@@ -1,0 +1,78 @@
+{
+  "event": {
+    "t": 5.3,
+    "e": "stat",
+    "u": "p1",
+    "v": {
+      "atk_physical": {
+        "min": 10,
+        "max": 17.5
+      }
+    }
+  },
+  "renderAtk": [
+    8,
+    14
+  ],
+  "liveAtk": {
+    "min": 10,
+    "max": 17.5
+  },
+  "actualTooltip": "\n        Lv.1배시STR도끼 · 둔기\n        단일물리\n        15.0초마다 무기를 높이 들어 적 하나를 내리찍어 29~51 의 물리 피해를 입힙니다",
+  "expectedTooltip": "\n        Lv.1배시STR도끼 · 둔기\n        단일물리\n        15.0초마다 무기를 높이 들어 적 하나를 내리찍어 36~64 의 물리 피해를 입힙니다",
+  "stalePreview": {
+    "baseSec": 15,
+    "coolSec": 15,
+    "coolCut": null,
+    "everySec": 17.143,
+    "lossPct": 0.14286666666666673,
+    "amount": {
+      "min": 29,
+      "max": 51
+    },
+    "parts": {
+      "amount": {
+        "value": {
+          "min": 29,
+          "max": 51
+        },
+        "basis": "atk",
+        "pct": 3,
+        "terms": [
+          {
+            "attr": "str",
+            "coef": 0
+          }
+        ]
+      }
+    }
+  },
+  "livePreview": {
+    "baseSec": 15,
+    "coolSec": 15,
+    "coolCut": null,
+    "everySec": 17.143,
+    "lossPct": 0.14286666666666673,
+    "amount": {
+      "min": 36,
+      "max": 64
+    },
+    "parts": {
+      "amount": {
+        "value": {
+          "min": 36,
+          "max": 64
+        },
+        "basis": "atk",
+        "pct": 3,
+        "terms": [
+          {
+            "attr": "str",
+            "coef": 0
+          }
+        ]
+      }
+    }
+  },
+  "source_set_sha256": "a5ecb3f73e8f09230a4ac6e478ed2a93a5123c2695d165aa1360c4a2b8d38fea"
+}

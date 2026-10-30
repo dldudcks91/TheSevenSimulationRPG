@@ -3,8 +3,8 @@
  *
  * `⚙` 판 설정 탭 마지막 줄들 (SCREEN_DESIGN §10-2 · §10-5) — **게임 기능이 아니다.** 고른 쪽은 이 브라우저에만 남는다(localStorage).
  *   · `Focus [Off | Stop | Dim]` — 관전에서 한 유닛이 행동하면 재생을 잠깐 세워 시선을 모은다(`battle.js:focusMode`)
- *   · `Skin [Now | D2 Min | 191 … 210]` — 화면을 선 대신 면으로 가르는 디아블로 2 최소화 시안 · D2 Min 그림을 재질만 바꿔 다시 그린 스킨 키트와
- *     지금 화면을 견준다(ADR-0791 · 0901 · style.css 맨 끝 두 절)
+ *   · `Skin [Now | D2 Min | 200]` — 화면을 선 대신 면으로 가르는 디아블로 2 최소화 시안 · D2 Min 그림을 재질만 바꿔 다시 그린 스킨 키트와
+ *     지금 화면을 견준다(ADR-0791 · 0901 · 0970 · style.css 맨 끝 두 절)
  *   ~~`Card [Before | After]`~~ 는 2026-10-09 걷었다 — 관전 카드는 개편판으로 고정이다(ADR-0566 · 되돌림은 `battle.js:CARD_V2`)
  *
  * 어떻게 동작하나 — `<html data-focus="off|stop|dim">` 하나를 건다. 재생기가 사건을 적용할 때 `battle.js:focusMode()` 로
@@ -34,12 +34,9 @@ const write = (k, v) => { try { localStorage.setItem(k, v); } catch { /* 사생�
 
 const SKIN_KEY = 'devSkin';
 const SKINS = [['now', 'Now'], ['d2min', 'D2 Min']];
-// 스킨 키트 — 버튼 글은 번호 · 이름은 hover (변주 한 줄은 `skins/source/run_skin_repaints.py:KITS` · ADR-0901)
+// 스킨 키트 — 버튼 글은 번호 · 이름은 hover (변주 한 줄은 `skins/source/run_skin_repaints.py:KITS` · ADR-0901 · 200 만 남김 ADR-0970)
 const KIT_SKINS = [
-    ['191', 'Oak & Iron'], ['192', 'Castle Stone'], ['193', 'Cathedral'], ['194', 'Forged Iron'], ['195', 'Leather Tome'],
-    ['196', 'Bronze Trim'], ['197', 'Slate'], ['198', "Knight's Steel"], ['199', 'Monastery'], ['200', 'Keep Timber'],
-    ['201', 'Heraldic Red'], ['202', 'Heraldic Blue'], ['203', 'Gilded Gothic'], ['204', 'Crypt Marble'], ['205', 'Granite Keep'],
-    ['206', 'Ironbound Chest'], ['207', 'Parchment'], ['208', 'Chainmail'], ['209', 'Ember Forge'], ['210', 'Moon Silver'],
+    ['200', 'Keep Timber'],
 ];
 const isSkin = v => SKINS.some(([s]) => s === v) || KIT_SKINS.some(([s]) => s === v);
 const skinNow = () => document.documentElement.dataset.skinParts || document.documentElement.dataset.skin || 'now';

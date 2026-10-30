@@ -1,0 +1,85 @@
+<!doctype html><meta charset="utf-8"><title>running</title><pre id="out"></pre>
+<script type="module">
+// 임시 — 사제 기본 스킬 결투 비교 (2026-10-30 세션 · 끝나면 지운다)
+import { loadData, buildSystems, D } from '../ui/data.js';
+import { makeRng } from '../game_logic/rng.js';
+const q = new URL(location.href).searchParams;
+const N = +(q.get('n') || 60);
+const out = document.getElementById('out');
+try {
+    await loadData('../data/');
+    const SYS = buildSystems(D);
+    const ov = q.get('ov') ? JSON.parse(q.get('ov')) : null;
+    let FSYS = SYS;
+    if (ov) {
+        const st = D.skillStatusRows.map(r => ov.status?.[r.status_id] ? { ...r, ...ov.status[r.status_id] } : r);
+        const ef = D.skillEffectRows.map(r => ov.effect?.[r.skill_id] ? { ...r, ...ov.effect[r.skill_id] } : r);
+        const sk = D.skillRows.map(r => ov.skill?.[r.skill_id] ? { ...r, ...ov.skill[r.skill_id] } : r);
+        FSYS = buildSystems({ ...D, skillStatusRows: st, skillEffectRows: ef, skillRows: sk });
+    }
+    const PRI = ['pri_judgment', 'pri_heal', 'pri_cure', 'pri_grace', 'pri_haste', 'pri_regen', 'pri_penitence', 'pri_bind', 'pri_doom', 'pri_summon'];
+    const VARS = (q.get('v') || ['none', ...PRI].join(',')).split(',');
+    const levels = (q.get('lv') || '15,25,45').split(',').map(Number);
+    const clone = x => JSON.parse(JSON.stringify(x));
+    const res = {};
+    const sheet = {};
+    for (const lv of levels) {
+        const tier = SYS.arena.tiers.find(t => t.level === lv);
+        const pairs = [];
+        for (let s = 1; pairs.length < N && s < N * 40; s++) {
+            const A = SYS.arena.rollTierOpponent(tier.id, makeRng(1000 + s));
+            if (!A.some(p => p.hero.cls === 'priest')) continue;
+            const B = SYS.arena.rollTierOpponent(tier.id, makeRng(70000 + s));
+            if (B.some(p => p.hero.cls === 'priest')) continue;
+            pairs.push({ A, B, s });
+        }
+        // 능력치 표 — 사제 마법 데미지 · 팀 최대 HP · 방어 · 저항
+        const pr = pairs.map(x => x.A.find(p => p.hero.cls === 'priest').combat);
+        const all = pairs.flatMap(x => [...x.A, ...x.B]).map(p => p.combat);
+        const avg = f => all.reduce((n, c) => n + f(c), 0) / all.length;
+        sheet[lv] = {
+            priestMatk: pr.reduce((n, c) => n + (c.atk_magic?.min + c.atk_magic?.max) / 2, 0) / pr.length,
+            priestHp: pr.reduce((n, c) => n + c.hp_max, 0) / pr.length,
+            hp: avg(c => c.hp_max), def: avg(c => c.defense ?? 0), res: avg(c => ((c.res_fire ?? 0) + (c.res_cold ?? 0) + (c.res_lightning ?? 0)) / 3),
+            dr: avg(c => c.damage_reduction ?? 0), dmgPct: avg(c => c.atk_pct_sum ?? 0), regen: avg(c => c.hp_regen ?? 0),
+            up: pairs.map(x => x.A.find(p => p.hero.cls === 'priest').actives[0]?.up ?? 0)[0],
+            keys: Object.keys(pr[0]).join(' '),
+        };
+        res[lv] = {};
+        for (const v of VARS) {
+            let win = 0, margin = 0, dur = 0, inc = 0, healA = 0, priDmg = 0, casts = 0;
+            const half = [0, 0];
+            for (const [pi, { A, B, s }] of pairs.entries()) {
+                const A2 = clone(A);
+                const pri = A2.find(p => p.hero.cls === 'priest');
+                const up = pri.actives.find(a => a.source === 'innate')?.up ?? 0;
+                pri.actives = v === 'none' ? [] : [{ id: v, source: 'innate', ...(up ? { up } : {}) }];
+                const r = FSYS.arena.fight(A2, B, makeRng(90000 + s));
+                const hpMax = {}; A2.forEach((p, i) => hpMax[`p${i}`] = p.combat.hp_max); B.forEach((p, i) => hpMax[`e${i}`] = p.combat.hp_max);
+                const hp = { ...hpMax };
+                const sumA = A2.reduce((n, p) => n + p.combat.hp_max, 0);
+                const priKey = `p${A2.indexOf(pri)}`;
+                for (const e of r.timeline) {
+                    if (e.e === 'hit' && e.d in hp) { hp[e.d] = e.dhp; if (e.d[0] === 'p') inc += e.dmg / sumA; if (e.a === priKey) priDmg += e.dmg; }
+                    else if (e.e === 'heal' && e.d in hp) { hp[e.d] = e.dhp; if (e.a === priKey) healA += e.amt / sumA; }
+                    else if (e.e === 'regen' && e.u in hp) hp[e.u] = e.dhp;
+                    else if (e.e === 'skill' && e.u === priKey) casts++;
+                }
+                const frac = side => Object.keys(hp).filter(k => k[0] === side).reduce((n, k) => n + Math.max(0, hp[k]) / hpMax[k], 0) / 3;
+                if (r.won) win++;
+                margin += frac('p') - frac('e');
+                half[pi < pairs.length / 2 ? 0 : 1] += frac('p') - frac('e');
+                dur += r.durationSec;
+            }
+            const n = pairs.length;
+            res[lv][v] = { win: +(win / n * 100).toFixed(1), margin: +(margin / n).toFixed(3), m1: +(half[0] / (n / 2)).toFixed(3), m2: +(half[1] / (n / 2)).toFixed(3), dur: +(dur / n).toFixed(1),
+                incPctPerS: +(inc / dur * 100).toFixed(2), healPctPerS: +(healA / dur * 100).toFixed(2), priDmg: Math.round(priDmg / n), casts: +(casts / n).toFixed(1) };
+        }
+    }
+    out.textContent = JSON.stringify({ N, sheet, res });
+    document.title = 'DONE';
+} catch (err) {
+    out.textContent = 'ERR ' + err.stack;
+    document.title = 'FAIL';
+}
+</script>

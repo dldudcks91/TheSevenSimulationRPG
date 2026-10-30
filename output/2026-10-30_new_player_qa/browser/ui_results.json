@@ -1,0 +1,2611 @@
+{
+  "base": "http://127.0.0.1:52357",
+  "checks": [
+    {
+      "name": "fresh menu has no save",
+      "ok": true,
+      "detail": "EN\nAdmin\n⚙\n새 게임\n불러오기"
+    },
+    {
+      "name": "three hero candidates",
+      "ok": true,
+      "detail": "1번째 굴림\n다시 굴리기\n이 셋으로 시작"
+    },
+    {
+      "name": "save created before prologue",
+      "ok": true,
+      "detail": {
+        "heroes": 4,
+        "createdAt": 1793293965513
+      }
+    },
+    {
+      "name": "all prologue scenes lead to game",
+      "ok": true,
+      "detail": [
+        "왕좌",
+        "배신의 밤",
+        "추락",
+        "마을",
+        "불길"
+      ]
+    },
+    {
+      "name": "navigate expedition",
+      "ok": true,
+      "detail": {
+        "locked": false,
+        "actual": "expedition",
+        "body": "노말\n나이트메어\n헬\n노말 5장 보스 클리어\nReport\nCh1 불타는 전장\nCh2 뒤틀린 숲\nCh3 황금의 사막\nCh4 망각의 동토\nCh5 심연의 동굴\nCh6 타락한 궁전\nCh7 신의 폐허\n분노\nCh1-1 파멸의 진영\nLv1 · 고블린 척후병 · 고블린 전사 · 고블린 주술사 · 아바돈\n분노\nCh1-2 핏빛 교전지대\nLv3 · 인간 보병 · 인간 궁수 · 인간 기사 · 라멕\n이전 스테이지 클리어\n분노\nCh1-3 원한의 묘지\nLv4 · 스켈레톤 전사 · 스켈레톤 기사 · 스켈레톤 마법사 · 레기온\n이전 스테이지 클리어\n분노\nCh1-4 몰록의 화로\nLv6 · 화염 광신도 · 임프 제사장 · 청동 수호상 · 몰록\n이전 스테이지 클리어\n분노\nCh1-5 사탄의 제단\nLv10 · 분노의 사탄\n이전 스테이지 클리어"
+      }
+    },
+    {
+      "name": "navigate explore",
+      "ok": true,
+      "detail": {
+        "locked": true,
+        "actual": "expedition",
+        "body": "노말\n나이트메어\n헬\n노말 5장 보스 클리어\nReport\nCh1 불타는 전장\nCh2 뒤틀린 숲\nCh3 황금의 사막\nCh4 망각의 동토\nCh5 심연의 동굴\nCh6 타락한 궁전\nCh7 신의 폐허\n분노\nCh1-1 파멸의 진영\nLv1 · 고블린 척후병 · 고블린 전사 · 고블린 주술사 · 아바돈\n분노\nCh1-2 핏빛 교전지대\nLv3 · 인간 보병 · 인간 궁수 · 인간 기사 · 라멕\n이전 스테이지 클리어\n분노\nCh1-3 원한의 묘지\nLv4 · 스켈레톤 전사 · 스켈레톤 기사 · 스켈레톤 마법사 · 레기온\n이전 스테이지 클리어\n분노\nCh1-4 몰록의 화로\nLv6 · 화염 광신도 · 임프 제사장 · 청동 수호상 · 몰록\n이전 스테이지 클리어\n분노\nCh1-5 사탄의 제단\nLv10 · 분노의 사탄\n이전 스테이지 클리어"
+      }
+    },
+    {
+      "name": "navigate party",
+      "ok": true,
+      "detail": {
+        "locked": false,
+        "actual": "party",
+        "body": "Party I\n발렌\nLv.1\n리더\nParty I\n이언\nLv.1\nParty I\n마르고\nLv.1\n대기 중\n고블린 짐꾼\nLv.1\n+\n+\nParty I\nParty II\nParty III\n진형?\n모두 전열\n전열 2 · 후열 1\n전열 1 · 후열 2\n모두 후열\nParty I\n이언\nLv.1\n후열\nParty I\n발렌\nLv.1\n리더\n전열\nParty I\n마르고\nLv.1\n후열\n물약?\n−\nHP 50% 미만에서 마심\n+\n가진 물약\n×20\n파티 전술?\n추가 버프\n합산 레벨 4\n열린 칸 0 / 7\n잠근 칸 0\n지휘 천막 건설\n전체 리롤 600G\n상태\n조건\n진행\n버프\n추가 버프\n잠금\n지휘 천막 건설\n지휘 천막 2랭크\n지휘 천막 3랭크\n지휘 천막 4랭크\n지휘 천막 5랭크\n지휘 천막 6랭크\n지휘 천막 7랭크"
+      }
+    },
+    {
+      "name": "navigate character",
+      "ok": true,
+      "detail": {
+        "locked": false,
+        "actual": "character",
+        "body": "Party I\n발렌\nLv.1\n해고\nParty I\n이언\nLv.1\nParty I\n마르고\nLv.1\n대기 중\n고블린 짐꾼\nLv.1\n+\n+\n장비?\nLv.1\nLv.1\n접사 죄종?\n접사 없음\n기본 옵션?\n레어\n분노\n전사\nLv.1\n경험치 0 / 200\n힘\nSTR\n18\n민첩\nDEX\n10\n지능\nINT\n10\n건강\nVIT\n11\n운\nLCK\n9\n통솔\nLDR\n7\n매력\nCHA\n12\n액티브 스킬?\n우선순위\nLv.1\n영웅\n습득\n전직\n마스터리 열기\n세부 옵션 1?\n물리 데미지\n8~15\n마법 데미지\n—\n공격 속도\n3.30초\n최대 HP\n100\n치명타 확률\n30%\n치명타 피해\n145.5%\n방어 무시\n0%\n쿨타임 감소\n0%\n물리 방어\n12 감쇠 6%\n피해 감소\n0 / 0%\n타격 회복\n0%\n상태이상 · 디버프 시간 감소\n6%\n화염 저항\n0% / 상한 75%\n냉기 저항\n0% / 상한 75%\n전기 저항\n0% / 상한 75%\n독 저항\n0% / 상한 75%\n원소 피해량 증가\n0%/0%/0%/0%\n적 원소 저항 감소\n0%/0%/0%/0%\n세부 옵션 2?\n타입별 추가 데미지\n일반 8%\n타입별 받는 피해 감소\n—\n정예 · 열별 추가 데미지\n—\n정예 · 열별 받는 피해 감소\n—\n강타\n0%\n명중률\n0%\n반격 확률\n0%\n반사 피해\n0%\n흡혈\n0%\nHP 재생\n0.05\n체력 회복\n0%\n버프 지속시간\n0%\n드랍률\n0%\n매직아이템 획득\n0%\n골드 획득\n8%\n경험치 획득\n0%\n창고?\n장비\n재료\n스킬북\n정렬\n인벤토리?\nParty I\n자동 장착\n분해\n자동 분해\n정렬"
+      }
+    },
+    {
+      "name": "navigate research",
+      "ok": true,
+      "detail": {
+        "locked": false,
+        "actual": "research",
+        "body": "건설?\n탐험\n지휘 천막\n창고\n선술집\n상단\n대장간\n도서관\n연구소\n상단?\n미건설\n아직 지은 랭크 없음\n다음 랭크?\n랭크 I\n상단에서 무기 · 물약 구매\n600\n골드\n건설\n상단 랭크?\n랭크 I\n상단에서 무기 · 물약 구매\n랭크 II\n상단에서 방어구 · 장신구 · 스킬 도안 구매\n랭크 III\n교역소에서 재료 교환\n랭크 IV\n특수상단 방문\n상단 품목 층 +1 (준비 중)"
+      }
+    },
+    {
+      "name": "navigate tavern",
+      "ok": true,
+      "detail": {
+        "locked": true,
+        "actual": "research",
+        "body": "건설?\n탐험\n지휘 천막\n창고\n선술집\n상단\n대장간\n도서관\n연구소\n상단?\n미건설\n아직 지은 랭크 없음\n다음 랭크?\n랭크 I\n상단에서 무기 · 물약 구매\n600\n골드\n건설\n상단 랭크?\n랭크 I\n상단에서 무기 · 물약 구매\n랭크 II\n상단에서 방어구 · 장신구 · 스킬 도안 구매\n랭크 III\n교역소에서 재료 교환\n랭크 IV\n특수상단 방문\n상단 품목 층 +1 (준비 중)"
+      }
+    },
+    {
+      "name": "navigate shop",
+      "ok": true,
+      "detail": {
+        "locked": true,
+        "actual": "research",
+        "body": "건설?\n탐험\n지휘 천막\n창고\n선술집\n상단\n대장간\n도서관\n연구소\n상단?\n미건설\n아직 지은 랭크 없음\n다음 랭크?\n랭크 I\n상단에서 무기 · 물약 구매\n600\n골드\n건설\n상단 랭크?\n랭크 I\n상단에서 무기 · 물약 구매\n랭크 II\n상단에서 방어구 · 장신구 · 스킬 도안 구매\n랭크 III\n교역소에서 재료 교환\n랭크 IV\n특수상단 방문\n상단 품목 층 +1 (준비 중)"
+      }
+    },
+    {
+      "name": "navigate forge",
+      "ok": true,
+      "detail": {
+        "locked": true,
+        "actual": "research",
+        "body": "건설?\n탐험\n지휘 천막\n창고\n선술집\n상단\n대장간\n도서관\n연구소\n상단?\n미건설\n아직 지은 랭크 없음\n다음 랭크?\n랭크 I\n상단에서 무기 · 물약 구매\n600\n골드\n건설\n상단 랭크?\n랭크 I\n상단에서 무기 · 물약 구매\n랭크 II\n상단에서 방어구 · 장신구 · 스킬 도안 구매\n랭크 III\n교역소에서 재료 교환\n랭크 IV\n특수상단 방문\n상단 품목 층 +1 (준비 중)"
+      }
+    },
+    {
+      "name": "navigate library",
+      "ok": true,
+      "detail": {
+        "locked": false,
+        "actual": "library",
+        "body": "Party I\n발렌\nLv.1\nParty I\n이언\nLv.1\nParty I\n마르고\nLv.1\n대기 중\n고블린 짐꾼\nLv.1\n+\n+\n전직?\n발렌\nLv.1 / 30\nLv.1\n영웅\n습득\n전직\n도서관 3랭크\n광전사\n고통이 깊어질수록 일격은 무거워진다. 광기에 몸을 맡긴 자에게 물러섬이란 없다.\n라그나로크\n25초마다 10초 동안 종말의 힘을 끌어내 자신의 데미지를 35% 올립니다\n버서크\n20초마다 8초 동안 이성을 놓고 날뛰어 자신의 데미지를 40% 올립니다\n동귀어진\n16초마다 모든 것을 건 필사의 일격으로 적 하나에게 72~135 의 물리 피해를 입힙니다\n바바리안\n폭풍처럼 휘몰아치고 대지를 쪼갠다. 지나간 자리엔 부서진 방패만 남는다.\n휠윈드\n11초마다 회오리처럼 돌며 적들 사이를 휩쓸어 5번 베고 매번 9~16 의 물리 피해를 입힙니다\n토르의 분노\n22초마다 방어가 가장 두꺼운 적에게 천둥 같은 일격을 내리쳐 72~135 의 물리 피해를 입힙니다\n쇼크웨이브\n15초마다 땅을 내리찍어 충격파로 적 전원에게 26~48 의 물리 피해를 입힙니다\n선봉장\n한 번의 포효가 전열을 일으켜 세운다. 깃발이 앞서는 곳에 승리가 따른다.\n사자후\n13초마다 사자처럼 포효해 적 전원에게 22~42 의 물리 피해를 입힙니다\n호령\n18초마다 호령으로 사기를 끌어올려 10초 동안 파티 전원의 데미지를 30% 올립니다\n일갈\n19초마다 일갈로 적을 움츠러들게 해 10초 동안 적 전원의 데미지를 25% 낮춥니다\n스킬 업그레이드?\n가진 책 없음\n도서관 2랭크\n스킬 북 제작?\n스킬 도안 없음\n도서관 2랭크"
+      }
+    },
+    {
+      "name": "navigate resource",
+      "ok": true,
+      "detail": {
+        "locked": false,
+        "actual": "resource",
+        "body": "미등록\n발렌\nLv.1\n미등록\n이언\nLv.1\n미등록\n마르고\nLv.1\n미등록\n고블린 짐꾼\nLv.1\n+\n+\n연구소?\n1랭크 · 오프라인 최대 3시간\n자원\n창고 건설\n수색\n선술집 2랭크\n훈련\n연구소 2랭크\n도박장\n선술집 3랭크\n자원?\n채광?\n자원\n다음 레벨?\n창고 건설\n채광 레벨?\nLv 1\n×1.1\nLv 2\n×1.2\nLv 3\n×1.3\nLv 4\n×1.4\nLv 5\n×1.5\nLv 6\n×1.6\nLv 7\n×1.7\nLv 8\n×1.8\nLv 9\n×1.9\nLv 10\n×2"
+      }
+    },
+    {
+      "name": "navigate colosseum",
+      "ok": true,
+      "detail": {
+        "locked": false,
+        "actual": "colosseum",
+        "body": "결투장\n?\n0 / 21층\n챔피언\nLv.50\n21\n다이아\nLv.45~49\n17\n18\n19\n20\n플래티넘\nLv.35~43\n13\n14\n15\n16\n골드\nLv.25~33\n9\n10\n11\n12\n실버\nLv.15~23\n5\n6\n7\n8\n브론즈\nLv.5~13\n1\n2\n3\n4\nParty I\n출전 인원 3 / 3?\n편성 수정\n1층 · 브론즈 · AI 팀\nLv.5 · 전사\n오만\n노엘\n124 / 124\nLv.1\nLv.5 · 기사\n색욕\n세드릭\n139 / 139\nLv.1\nLv.5 · 사제\n폭식\n아르덴\n107 / 107\nLv.1\nVS\nLv.1 · 마법사\n폭식\n이언\n50 / 50\nLv.1\nLv.1 · 전사\n분노\n발렌\n100 / 100\nLv.1\nLv.1 · 궁수\n나태\n마르고\n50 / 50\nLv.1\n물약?\n파티 전술?\n열린 전술 칸 없음\n도전"
+      }
+    },
+    {
+      "name": "navigate arena",
+      "ok": true,
+      "detail": {
+        "locked": false,
+        "actual": "arena",
+        "body": "콜로세움\n?\n브론즈\n1000\n레이팅\n실버까지 200\n최고 1000 · 0승 0무 0패\n상대 후보?\n930\nAI 팀\n+13\n−19\n1029\nAI 팀\n+17\n−15\n1116\nAI 팀\n+21\n−11\n새 상대\n친선전\n챔피언\n2000\n다이아\n1800\n플래티넘\n1600\n골드\n1400\n실버\n1200\n브론즈\n1000\nParty I\n출전 인원 3 / 3?\n편성 수정\nAI 팀 · 브론즈 · 1029\nLv.6 · 사제\n시기\n오르윈\n88 / 88\nLv.1\nLv.6 · 기사\n분노\n피오나\n158 / 158\nLv.1\nLv.6 · 마법사\n나태\n로웨나\n76 / 76\nLv.1\nVS\nLv.1 · 마법사\n폭식\n이언\n50 / 50\nLv.1\nLv.1 · 전사\n분노\n발렌\n100 / 100\nLv.1\nLv.1 · 궁수\n나태\n마르고\n50 / 50\nLv.1\n물약?\n파티 전술?\n열린 전술 칸 없음\n결투 시작"
+      }
+    },
+    {
+      "name": "navigate codex",
+      "ok": true,
+      "detail": {
+        "locked": false,
+        "actual": "codex",
+        "body": "몬스터\n캐릭터\n아이템\n스킬\n이펙트\n마스터리\nCh1 불타는 전장\nCh2 뒤틀린 숲\nCh3 황금의 사막\nCh4 망각의 동토\nCh5 심연의 동굴\n죄종 분노\n일반\n정예\n얼굴 스타일\ngemini\ngpt\nI 파멸의 진영\n데몬\n부족\n궁수\n고블린 척후병\nLv.1\nLv.1\n데몬\n부족\n전사\n고블린 전사\nLv.1\nLv.1\n데몬\n부족\n사제\n고블린 주술사\nLv.1\nLv.1\n데몬\n전사\n아바돈보스\nLv.1\nII 핏빛 교전지대\n일반\n군대\n전사\n인간 보병\nLv.1\nLv.1\n일반\n군대\n궁수\n인간 궁수\nLv.1\nLv.1\n일반\n군대\n기사\n인간 기사\nLv.1\nLv.1\n일반\n궁수\n라멕보스\nLv.1\nIII 원한의 묘지\n언데드\n군대\n전사\n스켈레톤 전사\nLv.1\nLv.1\n언데드\n군대\n기사\n스켈레톤 기사\nLv.1\nLv.1\n언데드\n군대\n마법사\n스켈레톤 마법사\nLv.1\nLv.1\n일반\n전사\n레기온보스\nLv.1\nIV 몰록의 화로\n데몬\n이형\n마법사\n화염 광신도\nLv.1\nLv.1\n데몬\n이형\n사제\n임프 제사장\nLv.1\nLv.1\n데몬\n수호자\n기사\n청동 수호상\nLv.1\nLv.1\n데몬\n마법사\n몰록보스\nLv.1\nV 사탄의 제단\n데몬\n마법사\n사탄보스\nLv.1\nVI ???\n언데드\n전사\n둘라한보스\nLv.1\n???"
+      }
+    },
+    {
+      "name": "navigate help",
+      "ok": true,
+      "detail": {
+        "locked": false,
+        "actual": "help",
+        "body": "원정\n탐험\n편성\n캐릭터\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n결투장\n콜로세움\n도감\n도움말\n실험실\n원정?\n도움말 검색\n검색 지우기\n전체 117개 설명\n처음 플레이하는 순서\n목표는 좋은 영웅과 장비를 모아 파티를 키우고 챕터를 진행하는 것입니다. 전투는 자동으로 진행되며, 누구를 데려가고 어떤 장비·스킬·전술을 줄지 준비하는 것이 플레이의 중심입니다.\n\n새 게임에서 시작 영웅을 확정했다면 왼쪽 [원정] 탭에서 스테이지 목록을 열고 첫 스테이지를 골라 [보내기]로 시작합니다. 인원과 진형은 편성에서, 장비와 마스터리는 캐릭터에서 조정합니다. 전투를 계속 보고 있지 않아도 게임이 켜져 있는 동안 원정은 진행됩니다.\n\n장비를 얻으면 캐릭터에서 착용품과 비교하고, 다음 스테이지에 도전합니다. 막히면 이미 깬 곳을 돌아 장비·경험치·재료를 모으고, 선술집의 영웅 고용이나 대장간의 제작·강화를 함께 살펴봅니다. 기능이 잠겨 있으면 건설에서 다음 해금 조건을 확인합니다. 여러 곳에서 얻은 성장을 모아 막혔던 스테이지를 넘는 흐름입니다.\n출발과 부대\n왼쪽 [원정] 탭에서 스테이지 목록을 열고 난이도·챕터·열린 스테이지를 고릅니다. 출정 창에서 적 구성과 보상을 확인하고, 편성을 고른 뒤 [보내기]로 출발합니다. 인원·진형·물약·전술은 편성 탭에서 준비합니다.\n\n한 파티에는 최대 3명이 들어가며, 현재 동시에 원정을 보낼 수 있는 부대는 1개입니다. 같은 영웅을 여러 부대에 동시에 보낼 수 없습니다.\n라운드와 한 번의 원정\n한 스테이지를 시작해서 끝낼 때까지가 한 번의 원정이며, 그 안에서 적 무리와 싸우는 단위가 라운드입니다"
+      }
+    },
+    {
+      "name": "navigate lab",
+      "ok": true,
+      "detail": {
+        "locked": false,
+        "actual": "lab",
+        "body": "아이템 생성기\n챕터\nCh1 불타는 전장\nCh2 뒤틀린 숲\nCh3 황금의 사막\nCh4 망각의 동토\nCh5 심연의 동굴\nCh6 타락한 궁전\nCh7 신의 폐허\n몬스터\nI 파멸의 진영\n고블린 척후병\n고블린 전사\n고블린 주술사\n아바돈\nII 핏빛 교전지대\n인간 보병\n인간 궁수\n인간 기사\n라멕\nIII 원한의 묘지\n스켈레톤 전사\n스켈레톤 기사\n스켈레톤 마법사\n레기온\nIV 몰록의 화로\n화염 광신도\n임프 제사장\n청동 수호상\n몰록\nV 사탄의 제단\n사탄\n등급\n일반\n정예\n난이도\n노말\n나이트메어\n헬\n스테이지 레벨\n−\n1\n+\n부위\n50%\n아이템 레벨\n1 ~ 1\n희귀도 가중치\n일반 90 · 매직 10\n굴리기\n×10\n—\n0개\n비우기"
+      }
+    },
+    {
+      "name": "first departure available",
+      "ok": true,
+      "detail": "분노\nCh1-1 파멸의 진영 I?\n레벨 1\n×\n적 구성?\n고블린 척후병\nLv.1\n고블린 전사\nLv.1\n고블린 주술사\nLv.1\n이야기?\n\n마을에서 피어오른 연기가 진영의 군기까지 검게 물들였다. 고블린들이 불탄 울타리 뒤에서 활을 겨눴고, 짐승 두개골을 쓴 주술사가 쓰러진 동족 사이를 걸었다. 다시 일어난 것들은 제 몸에 꽂힌 화살도 뽑지 않고 앞줄에 섞였다.\n\n그 무리 앞에서 「아바돈」이 도끼를 끌고 있었다. 「사탄」과 지옥에서 떨어지던 날, 그는 눈앞의 것을 모두 부수라는 명을 받았다. 명령을 지키는 동안 길을 막은 동족도 베었고, 마침내 멈추라던 주인의 목소리마저 잊었다.\n\n「발렌」이 흩어지려는 일행을 손짓으로 모았다. 바알은 도끼가 지나온 자리에 짓밟힌 고블린들을 보았다. 입술까지 올라왔던 돌격 명령이 잠시 머물렀다. 그는 대열이 갖춰지기를 기다렸다.\n\n편성?\nParty I\nParty I\n발렌\nLv.1\n리더\nLv.1\nParty I\n이언\nLv.1\nLv.1\nParty I\n마르고\nLv.1\nLv.1\n파티 전술?\n물약?\n자동 분해?\n바꾸기\n출정 방식?\n출발 칸?\nI\nII\nIII\n반복 원정\n보내기"
+    },
+    {
+      "name": "escape closes departure",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "first battle started",
+      "ok": true,
+      "detail": {
+        "runs": [
+          {
+            "stageId": 1011,
+            "preset": 1,
+            "repeat": false,
+            "auto": true,
+            "difficulty": "normal",
+            "lastAt": 1793293971189,
+            "durationSec": 0,
+            "active": true,
+            "shrine": null
+          }
+        ],
+        "exp": "battle"
+      }
+    },
+    {
+      "name": "character while expedition runs",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "nickname Enter trims and saves",
+      "ok": true,
+      "detail": {
+        "nick": "QA New Player",
+        "sessions": 0,
+        "reach": {}
+      }
+    },
+    {
+      "name": "reload offers load",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "save and reload retains party and currency",
+      "ok": true,
+      "detail": {
+        "before": {
+          "heroes": [
+            "h1",
+            "h2",
+            "h3",
+            "h4"
+          ],
+          "createdAt": 1793293965513,
+          "gold": 600
+        },
+        "after": {
+          "heroes": [
+            "h1",
+            "h2",
+            "h3",
+            "h4"
+          ],
+          "createdAt": 1793293965513,
+          "gold": 600
+        }
+      }
+    },
+    {
+      "name": "reload preserves nickname",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "no local HTTP errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "no uncaught JavaScript errors",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "page_errors": [],
+  "http_errors": [],
+  "external_blocked": [],
+  "requests": [
+    "http://127.0.0.1:52357/index.html",
+    "http://127.0.0.1:52357/ui/style.css",
+    "http://127.0.0.1:52357/assets/art/logo/the_seven.webp",
+    "http://127.0.0.1:52357/ui/app.js",
+    "https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap",
+    "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css",
+    "http://127.0.0.1:52357/ui/mock.js",
+    "http://127.0.0.1:52357/ui/notifications.js",
+    "http://127.0.0.1:52357/ui/minigame_art.js",
+    "http://127.0.0.1:52357/ui/i18n.js",
+    "http://127.0.0.1:52357/ui/battle.js",
+    "http://127.0.0.1:52357/ui/pace.js",
+    "http://127.0.0.1:52357/ui/tip.js",
+    "http://127.0.0.1:52357/ui/data.js",
+    "http://127.0.0.1:52357/ui/storage.js",
+    "http://127.0.0.1:52357/ui/cloud.js",
+    "http://127.0.0.1:52357/game_logic/rng.js",
+    "http://127.0.0.1:52357/ui/devpalette.js",
+    "http://127.0.0.1:52357/ui/devcompare.js",
+    "http://127.0.0.1:52357/ui/fx.js",
+    "http://127.0.0.1:52357/ui/skill_art.js",
+    "http://127.0.0.1:52357/ui/devadmin.js",
+    "http://127.0.0.1:52357/ui/devsave.js",
+    "http://127.0.0.1:52357/ui/env.js",
+    "http://127.0.0.1:52357/assets/art/faces/portrait_files.js",
+    "http://127.0.0.1:52357/game_logic/csv.js",
+    "http://127.0.0.1:52357/game_logic/hero.js",
+    "http://127.0.0.1:52357/game_logic/naming.js",
+    "http://127.0.0.1:52357/game_logic/item.js",
+    "http://127.0.0.1:52357/game_logic/battle.js",
+    "http://127.0.0.1:52357/game_logic/arena.js",
+    "http://127.0.0.1:52357/game_logic/skill.js",
+    "http://127.0.0.1:52357/game_logic/tactic.js",
+    "http://127.0.0.1:52357/game_logic/construction.js",
+    "http://127.0.0.1:52357/game_logic/gamble.js",
+    "http://127.0.0.1:52357/game_logic/commission.js",
+    "http://127.0.0.1:52357/game_logic/formula.js",
+    "http://127.0.0.1:52357/game_logic/state.js",
+    "http://127.0.0.1:52357/ui/skill_looks.js",
+    "http://127.0.0.1:52357/game_logic/skill_runtime.js",
+    "http://127.0.0.1:52357/game_logic/skill_effects.js",
+    "http://127.0.0.1:52357/game_logic/spawn_rule.js",
+    "http://127.0.0.1:52357/assets/art/backgrounds/pixel/town.webp",
+    "http://127.0.0.1:52357/data/balance.csv",
+    "http://127.0.0.1:52357/data/monster.csv",
+    "http://127.0.0.1:52357/data/stage.csv",
+    "http://127.0.0.1:52357/data/stage_round.csv",
+    "http://127.0.0.1:52357/data/round_budget.csv",
+    "http://127.0.0.1:52357/data/spawn_grade.csv",
+    "http://127.0.0.1:52357/data/codex_level.csv",
+    "http://127.0.0.1:52357/data/codex_option.csv",
+    "http://127.0.0.1:52357/data/monster_base.csv",
+    "http://127.0.0.1:52357/data/weapon_group.csv",
+    "http://127.0.0.1:52357/data/skill.csv",
+    "http://127.0.0.1:52357/data/skill_effect.csv",
+    "http://127.0.0.1:52357/data/skill_status.csv",
+    "http://127.0.0.1:52357/data/skill_tag.csv",
+    "http://127.0.0.1:52357/data/hero_attribute.csv",
+    "http://127.0.0.1:52357/data/combat_stat.csv",
+    "http://127.0.0.1:52357/data/chapter.csv",
+    "http://127.0.0.1:52357/data/mastery_node.csv",
+    "http://127.0.0.1:52357/data/tactic_slot.csv",
+    "http://127.0.0.1:52357/data/tactic_option.csv",
+    "http://127.0.0.1:52357/data/commission_kind.csv",
+    "http://127.0.0.1:52357/data/commission.csv",
+    "http://127.0.0.1:52357/data/item_base.csv",
+    "http://127.0.0.1:52357/data/equip_slot.csv",
+    "http://127.0.0.1:52357/data/class.csv",
+    "http://127.0.0.1:52357/data/hero_name.csv",
+    "http://127.0.0.1:52357/data/hero_trait.csv",
+    "http://127.0.0.1:52357/data/lab_material.csv",
+    "http://127.0.0.1:52357/data/hero_tier.csv",
+    "http://127.0.0.1:52357/data/monster_role.csv",
+    "http://127.0.0.1:52357/data/formation_template.csv",
+    "http://127.0.0.1:52357/data/hero_unique_candidates.csv",
+    "http://127.0.0.1:52357/data/weapon_base.csv",
+    "http://127.0.0.1:52357/data/weapon_sin_option.csv",
+    "http://127.0.0.1:52357/data/make_recipe.csv",
+    "http://127.0.0.1:52357/data/potion.csv",
+    "http://127.0.0.1:52357/data/armor_group.csv",
+    "http://127.0.0.1:52357/data/armor_sin_option.csv",
+    "http://127.0.0.1:52357/data/sin_word.csv",
+    "http://127.0.0.1:52357/data/accessory_sin_option.csv",
+    "http://127.0.0.1:52357/data/accessory_common_option.csv",
+    "http://127.0.0.1:52357/data/amulet_proc.csv",
+    "http://127.0.0.1:52357/data/tactic_condition.csv",
+    "http://127.0.0.1:52357/data/tactic_score.csv",
+    "http://127.0.0.1:52357/data/building.csv",
+    "http://127.0.0.1:52357/data/building_rank.csv",
+    "http://127.0.0.1:52357/data/building_effect.csv",
+    "http://127.0.0.1:52357/data/slot_symbol.csv",
+    "http://127.0.0.1:52357/data/slot_coin.csv",
+    "http://127.0.0.1:52357/data/slot_line.csv",
+    "http://127.0.0.1:52357/data/slot_stake.csv",
+    "http://127.0.0.1:52357/data/commission_grade.csv",
+    "http://127.0.0.1:52357/data/monster_type.csv",
+    "http://127.0.0.1:52357/data/advance.csv",
+    "http://127.0.0.1:52357/data/level_xp.csv",
+    "http://127.0.0.1:52357/data/shrine.csv",
+    "http://127.0.0.1:52357/data/advance_node.csv",
+    "http://127.0.0.1:52357/data/explore_spot.csv",
+    "http://127.0.0.1:52357/data/explore_story.csv",
+    "http://127.0.0.1:52357/data/difficulty_tier.csv",
+    "http://127.0.0.1:52357/data/upgrade_chance.csv",
+    "http://127.0.0.1:52357/data/arena_tier.csv",
+    "http://127.0.0.1:52357/data/lab_node.csv",
+    "http://127.0.0.1:52357/data/sin_attr.csv",
+    "http://127.0.0.1:52357/data/gear_rarity.csv",
+    "http://127.0.0.1:52357/data/material_synth.csv",
+    "http://127.0.0.1:52357/data/chapter_debuff.csv",
+    "http://127.0.0.1:52357/data/commission_fame.csv",
+    "http://127.0.0.1:52357/assets/art/fx/ui/stage_banner.webp",
+    "http://127.0.0.1:52357/assets/art/faces/backdrop.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/hero/warrior_5.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/war_bash.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/hero/mage_2.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/mag_fireball.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/hero/archer_1.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/arc_guided.webp",
+    "http://127.0.0.1:52357/assets/art/icons/mail/mail.webp",
+    "http://127.0.0.1:52357/assets/art/icons/mail/bell.webp",
+    "http://127.0.0.1:52357/assets/art/backgrounds/illustrate/background_stage_101.webp",
+    "http://127.0.0.1:52357/assets/art/backgrounds/illustrate/background_stage_102.webp",
+    "http://127.0.0.1:52357/assets/art/backgrounds/illustrate/background_stage_103.webp",
+    "http://127.0.0.1:52357/assets/art/backgrounds/illustrate/background_stage_104.webp",
+    "http://127.0.0.1:52357/assets/art/backgrounds/illustrate/background_stage_105.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/hero/goblin_porter.webp",
+    "http://127.0.0.1:52357/assets/art/icons/items/potion/minor_healing.webp",
+    "http://127.0.0.1:52357/assets/art/icons/items/empty/helmet.webp",
+    "http://127.0.0.1:52357/assets/art/icons/items/empty/amulet.webp",
+    "http://127.0.0.1:52357/assets/art/icons/items/weapon_base/axe/battle_axe.webp",
+    "http://127.0.0.1:52357/assets/art/icons/items/item_base/armor_cloth.webp",
+    "http://127.0.0.1:52357/assets/art/icons/items/empty/gloves.webp",
+    "http://127.0.0.1:52357/assets/art/icons/items/empty/ring.webp",
+    "http://127.0.0.1:52357/assets/art/icons/items/empty/boots.webp",
+    "http://127.0.0.1:52357/assets/art/icons/currency/gold.webp",
+    "http://127.0.0.1:52357/assets/art/buildings/explore.webp",
+    "http://127.0.0.1:52357/assets/art/buildings/command.webp",
+    "http://127.0.0.1:52357/assets/art/buildings/storage.webp",
+    "http://127.0.0.1:52357/assets/art/buildings/tavern.webp",
+    "http://127.0.0.1:52357/assets/art/buildings/shop.webp",
+    "http://127.0.0.1:52357/assets/art/buildings/forge.webp",
+    "http://127.0.0.1:52357/assets/art/buildings/codex.webp",
+    "http://127.0.0.1:52357/assets/art/buildings/resource.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/war_ragnarok.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/war_berserk.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/war_mutualruin.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/war_whirlwind.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/war_thorswrath.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/war_shockwave.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/war_lionsroar.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/war_command.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/war_intimidate.webp",
+    "http://127.0.0.1:52357/assets/art/icons/lab/mine.webp",
+    "http://127.0.0.1:52357/assets/art/icons/lab/gather.webp",
+    "http://127.0.0.1:52357/assets/art/icons/lab/log.webp",
+    "http://127.0.0.1:52357/assets/art/icons/lab/node/seats.webp",
+    "http://127.0.0.1:52357/assets/art/icons/lab/node/burst.webp",
+    "http://127.0.0.1:52357/assets/art/icons/lab/node/interval.webp",
+    "http://127.0.0.1:52357/assets/art/icons/lab/node/quality.webp",
+    "http://127.0.0.1:52357/assets/art/icons/lab/node/waiting.webp",
+    "http://127.0.0.1:52357/assets/art/buildings/training.webp",
+    "http://127.0.0.1:52357/assets/art/icons/lab/node/speed.webp",
+    "http://127.0.0.1:52357/assets/art/icons/lab/node/range.webp",
+    "http://127.0.0.1:52357/assets/art/icons/gamble/jackpot.webp",
+    "http://127.0.0.1:52357/assets/art/icons/lab/node/income.webp",
+    "http://127.0.0.1:52357/assets/art/icons/arena/champion.webp",
+    "http://127.0.0.1:52357/assets/art/icons/arena/gladiator.webp",
+    "http://127.0.0.1:52357/assets/art/icons/arena/diamond.webp",
+    "http://127.0.0.1:52357/assets/art/icons/arena/platinum.webp",
+    "http://127.0.0.1:52357/assets/art/icons/arena/gold.webp",
+    "http://127.0.0.1:52357/assets/art/icons/arena/silver.webp",
+    "http://127.0.0.1:52357/assets/art/icons/arena/bronze.webp",
+    "http://127.0.0.1:52357/assets/art/icons/arena/duel.webp",
+    "http://127.0.0.1:52357/assets/art/backgrounds/illustrate/background_duel_bronze.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/hero/warrior_3.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/war_shout.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/hero/knight_4.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/kni_resistshield.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/hero/priest_1.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/pri_grace.webp",
+    "http://127.0.0.1:52357/assets/art/icons/arena/colosseum.webp",
+    "http://127.0.0.1:52357/assets/art/backgrounds/illustrate/background_colosseum.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/hero/priest_2.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/pri_bind.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/hero/knight_5.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/kni_holyfire.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/hero/mage_1.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/mag_frostnova.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1101.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/arc_rapid.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1102.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/war_warcry.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1103.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/pri_summon.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/pri_haste.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1150.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/war_leap.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1201.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/war_ironskin.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/war_frenzy.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1202.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/arc_multishot.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1203.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/kni_rush.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/kni_might.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1251.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1301.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/war_doubleswing.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1302.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/kni_charge.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/kni_fanaticism.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1303.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/mag_ignite.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1250.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/war_battleorders.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1401.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/mag_inferno.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1402.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/pri_cure.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/pri_regen.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1403.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1450.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1900.webp",
+    "http://127.0.0.1:52357/assets/art/icons/skills/mon_hellfire.webp",
+    "http://127.0.0.1:52357/assets/art/faces/gemini/monster/1350.webp",
+    "http://127.0.0.1:52357/assets/art/icons/items/empty/weapon.webp",
+    "http://127.0.0.1:52357/assets/art/icons/items/empty/armor.webp",
+    "http://127.0.0.1:52357/assets/art/fx/ui/stage_banner.webp",
+    "http://127.0.0.1:52357/assets/art/fx/skills/war_bash_darktoon.webp",
+    "http://127.0.0.1:52357/assets/art/fx/skills/mag_fireball_darktoon.webp",
+    "http://127.0.0.1:52357/assets/art/fx/skills/arc_guided_darktoon.webp",
+    "http://127.0.0.1:52357/assets/art/fx/skills/arc_rapid_darktoon.webp",
+    "http://127.0.0.1:52357/index.html",
+    "http://127.0.0.1:52357/ui/style.css",
+    "http://127.0.0.1:52357/assets/art/logo/the_seven.webp",
+    "http://127.0.0.1:52357/ui/app.js",
+    "https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap",
+    "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css",
+    "http://127.0.0.1:52357/ui/mock.js",
+    "http://127.0.0.1:52357/ui/notifications.js",
+    "http://127.0.0.1:52357/ui/minigame_art.js",
+    "http://127.0.0.1:52357/ui/i18n.js",
+    "http://127.0.0.1:52357/ui/battle.js",
+    "http://127.0.0.1:52357/ui/pace.js",
+    "http://127.0.0.1:52357/ui/tip.js",
+    "http://127.0.0.1:52357/ui/data.js",
+    "http://127.0.0.1:52357/ui/storage.js",
+    "http://127.0.0.1:52357/ui/cloud.js",
+    "http://127.0.0.1:52357/game_logic/rng.js",
+    "http://127.0.0.1:52357/ui/devpalette.js",
+    "http://127.0.0.1:52357/ui/devcompare.js",
+    "http://127.0.0.1:52357/ui/fx.js",
+    "http://127.0.0.1:52357/ui/skill_art.js",
+    "http://127.0.0.1:52357/ui/devadmin.js",
+    "http://127.0.0.1:52357/ui/devsave.js",
+    "http://127.0.0.1:52357/ui/env.js",
+    "http://127.0.0.1:52357/assets/art/backgrounds/pixel/town.webp",
+    "http://127.0.0.1:52357/assets/art/faces/portrait_files.js",
+    "http://127.0.0.1:52357/game_logic/csv.js",
+    "http://127.0.0.1:52357/game_logic/hero.js",
+    "http://127.0.0.1:52357/game_logic/naming.js",
+    "http://127.0.0.1:52357/game_logic/item.js",
+    "http://127.0.0.1:52357/game_logic/battle.js",
+    "http://127.0.0.1:52357/game_logic/arena.js",
+    "http://127.0.0.1:52357/game_logic/skill.js",
+    "http://127.0.0.1:52357/game_logic/tactic.js",
+    "http://127.0.0.1:52357/game_logic/construction.js",
+    "http://127.0.0.1:52357/game_logic/gamble.js",
+    "http://127.0.0.1:52357/game_logic/commission.js",
+    "http://127.0.0.1:52357/game_logic/formula.js",
+    "http://127.0.0.1:52357/game_logic/state.js",
+    "http://127.0.0.1:52357/ui/skill_looks.js",
+    "http://127.0.0.1:52357/game_logic/skill_runtime.js",
+    "http://127.0.0.1:52357/game_logic/skill_effects.js",
+    "http://127.0.0.1:52357/game_logic/spawn_rule.js",
+    "http://127.0.0.1:52357/data/balance.csv",
+    "http://127.0.0.1:52357/data/monster.csv",
+    "http://127.0.0.1:52357/data/stage.csv",
+    "http://127.0.0.1:52357/data/stage_round.csv",
+    "http://127.0.0.1:52357/data/round_budget.csv",
+    "http://127.0.0.1:52357/data/spawn_grade.csv",
+    "http://127.0.0.1:52357/data/codex_level.csv",
+    "http://127.0.0.1:52357/data/codex_option.csv",
+    "http://127.0.0.1:52357/data/monster_base.csv",
+    "http://127.0.0.1:52357/data/weapon_group.csv",
+    "http://127.0.0.1:52357/data/skill.csv",
+    "http://127.0.0.1:52357/data/skill_effect.csv",
+    "http://127.0.0.1:52357/data/skill_status.csv",
+    "http://127.0.0.1:52357/data/skill_tag.csv",
+    "http://127.0.0.1:52357/data/hero_attribute.csv",
+    "http://127.0.0.1:52357/data/combat_stat.csv",
+    "http://127.0.0.1:52357/data/chapter.csv",
+    "http://127.0.0.1:52357/data/mastery_node.csv",
+    "http://127.0.0.1:52357/data/tactic_slot.csv",
+    "http://127.0.0.1:52357/data/tactic_option.csv",
+    "http://127.0.0.1:52357/data/commission_kind.csv",
+    "http://127.0.0.1:52357/data/commission.csv",
+    "http://127.0.0.1:52357/data/item_base.csv",
+    "http://127.0.0.1:52357/data/equip_slot.csv",
+    "http://127.0.0.1:52357/data/class.csv",
+    "http://127.0.0.1:52357/data/hero_name.csv",
+    "http://127.0.0.1:52357/data/hero_trait.csv",
+    "http://127.0.0.1:52357/data/lab_material.csv",
+    "http://127.0.0.1:52357/data/hero_tier.csv",
+    "http://127.0.0.1:52357/data/monster_role.csv",
+    "http://127.0.0.1:52357/data/formation_template.csv",
+    "http://127.0.0.1:52357/data/hero_unique_candidates.csv",
+    "http://127.0.0.1:52357/data/weapon_base.csv",
+    "http://127.0.0.1:52357/data/weapon_sin_option.csv",
+    "http://127.0.0.1:52357/data/make_recipe.csv",
+    "http://127.0.0.1:52357/data/potion.csv",
+    "http://127.0.0.1:52357/data/armor_group.csv",
+    "http://127.0.0.1:52357/data/armor_sin_option.csv",
+    "http://127.0.0.1:52357/data/sin_word.csv",
+    "http://127.0.0.1:52357/data/accessory_sin_option.csv",
+    "http://127.0.0.1:52357/data/accessory_common_option.csv",
+    "http://127.0.0.1:52357/data/amulet_proc.csv",
+    "http://127.0.0.1:52357/data/tactic_condition.csv",
+    "http://127.0.0.1:52357/data/tactic_score.csv",
+    "http://127.0.0.1:52357/data/building.csv",
+    "http://127.0.0.1:52357/data/building_rank.csv",
+    "http://127.0.0.1:52357/data/building_effect.csv",
+    "http://127.0.0.1:52357/data/slot_symbol.csv",
+    "http://127.0.0.1:52357/data/slot_coin.csv",
+    "http://127.0.0.1:52357/data/slot_line.csv",
+    "http://127.0.0.1:52357/data/slot_stake.csv",
+    "http://127.0.0.1:52357/data/commission_grade.csv",
+    "http://127.0.0.1:52357/data/monster_type.csv",
+    "http://127.0.0.1:52357/data/advance.csv",
+    "http://127.0.0.1:52357/data/level_xp.csv",
+    "http://127.0.0.1:52357/data/shrine.csv",
+    "http://127.0.0.1:52357/data/advance_node.csv",
+    "http://127.0.0.1:52357/data/explore_spot.csv",
+    "http://127.0.0.1:52357/data/explore_story.csv",
+    "http://127.0.0.1:52357/data/difficulty_tier.csv",
+    "http://127.0.0.1:52357/data/upgrade_chance.csv",
+    "http://127.0.0.1:52357/data/arena_tier.csv",
+    "http://127.0.0.1:52357/data/lab_node.csv",
+    "http://127.0.0.1:52357/data/sin_attr.csv",
+    "http://127.0.0.1:52357/data/gear_rarity.csv",
+    "http://127.0.0.1:52357/data/material_synth.csv",
+    "http://127.0.0.1:52357/data/chapter_debuff.csv",
+    "http://127.0.0.1:52357/data/commission_fame.csv",
+    "http://127.0.0.1:52357/assets/art/fx/ui/stage_banner.webp",
+    "http://127.0.0.1:52357/assets/art/icons/mail/mail.webp",
+    "http://127.0.0.1:52357/assets/art/icons/mail/bell.webp",
+    "http://127.0.0.1:52357/assets/art/backgrounds/illustrate/background_stage_101.webp",
+    "http://127.0.0.1:52357/assets/art/backgrounds/illustrate/background_stage_102.webp",
+    "http://127.0.0.1:52357/assets/art/backgrounds/illustrate/background_stage_103.webp",
+    "http://127.0.0.1:52357/assets/art/backgrounds/illustrate/background_stage_104.webp",
+    "http://127.0.0.1:52357/assets/art/backgrounds/illustrate/background_stage_105.webp"
+  ],
+  "console": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "type": "info",
+      "text": "Images loaded lazily and replaced with placeholders. Load events are deferred. See https://go.microsoft.com/fwlink/?linkid=2048113"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED"
+    }
+  ],
+  "failed_requests": [
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap",
+      "failure": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css",
+      "failure": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap",
+      "failure": "net::ERR_NETWORK_ACCESS_DENIED"
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css",
+      "failure": "net::ERR_NETWORK_ACCESS_DENIED"
+    }
+  ],
+  "initial_game": {
+    "heroes": [
+      {
+        "uid": "h1",
+        "name": {
+          "ko": "발렌",
+          "en": "Valen"
+        },
+        "tier": "rare",
+        "sin": "wrath",
+        "cls": "warrior",
+        "trait": {
+          "ko": "언변",
+          "en": "Silver Tongue"
+        },
+        "face": "warrior_5",
+        "level": 1,
+        "xp": 0,
+        "mastery": {},
+        "masteryPoints": 0,
+        "innate": "war_bash",
+        "stats": {
+          "str": 18,
+          "agi": 10,
+          "int": 10,
+          "vit": 11,
+          "luck": 9,
+          "ldr": 7,
+          "cha": 12
+        },
+        "equipped": {
+          "weapon": "i1",
+          "helmet": null,
+          "armor": "i2",
+          "gloves": null,
+          "boots": null,
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        }
+      },
+      {
+        "uid": "h2",
+        "name": {
+          "ko": "이언",
+          "en": "Ian"
+        },
+        "tier": "magic",
+        "sin": "gluttony",
+        "cls": "mage",
+        "trait": {
+          "ko": "타고난 지휘관",
+          "en": "Born Commander"
+        },
+        "face": "mage_2",
+        "level": 1,
+        "xp": 0,
+        "mastery": {},
+        "masteryPoints": 0,
+        "innate": "mag_fireball",
+        "stats": {
+          "str": 8,
+          "agi": 9,
+          "int": 12,
+          "vit": 13,
+          "luck": 7,
+          "ldr": 9,
+          "cha": 3
+        },
+        "equipped": {
+          "weapon": "i3",
+          "helmet": null,
+          "armor": "i4",
+          "gloves": null,
+          "boots": null,
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        }
+      },
+      {
+        "uid": "h3",
+        "name": {
+          "ko": "마르고",
+          "en": "Margot"
+        },
+        "tier": "normal",
+        "sin": "sloth",
+        "cls": "archer",
+        "trait": {
+          "ko": "잔꾀",
+          "en": "Cunning"
+        },
+        "face": "archer_1",
+        "level": 1,
+        "xp": 0,
+        "mastery": {},
+        "masteryPoints": 0,
+        "innate": "arc_guided",
+        "stats": {
+          "str": 10,
+          "agi": 15,
+          "int": 11,
+          "vit": 5,
+          "luck": 5,
+          "ldr": 6,
+          "cha": 9
+        },
+        "equipped": {
+          "weapon": "i5",
+          "helmet": null,
+          "armor": "i6",
+          "gloves": null,
+          "boots": null,
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        }
+      },
+      {
+        "name": {
+          "ko": "고블린 짐꾼",
+          "en": "Goblin Porter"
+        },
+        "tier": "growth",
+        "sin": "greed",
+        "cls": "knight",
+        "trait": {
+          "ko": "억척스러움",
+          "en": "Tenacious"
+        },
+        "face": "goblin_porter",
+        "level": 1,
+        "xp": 0,
+        "mastery": {},
+        "masteryPoints": 0,
+        "innate": "kni_rush",
+        "stats": {
+          "str": 5,
+          "agi": 5,
+          "int": 5,
+          "vit": 5,
+          "luck": 5,
+          "ldr": 5,
+          "cha": 5
+        },
+        "equipped": {
+          "weapon": null,
+          "helmet": null,
+          "armor": null,
+          "gloves": null,
+          "boots": null,
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        },
+        "uid": "h4",
+        "growthSeed": 2164049540
+      }
+    ],
+    "resources": {
+      "gold": 600,
+      "stigma": 0
+    },
+    "construction": {
+      "built": 2,
+      "total": 47,
+      "tabs": {
+        "explore": false,
+        "tavern": false,
+        "shop": false,
+        "forge": false,
+        "library": true,
+        "codex": true,
+        "resource": true
+      },
+      "buildings": [
+        {
+          "id": "explore",
+          "name": {
+            "ko": "탐험",
+            "en": "Exploration"
+          },
+          "tab": "explore",
+          "tabIds": [
+            "explore"
+          ],
+          "rank": 0,
+          "maxRank": 5,
+          "next": {
+            "rank": 1,
+            "require": [
+              {
+                "kind": "chapter",
+                "ref": 1,
+                "stage": 1051,
+                "diff": null,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ],
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 600
+              }
+            ],
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "explore",
+                "value": null,
+                "live": true
+              }
+            ],
+            "err": "locked"
+          },
+          "ranks": [
+            {
+              "rank": 1,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "explore",
+                  "value": null,
+                  "live": true
+                }
+              ],
+              "require": [
+                {
+                  "kind": "chapter",
+                  "ref": 1,
+                  "stage": 1051,
+                  "diff": null,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "explore_caravan",
+                  "value": null,
+                  "live": true
+                }
+              ],
+              "require": [
+                {
+                  "kind": "chapter",
+                  "ref": 2,
+                  "stage": 2051,
+                  "diff": null,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 3,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "explore_ruins",
+                  "value": null,
+                  "live": true
+                }
+              ],
+              "require": [
+                {
+                  "kind": "chapter",
+                  "ref": 4,
+                  "stage": 4051,
+                  "diff": null,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 4,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "presets",
+                  "value": 1,
+                  "live": true,
+                  "total": 1
+                }
+              ],
+              "require": [
+                {
+                  "kind": "difficulty",
+                  "ref": "normal",
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 5,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "presets",
+                  "value": 1,
+                  "live": true,
+                  "total": 2
+                }
+              ],
+              "require": [
+                {
+                  "kind": "difficulty",
+                  "ref": "nightmare",
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "command",
+          "name": {
+            "ko": "지휘 천막",
+            "en": "Command Tent"
+          },
+          "tab": "-",
+          "tabIds": [],
+          "rank": 0,
+          "maxRank": 7,
+          "next": {
+            "rank": 1,
+            "require": [
+              {
+                "kind": "building",
+                "ref": "storage",
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ],
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 600
+              }
+            ],
+            "effects": [
+              {
+                "kind": "add",
+                "target": "tactic_slots",
+                "value": 1,
+                "live": true
+              }
+            ],
+            "err": "locked"
+          },
+          "ranks": [
+            {
+              "rank": 1,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "tactic_slots",
+                  "value": 1,
+                  "live": true,
+                  "total": 1
+                }
+              ],
+              "require": [
+                {
+                  "kind": "building",
+                  "ref": "storage",
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "tactic_slots",
+                  "value": 1,
+                  "live": true,
+                  "total": 2
+                }
+              ],
+              "require": [
+                {
+                  "kind": "total",
+                  "ref": null,
+                  "need": 8,
+                  "have": 4,
+                  "ok": false
+                },
+                {
+                  "kind": "stage",
+                  "ref": 1051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 3,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "tactic_slots",
+                  "value": 1,
+                  "live": true,
+                  "total": 3
+                }
+              ],
+              "require": [
+                {
+                  "kind": "total",
+                  "ref": null,
+                  "need": 15,
+                  "have": 4,
+                  "ok": false
+                },
+                {
+                  "kind": "stage",
+                  "ref": 2051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 4,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "tactic_slots",
+                  "value": 1,
+                  "live": true,
+                  "total": 4
+                }
+              ],
+              "require": [
+                {
+                  "kind": "total",
+                  "ref": null,
+                  "need": 30,
+                  "have": 4,
+                  "ok": false
+                },
+                {
+                  "kind": "stage",
+                  "ref": 3051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 5,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "tactic_slots",
+                  "value": 1,
+                  "live": true,
+                  "total": 5
+                }
+              ],
+              "require": [
+                {
+                  "kind": "total",
+                  "ref": null,
+                  "need": 40,
+                  "have": 4,
+                  "ok": false
+                },
+                {
+                  "kind": "stage",
+                  "ref": 4051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 6,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "tactic_slots",
+                  "value": 1,
+                  "live": true,
+                  "total": 6
+                }
+              ],
+              "require": [
+                {
+                  "kind": "total",
+                  "ref": null,
+                  "need": 55,
+                  "have": 4,
+                  "ok": false
+                },
+                {
+                  "kind": "stage",
+                  "ref": 5051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 7,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "tactic_slots",
+                  "value": 1,
+                  "live": true,
+                  "total": 7
+                }
+              ],
+              "require": [
+                {
+                  "kind": "total",
+                  "ref": null,
+                  "need": 90,
+                  "have": 4,
+                  "ok": false
+                },
+                {
+                  "kind": "stage",
+                  "ref": 6051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "storage",
+          "name": {
+            "ko": "창고",
+            "en": "Storage"
+          },
+          "tab": "-",
+          "tabIds": [],
+          "rank": 0,
+          "maxRank": 5,
+          "next": {
+            "rank": 1,
+            "require": [
+              {
+                "kind": "building",
+                "ref": "forge",
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ],
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 600
+              }
+            ],
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "lab_res",
+                "value": null,
+                "live": true
+              }
+            ],
+            "err": "locked"
+          },
+          "ranks": [
+            {
+              "rank": 1,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "lab_res",
+                  "value": null,
+                  "live": true
+                }
+              ],
+              "require": [
+                {
+                  "kind": "building",
+                  "ref": "forge",
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "potionSlots",
+                  "value": 1,
+                  "live": true,
+                  "total": 1
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 2013,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 3,
+              "built": false,
+              "pending": true,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "gear_set",
+                  "value": null,
+                  "live": false
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 3033,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 4,
+              "built": false,
+              "pending": true,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "gear_sets",
+                  "value": 1,
+                  "live": false,
+                  "total": 1
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 4033,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 5,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "potionSlots",
+                  "value": 1,
+                  "live": true,
+                  "total": 2
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 5013,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tavern",
+          "name": {
+            "ko": "선술집",
+            "en": "Tavern"
+          },
+          "tab": "tavern",
+          "tabIds": [
+            "tavern"
+          ],
+          "rank": 0,
+          "maxRank": 7,
+          "next": {
+            "rank": 1,
+            "require": [
+              {
+                "kind": "building",
+                "ref": "shop",
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ],
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 600
+              }
+            ],
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "commission_board",
+                "value": null,
+                "live": true
+              }
+            ],
+            "err": "locked"
+          },
+          "ranks": [
+            {
+              "rank": 1,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "commission_board",
+                  "value": null,
+                  "live": true
+                }
+              ],
+              "require": [
+                {
+                  "kind": "building",
+                  "ref": "shop",
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "hire",
+                  "value": null,
+                  "live": true
+                }
+              ],
+              "require": [
+                {
+                  "kind": "chapter",
+                  "ref": 1,
+                  "stage": 1051,
+                  "diff": null,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 3,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "gamble",
+                  "value": null,
+                  "live": true
+                }
+              ],
+              "require": [
+                {
+                  "kind": "chapter",
+                  "ref": 2,
+                  "stage": 2051,
+                  "diff": null,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 4,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "roster",
+                  "value": 1,
+                  "live": true,
+                  "total": 1
+                }
+              ],
+              "require": [
+                {
+                  "kind": "chapter",
+                  "ref": 1,
+                  "stage": 1051,
+                  "diff": "nightmare",
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 5,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "roster",
+                  "value": 1,
+                  "live": true,
+                  "total": 2
+                }
+              ],
+              "require": [
+                {
+                  "kind": "chapter",
+                  "ref": 2,
+                  "stage": 2051,
+                  "diff": "nightmare",
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 6,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "roster",
+                  "value": 1,
+                  "live": true,
+                  "total": 3
+                }
+              ],
+              "require": [
+                {
+                  "kind": "chapter",
+                  "ref": 3,
+                  "stage": 3051,
+                  "diff": "nightmare",
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 7,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "roster",
+                  "value": 1,
+                  "live": true,
+                  "total": 4
+                }
+              ],
+              "require": [
+                {
+                  "kind": "chapter",
+                  "ref": 4,
+                  "stage": 4051,
+                  "diff": "nightmare",
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "shop",
+          "name": {
+            "ko": "상단",
+            "en": "Trading House"
+          },
+          "tab": "shop",
+          "tabIds": [
+            "shop"
+          ],
+          "rank": 0,
+          "maxRank": 4,
+          "next": {
+            "rank": 1,
+            "require": [],
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 600
+              }
+            ],
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "shop",
+                "value": null,
+                "live": true
+              }
+            ],
+            "err": null
+          },
+          "ranks": [
+            {
+              "rank": 1,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "shop",
+                  "value": null,
+                  "live": true
+                }
+              ],
+              "require": []
+            },
+            {
+              "rank": 2,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "shop_rows",
+                  "value": null,
+                  "live": true
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 2013,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 3,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "shop_trade",
+                  "value": null,
+                  "live": true
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 3013,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 4,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "shop_special",
+                  "value": null,
+                  "live": true
+                },
+                {
+                  "kind": "add",
+                  "target": "shop_layers",
+                  "value": 1,
+                  "live": false,
+                  "total": 1
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 4033,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "forge",
+          "name": {
+            "ko": "대장간",
+            "en": "Blacksmith"
+          },
+          "tab": "forge",
+          "tabIds": [
+            "forge"
+          ],
+          "rank": 0,
+          "maxRank": 6,
+          "next": {
+            "rank": 1,
+            "require": [
+              {
+                "kind": "building",
+                "ref": "tavern",
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ],
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 600
+              }
+            ],
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "upgrade_item",
+                "value": null,
+                "live": true
+              },
+              {
+                "kind": "unlock",
+                "target": "make",
+                "value": null,
+                "live": true
+              },
+              {
+                "kind": "unlock",
+                "target": "synth",
+                "value": null,
+                "live": true
+              }
+            ],
+            "err": "locked"
+          },
+          "ranks": [
+            {
+              "rank": 1,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "upgrade_item",
+                  "value": null,
+                  "live": true
+                },
+                {
+                  "kind": "unlock",
+                  "target": "make",
+                  "value": null,
+                  "live": true
+                },
+                {
+                  "kind": "unlock",
+                  "target": "synth",
+                  "value": null,
+                  "live": true
+                }
+              ],
+              "require": [
+                {
+                  "kind": "building",
+                  "ref": "tavern",
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "potion",
+                  "value": null,
+                  "live": true
+                },
+                {
+                  "kind": "add",
+                  "target": "make_level",
+                  "value": 1,
+                  "live": true,
+                  "total": 2
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 1051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 3,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "make_level",
+                  "value": 1,
+                  "live": true,
+                  "total": 3
+                },
+                {
+                  "kind": "unlock",
+                  "target": "craft",
+                  "value": null,
+                  "live": false
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 2051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 4,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "make_level",
+                  "value": 1,
+                  "live": true,
+                  "total": 4
+                },
+                {
+                  "kind": "add",
+                  "target": "potion_tier",
+                  "value": 1,
+                  "live": true,
+                  "total": 2
+                },
+                {
+                  "kind": "add",
+                  "target": "make_kinds",
+                  "value": 1,
+                  "live": false,
+                  "total": 1
+                },
+                {
+                  "kind": "unlock",
+                  "target": "stigma_craft",
+                  "value": null,
+                  "live": false
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 3051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 5,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "make_level",
+                  "value": 1,
+                  "live": true,
+                  "total": 5
+                },
+                {
+                  "kind": "add",
+                  "target": "upgrade",
+                  "value": 3,
+                  "live": true,
+                  "total": 3
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 4051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 6,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "make_level",
+                  "value": 1,
+                  "live": true,
+                  "total": 6
+                },
+                {
+                  "kind": "add",
+                  "target": "potion_tier",
+                  "value": 1,
+                  "live": true,
+                  "total": 3
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 5051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "library",
+          "name": {
+            "ko": "도서관",
+            "en": "Library"
+          },
+          "tab": "library",
+          "tabIds": [
+            "library",
+            "codex"
+          ],
+          "rank": 1,
+          "maxRank": 6,
+          "next": {
+            "rank": 2,
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 1051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ],
+            "cost": [
+              {
+                "res": "gold",
+                "need": 3000,
+                "have": 600
+              }
+            ],
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "skillbook",
+                "value": null,
+                "live": true
+              },
+              {
+                "kind": "unlock",
+                "target": "book_craft",
+                "value": null,
+                "live": true
+              }
+            ],
+            "err": "locked"
+          },
+          "ranks": [
+            {
+              "rank": 1,
+              "built": true,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "codex",
+                  "value": null,
+                  "live": true
+                }
+              ],
+              "require": []
+            },
+            {
+              "rank": 2,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "skillbook",
+                  "value": null,
+                  "live": true
+                },
+                {
+                  "kind": "unlock",
+                  "target": "book_craft",
+                  "value": null,
+                  "live": true
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 1051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 3,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "advance",
+                  "value": null,
+                  "live": true
+                }
+              ],
+              "require": [
+                {
+                  "kind": "hero",
+                  "ref": null,
+                  "need": 30,
+                  "have": 1,
+                  "ok": false
+                },
+                {
+                  "kind": "stage",
+                  "ref": 2051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 4,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "unlock",
+                  "target": "skill_depth",
+                  "value": null,
+                  "live": false
+                },
+                {
+                  "kind": "add",
+                  "target": "codex_level",
+                  "value": 1,
+                  "live": true,
+                  "total": 2
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 3051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 5,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "codex_level",
+                  "value": 1,
+                  "live": true,
+                  "total": 3
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 4051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 6,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "codex_level",
+                  "value": 1,
+                  "live": true,
+                  "total": 4
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 5051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "resource",
+          "name": {
+            "ko": "연구소",
+            "en": "Laboratory"
+          },
+          "tab": "resource",
+          "tabIds": [
+            "resource"
+          ],
+          "rank": 1,
+          "maxRank": 7,
+          "next": {
+            "rank": 2,
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 1051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ],
+            "cost": [
+              {
+                "res": "gold",
+                "need": 3000,
+                "have": 600
+              },
+              {
+                "res": "iron_ore",
+                "need": 30,
+                "have": 0
+              },
+              {
+                "res": "timber",
+                "need": 30,
+                "have": 0
+              }
+            ],
+            "effects": [
+              {
+                "kind": "add",
+                "target": "resource_tier",
+                "value": 1,
+                "live": true
+              }
+            ],
+            "err": "locked"
+          },
+          "ranks": [
+            {
+              "rank": 1,
+              "built": true,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "resource_tier",
+                  "value": 1,
+                  "live": true,
+                  "total": 1
+                }
+              ],
+              "require": []
+            },
+            {
+              "rank": 2,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "resource_tier",
+                  "value": 1,
+                  "live": true,
+                  "total": 2
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 1051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 3,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "resource_tier",
+                  "value": 1,
+                  "live": true,
+                  "total": 3
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 2051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 4,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "resource_tier",
+                  "value": 1,
+                  "live": true,
+                  "total": 4
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 3051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 5,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "resource_tier",
+                  "value": 1,
+                  "live": true,
+                  "total": 5
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 4051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 6,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "resource_tier",
+                  "value": 1,
+                  "live": true,
+                  "total": 6
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 5051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "rank": 7,
+              "built": false,
+              "pending": false,
+              "effects": [
+                {
+                  "kind": "add",
+                  "target": "resource_tier",
+                  "value": 1,
+                  "live": true,
+                  "total": 7
+                }
+              ],
+              "require": [
+                {
+                  "kind": "stage",
+                  "ref": 6051,
+                  "need": 1,
+                  "have": 0,
+                  "ok": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "buttons": [
+      {
+        "text": "Party I - 대기 중",
+        "tab": null,
+        "disabled": true
+      },
+      {
+        "text": "Party II",
+        "tab": null,
+        "disabled": true
+      },
+      {
+        "text": "Party III",
+        "tab": null,
+        "disabled": true
+      },
+      {
+        "text": "",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "×",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "다음 할 일−",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "이동",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "EN",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "Admin",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "×",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "On",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "Off",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "Add",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "Add",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "Add",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "Add",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "⚙",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "원정",
+        "tab": "expedition",
+        "disabled": false
+      },
+      {
+        "text": "탐험",
+        "tab": "explore",
+        "disabled": false
+      },
+      {
+        "text": "편성",
+        "tab": "party",
+        "disabled": false
+      },
+      {
+        "text": "캐릭터",
+        "tab": "character",
+        "disabled": false
+      },
+      {
+        "text": "건설",
+        "tab": "research",
+        "disabled": false
+      },
+      {
+        "text": "선술집",
+        "tab": "tavern",
+        "disabled": false
+      },
+      {
+        "text": "상점",
+        "tab": "shop",
+        "disabled": false
+      },
+      {
+        "text": "대장간",
+        "tab": "forge",
+        "disabled": false
+      },
+      {
+        "text": "도서관",
+        "tab": "library",
+        "disabled": false
+      },
+      {
+        "text": "연구소",
+        "tab": "resource",
+        "disabled": false
+      },
+      {
+        "text": "결투장",
+        "tab": "colosseum",
+        "disabled": false
+      },
+      {
+        "text": "콜로세움",
+        "tab": "arena",
+        "disabled": false
+      },
+      {
+        "text": "도감",
+        "tab": "codex",
+        "disabled": false
+      },
+      {
+        "text": "도움말",
+        "tab": "help",
+        "disabled": false
+      },
+      {
+        "text": "실험실",
+        "tab": "lab",
+        "disabled": false
+      },
+      {
+        "text": "새 게임",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "노말",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "나이트메어",
+        "tab": null,
+        "disabled": true
+      },
+      {
+        "text": "헬",
+        "tab": null,
+        "disabled": true
+      },
+      {
+        "text": "Report",
+        "tab": null,
+        "disabled": true
+      },
+      {
+        "text": "Ch1 불타는 전장",
+        "tab": null,
+        "disabled": false
+      },
+      {
+        "text": "Ch2 뒤틀린 숲",
+        "tab": null,
+        "disabled": true
+      },
+      {
+        "text": "Ch3 황금의 사막",
+        "tab": null,
+        "disabled": true
+      },
+      {
+        "text": "Ch4 망각의 동토",
+        "tab": null,
+        "disabled": true
+      },
+      {
+        "text": "Ch5 심연의 동굴",
+        "tab": null,
+        "disabled": true
+      },
+      {
+        "text": "Ch6 타락한 궁전",
+        "tab": null,
+        "disabled": true
+      },
+      {
+        "text": "Ch7 신의 폐허",
+        "tab": null,
+        "disabled": true
+      }
+    ]
+  }
+}

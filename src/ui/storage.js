@@ -12,6 +12,7 @@
 
 const KEY = 'thesevensim.save';
 const TRACK_KEY = 'thesevensim.track';
+const NOTIFICATION_DISMISSED_KEY = 'thesevensim.notificationDismissed';
 
 export function loadSave() {
     try {
@@ -38,6 +39,37 @@ export function clearSave() {
 }
 
 export const hasSave = () => loadSave() != null;
+
+/** 알림의 [확인] 기록 — 게임(seed:createdAt)별 UI 상태이며 게임 세이브·다른 탭 멈춤 신호와 분리한다. */
+const notificationIds = ids => Array.isArray(ids) ? [...new Set(ids.filter(id => typeof id === 'string' && id.length))] : [];
+const notificationDismissedRecords = () => {
+    const records = Object.create(null);
+    const raw = localStorage.getItem(NOTIFICATION_DISMISSED_KEY);
+    if (!raw) return records;
+    let parsed;
+    try { parsed = JSON.parse(raw); } catch { return records; }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return records;
+    for (const [gameId, ids] of Object.entries(parsed)) if (Array.isArray(ids)) records[gameId] = notificationIds(ids);
+    return records;
+};
+
+export function loadNotificationDismissed(gameId) {
+    if (typeof gameId !== 'string' || !gameId.length) return [];
+    try { return notificationDismissedRecords()[gameId] ?? []; } catch { return []; }
+}
+
+export function writeNotificationDismissed(gameId, ids) {
+    if (typeof gameId !== 'string' || !gameId.length || !Array.isArray(ids)) return false;
+    try {
+        const records = notificationDismissedRecords();
+        records[gameId] = notificationIds(ids);
+        localStorage.setItem(NOTIFICATION_DISMISSED_KEY, JSON.stringify(records));
+        return true;
+    } catch (e) {
+        console.warn('notifications: dismissal write failed', e);
+        return false;
+    }
+}
 
 /**
  * 세이브 슬롯 — `⚙` 판 Save 탭의 개발 장치 (SCREEN_DESIGN §10-4 · ADR-0738). 자동 저장(`KEY`)과 따로 산다 —

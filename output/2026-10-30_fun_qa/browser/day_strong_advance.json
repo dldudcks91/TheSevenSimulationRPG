@@ -1,0 +1,2338 @@
+{
+  "label": "day_strong_advance",
+  "input": "C:\\Users\\ANGames-001\\Desktop\\LYC\\thesevensimulationrpg\\output\\2026-10-30_fun_qa\\simulation\\checkpoints\\state_adaptive_seed4_86400.json",
+  "actions": [
+    "불러오기",
+    "중단 알림 확인",
+    "도서관으로 이동",
+    "첫 전직 갈래 선택(3갈래 중1)",
+    "50000G 전직 확정",
+    "캐릭터로 이동",
+    "마스터리·전직 스킬 창 열기",
+    "전직 포인트로3개 중1개스킬 습득"
+  ],
+  "screens": [
+    {
+      "label": "day_strong_advance_library_before",
+      "screen_text": "Party I - 대기 중\nParty II - 대기 중\nParty III - 대기 중\n골드2,153,446\n2\nEN\nAdmin\n원정 플레이 시간20:23:52\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\nParty I\n에드릭\nLv.50\nParty I\n하이델\nLv.50\nParty I\n마르고\nLv.49\n대기 중\n고블린 일꾼\nLv.1\n+\n+\n+\n+\n+\n+\n전직?\n전직\n에드릭\nLv.50 / 30\nLv.1\n영웅\n습득\n전직\n파이어 메이지\n하늘을 가르고 떨어지는 불꽃. 재가 된 전장 위에 치유는 없다.\n메테오\n18초마다 하늘에서 운석을 떨어뜨려 적 하나에게 5,219~6,863 의 화염 피해를 입힙니다\n파이어월\n16초마다 불의 장벽을 세워 적 전원에게 1,864~2,451 의 화염 피해를 입힙니다\n히드라\n14초마다 불뱀의 머리들이 적들을 옮겨 가며 3번 물어뜯어 매번 1,243~1,634 의 화염 피해를 입힙니다\n프로스트 메이지\n숨결마저 얼어붙는 정적. 서리가 내린 적은 두 번 움직이지 못한다.\n프로즌 오브\n12초마다 얼음 구슬을 던져 적 하나에게 3,976~5,229 의 냉기 피해를 입힙니다\n블리자드\n15초마다 눈보라를 일으켜 적 전원에게 1,802~2,369 의 냉기 피해를 입힙니다\n프로스트 버스트\n10초마다 적 하나 곁에서 서리를 터뜨려 2,485~3,268 의 냉기 피해를 입힙니다 · 타격마다 20% 확률로 피해가 220% 가 됨\n썬더 메이지\n예고 없이 내리꽂히는 천벌. 운명이 미소 지을 때 번개는 멈추지 않는다.\n썬더 스트라이크\n10초마다 적 하나에게 벼락을 내리쳐 3,231~4,249 의 전기 피해를 입힙니다 · 타격마다 15% 확률로 피해가 250% 가 됨\n노바\n7초마다 사방으로 번개를 뿜어 적 전원에게 870~1,144 의 전기 피해를 입힙니다\n정전장\n13초마다 적 하나에게 정전기를 흘려 넣어 3,728~4,902 의 전기 피해를 입힙니다\n스킬 업그레이드?\n가진 책 없음\n스킬 북 제작?\n—\n만들기\n×26\n×19\n×2\n×15\n×1\n×8\n×5\n×5\n×14\n×2\n×6\n×10\n×9\n×7\n×8\n×1\n×2\n×2\n×4\n×18\n×15\n×5\n×6\n×1\n×2\n×2\n×8\n×16\n×7\n×2\n×2\n×3\n×1\n×3\n×15\n×1\n×2\n×4\n×9\n×2\n×36\n×4\n×1\n×3\n×2\n×3",
+      "game": {
+        "at": 1793404800001,
+        "screen": "game",
+        "tab": "library",
+        "exp": "idle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 50,
+            "xp": 0,
+            "points": 0,
+            "cls": "mage",
+            "sin": "gluttony",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h2",
+            "level": 50,
+            "xp": 0,
+            "points": 0,
+            "cls": "archer",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 49,
+            "xp": 203597,
+            "points": 0,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 2153446,
+        "materials": {
+          "dust": 2185,
+          "timber": 1850,
+          "iron_ore": 873,
+          "herb": 1735
+        },
+        "potions": {},
+        "inventory": [
+          6,
+          0,
+          0
+        ],
+        "items": 30,
+        "cleared": [
+          1011,
+          1012,
+          1013,
+          1021,
+          1022,
+          1023,
+          1031,
+          1032,
+          1033,
+          1041,
+          1042,
+          1043,
+          1051,
+          2011,
+          2012,
+          2013,
+          2021,
+          2022,
+          2023,
+          2031,
+          2032,
+          2033,
+          2041,
+          2042,
+          2043,
+          2051,
+          3011,
+          3012,
+          3013,
+          3021,
+          3022,
+          3023,
+          3031,
+          3032,
+          3033,
+          3041,
+          3042,
+          3043,
+          3051,
+          4011,
+          4012,
+          4013,
+          4021,
+          4022,
+          4023,
+          4031,
+          4032,
+          4033,
+          4041,
+          4042,
+          4043,
+          4051,
+          5011,
+          5012,
+          5013,
+          5021,
+          5022,
+          5023,
+          5031,
+          5032,
+          5033,
+          5041,
+          5042,
+          5043,
+          5051
+        ],
+        "buildings": {
+          "explore": 5,
+          "command": 6,
+          "storage": 2,
+          "tavern": 7,
+          "shop": 4,
+          "forge": 6,
+          "library": 6,
+          "resource": 6
+        },
+        "report": {
+          "at": 1793404793250,
+          "stageId": 1011,
+          "level": 50,
+          "preset": 1,
+          "won": false,
+          "reason": "closed",
+          "durationSec": 0,
+          "difficulty": "hell",
+          "shrine": null,
+          "gold": 0,
+          "xp": {
+            "h1": 0,
+            "h2": 0,
+            "h3": 0
+          },
+          "levelUps": [],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [],
+          "blueprints": [],
+          "discarded": 0,
+          "rounds": [],
+          "roundsCleared": 0,
+          "strikes": {
+            "party": {
+              "n": 0,
+              "miss": 0
+            },
+            "enemy": {
+              "n": 0,
+              "miss": 0
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h2",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h3",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            }
+          ]
+        },
+        "guide": {
+          "guide": null,
+          "items": [
+            {
+              "id": "join:1",
+              "kind": "join",
+              "tab": "tavern",
+              "target": {
+                "join": 1
+              }
+            },
+            {
+              "id": "join:2",
+              "kind": "join",
+              "tab": "tavern",
+              "target": {
+                "join": 2
+              }
+            }
+          ],
+          "count": 2
+        },
+        "clock": 73432050
+      },
+      "buttons": [
+        {
+          "text": "Party I - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party II - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party III - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "2",
+          "disabled": false,
+          "className": "mail-btn notification-btn has"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": "on"
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "전직",
+          "disabled": true,
+          "className": "btn sm primary tr-adv-go"
+        },
+        {
+          "text": "만들기",
+          "disabled": true,
+          "className": "btn sm primary"
+        }
+      ]
+    },
+    {
+      "label": "day_strong_advance_advanced_no_skill_yet",
+      "screen_text": "Party I - 대기 중\nParty II - 대기 중\nParty III - 대기 중\n골드2,103,446\n2\nEN\nAdmin\n원정 플레이 시간20:23:52\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\nParty I\n에드릭\nLv.50\nParty I\n하이델\nLv.50\nParty I\n마르고\nLv.49\n대기 중\n고블린 일꾼\nLv.1\n+\n+\n+\n+\n+\n+\n전직?\n에드릭\nLv.50 / 30\n전직 포인트 5 / 5\nLv.1\n영웅\n습득\n전직\n파이어 메이지\n하늘을 가르고 떨어지는 불꽃. 재가 된 전장 위에 치유는 없다.\n메테오\n18초마다 하늘에서 운석을 떨어뜨려 적 하나에게 5,219~6,863 의 화염 피해를 입힙니다\n파이어월\n16초마다 불의 장벽을 세워 적 전원에게 1,864~2,451 의 화염 피해를 입힙니다\n히드라\n14초마다 불뱀의 머리들이 적들을 옮겨 가며 3번 물어뜯어 매번 1,243~1,634 의 화염 피해를 입힙니다\n프로스트 메이지\n숨결마저 얼어붙는 정적. 서리가 내린 적은 두 번 움직이지 못한다.\n프로즌 오브\n12초마다 얼음 구슬을 던져 적 하나에게 3,976~5,229 의 냉기 피해를 입힙니다\n블리자드\n15초마다 눈보라를 일으켜 적 전원에게 1,802~2,369 의 냉기 피해를 입힙니다\n프로스트 버스트\n10초마다 적 하나 곁에서 서리를 터뜨려 2,485~3,268 의 냉기 피해를 입힙니다 · 타격마다 20% 확률로 피해가 220% 가 됨\n썬더 메이지\n예고 없이 내리꽂히는 천벌. 운명이 미소 지을 때 번개는 멈추지 않는다.\n썬더 스트라이크\n10초마다 적 하나에게 벼락을 내리쳐 3,231~4,249 의 전기 피해를 입힙니다 · 타격마다 15% 확률로 피해가 250% 가 됨\n노바\n7초마다 사방으로 번개를 뿜어 적 전원에게 870~1,144 의 전기 피해를 입힙니다\n정전장\n13초마다 적 하나에게 정전기를 흘려 넣어 3,728~4,902 의 전기 피해를 입힙니다\n스킬 업그레이드?\n가진 책 없음\n스킬 북 제작?\n—\n만들기\n×26\n×19\n×2\n×15\n×1\n×8\n×5\n×5\n×14\n×2\n×6\n×10\n×9\n×7\n×8\n×1\n×2\n×2\n×4\n×18\n×15\n×5\n×6\n×1\n×2\n×2\n×8\n×16\n×7\n×2\n×2\n×3\n×1\n×3\n×15\n×1\n×2\n×4\n×9\n×2\n×36\n×4\n×1\n×3\n×2\n×3\n에드릭 — 파이어 메이지 전직 시작",
+      "game": {
+        "at": 1793404800001,
+        "screen": "game",
+        "tab": "library",
+        "exp": "idle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 50,
+            "xp": 0,
+            "points": 0,
+            "cls": "mage",
+            "sin": "gluttony",
+            "book": null,
+            "advance": "fire_mage"
+          },
+          {
+            "uid": "h2",
+            "level": 50,
+            "xp": 0,
+            "points": 0,
+            "cls": "archer",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 49,
+            "xp": 203597,
+            "points": 0,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 2103446,
+        "materials": {
+          "dust": 2185,
+          "timber": 1850,
+          "iron_ore": 873,
+          "herb": 1735
+        },
+        "potions": {},
+        "inventory": [
+          6,
+          0,
+          0
+        ],
+        "items": 30,
+        "cleared": [
+          1011,
+          1012,
+          1013,
+          1021,
+          1022,
+          1023,
+          1031,
+          1032,
+          1033,
+          1041,
+          1042,
+          1043,
+          1051,
+          2011,
+          2012,
+          2013,
+          2021,
+          2022,
+          2023,
+          2031,
+          2032,
+          2033,
+          2041,
+          2042,
+          2043,
+          2051,
+          3011,
+          3012,
+          3013,
+          3021,
+          3022,
+          3023,
+          3031,
+          3032,
+          3033,
+          3041,
+          3042,
+          3043,
+          3051,
+          4011,
+          4012,
+          4013,
+          4021,
+          4022,
+          4023,
+          4031,
+          4032,
+          4033,
+          4041,
+          4042,
+          4043,
+          4051,
+          5011,
+          5012,
+          5013,
+          5021,
+          5022,
+          5023,
+          5031,
+          5032,
+          5033,
+          5041,
+          5042,
+          5043,
+          5051
+        ],
+        "buildings": {
+          "explore": 5,
+          "command": 6,
+          "storage": 2,
+          "tavern": 7,
+          "shop": 4,
+          "forge": 6,
+          "library": 6,
+          "resource": 6
+        },
+        "report": {
+          "at": 1793404793250,
+          "stageId": 1011,
+          "level": 50,
+          "preset": 1,
+          "won": false,
+          "reason": "closed",
+          "durationSec": 0,
+          "difficulty": "hell",
+          "shrine": null,
+          "gold": 0,
+          "xp": {
+            "h1": 0,
+            "h2": 0,
+            "h3": 0
+          },
+          "levelUps": [],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [],
+          "blueprints": [],
+          "discarded": 0,
+          "rounds": [],
+          "roundsCleared": 0,
+          "strikes": {
+            "party": {
+              "n": 0,
+              "miss": 0
+            },
+            "enemy": {
+              "n": 0,
+              "miss": 0
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h2",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h3",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            }
+          ]
+        },
+        "guide": {
+          "guide": null,
+          "items": [
+            {
+              "id": "join:1",
+              "kind": "join",
+              "tab": "tavern",
+              "target": {
+                "join": 1
+              }
+            },
+            {
+              "id": "join:2",
+              "kind": "join",
+              "tab": "tavern",
+              "target": {
+                "join": 2
+              }
+            }
+          ],
+          "count": 2
+        },
+        "clock": 73432050
+      },
+      "buttons": [
+        {
+          "text": "Party I - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party II - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party III - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "2",
+          "disabled": false,
+          "className": "mail-btn notification-btn has"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": "on"
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "만들기",
+          "disabled": true,
+          "className": "btn sm primary"
+        }
+      ]
+    },
+    {
+      "label": "day_strong_advance_advance_skill_choices",
+      "screen_text": "Party I - 대기 중\nParty II - 대기 중\nParty III - 대기 중\n골드2,103,446\n2\nEN\nAdmin\n원정 플레이 시간20:23:52\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\nParty I\n에드릭\nLv.50\n해고\nParty I\n하이델\nLv.50\nParty I\n마르고\nLv.49\n대기 중\n고블린 일꾼\nLv.1\n+\n+\n+\n+\n+\n+\n장비?\n+3\nLv.50\nLv.48\n+3\nLv.48\n+3\nLv.40\n+3\nLv.50\nLv.50\n+3\nLv.50\nLv.50\n접사 죄종?\n오만\n×4\n색욕\n×3\n탐욕\n×2\n폭식\n×2\n시기\n나태\n기본 옵션?\n레어\n폭식\n마법사\nLv.50\nMAX\n힘\nSTR\n6\n민첩\nDEX\n10\n지능\nINT\n19\n건강\nVIT\n10\n운\nLCK\n13\n통솔\nLDR\n7\n매력\nCHA\n8\n액티브 스킬?\n우선순위\nLv.1\n영웅\n습득\n전직\n마스터리 열기\n세부 옵션 1?\n물리 데미지\n—\n마법 데미지\n527~693\n캐스팅 속도\n2.35초\n최대 HP\n2399\n치명타 확률\n33%\n치명타 피해\n177.2%\n방어 무시\n0%\n쿨타임 감소\n30.7%\n물리 방어\n229 감쇠 53%\n피해 감소\n4 / 0%\n타격 회복\n19%\n상태이상 · 디버프 시간 감소\n-6%\n화염 저항\n28% / 상한 75%\n냉기 저항\n46% / 상한 75%\n전기 저항\n28% / 상한 75%\n독 저항\n41% / 상한 75%\n원소 피해량 증가\n0%/12%/0%/0%\n적 원소 저항 감소\n6%/0%/0%/0%\n세부 옵션 2?\n타입별 추가 데미지\n—\n타입별 받는 피해 감소\n—\n정예 · 열별 추가 데미지\n정예 13%\n정예 · 열별 받는 피해 감소\n—\n강타\n1.6%\n명중률\n0%\n반격 확률\n0%\n반사 피해\n0%\n흡혈\n0%\nHP 재생\n1.369\n체력 회복\n0%\n버프 지속시간\n14%\n드랍률\n0%\n매직아이템 획득\n11%\n골드 획득\n0%\n경험치 획득\n11%\n창고?\n장비\n재료\n스킬북\n정렬\n인벤토리?\nParty I\nParty II\nParty III\n자동 장착\n분해\n자동 분해\n정렬\nLv.50\nLv.50\nLv.50\nLv.50\nLv.50\nLv.50\n메테오\nINT\n스태프 · 오브\n단일\n화염\n12.5초마다 하늘에서 운석을 떨어뜨려 적 하나에게 5,219~6,863 의 화염 피해를 입힙니다\n스킬?\n×\n스킬 포인트?\n초기화\n0 / 49 남은 포인트\n5 / 5 전직 포인트\n액티브?\n캐스팅 속도 2.35초\n영웅\nLv.1\n라이트닝 쿨 9초\n9초마다 적 하나를 강력하게 공격하는 번개를 발사해 3,107~4,085 의 전기 피해를 입힙니다\n타격마다 10% 확률로 피해가 200% 가 됨\n습득\n배운 스킬 없음\n전직\n전직 전\n폭식 마스터리?\n5/5\n4/5\n5/5\n0/5\n0/5\n5/5\n5/5\n마법사 마스터리?\n5/5\n5/5\n5/5\n5/5\n0/5\n5/5\n전직 트리?\n②\n②\n②\n③\n③\n③\n④\n④\n④\n에드릭 — 파이어 메이지 전직 시작",
+      "game": {
+        "at": 1793404800001,
+        "screen": "game",
+        "tab": "character",
+        "exp": "idle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 50,
+            "xp": 0,
+            "points": 0,
+            "cls": "mage",
+            "sin": "gluttony",
+            "book": null,
+            "advance": "fire_mage"
+          },
+          {
+            "uid": "h2",
+            "level": 50,
+            "xp": 0,
+            "points": 0,
+            "cls": "archer",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 49,
+            "xp": 203597,
+            "points": 0,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 2103446,
+        "materials": {
+          "dust": 2185,
+          "timber": 1850,
+          "iron_ore": 873,
+          "herb": 1735
+        },
+        "potions": {},
+        "inventory": [
+          6,
+          0,
+          0
+        ],
+        "items": 30,
+        "cleared": [
+          1011,
+          1012,
+          1013,
+          1021,
+          1022,
+          1023,
+          1031,
+          1032,
+          1033,
+          1041,
+          1042,
+          1043,
+          1051,
+          2011,
+          2012,
+          2013,
+          2021,
+          2022,
+          2023,
+          2031,
+          2032,
+          2033,
+          2041,
+          2042,
+          2043,
+          2051,
+          3011,
+          3012,
+          3013,
+          3021,
+          3022,
+          3023,
+          3031,
+          3032,
+          3033,
+          3041,
+          3042,
+          3043,
+          3051,
+          4011,
+          4012,
+          4013,
+          4021,
+          4022,
+          4023,
+          4031,
+          4032,
+          4033,
+          4041,
+          4042,
+          4043,
+          4051,
+          5011,
+          5012,
+          5013,
+          5021,
+          5022,
+          5023,
+          5031,
+          5032,
+          5033,
+          5041,
+          5042,
+          5043,
+          5051
+        ],
+        "buildings": {
+          "explore": 5,
+          "command": 6,
+          "storage": 2,
+          "tavern": 7,
+          "shop": 4,
+          "forge": 6,
+          "library": 6,
+          "resource": 6
+        },
+        "report": {
+          "at": 1793404793250,
+          "stageId": 1011,
+          "level": 50,
+          "preset": 1,
+          "won": false,
+          "reason": "closed",
+          "durationSec": 0,
+          "difficulty": "hell",
+          "shrine": null,
+          "gold": 0,
+          "xp": {
+            "h1": 0,
+            "h2": 0,
+            "h3": 0
+          },
+          "levelUps": [],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [],
+          "blueprints": [],
+          "discarded": 0,
+          "rounds": [],
+          "roundsCleared": 0,
+          "strikes": {
+            "party": {
+              "n": 0,
+              "miss": 0
+            },
+            "enemy": {
+              "n": 0,
+              "miss": 0
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h2",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h3",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            }
+          ]
+        },
+        "guide": {
+          "guide": null,
+          "items": [
+            {
+              "id": "join:1",
+              "kind": "join",
+              "tab": "tavern",
+              "target": {
+                "join": 1
+              }
+            },
+            {
+              "id": "join:2",
+              "kind": "join",
+              "tab": "tavern",
+              "target": {
+                "join": 2
+              }
+            }
+          ],
+          "count": 2
+        },
+        "clock": 73432050
+      },
+      "buttons": [
+        {
+          "text": "Party I - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party II - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party III - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "2",
+          "disabled": false,
+          "className": "mail-btn notification-btn has"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": "on"
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "해고",
+          "disabled": false,
+          "className": "btn hs-dismiss"
+        },
+        {
+          "text": "우선순위",
+          "disabled": true,
+          "className": "btn sm sk-order-btn"
+        },
+        {
+          "text": "마스터리 열기",
+          "disabled": false,
+          "className": "btn sm go-tree"
+        },
+        {
+          "text": "장비",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "재료",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "스킬북",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "Party I",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "Party II",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "Party III",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "자동 장착",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "자동 분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "×",
+          "disabled": false,
+          "className": "btn modal-x"
+        },
+        {
+          "text": "초기화",
+          "disabled": false,
+          "className": "btn sm"
+        }
+      ]
+    },
+    {
+      "label": "day_strong_advance_advance_skill_learned",
+      "screen_text": "Party I - 대기 중\nParty II - 대기 중\nParty III - 대기 중\n골드2,103,446\n2\nEN\nAdmin\n원정 플레이 시간20:23:52\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\nParty I\n에드릭\nLv.50\n해고\nParty I\n하이델\nLv.50\nParty I\n마르고\nLv.49\n대기 중\n고블린 일꾼\nLv.1\n+\n+\n+\n+\n+\n+\n장비?\n+3\nLv.50\nLv.48\n+3\nLv.48\n+3\nLv.40\n+3\nLv.50\nLv.50\n+3\nLv.50\nLv.50\n접사 죄종?\n오만\n×4\n색욕\n×3\n탐욕\n×2\n폭식\n×2\n시기\n나태\n기본 옵션?\n레어\n폭식\n마법사\nLv.50\nMAX\n힘\nSTR\n6\n민첩\nDEX\n10\n지능\nINT\n19\n건강\nVIT\n10\n운\nLCK\n13\n통솔\nLDR\n7\n매력\nCHA\n8\n액티브 스킬?\n우선순위\nLv.1\n영웅\n습득\nLv.1\n전직\n마스터리 열기\n세부 옵션 1?\n물리 데미지\n—\n마법 데미지\n527~693\n캐스팅 속도\n2.35초\n최대 HP\n2399\n치명타 확률\n33%\n치명타 피해\n177.2%\n방어 무시\n0%\n쿨타임 감소\n30.7%\n물리 방어\n229 감쇠 53%\n피해 감소\n4 / 0%\n타격 회복\n19%\n상태이상 · 디버프 시간 감소\n-6%\n화염 저항\n28% / 상한 75%\n냉기 저항\n46% / 상한 75%\n전기 저항\n28% / 상한 75%\n독 저항\n41% / 상한 75%\n원소 피해량 증가\n0%/12%/0%/0%\n적 원소 저항 감소\n6%/0%/0%/0%\n세부 옵션 2?\n타입별 추가 데미지\n—\n타입별 받는 피해 감소\n—\n정예 · 열별 추가 데미지\n정예 13%\n정예 · 열별 받는 피해 감소\n—\n강타\n1.6%\n명중률\n0%\n반격 확률\n0%\n반사 피해\n0%\n흡혈\n0%\nHP 재생\n1.369\n체력 회복\n0%\n버프 지속시간\n14%\n드랍률\n0%\n매직아이템 획득\n11%\n골드 획득\n0%\n경험치 획득\n11%\n창고?\n장비\n재료\n스킬북\n정렬\n인벤토리?\nParty I\nParty II\nParty III\n자동 장착\n분해\n자동 분해\n정렬\nLv.50\nLv.50\nLv.50\nLv.50\nLv.50\nLv.50\nLv.1\n메테오\nINT\n스태프 · 오브\n단일\n화염\n12.5초마다 하늘에서 운석을 떨어뜨려 적 하나에게 5,219~6,863 의 화염 피해를 입힙니다\n스킬?\n×\n스킬 포인트?\n초기화\n0 / 49 남은 포인트\n4 / 5 전직 포인트\n액티브?\n캐스팅 속도 2.35초\n영웅\nLv.1\n라이트닝 쿨 9초\n9초마다 적 하나를 강력하게 공격하는 번개를 발사해 3,107~4,085 의 전기 피해를 입힙니다\n타격마다 10% 확률로 피해가 200% 가 됨\n습득\n배운 스킬 없음\n전직\nLv.1\n메테오 쿨 18초\n18초마다 하늘에서 운석을 떨어뜨려 적 하나에게 5,219~6,863 의 화염 피해를 입힙니다\n폭식 마스터리?\n5/5\n4/5\n5/5\n0/5\n0/5\n5/5\n5/5\n마법사 마스터리?\n5/5\n5/5\n5/5\n5/5\n0/5\n5/5\n전직 트리?\nLv.1\n②\n②\n②\n③\n③\n③\n④\n④\n④\n에드릭 — 파이어 메이지 전직 시작\n메테오 Lv.1",
+      "game": {
+        "at": 1793404800001,
+        "screen": "game",
+        "tab": "character",
+        "exp": "idle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 50,
+            "xp": 0,
+            "points": 0,
+            "cls": "mage",
+            "sin": "gluttony",
+            "book": null,
+            "advance": "fire_mage"
+          },
+          {
+            "uid": "h2",
+            "level": 50,
+            "xp": 0,
+            "points": 0,
+            "cls": "archer",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 49,
+            "xp": 203597,
+            "points": 0,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 2103446,
+        "materials": {
+          "dust": 2185,
+          "timber": 1850,
+          "iron_ore": 873,
+          "herb": 1735
+        },
+        "potions": {},
+        "inventory": [
+          6,
+          0,
+          0
+        ],
+        "items": 30,
+        "cleared": [
+          1011,
+          1012,
+          1013,
+          1021,
+          1022,
+          1023,
+          1031,
+          1032,
+          1033,
+          1041,
+          1042,
+          1043,
+          1051,
+          2011,
+          2012,
+          2013,
+          2021,
+          2022,
+          2023,
+          2031,
+          2032,
+          2033,
+          2041,
+          2042,
+          2043,
+          2051,
+          3011,
+          3012,
+          3013,
+          3021,
+          3022,
+          3023,
+          3031,
+          3032,
+          3033,
+          3041,
+          3042,
+          3043,
+          3051,
+          4011,
+          4012,
+          4013,
+          4021,
+          4022,
+          4023,
+          4031,
+          4032,
+          4033,
+          4041,
+          4042,
+          4043,
+          4051,
+          5011,
+          5012,
+          5013,
+          5021,
+          5022,
+          5023,
+          5031,
+          5032,
+          5033,
+          5041,
+          5042,
+          5043,
+          5051
+        ],
+        "buildings": {
+          "explore": 5,
+          "command": 6,
+          "storage": 2,
+          "tavern": 7,
+          "shop": 4,
+          "forge": 6,
+          "library": 6,
+          "resource": 6
+        },
+        "report": {
+          "at": 1793404793250,
+          "stageId": 1011,
+          "level": 50,
+          "preset": 1,
+          "won": false,
+          "reason": "closed",
+          "durationSec": 0,
+          "difficulty": "hell",
+          "shrine": null,
+          "gold": 0,
+          "xp": {
+            "h1": 0,
+            "h2": 0,
+            "h3": 0
+          },
+          "levelUps": [],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [],
+          "blueprints": [],
+          "discarded": 0,
+          "rounds": [],
+          "roundsCleared": 0,
+          "strikes": {
+            "party": {
+              "n": 0,
+              "miss": 0
+            },
+            "enemy": {
+              "n": 0,
+              "miss": 0
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h2",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h3",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            }
+          ]
+        },
+        "guide": {
+          "guide": null,
+          "items": [
+            {
+              "id": "join:1",
+              "kind": "join",
+              "tab": "tavern",
+              "target": {
+                "join": 1
+              }
+            },
+            {
+              "id": "join:2",
+              "kind": "join",
+              "tab": "tavern",
+              "target": {
+                "join": 2
+              }
+            }
+          ],
+          "count": 2
+        },
+        "clock": 73432050
+      },
+      "buttons": [
+        {
+          "text": "Party I - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party II - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party III - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "2",
+          "disabled": false,
+          "className": "mail-btn notification-btn has"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": "on"
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "해고",
+          "disabled": false,
+          "className": "btn hs-dismiss"
+        },
+        {
+          "text": "우선순위",
+          "disabled": false,
+          "className": "btn sm sk-order-btn"
+        },
+        {
+          "text": "마스터리 열기",
+          "disabled": false,
+          "className": "btn sm go-tree"
+        },
+        {
+          "text": "장비",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "재료",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "스킬북",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "Party I",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "Party II",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "Party III",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "자동 장착",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "자동 분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "×",
+          "disabled": false,
+          "className": "btn modal-x"
+        },
+        {
+          "text": "초기화",
+          "disabled": false,
+          "className": "btn sm"
+        }
+      ]
+    }
+  ],
+  "scope": "Real UI decisions using earned gold/materials on isolated copy; one paired deterministic battle is causal demonstration, not progression or win-rate estimate.",
+  "state_before": {
+    "at": 1793404800001,
+    "screen": "game",
+    "tab": "library",
+    "exp": "idle",
+    "levels": [
+      {
+        "uid": "h1",
+        "level": 50,
+        "xp": 0,
+        "points": 0,
+        "cls": "mage",
+        "sin": "gluttony",
+        "book": null,
+        "advance": null
+      },
+      {
+        "uid": "h2",
+        "level": 50,
+        "xp": 0,
+        "points": 0,
+        "cls": "archer",
+        "sin": "sloth",
+        "book": null,
+        "advance": null
+      },
+      {
+        "uid": "h3",
+        "level": 49,
+        "xp": 203597,
+        "points": 0,
+        "cls": "knight",
+        "sin": "wrath",
+        "book": null,
+        "advance": null
+      },
+      {
+        "uid": "h4",
+        "level": 1,
+        "xp": 0,
+        "points": 0,
+        "cls": "warrior",
+        "sin": "sloth",
+        "book": null,
+        "advance": null
+      }
+    ],
+    "gold": 2153446,
+    "materials": {
+      "dust": 2185,
+      "timber": 1850,
+      "iron_ore": 873,
+      "herb": 1735
+    },
+    "potions": {},
+    "inventory": [
+      6,
+      0,
+      0
+    ],
+    "items": 30,
+    "cleared": [
+      1011,
+      1012,
+      1013,
+      1021,
+      1022,
+      1023,
+      1031,
+      1032,
+      1033,
+      1041,
+      1042,
+      1043,
+      1051,
+      2011,
+      2012,
+      2013,
+      2021,
+      2022,
+      2023,
+      2031,
+      2032,
+      2033,
+      2041,
+      2042,
+      2043,
+      2051,
+      3011,
+      3012,
+      3013,
+      3021,
+      3022,
+      3023,
+      3031,
+      3032,
+      3033,
+      3041,
+      3042,
+      3043,
+      3051,
+      4011,
+      4012,
+      4013,
+      4021,
+      4022,
+      4023,
+      4031,
+      4032,
+      4033,
+      4041,
+      4042,
+      4043,
+      4051,
+      5011,
+      5012,
+      5013,
+      5021,
+      5022,
+      5023,
+      5031,
+      5032,
+      5033,
+      5041,
+      5042,
+      5043,
+      5051
+    ],
+    "buildings": {
+      "explore": 5,
+      "command": 6,
+      "storage": 2,
+      "tavern": 7,
+      "shop": 4,
+      "forge": 6,
+      "library": 6,
+      "resource": 6
+    },
+    "report": {
+      "at": 1793404793250,
+      "stageId": 1011,
+      "level": 50,
+      "preset": 1,
+      "won": false,
+      "reason": "closed",
+      "durationSec": 0,
+      "difficulty": "hell",
+      "shrine": null,
+      "gold": 0,
+      "xp": {
+        "h1": 0,
+        "h2": 0,
+        "h3": 0
+      },
+      "levelUps": [],
+      "downed": [],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [],
+      "blueprints": [],
+      "discarded": 0,
+      "rounds": [],
+      "roundsCleared": 0,
+      "strikes": {
+        "party": {
+          "n": 0,
+          "miss": 0
+        },
+        "enemy": {
+          "n": 0,
+          "miss": 0
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 0,
+          "taken": 0,
+          "kills": 0
+        },
+        {
+          "uid": "h2",
+          "dealt": 0,
+          "taken": 0,
+          "kills": 0
+        },
+        {
+          "uid": "h3",
+          "dealt": 0,
+          "taken": 0,
+          "kills": 0
+        }
+      ]
+    },
+    "guide": {
+      "guide": null,
+      "items": [
+        {
+          "id": "join:1",
+          "kind": "join",
+          "tab": "tavern",
+          "target": {
+            "join": 1
+          }
+        },
+        {
+          "id": "join:2",
+          "kind": "join",
+          "tab": "tavern",
+          "target": {
+            "join": 2
+          }
+        }
+      ],
+      "count": 2
+    },
+    "clock": 73432050
+  },
+  "choice": {
+    "open": true,
+    "need": {
+      "have": 50,
+      "need": 30
+    },
+    "gold": {
+      "have": 2153446,
+      "need": 50000
+    },
+    "hero": {
+      "advance": null,
+      "skill": null,
+      "lv": 0,
+      "points": {
+        "have": 0,
+        "spent": 0,
+        "free": 0
+      },
+      "working": null
+    },
+    "branches": [
+      {
+        "id": "fire_mage",
+        "name": {
+          "ko": "파이어 메이지",
+          "en": "Fire Mage"
+        },
+        "desc": {
+          "ko": "하늘을 가르고 떨어지는 불꽃. 재가 된 전장 위에 치유는 없다.",
+          "en": "Fire that tears the sky open. On a field of ash nothing heals."
+        },
+        "skills": [
+          "mag_meteor",
+          "mag_firewall",
+          "mag_hydra"
+        ]
+      },
+      {
+        "id": "frost_mage",
+        "name": {
+          "ko": "프로스트 메이지",
+          "en": "Frost Mage"
+        },
+        "desc": {
+          "ko": "숨결마저 얼어붙는 정적. 서리가 내린 적은 두 번 움직이지 못한다.",
+          "en": "A silence where even breath freezes. Foes touched by frost do not move twice."
+        },
+        "skills": [
+          "mag_frozenorb",
+          "mag_blizzard",
+          "mag_frostburst"
+        ]
+      },
+      {
+        "id": "thunder_mage",
+        "name": {
+          "ko": "썬더 메이지",
+          "en": "Thunder Mage"
+        },
+        "desc": {
+          "ko": "예고 없이 내리꽂히는 천벌. 운명이 미소 지을 때 번개는 멈추지 않는다.",
+          "en": "Judgment that strikes without warning. When fate smiles the lightning never stops."
+        },
+        "skills": [
+          "mag_thunderstrike",
+          "mag_nova",
+          "mag_staticfield"
+        ]
+      }
+    ],
+    "nodes": {
+      "mag_meteor": [
+        {
+          "slot": 2,
+          "hold": false,
+          "desc": {
+            "ko": "화상 부여",
+            "en": "Inflicts Burn"
+          }
+        },
+        {
+          "slot": 3,
+          "hold": false,
+          "desc": {
+            "ko": "맞은 자리에 잔여(도트) 데미지가 남음",
+            "en": "Leaves lingering damage (DoT) where it lands"
+          }
+        },
+        {
+          "slot": 4,
+          "hold": false,
+          "desc": {
+            "ko": "유성우 — 여러 개가 무작위 적에게 떨어짐",
+            "en": "Meteor Shower — several fall on random enemies"
+          }
+        }
+      ],
+      "mag_firewall": [
+        {
+          "slot": 2,
+          "hold": false,
+          "desc": {
+            "ko": "화상 부여",
+            "en": "Inflicts Burn"
+          }
+        },
+        {
+          "slot": 3,
+          "hold": true,
+          "desc": null
+        },
+        {
+          "slot": 4,
+          "hold": true,
+          "desc": null
+        }
+      ],
+      "mag_hydra": [
+        {
+          "slot": 2,
+          "hold": false,
+          "desc": {
+            "ko": "화상 부여",
+            "en": "Inflicts Burn"
+          }
+        },
+        {
+          "slot": 3,
+          "hold": false,
+          "desc": {
+            "ko": "머릿수 증가",
+            "en": "Adds more heads"
+          }
+        },
+        {
+          "slot": 4,
+          "hold": false,
+          "desc": {
+            "ko": "타격마다 화염 저항 감소",
+            "en": "Each hit lowers Fire Resistance"
+          }
+        }
+      ],
+      "mag_frozenorb": [
+        {
+          "slot": 2,
+          "hold": false,
+          "desc": {
+            "ko": "결빙 부여",
+            "en": "Inflicts Freeze"
+          }
+        },
+        {
+          "slot": 3,
+          "hold": false,
+          "desc": {
+            "ko": "사방으로 약한 아이스 조각이 튐",
+            "en": "Weak ice shards burst in every direction"
+          }
+        },
+        {
+          "slot": 4,
+          "hold": true,
+          "desc": null
+        }
+      ],
+      "mag_blizzard": [
+        {
+          "slot": 2,
+          "hold": false,
+          "desc": {
+            "ko": "결빙 부여",
+            "en": "Inflicts Freeze"
+          }
+        },
+        {
+          "slot": 3,
+          "hold": false,
+          "desc": {
+            "ko": "구름 속 적의 데미지 감소",
+            "en": "Enemies in the cloud deal less Damage"
+          }
+        },
+        {
+          "slot": 4,
+          "hold": false,
+          "desc": {
+            "ko": "구름 속 적이 받는 피해 증가",
+            "en": "Enemies in the cloud take more damage"
+          }
+        }
+      ],
+      "mag_frostburst": [
+        {
+          "slot": 2,
+          "hold": false,
+          "desc": {
+            "ko": "결빙 부여",
+            "en": "Inflicts Freeze"
+          }
+        },
+        {
+          "slot": 3,
+          "hold": false,
+          "desc": {
+            "ko": "스택을 터뜨릴 때 스턴",
+            "en": "Stuns when the stacks burst"
+          }
+        },
+        {
+          "slot": 4,
+          "hold": false,
+          "desc": {
+            "ko": "스택이 쌓일 때마다 냉기 저항 감소",
+            "en": "Each stack lowers Cold Resistance"
+          }
+        }
+      ],
+      "mag_thunderstrike": [
+        {
+          "slot": 2,
+          "hold": false,
+          "desc": {
+            "ko": "추가 피해가 나갈 확률 증가",
+            "en": "Higher chance of bonus damage"
+          }
+        },
+        {
+          "slot": 3,
+          "hold": false,
+          "desc": {
+            "ko": "n초마다 한 번 무작위 적에게 자동 시전",
+            "en": "Casts itself on a random enemy once every n seconds"
+          }
+        },
+        {
+          "slot": 4,
+          "hold": true,
+          "desc": null
+        }
+      ],
+      "mag_nova": [
+        {
+          "slot": 2,
+          "hold": false,
+          "desc": {
+            "ko": "추가 피해가 나갈 확률 증가",
+            "en": "Higher chance of bonus damage"
+          }
+        },
+        {
+          "slot": 3,
+          "hold": false,
+          "desc": {
+            "ko": "쓸 때마다 다음 노바 강화(최대 n회 · 라운드가 끝나면 초기화)",
+            "en": "Each cast strengthens the next Nova (up to n times · resets at round end)"
+          }
+        },
+        {
+          "slot": 4,
+          "hold": true,
+          "desc": null
+        }
+      ],
+      "mag_staticfield": [
+        {
+          "slot": 2,
+          "hold": true,
+          "desc": null
+        },
+        {
+          "slot": 3,
+          "hold": true,
+          "desc": null
+        },
+        {
+          "slot": 4,
+          "hold": true,
+          "desc": null
+        }
+      ]
+    },
+    "err": null
+  },
+  "available_advance_skills": 3,
+  "advance_tooltip": "메테오\nINT\n스태프 · 오브\n단일\n화염\n12.5초마다 하늘에서 운석을 떨어뜨려 적 하나에게 5,219~6,863 의 화염 피해를 입힙니다",
+  "state_after": {
+    "at": 1793404800001,
+    "screen": "game",
+    "tab": "character",
+    "exp": "idle",
+    "levels": [
+      {
+        "uid": "h1",
+        "level": 50,
+        "xp": 0,
+        "points": 0,
+        "cls": "mage",
+        "sin": "gluttony",
+        "book": null,
+        "advance": "fire_mage"
+      },
+      {
+        "uid": "h2",
+        "level": 50,
+        "xp": 0,
+        "points": 0,
+        "cls": "archer",
+        "sin": "sloth",
+        "book": null,
+        "advance": null
+      },
+      {
+        "uid": "h3",
+        "level": 49,
+        "xp": 203597,
+        "points": 0,
+        "cls": "knight",
+        "sin": "wrath",
+        "book": null,
+        "advance": null
+      },
+      {
+        "uid": "h4",
+        "level": 1,
+        "xp": 0,
+        "points": 0,
+        "cls": "warrior",
+        "sin": "sloth",
+        "book": null,
+        "advance": null
+      }
+    ],
+    "gold": 2103446,
+    "materials": {
+      "dust": 2185,
+      "timber": 1850,
+      "iron_ore": 873,
+      "herb": 1735
+    },
+    "potions": {},
+    "inventory": [
+      6,
+      0,
+      0
+    ],
+    "items": 30,
+    "cleared": [
+      1011,
+      1012,
+      1013,
+      1021,
+      1022,
+      1023,
+      1031,
+      1032,
+      1033,
+      1041,
+      1042,
+      1043,
+      1051,
+      2011,
+      2012,
+      2013,
+      2021,
+      2022,
+      2023,
+      2031,
+      2032,
+      2033,
+      2041,
+      2042,
+      2043,
+      2051,
+      3011,
+      3012,
+      3013,
+      3021,
+      3022,
+      3023,
+      3031,
+      3032,
+      3033,
+      3041,
+      3042,
+      3043,
+      3051,
+      4011,
+      4012,
+      4013,
+      4021,
+      4022,
+      4023,
+      4031,
+      4032,
+      4033,
+      4041,
+      4042,
+      4043,
+      4051,
+      5011,
+      5012,
+      5013,
+      5021,
+      5022,
+      5023,
+      5031,
+      5032,
+      5033,
+      5041,
+      5042,
+      5043,
+      5051
+    ],
+    "buildings": {
+      "explore": 5,
+      "command": 6,
+      "storage": 2,
+      "tavern": 7,
+      "shop": 4,
+      "forge": 6,
+      "library": 6,
+      "resource": 6
+    },
+    "report": {
+      "at": 1793404793250,
+      "stageId": 1011,
+      "level": 50,
+      "preset": 1,
+      "won": false,
+      "reason": "closed",
+      "durationSec": 0,
+      "difficulty": "hell",
+      "shrine": null,
+      "gold": 0,
+      "xp": {
+        "h1": 0,
+        "h2": 0,
+        "h3": 0
+      },
+      "levelUps": [],
+      "downed": [],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [],
+      "blueprints": [],
+      "discarded": 0,
+      "rounds": [],
+      "roundsCleared": 0,
+      "strikes": {
+        "party": {
+          "n": 0,
+          "miss": 0
+        },
+        "enemy": {
+          "n": 0,
+          "miss": 0
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 0,
+          "taken": 0,
+          "kills": 0
+        },
+        {
+          "uid": "h2",
+          "dealt": 0,
+          "taken": 0,
+          "kills": 0
+        },
+        {
+          "uid": "h3",
+          "dealt": 0,
+          "taken": 0,
+          "kills": 0
+        }
+      ]
+    },
+    "guide": {
+      "guide": null,
+      "items": [
+        {
+          "id": "join:1",
+          "kind": "join",
+          "tab": "tavern",
+          "target": {
+            "join": 1
+          }
+        },
+        {
+          "id": "join:2",
+          "kind": "join",
+          "tab": "tavern",
+          "target": {
+            "join": 2
+          }
+        }
+      ],
+      "count": 2
+    },
+    "clock": 73432050
+  },
+  "paired_battle": [
+    {
+      "ok": true,
+      "won": false,
+      "reason": "wipe",
+      "duration": 55,
+      "rounds": 4,
+      "downed": 3,
+      "casts": {
+        "mag_lightning": 9,
+        "kni_holyshield": 1,
+        "arc_multishot": 8
+      }
+    },
+    {
+      "ok": true,
+      "won": false,
+      "reason": "wipe",
+      "duration": 45.7,
+      "rounds": 5,
+      "downed": 3,
+      "casts": {
+        "mag_lightning": 6,
+        "kni_holyshield": 1,
+        "arc_multishot": 7,
+        "mag_meteor": 3
+      }
+    }
+  ]
+}

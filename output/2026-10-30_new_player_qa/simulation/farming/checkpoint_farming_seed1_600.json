@@ -1,0 +1,154 @@
+{
+  "seconds": 600,
+  "stage": 1013,
+  "difficulty": "normal",
+  "classes": [
+    "mage",
+    "priest",
+    "warrior"
+  ],
+  "levels": [
+    4,
+    4,
+    4
+  ],
+  "xp": [
+    1299,
+    1299,
+    1299
+  ],
+  "freeMastery": [
+    0,
+    0,
+    0
+  ],
+  "cleared": [
+    1011,
+    1012
+  ],
+  "clearedIn": {},
+  "gold": 267,
+  "materials": {
+    "dust": 6,
+    "timber": 6
+  },
+  "potions": {
+    "minor_healing": 10
+  },
+  "bags": [
+    0
+  ],
+  "bagCap": 42,
+  "mail": 0,
+  "books": {},
+  "blueprints": {},
+  "buildings": {
+    "library": 1,
+    "resource": 1,
+    "shop": 1,
+    "tavern": 1
+  },
+  "gear": {
+    "n": 7,
+    "ilvl": 1.143,
+    "weaponIlvl": [
+      1,
+      1,
+      1
+    ],
+    "upTotal": 0
+  },
+  "labNodes": {},
+  "joins": 0,
+  "commission": {
+    "open": true,
+    "slots": 1,
+    "taken": 1,
+    "fame": {
+      "level": 1,
+      "xp": 0,
+      "total": 0,
+      "next": 3,
+      "needMult": 1,
+      "goldMult": 1,
+      "max": false
+    },
+    "cards": [
+      {
+        "no": 1,
+        "tpl": "cm_col_magic",
+        "kind": "collect",
+        "axis": "rarity",
+        "ref": "magic",
+        "need": 5,
+        "grade": "normal",
+        "gold": 400,
+        "have": 0,
+        "taken": true,
+        "done": false,
+        "canTake": false
+      },
+      {
+        "no": 2,
+        "tpl": "cm_col_rare",
+        "kind": "collect",
+        "axis": "rarity",
+        "ref": "rare",
+        "need": 3,
+        "grade": "magic",
+        "gold": 1300,
+        "taken": false,
+        "have": null,
+        "done": false,
+        "canTake": false
+      },
+      {
+        "no": 3,
+        "tpl": "cm_kill_monster",
+        "kind": "kill",
+        "axis": "monster",
+        "ref": 1101,
+        "need": 12,
+        "grade": "normal",
+        "gold": 400,
+        "taken": false,
+        "have": null,
+        "done": false,
+        "canTake": false
+      },
+      {
+        "no": 4,
+        "tpl": "cm_col_rare",
+        "kind": "collect",
+        "axis": "rarity",
+        "ref": "rare",
+        "need": 2,
+        "grade": "normal",
+        "gold": 650,
+        "taken": false,
+        "have": null,
+        "done": false,
+        "canTake": false
+      }
+    ]
+  },
+  "runs": 2,
+  "wins": 2,
+  "losses": 0,
+  "timeouts": 0,
+  "downed": 0,
+  "overflow": 0,
+  "firstOverflow": null,
+  "firstBagFull": null,
+  "maxBag": 1,
+  "actions": {
+    "construct": 2,
+    "mastery": 9,
+    "autoEquip": 3,
+    "salvage": 3,
+    "commissionTake": 1,
+    "potion": 2
+  },
+  "departErrors": [],
+  "violations": []
+}

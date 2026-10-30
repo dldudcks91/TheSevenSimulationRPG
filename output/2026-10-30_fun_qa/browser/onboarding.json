@@ -1,0 +1,5395 @@
+{
+  "actions": [
+    {
+      "elapsed_sec": 0.98,
+      "action": "새 게임",
+      "selector": ".mn-btn"
+    },
+    {
+      "elapsed_sec": 1.16,
+      "action": "무료 파티 전체 다시 굴리기 1회",
+      "selector": ".ng-actions .btn:not(.primary)"
+    },
+    {
+      "elapsed_sec": 1.28,
+      "action": "현재 세 영웅으로 확정",
+      "selector": ".ng-actions .primary"
+    },
+    {
+      "elapsed_sec": 1.36,
+      "action": "프롤로그 다음 또는 시작",
+      "selector": ".pro-actions .primary"
+    },
+    {
+      "elapsed_sec": 2.05,
+      "action": "프롤로그 다음 또는 시작",
+      "selector": ".pro-actions .primary"
+    },
+    {
+      "elapsed_sec": 2.72,
+      "action": "프롤로그 다음 또는 시작",
+      "selector": ".pro-actions .primary"
+    },
+    {
+      "elapsed_sec": 3.45,
+      "action": "프롤로그 다음 또는 시작",
+      "selector": ".pro-actions .primary"
+    },
+    {
+      "elapsed_sec": 4.27,
+      "action": "프롤로그 다음 또는 시작",
+      "selector": ".pro-actions .primary"
+    },
+    {
+      "elapsed_sec": 5.16,
+      "action": "첫 목표를 확인하려 종 열기",
+      "selector": ".notification-btn"
+    },
+    {
+      "elapsed_sec": 5.2,
+      "action": "임무 폴더 확인",
+      "selector": "[data-notification-action=\"folder-missions\"]"
+    },
+    {
+      "elapsed_sec": 5.39,
+      "action": "첫 원정 바로가기",
+      "selector": "[data-notification-action=\"firstExpedition\"]"
+    },
+    {
+      "elapsed_sec": 5.48,
+      "action": "첫 원정 장소 선택",
+      "selector": ".zone:not(.locked)"
+    },
+    {
+      "elapsed_sec": 5.72,
+      "action": "기본 편성·기본 배속으로 첫 출정",
+      "selector": ".form-actions .primary"
+    },
+    {
+      "elapsed_sec": 96.23,
+      "action": "전투를 유지하며 캐릭터·장비 확인",
+      "selector": ".nav button[data-tab=\"character\"]"
+    },
+    {
+      "elapsed_sec": 96.47,
+      "action": "첫 마스터리 창 열기"
+    }
+  ],
+  "observations": [
+    {
+      "label": "onboard_01_menu",
+      "screen_text": "EN\nAdmin\n⚙\n새 게임\n불러오기",
+      "game": null,
+      "buttons": [
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "btn lg mn-btn"
+        },
+        {
+          "text": "불러오기",
+          "disabled": true,
+          "className": "btn lg mn-btn"
+        }
+      ]
+    },
+    {
+      "label": "onboard_02_candidates",
+      "screen_text": "새 게임\nEN\nAdmin\n⚙\n뒤로가기\n레어\n분노\n전사\n발렌\nLv.1\n도끼 / 둔기\nLv.1\n배시\n힘\nSTR\n18\n민첩\nDEX\n10\n지능\nINT\n10\n건강\nVIT\n11\n운\nLCK\n9\n통솔\nLDR\n7\n매력\nCHA\n12\n능력치가 하는 일?\n힘\n평타 · 물리 스킬 피해\n민첩\n공격 · 캐스팅 속도\n지능\n마법 스킬 피해\n건강\n레벨업 HP · 버프 지속시간\n운\n치명타 피해 · 드랍률 · 골드\n통솔\n아군 버프 · 리더면 파티 전술\n매력\n회복량 · 받는 디버프 시간 감소\n최대 HP\n100\n능력치 합\n77\n전사\n도끼와 둔기를 쓰는 맷집 좋은 근접 딜러\n분노\n공격이 빨라지고 치명타가 잘 터진다\n매직\n폭식\n마법사\n이언\nLv.1\n스태프 / 오브\nLv.1\n파이어볼\n힘\nSTR\n8\n민첩\nDEX\n9\n지능\nINT\n12\n건강\nVIT\n13\n운\nLCK\n7\n통솔\nLDR\n9\n매력\nCHA\n3\n최대 HP\n50\n능력치 합\n61\n마법사\n스태프와 오브를 쓰는 마법 딜러. 몸이 약하다\n폭식\n체력과 저항이 오르고 적 체력을 비율로 깎는다\n일반\n나태\n궁수\n마르고\nLv.1\n활 / 석궁\nLv.1\n가이디드 애로우\n힘\nSTR\n10\n민첩\nDEX\n15\n지능\nINT\n11\n건강\nVIT\n5\n운\nLCK\n5\n통솔\nLDR\n6\n매력\nCHA\n9\n최대 HP\n50\n능력치 합\n61\n궁수\n활과 석궁을 쓰는 원거리 물리 딜러\n나태\n받는 피해가 줄고 스킬을 더 자주 쓴다\n1번째 굴림\n다시 굴리기\n이 셋으로 시작\n최대 HP\nHP 의 최대치 — 0 이 되면 쓰러짐",
+      "game": null,
+      "buttons": [
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "뒤로가기",
+          "disabled": false,
+          "className": "ng-back"
+        },
+        {
+          "text": "다시 굴리기",
+          "disabled": false,
+          "className": "btn"
+        },
+        {
+          "text": "이 셋으로 시작",
+          "disabled": false,
+          "className": "btn lg primary"
+        }
+      ]
+    },
+    {
+      "label": "onboard_03_rerolled",
+      "screen_text": "새 게임\nEN\nAdmin\n⚙\n뒤로가기\n레어\n분노\n기사\n페린\nLv.1\n양손검 / 창\nLv.1\n러시\n힘\nSTR\n19\n민첩\nDEX\n8\n지능\nINT\n8\n건강\nVIT\n9\n운\nLCK\n7\n통솔\nLDR\n15\n매력\nCHA\n10\n능력치가 하는 일?\n힘\n평타 · 물리 스킬 피해\n민첩\n공격 · 캐스팅 속도\n지능\n마법 스킬 피해\n건강\n레벨업 HP · 버프 지속시간\n운\n치명타 피해 · 드랍률 · 골드\n통솔\n아군 버프 · 리더면 파티 전술\n매력\n회복량 · 받는 디버프 시간 감소\n최대 HP\n100\n능력치 합\n76\n기사\n양손검과 창을 쓰는 탱커. 공격도 한다\n분노\n공격이 빨라지고 치명타가 잘 터진다\n매직\n나태\n전사\n이베인\nLv.1\n도끼 / 둔기\nLv.1\n더블스윙\n힘\nSTR\n19\n민첩\nDEX\n2\n지능\nINT\n15\n건강\nVIT\n13\n운\nLCK\n9\n통솔\nLDR\n2\n매력\nCHA\n8\n최대 HP\n100\n능력치 합\n68\n전사\n도끼와 둔기를 쓰는 맷집 좋은 근접 딜러\n나태\n받는 피해가 줄고 스킬을 더 자주 쓴다\n일반\n시기\n궁수\n노엘\nLv.1\n활 / 석궁\nLv.1\n래피드 샷\n힘\nSTR\n11\n민첩\nDEX\n14\n지능\nINT\n8\n건강\nVIT\n10\n운\nLCK\n5\n통솔\nLDR\n4\n매력\nCHA\n4\n최대 HP\n50\n능력치 합\n56\n궁수\n활과 석궁을 쓰는 원거리 물리 딜러\n시기\n방어와 저항을 뚫고 받은 피해 일부를 돌려준다\n2번째 굴림\n다시 굴리기\n이 셋으로 시작",
+      "game": null,
+      "buttons": [
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "뒤로가기",
+          "disabled": false,
+          "className": "ng-back"
+        },
+        {
+          "text": "다시 굴리기",
+          "disabled": false,
+          "className": "btn"
+        },
+        {
+          "text": "이 셋으로 시작",
+          "disabled": false,
+          "className": "btn lg primary"
+        }
+      ]
+    },
+    {
+      "label": "onboard_04_game_goal",
+      "screen_text": "Party I - 대기 중\nParty II\nParty III\n골드600\nEN\nAdmin\n원정 플레이 시간0:00:00\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\n노말\n나이트메어\n헬\n노말 5장 보스 클리어\nReport\nCh1 불타는 전장\nCh2 뒤틀린 숲\nCh3 황금의 사막\nCh4 망각의 동토\nCh5 심연의 동굴\nCh6 타락한 궁전\nCh7 신의 폐허\n분노\nCh1-1 파멸의 진영\nLv1 · 고블린 척후병 · 고블린 전사 · 고블린 주술사 · 아바돈\n분노\nCh1-2 핏빛 교전지대\nLv3 · 인간 보병 · 인간 궁수 · 인간 기사 · 라멕\n이전 스테이지 클리어\n분노\nCh1-3 원한의 묘지\nLv4 · 스켈레톤 전사 · 스켈레톤 기사 · 스켈레톤 마법사 · 레기온\n이전 스테이지 클리어\n분노\nCh1-4 몰록의 화로\nLv6 · 화염 광신도 · 임프 제사장 · 청동 수호상 · 몰록\n이전 스테이지 클리어\n분노\nCh1-5 사탄의 제단\nLv10 · 분노의 사탄\n이전 스테이지 클리어",
+      "game": {
+        "at": 1793297396813,
+        "screen": "game",
+        "tab": "expedition",
+        "exp": "idle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h2",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "archer",
+            "sin": "envy",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "lust",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 600,
+        "materials": {},
+        "potions": {
+          "minor_healing": 20
+        },
+        "inventory": [
+          0
+        ],
+        "items": 6,
+        "cleared": [],
+        "buildings": {
+          "library": 1,
+          "resource": 1
+        },
+        "report": null,
+        "guide": {
+          "guide": {
+            "id": "firstExpedition",
+            "tab": "expedition"
+          },
+          "items": [],
+          "count": 0
+        },
+        "clock": 0
+      },
+      "buttons": [
+        {
+          "text": "Party I - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party II",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "Party III",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn notification-btn"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": "on"
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "노말",
+          "disabled": false,
+          "className": "diff-tab on"
+        },
+        {
+          "text": "나이트메어",
+          "disabled": true,
+          "className": "diff-tab locked"
+        },
+        {
+          "text": "헬",
+          "disabled": true,
+          "className": "diff-tab locked"
+        },
+        {
+          "text": "Report",
+          "disabled": true,
+          "className": "btn sm dt-report"
+        },
+        {
+          "text": "Ch1 불타는 전장",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "Ch2 뒤틀린 숲",
+          "disabled": true,
+          "className": "btn sm seg-lock"
+        },
+        {
+          "text": "Ch3 황금의 사막",
+          "disabled": true,
+          "className": "btn sm seg-lock"
+        },
+        {
+          "text": "Ch4 망각의 동토",
+          "disabled": true,
+          "className": "btn sm seg-lock"
+        },
+        {
+          "text": "Ch5 심연의 동굴",
+          "disabled": true,
+          "className": "btn sm seg-lock"
+        },
+        {
+          "text": "Ch6 타락한 궁전",
+          "disabled": true,
+          "className": "btn sm seg-crumble"
+        },
+        {
+          "text": "Ch7 신의 폐허",
+          "disabled": true,
+          "className": "btn sm seg-crumble"
+        }
+      ]
+    },
+    {
+      "label": "onboard_05_first_goal",
+      "screen_text": "Party I - 대기 중\nParty II\nParty III\n골드600\n알림\n×\n알림\n미션\n업적\n다음 할 일\n−\n첫 원정 출발\n바로가기\nEN\nAdmin\n원정 플레이 시간0:00:00\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\n노말\n나이트메어\n헬\n노말 5장 보스 클리어\nReport\nCh1 불타는 전장\nCh2 뒤틀린 숲\nCh3 황금의 사막\nCh4 망각의 동토\nCh5 심연의 동굴\nCh6 타락한 궁전\nCh7 신의 폐허\n분노\nCh1-1 파멸의 진영\nLv1 · 고블린 척후병 · 고블린 전사 · 고블린 주술사 · 아바돈\n분노\nCh1-2 핏빛 교전지대\nLv3 · 인간 보병 · 인간 궁수 · 인간 기사 · 라멕\n이전 스테이지 클리어\n분노\nCh1-3 원한의 묘지\nLv4 · 스켈레톤 전사 · 스켈레톤 기사 · 스켈레톤 마법사 · 레기온\n이전 스테이지 클리어\n분노\nCh1-4 몰록의 화로\nLv6 · 화염 광신도 · 임프 제사장 · 청동 수호상 · 몰록\n이전 스테이지 클리어\n분노\nCh1-5 사탄의 제단\nLv10 · 분노의 사탄\n이전 스테이지 클리어",
+      "game": {
+        "at": 1793297397074,
+        "screen": "game",
+        "tab": "expedition",
+        "exp": "idle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h2",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "archer",
+            "sin": "envy",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "lust",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 600,
+        "materials": {},
+        "potions": {
+          "minor_healing": 20
+        },
+        "inventory": [
+          0
+        ],
+        "items": 6,
+        "cleared": [],
+        "buildings": {
+          "library": 1,
+          "resource": 1
+        },
+        "report": null,
+        "guide": {
+          "guide": {
+            "id": "firstExpedition",
+            "tab": "expedition"
+          },
+          "items": [],
+          "count": 0
+        },
+        "clock": 0
+      },
+      "buttons": [
+        {
+          "text": "Party I - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party II",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "Party III",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn notification-btn"
+        },
+        {
+          "text": "×",
+          "disabled": false,
+          "className": "btn sm notification-close"
+        },
+        {
+          "text": "알림",
+          "disabled": false,
+          "className": "fg-tab notification-folder"
+        },
+        {
+          "text": "미션",
+          "disabled": false,
+          "className": "fg-tab notification-folder on"
+        },
+        {
+          "text": "업적",
+          "disabled": true,
+          "className": "fg-tab notification-folder"
+        },
+        {
+          "text": "다음 할 일\n−",
+          "disabled": false,
+          "className": "notification-guide-toggle"
+        },
+        {
+          "text": "바로가기",
+          "disabled": false,
+          "className": "btn sm notification-go"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": "on"
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "노말",
+          "disabled": false,
+          "className": "diff-tab on"
+        },
+        {
+          "text": "나이트메어",
+          "disabled": true,
+          "className": "diff-tab locked"
+        },
+        {
+          "text": "헬",
+          "disabled": true,
+          "className": "diff-tab locked"
+        },
+        {
+          "text": "Report",
+          "disabled": true,
+          "className": "btn sm dt-report"
+        },
+        {
+          "text": "Ch1 불타는 전장",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "Ch2 뒤틀린 숲",
+          "disabled": true,
+          "className": "btn sm seg-lock"
+        },
+        {
+          "text": "Ch3 황금의 사막",
+          "disabled": true,
+          "className": "btn sm seg-lock"
+        },
+        {
+          "text": "Ch4 망각의 동토",
+          "disabled": true,
+          "className": "btn sm seg-lock"
+        },
+        {
+          "text": "Ch5 심연의 동굴",
+          "disabled": true,
+          "className": "btn sm seg-lock"
+        },
+        {
+          "text": "Ch6 타락한 궁전",
+          "disabled": true,
+          "className": "btn sm seg-crumble"
+        },
+        {
+          "text": "Ch7 신의 폐허",
+          "disabled": true,
+          "className": "btn sm seg-crumble"
+        }
+      ]
+    },
+    {
+      "label": "onboard_06_departure_choices",
+      "screen_text": "Party I - 대기 중\nParty II\nParty III\n골드600\nEN\nAdmin\n원정 플레이 시간0:00:00\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\n노말\n나이트메어\n헬\n노말 5장 보스 클리어\nReport\nCh1 불타는 전장\nCh2 뒤틀린 숲\nCh3 황금의 사막\nCh4 망각의 동토\nCh5 심연의 동굴\nCh6 타락한 궁전\nCh7 신의 폐허\n분노\nCh1-1 파멸의 진영\nLv1 · 고블린 척후병 · 고블린 전사 · 고블린 주술사 · 아바돈\n분노\nCh1-2 핏빛 교전지대\nLv3 · 인간 보병 · 인간 궁수 · 인간 기사 · 라멕\n이전 스테이지 클리어\n분노\nCh1-3 원한의 묘지\nLv4 · 스켈레톤 전사 · 스켈레톤 기사 · 스켈레톤 마법사 · 레기온\n이전 스테이지 클리어\n분노\nCh1-4 몰록의 화로\nLv6 · 화염 광신도 · 임프 제사장 · 청동 수호상 · 몰록\n이전 스테이지 클리어\n분노\nCh1-5 사탄의 제단\nLv10 · 분노의 사탄\n이전 스테이지 클리어\n분노\nCh1-1 파멸의 진영 I?\n레벨 1\n×\n적 구성?\n고블린 척후병\nLv.1\n고블린 전사\nLv.1\n고블린 주술사\nLv.1\n이야기?\n\n마을에서 피어오른 연기가 진영의 군기까지 검게 물들였다. 고블린들이 불탄 울타리 뒤에서 활을 겨눴고, 짐승 두개골을 쓴 주술사가 쓰러진 동족 사이를 걸었다. 다시 일어난 것들은 제 몸에 꽂힌 화살도 뽑지 않고 앞줄에 섞였다.\n\n그 무리 앞에서 「아바돈」이 도끼를 끌고 있었다. 「사탄」과 지옥에서 떨어지던 날, 그는 눈앞의 것을 모두 부수라는 명을 받았다. 명령을 지키는 동안 길을 막은 동족도 베었고, 마침내 멈추라던 주인의 목소리마저 잊었다.\n\n「페린」이 흩어지려는 일행을 손짓으로 모았다. 바알은 도끼가 지나온 자리에 짓밟힌 고블린들을 보았다. 입술까지 올라왔던 돌격 명령이 잠시 머물렀다. 그는 대열이 갖춰지기를 기다렸다.\n\n편성?\nParty I\nParty I\n페린\nLv.1\n리더\nLv.1\nParty I\n이베인\nLv.1\nLv.1\nParty I\n노엘\nLv.1\nLv.1\n파티 전술?\n물약?\n자동 분해?\n바꾸기\n출정 방식?\n출발 칸?\nI\nII\nIII\n반복 원정\n보내기",
+      "game": {
+        "at": 1793297397341,
+        "screen": "game",
+        "tab": "expedition",
+        "exp": "idle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h2",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "archer",
+            "sin": "envy",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "lust",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 600,
+        "materials": {},
+        "potions": {
+          "minor_healing": 20
+        },
+        "inventory": [
+          0
+        ],
+        "items": 6,
+        "cleared": [],
+        "buildings": {
+          "library": 1,
+          "resource": 1
+        },
+        "report": null,
+        "guide": {
+          "guide": {
+            "id": "firstExpedition",
+            "tab": "expedition"
+          },
+          "items": [],
+          "count": 0
+        },
+        "clock": 0
+      },
+      "buttons": [
+        {
+          "text": "Party I - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party II",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "Party III",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn notification-btn"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": "on"
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "노말",
+          "disabled": false,
+          "className": "diff-tab on"
+        },
+        {
+          "text": "나이트메어",
+          "disabled": true,
+          "className": "diff-tab locked"
+        },
+        {
+          "text": "헬",
+          "disabled": true,
+          "className": "diff-tab locked"
+        },
+        {
+          "text": "Report",
+          "disabled": true,
+          "className": "btn sm dt-report"
+        },
+        {
+          "text": "Ch1 불타는 전장",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "Ch2 뒤틀린 숲",
+          "disabled": true,
+          "className": "btn sm seg-lock"
+        },
+        {
+          "text": "Ch3 황금의 사막",
+          "disabled": true,
+          "className": "btn sm seg-lock"
+        },
+        {
+          "text": "Ch4 망각의 동토",
+          "disabled": true,
+          "className": "btn sm seg-lock"
+        },
+        {
+          "text": "Ch5 심연의 동굴",
+          "disabled": true,
+          "className": "btn sm seg-lock"
+        },
+        {
+          "text": "Ch6 타락한 궁전",
+          "disabled": true,
+          "className": "btn sm seg-crumble"
+        },
+        {
+          "text": "Ch7 신의 폐허",
+          "disabled": true,
+          "className": "btn sm seg-crumble"
+        },
+        {
+          "text": "×",
+          "disabled": false,
+          "className": "btn modal-x"
+        },
+        {
+          "text": "Party I",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "바꾸기",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "I",
+          "disabled": false,
+          "className": "btn sm cp-btn on"
+        },
+        {
+          "text": "II",
+          "disabled": false,
+          "className": "btn sm cp-btn locked"
+        },
+        {
+          "text": "III",
+          "disabled": false,
+          "className": "btn sm cp-btn locked"
+        },
+        {
+          "text": "반복 원정",
+          "disabled": false,
+          "className": "btn lg toggle"
+        },
+        {
+          "text": "보내기",
+          "disabled": false,
+          "className": "btn lg primary"
+        }
+      ]
+    },
+    {
+      "label": "onboard_07_battle_start",
+      "screen_text": "Party I - \n파멸의 진영 I\nParty II\nParty III\n골드600\nEN\nAdmin\n원정 플레이 시간0:00:00\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\n불타는 전장 — 파멸의 진영 I\n1\n2\n3\n4\n5\n6\n7\n8\n9\n×1\n×2\n×4\n×16\n일시정지\n철수\n전투 로그\n누적 데미지\nLv.1 · 전사 · 데몬\n고블린 전사\n42 / 42\nLv.1\nVS\nLv.1 · 기사\n분노\n페린\n100 / 100\nLv.1\nLv.1 · 전사\n나태\n이베인\n100 / 100\nLv.1\nLv.1 · 궁수\n시기\n노엘\n50 / 50\nLv.1\n버프\nCh1-1불타는 전장\n파멸의 진영 I\n창고?\n장비\n재료\n스킬북\n정렬\n인벤토리?\nParty I\n자동 장착\n분해\n자동 분해\n정렬",
+      "game": {
+        "at": 1793297397737,
+        "screen": "game",
+        "tab": "expedition",
+        "exp": "battle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h2",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "archer",
+            "sin": "envy",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "lust",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 600,
+        "materials": {},
+        "potions": {
+          "minor_healing": 20
+        },
+        "inventory": [
+          0
+        ],
+        "items": 6,
+        "cleared": [],
+        "buildings": {
+          "library": 1,
+          "resource": 1
+        },
+        "report": {
+          "at": 1793297397375,
+          "stageId": 1011,
+          "level": 1,
+          "preset": 1,
+          "won": false,
+          "reason": null,
+          "durationSec": 0,
+          "difficulty": "normal",
+          "shrine": null,
+          "gold": 0,
+          "xp": {
+            "h1": 0,
+            "h2": 0,
+            "h3": 0
+          },
+          "levelUps": [],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [],
+          "blueprints": [],
+          "discarded": 0,
+          "rounds": [],
+          "roundsCleared": 0,
+          "strikes": {
+            "party": {
+              "n": 0,
+              "miss": 0
+            },
+            "enemy": {
+              "n": 0,
+              "miss": 0
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h2",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h3",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            }
+          ]
+        },
+        "guide": {
+          "guide": {
+            "id": "buildShop",
+            "tab": "research",
+            "target": {
+              "building": "shop"
+            }
+          },
+          "items": [],
+          "count": 0
+        },
+        "clock": 644
+      },
+      "buttons": [
+        {
+          "text": "Party I - \n파멸의 진영 I",
+          "disabled": false,
+          "className": "btn sm on seg-party seg-live party-go"
+        },
+        {
+          "text": "Party II",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "Party III",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn notification-btn"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": "on"
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "×1",
+          "disabled": false,
+          "className": "btn sm b-speed on"
+        },
+        {
+          "text": "×2",
+          "disabled": false,
+          "className": "btn sm b-speed"
+        },
+        {
+          "text": "×4",
+          "disabled": false,
+          "className": "btn sm b-speed"
+        },
+        {
+          "text": "×16",
+          "disabled": false,
+          "className": "btn sm b-speed"
+        },
+        {
+          "text": "일시정지",
+          "disabled": false,
+          "className": "btn sm b-pause"
+        },
+        {
+          "text": "철수",
+          "disabled": false,
+          "className": "btn sm b-skip"
+        },
+        {
+          "text": "전투 로그",
+          "disabled": false,
+          "className": "btn sm b-pane"
+        },
+        {
+          "text": "누적 데미지",
+          "disabled": false,
+          "className": "btn sm b-pane"
+        },
+        {
+          "text": "버프",
+          "disabled": false,
+          "className": "btn sm b-buff"
+        },
+        {
+          "text": "장비",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "재료",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "스킬북",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "Party I",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "자동 장착",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "자동 분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        }
+      ]
+    },
+    {
+      "label": "onboard_battle_15s",
+      "screen_text": "Party I - \n파멸의 진영 I\nParty II\nParty III\n골드639\nEN\nAdmin\n원정 플레이 시간0:00:13\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\n불타는 전장 — 파멸의 진영 I\n1\n2\n3\n4\n5\n6\n7\n8\n9\n×1\n×2\n×4\n×16\n일시정지\n철수\n전투 로그\n누적 데미지\nLv.1 · 사제 · 데몬\n피의 갈망\n정예\n고블린 주술사\n84 / 84\nLv.1\nLv.1 · 전사 · 데몬\n고블린 전사\n30 / 42\nLv.1\n빗나감\nLv.1 · 전사 · 데몬\n고블린 전사\n42 / 42\nLv.1\nVS\nLv.1 · 기사\n분노\n페린\n72 / 100\nLv.1\n-17\n-6\nLv.1 · 전사\n나태\n이베인\n98 / 100\nLv.1\nLv.1 · 궁수\n시기\n노엘\n50 / 50\nLv.1\n버프\n창고?\n장비\n재료\n스킬북\n정렬\n인벤토리?\nParty I\n자동 장착\n분해\n자동 분해\n정렬",
+      "game": {
+        "at": 1793297412810,
+        "screen": "game",
+        "tab": "expedition",
+        "exp": "battle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 1,
+            "xp": 90,
+            "points": 0,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h2",
+            "level": 1,
+            "xp": 90,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 1,
+            "xp": 90,
+            "points": 0,
+            "cls": "archer",
+            "sin": "envy",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "lust",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 639,
+        "materials": {},
+        "potions": {
+          "minor_healing": 20
+        },
+        "inventory": [
+          0
+        ],
+        "items": 6,
+        "cleared": [],
+        "buildings": {
+          "library": 1,
+          "resource": 1
+        },
+        "report": {
+          "at": 1793297397375,
+          "stageId": 1011,
+          "level": 1,
+          "preset": 1,
+          "won": false,
+          "reason": null,
+          "durationSec": 10.3,
+          "difficulty": "normal",
+          "shrine": null,
+          "gold": 39,
+          "xp": {
+            "h1": 90,
+            "h2": 90,
+            "h3": 90
+          },
+          "levelUps": [],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [],
+          "blueprints": [],
+          "discarded": 0,
+          "rounds": [
+            {
+              "n": 1,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 2,
+              "kind": "normal",
+              "killed": [
+                1101,
+                1101
+              ],
+              "eliteSin": null
+            }
+          ],
+          "roundsCleared": 2,
+          "strikes": {
+            "party": {
+              "n": 14,
+              "miss": 4
+            },
+            "enemy": {
+              "n": 3,
+              "miss": 1
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 74,
+              "taken": 5,
+              "kills": 1
+            },
+            {
+              "uid": "h2",
+              "dealt": 42,
+              "taken": 2,
+              "kills": 1
+            },
+            {
+              "uid": "h3",
+              "dealt": 10,
+              "taken": 0,
+              "kills": 1
+            }
+          ]
+        },
+        "guide": {
+          "guide": {
+            "id": "buildShop",
+            "tab": "research",
+            "target": {
+              "building": "shop"
+            }
+          },
+          "items": [],
+          "count": 0
+        },
+        "clock": 13746.000000000011
+      },
+      "buttons": [
+        {
+          "text": "Party I - \n파멸의 진영 I",
+          "disabled": false,
+          "className": "btn sm on seg-party seg-live party-go"
+        },
+        {
+          "text": "Party II",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "Party III",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn notification-btn"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": "on"
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "×1",
+          "disabled": false,
+          "className": "btn sm b-speed on"
+        },
+        {
+          "text": "×2",
+          "disabled": false,
+          "className": "btn sm b-speed"
+        },
+        {
+          "text": "×4",
+          "disabled": false,
+          "className": "btn sm b-speed"
+        },
+        {
+          "text": "×16",
+          "disabled": false,
+          "className": "btn sm b-speed"
+        },
+        {
+          "text": "일시정지",
+          "disabled": false,
+          "className": "btn sm b-pause"
+        },
+        {
+          "text": "철수",
+          "disabled": false,
+          "className": "btn sm b-skip"
+        },
+        {
+          "text": "전투 로그",
+          "disabled": false,
+          "className": "btn sm b-pane"
+        },
+        {
+          "text": "누적 데미지",
+          "disabled": false,
+          "className": "btn sm b-pane"
+        },
+        {
+          "text": "버프",
+          "disabled": false,
+          "className": "btn sm b-buff"
+        },
+        {
+          "text": "장비",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "재료",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "스킬북",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "Party I",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "자동 장착",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "자동 분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        }
+      ],
+      "actual_battle_watch_sec": 15.39
+    },
+    {
+      "label": "onboard_battle_30s",
+      "screen_text": "Party I - \n파멸의 진영 I\nParty II\nParty III\n골드703\nEN\nAdmin\n원정 플레이 시간0:00:28\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\n불타는 전장 — 파멸의 진영 I\n1\n2\n3\n4\n5\n6\n7\n8\n9\n×1\n×2\n×4\n×16\n일시정지\n철수\n전투 로그\n누적 데미지\nLv.1 · 사제 · 데몬\n피의 갈망\n정예\n고블린 주술사\n0 / 84\nLv.1\nLv.1 · 전사 · 데몬\n고블린 전사\n0 / 42\nLv.1\nLv.1 · 전사 · 데몬\n고블린 전사\n0 / 42\nLv.1\nVS\nLv.2 · 기사\n분노\n페린\n105 / 105\nLv.1\n레벨 업\nLv.2 · 전사\n나태\n이베인\n107 / 107\nLv.1\n레벨 업\nLv.2 · 궁수\n시기\n노엘\n56 / 56\nLv.1\n레벨 업\n버프\n창고?\n장비\n재료\n스킬북\n정렬\n인벤토리?\nParty I\n자동 장착\n분해\n자동 분해\n정렬",
+      "game": {
+        "at": 1793297427638,
+        "screen": "game",
+        "tab": "expedition",
+        "exp": "battle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 2,
+            "xp": 40,
+            "points": 1,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h2",
+            "level": 2,
+            "xp": 40,
+            "points": 1,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 2,
+            "xp": 40,
+            "points": 1,
+            "cls": "archer",
+            "sin": "envy",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "lust",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 703,
+        "materials": {},
+        "potions": {
+          "minor_healing": 20
+        },
+        "inventory": [
+          0
+        ],
+        "items": 6,
+        "cleared": [],
+        "buildings": {
+          "library": 1,
+          "resource": 1
+        },
+        "report": {
+          "at": 1793297397375,
+          "stageId": 1011,
+          "level": 1,
+          "preset": 1,
+          "won": false,
+          "reason": null,
+          "durationSec": 27.8,
+          "difficulty": "normal",
+          "shrine": null,
+          "gold": 103,
+          "xp": {
+            "h1": 240,
+            "h2": 240,
+            "h3": 240
+          },
+          "levelUps": [
+            {
+              "uid": "h1",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            },
+            {
+              "uid": "h2",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            },
+            {
+              "uid": "h3",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            }
+          ],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [],
+          "blueprints": [],
+          "discarded": 0,
+          "rounds": [
+            {
+              "n": 1,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 2,
+              "kind": "normal",
+              "killed": [
+                1101,
+                1101
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 3,
+              "kind": "elite",
+              "killed": [
+                1102,
+                1102,
+                1103
+              ],
+              "eliteSin": "wrath"
+            }
+          ],
+          "roundsCleared": 3,
+          "strikes": {
+            "party": {
+              "n": 42,
+              "miss": 13
+            },
+            "enemy": {
+              "n": 12,
+              "miss": 3
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 169,
+              "taken": 35,
+              "kills": 1
+            },
+            {
+              "uid": "h2",
+              "dealt": 100,
+              "taken": 36,
+              "kills": 2
+            },
+            {
+              "uid": "h3",
+              "dealt": 67,
+              "taken": 0,
+              "kills": 3
+            }
+          ]
+        },
+        "guide": {
+          "guide": {
+            "id": "buildShop",
+            "tab": "research",
+            "target": {
+              "building": "shop"
+            }
+          },
+          "items": [],
+          "count": 0
+        },
+        "clock": 28230.00000000001
+      },
+      "buttons": [
+        {
+          "text": "Party I - \n파멸의 진영 I",
+          "disabled": false,
+          "className": "btn sm on seg-party seg-live party-go"
+        },
+        {
+          "text": "Party II",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "Party III",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn notification-btn"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": "on"
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "×1",
+          "disabled": false,
+          "className": "btn sm b-speed on"
+        },
+        {
+          "text": "×2",
+          "disabled": false,
+          "className": "btn sm b-speed"
+        },
+        {
+          "text": "×4",
+          "disabled": false,
+          "className": "btn sm b-speed"
+        },
+        {
+          "text": "×16",
+          "disabled": false,
+          "className": "btn sm b-speed"
+        },
+        {
+          "text": "일시정지",
+          "disabled": false,
+          "className": "btn sm b-pause"
+        },
+        {
+          "text": "철수",
+          "disabled": false,
+          "className": "btn sm b-skip"
+        },
+        {
+          "text": "전투 로그",
+          "disabled": false,
+          "className": "btn sm b-pane"
+        },
+        {
+          "text": "누적 데미지",
+          "disabled": false,
+          "className": "btn sm b-pane"
+        },
+        {
+          "text": "버프",
+          "disabled": false,
+          "className": "btn sm b-buff"
+        },
+        {
+          "text": "장비",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "재료",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "스킬북",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "Party I",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "자동 장착",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "자동 분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        }
+      ],
+      "actual_battle_watch_sec": 30.22
+    },
+    {
+      "label": "onboard_battle_60s",
+      "screen_text": "Party I - \n파멸의 진영 I\nParty II\nParty III\n골드755\nEN\nAdmin\n원정 플레이 시간0:00:55\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\n불타는 전장 — 파멸의 진영 I\n1\n2\n3\n4\n5\n6\n7\n8\n9\n×1\n×2\n×4\n×16\n일시정지\n철수\n전투 로그\n누적 데미지\nLv.1 · 사제 · 데몬\n깊은 잠\n정예\n고블린 주술사\n42 / 84\nLv.1\n-11\nLv.1 · 궁수 · 데몬\n고블린 척후병\n0 / 42\nLv.1\nLv.1 · 전사 · 데몬\n고블린 전사\n0 / 42\nLv.1\nVS\nLv.2 · 기사\n분노\n페린\n80 / 105\nLv.1\nLv.2 · 전사\n나태\n이베인\n91 / 107\nLv.1\nLv.2 · 궁수\n시기\n노엘\n56 / 56\nLv.1\n버프\n창고?\n장비\n재료\n스킬북\n정렬\n인벤토리?\nParty I\n자동 장착\n분해\n자동 분해\n정렬",
+      "game": {
+        "at": 1793297457731,
+        "screen": "game",
+        "tab": "expedition",
+        "exp": "battle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 2,
+            "xp": 148,
+            "points": 1,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h2",
+            "level": 2,
+            "xp": 148,
+            "points": 1,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 2,
+            "xp": 148,
+            "points": 1,
+            "cls": "archer",
+            "sin": "envy",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "lust",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 755,
+        "materials": {},
+        "potions": {
+          "minor_healing": 20
+        },
+        "inventory": [
+          0
+        ],
+        "items": 6,
+        "cleared": [],
+        "buildings": {
+          "library": 1,
+          "resource": 1
+        },
+        "report": {
+          "at": 1793297397375,
+          "stageId": 1011,
+          "level": 1,
+          "preset": 1,
+          "won": false,
+          "reason": null,
+          "durationSec": 44.1,
+          "difficulty": "normal",
+          "shrine": null,
+          "gold": 155,
+          "xp": {
+            "h1": 348,
+            "h2": 348,
+            "h3": 348
+          },
+          "levelUps": [
+            {
+              "uid": "h1",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            },
+            {
+              "uid": "h2",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            },
+            {
+              "uid": "h3",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            }
+          ],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [],
+          "blueprints": [],
+          "discarded": 0,
+          "rounds": [
+            {
+              "n": 1,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 2,
+              "kind": "normal",
+              "killed": [
+                1101,
+                1101
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 3,
+              "kind": "elite",
+              "killed": [
+                1102,
+                1102,
+                1103
+              ],
+              "eliteSin": "wrath"
+            },
+            {
+              "n": 4,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 5,
+              "kind": "normal",
+              "killed": [
+                1101,
+                1101,
+                1101
+              ],
+              "eliteSin": null
+            }
+          ],
+          "roundsCleared": 5,
+          "strikes": {
+            "party": {
+              "n": 61,
+              "miss": 18
+            },
+            "enemy": {
+              "n": 21,
+              "miss": 5
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 256,
+              "taken": 45,
+              "kills": 4
+            },
+            {
+              "uid": "h2",
+              "dealt": 154,
+              "taken": 47,
+              "kills": 3
+            },
+            {
+              "uid": "h3",
+              "dealt": 98,
+              "taken": 0,
+              "kills": 3
+            }
+          ]
+        },
+        "guide": {
+          "guide": {
+            "id": "buildShop",
+            "tab": "research",
+            "target": {
+              "building": "shop"
+            }
+          },
+          "items": [],
+          "count": 0
+        },
+        "clock": 55886.999999999935
+      },
+      "buttons": [
+        {
+          "text": "Party I - \n파멸의 진영 I",
+          "disabled": false,
+          "className": "btn sm on seg-party seg-live party-go"
+        },
+        {
+          "text": "Party II",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "Party III",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn notification-btn"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": "on"
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "×1",
+          "disabled": false,
+          "className": "btn sm b-speed on"
+        },
+        {
+          "text": "×2",
+          "disabled": false,
+          "className": "btn sm b-speed"
+        },
+        {
+          "text": "×4",
+          "disabled": false,
+          "className": "btn sm b-speed"
+        },
+        {
+          "text": "×16",
+          "disabled": false,
+          "className": "btn sm b-speed"
+        },
+        {
+          "text": "일시정지",
+          "disabled": false,
+          "className": "btn sm b-pause"
+        },
+        {
+          "text": "철수",
+          "disabled": false,
+          "className": "btn sm b-skip"
+        },
+        {
+          "text": "전투 로그",
+          "disabled": false,
+          "className": "btn sm b-pane"
+        },
+        {
+          "text": "누적 데미지",
+          "disabled": false,
+          "className": "btn sm b-pane"
+        },
+        {
+          "text": "버프",
+          "disabled": false,
+          "className": "btn sm b-buff"
+        },
+        {
+          "text": "장비",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "재료",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "스킬북",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "Party I",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "자동 장착",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "자동 분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        }
+      ],
+      "actual_battle_watch_sec": 60.33
+    },
+    {
+      "label": "onboard_battle_90s",
+      "screen_text": "Party I - \n파멸의 진영 I\nParty II\nParty III\n골드871\nEN\nAdmin\n원정 플레이 시간0:01:23\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\n불타는 전장 — 파멸의 진영 I\n1\n2\n3\n4\n5\n6\n7\n8\n9\n×1\n×2\n×4\n×16\n일시정지\n철수\n전투 로그\n누적 데미지\nLv.1 · 사제 · 데몬\n끝없는 만찬\n정예\n고블린 주술사\n100 / 100\nLv.1\nLv.1 · 궁수 · 데몬\n고블린 척후병\n42 / 42\nLv.1\nLv.1 · 전사 · 데몬\n고블린 전사\n0 / 42\nLv.1\n-13\n-13\nVS\nLv.2 · 기사\n분노\n페린\n67 / 105\nLv.1\nLv.2 · 전사\n나태\n이베인\n57 / 107\nLv.1\nLv.2 · 궁수\n시기\n노엘\n56 / 56\nLv.1\n버프\n창고?\n장비\n재료\n스킬북\n정렬\n인벤토리?\nParty I\n자동 장착\n분해\n자동 분해\n정렬",
+      "game": {
+        "at": 1793297487840,
+        "screen": "game",
+        "tab": "expedition",
+        "exp": "battle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 2,
+            "xp": 391,
+            "points": 1,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h2",
+            "level": 2,
+            "xp": 391,
+            "points": 1,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 2,
+            "xp": 391,
+            "points": 1,
+            "cls": "archer",
+            "sin": "envy",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "lust",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 871,
+        "materials": {},
+        "potions": {
+          "minor_healing": 20
+        },
+        "inventory": [
+          0
+        ],
+        "items": 6,
+        "cleared": [],
+        "buildings": {
+          "library": 1,
+          "resource": 1
+        },
+        "report": {
+          "at": 1793297397375,
+          "stageId": 1011,
+          "level": 1,
+          "preset": 1,
+          "won": false,
+          "reason": null,
+          "durationSec": 73.4,
+          "difficulty": "normal",
+          "shrine": null,
+          "gold": 271,
+          "xp": {
+            "h1": 591,
+            "h2": 591,
+            "h3": 591
+          },
+          "levelUps": [
+            {
+              "uid": "h1",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            },
+            {
+              "uid": "h2",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            },
+            {
+              "uid": "h3",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            }
+          ],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [],
+          "blueprints": [],
+          "discarded": 0,
+          "rounds": [
+            {
+              "n": 1,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 2,
+              "kind": "normal",
+              "killed": [
+                1101,
+                1101
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 3,
+              "kind": "elite",
+              "killed": [
+                1102,
+                1102,
+                1103
+              ],
+              "eliteSin": "wrath"
+            },
+            {
+              "n": 4,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 5,
+              "kind": "normal",
+              "killed": [
+                1101,
+                1101,
+                1101
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 6,
+              "kind": "elite",
+              "killed": [
+                1102,
+                1101,
+                1103
+              ],
+              "eliteSin": "sloth"
+            },
+            {
+              "n": 7,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 8,
+              "kind": "normal",
+              "killed": [
+                1102,
+                1101,
+                1103
+              ],
+              "eliteSin": null
+            }
+          ],
+          "roundsCleared": 8,
+          "strikes": {
+            "party": {
+              "n": 105,
+              "miss": 24
+            },
+            "enemy": {
+              "n": 32,
+              "miss": 8
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 484,
+              "taken": 65,
+              "kills": 8
+            },
+            {
+              "uid": "h2",
+              "dealt": 242,
+              "taken": 58,
+              "kills": 6
+            },
+            {
+              "uid": "h3",
+              "dealt": 202,
+              "taken": 0,
+              "kills": 3
+            }
+          ]
+        },
+        "guide": {
+          "guide": {
+            "id": "buildShop",
+            "tab": "research",
+            "target": {
+              "building": "shop"
+            }
+          },
+          "items": [],
+          "count": 0
+        },
+        "clock": 83036.99999999981
+      },
+      "buttons": [
+        {
+          "text": "Party I - \n파멸의 진영 I",
+          "disabled": false,
+          "className": "btn sm on seg-party seg-live party-go"
+        },
+        {
+          "text": "Party II",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "Party III",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn notification-btn"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": "on"
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "×1",
+          "disabled": false,
+          "className": "btn sm b-speed on"
+        },
+        {
+          "text": "×2",
+          "disabled": false,
+          "className": "btn sm b-speed"
+        },
+        {
+          "text": "×4",
+          "disabled": false,
+          "className": "btn sm b-speed"
+        },
+        {
+          "text": "×16",
+          "disabled": false,
+          "className": "btn sm b-speed"
+        },
+        {
+          "text": "일시정지",
+          "disabled": false,
+          "className": "btn sm b-pause"
+        },
+        {
+          "text": "철수",
+          "disabled": false,
+          "className": "btn sm b-skip"
+        },
+        {
+          "text": "전투 로그",
+          "disabled": false,
+          "className": "btn sm b-pane"
+        },
+        {
+          "text": "누적 데미지",
+          "disabled": false,
+          "className": "btn sm b-pane"
+        },
+        {
+          "text": "버프",
+          "disabled": false,
+          "className": "btn sm b-buff"
+        },
+        {
+          "text": "장비",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "재료",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "스킬북",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "Party I",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "자동 장착",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "자동 분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        }
+      ],
+      "actual_battle_watch_sec": 90.42
+    },
+    {
+      "label": "onboard_08_first_character",
+      "screen_text": "Party I - \n파멸의 진영 I\nParty II\nParty III\n골드871\nEN\nAdmin\n원정 플레이 시간0:01:23\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\nParty I\n페린\nLv.2\n해고\nParty I\n이베인\nLv.2\nParty I\n노엘\nLv.2\n대기 중\n고블린 일꾼\nLv.1\n+\n+\n장비?\nLv.1\nLv.1\n접사 죄종?\n접사 없음\n기본 옵션?\n레어\n분노\n기사\nLv.2\n경험치 391 / 400\n힘\nSTR\n19\n민첩\nDEX\n8\n지능\nINT\n8\n건강\nVIT\n9\n운\nLCK\n7\n통솔\nLDR\n15\n매력\nCHA\n10\n액티브 스킬?\n우선순위\nLv.1\n영웅\n습득\n전직\n마스터리 열기\n세부 옵션 1?\n물리 데미지\n11~13\n마법 데미지\n—\n공격 속도\n2.98초\n최대 HP\n105\n치명타 확률\n30%\n치명타 피해\n137.6%\n방어 무시\n7%\n쿨타임 감소\n0%\n물리 방어\n19 감쇠 9%\n피해 감소\n0 / 0%\n타격 회복\n0%\n상태이상 · 디버프 시간 감소\n0%\n화염 저항\n0% / 상한 75%\n냉기 저항\n0% / 상한 75%\n전기 저항\n0% / 상한 75%\n독 저항\n0% / 상한 75%\n원소 피해량 증가\n0%/0%/0%/0%\n적 원소 저항 감소\n0%/0%/0%/0%\n세부 옵션 2?\n타입별 추가 데미지\n—\n타입별 받는 피해 감소\n—\n정예 · 열별 추가 데미지\n—\n정예 · 열별 받는 피해 감소\n—\n강타\n0%\n명중률\n0%\n반격 확률\n0%\n반사 피해\n0%\n흡혈\n0%\nHP 재생\n0.053\n체력 회복\n0%\n버프 지속시간\n0%\n드랍률\n0%\n매직아이템 획득\n0%\n골드 획득\n7%\n경험치 획득\n0%\n창고?\n장비\n재료\n스킬북\n정렬\n인벤토리?\nParty I\n자동 장착\n분해\n자동 분해\n정렬",
+      "game": {
+        "at": 1793297488061,
+        "screen": "game",
+        "tab": "character",
+        "exp": "battle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 2,
+            "xp": 391,
+            "points": 1,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h2",
+            "level": 2,
+            "xp": 391,
+            "points": 1,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 2,
+            "xp": 391,
+            "points": 1,
+            "cls": "archer",
+            "sin": "envy",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "lust",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 871,
+        "materials": {},
+        "potions": {
+          "minor_healing": 20
+        },
+        "inventory": [
+          0
+        ],
+        "items": 6,
+        "cleared": [],
+        "buildings": {
+          "library": 1,
+          "resource": 1
+        },
+        "report": {
+          "at": 1793297397375,
+          "stageId": 1011,
+          "level": 1,
+          "preset": 1,
+          "won": false,
+          "reason": null,
+          "durationSec": 73.4,
+          "difficulty": "normal",
+          "shrine": null,
+          "gold": 271,
+          "xp": {
+            "h1": 591,
+            "h2": 591,
+            "h3": 591
+          },
+          "levelUps": [
+            {
+              "uid": "h1",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            },
+            {
+              "uid": "h2",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            },
+            {
+              "uid": "h3",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            }
+          ],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [],
+          "blueprints": [],
+          "discarded": 0,
+          "rounds": [
+            {
+              "n": 1,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 2,
+              "kind": "normal",
+              "killed": [
+                1101,
+                1101
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 3,
+              "kind": "elite",
+              "killed": [
+                1102,
+                1102,
+                1103
+              ],
+              "eliteSin": "wrath"
+            },
+            {
+              "n": 4,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 5,
+              "kind": "normal",
+              "killed": [
+                1101,
+                1101,
+                1101
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 6,
+              "kind": "elite",
+              "killed": [
+                1102,
+                1101,
+                1103
+              ],
+              "eliteSin": "sloth"
+            },
+            {
+              "n": 7,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 8,
+              "kind": "normal",
+              "killed": [
+                1102,
+                1101,
+                1103
+              ],
+              "eliteSin": null
+            }
+          ],
+          "roundsCleared": 8,
+          "strikes": {
+            "party": {
+              "n": 105,
+              "miss": 24
+            },
+            "enemy": {
+              "n": 32,
+              "miss": 8
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 484,
+              "taken": 65,
+              "kills": 8
+            },
+            {
+              "uid": "h2",
+              "dealt": 242,
+              "taken": 58,
+              "kills": 6
+            },
+            {
+              "uid": "h3",
+              "dealt": 202,
+              "taken": 0,
+              "kills": 3
+            }
+          ]
+        },
+        "guide": {
+          "guide": {
+            "id": "buildShop",
+            "tab": "research",
+            "target": {
+              "building": "shop"
+            }
+          },
+          "items": [],
+          "count": 0
+        },
+        "clock": 83247.99999999981
+      },
+      "buttons": [
+        {
+          "text": "Party I - \n파멸의 진영 I",
+          "disabled": false,
+          "className": "btn sm seg-party seg-live party-go"
+        },
+        {
+          "text": "Party II",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "Party III",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn notification-btn"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": "on"
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "해고",
+          "disabled": false,
+          "className": "btn hs-dismiss"
+        },
+        {
+          "text": "우선순위",
+          "disabled": true,
+          "className": "btn sm sk-order-btn"
+        },
+        {
+          "text": "마스터리 열기",
+          "disabled": false,
+          "className": "btn sm go-tree has-points"
+        },
+        {
+          "text": "장비",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "재료",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "스킬북",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "Party I",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "자동 장착",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "자동 분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        }
+      ]
+    },
+    {
+      "label": "onboard_09_mastery_choices",
+      "screen_text": "Party I - \n파멸의 진영 I\nParty II\nParty III\n골드871\nEN\nAdmin\n원정 플레이 시간0:01:23\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\nParty I\n페린\nLv.2\n해고\nParty I\n이베인\nLv.2\nParty I\n노엘\nLv.2\n대기 중\n고블린 일꾼\nLv.1\n+\n+\n장비?\nLv.1\nLv.1\n접사 죄종?\n접사 없음\n기본 옵션?\n레어\n분노\n기사\nLv.2\n경험치 391 / 400\n힘\nSTR\n19\n민첩\nDEX\n8\n지능\nINT\n8\n건강\nVIT\n9\n운\nLCK\n7\n통솔\nLDR\n15\n매력\nCHA\n10\n액티브 스킬?\n우선순위\nLv.1\n영웅\n습득\n전직\n마스터리 열기\n세부 옵션 1?\n물리 데미지\n11~13\n마법 데미지\n—\n공격 속도\n2.98초\n최대 HP\n105\n치명타 확률\n30%\n치명타 피해\n137.6%\n방어 무시\n7%\n쿨타임 감소\n0%\n물리 방어\n19 감쇠 9%\n피해 감소\n0 / 0%\n타격 회복\n0%\n상태이상 · 디버프 시간 감소\n0%\n화염 저항\n0% / 상한 75%\n냉기 저항\n0% / 상한 75%\n전기 저항\n0% / 상한 75%\n독 저항\n0% / 상한 75%\n원소 피해량 증가\n0%/0%/0%/0%\n적 원소 저항 감소\n0%/0%/0%/0%\n세부 옵션 2?\n타입별 추가 데미지\n—\n타입별 받는 피해 감소\n—\n정예 · 열별 추가 데미지\n—\n정예 · 열별 받는 피해 감소\n—\n강타\n0%\n명중률\n0%\n반격 확률\n0%\n반사 피해\n0%\n흡혈\n0%\nHP 재생\n0.053\n체력 회복\n0%\n버프 지속시간\n0%\n드랍률\n0%\n매직아이템 획득\n0%\n골드 획득\n7%\n경험치 획득\n0%\n창고?\n장비\n재료\n스킬북\n정렬\n인벤토리?\nParty I\n자동 장착\n분해\n자동 분해\n정렬\n스킬?\n×\n스킬 포인트?\n초기화\n1 / 1 남은 포인트\n액티브?\n공격 속도 2.98초\n영웅\nLv.1\n러시 쿨 9초\n9초마다 멈추지 않고 적들 사이를 누비며 4번 찔러 매번 16~18 의 물리 피해를 입힙니다\n습득\n도서관 2랭크\n전직\n전직 전\n분노 마스터리?\n0/5\n0/5\n0/5\nLv.10\n0/5\nLv.10\n0/5\nLv.10\n0/5\nLv.20\n0/5\n기사 마스터리?\n0/5\n0/5\n0/5\nLv.10\n0/5\nLv.10\n0/5\nLv.10\n0/5\n전직 트리?\n전직",
+      "game": {
+        "at": 1793297488267,
+        "screen": "game",
+        "tab": "character",
+        "exp": "battle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 2,
+            "xp": 391,
+            "points": 1,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h2",
+            "level": 2,
+            "xp": 391,
+            "points": 1,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 2,
+            "xp": 391,
+            "points": 1,
+            "cls": "archer",
+            "sin": "envy",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "lust",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 871,
+        "materials": {},
+        "potions": {
+          "minor_healing": 20
+        },
+        "inventory": [
+          0
+        ],
+        "items": 6,
+        "cleared": [],
+        "buildings": {
+          "library": 1,
+          "resource": 1
+        },
+        "report": {
+          "at": 1793297397375,
+          "stageId": 1011,
+          "level": 1,
+          "preset": 1,
+          "won": false,
+          "reason": null,
+          "durationSec": 73.4,
+          "difficulty": "normal",
+          "shrine": null,
+          "gold": 271,
+          "xp": {
+            "h1": 591,
+            "h2": 591,
+            "h3": 591
+          },
+          "levelUps": [
+            {
+              "uid": "h1",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            },
+            {
+              "uid": "h2",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            },
+            {
+              "uid": "h3",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            }
+          ],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [],
+          "blueprints": [],
+          "discarded": 0,
+          "rounds": [
+            {
+              "n": 1,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 2,
+              "kind": "normal",
+              "killed": [
+                1101,
+                1101
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 3,
+              "kind": "elite",
+              "killed": [
+                1102,
+                1102,
+                1103
+              ],
+              "eliteSin": "wrath"
+            },
+            {
+              "n": 4,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 5,
+              "kind": "normal",
+              "killed": [
+                1101,
+                1101,
+                1101
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 6,
+              "kind": "elite",
+              "killed": [
+                1102,
+                1101,
+                1103
+              ],
+              "eliteSin": "sloth"
+            },
+            {
+              "n": 7,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 8,
+              "kind": "normal",
+              "killed": [
+                1102,
+                1101,
+                1103
+              ],
+              "eliteSin": null
+            }
+          ],
+          "roundsCleared": 8,
+          "strikes": {
+            "party": {
+              "n": 105,
+              "miss": 24
+            },
+            "enemy": {
+              "n": 32,
+              "miss": 8
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 484,
+              "taken": 65,
+              "kills": 8
+            },
+            {
+              "uid": "h2",
+              "dealt": 242,
+              "taken": 58,
+              "kills": 6
+            },
+            {
+              "uid": "h3",
+              "dealt": 202,
+              "taken": 0,
+              "kills": 3
+            }
+          ]
+        },
+        "guide": {
+          "guide": {
+            "id": "buildShop",
+            "tab": "research",
+            "target": {
+              "building": "shop"
+            }
+          },
+          "items": [],
+          "count": 0
+        },
+        "clock": 83336.99999999981
+      },
+      "buttons": [
+        {
+          "text": "Party I - \n파멸의 진영 I",
+          "disabled": false,
+          "className": "btn sm seg-party seg-live party-go"
+        },
+        {
+          "text": "Party II",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "Party III",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn notification-btn"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": "on"
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "해고",
+          "disabled": false,
+          "className": "btn hs-dismiss"
+        },
+        {
+          "text": "우선순위",
+          "disabled": true,
+          "className": "btn sm sk-order-btn"
+        },
+        {
+          "text": "마스터리 열기",
+          "disabled": false,
+          "className": "btn sm go-tree has-points"
+        },
+        {
+          "text": "장비",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "재료",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "스킬북",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "Party I",
+          "disabled": false,
+          "className": "btn sm on"
+        },
+        {
+          "text": "자동 장착",
+          "disabled": false,
+          "className": "btn sm"
+        },
+        {
+          "text": "분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "자동 분해",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "정렬",
+          "disabled": false,
+          "className": "btn sm toggle"
+        },
+        {
+          "text": "×",
+          "disabled": false,
+          "className": "btn modal-x"
+        },
+        {
+          "text": "초기화",
+          "disabled": true,
+          "className": "btn sm"
+        }
+      ]
+    },
+    {
+      "label": "onboard_10_first_build_choices",
+      "screen_text": "Party I - \n파멸의 진영 I\nParty II\nParty III\n골드871\nEN\nAdmin\n원정 플레이 시간0:01:23\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\n건설?\n탐험\n지휘 천막\n창고\n선술집\n상단\n대장간\n도서관\n연구소\n상단?\n미건설\n아직 지은 랭크 없음\n다음 랭크?\n랭크 I\n상단에서 무기 · 물약 구매\n600\n골드\n건설\n상단 랭크?\n랭크 I\n상단에서 무기 · 물약 구매\n랭크 II\n상단에서 방어구 · 장신구 · 스킬 도안 구매\n랭크 III\n교역소에서 재료 교환\n랭크 IV\n특수상단 방문\n상단 품목 층 +1 (준비 중)",
+      "game": {
+        "at": 1793297488507,
+        "screen": "game",
+        "tab": "research",
+        "exp": "battle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 2,
+            "xp": 391,
+            "points": 1,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h2",
+            "level": 2,
+            "xp": 391,
+            "points": 1,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 2,
+            "xp": 391,
+            "points": 1,
+            "cls": "archer",
+            "sin": "envy",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "lust",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 871,
+        "materials": {},
+        "potions": {
+          "minor_healing": 20
+        },
+        "inventory": [
+          0
+        ],
+        "items": 6,
+        "cleared": [],
+        "buildings": {
+          "library": 1,
+          "resource": 1
+        },
+        "report": {
+          "at": 1793297397375,
+          "stageId": 1011,
+          "level": 1,
+          "preset": 1,
+          "won": false,
+          "reason": null,
+          "durationSec": 73.4,
+          "difficulty": "normal",
+          "shrine": null,
+          "gold": 271,
+          "xp": {
+            "h1": 591,
+            "h2": 591,
+            "h3": 591
+          },
+          "levelUps": [
+            {
+              "uid": "h1",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            },
+            {
+              "uid": "h2",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            },
+            {
+              "uid": "h3",
+              "from": 1,
+              "to": 2,
+              "gains": {},
+              "points": 1
+            }
+          ],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [],
+          "blueprints": [],
+          "discarded": 0,
+          "rounds": [
+            {
+              "n": 1,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 2,
+              "kind": "normal",
+              "killed": [
+                1101,
+                1101
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 3,
+              "kind": "elite",
+              "killed": [
+                1102,
+                1102,
+                1103
+              ],
+              "eliteSin": "wrath"
+            },
+            {
+              "n": 4,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 5,
+              "kind": "normal",
+              "killed": [
+                1101,
+                1101,
+                1101
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 6,
+              "kind": "elite",
+              "killed": [
+                1102,
+                1101,
+                1103
+              ],
+              "eliteSin": "sloth"
+            },
+            {
+              "n": 7,
+              "kind": "normal",
+              "killed": [
+                1102
+              ],
+              "eliteSin": null
+            },
+            {
+              "n": 8,
+              "kind": "normal",
+              "killed": [
+                1102,
+                1101,
+                1103
+              ],
+              "eliteSin": null
+            }
+          ],
+          "roundsCleared": 8,
+          "strikes": {
+            "party": {
+              "n": 105,
+              "miss": 24
+            },
+            "enemy": {
+              "n": 32,
+              "miss": 8
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 484,
+              "taken": 65,
+              "kills": 8
+            },
+            {
+              "uid": "h2",
+              "dealt": 242,
+              "taken": 58,
+              "kills": 6
+            },
+            {
+              "uid": "h3",
+              "dealt": 202,
+              "taken": 0,
+              "kills": 3
+            }
+          ]
+        },
+        "guide": {
+          "guide": {
+            "id": "buildShop",
+            "tab": "research",
+            "target": {
+              "building": "shop"
+            }
+          },
+          "items": [],
+          "count": 0
+        },
+        "clock": 83509.9999999998
+      },
+      "buttons": [
+        {
+          "text": "Party I - \n파멸의 진영 I",
+          "disabled": false,
+          "className": "btn sm seg-party seg-live party-go"
+        },
+        {
+          "text": "Party II",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "Party III",
+          "disabled": true,
+          "className": "btn sm seg-party seg-none seg-lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn notification-btn"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": "on todo"
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": " dim"
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": "cn-lot has-img"
+        },
+        {
+          "text": "지휘 천막",
+          "disabled": false,
+          "className": "cn-lot has-img"
+        },
+        {
+          "text": "창고",
+          "disabled": false,
+          "className": "cn-lot has-img"
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": "cn-lot has-img"
+        },
+        {
+          "text": "상단",
+          "disabled": false,
+          "className": "cn-lot ready pick has-img"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": "cn-lot has-img"
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": "cn-lot on has-img"
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": "cn-lot on has-img"
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": "btn primary cn-go"
+        }
+      ]
+    }
+  ],
+  "method": "Fresh browser, normal UI clicks, native real time; 90-second first battle observation. No dev URL, resources, or levels injected.",
+  "candidates_before": [
+    {
+      "uid": null,
+      "name": {
+        "ko": "발렌",
+        "en": "Valen"
+      },
+      "tier": "rare",
+      "sin": "wrath",
+      "cls": "warrior",
+      "trait": {
+        "ko": "언변",
+        "en": "Silver Tongue"
+      },
+      "face": "warrior_5",
+      "level": 1,
+      "xp": 0,
+      "mastery": {},
+      "masteryPoints": 0,
+      "innate": "war_bash",
+      "stats": {
+        "str": 18,
+        "agi": 10,
+        "int": 10,
+        "vit": 11,
+        "luck": 9,
+        "ldr": 7,
+        "cha": 12
+      },
+      "equipped": {}
+    },
+    {
+      "uid": null,
+      "name": {
+        "ko": "이언",
+        "en": "Ian"
+      },
+      "tier": "magic",
+      "sin": "gluttony",
+      "cls": "mage",
+      "trait": {
+        "ko": "타고난 지휘관",
+        "en": "Born Commander"
+      },
+      "face": "mage_2",
+      "level": 1,
+      "xp": 0,
+      "mastery": {},
+      "masteryPoints": 0,
+      "innate": "mag_fireball",
+      "stats": {
+        "str": 8,
+        "agi": 9,
+        "int": 12,
+        "vit": 13,
+        "luck": 7,
+        "ldr": 9,
+        "cha": 3
+      },
+      "equipped": {}
+    },
+    {
+      "uid": null,
+      "name": {
+        "ko": "마르고",
+        "en": "Margot"
+      },
+      "tier": "normal",
+      "sin": "sloth",
+      "cls": "archer",
+      "trait": {
+        "ko": "잔꾀",
+        "en": "Cunning"
+      },
+      "face": "archer_1",
+      "level": 1,
+      "xp": 0,
+      "mastery": {},
+      "masteryPoints": 0,
+      "innate": "arc_guided",
+      "stats": {
+        "str": 10,
+        "agi": 15,
+        "int": 11,
+        "vit": 5,
+        "luck": 5,
+        "ldr": 6,
+        "cha": 9
+      },
+      "equipped": {}
+    }
+  ],
+  "candidates_after": [
+    {
+      "uid": null,
+      "name": {
+        "ko": "페린",
+        "en": "Perrin"
+      },
+      "tier": "rare",
+      "sin": "wrath",
+      "cls": "knight",
+      "trait": {
+        "ko": "예리한 눈",
+        "en": "Keen Eye"
+      },
+      "face": "knight_1",
+      "level": 1,
+      "xp": 0,
+      "mastery": {},
+      "masteryPoints": 0,
+      "innate": "kni_rush",
+      "stats": {
+        "str": 19,
+        "agi": 8,
+        "int": 8,
+        "vit": 9,
+        "luck": 7,
+        "ldr": 15,
+        "cha": 10
+      },
+      "equipped": {}
+    },
+    {
+      "uid": null,
+      "name": {
+        "ko": "이베인",
+        "en": "Yvaine"
+      },
+      "tier": "magic",
+      "sin": "sloth",
+      "cls": "warrior",
+      "trait": {
+        "ko": "탐구심",
+        "en": "Inquisitive"
+      },
+      "face": "warrior_5",
+      "level": 1,
+      "xp": 0,
+      "mastery": {},
+      "masteryPoints": 0,
+      "innate": "war_doubleswing",
+      "stats": {
+        "str": 19,
+        "agi": 2,
+        "int": 15,
+        "vit": 13,
+        "luck": 9,
+        "ldr": 2,
+        "cha": 8
+      },
+      "equipped": {}
+    },
+    {
+      "uid": null,
+      "name": {
+        "ko": "노엘",
+        "en": "Noel"
+      },
+      "tier": "normal",
+      "sin": "envy",
+      "cls": "archer",
+      "trait": {
+        "ko": "강골",
+        "en": "Sturdy"
+      },
+      "face": "archer_1",
+      "level": 1,
+      "xp": 0,
+      "mastery": {},
+      "masteryPoints": 0,
+      "innate": "arc_rapid",
+      "stats": {
+        "str": 11,
+        "agi": 14,
+        "int": 8,
+        "vit": 10,
+        "luck": 5,
+        "ldr": 4,
+        "cha": 4
+      },
+      "equipped": {}
+    }
+  ],
+  "prologue": [
+    {
+      "title": "왕좌",
+      "body": "지옥에는 왕이 있었다.\n\n바알. 대악마.\n이 땅의 모든 것은 그의 것이었고,\n7개의 감정을 나누어 부하에게 깃들게 했다.\n\n분노, 시기, 탐욕, 나태, 폭식, 색욕, 오만.\n\n그것은 지옥을 유지하는 균형이었다."
+    },
+    {
+      "title": "배신의 밤",
+      "body": "그 밤, 7개의 칼이 등에 꽂혔다.\n\n뒤를 돌아봤다.\n전부 아는 얼굴이었다.\n\n싸웠다.\n하지만 힘의 반이 이미 빠져나간 뒤였다.\n묶여있던 것이 풀려있었다. 누군가가 열쇠를 넘겼다.\n\n밀려난다. 발밑이 무너진다."
+    },
+    {
+      "title": "추락",
+      "body": "떨어졌다.\n\n지옥의 빛이 멀어진다.\n힘이 빠져나간다.\n왕좌가, 부하들의 얼굴이, 그 밤의 순서가 — 흐려진다.\n\n누가 칼을 들었는지.\n누가 먼저 등을 돌렸는지.\n7개였는지, 아니었는지.\n\n확실한 건 하나.\n\n배신당했다.\n\n그리고 — 몸에 무언가가 새겨지는 감각.\n뜨겁다. 살이 타는 것 같다.\n낙인이다. 이 추락이 남긴 저주."
+    },
+    {
+      "title": "마을",
+      "body": "눈을 떴을 때, 누군가가 물을 먹이고 있었다.\n늙은 인간이다.\n\n몸이 무겁다. 배가 고프다. 숨이 가쁘다.\n전부 처음이다. 전부 불쾌하다.\n\n며칠이 지났다.\n인간들이 음식을 나눠줬다. 자기들도 부족하면서.\n다친 곳을 감싸줬다. 이름도 모르는 자에게.\n\n이해할 수 없다.\n왜 이것들은 나를 살리려 하는가.\n\n지옥에서는 쓰러진 자를 밟고 지나간다.\n약한 것은 버려진다. 그것이 당연하다.\n\n이것들은 당연한 것을 하지 않는다.\n\n이름은 기억한다. 바알.\n왕이었다는 것도. 빼앗겼다는 것도.\n하지만 그 밤이 선명하지 않다.\n7개의 칼. 아는 얼굴들. 무너지는 발밑.\n그 사이의 것들이 — 뒤섞여 있다."
+    },
+    {
+      "title": "불길",
+      "body": "그 날 밤, 지평선이 붉어졌다.\n\n불길. 군세. 분노의 기운.\n이 기운을 안다. 잊을 수 없다.\n\n사탄.\n바알이 지옥에서 추방한 놈.\n왕이 바닥에 있다는 걸 감지한 것이다.\n\n마을이 불탄다. 인간들이 비명을 지른다.\n\n바알은 일어섰다.\n더 이상 직접 싸울 힘은 없다.\n하지만 지휘하는 법은 잊지 않았다.\n\n선술집에서 만난 용병들에게 명했다."
+    }
+  ],
+  "departure_text": "분노\nCh1-1 파멸의 진영 I?\n레벨 1\n×\n적 구성?\n고블린 척후병\nLv.1\n고블린 전사\nLv.1\n고블린 주술사\nLv.1\n이야기?\n\n마을에서 피어오른 연기가 진영의 군기까지 검게 물들였다. 고블린들이 불탄 울타리 뒤에서 활을 겨눴고, 짐승 두개골을 쓴 주술사가 쓰러진 동족 사이를 걸었다. 다시 일어난 것들은 제 몸에 꽂힌 화살도 뽑지 않고 앞줄에 섞였다.\n\n그 무리 앞에서 「아바돈」이 도끼를 끌고 있었다. 「사탄」과 지옥에서 떨어지던 날, 그는 눈앞의 것을 모두 부수라는 명을 받았다. 명령을 지키는 동안 길을 막은 동족도 베었고, 마침내 멈추라던 주인의 목소리마저 잊었다.\n\n「페린」이 흩어지려는 일행을 손짓으로 모았다. 바알은 도끼가 지나온 자리에 짓밟힌 고블린들을 보았다. 입술까지 올라왔던 돌격 명령이 잠시 머물렀다. 그는 대열이 갖춰지기를 기다렸다.\n\n편성?\nParty I\nParty I\n페린\nLv.1\n리더\nLv.1\nParty I\n이베인\nLv.1\nLv.1\nParty I\n노엘\nLv.1\nLv.1\n파티 전술?\n물약?\n자동 분해?\n바꾸기\n출정 방식?\n출발 칸?\nI\nII\nIII\n반복 원정\n보내기",
+  "mastery_state": {
+    "points": 1,
+    "sinGear": 0,
+    "nodes": [
+      {
+        "id": "sin_wrath_t1_atkspeed",
+        "treeKind": "sin",
+        "ownerId": "wrath",
+        "tier": 1,
+        "stat": "aspd_pct",
+        "name": {
+          "ko": "격분",
+          "en": "Fury"
+        },
+        "value": 0.01,
+        "rank": 0,
+        "maxRank": 5,
+        "unlockLevel": 1,
+        "unlocked": true,
+        "total": 0,
+        "canLearn": true,
+        "gate": null,
+        "on": true,
+        "cond": null
+      },
+      {
+        "id": "sin_wrath_t1_critchance",
+        "treeKind": "sin",
+        "ownerId": "wrath",
+        "tier": 1,
+        "stat": "crit_rate",
+        "name": {
+          "ko": "살의",
+          "en": "Killing Intent"
+        },
+        "value": 0.01,
+        "rank": 0,
+        "maxRank": 5,
+        "unlockLevel": 1,
+        "unlocked": true,
+        "total": 0,
+        "canLearn": true,
+        "gate": null,
+        "on": true,
+        "cond": null
+      },
+      {
+        "id": "sin_wrath_t1_critdamage",
+        "treeKind": "sin",
+        "ownerId": "wrath",
+        "tier": 1,
+        "stat": "crit_damage",
+        "name": {
+          "ko": "피의 갈망",
+          "en": "Bloodlust"
+        },
+        "value": 0.005,
+        "rank": 0,
+        "maxRank": 5,
+        "unlockLevel": 1,
+        "unlocked": true,
+        "total": 0,
+        "canLearn": true,
+        "gate": null,
+        "on": true,
+        "cond": null
+      },
+      {
+        "id": "sin_wrath_t2_gear",
+        "treeKind": "sin",
+        "ownerId": "wrath",
+        "tier": 2,
+        "stat": "aspd_pct",
+        "name": {
+          "ko": "전투의 열기",
+          "en": "Battle Fervor"
+        },
+        "value": 0.01,
+        "rank": 0,
+        "maxRank": 5,
+        "unlockLevel": 10,
+        "unlocked": false,
+        "total": 0,
+        "canLearn": false,
+        "gate": {
+          "slot": "sin_gear",
+          "need": 3
+        },
+        "on": false,
+        "cond": null
+      },
+      {
+        "id": "sin_wrath_t2_wounded_crit",
+        "treeKind": "sin",
+        "ownerId": "wrath",
+        "tier": 2,
+        "stat": "crit_rate",
+        "name": {
+          "ko": "최후의 저항",
+          "en": "Last Stand"
+        },
+        "value": 0.01,
+        "rank": 0,
+        "maxRank": 5,
+        "unlockLevel": 10,
+        "unlocked": false,
+        "total": 0,
+        "canLearn": false,
+        "gate": null,
+        "on": true,
+        "cond": "wounded"
+      },
+      {
+        "id": "sin_wrath_t2_wounded_critdmg",
+        "treeKind": "sin",
+        "ownerId": "wrath",
+        "tier": 2,
+        "stat": "crit_damage",
+        "name": {
+          "ko": "죽음의 소망",
+          "en": "Death Wish"
+        },
+        "value": 0.005,
+        "rank": 0,
+        "maxRank": 5,
+        "unlockLevel": 10,
+        "unlocked": false,
+        "total": 0,
+        "canLearn": false,
+        "gate": null,
+        "on": true,
+        "cond": "wounded"
+      },
+      {
+        "id": "sin_wrath_t3_fury",
+        "treeKind": "sin",
+        "ownerId": "wrath",
+        "tier": 3,
+        "stat": "atk_pct",
+        "name": {
+          "ko": "풀려난 분노",
+          "en": "Wrath Unbound"
+        },
+        "value": 0.12,
+        "rank": 0,
+        "maxRank": 5,
+        "unlockLevel": 20,
+        "unlocked": false,
+        "total": 0,
+        "canLearn": false,
+        "gate": null,
+        "on": true,
+        "cond": "fury"
+      },
+      {
+        "id": "cls_knight_t1_hp",
+        "treeKind": "class",
+        "ownerId": "knight",
+        "tier": 1,
+        "stat": "hp_flat",
+        "name": {
+          "ko": "체력 증가",
+          "en": "Health Increase"
+        },
+        "value": 10,
+        "rank": 0,
+        "maxRank": 5,
+        "unlockLevel": 1,
+        "unlocked": true,
+        "total": 0,
+        "canLearn": true,
+        "gate": null,
+        "on": true,
+        "cond": null
+      },
+      {
+        "id": "cls_knight_t1_def",
+        "treeKind": "class",
+        "ownerId": "knight",
+        "tier": 1,
+        "stat": "def_flat",
+        "name": {
+          "ko": "물리 방어",
+          "en": "Physical Defense"
+        },
+        "value": 5,
+        "rank": 0,
+        "maxRank": 5,
+        "unlockLevel": 1,
+        "unlocked": true,
+        "total": 0,
+        "canLearn": true,
+        "gate": null,
+        "on": true,
+        "cond": null
+      },
+      {
+        "id": "cls_knight_t1_dr",
+        "treeKind": "class",
+        "ownerId": "knight",
+        "tier": 1,
+        "stat": "damage_reduction",
+        "name": {
+          "ko": "피해 감소",
+          "en": "Damage Reduction"
+        },
+        "value": 0.005,
+        "rank": 0,
+        "maxRank": 5,
+        "unlockLevel": 1,
+        "unlocked": true,
+        "total": 0,
+        "canLearn": true,
+        "gate": null,
+        "on": true,
+        "cond": null
+      },
+      {
+        "id": "cls_t2_weapon_damage",
+        "treeKind": "class",
+        "ownerId": "*",
+        "tier": 2,
+        "stat": "atk_pct",
+        "name": {
+          "ko": "{group} 마스터리",
+          "en": "{group} Mastery"
+        },
+        "value": 0.02,
+        "rank": 0,
+        "maxRank": 5,
+        "unlockLevel": 10,
+        "unlocked": false,
+        "total": 0,
+        "canLearn": false,
+        "gate": {
+          "slot": "weapon",
+          "groups": [
+            "mace",
+            "spear",
+            "orb",
+            "crucifix",
+            "bow"
+          ]
+        },
+        "on": true,
+        "cond": null
+      },
+      {
+        "id": "cls_knight_t2_sword2h",
+        "treeKind": "class",
+        "ownerId": "knight",
+        "tier": 2,
+        "stat": "aspd_pct",
+        "name": {
+          "ko": "양손검 마스터리",
+          "en": "Greatsword Mastery"
+        },
+        "value": 0.01,
+        "rank": 0,
+        "maxRank": 5,
+        "unlockLevel": 10,
+        "unlocked": false,
+        "total": 0,
+        "canLearn": false,
+        "gate": {
+          "slot": "weapon",
+          "groups": [
+            "sword2h"
+          ]
+        },
+        "on": false,
+        "cond": null
+      },
+      {
+        "id": "cls_knight_t2_heavy",
+        "treeKind": "class",
+        "ownerId": "knight",
+        "tier": 2,
+        "stat": "aspd_pct",
+        "name": {
+          "ko": "중갑 마스터리",
+          "en": "Heavy Armor Mastery"
+        },
+        "value": 0.02,
+        "rank": 0,
+        "maxRank": 5,
+        "unlockLevel": 10,
+        "unlocked": false,
+        "total": 0,
+        "canLearn": false,
+        "gate": {
+          "slot": "armor",
+          "groups": [
+            "heavy"
+          ]
+        },
+        "on": false,
+        "cond": null
+      }
+    ]
+  },
+  "final_save": {
+    "version": 43,
+    "seed": 2296030542,
+    "createdAt": 1793297392974,
+    "savedAt": 1793297488516,
+    "expMs": 83509.9999999998,
+    "resources": {
+      "gold": 871,
+      "stigma": 0
+    },
+    "materials": {},
+    "advancing": [],
+    "resourceProduction": [],
+    "labNodes": {},
+    "labResearch": null,
+    "labReg": {},
+    "labSince": {},
+    "labClock": {
+      "gamble": null,
+      "train": null
+    },
+    "potions": {
+      "minor_healing": 20
+    },
+    "books": {},
+    "blueprints": {},
+    "heroes": [
+      {
+        "uid": "h1",
+        "name": {
+          "ko": "페린",
+          "en": "Perrin"
+        },
+        "tier": "rare",
+        "sin": "wrath",
+        "cls": "knight",
+        "trait": {
+          "ko": "예리한 눈",
+          "en": "Keen Eye"
+        },
+        "face": "knight_1",
+        "level": 2,
+        "xp": 391,
+        "mastery": {},
+        "masteryPoints": 1,
+        "innate": "kni_rush",
+        "stats": {
+          "str": 19,
+          "agi": 8,
+          "int": 8,
+          "vit": 9,
+          "luck": 7,
+          "ldr": 15,
+          "cha": 10
+        },
+        "equipped": {
+          "weapon": "i1",
+          "helmet": null,
+          "armor": "i2",
+          "gloves": null,
+          "boots": null,
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        }
+      },
+      {
+        "uid": "h2",
+        "name": {
+          "ko": "이베인",
+          "en": "Yvaine"
+        },
+        "tier": "magic",
+        "sin": "sloth",
+        "cls": "warrior",
+        "trait": {
+          "ko": "탐구심",
+          "en": "Inquisitive"
+        },
+        "face": "warrior_5",
+        "level": 2,
+        "xp": 391,
+        "mastery": {},
+        "masteryPoints": 1,
+        "innate": "war_doubleswing",
+        "stats": {
+          "str": 19,
+          "agi": 2,
+          "int": 15,
+          "vit": 13,
+          "luck": 9,
+          "ldr": 2,
+          "cha": 8
+        },
+        "equipped": {
+          "weapon": "i3",
+          "helmet": null,
+          "armor": "i4",
+          "gloves": null,
+          "boots": null,
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        }
+      },
+      {
+        "uid": "h3",
+        "name": {
+          "ko": "노엘",
+          "en": "Noel"
+        },
+        "tier": "normal",
+        "sin": "envy",
+        "cls": "archer",
+        "trait": {
+          "ko": "강골",
+          "en": "Sturdy"
+        },
+        "face": "archer_1",
+        "level": 2,
+        "xp": 391,
+        "mastery": {},
+        "masteryPoints": 1,
+        "innate": "arc_rapid",
+        "stats": {
+          "str": 11,
+          "agi": 14,
+          "int": 8,
+          "vit": 10,
+          "luck": 5,
+          "ldr": 4,
+          "cha": 4
+        },
+        "equipped": {
+          "weapon": "i5",
+          "helmet": null,
+          "armor": "i6",
+          "gloves": null,
+          "boots": null,
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        }
+      },
+      {
+        "name": {
+          "ko": "고블린 일꾼",
+          "en": "Goblin Worker"
+        },
+        "tier": "growth",
+        "sin": "lust",
+        "cls": "warrior",
+        "trait": {
+          "ko": "타고난 지휘관",
+          "en": "Born Commander"
+        },
+        "face": "goblin_butler",
+        "level": 1,
+        "xp": 0,
+        "mastery": {},
+        "masteryPoints": 0,
+        "innate": "war_warcry",
+        "stats": {
+          "str": 5,
+          "agi": 5,
+          "int": 5,
+          "vit": 5,
+          "luck": 5,
+          "ldr": 5,
+          "cha": 5
+        },
+        "equipped": {
+          "weapon": null,
+          "helmet": null,
+          "armor": null,
+          "gloves": null,
+          "boots": null,
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        },
+        "uid": "h4",
+        "growthSeed": 3748223353
+      }
+    ],
+    "items": {
+      "i1": {
+        "uid": "i1",
+        "slot": "weapon",
+        "rarity": "normal",
+        "ilvl": 1,
+        "up": 0,
+        "name": {
+          "ko": "스레셔",
+          "en": "Thresher"
+        },
+        "implicit": null,
+        "affixes": [
+          {
+            "stat": "atk_pct",
+            "v": 0.89,
+            "src": "fixed"
+          },
+          {
+            "stat": "def_ignore",
+            "v": 0.07,
+            "src": "envy"
+          }
+        ],
+        "sins": [],
+        "words": [],
+        "group": "spear",
+        "baseId": "thresher"
+      },
+      "i2": {
+        "uid": "i2",
+        "slot": "armor",
+        "rarity": "normal",
+        "ilvl": 1,
+        "up": 0,
+        "name": {
+          "ko": "클로스 아머",
+          "en": "Cloth Armor"
+        },
+        "implicit": {
+          "stat": "def_flat",
+          "v": 10
+        },
+        "affixes": [
+          {
+            "stat": "armor_def_pct",
+            "v": 0.91,
+            "src": "fixed"
+          },
+          {
+            "stat": "gold_find",
+            "v": 0.07,
+            "src": "greed"
+          }
+        ],
+        "sins": [],
+        "words": [],
+        "baseId": "armor_cloth"
+      },
+      "i3": {
+        "uid": "i3",
+        "slot": "weapon",
+        "rarity": "normal",
+        "ilvl": 1,
+        "up": 0,
+        "name": {
+          "ko": "배틀 액스",
+          "en": "Battle Axe"
+        },
+        "implicit": null,
+        "affixes": [
+          {
+            "stat": "atk_pct",
+            "v": 0.24,
+            "src": "fixed"
+          },
+          {
+            "stat": "proc_hit_buff",
+            "v": 0.07,
+            "src": "sloth",
+            "skill": "arc_evade"
+          }
+        ],
+        "sins": [],
+        "words": [],
+        "group": "axe",
+        "baseId": "battle_axe"
+      },
+      "i4": {
+        "uid": "i4",
+        "slot": "armor",
+        "rarity": "normal",
+        "ilvl": 1,
+        "up": 0,
+        "name": {
+          "ko": "클로스 아머",
+          "en": "Cloth Armor"
+        },
+        "implicit": {
+          "stat": "def_flat",
+          "v": 10
+        },
+        "affixes": [
+          {
+            "stat": "armor_def_pct",
+            "v": 0.18,
+            "src": "fixed"
+          },
+          {
+            "stat": "fhr",
+            "v": 0.23,
+            "src": "wrath"
+          }
+        ],
+        "sins": [],
+        "words": [],
+        "baseId": "armor_cloth"
+      },
+      "i5": {
+        "uid": "i5",
+        "slot": "weapon",
+        "rarity": "normal",
+        "ilvl": 1,
+        "up": 0,
+        "name": {
+          "ko": "크로스보우",
+          "en": "Crossbow"
+        },
+        "implicit": null,
+        "affixes": [
+          {
+            "stat": "atk_pct",
+            "v": 0.5,
+            "src": "fixed"
+          },
+          {
+            "stat": "crushing_blow_pct",
+            "v": 0.01,
+            "src": "gluttony"
+          }
+        ],
+        "sins": [],
+        "words": [],
+        "group": "crossbow",
+        "baseId": "crossbow"
+      },
+      "i6": {
+        "uid": "i6",
+        "slot": "armor",
+        "rarity": "normal",
+        "ilvl": 1,
+        "up": 0,
+        "name": {
+          "ko": "클로스 아머",
+          "en": "Cloth Armor"
+        },
+        "implicit": {
+          "stat": "def_flat",
+          "v": 10
+        },
+        "affixes": [
+          {
+            "stat": "armor_def_pct",
+            "v": 0.51,
+            "src": "fixed"
+          },
+          {
+            "stat": "vs_undead_dr",
+            "v": 0.05,
+            "src": "gluttony"
+          }
+        ],
+        "sins": [],
+        "words": [],
+        "baseId": "armor_cloth"
+      }
+    },
+    "bags": [
+      []
+    ],
+    "stash": [],
+    "mail": [],
+    "progress": {
+      "cleared": [],
+      "clearedIn": {},
+      "peakTotal": 0
+    },
+    "difficulty": "normal",
+    "codexExp": {
+      "1101": 7,
+      "1102": 7,
+      "1103": 3
+    },
+    "bossDown": {},
+    "counters": {
+      "hero": 4,
+      "item": 6,
+      "battle": 1,
+      "tavern": 0,
+      "tactic": 0,
+      "upgrade": 0,
+      "visit": 0,
+      "make": 0,
+      "gamble": 0,
+      "commission": 0,
+      "explore": 0,
+      "join": 0,
+      "shop": 0,
+      "lab": 0,
+      "mail": 0,
+      "box": 0
+    },
+    "runs": [
+      {
+        "stageId": 1011,
+        "preset": 1,
+        "repeat": false,
+        "auto": true,
+        "difficulty": "normal",
+        "lastAt": 1793297397375,
+        "durationSec": 73.4,
+        "active": true,
+        "shrine": null
+      }
+    ],
+    "reports": [
+      {
+        "at": 1793297397375,
+        "stageId": 1011,
+        "level": 1,
+        "preset": 1,
+        "won": false,
+        "reason": null,
+        "durationSec": 73.4,
+        "difficulty": "normal",
+        "shrine": null,
+        "gold": 271,
+        "xp": {
+          "h1": 591,
+          "h2": 591,
+          "h3": 591
+        },
+        "levelUps": [
+          {
+            "uid": "h1",
+            "from": 1,
+            "to": 2,
+            "gains": {},
+            "points": 1
+          },
+          {
+            "uid": "h2",
+            "from": 1,
+            "to": 2,
+            "gains": {},
+            "points": 1
+          },
+          {
+            "uid": "h3",
+            "from": 1,
+            "to": 2,
+            "gains": {},
+            "points": 1
+          }
+        ],
+        "downed": [],
+        "party": [
+          "h1",
+          "h2",
+          "h3"
+        ],
+        "drops": [],
+        "blueprints": [],
+        "discarded": 0,
+        "rounds": [
+          {
+            "n": 1,
+            "kind": "normal",
+            "killed": [
+              1102
+            ],
+            "eliteSin": null
+          },
+          {
+            "n": 2,
+            "kind": "normal",
+            "killed": [
+              1101,
+              1101
+            ],
+            "eliteSin": null
+          },
+          {
+            "n": 3,
+            "kind": "elite",
+            "killed": [
+              1102,
+              1102,
+              1103
+            ],
+            "eliteSin": "wrath"
+          },
+          {
+            "n": 4,
+            "kind": "normal",
+            "killed": [
+              1102
+            ],
+            "eliteSin": null
+          },
+          {
+            "n": 5,
+            "kind": "normal",
+            "killed": [
+              1101,
+              1101,
+              1101
+            ],
+            "eliteSin": null
+          },
+          {
+            "n": 6,
+            "kind": "elite",
+            "killed": [
+              1102,
+              1101,
+              1103
+            ],
+            "eliteSin": "sloth"
+          },
+          {
+            "n": 7,
+            "kind": "normal",
+            "killed": [
+              1102
+            ],
+            "eliteSin": null
+          },
+          {
+            "n": 8,
+            "kind": "normal",
+            "killed": [
+              1102,
+              1101,
+              1103
+            ],
+            "eliteSin": null
+          }
+        ],
+        "roundsCleared": 8,
+        "strikes": {
+          "party": {
+            "n": 105,
+            "miss": 24
+          },
+          "enemy": {
+            "n": 32,
+            "miss": 8
+          }
+        },
+        "contrib": [
+          {
+            "uid": "h1",
+            "dealt": 484,
+            "taken": 65,
+            "kills": 8
+          },
+          {
+            "uid": "h2",
+            "dealt": 242,
+            "taken": 58,
+            "kills": 6
+          },
+          {
+            "uid": "h3",
+            "dealt": 202,
+            "taken": 0,
+            "kills": 3
+          }
+        ]
+      }
+    ],
+    "notice": null,
+    "tavern": {
+      "rerolledAt": null,
+      "hired": [],
+      "paid": 0
+    },
+    "shop": null,
+    "explores": [],
+    "joins": [],
+    "visit": null,
+    "arena": {
+      "rating": 1000,
+      "peak": 1000,
+      "win": 0,
+      "draw": 0,
+      "loss": 0
+    },
+    "colosseum": {
+      "cleared": 0
+    },
+    "commissions": {
+      "cards": [],
+      "fame": 0
+    },
+    "presets": [
+      {
+        "party": [
+          "h1",
+          "h2",
+          "h3"
+        ],
+        "formation": {
+          "tpl": "2-1",
+          "ranks": [
+            [
+              "h1",
+              "h2"
+            ],
+            [
+              "h3"
+            ]
+          ]
+        },
+        "potionSlots": [
+          "minor_healing",
+          "minor_healing"
+        ],
+        "tactics": {
+          "slots": {},
+          "locked": []
+        }
+      }
+    ],
+    "preset": 1,
+    "bonds": {},
+    "salvageRules": [
+      {
+        "cells": {},
+        "base": {},
+        "lvGap": null
+      }
+    ],
+    "salvageSlots": [
+      null,
+      null,
+      null,
+      null
+    ],
+    "salvageLogs": [
+      []
+    ],
+    "buildings": {
+      "library": 1,
+      "resource": 1
+    }
+  },
+  "elapsed_wall_sec": 96.83,
+  "page_errors": [],
+  "http_errors": [],
+  "external_blocked": [
+    "https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap",
+    "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css"
+  ]
+}

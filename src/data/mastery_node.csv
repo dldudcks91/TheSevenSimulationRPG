@@ -6,7 +6,7 @@ sin_envy_t1_defignore,sin,envy,1,def_ignore,사안,Evil Eye,mastery_envy_t1_defi
 sin_envy_t1_reflect,sin,envy,1,reflect_damage,원한,Resentment,mastery_envy_t1_reflect_pct,mastery_t1_max_rank,-,-,-,시기 T1-2 — 반사 피해 (skill_design §3-1)
 sin_envy_t1_resignore,sin,envy,1,res_reduction,폄하,Belittle,mastery_envy_t1_resignore_pct,mastery_t1_max_rank,-,-,-,시기 T1-3 — 모든 원소 저항 무시. 그 타격의 원소 저항에 걸린다 (skill_design §3-1)
 sin_greed_t1_gold,sin,greed,1,gold_find,미다스의 손,Midas Touch,mastery_greed_t1_gold_pct,mastery_t1_max_rank,-,-,-,탐욕 T1-1 — 골드 획득. 파티 합산 뒤 체감 (skill_design §3-1 · item_design §1)
-sin_greed_t1_itemfind,sin,greed,1,item_find,약탈,Plunder,mastery_greed_t1_itemfind_pct,mastery_t1_max_rank,-,-,-,탐욕 T1-2 — 드랍률. 파티 합산 뒤 체감 (skill_design §3-1)
+sin_greed_t1_itemfind,sin,greed,1,xp_gain_pct,복리,Compound Interest,mastery_greed_t1_xp_pct,mastery_t1_max_rank,-,-,-,탐욕 T1-2 — 경험치 획득(본인 몫 · 장비 경험치 칸과 같은 채널) · node_id 는 세이브 키 · 아이콘 경로라 옛 이름 그대로 · ⚠ 이름 임시 (skill_design §3-1 · 2026-10-30 드랍률을 대체)
 sin_greed_t1_magicfind,sin,greed,1,magic_find,감정사의 눈,Appraiser's Eye,mastery_greed_t1_magicfind_pct,mastery_t1_max_rank,-,-,-,탐욕 T1-3 — 매직아이템 획득확률. 장비 탐욕 칸과 같은 채널 (skill_design §3-1)
 sin_sloth_t1_hp,sin,sloth,1,hp_flat,깊은 잠,Deep Slumber,mastery_sloth_t1_hp_flat,mastery_t1_max_rank,-,-,-,나태 T1-1 — 체력 +상수. 체력 % 보다 먼저 더해진다 · 초반에 강하게 (skill_design §3-1 · 2026-10-05)
 sin_sloth_t1_dr,sin,sloth,1,damage_reduction,무관심,Indifference,mastery_sloth_t1_dr_pct,mastery_t1_max_rank,-,-,-,나태 T1-2 — 피해 감소. 원천별 곱의 한 원천이다 (battle_design §9-3)
@@ -43,7 +43,7 @@ sin_pride_t2_weaker_atk,sin,pride,2,atk_pct,군림,Lord Over,mastery_pride_t2_we
 sin_pride_t2_weaker_dr,sin,pride,2,damage_reduction,안중에 없음,Beneath Notice,mastery_pride_t2_weaker_dr_pct,mastery_t1_max_rank,mastery_t2_unlock_level,-,weaker,오만 T2-3 — 나를 때린 적의 현재 HP 가 내 현재 HP 보다 낮을 때 피해 감소(원천 하나). ⚠ 이름 임시
 sin_greed_t3_dmg,sin,greed,3,atk_pct_per_greed,황금 칼날,Golden Blade,mastery_greed_t3_dmg_pct,mastery_t1_max_rank,mastery_t3_unlock_level,-,-,탐욕 T3-1 — 제 몫 골드 획득 · 드랍률 · 매직아이템 획득확률의 합(탐욕 합)에 비례해 데미지 %. 데미지 % 괄호에 더한다 · ⚠ 이름 임시 (skill_design §3-3 · R325)
 sin_greed_t3_hp,sin,greed,3,hp_pct_per_greed,황금 심장,Heart of Gold,mastery_greed_t3_hp_pct,mastery_t1_max_rank,mastery_t3_unlock_level,-,-,탐욕 T3-2 — 탐욕 합에 비례해 최대 HP %. 기존 체력 % 칸에 더한다 · ⚠ 이름 임시 (skill_design §3-3 · R325)
-sin_greed_t3_cdr,sin,greed,3,cdr_per_greed,시간은 돈이다,Time Is Money,mastery_greed_t3_cdr_pct,mastery_t1_max_rank,mastery_t3_unlock_level,-,-,탐욕 T3-3 — 탐욕 합에 비례해 쿨타임 감소. cooldown_reduction 에 더한다 · ⚠ 이름 임시 (skill_design §3-3 · R325)
+sin_greed_t3_cdr,sin,greed,3,cdr_per_greed,시간은 돈,Time Is Money,mastery_greed_t3_cdr_pct,mastery_t1_max_rank,mastery_t3_unlock_level,-,-,탐욕 T3-3 — 탐욕 합에 비례해 쿨타임 감소. cooldown_reduction 에 더한다 · ⚠ 이름 임시 (skill_design §3-3 · R325)
 sin_wrath_t3_fury,sin,wrath,3,atk_pct,풀려난 분노,Wrath Unbound,mastery_wrath_t3_atk_pct,mastery_t1_max_rank,mastery_t3_unlock_level,-,fury,분노 T3 — 내 HP 가 문턱 미만인 동안 데미지 %. 값은 랭크와 상관없이 하나 · 랭크가 문턱을 올린다(1랭크 = T2 문턱) · ⚠ 이름 임시 (skill_design §3-3 · R343)
 sin_gluttony_t3_feast,sin,gluttony,3,atk_pct,끝없는 만찬,Endless Feast,mastery_gluttony_t3_stack_atk_pct,mastery_t1_max_rank,mastery_t3_unlock_level,-,feast,폭식 T3 — 직격이 맞을 때마다 한 겹 · 겹당 데미지 % · 라운드를 열면 비운다. 값은 랭크와 상관없이 하나 · 랭크가 겹 상한을 올린다 · ⚠ 이름 임시 (skill_design §3-3 · R343)
 cls_warrior_t1_hp,class,warrior,1,hp_flat,체력 증가,Health Increase,mastery_warrior_t1_hp_flat,mastery_t1_max_rank,-,-,-,전사 T1-1 — 체력 +상수. 체력 % 보다 먼저 더해진다 · 나태 · 폭식 T1-1 과 같은 채널 (skill_design §3-4 · 2026-10-15 옛 최대 HP % 대체)

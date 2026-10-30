@@ -1,12 +1,12 @@
 sin,option,applies_to,stat,scale,min,max,description_kr
 wrath,1,all,crit_damage,flat,0.04,0.09,분노 ① — 치명타 피해(낮은 값 · 치명 배수를 귀하게 둔다) ⚠제안 수치 (item_design §1 「무기 옵션 — 죄종 계열」 · 2026-10-04 · R206)
 wrath,2,all,crit_rate,flat,0.02,0.05,분노 ② — 치명타 확률 ⚠제안 수치
-wrath,3,physical,proc_hit_attack,flat,0.05,0.12,분노 ③(물리) — 타격 시 기본 공격 스킬 발동 확률 · 스킬은 그 무기군 직업의 1티어 공격 스킬 중 드롭 때 하나 · ⚠ 전투 미적용(설명에만) ⚠제안 수치
+wrath,3,physical,proc_hit_attack,flat,0.05,0.12,분노 ③(물리) — 타격 시 기본 공격 스킬 발동 확률 · 스킬은 그 무기군 직업의 1티어 공격 스킬 중 드롭 때 하나 · 전투 적용(2026-10-30) ⚠제안 수치
 wrath,3,magic,proc_cast_attack,flat,0.05,0.12,분노 ③(마법) — 시전 시 기본 공격 스킬 발동 확률 · 마법사 = 1티어 공격 셋 중 하나 · 사제 = 심판 · ⚠ 전투 미적용 ⚠제안 수치 (R208)
 sloth,1,physical,aspd_pct,flat,0.02,0.05,나태 ①(물리) — 공격 속도 증가 ⚠제안 수치
 sloth,1,magic,cast_speed_pct,flat,0.02,0.05,나태 ①(마법) — 캐스팅 속도 증가 · 공격 속도와 별개 옵션(2026-10-03 R203 · battle_design §2) ⚠제안 수치
 sloth,2,all,cooldown_reduction,flat,0.02,0.05,나태 ② — 쿨타임 감소 ⚠제안 수치
-sloth,3,physical,proc_hit_buff,flat,0.05,0.12,나태 ③(물리) — 타격 시 버프 스킬 발동 확률 · 버프 아무거나(도발 · 저주 · 오오라 제외) 드롭 때 하나 · ⚠ 전투 미적용 ⚠제안 수치
+sloth,3,physical,proc_hit_buff,flat,0.05,0.12,나태 ③(물리) — 타격 시 버프 스킬 발동 확률 · 버프 아무거나(도발 · 저주 · 오오라 제외) 드롭 때 하나 · 전투 적용(2026-10-30) ⚠제안 수치
 sloth,3,magic,proc_cast_buff,flat,0.05,0.12,나태 ③(마법) — 시전 시 버프 스킬 발동 확률 · ⚠ 전투 미적용 ⚠제안 수치 (R208)
 lust,1,physical,life_steal,flat,0.01,0.03,색욕 ①(물리) — 흡혈 ⚠제안 수치
 lust,1,magic,cast_refund_chance,flat,0.05,0.12,색욕 ①(마법) — 시전 시 확률로 시전 칸 1 충전 · 마법 무기는 흡혈을 안 받는다(10-04) ⚠제안 수치 (R208)
@@ -33,4 +33,4 @@ gluttony,3,all,vs_demon_dmg,flat,0.06,0.15,폭식 ③ — 종족 추가 데미�
 gluttony,3,all,vs_undead_dmg,flat,0.06,0.15,폭식 ③ — 종족 추가 데미지 · 언데드(Undead) ⚠제안 수치
 greed,1,all,magic_find,flat,0.05,0.15,탐욕 ① — 매직아이템 획득확률 · 레어 가중치 × (1 + 파티 값) ⚠제안 수치
 greed,2,all,gold_find,flat,0.05,0.12,탐욕 ② — 골드 획득 ⚠제안 수치
-greed,3,all,item_find,flat,0.04,0.1,탐욕 ③ — 아이템 드랍확률 ⚠제안 수치
+greed,3,all,xp_gain_pct,flat,0.05,0.12,탐욕 ③ — 경험치 획득 증가(본인 몫) ⚠제안 수치 (다른 부위 경험치 칸과 같은 대역 · 2026-10-30 아이템 드랍확률을 대체)

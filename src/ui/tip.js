@@ -43,7 +43,7 @@ const skillImg = s => {
 
 /**
  * 도감 몬스터의 스킬 아이콘 줄 — 정해진 칸(고유 → 나이트메어 2칸)의 **그림만 가로로** · 이름은 안 적는다 (SCREEN_DESIGN §9 · ADR-0666).
- *   칸 규칙은 로직의 것 — 단마다 `battle.monsterSkillSlots` 를 물어 처음 선 단을 붙인다 · 첫 단 뒤에 서는 칸은 `late`(오른쪽 위 모서리 표시) ·
+ *   칸 규칙은 로직의 것 — 단마다 `battle.monsterSkillSlots` 를 물어 처음 선 단을 붙인다 · 고유 칸과 나이트메어 칸은 같은 모양이다(모서리 표시 없음 · ADR-0990) ·
  *   아이콘의 `title` = 이름(· 여는 단) — 목록 카드는 그린 뒤 그것을 걷고 스킬 설명창을 건다(ADR-0709). 목록 카드(`app.js:monsterCard`)와 툴팁 왼쪽 장(`codexCandCard`)이 같이 부른다
  * @param cls  줄 클래스 — 목록 카드 `mon-sk` · 툴팁 `ng-skill`
  * @param cell 칸 클래스 — 목록 카드 `sk-ico` · 툴팁 `ico sk-ico`
@@ -60,7 +60,7 @@ export function monsterSkillIcons(id, cls, cell) {
         const title = L(SYS.skill.defs[a.id]?.name ?? { ko: a.id, en: a.id }) + (late ? ` · ${L(d.name)}` : '');
         // 칸마다 바탕 레벨 `Lv.n` — 오른쪽 아래(늦은 칸 표시는 오른쪽 위) · 장비 몫은 스폰 때 굴려져 도감은 모른다 (ADR-0705)
         // `data-sk` · `data-up` — 목록 카드가 그린 뒤 칸마다 스킬 설명창을 거는 손잡이 (`app.js:bindMonSkillTips` · ADR-0709)
-        return `<span class="${cell}${late ? ' late' : ''}" title="${title}" data-sk="${a.id}" data-up="${a.up ?? 0}">${skillImg(a)}<span class="sk-lv">${t('sk.lvTag', { n: 1 + (a.up ?? 0) })}</span></span>`;
+        return `<span class="${cell}" title="${title}" data-sk="${a.id}" data-up="${a.up ?? 0}">${skillImg(a)}<span class="sk-lv">${t('sk.lvTag', { n: 1 + (a.up ?? 0) })}</span></span>`;
     }).join('')}</span>`;
 }
 
@@ -74,8 +74,9 @@ export function monsterSkillIcons(id, cls, cell) {
  * @param holdOnAlt true 면 Alt 를 누르는 동안 node 밖으로 나가도 닫지 않고 툴팁이 포인터를 받는다 — 영웅 장비 · 세부 옵션 카드만 준다 (ADR-0171 · ADR-0176)
  * @param actions () => {label, run}[] — **손가락으로 연 툴팁**의 버튼 줄에 설 그 칸만의 행동 (마우스의 우클릭 같은 것 · ADR-0374). 마우스 툴팁엔 안 선다
  * @param side 'left' 면 커서 **왼쪽이 먼저** — 왼쪽에 다 안 들어갈 때만 오른쪽으로 접는다. 인벤토리 칸만 준다 (2026-10-21 · SCREEN_DESIGN §6 · ADR-0693)
+ * @param keyboard true 면 키보드 포커스로도 열고 Escape 로 닫는다.
  */
-export function bindTipNode(node, build, { anchor = false, holdOnAlt = false, actions = null, side = null } = {}) {
+export function bindTipNode(node, build, { anchor = false, holdOnAlt = false, actions = null, side = null, keyboard = false } = {}) {
     node.dataset.tip = '1';
     node._tipBuild = build;
     node._tipAnchor = anchor;
@@ -93,6 +94,79 @@ export function bindTipNode(node, build, { anchor = false, holdOnAlt = false, ac
         else if (altHeld && node._tipHoldOnAlt && anchorNode === node) return;
         else hideTip();
     };
+    if (keyboard) {
+        node.tabIndex = 0;
+        node.onfocus = () => {
+            if (!node.matches(':focus-visible')) return;
+            const rect = node.getBoundingClientRect();
+            openTip(node, { clientX: rect.right, clientY: rect.bottom });
+        };
+        node.onblur = () => hideTip();
+        node.onkeydown = ev => {
+            if (ev.key !== 'Escape' || !$tip()?.classList.contains('show')) return;
+            hideTip();
+            ev.preventDefault();
+            ev.stopPropagation();
+        };
+    }
+}
+
+/** 제목 옆 공통 도움말 — 기존 카드·마우스·터치 동작을 쓰고 키보드 포커스로도 읽는다. */
+export function helpMark(key, text) {
+    const title = () => typeof key === 'function' ? key() : t(key);
+    const q = el('span', 'q-btn', '?');
+    q.tabIndex = 0;
+    q.setAttribute('aria-label', t('ui.helpFor', { name: title() }));
+    bindTipNode(q, () => {
+        const card = el('div', 'tip-card q-tip');
+        const head = el('div', 'tip-effect-head');
+        const name = el('div', 'tip-name');
+        name.textContent = title();
+        head.appendChild(name);
+        card.append(head, el('div', 'tip-effect-summary', typeof text === 'function' ? text() : text));
+        // 편성 탭의 왼쪽 칸은 전술 구분선까지 기존 설명 카드 폭을 유지한다.
+        const line = q.closest('.pt-mid')?.querySelector(':scope > .pt-tactics');
+        const width = line ? stageRect(line).left - stageRect(q).right - 16 : 0;
+        if (width > 300) { card.style.width = `${Math.floor(width)}px`; card.style.maxWidth = 'none'; }
+        return card;
+    });
+    q.onfocus = () => {
+        // 터치가 낸 포커스는 기존 길게 누르기를 따른다. 키보드 포커스는 입력 종류와 무관하게 연다.
+        if (!q.matches(':focus-visible')) return;
+        const rect = q.getBoundingClientRect();
+        openTip(q, { clientX: rect.right, clientY: rect.bottom });
+    };
+    q.onblur = () => hideTip();
+    q.onkeydown = ev => {
+        if (ev.key !== 'Escape' || !$tip()?.classList.contains('show')) return;
+        hideTip();
+        ev.preventDefault();
+        ev.stopPropagation();
+    };
+    return q;
+}
+
+/** 제목과 물음표를 같은 덩어리로 묶고 보조 수치·버튼은 원래 자리에 둔다. */
+export function headingHelp(node, text, label = null) {
+    if (node.querySelector('.q-btn')) return node;
+    if (!label) {
+        const first = [...node.childNodes].find(child => child.nodeType !== 3 || child.textContent.trim());
+        if (first?.nodeType === 1 && first.tagName === 'SPAN') label = first;
+        else {
+            label = el('span', 'heading-label');
+            const leading = [...node.childNodes];
+            node.prepend(label);
+            for (const child of leading) {
+                if (child.nodeType === 1 && child.matches('small, button')) break;
+                label.appendChild(child);
+            }
+        }
+    }
+    const title = label.cloneNode(true);
+    title.querySelectorAll('small').forEach(meta => meta.remove());
+    const name = title.textContent.trim();
+    label.insertBefore(helpMark(() => name, text), label.querySelector(':scope > small'));
+    return node;
 }
 
 /** 지금 뜬 툴팁이 붙은 노드 — `null` 이면 커서를 따른다 (ADR-0120) */
@@ -834,13 +908,12 @@ const LV_LABEL = {
 };
 /** 레벨 줄이 둘인 스킬의 `effect_value` 줄 — 걸린 효과의 수치(`skill_status.csv:stat`) → 칸 이름 (2026-10-28 R367 · 워 오더스) */
 const LV_STAT = { def_pct: 'cx.lv.def', res_pct: 'cx.lv.resAll' };
-/** 레벨 줄의 값 — `level_step` **그대로**(레벨마다 더하는 양 · 부호를 단다). 시간 칸은 초 · 타수는 회 · 재생 + 수치는 수(프레이어 · 2026-10-29) · 나머지는 비율(%) */
-function lvStepText(field, step, stat = null) {
+/** 레벨 줄의 값 — `level_step` **그대로**(레벨마다 더하는 양 · 부호를 단다). 시간 칸은 초 · 타수는 회 · 나머지는 비율(%) */
+function lvStepText(field, step) {
     const sign = step < 0 ? '−' : '+';
     const v = Math.abs(step);
     if (field === 'duration_sec' || field === 'cool_sec' || field === 'hit_duration_sec') return sign + t('time.s', { s: num(v) });
     if (field === 'hits') return sign + t('sk.u.times', { v: num(v) });
-    if (field === 'effect_value' && stat === 'regen_flat') return sign + num(v);
     return `${sign}${M.pctNum(v)}%`;
 }
 /** 타수 레벨 칸 — 단계가 정수가 아니면 「+0.34회」 대신 **한 타가 느는 레벨**을 적는다(러시 Lv4 · 7 · 10 · 2026-10-28 R374). 정수 단계면 종전 그대로 */
@@ -889,7 +962,7 @@ export function codexSkillTipCard(id) {
     const lvKey = (e, f) => (lvRows.length > 1 && f === 'effect_value' && LV_STAT[SYS.skill.statuses[e.status]?.stat])
         || (LV_LABEL[f]?.(def, e) ?? 'cx.lv.value');
     const lvUp = lvRows.length
-        ? lvRows.map(([e, f, s]) => `<div class="cx-lvup"><span>${t(lvKey(e, f))}</span><b>${f === 'hits' ? hitsStepText(e.hits, s) : lvStepText(f, s, SYS.skill.statuses[e.status]?.stat)}</b></div>`).join('')
+        ? lvRows.map(([e, f, s]) => `<div class="cx-lvup"><span>${t(lvKey(e, f))}</span><b>${f === 'hits' ? hitsStepText(e.hits, s) : lvStepText(f, s)}</b></div>`).join('')
         : '<span class="muted">—</span>';
     const card = el('div', 'tip-card cx-tip cx-sk-tip', `
         <div class="cx-tip-h">${t('cx.tip.source')}</div>
@@ -1101,8 +1174,8 @@ function descSlots(def, pv, atkType, R) {
         h: () => at(e.hits, 'hits', UNIT.times),
         k: () => at(e.decay, 'decay', UNIT.pct),
         s: () => st ? at(st.dur, 'dur', UNIT.sec) : null,
-        // 값의 단위 — 이베이드는 횟수 · 변신은 맞힐 때마다 늘어나는 초(골드 피버 · 2026-10-29 R380) · 재생 + 수치는 수(프레이어 · 2026-10-29) · 그 밖은 %
-        v: () => st ? at(Math.abs(st.value), 'value', st.stat === 'evade' ? UNIT.times : st.stat === 'transform' ? UNIT.sec : st.stat === 'regen_flat' ? UNIT.none : UNIT.pct) : null,
+        // 값의 단위 — 이베이드는 횟수 · 변신은 맞힐 때마다 늘어나는 초(골드 피버 · 2026-10-29 R380) · 그 밖은 %
+        v: () => st ? at(Math.abs(st.value), 'value', st.stat === 'evade' ? UNIT.times : st.stat === 'transform' ? UNIT.sec : UNIT.pct) : null,
         v2: () => st2 ? slot({ raw: Math.abs(st2.value), unit: UNIT.pct }, R) : null,
         m: () => hl(num(D.balance.frenzy_stack_max)),
         f: () => hl(num(D.balance.swarm_fly_count)),   // 스웜의 파리 수 (2026-10-29 · R380)

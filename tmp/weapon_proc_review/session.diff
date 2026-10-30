@@ -1,0 +1,253 @@
+--- before/src/game_logic/hero.js
++++ src/game_logic/hero.js
+@@ -667,6 +667,11 @@
+             if (f(from)) flat[to] = f(to) + f(from) * greed;
+ 
+         const weapon = items.find(it => it.slot === 'weapon');
++        // 무기 타격 발동 — 스킬 id와 확률을 줄 순서대로 보존한다. 능력치 합산 · 액티브 칸과 별개다.
++        // 목걸이 · 다른 부위 · 시전/피격 발동은 아직 전투에 연결하지 않는다 (2026-10-30).
++        const hitProcs = (weapon?.affixes ?? [])
++            .filter(a => (a.stat === 'proc_hit_attack' || a.stat === 'proc_hit_buff') && typeof a.skill === 'string' && a.skill.length > 0 && Number.isFinite(a.v) && a.v > 0)
++            .map(a => ({ skill: a.skill, chance: Math.min(1, a.v) }));
+         const group = weapon ? data.weaponGroups[weapon.group] ?? null : null;
+         const magic = group?.damageKind === 'magic';
+         // 밑수 = **무기 피해 범위**(양끝 · 무기군 × ilvl × 강화에서 파생 · R90) + 무기 슬롯 접사의 고정 공격력(양끝에 같이). 맨손이면 양끝 모두 unarmed_atk
+@@ -727,6 +732,7 @@
+         // 무기 옵션이 여는 축 한 묶음 [2026-09-11 · R78 · item_design §1 「무기 옵션」] — **전투 능력치가 아니다**(combat_stat 행 없음 · 시트에 안 선다).
+         //   소비자는 battle.js 뿐이다(조건부 % · 타격 시 창 · 강타 · 매직아이템 획득확률). 전부 0 이면 null 이라 전투가 한 번도 안 읽는다
+         const fx = {
++            ...(hitProcs.length ? { hitProcs } : {}),
+             vs: { normal: f('vs_normal_dmg'), demon: f('vs_demon_dmg'), undead: f('vs_undead_dmg') },
+             vsElite: f('vs_elite_dmg'), vsFront: f('vs_front_dmg'), vsBack: f('vs_back_dmg'),
+             ele: Object.fromEntries(ELEMENTS.map(e => [e, f(`${e}_dmg_pct`)])),
+@@ -766,7 +772,7 @@
+             // 물약 효과 상승 — **낀 영웅이 마시는 물약의 수치**(반지 분노 ③ · 2026-10-29 R382 · battle_design §7-1). 체력 물약은 체력 회복 +% 와 한 괄호(battle.drinkPotions)
+             potion: f('potion_effect_pct'),
+         };
+-        const anyFx = [...Object.values(fx.vs), ...Object.values(fx.ele), fx.vsElite, fx.vsFront, fx.vsBack,
++        const anyFx = hitProcs.length > 0 || [...Object.values(fx.vs), ...Object.values(fx.ele), fx.vsElite, fx.vsFront, fx.vsBack,
+             fx.defDown, fx.resDown, fx.atkDownPhys, fx.atkDownMag, fx.crush, fx.magicFind,
+             ...Object.values(fx.vsDr), fx.vsEliteDr, fx.vsFrontDr, fx.vsBackDr, fx.drFlat, fx.counter, fx.recv, fx.killHeal, fx.startGauge, fx.cullNormal, fx.xpGain,
+             fx.freezeDur, fx.poisonDur, fx.burnDur, fx.stunDur, fx.buffDur, fx.hitBonus,
+--- before/src/game_logic/skill_runtime.js
++++ src/game_logic/skill_runtime.js
+@@ -327,8 +327,9 @@
+         for (const tgt of targets) {
+             for (const [key, win] of wins) {
+                 if (u.hp <= 0 || tgt.hp <= 0) break;
+-                const landed = ctx.strikeOnce(u, tgt, win.v, win.element, win.s ?? key);
+-                if (landed && win.hit && tgt.hp > 0 && !tgt.summon) applyStatus(u, tgt, win.hit, t);
++                ctx.strikeOnce(u, tgt, win.v, win.element, win.s ?? key, null, false, landed => {
++                    if (landed && win.hit && tgt.hp > 0 && !tgt.summon) applyStatus(u, tgt, win.hit, t);
++                });
+             }
+         }
+     }
+@@ -340,10 +341,12 @@
+     let struck = null;
+ 
+     /** 공격 대상 표(`skill_effects.ATTACK_TARGETS`)가 부르는 직격 — `ctx.strikeOnce` 그대로이고, 장부에 대상을 처음 겨눈 순서로 적는다(rng 0) */
+-    function skillStrike(u, tgt, mult, element, s, sk) {
++    function skillStrike(u, tgt, mult, element, s, sk, afterStrike = null) {
+         // 덤이 붙는 대상 장부 — 원소 스킬도 적는다(2026-10-29 · R387 — ~~원소 태그 없는 것만 · R201~~)
+         if (struck?.u === u && !struck.list.includes(tgt)) struck.list.push(tgt);
+-        return ctx.strikeOnce(u, tgt, mult, element, s, sk);
++        // 중첩 발동의 타격 순번은 시전 장부에서 낸다. 정상 다단/정신 집중의 관전 순번을 덮지 않는다.
++        if (procDepth && struck?.u === u) sk = { ...sk, hitIndex: struck.next++ };
++        return ctx.strikeOnce(u, tgt, mult, element, s, sk, sk?.spread ?? false, afterStrike);
+     }
+ 
+     /**
+@@ -360,7 +363,7 @@
+         // 정신 집중의 한 방 [2026-10-22 · R318] — 그 스킬의 타수는 방 수라 한 방은 1타다(실효 타수는 연 차례에 `chanOpen` 이 쟀다)
+         if (one) eff = { ...eff, effects: eff.effects.map(x => (x.effect === 'hit' ? { ...x, hits: 1 } : x)) };
+         const outer = struck;
+-        const mine = struck = { u, list: [] };
++        const mine = struck = { u, list: [], next: 0 };
+         let lead = null;
+         for (const x of eff.effects) {
+             const type = EFFECT_TYPES[x.effect];
+@@ -395,6 +398,34 @@
+                 u.fired[a.def.id] = true;
+             }
+             cast(u, a.def, t);
++        }
++    }
++
++    // 발동 중의 직격 · 추가타 · 에코 · 반격은 다른 장비 발동을 일으키지 않는다. 전투 전체에서 공유한다.
++    let procDepth = 0;
++
++    /**
++     * 무기 타격 발동 — 적중한 직격의 반사 · 쓰러짐 · 반격까지 끝난 뒤 battle.js 가 부른다.
++     * 유효한 옵션마다 확률 1회(100%도 1회). 조건 불일치 · 사망 · 적 없음 · 발동 중이면 rng 0.
++     * 기본 Lv1 정의 + 현재 능력치로 즉시 시전한다(정신 집중도 전체 타수). 차례 · HP 비용 · 쿨 · 시전 칸은 안 쓴다.
++     * skill 사건의 trigger만 남겨 같은 스킬의 정상 액티브 칸을 식별하고, cast 훅은 발화하지 않는다.
++     */
++    function procHit(u, t) {
++        if (!SK || procDepth || u.hp <= 0) return;
++        for (const p of u.fx?.hitProcs ?? []) {
++            if (u.hp <= 0 || alive(foesOf(u)).length === 0) break;
++            const def = SK.defs[p.skill];
++            if (!Number.isFinite(p.chance) || !(p.chance > 0) || !def || !CASTS[def.cast]?.picked) continue;
++            if (!SK.castable(def, { self: u, allies: alive(alliesOf(u)) })) continue;
++            if (rng() >= Math.min(1, p.chance)) continue;
++            timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id, trigger: 'hit' });
++            out.casts[def.id] = (out.casts[def.id] ?? 0) + 1;
++            procDepth += 1;
++            // 정상 정신 집중의 대상 고정은 그 방에만 적용한다. 발동은 제 규칙으로 대상을 다시 고른다.
++            const pick0 = rt.pickTarget;
++            rt.pickTarget = ctx.pickTarget;
++            try { cast(u, def, t); }
++            finally { rt.pickTarget = pick0; procDepth -= 1; }
+         }
+     }
+ 
+@@ -554,7 +585,7 @@
+         shredMax: B.weapon_def_down_stack_max,
+         // 파리 떼 여닫기 — HP · 타임라인 · 판 크기를 아는 battle.js 가 한다(`EFFECTS.swarm` · 2026-10-29 R380)
+         swarmOpen: ctx.swarmOpen, swarmClose: ctx.swarmClose,
+-        alive, alliesOf, foesOf, pick, act, cast, fire, expire, castHeal, castMend, castBuff, applyStatus, castSummon, castCall, basicAttack, targetsOf, chanHit, chanClose,
++        alive, alliesOf, foesOf, pick, act, cast, fire, procHit, expire, castHeal, castMend, castBuff, applyStatus, castSummon, castCall, basicAttack, targetsOf, chanHit, chanClose,
+     };
+     return rt;
+ }
+--- before/src/game_logic/battle.js
++++ src/game_logic/battle.js
+@@ -1954,7 +1954,7 @@
+             return units.enemies.some(e => e !== target && e.hp > 0 && e.family === 'Guardian') ? f.value : 0;
+         };
+ 
+-        function strikeOnce(u, target, mult, element, s, sk = null, spread = sk?.spread ?? false) {
++        function strikeOnce(u, target, mult, element, s, sk = null, spread = sk?.spread ?? false, afterStrike = null) {
+             // 이베이드 [2026-10-16 · R247 · INTERFACE §2-6 「기본 스킬 50 의 장치」] — 횟수가 남은 창이 있으면 **굴리지 않고** 통째로 피한다.
+             //   피해 · 경직 · 창 · 훅 · 반사 · 반격 · 집계 없음. 다 쓰면 그 창을 닫는다. 창이 없으면 아무 일도 없다(rng 불변)
+             const ev0 = stateOf(target, 'evade');
+@@ -1963,12 +1963,14 @@
+                 w.n -= 1;
+                 const dodge = { t: r1(t), e: 'evade', a: u.key, d: target.key, n: w.n };
+                 if (s) dodge.s = s;
++                if (sk?.hitIndex != null) dodge.i = sk.hitIndex;
+                 timeline.push(dodge);
+                 if (w.n <= 0) {
+                     delete target.buffs[key];
+                     timeline.push({ t: r1(t), e: 'buffEnd', u: target.key, s: w.s ?? key });
+                     refreshDerived(target);
+                 }
++                afterStrike?.(false);
+                 return;
+             }
+             const mult0 = u.skillMult, type0 = u.atkType, stat0 = u.statMult, chance0 = u.procChance, pmult0 = u.procMult, cond0 = u.condPct;
+@@ -2066,7 +2068,9 @@
+             if (!hit) {
+                 const miss = { t: r1(t), e: 'dodge', a: u.key, d: target.key };
+                 if (s) miss.s = s;
++                if (sk?.hitIndex != null) miss.i = sk.hitIndex;
+                 timeline.push(miss);
++                afterStrike?.(false);
+                 return;
+             }
+             const shield = target.barrier;
+@@ -2114,6 +2118,7 @@
+                 ev.ahp = u.hp;
+             }
+             if (s) ev.s = s;
++            if (sk?.hitIndex != null) ev.i = sk.hitIndex;
+             if (proc) ev.proc = true;                        // 추가 피해가 **터진 타격만** 키가 선다 (INTERFACE §2-6)
+             if (shield) ev.bar = shield.amt;                // 흡수 후 잔량
+             timeline.push(ev);
+@@ -2217,6 +2222,10 @@
+                 rt.basicAttack(target, t, alive(rt.foesOf(target)), u);
+                 target.next = target.period;
+             }
++            // 호출자가 붙인 후처리(추가타 결빙 · 대상 방어 감소)까지 끝낸 뒤 장비 발동을 판정한다.
++            afterStrike?.(true);
++            // 무기 타격 발동 — 원래 타격의 반사 · 쓰러짐 · 반격을 먼저 끝낸다. 발동 안의 직격은 런타임이 연쇄를 막는다.
++            rt.procHit(u, t);
+             // 적중한 직격 [2026-10-29 · R387] — 덤 창의 상태이상(콜드 애로우 결빙 · `skill_runtime.onhitExtra`)이 읽는다 · 피함 · 빗나감은 위에서 값 없이 돌아갔다
+             return true;
+         }
+--- before/src/game_logic/item.js
++++ src/game_logic/item.js
+@@ -25,7 +25,7 @@
+  *   **값 굴림은 아이템 레벨 따라 치우친다 — 범위는 그대로** [2026-10-20 · R291 · item_design §2-1 — ~~매직 고점 `magic_option_max_mult`~~ 퇴역] —
+  *   1레벨 = 낮은 쪽 · 만렙 = 높은 쪽(`lean` · [balance.csv:item_roll_skew]). **반지 · 목걸이는 일반이 없다**(`rollGear` 가 매직으로 올린다).
+  *   두 줄 모두 `src` 에 그 옵션의 죄종 id 를 든다. 무기 표 `weapon_sin_option.csv` · 갑옷 표 `armor_sin_option.csv` 의 갑옷 행. ~~`weapon_common_option.csv`~~ 퇴역.
+- *   **발동 옵션**(`proc_*`)은 `affixes` 줄에 스킬 id(`skill`)를 함께 든다 — ⚠ 목걸이 `proc` 처럼 **전투는 안 읽는다**(설명에만 · GAME_DESIGN §10).
++ *   **발동 옵션**(`proc_*`)은 `affixes` 줄에 스킬 id(`skill`)를 함께 든다 — 무기의 `proc_hit_attack` · `proc_hit_buff` 는 전투에 적용한다(2026-10-30). 시전 · 피격 · 목걸이 발동은 미적용이다.
+  *   **방어구 넷 모두 죄종 계열표다** [투구 2026-10-21 R299 · 장갑 · 신발 2026-10-21 R303 · item_design §1 「10-21 방어구 개정」 — ~~투구 · 장갑 · 신발 세 층 ·
+  *   공통옵션 `armor_common_option.csv`~~(09-18 · 파일째 퇴역)] — 부위마다 표 하나 · 갈래가 표를 가르지 않는다.
+  *   **갈래는 방어 계수 + 굴리는 베이스 특성**(`armor_group.csv:trait_*` · 투구 · 장갑 · 신발) — 특성은 베이스 「방어력 +%」 바로 뒤에 `src: 'fixed'` 줄로 박힌다(R303).
+@@ -66,7 +66,7 @@
+  * ⚠ 접사 종류·수치 범위·희귀도 가중치는 전부 프로토타입 임시값 — balance.csv ⚠제안 키와
+  *   주입된 무기 · 방어구 · 장신구 옵션 표에서 온다.
+  *   ⚠ 장갑의 공통옵션 풀은 옛 `affix.csv` 장갑 풀을 옮긴 임시다(기획 미정 · 2026-09-18 사용자 보류) · 장갑 갈래 고정값도 보류다.
+- *   ⚠ **발동 스킬(`item.proc` · 무기 · 갑옷의 `proc_*` 줄)은 설명에만 나온다** [사용자 지시 2026-09-21 · 2026-10-05] — 세기 · 내부 쿨타임이 미정이라 전투가 읽지 않는다(GAME_DESIGN §10).
++ *   **무기 타격 발동은 전투에 적용한다** [2026-10-30] — 기본 Lv1 · 현재 능력치 · 내부 쿨 없음 · 발동으로 추가 발동 금지. `item.proc` · 시전 · 피격 발동은 설명에만 나온다(GAME_DESIGN §10).
+  */
+ 
+ import { createFormula } from './formula.js';
+--- before/src/ui/battle.js
++++ src/ui/battle.js
+@@ -1229,7 +1229,7 @@
+     if (i < 0) return;
+     const s = u.skills[i];
+     // 정신 집중의 방(`chan`)은 칸만 튄다 — 쿨은 여는 `skill` 이 덮고(쓰는 동안 Infinity) `chanEnd` 가 연다 (R318 · ADR-0720)
+-    if (ev.e === 'skill') {
++    if (ev.e === 'skill' && !ev.trigger) {
+         s.firedAt = ev.t;
+         s.readyAt = ev.chan ? Infinity : (ev.ready ?? ev.t);   // 준비 시각은 시뮬이 실어 보낸다 (INTERFACE §2-6)
+     }
+@@ -1392,6 +1392,7 @@
+ /** 같은 차례 그 스킬의 타격 순번 — `skill` 사건이 0 으로 되돌리고 그 스킬의 `hit` · `dodge` 마다 하나씩 센다(사건을 셀 뿐이다 · ADR-0778).
+  *  스킬이 아닌 타격 · 다른 차례의 타격은 0 */
+ function hitIndex(a, ev) {
++    if (ev.i != null) return ev.i;   // 중첩 발동은 시뮬이 실어 온 제 시전의 순번을 쓴다.
+     return a && ev.s && a.skillT === ev.t && a.skillS === ev.s ? a.skillN++ : 0;
+ }
+ 
+@@ -1741,7 +1742,12 @@
+         }
+         case 'skill': {   // 시전 — 그 차례의 사건. 뒤따르는 hit/dodge/heal/buff 가 같은 s 를 단다
+             const u = U(ev.u);
+-            if (u) { markActed(u, ev.t); chargeTo(u, ev.ch, ev.t, false); castSkill(state, u, ev); u.skillT = ev.t; u.skillS = ev.s; u.skillN = 0; }   // 시각을 적어 둔다 — 이어지는 기본 공격은 베기를 안 띄운다 (ADR-0564) · 그 스킬의 타격 순번은 0 부터 (ADR-0778)
++            if (u) {
++                // 장비 발동은 제 차례 · 시전 칸을 쓰지 않는다. 같은 스킬을 배웠어도 그 칸의 쿨은 이어진다.
++                if (!ev.trigger) { markActed(u, ev.t); chargeTo(u, ev.ch, ev.t, false); }
++                castSkill(state, u, ev);
++                if (!ev.trigger) { u.skillT = ev.t; u.skillS = ev.s; u.skillN = 0; }
++            }   // 이어지는 기본 공격은 베기를 안 띄운다 (ADR-0564) · 그 스킬의 타격 순번은 0 부터 (ADR-0778)
+             // 정신 집중을 열었다 — 이 차례가 첫 방 (R318 · ADR-0720) · `iv` = 계속 닳기의 방 사이 간격(없으면 끊어 치기 — 주기)
+             if (u && ev.chan) u.chan = { s: ev.s, n: ev.chan, left: ev.chan - 1, at: ev.t, iv: ev.iv ?? null };
+             break;
+--- before/src/ui/mock.js
++++ src/ui/mock.js
+@@ -188,9 +188,9 @@
+     heal_out_pct: { ko: '회복량 증가', en: 'Healing Done', fmt: 'pct' },
+     debuff_dur_pct: { ko: '디버프 시간 증가', en: 'Debuff Duration', fmt: 'pct' },
+     hp_regen: { ko: 'HP 재생', en: 'HP Regen', fmt: 'n' },
+-    // 발동 옵션 — 줄에 스킬 id(`a.skill`)를 함께 든다. `proc` = 발동 조건(툴팁 문장 `tip.proc.<조건>` · app.js `affixText`) · `inert` = 전투가 아직 안 읽는다(목걸이 발동과 같다)
+-    proc_hit_attack: { ko: '타격 시 공격 스킬 발동', en: 'Attack Skill on Hit', fmt: 'pct', proc: 'hit', inert: true },
+-    proc_hit_buff: { ko: '타격 시 버프 스킬 발동', en: 'Buff Skill on Hit', fmt: 'pct', proc: 'hit', inert: true },
++    // 발동 옵션 — 줄에 스킬 id(`a.skill`)를 함께 든다. `proc` = 발동 조건(툴팁 문장 `tip.proc.<조건>` · app.js `affixText`) · 타격 둘은 적용, 나머지 `inert` 는 미적용이다.
++    proc_hit_attack: { ko: '타격 시 공격 스킬 발동', en: 'Attack Skill on Hit', fmt: 'pct', proc: 'hit' },
++    proc_hit_buff: { ko: '타격 시 버프 스킬 발동', en: 'Buff Skill on Hit', fmt: 'pct', proc: 'hit' },
+     proc_cast_attack: { ko: '시전 시 공격 스킬 발동', en: 'Attack Skill on Cast', fmt: 'pct', proc: 'cast', inert: true },
+     proc_cast_buff: { ko: '시전 시 버프 스킬 발동', en: 'Buff Skill on Cast', fmt: 'pct', proc: 'cast', inert: true },
+     proc_cast_debuff: { ko: '시전 시 디버프 스킬 발동', en: 'Debuff Skill on Cast', fmt: 'pct', proc: 'cast', inert: true },
+--- before/src/data/weapon_sin_option.csv
++++ src/data/weapon_sin_option.csv
+@@ -1,12 +1,12 @@
+ sin,option,applies_to,stat,scale,min,max,description_kr
+ wrath,1,all,crit_damage,flat,0.04,0.09,분노 ① — 치명타 피해(낮은 값 · 치명 배수를 귀하게 둔다) ⚠제안 수치 (item_design §1 「무기 옵션 — 죄종 계열」 · 2026-10-04 · R206)
+ wrath,2,all,crit_rate,flat,0.02,0.05,분노 ② — 치명타 확률 ⚠제안 수치
+-wrath,3,physical,proc_hit_attack,flat,0.05,0.12,분노 ③(물리) — 타격 시 기본 공격 스킬 발동 확률 · 스킬은 그 무기군 직업의 1티어 공격 스킬 중 드롭 때 하나 · ⚠ 전투 미적용(설명에만) ⚠제안 수치
++wrath,3,physical,proc_hit_attack,flat,0.05,0.12,분노 ③(물리) — 타격 시 기본 공격 스킬 발동 확률 · 스킬은 그 무기군 직업의 1티어 공격 스킬 중 드롭 때 하나 · 전투 적용(2026-10-30) ⚠제안 수치
+ wrath,3,magic,proc_cast_attack,flat,0.05,0.12,분노 ③(마법) — 시전 시 기본 공격 스킬 발동 확률 · 마법사 = 1티어 공격 셋 중 하나 · 사제 = 심판 · ⚠ 전투 미적용 ⚠제안 수치 (R208)
+ sloth,1,physical,aspd_pct,flat,0.02,0.05,나태 ①(물리) — 공격 속도 증가 ⚠제안 수치
+ sloth,1,magic,cast_speed_pct,flat,0.02,0.05,나태 ①(마법) — 캐스팅 속도 증가 · 공격 속도와 별개 옵션(2026-10-03 R203 · battle_design §2) ⚠제안 수치
+ sloth,2,all,cooldown_reduction,flat,0.02,0.05,나태 ② — 쿨타임 감소 ⚠제안 수치
+-sloth,3,physical,proc_hit_buff,flat,0.05,0.12,나태 ③(물리) — 타격 시 버프 스킬 발동 확률 · 버프 아무거나(도발 · 저주 · 오오라 제외) 드롭 때 하나 · ⚠ 전투 미적용 ⚠제안 수치
++sloth,3,physical,proc_hit_buff,flat,0.05,0.12,나태 ③(물리) — 타격 시 버프 스킬 발동 확률 · 버프 아무거나(도발 · 저주 · 오오라 제외) 드롭 때 하나 · 전투 적용(2026-10-30) ⚠제안 수치
+ sloth,3,magic,proc_cast_buff,flat,0.05,0.12,나태 ③(마법) — 시전 시 버프 스킬 발동 확률 · ⚠ 전투 미적용 ⚠제안 수치 (R208)
+ lust,1,physical,life_steal,flat,0.01,0.03,색욕 ①(물리) — 흡혈 ⚠제안 수치
+ lust,1,magic,cast_refund_chance,flat,0.05,0.12,색욕 ①(마법) — 시전 시 확률로 시전 칸 1 충전 · 마법 무기는 흡혈을 안 받는다(10-04) ⚠제안 수치 (R208)

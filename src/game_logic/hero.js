@@ -175,6 +175,21 @@ export function createHeroSystem(data) {
     const sinGearCount = (hero, items) => (items ?? []).filter(it => hero?.sin && (it?.sins ?? []).includes(hero.sin)).length;
 
     /**
+     * 레벨당 옵션 하나가 그 레벨에서 더하는 축과 값 — `{stat, v}` · 레벨당 옵션이 아니거나 레벨을 모르면 `null`
+     * [2026-10-30 · SCREEN_DESIGN §6 · ADR-0954 — 아이템 툴팁 「데미지 +40% (레벨당 데미지 +1%)」].
+     *   짝 · 반올림은 아래 `computeCombat` 이 더하는 것과 같다(최대 데미지만 정수로 반올림) — 그쪽을 고치면 여기도 고친다
+     */
+    const PER_LEVEL = {
+        dmg_per_level_pct: 'atk_pct', dmg_max_per_level: 'dmg_max_flat', hp_per_level: 'hp_flat', def_per_level: 'def_flat',
+        aspd_per_level_pct: 'aspd_pct', cast_speed_per_level_pct: 'cast_speed_pct', res_all_per_level: 'res_all',
+    };
+    const levelScaled = (stat, v, level) => {
+        const to = PER_LEVEL[stat];
+        if (!to || !(level > 0)) return null;
+        return { stat: to, v: stat === 'dmg_max_per_level' ? Math.round(v * level) : v * level };
+    };
+
+    /**
      * 그 노드가 **지금 낀 장비로 켜졌나** — 게이트 없는 노드는 언제나 켜져 있다. 랭크는 캐릭터에 쌓이고 켜는 것만 장비가 정한다(§3-5 「누적형」 소멸).
      * `items` 를 모르면(null) 게이트 노드는 꺼진 것으로 친다 — 맨몸과 같다 · `sin_gear` 는 `hero` 도 알아야 한다(모르면 꺼짐)
      */
@@ -652,6 +667,11 @@ export function createHeroSystem(data) {
             if (f(from)) flat[to] = f(to) + f(from) * greed;
 
         const weapon = items.find(it => it.slot === 'weapon');
+        // 무기 타격 발동 — 스킬 id와 확률을 줄 순서대로 보존한다. 능력치 합산 · 액티브 칸과 별개다.
+        // 목걸이 · 다른 부위 · 시전/피격 발동은 아직 전투에 연결하지 않는다 (2026-10-30).
+        const hitProcs = (weapon?.affixes ?? [])
+            .filter(a => (a.stat === 'proc_hit_attack' || a.stat === 'proc_hit_buff') && typeof a.skill === 'string' && a.skill.length > 0 && Number.isFinite(a.v) && a.v > 0)
+            .map(a => ({ skill: a.skill, chance: Math.min(1, a.v) }));
         const group = weapon ? data.weaponGroups[weapon.group] ?? null : null;
         const magic = group?.damageKind === 'magic';
         // 밑수 = **무기 피해 범위**(양끝 · 무기군 × ilvl × 강화에서 파생 · R90) + 무기 슬롯 접사의 고정 공격력(양끝에 같이). 맨손이면 양끝 모두 unarmed_atk
@@ -712,6 +732,7 @@ export function createHeroSystem(data) {
         // 무기 옵션이 여는 축 한 묶음 [2026-09-11 · R78 · item_design §1 「무기 옵션」] — **전투 능력치가 아니다**(combat_stat 행 없음 · 시트에 안 선다).
         //   소비자는 battle.js 뿐이다(조건부 % · 타격 시 창 · 강타 · 매직아이템 획득확률). 전부 0 이면 null 이라 전투가 한 번도 안 읽는다
         const fx = {
+            ...(hitProcs.length ? { hitProcs } : {}),
             vs: { normal: f('vs_normal_dmg'), demon: f('vs_demon_dmg'), undead: f('vs_undead_dmg') },
             vsElite: f('vs_elite_dmg'), vsFront: f('vs_front_dmg'), vsBack: f('vs_back_dmg'),
             ele: Object.fromEntries(ELEMENTS.map(e => [e, f(`${e}_dmg_pct`)])),
@@ -751,7 +772,7 @@ export function createHeroSystem(data) {
             // 물약 효과 상승 — **낀 영웅이 마시는 물약의 수치**(반지 분노 ③ · 2026-10-29 R382 · battle_design §7-1). 체력 물약은 체력 회복 +% 와 한 괄호(battle.drinkPotions)
             potion: f('potion_effect_pct'),
         };
-        const anyFx = [...Object.values(fx.vs), ...Object.values(fx.ele), fx.vsElite, fx.vsFront, fx.vsBack,
+        const anyFx = hitProcs.length > 0 || [...Object.values(fx.vs), ...Object.values(fx.ele), fx.vsElite, fx.vsFront, fx.vsBack,
             fx.defDown, fx.resDown, fx.atkDownPhys, fx.atkDownMag, fx.crush, fx.magicFind,
             ...Object.values(fx.vsDr), fx.vsEliteDr, fx.vsFrontDr, fx.vsBackDr, fx.drFlat, fx.counter, fx.recv, fx.killHeal, fx.startGauge, fx.cullNormal, fx.xpGain,
             fx.freezeDur, fx.poisonDur, fx.burnDur, fx.stunDur, fx.buffDur, fx.hitBonus,
@@ -837,7 +858,7 @@ export function createHeroSystem(data) {
 
     return {
         rollAttributes, rollAttributesTrace, attrCenters, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, avoidNames, rollHeroOf, rollGoblin, xpNeeded, grantXp, computeCombat,
-        masteryNodes, masteryById, masteryNodesFor, masteryBonus, masteryWiden, gateOn, sinGearCount,
+        masteryNodes, masteryById, masteryNodesFor, masteryBonus, masteryWiden, gateOn, sinGearCount, levelScaled,
         classIds: data.classes.map(c => c.id),   // 「직업 순」 = `class.csv` 행 순서 — 책 정렬(`game.sortBooks`)이 읽는다 (2026-10-14 · ADR-0620)
         mainClasses: mainClasses.slice(),        // 본편 직업 — 결투장 등급 상대가 직업 셋을 여기서 뽑는다 (INTERFACE §2-17 · 2026-10-17)
         // 새 게임 첫 진형의 랭크 · 첫 파티 앞줄 보장의 기준 (위 `startRankOf` · INTERFACE §2-4)

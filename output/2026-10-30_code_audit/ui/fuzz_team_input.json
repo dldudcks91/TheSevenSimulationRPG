@@ -1,0 +1,2020 @@
+{
+  "base": {
+    "v": 1,
+    "heroes": [
+      {
+        "hero": {
+          "name": {
+            "ko": "발렌",
+            "en": "Valen"
+          },
+          "tier": "rare",
+          "sin": "wrath",
+          "cls": "warrior",
+          "trait": {
+            "ko": "언변",
+            "en": "Silver Tongue"
+          },
+          "face": "warrior_5",
+          "level": 1,
+          "stats": {
+            "str": 18,
+            "agi": 10,
+            "int": 10,
+            "vit": 11,
+            "luck": 9,
+            "ldr": 7,
+            "cha": 12
+          },
+          "mastery": {},
+          "innate": "war_bash"
+        },
+        "gear": [
+          {
+            "pos": "weapon",
+            "item": {
+              "slot": "weapon",
+              "rarity": "normal",
+              "ilvl": 1,
+              "up": 0,
+              "name": {
+                "ko": "레전더리 맬릿",
+                "en": "Legendary Mallet"
+              },
+              "implicit": null,
+              "affixes": [
+                {
+                  "stat": "atk_pct",
+                  "v": 0.35,
+                  "src": "fixed"
+                },
+                {
+                  "stat": "crushing_blow_pct",
+                  "v": 0.02,
+                  "src": "gluttony"
+                }
+              ],
+              "sins": [],
+              "words": [],
+              "group": "mace",
+              "baseId": "legendary_mallet"
+            }
+          },
+          {
+            "pos": "armor",
+            "item": {
+              "slot": "armor",
+              "rarity": "normal",
+              "ilvl": 1,
+              "up": 0,
+              "name": {
+                "ko": "클로스 아머",
+                "en": "Cloth Armor"
+              },
+              "implicit": {
+                "stat": "def_flat",
+                "v": 10
+              },
+              "affixes": [
+                {
+                  "stat": "armor_def_pct",
+                  "v": 1.07,
+                  "src": "fixed"
+                },
+                {
+                  "stat": "vs_undead_dr",
+                  "v": 0.07,
+                  "src": "gluttony"
+                }
+              ],
+              "sins": [],
+              "words": [],
+              "baseId": "armor_cloth"
+            }
+          }
+        ],
+        "rank": 0
+      },
+      {
+        "hero": {
+          "name": {
+            "ko": "이언",
+            "en": "Ian"
+          },
+          "tier": "magic",
+          "sin": "gluttony",
+          "cls": "mage",
+          "trait": {
+            "ko": "타고난 지휘관",
+            "en": "Born Commander"
+          },
+          "face": "mage_2",
+          "level": 1,
+          "stats": {
+            "str": 8,
+            "agi": 9,
+            "int": 12,
+            "vit": 13,
+            "luck": 7,
+            "ldr": 9,
+            "cha": 3
+          },
+          "mastery": {},
+          "innate": "mag_fireball"
+        },
+        "gear": [
+          {
+            "pos": "weapon",
+            "item": {
+              "slot": "weapon",
+              "rarity": "normal",
+              "ilvl": 1,
+              "up": 0,
+              "name": {
+                "ko": "스월링 크리스탈",
+                "en": "Swirling Crystal"
+              },
+              "implicit": null,
+              "affixes": [
+                {
+                  "stat": "atk_pct",
+                  "v": 1.05,
+                  "src": "fixed"
+                },
+                {
+                  "stat": "dmg_min_flat",
+                  "v": 1,
+                  "src": "lust"
+                }
+              ],
+              "sins": [],
+              "words": [],
+              "group": "orb",
+              "baseId": "swirling_crystal"
+            }
+          },
+          {
+            "pos": "armor",
+            "item": {
+              "slot": "armor",
+              "rarity": "normal",
+              "ilvl": 1,
+              "up": 0,
+              "name": {
+                "ko": "클로스 아머",
+                "en": "Cloth Armor"
+              },
+              "implicit": {
+                "stat": "def_flat",
+                "v": 10
+              },
+              "affixes": [
+                {
+                  "stat": "armor_def_pct",
+                  "v": 1.62,
+                  "src": "fixed"
+                },
+                {
+                  "stat": "fhr",
+                  "v": 0.14,
+                  "src": "wrath"
+                }
+              ],
+              "sins": [],
+              "words": [],
+              "baseId": "armor_cloth"
+            }
+          }
+        ],
+        "rank": 1
+      },
+      {
+        "hero": {
+          "name": {
+            "ko": "마르고",
+            "en": "Margot"
+          },
+          "tier": "normal",
+          "sin": "sloth",
+          "cls": "archer",
+          "trait": {
+            "ko": "잔꾀",
+            "en": "Cunning"
+          },
+          "face": "archer_1",
+          "level": 1,
+          "stats": {
+            "str": 10,
+            "agi": 15,
+            "int": 11,
+            "vit": 5,
+            "luck": 5,
+            "ldr": 6,
+            "cha": 9
+          },
+          "mastery": {},
+          "innate": "arc_guided"
+        },
+        "gear": [
+          {
+            "pos": "weapon",
+            "item": {
+              "slot": "weapon",
+              "rarity": "normal",
+              "ilvl": 1,
+              "up": 0,
+              "name": {
+                "ko": "숏 보우",
+                "en": "Short Bow"
+              },
+              "implicit": null,
+              "affixes": [
+                {
+                  "stat": "atk_pct",
+                  "v": 0.11,
+                  "src": "fixed"
+                },
+                {
+                  "stat": "hit_bonus",
+                  "v": 0.16,
+                  "src": "lust"
+                }
+              ],
+              "sins": [],
+              "words": [],
+              "group": "bow",
+              "baseId": "short_bow"
+            }
+          },
+          {
+            "pos": "armor",
+            "item": {
+              "slot": "armor",
+              "rarity": "normal",
+              "ilvl": 1,
+              "up": 0,
+              "name": {
+                "ko": "클로스 아머",
+                "en": "Cloth Armor"
+              },
+              "implicit": {
+                "stat": "def_flat",
+                "v": 10
+              },
+              "affixes": [
+                {
+                  "stat": "armor_def_pct",
+                  "v": 0.48,
+                  "src": "fixed"
+                },
+                {
+                  "stat": "hp_flat",
+                  "v": 15,
+                  "src": "lust"
+                }
+              ],
+              "sins": [],
+              "words": [],
+              "baseId": "armor_cloth"
+            }
+          }
+        ],
+        "rank": 1
+      }
+    ]
+  },
+  "out": [
+    {
+      "id": "baseline",
+      "ok": true,
+      "problems": null,
+      "combat": {
+        "atk_physical": {
+          "min": 7,
+          "max": 11
+        },
+        "attack_type": "physical",
+        "basic_attack": true,
+        "level": 1,
+        "hp_max": 100,
+        "defense": 21,
+        "res_fire": 0,
+        "res_cold": 0,
+        "res_lightning": 0,
+        "res_poison": 0,
+        "res_max_bonus": 0,
+        "res_max_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "res_reduction": 0,
+        "res_reduction_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "def_ignore": 0,
+        "reflect_damage": 0,
+        "damage_reduction": 0,
+        "crit_rate": 0.3,
+        "crit_damage": 1.4545,
+        "life_steal": 0,
+        "hp_regen": 0.05,
+        "cooldown_reduction": 0,
+        "fhr": 0,
+        "debuff_dur_reduction": 0.06,
+        "action_period": 2.7,
+        "period_raw": 2.7,
+        "speed_pct": 0,
+        "period_weapon": 2.7,
+        "dmg_bonus_pct": 0,
+        "main_attr_mult": 2.1435888100000016,
+        "gold_find": 0,
+        "item_find": 0,
+        "find_own": {
+          "gold": 0,
+          "item": 0,
+          "magic": 0
+        },
+        "find_party": null,
+        "mastery_cond": null,
+        "atk_pct_sum": 0,
+        "option_fx": {
+          "vs": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0
+          },
+          "vsElite": 0,
+          "vsFront": 0,
+          "vsBack": 0,
+          "ele": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "defDown": 0,
+          "resDown": 0,
+          "atkDownPhys": 0,
+          "atkDownMag": 0,
+          "crush": 0.02,
+          "magicFind": 0,
+          "vsDr": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0.07
+          },
+          "vsEliteDr": 0,
+          "vsFrontDr": 0,
+          "vsBackDr": 0,
+          "drFlat": 0,
+          "counter": 0,
+          "recv": 0,
+          "killHeal": 0,
+          "startGauge": 0,
+          "cullNormal": 0,
+          "xpGain": 0,
+          "freezeDur": 0,
+          "poisonDur": 0,
+          "burnDur": 0,
+          "stunDur": 0,
+          "buffDur": 0,
+          "hitBonus": 0,
+          "defStack": 0,
+          "staggerDur": 0,
+          "castRefund": 0,
+          "castStack": 0,
+          "statusDur": 0,
+          "debuffDur": 0,
+          "healOut": 0,
+          "potion": 0
+        }
+      }
+    },
+    {
+      "id": "stats_empty",
+      "ok": true,
+      "problems": null,
+      "combat": {
+        "atk_physical": {
+          "min": 7,
+          "max": 11
+        },
+        "attack_type": "physical",
+        "basic_attack": true,
+        "level": 1,
+        "hp_max": 100,
+        "defense": 21,
+        "res_fire": 0,
+        "res_cold": 0,
+        "res_lightning": 0,
+        "res_poison": 0,
+        "res_max_bonus": 0,
+        "res_max_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "res_reduction": 0,
+        "res_reduction_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "def_ignore": 0,
+        "reflect_damage": 0,
+        "damage_reduction": 0,
+        "crit_rate": 0.3,
+        "crit_damage": 1.5,
+        "life_steal": 0,
+        "hp_regen": 0.05,
+        "cooldown_reduction": 0,
+        "fhr": 0,
+        "debuff_dur_reduction": 0,
+        "action_period": 2.7,
+        "period_raw": 2.7,
+        "speed_pct": 0,
+        "period_weapon": 2.7,
+        "dmg_bonus_pct": 0,
+        "main_attr_mult": 1,
+        "gold_find": 0,
+        "item_find": 0,
+        "find_own": {
+          "gold": 0,
+          "item": 0,
+          "magic": 0
+        },
+        "find_party": null,
+        "mastery_cond": null,
+        "atk_pct_sum": 0,
+        "option_fx": {
+          "vs": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0
+          },
+          "vsElite": 0,
+          "vsFront": 0,
+          "vsBack": 0,
+          "ele": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "defDown": 0,
+          "resDown": 0,
+          "atkDownPhys": 0,
+          "atkDownMag": 0,
+          "crush": 0.02,
+          "magicFind": 0,
+          "vsDr": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0.07
+          },
+          "vsEliteDr": 0,
+          "vsFrontDr": 0,
+          "vsBackDr": 0,
+          "drFlat": 0,
+          "counter": 0,
+          "recv": 0,
+          "killHeal": 0,
+          "startGauge": 0,
+          "cullNormal": 0,
+          "xpGain": 0,
+          "freezeDur": 0,
+          "poisonDur": 0,
+          "burnDur": 0,
+          "stunDur": 0,
+          "buffDur": 0,
+          "hitBonus": 0,
+          "defStack": 0,
+          "staggerDur": 0,
+          "castRefund": 0,
+          "castStack": 0,
+          "statusDur": 0,
+          "debuffDur": 0,
+          "healOut": 0,
+          "potion": 0
+        }
+      }
+    },
+    {
+      "id": "stats_missing_str",
+      "ok": true,
+      "problems": null,
+      "combat": {
+        "atk_physical": {
+          "min": 7,
+          "max": 11
+        },
+        "attack_type": "physical",
+        "basic_attack": true,
+        "level": 1,
+        "hp_max": 100,
+        "defense": 21,
+        "res_fire": 0,
+        "res_cold": 0,
+        "res_lightning": 0,
+        "res_poison": 0,
+        "res_max_bonus": 0,
+        "res_max_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "res_reduction": 0,
+        "res_reduction_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "def_ignore": 0,
+        "reflect_damage": 0,
+        "damage_reduction": 0,
+        "crit_rate": 0.3,
+        "crit_damage": 1.4545,
+        "life_steal": 0,
+        "hp_regen": 0.05,
+        "cooldown_reduction": 0,
+        "fhr": 0,
+        "debuff_dur_reduction": 0.06,
+        "action_period": 2.7,
+        "period_raw": 2.7,
+        "speed_pct": 0,
+        "period_weapon": 2.7,
+        "dmg_bonus_pct": 0,
+        "main_attr_mult": 1,
+        "gold_find": 0,
+        "item_find": 0,
+        "find_own": {
+          "gold": 0,
+          "item": 0,
+          "magic": 0
+        },
+        "find_party": null,
+        "mastery_cond": null,
+        "atk_pct_sum": 0,
+        "option_fx": {
+          "vs": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0
+          },
+          "vsElite": 0,
+          "vsFront": 0,
+          "vsBack": 0,
+          "ele": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "defDown": 0,
+          "resDown": 0,
+          "atkDownPhys": 0,
+          "atkDownMag": 0,
+          "crush": 0.02,
+          "magicFind": 0,
+          "vsDr": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0.07
+          },
+          "vsEliteDr": 0,
+          "vsFrontDr": 0,
+          "vsBackDr": 0,
+          "drFlat": 0,
+          "counter": 0,
+          "recv": 0,
+          "killHeal": 0,
+          "startGauge": 0,
+          "cullNormal": 0,
+          "xpGain": 0,
+          "freezeDur": 0,
+          "poisonDur": 0,
+          "burnDur": 0,
+          "stunDur": 0,
+          "buffDur": 0,
+          "hitBonus": 0,
+          "defStack": 0,
+          "staggerDur": 0,
+          "castRefund": 0,
+          "castStack": 0,
+          "statusDur": 0,
+          "debuffDur": 0,
+          "healOut": 0,
+          "potion": 0
+        }
+      }
+    },
+    {
+      "id": "name_null",
+      "ok": true,
+      "problems": null,
+      "combat": {
+        "atk_physical": {
+          "min": 7,
+          "max": 11
+        },
+        "attack_type": "physical",
+        "basic_attack": true,
+        "level": 1,
+        "hp_max": 100,
+        "defense": 21,
+        "res_fire": 0,
+        "res_cold": 0,
+        "res_lightning": 0,
+        "res_poison": 0,
+        "res_max_bonus": 0,
+        "res_max_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "res_reduction": 0,
+        "res_reduction_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "def_ignore": 0,
+        "reflect_damage": 0,
+        "damage_reduction": 0,
+        "crit_rate": 0.3,
+        "crit_damage": 1.4545,
+        "life_steal": 0,
+        "hp_regen": 0.05,
+        "cooldown_reduction": 0,
+        "fhr": 0,
+        "debuff_dur_reduction": 0.06,
+        "action_period": 2.7,
+        "period_raw": 2.7,
+        "speed_pct": 0,
+        "period_weapon": 2.7,
+        "dmg_bonus_pct": 0,
+        "main_attr_mult": 2.1435888100000016,
+        "gold_find": 0,
+        "item_find": 0,
+        "find_own": {
+          "gold": 0,
+          "item": 0,
+          "magic": 0
+        },
+        "find_party": null,
+        "mastery_cond": null,
+        "atk_pct_sum": 0,
+        "option_fx": {
+          "vs": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0
+          },
+          "vsElite": 0,
+          "vsFront": 0,
+          "vsBack": 0,
+          "ele": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "defDown": 0,
+          "resDown": 0,
+          "atkDownPhys": 0,
+          "atkDownMag": 0,
+          "crush": 0.02,
+          "magicFind": 0,
+          "vsDr": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0.07
+          },
+          "vsEliteDr": 0,
+          "vsFrontDr": 0,
+          "vsBackDr": 0,
+          "drFlat": 0,
+          "counter": 0,
+          "recv": 0,
+          "killHeal": 0,
+          "startGauge": 0,
+          "cullNormal": 0,
+          "xpGain": 0,
+          "freezeDur": 0,
+          "poisonDur": 0,
+          "burnDur": 0,
+          "stunDur": 0,
+          "buffDur": 0,
+          "hitBonus": 0,
+          "defStack": 0,
+          "staggerDur": 0,
+          "castRefund": 0,
+          "castStack": 0,
+          "statusDur": 0,
+          "debuffDur": 0,
+          "healOut": 0,
+          "potion": 0
+        }
+      }
+    },
+    {
+      "id": "name_number",
+      "ok": true,
+      "problems": null,
+      "combat": {
+        "atk_physical": {
+          "min": 7,
+          "max": 11
+        },
+        "attack_type": "physical",
+        "basic_attack": true,
+        "level": 1,
+        "hp_max": 100,
+        "defense": 21,
+        "res_fire": 0,
+        "res_cold": 0,
+        "res_lightning": 0,
+        "res_poison": 0,
+        "res_max_bonus": 0,
+        "res_max_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "res_reduction": 0,
+        "res_reduction_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "def_ignore": 0,
+        "reflect_damage": 0,
+        "damage_reduction": 0,
+        "crit_rate": 0.3,
+        "crit_damage": 1.4545,
+        "life_steal": 0,
+        "hp_regen": 0.05,
+        "cooldown_reduction": 0,
+        "fhr": 0,
+        "debuff_dur_reduction": 0.06,
+        "action_period": 2.7,
+        "period_raw": 2.7,
+        "speed_pct": 0,
+        "period_weapon": 2.7,
+        "dmg_bonus_pct": 0,
+        "main_attr_mult": 2.1435888100000016,
+        "gold_find": 0,
+        "item_find": 0,
+        "find_own": {
+          "gold": 0,
+          "item": 0,
+          "magic": 0
+        },
+        "find_party": null,
+        "mastery_cond": null,
+        "atk_pct_sum": 0,
+        "option_fx": {
+          "vs": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0
+          },
+          "vsElite": 0,
+          "vsFront": 0,
+          "vsBack": 0,
+          "ele": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "defDown": 0,
+          "resDown": 0,
+          "atkDownPhys": 0,
+          "atkDownMag": 0,
+          "crush": 0.02,
+          "magicFind": 0,
+          "vsDr": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0.07
+          },
+          "vsEliteDr": 0,
+          "vsFrontDr": 0,
+          "vsBackDr": 0,
+          "drFlat": 0,
+          "counter": 0,
+          "recv": 0,
+          "killHeal": 0,
+          "startGauge": 0,
+          "cullNormal": 0,
+          "xpGain": 0,
+          "freezeDur": 0,
+          "poisonDur": 0,
+          "burnDur": 0,
+          "stunDur": 0,
+          "buffDur": 0,
+          "hitBonus": 0,
+          "defStack": 0,
+          "staggerDur": 0,
+          "castRefund": 0,
+          "castStack": 0,
+          "statusDur": 0,
+          "debuffDur": 0,
+          "healOut": 0,
+          "potion": 0
+        }
+      }
+    },
+    {
+      "id": "name_object",
+      "ok": true,
+      "problems": null,
+      "combat": {
+        "atk_physical": {
+          "min": 7,
+          "max": 11
+        },
+        "attack_type": "physical",
+        "basic_attack": true,
+        "level": 1,
+        "hp_max": 100,
+        "defense": 21,
+        "res_fire": 0,
+        "res_cold": 0,
+        "res_lightning": 0,
+        "res_poison": 0,
+        "res_max_bonus": 0,
+        "res_max_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "res_reduction": 0,
+        "res_reduction_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "def_ignore": 0,
+        "reflect_damage": 0,
+        "damage_reduction": 0,
+        "crit_rate": 0.3,
+        "crit_damage": 1.4545,
+        "life_steal": 0,
+        "hp_regen": 0.05,
+        "cooldown_reduction": 0,
+        "fhr": 0,
+        "debuff_dur_reduction": 0.06,
+        "action_period": 2.7,
+        "period_raw": 2.7,
+        "speed_pct": 0,
+        "period_weapon": 2.7,
+        "dmg_bonus_pct": 0,
+        "main_attr_mult": 2.1435888100000016,
+        "gold_find": 0,
+        "item_find": 0,
+        "find_own": {
+          "gold": 0,
+          "item": 0,
+          "magic": 0
+        },
+        "find_party": null,
+        "mastery_cond": null,
+        "atk_pct_sum": 0,
+        "option_fx": {
+          "vs": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0
+          },
+          "vsElite": 0,
+          "vsFront": 0,
+          "vsBack": 0,
+          "ele": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "defDown": 0,
+          "resDown": 0,
+          "atkDownPhys": 0,
+          "atkDownMag": 0,
+          "crush": 0.02,
+          "magicFind": 0,
+          "vsDr": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0.07
+          },
+          "vsEliteDr": 0,
+          "vsFrontDr": 0,
+          "vsBackDr": 0,
+          "drFlat": 0,
+          "counter": 0,
+          "recv": 0,
+          "killHeal": 0,
+          "startGauge": 0,
+          "cullNormal": 0,
+          "xpGain": 0,
+          "freezeDur": 0,
+          "poisonDur": 0,
+          "burnDur": 0,
+          "stunDur": 0,
+          "buffDur": 0,
+          "hitBonus": 0,
+          "defStack": 0,
+          "staggerDur": 0,
+          "castRefund": 0,
+          "castStack": 0,
+          "statusDur": 0,
+          "debuffDur": 0,
+          "healOut": 0,
+          "potion": 0
+        }
+      }
+    },
+    {
+      "id": "sin_missing",
+      "ok": true,
+      "problems": null,
+      "combat": {
+        "atk_physical": {
+          "min": 7,
+          "max": 11
+        },
+        "attack_type": "physical",
+        "basic_attack": true,
+        "level": 1,
+        "hp_max": 100,
+        "defense": 21,
+        "res_fire": 0,
+        "res_cold": 0,
+        "res_lightning": 0,
+        "res_poison": 0,
+        "res_max_bonus": 0,
+        "res_max_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "res_reduction": 0,
+        "res_reduction_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "def_ignore": 0,
+        "reflect_damage": 0,
+        "damage_reduction": 0,
+        "crit_rate": 0.3,
+        "crit_damage": 1.4545,
+        "life_steal": 0,
+        "hp_regen": 0.05,
+        "cooldown_reduction": 0,
+        "fhr": 0,
+        "debuff_dur_reduction": 0.06,
+        "action_period": 2.7,
+        "period_raw": 2.7,
+        "speed_pct": 0,
+        "period_weapon": 2.7,
+        "dmg_bonus_pct": 0,
+        "main_attr_mult": 2.1435888100000016,
+        "gold_find": 0,
+        "item_find": 0,
+        "find_own": {
+          "gold": 0,
+          "item": 0,
+          "magic": 0
+        },
+        "find_party": null,
+        "mastery_cond": null,
+        "atk_pct_sum": 0,
+        "option_fx": {
+          "vs": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0
+          },
+          "vsElite": 0,
+          "vsFront": 0,
+          "vsBack": 0,
+          "ele": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "defDown": 0,
+          "resDown": 0,
+          "atkDownPhys": 0,
+          "atkDownMag": 0,
+          "crush": 0.02,
+          "magicFind": 0,
+          "vsDr": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0.07
+          },
+          "vsEliteDr": 0,
+          "vsFrontDr": 0,
+          "vsBackDr": 0,
+          "drFlat": 0,
+          "counter": 0,
+          "recv": 0,
+          "killHeal": 0,
+          "startGauge": 0,
+          "cullNormal": 0,
+          "xpGain": 0,
+          "freezeDur": 0,
+          "poisonDur": 0,
+          "burnDur": 0,
+          "stunDur": 0,
+          "buffDur": 0,
+          "hitBonus": 0,
+          "defStack": 0,
+          "staggerDur": 0,
+          "castRefund": 0,
+          "castStack": 0,
+          "statusDur": 0,
+          "debuffDur": 0,
+          "healOut": 0,
+          "potion": 0
+        }
+      }
+    },
+    {
+      "id": "sin_unknown",
+      "ok": true,
+      "problems": null,
+      "combat": {
+        "atk_physical": {
+          "min": 7,
+          "max": 11
+        },
+        "attack_type": "physical",
+        "basic_attack": true,
+        "level": 1,
+        "hp_max": 100,
+        "defense": 21,
+        "res_fire": 0,
+        "res_cold": 0,
+        "res_lightning": 0,
+        "res_poison": 0,
+        "res_max_bonus": 0,
+        "res_max_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "res_reduction": 0,
+        "res_reduction_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "def_ignore": 0,
+        "reflect_damage": 0,
+        "damage_reduction": 0,
+        "crit_rate": 0.3,
+        "crit_damage": 1.4545,
+        "life_steal": 0,
+        "hp_regen": 0.05,
+        "cooldown_reduction": 0,
+        "fhr": 0,
+        "debuff_dur_reduction": 0.06,
+        "action_period": 2.7,
+        "period_raw": 2.7,
+        "speed_pct": 0,
+        "period_weapon": 2.7,
+        "dmg_bonus_pct": 0,
+        "main_attr_mult": 2.1435888100000016,
+        "gold_find": 0,
+        "item_find": 0,
+        "find_own": {
+          "gold": 0,
+          "item": 0,
+          "magic": 0
+        },
+        "find_party": null,
+        "mastery_cond": null,
+        "atk_pct_sum": 0,
+        "option_fx": {
+          "vs": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0
+          },
+          "vsElite": 0,
+          "vsFront": 0,
+          "vsBack": 0,
+          "ele": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "defDown": 0,
+          "resDown": 0,
+          "atkDownPhys": 0,
+          "atkDownMag": 0,
+          "crush": 0.02,
+          "magicFind": 0,
+          "vsDr": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0.07
+          },
+          "vsEliteDr": 0,
+          "vsFrontDr": 0,
+          "vsBackDr": 0,
+          "drFlat": 0,
+          "counter": 0,
+          "recv": 0,
+          "killHeal": 0,
+          "startGauge": 0,
+          "cullNormal": 0,
+          "xpGain": 0,
+          "freezeDur": 0,
+          "poisonDur": 0,
+          "burnDur": 0,
+          "stunDur": 0,
+          "buffDur": 0,
+          "hitBonus": 0,
+          "defStack": 0,
+          "staggerDur": 0,
+          "castRefund": 0,
+          "castStack": 0,
+          "statusDur": 0,
+          "debuffDur": 0,
+          "healOut": 0,
+          "potion": 0
+        }
+      }
+    },
+    {
+      "id": "tier_unknown",
+      "ok": true,
+      "problems": null,
+      "combat": {
+        "atk_physical": {
+          "min": 7,
+          "max": 11
+        },
+        "attack_type": "physical",
+        "basic_attack": true,
+        "level": 1,
+        "hp_max": 100,
+        "defense": 21,
+        "res_fire": 0,
+        "res_cold": 0,
+        "res_lightning": 0,
+        "res_poison": 0,
+        "res_max_bonus": 0,
+        "res_max_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "res_reduction": 0,
+        "res_reduction_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "def_ignore": 0,
+        "reflect_damage": 0,
+        "damage_reduction": 0,
+        "crit_rate": 0.3,
+        "crit_damage": 1.4545,
+        "life_steal": 0,
+        "hp_regen": 0.05,
+        "cooldown_reduction": 0,
+        "fhr": 0,
+        "debuff_dur_reduction": 0.06,
+        "action_period": 2.7,
+        "period_raw": 2.7,
+        "speed_pct": 0,
+        "period_weapon": 2.7,
+        "dmg_bonus_pct": 0,
+        "main_attr_mult": 2.1435888100000016,
+        "gold_find": 0,
+        "item_find": 0,
+        "find_own": {
+          "gold": 0,
+          "item": 0,
+          "magic": 0
+        },
+        "find_party": null,
+        "mastery_cond": null,
+        "atk_pct_sum": 0,
+        "option_fx": {
+          "vs": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0
+          },
+          "vsElite": 0,
+          "vsFront": 0,
+          "vsBack": 0,
+          "ele": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "defDown": 0,
+          "resDown": 0,
+          "atkDownPhys": 0,
+          "atkDownMag": 0,
+          "crush": 0.02,
+          "magicFind": 0,
+          "vsDr": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0.07
+          },
+          "vsEliteDr": 0,
+          "vsFrontDr": 0,
+          "vsBackDr": 0,
+          "drFlat": 0,
+          "counter": 0,
+          "recv": 0,
+          "killHeal": 0,
+          "startGauge": 0,
+          "cullNormal": 0,
+          "xpGain": 0,
+          "freezeDur": 0,
+          "poisonDur": 0,
+          "burnDur": 0,
+          "stunDur": 0,
+          "buffDur": 0,
+          "hitBonus": 0,
+          "defStack": 0,
+          "staggerDur": 0,
+          "castRefund": 0,
+          "castStack": 0,
+          "statusDur": 0,
+          "debuffDur": 0,
+          "healOut": 0,
+          "potion": 0
+        }
+      }
+    },
+    {
+      "id": "gear_null",
+      "ok": false,
+      "problems": [
+        {
+          "code": "slot",
+          "hero": 0,
+          "pos": null
+        }
+      ],
+      "combat": null
+    },
+    {
+      "id": "affixes_object",
+      "throw": "TypeError: (it.affixes ?? []).forEach is not a function",
+      "stack": "TypeError: (it.affixes ?? []).forEach is not a function\n    at http://127.0.0.1:8921/game_logic/arena.js:347:36\n    at Array.forEach (<anonymous>)\n    at validateTeam (http://127.0.0.1:8921/game_logic/arena.js:304:24)\n    at Object.importTeam (http://127.0.0.1:8921/game_logic/arena.js:358:26)\n    at eval (eval at evaluate (:370:30), <anonymous>:19:27)\n    at UtilityScript.evaluate (<anonymous>:377:18)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)"
+    },
+    {
+      "id": "affixes_null_entry",
+      "throw": "TypeError: Cannot read properties of null (reading 'stat')",
+      "stack": "TypeError: Cannot read properties of null (reading 'stat')\n    at Object.computeCombat (http://127.0.0.1:8921/game_logic/hero.js:634:47)\n    at http://127.0.0.1:8921/game_logic/arena.js:115:33\n    at Array.map (<anonymous>)\n    at snapshotTeam (http://127.0.0.1:8921/game_logic/arena.js:112:23)\n    at Object.importTeam (http://127.0.0.1:8921/game_logic/arena.js:374:34)\n    at eval (eval at evaluate (:370:30), <anonymous>:19:27)\n    at UtilityScript.evaluate (<anonymous>:377:18)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)"
+    },
+    {
+      "id": "affixes_numeric_entry",
+      "ok": true,
+      "problems": null,
+      "combat": {
+        "atk_physical": {
+          "min": 5,
+          "max": 8
+        },
+        "attack_type": "physical",
+        "basic_attack": true,
+        "level": 1,
+        "hp_max": 100,
+        "defense": 21,
+        "res_fire": 0,
+        "res_cold": 0,
+        "res_lightning": 0,
+        "res_poison": 0,
+        "res_max_bonus": 0,
+        "res_max_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "res_reduction": 0,
+        "res_reduction_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "def_ignore": 0,
+        "reflect_damage": 0,
+        "damage_reduction": 0,
+        "crit_rate": 0.3,
+        "crit_damage": 1.4545,
+        "life_steal": 0,
+        "hp_regen": 0.05,
+        "cooldown_reduction": 0,
+        "fhr": 0,
+        "debuff_dur_reduction": 0.06,
+        "action_period": 2.7,
+        "period_raw": 2.7,
+        "speed_pct": 0,
+        "period_weapon": 2.7,
+        "dmg_bonus_pct": 0,
+        "main_attr_mult": 2.1435888100000016,
+        "gold_find": 0,
+        "item_find": 0,
+        "find_own": {
+          "gold": 0,
+          "item": 0,
+          "magic": 0
+        },
+        "find_party": null,
+        "mastery_cond": null,
+        "atk_pct_sum": 0,
+        "option_fx": {
+          "vs": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0
+          },
+          "vsElite": 0,
+          "vsFront": 0,
+          "vsBack": 0,
+          "ele": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "defDown": 0,
+          "resDown": 0,
+          "atkDownPhys": 0,
+          "atkDownMag": 0,
+          "crush": 0,
+          "magicFind": 0,
+          "vsDr": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0.07
+          },
+          "vsEliteDr": 0,
+          "vsFrontDr": 0,
+          "vsBackDr": 0,
+          "drFlat": 0,
+          "counter": 0,
+          "recv": 0,
+          "killHeal": 0,
+          "startGauge": 0,
+          "cullNormal": 0,
+          "xpGain": 0,
+          "freezeDur": 0,
+          "poisonDur": 0,
+          "burnDur": 0,
+          "stunDur": 0,
+          "buffDur": 0,
+          "hitBonus": 0,
+          "defStack": 0,
+          "staggerDur": 0,
+          "castRefund": 0,
+          "castStack": 0,
+          "statusDur": 0,
+          "debuffDur": 0,
+          "healOut": 0,
+          "potion": 0
+        }
+      }
+    },
+    {
+      "id": "affixes_missing_stat",
+      "ok": true,
+      "problems": null,
+      "combat": {
+        "atk_physical": {
+          "min": 5,
+          "max": 8
+        },
+        "attack_type": "physical",
+        "basic_attack": true,
+        "level": 1,
+        "hp_max": 100,
+        "defense": 21,
+        "res_fire": 0,
+        "res_cold": 0,
+        "res_lightning": 0,
+        "res_poison": 0,
+        "res_max_bonus": 0,
+        "res_max_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "res_reduction": 0,
+        "res_reduction_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "def_ignore": 0,
+        "reflect_damage": 0,
+        "damage_reduction": 0,
+        "crit_rate": 0.3,
+        "crit_damage": 1.4545,
+        "life_steal": 0,
+        "hp_regen": 0.05,
+        "cooldown_reduction": 0,
+        "fhr": 0,
+        "debuff_dur_reduction": 0.06,
+        "action_period": 2.7,
+        "period_raw": 2.7,
+        "speed_pct": 0,
+        "period_weapon": 2.7,
+        "dmg_bonus_pct": 0,
+        "main_attr_mult": 2.1435888100000016,
+        "gold_find": 0,
+        "item_find": 0,
+        "find_own": {
+          "gold": 0,
+          "item": 0,
+          "magic": 0
+        },
+        "find_party": null,
+        "mastery_cond": null,
+        "atk_pct_sum": 0,
+        "option_fx": {
+          "vs": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0
+          },
+          "vsElite": 0,
+          "vsFront": 0,
+          "vsBack": 0,
+          "ele": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "defDown": 0,
+          "resDown": 0,
+          "atkDownPhys": 0,
+          "atkDownMag": 0,
+          "crush": 0,
+          "magicFind": 0,
+          "vsDr": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0.07
+          },
+          "vsEliteDr": 0,
+          "vsFrontDr": 0,
+          "vsBackDr": 0,
+          "drFlat": 0,
+          "counter": 0,
+          "recv": 0,
+          "killHeal": 0,
+          "startGauge": 0,
+          "cullNormal": 0,
+          "xpGain": 0,
+          "freezeDur": 0,
+          "poisonDur": 0,
+          "burnDur": 0,
+          "stunDur": 0,
+          "buffDur": 0,
+          "hitBonus": 0,
+          "defStack": 0,
+          "staggerDur": 0,
+          "castRefund": 0,
+          "castStack": 0,
+          "statusDur": 0,
+          "debuffDur": 0,
+          "healOut": 0,
+          "potion": 0
+        }
+      }
+    },
+    {
+      "id": "weapon_ilvl_huge",
+      "ok": false,
+      "problems": [
+        {
+          "code": "reqLevel",
+          "hero": 0,
+          "pos": "weapon"
+        }
+      ],
+      "combat": null
+    },
+    {
+      "id": "level_missing",
+      "ok": false,
+      "problems": [
+        {
+          "code": "level",
+          "hero": 0
+        }
+      ],
+      "combat": null
+    },
+    {
+      "id": "skillLv_null",
+      "ok": true,
+      "problems": null,
+      "combat": {
+        "atk_physical": {
+          "min": 7,
+          "max": 11
+        },
+        "attack_type": "physical",
+        "basic_attack": true,
+        "level": 1,
+        "hp_max": 100,
+        "defense": 21,
+        "res_fire": 0,
+        "res_cold": 0,
+        "res_lightning": 0,
+        "res_poison": 0,
+        "res_max_bonus": 0,
+        "res_max_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "res_reduction": 0,
+        "res_reduction_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "def_ignore": 0,
+        "reflect_damage": 0,
+        "damage_reduction": 0,
+        "crit_rate": 0.3,
+        "crit_damage": 1.4545,
+        "life_steal": 0,
+        "hp_regen": 0.05,
+        "cooldown_reduction": 0,
+        "fhr": 0,
+        "debuff_dur_reduction": 0.06,
+        "action_period": 2.7,
+        "period_raw": 2.7,
+        "speed_pct": 0,
+        "period_weapon": 2.7,
+        "dmg_bonus_pct": 0,
+        "main_attr_mult": 2.1435888100000016,
+        "gold_find": 0,
+        "item_find": 0,
+        "find_own": {
+          "gold": 0,
+          "item": 0,
+          "magic": 0
+        },
+        "find_party": null,
+        "mastery_cond": null,
+        "atk_pct_sum": 0,
+        "option_fx": {
+          "vs": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0
+          },
+          "vsElite": 0,
+          "vsFront": 0,
+          "vsBack": 0,
+          "ele": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "defDown": 0,
+          "resDown": 0,
+          "atkDownPhys": 0,
+          "atkDownMag": 0,
+          "crush": 0.02,
+          "magicFind": 0,
+          "vsDr": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0.07
+          },
+          "vsEliteDr": 0,
+          "vsFrontDr": 0,
+          "vsBackDr": 0,
+          "drFlat": 0,
+          "counter": 0,
+          "recv": 0,
+          "killHeal": 0,
+          "startGauge": 0,
+          "cullNormal": 0,
+          "xpGain": 0,
+          "freezeDur": 0,
+          "poisonDur": 0,
+          "burnDur": 0,
+          "stunDur": 0,
+          "buffDur": 0,
+          "hitBonus": 0,
+          "defStack": 0,
+          "staggerDur": 0,
+          "castRefund": 0,
+          "castStack": 0,
+          "statusDur": 0,
+          "debuffDur": 0,
+          "healOut": 0,
+          "potion": 0
+        }
+      }
+    },
+    {
+      "id": "mastery_null",
+      "ok": true,
+      "problems": null,
+      "combat": {
+        "atk_physical": {
+          "min": 7,
+          "max": 11
+        },
+        "attack_type": "physical",
+        "basic_attack": true,
+        "level": 1,
+        "hp_max": 100,
+        "defense": 21,
+        "res_fire": 0,
+        "res_cold": 0,
+        "res_lightning": 0,
+        "res_poison": 0,
+        "res_max_bonus": 0,
+        "res_max_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "res_reduction": 0,
+        "res_reduction_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "def_ignore": 0,
+        "reflect_damage": 0,
+        "damage_reduction": 0,
+        "crit_rate": 0.3,
+        "crit_damage": 1.4545,
+        "life_steal": 0,
+        "hp_regen": 0.05,
+        "cooldown_reduction": 0,
+        "fhr": 0,
+        "debuff_dur_reduction": 0.06,
+        "action_period": 2.7,
+        "period_raw": 2.7,
+        "speed_pct": 0,
+        "period_weapon": 2.7,
+        "dmg_bonus_pct": 0,
+        "main_attr_mult": 2.1435888100000016,
+        "gold_find": 0,
+        "item_find": 0,
+        "find_own": {
+          "gold": 0,
+          "item": 0,
+          "magic": 0
+        },
+        "find_party": null,
+        "mastery_cond": null,
+        "atk_pct_sum": 0,
+        "option_fx": {
+          "vs": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0
+          },
+          "vsElite": 0,
+          "vsFront": 0,
+          "vsBack": 0,
+          "ele": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "defDown": 0,
+          "resDown": 0,
+          "atkDownPhys": 0,
+          "atkDownMag": 0,
+          "crush": 0.02,
+          "magicFind": 0,
+          "vsDr": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0.07
+          },
+          "vsEliteDr": 0,
+          "vsFrontDr": 0,
+          "vsBackDr": 0,
+          "drFlat": 0,
+          "counter": 0,
+          "recv": 0,
+          "killHeal": 0,
+          "startGauge": 0,
+          "cullNormal": 0,
+          "xpGain": 0,
+          "freezeDur": 0,
+          "poisonDur": 0,
+          "burnDur": 0,
+          "stunDur": 0,
+          "buffDur": 0,
+          "hitBonus": 0,
+          "defStack": 0,
+          "staggerDur": 0,
+          "castRefund": 0,
+          "castStack": 0,
+          "statusDur": 0,
+          "debuffDur": 0,
+          "healOut": 0,
+          "potion": 0
+        }
+      }
+    },
+    {
+      "id": "item_name_number",
+      "ok": true,
+      "problems": null,
+      "combat": {
+        "atk_physical": {
+          "min": 7,
+          "max": 11
+        },
+        "attack_type": "physical",
+        "basic_attack": true,
+        "level": 1,
+        "hp_max": 100,
+        "defense": 21,
+        "res_fire": 0,
+        "res_cold": 0,
+        "res_lightning": 0,
+        "res_poison": 0,
+        "res_max_bonus": 0,
+        "res_max_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "res_reduction": 0,
+        "res_reduction_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "def_ignore": 0,
+        "reflect_damage": 0,
+        "damage_reduction": 0,
+        "crit_rate": 0.3,
+        "crit_damage": 1.4545,
+        "life_steal": 0,
+        "hp_regen": 0.05,
+        "cooldown_reduction": 0,
+        "fhr": 0,
+        "debuff_dur_reduction": 0.06,
+        "action_period": 2.7,
+        "period_raw": 2.7,
+        "speed_pct": 0,
+        "period_weapon": 2.7,
+        "dmg_bonus_pct": 0,
+        "main_attr_mult": 2.1435888100000016,
+        "gold_find": 0,
+        "item_find": 0,
+        "find_own": {
+          "gold": 0,
+          "item": 0,
+          "magic": 0
+        },
+        "find_party": null,
+        "mastery_cond": null,
+        "atk_pct_sum": 0,
+        "option_fx": {
+          "vs": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0
+          },
+          "vsElite": 0,
+          "vsFront": 0,
+          "vsBack": 0,
+          "ele": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "defDown": 0,
+          "resDown": 0,
+          "atkDownPhys": 0,
+          "atkDownMag": 0,
+          "crush": 0.02,
+          "magicFind": 0,
+          "vsDr": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0.07
+          },
+          "vsEliteDr": 0,
+          "vsFrontDr": 0,
+          "vsBackDr": 0,
+          "drFlat": 0,
+          "counter": 0,
+          "recv": 0,
+          "killHeal": 0,
+          "startGauge": 0,
+          "cullNormal": 0,
+          "xpGain": 0,
+          "freezeDur": 0,
+          "poisonDur": 0,
+          "burnDur": 0,
+          "stunDur": 0,
+          "buffDur": 0,
+          "hitBonus": 0,
+          "defStack": 0,
+          "staggerDur": 0,
+          "castRefund": 0,
+          "castStack": 0,
+          "statusDur": 0,
+          "debuffDur": 0,
+          "healOut": 0,
+          "potion": 0
+        }
+      }
+    },
+    {
+      "id": "item_rarity_unknown",
+      "ok": true,
+      "problems": null,
+      "combat": {
+        "atk_physical": {
+          "min": 7,
+          "max": 11
+        },
+        "attack_type": "physical",
+        "basic_attack": true,
+        "level": 1,
+        "hp_max": 100,
+        "defense": 21,
+        "res_fire": 0,
+        "res_cold": 0,
+        "res_lightning": 0,
+        "res_poison": 0,
+        "res_max_bonus": 0,
+        "res_max_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "res_reduction": 0,
+        "res_reduction_el": {
+          "fire": 0,
+          "cold": 0,
+          "lightning": 0,
+          "poison": 0
+        },
+        "def_ignore": 0,
+        "reflect_damage": 0,
+        "damage_reduction": 0,
+        "crit_rate": 0.3,
+        "crit_damage": 1.4545,
+        "life_steal": 0,
+        "hp_regen": 0.05,
+        "cooldown_reduction": 0,
+        "fhr": 0,
+        "debuff_dur_reduction": 0.06,
+        "action_period": 2.7,
+        "period_raw": 2.7,
+        "speed_pct": 0,
+        "period_weapon": 2.7,
+        "dmg_bonus_pct": 0,
+        "main_attr_mult": 2.1435888100000016,
+        "gold_find": 0,
+        "item_find": 0,
+        "find_own": {
+          "gold": 0,
+          "item": 0,
+          "magic": 0
+        },
+        "find_party": null,
+        "mastery_cond": null,
+        "atk_pct_sum": 0,
+        "option_fx": {
+          "vs": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0
+          },
+          "vsElite": 0,
+          "vsFront": 0,
+          "vsBack": 0,
+          "ele": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "defDown": 0,
+          "resDown": 0,
+          "atkDownPhys": 0,
+          "atkDownMag": 0,
+          "crush": 0.02,
+          "magicFind": 0,
+          "vsDr": {
+            "normal": 0,
+            "demon": 0,
+            "undead": 0.07
+          },
+          "vsEliteDr": 0,
+          "vsFrontDr": 0,
+          "vsBackDr": 0,
+          "drFlat": 0,
+          "counter": 0,
+          "recv": 0,
+          "killHeal": 0,
+          "startGauge": 0,
+          "cullNormal": 0,
+          "xpGain": 0,
+          "freezeDur": 0,
+          "poisonDur": 0,
+          "burnDur": 0,
+          "stunDur": 0,
+          "buffDur": 0,
+          "hitBonus": 0,
+          "defStack": 0,
+          "staggerDur": 0,
+          "castRefund": 0,
+          "castStack": 0,
+          "statusDur": 0,
+          "debuffDur": 0,
+          "healOut": 0,
+          "potion": 0
+        }
+      }
+    },
+    {
+      "id": "stats_extra",
+      "ok": false,
+      "problems": [
+        {
+          "code": "stats",
+          "hero": 0
+        }
+      ],
+      "combat": null
+    },
+    {
+      "id": "stats_string",
+      "ok": false,
+      "problems": [
+        {
+          "code": "stats",
+          "hero": 0
+        }
+      ],
+      "combat": null
+    }
+  ]
+}

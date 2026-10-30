@@ -1,0 +1,2081 @@
+{
+  "stage": 1032,
+  "difficulty": "normal",
+  "checkpointAt": 1793322000000,
+  "elapsedAtCheckpointSec": 3600,
+  "method": "Paired legal interventions on identical saved checkpoint; common closeRun on restore, then next10 manual attempts at same stage. Actual costs, XP, loot, healing and clock; no free ranks/gold/levels/counter edits. This is a short controlled scenario, not a full day persona or optimal strategy.",
+  "branches": [
+    {
+      "name": "control",
+      "actions": [],
+      "actionGoldCost": 0,
+      "before": {
+        "gold": 1080,
+        "materials": {
+          "dust": 40,
+          "iron_ore": 74,
+          "timber": 51,
+          "herb": 43
+        },
+        "potions": {}
+      },
+      "afterActions": {
+        "gold": 1080,
+        "materials": {
+          "dust": 40,
+          "iron_ore": 74,
+          "timber": 51,
+          "herb": 43
+        },
+        "potions": {}
+      },
+      "wins": 1,
+      "attempts": 10,
+      "elapsedSec": 856.85,
+      "totalGold": 2080,
+      "endLevels": [
+        11,
+        10,
+        8
+      ],
+      "runs": [
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 29.6,
+          "combatSec": 27.7,
+          "gold": 90,
+          "xp": {
+            "h1": 230,
+            "h2": 243,
+            "h3": 255
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 16
+        },
+        {
+          "won": true,
+          "reason": "clear",
+          "elapsedSec": 109.8,
+          "combatSec": 102.2,
+          "gold": 381,
+          "xp": {
+            "h1": 963,
+            "h2": 921,
+            "h3": 459
+          },
+          "downed": [
+            "h3"
+          ],
+          "roundsCleared": 9,
+          "potionUse": {},
+          "casts": 43
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 94.25,
+          "combatSec": 89.5,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 526,
+            "h3": 408
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 41
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 94.25,
+          "combatSec": 89.5,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 526,
+            "h3": 204
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 40
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 46.8,
+          "combatSec": 44.9,
+          "gold": 72,
+          "xp": {
+            "h1": 184,
+            "h2": 175,
+            "h3": 51
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 23
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 36.8,
+          "combatSec": 34.9,
+          "gold": 72,
+          "xp": {
+            "h1": 184,
+            "h2": 175,
+            "h3": 51
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 19
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 84.85,
+          "combatSec": 80.1,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 527,
+            "h3": 510
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 37
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 83.75,
+          "combatSec": 79,
+          "gold": 271,
+          "xp": {
+            "h1": 689,
+            "h2": 525,
+            "h3": 459
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 38
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 103.35,
+          "combatSec": 98.6,
+          "gold": 271,
+          "xp": {
+            "h1": 689,
+            "h2": 657,
+            "h3": 255
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 47
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 123.4,
+          "combatSec": 117.7,
+          "gold": 272,
+          "xp": {
+            "h1": 632,
+            "h2": 658,
+            "h3": 153
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 6,
+          "potionUse": {},
+          "casts": 46
+        }
+      ]
+    },
+    {
+      "name": "combat_respec",
+      "actions": [
+        {
+          "respec": [
+            {
+              "hero": "h1",
+              "reset": {
+                "ok": true,
+                "refunded": 8,
+                "points": 9
+              },
+              "learned": 9,
+              "mastery": {
+                "cls_mage_t1_cdr": 5,
+                "cls_mage_t1_castspeed": 4
+              }
+            },
+            {
+              "hero": "h2",
+              "reset": {
+                "ok": true,
+                "refunded": 8,
+                "points": 8
+              },
+              "learned": 8,
+              "mastery": {
+                "cls_priest_t1_cdr": 5,
+                "cls_priest_t1_castspeed": 3
+              }
+            },
+            {
+              "hero": "h3",
+              "reset": {
+                "ok": true,
+                "refunded": 6,
+                "points": 7
+              },
+              "learned": 7,
+              "mastery": {
+                "cls_warrior_t1_atk": 5,
+                "cls_warrior_t1_resall": 2
+              }
+            }
+          ]
+        }
+      ],
+      "actionGoldCost": 0,
+      "before": {
+        "gold": 1080,
+        "materials": {
+          "dust": 40,
+          "iron_ore": 74,
+          "timber": 51,
+          "herb": 43
+        },
+        "potions": {}
+      },
+      "afterActions": {
+        "gold": 1080,
+        "materials": {
+          "dust": 40,
+          "iron_ore": 74,
+          "timber": 51,
+          "herb": 43
+        },
+        "potions": {}
+      },
+      "wins": 0,
+      "attempts": 10,
+      "elapsedSec": 740.6,
+      "totalGold": 1695,
+      "endLevels": [
+        11,
+        10,
+        8
+      ],
+      "runs": [
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 29.6,
+          "combatSec": 27.7,
+          "gold": 75,
+          "xp": {
+            "h1": 217,
+            "h2": 243,
+            "h3": 255
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 16
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 68,
+          "combatSec": 64.2,
+          "gold": 150,
+          "xp": {
+            "h1": 433,
+            "h2": 438,
+            "h3": 357
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 4,
+          "potionUse": {},
+          "casts": 27
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 72.05,
+          "combatSec": 67.3,
+          "gold": 165,
+          "xp": {
+            "h1": 477,
+            "h2": 483,
+            "h3": 408
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 30
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 90.8,
+          "combatSec": 85.1,
+          "gold": 270,
+          "xp": {
+            "h1": 781,
+            "h2": 789,
+            "h3": 204
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 6,
+          "potionUse": {},
+          "casts": 39
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 35.9,
+          "combatSec": 34,
+          "gold": 60,
+          "xp": {
+            "h1": 173,
+            "h2": 175,
+            "h3": 51
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 19
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 76.65,
+          "combatSec": 71.9,
+          "gold": 210,
+          "xp": {
+            "h1": 607,
+            "h2": 613,
+            "h3": 204
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 37
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 117.2,
+          "combatSec": 109.6,
+          "gold": 300,
+          "xp": {
+            "h1": 868,
+            "h2": 834,
+            "h3": 561
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 8,
+          "potionUse": {},
+          "casts": 50
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 84.15,
+          "combatSec": 79.4,
+          "gold": 195,
+          "xp": {
+            "h1": 564,
+            "h2": 570,
+            "h3": 204
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 38
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 35.6,
+          "combatSec": 33.7,
+          "gold": 75,
+          "xp": {
+            "h1": 217,
+            "h2": 219,
+            "h3": 102
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 17
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 80.65,
+          "combatSec": 75.9,
+          "gold": 195,
+          "xp": {
+            "h1": 542,
+            "h2": 439,
+            "h3": 153
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 36
+        }
+      ]
+    },
+    {
+      "name": "minor10",
+      "actions": [
+        {
+          "buy": {
+            "ok": true,
+            "id": "minor_healing",
+            "n": 10,
+            "gold": 500,
+            "have": 10
+          }
+        }
+      ],
+      "actionGoldCost": 500,
+      "before": {
+        "gold": 1080,
+        "materials": {
+          "dust": 40,
+          "iron_ore": 74,
+          "timber": 51,
+          "herb": 43
+        },
+        "potions": {}
+      },
+      "afterActions": {
+        "gold": 580,
+        "materials": {
+          "dust": 40,
+          "iron_ore": 74,
+          "timber": 51,
+          "herb": 43
+        },
+        "potions": {
+          "minor_healing": 10
+        }
+      },
+      "wins": 1,
+      "attempts": 10,
+      "elapsedSec": 975.85,
+      "totalGold": 2334,
+      "endLevels": [
+        11,
+        10,
+        8
+      ],
+      "runs": [
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 148.6,
+          "combatSec": 141,
+          "gold": 344,
+          "xp": {
+            "h1": 872,
+            "h2": 857,
+            "h3": 255
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 8,
+          "potionUse": {
+            "minor_healing": 10
+          },
+          "casts": 62
+        },
+        {
+          "won": true,
+          "reason": "clear",
+          "elapsedSec": 109.8,
+          "combatSec": 102.2,
+          "gold": 381,
+          "xp": {
+            "h1": 963,
+            "h2": 921,
+            "h3": 459
+          },
+          "downed": [
+            "h3"
+          ],
+          "roundsCleared": 9,
+          "potionUse": {},
+          "casts": 43
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 94.25,
+          "combatSec": 89.5,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 526,
+            "h3": 408
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 41
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 94.25,
+          "combatSec": 89.5,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 526,
+            "h3": 204
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 40
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 46.8,
+          "combatSec": 44.9,
+          "gold": 72,
+          "xp": {
+            "h1": 184,
+            "h2": 175,
+            "h3": 51
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 23
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 36.8,
+          "combatSec": 34.9,
+          "gold": 72,
+          "xp": {
+            "h1": 184,
+            "h2": 175,
+            "h3": 51
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 19
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 84.85,
+          "combatSec": 80.1,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 527,
+            "h3": 510
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 37
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 83.75,
+          "combatSec": 79,
+          "gold": 271,
+          "xp": {
+            "h1": 689,
+            "h2": 525,
+            "h3": 459
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 38
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 103.35,
+          "combatSec": 98.6,
+          "gold": 271,
+          "xp": {
+            "h1": 643,
+            "h2": 657,
+            "h3": 255
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 47
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 123.4,
+          "combatSec": 117.7,
+          "gold": 272,
+          "xp": {
+            "h1": 618,
+            "h2": 658,
+            "h3": 153
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 6,
+          "potionUse": {},
+          "casts": 46
+        }
+      ]
+    },
+    {
+      "name": "weapon_upgrade",
+      "actions": [
+        {
+          "hero": "h2",
+          "upgrade": {
+            "ok": true,
+            "up": 1,
+            "cost": 600,
+            "success": true
+          }
+        }
+      ],
+      "actionGoldCost": 600,
+      "before": {
+        "gold": 1080,
+        "materials": {
+          "dust": 40,
+          "iron_ore": 74,
+          "timber": 51,
+          "herb": 43
+        },
+        "potions": {}
+      },
+      "afterActions": {
+        "gold": 480,
+        "materials": {
+          "dust": 39,
+          "iron_ore": 73,
+          "timber": 51,
+          "herb": 43
+        },
+        "potions": {}
+      },
+      "wins": 1,
+      "attempts": 10,
+      "elapsedSec": 856.95,
+      "totalGold": 2080,
+      "endLevels": [
+        11,
+        10,
+        8
+      ],
+      "runs": [
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 29.6,
+          "combatSec": 27.7,
+          "gold": 90,
+          "xp": {
+            "h1": 230,
+            "h2": 243,
+            "h3": 255
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 16
+        },
+        {
+          "won": true,
+          "reason": "clear",
+          "elapsedSec": 109.8,
+          "combatSec": 102.2,
+          "gold": 381,
+          "xp": {
+            "h1": 963,
+            "h2": 921,
+            "h3": 459
+          },
+          "downed": [
+            "h3"
+          ],
+          "roundsCleared": 9,
+          "potionUse": {},
+          "casts": 43
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 94.25,
+          "combatSec": 89.5,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 526,
+            "h3": 408
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 41
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 94.34999999999998,
+          "combatSec": 89.6,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 526,
+            "h3": 204
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 41
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 46.8,
+          "combatSec": 44.9,
+          "gold": 72,
+          "xp": {
+            "h1": 184,
+            "h2": 175,
+            "h3": 51
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 23
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 36.8,
+          "combatSec": 34.9,
+          "gold": 72,
+          "xp": {
+            "h1": 184,
+            "h2": 175,
+            "h3": 51
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 19
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 84.85,
+          "combatSec": 80.1,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 527,
+            "h3": 510
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 37
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 83.75,
+          "combatSec": 79,
+          "gold": 271,
+          "xp": {
+            "h1": 689,
+            "h2": 525,
+            "h3": 459
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 38
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 103.35,
+          "combatSec": 98.6,
+          "gold": 271,
+          "xp": {
+            "h1": 689,
+            "h2": 657,
+            "h3": 255
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 47
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 123.4,
+          "combatSec": 117.7,
+          "gold": 272,
+          "xp": {
+            "h1": 632,
+            "h2": 658,
+            "h3": 153
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 6,
+          "potionUse": {},
+          "casts": 46
+        }
+      ]
+    },
+    {
+      "name": "books",
+      "actions": [
+        {
+          "books": [
+            {
+              "hero": "h1",
+              "id": "mag_fireball",
+              "crafted": {
+                "ok": false,
+                "err": "unbuilt"
+              },
+              "learned": null
+            },
+            {
+              "hero": "h2",
+              "skipped": "no owned relevant blueprint"
+            },
+            {
+              "hero": "h3",
+              "id": "war_bash",
+              "crafted": {
+                "ok": false,
+                "err": "unbuilt"
+              },
+              "learned": null
+            }
+          ]
+        }
+      ],
+      "actionGoldCost": 0,
+      "before": {
+        "gold": 1080,
+        "materials": {
+          "dust": 40,
+          "iron_ore": 74,
+          "timber": 51,
+          "herb": 43
+        },
+        "potions": {}
+      },
+      "afterActions": {
+        "gold": 1080,
+        "materials": {
+          "dust": 40,
+          "iron_ore": 74,
+          "timber": 51,
+          "herb": 43
+        },
+        "potions": {}
+      },
+      "wins": 1,
+      "attempts": 10,
+      "elapsedSec": 856.85,
+      "totalGold": 2080,
+      "endLevels": [
+        11,
+        10,
+        8
+      ],
+      "runs": [
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 29.6,
+          "combatSec": 27.7,
+          "gold": 90,
+          "xp": {
+            "h1": 230,
+            "h2": 243,
+            "h3": 255
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 16
+        },
+        {
+          "won": true,
+          "reason": "clear",
+          "elapsedSec": 109.8,
+          "combatSec": 102.2,
+          "gold": 381,
+          "xp": {
+            "h1": 963,
+            "h2": 921,
+            "h3": 459
+          },
+          "downed": [
+            "h3"
+          ],
+          "roundsCleared": 9,
+          "potionUse": {},
+          "casts": 43
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 94.25,
+          "combatSec": 89.5,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 526,
+            "h3": 408
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 41
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 94.25,
+          "combatSec": 89.5,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 526,
+            "h3": 204
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 40
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 46.8,
+          "combatSec": 44.9,
+          "gold": 72,
+          "xp": {
+            "h1": 184,
+            "h2": 175,
+            "h3": 51
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 23
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 36.8,
+          "combatSec": 34.9,
+          "gold": 72,
+          "xp": {
+            "h1": 184,
+            "h2": 175,
+            "h3": 51
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 19
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 84.85,
+          "combatSec": 80.1,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 527,
+            "h3": 510
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 37
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 83.75,
+          "combatSec": 79,
+          "gold": 271,
+          "xp": {
+            "h1": 689,
+            "h2": 525,
+            "h3": 459
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 38
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 103.35,
+          "combatSec": 98.6,
+          "gold": 271,
+          "xp": {
+            "h1": 689,
+            "h2": 657,
+            "h3": 255
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 47
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 123.4,
+          "combatSec": 117.7,
+          "gold": 272,
+          "xp": {
+            "h1": 632,
+            "h2": 658,
+            "h3": 153
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 6,
+          "potionUse": {},
+          "casts": 46
+        }
+      ]
+    },
+    {
+      "name": "respec_and_books",
+      "actions": [
+        {
+          "respec": [
+            {
+              "hero": "h1",
+              "reset": {
+                "ok": true,
+                "refunded": 8,
+                "points": 9
+              },
+              "learned": 9,
+              "mastery": {
+                "cls_mage_t1_cdr": 5,
+                "cls_mage_t1_castspeed": 4
+              }
+            },
+            {
+              "hero": "h2",
+              "reset": {
+                "ok": true,
+                "refunded": 8,
+                "points": 8
+              },
+              "learned": 8,
+              "mastery": {
+                "cls_priest_t1_cdr": 5,
+                "cls_priest_t1_castspeed": 3
+              }
+            },
+            {
+              "hero": "h3",
+              "reset": {
+                "ok": true,
+                "refunded": 6,
+                "points": 7
+              },
+              "learned": 7,
+              "mastery": {
+                "cls_warrior_t1_atk": 5,
+                "cls_warrior_t1_resall": 2
+              }
+            }
+          ]
+        },
+        {
+          "books": [
+            {
+              "hero": "h1",
+              "id": "mag_fireball",
+              "crafted": {
+                "ok": false,
+                "err": "unbuilt"
+              },
+              "learned": null
+            },
+            {
+              "hero": "h2",
+              "skipped": "no owned relevant blueprint"
+            },
+            {
+              "hero": "h3",
+              "id": "war_bash",
+              "crafted": {
+                "ok": false,
+                "err": "unbuilt"
+              },
+              "learned": null
+            }
+          ]
+        }
+      ],
+      "actionGoldCost": 0,
+      "before": {
+        "gold": 1080,
+        "materials": {
+          "dust": 40,
+          "iron_ore": 74,
+          "timber": 51,
+          "herb": 43
+        },
+        "potions": {}
+      },
+      "afterActions": {
+        "gold": 1080,
+        "materials": {
+          "dust": 40,
+          "iron_ore": 74,
+          "timber": 51,
+          "herb": 43
+        },
+        "potions": {}
+      },
+      "wins": 0,
+      "attempts": 10,
+      "elapsedSec": 740.6,
+      "totalGold": 1695,
+      "endLevels": [
+        11,
+        10,
+        8
+      ],
+      "runs": [
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 29.6,
+          "combatSec": 27.7,
+          "gold": 75,
+          "xp": {
+            "h1": 217,
+            "h2": 243,
+            "h3": 255
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 16
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 68,
+          "combatSec": 64.2,
+          "gold": 150,
+          "xp": {
+            "h1": 433,
+            "h2": 438,
+            "h3": 357
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 4,
+          "potionUse": {},
+          "casts": 27
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 72.05,
+          "combatSec": 67.3,
+          "gold": 165,
+          "xp": {
+            "h1": 477,
+            "h2": 483,
+            "h3": 408
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 30
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 90.8,
+          "combatSec": 85.1,
+          "gold": 270,
+          "xp": {
+            "h1": 781,
+            "h2": 789,
+            "h3": 204
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 6,
+          "potionUse": {},
+          "casts": 39
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 35.9,
+          "combatSec": 34,
+          "gold": 60,
+          "xp": {
+            "h1": 173,
+            "h2": 175,
+            "h3": 51
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 19
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 76.65,
+          "combatSec": 71.9,
+          "gold": 210,
+          "xp": {
+            "h1": 607,
+            "h2": 613,
+            "h3": 204
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 37
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 117.2,
+          "combatSec": 109.6,
+          "gold": 300,
+          "xp": {
+            "h1": 868,
+            "h2": 834,
+            "h3": 561
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 8,
+          "potionUse": {},
+          "casts": 50
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 84.15,
+          "combatSec": 79.4,
+          "gold": 195,
+          "xp": {
+            "h1": 564,
+            "h2": 570,
+            "h3": 204
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 38
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 35.6,
+          "combatSec": 33.7,
+          "gold": 75,
+          "xp": {
+            "h1": 217,
+            "h2": 219,
+            "h3": 102
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 17
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 80.65,
+          "combatSec": 75.9,
+          "gold": 195,
+          "xp": {
+            "h1": 542,
+            "h2": 439,
+            "h3": 153
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 36
+        }
+      ]
+    },
+    {
+      "name": "health_matched_potions",
+      "actions": [
+        {
+          "desiredMedianHeal": 68,
+          "potion": "light_healing",
+          "bought": {
+            "ok": true,
+            "id": "light_healing",
+            "n": 10,
+            "gold": 1000,
+            "have": 10
+          }
+        }
+      ],
+      "actionGoldCost": 1000,
+      "before": {
+        "gold": 1080,
+        "materials": {
+          "dust": 40,
+          "iron_ore": 74,
+          "timber": 51,
+          "herb": 43
+        },
+        "potions": {}
+      },
+      "afterActions": {
+        "gold": 80,
+        "materials": {
+          "dust": 40,
+          "iron_ore": 74,
+          "timber": 51,
+          "herb": 43
+        },
+        "potions": {
+          "light_healing": 10
+        }
+      },
+      "wins": 0,
+      "attempts": 10,
+      "elapsedSec": 941.2,
+      "totalGold": 2170,
+      "endLevels": [
+        11,
+        10,
+        9
+      ],
+      "runs": [
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 167.9,
+          "combatSec": 160.3,
+          "gold": 434,
+          "xp": {
+            "h1": 1102,
+            "h2": 1075,
+            "h3": 1224
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 8,
+          "potionUse": {
+            "light_healing": 9
+          },
+          "casts": 66
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 71.65,
+          "combatSec": 66.9,
+          "gold": 163,
+          "xp": {
+            "h1": 413,
+            "h2": 395,
+            "h3": 459
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {
+            "light_healing": 1
+          },
+          "casts": 31
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 94.25,
+          "combatSec": 89.5,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 526,
+            "h3": 408
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 41
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 94.25,
+          "combatSec": 89.5,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 526,
+            "h3": 204
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 40
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 46.8,
+          "combatSec": 44.9,
+          "gold": 72,
+          "xp": {
+            "h1": 184,
+            "h2": 175,
+            "h3": 51
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 23
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 36.8,
+          "combatSec": 34.9,
+          "gold": 72,
+          "xp": {
+            "h1": 184,
+            "h2": 175,
+            "h3": 51
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 19
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 95.65000000000002,
+          "combatSec": 90.9,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 527,
+            "h3": 510
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 42
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 86.15,
+          "combatSec": 81.4,
+          "gold": 235,
+          "xp": {
+            "h1": 597,
+            "h2": 569,
+            "h3": 598
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 36
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 74.35,
+          "combatSec": 69.6,
+          "gold": 271,
+          "xp": {
+            "h1": 675,
+            "h2": 657,
+            "h3": 230
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 36
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 123.4,
+          "combatSec": 117.7,
+          "gold": 272,
+          "xp": {
+            "h1": 618,
+            "h2": 658,
+            "h3": 138
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 6,
+          "potionUse": {},
+          "casts": 46
+        }
+      ]
+    },
+    {
+      "name": "no_potions",
+      "actions": [
+        {
+          "ok": true,
+          "slot": 0
+        },
+        {
+          "ok": true,
+          "slot": 1
+        }
+      ],
+      "actionGoldCost": 0,
+      "before": {
+        "gold": 1080,
+        "materials": {
+          "dust": 40,
+          "iron_ore": 74,
+          "timber": 51,
+          "herb": 43
+        },
+        "potions": {}
+      },
+      "afterActions": {
+        "gold": 1080,
+        "materials": {
+          "dust": 40,
+          "iron_ore": 74,
+          "timber": 51,
+          "herb": 43
+        },
+        "potions": {}
+      },
+      "wins": 1,
+      "attempts": 10,
+      "elapsedSec": 856.85,
+      "totalGold": 2080,
+      "endLevels": [
+        11,
+        10,
+        8
+      ],
+      "runs": [
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 29.6,
+          "combatSec": 27.7,
+          "gold": 90,
+          "xp": {
+            "h1": 230,
+            "h2": 243,
+            "h3": 255
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 16
+        },
+        {
+          "won": true,
+          "reason": "clear",
+          "elapsedSec": 109.8,
+          "combatSec": 102.2,
+          "gold": 381,
+          "xp": {
+            "h1": 963,
+            "h2": 921,
+            "h3": 459
+          },
+          "downed": [
+            "h3"
+          ],
+          "roundsCleared": 9,
+          "potionUse": {},
+          "casts": 43
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 94.25,
+          "combatSec": 89.5,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 526,
+            "h3": 408
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 41
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 94.25,
+          "combatSec": 89.5,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 526,
+            "h3": 204
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 40
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 46.8,
+          "combatSec": 44.9,
+          "gold": 72,
+          "xp": {
+            "h1": 184,
+            "h2": 175,
+            "h3": 51
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 23
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 36.8,
+          "combatSec": 34.9,
+          "gold": 72,
+          "xp": {
+            "h1": 184,
+            "h2": 175,
+            "h3": 51
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 2,
+          "potionUse": {},
+          "casts": 19
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 84.85,
+          "combatSec": 80.1,
+          "gold": 217,
+          "xp": {
+            "h1": 551,
+            "h2": 527,
+            "h3": 510
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 37
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 83.75,
+          "combatSec": 79,
+          "gold": 271,
+          "xp": {
+            "h1": 689,
+            "h2": 525,
+            "h3": 459
+          },
+          "downed": [
+            "h3",
+            "h2",
+            "h1"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 38
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 103.35,
+          "combatSec": 98.6,
+          "gold": 271,
+          "xp": {
+            "h1": 689,
+            "h2": 657,
+            "h3": 255
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 5,
+          "potionUse": {},
+          "casts": 47
+        },
+        {
+          "won": false,
+          "reason": "wipe",
+          "elapsedSec": 123.4,
+          "combatSec": 117.7,
+          "gold": 272,
+          "xp": {
+            "h1": 632,
+            "h2": 658,
+            "h3": 153
+          },
+          "downed": [
+            "h3",
+            "h1",
+            "h2"
+          ],
+          "roundsCleared": 6,
+          "potionUse": {},
+          "casts": 46
+        }
+      ]
+    }
+  ],
+  "page_errors": [],
+  "baseline_manifest": "../source_manifest.json"
+}

@@ -42,19 +42,21 @@ import { reductionMult } from './formula.js';
  *   `aura`  — 쿨 없이 상시 · 한 번에 하나 · **행동을 안 먹는다** (skill_design §1-5). 액티브 칸에서 빠져
  *             전투 시작에 `until: Infinity` 창으로 걸린다 — 켜는 주체는 battle.js 다
  *   `event` — 차례가 아니라 **사건이 부른다**(`EVENT_TRIGGERS` · 사망 폭발 §9-6 · 2026-09-21 · §12-9). `cast_condition` 이 그 사건이다
- *   `channel` — **정신 집중** [2026-10-22 · R318 · battle_design §3-2] — 차례에 고르고, 열리면 `hit` 줄 타수만큼 **차례마다 한 방**을 친다(`chan`).
- *             그동안 게이지가 안 찬다 · 기본 공격 · 다른 스킬은 기다린다 · 쿨은 마지막 방 뒤부터 — 여닫는 것은 skill_runtime(`chanOpen` · `chanClose`)이다
+ *   `channel` — **정신 집중** [2026-10-22 · R318 · battle_design §3-2] — 차례에 고르고, 열리면 `hit` 줄 타수만큼 **방 사이 간격마다 한 방**을 친다(`chan`).
+ *             그동안 게이지가 안 찬다 · 기본 공격 · 다른 스킬은 기다린다 · 쿨은 마지막 방 뒤부터 — 여닫는 것은 skill_runtime(`chanOpen` · `chanClose`)이다.
+ *             방 사이는 셋 다 초 시계다(공속과 상관없다) — `iv` = 그 간격의 balance 키 · 모으기는 그 스킬의 `charge_sec`
  */
 export const CASTS = {
     turn: { picked: true, cooled: true },
     aura: { picked: false, cooled: false },
     event: { picked: false, cooled: false },
-    channel: { picked: true, cooled: true, chan: 'turn' },
+    // 끊어 치기 [2026-10-30 · R392 · 사용자 「빠르게 4번을 다다다닥 때리라니까」 — ~~방 사이 = 행동 주기~~(2026-10-28 R374)] — 방이 [balance.csv:channel_strike_sec] 마다 몰아친다
+    channel: { picked: true, cooled: true, chan: true, iv: 'channel_strike_sec' },
     // 계속 닳기 [2026-10-22 · 사용자 「도트딜로」 · 「직격」 · 간격 「0.5초마다」] — 같은 정신 집중이고 방이 [balance.csv:channel_tick_sec] 마다다(타수 = 틱 수 · 배율 = 한 틱 몫 · 중독 틱과 따로)
-    channel_tick: { picked: true, cooled: true, chan: 'tick' },
-    // 모으기 [2026-10-26 · R357 · 사용자 「기모아서 마지막에 한발」 · 초 시계 R358 「그냥 n초로해」] — 계속 닳기와 같은 초 시계인데 **방이 둘**(여는 순간 · 쏘는 순간)이고
+    channel_tick: { picked: true, cooled: true, chan: true, iv: 'channel_tick_sec' },
+    // 모으기 [2026-10-26 · R357 · 사용자 「기모아서 마지막에 한발」 · 초 시계 R358 「그냥 n초로해」] — 같은 초 시계인데 **방이 둘**(여는 순간 · 쏘는 순간)이고
     //   **마지막 방에만 친다**(`burst`) · 그 사이 = 그 스킬의 `charge_sec`(공속과 상관없다 · 스킬마다 — 2026-10-28 R371) · `hit` 줄은 한 발(타수 1 — 로드 검사)
-    channel_charge: { picked: true, cooled: true, chan: 'tick', burst: true },
+    channel_charge: { picked: true, cooled: true, chan: true, burst: true },
 };
 export const CAST_IDS = Object.keys(CASTS);
 
@@ -169,18 +171,19 @@ export const ATTACK_TARGETS = {
         const sk = skillHit(def);
         for (let k = 0; k < def.hits; k++) {
             if (u.hp <= 0 || tgt.hp <= 0) break;
-            rt.strikeOnce(u, tgt, def.mult, def.element, def.id, sk);
-            // 방어 감소는 **밑수까지** 깎는다 — 창이 다시 파생돼도 되돌아오지 않게 (guard_pct 와 같은 축이다).
-            //   % 로 깎으므로 **양수 밑수만** 깎고, 깎은 비율을 `defKeep` 에 곱한다 — 갈아입기가 이 비율로 잇는다(벗었다 입어도 안 씻긴다 · R130).
-            //   `def` 도 같은 비율로 — 밑수 × 창 배수라 둘을 같이 곱하면 다시 파생한 것과 같다(0 밑으로 자르지 않는다 · 음수 방어 R130)
-            //   **겹 상한** [2026-10-29 · R383 · battle_design §9-3 「쌓이는 방어 감소는 상한이 같다」] — 대상마다 깎은 횟수(`shredN`)가
-            //   `rt.shredMax`([balance.csv:weapon_def_down_stack_max] — 무기 시기 ② 겹과 같은 값)에 닿으면 더 안 깎는다 · 감쇠가 0 인 줄은 세지 않는다
-            if (tgt.defBase > 0 && def.decay > 0 && (tgt.shredN ?? 0) < rt.shredMax) {
-                tgt.defBase = tgt.defBase * (1 - def.decay);
-                tgt.defKeep = (tgt.defKeep ?? 1) * (1 - def.decay);
-                tgt.def = tgt.def * (1 - def.decay);
-                tgt.shredN = (tgt.shredN ?? 0) + 1;
-            }
+            rt.strikeOnce(u, tgt, def.mult, def.element, def.id, sk, () => {
+                // 방어 감소는 **밑수까지** 깎는다 — 창이 다시 파생돼도 되돌아오지 않게 (guard_pct 와 같은 축이다).
+                //   % 로 깎으므로 **양수 밑수만** 깎고, 깎은 비율을 `defKeep` 에 곱한다 — 갈아입기가 이 비율로 잇는다(벗었다 입어도 안 씻긴다 · R130).
+                //   `def` 도 같은 비율로 — 밑수 × 창 배수라 둘을 같이 곱하면 다시 파생한 것과 같다(0 밑으로 자르지 않는다 · 음수 방어 R130)
+                //   **겹 상한** [2026-10-29 · R383 · battle_design §9-3 「쌓이는 방어 감소는 상한이 같다」] — 대상마다 깎은 횟수(`shredN`)가
+                //   `rt.shredMax`([balance.csv:weapon_def_down_stack_max] — 무기 시기 ② 겹과 같은 값)에 닿으면 더 안 깎는다 · 감쇠가 0 인 줄은 세지 않는다
+                if (tgt.defBase > 0 && def.decay > 0 && (tgt.shredN ?? 0) < rt.shredMax) {
+                    tgt.defBase = tgt.defBase * (1 - def.decay);
+                    tgt.defKeep = (tgt.defKeep ?? 1) * (1 - def.decay);
+                    tgt.def = tgt.def * (1 - def.decay);
+                    tgt.shredN = (tgt.shredN ?? 0) + 1;
+                }
+            });
         }
         return tgt;
     },
@@ -363,8 +366,8 @@ export const EFFECTS = {
     },
     // HP 재생 창 — 09-07 확정 구조(레벨 곡선 밑수)에 **얹는다**. 밑수가 0 이면 아무 일도 없다
     regen_pct: {},
-    // HP 재생 + 수치 — 장비 「체력 재생」과 같은 단위를 밑수 위에 **더한다**(프레이어 · 2026-10-29) · 밑수가 0 이어도 선다
-    regen_flat: {},
+    // HP 재생 + 받는 쪽 최대 HP × 값 — 밑수 위에 **더한다**(프레이어 · 2026-10-30 R391 · skill_design §12-7) · 밑수가 0 이어도 선다
+    regen_hp_pct: {},
     // 받는 피해 감소 — 감쇠 뒤 곱이고 원천별로 각각 곱한다 (battle_design §9-3). 방어·저항과 채널이 다르다
     dr_pct: {},
     // 평타 부여 둘 — 소비자는 skill_runtime 의 기본 공격이다
@@ -554,8 +557,8 @@ const ATTRS = [
         u.hpMax = Math.round(u.hpMaxBase * (1 + sumOf(u, 'hp_max_pct')));
         if (u.hp > u.hpMax) u.hp = u.hpMax;
     },
-    // HP 재생 — 밑수 × (1 + % 창) + 수치 창
-    u => { u.regen = u.regenBase * (1 + sumOf(u, 'regen_pct')) + sumOf(u, 'regen_flat'); },
+    // HP 재생 — 밑수 × (1 + % 창) + 최대 HP × 최대 HP 비율 창 (최대 HP 를 다시 쓴 **뒤**라 최대 HP 창이 키운 몫도 탄다)
+    u => { u.regen = u.regenBase * (1 + sumOf(u, 'regen_pct')) + u.hpMax * sumOf(u, 'regen_hp_pct'); },
     // 받는 피해 감소 — **창 하나 = 원천 하나** — 창 합을 안 쓰고 창마다 곱한다. 밑값(`drBase` — 장비 · 마스터리를 이미 곱으로 합친 값)도 원천 하나다.
     //   ~~`drBase + sum`~~ 은 2026-09-22 에 고쳤다 — 덧셈이라 장비 50% + 결투 20% 가 70%(곱이면 60%)였고 합이 100% 를 넘을 수 있었다.
     //   창이 없으면 밑값을 그대로 둔다(부동소수 왕복 없이 원값 복원) · 음수 창(받는 피해 증가)은 `1 − v` 가 1 보다 커져 그대로 곱해진다

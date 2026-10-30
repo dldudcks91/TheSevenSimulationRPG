@@ -1,0 +1,34 @@
+{
+  "status": "Class-aware heuristic for controlled experiments; not an optimal-build claim",
+  "apis": {
+    "refund": "game.resetMastery(state, heroUid): free full refund, no wallet or level edits",
+    "available": "game.masteryState(state, heroUid).nodes: choose canLearn and on !== false",
+    "learn": "game.learnMastery(state, heroUid, node.id), repeat while a permitted candidate exists",
+    "weaponMode": "magic = !game.heroCombat(state, hero).basic_attack"
+  },
+  "classFirstIds": {
+    "mage": ["cls_mage_t1_cdr", "cls_mage_t1_castspeed", "cls_mage_t1_atk"],
+    "priest": ["cls_priest_t1_cdr", "cls_priest_t1_castspeed"],
+    "knight": ["cls_knight_t1_dr", "cls_knight_t1_def", "cls_knight_t1_hp"],
+    "warrior": ["cls_warrior_t1_atk", "cls_warrior_t1_resall", "cls_warrior_t1_hp"],
+    "archer": ["cls_archer_t1_atkspeed", "cls_archer_t1_hitbonus", "cls_archer_t1_critchance"]
+  },
+  "afterClassFirstByStat": {
+    "magic": ["cooldown_reduction", "cast_speed_pct", "atk_pct", "res_reduction", "crit_rate", "crit_damage", "res_all", "damage_reduction", "hp_flat", "def_flat", "buff_dur_pct", "fhr"],
+    "physicalArcher": ["aspd_pct", "hit_bonus", "atk_pct", "crit_rate", "crit_damage", "def_ignore", "res_all", "damage_reduction", "hp_flat", "def_flat", "life_steal", "fhr"],
+    "physicalWarrior": ["aspd_pct", "atk_pct", "def_ignore", "crit_rate", "crit_damage", "hit_bonus", "res_all", "damage_reduction", "hp_flat", "def_flat", "life_steal", "fhr"],
+    "frontKnight": ["damage_reduction", "def_flat", "hp_flat", "res_all", "atk_pct", "aspd_pct", "hit_bonus", "crit_rate", "crit_damage", "def_ignore", "life_steal", "fhr"]
+  },
+  "postponeEconomyStats": ["gold_find", "xp_gain_pct", "magic_find"],
+  "avoidForMagicMode": ["aspd_pct", "def_ignore", "life_steal", "reflect_damage"],
+  "orderingNotes": [
+    "Apply exact classFirstIds in order before generic stat ordering; each node can be filled to its legitimate maximum.",
+    "Only use the caster exclusions when the currently equipped weapon has basic_attack=false; equipping an off-class weapon can change this mode.",
+    "Favor n.cond absent or '-' before conditional nodes within the same priority; on=false denotes a currently inactive equipment gate.",
+    "For generic same-stat ties, prefer class tree over sin tree, then stable data order.",
+    "Knight ordering assumes the knight is the exposed front tank. Do not label this universally optimal for rear-row or offensive knight builds.",
+    "Priest buff duration is useful for actual buff skills, not for direct healing. Put it after CDR/casting speed/magic attack unless the experiment explicitly tests a buff build.",
+    "All this changes is legitimate point allocation. Keep each test branch's wallet, equipment, XP, drop seed, battle counter and elapsed time unchanged until actual attempts run.",
+    "The cohort adaptive bundle may also retreat-farm after repeated failures; root ablations must separate that effect from respec."
+  ]
+}

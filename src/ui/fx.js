@@ -657,27 +657,25 @@ export function fxAppear(state, u, s = null) {
 }
 
 /* ── 라운드 사이 [2026-10-29 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0948] — 마지막 적이 쓰러지면 적 카드가 사라지고 숨 동안 빈 줄이 선다 ·
-      원정의 새 라운드 적은 제자리에서 작고 어둡게 생겨 카드마다 차례로 커진다(위에서 내려오지 않는다 — 2026-10-29 사용자 「제자리에서 슉하고 생기는」 · ADR-0949).
-      다가옴은 웹 애니메이션이다 — 카드 자리의 CSS 연출
+      원정의 새 라운드 적은 불린 무리와 같은 떠오름으로 한꺼번에 선다 · 마법진은 없다 · 길이는 쓰러진 적 카드가 사라지는 길이와 같다
+      (2026-10-30 사용자 「소환 이펙트 없애고 소환 방식으로 … 죽은 애들 없어지는 속도로」 · ADR-0951).
+      떠오름은 웹 애니메이션이다 — 카드 자리의 CSS 연출
       (내려찍기 · 흔들림 · 떠오름)은 `transform` 을 움직여 안 겹치고, 불러내기가 카드를 다시 지어도(`renderUnits`) 지난 만큼에서 이어 간다.
-      끝 값은 적지 않는다(첫 키프레임만 — 끝은 그 카드의 지금 값). 화면 연출의 길이라 CSV 가 아니다 ── */
-const ARRIVE = { move: 816, fade: 456, step: 108, from: { scale: '0.58' }, dim: 'brightness(0.45)' };
-/** 새 라운드의 적에게 다가옴을 단다 — 카드를 짓기 전에 · 되감는 동안은 안 단다(되감기 뒤에 서는 카드는 제자리에 선다) */
+      끝 값은 적지 않는다(첫 키프레임만 — 끝은 그 카드의 지금 값). 거리는 style.css `.unit-slot.fx-appear` · 길이는 `.side-enemy.round-clear` 의 사라짐과 짝이다 — 화면 연출의 길이라 CSV 가 아니다 ── */
+const ARRIVE = { move: 450, from: { translate: '0 12px', opacity: 0 } };
+/** 새 라운드의 적에게 등장을 단다 — 카드를 짓기 전에 · 되감는 동안은 안 단다(되감기 뒤에 서는 카드는 제자리에 선다) */
 export function fxArriveMark(state, units) {
     if (state.catchUp) return;
     const at = performance.now();
-    units.forEach((u, i) => { u.arrive = { at, i }; });
+    units.forEach(u => { u.arrive = { at }; });
 }
-/** 그 카드의 다가옴 — 단 지 얼마나 됐나만큼 이어서 돈다 · 다 왔으면 걷는다. `renderUnits` 가 카드를 지을 때마다 부른다 */
+/** 그 카드의 등장 — 단 지 얼마나 됐나만큼 이어서 돈다 · 다 섰으면 걷는다. `renderUnits` 가 카드를 지을 때마다 부른다 */
 export function fxArrive(state, u) {
     const a = u.arrive, slot = u.node?.parentElement;
     if (!a || !slot?.isConnected || state.catchUp) return;
-    const k = SPEED_K[state.speed] ?? 1, delay = a.i * ARRIVE.step * k, gone = performance.now() - a.at;
-    if (gone >= delay + ARRIVE.move * k) { u.arrive = null; return; }
-    const run = (from, dur, easing) => { slot.animate([{ ...from, offset: 0 }], { duration: dur * k, delay, easing, fill: 'backwards' }).currentTime = gone; };
-    run(ARRIVE.from, ARRIVE.move, 'cubic-bezier(.2,.7,.3,1)');
-    run({ opacity: 0 }, ARRIVE.fade, 'ease');
-    run({ filter: ARRIVE.dim }, ARRIVE.move, 'ease');
+    const k = SPEED_K[state.speed] ?? 1, gone = performance.now() - a.at;
+    if (gone >= ARRIVE.move * k) { u.arrive = null; return; }
+    slot.animate([{ ...ARRIVE.from, offset: 0 }], { duration: ARRIVE.move * k, easing: 'ease-out' }).currentTime = gone;
 }
 /** 라운드 숨 동안 적 줄을 비운다 — 박자가 `round` 숨에 선 동안만(첫 라운드 · 판 끝은 숨이 없다) · 사라지는 길이는 style.css 가 든다(숨 길이 `pace.js:ROUND_GAP_MS` 와 짝) */
 export function fxRoundClear(state, root) {

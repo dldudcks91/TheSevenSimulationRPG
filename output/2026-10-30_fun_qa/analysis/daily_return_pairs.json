@@ -1,0 +1,4803 @@
+{
+  "method": "Actual fresh60min saves cloned; identical logout,23h absence. Preparation spends actual funds, observes all normal gates, uses existing cave only; no injected ranks/currency/levels. Visit research first, otherwise first funded resource/training/gambling research; spare goblin training if already unlocked.",
+  "accounts": [
+    {
+      "name": "state_adaptive_seed1_3600.json",
+      "start": 1793322000000,
+      "end": 1793404800000,
+      "branches": [
+        {
+          "prepare": false,
+          "before": {
+            "gold": 1247,
+            "materials": {
+              "dust": 42,
+              "iron_ore": 62,
+              "timber": 65,
+              "herb": 43
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 11,
+                "xp": 2055
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 11,
+                "xp": 762
+              },
+              {
+                "uid": "h3",
+                "cls": "warrior",
+                "level": 10,
+                "xp": 3887
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 5
+          },
+          "actions": [],
+          "blocked": [],
+          "afterPreparation": {
+            "gold": 1247,
+            "materials": {
+              "dust": 42,
+              "iron_ore": 62,
+              "timber": 65,
+              "herb": 43
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 11,
+                "xp": 2055
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 11,
+                "xp": 762
+              },
+              {
+                "uid": "h3",
+                "cls": "warrior",
+                "level": 10,
+                "xp": 3887
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 5
+          },
+          "settlement": {
+            "done": null,
+            "gained": {
+              "iron_ore": 191,
+              "herb": 192,
+              "timber": 190
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [],
+          "after": {
+            "gold": 1247,
+            "materials": {
+              "dust": 42,
+              "iron_ore": 253,
+              "timber": 255,
+              "herb": 235
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 11,
+                "xp": 2055
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 11,
+                "xp": 762
+              },
+              {
+                "uid": "h3",
+                "cls": "warrior",
+                "level": 10,
+                "xp": 3887
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 5
+          },
+          "joins": []
+        },
+        {
+          "prepare": true,
+          "before": {
+            "gold": 1247,
+            "materials": {
+              "dust": 42,
+              "iron_ore": 62,
+              "timber": 65,
+              "herb": 43
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 11,
+                "xp": 2055
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 11,
+                "xp": 762
+              },
+              {
+                "uid": "h3",
+                "cls": "warrior",
+                "level": 10,
+                "xp": 3887
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 5
+          },
+          "actions": [
+            {
+              "kind": "research",
+              "line": "res",
+              "node": "gather",
+              "cost": {
+                "value": 1.1,
+                "gold": 193,
+                "mat": {
+                  "id": "herb",
+                  "n": 29
+                },
+                "ms": 545359
+              },
+              "result": {
+                "ok": true,
+                "until": 1793322545359
+              }
+            }
+          ],
+          "blocked": [
+            {
+              "kind": "hireUnlock",
+              "next": {
+                "rank": 2,
+                "require": [
+                  {
+                    "kind": "chapter",
+                    "ref": 1,
+                    "stage": 1051,
+                    "diff": null,
+                    "need": 1,
+                    "have": 0,
+                    "ok": false
+                  }
+                ],
+                "cost": [
+                  {
+                    "res": "gold",
+                    "need": 3000,
+                    "have": 1247
+                  }
+                ],
+                "effects": [
+                  {
+                    "kind": "unlock",
+                    "target": "hire",
+                    "value": null,
+                    "live": true
+                  }
+                ],
+                "err": "locked"
+              }
+            },
+            {
+              "kind": "spareTraining",
+              "open": false,
+              "cap": 6,
+              "spareLevel": 1,
+              "seats": {
+                "cap": 1,
+                "uids": []
+              }
+            },
+            {
+              "kind": "research",
+              "line": "visit",
+              "node": "interval",
+              "err": "locked",
+              "next": {
+                "value": 1,
+                "gold": 300,
+                "mat": null,
+                "ms": 1800000
+              }
+            },
+            {
+              "kind": "caveUnbuilt",
+              "next": {
+                "rank": 1,
+                "require": [
+                  {
+                    "kind": "chapter",
+                    "ref": 1,
+                    "stage": 1051,
+                    "diff": null,
+                    "need": 1,
+                    "have": 0,
+                    "ok": false
+                  }
+                ],
+                "cost": [
+                  {
+                    "res": "gold",
+                    "need": 600,
+                    "have": 1054
+                  }
+                ],
+                "effects": [
+                  {
+                    "kind": "unlock",
+                    "target": "explore",
+                    "value": null,
+                    "live": true
+                  }
+                ],
+                "err": "locked"
+              }
+            }
+          ],
+          "afterPreparation": {
+            "gold": 1054,
+            "materials": {
+              "dust": 42,
+              "iron_ore": 62,
+              "timber": 65,
+              "herb": 14
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 11,
+                "xp": 2055
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 11,
+                "xp": 762
+              },
+              {
+                "uid": "h3",
+                "cls": "warrior",
+                "level": 10,
+                "xp": 3887
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1,
+              "at": 1793322000000,
+              "until": 1793322545359,
+              "paid": {
+                "gold": 193,
+                "mat": {
+                  "id": "herb",
+                  "n": 29
+                }
+              }
+            },
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 5
+          },
+          "settlement": {
+            "done": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1
+            },
+            "gained": {
+              "iron_ore": 195,
+              "herb": 209,
+              "timber": 194
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [],
+          "after": {
+            "gold": 1054,
+            "materials": {
+              "dust": 42,
+              "iron_ore": 257,
+              "timber": 259,
+              "herb": 223
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 11,
+                "xp": 2055
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 11,
+                "xp": 762
+              },
+              {
+                "uid": "h3",
+                "cls": "warrior",
+                "level": 10,
+                "xp": 3887
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {
+              "res:gather": 1
+            },
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 5
+          },
+          "joins": []
+        }
+      ]
+    },
+    {
+      "name": "state_adaptive_seed2_3600.json",
+      "start": 1793322000000,
+      "end": 1793404800000,
+      "branches": [
+        {
+          "prepare": false,
+          "before": {
+            "gold": 1579,
+            "materials": {
+              "dust": 54,
+              "timber": 85,
+              "iron_ore": 70,
+              "herb": 49
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 2
+          },
+          "actions": [],
+          "blocked": [],
+          "afterPreparation": {
+            "gold": 1579,
+            "materials": {
+              "dust": 54,
+              "timber": 85,
+              "iron_ore": 70,
+              "herb": 49
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 2
+          },
+          "settlement": {
+            "done": null,
+            "gained": {
+              "iron_ore": 194,
+              "herb": 194,
+              "timber": 196
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [],
+          "after": {
+            "gold": 1579,
+            "materials": {
+              "dust": 54,
+              "timber": 281,
+              "iron_ore": 264,
+              "herb": 243
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 2
+          },
+          "joins": []
+        },
+        {
+          "prepare": true,
+          "before": {
+            "gold": 1579,
+            "materials": {
+              "dust": 54,
+              "timber": 85,
+              "iron_ore": 70,
+              "herb": 49
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 2
+          },
+          "actions": [
+            {
+              "kind": "research",
+              "line": "res",
+              "node": "gather",
+              "cost": {
+                "value": 1.1,
+                "gold": 191,
+                "mat": {
+                  "id": "herb",
+                  "n": 29
+                },
+                "ms": 526155
+              },
+              "result": {
+                "ok": true,
+                "until": 1793322526155
+              }
+            },
+            {
+              "kind": "sendCave",
+              "chapter": 2,
+              "preset": 1,
+              "heroes": 3,
+              "result": {
+                "ok": true,
+                "endsAt": 1793325600000
+              }
+            }
+          ],
+          "blocked": [
+            {
+              "kind": "hireUnlock",
+              "next": {
+                "rank": 2,
+                "require": [
+                  {
+                    "kind": "chapter",
+                    "ref": 1,
+                    "stage": 1051,
+                    "diff": null,
+                    "need": 1,
+                    "have": 1,
+                    "ok": true
+                  }
+                ],
+                "cost": [
+                  {
+                    "res": "gold",
+                    "need": 3000,
+                    "have": 1579
+                  }
+                ],
+                "effects": [
+                  {
+                    "kind": "unlock",
+                    "target": "hire",
+                    "value": null,
+                    "live": true
+                  }
+                ],
+                "err": "gold"
+              }
+            },
+            {
+              "kind": "spareTraining",
+              "open": false,
+              "cap": 10,
+              "spareLevel": 1,
+              "seats": {
+                "cap": 1,
+                "uids": []
+              }
+            },
+            {
+              "kind": "research",
+              "line": "visit",
+              "node": "interval",
+              "err": "locked",
+              "next": {
+                "value": 1,
+                "gold": 300,
+                "mat": null,
+                "ms": 1800000
+              }
+            }
+          ],
+          "afterPreparation": {
+            "gold": 1388,
+            "materials": {
+              "dust": 54,
+              "timber": 85,
+              "iron_ore": 70,
+              "herb": 20
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 1,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1,
+              "at": 1793322000000,
+              "until": 1793322526155,
+              "paid": {
+                "gold": 191,
+                "mat": {
+                  "id": "herb",
+                  "n": 29
+                }
+              }
+            },
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 2
+          },
+          "settlement": {
+            "done": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1
+            },
+            "gained": {
+              "iron_ore": 193,
+              "herb": 214,
+              "timber": 198
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [
+            {
+              "chapter": 2,
+              "spot": "cave",
+              "preset": 1,
+              "items": [
+                {
+                  "slot": "gloves",
+                  "rarity": "normal",
+                  "ilvl": 12,
+                  "group": "gauntlet"
+                },
+                {
+                  "slot": "helmet",
+                  "rarity": "normal",
+                  "ilvl": 11,
+                  "group": "plate"
+                },
+                {
+                  "slot": "ring",
+                  "rarity": "rare",
+                  "ilvl": 15,
+                  "group": null
+                }
+              ],
+              "takeResult": {
+                "ok": true,
+                "items": [
+                  "i62",
+                  "i63",
+                  "i64"
+                ]
+              }
+            }
+          ],
+          "after": {
+            "gold": 1388,
+            "materials": {
+              "dust": 54,
+              "timber": 283,
+              "iron_ore": 263,
+              "herb": 234
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 15,
+                "xp": 10
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {
+              "res:gather": 1
+            },
+            "labResearch": null,
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 5
+          },
+          "joins": []
+        }
+      ]
+    },
+    {
+      "name": "state_adaptive_seed3_3600.json",
+      "start": 1793322000000,
+      "end": 1793404800000,
+      "branches": [
+        {
+          "prepare": false,
+          "before": {
+            "gold": 1080,
+            "materials": {
+              "dust": 38,
+              "iron_ore": 62,
+              "timber": 60,
+              "herb": 42
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 10,
+                "xp": 4659
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 10,
+                "xp": 3007
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 9,
+                "xp": 4310
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "actions": [],
+          "blocked": [],
+          "afterPreparation": {
+            "gold": 1080,
+            "materials": {
+              "dust": 38,
+              "iron_ore": 62,
+              "timber": 60,
+              "herb": 42
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 10,
+                "xp": 4659
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 10,
+                "xp": 3007
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 9,
+                "xp": 4310
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "settlement": {
+            "done": null,
+            "gained": {
+              "iron_ore": 195,
+              "herb": 193,
+              "timber": 194
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [],
+          "after": {
+            "gold": 1080,
+            "materials": {
+              "dust": 38,
+              "iron_ore": 257,
+              "timber": 254,
+              "herb": 235
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 10,
+                "xp": 4659
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 10,
+                "xp": 3007
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 9,
+                "xp": 4310
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "joins": []
+        },
+        {
+          "prepare": true,
+          "before": {
+            "gold": 1080,
+            "materials": {
+              "dust": 38,
+              "iron_ore": 62,
+              "timber": 60,
+              "herb": 42
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 10,
+                "xp": 4659
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 10,
+                "xp": 3007
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 9,
+                "xp": 4310
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "actions": [
+            {
+              "kind": "research",
+              "line": "res",
+              "node": "gather",
+              "cost": {
+                "value": 1.1,
+                "gold": 192,
+                "mat": {
+                  "id": "herb",
+                  "n": 29
+                },
+                "ms": 555499
+              },
+              "result": {
+                "ok": true,
+                "until": 1793322555499
+              }
+            }
+          ],
+          "blocked": [
+            {
+              "kind": "hireUnlock",
+              "next": {
+                "rank": 2,
+                "require": [
+                  {
+                    "kind": "chapter",
+                    "ref": 1,
+                    "stage": 1051,
+                    "diff": null,
+                    "need": 1,
+                    "have": 0,
+                    "ok": false
+                  }
+                ],
+                "cost": [
+                  {
+                    "res": "gold",
+                    "need": 3000,
+                    "have": 1080
+                  }
+                ],
+                "effects": [
+                  {
+                    "kind": "unlock",
+                    "target": "hire",
+                    "value": null,
+                    "live": true
+                  }
+                ],
+                "err": "locked"
+              }
+            },
+            {
+              "kind": "spareTraining",
+              "open": false,
+              "cap": 5,
+              "spareLevel": 1,
+              "seats": {
+                "cap": 1,
+                "uids": []
+              }
+            },
+            {
+              "kind": "research",
+              "line": "visit",
+              "node": "interval",
+              "err": "locked",
+              "next": {
+                "value": 1,
+                "gold": 300,
+                "mat": null,
+                "ms": 1800000
+              }
+            },
+            {
+              "kind": "caveUnbuilt",
+              "next": {
+                "rank": 1,
+                "require": [
+                  {
+                    "kind": "chapter",
+                    "ref": 1,
+                    "stage": 1051,
+                    "diff": null,
+                    "need": 1,
+                    "have": 0,
+                    "ok": false
+                  }
+                ],
+                "cost": [
+                  {
+                    "res": "gold",
+                    "need": 600,
+                    "have": 888
+                  }
+                ],
+                "effects": [
+                  {
+                    "kind": "unlock",
+                    "target": "explore",
+                    "value": null,
+                    "live": true
+                  }
+                ],
+                "err": "locked"
+              }
+            }
+          ],
+          "afterPreparation": {
+            "gold": 888,
+            "materials": {
+              "dust": 38,
+              "iron_ore": 62,
+              "timber": 60,
+              "herb": 13
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 10,
+                "xp": 4659
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 10,
+                "xp": 3007
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 9,
+                "xp": 4310
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1,
+              "at": 1793322000000,
+              "until": 1793322555499,
+              "paid": {
+                "gold": 192,
+                "mat": {
+                  "id": "herb",
+                  "n": 29
+                }
+              }
+            },
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "settlement": {
+            "done": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1
+            },
+            "gained": {
+              "iron_ore": 194,
+              "herb": 212,
+              "timber": 193
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [],
+          "after": {
+            "gold": 888,
+            "materials": {
+              "dust": 38,
+              "iron_ore": 256,
+              "timber": 253,
+              "herb": 225
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 10,
+                "xp": 4659
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 10,
+                "xp": 3007
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 9,
+                "xp": 4310
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {
+              "res:gather": 1
+            },
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "joins": []
+        }
+      ]
+    },
+    {
+      "name": "state_adaptive_seed4_3600.json",
+      "start": 1793322000000,
+      "end": 1793404800000,
+      "branches": [
+        {
+          "prepare": false,
+          "before": {
+            "gold": 2983,
+            "materials": {
+              "dust": 76,
+              "timber": 92,
+              "iron_ore": 80,
+              "herb": 48
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 14,
+                "xp": 12013
+              },
+              {
+                "uid": "h2",
+                "cls": "archer",
+                "level": 14,
+                "xp": 13576
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 14,
+                "xp": 11868
+              },
+              {
+                "uid": "h4",
+                "cls": "warrior",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 1,
+            "labNodes": {},
+            "labResearch": {
+              "line": "visit",
+              "node": "interval",
+              "lv": 1,
+              "at": 1793321700000,
+              "until": 1793323500000,
+              "paid": {
+                "gold": 300,
+                "mat": null
+              }
+            },
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 2,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 8
+          },
+          "actions": [],
+          "blocked": [],
+          "afterPreparation": {
+            "gold": 2983,
+            "materials": {
+              "dust": 76,
+              "timber": 92,
+              "iron_ore": 80,
+              "herb": 48
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 14,
+                "xp": 12013
+              },
+              {
+                "uid": "h2",
+                "cls": "archer",
+                "level": 14,
+                "xp": 13576
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 14,
+                "xp": 11868
+              },
+              {
+                "uid": "h4",
+                "cls": "warrior",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 1,
+            "labNodes": {},
+            "labResearch": {
+              "line": "visit",
+              "node": "interval",
+              "lv": 1,
+              "at": 1793321700000,
+              "until": 1793323500000,
+              "paid": {
+                "gold": 300,
+                "mat": null
+              }
+            },
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 2,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 8
+          },
+          "settlement": {
+            "done": {
+              "line": "visit",
+              "node": "interval",
+              "lv": 1
+            },
+            "gained": {
+              "iron_ore": 195,
+              "herb": 196,
+              "timber": 198
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [],
+          "after": {
+            "gold": 2983,
+            "materials": {
+              "dust": 76,
+              "timber": 290,
+              "iron_ore": 275,
+              "herb": 244
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 14,
+                "xp": 12013
+              },
+              {
+                "uid": "h2",
+                "cls": "archer",
+                "level": 14,
+                "xp": 13576
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 14,
+                "xp": 11868
+              },
+              {
+                "uid": "h4",
+                "cls": "warrior",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 2,
+            "explores": 0,
+            "completedCommissions": 1,
+            "labNodes": {
+              "visit:interval": 1
+            },
+            "labResearch": null,
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 2,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 8
+          },
+          "joins": [
+            {
+              "no": 1,
+              "src": "visit",
+              "cls": "mage",
+              "tier": "magic",
+              "level": 1,
+              "stats": {
+                "str": 7,
+                "agi": 7,
+                "int": 14,
+                "vit": 10,
+                "luck": 6,
+                "ldr": 9,
+                "cha": 10
+              }
+            },
+            {
+              "no": 2,
+              "src": "visit",
+              "cls": "knight",
+              "tier": "magic",
+              "level": 1,
+              "stats": {
+                "str": 15,
+                "agi": 11,
+                "int": 6,
+                "vit": 11,
+                "luck": 10,
+                "ldr": 8,
+                "cha": 9
+              }
+            }
+          ]
+        },
+        {
+          "prepare": true,
+          "before": {
+            "gold": 2983,
+            "materials": {
+              "dust": 76,
+              "timber": 92,
+              "iron_ore": 80,
+              "herb": 48
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 14,
+                "xp": 12013
+              },
+              {
+                "uid": "h2",
+                "cls": "archer",
+                "level": 14,
+                "xp": 13576
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 14,
+                "xp": 11868
+              },
+              {
+                "uid": "h4",
+                "cls": "warrior",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 1,
+            "labNodes": {},
+            "labResearch": {
+              "line": "visit",
+              "node": "interval",
+              "lv": 1,
+              "at": 1793321700000,
+              "until": 1793323500000,
+              "paid": {
+                "gold": 300,
+                "mat": null
+              }
+            },
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 2,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 8
+          },
+          "actions": [
+            {
+              "kind": "preserveExistingResearch",
+              "research": {
+                "line": "visit",
+                "node": "interval",
+                "lv": 1,
+                "at": 1793321700000,
+                "until": 1793323500000,
+                "paid": {
+                  "gold": 300,
+                  "mat": null
+                }
+              }
+            },
+            {
+              "kind": "sendCave",
+              "chapter": 2,
+              "preset": 1,
+              "heroes": 3,
+              "result": {
+                "ok": true,
+                "endsAt": 1793325600000
+              }
+            }
+          ],
+          "blocked": [
+            {
+              "kind": "spareTraining",
+              "open": false,
+              "cap": 9,
+              "spareLevel": 1,
+              "seats": {
+                "cap": 1,
+                "uids": []
+              }
+            }
+          ],
+          "afterPreparation": {
+            "gold": 2983,
+            "materials": {
+              "dust": 76,
+              "timber": 92,
+              "iron_ore": 80,
+              "herb": 48
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 14,
+                "xp": 12013
+              },
+              {
+                "uid": "h2",
+                "cls": "archer",
+                "level": 14,
+                "xp": 13576
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 14,
+                "xp": 11868
+              },
+              {
+                "uid": "h4",
+                "cls": "warrior",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 1,
+            "completedCommissions": 1,
+            "labNodes": {},
+            "labResearch": {
+              "line": "visit",
+              "node": "interval",
+              "lv": 1,
+              "at": 1793321700000,
+              "until": 1793323500000,
+              "paid": {
+                "gold": 300,
+                "mat": null
+              }
+            },
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 2,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 8
+          },
+          "settlement": {
+            "done": {
+              "line": "visit",
+              "node": "interval",
+              "lv": 1
+            },
+            "gained": {
+              "iron_ore": 195,
+              "herb": 196,
+              "timber": 198
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [
+            {
+              "chapter": 2,
+              "spot": "cave",
+              "preset": 1,
+              "items": [
+                {
+                  "slot": "ring",
+                  "rarity": "magic",
+                  "ilvl": 13,
+                  "group": null
+                },
+                {
+                  "slot": "armor",
+                  "rarity": "normal",
+                  "ilvl": 11,
+                  "group": "robe"
+                },
+                {
+                  "slot": "weapon",
+                  "rarity": "normal",
+                  "ilvl": 15,
+                  "group": "bible"
+                }
+              ],
+              "takeResult": {
+                "ok": true,
+                "items": [
+                  "i77",
+                  "i78",
+                  "i79"
+                ]
+              }
+            }
+          ],
+          "after": {
+            "gold": 2983,
+            "materials": {
+              "dust": 76,
+              "timber": 290,
+              "iron_ore": 275,
+              "herb": 244
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 14,
+                "xp": 12013
+              },
+              {
+                "uid": "h2",
+                "cls": "archer",
+                "level": 14,
+                "xp": 13576
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 14,
+                "xp": 11868
+              },
+              {
+                "uid": "h4",
+                "cls": "warrior",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 2,
+            "explores": 0,
+            "completedCommissions": 1,
+            "labNodes": {
+              "visit:interval": 1
+            },
+            "labResearch": null,
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 2,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 11
+          },
+          "joins": [
+            {
+              "no": 1,
+              "src": "visit",
+              "cls": "mage",
+              "tier": "magic",
+              "level": 1,
+              "stats": {
+                "str": 7,
+                "agi": 7,
+                "int": 14,
+                "vit": 10,
+                "luck": 6,
+                "ldr": 9,
+                "cha": 10
+              }
+            },
+            {
+              "no": 2,
+              "src": "visit",
+              "cls": "knight",
+              "tier": "magic",
+              "level": 1,
+              "stats": {
+                "str": 15,
+                "agi": 11,
+                "int": 6,
+                "vit": 11,
+                "luck": 10,
+                "ldr": 8,
+                "cha": 9
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "state_adaptive_seed5_3600.json",
+      "start": 1793322000000,
+      "end": 1793404800000,
+      "branches": [
+        {
+          "prepare": false,
+          "before": {
+            "gold": 1115,
+            "materials": {
+              "dust": 33,
+              "timber": 46,
+              "iron_ore": 60,
+              "herb": 37
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 9,
+                "xp": 4668
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 9,
+                "xp": 4152
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 9,
+                "xp": 4257
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 3
+          },
+          "actions": [],
+          "blocked": [],
+          "afterPreparation": {
+            "gold": 1115,
+            "materials": {
+              "dust": 33,
+              "timber": 46,
+              "iron_ore": 60,
+              "herb": 37
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 9,
+                "xp": 4668
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 9,
+                "xp": 4152
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 9,
+                "xp": 4257
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 3
+          },
+          "settlement": {
+            "done": null,
+            "gained": {
+              "iron_ore": 194,
+              "herb": 191,
+              "timber": 193
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [],
+          "after": {
+            "gold": 1115,
+            "materials": {
+              "dust": 33,
+              "timber": 239,
+              "iron_ore": 254,
+              "herb": 228
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 9,
+                "xp": 4668
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 9,
+                "xp": 4152
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 9,
+                "xp": 4257
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 3
+          },
+          "joins": []
+        },
+        {
+          "prepare": true,
+          "before": {
+            "gold": 1115,
+            "materials": {
+              "dust": 33,
+              "timber": 46,
+              "iron_ore": 60,
+              "herb": 37
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 9,
+                "xp": 4668
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 9,
+                "xp": 4152
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 9,
+                "xp": 4257
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 3
+          },
+          "actions": [
+            {
+              "kind": "research",
+              "line": "res",
+              "node": "gather",
+              "cost": {
+                "value": 1.1,
+                "gold": 191,
+                "mat": {
+                  "id": "herb",
+                  "n": 29
+                },
+                "ms": 535561
+              },
+              "result": {
+                "ok": true,
+                "until": 1793322535561
+              }
+            }
+          ],
+          "blocked": [
+            {
+              "kind": "hireUnlock",
+              "next": {
+                "rank": 2,
+                "require": [
+                  {
+                    "kind": "chapter",
+                    "ref": 1,
+                    "stage": 1051,
+                    "diff": null,
+                    "need": 1,
+                    "have": 0,
+                    "ok": false
+                  }
+                ],
+                "cost": [
+                  {
+                    "res": "gold",
+                    "need": 3000,
+                    "have": 1115
+                  }
+                ],
+                "effects": [
+                  {
+                    "kind": "unlock",
+                    "target": "hire",
+                    "value": null,
+                    "live": true
+                  }
+                ],
+                "err": "locked"
+              }
+            },
+            {
+              "kind": "spareTraining",
+              "open": false,
+              "cap": 4,
+              "spareLevel": 1,
+              "seats": {
+                "cap": 1,
+                "uids": []
+              }
+            },
+            {
+              "kind": "research",
+              "line": "visit",
+              "node": "interval",
+              "err": "locked",
+              "next": {
+                "value": 1,
+                "gold": 300,
+                "mat": null,
+                "ms": 1800000
+              }
+            },
+            {
+              "kind": "caveUnbuilt",
+              "next": {
+                "rank": 1,
+                "require": [
+                  {
+                    "kind": "chapter",
+                    "ref": 1,
+                    "stage": 1051,
+                    "diff": null,
+                    "need": 1,
+                    "have": 0,
+                    "ok": false
+                  }
+                ],
+                "cost": [
+                  {
+                    "res": "gold",
+                    "need": 600,
+                    "have": 924
+                  }
+                ],
+                "effects": [
+                  {
+                    "kind": "unlock",
+                    "target": "explore",
+                    "value": null,
+                    "live": true
+                  }
+                ],
+                "err": "locked"
+              }
+            }
+          ],
+          "afterPreparation": {
+            "gold": 924,
+            "materials": {
+              "dust": 33,
+              "timber": 46,
+              "iron_ore": 60,
+              "herb": 8
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 9,
+                "xp": 4668
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 9,
+                "xp": 4152
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 9,
+                "xp": 4257
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1,
+              "at": 1793322000000,
+              "until": 1793322535561,
+              "paid": {
+                "gold": 191,
+                "mat": {
+                  "id": "herb",
+                  "n": 29
+                }
+              }
+            },
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 3
+          },
+          "settlement": {
+            "done": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1
+            },
+            "gained": {
+              "iron_ore": 191,
+              "herb": 211,
+              "timber": 191
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [],
+          "after": {
+            "gold": 924,
+            "materials": {
+              "dust": 33,
+              "timber": 237,
+              "iron_ore": 251,
+              "herb": 219
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 9,
+                "xp": 4668
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 9,
+                "xp": 4152
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 9,
+                "xp": 4257
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {
+              "res:gather": 1
+            },
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 3
+          },
+          "joins": []
+        }
+      ]
+    },
+    {
+      "name": "state_basic_seed1_3600.json",
+      "start": 1793322000000,
+      "end": 1793404800000,
+      "branches": [
+        {
+          "prepare": false,
+          "before": {
+            "gold": 1080,
+            "materials": {
+              "dust": 40,
+              "iron_ore": 74,
+              "timber": 51,
+              "herb": 43
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 10,
+                "xp": 1090
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 9,
+                "xp": 5193
+              },
+              {
+                "uid": "h3",
+                "cls": "warrior",
+                "level": 8,
+                "xp": 1722
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 1,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "actions": [],
+          "blocked": [],
+          "afterPreparation": {
+            "gold": 1080,
+            "materials": {
+              "dust": 40,
+              "iron_ore": 74,
+              "timber": 51,
+              "herb": 43
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 10,
+                "xp": 1090
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 9,
+                "xp": 5193
+              },
+              {
+                "uid": "h3",
+                "cls": "warrior",
+                "level": 8,
+                "xp": 1722
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 1,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "settlement": {
+            "done": null,
+            "gained": {
+              "iron_ore": 191,
+              "herb": 192,
+              "timber": 190
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [],
+          "after": {
+            "gold": 1080,
+            "materials": {
+              "dust": 40,
+              "iron_ore": 265,
+              "timber": 241,
+              "herb": 235
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 10,
+                "xp": 1090
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 9,
+                "xp": 5193
+              },
+              {
+                "uid": "h3",
+                "cls": "warrior",
+                "level": 8,
+                "xp": 1722
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 1,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "joins": []
+        },
+        {
+          "prepare": true,
+          "before": {
+            "gold": 1080,
+            "materials": {
+              "dust": 40,
+              "iron_ore": 74,
+              "timber": 51,
+              "herb": 43
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 10,
+                "xp": 1090
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 9,
+                "xp": 5193
+              },
+              {
+                "uid": "h3",
+                "cls": "warrior",
+                "level": 8,
+                "xp": 1722
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 1,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "actions": [
+            {
+              "kind": "research",
+              "line": "res",
+              "node": "gather",
+              "cost": {
+                "value": 1.1,
+                "gold": 193,
+                "mat": {
+                  "id": "herb",
+                  "n": 29
+                },
+                "ms": 545359
+              },
+              "result": {
+                "ok": true,
+                "until": 1793322545359
+              }
+            }
+          ],
+          "blocked": [
+            {
+              "kind": "hireUnlock",
+              "next": {
+                "rank": 2,
+                "require": [
+                  {
+                    "kind": "chapter",
+                    "ref": 1,
+                    "stage": 1051,
+                    "diff": null,
+                    "need": 1,
+                    "have": 0,
+                    "ok": false
+                  }
+                ],
+                "cost": [
+                  {
+                    "res": "gold",
+                    "need": 3000,
+                    "have": 1080
+                  }
+                ],
+                "effects": [
+                  {
+                    "kind": "unlock",
+                    "target": "hire",
+                    "value": null,
+                    "live": true
+                  }
+                ],
+                "err": "locked"
+              }
+            },
+            {
+              "kind": "spareTraining",
+              "open": false,
+              "cap": 5,
+              "spareLevel": 1,
+              "seats": {
+                "cap": 1,
+                "uids": []
+              }
+            },
+            {
+              "kind": "research",
+              "line": "visit",
+              "node": "interval",
+              "err": "locked",
+              "next": {
+                "value": 1,
+                "gold": 300,
+                "mat": null,
+                "ms": 1800000
+              }
+            },
+            {
+              "kind": "caveUnbuilt",
+              "next": {
+                "rank": 1,
+                "require": [
+                  {
+                    "kind": "chapter",
+                    "ref": 1,
+                    "stage": 1051,
+                    "diff": null,
+                    "need": 1,
+                    "have": 0,
+                    "ok": false
+                  }
+                ],
+                "cost": [
+                  {
+                    "res": "gold",
+                    "need": 600,
+                    "have": 887
+                  }
+                ],
+                "effects": [
+                  {
+                    "kind": "unlock",
+                    "target": "explore",
+                    "value": null,
+                    "live": true
+                  }
+                ],
+                "err": "locked"
+              }
+            }
+          ],
+          "afterPreparation": {
+            "gold": 887,
+            "materials": {
+              "dust": 40,
+              "iron_ore": 74,
+              "timber": 51,
+              "herb": 14
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 10,
+                "xp": 1090
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 9,
+                "xp": 5193
+              },
+              {
+                "uid": "h3",
+                "cls": "warrior",
+                "level": 8,
+                "xp": 1722
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 1,
+            "labNodes": {},
+            "labResearch": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1,
+              "at": 1793322000000,
+              "until": 1793322545359,
+              "paid": {
+                "gold": 193,
+                "mat": {
+                  "id": "herb",
+                  "n": 29
+                }
+              }
+            },
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "settlement": {
+            "done": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1
+            },
+            "gained": {
+              "iron_ore": 195,
+              "herb": 209,
+              "timber": 194
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [],
+          "after": {
+            "gold": 887,
+            "materials": {
+              "dust": 40,
+              "iron_ore": 269,
+              "timber": 245,
+              "herb": 223
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 10,
+                "xp": 1090
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 9,
+                "xp": 5193
+              },
+              {
+                "uid": "h3",
+                "cls": "warrior",
+                "level": 8,
+                "xp": 1722
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 1,
+            "labNodes": {
+              "res:gather": 1
+            },
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "joins": []
+        }
+      ]
+    },
+    {
+      "name": "state_basic_seed2_3600.json",
+      "start": 1793322000000,
+      "end": 1793404800000,
+      "branches": [
+        {
+          "prepare": false,
+          "before": {
+            "gold": 1008,
+            "materials": {
+              "dust": 55,
+              "timber": 79,
+              "iron_ore": 77,
+              "herb": 49
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 13,
+                "xp": 5793
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 13,
+                "xp": 2917
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 13,
+                "xp": 3528
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 2
+          },
+          "actions": [],
+          "blocked": [],
+          "afterPreparation": {
+            "gold": 1008,
+            "materials": {
+              "dust": 55,
+              "timber": 79,
+              "iron_ore": 77,
+              "herb": 49
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 13,
+                "xp": 5793
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 13,
+                "xp": 2917
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 13,
+                "xp": 3528
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 2
+          },
+          "settlement": {
+            "done": null,
+            "gained": {
+              "iron_ore": 194,
+              "herb": 194,
+              "timber": 196
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [],
+          "after": {
+            "gold": 1008,
+            "materials": {
+              "dust": 55,
+              "timber": 275,
+              "iron_ore": 271,
+              "herb": 243
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 13,
+                "xp": 5793
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 13,
+                "xp": 2917
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 13,
+                "xp": 3528
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 2
+          },
+          "joins": []
+        },
+        {
+          "prepare": true,
+          "before": {
+            "gold": 1008,
+            "materials": {
+              "dust": 55,
+              "timber": 79,
+              "iron_ore": 77,
+              "herb": 49
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 13,
+                "xp": 5793
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 13,
+                "xp": 2917
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 13,
+                "xp": 3528
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 2
+          },
+          "actions": [
+            {
+              "kind": "research",
+              "line": "res",
+              "node": "gather",
+              "cost": {
+                "value": 1.1,
+                "gold": 191,
+                "mat": {
+                  "id": "herb",
+                  "n": 29
+                },
+                "ms": 526155
+              },
+              "result": {
+                "ok": true,
+                "until": 1793322526155
+              }
+            },
+            {
+              "kind": "sendCave",
+              "chapter": 2,
+              "preset": 1,
+              "heroes": 3,
+              "result": {
+                "ok": true,
+                "endsAt": 1793325600000
+              }
+            }
+          ],
+          "blocked": [
+            {
+              "kind": "hireUnlock",
+              "next": {
+                "rank": 2,
+                "require": [
+                  {
+                    "kind": "chapter",
+                    "ref": 1,
+                    "stage": 1051,
+                    "diff": null,
+                    "need": 1,
+                    "have": 1,
+                    "ok": true
+                  }
+                ],
+                "cost": [
+                  {
+                    "res": "gold",
+                    "need": 3000,
+                    "have": 1008
+                  }
+                ],
+                "effects": [
+                  {
+                    "kind": "unlock",
+                    "target": "hire",
+                    "value": null,
+                    "live": true
+                  }
+                ],
+                "err": "gold"
+              }
+            },
+            {
+              "kind": "spareTraining",
+              "open": false,
+              "cap": 8,
+              "spareLevel": 1,
+              "seats": {
+                "cap": 1,
+                "uids": []
+              }
+            },
+            {
+              "kind": "research",
+              "line": "visit",
+              "node": "interval",
+              "err": "locked",
+              "next": {
+                "value": 1,
+                "gold": 300,
+                "mat": null,
+                "ms": 1800000
+              }
+            }
+          ],
+          "afterPreparation": {
+            "gold": 817,
+            "materials": {
+              "dust": 55,
+              "timber": 79,
+              "iron_ore": 77,
+              "herb": 20
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 13,
+                "xp": 5793
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 13,
+                "xp": 2917
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 13,
+                "xp": 3528
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 1,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1,
+              "at": 1793322000000,
+              "until": 1793322526155,
+              "paid": {
+                "gold": 191,
+                "mat": {
+                  "id": "herb",
+                  "n": 29
+                }
+              }
+            },
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 2
+          },
+          "settlement": {
+            "done": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1
+            },
+            "gained": {
+              "iron_ore": 193,
+              "herb": 214,
+              "timber": 198
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [
+            {
+              "chapter": 2,
+              "spot": "cave",
+              "preset": 1,
+              "items": [
+                {
+                  "slot": "gloves",
+                  "rarity": "normal",
+                  "ilvl": 12,
+                  "group": "gauntlet"
+                },
+                {
+                  "slot": "helmet",
+                  "rarity": "normal",
+                  "ilvl": 11,
+                  "group": "plate"
+                },
+                {
+                  "slot": "ring",
+                  "rarity": "rare",
+                  "ilvl": 15,
+                  "group": null
+                }
+              ],
+              "takeResult": {
+                "ok": true,
+                "items": [
+                  "i55",
+                  "i56",
+                  "i57"
+                ]
+              }
+            }
+          ],
+          "after": {
+            "gold": 817,
+            "materials": {
+              "dust": 55,
+              "timber": 277,
+              "iron_ore": 270,
+              "herb": 234
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 13,
+                "xp": 5793
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 13,
+                "xp": 2917
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 13,
+                "xp": 3528
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {
+              "res:gather": 1
+            },
+            "labResearch": null,
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 5
+          },
+          "joins": []
+        }
+      ]
+    },
+    {
+      "name": "state_basic_seed3_3600.json",
+      "start": 1793322000000,
+      "end": 1793404800000,
+      "branches": [
+        {
+          "prepare": false,
+          "before": {
+            "gold": 388,
+            "materials": {
+              "dust": 23,
+              "iron_ore": 59,
+              "herb": 42,
+              "timber": 48
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 9,
+                "xp": 3460
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 9,
+                "xp": 2090
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 8,
+                "xp": 3966
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 1
+          },
+          "actions": [],
+          "blocked": [],
+          "afterPreparation": {
+            "gold": 388,
+            "materials": {
+              "dust": 23,
+              "iron_ore": 59,
+              "herb": 42,
+              "timber": 48
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 9,
+                "xp": 3460
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 9,
+                "xp": 2090
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 8,
+                "xp": 3966
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 1
+          },
+          "settlement": {
+            "done": null,
+            "gained": {
+              "iron_ore": 195,
+              "herb": 193,
+              "timber": 194
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [],
+          "after": {
+            "gold": 388,
+            "materials": {
+              "dust": 23,
+              "iron_ore": 254,
+              "herb": 235,
+              "timber": 242
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 9,
+                "xp": 3460
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 9,
+                "xp": 2090
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 8,
+                "xp": 3966
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 1
+          },
+          "joins": []
+        },
+        {
+          "prepare": true,
+          "before": {
+            "gold": 388,
+            "materials": {
+              "dust": 23,
+              "iron_ore": 59,
+              "herb": 42,
+              "timber": 48
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 9,
+                "xp": 3460
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 9,
+                "xp": 2090
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 8,
+                "xp": 3966
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 1
+          },
+          "actions": [
+            {
+              "kind": "research",
+              "line": "res",
+              "node": "gather",
+              "cost": {
+                "value": 1.1,
+                "gold": 192,
+                "mat": {
+                  "id": "herb",
+                  "n": 29
+                },
+                "ms": 555499
+              },
+              "result": {
+                "ok": true,
+                "until": 1793322555499
+              }
+            }
+          ],
+          "blocked": [
+            {
+              "kind": "hireUnlock",
+              "next": {
+                "rank": 2,
+                "require": [
+                  {
+                    "kind": "chapter",
+                    "ref": 1,
+                    "stage": 1051,
+                    "diff": null,
+                    "need": 1,
+                    "have": 0,
+                    "ok": false
+                  }
+                ],
+                "cost": [
+                  {
+                    "res": "gold",
+                    "need": 3000,
+                    "have": 388
+                  }
+                ],
+                "effects": [
+                  {
+                    "kind": "unlock",
+                    "target": "hire",
+                    "value": null,
+                    "live": true
+                  }
+                ],
+                "err": "locked"
+              }
+            },
+            {
+              "kind": "spareTraining",
+              "open": false,
+              "cap": 4,
+              "spareLevel": 1,
+              "seats": {
+                "cap": 1,
+                "uids": []
+              }
+            },
+            {
+              "kind": "research",
+              "line": "visit",
+              "node": "interval",
+              "err": "locked",
+              "next": {
+                "value": 1,
+                "gold": 300,
+                "mat": null,
+                "ms": 1800000
+              }
+            },
+            {
+              "kind": "caveUnbuilt",
+              "next": {
+                "rank": 1,
+                "require": [
+                  {
+                    "kind": "chapter",
+                    "ref": 1,
+                    "stage": 1051,
+                    "diff": null,
+                    "need": 1,
+                    "have": 0,
+                    "ok": false
+                  }
+                ],
+                "cost": [
+                  {
+                    "res": "gold",
+                    "need": 600,
+                    "have": 196
+                  }
+                ],
+                "effects": [
+                  {
+                    "kind": "unlock",
+                    "target": "explore",
+                    "value": null,
+                    "live": true
+                  }
+                ],
+                "err": "locked"
+              }
+            }
+          ],
+          "afterPreparation": {
+            "gold": 196,
+            "materials": {
+              "dust": 23,
+              "iron_ore": 59,
+              "herb": 13,
+              "timber": 48
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 9,
+                "xp": 3460
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 9,
+                "xp": 2090
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 8,
+                "xp": 3966
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1,
+              "at": 1793322000000,
+              "until": 1793322555499,
+              "paid": {
+                "gold": 192,
+                "mat": {
+                  "id": "herb",
+                  "n": 29
+                }
+              }
+            },
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 1
+          },
+          "settlement": {
+            "done": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1
+            },
+            "gained": {
+              "iron_ore": 194,
+              "herb": 212,
+              "timber": 193
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [],
+          "after": {
+            "gold": 196,
+            "materials": {
+              "dust": 23,
+              "iron_ore": 253,
+              "herb": 225,
+              "timber": 241
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 9,
+                "xp": 3460
+              },
+              {
+                "uid": "h2",
+                "cls": "priest",
+                "level": 9,
+                "xp": 2090
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 8,
+                "xp": 3966
+              },
+              {
+                "uid": "h4",
+                "cls": "archer",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {
+              "res:gather": 1
+            },
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 1
+          },
+          "joins": []
+        }
+      ]
+    },
+    {
+      "name": "state_basic_seed4_3600.json",
+      "start": 1793322000000,
+      "end": 1793404800000,
+      "branches": [
+        {
+          "prepare": false,
+          "before": {
+            "gold": 2370,
+            "materials": {
+              "dust": 61,
+              "timber": 91,
+              "iron_ore": 66,
+              "herb": 48
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 14,
+                "xp": 8436
+              },
+              {
+                "uid": "h2",
+                "cls": "archer",
+                "level": 14,
+                "xp": 5956
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 13,
+                "xp": 5988
+              },
+              {
+                "uid": "h4",
+                "cls": "warrior",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 5
+          },
+          "actions": [],
+          "blocked": [],
+          "afterPreparation": {
+            "gold": 2370,
+            "materials": {
+              "dust": 61,
+              "timber": 91,
+              "iron_ore": 66,
+              "herb": 48
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 14,
+                "xp": 8436
+              },
+              {
+                "uid": "h2",
+                "cls": "archer",
+                "level": 14,
+                "xp": 5956
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 13,
+                "xp": 5988
+              },
+              {
+                "uid": "h4",
+                "cls": "warrior",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 5
+          },
+          "settlement": {
+            "done": null,
+            "gained": {
+              "iron_ore": 196,
+              "herb": 196,
+              "timber": 196
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [],
+          "after": {
+            "gold": 2370,
+            "materials": {
+              "dust": 61,
+              "timber": 287,
+              "iron_ore": 262,
+              "herb": 244
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 14,
+                "xp": 8436
+              },
+              {
+                "uid": "h2",
+                "cls": "archer",
+                "level": 14,
+                "xp": 5956
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 13,
+                "xp": 5988
+              },
+              {
+                "uid": "h4",
+                "cls": "warrior",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 5
+          },
+          "joins": []
+        },
+        {
+          "prepare": true,
+          "before": {
+            "gold": 2370,
+            "materials": {
+              "dust": 61,
+              "timber": 91,
+              "iron_ore": 66,
+              "herb": 48
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 14,
+                "xp": 8436
+              },
+              {
+                "uid": "h2",
+                "cls": "archer",
+                "level": 14,
+                "xp": 5956
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 13,
+                "xp": 5988
+              },
+              {
+                "uid": "h4",
+                "cls": "warrior",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 5
+          },
+          "actions": [
+            {
+              "kind": "research",
+              "line": "res",
+              "node": "gather",
+              "cost": {
+                "value": 1.1,
+                "gold": 195,
+                "mat": {
+                  "id": "herb",
+                  "n": 30
+                },
+                "ms": 550317
+              },
+              "result": {
+                "ok": true,
+                "until": 1793322550317
+              }
+            },
+            {
+              "kind": "sendCave",
+              "chapter": 2,
+              "preset": 1,
+              "heroes": 3,
+              "result": {
+                "ok": true,
+                "endsAt": 1793325600000
+              }
+            }
+          ],
+          "blocked": [
+            {
+              "kind": "hireUnlock",
+              "next": {
+                "rank": 2,
+                "require": [
+                  {
+                    "kind": "chapter",
+                    "ref": 1,
+                    "stage": 1051,
+                    "diff": null,
+                    "need": 1,
+                    "have": 1,
+                    "ok": true
+                  }
+                ],
+                "cost": [
+                  {
+                    "res": "gold",
+                    "need": 3000,
+                    "have": 2370
+                  }
+                ],
+                "effects": [
+                  {
+                    "kind": "unlock",
+                    "target": "hire",
+                    "value": null,
+                    "live": true
+                  }
+                ],
+                "err": "gold"
+              }
+            },
+            {
+              "kind": "spareTraining",
+              "open": false,
+              "cap": 9,
+              "spareLevel": 1,
+              "seats": {
+                "cap": 1,
+                "uids": []
+              }
+            },
+            {
+              "kind": "research",
+              "line": "visit",
+              "node": "interval",
+              "err": "locked",
+              "next": {
+                "value": 1,
+                "gold": 300,
+                "mat": null,
+                "ms": 1800000
+              }
+            }
+          ],
+          "afterPreparation": {
+            "gold": 2175,
+            "materials": {
+              "dust": 61,
+              "timber": 91,
+              "iron_ore": 66,
+              "herb": 18
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 14,
+                "xp": 8436
+              },
+              {
+                "uid": "h2",
+                "cls": "archer",
+                "level": 14,
+                "xp": 5956
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 13,
+                "xp": 5988
+              },
+              {
+                "uid": "h4",
+                "cls": "warrior",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 1,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1,
+              "at": 1793322000000,
+              "until": 1793322550317,
+              "paid": {
+                "gold": 195,
+                "mat": {
+                  "id": "herb",
+                  "n": 30
+                }
+              }
+            },
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 5
+          },
+          "settlement": {
+            "done": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1
+            },
+            "gained": {
+              "iron_ore": 195,
+              "herb": 214,
+              "timber": 197
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [
+            {
+              "chapter": 2,
+              "spot": "cave",
+              "preset": 1,
+              "items": [
+                {
+                  "slot": "ring",
+                  "rarity": "magic",
+                  "ilvl": 13,
+                  "group": null
+                },
+                {
+                  "slot": "armor",
+                  "rarity": "normal",
+                  "ilvl": 11,
+                  "group": "robe"
+                },
+                {
+                  "slot": "weapon",
+                  "rarity": "normal",
+                  "ilvl": 15,
+                  "group": "bible"
+                }
+              ],
+              "takeResult": {
+                "ok": true,
+                "items": [
+                  "i58",
+                  "i59",
+                  "i60"
+                ]
+              }
+            }
+          ],
+          "after": {
+            "gold": 2175,
+            "materials": {
+              "dust": 61,
+              "timber": 288,
+              "iron_ore": 261,
+              "herb": 232
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "mage",
+                "level": 14,
+                "xp": 8436
+              },
+              {
+                "uid": "h2",
+                "cls": "archer",
+                "level": 14,
+                "xp": 5956
+              },
+              {
+                "uid": "h3",
+                "cls": "knight",
+                "level": 13,
+                "xp": 5988
+              },
+              {
+                "uid": "h4",
+                "cls": "warrior",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {
+              "res:gather": 1
+            },
+            "labResearch": null,
+            "buildings": {
+              "explore": 1,
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 8
+          },
+          "joins": []
+        }
+      ]
+    },
+    {
+      "name": "state_basic_seed5_3600.json",
+      "start": 1793322000000,
+      "end": 1793404800000,
+      "branches": [
+        {
+          "prepare": false,
+          "before": {
+            "gold": 769,
+            "materials": {
+              "dust": 29,
+              "timber": 51,
+              "iron_ore": 51,
+              "herb": 37
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 9,
+                "xp": 2352
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 9,
+                "xp": 1949
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 9,
+                "xp": 2499
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "actions": [],
+          "blocked": [],
+          "afterPreparation": {
+            "gold": 769,
+            "materials": {
+              "dust": 29,
+              "timber": 51,
+              "iron_ore": 51,
+              "herb": 37
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 9,
+                "xp": 2352
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 9,
+                "xp": 1949
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 9,
+                "xp": 2499
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "settlement": {
+            "done": null,
+            "gained": {
+              "iron_ore": 194,
+              "herb": 191,
+              "timber": 193
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [],
+          "after": {
+            "gold": 769,
+            "materials": {
+              "dust": 29,
+              "timber": 244,
+              "iron_ore": 245,
+              "herb": 228
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 9,
+                "xp": 2352
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 9,
+                "xp": 1949
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 9,
+                "xp": 2499
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "joins": []
+        },
+        {
+          "prepare": true,
+          "before": {
+            "gold": 769,
+            "materials": {
+              "dust": 29,
+              "timber": 51,
+              "iron_ore": 51,
+              "herb": 37
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 9,
+                "xp": 2352
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 9,
+                "xp": 1949
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 9,
+                "xp": 2499
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "actions": [
+            {
+              "kind": "research",
+              "line": "res",
+              "node": "gather",
+              "cost": {
+                "value": 1.1,
+                "gold": 191,
+                "mat": {
+                  "id": "herb",
+                  "n": 29
+                },
+                "ms": 535561
+              },
+              "result": {
+                "ok": true,
+                "until": 1793322535561
+              }
+            }
+          ],
+          "blocked": [
+            {
+              "kind": "hireUnlock",
+              "next": {
+                "rank": 2,
+                "require": [
+                  {
+                    "kind": "chapter",
+                    "ref": 1,
+                    "stage": 1051,
+                    "diff": null,
+                    "need": 1,
+                    "have": 0,
+                    "ok": false
+                  }
+                ],
+                "cost": [
+                  {
+                    "res": "gold",
+                    "need": 3000,
+                    "have": 769
+                  }
+                ],
+                "effects": [
+                  {
+                    "kind": "unlock",
+                    "target": "hire",
+                    "value": null,
+                    "live": true
+                  }
+                ],
+                "err": "locked"
+              }
+            },
+            {
+              "kind": "spareTraining",
+              "open": false,
+              "cap": 4,
+              "spareLevel": 1,
+              "seats": {
+                "cap": 1,
+                "uids": []
+              }
+            },
+            {
+              "kind": "research",
+              "line": "visit",
+              "node": "interval",
+              "err": "locked",
+              "next": {
+                "value": 1,
+                "gold": 300,
+                "mat": null,
+                "ms": 1800000
+              }
+            },
+            {
+              "kind": "caveUnbuilt",
+              "next": {
+                "rank": 1,
+                "require": [
+                  {
+                    "kind": "chapter",
+                    "ref": 1,
+                    "stage": 1051,
+                    "diff": null,
+                    "need": 1,
+                    "have": 0,
+                    "ok": false
+                  }
+                ],
+                "cost": [
+                  {
+                    "res": "gold",
+                    "need": 600,
+                    "have": 578
+                  }
+                ],
+                "effects": [
+                  {
+                    "kind": "unlock",
+                    "target": "explore",
+                    "value": null,
+                    "live": true
+                  }
+                ],
+                "err": "locked"
+              }
+            }
+          ],
+          "afterPreparation": {
+            "gold": 578,
+            "materials": {
+              "dust": 29,
+              "timber": 51,
+              "iron_ore": 51,
+              "herb": 8
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 9,
+                "xp": 2352
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 9,
+                "xp": 1949
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 9,
+                "xp": 2499
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {},
+            "labResearch": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1,
+              "at": 1793322000000,
+              "until": 1793322535561,
+              "paid": {
+                "gold": 191,
+                "mat": {
+                  "id": "herb",
+                  "n": 29
+                }
+              }
+            },
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "settlement": {
+            "done": {
+              "line": "res",
+              "node": "gather",
+              "lv": 1
+            },
+            "gained": {
+              "iron_ore": 191,
+              "herb": 211,
+              "timber": 191
+            },
+            "gold": 0,
+            "xp": []
+          },
+          "readyExplorations": [],
+          "after": {
+            "gold": 578,
+            "materials": {
+              "dust": 29,
+              "timber": 242,
+              "iron_ore": 242,
+              "herb": 219
+            },
+            "heroes": [
+              {
+                "uid": "h1",
+                "cls": "knight",
+                "level": 9,
+                "xp": 2352
+              },
+              {
+                "uid": "h2",
+                "cls": "warrior",
+                "level": 9,
+                "xp": 1949
+              },
+              {
+                "uid": "h3",
+                "cls": "priest",
+                "level": 9,
+                "xp": 2499
+              },
+              {
+                "uid": "h4",
+                "cls": "priest",
+                "level": 1,
+                "xp": 0
+              }
+            ],
+            "joins": 0,
+            "explores": 0,
+            "completedCommissions": 0,
+            "labNodes": {
+              "res:gather": 1
+            },
+            "labResearch": null,
+            "buildings": {
+              "command": 1,
+              "storage": 1,
+              "tavern": 1,
+              "shop": 1,
+              "forge": 1,
+              "library": 1,
+              "resource": 1
+            },
+            "bag": 4
+          },
+          "joins": []
+        }
+      ]
+    }
+  ]
+}

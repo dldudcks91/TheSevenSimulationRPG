@@ -9,7 +9,7 @@
 
 | 자리 | 쓰는 곳 |
 |---|---|
-| `gpt/` | **GPT 스테이지 배경 25장(Ch1~Ch5)** — 설정·도감의 `gpt` 버튼으로 초상과 함께 선택한다. 1~3장은 새 그림 15장, 4~5장은 먼저 만든 10장을 그대로 복사했다. 원본·프롬프트는 `source/gpt/` (ADR-0632) |
+| `gpt/` | **GPT 스테이지 배경 25장(Ch1~Ch5)** — **비교용**(`?bg=gpt`). 함께 고르던 GPT 초상이 지워져 버튼으로는 안 열린다(ADR-0986). 1~3장은 새 그림 15장, 4~5장은 먼저 만든 10장을 그대로 복사했다. 원본·프롬프트는 `source/gpt/` |
 | `illustrate/` | **스테이지 배경 설치본 — 일러스트 스타일** 25장(Ch1~Ch5 전부). **`BG_STYLES` 첫 항목 = 정식** [2026-09-16 · ADR-0152] · `background_stage_101.webp` 은 **로그인 첫 화면 배경도 겸한다** — 로그인은 스타일 설정 이전이라 CSS 가 이 폴더를 직접 박는다(거점 `pixel/town.webp` 와 같은 예외 · 2026-09-18 사용자 지시) |
 | `pixel/` | **스테이지 배경 설치본 — 도트 스타일** 15장(Ch1~Ch3) + `town.webp`(앱 전역 배경 · 한 장 뒤 하나뿐 — 탭 패널은 안 깐다 · ADR-0110). **비교용으로 남긴다**(`?bg=pixel`) · 거점 배경은 스타일을 안 타고 늘 여기서 읽는다 |
 | `illustrate/background_colosseum.webp` · `illustrate/background_duel_<tier_id>.webp` | **결투 배경** [2026-10-24 사용자 지시 · ADR-0749 · ADR-0760 · ADR-0761] — 콜로세움(온라인 ELO · 탭 id `arena`) = 로마 콜로세움 한 장 · 결투장(층 사다리 · 탭 id `colosseum`) = **고른 층의 등급마다 한 장**(`arena_tier.csv:tier_id` 여섯 — 브론즈 뒷골목 → 챔피언 정상). 판과 결투 관전이 깐다. ⚠ 스테이지 배경이 아니라 **스타일을 안 탄다** — 화면은 `mock.js:COLOSSEUM_BG` · `duelBg` 로 이 경로를 박는다(아래 「결투 배경」) |
@@ -21,7 +21,7 @@
 | `source/pixel/` · `source/illustrate/` · `source/gpt/` | **생성 원본** — 게임이 안 읽는다. 설치본은 여기서 게임용 비율로 잘라 만든다. 기존 Gemini 원본은 워터마크 띠도 제외한다 (아래) |
 
 파일명의 숫자는 `stage.csv` 의 `chapter * 100 + stage_num` 이다 — 같은 스테이지의 세 구간은 배경 한 장을 공유한다(`stage_id` 는 구간까지 포함한 네 자리).
-**스타일 하나 = 폴더 하나** — 화면은 `mock.js:bgDir()` 이 고른 폴더 **하나만** 읽는다. 설정·도감의 아트 버튼과 `?face=`가 초상·배경을 함께 고른다: `gemini` → `illustrate/`, `gpt` → `gpt/`. 배경만 비교하려면 `?bg=illustrate|gpt|pixel`로 재정의한다. URL·저장값의 우선순위는 [SCREEN_DESIGN §10](../../../docs/client/SCREEN_DESIGN.md), 결정은 ADR-0632다.
+**스타일 하나 = 폴더 하나** — 화면은 `mock.js:bgDir()` 이 고른 폴더 **하나만** 읽는다. 초상 스타일이 배경 묶음을 정한다(`mock.js:FACE_BG_STYLES` — `gemini` → `illustrate/`). 배경만 비교하려면 `?bg=illustrate|gpt|pixel`로 재정의한다. URL·저장값의 우선순위는 [SCREEN_DESIGN §10](../../../docs/client/SCREEN_DESIGN.md), 결정은 ADR-0632 · ADR-0986이다.
 **한 스타일이 전 스테이지를 다 갖출 필요는 없다** — 없는 자리는 CSS 그라디언트로 폴백한다(`.arena` 기본 배경). **일러스트와 GPT는 각각 챕터 1~5 스물다섯 장, 도트는 챕터 1~3 열다섯 장을 갖췄다. 챕터 6~7은 아직 없다.**
 ⚠ **화면은 `source/` 원본을 직접 안 읽는다** [2026-09-11 사용자 지시] — 오른쪽 아래 생성기 워터마크(✦) 띠를 잘라 낸 설치본을 읽는다(아래 레시피). 계승 원본은 재동기화 사본으로 `source/pixel/` 에 그대로 둔다.
 
@@ -325,16 +325,11 @@ fx_source/stun_star_20261028/   그 원본(Codex 다크 카툰 2×2 · 왼쪽 �
 
 ## faces/ — 몬스터 얼굴 아이콘 · **스타일 하나 = 폴더 하나** [2026-08-30]
 
-2026-10-01: 상단 Admin 오른쪽 · 설정에서 `gemini` / `gpt`를 선택한다. 선택한 스타일에 없는 초상은 빈 칸이다. 현재 분류·추가 절차는 [faces/README.md](faces/README.md). 아래 `cartoon` 표기는 분리 전 이력이다.
+스타일은 `gemini` 하나다(2026-10-30 `gpt/` 삭제 · ADR-0986). 스타일이 하나면 설정·도감의 스타일 버튼이 안 선다. 없는 초상은 빈 칸이다. 현재 분류·추가 절차는 [faces/README.md](faces/README.md). 아래 `cartoon` 표기는 분리 전 이력이다.
 
 ```
 faces/
-├── gemini/      ← 기본 스타일 — 영웅 전체 · GPT 분류 외 몬스터
-├── gpt/         ← 기존 1-2 · 1-4 초상 10장 + Gemini 초상의 그림체 변형 64장(총 74)
-│   ├── hero/<직업id>_<k>.png
-│   └── monster/<idx>.png
-├── pixel16/     ← 스타일 2 — 16-bit 도트그래픽, 배경 팔레트에 맞춤
-│   └── monster/<idx>.png
+├── gemini/      ← 유일한 스타일 — hero/<직업id>_<k>.webp · monster/<idx>.webp
 └── source/      ← **스타일 아님** — 원본 시트 · 생성용 스타일 앵커(구 `example/` · 2026-09-14). 게임이 로드하지 않는다 (faces/source/README.md)
 ```
 
@@ -421,7 +416,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 - **설치본은 손으로 만들지 않는다** — `python scripts/build_icons.py` 가 짓는다. 한 장마다 무손실 · 손실(q90)을 둘 다 인코딩해 **작은 쪽**을 쓴다(단색 실루엣은 무손실이 이긴다 — 오차 0 · 컬러 그림은 q90 이 1/4 크기에 오차가 눈에 안 띈다). 원본이 없어진 설치본은 지운다
 - **새 아이콘 · 교체** — 원본 PNG 를 `icons_source/<폴더>/<id>.png` 에 넣고 스크립트를 돌린다. `icons/` 에 PNG 를 떨어뜨려도 스크립트가 `icons_source/` 로 옮기고(같은 이름의 옛 원본을 대체) 짓는다
-- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/box · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · explore · currency · gamble · forge · lab · arena · mail). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
+- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/box · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · explore · currency · gamble · forge · lab · arena · mail · battle_buffs). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
 - **경로 조립** — `mock.js:ICON_EXT`(= `.webp`) 하나를 모든 아이콘 경로가 쓴다
 - **256 인 이유** — 칸은 22~44px 지만 한 장(1600×800)이 모니터에 맞춰 늘고(`fitStage`) 고해상도 배율이 겹치면 40px 칸이 기기 픽셀 100 안팎이 된다. 128 은 거기서 빠듯하다. 512 PNG 대비 7장 1.1MB → 70KB 안팎
 - 아래 폴더별 절의 트리 · 규격(512 · 투명 · 0.88)은 **원본(`icons_source/`) 기준**이다 — 설치본은 그걸 256 WebP 로 줄인 것뿐이다
@@ -460,11 +455,11 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 자리는 원본의 픽셀 좌표다(스크립트 머리) — 원본을 바꾸면 다시 잰다. 비교 줄을 걷으면 이 폴더도 걷는다.
 
-**`k<번호>_*.webp` — 스킨 키트 스물(191 ~ 210 · 다섯 장씩)** [2026-10-27 · ADR-0901] — `Skin` 줄의 번호 버튼이 내용물(메인 · 툴팁 · 창 · 플래시)에 갈아 끼우는 부품 · `d2min_*` 와 같은 다섯 장 · 같은 크기다.
+**`k<번호>_*.webp` — 스킨 키트(`200` Keep Timber 하나 · 다섯 장)** [2026-10-27 · ADR-0901 · 200 만 남김 ADR-0970] — `Skin` 줄의 번호 버튼이 내용물(메인 · 툴팁 · 창 · 플래시)에 갈아 끼우는 부품 · `d2min_*` 와 같은 다섯 장 · 같은 크기다.
 
 - **그리기** — `python src/assets/art/skins/source/run_skin_repaints.py [번호 …]` — Codex(ChatGPT 로그인)에 `concept_17_minimal.png` 를 Image 1 로 주고 배치 · 글자는 그대로 · 재질만 키트의 변주(`KITS` — 깔끔한 중세)로 다시 그리게 한다 · 결과 `source/repaint_<번호>_<id>.png`(1536×1024) · 지시문 `source/repaint_<번호>_<id>_prompt.txt`
 - **자르기** — `python src/assets/art/skins/source/cut_skin_repaints.py [번호 …]` — `cut_d2min_parts.py` 의 좌표 그대로(밀리면 가장자리 맞대기로 옮긴다) · 결은 그 자리 안 가장 민 곳 · 글자 면 밝기 상한 · `--css` 로 style.css 「스킨 키트」 절의 토큰 덩어리를 찍는다
-- ⚠ 다시 그린 원본 스무 장이 약 36MB 다 — 키트를 걷을 때 `source/repaint_*` 도 같이 지운다
+- ⚠ 다시 그린 원본은 한 장에 약 1.6MB 다 — 키트를 걷을 때 `source/repaint_*` 도 같이 지운다
 
 ## grave/ — 무덤 명패 비석 [신설 2026-10-13]
 
@@ -531,12 +526,17 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 - **원본** — Codex 이미지 생성 · 3×3 시트 · 도박장 시트(`gamble/source/sheet_01_codex.png`)를 기준 그림으로 붙여 같은 low-poly 결로 뽑았다(지시문 `source/sheet_01_prompt.txt`). 같은 지시문의 다른 판은 `source/sheet_01b_codex_unused.png`
 - **자르기** — `cut.py` 의 칸 선 · 격자선 규칙이 이 시트에서 틀렸다(둘째 줄 날개가 시트 폭을 거의 채워 한 줄이 「격자선」으로 지워졌다). 고친 판이 `source/cut_sheet_01.py` 다 — 줄 선을 손으로 주고 · 격자선 규칙을 끄고 · 칸 선을 넘는 조각은 중심이 든 칸으로 보낸다
 
-## icons/items/box/ · icons/mail/ — 첫 클리어 상자 · 우편함 [신설 2026-10-23]
+## icons/items/box/ · icons/mail/ — 첫 클리어 상자 · 우편함 · 알림
 
-`items/box/clear_box.png`(상자 칸 그림 · `mock.js:CLEAR_BOX_ART`) · `mail/mail.png`(상단바 편지봉투 · `mock.js:MAIL_ART`) — 512 투명 · 긴 변 0.88 · 중앙(`cut.py`). SCREEN_DESIGN §2 · §6 · ADR-0731 · 0732.
+`items/box/clear_box.png`(상자 칸 그림 · `mock.js:CLEAR_BOX_ART`)는 512 투명 · 긴 변 0.88 · 중앙(`cut.py`). Codex 이미지 생성 2×2 시트 `items/source/sheet_box_mail.png`의 왼쪽 위 그림(피 묻은 나무 상자 · 뼈 걸쇠 · 밀랍)을 쓴다. 경계밀도는 합격이며 색 수는 133으로 기준 130을 조금 넘는다. SCREEN_DESIGN §2 · §6 · ADR-0731 · 0732.
 
-- **원본** — Codex 이미지 생성 · 2×2 시트 `items/source/sheet_box_mail.png`(앵커 `examples.png` · `sheet_healing_potions.png`) — 상자 둘 · 봉투 둘 중 왼쪽 위(피 묻은 나무 상자 · 뼈 걸쇠 · 밀랍)와 오른쪽 아래(못 박힌 봉투)를 썼다. 해골 자물쇠 상자는 24px 에서 어두워 뭉갰다
-- **실측** — 경계밀도는 합격 · **색 수가 조금 넘는다**(상자 133 · 봉투 143 — 합격선 130). 첫 시트(질감 있음 — 경계 25 ~ 37%)는 버렸고 「평면 칠만」 문장을 넣은 둘째 시트다
+`mail/mail.png`(상단바 우편함 · `mock.js:MAIL_ART`)와 `mail/bell.png`(바로 옆 알림 · `mock.js:BELL_ART`)는 **투명 바탕의 단순한 백색 실루엣**이다. 스킬 아이콘과 어울리고 상단바의 작은 크기에서 읽히도록 질감·색 장식을 덜었다. 원본은 `icons_source/mail/`의 PNG, 설치본은 `icons/mail/`의 256 WebP이며 같은 아이콘 빌드 규칙을 따른다. 봉투는 우편함의 빈 카드 표식에도 쓴다. 내장 이미지 생성으로 각각 제작하며 봉투는 기존 경로의 그림을 교체한다. SCREEN_DESIGN §2 · ADR-0969.
+
+## icons/battle_buffs/ — 관전 버프 출처 아이콘 [신설 2026-10-30]
+
+`shrine`(제단) · `tactic`(교차한 검과 지휘 깃발) · `codex`(펼친 책)는 **기본 스킬과 어울리는 회백색에 가까운 흰 실루엣**(`#f4f4f7`)이다. 관전 아레나 왼쪽 위에 나란히 서고, 각 아이콘의 공통 설명창이 해당 출처의 효과를 읽는다(`mock.js:RUN_BUFF_ART` · SCREEN_DESIGN §4-2 · ADR-0992). 효과가 없는 출처의 흐림은 UI가 적용한다.
+
+내장 이미지 생성으로 각각 제작한다. 생성 원본·프롬프트는 `icons_source/battle_buffs/source/`, 긴 변 88%·중앙 정렬로 정규화한 설치 원본은 같은 상위 폴더의 **512 PNG**, 게임용은 `icons/battle_buffs/`의 **256 WebP**이다. 생성 알파를 보존하며 `python scripts/build_icons.py`가 설치본을 내보낸다. 신단 획득 카드·결과 띠·리포트의 `shrines/` 그림과는 별도 자산이다.
 
 ## icons/lab/ — 연구소 줄 아이콘 [신설 2026-10-18]
 
@@ -572,6 +572,7 @@ icons_source/skills/
 │   ├── war_recovery_20261017.png · kni_resistshield_20261017.png  ← 리커버리 · 레지스탕스 실드 단독 생성 원본(내장 image_gen · 투명 배경) · 지시문 `*_20261017_prompt.txt` · 내보내기 기록 `missing_basic_20261017.json`
 │   ├── missing_basic_20261017_preview.png  ← 새 아이콘과 같은 직업 기존 아이콘을 28 · 32 · 44px로 비교
 │   ├── body_shield_revision_20261017/  ← 리커버리 · 아이언 스킨의 공통 몸, 홀리 실드형 레지스탕스 실드 수정본 · `*_generated.png` · `*_prompt.txt` · `manifest.json` · 비교 `comparison.png` · 이전 설치본 `previous/`
+│   ├── archer_revision_20261030/  ← 콜드 애로우 · 퀵 핸즈 · 이글 아이 · 이베이드 단독 생성 원본 · `prompts.json` · `manifest.json` · 이전 이베이드 `previous/`
 │   ├── <직업>_advanced_skills_sheet.png  ← 전직 45 투톤 시트 다섯 (2026-09-28 · 전직 시트의 앵커는 war_ 시트)
 │   └── sheet_01 ~ 06 · Gemini_Generated_Image_*  ← 9월 Gemini 시트 — 지금 설치된 기존 기본 36 의 출처 · sheet_02_mono_anchor 가 그때의 앵커
 └── unused/               ← id 가 없는 여분 · 10-15 「새 B」 넷(`war_frenzy_b` · `arc_evade_b` · `pri_halo_b` · `pri_doom_b`) · 부류 기믹 칩 시안 넷(`fam_army` · `fam_guardian` · `fam_giant` · `fam_aberration` — 회백 단색 · 긴 변 88 · 기믹 id 가 서면 그 이름으로 옮긴다 · monster_design §3-1)
@@ -583,6 +584,7 @@ icons_source/skills/
 - **인페르노 · 소환** [2026-10-16 · Codex 단색] — 인페르노는 「화염의 고리」로 갈아 끼웠고(옛 각진 분사는 git 이력에만) 소환은 「별을 그린 의식 원에서 솟는 뿔 해골」이다. 설치본 실측 장변 88 · 중앙 50/50 · 단색
 - **리커버리 · 레지스탕스 실드 초판** [2026-10-17 · 내장 image_gen 단색] — 기본 스킬 50행과 화면 등록 목록 · 설치 파일을 대조해 비어 있던 두 스킬을 채우고 `mock.js:SKILL_ICON_FILES`에 등록했다. 건틀릿과 회복 화살표 · 원소 방패와 보호 호로 만든 첫 그림은 같은 날 아래 수정본으로 교체했다. 원본과 지시문은 `source/`, 당시 설치본은 수정 폴더의 `previous/`에 남는다
 - **리커버리 · 아이언 스킨 · 레지스탕스 실드 수정** [2026-10-17 · 사용자 지시 · 내장 image_gen 편집] — 리커버리와 아이언 스킨은 같은 정면 사람 상반신을 쓴다. 리커버리는 몸 가운데 큰 십자 구멍, 아이언 스킨은 십자 대신 목 · 어깨 · 가슴 · 복부의 적은 갑옷 선으로만 구분한다. 레지스탕스 실드는 홀리 실드의 방패 외형 · 테두리 · 바깥 광선을 기준으로 안쪽 십자를 화염 · 얼음 · 번개로 바꿨다. 회백 `#d8d9e6`, 생성 알파 유지, 512 PNG · 장변 88% · 중앙 50/50, 게임용 256 WebP 세 장만 기존 인코더로 내보냈다. 원본 · 프롬프트 · 이전 설치본 · 크기 비교는 [`body_shield_revision_20261017/`](icons_source/skills/source/body_shield_revision_20261017/manifest.json)에 기록한다
+- **궁수 기본 버프 넷** [2026-10-30 · 사용자 지시 · 내장 image_gen] — 콜드 애로우(`arc_coldarrow`)는 얼음 화살과 눈송이, 퀵 핸즈(`arc_quickhands`)는 화살을 집은 손과 속도선, 이글 아이(`arc_eagleeye`)는 눈을 강조한 매의 머리, 이베이드(`arc_evade`)는 머리 위 화살을 피하는 후드 상반신이다. 기존 궁수 시트와 기본 단색 앵커를 기준으로 회백 `#d8d9e6` · 투명 배경 · 굵은 실루엣으로 맞췄다. 512 PNG · 장변 88% · 중앙 50/50, 게임용 256 WebP 네 장과 현재 ID 등록을 함께 적용했다. 원본 · 프롬프트 · 내보내기 기록 · 이전 이베이드는 [`archer_revision_20261030/`](icons_source/skills/source/archer_revision_20261030/manifest.json), 28 · 32 · 44px 비교는 [`comparison.png`](../../../output/archer_icons_20261030/comparison.png).
 - **헬파이어**(`mon_hellfire` — 몬스터 전용 · 1-5 사탄의 정신 집중) [2026-10-22 · Codex 단색] — 「굵은 뿔 한 쌍 사이로 쏟아지는 지옥불이 해골 하나에 떨어진다」. 첫 시트(`source/sheet_15_codex_hellfire.png`)는 길쭉해서 40px 에서 가늘어 버렸고 두 번째 시트(`sheet_16_codex_hellfire.png` 오른쪽 위 칸)를 설치했다 · 프롬프트는 각 시트 옆 `_prompt.txt`. 설치본 실측 장변 88 · 중앙 50/50 · 단색 `#d8d9e6` · 256 WebP 한 장만 기존 인코더로 내보냈다
 - **장 보스 고유 넷**(몬스터 전용 · skill_design §12-9) [2026-10-29 · Codex 단색] — `mon_ironmaiden` 「양쪽 문이 열린 가시 고문함」(`sheet_17` 왼쪽 위) · `mon_goldfever` 「왕관 쓴 채 포효하는 뿔 머리 · 위로 튀는 동전 셋」(`sheet_18` 왼쪽 위) · `mon_delegate` 「원 배지 안 빈 왕좌 · 자리를 떠나는 화살」(오오라라 원 배지 · `sheet_19` 오른쪽 위) · `mon_swarm` 「금이 가며 갈라지는 파리」(`sheet_20` 왼쪽 아래). 실측 장변 88 · 중앙 50/50 · 단색 `#d8d9e6`. **화면에는 아직 안 나온다** — `skill.csv` 행이 없어(DEV_PLAN R380) `mock.js:SKILL_ICON_FILES` 에 넣지 않았다 · 고른 칸 밖의 구도는 시트에만 있다
 - 지운 스킬(`war_taunt` · `kni_duel` · `mag_focus` · `mag_frozenwall`)은 2026-10-16 행이 걷혀 목록에서 빠졌다 — 그림 파일만 폴더에 남는다
@@ -603,7 +605,7 @@ Might(굽은 갈고리 → **굽힌 팔**) · Fanaticism(가는 평행 줄무늬
 |---|---|---|---|
 | 전사 10 | **10** | 10 | — |
 | 기사 10 | **10** | 10 | — |
-| 궁수 10 | **10** | 10 | — (퀵 드로우는 전직 투톤 그림 그대로) |
+| 궁수 10 | **10** | 10 | — (버프 넷 2026-10-30 단색 수정본) |
 | 마법사 10 | **10** | 10 | — |
 | 사제 10 | **10** | 10 | — |
 | 몬스터 전용 2 + 장 보스 고유 넷(행 없음 · R380) | **5** | 1 | 자폭(쥔 몬스터가 없다) · 넷은 행이 서면 `SKILL_ICON_FILES` 에 넣는다 |
@@ -815,4 +817,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-10-29*
+*마지막 업데이트: 2026-10-30*

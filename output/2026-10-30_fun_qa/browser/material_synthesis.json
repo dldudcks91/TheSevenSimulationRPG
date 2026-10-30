@@ -1,0 +1,1420 @@
+{
+  "before": {
+    "gold": 2321,
+    "materials": {
+      "dust": 394,
+      "iron_ore": 1275,
+      "herb": 1537,
+      "timber": 1408
+    },
+    "make": {
+      "part": "weapon",
+      "level": 20,
+      "kinds": [
+        {
+          "id": "sword2h",
+          "ko": "클레이모어",
+          "en": "Claymore",
+          "group": "sword2h",
+          "baseId": "claymore"
+        },
+        {
+          "id": "axe",
+          "ko": "해칫",
+          "en": "Hatchet",
+          "group": "axe",
+          "baseId": "hatchet"
+        },
+        {
+          "id": "mace",
+          "ko": "플랜지드 메이스",
+          "en": "Flanged Mace",
+          "group": "mace",
+          "baseId": "flanged_mace"
+        },
+        {
+          "id": "spear",
+          "ko": "스레셔",
+          "en": "Thresher",
+          "group": "spear",
+          "baseId": "thresher"
+        },
+        {
+          "id": "staff",
+          "ko": "롱 스태프",
+          "en": "Long Staff",
+          "group": "staff",
+          "baseId": "long_staff"
+        },
+        {
+          "id": "orb",
+          "ko": "헤븐리 스톤",
+          "en": "Heavenly Stone",
+          "group": "orb",
+          "baseId": "heavenly_stone"
+        },
+        {
+          "id": "crucifix",
+          "ko": "디바인 셉터",
+          "en": "Divine Scepter",
+          "group": "crucifix",
+          "baseId": "divine_scepter"
+        },
+        {
+          "id": "bible",
+          "ko": "브리비어리",
+          "en": "Breviary",
+          "group": "bible",
+          "baseId": "breviary"
+        },
+        {
+          "id": "bow",
+          "ko": "롱 보우",
+          "en": "Long Bow",
+          "group": "bow",
+          "baseId": "long_bow"
+        },
+        {
+          "id": "crossbow",
+          "ko": "라이트 크로스보우",
+          "en": "Light Crossbow",
+          "group": "crossbow",
+          "baseId": "light_crossbow"
+        }
+      ],
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 2321
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 1275
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 394
+        }
+      ],
+      "canMake": false,
+      "err": "unbuilt"
+    },
+    "upgrade": {
+      "up": 3,
+      "max": 3,
+      "slots": 9,
+      "cost": null,
+      "mats": [],
+      "chance": null,
+      "gold": 2321,
+      "open": true,
+      "upgradeable": true,
+      "canUpgrade": false,
+      "next": null
+    }
+  },
+  "before_screen": {
+    "label": "material_synth_before",
+    "screen_text": "Party I - 대기 중\nParty II\nParty III\n골드2,321\n2\nEN\nAdmin\n원정 플레이 시간22:06:10\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\nParty I\n이언\nLv.30\nParty I\n피오나\nLv.29\nParty I\n위넬\nLv.27\n대기 중\n고블린 몰이꾼\nLv.1\n+\n+\n장비?\n+3\nLv.5\nLv.26\n+3\nLv.24\n+3\nLv.27\n+3\nLv.18\nLv.27\n+3\nLv.15\nLv.27\n접사 죄종?\n오만\n×3\n시기\n폭식\n탐욕\n분노\n색욕\n강화\n제작\n합성\n크래프트\n합성?\nI\n1,275\n×5\n20 G\n합성\n최대 ×116\nII\n0\n×5\n80 G\n합성\n최대 ×0\nIII\n0\n×5\n320 G\n합성\n최대 ×0\nIV\n0\n×5\n1,280 G\n합성\n최대 ×0\nV\n0\nI\n1,537\n×5\n20 G\n합성\n최대 ×116\nII\n0\n×5\n80 G\n합성\n최대 ×0\nIII\n0\n×5\n320 G\n합성\n최대 ×0\nIV\n0\n×5\n1,280 G\n합성\n최대 ×0\nV\n0\nI\n1,408\n×5\n20 G\n합성\n최대 ×116\nII\n0\n×5\n80 G\n합성\n최대 ×0\nIII\n0\n×5\n320 G\n합성\n최대 ×0\nIV\n0\n×5\n1,280 G\n합성\n최대 ×0\nV\n0\nI\n394\n×5\n20 G\n합성\n최대 ×78\nII\n0\n×5\n80 G\n합성\n최대 ×0\nIII\n0\n×5\n320 G\n합성\n최대 ×0\nIV\n0\n×5\n1,280 G\n합성\n최대 ×0\nV\n0\n창고?\n장비\n재료\n스킬북\n정렬\n인벤토리?\nParty I\n분해\n자동 분해\n정렬\nLv.23",
+    "game": {
+      "at": 1793404800001,
+      "screen": "game",
+      "tab": "forge",
+      "exp": "idle",
+      "levels": [
+        {
+          "uid": "h1",
+          "level": 30,
+          "xp": 65596,
+          "points": 0,
+          "cls": "mage",
+          "sin": "pride",
+          "book": null,
+          "advance": null
+        },
+        {
+          "uid": "h2",
+          "level": 29,
+          "xp": 267114,
+          "points": 0,
+          "cls": "priest",
+          "sin": "sloth",
+          "book": null,
+          "advance": null
+        },
+        {
+          "uid": "h3",
+          "level": 27,
+          "xp": 51270,
+          "points": 0,
+          "cls": "knight",
+          "sin": "lust",
+          "book": null,
+          "advance": null
+        },
+        {
+          "uid": "h4",
+          "level": 1,
+          "xp": 0,
+          "points": 0,
+          "cls": "archer",
+          "sin": "sloth",
+          "book": null,
+          "advance": null
+        }
+      ],
+      "gold": 2321,
+      "materials": {
+        "dust": 394,
+        "iron_ore": 1275,
+        "herb": 1537,
+        "timber": 1408
+      },
+      "potions": {},
+      "inventory": [
+        1
+      ],
+      "items": 25,
+      "cleared": [
+        1011,
+        1012,
+        1013,
+        1021,
+        1022,
+        1023,
+        1031,
+        1032,
+        1033,
+        1041,
+        1042,
+        1043,
+        1051,
+        2011,
+        2012,
+        2013,
+        2021,
+        2022,
+        2023,
+        2031,
+        2032,
+        2033,
+        2041,
+        2042,
+        2043,
+        2051,
+        3011,
+        3012,
+        3013,
+        3021,
+        3022,
+        3023,
+        3031,
+        3032,
+        3033,
+        3041,
+        3042,
+        3043,
+        3051,
+        4011,
+        4012,
+        4013,
+        4021,
+        4022,
+        4023,
+        4031,
+        4032,
+        4033,
+        4041,
+        4042,
+        4043,
+        4051,
+        5011,
+        5012,
+        5013,
+        5021
+      ],
+      "buildings": {
+        "explore": 3,
+        "command": 3,
+        "storage": 2,
+        "tavern": 3,
+        "shop": 4,
+        "forge": 3,
+        "library": 3,
+        "resource": 3
+      },
+      "report": {
+        "at": 1793404698050,
+        "stageId": 5022,
+        "level": 27,
+        "preset": 1,
+        "won": false,
+        "reason": "closed",
+        "durationSec": 56.2,
+        "difficulty": "normal",
+        "shrine": null,
+        "gold": 396,
+        "xp": {
+          "h1": 2912,
+          "h2": 2720,
+          "h3": 1846
+        },
+        "levelUps": [],
+        "downed": [
+          "h3"
+        ],
+        "party": [
+          "h1",
+          "h2",
+          "h3"
+        ],
+        "drops": [
+          "i290"
+        ],
+        "blueprints": [],
+        "discarded": 0,
+        "rounds": [
+          {
+            "n": 1,
+            "kind": "normal",
+            "killed": [
+              5203,
+              5202,
+              5202
+            ],
+            "eliteSin": null
+          },
+          {
+            "n": 2,
+            "kind": "normal",
+            "killed": [
+              5202,
+              5202,
+              5202
+            ],
+            "eliteSin": null
+          }
+        ],
+        "roundsCleared": 2,
+        "strikes": {
+          "party": {
+            "n": 27,
+            "miss": 4
+          },
+          "enemy": {
+            "n": 49,
+            "miss": 16
+          }
+        },
+        "contrib": [
+          {
+            "uid": "h1",
+            "dealt": 1396,
+            "taken": 543,
+            "kills": 6
+          },
+          {
+            "uid": "h2",
+            "dealt": 0,
+            "taken": 334,
+            "kills": 0
+          },
+          {
+            "uid": "h3",
+            "dealt": 463,
+            "taken": 961,
+            "kills": 0
+          }
+        ]
+      },
+      "guide": {
+        "guide": {
+          "id": "progressCommission",
+          "tab": "expedition",
+          "target": {
+            "commission": 1
+          }
+        },
+        "items": [
+          {
+            "id": "join:1",
+            "kind": "join",
+            "tab": "tavern",
+            "target": {
+              "join": 1
+            }
+          },
+          {
+            "id": "join:2",
+            "kind": "join",
+            "tab": "tavern",
+            "target": {
+              "join": 2
+            }
+          }
+        ],
+        "count": 2
+      },
+      "clock": 79570450
+    },
+    "buttons": [
+      {
+        "text": "Party I - 대기 중",
+        "disabled": true,
+        "className": "btn sm seg-party seg-idle"
+      },
+      {
+        "text": "Party II",
+        "disabled": true,
+        "className": "btn sm seg-party seg-none seg-lock"
+      },
+      {
+        "text": "Party III",
+        "disabled": true,
+        "className": "btn sm seg-party seg-none seg-lock"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "className": "mail-btn"
+      },
+      {
+        "text": "2",
+        "disabled": false,
+        "className": "mail-btn notification-btn has"
+      },
+      {
+        "text": "EN",
+        "disabled": false,
+        "className": "btn sm lang-btn"
+      },
+      {
+        "text": "Admin",
+        "disabled": false,
+        "className": "btn sm da-b"
+      },
+      {
+        "text": "⚙",
+        "disabled": false,
+        "className": "btn sm dp-btn"
+      },
+      {
+        "text": "원정",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "탐험",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "편성",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "캐릭터",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "건설",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "선술집",
+        "disabled": false,
+        "className": " todo"
+      },
+      {
+        "text": "상점",
+        "disabled": false,
+        "className": " todo"
+      },
+      {
+        "text": "대장간",
+        "disabled": false,
+        "className": "on"
+      },
+      {
+        "text": "도서관",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "연구소",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "결투장",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "콜로세움",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "도감",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "도움말",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "실험실",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "새 게임",
+        "disabled": false,
+        "className": "b-newgame"
+      },
+      {
+        "text": "강화",
+        "disabled": false,
+        "className": "fg-tab"
+      },
+      {
+        "text": "제작",
+        "disabled": false,
+        "className": "fg-tab"
+      },
+      {
+        "text": "합성",
+        "disabled": false,
+        "className": "fg-tab on"
+      },
+      {
+        "text": "크래프트",
+        "disabled": false,
+        "className": "fg-tab"
+      },
+      {
+        "text": "합성",
+        "disabled": false,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×116",
+        "disabled": false,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": false,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×116",
+        "disabled": false,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": false,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×116",
+        "disabled": false,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": false,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×78",
+        "disabled": false,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "장비",
+        "disabled": false,
+        "className": "btn sm on"
+      },
+      {
+        "text": "재료",
+        "disabled": false,
+        "className": "btn sm"
+      },
+      {
+        "text": "스킬북",
+        "disabled": false,
+        "className": "btn sm"
+      },
+      {
+        "text": "정렬",
+        "disabled": false,
+        "className": "btn sm toggle"
+      },
+      {
+        "text": "Party I",
+        "disabled": false,
+        "className": "btn sm on"
+      },
+      {
+        "text": "분해",
+        "disabled": false,
+        "className": "btn sm toggle"
+      },
+      {
+        "text": "자동 분해",
+        "disabled": false,
+        "className": "btn sm toggle"
+      },
+      {
+        "text": "정렬",
+        "disabled": false,
+        "className": "btn sm toggle"
+      }
+    ]
+  },
+  "button": "합성",
+  "after_screen": {
+    "label": "material_synth_after",
+    "screen_text": "Party I - 대기 중\nParty II\nParty III\n골드2,301\n2\nEN\nAdmin\n원정 플레이 시간22:06:10\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\nParty I\n이언\nLv.30\nParty I\n피오나\nLv.29\nParty I\n위넬\nLv.27\n대기 중\n고블린 몰이꾼\nLv.1\n+\n+\n장비?\n+3\nLv.5\nLv.26\n+3\nLv.24\n+3\nLv.27\n+3\nLv.18\nLv.27\n+3\nLv.15\nLv.27\n접사 죄종?\n오만\n×3\n시기\n폭식\n탐욕\n분노\n색욕\n강화\n제작\n합성\n크래프트\n합성?\nI\n1,270\n×5\n20 G\n합성\n최대 ×115\nII\n1\n×5\n80 G\n합성\n최대 ×0\nIII\n0\n×5\n320 G\n합성\n최대 ×0\nIV\n0\n×5\n1,280 G\n합성\n최대 ×0\nV\n0\nI\n1,537\n×5\n20 G\n합성\n최대 ×115\nII\n0\n×5\n80 G\n합성\n최대 ×0\nIII\n0\n×5\n320 G\n합성\n최대 ×0\nIV\n0\n×5\n1,280 G\n합성\n최대 ×0\nV\n0\nI\n1,408\n×5\n20 G\n합성\n최대 ×115\nII\n0\n×5\n80 G\n합성\n최대 ×0\nIII\n0\n×5\n320 G\n합성\n최대 ×0\nIV\n0\n×5\n1,280 G\n합성\n최대 ×0\nV\n0\nI\n394\n×5\n20 G\n합성\n최대 ×78\nII\n0\n×5\n80 G\n합성\n최대 ×0\nIII\n0\n×5\n320 G\n합성\n최대 ×0\nIV\n0\n×5\n1,280 G\n합성\n최대 ×0\nV\n0\n창고?\n장비\n재료\n스킬북\n정렬\n인벤토리?\nParty I\n분해\n자동 분해\n정렬\nLv.23\n합성 — 하급 철광석 ×1",
+    "game": {
+      "at": 1793404800001,
+      "screen": "game",
+      "tab": "forge",
+      "exp": "idle",
+      "levels": [
+        {
+          "uid": "h1",
+          "level": 30,
+          "xp": 65596,
+          "points": 0,
+          "cls": "mage",
+          "sin": "pride",
+          "book": null,
+          "advance": null
+        },
+        {
+          "uid": "h2",
+          "level": 29,
+          "xp": 267114,
+          "points": 0,
+          "cls": "priest",
+          "sin": "sloth",
+          "book": null,
+          "advance": null
+        },
+        {
+          "uid": "h3",
+          "level": 27,
+          "xp": 51270,
+          "points": 0,
+          "cls": "knight",
+          "sin": "lust",
+          "book": null,
+          "advance": null
+        },
+        {
+          "uid": "h4",
+          "level": 1,
+          "xp": 0,
+          "points": 0,
+          "cls": "archer",
+          "sin": "sloth",
+          "book": null,
+          "advance": null
+        }
+      ],
+      "gold": 2301,
+      "materials": {
+        "dust": 394,
+        "iron_ore": 1270,
+        "herb": 1537,
+        "timber": 1408,
+        "iron_ore_2": 1
+      },
+      "potions": {},
+      "inventory": [
+        1
+      ],
+      "items": 25,
+      "cleared": [
+        1011,
+        1012,
+        1013,
+        1021,
+        1022,
+        1023,
+        1031,
+        1032,
+        1033,
+        1041,
+        1042,
+        1043,
+        1051,
+        2011,
+        2012,
+        2013,
+        2021,
+        2022,
+        2023,
+        2031,
+        2032,
+        2033,
+        2041,
+        2042,
+        2043,
+        2051,
+        3011,
+        3012,
+        3013,
+        3021,
+        3022,
+        3023,
+        3031,
+        3032,
+        3033,
+        3041,
+        3042,
+        3043,
+        3051,
+        4011,
+        4012,
+        4013,
+        4021,
+        4022,
+        4023,
+        4031,
+        4032,
+        4033,
+        4041,
+        4042,
+        4043,
+        4051,
+        5011,
+        5012,
+        5013,
+        5021
+      ],
+      "buildings": {
+        "explore": 3,
+        "command": 3,
+        "storage": 2,
+        "tavern": 3,
+        "shop": 4,
+        "forge": 3,
+        "library": 3,
+        "resource": 3
+      },
+      "report": {
+        "at": 1793404698050,
+        "stageId": 5022,
+        "level": 27,
+        "preset": 1,
+        "won": false,
+        "reason": "closed",
+        "durationSec": 56.2,
+        "difficulty": "normal",
+        "shrine": null,
+        "gold": 396,
+        "xp": {
+          "h1": 2912,
+          "h2": 2720,
+          "h3": 1846
+        },
+        "levelUps": [],
+        "downed": [
+          "h3"
+        ],
+        "party": [
+          "h1",
+          "h2",
+          "h3"
+        ],
+        "drops": [
+          "i290"
+        ],
+        "blueprints": [],
+        "discarded": 0,
+        "rounds": [
+          {
+            "n": 1,
+            "kind": "normal",
+            "killed": [
+              5203,
+              5202,
+              5202
+            ],
+            "eliteSin": null
+          },
+          {
+            "n": 2,
+            "kind": "normal",
+            "killed": [
+              5202,
+              5202,
+              5202
+            ],
+            "eliteSin": null
+          }
+        ],
+        "roundsCleared": 2,
+        "strikes": {
+          "party": {
+            "n": 27,
+            "miss": 4
+          },
+          "enemy": {
+            "n": 49,
+            "miss": 16
+          }
+        },
+        "contrib": [
+          {
+            "uid": "h1",
+            "dealt": 1396,
+            "taken": 543,
+            "kills": 6
+          },
+          {
+            "uid": "h2",
+            "dealt": 0,
+            "taken": 334,
+            "kills": 0
+          },
+          {
+            "uid": "h3",
+            "dealt": 463,
+            "taken": 961,
+            "kills": 0
+          }
+        ]
+      },
+      "guide": {
+        "guide": {
+          "id": "progressCommission",
+          "tab": "expedition",
+          "target": {
+            "commission": 1
+          }
+        },
+        "items": [
+          {
+            "id": "join:1",
+            "kind": "join",
+            "tab": "tavern",
+            "target": {
+              "join": 1
+            }
+          },
+          {
+            "id": "join:2",
+            "kind": "join",
+            "tab": "tavern",
+            "target": {
+              "join": 2
+            }
+          }
+        ],
+        "count": 2
+      },
+      "clock": 79570450
+    },
+    "buttons": [
+      {
+        "text": "Party I - 대기 중",
+        "disabled": true,
+        "className": "btn sm seg-party seg-idle"
+      },
+      {
+        "text": "Party II",
+        "disabled": true,
+        "className": "btn sm seg-party seg-none seg-lock"
+      },
+      {
+        "text": "Party III",
+        "disabled": true,
+        "className": "btn sm seg-party seg-none seg-lock"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "className": "mail-btn"
+      },
+      {
+        "text": "2",
+        "disabled": false,
+        "className": "mail-btn notification-btn has"
+      },
+      {
+        "text": "EN",
+        "disabled": false,
+        "className": "btn sm lang-btn"
+      },
+      {
+        "text": "Admin",
+        "disabled": false,
+        "className": "btn sm da-b"
+      },
+      {
+        "text": "⚙",
+        "disabled": false,
+        "className": "btn sm dp-btn"
+      },
+      {
+        "text": "원정",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "탐험",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "편성",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "캐릭터",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "건설",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "선술집",
+        "disabled": false,
+        "className": " todo"
+      },
+      {
+        "text": "상점",
+        "disabled": false,
+        "className": " todo"
+      },
+      {
+        "text": "대장간",
+        "disabled": false,
+        "className": "on"
+      },
+      {
+        "text": "도서관",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "연구소",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "결투장",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "콜로세움",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "도감",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "도움말",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "실험실",
+        "disabled": false,
+        "className": ""
+      },
+      {
+        "text": "새 게임",
+        "disabled": false,
+        "className": "b-newgame"
+      },
+      {
+        "text": "강화",
+        "disabled": false,
+        "className": "fg-tab"
+      },
+      {
+        "text": "제작",
+        "disabled": false,
+        "className": "fg-tab"
+      },
+      {
+        "text": "합성",
+        "disabled": false,
+        "className": "fg-tab on"
+      },
+      {
+        "text": "크래프트",
+        "disabled": false,
+        "className": "fg-tab"
+      },
+      {
+        "text": "합성",
+        "disabled": false,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×115",
+        "disabled": false,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": false,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×115",
+        "disabled": false,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": false,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×115",
+        "disabled": false,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": false,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×78",
+        "disabled": false,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "합성",
+        "disabled": true,
+        "className": "btn sm primary"
+      },
+      {
+        "text": "최대 ×0",
+        "disabled": true,
+        "className": "btn sm "
+      },
+      {
+        "text": "장비",
+        "disabled": false,
+        "className": "btn sm on"
+      },
+      {
+        "text": "재료",
+        "disabled": false,
+        "className": "btn sm"
+      },
+      {
+        "text": "스킬북",
+        "disabled": false,
+        "className": "btn sm"
+      },
+      {
+        "text": "정렬",
+        "disabled": false,
+        "className": "btn sm toggle"
+      },
+      {
+        "text": "Party I",
+        "disabled": false,
+        "className": "btn sm on"
+      },
+      {
+        "text": "분해",
+        "disabled": false,
+        "className": "btn sm toggle"
+      },
+      {
+        "text": "자동 분해",
+        "disabled": false,
+        "className": "btn sm toggle"
+      },
+      {
+        "text": "정렬",
+        "disabled": false,
+        "className": "btn sm toggle"
+      }
+    ]
+  },
+  "after": {
+    "gold": 2301,
+    "materials": {
+      "dust": 394,
+      "iron_ore": 1270,
+      "herb": 1537,
+      "timber": 1408,
+      "iron_ore_2": 1
+    },
+    "make": {
+      "part": "weapon",
+      "level": 20,
+      "kinds": [
+        {
+          "id": "sword2h",
+          "ko": "클레이모어",
+          "en": "Claymore",
+          "group": "sword2h",
+          "baseId": "claymore"
+        },
+        {
+          "id": "axe",
+          "ko": "해칫",
+          "en": "Hatchet",
+          "group": "axe",
+          "baseId": "hatchet"
+        },
+        {
+          "id": "mace",
+          "ko": "플랜지드 메이스",
+          "en": "Flanged Mace",
+          "group": "mace",
+          "baseId": "flanged_mace"
+        },
+        {
+          "id": "spear",
+          "ko": "스레셔",
+          "en": "Thresher",
+          "group": "spear",
+          "baseId": "thresher"
+        },
+        {
+          "id": "staff",
+          "ko": "롱 스태프",
+          "en": "Long Staff",
+          "group": "staff",
+          "baseId": "long_staff"
+        },
+        {
+          "id": "orb",
+          "ko": "헤븐리 스톤",
+          "en": "Heavenly Stone",
+          "group": "orb",
+          "baseId": "heavenly_stone"
+        },
+        {
+          "id": "crucifix",
+          "ko": "디바인 셉터",
+          "en": "Divine Scepter",
+          "group": "crucifix",
+          "baseId": "divine_scepter"
+        },
+        {
+          "id": "bible",
+          "ko": "브리비어리",
+          "en": "Breviary",
+          "group": "bible",
+          "baseId": "breviary"
+        },
+        {
+          "id": "bow",
+          "ko": "롱 보우",
+          "en": "Long Bow",
+          "group": "bow",
+          "baseId": "long_bow"
+        },
+        {
+          "id": "crossbow",
+          "ko": "라이트 크로스보우",
+          "en": "Light Crossbow",
+          "group": "crossbow",
+          "baseId": "light_crossbow"
+        }
+      ],
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 2301
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 1270
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 394
+        }
+      ],
+      "canMake": false,
+      "err": "unbuilt"
+    },
+    "upgrade": {
+      "up": 3,
+      "max": 3,
+      "slots": 9,
+      "cost": null,
+      "mats": [],
+      "chance": null,
+      "gold": 2301,
+      "open": true,
+      "upgradeable": true,
+      "canUpgrade": false,
+      "next": null
+    }
+  },
+  "errors": []
+}

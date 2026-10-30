@@ -1,0 +1,199 @@
+{
+  "page_errors": [],
+  "cases": [
+    {
+      "id": "storage-initial-production-clock",
+      "built": {
+        "ok": true,
+        "rank": 1
+      },
+      "clocksAfterBuild": [],
+      "actual": {
+        "done": null,
+        "gained": {
+          "iron_ore": 60,
+          "herb": 60,
+          "timber": 60
+        },
+        "gold": 0,
+        "xp": []
+      },
+      "expected": {
+        "done": null,
+        "gained": {
+          "iron_ore": 60,
+          "herb": 60,
+          "timber": 60
+        },
+        "gold": 0,
+        "xp": []
+      }
+    },
+    {
+      "id": "visit-before-lab-waiting",
+      "researchHours": 1,
+      "nowHours": 10,
+      "expected": [
+        {
+          "hours": 4,
+          "tier": "magic",
+          "no": 1
+        },
+        {
+          "hours": 8,
+          "tier": "rare",
+          "no": 2
+        }
+      ],
+      "actual": [
+        {
+          "hours": 4,
+          "tier": "magic",
+          "no": 1
+        },
+        {
+          "hours": 8,
+          "tier": "rare",
+          "no": 2
+        },
+        {
+          "hours": 5,
+          "tier": "rare",
+          "no": 3
+        }
+      ],
+      "expectedVisit": {
+        "nextAt": 1700043200000,
+        "left": null
+      },
+      "actualVisit": {
+        "nextAt": null,
+        "left": 14400000
+      }
+    },
+    {
+      "id": "visit-before-lab-interval",
+      "researchHours": 0.75,
+      "nowHours": 7.8,
+      "expected": [
+        {
+          "hours": 4,
+          "tier": "magic",
+          "no": 1
+        },
+        {
+          "hours": 7.6363636363389755,
+          "tier": "rare",
+          "no": 2
+        }
+      ],
+      "actual": [
+        {
+          "hours": 4,
+          "tier": "magic",
+          "no": 1
+        }
+      ],
+      "expectedVisit": {
+        "nextAt": 1700040581818.1816,
+        "left": null
+      },
+      "actualVisit": {
+        "nextAt": 1700028800000,
+        "left": null
+      }
+    },
+    {
+      "id": "visit-before-lab-quality",
+      "seed": 63,
+      "researchHours": 0.3333333333333333,
+      "expected": [
+        {
+          "hours": 4,
+          "tier": "rare",
+          "no": 1
+        },
+        {
+          "hours": 8,
+          "tier": "magic",
+          "no": 2
+        }
+      ],
+      "actual": [
+        {
+          "hours": 4,
+          "tier": "magic",
+          "no": 1
+        },
+        {
+          "hours": 8,
+          "tier": "magic",
+          "no": 2
+        }
+      ]
+    },
+    {
+      "id": "concurrent-potion-stock-overspend",
+      "seed": 1,
+      "initial": 1,
+      "afterA": 0,
+      "afterB": 0,
+      "usedA": 1,
+      "usedB": 1,
+      "classes": [
+        "archer",
+        "mage"
+      ],
+      "aPotions": [
+        {
+          "t": 3.4,
+          "e": "potion",
+          "u": "p0",
+          "s": "minor_healing",
+          "i": 0,
+          "amt": 50,
+          "dhp": 50,
+          "left": 0
+        }
+      ],
+      "bPotions": [
+        {
+          "t": 3.4,
+          "e": "potion",
+          "u": "p0",
+          "s": "minor_healing",
+          "i": 0,
+          "amt": 50,
+          "dhp": 50,
+          "left": 0
+        }
+      ]
+    },
+    {
+      "id": "boundary-and-rejection-contracts",
+      "count": 30,
+      "passed": 30,
+      "failures": []
+    },
+    {
+      "id": "state-one-shot-vs-split-time",
+      "runs": 120,
+      "passed": 120,
+      "failures": []
+    },
+    {
+      "id": "actual-run-continuation-boundaries",
+      "count": 17,
+      "passed": 17,
+      "failures": []
+    },
+    {
+      "id": "legal-economy-state-sequences",
+      "steps": 6000,
+      "checked": 6000,
+      "failures": []
+    }
+  ],
+  "elapsed_sec": 5.93,
+  "changed_sources": []
+}

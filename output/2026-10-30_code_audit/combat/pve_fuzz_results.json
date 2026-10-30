@@ -1,0 +1,148 @@
+{
+  "counts": {
+    "battles": 585,
+    "events": 297318,
+    "bossSkills": {
+      "mon_hellfire": 11,
+      "mon_ironmaiden": 7,
+      "mon_swarm": 10,
+      "mon_goldfever": 4
+    },
+    "calls": 157,
+    "summons": 0,
+    "revives": 119,
+    "exceptions": 0,
+    "contribMismatch": 8,
+    "partitionChecks": 15
+  },
+  "issues": [
+    {
+      "kind": "contribution_mismatch",
+      "stage": 5051,
+      "difficulty": "normal",
+      "seed": 50512,
+      "actual": {
+        "uid": "arena-enemy-2",
+        "dealt": 2267,
+        "taken": 0,
+        "kills": 3
+      },
+      "expected": {
+        "dealt": -3809,
+        "taken": 0
+      }
+    },
+    {
+      "kind": "contribution_mismatch",
+      "stage": 5051,
+      "difficulty": "nightmare",
+      "seed": 50511,
+      "actual": {
+        "uid": "arena-enemy-0",
+        "dealt": 2390,
+        "taken": 217,
+        "kills": 2
+      },
+      "expected": {
+        "dealt": 2783,
+        "taken": 217
+      }
+    },
+    {
+      "kind": "contribution_mismatch",
+      "stage": 5051,
+      "difficulty": "nightmare",
+      "seed": 50511,
+      "actual": {
+        "uid": "arena-enemy-1",
+        "dealt": 7427,
+        "taken": 0,
+        "kills": 1
+      },
+      "expected": {
+        "dealt": 8321,
+        "taken": 0
+      }
+    },
+    {
+      "kind": "contribution_mismatch",
+      "stage": 5051,
+      "difficulty": "nightmare",
+      "seed": 50512,
+      "actual": {
+        "uid": "arena-enemy-2",
+        "dealt": 6460,
+        "taken": 0,
+        "kills": 2
+      },
+      "expected": {
+        "dealt": 3304,
+        "taken": 0
+      }
+    },
+    {
+      "kind": "contribution_mismatch",
+      "stage": 5051,
+      "difficulty": "hell",
+      "seed": 50512,
+      "actual": {
+        "uid": "arena-enemy-1",
+        "dealt": 3796,
+        "taken": 8550,
+        "kills": 1
+      },
+      "expected": {
+        "dealt": 4156,
+        "taken": 8550
+      }
+    },
+    {
+      "kind": "contribution_mismatch",
+      "stage": 5051,
+      "difficulty": "hell",
+      "seed": 50512,
+      "actual": {
+        "uid": "arena-enemy-2",
+        "dealt": 11924,
+        "taken": 0,
+        "kills": 2
+      },
+      "expected": {
+        "dealt": 8016,
+        "taken": 0
+      }
+    },
+    {
+      "kind": "contribution_mismatch",
+      "stage": 5051,
+      "difficulty": "hell",
+      "seed": 50513,
+      "actual": {
+        "uid": "arena-enemy-1",
+        "dealt": 11568,
+        "taken": 402,
+        "kills": 0
+      },
+      "expected": {
+        "dealt": 10161,
+        "taken": 402
+      }
+    },
+    {
+      "kind": "contribution_mismatch",
+      "stage": 5051,
+      "difficulty": "hell",
+      "seed": 50513,
+      "actual": {
+        "uid": "arena-enemy-2",
+        "dealt": 4750,
+        "taken": 19841,
+        "kills": 3
+      },
+      "expected": {
+        "dealt": 4996,
+        "taken": 19841
+      }
+    }
+  ]
+}

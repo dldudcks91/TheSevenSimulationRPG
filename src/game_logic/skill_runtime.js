@@ -61,7 +61,8 @@ export function cooldownSec(B, u, def) {
  *   out         — 전투 결과 (여기서는 `casts` 만 센다)
  *   units       — `{party, enemies}`. **`enemies` 는 라운드마다 갈아 끼워지는 속성**이라
  *                 런타임은 항상 `ctx.units.enemies` 를 읽는다(변수로 복사해 두면 옛 라운드를 가리킨다)
- *   strikeOnce  — `(u, target, mult, element, s, sk?)` 직격 1회. 기본 공격과 스킬 타격이 같은 함수를 쓴다.
+ *   strikeOnce  — `(u, target, mult, element, s, sk?, spread?, afterStrike?)` 직격 1회. 기본 공격과 스킬 타격이 같은 함수를 쓴다.
+ *                 `afterStrike(landed)` 는 타격 후처리 · 장비 발동 사이에 실행한다(추가타 결빙 · 대상 방어 감소).
  *                 `sk = {statMult, procChance, procMult}` 는 스킬 타격만 넘긴다(공격 대상 표) — 기본 공격은 안 넘긴다(메인 스탯 계수)
  *   pickTarget  — `(u, foes)` 단일 대상 선택 (도발·결투 규칙을 아는 쪽은 battle.js 다)
  *   makeSummon  — `(caster, def)` 소환 유닛 하나. **유닛 생성자는 battle.js 것**이라 만드는 일을 그쪽에 맡긴다
@@ -327,8 +328,9 @@ export function createSkillRuntime(ctx) {
         for (const tgt of targets) {
             for (const [key, win] of wins) {
                 if (u.hp <= 0 || tgt.hp <= 0) break;
-                const landed = ctx.strikeOnce(u, tgt, win.v, win.element, win.s ?? key);
-                if (landed && win.hit && tgt.hp > 0 && !tgt.summon) applyStatus(u, tgt, win.hit, t);
+                ctx.strikeOnce(u, tgt, win.v, win.element, win.s ?? key, null, false, landed => {
+                    if (landed && win.hit && tgt.hp > 0 && !tgt.summon) applyStatus(u, tgt, win.hit, t);
+                });
             }
         }
     }
@@ -340,10 +342,12 @@ export function createSkillRuntime(ctx) {
     let struck = null;
 
     /** 공격 대상 표(`skill_effects.ATTACK_TARGETS`)가 부르는 직격 — `ctx.strikeOnce` 그대로이고, 장부에 대상을 처음 겨눈 순서로 적는다(rng 0) */
-    function skillStrike(u, tgt, mult, element, s, sk) {
+    function skillStrike(u, tgt, mult, element, s, sk, afterStrike = null) {
         // 덤이 붙는 대상 장부 — 원소 스킬도 적는다(2026-10-29 · R387 — ~~원소 태그 없는 것만 · R201~~)
         if (struck?.u === u && !struck.list.includes(tgt)) struck.list.push(tgt);
-        return ctx.strikeOnce(u, tgt, mult, element, s, sk);
+        // 중첩 발동의 타격 순번은 시전 장부에서 낸다. 정상 다단/정신 집중의 관전 순번을 덮지 않는다.
+        if (procDepth && struck?.u === u) sk = { ...sk, hitIndex: struck.next++ };
+        return ctx.strikeOnce(u, tgt, mult, element, s, sk, sk?.spread ?? false, afterStrike);
     }
 
     /**
@@ -360,7 +364,7 @@ export function createSkillRuntime(ctx) {
         // 정신 집중의 한 방 [2026-10-22 · R318] — 그 스킬의 타수는 방 수라 한 방은 1타다(실효 타수는 연 차례에 `chanOpen` 이 쟀다)
         if (one) eff = { ...eff, effects: eff.effects.map(x => (x.effect === 'hit' ? { ...x, hits: 1 } : x)) };
         const outer = struck;
-        const mine = struck = { u, list: [] };
+        const mine = struck = { u, list: [], next: 0 };
         let lead = null;
         for (const x of eff.effects) {
             const type = EFFECT_TYPES[x.effect];
@@ -398,6 +402,34 @@ export function createSkillRuntime(ctx) {
         }
     }
 
+    // 발동 중의 직격 · 추가타 · 에코 · 반격은 다른 장비 발동을 일으키지 않는다. 전투 전체에서 공유한다.
+    let procDepth = 0;
+
+    /**
+     * 무기 타격 발동 — 적중한 직격의 반사 · 쓰러짐 · 반격까지 끝난 뒤 battle.js 가 부른다.
+     * 유효한 옵션마다 확률 1회(100%도 1회). 조건 불일치 · 사망 · 적 없음 · 발동 중이면 rng 0.
+     * 기본 Lv1 정의 + 현재 능력치로 즉시 시전한다(정신 집중도 전체 타수). 차례 · HP 비용 · 쿨 · 시전 칸은 안 쓴다.
+     * skill 사건의 trigger만 남겨 같은 스킬의 정상 액티브 칸을 식별하고, cast 훅은 발화하지 않는다.
+     */
+    function procHit(u, t) {
+        if (!SK || procDepth || u.hp <= 0) return;
+        for (const p of u.fx?.hitProcs ?? []) {
+            if (u.hp <= 0 || alive(foesOf(u)).length === 0) break;
+            const def = SK.defs[p.skill];
+            if (!Number.isFinite(p.chance) || !(p.chance > 0) || !def || !CASTS[def.cast]?.picked) continue;
+            if (!SK.castable(def, { self: u, allies: alive(alliesOf(u)) })) continue;
+            if (rng() >= Math.min(1, p.chance)) continue;
+            timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id, trigger: 'hit' });
+            out.casts[def.id] = (out.casts[def.id] ?? 0) + 1;
+            procDepth += 1;
+            // 정상 정신 집중의 대상 고정은 그 방에만 적용한다. 발동은 제 규칙으로 대상을 다시 고른다.
+            const pick0 = rt.pickTarget;
+            rt.pickTarget = ctx.pickTarget;
+            try { cast(u, def, t); }
+            finally { rt.pickTarget = pick0; procDepth -= 1; }
+        }
+    }
+
     /**
      * 지금 고를 액티브 — 준비됐고 발동 조건이 참인 것 중 `pickReady` 가 고른 하나 · 없으면 null. **rng 0**.
      *   차례(`act`)와 마법 무기의 기다림(battle.js 틱 루프 — 찬 채로 기다리다 준비되는 틱에 시전 · R198)이 같은 판정을 쓴다
@@ -412,11 +444,12 @@ export function createSkillRuntime(ctx) {
     }
 
     /**
-     * **정신 집중** [2026-10-22 · R318 · battle_design §3-2] — `cast = channel` 스킬이 열리면 `hit` 줄 실효 타수만큼 **차례마다 한 방**을 친다.
-     *   `u.chan = {a, def, left, single, tgt}` — `a` 그 칸 · `left` 남은 방 · `tgt` 기준 대상(단일 대상은 쓰러질 때까지 이 적을 친다).
+     * **정신 집중** [2026-10-22 · R318 · battle_design §3-2] — `cast = channel` 스킬이 열리면 `hit` 줄 실효 타수만큼 **방 사이 간격(`iv`)마다 한 방**을 친다.
+     *   `u.chan = {a, def, left, single, tgt, iv, acc}` — `a` 그 칸 · `left` 남은 방 · `tgt` 기준 대상(단일 대상은 쓰러질 때까지 이 적을 친다).
      *   여는 차례가 첫 방이다 · 열린 동안 그 칸은 `readyAt = Infinity`(다시 안 골라진다 · 스턴이 밀어도 그대로) · 기본 공격 · 다른 스킬은 없다(쿨은 그대로 돈다).
-     *   마법 무기는 칸 하나를 쓰고 연다(부르는 쪽 `chargeTick`) — 차던 칸은 버리고 열린 동안 `next` 가 방 사이 시계다(battle.js). 쓰는 스킬이 없으면 아래 넷은 안 돈다
-     *   **계속 닳기**(`cast = channel_tick` · 2026-10-22) — 방 사이 시계만 다르다: `iv` = [balance.csv:channel_tick_sec] · `acc` 를 battle.js `chanTick` 이 쌓아 한 방을 부른다(`chanHit`)
+     *   마법 무기는 칸 하나를 쓰고 연다(부르는 쪽 `chargeTick`) — 차던 칸은 버린다. 쓰는 스킬이 없으면 아래 넷은 안 돈다
+     *   **방 사이는 초 시계다** — `iv` = [balance.csv:channel_strike_sec](끊어 치기 · 2026-10-30 R392 — ~~행동 주기~~) · [balance.csv:channel_tick_sec](계속 닳기) ·
+     *   그 스킬의 `chargeSec`(모으기). 열린 동안 그 유닛은 차례 · 칸 충전을 건너뛰고 battle.js `chanTick` 이 `acc` 를 쌓아 한 방을 부른다(`chanHit`)
      */
     function chanOpen(u, sel, t) {
         const def = sel.def;
@@ -424,19 +457,19 @@ export function createSkillRuntime(ctx) {
         // 모으기(`burst` · 2026-10-26 R358)는 방이 둘 — 여는 순간 · 그 스킬의 모으는 시간(`chargeSec` = skill.csv:charge_sec · 2026-10-28 R371) 뒤 쏘는 순간
         const burst = CASTS[def.cast].burst === true;
         const n = burst ? 2 : Math.max(1, hit?.hits ?? 1);
-        const iv = CASTS[def.cast].chan === 'tick' ? (burst ? def.chargeSec : B.channel_tick_sec) : null;
+        const iv = burst ? def.chargeSec : B[CASTS[def.cast].iv];
         sel.readyAt = Infinity;
         u.chan = { a: sel, def, left: n, single: hit?.target === 'enemy_single', tgt: null, iv, acc: 0 };
-        if (u.noBasic || iv) u.next = u.period;
+        u.next = u.period;
         out.casts[def.id] = (out.casts[def.id] ?? 0) + 1;
-        // `chan` = 방 수 · `ready` 는 없다 — 쿨은 닫힐 때 `chanEnd` 가 싣는다 · `iv` = 계속 닳기의 방 사이 간격(재생기가 게이지를 그 간격으로 닳린다)
-        timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id, chan: n, ...(iv ? { iv } : {}), ...(u.noBasic ? { ch: u.charges } : {}) });
+        // `chan` = 방 수 · `ready` 는 없다 — 쿨은 닫힐 때 `chanEnd` 가 싣는다 · `iv` = 방 사이 간격(재생기가 게이지를 그 간격으로 닳린다)
+        timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id, chan: n, iv, ...(u.noBasic ? { ch: u.charges } : {}) });
         hooks.emit('cast', u, { t, def });
         chanStrike(u, t);
         return true;
     }
 
-    /** 열린 동안의 차례 — `chan` 이벤트(`left` = 이 방 뒤에 남는 방) 뒤 한 방 */
+    /** 열린 동안의 방 — `chan` 이벤트(`left` = 이 방 뒤에 남는 방) 뒤 한 방 · 부르는 쪽은 battle.js `chanTick` */
     function chanHit(u, t) {
         timeline.push({ t: r1(t), e: 'chan', u: u.key, s: u.chan.def.id, left: u.chan.left - 1 });
         chanStrike(u, t);
@@ -462,7 +495,7 @@ export function createSkillRuntime(ctx) {
 
     /**
      * 닫는다 — 마지막 방 뒤 · 라운드 경계 · 갈아입기(battle.js 가 부른다). 쿨은 **지금부터** · `chanEnd` 이벤트 ·
-     *   마법 무기는 충전을 다시 연다(`next = period`) · 계속 닳기는 물리도 `next = period`(열린 동안 선 차례 · 경직이 민 몫은 버린다 — 틱이 이미 섰다).
+     *   `next = period` — 물리는 다음 차례 · 마법은 충전이 지금부터 다시 돈다(열린 동안 선 차례 · 경직이 민 몫은 버린다 — 틱이 이미 섰다).
      *   열린 것이 없으면 아무것도 안 한다 · rng 0
      */
     function chanClose(u, t) {
@@ -470,7 +503,7 @@ export function createSkillRuntime(ctx) {
         if (!c) return;
         u.chan = null;
         c.a.readyAt = t + cooldownSec(B, u, c.def);
-        if (u.noBasic || c.iv) u.next = u.period;
+        u.next = u.period;
         timeline.push({ t: r1(t), e: 'chanEnd', u: u.key, s: c.def.id, ready: r1(c.a.readyAt), ...(u.noBasic ? { ch: u.charges } : {}) });
     }
 
@@ -483,7 +516,7 @@ export function createSkillRuntime(ctx) {
      *   시전자가 스킬 도중 쓰러졌으면 `basicAttack` 이 건너뛴다(`u.hp <= 0`)
      *   **마법 무기(`noBasic`)는 기본 공격이 없다** [2026-10-02 · R198] — 준비된 것이 없으면 아무것도 안 한다. 그 차례를 세우지 않는 것
      *   (칸 충전 · R200)은 부르는 쪽(battle.js `chargeTick`)이 `pick` 으로 먼저 가른다 — 여기는 안전장치다
-     *   **정신 집중**(R318) — 열린 동안의 차례는 한 방(`chanHit`)이고, 고른 스킬이 정신 집중이면 그 차례에 연다(`chanOpen`) — 둘 다 기본 공격이 없다
+     *   **정신 집중**(R318) — 고른 스킬이 정신 집중이면 그 차례에 연다(`chanOpen`) · 기본 공격이 없다. 열린 동안은 차례가 안 온다(battle.js `chanTick` 이 방을 친다 · R392)
      *   **프렌지 겹 이어짐**(2026-10-28 · R372) — 창이 끝나며 남긴 겹(`fzKeep` · `expire`)은 **이 차례 한 번만** 산다 — 걸었든 안 걸었든 차례가 끝나면 지운다
      * @returns 무언가 했으면 참(시전 · 기본 공격) — 마법 무기의 칸을 되돌리는 판정이 읽는다 (R200)
      */
@@ -496,7 +529,6 @@ export function createSkillRuntime(ctx) {
     function turn(u, t) {
         const foes = alive(foesOf(u));
         if (foes.length === 0) return false;
-        if (u.chan) return chanHit(u, t);
         // 파리 떼 [2026-10-29 · R380 · skill_design §12-9 스웜] — 그 차례는 **산 파리마다 기본 공격 한 번**(배율 = 파리 몫 · 대상 굴림도 마리마다) · 스킬은 없다(`pick`).
         //   마법 무기는 기본 공격이 없어 파리도 안 쏜다 · 앞 파리의 타격이 반격 등으로 파리를 쓰러뜨리면 그 파리는 건너뛴다
         if (u.swarm) {
@@ -554,7 +586,7 @@ export function createSkillRuntime(ctx) {
         shredMax: B.weapon_def_down_stack_max,
         // 파리 떼 여닫기 — HP · 타임라인 · 판 크기를 아는 battle.js 가 한다(`EFFECTS.swarm` · 2026-10-29 R380)
         swarmOpen: ctx.swarmOpen, swarmClose: ctx.swarmClose,
-        alive, alliesOf, foesOf, pick, act, cast, fire, expire, castHeal, castMend, castBuff, applyStatus, castSummon, castCall, basicAttack, targetsOf, chanHit, chanClose,
+        alive, alliesOf, foesOf, pick, act, cast, fire, procHit, expire, castHeal, castMend, castBuff, applyStatus, castSummon, castCall, basicAttack, targetsOf, chanHit, chanClose,
     };
     return rt;
 }

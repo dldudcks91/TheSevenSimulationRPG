@@ -1,0 +1,1399 @@
+{
+  "scope": "Actual saved60min/day states, normal APIs, isolated clones, no resources/ranks/levels injected.",
+  "synthesis": {
+    "availability": {
+      "id": "iron_ore_2",
+      "from": "iron_ore",
+      "post": "mine",
+      "tier": 2,
+      "need": 5,
+      "gold": 20,
+      "have": 74,
+      "own": 0,
+      "max": 14,
+      "err": null
+    },
+    "before": {
+      "gold": 1080,
+      "ore": 74,
+      "tier2": 0
+    },
+    "result": {
+      "ok": true,
+      "id": "iron_ore_2",
+      "n": 1,
+      "gold": 20,
+      "have": 1
+    },
+    "after": {
+      "gold": 1060,
+      "ore": 69,
+      "tier2": 1
+    },
+    "delta": {
+      "gold": -20,
+      "ore": -5,
+      "tier2": 1
+    }
+  },
+  "consumerMaterialIds": [
+    "iron_ore",
+    "dust",
+    "timber",
+    "herb"
+  ],
+  "synthesisOutputsWithoutProgressionConsumers": [
+    "iron_ore_2",
+    "iron_ore_3",
+    "iron_ore_4",
+    "iron_ore_5",
+    "herb_2",
+    "herb_3",
+    "herb_4",
+    "herb_5",
+    "timber_2",
+    "timber_3",
+    "timber_4",
+    "timber_5",
+    "dust_2",
+    "dust_3",
+    "dust_4",
+    "dust_5"
+  ],
+  "craftRecipes": [
+    {
+      "part": "weapon",
+      "level": 1,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "helmet",
+      "level": 1,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "armor",
+      "level": 1,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "gloves",
+      "level": 1,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "boots",
+      "level": 1,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "amulet",
+      "level": 1,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "ring",
+      "level": 1,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "weapon",
+      "level": 10,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "helmet",
+      "level": 10,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "armor",
+      "level": 10,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "gloves",
+      "level": 10,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "boots",
+      "level": 10,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "amulet",
+      "level": 10,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "ring",
+      "level": 10,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "weapon",
+      "level": 15,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "helmet",
+      "level": 15,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "armor",
+      "level": 15,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "gloves",
+      "level": 15,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "boots",
+      "level": 15,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "amulet",
+      "level": 15,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "ring",
+      "level": 15,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "weapon",
+      "level": 20,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "helmet",
+      "level": 20,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "armor",
+      "level": 20,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "gloves",
+      "level": 20,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "boots",
+      "level": 20,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "amulet",
+      "level": 20,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "ring",
+      "level": 20,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "weapon",
+      "level": 25,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "helmet",
+      "level": 25,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "armor",
+      "level": 25,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "gloves",
+      "level": 25,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "boots",
+      "level": 25,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "amulet",
+      "level": 25,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "ring",
+      "level": 25,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "weapon",
+      "level": 30,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "helmet",
+      "level": 30,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "armor",
+      "level": 30,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "gloves",
+      "level": 30,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "boots",
+      "level": 30,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "amulet",
+      "level": 30,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "ring",
+      "level": 30,
+      "open": true,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "weapon",
+      "level": 50,
+      "open": false,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "helmet",
+      "level": 50,
+      "open": false,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "armor",
+      "level": 50,
+      "open": false,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "gloves",
+      "level": 50,
+      "open": false,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "boots",
+      "level": 50,
+      "open": false,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "timber",
+          "id": "timber",
+          "need": 2,
+          "have": 1361
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "amulet",
+      "level": 50,
+      "open": false,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    },
+    {
+      "part": "ring",
+      "level": 50,
+      "open": false,
+      "cost": [
+        {
+          "kind": "gold",
+          "id": "gold",
+          "need": 500,
+          "have": 999501
+        },
+        {
+          "kind": "ore",
+          "id": "iron_ore",
+          "need": 2,
+          "have": 693
+        },
+        {
+          "kind": "dust",
+          "id": "dust",
+          "need": 2,
+          "have": 1447
+        }
+      ]
+    }
+  ],
+  "potions": [
+    {
+      "potion": "minor_healing",
+      "base": {
+        "gold": 999501,
+        "herb": 1644,
+        "n": 2
+      },
+      "buy": {
+        "ok": true,
+        "id": "minor_healing",
+        "n": 1,
+        "gold": 50,
+        "have": 3
+      },
+      "craft": {
+        "ok": true,
+        "id": "minor_healing",
+        "cost": 500,
+        "have": 3
+      },
+      "buyGoldSpent": 50,
+      "craftGoldSpent": 500,
+      "buyHerbSpent": 0,
+      "craftHerbSpent": 1,
+      "buyStockIncrease": 1,
+      "craftStockIncrease": 1
+    },
+    {
+      "potion": "light_healing",
+      "base": {
+        "gold": 999501,
+        "herb": 1644,
+        "n": 0
+      },
+      "buy": {
+        "ok": true,
+        "id": "light_healing",
+        "n": 1,
+        "gold": 100,
+        "have": 1
+      },
+      "craft": {
+        "ok": true,
+        "id": "light_healing",
+        "cost": 500,
+        "have": 1
+      },
+      "buyGoldSpent": 100,
+      "craftGoldSpent": 500,
+      "buyHerbSpent": 0,
+      "craftHerbSpent": 2,
+      "buyStockIncrease": 1,
+      "craftStockIncrease": 1
+    },
+    {
+      "potion": "healing",
+      "base": {
+        "gold": 999501,
+        "herb": 1644,
+        "n": 0
+      },
+      "buy": {
+        "ok": true,
+        "id": "healing",
+        "n": 1,
+        "gold": 200,
+        "have": 1
+      },
+      "craft": {
+        "ok": true,
+        "id": "healing",
+        "cost": 500,
+        "have": 1
+      },
+      "buyGoldSpent": 200,
+      "craftGoldSpent": 500,
+      "buyHerbSpent": 0,
+      "craftHerbSpent": 3,
+      "buyStockIncrease": 1,
+      "craftStockIncrease": 1
+    }
+  ],
+  "training": {
+    "source": "Actual adaptive seed1 day save; legal registration of existing bench goblin into already unlocked training line, then23h absence.",
+    "before": {
+      "level": 1,
+      "xp": 0,
+      "needed": 200
+    },
+    "registration": {
+      "ok": true
+    },
+    "after": {
+      "level": 1,
+      "xp": 61,
+      "carry": 0.5
+    },
+    "settlement": {
+      "done": null,
+      "gained": {
+        "iron_ore": 192,
+        "herb": 193,
+        "timber": 193
+      },
+      "gold": 180,
+      "xp": []
+    }
+  }
+}

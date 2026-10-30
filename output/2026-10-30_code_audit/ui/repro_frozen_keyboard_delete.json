@@ -1,0 +1,693 @@
+{
+  "source_set_sha256": "a5ecb3f73e8f09230a4ac6e478ed2a93a5123c2695d165aa1360c4a2b8d38fea",
+  "before": {
+    "version": 43,
+    "seed": 2297565825,
+    "createdAt": 1793298928257,
+    "savedAt": 1793298928259,
+    "expMs": 0,
+    "resources": {
+      "gold": 600,
+      "stigma": 0
+    },
+    "materials": {},
+    "advancing": [],
+    "resourceProduction": [],
+    "labNodes": {},
+    "labResearch": null,
+    "labReg": {},
+    "labSince": {},
+    "labClock": {
+      "gamble": null,
+      "train": null
+    },
+    "potions": {
+      "minor_healing": 20
+    },
+    "books": {},
+    "blueprints": {},
+    "heroes": [
+      {
+        "uid": "h1",
+        "name": {
+          "ko": "발렌",
+          "en": "Valen"
+        },
+        "tier": "rare",
+        "sin": "wrath",
+        "cls": "warrior",
+        "trait": {
+          "ko": "언변",
+          "en": "Silver Tongue"
+        },
+        "face": "warrior_5",
+        "level": 1,
+        "xp": 0,
+        "mastery": {},
+        "masteryPoints": 0,
+        "innate": "war_bash",
+        "stats": {
+          "str": 18,
+          "agi": 10,
+          "int": 10,
+          "vit": 11,
+          "luck": 9,
+          "ldr": 7,
+          "cha": 12
+        },
+        "equipped": {
+          "weapon": "i1",
+          "helmet": null,
+          "armor": "i2",
+          "gloves": null,
+          "boots": null,
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        }
+      },
+      {
+        "uid": "h2",
+        "name": {
+          "ko": "이언",
+          "en": "Ian"
+        },
+        "tier": "magic",
+        "sin": "gluttony",
+        "cls": "mage",
+        "trait": {
+          "ko": "타고난 지휘관",
+          "en": "Born Commander"
+        },
+        "face": "mage_2",
+        "level": 1,
+        "xp": 0,
+        "mastery": {},
+        "masteryPoints": 0,
+        "innate": "mag_fireball",
+        "stats": {
+          "str": 8,
+          "agi": 9,
+          "int": 12,
+          "vit": 13,
+          "luck": 7,
+          "ldr": 9,
+          "cha": 3
+        },
+        "equipped": {
+          "weapon": "i3",
+          "helmet": null,
+          "armor": "i4",
+          "gloves": null,
+          "boots": null,
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        }
+      },
+      {
+        "uid": "h3",
+        "name": {
+          "ko": "마르고",
+          "en": "Margot"
+        },
+        "tier": "normal",
+        "sin": "sloth",
+        "cls": "archer",
+        "trait": {
+          "ko": "잔꾀",
+          "en": "Cunning"
+        },
+        "face": "archer_1",
+        "level": 1,
+        "xp": 0,
+        "mastery": {},
+        "masteryPoints": 0,
+        "innate": "arc_guided",
+        "stats": {
+          "str": 10,
+          "agi": 15,
+          "int": 11,
+          "vit": 5,
+          "luck": 5,
+          "ldr": 6,
+          "cha": 9
+        },
+        "equipped": {
+          "weapon": "i5",
+          "helmet": null,
+          "armor": "i6",
+          "gloves": null,
+          "boots": null,
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        }
+      },
+      {
+        "name": {
+          "ko": "고블린 종지기",
+          "en": "Goblin Bellringer"
+        },
+        "tier": "growth",
+        "sin": "gluttony",
+        "cls": "priest",
+        "trait": {
+          "ko": "언변",
+          "en": "Silver Tongue"
+        },
+        "face": "goblin_bellringer",
+        "level": 1,
+        "xp": 0,
+        "mastery": {},
+        "masteryPoints": 0,
+        "innate": "pri_doom",
+        "stats": {
+          "str": 5,
+          "agi": 5,
+          "int": 5,
+          "vit": 5,
+          "luck": 5,
+          "ldr": 5,
+          "cha": 5
+        },
+        "equipped": {
+          "weapon": null,
+          "helmet": null,
+          "armor": null,
+          "gloves": null,
+          "boots": null,
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        },
+        "uid": "h4",
+        "growthSeed": 3911373260
+      }
+    ],
+    "items": {
+      "i1": {
+        "uid": "i1",
+        "slot": "weapon",
+        "rarity": "normal",
+        "ilvl": 1,
+        "up": 0,
+        "name": {
+          "ko": "버서커 액스",
+          "en": "Berserker Axe"
+        },
+        "implicit": null,
+        "affixes": [
+          {
+            "stat": "atk_pct",
+            "v": 0.34,
+            "src": "fixed"
+          },
+          {
+            "stat": "magic_find",
+            "v": 0.07,
+            "src": "greed"
+          }
+        ],
+        "sins": [],
+        "words": [],
+        "group": "axe",
+        "baseId": "berserker_axe"
+      },
+      "i2": {
+        "uid": "i2",
+        "slot": "armor",
+        "rarity": "normal",
+        "ilvl": 1,
+        "up": 0,
+        "name": {
+          "ko": "클로스 아머",
+          "en": "Cloth Armor"
+        },
+        "implicit": {
+          "stat": "def_flat",
+          "v": 10
+        },
+        "affixes": [
+          {
+            "stat": "armor_def_pct",
+            "v": 0.57,
+            "src": "fixed"
+          },
+          {
+            "stat": "res_all",
+            "v": 0.07,
+            "src": "gluttony"
+          }
+        ],
+        "sins": [],
+        "words": [],
+        "baseId": "armor_cloth"
+      },
+      "i3": {
+        "uid": "i3",
+        "slot": "weapon",
+        "rarity": "normal",
+        "ilvl": 1,
+        "up": 0,
+        "name": {
+          "ko": "엘드리치 오브",
+          "en": "Eldritch Orb"
+        },
+        "implicit": null,
+        "affixes": [
+          {
+            "stat": "atk_pct",
+            "v": 0.76,
+            "src": "fixed"
+          },
+          {
+            "stat": "xp_gain_pct",
+            "v": 0.07,
+            "src": "greed"
+          }
+        ],
+        "sins": [],
+        "words": [],
+        "group": "orb",
+        "baseId": "eldritch_orb"
+      },
+      "i4": {
+        "uid": "i4",
+        "slot": "armor",
+        "rarity": "normal",
+        "ilvl": 1,
+        "up": 0,
+        "name": {
+          "ko": "클로스 아머",
+          "en": "Cloth Armor"
+        },
+        "implicit": {
+          "stat": "def_flat",
+          "v": 10
+        },
+        "affixes": [
+          {
+            "stat": "armor_def_pct",
+            "v": 0.88,
+            "src": "fixed"
+          },
+          {
+            "stat": "hp_flat",
+            "v": 14,
+            "src": "lust"
+          }
+        ],
+        "sins": [],
+        "words": [],
+        "baseId": "armor_cloth"
+      },
+      "i5": {
+        "uid": "i5",
+        "slot": "weapon",
+        "rarity": "normal",
+        "ilvl": 1,
+        "up": 0,
+        "name": {
+          "ko": "라이트 크로스보우",
+          "en": "Light Crossbow"
+        },
+        "implicit": null,
+        "affixes": [
+          {
+            "stat": "atk_pct",
+            "v": 1.51,
+            "src": "fixed"
+          },
+          {
+            "stat": "magic_find",
+            "v": 0.06,
+            "src": "greed"
+          }
+        ],
+        "sins": [],
+        "words": [],
+        "group": "crossbow",
+        "baseId": "light_crossbow"
+      },
+      "i6": {
+        "uid": "i6",
+        "slot": "armor",
+        "rarity": "normal",
+        "ilvl": 1,
+        "up": 0,
+        "name": {
+          "ko": "클로스 아머",
+          "en": "Cloth Armor"
+        },
+        "implicit": {
+          "stat": "def_flat",
+          "v": 10
+        },
+        "affixes": [
+          {
+            "stat": "armor_def_pct",
+            "v": 0.62,
+            "src": "fixed"
+          },
+          {
+            "stat": "hp_flat",
+            "v": 8,
+            "src": "lust"
+          }
+        ],
+        "sins": [],
+        "words": [],
+        "baseId": "armor_cloth"
+      }
+    },
+    "bags": [
+      []
+    ],
+    "stash": [],
+    "mail": [],
+    "progress": {
+      "cleared": [],
+      "clearedIn": {},
+      "peakTotal": 0
+    },
+    "difficulty": "normal",
+    "codexExp": {},
+    "bossDown": {},
+    "counters": {
+      "hero": 4,
+      "item": 6,
+      "battle": 0,
+      "tavern": 0,
+      "tactic": 0,
+      "upgrade": 0,
+      "visit": 0,
+      "make": 0,
+      "gamble": 0,
+      "commission": 0,
+      "explore": 0,
+      "join": 0,
+      "shop": 0,
+      "lab": 0,
+      "mail": 0,
+      "box": 0
+    },
+    "runs": [
+      null
+    ],
+    "reports": [],
+    "notice": null,
+    "tavern": {
+      "rerolledAt": null,
+      "hired": [],
+      "paid": 0
+    },
+    "shop": null,
+    "explores": [],
+    "joins": [],
+    "visit": null,
+    "arena": {
+      "rating": 1000,
+      "peak": 1000,
+      "win": 0,
+      "draw": 0,
+      "loss": 0
+    },
+    "colosseum": {
+      "cleared": 0
+    },
+    "commissions": {
+      "cards": [],
+      "fame": 0
+    },
+    "presets": [
+      {
+        "party": [
+          "h1",
+          "h2",
+          "h3"
+        ],
+        "formation": {
+          "tpl": "1-2",
+          "ranks": [
+            [
+              "h1"
+            ],
+            [
+              "h2",
+              "h3"
+            ]
+          ]
+        },
+        "potionSlots": [
+          "minor_healing",
+          "minor_healing"
+        ],
+        "tactics": {
+          "slots": {},
+          "locked": []
+        }
+      }
+    ],
+    "preset": 1,
+    "bonds": {},
+    "salvageRules": [
+      {
+        "cells": {},
+        "base": {},
+        "lvGap": null
+      }
+    ],
+    "salvageSlots": [
+      null,
+      null,
+      null,
+      null
+    ],
+    "salvageLogs": [
+      []
+    ],
+    "buildings": {
+      "library": 1,
+      "resource": 1
+    }
+  },
+  "actions": [
+    {
+      "tab_to_newgame": {
+        "steps": 20,
+        "visited": [
+          {
+            "tag": "BUTTON",
+            "cls": "mail-btn",
+            "text": "",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "btn sm lang-btn",
+            "text": "EN",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "btn sm da-b",
+            "text": "Admin",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "btn sm dp-btn",
+            "text": "⚙",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "on",
+            "text": "원정",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": " dim",
+            "text": "탐험",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "",
+            "text": "편성",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "",
+            "text": "캐릭터",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": " todo",
+            "text": "건설",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": " dim",
+            "text": "선술집",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": " dim",
+            "text": "상점",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": " dim",
+            "text": "대장간",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "",
+            "text": "도서관",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "",
+            "text": "연구소",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "",
+            "text": "결투장",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "",
+            "text": "콜로세움",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "",
+            "text": "도감",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "",
+            "text": "도움말",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "",
+            "text": "실험실",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "b-newgame",
+            "text": "새 게임",
+            "match": true
+          }
+        ]
+      }
+    },
+    {
+      "tab_to_start": {
+        "steps": 4,
+        "visited": [
+          {
+            "tag": "BUTTON",
+            "cls": "ng-back",
+            "text": "뒤로가기",
+            "match": false
+          },
+          {
+            "tag": "SPAN",
+            "cls": "q-btn",
+            "text": "?",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "btn",
+            "text": "다시 굴리기",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "btn lg danger",
+            "text": "세이브를 지우고 이 셋으로 시작",
+            "match": true
+          }
+        ]
+      }
+    },
+    {
+      "tab_to_confirm": {
+        "steps": 4,
+        "visited": [
+          {
+            "tag": "BUTTON",
+            "cls": "ng-back",
+            "text": "뒤로가기",
+            "match": false
+          },
+          {
+            "tag": "SPAN",
+            "cls": "q-btn",
+            "text": "?",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "btn",
+            "text": "다시 굴리기",
+            "match": false
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "btn lg danger",
+            "text": "정말 지울까요? 한 번 더 누르면 지웁니다",
+            "match": true
+          }
+        ]
+      }
+    }
+  ],
+  "after_open_newgame": {
+    "screen": "start",
+    "modal": "frozen",
+    "save": true
+  },
+  "after": {
+    "screen": "prologue",
+    "modal": "frozen",
+    "save": null
+  },
+  "other_tab": {
+    "screen": "game",
+    "modal": "frozen",
+    "save": null
+  },
+  "after_2seconds_other_tab": {
+    "screen": "game",
+    "modal": "frozen",
+    "save": null,
+    "inMemoryHeroes": 4
+  },
+  "after_reload_other_tab": {
+    "screen": "menu",
+    "game": null,
+    "save": null,
+    "loadDisabled": true
+  }
+}

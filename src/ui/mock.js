@@ -46,19 +46,19 @@ import { PORTRAIT_FILES } from '../assets/art/faces/portrait_files.js';
    직업 문장(`class.csv:role_text`)은 「무기 + 역할」 소개형이다. 둘 다 **카드 한 줄에 선다** — 가장 넓은 칩(마법사 · Gluttony) 옆에서 재서 넘치지 않게 (SCREEN_DESIGN §3) */
 export const SINS = {
     wrath: { ko: '분노', en: 'Wrath', adj: 'Wrathful', color: '#e03030',
-        line: { ko: '공격이 빨라지고 치명타가 잘 터진다', en: 'Attacks faster and crits more often' } },
+        line: { ko: '공격 속도와 치명타 확률 증가', en: 'Attacks faster and crits more often' } },
     envy: { ko: '시기', en: 'Envy', adj: 'Envious', color: '#30b050',
-        line: { ko: '방어와 저항을 뚫고 받은 피해 일부를 돌려준다', en: 'Pierces defenses and reflects damage' } },
+        line: { ko: '방어·저항 관통 및 받은 피해 일부 반사', en: 'Pierces defenses and reflects damage' } },
     greed: { ko: '탐욕', en: 'Greed', adj: 'Greedy', color: '#d0a020',
-        line: { ko: '골드와 아이템을 더 많이 얻는다', en: 'Finds more gold and items' } },
+        line: { ko: '골드와 아이템 획득량 증가', en: 'Finds more gold and items' } },
     sloth: { ko: '나태', en: 'Sloth', adj: 'Slothful', color: '#7087a8',   // 파란빛이 돌게 [2026-09-30 사용자 지시 · 옛 #808898 — 밝기는 그대로]
-        line: { ko: '받는 피해가 줄고 스킬을 더 자주 쓴다', en: 'Takes less damage, shorter cooldowns' } },
+        line: { ko: '받는 피해와 스킬 쿨타임 감소', en: 'Takes less damage, shorter cooldowns' } },
     gluttony: { ko: '폭식', en: 'Gluttony', adj: 'Gluttonous', color: '#e07020',
-        line: { ko: '체력과 저항이 오르고 적 체력을 비율로 깎는다', en: 'More health and resists, % HP damage' } },
+        line: { ko: '체력·저항 증가 및 적 체력 비례 피해', en: 'More health and resists, % HP damage' } },
     lust: { ko: '색욕', en: 'Lust', adj: 'Lustful', color: '#e03080',
-        line: { ko: '때릴 때마다 체력을 흡수하고 버프가 오래 간다', en: 'Steals life on hit and buffs last longer' } },
+        line: { ko: '타격 시 체력 흡수 및 버프 지속시간 증가', en: 'Steals life on hit and buffs last longer' } },
     pride: { ko: '오만', en: 'Pride', adj: 'Prideful', color: '#8040e0',
-        line: { ko: '받는 피해가 줄고 공격력이 오르며 잘 안 밀린다', en: 'Tougher, hits harder, hard to stagger' } },
+        line: { ko: '받는 피해 감소 및 공격력·타격 회복 증가', en: 'Tougher, hits harder, hard to stagger' } },
 };
 
 /* 스킬 태그 표시 이름(`SKILL_TAGS`)은 **삭제했다** (2026-09-01) — 어휘·대분류·이름의 SSOT 가
@@ -119,7 +119,7 @@ export const AFFIX_LABELS = {
     atk_down_phys_pct: { ko: '타격 시 대상 물리 데미지 감소', en: 'Physical Damage Down on Hit', fmt: 'pct' },
     atk_down_mag_pct: { ko: '타격 시 대상 마법 데미지 감소', en: 'Magic Damage Down on Hit', fmt: 'pct' },
     dmg_per_level_pct: { ko: '레벨당 데미지', en: 'Damage per Level', fmt: 'pct' },
-    crushing_blow_pct: { ko: '강타 (현재 체력)', en: 'Crushing Blow (Current HP)', fmt: 'pct' },
+    crushing_blow_pct: { ko: '강타', en: 'Crushing Blow', fmt: 'pct' },   // 옵션 이름에 괄호를 안 단다 (§6 · ADR-0954)
     magic_find: { ko: '매직아이템 획득', en: 'Magic Find', fmt: 'pct' },
     vs_normal_dmg: { ko: '일반 대상 추가 피해', en: 'Damage vs Normal', fmt: 'pct' },
     vs_demon_dmg: { ko: '데몬 대상 추가 피해', en: 'Damage vs Demon', fmt: 'pct' },
@@ -141,7 +141,7 @@ export const AFFIX_LABELS = {
     hp_recovery_pct: { ko: '체력 회복', en: 'HP Recovery', fmt: 'pct' },
     kill_heal_pct: { ko: '처치 시 체력 회복', en: 'Heal on Kill', fmt: 'pct' },   // 처치마다 최대 HP × 값 — 투구 · 장갑 색욕 ① (2026-10-21 · R299)
     start_gauge_pct: { ko: '전투 시작 시 행동 게이지', en: 'Action Gauge at Battle Start', fmt: 'pct' },   // 가죽 신발 특성 — 빈 게이지를 그만큼 채운 채 출발 (R303)
-    cull_normal_pct: { ko: '일반몹 처형', en: 'Culling Strike (Normal)', fmt: 'pct' },   // 장갑 폭식 ② — 직격 뒤 일반 몬스터 체력이 이 비율 이하면 쓰러뜨린다 (R303)
+    cull_normal_pct: { ko: '일반몹 처형', en: 'Culling Strike vs Normal', fmt: 'pct' },   // 장갑 폭식 ② — 직격 뒤 일반 몬스터 체력이 이 비율 이하면 쓰러뜨린다 (R303)
     res_all_per_level: { ko: '레벨당 모든 원소 저항', en: 'All Resist per Level', fmt: 'pct' },   // 신발 오만 (R303)
     def_per_level: { ko: '레벨당 물리 방어', en: 'Physical Defense per Level', fmt: 'n' },
     hp_per_level: { ko: '레벨당 최대 HP', en: 'Max HP per Level', fmt: 'n' },
@@ -151,7 +151,7 @@ export const AFFIX_LABELS = {
     res_max_cold: { ko: '최대 냉기 저항', en: 'Max Cold Resist', fmt: 'pct' },
     res_max_lightning: { ko: '최대 전기 저항', en: 'Max Lightning Resist', fmt: 'pct' },
     res_max_poison: { ko: '최대 독 저항', en: 'Max Poison Resist', fmt: 'pct' },
-    dr_flat: { ko: '피해 감소 (고정)', en: 'Damage Reduction (Flat)', fmt: 'n' },
+    dr_flat: { ko: '피해 감소', en: 'Damage Reduction', fmt: 'n' },   // 고정 · % 는 단위가 가른다 — `damage_reduction` 과 이름이 같다 (§6 · ADR-0954)
     vs_normal_dr: { ko: '일반 적에게 받는 피해 감소', en: 'Damage Reduction vs Normal', fmt: 'pct' },
     vs_demon_dr: { ko: '데몬에게 받는 피해 감소', en: 'Damage Reduction vs Demon', fmt: 'pct' },
     vs_undead_dr: { ko: '언데드에게 받는 피해 감소', en: 'Damage Reduction vs Undead', fmt: 'pct' },
@@ -188,9 +188,9 @@ export const AFFIX_LABELS = {
     heal_out_pct: { ko: '회복량 증가', en: 'Healing Done', fmt: 'pct' },
     debuff_dur_pct: { ko: '디버프 시간 증가', en: 'Debuff Duration', fmt: 'pct' },
     hp_regen: { ko: 'HP 재생', en: 'HP Regen', fmt: 'n' },
-    // 발동 옵션 — 줄에 스킬 id(`a.skill`)를 함께 든다. `proc` = 발동 조건(툴팁 문장 `tip.proc.<조건>` · app.js `affixText`) · `inert` = 전투가 아직 안 읽는다(목걸이 발동과 같다)
-    proc_hit_attack: { ko: '타격 시 공격 스킬 발동', en: 'Attack Skill on Hit', fmt: 'pct', proc: 'hit', inert: true },
-    proc_hit_buff: { ko: '타격 시 버프 스킬 발동', en: 'Buff Skill on Hit', fmt: 'pct', proc: 'hit', inert: true },
+    // 발동 옵션 — 줄에 스킬 id(`a.skill`)를 함께 든다. `proc` = 발동 조건(툴팁 문장 `tip.proc.<조건>` · app.js `affixText`) · 타격 둘은 적용, 나머지 `inert` 는 미적용이다.
+    proc_hit_attack: { ko: '타격 시 공격 스킬 발동', en: 'Attack Skill on Hit', fmt: 'pct', proc: 'hit' },
+    proc_hit_buff: { ko: '타격 시 버프 스킬 발동', en: 'Buff Skill on Hit', fmt: 'pct', proc: 'hit' },
     proc_cast_attack: { ko: '시전 시 공격 스킬 발동', en: 'Attack Skill on Cast', fmt: 'pct', proc: 'cast', inert: true },
     proc_cast_buff: { ko: '시전 시 버프 스킬 발동', en: 'Buff Skill on Cast', fmt: 'pct', proc: 'cast', inert: true },
     proc_cast_debuff: { ko: '시전 시 디버프 스킬 발동', en: 'Debuff Skill on Cast', fmt: 'pct', proc: 'cast', inert: true },
@@ -442,7 +442,8 @@ export const SKILL_ICON_FILES = [
     'kni_resistshield', 'kni_holyshield', 'kni_charge', 'kni_rush', 'kni_enchant',
     'kni_might', 'kni_fanaticism', 'kni_defiance', 'kni_sweep', 'kni_holyfire',
     'arc_snipe', 'arc_rapid', 'arc_guided', 'arc_multishot', 'arc_pierce', 'arc_poison',
-    'arc_arrowrain', 'arc_evade', 'arc_overdraw',
+    // 궁수 기본 버프 넷 — 현재 skill_id에 맞춘 단색 아이콘 (2026-10-30).
+    'arc_coldarrow', 'arc_evade', 'arc_quickhands', 'arc_eagleeye',
     'mag_fireball', 'mag_iceblast', 'mag_frostnova', 'mag_lightning',
     'mag_chain', 'mag_inferno', 'mag_ignite', 'mag_deepfreeze', 'mag_surge', 'mag_echo',
     'pri_judgment', 'pri_heal', 'pri_grace', 'pri_cure', 'pri_regen',
@@ -510,11 +511,13 @@ export const potionArt = id => POTION_ART_IDS.includes(id) ? `${POTION_ART_DIR}$
  */
 export const POTION_SLOT_ART = `${POTION_ART_DIR}slot${ICON_EXT}`;
 /**
- * 첫 클리어 상자 · 우편함 그림 [2026-10-23 · R328 · base_expedition_design §1-6 · SCREEN_DESIGN §2 · §6] — Codex 시트 한 장의 두 칸(`icons_source/items/source/sheet_box_mail.png`).
- * 상자는 **봉인된 무기 칸**이 무기 그림 대신 든다(열면 그 무기 그림) · 편지봉투는 상단바 우편함 버튼이 든다
+ * 첫 클리어 상자는 봉인된 무기 칸이 든다. 상단바의 우편·알림 그림은 백색 실루엣 별도 자산이다 (ADR-0969).
  */
 export const CLEAR_BOX_ART = `./assets/art/icons/items/box/clear_box${ICON_EXT}`;
 export const MAIL_ART = `./assets/art/icons/mail/mail${ICON_EXT}`;
+export const BELL_ART = `./assets/art/icons/mail/bell${ICON_EXT}`;
+/** 관전의 파티 공통 효과 — 기본 스킬과 같은 흰색 실루엣 세 장. */
+export const RUN_BUFF_ART = Object.fromEntries(['shrine', 'tactic', 'codex'].map(k => [k, `./assets/art/icons/battle_buffs/${k}${ICON_EXT}`]));
 /**
  * 방어구 · 장신구 그림 — `icons/items/item_base/<base_id>.webp` (2026-09-03 · **베이스 축으로 개정 2026-09-17** · SCREEN_DESIGN §2).
  *
@@ -617,7 +620,7 @@ export const itemArt = (slot, group, uid, baseId) => {
  *   ① `backgrounds/` 아래 폴더를 만들고 같은 이름 규칙(`background_stage_<id>.webp`)으로 그림을 넣는다
  *   ② 아래 `BG_STYLES` 에 그 폴더 이름을 더한다
  * 코드의 다른 곳은 스타일을 모른다 — 경로를 조립하는 곳이 `bgDir()` 하나뿐이라서다.
- * 아트 버튼·`?face=`는 초상과 함께 선택한다(gemini → illustrate, gpt → gpt).
+ * 아트 버튼·`?face=`는 초상과 함께 선택한다(`FACE_BG_STYLES` — gemini → illustrate). `gpt` 배경은 초상 묶음이 없어 `?bg=gpt` 로만 연다(ADR-0986).
  * 명시적인 `?bg=`는 비교용 재정의이며, 버튼을 누르면 그 아트 묶음의 배경으로 돌아간다.
  * **한 스타일이 전 스테이지를 다 갖출 필요는 없다** — 그림이 없으면 그 자리는 그라디언트로 떨어진다.
  *   그리는 중인 스타일로도 게임이 돈다 (⚠ 자리를 여는 것은 `stage.csv:bg` 지 폴더 재고가 아니다 — `ui/data.js:stageBgOf`.
@@ -630,7 +633,7 @@ export const itemArt = (slot, group, uid, baseId) => {
 export const BG_DIR = './assets/art/backgrounds/';
 export const BG_STYLES = ['illustrate', 'gpt', 'pixel'];
 const FACE_STORE_KEY = 'thesevensim.faceStyle';
-const FACE_BG_STYLES = { gemini: 'illustrate', gpt: 'gpt' };
+const FACE_BG_STYLES = { gemini: 'illustrate' };
 const BG_STORE_KEY = 'thesevensim.bgStyle';
 
 let bgStyleCur = (() => {
@@ -652,7 +655,8 @@ let bgStyleCur = (() => {
         const saved = localStorage.getItem(BG_STORE_KEY);
         if (saved === 'pixel') return saved; // 기존 도트 비교 선택은 유지한다.
         const face = localStorage.getItem(FACE_STORE_KEY);
-        if (Object.hasOwn(FACE_BG_STYLES, face)) return FACE_BG_STYLES[face];
+        // 지워진 묶음(옛 `gpt` · ADR-0986)이 남아 있어도 그 배경에 갇히지 않게 기본 묶음으로 돌린다
+        if (face) return FACE_BG_STYLES[face] ?? BG_STYLES[0];
         if (BG_STYLES.includes(saved)) return saved;
     } catch { /* 프라이빗 모드 등 — 기본값으로 */ }
     return BG_STYLES[0];
@@ -732,7 +736,7 @@ export const labNodeIcon = node => (LAB_NODE_BORROW.includes(node) ? labIcon(nod
  * **어느 몬스터가 얼굴을 갖는가는 `monster.csv:face` 가 SSOT** — 여기 남는 것은 경로 조립뿐이다
  * (이름 ko/en 도 `monster_name_kr`/`_en` 으로 이사했다 — ui/data.js:monsterName·monsterFace).
  */
-export const FACE_STYLES = ['gemini', 'gpt']; // 첫 항목이 기본값. 기존 cartoon 저장값도 gemini로 돌아간다.
+export const FACE_STYLES = ['gemini']; // 첫 항목이 기본값. 옛 cartoon · gpt 저장값도 gemini로 돌아간다 (gpt 폴더 삭제 · ADR-0986).
 
 let faceStyleCur = (() => {
     const q = new URLSearchParams(location.search).get('face');
@@ -839,6 +843,8 @@ export const TRADE = {
         who: { ko: '떠돌이 광물상', en: 'Wandering Ore Dealer' },
         slots: 3,
     },
+    /** 교역소 — 물건 칸 수만(2026-10-30 · ADR-0960). 교환 비율 · 재화가 정해지면 CSV 로 가고 이 칸은 걷는다 (base_expedition_design §2-6) */
+    post: { slots: 3 },
 };
 
 /* 의뢰 게시판(`COMMISSIONS`)은 **CSV 로 나갔다** (2026-09-03 사용자 지시) — 종류(`commission_kind.csv`) · 틀(`commission.csv`) ·

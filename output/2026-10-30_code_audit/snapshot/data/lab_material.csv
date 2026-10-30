@@ -1,0 +1,4 @@
+post,material_id,name_kr,name_en,yield_per_hour,description_kr
+mine,iron_ore,최하급 철광석,Lowest-Grade Iron Ore,60,⚠임시 [신설 2026-10-25 · R356 · base_expedition_design §2-1 · item_design §5-1 — mine_node · gather_node · log_node(단계 7) 셋을 대체 · **2026-10-27 · R359 — 이 셋이 하급이다** · **2026-10-29 · R373 — 단계 다섯의 맨 아래 = 최하급**] — 수량은 구조 검증용 임시값이다. 한 행 = 연구소 「자원」 줄의 재료 지점 하나(post = lab_node.csv 의 res 줄 지점 id)가 내는 재료 · **캐는 것은 하급뿐 — 위 단계(이름 그대로 · 상급 · 최상급)는 material_synth.csv 의 합성으로만 만든다**(item_design §5-2) · 처치 재료 · 도박장도 이 id 를 낸다 · 행 순서 = 줄 순서(화면 · 대박 굴림 순서). 채광 = 하급 철광석 — 무기 제작 · 강화 · 건설이 먹는다
+gather,herb,최하급 약초,Lowest-Grade Herb,60,⚠임시 — 채집 = 최하급 약초 — 크래프트 · 물약이 먹는다
+log,timber,최하급 목재,Lowest-Grade Timber,60,⚠임시 — 벌목 = 최하급 목재 — 방어구 제작 · 강화 · 건설이 먹는다

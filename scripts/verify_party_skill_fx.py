@@ -40,7 +40,7 @@ function check(name, ok){report.runtime_checks[name]=!!ok;if(!ok)throw Error(nam
 function unit(key='test', job='priest'){
  const slot=document.createElement('div'); slot.className='unit-slot';
  const node=document.createElement('div');node.className='unit enemy';
- node.innerHTML=`<div class="sprite" style="background-image:url('/assets/art/faces/gpt/hero/${job}_1.webp')"></div><div class="pop-layer"></div>`;
+ node.innerHTML=`<div class="sprite" style="background-image:url('/assets/art/faces/gemini/hero/${job}_1.webp')"></div><div class="pop-layer"></div>`;
  slot.append(node);document.querySelector('#grid').append(slot);
  return {key,side:'enemy',node};
 }

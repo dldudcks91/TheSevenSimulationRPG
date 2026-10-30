@@ -1,0 +1,2290 @@
+{
+  "accounts": 10,
+  "sourceTimes": {
+    "old": "2026-10-29T18:07:32.151220+00:00",
+    "new": "2026-10-29T18:38:27.428557+00:00"
+  },
+  "checks": {
+    "sameCore10m": 9,
+    "sameCore60m": 7,
+    "sameCoreDay": 1,
+    "newCompletedExpeditions": 11005
+  },
+  "runInfo": {
+    "wall_seconds": 140.78099999995902,
+    "completed": [
+      {
+        "seed": 1,
+        "policy": "basic",
+        "replicate": false,
+        "seconds": 31.292,
+        "failures": 0
+      },
+      {
+        "seed": 2,
+        "policy": "basic",
+        "replicate": false,
+        "seconds": 33.081,
+        "failures": 0
+      },
+      {
+        "seed": 1,
+        "policy": "adaptive",
+        "replicate": false,
+        "seconds": 35.492,
+        "failures": 0
+      },
+      {
+        "seed": 3,
+        "policy": "basic",
+        "replicate": false,
+        "seconds": 26.767,
+        "failures": 0
+      },
+      {
+        "seed": 2,
+        "policy": "adaptive",
+        "replicate": false,
+        "seconds": 35.192,
+        "failures": 0
+      },
+      {
+        "seed": 3,
+        "policy": "adaptive",
+        "replicate": false,
+        "seconds": 32.237,
+        "failures": 0
+      },
+      {
+        "seed": 10,
+        "policy": "basic",
+        "replicate": false,
+        "seconds": 22.563,
+        "failures": 0
+      },
+      {
+        "seed": 4,
+        "policy": "basic",
+        "replicate": false,
+        "seconds": 33.124,
+        "failures": 0
+      },
+      {
+        "seed": 4,
+        "policy": "adaptive",
+        "replicate": false,
+        "seconds": 38.286,
+        "failures": 0
+      },
+      {
+        "seed": 2,
+        "policy": "basic",
+        "replicate": true,
+        "seconds": 31.063,
+        "failures": 0
+      },
+      {
+        "seed": 10,
+        "policy": "adaptive",
+        "replicate": false,
+        "seconds": 38.787,
+        "failures": 0
+      }
+    ],
+    "errors": [],
+    "frozen_source_changed": [],
+    "seed2_repeat_identical_except_runtime": true
+  },
+  "comparisons": [
+    {
+      "seed": 1,
+      "policy": "adaptive",
+      "firstChapterBossClear": {
+        "old": 6786.25,
+        "new": 6786.25
+      },
+      "longestZeroRewardBlock": {
+        "old": {
+          "target": [
+            "normal",
+            1051
+          ],
+          "from": 6479.95,
+          "runs": 4,
+          "to": 6717.45,
+          "seconds": 237.5
+        },
+        "new": {
+          "target": [
+            "normal",
+            1051
+          ],
+          "from": 6479.95,
+          "runs": 4,
+          "to": 6717.45,
+          "seconds": 237.5
+        }
+      },
+      "marks": [
+        {
+          "seconds": 600,
+          "sameCoreMetrics": true,
+          "old": {
+            "stage": 1013,
+            "difficulty": "normal",
+            "levels": [
+              4,
+              4,
+              4
+            ],
+            "frontierScore": 2,
+            "runs": 2,
+            "wins": 2,
+            "losses": 0,
+            "drops": 4,
+            "battleGold": 852,
+            "gold": 852,
+            "potionGold": 0,
+            "newStageGap": {
+              "seconds": 256.7,
+              "from": 244.8,
+              "to": 501.5
+            },
+            "battleRewardGap": {
+              "seconds": 63.25,
+              "from": 528.45,
+              "to": 591.7
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 1013,
+            "difficulty": "normal",
+            "levels": [
+              4,
+              4,
+              4
+            ],
+            "frontierScore": 2,
+            "runs": 2,
+            "wins": 2,
+            "losses": 0,
+            "drops": 4,
+            "battleGold": 852,
+            "gold": 852,
+            "potionGold": 0,
+            "newStageGap": {
+              "seconds": 256.7,
+              "from": 244.8,
+              "to": 501.5
+            },
+            "battleRewardGap": {
+              "seconds": 63.25,
+              "from": 528.45,
+              "to": 591.7
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 3600,
+          "sameCoreMetrics": true,
+          "old": {
+            "stage": 1041,
+            "difficulty": "normal",
+            "levels": [
+              11,
+              11,
+              10
+            ],
+            "frontierScore": 9,
+            "runs": 27,
+            "wins": 19,
+            "losses": 8,
+            "drops": 35,
+            "battleGold": 9967,
+            "gold": 1247,
+            "potionGold": 3300,
+            "newStageGap": {
+              "seconds": 1922.65,
+              "from": 1080.2,
+              "to": 3002.85
+            },
+            "battleRewardGap": {
+              "seconds": 63.25,
+              "from": 528.45,
+              "to": 591.7
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 1041,
+            "difficulty": "normal",
+            "levels": [
+              11,
+              11,
+              10
+            ],
+            "frontierScore": 9,
+            "runs": 27,
+            "wins": 19,
+            "losses": 8,
+            "drops": 35,
+            "battleGold": 9967,
+            "gold": 1247,
+            "potionGold": 3300,
+            "newStageGap": {
+              "seconds": 1922.65,
+              "from": 1080.2,
+              "to": 3002.85
+            },
+            "battleRewardGap": {
+              "seconds": 63.25,
+              "from": 528.45,
+              "to": 591.7
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 86400,
+          "sameCoreMetrics": false,
+          "old": {
+            "stage": 5013,
+            "difficulty": "nightmare",
+            "levels": [
+              47,
+              47,
+              44
+            ],
+            "frontierScore": 120,
+            "runs": 816,
+            "wins": 290,
+            "losses": 526,
+            "drops": 711,
+            "battleGold": 1870406,
+            "gold": 999501,
+            "potionGold": 116200,
+            "newStageGap": {
+              "seconds": 16445.1,
+              "from": 69954.9,
+              "to": 86400
+            },
+            "battleRewardGap": {
+              "seconds": 527.65,
+              "from": 45273.4,
+              "to": 45801.05
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 39
+          },
+          "new": {
+            "stage": 5021,
+            "difficulty": "nightmare",
+            "levels": [
+              49,
+              49,
+              44
+            ],
+            "frontierScore": 121,
+            "runs": 776,
+            "wins": 370,
+            "losses": 406,
+            "drops": 881,
+            "battleGold": 2103979,
+            "gold": 1188029,
+            "potionGold": 117750,
+            "newStageGap": {
+              "seconds": 17566.75,
+              "from": 63130.2,
+              "to": 80696.95
+            },
+            "battleRewardGap": {
+              "seconds": 599.65,
+              "from": 70161.35,
+              "to": 70761
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 42
+          }
+        }
+      ],
+      "newFailures": []
+    },
+    {
+      "seed": 10,
+      "policy": "adaptive",
+      "firstChapterBossClear": {
+        "old": 7184.25,
+        "new": 7184.25
+      },
+      "longestZeroRewardBlock": {
+        "old": {
+          "target": [
+            "normal",
+            1051
+          ],
+          "from": 4749.85,
+          "runs": 5,
+          "to": 4930.15,
+          "seconds": 180.3
+        },
+        "new": {
+          "target": [
+            "normal",
+            1051
+          ],
+          "from": 4749.85,
+          "runs": 5,
+          "to": 4930.15,
+          "seconds": 180.3
+        }
+      },
+      "marks": [
+        {
+          "seconds": 600,
+          "sameCoreMetrics": true,
+          "old": {
+            "stage": 1013,
+            "difficulty": "normal",
+            "levels": [
+              4,
+              4,
+              4
+            ],
+            "frontierScore": 2,
+            "runs": 3,
+            "wins": 2,
+            "losses": 1,
+            "drops": 5,
+            "battleGold": 955,
+            "gold": 755,
+            "potionGold": 200,
+            "newStageGap": {
+              "seconds": 310.25,
+              "from": 201.1,
+              "to": 511.35
+            },
+            "battleRewardGap": {
+              "seconds": 36.95,
+              "from": 555.1,
+              "to": 592.05
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 1013,
+            "difficulty": "normal",
+            "levels": [
+              4,
+              4,
+              4
+            ],
+            "frontierScore": 2,
+            "runs": 3,
+            "wins": 2,
+            "losses": 1,
+            "drops": 5,
+            "battleGold": 955,
+            "gold": 755,
+            "potionGold": 200,
+            "newStageGap": {
+              "seconds": 310.25,
+              "from": 201.1,
+              "to": 511.35
+            },
+            "battleRewardGap": {
+              "seconds": 36.95,
+              "from": 555.1,
+              "to": 592.05
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 3600,
+          "sameCoreMetrics": true,
+          "old": {
+            "stage": 1031,
+            "difficulty": "normal",
+            "levels": [
+              10,
+              10,
+              10
+            ],
+            "frontierScore": 7,
+            "runs": 30,
+            "wins": 12,
+            "losses": 18,
+            "drops": 32,
+            "battleGold": 9772,
+            "gold": 1622,
+            "potionGold": 4450,
+            "newStageGap": {
+              "seconds": 1393.55,
+              "from": 2206.45,
+              "to": 3600
+            },
+            "battleRewardGap": {
+              "seconds": 50.75,
+              "from": 1579.55,
+              "to": 1630.3
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 1031,
+            "difficulty": "normal",
+            "levels": [
+              10,
+              10,
+              10
+            ],
+            "frontierScore": 7,
+            "runs": 30,
+            "wins": 12,
+            "losses": 18,
+            "drops": 32,
+            "battleGold": 9772,
+            "gold": 1622,
+            "potionGold": 4450,
+            "newStageGap": {
+              "seconds": 1393.55,
+              "from": 2206.45,
+              "to": 3600
+            },
+            "battleRewardGap": {
+              "seconds": 50.75,
+              "from": 1579.55,
+              "to": 1630.3
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 86400,
+          "sameCoreMetrics": false,
+          "old": {
+            "stage": 1011,
+            "difficulty": "hell",
+            "levels": [
+              50,
+              50,
+              50
+            ],
+            "frontierScore": 130,
+            "runs": 1036,
+            "wins": 368,
+            "losses": 668,
+            "drops": 1090,
+            "battleGold": 2477832,
+            "gold": 1454758,
+            "potionGold": 126400,
+            "newStageGap": {
+              "seconds": 7076.55,
+              "from": 73673.8,
+              "to": 80750.35
+            },
+            "battleRewardGap": {
+              "seconds": 563.85,
+              "from": 38373.15,
+              "to": 38937
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 46
+          },
+          "new": {
+            "stage": 5023,
+            "difficulty": "nightmare",
+            "levels": [
+              50,
+              50,
+              50
+            ],
+            "frontierScore": 122,
+            "runs": 1017,
+            "wins": 354,
+            "losses": 663,
+            "drops": 1045,
+            "battleGold": 2432649,
+            "gold": 1466835,
+            "potionGold": 125750,
+            "newStageGap": {
+              "seconds": 9418.55,
+              "from": 73722.1,
+              "to": 83140.65
+            },
+            "battleRewardGap": {
+              "seconds": 563.85,
+              "from": 38373.15,
+              "to": 38937
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 46
+          }
+        }
+      ],
+      "newFailures": []
+    },
+    {
+      "seed": 2,
+      "policy": "adaptive",
+      "firstChapterBossClear": {
+        "old": 1897.65,
+        "new": 1897.65
+      },
+      "longestZeroRewardBlock": {
+        "old": {
+          "target": [
+            "nightmare",
+            1051
+          ],
+          "from": 35577.85,
+          "runs": 5,
+          "to": 35773.55,
+          "seconds": 195.7
+        },
+        "new": {
+          "target": [
+            "nightmare",
+            3051
+          ],
+          "from": 52384.65,
+          "runs": 5,
+          "to": 52583.75,
+          "seconds": 199.1
+        }
+      },
+      "marks": [
+        {
+          "seconds": 600,
+          "sameCoreMetrics": true,
+          "old": {
+            "stage": 1021,
+            "difficulty": "normal",
+            "levels": [
+              5,
+              5,
+              5
+            ],
+            "frontierScore": 3,
+            "runs": 3,
+            "wins": 3,
+            "losses": 0,
+            "drops": 6,
+            "battleGold": 1439,
+            "gold": 1439,
+            "potionGold": 0,
+            "newStageGap": {
+              "seconds": 222,
+              "from": 181.4,
+              "to": 403.4
+            },
+            "battleRewardGap": {
+              "seconds": 37.95,
+              "from": 477,
+              "to": 514.95
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 1021,
+            "difficulty": "normal",
+            "levels": [
+              5,
+              5,
+              5
+            ],
+            "frontierScore": 3,
+            "runs": 3,
+            "wins": 3,
+            "losses": 0,
+            "drops": 6,
+            "battleGold": 1439,
+            "gold": 1439,
+            "potionGold": 0,
+            "newStageGap": {
+              "seconds": 222,
+              "from": 181.4,
+              "to": 403.4
+            },
+            "battleRewardGap": {
+              "seconds": 37.95,
+              "from": 477,
+              "to": 514.95
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 3600,
+          "sameCoreMetrics": true,
+          "old": {
+            "stage": 2042,
+            "difficulty": "normal",
+            "levels": [
+              15,
+              15,
+              15
+            ],
+            "frontierScore": 23,
+            "runs": 24,
+            "wins": 23,
+            "losses": 1,
+            "drops": 40,
+            "battleGold": 14157,
+            "gold": 1579,
+            "potionGold": 1650,
+            "newStageGap": {
+              "seconds": 222,
+              "from": 181.4,
+              "to": 403.4
+            },
+            "battleRewardGap": {
+              "seconds": 72.95,
+              "from": 3458.85,
+              "to": 3531.8
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 2042,
+            "difficulty": "normal",
+            "levels": [
+              15,
+              15,
+              15
+            ],
+            "frontierScore": 23,
+            "runs": 24,
+            "wins": 23,
+            "losses": 1,
+            "drops": 40,
+            "battleGold": 14157,
+            "gold": 1579,
+            "potionGold": 1650,
+            "newStageGap": {
+              "seconds": 222,
+              "from": 181.4,
+              "to": 403.4
+            },
+            "battleRewardGap": {
+              "seconds": 72.95,
+              "from": 3458.85,
+              "to": 3531.8
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 86400,
+          "sameCoreMetrics": false,
+          "old": {
+            "stage": 1021,
+            "difficulty": "hell",
+            "levels": [
+              48,
+              48,
+              48
+            ],
+            "frontierScore": 133,
+            "runs": 712,
+            "wins": 300,
+            "losses": 412,
+            "drops": 676,
+            "battleGold": 1835156,
+            "gold": 947471,
+            "potionGold": 94850,
+            "newStageGap": {
+              "seconds": 19916.35,
+              "from": 49232.35,
+              "to": 69148.7
+            },
+            "battleRewardGap": {
+              "seconds": 274.55,
+              "from": 55483.85,
+              "to": 55758.4
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 42
+          },
+          "new": {
+            "stage": 1011,
+            "difficulty": "hell",
+            "levels": [
+              47,
+              46,
+              45
+            ],
+            "frontierScore": 130,
+            "runs": 704,
+            "wins": 234,
+            "losses": 470,
+            "drops": 536,
+            "battleGold": 1318477,
+            "gold": 467701,
+            "potionGold": 99000,
+            "newStageGap": {
+              "seconds": 16287.6,
+              "from": 11755.15,
+              "to": 28042.75
+            },
+            "battleRewardGap": {
+              "seconds": 588.55,
+              "from": 38554.2,
+              "to": 39142.75
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 43
+          }
+        }
+      ],
+      "newFailures": []
+    },
+    {
+      "seed": 3,
+      "policy": "adaptive",
+      "firstChapterBossClear": {
+        "old": 7648.25,
+        "new": 7648.25
+      },
+      "longestZeroRewardBlock": {
+        "old": {
+          "target": [
+            "normal",
+            1051
+          ],
+          "from": 4318.05,
+          "runs": 5,
+          "to": 4494.05,
+          "seconds": 176.0
+        },
+        "new": {
+          "target": [
+            "normal",
+            1051
+          ],
+          "from": 4318.05,
+          "runs": 5,
+          "to": 4494.05,
+          "seconds": 176.0
+        }
+      },
+      "marks": [
+        {
+          "seconds": 600,
+          "sameCoreMetrics": true,
+          "old": {
+            "stage": 1013,
+            "difficulty": "normal",
+            "levels": [
+              4,
+              4,
+              4
+            ],
+            "frontierScore": 2,
+            "runs": 2,
+            "wins": 2,
+            "losses": 0,
+            "drops": 4,
+            "battleGold": 955,
+            "gold": 955,
+            "potionGold": 0,
+            "newStageGap": {
+              "seconds": 214.6,
+              "from": 202.2,
+              "to": 416.8
+            },
+            "battleRewardGap": {
+              "seconds": 56.7,
+              "from": 543.3,
+              "to": 600
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 1013,
+            "difficulty": "normal",
+            "levels": [
+              4,
+              4,
+              4
+            ],
+            "frontierScore": 2,
+            "runs": 2,
+            "wins": 2,
+            "losses": 0,
+            "drops": 4,
+            "battleGold": 955,
+            "gold": 955,
+            "potionGold": 0,
+            "newStageGap": {
+              "seconds": 214.6,
+              "from": 202.2,
+              "to": 416.8
+            },
+            "battleRewardGap": {
+              "seconds": 56.7,
+              "from": 543.3,
+              "to": 600
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 3600,
+          "sameCoreMetrics": true,
+          "old": {
+            "stage": 1041,
+            "difficulty": "normal",
+            "levels": [
+              10,
+              10,
+              9
+            ],
+            "frontierScore": 9,
+            "runs": 32,
+            "wins": 11,
+            "losses": 21,
+            "drops": 28,
+            "battleGold": 7330,
+            "gold": 1080,
+            "potionGold": 3850,
+            "newStageGap": {
+              "seconds": 1626.1,
+              "from": 1950.35,
+              "to": 3576.45
+            },
+            "battleRewardGap": {
+              "seconds": 114.95,
+              "from": 1595.3,
+              "to": 1710.25
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 1041,
+            "difficulty": "normal",
+            "levels": [
+              10,
+              10,
+              9
+            ],
+            "frontierScore": 9,
+            "runs": 32,
+            "wins": 11,
+            "losses": 21,
+            "drops": 28,
+            "battleGold": 7330,
+            "gold": 1080,
+            "potionGold": 3850,
+            "newStageGap": {
+              "seconds": 1626.1,
+              "from": 1950.35,
+              "to": 3576.45
+            },
+            "battleRewardGap": {
+              "seconds": 114.95,
+              "from": 1595.3,
+              "to": 1710.25
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 86400,
+          "sameCoreMetrics": false,
+          "old": {
+            "stage": 5021,
+            "difficulty": "nightmare",
+            "levels": [
+              47,
+              46,
+              45
+            ],
+            "frontierScore": 120,
+            "runs": 673,
+            "wins": 333,
+            "losses": 340,
+            "drops": 766,
+            "battleGold": 1522482,
+            "gold": 639316,
+            "potionGold": 105300,
+            "newStageGap": {
+              "seconds": 14045.55,
+              "from": 33267.15,
+              "to": 47312.7
+            },
+            "battleRewardGap": {
+              "seconds": 667.4,
+              "from": 9842.85,
+              "to": 10510.25
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 40
+          },
+          "new": {
+            "stage": 3033,
+            "difficulty": "nightmare",
+            "levels": [
+              40,
+              40,
+              37
+            ],
+            "frontierScore": 99,
+            "runs": 553,
+            "wins": 207,
+            "losses": 346,
+            "drops": 510,
+            "battleGold": 764686,
+            "gold": 73648,
+            "potionGold": 82200,
+            "newStageGap": {
+              "seconds": 28555.85,
+              "from": 56984.15,
+              "to": 85540
+            },
+            "battleRewardGap": {
+              "seconds": 667.4,
+              "from": 9842.85,
+              "to": 10510.25
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 34
+          }
+        }
+      ],
+      "newFailures": []
+    },
+    {
+      "seed": 4,
+      "policy": "adaptive",
+      "firstChapterBossClear": {
+        "old": 2934.7,
+        "new": 2960.9
+      },
+      "longestZeroRewardBlock": {
+        "old": {
+          "target": [
+            "nightmare",
+            1051
+          ],
+          "from": 22055.65,
+          "runs": 5,
+          "to": 22157.65,
+          "seconds": 102.0
+        },
+        "new": {
+          "target": [
+            "nightmare",
+            1051
+          ],
+          "from": 20699.25,
+          "runs": 3,
+          "to": 20771.25,
+          "seconds": 72.0
+        }
+      },
+      "marks": [
+        {
+          "seconds": 600,
+          "sameCoreMetrics": true,
+          "old": {
+            "stage": 1022,
+            "difficulty": "normal",
+            "levels": [
+              5,
+              5,
+              5
+            ],
+            "frontierScore": 4,
+            "runs": 4,
+            "wins": 4,
+            "losses": 0,
+            "drops": 8,
+            "battleGold": 1546,
+            "gold": 946,
+            "potionGold": 0,
+            "newStageGap": {
+              "seconds": 175.1,
+              "from": 277.6,
+              "to": 452.7
+            },
+            "battleRewardGap": {
+              "seconds": 34.15,
+              "from": 350.15,
+              "to": 384.3
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 1022,
+            "difficulty": "normal",
+            "levels": [
+              5,
+              5,
+              5
+            ],
+            "frontierScore": 4,
+            "runs": 4,
+            "wins": 4,
+            "losses": 0,
+            "drops": 8,
+            "battleGold": 1546,
+            "gold": 946,
+            "potionGold": 0,
+            "newStageGap": {
+              "seconds": 175.1,
+              "from": 277.6,
+              "to": 452.7
+            },
+            "battleRewardGap": {
+              "seconds": 34.15,
+              "from": 350.15,
+              "to": 384.3
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 3600,
+          "sameCoreMetrics": false,
+          "old": {
+            "stage": 2031,
+            "difficulty": "normal",
+            "levels": [
+              14,
+              14,
+              14
+            ],
+            "frontierScore": 19,
+            "runs": 38,
+            "wins": 29,
+            "losses": 9,
+            "drops": 58,
+            "battleGold": 20051,
+            "gold": 2983,
+            "potionGold": 3850,
+            "newStageGap": {
+              "seconds": 1240,
+              "from": 1357.8,
+              "to": 2597.8
+            },
+            "battleRewardGap": {
+              "seconds": 42.45,
+              "from": 884.65,
+              "to": 927.1
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 2031,
+            "difficulty": "normal",
+            "levels": [
+              14,
+              14,
+              14
+            ],
+            "frontierScore": 19,
+            "runs": 38,
+            "wins": 29,
+            "losses": 9,
+            "drops": 61,
+            "battleGold": 19496,
+            "gold": 2767,
+            "potionGold": 4150,
+            "newStageGap": {
+              "seconds": 1242.4,
+              "from": 1357.8,
+              "to": 2600.2
+            },
+            "battleRewardGap": {
+              "seconds": 42.45,
+              "from": 884.65,
+              "to": 927.1
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 86400,
+          "sameCoreMetrics": false,
+          "old": {
+            "stage": 1011,
+            "difficulty": "hell",
+            "levels": [
+              50,
+              50,
+              49
+            ],
+            "frontierScore": 130,
+            "runs": 1366,
+            "wins": 237,
+            "losses": 1129,
+            "drops": 1004,
+            "battleGold": 3096839,
+            "gold": 2153446,
+            "potionGold": 140500,
+            "newStageGap": {
+              "seconds": 31387.7,
+              "from": 55012.3,
+              "to": 86400
+            },
+            "battleRewardGap": {
+              "seconds": 566.55,
+              "from": 22401.15,
+              "to": 22967.7
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 46
+          },
+          "new": {
+            "stage": 1022,
+            "difficulty": "hell",
+            "levels": [
+              50,
+              50,
+              50
+            ],
+            "frontierScore": 134,
+            "runs": 1269,
+            "wins": 274,
+            "losses": 995,
+            "drops": 1069,
+            "battleGold": 3162124,
+            "gold": 2176168,
+            "potionGold": 138450,
+            "newStageGap": {
+              "seconds": 15245.55,
+              "from": 58933.5,
+              "to": 74179.05
+            },
+            "battleRewardGap": {
+              "seconds": 118.75,
+              "from": 22702.3,
+              "to": 22821.05
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 44
+          }
+        }
+      ],
+      "newFailures": []
+    },
+    {
+      "seed": 1,
+      "policy": "basic",
+      "firstChapterBossClear": {
+        "old": 5468.9,
+        "new": 5468.9
+      },
+      "longestZeroRewardBlock": {
+        "old": {
+          "target": [
+            "nightmare",
+            1051
+          ],
+          "from": 82993.05,
+          "runs": 41,
+          "to": 84092.75,
+          "seconds": 1099.7
+        },
+        "new": {
+          "target": [
+            "normal",
+            1051
+          ],
+          "from": 5212.7,
+          "runs": 5,
+          "to": 5423.8,
+          "seconds": 211.1
+        }
+      },
+      "marks": [
+        {
+          "seconds": 600,
+          "sameCoreMetrics": true,
+          "old": {
+            "stage": 1013,
+            "difficulty": "normal",
+            "levels": [
+              4,
+              4,
+              4
+            ],
+            "frontierScore": 2,
+            "runs": 2,
+            "wins": 2,
+            "losses": 0,
+            "drops": 3,
+            "battleGold": 847,
+            "gold": 847,
+            "potionGold": 0,
+            "newStageGap": {
+              "seconds": 285.8,
+              "from": 244.8,
+              "to": 530.6
+            },
+            "battleRewardGap": {
+              "seconds": 45.95,
+              "from": 484.65,
+              "to": 530.6
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 1013,
+            "difficulty": "normal",
+            "levels": [
+              4,
+              4,
+              4
+            ],
+            "frontierScore": 2,
+            "runs": 2,
+            "wins": 2,
+            "losses": 0,
+            "drops": 3,
+            "battleGold": 847,
+            "gold": 847,
+            "potionGold": 0,
+            "newStageGap": {
+              "seconds": 285.8,
+              "from": 244.8,
+              "to": 530.6
+            },
+            "battleRewardGap": {
+              "seconds": 45.95,
+              "from": 484.65,
+              "to": 530.6
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 3600,
+          "sameCoreMetrics": true,
+          "old": {
+            "stage": 1032,
+            "difficulty": "normal",
+            "levels": [
+              10,
+              9,
+              8
+            ],
+            "frontierScore": 7,
+            "runs": 28,
+            "wins": 7,
+            "losses": 21,
+            "drops": 30,
+            "battleGold": 8330,
+            "gold": 1080,
+            "potionGold": 3650,
+            "newStageGap": {
+              "seconds": 1336.15,
+              "from": 2263.85,
+              "to": 3600
+            },
+            "battleRewardGap": {
+              "seconds": 126.65,
+              "from": 1703.45,
+              "to": 1830.1
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 1032,
+            "difficulty": "normal",
+            "levels": [
+              10,
+              9,
+              8
+            ],
+            "frontierScore": 7,
+            "runs": 28,
+            "wins": 7,
+            "losses": 21,
+            "drops": 30,
+            "battleGold": 8330,
+            "gold": 1080,
+            "potionGold": 3650,
+            "newStageGap": {
+              "seconds": 1336.15,
+              "from": 2263.85,
+              "to": 3600
+            },
+            "battleRewardGap": {
+              "seconds": 126.65,
+              "from": 1703.45,
+              "to": 1830.1
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 86400,
+          "sameCoreMetrics": false,
+          "old": {
+            "stage": 2023,
+            "difficulty": "nightmare",
+            "levels": [
+              36,
+              35,
+              29
+            ],
+            "frontierScore": 83,
+            "runs": 961,
+            "wins": 83,
+            "losses": 878,
+            "drops": 443,
+            "battleGold": 623842,
+            "gold": 34155,
+            "potionGold": 130950,
+            "newStageGap": {
+              "seconds": 53631.3,
+              "from": 17029.2,
+              "to": 70660.5
+            },
+            "battleRewardGap": {
+              "seconds": 1141.2,
+              "from": 82988.05,
+              "to": 84129.25
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 30
+          },
+          "new": {
+            "stage": 3022,
+            "difficulty": "nightmare",
+            "levels": [
+              40,
+              39,
+              30
+            ],
+            "frontierScore": 95,
+            "runs": 1050,
+            "wins": 95,
+            "losses": 955,
+            "drops": 594,
+            "battleGold": 1000155,
+            "gold": 280821,
+            "potionGold": 127100,
+            "newStageGap": {
+              "seconds": 17125.2,
+              "from": 52228.45,
+              "to": 69353.65
+            },
+            "battleRewardGap": {
+              "seconds": 606.05,
+              "from": 59216.35,
+              "to": 59822.4
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 30
+          }
+        }
+      ],
+      "newFailures": []
+    },
+    {
+      "seed": 10,
+      "policy": "basic",
+      "firstChapterBossClear": {
+        "old": 64157.45,
+        "new": 64157.45
+      },
+      "longestZeroRewardBlock": {
+        "old": {
+          "target": [
+            "normal",
+            1051
+          ],
+          "from": 5269.95,
+          "runs": 1729,
+          "to": 64105.25,
+          "seconds": 58835.3
+        },
+        "new": {
+          "target": [
+            "normal",
+            1051
+          ],
+          "from": 5269.95,
+          "runs": 1729,
+          "to": 64105.25,
+          "seconds": 58835.3
+        }
+      },
+      "marks": [
+        {
+          "seconds": 600,
+          "sameCoreMetrics": true,
+          "old": {
+            "stage": 1013,
+            "difficulty": "normal",
+            "levels": [
+              4,
+              4,
+              4
+            ],
+            "frontierScore": 2,
+            "runs": 3,
+            "wins": 2,
+            "losses": 1,
+            "drops": 2,
+            "battleGold": 956,
+            "gold": 756,
+            "potionGold": 200,
+            "newStageGap": {
+              "seconds": 339.95,
+              "from": 201.1,
+              "to": 541.05
+            },
+            "battleRewardGap": {
+              "seconds": 36.95,
+              "from": 412.45,
+              "to": 449.4
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 1013,
+            "difficulty": "normal",
+            "levels": [
+              4,
+              4,
+              4
+            ],
+            "frontierScore": 2,
+            "runs": 3,
+            "wins": 2,
+            "losses": 1,
+            "drops": 2,
+            "battleGold": 956,
+            "gold": 756,
+            "potionGold": 200,
+            "newStageGap": {
+              "seconds": 339.95,
+              "from": 201.1,
+              "to": 541.05
+            },
+            "battleRewardGap": {
+              "seconds": 36.95,
+              "from": 412.45,
+              "to": 449.4
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 3600,
+          "sameCoreMetrics": true,
+          "old": {
+            "stage": 1033,
+            "difficulty": "normal",
+            "levels": [
+              9,
+              9,
+              9
+            ],
+            "frontierScore": 8,
+            "runs": 39,
+            "wins": 8,
+            "losses": 31,
+            "drops": 18,
+            "battleGold": 7244,
+            "gold": 894,
+            "potionGold": 3850,
+            "newStageGap": {
+              "seconds": 993.05,
+              "from": 1338.1,
+              "to": 2331.15
+            },
+            "battleRewardGap": {
+              "seconds": 68.05,
+              "from": 584.8,
+              "to": 652.85
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 1033,
+            "difficulty": "normal",
+            "levels": [
+              9,
+              9,
+              9
+            ],
+            "frontierScore": 8,
+            "runs": 39,
+            "wins": 8,
+            "losses": 31,
+            "drops": 18,
+            "battleGold": 7244,
+            "gold": 894,
+            "potionGold": 3850,
+            "newStageGap": {
+              "seconds": 993.05,
+              "from": 1338.1,
+              "to": 2331.15
+            },
+            "battleRewardGap": {
+              "seconds": 68.05,
+              "from": 584.8,
+              "to": 652.85
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 86400,
+          "sameCoreMetrics": true,
+          "old": {
+            "stage": 5022,
+            "difficulty": "normal",
+            "levels": [
+              27,
+              28,
+              27
+            ],
+            "frontierScore": 56,
+            "runs": 2013,
+            "wins": 56,
+            "losses": 1957,
+            "drops": 203,
+            "battleGold": 184770,
+            "gold": 7576,
+            "potionGold": 39150,
+            "newStageGap": {
+              "seconds": 58892.5,
+              "from": 5264.95,
+              "to": 64157.45
+            },
+            "battleRewardGap": {
+              "seconds": 58892.5,
+              "from": 5264.95,
+              "to": 64157.45
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 16
+          },
+          "new": {
+            "stage": 5022,
+            "difficulty": "normal",
+            "levels": [
+              27,
+              28,
+              27
+            ],
+            "frontierScore": 56,
+            "runs": 2013,
+            "wins": 56,
+            "losses": 1957,
+            "drops": 203,
+            "battleGold": 184770,
+            "gold": 7576,
+            "potionGold": 39150,
+            "newStageGap": {
+              "seconds": 58892.5,
+              "from": 5264.95,
+              "to": 64157.45
+            },
+            "battleRewardGap": {
+              "seconds": 58892.5,
+              "from": 5264.95,
+              "to": 64157.45
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 16
+          }
+        }
+      ],
+      "newFailures": []
+    },
+    {
+      "seed": 2,
+      "policy": "basic",
+      "firstChapterBossClear": {
+        "old": 2051.5,
+        "new": 2051.5
+      },
+      "longestZeroRewardBlock": {
+        "old": {
+          "target": [
+            "nightmare",
+            1051
+          ],
+          "from": 54102.4,
+          "runs": 152,
+          "to": 57612.2,
+          "seconds": 3509.8
+        },
+        "new": {
+          "target": [
+            "nightmare",
+            1051
+          ],
+          "from": 45990.85,
+          "runs": 80,
+          "to": 48203.35,
+          "seconds": 2212.5
+        }
+      },
+      "marks": [
+        {
+          "seconds": 600,
+          "sameCoreMetrics": true,
+          "old": {
+            "stage": 1013,
+            "difficulty": "normal",
+            "levels": [
+              4,
+              4,
+              4
+            ],
+            "frontierScore": 2,
+            "runs": 2,
+            "wins": 2,
+            "losses": 0,
+            "drops": 7,
+            "battleGold": 1270,
+            "gold": 1270,
+            "potionGold": 0,
+            "newStageGap": {
+              "seconds": 219,
+              "from": 181.4,
+              "to": 400.4
+            },
+            "battleRewardGap": {
+              "seconds": 52.05,
+              "from": 430.65,
+              "to": 482.7
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 1013,
+            "difficulty": "normal",
+            "levels": [
+              4,
+              4,
+              4
+            ],
+            "frontierScore": 2,
+            "runs": 2,
+            "wins": 2,
+            "losses": 0,
+            "drops": 7,
+            "battleGold": 1270,
+            "gold": 1270,
+            "potionGold": 0,
+            "newStageGap": {
+              "seconds": 219,
+              "from": 181.4,
+              "to": 400.4
+            },
+            "battleRewardGap": {
+              "seconds": 52.05,
+              "from": 430.65,
+              "to": 482.7
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 3600,
+          "sameCoreMetrics": true,
+          "old": {
+            "stage": 2023,
+            "difficulty": "normal",
+            "levels": [
+              13,
+              13,
+              13
+            ],
+            "frontierScore": 18,
+            "runs": 20,
+            "wins": 18,
+            "losses": 2,
+            "drops": 37,
+            "battleGold": 12032,
+            "gold": 1008,
+            "potionGold": 2000,
+            "newStageGap": {
+              "seconds": 542.35,
+              "from": 2051.5,
+              "to": 2593.85
+            },
+            "battleRewardGap": {
+              "seconds": 135.55,
+              "from": 2228,
+              "to": 2363.55
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 2023,
+            "difficulty": "normal",
+            "levels": [
+              13,
+              13,
+              13
+            ],
+            "frontierScore": 18,
+            "runs": 20,
+            "wins": 18,
+            "losses": 2,
+            "drops": 37,
+            "battleGold": 12032,
+            "gold": 1008,
+            "potionGold": 2000,
+            "newStageGap": {
+              "seconds": 542.35,
+              "from": 2051.5,
+              "to": 2593.85
+            },
+            "battleRewardGap": {
+              "seconds": 135.55,
+              "from": 2228,
+              "to": 2363.55
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 86400,
+          "sameCoreMetrics": false,
+          "old": {
+            "stage": 4011,
+            "difficulty": "nightmare",
+            "levels": [
+              38,
+              37,
+              38
+            ],
+            "frontierScore": 104,
+            "runs": 1508,
+            "wins": 104,
+            "losses": 1404,
+            "drops": 380,
+            "battleGold": 705738,
+            "gold": 7924,
+            "potionGold": 115450,
+            "newStageGap": {
+              "seconds": 27792.15,
+              "from": 19643.8,
+              "to": 47435.95
+            },
+            "battleRewardGap": {
+              "seconds": 3577.1,
+              "from": 54097.4,
+              "to": 57674.5
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 35
+          },
+          "new": {
+            "stage": 5021,
+            "difficulty": "nightmare",
+            "levels": [
+              41,
+              40,
+              40
+            ],
+            "frontierScore": 120,
+            "runs": 1208,
+            "wins": 120,
+            "losses": 1088,
+            "drops": 412,
+            "battleGold": 884639,
+            "gold": 21217,
+            "potionGold": 113250,
+            "newStageGap": {
+              "seconds": 19921,
+              "from": 19189.5,
+              "to": 39110.5
+            },
+            "battleRewardGap": {
+              "seconds": 2271.7,
+              "from": 45985.85,
+              "to": 48257.55
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 37
+          }
+        }
+      ],
+      "newFailures": []
+    },
+    {
+      "seed": 3,
+      "policy": "basic",
+      "firstChapterBossClear": {
+        "old": 24801.05,
+        "new": 39113.4
+      },
+      "longestZeroRewardBlock": {
+        "old": {
+          "target": [
+            "normal",
+            1051
+          ],
+          "from": 7361.95,
+          "runs": 399,
+          "to": 24694.45,
+          "seconds": 17332.5
+        },
+        "new": {
+          "target": [
+            "normal",
+            1051
+          ],
+          "from": 7447,
+          "runs": 733,
+          "to": 39000.1,
+          "seconds": 31553.1
+        }
+      },
+      "marks": [
+        {
+          "seconds": 600,
+          "sameCoreMetrics": false,
+          "old": {
+            "stage": 1013,
+            "difficulty": "normal",
+            "levels": [
+              5,
+              5,
+              5
+            ],
+            "frontierScore": 2,
+            "runs": 2,
+            "wins": 2,
+            "losses": 0,
+            "drops": 2,
+            "battleGold": 995,
+            "gold": 995,
+            "potionGold": 0,
+            "newStageGap": {
+              "seconds": 225.3,
+              "from": 202.2,
+              "to": 427.5
+            },
+            "battleRewardGap": {
+              "seconds": 54.95,
+              "from": 303.6,
+              "to": 358.55
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 1013,
+            "difficulty": "normal",
+            "levels": [
+              5,
+              5,
+              5
+            ],
+            "frontierScore": 2,
+            "runs": 2,
+            "wins": 2,
+            "losses": 0,
+            "drops": 1,
+            "battleGold": 995,
+            "gold": 995,
+            "potionGold": 0,
+            "newStageGap": {
+              "seconds": 229.4,
+              "from": 202.2,
+              "to": 431.6
+            },
+            "battleRewardGap": {
+              "seconds": 54.95,
+              "from": 303.6,
+              "to": 358.55
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 3600,
+          "sameCoreMetrics": false,
+          "old": {
+            "stage": 1032,
+            "difficulty": "normal",
+            "levels": [
+              9,
+              9,
+              8
+            ],
+            "frontierScore": 7,
+            "runs": 31,
+            "wins": 7,
+            "losses": 24,
+            "drops": 16,
+            "battleGold": 5838,
+            "gold": 388,
+            "potionGold": 3050,
+            "newStageGap": {
+              "seconds": 1334.2,
+              "from": 1434.3,
+              "to": 2768.5
+            },
+            "battleRewardGap": {
+              "seconds": 106.05,
+              "from": 1160.05,
+              "to": 1266.1
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 1032,
+            "difficulty": "normal",
+            "levels": [
+              9,
+              9,
+              8
+            ],
+            "frontierScore": 7,
+            "runs": 33,
+            "wins": 7,
+            "losses": 26,
+            "drops": 20,
+            "battleGold": 6003,
+            "gold": 503,
+            "potionGold": 3700,
+            "newStageGap": {
+              "seconds": 1113.15,
+              "from": 2486.85,
+              "to": 3600
+            },
+            "battleRewardGap": {
+              "seconds": 93.65,
+              "from": 970.7,
+              "to": 1064.35
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 86400,
+          "sameCoreMetrics": false,
+          "old": {
+            "stage": 5022,
+            "difficulty": "normal",
+            "levels": [
+              30,
+              29,
+              27
+            ],
+            "frontierScore": 56,
+            "runs": 1007,
+            "wins": 56,
+            "losses": 951,
+            "drops": 243,
+            "battleGold": 245841,
+            "gold": 2321,
+            "potionGold": 97600,
+            "newStageGap": {
+              "seconds": 44173.55,
+              "from": 38900.15,
+              "to": 83073.7
+            },
+            "battleRewardGap": {
+              "seconds": 17444.1,
+              "from": 7356.95,
+              "to": 24801.05
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 18
+          },
+          "new": {
+            "stage": 1021,
+            "difficulty": "nightmare",
+            "levels": [
+              30,
+              29,
+              26
+            ],
+            "frontierScore": 69,
+            "runs": 1127,
+            "wins": 69,
+            "losses": 1058,
+            "drops": 233,
+            "battleGold": 239191,
+            "gold": 9599,
+            "potionGold": 71350,
+            "newStageGap": {
+              "seconds": 31671.4,
+              "from": 7442,
+              "to": 39113.4
+            },
+            "battleRewardGap": {
+              "seconds": 31671.4,
+              "from": 7442,
+              "to": 39113.4
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 26
+          }
+        }
+      ],
+      "newFailures": []
+    },
+    {
+      "seed": 4,
+      "policy": "basic",
+      "firstChapterBossClear": {
+        "old": 2543.95,
+        "new": 2505.05
+      },
+      "longestZeroRewardBlock": {
+        "old": {
+          "target": [
+            "nightmare",
+            1051
+          ],
+          "from": 32526.9,
+          "runs": 1,
+          "to": 32548.8,
+          "seconds": 21.9
+        },
+        "new": {
+          "target": [
+            "hell",
+            1011
+          ],
+          "from": 76777.4,
+          "runs": 1,
+          "to": 76800.4,
+          "seconds": 23.0
+        }
+      },
+      "marks": [
+        {
+          "seconds": 600,
+          "sameCoreMetrics": true,
+          "old": {
+            "stage": 1022,
+            "difficulty": "normal",
+            "levels": [
+              5,
+              5,
+              5
+            ],
+            "frontierScore": 4,
+            "runs": 4,
+            "wins": 4,
+            "losses": 0,
+            "drops": 9,
+            "battleGold": 1546,
+            "gold": 946,
+            "potionGold": 0,
+            "newStageGap": {
+              "seconds": 169.5,
+              "from": 277.6,
+              "to": 447.1
+            },
+            "battleRewardGap": {
+              "seconds": 27.95,
+              "from": 342.15,
+              "to": 370.1
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 1022,
+            "difficulty": "normal",
+            "levels": [
+              5,
+              5,
+              5
+            ],
+            "frontierScore": 4,
+            "runs": 4,
+            "wins": 4,
+            "losses": 0,
+            "drops": 9,
+            "battleGold": 1546,
+            "gold": 946,
+            "potionGold": 0,
+            "newStageGap": {
+              "seconds": 169.5,
+              "from": 277.6,
+              "to": 447.1
+            },
+            "battleRewardGap": {
+              "seconds": 27.95,
+              "from": 342.15,
+              "to": 370.1
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 3600,
+          "sameCoreMetrics": false,
+          "old": {
+            "stage": 2032,
+            "difficulty": "normal",
+            "levels": [
+              14,
+              14,
+              13
+            ],
+            "frontierScore": 20,
+            "runs": 32,
+            "wins": 20,
+            "losses": 12,
+            "drops": 38,
+            "battleGold": 14194,
+            "gold": 2370,
+            "potionGold": 4800,
+            "newStageGap": {
+              "seconds": 391.55,
+              "from": 559.4,
+              "to": 950.95
+            },
+            "battleRewardGap": {
+              "seconds": 49.2,
+              "from": 2494.75,
+              "to": 2543.95
+            },
+            "skillbookLearningOpen": false,
+            "craftableBooks": 0
+          },
+          "new": {
+            "stage": 2033,
+            "difficulty": "normal",
+            "levels": [
+              15,
+              15,
+              14
+            ],
+            "frontierScore": 21,
+            "runs": 33,
+            "wins": 21,
+            "losses": 12,
+            "drops": 40,
+            "battleGold": 14734,
+            "gold": 2153,
+            "potionGold": 4800,
+            "newStageGap": {
+              "seconds": 391.55,
+              "from": 559.4,
+              "to": 950.95
+            },
+            "battleRewardGap": {
+              "seconds": 46.4,
+              "from": 2458.65,
+              "to": 2505.05
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 0
+          }
+        },
+        {
+          "seconds": 86400,
+          "sameCoreMetrics": false,
+          "old": {
+            "stage": 1011,
+            "difficulty": "hell",
+            "levels": [
+              50,
+              50,
+              42
+            ],
+            "frontierScore": 130,
+            "runs": 1338,
+            "wins": 130,
+            "losses": 1208,
+            "drops": 848,
+            "battleGold": 2231011,
+            "gold": 1263486,
+            "potionGold": 139600,
+            "newStageGap": {
+              "seconds": 11511.15,
+              "from": 49892.55,
+              "to": 61403.7
+            },
+            "battleRewardGap": {
+              "seconds": 58.25,
+              "from": 8641.9,
+              "to": 8700.15
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 41
+          },
+          "new": {
+            "stage": 1011,
+            "difficulty": "hell",
+            "levels": [
+              50,
+              50,
+              43
+            ],
+            "frontierScore": 130,
+            "runs": 1288,
+            "wins": 130,
+            "losses": 1158,
+            "drops": 851,
+            "battleGold": 2195488,
+            "gold": 1212356,
+            "potionGold": 140350,
+            "newStageGap": {
+              "seconds": 12447.35,
+              "from": 73952.65,
+              "to": 86400
+            },
+            "battleRewardGap": {
+              "seconds": 65.35,
+              "from": 73095.35,
+              "to": 73160.7
+            },
+            "skillbookLearningOpen": true,
+            "craftableBooks": 45
+          }
+        }
+      ],
+      "newFailures": []
+    }
+  ]
+}

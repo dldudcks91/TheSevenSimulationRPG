@@ -18,10 +18,9 @@ ring,pride,1,dmg_min_flat,wdmg,0.04,0.1,-,반지 오만 — 최소 데미지 +�
 ring,pride,1,dmg_max_flat,wdmg,0.06,0.15,-,반지 오만 — 최대 데미지 +수치 · 둘 중 하나(한 칸) ⚠제안 수치 (무기 · 장갑 색욕 ③ 과 같은 대역)
 ring,gluttony,1,crushing_blow_pct,flat,0.01,0.03,-,반지 폭식 ① — 강타(맞기 직전 대상 현재 체력 × % 고정 피해 · 직격만) ⚠제안 수치 (물리 무기 폭식 ① 과 같은 대역 · 출처 셋)
 ring,gluttony,2,res_all,flat,0.03,0.1,-,반지 폭식 ② — 모든 원소 저항 ⚠제안 수치 (갑옷 · 투구 폭식과 같다)
-ring,gluttony,3,xp_gain_pct,flat,0.05,0.12,-,반지 폭식 ③ — 경험치 획득 증가(본인 몫) ⚠제안 수치 (신발 폭식 ① 과 같은 대역)
 ring,greed,1,magic_find,flat,0.05,0.15,-,반지 탐욕 ① — 매직아이템 획득확률 ⚠제안 수치
 ring,greed,2,gold_find,flat,0.05,0.12,-,반지 탐욕 ② — 골드 획득 ⚠제안 수치
-ring,greed,3,item_find,flat,0.04,0.1,-,반지 탐욕 ③ — 아이템 드랍확률 ⚠제안 수치
+ring,greed,3,xp_gain_pct,flat,0.05,0.12,-,반지 탐욕 ③ — 경험치 획득 증가(본인 몫) ⚠제안 수치 (2026-10-30 아이템 드랍확률을 대체)
 amulet,wrath,1,crit_damage,flat,0.04,0.09,-,목걸이 분노 — 치명타 피해(낮은 값 · 한 칸이라 곱이 쌓이지 않는다) ⚠제안 수치 (무기 분노와 같은 대역)
 amulet,sloth,1,cooldown_reduction,flat,0.03,0.08,-,목걸이 나태 — 스킬 쿨타임 감소 ⚠제안 수치
 amulet,lust,1,hp_recovery_pct,flat,0.05,0.12,-,목걸이 색욕 — 체력 회복 +%(받는 힐 · 재생 · 흡혈 · 물약 · 보호막 제외) ⚠제안 수치 (갑옷 나태와 같은 대역)
@@ -31,4 +30,4 @@ amulet,pride,1,hp_per_level,band,2,5,0,목걸이 오만 — 레벨당 체력(영
 amulet,gluttony,1,res_all,flat,0.03,0.1,-,목걸이 폭식 — 모든 원소 저항 ⚠제안 수치
 amulet,greed,1,magic_find,flat,0.05,0.15,-,목걸이 탐욕 — 매직아이템 획득확률 · 셋 중 하나 ⚠제안 수치
 amulet,greed,1,gold_find,flat,0.05,0.12,-,목걸이 탐욕 — 골드 획득 · 셋 중 하나 ⚠제안 수치
-amulet,greed,1,item_find,flat,0.04,0.1,-,목걸이 탐욕 — 아이템 드랍확률 · 셋 중 하나 ⚠제안 수치
+amulet,greed,1,xp_gain_pct,flat,0.05,0.12,-,목걸이 탐욕 — 경험치 획득 증가(본인 몫) · 셋 중 하나 ⚠제안 수치 (2026-10-30 아이템 드랍확률을 대체)

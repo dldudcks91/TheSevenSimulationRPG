@@ -1,0 +1,17 @@
+2026-10-30 · Built-in image_gen · One call per icon, transparent_background=true.
+Style reference: icons_source/skills/source/sheet_21_anchor_installed_buffs.png
+
+Shared prompt:
+Use case: game UI icon asset. Create one isolated icon on a truly transparent background. Match the attached reference sheet's bold, flat, simple fantasy skill-symbol silhouettes, but use uniform white (#f4f4f7) instead of black. Strong filled shapes, clean transparent negative space, compact balanced composition. No shading, texture, gradient, glow, background, lettering, numerals, border, circular badge, colored elements, or watermark. Icon must be instantly recognizable at 28px. Center it and leave about 10% transparent padding around it. This is a single icon, never a grid or sheet. The attached sheet is a style reference only. Subject:
+
+shrine:
+a sacred stone altar on a broad stepped plinth, with a single large stylized flame or teardrop hovering above the altar and three short separated rays above it. Frontal symmetrical silhouette. Keep the altar top, sturdy pedestal and two broad steps recognizable. Minimal interior detail.
+
+tactic:
+two short broad crossed swords behind a compact command pennant at their center, symbolizing coordinated party tactics. Bold clean coherent silhouette, recognizable crossed blades and a small flag. Avoid tiny lines; no shield or enclosing circle.
+
+codex:
+an open bestiary book, frontal view, with two broad pages, a thick outer silhouette and a strong central spine gap; each page has just two short horizontal transparent cutouts suggesting text. One simple four-point discovery star hovering above the open book. Bold and minimal.
+
+Installation: python src/assets/art/icons_source/battle_buffs/source/install.py
+Generated originals are preserved. Crop to visible alpha bounds, normalize to 512px square with 88% long side, export 256px WebP using scripts/build_icons.py:encode.

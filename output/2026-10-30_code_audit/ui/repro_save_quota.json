@@ -1,0 +1,26 @@
+{
+  "source_set_sha256": "a5ecb3f73e8f09230a4ac6e478ed2a93a5123c2695d165aa1360c4a2b8d38fea",
+  "quota": {
+    "storedChars": 5242869,
+    "error": "QuotaExceededError",
+    "keys": [
+      "audit.quota"
+    ]
+  },
+  "after_start": {
+    "screen": "prologue",
+    "gameExists": true,
+    "save": null,
+    "toast": ""
+  },
+  "after_reload": {
+    "screen": "menu",
+    "game": null,
+    "save": null,
+    "loadDisabled": true
+  },
+  "warnings": [
+    "save: write failed QuotaExceededError: Failed to execute 'setItem' on 'Storage': Setting the value of 'thesevensim.save' exceeded the quota.\n    at writeSave (http://127.0.0.1:8921/ui/storage.js:29:22)\n    at save (http://127.0.0.1:8921/ui/app.js:93:37)\n    at startGame (http://127.0.0.1:8921/ui/app.js:1073:5)\n    at start.onclick (http://127.0.0.1:8921/ui/app.js:1217:9)"
+  ],
+  "pageerrors": []
+}

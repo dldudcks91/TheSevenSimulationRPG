@@ -1,0 +1,510 @@
+{
+  "page_errors": [],
+  "source_manifest": "source_manifest.json",
+  "independent": {
+    "capHours": 3,
+    "at": 1700000000000,
+    "checks": [
+      {
+        "name": "seats/5h materials-gold-training",
+        "ok": true,
+        "actual": {
+          "resources": {
+            "iron_ore": 100000180,
+            "herb": 100000180,
+            "timber": 100000180
+          },
+          "gold": 99999680,
+          "trainee": {
+            "level": 1,
+            "xp": 60
+          },
+          "carry": {}
+        },
+        "expected": {
+          "resources": {
+            "iron_ore": 100000180,
+            "herb": 100000180,
+            "timber": 100000180
+          },
+          "gold": 99999680,
+          "trainee": {
+            "level": 1,
+            "xp": 60
+          },
+          "carry": {}
+        }
+      },
+      {
+        "name": "seats/5h research completed",
+        "ok": true,
+        "actual": {
+          "level": 1,
+          "research": null
+        },
+        "expected": {
+          "level": 1,
+          "research": null
+        }
+      },
+      {
+        "name": "seats/5h production clocks advanced",
+        "ok": true,
+        "actual": [
+          1700018000000,
+          1700018000000,
+          1700018000000
+        ],
+        "expected": [
+          1700018000000,
+          1700018000000,
+          1700018000000
+        ]
+      },
+      {
+        "name": "seats/5h gamble/train clocks advanced",
+        "ok": true,
+        "actual": [
+          1700018000000,
+          1700018000000
+        ],
+        "expected": [
+          1700018000000,
+          1700018000000
+        ]
+      },
+      {
+        "name": "seats/5h idempotent",
+        "ok": true,
+        "actual": {
+          "resources": {
+            "iron_ore": 100000180,
+            "herb": 100000180,
+            "timber": 100000180
+          },
+          "gold": 99999680,
+          "trainee": {
+            "level": 1,
+            "xp": 60
+          },
+          "carry": {}
+        },
+        "expected": {
+          "resources": {
+            "iron_ore": 100000180,
+            "herb": 100000180,
+            "timber": 100000180
+          },
+          "gold": 99999680,
+          "trainee": {
+            "level": 1,
+            "xp": 60
+          },
+          "carry": {}
+        },
+        "settlement": {
+          "done": {
+            "line": "res",
+            "node": "seats",
+            "lv": 1
+          },
+          "gained": {
+            "iron_ore": 180,
+            "herb": 180,
+            "timber": 180
+          },
+          "gold": 180,
+          "xp": []
+        }
+      },
+      {
+        "name": "seats/24h materials-gold-training",
+        "ok": true,
+        "actual": {
+          "resources": {
+            "iron_ore": 100000180,
+            "herb": 100000180,
+            "timber": 100000180
+          },
+          "gold": 99999680,
+          "trainee": {
+            "level": 1,
+            "xp": 60
+          },
+          "carry": {}
+        },
+        "expected": {
+          "resources": {
+            "iron_ore": 100000180,
+            "herb": 100000180,
+            "timber": 100000180
+          },
+          "gold": 99999680,
+          "trainee": {
+            "level": 1,
+            "xp": 60
+          },
+          "carry": {}
+        }
+      },
+      {
+        "name": "seats/24h research completed",
+        "ok": true,
+        "actual": {
+          "level": 1,
+          "research": null
+        },
+        "expected": {
+          "level": 1,
+          "research": null
+        }
+      },
+      {
+        "name": "seats/24h production clocks advanced",
+        "ok": true,
+        "actual": [
+          1700086400000,
+          1700086400000,
+          1700086400000
+        ],
+        "expected": [
+          1700086400000,
+          1700086400000,
+          1700086400000
+        ]
+      },
+      {
+        "name": "seats/24h gamble/train clocks advanced",
+        "ok": true,
+        "actual": [
+          1700086400000,
+          1700086400000
+        ],
+        "expected": [
+          1700086400000,
+          1700086400000
+        ]
+      },
+      {
+        "name": "seats/24h idempotent",
+        "ok": true,
+        "actual": {
+          "resources": {
+            "iron_ore": 100000180,
+            "herb": 100000180,
+            "timber": 100000180
+          },
+          "gold": 99999680,
+          "trainee": {
+            "level": 1,
+            "xp": 60
+          },
+          "carry": {}
+        },
+        "expected": {
+          "resources": {
+            "iron_ore": 100000180,
+            "herb": 100000180,
+            "timber": 100000180
+          },
+          "gold": 99999680,
+          "trainee": {
+            "level": 1,
+            "xp": 60
+          },
+          "carry": {}
+        },
+        "settlement": {
+          "done": {
+            "line": "res",
+            "node": "seats",
+            "lv": 1
+          },
+          "gained": {
+            "iron_ore": 180,
+            "herb": 180,
+            "timber": 180
+          },
+          "gold": 180,
+          "xp": []
+        }
+      },
+      {
+        "name": "rate-upgrade/5h/mine",
+        "ok": true,
+        "actual": 197,
+        "expected": 197
+      },
+      {
+        "name": "rate-upgrade/5h/gather",
+        "ok": true,
+        "actual": 180,
+        "expected": 180
+      },
+      {
+        "name": "rate-upgrade/5h/log",
+        "ok": true,
+        "actual": 180,
+        "expected": 180
+      },
+      {
+        "name": "rate-upgrade/24h/mine",
+        "ok": true,
+        "actual": 197,
+        "expected": 197
+      },
+      {
+        "name": "rate-upgrade/24h/gather",
+        "ok": true,
+        "actual": 180,
+        "expected": 180
+      },
+      {
+        "name": "rate-upgrade/24h/log",
+        "ok": true,
+        "actual": 180,
+        "expected": 180
+      },
+      {
+        "name": "late-research/5h capped gains",
+        "ok": true,
+        "actual": {
+          "resources": {
+            "iron_ore": 100000342,
+            "herb": 99999026,
+            "timber": 100000180
+          },
+          "gold": 99992491,
+          "trainee": {
+            "level": 1,
+            "xp": 60
+          },
+          "carry": {}
+        },
+        "expected": {
+          "resources": {
+            "iron_ore": 100000342,
+            "herb": 99999026,
+            "timber": 100000180
+          },
+          "gold": 99992491,
+          "trainee": {
+            "level": 1,
+            "xp": 60
+          },
+          "carry": {}
+        }
+      },
+      {
+        "name": "late-research/5h completes on wall time",
+        "ok": true,
+        "actual": {
+          "mine": 10,
+          "research": null
+        },
+        "expected": {
+          "mine": 10,
+          "research": null
+        }
+      },
+      {
+        "name": "late-research/5h next hour new rate",
+        "ok": true,
+        "actual": 120,
+        "expected": 120
+      },
+      {
+        "name": "late-research/24h capped gains",
+        "ok": true,
+        "actual": {
+          "resources": {
+            "iron_ore": 100000342,
+            "herb": 99999026,
+            "timber": 100000180
+          },
+          "gold": 99992491,
+          "trainee": {
+            "level": 1,
+            "xp": 60
+          },
+          "carry": {}
+        },
+        "expected": {
+          "resources": {
+            "iron_ore": 100000342,
+            "herb": 99999026,
+            "timber": 100000180
+          },
+          "gold": 99992491,
+          "trainee": {
+            "level": 1,
+            "xp": 60
+          },
+          "carry": {}
+        }
+      },
+      {
+        "name": "late-research/24h completes on wall time",
+        "ok": true,
+        "actual": {
+          "mine": 10,
+          "research": null
+        },
+        "expected": {
+          "mine": 10,
+          "research": null
+        }
+      },
+      {
+        "name": "late-research/24h next hour new rate",
+        "ok": true,
+        "actual": 120,
+        "expected": 120
+      },
+      {
+        "name": "visit remains uncapped across research split",
+        "ok": true,
+        "actual": [
+          {
+            "at": 1700014400000,
+            "src": "visit"
+          },
+          {
+            "at": 1700028800000,
+            "src": "visit"
+          },
+          {
+            "at": 1700043200000,
+            "src": "visit"
+          },
+          {
+            "at": 1700057600000,
+            "src": "visit"
+          },
+          {
+            "at": 1700072000000,
+            "src": "visit"
+          },
+          {
+            "at": 1700086400000,
+            "src": "visit"
+          }
+        ],
+        "expected": [
+          {
+            "at": 1700014400000,
+            "src": "visit"
+          },
+          {
+            "at": 1700028800000,
+            "src": "visit"
+          },
+          {
+            "at": 1700043200000,
+            "src": "visit"
+          },
+          {
+            "at": 1700057600000,
+            "src": "visit"
+          },
+          {
+            "at": 1700072000000,
+            "src": "visit"
+          },
+          {
+            "at": 1700086400000,
+            "src": "visit"
+          }
+        ]
+      },
+      {
+        "name": "visit has arrivals beyond production cap",
+        "ok": true,
+        "actual": true,
+        "expected": true
+      },
+      {
+        "name": "online/5h all gains uncapped",
+        "ok": true,
+        "actual": {
+          "resources": {
+            "iron_ore": 100000300,
+            "herb": 100000300,
+            "timber": 100000300
+          },
+          "gold": 99999800,
+          "trainee": {
+            "level": 1,
+            "xp": 100
+          },
+          "carry": {}
+        },
+        "expected": {
+          "resources": {
+            "iron_ore": 100000300,
+            "herb": 100000300,
+            "timber": 100000300
+          },
+          "gold": 99999800,
+          "trainee": {
+            "level": 1,
+            "xp": 100
+          },
+          "carry": {}
+        }
+      },
+      {
+        "name": "online/5h full resource hours",
+        "ok": true,
+        "actual": 300,
+        "expected": 300
+      },
+      {
+        "name": "online/24h all gains uncapped",
+        "ok": true,
+        "actual": {
+          "resources": {
+            "iron_ore": 100001440,
+            "herb": 100001440,
+            "timber": 100001440
+          },
+          "gold": 100000940,
+          "trainee": {
+            "level": 3,
+            "xp": 360
+          },
+          "carry": {}
+        },
+        "expected": {
+          "resources": {
+            "iron_ore": 100001440,
+            "herb": 100001440,
+            "timber": 100001440
+          },
+          "gold": 100000940,
+          "trainee": {
+            "level": 3,
+            "xp": 360
+          },
+          "carry": {}
+        }
+      },
+      {
+        "name": "online/24h full resource hours",
+        "ok": true,
+        "actual": 1440,
+        "expected": 1440
+      }
+    ],
+    "passed": 28,
+    "total": 28
+  },
+  "regression": {
+    "title": "PASS 714/714",
+    "passed": 714,
+    "failed": 0,
+    "failures": []
+  },
+  "elapsed_sec": 25.54,
+  "source_changed_during_run": []
+}

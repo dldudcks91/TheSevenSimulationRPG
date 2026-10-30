@@ -20,7 +20,7 @@ import numpy as np
 from PIL import Image
 
 CSV = 'src/data/monster.csv'
-FACES = ['src/assets/art/faces/gemini/monster/', 'src/assets/art/faces/gpt/monster/']
+FACES = ['src/assets/art/faces/gemini/monster/']
 OUT = 'src/assets/art/faces/source/chapters/'
 CELL, SHEET, GRID = 1013, 2048, (1014, 1033)      # 격자선 밴드 — sheets/ 의 Gem 시트와 같은 규격
 GREEN = (0, 255, 0)

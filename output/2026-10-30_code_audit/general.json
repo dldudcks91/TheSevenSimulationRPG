@@ -1,0 +1,4662 @@
+{
+  "transform_errors": [],
+  "transformed_files": 223,
+  "generative": {
+    "valid_roundtrip": [],
+    "generated": [],
+    "malformed": [
+      {
+        "name": "empty_stats",
+        "problems": [],
+        "import_ok": true,
+        "import_team": [
+          {
+            "uid": "ghost-0",
+            "hero": {
+              "name": {
+                "ko": "키어런",
+                "en": "Kieran"
+              },
+              "tier": "normal",
+              "sin": "sloth",
+              "cls": "mage",
+              "trait": {
+                "ko": "탐구심",
+                "en": "Inquisitive"
+              },
+              "face": "mage_2",
+              "level": 1,
+              "stats": {},
+              "mastery": {},
+              "innate": "mag_frostnova",
+              "uid": "ghost-0",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-0-0",
+                "armor": "ghost-gear-0-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "롱 스태프",
+                  "en": "Long Staff"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.28,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "lightning_dmg_pct",
+                    "v": 0.09,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "staff",
+                "baseId": "long_staff",
+                "uid": "ghost-gear-0-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.98,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "counter_chance",
+                    "v": 0.07,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-0-1"
+              }
+            ],
+            "combat": {
+              "atk_magic": {
+                "min": 8,
+                "max": 10
+              },
+              "attack_type": "physical",
+              "basic_attack": false,
+              "level": 1,
+              "hp_max": 50,
+              "defense": 20,
+              "res_fire": 0,
+              "res_cold": 0,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.5,
+              "life_steal": 0,
+              "hp_regen": 0.05,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": 0,
+              "action_period": 3.5,
+              "period_raw": 3.5,
+              "speed_pct": 0,
+              "period_weapon": 3.5,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 1,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0.09,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0.07,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {},
+            "actives": [
+              {
+                "id": "mag_frostnova",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "staff",
+            "rank": 0
+          },
+          {
+            "uid": "ghost-1",
+            "hero": {
+              "name": {
+                "ko": "오르윈",
+                "en": "Orwin"
+              },
+              "tier": "magic",
+              "sin": "lust",
+              "cls": "knight",
+              "trait": {
+                "ko": "무쇠 팔",
+                "en": "Iron Arm"
+              },
+              "face": "knight_1",
+              "level": 1,
+              "stats": {
+                "str": 15,
+                "agi": 8,
+                "int": 8,
+                "vit": 9,
+                "luck": 12,
+                "ldr": 8,
+                "cha": 6
+              },
+              "mastery": {},
+              "innate": "kni_fanaticism",
+              "uid": "ghost-1",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-1-0",
+                "armor": "ghost-gear-1-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "하이랜드 블레이드",
+                  "en": "Highland Blade"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.28,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "vs_normal_dmg",
+                    "v": 0.09,
+                    "src": "gluttony"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "sword2h",
+                "baseId": "highland_blade",
+                "uid": "ghost-gear-1-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.39,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "hp_regen",
+                    "v": 0.5,
+                    "src": "lust"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-1-1"
+              }
+            ],
+            "combat": {
+              "atk_physical": {
+                "min": 8,
+                "max": 10
+              },
+              "attack_type": "physical",
+              "basic_attack": true,
+              "level": 1,
+              "hp_max": 100,
+              "defense": 14,
+              "res_fire": 0,
+              "res_cold": 0,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.605,
+              "life_steal": 0,
+              "hp_regen": 0.55,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.12,
+              "action_period": 3.638,
+              "period_raw": 3.63825,
+              "speed_pct": 0,
+              "period_weapon": 3.3,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 1.6105100000000006,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0.09,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 15,
+              "agi": 8,
+              "int": 8,
+              "vit": 9,
+              "luck": 12,
+              "ldr": 8,
+              "cha": 6
+            },
+            "actives": [
+              {
+                "id": "kni_fanaticism",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "sword2h",
+            "rank": 1
+          },
+          {
+            "uid": "ghost-2",
+            "hero": {
+              "name": {
+                "ko": "우르술라",
+                "en": "Ursula"
+              },
+              "tier": "normal",
+              "sin": "wrath",
+              "cls": "archer",
+              "trait": {
+                "ko": "신실함",
+                "en": "Devout"
+              },
+              "face": "archer_1",
+              "level": 1,
+              "stats": {
+                "str": 13,
+                "agi": 10,
+                "int": 11,
+                "vit": 6,
+                "luck": 3,
+                "ldr": 8,
+                "cha": 8
+              },
+              "mastery": {},
+              "innate": "arc_coldarrow",
+              "uid": "ghost-2",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-2-0",
+                "armor": "ghost-gear-2-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "하이드라 보우",
+                  "en": "Hydra Bow"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.11,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "vs_undead_dmg",
+                    "v": 0.07,
+                    "src": "gluttony"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "bow",
+                "baseId": "hydra_bow",
+                "uid": "ghost-gear-2-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.06,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "res_cold",
+                    "v": 0.08,
+                    "src": "sloth"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-2-1"
+              }
+            ],
+            "combat": {
+              "atk_physical": {
+                "min": 7,
+                "max": 9
+              },
+              "attack_type": "physical",
+              "basic_attack": true,
+              "level": 1,
+              "hp_max": 50,
+              "defense": 11,
+              "res_fire": 0,
+              "res_cold": 0.08,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.2566,
+              "life_steal": 0,
+              "hp_regen": 0.05,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.06,
+              "action_period": 2.9,
+              "period_raw": 2.9,
+              "speed_pct": 0,
+              "period_weapon": 2.9,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 1.3310000000000004,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0.07
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 13,
+              "agi": 10,
+              "int": 11,
+              "vit": 6,
+              "luck": 3,
+              "ldr": 8,
+              "cha": 8
+            },
+            "actives": [
+              {
+                "id": "arc_coldarrow",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "bow",
+            "rank": 1
+          }
+        ]
+      },
+      {
+        "name": "missing_stats_key",
+        "problems": [],
+        "import_ok": true,
+        "import_team": [
+          {
+            "uid": "ghost-0",
+            "hero": {
+              "name": {
+                "ko": "키어런",
+                "en": "Kieran"
+              },
+              "tier": "normal",
+              "sin": "sloth",
+              "cls": "mage",
+              "trait": {
+                "ko": "탐구심",
+                "en": "Inquisitive"
+              },
+              "face": "mage_2",
+              "level": 1,
+              "stats": {
+                "agi": 5,
+                "int": 16,
+                "vit": 9,
+                "luck": 9,
+                "ldr": 6,
+                "cha": 6
+              },
+              "mastery": {},
+              "innate": "mag_frostnova",
+              "uid": "ghost-0",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-0-0",
+                "armor": "ghost-gear-0-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "롱 스태프",
+                  "en": "Long Staff"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.28,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "lightning_dmg_pct",
+                    "v": 0.09,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "staff",
+                "baseId": "long_staff",
+                "uid": "ghost-gear-0-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.98,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "counter_chance",
+                    "v": 0.07,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-0-1"
+              }
+            ],
+            "combat": {
+              "atk_magic": {
+                "min": 8,
+                "max": 10
+              },
+              "attack_type": "physical",
+              "basic_attack": false,
+              "level": 1,
+              "hp_max": 50,
+              "defense": 20,
+              "res_fire": 0,
+              "res_cold": 0,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.4545,
+              "life_steal": 0,
+              "hp_regen": 0.05,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.12,
+              "action_period": 4.467,
+              "period_raw": 4.466985468750001,
+              "speed_pct": 0,
+              "period_weapon": 3.5,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 1,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0.09,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0.07,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "agi": 5,
+              "int": 16,
+              "vit": 9,
+              "luck": 9,
+              "ldr": 6,
+              "cha": 6
+            },
+            "actives": [
+              {
+                "id": "mag_frostnova",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "staff",
+            "rank": 0
+          },
+          {
+            "uid": "ghost-1",
+            "hero": {
+              "name": {
+                "ko": "오르윈",
+                "en": "Orwin"
+              },
+              "tier": "magic",
+              "sin": "lust",
+              "cls": "knight",
+              "trait": {
+                "ko": "무쇠 팔",
+                "en": "Iron Arm"
+              },
+              "face": "knight_1",
+              "level": 1,
+              "stats": {
+                "str": 15,
+                "agi": 8,
+                "int": 8,
+                "vit": 9,
+                "luck": 12,
+                "ldr": 8,
+                "cha": 6
+              },
+              "mastery": {},
+              "innate": "kni_fanaticism",
+              "uid": "ghost-1",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-1-0",
+                "armor": "ghost-gear-1-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "하이랜드 블레이드",
+                  "en": "Highland Blade"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.28,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "vs_normal_dmg",
+                    "v": 0.09,
+                    "src": "gluttony"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "sword2h",
+                "baseId": "highland_blade",
+                "uid": "ghost-gear-1-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.39,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "hp_regen",
+                    "v": 0.5,
+                    "src": "lust"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-1-1"
+              }
+            ],
+            "combat": {
+              "atk_physical": {
+                "min": 8,
+                "max": 10
+              },
+              "attack_type": "physical",
+              "basic_attack": true,
+              "level": 1,
+              "hp_max": 100,
+              "defense": 14,
+              "res_fire": 0,
+              "res_cold": 0,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.605,
+              "life_steal": 0,
+              "hp_regen": 0.55,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.12,
+              "action_period": 3.638,
+              "period_raw": 3.63825,
+              "speed_pct": 0,
+              "period_weapon": 3.3,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 1.6105100000000006,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0.09,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 15,
+              "agi": 8,
+              "int": 8,
+              "vit": 9,
+              "luck": 12,
+              "ldr": 8,
+              "cha": 6
+            },
+            "actives": [
+              {
+                "id": "kni_fanaticism",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "sword2h",
+            "rank": 1
+          },
+          {
+            "uid": "ghost-2",
+            "hero": {
+              "name": {
+                "ko": "우르술라",
+                "en": "Ursula"
+              },
+              "tier": "normal",
+              "sin": "wrath",
+              "cls": "archer",
+              "trait": {
+                "ko": "신실함",
+                "en": "Devout"
+              },
+              "face": "archer_1",
+              "level": 1,
+              "stats": {
+                "str": 13,
+                "agi": 10,
+                "int": 11,
+                "vit": 6,
+                "luck": 3,
+                "ldr": 8,
+                "cha": 8
+              },
+              "mastery": {},
+              "innate": "arc_coldarrow",
+              "uid": "ghost-2",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-2-0",
+                "armor": "ghost-gear-2-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "하이드라 보우",
+                  "en": "Hydra Bow"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.11,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "vs_undead_dmg",
+                    "v": 0.07,
+                    "src": "gluttony"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "bow",
+                "baseId": "hydra_bow",
+                "uid": "ghost-gear-2-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.06,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "res_cold",
+                    "v": 0.08,
+                    "src": "sloth"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-2-1"
+              }
+            ],
+            "combat": {
+              "atk_physical": {
+                "min": 7,
+                "max": 9
+              },
+              "attack_type": "physical",
+              "basic_attack": true,
+              "level": 1,
+              "hp_max": 50,
+              "defense": 11,
+              "res_fire": 0,
+              "res_cold": 0.08,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.2566,
+              "life_steal": 0,
+              "hp_regen": 0.05,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.06,
+              "action_period": 2.9,
+              "period_raw": 2.9,
+              "speed_pct": 0,
+              "period_weapon": 2.9,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 1.3310000000000004,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0.07
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 13,
+              "agi": 10,
+              "int": 11,
+              "vit": 6,
+              "luck": 3,
+              "ldr": 8,
+              "cha": 8
+            },
+            "actives": [
+              {
+                "id": "arc_coldarrow",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "bow",
+            "rank": 1
+          }
+        ]
+      },
+      {
+        "name": "empty_stats_array",
+        "problems": [],
+        "import_ok": true,
+        "import_team": [
+          {
+            "uid": "ghost-0",
+            "hero": {
+              "name": {
+                "ko": "키어런",
+                "en": "Kieran"
+              },
+              "tier": "normal",
+              "sin": "sloth",
+              "cls": "mage",
+              "trait": {
+                "ko": "탐구심",
+                "en": "Inquisitive"
+              },
+              "face": "mage_2",
+              "level": 1,
+              "stats": [],
+              "mastery": {},
+              "innate": "mag_frostnova",
+              "uid": "ghost-0",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-0-0",
+                "armor": "ghost-gear-0-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "롱 스태프",
+                  "en": "Long Staff"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.28,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "lightning_dmg_pct",
+                    "v": 0.09,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "staff",
+                "baseId": "long_staff",
+                "uid": "ghost-gear-0-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.98,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "counter_chance",
+                    "v": 0.07,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-0-1"
+              }
+            ],
+            "combat": {
+              "atk_magic": {
+                "min": 8,
+                "max": 10
+              },
+              "attack_type": "physical",
+              "basic_attack": false,
+              "level": 1,
+              "hp_max": 50,
+              "defense": 20,
+              "res_fire": 0,
+              "res_cold": 0,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.5,
+              "life_steal": 0,
+              "hp_regen": 0.05,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": 0,
+              "action_period": 3.5,
+              "period_raw": 3.5,
+              "speed_pct": 0,
+              "period_weapon": 3.5,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 1,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0.09,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0.07,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": [],
+            "actives": [
+              {
+                "id": "mag_frostnova",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "staff",
+            "rank": 0
+          },
+          {
+            "uid": "ghost-1",
+            "hero": {
+              "name": {
+                "ko": "오르윈",
+                "en": "Orwin"
+              },
+              "tier": "magic",
+              "sin": "lust",
+              "cls": "knight",
+              "trait": {
+                "ko": "무쇠 팔",
+                "en": "Iron Arm"
+              },
+              "face": "knight_1",
+              "level": 1,
+              "stats": {
+                "str": 15,
+                "agi": 8,
+                "int": 8,
+                "vit": 9,
+                "luck": 12,
+                "ldr": 8,
+                "cha": 6
+              },
+              "mastery": {},
+              "innate": "kni_fanaticism",
+              "uid": "ghost-1",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-1-0",
+                "armor": "ghost-gear-1-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "하이랜드 블레이드",
+                  "en": "Highland Blade"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.28,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "vs_normal_dmg",
+                    "v": 0.09,
+                    "src": "gluttony"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "sword2h",
+                "baseId": "highland_blade",
+                "uid": "ghost-gear-1-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.39,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "hp_regen",
+                    "v": 0.5,
+                    "src": "lust"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-1-1"
+              }
+            ],
+            "combat": {
+              "atk_physical": {
+                "min": 8,
+                "max": 10
+              },
+              "attack_type": "physical",
+              "basic_attack": true,
+              "level": 1,
+              "hp_max": 100,
+              "defense": 14,
+              "res_fire": 0,
+              "res_cold": 0,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.605,
+              "life_steal": 0,
+              "hp_regen": 0.55,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.12,
+              "action_period": 3.638,
+              "period_raw": 3.63825,
+              "speed_pct": 0,
+              "period_weapon": 3.3,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 1.6105100000000006,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0.09,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 15,
+              "agi": 8,
+              "int": 8,
+              "vit": 9,
+              "luck": 12,
+              "ldr": 8,
+              "cha": 6
+            },
+            "actives": [
+              {
+                "id": "kni_fanaticism",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "sword2h",
+            "rank": 1
+          },
+          {
+            "uid": "ghost-2",
+            "hero": {
+              "name": {
+                "ko": "우르술라",
+                "en": "Ursula"
+              },
+              "tier": "normal",
+              "sin": "wrath",
+              "cls": "archer",
+              "trait": {
+                "ko": "신실함",
+                "en": "Devout"
+              },
+              "face": "archer_1",
+              "level": 1,
+              "stats": {
+                "str": 13,
+                "agi": 10,
+                "int": 11,
+                "vit": 6,
+                "luck": 3,
+                "ldr": 8,
+                "cha": 8
+              },
+              "mastery": {},
+              "innate": "arc_coldarrow",
+              "uid": "ghost-2",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-2-0",
+                "armor": "ghost-gear-2-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "하이드라 보우",
+                  "en": "Hydra Bow"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.11,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "vs_undead_dmg",
+                    "v": 0.07,
+                    "src": "gluttony"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "bow",
+                "baseId": "hydra_bow",
+                "uid": "ghost-gear-2-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.06,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "res_cold",
+                    "v": 0.08,
+                    "src": "sloth"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-2-1"
+              }
+            ],
+            "combat": {
+              "atk_physical": {
+                "min": 7,
+                "max": 9
+              },
+              "attack_type": "physical",
+              "basic_attack": true,
+              "level": 1,
+              "hp_max": 50,
+              "defense": 11,
+              "res_fire": 0,
+              "res_cold": 0.08,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.2566,
+              "life_steal": 0,
+              "hp_regen": 0.05,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.06,
+              "action_period": 2.9,
+              "period_raw": 2.9,
+              "speed_pct": 0,
+              "period_weapon": 2.9,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 1.3310000000000004,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0.07
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 13,
+              "agi": 10,
+              "int": 11,
+              "vit": 6,
+              "luck": 3,
+              "ldr": 8,
+              "cha": 8
+            },
+            "actives": [
+              {
+                "id": "arc_coldarrow",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "bow",
+            "rank": 1
+          }
+        ]
+      },
+      {
+        "name": "missing_name",
+        "problems": [],
+        "import_ok": true,
+        "import_team": [
+          {
+            "uid": "ghost-0",
+            "hero": {
+              "tier": "normal",
+              "sin": "sloth",
+              "cls": "mage",
+              "trait": {
+                "ko": "탐구심",
+                "en": "Inquisitive"
+              },
+              "face": "mage_2",
+              "level": 1,
+              "stats": {
+                "str": 8,
+                "agi": 5,
+                "int": 16,
+                "vit": 9,
+                "luck": 9,
+                "ldr": 6,
+                "cha": 6
+              },
+              "mastery": {},
+              "innate": "mag_frostnova",
+              "uid": "ghost-0",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-0-0",
+                "armor": "ghost-gear-0-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "롱 스태프",
+                  "en": "Long Staff"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.28,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "lightning_dmg_pct",
+                    "v": 0.09,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "staff",
+                "baseId": "long_staff",
+                "uid": "ghost-gear-0-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.98,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "counter_chance",
+                    "v": 0.07,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-0-1"
+              }
+            ],
+            "combat": {
+              "atk_magic": {
+                "min": 8,
+                "max": 10
+              },
+              "attack_type": "physical",
+              "basic_attack": false,
+              "level": 1,
+              "hp_max": 50,
+              "defense": 20,
+              "res_fire": 0,
+              "res_cold": 0,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.4545,
+              "life_steal": 0,
+              "hp_regen": 0.05,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.12,
+              "action_period": 4.467,
+              "period_raw": 4.466985468750001,
+              "speed_pct": 0,
+              "period_weapon": 3.5,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 0.8264462809917354,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0.09,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0.07,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 8,
+              "agi": 5,
+              "int": 16,
+              "vit": 9,
+              "luck": 9,
+              "ldr": 6,
+              "cha": 6
+            },
+            "actives": [
+              {
+                "id": "mag_frostnova",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "staff",
+            "rank": 0
+          },
+          {
+            "uid": "ghost-1",
+            "hero": {
+              "name": {
+                "ko": "오르윈",
+                "en": "Orwin"
+              },
+              "tier": "magic",
+              "sin": "lust",
+              "cls": "knight",
+              "trait": {
+                "ko": "무쇠 팔",
+                "en": "Iron Arm"
+              },
+              "face": "knight_1",
+              "level": 1,
+              "stats": {
+                "str": 15,
+                "agi": 8,
+                "int": 8,
+                "vit": 9,
+                "luck": 12,
+                "ldr": 8,
+                "cha": 6
+              },
+              "mastery": {},
+              "innate": "kni_fanaticism",
+              "uid": "ghost-1",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-1-0",
+                "armor": "ghost-gear-1-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "하이랜드 블레이드",
+                  "en": "Highland Blade"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.28,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "vs_normal_dmg",
+                    "v": 0.09,
+                    "src": "gluttony"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "sword2h",
+                "baseId": "highland_blade",
+                "uid": "ghost-gear-1-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.39,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "hp_regen",
+                    "v": 0.5,
+                    "src": "lust"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-1-1"
+              }
+            ],
+            "combat": {
+              "atk_physical": {
+                "min": 8,
+                "max": 10
+              },
+              "attack_type": "physical",
+              "basic_attack": true,
+              "level": 1,
+              "hp_max": 100,
+              "defense": 14,
+              "res_fire": 0,
+              "res_cold": 0,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.605,
+              "life_steal": 0,
+              "hp_regen": 0.55,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.12,
+              "action_period": 3.638,
+              "period_raw": 3.63825,
+              "speed_pct": 0,
+              "period_weapon": 3.3,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 1.6105100000000006,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0.09,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 15,
+              "agi": 8,
+              "int": 8,
+              "vit": 9,
+              "luck": 12,
+              "ldr": 8,
+              "cha": 6
+            },
+            "actives": [
+              {
+                "id": "kni_fanaticism",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "sword2h",
+            "rank": 1
+          },
+          {
+            "uid": "ghost-2",
+            "hero": {
+              "name": {
+                "ko": "우르술라",
+                "en": "Ursula"
+              },
+              "tier": "normal",
+              "sin": "wrath",
+              "cls": "archer",
+              "trait": {
+                "ko": "신실함",
+                "en": "Devout"
+              },
+              "face": "archer_1",
+              "level": 1,
+              "stats": {
+                "str": 13,
+                "agi": 10,
+                "int": 11,
+                "vit": 6,
+                "luck": 3,
+                "ldr": 8,
+                "cha": 8
+              },
+              "mastery": {},
+              "innate": "arc_coldarrow",
+              "uid": "ghost-2",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-2-0",
+                "armor": "ghost-gear-2-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "하이드라 보우",
+                  "en": "Hydra Bow"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.11,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "vs_undead_dmg",
+                    "v": 0.07,
+                    "src": "gluttony"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "bow",
+                "baseId": "hydra_bow",
+                "uid": "ghost-gear-2-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.06,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "res_cold",
+                    "v": 0.08,
+                    "src": "sloth"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-2-1"
+              }
+            ],
+            "combat": {
+              "atk_physical": {
+                "min": 7,
+                "max": 9
+              },
+              "attack_type": "physical",
+              "basic_attack": true,
+              "level": 1,
+              "hp_max": 50,
+              "defense": 11,
+              "res_fire": 0,
+              "res_cold": 0.08,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.2566,
+              "life_steal": 0,
+              "hp_regen": 0.05,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.06,
+              "action_period": 2.9,
+              "period_raw": 2.9,
+              "speed_pct": 0,
+              "period_weapon": 2.9,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 1.3310000000000004,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0.07
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 13,
+              "agi": 10,
+              "int": 11,
+              "vit": 6,
+              "luck": 3,
+              "ldr": 8,
+              "cha": 8
+            },
+            "actives": [
+              {
+                "id": "arc_coldarrow",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "bow",
+            "rank": 1
+          }
+        ]
+      },
+      {
+        "name": "invalid_sin",
+        "problems": [],
+        "import_ok": true,
+        "import_team": [
+          {
+            "uid": "ghost-0",
+            "hero": {
+              "name": {
+                "ko": "키어런",
+                "en": "Kieran"
+              },
+              "tier": "normal",
+              "sin": "invalid",
+              "cls": "mage",
+              "trait": {
+                "ko": "탐구심",
+                "en": "Inquisitive"
+              },
+              "face": "mage_2",
+              "level": 1,
+              "stats": {
+                "str": 8,
+                "agi": 5,
+                "int": 16,
+                "vit": 9,
+                "luck": 9,
+                "ldr": 6,
+                "cha": 6
+              },
+              "mastery": {},
+              "innate": "mag_frostnova",
+              "uid": "ghost-0",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-0-0",
+                "armor": "ghost-gear-0-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "롱 스태프",
+                  "en": "Long Staff"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.28,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "lightning_dmg_pct",
+                    "v": 0.09,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "staff",
+                "baseId": "long_staff",
+                "uid": "ghost-gear-0-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.98,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "counter_chance",
+                    "v": 0.07,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-0-1"
+              }
+            ],
+            "combat": {
+              "atk_magic": {
+                "min": 8,
+                "max": 10
+              },
+              "attack_type": "physical",
+              "basic_attack": false,
+              "level": 1,
+              "hp_max": 50,
+              "defense": 20,
+              "res_fire": 0,
+              "res_cold": 0,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.4545,
+              "life_steal": 0,
+              "hp_regen": 0.05,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.12,
+              "action_period": 4.467,
+              "period_raw": 4.466985468750001,
+              "speed_pct": 0,
+              "period_weapon": 3.5,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 0.8264462809917354,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0.09,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0.07,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 8,
+              "agi": 5,
+              "int": 16,
+              "vit": 9,
+              "luck": 9,
+              "ldr": 6,
+              "cha": 6
+            },
+            "actives": [
+              {
+                "id": "mag_frostnova",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "staff",
+            "rank": 0
+          },
+          {
+            "uid": "ghost-1",
+            "hero": {
+              "name": {
+                "ko": "오르윈",
+                "en": "Orwin"
+              },
+              "tier": "magic",
+              "sin": "lust",
+              "cls": "knight",
+              "trait": {
+                "ko": "무쇠 팔",
+                "en": "Iron Arm"
+              },
+              "face": "knight_1",
+              "level": 1,
+              "stats": {
+                "str": 15,
+                "agi": 8,
+                "int": 8,
+                "vit": 9,
+                "luck": 12,
+                "ldr": 8,
+                "cha": 6
+              },
+              "mastery": {},
+              "innate": "kni_fanaticism",
+              "uid": "ghost-1",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-1-0",
+                "armor": "ghost-gear-1-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "하이랜드 블레이드",
+                  "en": "Highland Blade"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.28,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "vs_normal_dmg",
+                    "v": 0.09,
+                    "src": "gluttony"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "sword2h",
+                "baseId": "highland_blade",
+                "uid": "ghost-gear-1-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.39,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "hp_regen",
+                    "v": 0.5,
+                    "src": "lust"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-1-1"
+              }
+            ],
+            "combat": {
+              "atk_physical": {
+                "min": 8,
+                "max": 10
+              },
+              "attack_type": "physical",
+              "basic_attack": true,
+              "level": 1,
+              "hp_max": 100,
+              "defense": 14,
+              "res_fire": 0,
+              "res_cold": 0,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.605,
+              "life_steal": 0,
+              "hp_regen": 0.55,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.12,
+              "action_period": 3.638,
+              "period_raw": 3.63825,
+              "speed_pct": 0,
+              "period_weapon": 3.3,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 1.6105100000000006,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0.09,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 15,
+              "agi": 8,
+              "int": 8,
+              "vit": 9,
+              "luck": 12,
+              "ldr": 8,
+              "cha": 6
+            },
+            "actives": [
+              {
+                "id": "kni_fanaticism",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "sword2h",
+            "rank": 1
+          },
+          {
+            "uid": "ghost-2",
+            "hero": {
+              "name": {
+                "ko": "우르술라",
+                "en": "Ursula"
+              },
+              "tier": "normal",
+              "sin": "wrath",
+              "cls": "archer",
+              "trait": {
+                "ko": "신실함",
+                "en": "Devout"
+              },
+              "face": "archer_1",
+              "level": 1,
+              "stats": {
+                "str": 13,
+                "agi": 10,
+                "int": 11,
+                "vit": 6,
+                "luck": 3,
+                "ldr": 8,
+                "cha": 8
+              },
+              "mastery": {},
+              "innate": "arc_coldarrow",
+              "uid": "ghost-2",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-2-0",
+                "armor": "ghost-gear-2-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "하이드라 보우",
+                  "en": "Hydra Bow"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.11,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "vs_undead_dmg",
+                    "v": 0.07,
+                    "src": "gluttony"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "bow",
+                "baseId": "hydra_bow",
+                "uid": "ghost-gear-2-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.06,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "res_cold",
+                    "v": 0.08,
+                    "src": "sloth"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-2-1"
+              }
+            ],
+            "combat": {
+              "atk_physical": {
+                "min": 7,
+                "max": 9
+              },
+              "attack_type": "physical",
+              "basic_attack": true,
+              "level": 1,
+              "hp_max": 50,
+              "defense": 11,
+              "res_fire": 0,
+              "res_cold": 0.08,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.2566,
+              "life_steal": 0,
+              "hp_regen": 0.05,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.06,
+              "action_period": 2.9,
+              "period_raw": 2.9,
+              "speed_pct": 0,
+              "period_weapon": 2.9,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 1.3310000000000004,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0.07
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 13,
+              "agi": 10,
+              "int": 11,
+              "vit": 6,
+              "luck": 3,
+              "ldr": 8,
+              "cha": 8
+            },
+            "actives": [
+              {
+                "id": "arc_coldarrow",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "bow",
+            "rank": 1
+          }
+        ]
+      },
+      {
+        "name": "affixes_object",
+        "validation_threw": "TypeError: (it.affixes ?? []).forEach is not a function",
+        "import_threw": "TypeError: (it.affixes ?? []).forEach is not a function"
+      },
+      {
+        "name": "affixes_null_entry",
+        "problems": [],
+        "import_threw": "TypeError: Cannot read properties of null (reading 'stat')"
+      },
+      {
+        "name": "sins_object",
+        "problems": [],
+        "import_ok": true,
+        "import_team": [
+          {
+            "uid": "ghost-0",
+            "hero": {
+              "name": {
+                "ko": "키어런",
+                "en": "Kieran"
+              },
+              "tier": "normal",
+              "sin": "sloth",
+              "cls": "mage",
+              "trait": {
+                "ko": "탐구심",
+                "en": "Inquisitive"
+              },
+              "face": "mage_2",
+              "level": 1,
+              "stats": {
+                "str": 8,
+                "agi": 5,
+                "int": 16,
+                "vit": 9,
+                "luck": 9,
+                "ldr": 6,
+                "cha": 6
+              },
+              "mastery": {},
+              "innate": "mag_frostnova",
+              "uid": "ghost-0",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-0-0",
+                "armor": "ghost-gear-0-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "롱 스태프",
+                  "en": "Long Staff"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.28,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "lightning_dmg_pct",
+                    "v": 0.09,
+                    "src": "envy"
+                  }
+                ],
+                "sins": {},
+                "words": [],
+                "group": "staff",
+                "baseId": "long_staff",
+                "uid": "ghost-gear-0-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.98,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "counter_chance",
+                    "v": 0.07,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-0-1"
+              }
+            ],
+            "combat": {
+              "atk_magic": {
+                "min": 8,
+                "max": 10
+              },
+              "attack_type": "physical",
+              "basic_attack": false,
+              "level": 1,
+              "hp_max": 50,
+              "defense": 20,
+              "res_fire": 0,
+              "res_cold": 0,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.4545,
+              "life_steal": 0,
+              "hp_regen": 0.05,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.12,
+              "action_period": 4.467,
+              "period_raw": 4.466985468750001,
+              "speed_pct": 0,
+              "period_weapon": 3.5,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 0.8264462809917354,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0.09,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0.07,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 8,
+              "agi": 5,
+              "int": 16,
+              "vit": 9,
+              "luck": 9,
+              "ldr": 6,
+              "cha": 6
+            },
+            "actives": [
+              {
+                "id": "mag_frostnova",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "staff",
+            "rank": 0
+          },
+          {
+            "uid": "ghost-1",
+            "hero": {
+              "name": {
+                "ko": "오르윈",
+                "en": "Orwin"
+              },
+              "tier": "magic",
+              "sin": "lust",
+              "cls": "knight",
+              "trait": {
+                "ko": "무쇠 팔",
+                "en": "Iron Arm"
+              },
+              "face": "knight_1",
+              "level": 1,
+              "stats": {
+                "str": 15,
+                "agi": 8,
+                "int": 8,
+                "vit": 9,
+                "luck": 12,
+                "ldr": 8,
+                "cha": 6
+              },
+              "mastery": {},
+              "innate": "kni_fanaticism",
+              "uid": "ghost-1",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-1-0",
+                "armor": "ghost-gear-1-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "하이랜드 블레이드",
+                  "en": "Highland Blade"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.28,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "vs_normal_dmg",
+                    "v": 0.09,
+                    "src": "gluttony"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "sword2h",
+                "baseId": "highland_blade",
+                "uid": "ghost-gear-1-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.39,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "hp_regen",
+                    "v": 0.5,
+                    "src": "lust"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-1-1"
+              }
+            ],
+            "combat": {
+              "atk_physical": {
+                "min": 8,
+                "max": 10
+              },
+              "attack_type": "physical",
+              "basic_attack": true,
+              "level": 1,
+              "hp_max": 100,
+              "defense": 14,
+              "res_fire": 0,
+              "res_cold": 0,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.605,
+              "life_steal": 0,
+              "hp_regen": 0.55,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.12,
+              "action_period": 3.638,
+              "period_raw": 3.63825,
+              "speed_pct": 0,
+              "period_weapon": 3.3,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 1.6105100000000006,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0.09,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 15,
+              "agi": 8,
+              "int": 8,
+              "vit": 9,
+              "luck": 12,
+              "ldr": 8,
+              "cha": 6
+            },
+            "actives": [
+              {
+                "id": "kni_fanaticism",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "sword2h",
+            "rank": 1
+          },
+          {
+            "uid": "ghost-2",
+            "hero": {
+              "name": {
+                "ko": "우르술라",
+                "en": "Ursula"
+              },
+              "tier": "normal",
+              "sin": "wrath",
+              "cls": "archer",
+              "trait": {
+                "ko": "신실함",
+                "en": "Devout"
+              },
+              "face": "archer_1",
+              "level": 1,
+              "stats": {
+                "str": 13,
+                "agi": 10,
+                "int": 11,
+                "vit": 6,
+                "luck": 3,
+                "ldr": 8,
+                "cha": 8
+              },
+              "mastery": {},
+              "innate": "arc_coldarrow",
+              "uid": "ghost-2",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-2-0",
+                "armor": "ghost-gear-2-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "하이드라 보우",
+                  "en": "Hydra Bow"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.11,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "vs_undead_dmg",
+                    "v": 0.07,
+                    "src": "gluttony"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "bow",
+                "baseId": "hydra_bow",
+                "uid": "ghost-gear-2-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.06,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "res_cold",
+                    "v": 0.08,
+                    "src": "sloth"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-2-1"
+              }
+            ],
+            "combat": {
+              "atk_physical": {
+                "min": 7,
+                "max": 9
+              },
+              "attack_type": "physical",
+              "basic_attack": true,
+              "level": 1,
+              "hp_max": 50,
+              "defense": 11,
+              "res_fire": 0,
+              "res_cold": 0.08,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.2566,
+              "life_steal": 0,
+              "hp_regen": 0.05,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.06,
+              "action_period": 2.9,
+              "period_raw": 2.9,
+              "speed_pct": 0,
+              "period_weapon": 2.9,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 1.3310000000000004,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0.07
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 13,
+              "agi": 10,
+              "int": 11,
+              "vit": 6,
+              "luck": 3,
+              "ldr": 8,
+              "cha": 8
+            },
+            "actives": [
+              {
+                "id": "arc_coldarrow",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "bow",
+            "rank": 1
+          }
+        ]
+      },
+      {
+        "name": "skillOrder_object",
+        "problems": [],
+        "import_threw": "TypeError: order is not iterable"
+      },
+      {
+        "name": "missing_gear_group",
+        "problems": [
+          {
+            "code": "slot",
+            "hero": 0,
+            "pos": "weapon"
+          }
+        ],
+        "import_ok": false
+      },
+      {
+        "name": "name_object",
+        "problems": [],
+        "import_ok": true,
+        "import_team": [
+          {
+            "uid": "ghost-0",
+            "hero": {
+              "name": {
+                "ko": {
+                  "x": 1
+                },
+                "en": {
+                  "x": 2
+                }
+              },
+              "tier": "normal",
+              "sin": "sloth",
+              "cls": "mage",
+              "trait": {
+                "ko": "탐구심",
+                "en": "Inquisitive"
+              },
+              "face": "mage_2",
+              "level": 1,
+              "stats": {
+                "str": 8,
+                "agi": 5,
+                "int": 16,
+                "vit": 9,
+                "luck": 9,
+                "ldr": 6,
+                "cha": 6
+              },
+              "mastery": {},
+              "innate": "mag_frostnova",
+              "uid": "ghost-0",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-0-0",
+                "armor": "ghost-gear-0-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "롱 스태프",
+                  "en": "Long Staff"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.28,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "lightning_dmg_pct",
+                    "v": 0.09,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "staff",
+                "baseId": "long_staff",
+                "uid": "ghost-gear-0-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.98,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "counter_chance",
+                    "v": 0.07,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-0-1"
+              }
+            ],
+            "combat": {
+              "atk_magic": {
+                "min": 8,
+                "max": 10
+              },
+              "attack_type": "physical",
+              "basic_attack": false,
+              "level": 1,
+              "hp_max": 50,
+              "defense": 20,
+              "res_fire": 0,
+              "res_cold": 0,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.4545,
+              "life_steal": 0,
+              "hp_regen": 0.05,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.12,
+              "action_period": 4.467,
+              "period_raw": 4.466985468750001,
+              "speed_pct": 0,
+              "period_weapon": 3.5,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 0.8264462809917354,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0.09,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0.07,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 8,
+              "agi": 5,
+              "int": 16,
+              "vit": 9,
+              "luck": 9,
+              "ldr": 6,
+              "cha": 6
+            },
+            "actives": [
+              {
+                "id": "mag_frostnova",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "staff",
+            "rank": 0
+          },
+          {
+            "uid": "ghost-1",
+            "hero": {
+              "name": {
+                "ko": "오르윈",
+                "en": "Orwin"
+              },
+              "tier": "magic",
+              "sin": "lust",
+              "cls": "knight",
+              "trait": {
+                "ko": "무쇠 팔",
+                "en": "Iron Arm"
+              },
+              "face": "knight_1",
+              "level": 1,
+              "stats": {
+                "str": 15,
+                "agi": 8,
+                "int": 8,
+                "vit": 9,
+                "luck": 12,
+                "ldr": 8,
+                "cha": 6
+              },
+              "mastery": {},
+              "innate": "kni_fanaticism",
+              "uid": "ghost-1",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-1-0",
+                "armor": "ghost-gear-1-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "하이랜드 블레이드",
+                  "en": "Highland Blade"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.28,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "vs_normal_dmg",
+                    "v": 0.09,
+                    "src": "gluttony"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "sword2h",
+                "baseId": "highland_blade",
+                "uid": "ghost-gear-1-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.39,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "hp_regen",
+                    "v": 0.5,
+                    "src": "lust"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-1-1"
+              }
+            ],
+            "combat": {
+              "atk_physical": {
+                "min": 8,
+                "max": 10
+              },
+              "attack_type": "physical",
+              "basic_attack": true,
+              "level": 1,
+              "hp_max": 100,
+              "defense": 14,
+              "res_fire": 0,
+              "res_cold": 0,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.605,
+              "life_steal": 0,
+              "hp_regen": 0.55,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.12,
+              "action_period": 3.638,
+              "period_raw": 3.63825,
+              "speed_pct": 0,
+              "period_weapon": 3.3,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 1.6105100000000006,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0.09,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 15,
+              "agi": 8,
+              "int": 8,
+              "vit": 9,
+              "luck": 12,
+              "ldr": 8,
+              "cha": 6
+            },
+            "actives": [
+              {
+                "id": "kni_fanaticism",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "sword2h",
+            "rank": 1
+          },
+          {
+            "uid": "ghost-2",
+            "hero": {
+              "name": {
+                "ko": "우르술라",
+                "en": "Ursula"
+              },
+              "tier": "normal",
+              "sin": "wrath",
+              "cls": "archer",
+              "trait": {
+                "ko": "신실함",
+                "en": "Devout"
+              },
+              "face": "archer_1",
+              "level": 1,
+              "stats": {
+                "str": 13,
+                "agi": 10,
+                "int": 11,
+                "vit": 6,
+                "luck": 3,
+                "ldr": 8,
+                "cha": 8
+              },
+              "mastery": {},
+              "innate": "arc_coldarrow",
+              "uid": "ghost-2",
+              "xp": 0,
+              "masteryPoints": 0,
+              "equipped": {
+                "weapon": "ghost-gear-2-0",
+                "armor": "ghost-gear-2-1"
+              }
+            },
+            "gear": [
+              {
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "하이드라 보우",
+                  "en": "Hydra Bow"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.11,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "vs_undead_dmg",
+                    "v": 0.07,
+                    "src": "gluttony"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "bow",
+                "baseId": "hydra_bow",
+                "uid": "ghost-gear-2-0"
+              },
+              {
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 1,
+                "up": 0,
+                "name": {
+                  "ko": "클로스 아머",
+                  "en": "Cloth Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 10
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.06,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "res_cold",
+                    "v": 0.08,
+                    "src": "sloth"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "baseId": "armor_cloth",
+                "uid": "ghost-gear-2-1"
+              }
+            ],
+            "combat": {
+              "atk_physical": {
+                "min": 7,
+                "max": 9
+              },
+              "attack_type": "physical",
+              "basic_attack": true,
+              "level": 1,
+              "hp_max": 50,
+              "defense": 11,
+              "res_fire": 0,
+              "res_cold": 0.08,
+              "res_lightning": 0,
+              "res_poison": 0,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.2566,
+              "life_steal": 0,
+              "hp_regen": 0.05,
+              "cooldown_reduction": 0,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.06,
+              "action_period": 2.9,
+              "period_raw": 2.9,
+              "speed_pct": 0,
+              "period_weapon": 2.9,
+              "dmg_bonus_pct": 0,
+              "main_attr_mult": 1.3310000000000004,
+              "gold_find": 0,
+              "item_find": 0,
+              "find_own": {
+                "gold": 0,
+                "item": 0,
+                "magic": 0
+              },
+              "find_party": null,
+              "mastery_cond": null,
+              "atk_pct_sum": 0,
+              "option_fx": {
+                "vs": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0.07
+                },
+                "vsElite": 0,
+                "vsFront": 0,
+                "vsBack": 0,
+                "ele": {
+                  "fire": 0,
+                  "cold": 0,
+                  "lightning": 0,
+                  "poison": 0
+                },
+                "defDown": 0,
+                "resDown": 0,
+                "atkDownPhys": 0,
+                "atkDownMag": 0,
+                "crush": 0,
+                "magicFind": 0,
+                "vsDr": {
+                  "normal": 0,
+                  "demon": 0,
+                  "undead": 0
+                },
+                "vsEliteDr": 0,
+                "vsFrontDr": 0,
+                "vsBackDr": 0,
+                "drFlat": 0,
+                "counter": 0,
+                "recv": 0,
+                "killHeal": 0,
+                "startGauge": 0,
+                "cullNormal": 0,
+                "xpGain": 0,
+                "freezeDur": 0,
+                "poisonDur": 0,
+                "burnDur": 0,
+                "stunDur": 0,
+                "buffDur": 0,
+                "hitBonus": 0,
+                "defStack": 0,
+                "staggerDur": 0,
+                "castRefund": 0,
+                "castStack": 0,
+                "statusDur": 0,
+                "debuffDur": 0,
+                "healOut": 0,
+                "potion": 0
+              }
+            },
+            "stats": {
+              "str": 13,
+              "agi": 10,
+              "int": 11,
+              "vit": 6,
+              "luck": 3,
+              "ldr": 8,
+              "cha": 8
+            },
+            "actives": [
+              {
+                "id": "arc_coldarrow",
+                "source": "innate"
+              }
+            ],
+            "weaponGroup": "bow",
+            "rank": 1
+          }
+        ]
+      }
+    ],
+    "item_range": {
+      "items": 7000,
+      "options": 28400,
+      "failures": []
+    }
+  },
+  "transformed_suite": {
+    "title": "PASS 732/732",
+    "passed": 732,
+    "failed": 0,
+    "failures": [],
+    "page_errors": []
+  }
+}

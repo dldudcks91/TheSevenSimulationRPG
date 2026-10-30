@@ -25,7 +25,7 @@
  *   **값 굴림은 아이템 레벨 따라 치우친다 — 범위는 그대로** [2026-10-20 · R291 · item_design §2-1 — ~~매직 고점 `magic_option_max_mult`~~ 퇴역] —
  *   1레벨 = 낮은 쪽 · 만렙 = 높은 쪽(`lean` · [balance.csv:item_roll_skew]). **반지 · 목걸이는 일반이 없다**(`rollGear` 가 매직으로 올린다).
  *   두 줄 모두 `src` 에 그 옵션의 죄종 id 를 든다. 무기 표 `weapon_sin_option.csv` · 갑옷 표 `armor_sin_option.csv` 의 갑옷 행. ~~`weapon_common_option.csv`~~ 퇴역.
- *   **발동 옵션**(`proc_*`)은 `affixes` 줄에 스킬 id(`skill`)를 함께 든다 — ⚠ 목걸이 `proc` 처럼 **전투는 안 읽는다**(설명에만 · GAME_DESIGN §10).
+ *   **발동 옵션**(`proc_*`)은 `affixes` 줄에 스킬 id(`skill`)를 함께 든다 — 무기의 `proc_hit_attack` · `proc_hit_buff` 는 전투에 적용한다(2026-10-30). 시전 · 피격 · 목걸이 발동은 미적용이다.
  *   **방어구 넷 모두 죄종 계열표다** [투구 2026-10-21 R299 · 장갑 · 신발 2026-10-21 R303 · item_design §1 「10-21 방어구 개정」 — ~~투구 · 장갑 · 신발 세 층 ·
  *   공통옵션 `armor_common_option.csv`~~(09-18 · 파일째 퇴역)] — 부위마다 표 하나 · 갈래가 표를 가르지 않는다.
  *   **갈래는 방어 계수 + 굴리는 베이스 특성**(`armor_group.csv:trait_*` · 투구 · 장갑 · 신발) — 특성은 베이스 「방어력 +%」 바로 뒤에 `src: 'fixed'` 줄로 박힌다(R303).
@@ -66,7 +66,7 @@
  * ⚠ 접사 종류·수치 범위·희귀도 가중치는 전부 프로토타입 임시값 — balance.csv ⚠제안 키와
  *   주입된 무기 · 방어구 · 장신구 옵션 표에서 온다.
  *   ⚠ 장갑의 공통옵션 풀은 옛 `affix.csv` 장갑 풀을 옮긴 임시다(기획 미정 · 2026-09-18 사용자 보류) · 장갑 갈래 고정값도 보류다.
- *   ⚠ **발동 스킬(`item.proc` · 무기 · 갑옷의 `proc_*` 줄)은 설명에만 나온다** [사용자 지시 2026-09-21 · 2026-10-05] — 세기 · 내부 쿨타임이 미정이라 전투가 읽지 않는다(GAME_DESIGN §10).
+ *   **무기 타격 발동은 전투에 적용한다** [2026-10-30] — 기본 Lv1 · 현재 능력치 · 내부 쿨 없음 · 발동으로 추가 발동 금지. `item.proc` · 시전 · 피격 발동은 설명에만 나온다(GAME_DESIGN §10).
  */
 
 import { createFormula } from './formula.js';
@@ -156,7 +156,12 @@ export function createItemSystem(data) {
     const singleOption = (slot, sin) => sin === 'pride' || (slot === 'gloves' && sin === 'envy');
     /** **두 칸뿐인 계열** [2026-10-29 · 사용자 「지원은 삭제」 · R382 · item_design §1 「반지 옵션 — 죄종 계열」 · INTERFACE §5-3] — 반지 시기(① 다섯 변형 · ② 독 저항). 구조 상수 */
     const twoOptions = (slot, sin) => slot === 'ring' && sin === 'envy';
-    const optionsOf = (slot, sin) => (singleOption(slot, sin) ? [1] : twoOptions(slot, sin) ? [1, 2] : FAMILY_OPTIONS);
+    /**
+     * **빈 칸** [2026-10-30 · 사용자 「기존에 다른 죄종에 있던 경험치 증가는 모두 삭제해 다른걸로 넣을게 내가」 · R393 · item_design §1 · INTERFACE §5-3] — 경험치를 탐욕 칸에만 남기고 걷은 자리.
+     *   그 옵션 번호의 행이 없다 — 사용자가 채우면 여기서 지운다. 구조 상수
+     */
+    const EMPTY_CELLS = new Set(['armor:sloth:2', 'helmet:sloth:1', 'boots:gluttony:1', 'ring:gluttony:3']);
+    const optionsOf = (slot, sin) => (singleOption(slot, sin) ? [1] : twoOptions(slot, sin) ? [1, 2] : FAMILY_OPTIONS).filter(o => !EMPTY_CELLS.has(`${slot}:${sin}:${o}`));
     /**
      * 발동 옵션 → 스킬 풀 [2026-10-05 · R206 · R208 · R209 · INTERFACE §5-3 `PROC_POOL`] — 구조 어휘라 CSV 가 아니라 여기 둔다(`PROC_TRIGGERS` 와 같은 자리).
      * ⚠ `proc_struck_buff`(갑옷 오만 ③)는 「방어 쪽으로 한정」 목록이 미정이라 `buff` 그대로다(⚠임시)

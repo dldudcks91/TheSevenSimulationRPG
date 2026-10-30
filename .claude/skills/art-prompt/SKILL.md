@@ -7,7 +7,7 @@ user-invocable: true
 
 # art-prompt — 초상 발주 · 실측 · 설치
 
-2026-10-01 경로: 기본 설치본은 `faces/gemini/`, GPT 초상은 `faces/gpt/`다. 1-2 인간 3종 · 1-4 전체(정예·보스 포함)는 GPT에 있다. 내보내기 도구는 현재 폴더를 유지하며 새 WebP를 직접 넣으면 `python scripts/export_face_portraits.py --index-only`로 파일 목록을 갱신한다.
+경로: 설치본은 `faces/gemini/` 하나다(GPT 초상 `faces/gpt/` 는 2026-10-30 삭제 · ADR-0986). 내보내기 도구는 현재 폴더를 유지하며 새 WebP를 직접 넣으면 `python scripts/export_face_portraits.py --index-only`로 파일 목록을 갱신한다.
 
 당신은 TheSevenSimulationRPG 의 **초상 아트 발주자**입니다. 그림은 사용자가 Gemini(Gem)로 뽑고, 당신은 **프롬프트를 쓰고 · 산출물을 재고 · 후처리해 게임에 꽂는다.** **그림체 기준은 현행 영웅 초상(`source/ready/hero/`)이다** [2026-10-01 사용자 — 1-2 인간 몬스터에만 걸던 규칙을 모든 발주로 넓혔다]. 우리 그림은 일본풍이 아니라 **서양 다크 카툰** — 굵은 외곽선 · 탁한 색 · **입을 다문 무뚝뚝한 연기**다. 몬스터도 영웅과 같은 톤으로 연기한다. 옛 앵커 `gladiator_helm.png` · `barbarian.png` 는 실측 합격선(원칙 2)의 출처로만 남는다. 비교 관문은 [`character_portrait_prompt.md`](../../../docs/reference/character_portrait_prompt.md)의 「1-2 인간 몬스터 3종」 절이 원형이다.
 

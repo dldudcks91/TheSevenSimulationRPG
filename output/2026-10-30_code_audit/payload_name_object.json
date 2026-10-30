@@ -1,0 +1,288 @@
+{
+  "v": 1,
+  "heroes": [
+    {
+      "hero": {
+        "name": {
+          "ko": {
+            "toString": 1
+          },
+          "en": {
+            "toString": 1
+          }
+        },
+        "tier": "normal",
+        "sin": "sloth",
+        "cls": "mage",
+        "trait": {
+          "ko": "탐구심",
+          "en": "Inquisitive"
+        },
+        "face": "mage_2",
+        "level": 1,
+        "stats": {
+          "str": 8,
+          "agi": 5,
+          "int": 16,
+          "vit": 9,
+          "luck": 9,
+          "ldr": 6,
+          "cha": 6
+        },
+        "mastery": {},
+        "innate": "mag_frostnova"
+      },
+      "gear": [
+        {
+          "pos": "weapon",
+          "item": {
+            "slot": "weapon",
+            "rarity": "normal",
+            "ilvl": 1,
+            "up": 0,
+            "name": {
+              "ko": "롱 스태프",
+              "en": "Long Staff"
+            },
+            "implicit": null,
+            "affixes": [
+              {
+                "stat": "atk_pct",
+                "v": 0.28,
+                "src": "fixed"
+              },
+              {
+                "stat": "lightning_dmg_pct",
+                "v": 0.09,
+                "src": "envy"
+              }
+            ],
+            "sins": [],
+            "words": [],
+            "group": "staff",
+            "baseId": "long_staff"
+          }
+        },
+        {
+          "pos": "armor",
+          "item": {
+            "slot": "armor",
+            "rarity": "normal",
+            "ilvl": 1,
+            "up": 0,
+            "name": {
+              "ko": "클로스 아머",
+              "en": "Cloth Armor"
+            },
+            "implicit": {
+              "stat": "def_flat",
+              "v": 10
+            },
+            "affixes": [
+              {
+                "stat": "armor_def_pct",
+                "v": 0.98,
+                "src": "fixed"
+              },
+              {
+                "stat": "counter_chance",
+                "v": 0.07,
+                "src": "envy"
+              }
+            ],
+            "sins": [],
+            "words": [],
+            "baseId": "armor_cloth"
+          }
+        }
+      ],
+      "rank": 0
+    },
+    {
+      "hero": {
+        "name": {
+          "ko": "오르윈",
+          "en": "Orwin"
+        },
+        "tier": "magic",
+        "sin": "lust",
+        "cls": "knight",
+        "trait": {
+          "ko": "무쇠 팔",
+          "en": "Iron Arm"
+        },
+        "face": "knight_1",
+        "level": 1,
+        "stats": {
+          "str": 15,
+          "agi": 8,
+          "int": 8,
+          "vit": 9,
+          "luck": 12,
+          "ldr": 8,
+          "cha": 6
+        },
+        "mastery": {},
+        "innate": "kni_fanaticism"
+      },
+      "gear": [
+        {
+          "pos": "weapon",
+          "item": {
+            "slot": "weapon",
+            "rarity": "normal",
+            "ilvl": 1,
+            "up": 0,
+            "name": {
+              "ko": "하이랜드 블레이드",
+              "en": "Highland Blade"
+            },
+            "implicit": null,
+            "affixes": [
+              {
+                "stat": "atk_pct",
+                "v": 0.28,
+                "src": "fixed"
+              },
+              {
+                "stat": "vs_normal_dmg",
+                "v": 0.09,
+                "src": "gluttony"
+              }
+            ],
+            "sins": [],
+            "words": [],
+            "group": "sword2h",
+            "baseId": "highland_blade"
+          }
+        },
+        {
+          "pos": "armor",
+          "item": {
+            "slot": "armor",
+            "rarity": "normal",
+            "ilvl": 1,
+            "up": 0,
+            "name": {
+              "ko": "클로스 아머",
+              "en": "Cloth Armor"
+            },
+            "implicit": {
+              "stat": "def_flat",
+              "v": 10
+            },
+            "affixes": [
+              {
+                "stat": "armor_def_pct",
+                "v": 0.39,
+                "src": "fixed"
+              },
+              {
+                "stat": "hp_regen",
+                "v": 0.5,
+                "src": "lust"
+              }
+            ],
+            "sins": [],
+            "words": [],
+            "baseId": "armor_cloth"
+          }
+        }
+      ],
+      "rank": 1
+    },
+    {
+      "hero": {
+        "name": {
+          "ko": "우르술라",
+          "en": "Ursula"
+        },
+        "tier": "normal",
+        "sin": "wrath",
+        "cls": "archer",
+        "trait": {
+          "ko": "신실함",
+          "en": "Devout"
+        },
+        "face": "archer_1",
+        "level": 1,
+        "stats": {
+          "str": 13,
+          "agi": 10,
+          "int": 11,
+          "vit": 6,
+          "luck": 3,
+          "ldr": 8,
+          "cha": 8
+        },
+        "mastery": {},
+        "innate": "arc_coldarrow"
+      },
+      "gear": [
+        {
+          "pos": "weapon",
+          "item": {
+            "slot": "weapon",
+            "rarity": "normal",
+            "ilvl": 1,
+            "up": 0,
+            "name": {
+              "ko": "하이드라 보우",
+              "en": "Hydra Bow"
+            },
+            "implicit": null,
+            "affixes": [
+              {
+                "stat": "atk_pct",
+                "v": 0.11,
+                "src": "fixed"
+              },
+              {
+                "stat": "vs_undead_dmg",
+                "v": 0.07,
+                "src": "gluttony"
+              }
+            ],
+            "sins": [],
+            "words": [],
+            "group": "bow",
+            "baseId": "hydra_bow"
+          }
+        },
+        {
+          "pos": "armor",
+          "item": {
+            "slot": "armor",
+            "rarity": "normal",
+            "ilvl": 1,
+            "up": 0,
+            "name": {
+              "ko": "클로스 아머",
+              "en": "Cloth Armor"
+            },
+            "implicit": {
+              "stat": "def_flat",
+              "v": 10
+            },
+            "affixes": [
+              {
+                "stat": "armor_def_pct",
+                "v": 0.06,
+                "src": "fixed"
+              },
+              {
+                "stat": "res_cold",
+                "v": 0.08,
+                "src": "sloth"
+              }
+            ],
+            "sins": [],
+            "words": [],
+            "baseId": "armor_cloth"
+          }
+        }
+      ],
+      "rank": 1
+    }
+  ]
+}

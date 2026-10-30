@@ -3,7 +3,6 @@ armor,wrath,1,fhr,flat,0.1,0.25,-,갑옷 분노 ① — 타격 회복(물리 경
 armor,wrath,2,damage_reduction,flat,0.02,0.05,-,갑옷 분노 ② — 피해 감소(조건 없음 · 원천별 곱) · 탱커가 모든 갑옷에서 찾는 줄이 되기 쉬워 값은 낮게 ⚠제안 수치
 armor,wrath,3,res_fire,flat,0.06,0.2,-,갑옷 분노 ③ — 화염 저항 ⚠제안 수치
 armor,sloth,1,hp_pct,flat,0.03,0.08,-,갑옷 나태 ① — 최대 체력 +% ⚠제안 수치
-armor,sloth,2,xp_gain_pct,flat,0.05,0.12,-,갑옷 나태 ② — 경험치 획득 증가(낀 영웅 본인 몫) ⚠제안 수치
 armor,sloth,3,res_cold,flat,0.06,0.2,-,갑옷 나태 ③ — 냉기 저항 ⚠제안 수치
 armor,lust,1,hp_flat,growth,8,20,-,갑옷 색욕 ① — 체력 +수치 ⚠제안 수치
 armor,lust,2,hp_regen,tenth,0.2,0.6,-,갑옷 색욕 ② — 체력 재생(초당 고정 · 0.1 단위) · ⚠ 아이템 레벨을 따라 자라는지 미정 ⚠제안 수치
@@ -19,11 +18,10 @@ armor,gluttony,2,vs_undead_dr,flat,0.04,0.1,-,갑옷 폭식 ② — 종족에게
 armor,gluttony,3,res_all,flat,0.03,0.1,-,갑옷 폭식 ③ — 모든 원소 저항 ⚠제안 수치
 armor,greed,1,magic_find,flat,0.05,0.15,-,갑옷 탐욕 ① — 매직아이템 획득확률 ⚠제안 수치 (무기와 같은 대역)
 armor,greed,2,gold_find,flat,0.05,0.12,-,갑옷 탐욕 ② — 골드 획득 ⚠제안 수치
-armor,greed,3,item_find,flat,0.04,0.1,-,갑옷 탐욕 ③ — 아이템 드랍확률 ⚠제안 수치
+armor,greed,3,xp_gain_pct,flat,0.05,0.12,-,갑옷 탐욕 ③ — 경험치 획득 증가(본인 몫) ⚠제안 수치 (2026-10-30 아이템 드랍확률을 대체)
 helmet,wrath,1,fhr,flat,0.1,0.25,-,투구 분노 ① — 타격 회복 · 갑옷 분노 ① 과 같은 대역 ⚠제안 수치 (2026-10-21 사용자 · item_design §1 「10-21 투구 개정」 · 세 갈래가 같은 표)
 helmet,wrath,2,crit_rate,flat,0.02,0.05,-,투구 분노 ② — 치명타 확률 · 옛 가죽 공통옵션과 같은 대역 ⚠제안 수치 (2026-10-09)
 helmet,wrath,3,res_fire,flat,0.06,0.2,-,투구 분노 ③ — 화염 저항 ⚠제안 수치
-helmet,sloth,1,xp_gain_pct,flat,0.05,0.12,-,투구 나태 ① — 경험치 획득 증가(본인 몫) · 옛 세 갈래 공통옵션과 같은 대역 ⚠제안 수치 (2026-10-21 — 갈래 칸 셋은 갈래 특성으로 올라갔다)
 helmet,sloth,2,buff_dur_pct,flat,0.05,0.15,-,투구 나태 ② — 버프 지속시간 +%(낀 영웅이 거는 버프 창) · 반지 · 목걸이 공통과 같은 대역 · ~~쿨타임 감소~~(티아라 특성으로) ⚠제안 수치 (2026-10-21 사용자 · item_design §1 「10-21 방어구 개정」 · R303)
 helmet,sloth,3,res_cold,flat,0.06,0.2,-,투구 나태 ③ — 냉기 저항 ⚠제안 수치
 helmet,lust,1,kill_heal_pct,flat,0.02,0.05,-,투구 색욕 ① — 처치 시 체력 회복(처치마다 최대 HP × 값 · 체력 회복 +% 가 곱한다) · 새 능력치 ⚠제안 수치 (2026-10-06 새 옵션 · 값 규칙 2026-10-21 사용자)
@@ -41,7 +39,7 @@ helmet,gluttony,2,def_flat,band,2,6,0.3,투구 폭식 ② — 방어력 +수치 
 helmet,gluttony,3,res_all,flat,0.03,0.1,-,투구 폭식 ③ — 모든 원소 저항 · 갑옷 폭식 ③ 과 같다 ⚠제안 수치
 helmet,greed,1,magic_find,flat,0.05,0.15,-,투구 탐욕 ① — 매직아이템 획득확률 ⚠제안 수치
 helmet,greed,2,gold_find,flat,0.05,0.12,-,투구 탐욕 ② — 골드 획득 ⚠제안 수치
-helmet,greed,3,item_find,flat,0.04,0.1,-,투구 탐욕 ③ — 아이템 드랍확률 ⚠제안 수치
+helmet,greed,3,xp_gain_pct,flat,0.05,0.12,-,투구 탐욕 ③ — 경험치 획득 증가(본인 몫) ⚠제안 수치 (2026-10-30 아이템 드랍확률을 대체)
 gloves,wrath,1,crit_rate,flat,0.02,0.05,-,장갑 분노 ① — 치명타 확률 · 무기 분노 ② 와 같은 대역 ⚠제안 수치 (2026-10-21 사용자 · item_design §1 「10-21 방어구 개정」 · R303)
 gloves,wrath,2,atk_pct,flat,0.03,0.08,-,장갑 분노 ② — 데미지 +%(데미지 % 괄호) · 옛 장갑 풀과 같은 대역 ⚠제안 수치
 gloves,wrath,3,crit_damage,flat,0.04,0.09,-,장갑 분노 ③ — 치명타 피해 · 무기 분노 ① 과 같은 대역 ⚠제안 수치
@@ -63,7 +61,7 @@ gloves,gluttony,2,cull_normal_pct,flat,0.05,0.1,-,장갑 폭식 ② — 일반�
 gloves,gluttony,3,vs_elite_dmg,flat,0.06,0.15,-,장갑 폭식 ③ — 정예 · 보스 추가 데미지 · 무기 폭식 ② 와 같은 대역 ⚠제안 수치
 gloves,greed,1,magic_find,flat,0.05,0.15,-,장갑 탐욕 ① — 매직아이템 획득확률 ⚠제안 수치
 gloves,greed,2,gold_find,flat,0.05,0.12,-,장갑 탐욕 ② — 골드 획득 ⚠제안 수치
-gloves,greed,3,item_find,flat,0.04,0.1,-,장갑 탐욕 ③ — 아이템 드랍확률 ⚠제안 수치
+gloves,greed,3,xp_gain_pct,flat,0.05,0.12,-,장갑 탐욕 ③ — 경험치 획득 증가(본인 몫) ⚠제안 수치 (2026-10-30 아이템 드랍확률을 대체)
 boots,wrath,1,fhr,flat,0.1,0.25,-,신발 분노 ① — 타격 회복 · 갑옷 분노 ① 과 같은 대역 · ~~전투 시작 시 행동 게이지~~(가죽 특성으로) ⚠제안 수치 (2026-10-21 사용자 · item_design §1 「10-21 방어구 개정」 · R303)
 boots,wrath,2,burn_dur_reduction,flat,0.1,0.25,-,신발 분노 ② — 화상 시간 감소 · 반지 · 목걸이 공통과 같은 대역 ⚠제안 수치
 boots,wrath,3,res_fire,flat,0.06,0.2,-,신발 분노 ③ — 화염 저항 ⚠제안 수치
@@ -77,9 +75,8 @@ boots,envy,1,counter_chance,flat,0.05,0.12,-,신발 시기 ① — 반격 확률
 boots,envy,2,poison_dur_reduction,flat,0.1,0.25,-,신발 시기 ② — 중독 시간 감소 ⚠제안 수치
 boots,envy,3,res_poison,flat,0.06,0.2,-,신발 시기 ③ — 독 저항 ⚠제안 수치
 boots,pride,1,res_all_per_level,fine,0.001,0.002,-,신발 오만 — 한 칸 · 레벨당 모든 원소 저항(영웅 레벨 × 값 · 0.1% 단위) · 새 능력치 ⚠제안 수치 (2026-10-21 사용자 「모든 원소저항으로」)
-boots,gluttony,1,xp_gain_pct,flat,0.05,0.12,-,신발 폭식 ① — 경험치 획득 증가(본인 몫) · ~~절대값 피해 감소~~(그리브스 특성으로) ⚠제안 수치
 boots,gluttony,2,def_flat,band,2,6,0.3,신발 폭식 ② — 방어력 +수치 ⚠제안 수치
 boots,gluttony,3,res_all,flat,0.03,0.1,-,신발 폭식 ③ — 모든 원소 저항 ⚠제안 수치
 boots,greed,1,magic_find,flat,0.05,0.15,-,신발 탐욕 ① — 매직아이템 획득확률 ⚠제안 수치
 boots,greed,2,gold_find,flat,0.05,0.12,-,신발 탐욕 ② — 골드 획득 ⚠제안 수치
-boots,greed,3,item_find,flat,0.04,0.1,-,신발 탐욕 ③ — 아이템 드랍확률 ⚠제안 수치
+boots,greed,3,xp_gain_pct,flat,0.05,0.12,-,신발 탐욕 ③ — 경험치 획득 증가(본인 몫) ⚠제안 수치 (2026-10-30 아이템 드랍확률을 대체)

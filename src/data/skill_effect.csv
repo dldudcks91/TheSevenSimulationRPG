@@ -13,7 +13,7 @@ war_battlecry,1,apply,-,0,0,0,0,0,-,war_battlecry,effect_value,ldr,0,duration_se
 kni_resistshield,1,apply,-,0,0,0,0,0,-,kni_resistshield,effect_value,vit,0,duration_sec,vit,0,-,-,0,duration_sec,0.5,레벨 = 지속(2026-10-29 R384 — 저항 상한에 막혀 값 레벨이 헛돈다),-,-
 kni_holyshield,1,apply,-,0,0,0,0,0,-,kni_holyshield,effect_value,vit,0,duration_sec,vit,0,-,-,0,effect_value,0.025,-,-,-
 kni_charge,1,hit,-,1,2.5,0,0.1,2,-,-,mult_pct,str,0,proc_chance_pct,luck,0,-,-,0,mult_pct,0.25,-,-,-
-kni_rush,1,hit,-,4,2,0,0,0,-,-,mult_pct,str,0,hits,agi,0,-,-,0,hits,0.34,-,mult_pct,0.01
+kni_rush,1,hit,-,4,0.6,0,0,0,-,-,mult_pct,str,0,hits,agi,0,-,-,0,hits,0.34,-,mult_pct,0.01
 kni_enchant,1,apply,-,0,0,0,0,0,-,kni_enchant,effect_value,int,0,duration_sec,vit,0,-,-,0,effect_value,0.06,-,-,-
 kni_might,1,apply,-,0,0,0,0,0,-,kni_might,effect_value,ldr,0,-,-,0,-,-,0,effect_value,0.01,-,-,-
 kni_fanaticism,1,apply,-,0,0,0,0,0,-,kni_fanaticism,effect_value,ldr,0,-,-,0,-,-,0,effect_value,0.01,-,-,-
@@ -39,15 +39,15 @@ mag_deepfreeze,1,apply,-,0,0,0,0,0,-,mag_deepfreeze,duration_sec,vit,0,-,-,0,-,-
 mag_deepfreeze,2,apply,-,0,0,0,0,0,-,mag_deepfreeze_shatter,duration_sec,vit,0,-,-,0,-,-,0,hit_duration_sec,0.1,② 얼어 있던 적에게 스턴(shatter) · 레벨 = 스턴 시간(2026-10-29 R385),-,-
 mag_surge,1,apply,-,0,0,0,0,0,-,mag_surge,effect_value,luck,0,duration_sec,vit,0,-,-,0,effect_value,0.02,-,-,-
 mag_echo,1,apply,-,0,0,0,0,0,-,mag_echo,duration_sec,vit,0,-,-,0,-,-,0,duration_sec,0.5,-,-,-
-pri_judgment,1,hit,-,1,0.88,0,0,0,fixed,-,mult_pct,int,0,-,-,0,-,-,0,mult_pct,0.088,고정 피해 — 방어 · 저항 · 피해 감소를 안 받는다 · 배율 · 레벨당 ×0.4 (2.2 · 0.22 → 10-06 사용자 「데미지를 낮춰서」 · R221),-,-
+pri_judgment,1,hit,-,1,0.7,0,0,0,fixed,-,mult_pct,int,0,-,-,0,-,-,0,mult_pct,0.07,고정 피해 — 방어 · 저항 · 피해 감소를 안 받는다 · 배율 · 레벨당 ×0.4 (2.2 · 0.22 → 10-06 사용자 「데미지를 낮춰서」 · R221) · 0.88 → 0.7 (2026-10-30 R396 결투 측정 — 상대 방어가 오를수록 혼자 세진다),-,-
 pri_heal,1,heal,-,0,1.6,0,0,0,-,-,mult_pct,cha,0,-,-,0,-,-,0,mult_pct,0.16,-,-,-
 pri_grace,1,apply,-,0,0,0,0,0,-,pri_grace,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.025,-,-,-
-pri_haste,1,apply,-,0,0,0,0,0,-,pri_haste,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.02,-,-,-
+pri_haste,1,apply,-,0,0,0,0,0,-,pri_haste,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.05,-,-,-
 pri_cure,1,heal,-,0,3,0,0,0,-,-,mult_pct,cha,0,-,-,0,-,-,0,mult_pct,0.3,-,-,-
-pri_regen,1,apply,-,0,0,0,0,0,-,pri_regen,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.1,-,-,-
+pri_regen,1,apply,-,0,0,0,0,0,-,pri_regen,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.002,-,-,-
 pri_penitence,1,apply,-,0,0,0,0,0,-,pri_penitence,effect_value,cha,0,-,-,0,-,-,0,effect_value,0.025,-,-,-
-pri_bind,1,apply,-,0,0,0,0,0,-,pri_bind,effect_value,cha,0,-,-,0,-,-,0,effect_value,0.02,-,-,-
-pri_doom,1,apply,-,0,0,0,0,0,-,pri_doom,effect_value,cha,0,-,-,0,-,-,0,effect_value,0.015,-,-,-
+pri_bind,1,apply,-,0,0,0,0,0,-,pri_bind,effect_value,cha,0,-,-,0,-,-,0,effect_value,0.04,-,-,-
+pri_doom,1,apply,-,0,0,0,0,0,-,pri_doom,effect_value,cha,0,-,-,0,-,-,0,effect_value,0.02,-,-,-
 pri_summon,1,call,-,0,0,0,0,0,-,-,-,-,0,-,-,0,-,-,0,-,-,-,-,-
 mon_selfdestruct,1,fixed,-,1,0.3,0,0,0,-,-,-,-,0,-,-,0,-,-,0,-,-,-,-,-
 mon_hellfire,1,hit,-,10,0.4,0,0,0,fire,-,mult_pct,int,0,-,-,0,-,-,0,-,-,사탄 헬파이어 — 정신 집중 계속 닳기 · 타수 10 = 틱 수(× balance.csv:channel_tick_sec = 지속) · 배율 = 한 틱 몫 · 몬스터 전용이라 레벨 줄이 없다(R216) · ⚠값 임시,-,-

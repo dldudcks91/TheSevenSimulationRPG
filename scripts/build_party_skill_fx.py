@@ -108,7 +108,7 @@ def review_sheet(job: str, entries: list[dict], sprites: dict[str, Image.Image])
     draw = ImageDraw.Draw(sheet)
     font_path = Path("C:/Windows/Fonts/malgun.ttf")
     font = ImageFont.truetype(str(font_path), 16) if font_path.exists() else ImageFont.load_default()
-    with Image.open(ROOT / f"src/assets/art/faces/gpt/hero/{job}_1.webp") as original:
+    with Image.open(ROOT / f"src/assets/art/faces/gemini/hero/{job}_1.webp") as original:
         face = original.convert("RGBA").resize((101, 101), Image.Resampling.LANCZOS)
     for i, entry in enumerate(entries):
         x, y = i % 4 * 320, i // 4 * 350

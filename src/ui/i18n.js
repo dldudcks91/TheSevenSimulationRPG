@@ -71,6 +71,68 @@ export function t(key, params) {
 /* ═══════════════════ 사전 ═══════════════════ */
 
 const STRINGS = {
+    /* ── 제목 옆 짧은 도움말 ── */
+    'ui.helpFor': { ko: '{name} 도움말', en: 'Help for {name}' },
+    'hint.attributes': { ko: '영웅의 기본 능력치입니다. 전투 수치와 연구소 등록 효과의 바탕이 됩니다.', en: 'The hero’s base attributes. These determine combat values and Laboratory assignment effects.' },
+    'hint.colosseum': { ko: '상대 팀을 확인하고 선택한 Party로 겨룹니다. 영웅의 장비·스킬과 편성을 함께 준비하세요.', en: 'Inspect the opposing team and fight with your selected Party. Prepare its equipment, skills and formation together.' },
+    'hint.arena': { ko: '상대를 고르고 선택한 Party로 결투합니다. 전투 전에 상대 구성과 내 물약·전술을 확인하세요.', en: 'Choose an opponent and duel with the selected Party. Check both teams and your potions and tactics before starting.' },
+    'hint.opponents': { ko: '후보를 누르면 상대 팀을 확인할 수 있습니다. 새 상대는 후보 목록을 다시 고릅니다.', en: 'Select a candidate to inspect its team. New opponents refreshes the candidate list.' },
+    'hint.team': { ko: '선택한 Party의 영웅과 진형입니다. 편성 탭에서 인원과 자리를 바꿀 수 있습니다.', en: 'The heroes and formation of the selected Party. Change members and positions in Party.' },
+    'hint.team_code': { ko: '내 팀 코드를 만들어 공유하거나 받은 코드를 불러와 친선전 상대를 정합니다.', en: 'Create a code to share your team, or load a received code to choose a friendly opponent.' },
+    'hint.depart': { ko: '선택한 지역의 적과 출정 준비를 확인합니다. Party와 출정 방식을 고른 뒤 출발하세요.', en: 'Review this area’s enemies and your preparations. Choose a Party and departure mode, then deploy.' },
+    'hint.cell': { ko: '같은 지역 안에서 도전할 칸을 고릅니다. 칸마다 적 구성과 진행 조건을 확인하세요.', en: 'Choose a stage within this area. Check its enemies and progression requirements.' },
+    'hint.departure': { ko: '한 번 출정할지 반복할지 고릅니다. 출발하면 선택한 Party의 준비 상태가 적용됩니다.', en: 'Choose a single or repeating expedition. Deployment uses the selected Party’s preparation.' },
+    'hint.foes': { ko: '이 지역에 등장하는 적입니다. 초상과 스킬에 마우스를 올리면 자세히 볼 수 있습니다.', en: 'The enemies found in this area. Hover their portraits and skills for details.' },
+    'hint.story': { ko: '선택한 지역의 배경 이야기입니다.', en: 'The background story of the selected area.' },
+    'hint.tactics': { ko: '조건을 만족한 전술 효과가 파티에 적용됩니다. 남길 칸은 잠그고 나머지는 리롤할 수 있습니다.', en: 'A tactic affects the party when its condition is met. Lock slots to keep them and reroll the rest.' },
+    'hint.potions': { ko: '이 Party가 함께 쓸 물약과 순서입니다. 재고가 모자란 칸은 빈 채로 출발합니다.', en: 'The potions and drinking order shared by this Party. Slots without enough stock start empty.' },
+    'hint.reports': { ko: '지난 원정 결과를 골라 보상과 전투 기록을 확인합니다.', en: 'Select a past expedition to review its rewards and battle record.' },
+    'hint.drops': { ko: '이 원정에서 얻은 아이템입니다. 아이템에 마우스를 올리면 옵션을 확인할 수 있습니다.', en: 'Items obtained in this expedition. Hover an item to inspect its options.' },
+    'hint.contribution': { ko: '영웅별 전투 기여를 비교합니다. 가한·받은 피해와 처치·전투불능 기록을 함께 살펴보세요.', en: 'Compare each hero’s contribution. Review damage dealt and taken, kills and fallen-hero records together.' },
+    'hint.battle_totals': { ko: '현재까지 재생된 전투의 가한·받은 피해 누계입니다. 요약과 스킬별 보기로 비교할 수 있습니다.', en: 'Damage dealt and taken during the battle played so far. Switch between summary and per-skill views to compare.' },
+    'hint.equipment': { ko: '선택한 영웅이 착용한 장비입니다. 장비에 마우스를 올리면 옵션과 사용 가능한 조작을 확인할 수 있습니다.', en: 'Equipment worn by the selected hero. Hover an item to inspect its options and available actions.' },
+    'hint.sins': { ko: '착용 장비의 죄종 구성입니다. 영웅의 죄종과 장비의 죄종은 별개입니다.', en: 'The Sins of the equipped items. A hero’s Sin and equipment Sins are separate.' },
+    'hint.skills': { ko: '이 영웅이 사용하는 스킬입니다. 스킬 그림에 마우스를 올리면 효과를 확인할 수 있습니다.', en: 'Skills used by this hero. Hover a skill icon to inspect its effects.' },
+    'hint.combat_stats': { ko: '장비와 스킬 효과가 반영된 전투 수치입니다. 수치 이름에 마우스를 올리면 설명을 볼 수 있습니다.', en: 'Combat values including equipment and skill effects. Hover a stat name for its explanation.' },
+    'hint.auto_salvage': { ko: '이 Party의 원정에서 자동 분해할 장비를 정합니다. 남길 부위와 희귀도를 확인하세요.', en: 'Choose which drops this Party automatically salvages. Check the slots and rarities you want to keep.' },
+    'hint.salvage': { ko: '고른 장비를 분해합니다. 남길 장비가 포함되지 않았는지 확인하세요.', en: 'Salvage the selected equipment. Check that no items you want to keep are included.' },
+    'hint.inventory': { ko: '보유한 아이템을 확인하고 장착하거나 정리합니다. 아이템에 마우스를 올리면 자세히 볼 수 있습니다.', en: 'Inspect, equip and manage owned items. Hover an item for details.' },
+    'hint.stash': { ko: '따로 보관할 아이템을 두는 곳입니다. 아이템을 가방과 보관함 사이로 옮길 수 있습니다.', en: 'A place to set items aside. Move items between the bag and stash.' },
+    'hint.skill_slots': { ko: '스킬을 얻은 경로별 사용 칸입니다. 빈 칸에는 스킬을 여는 조건이 표시됩니다.', en: 'Skill slots grouped by how the skills are learned. Empty slots show their unlock requirements.' },
+    'hint.skill_tree': { ko: '선택한 영웅의 스킬을 배우고 강화합니다. 각 칸에서 효과와 필요한 포인트를 확인하세요.', en: 'Learn and improve the selected hero’s skills. Inspect each node’s effects and required points.' },
+    'hint.skill_points': { ko: '스킬을 배우고 강화하는 데 쓰는 포인트입니다. 배분할 트리와 남은 포인트를 확인하세요.', en: 'Points used to learn and improve skills. Check the available trees and remaining points.' },
+    'hint.construction': { ko: '건물을 골라 랭크를 올리면 새 기능과 상한이 열립니다. 상세에서 비용과 조건을 확인하세요.', en: 'Select buildings and raise their ranks to unlock features and limits. Check costs and requirements in the details.' },
+    'hint.building': { ko: '이 건물이 연 기능과 다음 랭크 정보를 확인합니다. 건설하려면 표시된 조건과 재료가 필요합니다.', en: 'Review this building’s unlocked features and next rank. Construction requires the listed conditions and materials.' },
+    'hint.building_ranks': { ko: '각 랭크에서 열리는 기능과 조건입니다. 이미 지은 랭크와 앞으로 지을 랭크를 비교할 수 있습니다.', en: 'Features and requirements for each rank. Compare completed ranks with future upgrades.' },
+    'hint.next_rank': { ko: '다음 랭크의 효과·조건·비용입니다. 필요한 재료를 갖추면 건설할 수 있습니다.', en: 'The next rank’s effects, requirements and cost. Build it when the required materials are ready.' },
+    'hint.advance': { ko: '조건을 갖춘 영웅의 전직 계열을 고릅니다. 확정하기 전에 계열과 사용할 스킬을 확인하세요.', en: 'Choose an advancement path for an eligible hero. Review the path and its skills before confirming.' },
+    'hint.resource': { ko: '각 줄의 생산과 연구를 관리합니다. 줄 카드는 현황을, 연구 칸은 다음 효과와 비용을 보여 줍니다.', en: 'Manage each line’s production and research. Line cards show progress; research nodes show upcoming effects and costs.' },
+    'hint.resource_next': { ko: '선택한 연구의 다음 레벨입니다. 비용과 시간을 확인한 뒤 연구를 시작합니다.', en: 'The selected research node’s next level. Review its cost and duration before starting.' },
+    'hint.resource_levels': { ko: '이 연구의 레벨별 효과입니다. 현재 효과와 다음 레벨에서 달라지는 값을 비교하세요.', en: 'Effects at each research level. Compare current effects with the changes at the next level.' },
+    'hint.resource_lines': { ko: '선택한 줄의 생산·진행 상태입니다. 건설과 연구로 해당 줄의 기능을 넓힐 수 있습니다.', en: 'Production and progress for the selected line. Buildings and research expand its capabilities.' },
+    'hint.resource_effects': { ko: '이 줄에 등록한 영웅들의 능력치로 더해지는 효과입니다. 배치를 바꾸면 적용 값도 달라집니다.', en: 'Effects added by the attributes of heroes registered to this line. Changing assignments changes the applied values.' },
+    'hint.assignment': { ko: '이 줄에 효과를 더할 영웅을 등록합니다. 등록된 영웅을 다시 누르면 해제할 수 있습니다.', en: 'Register a hero to add effects to this line. Select a registered hero again to remove the assignment.' },
+    'hint.minigame': { ko: '선택한 자원 줄의 미니게임입니다. 화면의 조작 안내를 확인하고 시작하세요.', en: 'A minigame for the selected resource line. Review its controls before starting.' },
+    'hint.explore': { ko: '탐험할 장소와 Party를 정해 보냅니다. 완료 후 돌아온 편성의 보상을 받을 수 있습니다.', en: 'Choose an exploration location and Party. Claim rewards when the exploring party returns.' },
+    'hint.recruit': { ko: '후보 영웅을 확인하고 골드를 내어 고용합니다. 교체하기 전에 남길 후보는 보관할 수 있습니다.', en: 'Inspect candidate heroes and spend gold to hire them. Keep candidates you want to save before refreshing.' },
+    'hint.visitors': { ko: '시간이 지나 찾아온 영웅과 보관한 후보입니다. 카드를 골라 고용하거나 떠나보낼 수 있습니다.', en: 'Heroes who arrived over time and candidates you kept. Select a card to hire or dismiss a candidate.' },
+    'hint.commissions': { ko: '의뢰를 받아 목표를 채우고 보상을 받습니다. 의뢰 카드에서 조건과 진행도를 확인하세요.', en: 'Accept commissions, complete their objectives and claim rewards. Check each card’s conditions and progress.' },
+    'hint.gamble': { ko: '판돈을 고르고 슬롯을 돌립니다. 심볼 조합에 따른 배당은 배당표에서 확인할 수 있습니다.', en: 'Choose a stake and spin the slots. The payout table shows rewards for symbol combinations.' },
+    'hint.payouts': { ko: '당첨 조합과 배당입니다. 판돈과 함께 확인하면 한 판의 보상을 비교할 수 있습니다.', en: 'Winning combinations and their payouts. Compare them with your chosen stake.' },
+    'hint.forge_make': { ko: '장비 부위나 물약을 골라 제작합니다. 만들 항목의 재료와 골드 비용을 확인하세요.', en: 'Choose an equipment slot or potion to craft. Check its material and gold costs.' },
+    'hint.forge_up': { ko: '장비를 골라 강화합니다. 다음 단계의 변화와 필요한 재료를 확인한 뒤 진행하세요.', en: 'Select equipment to upgrade. Review the next step’s changes and required materials.' },
+    'hint.forge_synth': { ko: '같은 종류의 아래 단계 재료를 써서 위 단계 재료를 만듭니다. 합성에 쓴 재료는 소모됩니다.', en: 'Combine lower-tier materials into a higher tier of the same material. Combining consumes the input materials.' },
+    'hint.forge_craft': { ko: '크래프트는 준비 중입니다. 현재는 제작·강화·합성을 이용할 수 있습니다.', en: 'Craft is in development. Smithing, upgrading and combining are currently available.' },
+    'hint.potion_stock': { ko: '현재 가진 물약의 종류와 개수입니다. 편성 탭에서 Party의 물약 칸에 넣을 수 있습니다.', en: 'Potion types and quantities currently in stock. Configure each Party’s potion belt in Party.' },
+    'hint.trade': { ko: '교역 기능은 준비 중입니다. 현재 판매 중인 상품은 상단에서 확인할 수 있습니다.', en: 'Trading is in development. Browse currently available goods in the shop.' },
+    'hint.special': { ko: '특수 상단 기능은 준비 중입니다.', en: 'The special trader is in development.' },
+    'hint.help': { ko: '폴더를 고르거나 궁금한 말을 검색해 조작법과 게임 규칙을 찾아봅니다.', en: 'Choose a folder or search a term to find controls and game rules.' },
+    'hint.codex': { ko: '몬스터·아이템·스킬 자료를 살펴봅니다. 각 항목에 마우스를 올리면 자세한 정보를 볼 수 있습니다.', en: 'Browse monster, item and skill references. Hover entries for more information.' },
+    'hint.settings': { ko: '그림체와 전투 연출 등 화면 설정을 조절합니다.', en: 'Adjust display preferences such as art style and battle effects.' },
+    'hint.mail': { ko: '도착한 보상을 수령합니다. 받은 첨부물은 표시된 Party의 보유 아이템에 추가됩니다.', en: 'Claim delivered rewards. Attachments are added to the items of the indicated Party.' },
+    'hint.dismiss': { ko: '선택한 영웅을 로스터에서 해고합니다. 확인 전에 대상 영웅을 다시 살펴보세요.', en: 'Dismiss the selected hero from the roster. Review the chosen hero before confirming.' },
+    'hint.skill_order': { ko: '스킬 줄을 드래그해 사용 우선순위를 정합니다. 먼저 쓰고 싶은 스킬을 위에 놓으세요.', en: 'Drag skill rows to set their priority. Place skills you want to use first higher in the list.' },
+    'hint.frozen': { ko: '다른 탭에서 저장한 진행을 보호하기 위해 이 탭의 플레이가 멈췄습니다. 안내에 따라 다시 불러오세요.', en: 'Play in this tab has stopped to protect progress saved by another tab. Follow the instructions to reload.' },
     /* ── 셸 ── */
     'app.title': { ko: 'The Seven Simulation RPG — 화면 목업', en: 'The Seven Simulation RPG — Screen Mockup' },
     // 세로 창 막 (SCREEN_DESIGN §2 · ADR-0371)
@@ -153,12 +215,12 @@ const STRINGS = {
 
     'pro.s1.h': { ko: '왕좌', en: 'The Throne' },
     'pro.s1.b': {
-        ko: '지옥에는 왕이 있었다.\n\n'
+        ko: '지옥에는 왕이 있었습니다.\n\n'
             + '바알. 대악마.\n'
             + '이 땅의 모든 것은 그의 것이었고,\n'
-            + '7개의 감정을 나누어 부하에게 깃들게 했다.\n\n'
+            + '7개의 감정을 나누어 부하에게 깃들게 했습니다.\n\n'
             + '분노, 시기, 탐욕, 나태, 폭식, 색욕, 오만.\n\n'
-            + '그것은 지옥을 유지하는 균형이었다.',
+            + '그것은 지옥을 유지하는 균형이었습니다.',
         en: 'Hell had a king.\n\n'
             + 'Baal. Archdemon.\n'
             + 'Everything in this land was his,\n'
@@ -169,13 +231,13 @@ const STRINGS = {
 
     'pro.s2.h': { ko: '배신의 밤', en: 'Night of Betrayal' },
     'pro.s2.b': {
-        ko: '그 밤, 7개의 칼이 등에 꽂혔다.\n\n'
-            + '뒤를 돌아봤다.\n'
-            + '전부 아는 얼굴이었다.\n\n'
-            + '싸웠다.\n'
-            + '하지만 힘의 반이 이미 빠져나간 뒤였다.\n'
-            + '묶여있던 것이 풀려있었다. 누군가가 열쇠를 넘겼다.\n\n'
-            + '밀려난다. 발밑이 무너진다.',
+        ko: '그 밤, 7개의 칼이 등에 꽂혔습니다.\n\n'
+            + '뒤를 돌아봤습니다.\n'
+            + '전부 아는 얼굴이었습니다.\n\n'
+            + '싸웠습니다.\n'
+            + '하지만 힘의 반이 이미 빠져나간 뒤였습니다.\n'
+            + '묶여 있던 것이 풀려 있었습니다. 누군가가 열쇠를 넘겼습니다.\n\n'
+            + '밀려납니다. 발밑이 무너집니다.',
         en: 'That night, seven blades sank into his back.\n\n'
             + 'He looked back.\n'
             + 'Every face was one he knew.\n\n'
@@ -187,18 +249,18 @@ const STRINGS = {
 
     'pro.s3.h': { ko: '추락', en: 'The Fall' },
     'pro.s3.b': {
-        ko: '떨어졌다.\n\n'
-            + '지옥의 빛이 멀어진다.\n'
-            + '힘이 빠져나간다.\n'
-            + '왕좌가, 부하들의 얼굴이, 그 밤의 순서가 — 흐려진다.\n\n'
+        ko: '떨어졌습니다.\n\n'
+            + '지옥의 빛이 멀어집니다.\n'
+            + '힘이 빠져나갑니다.\n'
+            + '왕좌가, 부하들의 얼굴이, 그 밤의 순서가 — 흐려집니다.\n\n'
             + '누가 칼을 들었는지.\n'
             + '누가 먼저 등을 돌렸는지.\n'
             + '7개였는지, 아니었는지.\n\n'
             + '확실한 건 하나.\n\n'
-            + '배신당했다.\n\n'
+            + '배신당했습니다.\n\n'
             + '그리고 — 몸에 무언가가 새겨지는 감각.\n'
-            + '뜨겁다. 살이 타는 것 같다.\n'
-            + '낙인이다. 이 추락이 남긴 저주.',
+            + '뜨겁습니다. 살이 타는 것 같습니다.\n'
+            + '낙인입니다. 이 추락이 남긴 저주.',
         en: 'He fell.\n\n'
             + 'The light of Hell grows distant.\n'
             + 'His strength drains away.\n'
@@ -215,23 +277,23 @@ const STRINGS = {
 
     'pro.s4.h': { ko: '마을', en: 'The Village' },
     'pro.s4.b': {
-        ko: '눈을 떴을 때, 누군가가 물을 먹이고 있었다.\n'
-            + '늙은 인간이다.\n\n'
-            + '몸이 무겁다. 배가 고프다. 숨이 가쁘다.\n'
-            + '전부 처음이다. 전부 불쾌하다.\n\n'
-            + '며칠이 지났다.\n'
-            + '인간들이 음식을 나눠줬다. 자기들도 부족하면서.\n'
-            + '다친 곳을 감싸줬다. 이름도 모르는 자에게.\n\n'
-            + '이해할 수 없다.\n'
-            + '왜 이것들은 나를 살리려 하는가.\n\n'
-            + '지옥에서는 쓰러진 자를 밟고 지나간다.\n'
-            + '약한 것은 버려진다. 그것이 당연하다.\n\n'
-            + '이것들은 당연한 것을 하지 않는다.\n\n'
-            + '이름은 기억한다. 바알.\n'
+        ko: '눈을 떴을 때, 누군가가 물을 먹이고 있었습니다.\n'
+            + '늙은 인간입니다.\n\n'
+            + '몸이 무겁습니다. 배가 고픕니다. 숨이 가쁩니다.\n'
+            + '전부 처음입니다. 전부 불쾌합니다.\n\n'
+            + '며칠이 지났습니다.\n'
+            + '인간들이 음식을 나눠줬습니다. 자기들도 부족하면서.\n'
+            + '다친 곳을 감싸줬습니다. 이름도 모르는 자에게.\n\n'
+            + '이해할 수 없습니다.\n'
+            + '왜 이들은 저를 살리려 하는 걸까요?\n\n'
+            + '지옥에서는 쓰러진 자를 밟고 지나갑니다.\n'
+            + '약한 것은 버려집니다. 그것이 당연합니다.\n\n'
+            + '이들은 당연한 것을 하지 않습니다.\n\n'
+            + '이름은 기억합니다. 바알.\n'
             + '왕이었다는 것도. 빼앗겼다는 것도.\n'
-            + '하지만 그 밤이 선명하지 않다.\n'
+            + '하지만 그 밤이 선명하지 않습니다.\n'
             + '7개의 칼. 아는 얼굴들. 무너지는 발밑.\n'
-            + '그 사이의 것들이 — 뒤섞여 있다.',
+            + '그 사이의 것들이 — 뒤섞여 있습니다.',
         en: 'When he opened his eyes, someone was giving him water.\n'
             + 'An old human.\n\n'
             + 'His body is heavy. He is hungry. His breath is short.\n'
@@ -253,17 +315,17 @@ const STRINGS = {
 
     'pro.s5.h': { ko: '불길', en: 'Flames' },
     'pro.s5.b': {
-        ko: '그 날 밤, 지평선이 붉어졌다.\n\n'
+        ko: '그 날 밤, 지평선이 붉어졌습니다.\n\n'
             + '불길. 군세. 분노의 기운.\n'
-            + '이 기운을 안다. 잊을 수 없다.\n\n'
+            + '이 기운을 압니다. 잊을 수 없습니다.\n\n'
             + '사탄.\n'
-            + '바알이 지옥에서 추방한 놈.\n'
-            + '왕이 바닥에 있다는 걸 감지한 것이다.\n\n'
-            + '마을이 불탄다. 인간들이 비명을 지른다.\n\n'
-            + '바알은 일어섰다.\n'
-            + '더 이상 직접 싸울 힘은 없다.\n'
-            + '하지만 지휘하는 법은 잊지 않았다.\n\n'
-            + '선술집에서 만난 용병들에게 명했다.',
+            + '바알이 지옥에서 추방한 자.\n'
+            + '왕이 바닥에 있다는 걸 감지한 것입니다.\n\n'
+            + '마을이 불탑니다. 인간들이 비명을 지릅니다.\n\n'
+            + '바알은 일어섰습니다.\n'
+            + '더 이상 직접 싸울 힘은 없습니다.\n'
+            + '하지만 지휘하는 법은 잊지 않았습니다.\n\n'
+            + '선술집에서 만난 용병들에게 명했습니다.',
         en: 'That night, the horizon turned red.\n\n'
             + 'Flames. An army. The air of wrath.\n'
             + 'He knows this air. He cannot forget it.\n\n'
@@ -277,7 +339,7 @@ const STRINGS = {
             + 'He gave his order to the mercenaries he had met at the tavern.',
     },
     /* 마지막 씬에만 선다 — 본문과 층이 다르다 (SCREEN_DESIGN §3-1) */
-    'pro.s5.q': { ko: '"저놈들을 쓸어라. 내가 뒤에서 이끈다."', en: '"Sweep them away. I will lead from behind."' },
+    'pro.s5.q': { ko: '"저들을 쓸어버리세요. 제가 뒤에서 이끌겠습니다."', en: '"Sweep them away. I will lead from behind."' },
     'pro.end': { ko: 'Chapter 1. 분노 / 불타는 전장', en: 'Chapter 1. Wrath / Burning Battlefield' },
 
     /* ── 원정 (실동작) ── */
@@ -309,8 +371,7 @@ const STRINGS = {
     'exp.sinBoss': { ko: '{sin}의 {name}', en: '{name} of {sin}' },
     /* 출발 칸 줄의 라벨 — 출정 창 출정 방식 칸 맨 위 [2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0437 — 위험도 줄(ADR-0104)을 걷은 자리] */
     'exp.cell.h': { ko: '출발 칸', en: 'Starting stage' },
-    // 원정 중 교체 [2026-09-21 · R130 · SCREEN_DESIGN §4 · ADR-0272] — 보스전 중이면 다음 런부터 · 교체로 도는 원정의 전술이 꺼졌다(효과 줄을 싣는다)
-    'exp.lock.boss': { ko: '보스전 중 — 바꾼 것은 다음 런부터 적용', en: 'Boss fight — changes apply next run' },
+    // 원정 중 교체 [2026-09-21 · R130 · SCREEN_DESIGN §4 · ADR-0272] — 교체로 도는 원정의 전술이 꺼졌다(효과 줄을 싣는다)
     'exp.tactic.off': { ko: '전술 꺼짐 — {eff}', en: 'Tactic off — {eff}' },
     // 반복 원정 [개정 2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0432 — PLAN_stage_segments D8] — 켬 = 장소 안 순환 · 끔 = 이길 때마다 다음 칸. 어느 쪽이든 원정은 멈추지 않는다.
     //   버튼 글자는 기획 용어(반복 켬 · 끔)라 그대로다 — 뜻은 툴팁(`exp.repeat.tip`)과 도움말(`exp.repeat.sub`)이 든다
@@ -377,6 +438,33 @@ const STRINGS = {
     'mail.claim': { ko: '받기', en: 'Claim' },
     'mail.claimAll': { ko: '모두 받기', en: 'Claim All' },
     'mail.claimed': { ko: '우편 {n}통 수령', en: 'Claimed {n} mail' },
+    // 상단바 종 — 다음 할 일과 처리 대기 결과 (ADR-0969). 배지는 안내를 제외한 대기 건수다.
+    'nt.h': { ko: '알림', en: 'Notifications' },
+    'nt.folder.notifications': { ko: '알림', en: 'Notifications' },
+    'nt.folder.missions': { ko: '미션', en: 'Missions' },
+    'nt.folder.achievements': { ko: '업적', en: 'Achievements' },
+    'nt.achievementsLocked': { ko: '업적 · 준비 중', en: 'Achievements · Coming soon' },
+    'nt.missionsEmpty': { ko: '진행 중인 미션 없음', en: 'No active missions' },
+    'nt.count': { ko: '알림 · 처리 대기 {n}건', en: { one: 'Notifications · {n} pending task', other: 'Notifications · {n} pending tasks' } },
+    'nt.next': { ko: '다음 할 일', en: 'Next step' },
+    'nt.empty': { ko: '대기 중인 알림 없음', en: 'No pending tasks' },
+    'nt.shortcut': { ko: '바로가기', en: 'Go to' },
+    'nt.check': { ko: '확인', en: 'OK' },
+    'nt.arrived': { ko: '새 알림 {n}건', en: { one: '{n} new notification', other: '{n} new notifications' } },
+    'nt.kind.commission': { ko: '의뢰 목표 달성 · 보상 수령 가능', en: 'Commission goal met · Reward ready' },
+    'nt.kind.explore': { ko: '탐험 완료 · 결과 수령 가능', en: 'Exploration complete · Results ready' },
+    'nt.kind.join': { ko: '가입 희망 영웅 도착', en: 'Hero awaiting recruitment' },
+    'nt.guide.firstExpedition': { ko: '첫 원정 출발', en: 'Start your first expedition' },
+    'nt.guide.buildShop': { ko: '상단 건설 · 물품 구매 개방', en: 'Build the Trading House · Unlock purchases' },
+    'nt.guide.buildTavern': { ko: '선술집 건설 · 의뢰 게시판 개방', en: 'Build the Tavern · Unlock commissions' },
+    'nt.guide.earnGold': { ko: '원정으로 건설 자금 마련', en: 'Earn building funds on an expedition' },
+    'nt.guide.acceptCommission': { ko: '첫 의뢰 수락', en: 'Accept your first commission' },
+    'nt.guide.progressCommission': { ko: '원정을 진행해 의뢰 목표 달성', en: 'Progress your commission on an expedition' },
+    'nt.guide.retryPreparation': { ko: '원정 준비 점검', en: 'Review expedition preparation' },
+    'nt.retry.detail': {
+        ko: 'Party {party} · {stage} · 최근 {n}회 연속 미클리어. 장비·마스터리·물약을 점검하고, 이전 구간에서 파밍해 보세요.',
+        en: 'Party {party} · {stage} · {n} recent runs without a clear. Review gear, mastery and potions, or farm an earlier stage.',
+    },
     // 도움말이 받는 힌트 — 인게임 패널에는 규칙 문구를 안 둔다 (SCREEN_DESIGN §12)
     'ch.salvageHint': { ko: '장비를 우클릭해 [잠금]을 누르면 잠기거나 풀립니다. 잠근 장비는 분해되지 않습니다. [분해]를 누르면 분해함이 뜹니다. 장비를 눌러 함에 올리거나 등급 · 레벨 · 베이스 열에서 고르면 맞는 장비가 바로 함에 오르고, [분해하기]로 가루를 얻으면 필터가 풀립니다. 열을 여럿 고르면 모든 열에 맞는 것만 오르니, 베이스 옵션이 높은 장비는 베이스 열로 남길 수 있습니다. [자동 분해]는 부대마다 따로 정합니다. 등급 × 부위 칸마다 보존 · 베이스 · 분해를 고르고, 레벨 조건을 켜면 부대에서 가장 낮은 영웅 레벨보다 많이 낮은 장비를 분해합니다. 레벨 조건과 그 칸을 모두 만족해야 보존하고, [베이스] 칸은 베이스 옵션이 그 부위 문턱 이상인 것만 보존합니다. 유니크 · 크래프트는 언제나 보존합니다. 새로 들어오는 장비에만 걸리니 이미 가진 것은 [지금 인벤토리에 적용]을 눌러야 분해됩니다. 지금 규칙을 프리셋에 저장해 두면 다른 부대에서 불러올 수 있습니다',
         en: 'Right-click gear and press [Lock] to lock or unlock it. Locked gear is never salvaged. Press [Salvage] to open the Salvage Box: click gear to put it in, or pick from the rarity, level and base columns and the matching gear goes in at once — [Salvage now] turns it to dust and clears the picks. With several columns picked, only gear matching every column goes in, so you can keep high base-option gear out with the base column. [Auto salvage] is set per party. For each rarity × slot cell choose Keep, Base or Salvage, and turn on the level condition to salvage gear far below the party’s lowest hero level. Gear is kept only when it meets both the level condition and its cell; a Base cell keeps only gear whose base option is at or above that slot’s threshold. Uniques and crafted gear are always kept. Only new gear is checked — press [Apply to inventory now] to salvage what you already hold. Save the rules to a preset to load them on another party' },
@@ -713,10 +801,6 @@ const STRINGS = {
     'dp.post.log': { ko: '벌목', en: 'Logging' },
     // 연구소 줄 「수색」 — 단계 없는 칸 하나 (SCREEN_DESIGN §8 · ADR-0672 · 2026-10-19)
     'dp.post.visit': { ko: '수색', en: 'Search' },
-    'dp.visit.every': { ko: '{h}시간마다 한 명', en: 'One every {h}h' },
-    'dp.visit.rare': { ko: '레어 {r}%', en: 'Rare {r}%' },
-    'dp.visit.closed': { ko: '닫힘', en: 'Closed' },
-    'dp.visit.slots': { ko: '칸 {n}', en: '{n} slots' },
     // 연구소 줄 · 지점 · 연구 (2026-10-21 · SCREEN_DESIGN §8 · ADR-0684 · R298)
     'dp.post.train': { ko: '훈련', en: 'Training' },
     'dp.post.gamble': { ko: '도박장', en: 'Gambling Den' },
@@ -741,17 +825,31 @@ const STRINGS = {
     'dp.res.busy': { ko: '연구 중 {name}', en: 'Researching {name}' },
     'dp.res.started': { ko: '{name} 연구 시작', en: 'Started {name}' },
     'dp.res.canceled': { ko: '연구 취소 — 비용 반환', en: 'Research canceled — cost refunded' },
-    'dp.line.h': { ko: '이 줄', en: 'This Line' },
-    'dp.train.cap': { ko: '상한 Lv {n}', en: 'Cap Lv {n}' },
-    'dp.gamble.rate': { ko: '골드 {n}/시간', en: 'Gold {n}/h' },
-    'dp.fx.h': { ko: '등록 효과', en: 'Hero Effects' },   // 고른 줄의 소제목 — 아래 영웅 카드 · 효과 숫자 (ADR-0700 — ~~Assigned heroes~~ 카드가 서며 영웅 목록 제목처럼 겹쳐 읽혔다)
-    'dp.fx.none': { ko: '등록한 영웅 없음', en: 'No heroes assigned' },
-    'dp.fx.zero': { ko: '효과 없음', en: 'No effect' },
-    'dp.fx.speed': { ko: '속도 ×{v}', en: 'Speed ×{v}' },
-    'dp.fx.burst': { ko: '대박 +{v}%', en: 'Jackpot +{v}%' },
-    'dp.fx.research': { ko: '연구 속도 ×{v}', en: 'Research ×{v}' },
-    'dp.fx.quality': { ko: '품질 +{v}%', en: 'Quality +{v}%' },
-    'dp.fx.cost': { ko: '연구 비용 −{v}%', en: 'Research cost −{v}%' },
+    /* 고른 줄 (SCREEN_DESIGN §8 · ADR-0971 — ~~「이 줄」 `dp.line.h` · 「속도 ×{v}」~~) — 머리 아래 하는 일 한 줄 → 지금 내는 것(소제목 = 그 내용의 이름) → 등록 효과 표 */
+    'dp.line.desc.res': { ko: '철광석 · 약초 · 목재를 시간마다 생산합니다', en: 'Produces ore, herbs and timber every hour' },
+    'dp.line.desc.visit': { ko: '시간마다 영웅 한 명이 선술집에 찾아옵니다', en: 'A hero comes to the tavern every few hours' },
+    'dp.line.desc.train': { ko: '등록한 영웅이 시간마다 경험치를 받습니다', en: 'Assigned heroes gain XP every hour' },
+    'dp.line.desc.gamble': { ko: '시간마다 골드를 법니다', en: 'Earns gold every hour' },
+    'dp.out.h.res': { ko: '시간당 생산', en: 'Per Hour' },
+    'dp.out.h.visit': { ko: '영웅 도착', en: 'Hero Arrivals' },
+    'dp.out.h.train': { ko: '훈련 상한', en: 'Training Cap' },
+    'dp.out.h.gamble': { ko: '시간당 생산', en: 'Per Hour' },
+    'dp.out.interval': { ko: '도착 간격', en: 'Interval' },
+    'dp.out.hours': { ko: '{h}시간', en: '{h}h' },
+    'dp.out.rare': { ko: '레어 확률', en: 'Rare chance' },
+    'dp.out.waiting': { ko: '대기 칸', en: 'Waiting slots' },
+    'dp.out.cap': { ko: '상한 레벨', en: 'Level cap' },
+    'dp.out.gold': { ko: '골드', en: 'Gold' },
+    'dp.fx.h': { ko: '등록 효과', en: 'Hero Effects' },   // 고른 줄의 소제목 — 아래 영웅 카드 · 효과 표 (ADR-0700 — ~~Assigned heroes~~ 카드가 서며 영웅 목록 제목처럼 겹쳐 읽혔다)
+    // 효과 표의 이름 — 속도는 그 줄이 내는 것의 이름(ADR-0971) · 값은 +n% / −n%
+    'dp.fx.speed.res': { ko: '생산량', en: 'Output' },
+    'dp.fx.speed.visit': { ko: '도착 속도', en: 'Arrival speed' },
+    'dp.fx.speed.train': { ko: '경험치', en: 'XP' },
+    'dp.fx.speed.gamble': { ko: '골드', en: 'Gold' },
+    'dp.fx.burst': { ko: '대박 확률', en: 'Jackpot chance' },
+    'dp.fx.quality': { ko: '레어 확률', en: 'Rare chance' },
+    'dp.fx.research': { ko: '연구 속도', en: 'Research speed' },
+    'dp.fx.cost': { ko: '연구 비용', en: 'Research cost' },
     // 도움말 연구소 섹션 (SCREEN_DESIGN §12 · 2026-10-21 R298 — ~~벤치(파견 대기)~~ 문장 대체) — 탐험 `ex.help` · 결투장 `cs.help` 와 같은 도움말 전용 문장
     'dp.help': {
         ko: '줄은 <b>영웅이 없어도</b> 시간마다 생산합니다 — 게임을 꺼 둔 동안에도(최대 {h}시간 · 수색은 칸이 찰 때까지)<br>'
@@ -793,12 +891,15 @@ const STRINGS = {
 
     /* 상점 (SCREEN_DESIGN §8-3 · ADR-0223) — 패널 머리는 `dp.post.trade`(상단) 재사용. 상단은 탭 없이 장비 목록 하나(2026-09-30),
        오른쪽 특수상단 카드. 남은 시간은 **정보**다 — 재촉하는 말을 안 쓴다 (base_expedition_design §2-6) */
-    // 상단 목록 교체 — 고른 영웅의 레벨({lv})로 다시 굴린다 · 무료는 선술집처럼 쿨다운 · 유료는 두 배씩 (§8-3 · game.shopReroll · ADR-0648)
-    'td.reroll': { ko: '교체 · Lv {lv} ({g} 골드)', en: 'Refresh · Lv {lv} ({g} gold)' },
-    'td.reroll.free': { ko: '교체 · Lv {lv} (무료)', en: 'Refresh · Lv {lv} (free)' },
+    // 상단 목록 교체 — 고른 영웅의 레벨로 다시 굴린다 · 무료는 선술집처럼 쿨다운 · 유료는 두 배씩 (§8-3 · game.shopReroll · ADR-0648)
+    //   버튼은 행동과 값만 · 고른 영웅의 이름({name}) · 레벨({lv})은 버튼 왼쪽 따로 선 글자 (ADR-0965)
+    'td.reroll': { ko: '교체 ({g} 골드)', en: 'Refresh ({g} gold)' },
+    'td.reroll.free': { ko: '교체 (무료)', en: 'Refresh (free)' },
+    'td.reroll.who': { ko: '{name} Lv {lv} 적용', en: 'For {name} Lv {lv}' },
     // 상단 제목 옆 `?` — 올리면 뜨는 두 문장 · {h} = [balance.csv:shop_refresh_hours] (ADR-0464 · ADR-0648)
     'td.reroll.help': { ko: '교체하면 고른 영웅 레벨에 맞춰 다시 들어옵니다. 무료 교체 뒤 {h}시간이 지나면 다시 무료.', en: 'A refresh restocks at the selected hero\'s level. After a free refresh, it is free again in {h} hours.' },
     'td.special': { ko: '특수상단', en: 'Visiting trader' },
+    'td.trade': { ko: '교역소', en: 'Trading Post' },
     'td.leave': { ko: '떠나기까지 {t}', en: 'Leaves in {t}' },
     'td.next': { ko: '다음 상인까지 {t}', en: 'Next trader in {t}' },
     'td.buy': { ko: '구매', en: 'Buy' },
@@ -813,14 +914,14 @@ const STRINGS = {
 
     /* 의뢰 게시판 (SCREEN_DESIGN §14 · 자리는 선술집 탭 §8-1 · ADR-0352) — 제목은 `nav.commission` 재사용(옛 탭 라벨이 패널 제목으로 내려왔다).
        ⚠ **종류 · 등급 이름은 여기 없다** — `commission_kind.csv` · `commission_grade.csv` 의 `_kr`/`_en` 쌍이고 화면은 `L()` 로 푼다.
-       남는 것은 화면 라벨 · **목표 틀**(어휘마다 하나 — `{t}` = 대상 이름 · `{n}` = 목표 수) · 플래시다. `cm.fame` · `cm.fameMax` · `cm.claimedUp` = 명성 레벨(제목 줄 · 오른 수령 플래시 — §14 · ADR-0945 · R375) */
+       남는 것은 화면 라벨 · **목표 틀**(어휘마다 하나 — `{t}` = 대상 이름 · `{n}` = 목표 수) · 플래시다. `cm.fameLv` · `cm.fameMax` · `cm.claimedUp` = 명성 레벨(게시판 위 막대 줄 · 오른 수령 플래시 — §14 · ADR-0958 · R375) */
     'cm.accept': { ko: '수락', en: 'Accept' },
     'cm.claim': { ko: '수령', en: 'Claim' },
     'cm.drop': { ko: '포기', en: 'Abandon' },
     'cm.dropConfirm': { ko: '정말 포기', en: 'Confirm abandon' },
     'cm.slots': { ko: '받음 {n} / {max}', en: 'Taken {n} / {max}' },
-    'cm.fame': { ko: '명성 Lv {lv} · {n} / {next}', en: 'Fame Lv {lv} · {n} / {next}' },
-    'cm.fameMax': { ko: '명성 Lv {lv} · 최고', en: 'Fame Lv {lv} · Max' },
+    'cm.fameLv': { ko: '명성 Lv {lv}', en: 'Fame Lv {lv}' },
+    'cm.fameMax': { ko: '최고', en: 'Max' },
     'cm.goal.chapter': { ko: '{t}의 몬스터 {n}마리', en: { one: '{n} monster in the {t}', other: '{n} monsters in the {t}' } },
     'cm.goal.race': { ko: '{t} 종족 {n}마리', en: { one: '{n} {t} foe', other: '{n} {t} foes' } },
     'cm.goal.monster': { ko: '{t} {n}마리', en: '{t} ×{n}' },
@@ -877,10 +978,9 @@ const STRINGS = {
     'fg.upMax': { ko: '강화 +{up} · 상한', en: 'Upgrade +{up} · max' },
     'fg.base': { ko: '베이스 능력치', en: 'Base stat' },
     // 강화 진열의 메타 — 누가 끼고 있나 · 안 끼었으면 있는 곳(`ch.bag.inv` · `ch.bag.stash`) (ADR-0604 · ~~`fg.worn` 착용 중 · `fg.bag` 가방~~)
-    'fg.wornBy': { ko: '{name} 착용', en: 'Worn by {name}' },
     'fg.stage': { ko: '강화 단계', en: 'Upgrade level' },   // 강화 작업 칸의 눈금 머리 (ADR-0604)
     // 강화 성공 확률 · 실패 [2026-10-14 · R253 · ADR-0626] — 확률 칩(비용 칩 앞) · 실패 플래시 · 연출의 실패 표지
-    'fg.chance': { ko: '성공 {p}%', en: '{p}% success' },
+    'fg.chanceLab': { ko: '성공 확률', en: 'Success chance' },   // 강화 작업 칸 비교 줄 아래 「이름 · 값」 줄 (ADR-0973 · ~~`fg.chance` 칩~~)
     'fg.upFail': { ko: '강화 실패 · +{n} 그대로 · {g}G', en: 'Upgrade failed · still +{n} · {g}G' },
     'fg.failMark': { ko: '실패', en: 'Failed' },
     'fg.pick': { ko: '장비 선택', en: 'Pick an item' },   // 장비칸 · 아이템창 어디서든 고른다 (ADR-0364)
@@ -984,8 +1084,8 @@ const STRINGS = {
         en: "Spectating and changes",
     },
     'help.expedition.spectate.body': {
-        ko: "상단의 Party 칸을 눌러 해당 부대의 전투를 봅니다. 다른 탭을 보아도 전투는 진행됩니다. 영웅과 적의 그림에 마우스를 올리면 능력치·스킬·장비를 확인하고, 영웅을 누르면 아래 인벤토리의 장착 대상이 됩니다.<br><br>일반 전투 중 장비와 마스터리를 바꾸면 진행 중인 전투에 반영되지만, 보스 라운드 도중의 변경은 다음 원정부터 반영됩니다. 승리 후 자동 출정은 출발 당시의 편성을 이어 사용합니다. 바꾼 인원·진형·물약·전술을 확실히 반영하려면 [철수]한 뒤 다시 [보내기]합니다.",
-        en: "Select a Party tab at the top to spectate that party. Combat continues when you view other tabs. Hover heroes or enemies to inspect stats, skills and gear. Click a hero to choose the equip target for the inventory below. Equipment and mastery changes apply during regular combat, but changes made during a boss round apply from the next run.<br><br>Automatic departures after wins retain the original preset configuration. To apply changed members, formation, potions or tactics, [Retreat] and [Deploy] again.",
+        ko: "상단의 Party 칸을 눌러 해당 부대의 전투를 봅니다. 다른 탭을 보아도 전투는 진행됩니다. 영웅과 적의 그림에 마우스를 올리면 능력치·스킬·장비를 확인하고, 영웅을 누르면 아래 인벤토리의 장착 대상이 됩니다.<br><br>전투 중 장비와 마스터리를 바꾸면 보스전을 포함해 진행 중인 전투에 즉시 반영됩니다. 승리 후 자동 출정은 출발 당시의 편성을 이어 사용합니다. 바꾼 인원·진형·물약·전술을 확실히 반영하려면 [철수]한 뒤 다시 [보내기]합니다.",
+        en: "Select a Party tab at the top to spectate that party. Combat continues when you view other tabs. Hover heroes or enemies to inspect stats, skills and gear. Click a hero to choose the equip target for the inventory below. Equipment and mastery changes apply immediately to combat in progress, including boss fights.<br><br>Automatic departures after wins retain the original preset configuration. To apply changed members, formation, potions or tactics, [Retreat] and [Deploy] again.",
     },
     'help.expedition.controls.title': {
         ko: "배속 · 일시정지 · 전투 정보",
@@ -1116,7 +1216,7 @@ const STRINGS = {
         en: "The first hero in a preset's member list is its leader. The leader's Leadership affects the strength of Party tactics. Standing in the first front-row seat or selecting a hero in Character does not change the leader.<br><br>To change the leader, remove every hero from the preset, add the intended leader first, then fill the remaining places. High Leadership does not activate a tactic whose condition is unmet, so check both the condition and the leader's contribution.",
     },
     'help.party.formation.title': {
-        ko: "전열은 누구를 지키는가",
+        ko: "전열은 누구를 지키나요",
         en: "What the front row protects",
     },
     'help.party.formation.body': {
@@ -1252,7 +1352,7 @@ const STRINGS = {
         en: "Active skills come one each from the hero's innate skill, a learned skill book and advancement. Leveling alone does not automatically teach a collection of skills. Hover an icon to check its effect, targets and weapon requirement. Learn and upgrade book skills at the Library.<br><br>On a turn, combat automatically picks the eligible skill that has been ready longest. Skills ready at the same time follow your [Priority] order. Drag rows in that window to change it. Putting a skill first does not force it to cast before its cooldown ends.<br><br>Physical weapons and bare hands normally make a basic attack each turn, using a ready skill first. The following basic attack may be skipped if the attack skill's target has already fallen. Magic weapons have no basic attack and cast using stored charges. Channeling prevents other skills and basic attacks while active; auras and event-triggered skills also follow their own activation rules. There is no mana.",
     },
     'help.character.weapon_skills.title': {
-        ko: "배울 수 있는데 왜 스킬이 꺼지는가",
+        ko: "배울 수 있는데 왜 스킬이 꺼지나요",
         en: "Why a learned skill may be inactive",
     },
     'help.character.weapon_skills.body': {
@@ -1432,8 +1532,8 @@ const STRINGS = {
         en: "Card grade and Fame level",
     },
     'help.tavern.fame.body': {
-        ko: "의뢰의 <b>일반·매직·레어 등급</b>은 카드마다 따로 정해집니다. 높은 등급은 목표 수와 보상이 함께 커지며, 목표 수 대비 골드도 더 좋습니다.<br><br><b>명성</b>은 로스터 전체가 공유하는 의뢰 성장입니다. 완료한 의뢰를 <b>[수령]</b>할 때 경험치가 쌓이고, 명성 레벨이 오르면 새 카드의 목표 수와 골드가 함께 커집니다. 이미 게시판에 있는 카드는 그대로입니다.<br><br>명성은 내려가지 않으며 포기는 경험치를 주지 않습니다. 최고 레벨에 도달한 뒤에도 그 레벨의 의뢰를 계속 받고 보상을 받을 수 있습니다.",
-        en: "Each commission rolls its own <b>Normal, Magic or Rare grade</b>. Higher grades increase both the goal and reward, with more gold per unit of the goal.<br><br><b>Fame</b> is shared commission progress for your whole roster. <b>Claiming</b> completed commissions earns XP. Higher Fame levels increase the goals and gold on new cards; cards already on the board stay unchanged.<br><br>Fame never falls, and abandoning grants no XP. At the highest Fame level, you can continue accepting its commissions and earning rewards.",
+        ko: "의뢰의 <b>일반·매직·레어 등급</b>은 카드마다 따로 정해집니다. 높은 등급은 목표 수와 보상이 함께 커지며, 목표 수 대비 골드도 더 좋습니다.<br><br><b>명성</b>은 로스터 전체가 공유하는 의뢰 성장입니다. 완료한 의뢰를 <b>[수령]</b>할 때 경험치가 쌓이고, 명성 레벨이 오르면 새 카드의 목표 수와 골드가 함께 커지고, 게시판에서 받지 않은 카드도 모두 새 레벨로 다시 섭니다. 받아 둔 의뢰는 진행도 그대로입니다.<br><br>명성은 내려가지 않으며 포기는 경험치를 주지 않습니다. 최고 레벨에 도달한 뒤에도 그 레벨의 의뢰를 계속 받고 보상을 받을 수 있습니다.",
+        en: "Each commission rolls its own <b>Normal, Magic or Rare grade</b>. Higher grades increase both the goal and reward, with more gold per unit of the goal.<br><br><b>Fame</b> is shared commission progress for your whole roster. <b>Claiming</b> completed commissions earns XP. Higher Fame levels increase the goals and gold on new cards, and every card on the board you have not accepted is rerolled at the new level. Accepted commissions keep their progress.<br><br>Fame never falls, and abandoning grants no XP. At the highest Fame level, you can continue accepting its commissions and earning rewards.",
     },
     'help.tavern.gambling.title': {
         ko: "도박장 슬롯",
@@ -1448,8 +1548,8 @@ const STRINGS = {
         en: "Compare, then buy",
     },
     'help.shop.buy.body': {
-        ko: "위쪽 영웅 띠에서 비교할 영웅을 고릅니다. 장비 상품에 마우스를 올리면 그 영웅의 착용품과 비교할 수 있습니다. 장비는 레벨이나 등급뿐 아니라 필요한 옵션·스킬·파티 전술과 맞는지도 확인합니다.<br><br>장비 상품을 선택하고 아래 <b>[구매]</b>를 누르면 <b>현재 보고 있는 부대 인벤토리</b>로 들어갑니다. 자동으로 장착되지는 않습니다. 장비 구매에는 골드와 빈 인벤토리 칸이 필요합니다.<br><br><b>스킬 도안은 도안 재고에, 물약은 공동 물약 재고에</b> 쌓입니다. 장비 인벤토리 칸을 차지하지 않으므로 장비 칸이 가득 차 있어도 살 수 있습니다.<br><br>장비와 스킬 도안은 목록의 한 칸마다 한 번 살 수 있습니다. 팔린 칸은 <b>[교체]</b>까지 그대로 남습니다. 필요 없는 장비를 재료로 바꾸는 것은 판매가 아니라 캐릭터·인벤토리의 <b>[분해]</b>입니다.",
-        en: "Choose a comparison hero in the top strip. Hover an equipment item to compare it with that hero's worn item. Alongside level and rarity, check whether its options suit the skills and Party tactics you use.<br><br>Select an equipment item, then press <b>Buy</b> below. It enters the <b>party inventory you are viewing</b> and is not equipped automatically. Buying equipment requires enough gold and a free inventory slot.<br><br><b>Skill blueprints enter blueprint stock, and potions enter shared potion stock.</b> Neither occupies equipment slots, so a full equipment inventory does not block these purchases.<br><br>Each equipment or skill-blueprint slot can be bought once per list. Sold slots remain until <b>Refresh</b>. To turn unwanted gear into materials, use <b>Salvage</b> in Character or the inventory; there is no selling step.",
+        ko: "위쪽 영웅 띠에서 비교할 영웅을 고릅니다. 장비 상품에 마우스를 올리면 그 영웅의 착용품과 비교할 수 있습니다. 장비는 레벨이나 등급뿐 아니라 필요한 옵션·스킬·파티 전술과 맞는지도 확인합니다.<br><br>장비 상품을 선택하고 아래 <b>[구매]</b>를 누르면 <b>현재 보고 있는 부대 인벤토리</b>로 들어갑니다. 자동으로 장착되지는 않습니다. 장비 구매에는 골드와 빈 인벤토리 칸이 필요합니다.<br><br><b>스킬 도안은 도안 재고에, 물약은 공동 물약 재고에</b> 쌓입니다. 장비 인벤토리 칸을 차지하지 않으므로 장비 칸이 가득 차 있어도 살 수 있습니다.<br><br>장비와 스킬 도안은 목록의 한 칸마다 한 번 살 수 있습니다. 팔린 칸은 <b>[교체]</b>까지 그대로 남습니다. 필요 없는 장비를 재료로 바꾸는 것은 판매가 아니라 캐릭터·인벤토리의 <b>[분해]</b>입니다.<br><br>자물쇠 칸은 아직 팔지 않는 상품입니다. 처음 지은 상단은 맨 윗줄의 무기·물약만 팔고, 건설에서 상단 랭크를 올리면 방어구·장신구·스킬 도안 줄이 열립니다.",
+        en: "Choose a comparison hero in the top strip. Hover an equipment item to compare it with that hero's worn item. Alongside level and rarity, check whether its options suit the skills and Party tactics you use.<br><br>Select an equipment item, then press <b>Buy</b> below. It enters the <b>party inventory you are viewing</b> and is not equipped automatically. Buying equipment requires enough gold and a free inventory slot.<br><br><b>Skill blueprints enter blueprint stock, and potions enter shared potion stock.</b> Neither occupies equipment slots, so a full equipment inventory does not block these purchases.<br><br>Each equipment or skill-blueprint slot can be bought once per list. Sold slots remain until <b>Refresh</b>. To turn unwanted gear into materials, use <b>Salvage</b> in Character or the inventory; there is no selling step.<br><br>Locked slots are goods not yet on sale. A newly built Trading House sells only the top row of weapons and potions; upgrade it in Construction to open the armor, jewelry and skill-blueprint rows.",
     },
     'help.shop.restock.title': {
         ko: "교체 전에 영웅 레벨 확인",
@@ -1784,8 +1884,8 @@ const STRINGS = {
         en: "Finding the explanation you need",
     },
     'help.help.browse.body': {
-        ko: "도움말 목차는 왼쪽 메뉴와 같은 순서입니다. 탭 이름을 누르면 해당 설명으로 이동하고, 본문 안에서 스크롤해 끝까지 읽을 수 있습니다. 잠긴 탭의 설명도 미리 볼 수 있습니다.<br><br>검색창에 단어를 띄어 써 넣으면 제목·소제목·본문에 그 단어가 모두 포함된 설명을 찾습니다. 검색어를 지우면 전체 도움말을 다시 볼 수 있습니다.<br><br>처음 시작했다면 처음 플레이하는 순서와 자주 쓰는 용어부터 읽습니다. 당장 막힌 일이 있다면 막혔을 때 확인할 곳에서 해결할 탭을 찾고, 그 탭의 자세한 설명으로 이어갑니다.",
-        en: "The Help contents follow the same order as the left menu. Select a tab name to jump to its explanation, then scroll inside the text to read further. You can also read about tabs that are still locked.<br><br>Enter words separated by spaces in Search to find explanations whose titles, subheadings and text contain every word. Clear the search to see all Help again.<br><br>If you are new, start with Your first steps and Common terms. If something has stopped your progress, use Where to look when stuck to find the relevant tab, then read its detailed explanation.",
+        ko: "도움말의 주제별 폴더는 왼쪽 메뉴와 같은 순서입니다. 폴더를 누르면 그 주제의 설명만 열리고, 본문을 스크롤해 끝까지 읽을 수 있습니다. 폴더마다 읽던 위치를 기억하며 잠긴 탭의 설명도 미리 볼 수 있습니다.<br><br>검색창에 단어를 띄어 써 넣으면 모든 폴더의 제목·소제목·본문에서 그 단어가 모두 포함된 설명을 찾습니다. 결과가 있는 폴더를 골라 읽으며, 현재 폴더에 결과가 없으면 첫 결과 폴더가 열립니다. 검색어를 지우면 모든 폴더의 설명이 복구됩니다.<br><br>처음 시작했다면 처음 플레이하는 순서와 자주 쓰는 용어부터 읽습니다. 당장 막힌 일이 있다면 막혔을 때 확인할 곳에서 해결할 탭을 찾고, 그 탭의 자세한 설명으로 이어갑니다.",
+        en: "Help folders follow the same order as the left menu. Select a folder to open only that topic, then scroll inside its text to read further. Each folder remembers your reading position. You can also read about tabs that are still locked.<br><br>Enter words separated by spaces in Search to find explanations across all folders whose titles, subheadings and text contain every word. Choose a folder with matches to read them. If the current folder has no matches, the first matching folder opens. Clear the search to restore every folder's explanations.<br><br>If you are new, start with Your first steps and Common terms. If something has stopped your progress, use Where to look when stuck to find the relevant tab, then read its detailed explanation.",
     },
     'help.help.common_terms.title': {
         ko: "자주 쓰는 용어",
@@ -1816,8 +1916,8 @@ const STRINGS = {
         en: "Display settings and language",
     },
     'help.help.settings.body': {
-        ko: "상단의 EN 또는 한국어 버튼을 누르면 표시 언어가 바뀝니다. ⚙ 설정에서 아트 스타일을 고르면 영웅·몬스터 초상과 스테이지 배경이 함께 바뀝니다. 도감의 초상 스타일 선택도 같은 설정을 사용합니다.<br><br>전투 연출이 복잡하게 느껴지면 스킬 이펙트·기본 공격 이펙트·피격 반응·공격 시 흔들림을 각각 조정할 수 있습니다. 이펙트 투명도는 값이 클수록 스킬 그림을 옅게 만듭니다. 스킬 이펙트가 Off이면 그림체와 투명도 선택이 흐려지고, 피격 반응이 Off이면 피격 시 흔들림 선택이 흐려집니다. 다시 켜면 이전 선택을 사용합니다.<br><br>로그의 칸/문장은 전투 기록을 나누어 볼지 문장으로 읽을지 고르는 표시 방식입니다. 언어와 연출·로그 설정은 전투 승패나 장비 효과를 바꾸지 않으며 이 브라우저에 저장됩니다.",
-        en: "Use the language button at the top to switch between Korean and English. Art Style in ⚙ Settings changes hero and monster portraits together with stage backgrounds. Portrait style selectors in the Codex use the same saved choice.<br><br>If combat visuals feel busy, adjust skill effects, basic attack effects, hit reactions and attack movement separately. A higher transparency value makes skill artwork fainter. Turning Skill Effects Off dims its style and transparency controls; turning Hit Reactions Off dims Shake on Hit. Turning them back on restores the previous choices.<br><br>Grid/Text chooses whether battle log entries are divided into columns or read as sentences. Language, visual effects and log settings do not change battle outcomes or equipment effects, and are saved in this browser.",
+        ko: "상단의 EN 또는 한국어 버튼을 누르면 표시 언어가 바뀝니다.<br><br>전투 연출이 복잡하게 느껴지면 스킬 이펙트·기본 공격 이펙트·피격 반응·공격 시 흔들림을 각각 조정할 수 있습니다. 이펙트 투명도는 값이 클수록 스킬 그림을 옅게 만듭니다. 스킬 이펙트가 Off이면 그림체와 투명도 선택이 흐려지고, 피격 반응이 Off이면 피격 시 흔들림 선택이 흐려집니다. 다시 켜면 이전 선택을 사용합니다.<br><br>로그의 칸/문장은 전투 기록을 나누어 볼지 문장으로 읽을지 고르는 표시 방식입니다. 언어와 연출·로그 설정은 전투 승패나 장비 효과를 바꾸지 않으며 이 브라우저에 저장됩니다.",
+        en: "Use the language button at the top to switch between Korean and English.<br><br>If combat visuals feel busy, adjust skill effects, basic attack effects, hit reactions and attack movement separately. A higher transparency value makes skill artwork fainter. Turning Skill Effects Off dims its style and transparency controls; turning Hit Reactions Off dims Shake on Hit. Turning them back on restores the previous choices.<br><br>Grid/Text chooses whether battle log entries are divided into columns or read as sentences. Language, visual effects and log settings do not change battle outcomes or equipment effects, and are saved in this browser.",
     },
     'help.help.newgame.title': {
         ko: "새 게임과 첫 영웅",
@@ -1929,7 +2029,7 @@ const STRINGS = {
             + '<b>수락하면 그 카드가 소진됩니다</b> — 받은 카드는 그 자리에서 진행 중이 되고, 받아 둘 수 있는 수는 선술집 랭크가 늘립니다. 그래서 「어느 의뢰를 받을까」가 결정이 됩니다<br>'
             + '<b>받은 뒤</b> 이긴 라운드의 처치와 들어온 드롭만 셉니다(가방이 차서 넘쳐 분해된 것은 빼고) · 모든 부대가 같이 채웁니다 · <b>기한은 없습니다</b><br>'
             + '다 채우면 <b>[수령]</b>으로 골드를 받습니다 · <b>[포기]</b>는 벌이 없습니다(진행만 버림) — 비는 자리에는 새 카드가 섭니다<br>'
-            + '<b>명성 레벨</b> — [수령]할 때마다 명성이 하나 쌓이고(포기는 0 · 떨어지지 않음) 문턱을 넘으면 레벨이 오릅니다. 레벨이 오르면 <b>새로 서는 카드</b>의 목표와 골드가 같이 커지고 골드가 더 크게 오릅니다 — 이미 선 카드는 그대로입니다',
+            + '<b>명성 레벨</b> — [수령]할 때마다 명성이 하나 쌓이고(포기는 0 · 떨어지지 않음) 문턱을 넘으면 레벨이 오릅니다. 레벨이 오르면 <b>새로 서는 카드</b>의 목표와 골드가 같이 커지고 골드가 더 크게 오릅니다 — 레벨이 오르는 순간 받지 않은 카드는 모두 새 레벨로 다시 서고, 받아 둔 의뢰는 진행도 그대로입니다',
         en: 'A commission is a <b>goal you take on</b> — no battlefield opens. Pick one from the board and it fills itself <b>on top of what you already do</b><br>'
             + 'There are <b>two kinds</b> — <b>Slay</b> ("kill x" · the battles you already run count it) and <b>Collect</b> ("gather x" · drops and dispatch/exploration yields fill it)<br>'
             + '<b>It advances offline too</b> — the goal moves while you are away. So there is no party to send and no commission-only battlefield<br>'
@@ -1937,7 +2037,7 @@ const STRINGS = {
             + '<b>Accepting spends that card</b> — it turns into an active commission in place, and the Tavern rank raises how many you can hold. That is what makes "which one do I take" a decision<br>'
             + 'Only kills in won rounds and drops that come in <b>after you accept</b> count (items salvaged because the bag was full do not) · every party fills it · <b>there is no deadline</b><br>'
             + 'When it is full, <b>[Claim]</b> pays the gold · <b>[Abandon]</b> costs nothing but the progress — a new card takes the empty place<br>'
-            + '<b>Fame level</b> — every [Claim] adds one fame (abandoning adds none · it never drops), and passing a threshold raises the level. A higher level makes <b>newly posted cards</b> ask for more and pay more, with gold rising faster — cards already on the board stay as they are',
+            + '<b>Fame level</b> — every [Claim] adds one fame (abandoning adds none · it never drops), and passing a threshold raises the level. A higher level makes <b>newly posted cards</b> ask for more and pay more, with gold rising faster — when the level rises, every card you have not accepted is rerolled at the new level, while accepted commissions keep their progress',
     },
     'exp.zones.h': { ko: '원정 지역', en: 'Expedition Zones' },
     // 원정 지역 [개정 2026-09-29 · PLAN_stage_segments D1] — 챕터 = 장소 {p} · 장소마다 칸 I · II · III · 칸 하나가 한 런이다(도움말 · SCREEN_DESIGN §12)
@@ -2133,7 +2233,7 @@ const STRINGS = {
     'ch.detail.hn': { ko: '세부 옵션 {n}', en: 'Detailed Stats {n}' },
     'ch.detail.note': {
         ko: '전투 능력치는 <b>장비와 스킬이 만듭니다</b>. 값이 <b>—</b> 인 축은 0이 아니라 '
-            + '<b>아직 아무것도 그 축을 건드리지 않았다</b>는 뜻입니다 — 비어 있는 축이 곧 다음 장비의 자리입니다.<br>'
+            + '<b>아직 아무 효과도 그 축에 적용되지 않음</b>을 뜻합니다 — 비어 있는 축이 곧 다음 장비의 자리입니다.<br>'
             + '괄호 안 약어 = 이 축을 미는 기본 능력치. 표는 src/data/combat_stat.csv 를 그대로 따릅니다',
         en: 'Combat stats are <b>built by gear and skills</b>. A <b>—</b> is not zero — it means '
             + '<b>nothing has touched that axis yet</b>, and an empty axis is where the next item goes.<br>'
@@ -2170,6 +2270,8 @@ const STRINGS = {
     'tip.inert': { ko: '(미적용)', en: '(inactive)' },
     /* 특정 스킬 +n 줄 [신설 2026-10-08 · §6 · ADR-0535 · R225] — {skill} = 스킬 이름 · {v} = 단계 수 */
     'tip.skillPlus': { ko: '{skill} +{v}', en: '+{v} to {skill}' },
+    // 레벨당 옵션 줄 — 그 레벨의 합계 + 괄호에 옵션 그대로 「데미지 +40% (레벨당 데미지 +1%)」 (§6 · ADR-0954)
+    'tip.perLevel': { ko: '{total} ({per})', en: '{total} ({per})' },
     /* 스킬 칸 [신설 2026-09-09 · §6] — 무기가 액티브 한 칸을 통째로 정하므로(skill_design §12-1 규칙 3)
        공격력만 보고 무기를 고르지 않게 툴팁이 그것을 말한다. 칸은 스킬 설명창 몸통 그대로라 문구도 설명창 키를 쓴다.
        ~~`tip.skill`~~(「담은 스킬」 라벨)은 2026-09-15 삭제 [사용자 지시 · ADR-0139] */
@@ -2268,13 +2370,15 @@ const STRINGS = {
     'cn.t.lab_res': { ko: '연구소 자원 생산', en: 'Laboratory resource production' },   // 창고 r1 — 연구소 「자원」 줄을 연다 (R361)
     'cn.t.codex': { ko: '만난 몬스터를 도감에 기록', en: 'Record monsters you meet in the codex' },
     // 선술집의 켜기도 이름 토막 [2026-09-25 사용자 지시 「영웅고용, 영웅수색」 · 「의뢰오픈」 · 대장간과 같은 시험 중 — SCREEN_DESIGN §13-1]
-    'cn.t.hire': { ko: '영웅 고용', en: 'Hero Hiring' },
-    'cn.t.shop': { ko: '상단에서 장비 · 재료 구매', en: 'Buy gear and materials at the trading house' },
+    'cn.t.hire': { ko: '영웅 고용 · 수색', en: 'Hero Hiring · Search' },   // 연구소 수색 줄도 이 랭크가 연다 (2026-10-30 사용자 지시)
+    'cn.t.shop': { ko: '상단에서 무기 · 물약 구매', en: 'Buy weapons and potions at the trading house' },
+    'cn.t.shop_rows': { ko: '상단에서 방어구 · 장신구 · 스킬 도안 구매', en: 'Buy armor, jewelry and skill blueprints at the trading house' },
+    'cn.t.shop_trade': { ko: '교역소에서 재료 교환', en: 'Trade materials at the trading post' },
     'cn.t.shop_special': { ko: '특수상단 방문', en: 'The special merchant starts visiting' },
     'cn.t.craft': { ko: '매직 장비에 전용 옵션 추가', en: 'Add a special option to magic gear' },
     'cn.t.stigma_craft': { ko: '낙인으로 장비 크래프트', en: 'Craft equipment with stigmas' },
     'cn.t.skill_card': { ko: '스킬 카드 합성', en: 'Fuse skill cards' },
-    'cn.t.skillbook': { ko: '스킬북으로 스킬 습득', en: 'Learn skills from skill books' },   // 도서관 r2 (R179 · 2026-10-27 R364 · construction_draft §2)
+    'cn.t.skillbook': { ko: '스킬북으로 스킬 습득', en: 'Learn skills from skill books' },   // 도서관 r1 (R179 · 2026-10-30 R398 · construction_draft §2)
     'cn.t.book_craft': { ko: '스킬북 제작', en: 'Craft skill books' },   // 도서관 r2 (2026-10-16 · R263 — 도안이 열린 책 · ~~기본 책~~ 10-12)
     'cn.t.explore': { ko: '파티를 탐험에 파견', en: 'Send a party to explore' },
     // 탐험 r2 · r3 — 지도에 그 지점 아이콘이 생긴다 [2026-10-27 사용자 「상단 오픈」 · 「폐허 오픈」 · ADR-0908]
@@ -2655,7 +2759,7 @@ const STRINGS = {
     'sk.sinTree': { ko: '{sin} 마스터리', en: '{sin} Mastery' },
     'sk.sinTree.sub': { ko: '모든 {sin} 영웅 공유', en: 'Shared by all {sin} heroes' },
     'sk.sinTree.missing': {
-        ko: '<b>맨 아랫줄(반응형)은 기획이 방향만 정했습니다</b> — 「~하면 ~한다」는 발동 빈도에 파워가 종속돼 값을 잴 자가 없습니다.',
+        ko: '<b>맨 아랫줄(반응형)은 기획이 방향만 정했습니다</b> — 「~하면 ~하는 효과」는 발동 빈도에 파워가 종속돼 값을 잴 자가 없습니다.',
         en: '<b>The bottom row (reactive) has direction but no numbers</b> — "when X, then Y" scales with trigger frequency, and there is no yardstick for that yet.',
     },
     'sk.mastery': { ko: '{cls} 마스터리', en: '{cls} Mastery' },
@@ -2689,7 +2793,7 @@ const STRINGS = {
     },
 
     /* ── 선술집 ── */
-    'tv.h': { ko: '영입 후보', en: 'Recruits' },
+    'tv.h': { ko: '영웅 고용', en: 'Hire Heroes' },
     'tv.sub': { ko: '레어 층 — 직업 × 죄종 × 시작특성을 등장 시 굴림', en: 'Rare tier — class × sin × trait rolled on arrival' },
     'tv.reroll.note': {
         ko: '선술집 리롤 = <b>아이템 파밍의 영웅판</b> — 굴림 루프는 <b>레어 층</b>에 있습니다. 죄종 × 직업 35칸을 전부 여기서 공급합니다',
@@ -2908,9 +3012,9 @@ const STRINGS = {
     'bt.buff.codex': { ko: '도감', en: 'Codex' },
     'bt.buff.none': { ko: '없음', en: 'None' },
     'bt.note': {
-        ko: '관전은 가능하되 <b>의무가 아닙니다</b> — 배속은 진행 속도만 바꿉니다. 원정 중에 바꾼 장비 · 스킬 트리는 <b>그 순간</b> 적용됩니다(보스전 중이면 다음 런부터) · <b>라운드를 이긴 순간 그 보상이 들어옵니다</b>(가방 · 골드 · 경험치 · 도감).<br>'
+        ko: '관전은 가능하되 <b>의무가 아닙니다</b> — 배속은 진행 속도만 바꿉니다. 원정 중에 바꾼 장비 · 스킬 트리는 보스전에서도 <b>그 순간</b> 적용됩니다 · <b>라운드를 이긴 순간 그 보상이 들어옵니다</b>(가방 · 골드 · 경험치 · 도감).<br>'
             + '<b>철수</b>하면 원정이 멈춥니다 — 진행 중이던 라운드는 사라지고 이긴 라운드까지의 보상은 남습니다 · 런이 끝나 다음 런을 세는 동안 누르면 다음 런이 안 나갑니다. 게임을 끄면 원정도 그 자리에서 끊깁니다.',
-        en: 'Watching is allowed but <b>never required</b> — speed only changes the pace. Gear and skill-tree changes during a run apply <b>at once</b> (from the next run during a boss fight) · each round <b>pays out the moment you win it</b> (bag · gold · XP · codex).<br>'
+        en: 'Watching is allowed but <b>never required</b> — speed only changes the pace. Gear and skill-tree changes during a run apply <b>at once</b>, including during boss fights · each round <b>pays out the moment you win it</b> (bag · gold · XP · codex).<br>'
             + '<b>Retreat</b> stops the expedition — it drops the round in progress and keeps what the won rounds gave · pressed while the next run is counting down, the next run does not head out. Closing the game cuts the expedition off on the spot.',
     },
     'bt.rTitle': { ko: 'R{n} {kind}', en: 'R{n} {kind}' },

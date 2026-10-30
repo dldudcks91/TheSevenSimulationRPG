@@ -1,0 +1,1835 @@
+{
+  "method": "Actual hire/register clicks using earned day1 resources. Three training hours advanced through app clock on isolated copy; no combat carry attempted, no claim that recruits cannot catch up through combat.",
+  "actions": [
+    "불러오기",
+    "중단 알림 확인",
+    "선술집 열기",
+    "600G 신규 후보 고용",
+    "연구소 열기",
+    "훈련 줄 등록 칸 열기",
+    "새 영웅을 훈련에 등록"
+  ],
+  "screens": [
+    {
+      "label": "recruit_candidates",
+      "screen_text": "Party I - 대기 중\nParty II - 대기 중\nParty III - 대기 중\n골드2,153,446\n2\nEN\nAdmin\n원정 플레이 시간20:23:52\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\n영웅 고용?\n일반\n오만\n마법사\n로웨나\nLv.1\n스태프 / 오브\nLv.1\n체인 라이트닝\n힘\nSTR\n9\n민첩\nDEX\n8\n지능\nINT\n14\n건강\nVIT\n7\n운\nLCK\n10\n통솔\nLDR\n7\n매력\nCHA\n9\n최대 HP\n50\n능력치 합\n64\n고용 (600 골드)\n보관\n일반\n나태\n궁수\n세드릭\nLv.1\n활 / 석궁\nLv.1\n포이즌 애로우\n힘\nSTR\n12\n민첩\nDEX\n9\n지능\nINT\n9\n건강\nVIT\n7\n운\nLCK\n8\n통솔\nLDR\n9\n매력\nCHA\n6\n최대 HP\n50\n능력치 합\n60\n고용 (600 골드)\n보관\n후보 교체 (무료)\n수색?\n4시간마다 한 명 · 2칸\n레어 15%\n칸이 다 참 — 돌려보내야 새로 옴\n다음 도착까지 04:00:00\n찾아옴\n찾아옴\n의뢰 ?\n받음 1 / 1\n명성 Lv 3\n3 / 7\n처치 매직\n뒤틀린 숲의 몬스터 63마리\n0 / 63\n2,000 G\n포기\n처치 매직\n불타는 전장의 몬스터 45마리\n1,000 G\n수락\n처치 매직\n고블린 척후병 18마리\n800 G\n수락\n처치 매직\n보스 3마리\n1,700 G\n수락\n도박장?\n한 판 506 G부터\n입장",
+      "game": {
+        "at": 1793404800001,
+        "screen": "game",
+        "tab": "tavern",
+        "exp": "idle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 50,
+            "xp": 0,
+            "points": 0,
+            "cls": "mage",
+            "sin": "gluttony",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h2",
+            "level": 50,
+            "xp": 0,
+            "points": 0,
+            "cls": "archer",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 49,
+            "xp": 203597,
+            "points": 0,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 2153446,
+        "materials": {
+          "dust": 2185,
+          "timber": 1850,
+          "iron_ore": 873,
+          "herb": 1735
+        },
+        "potions": {},
+        "inventory": [
+          6,
+          0,
+          0
+        ],
+        "items": 30,
+        "cleared": [
+          1011,
+          1012,
+          1013,
+          1021,
+          1022,
+          1023,
+          1031,
+          1032,
+          1033,
+          1041,
+          1042,
+          1043,
+          1051,
+          2011,
+          2012,
+          2013,
+          2021,
+          2022,
+          2023,
+          2031,
+          2032,
+          2033,
+          2041,
+          2042,
+          2043,
+          2051,
+          3011,
+          3012,
+          3013,
+          3021,
+          3022,
+          3023,
+          3031,
+          3032,
+          3033,
+          3041,
+          3042,
+          3043,
+          3051,
+          4011,
+          4012,
+          4013,
+          4021,
+          4022,
+          4023,
+          4031,
+          4032,
+          4033,
+          4041,
+          4042,
+          4043,
+          4051,
+          5011,
+          5012,
+          5013,
+          5021,
+          5022,
+          5023,
+          5031,
+          5032,
+          5033,
+          5041,
+          5042,
+          5043,
+          5051
+        ],
+        "buildings": {
+          "explore": 5,
+          "command": 6,
+          "storage": 2,
+          "tavern": 7,
+          "shop": 4,
+          "forge": 6,
+          "library": 6,
+          "resource": 6
+        },
+        "report": {
+          "at": 1793404793250,
+          "stageId": 1011,
+          "level": 50,
+          "preset": 1,
+          "won": false,
+          "reason": "closed",
+          "durationSec": 0,
+          "difficulty": "hell",
+          "shrine": null,
+          "gold": 0,
+          "xp": {
+            "h1": 0,
+            "h2": 0,
+            "h3": 0
+          },
+          "levelUps": [],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [],
+          "blueprints": [],
+          "discarded": 0,
+          "rounds": [],
+          "roundsCleared": 0,
+          "strikes": {
+            "party": {
+              "n": 0,
+              "miss": 0
+            },
+            "enemy": {
+              "n": 0,
+              "miss": 0
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h2",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h3",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            }
+          ]
+        },
+        "guide": {
+          "guide": null,
+          "items": [
+            {
+              "id": "join:1",
+              "kind": "join",
+              "tab": "tavern",
+              "target": {
+                "join": 1
+              }
+            },
+            {
+              "id": "join:2",
+              "kind": "join",
+              "tab": "tavern",
+              "target": {
+                "join": 2
+              }
+            }
+          ],
+          "count": 2
+        },
+        "clock": 73432050
+      },
+      "buttons": [
+        {
+          "text": "Party I - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party II - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party III - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "2",
+          "disabled": false,
+          "className": "mail-btn notification-btn has"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": "on todo"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "고용 (600 골드)",
+          "disabled": false,
+          "className": "btn primary sm b-hire"
+        },
+        {
+          "text": "보관",
+          "disabled": true,
+          "className": "btn sm b-keep"
+        },
+        {
+          "text": "고용 (600 골드)",
+          "disabled": false,
+          "className": "btn primary sm b-hire"
+        },
+        {
+          "text": "보관",
+          "disabled": true,
+          "className": "btn sm b-keep"
+        },
+        {
+          "text": "후보 교체 (무료)",
+          "disabled": false,
+          "className": "btn"
+        },
+        {
+          "text": "찾아옴",
+          "disabled": false,
+          "className": "tv-join-slot"
+        },
+        {
+          "text": "찾아옴",
+          "disabled": false,
+          "className": "tv-join-slot"
+        },
+        {
+          "text": "포기",
+          "disabled": false,
+          "className": "btn sm cm-go cm-drop"
+        },
+        {
+          "text": "수락",
+          "disabled": false,
+          "className": "btn sm cm-go dim"
+        },
+        {
+          "text": "수락",
+          "disabled": false,
+          "className": "btn sm cm-go dim"
+        },
+        {
+          "text": "수락",
+          "disabled": false,
+          "className": "btn sm cm-go dim"
+        },
+        {
+          "text": "입장",
+          "disabled": false,
+          "className": "btn sm gb-go"
+        }
+      ]
+    },
+    {
+      "label": "recruit_hired",
+      "screen_text": "Party I - 대기 중\nParty II - 대기 중\nParty III - 대기 중\n골드2,152,846\n2\nEN\nAdmin\n원정 플레이 시간20:23:52\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\n영웅 고용?\n고용함 — 다음 교체 때 채워짐\n일반\n나태\n궁수\n세드릭\nLv.1\n활 / 석궁\nLv.1\n포이즌 애로우\n힘\nSTR\n12\n민첩\nDEX\n9\n지능\nINT\n9\n건강\nVIT\n7\n운\nLCK\n8\n통솔\nLDR\n9\n매력\nCHA\n6\n최대 HP\n50\n능력치 합\n60\n고용 (600 골드)\n보관\n후보 교체 (무료)\n수색?\n4시간마다 한 명 · 2칸\n레어 15%\n칸이 다 참 — 돌려보내야 새로 옴\n다음 도착까지 04:00:00\n찾아옴\n찾아옴\n의뢰 ?\n받음 1 / 1\n명성 Lv 3\n3 / 7\n처치 매직\n뒤틀린 숲의 몬스터 63마리\n0 / 63\n2,000 G\n포기\n처치 매직\n불타는 전장의 몬스터 45마리\n1,000 G\n수락\n처치 매직\n고블린 척후병 18마리\n800 G\n수락\n처치 매직\n보스 3마리\n1,700 G\n수락\n도박장?\n한 판 506 G부터\n입장\n로웨나 고용",
+      "game": {
+        "at": 1793404800001,
+        "screen": "game",
+        "tab": "tavern",
+        "exp": "idle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 50,
+            "xp": 0,
+            "points": 0,
+            "cls": "mage",
+            "sin": "gluttony",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h2",
+            "level": 50,
+            "xp": 0,
+            "points": 0,
+            "cls": "archer",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 49,
+            "xp": 203597,
+            "points": 0,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h5",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "mage",
+            "sin": "pride",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 2152846,
+        "materials": {
+          "dust": 2185,
+          "timber": 1850,
+          "iron_ore": 873,
+          "herb": 1735
+        },
+        "potions": {},
+        "inventory": [
+          6,
+          0,
+          0
+        ],
+        "items": 32,
+        "cleared": [
+          1011,
+          1012,
+          1013,
+          1021,
+          1022,
+          1023,
+          1031,
+          1032,
+          1033,
+          1041,
+          1042,
+          1043,
+          1051,
+          2011,
+          2012,
+          2013,
+          2021,
+          2022,
+          2023,
+          2031,
+          2032,
+          2033,
+          2041,
+          2042,
+          2043,
+          2051,
+          3011,
+          3012,
+          3013,
+          3021,
+          3022,
+          3023,
+          3031,
+          3032,
+          3033,
+          3041,
+          3042,
+          3043,
+          3051,
+          4011,
+          4012,
+          4013,
+          4021,
+          4022,
+          4023,
+          4031,
+          4032,
+          4033,
+          4041,
+          4042,
+          4043,
+          4051,
+          5011,
+          5012,
+          5013,
+          5021,
+          5022,
+          5023,
+          5031,
+          5032,
+          5033,
+          5041,
+          5042,
+          5043,
+          5051
+        ],
+        "buildings": {
+          "explore": 5,
+          "command": 6,
+          "storage": 2,
+          "tavern": 7,
+          "shop": 4,
+          "forge": 6,
+          "library": 6,
+          "resource": 6
+        },
+        "report": {
+          "at": 1793404793250,
+          "stageId": 1011,
+          "level": 50,
+          "preset": 1,
+          "won": false,
+          "reason": "closed",
+          "durationSec": 0,
+          "difficulty": "hell",
+          "shrine": null,
+          "gold": 0,
+          "xp": {
+            "h1": 0,
+            "h2": 0,
+            "h3": 0
+          },
+          "levelUps": [],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [],
+          "blueprints": [],
+          "discarded": 0,
+          "rounds": [],
+          "roundsCleared": 0,
+          "strikes": {
+            "party": {
+              "n": 0,
+              "miss": 0
+            },
+            "enemy": {
+              "n": 0,
+              "miss": 0
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h2",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h3",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            }
+          ]
+        },
+        "guide": {
+          "guide": null,
+          "items": [
+            {
+              "id": "join:1",
+              "kind": "join",
+              "tab": "tavern",
+              "target": {
+                "join": 1
+              }
+            },
+            {
+              "id": "join:2",
+              "kind": "join",
+              "tab": "tavern",
+              "target": {
+                "join": 2
+              }
+            }
+          ],
+          "count": 2
+        },
+        "clock": 73432050
+      },
+      "buttons": [
+        {
+          "text": "Party I - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party II - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party III - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "2",
+          "disabled": false,
+          "className": "mail-btn notification-btn has"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": "on todo"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "고용 (600 골드)",
+          "disabled": false,
+          "className": "btn primary sm b-hire"
+        },
+        {
+          "text": "보관",
+          "disabled": true,
+          "className": "btn sm b-keep"
+        },
+        {
+          "text": "후보 교체 (무료)",
+          "disabled": false,
+          "className": "btn"
+        },
+        {
+          "text": "찾아옴",
+          "disabled": false,
+          "className": "tv-join-slot"
+        },
+        {
+          "text": "찾아옴",
+          "disabled": false,
+          "className": "tv-join-slot"
+        },
+        {
+          "text": "포기",
+          "disabled": false,
+          "className": "btn sm cm-go cm-drop"
+        },
+        {
+          "text": "수락",
+          "disabled": false,
+          "className": "btn sm cm-go dim"
+        },
+        {
+          "text": "수락",
+          "disabled": false,
+          "className": "btn sm cm-go dim"
+        },
+        {
+          "text": "수락",
+          "disabled": false,
+          "className": "btn sm cm-go dim"
+        },
+        {
+          "text": "입장",
+          "disabled": false,
+          "className": "btn sm gb-go"
+        }
+      ]
+    },
+    {
+      "label": "recruit_training_started",
+      "screen_text": "Party I - 대기 중\nParty II - 대기 중\nParty III - 대기 중\n골드2,152,846\n2\nEN\nAdmin\n원정 플레이 시간20:23:52\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\n미등록\n에드릭\nLv.50\n미등록\n하이델\nLv.50\n자원\n마르고\nLv.49\n미등록\n고블린 일꾼\nLv.1\n훈련\n로웨나\nLv.1\n+\n+\n+\n+\n+\n연구소?\n6랭크 · 오프라인 최대 3시간\n자원\n수색\n+\nLv.1\n훈련\n도박장\n+\n훈련?\n등록한 영웅이 시간마다 경험치를 받는다\n훈련 상한?\n상한 레벨\nLv 45\n범위\n최고 −5\n등록 효과?\n훈련\n로웨나\nLv.1\n경험치\n힘\n+4.5%\n연구 속도\n지능\n+14%\n연구 비용\n민첩\n−4%\n로웨나 고용",
+      "game": {
+        "at": 1793404800001,
+        "screen": "game",
+        "tab": "resource",
+        "exp": "idle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 50,
+            "xp": 0,
+            "points": 0,
+            "cls": "mage",
+            "sin": "gluttony",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h2",
+            "level": 50,
+            "xp": 0,
+            "points": 0,
+            "cls": "archer",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 49,
+            "xp": 203597,
+            "points": 0,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h5",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "mage",
+            "sin": "pride",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 2152846,
+        "materials": {
+          "dust": 2185,
+          "timber": 1850,
+          "iron_ore": 873,
+          "herb": 1735
+        },
+        "potions": {},
+        "inventory": [
+          6,
+          0,
+          0
+        ],
+        "items": 32,
+        "cleared": [
+          1011,
+          1012,
+          1013,
+          1021,
+          1022,
+          1023,
+          1031,
+          1032,
+          1033,
+          1041,
+          1042,
+          1043,
+          1051,
+          2011,
+          2012,
+          2013,
+          2021,
+          2022,
+          2023,
+          2031,
+          2032,
+          2033,
+          2041,
+          2042,
+          2043,
+          2051,
+          3011,
+          3012,
+          3013,
+          3021,
+          3022,
+          3023,
+          3031,
+          3032,
+          3033,
+          3041,
+          3042,
+          3043,
+          3051,
+          4011,
+          4012,
+          4013,
+          4021,
+          4022,
+          4023,
+          4031,
+          4032,
+          4033,
+          4041,
+          4042,
+          4043,
+          4051,
+          5011,
+          5012,
+          5013,
+          5021,
+          5022,
+          5023,
+          5031,
+          5032,
+          5033,
+          5041,
+          5042,
+          5043,
+          5051
+        ],
+        "buildings": {
+          "explore": 5,
+          "command": 6,
+          "storage": 2,
+          "tavern": 7,
+          "shop": 4,
+          "forge": 6,
+          "library": 6,
+          "resource": 6
+        },
+        "report": {
+          "at": 1793404793250,
+          "stageId": 1011,
+          "level": 50,
+          "preset": 1,
+          "won": false,
+          "reason": "closed",
+          "durationSec": 0,
+          "difficulty": "hell",
+          "shrine": null,
+          "gold": 0,
+          "xp": {
+            "h1": 0,
+            "h2": 0,
+            "h3": 0
+          },
+          "levelUps": [],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [],
+          "blueprints": [],
+          "discarded": 0,
+          "rounds": [],
+          "roundsCleared": 0,
+          "strikes": {
+            "party": {
+              "n": 0,
+              "miss": 0
+            },
+            "enemy": {
+              "n": 0,
+              "miss": 0
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h2",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h3",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            }
+          ]
+        },
+        "guide": {
+          "guide": null,
+          "items": [
+            {
+              "id": "join:1",
+              "kind": "join",
+              "tab": "tavern",
+              "target": {
+                "join": 1
+              }
+            },
+            {
+              "id": "join:2",
+              "kind": "join",
+              "tab": "tavern",
+              "target": {
+                "join": 2
+              }
+            }
+          ],
+          "count": 2
+        },
+        "clock": 73432050
+      },
+      "buttons": [
+        {
+          "text": "Party I - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party II - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party III - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "2",
+          "disabled": false,
+          "className": "mail-btn notification-btn has"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": "on"
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face empty lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face empty lock"
+        },
+        {
+          "text": "+",
+          "disabled": false,
+          "className": "dp-reg-face empty"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face empty lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face empty lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face empty lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face empty lock"
+        },
+        {
+          "text": "+",
+          "disabled": false,
+          "className": "dp-reg-face empty"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face empty lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face empty lock"
+        }
+      ]
+    },
+    {
+      "label": "recruit_after_three_game_hours",
+      "screen_text": "Party I - 대기 중\nParty II - 대기 중\nParty III - 대기 중\n골드2,153,026\n2\nEN\nAdmin\n원정 플레이 시간20:23:52\n⚙\n전투\n원정\n탐험\n편성\n캐릭터\n마을\n건설\n선술집\n상점\n대장간\n도서관\n연구소\n기타\n결투장\n콜로세움\n도감\n도움말\n실험실\n새 게임\n미등록\n에드릭\nLv.50\n미등록\n하이델\nLv.50\n자원\n마르고\nLv.49\n미등록\n고블린 일꾼\nLv.1\n훈련\n로웨나\nLv.1\n+\n+\n+\n+\n+\n연구소?\n6랭크 · 오프라인 최대 3시간\n자원\n수색\n+\nLv.1\n훈련\n도박장\n+\n훈련?\n등록한 영웅이 시간마다 경험치를 받는다\n훈련 상한?\n상한 레벨\nLv 45\n범위\n최고 −5\n등록 효과?\n훈련\n로웨나\nLv.1\n경험치\n힘\n+4.54%\n연구 속도\n지능\n+14.12%\n연구 비용\n민첩\n−4.04%\n로웨나 고용",
+      "game": {
+        "at": 1793415600001,
+        "screen": "game",
+        "tab": "resource",
+        "exp": "idle",
+        "levels": [
+          {
+            "uid": "h1",
+            "level": 50,
+            "xp": 0,
+            "points": 0,
+            "cls": "mage",
+            "sin": "gluttony",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h2",
+            "level": 50,
+            "xp": 0,
+            "points": 0,
+            "cls": "archer",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h3",
+            "level": 49,
+            "xp": 203597,
+            "points": 0,
+            "cls": "knight",
+            "sin": "wrath",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h4",
+            "level": 1,
+            "xp": 0,
+            "points": 0,
+            "cls": "warrior",
+            "sin": "sloth",
+            "book": null,
+            "advance": null
+          },
+          {
+            "uid": "h5",
+            "level": 1,
+            "xp": 62,
+            "points": 0,
+            "cls": "mage",
+            "sin": "pride",
+            "book": null,
+            "advance": null
+          }
+        ],
+        "gold": 2153026,
+        "materials": {
+          "dust": 2185,
+          "timber": 2051,
+          "iron_ore": 1069,
+          "herb": 1933
+        },
+        "potions": {},
+        "inventory": [
+          6,
+          0,
+          0
+        ],
+        "items": 32,
+        "cleared": [
+          1011,
+          1012,
+          1013,
+          1021,
+          1022,
+          1023,
+          1031,
+          1032,
+          1033,
+          1041,
+          1042,
+          1043,
+          1051,
+          2011,
+          2012,
+          2013,
+          2021,
+          2022,
+          2023,
+          2031,
+          2032,
+          2033,
+          2041,
+          2042,
+          2043,
+          2051,
+          3011,
+          3012,
+          3013,
+          3021,
+          3022,
+          3023,
+          3031,
+          3032,
+          3033,
+          3041,
+          3042,
+          3043,
+          3051,
+          4011,
+          4012,
+          4013,
+          4021,
+          4022,
+          4023,
+          4031,
+          4032,
+          4033,
+          4041,
+          4042,
+          4043,
+          4051,
+          5011,
+          5012,
+          5013,
+          5021,
+          5022,
+          5023,
+          5031,
+          5032,
+          5033,
+          5041,
+          5042,
+          5043,
+          5051
+        ],
+        "buildings": {
+          "explore": 5,
+          "command": 6,
+          "storage": 2,
+          "tavern": 7,
+          "shop": 4,
+          "forge": 6,
+          "library": 6,
+          "resource": 6
+        },
+        "report": {
+          "at": 1793404793250,
+          "stageId": 1011,
+          "level": 50,
+          "preset": 1,
+          "won": false,
+          "reason": "closed",
+          "durationSec": 0,
+          "difficulty": "hell",
+          "shrine": null,
+          "gold": 0,
+          "xp": {
+            "h1": 0,
+            "h2": 0,
+            "h3": 0
+          },
+          "levelUps": [],
+          "downed": [],
+          "party": [
+            "h1",
+            "h2",
+            "h3"
+          ],
+          "drops": [],
+          "blueprints": [],
+          "discarded": 0,
+          "rounds": [],
+          "roundsCleared": 0,
+          "strikes": {
+            "party": {
+              "n": 0,
+              "miss": 0
+            },
+            "enemy": {
+              "n": 0,
+              "miss": 0
+            }
+          },
+          "contrib": [
+            {
+              "uid": "h1",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h2",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            },
+            {
+              "uid": "h3",
+              "dealt": 0,
+              "taken": 0,
+              "kills": 0
+            }
+          ]
+        },
+        "guide": {
+          "guide": null,
+          "items": [
+            {
+              "id": "join:1",
+              "kind": "join",
+              "tab": "tavern",
+              "target": {
+                "join": 1
+              }
+            },
+            {
+              "id": "join:2",
+              "kind": "join",
+              "tab": "tavern",
+              "target": {
+                "join": 2
+              }
+            }
+          ],
+          "count": 2
+        },
+        "clock": 73432050
+      },
+      "buttons": [
+        {
+          "text": "Party I - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party II - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "Party III - 대기 중",
+          "disabled": true,
+          "className": "btn sm seg-party seg-idle"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "mail-btn"
+        },
+        {
+          "text": "2",
+          "disabled": false,
+          "className": "mail-btn notification-btn has"
+        },
+        {
+          "text": "EN",
+          "disabled": false,
+          "className": "btn sm lang-btn"
+        },
+        {
+          "text": "Admin",
+          "disabled": false,
+          "className": "btn sm da-b"
+        },
+        {
+          "text": "⚙",
+          "disabled": false,
+          "className": "btn sm dp-btn"
+        },
+        {
+          "text": "원정",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "탐험",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "편성",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "캐릭터",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "건설",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "선술집",
+          "disabled": false,
+          "className": " todo"
+        },
+        {
+          "text": "상점",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "대장간",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도서관",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "연구소",
+          "disabled": false,
+          "className": "on"
+        },
+        {
+          "text": "결투장",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "콜로세움",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도감",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "도움말",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "실험실",
+          "disabled": false,
+          "className": ""
+        },
+        {
+          "text": "새 게임",
+          "disabled": false,
+          "className": "b-newgame"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face empty lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face empty lock"
+        },
+        {
+          "text": "+",
+          "disabled": false,
+          "className": "dp-reg-face empty"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face empty lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face empty lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face empty lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face empty lock"
+        },
+        {
+          "text": "+",
+          "disabled": false,
+          "className": "dp-reg-face empty"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face empty lock"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "dp-reg-face empty lock"
+        }
+      ]
+    }
+  ],
+  "hero_before": {
+    "uid": "h5",
+    "name": {
+      "ko": "로웨나",
+      "en": "Rowena"
+    },
+    "tier": "normal",
+    "sin": "pride",
+    "cls": "mage",
+    "trait": {
+      "ko": "신실함",
+      "en": "Devout"
+    },
+    "face": "mage_1",
+    "level": 1,
+    "xp": 0,
+    "mastery": {},
+    "masteryPoints": 0,
+    "innate": "mag_chain",
+    "stats": {
+      "str": 9,
+      "agi": 8,
+      "int": 14,
+      "vit": 7,
+      "luck": 10,
+      "ldr": 7,
+      "cha": 9
+    },
+    "equipped": {
+      "weapon": "i1106",
+      "helmet": null,
+      "armor": "i1107",
+      "gloves": null,
+      "boots": null,
+      "amulet": null,
+      "ring1": null,
+      "ring2": null
+    }
+  },
+  "train_before": {
+    "line": "train",
+    "open": true,
+    "active": true,
+    "seats": {
+      "cap": 1,
+      "uids": [
+        "h5"
+      ]
+    },
+    "effects": {
+      "speed": 1.045,
+      "burst": 0,
+      "research": 1.1400000000000001,
+      "quality": 0,
+      "costCut": 0.04
+    },
+    "nodes": [
+      {
+        "node": "speed",
+        "ord": 1,
+        "open": true,
+        "unlockRank": 2,
+        "lv": 0,
+        "max": 10,
+        "value": 1,
+        "levels": [
+          1.1,
+          1.2,
+          1.3,
+          1.4,
+          1.5,
+          1.6,
+          1.7000000000000002,
+          1.8,
+          1.9,
+          2
+        ],
+        "next": {
+          "value": 1.1,
+          "gold": 288,
+          "mat": null,
+          "ms": 1052632
+        },
+        "err": null
+      },
+      {
+        "node": "seats",
+        "ord": 2,
+        "open": true,
+        "unlockRank": 2,
+        "lv": 0,
+        "max": 2,
+        "value": 1,
+        "levels": [
+          2,
+          3
+        ],
+        "next": {
+          "value": 2,
+          "gold": 480,
+          "mat": null,
+          "ms": 1578948
+        },
+        "err": null
+      },
+      {
+        "node": "range",
+        "ord": 3,
+        "open": true,
+        "unlockRank": 4,
+        "lv": 0,
+        "max": 5,
+        "value": 5,
+        "levels": [
+          4,
+          3,
+          2,
+          1,
+          0
+        ],
+        "next": {
+          "value": 4,
+          "gold": 768,
+          "mat": null,
+          "ms": 3157895
+        },
+        "err": null
+      }
+    ],
+    "cap": 45
+  },
+  "hero_after": {
+    "uid": "h5",
+    "name": {
+      "ko": "로웨나",
+      "en": "Rowena"
+    },
+    "tier": "normal",
+    "sin": "pride",
+    "cls": "mage",
+    "trait": {
+      "ko": "신실함",
+      "en": "Devout"
+    },
+    "face": "mage_1",
+    "level": 1,
+    "xp": 62,
+    "mastery": {},
+    "masteryPoints": 0,
+    "innate": "mag_chain",
+    "stats": {
+      "str": 9,
+      "agi": 8,
+      "int": 14,
+      "vit": 7,
+      "luck": 10,
+      "ldr": 7,
+      "cha": 9
+    },
+    "equipped": {
+      "weapon": "i1106",
+      "helmet": null,
+      "armor": "i1107",
+      "gloves": null,
+      "boots": null,
+      "amulet": null,
+      "ring1": null,
+      "ring2": null
+    }
+  },
+  "xp_needed": 200,
+  "errors": [],
+  "http_errors": []
+}

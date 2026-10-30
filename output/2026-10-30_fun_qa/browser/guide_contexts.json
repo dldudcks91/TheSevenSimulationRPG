@@ -1,0 +1,128 @@
+[
+  {
+    "label": "basic1_60m",
+    "runs": [
+      {
+        "stageId": 1032,
+        "preset": 1,
+        "repeat": false,
+        "auto": true,
+        "difficulty": "normal",
+        "lastAt": 1793321998750,
+        "durationSec": 0,
+        "active": true,
+        "shrine": null
+      }
+    ],
+    "liveGuide": {
+      "id": "retryPreparation",
+      "tab": "character",
+      "target": {
+        "preset": 1,
+        "hero": "h1",
+        "stageId": 1032,
+        "difficulty": "normal",
+        "attempts": 14
+      }
+    }
+  },
+  {
+    "label": "adaptive2_60m",
+    "runs": [
+      {
+        "stageId": 2042,
+        "preset": 1,
+        "repeat": false,
+        "auto": true,
+        "difficulty": "normal",
+        "lastAt": 1793321995050,
+        "durationSec": 3.3,
+        "active": true,
+        "shrine": {
+          "id": "sloth",
+          "stageId": 2042
+        }
+      }
+    ],
+    "liveGuide": null
+  },
+  {
+    "label": "basic3_day",
+    "runs": [
+      {
+        "stageId": 5022,
+        "preset": 1,
+        "repeat": false,
+        "auto": true,
+        "difficulty": "normal",
+        "lastAt": 1793404698050,
+        "durationSec": 56.2,
+        "active": true,
+        "shrine": null
+      }
+    ],
+    "liveGuide": {
+      "id": "retryPreparation",
+      "tab": "character",
+      "target": {
+        "preset": 1,
+        "hero": "h1",
+        "stageId": 5022,
+        "difficulty": "normal",
+        "attempts": 19
+      }
+    }
+  },
+  {
+    "label": "adaptive4_day",
+    "runs": [
+      {
+        "stageId": 1011,
+        "preset": 1,
+        "repeat": false,
+        "auto": true,
+        "difficulty": "hell",
+        "lastAt": 1793404793250,
+        "durationSec": 0,
+        "active": true,
+        "shrine": null
+      },
+      null,
+      null
+    ],
+    "liveGuide": {
+      "id": "retryPreparation",
+      "tab": "character",
+      "target": {
+        "preset": 1,
+        "hero": "h1",
+        "stageId": 1011,
+        "difficulty": "hell",
+        "attempts": 19
+      }
+    }
+  },
+  {
+    "label": "passive1_day",
+    "runs": [
+      {
+        "stageId": 1032,
+        "preset": 1,
+        "repeat": false,
+        "auto": true,
+        "difficulty": "normal",
+        "lastAt": 1793404711150,
+        "durationSec": 66.2,
+        "active": true,
+        "shrine": null
+      }
+    ],
+    "liveGuide": {
+      "id": "buildShop",
+      "tab": "research",
+      "target": {
+        "building": "shop"
+      }
+    }
+  }
+]

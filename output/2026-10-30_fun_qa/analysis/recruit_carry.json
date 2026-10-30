@@ -1,0 +1,415 @@
+{
+  "scope": "Actual adaptive seed4 24h checkpoint, frozen modules. All branches close active expeditions first, then same actual first available candidate hired for600gold. No free gold/XP/levels/gear; no additional purchases, respec, gear transfer, auto-equip, skill learning or optimization. Each combat branch legally removes one old back-row hero and keeps the front tank plus stronger remaining damage-range hero; recruit uses starter gear in rear row. Five manual same-stage runs, speed1/focusOff/950msroundgaps through actual paceStep, four normal5srestart waits reported separately.",
+  "source": "state_adaptive_seed4_86400.json",
+  "walletBefore": 2153446,
+  "hireCost": 600,
+  "candidateIndex": 0,
+  "candidate": {
+    "uid": "h5",
+    "cls": "mage",
+    "tier": "normal",
+    "sin": "pride",
+    "innate": "mag_chain",
+    "level": 1,
+    "stats": {
+      "str": 9,
+      "agi": 8,
+      "int": 14,
+      "vit": 7,
+      "luck": 10,
+      "ldr": 7,
+      "cha": 9
+    },
+    "equipped": {
+      "weapon": "i1106",
+      "helmet": null,
+      "armor": "i1107",
+      "gloves": null,
+      "boots": null,
+      "amulet": null,
+      "ring1": null,
+      "ring2": null
+    }
+  },
+  "protectors": {
+    "tank": {
+      "uid": "h3",
+      "cls": "knight",
+      "level": 49
+    },
+    "dps": {
+      "uid": "h2",
+      "cls": "archer",
+      "level": 50,
+      "selection": "higher current weapon-range damage proxy"
+    },
+    "removed": {
+      "uid": "h1",
+      "cls": "mage",
+      "level": 50
+    }
+  },
+  "modes": [
+    {
+      "stageId": 1011,
+      "party": [
+        "h2",
+        "h3",
+        "h5"
+      ],
+      "formation": {
+        "tpl": "1-2",
+        "caps": [
+          1,
+          2
+        ],
+        "ranks": [
+          [
+            "h3"
+          ],
+          [
+            "h2",
+            "h5"
+          ]
+        ],
+        "byUid": {
+          "h3": 0,
+          "h2": 1,
+          "h5": 1
+        },
+        "templates": [
+          3,
+          "2-1",
+          "1-2",
+          "0-3"
+        ],
+        "shapes": {
+          "3": [
+            3,
+            0
+          ],
+          "2-1": [
+            2,
+            1
+          ],
+          "1-2": [
+            1,
+            2
+          ],
+          "0-3": [
+            0,
+            3
+          ]
+        }
+      },
+      "before": {
+        "level": 1,
+        "xp": 0,
+        "masteryPoints": 0
+      },
+      "runs": [
+        {
+          "i": 1,
+          "won": true,
+          "reason": "clear",
+          "battleSeconds": 27.7,
+          "paceSeconds": 35.3,
+          "recruitDowned": false,
+          "recruitXpGranted": 810,
+          "recruitLevel": 3,
+          "recruitXp": 210,
+          "roundsCleared": 9,
+          "contrib": {
+            "uid": "h5",
+            "dealt": 144,
+            "taken": 0,
+            "kills": 1
+          }
+        },
+        {
+          "i": 2,
+          "won": true,
+          "reason": "clear",
+          "battleSeconds": 31.8,
+          "paceSeconds": 39.4,
+          "recruitDowned": false,
+          "recruitXpGranted": 748,
+          "recruitLevel": 4,
+          "recruitXp": 58,
+          "roundsCleared": 9,
+          "contrib": {
+            "uid": "h5",
+            "dealt": 174,
+            "taken": 0,
+            "kills": 0
+          }
+        },
+        {
+          "i": 3,
+          "won": true,
+          "reason": "clear",
+          "battleSeconds": 44.4,
+          "paceSeconds": 52,
+          "recruitDowned": false,
+          "recruitXpGranted": 721,
+          "recruitLevel": 4,
+          "recruitXp": 779,
+          "roundsCleared": 9,
+          "contrib": {
+            "uid": "h5",
+            "dealt": 192,
+            "taken": 0,
+            "kills": 0
+          }
+        },
+        {
+          "i": 4,
+          "won": true,
+          "reason": "clear",
+          "battleSeconds": 38.1,
+          "paceSeconds": 45.7,
+          "recruitDowned": false,
+          "recruitXpGranted": 720,
+          "recruitLevel": 4,
+          "recruitXp": 1499,
+          "roundsCleared": 9,
+          "contrib": {
+            "uid": "h5",
+            "dealt": 170,
+            "taken": 0,
+            "kills": 0
+          }
+        },
+        {
+          "i": 5,
+          "won": true,
+          "reason": "clear",
+          "battleSeconds": 25.6,
+          "paceSeconds": 33.2,
+          "recruitDowned": false,
+          "recruitXpGranted": 561,
+          "recruitLevel": 5,
+          "recruitXp": 410,
+          "roundsCleared": 9,
+          "contrib": {
+            "uid": "h5",
+            "dealt": 178,
+            "taken": 0,
+            "kills": 0
+          }
+        }
+      ],
+      "totalPaceSeconds": 205.6,
+      "elapsedIncludingFourRestartGapsSeconds": 225.6,
+      "after": {
+        "level": 5,
+        "xp": 410,
+        "masteryPoints": 4,
+        "equipped": {
+          "weapon": "i1106",
+          "helmet": null,
+          "armor": "i1107",
+          "gloves": null,
+          "boots": null,
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        }
+      },
+      "walletAfter": 2154891
+    },
+    {
+      "stageId": 2011,
+      "party": [
+        "h2",
+        "h3",
+        "h5"
+      ],
+      "formation": {
+        "tpl": "1-2",
+        "caps": [
+          1,
+          2
+        ],
+        "ranks": [
+          [
+            "h3"
+          ],
+          [
+            "h2",
+            "h5"
+          ]
+        ],
+        "byUid": {
+          "h3": 0,
+          "h2": 1,
+          "h5": 1
+        },
+        "templates": [
+          3,
+          "2-1",
+          "1-2",
+          "0-3"
+        ],
+        "shapes": {
+          "3": [
+            3,
+            0
+          ],
+          "2-1": [
+            2,
+            1
+          ],
+          "1-2": [
+            1,
+            2
+          ],
+          "0-3": [
+            0,
+            3
+          ]
+        }
+      },
+      "before": {
+        "level": 1,
+        "xp": 0,
+        "masteryPoints": 0
+      },
+      "runs": [
+        {
+          "i": 1,
+          "won": true,
+          "reason": "clear",
+          "battleSeconds": 23.6,
+          "paceSeconds": 31.2,
+          "recruitDowned": false,
+          "recruitXpGranted": 3368,
+          "recruitLevel": 5,
+          "recruitXp": 218,
+          "roundsCleared": 9,
+          "contrib": {
+            "uid": "h5",
+            "dealt": 144,
+            "taken": 0,
+            "kills": 0
+          }
+        },
+        {
+          "i": 2,
+          "won": true,
+          "reason": "clear",
+          "battleSeconds": 19.3,
+          "paceSeconds": 26.9,
+          "recruitDowned": false,
+          "recruitXpGranted": 3509,
+          "recruitLevel": 6,
+          "recruitXp": 1207,
+          "roundsCleared": 9,
+          "contrib": {
+            "uid": "h5",
+            "dealt": 111,
+            "taken": 0,
+            "kills": 0
+          }
+        },
+        {
+          "i": 3,
+          "won": true,
+          "reason": "clear",
+          "battleSeconds": 23.4,
+          "paceSeconds": 31,
+          "recruitDowned": false,
+          "recruitXpGranted": 3662,
+          "recruitLevel": 7,
+          "recruitXp": 1469,
+          "roundsCleared": 9,
+          "contrib": {
+            "uid": "h5",
+            "dealt": 114,
+            "taken": 0,
+            "kills": 0
+          }
+        },
+        {
+          "i": 4,
+          "won": true,
+          "reason": "clear",
+          "battleSeconds": 31.8,
+          "paceSeconds": 39.4,
+          "recruitDowned": false,
+          "recruitXpGranted": 4576,
+          "recruitLevel": 8,
+          "recruitXp": 1965,
+          "roundsCleared": 9,
+          "contrib": {
+            "uid": "h5",
+            "dealt": 113,
+            "taken": 0,
+            "kills": 0
+          }
+        },
+        {
+          "i": 5,
+          "won": true,
+          "reason": "clear",
+          "battleSeconds": 25.7,
+          "paceSeconds": 33.3,
+          "recruitDowned": false,
+          "recruitXpGranted": 3575,
+          "recruitLevel": 9,
+          "recruitXp": 940,
+          "roundsCleared": 9,
+          "contrib": {
+            "uid": "h5",
+            "dealt": 147,
+            "taken": 0,
+            "kills": 0
+          }
+        }
+      ],
+      "totalPaceSeconds": 161.8,
+      "elapsedIncludingFourRestartGapsSeconds": 181.8,
+      "after": {
+        "level": 9,
+        "xp": 940,
+        "masteryPoints": 8,
+        "equipped": {
+          "weapon": "i1106",
+          "helmet": null,
+          "armor": "i1107",
+          "gloves": null,
+          "boots": null,
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        }
+      },
+      "walletAfter": 2156542
+    }
+  ],
+  "training": {
+    "before": {
+      "level": 1,
+      "xp": 0,
+      "needed": 200
+    },
+    "register": {
+      "ok": true
+    },
+    "after": {
+      "level": 1,
+      "xp": 62,
+      "carry": 0.6999999999999957
+    },
+    "settled": {
+      "done": null,
+      "gained": {
+        "iron_ore": 196,
+        "herb": 198,
+        "timber": 201
+      },
+      "gold": 180,
+      "xp": []
+    }
+  }
+}

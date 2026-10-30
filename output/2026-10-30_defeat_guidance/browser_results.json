@@ -1,0 +1,442 @@
+{
+  "checks": [
+    {
+      "name": "ko repeated defeat guide after onboarding",
+      "ok": true,
+      "detail": {
+        "guide": {
+          "id": "retryPreparation",
+          "tab": "character",
+          "target": {
+            "preset": 1,
+            "hero": "h1",
+            "stageId": 1051,
+            "difficulty": "normal",
+            "attempts": 5
+          }
+        },
+        "items": [],
+        "count": 0
+      }
+    },
+    {
+      "name": "ko no bubble for loaded owner guide",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "ko advice visible",
+      "ok": true,
+      "detail": "원정 준비 점검\nParty I · 불타는 전장 — 사탄의 제단 · 최근 5회 연속 미클리어. 장비·마스터리·물약을 점검하고, 이전 구간에서 파밍해 보세요.\n바로가기"
+    },
+    {
+      "name": "ko all advice text wraps without clipping",
+      "ok": true,
+      "detail": {
+        "clientWidth": 216,
+        "scrollWidth": 216,
+        "clientHeight": 67,
+        "scrollHeight": 67,
+        "whiteSpace": "normal",
+        "rect": {
+          "x": 890.828125,
+          "y": 274.796875,
+          "width": 216,
+          "height": 67.1875,
+          "top": 274.796875,
+          "right": 1106.828125,
+          "bottom": 341.984375,
+          "left": 890.828125
+        },
+        "card": {
+          "x": 877.828125,
+          "y": 238.296875,
+          "width": 324,
+          "height": 115.6875,
+          "top": 238.296875,
+          "right": 1201.828125,
+          "bottom": 353.984375,
+          "left": 877.828125
+        }
+      }
+    },
+    {
+      "name": "ko advice button within panel",
+      "ok": true,
+      "detail": {
+        "button": {
+          "x": 1118.828125,
+          "y": 251.296875,
+          "width": 70,
+          "height": 25
+        },
+        "panel": {
+          "x": 864.828125,
+          "y": 100.5,
+          "width": 360,
+          "height": 338
+        }
+      }
+    },
+    {
+      "name": "ko collapse advice",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "ko Escape closes panel",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "ko panel controls preserve expedition",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "ko shortcut reaches correct character and inventory",
+      "ok": true,
+      "detail": {
+        "tab": "character",
+        "hero": "h1",
+        "inventory": 1,
+        "handles": [
+          "1"
+        ],
+        "preset": 1
+      }
+    },
+    {
+      "name": "ko shortcut preserves selected game preset",
+      "ok": true,
+      "detail": {
+        "tab": "character",
+        "hero": "h1",
+        "inventory": 1,
+        "handles": [
+          "1"
+        ],
+        "preset": 1
+      }
+    },
+    {
+      "name": "ko shortcut preserves live expedition",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "ko panel closes after navigation",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "ko report remains internally scrollable",
+      "ok": true,
+      "detail": {
+        "height": 800,
+        "scrollHeight": 800,
+        "overflow": "auto",
+        "rect": {
+          "x": 656.75,
+          "y": 116,
+          "width": 925.25,
+          "height": 722,
+          "top": 116,
+          "right": 1582,
+          "bottom": 838,
+          "left": 656.75
+        }
+      }
+    },
+    {
+      "name": "ko remaining enemies reachable",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "ko below threshold hides advice",
+      "ok": true,
+      "detail": {
+        "guide": null,
+        "items": [],
+        "count": 0
+      }
+    },
+    {
+      "name": "ko first live arrival creates one bubble",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "ko live bubble visible",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "ko repeated losses do not repeat bubble",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "ko stale shortcut rejected",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "ko stale shortcut preserves expedition",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "ko multi-party A5 B6 A7 does not repeat old bubble",
+      "ok": true,
+      "detail": [
+        1,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "ko reeligibility and new owner do not replay old bubble",
+      "ok": true,
+      "detail": [
+        1,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "en repeated defeat guide after onboarding",
+      "ok": true,
+      "detail": {
+        "guide": {
+          "id": "retryPreparation",
+          "tab": "character",
+          "target": {
+            "preset": 1,
+            "hero": "h1",
+            "stageId": 1051,
+            "difficulty": "normal",
+            "attempts": 5
+          }
+        },
+        "items": [],
+        "count": 0
+      }
+    },
+    {
+      "name": "en no bubble for loaded owner guide",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "en advice visible",
+      "ok": true,
+      "detail": "Review expedition preparation\nParty I · Burning Battlefield — Satan's Altar · 5 recent runs without a clear. Review gear, mastery and potions, or farm an earlier stage.\nGo to"
+    },
+    {
+      "name": "en all advice text wraps without clipping",
+      "ok": true,
+      "detail": {
+        "clientWidth": 234,
+        "scrollWidth": 234,
+        "clientHeight": 67,
+        "scrollHeight": 67,
+        "whiteSpace": "normal",
+        "rect": {
+          "x": 691.1625366210938,
+          "y": 219.83750915527344,
+          "width": 187.4749755859375,
+          "height": 53.75001525878906,
+          "top": 219.83750915527344,
+          "right": 878.6375122070312,
+          "bottom": 273.5875244140625,
+          "left": 691.1625366210938
+        },
+        "card": {
+          "x": 680.7625122070312,
+          "y": 190.6374969482422,
+          "width": 259.20001220703125,
+          "height": 92.55000305175781,
+          "top": 190.6374969482422,
+          "right": 939.9625244140625,
+          "bottom": 283.1875,
+          "left": 680.7625122070312
+        }
+      }
+    },
+    {
+      "name": "en advice button within panel",
+      "ok": true,
+      "detail": {
+        "button": {
+          "x": 888.2374877929688,
+          "y": 201.03750610351562,
+          "width": 41.32501220703125,
+          "height": 20
+        },
+        "panel": {
+          "x": 670.3624877929688,
+          "y": 80.4000015258789,
+          "width": 288,
+          "height": 270.40001678466797
+        }
+      }
+    },
+    {
+      "name": "en collapse advice",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "en Escape closes panel",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "en panel controls preserve expedition",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "en shortcut reaches correct character and inventory",
+      "ok": true,
+      "detail": {
+        "tab": "character",
+        "hero": "h1",
+        "inventory": 1,
+        "handles": [
+          "1"
+        ],
+        "preset": 1
+      }
+    },
+    {
+      "name": "en shortcut preserves selected game preset",
+      "ok": true,
+      "detail": {
+        "tab": "character",
+        "hero": "h1",
+        "inventory": 1,
+        "handles": [
+          "1"
+        ],
+        "preset": 1
+      }
+    },
+    {
+      "name": "en shortcut preserves live expedition",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "en panel closes after navigation",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "en report remains internally scrollable",
+      "ok": true,
+      "detail": {
+        "height": 800,
+        "scrollHeight": 800,
+        "overflow": "auto",
+        "rect": {
+          "x": 525.4000244140625,
+          "y": 92.80000305175781,
+          "width": 740.199951171875,
+          "height": 577.6000366210938,
+          "top": 92.80000305175781,
+          "right": 1265.5999755859375,
+          "bottom": 670.4000396728516,
+          "left": 525.4000244140625
+        }
+      }
+    },
+    {
+      "name": "en remaining enemies reachable",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "en below threshold hides advice",
+      "ok": true,
+      "detail": {
+        "guide": null,
+        "items": [],
+        "count": 0
+      }
+    },
+    {
+      "name": "en first live arrival creates one bubble",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "en live bubble visible",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "en repeated losses do not repeat bubble",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "en stale shortcut rejected",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "en stale shortcut preserves expedition",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "en multi-party A5 B6 A7 does not repeat old bubble",
+      "ok": true,
+      "detail": [
+        1,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "en reeligibility and new owner do not replay old bubble",
+      "ok": true,
+      "detail": [
+        1,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "no uncaught JavaScript errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "no local HTTP errors",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "page_errors": [],
+  "http_errors": [],
+  "source_manifest": "browser_source_manifest.json",
+  "fixture": "real recorded defeat, artificial repeated reports; no progression timing claim",
+  "elapsed_sec": 4.26,
+  "source_changed_during_run": []
+}

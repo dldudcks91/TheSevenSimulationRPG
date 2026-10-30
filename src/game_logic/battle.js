@@ -2,7 +2,7 @@
  * 전투 시뮬레이터 — **헤드리스**. 파티·스테이지·시드를 받아 결과와 타임라인을 돌려준다.
  * **런은 라운드 단위로 계산한다** [2026-09-14 · R89 · base_expedition_design §1-1] — `createRun().next()` 한 번이 라운드 하나다.
  *   **걸음 단위로도 돈다** [2026-09-21 · R130 · base_expedition_design §1-5] — `advance(until)` 이 재생 시각까지만 틱을 돌고,
- *   부르는 쪽은 **틱 사이 어디서나** 그 순간의 파티(장비 · 레벨 · 스킬 트리)를 넣을 수 있다(`refit` — 보스 라운드 도중만 거절).
+ *   부르는 쪽은 **틱 사이 어디서나** 그 순간의 파티(장비 · 레벨 · 스킬 트리)를 넣을 수 있다(`refit` — 보스 라운드 도중도 포함).
  *   보상(경험치 · 골드 · 도감 · 드롭)은 **이긴 라운드의 몫만** 결과에 들어간다.
  * 화면(ui/battle.js)은 이 타임라인을 시간에 맞춰 옮길 뿐이다 — 인자 없이 끝까지 이어 부르면 `simulate` 와 같고, 쪼개 걸어도 같다.
  * 같은 입력 + 같은 시드 = 같은 타임라인 (엔진 이식 후 대조 검증의 기준).
@@ -921,7 +921,7 @@ export function createBattleSystem(data) {
      *   찬 칸이 없으면(빈 목록 · 전부 null) 물약 단계가 아예 안 돌아 rng · 타임라인이 인자를 안 준 것과 같다
      * @returns `{ next, advance, refit, restock, status, result, ended }` — `next()` = 라운드 하나의 요약(이미 끝났으면 null) ·
      *   `advance(until)` = 그 시각까지만(라운드가 끝나면 그 요약 · 도중에 서면 null · R130) · `refit(partyUnits, fill?)` = 지금 시각에 갈아입기
-     *   (`{locked, changed}` — 보스 라운드 도중이면 `locked` · R130 · `fill` = 가득 채울 영웅 uid — 레벨업 · R182) · `restock(potions)` = 다음 라운드의 물약 칸(R315) · `status()` = `{t, round, kind, inRound}` ·
+     *   (`{locked: false, changed}` · `fill` = 가득 채울 영웅 uid — 레벨업 · R182) · `restock(potions)` = 다음 라운드의 물약 칸(R315) · `status()` = `{t, round, kind, inRound}` ·
      *   `result` = 걸음마다 자라는 결과 + 타임라인. 타임라인은 재생용이라 세이브에 넣지 않는다 (리포트만 남긴다)
      * @param slotMax 물약 칸 수 — 게임은 그 세이브의 상한(`state.limitsOf(state).potionSlots`)을 넘긴다 · 안 주면 CSV 기본값 [balance.csv:potion_slot_max] (2026-09-22)
      * @param difficulty 이번 런의 난이도 단 id — 몬스터가 선택 부위를 입을 확률만 고른다(레벨은 `level` 이 든다) · 안 주면 첫 단 (2026-10-12 · R245)
@@ -1718,8 +1718,9 @@ export function createBattleSystem(data) {
         }
 
         /**
-         * 계속 닳기 정신 집중의 한 틱 [2026-10-22 · 사용자 「도트딜로」 · 「직격」 · 간격 「0.5초마다」 · battle_design §3-2] — 열린 동안 그 유닛은 차례 · 칸 충전을 건너뛰고(`next` 가 선다)
-         *   여기서 `acc` 를 쌓아 `iv`([balance.csv:channel_tick_sec])마다 한 방(`rt.chanHit` — `chan` 이벤트 · 직격 굴림)을 친다. **경직 · 스턴 중엔 안 쌓는다**(빔이 선다).
+         * 정신 집중의 한 틱 [2026-10-22 · 사용자 「도트딜로」 · 「직격」 · 간격 「0.5초마다」 · battle_design §3-2] — 열린 동안 그 유닛은 차례 · 칸 충전을 건너뛰고(`next` 가 선다)
+         *   여기서 `acc` 를 쌓아 `iv`(끊어 치기 [balance.csv:channel_strike_sec] · 계속 닳기 [balance.csv:channel_tick_sec] · 모으기 그 스킬의 `chargeSec`)마다
+         *   한 방(`rt.chanHit` — `chan` 이벤트 · 직격 굴림)을 친다. **경직 · 스턴 중엔 안 쌓는다**(빔이 선다) · 끊어 치기도 초 시계다(2026-10-30 R392 — ~~행동 주기~~).
          *   살아 있는 적이 없으면 치지 않는다(라운드가 끝나는 틱) · 마지막 방이면 `chanHit` 이 같은 틱에 닫는다 · rng 는 한 방의 직격 굴림뿐
          */
         function chanTick(u) {
@@ -1744,13 +1745,13 @@ export function createBattleSystem(data) {
          */
         /**
          * 델리게이트 [2026-10-29 · R380 · skill_design §12-9 · INTERFACE §2-6 「장 보스 고유 넷의 장치」] — `delegate` 창(오오라)을 든 유닛의 차례가 오면
-         *   **공격력(중앙값)이 가장 높은 아군** 하나가 그 차례를 받는다. 받을 수 없는 아군 — 자기 · 쓰러짐 · 소환 · 같은 창을 든 유닛 · 경직 · 스턴 중 · 계속 닳기 · 모으기 정신 집중 중.
+         *   **공격력(중앙값)이 가장 높은 아군** 하나가 그 차례를 받는다. 받을 수 없는 아군 — 자기 · 쓰러짐 · 소환 · 같은 창을 든 유닛 · 경직 · 스턴 중 · 정신 집중 중(셋 다 · 2026-10-30 R392 — 끊어 치기도 차례가 없다).
          *   동률이면 배열 순 앞 · 받을 아군이 없으면 null(제가 행동한다) · rng 0
          */
         function delegateTo(u) {
             let best = null, top = -Infinity;
             for (const x of rt.alliesOf(u)) {
-                if (x === u || x.hp <= 0 || x.summon || stateOf(x, 'delegate') || x.chan?.iv
+                if (x === u || x.hp <= 0 || x.summon || stateOf(x, 'delegate') || x.chan
                     || x.stagUntil > t + STEP_EPS || (x.stunUntil ?? 0) > t + STEP_EPS) continue;
                 const a = ((x.atkMin ?? 0) + (x.atkMax ?? 0)) / 2;
                 if (a > top) { best = x; top = a; }
@@ -1771,12 +1772,7 @@ export function createBattleSystem(data) {
         }
 
         function chargeTick(u) {
-            // 정신 집중이 열린 동안 [2026-10-22 · R318 · battle_design §3-2] — 칸이 안 찬다 · `next` 가 방 사이 시계다(경직 · 스턴은 지금처럼 `next` 를 밀어 방도 밀린다)
-            if (u.chan) {
-                u.next -= TICK;
-                if (u.next <= STEP_EPS) { u.next = u.period; rt.act(u, t); }
-                return;
-            }
+            // 정신 집중이 열린 동안은 여기 안 온다 — 행동 순회가 `chanTick` 으로 돌린다(칸이 안 찬다 · 2026-10-30 R392 — ~~끊어 치기는 `next` 가 방 사이 시계~~)
             const max = B.cast_charge_max;
             if (u.charges < max) {
                 u.next -= TICK;
@@ -1958,7 +1954,7 @@ export function createBattleSystem(data) {
             return units.enemies.some(e => e !== target && e.hp > 0 && e.family === 'Guardian') ? f.value : 0;
         };
 
-        function strikeOnce(u, target, mult, element, s, sk = null, spread = sk?.spread ?? false) {
+        function strikeOnce(u, target, mult, element, s, sk = null, spread = sk?.spread ?? false, afterStrike = null) {
             // 이베이드 [2026-10-16 · R247 · INTERFACE §2-6 「기본 스킬 50 의 장치」] — 횟수가 남은 창이 있으면 **굴리지 않고** 통째로 피한다.
             //   피해 · 경직 · 창 · 훅 · 반사 · 반격 · 집계 없음. 다 쓰면 그 창을 닫는다. 창이 없으면 아무 일도 없다(rng 불변)
             const ev0 = stateOf(target, 'evade');
@@ -1967,12 +1963,14 @@ export function createBattleSystem(data) {
                 w.n -= 1;
                 const dodge = { t: r1(t), e: 'evade', a: u.key, d: target.key, n: w.n };
                 if (s) dodge.s = s;
+                if (sk?.hitIndex != null) dodge.i = sk.hitIndex;
                 timeline.push(dodge);
                 if (w.n <= 0) {
                     delete target.buffs[key];
                     timeline.push({ t: r1(t), e: 'buffEnd', u: target.key, s: w.s ?? key });
                     refreshDerived(target);
                 }
+                afterStrike?.(false);
                 return;
             }
             const mult0 = u.skillMult, type0 = u.atkType, stat0 = u.statMult, chance0 = u.procChance, pmult0 = u.procMult, cond0 = u.condPct;
@@ -2070,7 +2068,9 @@ export function createBattleSystem(data) {
             if (!hit) {
                 const miss = { t: r1(t), e: 'dodge', a: u.key, d: target.key };
                 if (s) miss.s = s;
+                if (sk?.hitIndex != null) miss.i = sk.hitIndex;
                 timeline.push(miss);
+                afterStrike?.(false);
                 return;
             }
             const shield = target.barrier;
@@ -2118,6 +2118,7 @@ export function createBattleSystem(data) {
                 ev.ahp = u.hp;
             }
             if (s) ev.s = s;
+            if (sk?.hitIndex != null) ev.i = sk.hitIndex;
             if (proc) ev.proc = true;                        // 추가 피해가 **터진 타격만** 키가 선다 (INTERFACE §2-6)
             if (shield) ev.bar = shield.amt;                // 흡수 후 잔량
             timeline.push(ev);
@@ -2221,6 +2222,10 @@ export function createBattleSystem(data) {
                 rt.basicAttack(target, t, alive(rt.foesOf(target)), u);
                 target.next = target.period;
             }
+            // 호출자가 붙인 후처리(추가타 결빙 · 대상 방어 감소)까지 끝낸 뒤 장비 발동을 판정한다.
+            afterStrike?.(true);
+            // 무기 타격 발동 — 원래 타격의 반사 · 쓰러짐 · 반격을 먼저 끝낸다. 발동 안의 직격은 런타임이 연쇄를 막는다.
+            rt.procHit(u, t);
             // 적중한 직격 [2026-10-29 · R387] — 덤 창의 상태이상(콜드 애로우 결빙 · `skill_runtime.onhitExtra`)이 읽는다 · 피함 · 빗나감은 위에서 값 없이 돌아갔다
             return true;
         }
@@ -2259,8 +2264,7 @@ export function createBattleSystem(data) {
 
         /* 갈아입기 [2026-09-14 · R89 · INTERFACE §2-6 createRun · **라운드 도중 2026-09-21 · R130**] — **그 순간의 파티**를 받아 **바뀐 영웅만** 다시 입힌다.
            부르는 자리가 둘이다 — **라운드 사이**(이긴 라운드의 요약 뒤 · 다음 라운드를 열기 전 — 옛 `next(partyUnits)` 의 자리)와
-           **라운드 도중**(틱과 틱 사이 — 원정 중 교체가 그 순간 먹는다 · base_expedition_design §1-5). **보스 라운드 도중에는 거절한다** —
-           보스 라운드가 시작하는 순간의 장비로 싸운다(보스전 중 교체는 다음 런부터). 라운드 사이 · 첫 라운드 전은 보스 라운드 앞이라도 받는다.
+           **라운드 도중**(틱과 틱 사이 — 원정 중 교체가 그 순간 먹는다 · base_expedition_design §1-5). 보스 라운드도 같은 규칙이다.
            같은지는 입력(`combat` · `stats` · 스킬 칸)으로 가른다 — 같으면 손대지 않아야 인자 없이 이어 부른 것과 한 글자도 안 다르다.
            지키는 것: **현재 HP 의 비율**(R130 — ~~현재 HP · 새 최대치로 자른다~~ · **`fill` 에 든 영웅 = 레벨업은 가득** — R182) · 창 · 배리어 · 행동 예약 · 남은 스킬의 쿨(**칸마다** — R130) ·
            깎인 방어(`defKeep` — R130). **새로 생긴 스킬은 지금부터 한 바퀴** (battle_design §6) */
@@ -2281,8 +2285,6 @@ export function createBattleSystem(data) {
         }
         function refit(updates, fill) {
             if (ended) return { locked: false, changed: [] };
-            // 보스 라운드 도중 — 아무것도 안 바꾼다. 바뀐 입력은 `worn` 에도 안 적으므로 라운드 사이에 오면 그때 입는다 (R130)
-            if (inRound() && roundLog?.kind === 'boss') return { locked: true, changed: [] };
             const changed = [];
             const removed = [];   // 갈아입기로 걷힌 오오라 창 `{u, s}`(`s` = 건 오오라 id) — 다시 안 걸린 것은 다음 `round` 뒤에 `buffEnd` 로 닫는다 (R98)
             for (const p of updates) {
@@ -2420,7 +2422,7 @@ export function createBattleSystem(data) {
                 if (potionLeft > 0) drinkPotions();
                 for (const u of [...party, ...units.enemies]) {
                     if (u.hp <= 0) continue;
-                    if (u.chan?.iv) { chanTick(u); continue; }   // 계속 닳기 정신 집중 — 차례 · 칸 충전 대신 1초 틱 (2026-10-22 · 아래 `chanTick`)
+                    if (u.chan) { chanTick(u); continue; }   // 정신 집중 — 차례 · 칸 충전 대신 방 사이 초 시계 (2026-10-22 · 끊어 치기도 2026-10-30 R392 · 위 `chanTick`)
                     if (u.noBasic) { chargeTick(u); continue; }
                     u.next -= TICK;
                     // 같은 여유로 판정한다 — `next -= TICK` 의 꼬리(5.0 − 0.1 × 50 > 0)가 틱 하나를 더 먹지 않게 (DEV_PLAN §4 #69)

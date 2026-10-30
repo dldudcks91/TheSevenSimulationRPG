@@ -45,7 +45,7 @@ def review_sheet(rows: list[dict], sprites: dict[str, Image.Image]) -> None:
     font_path = Path("C:/Windows/Fonts/malgun.ttf")
     title = ImageFont.truetype(str(font_path), 20) if font_path.exists() else ImageFont.load_default()
     small = ImageFont.truetype(str(font_path), 14) if font_path.exists() else ImageFont.load_default()
-    with Image.open(ROOT / "src/assets/art/faces/gpt/hero/warrior_1.webp") as image:
+    with Image.open(ROOT / "src/assets/art/faces/gemini/hero/warrior_1.webp") as image:
         portrait = image.convert("RGBA").resize((101, 101), Image.Resampling.LANCZOS)
     for index, row in enumerate(rows):
         x, y = index % 4 * 320, index // 4 * 420

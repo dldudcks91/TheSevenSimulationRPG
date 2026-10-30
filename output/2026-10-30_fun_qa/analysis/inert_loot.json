@@ -1,0 +1,5255 @@
+{
+  "classification": "Explicitly unfinished effects, shown as inactive in game tooltips; not a newly introduced regression. Weapon hit procs are implemented and excluded.",
+  "denominator": "Actual newly acquired expedition loot plus opened first-clear chest items captured by the observer; each account UID counted once. Starting gear and unacquired monster gear excluded.",
+  "sourceFlags": "snapshot/src/ui/mock.js:195-199 and item.js:28; runtime hero.js:672 only collects weapon hit procs.",
+  "notes": [
+    "Auto-equipped-at-least-once is joined to actual automatic equip events; it is not proof that the inactive line caused the choice.",
+    "This observational sample does not estimate all player distributions. Observer/main parity must be checked by the simulation owner.",
+    "Phases are cumulative and must not be added together."
+  ],
+  "accounts": [
+    {
+      "account": "adaptive_seed1",
+      "seed": 1,
+      "policy": "adaptive",
+      "metadata": {
+        "pace": {
+          "speed": 1,
+          "rise": 0,
+          "focus": 0,
+          "gap": 950
+        },
+        "managementSeconds": 300,
+        "labTickSeconds": 60,
+        "checkpoint": "before_exact_mark_management",
+        "mastery": "combat priority + first guide free reset",
+        "futureLoot": "keep best future-level candidate per hero/slot, all craft/unique/set",
+        "noActions": [
+          "hire",
+          "skillbook craft/learn",
+          "advance",
+          "explore",
+          "tactic reroll",
+          "higher tier potions"
+        ]
+      },
+      "phases": [
+        {
+          "seconds": 600,
+          "acquiredItems": 4,
+          "affixLines": 10,
+          "itemsWithInertAffixes": 0,
+          "inertAffixLines": 0,
+          "itemsWithInactiveAmuletProc": 0,
+          "anyInactiveItems": 0,
+          "inertStatCounts": {},
+          "autoEquippedInertItems": 0
+        },
+        {
+          "seconds": 3600,
+          "acquiredItems": 38,
+          "affixLines": 92,
+          "itemsWithInertAffixes": 2,
+          "inertAffixLines": 2,
+          "itemsWithInactiveAmuletProc": 0,
+          "anyInactiveItems": 2,
+          "inertStatCounts": {
+            "proc_cast_buff": 1,
+            "proc_cast_attack": 1
+          },
+          "autoEquippedInertItems": 2
+        },
+        {
+          "seconds": 86400,
+          "acquiredItems": 757,
+          "affixLines": 2335,
+          "itemsWithInertAffixes": 34,
+          "inertAffixLines": 34,
+          "itemsWithInactiveAmuletProc": 18,
+          "anyInactiveItems": 52,
+          "inertStatCounts": {
+            "proc_cast_buff": 9,
+            "proc_cast_attack": 6,
+            "proc_struck_debuff": 14,
+            "proc_cast_debuff": 5
+          },
+          "autoEquippedInertItems": 8
+        }
+      ]
+    },
+    {
+      "account": "adaptive_seed2",
+      "seed": 2,
+      "policy": "adaptive",
+      "metadata": {
+        "pace": {
+          "speed": 1,
+          "rise": 0,
+          "focus": 0,
+          "gap": 950
+        },
+        "managementSeconds": 300,
+        "labTickSeconds": 60,
+        "checkpoint": "before_exact_mark_management",
+        "mastery": "combat priority + first guide free reset",
+        "futureLoot": "keep best future-level candidate per hero/slot, all craft/unique/set",
+        "noActions": [
+          "hire",
+          "skillbook craft/learn",
+          "advance",
+          "explore",
+          "tactic reroll",
+          "higher tier potions"
+        ]
+      },
+      "phases": [
+        {
+          "seconds": 600,
+          "acquiredItems": 7,
+          "affixLines": 17,
+          "itemsWithInertAffixes": 1,
+          "inertAffixLines": 1,
+          "itemsWithInactiveAmuletProc": 0,
+          "anyInactiveItems": 1,
+          "inertStatCounts": {
+            "proc_cast_debuff": 1
+          },
+          "autoEquippedInertItems": 0
+        },
+        {
+          "seconds": 3600,
+          "acquiredItems": 48,
+          "affixLines": 133,
+          "itemsWithInertAffixes": 2,
+          "inertAffixLines": 2,
+          "itemsWithInactiveAmuletProc": 0,
+          "anyInactiveItems": 2,
+          "inertStatCounts": {
+            "proc_cast_debuff": 1,
+            "proc_struck_debuff": 1
+          },
+          "autoEquippedInertItems": 0
+        },
+        {
+          "seconds": 86400,
+          "acquiredItems": 727,
+          "affixLines": 2264,
+          "itemsWithInertAffixes": 19,
+          "inertAffixLines": 19,
+          "itemsWithInactiveAmuletProc": 27,
+          "anyInactiveItems": 46,
+          "inertStatCounts": {
+            "proc_cast_debuff": 1,
+            "proc_struck_debuff": 14,
+            "proc_cast_attack": 3,
+            "proc_cast_buff": 1
+          },
+          "autoEquippedInertItems": 3
+        }
+      ]
+    },
+    {
+      "account": "adaptive_seed3",
+      "seed": 3,
+      "policy": "adaptive",
+      "metadata": {
+        "pace": {
+          "speed": 1,
+          "rise": 0,
+          "focus": 0,
+          "gap": 950
+        },
+        "managementSeconds": 300,
+        "labTickSeconds": 60,
+        "checkpoint": "before_exact_mark_management",
+        "mastery": "combat priority + first guide free reset",
+        "futureLoot": "keep best future-level candidate per hero/slot, all craft/unique/set",
+        "noActions": [
+          "hire",
+          "skillbook craft/learn",
+          "advance",
+          "explore",
+          "tactic reroll",
+          "higher tier potions"
+        ]
+      },
+      "phases": [
+        {
+          "seconds": 600,
+          "acquiredItems": 4,
+          "affixLines": 9,
+          "itemsWithInertAffixes": 0,
+          "inertAffixLines": 0,
+          "itemsWithInactiveAmuletProc": 0,
+          "anyInactiveItems": 0,
+          "inertStatCounts": {},
+          "autoEquippedInertItems": 0
+        },
+        {
+          "seconds": 3600,
+          "acquiredItems": 31,
+          "affixLines": 69,
+          "itemsWithInertAffixes": 0,
+          "inertAffixLines": 0,
+          "itemsWithInactiveAmuletProc": 0,
+          "anyInactiveItems": 0,
+          "inertStatCounts": {},
+          "autoEquippedInertItems": 0
+        },
+        {
+          "seconds": 86400,
+          "acquiredItems": 812,
+          "affixLines": 2513,
+          "itemsWithInertAffixes": 27,
+          "inertAffixLines": 27,
+          "itemsWithInactiveAmuletProc": 19,
+          "anyInactiveItems": 46,
+          "inertStatCounts": {
+            "proc_struck_debuff": 19,
+            "proc_cast_attack": 4,
+            "proc_cast_debuff": 1,
+            "proc_cast_buff": 3
+          },
+          "autoEquippedInertItems": 4
+        }
+      ]
+    },
+    {
+      "account": "basic_seed1",
+      "seed": 1,
+      "policy": "basic",
+      "metadata": {
+        "pace": {
+          "speed": 1,
+          "rise": 0,
+          "focus": 0,
+          "gap": 950
+        },
+        "managementSeconds": 300,
+        "labTickSeconds": 60,
+        "checkpoint": "before_exact_mark_management",
+        "mastery": "CSV order (weak/default proxy)",
+        "futureLoot": "keep best future-level candidate per hero/slot, all craft/unique/set",
+        "noActions": [
+          "hire",
+          "skillbook craft/learn",
+          "advance",
+          "explore",
+          "tactic reroll",
+          "higher tier potions"
+        ]
+      },
+      "phases": [
+        {
+          "seconds": 600,
+          "acquiredItems": 3,
+          "affixLines": 6,
+          "itemsWithInertAffixes": 0,
+          "inertAffixLines": 0,
+          "itemsWithInactiveAmuletProc": 0,
+          "anyInactiveItems": 0,
+          "inertStatCounts": {},
+          "autoEquippedInertItems": 0
+        },
+        {
+          "seconds": 3600,
+          "acquiredItems": 32,
+          "affixLines": 74,
+          "itemsWithInertAffixes": 2,
+          "inertAffixLines": 2,
+          "itemsWithInactiveAmuletProc": 0,
+          "anyInactiveItems": 2,
+          "inertStatCounts": {
+            "proc_cast_buff": 2
+          },
+          "autoEquippedInertItems": 1
+        },
+        {
+          "seconds": 86400,
+          "acquiredItems": 474,
+          "affixLines": 1328,
+          "itemsWithInertAffixes": 14,
+          "inertAffixLines": 14,
+          "itemsWithInactiveAmuletProc": 3,
+          "anyInactiveItems": 17,
+          "inertStatCounts": {
+            "proc_cast_buff": 3,
+            "proc_cast_attack": 2,
+            "proc_struck_debuff": 8,
+            "proc_cast_debuff": 1
+          },
+          "autoEquippedInertItems": 5
+        }
+      ]
+    },
+    {
+      "account": "basic_seed2",
+      "seed": 2,
+      "policy": "basic",
+      "metadata": {
+        "pace": {
+          "speed": 1,
+          "rise": 0,
+          "focus": 0,
+          "gap": 950
+        },
+        "managementSeconds": 300,
+        "labTickSeconds": 60,
+        "checkpoint": "before_exact_mark_management",
+        "mastery": "CSV order (weak/default proxy)",
+        "futureLoot": "keep best future-level candidate per hero/slot, all craft/unique/set",
+        "noActions": [
+          "hire",
+          "skillbook craft/learn",
+          "advance",
+          "explore",
+          "tactic reroll",
+          "higher tier potions"
+        ]
+      },
+      "phases": [
+        {
+          "seconds": 600,
+          "acquiredItems": 7,
+          "affixLines": 18,
+          "itemsWithInertAffixes": 2,
+          "inertAffixLines": 2,
+          "itemsWithInactiveAmuletProc": 0,
+          "anyInactiveItems": 2,
+          "inertStatCounts": {
+            "proc_cast_debuff": 1,
+            "proc_cast_attack": 1
+          },
+          "autoEquippedInertItems": 0
+        },
+        {
+          "seconds": 3600,
+          "acquiredItems": 43,
+          "affixLines": 110,
+          "itemsWithInertAffixes": 3,
+          "inertAffixLines": 3,
+          "itemsWithInactiveAmuletProc": 0,
+          "anyInactiveItems": 3,
+          "inertStatCounts": {
+            "proc_cast_debuff": 1,
+            "proc_cast_attack": 1,
+            "proc_cast_buff": 1
+          },
+          "autoEquippedInertItems": 1
+        },
+        {
+          "seconds": 86400,
+          "acquiredItems": 420,
+          "affixLines": 1229,
+          "itemsWithInertAffixes": 23,
+          "inertAffixLines": 23,
+          "itemsWithInactiveAmuletProc": 4,
+          "anyInactiveItems": 27,
+          "inertStatCounts": {
+            "proc_cast_debuff": 1,
+            "proc_cast_attack": 4,
+            "proc_cast_buff": 6,
+            "proc_struck_debuff": 12
+          },
+          "autoEquippedInertItems": 2
+        }
+      ]
+    },
+    {
+      "account": "basic_seed3",
+      "seed": 3,
+      "policy": "basic",
+      "metadata": {
+        "pace": {
+          "speed": 1,
+          "rise": 0,
+          "focus": 0,
+          "gap": 950
+        },
+        "managementSeconds": 300,
+        "labTickSeconds": 60,
+        "checkpoint": "before_exact_mark_management",
+        "mastery": "CSV order (weak/default proxy)",
+        "futureLoot": "keep best future-level candidate per hero/slot, all craft/unique/set",
+        "noActions": [
+          "hire",
+          "skillbook craft/learn",
+          "advance",
+          "explore",
+          "tactic reroll",
+          "higher tier potions"
+        ]
+      },
+      "phases": [
+        {
+          "seconds": 600,
+          "acquiredItems": 2,
+          "affixLines": 5,
+          "itemsWithInertAffixes": 0,
+          "inertAffixLines": 0,
+          "itemsWithInactiveAmuletProc": 0,
+          "anyInactiveItems": 0,
+          "inertStatCounts": {},
+          "autoEquippedInertItems": 0
+        },
+        {
+          "seconds": 3600,
+          "acquiredItems": 18,
+          "affixLines": 44,
+          "itemsWithInertAffixes": 0,
+          "inertAffixLines": 0,
+          "itemsWithInactiveAmuletProc": 0,
+          "anyInactiveItems": 0,
+          "inertStatCounts": {},
+          "autoEquippedInertItems": 0
+        },
+        {
+          "seconds": 86400,
+          "acquiredItems": 264,
+          "affixLines": 706,
+          "itemsWithInertAffixes": 7,
+          "inertAffixLines": 7,
+          "itemsWithInactiveAmuletProc": 4,
+          "anyInactiveItems": 11,
+          "inertStatCounts": {
+            "proc_struck_debuff": 6,
+            "proc_cast_buff": 1
+          },
+          "autoEquippedInertItems": 0
+        }
+      ]
+    }
+  ],
+  "aggregate": [
+    {
+      "policy": "adaptive",
+      "seconds": 600,
+      "accounts": 3,
+      "acquiredItems": 15,
+      "affixLines": 36,
+      "itemsWithInertAffixes": 1,
+      "inertAffixLines": 1,
+      "itemsWithInactiveAmuletProc": 0,
+      "anyInactiveItems": 1,
+      "autoEquippedInertItems": 0,
+      "anyInactiveItemPct": 6.666666666666667
+    },
+    {
+      "policy": "adaptive",
+      "seconds": 3600,
+      "accounts": 3,
+      "acquiredItems": 117,
+      "affixLines": 294,
+      "itemsWithInertAffixes": 4,
+      "inertAffixLines": 4,
+      "itemsWithInactiveAmuletProc": 0,
+      "anyInactiveItems": 4,
+      "autoEquippedInertItems": 2,
+      "anyInactiveItemPct": 3.4188034188034186
+    },
+    {
+      "policy": "adaptive",
+      "seconds": 86400,
+      "accounts": 3,
+      "acquiredItems": 2296,
+      "affixLines": 7112,
+      "itemsWithInertAffixes": 80,
+      "inertAffixLines": 80,
+      "itemsWithInactiveAmuletProc": 64,
+      "anyInactiveItems": 144,
+      "autoEquippedInertItems": 15,
+      "anyInactiveItemPct": 6.2717770034843205
+    },
+    {
+      "policy": "basic",
+      "seconds": 600,
+      "accounts": 3,
+      "acquiredItems": 12,
+      "affixLines": 29,
+      "itemsWithInertAffixes": 2,
+      "inertAffixLines": 2,
+      "itemsWithInactiveAmuletProc": 0,
+      "anyInactiveItems": 2,
+      "autoEquippedInertItems": 0,
+      "anyInactiveItemPct": 16.666666666666668
+    },
+    {
+      "policy": "basic",
+      "seconds": 3600,
+      "accounts": 3,
+      "acquiredItems": 93,
+      "affixLines": 228,
+      "itemsWithInertAffixes": 5,
+      "inertAffixLines": 5,
+      "itemsWithInactiveAmuletProc": 0,
+      "anyInactiveItems": 5,
+      "autoEquippedInertItems": 2,
+      "anyInactiveItemPct": 5.376344086021505
+    },
+    {
+      "policy": "basic",
+      "seconds": 86400,
+      "accounts": 3,
+      "acquiredItems": 1158,
+      "affixLines": 3263,
+      "itemsWithInertAffixes": 44,
+      "inertAffixLines": 44,
+      "itemsWithInactiveAmuletProc": 11,
+      "anyInactiveItems": 55,
+      "autoEquippedInertItems": 7,
+      "anyInactiveItemPct": 4.7495682210708114
+    }
+  ],
+  "inactiveSamples": [
+    {
+      "account": "adaptive_seed1",
+      "t": 900,
+      "source": "box",
+      "uid": "i15",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 5,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "격노의 헤븐리 스톤",
+        "en": "Raging Heavenly Stone"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.05,
+          "src": "sloth",
+          "skill": "mag_deepfreeze"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 3600,
+      "source": "box",
+      "uid": "i47",
+      "slot": "weapon",
+      "rarity": "rare",
+      "ilvl": 11,
+      "group": "crucifix",
+      "classes": "priest",
+      "name": {
+        "ko": "방탕과 학살의 디바인 셉터",
+        "en": "Debauched and Slaughtering Divine Scepter"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.09,
+          "src": "wrath",
+          "skill": "pri_judgment"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 3774.2,
+      "source": "drop",
+      "uid": "i48",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 5,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "클로스 아머",
+        "en": "Cloth Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.07,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 4619.35,
+      "source": "drop",
+      "uid": "i58",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 11,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "질투의 탈리스만",
+        "en": "Jealous Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "arc_multishot",
+        "v": 0.11
+      },
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 5363.95,
+      "source": "drop",
+      "uid": "i64",
+      "slot": "weapon",
+      "rarity": "normal",
+      "ilvl": 7,
+      "group": "crucifix",
+      "classes": "priest",
+      "name": {
+        "ko": "마이티 셉터",
+        "en": "Mighty Scepter"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.05,
+          "src": "wrath",
+          "skill": "pri_judgment"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 5673.55,
+      "source": "drop",
+      "uid": "i68",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 11,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "경멸의 아이 펜던트",
+        "en": "Contemptuous Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "pri_grace",
+        "v": 0.05
+      },
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 6474.95,
+      "source": "drop",
+      "uid": "i75",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 11,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "포식의 탈리스만",
+        "en": "Predatory Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "kni_resistshield",
+        "v": 0.13
+      },
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 6786.25,
+      "source": "drop",
+      "uid": "i76",
+      "slot": "amulet",
+      "rarity": "rare",
+      "ilvl": 13,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "방탕과 탐욕의 골드 네클리스",
+        "en": "Debauched and Greedy Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "war_battlecry",
+        "v": 1.44
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 7298.1,
+      "source": "drop",
+      "uid": "i82",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 11,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "시기의 퀼티드 아머",
+        "en": "Envious Quilted Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.1,
+          "src": "envy",
+          "skill": "war_warcry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 7753.15,
+      "source": "drop",
+      "uid": "i87",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 12,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "탐욕의 에인션트 아머",
+        "en": "Greedy Ancient Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.06,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 9600,
+      "source": "box",
+      "uid": "i119",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 18,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "색욕의 디멘셔널 샤드",
+        "en": "Lustful Dimensional Shard"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.11,
+          "src": "wrath",
+          "skill": "mag_inferno"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 10319.1,
+      "source": "drop",
+      "uid": "i132",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 19,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "방탕의 탈리스만",
+        "en": "Debauched Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "arc_pierce",
+        "v": 0.12
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 10500,
+      "source": "box",
+      "uid": "i137",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 20,
+      "group": "crucifix",
+      "classes": "priest",
+      "name": {
+        "ko": "무기력의 세라프 로드",
+        "en": "Lethargic Seraph Rod"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_debuff",
+          "v": 0.07,
+          "src": "envy",
+          "skill": "pri_penitence"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 14613.1,
+      "source": "drop",
+      "uid": "i178",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 26,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "탐욕의 골드 네클리스",
+        "en": "Greedy Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "war_doubleswing",
+        "v": 1.17
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 16660.55,
+      "source": "drop",
+      "uid": "i200",
+      "slot": "weapon",
+      "rarity": "normal",
+      "ilvl": 24,
+      "group": "bible",
+      "classes": "priest",
+      "name": {
+        "ko": "브리비어리",
+        "en": "Breviary"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "war_battlecry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 17772.3,
+      "source": "drop",
+      "uid": "i211",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 26,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "경멸의 아이 펜던트",
+        "en": "Contemptuous Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "mag_deepfreeze",
+        "v": 0.07
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 18458.9,
+      "source": "drop",
+      "uid": "i213",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 26,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "시기의 라이트 플레이트",
+        "en": "Envious Light Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.07,
+          "src": "envy",
+          "skill": "war_battlecry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 18667.35,
+      "source": "drop",
+      "uid": "i215",
+      "slot": "weapon",
+      "rarity": "normal",
+      "ilvl": 26,
+      "group": "bible",
+      "classes": "priest",
+      "name": {
+        "ko": "렉턴 바이블",
+        "en": "Lectern Bible"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.1,
+          "src": "sloth",
+          "skill": "war_ironskin"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 18846,
+      "source": "drop",
+      "uid": "i218",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 26,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "허기의 아이 펜던트",
+        "en": "Hungering Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "arc_evade",
+        "v": 0.07
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 20493.8,
+      "source": "drop",
+      "uid": "i237",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 26,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "권태의 아이 펜던트",
+        "en": "Weary Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "mag_echo",
+        "v": 0.08
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 20824.1,
+      "source": "drop",
+      "uid": "i246",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 26,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "방탕의 탈리스만",
+        "en": "Debauched Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "pri_penitence",
+        "v": 0.12
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 21026.1,
+      "source": "drop",
+      "uid": "i249",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 26,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "퀼티드 아머",
+        "en": "Quilted Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.08,
+          "src": "envy",
+          "skill": "war_warcry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 21600,
+      "source": "box",
+      "uid": "i254",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 27,
+      "group": "bible",
+      "classes": "priest",
+      "name": {
+        "ko": "광란의 그레이트 바이블",
+        "en": "Rampaging Great Bible"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_debuff",
+          "v": 0.05,
+          "src": "envy",
+          "skill": "war_battlecry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 24077.7,
+      "source": "drop",
+      "uid": "i292",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 33,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "오만의 아이 펜던트",
+        "en": "Prideful Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "war_warcry",
+        "v": 0.1
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 28589.2,
+      "source": "drop",
+      "uid": "i349",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 32,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "오네이트 플레이트",
+        "en": "Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.09,
+          "src": "envy",
+          "skill": "war_warcry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 29459.7,
+      "source": "drop",
+      "uid": "i358",
+      "slot": "weapon",
+      "rarity": "rare",
+      "ilvl": 31,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "나태와 착취의 디멘셔널 샤드",
+        "en": "Slothful and Exploitative Dimensional Shard"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.09,
+          "src": "sloth",
+          "skill": "war_shout"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 30682.65,
+      "source": "drop",
+      "uid": "i371",
+      "slot": "weapon",
+      "rarity": "rare",
+      "ilvl": 32,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "나태와 색욕의 데몬 하트",
+        "en": "Slothful and Lustful Demon Heart"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.11,
+          "src": "sloth",
+          "skill": "arc_poison"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 35601.05,
+      "source": "drop",
+      "uid": "i408",
+      "slot": "weapon",
+      "rarity": "rare",
+      "ilvl": 28,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "나태와 광란의 데몬 하트",
+        "en": "Slothful and Rampaging Demon Heart"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.11,
+          "src": "wrath",
+          "skill": "mag_chain"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 36336,
+      "source": "drop",
+      "uid": "i416",
+      "slot": "weapon",
+      "rarity": "rare",
+      "ilvl": 32,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "학살과 방탕의 디멘셔널 샤드",
+        "en": "Slaughtering and Debauched Dimensional Shard"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.07,
+          "src": "sloth",
+          "skill": "mag_deepfreeze"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 39000,
+      "source": "box",
+      "uid": "i440",
+      "slot": "weapon",
+      "rarity": "rare",
+      "ilvl": 35,
+      "group": "bible",
+      "classes": "priest",
+      "name": {
+        "ko": "방탕과 탐욕의 그레이트 바이블",
+        "en": "Debauched and Greedy Great Bible"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_debuff",
+          "v": 0.09,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 39006.7,
+      "source": "drop",
+      "uid": "i441",
+      "slot": "amulet",
+      "rarity": "rare",
+      "ilvl": 37,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "질투와 포식의 탈리스만",
+        "en": "Jealous and Predatory Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "pri_penitence",
+        "v": 0.1
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 40186.05,
+      "source": "drop",
+      "uid": "i464",
+      "slot": "weapon",
+      "rarity": "epic",
+      "ilvl": 36,
+      "group": "crucifix",
+      "classes": "priest",
+      "name": {
+        "ko": "시기와 경멸의 카두케우스",
+        "en": "Envious and Contemptuous Caduceus"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 40392.1,
+      "source": "drop",
+      "uid": "i467",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 37,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "나태의 세이크리드 글로브",
+        "en": "Slothful Sacred Globe"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.09,
+          "src": "sloth",
+          "skill": "pri_grace"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 40811.1,
+      "source": "drop",
+      "uid": "i471",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 38,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "탐욕과 방탕의 고스트 아머",
+        "en": "Greedy and Debauched Ghost Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.09,
+          "src": "envy",
+          "skill": "war_battlecry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 41400,
+      "source": "box",
+      "uid": "i479",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 36,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "광란의 데몬 하트",
+        "en": "Rampaging Demon Heart"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.07,
+          "src": "wrath",
+          "skill": "mag_frostnova"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 44122.7,
+      "source": "drop",
+      "uid": "i518",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 38,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "오만의 고스트 아머",
+        "en": "Prideful Ghost Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "pri_penitence"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 44262.1,
+      "source": "drop",
+      "uid": "i521",
+      "slot": "amulet",
+      "rarity": "epic",
+      "ilvl": 38,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "경멸과 앙심의 골드 네클리스",
+        "en": "Contemptuous and Spiteful Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "arc_pierce",
+        "v": 1.04
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 44625.5,
+      "source": "drop",
+      "uid": "i529",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 38,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "타락의 골드 네클리스",
+        "en": "Corrupted Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "mag_chain",
+        "v": 1.06
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 46253.55,
+      "source": "drop",
+      "uid": "i544",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 40,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "앙심과 망각의 메이지 플레이트",
+        "en": "Spiteful and Forgotten Mage Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.08,
+          "src": "envy",
+          "skill": "war_warcry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 48991.35,
+      "source": "drop",
+      "uid": "i566",
+      "slot": "armor",
+      "rarity": "epic",
+      "ilvl": 39,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "오만과 학살의 메이지 플레이트",
+        "en": "Prideful and Slaughtering Mage Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.07,
+          "src": "envy",
+          "skill": "war_battlecry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 49180.25,
+      "source": "drop",
+      "uid": "i569",
+      "slot": "weapon",
+      "rarity": "normal",
+      "ilvl": 39,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "엘드리치 오브",
+        "en": "Eldritch Orb"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.09,
+          "src": "sloth",
+          "skill": "kni_resistshield"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 58500.75,
+      "source": "drop",
+      "uid": "i610",
+      "slot": "weapon",
+      "rarity": "normal",
+      "ilvl": 45,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "데몬 하트",
+        "en": "Demon Heart"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.12,
+          "src": "sloth",
+          "skill": "arc_coldarrow"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 58746.95,
+      "source": "drop",
+      "uid": "i611",
+      "slot": "weapon",
+      "rarity": "epic",
+      "ilvl": 43,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "나태와 오만의 이글 오브",
+        "en": "Slothful and Prideful Eagle Orb"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.1,
+          "src": "sloth",
+          "skill": "war_frenzy"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 63856.05,
+      "source": "drop",
+      "uid": "i626",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 45,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "메이지 플레이트",
+        "en": "Mage Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.06,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 70531.1,
+      "source": "drop",
+      "uid": "i660",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 46,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "탐욕과 허기의 고스트 아머",
+        "en": "Greedy and Hungering Ghost Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 71224.55,
+      "source": "drop",
+      "uid": "i669",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 46,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "찬탈의 아이 펜던트",
+        "en": "Usurping Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "mag_echo",
+        "v": 0.09
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 76235.2,
+      "source": "drop",
+      "uid": "i702",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 39,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "망각과 질투의 오네이트 플레이트",
+        "en": "Forgotten and Jealous Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.12,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 76360.4,
+      "source": "drop",
+      "uid": "i703",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 41,
+      "group": "bible",
+      "classes": "priest",
+      "name": {
+        "ko": "착취의 아포크리파",
+        "en": "Exploitative Apocrypha"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.12,
+          "src": "wrath",
+          "skill": "pri_judgment"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 76636.1,
+      "source": "drop",
+      "uid": "i708",
+      "slot": "amulet",
+      "rarity": "rare",
+      "ilvl": 46,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "타락과 광란의 골드 네클리스",
+        "en": "Corrupted and Rampaging Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "arc_guided",
+        "v": 1.41
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 79286.95,
+      "source": "drop",
+      "uid": "i727",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 46,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "앙심과 착취의 메이지 플레이트",
+        "en": "Spiteful and Exploitative Mage Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.1,
+          "src": "envy",
+          "skill": "war_battlecry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 84788.25,
+      "source": "drop",
+      "uid": "i779",
+      "slot": "amulet",
+      "rarity": "rare",
+      "ilvl": 44,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "권태와 격노의 탈리스만",
+        "en": "Weary and Raging Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "pri_cure",
+        "v": 0.14
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed1",
+      "t": 85616.9,
+      "source": "drop",
+      "uid": "i788",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 44,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "찬탈의 탈리스만",
+        "en": "Usurping Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "kni_resistshield",
+        "v": 0.14
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 353,
+      "source": "drop",
+      "uid": "i10",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 2,
+      "group": "crucifix",
+      "classes": "priest",
+      "name": {
+        "ko": "배신의 마이티 셉터",
+        "en": "Treacherous Mighty Scepter"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_debuff",
+          "v": 0.06,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 1640.5,
+      "source": "drop",
+      "uid": "i29",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 7,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "타락의 클로스 아머",
+        "en": "Corrupted Cloth Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.06,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 5308.45,
+      "source": "drop",
+      "uid": "i88",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 18,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "권태의 골드 네클리스",
+        "en": "Weary Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "mag_iceblast",
+        "v": 1.23
+      },
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 7561.75,
+      "source": "drop",
+      "uid": "i115",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 24,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "오만의 골드 네클리스",
+        "en": "Prideful Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "pri_doom",
+        "v": 1.35
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 8061.75,
+      "source": "drop",
+      "uid": "i121",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 26,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "심연의 탈리스만",
+        "en": "Abyssal Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "arc_coldarrow",
+        "v": 0.13
+      },
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 18101,
+      "source": "drop",
+      "uid": "i203",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 33,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "탐욕의 골드 네클리스",
+        "en": "Greedy Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "kni_charge",
+        "v": 1.1
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 22637.25,
+      "source": "drop",
+      "uid": "i240",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 33,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "허기의 아이 펜던트",
+        "en": "Hungering Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "pri_bind",
+        "v": 0.08
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 26501.5,
+      "source": "drop",
+      "uid": "i291",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 31,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "고스트 아머",
+        "en": "Ghost Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.1,
+          "src": "envy",
+          "skill": "war_battlecry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 31763.35,
+      "source": "drop",
+      "uid": "i351",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 33,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "배신과 경멸의 오네이트 플레이트",
+        "en": "Treacherous and Contemptuous Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "war_warcry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 33835.05,
+      "source": "drop",
+      "uid": "i376",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 33,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "고스트 아머",
+        "en": "Ghost Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "war_warcry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 33996.05,
+      "source": "drop",
+      "uid": "i382",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 35,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "집착의 골드 네클리스",
+        "en": "Obsessive Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "arc_quickhands",
+        "v": 1.48
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 34309.45,
+      "source": "drop",
+      "uid": "i386",
+      "slot": "armor",
+      "rarity": "epic",
+      "ilvl": 36,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "질투와 집착의 메이지 플레이트",
+        "en": "Jealous and Obsessive Mage Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.07,
+          "src": "envy",
+          "skill": "pri_penitence"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 34932.95,
+      "source": "drop",
+      "uid": "i394",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 36,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "갈취의 아이 펜던트",
+        "en": "Extorting Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "kni_holyshield",
+        "v": 0.09
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 35451.35,
+      "source": "drop",
+      "uid": "i404",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 36,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "탐욕의 아이 펜던트",
+        "en": "Greedy Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "arc_pierce",
+        "v": 0.09
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 35572.85,
+      "source": "drop",
+      "uid": "i406",
+      "slot": "amulet",
+      "rarity": "epic",
+      "ilvl": 36,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "시기와 무기력의 아이 펜던트",
+        "en": "Envious and Lethargic Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "pri_doom",
+        "v": 0.08
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 36060.15,
+      "source": "drop",
+      "uid": "i411",
+      "slot": "weapon",
+      "rarity": "normal",
+      "ilvl": 30,
+      "group": "crucifix",
+      "classes": "priest",
+      "name": {
+        "ko": "그랜드 셉터",
+        "en": "Grand Scepter"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.09,
+          "src": "wrath",
+          "skill": "pri_judgment"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 37017.15,
+      "source": "drop",
+      "uid": "i423",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 37,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "무기력과 앙심의 오네이트 플레이트",
+        "en": "Lethargic and Spiteful Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "pri_penitence"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 37390.85,
+      "source": "drop",
+      "uid": "i430",
+      "slot": "amulet",
+      "rarity": "epic",
+      "ilvl": 34,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "망각과 집착의 탈리스만",
+        "en": "Forgotten and Obsessive Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "war_bash",
+        "v": 0.12
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 38253.65,
+      "source": "drop",
+      "uid": "i449",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 37,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "배신의 오네이트 플레이트",
+        "en": "Treacherous Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 38400,
+      "source": "box",
+      "uid": "i450",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 36,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "질투의 고스트 아머",
+        "en": "Jealous Ghost Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.1,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 38771.75,
+      "source": "drop",
+      "uid": "i453",
+      "slot": "amulet",
+      "rarity": "epic",
+      "ilvl": 38,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "오만과 질투의 아이 펜던트",
+        "en": "Prideful and Jealous Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "war_warcry",
+        "v": 0.08
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 38930.65,
+      "source": "drop",
+      "uid": "i455",
+      "slot": "weapon",
+      "rarity": "rare",
+      "ilvl": 38,
+      "group": "crucifix",
+      "classes": "priest",
+      "name": {
+        "ko": "타락과 폭식의 카두케우스",
+        "en": "Corrupted and Gluttonous Caduceus"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.12,
+          "src": "sloth",
+          "skill": "kni_holyshield"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 40314.15,
+      "source": "drop",
+      "uid": "i475",
+      "slot": "weapon",
+      "rarity": "epic",
+      "ilvl": 40,
+      "group": "bible",
+      "classes": "priest",
+      "name": {
+        "ko": "색욕과 심연의 미설",
+        "en": "Lustful and Abyssal Missal"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.07,
+          "src": "wrath",
+          "skill": "pri_judgment"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 50572.25,
+      "source": "drop",
+      "uid": "i542",
+      "slot": "armor",
+      "rarity": "epic",
+      "ilvl": 42,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "지배와 무기력의 메이지 플레이트",
+        "en": "Dominating and Lethargic Mage Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.08,
+          "src": "envy",
+          "skill": "pri_penitence"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 50801,
+      "source": "drop",
+      "uid": "i543",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 46,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "착취의 골드 네클리스",
+        "en": "Exploitative Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "war_warcry",
+        "v": 1.17
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 51138.2,
+      "source": "drop",
+      "uid": "i547",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 46,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "무기력과 심연의 메이지 플레이트",
+        "en": "Lethargic and Abyssal Mage Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "war_battlecry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 51340.2,
+      "source": "drop",
+      "uid": "i551",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 46,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "질투의 아이 펜던트",
+        "en": "Jealous Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "pri_judgment",
+        "v": 0.1
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 53801.05,
+      "source": "drop",
+      "uid": "i566",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 45,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "질투의 탈리스만",
+        "en": "Jealous Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "pri_doom",
+        "v": 0.14
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 54572.05,
+      "source": "drop",
+      "uid": "i572",
+      "slot": "amulet",
+      "rarity": "rare",
+      "ilvl": 46,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "색욕과 포식의 아이 펜던트",
+        "en": "Lustful and Predatory Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "mag_ignite",
+        "v": 0.07
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 55920,
+      "source": "drop",
+      "uid": "i580",
+      "slot": "amulet",
+      "rarity": "epic",
+      "ilvl": 44,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "폭식과 시기의 아이 펜던트",
+        "en": "Gluttonous and Envious Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "war_battleorders",
+        "v": 0.1
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 58608.55,
+      "source": "drop",
+      "uid": "i605",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 46,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "시기의 탈리스만",
+        "en": "Envious Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "pri_penitence",
+        "v": 0.11
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 59258.35,
+      "source": "drop",
+      "uid": "i610",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 46,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "찬탈의 골드 네클리스",
+        "en": "Usurping Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "war_frenzy",
+        "v": 1.1
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 59408.25,
+      "source": "drop",
+      "uid": "i611",
+      "slot": "armor",
+      "rarity": "epic",
+      "ilvl": 46,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "방탕과 학살의 메이지 플레이트",
+        "en": "Debauched and Slaughtering Mage Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "war_warcry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 61209.5,
+      "source": "drop",
+      "uid": "i620",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 43,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "나태의 탈리스만",
+        "en": "Slothful Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "arc_eagleeye",
+        "v": 0.13
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 61288.5,
+      "source": "drop",
+      "uid": "i622",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 41,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "격노의 고스트 아머",
+        "en": "Raging Ghost Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.09,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 62498.2,
+      "source": "drop",
+      "uid": "i639",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 46,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "오만의 골드 네클리스",
+        "en": "Prideful Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "arc_guided",
+        "v": 1.06
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 63644.4,
+      "source": "drop",
+      "uid": "i648",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 46,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "허기의 탈리스만",
+        "en": "Hungering Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "mag_deepfreeze",
+        "v": 0.12
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 64315.8,
+      "source": "drop",
+      "uid": "i653",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 46,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "탐욕의 아이 펜던트",
+        "en": "Greedy Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "arc_quickhands",
+        "v": 0.06
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 65530.95,
+      "source": "drop",
+      "uid": "i665",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 44,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "타락의 아이 펜던트",
+        "en": "Corrupted Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "pri_cure",
+        "v": 0.09
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 67692.8,
+      "source": "drop",
+      "uid": "i684",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 46,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "색욕의 아이 펜던트",
+        "en": "Lustful Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "mag_iceblast",
+        "v": 0.09
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 67951.3,
+      "source": "drop",
+      "uid": "i686",
+      "slot": "amulet",
+      "rarity": "rare",
+      "ilvl": 46,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "심연과 권태의 골드 네클리스",
+        "en": "Abyssal and Weary Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "pri_judgment",
+        "v": 1.38
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 68211.1,
+      "source": "drop",
+      "uid": "i689",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 46,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "강탈의 아이 펜던트",
+        "en": "Rapacious Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "pri_judgment",
+        "v": 0.1
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 68567.2,
+      "source": "drop",
+      "uid": "i694",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 46,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "탐욕의 아이 펜던트",
+        "en": "Greedy Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "pri_regen",
+        "v": 0.09
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 69600,
+      "source": "box",
+      "uid": "i706",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 45,
+      "group": "crucifix",
+      "classes": "priest",
+      "name": {
+        "ko": "분노의 디바인 셉터",
+        "en": "Wrathful Divine Scepter"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.1,
+          "src": "wrath",
+          "skill": "pri_judgment"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 81956.75,
+      "source": "drop",
+      "uid": "i762",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 50,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "배신의 아콘 플레이트",
+        "en": "Treacherous Archon Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "war_warcry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed2",
+      "t": 82996.1,
+      "source": "drop",
+      "uid": "i764",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 50,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "심연의 아콘 플레이트",
+        "en": "Abyssal Archon Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.1,
+          "src": "envy",
+          "skill": "war_warcry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 5257.15,
+      "source": "drop",
+      "uid": "i50",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 10,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "방탕의 아이 펜던트",
+        "en": "Debauched Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "pri_haste",
+        "v": 0.06
+      },
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 7111.5,
+      "source": "drop",
+      "uid": "i59",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 8,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "경멸의 클로스 아머",
+        "en": "Contemptuous Cloth Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.09,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 10510.25,
+      "source": "drop",
+      "uid": "i92",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 15,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "무기력의 아이 펜던트",
+        "en": "Lethargic Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "mag_frostnova",
+        "v": 0.07
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 11735.45,
+      "source": "drop",
+      "uid": "i105",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 17,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "라이트 플레이트",
+        "en": "Light Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.1,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 12600,
+      "source": "box",
+      "uid": "i118",
+      "slot": "weapon",
+      "rarity": "rare",
+      "ilvl": 19,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "오만과 갈취의 엘드리치 오브",
+        "en": "Prideful and Extorting Eldritch Orb"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.1,
+          "src": "wrath",
+          "skill": "mag_inferno"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 14100,
+      "source": "box",
+      "uid": "i140",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 21,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "폭식과 질투의 퀼티드 아머",
+        "en": "Gluttonous and Jealous Quilted Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.12,
+          "src": "envy",
+          "skill": "war_warcry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 16200,
+      "source": "box",
+      "uid": "i155",
+      "slot": "weapon",
+      "rarity": "rare",
+      "ilvl": 22,
+      "group": "bible",
+      "classes": "priest",
+      "name": {
+        "ko": "지배와 시기의 위키드 바이블",
+        "en": "Dominating and Envious Wicked Bible"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_debuff",
+          "v": 0.05,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 16243.1,
+      "source": "drop",
+      "uid": "i157",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 25,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "라이트 플레이트",
+        "en": "Light Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.08,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 16724.9,
+      "source": "drop",
+      "uid": "i161",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 26,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "방탕과 질투의 퀼티드 아머",
+        "en": "Debauched and Jealous Quilted Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.1,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 18932.7,
+      "source": "drop",
+      "uid": "i177",
+      "slot": "weapon",
+      "rarity": "normal",
+      "ilvl": 26,
+      "group": "bible",
+      "classes": "priest",
+      "name": {
+        "ko": "렉턴 바이블",
+        "en": "Lectern Bible"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.11,
+          "src": "sloth",
+          "skill": "kni_resistshield"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 23465.6,
+      "source": "drop",
+      "uid": "i208",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 26,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "갈취의 아이 펜던트",
+        "en": "Extorting Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "pri_bind",
+        "v": 0.07
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 31775.35,
+      "source": "drop",
+      "uid": "i269",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 24,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "퀼티드 아머",
+        "en": "Quilted Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "pri_penitence"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 32400,
+      "source": "box",
+      "uid": "i282",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 29,
+      "group": "bible",
+      "classes": "priest",
+      "name": {
+        "ko": "착취의 미설",
+        "en": "Exploitative Missal"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.06,
+          "src": "wrath",
+          "skill": "pri_judgment"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 33635,
+      "source": "drop",
+      "uid": "i299",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 33,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "허기의 골드 네클리스",
+        "en": "Hungering Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "kni_charge",
+        "v": 1.27
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 33823.6,
+      "source": "drop",
+      "uid": "i302",
+      "slot": "armor",
+      "rarity": "epic",
+      "ilvl": 31,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "질투와 망각의 고스트 아머",
+        "en": "Jealous and Forgotten Ghost Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.1,
+          "src": "envy",
+          "skill": "war_battlecry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 35229.15,
+      "source": "drop",
+      "uid": "i316",
+      "slot": "armor",
+      "rarity": "epic",
+      "ilvl": 31,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "나태와 시기의 고스트 아머",
+        "en": "Slothful and Envious Ghost Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.08,
+          "src": "envy",
+          "skill": "war_warcry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 37981.7,
+      "source": "drop",
+      "uid": "i339",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 33,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "지배의 아이 펜던트",
+        "en": "Dominating Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "arc_guided",
+        "v": 0.08
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 42392.45,
+      "source": "drop",
+      "uid": "i382",
+      "slot": "amulet",
+      "rarity": "rare",
+      "ilvl": 32,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "앙심과 타락의 골드 네클리스",
+        "en": "Spiteful and Corrupted Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "mag_surge",
+        "v": 1.38
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 43547.65,
+      "source": "drop",
+      "uid": "i396",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 31,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "강탈의 탈리스만",
+        "en": "Rapacious Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "kni_enchant",
+        "v": 0.13
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 43662.15,
+      "source": "drop",
+      "uid": "i398",
+      "slot": "amulet",
+      "rarity": "epic",
+      "ilvl": 31,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "권태와 앙심의 탈리스만",
+        "en": "Weary and Spiteful Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "war_frenzy",
+        "v": 0.11
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 43997.95,
+      "source": "drop",
+      "uid": "i406",
+      "slot": "armor",
+      "rarity": "epic",
+      "ilvl": 33,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "시기와 경멸의 고스트 아머",
+        "en": "Envious and Contemptuous Ghost Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.1,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 44315.85,
+      "source": "drop",
+      "uid": "i414",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 33,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "앙심의 탈리스만",
+        "en": "Spiteful Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "mag_deepfreeze",
+        "v": 0.14
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 44627.95,
+      "source": "drop",
+      "uid": "i421",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 31,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "오네이트 플레이트",
+        "en": "Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.1,
+          "src": "envy",
+          "skill": "war_battlecry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 45024.5,
+      "source": "drop",
+      "uid": "i425",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 33,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "오네이트 플레이트",
+        "en": "Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.09,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 45046.9,
+      "source": "drop",
+      "uid": "i428",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 31,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "앙심의 오네이트 플레이트",
+        "en": "Spiteful Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.09,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 46324,
+      "source": "drop",
+      "uid": "i454",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 33,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "착취의 아이 펜던트",
+        "en": "Exploitative Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "kni_charge",
+        "v": 0.07
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 47391.3,
+      "source": "drop",
+      "uid": "i474",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 30,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "격노의 디멘셔널 샤드",
+        "en": "Raging Dimensional Shard"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.1,
+          "src": "wrath",
+          "skill": "mag_frostnova"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 49972.45,
+      "source": "drop",
+      "uid": "i519",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 36,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "심연의 아이 펜던트",
+        "en": "Abyssal Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "arc_evade",
+        "v": 0.08
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 50097.25,
+      "source": "drop",
+      "uid": "i520",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 36,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "배신의 골드 네클리스",
+        "en": "Treacherous Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "kni_holyshield",
+        "v": 1.23
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 51487.15,
+      "source": "drop",
+      "uid": "i529",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 32,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "권태의 아이 펜던트",
+        "en": "Weary Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "pri_bind",
+        "v": 0.09
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 51641.65,
+      "source": "drop",
+      "uid": "i532",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 37,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "착취의 골드 네클리스",
+        "en": "Exploitative Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "mag_ignite",
+        "v": 1.34
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 51853.8,
+      "source": "drop",
+      "uid": "i538",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 34,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "학살의 오네이트 플레이트",
+        "en": "Slaughtering Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.12,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 52800,
+      "source": "box",
+      "uid": "i555",
+      "slot": "weapon",
+      "rarity": "rare",
+      "ilvl": 37,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "앙심과 폭식의 세이크리드 글로브",
+        "en": "Spiteful and Gluttonous Sacred Globe"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.07,
+          "src": "wrath",
+          "skill": "mag_chain"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 55412.1,
+      "source": "drop",
+      "uid": "i593",
+      "slot": "armor",
+      "rarity": "epic",
+      "ilvl": 37,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "학살과 방탕의 메이지 플레이트",
+        "en": "Slaughtering and Debauched Mage Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.09,
+          "src": "envy",
+          "skill": "pri_penitence"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 62678.5,
+      "source": "drop",
+      "uid": "i657",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 42,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "심연의 아이 펜던트",
+        "en": "Abyssal Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "arc_quickhands",
+        "v": 0.09
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 64841.05,
+      "source": "drop",
+      "uid": "i675",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 44,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "메이지 플레이트",
+        "en": "Mage Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.09,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 70255.9,
+      "source": "drop",
+      "uid": "i710",
+      "slot": "amulet",
+      "rarity": "epic",
+      "ilvl": 41,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "무기력과 포식의 아이 펜던트",
+        "en": "Lethargic and Predatory Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "kni_sweep",
+        "v": 0.07
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 77227.8,
+      "source": "drop",
+      "uid": "i746",
+      "slot": "amulet",
+      "rarity": "epic",
+      "ilvl": 46,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "집착과 권태의 골드 네클리스",
+        "en": "Obsessive and Weary Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "war_bash",
+        "v": 1.47
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 77675.15,
+      "source": "drop",
+      "uid": "i753",
+      "slot": "weapon",
+      "rarity": "rare",
+      "ilvl": 46,
+      "group": "bible",
+      "classes": "priest",
+      "name": {
+        "ko": "타락과 격노의 브리비어리",
+        "en": "Corrupted and Raging Breviary"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.11,
+          "src": "sloth",
+          "skill": "arc_quickhands"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 78027,
+      "source": "drop",
+      "uid": "i757",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 44,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "오네이트 플레이트",
+        "en": "Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.09,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 79405.5,
+      "source": "drop",
+      "uid": "i775",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 46,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "허기의 아이 펜던트",
+        "en": "Hungering Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "kni_charge",
+        "v": 0.09
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 80790.55,
+      "source": "drop",
+      "uid": "i792",
+      "slot": "weapon",
+      "rarity": "rare",
+      "ilvl": 45,
+      "group": "bible",
+      "classes": "priest",
+      "name": {
+        "ko": "나태와 배신의 위키드 바이블",
+        "en": "Slothful and Treacherous Wicked Bible"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.12,
+          "src": "sloth",
+          "skill": "pri_regen"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 80885.85,
+      "source": "drop",
+      "uid": "i793",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 42,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "강탈과 앙심의 오네이트 플레이트",
+        "en": "Rapacious and Spiteful Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "pri_penitence"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 83899.3,
+      "source": "drop",
+      "uid": "i824",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 43,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "학살의 아이 펜던트",
+        "en": "Slaughtering Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "pri_heal",
+        "v": 0.1
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 85757.7,
+      "source": "drop",
+      "uid": "i853",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 43,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "메이지 플레이트",
+        "en": "Mage Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.12,
+          "src": "envy",
+          "skill": "war_warcry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "adaptive_seed3",
+      "t": 86189.35,
+      "source": "drop",
+      "uid": "i859",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 46,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "방탕과 착취의 오네이트 플레이트",
+        "en": "Debauched and Exploitative Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.1,
+          "src": "envy",
+          "skill": "pri_penitence"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed1",
+      "t": 900,
+      "source": "box",
+      "uid": "i15",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 5,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "격노의 헤븐리 스톤",
+        "en": "Raging Heavenly Stone"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.05,
+          "src": "sloth",
+          "skill": "mag_deepfreeze"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "basic_seed1",
+      "t": 3580.7,
+      "source": "drop",
+      "uid": "i40",
+      "slot": "weapon",
+      "rarity": "normal",
+      "ilvl": 5,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "데몬 하트",
+        "en": "Demon Heart"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.06,
+          "src": "sloth",
+          "skill": "arc_eagleeye"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed1",
+      "t": 4500,
+      "source": "box",
+      "uid": "i46",
+      "slot": "weapon",
+      "rarity": "rare",
+      "ilvl": 11,
+      "group": "staff",
+      "classes": "mage",
+      "name": {
+        "ko": "방탕과 학살의 롱 스태프",
+        "en": "Debauched and Slaughtering Long Staff"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.09,
+          "src": "wrath",
+          "skill": "mag_frostnova"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed1",
+      "t": 4863.45,
+      "source": "drop",
+      "uid": "i47",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 7,
+      "group": "crucifix",
+      "classes": "priest",
+      "name": {
+        "ko": "색욕의 세라프 로드",
+        "en": "Lustful Seraph Rod"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.05,
+          "src": "wrath",
+          "skill": "pri_judgment"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "basic_seed1",
+      "t": 5207.7,
+      "source": "drop",
+      "uid": "i48",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 11,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "방탕의 탈리스만",
+        "en": "Debauched Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "pri_regen",
+        "v": 0.11
+      },
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "basic_seed1",
+      "t": 5468.9,
+      "source": "drop",
+      "uid": "i51",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 13,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "방탕의 아이 펜던트",
+        "en": "Debauched Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "arc_coldarrow",
+        "v": 0.07
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed1",
+      "t": 6602.05,
+      "source": "drop",
+      "uid": "i66",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 12,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "방탕과 시기의 라이트 플레이트",
+        "en": "Debauched and Envious Light Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.05,
+          "src": "envy",
+          "skill": "pri_penitence"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed1",
+      "t": 10245.2,
+      "source": "drop",
+      "uid": "i117",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 19,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "라이트 플레이트",
+        "en": "Light Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.09,
+          "src": "envy",
+          "skill": "war_battlecry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed1",
+      "t": 10674.05,
+      "source": "drop",
+      "uid": "i126",
+      "slot": "amulet",
+      "rarity": "rare",
+      "ilvl": 20,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "배신과 폭식의 아이 펜던트",
+        "en": "Treacherous and Gluttonous Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "war_battleorders",
+        "v": 0.09
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed1",
+      "t": 11873.5,
+      "source": "drop",
+      "uid": "i137",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 22,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "퀼티드 아머",
+        "en": "Quilted Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.07,
+          "src": "envy",
+          "skill": "war_battlecry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed1",
+      "t": 12300,
+      "source": "box",
+      "uid": "i144",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 21,
+      "group": "crucifix",
+      "classes": "priest",
+      "name": {
+        "ko": "권태의 룬 셉터",
+        "en": "Weary Rune Scepter"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.11,
+          "src": "sloth",
+          "skill": "pri_grace"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "basic_seed1",
+      "t": 58522.55,
+      "source": "drop",
+      "uid": "i313",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 27,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "무기력의 에인션트 아머",
+        "en": "Lethargic Ancient Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.06,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed1",
+      "t": 65749.1,
+      "source": "drop",
+      "uid": "i340",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 24,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "에인션트 아머",
+        "en": "Ancient Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.12,
+          "src": "envy",
+          "skill": "war_warcry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "basic_seed1",
+      "t": 70286.75,
+      "source": "drop",
+      "uid": "i355",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 27,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "라이트 플레이트",
+        "en": "Light Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed1",
+      "t": 72600,
+      "source": "box",
+      "uid": "i368",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 31,
+      "group": "bible",
+      "classes": "priest",
+      "name": {
+        "ko": "광란의 그레이트 바이블",
+        "en": "Rampaging Great Bible"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_debuff",
+          "v": 0.06,
+          "src": "envy",
+          "skill": "war_battlecry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "basic_seed1",
+      "t": 74983.7,
+      "source": "drop",
+      "uid": "i407",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 31,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "고스트 아머",
+        "en": "Ghost Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.08,
+          "src": "envy",
+          "skill": "war_warcry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed1",
+      "t": 81554.55,
+      "source": "drop",
+      "uid": "i466",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 32,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "앙심의 고스트 아머",
+        "en": "Spiteful Ghost Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.1,
+          "src": "envy",
+          "skill": "pri_penitence"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 353,
+      "source": "drop",
+      "uid": "i10",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 2,
+      "group": "crucifix",
+      "classes": "priest",
+      "name": {
+        "ko": "배신의 마이티 셉터",
+        "en": "Treacherous Mighty Scepter"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_debuff",
+          "v": 0.06,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 482.7,
+      "source": "drop",
+      "uid": "i12",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 3,
+      "group": "crucifix",
+      "classes": "priest",
+      "name": {
+        "ko": "광란의 룬 셉터",
+        "en": "Rampaging Rune Scepter"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.07,
+          "src": "wrath",
+          "skill": "pri_judgment"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 2100,
+      "source": "box",
+      "uid": "i37",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 10,
+      "group": "bible",
+      "classes": "priest",
+      "name": {
+        "ko": "지배의 위키드 바이블",
+        "en": "Dominating Wicked Bible"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.09,
+          "src": "sloth",
+          "skill": "mag_surge"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "basic_seed2",
+      "t": 3692.85,
+      "source": "drop",
+      "uid": "i57",
+      "slot": "amulet",
+      "rarity": "rare",
+      "ilvl": 12,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "허기와 앙심의 아이 펜던트",
+        "en": "Hungering and Spiteful Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "arc_evade",
+        "v": 0.1
+      },
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "basic_seed2",
+      "t": 3692.85,
+      "source": "drop",
+      "uid": "i58",
+      "slot": "weapon",
+      "rarity": "normal",
+      "ilvl": 10,
+      "group": "staff",
+      "classes": "mage",
+      "name": {
+        "ko": "롱 스태프",
+        "en": "Long Staff"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.07,
+          "src": "sloth",
+          "skill": "kni_holyshield"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 3902.45,
+      "source": "drop",
+      "uid": "i64",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 13,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "퀼티드 아머",
+        "en": "Quilted Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.08,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 5251.25,
+      "source": "drop",
+      "uid": "i77",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 15,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "분노의 골드 네클리스",
+        "en": "Wrathful Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "mag_frostnova",
+        "v": 1.03
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 8241.15,
+      "source": "drop",
+      "uid": "i126",
+      "slot": "weapon",
+      "rarity": "normal",
+      "ilvl": 21,
+      "group": "crucifix",
+      "classes": "priest",
+      "name": {
+        "ko": "카두케우스",
+        "en": "Caduceus"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.05,
+          "src": "sloth",
+          "skill": "arc_poison"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 10503.45,
+      "source": "drop",
+      "uid": "i142",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 24,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "에인션트 아머",
+        "en": "Ancient Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.12,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 15588.4,
+      "source": "drop",
+      "uid": "i182",
+      "slot": "weapon",
+      "rarity": "normal",
+      "ilvl": 29,
+      "group": "staff",
+      "classes": "mage",
+      "name": {
+        "ko": "날드 스태프",
+        "en": "Gnarled Staff"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.09,
+          "src": "wrath",
+          "skill": "mag_frostnova"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 28453.65,
+      "source": "drop",
+      "uid": "i230",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 32,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "앙심의 메이지 플레이트",
+        "en": "Spiteful Mage Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 33790.1,
+      "source": "drop",
+      "uid": "i241",
+      "slot": "weapon",
+      "rarity": "normal",
+      "ilvl": 30,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "데몬 하트",
+        "en": "Demon Heart"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.08,
+          "src": "sloth",
+          "skill": "arc_coldarrow"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 44714.05,
+      "source": "drop",
+      "uid": "i281",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 32,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "배신과 갈취의 오네이트 플레이트",
+        "en": "Treacherous and Extorting Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.12,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 46273.6,
+      "source": "drop",
+      "uid": "i291",
+      "slot": "weapon",
+      "rarity": "normal",
+      "ilvl": 27,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "디멘셔널 샤드",
+        "en": "Dimensional Shard"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.1,
+          "src": "sloth",
+          "skill": "arc_eagleeye"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 53700,
+      "source": "box",
+      "uid": "i334",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 33,
+      "group": "crucifix",
+      "classes": "priest",
+      "name": {
+        "ko": "분노의 카두케우스",
+        "en": "Wrathful Caduceus"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.11,
+          "src": "wrath",
+          "skill": "pri_judgment"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "basic_seed2",
+      "t": 57900,
+      "source": "box",
+      "uid": "i345",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 33,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "앙심의 오네이트 플레이트",
+        "en": "Spiteful Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 58473.25,
+      "source": "drop",
+      "uid": "i353",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 35,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "지배의 메이지 플레이트",
+        "en": "Dominating Mage Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.07,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 58956.2,
+      "source": "drop",
+      "uid": "i355",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 35,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "오네이트 플레이트",
+        "en": "Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.1,
+          "src": "envy",
+          "skill": "war_battlecry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 61200,
+      "source": "box",
+      "uid": "i373",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 34,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "질투의 오네이트 플레이트",
+        "en": "Jealous Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.1,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 61408.1,
+      "source": "drop",
+      "uid": "i376",
+      "slot": "weapon",
+      "rarity": "normal",
+      "ilvl": 37,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "세이크리드 글로브",
+        "en": "Sacred Globe"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_attack",
+          "v": 0.08,
+          "src": "wrath",
+          "skill": "mag_lightning"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 62796.95,
+      "source": "drop",
+      "uid": "i389",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 38,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "질투의 메이지 플레이트",
+        "en": "Jealous Mage Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "war_battlecry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 63730.9,
+      "source": "drop",
+      "uid": "i396",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 36,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "질투와 찬탈의 메이지 플레이트",
+        "en": "Jealous and Usurping Mage Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.06,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 64563.1,
+      "source": "drop",
+      "uid": "i403",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 39,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "오만의 탈리스만",
+        "en": "Prideful Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "pri_penitence",
+        "v": 0.12
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 69908.15,
+      "source": "drop",
+      "uid": "i413",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 37,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "오네이트 플레이트",
+        "en": "Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 71775.35,
+      "source": "drop",
+      "uid": "i415",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 40,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "방탕과 탐욕의 오네이트 플레이트",
+        "en": "Debauched and Greedy Ornate Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.08,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 79392.35,
+      "source": "drop",
+      "uid": "i448",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 39,
+      "group": "orb",
+      "classes": "mage",
+      "name": {
+        "ko": "격노의 데몬 하트",
+        "en": "Raging Demon Heart"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.11,
+          "src": "sloth",
+          "skill": "pri_regen"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed2",
+      "t": 79556.95,
+      "source": "drop",
+      "uid": "i450",
+      "slot": "amulet",
+      "rarity": "epic",
+      "ilvl": 41,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "무기력과 타락의 골드 네클리스",
+        "en": "Lethargic and Corrupted Gold Necklace"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "interval",
+        "skill": "war_bash",
+        "v": 1.02
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed3",
+      "t": 27440.8,
+      "source": "drop",
+      "uid": "i62",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 11,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "권태의 아이 펜던트",
+        "en": "Weary Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "war_battlecry",
+        "v": 0.07
+      },
+      "autoEquippedAtLeastOnce": true
+    },
+    {
+      "account": "basic_seed3",
+      "t": 28013.8,
+      "source": "drop",
+      "uid": "i72",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 12,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "착취의 탈리스만",
+        "en": "Exploitative Talisman"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "struck",
+        "skill": "arc_eagleeye",
+        "v": 0.1
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed3",
+      "t": 29062.8,
+      "source": "drop",
+      "uid": "i83",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 14,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "권태의 아이 펜던트",
+        "en": "Weary Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "war_doubleswing",
+        "v": 0.08
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed3",
+      "t": 29309.95,
+      "source": "drop",
+      "uid": "i91",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 16,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "라이트 플레이트",
+        "en": "Light Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.06,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed3",
+      "t": 29419.5,
+      "source": "drop",
+      "uid": "i93",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 15,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "시기의 에인션트 아머",
+        "en": "Envious Ancient Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.06,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed3",
+      "t": 31200,
+      "source": "box",
+      "uid": "i122",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 19,
+      "group": "staff",
+      "classes": "mage",
+      "name": {
+        "ko": "나태의 룬 스태프",
+        "en": "Slothful Rune Staff"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_cast_buff",
+          "v": 0.1,
+          "src": "sloth",
+          "skill": "mag_deepfreeze"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed3",
+      "t": 38100,
+      "source": "box",
+      "uid": "i171",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 23,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "시기의 퀼티드 아머",
+        "en": "Envious Quilted Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.09,
+          "src": "envy",
+          "skill": "war_battlecry"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed3",
+      "t": 38900.15,
+      "source": "drop",
+      "uid": "i176",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 26,
+      "group": null,
+      "classes": null,
+      "name": {
+        "ko": "탐욕의 아이 펜던트",
+        "en": "Greedy Eye Pendant"
+      },
+      "inertAffixes": [],
+      "amuletProc": {
+        "trigger": "hit",
+        "skill": "mag_iceblast",
+        "v": 0.08
+      },
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed3",
+      "t": 46204.8,
+      "source": "drop",
+      "uid": "i186",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 27,
+      "group": "heavy",
+      "classes": null,
+      "name": {
+        "ko": "분노와 권태의 에인션트 아머",
+        "en": "Wrathful and Weary Ancient Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.1,
+          "src": "envy",
+          "skill": "pri_bind"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed3",
+      "t": 63949.95,
+      "source": "drop",
+      "uid": "i226",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 24,
+      "group": "robe",
+      "classes": null,
+      "name": {
+        "ko": "배신의 퀼티드 아머",
+        "en": "Treacherous Quilted Armor"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.09,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    },
+    {
+      "account": "basic_seed3",
+      "t": 72489.25,
+      "source": "drop",
+      "uid": "i249",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 27,
+      "group": "light",
+      "classes": null,
+      "name": {
+        "ko": "망각의 라이트 플레이트",
+        "en": "Forgotten Light Plate"
+      },
+      "inertAffixes": [
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.11,
+          "src": "envy",
+          "skill": "pri_doom"
+        }
+      ],
+      "amuletProc": null,
+      "autoEquippedAtLeastOnce": false
+    }
+  ]
+}

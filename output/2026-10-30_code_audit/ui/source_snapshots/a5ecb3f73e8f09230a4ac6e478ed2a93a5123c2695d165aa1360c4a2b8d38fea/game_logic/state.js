@@ -1,0 +1,5099 @@
+/**
+ * 게임 상태 — 생성 / 직렬화 / 모든 상태 전이(장착·고용·원정 결과 반영·재접속 시 런 마무리).
+ *
+ * 순수 모듈. DOM·localStorage·Date 를 모른다 — 현재 시각이 필요한 함수는 `now`(ms)를 인자로 받는다.
+ * 저장은 **엔진 중립 JSON** 이다: 상태 객체 자체가 평문 데이터라 serialize 는 버전 도장만 찍는다.
+ * localStorage 접근은 ui/storage.js 어댑터 한 곳에서만 한다 (CLAUDE.md 이식성 규칙 3).
+ *
+ * 세이브 형식 v37 (2026-09-22)
+ * {
+ *   version, seed, createdAt, savedAt,
+ *   expMs    — **누적 원정 플레이 시간**(ms · 배속을 탄다). 더하는 것은 `addExpTime` 하나 · 얼마를 더할지는 화면이 정한다 · 없으면 0 · 버전 무변경 (2026-10-05 · ADR-0514 — 옛 `playMs` 는 로드가 지운다)
+ *   resources: {gold, stigma},   — 가루는 v43 부터 재료 사다리(`materials.dust` · 2026-10-29 · R373)
+ *   materials: {yieldId: n}   — 재료 사다리(철광석 · 약초 · 목재 · 가루 × 단계 다섯 — 최하급 = `lab_material.csv:material_id` · 가루 `dust` · 위 단계 = `material_synth.csv`). 없으면 {} (2026-09-15 · R96 · v43 가루 · R373) · 연구소 · 분해 · 도박장 · 합성이 채운다
+ *   resourceProduction: [{post, at, carry}] — 재료별 생산 시계(`post` = 재료 지점 id). carry = 다음 1개의 소수 진행도(2026-10-16 · v42 `tier` 걷음 · R356)
+ *   labNodes: {'줄:지점': lv} — 연구소 지점 레벨(`lab_node.csv`). 0 은 안 적는다 · 없으면 {} · 버전 무변경 (2026-10-21 · R298 — ~~labLevels {'줄:단계': lv}~~ 2026-10-18 R288 은 로드가 지운다)
+ *   labResearch: {line, node, lv, at, until, paid} | null — 하고 있는 연구 하나(연구소 전체에 하나) · 버전 무변경 (2026-10-21 · R298)
+ *   labReg: {uid: 줄} — 연구소 줄 등록(`LAB_LINES`). 한 영웅은 한 줄 · 효과 = 능력치 일곱 · 없으면 {} · 버전 무변경 (2026-10-21)
+ *   labSince: {uid: ms} — 등록한 시각(숙련) · labClock: {gamble, train} — 도박장 · 훈련 시계 · 버전 무변경 (2026-10-21 · R298)
+ *   potions: {potionId: n}    — 물약 재고(v32 · R124). 마시면 준다(`advanceRun`) · 만들면 는다 · 0 이면 키가 없다. 새 게임 = `start_owned` 개수. 칸 구성은 편성이 든다
+ *   heroes: [{uid, name, tier, sin, cls, trait, face, level, xp, mastery, masteryPoints, innate, stats, equipped:{position: itemUid|null}}],
+ *     — tier = 일반 | 매직 | 레어 | 유니크 | 성장(고블린 — 2026-10-27) (`hero_tier.csv`). ~~caps(개체별 히든 상한)~~ 는 **v15 에서 사라졌다** —
+ *       상한이 전 영웅 공통 하나가 되어(hero_design §4-3) 개체가 들 것이 없다
+ *     — face = 초상 id `'<classId>_<k>'` 문자열 | null. **제 직업 풀에서** 생성 시 한 번 굴리고 이후 불변 —
+ *       innate 와 같은 층이다 (2026-09-06 저장형 · 2026-09-07 직업 분류). 풀이 0장인 직업(마법사)은 `null` = 초상 없음.
+ *       로직은 그림을 모른다 — id 하나만 든다. 어느 파일인지는 화면이 정한다(`ui/mock.js:heroFace`).
+ *       화면이 이름 해시로 매번 다시 계산하던 것을 저장으로 바꾼 것이다 (SCREEN_DESIGN §5 · DEV_PLAN 부채 #36)
+ *     — innate = 고유 스킬 id. **생성 시 한 번 굴리고 이후 불변**이다 (hero_design §1).
+ *       배정은 `skill.activesFor` 가 1번 칸에 싣는다 — 저장하는 건 굴린 결과 하나뿐
+ *     — mastery = {nodeId: rank} 찍은 것만 담는다(0은 안 담는다) · masteryPoints = 남은 포인트.
+ *       죄종·직업 마스터리가 한 풀을 공유한다 (skill_design §1-4). 전직 전용 포인트는 전직 미구현이라 없다
+ *     — position = 착용 위치 id. 부위 7종 · 위치 8개 (반지 ×2 = ring1/ring2, 나머지는 부위 id 그대로).
+ *       보조(offhand)는 2026-09-01 한손 개념 폐지와 함께 사라졌다
+ *   presets: [{party: [uid], formation: {tpl, ranks}, potionSlots: [potionId|null], potionHp?, tactics: {slots}}], preset: n, items: {uid: item}, bags: [[uid]],
+ *     — bags = **부대마다 인벤토리 — v40** [2026-10-06 · SCREEN_DESIGN ADR-0521] · 길이 = presets · 자리 + 1 = 편성 번호(`runs` 와 같은 색인) · 상한은 하나마다 `limitsOf.bag`.
+ *       드롭은 나간 부대의 것에 · 해제 · 꺼내기 · 구매 · 제작은 부르는 쪽이 넘긴 번호(`no`)에 들어간다 (옛 `bag` 하나 → v39 까지)
+ *     — salvageRules · salvageLogs = **자동 분해 규칙 · 최근 분해 — 부대마다 · v41** [2026-10-22 · R316] · `bags` 와 같은 색인 · salvageSlots = 프리셋 칸(계정 · 사본)
+ *       (옛 계정 규칙 `autoSalvage` 하나 → v40 까지 · INTERFACE §4)
+ *     — presets = **편성**(v32 · R122 · 길이 = `limitsOf(state).presets` — 탐험 r4 · r5 가 연다 · R362) · preset = 고른 편성 번호(1 부터).
+ *       party = **편성한 순서 그대로** · `party[0]` 이 리더 · **새 게임은 전부 빈 배열**이다 (2026-09-09).
+ *       **한 영웅은 한 편성에만 든다 — v38** [2026-09-23 · 다부대] — 편성이 곧 부대라 겹치면 한 사람이 두 부대에 선다.
+ *       `toggleParty` 가 넣을 때 다른 편성에서 빼고(이동), 로드도 같은 규칙으로 걸러 낸다 (옛 규칙 = 여러 편성에 들어도 됨)
+ *       potionSlots = 물약 칸 구성(길이 = `potion_slot_max` · null = 빈 칸) — 런을 열 때 · 라운드마다 재고에서 앞 칸부터 채운다 (R124 · R315)
+ *       tactics = **이 편성의 파티 전술 칸**(v34 · R129) — 아래 옛 `tactics` 와 같은 모양이고 편성마다 한 벌이다
+ *     — items[*].proc = **목걸이 발동 스킬** `{trigger, skill, v}` (목걸이만 · v33 · 2026-09-21 · ⚠ 전투는 안 읽는다 — 설명에만).
+ *     — ~~items[*].skill = 무기가 담은 액티브 id~~ — **2026-09-29 삭제**(R179 · 스킬북 skill_design §2-1) · 로드가 지운다
+ *   books: {skillId: n}   — **스킬북 재고**(R179 · 버전 무변경) — 소모품이라 쌓인다(2026-09-30) · `learnBook` 이 1권을 쓰고 0 이면 키를 지운다 · 생기는 곳은 도서관 하나(`craftBook` · 2026-10-20)
+ *   blueprints: {skillId: n} — **스킬 도안 재고**(2026-10-20 · R293 · 버전 무변경) — 처치 · 상단이 한 장씩 준다 · `craftBook` 이 한 장을 쓰고 0 이면 키를 지운다
+ *     heroes[*].bookSkill = 책으로 배운 액티브 id(선택 필드) — 액티브 둘째 칸(`skill.activesFor`) · 다른 책을 쓰면 덮어쓴다
+ *     heroes[*].skillLv = {skillId: n}(선택 필드 · 2026-10-06 · R216) — 기본 스킬(고유 · 배운 칸)의 업그레이드 횟수 · 같은 책을 읽으면 +1
+ *     heroes[*].advanceUp = n(선택 필드 · R216) — 전직 스킬을 배운 뒤 더 넣은 전직 포인트(레벨 = 1 + n)
+ *   progress: {cleared: [stageId], clearedIn: {단: [stageId]}, peakTotal},   // ~~levelUp = 스테이지별 올린 양~~(R87) — **2026-09-29 위험도 폐지로 삭제** · 로드가 지운다 · cleared = 첫 단(노말) · clearedIn = 나머지 단 (2026-10-10 · R236 · 버전 무변경)
+ *   difficulty: 단 id            — **고른 난이도** (2026-10-10 · R236 · 없으면 첫 단) · 부대 자리 · 리포트의 `difficulty` = 그 런의 단 (몬스터 레벨 = `stage.csv:dlvl` + 단의 더하기 · 만렙에서 자른다)
+ *   codexExp: {monsterId: n}     — **도감 레벨의 출처** — 누적 도감 경험치 · 처치 하나 = 그 런 단의 `codex_exp` (monster_design §8 · 2026-10-10 · R239 — ~~codexKills 누적 처치 수~~ 09-21)
+ *   ~~skillCodexExp~~ — 2026-10-20 걷었다(R293 · 스킬 도감 = 레벨 없는 목록 — monster_design §8-1) · 로드가 지운다
+ *   bossDown: {"단|stageId": ms} — **챕터보스가 죽은 실제 시각** (2026-10-10 · R240 · 버전 무변경) — 돌아오는 시각 = 값 + `boss_respawn_sec` 초 · 그동안 그 칸 × 단으로는 어느 부대도 못 나간다 (base_expedition_design §1-2)
+ *   counters: {hero, item, battle, tavern, tactic, upgrade, visit, make, gamble, commission, shop},   // visit = 수색 번호(시간으로 온 영웅마다 +1 · 2026-10-19 · ~~search~~ 수색 회차는 로드가 지운다) · shop =상단 목록 번호(교체마다 +1 · 2026-10-16 · 없으면 0) · upgrade = 강화 굴림 회차(R253 · 2026-10-14 다시 오른다 — R95(2026-09-15)부터 그때까지는 자리만 있었다 · 옛 값에서 이어 센다) · make = 제작 회차(R96 · 없으면 0) · gamble = 도박장 판 수(R149 · 없으면 0) · commission = 굴린 의뢰 카드 수(R153 · 없으면 0) · mg = 자원 미니게임 판 수(2026-10-06 · 없으면 0 · 짝 필드 `mgPlay = {no, post, done}`(v42 `tier` 걷음) — 옛 세이브의 `hour` · `n` 은 안 읽는다 · 옛 관전 창 미니게임의 `dwatch` · `dwBoost` 는 안 읽는다)
+ *   commissions: {cards: [{no, tpl, kind, axis, ref, need, grade, gold, have?}], fame}   — **의뢰 게시판** (R153 · 버전 무변경 · base_expedition_design §1-3).
+ *     `fame` = 명성 경험치 = 누적 수령 수(레벨은 `commission_fame.csv` 로 푼다 · 2026-10-29 · R375 · 버전 무변경 — 없으면 0) ·
+ *     자리 순서 그대로 · **굴린 순간의 내용을 박는다**(대상 풀이 그때의 진행에 달려 있다 — 수색 스냅샷과 같은 이유) · `have` 가 있으면 받아 둔 것 · 없으면 게시판에 걸린 것
+ *   runs: [{stageId, preset, difficulty, repeat, auto, lastAt, durationSec, active} | null],   // **부대마다 하나 — v38** [2026-09-23 · 다부대 · GAME_DESIGN §1-1] — 옛 `run`(단수) 대체.
+ *     길이 = presets 와 같고 **자리 + 1 = 편성 번호**(부대 = 편성이다) · 안 나간 편성은 null · 동시에 active 일 수 있는 수는 `limitsOf(state).expeditions`.
+ *     active = 그 부대가 도는 중(v25 · R89) — 불러온 세이브에 서 있으면 끊긴 원정이다 · preset = 나간 편성 번호(자리와 같다 · v32) ·
+ *     ~~fallen = 이 런에서 쓰러져 있는 영웅(R130)~~ — 2026-10-21 걷었다(R300 · 읽던 잠금이 사라졌다) · 로드가 지운다 ·
+ *     **auto — v39** = 그 부대가 **이어 가는 중**(런이 끝나면 다음 런이 나간다 · 출발이 켜고 철수 · 끊기가 끈다) ·
+ *     repeat = **장소 안 순환**(v39 부터 — 끄면 다음 칸으로 전진 · base_expedition_design §1 · PLAN_stage_segments D7 · D8)
+ *   reports: [{...}]             — 리포트 목록. **최신이 맨 앞**이고 **부대마다** [balance.csv:report_keep] 개까지 남는다 (v21 · 부대마다 2026-10-14 · ADR-0622).
+ *     반복 원정은 이기는 동안 런을 잇는데, 칸이 하나면 앞 런이 매번 덮여 사라졌다 (SCREEN_DESIGN §4-3)
+ *   notice: {kind:'runClosed', runs: [{stageId, at}], stageId, at, seenAt} | null   — 재접속 알림 (배너 1회).
+ *     `runs` = **끊은 부대마다 한 줄 — v38**(편성 번호 순) · `stageId`·`at` 은 그중 첫 줄을 그대로 둔 것이다(한 부대만 돌던 화면이 안 깨지게)
+ *   tavern: {rerolledAt: ms|null, hired: [슬롯번호], kept: [슬롯번호], paid}   — 리롤 쿨다운의 기준 시각(**마지막 무료 리롤** — 유료는 안 옮긴다 · 10-16) · 이번 명단에서 산 칸 · 수색 칸에 보관한 칸(10-27 · 없으면 빈 목록) · 무료 뒤 유료 리롤 횟수(값이 두 배씩 · 09-30).
+ *     명단 자체는 저장하지 않는다(시드+카운터로 재현) — 저장하는 건 「언제 갈았나」와 「몇 번 칸을 샀나」뿐이다
+ *   joins: [{no, hero, arrivedAt, src}]   — **수색 칸** · 도착 순 (2026-10-09 가입 희망 · 2026-10-19 수색 · base_expedition_design §2-4).
+ *     `src` = 어떻게 왔나 — `'visit'`(연구소 줄이 연 시계) · `'caravan'`(탐험 마차 · 지금은 개발 경로뿐). **떠나지 않는다** — 돌려보낼 때까지 남는다(~~leavesAt~~ 2026-10-19).
+ *     `hero` = 후보 개체를 통째로 박는다 — 굴린 순간의 것이 계약이다(다시 굴리지 않는다). **버전을 안 올린 필드다**(INTERFACE §4)
+ *   visit: {nextAt: ms|null, left: ms|null} | null   — **수색 시계** [2026-10-19]. null = 그 줄을 연 적이 없다(레벨 0).
+ *     흐르는 중 = `nextAt`(다음 사람이 오는 시각) · **칸이 다 차 멈춘 동안** = `left`(멈췄을 때 남은 시간) — 비면 그때부터 `left` 뒤에 온다.
+ *     꺼져 있어도 흐른다(연구소의 오프라인 상한을 안 받는다 — 칸 수가 상한이다). 줄 레벨은 `labNodes['visit:interval']`(2026-10-21 · ~~`labLevels.visit`~~)
+ *   presets[*].tactics: {slots: {칸번호: {id, grade}}, locked: [칸번호]}   — **리롤로 바꾼 칸만** 담는다 (v34 부터 편성마다 · 그 전엔 최상위 `tactics` 하나).
+ *     안 담긴 칸은 시드에서 파생되는 첫 배정이다(tactic.initialAssign · **모든 편성이 같다**) — 선술집 명단과 같은 규칙:
+ *     저장하는 건 「플레이어가 바꾼 것」뿐이고 나머지는 시드가 재현한다. 열린 칸 수는 계정(합산 레벨)이라 세이브에 없다.
+ *     `locked` = **잠근 칸 번호 — v35** [2026-09-22 · R28] · 편성마다 · 전체 리롤이 건너뛰고 비용은 그 개수가 정한다 (tactic_card_design §5-6)
+ *   bonds: {"uid|uid|uid": n}   — **같이 깬 칸 수 — v36** [2026-09-22 · R134 · 뜻 개정 2026-09-29] · 키 = 나간 인원의 uid 를 정렬해 이은 것 · **칸을 이길 때마다 +1**(~~출발할 때 +1~~ — 출정 → 철수 연타로 올랐다). 옛 세이브의 값은 그대로 읽는다.
+ *     전술 「관계」 조건이 읽는다(tactic_card_design §5-8) · 한 명이라도 바뀌면 다른 키다
+ *   buildings: {buildingId: rank}   — **건물 랭크 — v37** [2026-09-22 · R137 · construction_draft §11] · 0 은 안 적는다.
+ *     **「무엇이 열렸나」는 저장하지 않는다** — `construction.js` 가 부를 때마다 표에서 센다(표를 고치면 옛 세이브도 따른다)
+ *   ~~research: {researchId: level}~~ — 건설 연구 레벨(v37 ~ v43 · 항목이 없어 언제나 {}) · 2026-10-29 걷었다(R195 — 사용자 09-30 「연구 완전히 삭제」 · 로드가 지운다 · 버전 무변경)
+ *   progress.peakTotal              — 로스터 합산 레벨의 **도달 최고치**(v37) — 해고가 합산을 내리기 전에 적는다(건설 문턱 `total:`)
+ * }
+ *
+ * **버전** — `deserialize` 는 **v38 · v39 · v40 을 연다** — v38 은 `upgradeV38`(2026-09-29 · 스테이지 칸 구조) · v39 는 `upgradeV39`(2026-10-06 · 부대마다 인벤토리)가 한 단계씩 올린다. 그 전 세이브(v1 ~ v37)는 던지고 시작 화면이 새 게임으로 받는다
+ *   [2026-09-23 · 사용자 지시 「끊어」 · 다부대]. 다음 버전이 생기면 같은 자리에서 한 단계씩 올린다 (INTERFACE §4)
+ */
+
+import { makeRng, deriveSeed } from './rng.js';
+// 물리 감쇠 곡선 — 자동 장착의 「버티는 양」이 전투와 같은 식을 읽는다(R313)
+import { createFormula } from './formula.js';
+// ~~능력치 계수(`statCoef`) — 자원 파견의 산출 속도가 담당 능력치를 탄다~~ — 2026-10-18 연구소에서 영웅 배치를 걷어 쓰는 곳이 사라졌다(R283)
+// 건설 어휘 — 창구가 모르는 이름을 거절하는 데만 쓴다(시스템 주입이 아니다 · skill_effects.js 와 같은 취급)
+import { TARGETS as CN_TARGETS } from './construction.js';
+// 의뢰 어휘 — 로드가 모르는 어휘의 카드를 거르는 데만 쓴다(같은 취급 · R153)
+import { AXES as CM_AXES } from './commission.js';
+
+export const SAVE_VERSION = 43;
+
+/**
+ * @param {object} deps
+ *   hero, item, battle, skill, tactic — 각 시스템 / balance / equipSlots [{id, part}] (착용 위치 8개) / stages(byId) / stageOrder [id...]
+ *   monsters(byId) / codex {levels:[exp_total...](codex_level.csv 레벨순 — 누적 도감 경험치 문턱), steps:[{reward, value}](같은 표 — 레벨 n 이 여는 단계 · 2026-10-18 R286), options:[{monsterId, stat, value, farm, farmValue, fight, fightValue}](codex_option.csv — Lv4 몬스터다운 전투 옵션 + Lv1 · Lv2 칸 · 2026-10-22 R314), races:{base: {ko, en}}(monster_base.csv — 종족 이름 · R314)}
+ *   sins [죄종 id...] — 탐험 이야기의 `sin` 컬럼 검증에만 쓴다 (~~수색 이야기 · 만남 · 답~~ 표는 2026-10-19 수색과 함께 삭제)
+ *   makeRecipes {part: {ore, timber, dust}} (make_recipe.csv) · labMaterials [{post, id, ko, en, yieldPerHour}] (lab_material.csv — 연구소 「자원」 줄의 재료 셋 = **하급** · 생산 · 제작 · 도박장 · 처치 재료가 같은 id 를 쓴다 · 2026-10-25 R356)
+ *   materialSynth [{id, from, need, gold, ko, en}] (material_synth.csv — 위 단계 재료와 그 합성 · `from` 사슬이 줄 · 단계를 정한다 · 2026-10-27 R359)
+ *   potions [{id, kind, tier, ko, en, heal, craftGold, startOwned}] (potion.csv 행 순서) — 물약 단계 표 · startOwned = 시작 개수 (battle_design §7-1 · item_design §7-4 · R103 · R124) · 만들 수 있는 단계는 대장간 랭크가 연다(R137)
+ *   construction — 건설 시스템(`construction.js` · 표 넷을 든다 · INTERFACE §2-14 · R137)
+ *   gamble — 도박장 슬롯(`gamble.js` · 표 넷을 든다 · 한 판을 굴린다 · INTERFACE §2-15 · R149)
+ *   commission — 의뢰(`commission.js` · 표 넷을 든다 · 카드 한 장을 굴리고 처치 · 드롭을 대조한다 · INTERFACE §2-16 · R153)
+ *   openAll — `() → bool` 선택 · **개발 장치**(관리자 모드) — 켜져 있으면 「무엇이 열렸나」가 모든 건물을 최대 랭크로 친다(`openRanks`) · 스테이지도 `chapter_open_max` 장까지 전부 열린다(`stageUnlocked` · INTERFACE §2-7 · 그 뒤의 장은 켜도 잠긴다 · R227)
+ */
+export function createGameSystem(deps) {
+    const { hero: H, item: I, battle: BT, skill: SK, tactic: TC, construction: CN, gamble: GB, commission: CM, balance: B } = deps;
+    const clone = v => JSON.parse(JSON.stringify(v));
+
+    const positions = deps.equipSlots.map(s => s.id);
+    const positionsOf = part => deps.equipSlots.filter(s => s.part === part).map(s => s.id);
+
+    /* ── 신단 [2026-09-29 · base_expedition_design §1-2] — 이긴 칸 뒤 칸 I → II · II → III 으로 넘어갈 때 하나가 서고 다음 칸의 파티 전원이 입는다 ── */
+
+    /** 신단 효과가 올릴 수 있는 이름 — **전술 보너스 채널(`hero.computeCombat` 의 flat)이 읽는 것**만 · 경험치는 `settleRound` 가 따로 곱한다 */
+    const SHRINE_STATS = ['atk_pct', 'cooldown_reduction', 'life_steal', 'res_all', 'hp_pct', 'xp_gain_pct', 'item_find', 'gold_find'];
+    /** 신단 표 — `shrine.csv` 를 id 로 묶은 것 · 행 순서가 뽑기 순서다. 비어 있으면 신단이 안 선다 */
+    const shrineList = deps.shrines ?? [];
+    const shrineById = (() => {
+        const bad = why => { throw new Error(`shrine: ${why}`); };
+        const map = {};
+        for (const s of shrineList) {
+            if (!s?.id || map[s.id]) bad(`id '${s?.id}'`);
+            if (!s.ko || !s.en) bad(`${s.id} — 이름이 비었다`);
+            const fx = Object.entries(s.fx ?? {});
+            if (fx.length === 0) bad(`${s.id} — 효과가 없다`);
+            for (const [stat, v] of fx) {
+                if (!SHRINE_STATS.includes(stat)) bad(`${s.id} — 모르는 능력치 '${stat}'`);
+                if (!(Number.isFinite(v) && v > 0)) bad(`${s.id} — ${stat} 값 '${v}'`);
+            }
+            map[s.id] = s;
+        }
+        return map;
+    })();
+    /** 그 신단의 효과 한 값(없으면 0) */
+    const shrineFx = (id, stat) => shrineById[id]?.fx?.[stat] ?? 0;
+    /** 전술 보너스 `{flat, dr}` 에 신단 효과를 더한 **새** 묶음 — 원본을 안 바꾼다 */
+    const withShrine = (bonus, id) => {
+        const s = shrineById[id];
+        if (!s) return bonus;
+        const flat = { ...(bonus?.flat ?? {}) };
+        for (const [stat, v] of Object.entries(s.fx)) if (stat !== 'xp_gain_pct') flat[stat] = (flat[stat] ?? 0) + v;
+        return { flat, dr: (bonus?.dr ?? []).slice() };
+    };
+    /** 이긴 칸 다음에 신단이 서는 칸 — **같은 장소의 바로 다음 칸**(칸 번호 +1)일 때만 그 칸 id · 아니면 null(장소 사이 · 순환의 III → I · 칸 하나인 장소) */
+    const shrineTarget = stageId => {
+        const nx = deps.stageOrder[deps.stageOrder.indexOf(stageId) + 1];
+        return nx != null && samePlace(nx, stageId) && deps.stages[nx].cell === deps.stages[stageId].cell + 1 ? nx : null;
+    };
+
+    /* ── 생성 · 직렬화 ── */
+
+    const emptyEquip = () => Object.fromEntries(positions.map(p => [p, null]));
+
+    function addHero(state, h) {
+        state.counters.hero += 1;
+        h.uid = `h${state.counters.hero}`;
+        h.equipped = { ...emptyEquip(), ...(h.equipped ?? {}) };
+        state.heroes.push(h);
+        return h;
+    }
+    /** 성장 영웅(고블린)의 성장 굴림 씨앗 — `seed ^ 0x60B1` · 두 번째 인자는 그 영웅의 번호(uid `h<n>`) · rng 0 (2026-10-29 · R365 · INTERFACE §5-1) */
+    const growthSeedOf = (state, h) => deriveSeed(state.seed ^ 0x60B1, Number(h.uid.slice(1)));
+    function addItem(state, it) {
+        state.counters.item += 1;
+        it.uid = `i${state.counters.item}`;
+        state.items[it.uid] = it;
+        return it;
+    }
+    /**
+     * 시작 장비 한 벌 — **일반 무기 + 일반 갑옷**을 입힌다 (hero_design §1). 새 게임의 시작 영웅과 **선술집에서 온 영웅**(명단 · 수색)이 같은 한 벌이다 [2026-09-25 사용자 지시].
+     *   무기 → 갑옷 — **이 순서가 계약이다**(INTERFACE §5-2). 바로 입으므로 가방 칸을 안 먹는다 · ~~무기 스킬 풀에서 고유 스킬을 뺀다~~(2026-09-29 R179 — 무기가 스킬을 안 담는다)
+     */
+    function equipStarter(state, h, rng) {
+        const w = addItem(state, I.startingWeapon(rng, h.cls));
+        h.equipped.weapon = w.uid;
+        const a = addItem(state, I.startingArmor(rng));
+        h.equipped.armor = a.uid;
+    }
+
+    /**
+     * 새 게임 — 확정한 시작 영웅 3명이 곧 로스터다. 각자 **일반 무기 + 일반 갑옷**을 입고 시작한다 [개정 2026-09-14 · R86 · hero_design §1] —
+     *   무기는 제 직업 무기군이다(~~고유와 같은 스킬을 담지 않는다~~ — 2026-09-29 R179 무기가 스킬을 안 담는다 · 첫 파티의 딜 · 힐 보장은 고유가 든다 — hero.rollStartParty).
+     * **파티는 비어 있다** [사용자 지시 2026-09-09 · SCREEN_DESIGN §5] — ~~로스터가 곧 파티~~ 폐기.
+     *   자동으로 채우면 플레이어가 **편성을 한 번도 안 하고** 첫 원정을 떠나므로 편성이 결정이라는 것을 배울 자리가 없다.
+     *   **처음 고른 영웅이 리더**가 되는 것은 새 규칙이 아니다 — `party` 는 넣은 순서 그대로이고 리더는 `party[0]` 이다.
+     * ⚠ 전투를 바로 돌리는 쪽(골든 · 단정 · `?dev=battle|play|offline`)은 **직접 안 채운다** [2026-09-21 · ADR-0227] — 편성 1 이 이미 차 있어서
+     *   `toggleParty` 를 또 부르면 **빼기로 뒤집힌다**
+     */
+    /**
+     * 「무엇이 열렸나」가 세는 랭크 — 세이브의 `buildings` · **`deps.openAll()` 이 켜져 있으면 모든 건물의 최대 랭크** [2026-09-24 · 개발 장치 — 관리자 모드 · INTERFACE §2-7].
+     *   세는 자리는 셋이다(`limitsOf` · `hasFeature` · `constructionState.tabs`). 짓기 쪽(건설 탭의 랭크 · 다음 랭크 · `construct`)은 안 거친다 — 실제 랭크를 본다.
+     *   스테이지는 이 랭크가 아니라 `stageUnlocked` 가 `openAll()` 을 직접 본다(직전 클리어를 건너뛴다 · 장 잠금은 `chapter_open_max` 까지 그대로 · R227)
+     */
+    const openAll = deps.openAll ?? (() => false);
+    const maxRanks = Object.fromEntries(CN.list.map(b => [b.id, b.maxRank]));
+    const openRanks = state => (openAll() ? maxRanks : state?.buildings ?? CN.startRanks());
+    /**
+     * 장을 여는 칸 — `{장: 앞 장의 보스 칸}`(`stage.csv:boss_grade` = `chapter_boss`) · 2장부터 `chapter_open_max` 장까지 [2026-10-22 원정 건물 삭제 · R319 · construction_draft §1-3].
+     *   앞 장에 보스 칸이 없으면 만들 때 던진다 — 그 장이 조용히 안 열린다
+     */
+    const CHAPTER_GATE = (() => {
+        const out = {};
+        for (let ch = 2; ch <= B.chapter_open_max; ch++) {
+            const id = (deps.stageOrder ?? []).find(s => deps.stages[s].chapter === ch - 1 && deps.stages[s].boss_grade === 'chapter_boss');
+            if (id == null) throw new Error(`chapter: ${ch - 1}장에 보스 칸(chapter_boss)이 없다 — ${ch}장이 안 열린다 (stage.csv · INTERFACE §2-7)`);
+            out[ch] = id;
+        }
+        return out;
+    })();
+    /** 열린 장 수 — 1장 + **첫 단에서** 깬 장 보스(앞에서부터 이어진 것만 센다 · 건설 문턱 `stage:` 와 같은 기록) · `limitsOf` 가 `chapter_open_max` 로 자른다 */
+    const chaptersOpened = state => {
+        const cleared = state?.progress?.cleared ?? [];
+        let n = 1;
+        while (CHAPTER_GATE[n + 1] != null && cleared.includes(CHAPTER_GATE[n + 1])) n++;
+        return n;
+    };
+    /**
+     * 상한 — **이 세이브가 쓸 수 있는 칸 · 인원 · 단계의 수를 여기 한 곳이 답한다** [신설 2026-09-22 · INTERFACE §2-7 · construction_draft §9].
+     *   bag 가방 · stash 창고 · roster 로스터 · party 파티 인원 · presets 편성 수 · **expeditions 동시 원정 부대 수**(v38 · 편성 수를 넘지 않는다) · potionSlots 물약 칸 · upgrade 강화 단계 ·
+     *   tavernCandidates 고용 후보 · ~~searchSlots 동시 수색~~(2026-10-19 수색 삭제) · shopPerSlot · shopWeapon 상단 장비 목록(부위마다 · 무기) · commissionSlots 동시 의뢰(R153)
+     *   makeLevels 열린 제작 레벨 수 · potionTier 만들 수 있는 물약 단계 · tacticSlots 열린 전술 칸 수 — 이 셋은 기본값이 0 이다(건물만 연다) ·
+     *   **chapters 들어갈 수 있는 장** — 1장 + 첫 단에서 깬 장 보스(`chaptersOpened` · 건물이 안 연다 · 2026-10-22 원정 건물 삭제 · R319)
+     * **값 = balance.csv 기본값 + 지어진 건물 랭크의 더하기** [2단계 2026-09-22 · R137 · construction_draft §11-2] — 기본값은 **건설 전** 값이고
+     *   더하기는 `building_effect.csv` 가 든다(이름이 같은 키에 붙는다 · 단계 셋은 `ADD_KEY`). 판정 · 불러오기 · 전투 입력 · 강화 비용 · 화면이 모두 이것을 읽는다.
+     * `state` 가 null 이면(새 게임을 만드는 도중) **시작 랭크**(`building.csv:start_rank`)의 상한이다 · 관리자 모드면 모든 건물의 최대 랭크다(`openRanks`)
+     */
+    function limitsOf(state) {
+        const out = {
+            bag: B.inventory_cap, stash: B.stash_cap, roster: B.roster_cap, party: B.party_size_max,
+            presets: B.party_preset_count, expeditions: B.concurrent_expedition_parties,
+            potionSlots: B.potion_slot_max, upgrade: B.equip_upgrade_max,
+            tavernCandidates: B.tavern_candidates,
+            shopPerSlot: B.shop_equip_per_slot, shopWeapon: B.shop_equip_weapon,
+            makeLevels: 0, potionTier: 0, tacticSlots: 0,
+            gambleStakes: B.gamble_stake_steps,   // 도박장 판돈 단계 — 건물이 안 늘린다 · 도박장이 열리면 다 열린다 (2026-09-27 사용자 지시 · 옛 선술집 r5 · r7 더하기)
+            chapters: chaptersOpened(state),   // 들어갈 수 있는 장 — 앞 장 보스를 깨면 저절로 열린다 · 건물이 안 연다 (2026-10-22 원정 건물 삭제 · R319)
+            commissionSlots: B.commission_slots,   // 동시에 받아 둘 수 있는 의뢰 — 더하기 대상이지만 지금 표엔 늘리는 랭크가 없다 (R153 · R162)
+            resourceTiers: 0,   // ~~열린 자원 단계 수~~ → **연구소 랭크**(랭크마다 +1 이라 랭크와 같다 · 지점이 열리는 문 · 단계는 「종류」 지점이 연다 — 2026-10-21 · R298) · 이름은 옛 뜻 그대로 산다
+            exploreSlots: B.explore_slots,   // 동시 탐험 건수 — 탐험 건물의 `explore_slots` 가 더한다 (2026-10-09 · 탐험 최소 루프)
+            codexLevel: 0,   // 도감이 오를 수 있는 단계 — 도서관 r1 의 `codex` 가 1 을 심고 뒤 랭크의 `codex_level` 이 더한다 (2026-10-24 · R339 · `codexLevelOf`)
+        };
+        for (const [target, n] of Object.entries(CN.opened(openRanks(state)).adds)) {
+            const key = ADD_KEY[target] ?? target;
+            if (key in out) out[key] += n;      // 준비 중인 더하기(일꾼 칸 등)는 붙을 상한이 아직 없다
+        }
+        // 관리자 모드 — 표가 아직 여는 랭크를 두지 않은 단계까지 연다(제작 레벨 · 물약 단계) [2026-09-28 사용자 지시 「Admin 누르면 다 되도록」 · 개발 장치]
+        if (openAll()) {
+            out.makeLevels = Math.max(out.makeLevels, makeLevelList.length);
+            out.potionTier = Math.max(out.potionTier, ...potionRows.map(p => p.tier));
+            out.chapters = Math.max(out.chapters, B.chapter_open_max);
+        }
+        // 장은 이번 버전이 여는 마지막 장까지 — 관리자 모드여도 그 뒤는 안 열린다 [2026-10-09 사용자 지시 · ADR-0552 · R227]
+        out.chapters = Math.min(out.chapters, B.chapter_open_max);
+        // 부대는 편성 하나에 하나다 — 편성보다 많은 부대를 낼 수 없다 [2026-09-23 · 다부대]
+        out.expeditions = Math.min(out.expeditions, out.presets);
+        return out;
+    }
+    /** 더하기 대상 이름 → 상한 키 — 표의 단계 셋만 이름이 다르다(나머지는 같은 이름에 붙는다) */
+    const ADD_KEY = { make_level: 'makeLevels', potion_tier: 'potionTier', tactic_slots: 'tacticSlots', commission_slots: 'commissionSlots', resource_tier: 'resourceTiers', explore_slots: 'exploreSlots', codex_level: 'codexLevel' };
+
+    /** 고블린 다섯 종 — 직업마다 하나 · 행 순서가 굴림 인덱스다 [2026-10-27 사용자 · hero_design §1 「성장 영웅」 · INTERFACE §5-2]. 초상 = `hero/<face>.webp` */
+    const GOBLIN_KINDS = [
+        { cls: 'warrior', face: 'goblin_butler', name: { ko: '고블린 일꾼', en: 'Goblin Worker' } },
+        { cls: 'knight', face: 'goblin_porter', name: { ko: '고블린 짐꾼', en: 'Goblin Porter' } },
+        { cls: 'archer', face: 'goblin_beater', name: { ko: '고블린 몰이꾼', en: 'Goblin Beater' } },
+        { cls: 'mage', face: 'goblin_steward', name: { ko: '고블린 집사', en: 'Goblin Steward' } },
+        { cls: 'priest', face: 'goblin_bellringer', name: { ko: '고블린 종지기', en: 'Goblin Bellringer' } },
+    ];
+
+    function newGame(seed, candidates, now) {
+        const state = {
+            version: SAVE_VERSION, seed: seed >>> 0, createdAt: now, savedAt: now,
+            expMs: 0,        // 누적 원정 플레이 시간 — 원정의 재생 시각이 나아간 만큼 화면이 더한다(`addExpTime` · ADR-0514)
+            resources: { gold: B.start_gold, stigma: B.start_stigma },
+            materials: B.start_dust > 0 ? { [DUST_ID]: B.start_dust } : {},   // 재료 사다리 — 연구소 · 분해 · 도박장 · 합성이 채운다 · 가루도 여기(v43 · R373)
+            advancing: [],   // 전직하는 중 [{uid, branch, since, until}] (2026-09-28 · R16)
+            resourceProduction: [],   // 재료별 생산 시계 [{post, at, carry}] — carry는 다음 1개의 소수 진행도
+            labNodes: {},    // 연구소 지점 레벨 {'줄:지점': lv} — 0 은 안 적는다 (2026-10-21 · R298 · ~~labLevels~~ R288)
+            labResearch: null,   // 하고 있는 연구 — 연구소 전체에 하나 (R298)
+            labReg: {},      // 연구소 줄 등록 {uid: 줄} — 한 영웅은 한 줄 · 효과 = 능력치 일곱 (2026-10-21)
+            labSince: {},    // 등록한 시각 {uid: ms} — 숙련(건강) (R298)
+            labClock: { gamble: null, train: null },   // 도박장 · 훈련 시계 — 줄이 열린 첫 정산에서 선다 (R298)
+            potions: startStock(),     // 물약 재고 — 새 게임은 `potion.csv:start_owned` 개수를 갖고 시작한다 (R103 · 개수 R124)
+            books: {},       // 스킬북 재고 {skillId: n} — 도서관이 만든다 (2026-09-29 · R179 · 2026-10-20 처치 · 상단은 도안을 준다)
+            blueprints: {},  // 스킬 도안 재고 {skillId: n} — 처치 · 상단이 준다 · 책 한 권에 한 장 (2026-10-20 · R293)
+            heroes: [], items: {}, bags: newBags(), stash: [],   // 인벤토리는 부대마다 (v40 · ADR-0521)
+            mail: [],        // 우편함 [{id, kind, no, stageId, difficulty}] — 인벤토리에 새 칸이 없어 못 들어간 첫 클리어 상자 (2026-10-23 · R328 · 2026-10-24 · R333 · INTERFACE §4)
+            // peakTotal = 합산 레벨 도달 최고치(v37) · ~~levelUp~~ 은 2026-09-29 위험도 폐지로 삭제 ·
+            //   cleared = **첫 단(노말)의** 깬 칸 · clearedIn = 나머지 단의 깬 칸 {단: [stageId]} (2026-10-10 · R236)
+            progress: { cleared: [], clearedIn: {}, peakTotal: 0 },
+            difficulty: BASE_DIFF,   // 고른 난이도 단 — 원정 탭이 고른다(`selectDifficulty`) · 부대는 나간 단을 제 자리에 든다 (2026-10-10 · R236)
+            codexExp: {},   // 몬스터별 누적 도감 경험치 (2026-10-10 · R239)
+            bossDown: {},   // 죽어 있는 챕터보스 {"단|칸": 죽은 실제 시각} — 런이 끝난 순간 `noteRunEnd` 가 적는다 (2026-10-10 · R240)
+            counters: { hero: 0, item: 0, battle: 0, tavern: 0, tactic: 0, upgrade: 0, visit: 0, make: 0, gamble: 0, commission: 0, explore: 0, join: 0, shop: 0, lab: 0, mail: 0, box: 0 },
+            runs: newRuns(), reports: [], notice: null,   // 부대마다 한 자리 — 안 나간 편성은 null (v38 · 다부대)
+            tavern: { rerolledAt: null, hired: [], paid: 0 },
+            shop: null,      // 상단 목록 `{level, rerolledAt, paid, sold, books}` — 교체도 구매도 한 적 없으면 null(레벨 1 · 무료 열림) (2026-09-27 · 2026-10-16 · INTERFACE §4)
+            explores: [],   // 나가 있는 탐험 [{chapter, spot, preset, squad, heroes, startedAt, no}] (편성 2026-10-10 · R234) — 한 지점에 한 줄 (2026-10-09 · INTERFACE §4)
+            joins: [],       // 수색 칸 [{no, hero, arrivedAt, src}] — 도착 순 · 돌려보낼 때까지 남는다 (2026-10-09 · 2026-10-19 · INTERFACE §4)
+            visit: null,     // 수색 시계 {nextAt, left} — 연구소 줄을 열면 선다 (2026-10-19 · INTERFACE §4)
+            arena: freshArena(),       // 결투장 ELO {rating, peak, win, draw, loss} — `arenaRecord` 만 바꾼다 (2026-10-18 · arena_design §8 · INTERFACE §4)
+            colosseum: { cleared: 0 }, // 콜로세움 오른 층 — `colosseumRecord` 만 바꾼다 (2026-10-18 · arena_design §7)
+            // 의뢰 게시판 — 빈 채로 시작한다. 선술집을 짓고 화면이 그릴 때 `commissionFill` 이 채운다 (R153)
+            commissions: { cards: [], fame: 0 },
+            // 편성 — **편성 1 에 시작 영웅 셋**(아래에서 채운다 · ADR-0227) · 편성 2 부터는 빈 파티다.
+            //   물약 칸도 **편성 1 에만** 시작 물약이 한 칸씩 든다 (v32 · R122 · R124)
+            presets: newPresets(), preset: 1,     // 전술 칸도 편성마다 든다(`presets[*].tactics` · v34 · R129)
+            bonds: {},                            // 같이 깬 칸 수 — 전술 「관계」 조건 (v36 · R134 · 2026-09-29 — 이긴 칸마다 +1)
+            // 자동 분해 — 부대마다 격자 하나 · 새 게임은 전부 보존(= 아무것도 안 녹음 · 옛 「꺼짐」과 같은 뜻) · 프리셋 칸은 비었다 (item_design §6-5 · v41 · R316)
+            salvageRules: newSalvageRules(), salvageSlots: newSalvageSlots(), salvageLogs: newSalvageLogs(),
+            // 건설 — **시작 랭크**(`building.csv:start_rank` · 처음부터 지어진 건물) (v37 · R137 · construction_draft §4 · ~~연구~~ R195)
+            buildings: CN.startRanks(),
+        };
+        const rng = makeRng(deriveSeed(state.seed, 0));
+        // 영웅마다 무기 → 갑옷 — 한 스트림을 로스터 순서로 이어 쓴다(INTERFACE §5-2)
+        for (const c of candidates) equipStarter(state, addHero(state, clone(c)), rng);
+        // 모든 새 게임에 고블린 한 마리 — **다섯 종 중 하나** · 등급 「성장」 · 능력치 일곱 칸 5 [2026-10-27 사용자 · hero_design §1].
+        //   시작 파티 뒤에 넣어 첫 편성은 그대로다 · 굴림은 시작 장비 스트림을 이어 쓴다(종류 → 죄종 → 특성 → 고유 4회 · INTERFACE §5-2)
+        const gob = H.rollGoblin(rng, GOBLIN_KINDS);
+        const gh = addHero(state, {
+            name: { ...gob.kind.name },
+            tier: 'growth', sin: gob.sin, cls: gob.kind.cls,
+            trait: gob.trait, face: gob.kind.face,
+            level: 1, xp: 0, mastery: {}, masteryPoints: 0, innate: gob.innate,
+            stats: { str: 5, agi: 5, int: 5, vit: 5, luck: 5, ldr: 5, cha: 5 },
+            equipped: {},
+        });
+        // 레벨마다 한 칸이 자란다 — 씨앗만 박는다(rng 0 · 굴림은 `hero.grantXp` · 2026-10-29 · R365)
+        gh.growthSeed = growthSeedOf(state, gh);
+        // **편성 1 = 로스터 순서** [2026-09-21 사용자 지시 · ADR-0227 · ~~빈 파티~~ 2026-09-09 폐기] — 첫 원정을 떠날 편성이
+        //   처음부터 서 있다. 리더 규칙은 그대로다(`party[0]` = 먼저 넣은 영웅 = 로스터 첫 영웅).
+        //   **진형은 직업이 정한다** [2026-10-21 사용자 지시 「전사 · 기사는 앞열 · 나머지는 후열」] — `class.csv:start_row` 로
+        //   전열 / 후열을 가르고 정원이 그 두 수와 꼭 맞는 템플릿을 고른다(랭크 안은 파티 순서). 맞는 것이 없으면 기본 템플릿을
+        //   `normalizeFormation` 이 앞 랭크부터 채운다 — **rng 0 회** (INTERFACE §2-7)
+        const first = state.presets[0];
+        const starters = state.heroes.slice(0, limitsOf(state).party);
+        first.party = starters.map(h => h.uid);
+        const rows = [0, 1].map(r => starters.filter(h => H.startRankOf(h.cls) === r).map(h => h.uid));
+        const tpl = FT_ORDER.find(id => { const [front, back] = formCaps(id); return front === rows[0].length && back === rows[1].length; });
+        if (tpl) first.formation = { tpl, ranks: rows };
+        normalizeFormation(first);
+        return state;
+    }
+
+    const serialize = (state, now) => ({ ...clone(state), version: SAVE_VERSION, savedAt: now });
+
+    /**
+     * 누적 원정 플레이 시간에 더한다 [2026-10-05 · ADR-0514 · INTERFACE §2-7] — in-place · 새 누적 값을 돌려준다.
+     * **0 이하 · 유한수가 아닌 값은 무시**한다(시계가 뒤로 가도 줄지 않는다). 무엇을 더할지(재생 시각이 나아간 만큼 · 가장 많이 간 부대)는 부르는 쪽이 정한다
+     */
+    function addExpTime(state, ms) {
+        if (Number.isFinite(ms) && ms > 0) state.expMs = (state.expMs ?? 0) + ms;
+        return state.expMs ?? 0;
+    }
+
+    /**
+     * 이 세이브를 열 수 있는가 — **판정의 권한은 `deserialize` 하나다.**
+     * 받아들이는 버전 목록을 두 곳에 두면 이관을 늘릴 때마다 화면이 멀쩡한 세이브를 거부한다
+     *   (시작 화면이 `version !== SAVE_VERSION` 으로 직접 판정하다 v2 부터 그 증상이 있었다).
+     */
+    function canLoad(obj) {
+        try { deserialize(obj); return true; } catch { return false; }
+    }
+
+    /**
+     * v38 → v39 [2026-09-29 · 스테이지 칸 구조 · PLAN_stage_segments D12 · INTERFACE §4] — 스테이지 번호가 **장소 × 10 + 칸**이 됐다.
+     *   옛 번호는 장소 번호다(`chapter × 100 + stage_num` — 옛 형식 그대로 읽는다). 판단 셋:
+     *   ① 깬 기록 → **그 장소의 칸 전부** (옛 스테이지를 깼으면 그 안의 칸을 다 지난 것이다)
+     *   ② 부대 · 알림 · 리포트가 가리키던 스테이지 → **그 장소의 마지막 칸**(옛 스테이지와 같은 9라운드 · 같은 보스)
+     *   ③ 부대의 `auto`(이어 가는 중)는 false — 불러온 세이브의 원정은 어차피 끊긴 것이다(`closeRun`)
+     *   ~~올린 양 → 칸 전부~~ — 위험도가 폐지돼(2026-09-29 · PLAN_expedition_window D2) `progress.levelUp` 은 옮기지 않고 로드가 지운다(`deserialize`)
+     *   표에 없는 옛 번호는 깬 기록에서 빠지고 부대 자리는 빈다 · rng 0
+     */
+    function upgradeV38(s) {
+        const cellsOf = old => deps.stageOrder.filter(id => {
+            const st = deps.stages[id];
+            return st.chapter === Math.floor(old / 100) && st.stage_num === old % 100;
+        });
+        const lastOf = old => cellsOf(old).at(-1) ?? null;
+        s.progress.cleared = [...new Set((s.progress.cleared ?? []).flatMap(cellsOf))];
+        s.runs = (s.runs ?? []).map(r => {
+            if (!r || typeof r !== 'object') return null;
+            const id = lastOf(r.stageId);
+            return id == null ? null : { ...r, stageId: id, auto: false };
+        });
+        for (const r of s.reports ?? []) r.stageId = lastOf(r.stageId) ?? r.stageId;
+        if (s.notice?.runs) {
+            for (const r of s.notice.runs) r.stageId = lastOf(r.stageId) ?? r.stageId;
+            s.notice.stageId = lastOf(s.notice.stageId) ?? s.notice.stageId;
+        }
+        s.version = 39;
+        return s;
+    }
+
+    /**
+     * v39 → v40 [2026-10-06 · 부대마다 인벤토리 · SCREEN_DESIGN ADR-0521 · INTERFACE §4] — 판단 하나:
+     *   옛 인벤토리(`bag`)는 **편성 1 의 인벤토리**가 된다. 나머지 부대의 빈 인벤토리는 `deserialize` 가 편성 수에 맞춰 붙인다(`fitBags`) · rng 0
+     */
+    function upgradeV39(s) {
+        s.bags = [Array.isArray(s.bag) ? s.bag : []];
+        delete s.bag;
+        s.version = 40;
+        return s;
+    }
+
+    /**
+     * v40 → v41 [2026-10-22 · 자동 분해가 부대마다 격자 · R316 · INTERFACE §4] — 옛 계정 규칙 하나를 **편성마다 같은 뜻으로** 옮긴다:
+     *   등급 선 → 그 줄들의 칸 「분해」 · 레벨 선(절대값 n) → `lvGap = n − 그 편성의 가장 낮은 레벨`(0 에서 자르고 −만렙 아래는 −만렙 · 빈 편성은 안 봄).
+     *   유니크 · 크래프트는 새 규칙에서 언제나 보존이라 옛 레벨 선이 녹이던 고장이 옮기며 고쳐진다 · 프리셋 칸 · 기록은 빈 채로 연다(`deserialize` 가 맞춘다) · rng 0
+     */
+    function upgradeV40(s) {
+        const old = s.autoSalvage ?? {};
+        const rows = { normal: ['normal'], magic: ['normal', 'magic'] }[old.rarity] ?? [];
+        const lv = new Map((s.heroes ?? []).map(h => [h.uid, h.level]));
+        s.salvageRules = (Array.isArray(s.presets) ? s.presets : []).map(p => {
+            const cells = {};
+            for (const part of SALVAGE_PARTS) for (const r of rows) if (cellExists(part, r)) cells[`${part}:${r}`] = 'salvage';
+            const lvs = (p?.party ?? []).map(u => lv.get(u)).filter(Number.isInteger);
+            return { cells, base: {}, lvGap: old.ilvlBelow > 0 && lvs.length ? clampGap(old.ilvlBelow - Math.min(...lvs)) : null };
+        });
+        delete s.autoSalvage;
+        s.version = 41;
+        return s;
+    }
+
+    /**
+     * v41 → v42 [2026-10-25 · 연구소 재료 한 종류 · 자원 한 줄 · R356 · INTERFACE §4] — 단계 재료와 채광 · 채집 · 벌목 세 줄을 **같은 뜻으로** 옮긴다:
+     *   재료 = 그 줄의 단계 재료를 하나로 더한다(`ore_t*` → 철광 · `herb_t*` → 약초 · `timber_t*` → 목재 — 리포트의 처치 재료도) ·
+     *   지점 = 「획득량」 → 그 재료 지점 · 「등록 칸」 · 「대박」 = 세 줄 중 가장 높은 레벨 · 「종류」 · 「깊이」는 버린다(지점이 없다) ·
+     *   등록 = 세 줄 → 자원(칸을 넘는 몫은 `deserialize` 가 뒤에서부터 푼다) · 세 줄에서 연구 중이던 것 = 낸 비용을 돌려주고 비운다 · 시계 = 재료마다 하나 · rng 0
+     */
+    function upgradeV41(s) {
+        const OLD = { mine: 'ore_t', gather: 'herb_t', log: 'timber_t' };   // 옛 줄 id → 그 줄 단계 재료 id 의 머리
+        const newId = id => {
+            for (const [post, head] of Object.entries(OLD)) if (typeof id === 'string' && id.startsWith(head)) return MAT_BY_POST[post]?.id ?? id;
+            return id;
+        };
+        const merge = m => {
+            const out = {};
+            for (const [k, n] of Object.entries(m && typeof m === 'object' ? m : {})) if (Number.isFinite(n)) out[newId(k)] = (out[newId(k)] ?? 0) + n;
+            return out;
+        };
+        s.materials = merge(s.materials);
+        for (const r of Array.isArray(s.reports) ? s.reports : []) if (r?.materials) r.materials = merge(r.materials);
+        const nodes = {};
+        for (const [k, v] of Object.entries(s.labNodes && typeof s.labNodes === 'object' ? s.labNodes : {})) {
+            const [line, node] = k.split(':');
+            if (!OLD[line]) nodes[k] = v;
+            else if (node === 'yield') nodes[`${RES_KEY}:${line}`] = v;
+            else if (node === 'seats' || node === 'burst') nodes[`${RES_KEY}:${node}`] = Math.max(nodes[`${RES_KEY}:${node}`] ?? 0, v);
+        }
+        s.labNodes = nodes;
+        const reg = s.labReg && typeof s.labReg === 'object' ? s.labReg : {};
+        for (const [uid, line] of Object.entries(reg)) if (OLD[line]) reg[uid] = RES_KEY;
+        const R = s.labResearch;
+        if (R && OLD[R.line]) {
+            if (Number.isFinite(R.paid?.gold)) s.resources.gold = (s.resources.gold ?? 0) + R.paid.gold;
+            const m = R.paid?.mat;
+            if (m && Number.isFinite(m.n)) s.materials[newId(m.id)] = (s.materials[newId(m.id)] ?? 0) + m.n;
+            s.labResearch = null;
+        }
+        if (Array.isArray(s.resourceProduction)) s.resourceProduction = Object.keys(OLD).flatMap(post => {
+            const own = s.resourceProduction.filter(c => c?.post === post);
+            const c = own.find(x => x.tier === 1) ?? own[0];
+            return c ? [{ post, at: c.at, carry: c.carry }] : [];
+        });
+        if (s.mgPlay && typeof s.mgPlay === 'object') delete s.mgPlay.tier;
+        s.version = 42;
+        return s;
+    }
+    /**
+     * v42 → v43 [2026-10-29 · R373 · item_design §5-1 — 가루도 재료 사다리] — `resources.dust` 를 `materials.dust`(최하급 가루)로 **옮긴다**(더한다 · 버리지 않는다).
+     *   재료 id 는 그대로다 — 단계가 넷 → 다섯이 되며 이름만 한 칸씩 내려앉는다(id 순서 = 단계 · 합성 사슬의 자리가 같아 값어치도 같다)
+     */
+    function upgradeV42(s) {
+        const d = Number.isFinite(s.resources?.dust) ? s.resources.dust : 0;
+        s.materials = s.materials && typeof s.materials === 'object' ? s.materials : {};
+        if (d) s.materials[DUST_ID] = (Number.isFinite(s.materials[DUST_ID]) ? s.materials[DUST_ID] : 0) + d;
+        if (s.resources) delete s.resources.dust;
+        s.version = 43;
+        return s;
+    }
+
+    /** **v38 ~ v43 을 연다** — 옛 버전은 한 단계씩 올린다(v38 → `upgradeV38` · v39 → `upgradeV39` · v40 → `upgradeV40` · v41 → `upgradeV41` · v42 → `upgradeV42`) · 그 전은 끊었다(2026-09-23 · 다부대 · 파일 머리 참조) */
+    function deserialize(obj) {
+        if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
+        let src = obj.version === 38 ? upgradeV38(clone(obj)) : obj;
+        if (src.version === 39) src = upgradeV39(src === obj ? clone(obj) : src);
+        if (src.version === 40) src = upgradeV40(src === obj ? clone(obj) : src);
+        if (src.version === 41) src = upgradeV41(src === obj ? clone(obj) : src);
+        if (src.version === 42) src = upgradeV42(src === obj ? clone(obj) : src);
+        if (src.version !== SAVE_VERSION)
+            throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
+        const s = clone(src);
+        for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
+        // 고정 지급 캐릭터의 옛 이름을 이미 저장된 세이브에서도 갱신한다.
+        for (const h of s.heroes) if (h.face === 'goblin_butler' && h.name?.ko === '집사 고블린')
+            h.name = { ko: '고블린 일꾼', en: 'Goblin Worker' };
+        // 성장 영웅의 씨앗 [2026-10-29 · R365 · 버전 무변경] — 없으면 새 게임과 같은 식으로 채운다.
+        //   **지난 레벨은 소급하지 않는다**(사용자 결정) — 채운 뒤 오르는 레벨부터 자란다
+        for (const h of s.heroes) if (h.tier === 'growth' && !Number.isInteger(h.growthSeed)) h.growthSeed = growthSeedOf(s, h);
+        // 지운 기본 스킬 → 대체 스킬 [2026-10-16 · R246 · R249 · R250 · 사용자 「대체 스킬로 옮김」 · 버전 무변경 — INTERFACE §4] — 아래 정리(정의 밖 id 지우기)보다 **먼저** 옮긴다
+        retireSkills(s);
+        // 마스터리 — **표에 맞춘다** [2026-09-22 · R138 · 버전 무변경] — 그 영웅의 트리에 없는 노드(표에서 걷힌 칸)와 상한을 넘은 랭크는
+        //   포인트로 돌려준다. 롤백이 무료라(skill_design §5) 돌려주는 것이 곧 이관이고, 남겨 두면 못 빼는 포인트가 된다
+        for (const h of s.heroes) {
+            const own = new Map(H.masteryNodesFor(h).map(n => [n.id, n]));
+            for (const [id, r] of Object.entries(h.mastery ?? {})) {
+                const keep = Math.min(r, own.get(id)?.maxRank ?? 0);
+                if (keep === r) continue;
+                h.masteryPoints = (h.masteryPoints ?? 0) + (r - keep);
+                if (keep > 0) h.mastery[id] = keep; else delete h.mastery[id];
+            }
+        }
+        // 도감 카드는 걷혔다 [2026-09-21 · 버전 무변경] — 레벨은 이미 있던 `codexKills` 에서 다시 계산되므로 소급할 판단이 없다 · 필드만 지운다 (INTERFACE §4)
+        delete s.codexCards;
+        // 처치 수 → 도감 경험치 [2026-10-10 · R239 · 버전 무변경] — 난이도 단(R236) 전의 처치는 전부 노말(처치 하나 = 하나)이라 1:1 로 옮긴다 · 둘 다 있으면 `codexExp` (INTERFACE §4)
+        s.codexExp = s.codexExp ?? s.codexKills ?? {}; delete s.codexKills;
+        // 스킬 도감 경험치는 걷혔다 [2026-10-20 · R293 · 버전 무변경] — 스킬 도감이 레벨 없는 목록이 됐다. **이미 연 도안을 도안으로 보상하지 않는다**
+        //   (옛 세이브는 나중에 완전 초기화 — 사용자 2026-10-21) · 필드만 지운다 (INTERFACE §4)
+        delete s.skillCodexExp;
+        // 죽어 있는 챕터보스 — 없으면 「죽어 있는 보스가 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-10-10 · R240).
+        //   유한한 시각이 아닌 값은 지운다 — 셀 수 없는 줄이 칸을 막지 않게
+        s.bossDown = Object.fromEntries(Object.entries(s.bossDown && typeof s.bossDown === 'object' ? s.bossDown : {}).filter(([, at]) => Number.isFinite(at)));
+        s.reports = s.reports ?? []; s.notice = s.notice ?? null;
+        s.tavern = s.tavern ?? { rerolledAt: null, hired: [] };
+        s.tavern.paid = s.tavern.paid ?? 0;   // 유료 리롤 횟수 — 없으면 0 이 정확한 초기 상태라 버전을 안 올린다 (2026-09-30 · INTERFACE §4)
+        s.stash = s.stash ?? [];       // 창고 — v24. 없던 세이브는 빈 채로 열린다
+        // 우편함 번호 — 없으면 0 (INTERFACE §4 · 2026-10-23 · R328) · 우편 · 상자 칸은 부대 인벤토리를 맞춘 뒤에 본다(`fitBoxes`)
+        s.counters.mail = Number.isInteger(s.counters.mail) && s.counters.mail >= 0 ? s.counters.mail : 0;
+        // 스테이지 레벨 올린 양 — **위험도 폐지로 지운다** [2026-09-29 · PLAN_expedition_window D2 · 버전 무변경] — 몬스터 레벨은 칸의 기본 레벨 고정이라 옮길 곳이 없다
+        delete s.progress.levelUp;
+        // 수색 — **2026-10-19 삭제**(찾아온 영웅이 대체 · 사용자 「세이브 자체를 초기화시키면 됨」) · 버전을 안 올리고 옛 필드를 지운다 —
+        //   나가 있던 영웅은 붙잡을 것이 없어 마을에 선다(`heroBusy` 가 더는 수색을 안 본다) · 결과는 옮기지 않는다 (INTERFACE §4)
+        delete s.search; delete s.searchKept; delete s.counters.search;
+        // 탐험 — 없으면 「보낸 적이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-10-09).
+        //   모양이 틀린 줄(없는 지점 · 빈 명단)은 지운다 — 셀 수 없는 줄이 영웅을 붙잡지 않게
+        s.counters.explore = s.counters.explore ?? 0;
+        s.explores = (Array.isArray(s.explores) ? s.explores : [])
+            .filter(x => x && EXPLORE_SPOTS.includes(x.spot) && Number.isInteger(x.chapter) && Array.isArray(x.heroes) && x.heroes.length);
+        //   보낸 편성 · 그 순간의 편성 [2026-10-10 · R234 · 버전 무변경] — 없으면 null 이 정확하다(그 전의 탐험은 편성이 아니라 고른 명단이었다 · 잠글 편성이 없다)
+        for (const x of s.explores) { x.preset = Number.isInteger(x.preset) ? x.preset : null; x.squad = x.squad ?? null; }
+        // 수색 칸 — 없으면 「온 적이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-10-09).
+        //   모양이 틀린 줄(영웅 개체 · 번호 · 시각이 없는 줄)은 지운다 — 고용할 수 없는 줄이 칸을 막지 않게 ·
+        //   **떠나지 않는다**(2026-10-19) — 옛 `leavesAt` 은 지우고 · 출처가 없는 줄은 마차(그때까지 온 길은 그것 하나였다)
+        s.counters.join = s.counters.join ?? 0;
+        s.counters.visit = Number.isInteger(s.counters.visit) && s.counters.visit >= 0 ? s.counters.visit : 0;
+        s.joins = (Array.isArray(s.joins) ? s.joins : [])
+            .filter(j => j && j.hero && typeof j.hero === 'object' && Number.isInteger(j.no) && Number.isFinite(j.arrivedAt))
+            .map(({ leavesAt, ...j }) => ({ ...j, src: JOIN_SRC.includes(j.src) ? j.src : 'caravan' }));
+        // 수색 시계 (2026-10-19 · 버전 무변경) — 없으면 null(= 그 줄을 연 적이 없다) · 둘 중 하나만 서 있어야 한다(흐름 `nextAt` · 멈춤 `left`)
+        {
+            const v = s.visit && typeof s.visit === 'object' ? s.visit : null;
+            s.visit = !v ? null
+                : Number.isFinite(v.left) ? { nextAt: null, left: Math.max(0, v.left) }
+                : Number.isFinite(v.nextAt) ? { nextAt: v.nextAt, left: null } : null;
+        }
+        // 결투장 ELO · 콜로세움 층 — 없으면 「겨룬 적 · 오른 층이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-10-18).
+        //   셀 수 없는 값은 시작값 · 0 으로 · 최고치는 지금 레이팅 이상으로
+        {
+            const a = s.arena && typeof s.arena === 'object' ? s.arena : {};
+            const count = n => (Number.isInteger(n) && n >= 0 ? n : 0);
+            const rating = Number.isFinite(a.rating) ? a.rating : B.arena_elo_start;
+            s.arena = { rating, peak: Math.max(rating, Number.isFinite(a.peak) ? a.peak : rating), win: count(a.win), draw: count(a.draw), loss: count(a.loss) };
+            s.colosseum = { cleared: count(s.colosseum?.cleared) };
+        }
+        // 제작 재료 · 회차 — 없으면 「가진 재료가 없다 · 만든 적이 없다」가 정확한 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R96)
+        s.materials = s.materials ?? {};
+        s.counters.make = s.counters.make ?? 0;
+        // 도박장 판 수 — 없으면 「돌린 적이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R149).
+        //   충전 시계 `gamble` 은 같은 날 나갔다(횟수 제한 없음 · ADR-0334) — 읽는 곳이 없어 필드만 지운다
+        delete s.gamble;
+        s.counters.gamble = s.counters.gamble ?? 0;
+        // 상단 목록 — 없으면 「교체도 구매도 한 적 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-09-27).
+        //   2026-10-16 모양이 바뀌었다 — 옛 모양(`cycle` · `chapter` · `rerolls` — 방문 회차의 목록)은 옮길 곳이 없어 지운다(레벨 1 목록 · 무료 열림)
+        s.counters.shop = s.counters.shop ?? 0;
+        s.shop = s.shop && Number.isInteger(s.shop.level) && s.shop.level >= 1 && Array.isArray(s.shop.sold) ? s.shop : null;
+        if (s.shop) {
+            // 도안 구매 자리 — 옛 이름 `books`(스킬북 · 같은 스트림 0x540B · 같은 자리)를 옮긴다 (2026-10-20 · R293)
+            s.shop.blueprints = Array.isArray(s.shop.blueprints) ? s.shop.blueprints : Array.isArray(s.shop.books) ? s.shop.books : [];
+            delete s.shop.books;
+            s.shop.rerolledAt = Number.isFinite(s.shop.rerolledAt) ? s.shop.rerolledAt : null;
+            s.shop.paid = Number.isInteger(s.shop.paid) ? s.shop.paid : 0;
+        }
+        // 의뢰 — 없으면 「게시판을 굴린 적이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R153).
+        //   모르는 어휘의 카드는 지운다 — 표가 바뀌어 셀 수 없는 카드가 자리를 막지 않게(빈 자리는 다음 채우기가 굴린다)
+        s.counters.commission = s.counters.commission ?? 0;
+        //   명성 경험치 — 없거나 0 이상 정수가 아니면 0(= 명성 레벨 1 · 새 게임과 같다 · R375)
+        const fame0 = s.commissions?.fame;
+        s.commissions = {
+            cards: (Array.isArray(s.commissions?.cards) ? s.commissions.cards : []).filter(c => c && CM_AXES[c.axis]),
+            fame: Number.isInteger(fame0) && fame0 > 0 ? fame0 : 0,
+        };
+        // 물약 재고 — 개수 표다. 모양이 틀리면 시작 재고로 연다 (INTERFACE §4 · R124)
+        if (!s.potions || typeof s.potions !== 'object' || Array.isArray(s.potions)) s.potions = startStock();
+        // 건설 — **표에 맞춘다**(없는 건물은 지우고 최대 랭크에서 자르고 시작 랭크보다 낮으면 올린다 · 연구도 없는 항목을 지운다) (v37 · R137).
+        //   「무엇이 열렸나」를 저장하지 않으므로 표가 바뀌어도 이관이 필요 없다 — 여기서 랭크만 표의 범위로 들인다.
+        //   **편성보다 먼저** 맞춘다 — 편성 수 · 물약 칸 수가 건물 랭크의 더하기를 읽는다(`limitsOf` · 2단계)
+        //   옛 훈련장(`training` · 2026-10-09 삭제 · R231) — r3(전직)까지 지었으면 도서관을 **전직을 여는 랭크**(표 — `CN.reach('advance')` · 10-16 부터 r3 · R263)까지 올린다 ·
+        //   전직이 닫히지 않게 · 버전 무변경. 표에 없는 건물이라 `fitRanks` 가 지운다 — 훈련장에 쓴 골드는 돌려주지 않는다 (construction_draft §2)
+        if (s.buildings && Number.isInteger(s.buildings.training) && s.buildings.training >= 3)
+            s.buildings.library = Math.max(Number.isInteger(s.buildings.library) ? s.buildings.library : 0, CN.reach('advance')?.rank ?? 0);
+        s.buildings = CN.fitRanks(s.buildings);
+        // 건설 연구 — 걷었다(R195). 옛 세이브의 칸은 언제나 {} 라(연구 표가 비어 있었다) 버리는 값이 없다 · 버전 무변경
+        delete s.research;
+        // 편성 — **편성 수 · 칸 수를 그 세이브의 상한에 맞춘다**(모자라면 빈 편성 · 빈 칸을 붙이고 넘치면 뒤를 자른다) · 고른 번호는 범위로 자른다 (INTERFACE §2-7 · R122)
+        s.presets = fitPresets(s, s.presets);
+        s.preset = Math.min(limitsOf(s).presets, Math.max(1, Number.isInteger(s.preset) ? s.preset : 1));
+        // 한 영웅은 한 편성에만 든다 — 겹치면 **앞 편성이 갖는다** (v38 · 다부대 · `toggleParty` 와 같은 규칙)
+        dedupeParties(s);
+        // 부대 — 편성 수에 맞춘다(넘치면 뒤를 자르고 모자라면 빈 자리를 붙인다). 도는 채로 저장된 부대는 **끊긴 것**이라 `closeRun` 이 걷는다 (v38)
+        s.runs = fitRuns(s, s.runs);
+        // 부대 인벤토리 — 편성 수에 맞춘다. 남는 인벤토리는 지우지 않고 마지막 것 뒤에 붙인다(아이템은 소유물 · v40 · `fitBags`)
+        s.bags = fitBags(s, s.bags);
+        // 첫 클리어 상자 · 우편함 — 인벤토리가 편성 수에 맞은 뒤라 줄을 합쳐도 겹침을 다시 본다 (2026-10-24 · R333 · INTERFACE §4)
+        fitBoxes(s);
+        // 자동 분해 — 편성 수에 맞추고 모르는 칸 · 값을 걸러 낸다(규칙 · 기록 = 부대마다 · 프리셋 칸 = 칸 수에 맞춘다) (v41 · R316 · INTERFACE §4)
+        s.salvageRules = fitSalvageRules(s, s.salvageRules);
+        s.salvageSlots = fitSalvageSlots(s.salvageSlots);
+        s.salvageLogs = fitSalvageLogs(s, s.salvageLogs);
+        // 같이 깬 칸 수 — 1 이상 정수만 남긴다 (v36 · R134 · 뜻 개정 2026-09-29 — 옛 값(같이 나간 런 수)은 그대로 읽는다)
+        s.bonds = Object.fromEntries(Object.entries(s.bonds && typeof s.bonds === 'object' ? s.bonds : {}).filter(([, n]) => Number.isInteger(n) && n > 0));
+        s.progress.peakTotal = Number.isInteger(s.progress.peakTotal) && s.progress.peakTotal > 0 ? s.progress.peakTotal : 0;
+        // 난이도 바퀴 [2026-10-10 · R236 · 버전 무변경 — INTERFACE §4] — 없으면 「첫 단 · 다른 단은 깬 적 없음」이 새 게임과 같은 초기 상태라 소급할 판단이 없다.
+        //   표에 없는 단의 기록은 지운다(첫 단의 기록은 `cleared` 라 여기 안 든다) · 고른 단 · 부대의 단은 표에 없으면 첫 단으로
+        const inn = s.progress.clearedIn && typeof s.progress.clearedIn === 'object' && !Array.isArray(s.progress.clearedIn) ? s.progress.clearedIn : {};
+        s.progress.clearedIn = Object.fromEntries(DIFF_IDS.slice(1).filter(d => Array.isArray(inn[d])).map(d => [d, [...new Set(inn[d])]]));
+        s.difficulty = DIFF_IDS.includes(s.difficulty) ? s.difficulty : BASE_DIFF;
+        for (const r of s.runs) if (r) r.difficulty = DIFF_IDS.includes(r.difficulty) ? r.difficulty : BASE_DIFF;
+        // 옛 「이 런에서 쓰러져 있는 영웅」(`fallen` — R130)은 지운다 [2026-10-21 · R300 · 버전 무변경 — INTERFACE §4] — 읽던 잠금이 사라져 옮길 판단이 없다
+        for (const r of s.runs) if (r) delete r.fallen;
+        // 원정 플레이 시간 — 없으면 0 부터 센다. 흘러간 몫은 기록이 없어 소급할 판단이 없다 → 버전을 안 올린다 (INTERFACE §4 · ADR-0514).
+        //   옛 누적 플레이 시간(`playMs`)은 뜻이 달라 옮기지 않고 지운다
+        s.expMs = Number.isFinite(s.expMs) && s.expMs > 0 ? s.expMs : 0;
+        delete s.playMs;
+        // 전직 — 없으면 「아무도 안 한다 · 전직 안 함」이 정확한 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-09-28 · R16).
+        //   모르는 갈래 · 직업이 안 맞는 갈래는 지운다 · 배운 스킬이 그 갈래의 것이 아니면 빈 칸으로 (표가 바뀌어도 못 여는 세이브가 없게)
+        for (const h of s.heroes) {
+            if (h.advance && advanceById[h.advance]?.cls !== h.cls) h.advance = null;
+            if (h.advanceSkill && !(h.advance && advanceSkills(h.advance).includes(h.advanceSkill))) h.advanceSkill = null;
+            // 전직 스킬 레벨 [2026-10-06 · R216 · 버전 무변경 — 없으면 0] — 배운 뒤 더 넣은 전직 포인트. 전직 스킬이 없거나 양의 정수가 아니면 지운다
+            if (h.advanceUp !== undefined && !(h.advanceSkill && Number.isInteger(h.advanceUp) && h.advanceUp > 0)) delete h.advanceUp;
+        }
+        // 스킬북 [2026-09-29 · R179 · 버전 무변경 — INTERFACE §4] — 없으면 「가진 책이 없다 · 안 배웠다」가 정확한 초기 상태다.
+        //   책은 쌓인다(권수 그대로 · 2026-09-30) · 정의에 없는 id · 양의 정수가 아닌 값은 지운다 · 배운 스킬이 정의에 없으면 빈 칸으로. **무기의 `skill` 은 지운다**(무기가 스킬을 안 담는다 —
+        //   옛 무기 스킬을 배운 스킬로 옮기지 않는다: 소급하면 책의 문턱(레벨 · 도서관)을 우회한다)
+        s.books = Object.fromEntries(Object.entries(s.books && typeof s.books === 'object' && !Array.isArray(s.books) ? s.books : {})
+            .filter(([id, n]) => bookable(id) && Number.isInteger(n) && n > 0));
+        // 스킬 도안 [2026-10-20 · R293 · 버전 무변경] — 없으면 「가진 도안이 없다」가 정확한 초기 상태다 · 책과 같은 거름(책이 되는 id · 양의 정수 · 장수 그대로)
+        s.blueprints = Object.fromEntries(Object.entries(s.blueprints && typeof s.blueprints === 'object' && !Array.isArray(s.blueprints) ? s.blueprints : {})
+            .filter(([id, n]) => bookable(id) && Number.isInteger(n) && n > 0));
+        for (const h of s.heroes) if (h.bookSkill !== undefined && !(h.bookSkill && SK?.defs?.[h.bookSkill])) delete h.bookSkill;
+        // 스킬 레벨 [2026-10-06 · R216 · 버전 무변경 — INTERFACE §4] — 없으면 「업그레이드 0」이 정확한 초기 상태다.
+        //   지금 고유 · 배운 스킬이 아닌 키 · 양의 정수가 아닌 값은 지우고 상한(`skillCapMax` = `skillbook_upgrade_max` — 2026-10-20 · R293)을 넘는 값은 상한으로 (0 은 키가 없다) (INTERFACE §4)
+        for (const h of s.heroes) {
+            if (h.skillLv === undefined) continue;
+            const own = new Set([h.innate, h.bookSkill].filter(Boolean));
+            const kept = Object.entries(h.skillLv && typeof h.skillLv === 'object' && !Array.isArray(h.skillLv) ? h.skillLv : {})
+                .filter(([id, n]) => own.has(id) && Number.isInteger(n) && n > 0)
+                .map(([id, n]) => [id, Math.min(n, skillCapMax())]);
+            if (kept.length) h.skillLv = Object.fromEntries(kept); else delete h.skillLv;
+        }
+        for (const it of Object.values(s.items ?? {})) if (it && 'skill' in it) delete it.skill;
+        // 캐스팅 속도 [2026-10-03 · R203 · 버전 무변경 — INTERFACE §4] — 마법 무기의 나태 칸은 `cast_speed_pct` 다. 그 전에 굴린 마법 무기의 `aspd_pct` 를
+        //   **같은 값으로 이름만** 옮긴다 — 같은 행 자리 · 같은 굴림이라 지금 굴렸어도 같은 값이 났다 · 옮기지 않으면 캐스터에게 아무 일도 안 하는 줄이 남는다
+        for (const it of Object.values(s.items ?? {}))
+            if (I?.groupOf?.(it)?.damageKind === 'magic') for (const a of it.affixes ?? []) if (a.stat === 'aspd_pct') a.stat = 'cast_speed_pct';
+        s.advancing = (Array.isArray(s.advancing) ? s.advancing : []).filter(w => {
+            const h = w && s.heroes.find(x => x.uid === w.uid);
+            return h && !h.advance && advanceById[w.branch]?.cls === h.cls && Number.isFinite(w.since) && Number.isFinite(w.until);
+        }).filter((w, i, a) => a.findIndex(x => x.uid === w.uid) === i);
+        // ~~자원 파견 자리 `dispatch`~~ — 2026-10-18 퇴역(연구소에서 영웅 배치 삭제 · R283 · INTERFACE §4). 옛 세이브의 자리는
+        //   아래 시계 변환에만 읽고 지운다 — 앉아 있던 영웅은 대기로 돌아온다(자리는 영웅을 붙잡는 활동이었을 뿐 잃는 것이 없다) · 버전 무변경
+        const oldSeats = Array.isArray(s.dispatch) ? s.dispatch.filter(d => d && typeof d === 'object') : [];
+        delete s.dispatch;
+        // 연구소 지점 (2026-10-21 · R298 · 버전 무변경) — **생산 시계보다 먼저** 정리한다.
+        //   ~~칸 레벨 `labLevels`~~(2026-10-18 · R288)는 지운다 — 지점으로 옮기지 않는다(사용자 「엎어」 · INTERFACE §4)
+        delete s.labLevels;
+        const nodesIn = s.labNodes && typeof s.labNodes === 'object' ? s.labNodes : {};
+        s.labNodes = {};
+        for (const [k, v] of Object.entries(nodesIn)) {
+            const [line, node] = k.split(':');
+            const r = labNodeRow(line, node);
+            if (r && Number.isInteger(v) && v >= 1) s.labNodes[k] = Math.min(v, r.max);
+        }
+        const labR = s.labResearch;
+        const paidOk = p => p && Number.isFinite(p.gold) && p.gold >= 0 && (p.mat == null || (typeof p.mat.id === 'string' && Number.isInteger(p.mat.n) && p.mat.n >= 0));
+        s.labResearch = labR && labNodeRow(labR.line, labR.node) && Number.isInteger(labR.lv) && labR.lv >= 1 && labR.lv <= labNodeRow(labR.line, labR.node).max
+            && Number.isFinite(labR.at) && Number.isFinite(labR.until) && paidOk(labR.paid)
+            ? { line: labR.line, node: labR.node, lv: labR.lv, at: labR.at, until: labR.until,
+                paid: { gold: labR.paid.gold, mat: labR.paid.mat ? { id: labR.paid.mat.id, n: labR.paid.mat.n } : null } }
+            : null;
+        const clkIn = s.labClock && typeof s.labClock === 'object' ? s.labClock : {};
+        const gClk = clkIn.gamble, tClk = clkIn.train;
+        s.labClock = {
+            gamble: gClk && Number.isFinite(gClk.at) ? { at: gClk.at, carry: Number.isFinite(gClk.carry) && gClk.carry >= 0 ? Math.min(gClk.carry, 1) : 0 } : null,
+            train: tClk && Number.isFinite(tClk.at) ? { at: tClk.at, carry: Object.fromEntries(Object.entries(tClk.carry && typeof tClk.carry === 'object' ? tClk.carry : {})
+                .filter(([, x]) => Number.isFinite(x) && x >= 0)) } : null,
+        };
+        // 재료별 생산 시계 (2026-10-16 · v42 — 단계가 없어 재료마다 하나 · R356). `resourceProduction` 이 없던 세이브는 옛 자리의 ms 진행도(`carry`)를
+        //   진행도로 환산해 보존한다 — 옛 속도의 영웅 몫은 이제 없어 표 수량으로 잰다(1개 미만의 소수라 차이가 그 안에서 끝난다)
+        const legacyProduction = !Array.isArray(s.resourceProduction);
+        const clocks = legacyProduction ? [] : s.resourceProduction;
+        s.resourceProduction = openProductionNodes(s).map(m => {
+            const c = clocks.find(x => x?.post === m.post);
+            const d = legacyProduction ? oldSeats.find(x => x.post === m.post) : null;
+            const carry = c?.carry ?? (Number.isFinite(d?.carry) ? d.carry * m.yieldPerHour / DISPATCH_HOUR_MS : 0);
+            const at = Number.isFinite(c?.at) ? c.at : Number.isFinite(d?.at) ? d.at : Number.isFinite(d?.since) ? d.since : s.savedAt;
+            return { post: m.post, at, carry: Number.isFinite(carry) && carry >= 0 ? Math.min(carry, 1) : 0 };
+        });
+        // 수색 줄(「간격」 지점)이 열려 있는데 시계가 없으면(손으로 고친 세이브) 지금 이 순간부터 흐른다 — 열린 줄이 영영 안 오지 않게 ·
+        //   닫혀 있으면 시계를 지운다(옛 `labLevels.visit` 로 열렸던 줄도 — 2026-10-21 「엎어」)
+        if (visitLevelOf(s) && !s.visit) s.visit = { nextAt: s.savedAt + visitMs(s, s.savedAt), left: null };
+        if (!visitLevelOf(s)) s.visit = null;
+        // 연구소 줄 등록 (2026-10-21 · 버전 무변경) — 없으면 {} · 없는 영웅 · 모르는 줄을 지운다(열림은 다시 안 본다 — 랭크는 안 내려간다) ·
+        //   같은 날 R298 — 줄마다 「등록 칸」을 넘는 몫을 뒤에서부터 푼다 · 등록 시각이 없으면 `savedAt`
+        const regIn = s.labReg && typeof s.labReg === 'object' ? s.labReg : {};
+        const sinceIn = s.labSince && typeof s.labSince === 'object' ? s.labSince : {};
+        s.labReg = {};
+        s.labSince = {};
+        for (const [uid, line] of Object.entries(regIn)) {
+            if (!LAB_LINES.includes(line) || !s.heroes.some(h => h.uid === uid)) continue;
+            if (Object.values(s.labReg).filter(l => l === line).length >= labSeats(s, line)) continue;
+            s.labReg[uid] = line;
+            s.labSince[uid] = Number.isFinite(sinceIn[uid]) ? sinceIn[uid] : s.savedAt;
+        }
+        return s;
+    }
+
+    /* ── 조회 ── */
+
+    const heroById = (state, uid) => state.heroes.find(h => h.uid === uid);
+    const heroItems = (state, h) => Object.values(h.equipped).filter(Boolean).map(uid => state.items[uid]).filter(Boolean);
+    /**
+     * 착용 무기의 무기군 — **무기가 필요한 스킬이 나가는가의 입력**이다 [2026-09-29 · R187 · 개정 2026-10-03 · R204 · skill_design §2-2 — ~~배운 칸의 스킬~~ R197 · ~~액티브 2번 칸(무기군)의 입력~~].
+     * 장비를 아는 층은 여기뿐이라 이 조회도 여기 있다 — `skill.js` 는 아이템을 모른다.
+     * 맨손이면 `null` 이고, 그러면 무기가 필요한 스킬(타격 · 회복 · 소환)이 칸을 가리지 않고 꺼진다(`partyUnits` → battle · `skill.fitsWeapon`).
+     */
+    const weaponGroupOf = (state, h) => {
+        const w = h?.equipped?.weapon ? state.items[h.equipped.weapon] : null;
+        return w?.group ?? null;
+    };
+    /* ~~`weaponSkillOf(state, h)`~~ 는 2026-09-29 삭제(R179) — 무기가 스킬을 안 담는다. 둘째 액티브 칸은 `hero.bookSkill` 이다(skill.activesFor) */
+    /** 책이 될 수 있는 스킬 — 영웅이 배울 수 있는 것 [2026-09-29 · R179 · 2026-10-16 `skill.bookable` 하나로 — 몬스터 전용 · 불러내기(사제 「소환」)는 책이 없다 · R258] */
+    const bookable = id => !!SK?.bookable?.(id);
+    /**
+     * 지운 기본 스킬의 대체 [2026-10-16 · R246 · R249 · R250 · skill_design §12-3 · §12-4 · §12-6 · 사용자 「대체 스킬로 옮김」] — 같은 직업 1티어 스킬로 옮긴다.
+     *   몬스터의 새 고유도 같은 짝이다(`monster.csv` — 프로즌 월만 몬스터마다 원소가 갈렸다). 표가 아니라 이관 상수다(옛 세이브만 읽는다)
+     */
+    const RETIRED_SKILLS = { war_taunt: 'war_ironskin', kni_duel: 'kni_holyshield', mag_focus: 'mag_fireball', mag_frozenwall: 'mag_frostnova',
+        war_quake: 'war_leap', kni_smite: 'kni_charge',     // 어스스플릿 · 스마이트 — 2026-10-16 삭제(리커버리 · 레지스탕스 실드 자리) · 같은 모양의 1티어
+        arc_arrowrain: 'arc_coldarrow' };                   // 애로우 레인 — 2026-10-29 삭제(콜드 애로우 자리 · R383)
+    // 기본 → 전직으로 옮긴 스킬 [2026-10-29 · R383 · skill_design §10-4] — id 는 보우마스터 스킬로 살아 있어 **기본 자리(고유 · 배운 칸 · 책 · 아이템 줄)에서만**
+    //   그 자리를 받은 기본 스킬로 옮긴다 · 전직 칸(`advanceSkill`)과 그 칸 순서는 그대로 둔다
+    const MOVED_SKILLS = { arc_quickdraw: 'arc_quickhands', arc_overdraw: 'arc_eagleeye' };
+    // 지운 전직 스킬 — 같은 갈래의 대체로 옮긴다(배운 뒤 넣은 포인트 `advanceUp` 도 그대로) [2026-10-29 · R383 — 풀 드로우 → 오버드로우]
+    const RETIRED_ADVANCE = { arc_fulldraw: 'arc_overdraw' };
+    /**
+     * 옛 세이브의 지운 스킬을 대체 스킬로 옮긴다 [2026-10-16 · INTERFACE §4 · 버전 무변경 · rng 0] — 영웅(명단 · 가입 희망)의 고유 · 배운 칸 · 스킬 레벨(겹치면 큰 쪽) ·
+     *   칸 순서 · 책 재고(권수를 더한다) · 아이템 줄의 `skill`(특정 스킬 +n · 발동 옵션) · 목걸이 `proc.skill`. 정의 밖 · 책이 안 되는 id 를 지우는 일은 그 뒤 정리가 한다
+     */
+    function retireSkills(s) {
+        const to = id => RETIRED_SKILLS[id] ?? MOVED_SKILLS[id] ?? id;
+        const hero = h => {
+            if (!h || typeof h !== 'object') return;
+            if (h.advanceSkill && RETIRED_ADVANCE[h.advanceSkill]) {
+                const old = h.advanceSkill;
+                h.advanceSkill = RETIRED_ADVANCE[old];
+                if (Array.isArray(h.skillOrder)) h.skillOrder = h.skillOrder.map(id => (id === old ? h.advanceSkill : id));
+            }
+            if (h.innate) h.innate = to(h.innate);
+            if (h.bookSkill) h.bookSkill = to(h.bookSkill);
+            // 칸 순서 — 전직 칸의 id(보우마스터 퀵 드로우 · 오버드로우)는 옮기지 않는다
+            if (Array.isArray(h.skillOrder)) h.skillOrder = [...new Set(h.skillOrder.map(id => (id === h.advanceSkill ? id : to(id))))];
+            if (h.skillLv && typeof h.skillLv === 'object' && !Array.isArray(h.skillLv)) {
+                const lv = {};
+                for (const [id, n] of Object.entries(h.skillLv)) lv[to(id)] = Math.max(lv[to(id)] ?? 0, n);
+                h.skillLv = lv;
+            }
+        };
+        for (const h of s.heroes ?? []) hero(h);
+        for (const j of Array.isArray(s.joins) ? s.joins : []) hero(j?.hero);
+        if (s.books && typeof s.books === 'object' && !Array.isArray(s.books)) {
+            const books = {};
+            for (const [id, n] of Object.entries(s.books)) books[to(id)] = (books[to(id)] ?? 0) + n;
+            s.books = books;
+        }
+        for (const it of Object.values(s.items ?? {})) {
+            if (!it || typeof it !== 'object') continue;
+            for (const a of it.affixes ?? []) if (a?.skill) a.skill = to(a.skill);
+            if (it.proc?.skill) it.proc.skill = to(it.proc.skill);
+        }
+    }
+    /* ~~`isOut(state, uid)`~~ 는 2026-09-08 삭제 — 「출정 아웃」 폐기(base_expedition_design §1-1 개정).
+       아웃은 **그 런 안에서만** 산다(전투 유닛의 HP 0) — 전투 밖에 아웃된 영웅이 존재하지 않는다. */
+
+    /* ── 도감 — 도감 경험치 모델 (monster_design §8 · 2026-10-10 처치 수 → 도감 경험치 · R239) ── */
+
+    /**
+     * 누적 도감 경험치 → 도감 레벨. codex_level.csv 의 exp_total 은 **누적 문턱**이라 그대로 비교한다
+     * (~~cards_to_next — 레벨당 증분~~ 은 2026-09-21 대체). 경험치는 줄지 않으므로 레벨은 역행하지 않는다.
+     */
+    function codexLevel(exp) {
+        let lv = 0;
+        for (const need of deps.codex.levels) {
+            if (exp >= need) lv += 1; else break;
+        }
+        return lv;
+    }
+    /** 다음 레벨의 누적 경험치 문턱 — 최종 레벨이면 null */
+    function codexNext(exp) {
+        return deps.codex.levels[codexLevel(exp)] ?? null;
+    }
+    const codexMaxLevel = () => deps.codex.levels.length;
+    /**
+     * 그 몬스터의 **먹는 도감 레벨** = min(경험치 레벨, 도서관이 연 단계 `limitsOf(state).codexLevel`) [2026-10-24 · R339 · construction_draft §2 · monster_design §8].
+     *   경험치는 막는 동안에도 쌓인다(`codexExp` 는 그대로) — 랭크를 지으면 곧바로 오른다 · 사다리 · Lv4 옵션 · 화면이 모두 이것을 쓴다 · rng 0
+     */
+    const codexLevelOf = (state, id) => Math.min(codexLevel(state.codexExp?.[id] ?? 0), limitsOf(state).codexLevel);
+
+    /*
+     * 도감 사다리 — 레벨 n 이 여는 단계 [2026-10-18 · R286 · **2026-10-22 · R314 — Lv1 · Lv2 는 그 종족 전체** · monster_design §8 · §8-2].
+     *   단계의 `reward` 가 무엇을 여는지 정한다 — `farm`(파밍 한 줄) · `fight`(전투 한 줄)는 몬스터마다의 칸(codex_option.csv)이 **그 종족 전체**에 걸리고
+     *   (전투가 종족 몫을 유닛에 얹는다 — `codexLadder`) · `none` 은 아무것도 안 연다 · `option` 은 그 몬스터의 전투 옵션 한 줄이 **파티 전원**에게(`codexOptions` → `heroCombat`).
+     *   레벨 순서는 표가 정한다 · 표 검증은 생성 때 던진다 (~~`xp` · `vs_dmg` · `drop` 그 몬스터에게만~~ 2026-10-22)
+     */
+    const CODEX_REWARDS = ['farm', 'fight', 'none', 'option'];
+    // Lv1 파밍 줄 — `codexLadder().farm` 의 칸 이름이 곧 이것이다(INTERFACE §2-6 「도감 사다리」)
+    const CODEX_FARM = ['xp', 'drop', 'magic', 'gold', 'material'];
+    // Lv2 전투 줄 열다섯 — 걸리는 순간(때릴 때 · 맞을 때 · 그 종족이 나온 라운드)은 battle.js 가 줄마다 안다
+    const CODEX_FIGHT = ['vs_dmg', 'dr_flat', 'stagger_dur_pct', 'crit_rate', 'fhr', 'speed_pct', 'hit_bonus', 'damage_reduction', 'buff_dur_pct',
+        'res_reduction', 'res_all', 'status_dur_pct', 'life_steal', 'hp_regen', 'heal_out_pct'];
+    const CODEX = (() => {
+        const bad = why => { throw new Error(`codex: ${why}`); };
+        const steps = deps.codex.steps ?? [];
+        if (steps.length !== deps.codex.levels.length) bad(`단계 ${steps.length} ≠ 레벨 ${deps.codex.levels.length} (codex_level.csv)`);
+        const at = { farm: -1, fight: -1, option: -1 };
+        steps.forEach((s, i) => {
+            if (!CODEX_REWARDS.includes(s.reward)) bad(`Lv${i + 1} reward '${s.reward}' — ${CODEX_REWARDS.join(' · ')} 중 하나여야 한다`);
+            if (s.value !== null) bad(`Lv${i + 1} value '${s.value}' — 값은 몬스터마다다(codex_option.csv) · 여기는 비운다`);
+            if (s.reward === 'none') return;
+            if (at[s.reward] >= 0) bad(`${s.reward} 단계가 둘이다 — Lv${at[s.reward] + 1} · Lv${i + 1}`);
+            at[s.reward] = i;
+        });
+        const races = deps.codex.races ?? {};
+        const options = {}, lines = {}, members = {};
+        const pos = v => Number.isFinite(v) && v > 0;
+        for (const r of deps.codex.options ?? []) {
+            const m = deps.monsters[r.monsterId];
+            if (!m) bad(`codex_option ${r.monsterId} — monster.csv 에 없는 몬스터`);
+            if (options[r.monsterId]) bad(`codex_option ${r.monsterId} — 행이 둘이다(몬스터마다 한 줄)`);
+            if (typeof r.stat !== 'string' || !r.stat) bad(`codex_option ${r.monsterId} — stat 이 비었다`);
+            if (!pos(r.value)) bad(`codex_option ${r.monsterId} value '${r.value}' — 양수`);
+            options[r.monsterId] = { stat: r.stat, value: r.value };
+            // Lv1 · Lv2 칸 — 둘 다 있거나 둘 다 없다(보스 · VI 자리 · 2026-10-22 R314)
+            const farm = r.farm ?? null, fight = r.fight ?? null;
+            if ((farm === null) !== (fight === null)) bad(`codex_option ${r.monsterId} — farm · fight 중 하나만 있다`);
+            if (farm === null) {
+                if ((r.farmValue ?? null) !== null || (r.fightValue ?? null) !== null) bad(`codex_option ${r.monsterId} — 칸이 없는데 값이 있다`);
+                continue;
+            }
+            if (!CODEX_FARM.includes(farm)) bad(`codex_option ${r.monsterId} farm '${farm}' — ${CODEX_FARM.join(' · ')} 중 하나`);
+            if (!CODEX_FIGHT.includes(fight)) bad(`codex_option ${r.monsterId} fight '${fight}' — 전투 줄 열다섯 중 하나(INTERFACE §2-6)`);
+            if (!pos(r.farmValue) || !pos(r.fightValue)) bad(`codex_option ${r.monsterId} — farm_value · fight_value 는 양수`);
+            const race = m.monster_base;
+            if (!races[race]) bad(`codex_option ${r.monsterId} — 종족 '${race}' 가 monster_base.csv 에 없다`);
+            lines[r.monsterId] = { race, farm: { kind: farm, value: r.farmValue }, fight: { stat: fight, value: r.fightValue } };
+            (members[race] ??= []).push(String(r.monsterId));
+        }
+        return { steps, optionAt: at.option, farmAt: at.farm, fightAt: at.fight, options, lines, members, races };
+    })();
+    /** 레벨순 단계 `[{level, reward, value}]` — 사본 · value 는 늘 null(몬스터마다다 — `codexOptionOf` · `codexLineOf`) */
+    const codexSteps = () => CODEX.steps.map((s, i) => ({ level: i + 1, reward: s.reward, value: null }));
+    /** 그 몬스터의 Lv4 전투 옵션 `{stat, value}` — 행이 없으면 null(둘라한 · 6 · 7장) */
+    const codexOptionOf = id => CODEX.options[id] ? { ...CODEX.options[id] } : null;
+    /** 그 몬스터 한 마리가 내는 Lv1 · Lv2 칸 `{race, farm: {kind, value}, fight: {stat, value}}` — 칸이 없으면 null(보스 · 6 · 7장 · VI · 2026-10-22 R314) */
+    const codexLineOf = id => {
+        const l = CODEX.lines[id];
+        return l ? { race: l.race, farm: { ...l.farm }, fight: { ...l.fight } } : null;
+    };
+    /**
+     * 그 몬스터 **종족 전체의 닿은 몫** `{race, farm: {xp, drop, magic, gold, material}, fight: {줄: 값}}` [2026-10-22 · R314 — ~~그 몬스터의 `{xp, vs, drop}`~~].
+     *   같은 종족의 칸 있는 몬스터마다 `farm` 단계에 닿았으면 제 Lv1 칸을 · `fight` 단계에 닿았으면 제 Lv2 칸을 더한다(같은 줄은 더한다).
+     *   farm 다섯 칸은 늘 서고(안 닿으면 0) fight 는 닿은 줄만 · 그 몬스터에 칸이 없으면 null(보스 · 6 · 7장 — 주지도 받지도 않는다).
+     *   전투가 그 몬스터 유닛에 얹는다(`battle.createRun` 의 `codexOf`) · rng 0
+     *   닿았나 = **먹는 레벨**(도서관이 연 단계에서 자른다 — `codexLevelOf` · 2026-10-24 · R339)
+     */
+    function codexLadder(state, id) {
+        const own = CODEX.lines[id];
+        if (!own) return null;
+        const out = { race: own.race, farm: Object.fromEntries(CODEX_FARM.map(k => [k, 0])), fight: {} };
+        const cap = limitsOf(state).codexLevel;
+        for (const mid of CODEX.members[own.race]) {
+            const lv = Math.min(codexLevel(state.codexExp?.[mid] ?? 0), cap);
+            const l = CODEX.lines[mid];
+            if (CODEX.farmAt >= 0 && lv > CODEX.farmAt) out.farm[l.farm.kind] += l.farm.value;
+            if (CODEX.fightAt >= 0 && lv > CODEX.fightAt) out.fight[l.fight.stat] = (out.fight[l.fight.stat] ?? 0) + l.fight.value;
+        }
+        return out;
+    }
+    /** 도감 Lv4 옵션의 합 `{flat: {stat: v}}` — `option` 단계에 닿은 몬스터마다 제 한 줄을 더한다(닿았나 = 먹는 레벨 — `codexLevelOf` · R339) · `computeCombat` 의 `codex` 입력 · rng 0 */
+    function codexOptions(state) {
+        const flat = {};
+        if (CODEX.optionAt < 0) return { flat };
+        const cap = limitsOf(state).codexLevel;
+        if (cap <= CODEX.optionAt) return { flat };
+        for (const [id, exp] of Object.entries(state.codexExp ?? {})) {
+            const o = CODEX.options[id];
+            if (!o || codexLevel(exp) <= CODEX.optionAt) continue;
+            flat[o.stat] = (flat[o.stat] ?? 0) + o.value;
+        }
+        return { flat };
+    }
+
+    /* ── 책 업그레이드 상한 — 끝 하나 [2026-10-20 · R293 · skill_design §2-3 「레벨 제한을 두지말고 그냥 도안을 계속얻을 수 있게」] ──
+       모든 스킬 · 모든 영웅이 같다. ~~스킬 도감 레벨이 나눠 열던 상한~~(`skill_codex_level.csv` · 2026-10-16 R266)은 표째 걷었다 —
+       같은 책 수(피보나치)가 이미 오르는 속도를 막는다 */
+    const skillCapMax = () => B.skillbook_upgrade_max;
+
+    /**
+     * 전투 능력치 = 기본 능력치 + 장비 + 도감 + **파티 전술**.
+     * 전술 보너스는 **파티에 든 영웅에게만** 붙는다 (tactic_card_design §1 「파티 단위」) — 조건이 편성을 세는데
+     *   편성 밖 영웅이 그 결과를 받으면 인과가 깨진다. 벤치 영웅의 시트에 안 붙는 것이 맞다.
+     * `party` = 그 「파티」 — 기본은 **고른 편성**이고(R122) **원정은 나간 인원**을 넘긴다 [2026-09-14 · R92]. 원정 중에도 편성을 바꾸므로
+     *   편성을 읽으면 도는 원정의 전술이 라운드 경계에서 흔들린다
+     * `no` = 전술 칸을 읽는 편성 — 기본은 고른 편성 · **원정은 나간 편성**을 넘긴다 (칸이 편성마다 · R129)
+     * `tactic` = 전술 보너스를 **덮는다**(`{flat, dr}`) [2026-09-21 · R130] — 원정은 **출발 때 켜진 전술만** 산다(`departRun` 의 스냅숏)라
+     *   `partyUnits` 가 그 보너스를 넘긴다. 안 주면 종전대로 편성 `no` 의 칸을 지금 센다
+     */
+    const heroCombat = (state, h, party = partyOf(state), no = state.preset, tactic) => H.computeCombat(h, heroItems(state, h).map(I.effective), codexOptions(state),
+        party.includes(h.uid) ? (tactic ?? tacticBonus(state, party, no)) : null);
+
+    /* ── 장비 ── */
+
+    /** 착용 위치 — 같은 부위의 빈 위치가 있으면 거기, 없으면 첫 위치(교체). 위치가 둘인 부위는 반지뿐이다 */
+    function equipTarget(hero, item) {
+        const ps = positionsOf(item.slot);
+        return ps.find(p => !hero.equipped[p]) ?? ps[0] ?? null;
+    }
+
+    /**
+     * **「이 아이템을 끼면」** 전투 능력치 [2026-09-15 · INTERFACE §2-7] — 아이템 툴팁의 스킬 칸이 숫자를 **그 무기를 낀 영웅 기준**으로 낸다.
+     * 자리는 `equipTarget` 이 고른다(가방 칸 클릭이 끼울 그 자리). 원본은 안 건드린다 — 영웅 · 상태의 얕은 사본으로 `heroCombat` 을 부른다.
+     * 전술 조건도 사본으로 센다: 무기가 바뀌면 죄종 수 · 스킬 태그가 바뀌어 칸이 켜지고 꺼질 수 있다.
+     * 다른 영웅이 그 아이템을 끼고 있으면 그 사본에서 뺀다 — 한 개체가 두 몸에 서지 않는다
+     */
+    function heroCombatIf(state, h, itemUid) {
+        const w = wearing(state, h, itemUid);
+        return w ? heroCombat(w.state, w.me) : heroCombat(state, h);
+    }
+
+    /** 「이 물건을 끼면」의 임시 uid — 발급 uid(`i<n>`)와 겹치지 않는다 (`heroCombatWith`) */
+    const PROBE_UID = '__probe';
+    /**
+     * **「이 물건을 끼면」 — 가방에 없는 물건도** [신설 2026-10-14 · 착용 델타 · SCREEN_DESIGN §6 · ADR-0618 · INTERFACE §2-7].
+     * 그 개체가 `state.items` 에 있으면 `heroCombatIf` 그대로. 없으면(상점 상단 장비 — `uid` 가 없다) 사본의 `items` 에 임시 uid 로 넣고 같은 계산을 한다.
+     * 원본 · 세이브 무관 · rng 0. `canEquip`(요구 레벨)은 안 본다 — 못 끼는 물건의 「끼면」도 화면이 보인다
+     */
+    function heroCombatWith(state, h, item) {
+        if (!item) return heroCombat(state, h);
+        if (item.uid && state.items[item.uid] === item) return heroCombatIf(state, h, item.uid);
+        const items = { ...state.items, [PROBE_UID]: { ...item, uid: PROBE_UID } };
+        return heroCombatIf({ ...state, items }, h, PROBE_UID);
+    }
+
+    /**
+     * 「그 아이템을 끼면」의 사본 — `heroCombatIf` · `runTacticsIf` 가 같이 쓴다. 자리는 `equipTarget` 이 고르고, 다른 영웅이 끼고 있으면
+     *   그 사본에서 뺀다(한 개체가 두 몸에 서지 않는다). 원본은 안 건드린다. 이미 끼고 있거나 아이템이 없으면 null
+     */
+    function wearing(state, h, itemUid) {
+        const it = state.items[itemUid];
+        const pos = h && it && !Object.values(h.equipped).includes(itemUid) ? equipTarget(h, it) : null;
+        if (!pos) return null;
+        const off = x => Object.values(x.equipped).includes(itemUid)
+            ? { ...x, equipped: Object.fromEntries(Object.entries(x.equipped).map(([p, u]) => [p, u === itemUid ? null : u])) } : x;
+        const me = { ...h, equipped: { ...h.equipped, [pos]: itemUid } };
+        return { state: { ...state, heroes: state.heroes.map(x => x.uid === h.uid ? me : off(x)) }, me };
+    }
+
+    /* ~~`fallenOf` — 도는 원정에서 쓰러져 있는 영웅의 잠금(R130 · 장비는 R176 에서 풂)~~ 은 2026-10-21 삭제 [사용자 지시 · R300 · base_expedition_design §1-5] —
+       쓰러짐은 원정 밖 행동(장비 · 마스터리 · 전직 스킬 · 스킬북)을 아무것도 막지 않는다. 바꾼 것은 쓰러져 있는 동안 그 런의 전투에 안 들어간다(`battle.refit` 이 건너뛴다).
+       잠금이 읽던 `runs[*].fallen` 도 같이 걷었다 — 로드가 지운다 */
+
+    /** 가방 → 착용. 그 위치의 착용품은 가방으로 (가방이 차면 실패). position 은 생략 가능.
+     *  양손↔보조 배타는 2026-09-01 한손 개념 폐지로 사라졌다 — 되돌아오는 것은 언제나 그 자리에 있던 하나뿐이다 */
+    /** 그 아이템이 어느 보관함에 있나 — 인벤토리(`bag` — 어느 부대의 것이든) / 창고(`stash`) / 없음(null) [v24 · 부대 v40] */
+    const holderOf = (state, uid) =>
+        bagNoOf(state, uid) ? 'bag' : (state.stash ?? []).includes(uid) ? 'stash' : null;
+    const capOf = (state, where) => (where === 'bag' ? limitsOf(state).bag : limitsOf(state).stash);
+    /** 그 아이템이 든 보관 줄을 뺀 새 줄로 바꾼다 — 인벤토리면 **그 부대의 것** [v40] */
+    const dropFrom = (state, uid) => {
+        const no = bagNoOf(state, uid);
+        if (no) state.bags[no - 1] = state.bags[no - 1].filter(u => u !== uid);
+        else state.stash = (state.stash ?? []).filter(u => u !== uid);
+    };
+
+    function equip(state, heroUid, itemUid, position) {
+        const h = heroById(state, heroUid), it = state.items[itemUid];
+        const from = h && it ? holderOf(state, itemUid) : null;
+        if (!from) return { ok: false, err: 'missing' };
+        if (it.box) return { ok: false, err: 'sealed' };   // 첫 클리어 상자 칸 — 까야 장비다 (R328 · R333)
+        const why = I.canEquip(h, it);
+        if (why) return { ok: false, err: why };
+        const pos = position && positionsOf(it.slot).includes(position) ? position : equipTarget(h, it);
+        if (!pos) return { ok: false, err: 'missing' };
+
+        const back = [];
+        if (h.equipped[pos]) back.push(h.equipped[pos]);
+        // **교체품은 꺼낸 쪽으로 돌아간다** [v24] — 창고에서 낌 것을 인벤으로 돌려보내면
+        // 인벤이 찼을 때 거절이 나서 「창고에서 바로 장착」(item_design §1)이 깨진다. 칸 수는 그대로다.
+        // 인벤토리면 **꺼낸 그 부대의 인벤토리**다 [v40 · ADR-0521]
+        const no = from === 'bag' ? bagNoOf(state, itemUid) : 0;
+        const list = from === 'bag' ? state.bags[no - 1] : state.stash;
+        if (list.length - 1 + back.length > capOf(state, from)) return { ok: false, err: from === 'bag' ? 'bagFull' : 'stashFull' };
+
+        const rest = list.filter(u => u !== itemUid);
+        for (const u of back) rest.push(u);
+        if (from === 'bag') state.bags[no - 1] = rest; else state.stash = rest;
+        h.equipped[pos] = itemUid;
+        return { ok: true, back, position: pos, from };
+    }
+
+    /** 벗긴 것은 **부대 `no` 의 인벤토리 끝**으로 [v40 · 기본 1 — 화면은 보고 있는 인벤토리 번호를 넘긴다 · ADR-0521] */
+    function unequip(state, heroUid, position, no = 1) {
+        const h = heroById(state, heroUid);
+        const uid = h?.equipped[position];
+        const bag = bagOf(state, no);
+        if (!uid || !bag) return { ok: false, err: 'missing' };
+        if (bag.length >= capOf(state, 'bag')) return { ok: false, err: 'bagFull' };
+        h.equipped[position] = null;
+        bag.push(uid);
+        return { ok: true };
+    }
+
+    /**
+     * 분해 산출 [2026-10-29 · R373 · item_design §5-3] — 가루(`item.salvageDust`) + **부위 재료**(`make_recipe.csv:salvage_mat` 줄의 뿌리 = 최하급 · 무기 철광석 · 방어구 목재 · 반지 · 목걸이 약초) ·
+     *   부위 재료의 양은 가루와 같은 희귀도 문턱(`item.salvageMatUnits`) · 표에 없는 부위면 `mat` null · rng 0
+     */
+    const salvageYield = it => {
+        const id = recipes[it.slot]?.salvageMat ?? null;
+        return { dust: I.salvageDust(it), mat: id ? { id, n: I.salvageMatUnits(it) } : null };
+    };
+    /** 재료 사다리에 더한다 — 가루도 재료다(v43) */
+    const addMat = (state, id, n) => {
+        state.materials = state.materials ?? {};
+        state.materials[id] = (state.materials[id] ?? 0) + n;
+    };
+    /** 분해 산출을 지갑에 — 가루 · 부위 재료 (R373) */
+    const gainSalvage = (state, y) => {
+        addMat(state, DUST_ID, y.dust);
+        if (y.mat) addMat(state, y.mat.id, y.mat.n);
+    };
+    /** 분해 산출을 묶음에 센다 — `{재료 id: n}` · 가루도 한 칸 */
+    const tallySalvage = (acc, y) => {
+        acc[DUST_ID] = (acc[DUST_ID] ?? 0) + y.dust;
+        if (y.mat) acc[y.mat.id] = (acc[y.mat.id] ?? 0) + y.mat.n;
+        return acc;
+    };
+
+    /** 분해 — 가방 · 창고 아이템을 가루 + 부위 재료로 (착용 중인 것은 `missing` · 잠근 것은 `locked`) · 건물이 막지 않는다 (R140 · R373) */
+    function salvage(state, itemUid) {
+        const it = state.items[itemUid];
+        const from = it ? holderOf(state, itemUid) : null;   // 창고 것도 분해된다 [v24 · item_design §1]
+        if (!from) return { ok: false, err: 'missing' };
+        if (it.box) return { ok: false, err: 'sealed' };   // 첫 클리어 상자 칸은 분해되지 않는다 (R328)
+        // 잠금은 **분해만** 막는다 [2026-09-21 · ADR-0185] — 여러 개를 한 번에 지우는 길이 열려 보호 태그가 필요해졌다
+        if (it.locked) return { ok: false, err: 'locked' };
+        const y = salvageYield(it);
+        dropFrom(state, itemUid);
+        delete state.items[itemUid];
+        gainSalvage(state, y);
+        return { ok: true, dust: y.dust, mat: y.mat, from };
+    }
+
+    /** 인벤토리(어느 부대의 것이든) → 창고 [v24 · 부대 v40]. 받는 쪽이 차 있으면 `stashFull` · 건물이 막지 않는다(창고 칸은 처음부터 열림 · 2026-10-27 · R361) */
+    function moveToStash(state, itemUid) {
+        if (holderOf(state, itemUid) !== 'bag') return { ok: false, err: 'missing' };
+        if (mergeBox(state, itemUid, state.stash)) return { ok: true };   // 같은 종류 상자 칸이 있으면 거기에 겹친다 (R333)
+        if (state.stash.length >= capOf(state, 'stash')) return { ok: false, err: 'stashFull' };
+        dropFrom(state, itemUid);
+        state.stash.push(itemUid);
+        return { ok: true };
+    }
+
+    /** 창고 → **부대 `no` 의 인벤토리** [v24 · 부대 v40 · 기본 1]. 받는 쪽이 차 있으면 `bagFull` · 없는 번호면 `missing` */
+    function moveToBag(state, itemUid, no = 1) {
+        const bag = bagOf(state, no);
+        if (!bag || holderOf(state, itemUid) !== 'stash') return { ok: false, err: 'missing' };
+        if (mergeBox(state, itemUid, bag)) return { ok: true };   // 같은 종류 상자 칸이 있으면 거기에 겹친다 (R333)
+        if (bag.length >= capOf(state, 'bag')) return { ok: false, err: 'bagFull' };
+        state.stash = state.stash.filter(u => u !== itemUid);
+        bag.push(itemUid);
+        return { ok: true };
+    }
+
+    /* ── 정렬 (ADR-0242 · SCREEN_DESIGN §6) — 칸 하나를 **한 번** 줄 세운다. 늘 정렬된 상태가 아니다 ──
+       등급 사다리 = 일반 → 매직 → 레어 → 크래프트 → 에픽 → 레전더리 → 유니크 [에픽 · 레전더리 2026-10-24 · R342 · item_design §1 희귀도 — 크래프트는 레어와 줄 수가 같아 레어 바로 위]
+       수치가 아니라 어휘의 순서라 코드에 둔다. 부위 순서는 `equip_slot.csv` 가 든다(반지 둘은 부위 하나) */
+    const RARITY_LADDER = ['normal', 'magic', 'rare', 'craft', 'epic', 'legendary', 'unique'];
+    const PART_ORDER = [...new Set(deps.equipSlots.map(s => s.part))];
+    const orderIn = (list, v) => { const i = list.indexOf(v); return i < 0 ? list.length : i; };
+    // 비교 셋 — 등급 · 레벨은 **높은 것이 앞**, 부위는 표 순서가 앞
+    const CMP = {
+        rarity: (a, b) => orderIn(RARITY_LADDER, b.rarity) - orderIn(RARITY_LADDER, a.rarity),
+        ilvl: (a, b) => (b.ilvl ?? 0) - (a.ilvl ?? 0),
+        slot: (a, b) => orderIn(PART_ORDER, a.slot) - orderIn(PART_ORDER, b.slot),
+    };
+    // 고른 기준 다음으로 남은 둘 — 유저가 그 기준 안에서 다음으로 볼 것
+    const SORT_KEYS = { rarity: ['rarity', 'ilvl', 'slot'], ilvl: ['ilvl', 'rarity', 'slot'], slot: ['slot', 'rarity', 'ilvl'] };
+
+    /** 보관 한 칸을 줄 세운다 — 순서만 바꾸고 개체 · 개수는 그대로 · 다 같으면 원래 순서(`Array.sort` 는 안정 정렬) · rng 0.
+     *  `'bag'` 이면 **부대 `no` 의 인벤토리**(기본 1 · v40) */
+    function sortStorage(state, where, key, no = 1) {
+        const keys = SORT_KEYS[key];
+        if (!keys || (where !== 'bag' && where !== 'stash') || (where === 'bag' && !bagOf(state, no))) return { ok: false, err: 'invalid' };
+        const list = where === 'bag' ? bagOf(state, no) : (state.stash ?? []);
+        const sorted = list.slice().sort((ua, ub) => {
+            const a = state.items[ua], b = state.items[ub];
+            if (!a || !b) return 0;
+            if (!a.box !== !b.box) return a.box ? -1 : 1;   // 첫 클리어 상자 칸은 맨 앞 — 등급 · 레벨 · 부위가 없다 (R333)
+            for (const k of keys) { const d = CMP[k](a, b); if (d) return d; }
+            return 0;
+        });
+        if (where === 'bag') state.bags[no - 1] = sorted; else state.stash = sorted;
+        return { ok: true };
+    }
+
+    /* ── 자동 장착 [2026-10-22 · R307 · 기준 개정 R313 · item_design §6-3 · SCREEN_DESIGN §6 · ADR-0712] — 버튼이 부를 때만 · 고른 영웅 하나 · 부대 `no` 의 인벤토리만 ──
+       거르기 = 요구 레벨(`canEquip`) + 직업 어울림(`item.fitsClass`) — 직업 무기군이 물리 ↔ 마법(평타)도 같이 거른다.
+       고르기 = **영웅 세기** [R313] — 무기 · 방어구 넷을 끼면(`heroCombatIf` — 강화 포함) 그 영웅의 「입히는 DPS × 버티는 양」이 가장 높은 것. 안 오르면 안 바꾸고 빈 칸이면 가장 높은 것.
+         1:1 결투에서 이기는 쪽이 이 곱이 큰 쪽이라(PvP 기준) 데미지 1% 와 맷집 1% 의 값어치가 같다. 부위마다 수치를 따로 보면 장갑(가죽 = 속도 · 건틀릿 = 피해 감소)에서 깨진다 —
+         ~~무기 = 초당 세기 · 방어구 = 방어력~~(R307)은 마법사의 캐스팅 속도 장갑을 방어력이 조금 높은 공격 속도 장갑으로 바꿨다.
+       반지 · 목걸이는 **빈 칸만** — 아이템 레벨 → 등급(`CMP`). 줄 대부분(쿨감 · 흡혈 · 저항 · 찾기 · 발동)이 세기로 못 재는 것이다. 점수(§6-2)는 안 쓴다 — 굴림의 운을 재지 세기를 재지 않는다.
+       부위 이름은 수치가 아니라 어휘라 코드에 둔다(`SALVAGE_ROWS` 와 같은 자리) */
+    const F = createFormula(B);   // 물리 감쇠 곡선 — 전투(`formula.strike`)와 같은 함수
+    const MIGHT_PARTS = new Set(['weapon', 'armor', 'helmet', 'gloves', 'boots']);
+    // 입히는 DPS — 평타 한 대 평균(범위에 데미지 % 괄호가 이미 곱해져 있다) × 능력치 계수 × (1 + 피해량) × 치명 기대 ÷ 행동 주기. `strike` 의 곱 그대로 · 맨손도 범위가 있다
+    const dealtPerSec = c => {
+        const a = c.atk_physical ?? c.atk_magic;
+        if (!a) return 0;
+        const crit = 1 + Math.min(1, c.crit_rate ?? 0) * ((c.crit_damage ?? 1) - 1);   // 치명 확률은 상한이 없다 — 1 이면 전타 치명
+        return (a.min + a.max) / 2 * (c.main_attr_mult ?? 1) * (1 + (c.dmg_bonus_pct ?? 0)) * crit / (c.action_period || 1);
+    };
+    // 버티는 양 — 최대 HP ÷ 한 대에서 남는 몫(물리 감쇠 × 피해 감소). 상대에 따라 값이 바뀌는 것(저항 · 명중 · 절대값 감소)은 안 넣는다
+    const enduredHp = c => {
+        const keep = (1 - F.mitigation(c.defense ?? 0)) * (1 - (c.damage_reduction ?? 0));
+        return keep > 0 ? (c.hp_max ?? 0) / keep : Infinity;
+    };
+    const might = c => dealtPerSec(c) * enduredHp(c);
+
+    function autoEquip(state, heroUid, no = 1) {
+        const h = heroById(state, heroUid);
+        if (!h || !bagOf(state, no)) return { ok: false, err: 'missing' };
+        const before = { ...h.equipped };
+        const cands = part => bagOf(state, no).map(u => state.items[u])
+            .filter(it => it && !it.box && it.slot === part && !I.canEquip(h, it) && I.fitsClass(it, h.cls));   // 상자 칸은 안 본다 (R328)
+        // 반지 · 목걸이가 먼저 — 다섯 칸의 세기가 반지까지 낀 몸으로 서야 다시 눌렀을 때 그대로다
+        for (const { id: pos, part } of deps.equipSlots) {
+            if (MIGHT_PARTS.has(part) || h.equipped[pos]) continue;
+            let best = null;
+            for (const it of cands(part)) if (!best || (CMP.ilvl(it, best) || CMP.rarity(it, best)) < 0) best = it;
+            if (best) equip(state, h.uid, best.uid, pos);
+        }
+        // 다섯 칸 — 칸마다 하나씩 바꿔 보고, 한 바퀴에 바뀐 것이 있으면 다시 돈다(뒤 칸이 앞 칸의 답을 바꾼다 — 치명 확률 장갑 → 치명 피해 무기).
+        //   바꿀 때마다 세기가 오르니 멈춘다 · 바퀴 상한(인벤토리 수 + 1)은 그물이다
+        const passMax = bagOf(state, no).length + 1;
+        for (let pass = 0, moved = true; moved && pass < passMax; pass++) {
+            moved = false;
+            for (const { id: pos, part } of deps.equipSlots) {
+                if (!MIGHT_PARTS.has(part)) continue;
+                // 「끼면」의 자리는 `equipTarget` 이 고른다 — 다섯 칸은 위치가 하나라 곧 `pos` 다
+                let best = null, top = h.equipped[pos] ? might(heroCombat(state, h)) : -Infinity;
+                for (const it of cands(part)) {
+                    const v = might(heroCombatIf(state, h, it.uid));
+                    if (v > top) { best = it; top = v; }               // 같으면 인벤토리 앞의 것 · 지금 낀 것과 같으면 안 바꾼다
+                }
+                if (best && equip(state, h.uid, best.uid, pos).ok) moved = true;
+            }
+        }
+        // 누르기 전과 달라진 칸만 — 두 바퀴째에 또 바뀐 칸도 한 줄 · `back` = 누르기 전에 그 칸에 있던 것
+        const changes = deps.equipSlots.filter(({ id }) => h.equipped[id] !== before[id])
+            .map(({ id }) => ({ position: id, item: h.equipped[id], back: before[id] ? [before[id]] : [] }));
+        return { ok: true, changes };
+    }
+
+    /**
+     * 자물쇠 하나를 켜고 끈다 [2026-09-21 · ADR-0185] — 잠긴 아이템은 `salvage` 가 `locked` 로 거절한다.
+     * 보관 두 칸(가방 · 창고)에 있는 것만 잠근다 — 착용 중인 것은 어차피 분해되지 않는다.
+     * **끄면 필드를 지운다** — `locked: false` 를 남기면 세이브에 안 쓰는 값이 개체마다 쌓인다.
+     * 여러 개는 호출하는 쪽이 고른 만큼 부른다 (일괄 함수를 따로 두지 않는다).
+     */
+    function setItemLock(state, itemUid, on) {
+        const it = state.items[itemUid];
+        if (!it || !holderOf(state, itemUid)) return { ok: false, err: 'missing' };
+        if (on) it.locked = true; else delete it.locked;
+        return { ok: true, locked: !!it.locked };
+    }
+
+    /**
+     * 첫 클리어 상자 하나를 깐다 [2026-10-23 · R328 · 개정 2026-10-24 · R333 · R349 · base_expedition_design §1-6] — **그 영웅에 맞는 장비 한 점**을
+     * **그 영웅의 레벨**로 그 순간 굴린다(소비 순서 INTERFACE §5-2 · 희귀도 = 상자 등급이 연 두 희귀도 — `BOX_TIERS`). 장비는 상자가 있던 보관 줄에 든다 —
+     * 마지막 하나면 **그 칸 그대로** · 아니면 `n − 1` 하고 끝 칸(차 있으면 거절). 거절은 회차(`counters.box`)를 안 올린다
+     */
+    function openBox(state, itemUid, heroUid) {
+        const it = state.items[itemUid], h = heroById(state, heroUid);
+        const from = it?.box ? holderOf(state, itemUid) : null;
+        if (!from || !h) return { ok: false, err: 'missing' };
+        const list = from === 'bag' ? state.bags[bagNoOf(state, itemUid) - 1] : state.stash;
+        const last = it.box.n <= 1;
+        if (!last && list.length >= capOf(state, from)) return { ok: false, err: from === 'bag' ? 'bagFull' : 'stashFull' };
+        state.counters.box = (state.counters.box ?? 0) + 1;
+        const r = makeRng(deriveSeed(state.seed ^ BOX_OPEN_SALT, state.counters.box));
+        let fix;
+        if (it.box.kind === 'weapon') {
+            // 무기군 1 — 그 직업의 본편 무기군(없으면 본편 무기군 전부) · 하나여도 1회
+            const own = I.groupsFor(h.cls);
+            const groups = own.length ? own : I.basesAt('weapon', 1);
+            fix = { slots: ['weapon'], weaponGroup: groups[Math.floor(r() * groups.length)].id };
+        } else {
+            // 부위 1 → 베이스 1 — 그 레벨의 티어 베이스 중 그 직업 갈래(맞는 것이 없으면 전부) · 하나여도 1회
+            const part = BOX_ARMOR[Math.floor(r() * BOX_ARMOR.length)];
+            const all = I.basesAt(part, h.level);
+            const fit = all.filter(b => I.fitsClass({ slot: part, group: b.group }, h.cls));
+            const pool = fit.length ? fit : all;
+            fix = { slots: [part], itemBase: pool[Math.floor(r() * pool.length)].id };
+        }
+        // 희귀도 1 — 등급의 아래 · 위 희귀도 둘만 · 위 희귀도 비율 = balance.csv:box_upper_pct_<tier> (R349)
+        const [lo, hi] = BOX_TIERS[it.box.tier], up = B[`box_upper_pct_${it.box.tier}`];
+        const made = addItem(state, I.rollGear(r, { ...fix, ilvl: h.level, rarityWeights: { [lo]: 1 - up, [hi]: up } })[0]);
+        if (last) { list[list.indexOf(itemUid)] = made.uid; delete state.items[itemUid]; }
+        else { it.box.n -= 1; list.push(made.uid); }
+        return { ok: true, item: made.uid, left: last ? 0 : it.box.n };
+    }
+
+    /** 우편 한 통을 받는다 [2026-10-23 · R328 · 개정 2026-10-24 · R333 · R349] — 그 우편의 부대 인벤토리로(없는 번호면 편성 1) · 같은 종류 · 같은 등급 칸에 겹치고 없으면 끝에 새 칸 ·
+     *  새 칸이 없으면 `bagFull` · rng 0 */
+    function claimMail(state, id) {
+        const at = (state.mail ?? []).findIndex(m => m.id === id);
+        if (at < 0) return { ok: false, err: 'missing' };
+        const m = state.mail[at];
+        const no = bagOf(state, m.no) ? m.no : 1;
+        if (!putBox(state, bagOf(state, no), m.kind, m.tier, capOf(state, 'bag'))) return { ok: false, err: 'bagFull' };
+        state.mail.splice(at, 1);
+        return { ok: true, no };
+    }
+
+    /** 우편을 오래된 것부터 **들어가는 만큼** 받는다 — 인벤토리가 찬 우편은 남는다 · `n` = 받은 수 · `left` = 남은 수 · rng 0 */
+    function claimAllMail(state) {
+        let n = 0;
+        for (const { id } of (state.mail ?? []).slice()) if (claimMail(state, id).ok) n++;
+        return { ok: true, n, left: (state.mail ?? []).length };
+    }
+
+    /* ── 자동 분해 (item_design §6-5 · R125 · **2026-10-22 개편 R316** — 부대마다 격자) ──
+       **보존 = 레벨 조건(섰으면) 그리고 그 칸이 보존**이다(교집합 · 사용자 「보존을 중심으로 … 교집합」) — [베이스] 칸은 베이스 옵션이 그 부위 문턱 이상이면 보존.
+       줄에 없는 등급(유니크 · 크래프트)은 **언제나 보존**(옛 레벨 선이 이들도 녹이던 고장이 여기서 닫힌다).
+       새 드롭은 `settleRound` 가 적재 전에 **나간 부대의 규칙**으로 본다. 이미 가진 것은 `applyAutoSalvage` 를 부를 때만 · rng 0 */
+
+    /** 그 편성 영웅의 가장 낮은 레벨 — 레벨 조건의 기준 · 빈 편성이면 null (R316 — 가장 약한 영웅도 못 쓸 것만 녹는다) */
+    const partyMinLevel = (state, no) => {
+        const lvs = (state.presets?.[no - 1]?.party ?? []).map(u => heroById(state, u)?.level).filter(Number.isInteger);
+        return lvs.length ? Math.min(...lvs) : null;
+    };
+    const baseOf = (rule, part) => rule.base[part] ?? B.auto_salvage_base_default;
+    const EPS = 1e-9;   // 문턱 비교 — 굴린 값과 문턱이 둘 다 반올림된 비율이라 같은 값이 부동소수로 갈리지 않게
+    /** 보존하나 — 부대 `no` 의 규칙으로 아이템 `it` 을 본다 (INTERFACE §2-7 `salvageView`) */
+    const salvageKeeps = (state, no, it) => {
+        if (!SALVAGE_ROWS.includes(it.rarity)) return true;
+        const rule = salvageRuleOf(state, no) ?? emptyRule();
+        const minLv = partyMinLevel(state, no);
+        if (rule.lvGap !== null && minLv !== null && it.ilvl < minLv + rule.lvGap) return false;
+        const mode = rule.cells[`${it.slot}:${it.rarity}`] ?? 'keep';
+        if (mode === 'salvage') return false;
+        if (mode === 'base') { const v = I.baseRoll(it); return v === null || v >= baseOf(rule, it.slot) - EPS; }
+        return true;
+    };
+    /** 최근 분해 기록에 사본을 남긴다 — 최신이 앞 · 길이 상한에서 뒤를 버린다 (드롭 순간의 자동 분해 · 넘침만 · R316) */
+    const logSalvaged = (state, no, it) => {
+        const log = state.salvageLogs?.[no - 1];
+        if (!log) return;
+        log.unshift(clone(it));
+        if (log.length > B.auto_salvage_log_max) log.length = B.auto_salvage_log_max;
+    };
+
+    /** 부대 `no` 의 규칙을 화면이 그리는 모양으로 — 상태를 안 바꾼다 · 없는 번호면 null (INTERFACE §2-7) */
+    function salvageView(state, no) {
+        const rule = salvageRuleOf(state, no);
+        if (!rule) return null;
+        const minLv = partyMinLevel(state, no);
+        return {
+            no, minLv, lvGap: rule.lvGap,
+            keepFrom: rule.lvGap !== null && minLv !== null ? minLv + rule.lvGap : null,
+            parts: SALVAGE_PARTS.map(part => ({ part, hasBase: I.hasBase(part), base: I.hasBase(part) ? baseOf(rule, part) : null, max: I.baseMax(part) })),
+            rows: SALVAGE_ROWS.slice(),
+            cells: Object.fromEntries(SALVAGE_PARTS.map(part => [part, Object.fromEntries(SALVAGE_ROWS.map(r =>
+                [r, cellExists(part, r) ? rule.cells[`${part}:${r}`] ?? 'keep' : null]))])),
+            on: rule.lvGap !== null || Object.keys(rule.cells).length > 0,
+            slots: (state.salvageSlots ?? []).map((r, i) => ({ slot: i + 1, empty: !r })),
+            log: (state.salvageLogs?.[no - 1] ?? []).slice(),
+        };
+    }
+
+    const putCell = (rule, part, rarity, mode) => {
+        const k = `${part}:${rarity}`;
+        if (mode === 'keep') delete rule.cells[k]; else rule.cells[k] = mode;
+    };
+    /** 칸 하나 — 누르는 즉시 그 부대의 다음 드롭부터 먹는다(가방의 것은 그대로) · 건물이 막지 않는다 (R140) */
+    function setSalvageCell(state, no, part, rarity, mode) {
+        const rule = salvageRuleOf(state, no);
+        if (!rule || !SALVAGE_PARTS.includes(part) || !SALVAGE_ROWS.includes(rarity) || !cellExists(part, rarity)
+            || !SALVAGE_MODES.includes(mode) || (mode === 'base' && !I.hasBase(part))) return { ok: false, err: 'invalid' };
+        putCell(rule, part, rarity, mode);
+        return { ok: true };
+    }
+    /** 일괄 — `pick = {rarity}`(줄 머리) · `{part}`(열 머리) · `{}`(전부). 베이스가 없는 부위의 `base` 는 보존 · 반지 · 목걸이의 일반 칸은 건너뛴다 */
+    function setSalvageCells(state, no, pick, mode) {
+        const rule = salvageRuleOf(state, no);
+        const p = pick && typeof pick === 'object' ? pick : null;
+        if (!rule || !p || !SALVAGE_MODES.includes(mode)
+            || (p.part !== undefined && !SALVAGE_PARTS.includes(p.part)) || (p.rarity !== undefined && !SALVAGE_ROWS.includes(p.rarity))) return { ok: false, err: 'invalid' };
+        let n = 0;
+        for (const part of SALVAGE_PARTS) for (const r of SALVAGE_ROWS) {
+            if ((p.part !== undefined && p.part !== part) || (p.rarity !== undefined && p.rarity !== r) || !cellExists(part, r)) continue;
+            const m = mode === 'base' && !I.hasBase(part) ? 'keep' : mode;
+            if ((rule.cells[`${part}:${r}`] ?? 'keep') === m) continue;
+            putCell(rule, part, r, m);
+            n++;
+        }
+        return { ok: true, n };
+    }
+    /** 그 부위의 베이스 문턱 — 비율 · 0 ~ 그 부위 베이스 옵션의 위끝 · 소수 둘째 자리(= %의 정수)로 박는다 */
+    function setSalvageBase(state, no, part, v) {
+        const rule = salvageRuleOf(state, no);
+        if (!rule || !SALVAGE_PARTS.includes(part) || !I.hasBase(part) || !Number.isFinite(v)) return { ok: false, err: 'invalid' };
+        const pct = Math.round(v * 100) / 100;   // 비율 → % 의 정수 자리 — 버튼이 0.1 · 0.01 을 더해 생긴 부동소수 꼬리를 지운다
+        if (pct < 0 || pct > I.baseMax(part) + EPS) return { ok: false, err: 'invalid' };
+        rule.base[part] = pct;
+        return { ok: true };
+    }
+    /** 레벨 조건 — `null`(안 봄) · −만렙 ~ 0 정수. 보존 = 아이템 레벨 ≥ 그 편성 영웅의 가장 낮은 레벨 + gap */
+    function setSalvageLevel(state, no, gap) {
+        const rule = salvageRuleOf(state, no);
+        if (!rule || !(gap === null || (Number.isInteger(gap) && gap <= 0 && gap >= -B.hero_level_cap))) return { ok: false, err: 'invalid' };
+        rule.lvGap = gap;
+        return { ok: true };
+    }
+    const slotOk = (state, slot) => Number.isInteger(slot) && slot >= 1 && slot <= (state.salvageSlots?.length ?? 0);
+    /** 프리셋 칸에 저장 — 부대 `no` 의 규칙 **사본**을 덮어쓴다(가리키지 않는다 · 사용자 「불러오기 느낌으로 복사」) */
+    function saveSalvageSlot(state, no, slot) {
+        const rule = salvageRuleOf(state, no);
+        if (!rule || !slotOk(state, slot)) return { ok: false, err: 'invalid' };
+        state.salvageSlots[slot - 1] = clone(rule);
+        return { ok: true };
+    }
+    /** 프리셋 칸에서 불러오기 — 칸의 사본을 부대 `no` 에 덮어쓴다 · 뒤에 칸을 고쳐도 부대는 그대로 */
+    function loadSalvageSlot(state, no, slot) {
+        if (!salvageRuleOf(state, no) || !slotOk(state, slot)) return { ok: false, err: 'invalid' };
+        const src = state.salvageSlots[slot - 1];
+        if (!src) return { ok: false, err: 'empty' };
+        state.salvageRules[no - 1] = fitRule(clone(src));
+        return { ok: true };
+    }
+
+    // [지금 가방에 적용]이 갈 것 — **부대 `no` 의 인벤토리만**(창고는 옮겨 둔 것이 곧 「남긴다」 · 다른 부대의 것은 안 보이는 칸이다 · v40) · 잠근 것 제외 · 그 부대의 규칙으로
+    const autoTargets = (state, no) =>
+        (bagOf(state, no) ?? []).map(u => state.items[u]).filter(it => it && !it.locked && !it.box && !salvageKeeps(state, no, it));   // 상자 칸은 안 녹는다 (R328)
+
+    /** 지금 적용하면 갈릴 개수 · 가루 · 재료 묶음(`mats` — 가루 포함 · R373) · uid(가방 순서) — 창이 이 숫자와 그림을 보여 준다. 상태를 안 바꾼다 */
+    function autoSalvagePreview(state, no = 1) {
+        const list = autoTargets(state, no);
+        return { n: list.length, dust: list.reduce((a, it) => a + I.salvageDust(it), 0), mats: list.reduce((a, it) => tallySalvage(a, salvageYield(it)), {}), uids: list.map(it => it.uid) };
+    }
+
+    /** 부대 `no` 의 인벤토리에서 그 부대 규칙이 보존하지 않는 것을 분해한다 — `salvage` 를 그대로 부르므로 반환량 · 거절 규칙이 같다 · 기록에는 안 남긴다(손으로 누른 분해) */
+    function applyAutoSalvage(state, no = 1) {
+        let n = 0, dust = 0;
+        const mats = {};
+        for (const it of autoTargets(state, no)) {
+            const r = salvage(state, it.uid);
+            if (r.ok) { n++; dust += r.dust; tallySalvage(mats, r); }
+        }
+        return { ok: true, n, dust, mats };
+    }
+
+    /* ── 강화 (item_design §7-2 — R25 · 개정 2026-09-15 R95 · 2026-10-14 R253 성공 확률) ── */
+
+    /**
+     * 강화 화면 상태 한 덩어리 — **판정을 여기서 다 낸다** (`tavernState`·`masteryState` 와 같은 규칙).
+     * `upgradeable` = 베이스 능력치가 있는 부위인가 — 목걸이 · 반지는 강화 대상이 아니다(`cost` 도 null).
+     * 얼마가 나가고 무엇이 걸려 있는지를 화면이 계산하지 않는다. ~~optionAt~~ 은 옵션 계단과 함께 퇴역 (R95)
+     * `chance` = 다음 단계의 성공 확률(비율 · `upgrade_chance.csv`) — 누르기 전에 보인다 [2026-10-14 · R253]. `cost` 가 null 이면 null
+     * `next` = 한 단계 올린 뒤의 베이스 값 미리보기 [2026-10-12 · SCREEN_DESIGN §8-2 「지금 → 다음」] — `up + 1` **사본**에 툴팁과 같은 함수를 부른다(아이템은 안 바뀐다).
+     *   올릴 수 없으면(`cost` null — 상한 · 목걸이 · 반지) null
+     * `slots` = 화면이 그리는 눈금 칸 수 — [balance.csv:equip_upgrade_slots] · 상한이 더 크면 상한 · `max` 너머 칸은 잠긴 칸이다 [2026-10-30 · SCREEN_DESIGN §8-2 · ADR-0968]
+     */
+    /**
+     * 강화 한 단계의 재료 [2026-10-29 · R373 · item_design §5-1] — 부위 재료(`make_recipe.csv:mat` 줄의 뿌리 = 최하급 · 무기 철광석 · 방어구 목재) + 가루 ·
+     *   개수 = base + step × 지금 단계 ([balance.csv:equip_upgrade_mat_base] · `_step` · 가루는 `equip_upgrade_dust_*`) · 0 개인 칸은 안 든다 · `[{id, need, have}]`
+     */
+    const upgradeMatsOf = (state, it) => {
+        const up = it.up ?? 0, mats = state.materials ?? {};
+        const want = [[recipes[it.slot]?.mat ?? null, B.equip_upgrade_mat_base + B.equip_upgrade_mat_step * up],
+            [DUST_ID, B.equip_upgrade_dust_base + B.equip_upgrade_dust_step * up]];
+        return want.filter(([id, n]) => id && n > 0).map(([id, need]) => ({ id, need, have: mats[id] ?? 0 }));
+    };
+    function upgradeState(state, itemUid) {
+        const it = state.items[itemUid];
+        if (!it || it.box) return null;   // 첫 클리어 상자 칸은 강화 대상이 아니다 (R328)
+        const up = it.up ?? 0, max = limitsOf(state).upgrade, cost = I.upgradeCost(it, max);
+        const open = hasFeature(state, 'upgrade_item');   // 대장간이 연다 (R137)
+        const peek = cost == null ? null : { ...it, up: up + 1 };
+        // `mats` = 다음 단계의 재료(부위 재료 · 가루 — R373) · 올릴 수 없으면 빈 줄
+        const mats = cost == null ? [] : upgradeMatsOf(state, it);
+        return {
+            up, max, slots: Math.max(B.equip_upgrade_slots, max), cost, mats, chance: I.upgradeChance(it, max), gold: state.resources.gold, open,
+            upgradeable: I.upgradeable(it),
+            canUpgrade: open && cost != null && state.resources.gold >= cost && mats.every(m => m.have >= m.need),
+            next: peek && { up: peek.up, dmg: I.weaponDamageFixed(peek), imp: I.implicitFixed(peek) },
+        };
+    }
+
+    /**
+     * 강화 1단계 — 골드 · 재료(부위 재료 · 가루 — R373)를 내고 **굴려서** 성공하면 `up` 을 올린다. 거절은 `missing` → `unbuilt`(대장간을 안 지었다 · R137) → `noBase` → `maxUp` → `gold` → `materials` 순으로 본다.
+     * 거절이면 아무것도 안 바뀐다(스트림도 안 연다).
+     * **가방·착용을 가리지 않는다** — 소유물에 하는 일이지 자리에 하는 일이 아니다(분해와 갈리는 지점).
+     * **실패하면 비용만 나간다** [2026-10-14 사용자 · R253 · item_design §7-2] — 골드 · 재료 · `up` 그대로 · 파괴 · 하락 없음. 반환의 `up` 은 굴린 **뒤**의 단계다.
+     * rng = `deriveSeed(seed ^ 0xF0C5, counters.upgrade)` 선증가 · **언제나 1회**(확률 1 인 단계도) — 회차 번호가 결과를 정해 새로고침으로 되굴릴 수 없다.
+     *   ~~솔트 0xF0C3~~ 은 R95 퇴역 스트림이라 재사용하지 않는다 (INTERFACE §5-1)
+     */
+    function upgradeItem(state, itemUid) {
+        const it = state.items[itemUid];
+        if (!it) return { ok: false, err: 'missing' };
+        if (it.box) return { ok: false, err: 'sealed' };   // 첫 클리어 상자 칸 (R328)
+        if (!hasFeature(state, 'upgrade_item')) return { ok: false, err: 'unbuilt' };
+        if (!I.upgradeable(it)) return { ok: false, err: 'noBase' };
+        const max = limitsOf(state).upgrade, cost = I.upgradeCost(it, max);
+        if (cost == null) return { ok: false, err: 'maxUp' };
+        if (state.resources.gold < cost) return { ok: false, err: 'gold' };
+        const mats = upgradeMatsOf(state, it);
+        if (mats.some(m => m.have < m.need)) return { ok: false, err: 'materials' };
+        const chance = I.upgradeChance(it, max);
+        state.resources.gold -= cost;
+        for (const m of mats) state.materials[m.id] -= m.need;
+        state.counters.upgrade = (state.counters.upgrade ?? 0) + 1;
+        const success = makeRng(deriveSeed(state.seed ^ 0xF0C5, state.counters.upgrade))() < chance;
+        const up = success ? I.upgrade(it).up : (it.up ?? 0);
+        return { ok: true, up, cost, success };
+    }
+
+    /* ── 제작 (item_design §7-1 확정 2026-09-15 — R96) ── */
+
+    /**
+     * 레시피 — 부위마다 골드 · 부위 재료(줄의 뿌리 id) · 가루 · 분해가 내는 재료(`make_recipe.csv` · 2026-10-29 · R373 · item_design §5-1 · §5-3 —
+     *   ~~광석 · 목재 둘 다 보완재~~ · 무기 = 철광석 · 방어구 = 목재 · 반지 · 목걸이 제작은 철광석 ⚠임시 · 분해는 약초). 생성 때 검증한다:
+     *   · 골드 0 이상 정수 · 부위 재료 · 가루는 1 이상 — 가루가 들어가야 **원정 쪽 입력**이 있다(파견 재료만으로는 못 만든다 · item_design §7-1)
+     *   · 재료 칸이 **줄의 뿌리**인지는 사다리가 선 뒤에 본다(`MAT_ROOTS` — 아래)
+     */
+    const recipes = deps.makeRecipes ?? {};
+    (() => {
+        const bad = why => { throw new Error(`make_recipe: ${why}`); };
+        const parts = new Set(deps.equipSlots.map(s => s.part));
+        for (const [part, r] of Object.entries(recipes)) {
+            if (!parts.has(part)) bad(`없는 부위 '${part}'`);
+            if (!(Number.isInteger(r.gold) && r.gold >= 0)) bad(`${part} — gold ${r.gold} 은 0 이상 정수`);
+            if (!(r.matUnits >= 1 && r.dust >= 1)) bad(`${part} — 부위 재료 · 가루는 1 이상이어야 한다 (${r.matUnits} · ${r.dust})`);
+        }
+    })();
+    const MAKE_WEIGHTS = { normal: B.make_rarity_w_normal, magic: B.make_rarity_w_magic, rare: B.make_rarity_w_rare };
+
+    /**
+     * 레벨대 = 챕터 — **stage.csv 가 정한다.** 레벨대 n 의 ilvl 은 (챕터 n−1 의 최고 스테이지 레벨, 챕터 n 의 최고 스테이지 레벨] 이고 첫 레벨대는 1 부터다.
+     * 제작(아래) · 탐험이 같은 범위를 쓴다(~~상점 장비 목록~~ — 2026-10-16 부터 교체 때 고른 영웅 레벨) — 범위가 비는 챕터(`hi < lo`)는 없다
+     */
+    const chapterBands = (() => {
+        const top = new Map();
+        for (const s of Object.values(deps.stages ?? {})) top.set(s.chapter, Math.max(top.get(s.chapter) ?? 0, s.dlvl));
+        const out = [];
+        let lo = 1;
+        for (const ch of [...top.keys()].sort((a, b) => a - b)) {
+            const hi = top.get(ch);
+            if (hi >= lo) out.push({ band: ch, lo, hi });
+            lo = hi + 1;
+        }
+        return out;
+    })();
+
+    /** 재료 종류(도박장 심볼의 `ore` · `timber` · 물약 · 책 · 연구의 약초) → 그 재료를 내는 연구소 지점(`lab_material.csv:post`) → 재료 id(최하급).
+     *  [2026-10-25 · R356 — ~~챕터 단계의 산출물~~ · 2026-10-29 R373 — ~~처치 재료~~ · 먹고 내는 단계는 지금 최하급] */
+    const KIND_POST = { ore: 'mine', timber: 'log', herb: 'gather' };
+    const materialIdOf = kind => (deps.labMaterials ?? []).find(m => m.post === KIND_POST[kind])?.id ?? null;
+    /** 가루 줄의 뿌리(최하급 가루) — 분해 · 도박장이 내고 제작 · 강화 · 책이 먹는다 · `material_synth.csv` 의 뿌리 행이 이름을 든다(v43 · 2026-10-29 · R373) */
+    const DUST_ID = 'dust';
+    /** 재료 id → 화면 · 비용 칸의 종류(`ore` · `timber` · `herb` · `dust`) — 줄의 뿌리 지점으로 가른다 */
+    const POST_KIND = Object.fromEntries(Object.entries(KIND_POST).map(([k, p]) => [p, k]));
+    const kindOfRoot = id => POST_KIND[(deps.labMaterials ?? []).find(m => m.id === id)?.post] ?? (id === DUST_ID ? 'dust' : null);
+    /**
+     * 제작 레벨 [개정 2026-09-21 — ~~레벨대 = 챕터 · ilvl 은 대역 안 균등~~ · item_design §7-1] — **1** 과 **챕터마다 끝 레벨**이고 ilvl 은 고른 레벨 그대로다.
+     * 재료는 **모든 레벨이 같다** — 부위마다 `make_recipe.csv` 의 골드 · 부위 재료 · 가루(2026-10-29 · R373 — 단계는 지금 최하급)
+     */
+    const makeLevelList = [...new Set([chapterBands[0]?.lo, ...chapterBands.map(b => b.hi)].filter(v => v != null))].map(level => {
+        const b = chapterBands.find(x => level >= x.lo && level <= x.hi);
+        return { level, chapter: b.band };
+    });
+
+    /** 제작 레벨 목록 — 부위와 무관하다. 화면의 레벨 버튼이 이 순서로 선다.
+     *  `state` 를 주면 레벨마다 **`open`** — 제작이 열렸고(`make`) 앞에서부터 `limitsOf(state).makeLevels` 개 안에 드나 (대장간 랭크가 연다 · R137) */
+    const makeLevels = state => {
+        const open = state ? (hasFeature(state, 'make') ? limitsOf(state).makeLevels : 0) : null;
+        return makeLevelList.map((l, i) => (open == null ? { ...l } : { ...l, open: i < open }));
+    };
+
+    /**
+     * 제작 화면 상태 한 덩어리 — **판정을 여기서 다 낸다** (`upgradeState` 와 같은 규칙).
+     * `kinds` = 고를 수 있는 종류 = `item.basesAt(part, level)` — 무기는 무기군 · 무기 외는 베이스 (2026-09-21).
+     * `cost` = [{kind: 'gold'|'ore'|'timber'|'herb'|'dust', id, need, have}] — 골드 · 부위 재료 · 가루 순(2026-10-29 · R373) · `id` 는 재화 id(골드 `gold` · 재료 id). 필요량은 부위마다라 **종류와 무관**하다.
+     * `err` = 지금 누르면 나올 거절(`unbuilt` → `gold` → `materials` → `bagFull` 순) 또는 null. 없는 부위 · 레벨이면 null.
+     *   `unbuilt` = 그 레벨이 안 열렸다(대장간 랭크가 연다 — `makeLevels(state)` 의 `open` · R137)
+     * `bagFull` 은 **부대 `no` 의 인벤토리**로 잰다(기본 1 · v40 — 만든 것이 들어갈 곳) · 없는 번호면 null
+     */
+    function makeState(state, part, level, no = 1) {
+        const r = recipes[part], l = makeLevels(state).find(x => x.level === level);
+        const bag = bagOf(state, no);
+        if (!r || !l || !bag) return null;
+        const mats = state.materials ?? {};
+        const cost = [
+            { kind: 'gold', id: 'gold', need: r.gold, have: state.resources.gold },
+            { kind: kindOfRoot(r.mat), id: r.mat, need: r.matUnits, have: mats[r.mat] ?? 0 },
+            { kind: 'dust', id: DUST_ID, need: r.dust, have: mats[DUST_ID] ?? 0 },
+        ].filter(c => c.need > 0);
+        const err = !l.open ? 'unbuilt'
+            : cost.some(c => c.kind === 'gold' && c.have < c.need) ? 'gold'
+            : cost.some(c => c.have < c.need) ? 'materials'
+            : bag.length >= capOf(state, 'bag') ? 'bagFull' : null;
+        // 줄마다 **만들어질 베이스**(`baseId`)와 그 이름을 든다 — 무기는 무기군 줄에 그 레벨의 세부 베이스(`weaponBaseAt` · 2026-09-21) · 무기 외는 베이스 그 자체
+        const kinds = I.basesAt(part, level).map(k => {
+            if (part !== 'weapon') return { ...k, baseId: k.id };
+            const b = I.weaponBaseAt(k.id, level);
+            return { id: k.id, ko: b?.ko ?? k.ko, en: b?.en ?? k.en, group: k.id, baseId: b?.id ?? null };
+        });
+        return { part, level, kinds, cost, canMake: err === null, err };
+    }
+
+    /**
+     * 제작 1회 — 골드 · 재료를 내고 **고른 종류**의 장비 하나를 **부대 `no` 의 인벤토리 끝**(기본 1 · v40)에 넣는다. 거절은 `missing`(없는 부위 · 레벨 · 목록 밖 종류) → `unbuilt` → `gold` → `materials` → `bagFull` 순이고
+     * 거절이면 아무것도 안 바뀐다. rng 는 제작 전용 스트림(`seed ^ 0xC4AF` · `counters.make` 선증가) — 전투 · 선술집 · 전술 수열과 안 섞인다 (INTERFACE §5-1).
+     * 소비: `item.rollGear` 한 벌 — 베이스는 고른 종류라 **0회**(무기 = `weaponGroup` · 무기 외 = `itemBase`) → 희귀도(제작 가중치) → build (INTERFACE §5-2).
+     * 무기의 세부 베이스는 레벨이 정한다(`weaponBase` — build 의 베이스 굴림 1회는 그대로 돌고 값만 버린다 · 2026-09-21).
+     * ilvl 은 고른 레벨 그대로다 — ~~레벨대 안 균등 1회~~ 는 2026-09-21 폐기
+     */
+    function makeItem(state, part, level, kind, no = 1) {
+        const s = makeState(state, part, level, no);
+        const k = s?.kinds.find(x => x.id === kind);
+        if (!k) return { ok: false, err: 'missing' };
+        if (s.err) return { ok: false, err: s.err };
+        state.materials = state.materials ?? {};
+        for (const c of s.cost) {
+            if (c.kind === 'gold') state.resources.gold -= c.need;
+            else state.materials[c.id] -= c.need;
+        }
+        const rng = makeRng(deriveSeed(state.seed ^ 0xC4AF, ++state.counters.make));
+        // 무기 = 무기군 + 그 레벨의 세부 베이스(줄이 보인 그대로 · 2026-09-21) · 무기 외 = 베이스
+        const fix = part === 'weapon' ? { weaponGroup: kind, weaponBase: k.baseId ?? undefined } : { itemBase: kind };
+        const [it] = I.rollGear(rng, { slots: [part], ilvl: level, rarityWeights: MAKE_WEIGHTS, ...fix });
+        addItem(state, it);
+        bagOf(state, no).push(it.uid);
+        return { ok: true, uid: it.uid };
+    }
+
+    /* ── 물약 (battle_design §7-1 · item_design §7-4 확정 2026-09-15 — R103 · 개수 · 칸 구성 2026-09-21 — R124) ──
+       칸(스테이지당 개수)과 영웅별 쿨은 **전투 안에서만** 산다(battle.js). 세이브가 드는 것은 **재고**(`potions` — 물약마다 개수)와
+       **편성마다의 칸 구성**(`presets[].potionSlots`) 둘이다. 런을 열 때 구성대로 **재고에서 앞 칸부터** 채우고(모자란 칸은 빈다)
+       마신 만큼 라운드 정산에서 재고를 뺀다(`advanceRun`). 같은 물약을 여러 칸에 넣어도 된다. 제작은 골드 · 약초(최하급 · `potion.csv:craft_herb` · R373)를 먹고 rng 를 안 쓴다 */
+
+    /** 물약 종류 어휘 — 전투가 효과를 아는 종류만 둔다. 모르는 종류가 표에 오면 **로드에서 멈춘다**(조용히 새지 않게) */
+    const POTION_KINDS = ['heal'];
+    const potionRows = deps.potions ?? [];
+    (() => {
+        const bad = why => { throw new Error(`potion: ${why}`); };
+        const seen = new Set();
+        const lastTier = new Map(), lastHeal = new Map();
+        for (const p of potionRows) {
+            if (!p.id || seen.has(p.id)) bad(`id '${p.id}'`);
+            seen.add(p.id);
+            if (!POTION_KINDS.includes(p.kind)) bad(`${p.id} — 모르는 종류 '${p.kind}'`);
+            // 같은 종류 안에서 단계는 1 부터 연속이고 회복량은 단계마다 커진다 — 단계 이름(마이너 → 슈퍼)이 회복량의 순서와 어긋나지 않게 (item_design §7-4)
+            const want = (lastTier.get(p.kind) ?? 0) + 1;
+            if (p.tier !== want) bad(`${p.id} — ${p.kind} 의 단계 ${p.tier} ≠ ${want}`);
+            if (!(p.heal > (lastHeal.get(p.kind) ?? 0))) bad(`${p.id} — 회복량 ${p.heal} 이 앞 단계보다 크지 않다`);
+            lastTier.set(p.kind, p.tier);
+            lastHeal.set(p.kind, p.heal);
+            if (!(p.craftGold >= 0)) bad(`${p.id} — craft_gold ${p.craftGold}`);
+            if (!(Number.isInteger(p.craftHerb ?? 0) && (p.craftHerb ?? 0) >= 0)) bad(`${p.id} — craft_herb ${p.craftHerb} 은 0 이상 정수(최하급 약초 · R373)`);
+            if (p.shopGold != null && !(p.shopGold > 0)) bad(`${p.id} — shop_gold ${p.shopGold} (안 팔면 -)`);
+            // 시작 개수 — 0 이상 정수 (R124 · 전엔 0/1 플래그였다)
+            if (!(Number.isInteger(p.startOwned) && p.startOwned >= 0)) bad(`${p.id} — start_owned ${p.startOwned} 은 0 이상 정수(시작 개수)여야 한다`);
+            if (!p.ko || !p.en) bad(`${p.id} — 이름 ko/en 이 비었다`);
+        }
+    })();
+    const potionById = id => potionRows.find(p => p.id === id) ?? null;
+    /** 시작 재고 — `start_owned` 개수(0 보다 큰 행). 새 게임과 **물약이 없던 옛 세이브**가 같은 재고로 연다 (INTERFACE §4) */
+    const startStock = () => Object.fromEntries(potionRows.filter(p => p.startOwned > 0).map(p => [p.id, p.startOwned]));
+    /** 칸 구성을 그 세이브의 칸 수(`limitsOf(state).potionSlots`)에 맞춘다 — 넘치면 뒤를 자르고 모자라면 빈 칸(`null`)을 붙인다 */
+    const padSlots = (state, list) => Array.from({ length: limitsOf(state).potionSlots }, (_, i) => list[i] ?? null);
+    /** 시작 칸 — **열린 칸 전부**에 시작 물약 중 표의 첫 행(개수와 무관). 새 게임의 편성 1 이 든다 [2026-10-22 · R315 — ~~행 순서대로 한 칸씩~~] */
+    const startSlots = state => {
+        const first = potionRows.find(p => p.startOwned > 0);
+        return padSlots(state, first ? Array.from({ length: limitsOf(state).potionSlots }, () => first.id) : []);
+    };
+    /** 다 지었을 때의 물약 칸 수 — 기본값 + 모든 건물 최대 랭크의 더하기. 화면이 열린 칸 뒤를 잠긴 칸으로 세운다 (R315) */
+    const potionSlotCap = B.potion_slot_max + (CN.opened(maxRanks).adds.potionSlots ?? 0);
+    /* 물약 기준 [2026-10-29 · R378 · battle_design §7-1] — 편성마다 마시는 HP 비율(`presets[].potionHp` · 선택 필드 · 없으면 CSV 기본값).
+       고를 수 있는 값은 `k / steps`(k = 1 … steps − 1)뿐이다 — 0% · 100% 는 없다 */
+    const hpSteps = B.potion_use_hp_steps;
+    if (!(Number.isInteger(hpSteps) && hpSteps >= 2)) throw new Error(`balance: potion_use_hp_steps ${hpSteps} — 2 이상 정수여야 한다 (INTERFACE §2-7)`);
+    const potionHpOf = p => p?.potionHp ?? B.potion_use_hp_pct;
+    /** 불러온 기준을 가장 가까운 칸에 맞춘다 — 칸 밖이거나 수가 아니면 필드를 안 둔다(= 기본값) */
+    const potionHpField = v => {
+        const k = Number.isFinite(v) ? Math.round(v * hpSteps) : 0;
+        return k >= 1 && k <= hpSteps - 1 ? { potionHp: k / hpSteps } : {};
+    };
+    /** 편성 화면의 기준 — 값 · 한 칸 내리고 올릴 수 있나(`stepPotionHp` 와 같은 칸 셈) */
+    const potionUseOf = p => {
+        const hpPct = potionHpOf(p), k = Math.round(hpPct * hpSteps);
+        return { hpPct, down: k > 1, up: k < hpSteps - 1 };
+    };
+
+    /**
+     * 칸 채우기 — 편성의 칸 구성을 **재고에서 앞 칸부터** 채운다 [R124 · battle_design §7-1]. 칸마다 `{id, heal}` 또는 `null`
+     *   (비워 둔 칸 · 재고가 모자란 칸 · 표에서 사라진 id). 같은 물약이 여러 칸이면 앞 칸이 먼저 가져가서 **뒤 칸부터** 모자란다.
+     * 재고는 **안 바꾼다** — 줄어드는 것은 마실 때다(`advanceRun`). `departRun` 이 전투에 넘기는 칸도, `presetState` 의 `short` 도 이 함수 하나에서 나온다
+     */
+    function fillSlots(state, p) {
+        const left = { ...(state.potions ?? {}) };
+        return padSlots(state, p?.potionSlots ?? []).map(id => {
+            const row = id ? potionById(id) : null;
+            if (!row || !((left[id] ?? 0) > 0)) return null;
+            left[id] -= 1;
+            return { id: row.id, heal: row.heal };
+        });
+    }
+    /** 재고에서 뺀다 — 0 이 되면 키를 지운다(세이브에 안 쓰는 값이 쌓이지 않게) */
+    function spendPotion(state, id, k) {
+        state.potions = state.potions ?? {};
+        const left = (state.potions[id] ?? 0) - k;
+        if (left > 0) state.potions[id] = left; else delete state.potions[id];
+    }
+
+    /**
+     * 물약 화면 상태 한 덩어리 — **판정을 여기서 다 낸다** (`makeState` · `upgradeState` 와 같은 규칙).
+     * `have` = 재고 개수 · `herb` = 제작에 드는 약초 `{id, need, have}`(최하급 · 0 이면 null · R373) · `err` = 지금 누르면 나올 거절(`locked` → `gold` → `materials` 순) 또는 null. 칸은 편성마다라 여기 없다(`presetState`).
+     * `craftable` = 그 단계가 열렸나 — **대장간 랭크가 연다**(단계 ≤ `limitsOf(state).potionTier` · R137 · ~~`potion.csv:craftable` 임시 칸~~ 2026-09-22 삭제)
+     */
+    function potionState(state) {
+        const gold = state.resources.gold, tierOpen = limitsOf(state).potionTier, herbId = materialIdOf('herb');
+        const list = potionRows.map(p => {
+            const craftable = p.tier <= tierOpen;
+            const herb = (p.craftHerb ?? 0) > 0 && herbId ? { id: herbId, need: p.craftHerb, have: state.materials?.[herbId] ?? 0 } : null;
+            const err = !craftable ? 'locked' : gold < p.craftGold ? 'gold' : herb && herb.have < herb.need ? 'materials' : null;
+            return { id: p.id, kind: p.kind, tier: p.tier, heal: p.heal, cost: p.craftGold, herb, have: state.potions?.[p.id] ?? 0, craftable, canMake: err === null, err };
+        });
+        return { slotMax: limitsOf(state).potionSlots, useHpPct: B.potion_use_hp_pct, cooldownSec: B.potion_cooldown_sec, list };
+    }
+
+    /**
+     * 물약 제작 1회 — 골드 · 약초를 내고 **재고를 1 올린다**(거듭 만든다 · R124 · 약초 R373). 거절은 `missing` → `locked` → `gold` → `materials` 순이고 거절이면 아무것도 안 바뀐다.
+     * **rng 를 안 쓰고 카운터도 안 올린다** — `counters.make` 는 장비 제작 스트림의 회차라 여기서 올리면 다음 장비 제작이 밀린다 (INTERFACE §5-1).
+     * 원정 중에도 만든다 — 도는 런의 칸은 안 바뀌고 다음 런부터 칸을 채운다
+     */
+    function makePotion(state, potionId) {
+        const p = potionById(potionId);
+        if (!p) return { ok: false, err: 'missing' };
+        const { err, herb } = potionState(state).list.find(x => x.id === potionId);
+        if (err) return { ok: false, err };
+        state.resources.gold -= p.craftGold;
+        if (herb) state.materials[herb.id] -= herb.need;
+        state.potions = state.potions ?? {};
+        state.potions[p.id] = (state.potions[p.id] ?? 0) + 1;
+        return { ok: true, id: p.id, cost: p.craftGold, have: state.potions[p.id] };
+    }
+
+    /* ── 진형 ── */
+
+    /**
+     * 진형 (battle_design §3-1 확정 2026-09-09 · 부채 #37 해소) — **자리가 전투에 닿는다.**
+     * 랭크는 둘뿐이다: `0` 전열 · `1` 후열. 「앞에 있는 유닛부터 때린다」의 「앞」이 이것이다.
+     *   · 정원은 `formation_template.csv` 가 든다 (행마다 전열 · 후열 정원 — 한쪽이 0 인 행도 있다: `3` 모두 전열 · `0-3` 모두 후열) — **칸 수 = 표의 값**
+     *   · 저장하는 것은 `{tpl, ranks:[[uid...],[uid...]]}` 하나. 파생(정원 · uid→랭크)은 매번 다시 만든다
+     *   · **정규화는 상태를 바꾸는 쪽이 부른다**(`toggleParty`·`setFormation`·`placeFormation`).
+     *     읽기(`formationState`)는 순수하다 — 화면이 렌더마다 세이브를 흔들면 안 된다
+     */
+    const FT = deps.formationTemplates ?? {};
+    // 표의 **행 순서**다 — `Object.keys` 는 `'3'` 같은 정수형 키를 앞으로 끌어올려 첫 행을 못 준다
+    const FT_ORDER = (deps.formationTplOrder ?? []).filter(id => FT[id]);
+    const DEFAULT_TPL = deps.defaultFormationTpl ?? FT_ORDER[0];
+    const formCaps = tpl => { const t = FT[tpl] ?? FT[DEFAULT_TPL]; return t ? [t.front, t.back] : [B.party_size_max, 0]; };
+
+    /* ── 편성 [2026-09-21 · 사용자 확정 · SCREEN_DESIGN §15 · ADR-0192 · R122] ──
+       편성은 **늘 `limitsOf(state).presets` 개가 서 있고** 번호가 이름이다(1 부터) — 만들고 지우는 동작이 없다. 수는 기본값 하나에 탐험 랭크가 더 연다(r4 · r5 · R362 · 첫 편성은 기본값 R161).
+       편성마다 파티 · 진형 · 물약 칸 · **파티 전술 칸**을 든다(전술은 v34 부터 편성마다 · R129 — 열린 칸 수만 계정이다).
+       파티 · 진형 · 물약 칸을 바꾸는 함수는 **고른 편성**(`state.preset`)에 작용한다 — 편성 탭은 늘 고른 편성을 펴므로 번호를 따로 받지 않는다.
+       출발만 번호를 받는다 — 반복이 **도는 원정의 편성**으로 다시 나가야 해서다(고른 편성이 그새 바뀌었을 수 있다) */
+    // 편성 수는 `limitsOf(state).presets` 가 답한다 — 여기서는 CSV 값이 쓸 수 있는 수인지만 본다.
+    //   기본값은 0 이어도 된다 — 시작 랭크(처음부터 지어진 랭크)의 더하기를 얹은 수가 1 이상이면 된다 (R156 · 지금 표는 기본값 1 · R161)
+    const startPresets = B.party_preset_count + (CN.opened(CN.startRanks()).adds.presets ?? 0);
+    if (!(Number.isInteger(B.party_preset_count) && B.party_preset_count >= 0 && startPresets >= 1)) throw new Error(`balance: party_preset_count ${B.party_preset_count} · 시작 편성 ${startPresets} — 기본값은 0 이상 정수 · 시작 랭크의 편성은 1 이상이어야 한다 (INTERFACE §2-7)`);
+    // 이번 버전이 여는 마지막 장 — 없거나 1 미만이면 모든 장이 조용히 잠기므로 멈춘다 (R227)
+    if (!(Number.isInteger(B.chapter_open_max) && B.chapter_open_max >= 1)) throw new Error(`balance: chapter_open_max ${B.chapter_open_max} — 1 이상 정수여야 한다 (INTERFACE §2-7)`);
+    // 자동 분해 — 프리셋 칸 수 · 기록 길이는 0 이상 정수(칸은 1 이상) · 문턱 기본값은 0 이상 (R316) — 틀리면 격자가 조용히 비거나 기록이 안 쌓인다
+    if (!(Number.isInteger(B.auto_salvage_slots) && B.auto_salvage_slots >= 1 && Number.isInteger(B.auto_salvage_log_max) && B.auto_salvage_log_max >= 0
+        && Number.isFinite(B.auto_salvage_base_default) && B.auto_salvage_base_default >= 0))
+        throw new Error(`balance: auto_salvage_slots ${B.auto_salvage_slots} · auto_salvage_log_max ${B.auto_salvage_log_max} · auto_salvage_base_default ${B.auto_salvage_base_default} — 칸은 1 이상 정수 · 기록은 0 이상 정수 · 문턱은 0 이상 (INTERFACE §2-7)`);
+    const emptyPreset = state => ({ party: [], formation: { tpl: DEFAULT_TPL, ranks: [[], []] }, potionSlots: padSlots(state, []), tactics: { slots: {}, locked: [] } });
+    /** 불러온 전술 칸 — 없으면 리롤한 적이 없는 상태 (R129) · 잠금은 CSV 에 있는 칸 번호만 남긴다(칸이 줄면 잘린다 · v35 · R28) */
+    const fitTactics = t => ({
+        slots: t?.slots && typeof t.slots === 'object' ? t.slots : {},
+        locked: Array.isArray(t?.locked) ? [...new Set(t.locked)].filter(no => TC.slotList.some(s => s.no === no)).sort((a, b) => a - b) : [],
+    });
+    /** 새 게임의 편성 — 전부 빈 파티 · 물약 칸은 편성 1 에만 시작 물약 (R124) */
+    const newPresets = (state = null) => {
+        const list = Array.from({ length: limitsOf(state).presets }, () => emptyPreset(state));
+        list[0].potionSlots = startSlots(state);
+        return list;
+    };
+    /** 불러온 편성을 그 세이브의 상한(`limitsOf`)에 맞춘다 — 편성 수 · 칸 수. 모자라면 빈 편성 · 빈 칸을 붙이고 넘치면 뒤를 자른다.
+     *  **상한이 줄어든 옛 세이브도 자른다** [2026-09-22 사용자 확정 · R137] — 사라지는 것은 편성의 구성(파티 · 진형 · 칸 · 전술)뿐이고
+     *  영웅 · 장비 · 물약 재고는 그대로다. 가방 · 창고는 반대로 **넘친 채 둔다**(아이템은 구성이 아니라 소유물이다 — 새 드롭만 막힌다) */
+    const fitPresets = (state, list) => Array.from({ length: limitsOf(state).presets }, (_, i) => {
+        const p = Array.isArray(list) ? list[i] : null;
+        if (!p || typeof p !== 'object') return emptyPreset(state);
+        return {
+            party: Array.isArray(p.party) ? p.party : [],
+            formation: p.formation ?? { tpl: DEFAULT_TPL, ranks: [[], []] },
+            potionSlots: padSlots(state, Array.isArray(p.potionSlots) ? p.potionSlots : []),
+            ...potionHpField(p.potionHp),
+            tactics: fitTactics(p.tactics),
+        };
+    });
+    /* ── 부대 — 편성 하나에 하나다 [v38 · 2026-09-23 다부대 · GAME_DESIGN §1-1] ──
+       `state.runs` 는 `presets` 와 같은 색인이다(자리 + 1 = 편성 번호). 부대라는 번호를 따로 두지 않는다 —
+       편성이 곧 부대라서, 「2부대」는 「편성 2 가 나간 원정」이다 */
+    /** 새 게임의 부대 자리 — 전부 비어 있다 */
+    const newRuns = (state = null) => Array.from({ length: limitsOf(state).presets }, () => null);
+    /** 새 게임의 부대 인벤토리 — 편성마다 빈 것 하나 [v40 · ADR-0521] */
+    const newBags = (state = null) => Array.from({ length: limitsOf(state).presets }, () => []);
+    /** 부대 인벤토리를 편성 수에 맞춘다 [v40] — 모자라면 빈 인벤토리를 붙이고, 편성이 줄어 남는 것은 **마지막 열린 인벤토리 뒤에 붙인다**
+     *  (아이템은 소유물이라 지우지 않는다 — 넘친 채 두고 새 드롭 · 옮기기만 막힌다 · R137 과 같은 규칙) */
+    const fitBags = (state, list) => {
+        const src = (Array.isArray(list) ? list : []).map(b => (Array.isArray(b) ? b : []));
+        const n = limitsOf(state).presets;
+        const out = Array.from({ length: n }, (_, i) => src[i] ?? []);
+        for (const extra of src.slice(n)) out[n - 1].push(...extra);
+        return out;
+    };
+    /** 부대 `no`(편성 번호 · 1 부터)의 인벤토리 — **복사본이 아니다** · 없는 번호면 null [v40 · INTERFACE §2-7] */
+    const bagOf = (state, no) => (Number.isInteger(no) && no >= 1 ? state.bags?.[no - 1] ?? null : null);
+    /** 그 아이템이 든 부대 인벤토리의 번호 — 없으면 0 */
+    const bagNoOf = (state, uid) => (state.bags ?? []).findIndex(b => b.includes(uid)) + 1;
+    /* ── 자동 분해 규칙 — 부대마다 하나 [v41 · 2026-10-22 · R316 · item_design §6-5] ──
+       `salvageRules` · `salvageLogs` 는 `bags` 와 같은 색인(자리 + 1 = 편성 번호) · `salvageSlots` 는 계정의 프리셋 칸(사본). 모양은 INTERFACE §4.
+       규칙 = `{cells: {"부위:등급": 'base'|'salvage'}, base: {부위: 문턱}, lvGap}` — **보존이 아닌 칸만** 적는다(없는 칸 = 보존) */
+    const SALVAGE_PARTS = [...new Set(deps.equipSlots.map(s => s.part))];   // 열 = 부위 — 위치 순서에서 겹친 반지를 뺀 것(= equip_slot.csv:part_order)
+    const SALVAGE_ROWS = ['normal', 'magic', 'rare', 'epic', 'legendary'];   // 줄 — 에픽 · 레전더리 2026-10-24 R342 · 유니크 · 크래프트는 줄이 없고 **언제나 보존** (INTERFACE §5-3)
+    const SALVAGE_MODES = ['keep', 'base', 'salvage'];       // 칸 — 보존 · 베이스(문턱 이상이면 보존) · 분해
+    const cellExists = (part, rarity) => rarity !== 'normal' || I.hasNormal(part);   // 반지 · 목걸이는 일반이 없다 (R285)
+    const clampGap = g => Math.max(-B.hero_level_cap, Math.min(0, g));
+    const emptyRule = () => ({ cells: {}, base: {}, lvGap: null });
+    /** 새 게임의 규칙 — 편성마다 빈 규칙(= 전부 보존) · 기록은 빈 것 · 프리셋 칸은 빈 칸 */
+    const newSalvageRules = (state = null) => Array.from({ length: limitsOf(state).presets }, emptyRule);
+    const newSalvageLogs = (state = null) => Array.from({ length: limitsOf(state).presets }, () => []);
+    const newSalvageSlots = () => Array.from({ length: B.auto_salvage_slots }, () => null);
+    /** 규칙 하나를 표에 맞춘다 — 모르는 부위 · 줄 · mode · 베이스가 없는 부위의 base 칸 · 반지 · 목걸이의 일반 칸 · 범위 밖 문턱을 지우고 gap 은 범위로 자른다 */
+    const fitRule = r => {
+        const out = emptyRule();
+        if (!r || typeof r !== 'object') return out;
+        for (const [k, m] of Object.entries(r.cells && typeof r.cells === 'object' ? r.cells : {})) {
+            const [part, rarity] = String(k).split(':');
+            if (!SALVAGE_PARTS.includes(part) || !SALVAGE_ROWS.includes(rarity) || !cellExists(part, rarity)) continue;
+            if (m === 'salvage' || (m === 'base' && I.hasBase(part))) out.cells[k] = m;
+        }
+        for (const [part, v] of Object.entries(r.base && typeof r.base === 'object' ? r.base : {}))
+            if (SALVAGE_PARTS.includes(part) && I.hasBase(part) && Number.isFinite(v) && v >= 0 && v <= I.baseMax(part)) out.base[part] = v;
+        if (Number.isInteger(r.lvGap)) out.lvGap = clampGap(r.lvGap);
+        return out;
+    };
+    /** 불러온 규칙 · 기록을 편성 수에 맞춘다 — 모자라면 빈 것을 붙이고 넘치면 뒤를 자른다(규칙 · 기록은 소유물이 아니라 설정 · 사본이다) */
+    const fitSalvageRules = (state, list) => Array.from({ length: limitsOf(state).presets }, (_, i) => fitRule(Array.isArray(list) ? list[i] : null));
+    const fitSalvageLogs = (state, list) => Array.from({ length: limitsOf(state).presets }, (_, i) =>
+        (Array.isArray(list?.[i]) ? list[i] : []).filter(it => it && typeof it === 'object' && typeof it.slot === 'string').slice(0, B.auto_salvage_log_max));
+    const fitSalvageSlots = list => Array.from({ length: B.auto_salvage_slots }, (_, i) => (Array.isArray(list) && list[i] ? fitRule(list[i]) : null));
+    /** 부대 `no` 의 규칙 — **복사본이 아니다** · 없는 번호면 null */
+    const salvageRuleOf = (state, no) => (Number.isInteger(no) && no >= 1 ? state.salvageRules?.[no - 1] ?? null : null);
+    /** 불러온 부대 자리를 편성 수에 맞춘다 — 넘치면 뒤를 자르고 모자라면 빈 자리를 붙인다 */
+    const fitRuns = (state, list) => Array.from({ length: limitsOf(state).presets }, (_, i) => {
+        const r = Array.isArray(list) ? list[i] : null;
+        if (!r || typeof r !== 'object') return null;
+        r.auto = r.auto === true;             // 이어 가는 중 — v39 (없으면 멈춘 부대)
+        return r;
+    });
+    /** 그 편성의 부대 — 없는 번호면 null */
+    const runAt = (state, no) => (Number.isInteger(no) && no >= 1 ? state.runs?.[no - 1] ?? null : null);
+    /** 지금 **나가 있는** 부대의 편성 번호 — 도는 중(`active`)이거나 **런이 끝나 다음 칸을 기다리는 중**(`auto`)이다 · 오름차순 · 없으면 [].
+     *  칸 사이도 나가 있다 [2026-09-29 사용자 지시] — 철수하기 전까지 그 부대의 영웅은 다른 일을 못 하고 부대 수 상한의 자리도 안 빈다 */
+    const runningNos = state => (state.runs ?? []).map((r, i) => (r?.active || r?.auto === true ? i + 1 : 0)).filter(Boolean);
+    /**
+     * 한 영웅은 한 편성에만 든다 [v38 · 다부대] — 겹치면 **앞 편성이 갖는다.**
+     * 로드(`deserialize`)와 편성 이동(`toggleParty`)이 같은 규칙을 쓴다 · 뺀 자리는 진형에서도 빠진다 · rng 0
+     */
+    function dedupeParties(state) {
+        const seen = new Set();
+        for (const p of state.presets) {
+            p.party = p.party.filter(uid => (seen.has(uid) ? false : (seen.add(uid), true)));
+            normalizeFormation(p);
+        }
+    }
+
+    /** 번호 → 편성. 정수가 아니거나 범위 밖이면 null */
+    const presetAt = (state, no) => (Number.isInteger(no) && no >= 1 && no <= (state.presets?.length ?? 0) ? state.presets[no - 1] : null);
+    /** 고른 편성 — 번호가 틀려 있으면 편성 1 (로드가 범위로 자르므로 평소엔 안 탄다) */
+    const curPreset = state => presetAt(state, state.preset) ?? state.presets[0];
+    /** 편성의 파티 — **복사본**이다. `no` 를 안 주면 고른 편성 · 없는 번호면 [] */
+    const partyOf = (state, no = state.preset) => (presetAt(state, no)?.party ?? []).slice();
+    /**
+     * 그 편성으로 지금 나가면 나올 거절 — 스테이지 무관 [다부대 2026-09-23].
+     * 없는 편성 `missing` → 빈 파티 `noParty` → ~~수색 나간 영웅 `searching`~~(2026-10-19 수색 삭제) → 탐험 · 전직 →
+     * **`busy`**(그 편성의 영웅이 **다른 부대**에서 싸우는 중 — 도는 부대의 인원은 출발 때 굳은 스냅샷이라 편성을 옮겨 두면 한 사람이 두 부대에 선다) →
+     * **`full`**(도는 부대가 이미 상한만큼이다 — **그 편성이 이미 도는 중이면 안 센다**: 다시 보내는 것은 그 부대를 끊고 여는 것이라 수가 안 는다) → null
+     */
+    const presetErr = (state, p, no) => {
+        if (!p) return 'missing';
+        if (p.party.length === 0) return 'noParty';
+        if (p.party.some(uid => heroBusy(state, uid) === 'explore')) return 'exploring';   // 탐험 나감 (2026-10-09)
+        if (p.party.some(uid => heroBusy(state, uid) === 'advance')) return 'advancing';   // 전직하는 중 (2026-09-28 · R16)
+        if (p.party.some(uid => { const at = runOf(state, uid); return at !== null && at !== no; })) return 'busy';
+        const going = runningNos(state);
+        if (!going.includes(no) && going.length >= limitsOf(state).expeditions) return 'full';
+        return null;
+    };
+
+    /**
+     * 파티와 진형을 맞춘다 — **결정적이고 순서를 보존한다.** rng 를 안 쓴다.
+     *   ① 파티에 없는 uid 를 뺀다 ② 정원 초과분은 **뒤에서부터** 뽑아 대기로 ③ 미배치(파티 순서) + 대기를
+     *   **앞 랭크부터** 빈 정원에 채운다. 그래서 새 영웅은 언제나 전열이 찬 뒤에 후열로 간다
+     */
+    function normalizeFormation(p) {                     // p = 편성 `{party, formation}` (v19 이관은 옛 세이브 그 자체를 넘긴다 — 같은 두 필드다)
+        const party = p.party ?? [];
+        const f = p.formation ?? (p.formation = { tpl: DEFAULT_TPL, ranks: [[], []] });
+        if (!FT[f.tpl]) f.tpl = DEFAULT_TPL;
+        const caps = formCaps(f.tpl);
+        const ranks = caps.map((_, i) => (f.ranks?.[i] ?? []).filter(uid => party.includes(uid)));
+        const spill = [];
+        ranks.forEach((list, i) => { while (list.length > caps[i]) spill.push(list.pop()); });
+        const placed = new Set(ranks.flat());
+        const queue = party.filter(uid => !placed.has(uid)).concat(spill);
+        ranks.forEach((list, i) => { while (list.length < caps[i] && queue.length) list.push(queue.shift()); });
+        f.ranks = ranks;
+        return f;
+    }
+
+    /** 읽기 — 순수하다. `byUid` 는 uid → 랭크 번호 (없는 영웅은 전열로 읽는다) · p = 편성 */
+    function formationOf(p) {
+        const f = p?.formation ?? { tpl: DEFAULT_TPL, ranks: [[], []] };
+        const caps = formCaps(f.tpl);
+        const ranks = caps.map((_, i) => (f.ranks?.[i] ?? []).slice());
+        const byUid = {};
+        ranks.forEach((list, i) => { for (const uid of list) byUid[uid] = i; });
+        // `shapes` — 템플릿마다의 정원. 화면이 아이콘(점 배열)을 그리려면 **현재 것만으로는 모자라다**
+        const shapes = Object.fromEntries(FT_ORDER.map(id => [id, formCaps(id)]));
+        return { tpl: f.tpl, caps, ranks, byUid, templates: FT_ORDER.slice(), shapes };
+    }
+    /** **고른 편성**의 진형 (R122) — `no` 를 주면 **그 편성**의 것이다 [2026-09-24 · 다부대] (없는 번호면 고른 편성) */
+    const formationState = (state, no = state.preset) => formationOf(presetAt(state, no) ?? curPreset(state));
+
+    /** 그 영웅의 랭크 — 배치가 없으면 **전열**이다 (자리를 못 받은 유닛이 뒤에 숨지 않는다) */
+    const rankOf = (state, uid) => formationState(state).byUid[uid] ?? 0;
+
+    /** 템플릿 교체 — 정원이 바뀌므로 재배치가 따라온다 */
+    function setFormation(state, tpl) {
+        if (!FT[tpl]) return { ok: false, err: 'missing' };
+        const p = curPreset(state);                       // 고른 편성 (R122)
+        (p.formation ?? (p.formation = { tpl, ranks: [[], []] })).tpl = tpl;
+        normalizeFormation(p);
+        return { ok: true };
+    }
+
+    /**
+     * 한 명을 그 랭크로 옮긴다 (편성 화면의 드래그). 정원이 찼으면 **그 랭크의 마지막 하나와 자리를 바꾼다** —
+     * 거절하면 플레이어가 "왜 안 되지"를 읽을 수 없고, 밀어내면 누가 밀렸는지가 안 보인다. 맞바꿈이 둘 다 답한다.
+     * `idx` 를 주면 **그 칸**이 목적지다 [2026-09-11 사용자 지시 · SCREEN_DESIGN §4-1] — 주인이 있으면 **그 주인과** 맞바꾸고
+     * (같은 랭크 안에서도), 비었으면 그 랭크 끝으로 간다. 칸은 늘 앞부터 차므로(`normalizeFormation`) 빈 칸은 끝에만 있다.
+     * 칸을 안 받던 판은 후열 영웅을 전열 첫 칸에 끌어도 전열 **마지막**과 바뀌었고, 같은 랭크 안에서는 아무 일이 없었다.
+     */
+    function placeFormation(state, uid, rank, idx) {
+        const p = curPreset(state);                       // 고른 편성 (R122)
+        if (!p.party.includes(uid)) return { ok: false, err: 'missing' };
+        const f = normalizeFormation(p);
+        const caps = formCaps(f.tpl);
+        if (!(rank >= 0 && rank < caps.length)) return { ok: false, err: 'missing' };
+        const from = f.ranks.findIndex(list => list.includes(uid));
+        if (idx !== undefined) {
+            if (!(Number.isInteger(idx) && idx >= 0 && idx < caps[rank])) return { ok: false, err: 'missing' };
+            const owner = f.ranks[rank][idx];
+            if (owner === uid) return { ok: true, swapped: null };
+            if (owner === undefined) {
+                if (from === rank) return { ok: true, swapped: null };   // 같은 랭크의 빈 칸 — 앞부터 차므로 옮겨도 같은 자리다
+                if (from >= 0) f.ranks[from] = f.ranks[from].filter(u => u !== uid);
+                f.ranks[rank].push(uid);
+                normalizeFormation(p);
+                return { ok: true, swapped: null };
+            }
+            if (from >= 0) f.ranks[from][f.ranks[from].indexOf(uid)] = owner;   // 주인은 내가 있던 칸으로
+            f.ranks[rank][idx] = uid;
+            normalizeFormation(p);
+            return { ok: true, swapped: owner };
+        }
+        if (from === rank) return { ok: true, swapped: null };
+        let swapped = null;
+        if (f.ranks[rank].length >= caps[rank]) {
+            swapped = f.ranks[rank].pop();
+            if (from >= 0) f.ranks[from].push(swapped);
+        }
+        if (from >= 0) f.ranks[from] = f.ranks[from].filter(u => u !== uid);
+        f.ranks[rank].push(uid);
+        normalizeFormation(p);
+        return { ok: true, swapped };
+    }
+
+    /**
+     * 편성 화면 상태 한 덩어리 — **판정을 여기서 다 낸다** [신설 2026-09-21 · R122 · R124 · SCREEN_DESIGN §15 · §4-1 · **다부대 2026-09-23**].
+     * `runNos` = 도는 부대의 편성 번호(오름차순 · ~~`runNo` 하나~~) · `max` = 동시에 낼 수 있는 부대 수 ·
+     * 편성마다 `running` = 그 편성이 도는 중인가(고르개의 「원정 중」) · 칸마다 `short` = 재고가 모자라 런에서 빈 채 시작할 칸 — `departRun` 이 채우는 것과 같은 함수(`fillSlots`)다
+     */
+    function presetState(state) {
+        const L = limitsOf(state);
+        const going = runningNos(state);
+        return {
+            count: L.presets, activeNo: state.preset, runNos: going, max: L.expeditions, slotMax: L.potionSlots,
+            slotCap: Math.max(L.potionSlots, potionSlotCap),   // 다 지었을 때의 칸 수 — `slotMax` 뒤는 잠긴 칸 (R315 · 관리자 모드는 이미 다 열려 같다)
+            presets: state.presets.map((p, i) => {
+                const filled = fillSlots(state, p);
+                return {
+                    no: i + 1, party: p.party.slice(), formation: clone(p.formation),
+                    potionSlots: padSlots(state, p.potionSlots ?? []).map((id, k) => (id ? { id, short: !filled[k] } : null)),
+                    potionUse: potionUseOf(p),   // 마시는 HP 비율 · 한 칸 내리고 올릴 수 있나 (R378)
+                    running: going.includes(i + 1),
+                    exploring: !!exploreOfPreset(state, i + 1),   // 탐험에 나간 편성 — 고르개의 「탐험 중」 · 명단이 잠긴다 (2026-10-10 · R234)
+                    err: presetErr(state, p, i + 1),
+                };
+            }),
+        };
+    }
+
+    /** 편성 고르기 — 편성 탭 · 출정 창 · 상단바가 **같은 값 하나**를 쓴다. 원정 중에도 고른다(도는 원정은 `run.preset` 을 든다) */
+    function selectPreset(state, no) {
+        if (!presetAt(state, no)) return { ok: false, err: 'missing' };
+        state.preset = no;
+        return { ok: true };
+    }
+
+    /**
+     * 고른 편성의 물약 칸 하나를 채우거나 비운다 [신설 2026-09-21 · R124 · ADR-0195]. `slot` = 칸 자리(0 = 앞 칸) · `null` 이면 **앞의 빈 칸** ·
+     * `potionId = null` 이면 비운다. **재고를 안 본다** — 칸은 구성일 뿐이고 모자란 칸은 런에서 빈다(`presetState` 의 `short`). 같은 물약을 여러 칸에 넣어도 된다
+     */
+    function setPotionSlot(state, slot, potionId) {
+        if (potionId !== null && !potionById(potionId)) return { ok: false, err: 'missing' };
+        const p = curPreset(state);
+        const slots = padSlots(state, p.potionSlots ?? []);
+        let at = slot;
+        if (at === null || at === undefined) {
+            at = slots.indexOf(null);
+            if (at < 0) return { ok: false, err: 'slotsFull' };
+        } else if (!(Number.isInteger(at) && at >= 0 && at < slots.length)) return { ok: false, err: 'missing' };
+        slots[at] = potionId;
+        p.potionSlots = slots;
+        return { ok: true, slot: at };
+    }
+
+    /** 고른 편성의 물약 칸 둘을 맞바꾼다 — **앞 칸부터 마시므로 순서가 결정이다**(빈 칸과도 바꾼다) */
+    function swapPotionSlot(state, a, b) {
+        const p = curPreset(state);
+        const slots = padSlots(state, p.potionSlots ?? []);
+        const inRange = i => Number.isInteger(i) && i >= 0 && i < slots.length;
+        if (!inRange(a) || !inRange(b)) return { ok: false, err: 'missing' };
+        [slots[a], slots[b]] = [slots[b], slots[a]];
+        p.potionSlots = slots;
+        return { ok: true };
+    }
+
+    /**
+     * 고른 편성의 물약 기준을 한 칸 올리거나 내린다 [신설 2026-10-29 · R378 · SCREEN_DESIGN §15 · battle_design §7-1] — `dir` 의 부호만 본다.
+     * 지금 값을 가장 가까운 칸에 맞춘 뒤 한 칸 옮기고 **끝에서 멈춘다**(거절 없음). 원정 중에도 바꾼다 — 도는 원정은 굳힌 편성의 값(`squad.potionHp`) · rng 0
+     */
+    function stepPotionHp(state, dir) {
+        const p = curPreset(state);
+        const k = Math.min(hpSteps - 1, Math.max(1, Math.round(potionHpOf(p) * hpSteps) + Math.sign(dir)));
+        p.potionHp = k / hpSteps;
+        return { ok: true, hpPct: p.potionHp };
+    }
+
+    /* ── 파티 ── */
+
+    function toggleParty(state, uid, now) {
+        const h = heroById(state, uid);
+        if (!h) return { ok: false, err: 'missing' };
+        // 원정 중에도 넣고 뺀다 [2026-09-14 · R92 · 사용자 지시] — 도는 원정은 나간 인원 그대로 싸우고(`runParty`), 바꾼 인원은 다음 원정부터다
+        //   **고른 편성**에 작용한다 [2026-09-21 · R122]
+        const p = curPreset(state);
+        // **탐험 중인 편성은 명단이 잠긴다** — 넣기도 빼기도 거절 · 바꾸려면 편성째 부른다 [2026-10-10 · R234 · base_expedition §3-1]
+        if (exploreOfPreset(state, state.presets.indexOf(p) + 1)) return { ok: false, err: 'exploring' };
+        if (p.party.includes(uid)) {
+            p.party = p.party.filter(u => u !== uid);
+            normalizeFormation(p);                        // 뺀 자리를 뒤가 메운다 (진형 2026-09-09)
+            return { ok: true };
+        }
+        // 편성이 막는 상태는 **탐험 하나**다 — 전투 밖에 쓰러져 있는 영웅은 없지만(나오면 전원 회복) 나가 있는 영웅은 마을에 없다.
+        //   출정 중 아웃은 편성이 아니라 출발이 본다 · ~~수색 나간 영웅~~ 은 2026-10-19 수색 삭제로 사라졌다
+        if (heroBusy(state, uid) === 'explore') return { ok: false, err: 'exploring' };   // 탐험 나간 영웅도 마을에 없다 (2026-10-09)
+        if (p.party.length >= limitsOf(state).party) return { ok: false, err: 'full' };
+        // **한 영웅은 한 편성에만** [v38 · 2026-09-23 다부대] — 다른 편성에 들어 있으면 거기서 뺀다(거절이 아니라 이동 · 그 편성의 진형에서도 빠진다).
+        //   편성이 곧 부대라 겹치면 한 사람이 두 부대에 선다. 도는 부대는 나간 인원 그대로 싸우므로 흔들리지 않는다 —
+        //   옮겨 둔 탓에 그 편성이 못 나가는 것은 출발(`presetErr` 의 `busy`)이 본다
+        for (const other of state.presets) {
+            if (other === p || !other.party.includes(uid)) continue;
+            other.party = other.party.filter(u => u !== uid);
+            normalizeFormation(other);
+        }
+        p.party.push(uid);
+        normalizeFormation(p);                            // 전열이 찬 뒤 후열로 — 새 영웅의 자리 (진형 2026-09-09)
+        return { ok: true };
+    }
+
+    /* ~~`returnToTown(state)`~~ 는 2026-09-08 삭제 — 「출정 아웃」 폐기로 **귀환이 회복할 것이 없다**.
+       회복은 런이 끝나는 순간 자동이고 상태에 남는 것이 없다(HP 는 애초에 세이브에 없다 — INTERFACE §4). */
+
+    /* ── 난이도 바퀴 [신설 2026-10-10 · R236 · base_expedition_design §1-4] ──
+       `difficulty_tier.csv` 순서대로 선다 · **첫 단이 처음부터 열린 단**이고 그 단의 깬 기록이 `progress.cleared` 다(건설 · 탐험 · 의뢰가 읽는 그 기록 — 옛 세이브도 그대로 · 예외는 건설 문턱 `difficulty:` 하나 — 그 단의 기록을 본다 · R362).
+       나머지 단의 기록은 `progress.clearedIn[단]` · 단이 바꾸는 것은 지금 **몬스터 레벨**(`level_col` 이 고른 칸 레벨 열 + `level_add` — 만렙에서 자른다 · R338)과 **처치 하나의 도감 경험치**(`codex_exp` · R239) ·
+       **장 순서 해금**(`chapter_gate` — 0 이면 그 단이 열리는 순간 열린 장마다 첫 칸이 열린다 · 장 안은 그대로 순서 · 헬 · R242) 셋 */
+    const DIFFS = (() => {
+        const rows = deps.difficulties?.length ? deps.difficulties : [{ id: 'normal', levelCol: 'dlvl', levelAdd: 0, codexExp: 1, chapterGate: 1 }];   // 표가 없는 조립 = 노말 한 단
+        const bad = why => { throw new Error(`difficulty_tier: ${why}`); };
+        const seen = new Set();
+        for (const d of rows) {
+            if (!d.id || seen.has(d.id)) bad(`id '${d.id}' 가 비었거나 겹친다`);
+            if (!(Number.isInteger(d.levelAdd) && d.levelAdd >= 0)) bad(`${d.id} — level_add '${d.levelAdd}'`);
+            // 칸 레벨 열 — 모든 칸에 1 이상 정수가 있어야 한다(빈 칸이 조용히 NaN 레벨이 되지 않게 · 2026-10-24 · R338)
+            const col = d.levelCol ?? 'dlvl', hole = Object.values(deps.stages ?? {}).find(st => !(Number.isInteger(st[col]) && st[col] >= 1));
+            if (hole) bad(`${d.id} — level_col '${col}' 이 칸 ${hole.stage_id} 에서 '${hole[col]}'`);
+            if (!(Number.isInteger(d.codexExp) && d.codexExp >= 1)) bad(`${d.id} — codex_exp '${d.codexExp}'`);   // 처치 하나의 도감 경험치 (2026-10-10 · R239)
+            if (d.chapterGate !== 0 && d.chapterGate !== 1) bad(`${d.id} — chapter_gate '${d.chapterGate}' (0 · 1)`);   // 장 순서 해금 (2026-10-12 · R242)
+            seen.add(d.id);
+        }
+        return rows.map(d => ({ id: d.id, levelCol: d.levelCol ?? 'dlvl', levelAdd: d.levelAdd, codexExp: d.codexExp, chapterGate: d.chapterGate === 1 }));
+    })();
+    const DIFF_IDS = DIFFS.map(d => d.id);
+    const BASE_DIFF = DIFF_IDS[0];
+    const diffById = Object.fromEntries(DIFFS.map(d => [d.id, d]));
+    /** 다음 단을 여는 칸 — `[balance.csv:difficulty_unlock_chapter]` 장의 **보스 칸**(`boss_grade` = `chapter_boss`) · 단이 하나면 null · 없으면 만들 때 던진다 */
+    const DIFF_GATE = (() => {
+        if (DIFFS.length < 2) return null;
+        const id = (deps.stageOrder ?? []).find(s => deps.stages[s].chapter === B.difficulty_unlock_chapter && deps.stages[s].boss_grade === 'chapter_boss');
+        if (id == null) throw new Error(`difficulty: ${B.difficulty_unlock_chapter}장에 보스 칸(chapter_boss)이 없다 (balance.csv:difficulty_unlock_chapter)`);
+        return id;
+    })();
+    /** 그 단의 깬 칸 — **원본**이다(읽기만 한다 · 더하기는 `markCleared`). 첫 단 = `progress.cleared` */
+    const clearedList = (state, diff) => (diff === BASE_DIFF ? state.progress.cleared : state.progress.clearedIn?.[diff] ?? []);
+    const markCleared = (state, diff, stageId) => {
+        const list = diff === BASE_DIFF ? state.progress.cleared : ((state.progress.clearedIn ??= {})[diff] ??= []);
+        if (!list.includes(stageId)) list.push(stageId);
+    };
+    /** 그 단이 열렸나 — 첫 단 · 관리자 모드는 언제나 · 아니면 **앞 단에서 여는 칸(`DIFF_GATE`)을 깼다** · 표에 없는 단은 거짓 */
+    function difficultyOpen(state, diff) {
+        const i = DIFF_IDS.indexOf(diff);
+        if (i < 0) return false;
+        if (i === 0 || openAll()) return true;
+        return clearedList(state, DIFF_IDS[i - 1]).includes(DIFF_GATE);
+    }
+    /** 지금 고른 단 — 표에 없거나 **안 열린** 단(관리자 모드를 끈 뒤 등)이면 첫 단 */
+    const curDiff = state => (difficultyOpen(state, state?.difficulty) ? state.difficulty : BASE_DIFF);
+    /** 그 단에서 처치 하나가 그 몬스터에게 주는 도감 경험치 `[difficulty_tier.csv:codex_exp]` — 표에 없는 단은 첫 단 · rng 0 (2026-10-10 · R239 · monster_design §8) */
+    const codexExpOf = diff => (diffById[diff] ?? diffById[BASE_DIFF]).codexExp;
+    /** 그 단에서 그 칸의 몬스터 레벨 — **그 단이 고른 칸 레벨 열**(`[difficulty_tier.csv:level_col]` — 노말 · 헬 `stage.csv:dlvl` · 나이트메어 `dlvl_nightmare`) + 단의 더하기 ·
+     *  만렙 `[balance.csv:hero_level_cap]` 에서 자른다 · 표에 없는 단은 `dlvl` 그대로 · rng 0 (2026-10-24 · R338 — 나이트메어 = 노말 끝에서 만렙까지 장마다 4레벨 계단) */
+    const stageLevel = (stageId, diff = BASE_DIFF) => {
+        const d = diffById[diff];
+        return Math.min(B.hero_level_cap ?? Infinity, deps.stages[stageId][d?.levelCol ?? 'dlvl'] + (d?.levelAdd ?? 0));
+    };
+    /** 그 단에서 그 칸을 깼나 — 안 주면 고른 단 · rng 0 */
+    const stageCleared = (state, stageId, diff = curDiff(state)) => clearedList(state, diff).includes(stageId);
+
+    /** 난이도 고르기 [신설 2026-10-10 · R236] — `state.difficulty = id`. err: `missing`(표에 없는 단) · `locked`(안 열렸다). 도는 부대는 제 단을 들고 있어 안 바뀐다 · rng 0 */
+    function selectDifficulty(state, id) {
+        if (!DIFF_IDS.includes(id)) return { ok: false, err: 'missing' };
+        if (!difficultyOpen(state, id)) return { ok: false, err: 'locked' };
+        state.difficulty = id;
+        return { ok: true };
+    }
+
+    /** 난이도 줄 [신설 2026-10-10 · R236 · SCREEN_DESIGN §4-1] — `cur` = 지금 고른 단(`curDiff`) · 단마다 열렸나 · `gate` = 열려면 깰 것(앞 단 · 칸 — 첫 단은 null) · rng 0 */
+    function difficultyState(state) {
+        return {
+            cur: curDiff(state),
+            list: DIFFS.map((d, i) => ({ id: d.id, open: difficultyOpen(state, d.id), levelAdd: d.levelAdd, gate: i === 0 ? null : { from: DIFF_IDS[i - 1], stageId: DIFF_GATE } })),
+        };
+    }
+
+    /* ── 스테이지 · 원정 ── */
+
+    /** 그 장이 열렸나 — 1장은 처음부터 · n장은 첫 단에서 n−1장 보스를 깨면 저절로 (2026-10-22 원정 건물 삭제 · R319 · construction_draft §2) */
+    const chapterOpen = (state, chapter) => chapter <= limitsOf(state).chapters;
+    /** 그 장을 여는 칸 — 앞 장의 보스 칸 · 1장 · `chapter_open_max` 뒤의 장은 null (R319 · R227) · 상태를 안 본다 — 잠긴 장의 한 줄 「n−1장 보스 클리어」 */
+    const chapterGate = chapter => CHAPTER_GATE[chapter] ?? null;
+
+    /** 해금 = **그 장이 열렸고**(`chapterOpen`) 첫 스테이지이거나 직전 스테이지(순서 기준)를 클리어했다 ·
+     *  관리자 모드면 열린 장의 모든 스테이지가 열린 척한다(클리어 기록은 안 쓴다 · 2026-09-24 · R155 · INTERFACE §2-7) —
+     *  **장 잠금은 관리자 모드도 못 건너뛴다**: `chapter_open_max` 뒤의 장은 언제나 잠겼다 [2026-10-09 사용자 지시 · ADR-0552 · R227]
+     *  **난이도 `diff`(기본 고른 단)** [2026-10-10 · R236] — 그 단이 안 열렸으면 거짓 · 직전 칸은 **그 단의 기록**으로 센다(나이트메어는 1-1 부터)
+     *  **장 순서 해금이 없는 단**(`chapter_gate` = 0 · 헬) [2026-10-12 사용자 · R242] — 단이 열렸으면 열린 장마다 **첫 칸**이 참(앞 장의 마지막 칸을 안 본다) · 장 안의 칸은 그대로 직전 칸 */
+    function stageUnlocked(state, stageId, diff = curDiff(state)) {
+        const i = deps.stageOrder.indexOf(stageId);
+        if (i < 0 || !chapterOpen(state, deps.stages[stageId]?.chapter)) return false;
+        if (!difficultyOpen(state, diff)) return false;
+        if (openAll() || i === 0) return true;
+        const prev = deps.stageOrder[i - 1];
+        if (!diffById[diff].chapterGate && deps.stages[prev].chapter !== deps.stages[stageId].chapter) return true;
+        return clearedList(state, diff).includes(prev);
+    }
+
+    /** 두 스테이지가 **같은 장소**의 칸인가 — 장소 = (`chapter`, `stage_num`) · 칸 = `cell` (2026-09-29 · PLAN_stage_segments D1 · D4) */
+    const samePlace = (a, b) => {
+        const x = deps.stages[a], y = deps.stages[b];
+        return !!x && !!y && x.chapter === y.chapter && x.stage_num === y.stage_num;
+    };
+
+    /**
+     * 이긴 런 다음에 갈 칸 [신설 2026-09-29 · PLAN_stage_segments D8 · base_expedition_design §1] — rng 0 · 상태를 안 바꾼다.
+     *   `cycle`(반복 켬) = **장소 안 순환** — 다음 칸 · 마지막 칸 뒤는 첫 칸 · 칸이 하나인 장소는 그 칸.
+     *   아니면 **전진** — 표 순서의 다음 칸. 그 칸이 **잠겼거나(장이 안 열림) 없으면 같은 칸**을 다시 돈다(멈추지 않는다)
+     *   `diff` = 그 부대가 도는 단 — 잠김을 그 단의 기록으로 센다 (2026-10-10 · R236) · 단 안의 칸만 고른다 — 바퀴를 넘는 것은 `nextRepeat` 이 가른다 (2026-10-24 · R354)
+     */
+    function nextStageOf(state, stageId, cycle, diff = curDiff(state)) {
+        if (cycle) {
+            const cells = deps.stageOrder.filter(id => samePlace(id, stageId));
+            return cells[(cells.indexOf(stageId) + 1) % cells.length] ?? stageId;
+        }
+        const nx = deps.stageOrder[deps.stageOrder.indexOf(stageId) + 1];
+        return nx != null && stageUnlocked(state, nx, diff) ? nx : stageId;
+    }
+
+    /* ── 챕터보스 재등장 [신설 2026-10-10 · R240 · base_expedition_design §1-2 · 사용자 「보스는 죽으면 … 1분동안 대기」] ──
+       죽은 챕터보스는 [balance.csv:boss_respawn_sec] 동안 안 돌아온다 — **부대가 아니라 칸 × 단의 상태**라 그동안 어느 부대도 그 칸으로 못 나간다.
+       세이브에는 **죽은 실제 시각**을 적는다(돌아오는 시각이 아니라) — 손잡이를 바꾸면 곧바로 먹는다. 실제 시각은 화면 층만 알아서(배속) 런이 끝난 순간 알려 준다 */
+    const bossKey = (diff, stageId) => `${diff}|${stageId}`;
+    const isChapterBoss = stageId => deps.stages[stageId]?.boss_grade === 'chapter_boss';
+
+    /** 그 칸 × 단의 챕터보스가 돌아오는 시각(ms) — 적힌 것이 없으면 null · 지난 시각이어도 돌려준다(비교는 부르는 쪽의 `now`) · rng 0 */
+    function bossRespawnAt(state, stageId, diff = curDiff(state)) {
+        const at = state.bossDown?.[bossKey(diff, stageId)];
+        return Number.isFinite(at) ? at + B.boss_respawn_sec * 1000 : null;
+    }
+    const respawnErr = (state, stageId, diff, now) => (bossRespawnAt(state, stageId, diff) ?? -Infinity) > now ? 'respawn' : null;
+
+    /**
+     * 런이 실제로 끝난 순간을 알린다 — **이긴 챕터보스 칸**이면 그 칸 × 단의 보스가 그 순간 죽은 것으로 적는다(같은 키는 덮는다 · 이미 돌아온 키는 걷는다).
+     * `endedAt` = `nextRepeat` 에 넘기는 것과 같은 값(화면 층이 잰다 · `resolveBattle` 은 자기 `now`) · 진 런 · 철수 · 끊김 · 다른 칸은 아무것도 안 한다 · rng 0
+     * @returns 적었나
+     */
+    function noteRunEnd(state, run, endedAt) {
+        if (!run?.done || run.report?.won !== true || !isChapterBoss(run.stageId) || !Number.isFinite(endedAt)) return false;
+        const down = state.bossDown ?? (state.bossDown = {});
+        for (const [k, at] of Object.entries(down)) if (at + B.boss_respawn_sec * 1000 <= endedAt) delete down[k];
+        down[bossKey(run.difficulty ?? BASE_DIFF, run.stageId)] = endedAt;
+        return true;
+    }
+
+    function canDepart(state, stageId, now, no = state.preset, diff = curDiff(state)) {
+        // **그 편성의** 원정이 도는 중이어도 막지 않는다 — 보내면 `departRun` 이 그 부대를 끊는다 (R92 · 다른 부대는 안 건드린다)
+        //   원정은 건물 밖이다 — 처음부터 열려 있어 `hasFeature` 를 묻지 않는다 (2026-09-25 · R161 · 원정 건물은 2026-10-22 에 걷혔다 · R319)
+        //   난이도 `diff`(기본 고른 단 · R236) — 그 단이 안 열렸거나 그 단에서 아직 못 들어가는 칸이면 `locked`
+        if (!stageUnlocked(state, stageId, diff)) return 'locked';
+        // 챕터보스가 죽어 있다 — 그 칸 × 단의 보스가 돌아올 때까지 어느 편성도 못 나간다 (2026-10-10 · R240)
+        const wait = respawnErr(state, stageId, diff, now);
+        if (wait) return wait;
+        // 편성 `no`(기본 고른 편성)로 나간다 [2026-09-21 · R122] — 없는 편성 · 빈 파티 · **수색 나간 영웅이 든 편성**은 못 나간다.
+        //   편성은 계획이라 든 채로 수색을 보낼 수 있고 여기서 막는다. ~~「아웃을 빼고 아무도 안 남으면」~~ 은 2026-09-08 삭제 —
+        //   아웃이 런을 넘지 않으므로 언제나 전원이 나간다 (base_expedition_design §1-1)
+        //   **다부대** [2026-09-23] — 다른 부대에서 싸우는 영웅이 든 편성(`busy`) · 도는 부대가 이미 상한만큼(`full`)도 여기서 막는다
+        return presetErr(state, presetAt(state, no), no);
+    }
+
+    /* ~~`stageLevelState(state, stageId)`~~ · ~~`setStageLevel(state, stageId, level)`~~ 은 2026-09-29 삭제 — **위험도(스테이지 레벨 올리기 · R87) 폐지**
+       [사용자 「위험도 없어 이제」 · PLAN_expedition_window D1 · D3]. 몬스터 레벨은 **칸의 기본 레벨 `stage.csv:dlvl` 고정**이고 플레이어가 바꾸는 숫자가 없다.
+       옛 세이브의 올린 양(`progress.levelUp`)은 로드가 지운다 · 결과 코드 `range` 도 함께 사라졌다 */
+
+    /* ~~`activeParty(state, stageId)`~~ · ~~`continuing`~~ 은 2026-09-08 삭제 — 「출정 아웃」 폐기.
+       반복으로 잇는 런에도 **전원이 다시 나간다**(런이 끝나면 회복 · base_expedition_design §1-1 개정 09-08). */
+
+    /**
+     * 출발 때 켜진 전술 — 그 편성의 칸 중 **열렸고 조건이 선** 옵션 [2026-09-21 · R130 · tactic_card_design §2-1]. 원정은 이것만 산다:
+     *   도중 리롤 · 새로 열린 칸은 다음 런부터 · 출발 때 꺼져 있던 것은 그 런에서 안 켜진다(교체로 전술을 **켜는** 길이 없다)
+     */
+    const tacticSnap = (state, party, no) => tacticState(state, party, no).slots.filter(s => s.open && s.active).map(s => s.option);
+    /** 스냅숏 중 **지금 그 인원으로 조건이 선** 것 — 교체로 조건이 깨지면 꺼지고 되찾으면 다시 켜진다 (R130) */
+    //   `fixed` = 출발 때 굳힌 전열 명단 · 같이 깬 칸 수 — 원정 중에 그 편성의 진형을 고쳐도 도는 원정의 조건은 안 흔들린다 (R134)
+    const snapMeasure = (state, snap, party, no = state.preset, fixed = null) => {
+        const ctx = TC.contextOf(partyMembers(state, party, no, fixed?.front ?? null), { bond: fixed ? fixed.bond : bondOf(state, party) });
+        return snap.map(option => ({ option, ...TC.measure(option, ctx) }));
+    };
+    /** 잰 칸 하나 → `bonusOf` 가 받는 옵션 — 값은 **리더 보너스를 탄 적용 값**(`measure` 의 `value` · 2026-10-24 · R340 · tactic_card_design §5-10) */
+    const applied = m => ({ ...m.option, value: m.value });
+
+    // 액티브는 **전투 안에서만** 산다 — 쿨·창·배리어는 HP 와 같은 취급이라 세이브에 넣지 않는다 (INTERFACE §4)
+    // `snap` = 원정의 전술 스냅숏(`departRun`) — 있으면 그 옵션 중 지금 조건이 선 것만 보너스로 넘긴다 (R130). 없으면 편성의 칸을 지금 센다
+    const partyUnits = (state, uids, no = state.preset, snap = null, fixed = null) => {
+        const p = presetAt(state, no) ?? curPreset(state);   // 편성 `no` — 원정은 나간 편성을 넘긴다 (R122)
+        // 자리 — 전투가 「앞」을 읽는 유일한 입력 (진형 2026-09-09) · 둘째 라운드부터는 안 읽힌다(`refit`) · 원정은 **출발 때 굳힌 자리**다(`fixed.byUid` — 이어 가는 런은 처음 나간 편성의 자리 · 2026-09-29)
+        const byUid = fixed?.byUid ?? formationOf(p).byUid;
+        const list = uids ?? p.party;
+        const base = snap ? TC.bonusOf(snapMeasure(state, snap, list, no, fixed).filter(m => m.active).map(applied)) : undefined;
+        // 신단 [2026-09-29 · base_expedition_design §1-2] — 그 런이 입는 신단(`fixed.shrine`)을 **전술 보너스와 같은 채널에** 더한다 · 새 곱셈 층이 없다
+        const tactic = fixed?.shrine ? withShrine(base ?? tacticBonus(state, list, no), fixed.shrine) : base;
+        return list.map(uid => {
+            const h = heroById(state, uid);
+            return {
+                uid, combat: heroCombat(state, h, list, no, tactic),  // 전술 조건도 이 인원으로 센다 — 원정은 나간 인원이다 (R92) · 칸은 나간 편성의 것 (R129) · 출발 때 켜진 것만 (R130)
+                stats: h.stats,                           // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef · 2026-09-10 R72)
+                // 둘째 칸 = 책으로 배운 스킬(`h.bookSkill`) — ~~무기가 든 스킬~~ 2026-09-29 R179 · 낀 장비의 특정 스킬 +n 이 고유 · 배운 칸 레벨에 더해진다(2026-10-08 · R225)
+                actives: SK.activesFor(h, { skillPlus: I.skillPlusOf(heroItems(state, h)) }),
+                weaponGroup: weaponGroupOf(state, h),     // 든 무기군 · 맨손 null — 무기가 필요한 스킬은 그 직업 무기를 들어야 나간다(battle · skill.fitsWeapon · R187 · R204 · skill_design §2-2)
+                rank: byUid[uid] ?? 0,                    // 배치가 없으면 전열 — 뒤에 숨는 유닛을 만들지 않는다
+            };
+        });
+    };
+
+    /* ── 원정 — **라운드 단위로 진행한다** [2026-09-14 · R89 · base_expedition_design §1-1 · 사용자 확정] ──
+       출발(`departRun`)이 첫 라운드를 열고, **재생 시각을 따라 걸음마다**(`stepRun` · R130) 엔진을 그 시각까지만 민다 — 라운드가 끝나면
+       **이긴 라운드만** 정산하고 경계에서 갈아입는다. 원정 중 장비 · 스킬 트리 교체는 **다음 걸음의 첫머리 = 바꾼 시각**에 먹는다
+       (보스 라운드 도중도 포함 · base_expedition_design §1-5) — 보상이 들어오는 시각이 곧 라운드가 끝나는 시각이다.
+       ~~런은 출발 시점에 통째로 정산된다 — 관전은 재생일 뿐~~ 은 폐기: 드롭이 실시간이 아니었고(출발 순간 가방에 다 들어갔다)
+       건너뛰기 → 다시 출발로 원정을 몇 초에 하나씩 돌릴 수 있었다.
+       런 핸들은 **세이브에 안 든다** — 전투 안의 HP · 쿨 · 창과 같은 취급이다. 게임이 꺼지면 그 원정은 끊긴다(`closeRun`) */
+
+    /** 리포트의 레벨업 — 영웅마다 한 줄로 합친다(`from` = 원정 전 · `to` = 지금) */
+    const mergeLevelUp = (list, lu) => {
+        const had = list.find(x => x.uid === lu.uid);
+        if (!had) { list.push({ ...lu, gains: {} }); return; }
+        had.to = lu.to;
+        had.points = (had.points ?? 0) + (lu.points ?? 0);
+    };
+
+    /**
+     * 그 부대의 도는 리포트 — 판정이 아직 없고(`reason: null`) 그 부대가 나간 시각의 것. 안 돌면 null.
+     * **편성 번호로 가린다** [v38 · 2026-09-23 다부대] — 부대가 여럿이면 `reason: null` 인 리포트도 여럿이라 시각만으로는 못 가린다(`report.preset`)
+     */
+    const liveReport = (state, no) => {
+        const run = runAt(state, no);
+        return run?.active ? state.reports.find(r => r.preset === no && r.at === run.lastAt && r.reason === null) ?? null : null;
+    };
+
+    /** 끝났거나 **끊긴** 원정의 핸들인가 — 끊기(새 출발 · `closeRun`)는 핸들 없이 리포트 판정만 세운다 (R92) */
+    const runOver = run => !run || run.done || run.report.reason !== null;
+
+    /**
+     * 나가 있는 부대의 마지막 리포트 — 도는 중이면 그 런의 리포트(`liveReport` 와 같다) · **칸 사이면 막 끝난 런의 리포트**다 · 안 나가 있으면 null [2026-09-29].
+     * 이어 가는 런은 처음 나간 편성 그대로 나가므로(`departRun` 의 `prev`) 칸 사이에도 이 리포트의 `party` 가 곧 그 부대의 인원이다 ·
+     * 재도전이 고친 편성으로 나가도(2026-10-24) 바뀌는 것은 다음 런이 선 순간이다 — 칸 사이엔 막 진 런의 인원이 나가 있다
+     */
+    const outReport = (state, no) => {
+        const run = runAt(state, no);
+        return run && (run.active || run.auto === true) ? state.reports.find(r => r.preset === no && r.at === run.lastAt) ?? null : null;
+    };
+
+    /**
+     * 지금 **나가 있는** 영웅 — 그 부대가 나갈 때의 인원 [신설 2026-09-14 · R92 · **다부대 2026-09-23** · **칸 사이 포함 2026-09-29**]. 원정 중에도 편성을 바꾸고 고르므로 **그 편성의 지금 파티**와 다를 수 있다 —
+     * 파티에서 뺀 영웅도 **철수할 때까지** 나가 있고(이어 가는 런도 처음 나간 인원 그대로다), 새로 넣은 영웅은 안 나간다. 해고가 이것으로 막는다(`heroBusy` · 전직은 2026-10-24 부터 안 막는다).
+     * **런이 끝나 다음 칸을 기다리는 동안도 든다**(`runningNos`) — 칸 사이에 다른 일을 시키는 틈이 없다. 나가 있는 부대가 없으면 `[]`.
+     * `no` 를 주면 **그 부대**의 인원, 안 주면 **나가 있는 모든 부대를 합친 것**(중복 없음 · 편성 번호 순)
+     */
+    function runParty(state, no) {
+        if (no !== undefined) return outReport(state, no)?.party.slice() ?? [];
+        const out = [];
+        for (const n of runningNos(state)) for (const uid of outReport(state, n)?.party ?? []) if (!out.includes(uid)) out.push(uid);
+        return out;
+    }
+
+    /**
+     * 그 영웅이 나가 있는 부대 — 편성 번호 · 안 나가 있으면 null [신설 2026-09-23 · 다부대 · 칸 사이 포함 2026-09-29].
+     * `heroBusy` 가 `'run'` 이라고만 말하는 자리에서 **어느 부대인지**가 필요할 때 읽는다(영웅 띠 · 출발의 `busy`).
+     * 한 영웅은 한 부대에만 서므로 답은 하나다 · rng 0
+     */
+    const runOf = (state, uid) => runningNos(state).find(n => (outReport(state, n)?.party ?? []).includes(uid)) ?? null;
+
+    /**
+     * 영웅이 지금 하는 일 — `'run'`(**나가 있는 어느 부대든** 그 인원 · 칸 사이 포함 · 철수해야 풀린다 · `runParty` · 어느 부대인지는 `runOf`) · `'explore'`(탐험 나감) · `'advance'`(전직 중) · `null`(마을) [신설 2026-09-22 · INTERFACE §2-7].
+     * **영웅을 붙잡는 활동의 판정은 여기 한 곳이다** — 편성 · 출발 · 해고 · 수색 · 화면의 「지금 하는 일」이 모두 이것을 읽는다.
+     *   전직처럼 영웅을 붙잡는 활동이 생기면 여기에 더한다(흩어져 있던 `runParty(…).includes` · `search.heroUid ===` 를 걷었다 — 2026-09-22 구조 감사).
+     * ~~`'search'`(수색 나감)~~ 은 2026-10-19 수색 삭제로 사라졌다 — 찾아온 영웅은 영웅을 붙잡지 않는다.
+     * 쓰러짐(`result.downed`)은 하는 일이 아니라 **전투 안의 상태**다 — 원정 밖 행동을 아무것도 막지 않는다 (R300)
+     */
+    function heroBusy(state, uid) {
+        if (exploreOf(state, uid)) return 'explore';   // 탐험 나감 — 결과를 받을 때까지 (2026-10-09)
+        if (runParty(state).includes(uid)) return 'run';
+        if (advancingOf(state, uid)) return 'advance';   // 도서관에서 전직하는 중 (2026-09-28 · R16 · 도서관 2026-10-09)
+        return null;   // ~~'dispatch' — 자원 자리~~ 2026-10-18 퇴역(연구소에 영웅이 안 앉는다 · R283)
+    }
+
+    /* ── 전직 — 도서관 작업 [신설 2026-09-28 · R16 · skill_design §4 · GAME_DESIGN §9 09-27 · INTERFACE §2-7 · 2026-10-09 ~~훈련장~~ → 도서관 r2 · R231 · 2026-10-16 → r3 · R263] ──
+       갈래는 직업마다 셋(`advance.csv`) · **갈래는 되돌릴 수 없다** · 영웅을 넣어 두면 `[balance.csv:advance_hours]` 뒤에 끝난다.
+       전직 스킬은 그 갈래의 `skill.csv` 행(`owner_kind=advance`) 중 **하나를 첫 전직 포인트로 배운다 · 되돌리면 포인트가 전부 돌아온다** — 배운 것이 액티브 전직 칸(`skill.activesFor`)
+       [2026-10-06 · R216 · skill_design §4 — ~~무료로 되돌린다~~] 전직 포인트는 마스터리와 따로다 — 남은 것을 스킬 레벨(`advanceLevelUp`)에 쓴다 · 가지 셋은 설명만(`advance_node.csv`) */
+    const advanceRows = (deps.advances ?? []).map(r => ({
+        id: r.advance_id, cls: r.class_id, order: Number(r.sort_order) || 0, name: { ko: r.name_kr, en: r.name_en },
+        desc: { ko: r.desc_kr ?? '', en: r.desc_en ?? '' },   // 갈래를 상징하는 한 줄 (2026-09-28 사용자 지시)
+    })).sort((a, b) => a.order - b.order);
+    const advanceById = Object.fromEntries(advanceRows.map(a => [a.id, a]));
+    (() => {
+        const bad = why => { throw new Error(`advance: ${why}`); };
+        const seen = new Set();
+        for (const a of advanceRows) {
+            if (!a.id || seen.has(a.id)) bad(`advance_id '${a.id}'`);
+            seen.add(a.id);
+            if (!a.cls) bad(`${a.id} — class_id 가 없다`);
+            if (!a.name.ko || !a.name.en) bad(`${a.id} — 이름이 비었다`);
+            if (!a.desc.ko || !a.desc.en) bad(`${a.id} — 설명이 비었다`);
+        }
+        // 전직 스킬 행은 있는 갈래를 가리켜야 한다 — 모르는 갈래의 스킬은 아무도 못 배운다
+        for (const d of SK?.list ?? []) if (d.ownerKind === 'advance' && !advanceById[d.ownerId]) bad(`skill ${d.id} — 모르는 갈래 '${d.ownerId}'`);
+    })();
+    /** 갈래의 스킬 — `priority` 순 */
+    const advanceSkills = id => (SK?.list ?? []).filter(d => d.ownerKind === 'advance' && d.ownerId === id)
+        .sort((a, b) => a.priority - b.priority).map(d => d.id);
+    /* 전직 가지 — `advance_node.csv` [2026-10-06 · R216 · skill_design §4 · §10] — 전직 스킬마다 ② 특수 · ③ 변형 · ④ 필살기(`slot` 2 · 3 · 4).
+       **설명만이다** — 효과는 아직 전투에 안 걸리고 찍을 수 없다. `hold` = 기획서의 보류 · 미정 칸(설명이 `-`) */
+    const advanceNodesBy = new Map();
+    (() => {
+        const bad = why => { throw new Error(`advance_node: ${why}`); };
+        const rows = deps.advanceNodes ?? [];
+        for (const r of rows) {
+            const d = SK?.defs?.[r.skill_id];
+            if (!d || d.ownerKind !== 'advance') bad(`${r.skill_id} — 전직 스킬이 아니다`);
+            if (![2, 3, 4].includes(r.slot)) bad(`${r.skill_id} — slot '${r.slot}' (2 · 3 · 4 = ② · ③ · ④)`);
+            if (r.hold !== 0 && r.hold !== 1) bad(`${r.skill_id}#${r.slot} — hold '${r.hold}' (0 · 1)`);
+            // 보류 칸은 설명이 없다 · 선 칸은 ko · en 둘 다 있다 — 한쪽만 비면 화면이 반쪽 칸을 그린다
+            const blank = v => v === '-' || v === '' || v === undefined;
+            if (r.hold === 1 ? !(blank(r.desc_kr) && blank(r.desc_en)) : (blank(r.desc_kr) || blank(r.desc_en))) bad(`${r.skill_id}#${r.slot} — hold ${r.hold} 인데 설명 '${r.desc_kr}' · '${r.desc_en}'`);
+            const list = advanceNodesBy.get(r.skill_id) ?? [];
+            if (list.some(x => x.slot === r.slot)) bad(`${r.skill_id}#${r.slot} — 칸이 두 번`);
+            list.push({ slot: r.slot, hold: r.hold === 1, desc: r.hold === 1 ? null : { ko: r.desc_kr, en: r.desc_en } });
+            advanceNodesBy.set(r.skill_id, list);
+        }
+        // 표를 넘겼으면 전직 스킬마다 칸 셋이 다 있어야 한다 — 빠진 스킬은 판에 빈 칸이 선다
+        if (rows.length) for (const d of SK?.list ?? []) if (d.ownerKind === 'advance') {
+            const got = (advanceNodesBy.get(d.id) ?? []).map(x => x.slot).sort().join(' · ');
+            if (got !== '2 · 3 · 4') bad(`${d.id} — 가지 칸이 [${got}] — ② · ③ · ④ 셋이어야 한다`);
+        }
+        for (const list of advanceNodesBy.values()) list.sort((a, b) => a.slot - b.slot);
+    })();
+    /**
+     * 전직 포인트 [2026-10-06 · R216 · skill_design §4] — 마스터리 포인트와 **따로**다. 전직했으면 전직 레벨 `[balance.csv:advance_unlock_level]` 에 1 ·
+     *   그 뒤 `[balance.csv:advance_point_interval]` 레벨마다 1. 첫 포인트로 전직 스킬을 배우고 나머지를 스킬 레벨에 쓴다(가지는 아직 못 찍는다)
+     */
+    const advancePointsOf = h => {
+        if (!h?.advance) return 0;
+        const over = h.level - B.advance_unlock_level;
+        return over >= 0 ? 1 + Math.floor(over / Math.max(1, B.advance_point_interval)) : 0;
+    };
+    /** 쓴 전직 포인트 — 배운 것이 첫 포인트 + 배운 뒤 더 넣은 것(`advanceUp`) */
+    const advanceSpentOf = h => (h?.advanceSkill ? 1 : 0) + (h?.advanceUp ?? 0);
+    const advanceFreeOf = h => Math.max(0, advancePointsOf(h) - advanceSpentOf(h));
+    const advancingList = state => state.advancing ?? [];
+    const advancingOf = (state, uid) => advancingList(state).find(x => x.uid === uid) ?? null;
+    const advanceMs = () => (openAll() ? 0 : Math.max(0, B.advance_hours ?? 0) * 3600000);
+    /** 지금 시작하면 나올 거절 — `advanceStart` 와 카드(`advanceState`)가 이 하나를 읽는다 */
+    const advanceErr = (state, uid, branchId = null) => {
+        if (!hasFeature(state, 'advance')) return 'unbuilt';
+        const h = heroById(state, uid);
+        if (!h) return 'missing';
+        if (branchId !== null && advanceById[branchId]?.cls !== h.cls) return 'class';
+        if (h.advance) return 'done';
+        if (advancingOf(state, uid)) return 'working';
+        if (h.level < B.advance_unlock_level) return 'level';   // 관리자 모드도 본다 (2026-10-14 사용자 「30레벨이 안됬는데 전직이 되는데?」 · 스킬북 문턱과 같다)
+        // 원정에서 싸우는 중이어도 된다 — 갈래만 정하고 전투에 안 걸린다 · 배운 전직 스킬은 다음 걸음 첫머리의 `refit` 이 먹는다 (2026-10-24 사용자 지시 · ~~`running`~~)
+        if (heroBusy(state, uid) === 'explore') return 'exploring';   // 탐험 나감 (2026-10-09)
+        // 전직 비용 [2026-10-29 · R373 · skill_design §4 · 사용자 「5만으로해보자」] — 골드 [balance.csv:advance_gold] 를 내면 바로 끝난다(시간 없음 — advance_hours 0)
+        if ((state.resources.gold ?? 0) < B.advance_gold) return 'gold';
+        return null;
+    };
+    function advanceState(state, uid, now) {
+        const h = heroById(state, uid);
+        const w = h ? advancingOf(state, uid) : null;
+        const span = w ? Math.max(1, w.until - w.since) : 1;
+        return {
+            open: hasFeature(state, 'advance'),
+            need: { have: h?.level ?? 0, need: B.advance_unlock_level },
+            gold: { have: state.resources.gold ?? 0, need: B.advance_gold },   // 전직 비용 (R373)
+            hero: {
+                advance: h?.advance ?? null, skill: h?.advanceSkill ?? null,
+                // 전직 스킬 레벨 · 전직 포인트 (2026-10-06 · R216) — 레벨 = 배운 것 1 + 더 넣은 것 · 안 배웠으면 0
+                lv: h?.advanceSkill ? 1 + (h.advanceUp ?? 0) : 0,
+                points: { have: advancePointsOf(h), spent: advanceSpentOf(h), free: advanceFreeOf(h) },
+                working: w ? { branch: w.branch, since: w.since, until: w.until, frac: Math.min(1, Math.max(0, (now - w.since) / span)) } : null,
+            },
+            branches: h ? advanceRows.filter(a => a.cls === h.cls).map(a => ({ id: a.id, name: a.name, desc: a.desc, skills: advanceSkills(a.id) })) : [],
+            // 그 영웅 갈래의 스킬마다 가지 셋 — 설명만(찍을 수 없다 · `advance_node.csv` · R216)
+            nodes: h ? Object.fromEntries(advanceRows.filter(a => a.cls === h.cls).flatMap(a => advanceSkills(a.id)).map(id => [id, advanceNodesBy.get(id) ?? []])) : {},
+            err: advanceErr(state, uid),
+        };
+    }
+    function advanceStart(state, uid, branchId, now) {
+        const err = advanceErr(state, uid, branchId);
+        if (err) return { ok: false, err };
+        const until = now + advanceMs();
+        state.resources.gold -= B.advance_gold;
+        state.advancing = [...advancingList(state), { uid, branch: branchId, since: now, until }];
+        advanceSettle(state, now);   // 관리자 모드(시간 0)는 곧바로 끝난다
+        return { ok: true, until };
+    }
+    function advanceSettle(state, now) {
+        const done = [];
+        state.advancing = advancingList(state).filter(w => {
+            if (w.until > now) return true;
+            const h = heroById(state, w.uid);
+            if (h && !h.advance) { h.advance = w.branch; h.advanceSkill = null; delete h.advanceUp; done.push(w.uid); }
+            return false;
+        });
+        return { done };
+    }
+    function advanceLearn(state, uid, skillId) {
+        const h = heroById(state, uid);
+        if (!h) return { ok: false, err: 'missing' };
+        if (!h.advance) return { ok: false, err: 'none' };
+        if (h.advanceSkill) return { ok: false, err: 'learned' };
+        if (!advanceSkills(h.advance).includes(skillId)) return { ok: false, err: 'skill' };
+        // 첫 전직 포인트로 배운다 (2026-10-06 · R216 — ~~무료~~)
+        if (advanceFreeOf(h) < 1) return { ok: false, err: 'points' };
+        h.advanceSkill = skillId;
+        return { ok: true };
+    }
+    function advanceForget(state, uid) {
+        const h = heroById(state, uid);
+        if (!h) return { ok: false, err: 'missing' };
+        if (!h.advanceSkill) return { ok: false, err: 'empty' };
+        h.advanceSkill = null;
+        delete h.advanceUp;   // 쓴 포인트 전부 환급 — 배운 것 1 + 더 넣은 것 (2026-10-06 · R216)
+        return { ok: true };
+    }
+    /** 전직 스킬 레벨 +1 — 전직 포인트 1 을 쓴다 [신설 2026-10-06 · R216 · skill_design §4]. 상한은 따로 없다 — 받는 포인트가 끝이다 · rng 0 */
+    function advanceLevelUp(state, uid) {
+        const h = heroById(state, uid);
+        if (!h) return { ok: false, err: 'missing' };
+        if (!h.advance) return { ok: false, err: 'none' };
+        if (!h.advanceSkill) return { ok: false, err: 'empty' };
+        if (advanceFreeOf(h) < 1) return { ok: false, err: 'points' };
+        h.advanceUp = (h.advanceUp ?? 0) + 1;   // 도는 원정이면 다음 걸음 첫머리의 `refit` 이 먹는다 (마스터리와 같다)
+        return { ok: true, lv: 1 + h.advanceUp };
+    }
+
+    /* ── 스킬북 [신설 2026-09-29 · R179 · skill_design §2-1 · construction_draft §2 도서관 · INTERFACE §2-7] ──
+       둘째 액티브 칸 = **책으로 배운 스킬**(`hero.bookSkill`). 처치(`settleRound`) · 상단은 **스킬 도안**을 주고 책은 도서관이 **도안 한 장 + 골드 · 가루**로 만든다
+       (2026-10-20 · R293 — ~~처치가 책을 떨구고 상단이 책을 판다 · 도안 = 스킬 도감 Lv1 영구 해금~~) —
+       **책은 소모품이라 쌓인다**(2026-09-30 사용자 지시 — 가진 책도 +1 · 배우면 1권을 쓴다).
+       배우면 영구 · 다른 책은 덮어쓴다(앞의 것은 책으로 안 돌아온다) · 빼는 길이 없다 · 책이 없으면 칸은 빈 채로 간다. 전부 rng 0
+       **같은 책이면 업그레이드다** [2026-10-06 · R216 · skill_design §2-3 — ~~`same` 거절~~] — 이미 가진 스킬(고유 · 배운 칸)의 책은 칸을 늘리지 않고
+       그 스킬의 레벨을 올린다(`hero.skillLv` · 드는 책은 피보나치 · 상한 = `skillCapMax` — 2026-10-20 · R293) · 다른 책으로 덮어쓰면 쌓은 레벨도 사라진다 */
+    /**
+     * 가진 스킬 도안 [2026-10-12 · R241 · skill_design §2-1 · **2026-10-20 · R293 — 쌓이는 소모품** · ~~스킬 도감 Lv1 영구 해금~~(10-16)] —
+     * `state.blueprints` 에 한 장 이상 있는 스킬 중 책이 되는 것(`bookable`) · `skill.csv` 행 순서 · rng 0
+     */
+    function craftableBooks(state) {
+        const bp = state.blueprints ?? {};
+        return (SK?.list ?? []).filter(d => bp[d.id] > 0 && bookable(d.id)).map(d => d.id);
+    }
+    /** 도안 한 장을 재고에 쌓는다 — 가진 도안이어도 +1 (2026-10-20 · R293) */
+    function addBlueprint(state, id) {
+        state.blueprints = state.blueprints ?? {};
+        state.blueprints[id] = (state.blueprints[id] ?? 0) + 1;
+    }
+    /** 책 한 권을 재고에 쌓는다 — 가진 책이어도 +1 */
+    function addBook(state, id) {
+        state.books = state.books ?? {};
+        state.books[id] = (state.books[id] ?? 0) + 1;
+    }
+    /* 책 정렬 [2026-10-14 · ADR-0620 · SCREEN_DESIGN §6] — 장비 정렬(`sortStorage`)과 같은 문법: 고른 기준 다음으로 남은 둘.
+       권수는 많은 것이 앞 · 직업은 `class.csv` 행 순서(전직 스킬은 제 직업) · 티어는 1 이 앞(티어가 없는 전직 스킬은 뒤) */
+    const cmpNum = (x, y) => (x > y) - (x < y);
+    const BOOK_CMP = {
+        count: (a, b) => b.n - a.n,
+        class: (a, b) => orderIn(H.classIds, a.cls) - orderIn(H.classIds, b.cls),
+        tier: (a, b) => cmpNum(a.tier ?? Infinity, b.tier ?? Infinity),
+    };
+    const BOOK_SORT_KEYS = { count: ['count', 'class', 'tier'], class: ['class', 'tier', 'count'], tier: ['tier', 'class', 'count'] };
+    /** 가진 책의 **키 순서**를 한 번 다시 세운다 — `bookState.books` 가 그 순서다(창고 스킬북 탭 · 도서관). 셋이 다 같으면 `skill.csv` 행 순서 · 권수 그대로 · rng 0 */
+    function sortBooks(state, key) {
+        const keys = BOOK_SORT_KEYS[key];
+        if (!keys) return { ok: false, err: 'invalid' };
+        const rows = (SK?.list ?? []).map(d => d.id);
+        const list = Object.entries(state.books ?? {}).map(([id, n]) => ({
+            id, n, cls: SK?.defs?.[id]?.classId ?? null, tier: SK?.defs?.[id]?.tier ?? null, row: orderIn(rows, id),
+        }));
+        list.sort((a, b) => {
+            for (const k of keys) { const d = BOOK_CMP[k](a, b); if (d) return d; }
+            return a.row - b.row;
+        });
+        state.books = Object.fromEntries(list.map(x => [x.id, x.n]));
+        return { ok: true };
+    }
+    /** 배우기의 책 밖 거절 — `learnBook` 과 `bookState.hero.err` 가 같은 판정을 쓴다 */
+    function learnGate(state, h) {
+        if (!hasFeature(state, 'skillbook')) return 'unbuilt';
+        if (!h) return 'missing';
+        // 관리자 모드도 레벨 문턱을 본다 [2026-09-29 사용자 지시 「10제한은 Admin에서도 걸리게」] — 전직(`advanceGate`)과 다르다
+        if (h.level < B.skillbook_learn_level) return 'level';
+        return null;   // 쓰러진 영웅도 배운다 (2026-10-21 · R300 — ~~`downed`(R130)~~)
+    }
+    function craftGate(state, id) {
+        if (!hasFeature(state, 'book_craft')) return 'unbuilt';
+        if (!bookable(id)) return 'missing';
+        if (!craftableBooks(state).includes(id)) return 'blueprint';
+        if (state.resources.gold < B.book_craft_gold) return 'gold';
+        // 가루 · 약초(최하급 · 2026-10-29 · R373) — 모자라면 하나로 `materials`
+        if ((state.materials?.[DUST_ID] ?? 0) < B.book_craft_dust || (state.materials?.[materialIdOf('herb')] ?? 0) < B.book_craft_herb) return 'materials';
+        return null;
+    }
+    /** 업그레이드 n 번째(1 부터)에 드는 같은 책 수 [2026-10-06 · R216 · skill_design §2-3] — 첫째 · 둘째는 키 · 셋째부터 앞 두 단계의 합(피보나치) */
+    function upgradeBooks(n) {
+        let a = B.skillbook_upgrade_books_1, b = B.skillbook_upgrade_books_2;
+        if (n <= 1) return a;
+        for (let k = 3; k <= n; k++) [a, b] = [b, a + b];
+        return b;
+    }
+    /**
+     * 이 영웅이 이 책을 읽으면 무엇이 되나 — `bookState` 의 `plan` 과 `learnBook` 이 이 하나를 읽는다 (2026-10-06 · R216).
+     *   `upgrade` = 이미 가진 스킬(고유 · 배운 칸) — 그 단계에 드는 책 · 상한(`skillCapMax`)이면 `maxUp` /
+     *   `learn` = 새로 배운다(배운 칸을 덮어쓴다) — 1권. 책 밖 거절은 `learnGate`
+     */
+    function bookPlan(state, h, id) {
+        const have = state.books?.[id] ?? 0;
+        if (!h || (id !== h.innate && id !== h.bookSkill)) return { act: 'learn', lv: 0, need: 1, err: have >= 1 ? null : 'book' };
+        const lv = h.skillLv?.[id] ?? 0;
+        if (lv >= skillCapMax()) return { act: 'upgrade', lv, need: null, err: 'maxUp' };
+        const need = upgradeBooks(lv + 1);
+        return { act: 'upgrade', lv, need, err: have >= need ? null : 'book' };
+    }
+    function bookState(state, uid = null) {
+        const h = uid ? heroById(state, uid) : null;
+        return {
+            open: hasFeature(state, 'skillbook'),
+            need: { have: h?.level ?? 0, need: B.skillbook_learn_level },
+            books: Object.keys(state.books ?? {}).filter(id => state.books[id] > 0)
+                .map(id => ({ id, n: state.books[id], ...(h ? { plan: bookPlan(state, h, id) } : {}) })),
+            craft: craftableBooks(state).map(id => ({ id, n: state.blueprints[id], gold: B.book_craft_gold, dust: B.book_craft_dust, herb: B.book_craft_herb, err: craftGate(state, id) })),
+            hero: uid ? { skill: h?.bookSkill ?? null, innate: h?.innate ?? null, lv: { ...(h?.skillLv ?? {}) }, err: learnGate(state, h) } : null,
+        };
+    }
+    function learnBook(state, uid, skillId) {
+        const h = heroById(state, uid);
+        const gate = learnGate(state, h);
+        if (gate === 'unbuilt') return { ok: false, err: gate };
+        if (!h || !bookable(skillId)) return { ok: false, err: 'missing' };
+        if (gate) return { ok: false, err: gate };
+        if (!state.books?.[skillId]) return { ok: false, err: 'book' };
+        const plan = bookPlan(state, h, skillId);
+        if (plan.err) return { ok: false, err: plan.err };
+        const spend = n => {
+            state.books[skillId] -= n;
+            if (state.books[skillId] <= 0) delete state.books[skillId];
+        };
+        // 도는 원정이면 다음 걸음 첫머리의 `refit` 이 먹는다 (마스터리 · 전직 스킬과 같다)
+        if (plan.act === 'upgrade') {
+            spend(plan.need);
+            h.skillLv = { ...(h.skillLv ?? {}), [skillId]: plan.lv + 1 };
+            return { ok: true, upgraded: true, lv: plan.lv + 1, replaced: null };
+        }
+        const replaced = h.bookSkill ?? null;
+        spend(1);
+        // 덮어쓴 스킬의 업그레이드는 같이 사라진다 — 고유와 같은 id 면 고유 것이라 둔다 (skill_design §2-3)
+        if (replaced && replaced !== h.innate && h.skillLv?.[replaced] !== undefined) {
+            delete h.skillLv[replaced];
+            if (Object.keys(h.skillLv).length === 0) delete h.skillLv;
+        }
+        h.bookSkill = skillId;
+        return { ok: true, replaced, upgraded: false };
+    }
+    function craftBook(state, skillId) {
+        const err = craftGate(state, skillId);
+        if (err) return { ok: false, err };
+        state.resources.gold -= B.book_craft_gold;
+        state.materials[DUST_ID] -= B.book_craft_dust;
+        if (B.book_craft_herb > 0) state.materials[materialIdOf('herb')] -= B.book_craft_herb;
+        // 도안 한 장이 책 한 권이 된다 — 같은 책을 모으려면 같은 도안을 모은다 (2026-10-20 · R293 · skill_design §2-1)
+        state.blueprints[skillId] -= 1;
+        if (state.blueprints[skillId] <= 0) delete state.blueprints[skillId];
+        addBook(state, skillId);
+        return { ok: true };
+    }
+
+    /* ── 연구소 — 줄 × 지점 [신설 2026-09-27 · SCREEN_DESIGN §8 · INTERFACE §2-7 · 개정 2026-10-18 영웅 배치 삭제(R283) ·
+       **개정 2026-10-21 — 지점 · 연구 시간 · 등록 효과 · 훈련 · 도박장**(R298 · base_expedition §2-1 「지점」)] ──
+       줄 = `LAB_LINES` · 줄마다 지점(`lab_node.csv`) — 레벨 = `labNodes['줄:지점']` · 값 = base + 레벨 × per_lv(간격 · 범위만 모양이 다르다 — `nodeValue`).
+       **지점 레벨 올리기 = 연구** — 연구소 전체에 한 번에 하나(`labResearch` · 사용자 「하나로」) · 시작할 때 비용 · 끝난 시각부터 새 값(`labSettle`).
+       **연구소 랭크가 지점을 연다**(`unlock_rank` · 사용자 「랭크에따라 줄의 새로운 지점이 열림」) · **「자원」 줄 하나가 재료 셋을 낸다** — 지점 채광 · 채집 · 벌목이 그 재료의 생산 배수(2026-10-25 · R356 — ~~줄 셋 · 「종류」가 단계를 연다~~).
+       **등록 효과** = 등록한 영웅의 능력치 일곱(효과 종류에 붙는다 — INTERFACE §5-3) · ~~칸 레벨 `labLevels`~~(2026-10-18 · R288)는 걷었다.
+       이름의 `dispatch` 는 옛 이름 그대로다(재료 지점 id `mine` · `gather` · `log` 와 함께 산다) */
+    /** 재료 지점 id — 「자원」 줄의 지점이자 생산 · 미니게임의 `post`(`lab_material.csv:post` · INTERFACE §5-3) */
+    const MAT_POSTS = ['mine', 'gather', 'log'];
+    /** 연구소 「자원」 줄의 재료 셋 — `lab_material.csv` 행 순서 = 화면 · 대박 굴림 순서 [2026-10-25 · R356 — ~~단계 표 셋 `mine_node` · `gather_node` · `log_node`~~] */
+    const LAB_MATERIALS = deps.labMaterials ?? [];
+    for (const m of LAB_MATERIALS) {
+        if (!MAT_POSTS.includes(m.post)) throw new Error(`state: lab_material.csv — 모르는 지점 '${m.post}' (INTERFACE §5-3)`);
+        if (LAB_MATERIALS.filter(x => x.post === m.post || x.id === m.id).length > 1) throw new Error(`state: lab_material.csv — '${m.post}' · '${m.id}' 가 두 번 있다`);
+    }
+    const MAT_BY_POST = Object.fromEntries(LAB_MATERIALS.map(m => [m.post, m]));
+    /**
+     * 재료 사다리 [2026-10-27 · R359 · item_design §5-2 · **단계 다섯 · 가루 2026-10-29 · R373**] — 줄마다 **최하급**(뿌리) → 위 단계(`material_synth.csv` 의 `from` 사슬 · 한 재료 위에 하나만).
+     *   뿌리 = 연구소 재료 셋(`lab_material.csv`) + **연구소가 안 캐는 뿌리**(`material_synth.csv` 의 `from = -` 행 — 가루 · 분해 · 도박장이 낸다).
+     * 한 줄 = `{id, post, tier, ko, en, from?, need?, gold?}` · `post` = **줄 열쇠**(연구소 재료는 그 지점 id · 연구소가 안 캐는 뿌리는 제 id) ·
+     *   뿌리는 `tier` 1 이고 `from` 이 없다 · 순서 = 뿌리 순서(연구소 셋 → 표의 뿌리 행) × 단계 — 재료 탭 · 관리자 채우기가 이 순서다
+     */
+    const SYNTH_ROWS = deps.materialSynth ?? [];
+    const isMatRoot = r => r?.from === '-' || r?.from == null;
+    const MAT_SYNTH = SYNTH_ROWS.filter(r => !isMatRoot(r));
+    const MAT_LADDER = (() => {
+        const bad = why => { throw new Error(`state: material_synth.csv — ${why} (INTERFACE §2-7)`); };
+        const roots = [...LAB_MATERIALS.map(m => ({ id: m.id, post: m.post, tier: 1, ko: m.ko, en: m.en })),
+            ...SYNTH_ROWS.filter(isMatRoot).map(r => {
+                if (r.need !== '-' || r.gold !== '-') bad(`${r.id} — 뿌리 행(from -)은 need · gold 도 - 다`);
+                return { id: r.id, post: r.id, tier: 1, ko: r.ko, en: r.en };
+            })];
+        const known = new Map();
+        for (const x of roots) {
+            if (!x.id || known.has(x.id)) bad(`뿌리 '${x.id}' 가 비었거나 겹친다`);
+            if (!x.ko || !x.en) bad(`${x.id} — 이름이 비었다`);
+            known.set(x.id, x);
+        }
+        const topped = new Set();
+        for (const r of MAT_SYNTH) {
+            if (!r?.id || known.has(r.id)) bad(`id '${r?.id}' 가 비었거나 겹친다`);
+            const low = known.get(r.from);
+            if (!low) bad(`${r.id} — from '${r.from}' 는 연구소 재료도 앞 행도 아니다`);
+            if (topped.has(r.from)) bad(`${r.id} — '${r.from}' 위에 재료가 둘이다`);
+            if (!(Number.isInteger(r.need) && r.need >= 1) || !(Number.isInteger(r.gold) && r.gold >= 0)) bad(`${r.id} — need 는 1 이상 · gold 는 0 이상 정수다`);
+            if (!r.ko || !r.en) bad(`${r.id} — 이름이 비었다`);
+            topped.add(r.from);
+            known.set(r.id, { id: r.id, post: low.post, tier: low.tier + 1, ko: r.ko, en: r.en, from: r.from, need: r.need, gold: r.gold });
+        }
+        return roots.flatMap(m => [...known.values()].filter(x => x.post === m.post).sort((a, b) => a.tier - b.tier));
+    })();
+    const MAT_SYNTH_BY_ID = Object.fromEntries(MAT_LADDER.filter(x => x.from).map(x => [x.id, x]));
+    const MAT_ROOTS = new Set(MAT_LADDER.filter(x => x.tier === 1).map(x => x.id));
+    if (!MAT_ROOTS.has(DUST_ID)) throw new Error(`state: material_synth.csv — 가루 뿌리 '${DUST_ID}' 가 없다(from - 행 · R373 · INTERFACE §2-7)`);
+    // 제작 레시피의 재료 칸 — 줄의 **뿌리 id** 여야 한다(제작 · 강화 = `mat` · 분해 = `salvageMat` · 2026-10-29 R373). 사다리가 선 뒤라 여기서 본다
+    for (const [part, r] of Object.entries(recipes))
+        for (const k of ['mat', 'salvageMat']) if (!MAT_ROOTS.has(r[k])) throw new Error(`make_recipe: ${part} — ${k} '${r[k]}' 는 재료 줄의 뿌리가 아니다`);
+    const RES_KEY = 'res', VISIT_KEY = 'visit', TRAIN_KEY = 'train', GAMBLE_KEY = 'gamble';
+    /** 연구소 줄 — 순서 = 화면 · 대박 굴림 순서 (INTERFACE §5-3) */
+    const LAB_LINES = [RES_KEY, VISIT_KEY, TRAIN_KEY, GAMBLE_KEY];
+    /** 지점 id — 무엇을 미는가는 코드가 안다(값 · 비용 · 시간은 표 — INTERFACE §5-3) · 재료 지점 셋 = 그 재료의 생산 배수 */
+    const LAB_NODE_IDS = [...MAT_POSTS, 'burst', 'seats', 'interval', 'quality', 'waiting', 'speed', 'range', 'income'];
+    const LAB_NODES = deps.labNodes ?? [];
+    for (const n of LAB_NODES) {
+        if (!LAB_LINES.includes(n.line) || !LAB_NODE_IDS.includes(n.node)) throw new Error(`state: lab_node.csv — 모르는 줄 · 지점 '${n.line}:${n.node}' (INTERFACE §5-3)`);
+        if (!(Number.isInteger(n.max) && n.max >= 1) || !Number.isInteger(n.unlockRank)) throw new Error(`state: lab_node.csv '${n.line}:${n.node}' — max_lv · unlock_rank 는 정수다`);
+        if (LAB_NODES.filter(x => x.line === n.line && x.node === n.node).length > 1) throw new Error(`state: lab_node.csv — '${n.line}:${n.node}' 가 두 번 있다`);
+    }
+    const labNodeRow = (line, node) => LAB_NODES.find(n => n.line === line && n.node === node) ?? null;
+    const labLineNodes = line => LAB_NODES.filter(n => n.line === line).sort((a, b) => a.ord - b.ord);
+    const labNodeKey = (line, node) => `${line}:${node}`;
+    const labLv = (state, line, node) => state.labNodes?.[labNodeKey(line, node)] ?? 0;
+    /** 지점 값 — base + 레벨 × per_lv · 간격 = base + (레벨 − 1) × per_lv(레벨 1 이 기준) · 범위 = 상한까지의 거리 max(0, base − 레벨 × per_lv) (lab_node.csv) */
+    const nodeValue = (r, lv) => r.node === 'range' ? Math.max(0, r.base - lv * r.perLv)
+        : r.node === 'interval' ? r.base + Math.max(0, lv - 1) * r.perLv : r.base + lv * r.perLv;
+    /** 그 줄의 지점 값 — 그 줄에 그 지점이 없으면 `dflt` */
+    const labVal = (state, line, node, dflt) => { const r = labNodeRow(line, node); return r ? nodeValue(r, labLv(state, line, node)) : dflt; };
+    /** 연구소 랭크 — 연구소의 더하기 `resource_tier` 가 랭크마다 1 이라 랭크와 같다 (INTERFACE §2-7 `limitsOf`) */
+    const labRank = state => limitsOf(state).resourceTiers;
+    const labNodeOpen = (state, r) => labRank(state) >= r.unlockRank;
+    /** 줄이 열렸나 — 연구 · 등록을 받는다(지점이 하나라도 열렸다 · 도박장은 선술집 도박장도 — 사용자 「선술집 r4를 짓고 열리도록」 ·
+     *  자원은 창고도 — 사용자 「창고가 지어져야 연구소의 자원이 열리도록」 2026-10-27 · R361 ·
+     *  수색은 선술집 영웅 고용도 — 사용자 「수색은 랭크2 영웅고용과 함께 열리는걸로」 2026-10-30) */
+    function labLineOpen(state, line) {
+        if (labRank(state) < 1) return false;
+        if (line === GAMBLE_KEY && !hasFeature(state, 'gamble')) return false;
+        if (line === VISIT_KEY && !hasFeature(state, 'hire')) return false;
+        if (line === RES_KEY && !hasFeature(state, 'lab_res')) return false;
+        return labLineNodes(line).some(r => labNodeOpen(state, r));
+    }
+    /** 재료별 생산. 재료마다 소수 진행도를 저장해 정산 사이에도 보존한다. */
+    const DISPATCH_HOUR_MS = 3600 * 1000;   // 단위 변환(시간 → ms) — 값이 아니다
+    /** 지금 생산하는 재료 — 「자원」 줄이 열렸으면 셋 다(단계 없음 · 영웅 등록과 무관 — 2026-10-21 · 2026-10-25 R356) · 미니게임도 같은 문을 쓴다 */
+    function openProductionNodes(state) {
+        return labLineOpen(state, RES_KEY) ? LAB_MATERIALS : [];
+    }
+    /**
+     * 등록 효과 — 그 줄에 등록한 영웅의 능력치 일곱(INTERFACE §5-3 · GAME_DESIGN §9 10-21). `at` = 숙련을 재는 시각.
+     *   영웅마다 무게 = 숙련(1 + 찬 비율 × 건강 × lab_vit_skill_pct) × 동료(1 + 다른 영웅 통솔 합 × lab_ldr_peer_pct) · 능력치 × 무게를 더한다.
+     *   대박 · 품질은 그 줄에 「대박」 · 「품질」 지점이 있어야 건다 — 받을 데가 없는 줄은 0 (INTERFACE §5-3)
+     */
+    function labEffects(state, line, at) {
+        const hs = labRegList(state, line).map(uid => heroById(state, uid)).filter(Boolean);
+        const sum = { str: 0, luck: 0, int: 0, cha: 0, agi: 0 };
+        const full = Math.max(0, B.lab_skill_hours) * DISPATCH_HOUR_MS;
+        for (const h of hs) {
+            const since = state.labSince?.[h.uid];
+            const ripe = !(full > 0) ? 1 : Number.isFinite(since) && Number.isFinite(at) ? Math.min(1, Math.max(0, at - since) / full) : 0;
+            const skill = 1 + ripe * (h.stats?.vit ?? 0) * B.lab_vit_skill_pct;
+            const peer = 1 + hs.reduce((a, o) => a + (o === h ? 0 : (o.stats?.ldr ?? 0)), 0) * B.lab_ldr_peer_pct;
+            for (const k of Object.keys(sum)) sum[k] += (h.stats?.[k] ?? 0) * skill * peer;
+        }
+        const has = node => !!labNodeRow(line, node);
+        return {
+            speed: 1 + sum.str * B.lab_str_speed_pct, burst: has('burst') ? sum.luck * B.lab_luck_burst_pct : 0,
+            research: 1 + sum.int * B.lab_int_research_pct, quality: has('quality') ? sum.cha * B.lab_cha_quality_pct : 0,
+            costCut: Math.min(B.lab_cost_cut_max, sum.agi * B.lab_agi_cost_pct),
+        };
+    }
+    /** 대박 확률 — 「대박」 지점 + 운 효과 · 0 ~ 1 */
+    const burstPct = (state, line, fx) => Math.min(1, Math.max(0, labVal(state, line, 'burst', 0) + fx.burst));
+    /** `at` = 효과를 재는 시각(시계가 마지막으로 정산된 시각 — 지난 구간은 그 구간 앞의 명단 · 숙련으로 센다) */
+    function dispatchRate(state, post, at) {
+        const m = MAT_BY_POST[post];
+        if (!m || !labLineOpen(state, RES_KEY) || !(m.yieldPerHour > 0)) return null;
+        const fx = labEffects(state, RES_KEY, at);
+        // 표 수량 × 그 재료 지점(채광 · 채집 · 벌목) × 힘 효과 — ~~「획득량」 × 맨 위 단계면 「깊이」~~(2026-10-25 · R356 — 재료에 단계가 없다)
+        const perHour = m.yieldPerHour * labVal(state, RES_KEY, post, 1) * fx.speed;
+        return { yieldId: m.id, perHour, intervalSec: DISPATCH_HOUR_MS / perHour / 1000, burst: burstPct(state, RES_KEY, fx) };
+    }
+    /** 대박 굴림 — 완성 n 개마다 1회(확률 p) · 맞은 수. 연구소 수열(INTERFACE §5-2 — 굴릴 것이 있을 때만 회차가 오른다) */
+    function labBurst(state, n, p) {
+        if (!(n > 0) || !(p > 0)) return 0;
+        state.counters.lab = (state.counters.lab ?? 0) + 1;
+        const rng = makeRng(deriveSeed(state.seed ^ 0x1AB5, state.counters.lab));
+        let hit = 0;
+        for (let i = 0; i < n; i++) if (rng() < p) hit++;
+        return hit;
+    }
+    const productionClock = (state, post) => (state.resourceProduction ?? []).find(c => c.post === post);
+    function productionAmount(c, r, now, until = Infinity) {
+        const at = Number.isFinite(c?.at) ? c.at : now;
+        const cap = B.dispatch_offline_cap_hours * DISPATCH_HOUR_MS;
+        const dt = Math.min(Math.max(0, Math.min(now, until) - at), cap);
+        return (c?.carry ?? 0) + dt * r.perHour / DISPATCH_HOUR_MS;
+    }
+    /** 생산하는 재료 전부 정산한다. 새로 열린 재료는 이 시각에서 시작한다. */
+    function dispatchSettle(state, now) {
+        return settleProduction(state, now);
+    }
+    function settleProduction(state, now, untilByPost = null) {
+        const gained = {};
+        let total = 0;
+        if (!Number.isFinite(now)) return { gained, total };
+        state.materials = state.materials ?? {};
+        const nodes = openProductionNodes(state);
+        const keys = new Set(nodes.map(m => m.post));
+        state.resourceProduction = (state.resourceProduction ?? []).filter(c => keys.has(c.post));
+        for (const { post } of nodes) {
+            let c = productionClock(state, post);
+            if (!c) { c = { post, at: now, carry: 0 }; state.resourceProduction.push(c); }
+            const r = dispatchRate(state, post, c.at);
+            if (!r) continue;
+            const sum = productionAmount(c, r, now, untilByPost?.[post]);
+            const made = Math.floor(sum + 1e-9);
+            c.at = Math.max(c.at, now);
+            c.carry = Math.max(0, sum - made);
+            const n = made + labBurst(state, made, r.burst);   // 대박 — 완성 한 개마다 하나 더 (2026-10-21 · R298)
+            if (n > 0) {
+                state.materials[r.yieldId] = (state.materials[r.yieldId] ?? 0) + n;
+                gained[r.yieldId] = (gained[r.yieldId] ?? 0) + n;
+                total += n;
+            }
+        }
+        return { gained, total };
+    }
+    /** 재료의 게이지와 생산량 — 상태 불변. 연구소가 안 섰거나 모르는 재료는 null. */
+    function dispatchProgress(state, post, now) {
+        if (!Number.isFinite(now)) return null;
+        const c = productionClock(state, post);
+        const r = dispatchRate(state, post, c?.at ?? now);
+        if (!r) return null;
+        const sum = productionAmount(c, r, now);
+        return { ...r, frac: Math.max(0, sum - Math.floor(sum + 1e-9)) };
+    }
+
+    /* ── 도박장 줄 — 시간마다 골드 [신설 2026-10-21 사용자 「말그대로 돈버는걸로 일단」 · 「선술집 r4를 짓고 열리도록」 · R298] ──
+       ⚠ 「골드는 원정에서만」(item_design §5-1)의 예외 · `[balance.csv:gamble_gold_unit]` 단위로 쌓이고 단위마다 대박을 굴린다 · 공백 상한은 재료와 같다 */
+    function gambleRate(state, at) {
+        if (!labLineOpen(state, GAMBLE_KEY)) return null;
+        const fx = labEffects(state, GAMBLE_KEY, at);
+        const perHour = B.gamble_gold_per_hour * labVal(state, GAMBLE_KEY, 'income', 1) * fx.speed / B.gamble_gold_unit;   // 단위 수
+        return { perHour, burst: burstPct(state, GAMBLE_KEY, fx) };
+    }
+    const labClockOf = state => (state.labClock ??= { gamble: null, train: null });
+    /** `now` 까지 정산 — 들어온 골드 · in-place. 닫혀 있으면 시계를 지우고 · 처음 열린 정산은 시계만 세운다 */
+    function gambleSettle(state, now, until = Infinity) {
+        const clk = labClockOf(state);
+        if (!labLineOpen(state, GAMBLE_KEY)) { clk.gamble = null; return 0; }
+        if (!clk.gamble) { clk.gamble = { at: now, carry: 0 }; return 0; }
+        const r = gambleRate(state, clk.gamble.at);
+        const sum = r.perHour > 0 ? productionAmount(clk.gamble, r, now, until) : clk.gamble.carry;
+        const made = Math.floor(sum + 1e-9);
+        clk.gamble = { at: Math.max(clk.gamble.at, now), carry: Math.max(0, sum - made) };
+        const gold = (made + labBurst(state, made, r.burst)) * B.gamble_gold_unit;
+        if (gold > 0) state.resources.gold = (state.resources.gold ?? 0) + gold;
+        return gold;
+    }
+
+    /* ── 훈련 줄 — 등록한 영웅이 경험치를 받는다 [신설 2026-10-21 사용자 「훈련은 거기에 투입된 영웅들이 기본적으로 받는거임」 · R298] ──
+       한 시간에 지금 레벨의 필요 경험치 × `[balance.csv:train_level_per_hour]` × 「속도」 × 힘 효과 · **상한 = 로스터 최고 레벨 − 「범위」 거리**
+       (레벨을 앞에서 끌어올리는 것은 원정이다) · 등록은 겸직이라 원정에 나간 영웅도 받는다 · 소수 경험치는 `labClock.train.carry` 에 남는다 */
+    const trainCap = state => Math.max(0, ...state.heroes.map(h => h.level)) - labVal(state, TRAIN_KEY, 'range', 0);
+    /** `now` 까지 정산 — 레벨이 오른 영웅 `[{uid, from, to}]` · in-place */
+    function trainSettle(state, now, until = Infinity) {
+        const clk = labClockOf(state);
+        if (!labLineOpen(state, TRAIN_KEY)) { clk.train = null; return []; }
+        if (!clk.train) { clk.train = { at: now, carry: {} }; return []; }
+        const at = clk.train.at;
+        const hours = Math.min(Math.max(0, Math.min(now, until) - at), B.dispatch_offline_cap_hours * DISPATCH_HOUR_MS) / DISPATCH_HOUR_MS;
+        const carry = {};
+        const ups = [];
+        if (hours > 0) {
+            const fx = labEffects(state, TRAIN_KEY, at);
+            const mult = B.train_level_per_hour * labVal(state, TRAIN_KEY, 'speed', 1) * fx.speed;
+            const cap = trainCap(state);
+            for (const uid of labRegList(state, TRAIN_KEY)) {
+                const h = heroById(state, uid);
+                const from = h.level;
+                let left = hours, x = clk.train.carry[uid] ?? 0;
+                while (left > 1e-12 && h.level < cap && h.level < B.hero_level_cap) {
+                    const need = H.xpNeeded(h.level), rate = need * mult;
+                    if (!(rate > 0)) break;
+                    const t = Math.max(0, need - h.xp - x) / rate;
+                    if (t <= left) { H.grantXp(h, need - h.xp, null); x = 0; left -= t; continue; }
+                    x += rate * left;
+                    left = 0;
+                    const g = Math.floor(x + 1e-9);
+                    if (g > 0) { H.grantXp(h, g, null); x -= g; }
+                }
+                if (h.level < cap && x > 0) carry[uid] = x;
+                if (h.level > from) ups.push({ uid, from, to: h.level });
+            }
+        } else Object.assign(carry, clk.train.carry);
+        clk.train = { at: Math.max(at, now), carry };
+        return ups;
+    }
+
+    /* ── 연구 — 지점 레벨 올리기 [신설 2026-10-21 · R298 · 사용자 「연구하면 연구 속도」 · 「하나로」] ── */
+    /** 레벨 lv → lv + 1 의 비용 · 시간 — 골드 + **약초**(최하급 — `cost_mat_hours` 가 0 보다 큰 지점 · 2026-10-29 · R373 · item_design §5-1 — ~~그 지점의 재료~~ R356) × (1 − 민첩 효과) · 시간 ÷ 지능 효과 · 올림 */
+    function labCost(state, line, r, lv, at) {
+        const fx = labEffects(state, line, at);
+        const cut = 1 - fx.costCut;
+        const gold = Math.ceil(r.costGold * r.costGrowth ** lv * cut - 1e-9);
+        const m = MAT_BY_POST[KIND_POST.herb] ?? null;
+        const mat = m && r.costMatHours > 0 ? { id: m.id, n: Math.ceil(m.yieldPerHour * r.costMatHours * r.costGrowth ** lv * cut - 1e-9) } : null;
+        return { gold, mat, ms: Math.ceil(r.researchMin * r.researchGrowth ** lv * 60000 / fx.research) };
+    }
+    /** 지점 한 칸 — 지금 · 한 레벨 올린 뒤의 값 · 비용 · 시간 · 지금 연구하면 날 거절 · 상태 불변 */
+    function labNodeInfo(state, line, r, now) {
+        const lv = labLv(state, line, r.node);
+        const open = labLineOpen(state, line) && labNodeOpen(state, r);
+        const out = { node: r.node, ord: r.ord, open, unlockRank: r.unlockRank, lv, max: r.max, value: nodeValue(r, lv),
+            levels: Array.from({ length: r.max }, (_, i) => nodeValue(r, i + 1)), next: null, err: null };   // 레벨 1 ~ 최대의 값 — 고른 지점의 레벨 목록
+        if (lv < r.max) {
+            const c = labCost(state, line, r, lv, now);
+            out.next = { value: nodeValue(r, lv + 1), gold: c.gold, mat: c.mat, ms: c.ms };
+        }
+        out.err = !open ? 'locked' : state.labResearch ? 'busy' : !out.next ? 'maxUp'
+            : (state.resources.gold ?? 0) < out.next.gold ? 'gold'
+            : out.next.mat && (state.materials?.[out.next.mat.id] ?? 0) < out.next.mat.n ? 'materials' : null;
+        return out;
+    }
+    /** 지점 하나를 연구한다 — in-place · rng 0 · 먼저 정산. 비용은 시작할 때 · 관리자 모드는 곧바로 끝난다(개발 장치) */
+    function labResearchStart(state, line, node, now) {
+        labSettle(state, now);
+        const r = labNodeRow(line, node);
+        if (!r) return { ok: false, err: 'locked' };
+        const info = labNodeInfo(state, line, r, now);
+        if (info.err) return { ok: false, err: info.err };
+        state.resources.gold -= info.next.gold;
+        if (info.next.mat) state.materials[info.next.mat.id] -= info.next.mat.n;
+        const until = openAll() ? now : now + info.next.ms;
+        state.labResearch = { line, node, lv: info.lv + 1, at: now, until, paid: { gold: info.next.gold, mat: info.next.mat ? { ...info.next.mat } : null } };
+        if (openAll()) labSettle(state, now);
+        return { ok: true, until };
+    }
+    /** 연구를 그만둔다 — 낸 비용을 전부 돌려준다 · in-place · 먼저 정산(그새 끝났으면 `empty`) */
+    function labResearchCancel(state, now) {
+        labSettle(state, now);
+        const R = state.labResearch;
+        if (!R) return { ok: false, err: 'empty' };
+        state.resources.gold = (state.resources.gold ?? 0) + (R.paid?.gold ?? 0);
+        if (R.paid?.mat) state.materials[R.paid.mat.id] = (state.materials[R.paid.mat.id] ?? 0) + R.paid.mat.n;
+        state.labResearch = null;
+        return { ok: true };
+    }
+    /** 재료 · 도박장 · 훈련 · 수색을 `t` 까지 */
+    function labSettleTo(state, t, limits = null) {
+        const d = settleProduction(state, t, limits?.res);
+        const gold = gambleSettle(state, t, limits?.gamble);
+        const xp = trainSettle(state, t, limits?.train);
+        visitSettle(state, t);
+        return { gained: d.gained, gold, xp };
+    }
+    /**
+     * 연구소 정산 — in-place. 끝난 연구가 있으면 **끝난 시각까지 옛 값으로 정산한 뒤** 레벨을 올리고(새로 열린 시계는 그 시각에 선다) `now` 까지 정산한다.
+     *   공백 상한은 정산 시작 때 각 생산 시계의 시작 + 상한으로 고정한다 — 연구 전후를 나눠도 허용 시간이 늘지 않는다.
+     *   실제 시계는 `now` 까지 옮겨 초과 시간을 버린다. 수색은 이 상한을 받지 않는다.
+     *   수색 「간격」 0 → 1 이 끝나면 그 시각부터 시계가 선다
+     * @returns `{done: {line, node, lv} | null, gained, gold, xp: [{uid, from, to}]}`
+     */
+    function labSettle(state, now) {
+        const out = { done: null, gained: {}, gold: 0, xp: [] };
+        if (!Number.isFinite(now)) return out;
+        const add = p => {
+            for (const [k, n] of Object.entries(p.gained)) out.gained[k] = (out.gained[k] ?? 0) + n;
+            out.gold += p.gold;
+            out.xp.push(...p.xp);
+        };
+        const R = state.labResearch;
+        let limits = null;
+        if (R && R.until <= now) {
+            const cap = B.dispatch_offline_cap_hours * DISPATCH_HOUR_MS;
+            const until = c => Number.isFinite(c?.at) ? c.at + cap : Infinity;
+            limits = {
+                res: Object.fromEntries((state.resourceProduction ?? []).map(c => [c.post, until(c)])),
+                gamble: until(state.labClock?.gamble), train: until(state.labClock?.train),
+            };
+            add(labSettleTo(state, R.until, limits));
+            state.labNodes = { ...(state.labNodes ?? {}), [labNodeKey(R.line, R.node)]: R.lv };
+            state.labResearch = null;
+            out.done = { line: R.line, node: R.node, lv: R.lv };
+            if (R.line === VISIT_KEY && R.node === 'interval' && visitLevelOf(state) === 1 && !state.visit) {
+                state.visit = { nextAt: R.until + visitMs(state, R.until), left: null };
+                visitPause(state, R.until);
+            }
+            add(labSettleTo(state, R.until, limits));   // 새로 열린 줄의 시계가 끝난 시각에 선다
+        }
+        add(labSettleTo(state, now, limits));
+        return out;
+    }
+    /** 연구소 한 덩어리 — 상태 불변 · rng 0 · 정산하지 않는다 (INTERFACE §2-7) */
+    function labState(state, now) {
+        const R = state.labResearch;
+        const research = R ? { line: R.line, node: R.node, lv: R.lv, at: R.at, until: R.until,
+            frac: R.until > R.at ? Math.min(1, Math.max(0, (now - R.at) / (R.until - R.at))) : 1 } : null;
+        const lines = LAB_LINES.map(line => {
+            const open = labLineOpen(state, line);
+            const out = {
+                line, open, active: open, seats: { cap: labSeats(state, line), uids: labRegList(state, line) },
+                effects: labEffects(state, line, now), nodes: labLineNodes(line).map(r => labNodeInfo(state, line, r, now)),
+            };
+            if (line === VISIT_KEY) out.active = open && visitLevelOf(state) > 0;
+            if (line === GAMBLE_KEY) out.perHour = open ? gambleRate(state, now).perHour * B.gamble_gold_unit : 0;
+            if (line === TRAIN_KEY) out.cap = trainCap(state);
+            return out;
+        });
+        return { rank: labRank(state), research, lines };
+    }
+
+    /* ── 자원 미니게임 [2026-10-06 사용자 「+효과가 아니라 아예 따로 미니게임을 해서 캐는 방식」 · 「영웅을 넣지 않는다 · 스탯 상관없음」 · PLAN_dispatch_watch D8] ──
+       플레이어가 **직접** 캔다 — 영웅 · 능력치와 무관하고 연구소 생산도 안 건드린다. **판 점수(내림)가 곧 고른 단계의 산출물 개수**다.
+       채광 = 한 번 캐기(`tap`, 오클릭 즉시 종료) · 채집 = 눌렀다 놓아 따기(`pluck`) · 벌목 = 팀버맨(`chop`). 채집·벌목 목숨 = `mg_lives` ·
+       귀한 것 하나 = `mg_rare_value` 개 · 콤보(좋은 것을 놓치거나 맞으면 끊긴다)가 `mg_combo_step` 마다 배수에 `mg_combo_add` 를 더한다(`mg_combo_max` 까지) ·
+       놓친 좋은 것엔 벌이 없고 콤보만 끊긴다. 판 수 상한은 없다 [2026-10-06 사용자 지시 · ADR-0533].
+       rng = `deriveSeed(seed ^ 0x3A6E, counters.mg)`(선증가) — 판 번호 하나로 판이 정해져 받을 때(`mgClaim`) 다시 굴려 채점한다
+       (도박장과 같은 문법 · 원정 · 제작 수열과 안 섞인다). 판 안의 시각은 전부 **판 시작부터의 ms**(화면의 판 시계 — 숨긴 탭에선 멈춘다) */
+    const MG_KIND = { mine: 'tap', gather: 'pluck', log: 'chop' };
+    const mgLerp = (a, b, f) => a + (b - a) * Math.min(1, Math.max(0, f));
+    function mgRoll(state, post, no) {
+        const rng = makeRng(deriveSeed(state.seed ^ 0x3A6E, no));
+        const kind = MG_KIND[post];
+        // 채점에 드는 값은 판에 박는다 — 채점(`mgJudge`)이 판과 입력만 보고 끝난다
+        const r = { no, post, kind, lives: kind === 'tap' ? 1 : B.mg_lives, score: { rare: B.mg_rare_value, step: B.mg_combo_step, add: B.mg_combo_add, max: B.mg_combo_max } };
+        const pick = () => { const x = rng(); return x < B.mg_bad_pct ? 'bad' : x < B.mg_bad_pct + B.mg_rare_pct ? 'rare' : 'good'; };
+        if (kind === 'tap') {
+            // 광맥은 한 번에 캐진다. 떠 있는 시간이 짧아지고, 빈 칸·위험 바위는 즉시 끝난다.
+            const ms = B.mg_sec * 1000, free = Array(B.mg_tap_cols * B.mg_tap_rows).fill(0), spawns = [];
+            for (let at = B.mg_tap_gap_start_ms / 2; ;) {
+                const k = pick();
+                const life = k === 'rare' ? B.mg_tap_rare_life_ms : B.mg_tap_life_ms;
+                if (at + life > ms) break;
+                const open = free.flatMap((t, i) => t <= at ? [i] : []);
+                if (open.length) {
+                    const cell = open[Math.floor(rng() * open.length)];
+                    spawns.push({ at: Math.round(at), cell, kind: k, hp: 1, life: Math.round(life * mgLerp(1, 0.72, at / ms)) });
+                    free[cell] = at + life + B.mg_tap_rest_ms;
+                }
+                at += mgLerp(B.mg_tap_gap_start_ms, B.mg_tap_gap_end_ms, at / ms) * (0.7 + 0.6 * rng());
+            }
+            Object.assign(r, { ms, cols: B.mg_tap_cols, rows: B.mg_tap_rows, spawns });
+        }
+        if (kind === 'pluck') {
+            // 한 포기씩 나타난다. 누른 시간 / power = 힘. 초록 구간에 놓으면 수확, 중앙은 +1.
+            const ms = B.mg_sec * 1000, plants = [];
+            for (let at = 350; at + B.mg_pluck_life_ms <= ms; at += B.mg_pluck_gap_ms) {
+                const k = plants.length === 0 ? 'good' : pick();
+                const from = 0.42 + rng() * 0.2;
+                const width = k === 'rare' ? B.mg_pluck_rare_window : B.mg_pluck_window;
+                plants.push({ at, life: B.mg_pluck_life_ms, kind: k, power: Math.round(B.mg_pluck_power_ms * (0.85 + rng() * 0.3)), from, to: from + width });
+            }
+            Object.assign(r, { ms, plants, perfect: B.mg_pluck_perfect });
+        }
+        if (kind === 'chop') {
+            // 나무 — 토막 `mg_chop_height` 개 · 토막마다 가지(`b` = 'L' | 'R' | null) · 맨 아래는 비운다 · **가지 바로 위 토막은 늘 비운다**(가지 둘이 붙으면 피할 길이 없다)
+            const segs = [];
+            for (let i = 0; i < B.mg_chop_height; i++) {
+                const b = i === 0 || segs[i - 1].b ? null : rng() < B.mg_chop_branch_pct ? (rng() < 0.5 ? 'L' : 'R') : null;
+                segs.push({ b, rare: i > 0 && rng() < B.mg_rare_pct });
+            }
+            Object.assign(r, { segs, drain0: B.mg_chop_drain_start, drain1: B.mg_chop_drain_end, refill: B.mg_chop_refill });
+        }
+        return r;
+    }
+    /**
+     * 판의 그 시각 모습 — 순수. 화면이 판 시계(`at` = 판 시작부터 ms)마다 부르고, 받을 때(`at` 생략 = 끝까지)도 같은 것을 부른다.
+     * input — tap: 누름 `[{t, cell}]` · pluck: 놓음 `[{t, plant, held}]`(held = 누른 ms, poison은 0) ·
+     *   chop: 도끼질 `[{t, side: 'L'|'R'}]`. 누름 · 도끼질은 시각 순이다.
+     * → `{points, items, combo, mult, best, lives, over, why: 'time'|'lives'|'mistake'|'done'|null, end, …}` — tap `spawns: [{hp, done}]` /
+     *   pluck `plants: [null|'got'|'perfect'|'hit'|'miss'|'dodge']` / chop `cut` · `side` · `bar` · `hit`
+     */
+    function mgJudge(round, input, at = Infinity) {
+        const sc = round.score;
+        const o = { points: 0, combo: 0, best: 0, lives: round.lives, over: false, why: null, end: null };
+        const mult = c => Math.min(sc.max, 1 + Math.floor(c / sc.step) * sc.add);
+        const good = v => { o.combo += 1; o.best = Math.max(o.best, o.combo); o.points += v * mult(o.combo); };
+        const hurt = t => { o.combo = 0; o.lives -= 1; if (o.lives <= 0) Object.assign(o, { over: true, why: 'lives', end: t }); };
+        const val = k => k === 'rare' ? sc.rare : 1;
+        const list = Array.isArray(input) ? input : [];
+        if (round.kind === 'tap') {
+            const S = round.spawns.map(s => ({ hp: s.hp, done: null }));
+            const lim = Math.min(at, round.ms), endOf = s => s.at + s.life;
+            const order = round.spawns.map((_, i) => i).sort((a, b) => endOf(round.spawns[a]) - endOf(round.spawns[b]));
+            let next = 0;
+            // 사라짐 — 깨지 못하고 사라진 좋은 것은 콤보를 끊는다(벌은 없다)
+            const expire = t => {
+                for (; next < order.length && endOf(round.spawns[order[next]]) <= t; next++) {
+                    const i = order[next];
+                    if (!S[i].done) { S[i].done = 'gone'; if (round.spawns[i].kind !== 'bad') o.combo = 0; }
+                }
+            };
+            for (const c of list) {
+                if (o.over || !(c.t <= lim)) break;
+                expire(c.t);
+                if (!Number.isFinite(c.t) || c.t < 0) continue;
+                const i = round.spawns.findIndex((s, j) => s.cell === c.cell && !S[j].done && s.at <= c.t && c.t < endOf(s));
+                if (i < 0) { Object.assign(o, { combo: 0, lives: 0, over: true, why: 'mistake', end: c.t }); break; }
+                const s = round.spawns[i];
+                if (s.kind === 'bad') { S[i].done = 'boom'; Object.assign(o, { combo: 0, lives: 0, over: true, why: 'mistake', end: c.t }); break; }
+                S[i].hp = 0;
+                S[i].done = 'broke'; good(val(s.kind));
+            }
+            if (!o.over) { expire(lim); if (lim >= round.ms) Object.assign(o, { over: true, why: 'time', end: round.ms }); }
+            o.spawns = S;
+        }
+        if (round.kind === 'pluck') {
+            const R = round.plants.map(() => null), lim = Math.min(at, round.ms);
+            let next = 0;
+            const expire = t => {
+                for (; next < round.plants.length && round.plants[next].at + round.plants[next].life <= t; next++) {
+                    if (R[next]) continue;
+                    R[next] = round.plants[next].kind === 'bad' ? 'dodge' : 'miss';
+                    if (R[next] === 'miss') o.combo = 0;
+                }
+            };
+            for (const c of list) {
+                if (o.over || !(c.t <= lim)) break;
+                if (!Number.isFinite(c.t) || !Number.isFinite(c.held) || c.held < 0 || !Number.isInteger(c.plant) || c.plant < 0) continue;
+                expire(c.t);
+                const d = round.plants[c.plant];
+                if (!d || R[c.plant] || c.t - c.held < d.at || c.t >= d.at + d.life) continue;
+                const power = c.held / d.power;
+                if (d.kind === 'bad' || power < d.from || power > d.to) { R[c.plant] = 'hit'; hurt(c.t); }
+                else {
+                    const perfect = Math.abs(power - (d.from + d.to) / 2) <= round.perfect / 2;
+                    R[c.plant] = perfect ? 'perfect' : 'got';
+                    good(val(d.kind) + (perfect ? 1 : 0));
+                }
+            }
+            if (!o.over) expire(lim);
+            if (!o.over && lim >= round.ms) Object.assign(o, { over: true, why: 'time', end: round.ms });
+            o.plants = R;
+        }
+        if (round.kind === 'chop') {
+            // 시간 막대 — 첫 도끼질부터 준다 · 1초에 `drain`(벤 토막 수만큼 `drain0` → `drain1`) · 벨 때마다 `refill` · 다 닳으면 끝
+            const n = round.segs.length, cut = new Set();
+            const drain = k => round.drain0 + (round.drain1 - round.drain0) * k / n;
+            const branch = k => k < n && !cut.has(k) ? round.segs[k].b : null;
+            let i = 0, side = 'L', bar = 1, last = null;
+            const run = t => {
+                if (last == null || o.over) return;
+                const d = drain(i), left = bar - d * (t - last) / 1000;
+                if (left > 0) { bar = left; last = t; return; }
+                Object.assign(o, { over: true, why: 'time', end: last + bar / d * 1000 });
+                bar = 0;
+            };
+            for (const c of list) {
+                if (o.over || !(c.t <= at)) break;
+                run(c.t);
+                if (o.over) break;
+                last = c.t;
+                side = c.side === 'R' ? 'R' : 'L';
+                // 가지가 있는 쪽으로 들어갔다 — 맞고 가지는 부러진다 · 다 쓰면 그 토막은 못 벤다
+                if (branch(i) === side) { cut.add(i); hurt(c.t); if (o.over) break; }
+                good(val(round.segs[i].rare ? 'rare' : 'good'));
+                bar = Math.min(1, bar + round.refill);
+                i += 1;
+                if (i >= n) { Object.assign(o, { over: true, why: 'done', end: c.t }); break; }
+                // 내려온 토막의 가지가 내 쪽이다 — 벤 토막은 이미 받았다
+                if (branch(i) === side) { cut.add(i); hurt(c.t); }
+            }
+            if (Number.isFinite(at)) run(at);
+            Object.assign(o, { cut: i, side, bar, hit: [...cut] });
+        }
+        o.items = Math.floor(o.points + 1e-9);
+        o.mult = mult(o.combo);   // 지금 콤보의 배수 — 다음 좋은 것이 아니라 방금 받은 것에 걸린 값
+        return o;
+    }
+    /** 한 판을 연다 — 그 재료가 생산 중이어야 한다(「자원」 줄과 같은 문 · 2026-10-25 R356 — ~~고른 단계 · 「종류」 지점~~) · 판 수 상한은 없다. 거절이면 카운터가 안 오른다 */
+    function mgRound(state, post) {
+        if (!MG_KIND[post] || !MAT_BY_POST[post]) return { ok: false, err: 'post' };
+        if (!labLineOpen(state, RES_KEY)) return { ok: false, err: 'locked' };
+        state.counters.mg = (state.counters.mg ?? 0) + 1;
+        state.mgPlay = { no: state.counters.mg, post, done: false };
+        return { ok: true, round: mgRoll(state, post, state.counters.mg) };
+    }
+    /** 판을 받는다 — 마지막으로 연 판 하나 · 한 번만(`mgPlay.done`). 판 번호로 다시 굴려 끝까지 채점 → 점수(내림)만큼 그 재료 → `{ok, items, yieldId, snap}` */
+    function mgClaim(state, input) {
+        const p = state.mgPlay;
+        if (!p || p.done || p.no !== state.counters.mg) return { ok: false, err: 'stale' };
+        const m = MAT_BY_POST[p.post];
+        if (!m) return { ok: false, err: 'post' };
+        p.done = true;
+        const snap = mgJudge(mgRoll(state, p.post, p.no), input);
+        state.materials = state.materials ?? {};
+        if (snap.items > 0) state.materials[m.id] = (state.materials[m.id] ?? 0) + snap.items;
+        return { ok: true, items: snap.items, yieldId: m.id, snap };
+    }
+
+    /**
+     * 출발 — 런을 열고 **첫 라운드를 연다**(R130 — ~~첫 라운드까지 계산~~). **보상은 하나도 안 준다** — 라운드의 보상은 그 라운드가 끝나는 시각에
+     * `stepRun`(검증은 `advanceRun`)이 준다. 시드는 마스터 시드 + 전투 카운터에서 파생된다: 같은 세이브에서 다음 원정은 언제 돌려도 같다(도중에 장비를 안 바꾸면).
+     * 리포트는 **지금 목록 맨 앞에 선다** — `reason: null` 이 「진행 중」이고 라운드를 이길 때마다 찬다.
+     * **이어 가기** [2026-09-29 사용자 지시] — `from` = 그 부대의 앞 런 핸들. 주면 **그 부대가 처음 나간 편성 그대로**(핸들의 `squad` — 인원 · 진형 · 물약 칸 · 전술 칸) 나간다.
+     *   편성을 고쳐도 나가 있는 부대는 안 바뀐다 — 고친 편성으로 나가려면 철수하고 다시 보낸다(`from` 없이 보내면 지금 편성을 새로 굳힌다).
+     *   **재도전은 예외다** [2026-10-24 사용자 지시] — 앞 런이 **졌으면**(전멸 · 시간 초과 — 같은 칸을 다시 돈다) 그 편성의 **지금 모습**을 새로 굳힌다(고쳤으면 고친 편성 · 안 고쳤으면 같은 편성).
+     *     지금 편성으로 못 나가면(비웠다 · 탐험 · 다른 부대 영웅 — `presetErr`) 굳힌 편성 그대로 나간다 — 자리를 비운 사이 부대가 서지 않는다
+     *   `from` 이 그 부대의 마지막 런이 아니거나(뒤에 새 런이 섰다) 부대가 멈췄으면(철수 · 끊김) `stopped`
+     * **난이도** [2026-10-10 · R236] — `diff`(기본 고른 단)로 나간다 · 이어 가는 런은 `diff` 를 안 주면 **앞 런의 단 그대로**(`from.difficulty` — 그새 고른 단이 바뀌어도).
+     *   화면은 `nextRepeat` 이 답한 단을 넘긴다 — **바퀴를 넘는 런**이면 다음 단이고, 고른 단이 앞 런의 단이었으면 고른 단도 따라간다 (2026-10-24 사용자 · R354)
+     *   몬스터 레벨 = `stageLevel(stageId, 단)` · 단은 부대 자리 · 리포트 · 핸들의 `difficulty` 에 남는다
+     * @returns `{ok, run, report}` — `run` = 핸들 `{stageId, preset, difficulty, report, result, done, squad}` (INTERFACE §2-7)
+     */
+    function departRun(state, stageId, now, no = state.preset, from = null, diff = from ? from.difficulty ?? BASE_DIFF : curDiff(state)) {
+        if (from && !continuable(state, from, no)) return { ok: false, err: 'stopped' };
+        const dif = diff;
+        // 굳힌 편성을 물려받나 — 이긴 런의 이어 가기는 언제나 · **진 런의 재도전은 지금 편성으로 못 나갈 때만**(그새 고친 편성이 먹는다 · 2026-10-24 사용자 지시)
+        const held = from && (from.report.won || presetErr(state, presetAt(state, no), no)) ? from.squad : null;
+        // 이어 가는 런은 **굳힌 편성**으로 판정한다 — 그 인원은 칸 사이에도 나가 있어(`runParty`) 다른 일에 붙잡힐 틈이 없다 · 재도전의 지금 편성은 위에서 이미 섰다
+        //   챕터보스가 죽어 있는 칸은 이어 가는 런도 못 나간다 — 반복은 `nextRepeat` 이 돌아오는 시각까지 기다리게 한다 (2026-10-10 · R240)
+        const why = from ? (stageUnlocked(state, stageId, dif) ? respawnErr(state, stageId, dif, now) ?? (held ? presetErr(state, held, no) : null) : 'locked') : canDepart(state, stageId, now, no, dif);
+        if (why) return { ok: false, err: why };
+        // **그 부대의** 원정이 돌고 있으면 **먼저 끊는다** — 철수와 같다(진행 중이던 라운드는 없던 것 · 리포트 `retreat` · 반복 off) [2026-09-14 · R92 · 사용자 지시].
+        //   보상은 이긴 라운드에만 들어오므로 끊고 다시 보내는 것이 가속 수단이 안 된다. 옛 핸들은 리포트 판정이 서서 `done` 으로 거절된다.
+        //   **다른 부대는 안 건드린다** [2026-09-23 · 다부대] — 부대마다 제 칸을 가진다
+        cutRun(state, 'retreat', no);
+        // 바퀴를 넘은 이어 가기 — 고른 단이 넘기 전 단이었으면 따라간다 · 다른 단을 골라 뒀으면 그대로 (2026-10-24 사용자 · R354)
+        const was = from ? from.difficulty ?? BASE_DIFF : dif;
+        if (dif !== was && curDiff(state) === was) state.difficulty = dif;
+
+        state.counters.battle += 1;
+        const rng = makeRng(deriveSeed(state.seed, state.counters.battle));
+        // **전원이 나간다** [개정 2026-09-08 — 「출정 아웃」 폐기] (base_expedition_design §1-1). 이 인원이 핸들의 `party` 로 굳는다 —
+        //   원정 중에 편성을 바꿔도 도는 원정은 이 인원 · 이 인원의 전술로 싸운다 (R92)
+        //   편성 `no`(기본 고른 편성)의 파티다 (R122) · **이어 가는 런은 처음 나간 편성 그대로다**(`from.squad` · 2026-09-29 — ~~반복은 그 편성의 지금 모습으로 나간다~~) · 재도전은 지금 편성(위 `held`)
+        const preset = held ?? presetAt(state, no);
+        const going = preset.party.slice();
+        // 굳힌 편성 — 이 부대가 철수할 때까지 이긴 런의 이어 가기가 모두 이것으로 나간다. 처음 나갈 때 · 재도전할 때 편성을 베낀다(편성은 계획이라 그 뒤에 고쳐도 된다)
+        const squad = held ?? { party: going.slice(), formation: clone(preset.formation), potionSlots: padSlots(state, preset.potionSlots ?? []), potionHp: potionHpOf(preset), tactics: clone(fitTactics(preset.tactics)) };
+        // 전술 칸 · 진형을 **굳힌 편성으로** 센다 — 편성 `no` 자리에 그것을 끼운 읽기 전용 사본(새로 굳히는 런은 굳힌 것이 곧 지금 편성이라 상태 그대로)
+        const view = held ? withSquad(state, no, squad) : state;
+        // 몬스터 레벨 = **그 단의 칸 레벨 열(`level_col`) + 단의 더하기**(만렙에서 자른다 · `stageLevel` · 2026-10-10 R236 · 2026-10-24 R338) — 위험도가 폐지돼 플레이어가 바꾸는 숫자는 없다
+        //   (2026-09-29 · ~~올린 양 포함 · R87~~). 노말은 더하기가 없어 `dlvl` 그대로다. rng 를 안 쓰므로 수열이 안 밀린다
+        const level = stageLevel(stageId, dif);
+        // 물약 — **이 런을 열 때** 그 편성의 칸 구성을 재고에서 앞 칸부터 채운다(모자란 칸은 빈다). 재고는 마실 때 준다(`advanceRun`).
+        //   둘째 라운드부터는 정산이 굳힌 편성의 칸을 재고에서 다시 채워 넘긴다 — 원정 도중에 만들거나 산 물약은 다음 라운드부터 든다 (battle_design §7-1 · R124 · R315). rng 0
+        // 전술은 **이 순간 켜진 것만** 산다 — 핸들의 `tactics` 로 굳힌다 (R130 · tactic_card_design §2-1). rng 0
+        const tactics = tacticSnap(view, going, no);
+        //   조건이 읽은 전열 · 같이 깬 칸 수도 굳힌다 — 도는 원정의 재판정(`runTactics`)이 이 값으로 센다 (R134) · 자리(`byUid`)도 굳힌 편성의 것이다(`partyUnits` · 관전 아레나)
+        const byUid = formationOf(squad).byUid;
+        // 신단 [2026-09-29 · base_expedition_design §1-2] — **이어 가는 런**이고 그 부대 자리에 **이 칸의** 신단이 서 있으면 이어받는다(막 이긴 칸 뒤에 선 것 —
+        //   진 칸 뒤엔 자리가 비어 있다 · 2026-09-30) · 새로 보낸 런 · 다른 칸으로 가는 런은 신단 없음 · rng 0
+        const had = runAt(state, no)?.shrine;
+        const shrine = from && had?.stageId === stageId && shrineById[had.id] ? had.id : null;
+        const fixed = { front: going.filter(uid => (byUid[uid] ?? 0) === 0), bond: bondOf(state, going), byUid, shrine };
+        // 단 = 몬스터가 선택 부위를 입을 확률을 고른다(레벨은 위 `level` 이 이미 든다 · 2026-10-12 · R245)
+        // 도감 사다리 = 지금 상태를 읽는 함수 — 스폰마다 불러 라운드 사이에 오른 단계가 다음 라운드부터 먹는다 (2026-10-18 · R286 · INTERFACE §2-6 「도감 사다리」)
+        const battle = BT.createRun(partyUnits(view, going, no, tactics, fixed), stageId, rng, level, fillSlots(state, squad), limitsOf(state).potionSlots, null, dif,
+            id => codexLadder(state, id), squad.potionHp ?? null);   // 마시는 HP 비율 = 굳힌 편성의 값 · 이 값이 없던 옛 굳힌 편성은 CSV 기본값 (R378)
+        // 같이 깬 칸 수(`bonds`)는 **출발에서 안 센다** — 칸을 이긴 순간 +1 이다(`settleRound`) · 이 런의 판정은 지금까지 센 값(위 `fixed.bond`).
+        //   ~~출발할 때 +1~~ (v36) 은 2026-09-29 사용자 지시로 걷었다 — 출정 → 철수를 연타하면 한 판도 안 싸우고 올랐다 (tactic_card_design §5-8)
+
+        const report = {
+            at: now, stageId, level, preset: no, won: false, reason: null, durationSec: 0,   // reason null = 진행 중 · preset = 어느 부대의 런인가 (v38 · 다부대)
+            difficulty: dif,                                                                  // 이 런의 난이도 단 — 옛 리포트엔 없다(= 첫 단 · 2026-10-10 R236)
+            shrine,                                                                           // 이 런이 입은 신단 id · 없으면 null (2026-09-29)
+            gold: 0, xp: Object.fromEntries(going.map(uid => [uid, 0])), levelUps: [],
+            downed: [], party: going.slice(), drops: [], blueprints: [], discarded: 0,   // ~~materials 처치 재료~~ — 2026-10-29 R373 삭제(옛 리포트엔 남아 있을 수 있다 · 화면은 `?? {}`)
+            rounds: [], roundsCleared: 0,
+            // 빗나감 · 기여는 **0 에서 자리를 잡는다** — 첫 라운드 전에 끊겨도 리포트가 빈 칸 없이 선다 (SCREEN_DESIGN §4-3)
+            strikes: { party: { n: 0, miss: 0 }, enemy: { n: 0, miss: 0 } },
+            contrib: going.map(uid => ({ uid, dealt: 0, taken: 0, kills: 0 })),
+        };
+        // 목록의 맨 앞에 넣고 **그 부대의** 상한만큼만 남긴다 — 그 부대의 오래된 런부터 밀려난다 (v21 · 부대마다 2026-10-14 · ADR-0622).
+        //   다른 부대의 런은 안 밀어낸다 — 짧은 런을 도는 부대가 긴 런을 도는 부대의 기록을 지우지 않게 · `preset` 이 없는 옛 리포트는 1부대
+        state.reports.unshift(report);
+        let mine = 0;
+        for (let i = 0; i < state.reports.length; i++) {
+            if ((state.reports[i].preset ?? 1) !== no) continue;
+            if (++mine > B.report_keep) state.reports.splice(i--, 1);
+        }
+        // 부대의 자리에만 쓴다 — 다른 부대의 칸은 그대로다. 반복(장소 안 순환) 플래그는 **그 부대가 같은 장소를 돌던 중**이었을 때만 이어받는다
+        //   (v38 · 다부대 · v39 — ~~같은 스테이지~~ → 같은 장소: 순환이 칸을 옮겨도 안 꺼진다) · **출발하면 이어 가는 중이다**(`auto` — 철수 · 끊기가 끈다 · v39)
+        const prev = runAt(state, no);
+        state.runs[no - 1] = {
+            stageId, preset: no, repeat: samePlace(prev?.stageId, stageId) ? prev.repeat === true : false, auto: true,
+            difficulty: dif,   // 그 부대가 도는 단 — 다음 칸(`nextRepeat`)을 이 단의 기록으로 고른다 (2026-10-10 · R236)
+            lastAt: now, durationSec: 0, active: true,   // ~~fallen~~ — 이 런에서 쓰러져 있는 영웅(R130) · 2026-10-21 걷었다(R300 — 읽던 잠금이 사라졌다)
+            shrine: shrine ? { id: shrine, stageId } : null,   // 이 런이 입는 신단 — 칸이 끝나면 `settleRound` 가 다음 칸의 것으로 바꾸거나 지운다 (2026-09-29 · 09-30)
+        };
+        // 첫 라운드를 **연다** — 스폰 · 등장 지연 굴림은 여기서 돈다. 틱은 재생 시각을 따라 `stepRun` 이 민다 [2026-09-21 · R130] —
+        //   ~~첫 라운드까지 계산한다~~: 미래를 미리 계산해 두면 원정 중 교체가 그 순간 먹을 자리가 없다(base_expedition_design §1-5)
+        battle.advance(0);
+        // `seq` = 이 런의 전투 번호 — 신단 뽑기 스트림의 두 번째 인자(다른 부대가 그새 나가도 같은 신단 · INTERFACE §5-1)
+        return { ok: true, report, run: { stageId, preset: no, difficulty: dif, report, result: battle.result, done: false, battle, rng, party: going, tactics, fixed, squad, seq: state.counters.battle } };
+    }
+
+    /** 편성 `no` 자리에 굳힌 편성을 끼운 **읽기 전용 얕은 사본** — 이어 가는 런의 전술 칸 · 진형을 처음 나간 편성으로 센다(`wearing` 의 사본과 같은 수법 · 원본 불변) */
+    const withSquad = (state, no, squad) => ({ ...state, presets: state.presets.map((p, i) => (i === no - 1 ? squad : p)) });
+
+    /**
+     * 이어 가기의 앞 런인가 [2026-09-29] — `from` 이 **그 부대의 마지막 런**(`lastAt`)이고 끝났고 부대가 이어 가는 중(`auto`)이다.
+     * 철수 · 끊김 뒤이거나 그 뒤에 새 런이 섰으면 아니다 · rng 0
+     */
+    const continuable = (state, from, no) => {
+        const slot = runAt(state, no);
+        return !!from?.squad && from.preset === no && runOver(from) && !!slot && slot.auto === true && !slot.active && slot.lastAt === from.report.at;
+    };
+
+    /** 그 원정이 지금 입을 파티 — 나간 인원 · 나간 편성 · 출발 때 켜진 전술로 (R92 · R122 · R130) */
+    const runUnits = (state, run) => partyUnits(state, run.party, run.preset, run.tactics, run.fixed);
+    /**
+     * 그 런의 전투 능력치 한 명 [2026-10-21 · ADR-0708 · INTERFACE §2 game] — 전투가 그 런의 유닛을 만들고 갈아입히는 것과 같은 값(`runUnits` — **신단** 포함).
+     *   관전의 영웅 세부 옵션 바탕 · 스킬 설명창 쿨감이 읽는다. 런이 없거나 그 런에 없는 영웅이면 `heroCombat` 그대로 · 아무것도 안 바꾼다 · rng 0
+     */
+    const runCombat = (state, run, h) => (run?.party?.includes(h.uid) ? runUnits(state, run).find(p => p.uid === h.uid)?.combat : null) ?? heroCombat(state, h);
+
+    /**
+     * 도는 원정의 전술 [신설 2026-09-21 · R130 · tactic_card_design §2-1] — 출발 때 켜진 옵션마다 **지금 그 원정 인원으로** 센 조건.
+     *   `active` 가 거짓이면 교체로 조건이 깨져 꺼진 것이다(되찾으면 다시 켜진다). 도는 원정이 없으면 `[]` · rng 0
+     * @returns `[{option, have, need, active}]`
+     */
+    function runTactics(state, run) {
+        return runOver(run) ? [] : snapMeasure(state, run.tactics ?? [], run.party, run.preset, run.fixed);
+    }
+
+    /** 「이 아이템을 끼면」 도는 원정의 전술 [신설 2026-09-21 · R130] — `heroCombatIf` 와 같은 사본으로 센다(원본 불변 · 가방 툴팁의 경고 줄) */
+    function runTacticsIf(state, run, heroUid, itemUid) {
+        const w = runOver(run) || !run.party.includes(heroUid) ? null : wearing(state, heroById(state, heroUid), itemUid);
+        return runTactics(w ? w.state : state, run);
+    }
+
+    /**
+     * 그 런의 버프 [신설 2026-09-30 · SCREEN_DESIGN §4-2 「버프」] — 그 런의 파티 전원이 받는 것을 **출처별로** 묶는다. 아무것도 안 바꾼다 · rng 0
+     *   `shrine` = 그 런이 입은 신단 id(없으면 null) · `tactics` = 출발 때 켜진 전술 중 **지금 조건이 선** 것의 합 `{flat, dr}`
+     *   (`tactic.bonusOf` — 같은 능력치는 더하고 피해 감소는 원천별이라 따로) · `codex` = **도감 Lv4 옵션의 합** 중 0 이 아닌 것 `{stat: v}`
+     *   (2026-10-18 · R286 — ~~계열 보정 중 전투가 읽는 셋~~).
+     *   **끝난 런도 그 런의 것을 낸다** — 관전 머리 줄의 신단 칩과 같다(`runTactics` 는 끝난 런에 `[]`). 핸들이 없으면 신단 · 전술은 빈다
+     */
+    function runBuffs(state, run) {
+        const on = run ? snapMeasure(state, run.tactics ?? [], run.party, run.preset, run.fixed).filter(m => m.active).map(applied) : [];
+        const cx = codexOptions(state).flat;
+        return {
+            shrine: run?.fixed?.shrine ?? null,
+            tactics: TC.bonusOf(on),
+            codex: Object.fromEntries(Object.entries(cx).filter(([, v]) => v)),
+        };
+    }
+
+    /**
+     * 레벨 차로 깎이는 경험치 — 영웅이 몬스터보다 높은 레벨마다 `xp_level_gap_mult` 를 한 번씩 곱한다(`몫 × mult ^ 차`).
+     *   **몬스터가 같거나 높으면 안 깎는다**(모자란 레벨은 적중이 이미 값을 치른다 · battle_design §9-4).
+     *   깎이는 양을 돌려준다 — 차가 없으면 정확히 0 이라 종전 값과 한 글자도 안 다르다 · rng 0
+     * @param byLevel 그 라운드 처치 XP 를 몬스터 레벨로 가른 것 `{lvl: xp}` (battle.js 라운드 요약의 `xpByLevel`)
+     */
+    function xpGapCut(byLevel, heroLevel) {
+        let cut = 0;
+        for (const [lvl, xp] of Object.entries(byLevel ?? {})) {
+            const gap = heroLevel - Number(lvl);
+            if (gap > 0) cut += xp * (1 - B.xp_level_gap_mult ** gap);
+        }
+        return cut;
+    }
+
+    /* ── 첫 클리어 상자 [2026-10-23 · R328 · 개정 2026-10-24 · R333 · R349 · base_expedition_design §1-6 · INTERFACE §2-7 · §5] ──
+       상자 칸 = `{uid, box: {kind, tier, n}}` — 종류(무기 · 방어구) · 등급(하급 · 중급 · 고급)과 겹친 개수만 든다. 깬 순간엔 **종류만** 굴리고(`grantClearBox`)
+       장비는 **깔 때** 고른 영웅에 맞게 그 영웅의 레벨로 굴린다(`openBox`). 한 보관 줄에 같은 종류 · 같은 등급은 한 칸이다(겹친다).
+       종류 · 방어구 부위는 어휘라 코드에 둔다 — **순서가 굴림의 인덱스**다(§5-3) · 등급 → 아래 · 위 희귀도 짝과 첫 클리어 상자의 등급은 규칙이다 */
+    const BOX_SALT = 0xB0C5, BOX_OPEN_SALT = 0xB0C7;
+    const BOX_KINDS = ['weapon', 'armor'];
+    const BOX_ARMOR = ['helmet', 'armor', 'gloves', 'boots'];   // equip_slot.csv:part_order 순서
+    const BOX_TIERS = { low: ['magic', 'rare'], mid: ['rare', 'epic'], high: ['epic', 'legendary'] };   // 등급 → [아래, 위] 희귀도 (2026-10-24 · R349)
+    const CLEAR_BOX_TIER = 'low';   // 첫 클리어 상자는 모든 단 하급 — 중급 · 고급은 들어오는 길이 아직 없다 (base_expedition_design 「남은 것」 ⑦)
+    /** 그 상자 등급이 여는 두 희귀도 `[아래, 위]`(사본) — 모르는 등급이면 null · 화면의 상자 툴팁 (INTERFACE §2-7 · R349) · rng 0 */
+    const boxRarities = tier => Object.hasOwn(BOX_TIERS, tier) ? [...BOX_TIERS[tier]] : null;
+    /** 그 보관 줄에서 그 종류 · 그 등급의 상자 칸 — 없으면 null · rng 0 */
+    const boxIn = (state, list, kind, tier) => list.map(u => state.items[u]).find(it => it?.box?.kind === kind && it.box.tier === tier) ?? null;
+    /** 상자 하나를 보관 줄에 넣는다 — 같은 종류 · 같은 등급 칸이 있으면 `n + 1`(칸을 안 먹는다) · 없으면 끝에 새 칸 · 새 칸이 없으면 false · rng 0 */
+    function putBox(state, list, kind, tier, cap) {
+        const at = boxIn(state, list, kind, tier);
+        if (at) { at.box.n += 1; return true; }
+        if (list.length >= cap) return false;
+        list.push(addItem(state, { box: { kind, tier, n: 1 } }).uid);
+        return true;
+    }
+    /** 옮긴 상자 칸을 받는 줄의 같은 종류 · 같은 등급 칸에 합친다 — 합쳤으면 true(옮긴 칸은 걷힌다 · 칸을 안 먹는다) · 상자가 아니거나 같은 칸이 없으면 false · rng 0 */
+    function mergeBox(state, uid, list) {
+        const it = state.items[uid];
+        const at = it?.box ? boxIn(state, list, it.box.kind, it.box.tier) : null;
+        if (!at || at === it) return false;
+        at.box.n += it.box.n;
+        dropFrom(state, uid);
+        delete state.items[uid];
+        return true;
+    }
+
+    /**
+     * 불러온 세이브의 상자 칸 · 우편을 맞춘다 [2026-10-24 · R333 · 버전 무변경 — INTERFACE §4] — 부대 인벤토리를 맞춘 **뒤에** 부른다.
+     *   옛 우편(`item` = 봉인된 무기 · 10-23)은 무기 상자 우편으로 바꾸고 그 무기를 지운다 · 옛 봉인 무기 칸은 **무기 상자 1개**로(미리 굴린 무기는 버린다 —
+     *   깔 때 그 영웅 레벨로 다시 굴린다) · 보관 줄 밖의 상자 칸은 지운다 · 한 줄에 같은 종류 · 같은 등급이 여럿이면 앞 칸 하나로 합친다 · 모양이 틀린 우편은 지운다
+     *   [R349] 등급(`tier`)이 없거나 모르는 상자 칸 · 우편은 하급(`low`) — 그때까지 모든 상자가 하급과 같은 희귀도(매직 · 레어)였다
+     */
+    function fitBoxes(s) {
+        s.counters.box = Number.isInteger(s.counters.box) && s.counters.box >= 0 ? s.counters.box : 0;
+        s.mail = (Array.isArray(s.mail) ? s.mail : []).map(m => {
+            if (!m || typeof m !== 'object' || !('item' in m)) return m;
+            const { item, ...rest } = m;
+            const old = s.items[item];
+            delete s.items[item];
+            return old?.box ? { ...rest, kind: 'weapon', tier: 'low' } : null;
+        }).filter(m => m && Number.isInteger(m.id) && Number.isInteger(m.no) && BOX_KINDS.includes(m.kind))
+            .map(m => Object.hasOwn(BOX_TIERS, m.tier) ? m : { ...m, tier: 'low' });
+        const held = new Set([...s.bags.flat(), ...s.stash]);
+        for (const [uid, it] of Object.entries(s.items)) {
+            if (!it?.box) continue;
+            if (!held.has(uid)) { delete s.items[uid]; continue; }
+            const ok = BOX_KINDS.includes(it.box.kind) && Number.isInteger(it.box.n) && it.box.n >= 1;
+            if (!ok) s.items[uid] = { uid, box: { kind: 'weapon', tier: 'low', n: 1 } };
+            else if (!Object.hasOwn(BOX_TIERS, it.box.tier)) it.box = { kind: it.box.kind, tier: 'low', n: it.box.n };
+        }
+        for (const list of [...s.bags, s.stash]) {
+            const first = {};
+            for (const u of list.slice()) {
+                const it = s.items[u];
+                if (!it?.box) continue;
+                const key = `${it.box.kind}/${it.box.tier}`;
+                if (!first[key]) { first[key] = it; continue; }
+                first[key].box.n += it.box.n;
+                list.splice(list.indexOf(u), 1);
+                delete s.items[u];
+            }
+        }
+    }
+
+    /** 보스 칸인가 — 그 칸의 라운드 줄에 보스 라운드가 있다(장소마다 III · 챕터보스 칸) · I · II 는 끝이 정예라 아니다 (2026-10-24 사용자 지시) · rng 0 */
+    const bossCell = stageId => !!deps.stages[stageId] && !!BT.stageRounds(deps.stages[stageId])?.some(r => r.round_type === 'boss');
+
+    function grantClearBox(state, run, diff, R) {
+        if (!bossCell(run.stageId)) return;
+        // 소비 순서 — 종류 1 (INTERFACE §5-2) · 신단과 같은 문법의 따로 선 스트림이라 전투 수열을 안 민다 · 보스 칸이 아니면 굴리지 않는다
+        const r = makeRng(deriveSeed(state.seed ^ BOX_SALT, run.seq ?? state.counters.battle));
+        const kind = BOX_KINDS[Math.floor(r() * BOX_KINDS.length)], tier = CLEAR_BOX_TIER;   // 등급은 굴리지 않는다 (R349)
+        // 나간 부대의 인벤토리 — 같은 종류 · 같은 등급 칸에 겹치고 · 새 칸이 없으면 우편함. 알아서 분해 · 넘침 분해를 안 지난다(드롭이 아니다)
+        const no = bagOf(state, run.preset) ? run.preset : 1;
+        const mail = !putBox(state, bagOf(state, no), kind, tier, capOf(state, 'bag'));
+        if (mail) {
+            state.counters.mail = (state.counters.mail ?? 0) + 1;
+            (state.mail ??= []).push({ id: state.counters.mail, kind, tier, no, stageId: run.stageId, difficulty: diff });
+        }
+        R.clearBox = { kind, tier, mail };
+    }
+
+    /**
+     * 끝난 라운드 하나를 정산한다 — `advanceRun` · `stepRun` 이 같이 쓴다.
+     *   ① **이긴 라운드만**: 골드 → 도감(처치 수) → 드롭(인벤토리 · 넘치면 그 순간 버린다) →
+     *      **경험치 = 그 라운드 처치 XP 합 × xp_rate 를 그 순간 살아 있는 영웅마다**(쓰러진 영웅은 그 라운드 몫이 없다 · 제 레벨보다 낮은 몬스터의 몫은 레벨 차로 깎인다 — `xpGapCut`) → 마지막 라운드면 클리어.
+     *      진 라운드(전멸 · 시간 초과)는 보상 없이 런을 닫는다
+     *   ② 런이 안 끝났으면 **경계 갈아입기** — 그 순간의 장비 · 레벨로(레벨업이 여기서 먹는다 · **레벨이 오른 영웅은 체력이 가득 찬다** — R182). 다음 라운드는 다음 걸음이 연다 (R130)
+     * @returns 런이 끝났나
+     */
+    function settleRound(state, run, s) {
+        const R = run.report, res = run.result;
+        // 마신 물약을 재고에서 뺀다 — 이겼든 졌든 그 라운드에 마신 것이다 (R124 · battle_design §7-1). 버린 라운드(철수 · 끊김)는 여기 안 온다
+        for (const [id, k] of Object.entries(s.potions ?? {})) spendPotion(state, id, k);
+        const leveled = [];   // 이 라운드에 레벨이 오른 영웅 uid — 경계 갈아입기가 체력을 가득 채운다(②) [2026-09-29 · R182 · hero_design §5]
+        if (s.cleared) {
+            state.resources.gold += s.gold;
+            R.gold += s.gold;
+            // ~~처치가 뱉는 가루~~ 는 2026-09-09 삭제 — 가루의 공급원은 **분해** 하나다(`salvage` · item_design §5-3)
+            // 도감 레벨의 출처 — 이긴 라운드의 처치 × 그 런 단의 도감 경험치 (monster_design §8 · 2026-10-10 처치 수 → 도감 경험치 · R239)
+            const cxPer = codexExpOf(run.difficulty ?? BASE_DIFF);
+            for (const [id, n] of Object.entries(s.kills)) state.codexExp[id] = (state.codexExp[id] ?? 0) + n * cxPer;
+            const gained = [];   // 들어온 드롭 — 의뢰 「수집」이 센다(알아서 분해로 녹은 것은 든다 · 넘쳐 분해된 것은 안 든다 — 칸에 못 들어왔다 · R153 · 2026-10-14)
+            // 드롭은 **나간 부대의 인벤토리**로 — 차면 그 부대의 몫만 분해된다 (v40 · ADR-0521 · 2026-10-14 ADR-0625)
+            const bag = bagOf(state, run.preset) ?? state.bags[0];
+            for (const it of s.drops) {
+                // 알아서 분해 [2026-09-21 · R125 · item_design §6-5] — **가방 참 검사보다 먼저** 선을 본다: 걸린 것은 칸을 안 먹고 버린 수에도 안 든다.
+                //   「그 런이 준 것」이라 uid 를 받아 리포트 `drops` 에 남긴 뒤 곧바로 지운다 — 화면은 흐린 빈 칸으로 그린다(SCREEN_DESIGN §4-3) · rng 0
+                //   **인벤토리가 차 있어도 같은 길이다** [2026-10-14 사용자 지시 「넘쳐서 못획득한 장비는 분해한 아이템을 얻도록」 · GAME_DESIGN §9 · item_design §6-5] —
+                //   넘친 드롭은 버리지 않고 가루로 받는다. 그 수는 `discarded`(이름은 그대로 — 넘쳐 분해한 수 · 알아서 분해에 걸린 것은 안 센다) · rng 0
+                //   **판정은 나간 부대의 규칙**(부대마다 격자 · 2026-10-22 R316) · 녹은 것은 지우기 전에 그 부대의 최근 분해 기록에 사본을 남긴다(넘침도 같다)
+                const auto = !salvageKeeps(state, run.preset, it);
+                if (auto || bag.length >= capOf(state, 'bag')) {
+                    const gone = addItem(state, it);
+                    R.drops.push(gone.uid);
+                    if (auto) gained.push(gone); else R.discarded++;
+                    gainSalvage(state, salvageYield(gone));   // 가루 + 부위 재료 (R373)
+                    logSalvaged(state, run.preset, gone);
+                    delete state.items[gone.uid];
+                    continue;
+                }
+                const added = addItem(state, it);
+                bag.push(added.uid);
+                R.drops.push(added.uid);
+                gained.push(added);
+            }
+            // 스킬 도안 [2026-09-29 · R179 · **2026-10-20 · R293 — ~~스킬북~~ → 도안**] — 재고에 쌓는다(가진 도안이어도 +1) · 가방 칸을 안 먹는다 · rng 0
+            for (const id of s.blueprints ?? []) { addBlueprint(state, id); (R.blueprints ??= []).push({ id }); }
+            // ~~처치 재료~~ — 2026-10-29 R373 삭제(item_design §1 「처치는 재료를 뱉지 않는다」) · 원정의 재료는 떨어진 장비를 분해해서 나온다(`salvageYield`)
+            commissionCount(state, run.stageId, s.killGrades ?? {}, gained);
+            // 경험치 — **그 순간 살아 있는 영웅만** 같은 양을 받는다 (사용자 확정 2026-09-14). 레벨업은 다음 라운드부터 전투에 먹는다(②)
+            //   **경험치 획득 +%**(방어구 공통옵션)는 **낀 영웅 본인 몫**만 늘린다 [2026-09-18 사용자 확정 · item_design §1 「갑옷 옵션」] —
+            //   그 순간 입은 장비로 잰다(`heroCombat` 의 옵션 묶음). 0 이면 종전과 같은 값 · rng 0
+            const xpBase = s.xp * B.xp_rate;
+            for (const uid of s.alive) {
+                const h = heroById(state, uid);
+                if (!h) continue;
+                // 폭식의 신단 — 그 런이 입은 신단의 경험치 몫을 같은 괄호에 더한다 (2026-09-29 · base_expedition_design §1-2)
+                const gain = (heroCombat(state, h).option_fx?.xpGain ?? 0) + shrineFx(run.fixed?.shrine, 'xp_gain_pct');
+                // 레벨 차 감쇠 [2026-09-30 사용자 「레벨차이가 나면 얻는 경험치가 줄도록」 · hero_design §5] — **영웅마다 따로** · 정산 순간의 레벨로 잰다
+                const base = xpBase - xpGapCut(s.xpByLevel, h.level) * B.xp_rate;
+                const xp = Math.round(gain ? base * (1 + gain) : base);
+                const lu = H.grantXp(h, xp, run.rng);
+                R.xp[uid] = (R.xp[uid] ?? 0) + xp;
+                if (lu) { mergeLevelUp(R.levelUps, lu); leveled.push(uid); }
+            }
+        }
+        // 사실의 기록 — 소요 · 라운드 · 빗나감 · 기여 · 전투불능은 **정산한 라운드 끝**까지 (진 라운드도 끝까지 싸운 것이라 들어간다)
+        R.durationSec = s.t;
+        R.rounds = clone(res.rounds);
+        R.roundsCleared = res.roundsCleared;
+        R.strikes = clone(res.strikes);
+        R.contrib = clone(s.contrib);
+        R.downed = res.downed.slice();
+        const slot = runAt(state, run.preset);   // **그 부대의 칸** — 다른 부대는 제 걸음으로 따로 정산한다 (v38 · 다부대)
+        if (slot) slot.durationSec = s.t;
+
+        if (s.ended) {
+            R.won = res.won;
+            R.reason = res.reason;
+            if (res.fall) R.fall = clone(res.fall);   // 진 런 · 시간 초과의 사실 — 리포트 「왜 졌나」 (SCREEN_DESIGN §4-3 · ADR-0623)
+            // 첫 클리어 상자 — **그 단에서 처음 깬 보스 칸**이면 깬 순간 굴린다 · 깬 기록을 적기 **전에** 본다 (2026-10-23 · R328 · 2026-10-24 보스 칸만 · INTERFACE §2-7)
+            const diff = run.difficulty ?? BASE_DIFF;
+            if (res.won && !clearedList(state, diff).includes(run.stageId)) grantClearBox(state, run, diff, R);
+            // 깬 기록은 **그 런의 단**에 — 첫 단 = `progress.cleared` · 나머지 = `progress.clearedIn[단]` (2026-10-10 · R236)
+            if (res.won) markCleared(state, diff, run.stageId);
+            // 같이 깬 칸 수 — **칸을 이길 때마다 +1**(나간 인원 그대로 · 처음 깬 칸이든 다시 깬 칸이든) · 진 칸 · 철수 · 끊김은 안 센다 [2026-09-29 사용자 지시 · tactic_card_design §5-8]
+            if (res.won) { state.bonds = state.bonds ?? {}; state.bonds[bondKey(run.party)] = bondOf(state, run.party) + 1; }
+            run.done = true;
+            if (slot) slot.active = false;
+            // 신단 [2026-09-29 · base_expedition_design §1-2] — 그 칸이 끝나면 **이기든 지든** 입던 신단은 사라진다 [2026-09-30 사용자 지시 — ~~진 칸은 그대로 둔다~~] ·
+            //   **이긴 칸**만 다음 칸이 같은 장소의 다음 칸이면 새로 하나 선다. rng = 신단 스트림(전투 수열과 안 섞인다 · INTERFACE §5-1) · 진 칸은 굴리지 않는다
+            if (slot) {
+                const to = res.won && shrineList.length ? shrineTarget(run.stageId) : null;
+                const r = to ? makeRng(deriveSeed(state.seed ^ 0x5B1E, run.seq ?? state.counters.battle)) : null;
+                slot.shrine = to ? { id: shrineList[Math.floor(r() * shrineList.length)].id, stageId: to } : null;
+            }
+            return true;
+        }
+        run.battle.refit(runUnits(state, run), leveled);
+        // 물약 칸 다시 채우기 [2026-10-22 · R315 · battle_design §7-1] — 굳힌 편성(`run.squad`)의 칸 구성을 **방금 뺀 재고**에서 앞 칸부터 채워 넘긴다(출발과 같은 함수) ·
+        //   다음 라운드를 열 때 칸이 그것이 된다 · 재고가 모자란 칸은 빈 채로 시작한다 · rng 0
+        if (run.squad) run.battle.restock(fillSlots(state, run.squad));
+        return false;
+    }
+
+    /**
+     * 라운드 하나를 끝까지 [개정 2026-09-21 · R130] — 첫머리 갈아입기(`stepRun` 과 같다) 뒤 **지금 라운드를 끝까지 계산해** 정산한다
+     * (`settleRound`). `stepRun(state, run, Infinity)` 의 한 라운드판이다 — 검증 · `resolveBattle` 이 쓴다. **게임 화면은 `stepRun`** 을 쓴다.
+     * ~~진행 시각이 `run.segEnd` 에 닿았을 때 부른다~~ — 라운드를 미리 계산하지 않아 끝 시각이 없다
+     */
+    function advanceRun(state, run, now) {
+        if (runOver(run)) return { ok: false, err: 'done' };
+        run.battle.refit(runUnits(state, run));
+        const s = run.battle.advance(Infinity);
+        const done = settleRound(state, run, s);
+        return { ok: true, round: s, done };
+    }
+
+    /**
+     * 걸음 [신설 2026-09-21 · R130 · base_expedition_design §1-5 — 원정 중 교체는 그 순간부터] — 재생 시각(또는 앱 시계) `until` 까지 원정을 민다.
+     *   ① **첫머리 갈아입기** — 그 순간의 파티를 넘긴다(바뀐 영웅만 · 쓰러진 영웅은 안 입는다 · 보스 라운드 도중도 포함).
+     *      그래서 원정 중 장비 · 스킬 트리 교체는 **다음 걸음의 첫머리 = 바꾼 시각**에 먹는다
+     *   ② `advance(until)` — 끝난 라운드가 나오면 정산하고(`settleRound` — 경계 갈아입기 포함) 이어 민다(한 걸음에 여러 라운드 — 숨긴 탭)
+     *   ~~③ 이 런에서 쓰러져 있는 영웅(`runs[preset-1].fallen`)을 적는다~~ — 2026-10-21 걷었다(R300)
+     * **교체가 없으면 어디서 끊어 걸어도 `resolveBattle` 과 같은 결과다**(틱 수열이 같다 · INTERFACE §8 항목 18)
+     * @returns `{ok, rounds, done}` — 정산한 라운드 수 · 런이 끝났나
+     */
+    function stepRun(state, run, until) {
+        if (runOver(run)) return { ok: false, err: 'done' };
+        run.battle.refit(runUnits(state, run));
+        let rounds = 0, done = false;
+        for (let s = run.battle.advance(until); s; s = run.battle.advance(until)) {
+            rounds++;
+            done = settleRound(state, run, s);
+            if (done) break;
+        }
+        return { ok: true, rounds, done };
+    }
+
+    /** 그 부대의 원정을 끊는다 — 진행 중이던 라운드는 **없던 것**이다(보상 없음 · 리포트는 마지막으로 정산한 라운드 끝 그대로). 반복 · 이어 가기도 끈다. 끊었으면 true */
+    function cutRun(state, reason, no) {
+        const run = runAt(state, no);
+        if (!run?.active) return false;
+        const R = liveReport(state, no);
+        run.active = false;
+        run.repeat = false;
+        run.auto = false;             // 끊긴 부대는 다음 런이 안 나간다 (v39)
+        run.shrine = null;            // 신단은 이어 가는 런만 이어받는다 — 끊긴 부대는 잃는다 (2026-09-29)
+        if (R) R.reason = reason;
+        return true;
+    }
+
+    /**
+     * 철수 — 관전의 옛 「건너뛰기」 자리다 (R89). 진행 중이던 라운드는 버리고 원정을 끝낸다 · 이긴 라운드의 보상은 이미 들어가 있다.
+     * **런이 이미 끝나 다음 런을 기다리는 부대면 이어 가기만 끈다** [2026-09-29 · v39 — 원정이 멈추지 않으므로 철수가 멈추는 길이다 · PLAN_stage_segments D7] —
+     *   그 핸들이 그 부대의 마지막 런일 때만(`lastAt`) · 리포트는 그대로다
+     */
+    function retreatRun(state, run, now) {
+        if (runOver(run)) {
+            const slot = runAt(state, run?.preset);
+            if (!run || !slot?.auto || slot.active || slot.lastAt !== run.report.at) return { ok: false, err: 'done' };
+            slot.auto = false;
+            slot.repeat = false;
+            slot.shrine = null;   // 칸 사이 철수 — 다음 런이 없으니 신단도 없다 (2026-09-29)
+            return { ok: true, report: run.report };
+        }
+        run.done = true;
+        cutRun(state, 'retreat', run.preset);   // 핸들이 어느 부대인지 안다 — 다른 부대는 안 건드린다 (v38 · 다부대)
+        return { ok: true, report: run.report };
+    }
+
+    /**
+     * 개발 · 검증용 **즉시 계산** — 출발한 뒤 라운드를 끝까지 같은 `now` 로 넘긴다(장비를 안 바꾸므로 라운드 사이에 들어가는 것은 레벨업뿐이다).
+     * 골든 · 단정 · 캘리브레이션 · `?dev=battle` 이 쓴다. **게임 화면은 안 쓴다** — 화면은 `departRun` → `stepRun` 을 시간에 맞춰 부른다(R130).
+     * **한 판으로 끝나는 원정이다** [2026-09-29] — 끝나면 이어 가기를 끈다(`auto` false). 안 끄면 다음 칸을 낼 핸들이 없는데 그 인원이 칸 사이에 붙잡혀 있다(`runParty`)
+     */
+    function resolveBattle(state, stageId, now, no = state.preset, diff = curDiff(state)) {
+        const d = departRun(state, stageId, now, no, null, diff);
+        if (!d.ok) return d;
+        while (!advanceRun(state, d.run, now).done);
+        noteRunEnd(state, d.run, now);   // 즉시 계산의 끝난 순간 = 부른 `now` — 챕터보스를 이겼으면 재등장 대기가 선다 (2026-10-10 · R240)
+        const slot = runAt(state, d.run.preset);
+        if (slot && !slot.active) slot.auto = false;
+        return { ok: true, result: d.run.result, report: d.report };
+    }
+
+    /**
+     * 재접속 · 멈춤 — **원정은 게임이 켜져 있는 동안만 돈다** (base_expedition_design §1 · 2026-08-25).
+     * **도는 부대를 전부 끊는다** [개정 2026-09-14 · R89 · 사용자 확정 · **다부대 2026-09-23**] — 진행 중이던 라운드는 버리고(리포트 `closed`) 반복을 끈다.
+     *   ~~꺼져 있던 사이 돌던 런은 마무리된 것으로 본다~~ 는 폐기 — 남은 라운드를 마무리해 주면 껐다 켜기로 원정을 무한히 빨리 돌릴 수 있다.
+     * 끊었거나 **이어 가던**(`auto` — 다음 런을 기다리던) 부대가 하나라도 있으면 재접속 알림을 남긴다(`notice.runs` = 부대마다 한 줄 · 편성 번호 순).
+     *   ~~반복이 켜져 있던 부대~~ → 이어 가던 부대 (v39 — 반복을 안 켜도 원정이 이어진다 · PLAN_stage_segments D7)
+     * 오프라인에 도는 것은 파견뿐이다 — 미구현
+     */
+    function closeRun(state, now) {
+        const hit = [];
+        for (let i = 0; i < (state.runs?.length ?? 0); i++) {
+            const run = state.runs[i];
+            if (!run) continue;
+            const going = run.auto === true;
+            const cut = cutRun(state, 'closed', i + 1);
+            if (!cut && !going) continue;
+            run.repeat = false;
+            run.auto = false;
+            run.shrine = null;
+            hit.push({ stageId: run.stageId, at: run.lastAt });
+        }
+        if (hit.length === 0) return null;
+        // `stageId` · `at` 은 **첫 줄 그대로** — 한 부대만 돌던 화면이 안 깨지게 남긴다 (v38)
+        state.notice = { kind: 'runClosed', runs: hit, stageId: hit[0].stageId, at: hit[0].at, seenAt: now };
+        return state.notice;
+    }
+    function dismissNotice(state) { state.notice = null; }
+
+    /**
+     * 원정의 다음 출발 [신설 2026-09-22 · 부채 #57 · INTERFACE §2-7 · base_expedition_design §1 · ADR-0300 · **개정 2026-09-29 — 원정은 멈추지 않는다**] —
+     * **아무것도 안 바꾼다** · rng 0. **부대마다 따로 묻는다** [2026-09-23 · 다부대] — `no` 가 없으면 그 부대는 없는 것이다.
+     * 끝난 원정이 **이어 가는 중**(`auto` — 철수 · 끊기가 아니다)이면 같은 편성으로 **끝난 순간 + [balance.csv:repeat_restart_sec]** 에 나간다 —
+     *   **이긴 런 → 다음 칸**(`nextStageOf` — 반복 켬 = 장소 안 순환 · 끔 = 전진 · 갈 곳이 없으면 같은 칸) · **진 런(전멸 · 시간 초과) → 같은 칸**
+     *   (PLAN_stage_segments D7 · D8 — ~~반복이 켜져 있고 이긴 런일 때만 같은 스테이지로~~).
+     * 관전 결과 띠의 세기와 앱 시계가 둘 다 이 답대로만 출발시킨다 — 보고 있든 다른 탭이든 같은 시각이다(옛 화면은 두 곳에서 따로 셌다).
+     * `endedAt` = 그 런이 **실제로 끝난 순간**(ms) — 배속이 게임 시각을 밀어서 로직은 모르고 화면 층이 잰다
+     */
+    function nextRepeat(state, endedAt, no) {
+        const run = runAt(state, no);
+        if (!run || run.active || run.auto !== true) return null;
+        const report = state.reports.find(r => r.preset === no && r.at === run.lastAt);
+        if (!report || report.reason == null || report.reason === 'retreat' || report.reason === 'closed') return null;
+        // 다음 칸은 **그 부대가 도는 단**의 기록으로 고른다 — 고른 단이 그새 바뀌어도 부대는 제 단을 돈다 (2026-10-10 · R236)
+        const cur = run.difficulty ?? BASE_DIFF;
+        // 바퀴를 넘는다 [2026-10-24 사용자 「노말 다 깨면 자동으로 나이트메어 액트1부터」 · R354 — ~~바퀴 끝에서 다음 단으로 안 넘어간다~~(R236)] —
+        //   반복 끔으로 **난이도 해금 칸**(`DIFF_GATE`)을 이겼고 다음 단이 있으면 다음 단의 첫 칸 · 반복 켬(그 칸 파밍) · 마지막 단은 제 단 그대로
+        const up = report.won && run.repeat !== true && run.stageId === DIFF_GATE ? DIFF_IDS[DIFF_IDS.indexOf(cur) + 1] : undefined;
+        const climb = up != null && stageUnlocked(state, deps.stageOrder[0], up);
+        const dif = climb ? up : cur;
+        const stageId = climb ? deps.stageOrder[0] : report.won ? nextStageOf(state, run.stageId, run.repeat === true, cur) : run.stageId;
+        // 다음 런이 이어받을 신단 — 그 칸의 것일 때만(`departRun` 과 같은 판정) · `fresh` = 막 이긴 칸 뒤에 선 것 — 진 칸 뒤엔 신단이 없어 늘 참이다 (2026-09-29 · 09-30)
+        const sh = run.shrine?.stageId === stageId && shrineById[run.shrine.id] ? { id: run.shrine.id, fresh: report.won } : null;
+        // 챕터보스 재등장 — 다음 칸의 보스가 죽어 있으면 돌아오는 시각까지 기다린다(재출발 초와 늦은 쪽) · 화면의 [건너뛰기]는 `respawn` 앞으로 못 당긴다 (2026-10-10 · R240)
+        const respawn = bossRespawnAt(state, stageId, dif);
+        return { stageId, preset: run.preset, difficulty: dif, at: Math.max(endedAt + B.repeat_restart_sec * 1000, respawn ?? -Infinity), shrine: sh, respawn };
+    }
+
+    /* ── 선술집 — 명단 · 리롤 쿨다운 (base_expedition_design §2-4 확정 2026-08-26) ── */
+
+    /**
+     * 명단 — 시드+카운터에서 매번 같은 사람들이 다시 나온다 (명단 자체는 저장하지 않는다).
+     * **고용한 칸은 `null`** — 빈 채로 남고 다음 리롤에 채워진다. 그래서 저장하는 것은 「몇 번 칸을 샀나」뿐이다
+     */
+    function tavernCandidates(state) {
+        const rng = makeRng(deriveSeed(state.seed ^ 0x5A17, state.counters.tavern));
+        // 고용한 칸 · 수색 칸에 보관한 칸(`tavernKeep` · 2026-10-27)은 빈다
+        const gone = [...(state.tavern?.hired ?? []), ...(state.tavern?.kept ?? [])];
+        // 내 영웅과 같은 이름은 피한다 — rng 를 안 쓰고 빈 칸(`null`)은 건너뛴다 (`hero.avoidNames` · 2026-10-15 · PLAN_user_review 2-5)
+        const list = H.rollCandidates(rng, limitsOf(state).tavernCandidates).map((c, i) => (gone.includes(i) ? null : c));
+        return H.avoidNames(list, state.heroes.map(h => h.name));
+    }
+    /**
+     * 선술집에서 온 영웅(명단 · 수색)의 시작 장비 스트림 [2026-09-25 사용자 지시] — **그 영웅의 번호**(`addHero` 가 올린 `counters.hero`)가 정한다.
+     *   명단(`^ 0x5A17`) · 수색 결과(`^ 0x5EA7`)와 갈라 두어 나올 영웅을 안 바꾼다 · 불러오기를 다시 해도 같은 한 벌이다 (INTERFACE §5-1)
+     */
+    const recruitRng = state => makeRng(deriveSeed(state.seed ^ 0x6EA2, state.counters.hero));
+    /** 무료 리롤이 열리는 시각 — 리롤한 적이 없으면 이미 열려 있다. 쿨다운은 **플레이어 행동**에 걸린다(자동 갱신 없음) */
+    function tavernFreeAt(state) {
+        const at = state.tavern?.rerolledAt;
+        return at == null ? 0 : at + B.tavern_refresh_hours * 60 * 60 * 1000;
+    }
+    /** 선술집 화면 상태 한 덩어리 — 판정을 여기서 다 낸다 (masteryState 와 같은 규칙) · `open` = 고용이 열렸나(선술집 건물 · R137) */
+    function tavernState(state, now) {
+        const freeAt = tavernFreeAt(state);
+        return { candidates: tavernCandidates(state), kept: state.tavern?.kept ?? [], freeAt, free: now >=freeAt, cost: tavernRerollCost(state), open: hasFeature(state, 'hire') };
+    }
+    /** 다음 유료 리롤 값 — 무료 리롤 뒤 유료 리롤마다 **두 배**(상한 없음) [2026-09-30 사용자 지시] · 쿨다운이 끝나면 다음 리롤이 무료라 첫 값으로 돌아간다 */
+    const tavernRerollCost = state => B.tavern_reroll_cost * 2 ** (state.tavern?.paid ?? 0);
+    /**
+     * 리롤 — 쿨다운이 끝났으면 무료, 아니면 즉시 리롤 비용(골드). 리롤은 명단을 통째로 간다 · 선술집을 안 지었으면 `unbuilt`.
+     * **쿨다운은 무료 리롤만 다시 건다** — 유료 리롤은 무료 시계를 안 건드린다(무료는 따로 논다 · 2026-10-16 사용자)
+     */
+    function tavernReroll(state, now) {
+        if (!hasFeature(state, 'hire')) return { ok: false, err: 'unbuilt' };
+        const free = now >= tavernFreeAt(state);
+        const cost = tavernRerollCost(state);
+        if (!free && state.resources.gold < cost) return { ok: false, err: 'gold' };
+        if (!free) state.resources.gold -= cost;
+        state.counters.tavern += 1;
+        state.tavern = { rerolledAt: free ? now : state.tavern.rerolledAt, hired: [], paid: free ? 0 : (state.tavern?.paid ?? 0) + 1 };
+        return { ok: true, free };
+    }
+    function hire(state, index) {
+        if (!hasFeature(state, 'hire')) return { ok: false, err: 'unbuilt' };   // 선술집이 연다 (R137)
+        if (state.heroes.length >= limitsOf(state).roster) return { ok: false, err: 'roster' };
+        if (state.resources.gold < B.tavern_hire_cost) return { ok: false, err: 'gold' };
+        const c = tavernCandidates(state)[index];
+        if (!c) return { ok: false, err: 'missing' };
+        state.resources.gold -= B.tavern_hire_cost;
+        const h = addHero(state, clone(c));
+        equipStarter(state, h, recruitRng(state));   // 시작 영웅과 같은 한 벌을 입고 온다 (2026-09-25 사용자 지시)
+        // 고용한 칸만 빈다 — 명단을 갈지 않는다. 고용이 무료 리롤 우회로가 되면 쿨다운이 무의미해진다 (§2-4)
+        state.tavern = state.tavern ?? { rerolledAt: null, hired: [], paid: 0 };
+        state.tavern.hired.push(index);
+        return { ok: true, hero: h };
+    }
+    /**
+     * 관리자 모드 — 그 직업 영웅 한 명을 그 레벨로 로스터 끝에 넣는다 [2026-10-08 사용자 「30레벨 전사, 마법사, 기사 … 키우기 귀찮아서」 · 개발 장치 · SCREEN_DESIGN §10-3].
+     *   굴림은 선술집 후보와 같다(`hero.rollHeroOf` — 등급도 굴린다 · 그 영웅이 받을 번호의 전용 스트림) · 고용과 같은 시작 장비 한 벌 ·
+     *   레벨은 1 에서 그 레벨까지의 필요 XP 합을 한 번에 준다 — **레벨업을 차례로 거쳐** 마스터리 포인트가 오른 수만큼 붙는다(`grantXp` · 상한 `hero_level_cap`). 골드를 안 쓴다
+     *   `cls` 가 null 이면 메인 직업 중 하나를 그 스트림의 첫 수로 고른다 · `openAll` 을 안 본다 — 로스터 자리만 본다 [2026-10-23 사용자 「1마리씩 … 랜덤하게」 · 「자리있으면 넣어 없으면 넣지마」 · R332]
+     */
+    function adminHero(state, cls, level) {
+        if (state.heroes.length >= limitsOf(state).roster) return { ok: false, err: 'roster' };
+        const rng = makeRng(deriveSeed(state.seed ^ 0xAD31, state.counters.hero + 1));
+        const rolled = H.rollHeroOf(rng, cls ?? H.mainClasses[Math.floor(rng() * H.mainClasses.length)]);
+        if (!rolled) return { ok: false, err: 'class' };
+        const h = addHero(state, rolled);
+        equipStarter(state, h, recruitRng(state));
+        let xp = 0;
+        for (let l = 1; l < Math.min(level, B.hero_level_cap); l++) xp += H.xpNeeded(l);
+        H.grantXp(h, xp, null);   // rng 를 안 쓴다(INTERFACE §2-4)
+        return { ok: true, hero: h };
+    }
+
+    /* ── 상점 — 특수상단 방문 시계 · 상단 목록 (base_expedition_design §2-6 · SCREEN_DESIGN §8-3 · 2026-09-21 사용자 지시 · ADR-0223) ──
+       특수상단 시계는 **게임을 만든 시각에서 센다** — `trade_visit_hours` 마다 상인이 오고 `trade_stay_hours` 머문다. 벽시계라 오프라인에도 흐른다.
+       상단 목록은 그 시계와 **무관하다** [2026-10-16 사용자 「상인이 오는건 선술집처럼 그냥 무료리롤을 직접 누르게」] — [교체]로만 바뀌고,
+       무료 교체는 선술집처럼 쿨다운(`shop_refresh_hours`)이 건다. 시드 + 목록 번호(`counters.shop`)라 목록은 저장하지 않는다 — 선술집 명단과 같은 문법 */
+    const HOUR_MS = 60 * 60 * 1000;
+    /** 희귀도마다 한 값 — 상단 희귀도는 **드롭 가중치 그대로**(`rollGear` 에 가중치를 안 넘긴다 · 레어도 선다) [2026-10-06 사용자 지시 「상점가중치 10으로 올려」 · base_expedition_design §2-6] */
+    const SHOP_PRICE = { normal: B.shop_price_normal, magic: B.shop_price_magic, rare: B.shop_price_rare };
+    /** 장비 한 점의 값 — 희귀도 값 × 배율 ^ 레벨 구간(`shop_price_step_levels` 마다 한 번 · 첫 구간 = 희귀도 값 그대로) [2026-10-06 사용자 지시 「10레벨 단위로」] */
+    const shopPriceOf = item => Math.round(SHOP_PRICE[item.rarity] * B.shop_price_step_mult ** Math.floor((item.ilvl - 1) / B.shop_price_step_levels));
+
+    /** 방문 시계 — rng 를 안 쓰고 아무것도 안 바꾼다. 앱 시계가 틱마다 불러 방문이 바뀌는 순간을 잰다(목록 굴림과 갈라 둔 이유) */
+    function shopVisit(state, now) {
+        const period = B.trade_visit_hours * HOUR_MS, stay = B.trade_stay_hours * HOUR_MS;
+        const t0 = state.createdAt ?? 0;
+        // 시계가 게임을 만든 시각보다 뒤로 가 있으면(기기 시계를 돌렸다) 첫 회차의 첫 순간으로 본다
+        const cycle = Math.floor(Math.max(0, now - t0) / period);
+        const arriveAt = t0 + cycle * period;
+        const leaveAt = arriveAt + stay;
+        const nextAt = arriveAt + period;
+        const here = now < leaveAt;
+        return { cycle, here, arriveAt, leaveAt, nextAt, remainMs: (here ? leaveAt : nextAt) - now };
+    }
+
+    /** 지금 진행 중인 챕터 — 열린 스테이지 중 **가장 뒤의 것**의 챕터 · **첫 단(노말)의 기록**으로 센다 — 고른 난이도와 무관 (2026-10-10 · R236) */
+    function frontierChapter(state) {
+        let ch = chapterBands[0]?.band ?? 1;
+        for (const id of deps.stageOrder) if (stageUnlocked(state, id, BASE_DIFF)) ch = deps.stages[id]?.chapter ?? ch;
+        return ch;
+    }
+
+    /**
+     * 보유 재료 — 줄(철광석 · 약초 · 목재 · 가루) × 단계(최하급 → 최상급) (SCREEN_DESIGN §6 재료 탭 · ADR-0379 · 2026-10-25 R356 · 2026-10-27 R359 · 2026-10-29 R373 — 단계 다섯 · 가루 줄).
+     * 사다리의 재료가 전부 늘 선다(0 개여도). 낙인은 `resources` 라 안 든다 · rng 0
+     */
+    function materialsState(state) {
+        const mats = state.materials ?? {};
+        return { items: MAT_LADDER.map(m => ({ id: m.id, post: m.post, tier: m.tier, have: mats[m.id] ?? 0 })) };
+    }
+
+    /** 재료 사다리 — 줄 순서 × 단계 · 이름 · 합성 비용 (`MAT_LADDER` 사본 · 순수 · 2026-10-27 · R359) */
+    const materialLadder = () => MAT_LADDER.map(m => ({ ...m }));
+
+    /**
+     * 합성 화면 상태 [2026-10-27 · R359 · item_design §5-2] — **판정을 여기서 다 낸다**(`potionState` 와 같은 규칙).
+     * `list` = `material_synth.csv` 행 순서 · `have` = 바로 아래 재료 · `own` = 이 재료 · `max` = 아래 재료 · 골드 둘 다 맞는 최대 개수(닫혀 있으면 0) ·
+     * `err` = 하나를 누르면 나올 거절(`unbuilt` → `materials` → `gold`) 또는 null · 상태를 안 바꾼다 · rng 0
+     */
+    function synthState(state) {
+        const open = hasFeature(state, 'synth'), mats = state.materials ?? {}, gold = state.resources.gold ?? 0;
+        const list = MAT_SYNTH.map(r => {
+            const m = MAT_SYNTH_BY_ID[r.id], have = mats[m.from] ?? 0;
+            const max = open ? Math.min(Math.floor(have / m.need), m.gold > 0 ? Math.floor(gold / m.gold) : Infinity) : 0;
+            const err = !open ? 'unbuilt' : have < m.need ? 'materials' : gold < m.gold ? 'gold' : null;
+            return { id: m.id, from: m.from, post: m.post, tier: m.tier, need: m.need, gold: m.gold, have, own: mats[m.id] ?? 0, max, err };
+        });
+        return { open, list };
+    }
+
+    /**
+     * 합성 `n`회 [2026-10-27 · R359 · item_design §5-2] — 바로 아래 재료 `need × n` · 골드 `gold × n` 을 내고 그 재료를 n 올린다 · 즉시 · 실패 없음.
+     * 거절 `unbuilt` → `missing`(표에 없는 재료 · `n` 이 양의 정수가 아님) → `materials` → `gold` — **다 만들거나 하나도 안 만든다** · 거절이면 아무것도 안 바뀐다 · rng 0
+     */
+    function synthesize(state, id, n = 1) {
+        if (!hasFeature(state, 'synth')) return { ok: false, err: 'unbuilt' };
+        const m = MAT_SYNTH_BY_ID[id];
+        if (!m || !Number.isInteger(n) || n < 1) return { ok: false, err: 'missing' };
+        const gold = m.gold * n;
+        if ((state.materials?.[m.from] ?? 0) < m.need * n) return { ok: false, err: 'materials' };
+        if (state.resources.gold < gold) return { ok: false, err: 'gold' };
+        state.materials[m.from] -= m.need * n;
+        state.resources.gold -= gold;
+        state.materials[id] = (state.materials[id] ?? 0) + n;
+        return { ok: true, id, n, gold, have: state.materials[id] };
+    }
+
+    /** 상단이 파는 부위 — 착용 위치 순서에서 부위만 한 번씩(반지는 위치가 둘이어도 한 종류다) */
+    const shopParts = [...new Set(deps.equipSlots.map(s => s.part))];
+    /** 부위마다 파는 개수 — **무기만 따로**(맨 윗줄을 혼자 채운다 · 사용자 지시 2026-09-21) · 나머지는 한 값 */
+    const shopCountOf = (state, part) => (part === 'weapon' ? limitsOf(state).shopWeapon : limitsOf(state).shopPerSlot);
+
+    /** 상단 무료 교체가 열리는 시각 — 교체한 적이 없으면 이미 열려 있다. 쿨다운은 **무료 교체**에만 걸린다(자동 갱신 없음 · `tavernFreeAt` 과 같은 틀 · 2026-10-16 사용자) */
+    function shopFreeAt(state) {
+        const at = state.shop?.rerolledAt;
+        return at == null ? 0 : at + B.shop_refresh_hours * HOUR_MS;
+    }
+    /** 교체도 구매도 한 적 없는 목록의 기록 — 가운데 레벨 1 · 무료 열림 [2026-10-16 사용자 「한 번도 교체 안 한 첫 목록 = Lv 1」] */
+    const shopFirst = () => ({ level: 1, rerolledAt: null, paid: 0, sold: [], blueprints: [] });
+
+    /**
+     * 상점 화면 상태 한 덩어리 — 특수상단 방문 시계 + 상단 목록. **판정을 여기서 다 낸다**(`tavernState` 와 같은 규칙).
+     * 목록은 **부위마다 `shop_equip_per_slot` 개**(무기만 `shop_equip_weapon` 개)이고 같은 부위가 붙어 선다
+     * [2026-09-21 사용자 지시 「종류별로 한 3개씩만 해서 붙여놔야지 서로」 · 「맨위에 무기 6개로 하고 다른걸 하나씩 밀어보자」].
+     * rng = `deriveSeed(seed ^ 0x5409, 목록 번호)` — 부위 순서대로 칸마다 `item.rollGear` 한 점 (INTERFACE §5-1 · §5-2).
+     * 아이템 레벨 = **드롭과 같은 굴림** — 가운데 = 교체 때 고른 영웅의 레벨 · 반폭 = `battle.ilvlSpreadOf` [2026-10-16 사용자 「드롭이랑 똑같이해 위에꺼가 나와도 괜찮음」].
+     * 아이템은 `uid` 가 없다 — 가방에 들지 않은 물건이라 `addItem` 을 안 지난다
+     */
+    function shopState(state, now) {
+        const visit = shopVisit(state, now);
+        const list = state.counters.shop ?? 0;
+        const sh = state.shop ?? shopFirst();
+        const rng = makeRng(deriveSeed(state.seed ^ 0x5409, list));
+        const spread = BT.ilvlSpreadOf(sh.level);
+        // 잠긴 칸 — 맨 윗줄(무기 · 물약)은 상단(`shop`)이 · 둘째 · 셋째 줄(나머지 부위 · 도안)은 상단 r2(`shop_rows`)가 연다 [2026-10-30 사용자 · R390].
+        //   잠긴 칸도 굴린다 — 목록은 랭크와 무관하다(rng 소비가 랭크에 따라 안 갈린다)
+        const rows = hasFeature(state, 'shop_rows');
+        const equip = [];
+        for (const part of shopParts)
+            for (let i = 0; i < shopCountOf(state, part); i++) {
+                const [item] = I.rollGear(rng, { slots: [part], ilvl: sh.level, ilvlSpread: spread });
+                equip.push({ item, gold: shopPriceOf(item), sold: sh.sold.includes(equip.length), locked: part !== 'weapon' && !rows });
+            }
+        // `open` = 상단 · `trade` = 교역소(2026-10-30 · 교환은 아직 없다 — 열렸나만) · `special` = 특수상단 방문 — 건물 랭크가 연다(R137). 목록 · 시계는 닫혀 있어도 같은 값이다(시드 + 번호)
+        // 물약 — **정해진 셋을 늘 판다** [2026-09-28 사용자 지시 · base_expedition §2-6] — `potion.csv:shop_gold` 가 선 행만 · 회차 · 매진이 없다
+        const potions = potionRows.filter(p => p.shopGold != null).map(p => ({ id: p.id, tier: p.tier, heal: p.heal, gold: p.shopGold, have: state.potions?.[p.id] ?? 0 }));
+        // 스킬 도안 — 목록마다 `shop_book_count` 장 · 따로 선 스트림(0x540B) [2026-09-29 사용자 지시 · base_expedition §2-6 · INTERFACE §5-2 · 2026-10-20 · R293 ~~스킬북~~]
+        const blueprints = shopBlueprintIds(state, list).map((id, i) => ({ id, gold: B.shop_book_gold, sold: sh.blueprints.includes(i), locked: !rows }));
+        // 교체 값 — 무료가 열렸으면 0 · 아니면 무료 뒤 유료 교체마다 두 배(상한 없음) [2026-09-30 · 2026-10-16 사용자 — `tavernState` 와 같은 틀]
+        const freeAt = shopFreeAt(state), free = now >= freeAt;
+        const rerollCost = free ? 0 : B.shop_reroll_cost * 2 ** sh.paid;
+        return { ...visit, list, level: sh.level, equip, potions, blueprints, freeAt, free, rerollCost, open: hasFeature(state, 'shop'), trade: hasFeature(state, 'shop_trade'), special: hasFeature(state, 'shop_special') };
+    }
+
+    /**
+     * 상단 목록 교체 [2026-09-30 사용자 지시 · 2026-10-16 개정 · INTERFACE §2-7] — 거절 `unbuilt` → `stale` → `missing` → `gold` · 거절이면 아무것도 안 바뀐다.
+     * 장비 · 도안을 다음 번호의 스트림으로 다시 굴린다 — **산 칸도 풀린다**(새 목록이다) · 가운데 레벨 = **고른 영웅(`heroUid`)의 지금 레벨** · 물약은 그대로.
+     * 무료 시계는 **무료 교체만** 옮기고, 유료 교체 횟수는 무료 교체가 0 으로 돌린다(`tavernReroll` 과 같은 틀)
+     */
+    function shopReroll(state, list, now, heroUid) {
+        if (!hasFeature(state, 'shop')) return { ok: false, err: 'unbuilt' };
+        const S = shopState(state, now);
+        if (list !== S.list) return { ok: false, err: 'stale' };
+        const h = heroById(state, heroUid);
+        if (!h) return { ok: false, err: 'missing' };
+        const gold = S.rerollCost;
+        if (state.resources.gold < gold) return { ok: false, err: 'gold' };
+        state.resources.gold -= gold;
+        state.counters.shop = S.list + 1;
+        const prev = state.shop ?? shopFirst();
+        state.shop = { level: h.level, rerolledAt: S.free ? now : prev.rerolledAt, paid: S.free ? 0 : prev.paid + 1, sold: [], blueprints: [] };
+        return { ok: true, gold, free: S.free, level: h.level };
+    }
+
+    /** 상단이 파는 도안의 후보 — 직업 스킬 1티어(기본 책 포함) · 2티어는 안 판다 · `skill.csv` 행 순서 · 스킬 도감의 획득처도 이것을 읽는다 (2026-10-20 · R293 · ~~책~~ · 2026-10-22 R310 — ~~기본 책이 아닌 것~~) */
+    const shopBlueprintPool = () => (SK?.list ?? []).filter(d => d.ownerKind === 'job' && d.tier === 1 && bookable(d.id)).map(d => d.id);
+    /** 그 목록의 도안 — 앞에서부터 부분 섞기(자리마다 rng 1회) · 겹치지 않는다 */
+    function shopBlueprintIds(state, list) {
+        const pool = shopBlueprintPool();
+        const rng = makeRng(deriveSeed(state.seed ^ 0x540B, list));
+        const n = Math.min(B.shop_book_count, pool.length);
+        for (let k = 0; k < n; k++) {
+            const j = k + Math.floor(rng() * (pool.length - k));
+            [pool[k], pool[j]] = [pool[j], pool[k]];
+        }
+        return pool.slice(0, n);
+    }
+
+    /**
+     * 상단 스킬 도안 한 장을 산다 [2026-09-29 · base_expedition §2-6 · INTERFACE §2-7 · 2026-10-20 · R293 ~~스킬북~~] — 거절 `unbuilt` → `stale` → `missing` → `unbuilt`(잠긴 칸 · 상단 r2 · R390) → `sold` → `gold`.
+     * 가진 도안도 산다 — 쌓인다(`addBlueprint`). rng 를 새로 안 연다(`shopState` 와 같은 스트림)
+     */
+    function shopBlueprintBuy(state, i, list, now) {
+        if (!hasFeature(state, 'shop')) return { ok: false, err: 'unbuilt' };
+        const S = shopState(state, now);
+        if (list !== S.list) return { ok: false, err: 'stale' };
+        const b = S.blueprints[i];
+        if (!b) return { ok: false, err: 'missing' };
+        if (b.locked) return { ok: false, err: 'unbuilt' };
+        if (b.sold) return { ok: false, err: 'sold' };
+        if (state.resources.gold < b.gold) return { ok: false, err: 'gold' };
+        state.shop = state.shop ?? shopFirst();
+        state.shop.blueprints.push(i);
+        state.resources.gold -= b.gold;
+        addBlueprint(state, b.id);
+        return { ok: true, id: b.id, gold: b.gold };
+    }
+
+    /** 상단 물약 `n`개의 값(골드) — 안 파는 물약 · `n` 이 양의 정수가 아니면 null · 사기 줄의 가격이 이것이고 `shopPotionBuy` 가 같은 값을 낸다 (2026-10-23) */
+    function shopPotionGold(potionId, n = 1) {
+        const p = potionById(potionId);
+        return p && p.shopGold != null && Number.isInteger(n) && n > 0 ? p.shopGold * n : null;
+    }
+
+    /**
+     * 상단 물약 `n`개를 산다 [2026-09-28 사용자 지시 · base_expedition §2-6] — 골드를 내고 **재고를 n 올린다**(`makePotion` 과 같은 자리).
+     * 거절 `unbuilt` → `missing`(안 파는 물약) → `gold` — 거절이면 아무것도 안 바뀐다 · rng 0 · 매진 없음.
+     * `n` 은 한 번에 사는 수(기본 1 · 2026-10-23 사용자 「x10, x50, x100」) — **다 사거나 하나도 안 산다**(n 개 값이 모자라면 `gold`) · `gold` 는 낸 합
+     */
+    function shopPotionBuy(state, potionId, n = 1) {
+        if (!hasFeature(state, 'shop')) return { ok: false, err: 'unbuilt' };
+        const gold = shopPotionGold(potionId, n);
+        if (gold == null) return { ok: false, err: 'missing' };
+        const p = potionById(potionId);
+        if (state.resources.gold < gold) return { ok: false, err: 'gold' };
+        state.resources.gold -= gold;
+        state.potions = state.potions ?? {};
+        state.potions[p.id] = (state.potions[p.id] ?? 0) + n;
+        return { ok: true, id: p.id, n, gold, have: state.potions[p.id] };
+    }
+
+    /**
+     * 상단 장비 한 칸을 산다 [2026-09-27 · base_expedition_design §2-6 — 기본상단이 장비를 판다(09-27 개정)].
+     * 거절 순서 `unbuilt` → `stale` → `missing` → `unbuilt`(잠긴 칸 — 무기 아닌 부위는 상단 r2 · R390) → `sold` → `gold` → `bagFull` — 거절이면 아무것도 안 바뀐다.
+     * 목록을 `shopState` 로 다시 굴려 **같은 물건**을 얻는다 — 새 스트림을 안 연다 (INTERFACE §2-7).
+     * 산 것은 **부대 `no` 의 인벤토리 끝**(기본 1 · v40 — 화면은 보고 있는 인벤토리 번호) · 없는 번호면 `missing`
+     */
+    function shopBuy(state, i, list, now, no = 1) {
+        if (!hasFeature(state, 'shop')) return { ok: false, err: 'unbuilt' };
+        const S = shopState(state, now);
+        if (list !== S.list) return { ok: false, err: 'stale' };
+        const g = S.equip[i];
+        const bag = bagOf(state, no);
+        if (!g || !bag) return { ok: false, err: 'missing' };
+        if (g.locked) return { ok: false, err: 'unbuilt' };
+        if (g.sold) return { ok: false, err: 'sold' };
+        if (state.resources.gold < g.gold) return { ok: false, err: 'gold' };
+        if (bag.length >= capOf(state, 'bag')) return { ok: false, err: 'bagFull' };
+        state.shop = state.shop ?? shopFirst();   // 교체 안 한 첫 목록에서 산 것도 적는다
+        state.shop.sold.push(i);
+        state.resources.gold -= g.gold;
+        const it = addItem(state, g.item);
+        bag.push(it.uid);
+        return { ok: true, uid: it.uid, gold: g.gold };
+    }
+
+    /* ── 도박장 — 슬롯 (base_expedition_design 「도박장」 · INTERFACE §2-7 · §2-15 · 2026-09-24 사용자 「일단 만들어」 · R149) ──
+       판은 `gamble.js` 가 굴리고 여기는 **판돈 · 지급**만 한다.
+       **횟수 제한이 없다 — 판돈만 있으면 돈다**(같은 날 사용자 「횟수 무제한 · 돈만 있으면」 — 충전식에서 바뀜 · ADR-0334). 시계를 안 본다.
+       판돈은 **진행 챕터**(`frontierChapter` — 상점과 같은 값)를 따른다 · 재료는 철광 · 목재 · 가루 그대로다(2026-10-25 R356 — ~~재료도 진행 챕터 단계~~ ·
+       판돈이 챕터를 따르는 까닭이 약해진 것은 base_expedition 「도박장의 남은 칸」 ⚠).
+       결과는 저장하지 않는다 — 판 번호(`counters.gamble`)와 시드가 재현한다(선술집 명단 · 제작과 같은 문법). 장비 · 낙인은 안 나온다 */
+
+    /** 판돈 — 기본 판돈 × 챕터 배수^(챕터−1) × 단계 배수를 곱한 **뒤 한 번** 정수로 (INTERFACE §5-3) */
+    const gambleStake = (chapter, mult) => Math.round(B.gamble_stake_gold * B.gamble_stake_chapter_mult ** (chapter - 1) * mult);
+    /** 재료 심볼이 주는 재화 id — 철광 · 목재(`materialIdOf`) · 가루(최하급 — v43 부터 재료 · R373) */
+    const gambleMats = () => ({ ore: materialIdOf('ore'), timber: materialIdOf('timber'), dust: DUST_ID });
+
+    /**
+     * 도박장 화면 상태 한 덩어리 — **판정을 여기서 다 낸다**(`tavernState` 와 같은 규칙) · rng 0 · 상태 불변.
+     * `pays` = **고른 단계의 판돈에서의** 배당표 — 골드는 `floor(값 × 판돈)`(지급과 같은 식) · 재료는 `pay × 단계 배수` 개
+     */
+    function gambleState(state, step = 1) {
+        const chapter = frontierChapter(state);
+        const openN = limitsOf(state).gambleStakes;
+        const stakes = GB.stakes.map((s, i) => ({ step: s.step, mult: s.mult, gold: gambleStake(chapter, s.mult), open: i < openN }));
+        const cur = stakes.find(s => s.step === step) ?? stakes[0];
+        const mats = gambleMats();
+        return {
+            open: hasFeature(state, 'gamble'), chapter, mats, stakes,
+            step: cur.step, stake: cur.gold, batch: B.gamble_batch_spins,
+            pays: {
+                symbols: GB.symbols.filter(s => s.kind !== 'coin').map(s => (s.yield === 'gold'
+                    ? { id: s.id, gold: Math.floor(s.pay * cur.gold), mat: null }
+                    : { id: s.id, gold: 0, mat: { id: mats[s.yield], n: s.pay * cur.mult } })),
+                coins: GB.coins.map(c => ({ id: c.id, gold: Math.floor(c.value * cur.gold) })),
+            },
+            n: state.counters.gamble ?? 0,
+        };
+    }
+
+    /**
+     * 한 판 — 횟수 제한 없음. 거절 순서 `unbuilt` → `missing`(표에 없는 단계) → `locked`(안 열린 단계) → `gold` — 거절이면 아무것도 안 바뀐다(스트림도 안 연다).
+     * 통과하면 판돈을 쓰고 `counters.gamble` 선증가 → rng = `deriveSeed(seed ^ 0x6A3B, 판 번호)` (INTERFACE §5-1)
+     * → 골드 `floor(goldMult × 판돈)` · 재료 `mats × 단계 배수`(광석 · 목재 · 가루 = `materials[최하급 id]` · R373).
+     * `net` 은 골드만 센다 — 재료는 순손익에 안 든다
+     */
+    function gambleSpin(state, step) {
+        if (!hasFeature(state, 'gamble')) return { ok: false, err: 'unbuilt' };
+        const idx = GB.stakes.findIndex(s => s.step === step);
+        if (idx < 0) return { ok: false, err: 'missing' };
+        if (idx >= limitsOf(state).gambleStakes) return { ok: false, err: 'locked' };
+        const chapter = frontierChapter(state);
+        const { mult } = GB.stakes[idx];
+        const stake = gambleStake(chapter, mult);
+        if (state.resources.gold < stake) return { ok: false, err: 'gold' };
+
+        state.resources.gold -= stake;
+        state.counters.gamble = (state.counters.gamble ?? 0) + 1;
+        const r = GB.spin(makeRng(deriveSeed(state.seed ^ 0x6A3B, state.counters.gamble)));
+
+        const gold = Math.floor(r.goldMult * stake);
+        state.resources.gold += gold;
+        const ids = gambleMats(), got = {};
+        for (const [k, units] of Object.entries(r.mats)) {
+            const n = units * mult;
+            if (!n || !ids[k]) continue;
+            addMat(state, ids[k], n);
+            got[ids[k]] = (got[ids[k]] ?? 0) + n;
+        }
+        // `coinGold` = 코인마다 **이 판의 판돈에서** 받는 골드 — 화면이 코인 칸에 적는 값이다(배당표와 같은 식 · 화면이 곱하지 않게)
+        const coinGold = Object.fromEntries(GB.coins.map(c => [c.id, Math.floor(c.value * stake)]));
+        return { ok: true, spin: { ...r, n: state.counters.gamble, step, stake, chapter, gold, mats: got, net: gold - stake, coinGold } };
+    }
+
+    /**
+     * 여러 판 돌리기 — `gambleSpin` 을 **`gamble_batch_spins` 판까지** 거듭 부르고 거절이 나면 멈춘다(판돈이 떨어지면 덜 돈다).
+     * 판 수가 정해진 까닭: 횟수 제한이 없어 끝이 골드뿐이면 한 번 누름에 가진 골드를 다 건다 (ADR-0334).
+     * 한 판도 못 돌았으면 그 거절을 그대로 낸다 · `stop` = 멈춘 사유(다 돌았으면 null) · 합계는 여기서 낸다(화면이 더하지 않게)
+     */
+    function gambleSpinBatch(state, step) {
+        const spins = [];
+        let stop = null;
+        while (spins.length < B.gamble_batch_spins) {
+            const r = gambleSpin(state, step);
+            if (!r.ok) { stop = r.err; break; }
+            spins.push(r.spin);
+        }
+        if (!spins.length) return { ok: false, err: stop };
+        const mats = {};
+        for (const s of spins) for (const [id, n] of Object.entries(s.mats)) mats[id] = (mats[id] ?? 0) + n;
+        const sum = k => spins.reduce((a, s) => a + s[k], 0);
+        return { ok: true, spins, stop, gold: sum('gold'), stake: sum('stake'), net: sum('net'), mats };
+    }
+
+    /* ── 의뢰 — 게시판 · 받기 · 세기 · 수령 (base_expedition_design §1-3 · INTERFACE §2-7 · §2-16 · 2026-09-24 사용자 「의뢰가 실제로 적용되도록」 · R153) ──
+       카드는 `commission.js` 가 굴리고 여기는 **자리 · 받기 · 세기 · 지급**만 한다.
+       게시판은 `commission_board_cards` 자리이고 받은 카드는 **제자리에서** 진행 중이 된다 — 자리가 비는 것은 수령 · 포기 때이고 그 자리에 새 카드를 굴린다.
+       카드는 **굴린 순간의 내용을 박는다** — 대상 풀이 그때의 진행(열린 스테이지)에 달려 있어 다시 굴리면 다른 카드다(수색 스냅샷과 같은 이유).
+       기한은 없다 · 포기에 벌이 없다 · **명성 레벨**(2026-10-29 · R375) — 수령마다 경험치 1 · 레벨이 새로 굴리는 카드의 목표 · 골드에 배수를 붙인다(카드에 명성 칸은 없다) ·
+       레벨이 오르면 안 받은 카드를 전부 다시 굴려 새 레벨로 맞춘다 — 받아 둔 카드는 그대로 (2026-10-30 · R400) */
+
+    const isTaken = c => c.have !== undefined && c.have !== null;
+    const boardOf = state => state.commissions?.cards ?? [];
+    const ownBoard = state => (state.commissions ??= { cards: [], fame: 0 }).cards;
+    /** 명성 경험치 — 누적 수령 수 (R375) */
+    const fameXp = state => state.commissions?.fame ?? 0;
+
+    /** 굴릴 대상 — **지금 들어갈 수 있는 스테이지**의 챕터 · 일반몹 · 그 종족 + 진행 챕터. 순서가 계약이다(챕터 · 몬스터 오름차순 · 종족은 표 순서 · INTERFACE §2-16) */
+    function commissionCtx(state) {
+        const chapters = new Set(), monsters = new Set();
+        for (const id of deps.stageOrder) {
+            if (!stageUnlocked(state, id, BASE_DIFF)) continue;   // 첫 단(노말)의 기록 — 고른 난이도와 무관 (2026-10-10 · R236)
+            const st = deps.stages[id];
+            chapters.add(st.chapter);
+            for (const m of BT.stagePool(st)) monsters.add(m);
+        }
+        const mons = [...monsters].sort((a, b) => a - b);
+        const present = new Set(mons.map(id => deps.monsters[id]?.monster_type));
+        return {
+            chapters: [...chapters].sort((a, b) => a - b),
+            monsters: mons,
+            races: CM.races.map(r => r.id).filter(id => present.has(id)),
+            chapter: frontierChapter(state),
+            fame: fameXp(state),   // 명성 레벨의 배수 — 굴린 순간의 레벨이 카드에 박힌다 (R375)
+        };
+    }
+
+    /** 카드 한 장 — `counters.commission` 선증가 → rng = `deriveSeed(seed ^ 0xC0DA, 번호)` (INTERFACE §5-1) · 굴릴 틀이 없으면 null */
+    function rollCard(state) {
+        state.counters.commission = (state.counters.commission ?? 0) + 1;
+        const no = state.counters.commission;
+        const c = CM.roll(makeRng(deriveSeed(state.seed ^ 0xC0DA, no)), commissionCtx(state));
+        return c ? { no, ...c } : null;
+    }
+
+    /** 게시판 한 벌 — **판정을 여기서 다 낸다**(`tavernState` 와 같은 규칙) · rng 0 · 상태 불변 */
+    function commissionState(state) {
+        const open = hasFeature(state, 'commission_board');
+        const slots = limitsOf(state).commissionSlots;
+        const list = boardOf(state);
+        const taken = list.filter(isTaken).length;
+        return {
+            open, slots, taken, fame: CM.fameOf(fameXp(state)),
+            cards: list.map(c => {
+                const t = isTaken(c);
+                return { ...c, taken: t, have: t ? c.have : null, done: t && c.have >= c.need, canTake: open && !t && taken < slots };
+            }),
+        };
+    }
+
+    /** 빈 자리를 굴려 채운다 — 자리 수가 `commission_board_cards` 가 될 때까지 끝에 붙인다 · 이미 차 있으면 아무것도 안 바뀐다 */
+    function commissionFill(state) {
+        if (!hasFeature(state, 'commission_board')) return { ok: false, err: 'unbuilt' };
+        const cards = ownBoard(state);
+        let rolled = 0;
+        while (cards.length < B.commission_board_cards) {
+            const c = rollCard(state);
+            if (!c) break;
+            cards.push(c);
+            rolled++;
+        }
+        return { ok: true, rolled };
+    }
+
+    /** 받는다 — 거절 순서 `unbuilt` → `missing` → `full` · 거절이면 아무것도 안 바뀐다. **자리는 그대로**이고 받은 뒤부터 센다 */
+    function commissionTake(state, no) {
+        if (!hasFeature(state, 'commission_board')) return { ok: false, err: 'unbuilt' };
+        const c = boardOf(state).find(x => x.no === no && !isTaken(x));
+        if (!c) return { ok: false, err: 'missing' };
+        if (boardOf(state).filter(isTaken).length >= limitsOf(state).commissionSlots) return { ok: false, err: 'full' };
+        c.have = 0;
+        return { ok: true, card: { ...c } };
+    }
+
+    /** 그 자리를 비운다 — 게시판이 열려 있으면 **그 자리에** 새 카드를 굴려 넣고, 닫혀 있으면 자리만 지운다 */
+    function vacate(state, c) {
+        const cards = ownBoard(state);
+        const i = cards.indexOf(c);
+        const next = hasFeature(state, 'commission_board') ? rollCard(state) : null;
+        if (next) cards[i] = next; else cards.splice(i, 1);
+    }
+
+    /** 수령 — 거절 순서 `missing` → `notDone`. 골드를 주고 **명성 경험치 +1** 뒤에 그 자리를 새로 굴린다(새 카드는 오른 레벨을 탄다 · R375) ·
+     *  **레벨이 올랐으면 안 받은 카드를 전부 자리 순서대로 다시 굴린다** — 받아 둔 카드는 진행도째 그대로 · 수령 자리보다 먼저 굴린다(카드 번호 차례 · R400) ·
+     *  **`unbuilt` 로 안 막는다**(받아 둔 것은 끝까지 간다 · 닫힌 게시판은 다시 굴리지 않는다) */
+    function commissionClaim(state, no) {
+        const c = boardOf(state).find(x => x.no === no && isTaken(x));
+        if (!c) return { ok: false, err: 'missing' };
+        if (c.have < c.need) return { ok: false, err: 'notDone' };
+        state.resources.gold += c.gold;
+        const before = CM.fameOf(fameXp(state)).level;
+        const cards = ownBoard(state);
+        state.commissions.fame = fameXp(state) + 1;
+        const fame = CM.fameOf(state.commissions.fame);
+        const fameUp = fame.level > before;
+        let rerolled = 0;
+        if (fameUp && hasFeature(state, 'commission_board')) {
+            for (let i = 0; i < cards.length; i++) {
+                if (isTaken(cards[i])) continue;
+                const next = rollCard(state);
+                if (next) { cards[i] = next; rerolled++; }
+            }
+        }
+        vacate(state, c);
+        return { ok: true, gold: c.gold, card: { ...c }, fame, fameUp, rerolled };
+    }
+
+    /** 포기 — **벌이 없다**(진행도만 버린다) · 그 자리를 새로 굴린다. ⚠ 받고 곧바로 포기하면 무료 리롤이다(GAME_DESIGN §10 「의뢰 세부」 ②) */
+    function commissionDrop(state, no) {
+        const c = boardOf(state).find(x => x.no === no && isTaken(x));
+        if (!c) return { ok: false, err: 'missing' };
+        vacate(state, c);
+        return { ok: true };
+    }
+
+    /**
+     * 센다 — `settleRound` 가 **이긴 라운드마다** 부른다. 받아 둔 · 안 찬 카드마다 처치(`killGrades`)와 들어온 드롭을 대조하고 `need` 에서 자른다.
+     *   모든 부대가 같이 채운다(의뢰에는 파티가 없다) · 진 라운드 · 끊긴 라운드는 여기 안 온다(도감 처치 수와 같은 규칙) · rng 0
+     */
+    function commissionCount(state, stageId, killGrades, gained) {
+        const open = boardOf(state).filter(c => isTaken(c) && c.have < c.need);
+        if (!open.length) return;
+        const chapter = deps.stages[stageId]?.chapter ?? null;
+        const add = (c, n) => { c.have = Math.min(c.need, c.have + n); };
+        for (const [id, byGrade] of Object.entries(killGrades)) {
+            const ev0 = { chapter, monster: Number(id), race: deps.monsters[id]?.monster_type ?? null };
+            for (const [grade, n] of Object.entries(byGrade)) {
+                const ev = { ...ev0, grade };
+                for (const c of open) if (CM.matchKill(c, ev)) add(c, n);
+            }
+        }
+        for (const it of gained) for (const c of open) if (CM.matchDrop(c, it)) add(c, 1);
+    }
+
+    /**
+     * 해고 판정 — **아무것도 안 바꾼다** [신설 2026-09-22 · 부채 #56 · INTERFACE §2-7]. `dismiss` 와 해고 창(SCREEN_DESIGN §6)이 이 하나를 읽는다 —
+     *   창이 판정을 따로 세우면 둘이 갈린다(옛 창은 장비 · 마지막 한 명만 세어 원정 · 수색 중인 영웅에게 [확인] 을 띄웠다).
+     * 순서가 곧 창에 서는 문장이다 — 막힘이 여럿이면 앞의 것 하나만 낸다
+     */
+    function dismissState(state, uid) {
+        const h = heroById(state, uid);
+        // 지금 싸우는 영웅은 못 지운다 — 도는 원정의 인원이다. 파티에서 뺐어도 그 원정이 끝날 때까지다 (R89 · R92)
+        // **나가 있는 일을 장비보다 먼저 본다** — 나가 있는 사람에게 「장비를 벗어라」라고 하면 벗어도 안 되는 길로 보내게 된다 (~~수색~~ 2026-10-19 삭제)
+        const err = !h ? 'missing'
+            : heroBusy(state, uid) === 'run' ? 'running'
+            : heroBusy(state, uid) === 'explore' ? 'exploring'   // 탐험 나감 — 장비보다 먼저 (2026-10-09)
+            : heroBusy(state, uid) === 'advance' ? 'advancing'
+            : Object.values(h.equipped ?? {}).some(Boolean) ? 'equipped'
+            : state.heroes.length <= 1 ? 'last'
+            : null;
+        return { canDismiss: err === null, err };
+    }
+
+    /**
+     * 해고 — 로스터에서 지운다. **되돌릴 수 없다** [신설 2026-09-09 사용자 확정 · INTERFACE §2-7].
+     * 막는 것 둘:
+     *   · `equipped` — **장비를 하나라도 걸치고 있으면 못 한다.** 다 벗으면 아이템이 가방에 남으므로
+     *     「해고하면 장비가 어떻게 되나」라는 질문 자체가 생기지 않는다 (사용자 확정).
+     *   · `last` — 마지막 한 명은 못 지운다. 0명이 되면 원정을 못 돌려 골드가 안 들어오고 고용도 못 해 복구가 막힌다.
+     * **반환물은 없다** — 있으면 GAME_DESIGN §10 이 경고한 고용→해고 루프가 열린다(고용은 골드를 받는다).
+     * **모든 편성**에서도 뺀다(진형도 맞춘다 · R122) — 지운 uid 가 남으면 편성·출발이 유령을 든다. `run` 은 uid 를 안 들어 런 중에도 안전하다.
+     * 막는 판정은 위 `dismissState` 하나다 — 여기서 다시 세지 않는다 [2026-09-22 · 부채 #56]
+     */
+    function dismiss(state, uid, now = state.savedAt) {
+        const { err } = dismissState(state, uid);
+        if (err) return { ok: false, err };
+        // 합산 레벨이 내려가기 **전에** 최고치를 적는다 — 건설 문턱 `total:` 은 도달한 최고치를 본다(construction_draft 원칙 3 · R137)
+        state.progress.peakTotal = peakTotal(state);
+        for (const p of state.presets) {
+            if (!p.party.includes(uid)) continue;
+            p.party = p.party.filter(u => u !== uid);
+            normalizeFormation(p);
+        }
+        // 연구소 줄 등록도 지운다 (2026-10-21) — 지운 uid 가 남으면 줄의 등록 영웅에 유령이 선다
+        if (labRegOf(state, uid)) labUnregister(state, uid);
+        state.heroes = state.heroes.filter(x => x.uid !== uid);
+        return { ok: true };
+    }
+
+    /**
+     * 로스터 순서 옮기기 — 캐릭터 탭 영웅 띠의 드래그 [2026-10-09 사용자 지시 · INTERFACE §2-7 · SCREEN_DESIGN §5 · ADR-0571 — 0136 의 맞바꾸기를 대체].
+     * 영웅을 빼서 **옮긴 뒤 `to` 번째**에 끼운다 — 사이의 영웅은 한 칸씩 밀리거나 당겨진다.
+     * 순서를 읽는 곳은 **표시뿐**이다(영웅 띠 · 수색 후보) — 파티 · 리더(`party[0]`) · 진형은 따로 들고 있어 안 흔들린다.
+     * 그래서 원정 중 · 수색 중에도 막을 것이 없다. 제자리면 바꿀 것이 없어 그대로 통과한다
+     */
+    function moveHero(state, uid, to) {
+        const i = state.heroes.findIndex(h => h.uid === uid);
+        if (i < 0 || !Number.isInteger(to) || to < 0 || to >= state.heroes.length) return { ok: false, err: 'missing' };
+        state.heroes.splice(to, 0, ...state.heroes.splice(i, 1));
+        return { ok: true };
+    }
+
+    /**
+     * 스킬 우선순위 — 캐릭터 탭 스킬 우선순위 창의 끌어 옮기기 [2026-10-28 사용자 지시 · INTERFACE §2-7 · SCREEN_DESIGN §6 · ADR-0937 · battle_design §5].
+     * `order` = 그 영웅의 지금 액티브 id 를 빠짐 · 겹침 · 남의 것 없이 다시 늘어놓은 것 → `hero.skillOrder`. 칸을 내는 것은 `activesFor` 이고
+     * 전투는 그 배열 순서를 동률 결정자로 쓴다(`pickReady` — 시작엔 전부 준비라 1 → 2 → 3 · 그 뒤는 쿨이 먼저 돈 것).
+     * 무료 · 원정 중에도 된다 — 도는 원정은 다음 걸음 첫머리의 `refit` 이 칸 순서가 바뀐 영웅을 갈아입히고 쿨은 칸마다 잇는다
+     */
+    function setSkillOrder(state, uid, order) {
+        const h = heroById(state, uid);
+        if (!h || !Array.isArray(order)) return { ok: false, err: 'missing' };
+        const have = SK.activesFor(h).map(a => a.id).sort();
+        const want = [...order].sort();
+        if (want.length !== have.length || want.some((id, i) => id !== have[i])) return { ok: false, err: 'missing' };
+        h.skillOrder = [...order];
+        return { ok: true };
+    }
+
+    /* ── 수색 — 시간마다 한 명이 선술집 칸에 저절로 온다 [신설 2026-10-19 · base_expedition §2-4 · INTERFACE §2-7 — ~~수색~~(대기 영웅 하나를 내보낸다 · 2026-09-09 ~ 10-16) 대체] ──
+       **영웅을 보내지 않는다** — 연구소 줄 「수색」의 「간격」 지점(`labNodes['visit:interval']` · 2026-10-21 R298)을 처음 연구하면 시계가 서고 `visit_hours` 마다 한 명이 칸(`joins`)에 선다.
+       칸은 마차 영웅과 나눠 쓰고(`tavern_join_slots`) **다 차면 더 안 받는다** — 찬 동안 시계가 멈추고(`visit.left`) 고용 · 돌려보내기로 비면 그때부터 남은 시간 뒤에 온다.
+       **꺼져 있어도 흐른다** — 연구소의 오프라인 상한을 안 받는다(칸 수가 상한이다). **떠나지 않는다** — 돌려보낼 때까지 남는다.
+       온 사람은 **굴린 순간 통째로 박는다**(`joins[].hero`) — 번호(`counters.visit` 선증가)와 시드가 굴리고 다시 굴리지 않는다 */
+    /** 칸의 출처 어휘 — 어떻게 왔나. **찾아오는 방식이 늘면 여기에 하나씩 는다** (INTERFACE §5-3) */
+    const JOIN_SRC = ['visit', 'caravan', 'tavern'];   // tavern = 명단에서 보관(`tavernKeep` · 2026-10-27)
+    /** 간격(ms) — `visit_hours` ÷ (「간격」 지점 배수 × 힘 효과) · `at` = 효과를 재는 시각 (2026-10-21 · R298) */
+    const visitMs = (state, at) => Math.max(0, B.visit_hours ?? 0) * 3600000 / (labVal(state, VISIT_KEY, 'interval', 1) * labEffects(state, VISIT_KEY, at).speed);
+    /** 줄 레벨 = 「간격」 지점 레벨 — 0 = 닫힘 (~~`labLevels.visit`~~ 2026-10-21 · R298) */
+    const visitLevelOf = state => labLv(state, VISIT_KEY, 'interval');
+    /* 수색의 두 등급 — `hero_tier.csv` 의 굴림 가능한 행 중 **위 둘**(옛 수색 그대로 · 일반은 명단에서만).
+       어휘가 코드에 있는 이유는 **어느 쪽이 위인가를 코드가 알아야** 하기 때문이다 (INTERFACE §5-3) */
+    const VISIT_TIER_HI = 'rare', VISIT_TIER_LO = 'magic';
+    /** 레어 확률(비율) — 기준 + 「품질」 지점 + 매력 효과(`at` 의 명단) · 1 에서 자른다 (2026-10-21 · R298 — ~~줄 레벨 × visit_rare_per_level_pct~~) */
+    const visitRarePct = (state, at) => Math.min(1, B.visit_rare_base_pct + labVal(state, VISIT_KEY, 'quality', 0) + labEffects(state, VISIT_KEY, at).quality);
+    /** 칸을 잡은 수 — 출처 무관 */
+    const joinUsed = state => (state.joins ?? []).length;
+    /** 칸 수 — `tavern_join_slots` + 「대기 칸」 지점 (2026-10-21 · R298) */
+    const joinSlots = state => B.tavern_join_slots + Math.max(0, Math.floor(labVal(state, VISIT_KEY, 'waiting', 0)));
+    /** 안 열린 칸 — 칸마다 그 칸을 여는 「대기 칸」 지점 레벨(작은 것부터 · 지점 최대 레벨까지) · 다 열렸거나 지점이 없으면 []
+     *  [2026-10-30 사용자 「처음에 2칸만 열고 나머지는 자물쇠」 · 「6칸으로 해 최대」 · INTERFACE §2 joinState] */
+    function joinLocked(state) {
+        const r = labNodeRow(VISIT_KEY, 'waiting');
+        if (!r) return [];
+        const out = [];
+        let have = joinSlots(state);
+        for (let lv = labLv(state, VISIT_KEY, 'waiting') + 1; lv <= r.max; lv++) {
+            const n = B.tavern_join_slots + Math.max(0, Math.floor(nodeValue(r, lv)));
+            for (; have < n; have++) out.push(lv);
+        }
+        return out;
+    }
+    const joinFull = state => joinUsed(state) >= joinSlots(state);
+    /** 줄을 연구할 수 있나 — 연구소가 지어졌다 */
+    const visitLabOpen = state => labLineOpen(state, VISIT_KEY);
+
+    /**
+     * 한 명을 굴린다 — `deriveSeed(seed ^ 0x5EA7, no)` · **등급 1회 → `rollCandidates(rng, 1, [tier])` 10회 = 11회**(이름 겹침은 그 뒤 `avoidNames` — rng 0) (INTERFACE §5-2).
+     *   이름은 내 영웅 · 칸에 이미 선 사람과 겹치지 않게 고친다
+     */
+    function visitRoll(state, no, at) {
+        const rng = makeRng(deriveSeed(state.seed ^ 0x5EA7, no));
+        const tier = rng() < visitRarePct(state, at) ? VISIT_TIER_HI : VISIT_TIER_LO;
+        const taken = [...state.heroes.map(h => h.name), ...(state.joins ?? []).map(j => j.hero?.name).filter(Boolean)];
+        const [hero] = H.avoidNames(H.rollCandidates(rng, 1, [tier]), taken);
+        return hero;
+    }
+    /** 칸에 한 줄 — in-place · 번호는 `counters.join`(출처 무관 — 고용 · 돌려보내기가 번호로 집는다) */
+    function joinPush(state, hero, at, src) {
+        state.counters.join = (state.counters.join ?? 0) + 1;
+        state.joins = [...(state.joins ?? []), { no: state.counters.join, hero: clone(hero), arrivedAt: at, src }];
+        return state.counters.join;
+    }
+    /** 칸이 다 찼으면 시계를 멈춘다(흐르는 중일 때만) — 남은 시간 = 다음 도착 − 찬 시각 */
+    function visitPause(state, at) {
+        const v = state.visit;
+        if (v && v.nextAt != null && joinFull(state)) state.visit = { nextAt: null, left: Math.max(0, v.nextAt - at) };
+    }
+    /** 칸이 비었으면 멈춘 시계를 다시 흘린다 — 그 순간부터 남은 시간 뒤 */
+    function visitResume(state, at) {
+        const v = state.visit;
+        if (v && v.left != null && !joinFull(state)) state.visit = { nextAt: at + v.left, left: null };
+    }
+    /**
+     * 정산 — `now` 까지 온 사람을 칸에 세운다 · in-place · **꺼져 있던 시간도 그대로 센다**(상한 = 칸 수).
+     *   도착 시각은 시계가 정한 그 시각이다(`arrivedAt` — 정산한 시각이 아니다) · 칸이 차면 그 도착 시각에 멈춘다(`left` = 간격 하나).
+     *   앱 시계 · 칸을 바꾸는 쪽(`joinAdd` · `joinHire` · `joinDrop` · `labSettle`)이 먼저 부른다
+     * @returns `{arrived: [no...]}`
+     */
+    function visitSettle(state, now) {
+        const arrived = [];
+        if (!Number.isFinite(now) || !visitLevelOf(state) || !state.visit) return { arrived };
+        visitResume(state, now);   // 칸이 비었는데 멈춰 있으면(로드가 고장 난 줄을 지웠다) 지금부터 흐른다
+        while (state.visit.nextAt != null && state.visit.nextAt <= now && !joinFull(state)) {
+            const at = state.visit.nextAt;
+            const step = visitMs(state, at);   // 간격은 도착마다 그때의 지점 · 명단으로 잰다 (2026-10-21 · R298)
+            if (!(step > 0)) break;
+            state.counters.visit = (state.counters.visit ?? 0) + 1;
+            arrived.push(joinPush(state, visitRoll(state, state.counters.visit, at), at, 'visit'));
+            state.visit = { nextAt: at + step, left: null };
+            visitPause(state, at);
+        }
+        return { arrived };
+    }
+    /**
+     * 화면 상태 한 덩어리 — 상태 불변 · rng 0 · **정산하지 않는다**(앱 시계가 `visitSettle` 을 먼저 부른다).
+     * @returns `{open, labOpen, lv, max, hours, rarePct, slots, used, full, paused, nextAt, remainMs}` — `open` = 줄이 열렸다(레벨 1 이상) ·
+     *   `labOpen` = 연구소가 지어졌다(줄을 열 수 있다) · 멈춤(`paused`)이면 `remainMs` = 멈췄을 때 남은 시간이고 `nextAt` 은 null
+     */
+    function visitState(state, now) {
+        const lv = visitLevelOf(state), v = state.visit;
+        const paused = !!v && v.left != null;
+        const nextAt = v && !paused ? v.nextAt : null;
+        return {
+            open: lv > 0, labOpen: visitLabOpen(state), lv, max: labNodeRow(VISIT_KEY, 'interval')?.max ?? 0,
+            hours: lv > 0 ? visitMs(state, now) / 3600000 : B.visit_hours,
+            rarePct: lv > 0 ? visitRarePct(state, now) : 0,
+            slots: joinSlots(state), used: joinUsed(state), full: joinFull(state),
+            paused, nextAt, remainMs: paused ? v.left : nextAt != null ? Math.max(0, nextAt - now) : null,
+        };
+    }
+    // ~~visitLevelInfo · visitLevelUp~~ — 2026-10-21 퇴역(R298) · 수색 줄의 레벨이 지점으로 바뀌었다 → labState · labResearchStart(state, 'visit', 'interval', now)
+
+    /* ── 연구소 줄 등록 [신설 2026-10-21 사용자 「연구소 내에서 뭐하는지가 나와야해」 · GAME_DESIGN §9 10-21 · INTERFACE §2-7] ──
+       영웅을 줄(`LAB_LINES`)에 **등록**한다 — `labReg = {uid: 줄}` · 한 영웅은 한 줄 · 줄마다 「등록 칸」 지점만큼(같은 날 R298).
+       **효과 = 그 영웅의 능력치 일곱**(같은 날 R298 — `labEffects` · ~~효과 없음(표시만)~~) · **편성 · 원정 · 탐험 · 전직과 겸직**이라 `heroBusy` 와 서로 안 본다.
+       ~~영웅 배치(자리 · 담당 능력치 효율)~~(2026-10-18 걷음)과 다르다 — 붙잡지 않는다. 등록한 시각(`labSince`)을 숙련이 센다 */
+    const labRegOf = (state, uid) => state.labReg?.[uid] ?? null;
+    const labRegList = (state, line) => state.heroes.filter(h => labRegOf(state, h.uid) === line).map(h => h.uid);
+    /** 그 줄에 등록할 수 있는 수 — 「등록 칸」 지점 */
+    const labSeats = (state, line) => Math.max(0, Math.floor(labVal(state, line, 'seats', 1)));
+    /** 등록 — in-place · 먼저 정산 · 다른 줄에 있으면 옮긴다(거절이 아니라 이동) · 같은 줄이면 그대로. 거절: `missing` · `locked` · `full` */
+    function labRegister(state, uid, line, now) {
+        if (Number.isFinite(now)) labSettle(state, now);
+        if (!heroById(state, uid) || !LAB_LINES.includes(line)) return { ok: false, err: 'missing' };
+        if (!labLineOpen(state, line)) return { ok: false, err: 'locked' };
+        if (labRegOf(state, uid) === line) return { ok: true };
+        if (labRegList(state, line).length >= labSeats(state, line)) return { ok: false, err: 'full' };
+        state.labReg = { ...(state.labReg ?? {}), [uid]: line };
+        state.labSince = { ...(state.labSince ?? {}), [uid]: Number.isFinite(now) ? now : state.savedAt };
+        return { ok: true };
+    }
+    /** 등록을 푼다 — in-place · 먼저 정산 · 등록 안 한 영웅이면 `missing` */
+    function labUnregister(state, uid, now) {
+        if (Number.isFinite(now)) labSettle(state, now);
+        if (!labRegOf(state, uid)) return { ok: false, err: 'missing' };
+        const { [uid]: _, ...rest } = state.labReg;
+        state.labReg = rest;
+        const { [uid]: __, ...since } = state.labSince ?? {};
+        state.labSince = since;
+        return { ok: true };
+    }
+
+    /* ── 수색 칸 — 시간으로 온 영웅 · 탐험 마차에서 이긴 적 영웅이 나눠 쓴다 [신설 2026-10-09 가입 희망 · 2026-10-19 수색 · base_expedition §2-4 · INTERFACE §2-7] ──
+       창구는 선술집 하나라 마차도 영웅을 바로 들이지 않고 여기로 보낸다. **영웅 개체를 통째로 박는다** · 칸 `tavern_join_slots`.
+       **떠나지 않는다**(~~`tavern_join_hours` 뒤 떠난다~~ 2026-10-19 사용자 「누가 왔던지 돌려보낼 때까지 남는 걸로」) — 고용하거나 돌려보낼 때까지 남는다.
+       칸을 바꾸는 쪽(`joinAdd` · `joinHire` · `joinDrop`)은 **먼저 정산하고 뒤에 시계를 고친다**(차면 멈추고 비면 흐른다) */
+    /** 지금 고용하면 나올 거절 — 명단 고용과 같은 둘(⚠ 고용비는 일단 명단과 같다 · 기획 §10 ⑦) */
+    const joinErr = state => state.heroes.length >= limitsOf(state).roster ? 'roster'
+        : state.resources.gold < B.tavern_hire_cost ? 'gold' : null;
+    /** 화면 상태 한 덩어리 — `list` 는 도착 순 · rng 0 · 아무것도 안 바꾼다(정산도 안 한다) */
+    function joinState(state, now) {
+        return {
+            open: hasFeature(state, 'hire'), slots: joinSlots(state), locked: joinLocked(state), cost: B.tavern_hire_cost,
+            list: (state.joins ?? []).map(j => ({ no: j.no, hero: j.hero, arrivedAt: j.arrivedAt, src: j.src })),
+            err: joinErr(state),
+        };
+    }
+    /**
+     * 칸에 영웅이 온다 — **부르는 쪽은 탐험 마차의 승리다**(⚠ 아직 없다 · 지금은 개발 경로뿐 · DEV_PLAN R232) · 시간으로 오는 사람은 `visitSettle` 이 세운다.
+     *   먼저 정산한다 · 칸이 차 있으면 `full` — 조용히 버리지 않는다(찼을 때의 규칙은 기획 미정 · §10 ⑥) · rng 0 · 세운 뒤 차면 시계가 멈춘다
+     */
+    function joinAdd(state, hero, now, src = 'caravan') {
+        visitSettle(state, now);
+        if (joinFull(state)) return { ok: false, err: 'full' };
+        const no = joinPush(state, hero, now, JOIN_SRC.includes(src) ? src : 'caravan');
+        visitPause(state, now);
+        return { ok: true, no };
+    }
+    /**
+     * 고용 — **번호로 고른다**(자리 순서는 누가 빠지면 밀린다 — 화면이 그린 줄과 고용하는 줄이 갈리지 않게).
+     *   거절 순서 `unbuilt` → `missing`(이미 고용했거나 돌려보냈다) → `roster` → `gold` · 명단 고용과 같은 시작 장비 한 벌(영웅 번호 스트림) · 칸이 비면 시계가 다시 흐른다
+     */
+    function joinHire(state, no, now) {
+        if (!hasFeature(state, 'hire')) return { ok: false, err: 'unbuilt' };   // 명단과 같은 문 — 선술집이 연다 (R137)
+        visitSettle(state, now);
+        const j = (state.joins ?? []).find(x => x.no === no);
+        if (!j) return { ok: false, err: 'missing' };
+        const err = joinErr(state);
+        if (err) return { ok: false, err };
+        state.resources.gold -= B.tavern_hire_cost;
+        const h = addHero(state, clone(j.hero));
+        equipStarter(state, h, recruitRng(state));
+        state.joins = state.joins.filter(x => x !== j);
+        visitResume(state, now);
+        return { ok: true, hero: h };
+    }
+    /**
+     * 돌려보내기 — 누구든 · 언제든 · 무료 [2026-10-19 사용자]. **이 문이 없으면 칸이 다 찼을 때 영원히 막힌다**(떠나지 않으므로).
+     *   다음 사람은 시계대로 오므로(비운 순간부터 남은 시간 뒤) 공짜 새로고침이 되지 않는다 · rng 0 · 거절 `missing`
+     */
+    function joinDrop(state, no, now) {
+        visitSettle(state, now);
+        const j = (state.joins ?? []).find(x => x.no === no);
+        if (!j) return { ok: false, err: 'missing' };
+        state.joins = state.joins.filter(x => x !== j);
+        visitResume(state, now);
+        return { ok: true };
+    }
+    /**
+     * 보관 — 명단 후보를 수색 칸에 넣는다 [2026-10-27 사용자 「Hire 오른쪽에 버튼하나 더 만들어서 Visiting Heroes에 저장」 · base_expedition §2-4].
+     *   **무료** · rng 0 · 거절 순서 `unbuilt`(고용과 같은 문) → `missing`(빈 칸) → `full`(`joinAdd` 가 먼저 정산하고 낸다).
+     *   명단은 그대로 · **그 칸만 빈다**(`tavern.kept` — 고용한 칸과 같다 · 리롤이 되살린다). 꺼낼 때가 고용이다(`joinHire` — 고용비 · 시작 장비 한 벌)
+     */
+    function tavernKeep(state, index, now) {
+        if (!hasFeature(state, 'hire')) return { ok: false, err: 'unbuilt' };
+        const c = tavernCandidates(state)[index];
+        if (!c) return { ok: false, err: 'missing' };
+        const r = joinAdd(state, clone(c), now, 'tavern');
+        if (!r.ok) return r;
+        state.tavern = state.tavern ?? { rerolledAt: null, hired: [], paid: 0 };
+        state.tavern.kept = [...(state.tavern.kept ?? []), index];
+        return { ok: true, no: r.no };
+    }
+
+    /* ── 탐험 — 지점 아이콘 → 보내기 → 수령 [신설 2026-10-09 · base_expedition §3-1 · SCREEN_DESIGN §8-4 · ADR-0553 · INTERFACE §2-7] ──
+       「어디를」 = 열린 장 · 「무엇을」 = 지점(`EXPLORE_SPOTS`) · **한 지점에 한 건** · 동시 건수는 `limitsOf.exploreSlots`.
+       결과는 저장하지 않는다 — 번호(`no` = 보낼 때의 `counters.explore`)와 시드가 재현한다(수색과 같은 문법).
+       **산출이 있는 것은 동굴 하나**(장비 — 보낸 인원 × `explore_cave_items_per_hero` 점 · 그 장의 레벨대) · 폐허 · 마차는 `pending`.
+       판정 4축 · 죄종 궁합은 기획 백지라 안 본다 — 결과의 크기는 보낸 인원만 정한다 */
+    /** 지점 어휘 — **이 순서가 `exploreState.spots` 의 지점 순서**다 (INTERFACE §5-3) */
+    const EXPLORE_SPOTS = ['cave', 'ruins', 'caravan'];
+    /** 산출이 있는 지점 → 가져오는 것. 없는 지점은 아직 산출이 기획에서 안 정해졌다 */
+    const EXPLORE_YIELD = { cave: 'gear' };
+    /** 지점마다 여는 켜기 — 동굴은 탐험 r1 · 마차(상단) · 폐허는 그 켜기를 든 랭크(지금 r2 · r3)를 지어야 지도에 선다 [2026-10-27 사용자 「아이콘 안보였다가 생성」 · R362 · INTERFACE §5-3] */
+    const EXPLORE_SPOT_FEATURE = { cave: 'explore', ruins: 'explore_ruins', caravan: 'explore_caravan' };
+    const spotBuilt = (state, spot) => hasFeature(state, EXPLORE_SPOT_FEATURE[spot]);
+    const exploreList = state => state.explores ?? [];
+    const exploreAt = (state, chapter, spot) => exploreList(state).find(x => x.chapter === chapter && x.spot === spot) ?? null;
+    /** 그 영웅이 나가 있는 탐험 — 없으면 null (`heroBusy` 의 `'explore'`) */
+    const exploreOf = (state, uid) => exploreList(state).find(x => x.heroes.includes(uid)) ?? null;
+    /** 그 편성이 나가 있는 탐험 — 없으면 null · **명단이 잠긴다**(`toggleParty`) · 편성 고르개의 「탐험 중」(`presetState`) [2026-10-10 · R234] */
+    const exploreOfPreset = (state, no) => exploreList(state).find(x => x.preset === no) ?? null;
+    const exploreMs = () => Math.max(0, B.explore_hours ?? 0) * 3600000;
+    /** 탐험이 서는 장 — 레벨대가 선 장(`stage.csv` 가 가진 장) 순 */
+    const exploreChapters = chapterBands.map(b => b.band);
+
+    /**
+     * 결과 굴림 — **저장하지 않는다.** `seed ^ 0xE7A1` 과 그 탐험의 번호가 매번 같은 장비를 낸다.
+     * rng 소비 순서가 계약이다 (INTERFACE §5-2) — 점마다 **ilvl 1(그 장의 레벨대 균등) → `rollDrop` 한 점**.
+     * 아이템은 `uid` 가 없다 — 받을 때 `addItem` 이 붙인다
+     */
+    function exploreRoll(state, x) {
+        if (EXPLORE_YIELD[x.spot] !== 'gear') return [];
+        const band = chapterBands.find(b => b.band === x.chapter) ?? chapterBands[0];
+        const rng = makeRng(deriveSeed(state.seed ^ 0xE7A1, x.no));
+        const n = x.heroes.length * Math.max(0, B.explore_cave_items_per_hero ?? 0);
+        const out = [];
+        for (let i = 0; i < n; i++) {
+            const ilvl = band.lo + Math.floor(rng() * (band.hi - band.lo + 1));
+            out.push(I.rollDrop(rng, ilvl));
+        }
+        return out;
+    }
+
+    /* ── 탐험 이야기 — `explore_story.csv` [신설 2026-10-10 · R235 · base_expedition §3-1 「이야기 줄」 · SCREEN_DESIGN §8-4] ──
+       수색 이야기(`searchPhases`)와 같은 문법에 **지점 열**이 붙었다 — 막 = `phase` · 순서 = `phase_order` · 지점마다 따로.
+       코드가 아는 것은 「막마다 한 줄을 굴린다」뿐이다. 산출이 있는 지점(`EXPLORE_YIELD`)은 표에 막이 있어야 한다(없으면 throw) */
+    const exploreStoryRows = deps.exploreStories ?? [];
+    const explorePhases = (() => {
+        const bad = why => { throw new Error(`explore_story: ${why}`); };
+        const bySpot = {};
+        for (const r of exploreStoryRows) {
+            if (!r.story_id) bad('story_id 가 없다');
+            if (!EXPLORE_SPOTS.includes(r.spot)) bad(`${r.story_id} — 지점 '${r.spot}'`);
+            if (!r.phase) bad(`${r.story_id} — phase 가 없다`);
+            if (!(r.phase_order >= 1)) bad(`${r.story_id} — phase_order ${r.phase_order}`);
+            if (r.sin !== '-' && !(deps.sins ?? []).includes(r.sin)) bad(`${r.story_id} — 죄종 '${r.sin}'`);
+            if (!r.text_kr || !r.text_en) bad(`${r.story_id} — 문구가 비었다`);
+            const order = bySpot[r.spot] ?? (bySpot[r.spot] = new Map());
+            const had = order.get(r.phase);
+            if (had !== undefined && had !== r.phase_order) bad(`${r.spot} ${r.phase} 의 phase_order 가 둘이다 (${had} · ${r.phase_order})`);
+            order.set(r.phase, r.phase_order);
+        }
+        const out = {};
+        for (const [spot, order] of Object.entries(bySpot)) {
+            const list = [...order.entries()].sort((a, b) => a[1] - b[1]).map(([id]) => id);
+            list.forEach((id, i) => { if (order.get(id) !== i + 1) bad(`${spot} — phase_order 가 1부터 연속이 아니다 (${id} = ${order.get(id)})`); });
+            // 막마다 **공통(`-`) 행이 하나는 있어야** 어느 편성이 와도 후보가 비지 않는다 — 「막마다 굴림 1회」의 전제다
+            for (const id of list) if (!exploreStoryRows.some(r => r.spot === spot && r.phase === id && r.sin === '-')) bad(`${spot} ${id} 에 공통(-) 행이 없다`);
+            out[spot] = list;
+        }
+        for (const spot of Object.keys(EXPLORE_YIELD)) if (!out[spot]) bad(`산출이 있는 지점 '${spot}' 의 이야기가 없다`);
+        return out;
+    })();
+
+    /**
+     * 이야기 굴림 — **저장하지 않는다.** `seed ^ 0xE7A2` 와 그 탐험의 번호가 매번 같은 줄을 낸다 —
+     * 결과(`^ 0xE7A1`)와 스트림을 가른다: 이야기는 나가 있는 내내 굴리고 결과는 끝난 뒤에만 굴리며, 표가 늘어도 장비가 안 바뀌어야 한다.
+     * rng 소비 순서가 계약이다 (INTERFACE §5-2) — **막마다 1회.** 후보 = 공통 + **편성원 죄종 모두**의 줄(CSV 행 순서)
+     */
+    function exploreStory(state, x) {
+        const sins = new Set(x.heroes.map(uid => heroById(state, uid)?.sin).filter(Boolean));
+        const rng = makeRng(deriveSeed(state.seed ^ 0xE7A2, x.no));
+        return (explorePhases[x.spot] ?? []).map(ph => {
+            const pool = exploreStoryRows.filter(r => r.spot === x.spot && r.phase === ph && (r.sin === '-' || sins.has(r.sin)));
+            return pool[Math.floor(rng() * pool.length)];        // 후보가 빌 수 없다 — 로드 검증이 막았다
+        });
+    }
+
+    /**
+     * 그 편성을 탐험에 보내면 나올 거절 — **지점과 무관한 편성 쪽 판정** [2026-10-10 · R234 · base_expedition §3-1 「편성으로 보낸다」].
+     * `exploreErr` 의 뒤 절반이고 `exploreState.squads[].err` 가 같은 것을 낸다. 순서가 계약이다 (INTERFACE §2-7):
+     * 없는 편성 `missing` → 빈 편성 `noParty` → **원정에 나간 편성** · 다른 부대에서 싸우는 편성원 `running`(철수가 먼저다 — 한 동작으로 만들지 않는다 · GAME_DESIGN §1-1)
+     * → 그 편성 · 편성원이 이미 탐험 중 `exploring` → `advancing` (~~`searching`~~ 2026-10-19 수색 삭제)
+     */
+    function squadErr(state, no) {
+        const p = presetAt(state, no);
+        if (!p) return 'missing';
+        if (!p.party.length) return 'noParty';
+        if (runningNos(state).includes(no) || p.party.some(uid => heroBusy(state, uid) === 'run')) return 'running';
+        if (exploreOfPreset(state, no) || p.party.some(uid => heroBusy(state, uid) === 'explore')) return 'exploring';
+        if (p.party.some(uid => heroBusy(state, uid) === 'advance')) return 'advancing';
+        return null;
+    }
+
+    /** 보내면 나올 거절 — `exploreSend` 와 화면(출발 버튼)이 이 하나를 읽는다. 지점 판정 → 편성 판정(`squadErr`) · 순서가 계약이다 (INTERFACE §2-7) */
+    function exploreErr(state, chapter, spot, no) {
+        if (!hasFeature(state, 'explore')) return 'unbuilt';   // 탐험 r1 (2026-10-08)
+        if (!EXPLORE_SPOTS.includes(spot) || !exploreChapters.includes(chapter)) return 'missing';
+        if (!spotBuilt(state, spot)) return 'unbuilt';             // 그 지점을 연 랭크 전 — 마차 r2 · 폐허 r3 (R362)
+        if (!chapterOpen(state, chapter)) return 'locked';
+        if (!EXPLORE_YIELD[spot]) return 'pending';
+        if (exploreAt(state, chapter, spot)) return 'busy';
+        if (exploreList(state).length >= limitsOf(state).exploreSlots) return 'slots';
+        return squadErr(state, no);
+    }
+
+    /**
+     * 탐험 화면 상태 한 덩어리 — **판정을 여기서 다 낸다**(`searchState` 와 같은 규칙) · 상태 불변.
+     * `spots` = 장 × 지점 전부 · `out.items` 는 **끝났을 때만** 가져올 장비다(받으면 같은 것이 온다)
+     */
+    function exploreState(state, now) {
+        const span = exploreMs();
+        const spots = [];
+        const built = Object.fromEntries(EXPLORE_SPOTS.map(s => [s, spotBuilt(state, s)]));   // 지점을 연 랭크를 지었나 — 화면은 `open && built` 만 세운다 (R362)
+        for (const chapter of exploreChapters)
+            for (const spot of EXPLORE_SPOTS) {
+                const x = exploreAt(state, chapter, spot);
+                let out = null;
+                if (x) {
+                    const endsAt = x.startedAt + span;
+                    const done = now >= endsAt;
+                    // 이야기 줄 — 막마다 하나 · 소요 시간을 막 수로 나눠 차례로 열린다(`searchState.beats` 와 같은 모양 · R235)
+                    const story = exploreStory(state, x);
+                    const beats = story.map((r, i) => {
+                        const at = x.startedAt + Math.round(span * i / story.length);
+                        return { id: r.story_id, at, open: now >= at, text: { ko: r.text_kr, en: r.text_en } };
+                    });
+                    out = {
+                        preset: x.preset ?? null, heroes: x.heroes.slice(), startedAt: x.startedAt, endsAt, remainMs: Math.max(0, endsAt - now), done,
+                        frac: span > 0 ? Math.min(1, Math.max(0, (now - x.startedAt) / span)) : 1,
+                        items: done ? exploreRoll(state, x) : null,
+                        beats,
+                    };
+                }
+                spots.push({ chapter, spot, open: chapterOpen(state, chapter), built: built[spot], live: !!EXPLORE_YIELD[spot], out });
+            }
+        const L = limitsOf(state);
+        return {
+            open: hasFeature(state, 'explore'),
+            hours: B.explore_hours, slots: L.exploreSlots, used: exploreList(state).length, partyMax: L.party,
+            perHero: B.explore_cave_items_per_hero,
+            // 편성마다 보낼 수 있나 — 지점과 무관한 편성 쪽 판정(`squadErr`) · 편성 번호 순 [2026-10-10 · R234 — ~~`ready`(보낼 수 있는 영웅)~~ 대체]
+            squads: state.presets.map((p, i) => ({ no: i + 1, party: p.party.slice(), err: squadErr(state, i + 1) })),
+            spots,
+        };
+    }
+
+    /**
+     * 편성 `no` 를 보낸다 — 거절은 `exploreErr` 하나.
+     * **보내는 순간의 편성을 떠서 간다**(`squad` — 사람 · 진형 · 물약 칸 · 전술 · 결투장 `snapshotTeam` 과 같은 문법) — 떠난 뒤 고친 것은 다음 탐험부터.
+     * 탐험 중인 편성은 명단이 잠긴다(`toggleParty`) · 바꾸려면 편성째 부른다(`exploreDrop`) [2026-10-10 · R234 · base_expedition §3-1]
+     */
+    function exploreSend(state, chapter, spot, no, now) {
+        const err = exploreErr(state, chapter, spot, no);
+        if (err) return { ok: false, err };
+        const p = presetAt(state, no);
+        const uids = p.party.slice();
+        const squad = { party: uids.slice(), formation: clone(p.formation ?? null), potionSlots: clone(p.potionSlots ?? []), potionHp: potionHpOf(p), tactics: clone(p.tactics ?? null) };
+        state.counters.explore = (state.counters.explore ?? 0) + 1;
+        state.explores = [...exploreList(state), { chapter, spot, preset: no, squad, heroes: uids, startedAt: now, no: state.counters.explore }];
+        return { ok: true, endsAt: now + exploreMs() };
+    }
+
+    /**
+     * 수령 — 결과 장비를 **부대 `no` 의 인벤토리 끝**에 넣고 줄을 걷는다(영웅이 돌아온다).
+     * 거절 `none` → `notDone` → `missing`(없는 인벤토리) → `bagFull`(다 안 들어가면 하나도 안 넣는다) — 거절이면 아무것도 안 바뀐다
+     */
+    function exploreTake(state, chapter, spot, now, no = 1) {
+        const x = exploreAt(state, chapter, spot);
+        if (!x) return { ok: false, err: 'none' };
+        if (now < x.startedAt + exploreMs()) return { ok: false, err: 'notDone' };
+        const bag = bagOf(state, no);
+        if (!bag) return { ok: false, err: 'missing' };
+        const items = exploreRoll(state, x);
+        if (bag.length + items.length > capOf(state, 'bag')) return { ok: false, err: 'bagFull' };
+        const uids = items.map(it => addItem(state, it).uid);
+        bag.push(...uids);
+        state.explores = exploreList(state).filter(e => e !== x);
+        return { ok: true, items: uids };
+    }
+
+    /** 취소 — 나가 있으면 불러들이고 결과가 와 있으면 버린다. **편성째 돌아온다**(한 사람만 빼는 길은 없다 · R234) · **결과 없이 영웅만 돌아온다**(넣은 것이 없다) */
+    function exploreDrop(state, chapter, spot) {
+        const x = exploreAt(state, chapter, spot);
+        if (!x) return { ok: false, err: 'none' };
+        state.explores = exploreList(state).filter(e => e !== x);
+        return { ok: true };
+    }
+
+    /* ── 파티 전술 — 칸 해금(지휘 천막 랭크 · R137) · 리롤 (tactic_card_design §5 확정 2026-08-30) ── */
+
+    /** 로스터 합산 레벨 = **로스터 전원의 레벨 합.** 파티 3명이 아니라 보유 영웅 전부다 — 벤치를 키워도 오른다 · 건설 문턱 `total:` 이 읽는다(`peakTotal`) */
+    const totalLevel = state => state.heroes.reduce((a, h) => a + (h.level ?? 1), 0);
+
+    /* ── 건설 — 건물 랭크가 기능을 연다 (construction_draft §11 · INTERFACE §2-7 · §2-14 · R137) ──
+       **무엇을 여는지는 표가 정하고 `construction.js` 가 센다** — 여기는 세이브에서 셈의 입력(클리어 · 레벨 · 재화)을 모아 넘기고,
+       짓기의 비용을 치르고, 게임이 묻는 **창구**를 낸다: 열렸나(`hasFeature`) · 몇 개인가(`limitsOf`) · 무엇을 지어야 열리나(`needOf`).
+       기능 자리마다 `hasFeature` 한 줄이 서 있고(거절 코드 `unbuilt`) 상한은 `limitsOf` 가 더하기를 얹는다 (2단계 2026-09-22) */
+
+    /** 로스터 합산 레벨의 **도달 최고치** — 해고로 내려가도 닫히지 않는다(construction_draft 원칙 3). 해고가 내리기 전에 적는다(`dismiss`) */
+    const peakTotal = state => Math.max(state.progress?.peakTotal ?? 0, totalLevel(state));
+    /** 로스터 최고 영웅 레벨 — 문턱 `hero:` */
+    const topLevel = state => state.heroes.reduce((a, h) => Math.max(a, h.level ?? 1), 0);
+    /** 셈의 입력 — 문턱 조건이 읽는 값 (`construction.check`) · `diffCleared` = 다음 단을 여는 칸(`DIFF_GATE`)을 **그 단에서** 깬 단 — 문턱 `difficulty:` (R362) ·
+     *  `clearedIn` = 첫 단 밖의 단마다 깬 칸 — 문턱 `chapter:<장>:<단>` (R363) */
+    const buildCtx = state => ({
+        cleared: new Set(state.progress?.cleared ?? []), peakTotal: peakTotal(state), topLevel: topLevel(state),
+        clearedIn: Object.fromEntries(DIFF_IDS.filter(d => d !== BASE_DIFF).map(d => [d, new Set(clearedList(state, d))])),
+        diffCleared: new Set(DIFF_GATE == null ? [] : DIFF_IDS.filter(d => clearedList(state, d).includes(DIFF_GATE))),
+    });
+    /** 가진 재화 — 자원 둘 + 재료 사다리(가루 포함 · v43 · R373). 비용 칸이 적을 수 있는 이름과 같다 */
+    const RESOURCE_KEYS = ['gold', 'stigma'];
+    const walletOf = state => ({ ...(state.materials ?? {}), ...Object.fromEntries(RESOURCE_KEYS.map(k => [k, state.resources[k] ?? 0])) });
+
+    /**
+     * 건설 탭이 읽는 한 벌 — 건물마다 지금 랭크 · **다음 랭크 판정**(`construction.nextState` — 조건 · 비용 · 여는 것 · err) ·
+     *   **랭크마다 한 줄**(지었나 · 여는 것(준비 중 표시) · 조건(지금 값 포함) — 비용은 다음 랭크의 `next` 만 든다) · 탭마다 열렸나(`construction.tabs`).
+     *   `built` / `total` = 지은 랭크 수 / 표의 랭크 수. rng 0 · 상태 불변
+     * @returns `{built, total, tabs: {tab: bool}, buildings: [{id, name, tab, tabIds, rank, maxRank, next, ranks: [{rank, built, effects, require}]}]}` · `tabIds` = 붙는 탭 전부(R339)
+     */
+    function constructionState(state) {
+        const ctx = buildCtx(state), wallet = walletOf(state);
+        const buildings = CN.list.map(b => {
+            const rank = state.buildings[b.id] ?? 0;
+            const ranks = Array.from({ length: b.maxRank }, (_, i) => {
+                const info = CN.rankInfo(b.id, i + 1);
+                // 더하기에 `total` — 그 건물을 이 랭크까지 지었을 때의 합(「파티 전술 레벨 n 해금」 같은 누적 문장)
+                const upto = CN.opened({ [b.id]: i + 1 }).adds;
+                const effects = info.effects.map(e => (e.kind === 'add' ? { ...e, total: upto[e.target] ?? 0 } : e));
+                return { rank: i + 1, built: i < rank, pending: info.pending, effects, require: CN.check(info.require, ctx, state.buildings) };
+            });
+            return { id: b.id, name: b.name, tab: b.tab, tabIds: b.tabIds, rank, maxRank: b.maxRank, next: CN.nextState(b.id, state.buildings, ctx, wallet), ranks };
+        });
+        return {
+            built: buildings.reduce((a, b) => a + b.rank, 0), total: buildings.reduce((a, b) => a + b.maxRank, 0),
+            tabs: CN.tabs(openRanks(state)), buildings,
+        };
+    }
+
+    /**
+     * 탭 할 일 점 [신설 2026-10-16 · SCREEN_DESIGN §1 · ADR-0637] — 탭마다 **하면 꺼지는 일**이 기다리나. 키 = 화면 탭 id(`constructionState.tabs` 와 같은 어휘).
+     *   건설 = 다음 랭크를 지금 지을 수 있는 건물(부지 초록 점과 같은 `CN.nextState`) · 선술집 = 수색 칸에 누가 기다린다(출처 무관 ·
+     *   ~~보관 수색 결과 · 끝난 나간 수색~~ 2026-10-19) · 다 채운 의뢰 · 상점 = 특수상인이 와 있다 · 탐험 = 끝난 탐험.
+     *   **정산하지 않는다** — 시계가 지났어도 아직 안 온 사람은 안 센다(앱 시계가 `visitSettle` 을 먼저 부른다).
+     *   흐린 탭은 안 본다(화면이 안 단다) · rng 0 · 상태 불변 — 앱 시계가 1초에 한 번 부른다
+     * @returns `{research, tavern, shop, explore}` (bool)
+     */
+    function navTodo(state, now) {
+        const ctx = buildCtx(state), wallet = walletOf(state);
+        return {
+            research: CN.list.some(b => !CN.nextState(b.id, state.buildings, ctx, wallet).err),
+            tavern: (state.joins ?? []).length > 0 || commissionState(state).cards.some(c => c.taken && c.done),
+            shop: hasFeature(state, 'shop_special') && shopVisit(state, now).here,
+            explore: exploreList(state).some(x => now >= x.startedAt + exploreMs()),
+        };
+    }
+
+    /**
+     * 상단 종 알림 — 초보자 다음 할 일 하나 + 처리 대기 목록 (2026-10-30 · INTERFACE §2).
+     * 초보 안내는 첫 의뢰 수령까지다. 같은 칸 미클리어가 이어지면 원정 준비 점검도 안내한다. 안내는 배지에서 뺀다.
+     * 완료 의뢰 · 탐험 · 대기 영웅은 실제 처리할 때까지 남는다.
+     * 정산하거나 결과를 굴리지 않는다 — 특히 exploreState 는 완료 보상을 미리 굴리므로 여기서 부르지 않는다.
+     * 저장 필드 없음 · rng 0 · 상태 불변.
+     */
+    function notificationState(state, now) {
+        const cm = commissionState(state), items = [];
+        if (cm.open) for (const c of cm.cards) if (c.taken && c.done)
+            items.push({ id: `commission:${c.no}`, kind: 'commission', tab: 'tavern', target: { commission: c.no } });
+        if (hasFeature(state, 'explore')) for (const x of exploreList(state))
+            if (chapterOpen(state, x.chapter) && spotBuilt(state, x.spot) && now >= x.startedAt + exploreMs())
+                items.push({ id: `explore:${x.no}`, kind: 'explore', tab: 'explore', target: { chapter: x.chapter, spot: x.spot } });
+        if (hasFeature(state, 'hire')) for (const j of state.joins ?? [])
+            items.push({ id: `join:${j.no}`, kind: 'join', tab: 'tavern', target: { join: j.no } });
+
+        let guide = null;
+        if (fameXp(state) === 0) {
+            const departed = (state.counters.battle ?? 0) > 0 || (state.reports ?? []).length > 0
+                || (state.progress.cleared ?? []).length > 0
+                || Object.values(state.progress.clearedIn ?? {}).some(ids => ids.length > 0);
+            if (!departed) guide = { id: 'firstExpedition', tab: 'expedition' };
+            else if (!cm.open) {
+                // 첫 두 건설만 안내한다. 비용 부족이면 원정으로 이어 주고, 그 밖의 조건을 우회하지 않는다.
+                const building = ['shop', 'tavern'].find(id => !(state.buildings[id] > 0));
+                if (building) {
+                    const next = CN.nextState(building, state.buildings, buildCtx(state), walletOf(state));
+                    if (!next.err) guide = { id: building === 'shop' ? 'buildShop' : 'buildTavern', tab: 'research', target: { building } };
+                    else if (next.err === 'gold') guide = { id: 'earnGold', tab: 'expedition', target: { building } };
+                }
+            } else if (!cm.taken) guide = { id: 'acceptCommission', tab: 'tavern' };
+            else if (!cm.cards.some(c => c.taken && c.done)) {
+                const c = cm.cards.find(c => c.taken);
+                guide = { id: 'progressCommission', tab: 'expedition', target: { commission: c.no } };
+            }
+        }
+        // 같은 칸 재도전 중인 부대의 최근 완료 기록만 본다. 현재 편성과 실제 출정 인원은 다를 수 있다.
+        let retryGuide = null;
+        for (const slot of state.runs ?? []) {
+            if (!slot || !(slot.active || slot.auto === true)) continue;
+            const difficulty = slot.difficulty ?? BASE_DIFF;
+            let attempts = 0;
+            for (const report of state.reports ?? []) {
+                if ((report.preset ?? 1) !== slot.preset || report.reason === null) continue;
+                if (report.stageId !== slot.stageId || (report.difficulty ?? BASE_DIFF) !== difficulty
+                    || report.won || !['wipe', 'timeout'].includes(report.reason)) break;
+                attempts++;
+            }
+            const hero = runParty(state, slot.preset).find(uid => heroById(state, uid));
+            if (hero && attempts >= B.expedition_retry_guide_runs
+                && (!retryGuide || attempts > retryGuide.target.attempts)) {
+                retryGuide = { id: 'retryPreparation', tab: 'character',
+                    target: { preset: slot.preset, hero, stageId: slot.stageId, difficulty, attempts } };
+            }
+        }
+        if (retryGuide && (!guide || ['earnGold', 'progressCommission'].includes(guide.id))) guide = retryGuide;
+        return { guide, items, count: items.length };
+    }
+
+    /**
+     * 다음 랭크를 짓는다 — **한 칸씩 · 즉시 · 되돌림 없음**(construction_draft 원칙 5). 판정은 `constructionState` 와 같은 것 하나다.
+     * err: `missing` · `maxRank` · `pending`(여는 것이 전부 준비 중) · `locked`(조건 미달) · `gold` · `materials`. 비용을 치르고 랭크 +1 · rng 0
+     */
+    function construct(state, buildingId, now = state.savedAt) {
+        const nx = CN.nextState(buildingId, state.buildings, buildCtx(state), walletOf(state));
+        if (nx.err) return { ok: false, err: nx.err };
+        // 연구소 랭크는 지점을 · 선술집 도박장은 연구소 도박장 줄을 연다 — 앞뒤로 정산해 새로 열린 줄 · 단계만 지금부터 흐르게 (2026-10-21 · R298)
+        const labTouch = buildingId === 'resource' || buildingId === 'tavern';
+        if (labTouch) labSettle(state, now);
+        for (const c of nx.cost) {
+            if (RESOURCE_KEYS.includes(c.res)) state.resources[c.res] -= c.need;
+            else state.materials[c.res] -= c.need;
+        }
+        state.buildings[buildingId] = nx.rank;
+        if (labTouch) labSettle(state, now);   // 새 장소만 지금부터 생산
+        // 편성 수 · 물약 칸 수가 더하기로 늘었으면 **그 자리를 곧바로 붙인다**(빈 편성 · 빈 칸 — 불러오기와 같은 `fitPresets`) · 줄어드는 길은 없다
+        //   부대 자리도 편성과 같은 길이로 맞춘다(`fitRuns` — 편성이 탐험 랭크로 느는 길이 있다 · R156 · R319)
+        state.presets = fitPresets(state, state.presets);
+        state.runs = fitRuns(state, state.runs);
+        state.bags = fitBags(state, state.bags);   // 새 편성은 빈 인벤토리를 갖고 연다 (v40 · ADR-0521)
+        state.salvageRules = fitSalvageRules(state, state.salvageRules);   // 새 편성은 빈 자동 분해 규칙(= 전부 보존) · 빈 기록으로 연다 (v41 · R316)
+        state.salvageLogs = fitSalvageLogs(state, state.salvageLogs);
+        return { ok: true, rank: nx.rank };
+    }
+
+    /** **창구 — 그 기능이 열렸나.** 모르는 이름이면 멈춘다(오타를 조용히 닫힌 기능으로 두지 않는다 · construction_draft §11-5) */
+    function hasFeature(state, id) {
+        if (CN_TARGETS[id]?.kind !== 'unlock') throw new Error(`state: hasFeature — 켜기 대상이 아니다 '${id}'`);
+        return CN.opened(openRanks(state)).features.includes(id);
+    }
+
+    /**
+     * **창구 — 무엇을 지어야 열리나** `{id, name, rank}` · 표에 없으면 null(`construction.reach`) — 잠긴 자리가 「선술집 2랭크」를 말할 때 읽는다.
+     *   켜기는 이름만(`needOf('hire')`) · 더하기는 **기본값 위로 몇이 필요한가**(`needOf('tactic_slots', 3)` = 셋째 전술 칸 · 제작 레벨 · 물약 단계 · 전술 칸은 기본값이 0 이라 순번 그대로). 상태를 안 본다 ·
+     *   장은 건물이 안 연다 — `chapterGate` (2026-10-22 · R319)
+     */
+    const needOf = (target, n = 1) => CN.reach(target, n);
+
+    /**
+     * 전술 조건이 세는 파티 — **편성 순서대로**(첫 칸이 리더 · §5-8) · 죄종 · 직업 · 입은 장비 · **전열에 섰나**.
+     * 조건이 세는 대상 = **파티**(기본은 칸을 읽는 편성의 파티 · 원정은 나간 인원을 넘긴다 · R92 · R122). 전술은 파티 단위이므로 벤치는 조건에 안 들어간다.
+     * 전열은 그 편성의 진형이 정한다(배치가 없으면 전열 — `partyUnits` 와 같은 규칙) · `front` 를 주면 그 명단을 쓴다(원정은 출발 때의 전열 — R134).
+     * ~~`actives`(스킬 정의)~~ 는 2026-09-22 삭제 — 스킬 태그 조건이 사라졌다(§5-8)
+     */
+    const partyMembers = (state, party = partyOf(state), no = state.preset, front = null) => {
+        const byUid = formationOf(presetAt(state, no) ?? curPreset(state)).byUid;
+        return party.map(uid => heroById(state, uid)).filter(Boolean)
+            .map(h => ({ sin: h.sin, cls: h.cls, ldr: h.stats?.ldr ?? 0, items: heroItems(state, h), front: front ? front.includes(h.uid) : (byUid[h.uid] ?? 0) === 0 }));
+    };
+    /** 같이 깬 칸 수의 키 — 나간 인원의 uid 를 정렬해 잇는다(순서 · 자리와 무관) · 전술 「관계」 조건 (v36 · R134 · 이긴 칸마다 +1 · 2026-09-29) */
+    const bondKey = party => party.slice().sort().join('|');
+    const bondOf = (state, party) => state.bonds?.[bondKey(party)] ?? 0;
+
+    /** 첫 배정 — 시드 하나에서 나온다. 리롤 카운터를 안 타므로 **리롤이 다른 칸의 내용을 흔들지 않는다**.
+     *  편성마다 같은 첫 배정이다 — 다르게 주면 편성 수만큼 공짜 리롤이 생긴다 (ADR-0250) */
+    const initialAssign = state => TC.initialAssign(makeRng(deriveSeed(state.seed ^ 0x7AC7, 0)));
+
+    /** 그 편성의 전술 칸 세이브 — 번호가 틀리면 고른 편성 (`partyUnits` 와 같은 대체) */
+    const tacticsOf = (state, no) => (presetAt(state, no) ?? curPreset(state)).tactics ?? { slots: {} };
+
+    /**
+     * 칸의 지금 상태 한 덩어리 — 열렸나 · 무엇이 들었나 · 조건이 몇 / 몇인가 · 잠갔나 · 전체 리롤 비용.
+     * 판정은 전부 여기서 낸다 (masteryState · tavernState 와 같은 규칙) — 화면은 그리기만 한다.
+     * `no` = 칸의 내용을 읽는 편성(기본 고른 편성 · 칸이 편성마다 · R129) · `party` 를 안 주면 **그 편성의 파티**다.
+     * 열린 칸 수는 계정이다 — **지휘 천막 랭크가 연다**(`limitsOf(state).tacticSlots` · 표의 칸 수에서 자른다 · R137 · ~~로스터 합산 레벨이 곧장 연다~~ —
+     *   합산 레벨은 이제 그 랭크의 문턱이다) — 모든 편성이 같다. **잠금은 편성마다**다(칸의 내용과 같은 자리 · v35 · R28).
+     * 비용은 칸이 아니라 **판 전체에 하나**다 — 잠근 칸 수가 정한다 (tactic_card_design §5-6)
+     */
+    function tacticState(state, party, no = state.preset) {
+        party = party ?? partyOf(state, no);
+        const total = totalLevel(state);
+        const open = Math.min(limitsOf(state).tacticSlots, TC.slotCount);
+        const saved = tacticsOf(state, no);
+        const stored = saved.slots ?? {};
+        const held = new Set(saved.locked ?? []);
+        const initial = initialAssign(state);
+        const ctx = TC.contextOf(partyMembers(state, party, no), { bond: bondOf(state, party) });
+        const slots = TC.slotList.map((s, i) => {
+            const opened = s.no <= open;
+            // 저장된 것(리롤한 칸) 우선 · 없으면 첫 배정. 세이브에 없는 가족·등급은 CSV 가 바뀐 것이라 첫 배정으로 되돌린다
+            //   **그 칸의 종류가 아닌 옵션도 첫 배정으로** — 칸 = 상황(2026-09-27) 전의 세이브는 아무 칸에 아무 종류나 들었다
+            const kept = TC.optionOf(stored[s.no]);
+            const option = opened ? ((kept?.category === s.category ? kept : null) ?? TC.optionOf(initial[i]) ?? null) : null;
+            const m = option ? TC.measure(option, ctx) : null;
+            return {
+                no: s.no, open: opened, locked: opened && held.has(s.no),
+                option, have: m?.have ?? 0, need: m?.need ?? 0, active: m?.active ?? false,
+                // 리더 보너스 [2026-10-24 · R340] — `value` = 적용 값(화면 · `tacticBonus` 가 쓴다) · `option.value` 는 등급 값 그대로
+                lead: m?.lead ?? 1, value: m?.value ?? null, bonus: m?.bonus ?? 0,
+            };
+        });
+        // 리더 — 그 파티의 첫 영웅(조건 문맥 `partyMembers` 와 같은 사람) · 화면의 「추가 버프」 툴팁이 이름 · 통솔 · 곡선을 찍는다 (ADR-0757)
+        const lh = party.map(uid => heroById(state, uid)).find(Boolean) ?? null;
+        const leader = lh ? { uid: lh.uid, ldr: lh.stats?.ldr ?? 0, curve: TC.leadCurve(lh.stats?.ldr ?? 0) } : null;
+        const lockedCount = slots.filter(s => s.locked).length;
+        const rerollCost = TC.rerollCost(lockedCount);
+        const canReroll = slots.some(s => s.open && !s.locked) && state.resources.gold >= rerollCost;
+        return { totalLevel: total, open, count: TC.slotCount, lockedCount, rerollCost, canReroll, slots, leader };
+    }
+
+    /** 켜진 칸들의 효과 합 — 접사·마스터리와 **같은 채널** (§2-4). `heroCombat` 이 이걸 받는다 · 칸은 편성 `no` 의 것 (R129) */
+    function tacticBonus(state, party, no = state.preset) {
+        return TC.bonusOf(tacticState(state, party, no).slots.filter(s => s.open && s.active).map(applied));
+    }
+
+    /** 결투장이 편성 `no` 에서 가져가는 것 — 전술 보너스 · 재고에서 채운 물약 칸 · 칸 수 (INTERFACE §2-17 · 2026-10-03). 상태 불변 · rng 0 */
+    function arenaLoadout(state, no = state.preset) {
+        const p = presetAt(state, no) ?? curPreset(state);
+        return { tactic: tacticBonus(state, p.party, no), potions: fillSlots(state, p), slotMax: limitsOf(state).potionSlots, potionHp: potionHpOf(p) };
+    }
+
+    /* ── 결투장 ELO · 콜로세움 층 — 세이브 쪽 [2026-10-18 · arena_design §7 · §8 · INTERFACE §2-7] ──
+       상대를 세우고 싸우는 것은 `arena.js` 다(세이브를 모른다). 여기는 그 결과를 적고 읽기만 한다 */
+
+    /** 레이팅 기록 — 없는 세이브 · 새 게임은 시작값 (로드도 같은 값으로 맞춘다 · INTERFACE §4) */
+    const freshArena = () => ({ rating: B.arena_elo_start, peak: B.arena_elo_start, win: 0, draw: 0, loss: 0 });
+    const ARENA_SCORE = { win: 1, draw: 0.5, loss: 0 };
+
+    const arenaState = state => ({ ...freshArena(), ...(state.arena ?? {}) });
+
+    /** 그 상대와 붙으면 오르내릴 양 — 표준 ELO · 반올림 · 0 아래로 가는 몫은 뺀다 */
+    function arenaStakes(state, opp) {
+        const { rating } = arenaState(state);
+        const expect = 1 / (1 + 10 ** ((opp - rating) / B.arena_elo_scale));
+        const out = {};
+        for (const [k, s] of Object.entries(ARENA_SCORE)) out[k] = Math.max(-rating, Math.round(B.arena_elo_k * (s - expect)));
+        return out;
+    }
+
+    /** 한 판의 결과를 적는다 — 부르는 쪽이 **싸운 순간에** 부른다(관전 전 · 창을 닫아 지는 판을 피하지 못하게) · in-place */
+    function arenaRecord(state, opp, outcome) {
+        if (!(outcome in ARENA_SCORE)) return { ok: false, err: 'outcome' };
+        if (!Number.isFinite(opp)) return { ok: false, err: 'opp' };
+        const a = arenaState(state), before = a.rating, delta = arenaStakes(state, opp)[outcome];
+        a.rating = before + delta;
+        a.peak = Math.max(a.peak, a.rating);
+        a[outcome] += 1;
+        state.arena = a;
+        return { ok: true, before, after: a.rating, delta };
+    }
+
+    const colosseumState = state => {
+        const cleared = state.colosseum?.cleared ?? 0;
+        return { cleared, next: cleared + 1 };
+    };
+
+    /** 한 층의 도전 결과 — 열린 가장 높은 층을 이기면 한 층 오른다 · 깬 층 다시 이기기 · 지기는 아무것도 안 바꾼다 · in-place */
+    function colosseumRecord(state, floor, won) {
+        const { cleared } = colosseumState(state);
+        if (!Number.isInteger(floor) || floor < 1) return { ok: false, err: 'floor' };
+        if (floor > cleared + 1) return { ok: false, err: 'locked' };
+        const advanced = !!won && floor === cleared + 1;
+        state.colosseum = { cleared: advanced ? floor : cleared };
+        return { ok: true, cleared: state.colosseum.cleared, advanced };
+    }
+
+    /** 고른 편성의 전술 칸 세이브 — 없으면 빈 자리를 세운다 (옛 세이브 · 테스트가 `{slots}` 만 꽂은 경우) */
+    const ownTactics = state => {
+        const p = curPreset(state);
+        p.tactics = p.tactics?.slots ? p.tactics : { slots: {} };
+        if (!Array.isArray(p.tactics.locked)) p.tactics.locked = [];
+        return p.tactics;
+    };
+
+    /**
+     * 전체 리롤 — **열렸고 안 잠긴 칸을 한 번에 전부** 다시 굴린다 (tactic_card_design §5-6 · 확정 2026-09-01 · 비용 곡선 2026-09-22 · R28).
+     * 비용은 **잠근 칸 수**가 정한다(`tactic.rerollCost` — 기본가 × 배수 ^ 잠근 칸 수). 굴릴 칸이 없으면 `allLocked`.
+     * 후보에서 빼는 것 = **굴리기 직전 열린 칸이 들고 있던 옵션 전부**(잠긴 칸 것 포함) + **이번에 이미 뽑은 것** — 가족 단위다(§5-5).
+     *   돈을 내고 같은 것이 나오는 일과 같은 옵션이 두 칸에 서는 일을 둘 다 막는다.
+     * rng — `counters.tactic` 은 리롤 **1회에 한 번만** 오르고 그 시드의 rng 하나가 굴릴 칸을 **번호 오름차순**으로 돈다 (INTERFACE §5-2).
+     * **고른 편성의 칸**을 굴린다 [2026-09-21 · R129] — 다른 편성의 칸은 안 바뀐다. 리롤 스트림은 계정에 하나다.
+     * 도는 원정은 안 흔들린다 — 원정은 출발 때 켜진 전술을 굳혀 들고 있다(`run.tactics` · R130)
+     */
+    function rerollTactic(state) {
+        const st = tacticState(state);
+        const roll = st.slots.filter(s => s.open && !s.locked);
+        if (!roll.length) return { ok: false, err: 'allLocked' };
+        if (state.resources.gold < st.rerollCost) return { ok: false, err: 'gold' };
+        const held = st.slots.filter(s => s.open && s.option).map(s => s.option.id);
+        const n = (state.counters.tactic ?? 0) + 1;
+        const picks = TC.pickMany(makeRng(deriveSeed(state.seed ^ 0x7AC7, n)), roll.map(s => TC.slotList[s.no - 1].category), held);
+        if (!picks) return { ok: false, err: 'missing' };     // 가족이 칸의 두 배 이상이라는 것은 로드 시 검증했다
+        state.counters.tactic = n;
+        state.resources.gold -= st.rerollCost;
+        const t = ownTactics(state);
+        const rolled = roll.map((s, i) => {
+            t.slots[s.no] = picks[i];
+            return { no: s.no, option: TC.optionOf(picks[i]) };
+        });
+        return { ok: true, rolled, cost: st.rerollCost };
+    }
+
+    /**
+     * 잠금 — 고른 편성의 칸 하나를 잠그거나 푼다 (tactic_card_design §5-6 · R28). **무료**이고 rng · 카운터를 안 탄다 —
+     * 값은 리롤할 때 치른다. 안 열린 칸은 못 잠근다(`locked`) · 없는 칸 `missing`
+     */
+    function toggleTacticLock(state, slotNo) {
+        const slot = tacticState(state).slots.find(s => s.no === slotNo);
+        if (!slot) return { ok: false, err: 'missing' };
+        if (!slot.open) return { ok: false, err: 'locked' };
+        const t = ownTactics(state);
+        const locked = !t.locked.includes(slotNo);
+        t.locked = locked ? [...t.locked, slotNo].sort((a, b) => a - b) : t.locked.filter(no => no !== slotNo);
+        return { ok: true, locked };
+    }
+
+    /* ── 마스터리 — 찍기 · 롤백 (skill_design §3 · §5) ── */
+
+    /**
+     * 그 영웅의 마스터리 화면 상태 한 덩어리 — 노드마다 현재 랭크·상한·해금 여부·지금 찍을 수 있는가.
+     * 판정 규칙이 렌더러로 새지 않게 여기서 한 번에 낸다(경계 규칙 — 화면은 결과만 그린다).
+     */
+    function masteryState(state, uid) {
+        const h = heroById(state, uid);
+        if (!h) return null;
+        const points = h.masteryPoints ?? 0;
+        const items = heroItems(state, h);
+        return {
+            points,
+            // 지금 낀 장비 중 그 영웅 죄종 장비 수 — 죄종 T2-1 의 「2/3」 표시 [2026-10-05 · skill_design §3-2]
+            sinGear: H.sinGearCount(h, items),
+            nodes: H.masteryNodesFor(h).map(n => {
+                const rank = h.mastery?.[n.id] ?? 0;
+                const unlocked = h.level >= n.unlockLevel;
+                return {
+                    id: n.id, treeKind: n.treeKind, ownerId: n.ownerId, tier: n.tier, stat: n.stat, name: n.name,
+                    value: n.value, rank, maxRank: n.maxRank, unlockLevel: n.unlockLevel, unlocked,
+                    // 랭크가 한계를 넓히는 칸(분노 · 폭식 T3 · R343)은 값이 랭크와 상관없이 하나다 — 찍었으면 값 그대로
+                    total: Number((H.masteryWiden(n.cond, 1) ? (rank > 0 ? n.value : 0) : n.value * rank).toFixed(3)),
+                    canLearn: unlocked && rank < n.maxRank && points > 0,
+                    // 낀 장비가 켜는 칸 [2026-09-22 · skill_design §3-5 · R138] — `gate` = {slot, groups} 또는 null · `on` = 지금 장비로 켜졌나.
+                    //   꺼져 있어도 찍을 수 있다 — 랭크는 캐릭터에 쌓이고 장비를 바꾸면 켜진다
+                    //   죄종 T2-1 은 `{slot: 'sin_gear', need}` — 그 영웅 죄종 장비 수가 켠다(2026-10-05)
+                    gate: n.gate, on: H.gateOn(n, items, h),
+                    // 조건부 칸 [2026-10-05] — 조건 id 또는 null. 켜짐은 전투가 타격마다 판정하므로 여기선 문구만 고른다
+                    cond: n.cond,
+                };
+            }),
+        };
+    }
+
+    /** 한 랭크 찍는다 — 포인트 1점 소비. 결과 코드는 INTERFACE §3 사전 */
+    function learnMastery(state, uid, nodeId) {
+        const h = heroById(state, uid);
+        if (!h) return { ok: false, err: 'missing' };
+        // 쓰러진 영웅도 찍는다 [2026-10-21 · 사용자 지시 · R300 — ~~`downed`(R130)~~] — 그 런엔 안 입는다(`battle.refit` 이 건너뛴다 · 장비 R176 과 같다)
+        const n = H.masteryById[nodeId];
+        // 그 영웅의 트리에 없는 노드는 「없음」이다 — 다른 죄종·직업의 노드를 남이 찍지 못한다
+        if (!n || !H.masteryNodesFor(h).some(x => x.id === nodeId)) return { ok: false, err: 'missing' };
+        if (h.level < n.unlockLevel) return { ok: false, err: 'locked' };
+        const rank = h.mastery?.[nodeId] ?? 0;
+        if (rank >= n.maxRank) return { ok: false, err: 'maxRank' };
+        if ((h.masteryPoints ?? 0) < 1) return { ok: false, err: 'points' };
+        h.mastery = h.mastery ?? {};
+        h.mastery[nodeId] = rank + 1;
+        h.masteryPoints -= 1;
+        return { ok: true, rank: rank + 1, points: h.masteryPoints };
+    }
+
+    /**
+     * 한 랭크 무른다 — 포인트 1점 환급. `learnMastery` 의 역방향이다 (skill_design §5 「무료 · 수시」).
+     * **해금 레벨을 보지 않는다** — 찍힌 랭크가 있다는 것 자체가 그때 열려 있었다는 증거이고,
+     * 여기서 다시 보면 「찍었는데 못 뺀다」는 상태가 생긴다(초기화로는 빠지므로 규칙도 갈린다).
+     * 랭크가 0 이 되면 키를 지운다 — 전액 롤백(`resetMastery`) 뒤와 같은 모양이어야 세이브가 두 갈래로 안 갈린다.
+     */
+    function unlearnMastery(state, uid, nodeId) {
+        const h = heroById(state, uid);
+        if (!h) return { ok: false, err: 'missing' };
+        const n = H.masteryById[nodeId];
+        // 그 영웅의 트리에 없는 노드는 「없음」이다 — learnMastery 와 같은 판정
+        if (!n || !H.masteryNodesFor(h).some(x => x.id === nodeId)) return { ok: false, err: 'missing' };
+        const rank = h.mastery?.[nodeId] ?? 0;
+        if (rank < 1) return { ok: false, err: 'noRank' };
+        h.mastery = h.mastery ?? {};
+        if (rank === 1) delete h.mastery[nodeId];
+        else h.mastery[nodeId] = rank - 1;
+        h.masteryPoints = (h.masteryPoints ?? 0) + 1;
+        return { ok: true, rank: rank - 1, points: h.masteryPoints };
+    }
+
+    /** 롤백 — **무료 · 수시** (skill_design §5). 찍은 것을 전부 돌려주고 포인트를 되돌린다 */
+    function resetMastery(state, uid) {
+        const h = heroById(state, uid);
+        if (!h) return { ok: false, err: 'missing' };
+        const spent = Object.values(h.mastery ?? {}).reduce((a, b) => a + b, 0);
+        h.mastery = {};
+        h.masteryPoints = (h.masteryPoints ?? 0) + spent;
+        return { ok: true, refunded: spent, points: h.masteryPoints };
+    }
+
+    return {
+        newGame, serialize, deserialize, canLoad, addExpTime,
+        heroById, heroItems, heroCombat, heroCombatIf, heroCombatWith, upgradeState, upgradeItem, makeLevels, makeState, makeItem, potionState, makePotion,
+        codexLevel, codexNext, codexMaxLevel, codexLevelOf, codexSteps, codexOptionOf, codexLineOf, codexLadder, codexOptions, codexExpOf,
+        skillCapMax,   // 책 업그레이드 상한 — 끝 하나 (2026-10-20 · R293 · ~~스킬 도감~~)
+        equipTarget, equip, unequip, autoEquip, salvage, setItemLock, openBox, boxRarities, claimMail, claimAllMail, salvageView, setSalvageCell, setSalvageCells, setSalvageBase, setSalvageLevel, saveSalvageSlot, loadSalvageSlot, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf, bagOf,
+        toggleParty, formationState, setFormation, placeFormation, rankOf,
+        presetState, selectPreset, partyOf, setPotionSlot, swapPotionSlot, stepPotionHp,
+        stageUnlocked, chapterOpen, chapterGate, canDepart, runParty, runOf, heroBusy, limitsOf, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,
+        noteRunEnd, bossRespawnAt,   // 챕터보스 재등장 (2026-10-10 · R240)
+        difficultyState, selectDifficulty, stageLevel, stageCleared,
+        runTactics, runTacticsIf, runBuffs, runCombat,
+        tavernCandidates, tavernState, tavernReroll, hire, adminHero, dismissState, dismiss, moveHero, setSkillOrder,
+        shopVisit, shopState, shopBuy, shopPotionBuy, shopPotionGold, shopBlueprintBuy, shopBlueprintPool, shopReroll, gambleState, gambleSpin, gambleSpinBatch,
+        commissionState, commissionFill, commissionTake, commissionClaim, commissionDrop,
+        visitSettle, visitState,
+        joinState, joinAdd, joinHire, joinDrop, tavernKeep,
+        exploreState, exploreErr, exploreSend, exploreTake, exploreDrop,
+        dispatchSettle, dispatchProgress, labState, labSettle, labResearchStart, labResearchCancel, labRegOf, labRegList, labRegister, labUnregister, materialsState,
+        materialLadder, synthState, synthesize,   // 재료 단계 · 대장간 합성 (2026-10-27 · R359)
+        mgRound, mgJudge, mgClaim,
+        advanceState, advanceStart, advanceSettle, advanceLearn, advanceForget, advanceLevelUp,
+        bookState, learnBook, craftBook, sortBooks,
+        masteryState, learnMastery, unlearnMastery, resetMastery,
+        tacticState, tacticBonus, arenaLoadout, arenaState, arenaStakes, arenaRecord, colosseumState, colosseumRecord, rerollTactic, toggleTacticLock, weaponGroupOf,
+        constructionState, construct, hasFeature, needOf, peakTotal,
+        navTodo,     // 탭 할 일 점 (2026-10-16 · ADR-0637)
+        notificationState,   // 상단 종 — 다음 할 일 · 처리 대기 (2026-10-30)
+    };
+}

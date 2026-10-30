@@ -1,0 +1,157 @@
+{
+  "suite": "PASS 732/732",
+  "failures": [],
+  "rule_checks": [
+    {
+      "name": "minigame: 자원 미니게임 — 판은 판 번호로 재현 · 문(연구소) · 판 수 상한 없음 · 한 판 한 번 · 점수(내림) = 그 줄의 재료 · 원정 카운터 무변동 (2026-10-06 · PLAN_dispatch_watch D8 · ADR-0533 · R356 · INTERFACE §2-7)한 클릭 만점 한 판 96개 · 30판 잇달아 열림",
+      "ok": true
+    },
+    {
+      "name": "minigame: 한 클릭 채광 — 짧은 등장 · 일반/희귀 한 번 · 오클릭 즉시 종료 · 놓침 안전 · 종료 뒤 보상 없음43개 한 클릭 · 만점 86 · 오클릭 즉시 종료",
+      "ok": true
+    },
+    {
+      "name": "minigame: 약초 누르고 놓기 — 성공 구간 · 완벽 +1 · 독초/과한 힘은 목숨 · 중복 무시 · 입력 검증 · 놓치기12포기 · 완벽 수확 31개",
+      "ok": true
+    },
+    {
+      "name": "minigame: 벌목 — 가지 회피 · 귀한 마디 · 시간 막대 · 완주팀버맨 79 (만점 기준)",
+      "ok": true
+    }
+  ],
+  "checks": [
+    {
+      "name": "mine_countdown",
+      "ok": true
+    },
+    {
+      "name": "mine_countdown_ignores_input",
+      "ok": true
+    },
+    {
+      "name": "mine_one_click",
+      "ok": true
+    },
+    {
+      "name": "mine_empty_ends",
+      "ok": true
+    },
+    {
+      "name": "mine_retry_resets",
+      "ok": true
+    },
+    {
+      "name": "mine_hazard_ends",
+      "ok": true
+    },
+    {
+      "name": "mine_escape_claim",
+      "ok": true
+    },
+    {
+      "name": "mine_no_double_claim",
+      "ok": true
+    },
+    {
+      "name": "gather_countdown",
+      "ok": true
+    },
+    {
+      "name": "gather_countdown_ignores_input",
+      "ok": true
+    },
+    {
+      "name": "gather_perfect_release",
+      "ok": true
+    },
+    {
+      "name": "gather_keyboard",
+      "ok": true
+    },
+    {
+      "name": "gather_early_release",
+      "ok": true
+    },
+    {
+      "name": "gather_overpull",
+      "ok": true
+    },
+    {
+      "name": "gather_blur_cancels",
+      "ok": true
+    },
+    {
+      "name": "hidden_clock_pauses",
+      "ok": true
+    },
+    {
+      "name": "gather_rerender_preserves_round",
+      "ok": true
+    },
+    {
+      "name": "gather_escape_claim",
+      "ok": true
+    },
+    {
+      "name": "gather_no_double_claim",
+      "ok": true
+    },
+    {
+      "name": "log_countdown",
+      "ok": true
+    },
+    {
+      "name": "log_countdown_ignores_input",
+      "ok": true
+    },
+    {
+      "name": "log_pointer",
+      "ok": true
+    },
+    {
+      "name": "log_keyboard",
+      "ok": true
+    },
+    {
+      "name": "log_rerender_preserves_round",
+      "ok": true
+    },
+    {
+      "name": "log_escape_claim",
+      "ok": true
+    },
+    {
+      "name": "log_no_double_claim",
+      "ok": true
+    },
+    {
+      "name": "mine_en",
+      "ok": true
+    },
+    {
+      "name": "mine_no_overflow",
+      "ok": true
+    },
+    {
+      "name": "gather_en",
+      "ok": true
+    },
+    {
+      "name": "gather_no_overflow",
+      "ok": true
+    },
+    {
+      "name": "log_en",
+      "ok": true
+    },
+    {
+      "name": "log_no_overflow",
+      "ok": true
+    },
+    {
+      "name": "gather_native_touch",
+      "ok": true
+    }
+  ],
+  "errors": []
+}

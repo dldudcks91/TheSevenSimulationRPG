@@ -25,28 +25,9 @@ BASE = HERE / 'concept_17_minimal.png'
 EXT = sorted((Path.home() / '.vscode/extensions').glob('openai.chatgpt-*-win32-x64'))[-1]
 EXE = EXT / 'bin/windows-x86_64/codex.exe'
 
-# 번호 → (id, 화면 이름, 변주 한 줄). 번호는 지운 키트(21 ~ 190)와 안 겹치게 191 부터 (ADR-0829 「번호를 새로 매긴 이유」)
+# 번호 → (id, 화면 이름, 변주 한 줄). 200 만 남겼다(ADR-0970) — 새 키트는 지운 번호(21 ~ 210)와 안 겹치게 211 부터 (ADR-0829 「번호를 새로 매긴 이유」)
 KITS = {
-    191: ('oakiron', 'Oak & Iron', 'dark oak panel fills edged with slim black iron; a few small rivets only at the corners'),
-    192: ('castlestone', 'Castle Stone', 'cut grey castle ashlar; fine mortar lines only along the frames'),
-    193: ('cathedral', 'Cathedral', 'dark limestone with a small pointed-arch notch on each title bar'),
-    194: ('forgediron', 'Forged Iron', 'slim blackened hammered-iron frames with small round rivets at the corners'),
-    195: ('leathertome', 'Leather Tome', 'dark brown book-leather panels with fine blind-tooled border lines and small metal corner caps'),
-    196: ('bronzetrim', 'Bronze Trim', 'dark stone with a slim tarnished-bronze edge trim on frames and title bars'),
-    197: ('slate', 'Slate', 'dark blue-grey slate panels with crisp chiselled bevels'),
-    198: ('knightsteel', "Knight's Steel", 'dull steel plate edges with one clean bevel and dark fills'),
-    199: ('monastery', 'Monastery', 'dark weathered sandstone frames with one simple carved band'),
     200: ('keeptimber', 'Keep Timber', 'dark timber frames held by small iron corner brackets'),
-    201: ('heraldicred', 'Heraldic Red', 'dark stone with a thin deep heraldic-red band inside each title bar'),
-    202: ('heraldicblue', 'Heraldic Blue', 'dark stone with a thin dark heraldic-blue band inside each title bar'),
-    203: ('gildedgothic', 'Gilded Gothic', 'dark stone with thin dull-gold lines on title bars and the selected navigation item'),
-    204: ('cryptmarble', 'Crypt Marble', 'dark grey marble with thin carved edges and faint veins'),
-    205: ('granitekeep', 'Granite Keep', 'speckled dark granite with chiselled bevels'),
-    206: ('ironchest', 'Ironbound Chest', 'dark wood fills with slim iron strap edges'),
-    207: ('parchment', 'Parchment', 'dark stone frames with title bars as dark aged parchment strips'),
-    208: ('chainmail', 'Chainmail', 'dark steel frames with a fine chainmail texture on the edges only'),
-    209: ('emberforge', 'Ember Forge', 'black iron frames with a very faint ember warmth in the bevels'),
-    210: ('moonsilver', 'Moon Silver', 'dark stone with thin cold silver edge highlights'),
 }
 
 COMMON = """Use the built-in image generation tool to EDIT Image 1. Do not create or edit any other file. When done, reply with only the absolute path of the generated PNG.

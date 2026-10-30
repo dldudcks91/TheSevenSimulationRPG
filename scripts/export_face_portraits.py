@@ -3,7 +3,7 @@
 Initial migration: python scripts/export_face_portraits.py --migrate
 Later exports:      python scripts/export_face_portraits.py
 Refresh file list:  python scripts/export_face_portraits.py --index-only
-Style masters:      source/ready/<gemini|gpt>/<hero|monster>/*.png
+Style masters:      source/ready/<style>/<hero|monster>/*.png (style = STYLES)
 Requires Pillow:    python -m pip install Pillow
 """
 
@@ -22,8 +22,7 @@ from PIL import Image, ImageChops
 ROOT = Path(__file__).resolve().parents[1]
 FACES = ROOT / "src/assets/art/faces"
 SOURCE = FACES / "source/ready"
-STYLES = ("gemini", "gpt")
-GPT_MONSTERS = {"1201", "1202", "1203", "1401", "1402", "1403", "1450"}
+STYLES = ("gemini",)  # gpt was removed 2026-10-30 (ADR-0986); add a folder name here to bring a style back
 SIZES = {"monster": 256, "hero": 320}
 
 
@@ -33,8 +32,7 @@ def game_path(master: Path, style: str | None = None) -> Path:
         style = master.parent.parent.name
     if style is None:
         owners = [s for s in STYLES if (FACES / s / master.parent.name / f"{master.stem}.webp").exists()]
-        style = owners[0] if len(owners) == 1 else (
-            "gpt" if master.parent.name == "monster" and master.stem.split("_")[0] in GPT_MONSTERS else "gemini")
+        style = owners[0] if len(owners) == 1 else STYLES[0]
     if style not in STYLES:
         raise ValueError(f"Unknown portrait style: {style}")
     return FACES / style / master.parent.name / f"{master.stem}.webp"

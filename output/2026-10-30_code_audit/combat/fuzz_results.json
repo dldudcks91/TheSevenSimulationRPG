@@ -1,0 +1,165 @@
+{
+  "counts": {
+    "battles": 600,
+    "determinism": 30,
+    "events": 95253,
+    "skills": {
+      "arc_evade": 157,
+      "kni_holyshield": 125,
+      "war_doubleswing": 138,
+      "mag_frostnova": 215,
+      "arc_multishot": 203,
+      "war_warcry": 132,
+      "pri_regen": 182,
+      "war_leap": 122,
+      "kni_enchant": 146,
+      "arc_eagleeye": 146,
+      "pri_grace": 121,
+      "pri_cure": 358,
+      "war_frenzy": 119,
+      "arc_guided": 226,
+      "pri_judgment": 214,
+      "war_shout": 120,
+      "mag_chain": 235,
+      "kni_rush": 167,
+      "mag_lightning": 236,
+      "kni_resistshield": 159,
+      "war_battleorders": 107,
+      "pri_penitence": 200,
+      "kni_sweep": 170,
+      "war_ironskin": 120,
+      "pri_bind": 186,
+      "war_recovery": 116,
+      "kni_divinejudgment": 33,
+      "kni_charge": 200,
+      "war_ragnarok": 10,
+      "pri_excommunication": 14,
+      "arc_reload": 20,
+      "war_lionsroar": 21,
+      "pri_doom": 194,
+      "arc_rapid": 247,
+      "arc_poison": 132,
+      "mag_inferno": 238,
+      "arc_quickhands": 160,
+      "mag_firewall": 15,
+      "mag_echo": 44,
+      "kni_holywar": 29,
+      "mag_frostburst": 24,
+      "arc_pierce": 121,
+      "war_battlecry": 125,
+      "arc_snipe": 163,
+      "mag_iceblast": 325,
+      "mag_surge": 65,
+      "arc_coldarrow": 154,
+      "kni_unbreakablewill": 34,
+      "mag_deepfreeze": 63,
+      "arc_singlestrike": 25,
+      "mag_nova": 24,
+      "kni_retribution": 26,
+      "kni_condemnation": 25,
+      "war_bash": 121,
+      "arc_trap": 21,
+      "war_whirlwind": 21,
+      "arc_trueaim": 13,
+      "pri_haste": 146,
+      "mag_ignite": 53,
+      "kni_unyieldingoath": 25,
+      "pri_diamondbody": 25,
+      "pri_sweep": 21,
+      "arc_supportingfire": 23,
+      "arc_quickdraw": 19,
+      "pri_counter": 18,
+      "arc_huntersmark": 22,
+      "war_thorswrath": 13,
+      "pri_resurrection": 34,
+      "war_berserk": 13,
+      "mag_fireball": 229,
+      "pri_aegis": 22,
+      "mag_staticfield": 20,
+      "pri_benediction": 22,
+      "kni_vow": 33,
+      "pri_atonement": 19,
+      "war_shockwave": 14,
+      "pri_heal": 261,
+      "kni_showdown": 31,
+      "mag_thunderstrike": 10,
+      "mag_meteor": 16,
+      "mag_blizzard": 18,
+      "arc_overdraw": 21,
+      "war_intimidate": 18,
+      "kni_lastbastion": 28,
+      "mag_hydra": 18,
+      "war_mutualruin": 21,
+      "pri_punishment": 17,
+      "war_command": 11,
+      "arc_chaindraw": 15,
+      "mag_frozenorb": 15
+    },
+    "exceptions": 0,
+    "lateHits": 0,
+    "contributionMismatch": 0,
+    "counterDuringChannel": 4
+  },
+  "issues": [
+    {
+      "kind": "counter_during_channel",
+      "seed": 118,
+      "tier": "platinum",
+      "start": {
+        "t": 2.8,
+        "s": "arc_rapid"
+      },
+      "event": {
+        "t": 3.1,
+        "e": "counter",
+        "u": "e0",
+        "d": "p1"
+      }
+    },
+    {
+      "kind": "counter_during_channel",
+      "seed": 144,
+      "tier": "champion",
+      "start": {
+        "t": 4.4,
+        "s": "war_leap"
+      },
+      "event": {
+        "t": 4.8,
+        "e": "counter",
+        "u": "e0",
+        "d": "p0"
+      }
+    },
+    {
+      "kind": "counter_during_channel",
+      "seed": 283,
+      "tier": "bronze",
+      "start": {
+        "t": 3.9,
+        "s": "war_leap"
+      },
+      "event": {
+        "t": 3.9,
+        "e": "counter",
+        "u": "p1",
+        "d": "e1"
+      }
+    },
+    {
+      "kind": "counter_during_channel",
+      "seed": 389,
+      "tier": "diamond",
+      "start": {
+        "t": 3.4,
+        "s": "war_leap"
+      },
+      "event": {
+        "t": 4.1,
+        "e": "counter",
+        "u": "p0",
+        "d": "e1"
+      }
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "event": {
+    "t": 5.3,
+    "e": "stat",
+    "u": "p1",
+    "v": {
+      "action_period": 1.6327
+    }
+  },
+  "initialPeriod": 2.449,
+  "t": 8.3,
+  "renderPeriod": 2.449,
+  "livePeriod": 1.6327,
+  "lastAct": 7.8,
+  "actionTitle": "공격 속도 2.45초 — 다 차면 이 유닛 행동",
+  "gauge": "scaleX(0.204165)",
+  "laterAction": {
+    "t": 7.8,
+    "e": "hit",
+    "a": "p1",
+    "d": "e0",
+    "dmg": 10,
+    "crit": false,
+    "dhp": 22,
+    "ty": "physical"
+  },
+  "stalled": 0,
+  "expectedGaugeAtCurrentPeriod": 0.306241195565628,
+  "html": "<div class=\"unit party v2 buffed\" style=\"--tier-line: #4169E1;\" data-tip=\"1\">\n        <div class=\"unit-top\"><span class=\"unit-ident\"><span class=\"unit-lv\">Lv.10</span> · 전사</span></div>\n        <div class=\"unit-body\">\n            <div class=\"sprite has-face\"><img src=\"./assets/art/faces/gemini/hero/warrior_3.webp\" alt=\"아르덴\" loading=\"lazy\" onerror=\"this.remove()\"></div>\n            <div class=\"unit-info\">\n                <div class=\"unit-id\"><span class=\"sin-chip\" style=\"color:#e03080\">색욕</span><span class=\"unit-name\">아르덴</span></div>\n                <div class=\"hp-row\">\n                    <div class=\"bar hp\"><i style=\"transform:scaleX(0.9821428571428571)\"></i></div>\n                    <span class=\"hp-text\">165 / 168</span>\n                </div>\n                <div class=\"act-row\" title=\"공격 속도 2.45초 — 다 차면 이 유닛 행동\">\n                    <i class=\"act-fill k-phys\" style=\"transform: scaleX(0.204165);\"></i>\n                </div>\n                <div class=\"cd-list\"><div class=\"cd-slot\" data-tip=\"1\"><span class=\"cd-g\"><img src=\"./assets/art/icons/skills/war_recovery.webp\" alt=\"\" loading=\"lazy\" onerror=\"this.remove()\"></span><i class=\"cd-mask\" style=\"transform: scaleY(0.694444);\"></i><span class=\"sk-lv\">Lv.1</span></div><div class=\"cd-slot\" data-tip=\"1\"><span class=\"cd-g\"><img src=\"./assets/art/icons/skills/pri_haste.webp\" alt=\"\" loading=\"lazy\" onerror=\"this.remove()\"></span><i class=\"cd-mask\" style=\"transform: scaleY(0.833333);\"></i><span class=\"sk-lv\">Lv.1</span></div><div class=\"cd-slot empty\"></div></div>\n            </div>\n        </div>\n        <div class=\"pop-layer\"></div></div>",
+  "changedEvents": [
+    {
+      "t": 5.3,
+      "e": "stat",
+      "u": "p1",
+      "v": {
+        "action_period": 1.6327
+      }
+    },
+    {
+      "t": 15.3,
+      "e": "stat",
+      "u": "p1",
+      "v": {
+        "action_period": 2.449
+      }
+    },
+    {
+      "t": 24.3,
+      "e": "stat",
+      "u": "p1",
+      "v": {
+        "action_period": 1.6327
+      }
+    },
+    {
+      "t": 34.3,
+      "e": "stat",
+      "u": "p1",
+      "v": {
+        "action_period": 2.449
+      }
+    },
+    {
+      "t": 44.6,
+      "e": "stat",
+      "u": "p1",
+      "v": {
+        "action_period": 1.6327
+      }
+    },
+    {
+      "t": 54.6,
+      "e": "stat",
+      "u": "p1",
+      "v": {
+        "action_period": 2.449
+      }
+    },
+    {
+      "t": 63.1,
+      "e": "stat",
+      "u": "p1",
+      "v": {
+        "action_period": 1.6327
+      }
+    },
+    {
+      "t": 73.1,
+      "e": "stat",
+      "u": "p1",
+      "v": {
+        "action_period": 2.449
+      }
+    },
+    {
+      "t": 82.1,
+      "e": "stat",
+      "u": "p1",
+      "v": {
+        "action_period": 1.6327
+      }
+    },
+    {
+      "t": 92.1,
+      "e": "stat",
+      "u": "p1",
+      "v": {
+        "action_period": 2.449
+      }
+    }
+  ],
+  "source_set_sha256": "a5ecb3f73e8f09230a4ac6e478ed2a93a5123c2695d165aa1360c4a2b8d38fea"
+}

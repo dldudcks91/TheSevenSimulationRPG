@@ -1404,6 +1404,7 @@ export function createGameSystem(deps) {
      * `chance` = 다음 단계의 성공 확률(비율 · `upgrade_chance.csv`) — 누르기 전에 보인다 [2026-10-14 · R253]. `cost` 가 null 이면 null
      * `next` = 한 단계 올린 뒤의 베이스 값 미리보기 [2026-10-12 · SCREEN_DESIGN §8-2 「지금 → 다음」] — `up + 1` **사본**에 툴팁과 같은 함수를 부른다(아이템은 안 바뀐다).
      *   올릴 수 없으면(`cost` null — 상한 · 목걸이 · 반지) null
+     * `slots` = 화면이 그리는 눈금 칸 수 — [balance.csv:equip_upgrade_slots] · 상한이 더 크면 상한 · `max` 너머 칸은 잠긴 칸이다 [2026-10-30 · SCREEN_DESIGN §8-2 · ADR-0968]
      */
     /**
      * 강화 한 단계의 재료 [2026-10-29 · R373 · item_design §5-1] — 부위 재료(`make_recipe.csv:mat` 줄의 뿌리 = 최하급 · 무기 철광석 · 방어구 목재) + 가루 ·
@@ -1424,7 +1425,7 @@ export function createGameSystem(deps) {
         // `mats` = 다음 단계의 재료(부위 재료 · 가루 — R373) · 올릴 수 없으면 빈 줄
         const mats = cost == null ? [] : upgradeMatsOf(state, it);
         return {
-            up, max, cost, mats, chance: I.upgradeChance(it, max), gold: state.resources.gold, open,
+            up, max, slots: Math.max(B.equip_upgrade_slots, max), cost, mats, chance: I.upgradeChance(it, max), gold: state.resources.gold, open,
             upgradeable: I.upgradeable(it),
             canUpgrade: open && cost != null && state.resources.gold >= cost && mats.every(m => m.have >= m.need),
             next: peek && { up: peek.up, dmg: I.weaponDamageFixed(peek), imp: I.implicitFixed(peek) },
@@ -2246,7 +2247,7 @@ export function createGameSystem(deps) {
     /* ── 원정 — **라운드 단위로 진행한다** [2026-09-14 · R89 · base_expedition_design §1-1 · 사용자 확정] ──
        출발(`departRun`)이 첫 라운드를 열고, **재생 시각을 따라 걸음마다**(`stepRun` · R130) 엔진을 그 시각까지만 민다 — 라운드가 끝나면
        **이긴 라운드만** 정산하고 경계에서 갈아입는다. 원정 중 장비 · 스킬 트리 교체는 **다음 걸음의 첫머리 = 바꾼 시각**에 먹는다
-       (보스 라운드 도중만 다음 런부터 · base_expedition_design §1-5) — 보상이 들어오는 시각이 곧 라운드가 끝나는 시각이다.
+       (보스 라운드 도중도 포함 · base_expedition_design §1-5) — 보상이 들어오는 시각이 곧 라운드가 끝나는 시각이다.
        ~~런은 출발 시점에 통째로 정산된다 — 관전은 재생일 뿐~~ 은 폐기: 드롭이 실시간이 아니었고(출발 순간 가방에 다 들어갔다)
        건너뛰기 → 다시 출발로 원정을 몇 초에 하나씩 돌릴 수 있었다.
        런 핸들은 **세이브에 안 든다** — 전투 안의 HP · 쿨 · 창과 같은 취급이다. 게임이 꺼지면 그 원정은 끊긴다(`closeRun`) */
@@ -2686,10 +2687,12 @@ export function createGameSystem(deps) {
     const labRank = state => limitsOf(state).resourceTiers;
     const labNodeOpen = (state, r) => labRank(state) >= r.unlockRank;
     /** 줄이 열렸나 — 연구 · 등록을 받는다(지점이 하나라도 열렸다 · 도박장은 선술집 도박장도 — 사용자 「선술집 r4를 짓고 열리도록」 ·
-     *  자원은 창고도 — 사용자 「창고가 지어져야 연구소의 자원이 열리도록」 2026-10-27 · R361) */
+     *  자원은 창고도 — 사용자 「창고가 지어져야 연구소의 자원이 열리도록」 2026-10-27 · R361 ·
+     *  수색은 선술집 영웅 고용도 — 사용자 「수색은 랭크2 영웅고용과 함께 열리는걸로」 2026-10-30) */
     function labLineOpen(state, line) {
         if (labRank(state) < 1) return false;
         if (line === GAMBLE_KEY && !hasFeature(state, 'gamble')) return false;
+        if (line === VISIT_KEY && !hasFeature(state, 'hire')) return false;
         if (line === RES_KEY && !hasFeature(state, 'lab_res')) return false;
         return labLineNodes(line).some(r => labNodeOpen(state, r));
     }
@@ -2743,14 +2746,17 @@ export function createGameSystem(deps) {
         return hit;
     }
     const productionClock = (state, post) => (state.resourceProduction ?? []).find(c => c.post === post);
-    function productionAmount(c, r, now) {
+    function productionAmount(c, r, now, until = Infinity) {
         const at = Number.isFinite(c?.at) ? c.at : now;
         const cap = B.dispatch_offline_cap_hours * DISPATCH_HOUR_MS;
-        const dt = Math.min(Math.max(0, now - at), cap);
+        const dt = Math.min(Math.max(0, Math.min(now, until) - at), cap);
         return (c?.carry ?? 0) + dt * r.perHour / DISPATCH_HOUR_MS;
     }
     /** 생산하는 재료 전부 정산한다. 새로 열린 재료는 이 시각에서 시작한다. */
     function dispatchSettle(state, now) {
+        return settleProduction(state, now);
+    }
+    function settleProduction(state, now, untilByPost = null) {
         const gained = {};
         let total = 0;
         if (!Number.isFinite(now)) return { gained, total };
@@ -2763,7 +2769,7 @@ export function createGameSystem(deps) {
             if (!c) { c = { post, at: now, carry: 0 }; state.resourceProduction.push(c); }
             const r = dispatchRate(state, post, c.at);
             if (!r) continue;
-            const sum = productionAmount(c, r, now);
+            const sum = productionAmount(c, r, now, untilByPost?.[post]);
             const made = Math.floor(sum + 1e-9);
             c.at = Math.max(c.at, now);
             c.carry = Math.max(0, sum - made);
@@ -2796,12 +2802,12 @@ export function createGameSystem(deps) {
     }
     const labClockOf = state => (state.labClock ??= { gamble: null, train: null });
     /** `now` 까지 정산 — 들어온 골드 · in-place. 닫혀 있으면 시계를 지우고 · 처음 열린 정산은 시계만 세운다 */
-    function gambleSettle(state, now) {
+    function gambleSettle(state, now, until = Infinity) {
         const clk = labClockOf(state);
         if (!labLineOpen(state, GAMBLE_KEY)) { clk.gamble = null; return 0; }
         if (!clk.gamble) { clk.gamble = { at: now, carry: 0 }; return 0; }
         const r = gambleRate(state, clk.gamble.at);
-        const sum = r.perHour > 0 ? productionAmount(clk.gamble, r, now) : clk.gamble.carry;
+        const sum = r.perHour > 0 ? productionAmount(clk.gamble, r, now, until) : clk.gamble.carry;
         const made = Math.floor(sum + 1e-9);
         clk.gamble = { at: Math.max(clk.gamble.at, now), carry: Math.max(0, sum - made) };
         const gold = (made + labBurst(state, made, r.burst)) * B.gamble_gold_unit;
@@ -2814,12 +2820,12 @@ export function createGameSystem(deps) {
        (레벨을 앞에서 끌어올리는 것은 원정이다) · 등록은 겸직이라 원정에 나간 영웅도 받는다 · 소수 경험치는 `labClock.train.carry` 에 남는다 */
     const trainCap = state => Math.max(0, ...state.heroes.map(h => h.level)) - labVal(state, TRAIN_KEY, 'range', 0);
     /** `now` 까지 정산 — 레벨이 오른 영웅 `[{uid, from, to}]` · in-place */
-    function trainSettle(state, now) {
+    function trainSettle(state, now, until = Infinity) {
         const clk = labClockOf(state);
         if (!labLineOpen(state, TRAIN_KEY)) { clk.train = null; return []; }
         if (!clk.train) { clk.train = { at: now, carry: {} }; return []; }
         const at = clk.train.at;
-        const hours = Math.min(Math.max(0, now - at), B.dispatch_offline_cap_hours * DISPATCH_HOUR_MS) / DISPATCH_HOUR_MS;
+        const hours = Math.min(Math.max(0, Math.min(now, until) - at), B.dispatch_offline_cap_hours * DISPATCH_HOUR_MS) / DISPATCH_HOUR_MS;
         const carry = {};
         const ups = [];
         if (hours > 0) {
@@ -2898,15 +2904,17 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
     /** 재료 · 도박장 · 훈련 · 수색을 `t` 까지 */
-    function labSettleTo(state, t) {
-        const d = dispatchSettle(state, t);
-        const gold = gambleSettle(state, t);
-        const xp = trainSettle(state, t);
+    function labSettleTo(state, t, limits = null) {
+        const d = settleProduction(state, t, limits?.res);
+        const gold = gambleSettle(state, t, limits?.gamble);
+        const xp = trainSettle(state, t, limits?.train);
         visitSettle(state, t);
         return { gained: d.gained, gold, xp };
     }
     /**
      * 연구소 정산 — in-place. 끝난 연구가 있으면 **끝난 시각까지 옛 값으로 정산한 뒤** 레벨을 올리고(새로 열린 시계는 그 시각에 선다) `now` 까지 정산한다.
+     *   공백 상한은 정산 시작 때 각 생산 시계의 시작 + 상한으로 고정한다 — 연구 전후를 나눠도 허용 시간이 늘지 않는다.
+     *   실제 시계는 `now` 까지 옮겨 초과 시간을 버린다. 수색은 이 상한을 받지 않는다.
      *   수색 「간격」 0 → 1 이 끝나면 그 시각부터 시계가 선다
      * @returns `{done: {line, node, lv} | null, gained, gold, xp: [{uid, from, to}]}`
      */
@@ -2919,8 +2927,15 @@ export function createGameSystem(deps) {
             out.xp.push(...p.xp);
         };
         const R = state.labResearch;
+        let limits = null;
         if (R && R.until <= now) {
-            add(labSettleTo(state, R.until));
+            const cap = B.dispatch_offline_cap_hours * DISPATCH_HOUR_MS;
+            const until = c => Number.isFinite(c?.at) ? c.at + cap : Infinity;
+            limits = {
+                res: Object.fromEntries((state.resourceProduction ?? []).map(c => [c.post, until(c)])),
+                gamble: until(state.labClock?.gamble), train: until(state.labClock?.train),
+            };
+            add(labSettleTo(state, R.until, limits));
             state.labNodes = { ...(state.labNodes ?? {}), [labNodeKey(R.line, R.node)]: R.lv };
             state.labResearch = null;
             out.done = { line: R.line, node: R.node, lv: R.lv };
@@ -2928,9 +2943,9 @@ export function createGameSystem(deps) {
                 state.visit = { nextAt: R.until + visitMs(state, R.until), left: null };
                 visitPause(state, R.until);
             }
-            add(labSettleTo(state, R.until));   // 새로 열린 줄의 시계가 끝난 시각에 선다
+            add(labSettleTo(state, R.until, limits));   // 새로 열린 줄의 시계가 끝난 시각에 선다
         }
-        add(labSettleTo(state, now));
+        add(labSettleTo(state, now, limits));
         return out;
     }
     /** 연구소 한 덩어리 — 상태 불변 · rng 0 · 정산하지 않는다 (INTERFACE §2-7) */
@@ -3250,16 +3265,6 @@ export function createGameSystem(deps) {
     const runCombat = (state, run, h) => (run?.party?.includes(h.uid) ? runUnits(state, run).find(p => p.uid === h.uid)?.combat : null) ?? heroCombat(state, h);
 
     /**
-     * 지금 교체가 전투에 먹는가 [신설 2026-09-21 · R130 · base_expedition_design §1-5] — 도는 원정이 **보스 라운드 도중**이면 `'boss'`
-     *   (바꿔도 다음 런부터) · 아니면 null. 화면이 교체 뒤 플래시를 고른다 · rng 0
-     */
-    function runLock(state, run) {
-        if (runOver(run)) return null;
-        const st = run.battle.status();
-        return st.inRound && st.kind === 'boss' ? 'boss' : null;
-    }
-
-    /**
      * 도는 원정의 전술 [신설 2026-09-21 · R130 · tactic_card_design §2-1] — 출발 때 켜진 옵션마다 **지금 그 원정 인원으로** 센 조건.
      *   `active` 가 거짓이면 교체로 조건이 깨져 꺼진 것이다(되찾으면 다시 켜진다). 도는 원정이 없으면 `[]` · rng 0
      * @returns `[{option, have, need, active}]`
@@ -3513,7 +3518,7 @@ export function createGameSystem(deps) {
 
     /**
      * 걸음 [신설 2026-09-21 · R130 · base_expedition_design §1-5 — 원정 중 교체는 그 순간부터] — 재생 시각(또는 앱 시계) `until` 까지 원정을 민다.
-     *   ① **첫머리 갈아입기** — 그 순간의 파티를 넘긴다(바뀐 영웅만 · 쓰러진 영웅은 안 입는다 · **보스 라운드 도중이면 엔진이 거절**).
+     *   ① **첫머리 갈아입기** — 그 순간의 파티를 넘긴다(바뀐 영웅만 · 쓰러진 영웅은 안 입는다 · 보스 라운드 도중도 포함).
      *      그래서 원정 중 장비 · 스킬 트리 교체는 **다음 걸음의 첫머리 = 바꾼 시각**에 먹는다
      *   ② `advance(until)` — 끝난 라운드가 나오면 정산하고(`settleRound` — 경계 갈아입기 포함) 이어 민다(한 걸음에 여러 라운드 — 숨긴 탭)
      *   ~~③ 이 런에서 쓰러져 있는 영웅(`runs[preset-1].fallen`)을 적는다~~ — 2026-10-21 걷었다(R300)
@@ -3816,21 +3821,24 @@ export function createGameSystem(deps) {
         const sh = state.shop ?? shopFirst();
         const rng = makeRng(deriveSeed(state.seed ^ 0x5409, list));
         const spread = BT.ilvlSpreadOf(sh.level);
+        // 잠긴 칸 — 맨 윗줄(무기 · 물약)은 상단(`shop`)이 · 둘째 · 셋째 줄(나머지 부위 · 도안)은 상단 r2(`shop_rows`)가 연다 [2026-10-30 사용자 · R390].
+        //   잠긴 칸도 굴린다 — 목록은 랭크와 무관하다(rng 소비가 랭크에 따라 안 갈린다)
+        const rows = hasFeature(state, 'shop_rows');
         const equip = [];
         for (const part of shopParts)
             for (let i = 0; i < shopCountOf(state, part); i++) {
                 const [item] = I.rollGear(rng, { slots: [part], ilvl: sh.level, ilvlSpread: spread });
-                equip.push({ item, gold: shopPriceOf(item), sold: sh.sold.includes(equip.length) });
+                equip.push({ item, gold: shopPriceOf(item), sold: sh.sold.includes(equip.length), locked: part !== 'weapon' && !rows });
             }
-        // `open` = 상단 · `special` = 특수상단 방문 — 건물 랭크가 연다(R137). 목록 · 시계는 닫혀 있어도 같은 값이다(시드 + 번호)
+        // `open` = 상단 · `trade` = 교역소(2026-10-30 · 교환은 아직 없다 — 열렸나만) · `special` = 특수상단 방문 — 건물 랭크가 연다(R137). 목록 · 시계는 닫혀 있어도 같은 값이다(시드 + 번호)
         // 물약 — **정해진 셋을 늘 판다** [2026-09-28 사용자 지시 · base_expedition §2-6] — `potion.csv:shop_gold` 가 선 행만 · 회차 · 매진이 없다
         const potions = potionRows.filter(p => p.shopGold != null).map(p => ({ id: p.id, tier: p.tier, heal: p.heal, gold: p.shopGold, have: state.potions?.[p.id] ?? 0 }));
         // 스킬 도안 — 목록마다 `shop_book_count` 장 · 따로 선 스트림(0x540B) [2026-09-29 사용자 지시 · base_expedition §2-6 · INTERFACE §5-2 · 2026-10-20 · R293 ~~스킬북~~]
-        const blueprints = shopBlueprintIds(state, list).map((id, i) => ({ id, gold: B.shop_book_gold, sold: sh.blueprints.includes(i) }));
+        const blueprints = shopBlueprintIds(state, list).map((id, i) => ({ id, gold: B.shop_book_gold, sold: sh.blueprints.includes(i), locked: !rows }));
         // 교체 값 — 무료가 열렸으면 0 · 아니면 무료 뒤 유료 교체마다 두 배(상한 없음) [2026-09-30 · 2026-10-16 사용자 — `tavernState` 와 같은 틀]
         const freeAt = shopFreeAt(state), free = now >= freeAt;
         const rerollCost = free ? 0 : B.shop_reroll_cost * 2 ** sh.paid;
-        return { ...visit, list, level: sh.level, equip, potions, blueprints, freeAt, free, rerollCost, open: hasFeature(state, 'shop'), special: hasFeature(state, 'shop_special') };
+        return { ...visit, list, level: sh.level, equip, potions, blueprints, freeAt, free, rerollCost, open: hasFeature(state, 'shop'), trade: hasFeature(state, 'shop_trade'), special: hasFeature(state, 'shop_special') };
     }
 
     /**
@@ -3868,7 +3876,7 @@ export function createGameSystem(deps) {
     }
 
     /**
-     * 상단 스킬 도안 한 장을 산다 [2026-09-29 · base_expedition §2-6 · INTERFACE §2-7 · 2026-10-20 · R293 ~~스킬북~~] — 거절 `unbuilt` → `stale` → `missing` → `sold` → `gold`.
+     * 상단 스킬 도안 한 장을 산다 [2026-09-29 · base_expedition §2-6 · INTERFACE §2-7 · 2026-10-20 · R293 ~~스킬북~~] — 거절 `unbuilt` → `stale` → `missing` → `unbuilt`(잠긴 칸 · 상단 r2 · R390) → `sold` → `gold`.
      * 가진 도안도 산다 — 쌓인다(`addBlueprint`). rng 를 새로 안 연다(`shopState` 와 같은 스트림)
      */
     function shopBlueprintBuy(state, i, list, now) {
@@ -3877,6 +3885,7 @@ export function createGameSystem(deps) {
         if (list !== S.list) return { ok: false, err: 'stale' };
         const b = S.blueprints[i];
         if (!b) return { ok: false, err: 'missing' };
+        if (b.locked) return { ok: false, err: 'unbuilt' };
         if (b.sold) return { ok: false, err: 'sold' };
         if (state.resources.gold < b.gold) return { ok: false, err: 'gold' };
         state.shop = state.shop ?? shopFirst();
@@ -3911,7 +3920,7 @@ export function createGameSystem(deps) {
 
     /**
      * 상단 장비 한 칸을 산다 [2026-09-27 · base_expedition_design §2-6 — 기본상단이 장비를 판다(09-27 개정)].
-     * 거절 순서 `unbuilt` → `stale` → `missing` → `sold` → `gold` → `bagFull` — 거절이면 아무것도 안 바뀐다.
+     * 거절 순서 `unbuilt` → `stale` → `missing` → `unbuilt`(잠긴 칸 — 무기 아닌 부위는 상단 r2 · R390) → `sold` → `gold` → `bagFull` — 거절이면 아무것도 안 바뀐다.
      * 목록을 `shopState` 로 다시 굴려 **같은 물건**을 얻는다 — 새 스트림을 안 연다 (INTERFACE §2-7).
      * 산 것은 **부대 `no` 의 인벤토리 끝**(기본 1 · v40 — 화면은 보고 있는 인벤토리 번호) · 없는 번호면 `missing`
      */
@@ -3922,6 +3931,7 @@ export function createGameSystem(deps) {
         const g = S.equip[i];
         const bag = bagOf(state, no);
         if (!g || !bag) return { ok: false, err: 'missing' };
+        if (g.locked) return { ok: false, err: 'unbuilt' };
         if (g.sold) return { ok: false, err: 'sold' };
         if (state.resources.gold < g.gold) return { ok: false, err: 'gold' };
         if (bag.length >= capOf(state, 'bag')) return { ok: false, err: 'bagFull' };
@@ -4026,7 +4036,8 @@ export function createGameSystem(deps) {
        카드는 `commission.js` 가 굴리고 여기는 **자리 · 받기 · 세기 · 지급**만 한다.
        게시판은 `commission_board_cards` 자리이고 받은 카드는 **제자리에서** 진행 중이 된다 — 자리가 비는 것은 수령 · 포기 때이고 그 자리에 새 카드를 굴린다.
        카드는 **굴린 순간의 내용을 박는다** — 대상 풀이 그때의 진행(열린 스테이지)에 달려 있어 다시 굴리면 다른 카드다(수색 스냅샷과 같은 이유).
-       기한은 없다 · 포기에 벌이 없다 · **명성 레벨**(2026-10-29 · R375) — 수령마다 경험치 1 · 레벨이 새로 굴리는 카드의 목표 · 골드에 배수를 붙인다(카드에 명성 칸은 없다) */
+       기한은 없다 · 포기에 벌이 없다 · **명성 레벨**(2026-10-29 · R375) — 수령마다 경험치 1 · 레벨이 새로 굴리는 카드의 목표 · 골드에 배수를 붙인다(카드에 명성 칸은 없다) ·
+       레벨이 오르면 안 받은 카드를 전부 다시 굴려 새 레벨로 맞춘다 — 받아 둔 카드는 그대로 (2026-10-30 · R400) */
 
     const isTaken = c => c.have !== undefined && c.have !== null;
     const boardOf = state => state.commissions?.cards ?? [];
@@ -4110,18 +4121,28 @@ export function createGameSystem(deps) {
     }
 
     /** 수령 — 거절 순서 `missing` → `notDone`. 골드를 주고 **명성 경험치 +1** 뒤에 그 자리를 새로 굴린다(새 카드는 오른 레벨을 탄다 · R375) ·
-     *  **`unbuilt` 로 안 막는다**(받아 둔 것은 끝까지 간다) */
+     *  **레벨이 올랐으면 안 받은 카드를 전부 자리 순서대로 다시 굴린다** — 받아 둔 카드는 진행도째 그대로 · 수령 자리보다 먼저 굴린다(카드 번호 차례 · R400) ·
+     *  **`unbuilt` 로 안 막는다**(받아 둔 것은 끝까지 간다 · 닫힌 게시판은 다시 굴리지 않는다) */
     function commissionClaim(state, no) {
         const c = boardOf(state).find(x => x.no === no && isTaken(x));
         if (!c) return { ok: false, err: 'missing' };
         if (c.have < c.need) return { ok: false, err: 'notDone' };
         state.resources.gold += c.gold;
         const before = CM.fameOf(fameXp(state)).level;
-        ownBoard(state);
+        const cards = ownBoard(state);
         state.commissions.fame = fameXp(state) + 1;
         const fame = CM.fameOf(state.commissions.fame);
+        const fameUp = fame.level > before;
+        let rerolled = 0;
+        if (fameUp && hasFeature(state, 'commission_board')) {
+            for (let i = 0; i < cards.length; i++) {
+                if (isTaken(cards[i])) continue;
+                const next = rollCard(state);
+                if (next) { cards[i] = next; rerolled++; }
+            }
+        }
         vacate(state, c);
-        return { ok: true, gold: c.gold, card: { ...c }, fame, fameUp: fame.level > before };
+        return { ok: true, gold: c.gold, card: { ...c }, fame, fameUp, rerolled };
     }
 
     /** 포기 — **벌이 없다**(진행도만 버린다) · 그 자리를 새로 굴린다. ⚠ 받고 곧바로 포기하면 무료 리롤이다(GAME_DESIGN §10 「의뢰 세부」 ②) */
@@ -4245,6 +4266,19 @@ export function createGameSystem(deps) {
     const joinUsed = state => (state.joins ?? []).length;
     /** 칸 수 — `tavern_join_slots` + 「대기 칸」 지점 (2026-10-21 · R298) */
     const joinSlots = state => B.tavern_join_slots + Math.max(0, Math.floor(labVal(state, VISIT_KEY, 'waiting', 0)));
+    /** 안 열린 칸 — 칸마다 그 칸을 여는 「대기 칸」 지점 레벨(작은 것부터 · 지점 최대 레벨까지) · 다 열렸거나 지점이 없으면 []
+     *  [2026-10-30 사용자 「처음에 2칸만 열고 나머지는 자물쇠」 · 「6칸으로 해 최대」 · INTERFACE §2 joinState] */
+    function joinLocked(state) {
+        const r = labNodeRow(VISIT_KEY, 'waiting');
+        if (!r) return [];
+        const out = [];
+        let have = joinSlots(state);
+        for (let lv = labLv(state, VISIT_KEY, 'waiting') + 1; lv <= r.max; lv++) {
+            const n = B.tavern_join_slots + Math.max(0, Math.floor(nodeValue(r, lv)));
+            for (; have < n; have++) out.push(lv);
+        }
+        return out;
+    }
     const joinFull = state => joinUsed(state) >= joinSlots(state);
     /** 줄을 연구할 수 있나 — 연구소가 지어졌다 */
     const visitLabOpen = state => labLineOpen(state, VISIT_KEY);
@@ -4356,7 +4390,7 @@ export function createGameSystem(deps) {
     /** 화면 상태 한 덩어리 — `list` 는 도착 순 · rng 0 · 아무것도 안 바꾼다(정산도 안 한다) */
     function joinState(state, now) {
         return {
-            open: hasFeature(state, 'hire'), slots: joinSlots(state), cost: B.tavern_hire_cost,
+            open: hasFeature(state, 'hire'), slots: joinSlots(state), locked: joinLocked(state), cost: B.tavern_hire_cost,
             list: (state.joins ?? []).map(j => ({ no: j.no, hero: j.hero, arrivedAt: j.arrivedAt, src: j.src })),
             err: joinErr(state),
         };
@@ -4683,6 +4717,66 @@ export function createGameSystem(deps) {
     }
 
     /**
+     * 상단 종 알림 — 초보자 다음 할 일 하나 + 처리 대기 목록 (2026-10-30 · INTERFACE §2).
+     * 초보 안내는 첫 의뢰 수령까지다. 같은 칸 미클리어가 이어지면 원정 준비 점검도 안내한다. 안내는 배지에서 뺀다.
+     * 완료 의뢰 · 탐험 · 대기 영웅은 실제 처리할 때까지 남는다.
+     * 정산하거나 결과를 굴리지 않는다 — 특히 exploreState 는 완료 보상을 미리 굴리므로 여기서 부르지 않는다.
+     * 저장 필드 없음 · rng 0 · 상태 불변.
+     */
+    function notificationState(state, now) {
+        const cm = commissionState(state), items = [];
+        if (cm.open) for (const c of cm.cards) if (c.taken && c.done)
+            items.push({ id: `commission:${c.no}`, kind: 'commission', tab: 'tavern', target: { commission: c.no } });
+        if (hasFeature(state, 'explore')) for (const x of exploreList(state))
+            if (chapterOpen(state, x.chapter) && spotBuilt(state, x.spot) && now >= x.startedAt + exploreMs())
+                items.push({ id: `explore:${x.no}`, kind: 'explore', tab: 'explore', target: { chapter: x.chapter, spot: x.spot } });
+        if (hasFeature(state, 'hire')) for (const j of state.joins ?? [])
+            items.push({ id: `join:${j.no}`, kind: 'join', tab: 'tavern', target: { join: j.no } });
+
+        let guide = null;
+        if (fameXp(state) === 0) {
+            const departed = (state.counters.battle ?? 0) > 0 || (state.reports ?? []).length > 0
+                || (state.progress.cleared ?? []).length > 0
+                || Object.values(state.progress.clearedIn ?? {}).some(ids => ids.length > 0);
+            if (!departed) guide = { id: 'firstExpedition', tab: 'expedition' };
+            else if (!cm.open) {
+                // 첫 두 건설만 안내한다. 비용 부족이면 원정으로 이어 주고, 그 밖의 조건을 우회하지 않는다.
+                const building = ['shop', 'tavern'].find(id => !(state.buildings[id] > 0));
+                if (building) {
+                    const next = CN.nextState(building, state.buildings, buildCtx(state), walletOf(state));
+                    if (!next.err) guide = { id: building === 'shop' ? 'buildShop' : 'buildTavern', tab: 'research', target: { building } };
+                    else if (next.err === 'gold') guide = { id: 'earnGold', tab: 'expedition', target: { building } };
+                }
+            } else if (!cm.taken) guide = { id: 'acceptCommission', tab: 'tavern' };
+            else if (!cm.cards.some(c => c.taken && c.done)) {
+                const c = cm.cards.find(c => c.taken);
+                guide = { id: 'progressCommission', tab: 'expedition', target: { commission: c.no } };
+            }
+        }
+        // 같은 칸 재도전 중인 부대의 최근 완료 기록만 본다. 현재 편성과 실제 출정 인원은 다를 수 있다.
+        let retryGuide = null;
+        for (const slot of state.runs ?? []) {
+            if (!slot || !(slot.active || slot.auto === true)) continue;
+            const difficulty = slot.difficulty ?? BASE_DIFF;
+            let attempts = 0;
+            for (const report of state.reports ?? []) {
+                if ((report.preset ?? 1) !== slot.preset || report.reason === null) continue;
+                if (report.stageId !== slot.stageId || (report.difficulty ?? BASE_DIFF) !== difficulty
+                    || report.won || !['wipe', 'timeout'].includes(report.reason)) break;
+                attempts++;
+            }
+            const hero = runParty(state, slot.preset).find(uid => heroById(state, uid));
+            if (hero && attempts >= B.expedition_retry_guide_runs
+                && (!retryGuide || attempts > retryGuide.target.attempts)) {
+                retryGuide = { id: 'retryPreparation', tab: 'character',
+                    target: { preset: slot.preset, hero, stageId: slot.stageId, difficulty, attempts } };
+            }
+        }
+        if (retryGuide && (!guide || ['earnGold', 'progressCommission'].includes(guide.id))) guide = retryGuide;
+        return { guide, items, count: items.length };
+    }
+
+    /**
      * 다음 랭크를 짓는다 — **한 칸씩 · 즉시 · 되돌림 없음**(construction_draft 원칙 5). 판정은 `constructionState` 와 같은 것 하나다.
      * err: `missing` · `maxRank` · `pending`(여는 것이 전부 준비 중) · `locked`(조건 미달) · `gold` · `materials`. 비용을 치르고 랭크 +1 · rng 0
      */
@@ -4984,7 +5078,7 @@ export function createGameSystem(deps) {
         stageUnlocked, chapterOpen, chapterGate, canDepart, runParty, runOf, heroBusy, limitsOf, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,
         noteRunEnd, bossRespawnAt,   // 챕터보스 재등장 (2026-10-10 · R240)
         difficultyState, selectDifficulty, stageLevel, stageCleared,
-        runLock, runTactics, runTacticsIf, runBuffs, runCombat,
+        runTactics, runTacticsIf, runBuffs, runCombat,
         tavernCandidates, tavernState, tavernReroll, hire, adminHero, dismissState, dismiss, moveHero, setSkillOrder,
         shopVisit, shopState, shopBuy, shopPotionBuy, shopPotionGold, shopBlueprintBuy, shopBlueprintPool, shopReroll, gambleState, gambleSpin, gambleSpinBatch,
         commissionState, commissionFill, commissionTake, commissionClaim, commissionDrop,
@@ -5000,5 +5094,6 @@ export function createGameSystem(deps) {
         tacticState, tacticBonus, arenaLoadout, arenaState, arenaStakes, arenaRecord, colosseumState, colosseumRecord, rerollTactic, toggleTacticLock, weaponGroupOf,
         constructionState, construct, hasFeature, needOf, peakTotal,
         navTodo,     // 탭 할 일 점 (2026-10-16 · ADR-0637)
+        notificationState,   // 상단 종 — 다음 할 일 · 처리 대기 (2026-10-30)
     };
 }

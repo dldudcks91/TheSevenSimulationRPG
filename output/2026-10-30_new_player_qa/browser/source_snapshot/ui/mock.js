@@ -1,0 +1,954 @@
+import { PORTRAIT_FILES } from '../assets/art/faces/portrait_files.js';
+
+/**
+ * 화면 목업 데이터 — **게임 로직이 아니다.**
+ *
+ * 이 단계의 목적은 "화면이 어떻게 생겼나"를 먼저 확정하는 것.
+ * 수치는 전부 손으로 박은 예시이며 밸런스 근거가 없다.
+ * 실데이터가 붙는 시점에 이 파일은 통째로 삭제된다.
+ *
+ * 단, 이름 / 희귀도 색상 / 죄종 색상은 실데이터(src/data/ + 계승분)의 실제 값을 썼다.
+ * 화면 폭과 글자 수 감각을 실제와 맞추기 위함.
+ *
+ * ── 2026-08-28 CSV 이관 ──
+ * 챕터·스테이지·몬스터 이름 · 몬스터 얼굴 유무 · 기본 능력치 7 · 전투 능력치 25 · 도감 레벨 보정·계열이
+ * **전부 CSV 로 나갔다** (`chapter` · `stage` · `monster` · `hero_attribute` · `combat_stat` ·
+ * `codex_level` · ~~`codex_series`~~ 2026-10-18 삭제 — 도감은 `codex_option` 사다리). 이름·얼굴·배경 헬퍼는 `ui/data.js` 에 있다.
+ *
+ * ── 2026-08-31 CSV 이관 (M7 완료) ──
+ * `CLASSES` · `SLOTS`/`EQUIP_SLOTS` · `ITEM_BASES` · `AFFIX_DEFS` · `HERO_NAME_POOL` · `HERO_TRAIT_POOL` 이
+ * **CSV 로 나갔다** (`class` · `equip_slot` · `item_base` · `affix` · `hero_name` · `hero_trait` —
+ * 로더는 `ui/data.js:D.classes`·`D.slots`/`D.equipSlots`·`D.itemBases`·`D.affixDefs`·`D.heroNamePool`·`D.heroTraitPool`).
+ * `ELEMENT_IDS` 는 삭제 — SSOT 는 `game_logic/hero.js:ELEMENTS` 하나다.
+ * `nm`(이름 조립)은 CSV 가 아니라 **이식 대상 코드**라 `game_logic/naming.js` 로 갔다 (`eliteName` 도 같이).
+ * game_logic 이 주입받는데 아직 여기 남은 것 — `SINS` · `ELITE_TRAIT_STAT` · `ELITE_TRAIT_DEF` 셋뿐
+ * (`SINS` 는 죄종 매핑 미확정 · 정예 특성 둘은 값과 함께 CSV 로 — INTERFACE §7 · DEV_PLAN §5-B · R344).
+ *
+ * ── i18n 규약 (2026-08-23) ──
+ * 표시 문자열은 전부 **{ko, en} 쌍**이다. 화면은 i18n.js 의 L() 로 현재 언어를 고른다.
+ * 영어는 CSV `_en` 컬럼(예정)의 초안 역할 — 검수 후 CSV 로 이사하면 이 파일과 함께 죽는다.
+ * 반복되는 접사·아이템명은 빌더 함수(AF/IMP/nm)로 만든다 — 실데이터도 "접사 타입 + 수치" 구조라
+ * 이쪽이 손글씨 문자열보다 실제에 가깝다.
+ */
+
+/**
+ * 확정 수치 — **SSOT는 src/data/balance.csv**.
+ * 아직 CSV 로더가 없어 화면용으로 옮겨 적은 것뿐이다. 로더가 붙으면 이 블록은 통째로 교체된다.
+ * 화면 코드는 숫자를 직접 박지 말고 반드시 여기를 참조할 것.
+ */
+
+/** 스테이지 라운드 구조 (base_expedition_design §1-2) — 구조는 고정, 내용물만 랜덤 */
+
+/** 죄종 — en 은 chapter_info.csv 의 sin_en 그대로. adj 는 아이템/정예 접두 형용사 */
+/* `line` — 그 죄종이 어떤 영웅을 만드나 한 문장 · 새 게임 카드 연장 칸의 죄종 줄 (2026-10-16 · app.js:startLines).
+   문장은 죄종 마스터리 1티어(skill_design §3-1)의 방향을 풀어 쓴 것이다 — 1티어 축이 바뀌면 같이 고친다.
+   **하는 일을 그대로 담백하게** 적는다 — 비유 · 감탄 · 반전 토막 없이(2026-10-21 사용자가 시안 셋 중 담백형을 골랐다).
+   직업 문장(`class.csv:role_text`)은 「무기 + 역할」 소개형이다. 둘 다 **카드 한 줄에 선다** — 가장 넓은 칩(마법사 · Gluttony) 옆에서 재서 넘치지 않게 (SCREEN_DESIGN §3) */
+export const SINS = {
+    wrath: { ko: '분노', en: 'Wrath', adj: 'Wrathful', color: '#e03030',
+        line: { ko: '공격이 빨라지고 치명타가 잘 터진다', en: 'Attacks faster and crits more often' } },
+    envy: { ko: '시기', en: 'Envy', adj: 'Envious', color: '#30b050',
+        line: { ko: '방어와 저항을 뚫고 받은 피해 일부를 돌려준다', en: 'Pierces defenses and reflects damage' } },
+    greed: { ko: '탐욕', en: 'Greed', adj: 'Greedy', color: '#d0a020',
+        line: { ko: '골드와 아이템을 더 많이 얻는다', en: 'Finds more gold and items' } },
+    sloth: { ko: '나태', en: 'Sloth', adj: 'Slothful', color: '#7087a8',   // 파란빛이 돌게 [2026-09-30 사용자 지시 · 옛 #808898 — 밝기는 그대로]
+        line: { ko: '받는 피해가 줄고 스킬을 더 자주 쓴다', en: 'Takes less damage, shorter cooldowns' } },
+    gluttony: { ko: '폭식', en: 'Gluttony', adj: 'Gluttonous', color: '#e07020',
+        line: { ko: '체력과 저항이 오르고 적 체력을 비율로 깎는다', en: 'More health and resists, % HP damage' } },
+    lust: { ko: '색욕', en: 'Lust', adj: 'Lustful', color: '#e03080',
+        line: { ko: '때릴 때마다 체력을 흡수하고 버프가 오래 간다', en: 'Steals life on hit and buffs last longer' } },
+    pride: { ko: '오만', en: 'Pride', adj: 'Prideful', color: '#8040e0',
+        line: { ko: '받는 피해가 줄고 공격력이 오르며 잘 안 밀린다', en: 'Tougher, hits harder, hard to stagger' } },
+};
+
+/* 스킬 태그 표시 이름(`SKILL_TAGS`)은 **삭제했다** (2026-09-01) — 어휘·대분류·이름의 SSOT 가
+   `src/data/skill_tag.csv`(15행 — 2026-09-08 오오라 · 2026-10-22 정신 집중 추가)로 나갔다 (skill_design §11). 읽는 곳은 `ui/data.js:skillTagName` 하나다. */
+
+// 매직~유니크는 equip_rarity_config.csv 의 color_hex 그대로 — **5단계** [일반 신설 2026-09-14 · 사용자 확정 · R86]
+// ~~item_design.md §1: "일반 등급 없음 — 필드 드롭 전부가 유의미"~~ → 일반 = 죄종 태그 없음 · ~~랜덤옵션은 붙는다~~ ~~고정 옵션 한 줄(2026-10-18 · R285)~~ 베이스 옵션 + 랜덤 줄(2026-10-21 · R297) · 색은 거의 흰색에 가까운 회색 — 몬스터 일반(style.css `.foe-cell`) · 영웅 일반(hero_tier.csv)과 같은 값 (2026-09-14 사용자 지시)
+// 순서 = 정렬 사다리(game_logic/state.js:RARITY_LADDER) · 필터 순서: 일반 → 매직 → 레어 → 크래프트(매직 + 고른 죄종 — 레어와 줄 수가 같다) → 에픽 → 레전더리 → 유니크(고정)
+//   **에픽 · 레전더리** [2026-10-24 · 사용자 「에픽이랑 레전더리를 추가하자, 보라색 및 빨간색으로」 · R342 · ADR-0767] — 오만 #8040e0 · 분노 #e03030 과 떨어뜨린 밝은 라벤더 · 산호빛 빨강
+export const RARITY = {
+    normal: { ko: '일반', en: 'Normal', color: '#D8D8D8' },
+    magic: { ko: '매직', en: 'Magic', color: '#4169E1' },
+    rare: { ko: '레어', en: 'Rare', color: '#FFD700' },
+    craft: { ko: '크래프트', en: 'Craft', color: '#22C55E' },
+    epic: { ko: '에픽', en: 'Epic', color: '#B266FF' },
+    legendary: { ko: '레전더리', en: 'Legendary', color: '#FF4D4D' },
+    unique: { ko: '유니크', en: 'Unique', color: '#FF8C00' },
+};
+
+/* 영웅 등급 표(`HERO_TIER`)는 **`src/data/hero_tier.csv` 로 나갔다** (2026-09-08 · R48) —
+   09-07 매직 신설로 2층 → 3층이 되면서 굴림 대역(총합·분포)이 데이터가 됐고, 이름·색만 mock 에 남기면
+   SSOT 가 둘로 갈린다. 읽는 곳은 `ui/data.js:D.heroTiers` 하나다. */
+
+/**
+ * 직업 · 장비 부위/위치 · 아이템 베이스 · 접사 정의는 **CSV 로 나갔다** (2026-08-31):
+ *   `class.csv` (7행 · CSV 컬럼은 `release`, 로더가 `stage` 로 주입) · `equip_slot.csv` (8행 = 부위 7 + 반지 두 번째 칸 — 2026-09-01 보조 폐지)
+ *   `item_base.csv` (7부위 × 4 — 무기는 없다. 무기의 베이스는 무기군 자체 = `weapon_group.csv`)
+ *   `affix.csv` (19행 · `scale` 3분류 · `per_ilvl` 은 `band` 행만)
+ * 읽는 곳은 `ui/data.js`(`D.classes` · `D.slots`/`D.equipSlots` · `D.itemBases` · `D.affixDefs`).
+ * ⚠ 접사·베이스 수치는 여전히 프로토타입 임시값이고 계승 접사 매트릭스(7죄종×슬롯)는 미연결이다.
+ */
+
+/** 접사 표기 — stat id → 이름 + 단위. **화면 전용 사전**이라 CSV 로 가지 않는다 (`SKILL_DISPLAY` 와 같은 성격) */
+export const AFFIX_LABELS = {
+    atk_flat: { ko: '데미지', en: 'Damage', fmt: 'n' },
+    atk_pct: { ko: '데미지', en: 'Damage', fmt: 'pct' },
+    hp_flat: { ko: '최대 HP', en: 'Max HP', fmt: 'n' },
+    hp_pct: { ko: '최대 HP', en: 'Max HP', fmt: 'pct' },
+    def_flat: { ko: '물리 방어', en: 'Physical Defense', fmt: 'n' },
+    res_all: { ko: '모든 원소 저항', en: 'All Resistances', fmt: 'pct' },
+    res_fire: { ko: '화염 저항', en: 'Fire Resist', fmt: 'pct' },
+    res_cold: { ko: '냉기 저항', en: 'Cold Resist', fmt: 'pct' },
+    res_lightning: { ko: '전기 저항', en: 'Lightning Resist', fmt: 'pct' },
+    res_poison: { ko: '독 저항', en: 'Poison Resist', fmt: 'pct' },
+    crit_rate: { ko: '치명타 확률', en: 'Crit Chance', fmt: 'pct' },
+    crit_damage: { ko: '치명타 피해', en: 'Crit Damage', fmt: 'pct' },
+    aspd_pct: { ko: '공격 속도', en: 'Attack Speed', fmt: 'pct' },
+    cast_speed_pct: { ko: '캐스팅 속도', en: 'Casting Speed', fmt: 'pct' },   // 마법 무기 유닛의 주기만 줄인다 — 공격 속도와 별개 옵션 (R203 · battle_design §2)
+    life_steal: { ko: '흡혈', en: 'Life Steal', fmt: 'pct' },
+    def_ignore: { ko: '방어 무시', en: 'Defense Ignore', fmt: 'pct' },
+    reflect_damage: { ko: '반사 피해', en: 'Reflect Damage', fmt: 'pct' },
+    damage_reduction: { ko: '피해 감소', en: 'Damage Reduction', fmt: 'pct' },
+    gold_find: { ko: '골드 획득', en: 'Gold Find', fmt: 'pct' },
+    item_find: { ko: '드랍률', en: 'Item Find', fmt: 'pct' },
+    // ── 무기 옵션 (item_design §1 「무기 옵션」 · 2026-09-11 R78) — 죄종 칸 · 통합옵션 표가 쓰는 축.
+    //    `res_reduction` 은 combat_stat.csv 이름과 같게 둔다 — 마스터리 칸도 이 사전을 먼저 읽는다
+    res_reduction: { ko: '저항 감소', en: 'Resist Reduction', fmt: 'pct' },
+    atk_down_phys_pct: { ko: '타격 시 대상 물리 데미지 감소', en: 'Physical Damage Down on Hit', fmt: 'pct' },
+    atk_down_mag_pct: { ko: '타격 시 대상 마법 데미지 감소', en: 'Magic Damage Down on Hit', fmt: 'pct' },
+    dmg_per_level_pct: { ko: '레벨당 데미지', en: 'Damage per Level', fmt: 'pct' },
+    crushing_blow_pct: { ko: '강타', en: 'Crushing Blow', fmt: 'pct' },   // 옵션 이름에 괄호를 안 단다 (§6 · ADR-0954)
+    magic_find: { ko: '매직아이템 획득', en: 'Magic Find', fmt: 'pct' },
+    vs_normal_dmg: { ko: '일반 대상 추가 피해', en: 'Damage vs Normal', fmt: 'pct' },
+    vs_demon_dmg: { ko: '데몬 대상 추가 피해', en: 'Damage vs Demon', fmt: 'pct' },
+    vs_undead_dmg: { ko: '언데드 대상 추가 피해', en: 'Damage vs Undead', fmt: 'pct' },
+    vs_elite_dmg: { ko: '정예·보스 대상 추가 피해', en: 'Damage vs Elites & Bosses', fmt: 'pct' },
+    vs_front_dmg: { ko: '전열 대상 추가 피해', en: 'Damage vs Front Row', fmt: 'pct' },
+    vs_back_dmg: { ko: '후열 대상 추가 피해', en: 'Damage vs Back Row', fmt: 'pct' },
+    def_down_pct: { ko: '타격 시 대상 방어력 감소', en: 'Defense Shred on Hit', fmt: 'pct' },
+    fire_dmg_pct: { ko: '화염 피해', en: 'Fire Damage', fmt: 'pct' },
+    cold_dmg_pct: { ko: '냉기 피해', en: 'Cold Damage', fmt: 'pct' },
+    lightning_dmg_pct: { ko: '전기 피해', en: 'Lightning Damage', fmt: 'pct' },
+    poison_dmg_pct: { ko: '독 피해', en: 'Poison Damage', fmt: 'pct' },
+    res_down_pct: { ko: '타격 시 대상 원소 저항 감소', en: 'Resist Shred on Hit', fmt: 'pct' },
+    // ── 방어구 옵션 (item_design §1 「갑옷 옵션」 · 「투구 옵션」 · 신발 행 · 2026-09-18) — 베이스 옵션 · 죄종 칸 · 공통옵션 표가 쓰는 축.
+    //    `fhr` · `cooldown_reduction` 은 combat_stat.csv 이름과 같게 둔다(마스터리 칸도 이 사전을 먼저 읽는다)
+    armor_def_pct: { ko: '물리 방어', en: 'Physical Defense', fmt: 'pct' },           // 베이스 옵션 — 그 장비 자신의 고유 방어력에만 곱한다
+    fhr: { ko: '타격 회복', en: 'Hit Recovery', fmt: 'pct' },
+    cooldown_reduction: { ko: '쿨타임 감소', en: 'Cooldown Reduction', fmt: 'pct' },
+    hp_recovery_pct: { ko: '체력 회복', en: 'HP Recovery', fmt: 'pct' },
+    kill_heal_pct: { ko: '처치 시 체력 회복', en: 'Heal on Kill', fmt: 'pct' },   // 처치마다 최대 HP × 값 — 투구 · 장갑 색욕 ① (2026-10-21 · R299)
+    start_gauge_pct: { ko: '전투 시작 시 행동 게이지', en: 'Action Gauge at Battle Start', fmt: 'pct' },   // 가죽 신발 특성 — 빈 게이지를 그만큼 채운 채 출발 (R303)
+    cull_normal_pct: { ko: '일반몹 처형', en: 'Culling Strike vs Normal', fmt: 'pct' },   // 장갑 폭식 ② — 직격 뒤 일반 몬스터 체력이 이 비율 이하면 쓰러뜨린다 (R303)
+    res_all_per_level: { ko: '레벨당 모든 원소 저항', en: 'All Resist per Level', fmt: 'pct' },   // 신발 오만 (R303)
+    def_per_level: { ko: '레벨당 물리 방어', en: 'Physical Defense per Level', fmt: 'n' },
+    hp_per_level: { ko: '레벨당 최대 HP', en: 'Max HP per Level', fmt: 'n' },
+    aspd_per_level_pct: { ko: '레벨당 공격 속도', en: 'Attack Speed per Level', fmt: 'pct' },
+    counter_chance: { ko: '반격 확률', en: 'Counter Chance', fmt: 'pct' },
+    res_max_fire: { ko: '최대 화염 저항', en: 'Max Fire Resist', fmt: 'pct' },
+    res_max_cold: { ko: '최대 냉기 저항', en: 'Max Cold Resist', fmt: 'pct' },
+    res_max_lightning: { ko: '최대 전기 저항', en: 'Max Lightning Resist', fmt: 'pct' },
+    res_max_poison: { ko: '최대 독 저항', en: 'Max Poison Resist', fmt: 'pct' },
+    dr_flat: { ko: '피해 감소', en: 'Damage Reduction', fmt: 'n' },   // 고정 · % 는 단위가 가른다 — `damage_reduction` 과 이름이 같다 (§6 · ADR-0954)
+    vs_normal_dr: { ko: '일반 적에게 받는 피해 감소', en: 'Damage Reduction vs Normal', fmt: 'pct' },
+    vs_demon_dr: { ko: '데몬에게 받는 피해 감소', en: 'Damage Reduction vs Demon', fmt: 'pct' },
+    vs_undead_dr: { ko: '언데드에게 받는 피해 감소', en: 'Damage Reduction vs Undead', fmt: 'pct' },
+    vs_elite_dr: { ko: '정예·보스에게 받는 피해 감소', en: 'Damage Reduction vs Elites & Bosses', fmt: 'pct' },
+    vs_front_dr: { ko: '전열 적에게 받는 피해 감소', en: 'Damage Reduction vs Front Row', fmt: 'pct' },
+    vs_back_dr: { ko: '후열 적에게 받는 피해 감소', en: 'Damage Reduction vs Back Row', fmt: 'pct' },
+    xp_gain_pct: { ko: '경험치 획득', en: 'Experience Gain', fmt: 'pct' },
+    // `inert` = **전투가 아직 안 읽는 줄** — 툴팁이 줄 끝에 「(미적용)」을 단다(SCREEN_DESIGN §6 · ADR-0213). 상태이상 기계가 서면 그 stat 의 표지를 지운다
+    freeze_dur_reduction: { ko: '빙결 시간 감소', en: 'Freeze Duration Reduction', fmt: 'pct' },   // 결빙이 읽는다(2026-09-28 · R177 · battle_design §2-4)
+    poison_dur_reduction: { ko: '중독 시간 감소', en: 'Poison Duration Reduction', fmt: 'pct' },   // 중독이 읽는다(2026-09-28 · R178 · battle_design §2-5)
+    // ── 반지 · 목걸이 옵션 (item_design §1 「반지 · 목걸이」 · 2026-09-21 · R127) — 반지 시기 칸 · 공통옵션이 쓰는 새 축.
+    //    원소별 저항 감소는 무기 시기 칸 `res_reduction`(저항 감소)과 같은 메커니즘이라 이름도 그 계열로 둔다 — **그 원소의 타격에만** 붙는다
+    res_reduction_fire: { ko: '화염 저항 감소', en: 'Fire Resist Reduction', fmt: 'pct' },
+    res_reduction_cold: { ko: '냉기 저항 감소', en: 'Cold Resist Reduction', fmt: 'pct' },
+    res_reduction_lightning: { ko: '전기 저항 감소', en: 'Lightning Resist Reduction', fmt: 'pct' },
+    res_reduction_poison: { ko: '독 저항 감소', en: 'Poison Resist Reduction', fmt: 'pct' },
+    burn_dur_reduction: { ko: '화상 시간 감소', en: 'Burn Duration Reduction', fmt: 'pct' },   // 화상이 읽는다(R178)
+    stun_dur_reduction: { ko: '스턴 시간 감소', en: 'Stun Duration Reduction', fmt: 'pct' },   // 스턴이 읽는다(R178)
+    buff_dur_pct: { ko: '버프 지속시간', en: 'Buff Duration', fmt: 'pct' },
+    // 물약 효과 상승 — 낀 영웅이 마시는 물약의 수치(반지 분노 ③ · 2026-10-29 · R382 · item_design §1 「반지 옵션 — 죄종 계열」)
+    potion_effect_pct: { ko: '물약 효과', en: 'Potion Effect', fmt: 'pct' },
+    // 명중률 — 지금은 궁수 마스터리 T1-3 의 축이다(적중률에 (1 + 명중률)로 곱한다 · 2026-09-22 R138 · 곱 2026-10-06 R219). 폐지된 `accuracy` 와 다른 id
+    hit_bonus: { ko: '명중률', en: 'Hit Bonus', fmt: 'pct' },
+    // ── 죄종 계열 옵션 (item_design §1 「무기 옵션 — 죄종 계열」 · 「마법사 · 사제 무기」 · 「갑옷 옵션 — 죄종 계열」 · 2026-10-05 · R206 · R208 · R209)
+    dmg_min_flat: { ko: '최소 데미지', en: 'Minimum Damage', fmt: 'n' },
+    dmg_max_flat: { ko: '최대 데미지', en: 'Maximum Damage', fmt: 'n' },
+    dmg_max_per_level: { ko: '레벨당 최대 데미지', en: 'Maximum Damage per Level', fmt: 'n' },
+    def_down_stack_pct: { ko: '타격 시 대상 방어력 감소 (겹침)', en: 'Stacking Defense Shred on Hit', fmt: 'pct' },
+    stagger_dur_pct: { ko: '경직 시간 증가', en: 'Stagger Duration', fmt: 'pct' },
+    cast_refund_chance: { ko: '시전 시 시전 칸 충전', en: 'Charge Refund on Cast', fmt: 'pct' },
+    status_dur_pct: { ko: '상태이상 시간 증가', en: 'Ailment Duration', fmt: 'pct' },
+    cast_speed_per_level_pct: { ko: '레벨당 캐스팅 속도', en: 'Casting Speed per Level', fmt: 'pct' },
+    cast_stack_pct: { ko: '시전 누적 데미지', en: 'Stacking Damage per Cast', fmt: 'pct' },
+    heal_out_pct: { ko: '회복량 증가', en: 'Healing Done', fmt: 'pct' },
+    debuff_dur_pct: { ko: '디버프 시간 증가', en: 'Debuff Duration', fmt: 'pct' },
+    hp_regen: { ko: 'HP 재생', en: 'HP Regen', fmt: 'n' },
+    // 발동 옵션 — 줄에 스킬 id(`a.skill`)를 함께 든다. `proc` = 발동 조건(툴팁 문장 `tip.proc.<조건>` · app.js `affixText`) · `inert` = 전투가 아직 안 읽는다(목걸이 발동과 같다)
+    proc_hit_attack: { ko: '타격 시 공격 스킬 발동', en: 'Attack Skill on Hit', fmt: 'pct', proc: 'hit', inert: true },
+    proc_hit_buff: { ko: '타격 시 버프 스킬 발동', en: 'Buff Skill on Hit', fmt: 'pct', proc: 'hit', inert: true },
+    proc_cast_attack: { ko: '시전 시 공격 스킬 발동', en: 'Attack Skill on Cast', fmt: 'pct', proc: 'cast', inert: true },
+    proc_cast_buff: { ko: '시전 시 버프 스킬 발동', en: 'Buff Skill on Cast', fmt: 'pct', proc: 'cast', inert: true },
+    proc_cast_debuff: { ko: '시전 시 디버프 스킬 발동', en: 'Debuff Skill on Cast', fmt: 'pct', proc: 'cast', inert: true },
+    proc_struck_debuff: { ko: '피격 시 디버프 스킬 발동', en: 'Debuff Skill when Struck', fmt: 'pct', proc: 'struck', inert: true },
+    proc_struck_buff: { ko: '피격 시 버프 스킬 발동', en: 'Buff Skill when Struck', fmt: 'pct', proc: 'struck', inert: true },
+    // 특정 스킬 +n — 줄에 스킬 id(`a.skill`)를 든다. `skill` = 툴팁 문장 `tip.skillPlus`(「파이어볼 +1」 · app.js `affixText`) [2026-10-08 · R225 · ADR-0535]
+    skill_plus: { ko: '스킬 레벨', en: 'Skill Level', fmt: 'n', skill: true },
+};
+
+/**
+ * 도감 Lv2 전투 줄 중 **장비 옵션 사전에 없는 둘**의 이름 [2026-10-22 · R314 · ADR-0715] — 나머지 열셋은 `AFFIX_LABELS` 를 그대로 쓴다.
+ *   접사가 아니라서 접사 사전에 넣지 않는다 — `affixText` 의 `fallback` 으로 넘긴다
+ */
+export const CODEX_FIGHT_LABELS = {
+    vs_dmg: { ko: '데미지', en: 'Damage', fmt: 'pct' },
+    speed_pct: { ko: '공격 · 캐스팅 속도', en: 'Attack · Casting Speed', fmt: 'pct' },
+};
+
+/**
+ * 마스터리에만 있는 축 — 접사도 `combat_stat.csv` 행도 아니다 [2026-10-24 · R325 — 탐욕 T3 「탐욕 합에 비례」]. 마스터리 칸 툴팁(`app.js:masteryTipCard`)의 `fallback`.
+ *   효과 문장은 `i18n.js:sk.masteryEffect.<stat>` 이 통째로 들고, 여기는 값의 단위(%)만 정한다
+ */
+export const MASTERY_LABELS = {
+    atk_pct_per_greed: { ko: '탐욕 비례 데미지', en: 'Damage per Greed', fmt: 'pct' },
+    hp_pct_per_greed: { ko: '탐욕 비례 최대 HP', en: 'Max HP per Greed', fmt: 'pct' },
+    cdr_per_greed: { ko: '탐욕 비례 쿨타임 감소', en: 'Cooldown Reduction per Greed', fmt: 'pct' },
+};
+
+/** 전투가 아직 안 읽는 옵션인가 — 툴팁의 「(미적용)」 표지 (SCREEN_DESIGN §6 · ADR-0213). 판정은 사전의 고정 표지다 — 렌더러가 계산하지 않는다 */
+export const statInert = stat => AFFIX_LABELS[stat]?.inert === true;
+
+/**
+ * 접사 한 줄 — {ko, en}. 단위(%)와 어순은 **여기서만** 정한다.
+ * `fallback` = 접사 풀 밖의 축을 그릴 때 쓰는 `{ko, en, fmt}` — 마스터리 노드가 `combat_stat.csv` 행을 넘긴다.
+ *   (접사가 아닌 것을 AFFIX_LABELS 에 밀어 넣지 않으려는 것 — 그러면 접사 사전이 접사 아닌 것을 들게 된다)
+ */
+export const affixText = (stat, v, fallback) => {
+    const d = statLabel(stat, fallback);
+    return { ko: `${d.ko} ${statValue(stat, v, fallback)}`, en: `${statValue(stat, v, fallback)} ${d.en}` };
+};
+
+/** 축 이름만 — {ko, en, fmt}. 이름과 값을 따로 찍는 화면(마스터리 칸)이 문자열을 되파싱하지 않게 한다 */
+export const statLabel = (stat, fallback) => AFFIX_LABELS[stat] ?? fallback ?? { ko: stat, en: stat, fmt: 'n' };
+
+/**
+ * 퍼센트 숫자 — 값은 **비율**(0.05)로 오고 **찍을 때만** 100 을 곱한다 [2026-09-17 · R111 · src/data/README.md 단위 규약].
+ * 곱한 뒤의 부동소수 꼬리(`7.000000000000001`)는 소수 둘째 자리에서 자른다 — 오만 「레벨당 데미지」(0.3%)가 가장 잘다.
+ * 화면 곳곳의 `%` 표기가 이것을 쓴다 (app.js · tip.js)
+ */
+export const pctNum = v => Number((v * 100).toFixed(2));
+/** 비율 하나를 부호 없는 `n%` 로 — 옵션 줄이 아닌 문장 안의 확률(목걸이 발동 줄 · 2026-09-21). 단위를 붙이는 곳은 이 파일 하나다 */
+export const pctText = v => `${pctNum(v)}%`;
+
+/** 로마 숫자 — 도감 스테이지 행의 번호(`I 파멸의 진영` · 2026-09-21 사용자 지시). 언어와 무관한 기호라 i18n 을 안 거친다 */
+const ROMAN = [[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+export const roman = n => ROMAN.reduce((s, [v, r]) => { while (n >= v) { s += r; n -= v; } return s; }, '');
+
+/** 값만 — 부호와 단위는 affixText 와 **같은 규칙**이다 (단위를 붙이는 곳은 이 파일 하나) */
+export const statValue = (stat, v, fallback) => {
+    const pct = statLabel(stat, fallback).fmt === 'pct';
+    return `${v >= 0 ? '+' : ''}${pct ? pctNum(v) : v}${pct ? '%' : ''}`;
+};
+
+/**
+ * 밑수 값만 — `statValue` 와 같되 **부호를 안 붙인다**. 접사의 `+` 는 「얼마를 더한다」라 뜻을 들지만
+ * 밑수는 「이 아이템이 가진 값」이라 더할 대상이 없다 (아이템 툴팁의 메인 옵션 줄 — SCREEN_DESIGN §6).
+ * 단위(%)는 여전히 이 파일 하나가 붙인다.
+ */
+export const baseValue = (stat, v, fallback) => {
+    const pct = statLabel(stat, fallback).fmt === 'pct';
+    return `${pct ? pctNum(v) : v}${pct ? '%' : ''}`;
+};
+
+/** 범위만 — `최소~최대` · 양끝이 같으면 한 수(데미지 범위와 같다 — ADR-0108) · 부호 없음 · 단위(%)는 끝에 한 번
+ *  (아이템 툴팁 옵션 줄의 Shift 범위 — SCREEN_DESIGN §6 · ADR-0617). 단위를 붙이는 곳은 이 파일 하나다 */
+export const rangeValue = (stat, min, max, fallback) => {
+    const pct = statLabel(stat, fallback).fmt === 'pct';
+    const n = v => (pct ? pctNum(v) : v);
+    return `${min === max ? n(min) : `${n(min)}~${n(max)}`}${pct ? '%' : ''}`;
+};
+
+/**
+ * 부위가 이름을 갈라 쓰는 줄 — 같은 stat 이라도 **무기 칸의 데미지 % 는 「무기 데미지」**다
+ * [2026-10-15 사용자 「무기 데미지와 데미지+%는 다른 개념」 · 「무기에 붙는 데미지+%를 무기데미지로」 · SCREEN_DESIGN §6 · ADR-0628].
+ * 계산은 이미 따로다 — 무기 피해 범위에만 곱하고 데미지 % 괄호에는 안 든다(hero.js `weaponPct` · battle_design §9-1).
+ * stat id(`atk_pct`)는 그대로라 세이브 · 계산이 안 바뀐다 — 이름만 여기서 갈린다
+ */
+const SLOT_LABELS = { weapon: { atk_pct: { ko: '무기 데미지', en: 'Weapon Damage', fmt: 'pct' } } };
+/** 아이템 옵션 한 줄 — {ko, en}. 부위가 이름을 바꾸는 줄(`SLOT_LABELS`)만 갈리고 나머지는 `affixText` 그대로다 */
+export const itemAffixText = (slot, stat, v) => {
+    const d = SLOT_LABELS[slot]?.[stat];
+    return d ? { ko: `${d.ko} ${statValue(stat, v)}`, en: `${statValue(stat, v)} ${d.en}` } : affixText(stat, v);
+};
+
+/** 페이퍼돌 배치 — 3열 × 3행, 신체 위치를 따른다. 칸은 착용 **위치**(equip_slot.csv:equip_slot_id) — 반지 두 칸.
+ *  **화면 레이아웃이지 데이터가 아니라서** CSV 로 가지 않는다 (부위·위치 표는 equip_slot.csv).
+ *  2026-09-01 재배치 — 보조 슬롯 폐지(한손 개념 폐지)로 위치가 9 → 8 이 되어 4행이 3행으로 줄었다.
+ *  무기 왼쪽 · 갑옷 가운데 · 장갑 오른쪽, 반지 둘이 신발을 감싼다. ⚠ SCREEN_DESIGN §6 갱신은 `/ui` 몫 */
+export const PAPERDOLL = [
+    [null, 'helmet', 'amulet'],
+    ['weapon', 'armor', 'gloves'],
+    ['ring1', 'boots', 'ring2'],
+];
+
+/* ═══════════ 영웅 생성 풀 ═══════════
+   굴리는 규칙은 game_logic/hero.js 에 있고, 풀(데이터)은 **CSV 로 나갔다** (2026-08-31):
+   `hero_name.csv` 24행(레어 영웅은 무한 생성이라 이름도 풀에서 뽑는다 — 유니크 15명은 고정 명단이라 들어오지 않는다) ·
+   `hero_trait.csv` 12행(시작 특성 — ⚠ 효과 미작성, 지금은 이름표만 굴린다. hero_design §3).
+   읽는 곳은 `ui/data.js`(`D.heroNamePool` · `D.heroTraitPool`). */
+
+/* 전투 능력치 — 25종(id·이름·카테고리·계수·단위·`impl`·`sheet_order`)은 `combat_stat.csv` 가 SSOT 고
+   로더(`ui/data.js:D.combatStats`)가 읽는다. 시트는 `impl=1` 행을 **`sheet_order` 순**으로 그린다 (SCREEN_DESIGN §6).
+   ⚠ **카테고리 라벨 사전 `COMBAT_CATS` 는 2026-09-01 에 삭제했다** — 캐릭터 탭이 카테고리 제목을 안 그리기로 한
+   08-26 결정 이후 라벨이 화면에 나온 적이 없고, 마지막 용도였던 시트 정렬마저 `sheet_order` 로 넘어가 읽는 곳이 0이 됐다.
+   카테고리 자체는 CSV 의 `category` 컬럼에 남아 있다 — 라벨이 다시 필요해지면 그때 이름을 붙인다.
+   **기본 능력치와는 다른 층이다** (CLAUDE.md / hero_design §4) — 기본 7종 = 영웅 고유·장비 불변 /
+   전투 25종 = 장비·스킬이 만든다. */
+
+/**
+ * 영웅 초상 — 몬스터와 같은 스타일 폴더(`faces/<스타일>/`)의 `hero/<직업id>_<k>.webp` (2026-09-07 직업 분류 · 하위 폴더 2026-09-14).
+ * **어느 그림인지는 영웅이 태어날 때 굴려 세이브에 박은 `face` 가 정한다** (2026-09-06 사용자 지시).
+ *
+ * 옛 판은 **이름 해시**였다 — 저장할 자리가 없어서 매번 다시 계산한 것이고, 그래서 두 가지가 따라왔다:
+ *   ① 해시가 몰리면 아예 안 나오는 얼굴이 생긴다(실제로 hero_1·3·7 이 그랬다 — DEV_PLAN 부채 #36)
+ *   ② 장수를 바꾸면 나머지가 달라져 **기존 영웅 얼굴이 전원 재배정**된다
+ * 저장으로 바꾸면서 둘 다 없어졌다. 굴림은 `game_logic/hero.js:rollStartParty` 가 **맨 마지막에 1회**,
+ *   저장은 세이브(v13)가, 파일 이름만 여기가 만든다.
+ *
+ * 인자는 `{face}` 를 가진 것이면 된다 — 영웅 객체 · 후보(굴리는 순간 face 가 박힌다) · 관전 유닛은 `u.hero`.
+ * **`face` 가 없으면 null 이다** — 빈 칸으로 두고 아무것도 안 깐다(직업 글리프 폐지 2026-09-03).
+ * 장수를 줄여 저장값이 범위를 넘으면 접어서 쓴다 — 없는 파일을 부르느니 있는 얼굴로 떨어진다.
+ */
+/* 이 값은 **새로 태어나는 영웅**의 굴림 범위다 (2026-09-06 저장형 전환) — 세이브에 이미 박힌 얼굴은 안 바뀐다.
+   ⚠ **줄일 때만** 영향이 있다: 범위를 넘은 저장값은 접어서 쓴다(`heroFace`). 늘리는 쪽은 기존 영웅에 무해하다.
+   옛 판(이름 해시)에서는 이 값을 바꿀 때마다 **전원 재배정**이었다 — 그 비용은 사라졌다.
+   기록은 남긴다: 5 → 14 는 2026-09-03 사용자 지시로 올린 것이다 (다인종 흉상 9종 추가).
+   2026-09-04 는 사용자 지시로 여러 번 갈았다: 14 → 1(검투사) → 3(바바리안 변주) → 2 → 5.
+   2026-09-05 사용자 지시로 5 → 7 (Gem 기사 시트의 위 두 타일만 채택 · 아래 두 장은 안 썼다).
+   2026-09-06 사용자 지시로 7 → 8 (인간 궁수 1종 추가 — 세트에서 처음으로 원거리 직업이 읽히는 얼굴이다),
+   같은 날 8 → 9 (외치는 기사 1종 추가). 같은 날 9 → 11 로 올렸다가 **사용자 지시로 되돌렸다** —
+   「레인저는 `hero_8` 하나만」이 지시였는데 궁수 시트의 갈색·청회 후드 2타일이 `hero_10..11` 로 더 들어가 있었다.
+   게임 사본만 지웠고 원본 타일은 `faces/source/hero/archer_hood_brown · archer_hood_slate` 로 남는다.
+   ⚠ 그 시트의 카키(우하단)는 ✦ 워터마크가 **인물 위에** 얹혀 있어 애초에 버린 타일이다. 배경이 아니라
+   후드 안쪽 검정 + 카키 테두리를 가로질러서 깨끗한 복원이 안 된다.
+   ⚠ **줄이는 방향이라 위 경고가 걸린다** — 세이브에 `face = 10·11` 이 박힌 영웅은 `heroFace` 가 접어서 1·2 를 준다.
+   2026-09-07 사용자 지시로 9 → 10 (사제 1종 추가 — `source_sheet_priest.png` 2번 타일 · 세트 첫 사제 얼굴.
+   늘리는 방향이라 기존 영웅 얼굴은 안 바뀐다).
+   2026-09-07 사용자 지시로 **직업 분류 전환** — 정수 하나(`HERO_FACE_MAX`)를 **직업별 장수 객체(`HERO_FACES`)**로 갈고
+   파일명을 `hero_<직업id>_<k>.png` 로 리네임했다. 세이브의 `face` 도 정수에서 `'<직업id>_<k>'` 문자열이 됐다(v13 —
+   전 영웅 전면 재굴림). 이력은 남긴다: 위 번호(1~10)는 **구 파일명**이고 아래가 새 이름이다.
+   지금은 warrior_1 검투사(구 1) · warrior_2 바바리안(구 2) · warrior_3 백발백염(구 7) ·
+   knight_1~3 무안면 로마군(구 3~5) · knight_4 민머리 기사(구 6) · knight_5 외치는 기사(구 9) ·
+   archer_1 궁수(구 8) · priest_1~4 사제(구 10 반삭 + 09-07 저녁 신규 셋: 후드 룬 · 흰 두건 · 역병 의사) ·
+   mage_1 마법사(수정구 예언자 — 09-07 밤, 마지막 직업 공백이 닫혔다) ·
+   mage_2 포세이돈(청록 장발·수염 노인) · mage_3 노스트라다무스(황도 기호 로브 · 회백 장발 노인)
+   — 2026-09-16 사용자 지시로 mage 1 → 3. 늘리는 방향이라 기존 영웅 얼굴은 안 바뀐다(faces/cartoon/README).
+   warrior_4 레오니다스(청동 투구를 이마로 올림 · 검은 볏 — 10-16 교체) · warrior_5 삼손(헝클어진 장발·수염 · 맨몸)
+   — 2026-09-21 사용자 지시로 warrior 3 → 5. 역시 늘리는 방향이다.
+   2026-10-21 사용자 지시로 노스트라다무스를 사제로 옮겼다 — mage_3 → priest_5 · mage 3 → 2 · priest 4 → 5.
+   ⚠ mage 는 **줄이는 방향**이라 세이브에 `mage_3` 이 박힌 마법사는 접혀서 mage_1 을 받는다(새 마법사 초상이 mage_3 에 들어오면 그 그림이 된다).
+   ⚠ **드디어 직업 대응이다** — 영웅은 제 직업 풀에서만 굴리므로 궁수 얼굴이 전사에게 가지 않는다.
+   풀이 0장인 직업(지금은 확장 직업만)은 `face = null` 이고 화면은 **빈 칸**으로 둔다 (자리표시를 안 깐다). */
+export const HERO_FACES = { warrior: 5, knight: 5, mage: 2, archer: 1, priest: 5 };
+
+/**
+ * 초상 이름 — `'<직업id>_<k>'` → `{ko, en}` (2026-09-10 사용자 지시 · ADR-0081).
+ * **그림 한 장의 이름이지 영웅의 이름이 아니다** — 굴려서 이 얼굴을 받은 평범한 영웅은 제 이름(`hero_name.csv` 풀)을
+ *   그대로 쓴다. 이 이름이 읽히는 자리는 지금 **도감 캐릭터 세그먼트의 타일 하나**뿐이다.
+ * **왜 이름을 붙이나** — 나중에 **유니크가 이 얼굴을 가져가기 위해서**다. 이름이 붙은 초상은 「굴려서 나오는 얼굴」이 아니라
+ *   정해진 개체의 얼굴이 된다. 그 개체 테이블(유니크 영웅)은 아직 없다 — 이름만 먼저 박아 둔 것이다.
+ * **없으면 없는 대로다** — 이름이 안 붙은 초상은 여기 줄이 없고, 도감 타일은 **풀 번호**로 남는다 (`codexCharacter`).
+ * ⚠ **`hero_name.csv` 와 다른 층이다** — 그쪽은 영웅이 태어날 때 굴리는 **이름 풀**(n01…)이고 얼굴과 아무 관계가 없다.
+ *   같은 이름이 양쪽에 있으면 안 된다는 규칙은 없지만, 지금은 겹치지 않는다.
+ * ⚠ **목록의 SSOT 는 위 `HERO_FACES` 다** — 여기 줄이 그 장수를 넘어도 도감은 안 그린다(범위 안만 돈다).
+ *   영어가 원본이고 한글이 음역인 넷(Maximus · Barbarian · Odysseus · Hannibal)과 **한국어가 원본인 하나**(검황 —
+ *   영어 `Sword Emperor` 가 직역)가 섞여 있다.
+ */
+export const HERO_FACE_NAMES = {
+    warrior_1: { ko: '막시무스', en: 'Maximus' },          // 검투사
+    warrior_2: { ko: '바바리안', en: 'Barbarian' },        // 바바리안
+    warrior_3: { ko: '검황', en: 'Sword Emperor' },        // 백발백염
+    warrior_4: { ko: '레오니다스', en: 'Leonidas' },       // 청동 투구를 이마로 올림 · 검은 볏
+    warrior_5: { ko: '삼손', en: 'Samson' },               // 헝클어진 장발·수염
+    knight_1: { ko: '오디세우스', en: 'Odysseus' },        // 무안면 로마군 1
+    knight_5: { ko: '한니발', en: 'Hannibal' },            // 외치는 기사
+    mage_2: { ko: '포세이돈', en: 'Poseidon' },            // 청록 장발·수염 노인
+    priest_3: { ko: '잔 다르크', en: 'Joan of Arc' },      // 흰 두건(윔플) — 사제 초상 중 유일한 여자
+    priest_4: { ko: '닥터 슈나벨', en: 'Doctor Schnabel' }, // 역병 의사 — 흰 부리 가면
+    priest_1: { ko: '베네딕토', en: 'Benedict' },          // 반삭 · 검은 수단 · 금 십자가 (10-20 이름)
+    priest_2: { ko: '멀린', en: 'Merlin' },                // 올리브 후드 · 룬 문신 노인 (10-20 이름)
+    priest_5: { ko: '노스트라다무스', en: 'Nostradamus' }, // 황도 기호 로브 노인 (10-21 마법사 mage_3 → 사제)
+    // knight_2 · knight_3 · knight_4 는 이름 없이 번호로 둔다 (2026-09-10 사용자 지시 — 「나중에 안 쓸 듯」)
+};
+/** 표시용 안정 해시(FNV-1a + 마무리 섞기) — 같은 문자열이면 언제나 같은 수. **game_logic 의 rng 와 무관하다**(결정론 계약 밖).
+ *
+ * ⚠ **마무리 섞기(murmur3 finalizer)를 빼면 안 된다** (2026-09-06 버그 수정) — 쓰는 쪽이 전부 `% 개수` 라
+ *   개수가 **2의 거듭제곱**이면 해시의 **아래 몇 비트만** 쓰인다. FNV-1a 의 곱수 16777619 는 8 로 나눈 나머지가 3 이라
+ *   아래 3비트가 거의 안 섞이고, 그러면 **닿지 않는 값이 생긴다.**
+ *   실제로 `HERO_FACE_MAX` 를 7 → 8 로 올린 날 이름 24개가 얼굴 5종에만 몰렸다(hero_1·3·7 은 어떤 이름으로도 안 나왔다).
+ *   홀수 개수(5·7)에서는 나머지가 32비트 전체를 끌어써서 안 드러나던 결함이다 — 개수에 기대지 않도록 해시 쪽을 고쳤다.
+ * ⚠ **영웅 얼굴은 더 이상 이 해시를 안 쓴다** (2026-09-06 저장형 전환) · **스킬 그림도 안 쓴다** (2026-09-18 · ADR-0162 — 그림 없는 스킬은 검은 칸).
+ *   지금 쓰는 곳은 `itemArt` 의 옛 무기 개체(`baseId` 없음) 하나다. 마무리 섞기는 그대로 필요하다 — 나머지를 가르는 개수가 무엇이든 아래 비트만 쓰이지 않게. */
+const strHash = s => {
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b);
+    h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35);
+    h ^= h >>> 16;
+    return h >>> 0;
+};
+export const heroFace = hero => {
+    const id = hero?.face;
+    if (typeof id !== 'string') return null;            // null·옛 정수 → 빈 칸 (v13 이관이 정수를 남기지 않는다 — 방어)
+    if (/^goblin_[a-z]+$/.test(id)) return facePath(`hero/${id}.webp`);   // 고블린 다섯 종 — 직업 풀 밖 · id 가 곧 파일 (2026-10-27)
+    const i = id.lastIndexOf('_');
+    const cls = id.slice(0, i), k = Math.floor(+id.slice(i + 1));
+    const m = HERO_FACES[cls] ?? 0;
+    if (!(m >= 1) || !(k >= 1)) return null;
+    return facePath(`hero/${cls}_${1 + (k - 1) % m}.webp`);   // 장수를 줄여 범위를 넘은 저장값은 접는다 (기존 규칙 유지)
+};
+
+/**
+ * 아이콘 설치본의 확장자 — **게임이 읽는 아이콘은 전부 256px WebP** [2026-09-27 사용자 지시] (`src/assets/art/README.md` 「아이콘 — 원본과 설치본」).
+ * 원본 PNG 는 `icons_source/` 에 같은 경로로 있고 `python scripts/build_icons.py` 가 설치본을 짓는다. 아래 경로 조립은 전부 이 상수를 쓴다
+ */
+export const ICON_EXT = '.webp';
+
+/**
+ * 스킬 아이콘 그림 — `src/assets/art/icons/skills/<skill_id>.webp` (2026-09-03 · SCREEN_DESIGN §2).
+ *
+ * 제 그림이 있는 스킬은 그것, **없는 스킬은 `null`** — 그리는 쪽(`skillImg` 셋)이 **검은 칸**을 깐다 [2026-09-18 사용자 지시 · ADR-0162].
+ *   ~~id 안정 해시로 목록에서 하나~~ 는 폐기 — 남의 그림은 틀린 정보다(부위 실루엣 `slotArt` 와 같은 이유). 자산이 늘면 이 목록에 파일명만 더한다.
+ * 파일 유무를 fetch 로 묻지 않는 이유도 같다 — 렌더는 동기다. 목록이 실제 폴더와 갈리면 img 가
+ *   `onerror` 로 빠지고 칸이 빈다 — 밑에 이모지를 안 까는 이유는 영웅 초상과 같다(투명 PNG 사이로 비친다).
+ * 얼굴 스타일(`faceDir`)을 안 타는 이유 — 스킬 아이콘은 스타일 폴더가 없는 단일 세트다.
+ */
+export const SKILL_ICON_DIR = './assets/art/icons/skills/';
+// [전사 세트 2026-09-09] **전사 7 이 제 그림을 갖는다** — 단색 실루엣 시트 한 장에서 잘라 설치했다
+//   (발주·타일 문장은 `.claude/skills/icon-prompt/skill_tiles.md` §3). 09-09 오전의 개명 셋(`war_warcry`·`wg_axe`·
+//   `wg_sword2h` → `war_taunt`·`war_doubleswing`·`war_quake`)은 **그림째 교체**돼 옛 컬러 자산이 남아 있지 않다.
+//   목록에 없는 스킬은 검은 칸이다(2026-09-18 · ADR-0162 — 해시 폴백 폐기)
+export const SKILL_ICON_FILES = [
+    // 기본 스킬 50 [2026-10-16 · skill_design §12 · R246 ~ R250 · R258] — 9월 단색 36 + 10-15 Codex 단색 13(그림만 먼저 와 있던 새 스킬 · 가안 id 그대로 행이 섰다).
+    //   ~~`war_taunt` · `kni_duel` · `mag_focus` · `mag_frozenwall`~~ 은 행이 지워져 뺐다(그림 파일은 폴더에 남는다) · 소환(`pri_summon`) · 인페르노 새 그림은 2026-10-16 Codex 단색(직업 설치본을 기준 그림으로)
+    //   · `pri_halo` 그림은 헤일로가 같은 날 지워져 쓸 곳이 없다(폴더에만 있다)
+    //   · `war_quake` · `kni_smite` 도 2026-10-16 행이 지워져 뺐다 — 자리에 선 리커버리 · 레지스탕스 실드는 2026-10-17 Codex 단색으로 채웠다
+    'war_bash', 'war_doubleswing', 'war_recovery', 'war_leap', 'war_shout', 'war_battleorders', 'war_ironskin',
+    'war_frenzy', 'war_warcry', 'war_battlecry',
+    'kni_resistshield', 'kni_holyshield', 'kni_charge', 'kni_rush', 'kni_enchant',
+    'kni_might', 'kni_fanaticism', 'kni_defiance', 'kni_sweep', 'kni_holyfire',
+    'arc_snipe', 'arc_rapid', 'arc_guided', 'arc_multishot', 'arc_pierce', 'arc_poison',
+    'arc_arrowrain', 'arc_evade', 'arc_overdraw',
+    'mag_fireball', 'mag_iceblast', 'mag_frostnova', 'mag_lightning',
+    'mag_chain', 'mag_inferno', 'mag_ignite', 'mag_deepfreeze', 'mag_surge', 'mag_echo',
+    'pri_judgment', 'pri_heal', 'pri_grace', 'pri_cure', 'pri_regen',
+    'pri_penitence', 'pri_bind', 'pri_haste', 'pri_doom', 'pri_summon',
+    // 전직 스킬 — 행이 섰다(2026-09-28 · R16). 그림은 **투톤**(회백 실루엣 + 효과 강조색 하나 · ADR-0401) — 다섯 직업 45 전부(궁수 9 는 2026-10-09)
+    //   · `arc_quickdraw` 는 2026-10-16 궁수 기본 스킬로 내려왔다(R247) — 그림은 전직 투톤 그대로 둔다
+    'war_ragnarok', 'war_berserk', 'war_mutualruin', 'war_whirlwind', 'war_thorswrath', 'war_shockwave',
+    'war_lionsroar', 'war_command', 'war_intimidate',
+    'kni_lastbastion', 'kni_unbreakablewill', 'kni_divinejudgment', 'kni_unyieldingoath', 'kni_holywar', 'kni_vow',
+    'kni_retribution', 'kni_condemnation', 'kni_showdown',
+    'arc_trueaim', 'arc_singlestrike', 'arc_reload', 'arc_quickdraw', 'arc_fulldraw', 'arc_chaindraw',
+    'arc_huntersmark', 'arc_supportingfire', 'arc_trap',
+    'mag_meteor', 'mag_firewall', 'mag_hydra', 'mag_frozenorb', 'mag_blizzard', 'mag_frostburst',
+    'mag_thunderstrike', 'mag_nova', 'mag_staticfield',
+    'pri_aegis', 'pri_benediction', 'pri_resurrection', 'pri_punishment', 'pri_atonement', 'pri_excommunication',
+    'pri_diamondbody', 'pri_sweep', 'pri_counter',
+    // 몬스터 전용 — 헬파이어(1-5 사탄 · 정신 집중 · 2026-10-22 Codex 단색 · 기본 스킬과 같은 연한 회청색 실루엣) · 자폭은 쥔 몬스터가 없어 그림도 없다
+    'mon_hellfire',
+    // 장 보스 고유 넷(2026-10-29 · R380 · Codex 단색 · art/README) — 레비아탄 · 맘몬 · 벨페고르(오오라라 원 배지) · 바알제붑
+    'mon_ironmaiden', 'mon_goldfever', 'mon_delegate', 'mon_swarm',
+];
+// ~~`SKILL_ADV_ICON_FILES`(전직 스킬 그림 표 — 행보다 그림이 먼저 왔던 09-22 의 임시 목록)~~ 는 2026-10-02 삭제 —
+//   도감 전직 탭이 `skill.csv` 의 `owner_kind=advance` 행을 직접 편다(SCREEN_DESIGN §9-1 · ADR-0472)
+/** 죄종 아이콘 — 스킬 아이콘 규격의 회색 실루엣 7장. 화면은 마스크로 쓰고 판 색으로 칠한다 (SCREEN_DESIGN §7 · ADR-0368) */
+export const SIN_ICON_DIR = './assets/art/icons/sins/';
+export const sinIcon = sin => SINS[sin] ? SIN_ICON_DIR + sin + ICON_EXT : null;
+/** 직업 아이콘 — 스킬 아이콘과 같은 Gemini 단색 실루엣 시트에서 잘랐다(`icons/classes/source/`). 마스터리 직업 판 머리가 판 색으로 칠한다 (SCREEN_DESIGN §7 · ADR-0375) */
+export const CLASS_ICON_DIR = './assets/art/icons/classes/';
+export const CLASS_ICON_FILES = ['warrior', 'knight', 'mage', 'archer', 'priest', 'assassin', 'necromancer'];
+export const classIcon = cls => CLASS_ICON_FILES.includes(cls) ? CLASS_ICON_DIR + cls + ICON_EXT : null;
+export const skillIcon = id => {
+    if (!id) return null;
+    const key = String(id);
+    return SKILL_ICON_FILES.includes(key) ? SKILL_ICON_DIR + key + ICON_EXT : null;
+};
+/**
+ * 미장착 착용 칸의 부위 실루엣 — `src/assets/art/icons/items/empty/<part>.webp` (2026-09-03 · SCREEN_DESIGN §6).
+ *
+ * 축은 **부위**(`equip_slot.csv:part`)라 반지 두 칸(`ring1`·`ring2`)이 같은 그림을 든다.
+ * `skillIcon` 과 달리 **해시 폴백이 없다** — 스킬은 「제 그림은 아니어도 늘 같은 그림」이면 되지만
+ *   부위는 **틀린 그림이 곧 틀린 정보**다(투구 칸에 장화가 뜨면 그 칸을 잘못 읽는다).
+ * 목록에 없는 부위는 `null` 이고, 그 칸은 옛 이모지(`equip_slot.csv:icon`)로 남는다 —
+ *   2026-09-17 로 **부위 7종이 다 찼다**(투구·목걸이가 이모지에서 그림으로).
+ */
+export const SLOT_ART_DIR = './assets/art/icons/items/empty/';
+export const SLOT_ART_PARTS = ['weapon', 'helmet', 'armor', 'gloves', 'boots', 'amulet', 'ring'];
+export const slotArt = part => SLOT_ART_PARTS.includes(part) ? `${SLOT_ART_DIR}${part}${ICON_EXT}` : null;
+/**
+ * 물약 그림 — `src/assets/art/icons/items/potion/<potion_id>.webp` (2026-09-15 · R104 · SCREEN_DESIGN §4-2 · §8-2 · ADR-0148).
+ *
+ * 축은 `potion.csv:potion_id` 다. 그림이 있는 id 만 목록에 둔다. 목록에 없는 물약은 `null` 이고 칸은 테두리만 선다.
+ * `slotArt` 와 같은 이유로 해시 폴백이 없다 — 틀린 그림이 곧 틀린 정보다(마이너 칸에 슈퍼 병이 뜨면 회복량을 잘못 읽는다).
+ */
+export const POTION_ART_DIR = './assets/art/icons/items/potion/';
+export const POTION_ART_IDS = [
+    'minor_healing', 'light_healing', 'healing', 'greater_healing', 'super_healing',
+];
+export const potionArt = id => POTION_ART_IDS.includes(id) ? `${POTION_ART_DIR}${id}${ICON_EXT}` : null;
+/**
+ * 물약 **칸**의 배경 실루엣 — 칸 넷 전부가 같은 한 장을 든다 [2026-09-17 사용자 지시].
+ *
+ * `potionArt` 와 축이 다르다 — 저쪽은 **어느 물약인가**(id 마다 제 그림 · 틀리면 회복량을 잘못 읽는다),
+ *   이쪽은 **여기에 물약이 들어간다**는 칸의 말이라 티어를 안 가린다. `slotArt` 의 부위 실루엣과 같은 자리다.
+ * 그래서 파일명이 id 가 아니다 — `potion.csv` 에 `slot` 이라는 id 는 없고, 앞으로도 겹치지 않는다.
+ */
+export const POTION_SLOT_ART = `${POTION_ART_DIR}slot${ICON_EXT}`;
+/**
+ * 첫 클리어 상자는 봉인된 무기 칸이 든다. 상단바의 우편·알림 그림은 백색 실루엣 별도 자산이다 (ADR-0969).
+ */
+export const CLEAR_BOX_ART = `./assets/art/icons/items/box/clear_box${ICON_EXT}`;
+export const MAIL_ART = `./assets/art/icons/mail/mail${ICON_EXT}`;
+export const BELL_ART = `./assets/art/icons/mail/bell${ICON_EXT}`;
+/**
+ * 방어구 · 장신구 그림 — `icons/items/item_base/<base_id>.webp` (2026-09-03 · **베이스 축으로 개정 2026-09-17** · SCREEN_DESIGN §2).
+ *
+ * 축은 `item_base.csv:base_id` 다 — 개체가 드롭 때 그 id 를 들고(`item.js:build` · INTERFACE 「item 객체」) 화면은 그대로 읽는다.
+ *   그래서 퀼티드와 더스크 슈라우드가 **다른 그림**이다. 옛 「부위당 한 장」 표(`ITEM_ART_BY_SLOT`)와
+ *   무기군 그림(`<group_id>.png` · `ITEM_ART_GROUPS`)은 2026-09-17 에 걷었다 — 파일 12장도 같이 지웠다(사용자 지시).
+ * 목록에 없는 베이스(투구 · 장갑 · 신발 · 장신구 전부)는 `null` 이고 그 칸은 부위 이모지(`equip_slot.csv:icon`)로 떨어진다 —
+ *   해시 폴백을 안 쓰는 이유는 `slotArt` · `potionArt` 와 같다(틀린 그림 = 틀린 정보).
+ * ⚠ **옛 세이브의 방어구는 `baseId` 가 없다** — 그 개체들도 이모지로 떨어진다(새로 먹는 것부터 그림이 붙는다).
+ */
+export const ITEM_BASE_ART_DIR = './assets/art/icons/items/item_base/';   // 파일명 = item_base.csv:base_id
+/** 그림이 있는 베이스 id — 그림이 오면 여기 한 줄 (`POTION_ART_IDS` 와 같은 문법) */
+export const ITEM_BASE_ART_IDS = ['armor_cloth', 'armor_robe_1', 'armor_robe_2', 'armor_robe_3',
+    'armor_light_1', 'armor_light_2', 'armor_light_3', 'armor_heavy_1', 'armor_heavy_2', 'armor_heavy_3',
+    // 투구 10 [2026-09-17] — 갈래 3(티아라 · 가죽 · 플레이트) × 티어 3 + 시작 하나 (item_design 「투구 갈래」)
+    'helmet_cloth', 'helmet_tiara_1', 'helmet_tiara_2', 'helmet_tiara_3',
+    'helmet_leather_1', 'helmet_leather_2', 'helmet_leather_3',
+    'helmet_plate_1', 'helmet_plate_2', 'helmet_plate_3',
+    // 장갑 7 · 신발 7 [2026-09-18] — 갈래 2(가죽 · 건틀릿 / 가죽 · 그리브스) × 티어 3 + 시작 하나 (item_design 「장갑 갈래」 · 「신발 갈래」)
+    'gloves_cloth', 'gloves_leather_1', 'gloves_leather_2', 'gloves_leather_3',
+    'gloves_gauntlet_1', 'gloves_gauntlet_2', 'gloves_gauntlet_3',
+    'boots_start', 'boots_leather_1', 'boots_leather_2', 'boots_leather_3',
+    'boots_greaves_1', 'boots_greaves_2', 'boots_greaves_3',
+    // 장신구 6 [2026-09-18] — 반지 3 · 목걸이 3 (베이스 이름은 아직 옛 임시 풀이다 — item_design 장신구 갈래 미정)
+    'ring_1', 'ring_2', 'ring_3', 'amulet_1', 'amulet_2', 'amulet_3'];
+/**
+ * 무기 베이스 그림 — `icons/items/weapon_base/<group>/` (2026-09-10 · SCREEN_DESIGN §2 · §9-1). 지금은 본편 열 전부.
+ *   열 모두 `weapon_base.csv` 행이 서서 새 개체는 `baseId` 를 들고(아래 `itemArt`) 이름도 그 베이스다 (둔기 · 창 · 활 2026-09-11 · 스태프 · 오브 · 십자가 · 성경 · 석궁 2026-09-14).
+ *   아래 문단(uid 해시)은 **`baseId` 없는 옛 개체의 폴백**으로만 산다.
+ *
+ * ⚠ **파일명이 id 가 아니다.** 무기 베이스는 기획 확정(무기군당 7 · `item_design.md` §1)이지만 `weapon_base` CSV 가
+ *   아직 없다(DEV_PLAN R62 — 대역 경계 · 수치 미발행). 그래서 **개체가 어느 베이스인지는 아무 데도 안 적혀 있다.**
+ * 그런데도 그림은 고를 수 있다 — **uid 해시**로 그 무기군의 7장 중 하나를 잡는다(`itemArt`). 스킬 아이콘의 해시
+ *   폴백과 같은 문법이고, 계약도 같다: **uid 는 세이브에 남으므로 한 개체는 평생 같은 무기로 보인다** (다시 그려도 · 껐다 켜도 안 바뀐다).
+ * ⚠ **rng 를 한 발도 안 쓴다** — 그리는 시각의 해시라 `game_logic` 의 난수 수열에 안 닿는다(골든 스냅샷 불변).
+ *   「랜덤하게 보이게」를 `Math.random()` 으로 하면 **다시 그릴 때마다 무기가 바뀐다** — 그래서 안 쓴다.
+ * ⚠ **이름은 안 따라온다** — 아이템 이름 · 툴팁은 여전히 무기군 이름이다(`item.js:build` 가 무기군을 그대로 base 로 쓴다).
+ *   그림과 이름이 어긋나는 것을 **알고 켠 것**이고, `weapon_base` 가 서면 굴림이 `game_logic` 으로 옮겨 가며 둘이 붙는다.
+ * 이름 표시(도감)는 `i18n:ix.b.<stem>` 이 든다 — CSV 가 없어 `L()` 로 읽을 데이터 행이 없기 때문이고, 이것도 **임시**다.
+ * 목록 순서 = 대역 순(기본 → ①-A · ①-B → ②-A · ②-B → ③-A · ③-B) — `item_design.md` §1 「이름 — 9군」 표의 행 순서다.
+ */
+export const WEAPON_BASE_DIR = './assets/art/icons/items/weapon_base/';
+/** 베이스 그림이 있는 무기군 → 그 7장의 파일 stem. 키 순서는 도감의 묶음 순서다(활 다음 석궁 · ADR-0180). 늘어나면 `<group>/` 폴더를 파고 여기 한 줄 */
+export const WEAPON_BASE_STEMS = {
+    sword2h: ['long_sword', 'claymore', 'highland_blade', 'bastard_sword', 'balrog_blade', 'zweihander', 'colossus_blade'],
+    axe: ['hatchet', 'axe', 'tomahawk', 'great_axe', 'berserker_axe', 'battle_axe', 'decapitator'],
+    // ⚠ 무기군마다 id · 순서가 `weapon_base.csv` 와 같아야 한다 — 두 벌이라, 어긋난 베이스는 제 그림 대신 uid 해시 그림을 들어 이름과 갈린다 (단정: dev/test.js)
+    mace: ['club', 'flanged_mace', 'reinforced_mace', 'battle_hammer', 'legendary_mallet', 'war_club', 'ogre_maul'],
+    spear: ['pike', 'thresher', 'giant_thresher', 'halberd', 'cryptic_axe', 'lance', 'war_pike'],
+    bow: ['short_bow', 'long_bow', 'great_bow', 'rune_bow', 'diamond_bow', 'gothic_bow', 'hydra_bow'],
+    crossbow: ['crossbow', 'light_crossbow', 'chu_ko_nu', 'heavy_crossbow', 'ballista', 'demon_crossbow', 'colossus_crossbow'],
+    staff: ['short_staff', 'long_staff', 'gnarled_staff', 'gothic_staff', 'elder_staff', 'rune_staff', 'archon_staff'],
+    orb: ['eagle_orb', 'heavenly_stone', 'demon_heart', 'sacred_globe', 'eldritch_orb', 'swirling_crystal', 'dimensional_shard'],
+    crucifix: ['scepter', 'divine_scepter', 'caduceus', 'rune_scepter', 'mighty_scepter', 'grand_scepter', 'seraph_rod'],
+    bible: ['psalter', 'breviary', 'missal', 'lectern_bible', 'great_bible', 'wicked_bible', 'apocrypha'],
+};
+export const weaponBaseArt = (group, stem) => WEAPON_BASE_STEMS[group]?.includes(stem) ? `${WEAPON_BASE_DIR}${group}/${stem}${ICON_EXT}` : null;
+/**
+ * `baseId` 가 있으면(2026-09-10 · `weapon_base.csv` 로 실제 굴린 개체 — `item.baseId`) **그 그림을 그대로** 쓴다 —
+ * 이름과 그림이 같은 베이스를 가리키게 된다. 없으면(구 세이브 · 베이스 풀이 아직 없는 무기군) **uid 해시**로 옛날처럼 고른다.
+ */
+export const itemArt = (slot, group, uid, baseId) => {
+    if (slot === 'weapon') {
+        // 그 무기군에 베이스 그림이 있으면 **베이스 그림**, 아니면 무기군 그림.
+        // 도감의 「무기」 묶음은 uid 없이 부르므로 거기서는 무기군 그림 그대로다 (재고를 보는 자리다 · §9-1)
+        const stems = WEAPON_BASE_STEMS[group];
+        if (stems) {
+            if (baseId && stems.includes(baseId)) return `${WEAPON_BASE_DIR}${group}/${baseId}${ICON_EXT}`;
+            if (uid)
+                // 해시 키에 무기군을 섞는다 — uid 만 쓰면 `i1`·`i2` 같은 **짧은 키**라 7 로 나눈 나머지가 쏠린다
+                //   (실측 60개: 발록 17 · 츠바이핸더 3). `<uid>:<group>` 이면 고르게 퍼지고, 무기군이 늘어도 서로 독립이다
+                return `${WEAPON_BASE_DIR}${group}/${stems[strHash(`${uid}:${group}`) % stems.length]}${ICON_EXT}`;
+        }
+        return null;   // 무기군 그림 8장은 2026-09-17 삭제 — 베이스 풀이 없는 무기군은 부위 이모지로 떨어진다
+    }
+    // 방어구 · 장신구 — 개체가 든 베이스의 그림. 그림이 없는 베이스는 `null` → 부위 이모지 (2026-09-17)
+    return baseId && ITEM_BASE_ART_IDS.includes(baseId) ? `${ITEM_BASE_ART_DIR}${baseId}${ICON_EXT}` : null;
+};
+/* 직업 글리프 표(`CLASS_GLYPH`·`classGlyph`)는 **삭제했다** (2026-09-03 사용자 지시) — 아트가 없는 영웅의
+   자리표시로 이모지(⚔ ⛨ ✦ 🏹 …)를 초상 **밑에 깔던** 방식이다. 영웅 그림이 배경 투명 PNG 이고
+   `object-fit: contain` 이라 그림이 있어도 여백 사이로 이모지가 비쳐 보였다 — 「캐릭터 그림 뒤에 활 같은 이모지」.
+   지금은 아트가 없으면 **빈 칸**이다 (SCREEN_DESIGN §5). 자리표시를 되살리려면 이모지가 아닌 것으로 한다. */
+/* 액티브의 표시 사전(`SKILL_DISPLAY`·`skillDisplay`)은 **삭제했다** (2026-09-01) — 아이콘과 설명 ko/en 이
+   `skill.csv` 의 `icon`·`desc_kr`·`desc_en` 컬럼으로 나갔고, 옛 `description_kr`(설계 노트)은 `note` 로 개명했다.
+   읽는 곳은 `ui/data.js:skillInfo` 하나다. 아이콘 이모지가 흑백 글리프와 컬러로 섞여 있던 문제는
+   2026-09-03 화면이 그림(`skillIcon` — 위)으로 갈아타며 화면에서는 닫혔다 — 컬럼은 데이터로 남는다. */
+
+/* 원소 4종 표시 사전(`ELEMENT_LABELS`)은 **삭제했다** (2026-08-31) — `ELEMENT_IDS` 가 유일한 소비자였고
+   그것이 `game_logic/hero.js:ELEMENTS` 로 통합되면서 참조가 0이 됐다. 화면이 원소 이름을 그리게 되면
+   그때 다시 만든다(4줄이다). id 목록의 SSOT 는 `hero.js:ELEMENTS` 하나다. */
+
+/* 아이템 이름 조립(`nm`)은 **이식 대상 코드**라 `game_logic/naming.js:createNaming` 으로 갔다 (2026-08-31).
+   죄종 표시명(SINS)만 여기서 주입된다 — `ui/data.js:NAMING`. */
+
+/**
+ * 배경 이미지 — `src/assets/art/backgrounds/<스타일>/background_stage_<id>.webp`.
+ * 파일 숫자는 chapter * 100 + stage_num(101/102/…)이다. 같은 장소의 세 구간이 배경 한 장을 공유한다.
+ *
+ * **스타일 하나 = 폴더 하나** [2026-09-16 사용자 지시 · `faces/` 와 같은 규칙]. 새 스타일을 넣는 방법은 둘뿐이다:
+ *   ① `backgrounds/` 아래 폴더를 만들고 같은 이름 규칙(`background_stage_<id>.webp`)으로 그림을 넣는다
+ *   ② 아래 `BG_STYLES` 에 그 폴더 이름을 더한다
+ * 코드의 다른 곳은 스타일을 모른다 — 경로를 조립하는 곳이 `bgDir()` 하나뿐이라서다.
+ * 아트 버튼·`?face=`는 초상과 함께 선택한다(gemini → illustrate, gpt → gpt).
+ * 명시적인 `?bg=`는 비교용 재정의이며, 버튼을 누르면 그 아트 묶음의 배경으로 돌아간다.
+ * **한 스타일이 전 스테이지를 다 갖출 필요는 없다** — 그림이 없으면 그 자리는 그라디언트로 떨어진다.
+ *   그리는 중인 스타일로도 게임이 돈다 (⚠ 자리를 여는 것은 `stage.csv:bg` 지 폴더 재고가 아니다 — `ui/data.js:stageBgOf`.
+ *   `bg=1` 인데 그 스타일에 파일이 없으면 404 가 한 번 난다).
+ *
+ * ⚠ **읽는 것은 워터마크 띠를 잘라 낸 사본이다** [2026-09-11 사용자 지시] — 원본 오른쪽 아래에 생성기 ✦ 가 박혀 있어
+ *   아레나 비율에 따라 드러났다. 손 안 댄 원본은 `backgrounds/source/<스타일>/` 이고 레시피는 `assets/art/README.md`.
+ * 경로는 문서(src/index.html) 기준 상대경로 — JS가 인라인 스타일로 넣기 때문이다.
+ */
+export const BG_DIR = './assets/art/backgrounds/';
+export const BG_STYLES = ['illustrate', 'gpt', 'pixel'];
+const FACE_STORE_KEY = 'thesevensim.faceStyle';
+const FACE_BG_STYLES = { gemini: 'illustrate', gpt: 'gpt' };
+const BG_STORE_KEY = 'thesevensim.bgStyle';
+
+let bgStyleCur = (() => {
+    const query = new URLSearchParams(location.search);
+    const q = query.get('bg');
+    // `?face=` 와 같이 **그 자리에서 저장한다** — 스타일에는 UI 스위치가 없어서, 저장하지 않으면 매번 다시 붙여야 한다
+    if (BG_STYLES.includes(q)) {
+        try { localStorage.setItem(BG_STORE_KEY, q); } catch { /* 저장 실패는 무해 — 이번 판만 그 스타일 */ }
+        return q;
+    }
+    // 명시적인 배경 URL은 비교용. 그 외에는 초상과 같은 아트 묶음을 고른다.
+    const faceQuery = query.get('face');
+    if (Object.hasOwn(FACE_BG_STYLES, faceQuery)) {
+        const style = FACE_BG_STYLES[faceQuery];
+        try { localStorage.setItem(BG_STORE_KEY, style); } catch { /* 저장 실패는 무해 */ }
+        return style;
+    }
+    try {
+        const saved = localStorage.getItem(BG_STORE_KEY);
+        if (saved === 'pixel') return saved; // 기존 도트 비교 선택은 유지한다.
+        const face = localStorage.getItem(FACE_STORE_KEY);
+        if (Object.hasOwn(FACE_BG_STYLES, face)) return FACE_BG_STYLES[face];
+        if (BG_STYLES.includes(saved)) return saved;
+    } catch { /* 프라이빗 모드 등 — 기본값으로 */ }
+    return BG_STYLES[0];
+})();
+
+export const bgStyle = () => bgStyleCur;
+/** 스타일 전환 — 배경은 매 렌더에 경로를 다시 만들므로 호출한 쪽이 render() 하면 그대로 갈린다 */
+export function setBgStyle(id) {
+    if (!BG_STYLES.includes(id)) return;
+    bgStyleCur = id;
+    try { localStorage.setItem(BG_STORE_KEY, id); } catch { /* 저장 실패는 무해 */ }
+    applyDocumentBg();
+}
+/** `<html data-bg>` 동기화 — CSS 가 **배경 축소 보간**을 스타일별로 가르는 유일한 신호다
+ *  (도트는 끄고 일러스트는 켠다 — `style.css` 의 `--bg-render`). `applyDocumentFace` 와 같은 패턴이고 같은 자리(`app.js render()`)에서 불린다.
+ *  안 불려도 안전한 쪽으로 떨어진다 — 속성이 없으면 `:root` 의 기본값(`auto`)이 먹어 정식 배경(일러스트)의 선이 안 끊긴다. */
+export function applyDocumentBg() {
+    document.documentElement.dataset.bg = bgStyleCur;
+}
+export const bgDir = () => `${BG_DIR}${bgStyleCur}/`;
+/** ⚠ 아직 아무 화면도 안 읽는다 — 자산(`town.webp`)은 실재하고 거점 화면이 생기면 여기가 쓰인다.
+ *  **거점 그림은 스타일을 안 탄다** — 도트 한 벌뿐이라 `pixel/` 을 박았다 (CSS `#stage::before` 도 같은 경로를 직접 건다).
+ *  ⚠ 정식 배경이 일러스트가 된 뒤로 **거점만 도트로 남아 있다** — 거점 일러스트가 나오면 `bgDir()` 로 돌린다 (ADR-0152 「열린 것」) */
+export const TOWN_BG = BG_DIR + 'pixel/town.webp';
+export const stageBg = id => bgDir() + `background_stage_${id}.webp`;
+/** 결투 배경 — 판과 관전이 같은 그림을 깐다 (SCREEN_DESIGN §1 「판」 · ADR-0749 · ADR-0752 · ADR-0761).
+ *  콜로세움(탭 id `arena` · ELO)은 로마 콜로세움 한 장 · 결투장(탭 id `colosseum` · 층 사다리)은 **고른 층의 등급마다 한 장**(id = `arena_tier.csv:tier_id`).
+ *  **스타일을 안 탄다** — 일러스트 한 벌뿐이라 `illustrate/` 를 박았다(`TOWN_BG` 와 같은 수법). 다른 스타일 판이 생기면 `bgDir()` 로 돌린다 */
+export const COLOSSEUM_BG = BG_DIR + 'illustrate/background_colosseum.webp';
+export const duelBg = tierId => BG_DIR + `illustrate/background_duel_${tierId}.webp`;
+
+/**
+ * 탐험 지도 — **세계지도 한 장 · 일곱 챕터가 구간** (SCREEN_DESIGN §8-4 · 2026-10-08 사용자 지시 · ADR-0537).
+ *
+ * ⚠ 위 넷과 달리 **계승이 아니라 신규 아트**다 — 같은 폴더에 섞여 있을 뿐이고, **픽셀아트가 아니다.**
+ *   `image-rendering: pixelated` 를 걸면 뭉갠다 (`.ex-map` 이 안 거는 이유 — style.css).
+ * 잠긴 구간 = **미리 구운 「빛 바랜 땅」 조각**(`explore_world_locked/<챕터 id>.webp` · 그 장의 땅만 알파 · 구간 크기로 잘랐다) — 땅만 덮고 바다는 안 덮는다.
+ *   `scripts/build_explore_locked.py` 가 그림 + 마스크(`explore_world_mask/<챕터 id>.png` — `build_explore_masks.py` 가 짓는다)로 굽는다 — **그림 · 마스크를 바꾸면 다시 돌린다**.
+ *   실행 중에 필터 · 마스크를 안 돌린다 [2026-10-09 — 지도 전체에 거는 필터 + 1536×714 마스크 여러 장은 탭을 열 때마다 큰 층을 다시 구워 늦게 켜졌다].
+ * `EXPLORE_REGIONS` = 챕터 id → 자물쇠 자리 `at` · **지점 아이콘 자리 `spots`**(그림 속 동굴 · 폐허 · 마차) · **잠긴 조각 자리 `tile`**(`[x, y, w, h]` — 굽는 스크립트가 찍는 값) — 셋 다 그림 크기 대비 % ·
+ *   **아이콘 테두리 색 `ring`**(그 땅의 바탕색 — 2026-10-09 사용자 「테두리를 각 배경에 맞는 색으로」 · ADR-0553). 목록에 있는 챕터만 구간을 갖는다.
+ *   **그림을 바꾸면 `at` · `spots` · `ring` · `tile` 을 같이 다시 잡는다.**
+ */
+export const EXPLORE_WORLD_MAP = BG_DIR + 'explore_world.webp';
+export const EXPLORE_WORLD_SIZE = [1536, 714];
+export const exploreLocked = ch => BG_DIR + `explore_world_locked/${ch}.webp`;
+export const EXPLORE_REGIONS = {
+    1: { at: [11, 62], ring: '#c4432e', tile: [0.00, 34.87, 24.41, 57.70], spots: { cave: [3.9, 44.5], ruins: [13.3, 49.7], caravan: [11.2, 57.1] } },
+    2: { at: [17, 18], ring: '#4f8a34', tile: [0.00, 2.80, 34.51, 48.60], spots: { cave: [2.9, 28.7], ruins: [21.2, 33.2], caravan: [14.5, 36.0] } },
+    3: { at: [38, 66], ring: '#e3ad3c', tile: [20.18, 35.01, 35.55, 60.50], spots: { cave: [28.6, 69.3], ruins: [47.9, 73.5], caravan: [43.3, 80.3] } },
+    4: { at: [47, 26], ring: '#9cc8e6', tile: [31.84, 2.52, 32.81, 56.02], spots: { cave: [35.8, 29.8], ruins: [57.3, 40.6], caravan: [42.3, 37.8] } },
+    5: { at: [68, 72], ring: '#5f5f6b', tile: [51.11, 49.44, 33.40, 44.68], spots: { cave: [56.6, 60.2], ruins: [78.1, 72.1], caravan: [61.5, 72.1] } },
+    6: { at: [72, 30], ring: '#7a4ca0', tile: [61.00, 2.38, 27.15, 56.72], spots: { cave: [67.7, 31.5], ruins: [80.7, 41.3], caravan: [73.9, 39.2] } },
+    7: { at: [91, 58], ring: '#dfe5ec', tile: [81.97, 1.40, 18.03, 94.12], spots: { cave: [89.5, 47.6], ruins: [91.5, 58.5], caravan: [89.8, 66.9] } },
+};
+/** 탐험 지점 아이콘 — `src/assets/art/icons/explore/<지점>.webp` · **테두리 없는 그림 원판**(테두리는 화면이 땅 색으로 두른다 · ADR-0553) */
+export const EXPLORE_ICON_DIR = './assets/art/icons/explore/';
+export const exploreIcon = spot => EXPLORE_ICON_DIR + spot + ICON_EXT;
+/** 연구소 줄 아이콘 — `src/assets/art/icons/lab/<줄 id>.webp`(`mine` · `gather` · `log`) · 탐험 지점 아이콘과 같은 둥근 그림 원판(Codex · ADR-0669) */
+export const LAB_ICON_DIR = './assets/art/icons/lab/';
+export const labIcon = post => LAB_ICON_DIR + post + ICON_EXT;
+/** 연구소 지점 아이콘 — `src/assets/art/icons/lab/node/<지점 id>.webp` · 회색 단색 실루엣(마스터리 아이콘과 같은 그림체) · 같은 지점은 줄이 달라도 같은 그림 (2026-10-21 · ADR-0684 · R298).
+ *  ⚠ 「자원」 줄의 채광 · 채집 · 벌목 지점은 실루엣이 아직 없어 **옛 줄 그림**(`icons/lab/<지점>` — 색 원판)을 빌린다 (2026-10-25 · ADR-0788) */
+const LAB_NODE_BORROW = ['mine', 'gather', 'log'];
+export const labNodeIcon = node => (LAB_NODE_BORROW.includes(node) ? labIcon(node) : `${LAB_ICON_DIR}node/${node}${ICON_EXT}`);
+
+/**
+ * 몬스터 얼굴 — `src/assets/art/faces/<스타일>/monster/<idx>.webp` · 영웅 초상은 같은 스타일 폴더의 `hero/<직업id>_<k>.webp`.
+ *
+ * **스타일 하나 = 폴더 하나** (2026-08-30). 새 스타일을 넣는 방법은 둘뿐이다:
+ *   ① `faces/` 아래 폴더를 만들고 같은 경로 규칙(`monster/<idx>.webp` · `hero/<직업id>_<k>.webp`)으로 그림을 넣는다
+ *   ② 아래 `FACE_STYLES` 에 그 폴더 이름을 더한다
+ * 경로는 `facePath()`가 조립하고, 파일 목록은 exporter가 갱신한다.
+ * 고르는 순서는 언어와 같다: URL `?face=<스타일>` → localStorage → 목록의 **첫 항목**.
+ * 선택한 스타일에 없는 초상은 빈 칸이다.
+ *
+ * **어느 몬스터가 얼굴을 갖는가는 `monster.csv:face` 가 SSOT** — 여기 남는 것은 경로 조립뿐이다
+ * (이름 ko/en 도 `monster_name_kr`/`_en` 으로 이사했다 — ui/data.js:monsterName·monsterFace).
+ */
+export const FACE_STYLES = ['gemini', 'gpt']; // 첫 항목이 기본값. 기존 cartoon 저장값도 gemini로 돌아간다.
+
+let faceStyleCur = (() => {
+    const q = new URLSearchParams(location.search).get('face');
+    // URL 선택은 저장한다. 상단바 · 설정 · 도감도 같은 값을 쓴다.
+    if (FACE_STYLES.includes(q)) {
+        try { localStorage.setItem(FACE_STORE_KEY, q); } catch { /* 저장 실패는 무해 — 이번 판만 그 스타일 */ }
+        return q;
+    }
+    try {
+        const saved = localStorage.getItem(FACE_STORE_KEY);
+        if (FACE_STYLES.includes(saved)) return saved;
+    } catch { /* 프라이빗 모드 등 — 기본값으로 */ }
+    return FACE_STYLES[0];
+})();
+
+export const faceStyle = () => faceStyleCur;
+/** 아트 묶음 전환 — 설정·도감의 같은 버튼이 초상과 스테이지 배경을 함께 바꾼다. */
+export function setFaceStyle(id) {
+    if (!FACE_STYLES.includes(id)) return;
+    faceStyleCur = id;
+    try { localStorage.setItem(FACE_STORE_KEY, id); } catch { /* 저장 실패는 무해 */ }
+    setBgStyle(FACE_BG_STYLES[id]);
+    applyDocumentFace();
+}
+/** `<html data-face>` 동기화 — CSS 가 **초상 축소 보간**을 스타일별로 가르는 유일한 신호다
+ *  (도트는 끄고 손그림은 켠다 — `style.css` 의 `--face-render` · [SCREEN_DESIGN §5]).
+ *  `i18n.js:applyDocumentLang` 과 같은 패턴이고 같은 자리(`app.js render()`)에서 불린다.
+ *  안 불려도 안전한 쪽으로 떨어진다 — 속성이 없으면 `:root` 의 기본값(보간 켬)이 먹는다. */
+export function applyDocumentFace() {
+    document.documentElement.dataset.face = faceStyleCur;
+}
+export const faceDir = () => `./assets/art/faces/${faceStyleCur}/`;
+
+/** 선택한 스타일에 파일이 있을 때만 초상을 표시한다. */
+export function facePath(file) {
+    return PORTRAIT_FILES[faceStyleCur]?.includes(file) ? `${faceDir()}${file}` : null;
+}
+
+/**
+ * 정예 특성 칸 — 능력치 칸 · 방어 칸 (monster_design §6 · 2026-10-24 · R344). 죄종 칸은 `mastery_node.csv` 의 죄종 T1 이다.
+ * **game_logic 이 주입받는 풀**이다 — `ui/data.js` 가 `attr` · `dt` 목록을 `battle.eliteTraits.stat` · `def` 로 넘긴다(이 순서가 굴림 인덱스 · INTERFACE §2-6).
+ * 이름은 관전 카드 띠 오른쪽 칩이 읽는다(ADR-0775). ⚠ SSOT 미발행 — 값이 정해지면 이름과 함께 CSV 로 나간다(계승 `elite_trait.csv` 대체).
+ * `dt` = 방어 칸 id 이자 피해 종류 색(`--dt-*`).
+ * **이름이 길수록 띠의 신원이 줄어든다** — 이름을 바꾸거나 더할 때 `&traits=max&lang=en` 으로 다시 본다(ADR-0775)
+ */
+export const ELITE_TRAIT_STAT = [
+    { attr: 'str', ko: '힘센', en: 'Strong' },
+    { attr: 'agi', ko: '민첩한', en: 'Agile' },
+    { attr: 'int', ko: '지적인', en: 'Intelligent' },
+    { attr: 'vit', ko: '건강한', en: 'Healthy' },
+    { attr: 'luck', ko: '운 좋은', en: 'Lucky' },
+    { attr: 'ldr', ko: '이끄는', en: 'Leading' },   // 「Commanding 지휘하는」은 영어 최장 조합이 카드 폭을 넘어 바꿨다(ADR-0768)
+    { attr: 'cha', ko: '매력적인', en: 'Charming' },
+];
+// 한글은 짧은 직역(내화 · 방한 · 방독 — 칩에 맞는 길이 · 2026-10-24 사용자 「살의, 매력적인 이런게 좋은거같에」)
+export const ELITE_TRAIT_DEF = [
+    { dt: 'physical', ko: '단단한', en: 'Durable' },
+    { dt: 'fire', ko: '내화의', en: 'Fireproof' },
+    { dt: 'cold', ko: '방한의', en: 'Frostproof' },
+    { dt: 'lightning', ko: '절연된', en: 'Insulated' },
+    { dt: 'poison', ko: '방독의', en: 'Venomproof' },
+];
+
+/**
+ * 원정 = 스테이지 런 (base_expedition_design §1-2).
+ * 챕터 1 = 스테이지 4개, 각 스테이지 9라운드. 이름·몬스터·보스는 실데이터(stage.csv) 그대로.
+ */
+
+/*
+ * 죄종 세트효과 — **보류** (item_design.md §4, 2026-08-25). 세트포인트·브레이크포인트 3/6/9·세트 보너스 표는
+ * 화면에서 내렸다. 설계안은 문서에, 원본 값은 계승 equipment_set_bonus.csv 에 그대로 남아 있다.
+ * 접사의 죄종은 이름(nm)과 태그로만 보인다 — 파티 전술이 세는 축이다 (~~지역 드롭 편향~~ 2026-08-27 폐기 · ~~낙인 지정~~ 2026-09-15 소멸).
+ */
+
+
+/* ═══════════ 스킬 ═══════════ */
+// 화면은 프레임만 갖고 내용은 전부 실데이터다 — 마스터리 노드는 mastery_node.csv,
+//   당하는 값은 balance.csv, 찍은 랭크는 세이브다 (2026-08-28 목업 폐기)
+
+export const MASTERY_GRID = { tiers: 3, nodes: 3 };
+/* ═══════════ 도감 ═══════════ */
+/**
+ * 몬스터 도감 — **도감 경험치 모델** (2026-10-10 사용자 지시 · 2026-09-21 처치 수 모델의 개정, monster_design §8). 08-25 몬스터 카드 모델을 대체한다(카드는 나중에 드롭형으로).
+ *
+ * 그 몬스터의 누적 도감 경험치(처치 하나 = 그 런 단의 `difficulty_tier.csv:codex_exp`)가 문턱을 넘을 때마다 도감 레벨이 오른다.
+ * 레벨별 누적 경험치 문턱 · 단계(`codex_level.csv:exp_total` · `reward` · `value`) · Lv4 몬스터다운 전투 옵션(`codex_option.csv`)은 전부 CSV 다 —
+ * 단계의 이름은 i18n(`cx.rw.*`) · 옵션 줄의 이름은 위 `AFFIX_LABELS` 다 (2026-10-18 · R286 · ADR-0667 — ~~계열 라벨 `CX_STAT` · 완성 보상 `CX_DONE`~~ 걷음).
+ * 챕터 이름·죄종은 `chapter.csv` (ui/data.js:D.chapterList · chapterOf).
+ */
+
+/**
+ * 상단 목업 — ⚠ **여기 숫자는 전부 거짓이다** (SCREEN_DESIGN §8-3 · base_expedition_design §2-6).
+ * 기획이 재고 · 가격을 하나도 안 정했으므로(GAME_DESIGN §10 「상단의 수치 전부」)
+ * **CSV 로 가지 않는다** — 확정 전에 SSOT 를 만들면 그 CSV 가 기획을 앞질러 굳는다.
+ * 확정되면 통째로 지우고 `game_logic` 의 상태 함수로 갈아탄다(건설 목업이 2026-09-22 에 그렇게 걷혔다 — R137).
+ *
+ * **여기 없는 것 둘** [2026-09-21 · ADR-0223] — 특수상단의 **방문 시계**(와 있나 · 남은 시간)와 상단의 **장비 목록**은
+ * `game.shopState` 가 낸다(주기 · 체류 · 장비 칸 수 · 가격은 balance.csv ⚠임시). 여기 남은 것은 특수상단의 상인 이름 · 물건 칸 수다.
+ * 재료 목록 · 지어낸 재고(루비 · 낙인)는 2026-10-24 걷었다 — 물건은 미정이라 칸 셋에 `?` 만 선다(SCREEN_DESIGN §8-3 · ADR-0782).
+ */
+export const TRADE = {
+    /** 특수상단 — 상인 이름과 물건 칸 수(사용자 「특수한 물건 3개 정도」). 와 있는지 · 남은 시간은 `game.shopVisit` 이 낸다 */
+    special: {
+        who: { ko: '떠돌이 광물상', en: 'Wandering Ore Dealer' },
+        slots: 3,
+    },
+    /** 교역소 — 물건 칸 수만(2026-10-30 · ADR-0960). 교환 비율 · 재화가 정해지면 CSV 로 가고 이 칸은 걷는다 (base_expedition_design §2-6) */
+    post: { slots: 3 },
+};
+
+/* 의뢰 게시판(`COMMISSIONS`)은 **CSV 로 나갔다** (2026-09-03 사용자 지시) — 종류(`commission_kind.csv`) · 틀(`commission.csv`) ·
+   등급(`commission_grade.csv`) · 종족(`monster_type.csv`)이고 카드는 `game_logic/commission.js` 가 굴린다(2026-09-24 · R153).
+   목업으로 시작했다가 같은 날 옮겼다 — 상단(TRADE)과 갈리는 지점이고, 근거는 「mock 과 CSV 가 겹치면 CSV 만 둔다」(SCREEN_DESIGN §14 · DEV_PLAN §5-B). */
+
+/* ═══════════ 건물 그림 — ⚠ 단색 실루엣 목업 (SCREEN_DESIGN §13 · ADR-0146 · ADR-0302) ═══════════
+ * 건설 탭의 건물 카드 머리 그림 — **키 = `building.csv:building_id`**. 건물마다 그릴 아트가 없어 선 그림(SVG) 한 장씩을 든다.
+ * viewBox 64×48 · 채움은 CSS 의 currentColor(글자색을 따라 테마를 탄다). 아트가 오면 이 표만 이미지로 갈아 끼운다 · 없는 건물은 빈 머리.
+ * ~~연구 목업 `RESEARCH`(가지 · 노드 · 지어낸 비용)~~ 는 2026-09-22 걷었다 — 건설은 표 넷을 그린다(`game.constructionState` · R137)
+ */
+const rsSvg = body => `<svg viewBox="0 0 64 48" aria-hidden="true">${body}</svg>`;
+export const BUILDING_ART = {
+    // ~~원정~~ — 2026-10-22 건물째 걷혔다(장은 앞 장 보스가 연다 · ADR-0719 · R319)
+    // 탐험 — 언덕 위 망루
+    explore: rsSvg('<path d="M2 46c8-8 18-12 30-12s22 4 30 12Z"/><path d="M27 35 29 15h6l2 20Z"/><path d="M24 15h16l-8-9Z"/><path d="M31.4 6V0h1.2v6ZM32.6 .4 39 2.2l-6.4 1.8Z"/>'),
+    // 대장간 — 작업장 + 굴뚝 + 화로 입
+    forge: rsSvg('<path fill-rule="evenodd" d="M4 46V26l15-10 15 10v20ZM14 46v-9h10v9Z"/><path d="M44 30V8h7v22Z"/><path fill-rule="evenodd" d="M36 46V28h24v18ZM42 46v-6a6 6 0 0 1 12 0v6Z"/><circle cx="47" cy="4" r="2.6"/><circle cx="53" cy="1.8" r="1.8"/>'),
+    // 선술집 — 박공집 + 매단 간판
+    tavern: rsSvg('<path fill-rule="evenodd" d="M6 46V24L24 10l18 14v22ZM19 46V35h10v11Z"/><path d="M42 20h16v2H42Z"/><path d="M47 22h1.2v3H47ZM54 22h1.2v3H54ZM45 25h12v9H45Z"/>'),
+    // 상단 — 짐마차
+    shop: rsSvg('<path d="M12 33V21c0-6 8-10 19-10s19 4 19 10v12Z"/><path d="M8 33h46v4H8Z"/><path fill-rule="evenodd" d="M18 36a5.5 5.5 0 1 1 0 11a5.5 5.5 0 1 1 0-11Zm0 3.8a1.7 1.7 0 1 0 0 3.4a1.7 1.7 0 1 0 0-3.4Z"/><path fill-rule="evenodd" d="M44 36a5.5 5.5 0 1 1 0 11a5.5 5.5 0 1 1 0-11Zm0 3.8a1.7 1.7 0 1 0 0 3.4a1.7 1.7 0 1 0 0-3.4Z"/><path d="M54 34h9v2h-9Z"/>'),
+    // 연구소(옛 자원) — 돔 지붕 작업장 + 굴뚝 (2026-10-18 · ~~산 + 갱도 입구~~)
+    resource: rsSvg('<path fill-rule="evenodd" d="M12 46V27h40v19ZM27 46v-9a5 5 0 0 1 10 0v9Z"/><path d="M12 26a20 17 0 0 1 40 0Z"/><path d="M30.6 9V4h2.8v5Z"/><path d="M52 46V16h6v30Z"/><circle cx="57" cy="11" r="2.4"/>'),
+    // 창고 — 곳간(박공 지붕 · 빗장 걸린 널문) [2026-09-22 · R137]
+    storage: rsSvg('<path fill-rule="evenodd" d="M4 46V21L32 7l28 14v25ZM19 46V29h26v17Z"/><path d="M21 31h22v3H21ZM21 37h22v3H21ZM21 43h22v3H21Z"/><path d="M31 29h2v17h-2Z"/>'),
+    // 도감 — 기둥 선 서고
+    codex: rsSvg('<path d="M4 17 32 4l28 13Z"/><path d="M6 19h52v3H6Z"/><path d="M10 23h5v18h-5ZM22 23h5v18h-5ZM37 23h5v18h-5ZM49 23h5v18h-5Z"/><path d="M4 42h56v4H4Z"/>'),
+    // 지휘 천막 — 작전 천막 + 깃발
+    command: rsSvg('<path fill-rule="evenodd" d="M4 46 32 11l28 35ZM26 46l6-13 6 13Z"/><path d="M31.3 11V1h1.4v10ZM32.7 1.2 42 4l-9.3 2.8Z"/>'),
+    // ~~훈련장~~ — 2026-10-09 건물째 걷혔다(ADR-0567 · construction_draft §2)
+};
+
+/**
+ * 건물 그림 — **일러스트 아트** [2026-09-23 사용자 지시] · `src/assets/art/buildings/<building_id>.webp` (시트 `buildings/source/sheet_01_buildings.png` 를 잘랐다).
+ * 부지 네모를 꽉 채우고(`cover`) 상세 머리에도 선다. **목록에 있는 건물만 그림을 읽는다** — 없는 건물은 위 단색 실루엣(`BUILDING_ART`)으로 폴백한다.
+ * 그림을 더하면 파일을 넣고 이 목록에 id 를 더한다(`CLASS_ICON_FILES` 와 같은 재고 목록)
+ */
+export const BUILDING_IMG_DIR = './assets/art/buildings/';
+export const BUILDING_IMAGES = ['command', 'forge', 'tavern', 'shop', 'resource', 'explore', 'storage', 'library'];   // ~~training~~ 2026-10-09 · ~~expedition~~ 2026-10-22 · ~~codex~~ 2026-10-24 도서관에 합침 (그림 파일은 남아 있다)
+/** 그림 파일 이름이 건물 id 와 다른 건물 — 도서관은 옛 도감 건물 그림을 쓴다 (2026-10-24 사용자 지시 「그림은 도감그림을 쓰도록」 · ADR-0762) */
+export const BUILDING_IMG_FILE = { library: 'codex' };
+export const buildingImg = id => (BUILDING_IMAGES.includes(id) ? `${BUILDING_IMG_DIR}${BUILDING_IMG_FILE[id] ?? id}.webp` : null);
+
+/**
+ * 재료 아이콘 — 연구소 「이 줄」 · 창고 재료 탭 · 비용 칸의 재료 그림 (SCREEN_DESIGN §8 · §6 · ADR-0377 · ADR-0789) · 키 = 재료 id (`lab_material.csv:material_id`).
+ * ⚠ 재료가 한 종류씩이 되며(2026-10-25 · R356) **옛 단계 그림을 빌린다** — 하급 철광석 = 철(`ore_t2`) · 하급 약초 = 쑥(`herb_t1`) · 하급 목재 = 소나무(`timber_t1`).
+ *   옛 단계 그림 파일(`ore_t*` · `herb_t*` · `timber_t*`)은 서로 다른 재료의 그림이라 위 단계(같은 재료 · 다른 단계 — 2026-10-27)에 못 쓴다 — 위 단계는 하급 그림을 빌린다.
+ * **표에 있는 재료만 그림을 읽는다** — 없는 재료는 null(칸은 종류 실루엣 `RES_ART`).
+ */
+const MATERIAL_ICON_DIR = './assets/art/icons/materials/';
+export const MATERIAL_ICONS = {
+    iron_ore: 'ores/ore_t2', herb: 'herbs/herb_t1', timber: 'timbers/timber_t1',
+    // 위 단계(합성 — 2026-10-27 · R359) ⚠임시 — 제 그림이 없어 **하급 그림을 빌린다** · 칸이 단계 점을 얹는다(`app.js:matPips` · ADR-0857)
+    iron_ore_2: 'ores/ore_t2', iron_ore_3: 'ores/ore_t2', iron_ore_4: 'ores/ore_t2', iron_ore_5: 'ores/ore_t2',
+    herb_2: 'herbs/herb_t1', herb_3: 'herbs/herb_t1', herb_4: 'herbs/herb_t1', herb_5: 'herbs/herb_t1',
+    timber_2: 'timbers/timber_t1', timber_3: 'timbers/timber_t1', timber_4: 'timbers/timber_t1', timber_5: 'timbers/timber_t1',
+    // 가루 줄(2026-10-29 · R373 — 단계 다섯 · 세이브 v43) ⚠임시 — 단계마다 제 그림이 없어 **분해 가루 그림**(`icons/currency/dust`)을 빌린다
+    dust: '../currency/dust', dust_2: '../currency/dust', dust_3: '../currency/dust', dust_4: '../currency/dust', dust_5: '../currency/dust',
+};
+export const materialIcon = id => (MATERIAL_ICONS[id] ? `${MATERIAL_ICON_DIR}${MATERIAL_ICONS[id]}${ICON_EXT}` : null);
+
+/**
+ * 재화 그림 — 건설 「다음 랭크」 의 재료 칸 그림 (SCREEN_DESIGN §13-1 · ADR-0323). **골드 · 분해 가루는 그림**(`icons/currency/`) · 낙인은 ⚠ **임시 단색 실루엣** — 재화 아트가 없어서 그렸다.
+ * 연구소 재료(철광 · 목재 · 약초)는 칸이 먼저 그 재료 아이콘(`materialIcon`)을 읽는다 — 아래 ore · wood · herb 실루엣은 아이콘 없는 재료의 폴백이다.
+ * 실루엣은 viewBox 32×32 · 채움은 CSS 의 currentColor(칸마다 `.res-<종류>` 가 색을 준다). 아트가 오면 이 표의 그 줄만 `resImg` 로 갈아 끼운다.
+ * 종류 = 자원 셋(gold · dust · stigma) · 연구소 재료는 그 재료를 내는 지점으로 가른다(ore 채광 · wood 벌목 · herb 채집 — `app.js:resKind`)
+ */
+const resSvg = body => `<svg viewBox="0 0 32 32" aria-hidden="true">${body}</svg>`;
+const resImg = id => `<img src="./assets/art/icons/currency/${id}${ICON_EXT}" alt="" draggable="false">`;
+export const RES_ART = {
+    // 금화 — 왕관을 찍은 주화 한 닢 (Codex · 2026-10-12)
+    gold: resImg('gold'),
+    // 분해 가루 — 돌절구에 수북한 잿빛 가루 (Codex · 2026-10-12)
+    dust: resImg('dust'),
+    // 낙인 — 속이 빈 마름모 인장
+    stigma: resSvg('<path fill-rule="evenodd" d="M16 2 28 16 16 30 4 16Zm0 7-6 7 6 7 6-7Z"/><path d="M15 14h2v4h-2Z"/>'),
+    // 광석 — 모난 돌덩이 둘
+    ore: resSvg('<path d="M3 26 7 14l7-4 6 5 1 11Z"/><path d="M18 26l2-9 6-3 4 6-1 6Z" opacity=".7"/>'),
+    // 목재 — 쌓은 통나무(끝의 나이테 면)
+    wood: resSvg('<path fill-rule="evenodd" d="M4 15h20a4.5 4.5 0 0 1 0 9H4a4.5 4.5 0 0 1 0-9Zm20 2.2a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 0 0 0-4.6Z"/><path d="M8 7h16a4 4 0 0 1 0 8H8a4 4 0 0 1 0-8Z" opacity=".6"/>'),
+    // 약초 — 줄기 하나에 잎 셋
+    herb: resSvg('<path d="M15 30h2V13h-2Z"/><path d="M16 14C8 14 5 9 5 4c7 0 11 4 11 10Z"/><path d="M16 14c0-6 4-10 11-10 0 5-3 10-11 10Z" opacity=".75"/><path d="M16 22c-5 0-8-3-8-6 5 0 8 2 8 6Z" opacity=".6"/>'),
+};
+
+/**
+ * 도박장 슬롯 심볼 그림 — **표시 사전**(SCREEN_DESIGN §8-1 · ADR-0331 · 그림 ADR-0608). 심볼 일곱 = **죄종 일곱** (2026-09-28 사용자 지시).
+ * 짝은 뜻으로 맞췄다 — 최고 심볼 = 오만 · 와일드 = 탐욕(탐욕 = 도박) · 골드 = 색욕 · 광석 = 분노(대장간 화염) · 목재 = 시기(숲 챕터) · 가루 = 나태(쌓인 먼지) · 코인 = 폭식(쌓아 먹는다).
+ * 그림은 그 죄종의 **문장(죄종 아이콘)을 물건 한 점으로 그린 것**이다 — 오만 = 윗변이 무쇠 왕관 띠인 숫자 7(최고 심볼이 7 로 읽히게 · ADR-0631) · 탐욕 = 금 인장 반지(「탐욕의 인장」) · 색욕 = 장미 · 분노 = 화로의 화염 ·
+ * 시기 = 가시 박힌 눈 · 나태 = 모래시계 · 폭식 = 아가리를 찍은 동전 · 잭팟 코인 = 루비 박힌 금화 (Codex · 2026-10-12 · 원본 `icons_source/gamble/`).
+ * 파일명 = `slot_symbol.csv` 의 `symbol_id` · 잭팟 코인 한 장은 `slot_coin.csv` 의 kind(`jackpot`).
+ * 어느 심볼이 무엇을 주는지는 `slot_symbol.csv` 가 든다 — 여기는 그림만. 무엇을 받는지는 배당표가 읽힌다.
+ * ~~`slotArt`~~ 는 장비 빈 칸 그림이 이미 쓰는 이름이다
+ */
+export const GAMBLE_ART_DIR = './assets/art/icons/gamble/';
+export const gambleArt = id => `<img class="gb-ico" src="${GAMBLE_ART_DIR}${id}${ICON_EXT}" alt="" draggable="false">`;
+
+/**
+ * 강화 연출의 모루 · 망치 (SCREEN_DESIGN §8-2 · ADR-0626 · Codex · 원본 `icons_source/forge/`).
+ * 연출이 그림의 방향에 기댄다 — 모루는 뿔이 왼쪽 · 윗면 수평, 망치는 머리가 왼쪽 · 때리는 면이 아래 · 손잡이 끝이 회전축(`style.css:.fg-hammer`)
+ */
+const FORGE_ART_DIR = './assets/art/icons/forge/';
+export const FORGE_ART = { anvil: `${FORGE_ART_DIR}anvil${ICON_EXT}`, hammer: `${FORGE_ART_DIR}hammer${ICON_EXT}` };
+
+/**
+ * 콜로세움 · 결투장 휘장 (SCREEN_DESIGN §1 · ADR-0670 · Codex · 원본 `icons_source/arena/`) — 파일명 = `arena_tier.csv` 의 `tier_id`
+ * (등급이 오를수록 하나씩 붙는 한 벌) + 장식 셋 `colosseum` · `duel` · `gladiator`(승급전 층 칸). 그림이 없는 등급은 깨진 그림 대신 칸이 빈다(`onerror`)
+ */
+const ARENA_ART_DIR = './assets/art/icons/arena/';
+export const arenaArt = (id, cls = '') => `<img class="ar-ico${cls ? ` ${cls}` : ''}" src="${ARENA_ART_DIR}${id}${ICON_EXT}" alt="" draggable="false" onerror="this.remove()">`;
+

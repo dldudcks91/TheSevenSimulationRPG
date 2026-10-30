@@ -45,7 +45,7 @@ import * as M from './mock.js';
 import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo, shrineInfo, pickJosa } from './data.js';
 import { t, L } from './i18n.js';
 import { DEV_HOST } from './env.js';
-import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard, withLive, refreshTip, reanchorTip } from './tip.js';
+import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard, withLive, refreshTip, reanchorTip, headingHelp } from './tip.js';
 import { paceAt, paceStep, paceCfg, actorOf, RISE_MS, PEAK_MS } from './pace.js';   // 박자 — 세움이 언제 · 얼마나 서나. 앱 시계와 같은 걸음이다 (ADR-0654)
 import { fxPreloadSkills, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear, fxArriveMark, fxArrive, fxRoundClear, SPEED_K, lungeFxOn } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 기본 공격 이펙트 + 피격 반응 + 공격 시 흔들림(넷 다 기본 On) — 넷 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468 · ADR-0501)
 
@@ -113,7 +113,12 @@ const chanFill = (u, now) => {
 const staggered = (u, now) => (u.stalls?.[u.stalls.length - 1]?.to ?? -Infinity) > now;
 /** 행동했다 — 게이지를 비우고 경직 창을 걷는다(skill · hit · dodge 가 부른다).
  *  **마법 무기는 안 비운다** [R200 · ADR-0483] — 칸 충전식이라 시전이 차던 칸을 안 건드린다. 칸은 `charge` · `skill` 의 `ch` 가 옮긴다(`chargeTo`) */
-const markActed = (u, at) => { if (u.noBasic) return; u.lastAct = at; u.acted = true; u.stalls = []; };
+const markActed = (u, at) => {
+    if (u.noBasic) return;
+    // 같은 시각의 다단 · 장비 발동은 한 행동이다. 사이에 반격으로 받은 경직을 지우지 않는다.
+    if (u.lastAct !== at) u.stalls = [];
+    u.lastAct = at; u.acted = true;
+};
 /** 마법 무기의 칸 수 — balance.csv 가 정한다(재생기는 세지 않고 시뮬이 실어 온 `ch` 로 옮긴다) */
 const chargeMax = () => D.balance.cast_charge_max;
 /** 칸 줄 — 칸 하나 = 틀 하나 + 채움 하나 (SCREEN_DESIGN §4-2 · ADR-0483) */
@@ -135,7 +140,7 @@ const shrineFxList = id => {
     const s = shrineInfo(id);
     return s ? Object.entries(s.fx).map(([k, v]) => ({ k, text: t(`shrine.fx.${k}`, { v: Math.round(v * 100) }) })) : [];
 };
-/** 신단 칩 — 그림 + 이름 · 올리면 효과만(CLAUDE.md 규칙 7) · 헤드 · 결과 띠 · 리포트가 같이 쓴다 (ADR-0445) */
+/** 신단 칩 — 그림 + 이름 · 올리면 효과만(CLAUDE.md 규칙 7) · 결과 띠 · 리포트와 버프 아이콘 없는 독립 헤드가 쓴다. */
 export const shrineChip = id => {
     const s = shrineInfo(id);
     return s ? `<span class="shrine-chip" title="${shrineFxText(id)}"><img src="${s.img}" alt="">${L(s.name)}</span>` : '';
@@ -153,38 +158,65 @@ export const gravePlaque = (name, until, at) => {
     return `<span class="grave-plaque" data-respawn="${until}" role="img" aria-label="${t('exp.foe.grave', { name, t: left })}"><span class="grave-stone"></span><span class="grave-left">${left}</span></span>`;
 };
 
-/* [버프] 창 [2026-09-30 · SCREEN_DESIGN §4-2 「버프」 · ADR-0461 · 버튼 자리 ADR-0462] — 그 런의 버프를 **출처별 세 줄**(신단 · 전술 · 도감)로 적는다.
+/* 아레나 왼쪽 위의 지속 버프 — 신단 · 전술 · 도감 아이콘에 올리면 그 출처의 효과를 읽는다.
    합치기(같은 능력치 · 피해 감소는 따로)는 `game.runBuffs` 가 했다 — 여기는 옮겨 적을 뿐이다 */
 /** 옵션 줄 사전(`AFFIX_LABELS`)에 없는 축의 이름 — 전투 능력치 표. 도감 줄도 장비 옵션 어휘라 사전이 먼저 답한다 (2026-10-18 · ADR-0667 — ~~도감 계열 라벨~~) */
 const buffLabel = k => D.combatStats.find(s => s.id === k);
 /** 효과 한 조각 — 옵션 줄과 같은 표기(「데미지 +2%」) */
 const buffStat = (k, v) => L(M.affixText(k, v, buffLabel(k)));
-/** 세 줄 — 비어 있는 출처는 「없음」(줄이 빠지지 않는다) */
-const buffRows = b => {
-    const none = `<span class="muted">${t('bt.buff.none')}</span>`;
-    const list = (flat, dr = []) => {
-        const parts = [...Object.entries(flat ?? {}).map(([k, v]) => buffStat(k, v)), ...dr.map(v => buffStat('damage_reduction', v))];
-        return parts.length ? parts.map(x => `<span class="bp-it">${x}</span>`).join(' · ') : none;   // 효과 하나는 안 꺾인다 — 줄은 효과 사이에서 바뀐다
-    };
-    return [
-        ['shrine', b.shrine ? `${shrineChip(b.shrine)}<span>${shrineFxText(b.shrine)}</span>` : none],
-        ['tactic', list(b.tactics?.flat, b.tactics?.dr)],
-        ['codex', list(b.codex)],
-    ].map(([k, v]) => `<div class="bp-row"><b>${t(`bt.buff.${k}`)}</b><span class="bp-fx">${v}</span></div>`).join('');   // `.buff-row` 는 카드 아래 창 뱃지 줄의 이름이다 — 겹치지 않게 `bp-`
+const RUN_BUFF_KEYS = ['shrine', 'tactic', 'codex'];
+/** 비어 있는 출처도 자리를 지킨다 — 그림만 흐리고 툴팁에는 「없음」을 적는다. */
+const runBuffParts = (key, b) => {
+    if (key === 'shrine') return shrineFxList(b.shrine).map(f => f.text);
+    const flat = key === 'tactic' ? b.tactics?.flat : b.codex;
+    const dr = key === 'tactic' ? b.tactics?.dr ?? [] : [];
+    return [...Object.entries(flat ?? {}).map(([k, v]) => buffStat(k, v)), ...dr.map(v => buffStat('damage_reduction', v))];
 };
-/** 버튼 아래에 창을 연다 — 투명 뒤판이 화면을 덮어 **버튼을 다시 누르거나 창 밖을 누르면** 닫힌다(우클릭 메뉴와 같은 수법 · 전역 리스너 없음).
- *  버튼은 아레나 왼쪽 위 구석에 선다(ADR-0462) — 열린 동안 `.open` 이 층을 올려 창이 카드 위에 선다 */
-function openBuffPop(btn, b) {
-    const wrap = btn.parentElement;
-    const back = document.createElement('div');
-    back.className = 'buff-back';
-    const pop = document.createElement('div');
-    pop.className = 'buff-pop';
-    pop.innerHTML = buffRows(b);
-    back.onclick = () => { back.remove(); pop.remove(); btn.classList.remove('on'); wrap.classList.remove('open'); };
-    wrap.append(back, pop);
-    btn.classList.add('on');
-    wrap.classList.add('open');
+const runBuffName = (key, b) => {
+    const shrine = key === 'shrine' ? shrineInfo(b.shrine) : null;
+    return t(`bt.buff.${key}`) + (shrine ? ` · ${L(shrine.name)}` : '');
+};
+const runBuffIconsHtml = () => `<div class="run-buff-icons">${RUN_BUFF_KEYS.map(key =>
+    `<span class="run-buff-icon" data-buff="${key}" role="img" tabindex="0" aria-label="${t(`bt.buff.${key}`)}"><img src="${M.RUN_BUFF_ART[key]}" alt="" draggable="false"></span>`
+).join('')}</div>`;
+/** 기존 효과 카드의 틀 — 이름 아래 효과마다 한 줄, 조건·남은 시간은 적지 않는다. */
+function runBuffTipCard(key, b) {
+    const c = document.createElement('div');
+    c.className = 'tip-card effect-tip run-buff-tip';
+    c.innerHTML = `<div class="tip-effect-head"><div class="tip-name"><span class="tip-sk-ico"><img src="${M.RUN_BUFF_ART[key]}" alt=""></span><span class="tip-name-text"></span></div></div><div class="tip-effect-summary"></div>`;
+    c.querySelector('.tip-name-text').textContent = runBuffName(key, b);
+    const parts = runBuffParts(key, b);
+    if (parts.length > 14) {
+        c.classList.add('many');
+        c.style.setProperty('--buff-rows', Math.ceil(parts.length / 2));
+    }
+    const body = c.querySelector('.tip-effect-summary');
+    for (const text of parts.length ? parts : [t('bt.buff.none')]) {
+        const row = document.createElement('div');
+        row.className = `run-buff-line${parts.length ? '' : ' muted'}`;
+        row.textContent = text;
+        body.appendChild(row);
+    }
+    return c;
+}
+/** 첫 그리기와 hover·키보드 포커스 때만 읽는다 — 재생 걸음마다 버프를 다시 계산하지 않는다. */
+function bindRunBuffTips(root, opts) {
+    const icons = [...root.querySelectorAll('.run-buff-icon')];
+    if (!icons.length) return;
+    const paint = b => {
+        for (const node of icons) {
+            const key = node.dataset.buff;
+            const parts = runBuffParts(key, b);
+            node.classList.toggle('empty', !parts.length);
+            node.setAttribute('aria-label', `${runBuffName(key, b)}: ${parts.length ? parts.join(' · ') : t('bt.buff.none')}`);
+        }
+    };
+    paint(opts.buffsOf() ?? {});
+    for (const node of icons) bindTipNode(node, () => {
+        const b = opts.buffsOf() ?? {};
+        paint(b);
+        return runBuffTipCard(node.dataset.buff, b);
+    }, { keyboard: true });
 }
 
 /**
@@ -197,7 +229,8 @@ function openBuffPop(btn, b) {
  *   pickedUid = 장착 대상 영웅(그 카드가 파란 겉 테두리) · onPickHero(uid) = 영웅 카드 클릭 — 고르는 것은 앱이다 (ADR-0137)
  *   onPickNone() = 아레나의 빈 곳 클릭 — 앱이 장착 대상을 비운다 (ADR-0849)
  *   result = game_logic 전투 결과 (timeline 포함). onEnd 는 [리포트 보기]를 눌렀을 때(false) / 결과 띠의 세기가 끝났을 때(true).
- *   shrine = 이 런이 입은 신단 id(없으면 null) — 헤드의 칩 (ADR-0445)
+ *   shrine = 이 런이 입은 신단 id(없으면 null) — buffsOf 없는 독립 헤드의 칩.
+ *   buffsOf() = 이 런의 신단 · 전술 · 도감 효과 — 아레나 아이콘과 hover 설명이 읽는다.
  *   teamPane = 두 팀 누적 데미지 판을 그릴 요소(결투 관전의 아레나 아래 칸) — 주면 상대 진영도 장부를 쌓고 걸음 끝마다 그 안에 두 판을 그린다 (ADR-0769)
  *   teamView = 두 팀 판의 보기 'rows'(요약) | 'cols'(스킬별) · onTeamView(v) = 판의 버튼으로 바꾼 보기 — 취향이라 앱이 든다 (ADR-0772)
  *   intro = `{ diff }` 면 재생 위치가 런의 처음일 때 스테이지 띠를 한 번 띄운다 — 「그 런에 한 번」은 앱이 정한다 · 결투장은 안 넘긴다 (ADR-0663)
@@ -235,7 +268,7 @@ export function mountBattle(container, opts) {
         units: new Map(), party: [], enemies: [],
         dmg: new Map(),          // 누적 데미지 — 이벤트의 dmg 를 더할 뿐 (표시값)
         teamPane: opts.teamPane ?? null,   // 두 팀 누적 판의 자리(결투 관전) — 있으면 상대 진영도 쌓는다 (ADR-0769)
-        arrive: stageId != null,   // 새 라운드의 적이 먼 곳에서 다가온다 — 원정만(결투는 스테이지가 없다 · 제자리에 선다) (ADR-0948)
+        arrive: stageId != null,   // 새 라운드의 적이 소환되는 방식으로 떠오르며 선다 — 원정만(결투는 스테이지가 없다 · 제자리에 선다) (ADR-0948 · ADR-0951)
         // 두 팀 판의 보기 — rows(요약) | cols(스킬별) · 취향이라 앱의 화면 상태가 들고 `onTeamView` 로 돌려받는다 (ADR-0772)
         teamView: opts.teamView === 'cols' ? 'cols' : 'rows', onTeamView: opts.onTeamView ?? null,
         catchUp: false,          // 재개 되감기 중 — 팝업을 띄우지 않고 DOM 도 안 만진다(끝에 `paintCaughtUp` 이 한 번 그린다)
@@ -293,7 +326,7 @@ export function mountBattle(container, opts) {
     bindPotionTips(state, container);   // 첫 프레임의 칸도 카드를 든다 — 다시 칠할 때는 `paintPotion` 이 건다
     // 아레나의 빈 곳(카드 · 버튼 · 물약 칸 · 결과 띠 밖)을 누르면 장착 대상을 비운다 — 비우는 것은 앱이다 (ADR-0849)
     if (opts.onPickNone) dom.querySelector('.arena').addEventListener('click', e => {
-        if (!e.target.closest('.unit, button, .p-belt, .b-buffwrap, .battle-result')) opts.onPickNone();
+        if (!e.target.closest('.unit, button, .p-belt, .run-buff-icons, .battle-result')) opts.onPickNone();
     });
     // t=0 의 이벤트(첫 라운드 편성)를 먼저 적용해서 첫 프레임부터 적이 서 있게 한다.
     // 재개(resume)면 그 시각까지 조용히 되감는다 — 팝업 없이. 로그·게이지·누적은 다시 쌓인다 (2026-08-27).
@@ -367,7 +400,7 @@ function buildDom(state, stage, stageId, shrine, buffs, opts = {}) {
         <div class="battle-head">
             <div class="bh-top">
                 <div class="bh-title">${opts.title ?? `${L(chapterOf(stage.chapter)?.name)} — ${L(stageName(stage))}`}</div>
-                ${shrine ? shrineChip(shrine) : ''}
+                ${shrine && !buffs ? shrineChip(shrine) : ''}
                 <div class="round-track">${
                     Array.from({ length: rounds }, (_, i) => {
                         const n = i + 1, k = kindOf(n);
@@ -392,7 +425,7 @@ function buildDom(state, stage, stageId, shrine, buffs, opts = {}) {
                 <div class="divider"><span class="muted">VS</span></div>
                 <div class="side side-party"></div>
                 <div class="p-belt b-belt">${potionBeltHtml(state.potion)}</div>
-                ${buffs ? `<div class="b-buffwrap"><button class="btn sm b-buff">${t('bt.buff')}</button></div>` : ''}
+                ${buffs ? runBuffIconsHtml() : ''}
                 <div class="battle-result"></div>
             </div>
             <div class="battle-side" hidden>
@@ -441,9 +474,7 @@ function bindControls(state, root, opts) {
         b.onclick = () => { state.dmgf = b.dataset.f; paintPane(state, root); };
     });
     paintLayout(state, root);
-    // [버프] — 그 런의 버프를 출처별 세 줄로 (SCREEN_DESIGN §4-2 「버프」 · ADR-0461). 값은 **누른 순간** 앱이 `game.runBuffs` 로 답한다
-    const buff = root.querySelector('.b-buff');
-    if (buff) buff.onclick = () => openBuffPop(buff, opts.buffsOf());
+    bindRunBuffTips(root, opts);
     // 철수 [개정 2026-09-14 · R89 — 옛 건너뛰기] — 진행 중이던 라운드를 버리고 원정을 끝낸다. 결과가 바뀌는 일이라 앱이 한다(`state.retreatRun`)
     root.querySelector('.b-skip').onclick = () => { clearInterval(state.timer); opts.onRetreat(); };
 }
@@ -851,7 +882,7 @@ function renderUnits(state, root) {
                 it => state.itemTipOf?.(u.hero, it) ?? null), { anchor: true, holdOnAlt: true });
             // 몬스터 장비의 아이템 카드도 영웅 · 캐릭터 탭과 같다 — 스킬 칸의 숫자는 그 몬스터의 표시값이다 (ADR-0183 · ADR-0312)
             else if (u.side === 'enemy') bindTipNode(n, () => monsterTipCard(u,
-                it => state.monsterItemTipOf?.(it, unitSkillCtx(u)) ?? null), { anchor: true, holdOnAlt: true });
+                it => state.monsterItemTipOf?.(it, unitSkillCtx(u), u.sheet?.level) ?? null), { anchor: true, holdOnAlt: true });
             // 영웅 카드 클릭 = **장착 대상 고르기** [2026-09-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0137] — 아래 보관 칸이 그 영웅을 향한다. 몬스터 · 소환물은 클릭이 없다
             // 반짝이는 레벨 — **카드 어디를 눌러도** 지금 레벨을 본 것으로 친다(앱의 화면 상태) · 장착 대상 고르기보다 먼저 건다: 고르기가 화면을 다시 그려도 본 레벨이 먼저 적힌다 (ADR-0463)
             const lvNew = n.querySelector('.unit-lv.lv-new');
@@ -880,7 +911,7 @@ function renderUnits(state, root) {
             cell.insertAdjacentHTML('beforeend', '<div class="buff-row"></div>');
             u.buffRow = cell.lastElementChild;
             side.appendChild(cell);
-            fxArrive(state, u);   // 다가오는 중인 적 — 불러내기로 다시 지어도 지난 만큼에서 이어 간다 (ADR-0948)
+            fxArrive(state, u);   // 서는 중인 적 — 불러내기로 다시 지어도 지난 만큼에서 이어 간다 (ADR-0948 · ADR-0951)
         }
     }
 }
@@ -1077,7 +1108,7 @@ function effectSummaryText(stat, value = 0, element = null, cut = 0) {
             case 'res_elem': return v < 0 ? 'bt.effect.res.down' : 'bt.effect.res.up';
             case 'res_pct': return v < 0 ? 'bt.effect.resAll.down' : 'bt.effect.resAll.up';
             case 'hp_max_pct': return v < 0 ? 'bt.effect.hp.down' : 'bt.effect.hp.up';
-            case 'regen_pct': case 'regen_flat': return v < 0 ? 'bt.effect.regen.down' : 'bt.effect.regen.up';
+            case 'regen_pct': case 'regen_hp_pct': return v < 0 ? 'bt.effect.regen.down' : 'bt.effect.regen.up';
             case 'dr_pct': return v < 0 ? 'bt.effect.taken.up' : 'bt.effect.taken.down';
             case 'onhit_element': return 'bt.effect.onhit';
             case 'attack_splash': return 'bt.effect.splash';
@@ -1229,7 +1260,7 @@ function castSkill(state, u, ev) {
     if (i < 0) return;
     const s = u.skills[i];
     // 정신 집중의 방(`chan`)은 칸만 튄다 — 쿨은 여는 `skill` 이 덮고(쓰는 동안 Infinity) `chanEnd` 가 연다 (R318 · ADR-0720)
-    if (ev.e === 'skill') {
+    if (ev.e === 'skill' && !ev.trigger) {
         s.firedAt = ev.t;
         s.readyAt = ev.chan ? Infinity : (ev.ready ?? ev.t);   // 준비 시각은 시뮬이 실어 보낸다 (INTERFACE §2-6)
     }
@@ -1341,6 +1372,7 @@ function renderTeams(state) {
     }
     box.classList.toggle('cols', cols);
     box.innerHTML = team('party') + team('enemy');
+    box.querySelectorAll('.tdm-head').forEach(head => headingHelp(head, () => t('hint.battle_totals'), head.querySelector('.tdm-name')));
 }
 /** 스킬별 보기의 줄 — 기본 공격(평타가 없는 마법 무기면 빠진다) → 카드의 스킬 칸 순 → 그 밖에 피해를 낸 것(반사 · 칸에서 빠진 스킬).
     피해를 안 낸 칸도 0 으로 선다 — 값은 늘 찍는다 (ADR-0772) */
@@ -1391,6 +1423,7 @@ const POP_ROWS = 4;
 /** 같은 차례 그 스킬의 타격 순번 — `skill` 사건이 0 으로 되돌리고 그 스킬의 `hit` · `dodge` 마다 하나씩 센다(사건을 셀 뿐이다 · ADR-0778).
  *  스킬이 아닌 타격 · 다른 차례의 타격은 0 */
 function hitIndex(a, ev) {
+    if (ev.i != null) return ev.i;   // 중첩 발동은 시뮬이 실어 온 제 시전의 순번을 쓴다.
     return a && ev.s && a.skillT === ev.t && a.skillS === ev.s ? a.skillN++ : 0;
 }
 
@@ -1695,7 +1728,7 @@ function apply(state, root, opts, ev) {
             for (const e of state.enemies) state.units.delete(e.key);
             state.enemies = ev.enemies.map(e => enemyEntry(e, ev.t));
             for (const e of state.enemies) state.units.set(e.key, e);
-            if (state.arrive) fxArriveMark(state, state.enemies);   // 원정의 새 적은 먼 곳에서 다가온다 — 카드를 짓기 전에 단다 (ADR-0948)
+            if (state.arrive) fxArriveMark(state, state.enemies);   // 원정의 새 적은 소환되는 방식으로 떠오르며 선다 — 카드를 짓기 전에 단다 (ADR-0951)
             if (state.teamPane) { for (const e of state.enemies) dmgEntry(state, e); state.dmgDirty = true; }   // 두 팀 판 — 상대도 0 부터 찍는다 (ADR-0769)
             // 전투 시작 시 행동 게이지(R303) — 원정의 라운드가 바뀌면 파티 게이지가 그 초만큼 앞당겨진다. 시뮬이 실어 온 값을 그대로 민다(계산하지 않는다)
             for (const [k, s] of Object.entries(ev.pg ?? {})) { const u = state.units.get(k); if (u) u.lastAct -= s; }
@@ -1740,7 +1773,12 @@ function apply(state, root, opts, ev) {
         }
         case 'skill': {   // 시전 — 그 차례의 사건. 뒤따르는 hit/dodge/heal/buff 가 같은 s 를 단다
             const u = U(ev.u);
-            if (u) { markActed(u, ev.t); chargeTo(u, ev.ch, ev.t, false); castSkill(state, u, ev); u.skillT = ev.t; u.skillS = ev.s; u.skillN = 0; }   // 시각을 적어 둔다 — 이어지는 기본 공격은 베기를 안 띄운다 (ADR-0564) · 그 스킬의 타격 순번은 0 부터 (ADR-0778)
+            if (u) {
+                // 장비 발동은 제 차례 · 시전 칸을 쓰지 않는다. 같은 스킬을 배웠어도 그 칸의 쿨은 이어진다.
+                if (!ev.trigger) { markActed(u, ev.t); chargeTo(u, ev.ch, ev.t, false); }
+                castSkill(state, u, ev);
+                if (!ev.trigger) { u.skillT = ev.t; u.skillS = ev.s; u.skillN = 0; }
+            }   // 이어지는 기본 공격은 베기를 안 띄운다 (ADR-0564) · 그 스킬의 타격 순번은 0 부터 (ADR-0778)
             // 정신 집중을 열었다 — 이 차례가 첫 방 (R318 · ADR-0720) · `iv` = 계속 닳기의 방 사이 간격(없으면 끊어 치기 — 주기)
             if (u && ev.chan) u.chan = { s: ev.s, n: ev.chan, left: ev.chan - 1, at: ev.t, iv: ev.iv ?? null };
             break;
@@ -1754,6 +1792,9 @@ function apply(state, root, opts, ev) {
             const u = U(ev.u);
             if (u) {
                 u.chan = null;
+                // 닫힘은 새 행동이 아니다 — 마지막 방이 세운 `acted` 를 눕혀 꽉 찬 프레임 없이 0 에서 다시 찬다(물리는 이 시각부터 · 시뮬 `next = period` 그대로 · 마법은 아래 chargeTo)
+                if (!u.noBasic) { u.lastAct = ev.t; u.stalls = []; }
+                u.acted = false;
                 const s = u.skills?.find(x => x.id === ev.s && x.readyAt === Infinity);
                 if (s) { s.firedAt = ev.t; s.readyAt = ev.ready; }
                 chargeTo(u, ev.ch, ev.t, true);

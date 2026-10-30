@@ -1,0 +1,46 @@
+{
+  "snapshot_capture": "2026-10-29T18:07:32.151220+00:00",
+  "source_manifest_sha256": "b747f7942d0ad797886eb46523fba44a1cc3fef328a1455cae9cc7b19c1f9eaf",
+  "harness_sha256": "1daaa9b98e9f944af6decf686f9b5a83d71dc1103420523b4fd7fca73a4a3def",
+  "paired": 2,
+  "passive": 2,
+  "workers": 2,
+  "short": true,
+  "jobs": [
+    [
+      1,
+      "basic",
+      false
+    ],
+    [
+      1,
+      "adaptive",
+      false
+    ],
+    [
+      1,
+      "passive",
+      false
+    ],
+    [
+      2,
+      "basic",
+      false
+    ],
+    [
+      2,
+      "adaptive",
+      false
+    ],
+    [
+      2,
+      "passive",
+      false
+    ],
+    [
+      2,
+      "basic",
+      true
+    ]
+  ]
+}

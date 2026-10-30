@@ -384,7 +384,7 @@ export function createSkillSystem(data) {
             v2: d.effects.slice(1).some(x => x.effect === 'apply'),    // 둘째 걸린 효과의 값
             m: st0?.stat === 'frenzy',                                 // 겹 상한
             t: st0?.stat === 'pulse',                                  // 오오라 피해 간격
-            i: CASTS[d.cast].chan === 'tick' && !CASTS[d.cast].burst,  // 계속 닳기의 방 사이 간격 (2026-10-22 · 모으기는 같은 초 시계라도 아니다 — R358)
+            i: d.cast === 'channel_tick',                              // 계속 닳기의 방 사이 간격 [balance.csv:channel_tick_sec] (2026-10-22 · 끊어 치기 · 모으기는 같은 초 시계라도 아니다 — R358 · R392)
             p: d.hpCost > 0,                                           // HP 소모 비율 (2026-10-24 · R355)
             f: st0?.stat === 'swarm',                                  // 파리 수 [balance.csv:swarm_fly_count] (스웜 · 2026-10-29 R380)
         };

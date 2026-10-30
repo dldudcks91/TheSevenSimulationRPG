@@ -1,0 +1,625 @@
+{
+  "method": "Same frozen source and legal 5-minute management; only harness calls snapshot paceOf(2), including its SPEED_K. Restart remains the actual rule. Extra encounters, action timings and subsequent RNG outcomes can legitimately differ. Six selected accounts, 10/60 minutes only, separate from primary 50.",
+  "pace2": {
+    "speed": 2,
+    "rise": 0,
+    "focus": 0,
+    "gap": 712.5
+  },
+  "info": {
+    "wall_seconds": 33.21900000004098,
+    "completed": [
+      {
+        "seed": 1,
+        "policy": "basic",
+        "replicate": false,
+        "seconds": 2.337,
+        "failures": 0
+      },
+      {
+        "seed": 1,
+        "policy": "adaptive",
+        "replicate": false,
+        "seconds": 2.619,
+        "failures": 0
+      },
+      {
+        "seed": 2,
+        "policy": "basic",
+        "replicate": false,
+        "seconds": 2.341,
+        "failures": 0
+      },
+      {
+        "seed": 2,
+        "policy": "adaptive",
+        "replicate": false,
+        "seconds": 2.337,
+        "failures": 0
+      },
+      {
+        "seed": 10,
+        "policy": "basic",
+        "replicate": false,
+        "seconds": 2.136,
+        "failures": 0
+      },
+      {
+        "seed": 10,
+        "policy": "adaptive",
+        "replicate": false,
+        "seconds": 2.332,
+        "failures": 0
+      }
+    ],
+    "errors": [],
+    "frozen_source_changed": [],
+    "seed2_repeat_identical_except_runtime": null
+  },
+  "comparisons": [
+    {
+      "seed": 1,
+      "policy": "adaptive",
+      "seconds": 600,
+      "speed1": {
+        "stage": 1013,
+        "difficulty": "normal",
+        "levels": [
+          4,
+          4,
+          4
+        ],
+        "gold": 852,
+        "bags": [
+          2
+        ],
+        "progress": 2,
+        "runs": 2,
+        "losses": 0,
+        "drops": 4,
+        "potionBuyGold": 0,
+        "longestNewStageGap": 256.7,
+        "longestRewardGap": 63.25,
+        "chapter1Cleared": false
+      },
+      "speed2": {
+        "stage": 1021,
+        "difficulty": "normal",
+        "levels": [
+          6,
+          6,
+          5
+        ],
+        "gold": 1051,
+        "bags": [
+          4
+        ],
+        "progress": 3,
+        "runs": 5,
+        "losses": 2,
+        "drops": 6,
+        "potionBuyGold": 150,
+        "longestNewStageGap": 184.2,
+        "longestRewardGap": 23.212,
+        "chapter1Cleared": false
+      }
+    },
+    {
+      "seed": 1,
+      "policy": "adaptive",
+      "seconds": 3600,
+      "speed1": {
+        "stage": 1041,
+        "difficulty": "normal",
+        "levels": [
+          11,
+          11,
+          10
+        ],
+        "gold": 1247,
+        "bags": [
+          5
+        ],
+        "progress": 9,
+        "runs": 27,
+        "losses": 8,
+        "drops": 35,
+        "potionBuyGold": 3300,
+        "longestNewStageGap": 1922.65,
+        "longestRewardGap": 63.25,
+        "chapter1Cleared": false
+      },
+      "speed2": {
+        "stage": 3012,
+        "difficulty": "normal",
+        "levels": [
+          16,
+          16,
+          16
+        ],
+        "gold": 3647,
+        "bags": [
+          8
+        ],
+        "progress": 27,
+        "runs": 47,
+        "losses": 10,
+        "drops": 69,
+        "potionBuyGold": 5000,
+        "longestNewStageGap": 931.313,
+        "longestRewardGap": 57,
+        "chapter1Cleared": true
+      }
+    },
+    {
+      "seed": 10,
+      "policy": "adaptive",
+      "seconds": 600,
+      "speed1": {
+        "stage": 1013,
+        "difficulty": "normal",
+        "levels": [
+          4,
+          4,
+          4
+        ],
+        "gold": 755,
+        "bags": [
+          4
+        ],
+        "progress": 2,
+        "runs": 3,
+        "losses": 1,
+        "drops": 5,
+        "potionBuyGold": 200,
+        "longestNewStageGap": 310.25,
+        "longestRewardGap": 36.95,
+        "chapter1Cleared": false
+      },
+      "speed2": {
+        "stage": 1011,
+        "difficulty": "normal",
+        "levels": [
+          5,
+          5,
+          5
+        ],
+        "gold": 457,
+        "bags": [
+          3
+        ],
+        "progress": 1,
+        "runs": 7,
+        "losses": 5,
+        "drops": 7,
+        "potionBuyGold": 650,
+        "longestNewStageGap": 497.55,
+        "longestRewardGap": 41.262,
+        "chapter1Cleared": false
+      }
+    },
+    {
+      "seed": 10,
+      "policy": "adaptive",
+      "seconds": 3600,
+      "speed1": {
+        "stage": 1031,
+        "difficulty": "normal",
+        "levels": [
+          10,
+          10,
+          10
+        ],
+        "gold": 1622,
+        "bags": [
+          1
+        ],
+        "progress": 7,
+        "runs": 30,
+        "losses": 18,
+        "drops": 32,
+        "potionBuyGold": 4450,
+        "longestNewStageGap": 1393.55,
+        "longestRewardGap": 50.75,
+        "chapter1Cleared": false
+      },
+      "speed2": {
+        "stage": 2011,
+        "difficulty": "normal",
+        "levels": [
+          13,
+          13,
+          12
+        ],
+        "gold": 1746,
+        "bags": [
+          6
+        ],
+        "progress": 13,
+        "runs": 53,
+        "losses": 28,
+        "drops": 60,
+        "potionBuyGold": 5300,
+        "longestNewStageGap": 1483.012,
+        "longestRewardGap": 86.563,
+        "chapter1Cleared": true
+      }
+    },
+    {
+      "seed": 2,
+      "policy": "adaptive",
+      "seconds": 600,
+      "speed1": {
+        "stage": 1021,
+        "difficulty": "normal",
+        "levels": [
+          5,
+          5,
+          5
+        ],
+        "gold": 1439,
+        "bags": [
+          4
+        ],
+        "progress": 3,
+        "runs": 3,
+        "losses": 0,
+        "drops": 6,
+        "potionBuyGold": 0,
+        "longestNewStageGap": 222,
+        "longestRewardGap": 37.95,
+        "chapter1Cleared": false
+      },
+      "speed2": {
+        "stage": 1031,
+        "difficulty": "normal",
+        "levels": [
+          6,
+          6,
+          6
+        ],
+        "gold": 1548,
+        "bags": [
+          6
+        ],
+        "progress": 6,
+        "runs": 6,
+        "losses": 0,
+        "drops": 9,
+        "potionBuyGold": 0,
+        "longestNewStageGap": 112,
+        "longestRewardGap": 24.813,
+        "chapter1Cleared": false
+      }
+    },
+    {
+      "seed": 2,
+      "policy": "adaptive",
+      "seconds": 3600,
+      "speed1": {
+        "stage": 2042,
+        "difficulty": "normal",
+        "levels": [
+          15,
+          15,
+          15
+        ],
+        "gold": 1579,
+        "bags": [
+          2
+        ],
+        "progress": 23,
+        "runs": 24,
+        "losses": 1,
+        "drops": 40,
+        "potionBuyGold": 1650,
+        "longestNewStageGap": 222,
+        "longestRewardGap": 72.95,
+        "chapter1Cleared": true
+      },
+      "speed2": {
+        "stage": 3032,
+        "difficulty": "normal",
+        "levels": [
+          18,
+          18,
+          18
+        ],
+        "gold": 3977,
+        "bags": [
+          4
+        ],
+        "progress": 33,
+        "runs": 52,
+        "losses": 12,
+        "drops": 76,
+        "potionBuyGold": 2800,
+        "longestNewStageGap": 872.1,
+        "longestRewardGap": 57.35,
+        "chapter1Cleared": true
+      }
+    },
+    {
+      "seed": 1,
+      "policy": "basic",
+      "seconds": 600,
+      "speed1": {
+        "stage": 1013,
+        "difficulty": "normal",
+        "levels": [
+          4,
+          4,
+          4
+        ],
+        "gold": 847,
+        "bags": [
+          1
+        ],
+        "progress": 2,
+        "runs": 2,
+        "losses": 0,
+        "drops": 3,
+        "potionBuyGold": 0,
+        "longestNewStageGap": 285.8,
+        "longestRewardGap": 45.95,
+        "chapter1Cleared": false
+      },
+      "speed2": {
+        "stage": 1021,
+        "difficulty": "normal",
+        "levels": [
+          5,
+          5,
+          5
+        ],
+        "gold": 1049,
+        "bags": [
+          5
+        ],
+        "progress": 3,
+        "runs": 5,
+        "losses": 2,
+        "drops": 7,
+        "potionBuyGold": 150,
+        "longestNewStageGap": 192.1,
+        "longestRewardGap": 23.213,
+        "chapter1Cleared": false
+      }
+    },
+    {
+      "seed": 1,
+      "policy": "basic",
+      "seconds": 3600,
+      "speed1": {
+        "stage": 1032,
+        "difficulty": "normal",
+        "levels": [
+          10,
+          9,
+          8
+        ],
+        "gold": 1080,
+        "bags": [
+          4
+        ],
+        "progress": 7,
+        "runs": 28,
+        "losses": 21,
+        "drops": 30,
+        "potionBuyGold": 3650,
+        "longestNewStageGap": 1336.15,
+        "longestRewardGap": 126.65,
+        "chapter1Cleared": false
+      },
+      "speed2": {
+        "stage": 2022,
+        "difficulty": "normal",
+        "levels": [
+          14,
+          14,
+          13
+        ],
+        "gold": 2854,
+        "bags": [
+          5
+        ],
+        "progress": 17,
+        "runs": 58,
+        "losses": 41,
+        "drops": 42,
+        "potionBuyGold": 4150,
+        "longestNewStageGap": 611.15,
+        "longestRewardGap": 309.75,
+        "chapter1Cleared": true
+      }
+    },
+    {
+      "seed": 10,
+      "policy": "basic",
+      "seconds": 600,
+      "speed1": {
+        "stage": 1013,
+        "difficulty": "normal",
+        "levels": [
+          4,
+          4,
+          4
+        ],
+        "gold": 756,
+        "bags": [
+          1
+        ],
+        "progress": 2,
+        "runs": 3,
+        "losses": 1,
+        "drops": 2,
+        "potionBuyGold": 200,
+        "longestNewStageGap": 339.95,
+        "longestRewardGap": 36.95,
+        "chapter1Cleared": false
+      },
+      "speed2": {
+        "stage": 1012,
+        "difficulty": "normal",
+        "levels": [
+          5,
+          5,
+          5
+        ],
+        "gold": 728,
+        "bags": [
+          1
+        ],
+        "progress": 1,
+        "runs": 7,
+        "losses": 6,
+        "drops": 3,
+        "potionBuyGold": 200,
+        "longestNewStageGap": 497.55,
+        "longestRewardGap": 45.663,
+        "chapter1Cleared": false
+      }
+    },
+    {
+      "seed": 10,
+      "policy": "basic",
+      "seconds": 3600,
+      "speed1": {
+        "stage": 1033,
+        "difficulty": "normal",
+        "levels": [
+          9,
+          9,
+          9
+        ],
+        "gold": 894,
+        "bags": [
+          1
+        ],
+        "progress": 8,
+        "runs": 39,
+        "losses": 31,
+        "drops": 18,
+        "potionBuyGold": 3850,
+        "longestNewStageGap": 993.05,
+        "longestRewardGap": 68.05,
+        "chapter1Cleared": false
+      },
+      "speed2": {
+        "stage": 1042,
+        "difficulty": "normal",
+        "levels": [
+          11,
+          11,
+          11
+        ],
+        "gold": 1786,
+        "bags": [
+          8
+        ],
+        "progress": 10,
+        "runs": 66,
+        "losses": 56,
+        "drops": 36,
+        "potionBuyGold": 4400,
+        "longestNewStageGap": 1204.638,
+        "longestRewardGap": 48.213,
+        "chapter1Cleared": false
+      }
+    },
+    {
+      "seed": 2,
+      "policy": "basic",
+      "seconds": 600,
+      "speed1": {
+        "stage": 1013,
+        "difficulty": "normal",
+        "levels": [
+          4,
+          4,
+          4
+        ],
+        "gold": 1270,
+        "bags": [
+          4
+        ],
+        "progress": 2,
+        "runs": 2,
+        "losses": 0,
+        "drops": 7,
+        "potionBuyGold": 0,
+        "longestNewStageGap": 219,
+        "longestRewardGap": 52.05,
+        "chapter1Cleared": false
+      },
+      "speed2": {
+        "stage": 1023,
+        "difficulty": "normal",
+        "levels": [
+          6,
+          6,
+          6
+        ],
+        "gold": 1699,
+        "bags": [
+          6
+        ],
+        "progress": 6,
+        "runs": 6,
+        "losses": 0,
+        "drops": 9,
+        "potionBuyGold": 0,
+        "longestNewStageGap": 112,
+        "longestRewardGap": 24.363,
+        "chapter1Cleared": false
+      }
+    },
+    {
+      "seed": 2,
+      "policy": "basic",
+      "seconds": 3600,
+      "speed1": {
+        "stage": 2023,
+        "difficulty": "normal",
+        "levels": [
+          13,
+          13,
+          13
+        ],
+        "gold": 1008,
+        "bags": [
+          2
+        ],
+        "progress": 18,
+        "runs": 20,
+        "losses": 2,
+        "drops": 37,
+        "potionBuyGold": 2000,
+        "longestNewStageGap": 542.35,
+        "longestRewardGap": 135.55,
+        "chapter1Cleared": true
+      },
+      "speed2": {
+        "stage": 3031,
+        "difficulty": "normal",
+        "levels": [
+          18,
+          17,
+          17
+        ],
+        "gold": 5629,
+        "bags": [
+          10
+        ],
+        "progress": 32,
+        "runs": 55,
+        "losses": 23,
+        "drops": 46,
+        "potionBuyGold": 2950,
+        "longestNewStageGap": 523.15,
+        "longestRewardGap": 523.15,
+        "chapter1Cleared": true
+      }
+    }
+  ]
+}
