@@ -1,0 +1,125 @@
+{
+  "passed": 16,
+  "checks": [
+    {
+      "name": "1600: place-name text is the actual anchor",
+      "ok": true
+    },
+    {
+      "name": "first area text now 1600x900: card fits viewport",
+      "ok": true,
+      "detail": {
+        "x": 540.53125,
+        "y": 222.4375,
+        "w": 310,
+        "h": 145,
+        "vw": 1600,
+        "vh": 900,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "first area text now 1600x900: highlighted action remains uncovered",
+      "ok": true,
+      "detail": {
+        "x": 540.53125,
+        "y": 222.4375,
+        "w": 310,
+        "h": 145,
+        "vw": 1600,
+        "vh": 900,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "1600: card keeps navigation uncovered",
+      "ok": true
+    },
+    {
+      "name": "1280: place-name text is the actual anchor",
+      "ok": true
+    },
+    {
+      "name": "first area text d2min 1280x720: card fits viewport",
+      "ok": true,
+      "detail": {
+        "x": 421.70001220703125,
+        "y": 240.53750610351562,
+        "w": 248,
+        "h": 116,
+        "vw": 1280,
+        "vh": 720,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "first area text d2min 1280x720: highlighted action remains uncovered",
+      "ok": true,
+      "detail": {
+        "x": 421.70001220703125,
+        "y": 240.53750610351562,
+        "w": 248,
+        "h": 116,
+        "vw": 1280,
+        "vh": 720,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "1280: card keeps navigation uncovered",
+      "ok": true
+    },
+    {
+      "name": "1920: place-name text is the actual anchor",
+      "ok": true
+    },
+    {
+      "name": "first area text d2min 1920x1080: card fits viewport",
+      "ok": true,
+      "detail": {
+        "x": 656.7750244140625,
+        "y": 360.8062744140625,
+        "w": 372,
+        "h": 174,
+        "vw": 1920,
+        "vh": 1080,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "first area text d2min 1920x1080: highlighted action remains uncovered",
+      "ok": true,
+      "detail": {
+        "x": 656.7750244140625,
+        "y": 360.8062744140625,
+        "w": 372,
+        "h": 174,
+        "vw": 1920,
+        "vh": 1080,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "1920: card keeps navigation uncovered",
+      "ok": true
+    },
+    {
+      "name": "clicking highlighted place name opens actual departure modal",
+      "ok": true
+    },
+    {
+      "name": "highlight click spends nothing and starts no expedition",
+      "ok": true
+    },
+    {
+      "name": "closing departure modal restores still-unconfirmed guide",
+      "ok": true
+    },
+    {
+      "name": "focused flow has no browser errors",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "errors": []
+}

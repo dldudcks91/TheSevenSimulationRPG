@@ -1,0 +1,48 @@
+{
+  "phase": "native_pilot",
+  "jobs": 2,
+  "accounts": 40,
+  "axes": {
+    "enemyHp": [
+      1,
+      0.9,
+      0.8
+    ],
+    "enemyAttack": [
+      1,
+      0.9
+    ],
+    "xp": [
+      1,
+      1.25,
+      1.5
+    ],
+    "rounds": [
+      9,
+      7
+    ],
+    "bookLevel": [
+      10,
+      9
+    ],
+    "bossHp": [
+      1,
+      0.8
+    ],
+    "bossAttack": [
+      1,
+      0.85
+    ],
+    "starter": [
+      1,
+      1.25
+    ]
+  },
+  "workers": 2,
+  "snapshot_capture": "2026-10-30T11:21:22.780378+00:00",
+  "harness_hashes": {
+    "worker.cjs": "bd4a4ff673290b348f98f186ca39a75ccc54ba66a5ba1b855ce2edbef06a787d",
+    "observer.js": "6f022feceda75c841eb3b109f681700ada5cb8cd5acd99d5888a9ad8a568e688",
+    "active.js": "c5e264f2edc9c21a9ad54d645655cf9d2930acc65512d07e0e6c80bea24a6864"
+  }
+}

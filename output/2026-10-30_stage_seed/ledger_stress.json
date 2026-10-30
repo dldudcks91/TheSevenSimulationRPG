@@ -1,0 +1,67 @@
+{
+  "pass": true,
+  "ok": true,
+  "command": "node scripts/check_stage_seed_ledger.mjs",
+  "totalRandomSteps": 6000,
+  "seeds": [464367618, 12648430, 4294967295],
+  "totals": {
+    "pass": true,
+    "issued": 1657,
+    "spent": 1336,
+    "departed": 1826,
+    "wonRounds": 1336,
+    "cleared": 229,
+    "released": 1597,
+    "snapshots": 459,
+    "rejected": 468,
+    "reissued": 9047,
+    "externallySeeded": 867
+  },
+  "results": [
+    {
+      "seed": 464367618,
+      "steps": 2000,
+      "decks": 66,
+      "issued": 561,
+      "spent": 457,
+      "departed": 598,
+      "wonRounds": 457,
+      "cleared": 87,
+      "released": 511,
+      "snapshots": 144,
+      "rejected": 171,
+      "reissued": 2909,
+      "externallySeeded": 286
+    },
+    {
+      "seed": 12648430,
+      "steps": 2000,
+      "decks": 66,
+      "issued": 536,
+      "spent": 429,
+      "departed": 631,
+      "wonRounds": 429,
+      "cleared": 76,
+      "released": 555,
+      "snapshots": 157,
+      "rejected": 143,
+      "reissued": 3123,
+      "externallySeeded": 309
+    },
+    {
+      "seed": 4294967295,
+      "steps": 2000,
+      "decks": 66,
+      "issued": 560,
+      "spent": 450,
+      "departed": 597,
+      "wonRounds": 450,
+      "cleared": 66,
+      "released": 531,
+      "snapshots": 158,
+      "rejected": 154,
+      "reissued": 3015,
+      "externallySeeded": 272
+    }
+  ]
+}

@@ -32,6 +32,7 @@
 
 import { createFormula } from './formula.js';
 import { makeRng, deriveSeed } from './rng.js';
+import { procSkillLevel } from './item.js';
 
 /** 원소 4종 — combat_stat.csv 의 res_* 와 스킬의 원소 태그(`skill_effect.csv:element`)가 쓰는 같은 어휘 (battle_design §9-5) */
 export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
@@ -59,7 +60,7 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  *   masteryNodes — mastery_node.csv 파싱 행. 랭크당 값·상한·해금 레벨은 **키 이름만** 들고 balance 에서 읽는다
  *   heroTiers    — 영웅 등급 표 [{id, weight, totalMin, totalMax, attrSd}...] ← `hero_tier.csv` (**행 순서가 굴림 결과를 정한다**).
  *                  `weight = 0` 인 행은 생성기가 안 뽑는다(유니크는 수작업). 등급을 가르는 것은 **총합 대역과 굴림의 폭 둘뿐**이다
- *                  (hero_design §1 확정 2026-09-07 · 폭 `attrSd` 2026-10-22 R308 — ~~분포 모양 `shape`~~). 상한은 등급이 아니라 `[balance.csv:hero_attr_max]` 하나다
+ *                  (hero_design §1 확정 2026-09-07 · 폭 `attrSd` 2026-10-22 R308 — ~~분포 모양 `shape`~~). 생성 상한은 등급과 무관한 `[balance.csv:hero_attr_roll_max]` 다
  *   heroFaces    — **직업별** 초상 장수 `{classId: n}`. **영웅이 태어날 때 제 직업 풀에서 굴려 `face` 에 박는다**
  *                  (2026-09-07 — 구 `heroFaceMax` 정수 하나를 대체). `face` 는 `'<classId>_<k>'` 문자열이고
  *                  풀이 0장인 직업은 `null`(초상 없음)이다. 로직은 그림을 모른다 — 직업별 장수 객체만 받고
@@ -290,6 +291,10 @@ export function createHeroSystem(data) {
 
     const classOf = id => data.classes.find(c => c.id === id) ?? null;
     const sinAttrs = data.sinAttrs ?? {};
+    // 생성 · 자동 성장 한도와 최종 한도를 분리한다 — 남은 구간은 만렙 이후 수동 성장용(2026-10-30).
+    const attrRollMax = B.hero_attr_roll_max;
+    if (!Number.isInteger(attrRollMax) || !(B.hero_attr_min <= attrRollMax && attrRollMax <= B.hero_attr_max))
+        throw new Error('hero: balance.csv 의 hero_attr_roll_max 는 hero_attr_min 이상 hero_attr_max 이하의 정수여야 한다');
     // 로드 검증 — 직업 · 죄종이 미는 칸이 능력치 어휘 밖이면 그 칸의 비율이 조용히 1 로 떨어진다 → 생성 때 던진다
     for (const c of data.classes) for (const k of ['keyAttr', 'subAttr'])
         if (c[k] != null && !statIds.includes(c[k])) throw new Error(`hero: class.csv ${c.id} 의 ${k} '${c[k]}' 가 hero_attribute.csv 에 없다`);
@@ -305,13 +310,13 @@ export function createHeroSystem(data) {
         const t = usableTier(t0) ? t0 : defaultTier();
         if (!usableTier(t)) throw new Error('hero: 능력치를 굴릴 등급(대역 · 폭)이 없다 — hero_tier.csv');
         const n = statIds.length;
-        const min = Math.max(t.totalMin, B.hero_attr_min * n);
-        return { min, max: Math.max(min, Math.min(t.totalMax, B.hero_attr_max * n)), sd: t.attrSd };
+        const min = Math.max(B.hero_attr_min * n, Math.min(t.totalMin, attrRollMax * n));
+        return { min, max: Math.max(min, Math.min(t.totalMax, attrRollMax * n)), sd: t.attrSd };
     }
 
     /**
      * 칸마다의 중심 — 대역 가운데 × 그 칸 비율 ÷ 비율 합. 비율은 1 에서 시작해 직업 주력 · 보조 · 죄종 칸에 손잡이를 곱한다
-     * (`hero_attr_key_weight` · `_sub_weight` · `_sin_weight`) — **겹치면 곱도 겹친다**(분노 전사의 힘 = 주력 × 죄종).
+     * (`hero_attr_key_weight` · `_sub_weight` · `_sin_weight`) — 죄종 칸이 직업 주력·보조와 겹치면 죄종 가중치는 생략한다(R389).
      * 직업 · 죄종은 「어느 칸이 크게」만 정하고 「얼마나」는 등급의 대역이 정한다 — 비율 표 하나로 세 등급을 다 쓴다
      */
     function centersOf(cls, sin, band) {
@@ -320,7 +325,7 @@ export function createHeroSystem(data) {
         const bump = (id, k) => { const i = statIds.indexOf(id); if (i >= 0) w[i] *= k; };
         bump(c?.keyAttr, B.hero_attr_key_weight);
         bump(c?.subAttr, B.hero_attr_sub_weight);
-        bump(sinAttrs[sin], B.hero_attr_sin_weight);
+        if (sinAttrs[sin] !== c?.keyAttr && sinAttrs[sin] !== c?.subAttr) bump(sinAttrs[sin], B.hero_attr_sin_weight);
         const sum = w.reduce((a, b) => a + b, 0), mid = (band.min + band.max) / 2;
         return w.map(x => mid * x / sum);
     }
@@ -343,7 +348,7 @@ export function createHeroSystem(data) {
         const sub = makeRng(Math.floor(rng() * 2 ** 32));
         const band = bandOf(tier);
         const c = centersOf(cls, sin, band);
-        const lo = B.hero_attr_min, hi = B.hero_attr_max;
+        const lo = B.hero_attr_min, hi = attrRollMax;
         let v = null, tries = 0;
         while (tries < Math.max(1, B.hero_attr_reroll_max)) {
             tries++;
@@ -382,7 +387,7 @@ export function createHeroSystem(data) {
         // rng 소비 순서가 계약이다 (INTERFACE §5-2) — 등급 1 → 능력치 1 → 고유 1 = **언제나 3회**
         //   (2026-10-22 R308 — ~~총합 1 · 능력치 7 = 10회~~ · 총합은 굴리지 않고 일곱 칸의 합으로 나온다 · 다시 굴리기는 능력치의 보조 rng 안).
         // 객체 리터럴 안에서 부르면 평가 순서가 문장으로 안 보여 순서가 조용히 밀린다.
-        // ⚠ ~~상한 7회(`rollCaps`)~~ 는 09-07 폐지 — 상한은 개체별이 아니라 `hero_attr_max` 하나다 (§4-3)
+        // 개체별 히든 상한은 없다 — 생성 상한 `hero_attr_roll_max` 는 전 영웅 공통이다 (§4-3).
         const t = rollTier(rng, tier);
         const stats = rollAttributes(rng, { cls, sin, tier: t });
         const innate = rollInnate(rng, cls, starter);
@@ -500,7 +505,7 @@ export function createHeroSystem(data) {
 
     /**
      * XP 지급 → 레벨업 처리.
-     * **기본 능력치는 안 바꾼다** [2026-09-14 사용자 확정 · hero_design §4-3 · R83] — 태어날 때 굴린 값이 평생 간다.
+     * **일반 영웅의 기본 능력치는 레벨업으로 안 바꾼다** [hero_design §4-3 · R83] — 만렙 이후 수동 성장분도 자동 지급하지 않는다.
      *   ~~레벨업마다 축별 [balance.csv:attr_growth_chance_pct]% 확률로 +1~~ 은 폐지됐다 — 7축을 공통 상한으로 모아
      *   만렙에서 개체차를 지웠다. 등급 차이는 이제 끝까지 간다.
      * `rng` 는 소비하지 않는다 — 계약 모양으로만 남는다 (INTERFACE §2-4 · §5-2).
@@ -515,10 +520,10 @@ export function createHeroSystem(data) {
         if (hero.tier !== GROWTH_TIER) return gains;
         if (!Number.isInteger(hero.growthSeed)) throw new Error(`hero: 성장 영웅 ${hero.uid} 에 growthSeed 가 없다`);
         for (let lv = from + 1; lv <= to; lv++) {
-            const open = statIds.filter(id => (hero.stats[id] ?? 0) < B.hero_attr_max);
+            const open = statIds.filter(id => (hero.stats[id] ?? 0) < attrRollMax);
             if (!open.length) break;   // 일곱 칸이 다 찼다
             const id = open[Math.floor(makeRng(deriveSeed(hero.growthSeed, lv))() * open.length)];
-            const add = Math.min(B.growth_attr_per_level, B.hero_attr_max - (hero.stats[id] ?? 0));
+            const add = Math.min(B.growth_attr_per_level, attrRollMax - (hero.stats[id] ?? 0));
             hero.stats[id] = (hero.stats[id] ?? 0) + add;
             gains[id] = (gains[id] ?? 0) + add;
         }
@@ -621,6 +626,7 @@ export function createHeroSystem(data) {
         const A = hero.stats;
         const flat = {};                       // 접사 합산 {stat: v}
         const drList = [];                     // 피해 감소는 합치지 않고 원천별로 모은다 (§9-3)
+        const skillTags = {};
         for (const it of items) {
             if (it.implicit) {
                 // 베이스 옵션 「방어력 +%」(`armor_def_pct`)는 **그 아이템 자신의 고유 방어력에만** 곱한다 [2026-09-18 · item_design §1 「갑옷 옵션」 · 네 부위 공통].
@@ -630,6 +636,13 @@ export function createHeroSystem(data) {
                 flat[it.implicit.stat] = (flat[it.implicit.stat] ?? 0) + v;
             }
             for (const a of it.affixes ?? []) {
+                if (a.stat === 'skill_tag') {
+                    if (a.tag && a.effect && Number.isFinite(a.v)) {
+                        const bonuses = skillTags[a.tag] ??= {};
+                        bonuses[a.effect] = (bonuses[a.effect] ?? 0) + a.v;
+                    }
+                    continue;
+                }
                 // 무기에 붙은 데미지 % 는 괄호에 안 섞는다 — 무기 양끝에만 따로 곱한다(아래 `weaponPct` · 2026-10-03 battle_design §9-1)
                 if (it.slot === 'weapon' && a.stat === 'atk_pct') continue;
                 // 특정 스킬 +n 은 전투 능력치가 아니라 스킬 레벨이다 — `item.skillPlusOf` → `skill.activesFor` 가 읽는다 (2026-10-08 · R225 · INTERFACE §2-5)
@@ -667,11 +680,19 @@ export function createHeroSystem(data) {
             if (f(from)) flat[to] = f(to) + f(from) * greed;
 
         const weapon = items.find(it => it.slot === 'weapon');
-        // 무기 타격 발동 — 스킬 id와 확률을 줄 순서대로 보존한다. 능력치 합산 · 액티브 칸과 별개다.
-        // 목걸이 · 다른 부위 · 시전/피격 발동은 아직 전투에 연결하지 않는다 (2026-10-30).
-        const hitProcs = (weapon?.affixes ?? [])
-            .filter(a => (a.stat === 'proc_hit_attack' || a.stat === 'proc_hit_buff') && typeof a.skill === 'string' && a.skill.length > 0 && Number.isFinite(a.v) && a.v > 0)
-            .map(a => ({ skill: a.skill, chance: Math.min(1, a.v) }));
+        // 장비 발동은 부위와 무관하게 착용 · 접사 순서대로 보존한다. 능력치 합산 · 액티브 칸과 별개다.
+        // 퇴역한 목걸이 item.proc 은 읽지 않는다 — 새 목걸이 베이스는 특정 스킬 +n 이다(R309).
+        const procs = { hitProcs: [], castProcs: [], struckProcs: [] };
+        const procChannels = {
+            proc_hit_attack: 'hitProcs', proc_hit_buff: 'hitProcs',
+            proc_cast_attack: 'castProcs', proc_cast_buff: 'castProcs', proc_cast_debuff: 'castProcs',
+            proc_struck_buff: 'struckProcs', proc_struck_debuff: 'struckProcs',
+        };
+        for (const it of items) for (const a of it.affixes ?? []) {
+            const channel = procChannels[a.stat];
+            if (channel && typeof a.skill === 'string' && a.skill.length > 0 && Number.isFinite(a.v) && a.v > 0)
+                procs[channel].push({ skill: a.skill, chance: Math.min(1, a.v), level: procSkillLevel(a.skillLv) });
+        }
         const group = weapon ? data.weaponGroups[weapon.group] ?? null : null;
         const magic = group?.damageKind === 'magic';
         // 밑수 = **무기 피해 범위**(양끝 · 무기군 × ilvl × 강화에서 파생 · R90) + 무기 슬롯 접사의 고정 공격력(양끝에 같이). 맨손이면 양끝 모두 unarmed_atk
@@ -732,7 +753,8 @@ export function createHeroSystem(data) {
         // 무기 옵션이 여는 축 한 묶음 [2026-09-11 · R78 · item_design §1 「무기 옵션」] — **전투 능력치가 아니다**(combat_stat 행 없음 · 시트에 안 선다).
         //   소비자는 battle.js 뿐이다(조건부 % · 타격 시 창 · 강타 · 매직아이템 획득확률). 전부 0 이면 null 이라 전투가 한 번도 안 읽는다
         const fx = {
-            ...(hitProcs.length ? { hitProcs } : {}),
+            ...(Object.keys(skillTags).length ? { skillTags } : {}),
+            ...Object.fromEntries(Object.entries(procs).filter(([, rows]) => rows.length)),
             vs: { normal: f('vs_normal_dmg'), demon: f('vs_demon_dmg'), undead: f('vs_undead_dmg') },
             vsElite: f('vs_elite_dmg'), vsFront: f('vs_front_dmg'), vsBack: f('vs_back_dmg'),
             ele: Object.fromEntries(ELEMENTS.map(e => [e, f(`${e}_dmg_pct`)])),
@@ -772,7 +794,7 @@ export function createHeroSystem(data) {
             // 물약 효과 상승 — **낀 영웅이 마시는 물약의 수치**(반지 분노 ③ · 2026-10-29 R382 · battle_design §7-1). 체력 물약은 체력 회복 +% 와 한 괄호(battle.drinkPotions)
             potion: f('potion_effect_pct'),
         };
-        const anyFx = hitProcs.length > 0 || [...Object.values(fx.vs), ...Object.values(fx.ele), fx.vsElite, fx.vsFront, fx.vsBack,
+        const anyFx = Object.values(procs).some(rows => rows.length) || Object.keys(skillTags).length > 0 || [...Object.values(fx.vs), ...Object.values(fx.ele), fx.vsElite, fx.vsFront, fx.vsBack,
             fx.defDown, fx.resDown, fx.atkDownPhys, fx.atkDownMag, fx.crush, fx.magicFind,
             ...Object.values(fx.vsDr), fx.vsEliteDr, fx.vsFrontDr, fx.vsBackDr, fx.drFlat, fx.counter, fx.recv, fx.killHeal, fx.startGauge, fx.cullNormal, fx.xpGain,
             fx.freezeDur, fx.poisonDur, fx.burnDur, fx.stunDur, fx.buffDur, fx.hitBonus,

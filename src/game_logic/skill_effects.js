@@ -29,7 +29,7 @@
  * ⚠ 아직 미확정이라 이 파일이 임시로 두는 것:
  *   `taunt` 는 파생값이 없는 **표식**이다 — 소비자가 battle.js 의 타겟팅(도발자 고정)이라
  *     여기서 할 일이 없다. 기본 타겟팅이 확정되면 그 임시 규칙과 함께 다시 본다 (skill_design §7).
- *   다단타·순환 중 대상이 쓰러지면 남은 타수를 **버린다**(재지정 없음) — 재지정 규칙 미확정.
+ *   순환 중 쓰러진 칸의 타수는 버린다. 단일 다단은 살아 있는 다른 적에게 남은 타수를 이어 간다(battle_design §3-1).
  */
 
 import { reductionMult } from './formula.js';
@@ -75,7 +75,7 @@ export const EVENT_IDS = Object.keys(EVENT_TRIGGERS);
  *   **맞은 대상에게 거는 걸린 효과**(`onHit` — 결빙 · 2026-09-28 R177 · battle_design §2-4 — 적중하면 `battle.strikeOnce` 가 `rt.applyStatus` 로 건다).
  * `def` 가 `scaleDef` 를 안 지난 원시 정의여도 `statMult` 는 1 로 읽는다. 기본 공격은 이것을 안 만든다(메인 스탯 계수를 쓴다 · 결빙도 안 건다)
  */
-const skillHit = def => ({ statMult: def.statMult ?? 1, procChance: def.procChance ?? 0, procMult: def.procMult ?? 0, onHit: def.onHit ?? null, spread: SPREAD.has(def.target) });
+const skillHit = def => ({ statMult: def.statMult ?? 1, procChance: def.procChance ?? 0, procMult: def.procMult ?? 0, onHit: def.onHit ?? null, spread: SPREAD.has(def.target), ...(def.tagDamage ? { tagDamage: def.tagDamage } : {}) });
 
 /**
  * **여럿을 치는 공격 대상** [2026-10-29 · R380 · skill_design §12-9 스웜] — 이 대상의 타격은 `spread` 를 싣고, 맞는 쪽이 파리 떼(`swarm`)면
@@ -104,7 +104,8 @@ export const ATTACK_TARGETS = {
     /**
      * 단일 다단 — 대상을 한 번 고르고 `hits` 회. 대상이 타수 도중에 쓰러지면 **남은 타수는 새로 고른 적에게**
      *   [2026-10-24 · R353 · battle_design §3-1 — ~~남은 타수는 버린다~~] — 다음 타격 앞에서 살아 있는 적 중 `pickTarget` 1회(평소 규칙 ·
-     *   정신 집중의 단일 대상과 같다) · 또 쓰러지면 또 고른다 · 살아 있는 적이 없으면 버린다. 쓰러뜨리지 않은 시전은 rng 가 종전 그대로다 ·
+     *   정신 집중의 단일 대상과 같다) · 또 쓰러지면 또 고른다 · 살아 있는 적이 없으면 버린다. 타격 사이에 등장 · 부활한 적도 현재 목록에서 찾는다.
+     *   쓰러뜨리지 않은 시전은 rng 가 종전 그대로다 ·
      *   기준 = **첫 대상**(넘어가도 안 바뀐다 — R317)
      */
     enemy_single: (rt, u, def, foes) => {
@@ -114,7 +115,7 @@ export const ATTACK_TARGETS = {
         for (let k = 0; k < def.hits; k++) {
             if (u.hp <= 0) break;
             if (tgt.hp <= 0) {
-                const left = foes.filter(f => f.hp > 0);
+                const left = rt.alive(rt.foesOf(u));
                 if (!left.length) break;
                 tgt = rt.pickTarget(u, left);
             }

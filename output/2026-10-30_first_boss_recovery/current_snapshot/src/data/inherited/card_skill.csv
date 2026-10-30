@@ -1,0 +1,17 @@
+monster_idx,skill_id,skill_name,trigger_type,trigger_rate_lv1,trigger_rate_lv2,cooldown,duration,effect_type,effect_value_lv1,effect_value_lv3,max_stacks,condition
+1101,D23,선제 타격,on_attack,1.00,1.00,0,0,bonus_damage_percent,50,80,0,first_attack
+1102,D01,강타,on_hit,0.20,0.28,5,0,bonus_damage_percent,30,50,0,
+1103,D03,발도,on_attack,0.15,0.22,15,0,damage_multiplier,2.0,2.8,0,
+1201,D3,강철 피부,on_being_hit,0.20,0.28,10,5,defense_percent,20,35,0,
+1202,C2,광전사화,on_hit,0.20,0.28,3,8,attack_speed_percent,5,8,5,
+1203,D6,재생,on_being_hit,0.15,0.22,12,8,hp_regen_percent,2,3.5,0,
+1301,B10,둔화,on_hit,0.20,0.28,8,5,enemy_attack_speed_percent,-15,-25,0,
+1302,B4,속박,on_hit,0.20,0.28,8,5,enemy_evasion_percent,-20,-35,0,
+1303,B5,방어 분쇄,on_hit,0.20,0.28,5,0,enemy_defense_flat,-3,-5,5,
+1401,D07,연쇄 타격,on_hit,0.18,0.25,6,0,extra_hit_percent,70,90,0,
+1402,D25,영혼 착취,on_hit,0.12,0.18,10,0,attack_steal_percent,3,5,0,
+1403,D13,처형,on_hit,1.00,1.00,0,0,bonus_damage_percent,50,80,0,target_hp_below_30
+1150,D10,맹타,on_hit,0.25,0.33,0,0,damage_percent_stack,4,7,5,
+1250,C7,오버드라이브,on_being_hit,0.20,0.28,10,6,attack_crit_buff,15/5,25/8,0,
+1350,B7,공포,on_hit,0.10,0.15,15,2,enemy_disable,1,1,0,
+1900,D22,희생,on_attack,0.15,0.22,12,0,self_damage_bonus,8/60,8/100,0,

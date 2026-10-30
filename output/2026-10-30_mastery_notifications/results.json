@@ -1,0 +1,68 @@
+{
+  "regression": {
+    "title": "FAIL 742/743",
+    "failures": [
+      "golden: 시드 10 × 스테이지 6 = 60런 지문이 golden.json 과 일치한다10/60 런 불일치 / 입력 변화 — CSV 2종이 달라졌다: lab_material: 09a9a350 → 7e766279 · monster_type: 289a1659 → 81eb45ed → 의도한 변경이면 **다시 찍는다** (test.html?golden=write) / [seed 1 stage 1033] rounds: 3 → 2 · cleared: 2 → 1 (+11) / [seed 2 stage 1033] sec: 53.9 → 76.9 · events: 212 → 251 (+5) / [seed 3 stage 1033] rounds: 2 → 1 · cleared: 1 → 0 (+10) / [seed 4 stage 1033] sec: 41.1 → 45.6 · gold: 48 → 64 (+9) / [seed 5 stage 1033] sec: 66.2 → 139 · events: 259 → 321 (+4) / [seed 6 stage 1033] sec: 33.4 → 55.4 · gold: 72 → 90 (+8)"
+    ]
+  },
+  "baseline": {
+    "title": "FAIL 740/741",
+    "failures": [
+      "golden: 시드 10 × 스테이지 6 = 60런 지문이 golden.json 과 일치한다10/60 런 불일치 / 입력 변화 — CSV 2종이 달라졌다: lab_material: 09a9a350 → 7e766279 · monster_type: 289a1659 → 81eb45ed → 의도한 변경이면 **다시 찍는다** (test.html?golden=write) / [seed 1 stage 1033] rounds: 3 → 2 · cleared: 2 → 1 (+11) / [seed 2 stage 1033] sec: 53.9 → 76.9 · events: 212 → 251 (+5) / [seed 3 stage 1033] rounds: 2 → 1 · cleared: 1 → 0 (+10) / [seed 4 stage 1033] sec: 41.1 → 45.6 · gold: 48 → 64 (+9) / [seed 5 stage 1033] sec: 66.2 → 139 · events: 259 → 321 (+4) / [seed 6 stage 1033] sec: 33.4 → 55.4 · gold: 72 → 90 (+8)"
+    ]
+  },
+  "passed": 50,
+  "checks": [
+    "existing regression failures are unchanged without mastery notifications",
+    "now/ko: no mastery alert for new party",
+    "now/ko: level-up bubble",
+    "now/ko: badge counts hero",
+    "now/ko: localized hero, level and point count",
+    "now/ko: shortcut selects exact hero and skill window",
+    "now/ko: shortcut keeps alert",
+    "now/ko: spending last point removes alert and badge",
+    "now/ko: confirmation only dismisses alert",
+    "now/ko: reload remembers confirmation",
+    "now/ko: next level notifies again",
+    "now/ko: new level has a new ID and plural points",
+    "now/ko: stale shortcut refreshes without opening a window",
+    "now/en: no mastery alert for new party",
+    "now/en: level-up bubble",
+    "now/en: badge counts hero",
+    "now/en: localized hero, level and point count",
+    "now/en: shortcut selects exact hero and skill window",
+    "now/en: shortcut keeps alert",
+    "now/en: spending last point removes alert and badge",
+    "now/en: confirmation only dismisses alert",
+    "now/en: reload remembers confirmation",
+    "now/en: next level notifies again",
+    "now/en: new level has a new ID and plural points",
+    "now/en: stale shortcut refreshes without opening a window",
+    "d2min/ko: no mastery alert for new party",
+    "d2min/ko: level-up bubble",
+    "d2min/ko: badge counts hero",
+    "d2min/ko: localized hero, level and point count",
+    "d2min/ko: shortcut selects exact hero and skill window",
+    "d2min/ko: shortcut keeps alert",
+    "d2min/ko: spending last point removes alert and badge",
+    "d2min/ko: confirmation only dismisses alert",
+    "d2min/ko: reload remembers confirmation",
+    "d2min/ko: next level notifies again",
+    "d2min/ko: new level has a new ID and plural points",
+    "d2min/ko: stale shortcut refreshes without opening a window",
+    "d2min/en: no mastery alert for new party",
+    "d2min/en: level-up bubble",
+    "d2min/en: badge counts hero",
+    "d2min/en: localized hero, level and point count",
+    "d2min/en: shortcut selects exact hero and skill window",
+    "d2min/en: shortcut keeps alert",
+    "d2min/en: spending last point removes alert and badge",
+    "d2min/en: confirmation only dismisses alert",
+    "d2min/en: reload remembers confirmation",
+    "d2min/en: next level notifies again",
+    "d2min/en: new level has a new ID and plural points",
+    "d2min/en: stale shortcut refreshes without opening a window",
+    "no browser exceptions"
+  ],
+  "errors": []
+}

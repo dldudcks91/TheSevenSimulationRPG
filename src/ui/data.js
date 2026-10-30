@@ -7,7 +7,7 @@
  *   전부 CSV 다 — mock.js 에 남은 게임 데이터는 죄종(`SINS`)·정예 특성 둘뿐이고 나머지는 화면 전용 사전·자산 경로다.
  * mock.js 의 BALANCE 미러는 폐지했다 — balance.csv 를 직접 읽는다 (한 곳만 고치면 된다).
  *
- * ⚠ **CSV 행 순서가 결정론 계약이다** — `slots`(부위) · `itemBases`(부위별) · 옵션 표(무기 · 방어구 · 장신구) · `procSkills` · `heroNamePool` ·
+ * ⚠ **CSV 행 순서가 결정론 계약이다** — `slots`(부위) · `itemBases`(부위별) · 옵션 표(무기 · 방어구 · 장신구) · `amuletSkills` · `heroNamePool` ·
  *   `heroTraitPool` 은 `rng` 가 인덱스를 굴리는 배열이다. 재정렬하면 같은 시드가 다른 게임이 된다 (INTERFACE §5-2).
  */
 
@@ -18,6 +18,7 @@ import { createNaming } from '../game_logic/naming.js';
 import { createItemSystem } from '../game_logic/item.js';
 import { createBattleSystem } from '../game_logic/battle.js';
 import { createArenaSystem } from '../game_logic/arena.js';
+import { createRaidSystem } from '../game_logic/raid.js';
 import { createSkillSystem } from '../game_logic/skill.js';
 import { createTacticSystem } from '../game_logic/tactic.js';
 import { createConstruction } from '../game_logic/construction.js';
@@ -29,6 +30,7 @@ import { adminOn } from './devadmin.js';   // 개발 장치 — 관리자 모드
 
 /** 로드된 데이터 — 렌더러는 수치를 여기서 읽는다 (D.balance.party_size_max 처럼) */
 export const D = {
+    raidBosses: [], raidPatterns: [],
     balance: null, monsters: null, stages: null, stageList: [], stageOrder: [],
     places: [], placeCells: {},   // 장소 — [{key, chapter, num, cells:[stage 행]}] 표 순서 · {`chapter-stage_num`: 칸 행들} (2026-09-29 · PLAN_stage_segments D1 · D3)
     roundSets: {},            // stage_round.csv — {round_set: [{round_num, round_type}]} · 스테이지가 stage.csv:round_set 으로 하나를 고른다
@@ -80,7 +82,6 @@ export const D = {
     // ~~affixDefs~~ (affix.csv) — 2026-09-21 R127 퇴역. 반지 · 목걸이가 아래 세 표로 옮겼다
     accessorySinOptions: [],  // accessory_sin_option.csv — [{slot, sin, option, stat, scale, min, max, perIlvl?}] · 반지 죄종 계열표(R382) · 목걸이 죄종 칸 후보 · CSV 행 순서 (2026-09-21 · R127)
     accessoryCommonOptions: [], // accessory_common_option.csv — [{family, stat, scale, min, max, perIlvl?}] · 두 부위 한 풀 · CSV 행 순서 (R127)
-    amuletProcs: [],          // amulet_proc.csv — [{baseId, trigger, min, max}] · 목걸이 베이스마다 발동 조건 하나 · CSV 행 순서 (R127)
     weaponSinOptions: [],     // weapon_sin_option.csv — [{sin, option, appliesTo, stat, scale, min, max}] · 무기 죄종 계열표 · CSV 행 순서 (2026-09-11 R78 · 계열표 2026-10-05 R206)
     // ~~weaponCommonOptions~~ — weapon_common_option.csv 퇴역 (2026-10-05 R206 — 무기 옵션은 전부 죄종 계열 중 하나다)
     heroNamePool: [],         // hero_name.csv — [{ko,en}] · CSV 행 순서
@@ -127,9 +128,9 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
     'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'lab_material', 'hero_tier', 'monster_role', 'formation_template',
     'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
-    'armor_sin_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option', 'amulet_proc',   // ~~armor_common_option~~ 2026-10-21 R303 퇴역(방어구 넷이 계열표)
+    'armor_sin_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option',   // ~~armor_common_option~~ 2026-10-21 R303 퇴역(방어구 넷이 계열표)
     'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect',
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff', 'commission_fame'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff', 'commission_fame', 'ring_base_option', 'raid_boss', 'raid_pattern'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -144,9 +145,13 @@ export async function loadData(base = './data/') {
         itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, labMaterialRow,
         heroTierRow, monsterRoleRow, formationTplRow,
         heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
-        armorSinOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow, amuletProcRow,
+        armorSinOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow,
         tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow, commissionFameRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow, commissionFameRow, ringBaseRow, raidBossRow, raidPatternRow] = texts.map(parseCsv);
+
+    D.ringBaseOptions = ringBaseRow;
+    D.raidBosses = raidBossRow;
+    D.raidPatterns = raidPatternRow;
 
     D.balanceRows = balance;
     D.balance = keyValue(balance);
@@ -251,7 +256,6 @@ export async function loadData(base = './data/') {
     //   방어구 표와 같은 규약 · 검증은 `item.js` 가 로드 시 한다. ⚠ 행 순서가 결정론 계약이다
     D.accessorySinOptions = accSinOptionRow.map(r => ({ slot: r.slot, sin: r.sin, option: r.option, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r) }));
     D.accessoryCommonOptions = accCommonOptionRow.map(r => ({ family: r.family, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r) }));
-    D.amuletProcs = amuletProcRow.map(r => ({ baseId: r.base_id, trigger: r.trigger, min: r.min, max: r.max }));
     // 무기 베이스 — 무기군별 7종 이름 풀. **아직 두 무기군뿐**(item_design.md §1 「이름 — 9군」 — 나머지는 미정/미발주).
     //   드롭 시 이 풀이 있는 무기군만 `item.build` 가 하나를 굴려 이름·그림을 그 베이스로 좁힌다(없으면 무기군 이름 그대로).
     //   ⚠ 행 순서가 대역 순(기본 → ①A·①B → ②A·②B → ③A·③B)이지만 **굴림은 균등** — 대역별 ilvl 경계는 아직 없다(DEV_PLAN R62)
@@ -603,9 +607,9 @@ export function buildSystems(d, dev = {}) {
         // 발동 옵션의 스킬 풀 재료 — 직업 스킬 전부 · 풀 규칙(1티어 공격 · 버프 · 저주)은 item.js 가 든다 (2026-10-05 · R206 · INTERFACE §2-5) · 행 순서가 결정론 계약
         procSkillDefs: skill.list.filter(sk => sk.ownerKind === 'job').map(sk => ({ id: sk.id, cls: sk.ownerId, tier: sk.tier, tags: sk.tags, target: sk.target, armorPool: sk.armorPool, buffPool: sk.buffPool })),
         armorSinOptions: d.armorSinOptions ?? [],       // 방어구 옵션 표 (2026-09-18 · ~~공통옵션~~ 2026-10-21 R303 퇴역)
-        // 반지 · 목걸이 옵션 표 셋 + 발동 스킬 후보 [2026-09-21 · R127] — 후보는 `skill.csv:amulet_pool = 1` · 직업을 안 가리는 한 풀 · 행 순서가 결정론 계약
+        // 장신구 옵션 표와 베이스 — 목걸이는 모든 직업 기본 스킬 후보 · 반지는 태그·효과별 범위(R309·R321)
         accessorySinOptions: d.accessorySinOptions ?? [], accessoryCommonOptions: d.accessoryCommonOptions ?? [],
-        amuletProcs: d.amuletProcs ?? [], procSkills: skill.list.filter(sk => sk.amuletPool).map(sk => sk.id),
+        amuletSkills: skill.list.filter(sk => sk.ownerKind === 'job').map(sk => sk.id), ringBaseOptions: d.ringBaseOptions ?? [],
         // ~~classSkills · starterSkills~~ — 무기가 스킬을 안 담는다 (2026-09-29 · R179 · skill_design §2-1)
     });
     // 전술은 규칙만 든다(무상태) — 어느 칸에 무엇이 들었는지는 세이브가 들고 state 가 묻는다
@@ -710,5 +714,7 @@ export function buildSystems(d, dev = {}) {
         upgradeCeiling: game.limitsOf({ buildings: Object.fromEntries(construction.list.map(b => [b.id, b.maxRank])) }).upgrade,
         skillCapMax: game.skillCapMax(),
     });
-    return { hero, item, battle, arena, skill, tactic, construction, gamble, commission, game, naming, formula: createFormula(d.balance) };
+    const raid = createRaidSystem({ battle, arena, game, monsters: d.monsters, chapters: d.chapters,
+        bosses: d.raidBosses ?? [], patterns: d.raidPatterns ?? [], balance: d.balance });
+    return { hero, item, battle, arena, raid, skill, tactic, construction, gamble, commission, game, naming, formula: createFormula(d.balance) };
 }

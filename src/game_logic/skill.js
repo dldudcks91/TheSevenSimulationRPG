@@ -58,6 +58,7 @@
 import { ELEMENTS } from './hero.js';
 import { createFormula, FIXED_DMG } from './formula.js';
 import { cooldownSec } from './skill_runtime.js';
+import { enhanceSkillLine } from './skill_tags.js';
 import {
     CASTS, CAST_IDS, EVENT_IDS, EFFECT_TYPES, TARGETS, ATTACK_TARGETS, HIT_DECAY, PICK_TARGETS, EFFECT_STATS, CONDITIONS, CONDITION_IDS, AILMENTS, AILMENT_IDS,
 } from './skill_effects.js';
@@ -193,7 +194,6 @@ export function createSkillSystem(data) {
         // 고유 스킬 후보 풀에 들어가는가 (hero.rollInnate 가 받는 목록 · §9-0). `note` 는 설계 노트라 화면에 안 나간다
         innatePool: row.innate_pool === 1,
         // 목걸이 발동 스킬 후보인가 [2026-09-21 · R127 · item_design §1 「목걸이 베이스 옵션」] — 확률로 나가도 이득만 되는 것(피해 · 회복 · 함성류)만 1
-        amuletPool: row.amulet_pool === 1,
         // 시작 무기 스킬 후보인가 [2026-09-27 사용자 지시 · hero_design §1] — 새 게임 · 선술집 영웅의 첫 무기가 직업 기본기를 담게
         starterPool: row.starter_pool === 1,
         // 갑옷 특정 스킬 +n 후보인가 — 방어 관련 기본 스킬 [2026-10-08 · R225 · item_design §1 「10-07 옵션 개정」] — 풀은 `item.js` 가 갑옷군 직업으로 좁힌다
@@ -345,9 +345,7 @@ export function createSkillSystem(data) {
         // 몬스터 전용은 영웅 고유 풀에 들지 않는다 — 풀은 `job` 행만 읽지만 칸이 1 이면 뜻이 두 곳에서 갈린다 (§12-9)
         if (d.ownerKind === 'monster' && row.innate_pool !== 0) bad(`owner_kind monster 인데 innate_pool ${row.innate_pool} — 몬스터 전용은 0`);
         // 목걸이 발동 후보 [2026-09-21 · R127] — 0/1 · 몬스터 전용은 0 · **차례 밖에서 나가면 뜻이 없는 것**(오오라 · 사건 · 소환 · 불러내기)은 0
-        if (row.amulet_pool !== 0 && row.amulet_pool !== 1) bad(`amulet_pool ${row.amulet_pool} — 0 또는 1`);
-        if (row.amulet_pool === 1 && (d.ownerKind === 'monster' || d.cast !== 'turn' || d.effects.some(e => e.effect === 'summon' || e.effect === 'call')))
-            bad(`amulet_pool 1 인데 ${d.ownerKind} · ${d.cast} · ${d.effects.map(e => e.effect).join('+')} — 발동 스킬 후보가 될 수 없다`);
+
         // 불러내기는 영웅이 손에 넣지 않는다 [2026-10-16 · R258] — 무리(`band`)는 편성만 만들어 영웅이 들면 안 나간다(고블린 일꾼은 GAME_DESIGN §10).
         //   고유 · 기본 책을 막는다 · 목걸이는 바로 위 검사 · 책 · 도안은 `bookable` 이 막는다
         if (d.effects.some(e => e.effect === 'call') && (row.innate_pool !== 0 || row.starter_pool !== 0))
@@ -763,9 +761,9 @@ export function createSkillSystem(data) {
      * ⚠ 계수가 지금 전부 0 이라 결과는 언제나 원값이다 — 축만 정했고 크기는 밸런스 몫이다 (§13-3)
      * @param def 스킬 정의 · @param stats 기본 능력치 `{str, agi, int, vit, luck, ldr, cha}` 또는 null
      */
-    function scaleDef(def, stats) {
+    function scaleDef(def, stats, skillTags = null) {
         if (!def) return null;
-        return { ...def, effects: def.effects.map(e => scaleLine(def, e, stats)) };
+        return { ...def, effects: def.effects.map(e => enhanceSkillLine(scaleLine(def, e, stats), def, skillTags)) };
     }
 
     /** 줄 하나를 민다 — `scaleDef` 의 본체. `stats` 가 null 이면 원값 그대로의 시전 단위다(설명창의 `raw`) */
@@ -838,7 +836,8 @@ export function createSkillSystem(data) {
         const stats = ctx.stats ?? null;
         const line = def.effects[0];
         const raw = scaleLine(def, line, null);   // 원값 그대로의 시전 단위 — `apply` 줄은 걸린 효과의 값 · 시간
-        const eff = scaleLine(def, line, stats);
+        const eff = enhanceSkillLine(scaleLine(def, line, stats), def, ctx.skillTags);
+        if (eff.tagDuration && eff.dur) eff.dur *= 1 + eff.tagDuration;
         const termsOf = field => (line.scales ?? []).filter(s => s.field === field).map(s => ({ attr: s.attr, coef: s.coef }));
         const parts = {};
         // 한 타 피해 · 회복량 · 벽 HP = 밑수 × 배율 × 능력치 계수 — 계수를 모르면(슬롯이 있는데 stats 가 없다) 숫자를 내지 않는다
@@ -849,6 +848,14 @@ export function createSkillSystem(data) {
             const terms = termsOf('mult_pct');
             // 밑수는 범위다(R90) — 양끝이 다 알려져야 숫자를 낸다. 한쪽이라도 모르면 식으로 접힌다
             const ends = basisEnds(basis, ctx);
+            if (eff.tagDamage && Number.isFinite(ctx.atkPct) && 1 + ctx.atkPct > 0) {
+                const ratio = (1 + ctx.atkPct + eff.tagDamage) / (1 + ctx.atkPct);
+                ends[0] *= ratio; ends[1] *= ratio;
+            }
+            if (eff.tagHeal) {
+                const ratio = (1 + (ctx.healOut ?? 0) + eff.tagHeal) / (1 + (ctx.healOut ?? 0));
+                ends[0] *= ratio; ends[1] *= ratio;
+            }
             // 자폭은 **고정 피해**라 범위를 굴리지 않는다 [2026-09-21 · battle_design §9-6] — 전투(`skill_effects` EFFECT_TYPES.fixed)가 중앙값을 쓰므로
             //   설명창도 한 점으로 낸다(양끝을 같게). 그래야 툴팁의 수와 실제로 들어오는 수가 같다
             if (line.effect === 'fixed' && ends.every(v => Number.isFinite(v))) { const mid = (ends[0] + ends[1]) / 2; ends[0] = mid; ends[1] = mid; }
@@ -869,7 +876,7 @@ export function createSkillSystem(data) {
             parts[key] = { value, raw: of(raw), terms };
         }
         const everySec = period === null ? null : F.effectiveCd(def.cool, period);
-        const coolSec = cooldownSec(B, { cdr: ctx.cdr ?? 0 }, def);
+        const coolSec = cooldownSec(B, { cdr: ctx.cdr ?? 0, fx: { skillTags: ctx.skillTags } }, def);
         return {
             baseSec: def.cool,
             // 실제 쿨 — 전투가 시전 순간 잡는 것과 같은 함수다(쿨감 곱 · 바닥). 전투 중에 쌓이는 쿨감(나태 T2 겹)은 안 든다 (2026-10-21 · ADR-0703)

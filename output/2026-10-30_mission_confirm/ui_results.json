@@ -1,0 +1,209 @@
+{
+  "passed": 32,
+  "checks": [
+    {
+      "name": "fixture has buildShop mission and one independent mastery notice",
+      "ok": true
+    },
+    {
+      "name": "mission copy uses requested Korean instruction",
+      "ok": true
+    },
+    {
+      "name": "mission has shortcut followed by confirmation",
+      "ok": true
+    },
+    {
+      "name": "mixed badges count each folder separately",
+      "ok": true
+    },
+    {
+      "name": "mission shortcut opens correct building and keeps mission",
+      "ok": true
+    },
+    {
+      "name": "shortcut does not mutate game state",
+      "ok": true
+    },
+    {
+      "name": "confirmation hides only mission and lowers badge",
+      "ok": true
+    },
+    {
+      "name": "mission confirmation does not mutate game or original guide",
+      "ok": true
+    },
+    {
+      "name": "mission confirmation returns focus to missions folder",
+      "ok": true
+    },
+    {
+      "name": "mission uses separate stable dismissal key",
+      "ok": true,
+      "detail": {
+        "2351372274:1793352734706": [
+          "mission:[\"buildShop\",\"shop\",null,null,null,null]"
+        ]
+      }
+    },
+    {
+      "name": "refresh and rerender keep acknowledged mission hidden",
+      "ok": true
+    },
+    {
+      "name": "reload preserves game identity and acknowledged mission",
+      "ok": true
+    },
+    {
+      "name": "acknowledged mission folder keeps normal empty layout",
+      "ok": true
+    },
+    {
+      "name": "independent mastery item remains visible",
+      "ok": true
+    },
+    {
+      "name": "notification can be acknowledged independently",
+      "ok": true
+    },
+    {
+      "name": "real building completion shows next new mission",
+      "ok": true
+    },
+    {
+      "name": "new mission retains both actions",
+      "ok": true
+    },
+    {
+      "name": "new game does not inherit old mission acknowledgement",
+      "ok": true
+    },
+    {
+      "name": "English mission instruction and two actions are translated",
+      "ok": true
+    },
+    {
+      "name": "English mission confirmation accessible name is complete",
+      "ok": true
+    },
+    {
+      "name": "mission actions fit 1280x720 now",
+      "ok": true,
+      "detail": {
+        "x": 622.3624877929688,
+        "y": 80.4000015258789,
+        "width": 336,
+        "height": 273.5999984741211
+      }
+    },
+    {
+      "name": "mission actions fit 1920x1080 d2min",
+      "ok": true,
+      "detail": {
+        "x": 622.3624877929688,
+        "y": 86.4000015258789,
+        "width": 336,
+        "height": 274.40001678466797
+      }
+    },
+    {
+      "name": "new retry mission contributes count and bubble",
+      "ok": true,
+      "detail": {
+        "arrived": {
+          "guide": false,
+          "badge": "1",
+          "bubble": true
+        },
+        "confirmed": {
+          "guide": false,
+          "badge": null,
+          "bubble": false
+        },
+        "attempts": {
+          "guide": false,
+          "badge": null,
+          "bubble": false
+        },
+        "hero": {
+          "guide": false,
+          "badge": null,
+          "bubble": false
+        },
+        "nextStage": {
+          "guide": true,
+          "badge": "1",
+          "bubble": true
+        },
+        "staleDidNotHideNew": true,
+        "nextParty": {
+          "guide": true,
+          "badge": "1",
+          "bubble": false
+        },
+        "fundsShop": {
+          "guide": true,
+          "badge": "1",
+          "bubble": false
+        },
+        "fundsTavern": {
+          "guide": true,
+          "badge": "1",
+          "bubble": false
+        },
+        "commission": {
+          "guide": true,
+          "badge": "1",
+          "bubble": false
+        },
+        "dismissed": [
+          "mission:[\"retryPreparation\",null,null,1,\"normal\",1011]",
+          "mission:[\"retryPreparation\",null,null,1,\"normal\",1012]",
+          "mission:[\"retryPreparation\",null,null,2,\"normal\",1012]",
+          "mission:[\"earnGold\",\"shop\",null,null,null,null]",
+          "mission:[\"earnGold\",\"tavern\",null,null,null,null]",
+          "mission:[\"progressCommission\",null,1,null,null,null]"
+        ]
+      }
+    },
+    {
+      "name": "retry confirmation removes counted mission",
+      "ok": true
+    },
+    {
+      "name": "retry attempt increments do not replay confirmed mission or bubble",
+      "ok": true
+    },
+    {
+      "name": "hero replacement does not bypass retry acknowledgement",
+      "ok": true
+    },
+    {
+      "name": "new retry stage has a new counted mission",
+      "ok": true
+    },
+    {
+      "name": "stale confirm handler cannot hide a newer mission",
+      "ok": true
+    },
+    {
+      "name": "new retry party has a separate mission",
+      "ok": true
+    },
+    {
+      "name": "building context differentiates funding missions",
+      "ok": true
+    },
+    {
+      "name": "new commission context has a new mission",
+      "ok": true
+    },
+    {
+      "name": "no browser runtime exceptions",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "errors": [],
+  "failure": null
+}

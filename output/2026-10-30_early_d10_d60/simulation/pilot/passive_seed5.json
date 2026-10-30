@@ -1,0 +1,4029 @@
+{
+  "seed": 5,
+  "policy": "passive",
+  "wallSeconds": 0.852,
+  "metadata": {
+    "pace": {
+      "speed": 1,
+      "rise": 0,
+      "focus": 0,
+      "gap": 950
+    },
+    "managementSeconds": 300,
+    "labTickSeconds": 60,
+    "checkpoint": "before_exact_mark_management",
+    "mastery": "unused",
+    "futureLoot": "keep best future-level candidate per hero/slot, all craft/unique/set",
+    "noActions": [
+      "hire",
+      "skillbook craft/learn",
+      "advance",
+      "explore",
+      "tactic reroll",
+      "higher tier potions"
+    ]
+  },
+  "checkpoints": [
+    {
+      "seconds": 600,
+      "seed": 5,
+      "policy": "passive",
+      "stage": 1013,
+      "difficulty": "normal",
+      "classes": [
+        "knight",
+        "warrior",
+        "priest"
+      ],
+      "levels": [
+        4,
+        4,
+        4
+      ],
+      "xp": [
+        570,
+        570,
+        779
+      ],
+      "mastery": [
+        {
+          "uid": "h1",
+          "points": 3,
+          "nodes": {}
+        },
+        {
+          "uid": "h2",
+          "points": 3,
+          "nodes": {}
+        },
+        {
+          "uid": "h3",
+          "points": 3,
+          "nodes": {}
+        }
+      ],
+      "skills": [
+        {
+          "uid": "h1",
+          "ids": [
+            "kni_rush"
+          ]
+        },
+        {
+          "uid": "h2",
+          "ids": [
+            "war_recovery"
+          ]
+        },
+        {
+          "uid": "h3",
+          "ids": [
+            "pri_heal"
+          ]
+        }
+      ],
+      "cleared": [
+        1011,
+        1012
+      ],
+      "clearedIn": {},
+      "gold": 2426,
+      "materials": {},
+      "potions": {
+        "minor_healing": 14
+      },
+      "bags": [
+        6
+      ],
+      "bagCap": 42,
+      "mail": 0,
+      "books": {},
+      "blueprints": {
+        "war_bash": 1
+      },
+      "buildings": {
+        "library": 1,
+        "resource": 1
+      },
+      "gear": {
+        "n": 6,
+        "ilvl": 1,
+        "weapons": [
+          {
+            "uid": "i1",
+            "ilvl": 1,
+            "up": 0
+          },
+          {
+            "uid": "i3",
+            "ilvl": 1,
+            "up": 0
+          },
+          {
+            "uid": "i5",
+            "ilvl": 1,
+            "up": 0
+          }
+        ],
+        "upTotal": 0
+      },
+      "first": {
+        "departure": {
+          "t": 0,
+          "stage": 1011,
+          "diff": "normal"
+        },
+        "xp": {
+          "t": 11.4,
+          "amount": 187
+        },
+        "gold": {
+          "t": 11.4,
+          "amount": 56
+        },
+        "drop": {
+          "t": 52.9,
+          "rarity": "normal",
+          "slot": "armor",
+          "ilvl": 1
+        },
+        "drop_normal": {
+          "t": 52.9,
+          "slot": "armor",
+          "ilvl": 1
+        },
+        "usableGainDrop": {
+          "t": 52.9,
+          "hero": "h3",
+          "uid": "i7",
+          "rarity": "normal",
+          "ratio": 1.009
+        },
+        "levelUp": {
+          "t": 52.9,
+          "hero": "h1",
+          "from": 1,
+          "to": 2
+        },
+        "masteryAvailable": {
+          "t": 52.9,
+          "hero": "h1",
+          "points": 1
+        },
+        "potionConsumed": {
+          "t": 52.9,
+          "units": 1
+        },
+        "stageClear": {
+          "t": 263.4,
+          "stage": 1011
+        },
+        "blueprint": {
+          "t": 561.15,
+          "ids": [
+            "war_bash"
+          ]
+        }
+      },
+      "count": {
+        "runs": 2,
+        "wins": 2,
+        "losses": 0,
+        "timeouts": 0,
+        "downed": 0,
+        "firstClears": 2,
+        "drops": 6,
+        "rarities": {
+          "normal": 6
+        },
+        "overflow": 0,
+        "maxBag": 6,
+        "heroXp": 6419,
+        "actualXp": 6419,
+        "battleGold": 1826,
+        "blueprints": 1,
+        "failedRoundKills": 0,
+        "failedRoundRawXp": 0,
+        "failedRoundUnmappedKills": 0,
+        "levelUps": 9,
+        "newActiveSkills": 0,
+        "boxesGranted": 0,
+        "boxesOpened": 0,
+        "autoEquipCalls": 0,
+        "equipButtonsWithChanges": 0,
+        "equipMoves": 0,
+        "mightImprovements": 0,
+        "autoEquipMightDecreases": 0,
+        "accessoryProxyChanges": 0,
+        "masterySpent": 0,
+        "salvaged": 0,
+        "buildGold": 0,
+        "researchGold": 0,
+        "commissionGold": 0,
+        "potionsBought": 0,
+        "potionBuyGold": 0,
+        "potionsConsumed": 6,
+        "potionConsumedValue": 300,
+        "upgradeAttempts": 0,
+        "upgradeSuccesses": 0,
+        "upgradeGold": 0,
+        "meaningfulManagementSessions": 0,
+        "waitingSec": 10,
+        "combatWallSec": 590,
+        "farmingRuns": 0,
+        "guideAppearances": 0,
+        "guideResponses": 0,
+        "respecs": 0,
+        "actions": {}
+      },
+      "usefulDroppedItems": 0,
+      "everEquippedItems": 0,
+      "dropEquippedRatio": 0,
+      "gaps": {
+        "newStage": {
+          "seconds": 263.4,
+          "from": 0,
+          "to": 263.4
+        },
+        "reward": {
+          "seconds": 62.05,
+          "from": 110.5,
+          "to": 172.55
+        },
+        "xp": {
+          "seconds": 62.05,
+          "from": 110.5,
+          "to": 172.55
+        },
+        "usefulEquipment": {
+          "seconds": 600,
+          "from": 0,
+          "to": 600
+        }
+      },
+      "recentHour": {
+        "runs": 2,
+        "wins": 2,
+        "losses": 0,
+        "gold": 1676,
+        "xp": 5719,
+        "drops": 6,
+        "potionUnits": 4,
+        "potionValue": 200
+      },
+      "recentTen": {
+        "runs": 2,
+        "wins": 2,
+        "losses": 0,
+        "roundsCleared": [
+          9,
+          9
+        ],
+        "seconds": 505.9,
+        "xp": 5719,
+        "gold": 1676
+      },
+      "unused": {
+        "affordableBuildings": [
+          {
+            "id": "shop",
+            "rank": 1,
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 2426
+              }
+            ]
+          }
+        ],
+        "buildingBlockers": [
+          {
+            "id": "explore",
+            "rank": 0,
+            "error": "locked",
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 2426
+              }
+            ]
+          },
+          {
+            "id": "command",
+            "rank": 0,
+            "error": "locked",
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 2426
+              }
+            ]
+          },
+          {
+            "id": "storage",
+            "rank": 0,
+            "error": "locked",
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 2426
+              }
+            ]
+          },
+          {
+            "id": "tavern",
+            "rank": 0,
+            "error": "locked",
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 2426
+              }
+            ]
+          },
+          {
+            "id": "shop",
+            "rank": 0,
+            "error": null,
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 2426
+              }
+            ]
+          },
+          {
+            "id": "forge",
+            "rank": 0,
+            "error": "locked",
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 2426
+              }
+            ]
+          },
+          {
+            "id": "library",
+            "rank": 1,
+            "error": "locked",
+            "cost": [
+              {
+                "res": "gold",
+                "need": 3000,
+                "have": 2426
+              }
+            ]
+          },
+          {
+            "id": "resource",
+            "rank": 1,
+            "error": "locked",
+            "cost": [
+              {
+                "res": "gold",
+                "need": 3000,
+                "have": 2426
+              },
+              {
+                "res": "iron_ore",
+                "need": 30,
+                "have": 0
+              },
+              {
+                "res": "timber",
+                "need": 30,
+                "have": 0
+              }
+            ]
+          }
+        ],
+        "craftableBooks": [],
+        "bookBlueprints": {
+          "war_bash": 1
+        },
+        "skillbooks": {},
+        "bookStateOpen": true,
+        "eligibleAdvance": [
+          {
+            "hero": "h1",
+            "error": "unbuilt",
+            "open": false,
+            "need": {
+              "have": 4,
+              "need": 30
+            },
+            "gold": {
+              "have": 2426,
+              "need": 50000
+            }
+          },
+          {
+            "hero": "h2",
+            "error": "unbuilt",
+            "open": false,
+            "need": {
+              "have": 4,
+              "need": 30
+            },
+            "gold": {
+              "have": 2426,
+              "need": 50000
+            }
+          },
+          {
+            "hero": "h3",
+            "error": "unbuilt",
+            "open": false,
+            "need": {
+              "have": 4,
+              "need": 30
+            },
+            "gold": {
+              "have": 2426,
+              "need": 50000
+            }
+          }
+        ],
+        "unspentMastery": [
+          {
+            "hero": "h1",
+            "points": 3
+          },
+          {
+            "hero": "h2",
+            "points": 3
+          },
+          {
+            "hero": "h3",
+            "points": 3
+          }
+        ],
+        "waitingHeroes": 0,
+        "resourceResearch": [],
+        "commission": {
+          "open": false,
+          "slots": 1,
+          "taken": 0,
+          "fame": {
+            "level": 1,
+            "xp": 0,
+            "total": 0,
+            "next": 3,
+            "needMult": 1,
+            "goldMult": 1,
+            "max": false
+          },
+          "cards": []
+        },
+        "guide": {
+          "id": "buildShop",
+          "tab": "research",
+          "target": {
+            "building": "shop"
+          }
+        }
+      },
+      "failures": []
+    },
+    {
+      "seconds": 3600,
+      "seed": 5,
+      "policy": "passive",
+      "stage": 1023,
+      "difficulty": "normal",
+      "classes": [
+        "knight",
+        "warrior",
+        "priest"
+      ],
+      "levels": [
+        7,
+        7,
+        8
+      ],
+      "xp": [
+        2198,
+        3729,
+        792
+      ],
+      "mastery": [
+        {
+          "uid": "h1",
+          "points": 6,
+          "nodes": {}
+        },
+        {
+          "uid": "h2",
+          "points": 6,
+          "nodes": {}
+        },
+        {
+          "uid": "h3",
+          "points": 7,
+          "nodes": {}
+        }
+      ],
+      "skills": [
+        {
+          "uid": "h1",
+          "ids": [
+            "kni_rush"
+          ]
+        },
+        {
+          "uid": "h2",
+          "ids": [
+            "war_recovery"
+          ]
+        },
+        {
+          "uid": "h3",
+          "ids": [
+            "pri_heal"
+          ]
+        }
+      ],
+      "cleared": [
+        1011,
+        1012,
+        1013,
+        1021,
+        1022
+      ],
+      "clearedIn": {},
+      "gold": 8431,
+      "materials": {},
+      "potions": {},
+      "bags": [
+        23
+      ],
+      "bagCap": 42,
+      "mail": 0,
+      "books": {},
+      "blueprints": {
+        "war_bash": 1,
+        "war_ironskin": 3
+      },
+      "buildings": {
+        "library": 1,
+        "resource": 1
+      },
+      "gear": {
+        "n": 6,
+        "ilvl": 1,
+        "weapons": [
+          {
+            "uid": "i1",
+            "ilvl": 1,
+            "up": 0
+          },
+          {
+            "uid": "i3",
+            "ilvl": 1,
+            "up": 0
+          },
+          {
+            "uid": "i5",
+            "ilvl": 1,
+            "up": 0
+          }
+        ],
+        "upTotal": 0
+      },
+      "first": {
+        "departure": {
+          "t": 0,
+          "stage": 1011,
+          "diff": "normal"
+        },
+        "xp": {
+          "t": 11.4,
+          "amount": 187
+        },
+        "gold": {
+          "t": 11.4,
+          "amount": 56
+        },
+        "drop": {
+          "t": 52.9,
+          "rarity": "normal",
+          "slot": "armor",
+          "ilvl": 1
+        },
+        "drop_normal": {
+          "t": 52.9,
+          "slot": "armor",
+          "ilvl": 1
+        },
+        "usableGainDrop": {
+          "t": 52.9,
+          "hero": "h3",
+          "uid": "i7",
+          "rarity": "normal",
+          "ratio": 1.009
+        },
+        "levelUp": {
+          "t": 52.9,
+          "hero": "h1",
+          "from": 1,
+          "to": 2
+        },
+        "masteryAvailable": {
+          "t": 52.9,
+          "hero": "h1",
+          "points": 1
+        },
+        "potionConsumed": {
+          "t": 52.9,
+          "units": 1
+        },
+        "stageClear": {
+          "t": 263.4,
+          "stage": 1011
+        },
+        "blueprint": {
+          "t": 561.15,
+          "ids": [
+            "war_bash"
+          ]
+        },
+        "drop_magic": {
+          "t": 628.5,
+          "slot": "armor",
+          "ilvl": 3
+        },
+        "boxGranted": {
+          "t": 838.6,
+          "kind": "weapon",
+          "tier": "low",
+          "mail": false,
+          "stage": 1013
+        },
+        "defeat": {
+          "t": 1394.9,
+          "stage": 1023,
+          "reason": "wipe"
+        }
+      },
+      "count": {
+        "runs": 23,
+        "wins": 5,
+        "losses": 18,
+        "timeouts": 0,
+        "downed": 54,
+        "firstClears": 5,
+        "drops": 22,
+        "rarities": {
+          "normal": 19,
+          "magic": 3
+        },
+        "overflow": 0,
+        "maxBag": 23,
+        "heroXp": 38009,
+        "actualXp": 38009,
+        "battleGold": 7831,
+        "blueprints": 4,
+        "failedRoundKills": 4,
+        "failedRoundRawXp": 700,
+        "failedRoundUnmappedKills": 0,
+        "levelUps": 19,
+        "newActiveSkills": 0,
+        "boxesGranted": 1,
+        "boxesOpened": 0,
+        "autoEquipCalls": 0,
+        "equipButtonsWithChanges": 0,
+        "equipMoves": 0,
+        "mightImprovements": 0,
+        "autoEquipMightDecreases": 0,
+        "accessoryProxyChanges": 0,
+        "masterySpent": 0,
+        "salvaged": 0,
+        "buildGold": 0,
+        "researchGold": 0,
+        "commissionGold": 0,
+        "potionsBought": 0,
+        "potionBuyGold": 0,
+        "potionsConsumed": 20,
+        "potionConsumedValue": 1000,
+        "upgradeAttempts": 0,
+        "upgradeSuccesses": 0,
+        "upgradeGold": 0,
+        "meaningfulManagementSessions": 0,
+        "waitingSec": 114.99999999999977,
+        "combatWallSec": 3485.0000000000005,
+        "farmingRuns": 0,
+        "guideAppearances": 0,
+        "guideResponses": 0,
+        "respecs": 0,
+        "actions": {}
+      },
+      "usefulDroppedItems": 0,
+      "everEquippedItems": 0,
+      "dropEquippedRatio": 0,
+      "gaps": {
+        "newStage": {
+          "seconds": 2291.6,
+          "from": 1308.4,
+          "to": 3600
+        },
+        "reward": {
+          "seconds": 121.35,
+          "from": 2347.4,
+          "to": 2468.75
+        },
+        "xp": {
+          "seconds": 121.35,
+          "from": 2347.4,
+          "to": 2468.75
+        },
+        "usefulEquipment": {
+          "seconds": 3600,
+          "from": 0,
+          "to": 3600
+        }
+      },
+      "recentHour": {
+        "runs": 23,
+        "wins": 5,
+        "losses": 18,
+        "gold": 7707,
+        "xp": 37555,
+        "drops": 22,
+        "potionUnits": 20,
+        "potionValue": 1000
+      },
+      "recentTen": {
+        "runs": 10,
+        "wins": 0,
+        "losses": 10,
+        "roundsCleared": [
+          1,
+          4,
+          4,
+          5,
+          2,
+          2,
+          2,
+          5,
+          2,
+          2
+        ],
+        "seconds": 1472.1499999999999,
+        "xp": 12467,
+        "gold": 2360
+      },
+      "unused": {
+        "affordableBuildings": [
+          {
+            "id": "shop",
+            "rank": 1,
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 8431
+              }
+            ]
+          }
+        ],
+        "buildingBlockers": [
+          {
+            "id": "explore",
+            "rank": 0,
+            "error": "locked",
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 8431
+              }
+            ]
+          },
+          {
+            "id": "command",
+            "rank": 0,
+            "error": "locked",
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 8431
+              }
+            ]
+          },
+          {
+            "id": "storage",
+            "rank": 0,
+            "error": "locked",
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 8431
+              }
+            ]
+          },
+          {
+            "id": "tavern",
+            "rank": 0,
+            "error": "locked",
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 8431
+              }
+            ]
+          },
+          {
+            "id": "shop",
+            "rank": 0,
+            "error": null,
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 8431
+              }
+            ]
+          },
+          {
+            "id": "forge",
+            "rank": 0,
+            "error": "locked",
+            "cost": [
+              {
+                "res": "gold",
+                "need": 600,
+                "have": 8431
+              }
+            ]
+          },
+          {
+            "id": "library",
+            "rank": 1,
+            "error": "locked",
+            "cost": [
+              {
+                "res": "gold",
+                "need": 3000,
+                "have": 8431
+              }
+            ]
+          },
+          {
+            "id": "resource",
+            "rank": 1,
+            "error": "locked",
+            "cost": [
+              {
+                "res": "gold",
+                "need": 3000,
+                "have": 8431
+              },
+              {
+                "res": "iron_ore",
+                "need": 30,
+                "have": 0
+              },
+              {
+                "res": "timber",
+                "need": 30,
+                "have": 0
+              }
+            ]
+          }
+        ],
+        "craftableBooks": [],
+        "bookBlueprints": {
+          "war_bash": 1,
+          "war_ironskin": 3
+        },
+        "skillbooks": {},
+        "bookStateOpen": true,
+        "eligibleAdvance": [
+          {
+            "hero": "h1",
+            "error": "unbuilt",
+            "open": false,
+            "need": {
+              "have": 7,
+              "need": 30
+            },
+            "gold": {
+              "have": 8431,
+              "need": 50000
+            }
+          },
+          {
+            "hero": "h2",
+            "error": "unbuilt",
+            "open": false,
+            "need": {
+              "have": 7,
+              "need": 30
+            },
+            "gold": {
+              "have": 8431,
+              "need": 50000
+            }
+          },
+          {
+            "hero": "h3",
+            "error": "unbuilt",
+            "open": false,
+            "need": {
+              "have": 8,
+              "need": 30
+            },
+            "gold": {
+              "have": 8431,
+              "need": 50000
+            }
+          }
+        ],
+        "unspentMastery": [
+          {
+            "hero": "h1",
+            "points": 6
+          },
+          {
+            "hero": "h2",
+            "points": 6
+          },
+          {
+            "hero": "h3",
+            "points": 7
+          }
+        ],
+        "waitingHeroes": 0,
+        "resourceResearch": [],
+        "commission": {
+          "open": false,
+          "slots": 1,
+          "taken": 0,
+          "fame": {
+            "level": 1,
+            "xp": 0,
+            "total": 0,
+            "next": 3,
+            "needMult": 1,
+            "goldMult": 1,
+            "max": false
+          },
+          "cards": []
+        },
+        "guide": {
+          "id": "buildShop",
+          "tab": "research",
+          "target": {
+            "building": "shop"
+          }
+        }
+      },
+      "failures": []
+    }
+  ],
+  "first": {
+    "departure": {
+      "t": 0,
+      "stage": 1011,
+      "diff": "normal"
+    },
+    "xp": {
+      "t": 11.4,
+      "amount": 187
+    },
+    "gold": {
+      "t": 11.4,
+      "amount": 56
+    },
+    "drop": {
+      "t": 52.9,
+      "rarity": "normal",
+      "slot": "armor",
+      "ilvl": 1
+    },
+    "drop_normal": {
+      "t": 52.9,
+      "slot": "armor",
+      "ilvl": 1
+    },
+    "usableGainDrop": {
+      "t": 52.9,
+      "hero": "h3",
+      "uid": "i7",
+      "rarity": "normal",
+      "ratio": 1.009
+    },
+    "levelUp": {
+      "t": 52.9,
+      "hero": "h1",
+      "from": 1,
+      "to": 2
+    },
+    "masteryAvailable": {
+      "t": 52.9,
+      "hero": "h1",
+      "points": 1
+    },
+    "potionConsumed": {
+      "t": 52.9,
+      "units": 1
+    },
+    "stageClear": {
+      "t": 263.4,
+      "stage": 1011
+    },
+    "blueprint": {
+      "t": 561.15,
+      "ids": [
+        "war_bash"
+      ]
+    },
+    "drop_magic": {
+      "t": 628.5,
+      "slot": "armor",
+      "ilvl": 3
+    },
+    "boxGranted": {
+      "t": 838.6,
+      "kind": "weapon",
+      "tier": "low",
+      "mail": false,
+      "stage": 1013
+    },
+    "defeat": {
+      "t": 1394.9,
+      "stage": 1023,
+      "reason": "wipe"
+    }
+  },
+  "count": {
+    "runs": 23,
+    "wins": 5,
+    "losses": 18,
+    "timeouts": 0,
+    "downed": 54,
+    "firstClears": 5,
+    "drops": 22,
+    "rarities": {
+      "normal": 19,
+      "magic": 3
+    },
+    "overflow": 0,
+    "maxBag": 23,
+    "heroXp": 38009,
+    "actualXp": 38009,
+    "battleGold": 7831,
+    "blueprints": 4,
+    "failedRoundKills": 4,
+    "failedRoundRawXp": 700,
+    "failedRoundUnmappedKills": 0,
+    "levelUps": 19,
+    "newActiveSkills": 0,
+    "boxesGranted": 1,
+    "boxesOpened": 0,
+    "autoEquipCalls": 0,
+    "equipButtonsWithChanges": 0,
+    "equipMoves": 0,
+    "mightImprovements": 0,
+    "autoEquipMightDecreases": 0,
+    "accessoryProxyChanges": 0,
+    "masterySpent": 0,
+    "salvaged": 0,
+    "buildGold": 0,
+    "researchGold": 0,
+    "commissionGold": 0,
+    "potionsBought": 0,
+    "potionBuyGold": 0,
+    "potionsConsumed": 20,
+    "potionConsumedValue": 1000,
+    "upgradeAttempts": 0,
+    "upgradeSuccesses": 0,
+    "upgradeGold": 0,
+    "meaningfulManagementSessions": 0,
+    "waitingSec": 114.99999999999977,
+    "combatWallSec": 3485.0000000000005,
+    "farmingRuns": 0,
+    "guideAppearances": 0,
+    "guideResponses": 0,
+    "respecs": 0,
+    "actions": {}
+  },
+  "clears": [
+    {
+      "t": 263.4,
+      "stage": 1011,
+      "diff": "normal",
+      "levels": [
+        3,
+        3,
+        3
+      ]
+    },
+    {
+      "t": 510.9,
+      "stage": 1012,
+      "diff": "normal",
+      "levels": [
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "t": 838.6,
+      "stage": 1013,
+      "diff": "normal",
+      "levels": [
+        5,
+        5,
+        5
+      ]
+    },
+    {
+      "t": 1073.6,
+      "stage": 1021,
+      "diff": "normal",
+      "levels": [
+        5,
+        5,
+        5
+      ]
+    },
+    {
+      "t": 1308.4,
+      "stage": 1022,
+      "diff": "normal",
+      "levels": [
+        6,
+        6,
+        6
+      ]
+    }
+  ],
+  "events": [
+    {
+      "t": 52.9,
+      "kind": "levelUp",
+      "hero": "h1",
+      "from": 1,
+      "to": 2
+    },
+    {
+      "t": 52.9,
+      "kind": "levelUp",
+      "hero": "h2",
+      "from": 1,
+      "to": 2
+    },
+    {
+      "t": 52.9,
+      "kind": "levelUp",
+      "hero": "h3",
+      "from": 1,
+      "to": 2
+    },
+    {
+      "t": 186.1,
+      "kind": "levelUp",
+      "hero": "h3",
+      "from": 2,
+      "to": 3
+    },
+    {
+      "t": 217.45,
+      "kind": "levelUp",
+      "hero": "h1",
+      "from": 2,
+      "to": 3
+    },
+    {
+      "t": 217.45,
+      "kind": "levelUp",
+      "hero": "h2",
+      "from": 2,
+      "to": 3
+    },
+    {
+      "t": 263.4,
+      "kind": "firstClear",
+      "stage": 1011,
+      "diff": "normal"
+    },
+    {
+      "t": 418.45,
+      "kind": "levelUp",
+      "hero": "h3",
+      "from": 3,
+      "to": 4
+    },
+    {
+      "t": 448.3,
+      "kind": "levelUp",
+      "hero": "h1",
+      "from": 3,
+      "to": 4
+    },
+    {
+      "t": 448.3,
+      "kind": "levelUp",
+      "hero": "h2",
+      "from": 3,
+      "to": 4
+    },
+    {
+      "t": 510.9,
+      "kind": "firstClear",
+      "stage": 1012,
+      "diff": "normal"
+    },
+    {
+      "t": 760.5,
+      "kind": "levelUp",
+      "hero": "h3",
+      "from": 4,
+      "to": 5
+    },
+    {
+      "t": 838.6,
+      "kind": "levelUp",
+      "hero": "h1",
+      "from": 4,
+      "to": 5
+    },
+    {
+      "t": 838.6,
+      "kind": "levelUp",
+      "hero": "h2",
+      "from": 4,
+      "to": 5
+    },
+    {
+      "t": 838.6,
+      "kind": "firstClear",
+      "stage": 1013,
+      "diff": "normal"
+    },
+    {
+      "t": 838.6,
+      "kind": "weapon",
+      "tier": "low",
+      "mail": false,
+      "stage": 1013
+    },
+    {
+      "t": 1073.6,
+      "kind": "firstClear",
+      "stage": 1021,
+      "diff": "normal"
+    },
+    {
+      "t": 1156.2,
+      "kind": "levelUp",
+      "hero": "h3",
+      "from": 5,
+      "to": 6
+    },
+    {
+      "t": 1235.95,
+      "kind": "levelUp",
+      "hero": "h1",
+      "from": 5,
+      "to": 6
+    },
+    {
+      "t": 1235.95,
+      "kind": "levelUp",
+      "hero": "h2",
+      "from": 5,
+      "to": 6
+    },
+    {
+      "t": 1308.4,
+      "kind": "firstClear",
+      "stage": 1022,
+      "diff": "normal"
+    },
+    {
+      "t": 2042.7,
+      "kind": "levelUp",
+      "hero": "h3",
+      "from": 6,
+      "to": 7
+    },
+    {
+      "t": 2308.95,
+      "kind": "levelUp",
+      "hero": "h2",
+      "from": 6,
+      "to": 7
+    },
+    {
+      "t": 2695.95,
+      "kind": "levelUp",
+      "hero": "h1",
+      "from": 6,
+      "to": 7
+    },
+    {
+      "t": 3237.65,
+      "kind": "levelUp",
+      "hero": "h3",
+      "from": 7,
+      "to": 8
+    }
+  ],
+  "rounds": [
+    {
+      "t": 11.4,
+      "stage": 1011,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 187,
+      "actualXp": 187,
+      "gold": 56,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 19.75,
+      "stage": 1011,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 93,
+      "actualXp": 93,
+      "gold": 28,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 52.9,
+      "stage": 1011,
+      "diff": "normal",
+      "n": 3,
+      "clear": true,
+      "end": false,
+      "xp": 467,
+      "actualXp": 467,
+      "gold": 139,
+      "drops": 1,
+      "rarities": {
+        "normal": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 1,
+      "potionValue": 50,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 88.15,
+      "stage": 1011,
+      "diff": "normal",
+      "n": 4,
+      "clear": true,
+      "end": false,
+      "xp": 252,
+      "actualXp": 252,
+      "gold": 84,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 110.5,
+      "stage": 1011,
+      "diff": "normal",
+      "n": 5,
+      "clear": true,
+      "end": false,
+      "xp": 252,
+      "actualXp": 252,
+      "gold": 84,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 172.55,
+      "stage": 1011,
+      "diff": "normal",
+      "n": 6,
+      "clear": true,
+      "end": false,
+      "xp": 420,
+      "actualXp": 420,
+      "gold": 139,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 1,
+      "potionValue": 50,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 186.1,
+      "stage": 1011,
+      "diff": "normal",
+      "n": 7,
+      "clear": true,
+      "end": false,
+      "xp": 168,
+      "actualXp": 168,
+      "gold": 56,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 217.45,
+      "stage": 1011,
+      "diff": "normal",
+      "n": 8,
+      "clear": true,
+      "end": false,
+      "xp": 243,
+      "actualXp": 243,
+      "gold": 84,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 263.4,
+      "stage": 1011,
+      "diff": "normal",
+      "n": 9,
+      "clear": true,
+      "end": true,
+      "xp": 379,
+      "actualXp": 379,
+      "gold": 139,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 1,
+      "potionValue": 50,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 279.8,
+      "stage": 1012,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 224,
+      "actualXp": 224,
+      "gold": 58,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 305.05,
+      "stage": 1012,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 336,
+      "actualXp": 336,
+      "gold": 87,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 1,
+      "potionValue": 50,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 340.6,
+      "stage": 1012,
+      "diff": "normal",
+      "n": 3,
+      "clear": true,
+      "end": false,
+      "xp": 560,
+      "actualXp": 560,
+      "gold": 144,
+      "drops": 2,
+      "rarities": {
+        "normal": 2
+      },
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 345.75,
+      "stage": 1012,
+      "diff": "normal",
+      "n": 4,
+      "clear": true,
+      "end": false,
+      "xp": 112,
+      "actualXp": 112,
+      "gold": 29,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 377.6,
+      "stage": 1012,
+      "diff": "normal",
+      "n": 5,
+      "clear": true,
+      "end": false,
+      "xp": 336,
+      "actualXp": 336,
+      "gold": 87,
+      "drops": 1,
+      "rarities": {
+        "normal": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 418.45,
+      "stage": 1012,
+      "diff": "normal",
+      "n": 6,
+      "clear": true,
+      "end": false,
+      "xp": 560,
+      "actualXp": 560,
+      "gold": 144,
+      "drops": 1,
+      "rarities": {
+        "normal": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 448.3,
+      "stage": 1012,
+      "diff": "normal",
+      "n": 7,
+      "clear": true,
+      "end": false,
+      "xp": 324,
+      "actualXp": 324,
+      "gold": 87,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 478.45,
+      "stage": 1012,
+      "diff": "normal",
+      "n": 8,
+      "clear": true,
+      "end": false,
+      "xp": 302,
+      "actualXp": 302,
+      "gold": 87,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 510.9,
+      "stage": 1012,
+      "diff": "normal",
+      "n": 9,
+      "clear": true,
+      "end": true,
+      "xp": 504,
+      "actualXp": 504,
+      "gold": 144,
+      "drops": 1,
+      "rarities": {
+        "normal": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 547,
+      "stage": 1013,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 420,
+      "actualXp": 420,
+      "gold": 90,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 2,
+      "potionValue": 100,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 561.15,
+      "stage": 1013,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 280,
+      "actualXp": 280,
+      "gold": 60,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 1,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 628.5,
+      "stage": 1013,
+      "diff": "normal",
+      "n": 3,
+      "clear": true,
+      "end": false,
+      "xp": 700,
+      "actualXp": 700,
+      "gold": 149,
+      "drops": 2,
+      "rarities": {
+        "magic": 1,
+        "normal": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 2,
+      "potionValue": 100,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 657.45,
+      "stage": 1013,
+      "diff": "normal",
+      "n": 4,
+      "clear": true,
+      "end": false,
+      "xp": 420,
+      "actualXp": 420,
+      "gold": 90,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 689.9,
+      "stage": 1013,
+      "diff": "normal",
+      "n": 5,
+      "clear": true,
+      "end": false,
+      "xp": 420,
+      "actualXp": 420,
+      "gold": 90,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 2,
+      "potionValue": 100,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 731.05,
+      "stage": 1013,
+      "diff": "normal",
+      "n": 6,
+      "clear": true,
+      "end": false,
+      "xp": 700,
+      "actualXp": 700,
+      "gold": 149,
+      "drops": 1,
+      "rarities": {
+        "magic": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 760.5,
+      "stage": 1013,
+      "diff": "normal",
+      "n": 7,
+      "clear": true,
+      "end": false,
+      "xp": 420,
+      "actualXp": 420,
+      "gold": 90,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 804.25,
+      "stage": 1013,
+      "diff": "normal",
+      "n": 8,
+      "clear": true,
+      "end": false,
+      "xp": 405,
+      "actualXp": 405,
+      "gold": 90,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 1,
+      "potionValue": 50,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 838.6,
+      "stage": 1013,
+      "diff": "normal",
+      "n": 9,
+      "clear": true,
+      "end": true,
+      "xp": 2177,
+      "actualXp": 2177,
+      "gold": 312,
+      "drops": 1,
+      "rarities": {
+        "magic": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 849.9,
+      "stage": 1021,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 127,
+      "actualXp": 127,
+      "gold": 30,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 874.45,
+      "stage": 1021,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 379,
+      "actualXp": 379,
+      "gold": 90,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 912.1,
+      "stage": 1021,
+      "diff": "normal",
+      "n": 3,
+      "clear": true,
+      "end": false,
+      "xp": 631,
+      "actualXp": 631,
+      "gold": 149,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 928.35,
+      "stage": 1021,
+      "diff": "normal",
+      "n": 4,
+      "clear": true,
+      "end": false,
+      "xp": 252,
+      "actualXp": 252,
+      "gold": 60,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 945.5,
+      "stage": 1021,
+      "diff": "normal",
+      "n": 5,
+      "clear": true,
+      "end": false,
+      "xp": 252,
+      "actualXp": 252,
+      "gold": 60,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 984.95,
+      "stage": 1021,
+      "diff": "normal",
+      "n": 6,
+      "clear": true,
+      "end": false,
+      "xp": 631,
+      "actualXp": 631,
+      "gold": 149,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 1,
+      "potionValue": 50,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1015.5,
+      "stage": 1021,
+      "diff": "normal",
+      "n": 7,
+      "clear": true,
+      "end": false,
+      "xp": 379,
+      "actualXp": 379,
+      "gold": 90,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1038.65,
+      "stage": 1021,
+      "diff": "normal",
+      "n": 8,
+      "clear": true,
+      "end": false,
+      "xp": 252,
+      "actualXp": 252,
+      "gold": 60,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1073.6,
+      "stage": 1021,
+      "diff": "normal",
+      "n": 9,
+      "clear": true,
+      "end": true,
+      "xp": 631,
+      "actualXp": 631,
+      "gold": 149,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1094.3,
+      "stage": 1022,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 168,
+      "actualXp": 168,
+      "gold": 30,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1106.65,
+      "stage": 1022,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 168,
+      "actualXp": 168,
+      "gold": 30,
+      "drops": 1,
+      "rarities": {
+        "normal": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1156.2,
+      "stage": 1022,
+      "diff": "normal",
+      "n": 3,
+      "clear": true,
+      "end": false,
+      "xp": 840,
+      "actualXp": 840,
+      "gold": 151,
+      "drops": 1,
+      "rarities": {
+        "normal": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 2,
+      "potionValue": 100,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1189.35,
+      "stage": 1022,
+      "diff": "normal",
+      "n": 4,
+      "clear": true,
+      "end": false,
+      "xp": 486,
+      "actualXp": 486,
+      "gold": 90,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1206.6,
+      "stage": 1022,
+      "diff": "normal",
+      "n": 5,
+      "clear": true,
+      "end": false,
+      "xp": 324,
+      "actualXp": 324,
+      "gold": 60,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1235.95,
+      "stage": 1022,
+      "diff": "normal",
+      "n": 6,
+      "clear": true,
+      "end": false,
+      "xp": 810,
+      "actualXp": 810,
+      "gold": 151,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1251.8,
+      "stage": 1022,
+      "diff": "normal",
+      "n": 7,
+      "clear": true,
+      "end": false,
+      "xp": 152,
+      "actualXp": 152,
+      "gold": 30,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1268.45,
+      "stage": 1022,
+      "diff": "normal",
+      "n": 8,
+      "clear": true,
+      "end": false,
+      "xp": 302,
+      "actualXp": 302,
+      "gold": 60,
+      "drops": 1,
+      "rarities": {
+        "normal": 1
+      },
+      "blueprints": 1,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1308.4,
+      "stage": 1022,
+      "diff": "normal",
+      "n": 9,
+      "clear": true,
+      "end": true,
+      "xp": 756,
+      "actualXp": 756,
+      "gold": 151,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 1,
+      "potionValue": 50,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1321.8,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 196,
+      "actualXp": 196,
+      "gold": 31,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1355.55,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 588,
+      "actualXp": 588,
+      "gold": 93,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1394.9,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 3,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 2,
+      "potionValue": 100,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 1408.3,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 196,
+      "actualXp": 196,
+      "gold": 31,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1441.55,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 588,
+      "actualXp": 588,
+      "gold": 93,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 2,
+      "potionValue": 100,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1494.5,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 3,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 1,
+      "potionValue": 50,
+      "failedRoundKills": 1,
+      "failedRoundRawXp": 210,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 1528.3,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 588,
+      "actualXp": 588,
+      "gold": 93,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1575.25,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 399,
+      "actualXp": 399,
+      "gold": 93,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 2
+    },
+    {
+      "t": 1601.1,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 3,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 1616.4,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 196,
+      "actualXp": 196,
+      "gold": 31,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1623.35,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 196,
+      "actualXp": 196,
+      "gold": 31,
+      "drops": 1,
+      "rarities": {
+        "normal": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1660.1,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 3,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 1689.4,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 392,
+      "actualXp": 392,
+      "gold": 62,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1720.75,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 588,
+      "actualXp": 588,
+      "gold": 93,
+      "drops": 1,
+      "rarities": {
+        "normal": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1746.9,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 3,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 1769.6,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 392,
+      "actualXp": 392,
+      "gold": 62,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1805.75,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 588,
+      "actualXp": 588,
+      "gold": 93,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1835.8,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 3,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 1868.5,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 392,
+      "actualXp": 392,
+      "gold": 62,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1880.45,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 196,
+      "actualXp": 196,
+      "gold": 31,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1923.1,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 3,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 1,
+      "failedRoundRawXp": 210,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 1940.4,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 196,
+      "actualXp": 196,
+      "gold": 31,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1952.35,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 196,
+      "actualXp": 196,
+      "gold": 31,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 1988.4,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 3,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 2042.7,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 399,
+      "actualXp": 399,
+      "gold": 93,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 2
+    },
+    {
+      "t": 2071.65,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 2093.55,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 378,
+      "actualXp": 378,
+      "gold": 62,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 2111.4,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 378,
+      "actualXp": 378,
+      "gold": 62,
+      "drops": 1,
+      "rarities": {
+        "normal": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 2158.35,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 3,
+      "clear": true,
+      "end": false,
+      "xp": 630,
+      "actualXp": 630,
+      "gold": 156,
+      "drops": 1,
+      "rarities": {
+        "normal": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 2
+    },
+    {
+      "t": 2229.8,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 4,
+      "clear": true,
+      "end": false,
+      "xp": 252,
+      "actualXp": 252,
+      "gold": 62,
+      "drops": 1,
+      "rarities": {
+        "normal": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 2
+    },
+    {
+      "t": 2273.45,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 5,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 2308.95,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 567,
+      "actualXp": 567,
+      "gold": 93,
+      "drops": 1,
+      "rarities": {
+        "normal": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 2347.4,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 548,
+      "actualXp": 548,
+      "gold": 93,
+      "drops": 1,
+      "rarities": {
+        "normal": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 2468.75,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 3,
+      "clear": true,
+      "end": false,
+      "xp": 599,
+      "actualXp": 599,
+      "gold": 156,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 2
+    },
+    {
+      "t": 2537,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 4,
+      "clear": true,
+      "end": false,
+      "xp": 239,
+      "actualXp": 239,
+      "gold": 62,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 2
+    },
+    {
+      "t": 2575.35,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 5,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 2620.25,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 548,
+      "actualXp": 548,
+      "gold": 93,
+      "drops": 1,
+      "rarities": {
+        "normal": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 2652.8,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 365,
+      "actualXp": 365,
+      "gold": 62,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 2695.95,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 3,
+      "clear": true,
+      "end": false,
+      "xp": 914,
+      "actualXp": 914,
+      "gold": 156,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 2727.2,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 4,
+      "clear": true,
+      "end": false,
+      "xp": 529,
+      "actualXp": 529,
+      "gold": 93,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 2763.75,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 5,
+      "clear": true,
+      "end": false,
+      "xp": 529,
+      "actualXp": 529,
+      "gold": 93,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 2787.4,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 6,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 2831.4,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 529,
+      "actualXp": 529,
+      "gold": 93,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 2855.35,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 352,
+      "actualXp": 352,
+      "gold": 62,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 2915.1,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 3,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 1,
+      "failedRoundRawXp": 210,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 2960,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 529,
+      "actualXp": 529,
+      "gold": 93,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 1,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 2972.15,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 177,
+      "actualXp": 177,
+      "gold": 31,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 3013.4,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 3,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 3034.7,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 352,
+      "actualXp": 352,
+      "gold": 62,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 3097.55,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 359,
+      "actualXp": 359,
+      "gold": 93,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 2
+    },
+    {
+      "t": 3117.7,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 3,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 3144.3,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 352,
+      "actualXp": 352,
+      "gold": 62,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 1,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 3177.35,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 352,
+      "actualXp": 352,
+      "gold": 62,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 3225.8,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 3,
+      "clear": true,
+      "end": false,
+      "xp": 883,
+      "actualXp": 883,
+      "gold": 156,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 3237.65,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 4,
+      "clear": true,
+      "end": false,
+      "xp": 177,
+      "actualXp": 177,
+      "gold": 31,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 3249.7,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 5,
+      "clear": true,
+      "end": false,
+      "xp": 171,
+      "actualXp": 171,
+      "gold": 31,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 3286.65,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 6,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 3316.45,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 339,
+      "actualXp": 339,
+      "gold": 62,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 3357.1,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 510,
+      "actualXp": 510,
+      "gold": 93,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 3404.75,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 3,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 3438.55,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 339,
+      "actualXp": 339,
+      "gold": 62,
+      "drops": 1,
+      "rarities": {
+        "normal": 1
+      },
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 3452,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 171,
+      "actualXp": 171,
+      "gold": 31,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 3
+    },
+    {
+      "t": 3510.55,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 3,
+      "clear": false,
+      "end": true,
+      "xp": 0,
+      "actualXp": 0,
+      "gold": 0,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 1,
+      "failedRoundRawXp": 70,
+      "overflow": 0,
+      "alive": 0
+    },
+    {
+      "t": 3566.95,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 1,
+      "clear": true,
+      "end": false,
+      "xp": 340,
+      "actualXp": 340,
+      "gold": 93,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 2
+    },
+    {
+      "t": 3598.9,
+      "stage": 1023,
+      "diff": "normal",
+      "n": 2,
+      "clear": true,
+      "end": false,
+      "xp": 114,
+      "actualXp": 114,
+      "gold": 31,
+      "drops": 0,
+      "rarities": {},
+      "blueprints": 0,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "failedRoundKills": 0,
+      "failedRoundRawXp": 0,
+      "overflow": 0,
+      "alive": 2
+    }
+  ],
+  "runs": [
+    {
+      "t": 263.4,
+      "start": 0,
+      "stage": 1011,
+      "diff": "normal",
+      "won": true,
+      "reason": "clear",
+      "roundsCleared": 9,
+      "wallSec": 263.4,
+      "combatSec": 255.8,
+      "xp": 2461,
+      "gold": 809,
+      "drops": 1,
+      "overflow": 0,
+      "downed": 0,
+      "potionUnits": 3,
+      "potionValue": 150,
+      "farming": false
+    },
+    {
+      "t": 510.9,
+      "start": 268.4,
+      "stage": 1012,
+      "diff": "normal",
+      "won": true,
+      "reason": "clear",
+      "roundsCleared": 9,
+      "wallSec": 242.5,
+      "combatSec": 234.9,
+      "xp": 3258,
+      "gold": 867,
+      "drops": 5,
+      "overflow": 0,
+      "downed": 0,
+      "potionUnits": 1,
+      "potionValue": 50,
+      "farming": false
+    },
+    {
+      "t": 838.6,
+      "start": 515.9,
+      "stage": 1013,
+      "diff": "normal",
+      "won": true,
+      "reason": "clear",
+      "roundsCleared": 9,
+      "wallSec": 322.7,
+      "combatSec": 315.1,
+      "xp": 5942,
+      "gold": 1120,
+      "drops": 4,
+      "overflow": 0,
+      "downed": 0,
+      "potionUnits": 7,
+      "potionValue": 350,
+      "farming": false
+    },
+    {
+      "t": 1073.6,
+      "start": 843.6,
+      "stage": 1021,
+      "diff": "normal",
+      "won": true,
+      "reason": "clear",
+      "roundsCleared": 9,
+      "wallSec": 230,
+      "combatSec": 222.4,
+      "xp": 3534,
+      "gold": 837,
+      "drops": 0,
+      "overflow": 0,
+      "downed": 0,
+      "potionUnits": 1,
+      "potionValue": 50,
+      "farming": false
+    },
+    {
+      "t": 1308.4,
+      "start": 1078.6,
+      "stage": 1022,
+      "diff": "normal",
+      "won": true,
+      "reason": "clear",
+      "roundsCleared": 9,
+      "wallSec": 229.8,
+      "combatSec": 222.2,
+      "xp": 4006,
+      "gold": 753,
+      "drops": 3,
+      "overflow": 0,
+      "downed": 0,
+      "potionUnits": 3,
+      "potionValue": 150,
+      "farming": false
+    },
+    {
+      "t": 1394.9,
+      "start": 1313.4,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 2,
+      "wallSec": 81.5,
+      "combatSec": 79.6,
+      "xp": 784,
+      "gold": 124,
+      "drops": 0,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 2,
+      "potionValue": 100,
+      "farming": false
+    },
+    {
+      "t": 1494.5,
+      "start": 1399.9,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 2,
+      "wallSec": 94.6,
+      "combatSec": 92.7,
+      "xp": 784,
+      "gold": 124,
+      "drops": 0,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 3,
+      "potionValue": 150,
+      "farming": false
+    },
+    {
+      "t": 1601.1,
+      "start": 1499.5,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 2,
+      "wallSec": 101.6,
+      "combatSec": 99.7,
+      "xp": 987,
+      "gold": 186,
+      "drops": 0,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "farming": false
+    },
+    {
+      "t": 1660.1,
+      "start": 1606.1,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 2,
+      "wallSec": 54,
+      "combatSec": 52.1,
+      "xp": 392,
+      "gold": 62,
+      "drops": 1,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "farming": false
+    },
+    {
+      "t": 1746.9,
+      "start": 1665.1,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 2,
+      "wallSec": 81.8,
+      "combatSec": 79.9,
+      "xp": 980,
+      "gold": 155,
+      "drops": 1,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "farming": false
+    },
+    {
+      "t": 1835.8,
+      "start": 1751.9,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 2,
+      "wallSec": 83.9,
+      "combatSec": 82,
+      "xp": 980,
+      "gold": 155,
+      "drops": 0,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "farming": false
+    },
+    {
+      "t": 1923.1,
+      "start": 1840.8,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 2,
+      "wallSec": 82.3,
+      "combatSec": 80.4,
+      "xp": 588,
+      "gold": 93,
+      "drops": 0,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "farming": false
+    },
+    {
+      "t": 1988.4,
+      "start": 1928.1,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 2,
+      "wallSec": 60.3,
+      "combatSec": 58.4,
+      "xp": 392,
+      "gold": 62,
+      "drops": 0,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "farming": false
+    },
+    {
+      "t": 2071.65,
+      "start": 1993.4,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 1,
+      "wallSec": 78.25,
+      "combatSec": 77.3,
+      "xp": 399,
+      "gold": 93,
+      "drops": 0,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "farming": false
+    },
+    {
+      "t": 2273.45,
+      "start": 2076.65,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 4,
+      "wallSec": 196.8,
+      "combatSec": 193,
+      "xp": 1638,
+      "gold": 342,
+      "drops": 3,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "farming": false
+    },
+    {
+      "t": 2575.35,
+      "start": 2278.45,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 4,
+      "wallSec": 296.9,
+      "combatSec": 293.1,
+      "xp": 1953,
+      "gold": 404,
+      "drops": 2,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "farming": false
+    },
+    {
+      "t": 2787.4,
+      "start": 2580.35,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 5,
+      "wallSec": 207.05,
+      "combatSec": 202.3,
+      "xp": 2885,
+      "gold": 497,
+      "drops": 1,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "farming": false
+    },
+    {
+      "t": 2915.1,
+      "start": 2792.4,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 2,
+      "wallSec": 122.7,
+      "combatSec": 120.8,
+      "xp": 881,
+      "gold": 155,
+      "drops": 0,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "farming": false
+    },
+    {
+      "t": 3013.4,
+      "start": 2920.1,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 2,
+      "wallSec": 93.3,
+      "combatSec": 91.4,
+      "xp": 706,
+      "gold": 124,
+      "drops": 0,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "farming": false
+    },
+    {
+      "t": 3117.7,
+      "start": 3018.4,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 2,
+      "wallSec": 99.3,
+      "combatSec": 97.4,
+      "xp": 711,
+      "gold": 155,
+      "drops": 0,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "farming": false
+    },
+    {
+      "t": 3286.65,
+      "start": 3122.7,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 5,
+      "wallSec": 163.95,
+      "combatSec": 159.2,
+      "xp": 1935,
+      "gold": 342,
+      "drops": 0,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "farming": false
+    },
+    {
+      "t": 3404.75,
+      "start": 3291.65,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 2,
+      "wallSec": 113.1,
+      "combatSec": 111.2,
+      "xp": 849,
+      "gold": 155,
+      "drops": 0,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "farming": false
+    },
+    {
+      "t": 3510.55,
+      "start": 3409.75,
+      "stage": 1023,
+      "diff": "normal",
+      "won": false,
+      "reason": "wipe",
+      "roundsCleared": 2,
+      "wallSec": 100.8,
+      "combatSec": 98.9,
+      "xp": 510,
+      "gold": 93,
+      "drops": 1,
+      "overflow": 0,
+      "downed": 3,
+      "potionUnits": 0,
+      "potionValue": 0,
+      "farming": false
+    }
+  ],
+  "failures": []
+}

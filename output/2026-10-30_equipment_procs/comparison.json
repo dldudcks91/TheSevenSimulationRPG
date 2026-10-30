@@ -1,0 +1,14 @@
+{
+  "runs": 60,
+  "changed_runs": 45,
+  "previous_matches_saved": true,
+  "starting_parties_unchanged": true,
+  "disabled_trigger_failures": [
+    "runtime: 시전 · 피격 발동도 Lv1 현재 능력치 · 확률 1회이며 HP 비용 · 정상 쿨 · 충전 칸 · cast 훅을 소비하지 않는다cast 발동 사건 undefined",
+    "runtime: 시전 · 피격 발동의 확률 실패는 1회 · 0확률 · 스킬 없음 · 조건 불일치 · 사망 · 적 없음은 0회다procCast 실패 확률을 한 번 넘게 굴렸다",
+    "runtime: 시전 발동은 정상 효과 뒤 · 기본 공격 앞에 한 번만 나가고 정신 집중 · 모으기도 시작할 때 한 번이다시전 발동 순서 [\"war_doubleswing\",\"war_doubleswing\",null]",
+    "battle: 양 진영의 타격 · 시전 · 피격 발동은 서로 연쇄하지 않고 정상 시전 · 원래 적중마다 한 번씩 나간다p0 cast 0회 / 원래 사건 1회 — 누락 또는 연쇄",
+    "battle: 피격 발동은 보호막이 흡수한 물리 · 원소 · 고정 직격도 읽고 빗나감 · 이베이드 · 쓰러진 대상은 읽지 않는다평타 보호막 직격 [{\"t\":1,\"e\":\"hit\",\"a\":\"p0\",\"d\":\"e0\",\"dmg\":10,\"crit\":false,\"dhp\":1000000,\"ty\":\"physical\",\"bar\":249990}] · 최대 HP 1000000 · 피격 발동 0",
+    "createRun: 피격 발동도 갈아입기 다음 적중부터 생기고 벗으면 남지 않는다장착 뒤 피격 발동 0회"
+  ]
+}

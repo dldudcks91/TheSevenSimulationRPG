@@ -71,9 +71,76 @@ export function t(key, params) {
 /* ═══════════════════ 사전 ═══════════════════ */
 
 const STRINGS = {
+    'nav.raid': { ko: '레이드', en: 'Raid' },
+    'raid.eyebrow': { ko: 'RAID · 분노의 전장', en: 'RAID · FIELD OF WRATH' },
+    'raid.trial': { ko: '전투 연습 · 보상 없음', en: 'Combat trial · No rewards' },
+    'raid.practice': { ko: '랜덤 편성', en: 'Random parties' },
+    'raid.reroll': { ko: '편성 다시 뽑기', en: 'Reroll parties' },
+    'raid.own': { ko: '내 편성', en: 'My parties' },
+    'raid.pause': { ko: '일시 정지', en: 'Pause' },
+    'raid.retreat': { ko: '철수', en: 'Retreat' },
+    'raid.retreated': { ko: '공격대 철수', en: 'RAID WITHDRAWN' },
+    'raid.resume': { ko: '계속', en: 'Resume' },
+    'raid.paused': { ko: '일시 정지 중', en: 'Paused' },
+    'raid.speed': { ko: '{n}배속', en: '{n}× speed' },
+    'raid.expand': { ko: '전장 확대', en: 'Expand' },
+    'raid.shrink': { ko: '메뉴 표시', en: 'Show menu' },
+    'raid.help': { ko: '레이드 도움말', en: 'Raid help' },
+    'raid.lane.1': { ko: '좌익 · Party I', en: 'Left · Party I' },
+    'raid.lane.2': { ko: '중앙 · Party II', en: 'Center · Party II' },
+    'raid.lane.3': { ko: '우익 · Party III', en: 'Right · Party III' },
+    'raid.front': { ko: '전열', en: 'Front' },
+    'raid.rear': { ko: '후열', en: 'Rear' },
+    'raid.bossOnly': { ko: '단일 보스 · 3개 편성', en: 'Single boss · Three parties' },
+    'raid.practiceReady': { ko: '랜덤 영웅 9명 · 세이브 소모 없음', en: '9 random heroes · No save resources used' },
+    'raid.ownReady': { ko: '편성 I · II · III 출전 준비', en: 'Parties I · II · III ready' },
+    'raid.err.level': { ko: '보유 영웅 최고 레벨 {need} 필요 · 현재 {have}', en: 'Highest hero level {need} required · Current level {have}', lock: true },
+    'raid.err.locked': { ko: '잠김 · 헬 {chapter}장 챕터보스 처치 필요', en: 'Locked · Defeat the Hell chapter {chapter} boss' },
+    'raid.err.party': { ko: '각 편성에 영웅 3명 필요', en: 'Each party needs three heroes' },
+    'raid.err.running': { ko: '원정 중인 편성', en: 'Party on an expedition' },
+    'raid.err.exploring': { ko: '탐험 중인 편성', en: 'Party exploring' },
+    'raid.err.advancing': { ko: '전직 중인 영웅', en: 'Hero changing class' },
+    'raid.err.missing': { ko: '편성 영웅 확인 필요', en: 'Party member missing' },
+    'raid.err.duplicate': { ko: '영웅 중복 편성', en: 'Duplicate party member' },
+    'raid.log': { ko: '레이드 주요 전황', en: 'Raid events' },
+    'raid.start': { ko: '레이드 시작', en: 'Start raid' },
+    'raid.fighting': { ko: '전투 중', en: 'In combat' },
+    'raid.retry': { ko: '다시 도전', en: 'Try again' },
+    'raid.started': { ko: '세 파티 출전 · 전투 시작', en: 'Three parties deployed · Battle started' },
+    'raid.phase': { ko: 'PHASE {n}', en: 'PHASE {n}' },
+    'raid.phaseChange': { ko: 'PHASE {n} · 보스 격화', en: 'PHASE {n} · Boss intensifies' },
+    'raid.exposed': { ko: '약점 노출', en: 'EXPOSED' },
+    'raid.enraged': { ko: '최종 공세', en: 'FINAL ASSAULT' },
+    'raid.awaiting': { ko: '출전 대기', en: 'Awaiting deployment' },
+    'raid.nextAttack': { ko: '다음 공격 준비', en: 'Preparing next attack' },
+    'raid.finished': { ko: '전투 종료', en: 'Encounter complete' },
+    'raid.threeParties': { ko: 'Party I + II + III', en: 'Party I + II + III' },
+    'raid.target': { ko: '공격 대상 · Party {parties}', en: 'Target · Party {parties}' },
+    'raid.targeted': { ko: '공격 예고', en: 'INCOMING' },
+    'raid.ready': { ko: '준비', en: 'Ready' },
+    'raid.partySize': { ko: '3인 편성', en: 'Three heroes' },
+    'raid.breakProgress': { ko: '시전 파괴 {n} / {max}', en: 'Cast break {n} / {max}' },
+    'raid.breakSuccess': { ko: '시전 파괴 · 약점 노출', en: 'Cast broken · Weak point exposed' },
+    'raid.breakFail': { ko: '시전 파괴 실패 · 전면 충격', en: 'Cast break failed · Full impact' },
+    'raid.downed': { ko: '전투불능', en: 'DOWN' },
+    'raid.victory': { ko: '레이드 승리', en: 'RAID CLEARED' },
+    'raid.defeat': { ko: '공격대 전멸', en: 'RAID DEFEATED' },
+    'raid.timeout': { ko: '제한 시간 초과', en: 'TIME LIMIT REACHED' },
+    'raid.resultSummary': { ko: '{time} · 생존 {n}/9 · 파괴 성공 {breaks}회 / 실패 {failed}회', en: '{time} · {n}/9 survivors · Cast breaks: {breaks} / Failed: {failed}' },
+    'raid.damageValue': { ko: '피해 {n}', en: 'Damage {n}' },
+    'raid.healValue': { ko: '회복 {n}', en: 'Healing {n}' },
+    'raid.aliveValue': { ko: '생존 {n}/3', en: 'Alive {n}/3' },
+    'raid.reviewField': { ko: '전장 확인', en: 'View battlefield' },
+    'raid.results': { ko: '레이드 결과', en: 'Raid results' },
+    'help.raid.overview.title': { ko: '세 파티의 공동 전투', en: 'Three parties, one encounter' },
+    'help.raid.overview.body': { ko: '좌익·중앙·우익의 세 편성이 하나의 보스를 상대합니다. 해당 장의 헬 챕터보스를 처치하면 내 편성으로 연습할 수 있습니다. 서로 다른 영웅 세 명씩 필요하며 원정·탐험 중인 편성은 사용할 수 없습니다.<br><br>기존 장비·스킬·진형·전술을 출전 순간 복사합니다. 회복·강화·오오라는 자기 편성에 적용되고 보스에게 건 약화는 공통으로 작동합니다. 한 편성이 쓰러져도 나머지는 계속 전투합니다.', en: 'The left, center and right parties fight one shared boss. Defeat that chapter’s Hell boss to try your own parties. Each needs three distinct heroes and must be free of expeditions and exploration.<br><br>Equipment, skills, formation and tactics are copied at deployment. Healing, buffs and auras stay within their party. Debuffs on the shared boss benefit everyone. Surviving parties keep fighting if another falls.' },
+    'help.raid.patterns.title': { ko: '공격 예고와 시전 파괴', en: 'Warnings and cast breaks' },
+    'help.raid.patterns.body': { ko: '보스 아래에 공격 이름·대상 편성·남은 시간이 표시됩니다. 맞을 편성의 테두리도 켜집니다. 철퇴는 대상 편성의 전열을 우선 공격하고 휩쓸기와 광역은 해당 편성 전원에게 피해를 줍니다. 지목과 도발도 지정 편성 안에서 적용합니다.<br><br>시전 파괴 게이지가 나타난 강공격은 예고 중 보스 체력을 깎아 중단할 수 있습니다. 성공하면 약점 노출 시간이 생깁니다. 실패하면 전 편성에 큰 공격이 들어옵니다. 체력이 줄면 단계가 오르며 공격이 빨라지고 강해집니다. 예정된 패턴은 일반 행동 경직으로 취소되지 않습니다.', en: 'Warnings show the attack, targeted parties and time to impact, with matching lane borders. Hammer prioritizes the targeted front rank. Cleaves and waves hit everyone in their targeted lanes. Marks and taunts apply within the selected lane.<br><br>Dealing real HP damage fills a heavy attack’s cast-break bar. Breaking the cast exposes the boss; failure causes a heavy raid-wide impact. Lower boss HP triggers faster, stronger phases. Scripted patterns are not cancelled by ordinary action stun.' },
+    'help.raid.trial.title': { ko: '전투 연습의 범위', en: 'Combat trial' },
+    'help.raid.trial.body': { ko: '현재는 보상 없는 전투 연습입니다. 훈련 편성은 샘플 영웅 아홉 명으로 누구나 체험할 수 있습니다. 내 편성도 스냅샷으로 전투하며 영웅·장비·재고·진행 기록을 소모하거나 변경하지 않습니다. 이번 연습에는 물약을 사용하지 않습니다.<br><br>탭을 떠나거나 창이 숨겨지면 연습 시계가 멈춥니다. 돌아오면 같은 판을 이어 보며 새로고침하면 초기화됩니다. 결과에서 피해·회복·생존·시전 파괴를 확인하고 다시 도전할 수 있습니다. 정식 보상·반복·추가 몬스터는 아직 정해지지 않았습니다.', en: 'This is a combat trial without rewards. Training parties provide nine sample heroes for anyone to try. Your parties also fight as snapshots, without consuming or changing heroes, equipment, inventory or progress. Potions are not used.<br><br>The trial pauses when you leave the tab or hide the window. Returning resumes it; refreshing resets it. Review damage, healing, survivors and cast breaks in the results and retry. Live rewards, repeat rules and additional monsters remain undecided.' },
     /* ── 제목 옆 짧은 도움말 ── */
     'ui.helpFor': { ko: '{name} 도움말', en: 'Help for {name}' },
-    'hint.attributes': { ko: '영웅의 기본 능력치입니다. 전투 수치와 연구소 등록 효과의 바탕이 됩니다.', en: 'The hero’s base attributes. These determine combat values and Laboratory assignment effects.' },
+    'hint.attributes': { ko: '영웅 생성 시 각 기본 능력치는 최대 {max}까지 붙습니다. 전투 수치와 연구소 등록 효과의 바탕이 됩니다.', en: 'Each base attribute can roll up to {max} when a hero is created. Attributes determine combat values and Laboratory assignment effects.' },
     'hint.colosseum': { ko: '상대 팀을 확인하고 선택한 Party로 겨룹니다. 영웅의 장비·스킬과 편성을 함께 준비하세요.', en: 'Inspect the opposing team and fight with your selected Party. Prepare its equipment, skills and formation together.' },
     'hint.arena': { ko: '상대를 고르고 선택한 Party로 결투합니다. 전투 전에 상대 구성과 내 물약·전술을 확인하세요.', en: 'Choose an opponent and duel with the selected Party. Check both teams and your potions and tactics before starting.' },
     'hint.opponents': { ko: '후보를 누르면 상대 팀을 확인할 수 있습니다. 새 상대는 후보 목록을 다시 고릅니다.', en: 'Select a candidate to inspect its team. New opponents refreshes the candidate list.' },
@@ -215,131 +282,79 @@ const STRINGS = {
 
     'pro.s1.h': { ko: '왕좌', en: 'The Throne' },
     'pro.s1.b': {
-        ko: '지옥에는 왕이 있었습니다.\n\n'
-            + '바알. 대악마.\n'
-            + '이 땅의 모든 것은 그의 것이었고,\n'
-            + '7개의 감정을 나누어 부하에게 깃들게 했습니다.\n\n'
+        ko: '지옥에는 왕이 있었다. 대악마 바알이었다.\n\n'
+            + '이 땅의 모든 것이 그의 것이었다. 바알은 자신의 일곱 감정을 나누어 부하들에게 깃들게 했다.\n'
             + '분노, 시기, 탐욕, 나태, 폭식, 색욕, 오만.\n\n'
-            + '그것은 지옥을 유지하는 균형이었습니다.',
-        en: 'Hell had a king.\n\n'
-            + 'Baal. Archdemon.\n'
-            + 'Everything in this land was his,\n'
-            + 'and he set seven emotions to dwell in his servants.\n\n'
+            + '그 일곱 감정이 지옥의 균형을 붙들고 있었다.',
+        en: 'Hell had a king. His name was Baal, the archdemon.\n\n'
+            + 'Everything in this land was his. Baal divided his seven emotions among his servants.\n'
             + 'Wrath, Envy, Greed, Sloth, Gluttony, Lust, Pride.\n\n'
-            + 'That was the balance that held Hell together.',
+            + 'Those seven emotions held Hell in balance.',
     },
 
     'pro.s2.h': { ko: '배신의 밤', en: 'Night of Betrayal' },
     'pro.s2.b': {
-        ko: '그 밤, 7개의 칼이 등에 꽂혔습니다.\n\n'
-            + '뒤를 돌아봤습니다.\n'
-            + '전부 아는 얼굴이었습니다.\n\n'
-            + '싸웠습니다.\n'
-            + '하지만 힘의 반이 이미 빠져나간 뒤였습니다.\n'
-            + '묶여 있던 것이 풀려 있었습니다. 누군가가 열쇠를 넘겼습니다.\n\n'
-            + '밀려납니다. 발밑이 무너집니다.',
-        en: 'That night, seven blades sank into his back.\n\n'
-            + 'He looked back.\n'
-            + 'Every face was one he knew.\n\n'
-            + 'He fought.\n'
-            + 'But half his power had already drained away.\n'
-            + 'What had been bound was undone. Someone had handed over the key.\n\n'
-            + 'Pushed back. The ground gives way beneath him.',
+        ko: '그날 밤, 일곱 개의 칼이 바알의 등에 꽂혔다.\n\n'
+            + '돌아본 자리에는 낯익은 얼굴들뿐이었다. 그는 맞서 싸웠으나, 힘의 절반은 이미 빠져나간 뒤였다.\n\n'
+            + '묶여 있던 것이 풀려 있었다. 누군가 열쇠를 넘긴 것이었다.\n'
+            + '바알은 뒤로 밀려났다. 발밑이 무너졌다.',
+        en: 'That night, seven blades sank into Baal’s back.\n\n'
+            + 'When he turned, every face was familiar. He fought back, but half his power had already drained away.\n\n'
+            + 'What had been bound was undone. Someone had handed over the key.\n'
+            + 'Baal was driven back. The ground gave way beneath him.',
     },
 
     'pro.s3.h': { ko: '추락', en: 'The Fall' },
     'pro.s3.b': {
-        ko: '떨어졌습니다.\n\n'
-            + '지옥의 빛이 멀어집니다.\n'
-            + '힘이 빠져나갑니다.\n'
-            + '왕좌가, 부하들의 얼굴이, 그 밤의 순서가 — 흐려집니다.\n\n'
-            + '누가 칼을 들었는지.\n'
-            + '누가 먼저 등을 돌렸는지.\n'
-            + '7개였는지, 아니었는지.\n\n'
-            + '확실한 건 하나.\n\n'
-            + '배신당했습니다.\n\n'
-            + '그리고 — 몸에 무언가가 새겨지는 감각.\n'
-            + '뜨겁습니다. 살이 타는 것 같습니다.\n'
-            + '낙인입니다. 이 추락이 남긴 저주.',
-        en: 'He fell.\n\n'
-            + 'The light of Hell grows distant.\n'
-            + 'His strength drains away.\n'
-            + 'The throne, his servants’ faces, the order of that night — all of it blurs.\n\n'
-            + 'Who raised a blade.\n'
-            + 'Who turned their back first.\n'
-            + 'Whether there were seven, or not.\n\n'
-            + 'One thing is certain.\n\n'
-            + 'He was betrayed.\n\n'
-            + 'And then — the feeling of something carved into his body.\n'
-            + 'It burns. As if his flesh were on fire.\n'
-            + 'A brand. The curse this fall left behind.',
+        ko: '바알은 추락했다.\n\n'
+            + '지옥의 빛이 멀어질수록 힘도 빠져나갔다. 왕좌와 부하들의 얼굴, 그 밤에 일어난 일들이 차례로 흐려졌다.\n\n'
+            + '누가 먼저 칼을 들었는지, 누가 등을 돌렸는지 알 수 없었다. 칼이 일곱이었는지조차 확신할 수 없었다.\n'
+            + '배신당했다는 사실만은 남아 있었다.\n\n'
+            + '그때 살을 태우는 듯한 통증이 몸을 파고들었다. 무언가가 새겨지고 있었다.\n'
+            + '추락이 남긴 저주, 낙인이었다.',
+        en: 'Baal fell.\n\n'
+            + 'As the light of Hell receded, his strength drained away. The throne, his servants’ faces, the events of that night faded one by one.\n\n'
+            + 'He could not tell who had raised a blade first, or who had turned against him. He could no longer be certain there had been seven blades.\n'
+            + 'Only one certainty remained: he had been betrayed.\n\n'
+            + 'Then pain seared through his body, as though his flesh were burning. Something was being carved into him.\n'
+            + 'It was a brand, the curse his fall had left behind.',
     },
 
     'pro.s4.h': { ko: '마을', en: 'The Village' },
     'pro.s4.b': {
-        ko: '눈을 떴을 때, 누군가가 물을 먹이고 있었습니다.\n'
-            + '늙은 인간입니다.\n\n'
-            + '몸이 무겁습니다. 배가 고픕니다. 숨이 가쁩니다.\n'
-            + '전부 처음입니다. 전부 불쾌합니다.\n\n'
-            + '며칠이 지났습니다.\n'
-            + '인간들이 음식을 나눠줬습니다. 자기들도 부족하면서.\n'
-            + '다친 곳을 감싸줬습니다. 이름도 모르는 자에게.\n\n'
-            + '이해할 수 없습니다.\n'
-            + '왜 이들은 저를 살리려 하는 걸까요?\n\n'
-            + '지옥에서는 쓰러진 자를 밟고 지나갑니다.\n'
-            + '약한 것은 버려집니다. 그것이 당연합니다.\n\n'
-            + '이들은 당연한 것을 하지 않습니다.\n\n'
-            + '이름은 기억합니다. 바알.\n'
-            + '왕이었다는 것도. 빼앗겼다는 것도.\n'
-            + '하지만 그 밤이 선명하지 않습니다.\n'
-            + '7개의 칼. 아는 얼굴들. 무너지는 발밑.\n'
-            + '그 사이의 것들이 — 뒤섞여 있습니다.',
-        en: 'When he opened his eyes, someone was giving him water.\n'
-            + 'An old human.\n\n'
-            + 'His body is heavy. He is hungry. His breath is short.\n'
-            + 'All of it is new. All of it is unpleasant.\n\n'
-            + 'Days passed.\n'
-            + 'The humans shared their food. Though they had too little themselves.\n'
-            + 'They bound his wounds. For one whose name they did not know.\n\n'
-            + 'He cannot understand it.\n'
-            + 'Why do these things try to keep me alive?\n\n'
-            + 'In Hell, you step over those who fall.\n'
-            + 'The weak are cast aside. That is only natural.\n\n'
-            + 'These things do not do what is natural.\n\n'
-            + 'He remembers his name. Baal.\n'
-            + 'That he was a king. That it was taken from him.\n'
-            + 'But that night is not clear.\n'
-            + 'Seven blades. Familiar faces. The ground giving way.\n'
-            + 'What lies between — is tangled.',
+        ko: '눈을 떴을 때, 늙은 인간이 그의 입에 물을 흘려 넣고 있었다.\n\n'
+            + '몸은 무거웠고 배는 고팠다. 숨을 쉬는 것조차 버거웠다. 바알은 이 낯설고 나약한 몸이 불쾌했다.\n\n'
+            + '며칠 동안 인간들은 제 몫도 부족한 음식을 나누고 그의 상처를 감싸 주었다. 이름조차 모르는 자를 살리려 애썼다.\n'
+            + '지옥에서는 쓰러진 자를 밟고 지나갔다. 약한 자는 버려졌다. 그런데 이들은 그 당연한 이치를 거스르고 있었다.\n\n'
+            + '왜 이것들은 나를 살리려 하는가. 바알은 그들을 이해할 수 없었다.\n\n'
+            + '자신의 이름은 기억했다. 왕이었다는 것도, 모든 것을 빼앗겼다는 것도.\n'
+            + '그러나 일곱 개의 칼과 낯익은 얼굴들, 무너지는 발밑은 하나의 기억으로 이어지지 않았다.',
+        en: 'When he opened his eyes, an old human was giving him water.\n\n'
+            + 'His body was heavy, his stomach empty. Even breathing was hard. Baal resented this strange, frail body.\n\n'
+            + 'For days, the humans shared what little food they had and bound his wounds. They tried to save a man whose name they did not know. '
+            + 'In Hell, the fallen were trampled, the weak discarded. Yet these humans defied that natural order.\n\n'
+            + 'Why did these things try to keep him alive? Baal could not understand them.\n\n'
+            + 'He remembered his name, that he had been a king, that everything had been taken from him. '
+            + 'But the seven blades, the familiar faces and the crumbling ground would not form a coherent memory.',
     },
 
     'pro.s5.h': { ko: '불길', en: 'Flames' },
     'pro.s5.b': {
-        ko: '그 날 밤, 지평선이 붉어졌습니다.\n\n'
-            + '불길. 군세. 분노의 기운.\n'
-            + '이 기운을 압니다. 잊을 수 없습니다.\n\n'
-            + '사탄.\n'
-            + '바알이 지옥에서 추방한 자.\n'
-            + '왕이 바닥에 있다는 걸 감지한 것입니다.\n\n'
-            + '마을이 불탑니다. 인간들이 비명을 지릅니다.\n\n'
-            + '바알은 일어섰습니다.\n'
-            + '더 이상 직접 싸울 힘은 없습니다.\n'
-            + '하지만 지휘하는 법은 잊지 않았습니다.\n\n'
-            + '선술집에서 만난 용병들에게 명했습니다.',
+        ko: '그날 밤, 지평선이 붉게 물들었다.\n\n'
+            + '군세가 밀려오는 곳에서 분노의 기운이 번져 왔다. 바알은 그 기운을 잊지 않았다.\n'
+            + '사탄. 그가 지옥에서 추방했던 자였다. 추락한 왕의 기척을 쫓아온 것이었다.\n\n'
+            + '마을에 불길이 치솟고 인간들의 비명이 터져 나왔다. 바알은 몸을 일으켰다.\n'
+            + '직접 싸울 힘은 잃었으나, 지휘하는 법까지 잊지는 않았다.\n\n'
+            + '그는 선술집에서 만난 용병들을 향해 명령했다.',
         en: 'That night, the horizon turned red.\n\n'
-            + 'Flames. An army. The air of wrath.\n'
-            + 'He knows this air. He cannot forget it.\n\n'
-            + 'Satan.\n'
-            + 'The one Baal had banished from Hell.\n'
-            + 'He had sensed that the king lay in the dirt.\n\n'
-            + 'The village burns. The humans scream.\n\n'
-            + 'Baal rose.\n'
-            + 'He no longer had the strength to fight himself.\n'
-            + 'But he had not forgotten how to command.\n\n'
-            + 'He gave his order to the mercenaries he had met at the tavern.',
+            + 'The advancing army carried an aura of wrath. Baal had not forgotten it.\n'
+            + 'Satan. The one he had banished from Hell. He had followed the fallen king’s presence here.\n\n'
+            + 'Flames rose through the village, and the humans screamed. Baal rose to his feet.\n'
+            + 'He had lost the strength to fight, but he had not forgotten how to command.\n\n'
+            + 'He turned to the mercenaries he had met at the tavern and gave his order.',
     },
     /* 마지막 씬에만 선다 — 본문과 층이 다르다 (SCREEN_DESIGN §3-1) */
-    'pro.s5.q': { ko: '"저들을 쓸어버리세요. 제가 뒤에서 이끌겠습니다."', en: '"Sweep them away. I will lead from behind."' },
+    'pro.s5.q': { ko: '"저놈들을 쓸어라. 내가 뒤에서 이끈다."', en: '"Sweep them away. I will lead from behind."' },
     'pro.end': { ko: 'Chapter 1. 분노 / 불타는 전장', en: 'Chapter 1. Wrath / Burning Battlefield' },
 
     /* ── 원정 (실동작) ── */
@@ -438,14 +453,32 @@ const STRINGS = {
     'mail.claim': { ko: '받기', en: 'Claim' },
     'mail.claimAll': { ko: '모두 받기', en: 'Claim All' },
     'mail.claimed': { ko: '우편 {n}통 수령', en: 'Claimed {n} mail' },
-    // 상단바 종 — 다음 할 일과 처리 대기 결과 (ADR-0969). 배지는 안내를 제외한 대기 건수다.
+    // 상단바 종 — 다음 할 일과 처리 대기 결과. 배지는 미확인 알림 + 미션이다(ADR-0998).
     'nt.h': { ko: '알림', en: 'Notifications' },
     'nt.folder.notifications': { ko: '알림', en: 'Notifications' },
     'nt.folder.missions': { ko: '미션', en: 'Missions' },
     'nt.folder.achievements': { ko: '업적', en: 'Achievements' },
     'nt.achievementsLocked': { ko: '업적 · 준비 중', en: 'Achievements · Coming soon' },
     'nt.missionsEmpty': { ko: '진행 중인 미션 없음', en: 'No active missions' },
-    'nt.count': { ko: '알림 · 처리 대기 {n}건', en: { one: 'Notifications · {n} pending task', other: 'Notifications · {n} pending tasks' } },
+    'nt.count': { ko: '알림과 미션 · {n}건', en: { one: 'Notifications and missions · {n} item', other: 'Notifications and missions · {n} items' } },
+    // 초반 안내 — 해당 기능 가까이에 한 번씩 표시하는 다섯 가지 설명.
+    'tutorial.progress': { ko: '초반 안내', en: 'Getting started' },
+    'tutorial.confirm': { ko: '확인', en: 'Got it' },
+    'tutorial.settings': { ko: '초반 안내', en: 'Getting started' },
+    'tutorial.replay': { ko: '다시 보기', en: 'Show again' },
+    'tutorial.expedition.title': { ko: '첫 원정', en: 'Your first expedition' },
+    'tutorial.expedition.detail': { ko: '열린 장소를 눌러 원정을 보내세요. 전투와 다음 구간 진행은 게임이 켜져 있는 동안 자동으로 이어집니다.', en: 'Choose an unlocked area to send your party. Combat and travel to the next stage continue automatically while the game is open.' },
+    'tutorial.loot.title': { ko: '장비 비교', en: 'Compare your gear' },
+    'tutorial.loot.detail': { ko: '장비에 마우스를 올리면 선택한 영웅의 착용품과 비교합니다. 마음에 드는 장비를 클릭하면 장착합니다.', en: 'Hover over gear to compare it with the selected hero’s equipment. Click an item when you want to equip it.' },
+    'tutorial.lootTouch.detail': { ko: '장비를 길게 눌러 선택한 영웅의 착용품과 비교하세요. 상세 정보의 [착용]으로 교체할 수 있습니다.', en: 'Touch and hold gear to compare it with the selected hero’s equipment. Use [Equip] in its details to replace the worn item.' },
+    'tutorial.mastery.title': { ko: '마스터리 배분', en: 'Spend mastery points' },
+    'tutorial.mastery.detail': { ko: '레벨업으로 받은 포인트로 영웅을 강화하세요. 마스터리 창에서 배분하며, 초기화는 무료입니다.', en: 'Use points earned from leveling up to strengthen your hero. Open mastery to spend them; resetting is free.' },
+    'tutorial.masteryTree.detail': { ko: '배울 수 있는 칸을 누르면 포인트를 사용해 강화합니다. 초기화하면 사용한 포인트를 무료로 돌려받습니다.', en: 'Click an available node to spend a point and improve your hero. Resetting returns all spent points for free.' },
+    'tutorial.potions.title': { ko: '물약과 재고', en: 'Potions and stock' },
+    'tutorial.potions.detail': { ko: '물약은 설정한 체력 기준에 따라 자동으로 사용하며, 마실 때마다 재고가 줄어듭니다. 편성에서 물약 칸과 사용 기준을 바꿀 수 있습니다.', en: 'Potions are used automatically at the set health threshold, consuming stock with each drink. Change potion slots and the threshold in Party.' },
+    'tutorial.potionsShop.detail': { ko: '물약은 설정한 체력 기준에 따라 자동으로 사용하며, 마실 때마다 재고가 줄어듭니다. 부족한 물약은 상점에서 구매할 수 있습니다.', en: 'Potions are used automatically at the set health threshold, consuming stock with each drink. Buy more at the Shop when stocks run low.' },
+    'tutorial.construction.title': { ko: '건설과 해금', en: 'Build to unlock features' },
+    'tutorial.construction.detail': { ko: '건물의 조건과 비용을 확인해 건설하세요. 다음 랭크에서 열리는 기능과 효과도 이곳에서 확인할 수 있습니다.', en: 'Check a building’s requirements and cost before building. This panel also shows the features and effects its next rank unlocks.' },
     'nt.next': { ko: '다음 할 일', en: 'Next step' },
     'nt.empty': { ko: '대기 중인 알림 없음', en: 'No pending tasks' },
     'nt.shortcut': { ko: '바로가기', en: 'Go to' },
@@ -454,8 +487,10 @@ const STRINGS = {
     'nt.kind.commission': { ko: '의뢰 목표 달성 · 보상 수령 가능', en: 'Commission goal met · Reward ready' },
     'nt.kind.explore': { ko: '탐험 완료 · 결과 수령 가능', en: 'Exploration complete · Results ready' },
     'nt.kind.join': { ko: '가입 희망 영웅 도착', en: 'Hero awaiting recruitment' },
+    'nt.kind.mastery': { ko: '마스터리 포인트 사용 가능', en: 'Mastery points available' },
+    'nt.mastery.detail': { ko: '{hero} · Lv.{level} · 사용 가능 {n}포인트', en: { one: '{hero} · Lv.{level} · {n} point available', other: '{hero} · Lv.{level} · {n} points available' } },
     'nt.guide.firstExpedition': { ko: '첫 원정 출발', en: 'Start your first expedition' },
-    'nt.guide.buildShop': { ko: '상단 건설 · 물품 구매 개방', en: 'Build the Trading House · Unlock purchases' },
+    'nt.guide.buildShop': { ko: '상단을 건설하세요', en: 'Build the Trading House' },
     'nt.guide.buildTavern': { ko: '선술집 건설 · 의뢰 게시판 개방', en: 'Build the Tavern · Unlock commissions' },
     'nt.guide.earnGold': { ko: '원정으로 건설 자금 마련', en: 'Earn building funds on an expedition' },
     'nt.guide.acceptCommission': { ko: '첫 의뢰 수락', en: 'Accept your first commission' },
@@ -497,6 +532,9 @@ const STRINGS = {
     'ch.sel.title': { ko: '분해함', en: 'Salvage Box' },
     // ~~'ch.sel.lift'~~ 는 2026-10-21 삭제 — 필터를 누르면 바로 함에 오른다 (ADR-0695)
     'ch.sel.dust': { ko: '가루 +{d}', en: 'Dust +{d}' },
+    'ch.sel.salvagedMats': { ko: '{n}개 분해 → {mats}', en: 'Salvaged {n} → {mats}' },
+    'ch.auto.previewMats': { ko: '지금 인벤토리 기준 분해 {n}개 · {mats}', en: 'Inventory now: salvage {n} · {mats}' },
+    'exp.diff.stats': { ko: '몬스터 체력 ×{hp} · 데미지 ×{dmg}', en: 'Monster HP ×{hp} · Damage ×{dmg}' },
     'ch.sel.full': { ko: '분해함 가득 참', en: 'The Salvage Box is full' },
     'ch.sel.lockedNo': { ko: '잠긴 장비는 분해함에 올릴 수 없음', en: 'Locked gear cannot go in the Salvage Box' },
     // 자동 분해 창 — 부대 하나의 규칙 · 프리셋 · 레벨 조건 · 등급 × 부위 격자 · 미리보기 · 최근 분해 (item_design §6-5 · SCREEN_DESIGN §6 · ADR-0717 — ~~선 둘~~ ADR-0203)
@@ -804,6 +842,14 @@ const STRINGS = {
     // 연구소 줄 · 지점 · 연구 (2026-10-21 · SCREEN_DESIGN §8 · ADR-0684 · R298)
     'dp.post.train': { ko: '훈련', en: 'Training' },
     'dp.post.gamble': { ko: '도박장', en: 'Gambling Den' },
+    'dp.post.lib': { ko: '도서관', en: 'Library' },
+    'tip.ring.cooldown': { ko: '[{tag}] 쿨타임 {p} 감소', en: '[{tag}] Cooldown −{p}' },
+    'tip.ring.damage': { ko: '[{tag}] 스킬 데미지 +{p}', en: '[{tag}] Skill Damage +{p}' },
+    'tip.ring.extra_hit': { ko: '[{tag}] {p} 확률로 한 타 추가', en: '[{tag}] {p} chance of an extra hit' },
+    'tip.ring.duration': { ko: '[{tag}] 지속시간 +{p}', en: '[{tag}] Duration +{p}' },
+    'tip.ring.value': { ko: '[{tag}] 효과 수치 +{p}', en: '[{tag}] Effect Strength +{p}' },
+    'tip.ring.heal': { ko: '[{tag}] 회복량 +{p}', en: '[{tag}] Healing +{p}' },
+    'dp.lib.empty': { ko: '영웅을 등록하면 기본 스킬 도안을 생산합니다', en: 'Assign a hero to produce basic skill blueprints' },
     'dp.node.mine': { ko: '채광', en: 'Mining' },
     'dp.node.gather': { ko: '채집', en: 'Gathering' },
     'dp.node.log': { ko: '벌목', en: 'Logging' },
@@ -830,10 +876,12 @@ const STRINGS = {
     'dp.line.desc.visit': { ko: '시간마다 영웅 한 명이 선술집에 찾아옵니다', en: 'A hero comes to the tavern every few hours' },
     'dp.line.desc.train': { ko: '등록한 영웅이 시간마다 경험치를 받습니다', en: 'Assigned heroes gain XP every hour' },
     'dp.line.desc.gamble': { ko: '시간마다 골드를 법니다', en: 'Earns gold every hour' },
+    'dp.line.desc.lib': { ko: '등록한 영웅의 기본 스킬 도안을 생산합니다', en: 'Produces blueprints of assigned heroes’ basic skills' },
     'dp.out.h.res': { ko: '시간당 생산', en: 'Per Hour' },
     'dp.out.h.visit': { ko: '영웅 도착', en: 'Hero Arrivals' },
     'dp.out.h.train': { ko: '훈련 상한', en: 'Training Cap' },
     'dp.out.h.gamble': { ko: '시간당 생산', en: 'Per Hour' },
+    'dp.out.h.lib': { ko: '영웅별 시간당 도안', en: 'Blueprints per Hero per Hour' },
     'dp.out.interval': { ko: '도착 간격', en: 'Interval' },
     'dp.out.hours': { ko: '{h}시간', en: '{h}h' },
     'dp.out.rare': { ko: '레어 확률', en: 'Rare chance' },
@@ -846,6 +894,7 @@ const STRINGS = {
     'dp.fx.speed.visit': { ko: '도착 속도', en: 'Arrival speed' },
     'dp.fx.speed.train': { ko: '경험치', en: 'XP' },
     'dp.fx.speed.gamble': { ko: '골드', en: 'Gold' },
+    'dp.fx.speed.lib': { ko: '도안 생산 속도', en: 'Blueprint production speed' },
     'dp.fx.burst': { ko: '대박 확률', en: 'Jackpot chance' },
     'dp.fx.quality': { ko: '레어 확률', en: 'Rare chance' },
     'dp.fx.research': { ko: '연구 속도', en: 'Research speed' },
@@ -889,7 +938,7 @@ const STRINGS = {
     // 단계 트랙은 머리 줄이 없다 [2026-09-21 사용자 지시 · ADR-0228] — 개수는 상자의 순서 번호가 말한다.
     // 무엇으로 여는가(해금 조건)는 기획 백지라 문구도 만들지 않는다 (§8)
 
-    /* 상점 (SCREEN_DESIGN §8-3 · ADR-0223) — 패널 머리는 `dp.post.trade`(상단) 재사용. 상단은 탭 없이 장비 목록 하나(2026-09-30),
+    /* 상점 (SCREEN_DESIGN §8-3) — 구매 · 판매 패널이 나란히 선다. 상단은 탭 없이 장비 목록 하나(2026-09-30),
        오른쪽 특수상단 카드. 남은 시간은 **정보**다 — 재촉하는 말을 안 쓴다 (base_expedition_design §2-6) */
     // 상단 목록 교체 — 고른 영웅의 레벨로 다시 굴린다 · 무료는 선술집처럼 쿨다운 · 유료는 두 배씩 (§8-3 · game.shopReroll · ADR-0648)
     //   버튼은 행동과 값만 · 고른 영웅의 이름({name}) · 레벨({lv})은 버튼 왼쪽 따로 선 글자 (ADR-0965)
@@ -903,6 +952,18 @@ const STRINGS = {
     'td.leave': { ko: '떠나기까지 {t}', en: 'Leaves in {t}' },
     'td.next': { ko: '다음 상인까지 {t}', en: 'Next trader in {t}' },
     'td.buy': { ko: '구매', en: 'Buy' },
+    'td.sell': { ko: '판매', en: 'Sell' },
+    'td.sell.add': { ko: '판매 목록에 추가', en: 'Add to sale' },
+    'td.sell.remove': { ko: '판매 목록에서 제외', en: 'Remove from sale' },
+    'td.sell.clear': { ko: '선택 해제', en: 'Clear selection' },
+    'td.sell.empty': { ko: '아래 인벤토리에서 판매할 장비를 선택하세요.', en: 'Select equipment from the inventory below to sell.' },
+    'td.sell.count': { ko: '선택 {n}개', en: '{n} selected' },
+    'td.sell.done': { ko: '장비 {n}개 판매 (+{g} G)', en: 'Sold {n} items (+{g} G)' },
+    'td.sell.err.missing': { ko: '판매할 장비를 다시 선택하세요.', en: 'Select the equipment to sell again.' },
+    'td.sell.err.locked': { ko: '잠긴 장비는 판매할 수 없습니다.', en: 'Locked equipment cannot be sold.' },
+    'td.sell.err.sealed': { ko: '미개봉 상자는 판매할 수 없습니다.', en: 'Unopened boxes cannot be sold.' },
+    'td.sell.err.rarity': { ko: '판매 가격이 없는 장비입니다.', en: 'This equipment has no sale price.' },
+    'hint.shop_sell': { ko: '아래 인벤토리·창고의 장비를 눌러 판매 목록에 올립니다. 판매가는 같은 레벨·등급 상점가의 1/3이며 소수점은 버립니다. [판매]를 누르기 전에는 장비가 사라지지 않습니다.', en: 'Click equipment in the inventory or stash below to add it to the sale. Its sale price is one third of the shop price for its level and rarity, rounded down. Equipment stays in storage until you press Sell.' },
     // 상단 장비 구매 (SCREEN_DESIGN §8-3 · game.shopBuy · 2026-09-27) — 거절은 결과 코드와 짝이다(unbuilt 는 flashNeed · missing 은 stale 과 같은 뜻)
     'td.sold': { ko: '팔림', en: 'Sold' },
     'td.bought': { ko: '{name} 구매 (−{g} G)', en: 'Bought {name} (−{g} G)' },
@@ -1052,8 +1113,8 @@ const STRINGS = {
         en: "Rounds and a complete run",
     },
     'help.expedition.rounds.body': {
-        ko: "한 스테이지를 시작해서 끝낼 때까지가 한 번의 원정이며, 그 안에서 적 무리와 싸우는 단위가 라운드입니다. 라운드를 이기면 그 라운드의 보상을 받고 다음 무리와 싸웁니다. 모든 라운드를 이겨야 스테이지가 클리어됩니다.<br><br>다음 라운드로 넘어가도 깎인 HP가 저절로 가득 차지는 않습니다. 쓰러진 영웅도 그 원정에서는 계속 빠져 있으므로, 앞 라운드를 이겼어도 뒤 라운드에서 파티가 무너질 수 있습니다. 회복·보호·적을 빨리 처치하는 힘을 함께 살펴보는 이유입니다.<br><br>라운드 보상으로 레벨이 오른 영웅은 다음 라운드를 최대 HP로 시작합니다. 원정 자체가 끝나면 승패와 관계없이 모두 회복하며, 다음 원정에는 다시 전원이 출발합니다.",
-        en: "A run lasts from entering a stage until that attempt ends. Each fight against a group of enemies is a round. Winning a round grants its rewards and moves on to the next group. Win every round to clear the stage.<br><br>Lost HP does not automatically refill between rounds. Fallen heroes stay out for the rest of that run, so a party that wins early rounds can still fall apart later. This is why healing, protection and killing enemies quickly all matter.<br><br>A hero who levels up from a round's rewards starts the next round at full HP. When the run itself ends, everyone recovers regardless of the result and can join the next departure.",
+        ko: "한 스테이지를 시작해서 끝낼 때까지가 한 번의 원정이며, 그 안에서 적 무리와 싸우는 단위가 라운드입니다. 라운드를 이기면 그 라운드의 보상을 받고 다음 무리와 싸웁니다. 모든 라운드를 이겨야 스테이지가 클리어됩니다.<br><br>철수·패배·게임 종료 뒤에도 아직 이기지 못한 라운드의 적과 장비는 다시 만납니다. 이미 이긴 라운드는 다음 출발에 새 무리로 바뀝니다. 여러 부대가 같은 스테이지에 가면 서로 다른 무리를 맡고, 미완료 무리는 다음 부대에게 돌아갑니다. 매직찬스를 높이면 같은 적의 장비 희귀도가 좋아질 수 있습니다.<br><br>다음 라운드로 넘어가도 깎인 HP가 저절로 가득 차지는 않습니다. 쓰러진 영웅도 그 원정에서는 계속 빠져 있으므로, 앞 라운드를 이겼어도 뒤 라운드에서 파티가 무너질 수 있습니다. 회복·보호·적을 빨리 처치하는 힘을 함께 살펴보는 이유입니다.<br><br>라운드 보상으로 레벨이 오른 영웅은 다음 라운드를 최대 HP로 시작합니다. 원정 자체가 끝나면 승패와 관계없이 모두 회복하며, 다음 원정에는 다시 전원이 출발합니다.",
+        en: "A run lasts from entering a stage until that attempt ends. Each fight against a group of enemies is a round. Winning a round grants its rewards and moves on to the next group. Win every round to clear the stage.<br><br>After retreat, defeat or closing the game, unfinished rounds keep their enemies and equipment. Rounds already won bring new groups on the next departure. Multiple parties take different groups at the same stage, and unfinished groups return for the next party. Raising Magic Find can improve the same enemies' equipment rarity.<br><br>Lost HP does not automatically refill between rounds. Fallen heroes stay out for the rest of that run, so a party that wins early rounds can still fall apart later. This is why healing, protection and killing enemies quickly all matter.<br><br>A hero who levels up from a round's rewards starts the next round at full HP. When the run itself ends, everyone recovers regardless of the result and can join the next departure.",
     },
     'help.expedition.stages.title': {
         ko: "스테이지와 난이도",
@@ -1108,8 +1169,8 @@ const STRINGS = {
         en: "First-clear chests and the mailbox",
     },
     'help.expedition.firstclear.body': {
-        ko: "보스가 나오는 스테이지를 그 난이도에서 처음 클리어하면 무기 상자 또는 방어구 상자 하나를 받습니다. 일반 장소의 III과 챕터보스 스테이지가 대상이며, I·II나 이미 깬 같은 난이도의 스테이지에서는 다시 받지 않습니다. 리포트의 [클리어 보상]에서 받은 상자를 확인할 수 있습니다.<br><br>상자는 깬 부대의 인벤토리에 들어옵니다. 새 상자 칸을 넣을 공간이 없으면 오른쪽 위 편지봉투의 우편함으로 갑니다. 우편함의 [받기]·[모두 받기]로 원래 부대의 인벤토리에 받을 수 있으며, 공간이 부족한 우편은 그대로 남습니다. 일반 드롭처럼 넘쳐서 분해되지 않습니다.<br><br>장비를 줄 영웅을 먼저 선택한 뒤 상자를 우클릭하고 [사용]합니다. 무기 상자는 그 영웅 직업의 무기, 방어구 상자는 그 직업에 어울리는 투구·갑옷·장갑·신발 중 하나가 나오며, 아이템 레벨은 여는 순간 그 영웅의 레벨입니다. 나온 장비는 상자가 있던 보관함에 들어가며 자동으로 장착되지는 않습니다.<br><br>현재 첫 클리어 보상은 하급 상자이며 매직 또는 레어 장비가 나옵니다. 같은 종류·등급 상자는 한 칸에 쌓입니다. 여러 개 쌓인 상자를 열 때는 새 장비가 들어갈 빈 칸도 필요합니다.",
-        en: "The first clear of a boss stage on each difficulty grants one weapon or armor chest. This includes stage III of regular areas and chapter-boss stages. Stages I and II do not grant one, and repeating an already-cleared stage on that difficulty grants no additional chest. Check [Clear Reward] in the report.<br><br>The chest enters the inventory of the party that cleared the stage. If there is no room for a new chest slot, it goes to the envelope mailbox at the top right. [Claim] or [Claim All] sends it to the original party's inventory. Mail that cannot fit stays waiting. Chests are not salvaged by ordinary loot overflow.<br><br>Select the hero you want to equip, then right-click the chest and choose [Use]. Weapon chests give a weapon for that hero's class. Armor chests give a suitable helmet, armor, gloves or boots. The item's level matches the selected hero's level when opened. The new item enters the same container as the chest and is not equipped automatically.<br><br>Current first-clear rewards are Low-Grade chests, containing Magic or Rare gear. Chests of the same kind and grade share one slot. Opening one from a stack also needs a free slot for the new item.",
+        ko: "보스가 나오는 스테이지를 그 난이도에서 처음 클리어하면 상자 하나를 받습니다. 1챕터에서는 무기 상자를 확정으로 받고, 2챕터부터는 무기 상자 또는 방어구 상자를 같은 확률로 받습니다. 일반 장소의 III과 챕터보스 스테이지가 대상이며, I·II나 이미 깬 같은 난이도의 스테이지에서는 다시 받지 않습니다. 리포트의 [클리어 보상]에서 받은 상자를 확인할 수 있습니다.<br><br>상자는 깬 부대의 인벤토리에 들어옵니다. 새 상자 칸을 넣을 공간이 없으면 오른쪽 위 편지봉투의 우편함으로 갑니다. 우편함의 [받기]·[모두 받기]로 원래 부대의 인벤토리에 받을 수 있으며, 공간이 부족한 우편은 그대로 남습니다. 일반 드롭처럼 넘쳐서 분해되지 않습니다.<br><br>장비를 줄 영웅을 먼저 선택한 뒤 상자를 우클릭하고 [사용]합니다. 무기 상자는 그 영웅 직업의 무기, 방어구 상자는 그 직업에 어울리는 투구·갑옷·장갑·신발 중 하나가 나오며, 아이템 레벨은 여는 순간 그 영웅의 레벨입니다. 나온 장비는 상자가 있던 보관함에 들어가며 자동으로 장착되지는 않습니다.<br><br>현재 첫 클리어 보상은 하급 상자이며 매직 또는 레어 장비가 나옵니다. 같은 종류·등급 상자는 한 칸에 쌓입니다. 여러 개 쌓인 상자를 열 때는 새 장비가 들어갈 빈 칸도 필요합니다.",
+        en: "The first clear of a boss stage on each difficulty grants one chest. Chapter 1 always grants a weapon chest; from Chapter 2 onward, weapon and armor chests have equal chances. This includes stage III of regular areas and chapter-boss stages. Stages I and II do not grant one, and repeating an already-cleared stage on that difficulty grants no additional chest. Check [Clear Reward] in the report.<br><br>The chest enters the inventory of the party that cleared the stage. If there is no room for a new chest slot, it goes to the envelope mailbox at the top right. [Claim] or [Claim All] sends it to the original party's inventory. Mail that cannot fit stays waiting. Chests are not salvaged by ordinary loot overflow.<br><br>Select the hero you want to equip, then right-click the chest and choose [Use]. Weapon chests give a weapon for that hero's class. Armor chests give a suitable helmet, armor, gloves or boots. The item's level matches the selected hero's level when opened. The new item enters the same container as the chest and is not equipped automatically.<br><br>Current first-clear rewards are Low-Grade chests, containing Magic or Rare gear. Chests of the same kind and grade share one slot. Opening one from a stack also needs a free slot for the new item.",
     },
     'help.expedition.review.title': {
         ko: "막힌 원정을 살펴보는 순서",
@@ -1548,8 +1609,8 @@ const STRINGS = {
         en: "Compare, then buy",
     },
     'help.shop.buy.body': {
-        ko: "위쪽 영웅 띠에서 비교할 영웅을 고릅니다. 장비 상품에 마우스를 올리면 그 영웅의 착용품과 비교할 수 있습니다. 장비는 레벨이나 등급뿐 아니라 필요한 옵션·스킬·파티 전술과 맞는지도 확인합니다.<br><br>장비 상품을 선택하고 아래 <b>[구매]</b>를 누르면 <b>현재 보고 있는 부대 인벤토리</b>로 들어갑니다. 자동으로 장착되지는 않습니다. 장비 구매에는 골드와 빈 인벤토리 칸이 필요합니다.<br><br><b>스킬 도안은 도안 재고에, 물약은 공동 물약 재고에</b> 쌓입니다. 장비 인벤토리 칸을 차지하지 않으므로 장비 칸이 가득 차 있어도 살 수 있습니다.<br><br>장비와 스킬 도안은 목록의 한 칸마다 한 번 살 수 있습니다. 팔린 칸은 <b>[교체]</b>까지 그대로 남습니다. 필요 없는 장비를 재료로 바꾸는 것은 판매가 아니라 캐릭터·인벤토리의 <b>[분해]</b>입니다.<br><br>자물쇠 칸은 아직 팔지 않는 상품입니다. 처음 지은 상단은 맨 윗줄의 무기·물약만 팔고, 건설에서 상단 랭크를 올리면 방어구·장신구·스킬 도안 줄이 열립니다.",
-        en: "Choose a comparison hero in the top strip. Hover an equipment item to compare it with that hero's worn item. Alongside level and rarity, check whether its options suit the skills and Party tactics you use.<br><br>Select an equipment item, then press <b>Buy</b> below. It enters the <b>party inventory you are viewing</b> and is not equipped automatically. Buying equipment requires enough gold and a free inventory slot.<br><br><b>Skill blueprints enter blueprint stock, and potions enter shared potion stock.</b> Neither occupies equipment slots, so a full equipment inventory does not block these purchases.<br><br>Each equipment or skill-blueprint slot can be bought once per list. Sold slots remain until <b>Refresh</b>. To turn unwanted gear into materials, use <b>Salvage</b> in Character or the inventory; there is no selling step.<br><br>Locked slots are goods not yet on sale. A newly built Trading House sells only the top row of weapons and potions; upgrade it in Construction to open the armor, jewelry and skill-blueprint rows.",
+        ko: "위쪽 영웅 띠에서 비교할 영웅을 고릅니다. 장비 상품에 마우스를 올리면 그 영웅의 착용품과 비교할 수 있습니다. 장비는 레벨이나 등급뿐 아니라 필요한 옵션·스킬·파티 전술과 맞는지도 확인합니다.<br><br>장비 상품을 선택하고 아래 <b>[구매]</b>를 누르면 <b>현재 보고 있는 부대 인벤토리</b>로 들어갑니다. 자동으로 장착되지는 않습니다. 장비 구매에는 골드와 빈 인벤토리 칸이 필요합니다.<br><br><b>스킬 도안은 도안 재고에, 물약은 공동 물약 재고에</b> 쌓입니다. 장비 인벤토리 칸을 차지하지 않으므로 장비 칸이 가득 차 있어도 살 수 있습니다.<br><br>장비와 스킬 도안은 목록의 한 칸마다 한 번 살 수 있습니다. 팔린 칸은 <b>[교체]</b>까지 그대로 남습니다.<br><br>상단 화면에서 아래 인벤토리·창고의 장비를 누르면 장착 대신 <b>판매 목록</b>에 오릅니다. 다시 누르면 선택을 풀고, <b>[판매]</b>를 눌러야 장비가 사라지고 골드를 받습니다. 판매가는 <b>같은 레벨·등급 상점가의 1/3</b>이며 소수점은 버립니다. 잠근 장비와 미개봉 상자는 팔 수 없습니다. 재료가 필요하면 인벤토리의 <b>[분해]</b>를 사용합니다.<br><br>자물쇠 칸은 아직 팔지 않는 상품입니다. 처음 지은 상단은 맨 윗줄의 무기·물약만 팔고, 건설에서 상단 랭크를 올리면 방어구·장신구·스킬 도안 줄이 열립니다.",
+        en: "Choose a comparison hero in the top strip. Hover an equipment item to compare it with that hero's worn item. Alongside level and rarity, check whether its options suit the skills and Party tactics you use.<br><br>Select an equipment item, then press <b>Buy</b> below. It enters the <b>party inventory you are viewing</b> and is not equipped automatically. Buying equipment requires enough gold and a free inventory slot.<br><br><b>Skill blueprints enter blueprint stock, and potions enter shared potion stock.</b> Neither occupies equipment slots, so a full equipment inventory does not block these purchases.<br><br>Each equipment or skill-blueprint slot can be bought once per list. Sold slots remain until <b>Refresh</b>.<br><br>In the Shop, clicking equipment in the inventory or stash below adds it to the <b>sale list</b>. Click it again to deselect it. Only pressing <b>Sell</b> removes the equipment and credits gold. Sale prices are <b>one third of the shop price for the same level and rarity</b>, rounded down. Locked equipment and unopened boxes cannot be sold. Use <b>Salvage</b> in the inventory when you need materials.<br><br>Locked slots are goods not yet on sale. A newly built Trading House sells only the top row of weapons and potions; upgrade it in Construction to open the armor, jewelry and skill-blueprint rows.",
     },
     'help.shop.restock.title': {
         ko: "교체 전에 영웅 레벨 확인",
@@ -1644,8 +1705,8 @@ const STRINGS = {
         en: "Turning a blueprint into a book",
     },
     'help.library.craft.body': {
-        ko: "스킬 도안은 원정에서 얻거나 상점에서 구매합니다. 도서관의 스킬북 기능을 열면 <b>[스킬 북 제작]</b>에 가진 도안이 표시됩니다. 그림을 골라 비용을 확인하고 <b>[만들기]</b>합니다.<br><br>도안 한 장과 <b>{gold}G · 최하급 가루 {dust}개 · 최하급 약초 {herb}개</b>가 같은 스킬북 한 권이 됩니다. 도안도 소모되므로 한 번 얻었다고 무제한 제작이 열리는 것은 아닙니다. 같은 도안과 책은 여러 개 모을 수 있고, 장비 인벤토리 칸을 차지하지 않습니다.",
-        en: "Obtain skill blueprints from Expeditions or the Shop. Once Library book features unlock, owned blueprints appear in <b>Skill Book Crafting</b>. Select an icon, check the cost and press <b>Craft</b>.<br><br>One blueprint plus <b>{gold}G, {dust} lowest-grade dust and {herb} lowest-grade herbs</b> produces one matching book. The blueprint is consumed; finding one does not unlock unlimited crafting. Blueprints and books can stack without taking equipment inventory slots.",
+        ko: "스킬 도안은 원정·상점·연구소 도서관에서 얻습니다. 도서관의 스킬북 기능을 열면 <b>[스킬 북 제작]</b>에 가진 도안이 표시됩니다. 그림을 골라 비용을 확인하고 <b>[만들기]</b>합니다.<br><br>도안 한 장과 <b>{gold}G · 최하급 가루 {dust}개 · 최하급 약초 {herb}개</b>가 같은 스킬북 한 권이 됩니다. 도안도 소모되므로 한 번 얻었다고 무제한 제작이 열리는 것은 아닙니다. 같은 도안과 책은 여러 개 모을 수 있고, 장비 인벤토리 칸을 차지하지 않습니다.",
+        en: "Obtain skill blueprints from Expeditions, the Shop or the Laboratory Library line. Once Library book features unlock, owned blueprints appear in <b>Skill Book Crafting</b>. Select an icon, check the cost and press <b>Craft</b>.<br><br>One blueprint plus <b>{gold}G, {dust} lowest-grade dust and {herb} lowest-grade herbs</b> produces one matching book. The blueprint is consumed; finding one does not unlock unlimited crafting. Blueprints and books can stack without taking equipment inventory slots.",
     },
     'help.library.learn.title': {
         ko: "읽힐 영웅을 고르고 배우기",
@@ -1684,8 +1745,8 @@ const STRINGS = {
         en: "Lines, nodes and ranks",
     },
     'help.resource.lines.body': {
-        ko: "연구소의 <b>줄</b>은 자원·수색·훈련·도박장처럼 자동으로 얻는 것의 분야입니다. <b>지점</b>은 그 줄의 생산량·간격·품질·등록 칸 등을 올리는 연구 항목입니다.<br><br>왼쪽 <b>줄 카드</b>를 누르면 오른쪽에 생산량과 등록 효과가 나옵니다. 동그란 <b>지점</b>을 누르면 현재 값·다음 효과·비용·연구 시간을 볼 수 있습니다. 연구소의 위쪽 영웅 띠는 현황을 보는 자리이며, 실제 등록은 줄 카드의 얼굴이나 <b>+</b>에서 합니다.<br><br>잠긴 지점은 필요한 건물·랭크부터 갖춰야 합니다. <b>건설</b>에서 연구소 랭크를 올리면 새 지점이 열리고, 이 화면의 <b>연구</b>로 열린 지점의 레벨을 올립니다.",
-        en: "A Laboratory <b>line</b> is a field of automatic output: Resources, Search, Training or Gambling Den. A <b>node</b> is research that improves a line's output, interval, quality, assignment seats or another property.<br><br>Select a <b>line card</b> on the left to see output and hero bonuses on the right. Select a round <b>node</b> for its current value, next effect, cost and research time. The hero strip at the top shows assignments; open an actual assignment from a line's portrait or <b>+</b>.<br><br>Locked nodes need the shown building or rank first. Raise Laboratory ranks in <b>Construction</b> to open nodes, then use <b>Research</b> here to raise their levels.",
+        ko: "연구소의 <b>줄</b>은 자원·수색·훈련·도박장·도서관처럼 자동으로 얻는 것의 분야입니다. <b>지점</b>은 그 줄의 생산량·간격·품질·등록 칸 등을 올리는 연구 항목입니다.<br><br>왼쪽 <b>줄 카드</b>를 누르면 오른쪽에 생산량과 등록 효과가 나옵니다. 동그란 <b>지점</b>을 누르면 현재 값·다음 효과·비용·연구 시간을 볼 수 있습니다. 연구소의 위쪽 영웅 띠는 현황을 보는 자리이며, 실제 등록은 줄 카드의 얼굴이나 <b>+</b>에서 합니다.<br><br>잠긴 지점은 필요한 건물·랭크부터 갖춰야 합니다. <b>건설</b>에서 연구소 랭크를 올리면 새 지점이 열리고, 이 화면의 <b>연구</b>로 열린 지점의 레벨을 올립니다.<br><br>도서관의 책 제작 기능을 열면 연구소 도서관 줄에 영웅을 등록할 수 있습니다. 등록한 영웅의 고유·배운 기본 스킬 중 하나의 도안을 생산합니다. 전직 스킬은 제외하며, 스킬이 업그레이드 상한에 닿아도 도안은 생산합니다.",
+        en: "A Laboratory <b>line</b> is a field of automatic output: Resources, Search, Training, Gambling Den or Library. A <b>node</b> is research that improves a line's output, interval, quality, assignment seats or another property.<br><br>Select a <b>line card</b> on the left to see output and hero bonuses on the right. Select a round <b>node</b> for its current value, next effect, cost and research time. The hero strip at the top shows assignments; open an actual assignment from a line's portrait or <b>+</b>.<br><br>Locked nodes need the shown building or rank first. Raise Laboratory ranks in <b>Construction</b> to open nodes, then use <b>Research</b> here to raise their levels.<br><br>Unlock book crafting in the Library to assign heroes to the Laboratory Library line. Each assigned hero produces blueprints of a randomly chosen innate or learned basic skill. Advance skills are excluded; reaching a skill upgrade cap does not stop production.",
     },
     'help.resource.production.title': {
         ko: "자동 생산과 게임을 닫은 동안",
@@ -2083,7 +2144,8 @@ const STRINGS = {
     'rep.drops.h': { ko: '획득 아이템', en: 'Loot' },   // 책 · 재료도 이 격자에 선다 (ADR-0625)
     'rep.drops.sub': { ko: '{n}개', en: { one: '{n} item', other: '{n} items' } },
     'rep.drops.none': { ko: '떨어진 아이템 없음', en: 'No loot' },
-    'rep.blueprint': { ko: '도안', en: 'Plan' },   // 스킬 도안 칸 배지 — 리포트 획득 격자 · 상단 도안 칸 (R293 · ADR-0680 — ~~`rep.book` 「책」~~ ADR-0420)
+    'rep.book': { ko: '스킬북', en: 'Book' },
+    'rep.blueprint': { ko: '도안', en: 'Plan' },   // 스킬 도안 칸 배지 — 리포트 획득 격자 · 상단 도안 칸
     'rep.matGot': { ko: '획득 {n}', en: 'Gained {n}' },   // 획득 격자의 처치 재료 칸 툴팁 아래 줄 (2026-10-06 · ADR-0530)
 
     /* ── 런 목록 · 기여 (리포트 개편 2026-09-09 · SCREEN_DESIGN §4-3 · ADR-0063) ── */
@@ -2261,8 +2323,9 @@ const STRINGS = {
     'tip.noAffix': { ko: '접사 없음', en: 'No affixes' },
     // 머리글 오른쪽 끝 종류 — 투구 · 장갑 · 신발은 갈래 + 부위(`가죽 장갑`) · 갈래 id 가 부위마다 겹쳐 갈래만으론 못 읽는다 (§6 · ADR-0526)
     'tip.kindPart': { ko: '{group} {part}', en: '{group} {part}' },
-    /* 목걸이 발동 스킬 줄 [신설 2026-09-21 · §6 · ADR-0213] — 발동 조건은 베이스가 정한다(amulet_proc.csv). {p} = 확률(% 포함) · {sec} = 간격 초 · {skill} = 스킬 이름.
-       ⚠ 발동은 전투에 아직 안 걸린다 — 줄 끝에 `tip.inert` 가 붙는다 */
+    /* 장비 발동 스킬 줄 (§6) — {p} = 확률(% 포함) · {sec} = 옛 목걸이 간격 초 · {skill} = Lv.n + 스킬 이름.
+       장비 접사의 타격 · 시전 · 피격 발동은 전투에 적용한다. 퇴역한 옛 목걸이 발동만 `tip.inert` 가 붙는다 */
+    'tip.proc.skill': { ko: 'Lv.{lv} {skill}', en: 'Lv.{lv} {skill}' },
     'tip.proc.hit': { ko: '타격 시 {p} 확률로 {skill} 발동', en: '{p} chance to cast {skill} on hit' },
     'tip.proc.struck': { ko: '피격 시 {p} 확률로 {skill} 발동', en: '{p} chance to cast {skill} when struck' },
     'tip.proc.cast': { ko: '시전 시 {p} 확률로 {skill} 발동', en: '{p} chance to cast {skill} on cast' },   // 마법 무기 발동 옵션 (2026-10-05 · R208)
@@ -2444,6 +2507,7 @@ const STRINGS = {
     'tr.err.done': { ko: '이미 전직 완료', en: 'Already advanced' },
     'tr.err.working': { ko: '전직 중', en: 'Already advancing' },
     'tr.err.level': { ko: '레벨 부족', en: 'Level too low' },
+    'tr.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
     'tr.err.exploring': { ko: '탐험 나가 있음', en: 'Out exploring' },
     'tr.err.none': { ko: '전직', en: 'Advance', lock: true },
     'tr.err.learned': { ko: '배운 스킬 되돌리기', en: 'Refund the learned skill', lock: true },
@@ -2808,6 +2872,7 @@ const STRINGS = {
 
     /* ── 실험실 (SCREEN_DESIGN §18 · ADR-0580 · ADR-0610) — 개발 장치 · 패널에 규칙 문장이 없다(숫자 · 이름 · 버튼만) ── */
     'lab.tool.item': { ko: '아이템 생성기', en: 'Item Generator' },
+    'lab.tool.raid': { ko: '레이드', en: 'Raid' },
     'lab.h.chapter': { ko: '챕터', en: 'Chapter' },
     'lab.h.monster': { ko: '몬스터', en: 'Monster' },
     'lab.h.grade': { ko: '등급', en: 'Grade' },

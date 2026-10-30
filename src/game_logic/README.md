@@ -12,9 +12,13 @@
 
 ## 파일별 역할
 
+`skill_tags.js`는 반지의 태그별 보정을 더하고 스킬 실행·설명창이 공유하는 조건부 수치·지속시간·회복·피해 보정을 낸다. 순수 함수이며 상태·난수를 소유하지 않는다.
+
 | 파일 | 역할 |
 |---|---|
+| `raid.js` | 세 편성 공동 보스 연습. 실제 영웅·장비·진형·스킬을 복사하고 기존 `battle.createRun`으로 기본 공격·스킬을 자동 실행합니다. 편성별 효과 범위·공격 예고·시전 파괴·단계·철수·피해/스킬 회복 집계, CSV 주입·결정론. `createRun(teams, id, rng)`는 진행·관전·철수 핸들을 제공합니다. 세이브·재고·보상은 변경하지 않습니다. |
 | `rng.js` | mulberry32 + `deriveSeed(마스터 시드, 스트림)` |
+| `stage_seed.js` | 원정 판 장부·로컬 시드 발급·외부 발급안 검증. `state.stageSeedRequest`·`departRun(..., seedGrant)`가 입구다. 세이브 v44의 `stageDecks`·`runs[*].stageSeeds`가 소유권을 저장하며 승리한 라운드만 소진하고 나머지는 반환한다. `battle.createRun(..., rules, encounterSeeds)`는 만남·전투 난수를 분리하며 몬스터 장비는 부위별 스트림이다(R405) |
 | `csv.js` | CSV 파서 (fetch 는 `ui/data.js`) |
 | `naming.js` | **이름 조립** — 아이템(`composeName`) · 정예 몬스터(`eliteName`). 언어별 어순·조사가 규칙이라 **CSV 로 적을 수 없다** — 그래서 데이터가 아니라 코드다. 죄종 표시명·형용사는 주입(⚠ 아직 `ui/mock.js:SINS`) · rng 를 쓰지 않는다 |
 | `formula.js` | **피해 계산** = battle_design.md §9. 순수 함수만 — **레벨 차 적중**(명중·회피 없음) · `def_curve_k` **상수** 감쇠 · **저항 상한형**(직접 %) · 피해 감소 원천별 곱 · 직격/비직격 · 성장 축의 유일한 곡선 `growthMult`. 엔진 이식 대조 검증의 핵 |
@@ -36,4 +40,4 @@
 검증: [`src/dev/README.md`](../dev/README.md)
 
 ---
-*마지막 업데이트: 2026-10-17*
+*마지막 업데이트: 2026-10-30*

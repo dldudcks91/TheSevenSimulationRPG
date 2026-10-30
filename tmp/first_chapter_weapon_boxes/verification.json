@@ -1,0 +1,37 @@
+{
+  "current": {
+    "title": "FAIL 742/743",
+    "failures": [
+      "golden: 시드 10 × 스테이지 6 = 60런 지문이 golden.json 과 일치한다10/60 런 불일치 / 입력 변화 — CSV 2종이 달라졌다: lab_material: 09a9a350 → 7e766279 · monster_type: 289a1659 → 81eb45ed → 의도한 변경이면 **다시 찍는다** (test.html?golden=write) / [seed 1 stage 1033] rounds: 3 → 2 · cleared: 2 → 1 (+11) / [seed 2 stage 1033] sec: 53.9 → 76.9 · events: 212 → 251 (+5) / [seed 3 stage 1033] rounds: 2 → 1 · cleared: 1 → 0 (+10) / [seed 4 stage 1033] sec: 41.1 → 45.6 · gold: 48 → 64 (+9) / [seed 5 stage 1033] sec: 66.2 → 139 · events: 259 → 321 (+4) / [seed 6 stage 1033] sec: 33.4 → 55.4 · gold: 72 → 90 (+8)"
+    ],
+    "errors": [],
+    "box_checks": [
+      "첫 클리어 상자: 1장은 모든 단에서 무기 확정 · 2장부터 무기/방어구 무작위 · 보스 칸만 · 깬 부대 인벤토리 · 겹침 · 재클리어 없음 · 같은 시드 = 같은 종류 · clearBox {kind, tier, mail} (base_expedition_design §1-6 · R333 · R347)1장 보스 5곳 × 3단 무기 확정 · I · II/재클리어 없음 · 2장 12시드 기존 추첨 유지",
+      "우편함: 깬 부대 인벤토리에 새 칸이 없으면 상자는 우편으로 {kind} — 받기는 같은 종류 칸에 겹치고(칸이 차 있어도) 없으면 bagFull · 모두 받기는 들어가는 만큼 · 우편이 든 세이브가 열린다 (ADR-0732 · ADR-0743 · R333)weapon · weapon → 자리 하나 → 받음 2 · 남음 0 · 가득 차도 같은 종류는 겹친다",
+      "상자 까기: 보고 있는 영웅에게 맞는 장비 · 아이템 레벨 = 그 영웅 레벨 · 매직 이상 — 무기 = 그 직업 무기군 · 방어구 = 투구 · 갑옷 · 장갑 · 신발 중 그 직업 갈래 · 마지막 하나는 그 칸 그대로 · 남으면 끝 칸(차면 bagFull · 회차 안 오름) · 같은 시드 = 같은 장비 (ADR-0742 · R333)archer Lv7 → magic bow · mage Lv23 → armor · gloves · boots",
+      "상자 칸: 장착 · 분해 · 강화가 sealed · 강화 상태 null · 자동 장착 · 자동 분해가 안 본다 · 옮기면 받는 쪽 같은 종류 칸에 합쳐진다(칸이 차 있어도) · 정렬은 맨 앞 (ADR-0742 · R333)옮김 · 합침 ×5 · 정렬 맨 앞",
+      "상자 이관: 옛 봉인 무기(box {stageId, difficulty})는 무기 상자 1개 · 한 줄의 같은 종류는 하나로 합친다 · 옛 우편(item)은 무기 상자 우편으로 · 보관 줄 밖 상자는 지운다 · counters.box 0 (INTERFACE §4 · R333)봉인 무기 2 + 1 → 무기 상자 ×2 · ×1 · 우편 → kind weapon",
+      "상자 등급: 하급 = 매직 · 레어 · 중급 = 레어 · 에픽 · 고급 = 에픽 · 레전더리(그 둘만 · 둘 다 나온다) · 같은 종류라도 등급이 다르면 안 겹친다(옮기기 · 우편) · 저장하면 등급이 남는다 · 등급이 없거나 모르는 옛 칸 · 우편은 하급 (base_expedition_design §1-6 「등급」 · INTERFACE §4 · R349)low magic·rare / mid rare·epic / high epic·legendary · 다른 등급 안 겹침 · 옛 칸 → 하급 ×4"
+    ]
+  },
+  "baseline": {
+    "title": "FAIL 741/743",
+    "failures": [
+      "첫 클리어 상자: 1장은 모든 단에서 무기 확정 · 2장부터 무기/방어구 무작위 · 보스 칸만 · 깬 부대 인벤토리 · 겹침 · 재클리어 없음 · 같은 시드 = 같은 종류 · clearBox {kind, tier, mail} (base_expedition_design §1-6 · R333 · R347)nightmare 1013 1장 첫 클리어는 무기 상자여야 한다: {\"kind\":\"armor\",\"tier\":\"low\",\"mail\":false}",
+      "golden: 시드 10 × 스테이지 6 = 60런 지문이 golden.json 과 일치한다10/60 런 불일치 / 입력 변화 — CSV 2종이 달라졌다: lab_material: 09a9a350 → 7e766279 · monster_type: 289a1659 → 81eb45ed → 의도한 변경이면 **다시 찍는다** (test.html?golden=write) / [seed 1 stage 1033] rounds: 3 → 2 · cleared: 2 → 1 (+11) / [seed 2 stage 1033] sec: 53.9 → 76.9 · events: 212 → 251 (+5) / [seed 3 stage 1033] rounds: 2 → 1 · cleared: 1 → 0 (+10) / [seed 4 stage 1033] sec: 41.1 → 45.6 · gold: 48 → 64 (+9) / [seed 5 stage 1033] sec: 66.2 → 139 · events: 259 → 321 (+4) / [seed 6 stage 1033] sec: 33.4 → 55.4 · gold: 72 → 90 (+8)"
+    ],
+    "errors": [],
+    "box_checks": [
+      "첫 클리어 상자: 1장은 모든 단에서 무기 확정 · 2장부터 무기/방어구 무작위 · 보스 칸만 · 깬 부대 인벤토리 · 겹침 · 재클리어 없음 · 같은 시드 = 같은 종류 · clearBox {kind, tier, mail} (base_expedition_design §1-6 · R333 · R347)nightmare 1013 1장 첫 클리어는 무기 상자여야 한다: {\"kind\":\"armor\",\"tier\":\"low\",\"mail\":false}",
+      "우편함: 깬 부대 인벤토리에 새 칸이 없으면 상자는 우편으로 {kind} — 받기는 같은 종류 칸에 겹치고(칸이 차 있어도) 없으면 bagFull · 모두 받기는 들어가는 만큼 · 우편이 든 세이브가 열린다 (ADR-0732 · ADR-0743 · R333)armor · armor → 자리 하나 → 받음 2 · 남음 0 · 가득 차도 같은 종류는 겹친다",
+      "상자 까기: 보고 있는 영웅에게 맞는 장비 · 아이템 레벨 = 그 영웅 레벨 · 매직 이상 — 무기 = 그 직업 무기군 · 방어구 = 투구 · 갑옷 · 장갑 · 신발 중 그 직업 갈래 · 마지막 하나는 그 칸 그대로 · 남으면 끝 칸(차면 bagFull · 회차 안 오름) · 같은 시드 = 같은 장비 (ADR-0742 · R333)archer Lv7 → magic bow · mage Lv23 → armor · gloves · boots",
+      "상자 칸: 장착 · 분해 · 강화가 sealed · 강화 상태 null · 자동 장착 · 자동 분해가 안 본다 · 옮기면 받는 쪽 같은 종류 칸에 합쳐진다(칸이 차 있어도) · 정렬은 맨 앞 (ADR-0742 · R333)옮김 · 합침 ×5 · 정렬 맨 앞",
+      "상자 이관: 옛 봉인 무기(box {stageId, difficulty})는 무기 상자 1개 · 한 줄의 같은 종류는 하나로 합친다 · 옛 우편(item)은 무기 상자 우편으로 · 보관 줄 밖 상자는 지운다 · counters.box 0 (INTERFACE §4 · R333)봉인 무기 2 + 1 → 무기 상자 ×2 · ×1 · 우편 → kind weapon",
+      "상자 등급: 하급 = 매직 · 레어 · 중급 = 레어 · 에픽 · 고급 = 에픽 · 레전더리(그 둘만 · 둘 다 나온다) · 같은 종류라도 등급이 다르면 안 겹친다(옮기기 · 우편) · 저장하면 등급이 남는다 · 등급이 없거나 모르는 옛 칸 · 우편은 하급 (base_expedition_design §1-6 「등급」 · INTERFACE §4 · R349)low magic·rare / mid rare·epic / high epic·legendary · 다른 등급 안 겹침 · 옛 칸 → 하급 ×4"
+    ]
+  },
+  "unchanged_failures": [
+    "golden: 시드 10 × 스테이지 6 = 60런 지문이 golden.json 과 일치한다10/60 런 불일치 / 입력 변화 — CSV 2종이 달라졌다: lab_material: 09a9a350 → 7e766279 · monster_type: 289a1659 → 81eb45ed → 의도한 변경이면 **다시 찍는다** (test.html?golden=write) / [seed 1 stage 1033] rounds: 3 → 2 · cleared: 2 → 1 (+11) / [seed 2 stage 1033] sec: 53.9 → 76.9 · events: 212 → 251 (+5) / [seed 3 stage 1033] rounds: 2 → 1 · cleared: 1 → 0 (+10) / [seed 4 stage 1033] sec: 41.1 → 45.6 · gold: 48 → 64 (+9) / [seed 5 stage 1033] sec: 66.2 → 139 · events: 259 → 321 (+4) / [seed 6 stage 1033] sec: 33.4 → 55.4 · gold: 72 → 90 (+8)"
+  ],
+  "new_failures": []
+}

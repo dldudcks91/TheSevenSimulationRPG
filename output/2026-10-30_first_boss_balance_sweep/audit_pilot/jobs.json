@@ -1,0 +1,40 @@
+[
+  {
+    "id": "baseline",
+    "variant": {
+      "enemyHp": 1,
+      "enemyAttack": 1,
+      "xp": 1,
+      "rounds": 9,
+      "bookLevel": 10,
+      "bossHp": 1,
+      "bossAttack": 1,
+      "starter": 1
+    },
+    "seeds": [
+      2,
+      15
+    ],
+    "horizon": 5400,
+    "scope": true
+  },
+  {
+    "id": "hp80",
+    "variant": {
+      "enemyHp": 0.8,
+      "enemyAttack": 1,
+      "xp": 1,
+      "rounds": 9,
+      "bookLevel": 10,
+      "bossHp": 1,
+      "bossAttack": 1,
+      "starter": 1
+    },
+    "seeds": [
+      2,
+      15
+    ],
+    "horizon": 5400,
+    "scope": true
+  }
+]

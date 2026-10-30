@@ -6,7 +6,7 @@
  * `build()` 가 붙일 노드를 돌려준다.
  *
  * 다만 **영웅 카드 · 스킬 카드는 여기 둔다**: 두 렌더러가 같은 카드를 띄우기 때문이다(영웅 띠 ↔ 관전 유닛 카드).
- * 관전 영웅 · 몬스터는 **기본 옵션 + 그 아래 착용 장비 3×3 + Alt 세부 옵션 두 열**을 같은 함수로 조립한다(ADR-0486).
+ * 관전 영웅 · 몬스터는 **기본 옵션 + 그 아래 착용 장비 3×3 + Alt 세부 옵션 두 열**을 같은 함수로 조립한다(ADR-0486). 양쪽 모두 장비 오른쪽에 액티브 스킬 셋을 세로로 붙인다(ADR-1015).
  * 한 벌의 출처는 영웅 `equipped`(위치 → uid) · 몬스터 `gear`(부위 배열)다.
  * 그 몸통의 줄 조립(`attrRowsHtml` · `sheetRowsHtml`)은 **캐릭터 탭의 기본 옵션 · 세부 옵션도 부른다** — 두 자리가 한 표기다.
  * 아이템 비교 카드는 `app.js` 에 남는다 — 희귀도 · 접사 · 무기군처럼 app 쪽 헬퍼를 많이 타서 옮기면 그게 따라온다.
@@ -493,8 +493,7 @@ const DETAIL_LAYOUT = [
         ['atk_physical', 'atk_magic', 'action_period', 'hp_max'],
         ['crit_rate', 'crit_damage', 'def_ignore', 'cooldown_reduction'],
         // 피해 감소 줄이 고정 피해 감소를 함께 든다(`고정 / %`) [2026-09-27 사용자 지시]
-        // 상태이상 · 디버프 시간 감소(매력)는 타격 회복 다음 — 둘 다 받는 쪽에서 짧게 한다 [2026-10-24 · R346 · ADR-0770]
-        ['defense', 'damage_reduction', 'fhr', 'debuff_dur_reduction'],
+        ['defense', 'damage_reduction', 'fhr'],
         // 저항 넷 아래에 원소 두 줄(화염/냉기/전기/독 네 값) · 타격 회복과 화염 저항 사이를 띄운다 [2026-09-28 사용자 지시]
         ['res_fire', 'res_cold', 'res_lightning', 'res_poison', 'fx_ele', 'fx_res_red'],
     ],
@@ -502,8 +501,8 @@ const DETAIL_LAYOUT = [
         // ~~최대 저항 증가~~ 줄은 걷었다 — 그 값은 저항 4행의 「상한」이 든다 [2026-09-28 사용자 지시]
         ['fx_vs_type', 'fx_dr_type', 'fx_vs_target', 'fx_dr_target'],   // 대상
         ['fx_crush', 'fx_hit', 'fx_counter', 'reflect_damage'],         // 발동 · 반응 — 강타 · 명중률을 반격 · 반사와 붙였다 [2026-09-28 사용자 지시]
-        ['life_steal', 'hp_regen', 'fx_recv', 'fx_buff_dur'],           // 회복 · 지속 — 흡혈은 HP 재생 위 [2026-09-28 사용자 지시]
-        ['item_find', 'fx_magic_find', 'gold_find', 'fx_xp'],           // 파밍
+        ['life_steal', 'hp_regen', 'fx_recv', 'fx_buff_dur', 'debuff_dur_reduction'], // 회복 · 지속 — 상태이상 · 디버프 시간 감소는 2에 둔다 (ADR-1009)
+        ['fx_magic_find', 'gold_find', 'fx_xp'],                       // 파밍 — 드랍률 줄은 걷는다 (ADR-1009)
     ],
 ];
 /**
@@ -717,14 +716,15 @@ function bindEquipmentCells(c, equipment, itemCardOf) {
 }
 
 /**
- * 기본 옵션 첫 장 카드 — 편성 영웅은 능력치 7 막대 + 액티브 스킬 그림 셋, 관전 양 진영은 능력치 7 막대 + 그 아래 장비 3×3.
+ * 기본 옵션 첫 장 카드 — 능력치 7 막대 + 그 아래 장비 3×3. 영웅 · 몬스터 모두 장비 오른쪽에 액티브 스킬 그림 셋을 세로로 붙인다.
  * Alt 동안 그 바깥쪽에 세부 옵션 1 · 2를 붙인다. 편성 카드는 장비도 Alt 동안 별도 열에 선다.
  * [2026-09-21 사용자 지시 · ADR-0284 · ADR-0287]. 기본 옵션 열은 Alt 에도 **안 사라진다** — 폭을 못박아 제자리에 선다(style.css `.stats-first`).
  * 대표값은 안 싣는다 — 세부 옵션 1 머리에 있다. 스킬 칸은 그림만이다(캐릭터 탭 스킬 칸과 같은 규칙) — 툴팁 속에 설명창을 걸면 한 자리를 두 카드가 다툰다.
  * 붙는 쪽은 유닛 카드와 같다 — 카드 왼쪽에 선 툴팁은 열이 왼쪽으로 자란다(ADR-0126 · 격자가 자리를 정하고 DOM 순서는 그대로다)
- * @param skills 액티브 칸 셋 — 스킬 개체 또는 `null`(빈 칸). 부르는 쪽이 넘긴다(`app.js:activeCells` — 이 파일은 `G` 를 모른다)
+ * @param skills 액티브 칸 셋 — 스킬 개체 또는 `null`(빈 칸). 영웅은 고유 · 책 · 전직 순서다.
+ * @param lockedSkills 빈 칸에 잠금 그림을 표시할지 — 배운 스킬은 그대로 표시한다.
  */
-function statsFirstCard(stats, color, combat, equipment, itemCardOf, rebuild, { skills = null, gearBelow = false, cls = '', chips = '' } = {}) {
+function statsFirstCard(stats, color, combat, equipment, itemCardOf, rebuild, { skills = null, lockedSkills = [], gearBelow = false, cls = '', chips = '' } = {}) {
     const side = anchorSide === 'left' ? ' grow-left' : '';
     const open = altHeld;
     // 관전 양 진영의 `gearBelow` — 장비가 기본 옵션 아래에 늘 서고 Alt는 세부 옵션 1 · 2만 연다 (ADR-0486).
@@ -734,7 +734,10 @@ function statsFirstCard(stats, color, combat, equipment, itemCardOf, rebuild, { 
     c.style.setProperty('--unit-line', color);
     // 영웅 스킬은 그림 오른쪽 아래에 `Lv.n` — `activeCells` 가 `lv` 를 싣는다 (ADR-0701)
     const lvTag = s => (Number.isFinite(s.lv) ? `<span class="sk-lv">${t('sk.lvTag', { n: s.lv })}</span>` : '');
-    const icons = (skills ?? []).map(s => `<span class="tip-skill${s ? '' : ' vacant'}">${s ? skillImg(s) + lvTag(s) : ''}</span>`).join('');
+    const icons = (skills ?? []).map((s, i) => {
+        const locked = !s && lockedSkills[i];
+        return `<span class="tip-skill${s ? '' : ' vacant'}${locked ? ' locked' : ''}">${s ? skillImg(s) + lvTag(s) : locked ? `<span class="sk-lock">${M.lockIcon(true)}</span>` : ''}</span>`;
+    }).join('');
     const more = open ? (gearBelow ? '' : `
             <div class="tip-unit-col gear">${equipment.html}</div>`) + sheetPages(combat, !gearBelow).map((rows, i) => `
             <div class="tip-unit-col d${i + 1}">
@@ -746,8 +749,8 @@ function statsFirstCard(stats, color, combat, equipment, itemCardOf, rebuild, { 
             <div class="tip-unit-col base">
                 ${chips ? `<div class="tip-col-h with-chips"><span>${t('ch.attr.h')}</span><span class="tip-chips">${chips}</span></div>` : `<div class="tip-col-h">${t('ch.attr.h')}</div>`}
                 <div class="attr-list">${attrRowsHtml(stats, color)}</div>
-                ${skills ? `<div class="tip-skills">${icons}</div>` : ''}
-                ${gearBelow ? `<div class="tip-gear-below">${equipment.html}</div>` : ''}
+                ${!gearBelow && skills ? `<div class="tip-skills">${icons}</div>` : ''}
+                ${gearBelow ? `<div class="tip-gear-below${skills ? ' with-skills' : ''}">${equipment.html}${skills ? `<div class="tip-skills">${icons}</div>` : ''}</div>` : ''}
                 <div class="tip-foot">${t(gearBelow ? 'tip.unit.altHint' : 'tip.unit.altHintGear')}</div>
             </div>${more}
         </div>`;
@@ -786,17 +789,23 @@ const monsterChipsHtml = (u, color) => {
  * @param itemOf uid 로 현재 세이브의 아이템을 찾는 함수 — tip.js 는 G 를 모른다
  * @param itemCardOf **아이템 개체**로 기존 「착용 중」 아이템 카드를 만드는 함수 — 아이템 옵션 표기는 앱이 든다 (ADR-0183 으로 uid → 개체)
  * @param statsFirst 첫 장이 **기본 옵션**인 편성 탭 카드(`statsFirstCard`) — 편성 탭(띠 · 진형 칸)이 **스위치가 켜져 있을 때만** 준다(`app.js:PARTY_TIP_STATS` · 꺼 둠 · ADR-0318) [2026-09-21 사용자 지시 · ADR-0284 · ADR-0287]
- * @param skills     `statsFirst` 카드의 액티브 칸 셋(스킬 개체 또는 `null`)
+ * @param skills     액티브 칸 셋(스킬 개체 또는 `null`) — 생략하면 영웅과 착용 장비에서 읽는다.
  */
 export function heroTipCard(h, combat = null, itemOf = null, itemCardOf = null, { statsFirst = false, skills = null } = {}) {
     if (!h) return null;
     const sheet = typeof combat === 'function' ? combat() : combat;
+    const worn = wornOfHero(h, itemOf);
+    const actives = SYS.skill.activesFor(h, { skillPlus: SYS.item.skillPlusOf(Object.values(worn).filter(Boolean)) });
+    const cells = skills ?? ['innate', 'book', 'advance'].map(source => {
+        const a = actives.find(s => s.source === source);
+        return a ? { ...a, lv: 1 + (a.up ?? 0) } : null;
+    });
     if (statsFirst || UNIT_TIP_ALL) return statsFirstCard(h.stats, tierOf(h).color, sheet,
-        equipmentHtml(wornOfHero(h, itemOf)), itemCardOf,
+        equipmentHtml(worn), itemCardOf,
         () => heroTipCard(h, combat, itemOf, itemCardOf, { statsFirst, skills }),
-        { skills: statsFirst ? skills : null, gearBelow: !statsFirst, chips: heroChipsHtml(h) });
+        { skills: cells, lockedSkills: [false, false, h.level < D.balance.advance_unlock_level], gearBelow: !statsFirst, chips: heroChipsHtml(h) });
     return unitCard(h.stats, tierOf(h).color, sheet, () => heroTipCard(h, combat, itemOf, itemCardOf), '',
-        equipmentHtml(wornOfHero(h, itemOf)), itemCardOf);
+        equipmentHtml(worn), itemCardOf);
 }
 
 /**
@@ -822,20 +831,23 @@ const GRADE_LINE = { normal: 'var(--enemy-line)', elite: 'var(--color-warning)',
  * 한 벌은 `round` 이벤트의 `gear`(그 몬스터가 입고 있는 장비 — 처치 드롭이 이 중 하나로 나간다 · INTERFACE §2-6),
  * 세부 옵션은 같은 이벤트의 `sheet`(R94)에 재생기가 쌓은 지금 값(`u.live` · `stat` 이벤트 · R305)을 덮은 것이다 — 렌더러는 계산하지 않는다.
  * 이름 줄은 없다 — 올린 카드의 이름 줄 · 테두리 색이 이미 든다 (ADR-0134) · 종족 · 죄종 · 직업은 「기본 옵션」 머리 오른쪽 칩 셋이다 (ADR-0773)
- * @param u 재생기의 적 유닛 `{monsterId, grade, sin, stats, sheet, live, gear}`
+ * @param u 재생기의 적 유닛 `{monsterId, grade, sin, stats, sheet, live, gear, skills}`
  * @param itemCardOf 장비 아이템 개체 → 「착용 중」 아이템 카드 — 영웅 · 캐릭터 탭과 같은 카드다 (ui/battle.js · ADR-0312)
+ * @param skills 관전 카드와 같은 순서로 정렬한 스킬 칸 — 남는 칸은 잠금 없이 비운다 (ADR-1015)
  */
-export function monsterTipCard(u, itemCardOf = null) {
+export function monsterTipCard(u, itemCardOf = null, { skills = null } = {}) {
     if (!u) return null;
     // 어두운 등급 색(일반 `--enemy-line` · 보스 `--boss-line`)은 막대만 밝힌다 — 검은 막대 바탕에 묻힌다. 정예(노랑)는 그대로 (2026-09-15 · SCREEN_DESIGN §2).
     const lift = u.grade === 'elite' ? '' : 'bar-lift';
     const color = GRADE_LINE[u.grade] ?? GRADE_LINE.normal;
     const equipment = equipmentHtml(wornOfMonster(u.gear));
-    const rebuild = () => monsterTipCard(u, itemCardOf);
+    const rebuild = () => monsterTipCard(u, itemCardOf, { skills });
+    const list = skills ?? u.skills ?? [];
+    const cells = Array.from({ length: Math.max(D.balance.active_slots, list.length) }, (_, i) => list[i] ?? null);
     // 시트는 평타 여부를 안 싣는다(battle.js 가 뺀다) — 속도 행 이름은 재생기 유닛의 `noBasic` 으로 고른다 (ADR-0492)
     const sheet = u.sheet ? { ...withLive(u.sheet, u.live), basic_attack: !u.noBasic } : null;
     if (UNIT_TIP_ALL) return statsFirstCard(u.stats, color, sheet, equipment, itemCardOf, rebuild,
-        { gearBelow: true, cls: lift, chips: monsterChipsHtml(u, color) });
+        { skills: cells, gearBelow: true, cls: lift, chips: monsterChipsHtml(u, color) });
     return unitCard(u.stats, color, sheet, rebuild, lift, equipment, itemCardOf);
 }
 

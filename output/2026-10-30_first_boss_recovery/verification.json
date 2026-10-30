@@ -1,0 +1,374 @@
+{
+  "checks": [
+    {
+      "name": "archived: paired branches have identical input",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived: control never clears boss",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/recover: no browser exceptions or external requests",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/control: gold accounts for actual rewards and purchases",
+      "passed": true,
+      "evidence": {
+        "expected": 2,
+        "actual": 2,
+        "potion_cost": 0
+      }
+    },
+    {
+      "name": "archived/control: elapsed time accounts for actual run pacing and restart delays",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/control: no new heroes or upgrades",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/offensive_respec_only: gold accounts for actual rewards and purchases",
+      "passed": true,
+      "evidence": {
+        "expected": 2,
+        "actual": 2,
+        "potion_cost": 0
+      }
+    },
+    {
+      "name": "archived/offensive_respec_only: elapsed time accounts for actual run pacing and restart delays",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/offensive_respec_only: no new heroes or upgrades",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/survival_respec_only: gold accounts for actual rewards and purchases",
+      "passed": true,
+      "evidence": {
+        "expected": 2,
+        "actual": 2,
+        "potion_cost": 0
+      }
+    },
+    {
+      "name": "archived/survival_respec_only: elapsed time accounts for actual run pacing and restart delays",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/survival_respec_only: no new heroes or upgrades",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/farm_only: gold accounts for actual rewards and purchases",
+      "passed": true,
+      "evidence": {
+        "expected": 23295,
+        "actual": 23295,
+        "potion_cost": 650
+      }
+    },
+    {
+      "name": "archived/farm_only: elapsed time accounts for actual run pacing and restart delays",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/farm_only: no new heroes or upgrades",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/farm_only: native completion agrees with paced winning report",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/farm_only: first chapter marked cleared",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/respec_and_farm: gold accounts for actual rewards and purchases",
+      "passed": true,
+      "evidence": {
+        "expected": 21053,
+        "actual": 21053,
+        "potion_cost": 650
+      }
+    },
+    {
+      "name": "archived/respec_and_farm: elapsed time accounts for actual run pacing and restart delays",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/respec_and_farm: no new heroes or upgrades",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/respec_and_farm: native completion agrees with paced winning report",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/respec_and_farm: first chapter marked cleared",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/repeat_recover: no browser exceptions or external requests",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/respec_and_place_repeat: gold accounts for actual rewards and purchases",
+      "passed": true,
+      "evidence": {
+        "expected": 10185,
+        "actual": 10185,
+        "potion_cost": 350
+      }
+    },
+    {
+      "name": "archived/respec_and_place_repeat: elapsed time accounts for actual run pacing and restart delays",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/respec_and_place_repeat: no new heroes or upgrades",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/respec_and_place_repeat: native completion agrees with paced winning report",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived/respec_and_place_repeat: first chapter marked cleared",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived: practical place-repeat branch clears in three boss attempts and twenty farm attempts",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "archived: actual place repetition traverses all three cells",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest: paired branches have identical input",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest: control never clears boss",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/recover: no browser exceptions or external requests",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/control: gold accounts for actual rewards and purchases",
+      "passed": true,
+      "evidence": {
+        "expected": 2,
+        "actual": 2,
+        "potion_cost": 0
+      }
+    },
+    {
+      "name": "latest/control: elapsed time accounts for actual run pacing and restart delays",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/control: no new heroes or upgrades",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/offensive_respec_only: gold accounts for actual rewards and purchases",
+      "passed": true,
+      "evidence": {
+        "expected": 2,
+        "actual": 2,
+        "potion_cost": 0
+      }
+    },
+    {
+      "name": "latest/offensive_respec_only: elapsed time accounts for actual run pacing and restart delays",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/offensive_respec_only: no new heroes or upgrades",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/survival_respec_only: gold accounts for actual rewards and purchases",
+      "passed": true,
+      "evidence": {
+        "expected": 2,
+        "actual": 2,
+        "potion_cost": 0
+      }
+    },
+    {
+      "name": "latest/survival_respec_only: elapsed time accounts for actual run pacing and restart delays",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/survival_respec_only: no new heroes or upgrades",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/farm_only: gold accounts for actual rewards and purchases",
+      "passed": true,
+      "evidence": {
+        "expected": 45827,
+        "actual": 45827,
+        "potion_cost": 1150
+      }
+    },
+    {
+      "name": "latest/farm_only: elapsed time accounts for actual run pacing and restart delays",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/farm_only: no new heroes or upgrades",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/farm_only: native completion agrees with paced winning report",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/farm_only: first chapter marked cleared",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/respec_and_farm: gold accounts for actual rewards and purchases",
+      "passed": true,
+      "evidence": {
+        "expected": 12685,
+        "actual": 12685,
+        "potion_cost": 450
+      }
+    },
+    {
+      "name": "latest/respec_and_farm: elapsed time accounts for actual run pacing and restart delays",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/respec_and_farm: no new heroes or upgrades",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/respec_and_farm: native completion agrees with paced winning report",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/respec_and_farm: first chapter marked cleared",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/repeat_recover: no browser exceptions or external requests",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/respec_and_place_repeat: gold accounts for actual rewards and purchases",
+      "passed": true,
+      "evidence": {
+        "expected": 10511,
+        "actual": 10511,
+        "potion_cost": 350
+      }
+    },
+    {
+      "name": "latest/respec_and_place_repeat: elapsed time accounts for actual run pacing and restart delays",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/respec_and_place_repeat: no new heroes or upgrades",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/respec_and_place_repeat: native completion agrees with paced winning report",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest/respec_and_place_repeat: first chapter marked cleared",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest: practical place-repeat branch clears in three boss attempts and twenty farm attempts",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest: actual place repetition traverses all three cells",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest: all twelve actual UI checks pass",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest: UI has no exceptions or HTTP failures",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "name": "latest: executed frozen input matches its recorded manifest",
+      "passed": true,
+      "evidence": []
+    }
+  ],
+  "passed": 63,
+  "total": 63,
+  "workspace_changes_after_freeze": [
+    "/data/stage.csv",
+    "/ui/battle.js"
+  ],
+  "provenance_note": "All browser requests used the pinned source bytes. Subsequent shared-workspace edits are recorded separately and are not silently included in these results."
+}

@@ -1,0 +1,22 @@
+{
+  "title": "FAIL 810/812",
+  "errors": [],
+  "failures": [
+    "runtime: 더블스윙 — 첫 타 뒤 새로 등장하거나 되살아난 적도 남은 타격의 대상이 된다spawn: 남은 타격 [e0]",
+    "battle: 더블스윙 — 첫 타로 처치하면 다음 생존 전열 · 전열이 비면 후열로 이어 치고 살아 있으면 같은 적을 친다enemy/survive: [] ≠ [p0,p0]"
+  ],
+  "targeted": [
+    {
+      "ok": true,
+      "text": "runtime: enemy_single 다단 — 대상이 타수 도중 쓰러지면 남은 타수는 새로 고른 적에게 · 고를 때마다 rng 1회 · 남은 적이 없으면 버린다 · 기준 = 첫 대상 (battle_design §3-1 · R353)arc_rapid 3타 → [e0,e1,e2] · war_doubleswing 2타 → [e0,e1]"
+    },
+    {
+      "ok": false,
+      "text": "runtime: 더블스윙 — 첫 타 뒤 새로 등장하거나 되살아난 적도 남은 타격의 대상이 된다spawn: 남은 타격 [e0]"
+    },
+    {
+      "ok": false,
+      "text": "battle: 더블스윙 — 첫 타로 처치하면 다음 생존 전열 · 전열이 비면 후열로 이어 치고 살아 있으면 같은 적을 친다enemy/survive: [] ≠ [p0,p0]"
+    }
+  ]
+}

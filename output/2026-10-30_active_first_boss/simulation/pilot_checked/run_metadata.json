@@ -1,0 +1,79 @@
+{
+  "snapshot_capture": "2026-10-30T10:46:05.339018+00:00",
+  "jobs": [
+    [
+      1,
+      "active",
+      false
+    ],
+    [
+      1,
+      "active_slow",
+      false
+    ],
+    [
+      1,
+      "adaptive",
+      false
+    ],
+    [
+      2,
+      "active",
+      false
+    ],
+    [
+      2,
+      "active_slow",
+      false
+    ],
+    [
+      2,
+      "adaptive",
+      false
+    ],
+    [
+      15,
+      "active",
+      false
+    ],
+    [
+      15,
+      "active_slow",
+      false
+    ],
+    [
+      15,
+      "adaptive",
+      false
+    ],
+    [
+      2,
+      "active",
+      true
+    ],
+    [
+      2,
+      "adaptive",
+      true
+    ]
+  ],
+  "manifest_sha256": "c0d2ce86be1af92a66a3afc72f3fe536fc57ebc08f38781e21515252d78334c4",
+  "active_js_sha256": "9083465a4732e4588fee33f3dee485c1338179d4c71857897714b79838118751",
+  "legacy_js_sha256": "3503f934c438ca5eb445bf05ffa96b1e2dc53589aa423c44ab71a3534e3276b6",
+  "marks": [
+    600,
+    1200,
+    1500,
+    1800,
+    2100,
+    2400,
+    2700,
+    3600,
+    5400
+  ],
+  "policies": {
+    "active": "120s plus observed defeats/new boxes",
+    "active_slow": "300s plus observed defeats/new boxes",
+    "adaptive": "previous combat-priority300s control"
+  }
+}

@@ -39,6 +39,13 @@ import { PORTRAIT_FILES } from '../assets/art/faces/portrait_files.js';
 
 /** 스테이지 라운드 구조 (base_expedition_design §1-2) — 구조는 고정, 내용물만 랜덤 */
 
+/** 자물쇠 — 앱 · 영웅 툴팁이 같은 닫힘 · 열림 SVG를 쓴다. 색은 currentColor를 따른다. */
+export const lockIcon = closed => `<svg class="rs-pin-ico" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">`
+    + (closed ? '<path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/>'
+        : '<path d="M4.5 7V5a3.5 3.5 0 0 1 6.8-1.2" fill="none" stroke="currentColor" stroke-width="1.6"/>')
+    // 몸통 + 열쇠 구멍(evenodd 로 뚫는다 — 버튼 배경이 무엇이든 비친다)
+    + '<path fill="currentColor" fill-rule="evenodd" d="M4 7h8a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 12 15H4a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 4 7zM7.25 9.5v3h1.5v-3z"/></svg>';
+
 /** 죄종 — en 은 chapter_info.csv 의 sin_en 그대로. adj 는 아이템/정예 접두 형용사 */
 /* `line` — 그 죄종이 어떤 영웅을 만드나 한 문장 · 새 게임 카드 연장 칸의 죄종 줄 (2026-10-16 · app.js:startLines).
    문장은 죄종 마스터리 1티어(skill_design §3-1)의 방향을 풀어 쓴 것이다 — 1티어 축이 바뀌면 같이 고친다.
@@ -188,16 +195,17 @@ export const AFFIX_LABELS = {
     heal_out_pct: { ko: '회복량 증가', en: 'Healing Done', fmt: 'pct' },
     debuff_dur_pct: { ko: '디버프 시간 증가', en: 'Debuff Duration', fmt: 'pct' },
     hp_regen: { ko: 'HP 재생', en: 'HP Regen', fmt: 'n' },
-    // 발동 옵션 — 줄에 스킬 id(`a.skill`)를 함께 든다. `proc` = 발동 조건(툴팁 문장 `tip.proc.<조건>` · app.js `affixText`) · 타격 둘은 적용, 나머지 `inert` 는 미적용이다.
+    // 발동 옵션 — 줄에 스킬 id(`a.skill`)를 함께 든다. `proc` = 발동 조건(툴팁 문장 `tip.proc.<조건>` · app.js `affixText`).
     proc_hit_attack: { ko: '타격 시 공격 스킬 발동', en: 'Attack Skill on Hit', fmt: 'pct', proc: 'hit' },
     proc_hit_buff: { ko: '타격 시 버프 스킬 발동', en: 'Buff Skill on Hit', fmt: 'pct', proc: 'hit' },
-    proc_cast_attack: { ko: '시전 시 공격 스킬 발동', en: 'Attack Skill on Cast', fmt: 'pct', proc: 'cast', inert: true },
-    proc_cast_buff: { ko: '시전 시 버프 스킬 발동', en: 'Buff Skill on Cast', fmt: 'pct', proc: 'cast', inert: true },
-    proc_cast_debuff: { ko: '시전 시 디버프 스킬 발동', en: 'Debuff Skill on Cast', fmt: 'pct', proc: 'cast', inert: true },
-    proc_struck_debuff: { ko: '피격 시 디버프 스킬 발동', en: 'Debuff Skill when Struck', fmt: 'pct', proc: 'struck', inert: true },
-    proc_struck_buff: { ko: '피격 시 버프 스킬 발동', en: 'Buff Skill when Struck', fmt: 'pct', proc: 'struck', inert: true },
+    proc_cast_attack: { ko: '시전 시 공격 스킬 발동', en: 'Attack Skill on Cast', fmt: 'pct', proc: 'cast' },
+    proc_cast_buff: { ko: '시전 시 버프 스킬 발동', en: 'Buff Skill on Cast', fmt: 'pct', proc: 'cast' },
+    proc_cast_debuff: { ko: '시전 시 디버프 스킬 발동', en: 'Debuff Skill on Cast', fmt: 'pct', proc: 'cast' },
+    proc_struck_debuff: { ko: '피격 시 디버프 스킬 발동', en: 'Debuff Skill when Struck', fmt: 'pct', proc: 'struck' },
+    proc_struck_buff: { ko: '피격 시 버프 스킬 발동', en: 'Buff Skill when Struck', fmt: 'pct', proc: 'struck' },
     // 특정 스킬 +n — 줄에 스킬 id(`a.skill`)를 든다. `skill` = 툴팁 문장 `tip.skillPlus`(「파이어볼 +1」 · app.js `affixText`) [2026-10-08 · R225 · ADR-0535]
     skill_plus: { ko: '스킬 레벨', en: 'Skill Level', fmt: 'n', skill: true },
+    skill_tag: { ko: '스킬 태그 강화', en: 'Skill Tag Bonus', fmt: 'pct' },
 };
 
 /**

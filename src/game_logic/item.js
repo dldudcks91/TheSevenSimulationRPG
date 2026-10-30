@@ -3,7 +3,7 @@
  *
  * 순수 모듈. 데이터는 생성자 주입, 난수는 rng 인자.
  *
- * 아이템 = { uid, slot, rarity, ilvl, up(강화 단계), name:{ko,en}, implicit:{stat,v}|null, affixes:[{stat,v,src}], sins:[sin...],
+ * 아이템 = { uid, slot, rarity, ilvl, up(강화 단계), name:{ko,en}, implicit:{stat,v}|null, affixes:[{stat,v,src,skill?,skillLv?}], sins:[sin...],
  *            words:[단 번호...](이름에 쓴 죄종 단어 — sins 와 같은 길이 · 2026-09-19),
  *            group?(무기군 id — weapon_group.csv),
  *            ~~skill?~~(무기가 담은 액티브 id — 2026-09-29 R179 삭제 · 스킬북),
@@ -25,16 +25,16 @@
  *   **값 굴림은 아이템 레벨 따라 치우친다 — 범위는 그대로** [2026-10-20 · R291 · item_design §2-1 — ~~매직 고점 `magic_option_max_mult`~~ 퇴역] —
  *   1레벨 = 낮은 쪽 · 만렙 = 높은 쪽(`lean` · [balance.csv:item_roll_skew]). **반지 · 목걸이는 일반이 없다**(`rollGear` 가 매직으로 올린다).
  *   두 줄 모두 `src` 에 그 옵션의 죄종 id 를 든다. 무기 표 `weapon_sin_option.csv` · 갑옷 표 `armor_sin_option.csv` 의 갑옷 행. ~~`weapon_common_option.csv`~~ 퇴역.
- *   **발동 옵션**(`proc_*`)은 `affixes` 줄에 스킬 id(`skill`)를 함께 든다 — 무기의 `proc_hit_attack` · `proc_hit_buff` 는 전투에 적용한다(2026-10-30). 시전 · 피격 · 목걸이 발동은 미적용이다.
+ *   **발동 옵션**(`proc_*`)은 `affixes` 줄에 스킬 id(`skill`)와 실제 레벨(`skillLv` · 생략된 옛 줄은 Lv1)을 함께 든다 — 모든 착용 부위의 타격 · 시전 · 피격 발동을 전투에 적용한다(2026-10-30). 퇴역한 옛 목걸이 `item.proc` 은 미적용이다.
  *   **방어구 넷 모두 죄종 계열표다** [투구 2026-10-21 R299 · 장갑 · 신발 2026-10-21 R303 · item_design §1 「10-21 방어구 개정」 — ~~투구 · 장갑 · 신발 세 층 ·
  *   공통옵션 `armor_common_option.csv`~~(09-18 · 파일째 퇴역)] — 부위마다 표 하나 · 갈래가 표를 가르지 않는다.
  *   **갈래는 방어 계수 + 굴리는 베이스 특성**(`armor_group.csv:trait_*` · 투구 · 장갑 · 신발) — 특성은 베이스 「방어력 +%」 바로 뒤에 `src: 'fixed'` 줄로 박힌다(R303).
  *   **오만은 부위마다 한 칸 · 장갑 시기도 한 칸**(`singleOption`) · **특정 스킬 +n 은 장비에서 뺐다**(2026-10-21 — 표에 서면 로드가 던진다 · 옛 아이템의 줄은 `skillPlusOf` 가 그대로 읽는다).
  *   **반지도 죄종 계열표다** [2026-10-29 · 사용자 확정 · R382 · item_design §1 「반지 옵션 — 죄종 계열」] — `accessory_sin_option.csv` 의 반지 행(`option`)을
- *   무기 · 방어구와 같은 `familyOptions` 로 굴린다 · 베이스 옵션은 아직 없다(스킬 태그 — R321).
+ *   무기 · 방어구와 같은 `familyOptions` 로 굴린다 · 베이스 옵션은 스킬 태그다(R321).
  *   **목걸이는 세 층이다** [2026-09-21 · 사용자 확정 · R127 · item_design §1 「반지 · 목걸이」] — 죄종 칸 `accessory_sin_option.csv` +
  *   공통옵션 `accessory_common_option.csv`(한 풀 · 랜덤 줄 — 위 · ~~두 부위 한 풀~~ 반지는 R382 로 떠났다),
- *   **목걸이 베이스 옵션은 발동 스킬**이라 `affixes` 가 아니라 `item.proc` 에 든다(발동 조건은 베이스 — `amulet_proc.csv`).
+ *   **목걸이 베이스 옵션은 특정 스킬 +n**, 반지 베이스는 태그·효과·값이다. 둘 다 `src: 'fixed'` 접사로 저장한다(R309·R321).
  *   ~~`affix.csv` 한 풀(전부 `random`)을 쓰는 것은 목걸이 · 반지뿐이다~~ — 마지막 사용자가 떠나 파일째 퇴역했다.
  *
  * **한손 개념은 없다** (2026-09-01) — 전 무기가 양손이라 `twoHanded` 플래그도 보조(offhand) 슬롯도 폐지했다.
@@ -66,7 +66,7 @@
  * ⚠ 접사 종류·수치 범위·희귀도 가중치는 전부 프로토타입 임시값 — balance.csv ⚠제안 키와
  *   주입된 무기 · 방어구 · 장신구 옵션 표에서 온다.
  *   ⚠ 장갑의 공통옵션 풀은 옛 `affix.csv` 장갑 풀을 옮긴 임시다(기획 미정 · 2026-09-18 사용자 보류) · 장갑 갈래 고정값도 보류다.
- *   **무기 타격 발동은 전투에 적용한다** [2026-10-30] — 기본 Lv1 · 현재 능력치 · 내부 쿨 없음 · 발동으로 추가 발동 금지. `item.proc` · 시전 · 피격 발동은 설명에만 나온다(GAME_DESIGN §10).
+ *   **타격 · 시전 · 피격 발동은 전투에 적용한다** [2026-10-30] — 저장한 skillLv · 현재 능력치 · 내부 쿨 없음 · 발동으로 추가 발동 금지. 새 발동 레벨은 balance.item_proc_skill_level(현재 Lv1)이고 퇴역한 옛 목걸이 `item.proc` 은 설명에만 나온다(GAME_DESIGN §10).
  */
 
 import { createFormula } from './formula.js';
@@ -86,8 +86,8 @@ import { createFormula } from './formula.js';
  *   accessorySinOptions    — [{slot, sin, option, stat, scale, min, max, perIlvl?}] ← accessory_sin_option.csv — 반지 죄종 계열표(`option` · 2026-10-29 R382) ·
  *                            목걸이 죄종 칸 후보(2026-09-21 · 한 죄종에 행이 여럿이면 그중 하나 — 시기 둘 · 탐욕 셋) · **행 순서가 결정론 계약**
  *   accessoryCommonOptions — [{family, stat, scale, min, max, perIlvl?}] ← accessory_common_option.csv — **목걸이 공통옵션 한 풀** (2026-09-21 · 반지는 R382 부터 안 굴린다) · **행 순서가 결정론 계약**
- *   amuletProcs  — [{baseId, trigger, min, max}] ← amulet_proc.csv — 목걸이 베이스마다 발동 조건 하나(`hit` · `struck` · `interval`)
- *   procSkills   — [skillId] ← skill.csv:amulet_pool = 1 — 목걸이 발동 스킬 후보(직업을 안 가리는 한 풀) · **행 순서가 결정론 계약**
+ *   amuletSkills — 모든 직업 기본 스킬 id · 행 순서가 결정론 계약
+ *   ringBaseOptions — ring_base_option.csv · 태그별 효과와 범위(임시값)
  *   weaponSinOptions    — [{sin, option, appliesTo, stat, scale, min, max}] ← weapon_sin_option.csv — **죄종 계열표** (2026-09-11 · R78 · 계열표 2026-10-05 · R206).
  *                         `appliesTo` = `all` · 무기군 `damageKind`(physical/magic) · 직업 id(그 무기군의 classes 에 있으면).
  *                         옵션 = (죄종, `option`) · 같은 옵션에서 그 무기군에 붙는 행 여럿 = 변형 · **행 순서가 결정론 계약**
@@ -109,8 +109,15 @@ const RARITIES = Object.freeze(['normal', 'magic', 'rare', 'epic', 'legendary'])
 const RARE_AT = RARITIES.indexOf('rare');                 // 이 칸부터 매직찬스 · 등급의 레어 보너스가 곱한다
 const TWO_SINS = new Set(['rare', 'epic', 'legendary']);  // 죄종 둘 — 레어 이상
 
+/** 발동 스킬의 실제 레벨 — 옛 접사 · 잘못된 값은 기본 Lv1로 읽는다. 저장 값과 책의 추가 단계(up)는 별개다. */
+export const procSkillLevel = value => Number.isSafeInteger(value) && value > 0 ? value : 1;
+
 export function createItemSystem(data) {
     const B = data.balance;
+    if (!Number.isSafeInteger(B.item_proc_skill_level) || B.item_proc_skill_level < 1)
+        throw new Error(`item: balance.csv item_proc_skill_level '${B.item_proc_skill_level}' — 양의 안전한 정수여야 한다`);
+    if (!(Number.isFinite(B.start_weapon_atk_pct) && B.start_weapon_atk_pct >= 0))
+        throw new Error(`item: balance.csv start_weapon_atk_pct '${B.start_weapon_atk_pct}' — 0 이상 유한한 비율이어야 한다`);
     // 랜덤 줄 수 · 굴림 치우침 키 (R342 · R291) — 줄 수는 희귀도마다 0 이상 정수 · 치우침 1 이상(1 = 균등) · 만렙 > 1(레벨 자리의 분모)
     for (const r of RARITIES) {
         const n = B[`item_random_lines_${r}`];
@@ -270,12 +277,29 @@ export function createItemSystem(data) {
     /* ── 반지 · 목걸이 옵션 표 (item_design §1 「반지 · 목걸이」 · 2026-09-21 · R127) ── */
     const accSinOpts = data.accessorySinOptions ?? [];
     const accCommonOpts = data.accessoryCommonOptions ?? [];
-    const procSkills = data.procSkills ?? [];
-    const procRows = data.amuletProcs ?? [];
-    const procByBase = Object.fromEntries(procRows.map(r => [r.baseId, r]));
+    const amuletSkills = data.amuletSkills ?? [];
+    const ringBaseOpts = data.ringBaseOptions ?? [];
+    const ringTags = [...new Set(ringBaseOpts.map(r => r.tag))];
+    const ringEffects = ['cooldown', 'damage', 'extra_hit', 'duration', 'value', 'heal'];
+    for (const r of ringBaseOpts) {
+        if (!['aoe', 'single', 'multihit', 'boost', 'blessing', 'shout', 'aura', 'restore', 'curse'].includes(r.tag)
+            || !ringEffects.includes(r.effect) || !(Number.isFinite(r.min) && Number.isFinite(r.max) && r.min >= 0 && r.max >= r.min)
+            || ringBaseOpts.filter(x => x.tag === r.tag && x.effect === r.effect).length !== 1)
+            throw new Error(`item: ring_base_option ${r.tag}/${r.effect} — 태그·효과·범위·중복 검사 실패`);
+    }
+    if (!Number.isInteger(B.amulet_skill_plus_min) || !Number.isInteger(B.amulet_skill_plus_max) || B.amulet_skill_plus_min < 0 || B.amulet_skill_plus_max < B.amulet_skill_plus_min)
+        throw new Error('item: 목걸이 스킬 레벨 범위가 잘못됐다');
     /** 발동 조건 어휘 — 타격 시 · 피격 시 · n초마다. 구조 어휘라 CSV 가 아니라 여기 둔다(`SCALES` 와 같은 자리) */
-    const PROC_TRIGGERS = ['hit', 'struck', 'interval'];
     const ACC_SLOTS = (data.slots ?? []).filter(baseless);
+    if (ACC_SLOTS.includes('amulet') && !amuletSkills.length) throw new Error('item: 목걸이 기본 스킬 후보가 비었다');
+    if (ACC_SLOTS.includes('ring')) {
+        const expected = { aoe: ['cooldown', 'damage'], single: ['cooldown', 'damage'], multihit: ['damage', 'extra_hit'],
+            boost: ['duration', 'value'], blessing: ['duration', 'value'], shout: ['duration', 'value'], aura: ['value'], restore: ['cooldown', 'heal'], curse: ['duration', 'value'] };
+        for (const [tag, effects] of Object.entries(expected)) {
+            const rows = ringBaseOpts.filter(r => r.tag === tag);
+            if (rows.length !== effects.length || effects.some(effect => !rows.some(r => r.effect === effect))) throw new Error(`item: ring_base_option ${tag} 효과가 기획과 다르다`);
+        }
+    }
     // 로드 검증 — 방어구 표와 같은 이유로 즉시 던진다. **두 부위마다 일곱 죄종이 다 차 있어야 하고**, 목걸이 베이스마다 발동 조건이 하나 있어야 한다
     {
         for (const [name, rows] of [['accessory_sin_option', accSinOpts], ['accessory_common_option', accCommonOpts]]) {
@@ -301,14 +325,7 @@ export function createItemSystem(data) {
             }
         }
         if (ACC_SLOTS.length && !accCommonOpts.length) throw new Error('item: accessory_common_option 이 비었다');
-        const amuletBases = (data.itemBases?.amulet ?? []).map(b => b.id);
-        for (const r of procRows) {
-            if (!PROC_TRIGGERS.includes(r.trigger)) throw new Error(`item: amulet_proc ${r.baseId} trigger '${r.trigger}'`);
-            if (!amuletBases.includes(r.baseId)) throw new Error(`item: amulet_proc '${r.baseId}' 는 목걸이 베이스가 아니다`);
-            if (!(r.max >= r.min) || !(r.min > 0)) throw new Error(`item: amulet_proc ${r.baseId} 범위 ${r.min}~${r.max}`);
-        }
-        if (ACC_SLOTS.includes('amulet'))
-            for (const id of amuletBases) if (!procByBase[id]) throw new Error(`item: amulet_proc 에 목걸이 베이스 '${id}' 행이 없다`);
+
     }
     const accSinRows = (slot, sin) => accSinOpts.filter(r => r.slot === slot && r.sin === sin);
     /** 계열표 부위(무기 밖)의 표 행 — 방어구 넷은 `armor_sin_option` · 반지는 `accessory_sin_option` 의 반지 행(R382) */
@@ -397,21 +414,22 @@ export function createItemSystem(data) {
     // ~~rollAffixes · affixCount~~ — 2026-09-21 R127 퇴역. 목걸이 · 반지가 마지막 사용자였다 (아래 `accessoryOptions`)
 
     /**
-     * 목걸이 베이스 옵션 — **발동 스킬 하나** [2026-09-21 · 사용자 확정 · R127 · item_design §1 「목걸이 베이스 옵션」].
-     * 발동 조건은 **베이스가 정한다**(`amulet_proc.csv` — rng 0) · 스킬은 `procSkills` 에서 1회 · 값 1회(확률 · 또는 쿨타임 배수 — 0.01 단위).
-     * rng 소비(계약 — INTERFACE §5-2): **스킬 1 → 값 1** — 베이스에 행이 없거나 풀이 비어도 2회 그대로다.
-     * 값은 아이템 레벨이 치우친다(`lean` · R291) — **`interval`(쿨타임 배수 — 낮을수록 좋다)만 균등 그대로**다(방향 미정 · 사용자 10-20 「나중에」)
-     * ⚠ **전투는 이 값을 읽지 않는다**(사용자 지시 — 설명에만) · `affixes` 에 넣지 않아 `computeCombat` 이 합산할 길이 없다
+     * 목걸이 베이스 옵션 — 특정 기본 스킬 +n(R309). 후보 1회 → 값 1회.
+     * 값은 아이템 레벨에 따라 높은 쪽으로 치우친 정수이며 0이면 접사를 만들지 않는다.
+     * `skillPlusOf`가 합산하고 고유·배운 스킬 레벨에 적용한다. 기존 장비를 재굴림하지 않는다.
      */
-    function amuletProc(rng, baseId, ilvl) {
-        const p = procByBase[baseId] ?? null;
+    function amuletBase(rng, ilvl) {
         const sr = rng(), vr = rng();
-        if (!p) return null;
-        return {
-            trigger: p.trigger,
-            skill: procSkills.length ? procSkills[Math.floor(sr * procSkills.length)] : null,
-            v: F.pctOption(p.min + (p.trigger === 'interval' ? vr : lean(vr, ilvl)) * (p.max - p.min)),
-        };
+        const lo = B.amulet_skill_plus_min, hi = B.amulet_skill_plus_max;
+        const v = Math.min(hi, lo + Math.floor(lean(vr, ilvl) * (hi - lo + 1)));
+        return v > 0 && amuletSkills.length ? [{ stat: SKILL_PLUS, v, skill: amuletSkills[Math.floor(sr * amuletSkills.length)], src: 'fixed' }] : [];
+    }
+    function ringBase(rng, ilvl) {
+        const tr = rng(), er = rng(), vr = rng();
+        if (!ringTags.length) return [];
+        const tag = ringTags[Math.floor(tr * ringTags.length)];
+        const rows = ringBaseOpts.filter(r => r.tag === tag), row = rows[Math.floor(er * rows.length)];
+        return [{ stat: 'skill_tag', tag, effect: row.effect, v: F.pctOption(row.min + lean(vr, ilvl) * (row.max - row.min)), src: 'fixed' }];
     }
 
     /**
@@ -482,6 +500,7 @@ export function createItemSystem(data) {
                 procTaken = true;
                 const pool = procPool(d.stat, classes);
                 a.skill = pool.length ? pool[Math.floor(kr * pool.length)] : null;
+                if (a.skill) a.skillLv = B.item_proc_skill_level;
             }
             if (d.stat === SKILL_PLUS) a.skill = plusPool[Math.floor(kr * plusPool.length)];   // 풀이 비면 `open` 이 이미 뺐다
             out.push(a);
@@ -555,8 +574,8 @@ export function createItemSystem(data) {
      * rng 소비 순서(계약 — INTERFACE §5-2): (매직 이상) 접두 죄종 → (레어 · 에픽 · 레전더리) 접미 죄종 →
      *   **(무기 · 방어구 넷) 베이스 옵션 1 + 죄종 계열**(`weaponOptions` · `armorOptions` → `familyOptions` — 줄마다 옵션 1 → 변형 1 → 값 1 → 스킬 1 · 2026-10-05 · 랜덤 줄 수는 희귀도가 정한다 · 붙나 굴림 없음 — 2026-10-24 R342 ·
      *   **방어구는 베이스 옵션 뒤에 갈래 특성 변형 1 → 값 1** — 2026-10-21 R303 · ~~(투구 · 장갑 · 신발) 옵션 세 층~~ R303 퇴역) /
- *   **(반지) 죄종 계열** [2026-10-29 · R382] — `ringOptions` → `familyOptions`(베이스 옵션 0회) /
- *   **(목걸이) 옵션 세 층** [2026-09-21 · R127 — ~~접사 수 → 접사마다 (정의 선택 → 값)~~] — 발동 스킬 1 → 값 1 → `accessoryOptions` →
+     *   **(반지) 태그 1 → 효과 1 → 값 1 → 죄종 계열** — `ringBase` → `ringOptions` → `familyOptions` /
+     *   **(목걸이) 특정 스킬 1 → 값 1 → 죄종·공통옵션** — `amuletBase` → `accessoryOptions` →
      *   **(무기) 베이스 1회** [신설 2026-09-10] · ~~(무기) 스킬 1회~~ **2026-09-29 삭제**(R179) · ~~(방어구) 개체 굴림 1회~~ **2026-09-18 삭제** · ~~(무기) 공격력 개체 굴림~~ **2026-09-14 삭제**(R90)
      *   ~~(마법 무기) 원소~~ 는 **2026-09-11 삭제**(R80) — 마법 무기에서 소비 1회가 빠졌다
      */
@@ -572,7 +591,7 @@ export function createItemSystem(data) {
         const sins = [prefix, suffix].filter(Boolean);
         const words = [pre, suf].filter(Boolean).map(x => x.word);
         // 목걸이 베이스 옵션(발동 스킬)은 **죄종 칸보다 앞**에서 굴린다 — 무기 · 방어구의 베이스 옵션이 죄종 칸 앞인 것과 같은 자리 (2026-09-21 · R127)
-        const proc = slot === 'amulet' ? amuletProc(rng, base?.id, ilvl) : null;
+        const accBase = slot === 'amulet' ? amuletBase(rng, ilvl) : slot === 'ring' ? ringBase(rng, ilvl) : [];
         const item = {
             uid: null,
             slot, rarity, ilvl,
@@ -587,7 +606,7 @@ export function createItemSystem(data) {
             sins,
             words,                             // 이름의 죄종 단어 — sins 와 같은 길이 (2026-09-19)
         };
-        if (proc) item.proc = proc;            // 목걸이만 — 행이 없는 베이스(검증이 막는다)면 키가 없다
+        if (accBase.length) item.affixes.unshift(...accBase);
         if (slot === 'weapon') {
             item.group = base.id;
             // 무기 베이스 — 이름이 실제로 갈리는 무기군만 풀이 있다(weapon_base.csv · 지금 본편 열 전부 — 스태프·오브·십자가·성경·석궁 2026-09-14 · 확장 둘은 없다).
@@ -716,10 +735,13 @@ export function createItemSystem(data) {
      *  ~~매직~~ → 일반 [2026-09-14 사용자 확정 · R86 · hero_design §1] — 시작 장비는 일반 무기 + 일반 갑옷이다.
      *  ~~스킬은 직업 기본기 풀에서 굴린다 · `avoidSkill`~~ 은 **2026-09-29 폐지**(R179 — 무기가 스킬을 안 담는다) —
      *  첫 파티의 딜 · 힐 보장은 **고유 스킬**로 옮겨 갔다(`hero.rollStartParty` · hero_design §1).
-     *  09-10 장착 개방 뒤에도 시작만은 자기 직업 무기로 준다. 갈아 끼우는 것은 자유다(`canEquip` 은 직업을 안 가린다 — 요구 레벨만 · R215). */
+     *  09-10 장착 개방 뒤에도 시작만은 자기 직업 무기로 준다. 갈아 끼우는 것은 자유다(`canEquip` 은 직업을 안 가린다 — 요구 레벨만 · R215).
+     *  베이스 「무기 데미지 +%」는 start_weapon_atk_pct로 고정(2026-10-30 사용자 지시 · +100%). 먼저 기존 굴림을 마쳐 다른 옵션과 다음 장비의 RNG 소비를 유지한다. */
     function startingWeapon(rng, cls) {
         const gs = groupsFor(cls);
-        return build(rng, 'weapon', 'normal', 1, gs.length ? pick(rng, gs) : pick(rng, dropGroups));
+        const weapon = build(rng, 'weapon', 'normal', 1, gs.length ? pick(rng, gs) : pick(rng, dropGroups));
+        weapon.affixes.find(a => a.src === 'fixed' && a.stat === 'atk_pct').v = B.start_weapon_atk_pct;
+        return weapon;
     }
 
     /** 시작 갑옷 — ilvl 1 **일반** 1개 [신설 2026-09-14 사용자 확정 · R86]. 베이스는 **ilvl 1 의 티어 행**에서 1회 → `build`.
@@ -826,6 +848,11 @@ export function createItemSystem(data) {
         const a = item?.affixes?.[i];
         if (!a) return null;
         if (a.src === 'fixed') {
+            if (a.stat === SKILL_PLUS && item.slot === 'amulet') return { min: B.amulet_skill_plus_min, max: B.amulet_skill_plus_max };
+            if (a.stat === 'skill_tag' && item.slot === 'ring') {
+                const row = ringBaseOpts.find(r => r.tag === a.tag && r.effect === a.effect);
+                return row ? { min: F.pctOption(row.min), max: F.pctOption(row.max) } : null;
+            }
             const lohi = a.stat === 'atk_pct' ? [B.weapon_fixed_atk_pct_min, B.weapon_fixed_atk_pct_max]
                 : a.stat === 'armor_def_pct' ? [B.armor_fixed_def_pct_min, B.armor_fixed_def_pct_max] : null;
             if (lohi) return { min: F.pctOption(lohi[0]), max: F.pctOption(lohi[1]) };
@@ -915,5 +942,5 @@ export function createItemSystem(data) {
         return { ...item, implicit: { ...item.implicit, v: Math.round(item.implicit.v * F.upgradeMult(item.up)) } };
     }
 
-    return { rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources, optionRange, skillPlusOf };
+    return { rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources, optionRange, skillPlusOf, procSkillLevel };
 }

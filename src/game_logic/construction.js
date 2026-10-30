@@ -36,9 +36,9 @@ export const TARGETS = {
     // 켜기 — 준비 중 (construction_draft §2 의 ⚠ 칸 포함)
     craft: U(false), stigma_craft: U(false), skill_card: U(false),
     raid: U(false), escort: U(false), gear_set: U(false), monster_card: U(false),
-    // 탐험 — 탐험 r1 이 탭과 보내기를 연다(SCREEN_DESIGN §8-4 · 2026-10-08 「건설에 탐험 열어봐」 → 2026-10-09 최소 루프가 서며 켰다 · `state.exploreErr` 의 `unbuilt`)
+    // 탐험 — 탐험 r2 가 보내기를 연다(r1 은 편성 +1 · 2026-10-30 · SCREEN_DESIGN §8-4 · `state.exploreErr` 의 `unbuilt`)
     explore: U(true),
-    // 탐험 지점 — 마차(상단) · 폐허 아이콘이 이 줄부터 지도에 선다(탐험 r2 · r3 · 동굴은 `explore` 가 연다 · 2026-10-27 · R362 · `state.EXPLORE_SPOT_FEATURE`)
+    // 탐험 지점 — 마차(상단) · 폐허 아이콘이 이 줄부터 지도에 선다(탐험 r3 · r4 · 동굴은 r2 `explore` 가 연다 · 2026-10-30 · `state.EXPLORE_SPOT_FEATURE`)
     explore_caravan: U(true), explore_ruins: U(true),
     commission_board: U(true),   // 의뢰 게시판 [2026-09-24 · R153 · base_expedition_design §1-3] — 준비 중에서 풀렸다
     gamble: U(true),   // 도박장 슬롯 [2026-09-24 · R149 · base_expedition_design 「도박장」] — 준비 중에서 풀렸다

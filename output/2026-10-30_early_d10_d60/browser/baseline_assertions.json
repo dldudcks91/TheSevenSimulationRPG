@@ -1,0 +1,21 @@
+{
+  "title": "FAIL 805/806",
+  "passed": 805,
+  "failed": 1,
+  "failures": [
+    "tip: 영웅 툴팁은 어디서나 원정과 같은 기본 옵션 + 장비 · Alt 는 둘을 둔 채 세부 옵션 전 행 둘을 추가 (ADR-0486 · ADR-0498)캐릭터 탭 세부 옵션 17 / 16 — 18 / 16 이어야 한다 (ADR-0381 · 고정 피해 감소는 피해 감소 줄 · 상태이상 · 디버프 시간 감소 ADR-0770)"
+  ],
+  "elapsed_sec": 23.72,
+  "page_errors": [],
+  "http_errors": [
+    {
+      "url": "http://127.0.0.1:57716/dev/assets/art/fx/ui/stage_banner.webp",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:57716/data/",
+      "status": 404
+    }
+  ],
+  "source": "../snapshot/src (frozen)"
+}

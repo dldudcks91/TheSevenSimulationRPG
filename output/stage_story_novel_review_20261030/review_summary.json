@@ -1,0 +1,41 @@
+{
+  "scope": {
+    "chapters": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "places": 25,
+    "cells_sharing_stories": 65,
+    "languages": [
+      "ko",
+      "en"
+    ],
+    "excluded_chapters": [
+      6,
+      7
+    ]
+  },
+  "editorial_passes": 3,
+  "changed_story_fields": 50,
+  "non_story_data_preserved": true,
+  "stage_csv_sha256": "8af73985d1e5964da80a193a3f8a5dd0d64188d4126e3a955361918dda45d956",
+  "verification": {
+    "final_story_screens": 50,
+    "additional_viewport_cases": 12,
+    "name_and_particle_variants": 390,
+    "browser_errors": [],
+    "regression": {
+      "title": "PASS 739/739",
+      "failures": [],
+      "passed": 739
+    }
+  },
+  "evidence": [
+    "content_validation.json",
+    "final_browser_review.json",
+    "browser_review.json"
+  ]
+}

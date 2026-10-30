@@ -1,0 +1,35 @@
+{
+  "checks": [
+    {
+      "lang": "ko",
+      "rows": [
+        "랭크 IParty +1",
+        "랭크 II파티를 탐험에 파견",
+        "랭크 III상단 오픈",
+        "랭크 IV폐허 오픈",
+        "랭크 VParty +1"
+      ],
+      "require": "✗ 챕터 2 클리어",
+      "before": 1,
+      "after": 2,
+      "cost": 600,
+      "ok": true
+    },
+    {
+      "lang": "en",
+      "rows": [
+        "Rank IParty +1",
+        "Rank IISend a party to explore",
+        "Rank IIIUnlocks Caravan",
+        "Rank IVUnlocks Ruins",
+        "Rank VParty +1"
+      ],
+      "require": "✗ Clear Chapter 2",
+      "before": 1,
+      "after": 2,
+      "cost": 600,
+      "ok": true
+    }
+  ],
+  "errors": []
+}

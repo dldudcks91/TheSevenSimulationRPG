@@ -1,0 +1,1348 @@
+{
+  "wall_seconds": 14.030999999959022,
+  "errors": [],
+  "comparisons": [
+    {
+      "id": "hp80",
+      "identical_rows": true,
+      "mismatched_seeds": []
+    },
+    {
+      "id": "baseline",
+      "identical_rows": true,
+      "mismatched_seeds": []
+    }
+  ],
+  "results": [
+    {
+      "id": "hp80",
+      "rows": [
+        {
+          "seed": 1,
+          "policy": "active",
+          "arrivalSeconds": 1997.6,
+          "clearSeconds": 2772.7,
+          "won": true,
+          "seconds": 2772.7,
+          "runs": 24,
+          "losses": 5,
+          "farmingRuns": 6,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1526,
+          "levels": [
+            12,
+            12,
+            12
+          ],
+          "classes": [
+            "mage",
+            "priest",
+            "warrior"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "mag_inferno",
+            "pri_judgment",
+            "war_ironskin"
+          ],
+          "timeBudgetMs": 2772700,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 2,
+          "policy": "active",
+          "arrivalSeconds": 1511,
+          "clearSeconds": 1633.4,
+          "won": true,
+          "seconds": 1633.4,
+          "runs": 14,
+          "losses": 1,
+          "farmingRuns": 0,
+          "booksLearned": 1,
+          "ownedBooksLearned": 1,
+          "gold": 4278,
+          "levels": [
+            10,
+            9,
+            10
+          ],
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "kni_rush",
+            null,
+            null
+          ],
+          "timeBudgetMs": 1633400,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 3,
+          "policy": "active",
+          "arrivalSeconds": 2056.2,
+          "clearSeconds": 2102.5,
+          "won": true,
+          "seconds": 2102.5,
+          "runs": 13,
+          "losses": 0,
+          "farmingRuns": 0,
+          "booksLearned": 2,
+          "ownedBooksLearned": 2,
+          "gold": 2030,
+          "levels": [
+            10,
+            10,
+            10
+          ],
+          "classes": [
+            "mage",
+            "priest",
+            "knight"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "mag_fireball",
+            "pri_cure",
+            null
+          ],
+          "timeBudgetMs": 2102500,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 4,
+          "policy": "active",
+          "arrivalSeconds": 1163.8,
+          "clearSeconds": 1178.7,
+          "won": true,
+          "seconds": 1178.7,
+          "runs": 13,
+          "losses": 0,
+          "farmingRuns": 0,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1500,
+          "levels": [
+            10,
+            11,
+            10
+          ],
+          "classes": [
+            "mage",
+            "archer",
+            "knight"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "mag_fireball",
+            "arc_snipe",
+            "kni_charge"
+          ],
+          "timeBudgetMs": 1178700,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 5,
+          "policy": "active",
+          "arrivalSeconds": 2989.3,
+          "clearSeconds": null,
+          "won": false,
+          "seconds": 3600,
+          "runs": 16,
+          "losses": 3,
+          "farmingRuns": 1,
+          "booksLearned": 1,
+          "ownedBooksLearned": 1,
+          "gold": 3261,
+          "levels": [
+            10,
+            10,
+            10
+          ],
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "stage": 1042,
+          "bookIds": [
+            null,
+            null,
+            "pri_judgment"
+          ],
+          "timeBudgetMs": 3600000,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 6,
+          "policy": "active",
+          "arrivalSeconds": 1614.85,
+          "clearSeconds": 1649.45,
+          "won": true,
+          "seconds": 1649.45,
+          "runs": 16,
+          "losses": 3,
+          "farmingRuns": 0,
+          "booksLearned": 0,
+          "ownedBooksLearned": 0,
+          "gold": 5709,
+          "levels": [
+            10,
+            10,
+            10
+          ],
+          "classes": [
+            "warrior",
+            "mage",
+            "archer"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            null,
+            null,
+            null
+          ],
+          "timeBudgetMs": 1649450,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 7,
+          "policy": "active",
+          "arrivalSeconds": 1029.6,
+          "clearSeconds": 1472.6,
+          "won": true,
+          "seconds": 1472.6,
+          "runs": 19,
+          "losses": 3,
+          "farmingRuns": 3,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1502,
+          "levels": [
+            11,
+            11,
+            11
+          ],
+          "classes": [
+            "warrior",
+            "archer",
+            "knight"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "war_ironskin",
+            "arc_snipe",
+            "kni_holyshield"
+          ],
+          "timeBudgetMs": 1472600,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 8,
+          "policy": "active",
+          "arrivalSeconds": 1768.2,
+          "clearSeconds": 1796.9,
+          "won": true,
+          "seconds": 1796.9,
+          "runs": 16,
+          "losses": 3,
+          "farmingRuns": 0,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1609,
+          "levels": [
+            10,
+            11,
+            11
+          ],
+          "classes": [
+            "warrior",
+            "mage",
+            "priest"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "war_recovery",
+            "mag_lightning",
+            "pri_cure"
+          ],
+          "timeBudgetMs": 1796900,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 9,
+          "policy": "active",
+          "arrivalSeconds": 1059.8,
+          "clearSeconds": 1170.9,
+          "won": true,
+          "seconds": 1170.9,
+          "runs": 15,
+          "losses": 2,
+          "farmingRuns": 0,
+          "booksLearned": 0,
+          "ownedBooksLearned": 0,
+          "gold": 4395,
+          "levels": [
+            10,
+            10,
+            10
+          ],
+          "classes": [
+            "archer",
+            "knight",
+            "warrior"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            null,
+            null,
+            null
+          ],
+          "timeBudgetMs": 1170900,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 10,
+          "policy": "active",
+          "arrivalSeconds": 1695.8,
+          "clearSeconds": 2568.7,
+          "won": true,
+          "seconds": 2568.7,
+          "runs": 23,
+          "losses": 4,
+          "farmingRuns": 6,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1298,
+          "levels": [
+            12,
+            12,
+            12
+          ],
+          "classes": [
+            "warrior",
+            "priest",
+            "mage"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "war_doubleswing",
+            "pri_heal",
+            "mag_chain"
+          ],
+          "timeBudgetMs": 2568700,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 11,
+          "policy": "active",
+          "arrivalSeconds": 1460.5,
+          "clearSeconds": 1561.9,
+          "won": true,
+          "seconds": 1561.9,
+          "runs": 18,
+          "losses": 5,
+          "farmingRuns": 0,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1268,
+          "levels": [
+            10,
+            10,
+            11
+          ],
+          "classes": [
+            "knight",
+            "warrior",
+            "mage"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "kni_charge",
+            "war_bash",
+            "mag_iceblast"
+          ],
+          "timeBudgetMs": 1561900,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 12,
+          "policy": "active",
+          "arrivalSeconds": 2268.9,
+          "clearSeconds": null,
+          "won": false,
+          "seconds": 3600,
+          "runs": 22,
+          "losses": 4,
+          "farmingRuns": 6,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 496,
+          "levels": [
+            12,
+            12,
+            12
+          ],
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "kni_charge",
+            "war_ironskin",
+            "pri_heal"
+          ],
+          "timeBudgetMs": 3600000,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 13,
+          "policy": "active",
+          "arrivalSeconds": 1729.3,
+          "clearSeconds": 1754,
+          "won": true,
+          "seconds": 1754,
+          "runs": 19,
+          "losses": 3,
+          "farmingRuns": 3,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1271,
+          "levels": [
+            11,
+            11,
+            10
+          ],
+          "classes": [
+            "mage",
+            "archer",
+            "warrior"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "mag_frostnova",
+            "arc_rapid",
+            "war_ironskin"
+          ],
+          "timeBudgetMs": 1754000,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 14,
+          "policy": "active",
+          "arrivalSeconds": 1149.45,
+          "clearSeconds": 1169.25,
+          "won": true,
+          "seconds": 1169.25,
+          "runs": 14,
+          "losses": 1,
+          "farmingRuns": 0,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1202,
+          "levels": [
+            11,
+            10,
+            10
+          ],
+          "classes": [
+            "knight",
+            "archer",
+            "mage"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "kni_rush",
+            "arc_guided",
+            "mag_fireball"
+          ],
+          "timeBudgetMs": 1169250,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 15,
+          "policy": "active",
+          "arrivalSeconds": null,
+          "clearSeconds": null,
+          "won": false,
+          "seconds": 3600,
+          "runs": 27,
+          "losses": 18,
+          "farmingRuns": 11,
+          "booksLearned": 0,
+          "ownedBooksLearned": 0,
+          "gold": 1409,
+          "levels": [
+            9,
+            9,
+            9
+          ],
+          "classes": [
+            "knight",
+            "mage",
+            "priest"
+          ],
+          "stage": 1022,
+          "bookIds": [
+            null,
+            null,
+            null
+          ],
+          "timeBudgetMs": 3600000,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 16,
+          "policy": "active",
+          "arrivalSeconds": 1659.1,
+          "clearSeconds": 1725.1,
+          "won": true,
+          "seconds": 1725.1,
+          "runs": 13,
+          "losses": 0,
+          "farmingRuns": 0,
+          "booksLearned": 1,
+          "ownedBooksLearned": 1,
+          "gold": 4156,
+          "levels": [
+            10,
+            9,
+            9
+          ],
+          "classes": [
+            "archer",
+            "priest",
+            "knight"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "arc_rapid",
+            null,
+            null
+          ],
+          "timeBudgetMs": 1725100,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 17,
+          "policy": "active",
+          "arrivalSeconds": 2504.1,
+          "clearSeconds": 2538.8,
+          "won": true,
+          "seconds": 2538.8,
+          "runs": 15,
+          "losses": 2,
+          "farmingRuns": 0,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1706,
+          "levels": [
+            10,
+            11,
+            10
+          ],
+          "classes": [
+            "mage",
+            "priest",
+            "warrior"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "mag_lightning",
+            "pri_judgment",
+            "war_doubleswing"
+          ],
+          "timeBudgetMs": 2538800,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 18,
+          "policy": "active",
+          "arrivalSeconds": 1361.8,
+          "clearSeconds": 1379,
+          "won": true,
+          "seconds": 1379,
+          "runs": 15,
+          "losses": 2,
+          "farmingRuns": 0,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1556,
+          "levels": [
+            11,
+            10,
+            10
+          ],
+          "classes": [
+            "mage",
+            "archer",
+            "warrior"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "mag_chain",
+            "arc_rapid",
+            "war_bash"
+          ],
+          "timeBudgetMs": 1379000,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 19,
+          "policy": "active",
+          "arrivalSeconds": 1740.2,
+          "clearSeconds": 1763.6,
+          "won": true,
+          "seconds": 1763.6,
+          "runs": 22,
+          "losses": 6,
+          "farmingRuns": 4,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1753,
+          "levels": [
+            11,
+            11,
+            11
+          ],
+          "classes": [
+            "warrior",
+            "archer",
+            "mage"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "war_ironskin",
+            "arc_rapid",
+            "mag_chain"
+          ],
+          "timeBudgetMs": 1763600,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 20,
+          "policy": "active",
+          "arrivalSeconds": 1917.6,
+          "clearSeconds": 1992.8,
+          "won": true,
+          "seconds": 1992.8,
+          "runs": 13,
+          "losses": 0,
+          "farmingRuns": 0,
+          "booksLearned": 0,
+          "ownedBooksLearned": 0,
+          "gold": 6790,
+          "levels": [
+            10,
+            10,
+            10
+          ],
+          "classes": [
+            "warrior",
+            "priest",
+            "archer"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            null,
+            null,
+            null
+          ],
+          "timeBudgetMs": 1992800,
+          "reportHashes": [],
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "baseline",
+      "rows": [
+        {
+          "seed": 1,
+          "policy": "active",
+          "arrivalSeconds": 2827.2,
+          "clearSeconds": 3712.3,
+          "won": true,
+          "seconds": 3712.3,
+          "runs": 29,
+          "losses": 7,
+          "farmingRuns": 9,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1315,
+          "levels": [
+            13,
+            12,
+            12
+          ],
+          "classes": [
+            "mage",
+            "priest",
+            "warrior"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "mag_inferno",
+            "pri_judgment",
+            "war_ironskin"
+          ],
+          "timeBudgetMs": 3712300,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 2,
+          "policy": "active",
+          "arrivalSeconds": 1847.1,
+          "clearSeconds": 1971.5,
+          "won": true,
+          "seconds": 1971.5,
+          "runs": 14,
+          "losses": 1,
+          "farmingRuns": 0,
+          "booksLearned": 1,
+          "ownedBooksLearned": 1,
+          "gold": 3322,
+          "levels": [
+            10,
+            10,
+            9
+          ],
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "kni_rush",
+            null,
+            null
+          ],
+          "timeBudgetMs": 1971500,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 3,
+          "policy": "active",
+          "arrivalSeconds": 3014.3,
+          "clearSeconds": 3068.4,
+          "won": true,
+          "seconds": 3068.4,
+          "runs": 14,
+          "losses": 1,
+          "farmingRuns": 0,
+          "booksLearned": 2,
+          "ownedBooksLearned": 2,
+          "gold": 2108,
+          "levels": [
+            10,
+            10,
+            10
+          ],
+          "classes": [
+            "mage",
+            "priest",
+            "knight"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "mag_fireball",
+            "pri_cure",
+            null
+          ],
+          "timeBudgetMs": 3068400,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 4,
+          "policy": "active",
+          "arrivalSeconds": 1253.6,
+          "clearSeconds": 1268.5,
+          "won": true,
+          "seconds": 1268.5,
+          "runs": 13,
+          "losses": 0,
+          "farmingRuns": 0,
+          "booksLearned": 2,
+          "ownedBooksLearned": 2,
+          "gold": 5310,
+          "levels": [
+            10,
+            10,
+            10
+          ],
+          "classes": [
+            "mage",
+            "archer",
+            "knight"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "mag_fireball",
+            "arc_snipe",
+            null
+          ],
+          "timeBudgetMs": 1268500,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 5,
+          "policy": "active",
+          "arrivalSeconds": 4141.4,
+          "clearSeconds": 4381.1,
+          "won": true,
+          "seconds": 4381.1,
+          "runs": 16,
+          "losses": 3,
+          "farmingRuns": 0,
+          "booksLearned": 1,
+          "ownedBooksLearned": 1,
+          "gold": 3241,
+          "levels": [
+            9,
+            10,
+            10
+          ],
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            null,
+            null,
+            "pri_judgment"
+          ],
+          "timeBudgetMs": 4381100,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 6,
+          "policy": "active",
+          "arrivalSeconds": 2295.85,
+          "clearSeconds": 2324.45,
+          "won": true,
+          "seconds": 2324.45,
+          "runs": 20,
+          "losses": 4,
+          "farmingRuns": 4,
+          "booksLearned": 2,
+          "ownedBooksLearned": 2,
+          "gold": 5379,
+          "levels": [
+            10,
+            11,
+            11
+          ],
+          "classes": [
+            "warrior",
+            "mage",
+            "archer"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            null,
+            "mag_lightning",
+            "arc_snipe"
+          ],
+          "timeBudgetMs": 2324450,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 7,
+          "policy": "active",
+          "arrivalSeconds": 1168.1,
+          "clearSeconds": 1897,
+          "won": true,
+          "seconds": 1897,
+          "runs": 20,
+          "losses": 4,
+          "farmingRuns": 4,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1666,
+          "levels": [
+            11,
+            11,
+            11
+          ],
+          "classes": [
+            "warrior",
+            "archer",
+            "knight"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "war_ironskin",
+            "arc_snipe",
+            "kni_holyshield"
+          ],
+          "timeBudgetMs": 1897000,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 8,
+          "policy": "active",
+          "arrivalSeconds": 2130.35,
+          "clearSeconds": 2159.05,
+          "won": true,
+          "seconds": 2159.05,
+          "runs": 18,
+          "losses": 5,
+          "farmingRuns": 0,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1190,
+          "levels": [
+            10,
+            11,
+            11
+          ],
+          "classes": [
+            "warrior",
+            "mage",
+            "priest"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "war_recovery",
+            "mag_lightning",
+            "pri_cure"
+          ],
+          "timeBudgetMs": 2159050,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 9,
+          "policy": "active",
+          "arrivalSeconds": 1168.7,
+          "clearSeconds": 1288,
+          "won": true,
+          "seconds": 1288,
+          "runs": 15,
+          "losses": 2,
+          "farmingRuns": 0,
+          "booksLearned": 0,
+          "ownedBooksLearned": 0,
+          "gold": 3973,
+          "levels": [
+            10,
+            9,
+            10
+          ],
+          "classes": [
+            "archer",
+            "knight",
+            "warrior"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            null,
+            null,
+            null
+          ],
+          "timeBudgetMs": 1288000,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 10,
+          "policy": "active",
+          "arrivalSeconds": 2715.9,
+          "clearSeconds": 3236.7,
+          "won": true,
+          "seconds": 3236.7,
+          "runs": 21,
+          "losses": 5,
+          "farmingRuns": 3,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1450,
+          "levels": [
+            11,
+            12,
+            11
+          ],
+          "classes": [
+            "warrior",
+            "priest",
+            "mage"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "war_doubleswing",
+            "pri_heal",
+            "mag_chain"
+          ],
+          "timeBudgetMs": 3236700,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 11,
+          "policy": "active",
+          "arrivalSeconds": 1591.05,
+          "clearSeconds": 2305.2,
+          "won": true,
+          "seconds": 2305.2,
+          "runs": 26,
+          "losses": 7,
+          "farmingRuns": 7,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1262,
+          "levels": [
+            12,
+            12,
+            12
+          ],
+          "classes": [
+            "knight",
+            "warrior",
+            "mage"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "kni_charge",
+            "war_bash",
+            "mag_iceblast"
+          ],
+          "timeBudgetMs": 2305200,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 12,
+          "policy": "active",
+          "arrivalSeconds": 2802.1,
+          "clearSeconds": null,
+          "won": false,
+          "seconds": 5400,
+          "runs": 29,
+          "losses": 6,
+          "farmingRuns": 11,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1001,
+          "levels": [
+            13,
+            13,
+            13
+          ],
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "stage": 1043,
+          "bookIds": [
+            "kni_charge",
+            "war_ironskin",
+            "pri_heal"
+          ],
+          "timeBudgetMs": 5400000,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 13,
+          "policy": "active",
+          "arrivalSeconds": 1651.65,
+          "clearSeconds": 1734.05,
+          "won": true,
+          "seconds": 1734.05,
+          "runs": 18,
+          "losses": 5,
+          "farmingRuns": 0,
+          "booksLearned": 2,
+          "ownedBooksLearned": 2,
+          "gold": 6129,
+          "levels": [
+            10,
+            11,
+            9
+          ],
+          "classes": [
+            "mage",
+            "archer",
+            "warrior"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "mag_frostnova",
+            "arc_rapid",
+            null
+          ],
+          "timeBudgetMs": 1734050,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 14,
+          "policy": "active",
+          "arrivalSeconds": 1417.9,
+          "clearSeconds": 1772.5,
+          "won": true,
+          "seconds": 1772.5,
+          "runs": 22,
+          "losses": 6,
+          "farmingRuns": 4,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1169,
+          "levels": [
+            12,
+            11,
+            11
+          ],
+          "classes": [
+            "knight",
+            "archer",
+            "mage"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "kni_rush",
+            "arc_guided",
+            "mag_fireball"
+          ],
+          "timeBudgetMs": 1772500,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 15,
+          "policy": "active",
+          "arrivalSeconds": null,
+          "clearSeconds": null,
+          "won": false,
+          "seconds": 5400,
+          "runs": 41,
+          "losses": 34,
+          "farmingRuns": 23,
+          "booksLearned": 0,
+          "ownedBooksLearned": 0,
+          "gold": 1041,
+          "levels": [
+            9,
+            9,
+            9
+          ],
+          "classes": [
+            "knight",
+            "mage",
+            "priest"
+          ],
+          "stage": 1011,
+          "bookIds": [
+            null,
+            null,
+            null
+          ],
+          "timeBudgetMs": 5400000,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 16,
+          "policy": "active",
+          "arrivalSeconds": 2004.2,
+          "clearSeconds": 2788.25,
+          "won": true,
+          "seconds": 2788.25,
+          "runs": 20,
+          "losses": 4,
+          "farmingRuns": 4,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1418,
+          "levels": [
+            11,
+            11,
+            11
+          ],
+          "classes": [
+            "archer",
+            "priest",
+            "knight"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "arc_rapid",
+            "pri_heal",
+            "kni_rush"
+          ],
+          "timeBudgetMs": 2788250,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 17,
+          "policy": "active",
+          "arrivalSeconds": 3497.85,
+          "clearSeconds": 3558.05,
+          "won": true,
+          "seconds": 3558.05,
+          "runs": 15,
+          "losses": 2,
+          "farmingRuns": 0,
+          "booksLearned": 2,
+          "ownedBooksLearned": 2,
+          "gold": 6872,
+          "levels": [
+            10,
+            11,
+            10
+          ],
+          "classes": [
+            "mage",
+            "priest",
+            "warrior"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "mag_lightning",
+            "pri_judgment",
+            null
+          ],
+          "timeBudgetMs": 3558050,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 18,
+          "policy": "active",
+          "arrivalSeconds": 1812.1,
+          "clearSeconds": 1834.1,
+          "won": true,
+          "seconds": 1834.1,
+          "runs": 21,
+          "losses": 5,
+          "farmingRuns": 3,
+          "booksLearned": 3,
+          "ownedBooksLearned": 3,
+          "gold": 1637,
+          "levels": [
+            12,
+            11,
+            10
+          ],
+          "classes": [
+            "mage",
+            "archer",
+            "warrior"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            "mag_chain",
+            "arc_rapid",
+            "war_bash"
+          ],
+          "timeBudgetMs": 1834100,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 19,
+          "policy": "active",
+          "arrivalSeconds": 1727.95,
+          "clearSeconds": 1783.55,
+          "won": true,
+          "seconds": 1783.55,
+          "runs": 19,
+          "losses": 6,
+          "farmingRuns": 0,
+          "booksLearned": 2,
+          "ownedBooksLearned": 2,
+          "gold": 4984,
+          "levels": [
+            9,
+            10,
+            11
+          ],
+          "classes": [
+            "warrior",
+            "archer",
+            "mage"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            null,
+            "arc_rapid",
+            "mag_chain"
+          ],
+          "timeBudgetMs": 1783550,
+          "reportHashes": [],
+          "failures": []
+        },
+        {
+          "seed": 20,
+          "policy": "active",
+          "arrivalSeconds": 2339.5,
+          "clearSeconds": 2418.5,
+          "won": true,
+          "seconds": 2418.5,
+          "runs": 13,
+          "losses": 0,
+          "farmingRuns": 0,
+          "booksLearned": 0,
+          "ownedBooksLearned": 0,
+          "gold": 5940,
+          "levels": [
+            10,
+            10,
+            10
+          ],
+          "classes": [
+            "warrior",
+            "priest",
+            "archer"
+          ],
+          "stage": 1051,
+          "bookIds": [
+            null,
+            null,
+            null
+          ],
+          "timeBudgetMs": 2418500,
+          "reportHashes": [],
+          "failures": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "snapshot_capture": "2026-10-30T10:46:05.339018+00:00",
+  "jobs": [
+    [
+      2,
+      "active",
+      false
+    ],
+    [
+      2,
+      "active_slow",
+      false
+    ],
+    [
+      2,
+      "book_first",
+      false
+    ],
+    [
+      11,
+      "active",
+      false
+    ],
+    [
+      11,
+      "active_slow",
+      false
+    ],
+    [
+      11,
+      "book_first",
+      false
+    ],
+    [
+      15,
+      "active",
+      false
+    ],
+    [
+      15,
+      "active_slow",
+      false
+    ],
+    [
+      15,
+      "book_first",
+      false
+    ]
+  ],
+  "manifest_sha256": "c0d2ce86be1af92a66a3afc72f3fe536fc57ebc08f38781e21515252d78334c4",
+  "active_js_sha256": "501cc2084239be1519fa3f97032edd4856550599260d8db5853b2358bd3324a3",
+  "legacy_js_sha256": "3503f934c438ca5eb445bf05ffa96b1e2dc53589aa423c44ab71a3534e3276b6",
+  "marks": [
+    600,
+    1200,
+    1500,
+    1800,
+    2100,
+    2400,
+    2700,
+    3600,
+    5400
+  ],
+  "policies": {
+    "book_first": "120s old combat-priority, reserve book funds/materials from first usable blueprint",
+    "active": "120s balanced class points plus observed defeats/new boxes",
+    "active_slow": "300s balanced plus observed defeats/new boxes",
+    "adaptive": "previous combat-priority300s control"
+  }
+}

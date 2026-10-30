@@ -1,0 +1,409 @@
+{
+  "passed": 66,
+  "checks": [
+    {
+      "name": "new game starts only first expedition explanation",
+      "ok": true
+    },
+    {
+      "name": "first explanation points at real unlocked area title",
+      "ok": true
+    },
+    {
+      "name": "showing explanation does not consume it",
+      "ok": true
+    },
+    {
+      "name": "guide does not steal keyboard focus",
+      "ok": true
+    },
+    {
+      "name": "guide has labelled accessible region and text",
+      "ok": true
+    },
+    {
+      "name": "guide starts no run and changes no selected tab",
+      "ok": true
+    },
+    {
+      "name": "first expedition now: card fits viewport",
+      "ok": true,
+      "detail": {
+        "x": 55.1875,
+        "y": 222.4375,
+        "w": 310,
+        "h": 145,
+        "vw": 1600,
+        "vh": 900,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "first expedition now: highlighted action remains uncovered",
+      "ok": true,
+      "detail": {
+        "x": 55.1875,
+        "y": 222.4375,
+        "w": 310,
+        "h": 145,
+        "vw": 1600,
+        "vh": 900,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "Tab can leave guide without a focus trap",
+      "ok": true
+    },
+    {
+      "name": "normal tab order reaches guide confirmation",
+      "ok": true
+    },
+    {
+      "name": "unconfirmed explanation can be left without saving it",
+      "ok": true
+    },
+    {
+      "name": "unconfirmed explanation returns in its actual context",
+      "ok": true
+    },
+    {
+      "name": "Escape within guide confirms without escaping game screen",
+      "ok": true
+    },
+    {
+      "name": "acknowledgement changes no game state or resources",
+      "ok": true
+    },
+    {
+      "name": "confirmed explanation stays closed through rerender",
+      "ok": true
+    },
+    {
+      "name": "same game reload retains seen record",
+      "ok": true
+    },
+    {
+      "name": "notification panel hides tutorial immediately",
+      "ok": true
+    },
+    {
+      "name": "closing notification panel restores pending tutorial",
+      "ok": true
+    },
+    {
+      "name": "settings panel hides tutorial immediately",
+      "ok": true
+    },
+    {
+      "name": "settings replay closes panel and shows current context",
+      "ok": true
+    },
+    {
+      "name": "unrelated modal hides tutorial",
+      "ok": true
+    },
+    {
+      "name": "frozen game hides tutorial",
+      "ok": true
+    },
+    {
+      "name": "hidden document hides tutorial",
+      "ok": true
+    },
+    {
+      "name": "portrait turn gate hides tutorial",
+      "ok": true
+    },
+    {
+      "name": "menu hides tutorial",
+      "ok": true
+    },
+    {
+      "name": "returning from menu retains unconfirmed explanation",
+      "ok": true
+    },
+    {
+      "name": "now 1280x720: card fits viewport",
+      "ok": true,
+      "detail": {
+        "x": 44.13750076293945,
+        "y": 177.9499969482422,
+        "w": 248.00001525878906,
+        "h": 116.00001525878906,
+        "vw": 1280,
+        "vh": 720,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "now 1280x720: highlighted action remains uncovered",
+      "ok": true,
+      "detail": {
+        "x": 44.13750076293945,
+        "y": 177.9499969482422,
+        "w": 248.00001525878906,
+        "h": 116.00001525878906,
+        "vw": 1280,
+        "vh": 720,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "d2min 1920x1080: card fits viewport",
+      "ok": true,
+      "detail": {
+        "x": 50.13750076293945,
+        "y": 360.8062744140625,
+        "w": 372,
+        "h": 174,
+        "vw": 1920,
+        "vh": 1080,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "d2min 1920x1080: highlighted action remains uncovered",
+      "ok": true,
+      "detail": {
+        "x": 50.13750076293945,
+        "y": 360.8062744140625,
+        "w": 372,
+        "h": 174,
+        "vw": 1920,
+        "vh": 1080,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "English title and confirmation translate",
+      "ok": true
+    },
+    {
+      "name": "first loose gear displays comparison at actual inventory cell",
+      "ok": true
+    },
+    {
+      "name": "gear guidance preserves equipment and mastery points",
+      "ok": true
+    },
+    {
+      "name": "gear comparison: card fits viewport",
+      "ok": true,
+      "detail": {
+        "x": 1129.06884765625,
+        "y": 826.8562622070312,
+        "w": 372,
+        "h": 174,
+        "vw": 1920,
+        "vh": 1080,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "gear comparison: highlighted action remains uncovered",
+      "ok": true,
+      "detail": {
+        "x": 1129.06884765625,
+        "y": 826.8562622070312,
+        "w": 372,
+        "h": 174,
+        "vw": 1920,
+        "vh": 1080,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "1280 mouse gear: real comparison tooltip opens",
+      "ok": true
+    },
+    {
+      "name": "1280 mouse gear: comparison is layered above tutorial",
+      "ok": true,
+      "detail": {
+        "sameLayer": true,
+        "card": 45,
+        "tooltip": 50
+      }
+    },
+    {
+      "name": "confirming gear does not chain another card on same screen",
+      "ok": true
+    },
+    {
+      "name": "explicit mastery opening allows next guide after gear confirmation",
+      "ok": true
+    },
+    {
+      "name": "unconfirmed mastery also explains its entry button",
+      "ok": true
+    },
+    {
+      "name": "unconfirmed mastery follows into actual learnable node",
+      "ok": true
+    },
+    {
+      "name": "mastery node: card fits viewport",
+      "ok": true,
+      "detail": {
+        "x": 576.5750122070312,
+        "y": 278.1500244140625,
+        "w": 248,
+        "h": 115.99996948242188,
+        "vw": 1280,
+        "vh": 720,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "mastery node: highlighted action remains uncovered",
+      "ok": true,
+      "detail": {
+        "x": 576.5750122070312,
+        "y": 278.1500244140625,
+        "w": 248,
+        "h": 115.99996948242188,
+        "vw": 1280,
+        "vh": 720,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "guide Escape keeps mastery modal open and spends no point",
+      "ok": true
+    },
+    {
+      "name": "potion guidance targets real party potion settings",
+      "ok": true
+    },
+    {
+      "name": "party potions: card fits viewport",
+      "ok": true,
+      "detail": {
+        "x": 687.2000122070312,
+        "y": 448.3374938964844,
+        "w": 248,
+        "h": 131.60000610351562,
+        "vw": 1280,
+        "vh": 720,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "party potions: highlighted action remains uncovered",
+      "ok": true,
+      "detail": {
+        "x": 687.2000122070312,
+        "y": 448.3374938964844,
+        "w": 248,
+        "h": 131.60000610351562,
+        "vw": 1280,
+        "vh": 720,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "construction guidance targets actual next-rank panel",
+      "ok": true
+    },
+    {
+      "name": "construction: card fits viewport",
+      "ok": true,
+      "detail": {
+        "x": 621.9249877929688,
+        "y": 247.4250030517578,
+        "w": 248,
+        "h": 116.00001525878906,
+        "vw": 1280,
+        "vh": 720,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "construction: highlighted action remains uncovered",
+      "ok": true,
+      "detail": {
+        "x": 621.9249877929688,
+        "y": 247.4250030517578,
+        "w": 248,
+        "h": 116.00001525878906,
+        "vw": 1280,
+        "vh": 720,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "all five explanations have independent persisted IDs",
+      "ok": true
+    },
+    {
+      "name": "all seen contexts remain quiet",
+      "ok": true
+    },
+    {
+      "name": "existing save without enrollment starts no tutorial",
+      "ok": true
+    },
+    {
+      "name": "existing save can explicitly start from current context",
+      "ok": true
+    },
+    {
+      "name": "new game has separate tutorial progress",
+      "ok": true
+    },
+    {
+      "name": "item action menu hides tutorial",
+      "ok": true
+    },
+    {
+      "name": "closing item menu restores pending gear explanation",
+      "ok": true
+    },
+    {
+      "name": "no browser runtime exceptions",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "touch gear guidance uses hold and explicit Equip wording",
+      "ok": true
+    },
+    {
+      "name": "1280 touch gear: real comparison tooltip opens",
+      "ok": true
+    },
+    {
+      "name": "1280 touch gear: comparison is layered above tutorial",
+      "ok": true,
+      "detail": {
+        "sameLayer": true,
+        "card": 45,
+        "tooltip": 50
+      }
+    },
+    {
+      "name": "long press exposes actual Equip action",
+      "ok": true
+    },
+    {
+      "name": "touch confirmation persists only the displayed guide",
+      "ok": true
+    },
+    {
+      "name": "potion tutorial can coexist with a real running expedition",
+      "ok": true
+    },
+    {
+      "name": "expedition clock advances while guide remains open",
+      "ok": true
+    },
+    {
+      "name": "all contexts have no browser runtime exceptions",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "errors": [],
+  "failure": null
+}

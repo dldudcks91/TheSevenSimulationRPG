@@ -1,0 +1,6718 @@
+{
+  "guide": {
+    "guide": {
+      "id": "retryPreparation",
+      "tab": "character",
+      "target": {
+        "preset": 1,
+        "hero": "h1",
+        "stageId": 1051,
+        "difficulty": "normal",
+        "attempts": 6
+      }
+    },
+    "items": [],
+    "count": 0
+  },
+  "before": {
+    "gold": 2,
+    "materials": {
+      "dust": 50,
+      "timber": 98,
+      "iron_ore": 97,
+      "herb": 74
+    },
+    "potions": {
+      "minor_healing": 2
+    },
+    "counters": {
+      "hero": 4,
+      "item": 52,
+      "battle": 62,
+      "tavern": 0,
+      "tactic": 0,
+      "upgrade": 8,
+      "visit": 0,
+      "make": 0,
+      "gamble": 0,
+      "commission": 5,
+      "explore": 0,
+      "join": 0,
+      "shop": 0,
+      "lab": 201,
+      "mail": 0,
+      "box": 4
+    },
+    "cleared": {
+      "cleared": [
+        1011,
+        1012,
+        1013,
+        1021,
+        1022,
+        1023,
+        1031,
+        1032,
+        1033,
+        1041,
+        1042,
+        1043
+      ],
+      "clearedIn": {},
+      "peakTotal": 0
+    },
+    "presets": [
+      {
+        "party": [
+          "h1",
+          "h2",
+          "h3"
+        ],
+        "formation": {
+          "tpl": "1-2",
+          "ranks": [
+            [
+              "h1"
+            ],
+            [
+              "h2",
+              "h3"
+            ]
+          ]
+        },
+        "potionSlots": [
+          "minor_healing",
+          "minor_healing"
+        ],
+        "tactics": {
+          "slots": {},
+          "locked": []
+        }
+      }
+    ],
+    "heroes": [
+      {
+        "uid": "h1",
+        "cls": "warrior",
+        "name": {
+          "ko": "키어런",
+          "en": "Kieran"
+        },
+        "level": 11,
+        "xp": 3478,
+        "innate": "war_recovery",
+        "equipped": {
+          "weapon": "i13",
+          "helmet": "i42",
+          "armor": "i34",
+          "gloves": "i39",
+          "boots": "i50",
+          "amulet": "i40",
+          "ring1": "i7",
+          "ring2": null
+        },
+        "mastery": {
+          "sin_greed_t1_gold": 5,
+          "sin_greed_t1_itemfind": 5
+        },
+        "free": 0,
+        "combat": {
+          "atk_physical": {
+            "min": 14,
+            "max": 23
+          },
+          "attack_type": "physical",
+          "basic_attack": true,
+          "level": 11,
+          "hp_max": 246,
+          "defense": 59,
+          "res_fire": 0.11,
+          "res_cold": 0,
+          "res_lightning": 0,
+          "res_poison": 0.09,
+          "res_max_bonus": 0,
+          "res_max_el": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "res_reduction": 0,
+          "res_reduction_el": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "def_ignore": 0,
+          "reflect_damage": 0,
+          "damage_reduction": 0,
+          "crit_rate": 0.32,
+          "crit_damage": 1.627,
+          "life_steal": 0,
+          "hp_regen": 0.09,
+          "cooldown_reduction": 0,
+          "fhr": 0,
+          "debuff_dur_reduction": 0.06,
+          "action_period": 3.282,
+          "period_raw": 3.281866875000001,
+          "speed_pct": 0,
+          "period_weapon": 2.7,
+          "dmg_bonus_pct": 0,
+          "main_attr_mult": 1.6105100000000006,
+          "gold_find": 0.28,
+          "item_find": 0,
+          "find_own": {
+            "gold": 0.28,
+            "item": 0,
+            "magic": 0.17
+          },
+          "find_party": null,
+          "mastery_cond": null,
+          "atk_pct_sum": 0,
+          "option_fx": {
+            "vs": {
+              "normal": 0,
+              "demon": 0,
+              "undead": 0
+            },
+            "vsElite": 0,
+            "vsFront": 0,
+            "vsBack": 0,
+            "ele": {
+              "fire": 0,
+              "cold": 0,
+              "lightning": 0,
+              "poison": 0
+            },
+            "defDown": 0,
+            "resDown": 0,
+            "atkDownPhys": 0,
+            "atkDownMag": 0,
+            "crush": 0,
+            "magicFind": 0.17,
+            "vsDr": {
+              "normal": 0,
+              "demon": 0,
+              "undead": 0
+            },
+            "vsEliteDr": 0,
+            "vsFrontDr": 0,
+            "vsBackDr": 0,
+            "drFlat": 1,
+            "counter": 0,
+            "recv": 0,
+            "killHeal": 0,
+            "startGauge": 0,
+            "cullNormal": 0.06,
+            "xpGain": 0.1,
+            "freezeDur": 0,
+            "poisonDur": 0,
+            "burnDur": 0,
+            "stunDur": 0,
+            "buffDur": 0,
+            "hitBonus": 0,
+            "defStack": 0,
+            "staggerDur": 0,
+            "castRefund": 0,
+            "castStack": 0,
+            "statusDur": 0,
+            "debuffDur": 0,
+            "healOut": 0,
+            "potion": 0
+          }
+        }
+      },
+      {
+        "uid": "h2",
+        "cls": "priest",
+        "name": {
+          "ko": "테오도르",
+          "en": "Theodore"
+        },
+        "level": 11,
+        "xp": 5300,
+        "innate": "pri_judgment",
+        "equipped": {
+          "weapon": "i44",
+          "helmet": "i21",
+          "armor": "i9",
+          "gloves": "i52",
+          "boots": "i15",
+          "amulet": "i18",
+          "ring1": null,
+          "ring2": null
+        },
+        "mastery": {
+          "sin_envy_t1_defignore": 5,
+          "sin_envy_t1_reflect": 5
+        },
+        "free": 0,
+        "combat": {
+          "atk_magic": {
+            "min": 18,
+            "max": 21
+          },
+          "attack_type": "physical",
+          "basic_attack": false,
+          "level": 11,
+          "hp_max": 129,
+          "defense": 55,
+          "res_fire": 0,
+          "res_cold": 0,
+          "res_lightning": 0,
+          "res_poison": 0.09,
+          "res_max_bonus": 0,
+          "res_max_el": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "res_reduction": 0,
+          "res_reduction_el": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "def_ignore": 0.09,
+          "reflect_damage": 0.05,
+          "damage_reduction": 0,
+          "crit_rate": 0.3,
+          "crit_damage": 1.2846,
+          "life_steal": 0,
+          "hp_regen": 0.09,
+          "cooldown_reduction": 0,
+          "fhr": 0,
+          "debuff_dur_reduction": 0.06,
+          "action_period": 2.038,
+          "period_raw": 2.2212966819380813,
+          "speed_pct": 0.09,
+          "period_weapon": 2.7,
+          "dmg_bonus_pct": 0,
+          "main_attr_mult": 0.9090909090909091,
+          "gold_find": 0.08,
+          "item_find": 0,
+          "find_own": {
+            "gold": 0.08,
+            "item": 0,
+            "magic": 0.06
+          },
+          "find_party": null,
+          "mastery_cond": null,
+          "atk_pct_sum": 0,
+          "option_fx": {
+            "vs": {
+              "normal": 0,
+              "demon": 0,
+              "undead": 0
+            },
+            "vsElite": 0,
+            "vsFront": 0,
+            "vsBack": 0,
+            "ele": {
+              "fire": 0,
+              "cold": 0,
+              "lightning": 0,
+              "poison": 0
+            },
+            "defDown": 0,
+            "resDown": 0,
+            "atkDownPhys": 0,
+            "atkDownMag": 0,
+            "crush": 0,
+            "magicFind": 0.06,
+            "vsDr": {
+              "normal": 0,
+              "demon": 0,
+              "undead": 0
+            },
+            "vsEliteDr": 0,
+            "vsFrontDr": 0,
+            "vsBackDr": 0,
+            "drFlat": 1,
+            "counter": 0,
+            "recv": 0.06,
+            "killHeal": 0,
+            "startGauge": 0,
+            "cullNormal": 0,
+            "xpGain": 0,
+            "freezeDur": 0,
+            "poisonDur": 0,
+            "burnDur": 0,
+            "stunDur": 0,
+            "buffDur": 0,
+            "hitBonus": 0,
+            "defStack": 0,
+            "staggerDur": 0,
+            "castRefund": 0,
+            "castStack": 0,
+            "statusDur": 0,
+            "debuffDur": 0,
+            "healOut": 0,
+            "potion": 0
+          }
+        }
+      },
+      {
+        "uid": "h3",
+        "cls": "mage",
+        "name": {
+          "ko": "발렌",
+          "en": "Valen"
+        },
+        "level": 12,
+        "xp": 5551,
+        "innate": "mag_inferno",
+        "equipped": {
+          "weapon": "i28",
+          "helmet": "i45",
+          "armor": "i27",
+          "gloves": "i47",
+          "boots": "i31",
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        },
+        "mastery": {
+          "sin_sloth_t1_hp": 5,
+          "sin_sloth_t1_dr": 5,
+          "sin_sloth_t1_cdr": 1
+        },
+        "free": 0,
+        "combat": {
+          "atk_magic": {
+            "min": 22,
+            "max": 24
+          },
+          "attack_type": "physical",
+          "basic_attack": false,
+          "level": 12,
+          "hp_max": 167,
+          "defense": 41,
+          "res_fire": 0.15,
+          "res_cold": 0,
+          "res_lightning": 0,
+          "res_poison": 0,
+          "res_max_bonus": 0,
+          "res_max_el": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "res_reduction": 0,
+          "res_reduction_el": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "def_ignore": 0,
+          "reflect_damage": 0,
+          "damage_reduction": 0.025,
+          "crit_rate": 0.32999999999999996,
+          "crit_damage": 1.55,
+          "life_steal": 0,
+          "hp_regen": 0.095,
+          "cooldown_reduction": 0.01,
+          "fhr": 0.36,
+          "debuff_dur_reduction": -0.12,
+          "action_period": 2.835,
+          "period_raw": 2.8350000000000004,
+          "speed_pct": 0,
+          "period_weapon": 2.7,
+          "dmg_bonus_pct": 0,
+          "main_attr_mult": 0.9090909090909091,
+          "gold_find": 0.08,
+          "item_find": 0,
+          "find_own": {
+            "gold": 0.08,
+            "item": 0,
+            "magic": 0
+          },
+          "find_party": null,
+          "mastery_cond": null,
+          "atk_pct_sum": 0,
+          "option_fx": {
+            "vs": {
+              "normal": 0,
+              "demon": 0,
+              "undead": 0
+            },
+            "vsElite": 0,
+            "vsFront": 0,
+            "vsBack": 0,
+            "ele": {
+              "fire": 0,
+              "cold": 0,
+              "lightning": 0,
+              "poison": 0
+            },
+            "defDown": 0,
+            "resDown": 0,
+            "atkDownPhys": 0,
+            "atkDownMag": 0,
+            "crush": 0,
+            "magicFind": 0,
+            "vsDr": {
+              "normal": 0,
+              "demon": 0,
+              "undead": 0
+            },
+            "vsEliteDr": 0,
+            "vsFrontDr": 0,
+            "vsBackDr": 0,
+            "drFlat": 0,
+            "counter": 0,
+            "recv": 0,
+            "killHeal": 0,
+            "startGauge": 0,
+            "cullNormal": 0,
+            "xpGain": 0.06,
+            "freezeDur": 0,
+            "poisonDur": 0,
+            "burnDur": 0,
+            "stunDur": 0,
+            "buffDur": 0,
+            "hitBonus": 0,
+            "defStack": 0,
+            "staggerDur": 0,
+            "castRefund": 0,
+            "castStack": 0,
+            "statusDur": 0,
+            "debuffDur": 0,
+            "healOut": 0,
+            "potion": 0
+          }
+        }
+      },
+      {
+        "uid": "h4",
+        "cls": "priest",
+        "name": {
+          "ko": "고블린 종지기",
+          "en": "Goblin Bellringer"
+        },
+        "level": 1,
+        "xp": 0,
+        "innate": "pri_grace",
+        "equipped": {
+          "weapon": null,
+          "helmet": null,
+          "armor": null,
+          "gloves": null,
+          "boots": null,
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        },
+        "mastery": {},
+        "free": 0,
+        "combat": {
+          "atk_physical": {
+            "min": 3,
+            "max": 3
+          },
+          "attack_type": "physical",
+          "basic_attack": true,
+          "level": 1,
+          "hp_max": 70,
+          "defense": 0,
+          "res_fire": 0,
+          "res_cold": 0,
+          "res_lightning": 0,
+          "res_poison": 0,
+          "res_max_bonus": 0,
+          "res_max_el": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "res_reduction": 0,
+          "res_reduction_el": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "def_ignore": 0,
+          "reflect_damage": 0,
+          "damage_reduction": 0,
+          "crit_rate": 0.3,
+          "crit_damage": 1.3105,
+          "life_steal": 0,
+          "hp_regen": 0.05,
+          "cooldown_reduction": 0,
+          "fhr": 0,
+          "debuff_dur_reduction": -0.15,
+          "action_period": 3.446,
+          "period_raw": 3.445960218750001,
+          "speed_pct": 0,
+          "period_weapon": 2.7,
+          "dmg_bonus_pct": 0,
+          "main_attr_mult": 0.6209213230591549,
+          "gold_find": 0,
+          "item_find": 0,
+          "find_own": {
+            "gold": 0,
+            "item": 0,
+            "magic": 0
+          },
+          "find_party": null,
+          "mastery_cond": null,
+          "atk_pct_sum": 0,
+          "option_fx": null
+        }
+      }
+    ]
+  },
+  "after": {
+    "gold": 2,
+    "materials": {
+      "dust": 50,
+      "timber": 98,
+      "iron_ore": 97,
+      "herb": 74
+    },
+    "potions": {},
+    "counters": {
+      "hero": 4,
+      "item": 52,
+      "battle": 63,
+      "tavern": 0,
+      "tactic": 0,
+      "upgrade": 8,
+      "visit": 0,
+      "make": 0,
+      "gamble": 0,
+      "commission": 5,
+      "explore": 0,
+      "join": 0,
+      "shop": 0,
+      "lab": 201,
+      "mail": 0,
+      "box": 4
+    },
+    "cleared": {
+      "cleared": [
+        1011,
+        1012,
+        1013,
+        1021,
+        1022,
+        1023,
+        1031,
+        1032,
+        1033,
+        1041,
+        1042,
+        1043
+      ],
+      "clearedIn": {},
+      "peakTotal": 0
+    },
+    "presets": [
+      {
+        "party": [
+          "h1",
+          "h2",
+          "h3"
+        ],
+        "formation": {
+          "tpl": "1-2",
+          "ranks": [
+            [
+              "h1"
+            ],
+            [
+              "h2",
+              "h3"
+            ]
+          ]
+        },
+        "potionSlots": [
+          "minor_healing",
+          "minor_healing"
+        ],
+        "tactics": {
+          "slots": {},
+          "locked": []
+        }
+      }
+    ],
+    "heroes": [
+      {
+        "uid": "h1",
+        "cls": "warrior",
+        "name": {
+          "ko": "키어런",
+          "en": "Kieran"
+        },
+        "level": 11,
+        "xp": 3478,
+        "innate": "war_recovery",
+        "equipped": {
+          "weapon": "i13",
+          "helmet": "i42",
+          "armor": "i34",
+          "gloves": "i39",
+          "boots": "i50",
+          "amulet": "i40",
+          "ring1": "i7",
+          "ring2": null
+        },
+        "mastery": {
+          "sin_greed_t1_gold": 5,
+          "sin_greed_t1_itemfind": 5
+        },
+        "free": 0,
+        "combat": {
+          "atk_physical": {
+            "min": 14,
+            "max": 23
+          },
+          "attack_type": "physical",
+          "basic_attack": true,
+          "level": 11,
+          "hp_max": 246,
+          "defense": 59,
+          "res_fire": 0.11,
+          "res_cold": 0,
+          "res_lightning": 0,
+          "res_poison": 0.09,
+          "res_max_bonus": 0,
+          "res_max_el": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "res_reduction": 0,
+          "res_reduction_el": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "def_ignore": 0,
+          "reflect_damage": 0,
+          "damage_reduction": 0,
+          "crit_rate": 0.32,
+          "crit_damage": 1.627,
+          "life_steal": 0,
+          "hp_regen": 0.09,
+          "cooldown_reduction": 0,
+          "fhr": 0,
+          "debuff_dur_reduction": 0.06,
+          "action_period": 3.282,
+          "period_raw": 3.281866875000001,
+          "speed_pct": 0,
+          "period_weapon": 2.7,
+          "dmg_bonus_pct": 0,
+          "main_attr_mult": 1.6105100000000006,
+          "gold_find": 0.28,
+          "item_find": 0,
+          "find_own": {
+            "gold": 0.28,
+            "item": 0,
+            "magic": 0.17
+          },
+          "find_party": null,
+          "mastery_cond": null,
+          "atk_pct_sum": 0,
+          "option_fx": {
+            "vs": {
+              "normal": 0,
+              "demon": 0,
+              "undead": 0
+            },
+            "vsElite": 0,
+            "vsFront": 0,
+            "vsBack": 0,
+            "ele": {
+              "fire": 0,
+              "cold": 0,
+              "lightning": 0,
+              "poison": 0
+            },
+            "defDown": 0,
+            "resDown": 0,
+            "atkDownPhys": 0,
+            "atkDownMag": 0,
+            "crush": 0,
+            "magicFind": 0.17,
+            "vsDr": {
+              "normal": 0,
+              "demon": 0,
+              "undead": 0
+            },
+            "vsEliteDr": 0,
+            "vsFrontDr": 0,
+            "vsBackDr": 0,
+            "drFlat": 1,
+            "counter": 0,
+            "recv": 0,
+            "killHeal": 0,
+            "startGauge": 0,
+            "cullNormal": 0.06,
+            "xpGain": 0.1,
+            "freezeDur": 0,
+            "poisonDur": 0,
+            "burnDur": 0,
+            "stunDur": 0,
+            "buffDur": 0,
+            "hitBonus": 0,
+            "defStack": 0,
+            "staggerDur": 0,
+            "castRefund": 0,
+            "castStack": 0,
+            "statusDur": 0,
+            "debuffDur": 0,
+            "healOut": 0,
+            "potion": 0
+          }
+        }
+      },
+      {
+        "uid": "h2",
+        "cls": "priest",
+        "name": {
+          "ko": "테오도르",
+          "en": "Theodore"
+        },
+        "level": 11,
+        "xp": 5300,
+        "innate": "pri_judgment",
+        "equipped": {
+          "weapon": "i44",
+          "helmet": "i21",
+          "armor": "i9",
+          "gloves": "i52",
+          "boots": "i15",
+          "amulet": "i18",
+          "ring1": null,
+          "ring2": null
+        },
+        "mastery": {
+          "sin_envy_t1_defignore": 5,
+          "sin_envy_t1_reflect": 5
+        },
+        "free": 0,
+        "combat": {
+          "atk_magic": {
+            "min": 18,
+            "max": 21
+          },
+          "attack_type": "physical",
+          "basic_attack": false,
+          "level": 11,
+          "hp_max": 129,
+          "defense": 55,
+          "res_fire": 0,
+          "res_cold": 0,
+          "res_lightning": 0,
+          "res_poison": 0.09,
+          "res_max_bonus": 0,
+          "res_max_el": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "res_reduction": 0,
+          "res_reduction_el": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "def_ignore": 0.09,
+          "reflect_damage": 0.05,
+          "damage_reduction": 0,
+          "crit_rate": 0.3,
+          "crit_damage": 1.2846,
+          "life_steal": 0,
+          "hp_regen": 0.09,
+          "cooldown_reduction": 0,
+          "fhr": 0,
+          "debuff_dur_reduction": 0.06,
+          "action_period": 2.038,
+          "period_raw": 2.2212966819380813,
+          "speed_pct": 0.09,
+          "period_weapon": 2.7,
+          "dmg_bonus_pct": 0,
+          "main_attr_mult": 0.9090909090909091,
+          "gold_find": 0.08,
+          "item_find": 0,
+          "find_own": {
+            "gold": 0.08,
+            "item": 0,
+            "magic": 0.06
+          },
+          "find_party": null,
+          "mastery_cond": null,
+          "atk_pct_sum": 0,
+          "option_fx": {
+            "vs": {
+              "normal": 0,
+              "demon": 0,
+              "undead": 0
+            },
+            "vsElite": 0,
+            "vsFront": 0,
+            "vsBack": 0,
+            "ele": {
+              "fire": 0,
+              "cold": 0,
+              "lightning": 0,
+              "poison": 0
+            },
+            "defDown": 0,
+            "resDown": 0,
+            "atkDownPhys": 0,
+            "atkDownMag": 0,
+            "crush": 0,
+            "magicFind": 0.06,
+            "vsDr": {
+              "normal": 0,
+              "demon": 0,
+              "undead": 0
+            },
+            "vsEliteDr": 0,
+            "vsFrontDr": 0,
+            "vsBackDr": 0,
+            "drFlat": 1,
+            "counter": 0,
+            "recv": 0.06,
+            "killHeal": 0,
+            "startGauge": 0,
+            "cullNormal": 0,
+            "xpGain": 0,
+            "freezeDur": 0,
+            "poisonDur": 0,
+            "burnDur": 0,
+            "stunDur": 0,
+            "buffDur": 0,
+            "hitBonus": 0,
+            "defStack": 0,
+            "staggerDur": 0,
+            "castRefund": 0,
+            "castStack": 0,
+            "statusDur": 0,
+            "debuffDur": 0,
+            "healOut": 0,
+            "potion": 0
+          }
+        }
+      },
+      {
+        "uid": "h3",
+        "cls": "mage",
+        "name": {
+          "ko": "발렌",
+          "en": "Valen"
+        },
+        "level": 12,
+        "xp": 5551,
+        "innate": "mag_inferno",
+        "equipped": {
+          "weapon": "i28",
+          "helmet": "i45",
+          "armor": "i27",
+          "gloves": "i47",
+          "boots": "i31",
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        },
+        "mastery": {
+          "sin_sloth_t1_hp": 5,
+          "sin_sloth_t1_dr": 5,
+          "sin_sloth_t1_cdr": 1
+        },
+        "free": 0,
+        "combat": {
+          "atk_magic": {
+            "min": 22,
+            "max": 24
+          },
+          "attack_type": "physical",
+          "basic_attack": false,
+          "level": 12,
+          "hp_max": 167,
+          "defense": 41,
+          "res_fire": 0.15,
+          "res_cold": 0,
+          "res_lightning": 0,
+          "res_poison": 0,
+          "res_max_bonus": 0,
+          "res_max_el": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "res_reduction": 0,
+          "res_reduction_el": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "def_ignore": 0,
+          "reflect_damage": 0,
+          "damage_reduction": 0.025,
+          "crit_rate": 0.32999999999999996,
+          "crit_damage": 1.55,
+          "life_steal": 0,
+          "hp_regen": 0.095,
+          "cooldown_reduction": 0.01,
+          "fhr": 0.36,
+          "debuff_dur_reduction": -0.12,
+          "action_period": 2.835,
+          "period_raw": 2.8350000000000004,
+          "speed_pct": 0,
+          "period_weapon": 2.7,
+          "dmg_bonus_pct": 0,
+          "main_attr_mult": 0.9090909090909091,
+          "gold_find": 0.08,
+          "item_find": 0,
+          "find_own": {
+            "gold": 0.08,
+            "item": 0,
+            "magic": 0
+          },
+          "find_party": null,
+          "mastery_cond": null,
+          "atk_pct_sum": 0,
+          "option_fx": {
+            "vs": {
+              "normal": 0,
+              "demon": 0,
+              "undead": 0
+            },
+            "vsElite": 0,
+            "vsFront": 0,
+            "vsBack": 0,
+            "ele": {
+              "fire": 0,
+              "cold": 0,
+              "lightning": 0,
+              "poison": 0
+            },
+            "defDown": 0,
+            "resDown": 0,
+            "atkDownPhys": 0,
+            "atkDownMag": 0,
+            "crush": 0,
+            "magicFind": 0,
+            "vsDr": {
+              "normal": 0,
+              "demon": 0,
+              "undead": 0
+            },
+            "vsEliteDr": 0,
+            "vsFrontDr": 0,
+            "vsBackDr": 0,
+            "drFlat": 0,
+            "counter": 0,
+            "recv": 0,
+            "killHeal": 0,
+            "startGauge": 0,
+            "cullNormal": 0,
+            "xpGain": 0.06,
+            "freezeDur": 0,
+            "poisonDur": 0,
+            "burnDur": 0,
+            "stunDur": 0,
+            "buffDur": 0,
+            "hitBonus": 0,
+            "defStack": 0,
+            "staggerDur": 0,
+            "castRefund": 0,
+            "castStack": 0,
+            "statusDur": 0,
+            "debuffDur": 0,
+            "healOut": 0,
+            "potion": 0
+          }
+        }
+      },
+      {
+        "uid": "h4",
+        "cls": "priest",
+        "name": {
+          "ko": "고블린 종지기",
+          "en": "Goblin Bellringer"
+        },
+        "level": 1,
+        "xp": 0,
+        "innate": "pri_grace",
+        "equipped": {
+          "weapon": null,
+          "helmet": null,
+          "armor": null,
+          "gloves": null,
+          "boots": null,
+          "amulet": null,
+          "ring1": null,
+          "ring2": null
+        },
+        "mastery": {},
+        "free": 0,
+        "combat": {
+          "atk_physical": {
+            "min": 3,
+            "max": 3
+          },
+          "attack_type": "physical",
+          "basic_attack": true,
+          "level": 1,
+          "hp_max": 70,
+          "defense": 0,
+          "res_fire": 0,
+          "res_cold": 0,
+          "res_lightning": 0,
+          "res_poison": 0,
+          "res_max_bonus": 0,
+          "res_max_el": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "res_reduction": 0,
+          "res_reduction_el": {
+            "fire": 0,
+            "cold": 0,
+            "lightning": 0,
+            "poison": 0
+          },
+          "def_ignore": 0,
+          "reflect_damage": 0,
+          "damage_reduction": 0,
+          "crit_rate": 0.3,
+          "crit_damage": 1.3105,
+          "life_steal": 0,
+          "hp_regen": 0.05,
+          "cooldown_reduction": 0,
+          "fhr": 0,
+          "debuff_dur_reduction": -0.15,
+          "action_period": 3.446,
+          "period_raw": 3.445960218750001,
+          "speed_pct": 0,
+          "period_weapon": 2.7,
+          "dmg_bonus_pct": 0,
+          "main_attr_mult": 0.6209213230591549,
+          "gold_find": 0,
+          "item_find": 0,
+          "find_own": {
+            "gold": 0,
+            "item": 0,
+            "magic": 0
+          },
+          "find_party": null,
+          "mastery_cond": null,
+          "atk_pct_sum": 0,
+          "option_fx": null
+        }
+      }
+    ]
+  },
+  "battle": {
+    "now": 1793323948600,
+    "elapsedSec": 23.6,
+    "report": {
+      "at": 1793323920000,
+      "stageId": 1051,
+      "level": 10,
+      "preset": 1,
+      "won": false,
+      "reason": "wipe",
+      "durationSec": 23.6,
+      "difficulty": "normal",
+      "shrine": null,
+      "gold": 0,
+      "xp": {
+        "h1": 0,
+        "h2": 0,
+        "h3": 0
+      },
+      "levelUps": [],
+      "downed": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [],
+      "blueprints": [],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "boss",
+          "killed": [],
+          "eliteSin": "lust"
+        }
+      ],
+      "roundsCleared": 0,
+      "strikes": {
+        "party": {
+          "n": 10,
+          "miss": 2
+        },
+        "enemy": {
+          "n": 30,
+          "miss": 2
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 0,
+          "taken": 364,
+          "kills": 0
+        },
+        {
+          "uid": "h2",
+          "dealt": 46,
+          "taken": 129,
+          "kills": 0
+        },
+        {
+          "uid": "h3",
+          "dealt": 252,
+          "taken": 168,
+          "kills": 0
+        }
+      ],
+      "fall": {
+        "downs": [
+          {
+            "uid": "h1",
+            "t": 10,
+            "round": 1,
+            "by": 1900,
+            "dmg": 289,
+            "taken": 364
+          },
+          {
+            "uid": "h2",
+            "t": 19.5,
+            "round": 1,
+            "by": 1900,
+            "dmg": 111,
+            "taken": 129
+          },
+          {
+            "uid": "h3",
+            "t": 23.6,
+            "round": 1,
+            "by": 1900,
+            "dmg": 97,
+            "taken": 168
+          }
+        ],
+        "foes": [
+          {
+            "id": 1900,
+            "hp": 221,
+            "max": 295
+          },
+          {
+            "id": 1403,
+            "hp": 82,
+            "max": 205
+          },
+          {
+            "id": 1403,
+            "hp": 116,
+            "max": 205
+          }
+        ],
+        "gap": 2
+      }
+    },
+    "timeline": [
+      {
+        "t": 0,
+        "e": "round",
+        "n": 1,
+        "kind": "boss",
+        "enemies": [
+          {
+            "key": "e0",
+            "monsterId": 1900,
+            "grade": "chapter_boss",
+            "sin": null,
+            "traits": null,
+            "hpMax": 295,
+            "period": 2.516,
+            "fillAt": 0.3,
+            "atkMin": 17.5,
+            "atkMax": 23.5,
+            "matkMin": 17.5,
+            "matkMax": 23.5,
+            "atkType": "physical",
+            "noBasic": true,
+            "stats": {
+              "str": 5,
+              "agi": 15,
+              "int": 18,
+              "vit": 7,
+              "luck": 13,
+              "ldr": 15,
+              "cha": 5
+            },
+            "actives": [
+              "mon_hellfire",
+              "mag_fireball"
+            ],
+            "ready": [
+              0,
+              0
+            ],
+            "sheet": {
+              "atk_magic": {
+                "min": 17.5,
+                "max": 23.5
+              },
+              "attack_type": "physical",
+              "level": 13,
+              "hp_max": 295,
+              "defense": 126,
+              "res_fire": 0.33,
+              "res_cold": 0.07,
+              "res_lightning": 0.19,
+              "res_poison": 0.19,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0.06,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.6655,
+              "life_steal": 0,
+              "hp_regen": 0.401,
+              "cooldown_reduction": 0.05,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.15,
+              "action_period": 2.516,
+              "period_raw": 2.742341582639606,
+              "speed_pct": 0.09,
+              "period_weapon": 3.5,
+              "dmg_bonus_pct": 0,
+              "gold_find": 0.12,
+              "item_find": 0
+            },
+            "gear": [
+              {
+                "uid": null,
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 13,
+                "up": 0,
+                "name": {
+                  "ko": "고딕 스태프",
+                  "en": "Gothic Staff"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 1.49,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "status_dur_pct",
+                    "v": 0.21,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "staff",
+                "baseId": "gothic_staff"
+              },
+              {
+                "uid": null,
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 13,
+                "up": 0,
+                "name": {
+                  "ko": "에인션트 아머",
+                  "en": "Ancient Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 25
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 1.04,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "res_fire",
+                    "v": 0.07,
+                    "src": "wrath"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "heavy",
+                "baseId": "armor_heavy_1"
+              },
+              {
+                "uid": null,
+                "slot": "gloves",
+                "rarity": "magic",
+                "ilvl": 13,
+                "up": 0,
+                "name": {
+                  "ko": "탐욕의 헤비 글러브",
+                  "en": "Greedy Heavy Gloves"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 2
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.96,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "cast_speed_pct",
+                    "v": 0.09,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "gold_find",
+                    "v": 0.11,
+                    "src": "greed"
+                  },
+                  {
+                    "stat": "hit_bonus",
+                    "v": 0.15,
+                    "src": "lust"
+                  }
+                ],
+                "sins": [
+                  "greed"
+                ],
+                "words": [
+                  0
+                ],
+                "group": "leather",
+                "baseId": "gloves_leather_1"
+              },
+              {
+                "uid": null,
+                "slot": "boots",
+                "rarity": "magic",
+                "ilvl": 13,
+                "up": 0,
+                "name": {
+                  "ko": "무기력의 헤비 부츠",
+                  "en": "Lethargic Heavy Boots"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 2
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 1.2,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "start_gauge_pct",
+                    "v": 0.09,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "hp_pct",
+                    "v": 0.04,
+                    "src": "sloth"
+                  },
+                  {
+                    "stat": "xp_gain_pct",
+                    "v": 0.07,
+                    "src": "greed"
+                  }
+                ],
+                "sins": [
+                  "sloth"
+                ],
+                "words": [
+                  2
+                ],
+                "group": "leather",
+                "baseId": "boots_leather_1"
+              },
+              {
+                "uid": null,
+                "slot": "ring",
+                "rarity": "rare",
+                "ilvl": 13,
+                "up": 0,
+                "name": {
+                  "ko": "배신과 나태의 글러턴 링",
+                  "en": "Treacherous and Slothful Glutton Ring"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "skill_tag",
+                    "tag": "aoe",
+                    "effect": "damage",
+                    "v": 0.05,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "res_reduction_fire",
+                    "v": 0.06,
+                    "src": "envy"
+                  },
+                  {
+                    "stat": "cooldown_reduction",
+                    "v": 0.05,
+                    "src": "sloth"
+                  },
+                  {
+                    "stat": "hp_regen",
+                    "v": 0.3,
+                    "src": "lust"
+                  }
+                ],
+                "sins": [
+                  "envy",
+                  "sloth"
+                ],
+                "words": [
+                  3,
+                  0
+                ],
+                "baseId": "ring_3"
+              },
+              {
+                "uid": null,
+                "slot": "amulet",
+                "rarity": "magic",
+                "ilvl": 13,
+                "up": 0,
+                "name": {
+                  "ko": "착취의 아이 펜던트",
+                  "en": "Exploitative Eye Pendant"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "magic_find",
+                    "v": 0.08,
+                    "src": "greed"
+                  },
+                  {
+                    "stat": "buff_dur_pct",
+                    "v": 0.13,
+                    "src": "random"
+                  }
+                ],
+                "sins": [
+                  "greed"
+                ],
+                "words": [
+                  1
+                ],
+                "baseId": "amulet_3"
+              }
+            ]
+          },
+          {
+            "key": "e1",
+            "monsterId": 1403,
+            "grade": "elite",
+            "sin": "lust",
+            "traits": [
+              {
+                "slot": "sin",
+                "id": "sin_lust_t1_buffdur"
+              }
+            ],
+            "hpMax": 205,
+            "period": 3.618,
+            "fillAt": 0.4,
+            "atkMin": 17.5,
+            "atkMax": 20,
+            "matkMin": 0,
+            "matkMax": 0,
+            "atkType": "physical",
+            "noBasic": false,
+            "stats": {
+              "str": 14,
+              "agi": 4,
+              "int": 7,
+              "vit": 16,
+              "luck": 6,
+              "ldr": 8,
+              "cha": 5
+            },
+            "actives": [
+              "kni_resistshield"
+            ],
+            "ready": [
+              0
+            ],
+            "sheet": {
+              "atk_physical": {
+                "min": 17.5,
+                "max": 20
+              },
+              "attack_type": "physical",
+              "level": 10,
+              "hp_max": 205,
+              "defense": 66.4,
+              "res_fire": 0.26,
+              "res_cold": 0.07,
+              "res_lightning": 0.19,
+              "res_poison": 0.19,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0.06,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.3415,
+              "life_steal": 0,
+              "hp_regen": 0.126,
+              "cooldown_reduction": 0.15,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.15,
+              "action_period": 3.618,
+              "period_raw": 3.618258229687501,
+              "speed_pct": 0,
+              "period_weapon": 2.7,
+              "dmg_bonus_pct": 0,
+              "gold_find": 0.06,
+              "item_find": 0
+            },
+            "gear": [
+              {
+                "uid": null,
+                "slot": "weapon",
+                "rarity": "normal",
+                "ilvl": 10,
+                "up": 0,
+                "name": {
+                  "ko": "워 파이크",
+                  "en": "War Pike"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 1.88,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "def_ignore",
+                    "v": 0.06,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "spear",
+                "baseId": "war_pike"
+              },
+              {
+                "uid": null,
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 10,
+                "up": 0,
+                "name": {
+                  "ko": "퀼티드 아머",
+                  "en": "Quilted Armor"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 7
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 1.25,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "counter_chance",
+                    "v": 0.05,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "robe",
+                "baseId": "armor_robe_1"
+              },
+              {
+                "uid": null,
+                "slot": "boots",
+                "rarity": "magic",
+                "ilvl": 10,
+                "up": 0,
+                "name": {
+                  "ko": "강탈의 그리브스",
+                  "en": "Rapacious Greaves"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 4
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.8,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "dr_flat",
+                    "v": 1,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "gold_find",
+                    "v": 0.06,
+                    "src": "greed"
+                  },
+                  {
+                    "stat": "def_flat",
+                    "v": 7,
+                    "src": "gluttony"
+                  }
+                ],
+                "sins": [
+                  "greed"
+                ],
+                "words": [
+                  3
+                ],
+                "group": "greaves",
+                "baseId": "boots_greaves_1"
+              },
+              {
+                "uid": null,
+                "slot": "ring",
+                "rarity": "magic",
+                "ilvl": 10,
+                "up": 0,
+                "name": {
+                  "ko": "포식의 실버 링",
+                  "en": "Predatory Silver Ring"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "skill_tag",
+                    "tag": "boost",
+                    "effect": "duration",
+                    "v": 0.03,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "crushing_blow_pct",
+                    "v": 0.01,
+                    "src": "gluttony"
+                  },
+                  {
+                    "stat": "buff_dur_pct",
+                    "v": 0.12,
+                    "src": "sloth"
+                  }
+                ],
+                "sins": [
+                  "gluttony"
+                ],
+                "words": [
+                  2
+                ],
+                "baseId": "ring_1"
+              }
+            ]
+          },
+          {
+            "key": "e2",
+            "monsterId": 1403,
+            "grade": "elite",
+            "sin": "pride",
+            "traits": [
+              {
+                "slot": "sin",
+                "id": "sin_pride_t1_dr"
+              }
+            ],
+            "hpMax": 205,
+            "period": 3.231,
+            "fillAt": 0.8,
+            "atkMin": 7,
+            "atkMax": 8,
+            "matkMin": 0,
+            "matkMax": 0,
+            "atkType": "physical",
+            "noBasic": false,
+            "stats": {
+              "str": 14,
+              "agi": 4,
+              "int": 7,
+              "vit": 16,
+              "luck": 6,
+              "ldr": 8,
+              "cha": 5
+            },
+            "actives": [
+              "kni_resistshield"
+            ],
+            "ready": [
+              0
+            ],
+            "sheet": {
+              "atk_physical": {
+                "min": 7,
+                "max": 8
+              },
+              "attack_type": "physical",
+              "level": 10,
+              "hp_max": 205,
+              "defense": 70.4,
+              "res_fire": 0.36,
+              "res_cold": 0.17,
+              "res_lightning": 0.29000000000000004,
+              "res_poison": 0.29000000000000004,
+              "res_max_bonus": 0,
+              "res_max_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0.04,
+                "poison": 0
+              },
+              "res_reduction": 0,
+              "res_reduction_el": {
+                "fire": 0,
+                "cold": 0,
+                "lightning": 0,
+                "poison": 0
+              },
+              "def_ignore": 0,
+              "reflect_damage": 0,
+              "damage_reduction": 0,
+              "crit_rate": 0.3,
+              "crit_damage": 1.3415,
+              "life_steal": 0,
+              "hp_regen": 0.126,
+              "cooldown_reduction": 0.06,
+              "fhr": 0,
+              "debuff_dur_reduction": -0.15,
+              "action_period": 3.231,
+              "period_raw": 3.618258229687501,
+              "speed_pct": 0.12000000000000001,
+              "period_weapon": 2.7,
+              "dmg_bonus_pct": 0,
+              "gold_find": 0,
+              "item_find": 0
+            },
+            "gear": [
+              {
+                "uid": null,
+                "slot": "weapon",
+                "rarity": "magic",
+                "ilvl": 10,
+                "up": 0,
+                "name": {
+                  "ko": "방탕의 랜스",
+                  "en": "Debauched Lance"
+                },
+                "implicit": null,
+                "affixes": [
+                  {
+                    "stat": "atk_pct",
+                    "v": 0.17,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "hit_bonus",
+                    "v": 0.17,
+                    "src": "lust"
+                  },
+                  {
+                    "stat": "def_down_stack_pct",
+                    "v": 0.01,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [
+                  "lust"
+                ],
+                "words": [
+                  2
+                ],
+                "group": "spear",
+                "baseId": "lance"
+              },
+              {
+                "uid": null,
+                "slot": "armor",
+                "rarity": "normal",
+                "ilvl": 10,
+                "up": 0,
+                "name": {
+                  "ko": "라이트 플레이트",
+                  "en": "Light Plate"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 14
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.59,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "magic_find",
+                    "v": 0.07,
+                    "src": "greed"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "light",
+                "baseId": "armor_light_1"
+              },
+              {
+                "uid": null,
+                "slot": "helmet",
+                "rarity": "normal",
+                "ilvl": 10,
+                "up": 0,
+                "name": {
+                  "ko": "서클릿",
+                  "en": "Circlet"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 1
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 1.01,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "cooldown_reduction",
+                    "v": 0.06,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "res_max_lightning",
+                    "v": 0.04,
+                    "src": "envy"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "tiara",
+                "baseId": "helmet_tiara_1"
+              },
+              {
+                "uid": null,
+                "slot": "gloves",
+                "rarity": "normal",
+                "ilvl": 10,
+                "up": 0,
+                "name": {
+                  "ko": "헤비 글러브",
+                  "en": "Heavy Gloves"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 1
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 0.63,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "aspd_pct",
+                    "v": 0.07,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "vs_elite_dmg",
+                    "v": 0.09,
+                    "src": "gluttony"
+                  }
+                ],
+                "sins": [],
+                "words": [],
+                "group": "leather",
+                "baseId": "gloves_leather_1"
+              },
+              {
+                "uid": null,
+                "slot": "boots",
+                "rarity": "magic",
+                "ilvl": 10,
+                "up": 0,
+                "name": {
+                  "ko": "심연의 그리브스",
+                  "en": "Abyssal Greaves"
+                },
+                "implicit": {
+                  "stat": "def_flat",
+                  "v": 4
+                },
+                "affixes": [
+                  {
+                    "stat": "armor_def_pct",
+                    "v": 1.21,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "dr_flat",
+                    "v": 1,
+                    "src": "fixed"
+                  },
+                  {
+                    "stat": "res_all",
+                    "v": 0.1,
+                    "src": "gluttony"
+                  },
+                  {
+                    "stat": "xp_gain_pct",
+                    "v": 0.06,
+                    "src": "greed"
+                  }
+                ],
+                "sins": [
+                  "gluttony"
+                ],
+                "words": [
+                  3
+                ],
+                "group": "greaves",
+                "baseId": "boots_greaves_1"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "t": 2.4,
+        "e": "charge",
+        "u": "p1",
+        "ch": 1
+      },
+      {
+        "t": 2.4,
+        "e": "skill",
+        "u": "p1",
+        "s": "pri_judgment",
+        "ready": 11.4,
+        "ch": 0
+      },
+      {
+        "t": 2.4,
+        "e": "hit",
+        "a": "p1",
+        "d": "e1",
+        "dmg": 16,
+        "crit": false,
+        "dhp": 189,
+        "ty": "fixed",
+        "s": "pri_judgment"
+      },
+      {
+        "t": 2.4,
+        "e": "stagger",
+        "u": "e1",
+        "until": 2.9
+      },
+      {
+        "t": 2.9,
+        "e": "charge",
+        "u": "e0",
+        "ch": 1
+      },
+      {
+        "t": 2.9,
+        "e": "skill",
+        "u": "e0",
+        "s": "mon_hellfire",
+        "chan": 10,
+        "iv": 0.5,
+        "ch": 0
+      },
+      {
+        "t": 2.9,
+        "e": "hit",
+        "a": "e0",
+        "d": "p0",
+        "dmg": 18,
+        "crit": false,
+        "dhp": 228,
+        "ty": "fire",
+        "s": "mon_hellfire"
+      },
+      {
+        "t": 3.3,
+        "e": "skill",
+        "u": "p0",
+        "s": "war_recovery",
+        "ready": 21.3
+      },
+      {
+        "t": 3.3,
+        "e": "heal",
+        "a": "p0",
+        "d": "p0",
+        "amt": 82,
+        "dhp": 246,
+        "s": "war_recovery"
+      },
+      {
+        "t": 3.3,
+        "e": "dodge",
+        "a": "p0",
+        "d": "e2"
+      },
+      {
+        "t": 3.4,
+        "e": "chan",
+        "u": "e0",
+        "s": "mon_hellfire",
+        "left": 8
+      },
+      {
+        "t": 3.4,
+        "e": "hit",
+        "a": "e0",
+        "d": "p0",
+        "dmg": 24,
+        "crit": true,
+        "dhp": 222,
+        "ty": "fire",
+        "s": "mon_hellfire"
+      },
+      {
+        "t": 3.5,
+        "e": "charge",
+        "u": "p2",
+        "ch": 1
+      },
+      {
+        "t": 3.5,
+        "e": "skill",
+        "u": "p2",
+        "s": "mag_inferno",
+        "ready": 15.4,
+        "ch": 0
+      },
+      {
+        "t": 3.5,
+        "e": "hit",
+        "a": "p2",
+        "d": "e0",
+        "dmg": 30,
+        "crit": false,
+        "dhp": 265,
+        "ty": "fire",
+        "s": "mag_inferno"
+      },
+      {
+        "t": 3.5,
+        "e": "hit",
+        "a": "p2",
+        "d": "e1",
+        "dmg": 62,
+        "crit": true,
+        "dhp": 127,
+        "ty": "fire",
+        "s": "mag_inferno"
+      },
+      {
+        "t": 3.5,
+        "e": "hit",
+        "a": "p2",
+        "d": "e2",
+        "dmg": 55,
+        "crit": true,
+        "dhp": 150,
+        "ty": "fire",
+        "s": "mag_inferno"
+      },
+      {
+        "t": 3.9,
+        "e": "chan",
+        "u": "e0",
+        "s": "mon_hellfire",
+        "left": 7
+      },
+      {
+        "t": 3.9,
+        "e": "hit",
+        "a": "e0",
+        "d": "p0",
+        "dmg": 15,
+        "crit": false,
+        "dhp": 207,
+        "ty": "fire",
+        "s": "mon_hellfire"
+      },
+      {
+        "t": 4.1,
+        "e": "skill",
+        "u": "e2",
+        "s": "kni_resistshield",
+        "ready": 21
+      },
+      {
+        "t": 4.1,
+        "e": "buff",
+        "u": "e2",
+        "s": "kni_resistshield",
+        "stat": "res_pct",
+        "v": 0.4,
+        "until": 14.1
+      },
+      {
+        "t": 4.1,
+        "e": "hit",
+        "a": "e2",
+        "d": "p0",
+        "dmg": 8,
+        "crit": false,
+        "dhp": 199,
+        "ty": "physical"
+      },
+      {
+        "t": 4.1,
+        "e": "stat",
+        "u": "p0",
+        "v": {
+          "defense": 58.41
+        }
+      },
+      {
+        "t": 4.1,
+        "e": "stat",
+        "u": "e2",
+        "v": {
+          "res_fire": 0.76,
+          "res_cold": 0.57,
+          "res_lightning": 0.69,
+          "res_poison": 0.69
+        }
+      },
+      {
+        "t": 4.4,
+        "e": "chan",
+        "u": "e0",
+        "s": "mon_hellfire",
+        "left": 6
+      },
+      {
+        "t": 4.4,
+        "e": "hit",
+        "a": "e0",
+        "d": "p0",
+        "dmg": 15,
+        "crit": false,
+        "dhp": 184,
+        "ty": "fire",
+        "s": "mon_hellfire"
+      },
+      {
+        "t": 4.5,
+        "e": "charge",
+        "u": "p1",
+        "ch": 1
+      },
+      {
+        "t": 4.6,
+        "e": "skill",
+        "u": "e1",
+        "s": "kni_resistshield",
+        "ready": 19.9
+      },
+      {
+        "t": 4.6,
+        "e": "buff",
+        "u": "e1",
+        "s": "kni_resistshield",
+        "stat": "res_pct",
+        "v": 0.4,
+        "until": 16.1
+      },
+      {
+        "t": 4.6,
+        "e": "hit",
+        "a": "e1",
+        "d": "p0",
+        "dmg": 29,
+        "crit": true,
+        "dhp": 155,
+        "ty": "physical",
+        "cb": 2
+      },
+      {
+        "t": 4.6,
+        "e": "stagger",
+        "u": "p0",
+        "until": 5.1
+      },
+      {
+        "t": 4.6,
+        "e": "stat",
+        "u": "e1",
+        "v": {
+          "res_fire": 0.66,
+          "res_cold": 0.47,
+          "res_lightning": 0.59,
+          "res_poison": 0.59
+        }
+      },
+      {
+        "t": 4.9,
+        "e": "chan",
+        "u": "e0",
+        "s": "mon_hellfire",
+        "left": 5
+      },
+      {
+        "t": 4.9,
+        "e": "hit",
+        "a": "e0",
+        "d": "p0",
+        "dmg": 24,
+        "crit": true,
+        "dhp": 131,
+        "ty": "fire",
+        "s": "mon_hellfire"
+      },
+      {
+        "t": 5.4,
+        "e": "chan",
+        "u": "e0",
+        "s": "mon_hellfire",
+        "left": 4
+      },
+      {
+        "t": 5.4,
+        "e": "hit",
+        "a": "e0",
+        "d": "p0",
+        "dmg": 28,
+        "crit": true,
+        "dhp": 103,
+        "ty": "fire",
+        "s": "mon_hellfire"
+      },
+      {
+        "t": 5.5,
+        "e": "potion",
+        "u": "p0",
+        "s": "minor_healing",
+        "i": 0,
+        "amt": 50,
+        "dhp": 153,
+        "left": 1
+      },
+      {
+        "t": 5.9,
+        "e": "chan",
+        "u": "e0",
+        "s": "mon_hellfire",
+        "left": 3
+      },
+      {
+        "t": 5.9,
+        "e": "hit",
+        "a": "e0",
+        "d": "p0",
+        "dmg": 16,
+        "crit": false,
+        "dhp": 137,
+        "ty": "fire",
+        "s": "mon_hellfire"
+      },
+      {
+        "t": 6,
+        "e": "regen",
+        "u": "e0",
+        "amt": 1,
+        "dhp": 266
+      },
+      {
+        "t": 6.4,
+        "e": "charge",
+        "u": "p2",
+        "ch": 1
+      },
+      {
+        "t": 6.4,
+        "e": "chan",
+        "u": "e0",
+        "s": "mon_hellfire",
+        "left": 2
+      },
+      {
+        "t": 6.4,
+        "e": "hit",
+        "a": "e0",
+        "d": "p0",
+        "dmg": 15,
+        "crit": false,
+        "dhp": 122,
+        "ty": "fire",
+        "s": "mon_hellfire"
+      },
+      {
+        "t": 6.6,
+        "e": "charge",
+        "u": "p1",
+        "ch": 2
+      },
+      {
+        "t": 6.9,
+        "e": "chan",
+        "u": "e0",
+        "s": "mon_hellfire",
+        "left": 1
+      },
+      {
+        "t": 6.9,
+        "e": "hit",
+        "a": "e0",
+        "d": "p0",
+        "dmg": 13,
+        "crit": false,
+        "dhp": 109,
+        "ty": "fire",
+        "s": "mon_hellfire"
+      },
+      {
+        "t": 7.1,
+        "e": "dodge",
+        "a": "p0",
+        "d": "e1"
+      },
+      {
+        "t": 7.4,
+        "e": "chan",
+        "u": "e0",
+        "s": "mon_hellfire",
+        "left": 0
+      },
+      {
+        "t": 7.4,
+        "e": "hit",
+        "a": "e0",
+        "d": "p0",
+        "dmg": 15,
+        "crit": false,
+        "dhp": 94,
+        "ty": "fire",
+        "s": "mon_hellfire"
+      },
+      {
+        "t": 7.4,
+        "e": "chanEnd",
+        "u": "e0",
+        "s": "mon_hellfire",
+        "ready": 20.7,
+        "ch": 0
+      },
+      {
+        "t": 7.4,
+        "e": "hit",
+        "a": "e2",
+        "d": "p0",
+        "dmg": 8,
+        "crit": false,
+        "dhp": 86,
+        "ty": "physical"
+      },
+      {
+        "t": 7.4,
+        "e": "stat",
+        "u": "p0",
+        "v": {
+          "defense": 57.82
+        }
+      },
+      {
+        "t": 8.3,
+        "e": "hit",
+        "a": "e1",
+        "d": "p0",
+        "dmg": 30,
+        "crit": true,
+        "dhp": 56,
+        "ty": "physical",
+        "cb": 1
+      },
+      {
+        "t": 8.3,
+        "e": "stagger",
+        "u": "p0",
+        "until": 8.8
+      },
+      {
+        "t": 8.5,
+        "e": "regen",
+        "u": "e0",
+        "amt": 1,
+        "dhp": 267
+      },
+      {
+        "t": 8.7,
+        "e": "charge",
+        "u": "p1",
+        "ch": 3
+      },
+      {
+        "t": 9.3,
+        "e": "charge",
+        "u": "p2",
+        "ch": 2
+      },
+      {
+        "t": 9.5,
+        "e": "potion",
+        "u": "p0",
+        "s": "minor_healing",
+        "i": 1,
+        "amt": 50,
+        "dhp": 106,
+        "left": 0
+      },
+      {
+        "t": 10,
+        "e": "charge",
+        "u": "e0",
+        "ch": 1
+      },
+      {
+        "t": 10,
+        "e": "skill",
+        "u": "e0",
+        "s": "mag_fireball",
+        "ready": 19.5,
+        "ch": 0
+      },
+      {
+        "t": 10,
+        "e": "hit",
+        "a": "e0",
+        "d": "p0",
+        "dmg": 215,
+        "crit": true,
+        "dhp": 0,
+        "ty": "fire",
+        "ov": 109,
+        "s": "mag_fireball"
+      },
+      {
+        "t": 10,
+        "e": "down",
+        "u": "p0"
+      },
+      {
+        "t": 10.4,
+        "e": "regen",
+        "u": "e1",
+        "amt": 1,
+        "dhp": 128
+      },
+      {
+        "t": 10.7,
+        "e": "hit",
+        "a": "e2",
+        "d": "p1",
+        "dmg": 8,
+        "crit": false,
+        "dhp": 121,
+        "ty": "physical"
+      },
+      {
+        "t": 10.7,
+        "e": "stagger",
+        "u": "p1",
+        "until": 11.2
+      },
+      {
+        "t": 10.7,
+        "e": "reflect",
+        "a": "p1",
+        "d": "e2",
+        "dmg": 1,
+        "ahp": 149
+      },
+      {
+        "t": 10.7,
+        "e": "stat",
+        "u": "p1",
+        "v": {
+          "defense": 54.45
+        }
+      },
+      {
+        "t": 11,
+        "e": "regen",
+        "u": "e0",
+        "amt": 1,
+        "dhp": 268
+      },
+      {
+        "t": 11.3,
+        "e": "charge",
+        "u": "p1",
+        "ch": 4
+      },
+      {
+        "t": 11.4,
+        "e": "skill",
+        "u": "p1",
+        "s": "pri_judgment",
+        "ready": 20.4,
+        "ch": 3
+      },
+      {
+        "t": 11.4,
+        "e": "hit",
+        "a": "p1",
+        "d": "e1",
+        "dmg": 20,
+        "crit": true,
+        "dhp": 108,
+        "ty": "fixed",
+        "s": "pri_judgment"
+      },
+      {
+        "t": 11.4,
+        "e": "stagger",
+        "u": "e1",
+        "until": 11.9
+      },
+      {
+        "t": 11.5,
+        "e": "regen",
+        "u": "e2",
+        "amt": 1,
+        "dhp": 150
+      },
+      {
+        "t": 12.2,
+        "e": "charge",
+        "u": "p2",
+        "ch": 3
+      },
+      {
+        "t": 12.5,
+        "e": "hit",
+        "a": "e1",
+        "d": "p2",
+        "dmg": 25,
+        "crit": false,
+        "dhp": 142,
+        "ty": "physical",
+        "cb": 2
+      },
+      {
+        "t": 12.5,
+        "e": "stagger",
+        "u": "p2",
+        "until": 12.8
+      },
+      {
+        "t": 12.6,
+        "e": "charge",
+        "u": "e0",
+        "ch": 1
+      },
+      {
+        "t": 13.5,
+        "e": "regen",
+        "u": "e0",
+        "amt": 1,
+        "dhp": 269
+      },
+      {
+        "t": 13.5,
+        "e": "charge",
+        "u": "p1",
+        "ch": 4
+      },
+      {
+        "t": 14,
+        "e": "hit",
+        "a": "e2",
+        "d": "p2",
+        "dmg": 9,
+        "crit": false,
+        "dhp": 133,
+        "ty": "physical"
+      },
+      {
+        "t": 14,
+        "e": "stagger",
+        "u": "p2",
+        "until": 14.3
+      },
+      {
+        "t": 14,
+        "e": "stat",
+        "u": "p2",
+        "v": {
+          "defense": 40.59
+        }
+      },
+      {
+        "t": 14.1,
+        "e": "buffEnd",
+        "u": "e2",
+        "s": "kni_resistshield"
+      },
+      {
+        "t": 14.1,
+        "e": "stat",
+        "u": "e2",
+        "v": {
+          "res_fire": 0.36,
+          "res_cold": 0.17,
+          "res_lightning": 0.29,
+          "res_poison": 0.29
+        }
+      },
+      {
+        "t": 15.2,
+        "e": "charge",
+        "u": "e0",
+        "ch": 2
+      },
+      {
+        "t": 15.4,
+        "e": "skill",
+        "u": "p2",
+        "s": "mag_inferno",
+        "ready": 27.3,
+        "ch": 2
+      },
+      {
+        "t": 15.4,
+        "e": "hit",
+        "a": "p2",
+        "d": "e0",
+        "dmg": 44,
+        "crit": true,
+        "dhp": 225,
+        "ty": "fire",
+        "s": "mag_inferno"
+      },
+      {
+        "t": 15.4,
+        "e": "hit",
+        "a": "p2",
+        "d": "e1",
+        "dmg": 27,
+        "crit": true,
+        "dhp": 81,
+        "ty": "fire",
+        "s": "mag_inferno"
+      },
+      {
+        "t": 15.4,
+        "e": "hit",
+        "a": "p2",
+        "d": "e2",
+        "dmg": 34,
+        "crit": false,
+        "dhp": 116,
+        "ty": "fire",
+        "s": "mag_inferno"
+      },
+      {
+        "t": 15.7,
+        "e": "charge",
+        "u": "p2",
+        "ch": 3
+      },
+      {
+        "t": 16,
+        "e": "regen",
+        "u": "e0",
+        "amt": 1,
+        "dhp": 226
+      },
+      {
+        "t": 16.1,
+        "e": "buffEnd",
+        "u": "e1",
+        "s": "kni_resistshield"
+      },
+      {
+        "t": 16.1,
+        "e": "stat",
+        "u": "e1",
+        "v": {
+          "res_fire": 0.26,
+          "res_cold": 0.07,
+          "res_lightning": 0.19,
+          "res_poison": 0.19
+        }
+      },
+      {
+        "t": 16.2,
+        "e": "hit",
+        "a": "e1",
+        "d": "p2",
+        "dmg": 24,
+        "crit": false,
+        "dhp": 109,
+        "ty": "physical",
+        "cb": 1
+      },
+      {
+        "t": 16.2,
+        "e": "stagger",
+        "u": "p2",
+        "until": 16.5
+      },
+      {
+        "t": 17.3,
+        "e": "hit",
+        "a": "e2",
+        "d": "p1",
+        "dmg": 10,
+        "crit": true,
+        "dhp": 111,
+        "ty": "physical"
+      },
+      {
+        "t": 17.3,
+        "e": "stagger",
+        "u": "p1",
+        "until": 17.8
+      },
+      {
+        "t": 17.3,
+        "e": "reflect",
+        "a": "p1",
+        "d": "e2",
+        "dmg": 1,
+        "ahp": 115
+      },
+      {
+        "t": 17.3,
+        "e": "stat",
+        "u": "p1",
+        "v": {
+          "defense": 53.9
+        }
+      },
+      {
+        "t": 17.8,
+        "e": "charge",
+        "u": "e0",
+        "ch": 3
+      },
+      {
+        "t": 18.3,
+        "e": "regen",
+        "u": "e1",
+        "amt": 1,
+        "dhp": 82
+      },
+      {
+        "t": 18.5,
+        "e": "regen",
+        "u": "e0",
+        "amt": 1,
+        "dhp": 227
+      },
+      {
+        "t": 18.9,
+        "e": "charge",
+        "u": "p2",
+        "ch": 4
+      },
+      {
+        "t": 19.4,
+        "e": "regen",
+        "u": "e2",
+        "amt": 1,
+        "dhp": 116
+      },
+      {
+        "t": 19.5,
+        "e": "skill",
+        "u": "e0",
+        "s": "mag_fireball",
+        "ready": 29,
+        "ch": 2
+      },
+      {
+        "t": 19.5,
+        "e": "hit",
+        "a": "e0",
+        "d": "p1",
+        "dmg": 168,
+        "crit": false,
+        "dhp": 0,
+        "ty": "fire",
+        "ov": 57,
+        "s": "mag_fireball"
+      },
+      {
+        "t": 19.5,
+        "e": "reflect",
+        "a": "p1",
+        "d": "e0",
+        "dmg": 8,
+        "ahp": 219
+      },
+      {
+        "t": 19.5,
+        "e": "down",
+        "u": "p1"
+      },
+      {
+        "t": 19.9,
+        "e": "skill",
+        "u": "e1",
+        "s": "kni_resistshield",
+        "ready": 35.2
+      },
+      {
+        "t": 19.9,
+        "e": "buff",
+        "u": "e1",
+        "s": "kni_resistshield",
+        "stat": "res_pct",
+        "v": 0.4,
+        "until": 31.4
+      },
+      {
+        "t": 19.9,
+        "e": "dodge",
+        "a": "e1",
+        "d": "p2"
+      },
+      {
+        "t": 19.9,
+        "e": "stat",
+        "u": "e1",
+        "v": {
+          "res_fire": 0.66,
+          "res_cold": 0.47,
+          "res_lightning": 0.59,
+          "res_poison": 0.59
+        }
+      },
+      {
+        "t": 20.4,
+        "e": "charge",
+        "u": "e0",
+        "ch": 3
+      },
+      {
+        "t": 20.6,
+        "e": "dodge",
+        "a": "e2",
+        "d": "p2"
+      },
+      {
+        "t": 20.7,
+        "e": "skill",
+        "u": "e0",
+        "s": "mon_hellfire",
+        "chan": 10,
+        "iv": 0.5,
+        "ch": 2
+      },
+      {
+        "t": 20.7,
+        "e": "hit",
+        "a": "e0",
+        "d": "p2",
+        "dmg": 17,
+        "crit": false,
+        "dhp": 92,
+        "ty": "fire",
+        "s": "mon_hellfire"
+      },
+      {
+        "t": 21,
+        "e": "regen",
+        "u": "e0",
+        "amt": 1,
+        "dhp": 220
+      },
+      {
+        "t": 21.2,
+        "e": "chan",
+        "u": "e0",
+        "s": "mon_hellfire",
+        "left": 8
+      },
+      {
+        "t": 21.2,
+        "e": "hit",
+        "a": "e0",
+        "d": "p2",
+        "dmg": 18,
+        "crit": false,
+        "dhp": 74,
+        "ty": "fire",
+        "s": "mon_hellfire"
+      },
+      {
+        "t": 21.7,
+        "e": "chan",
+        "u": "e0",
+        "s": "mon_hellfire",
+        "left": 7
+      },
+      {
+        "t": 21.7,
+        "e": "hit",
+        "a": "e0",
+        "d": "p2",
+        "dmg": 14,
+        "crit": false,
+        "dhp": 60,
+        "ty": "fire",
+        "s": "mon_hellfire"
+      },
+      {
+        "t": 22.2,
+        "e": "chan",
+        "u": "e0",
+        "s": "mon_hellfire",
+        "left": 6
+      },
+      {
+        "t": 22.2,
+        "e": "hit",
+        "a": "e0",
+        "d": "p2",
+        "dmg": 17,
+        "crit": false,
+        "dhp": 43,
+        "ty": "fire",
+        "s": "mon_hellfire"
+      },
+      {
+        "t": 22.7,
+        "e": "chan",
+        "u": "e0",
+        "s": "mon_hellfire",
+        "left": 5
+      },
+      {
+        "t": 22.7,
+        "e": "hit",
+        "a": "e0",
+        "d": "p2",
+        "dmg": 15,
+        "crit": false,
+        "dhp": 28,
+        "ty": "fire",
+        "s": "mon_hellfire"
+      },
+      {
+        "t": 23.1,
+        "e": "regen",
+        "u": "p2",
+        "amt": 1,
+        "dhp": 29
+      },
+      {
+        "t": 23.2,
+        "e": "chan",
+        "u": "e0",
+        "s": "mon_hellfire",
+        "left": 4
+      },
+      {
+        "t": 23.2,
+        "e": "hit",
+        "a": "e0",
+        "d": "p2",
+        "dmg": 16,
+        "crit": false,
+        "dhp": 13,
+        "ty": "fire",
+        "s": "mon_hellfire"
+      },
+      {
+        "t": 23.5,
+        "e": "regen",
+        "u": "e0",
+        "amt": 1,
+        "dhp": 221
+      },
+      {
+        "t": 23.6,
+        "e": "hit",
+        "a": "e1",
+        "d": "p2",
+        "dmg": 32,
+        "crit": true,
+        "dhp": 0,
+        "ty": "physical",
+        "ov": 19
+      },
+      {
+        "t": 23.6,
+        "e": "down",
+        "u": "p2"
+      },
+      {
+        "t": 23.6,
+        "e": "end",
+        "won": false,
+        "reason": "wipe"
+      }
+    ]
+  },
+  "mastery": [
+    {
+      "uid": "h1",
+      "nodes": [
+        {
+          "id": "sin_greed_t1_gold",
+          "treeKind": "sin",
+          "ownerId": "greed",
+          "tier": 1,
+          "stat": "gold_find",
+          "name": {
+            "ko": "미다스의 손",
+            "en": "Midas Touch"
+          },
+          "value": 0.05,
+          "rank": 5,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 0.25,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "sin_greed_t1_itemfind",
+          "treeKind": "sin",
+          "ownerId": "greed",
+          "tier": 1,
+          "stat": "xp_gain_pct",
+          "name": {
+            "ko": "복리",
+            "en": "Compound Interest"
+          },
+          "value": 0.02,
+          "rank": 5,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 0.1,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "sin_greed_t1_magicfind",
+          "treeKind": "sin",
+          "ownerId": "greed",
+          "tier": 1,
+          "stat": "magic_find",
+          "name": {
+            "ko": "감정사의 눈",
+            "en": "Appraiser's Eye"
+          },
+          "value": 0.02,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "sin_greed_t2_gear",
+          "treeKind": "sin",
+          "ownerId": "greed",
+          "tier": 2,
+          "stat": "magic_find",
+          "name": {
+            "ko": "황금 더미",
+            "en": "Golden Hoard"
+          },
+          "value": 0.02,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": {
+            "slot": "sin_gear",
+            "need": 3
+          },
+          "on": false,
+          "cond": null
+        },
+        {
+          "id": "sin_greed_t2_elite_atk",
+          "treeKind": "sin",
+          "ownerId": "greed",
+          "tier": 2,
+          "stat": "atk_pct",
+          "name": {
+            "ko": "큰 사냥감",
+            "en": "Big Game"
+          },
+          "value": 0.02,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": "elite"
+        },
+        {
+          "id": "sin_greed_t2_elite_crit",
+          "treeKind": "sin",
+          "ownerId": "greed",
+          "tier": 2,
+          "stat": "crit_rate",
+          "name": {
+            "ko": "잭팟",
+            "en": "Jackpot"
+          },
+          "value": 0.01,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": "elite"
+        },
+        {
+          "id": "sin_greed_t3_dmg",
+          "treeKind": "sin",
+          "ownerId": "greed",
+          "tier": 3,
+          "stat": "atk_pct_per_greed",
+          "name": {
+            "ko": "황금 칼날",
+            "en": "Golden Blade"
+          },
+          "value": 0.08,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 20,
+          "unlocked": false,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "sin_greed_t3_hp",
+          "treeKind": "sin",
+          "ownerId": "greed",
+          "tier": 3,
+          "stat": "hp_pct_per_greed",
+          "name": {
+            "ko": "황금 심장",
+            "en": "Heart of Gold"
+          },
+          "value": 0.06,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 20,
+          "unlocked": false,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "sin_greed_t3_cdr",
+          "treeKind": "sin",
+          "ownerId": "greed",
+          "tier": 3,
+          "stat": "cdr_per_greed",
+          "name": {
+            "ko": "시간은 돈",
+            "en": "Time Is Money"
+          },
+          "value": 0.03,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 20,
+          "unlocked": false,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "cls_warrior_t1_hp",
+          "treeKind": "class",
+          "ownerId": "warrior",
+          "tier": 1,
+          "stat": "hp_flat",
+          "name": {
+            "ko": "체력 증가",
+            "en": "Health Increase"
+          },
+          "value": 10,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "cls_warrior_t1_resall",
+          "treeKind": "class",
+          "ownerId": "warrior",
+          "tier": 1,
+          "stat": "res_all",
+          "name": {
+            "ko": "모든 저항력",
+            "en": "All Resistances"
+          },
+          "value": 0.02,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "cls_warrior_t1_atk",
+          "treeKind": "class",
+          "ownerId": "warrior",
+          "tier": 1,
+          "stat": "atk_pct",
+          "name": {
+            "ko": "데미지 증가",
+            "en": "Damage Increase"
+          },
+          "value": 0.01,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "cls_t2_weapon_damage",
+          "treeKind": "class",
+          "ownerId": "*",
+          "tier": 2,
+          "stat": "atk_pct",
+          "name": {
+            "ko": "{group} 마스터리",
+            "en": "{group} Mastery"
+          },
+          "value": 0.02,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": {
+            "slot": "weapon",
+            "groups": [
+              "mace",
+              "spear",
+              "orb",
+              "crucifix",
+              "bow"
+            ]
+          },
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "cls_warrior_t2_axe",
+          "treeKind": "class",
+          "ownerId": "warrior",
+          "tier": 2,
+          "stat": "aspd_pct",
+          "name": {
+            "ko": "도끼 마스터리",
+            "en": "Axe Mastery"
+          },
+          "value": 0.01,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": {
+            "slot": "weapon",
+            "groups": [
+              "axe"
+            ]
+          },
+          "on": false,
+          "cond": null
+        },
+        {
+          "id": "cls_warrior_t2_heavy",
+          "treeKind": "class",
+          "ownerId": "warrior",
+          "tier": 2,
+          "stat": "aspd_pct",
+          "name": {
+            "ko": "중갑 마스터리",
+            "en": "Heavy Armor Mastery"
+          },
+          "value": 0.02,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": {
+            "slot": "armor",
+            "groups": [
+              "heavy"
+            ]
+          },
+          "on": false,
+          "cond": null
+        }
+      ]
+    },
+    {
+      "uid": "h2",
+      "nodes": [
+        {
+          "id": "sin_envy_t1_defignore",
+          "treeKind": "sin",
+          "ownerId": "envy",
+          "tier": 1,
+          "stat": "def_ignore",
+          "name": {
+            "ko": "사안",
+            "en": "Evil Eye"
+          },
+          "value": 0.01,
+          "rank": 5,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 0.05,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "sin_envy_t1_reflect",
+          "treeKind": "sin",
+          "ownerId": "envy",
+          "tier": 1,
+          "stat": "reflect_damage",
+          "name": {
+            "ko": "원한",
+            "en": "Resentment"
+          },
+          "value": 0.01,
+          "rank": 5,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 0.05,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "sin_envy_t1_resignore",
+          "treeKind": "sin",
+          "ownerId": "envy",
+          "tier": 1,
+          "stat": "res_reduction",
+          "name": {
+            "ko": "폄하",
+            "en": "Belittle"
+          },
+          "value": 0.01,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "sin_envy_t2_gear",
+          "treeKind": "sin",
+          "ownerId": "envy",
+          "tier": 2,
+          "stat": "def_ignore",
+          "name": {
+            "ko": "탐내는 시선",
+            "en": "Covetous Gaze"
+          },
+          "value": 0.01,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": {
+            "slot": "sin_gear",
+            "need": 3
+          },
+          "on": false,
+          "cond": null
+        },
+        {
+          "id": "sin_envy_t2_stronger_defignore",
+          "treeKind": "sin",
+          "ownerId": "envy",
+          "tier": 2,
+          "stat": "def_ignore",
+          "name": {
+            "ko": "끌어내림",
+            "en": "Bring Down"
+          },
+          "value": 0.01,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": "stronger"
+        },
+        {
+          "id": "sin_envy_t2_stronger_reflect",
+          "treeKind": "sin",
+          "ownerId": "envy",
+          "tier": 2,
+          "stat": "reflect_damage",
+          "name": {
+            "ko": "원망",
+            "en": "Grudge"
+          },
+          "value": 0.01,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": "stronger"
+        },
+        {
+          "id": "cls_priest_t1_castspeed",
+          "treeKind": "class",
+          "ownerId": "priest",
+          "tier": 1,
+          "stat": "cast_speed_pct",
+          "name": {
+            "ko": "캐스팅 속도",
+            "en": "Casting Speed"
+          },
+          "value": 0.01,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "cls_priest_t1_cdr",
+          "treeKind": "class",
+          "ownerId": "priest",
+          "tier": 1,
+          "stat": "cooldown_reduction",
+          "name": {
+            "ko": "쿨타임 감소",
+            "en": "Cooldown Reduction"
+          },
+          "value": 0.01,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "cls_priest_t1_buffdur",
+          "treeKind": "class",
+          "ownerId": "priest",
+          "tier": 1,
+          "stat": "buff_dur_pct",
+          "name": {
+            "ko": "버프 지속시간",
+            "en": "Buff Duration"
+          },
+          "value": 0.03,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "cls_t2_weapon_damage",
+          "treeKind": "class",
+          "ownerId": "*",
+          "tier": 2,
+          "stat": "atk_pct",
+          "name": {
+            "ko": "{group} 마스터리",
+            "en": "{group} Mastery"
+          },
+          "value": 0.02,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": {
+            "slot": "weapon",
+            "groups": [
+              "mace",
+              "spear",
+              "orb",
+              "crucifix",
+              "bow"
+            ]
+          },
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "cls_priest_t2_bible",
+          "treeKind": "class",
+          "ownerId": "priest",
+          "tier": 2,
+          "stat": "cast_speed_pct",
+          "name": {
+            "ko": "성경 마스터리",
+            "en": "Bible Mastery"
+          },
+          "value": 0.01,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": {
+            "slot": "weapon",
+            "groups": [
+              "bible"
+            ]
+          },
+          "on": false,
+          "cond": null
+        },
+        {
+          "id": "cls_priest_t2_robe",
+          "treeKind": "class",
+          "ownerId": "priest",
+          "tier": 2,
+          "stat": "hp_pct",
+          "name": {
+            "ko": "로브 마스터리",
+            "en": "Robe Mastery"
+          },
+          "value": 0.02,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": {
+            "slot": "armor",
+            "groups": [
+              "robe"
+            ]
+          },
+          "on": false,
+          "cond": null
+        }
+      ]
+    },
+    {
+      "uid": "h3",
+      "nodes": [
+        {
+          "id": "sin_sloth_t1_hp",
+          "treeKind": "sin",
+          "ownerId": "sloth",
+          "tier": 1,
+          "stat": "hp_flat",
+          "name": {
+            "ko": "깊은 잠",
+            "en": "Deep Slumber"
+          },
+          "value": 10,
+          "rank": 5,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 50,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "sin_sloth_t1_dr",
+          "treeKind": "sin",
+          "ownerId": "sloth",
+          "tier": 1,
+          "stat": "damage_reduction",
+          "name": {
+            "ko": "무관심",
+            "en": "Indifference"
+          },
+          "value": 0.005,
+          "rank": 5,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 0.025,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "sin_sloth_t1_cdr",
+          "treeKind": "sin",
+          "ownerId": "sloth",
+          "tier": 1,
+          "stat": "cooldown_reduction",
+          "name": {
+            "ko": "지름길",
+            "en": "Shortcut"
+          },
+          "value": 0.01,
+          "rank": 1,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 0.01,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "sin_sloth_t2_gear",
+          "treeKind": "sin",
+          "ownerId": "sloth",
+          "tier": 2,
+          "stat": "damage_reduction",
+          "name": {
+            "ko": "따뜻한 침대",
+            "en": "Warm Bed"
+          },
+          "value": 0.005,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": {
+            "slot": "sin_gear",
+            "need": 3
+          },
+          "on": false,
+          "cond": null
+        },
+        {
+          "id": "sin_sloth_t2_tick_dr",
+          "treeKind": "sin",
+          "ownerId": "sloth",
+          "tier": 2,
+          "stat": "damage_reduction",
+          "name": {
+            "ko": "무거운 눈꺼풀",
+            "en": "Heavy Eyelids"
+          },
+          "value": 0.005,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": "tick"
+        },
+        {
+          "id": "sin_sloth_t2_tick_cdr",
+          "treeKind": "sin",
+          "ownerId": "sloth",
+          "tier": 2,
+          "stat": "cooldown_reduction",
+          "name": {
+            "ko": "느긋함",
+            "en": "Unhurried"
+          },
+          "value": 0.01,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": "tick"
+        },
+        {
+          "id": "cls_mage_t1_castspeed",
+          "treeKind": "class",
+          "ownerId": "mage",
+          "tier": 1,
+          "stat": "cast_speed_pct",
+          "name": {
+            "ko": "캐스팅 속도",
+            "en": "Casting Speed"
+          },
+          "value": 0.01,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "cls_mage_t1_cdr",
+          "treeKind": "class",
+          "ownerId": "mage",
+          "tier": 1,
+          "stat": "cooldown_reduction",
+          "name": {
+            "ko": "쿨타임 감소",
+            "en": "Cooldown Reduction"
+          },
+          "value": 0.01,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "cls_mage_t1_atk",
+          "treeKind": "class",
+          "ownerId": "mage",
+          "tier": 1,
+          "stat": "atk_pct",
+          "name": {
+            "ko": "데미지 증가",
+            "en": "Damage Increase"
+          },
+          "value": 0.01,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 1,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": null,
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "cls_t2_weapon_damage",
+          "treeKind": "class",
+          "ownerId": "*",
+          "tier": 2,
+          "stat": "atk_pct",
+          "name": {
+            "ko": "{group} 마스터리",
+            "en": "{group} Mastery"
+          },
+          "value": 0.02,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": {
+            "slot": "weapon",
+            "groups": [
+              "mace",
+              "spear",
+              "orb",
+              "crucifix",
+              "bow"
+            ]
+          },
+          "on": true,
+          "cond": null
+        },
+        {
+          "id": "cls_mage_t2_staff",
+          "treeKind": "class",
+          "ownerId": "mage",
+          "tier": 2,
+          "stat": "cast_speed_pct",
+          "name": {
+            "ko": "스태프 마스터리",
+            "en": "Staff Mastery"
+          },
+          "value": 0.01,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": {
+            "slot": "weapon",
+            "groups": [
+              "staff"
+            ]
+          },
+          "on": false,
+          "cond": null
+        },
+        {
+          "id": "cls_mage_t2_robe",
+          "treeKind": "class",
+          "ownerId": "mage",
+          "tier": 2,
+          "stat": "hp_pct",
+          "name": {
+            "ko": "로브 마스터리",
+            "en": "Robe Mastery"
+          },
+          "value": 0.02,
+          "rank": 0,
+          "maxRank": 5,
+          "unlockLevel": 10,
+          "unlocked": true,
+          "total": 0,
+          "canLearn": false,
+          "gate": {
+            "slot": "armor",
+            "groups": [
+              "robe"
+            ]
+          },
+          "on": false,
+          "cond": null
+        }
+      ]
+    }
+  ],
+  "inventory": [
+    []
+  ],
+  "construction": {
+    "built": 7,
+    "total": 47,
+    "tabs": {
+      "explore": false,
+      "tavern": true,
+      "shop": true,
+      "forge": true,
+      "library": true,
+      "codex": true,
+      "resource": true
+    },
+    "buildings": [
+      {
+        "id": "explore",
+        "name": {
+          "ko": "탐험",
+          "en": "Exploration"
+        },
+        "tab": "explore",
+        "tabIds": [
+          "explore"
+        ],
+        "rank": 0,
+        "maxRank": 5,
+        "next": {
+          "rank": 1,
+          "require": [
+            {
+              "kind": "chapter",
+              "ref": 1,
+              "stage": 1051,
+              "diff": null,
+              "need": 1,
+              "have": 0,
+              "ok": false
+            }
+          ],
+          "cost": [
+            {
+              "res": "gold",
+              "need": 600,
+              "have": 2
+            }
+          ],
+          "effects": [
+            {
+              "kind": "unlock",
+              "target": "explore",
+              "value": null,
+              "live": true
+            }
+          ],
+          "err": "locked"
+        },
+        "ranks": [
+          {
+            "rank": 1,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "explore",
+                "value": null,
+                "live": true
+              }
+            ],
+            "require": [
+              {
+                "kind": "chapter",
+                "ref": 1,
+                "stage": 1051,
+                "diff": null,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 2,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "explore_caravan",
+                "value": null,
+                "live": true
+              }
+            ],
+            "require": [
+              {
+                "kind": "chapter",
+                "ref": 2,
+                "stage": 2051,
+                "diff": null,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 3,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "explore_ruins",
+                "value": null,
+                "live": true
+              }
+            ],
+            "require": [
+              {
+                "kind": "chapter",
+                "ref": 4,
+                "stage": 4051,
+                "diff": null,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 4,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "presets",
+                "value": 1,
+                "live": true,
+                "total": 1
+              }
+            ],
+            "require": [
+              {
+                "kind": "difficulty",
+                "ref": "normal",
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 5,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "presets",
+                "value": 1,
+                "live": true,
+                "total": 2
+              }
+            ],
+            "require": [
+              {
+                "kind": "difficulty",
+                "ref": "nightmare",
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "command",
+        "name": {
+          "ko": "지휘 천막",
+          "en": "Command Tent"
+        },
+        "tab": "-",
+        "tabIds": [],
+        "rank": 1,
+        "maxRank": 7,
+        "next": {
+          "rank": 2,
+          "require": [
+            {
+              "kind": "total",
+              "ref": null,
+              "need": 8,
+              "have": 35,
+              "ok": true
+            },
+            {
+              "kind": "stage",
+              "ref": 1051,
+              "need": 1,
+              "have": 0,
+              "ok": false
+            }
+          ],
+          "cost": [
+            {
+              "res": "gold",
+              "need": 3000,
+              "have": 2
+            }
+          ],
+          "effects": [
+            {
+              "kind": "add",
+              "target": "tactic_slots",
+              "value": 1,
+              "live": true
+            }
+          ],
+          "err": "locked"
+        },
+        "ranks": [
+          {
+            "rank": 1,
+            "built": true,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "tactic_slots",
+                "value": 1,
+                "live": true,
+                "total": 1
+              }
+            ],
+            "require": [
+              {
+                "kind": "building",
+                "ref": "storage",
+                "need": 1,
+                "have": 1,
+                "ok": true
+              }
+            ]
+          },
+          {
+            "rank": 2,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "tactic_slots",
+                "value": 1,
+                "live": true,
+                "total": 2
+              }
+            ],
+            "require": [
+              {
+                "kind": "total",
+                "ref": null,
+                "need": 8,
+                "have": 35,
+                "ok": true
+              },
+              {
+                "kind": "stage",
+                "ref": 1051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 3,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "tactic_slots",
+                "value": 1,
+                "live": true,
+                "total": 3
+              }
+            ],
+            "require": [
+              {
+                "kind": "total",
+                "ref": null,
+                "need": 15,
+                "have": 35,
+                "ok": true
+              },
+              {
+                "kind": "stage",
+                "ref": 2051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 4,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "tactic_slots",
+                "value": 1,
+                "live": true,
+                "total": 4
+              }
+            ],
+            "require": [
+              {
+                "kind": "total",
+                "ref": null,
+                "need": 30,
+                "have": 35,
+                "ok": true
+              },
+              {
+                "kind": "stage",
+                "ref": 3051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 5,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "tactic_slots",
+                "value": 1,
+                "live": true,
+                "total": 5
+              }
+            ],
+            "require": [
+              {
+                "kind": "total",
+                "ref": null,
+                "need": 40,
+                "have": 35,
+                "ok": false
+              },
+              {
+                "kind": "stage",
+                "ref": 4051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 6,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "tactic_slots",
+                "value": 1,
+                "live": true,
+                "total": 6
+              }
+            ],
+            "require": [
+              {
+                "kind": "total",
+                "ref": null,
+                "need": 55,
+                "have": 35,
+                "ok": false
+              },
+              {
+                "kind": "stage",
+                "ref": 5051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 7,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "tactic_slots",
+                "value": 1,
+                "live": true,
+                "total": 7
+              }
+            ],
+            "require": [
+              {
+                "kind": "total",
+                "ref": null,
+                "need": 90,
+                "have": 35,
+                "ok": false
+              },
+              {
+                "kind": "stage",
+                "ref": 6051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "storage",
+        "name": {
+          "ko": "창고",
+          "en": "Storage"
+        },
+        "tab": "-",
+        "tabIds": [],
+        "rank": 1,
+        "maxRank": 5,
+        "next": {
+          "rank": 2,
+          "require": [
+            {
+              "kind": "stage",
+              "ref": 2013,
+              "need": 1,
+              "have": 0,
+              "ok": false
+            }
+          ],
+          "cost": [
+            {
+              "res": "gold",
+              "need": 3000,
+              "have": 2
+            },
+            {
+              "res": "iron_ore",
+              "need": 20,
+              "have": 97
+            },
+            {
+              "res": "timber",
+              "need": 20,
+              "have": 98
+            }
+          ],
+          "effects": [
+            {
+              "kind": "add",
+              "target": "potionSlots",
+              "value": 1,
+              "live": true
+            }
+          ],
+          "err": "locked"
+        },
+        "ranks": [
+          {
+            "rank": 1,
+            "built": true,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "lab_res",
+                "value": null,
+                "live": true
+              }
+            ],
+            "require": [
+              {
+                "kind": "building",
+                "ref": "forge",
+                "need": 1,
+                "have": 1,
+                "ok": true
+              }
+            ]
+          },
+          {
+            "rank": 2,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "potionSlots",
+                "value": 1,
+                "live": true,
+                "total": 1
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 2013,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 3,
+            "built": false,
+            "pending": true,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "gear_set",
+                "value": null,
+                "live": false
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 3033,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 4,
+            "built": false,
+            "pending": true,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "gear_sets",
+                "value": 1,
+                "live": false,
+                "total": 1
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 4033,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 5,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "potionSlots",
+                "value": 1,
+                "live": true,
+                "total": 2
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 5013,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "tavern",
+        "name": {
+          "ko": "선술집",
+          "en": "Tavern"
+        },
+        "tab": "tavern",
+        "tabIds": [
+          "tavern"
+        ],
+        "rank": 1,
+        "maxRank": 7,
+        "next": {
+          "rank": 2,
+          "require": [
+            {
+              "kind": "chapter",
+              "ref": 1,
+              "stage": 1051,
+              "diff": null,
+              "need": 1,
+              "have": 0,
+              "ok": false
+            }
+          ],
+          "cost": [
+            {
+              "res": "gold",
+              "need": 3000,
+              "have": 2
+            }
+          ],
+          "effects": [
+            {
+              "kind": "unlock",
+              "target": "hire",
+              "value": null,
+              "live": true
+            }
+          ],
+          "err": "locked"
+        },
+        "ranks": [
+          {
+            "rank": 1,
+            "built": true,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "commission_board",
+                "value": null,
+                "live": true
+              }
+            ],
+            "require": [
+              {
+                "kind": "building",
+                "ref": "shop",
+                "need": 1,
+                "have": 1,
+                "ok": true
+              }
+            ]
+          },
+          {
+            "rank": 2,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "hire",
+                "value": null,
+                "live": true
+              }
+            ],
+            "require": [
+              {
+                "kind": "chapter",
+                "ref": 1,
+                "stage": 1051,
+                "diff": null,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 3,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "gamble",
+                "value": null,
+                "live": true
+              }
+            ],
+            "require": [
+              {
+                "kind": "chapter",
+                "ref": 2,
+                "stage": 2051,
+                "diff": null,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 4,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "roster",
+                "value": 1,
+                "live": true,
+                "total": 1
+              }
+            ],
+            "require": [
+              {
+                "kind": "chapter",
+                "ref": 1,
+                "stage": 1051,
+                "diff": "nightmare",
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 5,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "roster",
+                "value": 1,
+                "live": true,
+                "total": 2
+              }
+            ],
+            "require": [
+              {
+                "kind": "chapter",
+                "ref": 2,
+                "stage": 2051,
+                "diff": "nightmare",
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 6,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "roster",
+                "value": 1,
+                "live": true,
+                "total": 3
+              }
+            ],
+            "require": [
+              {
+                "kind": "chapter",
+                "ref": 3,
+                "stage": 3051,
+                "diff": "nightmare",
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 7,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "roster",
+                "value": 1,
+                "live": true,
+                "total": 4
+              }
+            ],
+            "require": [
+              {
+                "kind": "chapter",
+                "ref": 4,
+                "stage": 4051,
+                "diff": "nightmare",
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "shop",
+        "name": {
+          "ko": "상단",
+          "en": "Trading House"
+        },
+        "tab": "shop",
+        "tabIds": [
+          "shop"
+        ],
+        "rank": 1,
+        "maxRank": 4,
+        "next": {
+          "rank": 2,
+          "require": [
+            {
+              "kind": "stage",
+              "ref": 2013,
+              "need": 1,
+              "have": 0,
+              "ok": false
+            }
+          ],
+          "cost": [
+            {
+              "res": "gold",
+              "need": 3000,
+              "have": 2
+            },
+            {
+              "res": "iron_ore",
+              "need": 20,
+              "have": 97
+            },
+            {
+              "res": "timber",
+              "need": 20,
+              "have": 98
+            }
+          ],
+          "effects": [
+            {
+              "kind": "unlock",
+              "target": "shop_rows",
+              "value": null,
+              "live": true
+            }
+          ],
+          "err": "locked"
+        },
+        "ranks": [
+          {
+            "rank": 1,
+            "built": true,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "shop",
+                "value": null,
+                "live": true
+              }
+            ],
+            "require": []
+          },
+          {
+            "rank": 2,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "shop_rows",
+                "value": null,
+                "live": true
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 2013,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 3,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "shop_trade",
+                "value": null,
+                "live": true
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 3013,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 4,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "shop_special",
+                "value": null,
+                "live": true
+              },
+              {
+                "kind": "add",
+                "target": "shop_layers",
+                "value": 1,
+                "live": false,
+                "total": 1
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 4033,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "forge",
+        "name": {
+          "ko": "대장간",
+          "en": "Blacksmith"
+        },
+        "tab": "forge",
+        "tabIds": [
+          "forge"
+        ],
+        "rank": 1,
+        "maxRank": 6,
+        "next": {
+          "rank": 2,
+          "require": [
+            {
+              "kind": "stage",
+              "ref": 1051,
+              "need": 1,
+              "have": 0,
+              "ok": false
+            }
+          ],
+          "cost": [
+            {
+              "res": "gold",
+              "need": 3000,
+              "have": 2
+            },
+            {
+              "res": "iron_ore",
+              "need": 30,
+              "have": 97
+            },
+            {
+              "res": "timber",
+              "need": 30,
+              "have": 98
+            }
+          ],
+          "effects": [
+            {
+              "kind": "unlock",
+              "target": "potion",
+              "value": null,
+              "live": true
+            },
+            {
+              "kind": "add",
+              "target": "make_level",
+              "value": 1,
+              "live": true
+            }
+          ],
+          "err": "locked"
+        },
+        "ranks": [
+          {
+            "rank": 1,
+            "built": true,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "upgrade_item",
+                "value": null,
+                "live": true
+              },
+              {
+                "kind": "unlock",
+                "target": "make",
+                "value": null,
+                "live": true
+              },
+              {
+                "kind": "unlock",
+                "target": "synth",
+                "value": null,
+                "live": true
+              }
+            ],
+            "require": [
+              {
+                "kind": "building",
+                "ref": "tavern",
+                "need": 1,
+                "have": 1,
+                "ok": true
+              }
+            ]
+          },
+          {
+            "rank": 2,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "potion",
+                "value": null,
+                "live": true
+              },
+              {
+                "kind": "add",
+                "target": "make_level",
+                "value": 1,
+                "live": true,
+                "total": 2
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 1051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 3,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "make_level",
+                "value": 1,
+                "live": true,
+                "total": 3
+              },
+              {
+                "kind": "unlock",
+                "target": "craft",
+                "value": null,
+                "live": false
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 2051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 4,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "make_level",
+                "value": 1,
+                "live": true,
+                "total": 4
+              },
+              {
+                "kind": "add",
+                "target": "potion_tier",
+                "value": 1,
+                "live": true,
+                "total": 2
+              },
+              {
+                "kind": "add",
+                "target": "make_kinds",
+                "value": 1,
+                "live": false,
+                "total": 1
+              },
+              {
+                "kind": "unlock",
+                "target": "stigma_craft",
+                "value": null,
+                "live": false
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 3051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 5,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "make_level",
+                "value": 1,
+                "live": true,
+                "total": 5
+              },
+              {
+                "kind": "add",
+                "target": "upgrade",
+                "value": 3,
+                "live": true,
+                "total": 3
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 4051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 6,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "make_level",
+                "value": 1,
+                "live": true,
+                "total": 6
+              },
+              {
+                "kind": "add",
+                "target": "potion_tier",
+                "value": 1,
+                "live": true,
+                "total": 3
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 5051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "library",
+        "name": {
+          "ko": "도서관",
+          "en": "Library"
+        },
+        "tab": "library",
+        "tabIds": [
+          "library",
+          "codex"
+        ],
+        "rank": 1,
+        "maxRank": 6,
+        "next": {
+          "rank": 2,
+          "require": [
+            {
+              "kind": "stage",
+              "ref": 1051,
+              "need": 1,
+              "have": 0,
+              "ok": false
+            }
+          ],
+          "cost": [
+            {
+              "res": "gold",
+              "need": 3000,
+              "have": 2
+            }
+          ],
+          "effects": [
+            {
+              "kind": "unlock",
+              "target": "book_craft",
+              "value": null,
+              "live": true
+            }
+          ],
+          "err": "locked"
+        },
+        "ranks": [
+          {
+            "rank": 1,
+            "built": true,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "codex",
+                "value": null,
+                "live": true
+              },
+              {
+                "kind": "unlock",
+                "target": "skillbook",
+                "value": null,
+                "live": true
+              }
+            ],
+            "require": []
+          },
+          {
+            "rank": 2,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "book_craft",
+                "value": null,
+                "live": true
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 1051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 3,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "advance",
+                "value": null,
+                "live": true
+              }
+            ],
+            "require": [
+              {
+                "kind": "hero",
+                "ref": null,
+                "need": 30,
+                "have": 12,
+                "ok": false
+              },
+              {
+                "kind": "stage",
+                "ref": 2051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 4,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "unlock",
+                "target": "skill_depth",
+                "value": null,
+                "live": false
+              },
+              {
+                "kind": "add",
+                "target": "codex_level",
+                "value": 1,
+                "live": true,
+                "total": 2
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 3051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 5,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "codex_level",
+                "value": 1,
+                "live": true,
+                "total": 3
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 4051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 6,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "codex_level",
+                "value": 1,
+                "live": true,
+                "total": 4
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 5051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "resource",
+        "name": {
+          "ko": "연구소",
+          "en": "Laboratory"
+        },
+        "tab": "resource",
+        "tabIds": [
+          "resource"
+        ],
+        "rank": 1,
+        "maxRank": 7,
+        "next": {
+          "rank": 2,
+          "require": [
+            {
+              "kind": "stage",
+              "ref": 1051,
+              "need": 1,
+              "have": 0,
+              "ok": false
+            }
+          ],
+          "cost": [
+            {
+              "res": "gold",
+              "need": 3000,
+              "have": 2
+            },
+            {
+              "res": "iron_ore",
+              "need": 30,
+              "have": 97
+            },
+            {
+              "res": "timber",
+              "need": 30,
+              "have": 98
+            }
+          ],
+          "effects": [
+            {
+              "kind": "add",
+              "target": "resource_tier",
+              "value": 1,
+              "live": true
+            }
+          ],
+          "err": "locked"
+        },
+        "ranks": [
+          {
+            "rank": 1,
+            "built": true,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "resource_tier",
+                "value": 1,
+                "live": true,
+                "total": 1
+              }
+            ],
+            "require": []
+          },
+          {
+            "rank": 2,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "resource_tier",
+                "value": 1,
+                "live": true,
+                "total": 2
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 1051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 3,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "resource_tier",
+                "value": 1,
+                "live": true,
+                "total": 3
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 2051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 4,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "resource_tier",
+                "value": 1,
+                "live": true,
+                "total": 4
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 3051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 5,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "resource_tier",
+                "value": 1,
+                "live": true,
+                "total": 5
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 4051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 6,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "resource_tier",
+                "value": 1,
+                "live": true,
+                "total": 6
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 5051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          },
+          {
+            "rank": 7,
+            "built": false,
+            "pending": false,
+            "effects": [
+              {
+                "kind": "add",
+                "target": "resource_tier",
+                "value": 1,
+                "live": true,
+                "total": 7
+              }
+            ],
+            "require": [
+              {
+                "kind": "stage",
+                "ref": 6051,
+                "need": 1,
+                "have": 0,
+                "ok": false
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "shop": {
+    "cycle": 0,
+    "here": false,
+    "arriveAt": 1793318400000,
+    "leaveAt": 1793322000000,
+    "nextAt": 1793332800000,
+    "remainMs": 8851400,
+    "list": 0,
+    "level": 1,
+    "equip": [
+      {
+        "item": {
+          "uid": null,
+          "slot": "weapon",
+          "rarity": "magic",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "강탈의 숏 스태프",
+            "en": "Rapacious Short Staff"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "atk_pct",
+              "v": 0.59,
+              "src": "fixed"
+            },
+            {
+              "stat": "xp_gain_pct",
+              "v": 0.07,
+              "src": "greed"
+            },
+            {
+              "stat": "crit_damage",
+              "v": 0.04,
+              "src": "wrath"
+            }
+          ],
+          "sins": [
+            "greed"
+          ],
+          "words": [
+            3
+          ],
+          "group": "staff",
+          "baseId": "short_staff"
+        },
+        "gold": 1500,
+        "sold": false,
+        "locked": false
+      },
+      {
+        "item": {
+          "uid": null,
+          "slot": "weapon",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "해칫",
+            "en": "Hatchet"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "atk_pct",
+              "v": 0.35,
+              "src": "fixed"
+            },
+            {
+              "stat": "dmg_max_flat",
+              "v": 1,
+              "src": "lust"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "group": "axe",
+          "baseId": "hatchet"
+        },
+        "gold": 600,
+        "sold": false,
+        "locked": false
+      },
+      {
+        "item": {
+          "uid": null,
+          "slot": "weapon",
+          "rarity": "normal",
+          "ilvl": 2,
+          "up": 0,
+          "name": {
+            "ko": "미설",
+            "en": "Missal"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "atk_pct",
+              "v": 0.34,
+              "src": "fixed"
+            },
+            {
+              "stat": "cast_refund_chance",
+              "v": 0.05,
+              "src": "lust"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "group": "bible",
+          "baseId": "missal"
+        },
+        "gold": 600,
+        "sold": false,
+        "locked": false
+      },
+      {
+        "item": {
+          "uid": null,
+          "slot": "helmet",
+          "rarity": "rare",
+          "ilvl": 2,
+          "up": 0,
+          "name": {
+            "ko": "방탕과 앙심의 클로스 후드",
+            "en": "Debauched and Spiteful Cloth Hood"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 5
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 0.76,
+              "src": "fixed"
+            },
+            {
+              "stat": "kill_heal_pct",
+              "v": 0.03,
+              "src": "lust"
+            },
+            {
+              "stat": "res_max_fire",
+              "v": 0.03,
+              "src": "envy"
+            },
+            {
+              "stat": "def_flat",
+              "v": 4,
+              "src": "gluttony"
+            }
+          ],
+          "sins": [
+            "lust",
+            "envy"
+          ],
+          "words": [
+            2,
+            2
+          ],
+          "baseId": "helmet_cloth"
+        },
+        "gold": 3750,
+        "sold": false,
+        "locked": true
+      },
+      {
+        "item": {
+          "uid": null,
+          "slot": "armor",
+          "rarity": "magic",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "질투의 클로스 아머",
+            "en": "Jealous Cloth Armor"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 10
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 0.99,
+              "src": "fixed"
+            },
+            {
+              "stat": "proc_struck_debuff",
+              "v": 0.05,
+              "src": "envy",
+              "skill": "pri_bind"
+            },
+            {
+              "stat": "res_fire",
+              "v": 0.17,
+              "src": "wrath"
+            }
+          ],
+          "sins": [
+            "envy"
+          ],
+          "words": [
+            1
+          ],
+          "baseId": "armor_cloth"
+        },
+        "gold": 1500,
+        "sold": false,
+        "locked": true
+      },
+      {
+        "item": {
+          "uid": null,
+          "slot": "gloves",
+          "rarity": "magic",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "분노의 클로스 글러브",
+            "en": "Wrathful Cloth Gloves"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 3
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 0.16,
+              "src": "fixed"
+            },
+            {
+              "stat": "atk_pct",
+              "v": 0.06,
+              "src": "wrath"
+            },
+            {
+              "stat": "kill_heal_pct",
+              "v": 0.03,
+              "src": "lust"
+            }
+          ],
+          "sins": [
+            "wrath"
+          ],
+          "words": [
+            0
+          ],
+          "baseId": "gloves_cloth"
+        },
+        "gold": 1500,
+        "sold": false,
+        "locked": true
+      },
+      {
+        "item": {
+          "uid": null,
+          "slot": "boots",
+          "rarity": "normal",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "부츠",
+            "en": "Boots"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 3
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 0.37,
+              "src": "fixed"
+            },
+            {
+              "stat": "xp_gain_pct",
+              "v": 0.05,
+              "src": "greed"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "boots_start"
+        },
+        "gold": 600,
+        "sold": false,
+        "locked": true
+      },
+      {
+        "item": {
+          "uid": null,
+          "slot": "amulet",
+          "rarity": "magic",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "오만의 탈리스만",
+            "en": "Prideful Talisman"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "skill_plus",
+              "v": 1,
+              "skill": "mag_fireball",
+              "src": "fixed"
+            },
+            {
+              "stat": "hp_per_level",
+              "v": 3,
+              "src": "pride"
+            },
+            {
+              "stat": "freeze_dur_reduction",
+              "v": 0.12,
+              "src": "random"
+            }
+          ],
+          "sins": [
+            "pride"
+          ],
+          "words": [
+            0
+          ],
+          "baseId": "amulet_1"
+        },
+        "gold": 1500,
+        "sold": false,
+        "locked": true
+      },
+      {
+        "item": {
+          "uid": null,
+          "slot": "ring",
+          "rarity": "magic",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "착취의 글러턴 링",
+            "en": "Exploitative Glutton Ring"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "skill_tag",
+              "tag": "aura",
+              "effect": "value",
+              "v": 0.05,
+              "src": "fixed"
+            },
+            {
+              "stat": "xp_gain_pct",
+              "v": 0.05,
+              "src": "greed"
+            },
+            {
+              "stat": "cooldown_reduction",
+              "v": 0.03,
+              "src": "sloth"
+            }
+          ],
+          "sins": [
+            "greed"
+          ],
+          "words": [
+            1
+          ],
+          "baseId": "ring_3"
+        },
+        "gold": 1500,
+        "sold": false,
+        "locked": true
+      }
+    ],
+    "potions": [
+      {
+        "id": "minor_healing",
+        "tier": 1,
+        "heal": 50,
+        "gold": 50,
+        "have": 0
+      },
+      {
+        "id": "light_healing",
+        "tier": 2,
+        "heal": 100,
+        "gold": 100,
+        "have": 0
+      },
+      {
+        "id": "healing",
+        "tier": 3,
+        "heal": 200,
+        "gold": 200,
+        "have": 0
+      }
+    ],
+    "blueprints": [
+      {
+        "id": "arc_rapid",
+        "gold": 1500,
+        "sold": false,
+        "locked": true
+      },
+      {
+        "id": "war_ironskin",
+        "gold": 1500,
+        "sold": false,
+        "locked": true
+      },
+      {
+        "id": "kni_holyshield",
+        "gold": 1500,
+        "sold": false,
+        "locked": true
+      }
+    ],
+    "freeAt": 0,
+    "free": true,
+    "rerollCost": 0,
+    "open": true,
+    "trade": false,
+    "special": false
+  },
+  "heroItems": [
+    {
+      "uid": "h1",
+      "items": [
+        {
+          "uid": "i13",
+          "slot": "weapon",
+          "rarity": "normal",
+          "ilvl": 2,
+          "up": 2,
+          "name": {
+            "ko": "워 클럽",
+            "en": "War Club"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "atk_pct",
+              "v": 1.27,
+              "src": "fixed"
+            },
+            {
+              "stat": "magic_find",
+              "v": 0.06,
+              "src": "greed"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "group": "mace",
+          "baseId": "war_club"
+        },
+        {
+          "uid": "i42",
+          "slot": "helmet",
+          "rarity": "normal",
+          "ilvl": 6,
+          "up": 1,
+          "name": {
+            "ko": "클로스 후드",
+            "en": "Cloth Hood"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 6
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 1.12,
+              "src": "fixed"
+            },
+            {
+              "stat": "dr_flat",
+              "v": 1,
+              "src": "gluttony"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "helmet_cloth"
+        },
+        {
+          "uid": "i34",
+          "slot": "armor",
+          "rarity": "normal",
+          "ilvl": 5,
+          "up": 2,
+          "name": {
+            "ko": "클로스 아머",
+            "en": "Cloth Armor"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 12
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 1.53,
+              "src": "fixed"
+            },
+            {
+              "stat": "res_fire",
+              "v": 0.11,
+              "src": "wrath"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "armor_cloth"
+        },
+        {
+          "uid": "i39",
+          "slot": "gloves",
+          "rarity": "magic",
+          "ilvl": 6,
+          "up": 1,
+          "name": {
+            "ko": "광란의 클로스 글러브",
+            "en": "Rampaging Cloth Gloves"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 4
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 0.22,
+              "src": "fixed"
+            },
+            {
+              "stat": "crit_damage",
+              "v": 0.07,
+              "src": "wrath"
+            },
+            {
+              "stat": "cull_normal_pct",
+              "v": 0.06,
+              "src": "gluttony"
+            }
+          ],
+          "sins": [
+            "wrath"
+          ],
+          "words": [
+            2
+          ],
+          "baseId": "gloves_cloth"
+        },
+        {
+          "uid": "i50",
+          "slot": "boots",
+          "rarity": "normal",
+          "ilvl": 8,
+          "up": 0,
+          "name": {
+            "ko": "부츠",
+            "en": "Boots"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 4
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 0.93,
+              "src": "fixed"
+            },
+            {
+              "stat": "hp_flat",
+              "v": 22,
+              "src": "lust"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "boots_start"
+        },
+        {
+          "uid": "i40",
+          "slot": "amulet",
+          "rarity": "magic",
+          "ilvl": 8,
+          "up": 0,
+          "name": {
+            "ko": "경멸의 탈리스만",
+            "en": "Contemptuous Talisman"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "hp_per_level",
+              "v": 4,
+              "src": "pride"
+            },
+            {
+              "stat": "res_poison",
+              "v": 0.09,
+              "src": "random"
+            }
+          ],
+          "sins": [
+            "pride"
+          ],
+          "words": [
+            1
+          ],
+          "proc": {
+            "trigger": "struck",
+            "skill": "mag_ignite",
+            "v": 0.1
+          },
+          "baseId": "amulet_1"
+        },
+        {
+          "uid": "i7",
+          "slot": "ring",
+          "rarity": "magic",
+          "ilvl": 1,
+          "up": 0,
+          "name": {
+            "ko": "탐욕의 글러턴 링",
+            "en": "Greedy Glutton Ring"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "magic_find",
+              "v": 0.09,
+              "src": "greed"
+            },
+            {
+              "stat": "crit_rate",
+              "v": 0.02,
+              "src": "wrath"
+            }
+          ],
+          "sins": [
+            "greed"
+          ],
+          "words": [
+            0
+          ],
+          "baseId": "ring_3"
+        }
+      ]
+    },
+    {
+      "uid": "h2",
+      "items": [
+        {
+          "uid": "i44",
+          "slot": "weapon",
+          "rarity": "rare",
+          "ilvl": 11,
+          "up": 0,
+          "name": {
+            "ko": "방탕과 광란의 세라프 로드",
+            "en": "Debauched and Rampaging Seraph Rod"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "atk_pct",
+              "v": 0.36,
+              "src": "fixed"
+            },
+            {
+              "stat": "dmg_max_flat",
+              "v": 1,
+              "src": "lust"
+            },
+            {
+              "stat": "crit_damage",
+              "v": 0.05,
+              "src": "wrath"
+            },
+            {
+              "stat": "gold_find",
+              "v": 0.08,
+              "src": "greed"
+            }
+          ],
+          "sins": [
+            "lust",
+            "wrath"
+          ],
+          "words": [
+            2,
+            2
+          ],
+          "group": "crucifix",
+          "baseId": "seraph_rod"
+        },
+        {
+          "uid": "i21",
+          "slot": "helmet",
+          "rarity": "normal",
+          "ilvl": 4,
+          "up": 1,
+          "name": {
+            "ko": "클로스 후드",
+            "en": "Cloth Hood"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 6
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 0.57,
+              "src": "fixed"
+            },
+            {
+              "stat": "magic_find",
+              "v": 0.06,
+              "src": "greed"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "helmet_cloth"
+        },
+        {
+          "uid": "i9",
+          "slot": "armor",
+          "rarity": "magic",
+          "ilvl": 3,
+          "up": 0,
+          "name": {
+            "ko": "오만의 클로스 아머",
+            "en": "Prideful Cloth Armor"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 11
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 0.87,
+              "src": "fixed"
+            },
+            {
+              "stat": "def_per_level",
+              "v": 1,
+              "src": "pride"
+            },
+            {
+              "stat": "res_poison",
+              "v": 0.09,
+              "src": "envy"
+            }
+          ],
+          "sins": [
+            "pride"
+          ],
+          "words": [
+            0
+          ],
+          "baseId": "armor_cloth"
+        },
+        {
+          "uid": "i52",
+          "slot": "gloves",
+          "rarity": "magic",
+          "ilvl": 11,
+          "up": 0,
+          "name": {
+            "ko": "배신의 헤비 글러브",
+            "en": "Treacherous Heavy Gloves"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 1
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 1.73,
+              "src": "fixed"
+            },
+            {
+              "stat": "cast_speed_pct",
+              "v": 0.09,
+              "src": "fixed"
+            },
+            {
+              "stat": "def_ignore",
+              "v": 0.04,
+              "src": "envy"
+            },
+            {
+              "stat": "crit_damage",
+              "v": 0.06,
+              "src": "wrath"
+            }
+          ],
+          "sins": [
+            "envy"
+          ],
+          "words": [
+            3
+          ],
+          "group": "leather",
+          "baseId": "gloves_leather_1"
+        },
+        {
+          "uid": "i15",
+          "slot": "boots",
+          "rarity": "normal",
+          "ilvl": 5,
+          "up": 0,
+          "name": {
+            "ko": "부츠",
+            "en": "Boots"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 3
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 0.69,
+              "src": "fixed"
+            },
+            {
+              "stat": "def_flat",
+              "v": 6,
+              "src": "gluttony"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "boots_start"
+        },
+        {
+          "uid": "i18",
+          "slot": "amulet",
+          "rarity": "magic",
+          "ilvl": 7,
+          "up": 0,
+          "name": {
+            "ko": "집착의 탈리스만",
+            "en": "Obsessive Talisman"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "hp_recovery_pct",
+              "v": 0.06,
+              "src": "lust"
+            },
+            {
+              "stat": "dr_flat",
+              "v": 1,
+              "src": "random"
+            }
+          ],
+          "sins": [
+            "lust"
+          ],
+          "words": [
+            1
+          ],
+          "proc": {
+            "trigger": "struck",
+            "skill": "mag_deepfreeze",
+            "v": 0.09
+          },
+          "baseId": "amulet_1"
+        }
+      ]
+    },
+    {
+      "uid": "h3",
+      "items": [
+        {
+          "uid": "i28",
+          "slot": "weapon",
+          "rarity": "normal",
+          "ilvl": 5,
+          "up": 0,
+          "name": {
+            "ko": "세이크리드 글로브",
+            "en": "Sacred Globe"
+          },
+          "implicit": null,
+          "affixes": [
+            {
+              "stat": "atk_pct",
+              "v": 1.41,
+              "src": "fixed"
+            },
+            {
+              "stat": "xp_gain_pct",
+              "v": 0.06,
+              "src": "greed"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "group": "orb",
+          "baseId": "sacred_globe"
+        },
+        {
+          "uid": "i45",
+          "slot": "helmet",
+          "rarity": "magic",
+          "ilvl": 6,
+          "up": 0,
+          "name": {
+            "ko": "학살의 클로스 후드",
+            "en": "Slaughtering Cloth Hood"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 6
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 0.05,
+              "src": "fixed"
+            },
+            {
+              "stat": "crit_rate",
+              "v": 0.03,
+              "src": "wrath"
+            },
+            {
+              "stat": "fhr",
+              "v": 0.17,
+              "src": "wrath"
+            }
+          ],
+          "sins": [
+            "wrath"
+          ],
+          "words": [
+            3
+          ],
+          "baseId": "helmet_cloth"
+        },
+        {
+          "uid": "i27",
+          "slot": "armor",
+          "rarity": "magic",
+          "ilvl": 5,
+          "up": 0,
+          "name": {
+            "ko": "망각의 클로스 아머",
+            "en": "Forgotten Cloth Armor"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 12
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 0.45,
+              "src": "fixed"
+            },
+            {
+              "stat": "hp_pct",
+              "v": 0.05,
+              "src": "sloth"
+            },
+            {
+              "stat": "res_fire",
+              "v": 0.15,
+              "src": "wrath"
+            }
+          ],
+          "sins": [
+            "sloth"
+          ],
+          "words": [
+            3
+          ],
+          "baseId": "armor_cloth"
+        },
+        {
+          "uid": "i47",
+          "slot": "gloves",
+          "rarity": "normal",
+          "ilvl": 7,
+          "up": 0,
+          "name": {
+            "ko": "클로스 글러브",
+            "en": "Cloth Gloves"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 4
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 0.93,
+              "src": "fixed"
+            },
+            {
+              "stat": "gold_find",
+              "v": 0.07,
+              "src": "greed"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "gloves_cloth"
+        },
+        {
+          "uid": "i31",
+          "slot": "boots",
+          "rarity": "normal",
+          "ilvl": 6,
+          "up": 0,
+          "name": {
+            "ko": "부츠",
+            "en": "Boots"
+          },
+          "implicit": {
+            "stat": "def_flat",
+            "v": 4
+          },
+          "affixes": [
+            {
+              "stat": "armor_def_pct",
+              "v": 1.38,
+              "src": "fixed"
+            },
+            {
+              "stat": "fhr",
+              "v": 0.19,
+              "src": "wrath"
+            }
+          ],
+          "sins": [],
+          "words": [],
+          "baseId": "boots_start"
+        }
+      ]
+    },
+    {
+      "uid": "h4",
+      "items": []
+    }
+  ],
+  "stage": {
+    "stage_id": 1051,
+    "chapter": 1,
+    "stage_num": 5,
+    "cell": 1,
+    "stage_name_kr": "사탄의 제단",
+    "stage_name_en": "Satan's Altar",
+    "bg": 1,
+    "monster_type": "Demon",
+    "dlvl": 10,
+    "dlvl_nightmare": 34,
+    "boss_monster_idx": 1900,
+    "boss_grade": "chapter_boss",
+    "round_set": "boss_only",
+    "story_kr": "검게 그을린 제단에는 재가 얇게 쌓여 있었습니다. 그 위에 홀로 선 {m:1900|이/가} 날개를 펼치자 재가 흩어졌고, 돌 틈으로 밴 붉은빛이 드러났습니다. 뒤에서 들리던 병사들의 함성도 여기까지는 따라오지 못했습니다.\\n\\n오래전 그는 바알이 아끼던 자의 등에 칼을 꽂았습니다. 바알은 그를 지옥 밖으로 내던졌고, 그가 떨어진 들판은 지금까지 타고 있었습니다. 제단 아래에 선 바알의 신발 밑창에도 그 불길이 스며들었습니다. 한때 내려다보던 얼굴이 이제 머리 위에 있었습니다.\\n\\n{leader|이/가} 제단과 바알 사이에 섰습니다. {m:1900|은/는} 용병을 훑어본 뒤 그 뒤의 인간에게 시선을 멈췄습니다. 바알은 물러서지 않고 손을 들었습니다.\\n“그때의 당신이었다면 도망쳤을 겁니다. 그런데 지금은, 남을 앞세우는군요.”",
+    "story_en": "A thin layer of ash covered the blackened altar. Alone upon it, {m:1900} spread his wings. The ash scattered, exposing red light seeping through cracks in the stone. Even the soldiers' shouting behind them failed to reach this place.\\n\\nLong ago, he had driven a blade into the back of the one Baal favored. Baal hurled him out of Hell, and the field where he fell had burned ever since. That same heat now crept through Baal's soles below the altar. The face he once looked down upon stood above him.\\n\\n{leader} stepped between Baal and the altar. {m:1900} glanced over the mercenary before fixing his gaze on the human behind them. Baal held his ground and raised a hand.\\n“I would have run from the king you were. Now you send others before you.”"
+  },
+  "baseline": "current",
+  "page_errors": [],
+  "external_requests": []
+}

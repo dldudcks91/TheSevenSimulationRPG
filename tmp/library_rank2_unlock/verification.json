@@ -1,0 +1,26 @@
+{
+  "title": "PASS 809/809",
+  "failures": [],
+  "errors": [],
+  "focused": {
+    "checks": {
+      "level9_blocked_even_after_boss": true,
+      "rejected_build_preserves_state": true,
+      "one_level10_hero_without_clear_can_build": true,
+      "upgrade_spends3000_and_opens_craft": true,
+      "localized_condition": true
+    },
+    "labels": {
+      "ko": "최고 영웅 Lv.10 / 10",
+      "en": "Top hero Lv.10 / 10"
+    },
+    "low": {
+      "ok": false,
+      "err": "locked"
+    },
+    "built": {
+      "ok": true,
+      "rank": 2
+    }
+  }
+}

@@ -1,0 +1,281 @@
+{
+  "checks": [
+    {
+      "name": "lab random training is available with owned heroes at level 1",
+      "ok": true
+    },
+    {
+      "name": "lab random training remains available below the real entry level",
+      "ok": true
+    },
+    {
+      "name": "raid is a lab tool, with no separate sidebar entry",
+      "ok": true
+    },
+    {
+      "name": "lab tools are ordered Item Generator then Raid",
+      "ok": true
+    },
+    {
+      "name": "three parties and nine hero cards",
+      "ok": true
+    },
+    {
+      "name": "raid has no tactical command buttons or auto command control",
+      "ok": true
+    },
+    {
+      "name": "reroll changes the nine random hero cards before combat",
+      "ok": true
+    },
+    {
+      "name": "own party entry retains its real entry rules on a new save",
+      "ok": true
+    },
+    {
+      "name": "rapid normal battle FX replace their completion listener",
+      "ok": true
+    },
+    {
+      "name": "reroll is disabled while the random encounter is running",
+      "ok": true
+    },
+    {
+      "name": "raid effects reuse elements without forced width reads or new particle trees",
+      "ok": true
+    },
+    {
+      "name": "raid animations avoid portrait filters",
+      "ok": true
+    },
+    {
+      "name": "background clock refresh preserves the live battlefield",
+      "ok": true
+    },
+    {
+      "name": "item generator remains available and switching tools pauses raid",
+      "ok": true
+    },
+    {
+      "name": "returning to Raid resumes the same encounter",
+      "ok": true
+    },
+    {
+      "name": "pause freezes combat time",
+      "ok": true
+    },
+    {
+      "name": "leaving raid pauses the trial",
+      "ok": true
+    },
+    {
+      "name": "return resumes the same encounter",
+      "ok": true
+    },
+    {
+      "name": "lab remembers its selected raid tool",
+      "ok": true
+    },
+    {
+      "name": "hidden document pauses the trial",
+      "ok": true
+    },
+    {
+      "name": "language switch preserves encounter",
+      "ok": true
+    },
+    {
+      "name": "English labels are translated",
+      "ok": true
+    },
+    {
+      "name": "expanded battlefield uses the menu space",
+      "ok": true
+    },
+    {
+      "name": "completed encounter opens results",
+      "ok": true
+    },
+    {
+      "name": "results show party damage healing and survivors without command totals",
+      "ok": true
+    },
+    {
+      "name": "trial does not mutate hero equipment or progress",
+      "ok": true
+    },
+    {
+      "name": "retry starts a new encounter",
+      "ok": true
+    },
+    {
+      "name": "retreat exits a trial immediately",
+      "ok": true
+    },
+    {
+      "name": "raid help is inside the lab folder",
+      "ok": true
+    },
+    {
+      "name": "direct route opens random training at level 29: dev=newgame&tab=lab&lab=raid",
+      "ok": true
+    },
+    {
+      "name": "lab route: dev=newgame&tab=lab&lab=raid",
+      "ok": true
+    },
+    {
+      "name": "direct route starts random training below level 30: dev=newgame&tab=lab&lab=raid",
+      "ok": true
+    },
+    {
+      "name": "direct route opens random training at level 29: dev=newgame&tab=raid",
+      "ok": true
+    },
+    {
+      "name": "lab route: dev=newgame&tab=raid",
+      "ok": true
+    },
+    {
+      "name": "direct route starts random training below level 30: dev=newgame&tab=raid",
+      "ok": true
+    },
+    {
+      "name": "local artwork loads",
+      "ok": true
+    },
+    {
+      "name": "no browser exceptions",
+      "ok": true
+    }
+  ],
+  "combat": {
+    "checks": [
+      {
+        "name": "three full parties and unique hero identities",
+        "ok": true
+      },
+      {
+        "name": "fixed practice roster is copied on every request",
+        "ok": true
+      },
+      {
+        "name": "lab rosters vary with their seed and remain repeatable without touching the fixed fixture",
+        "ok": true
+      },
+      {
+        "name": "combat leaves input snapshots untouched",
+        "ok": true
+      },
+      {
+        "name": "boss metadata and anti-demon damage use the existing combat rules",
+        "ok": true
+      },
+      {
+        "name": "same seed produces identical timeline and result",
+        "ok": true
+      },
+      {
+        "name": "frame chunking preserves the full result",
+        "ok": true
+      },
+      {
+        "name": "duplicate heroes rejected",
+        "ok": true
+      },
+      {
+        "name": "missing party rejected",
+        "ok": true
+      },
+      {
+        "name": "healing skills stay within the caster party",
+        "ok": true
+      },
+      {
+        "name": "auras stay within their party",
+        "ok": true
+      },
+      {
+        "name": "summons enter the shared target pool while their allies remain party scoped",
+        "ok": true
+      },
+      {
+        "name": "boss hits only announced lanes",
+        "ok": true
+      },
+      {
+        "name": "taunt and duel from another lane cannot redirect an announced hit",
+        "ok": true
+      },
+      {
+        "name": "raid tactics expose no controls, tuning fields or combat effects",
+        "ok": true
+      },
+      {
+        "name": "cast breaks suppress that heavy impact",
+        "ok": true
+      },
+      {
+        "name": "failed cast breaks resolve the heavy raid-wide attack",
+        "ok": true
+      },
+      {
+        "name": "timeout occurs exactly on its configured tick",
+        "ok": true
+      },
+      {
+        "name": "wipe terminates and one fallen party does not end the raid",
+        "ok": true
+      },
+      {
+        "name": "combat phases and result totals remain finite",
+        "ok": true
+      },
+      {
+        "name": "finished raids ignore further advances",
+        "ok": true
+      },
+      {
+        "name": "entry stays locked below level 30 and opens exactly at level 30",
+        "ok": true
+      },
+      {
+        "name": "empty rosters remain level locked",
+        "ok": true
+      },
+      {
+        "name": "entry level is read from the encounter data",
+        "ok": true
+      },
+      {
+        "name": "invalid unlock levels are rejected",
+        "ok": true
+      },
+      {
+        "name": "new saves report the real-party level requirement independently of lab practice",
+        "ok": true
+      },
+      {
+        "name": "reaching the entry level keeps the own-party Hell clear requirement",
+        "ok": true
+      },
+      {
+        "name": "Hell clear opens three full own parties and snapshots actual combat values",
+        "ok": true
+      },
+      {
+        "name": "own parties reject duplicates and expedition or exploration occupancy",
+        "ok": true
+      },
+      {
+        "name": "retreat finishes at the current time and cannot emit duplicate end events",
+        "ok": true
+      }
+    ],
+    "passed": 30,
+    "total": 30
+  },
+  "calibration": null,
+  "errors": [],
+  "assets": []
+}

@@ -1,0 +1,47 @@
+{
+  "passed": 9,
+  "total": 10,
+  "checks": [
+    {
+      "name": "direct dev route shows lock without mounting a raid session",
+      "ok": true
+    },
+    {
+      "name": "raid tab has lock icon, disabled state and required level title",
+      "ok": true
+    },
+    {
+      "name": "locked raid leaves item generator accessible",
+      "ok": true
+    },
+    {
+      "name": "level 29 remains locked with current level shown",
+      "ok": false
+    },
+    {
+      "name": "level 30 opens the battlefield and tab",
+      "ok": true
+    },
+    {
+      "name": "lowering below required level blocks an existing session view",
+      "ok": true
+    },
+    {
+      "name": "English lock text is translated",
+      "ok": true
+    },
+    {
+      "name": "direct route remains locked ?tab=lab&lab=raid&lang=en",
+      "ok": true
+    },
+    {
+      "name": "direct route remains locked ?tab=raid&lang=en",
+      "ok": true
+    },
+    {
+      "name": "browser has no runtime errors",
+      "ok": true
+    }
+  ],
+  "errors": []
+}

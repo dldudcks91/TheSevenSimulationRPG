@@ -13,6 +13,7 @@
 const KEY = 'thesevensim.save';
 const TRACK_KEY = 'thesevensim.track';
 const NOTIFICATION_DISMISSED_KEY = 'thesevensim.notificationDismissed';
+const TUTORIAL_SEEN_KEY = 'thesevensim.tutorialSeen';
 
 export function loadSave() {
     try {
@@ -67,6 +68,32 @@ export function writeNotificationDismissed(gameId, ids) {
         return true;
     } catch (e) {
         console.warn('notifications: dismissal write failed', e);
+        return false;
+    }
+}
+
+/** 초반 안내 확인 기록 — null은 안내를 시작하지 않은 기존 게임, []는 새로 안내를 시작한 게임이다. */
+export function loadTutorialSeen(gameId) {
+    if (typeof gameId !== 'string' || !gameId.length) return null;
+    try {
+        const records = JSON.parse(localStorage.getItem(TUTORIAL_SEEN_KEY) ?? '{}');
+        return records && !Array.isArray(records) && Array.isArray(records[gameId])
+            ? notificationIds(records[gameId]) : null;
+    } catch { return null; }
+}
+
+export function writeTutorialSeen(gameId, ids) {
+    if (typeof gameId !== 'string' || !gameId.length || !Array.isArray(ids)) return false;
+    try {
+        let records;
+        try { records = JSON.parse(localStorage.getItem(TUTORIAL_SEEN_KEY) ?? '{}'); } catch {}
+        if (!records || typeof records !== 'object' || Array.isArray(records)) records = {};
+        const next = Object.assign(Object.create(null), records);
+        next[gameId] = notificationIds(ids);
+        localStorage.setItem(TUTORIAL_SEEN_KEY, JSON.stringify(next));
+        return true;
+    } catch (e) {
+        console.warn('tutorial: progress write failed', e);
         return false;
     }
 }

@@ -98,13 +98,17 @@ const clamp01 = v => Math.max(0, Math.min(1, v));
    창은 행동을 넘지 않는다 — 시뮬이 행동 예약을 끝 시각 뒤로 밀기 때문이다(INTERFACE §2-6 「경직」). 계산이 아니라 이벤트 시각을 빼는 표시값이다 */
 /** 마지막 행동 이후 경직으로 선 시간 — 행동 게이지가 그만큼 덜 찬다 */
 const stalledFor = (u, now) => (u.stalls ?? []).reduce((s, w) => s + Math.max(0, Math.min(w.to, now) - Math.max(w.from, u.lastAct)), 0);
+/** 빠른 연타는 공격 바를 가득 유지한다 — 러시 · 래피드 샷 (ADR-0994) */
+const isBurstChannel = id => id === 'kni_rush' || id === 'arc_rapid';
 /**
- * 정신 집중의 게이지 [2026-10-22 · R318 · ADR-0720] — 차지 않고 **거꾸로 닳는다**: 방(`skill` 의 `chan` · `chan`)마다 남은 방 ÷ (방 수 − 1) 로 맞추고
- *   다음 방까지 방 사이 간격으로 닳린다(끊어 치기 = 주기 · 계속 닳기 = 시뮬이 실은 `iv` · 경직으로 선 시간은 뺀다 · 다음 방이 늦으면 그 칸에서 선다) · 마지막 방에 0.
+ * 정신 집중의 게이지 [R318 · ADR-0720 · ADR-0994] — 러시 · 래피드 샷은 **가득 유지**, 나머지는 **거꾸로 닳는다**:
+ *   방(`skill` 의 `chan` · `chan`)마다 남은 방 ÷ (방 수 − 1) 로 맞추고 다음 방까지 시뮬이 실은 `iv` 로 닳린다.
+ *   경직으로 선 시간은 뺀다 · 다음 방이 늦으면 그 칸에서 선다 · 마지막 방에 0.
  *   계산이 아니라 이벤트 시각을 그리는 표시값이다
  */
 const chanFill = (u, now) => {
     const c = u.chan;
+    if (isBurstChannel(c.s)) return 1;
     if (!(c.n > 1)) return 0;
     const stall = (u.stalls ?? []).reduce((s, w) => s + Math.max(0, Math.min(w.to, now) - Math.max(w.from, c.at)), 0);
     return clamp01((c.left - Math.min(1, Math.max(0, now - c.at - stall) / (c.iv ?? u.period))) / (c.n - 1));
@@ -872,7 +876,7 @@ function renderUnits(state, root) {
             const slots = cdSlots(u);
             n.innerHTML = unitInner(u, state, v2, sprite, slots);
             // 올려놓으면 뜬다 — **양 진영이 같은 카드다**: 착용 장비 첫 장 + Alt 세부 옵션 (SCREEN_DESIGN §2 · ADR-0171 · 몬스터 ADR-0183). 스킬 칸은 그 스킬.
-            // 세부 옵션은 영웅이 앱이 넘긴 `combatOf`(= game.heroCombat) · 몬스터가 `round` 이벤트의 `sheet`,
+            // 세부 옵션은 영웅이 앱이 넘긴 전투 시트(원정 `game.runCombat` · 결투 스냅숏) · 몬스터가 `round` 이벤트의 `sheet`,
             //   한 벌은 영웅이 `itemOf` 로 푼 `equipped` · 몬스터가 같은 이벤트의 `gear` 다. 소환물(벽)은 둘 다 아니라 안 뜬다.
             // 옛 title 속성은 걷었다: 같은 자리에 브라우저 기본 툴팁이 겹쳐 뜬다
             // 카드의 툴팁은 커서가 아니라 **카드 옆**에 선다 — 크고 오래 읽는 카드라 따라다니면 흔들린다 (2026-09-15 · ADR-0120). 스킬 칸은 커서를 따른다
@@ -882,7 +886,8 @@ function renderUnits(state, root) {
                 it => state.itemTipOf?.(u.hero, it) ?? null), { anchor: true, holdOnAlt: true });
             // 몬스터 장비의 아이템 카드도 영웅 · 캐릭터 탭과 같다 — 스킬 칸의 숫자는 그 몬스터의 표시값이다 (ADR-0183 · ADR-0312)
             else if (u.side === 'enemy') bindTipNode(n, () => monsterTipCard(u,
-                it => state.monsterItemTipOf?.(it, unitSkillCtx(u), u.sheet?.level) ?? null), { anchor: true, holdOnAlt: true });
+                it => state.monsterItemTipOf?.(it, unitSkillCtx(u), u.sheet?.level) ?? null,
+                { skills: slots }), { anchor: true, holdOnAlt: true });
             // 영웅 카드 클릭 = **장착 대상 고르기** [2026-09-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-0137] — 아래 보관 칸이 그 영웅을 향한다. 몬스터 · 소환물은 클릭이 없다
             // 반짝이는 레벨 — **카드 어디를 눌러도** 지금 레벨을 본 것으로 친다(앱의 화면 상태) · 장착 대상 고르기보다 먼저 건다: 고르기가 화면을 다시 그려도 본 레벨이 먼저 적힌다 (ADR-0463)
             const lvNew = n.querySelector('.unit-lv.lv-new');
@@ -1023,7 +1028,7 @@ function refreshUnit(state, u) {
     // **경직된 동안은 선다** (R110 · ADR-0154) — 경직으로 선 시간을 경과에서 뺀다. 시뮬이 행동 예약을 그만큼 밀었으므로 다시 차오른 끝에 행동한다
     // **마법 무기는 칸으로 갈린다** (R200 · ADR-0483) — 찬 칸 = 가득 · 지금 차는 칸 = 마지막 칸 시작 이후 경과 ÷ 주기(경직 · 스턴으로 선 시간을 뺀다) · 나머지 빈 칸.
     //   다 찼으면 게이지가 선다. 칸이 비는 것(시전)은 스냅 — 칸마다 앞 값보다 줄면 전환을 끈다
-    // **정신 집중 동안은 거꾸로 닳는다** (R318 · ADR-0720) — 물리 = 한 줄 · 마법 = 쓴 칸 하나(남은 칸 바로 뒤)만 · 닳는 것은 전환을 둔다(눈금 사이를 잇는다)
+    // **러시 · 래피드 샷은 가득 유지, 나머지 정신 집중은 거꾸로 닳는다** (ADR-0994 · ADR-0720) — 물리 = 한 줄 · 마법 = 쓴 칸 하나(남은 칸 바로 뒤)만 · 닳는 것은 전환을 둔다
     const segs = u.node.querySelectorAll('.act-seg > .act-fill');
     if (segs.length) {
         const n = u.hp <= 0 ? 0 : u.charges ?? 0;
@@ -1688,6 +1693,9 @@ function drain(state, root, opts) {
  * 몬스터도 영웅과 같이 능력치 계수를 탄다 — 전투(`battle.makeEnemy`)와 같은 규칙 (SCREEN_DESIGN §2 · ADR-0298)
  */
 const unitSkillCtx = (u, combatOf = null) => ({
+    skillTags: (u.side === 'party' ? combatOf?.(u.hero) : u.sheet)?.option_fx?.skillTags,
+    atkPct: (u.side === 'party' ? combatOf?.(u.hero) : u.sheet)?.atk_pct_sum,
+    healOut: (u.side === 'party' ? combatOf?.(u.hero) : u.sheet)?.option_fx?.healOut,
     period: u.period, atkMin: u.atkMin, atkMax: u.atkMax, matkMin: u.matkMin, matkMax: u.matkMax,
     hpMax: u.hpMax, atkType: u.atkType, stats: u.stats,
     // 설명창의 실제 쿨 — 쿨감 (ADR-0703) = **그 유닛 툴팁 세부 옵션의 지금 값**(ADR-0708): 바탕(영웅 `combatOf` — 원정은 그 런의 전투 능력치 · 신단 포함 /
@@ -1792,9 +1800,9 @@ function apply(state, root, opts, ev) {
             const u = U(ev.u);
             if (u) {
                 u.chan = null;
-                // 닫힘은 새 행동이 아니다 — 마지막 방이 세운 `acted` 를 눕혀 꽉 찬 프레임 없이 0 에서 다시 찬다(물리는 이 시각부터 · 시뮬 `next = period` 그대로 · 마법은 아래 chargeTo)
+                // 빠른 연타는 마지막 타격의 꽉 찬 프레임을 지킨다(ADR-0994). 나머지는 닫힐 때 0 에서 다시 찬다.
+                u.acted = isBurstChannel(ev.s) && u.acted;
                 if (!u.noBasic) { u.lastAct = ev.t; u.stalls = []; }
-                u.acted = false;
                 const s = u.skills?.find(x => x.id === ev.s && x.readyAt === Infinity);
                 if (s) { s.firedAt = ev.t; s.readyAt = ev.ready; }
                 chargeTo(u, ev.ch, ev.t, true);

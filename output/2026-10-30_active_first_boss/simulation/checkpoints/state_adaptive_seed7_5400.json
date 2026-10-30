@@ -1,0 +1,6838 @@
+{
+  "version": 44,
+  "seed": 7,
+  "createdAt": 1793318400000,
+  "savedAt": 1793323800000,
+  "expMs": 4780400,
+  "resources": {
+    "gold": 5064,
+    "stigma": 0
+  },
+  "materials": {
+    "dust": 77,
+    "iron_ore": 15,
+    "timber": 13,
+    "herb": 15
+  },
+  "advancing": [],
+  "resourceProduction": [
+    {
+      "post": "mine",
+      "at": 1793323800000,
+      "carry": 0.09126006944444431
+    },
+    {
+      "post": "gather",
+      "at": 1793323800000,
+      "carry": 0.09126006944444431
+    },
+    {
+      "post": "log",
+      "at": 1793323800000,
+      "carry": 0.09126006944444431
+    }
+  ],
+  "labNodes": {},
+  "labResearch": null,
+  "labReg": {
+    "h1": "res"
+  },
+  "labSince": {
+    "h1": 1793318700000
+  },
+  "labClock": {
+    "gamble": null,
+    "train": null,
+    "lib": null
+  },
+  "potions": {},
+  "books": {
+    "kni_holyshield": 1,
+    "arc_snipe": 1,
+    "war_ironskin": 1
+  },
+  "blueprints": {
+    "war_leap": 1,
+    "arc_multishot": 1,
+    "kni_charge": 2,
+    "mag_fireball": 1,
+    "pri_cure": 1,
+    "mag_inferno": 1,
+    "war_ironskin": 1,
+    "war_bash": 3,
+    "pri_judgment": 2,
+    "arc_rapid": 4,
+    "kni_resistshield": 1,
+    "war_doubleswing": 1,
+    "war_recovery": 2,
+    "pri_heal": 1,
+    "mag_lightning": 1,
+    "mag_chain": 5,
+    "kni_holyshield": 1
+  },
+  "heroes": [
+    {
+      "uid": "h1",
+      "name": {
+        "ko": "우르술라",
+        "en": "Ursula"
+      },
+      "tier": "rare",
+      "sin": "greed",
+      "cls": "warrior",
+      "trait": {
+        "ko": "무쇠 팔",
+        "en": "Iron Arm"
+      },
+      "face": "warrior_3",
+      "level": 20,
+      "xp": 35653,
+      "mastery": {
+        "cls_warrior_t1_atk": 5,
+        "cls_warrior_t1_resall": 5,
+        "cls_warrior_t1_hp": 5,
+        "cls_warrior_t2_heavy": 4
+      },
+      "masteryPoints": 0,
+      "innate": "war_recovery",
+      "stats": {
+        "str": 13,
+        "agi": 8,
+        "int": 10,
+        "vit": 14,
+        "luck": 14,
+        "ldr": 7,
+        "cha": 9
+      },
+      "equipped": {
+        "weapon": "i88",
+        "helmet": "i53",
+        "armor": "i75",
+        "gloves": "i52",
+        "boots": "i57",
+        "amulet": "i63",
+        "ring1": "i84",
+        "ring2": "i82"
+      }
+    },
+    {
+      "uid": "h2",
+      "name": {
+        "ko": "피오나",
+        "en": "Fiona"
+      },
+      "tier": "magic",
+      "sin": "wrath",
+      "cls": "archer",
+      "trait": {
+        "ko": "다혈질",
+        "en": "Hot-Blooded"
+      },
+      "face": "archer_1",
+      "level": 20,
+      "xp": 41952,
+      "mastery": {
+        "cls_archer_t1_atkspeed": 5,
+        "cls_archer_t1_hitbonus": 5,
+        "cls_archer_t1_critchance": 5,
+        "sin_wrath_t1_atkspeed": 4
+      },
+      "masteryPoints": 0,
+      "innate": "arc_multishot",
+      "stats": {
+        "str": 13,
+        "agi": 12,
+        "int": 8,
+        "vit": 12,
+        "luck": 10,
+        "ldr": 6,
+        "cha": 6
+      },
+      "equipped": {
+        "weapon": "i91",
+        "helmet": "i14",
+        "armor": "i78",
+        "gloves": "i56",
+        "boots": "i23",
+        "amulet": "i25",
+        "ring1": "i34",
+        "ring2": "i50"
+      }
+    },
+    {
+      "uid": "h3",
+      "name": {
+        "ko": "케이든",
+        "en": "Caden"
+      },
+      "tier": "normal",
+      "sin": "envy",
+      "cls": "knight",
+      "trait": {
+        "ko": "강골",
+        "en": "Sturdy"
+      },
+      "face": "knight_4",
+      "level": 20,
+      "xp": 5355,
+      "mastery": {
+        "cls_knight_t1_dr": 5,
+        "cls_knight_t1_def": 5,
+        "cls_knight_t1_hp": 5,
+        "cls_knight_t2_sword2h": 3
+      },
+      "masteryPoints": 1,
+      "innate": "kni_resistshield",
+      "stats": {
+        "str": 10,
+        "agi": 11,
+        "int": 12,
+        "vit": 5,
+        "luck": 5,
+        "ldr": 9,
+        "cha": 7
+      },
+      "equipped": {
+        "weapon": "i104",
+        "helmet": "i61",
+        "armor": "i12",
+        "gloves": "i96",
+        "boots": "i65",
+        "amulet": null,
+        "ring1": null,
+        "ring2": null
+      }
+    },
+    {
+      "name": {
+        "ko": "고블린 짐꾼",
+        "en": "Goblin Porter"
+      },
+      "tier": "growth",
+      "sin": "envy",
+      "cls": "knight",
+      "trait": {
+        "ko": "탐구심",
+        "en": "Inquisitive"
+      },
+      "face": "goblin_porter",
+      "level": 1,
+      "xp": 0,
+      "mastery": {},
+      "masteryPoints": 0,
+      "innate": "kni_rush",
+      "stats": {
+        "str": 5,
+        "agi": 5,
+        "int": 5,
+        "vit": 5,
+        "luck": 5,
+        "ldr": 5,
+        "cha": 5
+      },
+      "equipped": {
+        "weapon": null,
+        "helmet": null,
+        "armor": null,
+        "gloves": null,
+        "boots": null,
+        "amulet": null,
+        "ring1": null,
+        "ring2": null
+      },
+      "uid": "h4",
+      "growthSeed": 321683826
+    }
+  ],
+  "items": {
+    "i12": {
+      "uid": "i12",
+      "slot": "armor",
+      "rarity": "rare",
+      "ilvl": 4,
+      "up": 3,
+      "name": {
+        "ko": "허기와 방탕의 클로스 아머",
+        "en": "Hungering and Debauched Cloth Armor"
+      },
+      "implicit": {
+        "stat": "def_flat",
+        "v": 11
+      },
+      "affixes": [
+        {
+          "stat": "armor_def_pct",
+          "v": 1.7,
+          "src": "fixed"
+        },
+        {
+          "stat": "res_all",
+          "v": 0.03,
+          "src": "gluttony"
+        },
+        {
+          "stat": "hp_regen",
+          "v": 0.4,
+          "src": "lust"
+        },
+        {
+          "stat": "res_cold",
+          "v": 0.14,
+          "src": "sloth"
+        }
+      ],
+      "sins": [
+        "gluttony",
+        "lust"
+      ],
+      "words": [
+        1,
+        2
+      ],
+      "baseId": "armor_cloth"
+    },
+    "i14": {
+      "uid": "i14",
+      "slot": "helmet",
+      "rarity": "normal",
+      "ilvl": 5,
+      "up": 3,
+      "name": {
+        "ko": "클로스 후드",
+        "en": "Cloth Hood"
+      },
+      "implicit": {
+        "stat": "def_flat",
+        "v": 6
+      },
+      "affixes": [
+        {
+          "stat": "armor_def_pct",
+          "v": 1.66,
+          "src": "fixed"
+        },
+        {
+          "stat": "res_fire",
+          "v": 0.13,
+          "src": "wrath"
+        }
+      ],
+      "sins": [],
+      "words": [],
+      "baseId": "helmet_cloth"
+    },
+    "i23": {
+      "uid": "i23",
+      "slot": "boots",
+      "rarity": "normal",
+      "ilvl": 6,
+      "up": 3,
+      "name": {
+        "ko": "부츠",
+        "en": "Boots"
+      },
+      "implicit": {
+        "stat": "def_flat",
+        "v": 4
+      },
+      "affixes": [
+        {
+          "stat": "armor_def_pct",
+          "v": 1.97,
+          "src": "fixed"
+        },
+        {
+          "stat": "freeze_dur_reduction",
+          "v": 0.14,
+          "src": "sloth"
+        }
+      ],
+      "sins": [],
+      "words": [],
+      "baseId": "boots_start"
+    },
+    "i25": {
+      "uid": "i25",
+      "slot": "amulet",
+      "rarity": "rare",
+      "ilvl": 9,
+      "up": 0,
+      "name": {
+        "ko": "배신과 경멸의 탈리스만",
+        "en": "Treacherous and Contemptuous Talisman"
+      },
+      "implicit": null,
+      "affixes": [
+        {
+          "stat": "skill_plus",
+          "v": 1,
+          "skill": "arc_rapid",
+          "src": "fixed"
+        },
+        {
+          "stat": "res_down_pct",
+          "v": 0.05,
+          "src": "envy"
+        },
+        {
+          "stat": "hp_per_level",
+          "v": 5,
+          "src": "pride"
+        },
+        {
+          "stat": "stun_dur_reduction",
+          "v": 0.16,
+          "src": "random"
+        }
+      ],
+      "sins": [
+        "envy",
+        "pride"
+      ],
+      "words": [
+        3,
+        1
+      ],
+      "baseId": "amulet_1"
+    },
+    "i34": {
+      "uid": "i34",
+      "slot": "ring",
+      "rarity": "magic",
+      "ilvl": 11,
+      "up": 0,
+      "name": {
+        "ko": "색욕의 글러턴 링",
+        "en": "Lustful Glutton Ring"
+      },
+      "implicit": null,
+      "affixes": [
+        {
+          "stat": "skill_tag",
+          "tag": "aura",
+          "effect": "value",
+          "v": 0.05,
+          "src": "fixed"
+        },
+        {
+          "stat": "res_lightning",
+          "v": 0.15,
+          "src": "lust"
+        },
+        {
+          "stat": "res_all",
+          "v": 0.06,
+          "src": "gluttony"
+        }
+      ],
+      "sins": [
+        "lust"
+      ],
+      "words": [
+        0
+      ],
+      "baseId": "ring_3"
+    },
+    "i50": {
+      "uid": "i50",
+      "slot": "ring",
+      "rarity": "rare",
+      "ilvl": 12,
+      "up": 0,
+      "name": {
+        "ko": "나태와 격노의 글러턴 링",
+        "en": "Slothful and Raging Glutton Ring"
+      },
+      "implicit": null,
+      "affixes": [
+        {
+          "stat": "skill_tag",
+          "tag": "single",
+          "effect": "damage",
+          "v": 0.03,
+          "src": "fixed"
+        },
+        {
+          "stat": "buff_dur_pct",
+          "v": 0.06,
+          "src": "sloth"
+        },
+        {
+          "stat": "crit_rate",
+          "v": 0.03,
+          "src": "wrath"
+        },
+        {
+          "stat": "hp_regen",
+          "v": 0.3,
+          "src": "lust"
+        }
+      ],
+      "sins": [
+        "sloth",
+        "wrath"
+      ],
+      "words": [
+        0,
+        1
+      ],
+      "baseId": "ring_3"
+    },
+    "i52": {
+      "uid": "i52",
+      "slot": "gloves",
+      "rarity": "normal",
+      "ilvl": 11,
+      "up": 3,
+      "name": {
+        "ko": "건틀릿",
+        "en": "Gauntlets"
+      },
+      "implicit": {
+        "stat": "def_flat",
+        "v": 4
+      },
+      "affixes": [
+        {
+          "stat": "armor_def_pct",
+          "v": 1.23,
+          "src": "fixed"
+        },
+        {
+          "stat": "damage_reduction",
+          "v": 0.06,
+          "src": "fixed"
+        },
+        {
+          "stat": "hp_pct",
+          "v": 0.03,
+          "src": "sloth"
+        }
+      ],
+      "sins": [],
+      "words": [],
+      "group": "gauntlet",
+      "baseId": "gloves_gauntlet_1"
+    },
+    "i53": {
+      "uid": "i53",
+      "slot": "helmet",
+      "rarity": "magic",
+      "ilvl": 13,
+      "up": 3,
+      "name": {
+        "ko": "허기의 그레이트 헬름",
+        "en": "Hungering Great Helm"
+      },
+      "implicit": {
+        "stat": "def_flat",
+        "v": 8
+      },
+      "affixes": [
+        {
+          "stat": "armor_def_pct",
+          "v": 0.69,
+          "src": "fixed"
+        },
+        {
+          "stat": "hp_pct",
+          "v": 0.09,
+          "src": "fixed"
+        },
+        {
+          "stat": "dr_flat",
+          "v": 1,
+          "src": "gluttony"
+        },
+        {
+          "stat": "buff_dur_pct",
+          "v": 0.08,
+          "src": "sloth"
+        }
+      ],
+      "sins": [
+        "gluttony"
+      ],
+      "words": [
+        1
+      ],
+      "group": "plate",
+      "baseId": "helmet_plate_1"
+    },
+    "i56": {
+      "uid": "i56",
+      "slot": "gloves",
+      "rarity": "rare",
+      "ilvl": 13,
+      "up": 2,
+      "name": {
+        "ko": "폭식과 찬탈의 헤비 글러브",
+        "en": "Gluttonous and Usurping Heavy Gloves"
+      },
+      "implicit": {
+        "stat": "def_flat",
+        "v": 2
+      },
+      "affixes": [
+        {
+          "stat": "armor_def_pct",
+          "v": 0.24,
+          "src": "fixed"
+        },
+        {
+          "stat": "aspd_pct",
+          "v": 0.08,
+          "src": "fixed"
+        },
+        {
+          "stat": "vs_elite_dmg",
+          "v": 0.08,
+          "src": "gluttony"
+        },
+        {
+          "stat": "aspd_per_level_pct",
+          "v": 0.001,
+          "src": "pride"
+        },
+        {
+          "stat": "gold_find",
+          "v": 0.1,
+          "src": "greed"
+        }
+      ],
+      "sins": [
+        "gluttony",
+        "pride"
+      ],
+      "words": [
+        0,
+        3
+      ],
+      "group": "leather",
+      "baseId": "gloves_leather_1"
+    },
+    "i57": {
+      "uid": "i57",
+      "slot": "boots",
+      "rarity": "magic",
+      "ilvl": 13,
+      "up": 3,
+      "name": {
+        "ko": "망각의 그리브스",
+        "en": "Forgotten Greaves"
+      },
+      "implicit": {
+        "stat": "def_flat",
+        "v": 5
+      },
+      "affixes": [
+        {
+          "stat": "armor_def_pct",
+          "v": 0.75,
+          "src": "fixed"
+        },
+        {
+          "stat": "dr_flat",
+          "v": 1,
+          "src": "fixed"
+        },
+        {
+          "stat": "freeze_dur_reduction",
+          "v": 0.21,
+          "src": "sloth"
+        },
+        {
+          "stat": "hp_pct",
+          "v": 0.05,
+          "src": "sloth"
+        }
+      ],
+      "sins": [
+        "sloth"
+      ],
+      "words": [
+        3
+      ],
+      "group": "greaves",
+      "baseId": "boots_greaves_1"
+    },
+    "i61": {
+      "uid": "i61",
+      "slot": "helmet",
+      "rarity": "normal",
+      "ilvl": 14,
+      "up": 1,
+      "name": {
+        "ko": "그레이트 헬름",
+        "en": "Great Helm"
+      },
+      "implicit": {
+        "stat": "def_flat",
+        "v": 8
+      },
+      "affixes": [
+        {
+          "stat": "armor_def_pct",
+          "v": 0.42,
+          "src": "fixed"
+        },
+        {
+          "stat": "hp_pct",
+          "v": 0.07,
+          "src": "fixed"
+        },
+        {
+          "stat": "res_max_lightning",
+          "v": 0.03,
+          "src": "envy"
+        }
+      ],
+      "sins": [],
+      "words": [],
+      "group": "plate",
+      "baseId": "helmet_plate_1"
+    },
+    "i63": {
+      "uid": "i63",
+      "slot": "amulet",
+      "rarity": "magic",
+      "ilvl": 14,
+      "up": 0,
+      "name": {
+        "ko": "포식의 탈리스만",
+        "en": "Predatory Talisman"
+      },
+      "implicit": null,
+      "affixes": [
+        {
+          "stat": "res_all",
+          "v": 0.08,
+          "src": "gluttony"
+        },
+        {
+          "stat": "dr_flat",
+          "v": 1,
+          "src": "random"
+        }
+      ],
+      "sins": [
+        "gluttony"
+      ],
+      "words": [
+        2
+      ],
+      "baseId": "amulet_1"
+    },
+    "i65": {
+      "uid": "i65",
+      "slot": "boots",
+      "rarity": "normal",
+      "ilvl": 15,
+      "up": 1,
+      "name": {
+        "ko": "그리브스",
+        "en": "Greaves"
+      },
+      "implicit": {
+        "stat": "def_flat",
+        "v": 5
+      },
+      "affixes": [
+        {
+          "stat": "armor_def_pct",
+          "v": 0.17,
+          "src": "fixed"
+        },
+        {
+          "stat": "dr_flat",
+          "v": 1,
+          "src": "fixed"
+        },
+        {
+          "stat": "def_flat",
+          "v": 7,
+          "src": "gluttony"
+        }
+      ],
+      "sins": [],
+      "words": [],
+      "group": "greaves",
+      "baseId": "boots_greaves_1"
+    },
+    "i75": {
+      "uid": "i75",
+      "slot": "armor",
+      "rarity": "magic",
+      "ilvl": 14,
+      "up": 3,
+      "name": {
+        "ko": "착취의 에인션트 아머",
+        "en": "Exploitative Ancient Armor"
+      },
+      "implicit": {
+        "stat": "def_flat",
+        "v": 26
+      },
+      "affixes": [
+        {
+          "stat": "armor_def_pct",
+          "v": 1.77,
+          "src": "fixed"
+        },
+        {
+          "stat": "magic_find",
+          "v": 0.11,
+          "src": "greed"
+        },
+        {
+          "stat": "res_poison",
+          "v": 0.14,
+          "src": "envy"
+        }
+      ],
+      "sins": [
+        "greed"
+      ],
+      "words": [
+        1
+      ],
+      "group": "heavy",
+      "baseId": "armor_heavy_1"
+    },
+    "i78": {
+      "uid": "i78",
+      "slot": "armor",
+      "rarity": "normal",
+      "ilvl": 18,
+      "up": 2,
+      "name": {
+        "ko": "라이트 플레이트",
+        "en": "Light Plate"
+      },
+      "implicit": {
+        "stat": "def_flat",
+        "v": 19
+      },
+      "affixes": [
+        {
+          "stat": "armor_def_pct",
+          "v": 1.68,
+          "src": "fixed"
+        },
+        {
+          "stat": "proc_struck_debuff",
+          "v": 0.07,
+          "src": "envy",
+          "skill": "war_warcry",
+          "skillLv": 1
+        }
+      ],
+      "sins": [],
+      "words": [],
+      "group": "light",
+      "baseId": "armor_light_1"
+    },
+    "i82": {
+      "uid": "i82",
+      "slot": "ring",
+      "rarity": "magic",
+      "ilvl": 18,
+      "up": 0,
+      "name": {
+        "ko": "폭식의 실버 링",
+        "en": "Gluttonous Silver Ring"
+      },
+      "implicit": null,
+      "affixes": [
+        {
+          "stat": "skill_tag",
+          "tag": "curse",
+          "effect": "value",
+          "v": 0.08,
+          "src": "fixed"
+        },
+        {
+          "stat": "crushing_blow_pct",
+          "v": 0.02,
+          "src": "gluttony"
+        },
+        {
+          "stat": "magic_find",
+          "v": 0.08,
+          "src": "greed"
+        }
+      ],
+      "sins": [
+        "gluttony"
+      ],
+      "words": [
+        0
+      ],
+      "baseId": "ring_1"
+    },
+    "i84": {
+      "uid": "i84",
+      "slot": "ring",
+      "rarity": "magic",
+      "ilvl": 19,
+      "up": 0,
+      "name": {
+        "ko": "집착의 시그넷",
+        "en": "Obsessive Signet"
+      },
+      "implicit": null,
+      "affixes": [
+        {
+          "stat": "skill_tag",
+          "tag": "boost",
+          "effect": "value",
+          "v": 0.09,
+          "src": "fixed"
+        },
+        {
+          "stat": "life_steal",
+          "v": 0.01,
+          "src": "lust"
+        },
+        {
+          "stat": "hp_regen",
+          "v": 0.6,
+          "src": "lust"
+        }
+      ],
+      "sins": [
+        "lust"
+      ],
+      "words": [
+        1
+      ],
+      "baseId": "ring_2"
+    },
+    "i88": {
+      "uid": "i88",
+      "slot": "weapon",
+      "rarity": "normal",
+      "ilvl": 19,
+      "up": 2,
+      "name": {
+        "ko": "배틀 해머",
+        "en": "Battle Hammer"
+      },
+      "implicit": null,
+      "affixes": [
+        {
+          "stat": "atk_pct",
+          "v": 1.39,
+          "src": "fixed"
+        },
+        {
+          "stat": "def_ignore",
+          "v": 0.04,
+          "src": "envy"
+        }
+      ],
+      "sins": [],
+      "words": [],
+      "group": "mace",
+      "baseId": "battle_hammer"
+    },
+    "i91": {
+      "uid": "i91",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 20,
+      "up": 1,
+      "name": {
+        "ko": "학살의 다이아몬드 보우",
+        "en": "Slaughtering Diamond Bow"
+      },
+      "implicit": null,
+      "affixes": [
+        {
+          "stat": "atk_pct",
+          "v": 0.83,
+          "src": "fixed"
+        },
+        {
+          "stat": "crit_rate",
+          "v": 0.03,
+          "src": "wrath"
+        },
+        {
+          "stat": "xp_gain_pct",
+          "v": 0.06,
+          "src": "greed"
+        }
+      ],
+      "sins": [
+        "wrath"
+      ],
+      "words": [
+        3
+      ],
+      "group": "bow",
+      "baseId": "diamond_bow"
+    },
+    "i96": {
+      "uid": "i96",
+      "slot": "gloves",
+      "rarity": "normal",
+      "ilvl": 16,
+      "up": 0,
+      "name": {
+        "ko": "건틀릿",
+        "en": "Gauntlets"
+      },
+      "implicit": {
+        "stat": "def_flat",
+        "v": 5
+      },
+      "affixes": [
+        {
+          "stat": "armor_def_pct",
+          "v": 1.78,
+          "src": "fixed"
+        },
+        {
+          "stat": "damage_reduction",
+          "v": 0.06,
+          "src": "fixed"
+        },
+        {
+          "stat": "res_all",
+          "v": 0.06,
+          "src": "gluttony"
+        }
+      ],
+      "sins": [],
+      "words": [],
+      "group": "gauntlet",
+      "baseId": "gloves_gauntlet_1"
+    },
+    "i104": {
+      "uid": "i104",
+      "slot": "weapon",
+      "rarity": "normal",
+      "ilvl": 18,
+      "up": 1,
+      "name": {
+        "ko": "스레셔",
+        "en": "Thresher"
+      },
+      "implicit": null,
+      "affixes": [
+        {
+          "stat": "atk_pct",
+          "v": 1.7,
+          "src": "fixed"
+        },
+        {
+          "stat": "vs_elite_dmg",
+          "v": 0.11,
+          "src": "gluttony"
+        }
+      ],
+      "sins": [],
+      "words": [],
+      "group": "spear",
+      "baseId": "thresher"
+    },
+    "i105": {
+      "uid": "i105",
+      "slot": "ring",
+      "rarity": "magic",
+      "ilvl": 19,
+      "up": 0,
+      "name": {
+        "ko": "지배의 시그넷",
+        "en": "Dominating Signet"
+      },
+      "implicit": null,
+      "affixes": [
+        {
+          "stat": "skill_tag",
+          "tag": "curse",
+          "effect": "duration",
+          "v": 0.09,
+          "src": "fixed"
+        },
+        {
+          "stat": "dmg_min_flat",
+          "v": 2,
+          "src": "pride"
+        },
+        {
+          "stat": "buff_dur_pct",
+          "v": 0.08,
+          "src": "sloth"
+        }
+      ],
+      "sins": [
+        "pride"
+      ],
+      "words": [
+        2
+      ],
+      "baseId": "ring_2"
+    },
+    "i106": {
+      "uid": "i106",
+      "slot": "weapon",
+      "rarity": "magic",
+      "ilvl": 19,
+      "up": 0,
+      "name": {
+        "ko": "착취의 레전더리 맬릿",
+        "en": "Exploitative Legendary Mallet"
+      },
+      "implicit": null,
+      "affixes": [
+        {
+          "stat": "atk_pct",
+          "v": 0.11,
+          "src": "fixed"
+        },
+        {
+          "stat": "xp_gain_pct",
+          "v": 0.07,
+          "src": "greed"
+        },
+        {
+          "stat": "dmg_max_flat",
+          "v": 2,
+          "src": "lust"
+        }
+      ],
+      "sins": [
+        "greed"
+      ],
+      "words": [
+        1
+      ],
+      "group": "mace",
+      "baseId": "legendary_mallet"
+    },
+    "i107": {
+      "uid": "i107",
+      "slot": "weapon",
+      "rarity": "normal",
+      "ilvl": 19,
+      "up": 0,
+      "name": {
+        "ko": "클럽",
+        "en": "Club"
+      },
+      "implicit": null,
+      "affixes": [
+        {
+          "stat": "atk_pct",
+          "v": 0.15,
+          "src": "fixed"
+        },
+        {
+          "stat": "aspd_pct",
+          "v": 0.04,
+          "src": "sloth"
+        }
+      ],
+      "sins": [],
+      "words": [],
+      "group": "mace",
+      "baseId": "club"
+    }
+  },
+  "bags": [
+    [
+      "i105",
+      "i106",
+      "i107"
+    ],
+    []
+  ],
+  "stash": [],
+  "mail": [],
+  "progress": {
+    "cleared": [
+      1011,
+      1012,
+      1013,
+      1021,
+      1022,
+      1023,
+      1031,
+      1032,
+      1033,
+      1041,
+      1042,
+      1043,
+      1051,
+      2011,
+      2012,
+      2013,
+      2021,
+      2022,
+      2023,
+      2031,
+      2032,
+      2033,
+      2041,
+      2042,
+      2043,
+      2051,
+      3011,
+      3012,
+      3013,
+      3021,
+      3022,
+      3023,
+      3031,
+      3032,
+      3033,
+      3041,
+      3042,
+      3043,
+      3051
+    ],
+    "clearedIn": {},
+    "peakTotal": 0
+  },
+  "difficulty": "normal",
+  "codexExp": {
+    "1101": 20,
+    "1102": 31,
+    "1103": 16,
+    "1150": 1,
+    "1201": 22,
+    "1202": 21,
+    "1203": 18,
+    "1250": 1,
+    "1251": 1,
+    "1301": 16,
+    "1302": 23,
+    "1303": 34,
+    "1401": 17,
+    "1402": 19,
+    "1403": 24,
+    "1450": 1,
+    "1900": 1,
+    "2101": 29,
+    "2102": 19,
+    "2103": 17,
+    "2150": 1,
+    "2201": 28,
+    "2202": 16,
+    "2203": 19,
+    "2250": 1,
+    "2301": 19,
+    "2302": 23,
+    "2303": 19,
+    "2350": 1,
+    "2401": 27,
+    "2402": 17,
+    "2403": 16,
+    "2450": 1,
+    "2900": 1,
+    "3101": 17,
+    "3102": 15,
+    "3103": 23,
+    "3150": 1,
+    "3201": 23,
+    "3202": 20,
+    "3203": 16,
+    "3250": 1,
+    "3301": 15,
+    "3302": 20,
+    "3303": 21,
+    "3350": 1,
+    "3401": 86,
+    "3402": 57,
+    "3403": 88,
+    "3450": 8,
+    "3900": 1,
+    "4101": 13,
+    "4102": 6,
+    "4103": 8
+  },
+  "bossDown": {
+    "normal|3051": 1793322486900
+  },
+  "counters": {
+    "hero": 4,
+    "item": 107,
+    "battle": 55,
+    "tavern": 0,
+    "tactic": 0,
+    "upgrade": 48,
+    "visit": 0,
+    "make": 0,
+    "gamble": 0,
+    "commission": 11,
+    "explore": 0,
+    "join": 0,
+    "shop": 0,
+    "lab": 45,
+    "mail": 0,
+    "box": 15
+  },
+  "stageDecks": {
+    "normal|1011|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1011|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1011|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1011|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1011|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1011|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1011|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1011|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1011|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1012|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1012|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1012|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1012|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1012|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1012|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1012|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1012|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1012|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1013|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1013|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1013|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1013|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1013|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1013|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1013|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1013|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1013|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1021|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1021|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1021|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1021|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1021|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1021|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1021|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1021|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1021|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1022|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1022|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1022|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1022|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1022|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1022|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1022|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1022|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1022|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1023|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1023|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1023|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1023|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1023|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1023|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1023|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1023|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1023|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1031|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1031|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1031|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1031|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1031|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1031|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1031|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1031|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1031|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1032|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1032|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1032|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1032|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1032|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1032|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1032|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1032|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1032|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1033|1": {
+      "next": 2,
+      "free": []
+    },
+    "normal|1033|2": {
+      "next": 2,
+      "free": []
+    },
+    "normal|1033|3": {
+      "next": 2,
+      "free": []
+    },
+    "normal|1033|4": {
+      "next": 2,
+      "free": []
+    },
+    "normal|1033|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1033|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1033|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1033|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1033|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1041|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1041|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1041|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1041|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1041|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1041|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1041|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1041|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1041|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1042|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1042|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1042|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1042|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1042|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1042|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1042|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1042|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1042|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1043|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1043|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1043|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1043|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1043|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1043|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1043|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1043|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1043|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|1051|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2011|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2011|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2011|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2011|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2011|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2011|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2011|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2011|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2011|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2012|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2012|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2012|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2012|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2012|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2012|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2012|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2012|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2012|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2013|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2013|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2013|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2013|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2013|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2013|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2013|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2013|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2013|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2021|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2021|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2021|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2021|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2021|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2021|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2021|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2021|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2021|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2022|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2022|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2022|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2022|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2022|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2022|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2022|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2022|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2022|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2023|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2023|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2023|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2023|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2023|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2023|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2023|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2023|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2023|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2031|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2031|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2031|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2031|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2031|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2031|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2031|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2031|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2031|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2032|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2032|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2032|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2032|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2032|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2032|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2032|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2032|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2032|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2033|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2033|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2033|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2033|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2033|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2033|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2033|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2033|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2033|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2041|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2041|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2041|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2041|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2041|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2041|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2041|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2041|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2041|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2042|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2042|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2042|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2042|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2042|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2042|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2042|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2042|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2042|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2043|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2043|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2043|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2043|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2043|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2043|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2043|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2043|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2043|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|2051|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3011|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3011|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3011|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3011|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3011|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3011|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3011|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3011|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3011|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3012|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3012|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3012|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3012|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3012|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3012|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3012|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3012|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3012|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3013|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3013|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3013|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3013|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3013|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3013|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3013|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3013|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3013|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3021|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3021|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3021|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3021|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3021|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3021|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3021|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3021|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3021|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3022|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3022|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3022|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3022|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3022|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3022|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3022|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3022|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3022|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3023|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3023|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3023|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3023|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3023|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3023|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3023|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3023|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3023|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3031|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3031|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3031|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3031|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3031|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3031|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3031|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3031|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3031|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3032|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3032|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3032|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3032|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3032|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3032|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3032|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3032|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3032|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3033|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3033|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3033|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3033|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3033|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3033|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3033|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3033|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3033|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3041|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3041|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3041|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3041|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3041|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3041|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3041|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3041|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3041|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3042|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3042|2": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3042|3": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3042|4": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3042|5": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3042|6": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3042|7": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3042|8": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3042|9": {
+      "next": 1,
+      "free": []
+    },
+    "normal|3043|1": {
+      "next": 10,
+      "free": []
+    },
+    "normal|3043|2": {
+      "next": 10,
+      "free": []
+    },
+    "normal|3043|3": {
+      "next": 10,
+      "free": []
+    },
+    "normal|3043|4": {
+      "next": 10,
+      "free": []
+    },
+    "normal|3043|5": {
+      "next": 10,
+      "free": []
+    },
+    "normal|3043|6": {
+      "next": 10,
+      "free": []
+    },
+    "normal|3043|7": {
+      "next": 10,
+      "free": []
+    },
+    "normal|3043|8": {
+      "next": 10,
+      "free": []
+    },
+    "normal|3043|9": {
+      "next": 9,
+      "free": []
+    },
+    "normal|3051|1": {
+      "next": 1,
+      "free": []
+    },
+    "normal|4011|1": {
+      "next": 5,
+      "free": []
+    },
+    "normal|4011|2": {
+      "next": 5,
+      "free": []
+    },
+    "normal|4011|3": {
+      "next": 1,
+      "free": [
+        {
+          "no": 0,
+          "seed": 426750039
+        }
+      ]
+    },
+    "normal|4011|4": {
+      "next": 1,
+      "free": [
+        {
+          "no": 0,
+          "seed": 2167366096
+        }
+      ]
+    },
+    "normal|4011|5": {
+      "next": 1,
+      "free": [
+        {
+          "no": 0,
+          "seed": 458545813
+        }
+      ]
+    },
+    "normal|4011|6": {
+      "next": 1,
+      "free": [
+        {
+          "no": 0,
+          "seed": 2081993614
+        }
+      ]
+    },
+    "normal|4011|7": {
+      "next": 1,
+      "free": [
+        {
+          "no": 0,
+          "seed": 66358851
+        }
+      ]
+    },
+    "normal|4011|8": {
+      "next": 1,
+      "free": [
+        {
+          "no": 0,
+          "seed": 1224445628
+        }
+      ]
+    },
+    "normal|4011|9": {
+      "next": 1,
+      "free": [
+        {
+          "no": 0,
+          "seed": 3538770289
+        }
+      ]
+    }
+  },
+  "runs": [
+    {
+      "stageId": 3043,
+      "preset": 1,
+      "repeat": false,
+      "auto": true,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 55,
+        "preset": 1,
+        "stageId": 3043,
+        "difficulty": "normal",
+        "combatSeed": 148543078,
+        "rounds": [
+          null,
+          null,
+          {
+            "round": 3,
+            "no": 9,
+            "seed": 1449835454
+          },
+          {
+            "round": 4,
+            "no": 9,
+            "seed": 3750325559
+          },
+          {
+            "round": 5,
+            "no": 9,
+            "seed": 360260092
+          },
+          {
+            "round": 6,
+            "no": 9,
+            "seed": 160752501
+          },
+          {
+            "round": 7,
+            "no": 9,
+            "seed": 4263040426
+          },
+          {
+            "round": 8,
+            "no": 9,
+            "seed": 1126159907
+          },
+          {
+            "round": 9,
+            "no": 8,
+            "seed": 3440444065
+          }
+        ]
+      },
+      "lastAt": 1793323775600,
+      "durationSec": 16.2,
+      "active": true,
+      "shrine": null
+    },
+    null
+  ],
+  "reports": [
+    {
+      "at": 1793323775600,
+      "stageId": 3043,
+      "level": 19,
+      "preset": 1,
+      "won": false,
+      "reason": null,
+      "durationSec": 16.2,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 55,
+        "preset": 1,
+        "stageId": 3043,
+        "difficulty": "normal",
+        "combatSeed": 148543078,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 9,
+            "seed": 613933200
+          },
+          {
+            "round": 2,
+            "no": 9,
+            "seed": 2319557129
+          },
+          {
+            "round": 3,
+            "no": 9,
+            "seed": 1449835454
+          },
+          {
+            "round": 4,
+            "no": 9,
+            "seed": 3750325559
+          },
+          {
+            "round": 5,
+            "no": 9,
+            "seed": 360260092
+          },
+          {
+            "round": 6,
+            "no": 9,
+            "seed": 160752501
+          },
+          {
+            "round": 7,
+            "no": 9,
+            "seed": 4263040426
+          },
+          {
+            "round": 8,
+            "no": 9,
+            "seed": 1126159907
+          },
+          {
+            "round": 9,
+            "no": 8,
+            "seed": 3440444065
+          }
+        ]
+      },
+      "shrine": null,
+      "gold": 240,
+      "xp": {
+        "h1": 1474,
+        "h2": 1562,
+        "h3": 1474
+      },
+      "levelUps": [],
+      "downed": [],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [],
+      "blueprints": [],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3401,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3401,
+            3402
+          ],
+          "eliteSin": null
+        }
+      ],
+      "roundsCleared": 2,
+      "strikes": {
+        "party": {
+          "n": 23,
+          "miss": 5
+        },
+        "enemy": {
+          "n": 15,
+          "miss": 2
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 149,
+          "taken": 119,
+          "kills": 2
+        },
+        {
+          "uid": "h2",
+          "dealt": 403,
+          "taken": 84,
+          "kills": 2
+        },
+        {
+          "uid": "h3",
+          "dealt": 157,
+          "taken": 74,
+          "kills": 2
+        }
+      ]
+    },
+    {
+      "at": 1793323698400,
+      "stageId": 3043,
+      "level": 19,
+      "preset": 1,
+      "won": true,
+      "reason": "clear",
+      "durationSec": 64.6,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 54,
+        "preset": 1,
+        "stageId": 3043,
+        "difficulty": "normal",
+        "combatSeed": 148502575,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 8,
+            "seed": 613892697
+          },
+          {
+            "round": 2,
+            "no": 8,
+            "seed": 2319516626
+          },
+          {
+            "round": 3,
+            "no": 8,
+            "seed": 1449794951
+          },
+          {
+            "round": 4,
+            "no": 8,
+            "seed": 3750285056
+          },
+          {
+            "round": 5,
+            "no": 8,
+            "seed": 360219589
+          },
+          {
+            "round": 6,
+            "no": 8,
+            "seed": 160711998
+          },
+          {
+            "round": 7,
+            "no": 8,
+            "seed": 4262999923
+          },
+          {
+            "round": 8,
+            "no": 8,
+            "seed": 1126119404
+          },
+          {
+            "round": 9,
+            "no": 7,
+            "seed": 3440403562
+          }
+        ]
+      },
+      "shrine": null,
+      "gold": 1233,
+      "xp": {
+        "h1": 7618,
+        "h2": 8072,
+        "h3": 8109
+      },
+      "levelUps": [
+        {
+          "uid": "h3",
+          "from": 19,
+          "to": 20,
+          "gains": {},
+          "points": 1
+        }
+      ],
+      "downed": [],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [],
+      "blueprints": [
+        {
+          "id": "war_bash"
+        }
+      ],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3403,
+            3403
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            3403
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3401,
+            3402
+          ],
+          "eliteSin": "lust"
+        },
+        {
+          "n": 4,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 5,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 6,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3401,
+            3402
+          ],
+          "eliteSin": "gluttony"
+        },
+        {
+          "n": 7,
+          "kind": "normal",
+          "killed": [
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 8,
+          "kind": "normal",
+          "killed": [
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 9,
+          "kind": "boss",
+          "killed": [
+            3450,
+            3401
+          ],
+          "eliteSin": null
+        }
+      ],
+      "roundsCleared": 9,
+      "strikes": {
+        "party": {
+          "n": 91,
+          "miss": 20
+        },
+        "enemy": {
+          "n": 36,
+          "miss": 3
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 758,
+          "taken": 538,
+          "kills": 7
+        },
+        {
+          "uid": "h2",
+          "dealt": 1755,
+          "taken": 145,
+          "kills": 9
+        },
+        {
+          "uid": "h3",
+          "dealt": 555,
+          "taken": 279,
+          "kills": 2
+        }
+      ]
+    },
+    {
+      "at": 1793323609400,
+      "stageId": 3043,
+      "level": 19,
+      "preset": 1,
+      "won": true,
+      "reason": "clear",
+      "durationSec": 76.4,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 53,
+        "preset": 1,
+        "stageId": 3043,
+        "difficulty": "normal",
+        "combatSeed": 148462072,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 7,
+            "seed": 613852194
+          },
+          {
+            "round": 2,
+            "no": 7,
+            "seed": 2319476123
+          },
+          {
+            "round": 3,
+            "no": 7,
+            "seed": 1449754448
+          },
+          {
+            "round": 4,
+            "no": 7,
+            "seed": 3750244553
+          },
+          {
+            "round": 5,
+            "no": 7,
+            "seed": 360179086
+          },
+          {
+            "round": 6,
+            "no": 7,
+            "seed": 160671495
+          },
+          {
+            "round": 7,
+            "no": 7,
+            "seed": 4262959420
+          },
+          {
+            "round": 8,
+            "no": 7,
+            "seed": 1126078901
+          },
+          {
+            "round": 9,
+            "no": 6,
+            "seed": 3440363059
+          }
+        ]
+      },
+      "shrine": null,
+      "gold": 1393,
+      "xp": {
+        "h1": 8600,
+        "h2": 9113,
+        "h3": 9555
+      },
+      "levelUps": [],
+      "downed": [],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [
+        "i107"
+      ],
+      "blueprints": [
+        {
+          "id": "kni_holyshield"
+        }
+      ],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3402,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3401,
+            3401
+          ],
+          "eliteSin": "envy"
+        },
+        {
+          "n": 4,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3403,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 5,
+          "kind": "normal",
+          "killed": [
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 6,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3401,
+            3402
+          ],
+          "eliteSin": "lust"
+        },
+        {
+          "n": 7,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 8,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3401,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 9,
+          "kind": "boss",
+          "killed": [
+            3403,
+            3403,
+            3450
+          ],
+          "eliteSin": null
+        }
+      ],
+      "roundsCleared": 9,
+      "strikes": {
+        "party": {
+          "n": 106,
+          "miss": 19
+        },
+        "enemy": {
+          "n": 51,
+          "miss": 7
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 839,
+          "taken": 576,
+          "kills": 9
+        },
+        {
+          "uid": "h2",
+          "dealt": 1954,
+          "taken": 240,
+          "kills": 9
+        },
+        {
+          "uid": "h3",
+          "dealt": 748,
+          "taken": 311,
+          "kills": 4
+        }
+      ]
+    },
+    {
+      "at": 1793323528300,
+      "stageId": 3043,
+      "level": 19,
+      "preset": 1,
+      "won": true,
+      "reason": "clear",
+      "durationSec": 68.5,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 52,
+        "preset": 1,
+        "stageId": 3043,
+        "difficulty": "normal",
+        "combatSeed": 148421569,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 6,
+            "seed": 613811691
+          },
+          {
+            "round": 2,
+            "no": 6,
+            "seed": 2319435620
+          },
+          {
+            "round": 3,
+            "no": 6,
+            "seed": 1449713945
+          },
+          {
+            "round": 4,
+            "no": 6,
+            "seed": 3750204050
+          },
+          {
+            "round": 5,
+            "no": 6,
+            "seed": 360138583
+          },
+          {
+            "round": 6,
+            "no": 6,
+            "seed": 160630992
+          },
+          {
+            "round": 7,
+            "no": 6,
+            "seed": 4262918917
+          },
+          {
+            "round": 8,
+            "no": 6,
+            "seed": 1126038398
+          },
+          {
+            "round": 9,
+            "no": 5,
+            "seed": 3440322556
+          }
+        ]
+      },
+      "shrine": null,
+      "gold": 1353,
+      "xp": {
+        "h1": 8354,
+        "h2": 8854,
+        "h3": 9282
+      },
+      "levelUps": [],
+      "downed": [],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [
+        "i106"
+      ],
+      "blueprints": [
+        {
+          "id": "mag_chain"
+        }
+      ],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            3401,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3401,
+            3401
+          ],
+          "eliteSin": "wrath"
+        },
+        {
+          "n": 4,
+          "kind": "normal",
+          "killed": [
+            3401,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 5,
+          "kind": "normal",
+          "killed": [
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 6,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3401,
+            3401
+          ],
+          "eliteSin": "lust"
+        },
+        {
+          "n": 7,
+          "kind": "normal",
+          "killed": [
+            3401,
+            3401,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 8,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3401,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 9,
+          "kind": "boss",
+          "killed": [
+            3450,
+            3401
+          ],
+          "eliteSin": null
+        }
+      ],
+      "roundsCleared": 9,
+      "strikes": {
+        "party": {
+          "n": 97,
+          "miss": 29
+        },
+        "enemy": {
+          "n": 60,
+          "miss": 6
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 770,
+          "taken": 602,
+          "kills": 5
+        },
+        {
+          "uid": "h2",
+          "dealt": 1401,
+          "taken": 302,
+          "kills": 11
+        },
+        {
+          "uid": "h3",
+          "dealt": 655,
+          "taken": 485,
+          "kills": 5
+        }
+      ]
+    },
+    {
+      "at": 1793323416300,
+      "stageId": 3043,
+      "level": 19,
+      "preset": 1,
+      "won": true,
+      "reason": "clear",
+      "durationSec": 99.4,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 51,
+        "preset": 1,
+        "stageId": 3043,
+        "difficulty": "normal",
+        "combatSeed": 148381066,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 5,
+            "seed": 613771188
+          },
+          {
+            "round": 2,
+            "no": 5,
+            "seed": 2319395117
+          },
+          {
+            "round": 3,
+            "no": 5,
+            "seed": 1449673442
+          },
+          {
+            "round": 4,
+            "no": 5,
+            "seed": 3750163547
+          },
+          {
+            "round": 5,
+            "no": 5,
+            "seed": 360098080
+          },
+          {
+            "round": 6,
+            "no": 5,
+            "seed": 160590489
+          },
+          {
+            "round": 7,
+            "no": 5,
+            "seed": 4262878414
+          },
+          {
+            "round": 8,
+            "no": 5,
+            "seed": 1125997895
+          },
+          {
+            "round": 9,
+            "no": 4,
+            "seed": 3440282053
+          }
+        ]
+      },
+      "shrine": null,
+      "gold": 1393,
+      "xp": {
+        "h1": 8599,
+        "h2": 8806,
+        "h3": 2730
+      },
+      "levelUps": [],
+      "downed": [
+        "h3"
+      ],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [
+        "i104",
+        "i105"
+      ],
+      "blueprints": [],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            3401,
+            3402,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3403,
+            3401
+          ],
+          "eliteSin": "sloth"
+        },
+        {
+          "n": 4,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3401,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 5,
+          "kind": "normal",
+          "killed": [
+            3402,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 6,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3401,
+            3401
+          ],
+          "eliteSin": "greed"
+        },
+        {
+          "n": 7,
+          "kind": "normal",
+          "killed": [
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 8,
+          "kind": "normal",
+          "killed": [
+            3401,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 9,
+          "kind": "boss",
+          "killed": [
+            3450,
+            3402,
+            3402
+          ],
+          "eliteSin": null
+        }
+      ],
+      "roundsCleared": 9,
+      "strikes": {
+        "party": {
+          "n": 115,
+          "miss": 24
+        },
+        "enemy": {
+          "n": 70,
+          "miss": 9
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 1069,
+          "taken": 961,
+          "kills": 7
+        },
+        {
+          "uid": "h2",
+          "dealt": 2059,
+          "taken": 353,
+          "kills": 12
+        },
+        {
+          "uid": "h3",
+          "dealt": 171,
+          "taken": 274,
+          "kills": 3
+        }
+      ]
+    },
+    {
+      "at": 1793323277400,
+      "stageId": 3043,
+      "level": 19,
+      "preset": 1,
+      "won": false,
+      "reason": "wipe",
+      "durationSec": 126.3,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 50,
+        "preset": 1,
+        "stageId": 3043,
+        "difficulty": "normal",
+        "combatSeed": 148340563,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 4,
+            "seed": 613730685
+          },
+          {
+            "round": 2,
+            "no": 4,
+            "seed": 2319354614
+          },
+          {
+            "round": 3,
+            "no": 4,
+            "seed": 1449632939
+          },
+          {
+            "round": 4,
+            "no": 4,
+            "seed": 3750123044
+          },
+          {
+            "round": 5,
+            "no": 4,
+            "seed": 360057577
+          },
+          {
+            "round": 6,
+            "no": 4,
+            "seed": 160549986
+          },
+          {
+            "round": 7,
+            "no": 4,
+            "seed": 4262837911
+          },
+          {
+            "round": 8,
+            "no": 4,
+            "seed": 1125957392
+          },
+          {
+            "round": 9,
+            "no": 4,
+            "seed": 3440282053
+          }
+        ]
+      },
+      "shrine": null,
+      "gold": 1038,
+      "xp": {
+        "h1": 7016,
+        "h2": 6552,
+        "h3": 4095
+      },
+      "levelUps": [
+        {
+          "uid": "h2",
+          "from": 19,
+          "to": 20,
+          "gains": {},
+          "points": 1
+        },
+        {
+          "uid": "h1",
+          "from": 19,
+          "to": 20,
+          "gains": {},
+          "points": 1
+        }
+      ],
+      "downed": [
+        "h3",
+        "h2",
+        "h1"
+      ],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [
+        "i100",
+        "i101",
+        "i102",
+        "i103"
+      ],
+      "blueprints": [
+        {
+          "id": "mag_chain"
+        }
+      ],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3403,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3403,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3403,
+            3401
+          ],
+          "eliteSin": "sloth"
+        },
+        {
+          "n": 4,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 5,
+          "kind": "normal",
+          "killed": [
+            3402,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 6,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3403,
+            3401
+          ],
+          "eliteSin": "sloth"
+        },
+        {
+          "n": 7,
+          "kind": "normal",
+          "killed": [
+            3401,
+            3402,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 8,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3401,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 9,
+          "kind": "boss",
+          "killed": [],
+          "eliteSin": null
+        }
+      ],
+      "roundsCleared": 8,
+      "strikes": {
+        "party": {
+          "n": 154,
+          "miss": 35
+        },
+        "enemy": {
+          "n": 102,
+          "miss": 13
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 1190,
+          "taken": 1383,
+          "kills": 7
+        },
+        {
+          "uid": "h2",
+          "dealt": 2190,
+          "taken": 419,
+          "kills": 11
+        },
+        {
+          "uid": "h3",
+          "dealt": 390,
+          "taken": 343,
+          "kills": 4
+        }
+      ],
+      "fall": {
+        "downs": [
+          {
+            "uid": "h3",
+            "t": 72.7,
+            "round": 6,
+            "by": 3401,
+            "dmg": 218,
+            "taken": 343
+          },
+          {
+            "uid": "h2",
+            "t": 111.2,
+            "round": 9,
+            "by": 3401,
+            "dmg": 384,
+            "taken": 419
+          },
+          {
+            "uid": "h1",
+            "t": 126.3,
+            "round": 9,
+            "by": 3401,
+            "dmg": 604,
+            "taken": 1383
+          }
+        ],
+        "foes": [
+          {
+            "id": 3450,
+            "hp": 195,
+            "max": 399
+          },
+          {
+            "id": 3402,
+            "hp": 142,
+            "max": 142
+          },
+          {
+            "id": 3402,
+            "hp": 149,
+            "max": 149
+          }
+        ],
+        "gap": 0
+      }
+    },
+    {
+      "at": 1793323156800,
+      "stageId": 3043,
+      "level": 19,
+      "preset": 1,
+      "won": true,
+      "reason": "clear",
+      "durationSec": 108,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 49,
+        "preset": 1,
+        "stageId": 3043,
+        "difficulty": "normal",
+        "combatSeed": 148300060,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 3,
+            "seed": 613690182
+          },
+          {
+            "round": 2,
+            "no": 3,
+            "seed": 2319314111
+          },
+          {
+            "round": 3,
+            "no": 3,
+            "seed": 1449592436
+          },
+          {
+            "round": 4,
+            "no": 3,
+            "seed": 3750082541
+          },
+          {
+            "round": 5,
+            "no": 3,
+            "seed": 360017074
+          },
+          {
+            "round": 6,
+            "no": 3,
+            "seed": 160509483
+          },
+          {
+            "round": 7,
+            "no": 3,
+            "seed": 4262797408
+          },
+          {
+            "round": 8,
+            "no": 3,
+            "seed": 1125916889
+          },
+          {
+            "round": 9,
+            "no": 3,
+            "seed": 3440241550
+          }
+        ]
+      },
+      "shrine": null,
+      "gold": 1353,
+      "xp": {
+        "h1": 9282,
+        "h2": 9282,
+        "h3": 9282
+      },
+      "levelUps": [],
+      "downed": [],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [
+        "i99"
+      ],
+      "blueprints": [
+        {
+          "id": "war_bash"
+        }
+      ],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            3403
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3401,
+            3401
+          ],
+          "eliteSin": "lust"
+        },
+        {
+          "n": 4,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3403,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 5,
+          "kind": "normal",
+          "killed": [
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 6,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3402,
+            3402
+          ],
+          "eliteSin": "pride"
+        },
+        {
+          "n": 7,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3403,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 8,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3401,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 9,
+          "kind": "boss",
+          "killed": [
+            3450,
+            3402
+          ],
+          "eliteSin": null
+        }
+      ],
+      "roundsCleared": 9,
+      "strikes": {
+        "party": {
+          "n": 156,
+          "miss": 35
+        },
+        "enemy": {
+          "n": 102,
+          "miss": 14
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 1092,
+          "taken": 617,
+          "kills": 9
+        },
+        {
+          "uid": "h2",
+          "dealt": 1922,
+          "taken": 209,
+          "kills": 8
+        },
+        {
+          "uid": "h3",
+          "dealt": 539,
+          "taken": 641,
+          "kills": 4
+        }
+      ]
+    },
+    {
+      "at": 1793323037800,
+      "stageId": 3043,
+      "level": 19,
+      "preset": 1,
+      "won": true,
+      "reason": "clear",
+      "durationSec": 106.4,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 48,
+        "preset": 1,
+        "stageId": 3043,
+        "difficulty": "normal",
+        "combatSeed": 148259557,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 2,
+            "seed": 613649679
+          },
+          {
+            "round": 2,
+            "no": 2,
+            "seed": 2319273608
+          },
+          {
+            "round": 3,
+            "no": 2,
+            "seed": 1449551933
+          },
+          {
+            "round": 4,
+            "no": 2,
+            "seed": 3750042038
+          },
+          {
+            "round": 5,
+            "no": 2,
+            "seed": 359976571
+          },
+          {
+            "round": 6,
+            "no": 2,
+            "seed": 160468980
+          },
+          {
+            "round": 7,
+            "no": 2,
+            "seed": 4262756905
+          },
+          {
+            "round": 8,
+            "no": 2,
+            "seed": 1125876386
+          },
+          {
+            "round": 9,
+            "no": 2,
+            "seed": 3440201047
+          }
+        ]
+      },
+      "shrine": null,
+      "gold": 1513,
+      "xp": {
+        "h1": 10374,
+        "h2": 10374,
+        "h3": 10374
+      },
+      "levelUps": [
+        {
+          "uid": "h3",
+          "from": 18,
+          "to": 19,
+          "gains": {},
+          "points": 1
+        }
+      ],
+      "downed": [],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [
+        "i96",
+        "i97",
+        "i98"
+      ],
+      "blueprints": [],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3402,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3403,
+            3401
+          ],
+          "eliteSin": "wrath"
+        },
+        {
+          "n": 4,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3401,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 5,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3401,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 6,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3401,
+            3402
+          ],
+          "eliteSin": "pride"
+        },
+        {
+          "n": 7,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3401,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 8,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3403,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 9,
+          "kind": "boss",
+          "killed": [
+            3450,
+            3401,
+            3402
+          ],
+          "eliteSin": null
+        }
+      ],
+      "roundsCleared": 9,
+      "strikes": {
+        "party": {
+          "n": 158,
+          "miss": 36
+        },
+        "enemy": {
+          "n": 98,
+          "miss": 17
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 1215,
+          "taken": 765,
+          "kills": 10
+        },
+        {
+          "uid": "h2",
+          "dealt": 1944,
+          "taken": 261,
+          "kills": 12
+        },
+        {
+          "uid": "h3",
+          "dealt": 643,
+          "taken": 617,
+          "kills": 3
+        }
+      ]
+    },
+    {
+      "at": 1793322943000,
+      "stageId": 3043,
+      "level": 19,
+      "preset": 1,
+      "won": true,
+      "reason": "clear",
+      "durationSec": 82.2,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 47,
+        "preset": 1,
+        "stageId": 3043,
+        "difficulty": "normal",
+        "combatSeed": 148219054,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 1,
+            "seed": 613609176
+          },
+          {
+            "round": 2,
+            "no": 1,
+            "seed": 2319233105
+          },
+          {
+            "round": 3,
+            "no": 1,
+            "seed": 1449511430
+          },
+          {
+            "round": 4,
+            "no": 1,
+            "seed": 3750001535
+          },
+          {
+            "round": 5,
+            "no": 1,
+            "seed": 359936068
+          },
+          {
+            "round": 6,
+            "no": 1,
+            "seed": 160428477
+          },
+          {
+            "round": 7,
+            "no": 1,
+            "seed": 4262716402
+          },
+          {
+            "round": 8,
+            "no": 1,
+            "seed": 1125835883
+          },
+          {
+            "round": 9,
+            "no": 1,
+            "seed": 3440160544
+          }
+        ]
+      },
+      "shrine": null,
+      "gold": 1353,
+      "xp": {
+        "h1": 9282,
+        "h2": 9282,
+        "h3": 9282
+      },
+      "levelUps": [],
+      "downed": [],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [
+        "i94",
+        "i95"
+      ],
+      "blueprints": [],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            3401,
+            3401,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3403,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3403,
+            3401
+          ],
+          "eliteSin": "sloth"
+        },
+        {
+          "n": 4,
+          "kind": "normal",
+          "killed": [
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 5,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 6,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3402,
+            3402
+          ],
+          "eliteSin": "greed"
+        },
+        {
+          "n": 7,
+          "kind": "normal",
+          "killed": [
+            3403
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 8,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3401,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 9,
+          "kind": "boss",
+          "killed": [
+            3403,
+            3450
+          ],
+          "eliteSin": null
+        }
+      ],
+      "roundsCleared": 9,
+      "strikes": {
+        "party": {
+          "n": 122,
+          "miss": 23
+        },
+        "enemy": {
+          "n": 69,
+          "miss": 11
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 1338,
+          "taken": 587,
+          "kills": 10
+        },
+        {
+          "uid": "h2",
+          "dealt": 1582,
+          "taken": 172,
+          "kills": 7
+        },
+        {
+          "uid": "h3",
+          "dealt": 476,
+          "taken": 498,
+          "kills": 4
+        }
+      ]
+    },
+    {
+      "at": 1793322848000,
+      "stageId": 4011,
+      "level": 21,
+      "preset": 1,
+      "won": false,
+      "reason": "wipe",
+      "durationSec": 88.1,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 46,
+        "preset": 1,
+        "stageId": 4011,
+        "difficulty": "normal",
+        "combatSeed": 148178551,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 4,
+            "seed": 1284460037
+          },
+          {
+            "round": 2,
+            "no": 4,
+            "seed": 1296633726
+          },
+          {
+            "round": 3,
+            "no": 0,
+            "seed": 426750039
+          },
+          {
+            "round": 4,
+            "no": 0,
+            "seed": 2167366096
+          },
+          {
+            "round": 5,
+            "no": 0,
+            "seed": 458545813
+          },
+          {
+            "round": 6,
+            "no": 0,
+            "seed": 2081993614
+          },
+          {
+            "round": 7,
+            "no": 0,
+            "seed": 66358851
+          },
+          {
+            "round": 8,
+            "no": 0,
+            "seed": 1224445628
+          },
+          {
+            "round": 9,
+            "no": 0,
+            "seed": 3538770289
+          }
+        ]
+      },
+      "shrine": null,
+      "gold": 210,
+      "xp": {
+        "h1": 1650,
+        "h2": 1650,
+        "h3": 1650
+      },
+      "levelUps": [],
+      "downed": [
+        "h3",
+        "h1",
+        "h2"
+      ],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [],
+      "blueprints": [],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            4101,
+            4103,
+            4103
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            4101,
+            4103
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [
+            4101
+          ],
+          "eliteSin": "sloth"
+        }
+      ],
+      "roundsCleared": 2,
+      "strikes": {
+        "party": {
+          "n": 94,
+          "miss": 30
+        },
+        "enemy": {
+          "n": 53,
+          "miss": 10
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 517,
+          "taken": 709,
+          "kills": 0
+        },
+        {
+          "uid": "h2",
+          "dealt": 1474,
+          "taken": 316,
+          "kills": 6
+        },
+        {
+          "uid": "h3",
+          "dealt": 139,
+          "taken": 267,
+          "kills": 0
+        }
+      ],
+      "fall": {
+        "downs": [
+          {
+            "uid": "h3",
+            "t": 39,
+            "round": 3,
+            "by": 4101,
+            "dmg": 152,
+            "taken": 267
+          },
+          {
+            "uid": "h1",
+            "t": 54.6,
+            "round": 3,
+            "by": 4101,
+            "dmg": 553,
+            "taken": 709
+          },
+          {
+            "uid": "h2",
+            "t": 88.1,
+            "round": 3,
+            "by": 4101,
+            "dmg": 266,
+            "taken": 316
+          }
+        ],
+        "foes": [
+          {
+            "id": 4102,
+            "hp": 166,
+            "max": 193
+          },
+          {
+            "id": 4101,
+            "hp": 232,
+            "max": 232
+          }
+        ],
+        "gap": 3
+      }
+    },
+    {
+      "at": 1793322768300,
+      "stageId": 4011,
+      "level": 21,
+      "preset": 1,
+      "won": false,
+      "reason": "wipe",
+      "durationSec": 72.8,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 45,
+        "preset": 1,
+        "stageId": 4011,
+        "difficulty": "normal",
+        "combatSeed": 148138048,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 3,
+            "seed": 1284419534
+          },
+          {
+            "round": 2,
+            "no": 3,
+            "seed": 1296593223
+          },
+          {
+            "round": 3,
+            "no": 0,
+            "seed": 426750039
+          },
+          {
+            "round": 4,
+            "no": 0,
+            "seed": 2167366096
+          },
+          {
+            "round": 5,
+            "no": 0,
+            "seed": 458545813
+          },
+          {
+            "round": 6,
+            "no": 0,
+            "seed": 2081993614
+          },
+          {
+            "round": 7,
+            "no": 0,
+            "seed": 66358851
+          },
+          {
+            "round": 8,
+            "no": 0,
+            "seed": 1224445628
+          },
+          {
+            "round": 9,
+            "no": 0,
+            "seed": 3538770289
+          }
+        ]
+      },
+      "shrine": null,
+      "gold": 210,
+      "xp": {
+        "h1": 1650,
+        "h2": 1650,
+        "h3": 1650
+      },
+      "levelUps": [],
+      "downed": [
+        "h3",
+        "h1",
+        "h2"
+      ],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [],
+      "blueprints": [],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            4101,
+            4102,
+            4103
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            4101,
+            4102
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [
+            4101
+          ],
+          "eliteSin": "sloth"
+        }
+      ],
+      "roundsCleared": 2,
+      "strikes": {
+        "party": {
+          "n": 86,
+          "miss": 21
+        },
+        "enemy": {
+          "n": 38,
+          "miss": 6
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 768,
+          "taken": 598,
+          "kills": 2
+        },
+        {
+          "uid": "h2",
+          "dealt": 1444,
+          "taken": 310,
+          "kills": 4
+        },
+        {
+          "uid": "h3",
+          "dealt": 234,
+          "taken": 262,
+          "kills": 0
+        }
+      ],
+      "fall": {
+        "downs": [
+          {
+            "uid": "h3",
+            "t": 34.4,
+            "round": 3,
+            "by": 4101,
+            "dmg": 240,
+            "taken": 262
+          },
+          {
+            "uid": "h1",
+            "t": 55.8,
+            "round": 3,
+            "by": 4101,
+            "dmg": 546,
+            "taken": 598
+          },
+          {
+            "uid": "h2",
+            "t": 72.8,
+            "round": 3,
+            "by": 4101,
+            "dmg": 310,
+            "taken": 310
+          }
+        ],
+        "foes": [
+          {
+            "id": 4101,
+            "hp": 160,
+            "max": 452
+          },
+          {
+            "id": 4102,
+            "hp": 118,
+            "max": 193
+          }
+        ],
+        "gap": 3
+      }
+    },
+    {
+      "at": 1793322696600,
+      "stageId": 4011,
+      "level": 21,
+      "preset": 1,
+      "won": false,
+      "reason": "wipe",
+      "durationSec": 64.8,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 44,
+        "preset": 1,
+        "stageId": 4011,
+        "difficulty": "normal",
+        "combatSeed": 148097545,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 2,
+            "seed": 1284379031
+          },
+          {
+            "round": 2,
+            "no": 2,
+            "seed": 1296552720
+          },
+          {
+            "round": 3,
+            "no": 0,
+            "seed": 426750039
+          },
+          {
+            "round": 4,
+            "no": 0,
+            "seed": 2167366096
+          },
+          {
+            "round": 5,
+            "no": 0,
+            "seed": 458545813
+          },
+          {
+            "round": 6,
+            "no": 0,
+            "seed": 2081993614
+          },
+          {
+            "round": 7,
+            "no": 0,
+            "seed": 66358851
+          },
+          {
+            "round": 8,
+            "no": 0,
+            "seed": 1224445628
+          },
+          {
+            "round": 9,
+            "no": 0,
+            "seed": 3538770289
+          }
+        ]
+      },
+      "shrine": null,
+      "gold": 252,
+      "xp": {
+        "h1": 1980,
+        "h2": 1980,
+        "h3": 1980
+      },
+      "levelUps": [],
+      "downed": [
+        "h3",
+        "h1",
+        "h2"
+      ],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [],
+      "blueprints": [],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            4101,
+            4101,
+            4101
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            4103,
+            4102,
+            4103
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [],
+          "eliteSin": "sloth"
+        }
+      ],
+      "roundsCleared": 2,
+      "strikes": {
+        "party": {
+          "n": 90,
+          "miss": 28
+        },
+        "enemy": {
+          "n": 59,
+          "miss": 15
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 572,
+          "taken": 810,
+          "kills": 2
+        },
+        {
+          "uid": "h2",
+          "dealt": 1263,
+          "taken": 306,
+          "kills": 4
+        },
+        {
+          "uid": "h3",
+          "dealt": 283,
+          "taken": 472,
+          "kills": 0
+        }
+      ],
+      "fall": {
+        "downs": [
+          {
+            "uid": "h3",
+            "t": 47.8,
+            "round": 3,
+            "by": 4101,
+            "dmg": 432,
+            "taken": 472
+          },
+          {
+            "uid": "h1",
+            "t": 54.6,
+            "round": 3,
+            "by": 4101,
+            "dmg": 718,
+            "taken": 810
+          },
+          {
+            "uid": "h2",
+            "t": 64.8,
+            "round": 3,
+            "by": 4101,
+            "dmg": 306,
+            "taken": 306
+          }
+        ],
+        "foes": [
+          {
+            "id": 4101,
+            "hp": 173,
+            "max": 452
+          },
+          {
+            "id": 4102,
+            "hp": 144,
+            "max": 193
+          },
+          {
+            "id": 4101,
+            "hp": 184,
+            "max": 232
+          }
+        ],
+        "gap": 3
+      }
+    },
+    {
+      "at": 1793322616400,
+      "stageId": 4011,
+      "level": 21,
+      "preset": 1,
+      "won": false,
+      "reason": "wipe",
+      "durationSec": 73.3,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 43,
+        "preset": 1,
+        "stageId": 4011,
+        "difficulty": "normal",
+        "combatSeed": 148057042,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 1,
+            "seed": 1284338528
+          },
+          {
+            "round": 2,
+            "no": 1,
+            "seed": 1296512217
+          },
+          {
+            "round": 3,
+            "no": 0,
+            "seed": 426750039
+          },
+          {
+            "round": 4,
+            "no": 0,
+            "seed": 2167366096
+          },
+          {
+            "round": 5,
+            "no": 0,
+            "seed": 458545813
+          },
+          {
+            "round": 6,
+            "no": 0,
+            "seed": 2081993614
+          },
+          {
+            "round": 7,
+            "no": 0,
+            "seed": 66358851
+          },
+          {
+            "round": 8,
+            "no": 0,
+            "seed": 1224445628
+          },
+          {
+            "round": 9,
+            "no": 0,
+            "seed": 3538770289
+          }
+        ]
+      },
+      "shrine": null,
+      "gold": 210,
+      "xp": {
+        "h1": 1650,
+        "h2": 1650,
+        "h3": 1650
+      },
+      "levelUps": [],
+      "downed": [
+        "h3",
+        "h1",
+        "h2"
+      ],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [],
+      "blueprints": [],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            4101,
+            4103,
+            4102
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            4101,
+            4101
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [],
+          "eliteSin": "sloth"
+        }
+      ],
+      "roundsCleared": 2,
+      "strikes": {
+        "party": {
+          "n": 98,
+          "miss": 25
+        },
+        "enemy": {
+          "n": 53,
+          "miss": 13
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 804,
+          "taken": 797,
+          "kills": 2
+        },
+        {
+          "uid": "h2",
+          "dealt": 1434,
+          "taken": 306,
+          "kills": 2
+        },
+        {
+          "uid": "h3",
+          "dealt": 258,
+          "taken": 376,
+          "kills": 1
+        }
+      ],
+      "fall": {
+        "downs": [
+          {
+            "uid": "h3",
+            "t": 57.2,
+            "round": 3,
+            "by": 4101,
+            "dmg": 354,
+            "taken": 376
+          },
+          {
+            "uid": "h1",
+            "t": 63.6,
+            "round": 3,
+            "by": 4101,
+            "dmg": 758,
+            "taken": 797
+          },
+          {
+            "uid": "h2",
+            "t": 73.3,
+            "round": 3,
+            "by": 4101,
+            "dmg": 306,
+            "taken": 306
+          }
+        ],
+        "foes": [
+          {
+            "id": 4101,
+            "hp": 43,
+            "max": 452
+          },
+          {
+            "id": 4102,
+            "hp": 153,
+            "max": 193
+          },
+          {
+            "id": 4101,
+            "hp": 177,
+            "max": 232
+          }
+        ],
+        "gap": 3
+      }
+    },
+    {
+      "at": 1793322491900,
+      "stageId": 4011,
+      "level": 21,
+      "preset": 1,
+      "won": false,
+      "reason": "wipe",
+      "durationSec": 117.6,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 42,
+        "preset": 1,
+        "stageId": 4011,
+        "difficulty": "normal",
+        "combatSeed": 148016539,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 0,
+            "seed": 1284298025
+          },
+          {
+            "round": 2,
+            "no": 0,
+            "seed": 1296471714
+          },
+          {
+            "round": 3,
+            "no": 0,
+            "seed": 426750039
+          },
+          {
+            "round": 4,
+            "no": 0,
+            "seed": 2167366096
+          },
+          {
+            "round": 5,
+            "no": 0,
+            "seed": 458545813
+          },
+          {
+            "round": 6,
+            "no": 0,
+            "seed": 2081993614
+          },
+          {
+            "round": 7,
+            "no": 0,
+            "seed": 66358851
+          },
+          {
+            "round": 8,
+            "no": 0,
+            "seed": 1224445628
+          },
+          {
+            "round": 9,
+            "no": 0,
+            "seed": 3538770289
+          }
+        ]
+      },
+      "shrine": null,
+      "gold": 252,
+      "xp": {
+        "h1": 1980,
+        "h2": 1980,
+        "h3": 1980
+      },
+      "levelUps": [
+        {
+          "uid": "h1",
+          "from": 18,
+          "to": 19,
+          "gains": {},
+          "points": 1
+        }
+      ],
+      "downed": [
+        "h3",
+        "h1",
+        "h2"
+      ],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [],
+      "blueprints": [],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            4101,
+            4102,
+            4102
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            4101,
+            4101,
+            4103
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [],
+          "eliteSin": "sloth"
+        }
+      ],
+      "roundsCleared": 2,
+      "strikes": {
+        "party": {
+          "n": 172,
+          "miss": 56
+        },
+        "enemy": {
+          "n": 63,
+          "miss": 13
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 493,
+          "taken": 873,
+          "kills": 1
+        },
+        {
+          "uid": "h2",
+          "dealt": 2237,
+          "taken": 304,
+          "kills": 5
+        },
+        {
+          "uid": "h3",
+          "dealt": 637,
+          "taken": 292,
+          "kills": 0
+        }
+      ],
+      "fall": {
+        "downs": [
+          {
+            "uid": "h3",
+            "t": 94.1,
+            "round": 3,
+            "by": 4101,
+            "dmg": 272,
+            "taken": 292
+          },
+          {
+            "uid": "h1",
+            "t": 111.6,
+            "round": 3,
+            "by": 4101,
+            "dmg": 813,
+            "taken": 873
+          },
+          {
+            "uid": "h2",
+            "t": 117.6,
+            "round": 3,
+            "by": 4101,
+            "dmg": 304,
+            "taken": 304
+          }
+        ],
+        "foes": [
+          {
+            "id": 4101,
+            "hp": 164,
+            "max": 452
+          },
+          {
+            "id": 4102,
+            "hp": 104,
+            "max": 193
+          },
+          {
+            "id": 4101,
+            "hp": 159,
+            "max": 232
+          }
+        ],
+        "gap": 3
+      }
+    },
+    {
+      "at": 1793322447000,
+      "stageId": 3051,
+      "level": 20,
+      "preset": 1,
+      "won": true,
+      "reason": "clear",
+      "durationSec": 39.9,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 41,
+        "preset": 1,
+        "stageId": 3051,
+        "difficulty": "normal",
+        "combatSeed": 147976036,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 0,
+            "seed": 2043708393
+          }
+        ]
+      },
+      "shrine": null,
+      "gold": 1038,
+      "xp": {
+        "h1": 7800,
+        "h2": 7800,
+        "h3": 0
+      },
+      "levelUps": [
+        {
+          "uid": "h2",
+          "from": 18,
+          "to": 19,
+          "gains": {},
+          "points": 1
+        }
+      ],
+      "downed": [
+        "h3"
+      ],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [
+        "i90",
+        "i91"
+      ],
+      "blueprints": [],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "boss",
+          "killed": [
+            3900,
+            3401,
+            3402
+          ],
+          "eliteSin": "gluttony"
+        }
+      ],
+      "roundsCleared": 1,
+      "strikes": {
+        "party": {
+          "n": 50,
+          "miss": 14
+        },
+        "enemy": {
+          "n": 47,
+          "miss": 10
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 352,
+          "taken": 429,
+          "kills": 1
+        },
+        {
+          "uid": "h2",
+          "dealt": 774,
+          "taken": 128,
+          "kills": 2
+        },
+        {
+          "uid": "h3",
+          "dealt": 52,
+          "taken": 260,
+          "kills": 0
+        }
+      ],
+      "clearBox": {
+        "kind": "armor",
+        "tier": "low",
+        "mail": false
+      }
+    },
+    {
+      "at": 1793322355000,
+      "stageId": 3043,
+      "level": 19,
+      "preset": 1,
+      "won": true,
+      "reason": "clear",
+      "durationSec": 79.4,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 40,
+        "preset": 1,
+        "stageId": 3043,
+        "difficulty": "normal",
+        "combatSeed": 147935533,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 0,
+            "seed": 613568673
+          },
+          {
+            "round": 2,
+            "no": 0,
+            "seed": 2319192602
+          },
+          {
+            "round": 3,
+            "no": 0,
+            "seed": 1449470927
+          },
+          {
+            "round": 4,
+            "no": 0,
+            "seed": 3749961032
+          },
+          {
+            "round": 5,
+            "no": 0,
+            "seed": 359895565
+          },
+          {
+            "round": 6,
+            "no": 0,
+            "seed": 160387974
+          },
+          {
+            "round": 7,
+            "no": 0,
+            "seed": 4262675899
+          },
+          {
+            "round": 8,
+            "no": 0,
+            "seed": 1125795380
+          },
+          {
+            "round": 9,
+            "no": 0,
+            "seed": 3440120041
+          }
+        ]
+      },
+      "shrine": "wrath",
+      "gold": 1233,
+      "xp": {
+        "h1": 8463,
+        "h2": 8463,
+        "h3": 8463
+      },
+      "levelUps": [],
+      "downed": [],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [
+        "i87",
+        "i88"
+      ],
+      "blueprints": [],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            3403
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            3403
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3402,
+            3402
+          ],
+          "eliteSin": "wrath"
+        },
+        {
+          "n": 4,
+          "kind": "normal",
+          "killed": [
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 5,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 6,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3402,
+            3401
+          ],
+          "eliteSin": "envy"
+        },
+        {
+          "n": 7,
+          "kind": "normal",
+          "killed": [
+            3401,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 8,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 9,
+          "kind": "boss",
+          "killed": [
+            3450,
+            3403,
+            3403
+          ],
+          "eliteSin": null
+        }
+      ],
+      "roundsCleared": 9,
+      "strikes": {
+        "party": {
+          "n": 110,
+          "miss": 19
+        },
+        "enemy": {
+          "n": 62,
+          "miss": 11
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 780,
+          "taken": 515,
+          "kills": 5
+        },
+        {
+          "uid": "h2",
+          "dealt": 1762,
+          "taken": 151,
+          "kills": 8
+        },
+        {
+          "uid": "h3",
+          "dealt": 499,
+          "taken": 439,
+          "kills": 5
+        }
+      ],
+      "clearBox": {
+        "kind": "armor",
+        "tier": "low",
+        "mail": false
+      }
+    },
+    {
+      "at": 1793322247000,
+      "stageId": 3042,
+      "level": 19,
+      "preset": 1,
+      "won": true,
+      "reason": "clear",
+      "durationSec": 95.4,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 39,
+        "preset": 1,
+        "stageId": 3042,
+        "difficulty": "normal",
+        "combatSeed": 147895030,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 0,
+            "seed": 3834787080
+          },
+          {
+            "round": 2,
+            "no": 0,
+            "seed": 1375443661
+          },
+          {
+            "round": 3,
+            "no": 0,
+            "seed": 2533530438
+          },
+          {
+            "round": 4,
+            "no": 0,
+            "seed": 2340851067
+          },
+          {
+            "round": 5,
+            "no": 0,
+            "seed": 2141343476
+          },
+          {
+            "round": 6,
+            "no": 0,
+            "seed": 3524946089
+          },
+          {
+            "round": 7,
+            "no": 0,
+            "seed": 1530468898
+          },
+          {
+            "round": 8,
+            "no": 0,
+            "seed": 88668119
+          },
+          {
+            "round": 9,
+            "no": 0,
+            "seed": 4082608464
+          }
+        ]
+      },
+      "shrine": "wrath",
+      "gold": 1117,
+      "xp": {
+        "h1": 7644,
+        "h2": 7644,
+        "h3": 7644
+      },
+      "levelUps": [
+        {
+          "uid": "h3",
+          "from": 17,
+          "to": 18,
+          "gains": {},
+          "points": 1
+        }
+      ],
+      "downed": [],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [
+        "i85"
+      ],
+      "blueprints": [
+        {
+          "id": "mag_chain"
+        }
+      ],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            3401,
+            3401,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3402,
+            3401
+          ],
+          "eliteSin": "gluttony"
+        },
+        {
+          "n": 4,
+          "kind": "normal",
+          "killed": [
+            3401,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 5,
+          "kind": "normal",
+          "killed": [
+            3403
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 6,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3403,
+            3402
+          ],
+          "eliteSin": "lust"
+        },
+        {
+          "n": 7,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3401,
+            3401
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 8,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3401,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 9,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3402,
+            3401
+          ],
+          "eliteSin": "lust"
+        }
+      ],
+      "roundsCleared": 9,
+      "strikes": {
+        "party": {
+          "n": 128,
+          "miss": 28
+        },
+        "enemy": {
+          "n": 81,
+          "miss": 13
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 799,
+          "taken": 581,
+          "kills": 6
+        },
+        {
+          "uid": "h2",
+          "dealt": 1898,
+          "taken": 261,
+          "kills": 13
+        },
+        {
+          "uid": "h3",
+          "dealt": 610,
+          "taken": 443,
+          "kills": 3
+        }
+      ]
+    },
+    {
+      "at": 1793322109400,
+      "stageId": 3041,
+      "level": 19,
+      "preset": 1,
+      "won": true,
+      "reason": "clear",
+      "durationSec": 125,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 38,
+        "preset": 1,
+        "stageId": 3041,
+        "difficulty": "normal",
+        "combatSeed": 147854527,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 0,
+            "seed": 1031687395
+          },
+          {
+            "round": 2,
+            "no": 0,
+            "seed": 1829376348
+          },
+          {
+            "round": 3,
+            "no": 0,
+            "seed": 3897027601
+          },
+          {
+            "round": 4,
+            "no": 0,
+            "seed": 3130639626
+          },
+          {
+            "round": 5,
+            "no": 0,
+            "seed": 219274943
+          },
+          {
+            "round": 6,
+            "no": 0,
+            "seed": 2308083768
+          },
+          {
+            "round": 7,
+            "no": 0,
+            "seed": 3177993469
+          },
+          {
+            "round": 8,
+            "no": 0,
+            "seed": 971834998
+          },
+          {
+            "round": 9,
+            "no": 0,
+            "seed": 2355437611
+          }
+        ]
+      },
+      "shrine": null,
+      "gold": 997,
+      "xp": {
+        "h1": 6825,
+        "h2": 5460,
+        "h3": 3549
+      },
+      "levelUps": [],
+      "downed": [
+        "h3",
+        "h2"
+      ],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [
+        "i84"
+      ],
+      "blueprints": [
+        {
+          "id": "mag_chain"
+        },
+        {
+          "id": "mag_chain"
+        }
+      ],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            3403,
+            3402,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            3402,
+            3401,
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3403,
+            3402
+          ],
+          "eliteSin": "envy"
+        },
+        {
+          "n": 4,
+          "kind": "normal",
+          "killed": [
+            3403
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 5,
+          "kind": "normal",
+          "killed": [
+            3403
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 6,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3401,
+            3402
+          ],
+          "eliteSin": "greed"
+        },
+        {
+          "n": 7,
+          "kind": "normal",
+          "killed": [
+            3402
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 8,
+          "kind": "normal",
+          "killed": [
+            3403
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 9,
+          "kind": "elite",
+          "killed": [
+            3403,
+            3401,
+            3401
+          ],
+          "eliteSin": "greed"
+        }
+      ],
+      "roundsCleared": 9,
+      "strikes": {
+        "party": {
+          "n": 149,
+          "miss": 33
+        },
+        "enemy": {
+          "n": 96,
+          "miss": 21
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 773,
+          "taken": 956,
+          "kills": 7
+        },
+        {
+          "uid": "h2",
+          "dealt": 1827,
+          "taken": 302,
+          "kills": 12
+        },
+        {
+          "uid": "h3",
+          "dealt": 451,
+          "taken": 376,
+          "kills": 0
+        }
+      ]
+    },
+    {
+      "at": 1793322001100,
+      "stageId": 3033,
+      "level": 18,
+      "preset": 1,
+      "won": true,
+      "reason": "clear",
+      "durationSec": 95.7,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 37,
+        "preset": 1,
+        "stageId": 3033,
+        "difficulty": "normal",
+        "combatSeed": 147814024,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 0,
+            "seed": 4228786587
+          },
+          {
+            "round": 2,
+            "no": 0,
+            "seed": 2022628116
+          },
+          {
+            "round": 3,
+            "no": 0,
+            "seed": 1364587721
+          },
+          {
+            "round": 4,
+            "no": 0,
+            "seed": 3453396546
+          },
+          {
+            "round": 5,
+            "no": 0,
+            "seed": 3014043767
+          },
+          {
+            "round": 6,
+            "no": 0,
+            "seed": 3811732720
+          },
+          {
+            "round": 7,
+            "no": 0,
+            "seed": 3394032309
+          },
+          {
+            "round": 8,
+            "no": 0,
+            "seed": 468833070
+          },
+          {
+            "round": 9,
+            "no": 0,
+            "seed": 181640675
+          }
+        ]
+      },
+      "shrine": "sloth",
+      "gold": 1132,
+      "xp": {
+        "h1": 7192,
+        "h2": 7192,
+        "h3": 4216
+      },
+      "levelUps": [
+        {
+          "uid": "h1",
+          "from": 17,
+          "to": 18,
+          "gains": {},
+          "points": 1
+        }
+      ],
+      "downed": [
+        "h3"
+      ],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [
+        "i81",
+        "i82"
+      ],
+      "blueprints": [
+        {
+          "id": "mag_lightning"
+        }
+      ],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            3302
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            3301
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [
+            3302,
+            3301,
+            3303
+          ],
+          "eliteSin": "greed"
+        },
+        {
+          "n": 4,
+          "kind": "normal",
+          "killed": [
+            3302
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 5,
+          "kind": "normal",
+          "killed": [
+            3301
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 6,
+          "kind": "elite",
+          "killed": [
+            3302,
+            3303,
+            3303
+          ],
+          "eliteSin": "envy"
+        },
+        {
+          "n": 7,
+          "kind": "normal",
+          "killed": [
+            3302
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 8,
+          "kind": "normal",
+          "killed": [
+            3302,
+            3303
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 9,
+          "kind": "boss",
+          "killed": [
+            3350,
+            3303,
+            3303
+          ],
+          "eliteSin": null
+        }
+      ],
+      "roundsCleared": 9,
+      "strikes": {
+        "party": {
+          "n": 149,
+          "miss": 33
+        },
+        "enemy": {
+          "n": 17,
+          "miss": 0
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 733,
+          "taken": 533,
+          "kills": 2
+        },
+        {
+          "uid": "h2",
+          "dealt": 1874,
+          "taken": 0,
+          "kills": 9
+        },
+        {
+          "uid": "h3",
+          "dealt": 534,
+          "taken": 582,
+          "kills": 5
+        }
+      ],
+      "clearBox": {
+        "kind": "armor",
+        "tier": "low",
+        "mail": false
+      }
+    },
+    {
+      "at": 1793321880500,
+      "stageId": 3032,
+      "level": 18,
+      "preset": 1,
+      "won": true,
+      "reason": "clear",
+      "durationSec": 108,
+      "difficulty": "normal",
+      "stageSeeds": {
+        "version": 1,
+        "sequence": 36,
+        "preset": 1,
+        "stageId": 3032,
+        "difficulty": "normal",
+        "combatSeed": 147773521,
+        "rounds": [
+          {
+            "round": 1,
+            "no": 0,
+            "seed": 1062783362
+          },
+          {
+            "round": 2,
+            "no": 0,
+            "seed": 658422711
+          },
+          {
+            "round": 3,
+            "no": 0,
+            "seed": 2958912816
+          },
+          {
+            "round": 4,
+            "no": 0,
+            "seed": 1610490357
+          },
+          {
+            "round": 5,
+            "no": 0,
+            "seed": 1970856814
+          },
+          {
+            "round": 6,
+            "no": 0,
+            "seed": 1312816419
+          },
+          {
+            "round": 7,
+            "no": 0,
+            "seed": 3401625244
+          },
+          {
+            "round": 8,
+            "no": 0,
+            "seed": 2743584849
+          },
+          {
+            "round": 9,
+            "no": 0,
+            "seed": 2078716234
+          }
+        ]
+      },
+      "shrine": "pride",
+      "gold": 975,
+      "xp": {
+        "h1": 6200,
+        "h2": 6200,
+        "h3": 6634
+      },
+      "levelUps": [
+        {
+          "uid": "h2",
+          "from": 17,
+          "to": 18,
+          "gains": {},
+          "points": 1
+        }
+      ],
+      "downed": [],
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "drops": [],
+      "blueprints": [
+        {
+          "id": "war_recovery"
+        },
+        {
+          "id": "pri_heal"
+        }
+      ],
+      "discarded": 0,
+      "rounds": [
+        {
+          "n": 1,
+          "kind": "normal",
+          "killed": [
+            3301
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 2,
+          "kind": "normal",
+          "killed": [
+            3302,
+            3302,
+            3301
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 3,
+          "kind": "elite",
+          "killed": [
+            3302,
+            3303,
+            3303
+          ],
+          "eliteSin": "pride"
+        },
+        {
+          "n": 4,
+          "kind": "normal",
+          "killed": [
+            3302,
+            3303
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 5,
+          "kind": "normal",
+          "killed": [
+            3303,
+            3303
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 6,
+          "kind": "elite",
+          "killed": [
+            3302,
+            3303,
+            3303
+          ],
+          "eliteSin": "wrath"
+        },
+        {
+          "n": 7,
+          "kind": "normal",
+          "killed": [
+            3301
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 8,
+          "kind": "normal",
+          "killed": [
+            3303
+          ],
+          "eliteSin": null
+        },
+        {
+          "n": 9,
+          "kind": "elite",
+          "killed": [
+            3302,
+            3301,
+            3303
+          ],
+          "eliteSin": "envy"
+        }
+      ],
+      "roundsCleared": 9,
+      "strikes": {
+        "party": {
+          "n": 153,
+          "miss": 38
+        },
+        "enemy": {
+          "n": 16,
+          "miss": 3
+        }
+      },
+      "contrib": [
+        {
+          "uid": "h1",
+          "dealt": 869,
+          "taken": 514,
+          "kills": 4
+        },
+        {
+          "uid": "h2",
+          "dealt": 1730,
+          "taken": 0,
+          "kills": 12
+        },
+        {
+          "uid": "h3",
+          "dealt": 562,
+          "taken": 304,
+          "kills": 3
+        }
+      ]
+    }
+  ],
+  "notice": null,
+  "tavern": {
+    "rerolledAt": null,
+    "hired": [],
+    "paid": 0
+  },
+  "shop": null,
+  "explores": [],
+  "joins": [],
+  "visit": null,
+  "arena": {
+    "rating": 1000,
+    "peak": 1000,
+    "win": 0,
+    "draw": 0,
+    "loss": 0
+  },
+  "colosseum": {
+    "cleared": 0
+  },
+  "commissions": {
+    "cards": [
+      {
+        "no": 11,
+        "tpl": "cm_col_rare",
+        "kind": "collect",
+        "axis": "rarity",
+        "ref": "rare",
+        "need": 2,
+        "grade": "normal",
+        "gold": 975,
+        "have": 1
+      },
+      {
+        "no": 7,
+        "tpl": "cm_kill_race",
+        "kind": "kill",
+        "axis": "race",
+        "ref": "Demon",
+        "need": 30,
+        "grade": "normal",
+        "gold": 675
+      },
+      {
+        "no": 8,
+        "tpl": "cm_kill_race",
+        "kind": "kill",
+        "axis": "race",
+        "ref": "Normal",
+        "need": 30,
+        "grade": "normal",
+        "gold": 675
+      },
+      {
+        "no": 9,
+        "tpl": "cm_kill_race",
+        "kind": "kill",
+        "axis": "race",
+        "ref": "Demon",
+        "need": 30,
+        "grade": "normal",
+        "gold": 675
+      }
+    ],
+    "fame": 4
+  },
+  "presets": [
+    {
+      "party": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "formation": {
+        "tpl": "2-1",
+        "ranks": [
+          [
+            "h1",
+            "h3"
+          ],
+          [
+            "h2"
+          ]
+        ]
+      },
+      "potionSlots": [
+        "minor_healing",
+        "minor_healing",
+        null
+      ],
+      "tactics": {
+        "slots": {},
+        "locked": []
+      }
+    },
+    {
+      "party": [],
+      "formation": {
+        "tpl": 3,
+        "ranks": [
+          [],
+          []
+        ]
+      },
+      "potionSlots": [
+        null,
+        null,
+        null
+      ],
+      "tactics": {
+        "slots": {},
+        "locked": []
+      }
+    }
+  ],
+  "preset": 1,
+  "bonds": {
+    "h1|h2|h3": 46
+  },
+  "salvageRules": [
+    {
+      "cells": {},
+      "base": {},
+      "lvGap": null
+    },
+    {
+      "cells": {},
+      "base": {},
+      "lvGap": null
+    }
+  ],
+  "salvageSlots": [
+    null,
+    null,
+    null,
+    null
+  ],
+  "salvageLogs": [
+    [],
+    []
+  ],
+  "buildings": {
+    "library": 1,
+    "resource": 1,
+    "shop": 2,
+    "tavern": 1,
+    "forge": 1,
+    "storage": 2,
+    "command": 1,
+    "explore": 1
+  }
+}

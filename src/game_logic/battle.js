@@ -85,8 +85,16 @@ import { cooldownSec, createHooks, createSkillRuntime } from './skill_runtime.js
 import { refreshDerived, weaponOnHit, stateOf, strongestOf, sumOf } from './skill_effects.js';
 // 스테이지 편성 예외 — 규칙이 코드라서 주입이 아니라 import 다 (skill_effects.js 와 같은 취급 · INTERFACE §2-13)
 import { STAGE_SPAWN_RULES, spawnRuleKey } from './spawn_rule.js';
-// 몬스터 차림 줄 — 전투 줄에서 씨앗 하나만 받아 몬스터마다 제 줄을 연다 (INTERFACE §5-1 · 2026-09-22)
+// 만남 줄 — 라운드 씨앗을 용도 · 몬스터 자리 · 장비 부위로 나눈다 (INTERFACE §5-1).
 import { makeRng, deriveSeed } from './rng.js';
+
+/** 난수 용도 번호는 저장 · 서버 재현 계약이다. 표의 값이 바뀌면 같은 판의 내용도 바뀐다. */
+export const ENCOUNTER_STREAMS = Object.freeze({
+    formation: 0xF04D, gear: 0x6EA4, skill: 0x5C11, drop: 0xD40F,
+    weapon: 0x6A00, wear: 0xC10F, part: 0x6E40,
+});
+/** 부위 번호는 선택 부위의 유무 · 순서와 무관하다. 새 부위는 뒤에 붙인다. */
+export const MONSTER_GEAR_PARTS = Object.freeze(['weapon', 'helmet', 'armor', 'gloves', 'boots', 'amulet', 'ring']);
 
 const TICK = 0.1;
 /** 걸음을 끊는 자리의 부동소수 여유 — 시각은 0.1 을 거듭 더해 꼬리가 붙는다(`advance`). **틱을 몇 번 도느냐만** 정하고 틱 안의 계산에는
@@ -117,6 +125,19 @@ const NO_DMG = Object.freeze({ min: 0, max: 0 });
  */
 export function createBattleSystem(data) {
     const B = data.balance;
+    if (!Number.isInteger(B.monster_gold_support_mid_level) || B.monster_gold_support_mid_level <= 1
+        || !Number.isInteger(B.monster_gold_support_end_level) || B.monster_gold_support_end_level <= B.monster_gold_support_mid_level
+        || !Number.isFinite(B.monster_gold_support_start_mult) || !Number.isFinite(B.monster_gold_support_mid_mult)
+        || B.monster_gold_support_start_mult < B.monster_gold_support_mid_mult || B.monster_gold_support_mid_mult < 1)
+        throw new Error('battle: 초반 골드 지원의 레벨 순서·배수가 잘못됐다');
+    // 실제 몬스터 레벨(level_add 포함) 기준. 기존 보상 곡선은 그대로 두고 최종 반올림 전에 한 번 곱한다.
+    const goldSupportMult = lvl => {
+        const mid = B.monster_gold_support_mid_level, end = B.monster_gold_support_end_level;
+        if (lvl >= end) return 1;
+        if (lvl <= mid) return B.monster_gold_support_start_mult
+            + (B.monster_gold_support_mid_mult - B.monster_gold_support_start_mult) * (lvl - 1) / (mid - 1);
+        return 1 + (B.monster_gold_support_mid_mult - 1) * (end - lvl) / (end - mid);
+    };
     const F = createFormula(B);
     const SK = data.skillSystem ?? null;
     const HS = data.heroSystem ?? null;            // 몬스터도 computeCombat 을 지난다 (R79)
@@ -257,31 +278,35 @@ export function createBattleSystem(data) {
      *  입은 장비 아이템 레벨의 위 끝도 이 값이다(`wearGear`) */
     const monsterLevelOf = (m, level) => Math.min(B.hero_level_cap, level + m.level_add);
     /**
-     * 한 마리의 차림 — 스폰 2단과 실험실(`rollMonsterDrop`)이 **같은 이 함수**를 부른다 [2026-10-10 · 스폰에서 뺐다 · rng 순서 불변 · INTERFACE §5-2].
+     * 한 마리의 차림 — 스폰 2단과 실험실(`rollMonsterDrop`)이 **같은 이 함수**를 부른다.
      * 아이템 레벨 = 가운데(스테이지 레벨 + 등급 가산) ± 반폭 — **부위마다** `rollGear` 가 굴린다 [개정 2026-10-06 · 사용자 확정 · item_design §1 3단계 — ~~굴리지 않는다~~(09-11)].
      *   반폭 = 가운데 × 비율 반올림 · 하한 — 모든 등급이 같은 비율이라 평균은 종전과 같다. 몬스터가 입는 장비라 그 세기도 같이 흔들린다(사용자가 알고 택했다)
      *   **위 끝 = 그 몬스터의 레벨**(`monsterLevelOf`) — 넘친 값은 자른다 [2026-10-24 사용자 「몬스터가 장착중인 아이템은 본인의 레벨을 넘을 수 없다」 · 굴림 수 불변]
-     * **입는 부위** [2026-10-12 · R245] — 등급의 고정 부위는 언제나 · 선택 부위는 **부위마다 「입나」 1회**(`rng() < chance`)를 먼저 굴린다.
-     *   확률이 0 · 1 이어도 소비한다 — 소비 수가 단에 의존하면 같은 시드가 단마다 다른 차림 줄을 낸다 (INTERFACE §5-2)
-     * **무기군 `-`** [2026-10-23 · R324 · 사용자 「랜덤하게 줘도될거같에」] — 그 직업 본편 무기군(`item.groupsFor` 순서) 중 하나를 **이 줄의 첫 굴림 1회**로 고른다.
-     *   무기군이 박힌 몬스터는 안 굴려 차림 수열이 종전과 같다 · 든 무기군은 입은 무기의 `group` 이 들고 간다(`makeEnemy` 의 무기 판정이 그것을 읽는다)
+     * 무기군 · 선택 부위의 착용 여부 · 부위별 장비는 각각 독립 수열이다. 희귀도에 따라 한 부위의 굴림 수가 달라도 다른 부위를 안 민다.
+     * 선택 부위의 확률이 0 · 1 이어도 같은 부위 씨앗에서 한 번 비교한다. 매직찬스는 각 부위의 희귀도 문턱만 옮긴다.
+     * 무기군 `-` 는 그 직업 본편 무기군(`item.groupsFor` 순서) 중 하나를 전용 수열의 한 굴림으로 고른다.
+     * @param seed 이 몬스터 차림의 uint32 씨앗
      * @param level 스테이지 레벨 — `level_add` 는 안 탄다(INTERFACE §2-6 `lvl`)
      * @param chance 선택 부위 착용 확률 — 그 런의 단(`wearChanceOf`)
      * @param weights 희귀도 가중치 — 그 등급 × 그 런의 단(`gearWeightsOf` · 2026-10-24 · R350) · `null` 이면 드롭 가중치 · 굴림 수 불변
      * @param ilvlFixed 그 런의 단이 아이템 레벨을 고정하나(`gearFixedOf` — 헬) — 참이면 아래 끝도 그 몬스터의 레벨이다(굴림은 소비만 · 2026-10-28 · R366)
      */
-    const wearGear = (rng, m, g, level, magicFind, chance, weights, ilvlFixed = false) => {
+    const wearGear = (seed, m, g, level, magicFind, chance, weights, ilvlFixed = false) => {
         let weaponGroup = m.weapon_group;
         if (weaponGroup === '-') {
             const gs = data.itemSystem.groupsFor(m.cls);
-            weaponGroup = gs[Math.floor(rng() * gs.length)].id;
+            weaponGroup = gs[Math.floor(makeRng(deriveSeed(seed ^ ENCOUNTER_STREAMS.weapon, 0))() * gs.length)].id;
         }
         const { fixed, optional } = wearOf(g);
-        const worn = [];
-        for (const part of optional) if (rng() < chance) worn.push(part);
+        const partNo = part => {
+            const no = MONSTER_GEAR_PARTS.indexOf(part);
+            if (no < 0) throw new Error(`battle: 차림 난수 부위 '${part}' 의 번호가 없다`);
+            return no;
+        };
+        const worn = optional.filter(part => makeRng(deriveSeed(seed ^ ENCOUNTER_STREAMS.wear, partNo(part)))() < chance);
         const center = level + g.gear_ilvl_add;
-        return data.itemSystem.rollGear(rng, {
-            slots: [...fixed, ...worn],
+        return [...fixed, ...worn].flatMap(part => data.itemSystem.rollGear(makeRng(deriveSeed(seed ^ ENCOUNTER_STREAMS.part, partNo(part))), {
+            slots: [part],
             ilvl: center,
             ilvlSpread: ilvlSpreadOf(center),
             ilvlMax: monsterLevelOf(m, level),
@@ -290,7 +315,7 @@ export function createBattleSystem(data) {
             // 희귀도 가중치는 **등급 × 단이 쥔다** — 노말 일반몹 = 일반 + 가끔 매직(레어 0) · 나이트메어 · 헬 일반몹은 레어까지 (2026-10-24 사용자 확정 · R350)
             rarityWeights: weights,
             weaponGroup,
-        });
+        }));
     };
 
     /**
@@ -322,14 +347,16 @@ export function createBattleSystem(data) {
     /**
      * 그 몬스터 한 마리의 차림 + 처치 드롭 하나 [신설 2026-10-10 · 실험실 아이템 생성기 · INTERFACE §2-6 · §5-2] —
      * 차림은 스폰과 같은 `wearGear` · 드롭은 `onKill` 의 장비 자리와 같은 식(입은 부위 중 하나 1회). **드롭이 났다고 치고 장비만 낸다** —
-     * 판정 · 종류(책) · 처치 재료는 안 굴린다. 게임 경로는 안 부른다 — 부르는 쪽이 제 rng 를 준다. 없는 몬스터 · 등급이면 null.
+     * 판정 · 종류(도안)는 안 굴린다. 게임 경로는 안 부른다 — 제 rng 에서 씨앗 하나만 뽑고 차림과 부위 선택을 갈라 굴린다. 없는 몬스터 · 등급이면 null.
      * `difficulty` = 선택 부위 착용 확률을 고르는 단 — 안 주면 첫 단(스폰과 같은 뜻 · 2026-10-12 · R245)
      */
     function rollMonsterDrop(rng, monsterId, grade, level, magicFind = 0, difficulty = null) {
         const m = data.monsters[monsterId], g = data.grades[grade];
         if (!m || !g) return null;
-        const worn = wearGear(rng, m, g, level, magicFind, wearChanceOf(difficulty), gearWeightsOf(g, difficulty), gearFixedOf(difficulty));
-        return { worn, drop: worn.length ? worn[Math.floor(rng() * worn.length)] : null };
+        const seed = Math.floor(rng() * 4294967296);
+        const worn = wearGear(seed, m, g, level, magicFind, wearChanceOf(difficulty), gearWeightsOf(g, difficulty), gearFixedOf(difficulty));
+        const pick = makeRng(deriveSeed(seed ^ ENCOUNTER_STREAMS.drop, 0))();
+        return { worn, drop: worn.length ? worn[Math.floor(pick * worn.length)] : null };
     }
 
     /*
@@ -805,22 +832,22 @@ export function createBattleSystem(data) {
      * **2단이다** [개정 2026-09-11 · R79 · INTERFACE §5-2]:
      *   **1단 편성** — 누가 나오나. 스테이지 편성 예외(`spawn_rule.js`)가 뽑을 목록과 범위를 바꾸고, 소환사가 서면 상한까지 채운다 [2026-09-18].
      *     예외가 없는 스테이지는 굴림 순서·횟수가 **종전과 같다**
-     *   **2단 장비·스킬** — 편성이 확정된 뒤 목록 순서로 유닛마다 `rollGear` 한 벌 + (보스면) 셋째 스킬 1회.
-     *     **장비는 전투 줄에서 안 굴린다** [2026-09-22 · 구조 감사] — 유닛마다 **제 줄**(씨앗 · 라운드 번호 · 목록 자리)에서 굴린다.
-     *     전투 줄에 두면 아이템 옵션 한 줄이 장비 굴림 수를 바꿔 그 뒤 편성 · 적중 · 치명이 통째로 갈렸다. 셋째 스킬은 전투 줄 그대로다(1회 고정)
+     *   **2단 장비·스킬** — 편성이 확정된 뒤 목록 자리마다 차림과 보스 셋째 스킬을 별도 수열에서 굴린다.
+     *     편성 · 차림 · 스킬 · 처치 드롭은 만남 씨앗을 공유하되 서로의 소비 횟수에 영향받지 않는다.
      *
      * ⚠ **1단이 2단보다 앞인 것이 계약이다** — 장비 굴림이 편성 굴림을 밀면 같은 시드가 다른 편성을 낸다
      *   (`rollFace` 를 맨 뒤에 두는 것 · `searchRoll` 의 「결과를 먼저, 이야기를 뒤에」와 같은 규칙).
      * ⚠ **전역 상한도 1단에서 자른다** — 잘릴 유닛의 장비를 굴리면 수열이 편성 상한에 종속된다.
      * @param magicFind 파티 평균 매직아이템 획득확률(비율) — 장비 희귀도의 레어 가중치에 곱한다 (item_design §1 4단계)
      * @param level 몬스터 레벨 = **이번 런의 스테이지 레벨** — 안 주면 기본 레벨 `dlvl` (2026-09-14 · R87)
-     * @param gearSeed 몬스터 차림 줄의 씨앗 — `createRun` 이 런을 열 때 전투 줄에서 한 번 뽑는다 (2026-09-22)
+     * @param seed 이 라운드의 만남 씨앗 — 편성 · 차림 · 스킬 · 드롭 수열을 따로 파생한다
      * @param wearChance 선택 부위 착용 확률 — 그 런의 단 (2026-10-12 · R245 · `wearGear`)
      * @param difficulty 그 런의 단 id — 스킬 칸 수를 고른다(`makeEnemy` · `slotPlan` · 2026-10-18 · R269 · rng 0)
      * @param cxMagic 몬스터 id → 그 몬스터 종족의 도감 Lv1 매직 몫(`codexOf().farm.magic`) 또는 null — 그 한 마리의 차림 굴림 `magicFind` 에 체감 밖에서 더한다
      *   [2026-10-22 · R314 · INTERFACE §2-6 「도감 사다리」] · 차림 줄은 유닛마다 제 줄이라 전투 줄을 안 민다 · 0 이면 더해도 종전 값이다
      */
-    function spawnRound(rng, gearSeed, stage, pool, n, magicFind = 0, level = stage.dlvl, wearChance = 1, difficulty = null, cxMagic = null) {
+    function spawnRound(seed, stage, pool, n, magicFind = 0, level = stage.dlvl, wearChance = 1, difficulty = null, cxMagic = null) {
+        const rng = makeRng(deriveSeed(seed ^ ENCOUNTER_STREAMS.formation, 0));
         const type = stageRounds(stage).find(r => r.round_num === n)?.round_type ?? 'normal';
         const budgetKey = type === 'boss' ? stage.boss_grade : type;
         const bd = data.budgets[budgetKey];
@@ -885,18 +912,22 @@ export function createBattleSystem(data) {
             const m = data.monsters[s.id];
             const g = data.grades[s.grade];
             // 차림 — 아이템 레벨 · 희귀도 가중치 규칙은 `wearGear` 한 곳이다(실험실이 같은 함수를 부른다 · 2026-10-10)
-            // 제 줄 = (씨앗 · 라운드 · 목록 자리) — 앞 몬스터의 굴림 수가 뒤 몬스터의 장비도 전투 수열도 안 민다 (INTERFACE §5-1 · 2026-09-22)
+            // 제 줄 = (라운드 씨앗 · 용도 · 목록 자리) — 앞 몬스터나 부위의 굴림 수가 뒤 차림을 안 민다.
             const mf = cxMagic ? magicFind + cxMagic(s.id) : magicFind;   // 도감 Lv1 매직 — 그 종족 몫(R314)
-            const gear = wearGear(makeRng(deriveSeed(deriveSeed(gearSeed, n), k)), m, g, level, mf, wearChance, gearWeightsOf(g, difficulty), gearFixedOf(difficulty));
+            const gear = wearGear(deriveSeed(seed ^ ENCOUNTER_STREAMS.gear, k), m, g, level, mf, wearChance, gearWeightsOf(g, difficulty), gearFixedOf(difficulty));
             // 보스의 한 칸 더 — 보스만(`skill_slots_add` ≥ 1 · R269 — ~~`skill_slots` ≥ 3~~ 같은 유닛이라 순서 · 횟수 불변). ⚠ **풀이 비어도 1회 소비한다**(무기 베이스·스킬 굴림과 같은 규칙).
             //   2칸(나이트메어)은 굴리지 않는다 — `nightmare_skill` 이 정한다
             let thirdSkill = null;
             if (g.skill_slots_add >= 1) {
                 const cp = CLASS_SKILLS[m.cls] ?? [];
-                const tr = rng();
+                const tr = makeRng(deriveSeed(seed ^ ENCOUNTER_STREAMS.skill, k))();
                 thirdSkill = cp.length ? cp[Math.floor(tr * cp.length)] : null;
             }
-            return makeEnemy(`e${k}`, s.id, s.grade, level, gear, { ...s.extra, thirdSkill, difficulty });
+            const u = makeEnemy(`e${k}`, s.id, s.grade, level, gear, { ...s.extra, thirdSkill, difficulty });
+            // 보상은 처치 순간 판정하되 굴림은 그 몬스터 자리로 정한다. 불러내기로 나중에 서도 같은 카드다.
+            u.dropSeed = deriveSeed(seed ^ ENCOUNTER_STREAMS.drop, k);
+            u.spawnNo = k;
+            return u;
         });
         // 무리 [2026-09-18 · INTERFACE §2-13] — 소환사는 그 라운드의 다른 적 전부를 든다(대기 포함). `called` = 지금 서 있거나 한 번 선 적이 있다 —
         //   대기만 거짓으로 출발하고 라운드 시작의 적 배열에서 빠진다. 불러내기(`callBand`)가 무리 중 서 있지 않은 것을 세운다 · rng 0
@@ -928,8 +959,10 @@ export function createBattleSystem(data) {
      * @param codexOf 도감 사다리 — 몬스터 id → 그 종족의 닿은 몫 `{race, farm, fight}` 또는 null(`state.codexLadder` · 안 주면 도감 없음 · 칸 없는 몬스터도 null).
      *   **라운드마다 스폰한 몬스터에** 그 순간 값을 `unit.codex` 로 얹는다 (2026-10-18 · R286 · 2026-10-22 · R314 그 종족 전체 · monster_design §8 · INTERFACE §2-6 「도감 사다리」) · rng 0
      * @param potionHp 물약을 마시는 HP 비율 — 이 비율 **미만**인 영웅이 마신다 · 게임은 굳힌 편성의 값을 넘긴다(`squad.potionHp`) · 안 주면 [balance.csv:potion_use_hp_pct] (2026-10-29 · R378)
+     * @param encounterSeeds 원정이 발급받은 라운드별 uint32 만남 씨앗 배열 · 길이 = 스테이지 라운드 수 · 결투장에는 못 넘긴다.
+     *   없으면 `rng` 첫 굴림에서 만남 루트를 만들어 라운드 번호로 파생한다. 있으면 그대로 복사하고 전투 rng 를 소비하지 않는다.
      */
-    function createRun(partyUnits, stageId, rng, level, potions = null, slotMax = B.potion_slot_max, encounter = null, difficulty = null, codexOf = null, potionHp = null) {
+    function createRun(partyUnits, stageId, rng, level, potions = null, slotMax = B.potion_slot_max, encounter = null, difficulty = null, codexOf = null, potionHp = null, rules = null, encounterSeeds = null) {
         const wearChance = wearChanceOf(difficulty);
         // 결투장은 스테이지 스폰 대신 영웅 팀 스냅샷을 받아 같은 전투 루프를 단판으로 돈다.
         const stage = encounter ? { dlvl: level ?? 1 } : data.stages[stageId];
@@ -944,12 +977,18 @@ export function createBattleSystem(data) {
         const stageLevel = level ?? stage.dlvl;
         const pool = encounter ? [] : stagePool(stage);
         const rounds = encounter ? 1 : stageRounds(stage).length;
-        // 몬스터 차림 줄의 씨앗 — **런의 첫 굴림**이다 [2026-09-22 · 구조 감사 · INTERFACE §5-1]. 장비는 이 씨앗에서 몬스터마다 제 줄로 굴린다(`spawnRound`)
-        const gearSeed = Math.floor(rng() * 4294967296);
+        // 잘못된 외부 시드는 난수를 소비하거나 전투를 열기 전에 거절한다. 0 도 유효한 uint32 씨앗이다.
+        if (encounterSeeds !== null && (encounter || !Array.isArray(encounterSeeds) || encounterSeeds.length !== rounds
+            || !Array.from(encounterSeeds).every(s => Number.isInteger(s) && s >= 0 && s <= 0xFFFFFFFF)))
+            throw new Error('battle: encounterSeeds 는 스테이지 라운드 수와 같은 길이의 uint32 배열이어야 한다');
+        const suppliedSeeds = encounterSeeds?.slice() ?? null;   // 호출자가 뒤에 배열을 고쳐도 진행 중인 판은 불변
+        // 장부 없는 시뮬 · 동굴은 기존처럼 런의 첫 굴림으로 만남 루트를 만든다. 외부 시드를 받은 원정은 전투 줄을 소비하지 않는다.
+        const encounterRoot = suppliedSeeds ? null : Math.floor(rng() * 4294967296);
+        const roundSeedOf = n => suppliedSeeds ? suppliedSeeds[n - 1] : deriveSeed(encounterRoot, n);
 
         // 파티 유닛 — 몬스터와 **같은 생성자**를 지난다 (§8-1). 자리가 정하는 것만 extra 로 얹는다
         const party = partyUnits.map((p, i) => makeUnit('party', p.combat, {
-            key: `p${i}`, uid: p.uid,
+            key: `p${i}`, uid: p.uid, group: p.group,
             stats: p.stats ?? null,      // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef · 2026-09-10)
             rank: p.rank ?? 0,           // 진형 — 편성이 정한 자리 (state.formationState · 배치가 없으면 전열)
             // 첫 차례를 살짝 엇갈리게 — 동시 발동 시각 차이만 준다. 빈 게이지 한 바퀴 **뒤에** 얹는다 (R200 · INTERFACE §5-3)
@@ -1020,9 +1059,9 @@ export function createBattleSystem(data) {
          *   `applied` 에 `buff` 이벤트 모양(`t` 없음)을 쌓는다 · 파생값은 부르는 쪽이 다시 쓴다 · rng 0
          */
         function castAura(p, side, applied) {
-            for (const x of SK.scaleDef(p.aura.def, p.stats).effects) {
+            for (const x of SK.scaleDef(p.aura.def, p.stats, p.fx?.skillTags).effects) {
                 if (x.effect !== 'apply') continue;
-                const targets = x.target === 'self' ? [p] : side;
+                const targets = x.target === 'self' ? [p] : rules?.partyScope && p.side === 'party' ? side.filter(u => u.group === p.group) : side;
                 for (const tgt of targets) {
                     tgt.buffs[x.status] = { stat: x.stat, v: x.value, until: Infinity, element: x.element ?? null, by: p.key, s: p.aura.id, roundEnd: x.roundEnd };
                     applied.push({ e: 'buff', u: tgt.key, s: p.aura.id, stat: x.stat, v: x.value, until: null });
@@ -1148,13 +1187,18 @@ export function createBattleSystem(data) {
             falls.push({ uid: u.uid, t: r1(t), round, by, dmg: Math.round(top), taken: Math.round(sum) });
         };
 
-        /* 라운드 몫 [2026-09-14 · R89 · base_expedition_design §1-1] — 처치의 보상(경험치 · 골드 · 도감 · 드롭)은 **여기에 모았다가 라운드를 이기면**
-           결과로 옮긴다(`bank`). 진 라운드(전멸 · 시간 초과)의 몫은 버린다. 판정 굴림은 처치 순간 그대로 돌아 rng 순서가 안 바뀐다 */
+        /* 라운드 몫 — 처치의 보상은 여기에 모았다가 라운드를 이기면 결과로 옮긴다(`bank`). 진 라운드의 몫은 버린다.
+           장비 · 도안 목록은 몬스터가 뽑힌 자리 순으로 묶어 처치 순서가 지급 순서나 아이템 uid 를 바꾸지 않게 한다. */
         // xpByLevel = xp 를 **몬스터 레벨**로 가른 것 `{lvl: xp}` — 정산이 영웅마다 레벨 차 감쇠를 건다 (2026-09-30 · hero_design §5 · 세는 것뿐이라 rng 0)
         // ~~skillKills 스킬 도감의 처치 수~~ — 2026-10-20 삭제(R293 · 세는 것뿐이라 rng 0 이었다)
         const newLoot = () => ({ xp: 0, xpByLevel: {}, gold: 0, kills: {}, killGrades: {}, drops: [], blueprints: [] });
         let loot = newLoot();
+        let rewardCards = [];
         const bank = () => {
+            for (const c of rewardCards.sort((a, b) => a.no - b.no)) {
+                if (c.drop) loot.drops.push(c.drop);
+                else loot.blueprints.push(c.blueprint);
+            }
             out.xpTotal += loot.xp;
             out.gold += loot.gold;
             for (const [id, n] of Object.entries(loot.kills)) out.kills[id] = (out.kills[id] ?? 0) + n;
@@ -1204,9 +1248,9 @@ export function createBattleSystem(data) {
         // 소환 유닛 키 — `p0`(파티) · `e0`(적) 과 겹치지 않는 `s0` 대역. 전투 하나 안에서만 센다
         let summonSeq = 0;
         const rt = createSkillRuntime({
-            SK, B, rng, timeline, out, units,
+            SK, B, rng, timeline, out, units, partyScope: rules?.partyScope,
             strikeOnce, pickTarget, r1, EPS, hooks,
-            makeSummon: (caster, def) => makeSummon(caster, def, `s${summonSeq++}`),
+            makeSummon: (caster, def) => Object.assign(makeSummon(caster, def, `s${summonSeq++}`), { group: caster.group }),
             callBand: (caster, at) => callBand(caster, at),   // 불러내기 — 무리를 세우는 것은 적 배열 · 오오라 · 보상 표식을 아는 이쪽이다 (2026-09-18)
             // 비직격 고정 피해 한 대상 — 기여표와 전투불능을 아는 이쪽이다 (하는 일 `fixed` · 2026-09-24 R151 — ~~`blast` 전용 함수~~)
             dealIndirect: (a, d, dmg, s) => dealIndirect(a, d, dmg, s),
@@ -1216,6 +1260,10 @@ export function createBattleSystem(data) {
             swarmOpen: (u, x, ev) => swarmOpen(u, x, ev),
             swarmClose: (u, at) => swarmClose(u, at),
         });
+
+        // Encounter-specific orchestration. Ordinary runs keep the same events and RNG stream.
+        const ruleContext = () => ({ t: r1(t), party, enemies: units.enemies, timeline,
+            attack: strikeOnce, pickTarget, downed });
 
         /* 물약 [2026-09-15 · R103 · battle_design §7-1] — 칸은 **파티가 같이 쓴다**: 여기서 차고, 둘째 라운드부터는 부르는 쪽이 `restock` 으로 넘긴 목록으로
            그 라운드를 열 때 다시 찬다(게임은 정산이 재고에서 채워 넘긴다 · 안 넘기면 줄어든 칸 그대로 · 2026-10-22 · R315).
@@ -1291,8 +1339,7 @@ export function createBattleSystem(data) {
             // 장 디버프(시기 · 나태)도 라운드를 연 시각부터 다시 잰다 — 첫 틱에 걸린다 (R366) · 폭식은 `roundAt` 에서 0 부터
             curseAt = curse?.effect === 'poison' || curse?.effect === 'freeze' ? t : null;
             for (const u of [...party, ...units.enemies]) if (u.mfeast) u.feast = 0;   // 폭식 T3 겹도 라운드를 열면 비운다 (R343)
-            // 정신 집중은 라운드를 안 넘는다 [2026-10-22 · R318] — 열린 채 끝난 라운드면 여기서 닫는다(쿨은 지금부터 · `chanEnd` 는 `round` 앞) · rng 0
-            for (const p of party) if (p.chan) rt.chanClose(p, t);
+            // 정신 집중은 이전 라운드가 끝난 순간 이미 닫혔다 — 정산 · 경계 갈아입기도 절반만 남긴 쿨을 잇는다(2026-10-30).
             // 소환물은 **라운드가 끝나면 사라진다** (skill_design §12-6). 걷어내는 자리가 여기다 —
             //   적 배열이 갈리는 것과 같은 시점이라 결투 선언의 지목도 함께 사라진다(창이 적에게 붙어 있었다)
             for (let i = party.length - 1; i >= 0; i--) if (party[i].summon) party.splice(i, 1);
@@ -1334,12 +1381,12 @@ export function createBattleSystem(data) {
             } : null;
             // 매직찬스는 **스폰 굴림**에 걸린다 [2026-09-11 · R79] — 장비 희귀도가 여기서 정해지기 때문이다.
             //   ⚠ 딸린 것 — 파티의 매직아이템 획득확률이 **적 장비도 좋게 한다**(사용자가 알고 택한 「이스터에그」)
-            const sp = encounter ? { type: 'normal', list: encounter.map((p, i) => makeUnit('enemy', p.combat, {
+            const sp = encounter ? { type: rules?.kind ?? 'normal', list: encounter.map((p, i) => makeUnit('enemy', p.combat, {
                 key: `e${i}`, uid: p.uid, hero: p.hero, grade: 'normal', monsterType: 'Normal',
                 rank: p.rank ?? 0, stats: p.stats, sheet: { ...p.combat }, gear: p.gear,
                 reactions: p.reactions ?? [],
                 actives: (p.actives ?? []).map(a => slotOf(a, SK.resolve(a), fitterOf(p.weaponGroup), 0)),
-            })) } : spawnRound(rng, gearSeed, stage, pool, round, magicFind, stageLevel, wearChance, difficulty,
+            })) } : spawnRound(roundSeedOf(round), stage, pool, round, magicFind, stageLevel, wearChance, difficulty,
                 cxOf ? id => cxOf(id)?.farm.magic ?? 0 : null);
             units.enemies = sp.list;
             // 유닛에 얹는다 — 대기 무리(`band` · 불러내기가 세운다)도 같은 라운드의 몬스터다 · 칸이 없는 몬스터(보스 · 6 · 7장)는 null
@@ -1364,6 +1411,7 @@ export function createBattleSystem(data) {
             if (round > 1) for (const p of party) { const s = primeGauge(p); if (s) pg[p.key] = r1(s); }
             roundLog = { n: round, kind: sp.type, killed: [], eliteSin: units.enemies.find(e => e.grade === 'elite')?.sin ?? null };
             out.rounds.push(roundLog);
+            rules?.onStart?.(ruleContext());
             timeline.push({ t: r1(t), e: 'round', n: round, kind: sp.type, enemies: units.enemies.map(enemyView), ...(Object.keys(pg).length ? { pg } : {}),
                 ...(pots ? { pots: pots.map(p => (p ? { id: p.id, heal: p.heal } : null)) } : {}) });
             // 오오라 창 이벤트 [2026-09-15 · R98] — `round` 바로 뒤 · 파티 몫(전투 시작 · 갈아입기) 먼저, 이 라운드 적의 것 다음.
@@ -1394,7 +1442,7 @@ export function createBattleSystem(data) {
             const xp = e.expReward * (1 + (farm?.xp ?? 0));
             loot.xp += xp;
             loot.xpByLevel[e.lvl] = (loot.xpByLevel[e.lvl] ?? 0) + xp;
-            loot.gold += Math.round(e.goldReward * e.goldMult * B.gold_rate * goldMult * (1 + (farm?.gold ?? 0)));
+            loot.gold += Math.round(e.goldReward * goldSupportMult(e.lvl) * e.goldMult * B.gold_rate * goldMult * (1 + (farm?.gold ?? 0)));
             // ~~정예·보스 처치가 가루를 뱉던 두 줄~~ 은 2026-09-09 삭제 — **처치가 뱉는 재료는 없다**
             // (item_design §5-3 확정 · GAME_DESIGN §9 09-09). 처치의 산출은 **장비 · 골드**뿐이다.
             // 가루 자체는 남는다 — 공급원이 **분해** 하나로 줄었을 뿐이다(`item.salvageDust`)
@@ -1405,7 +1453,8 @@ export function createBattleSystem(data) {
             // 도감 Lv1 드롭 — 그 종족의 장비 · 도안 판정 확률 × (1 + drop) (R314 — ~~Lv3 그 몬스터의 drop~~ R286) · 판정 횟수는 그대로라 rng 순서가 안 밀린다 · 0 이면 × 1
             //   ⚠ 파밍 줄 `material`(재료 판정 확률)은 처치 재료가 걷혀(2026-10-29 · R373) 읽는 곳이 없다 — 대체를 정할 때까지 칸만 산다(DEV_PLAN §4)
             const cxDrop = 1 + (farm?.drop ?? 0);
-            let got = rng() < B.drop_chance_pct * e.dropChanceMult * dropMult * cxDrop ? 1 : 0;
+            const dropRng = makeRng(e.dropSeed);
+            let got = dropRng() < B.drop_chance_pct * e.dropChanceMult * dropMult * cxDrop ? 1 : 0;
             if ((e.grade === 'stage_boss' || e.grade === 'chapter_boss') && got < B.boss_guaranteed_drop) got = B.boss_guaranteed_drop;
             /*
              * **떨어지는 것은 그 몬스터가 입고 있던 장비다** [개정 2026-09-11 · R79 · 사용자 지시 · item_design §1 2단계].
@@ -1413,21 +1462,23 @@ export function createBattleSystem(data) {
              *   남은 굴림은 **입은 부위 중 하나를 고르는 1회**뿐이고, 그것이 「드롭 부위 편향의 단위」의 답이다 — 단위는 **입은 것**이다.
              * ⚠ 맨몸 몬스터는 판정이 성공해도 낼 것이 없다 — 아무것도 굴리지 않고 넘어간다.
              * **그 한 개가 장비냐 스킬 도안이냐를 굴린다** [2026-09-29 · R179 · 사용자 「처치당 1개 · 장비냐 책이냐」 · item_design §1 드롭 1-2 · **2026-10-20 · R293 ~~책~~ → 도안**] —
-             *   드롭이 나면 **종류 1회**(`drop_book_pct`) → 도안이면 **도안 후보 고르기 1회** · 장비면 입은 부위 1회. 책 → 도안은 이름만 바뀌었다 — 후보 · 굴림이 그대로라 수열이 같다.
+             *   드롭이 나면 몬스터 전용 수열에서 종류 1회(`drop_book_pct`) → 선택 1회다. 같은 선택값으로 도안 후보 또는 입은 부위를 고른다.
              *   도안 후보 = 그 유닛이 **든 칸** 중 영웅이 배울 수 있는 스킬(`blueprintSkills` — 칸 순서 · 자폭 · 불러내기는 책이 없다) [개정 2026-10-18 · R269 · monster_design §5-1 「쥔 스킬이면 어느 칸이든」 ·
              *   ~~고유 스킬 하나 · 굴림 더 없음~~] · ⚠제안 같은 확률.
-             *   ⚠ **후보가 없어도 · 하나여도 종류 · 고르기는 1회씩 소비한다** — 소비 수가 몬스터의 칸 수에 의존하면 같은 시드가 다른 드롭을 낸다(INTERFACE §5-2) · 후보가 없으면 장비로 간다
+             *   후보가 없어도 · 하나여도 종류 · 선택은 1회씩이다. 도안 후보가 없어 장비로 가도 선택값을 다시 뽑지 않는다.
+             *   찾기 스탯은 성공 문턱만 움직인다. 전투 수열 · 처치 순서 · 다른 몬스터의 후보 수는 이 몬스터의 카드를 안 민다.
              */
             const plans = e.blueprintSkills ?? [];
             for (let i = 0; i < got; i++) {
+                const kind = dropRng(), selection = dropRng();
                 const worn = e.gear ?? [];
                 if (!worn.length && !plans.length) break;
-                if (rng() < B.drop_book_pct) {
-                    const pick = Math.floor(rng() * plans.length);
-                    if (plans.length) { loot.blueprints.push(plans[pick]); continue; }
+                if (kind < B.drop_book_pct && plans.length) {
+                    rewardCards.push({ no: e.spawnNo, blueprint: plans[Math.floor(selection * plans.length)] });
+                    continue;
                 }
                 if (!worn.length) continue;
-                loot.drops.push(worn[Math.floor(rng() * worn.length)]);
+                rewardCards.push({ no: e.spawnNo, drop: worn[Math.floor(selection * worn.length)] });
             }
             // ~~처치 재료 판정 1회 → 종류 1회~~ — 2026-10-29 R373 삭제(item_design §1 「처치는 재료를 뱉지 않는다」 · INTERFACE §5-2 — 처치마다 굴림이 빠져 수열이 갈렸다)
         };
@@ -1987,6 +2038,7 @@ export function createBattleSystem(data) {
             u.procMult = sk?.procMult ?? 0;
             // 조건부 추가 피해 — vs 종족 · 등급 · 열 · 원소를 그 타격 동안만 얹는다. strike 가 **데미지 % 괄호 안에** 더한다 (battle_design §9-1 · R78 · 2026-09-18). rng 0
             u.condPct = fx ? condPct(fx, target, hitType) : 0;
+            if (sk?.tagDamage) u.condPct += sk.tagDamage;
             // 물리 데미지 % [2026-10-16 · R246 · 워 크라이 — 적에게 음수] — 물리 타격만 같은 괄호에 더한다. 창이 없으면 안 더한다(부동소수 그대로)
             if (hitType === 'physical') {
                 const phys = sumOf(u, 'phys_pct');
@@ -2224,7 +2276,8 @@ export function createBattleSystem(data) {
             }
             // 호출자가 붙인 후처리(추가타 결빙 · 대상 방어 감소)까지 끝낸 뒤 장비 발동을 판정한다.
             afterStrike?.(true);
-            // 무기 타격 발동 — 원래 타격의 반사 · 쓰러짐 · 반격을 먼저 끝낸다. 발동 안의 직격은 런타임이 연쇄를 막는다.
+            // 피격 → 타격 순서. 살아 있는 유닛만 발동하고 발동 안의 직격은 양쪽 모두 연쇄를 막는다.
+            rt.procStruck(target, t);
             rt.procHit(u, t);
             // 적중한 직격 [2026-10-29 · R387] — 덤 창의 상태이상(콜드 애로우 결빙 · `skill_runtime.onhitExtra`)이 읽는다 · 피함 · 빗나감은 위에서 값 없이 돌아갔다
             return true;
@@ -2232,6 +2285,10 @@ export function createBattleSystem(data) {
 
         // `between` = 이긴 라운드의 요약을 냈고 다음 라운드를 **아직 안 열었다**(라운드 사이) — 다음 걸음의 첫머리가 연다 (R130)
         let started = false, ended = false, between = false;
+        /** 라운드 종료로 남은 방을 취소한다 — 살아 있는 양 진영 모두 쿨 절반 환급 · 마지막 라운드도 같다 · rng 0. */
+        const closeRoundChannels = () => {
+            for (const u of [...party, ...units.enemies]) if (u.hp > 0 && u.chan) rt.chanClose(u, t, 'round');
+        };
         /** 진 런 · 시간 초과의 사실 — 쓰러진 순서 · 끝난 순간 서 있던 적 · 레벨 차(마지막 라운드 적 중 가장 높은 레벨 − 파티에서 가장 낮은 레벨 · 0 아래면 0) (ADR-0623) */
         const fallNow = () => {
             const foes = units.enemies.filter(e => !e.summon), heroes = party.filter(p => !p.summon);
@@ -2258,6 +2315,7 @@ export function createBattleSystem(data) {
                 potions: potionRound,        // 그 라운드에 마신 물약 — 이겼든 졌든 (R124)
             };
             loot = newLoot();
+            rewardCards = [];
             potionRound = {};
             return s;
         };
@@ -2395,6 +2453,7 @@ export function createBattleSystem(data) {
                 t += TICK;
                 // 창 만료를 행동 **앞에서** 한 번에 처리한다 — 같은 틱에 만료와 행동이 섞이는 순서를 고정하기 위해서다
                 for (const u of [...party, ...units.enemies]) if (u.hp > 0) rt.expire(u, t);
+                rules?.beforeTick?.(ruleContext());
                 // 장 디버프 — 시기 · 나태는 간격마다 영웅 전원에게 건다 — 창 만료 **뒤** · 중독 틱 **앞** (2026-10-28 · R366 · INTERFACE §5-2) · rng 0
                 if (curseAt !== null && t + STEP_EPS >= curseAt) { curseCast(); curseAt += curse.intervalSec; }
                 // 나태 T2 겹의 쿨감 [2026-10-05 · skill_design §3-2] — 행동 **앞**에서 그 틱의 겹으로 `cdr` 를 되쓴다(시전 순간 `cooldownSec` 이 읽는다). 겹 줄이 없는 유닛은 안 건드린다 · rng 0
@@ -2422,6 +2481,7 @@ export function createBattleSystem(data) {
                 if (potionLeft > 0) drinkPotions();
                 for (const u of [...party, ...units.enemies]) {
                     if (u.hp <= 0) continue;
+                    if (rules?.skipActor?.(u)) continue;
                     if (u.chan) { chanTick(u); continue; }   // 정신 집중 — 차례 · 칸 충전 대신 방 사이 초 시계 (2026-10-22 · 끊어 치기도 2026-10-30 R392 · 위 `chanTick`)
                     if (u.noBasic) { chargeTick(u); continue; }
                     u.next -= TICK;
@@ -2434,6 +2494,7 @@ export function createBattleSystem(data) {
                         else rt.act(u, t);
                     }
                 }
+                rules?.afterTick?.(ruleContext());
                 // 지금 값 — 행동 처리 **뒤** · 전멸 · 클리어 판정 **앞** [2026-10-21 · R305 · INTERFACE §2-6 `stat`]. 지난번에 알린 값과 달라진 줄만 싣는다 —
                 //   이벤트를 안 내는 창(무기 옵션 · 겹)과 깎인 방어 · 갈아입기까지 한 자리에서 잡는다. 표시값이라 전투는 안 읽는다 · rng 0
                 for (const u of [...party, ...units.enemies]) {
@@ -2452,17 +2513,18 @@ export function createBattleSystem(data) {
                 // ⚠ 09-07 로 이것이 **최종형**이다 — 원정은 켜 놓고 자리를 뜨는 것이라 전멸까지 도는 것이 사양이고,
                 //    추가 브레이크를 만들지 않는다. **결정은 편성이다** (base_expedition_design §1-1 · DEV_PLAN R42)
                 // ⚠ 소환물은 **전멸 판정에서 뺀다** — 얼음 벽이 서 있다고 전투가 안 끝나면 파티가 전멸해도 안 돌아온다
-                if (alive(party).filter(u => !u.summon).length === 0) { finish('wipe'); return summary(false); }
+                if (alive(party).filter(u => !u.summon).length === 0) { closeRoundChannels(); finish('wipe'); return summary(false); }
                 // 적의 소환 벽도 **클리어 판정에서 뺀다** [2026-09-11 · R79] — 바로 위 전멸 판정과 같은 규칙이다: 행동하지 않는 벽이 서 있다고
                 //   라운드가 안 끝나면 안 된다. 벽은 다음 라운드의 적 배열 교체(`units.enemies = sp.list`)로 함께 사라진다
                 if (alive(units.enemies).filter(u => !u.summon).length === 0) {
+                    closeRoundChannels();                // 정산 · 갈아입기 · 다음 라운드 전에 닫고 쿨 절반을 남긴다
                     out.roundsCleared = round;
                     bank();                              // 이긴 라운드의 몫 — 결과로 옮긴다 (R89)
                     if (round >= rounds) { out.won = true; finish('clear'); return summary(true); }
                     between = true;                  // 다음 라운드는 다음 걸음이 연다 — 그 사이에 정산 · 경계 갈아입기가 끼어든다
                     return summary(true);
                 }
-                if (t >= B.battle_timeout_sec) { finish('timeout'); return summary(false); }
+                if (rules ? t + STEP_EPS >= (rules.timeoutSec ?? B.battle_timeout_sec) : t >= B.battle_timeout_sec) { finish('timeout'); return summary(false); }
             }
             return null;                             // 라운드 도중에 섰다 — 다음 걸음이 이어 돈다
         }
@@ -2481,7 +2543,12 @@ export function createBattleSystem(data) {
         /** 지금 시각 · 라운드 · 그 종류 · 라운드 도중인가 — 표시 · 판정용 (R130 · rng 0) */
         const status = () => ({ t: r1(t), round, kind: started ? roundLog?.kind ?? null : null, inRound: inRound() });
 
-        return { next, advance, refit, restock, status, result: out, get ended() { return ended; } };
+        const abort = () => {
+            if (ended) return null;
+            closeRoundChannels(); finish('retreat');
+            return summary(false);
+        };
+        return { next, advance, refit, restock, status, abort, result: out, get ended() { return ended; } };
     }
 
     /**

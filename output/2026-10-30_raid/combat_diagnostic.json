@@ -1,0 +1,454 @@
+{
+  "checks": {
+    "checks": [
+      {
+        "name": "three full parties and unique hero identities",
+        "ok": true
+      },
+      {
+        "name": "fixed practice roster is copied on every request",
+        "ok": true
+      },
+      {
+        "name": "lab rosters vary with their seed and remain repeatable without touching the fixed fixture",
+        "ok": true
+      },
+      {
+        "name": "combat leaves input snapshots untouched",
+        "ok": true
+      },
+      {
+        "name": "boss metadata and anti-demon damage use the existing combat rules",
+        "ok": true
+      },
+      {
+        "name": "same seed produces identical timeline and result",
+        "ok": true
+      },
+      {
+        "name": "frame chunking preserves the full result",
+        "ok": true
+      },
+      {
+        "name": "duplicate heroes rejected",
+        "ok": true
+      },
+      {
+        "name": "missing party rejected",
+        "ok": true
+      },
+      {
+        "name": "healing skills stay within the caster party",
+        "ok": true
+      },
+      {
+        "name": "auras stay within their party",
+        "ok": true
+      },
+      {
+        "name": "summons enter the shared target pool while their allies remain party scoped",
+        "ok": true
+      },
+      {
+        "name": "boss hits only announced lanes",
+        "ok": true
+      },
+      {
+        "name": "taunt and duel from another lane cannot redirect an announced hit",
+        "ok": true
+      },
+      {
+        "name": "raid tactics expose no controls, tuning fields or combat effects",
+        "ok": true
+      },
+      {
+        "name": "cast breaks suppress that heavy impact",
+        "ok": true
+      },
+      {
+        "name": "failed cast breaks resolve the heavy raid-wide attack",
+        "ok": true
+      },
+      {
+        "name": "timeout occurs exactly on its configured tick",
+        "ok": true
+      },
+      {
+        "name": "wipe terminates and one fallen party does not end the raid",
+        "ok": true
+      },
+      {
+        "name": "combat phases and result totals remain finite",
+        "ok": true
+      },
+      {
+        "name": "finished raids ignore further advances",
+        "ok": true
+      },
+      {
+        "name": "entry stays locked below level 30 and opens exactly at level 30",
+        "ok": true
+      },
+      {
+        "name": "empty rosters remain level locked",
+        "ok": true
+      },
+      {
+        "name": "entry level is read from the encounter data",
+        "ok": true
+      },
+      {
+        "name": "invalid unlock levels are rejected",
+        "ok": true
+      },
+      {
+        "name": "new saves report the real-party level requirement independently of lab practice",
+        "ok": true
+      },
+      {
+        "name": "reaching the entry level keeps the own-party Hell clear requirement",
+        "ok": true
+      },
+      {
+        "name": "Hell clear opens three full own parties and snapshots actual combat values",
+        "ok": true
+      },
+      {
+        "name": "own parties reject duplicates and expedition or exploration occupancy",
+        "ok": true
+      },
+      {
+        "name": "retreat finishes at the current time and cannot emit duplicate end events",
+        "ok": true
+      }
+    ],
+    "passed": 30,
+    "total": 30
+  },
+  "calibration": null,
+  "teams": [
+    [
+      {
+        "cls": "knight",
+        "hp": 1849,
+        "period": 2.906
+      },
+      {
+        "cls": "priest",
+        "hp": 1638,
+        "period": 3.636
+      },
+      {
+        "cls": "mage",
+        "hp": 1365,
+        "period": 2.611
+      }
+    ],
+    [
+      {
+        "cls": "warrior",
+        "hp": 1962,
+        "period": 3.989
+      },
+      {
+        "cls": "archer",
+        "hp": 1478,
+        "period": 2.637
+      },
+      {
+        "cls": "priest",
+        "hp": 1248,
+        "period": 3.903
+      }
+    ],
+    [
+      {
+        "cls": "mage",
+        "hp": 1551,
+        "period": 2.296
+      },
+      {
+        "cls": "knight",
+        "hp": 1256,
+        "period": 2.715
+      },
+      {
+        "cls": "priest",
+        "hp": 1597,
+        "period": 2.236
+      }
+    ]
+  ],
+  "metrics": [
+    {
+      "seed": 1,
+      "won": false,
+      "reason": "timeout",
+      "t": 180,
+      "hp": 15029,
+      "breaks": 1,
+      "failed": 5,
+      "parties": [
+        {
+          "alive": 1,
+          "dealt": 236772,
+          "healed": 17367
+        },
+        {
+          "alive": 0,
+          "dealt": 97356,
+          "healed": 5689
+        },
+        {
+          "alive": 1,
+          "dealt": 70843,
+          "healed": 18522
+        }
+      ],
+      "events": 1922
+    },
+    {
+      "seed": 2,
+      "won": false,
+      "reason": "timeout",
+      "t": 180,
+      "hp": 8428,
+      "breaks": 1,
+      "failed": 5,
+      "parties": [
+        {
+          "alive": 0,
+          "dealt": 215360,
+          "healed": 14287
+        },
+        {
+          "alive": 0,
+          "dealt": 101400,
+          "healed": 1024
+        },
+        {
+          "alive": 1,
+          "dealt": 94812,
+          "healed": 14488
+        }
+      ],
+      "events": 1869
+    },
+    {
+      "seed": 3,
+      "won": true,
+      "reason": "clear",
+      "t": 96.4,
+      "hp": 0,
+      "breaks": 3,
+      "failed": 0,
+      "parties": [
+        {
+          "alive": 3,
+          "dealt": 240626,
+          "healed": 9465
+        },
+        {
+          "alive": 3,
+          "dealt": 90732,
+          "healed": 6968
+        },
+        {
+          "alive": 2,
+          "dealt": 88642,
+          "healed": 3666
+        }
+      ],
+      "events": 1717
+    },
+    {
+      "seed": 4,
+      "won": false,
+      "reason": "timeout",
+      "t": 180,
+      "hp": 86462,
+      "breaks": 1,
+      "failed": 5,
+      "parties": [
+        {
+          "alive": 0,
+          "dealt": 199418,
+          "healed": 9978
+        },
+        {
+          "alive": 0,
+          "dealt": 86206,
+          "healed": 1141
+        },
+        {
+          "alive": 1,
+          "dealt": 47914,
+          "healed": 13966
+        }
+      ],
+      "events": 1467
+    },
+    {
+      "seed": 5,
+      "won": false,
+      "reason": "timeout",
+      "t": 180,
+      "hp": 68875,
+      "breaks": 1,
+      "failed": 5,
+      "parties": [
+        {
+          "alive": 0,
+          "dealt": 200353,
+          "healed": 8591
+        },
+        {
+          "alive": 0,
+          "dealt": 70109,
+          "healed": 1082
+        },
+        {
+          "alive": 1,
+          "dealt": 80663,
+          "healed": 19117
+        }
+      ],
+      "events": 1561
+    },
+    {
+      "seed": 6,
+      "won": false,
+      "reason": "timeout",
+      "t": 180,
+      "hp": 46365,
+      "breaks": 1,
+      "failed": 5,
+      "parties": [
+        {
+          "alive": 0,
+          "dealt": 229836,
+          "healed": 8024
+        },
+        {
+          "alive": 0,
+          "dealt": 86702,
+          "healed": 4850
+        },
+        {
+          "alive": 1,
+          "dealt": 57097,
+          "healed": 15639
+        }
+      ],
+      "events": 1600
+    },
+    {
+      "seed": 7,
+      "won": true,
+      "reason": "clear",
+      "t": 95.1,
+      "hp": 0,
+      "breaks": 3,
+      "failed": 0,
+      "parties": [
+        {
+          "alive": 3,
+          "dealt": 225552,
+          "healed": 8270
+        },
+        {
+          "alive": 2,
+          "dealt": 98411,
+          "healed": 5331
+        },
+        {
+          "alive": 3,
+          "dealt": 96037,
+          "healed": 9925
+        }
+      ],
+      "events": 1735
+    },
+    {
+      "seed": 8,
+      "won": true,
+      "reason": "clear",
+      "t": 90.4,
+      "hp": 0,
+      "breaks": 2,
+      "failed": 0,
+      "parties": [
+        {
+          "alive": 3,
+          "dealt": 213863,
+          "healed": 8401
+        },
+        {
+          "alive": 3,
+          "dealt": 121814,
+          "healed": 7776
+        },
+        {
+          "alive": 2,
+          "dealt": 84323,
+          "healed": 5540
+        }
+      ],
+      "events": 1596
+    },
+    {
+      "seed": 9,
+      "won": false,
+      "reason": "timeout",
+      "t": 180,
+      "hp": 78536,
+      "breaks": 1,
+      "failed": 5,
+      "parties": [
+        {
+          "alive": 0,
+          "dealt": 199584,
+          "healed": 8354
+        },
+        {
+          "alive": 0,
+          "dealt": 91462,
+          "healed": 3505
+        },
+        {
+          "alive": 1,
+          "dealt": 50418,
+          "healed": 17049
+        }
+      ],
+      "events": 1563
+    },
+    {
+      "seed": 10,
+      "won": false,
+      "reason": "timeout",
+      "t": 180,
+      "hp": 72015,
+      "breaks": 1,
+      "failed": 5,
+      "parties": [
+        {
+          "alive": 0,
+          "dealt": 188443,
+          "healed": 7303
+        },
+        {
+          "alive": 0,
+          "dealt": 104979,
+          "healed": 3485
+        },
+        {
+          "alive": 1,
+          "dealt": 54563,
+          "healed": 12624
+        }
+      ],
+      "events": 1569
+    }
+  ]
+}

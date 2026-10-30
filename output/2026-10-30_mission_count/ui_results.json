@@ -1,0 +1,266 @@
+{
+  "passed": 38,
+  "checks": [
+    {
+      "name": "new game mission contributes one to model and bell",
+      "ok": true,
+      "detail": {
+        "guide": {
+          "id": "firstExpedition",
+          "tab": "expedition"
+        },
+        "items": [],
+        "count": 1
+      }
+    },
+    {
+      "name": "mission badge replaces the former dot",
+      "ok": true
+    },
+    {
+      "name": "Korean accessible bell name includes missions",
+      "ok": true
+    },
+    {
+      "name": "initial folder opens the current mission",
+      "ok": true
+    },
+    {
+      "name": "each folder counts only its own content",
+      "ok": true,
+      "detail": {
+        "notifications": null,
+        "missions": "1",
+        "achievements": null
+      }
+    },
+    {
+      "name": "initial mission points to first expedition",
+      "ok": true
+    },
+    {
+      "name": "collapsing and rerendering preserve mission count and focus",
+      "ok": true
+    },
+    {
+      "name": "keyboard Home selects notifications and preserves folder count",
+      "ok": true
+    },
+    {
+      "name": "keyboard ArrowRight selects missions",
+      "ok": true
+    },
+    {
+      "name": "Escape closes and restores bell focus without consuming mission",
+      "ok": true
+    },
+    {
+      "name": "mission shortcut navigates while retaining mission count",
+      "ok": true
+    },
+    {
+      "name": "two actual mastery notices and one mission total three",
+      "ok": true,
+      "detail": {
+        "guide": {
+          "id": "firstExpedition",
+          "tab": "expedition"
+        },
+        "items": [
+          {
+            "id": "mastery:h1:1",
+            "kind": "mastery",
+            "tab": "character",
+            "target": {
+              "hero": "h1"
+            },
+            "points": 1
+          },
+          {
+            "id": "mastery:h2:1",
+            "kind": "mastery",
+            "tab": "character",
+            "target": {
+              "hero": "h2"
+            },
+            "points": 1
+          }
+        ],
+        "count": 3
+      }
+    },
+    {
+      "name": "mixed folders show notifications two and missions one",
+      "ok": true,
+      "detail": {
+        "notifications": "2",
+        "missions": "1",
+        "achievements": null
+      }
+    },
+    {
+      "name": "mastery shortcut selects hero and opens skill window",
+      "ok": true
+    },
+    {
+      "name": "reopening retains the selected notifications folder",
+      "ok": true
+    },
+    {
+      "name": "acknowledgement filters only its notification and retains the mission",
+      "ok": true,
+      "detail": {
+        "notifications": "1",
+        "missions": "1",
+        "achievements": null
+      }
+    },
+    {
+      "name": "acknowledgement changes no game state",
+      "ok": true
+    },
+    {
+      "name": "acknowledgement focuses the next remaining confirm control",
+      "ok": true
+    },
+    {
+      "name": "acknowledgement is stored by owner identity",
+      "ok": true,
+      "detail": {
+        "2346628234:1793347990666": [
+          "mastery:h1:1"
+        ]
+      }
+    },
+    {
+      "name": "acknowledging all notification items leaves mission badge one",
+      "ok": true
+    },
+    {
+      "name": "reload preserves game owner and dismissed items while keeping the mission",
+      "ok": true
+    },
+    {
+      "name": "reloaded folder badges use filtered notifications plus mission",
+      "ok": true
+    },
+    {
+      "name": "mission transition replaces the step without increasing total",
+      "ok": true
+    },
+    {
+      "name": "building mission shortcut selects and highlights its real destination",
+      "ok": true
+    },
+    {
+      "name": "completing first building advances to tavern and retains one mission",
+      "ok": true
+    },
+    {
+      "name": "ending mission removes only that counted item",
+      "ok": true
+    },
+    {
+      "name": "empty missions folder has no count and three empty slots",
+      "ok": true
+    },
+    {
+      "name": "fully acknowledged notification folder is also empty",
+      "ok": true
+    },
+    {
+      "name": "new notification without mission counts normally",
+      "ok": true
+    },
+    {
+      "name": "notification-only folders show one notification and no mission",
+      "ok": true
+    },
+    {
+      "name": "English plural accessible name includes both item types",
+      "ok": true
+    },
+    {
+      "name": "English mission and folder labels are translated",
+      "ok": true
+    },
+    {
+      "name": "English singular accessible name retains current mission",
+      "ok": true
+    },
+    {
+      "name": "notification panel fits viewport 1280x720 now",
+      "ok": true,
+      "detail": {
+        "x": 622.3624877929688,
+        "y": 80.4000015258789,
+        "width": 336,
+        "height": 273.5999984741211
+      }
+    },
+    {
+      "name": "notification panel fits viewport 1920x1080 d2min",
+      "ok": true,
+      "detail": {
+        "x": 933.5437622070312,
+        "y": 129.60000610351562,
+        "width": 504.00006103515625,
+        "height": 411.6000061035156
+      }
+    },
+    {
+      "name": "no app runtime exceptions",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "99+ cap includes mission while folder counts remain exact",
+      "ok": true,
+      "detail": {
+        "bell": "99+",
+        "label": "Notifications and missions · 100 items",
+        "folders": {
+          "notifications": "99",
+          "missions": "1",
+          "achievements": null
+        },
+        "after": "99",
+        "raw": 100
+      }
+    },
+    {
+      "name": "acknowledging one of 100 total transitions cap to exact 99",
+      "ok": true,
+      "detail": {
+        "bell": "99+",
+        "label": "Notifications and missions · 100 items",
+        "folders": {
+          "notifications": "99",
+          "missions": "1",
+          "achievements": null
+        },
+        "after": "99",
+        "raw": 100
+      }
+    }
+  ],
+  "errors": [],
+  "failure": null,
+  "regression": {
+    "title": "PASS 786/786",
+    "failures": [],
+    "errors": [],
+    "notification_checks": [
+      "notification: 전체 개수는 처리 대기와 현재 미션 한 건의 합 — 미션만 · 함께 · 대기만 · 모두 없음미션만 1 · 대기1+미션1=2 · 미션 종료 후 1 · 모두 처리 후 0",
+      "notification: 레벨업 마스터리 — 영웅별 한 건 · 부분 배분은 같은 ID와 남은 포인트 · 전부 배분하면 제거 · 다음 레벨은 새 ID · 조회 불변레벨업 → 한 건 → 남은 포인트 갱신 → 새 레벨 ID → 전부 배분 시 제거 · 상태 불변",
+      "notification: 마스터리는 로스터 순서로 영웅마다 표시 · 잠겼거나 상한인 칸만 남으면 제외 · 다음 단계 해금 시 포함영웅별 로스터 순서 · 찍을 수 있는 칸만 · 다음 단계 해금 · 해고 제거",
+      "notification: 재도전 안내 — 표의 횟수부터 · 도는 중 또는 이어 가는 부대만 · 현재 런은 횟수에서 제외 · 저장하지 않은 과거 횟수는 추측하지 않는다5회부터 · active/auto · 완료된 최근 8회만",
+      "notification: 재도전 기록은 같은 부대·칸·난이도의 연속 기록 — 승리·철수·종료·다른 칸·다른 단·모르는 사유에서 끊는다완료된 wipe/timeout만 · 명시된 끊김 뒤 과거 기록은 제외",
+      "notification: 부대별 재도전 — 다른 부대 기록은 끊지 않고 · 가장 긴 연속 기록 · 동률이면 앞 부대 · 고른 편성·난이도와 분리부대별 집계 · 긴 기록 우선 · 동률 Party I · 보기 난이도와 분리",
+      "notification: 재도전 이동의 영웅은 실제 나간 인원 — 편성을 고쳐도 계획 속 영웅을 고르지 않고 · 사라진 영웅은 건너뛴다runParty의 첫 실제 영웅 · 편성 계획은 대상이 아니다",
+      "notification: 재도전 안내 우선순위 — 첫 출정·지을 수 있는 첫 두 건물·의뢰 수락은 유지 · 자금/의뢰 진행 안내는 대체 · 첫 의뢰 수령 뒤에도 동작구체적 첫 행동 유지 · 일반 원정 안내 대체 · 명성 이후에도",
+      "notification: 재도전 판정은 조회만 — 현재 부대·보상·카운터·세이브가 그대로 · 대기 목록은 유지하고 전체 개수에 미션 한 건을 더한다같은 조회 같은 결과 · 세이브/카운터 불변 · 대기3건+미션1건 → 미션 종료 후 3건",
+      "notification: 옛 리포트의 빠진 난이도는 노말 · 사유 없는 옛 기록은 재도전 실패로 추측하지 않는다빠진 단은 노말 · 빠진 판정은 끊김"
+    ]
+  }
+}

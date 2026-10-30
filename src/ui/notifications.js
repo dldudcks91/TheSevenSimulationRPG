@@ -7,6 +7,13 @@ const BUBBLE_MS = 3000;
 const RING_MS = 650;
 // Card places always laid in a folder — matches the fixed body height (ADR-0984); empty places are faint bells like the mailbox (ADR-0988).
 const SLOTS = 3;
+// A mission keeps its acknowledgement while its meaningful destination stays the same.
+// Retry counts and the selected hero can change without creating a new mission.
+const missionKey = item => {
+    const target = item.target ?? {};
+    return `mission:${JSON.stringify([item.id, target.building, target.commission,
+        target.preset, target.difficulty, target.stageId])}`;
+};
 const node = (tag, cls, text) => {
     const out = document.createElement(tag);
     if (cls) out.className = cls;
@@ -50,13 +57,15 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
             bubble = ''; clearTimeout(bubbleTimer);
         }
         const items = next.model.items.filter(item => !dismissed.has(item.id));
+        const guide = next.model.guide && !dismissed.has(missionKey(next.model.guide)) ? next.model.guide : null;
         const arrived = changedOwner ? [] : items.filter(item => !seen.has(item.id));
-        const retry = next.model.guide?.id === 'retryPreparation' ? next.model.guide : null;
-        const retryKey = retry ? `retry:${retry.target.preset}:${retry.target.difficulty}:${retry.target.stageId}` : '';
+        const retry = guide?.id === 'retryPreparation' ? guide : null;
+        const retryKey = retry ? missionKey(retry) : '';
         if (!changedOwner && retryKey && !seen.has(retryKey)) arrived.push(retry);
         if (retryKey) seen.add(retryKey);
         for (const item of next.model.items) seen.add(item.id);
-        model = { ...next.model, items, count: items.length };
+        // The bell includes only unacknowledged notification items and the current mission.
+        model = { ...next.model, guide, items, count: items.length + (guide ? 1 : 0) };
         const nextSignature = JSON.stringify(model);
         const changed = signature !== nextSignature || changedOwner;
         signature = nextSignature;
@@ -78,17 +87,18 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
         if (focus) host?.querySelector('.notification-btn')?.focus({ preventScroll: true });
     }
 
-    function acknowledge(item) {
-        const index = model.items.findIndex(current => current.id === item.id);
-        dismissed.add(item.id);
+    function acknowledge(key, guide) {
+        const index = model.items.findIndex(current => current.id === key);
+        dismissed.add(key);
         writeDismissed(owner, [...dismissed]);
         bubble = ''; clearTimeout(bubbleTimer);
         hideTip();
         observe();
         paint();
         const remaining = host.querySelectorAll('.notification-confirm');
-        const target = remaining[Math.min(index, remaining.length - 1)]
-            ?? host.querySelector('[data-folder="notifications"][role="tab"]');
+        const target = guide ? host.querySelector('[data-folder="missions"][role="tab"]')
+            : remaining[Math.min(index, remaining.length - 1)]
+                ?? host.querySelector('[data-folder="notifications"][role="tab"]');
         target?.focus({ preventScroll: true });
     }
 
@@ -105,13 +115,12 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
         action.onclick = () => { close(); hideTip(); navigate(item); };
         const actions = node('div', 'notification-actions');
         actions.appendChild(action);
-        if (!guide) {
-            const confirm = node('button', 'btn sm notification-confirm', t('nt.check'));
-            confirm.dataset.notificationAction = `confirm:${item.id}`;
-            confirm.setAttribute('aria-label', `${text.title} · ${confirm.textContent}`);
-            confirm.onclick = () => acknowledge(item);
-            actions.appendChild(confirm);
-        }
+        const confirm = node('button', 'btn sm notification-confirm', t('nt.check'));
+        const key = guide ? missionKey(item) : item.id, rowOwner = owner;
+        confirm.dataset.notificationAction = `confirm:${item.id}`;
+        confirm.setAttribute('aria-label', `${text.title} · ${confirm.textContent}`);
+        confirm.onclick = () => { if (owner === rowOwner) acknowledge(key, guide); };
+        actions.appendChild(confirm);
         card.append(copy, actions);
         return card;
     }
@@ -143,7 +152,6 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
         if (bubble && ringAge < RING_MS) art.style.animationDelay = `-${ringAge}ms`;
         button.appendChild(art);
         if (model.count) button.appendChild(node('span', 'mail-n', model.count > 99 ? '99+' : model.count));
-        else if (model.guide) button.appendChild(node('span', 'notification-dot'));
         button.onclick = () => {
             if (!open && !openedOnce) {
                 folder = model.guide ? 'missions' : 'notifications';
@@ -206,7 +214,8 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
                 });
             } else tab.onclick = () => selectFolder(id);
             tab.appendChild(node('span', 'notification-folder-label', t(`nt.folder.${id}`)));
-            if (id === 'notifications' && model.count) tab.appendChild(node('span', 'notification-folder-count', String(model.count)));
+            const count = id === 'notifications' ? model.items.length : id === 'missions' && model.guide ? 1 : 0;
+            if (count) tab.appendChild(node('span', 'notification-folder-count', String(count)));
             folders.appendChild(tab);
         }
         folders.appendChild(node('span', 'fg-gap fg-fill'));

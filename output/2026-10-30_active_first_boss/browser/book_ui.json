@@ -1,0 +1,165 @@
+{
+  "checks": [
+    {
+      "name": "first boss really cleared",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "preboss learned knight skill persisted",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "warrior reached natural Lv10 with granted book",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "learning open at library1",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "actual Learn button enabled",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "actual book consumed and active slot filled",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "learning spends no gold or materials",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "no JS or local HTTP errors",
+      "ok": true,
+      "detail": null
+    }
+  ],
+  "scope": "Actual winning seed2 state; h1 learned first book before boss, h2 reached Lv10 on final round and has an unspent granted book. Normal menu Load and real library clicks; no granted resources or items.",
+  "before": {
+    "gold": 3322,
+    "materials": {
+      "dust": 17,
+      "iron_ore": 19,
+      "timber": 6,
+      "herb": 4
+    },
+    "books": {
+      "war_doubleswing": 1
+    },
+    "hero": {
+      "uid": "h2",
+      "name": {
+        "ko": "노엘",
+        "en": "Noel"
+      },
+      "tier": "magic",
+      "sin": "sloth",
+      "cls": "warrior",
+      "trait": {
+        "ko": "잔꾀",
+        "en": "Cunning"
+      },
+      "face": "warrior_4",
+      "level": 10,
+      "xp": 2834,
+      "mastery": {
+        "cls_warrior_t1_hp": 2,
+        "cls_warrior_t1_atk": 4,
+        "cls_warrior_t1_resall": 2
+      },
+      "masteryPoints": 1,
+      "innate": "war_bash",
+      "stats": {
+        "str": 15,
+        "agi": 12,
+        "int": 6,
+        "vit": 9,
+        "luck": 9,
+        "ldr": 11,
+        "cha": 8
+      },
+      "equipped": {
+        "weapon": "i24",
+        "helmet": "i21",
+        "armor": "i2",
+        "gloves": null,
+        "boots": "i23",
+        "amulet": null,
+        "ring1": null,
+        "ring2": null
+      }
+    },
+    "buildings": {
+      "storage": 1,
+      "tavern": 1,
+      "shop": 1,
+      "forge": 1,
+      "library": 1,
+      "resource": 1
+    }
+  },
+  "after": {
+    "gold": 3322,
+    "materials": {
+      "dust": 17,
+      "iron_ore": 19,
+      "timber": 6,
+      "herb": 4
+    },
+    "books": {},
+    "hero": {
+      "uid": "h2",
+      "name": {
+        "ko": "노엘",
+        "en": "Noel"
+      },
+      "tier": "magic",
+      "sin": "sloth",
+      "cls": "warrior",
+      "trait": {
+        "ko": "잔꾀",
+        "en": "Cunning"
+      },
+      "face": "warrior_4",
+      "level": 10,
+      "xp": 2834,
+      "mastery": {
+        "cls_warrior_t1_hp": 2,
+        "cls_warrior_t1_atk": 4,
+        "cls_warrior_t1_resall": 2
+      },
+      "masteryPoints": 1,
+      "innate": "war_bash",
+      "stats": {
+        "str": 15,
+        "agi": 12,
+        "int": 6,
+        "vit": 9,
+        "luck": 9,
+        "ldr": 11,
+        "cha": 8
+      },
+      "equipped": {
+        "weapon": "i24",
+        "helmet": "i21",
+        "armor": "i2",
+        "gloves": null,
+        "boots": "i23",
+        "amulet": null,
+        "ring1": null,
+        "ring2": null
+      },
+      "bookSkill": "war_doubleswing"
+    }
+  },
+  "page_errors": [],
+  "http_errors": [],
+  "passed": 8
+}

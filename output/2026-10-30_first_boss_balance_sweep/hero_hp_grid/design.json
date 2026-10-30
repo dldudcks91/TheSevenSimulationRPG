@@ -1,0 +1,24 @@
+{
+  "axes": {
+    "backHp": [
+      0,
+      15,
+      30
+    ],
+    "frontHp": [
+      0,
+      15,
+      30
+    ],
+    "xp": [
+      1,
+      1.25
+    ],
+    "enemyHp": [
+      1,
+      0.9
+    ]
+  },
+  "variants": 36,
+  "scope": "Add15/30 to existing class.csv hp_base for front/back classes. Flat base only; monster overrides unchanged; hero HP changes at all levels and needs explicit scope reporting."
+}

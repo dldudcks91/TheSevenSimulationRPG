@@ -1,0 +1,20 @@
+/* A single contextual explanation within the game's transformed surface, below its comparison tooltips. */
+.tutorial-card {
+    position: absolute; z-index: 45; box-sizing: border-box;
+    width: 310px; padding: 12px 14px;
+    background: var(--bg-secondary); color: var(--text-primary);
+    border: 1px solid var(--border-highlight); border-left: 3px solid var(--info-line);
+    box-shadow: 0 6px 20px rgba(var(--shadow-rgb), .55);
+    font-family: var(--font-main); font-size: var(--fs-sm); line-height: 1.5;
+}
+.tutorial-card.tutorial-viewport { position: fixed; }
+.tutorial-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.tutorial-title { min-width: 0; font-weight: bold; color: var(--text-primary); }
+.tutorial-progress { flex: none; color: var(--text-muted); font-size: var(--fs-xs); }
+.tutorial-detail { margin-top: 6px; color: var(--text-secondary); overflow-wrap: anywhere; word-break: keep-all; }
+.tutorial-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+.tutorial-target { outline: 2px solid var(--info-line); outline-offset: 3px; }
+:root[data-skin="d2min"] .tutorial-card {
+    background: var(--sk-fill), var(--bg-secondary);
+    border-image: var(--sk-frame) 11 / 11px / 3px round;
+}

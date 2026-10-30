@@ -149,20 +149,31 @@ function ray(sd, i, n, r0, r1) {
 }
 
 /** 배속 배수를 그 유닛의 칸에 건다 */
-function prep(state, u) { u.node.parentElement?.style.setProperty('--fx-k', SPEED_K[state.speed] ?? 1); }
+function prep(state, u) {
+    const slot = u.node.parentElement, value = String(SPEED_K[state.speed] ?? 1);
+    if (slot && slot.style.getPropertyValue('--fx-k') !== value) slot.style.setProperty('--fx-k', value);
+}
 
 /** 그 요소의 연출 한 번 — 같은 무리의 클래스를 걷고 한 프레임 밀어 다시 건다(연달아 맞아도 처음부터 다시 돈다 · 스킬 칸 튀김과 같은 수).
     끝나면 클래스를 걷는다 — 카드 안 팝업 · 조각 · 스킬 칸의 애니메이션 끝도 올라오므로 **그 요소 자신의 끝만** 본다 */
+const pendingMotionEnd = new WeakMap();
 function play(node, cls, group) {
     if (!node) return;
+    const previous = pendingMotionEnd.get(node);
+    if (previous) node.removeEventListener('animationend', previous);
     node.classList.remove(...group);
     void node.offsetWidth;
     node.classList.add(cls);
-    node.addEventListener('animationend', function done(e) {
+    const done = e => {
         if (e.target !== node) return;
         node.classList.remove(cls);
         node.removeEventListener('animationend', done);
-    });
+        if (pendingMotionEnd.get(node) === done) pendingMotionEnd.delete(node);
+    };
+    node.addEventListener('animationend', done);
+    // Restarting an animation must also replace its completion listener.
+    // Otherwise rapid hits can keep the animation alive and retain every old listener.
+    pendingMotionEnd.set(node, done);
 }
 
 /** 카드의 조각 층 — **팝업 층 앞**에 끼워 피해 숫자가 늘 위에 선다. 초상 한가운데(`--cx` · `--cy`)는 처음 만들 때 잰다(카드 모양 개편 전/후마다 자리가 다르다) */
@@ -583,8 +594,7 @@ function impact(state, d, ty, crit, s, k) {
  *  afterSkill = 스킬을 쓴 차례에 이어진 기본 공격이다(재생기가 같은 시각을 본다) — 베기를 안 띄운다(스킬 이펙트와 겹치지 않게 · ADR-0564) ·
  *  k = 같은 차례 그 스킬의 타격 순번(재생기가 센다 · 없으면 미리보기 — 단일 다단의 박자 · 조각 · ADR-0778) */
 export function fxHit(state, a, d, ev, afterSkill = false, k) {
-    lunge(state, a);
-    struck(state, d, ev.crit);
+    if (state.motion !== false) { lunge(state, a); struck(state, d, ev.crit); }
     if (ev.s) impact(state, d, ev.ty, ev.crit, ev.s, k);
     else if (!afterSkill) swing(state, d, ev.crit);
 }

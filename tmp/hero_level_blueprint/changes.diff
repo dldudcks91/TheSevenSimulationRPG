@@ -1,0 +1,200 @@
+--- src/game_logic/state.js (before)
++++ src/game_logic/state.js
+@@ -2518,6 +2518,18 @@
+         state.blueprints = state.blueprints ?? {};
+         state.blueprints[id] = (state.blueprints[id] ?? 0) + 1;
+     }
++    /** 첫 책 사용 레벨 달성 — 영웅당 한 번. 독립 수열이라 전투·훈련의 정산 간격이 보상을 바꾸지 않는다. */
++    function grantLevelBlueprint(state, h, from) {
++        if (!(from < B.skillbook_learn_level && h.level >= B.skillbook_learn_level)) return null;
++        const pool = (SK?.list ?? []).filter(d => d.ownerKind === 'job' && d.ownerId === h.cls
++            && d.tier === 1 && d.id !== h.innate && bookable(d.id));
++        if (!pool.length) return null;
++        const hash = [...h.uid].reduce((v, c) => (Math.imul(v, 31) + c.charCodeAt(0)) >>> 0, 0);
++        const rng = makeRng(deriveSeed(state.seed ^ 0x10B1, hash));
++        const id = pool[Math.floor(rng() * pool.length)].id;
++        addBlueprint(state, id);
++        return id;
++    }
+     /** 책 한 권을 재고에 쌓는다 — 가진 책이어도 +1 */
+     function addBook(state, id) {
+         state.books = state.books ?? {};
+@@ -2852,11 +2864,12 @@
+        한 시간에 지금 레벨의 필요 경험치 × `[balance.csv:train_level_per_hour]` × 「속도」 × 힘 효과 · **상한 = 로스터 최고 레벨 − 「범위」 거리**
+        (레벨을 앞에서 끌어올리는 것은 원정이다) · 등록은 겸직이라 원정에 나간 영웅도 받는다 · 소수 경험치는 `labClock.train.carry` 에 남는다 */
+     const trainCap = state => Math.max(0, ...state.heroes.map(h => h.level)) - labVal(state, TRAIN_KEY, 'range', 0);
+-    /** `now` 까지 정산 — 레벨이 오른 영웅 `[{uid, from, to}]` · in-place */
++    /** `now` 까지 정산 — `{xp: [{uid, from, to}], blueprints}` · in-place */
+     function trainSettle(state, now, until = Infinity) {
+         const clk = labClockOf(state);
+-        if (!labLineOpen(state, TRAIN_KEY)) { clk.train = null; return []; }
+-        if (!clk.train) { clk.train = { at: now, carry: {} }; return []; }
++        const blueprints = {};
++        if (!labLineOpen(state, TRAIN_KEY)) { clk.train = null; return { xp: [], blueprints }; }
++        if (!clk.train) { clk.train = { at: now, carry: {} }; return { xp: [], blueprints }; }
+         const at = clk.train.at;
+         const hours = Math.min(Math.max(0, Math.min(now, until) - at), B.dispatch_offline_cap_hours * DISPATCH_HOUR_MS) / DISPATCH_HOUR_MS;
+         const carry = {};
+@@ -2880,11 +2893,15 @@
+                     if (g > 0) { H.grantXp(h, g, null); x -= g; }
+                 }
+                 if (h.level < cap && x > 0) carry[uid] = x;
+-                if (h.level > from) ups.push({ uid, from, to: h.level });
++                if (h.level > from) {
++                    const id = grantLevelBlueprint(state, h, from);
++                    if (id) blueprints[id] = (blueprints[id] ?? 0) + 1;
++                    ups.push({ uid, from, to: h.level });
++                }
+             }
+         } else Object.assign(carry, clk.train.carry);
+         clk.train = { at: Math.max(at, now), carry };
+-        return ups;
++        return { xp: ups, blueprints };
+     }
+ 
+     /** 도서관 — 영웅별 진행도·수열을 보존해 한 번에 정산해도 나눠 정산해도 같은 도안이 나온다(R399). */
+@@ -2973,8 +2990,8 @@
+     function labSettleTo(state, t, limits = null) {
+         const d = settleProduction(state, t, limits?.res);
+         const gold = gambleSettle(state, t, limits?.gamble);
+-        const xp = trainSettle(state, t, limits?.train);
+-        const blueprints = libSettle(state, t, limits?.lib);
++        const { xp, blueprints } = trainSettle(state, t, limits?.train);
++        for (const [id, n] of Object.entries(libSettle(state, t, limits?.lib))) blueprints[id] = (blueprints[id] ?? 0) + n;
+         visitSettle(state, t);
+         return { gained: d.gained, gold, xp, blueprints };
+     }
+@@ -3559,7 +3576,12 @@
+                 const xp = Math.round(gain ? base * (1 + gain) : base);
+                 const lu = H.grantXp(h, xp, run.rng);
+                 R.xp[uid] = (R.xp[uid] ?? 0) + xp;
+-                if (lu) { mergeLevelUp(R.levelUps, lu); leveled.push(uid); }
++                if (lu) {
++                    const id = grantLevelBlueprint(state, h, lu.from);
++                    if (id) (R.blueprints ??= []).push({ id });
++                    mergeLevelUp(R.levelUps, lu);
++                    leveled.push(uid);
++                }
+             }
+         }
+         // 사실의 기록 — 소요 · 라운드 · 빗나감 · 기여 · 전투불능은 **정산한 라운드 끝**까지 (진 라운드도 끝까지 싸운 것이라 들어간다)
+@@ -3817,7 +3839,8 @@
+         equipStarter(state, h, recruitRng(state));
+         let xp = 0;
+         for (let l = 1; l < Math.min(level, B.hero_level_cap); l++) xp += H.xpNeeded(l);
+-        H.grantXp(h, xp, null);   // rng 를 안 쓴다(INTERFACE §2-4)
++        const lu = H.grantXp(h, xp, null);   // rng 를 안 쓴다(INTERFACE §2-4)
++        if (lu) grantLevelBlueprint(state, h, lu.from);
+         return { ok: true, hero: h };
+     }
+ 
+--- src/dev/test.js (before)
++++ src/dev/test.js
+@@ -13977,6 +13977,55 @@
+ const labRow = (line, id) => D.labNodes.find(n => n.line === line && n.node === id);
+ const LAB_ATTRS = ['str', 'agi', 'int', 'vit', 'luck', 'ldr', 'cha'];
+ const setStats = (h, s) => { for (const k of LAB_ATTRS) h.stats[k] = s[k] ?? 0; };
++check('level blueprint: 첫 책 사용 레벨에 영웅당 한 장 · 해당 직업 1티어 · 고유·소환 제외 · 다중 레벨업도 한 장', () => {
++    const count = g => Object.values(g.blueprints).reduce((a, n) => a + n, 0);
++    for (const cls of SYS.hero.mainClasses) {
++        for (const level of [B.skillbook_learn_level - 1, B.skillbook_learn_level, B.hero_level_cap]) {
++            const g = newGameS(42);
++            const r = SYS.game.adminHero(g, cls, level);
++            if (!r.ok) fail(`영웅 생성 ${cls}: ${r.err}`);
++            const want = level >= B.skillbook_learn_level ? 1 : 0;
++            if (count(g) !== want || Object.keys(g.books).length) fail(`${cls} Lv${level}: 도안 ${count(g)} · 책 지급`);
++            for (const id of Object.keys(g.blueprints)) {
++                const d = SYS.skill.defs[id];
++                if (d.ownerKind !== 'job' || d.ownerId !== cls || d.tier !== 1 || id === r.hero.innate || !SYS.skill.bookable(id)) fail(`잘못된 도안 ${cls}: ${id}`);
++            }
++        }
++    }
++});
++check('level blueprint: 훈련으로 문턱 도달 · 정산 분할·저장 복원 동일 · 후속 레벨·재접속 중복 없음', () => {
++    const g = newGameS(42), hour = 3600_000;
++    for (const h of g.heroes) setStats(h, {});
++    g.heroes[0].level = B.hero_level_cap;
++    const h = g.heroes[1]; h.level = B.skillbook_learn_level - 1; h.xp = SYS.hero.xpNeeded(h.level) - 1;
++    if (!SYS.game.labRegister(g, h.uid, 'train', NOW).ok) fail('훈련 등록');
++    SYS.game.labSettle(g, NOW);
++    const split = SYS.game.deserialize(SYS.game.serialize(g, NOW));
++    const r = SYS.game.labSettle(g, NOW + hour);
++    if (h.level < B.skillbook_learn_level || Object.values(r.blueprints).reduce((a, n) => a + n, 0) !== 1 || !eq(r.blueprints, g.blueprints)) fail('훈련 도안 지급·반환');
++    for (let i = 1; i <= 4; i++) SYS.game.labSettle(split, NOW + hour * i / 4);
++    if (!eq(split.blueprints, g.blueprints)) fail('정산 간격이 보상을 바꿨다');
++    const back = SYS.game.deserialize(SYS.game.serialize(g, NOW + hour));
++    const before = JSON.stringify(back.blueprints);
++    const twice = SYS.game.labSettle(back, NOW + hour);
++    if (Object.keys(twice.blueprints).length) fail('같은 시각 중복 지급');
++    SYS.game.labSettle(back, NOW + 48 * hour);
++    if (JSON.stringify(back.blueprints) !== before) fail('다음 레벨에 재지급');
++    back.blueprints = {};
++    const old = SYS.game.deserialize(SYS.game.serialize(back, NOW + 48 * hour));
++    SYS.game.labSettle(old, NOW + 49 * hour);
++    if (Object.keys(old.blueprints).length) fail('기존 문턱 이상 영웅 소급 지급');
++});
++check('level blueprint: 원정 도달 보상은 도안 재고와 리포트에 한 번 · 처치 드롭과 합산', () => {
++    const g = newGameS(42);
++    for (const h of g.heroes) { h.level = B.skillbook_learn_level - 1; h.xp = SYS.hero.xpNeeded(h.level) - 1; }
++    const r = SYS.game.resolveBattle(g, 1021, NOW);
++    if (!r.ok) fail(`원정 ${r.err}`);
++    const n = r.report.levelUps.filter(lu => lu.from < B.skillbook_learn_level && lu.to >= B.skillbook_learn_level).length;
++    if (!n || r.report.blueprints.length !== r.result.blueprints.length + n) fail(`원정 도안 ${r.report.blueprints.length} · 드롭 ${r.result.blueprints.length} · 도달 ${n}`);
++    const counts = {}; for (const { id } of r.report.blueprints) counts[id] = (counts[id] ?? 0) + 1;
++    if (!eq(g.blueprints, counts)) fail('원정 도안 재고와 리포트 불일치');
++});
+ const libFixture = (seed = 42) => {
+     const g = newGameS(seed);
+     for (const h of g.heroes) setStats(h, {});
+--- docs/client/INTERFACE.md (before)
++++ docs/client/INTERFACE.md
+@@ -1,4 +1,6 @@
+ # INTERFACE — game_logic 이식 계약서
++
++영웅별 첫 책 도안: 원정·연구소 훈련·관리자 영웅 생성에서 레벨이 `skillbook_learn_level` 미만에서 이상으로 오를 때 해당 직업의 책으로 만들 수 있는 1티어 스킬 중 고유 스킬을 뺀 후보 하나의 도안을 지급한다. 영웅마다 한 번이며 이후 레벨 구간마다 반복하지 않는다. 별도 수령 상태 없이 이전·이후 레벨로 판정하므로 기존 문턱 이상 세이브에는 소급하지 않는다. 후보는 `skill.list` 순서이며 uid 문자 해시와 게임 시드의 독립 스트림(솔트 `0x10B1`)에서 선택 1회를 소비한다. 전투·생산의 기존 난수열은 소비하지 않는다. 원정 보상은 `report.blueprints`에 포함하고, 훈련 보상은 `labSettle.blueprints`에 도서관 생산분과 합쳐 반환한다. 책은 지급하지 않는다.
+ 
+ 장신구 개편(R309·R321): 새 목걸이는 기본 스킬 후보 1회→정수 값 1회, 새 반지는 태그 1회→효과 1회→값 1회를 죄종 줄 앞에서 굴린다. 목걸이는 `affixes[{stat:'skill_plus', skill, v, src:'fixed'}]`(0이면 생략), 반지는 `{stat:'skill_tag', tag, effect, v, src:'fixed'}`다. 범위는 `balance.csv:amulet_skill_plus_min/max`·`ring_base_option.csv`. 기존 장비는 재굴림하지 않는다. `computeCombat.option_fx.skillTags`는 `{tag:{effect:sum}}`이며 `scaleDef(def, stats, skillTags?)`가 조건부 수치·시간·회복·데미지를 전달한다. 태그 쿨감은 전체 쿨감에 더하고 기존 바닥을 쓴다. 데미지는 직격의 데미지 % 괄호 안에 더한다. 다단 추가타는 시전 시작 때 확률 1회, 정신 집중도 시작 때 전체 방 수에 1을 더한다. 기본 공격은 태그 효과를 받지 않는다. 툴팁 미리보기는 `ctx.skillTags`와 `ctx.atkPct`를 받는다.
+ 
+--- docs/game_design/skill_design.md (before)
++++ docs/game_design/skill_design.md
+@@ -201,16 +201,17 @@
+ | **다른 책을 쓰면** | **덮어쓴다** — 앞의 스킬은 사라지고 **책으로 돌려받지 않는다** [사용자 09-28] · 쌓은 레벨도 같이 사라진다(10-06 · §2-3) |
+ | **같은 책을 쓰면** [신설 2026-10-06] | **그 스킬이 한 단계 오른다** — 이미 가진 스킬이면 **어느 칸에 있든**(고유 · 배운 칸) 덮어쓰지 않고 레벨이 오른다 · 드는 책 수 · 상한은 §2-3 |
+ | **빼기** | **못 뺀다** [사용자 09-28] — 칸을 비우는 길은 없고 바꾸는 길은 다른 책뿐이다 |
+-| **책이 없으면** | **칸이 빈 채로 간다** [사용자 09-28] — 레벨 10 에 책을 보장하는 장치는 두지 않는다 |
++| **책이 없으면** | **칸이 빈 채로 간다** — 영웅마다 `[balance.csv:skillbook_learn_level]`에 처음 도달하면 해당 직업의 책으로 만들 수 있는 1티어 스킬 중 고유 스킬을 제외한 도안 한 장을 무작위로 받는다. 영웅당 한 번이며 이후 레벨 구간마다 반복하지 않는다. 책은 도서관에서 제작한다 [사용자 2026-10-30] |
+ | **누가 무엇을** | **누구나 어떤 스킬이든 배운다** — 직업 제한 없음 [사용자 09-28]. 「1스킬 = 1직업」(§12-1 규칙 1)은 **스킬 목록을 짜는 규칙**으로 남는다 |
+ | **세기** | **같은 책을 쌓아 읽은 만큼 그 스킬의 레벨이 오른다** [사용자 확정 2026-10-06 — §2-3] — 책 한 권의 내용은 누가 읽어도 같고, 갈리는 것은 쌓은 레벨 · 마스터리 · 장비 · 능력치 계수다. 남의 직업 스킬은 계수 축(§13)이 안 맞으면 덜 세다 — 「못 쓴다」가 아니라 「손해다」. 단 **타격 · 회복 · 소환 스킬은 그 스킬 직업의 무기를 들어야 나간다**(§2-2 · 10-03 — 칸 무관) |
+ 
+ **책의 출처** [개정 2026-10-20 — 사용자 「몬스터가 스킬 북을 주는게 아니라 도안으로 주면 내가 직접 제작 -> 재화소모라는 아주 좋은 형태」 · 「스킬북을 재화만 있으면 무한정 생산가능한 것도 막아낼 수 있음」 · **개정 2026-10-30** — 연구소 도서관 줄]
+ 
+-**처치 · 상단은 스킬 도안을 주고, 책은 도서관에서 도안 한 장으로 한 권 만든다. 이미 가진 스킬의 도안은 연구소 「도서관」 줄도 낸다**(2026-10-30 — 아래 표). 도안은 쌓이는 소모품이다 — 도안이 영구 해금이던 때(10-16)는 한 번 열면 가루만으로 같은 책을 끝없이 찍었다. 이제 같은 책을 모으려면 같은 도안을 모아야 해 드롭이 끝까지 값을 갖고, 가루가 스킬 성장의 연료가 된다(분해 → 가루 → 책 — item_design.md §5-1).
++**처치 · 상단은 스킬 도안을 주고, 책은 도서관에서 도안 한 장으로 한 권 만든다. 이미 가진 스킬의 도안은 연구소 「도서관」 줄도 낸다. 영웅마다 첫 책 사용 레벨 달성 시 고유 스킬을 제외한 해당 직업의 1티어 도안 한 장을 한 번 받는다**(2026-10-30 — 아래 표). 도안은 쌓이는 소모품이다 — 도안이 영구 해금이던 때(10-16)는 한 번 열면 가루만으로 같은 책을 끝없이 찍었다. 이제 같은 책을 모으려면 같은 도안을 모아야 해 드롭이 끝까지 값을 갖고, 가루가 스킬 성장의 연료가 된다(분해 → 가루 → 책 — item_design.md §5-1).
+ 
+ | 출처 | 주는 것 |
+ |---|---|
++| **영웅의 첫 책 사용 레벨 달성** [사용자 2026-10-30] | 영웅마다 `[balance.csv:skillbook_learn_level]` 도달 시 **딱 한 번**, 해당 직업의 책으로 제작 가능한 1티어 스킬 중 고유 스킬을 제외한 **무작위 도안 한 장**. 원정·훈련 모두 적용하며 한 번에 문턱을 넘어도 한 장만 준다. 저장·재접속과 이후 레벨업은 다시 주지 않고 기존 문턱 이상 영웅은 소급하지 않는다 |
+ | **몬스터 — 일반 · 정예 · 보스 모두** [개정 2026-09-30 · 2026-10-16 사용자 · **2026-10-20 도안**] | **지금 쥔 스킬이면 어느 칸이든 그 스킬의 도안** — 남의 직업 스킬을 배우는 길이다. 나이트메어 2칸(2티어) · 보스의 한 칸 더도 나온다(monster_design.md §5-1) |
+ | **몬스터 전용 스킬** [확정 2026-09-30 · 사용자 · 개정 2026-10-22 — 장 보스 고유 스킬은 도안이 나온다] | **책 · 도안이 없다** — 영웅이 못 쓰는 스킬(자폭 · 소환 — §12-9)은 도안 후보에서 빠진다 · 후보가 없는 몬스터는 장비만 떨군다. **장 보스 고유 스킬은 예외** — 그 보스가 도안을 떨구고 영웅이 배운다 · 확률은 극악(사용자 10-22 · [boss_skill_draft.md](boss_skill_draft.md) §0-2 · 묶음 규칙은 초안 §1) · ⚠ 배운 영웅을 연구소 도서관 줄에 등록하면 같은 도안이 시간마다 나온다(10-30 — 아래 행) |
+ | **도서관 제작** [개정 2026-10-12 · 사용자 지시 · **개정 2026-10-20 — 도안을 쓴다**] | **도안 한 장 + 골드 · 가루 → 그 스킬의 책 한 권 — 도안이 소모된다** · 책이 생기는 곳은 여기 하나다(10-20) · 여는 것은 **도서관 r2**(로스터에 레벨 10 이상 영웅이 한 명 이상이면 해금 · 장 · 스테이지 클리어 조건 없음 — 10-30 · construction_draft.md §2) · 재료는 가루. **도안은 처치 · 상단 · 연구소 도서관 줄이 주는 소모품이다**(2026-10-20 · 줄 2026-10-30) — 스킬 도감은 레벨 · 경험치 없는 목록이다 (monster_design.md §8-1 · construction_draft.md §2 도서관) |
+--- docs/game_design/GAME_DESIGN.md (before)
++++ docs/game_design/GAME_DESIGN.md
+@@ -209,6 +209,7 @@
+ 
+ | 날짜 | 결정 |
+ |---|---|
++| 10-30 | **영웅별 첫 책 사용 레벨에 도안 한 장을 한 번만 지급한다** [사용자 지시] — `[balance.csv:skillbook_learn_level]` 도달 시 해당 직업의 제작 가능한 1티어 스킬 중 고유 스킬을 제외하고 무작위 한 장 · 이후 레벨 구간 반복 없음 · 책은 도서관 제작 (skill_design §2-1 · INTERFACE 첫 책 도안 계약) |
+ | 10-30 | **상단 아래 판매 목록에서 장비를 골드로 바꾼다** [사용자 지시] — 창고·인벤토리 클릭으로 선택하고 [판매]로 실행 · 같은 레벨·등급의 상점 장비 가격 ÷ `[balance.csv:shop_sell_divisor]`, 개별 버림 · 분해는 재료 (base_expedition_design §2-6 · item_design §5-1 · SCREEN_DESIGN §8-3 · ADR-1010) |
+ | 10-30 | **초반 안내는 인물 없이 실제 기능 옆에서 다섯 가지만 알린다** [사용자 구현 요청] — 첫 원정 · 장비 비교 · 마스터리 · 물약 · 건설 · 화면/가능 상태에 따라 카드 하나 · 새 게임에서 시작 · 게임별 확인 기록 · 설정에서 다시 보기 (tutorial_draft.md · SCREEN_DESIGN §2 · ADR-1004) |
+ | 10-30 | **초반 처치 골드 지원은 실제 몬스터 레벨에 따라 완만하게 줄인다** [사용자 선택] — 기존 골드 성장률·등급 비율 유지 · 시작/중간 배수와 중간/종료 레벨은 `[balance.csv:monster_gold_support_*]` · 두 구간 선형 보간 · 종료 레벨 이후 기존 지급액 · XP·드롭·의뢰·연구소 수입 유지 (monster_design §7 · INTERFACE §2-6) |
+--- docs/game_design/base_expedition_design.md (before)
++++ docs/game_design/base_expedition_design.md
+@@ -347,7 +347,7 @@
+     - **줄 「훈련」** [신설 2026-10-21 — 사용자 「훈련소 일단 넣자」(10-20) · 「5번을 훈련소로」 · 「훈련은 거기에 투입된 영웅들이 기본적으로 받는거임」] — **그 줄에 등록한 영웅이 시간마다 경험치를 받는다.** 받는 수 = 「등록 칸」 지점이다. **그 줄에 등록한 영웅만 받는다**(같은 날 사용자 「일단 거기에 들어간 영웅만」) — 등록은 겸직이라 원정에 나가 있어도 등록했으면 받는다 · **받는 대상은 연구 업그레이드로 바뀐다**(사용자 「연구업그레이드에 따라 바뀔거임」 — 어느 지점이 어떻게는 미정 · GAME_DESIGN.md §10 「연구소의 남은 설계」 ⑤). **상한 = 로스터 최고 레벨**(레벨을 앞에서 끌어올리는 것은 원정이다 — 최고 레벨 영웅은 훈련으로 오르지 않는다) ⚠ · 「범위」 지점이 그 상한까지의 거리를 줄인다 ⚠. 옛 훈련장(영웅을 넣어 두는 건물 — 2026-10-09 삭제)과 달리 붙잡지 않는다
+     - **줄 「도박장」** [신설 2026-10-21 — 사용자 「말그대로 돈버는걸로 일단」 · 「도박장은 선술집 r4를 짓고 열리도록」] — 시간마다 골드가 쌓인다. **선술집 도박장(r3 — 2026-10-27)을 지으면 열린다.** ⚠ 「골드는 원정에서만 → 모든 행동의 문이 원정」(item_design.md §5-1)의 예외이고, 꺼진 동안의 상한이 없으면 꺼 둔 시간이 그대로 골드가 된다 — 크기는 원정 골드보다 확실히 작게(⚠제안). 선술집의 도박장(판)은 그대로다
+     - **줄 「도서관」** [신설 2026-10-30 — 사용자 「도서관을 추가하고 도서관에서는 등록한 영웅이 보유한 스킬북을 생성하는걸로」 · 「아니 스킬북도안을 생성한다고」 · 「무작위로나옴」 · 「상한에닿아도 나옴」] — **그 줄에 등록한 영웅이 가진 스킬의 도안이 시간마다 한 장씩 생긴다 — 고유 칸 · 배운 칸 중 무작위**(배운 칸이 비었으면 고유 칸) · 배운 칸이 장 보스 고유 스킬이어도 그 도안이 나온다 · 그 스킬이 상한(`[balance.csv:skillbook_upgrade_max]`)에 닿아도 나온다(다른 영웅이 책으로 만들어 읽는다). 간격 = `[balance.csv:lab_blueprint_hours]` ÷ 「간격」 지점 값 · 줄이 열리면 바로 흐른다(도박장 · 훈련처럼 — 수색처럼 첫 연구를 기다리지 않는다) · 값은 `lab_node.csv` ⚠임시(사용자 「일단 니가 넣어봐 나중에수정할거임」 — DEV_PLAN R399). 받는 수 = 「등록 칸」 지점 · **그 줄에 등록한 영웅만 받는다**(훈련과 같은 모양 — 등록이 없으면 받는 이가 없다) · 겸직이라 원정에 나가 있어도 등록했으면 받는다. **도서관 r2(책 제작)를 지으면 열린다**(책을 만드는 랭크가 그 재료인 도안을 내는 줄도 연다 — 수색 줄 = 선술집 r2(고용)와 같은 모양 · construction_draft.md §2). **생긴 도안은 처치 · 상단의 도안과 같다** — 책은 그대로 도서관 제작(도안 한 장 + 골드 · 가루)에서만 생긴다(skill_design.md §2-1 「책의 출처」) · 전직 스킬은 도안이 없어(포인트로 오른다 — skill_design.md §2-3) 빠진다 · 오프라인 상한은 다른 줄처럼 받는다
+-      - **왜** — 스킬 하나를 상한까지 올리려면 같은 책이 피보나치 합(`[balance.csv:skillbook_upgrade_books_1]` · `[balance.csv:skillbook_upgrade_books_2]` · `[balance.csv:skillbook_upgrade_max]`)만큼 들고 책 한 권에 도안 한 장이다 — 처치 · 상단만으로는 도안 공급 속도가 곧 성장 속도였다(GAME_DESIGN.md §10 「스킬북의 남은 설계」 ④). 이 줄은 **이미 가진 스킬**의 도안 공급을 하나 더 연다 — 새 스킬의 도안은 그대로 처치 · 상단뿐이다
++      - **왜** — 스킬 하나를 상한까지 올리려면 같은 책이 피보나치 합(`[balance.csv:skillbook_upgrade_books_1]` · `[balance.csv:skillbook_upgrade_books_2]` · `[balance.csv:skillbook_upgrade_max]`)만큼 들고 책 한 권에 도안 한 장이다 — 처치 · 상단만으로는 도안 공급 속도가 곧 성장 속도였다(GAME_DESIGN.md §10 「스킬북의 남은 설계」 ④). 이 줄은 **이미 가진 스킬**의 도안 공급을 하나 더 연다 — 새 스킬의 도안은 처치 · 상단과 영웅별 첫 책 사용 레벨 달성 보상으로 얻는다(skill_design.md §2-1)
+       - ⚠ **부딪히는 확정** — ① 「같은 책을 모으려면 같은 도안을 모아야 해 드롭이 끝까지 값을 갖는다」(2026-10-20)가 약해진다 — 막는 것은 오프라인 상한 · 등록 칸 · 「가진 스킬만」 셋이고, 책을 만드는 비용(골드 · 가루)은 그대로 남는다 · 같은 도안 드롭의 값은 준다 ② 장 보스 고유 스킬(도안 확률 극악 — 2026-10-22)을 배운 영웅을 등록하면 그 도안이 시간마다 나온다 — 첫 한 장은 그대로 극악이고, 그 뒤 같은 도안을 모으는 길이 이 줄이 된다(사용자가 알고 고른 것 — 2026-10-30)
+     - **연구는 연구소 전체에 한 번에 하나 · 연구소 랭크가 오르면 줄에 새 지점이 열린다** [2026-10-21 사용자 「ㅇㅇ 하나로」 · 「랭크에따라 줄의 새로운 지점이 열림」] — 어느 랭크에 어느 지점 · 지점 값 · 연구 시간은 ⚠임시(사용자 「임시로 넣어」)
+   - 「연구소」는 옛 연구(2026-09-30 삭제 — 건물 아래에서 % 를 올리던 노드)와 **이름만 같다** · 「자원 건물」 어휘는 폐기했고 데이터 키(`building.csv:resource` · 탭 `resource`)는 산다 — 「광산 → 채광」(§2-2)과 같은 처리

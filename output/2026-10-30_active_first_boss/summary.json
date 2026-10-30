@@ -1,0 +1,2534 @@
+{
+  "accounts": 80,
+  "completed_expeditions": 2217,
+  "policies": {
+    "book_first": {
+      "n": 20,
+      "arrived_by": {
+        "20": 1,
+        "25": 4,
+        "30": 6,
+        "40": 9,
+        "60": 17,
+        "90": 19
+      },
+      "cleared_by": {
+        "30": 3,
+        "40": 7,
+        "45": 9,
+        "60": 14,
+        "90": 18
+      },
+      "cleared_30_to_40": 4,
+      "clear_time_for_half_of_all_starts_min": 48.5392,
+      "all_start_clear_time_median_min": 48.792100000000005,
+      "successful_clear_time_median_min": 45.2121,
+      "arrival_time_for_half_of_all_starts_min": 41.4083,
+      "all_start_arrival_time_median_min": 43.68625,
+      "book_before_boss_clear": 19,
+      "values": [
+        {
+          "seed": 1,
+          "classes": [
+            "mage",
+            "priest",
+            "warrior"
+          ],
+          "arrival_min": 49.84,
+          "clear_min": 59.6717,
+          "arrival_to_clear_min": 9.8317,
+          "first_book_min": 44.0,
+          "library2_min": null,
+          "boss_attempts": 4,
+          "farming_runs": 6,
+          "books_learned": 3,
+          "end_gold": 1768,
+          "end_levels": [
+            12,
+            12,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 59.6717,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 2,
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "arrival_min": 31.265,
+          "clear_min": 40.6817,
+          "arrival_to_clear_min": 9.4167,
+          "first_book_min": 31.1817,
+          "library2_min": null,
+          "boss_attempts": 4,
+          "farming_runs": 3,
+          "books_learned": 3,
+          "end_gold": 1268,
+          "end_levels": [
+            11,
+            10,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 40.6817,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 3,
+          "classes": [
+            "mage",
+            "priest",
+            "knight"
+          ],
+          "arrival_min": 69.7792,
+          "clear_min": 70.5408,
+          "arrival_to_clear_min": 0.7617,
+          "first_book_min": 64.0,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 3,
+          "books_learned": 3,
+          "end_gold": 1783,
+          "end_levels": [
+            11,
+            11,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 70.5408,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 4,
+          "classes": [
+            "mage",
+            "archer",
+            "knight"
+          ],
+          "arrival_min": 21.8583,
+          "clear_min": 22.1033,
+          "arrival_to_clear_min": 0.245,
+          "first_book_min": 21.775,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 0,
+          "books_learned": 2,
+          "end_gold": 6930,
+          "end_levels": [
+            10,
+            11,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 22.1033,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 5,
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "arrival_min": 61.6408,
+          "clear_min": 83.0358,
+          "arrival_to_clear_min": 21.395,
+          "first_book_min": 68.0,
+          "library2_min": 69.8825,
+          "boss_attempts": 4,
+          "farming_runs": 4,
+          "books_learned": 3,
+          "end_gold": 1593,
+          "end_levels": [
+            11,
+            10,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 83.0358,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 6,
+          "classes": [
+            "warrior",
+            "mage",
+            "archer"
+          ],
+          "arrival_min": 41.4083,
+          "clear_min": 41.885,
+          "arrival_to_clear_min": 0.4767,
+          "first_book_min": 40.0,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 5,
+          "books_learned": 2,
+          "end_gold": 5339,
+          "end_levels": [
+            9,
+            11,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 41.885,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 7,
+          "classes": [
+            "warrior",
+            "archer",
+            "knight"
+          ],
+          "arrival_min": 18.9067,
+          "clear_min": 28.545,
+          "arrival_to_clear_min": 9.6383,
+          "first_book_min": 22.14,
+          "library2_min": null,
+          "boss_attempts": 4,
+          "farming_runs": 4,
+          "books_learned": 3,
+          "end_gold": 1304,
+          "end_levels": [
+            11,
+            11,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 28.545,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 8,
+          "classes": [
+            "warrior",
+            "mage",
+            "priest"
+          ],
+          "arrival_min": 55.2983,
+          "clear_min": 55.805,
+          "arrival_to_clear_min": 0.5067,
+          "first_book_min": 46.0,
+          "library2_min": 47.3983,
+          "boss_attempts": 1,
+          "farming_runs": 11,
+          "books_learned": 3,
+          "end_gold": 2896,
+          "end_levels": [
+            11,
+            12,
+            12
+          ],
+          "end_stage": 1051,
+          "end_minutes": 55.805,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 9,
+          "classes": [
+            "archer",
+            "knight",
+            "warrior"
+          ],
+          "arrival_min": 22.9867,
+          "clear_min": 23.4133,
+          "arrival_to_clear_min": 0.4267,
+          "first_book_min": 22.9033,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 0,
+          "books_learned": 3,
+          "end_gold": 1616,
+          "end_levels": [
+            11,
+            10,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 23.4133,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 10,
+          "classes": [
+            "warrior",
+            "priest",
+            "mage"
+          ],
+          "arrival_min": 56.8583,
+          "clear_min": 64.63,
+          "arrival_to_clear_min": 7.7717,
+          "first_book_min": 56.0,
+          "library2_min": 56.775,
+          "boss_attempts": 4,
+          "farming_runs": 3,
+          "books_learned": 3,
+          "end_gold": 1523,
+          "end_levels": [
+            11,
+            12,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 64.63,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 11,
+          "classes": [
+            "knight",
+            "warrior",
+            "mage"
+          ],
+          "arrival_min": 26.2967,
+          "clear_min": 37.2442,
+          "arrival_to_clear_min": 10.9475,
+          "first_book_min": 26.0,
+          "library2_min": null,
+          "boss_attempts": 5,
+          "farming_runs": 7,
+          "books_learned": 3,
+          "end_gold": 1690,
+          "end_levels": [
+            12,
+            12,
+            12
+          ],
+          "end_stage": 1051,
+          "end_minutes": 37.2442,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 12,
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "arrival_min": 52.7217,
+          "clear_min": null,
+          "arrival_to_clear_min": null,
+          "first_book_min": 52.0,
+          "library2_min": null,
+          "boss_attempts": 6,
+          "farming_runs": 9,
+          "books_learned": 3,
+          "end_gold": 1089,
+          "end_levels": [
+            13,
+            13,
+            13
+          ],
+          "end_stage": 1041,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 13,
+          "classes": [
+            "mage",
+            "archer",
+            "warrior"
+          ],
+          "arrival_min": 23.7925,
+          "clear_min": 49.045,
+          "arrival_to_clear_min": 25.2525,
+          "first_book_min": 28.0,
+          "library2_min": null,
+          "boss_attempts": 6,
+          "farming_runs": 12,
+          "books_learned": 3,
+          "end_gold": 1401,
+          "end_levels": [
+            12,
+            11,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 49.045,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 14,
+          "classes": [
+            "knight",
+            "archer",
+            "mage"
+          ],
+          "arrival_min": 28.6825,
+          "clear_min": 34.325,
+          "arrival_to_clear_min": 5.6425,
+          "first_book_min": 27.4442,
+          "library2_min": null,
+          "boss_attempts": 4,
+          "farming_runs": 4,
+          "books_learned": 3,
+          "end_gold": 1155,
+          "end_levels": [
+            11,
+            11,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 34.325,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 15,
+          "classes": [
+            "knight",
+            "mage",
+            "priest"
+          ],
+          "arrival_min": null,
+          "clear_min": null,
+          "arrival_to_clear_min": null,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 0,
+          "farming_runs": 23,
+          "books_learned": 0,
+          "end_gold": 1045,
+          "end_levels": [
+            8,
+            9,
+            9
+          ],
+          "end_stage": 1011,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": []
+        },
+        {
+          "seed": 16,
+          "classes": [
+            "archer",
+            "priest",
+            "knight"
+          ],
+          "arrival_min": 45.9642,
+          "clear_min": 64.1875,
+          "arrival_to_clear_min": 18.2233,
+          "first_book_min": 50.0,
+          "library2_min": null,
+          "boss_attempts": 4,
+          "farming_runs": 3,
+          "books_learned": 3,
+          "end_gold": 1276,
+          "end_levels": [
+            11,
+            11,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 64.1875,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 17,
+          "classes": [
+            "mage",
+            "priest",
+            "warrior"
+          ],
+          "arrival_min": 50.79,
+          "clear_min": 51.5333,
+          "arrival_to_clear_min": 0.7433,
+          "first_book_min": 50.7067,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 0,
+          "books_learned": 2,
+          "end_gold": 9166,
+          "end_levels": [
+            10,
+            10,
+            9
+          ],
+          "end_stage": 1051,
+          "end_minutes": 51.5333,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 18,
+          "classes": [
+            "mage",
+            "archer",
+            "warrior"
+          ],
+          "arrival_min": 33.5983,
+          "clear_min": 33.9433,
+          "arrival_to_clear_min": 0.345,
+          "first_book_min": 28.0,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 3,
+          "books_learned": 3,
+          "end_gold": 1774,
+          "end_levels": [
+            11,
+            11,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 33.9433,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 19,
+          "classes": [
+            "warrior",
+            "archer",
+            "mage"
+          ],
+          "arrival_min": 33.2175,
+          "clear_min": 33.5925,
+          "arrival_to_clear_min": 0.375,
+          "first_book_min": 26.0,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 4,
+          "books_learned": 3,
+          "end_gold": 1771,
+          "end_levels": [
+            12,
+            11,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 33.5925,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 20,
+          "classes": [
+            "warrior",
+            "priest",
+            "archer"
+          ],
+          "arrival_min": 47.1908,
+          "clear_min": 48.5392,
+          "arrival_to_clear_min": 1.3483,
+          "first_book_min": 46.0,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 0,
+          "books_learned": 1,
+          "end_gold": 10957,
+          "end_levels": [
+            11,
+            10,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 48.5392,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        }
+      ]
+    },
+    "active": {
+      "n": 20,
+      "arrived_by": {
+        "20": 2,
+        "25": 4,
+        "30": 7,
+        "40": 13,
+        "60": 18,
+        "90": 19
+      },
+      "cleared_by": {
+        "30": 5,
+        "40": 11,
+        "45": 12,
+        "60": 16,
+        "90": 18
+      },
+      "cleared_30_to_40": 6,
+      "clear_time_for_half_of_all_starts_min": 38.42,
+      "all_start_clear_time_median_min": 38.5804,
+      "successful_clear_time_median_min": 37.2021,
+      "arrival_time_for_half_of_all_starts_min": 33.4033,
+      "all_start_arrival_time_median_min": 34.45455,
+      "book_before_boss_clear": 17,
+      "values": [
+        {
+          "seed": 1,
+          "classes": [
+            "mage",
+            "priest",
+            "warrior"
+          ],
+          "arrival_min": 47.12,
+          "clear_min": 61.8717,
+          "arrival_to_clear_min": 14.7517,
+          "first_book_min": 44.0,
+          "library2_min": null,
+          "boss_attempts": 5,
+          "farming_runs": 9,
+          "books_learned": 3,
+          "end_gold": 1315,
+          "end_levels": [
+            13,
+            12,
+            12
+          ],
+          "end_stage": 1051,
+          "end_minutes": 61.8717,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 2,
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "arrival_min": 30.785,
+          "clear_min": 32.8583,
+          "arrival_to_clear_min": 2.0733,
+          "first_book_min": 30.7017,
+          "library2_min": null,
+          "boss_attempts": 2,
+          "farming_runs": 0,
+          "books_learned": 1,
+          "end_gold": 3322,
+          "end_levels": [
+            10,
+            10,
+            9
+          ],
+          "end_stage": 1051,
+          "end_minutes": 32.8583,
+          "boss_earliest_lost_rounds": [
+            0,
+            1
+          ]
+        },
+        {
+          "seed": 3,
+          "classes": [
+            "mage",
+            "priest",
+            "knight"
+          ],
+          "arrival_min": 50.2383,
+          "clear_min": 51.14,
+          "arrival_to_clear_min": 0.9017,
+          "first_book_min": 50.155,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 0,
+          "books_learned": 2,
+          "end_gold": 2108,
+          "end_levels": [
+            10,
+            10,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 51.14,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 4,
+          "classes": [
+            "mage",
+            "archer",
+            "knight"
+          ],
+          "arrival_min": 20.8933,
+          "clear_min": 21.1417,
+          "arrival_to_clear_min": 0.2483,
+          "first_book_min": 20.81,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 0,
+          "books_learned": 2,
+          "end_gold": 5310,
+          "end_levels": [
+            10,
+            10,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 21.1417,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 5,
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "arrival_min": 69.0233,
+          "clear_min": 73.0183,
+          "arrival_to_clear_min": 3.995,
+          "first_book_min": 68.94,
+          "library2_min": null,
+          "boss_attempts": 2,
+          "farming_runs": 0,
+          "books_learned": 1,
+          "end_gold": 3241,
+          "end_levels": [
+            9,
+            10,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 73.0183,
+          "boss_earliest_lost_rounds": [
+            0,
+            1
+          ]
+        },
+        {
+          "seed": 6,
+          "classes": [
+            "warrior",
+            "mage",
+            "archer"
+          ],
+          "arrival_min": 38.2642,
+          "clear_min": 38.7408,
+          "arrival_to_clear_min": 0.4767,
+          "first_book_min": 38.0,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 4,
+          "books_learned": 2,
+          "end_gold": 5379,
+          "end_levels": [
+            10,
+            11,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 38.7408,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 7,
+          "classes": [
+            "warrior",
+            "archer",
+            "knight"
+          ],
+          "arrival_min": 19.4683,
+          "clear_min": 31.6167,
+          "arrival_to_clear_min": 12.1483,
+          "first_book_min": 19.385,
+          "library2_min": null,
+          "boss_attempts": 4,
+          "farming_runs": 4,
+          "books_learned": 3,
+          "end_gold": 1666,
+          "end_levels": [
+            11,
+            11,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 31.6167,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 8,
+          "classes": [
+            "warrior",
+            "mage",
+            "priest"
+          ],
+          "arrival_min": 35.5058,
+          "clear_min": 35.9842,
+          "arrival_to_clear_min": 0.4783,
+          "first_book_min": 34.0,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 0,
+          "books_learned": 3,
+          "end_gold": 1190,
+          "end_levels": [
+            10,
+            11,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 35.9842,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 9,
+          "classes": [
+            "archer",
+            "knight",
+            "warrior"
+          ],
+          "arrival_min": 19.4783,
+          "clear_min": 21.4667,
+          "arrival_to_clear_min": 1.9883,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 3,
+          "farming_runs": 0,
+          "books_learned": 0,
+          "end_gold": 3973,
+          "end_levels": [
+            10,
+            9,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 21.4667,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "seed": 10,
+          "classes": [
+            "warrior",
+            "priest",
+            "mage"
+          ],
+          "arrival_min": 45.265,
+          "clear_min": 53.945,
+          "arrival_to_clear_min": 8.68,
+          "first_book_min": 44.0,
+          "library2_min": null,
+          "boss_attempts": 4,
+          "farming_runs": 3,
+          "books_learned": 3,
+          "end_gold": 1450,
+          "end_levels": [
+            11,
+            12,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 53.945,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 11,
+          "classes": [
+            "knight",
+            "warrior",
+            "mage"
+          ],
+          "arrival_min": 26.5175,
+          "clear_min": 38.42,
+          "arrival_to_clear_min": 11.9025,
+          "first_book_min": 24.9975,
+          "library2_min": null,
+          "boss_attempts": 5,
+          "farming_runs": 7,
+          "books_learned": 3,
+          "end_gold": 1262,
+          "end_levels": [
+            12,
+            12,
+            12
+          ],
+          "end_stage": 1051,
+          "end_minutes": 38.42,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 12,
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "arrival_min": 46.7017,
+          "clear_min": null,
+          "arrival_to_clear_min": null,
+          "first_book_min": 46.0,
+          "library2_min": null,
+          "boss_attempts": 6,
+          "farming_runs": 11,
+          "books_learned": 3,
+          "end_gold": 1006,
+          "end_levels": [
+            13,
+            13,
+            13
+          ],
+          "end_stage": 1043,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 13,
+          "classes": [
+            "mage",
+            "archer",
+            "warrior"
+          ],
+          "arrival_min": 27.5275,
+          "clear_min": 28.9008,
+          "arrival_to_clear_min": 1.3733,
+          "first_book_min": 27.4442,
+          "library2_min": null,
+          "boss_attempts": 3,
+          "farming_runs": 0,
+          "books_learned": 2,
+          "end_gold": 6129,
+          "end_levels": [
+            10,
+            11,
+            9
+          ],
+          "end_stage": 1051,
+          "end_minutes": 28.9008,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "seed": 14,
+          "classes": [
+            "knight",
+            "archer",
+            "mage"
+          ],
+          "arrival_min": 23.6317,
+          "clear_min": 29.5417,
+          "arrival_to_clear_min": 5.91,
+          "first_book_min": 22.0,
+          "library2_min": null,
+          "boss_attempts": 4,
+          "farming_runs": 4,
+          "books_learned": 3,
+          "end_gold": 1169,
+          "end_levels": [
+            12,
+            11,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 29.5417,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 15,
+          "classes": [
+            "knight",
+            "mage",
+            "priest"
+          ],
+          "arrival_min": null,
+          "clear_min": null,
+          "arrival_to_clear_min": null,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 0,
+          "farming_runs": 23,
+          "books_learned": 0,
+          "end_gold": 1041,
+          "end_levels": [
+            9,
+            9,
+            9
+          ],
+          "end_stage": 1011,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": []
+        },
+        {
+          "seed": 16,
+          "classes": [
+            "archer",
+            "priest",
+            "knight"
+          ],
+          "arrival_min": 33.4033,
+          "clear_min": 46.4708,
+          "arrival_to_clear_min": 13.0675,
+          "first_book_min": 33.32,
+          "library2_min": null,
+          "boss_attempts": 4,
+          "farming_runs": 4,
+          "books_learned": 3,
+          "end_gold": 1418,
+          "end_levels": [
+            11,
+            11,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 46.4708,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 17,
+          "classes": [
+            "mage",
+            "priest",
+            "warrior"
+          ],
+          "arrival_min": 58.2975,
+          "clear_min": 59.3008,
+          "arrival_to_clear_min": 1.0033,
+          "first_book_min": 56.0,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 0,
+          "books_learned": 2,
+          "end_gold": 6872,
+          "end_levels": [
+            10,
+            11,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 59.3008,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 18,
+          "classes": [
+            "mage",
+            "archer",
+            "warrior"
+          ],
+          "arrival_min": 30.2017,
+          "clear_min": 30.5683,
+          "arrival_to_clear_min": 0.3667,
+          "first_book_min": 24.0,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 3,
+          "books_learned": 3,
+          "end_gold": 1637,
+          "end_levels": [
+            12,
+            11,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 30.5683,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 19,
+          "classes": [
+            "warrior",
+            "archer",
+            "mage"
+          ],
+          "arrival_min": 28.7992,
+          "clear_min": 29.7258,
+          "arrival_to_clear_min": 0.9267,
+          "first_book_min": 28.0,
+          "library2_min": null,
+          "boss_attempts": 2,
+          "farming_runs": 0,
+          "books_learned": 2,
+          "end_gold": 4984,
+          "end_levels": [
+            9,
+            10,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 29.7258,
+          "boss_earliest_lost_rounds": [
+            0,
+            1
+          ]
+        },
+        {
+          "seed": 20,
+          "classes": [
+            "warrior",
+            "priest",
+            "archer"
+          ],
+          "arrival_min": 38.9917,
+          "clear_min": 40.3083,
+          "arrival_to_clear_min": 1.3167,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 0,
+          "books_learned": 0,
+          "end_gold": 5940,
+          "end_levels": [
+            10,
+            10,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 40.3083,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        }
+      ]
+    },
+    "active_slow": {
+      "n": 20,
+      "arrived_by": {
+        "20": 2,
+        "25": 4,
+        "30": 7,
+        "40": 11,
+        "60": 18,
+        "90": 19
+      },
+      "cleared_by": {
+        "30": 3,
+        "40": 9,
+        "45": 11,
+        "60": 17,
+        "90": 19
+      },
+      "cleared_30_to_40": 6,
+      "clear_time_for_half_of_all_starts_min": 40.1133,
+      "all_start_clear_time_median_min": 41.0433,
+      "successful_clear_time_median_min": 40.1133,
+      "arrival_time_for_half_of_all_starts_min": 34.0233,
+      "all_start_arrival_time_median_min": 36.41,
+      "book_before_boss_clear": 17,
+      "values": [
+        {
+          "seed": 1,
+          "classes": [
+            "mage",
+            "priest",
+            "warrior"
+          ],
+          "arrival_min": 45.2592,
+          "clear_min": 60.4392,
+          "arrival_to_clear_min": 15.18,
+          "first_book_min": 45.0,
+          "library2_min": null,
+          "boss_attempts": 5,
+          "farming_runs": 6,
+          "books_learned": 3,
+          "end_gold": 1277,
+          "end_levels": [
+            12,
+            12,
+            12
+          ],
+          "end_stage": 1051,
+          "end_minutes": 60.4392,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 2,
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "arrival_min": 30.3067,
+          "clear_min": 32.38,
+          "arrival_to_clear_min": 2.0733,
+          "first_book_min": 30.2233,
+          "library2_min": null,
+          "boss_attempts": 2,
+          "farming_runs": 0,
+          "books_learned": 1,
+          "end_gold": 3888,
+          "end_levels": [
+            10,
+            10,
+            9
+          ],
+          "end_stage": 1051,
+          "end_minutes": 32.38,
+          "boss_earliest_lost_rounds": [
+            0,
+            1
+          ]
+        },
+        {
+          "seed": 3,
+          "classes": [
+            "mage",
+            "priest",
+            "knight"
+          ],
+          "arrival_min": 40.9033,
+          "clear_min": 41.9733,
+          "arrival_to_clear_min": 1.07,
+          "first_book_min": 40.82,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 0,
+          "books_learned": 1,
+          "end_gold": 2251,
+          "end_levels": [
+            10,
+            10,
+            9
+          ],
+          "end_stage": 1051,
+          "end_minutes": 41.9733,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 4,
+          "classes": [
+            "mage",
+            "archer",
+            "knight"
+          ],
+          "arrival_min": 21.8367,
+          "clear_min": 22.1683,
+          "arrival_to_clear_min": 0.3317,
+          "first_book_min": 21.7533,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 0,
+          "books_learned": 2,
+          "end_gold": 5626,
+          "end_levels": [
+            10,
+            10,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 22.1683,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 5,
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "arrival_min": 78.1042,
+          "clear_min": 79.8742,
+          "arrival_to_clear_min": 1.77,
+          "first_book_min": 78.0208,
+          "library2_min": 78.0208,
+          "boss_attempts": 1,
+          "farming_runs": 0,
+          "books_learned": 3,
+          "end_gold": 1406,
+          "end_levels": [
+            10,
+            10,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 79.8742,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 6,
+          "classes": [
+            "warrior",
+            "mage",
+            "archer"
+          ],
+          "arrival_min": 34.0233,
+          "clear_min": 34.405,
+          "arrival_to_clear_min": 0.3817,
+          "first_book_min": 33.94,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 0,
+          "books_learned": 3,
+          "end_gold": 1708,
+          "end_levels": [
+            10,
+            10,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 34.405,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 7,
+          "classes": [
+            "warrior",
+            "archer",
+            "knight"
+          ],
+          "arrival_min": 19.7,
+          "clear_min": 30.7117,
+          "arrival_to_clear_min": 11.0117,
+          "first_book_min": 23.1483,
+          "library2_min": null,
+          "boss_attempts": 4,
+          "farming_runs": 4,
+          "books_learned": 3,
+          "end_gold": 1371,
+          "end_levels": [
+            11,
+            11,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 30.7117,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 8,
+          "classes": [
+            "warrior",
+            "mage",
+            "priest"
+          ],
+          "arrival_min": 48.13,
+          "clear_min": 48.665,
+          "arrival_to_clear_min": 0.535,
+          "first_book_min": 42.015,
+          "library2_min": 48.0467,
+          "boss_attempts": 1,
+          "farming_runs": 4,
+          "books_learned": 3,
+          "end_gold": 1498,
+          "end_levels": [
+            10,
+            11,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 48.665,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 9,
+          "classes": [
+            "archer",
+            "knight",
+            "warrior"
+          ],
+          "arrival_min": 19.8583,
+          "clear_min": 21.8467,
+          "arrival_to_clear_min": 1.9883,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 3,
+          "farming_runs": 0,
+          "books_learned": 0,
+          "end_gold": 5344,
+          "end_levels": [
+            10,
+            9,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 21.8467,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "seed": 10,
+          "classes": [
+            "warrior",
+            "priest",
+            "mage"
+          ],
+          "arrival_min": 57.625,
+          "clear_min": 59.43,
+          "arrival_to_clear_min": 1.805,
+          "first_book_min": 50.0,
+          "library2_min": null,
+          "boss_attempts": 3,
+          "farming_runs": 3,
+          "books_learned": 3,
+          "end_gold": 1349,
+          "end_levels": [
+            11,
+            12,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 59.43,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "seed": 11,
+          "classes": [
+            "knight",
+            "warrior",
+            "mage"
+          ],
+          "arrival_min": 29.255,
+          "clear_min": 30.245,
+          "arrival_to_clear_min": 0.99,
+          "first_book_min": 27.555,
+          "library2_min": null,
+          "boss_attempts": 2,
+          "farming_runs": 0,
+          "books_learned": 3,
+          "end_gold": 1381,
+          "end_levels": [
+            10,
+            10,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 30.245,
+          "boss_earliest_lost_rounds": [
+            0,
+            1
+          ]
+        },
+        {
+          "seed": 12,
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "arrival_min": 46.8967,
+          "clear_min": 59.8783,
+          "arrival_to_clear_min": 12.9817,
+          "first_book_min": 46.8133,
+          "library2_min": null,
+          "boss_attempts": 4,
+          "farming_runs": 3,
+          "books_learned": 3,
+          "end_gold": 1440,
+          "end_levels": [
+            12,
+            11,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 59.8783,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 13,
+          "classes": [
+            "mage",
+            "archer",
+            "warrior"
+          ],
+          "arrival_min": 28.7967,
+          "clear_min": 38.1433,
+          "arrival_to_clear_min": 9.3467,
+          "first_book_min": 27.0633,
+          "library2_min": null,
+          "boss_attempts": 4,
+          "farming_runs": 3,
+          "books_learned": 3,
+          "end_gold": 1223,
+          "end_levels": [
+            11,
+            12,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 38.1433,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 14,
+          "classes": [
+            "knight",
+            "archer",
+            "mage"
+          ],
+          "arrival_min": 22.9217,
+          "clear_min": 28.8417,
+          "arrival_to_clear_min": 5.92,
+          "first_book_min": 22.8383,
+          "library2_min": null,
+          "boss_attempts": 4,
+          "farming_runs": 4,
+          "books_learned": 3,
+          "end_gold": 1151,
+          "end_levels": [
+            11,
+            11,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 28.8417,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 15,
+          "classes": [
+            "knight",
+            "mage",
+            "priest"
+          ],
+          "arrival_min": null,
+          "clear_min": null,
+          "arrival_to_clear_min": null,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 0,
+          "farming_runs": 25,
+          "books_learned": 0,
+          "end_gold": 1171,
+          "end_levels": [
+            8,
+            9,
+            9
+          ],
+          "end_stage": 1031,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": []
+        },
+        {
+          "seed": 16,
+          "classes": [
+            "archer",
+            "priest",
+            "knight"
+          ],
+          "arrival_min": 33.6883,
+          "clear_min": 47.6525,
+          "arrival_to_clear_min": 13.9642,
+          "first_book_min": 33.605,
+          "library2_min": null,
+          "boss_attempts": 4,
+          "farming_runs": 4,
+          "books_learned": 3,
+          "end_gold": 1365,
+          "end_levels": [
+            11,
+            11,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 47.6525,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 17,
+          "classes": [
+            "mage",
+            "priest",
+            "warrior"
+          ],
+          "arrival_min": 56.6067,
+          "clear_min": 57.1833,
+          "arrival_to_clear_min": 0.5767,
+          "first_book_min": 53.6283,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 0,
+          "books_learned": 3,
+          "end_gold": 1210,
+          "end_levels": [
+            11,
+            11,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 57.1833,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 18,
+          "classes": [
+            "mage",
+            "archer",
+            "warrior"
+          ],
+          "arrival_min": 29.705,
+          "clear_min": 30.4183,
+          "arrival_to_clear_min": 0.7133,
+          "first_book_min": 24.7567,
+          "library2_min": null,
+          "boss_attempts": 2,
+          "farming_runs": 4,
+          "books_learned": 3,
+          "end_gold": 1669,
+          "end_levels": [
+            11,
+            11,
+            11
+          ],
+          "end_stage": 1051,
+          "end_minutes": 30.4183,
+          "boss_earliest_lost_rounds": [
+            0,
+            1
+          ]
+        },
+        {
+          "seed": 19,
+          "classes": [
+            "warrior",
+            "archer",
+            "mage"
+          ],
+          "arrival_min": 46.8842,
+          "clear_min": 55.5858,
+          "arrival_to_clear_min": 8.7017,
+          "first_book_min": 40.0,
+          "library2_min": 41.6125,
+          "boss_attempts": 4,
+          "farming_runs": 16,
+          "books_learned": 3,
+          "end_gold": 1424,
+          "end_levels": [
+            12,
+            12,
+            12
+          ],
+          "end_stage": 1051,
+          "end_minutes": 55.5858,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 20,
+          "classes": [
+            "warrior",
+            "priest",
+            "archer"
+          ],
+          "arrival_min": 38.7967,
+          "clear_min": 40.1133,
+          "arrival_to_clear_min": 1.3167,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 0,
+          "books_learned": 0,
+          "end_gold": 6340,
+          "end_levels": [
+            10,
+            10,
+            10
+          ],
+          "end_stage": 1051,
+          "end_minutes": 40.1133,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        }
+      ]
+    },
+    "adaptive": {
+      "n": 20,
+      "arrived_by": {
+        "20": 0,
+        "25": 2,
+        "30": 2,
+        "40": 7,
+        "60": 13,
+        "90": 17
+      },
+      "cleared_by": {
+        "30": 1,
+        "40": 4,
+        "45": 5,
+        "60": 10,
+        "90": 15
+      },
+      "cleared_30_to_40": 3,
+      "clear_time_for_half_of_all_starts_min": 55.9992,
+      "all_start_clear_time_median_min": 62.42085,
+      "successful_clear_time_median_min": 53.415,
+      "arrival_time_for_half_of_all_starts_min": 50.7758,
+      "all_start_arrival_time_median_min": 51.3429,
+      "book_before_boss_clear": 0,
+      "values": [
+        {
+          "seed": 1,
+          "classes": [
+            "mage",
+            "priest",
+            "warrior"
+          ],
+          "arrival_min": 61.2917,
+          "clear_min": null,
+          "arrival_to_clear_min": null,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 5,
+          "farming_runs": 20,
+          "books_learned": 0,
+          "end_gold": 2394,
+          "end_levels": [
+            14,
+            14,
+            13
+          ],
+          "end_stage": 1051,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 2,
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "arrival_min": 32.5433,
+          "clear_min": 36.6667,
+          "arrival_to_clear_min": 4.1233,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 4,
+          "farming_runs": 0,
+          "books_learned": 0,
+          "end_gold": 3210,
+          "end_levels": [
+            18,
+            18,
+            18
+          ],
+          "end_stage": 3031,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 3,
+          "classes": [
+            "mage",
+            "priest",
+            "knight"
+          ],
+          "arrival_min": 73.1767,
+          "clear_min": 77.2167,
+          "arrival_to_clear_min": 4.04,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 3,
+          "farming_runs": 10,
+          "books_learned": 0,
+          "end_gold": 1097,
+          "end_levels": [
+            13,
+            12,
+            11
+          ],
+          "end_stage": 1043,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "seed": 4,
+          "classes": [
+            "mage",
+            "archer",
+            "knight"
+          ],
+          "arrival_min": 53.0367,
+          "clear_min": 53.415,
+          "arrival_to_clear_min": 0.3783,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 10,
+          "books_learned": 0,
+          "end_gold": 3962,
+          "end_levels": [
+            18,
+            18,
+            17
+          ],
+          "end_stage": 3031,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 5,
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "arrival_min": 67.37,
+          "clear_min": 69.5,
+          "arrival_to_clear_min": 2.13,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 2,
+          "farming_runs": 10,
+          "books_learned": 0,
+          "end_gold": 2015,
+          "end_levels": [
+            14,
+            14,
+            14
+          ],
+          "end_stage": 2022,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            0,
+            1
+          ]
+        },
+        {
+          "seed": 6,
+          "classes": [
+            "warrior",
+            "mage",
+            "archer"
+          ],
+          "arrival_min": 53.2092,
+          "clear_min": 53.7025,
+          "arrival_to_clear_min": 0.4933,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 20,
+          "books_learned": 0,
+          "end_gold": 2387,
+          "end_levels": [
+            15,
+            15,
+            15
+          ],
+          "end_stage": 2013,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 7,
+          "classes": [
+            "warrior",
+            "archer",
+            "knight"
+          ],
+          "arrival_min": 20.645,
+          "clear_min": 21.7367,
+          "arrival_to_clear_min": 1.0917,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 2,
+          "farming_runs": 8,
+          "books_learned": 0,
+          "end_gold": 5064,
+          "end_levels": [
+            20,
+            20,
+            20
+          ],
+          "end_stage": 3043,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            0,
+            1
+          ]
+        },
+        {
+          "seed": 8,
+          "classes": [
+            "warrior",
+            "mage",
+            "priest"
+          ],
+          "arrival_min": null,
+          "clear_min": null,
+          "arrival_to_clear_min": null,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 0,
+          "farming_runs": 20,
+          "books_learned": 0,
+          "end_gold": 2268,
+          "end_levels": [
+            12,
+            13,
+            13
+          ],
+          "end_stage": 1042,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": []
+        },
+        {
+          "seed": 9,
+          "classes": [
+            "archer",
+            "knight",
+            "warrior"
+          ],
+          "arrival_min": 23.4558,
+          "clear_min": 42.6392,
+          "arrival_to_clear_min": 19.1833,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 7,
+          "farming_runs": 13,
+          "books_learned": 0,
+          "end_gold": 4503,
+          "end_levels": [
+            19,
+            19,
+            19
+          ],
+          "end_stage": 3043,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 10,
+          "classes": [
+            "warrior",
+            "priest",
+            "mage"
+          ],
+          "arrival_min": null,
+          "clear_min": null,
+          "arrival_to_clear_min": null,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 0,
+          "farming_runs": 1,
+          "books_learned": 0,
+          "end_gold": 1672,
+          "end_levels": [
+            11,
+            11,
+            11
+          ],
+          "end_stage": 1042,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": []
+        },
+        {
+          "seed": 11,
+          "classes": [
+            "knight",
+            "warrior",
+            "mage"
+          ],
+          "arrival_min": 35.055,
+          "clear_min": 55.9992,
+          "arrival_to_clear_min": 20.9442,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 10,
+          "farming_runs": 10,
+          "books_learned": 0,
+          "end_gold": 2900,
+          "end_levels": [
+            18,
+            18,
+            18
+          ],
+          "end_stage": 3033,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 12,
+          "classes": [
+            "knight",
+            "warrior",
+            "priest"
+          ],
+          "arrival_min": 36.5567,
+          "clear_min": null,
+          "arrival_to_clear_min": null,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 10,
+          "farming_runs": 15,
+          "books_learned": 0,
+          "end_gold": 1609,
+          "end_levels": [
+            14,
+            14,
+            14
+          ],
+          "end_stage": 1043,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 13,
+          "classes": [
+            "mage",
+            "archer",
+            "warrior"
+          ],
+          "arrival_min": 46.9375,
+          "clear_min": 68.8425,
+          "arrival_to_clear_min": 21.905,
+          "first_book_min": null,
+          "library2_min": 65.0,
+          "boss_attempts": 6,
+          "farming_runs": 20,
+          "books_learned": 0,
+          "end_gold": 4208,
+          "end_levels": [
+            16,
+            17,
+            16
+          ],
+          "end_stage": 3011,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 14,
+          "classes": [
+            "knight",
+            "archer",
+            "mage"
+          ],
+          "arrival_min": 51.91,
+          "clear_min": 69.7608,
+          "arrival_to_clear_min": 17.8508,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 10,
+          "farming_runs": 20,
+          "books_learned": 0,
+          "end_gold": 4666,
+          "end_levels": [
+            15,
+            16,
+            16
+          ],
+          "end_stage": 2041,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seed": 15,
+          "classes": [
+            "knight",
+            "mage",
+            "priest"
+          ],
+          "arrival_min": null,
+          "clear_min": null,
+          "arrival_to_clear_min": null,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 0,
+          "farming_runs": 20,
+          "books_learned": 0,
+          "end_gold": 2003,
+          "end_levels": [
+            8,
+            8,
+            8
+          ],
+          "end_stage": 1021,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": []
+        },
+        {
+          "seed": 16,
+          "classes": [
+            "archer",
+            "priest",
+            "knight"
+          ],
+          "arrival_min": 32.0017,
+          "clear_min": 34.59,
+          "arrival_to_clear_min": 2.5883,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 3,
+          "farming_runs": 0,
+          "books_learned": 0,
+          "end_gold": 3495,
+          "end_levels": [
+            17,
+            17,
+            17
+          ],
+          "end_stage": 3031,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "seed": 17,
+          "classes": [
+            "mage",
+            "priest",
+            "warrior"
+          ],
+          "arrival_min": 49.9192,
+          "clear_min": 52.9425,
+          "arrival_to_clear_min": 3.0233,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 2,
+          "farming_runs": 0,
+          "books_learned": 0,
+          "end_gold": 1275,
+          "end_levels": [
+            13,
+            13,
+            10
+          ],
+          "end_stage": 2021,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            0,
+            1
+          ]
+        },
+        {
+          "seed": 18,
+          "classes": [
+            "mage",
+            "archer",
+            "warrior"
+          ],
+          "arrival_min": 83.0342,
+          "clear_min": 83.8925,
+          "arrival_to_clear_min": 0.8583,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 2,
+          "farming_runs": 20,
+          "books_learned": 0,
+          "end_gold": 2496,
+          "end_levels": [
+            15,
+            14,
+            14
+          ],
+          "end_stage": 2013,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            0,
+            1
+          ]
+        },
+        {
+          "seed": 19,
+          "classes": [
+            "warrior",
+            "archer",
+            "mage"
+          ],
+          "arrival_min": 50.7758,
+          "clear_min": 51.1675,
+          "arrival_to_clear_min": 0.3917,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 10,
+          "books_learned": 0,
+          "end_gold": 4158,
+          "end_levels": [
+            17,
+            18,
+            18
+          ],
+          "end_stage": 3031,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        },
+        {
+          "seed": 20,
+          "classes": [
+            "warrior",
+            "priest",
+            "archer"
+          ],
+          "arrival_min": 35.8483,
+          "clear_min": 37.0733,
+          "arrival_to_clear_min": 1.225,
+          "first_book_min": null,
+          "library2_min": null,
+          "boss_attempts": 1,
+          "farming_runs": 0,
+          "books_learned": 0,
+          "end_gold": 2256,
+          "end_levels": [
+            16,
+            16,
+            17
+          ],
+          "end_stage": 3021,
+          "end_minutes": 90.0,
+          "boss_earliest_lost_rounds": [
+            1
+          ]
+        }
+      ]
+    }
+  },
+  "pairs": [
+    {
+      "seed": 1,
+      "times": {
+        "book_first": 59.6717,
+        "active": 61.8717,
+        "active_slow": 60.4392,
+        "adaptive": null
+      }
+    },
+    {
+      "seed": 2,
+      "times": {
+        "book_first": 40.6817,
+        "active": 32.8583,
+        "active_slow": 32.38,
+        "adaptive": 36.6667
+      }
+    },
+    {
+      "seed": 3,
+      "times": {
+        "book_first": 70.5408,
+        "active": 51.14,
+        "active_slow": 41.9733,
+        "adaptive": 77.2167
+      }
+    },
+    {
+      "seed": 4,
+      "times": {
+        "book_first": 22.1033,
+        "active": 21.1417,
+        "active_slow": 22.1683,
+        "adaptive": 53.415
+      }
+    },
+    {
+      "seed": 5,
+      "times": {
+        "book_first": 83.0358,
+        "active": 73.0183,
+        "active_slow": 79.8742,
+        "adaptive": 69.5
+      }
+    },
+    {
+      "seed": 6,
+      "times": {
+        "book_first": 41.885,
+        "active": 38.7408,
+        "active_slow": 34.405,
+        "adaptive": 53.7025
+      }
+    },
+    {
+      "seed": 7,
+      "times": {
+        "book_first": 28.545,
+        "active": 31.6167,
+        "active_slow": 30.7117,
+        "adaptive": 21.7367
+      }
+    },
+    {
+      "seed": 8,
+      "times": {
+        "book_first": 55.805,
+        "active": 35.9842,
+        "active_slow": 48.665,
+        "adaptive": null
+      }
+    },
+    {
+      "seed": 9,
+      "times": {
+        "book_first": 23.4133,
+        "active": 21.4667,
+        "active_slow": 21.8467,
+        "adaptive": 42.6392
+      }
+    },
+    {
+      "seed": 10,
+      "times": {
+        "book_first": 64.63,
+        "active": 53.945,
+        "active_slow": 59.43,
+        "adaptive": null
+      }
+    },
+    {
+      "seed": 11,
+      "times": {
+        "book_first": 37.2442,
+        "active": 38.42,
+        "active_slow": 30.245,
+        "adaptive": 55.9992
+      }
+    },
+    {
+      "seed": 12,
+      "times": {
+        "book_first": null,
+        "active": null,
+        "active_slow": 59.8783,
+        "adaptive": null
+      }
+    },
+    {
+      "seed": 13,
+      "times": {
+        "book_first": 49.045,
+        "active": 28.9008,
+        "active_slow": 38.1433,
+        "adaptive": 68.8425
+      }
+    },
+    {
+      "seed": 14,
+      "times": {
+        "book_first": 34.325,
+        "active": 29.5417,
+        "active_slow": 28.8417,
+        "adaptive": 69.7608
+      }
+    },
+    {
+      "seed": 15,
+      "times": {
+        "book_first": null,
+        "active": null,
+        "active_slow": null,
+        "adaptive": null
+      }
+    },
+    {
+      "seed": 16,
+      "times": {
+        "book_first": 64.1875,
+        "active": 46.4708,
+        "active_slow": 47.6525,
+        "adaptive": 34.59
+      }
+    },
+    {
+      "seed": 17,
+      "times": {
+        "book_first": 51.5333,
+        "active": 59.3008,
+        "active_slow": 57.1833,
+        "adaptive": 52.9425
+      }
+    },
+    {
+      "seed": 18,
+      "times": {
+        "book_first": 33.9433,
+        "active": 30.5683,
+        "active_slow": 30.4183,
+        "adaptive": 83.8925
+      }
+    },
+    {
+      "seed": 19,
+      "times": {
+        "book_first": 33.5925,
+        "active": 29.7258,
+        "active_slow": 55.5858,
+        "adaptive": 51.1675
+      }
+    },
+    {
+      "seed": 20,
+      "times": {
+        "book_first": 48.5392,
+        "active": 40.3083,
+        "active_slow": 40.1133,
+        "adaptive": 37.0733
+      }
+    }
+  ],
+  "notes": [
+    "미클리어는90분에서 종료한다. 성공한 조건만의 중앙값을 전체 중앙값으로 부르지 않는다.",
+    "book_first/active/active_slow share real starts; no policy is a measured human average.",
+    "Current library2 gate Lv10 and material costs differ from prior 18:34 snapshot.",
+    "Times start at first expedition, speed1/focusOff; real reading/click time excluded."
+  ]
+}

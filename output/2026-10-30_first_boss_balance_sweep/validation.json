@@ -1,0 +1,87 @@
+{
+  "checks": 93551,
+  "passed": 93551,
+  "failures": [],
+  "groups": {
+    "frozen source hash": {
+      "checks": 232,
+      "passed": 232
+    },
+    "browser/native parity": {
+      "checks": 1,
+      "passed": 1
+    },
+    "VM/native parity": {
+      "checks": 1,
+      "passed": 1
+    },
+    "grid all expected combinations": {
+      "checks": 1,
+      "passed": 1
+    },
+    "576 Cartesian combinations covered": {
+      "checks": 1,
+      "passed": 1
+    },
+    "variant exact input": {
+      "checks": 576,
+      "passed": 576
+    },
+    "seed set and order exact": {
+      "checks": 576,
+      "passed": 576
+    },
+    "no runtime or invariant errors": {
+      "checks": 11520,
+      "passed": 11520
+    },
+    "real timing budget": {
+      "checks": 11520,
+      "passed": 11520
+    },
+    "win agrees with endpoint": {
+      "checks": 11520,
+      "passed": 11520
+    },
+    "arrival precedes clear": {
+      "checks": 11520,
+      "passed": 11520
+    },
+    "censoring retains failed starts": {
+      "checks": 11520,
+      "passed": 11520
+    },
+    "no injected negative/nonfinite wallet": {
+      "checks": 11520,
+      "passed": 11520
+    },
+    "real level bounds": {
+      "checks": 11520,
+      "passed": 11520
+    },
+    "same starting class order": {
+      "checks": 11520,
+      "passed": 11520
+    },
+    "grid no phase errors": {
+      "checks": 1,
+      "passed": 1
+    },
+    "all54 legal class/rarity orders": {
+      "checks": 1,
+      "passed": 1
+    },
+    "coverage seeds separate from tuning and natural test": {
+      "checks": 1,
+      "passed": 1
+    }
+  },
+  "phases": [
+    {
+      "phase": "grid",
+      "combinations": 576,
+      "accounts": 11520,
+      "runs": 208823
+    }
+  ]
+}

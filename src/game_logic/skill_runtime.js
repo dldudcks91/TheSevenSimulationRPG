@@ -29,6 +29,8 @@
  */
 
 import { createFormula } from './formula.js';
+import { procSkillLevel } from './item.js';
+import { skillTagBonus } from './skill_tags.js';
 import { AILMENTS, CASTS, EFFECT_TYPES, EFFECTS, EVENT_TRIGGERS, PICK_TARGETS, refreshDerived, strongestOf, sumOf, stateOf } from './skill_effects.js';
 
 /**
@@ -49,7 +51,7 @@ export function createHooks() {
  * 0 이면 스킬이 매 차례 나가 예산이 무너진다 (battle_design §6)
  */
 export function cooldownSec(B, u, def) {
-    return (def.cool ?? 0) * Math.max(B.skill_cd_floor_mult, 1 - (u.cdr ?? 0));      // 쿨감소는 비율 (R111)
+    return (def.cool ?? 0) * Math.max(B.skill_cd_floor_mult, 1 - (u.cdr ?? 0) - skillTagBonus(u.fx?.skillTags, def, 'cooldown'));
 }
 
 /**
@@ -79,7 +81,9 @@ export function createSkillRuntime(ctx) {
     const F = createFormula(B);      // 고정 피해의 `indirect` — 무상태 순수 함수라 battle.js 의 것과 같은 값을 낸다 (code_conventions §2)
 
     const alive = list => list.filter(u => u.hp > 0);
-    const alliesOf = u => (u.side === 'party' ? units.party : units.enemies);
+    const alliesOf = u => u.side === 'party'
+        ? ctx.partyScope ? units.party.filter(p => p.group === u.group) : units.party
+        : units.enemies;
     const foesOf = u => (u.side === 'party' ? units.enemies : units.party);
 
     /** 창 만료 — 행동 순회 **앞에서** 처리한다. rng 를 쓰지 않으므로 수열이 밀리지 않는다 */
@@ -140,7 +144,7 @@ export function createSkillRuntime(ctx) {
     function castHeal(u, def, t) {
         const matk = u.matkMin + rng() * (u.matkMax - u.matkMin);   // 회복량 굴림 — 대상 선택 앞 · 양끝이 같아도 1회 (R90)
         // 배율은 비율 (R111) · 능력치 계수는 곱 (2026-09-18) · **회복량 증가**(거는 쪽 — 사제 무기 시기 ② · 2026-10-05 R208)는 곱 — 0 이면 ×1 이라 종전 값
-        const ho = healOutOf(u);
+        const ho = healOutOf(u) + (def.tagHeal ?? 0);
         const amt = Math.round(matk * def.mult * (def.statMult ?? 1) * (ho ? 1 + ho : 1));
         const targets = targetsOf(u, def);
         for (const tgt of targets) {
@@ -156,7 +160,7 @@ export function createSkillRuntime(ctx) {
      *   마법 공격력이 없는 직업(전사)의 회복이라 밑수가 최대 HP 다. 회복량 증가(거는 쪽) · 체력 회복 +%(받는 쪽)는 `castHeal` 과 같다 · 이벤트도 `heal` 이다
      */
     function castMend(u, def, t) {
-        const ho = healOutOf(u);
+        const ho = healOutOf(u) + (def.tagHeal ?? 0);
         const amt = Math.round(u.hpMax * def.mult * (def.statMult ?? 1) * (ho ? 1 + ho : 1));
         for (const tgt of targetsOf(u, def)) {
             const got = tgt.recv ? Math.round(amt * (1 + tgt.recv)) : amt;
@@ -187,7 +191,7 @@ export function createSkillRuntime(ctx) {
      */
     function applyStatus(u, tgt, x, t) {
         // 버프 지속시간 +% — 장비 + **도감 Lv2**(그 종족이 나온 라운드 동안 파티가 거는 창 · `units.codexRound.buff` · 2026-10-22 R314) · 없으면 0 을 더해 종전 값
-        let dur = x.dur * (1 + (u.buffDur ?? 0) + (u.side === 'party' ? units.codexRound?.buff ?? 0 : 0));
+        let dur = x.dur * (1 + (u.buffDur ?? 0) + (x.tagDuration ?? 0) + (u.side === 'party' ? units.codexRound?.buff ?? 0 : 0));
         const ail = x.ailment ? AILMENTS[x.ailment] : null;
         // 거는 쪽의 시간 증가 [2026-10-05 · R208 · item_design §1 「마법사 · 사제 무기」] — 상태이상 = `statusDur`(마법사 시기 ③) ·
         //   **다른 편에 거는** 상태이상 아닌 창 = `debuffDur`(사제 시기 ③). 0 이면 곱하지 않는다 — 부동소수가 종전과 같다
@@ -274,7 +278,8 @@ export function createSkillRuntime(ctx) {
     function castSummon(u, def, t) {
         const unit = ctx.makeSummon(u, def);
         if (!unit) return;
-        alliesOf(u).push(unit);
+        // Party-scoped ally queries return a filtered view; summons must join the owning side's target pool.
+        (u.side === 'party' ? units.party : units.enemies).push(unit);
         timeline.push({ t: r1(t), e: 'summon', u: u.key, d: unit.key, s: def.id, hpMax: unit.hpMax });
     }
 
@@ -360,9 +365,14 @@ export function createSkillRuntime(ctx) {
      *   에코로 한 번 더 나간 시전은 기준 대상을 안 바꾼다
      */
     function cast(u, def, t, echoing = false, one = false) {
-        let eff = SK.scaleDef(def, u.stats ?? null);
+        let eff = SK.scaleDef(def, u.stats ?? null, u.fx?.skillTags);
+        const extra = !one && !echoing ? skillTagBonus(u.fx?.skillTags, def, 'extra_hit') : 0;
+        if (extra > 0 && rng() < Math.min(1, extra)) {
+            const first = eff.effects.find(x => x.effect === 'hit');
+            if (first) first.hits += 1;
+        }
         // 정신 집중의 한 방 [2026-10-22 · R318] — 그 스킬의 타수는 방 수라 한 방은 1타다(실효 타수는 연 차례에 `chanOpen` 이 쟀다)
-        if (one) eff = { ...eff, effects: eff.effects.map(x => (x.effect === 'hit' ? { ...x, hits: 1 } : x)) };
+        if (one) eff = { ...eff, effects: eff.effects.map(x => (x.effect === 'hit' ? { ...x, hits: 1 + (u.chan?.extraHit ?? 0) } : x)) };
         const outer = struck;
         const mine = struck = { u, list: [], next: 0 };
         let lead = null;
@@ -406,20 +416,21 @@ export function createSkillRuntime(ctx) {
     let procDepth = 0;
 
     /**
-     * 무기 타격 발동 — 적중한 직격의 반사 · 쓰러짐 · 반격까지 끝난 뒤 battle.js 가 부른다.
+     * 장비 발동 — 타격 · 피격은 직격 후처리 뒤 battle.js, 시전은 정상 시전 효과 뒤 turn/chanOpen 이 부른다.
      * 유효한 옵션마다 확률 1회(100%도 1회). 조건 불일치 · 사망 · 적 없음 · 발동 중이면 rng 0.
-     * 기본 Lv1 정의 + 현재 능력치로 즉시 시전한다(정신 집중도 전체 타수). 차례 · HP 비용 · 쿨 · 시전 칸은 안 쓴다.
+     * 저장한 발동 레벨의 정의 + 현재 능력치로 즉시 시전한다(정신 집중도 전체 타수). 차례 · HP 비용 · 쿨 · 시전 칸은 안 쓴다.
      * skill 사건의 trigger만 남겨 같은 스킬의 정상 액티브 칸을 식별하고, cast 훅은 발화하지 않는다.
      */
-    function procHit(u, t) {
+    function procEquipment(u, t, channel, trigger) {
         if (!SK || procDepth || u.hp <= 0) return;
-        for (const p of u.fx?.hitProcs ?? []) {
+        for (const p of u.fx?.[channel] ?? []) {
             if (u.hp <= 0 || alive(foesOf(u)).length === 0) break;
-            const def = SK.defs[p.skill];
+            const level = procSkillLevel(p.level);
+            const def = SK.resolve({ id: p.skill, up: level - 1 });
             if (!Number.isFinite(p.chance) || !(p.chance > 0) || !def || !CASTS[def.cast]?.picked) continue;
             if (!SK.castable(def, { self: u, allies: alive(alliesOf(u)) })) continue;
             if (rng() >= Math.min(1, p.chance)) continue;
-            timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id, trigger: 'hit' });
+            timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id, trigger, level });
             out.casts[def.id] = (out.casts[def.id] ?? 0) + 1;
             procDepth += 1;
             // 정상 정신 집중의 대상 고정은 그 방에만 적용한다. 발동은 제 규칙으로 대상을 다시 고른다.
@@ -429,6 +440,9 @@ export function createSkillRuntime(ctx) {
             finally { rt.pickTarget = pick0; procDepth -= 1; }
         }
     }
+    const procHit = (u, t) => procEquipment(u, t, 'hitProcs', 'hit');
+    const procCast = (u, t) => procEquipment(u, t, 'castProcs', 'cast');
+    const procStruck = (u, t) => procEquipment(u, t, 'struckProcs', 'struck');
 
     /**
      * 지금 고를 액티브 — 준비됐고 발동 조건이 참인 것 중 `pickReady` 가 고른 하나 · 없으면 null. **rng 0**.
@@ -456,16 +470,20 @@ export function createSkillRuntime(ctx) {
         const hit = SK.scaleDef(def, u.stats ?? null).effects.find(x => x.effect === 'hit');
         // 모으기(`burst` · 2026-10-26 R358)는 방이 둘 — 여는 순간 · 그 스킬의 모으는 시간(`chargeSec` = skill.csv:charge_sec · 2026-10-28 R371) 뒤 쏘는 순간
         const burst = CASTS[def.cast].burst === true;
-        const n = burst ? 2 : Math.max(1, hit?.hits ?? 1);
+        const extra = skillTagBonus(u.fx?.skillTags, def, 'extra_hit');
+        const extraHit = extra > 0 && rng() < Math.min(1, extra) ? 1 : 0;
+        const n = (burst ? 2 : Math.max(1, hit?.hits ?? 1)) + (burst ? 0 : extraHit);
         const iv = burst ? def.chargeSec : B[CASTS[def.cast].iv];
         sel.readyAt = Infinity;
-        u.chan = { a: sel, def, left: n, single: hit?.target === 'enemy_single', tgt: null, iv, acc: 0 };
+        u.chan = { a: sel, def, left: n, single: hit?.target === 'enemy_single', tgt: null, iv, acc: 0, ...(burst && extraHit ? { extraHit } : {}) };
         u.next = u.period;
         out.casts[def.id] = (out.casts[def.id] ?? 0) + 1;
         // `chan` = 방 수 · `ready` 는 없다 — 쿨은 닫힐 때 `chanEnd` 가 싣는다 · `iv` = 방 사이 간격(재생기가 게이지를 그 간격으로 닳린다)
         timeline.push({ t: r1(t), e: 'skill', u: u.key, s: def.id, chan: n, iv, ...(u.noBasic ? { ch: u.charges } : {}) });
         hooks.emit('cast', u, { t, def });
         chanStrike(u, t);
+        // 정신 집중 · 모으기도 여는 시전 한 번만 판정한다 — 뒤의 방 · 에코 · 장비 발동 시전은 안 들어온다.
+        procCast(u, t);
         return true;
     }
 
@@ -494,15 +512,17 @@ export function createSkillRuntime(ctx) {
     }
 
     /**
-     * 닫는다 — 마지막 방 뒤 · 라운드 경계 · 갈아입기(battle.js 가 부른다). 쿨은 **지금부터** · `chanEnd` 이벤트 ·
+     * 닫는다 — 마지막 방 뒤 · 라운드 종료 · 갈아입기(battle.js 가 부른다). 쿨은 **지금부터** · `chanEnd` 이벤트 ·
+     *   라운드 종료(`reason = round`)로 남은 방을 취소하면 쿨감소를 적용한 쿨의 절반만 남긴다(2026-10-30). 정상 완료 · 갈아입기는 전부 남긴다.
      *   `next = period` — 물리는 다음 차례 · 마법은 충전이 지금부터 다시 돈다(열린 동안 선 차례 · 경직이 민 몫은 버린다 — 틱이 이미 섰다).
      *   열린 것이 없으면 아무것도 안 한다 · rng 0
      */
-    function chanClose(u, t) {
+    function chanClose(u, t, reason = 'complete') {
         const c = u.chan;
         if (!c) return;
         u.chan = null;
-        c.a.readyAt = t + cooldownSec(B, u, c.def);
+        const coolMult = reason === 'round' && c.left > 0 ? 0.5 : 1;
+        c.a.readyAt = t + cooldownSec(B, u, c.def) * coolMult;
         u.next = u.period;
         timeline.push({ t: r1(t), e: 'chanEnd', u: u.key, s: c.def.id, ready: r1(c.a.readyAt), ...(u.noBasic ? { ch: u.charges } : {}) });
     }
@@ -567,6 +587,7 @@ export function createSkillRuntime(ctx) {
         }
         // 쿨(`readyAt`)은 위에서 원값으로 이미 잡았다 — `cool_sec` 은 슬롯이 못 민다 (§13-1)
         const lead = cast(u, def, t);
+        procCast(u, t);
         // 스킬 뒤 기본 공격 (R218) — 적 목록은 스킬이 끝난 뒤의 것이다. 적이 없으면 굴림도 없다 · 대상은 스킬의 기준 대상(R317)
         if (!u.noBasic) {
             const left = alive(foesOf(u));
@@ -586,7 +607,7 @@ export function createSkillRuntime(ctx) {
         shredMax: B.weapon_def_down_stack_max,
         // 파리 떼 여닫기 — HP · 타임라인 · 판 크기를 아는 battle.js 가 한다(`EFFECTS.swarm` · 2026-10-29 R380)
         swarmOpen: ctx.swarmOpen, swarmClose: ctx.swarmClose,
-        alive, alliesOf, foesOf, pick, act, cast, fire, procHit, expire, castHeal, castMend, castBuff, applyStatus, castSummon, castCall, basicAttack, targetsOf, chanHit, chanClose,
+        alive, alliesOf, foesOf, pick, act, cast, fire, procHit, procCast, procStruck, expire, castHeal, castMend, castBuff, applyStatus, castSummon, castCall, basicAttack, targetsOf, chanHit, chanClose,
     };
     return rt;
 }

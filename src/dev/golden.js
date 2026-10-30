@@ -14,6 +14,7 @@
  */
 
 import { makeRng } from '../game_logic/rng.js';
+import { procSkillLevel } from '../game_logic/item.js';
 
 /** 스냅샷 범위 — 캘리브레이션(시드 20 × 같은 칸)과 **같은 조건**이라 두 표가 서로를 설명한다 (D-A3).
  *  **칸 번호**(2026-09-29 · 스테이지 칸 구조 — ~~101 ~ 105~~): 1011 = 정예로 끝나는 칸 I(`elite_end`) · 1013 · 1023 · 1033 · 1043 = 스테이지보스 칸 III
@@ -69,7 +70,7 @@ export const dropSig = it => [
     // 스킬 칸 — ~~무기가 담은 액티브~~ 는 2026-09-29 R179 로 사라졌다(무기가 스킬을 안 담는다 · 무기는 언제나 '-').
     //   **목걸이는 발동 스킬** `trigger/skill:v` 를 이 칸에 적는다 (2026-09-21 · R127)
     it.proc ? `${it.proc.trigger}/${it.proc.skill ?? '-'}:${it.proc.v}` : '-',
-    it.affixes.map(a => `${a.src ?? '-'}/${a.stat}:${a.v}`).join(';') || '-',   // 출처(베이스 옵션 · 죄종 · 랜덤)도 적는다 — 층이 바뀐 회귀를 잡는다 (2026-09-11 R78)
+    it.affixes.map(a => `${a.src ?? '-'}/${a.stat}${a.stat === 'skill_tag' ? '/' + a.tag + '/' + a.effect : a.stat === 'skill_plus' ? '/' + a.skill : a.stat.startsWith('proc_') ? '/' + (a.skill ?? '-') + '/' + procSkillLevel(a.skillLv) : ''}:${a.v}`).join(';') || '-',   // 발동 스킬 id · 실제 레벨도 적는다(R410).
 ].join('|');
 
 /** `{정수키: n}` 을 순서가 흔들리지 않는 문자열로 — 처치 카드 · 처치 수 */
