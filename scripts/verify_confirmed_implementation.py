@@ -66,7 +66,7 @@ def verify_ui(browser):
         page.evaluate("document.querySelector('.confirmed-cards').remove()")
         plan = page.evaluate('__confirmed.salvage()')
         page.screenshot(path=str(OUT / f'salvage_{lang}.png'))
-        checks.append({'name': 'salvage_preview_' + lang, 'ok': plan['preview']['n'] == 3 and len(plan['preview']['mats']) == 4 and 'undefined' not in page.locator('.salv-dust').inner_text()})
+        checks.append({'name': 'salvage_actions_' + lang, 'ok': plan['preview']['n'] == 3 and len(plan['preview']['mats']) == 4 and page.locator('.salv-foot > button').count() == 2 and page.locator('.salv-foot > :not(button)').count() == 0})
         page.locator('.salv-foot button.primary').click()
         after = page.evaluate('__confirmed.materials()')
         checks.append({'name': 'salvage_claim_' + lang, 'ok': all(after.get(key, 0) - plan['before'].get(key, 0) == n for key, n in plan['preview']['mats'].items())})

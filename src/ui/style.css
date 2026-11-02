@@ -85,6 +85,8 @@
     --boss-bg: #1f1416;
     --downed-line: #5a2424;
     --hp-fill: #c03030;
+    --shield-fill: #2466c0;
+    --shield-text: #bfe3ff;
     --accent-rgb: 224, 48, 48;  /* = --text-accent 의 채널. 보스 초상 글로우가 쓴다 */
 
     /* 정예 · 패시브 · 경고 — 금색 계열 */
@@ -381,9 +383,8 @@ html, body { height: 100%; overflow: hidden; }
    파랑은 **폴백**이다 — 원정이 있는 부대 칸은 렌더러가 그 스테이지의 챕터 죄종 색을 인라인으로 덮는다(`app.js:expNavBox` · ADR-0519).
    끝나도(져도) 빨강으로 안 바뀐다 (ADR-0522) */
 .tab-seg .btn.seg-none { color: var(--text-muted); }
-/* 원정이 없는 열린 부대 = 흰 글씨 「Party I - 대기 중」 — 안 눌려도 꺼진 버튼 흐림을 안 받는다. 흐린 회색은 자물쇠 칸(`seg-none`)만 [2026-10-27 사용자 지시 · ADR-0912] */
+/* 원정이 없는 열린 부대 = 흰 글씨 「Party I - 대기 중」 · 누르면 마지막으로 나간 곳(ADR-1024). 흐린 회색은 자물쇠 칸(`seg-none`)만 [2026-10-27 사용자 지시 · ADR-0912] */
 .tab-seg .btn.seg-idle { color: var(--text-primary); }
-.tab-seg .btn.seg-idle:disabled { opacity: 1; }
 .tab-seg .btn.seg-live, .tab-seg .btn.seg-over { color: var(--color-info); }
 .tab-seg .btn.seg-live.on, .tab-seg .btn.seg-over.on { border-color: var(--color-info); }
 /* 관전으로 가는 버튼 — 칸 모양은 그대로 · 이름 앞에 같은 색 ▶ 하나 [2026-10-21 사용자 지시 · SCREEN_DESIGN §4 · ADR-0689 — 0688 의 채운 모양을 걷었다].
@@ -2216,6 +2217,10 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .unit .bar { width: 100%; }
 /* HP 바 — 수치는 바 가운데 (2026-08-27). 바를 글자 높이만큼 키운다 */
 .hp-row { position: relative; width: 100%; }
+/* 방어막 — 빨강 바로 오른쪽에 잇는 파랑 · 글자는 합친 값이라 파랑 (§4-2 · ADR-1027) · 눈금마다 움직여 폭이 아니라 transform 이다(`battle.js:hpView`) */
+.bar.hp { position: relative; }
+.bar.hp > b { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: var(--shield-fill); transform-origin: left; }
+.hp-text.shielded { color: var(--shield-text); }
 /* 15 → 18 → **20** (2026-09-04 사용자 지시 — 한 단 더) — 본문 101 예산 안이다(이름 16 + 20 + 8 + 32 + 여백 ≈ 94) */
 .hp-row .bar.hp { height: 20px; }
 .hp-text {
@@ -4101,6 +4106,8 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .td-buy.bk-buy { margin-top: 0; flex: none; }
 .bk-buy .bk-cost { margin-left: 0; }
 .bk-buy > .btn { flex: none; min-width: 5.5em; }
+/* 스킬 북 제작 직업 탭 (§17 · ADR-1021) — 본문이 스크롤 상자라 줄지 않는다 */
+.bk-box > .segmented { flex: none; }
 /* 칸 격자는 고른 테두리(`.td-picked` — 3px · 바깥 1px)만큼 안쪽 여백을 둔다 — 카드 본문이 스크롤 상자라 왼쪽 끝 칸의 테두리가 잘렸다 (2026-10-09 사용자 「왼쪽에 파란색 선 잘리는거」 · 3px 은 ADR-0926) */
 .bk-grid { display: grid; grid-template-columns: repeat(auto-fill, 60px); gap: 8px 6px; padding: 4px; }
 .bk-grid .inv-icon { width: 44px; height: 44px; }
@@ -5099,8 +5106,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .salv-k { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
 .salv-right { display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }
 .salv-grid { display: grid; grid-template-columns: repeat(6, 50px); gap: 4px; }
-.salv-foot { display: flex; align-items: center; gap: 6px; }
-.salv-dust { margin-right: auto; padding-right: 8px; min-width: 0; font-size: var(--fs-sm); color: var(--text-secondary); white-space: normal; }
+.salv-foot { display: flex; justify-content: flex-end; align-items: center; gap: 6px; }
 .pd-cell.filled { cursor: pointer; }
 .pd-cell.filled:hover { background: var(--surface-7); }
 
@@ -6010,8 +6016,18 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .td-sale-grid .inv-cell { width: 60px; height: 60px; }
 .td-sale-empty { display: flex; align-items: center; justify-content: center; min-height: 100%; font-size: var(--fs-xs); text-align: center; }
 .td-sale-total { flex: none; }
-/* 교역소 물건 칸 — 칸 수만큼 한 줄(상단 칸과 같은 크기 · `?` 만 — ADR-0960) */
+/* 교역소 — 받을 최하급 재료 한 줄 · 선택 아래 지불 재료별 구매 줄(ADR-1017). */
 .td-grid.td-post { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 60px; }
+.td-trade-goods { width: 100%; grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 2px; }
+.td-trade .td-post { justify-content: center; }
+.td-trade-item { width: 60px; height: 60px; cursor: pointer; }
+.td-trade-target { font-size: var(--fs-xs); text-align: center; }
+.td-trade-offers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+.td-trade-offer { display: grid; grid-template-columns: 24px minmax(0, 1fr); align-items: center; gap: 2px; padding: 3px; background: var(--bg-input); border: 1px solid var(--border-dark); }
+.td-trade-icon { width: 24px; height: 24px; object-fit: contain; }
+.td-trade-icon img { width: 100%; height: 100%; object-fit: contain; }
+.td-trade-offer .td-price { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: var(--fs-xs); }
+.td-trade-offer button { grid-column: 1 / -1; }
 /* 특수상단의 상인 카드 — **한 줄로 납작하게** 선다(사용자 지시 「특수상단을 일단 좀 줄여」 · ADR-0235) — 왼쪽 이름 · 남은 시간 / 오른쪽 작은 칸 셋(ADR-0782) */
 .td-card { display: inline-flex; align-items: center; gap: 14px; max-width: 100%;
     padding: 7px 10px; background: var(--bg-card); border: 1px solid var(--border-secondary); }

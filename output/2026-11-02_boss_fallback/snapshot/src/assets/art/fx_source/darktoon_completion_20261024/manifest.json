@@ -1,0 +1,171 @@
+{
+  "date": "2026-10-24",
+  "mode": "built-in imagegen",
+  "style": "darktoon",
+  "grid": 3,
+  "sheets": [
+    {
+      "id": "01",
+      "cells": [
+        {
+          "skill": "war_recovery",
+          "ko": "리커버리",
+          "kind": "heal",
+          "motion": "heal",
+          "size": 88,
+          "duration": 640,
+          "content": "RECOVERY, self healing: TWO broad sage-green curved ribbons sweeping upward along the left and right sides, EACH built from chunky overlapping bandage-like segments; FOUR thick green healing drops rising around the outside. The central half stays EMPTY. Muted sage with bone-white highlights. A warrior gathering strength, no red cross or medical UI icon."
+        },
+        {
+          "skill": "war_frenzy",
+          "ko": "프렌지",
+          "kind": "buff",
+          "motion": "orders",
+          "size": 90,
+          "duration": 560,
+          "content": "FRENZY, escalating attack speed: THREE pairs of sharp crimson claw-shaped energy hooks climbing up both outer sides, progressively larger toward the top, with TWO short steel-gray speed strokes above the empty face center. Aggressive angular blood-red and pale steel. Central half EMPTY."
+        },
+        {
+          "skill": "war_warcry",
+          "ko": "워 크라이",
+          "kind": "bad",
+          "motion": "inward",
+          "size": 90,
+          "duration": 580,
+          "content": "WAR CRY, enemy damage reduction curse: EIGHT short broad jagged blood-red sound wedges around the outer perimeter, pointing INWARD but STOPPING outside the empty central half. Two smaller rust-red shock rings behind the wedges, kept sparse. Same bold stroke language as the reference shout effects, hostile red palette."
+        },
+        {
+          "skill": "war_battlecry",
+          "ko": "배틀 크라이",
+          "kind": "bad",
+          "motion": "inward",
+          "size": 90,
+          "duration": 580,
+          "content": "BATTLE CRY, enemy armor weakening curse: SIX heavy ochre-and-iron angular inward-pointing sound wedges around the outer perimeter, with FOUR small broken iron-plate fragments at the corners. Leave the central half EMPTY. Distinct from War Cry by iron-gray plates and dusty ochre edges; no standalone shield icon."
+        },
+        {
+          "skill": "kni_resistshield",
+          "ko": "레지스탕스 실드",
+          "kind": "buff",
+          "motion": "shell",
+          "size": 92,
+          "duration": 540,
+          "content": "RESISTANCE SHIELD, elemental ward: TWO strong curved bone-gold shield-rim strokes framing left and right, open at top and bottom. FOUR large small elemental facets inset into the OUTER rim: ember orange, cold cyan, pale old gold, olive. Central HALF fully empty, no solid shield face, no text."
+        },
+        {
+          "skill": "kni_sweep",
+          "ko": "스윕",
+          "kind": "hit",
+          "motion": "sweep",
+          "size": 94,
+          "duration": 420,
+          "content": "SWEEP, striking a row of enemies: ONE huge broad horizontal steel crescent slash sweeping left to right through the middle, long shallow curve, tapered ends, TWO shorter follow-through strokes at the left and THREE chunky rust-crimson chips at the right. No actual sword."
+        },
+        {
+          "skill": "kni_holyfire",
+          "ko": "홀리 파이어",
+          "kind": "buff",
+          "motion": "orbit",
+          "size": 90,
+          "duration": 620,
+          "content": "HOLY FIRE aura: a broken circular bone-gold ring around an EMPTY central half, SIX blunt hooked sacred flame tongues rising around its outer edge, alternating ember-orange interiors with gold tips. Flat cel-shaded opaque flame, no glow. No text or runes."
+        },
+        {
+          "skill": "arc_arrowrain",
+          "ko": "애로우 레인",
+          "kind": "hit",
+          "motion": "rain",
+          "size": 94,
+          "duration": 500,
+          "content": "ARROW RAIN, hitting the back row: FIVE thick short bone-white arrows with dark iron heads descending steeply diagonally from upper left toward lower right, staggered into two uneven rows, THREE sage-green motion strokes behind them. Actual arrows, chunky readable fletching, no sky or cloud."
+        },
+        {
+          "skill": "arc_evade",
+          "ko": "이베이드",
+          "kind": "buff",
+          "motion": "sweep",
+          "size": 88,
+          "duration": 520,
+          "content": "EVADE, dodging incoming hits: TWO lean sage-and-bone crescent wind strokes wrapping past the left and right edges of an EMPTY central half, THREE broad green leaf-shaped motion chips trailing behind near the lower corners. Dynamic asymmetrical outward flow, no silhouette of a person."
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "cells": [
+        {
+          "skill": "arc_overdraw",
+          "ko": "오버드로우",
+          "kind": "buff",
+          "motion": "orders",
+          "size": 92,
+          "duration": 620,
+          "content": "OVERDRAW, slower but stronger shots: ONE heavy curved drawn longbow hugging the TOP and LEFT outer edge, with a taut bone-white string and ONE very thick iron-headed arrow laid along the BOTTOM edge pointing RIGHT. TWO ochre compression wedges at the sides. EMPTY central half. Sage, bone, dark iron."
+        },
+        {
+          "skill": "mag_ignite",
+          "ko": "이그나이트",
+          "kind": "buff",
+          "motion": "orders",
+          "size": 90,
+          "duration": 560,
+          "content": "IGNITE, imbuing spells with burn: TWO twisting angular ember-orange flame ribbons rising along the outer sides and curving inward slightly at the TOP, with FOUR dark-red ember chunks around the bottom. EMPTY central half; not a full fireball, not a full wall. Thick black contour, no glow."
+        },
+        {
+          "skill": "mag_deepfreeze",
+          "ko": "딥 프리즈",
+          "kind": "buff",
+          "motion": "shell",
+          "size": 92,
+          "duration": 560,
+          "content": "DEEP FREEZE, stronger frost enchantment: FOUR chunky cold-blue jagged crystal arcs encasing the outer corners, three large ice facets per arc, with TWO short pale icy fracture strokes above the EMPTY central half. Heavy slate-cyan ice, tiny pale highlights, no full opaque sphere."
+        },
+        {
+          "skill": "mag_surge",
+          "ko": "서지",
+          "kind": "buff",
+          "motion": "wave",
+          "size": 90,
+          "duration": 520,
+          "content": "SURGE, electrical charge: FOUR thick jagged pale-old-gold lightning ribbons circling the outer edge like a loose broken cage, with FOUR small blunt electric knots near the corners. Leave the central HALF EMPTY. Bold two-tone yellow and dark ochre; no broad bloom."
+        },
+        {
+          "skill": "mag_echo",
+          "ko": "에코",
+          "kind": "buff",
+          "motion": "wave",
+          "size": 90,
+          "duration": 660,
+          "content": "ECHO, repeating attack spells: THREE broken concentric desaturated-blue magical echo rings, offset slightly to the RIGHT like successive sound wave copies; each ring is made from FOUR thick short separated angular arcs. Central half EMPTY. Two decisive blue planes, bone-blue edge highlights, no letters or pentagram."
+        },
+        {
+          "skill": "pri_doom",
+          "ko": "둠",
+          "kind": "bad",
+          "motion": "sink",
+          "size": 92,
+          "duration": 620,
+          "content": "DOOM, vulnerability curse: FOUR heavy charcoal-and-dried-crimson hooked curse strokes closing DOWNWARD around the outer corners, connected by TWO broken dark-teal semicircles on either side; THREE short crimson downward thorns along the top. EMPTY central half, severe angular oppressive framing, no character, no skull sticker."
+        },
+        {
+          "skill": "mon_selfdestruct",
+          "ko": "자폭",
+          "kind": "hit",
+          "motion": "burst",
+          "size": 124,
+          "duration": 460,
+          "content": "SELF-DESTRUCT, monster explosion: ONE asymmetric centered jagged red-orange blast with SIX broad uneven flame arms, THREE large charcoal cracked-rock chunks flying outward, and a broken dark-crimson shock ring. Powerful single impact. Flat opaque flame shapes, no character, no bomb object, no white glare."
+        },
+        {
+          "skill": "mon_hellfire",
+          "ko": "헬파이어",
+          "kind": "hit",
+          "motion": "pillar",
+          "size": 118,
+          "duration": 420,
+          "content": "HELLFIRE, repeated focused burning on one enemy: a narrow violent column of THREE interlocking hooked crimson-and-ember-orange flame tongues climbing from a jagged charcoal ground crack, TWO thick black cinder fragments at the sides. Tall directional flames, heavier and darker than ordinary fire. No scenery, no devil figure."
+        }
+      ]
+    }
+  ]
+}

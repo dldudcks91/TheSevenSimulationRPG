@@ -25,7 +25,7 @@ const UNSAFE_TEXT = /[<>"`]/;
 
 /**
  * @param deps.hero · item · skill · battle  시스템
- * @param deps.balance       balance.csv — 성장 문턱(`skillbook_learn_level` · `advance_unlock_level` · `advance_point_interval` · `mastery_point_per_level`) · 상한(`hero_level_cap` · `hero_attr_max`) · AI 가중치(`arena_ai_*`) ·
+ * @param deps.balance       balance.csv — 해금 문턱(`skillbook_learn_level` · `advance_unlock_level` · `advance_skill_level_interval`) · 공용 포인트(`mastery_point_per_level`) · 상한(`hero_level_cap` · `hero_attr_max`) · AI 가중치(`arena_ai_*`) ·
  *                           후보 간격(`arena_pick_spread` · `arena_pick_jitter`) · 층 시드(`colosseum_seed`)
  * @param deps.equipSlots    착용 위치 `[{id, part}]` — 위치 순서가 장비 굴림 순서다 (equip_slot.csv)
  * @param deps.advances      advance.csv 원시 행 — 전직 갈래 → 직업
@@ -96,10 +96,10 @@ export function createArenaSystem({ hero, item, skill, battle, balance = {}, equ
     const ADV = (advances ?? []).map(r => ({ id: r.advance_id, cls: r.class_id, order: Number(r.sort_order) || 0 })).sort((a, b) => a.order - b.order);
     const advanceSkills = id => skill.list.filter(d => d.ownerKind === 'advance' && d.ownerId === id)
         .sort((a, b) => a.priority - b.priority).map(d => d.id);
-    /** 전직 포인트 — 전직 레벨에 1 · 그 뒤 간격마다 1 (`state.advancePointsOf` 와 같은 식 · skill_design §4) */
-    const advancePoints = level => {
+    /** 전직 메인 레벨 상한 — 포인트 지급이 아니라 단계 해금 간격이다 (`state.advanceLevelCapOf`). */
+    const advanceLevelCap = level => {
         const over = level - B.advance_unlock_level;
-        return over >= 0 ? 1 + Math.floor(over / Math.max(1, B.advance_point_interval)) : 0;
+        return over >= 0 ? 1 + Math.floor(over / B.advance_skill_level_interval) : 0;
     };
     /** 레벨 1 에서 그 레벨까지 받은 마스터리 포인트 — `hero.grantXp` 와 같은 정액 */
     const masteryBudget = level => (level - 1) * B.mastery_point_per_level;
@@ -194,9 +194,11 @@ export function createArenaSystem({ hero, item, skill, battle, balance = {}, equ
             const br = pickOne(rng, ADV.filter(a => a.cls === h.cls));
             const id = pickOne(rng, br ? advanceSkills(br.id) : []);   // 갈래가 없어도 1회 소비
             if (br) h.advance = br.id;
-            if (br && id) {
+            if (br && id && (h.masteryPoints ?? 0) > 0) {
                 h.advanceSkill = id;
-                const up = advancePoints(h.level) - 1;   // 첫 포인트로 배우고 나머지는 전부 스킬 레벨 (state.advanceLevelUp 과 같은 셈)
+                const ranks = Math.min(advanceLevelCap(h.level), h.masteryPoints);
+                h.masteryPoints -= ranks;
+                const up = ranks - 1;
                 if (up > 0) h.advanceUp = up;
             }
         }
@@ -229,8 +231,8 @@ export function createArenaSystem({ hero, item, skill, battle, balance = {}, equ
                 items[it.uid] = it;
                 h.equipped[POS[j].id] = it.uid;
             });
-            spendMastery(h, gear, rng);
             learnSkills(h, T, rng);
+            spendMastery(h, gear, rng);
         });
         const team = snapshotTeam(heroes, items);
         // 진형 — 최대 HP 가 가장 큰 영웅 하나가 전열 · 나머지 후열(같으면 앞 영웅) · rng 0
@@ -330,7 +332,8 @@ export function createArenaSystem({ hero, item, skill, battle, balance = {}, equ
                 const spentA = (h.advanceSkill ? 1 : 0) + advUp;
                 if (!br || br.cls !== h.cls || h.level < B.advance_unlock_level
                     || (h.advanceSkill != null && !advanceSkills(br.id).includes(h.advanceSkill))
-                    || !within(advUp, 0, Infinity) || (advUp > 0 && !h.advanceSkill) || spentA > advancePoints(h.level)) bad('advance', i);
+                    || !within(advUp, 0, Infinity) || (advUp > 0 && !h.advanceSkill) || spentA > advanceLevelCap(h.level)) bad('advance', i);
+                if (spent + spentA > masteryBudget(h.level)) bad('masteryPoints', i, { detail: `${spent + spentA}/${masteryBudget(h.level)}` });
             } else if (h.advanceSkill != null || advUp) bad('advance', i);
             // 장비 — 위치 · 부위 · 무기군 · 착용 요구 · 강화 · 옵션 수치 범위
             const seen = new Set();

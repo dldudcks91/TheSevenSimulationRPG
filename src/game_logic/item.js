@@ -897,12 +897,12 @@ export function createItemSystem(data) {
     /** 그 부위 베이스 옵션의 위끝(비율) — 자동 분해 문턱의 상한 · 베이스가 없는 부위면 null (R316) */
     const baseMax = part => (!hasBase(part) ? null : part === 'weapon' ? B.weapon_fixed_atk_pct_max : B.armor_fixed_def_pct_max);
 
-    /** 다음 한 단계의 골드. 상한이거나 강화 대상이 아니면 null — 비용은 단계마다 기하로 붙는다.
+    /** 다음 한 단계의 골드. 상한이거나 강화 대상이 아니면 null — 비용은 단계마다 · 아이템 레벨마다 기하로 붙는다 [2026-11-02 · R419].
      *  `max` = 그 세이브의 강화 상한 — 게임은 `state.limitsOf(state).upgrade` 를 넘긴다 · 안 주면 CSV 기본값 [balance.csv:equip_upgrade_max] (2026-09-22) */
     function upgradeCost(item, max = B.equip_upgrade_max) {
         const up = item.up ?? 0;
         if (!upgradeable(item) || up >= max) return null;
-        return Math.round(B.equip_upgrade_gold_base * Math.pow(B.equip_upgrade_gold_growth, up));
+        return Math.round(B.equip_upgrade_gold_base * Math.pow(B.equip_upgrade_gold_growth, up) * Math.pow(B.equip_upgrade_gold_ilvl_growth, item.ilvl - 1));
     }
 
     /** 강화 단계마다 성공 확률 — 인덱스 = 단계 − 1 (R253). 단계는 1 부터 이어지고 확률은 0 초과 1 이하 — 어기면 생성 때 던진다 */

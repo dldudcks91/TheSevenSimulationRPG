@@ -639,7 +639,7 @@ export function createSkillSystem(data) {
             third ? { id: third.id, source: 'advance' } : null,
         ].filter(Boolean).map(a => {
             // 쌓은 단계 `up` [2026-10-06 · R216 · skill_design §2-3] — 고유 · 배운 칸 = `hero.skillLv[id]`(같은 책 업그레이드) ·
-            //   전직 칸 = `hero.advanceUp`(배운 뒤 더 넣은 전직 포인트). 몬스터 보스 셋째 칸(`ctx.thirdSkill`)은 없다 · 0 이면 키를 안 단다(정의는 `resolve` 가 얹는다)
+            //   전직 칸 = `hero.advanceUp`(배운 뒤 메인에 더 넣은 공용 스킬 포인트). 몬스터 보스 셋째 칸(`ctx.thirdSkill`)은 없다 · 0 이면 키를 안 단다(정의는 `resolve` 가 얹는다)
             //   **장비의 특정 스킬 +n**(`ctx.skillPlus` — `item.skillPlusOf` · 2026-10-08 · R225)은 고유 · 배운 칸에만 더한다(기본 스킬만 · 책 업그레이드 상한을 안 본다 — 상한은 `state.learnBook` 의 규칙)
             const up = a.source === 'advance' ? (ctx.thirdSkill ? 0 : hero?.advanceUp ?? 0)
                 : (hero?.skillLv?.[a.id] ?? 0) + (ctx.skillPlus?.[a.id] ?? 0);

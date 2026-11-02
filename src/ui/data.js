@@ -617,6 +617,7 @@ export function buildSystems(d, dev = {}) {
     const tactic = createTacticSystem({
         slots: d.tacticSlots ?? [], options: d.tacticOptions ?? [], sins, classes: d.classes,
         conditions: d.tacticConditions ?? [], scores: d.tacticScores ?? [],
+        attributes: d.heroAttributes ?? [], advances: d.advanceRows ?? [],   // 능력치 합 · 전직 조건의 인자 검증 (2026-11-02)
         // 등급 가중치 — 리롤이 옵션과 등급을 같이 굴린다 (tactic_card_design §5-5). 값은 CSV
         gradeWeights: {
             common: d.balance.tactic_grade_weight_common,

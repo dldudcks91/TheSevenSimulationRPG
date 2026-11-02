@@ -1,0 +1,509 @@
+{
+ "platinum": {
+  "level": 35,
+  "windowSec": 11,
+  "rows": {
+   "전직 없음": {
+    "leak": [],
+    "ids": {},
+    "n": 200,
+    "d": 0,
+    "se": 0,
+    "win": 52,
+    "fightT": 17.5,
+    "life": 16.7,
+    "casts": 0,
+    "firstCast": 0,
+    "otherCasts": 2.67,
+    "otherInWindow": 0,
+    "swings": 3.9,
+    "swingsInWindow": 0,
+    "windowSec": 0,
+    "dmg": 730,
+    "dmgBasic": 440,
+    "dmgSkill": 290
+   },
+   "150/150 봉인 · 맨 앞": {
+    "leak": [
+     {
+      "ev": {
+       "t": 3.2,
+       "e": "skill",
+       "u": "p0",
+       "s": "war_warcry",
+       "trigger": "struck",
+       "level": 1
+      },
+      "start": 2.4,
+      "end": 13.4,
+      "down": null,
+      "tl": [
+       "0:buff:kni_defiance:",
+       "2.4:buff:war_ragnarok:",
+       "2.4:buff:war_ragnarok:",
+       "2.4:buff:war_ragnarok:",
+       "3.7:buff:kni_vow:",
+       "5.5:buff:mag_frostnova:",
+       "8:buffEnd:kni_defiance:",
+       "8.2:buffEnd:mag_frostnova:"
+      ]
+     },
+     {
+      "ev": {
+       "t": 11.5,
+       "e": "skill",
+       "u": "p2",
+       "s": "war_doubleswing",
+       "trigger": "hit",
+       "level": 1
+      },
+      "start": 2.6,
+      "end": 13.6,
+      "down": null,
+      "tl": [
+       "2.6:buff:war_ragnarok:",
+       "2.6:buff:war_ragnarok:",
+       "2.6:buff:war_ragnarok:",
+       "3.9:buff:pri_regen:",
+       "8.1:buff:pri_haste:",
+       "8.7:buff:arc_coldarrow:"
+      ]
+     },
+     {
+      "ev": {
+       "t": 7.4,
+       "e": "skill",
+       "u": "p0",
+       "s": "war_battlecry",
+       "trigger": "struck",
+       "level": 1
+      },
+      "start": 3.1,
+      "end": 14.1,
+      "down": null,
+      "tl": [
+       "3.1:buff:war_ragnarok:",
+       "3.1:buff:war_ragnarok:",
+       "3.1:buff:war_ragnarok:",
+       "3.6:buff:pri_bind:",
+       "7.4:buff:war_intimidate:",
+       "14.1:buffEnd:war_ragnarok:",
+       "14.1:buffEnd:war_ragnarok:",
+       "14.1:buffEnd:war_ragnarok:"
+      ]
+     },
+     {
+      "ev": {
+       "t": 10.1,
+       "e": "skill",
+       "u": "p0",
+       "s": "war_bash",
+       "trigger": "hit",
+       "level": 1
+      },
+      "start": 2.6,
+      "end": 13.6,
+      "down": null,
+      "tl": [
+       "0:buff:kni_fanaticism:",
+       "2.6:buff:war_ragnarok:",
+       "2.6:buff:war_ragnarok:",
+       "2.6:buff:war_ragnarok:",
+       "4.2:buff:mag_frostnova:",
+       "4.3:buff:pri_doom:",
+       "5.9:buffEnd:kni_fanaticism:",
+       "8.1:buffEnd:mag_frostnova:"
+      ]
+     }
+    ],
+    "ids": {
+     "war_doubleswing(칸 밖)": 2,
+     "pri_doom(칸 밖)": 1,
+     "pri_penitence(칸 밖)": 2,
+     "arc_evade(칸 밖)": 1,
+     "arc_quickhands(칸 밖)": 1,
+     "war_bash(칸 밖)": 3,
+     "war_warcry(칸)": 1,
+     "war_doubleswing(칸)": 1,
+     "war_battlecry(칸)": 1,
+     "war_bash(칸)": 1,
+     "war_battlecry(칸 밖)": 1
+    },
+    "n": 200,
+    "d": 0.205,
+    "se": 0.031,
+    "win": 65,
+    "fightT": 12.4,
+    "life": 11.7,
+    "casts": 1.04,
+    "firstCast": 3.3,
+    "otherCasts": 0.34,
+    "otherInWindow": 0.07,
+    "swings": 4.9,
+    "swingsInWindow": 3.2,
+    "windowSec": 6.8,
+    "dmg": 1221,
+    "dmgBasic": 1179,
+    "dmgSkill": 43
+   },
+   "150/150 봉인 없음 · 맨 앞": {
+    "leak": [],
+    "ids": {
+     "war_ironskin(칸)": 33,
+     "war_leap(칸)": 45,
+     "war_battlecry(칸)": 28,
+     "war_shout(칸)": 39,
+     "war_doubleswing(칸)": 30,
+     "war_warcry(칸)": 34,
+     "war_battleorders(칸)": 39,
+     "war_bash(칸)": 24,
+     "war_frenzy(칸)": 25,
+     "war_recovery(칸)": 29,
+     "war_doubleswing(칸 밖)": 2,
+     "pri_doom(칸 밖)": 1,
+     "pri_penitence(칸 밖)": 2,
+     "kni_holyshield(칸 밖)": 1,
+     "arc_evade(칸 밖)": 1,
+     "arc_quickhands(칸 밖)": 2,
+     "war_bash(칸 밖)": 2,
+     "war_ironskin(칸 밖)": 1,
+     "war_battlecry(칸 밖)": 1
+    },
+    "n": 200,
+    "d": 0.325,
+    "se": 0.035,
+    "win": 74,
+    "fightT": 11.9,
+    "life": 11.2,
+    "casts": 1.02,
+    "firstCast": 3.3,
+    "otherCasts": 1.88,
+    "otherInWindow": 1.7,
+    "swings": 4.1,
+    "swingsInWindow": 2.5,
+    "windowSec": 6.5,
+    "dmg": 1442,
+    "dmgBasic": 1006,
+    "dmgSkill": 436
+   },
+   "150/150 봉인 · 맨 뒤": {
+    "leak": [],
+    "ids": {
+     "war_battlecry(칸 밖)": 1
+    },
+    "n": 200,
+    "d": 0.116,
+    "se": 0.02,
+    "win": 61,
+    "fightT": 13.4,
+    "life": 12.4,
+    "casts": 0.6,
+    "firstCast": 9.9,
+    "otherCasts": 1.99,
+    "otherInWindow": 0.01,
+    "swings": 3.6,
+    "swingsInWindow": 1.3,
+    "windowSec": 3,
+    "dmg": 899,
+    "dmgBasic": 661,
+    "dmgSkill": 238
+   }
+  }
+ },
+ "diamond": {
+  "level": 45,
+  "windowSec": 13,
+  "rows": {
+   "전직 없음": {
+    "leak": [],
+    "ids": {},
+    "n": 200,
+    "d": 0,
+    "se": 0,
+    "win": 51,
+    "fightT": 17.1,
+    "life": 15.8,
+    "casts": 0,
+    "firstCast": 0,
+    "otherCasts": 2.69,
+    "otherInWindow": 0,
+    "swings": 4,
+    "swingsInWindow": 0,
+    "windowSec": 0,
+    "dmg": 1408,
+    "dmgBasic": 711,
+    "dmgSkill": 697
+   },
+   "150/150 봉인 · 맨 앞": {
+    "leak": [
+     {
+      "ev": {
+       "t": 5.2,
+       "e": "skill",
+       "u": "p0",
+       "s": "war_doubleswing",
+       "trigger": "hit",
+       "level": 1
+      },
+      "start": 2.5,
+      "end": 15.5,
+      "down": null,
+      "tl": [
+       "0:buff:kni_might:",
+       "2.5:buff:war_ragnarok:",
+       "2.5:buff:war_ragnarok:",
+       "2.5:buff:war_ragnarok:"
+      ]
+     }
+    ],
+    "ids": {
+     "arc_poison(칸 밖)": 2,
+     "war_doubleswing(칸 밖)": 1,
+     "war_bash(칸 밖)": 3,
+     "arc_evade(칸 밖)": 1,
+     "war_battlecry(칸 밖)": 1,
+     "arc_quickhands(칸 밖)": 1,
+     "kni_enchant(칸 밖)": 1,
+     "war_ironskin(칸 밖)": 1,
+     "war_doubleswing(칸)": 1
+    },
+    "n": 200,
+    "d": 0.195,
+    "se": 0.036,
+    "win": 62,
+    "fightT": 17.5,
+    "life": 11,
+    "casts": 1,
+    "firstCast": 3.3,
+    "otherCasts": 0.23,
+    "otherInWindow": 0.06,
+    "swings": 4.7,
+    "swingsInWindow": 3.2,
+    "windowSec": 6.8,
+    "dmg": 1937,
+    "dmgBasic": 1868,
+    "dmgSkill": 69
+   },
+   "150/150 봉인 없음 · 맨 앞": {
+    "leak": [],
+    "ids": {
+     "war_ironskin(칸)": 31,
+     "war_leap(칸)": 33,
+     "war_recovery(칸)": 26,
+     "war_warcry(칸)": 41,
+     "war_frenzy(칸)": 23,
+     "war_shout(칸)": 38,
+     "war_bash(칸)": 27,
+     "war_battlecry(칸)": 25,
+     "war_battleorders(칸)": 39,
+     "war_doubleswing(칸)": 34,
+     "arc_poison(칸 밖)": 2,
+     "war_bash(칸 밖)": 4,
+     "arc_evade(칸 밖)": 1,
+     "war_battlecry(칸 밖)": 1,
+     "kni_enchant(칸 밖)": 1,
+     "war_ironskin(칸 밖)": 1,
+     "kni_holyshield(칸 밖)": 1
+    },
+    "n": 200,
+    "d": 0.327,
+    "se": 0.038,
+    "win": 73,
+    "fightT": 11.7,
+    "life": 11.1,
+    "casts": 1.02,
+    "firstCast": 3.3,
+    "otherCasts": 1.83,
+    "otherInWindow": 1.64,
+    "swings": 4.2,
+    "swingsInWindow": 2.8,
+    "windowSec": 6.7,
+    "dmg": 2494,
+    "dmgBasic": 1669,
+    "dmgSkill": 825
+   },
+   "150/150 봉인 · 맨 뒤": {
+    "leak": [],
+    "ids": {
+     "war_doubleswing(칸 밖)": 2,
+     "war_bash(칸 밖)": 3,
+     "kni_resistshield(칸 밖)": 1
+    },
+    "n": 200,
+    "d": 0.078,
+    "se": 0.019,
+    "win": 55,
+    "fightT": 12.9,
+    "life": 12.3,
+    "casts": 0.56,
+    "firstCast": 9.9,
+    "otherCasts": 2.02,
+    "otherInWindow": 0.03,
+    "swings": 3.7,
+    "swingsInWindow": 1.2,
+    "windowSec": 2.6,
+    "dmg": 1574,
+    "dmgBasic": 1077,
+    "dmgSkill": 498
+   }
+  }
+ },
+ "champion": {
+  "level": 50,
+  "windowSec": 14,
+  "rows": {
+   "전직 없음": {
+    "leak": [],
+    "ids": {},
+    "n": 200,
+    "d": 0,
+    "se": 0,
+    "win": 49,
+    "fightT": 15.3,
+    "life": 14.4,
+    "casts": 0,
+    "firstCast": 0,
+    "otherCasts": 2.52,
+    "otherInWindow": 0,
+    "swings": 3.6,
+    "swingsInWindow": 0,
+    "windowSec": 0,
+    "dmg": 1410,
+    "dmgBasic": 887,
+    "dmgSkill": 524
+   },
+   "150/150 봉인 · 맨 앞": {
+    "leak": [
+     {
+      "ev": {
+       "t": 7.2,
+       "e": "skill",
+       "u": "p2",
+       "s": "war_doubleswing",
+       "trigger": "hit",
+       "level": 1
+      },
+      "start": 2.8,
+      "end": 16.8,
+      "down": null,
+      "tl": [
+       "2.8:buff:war_ragnarok:",
+       "2.8:buff:war_ragnarok:",
+       "2.8:buff:war_ragnarok:",
+       "3.5:buff:pri_doom:"
+      ]
+     },
+     {
+      "ev": {
+       "t": 5.6,
+       "e": "skill",
+       "u": "p0",
+       "s": "war_doubleswing",
+       "trigger": "hit",
+       "level": 1
+      },
+      "start": 2.2,
+      "end": 16.2,
+      "down": null,
+      "tl": [
+       "0:buff:kni_defiance:",
+       "2.2:buff:war_ragnarok:",
+       "2.2:buff:war_ragnarok:",
+       "2.2:buff:war_ragnarok:",
+       "4.6:buff:pri_bind:",
+       "5.7:buff:war_battlecry:",
+       "6.8:buff:kni_lastbastion:"
+      ]
+     }
+    ],
+    "ids": {
+     "war_doubleswing(칸 밖)": 3,
+     "mag_deepfreeze(칸 밖)": 1,
+     "pri_doom(칸 밖)": 1,
+     "arc_quickhands(칸 밖)": 1,
+     "war_shout(칸 밖)": 1,
+     "war_doubleswing(칸)": 2,
+     "pri_grace(칸 밖)": 1,
+     "pri_bind(칸 밖)": 1
+    },
+    "n": 200,
+    "d": 0.18,
+    "se": 0.031,
+    "win": 62,
+    "fightT": 10.9,
+    "life": 10.5,
+    "casts": 1,
+    "firstCast": 3.3,
+    "otherCasts": 0.21,
+    "otherInWindow": 0.06,
+    "swings": 4.4,
+    "swingsInWindow": 3,
+    "windowSec": 6.3,
+    "dmg": 2322,
+    "dmgBasic": 2251,
+    "dmgSkill": 71
+   },
+   "150/150 봉인 없음 · 맨 앞": {
+    "leak": [],
+    "ids": {
+     "war_ironskin(칸)": 37,
+     "war_battlecry(칸)": 28,
+     "war_doubleswing(칸 밖)": 3,
+     "war_bash(칸)": 26,
+     "war_warcry(칸)": 37,
+     "war_frenzy(칸)": 20,
+     "war_shout(칸)": 41,
+     "war_battleorders(칸)": 33,
+     "war_doubleswing(칸)": 28,
+     "war_leap(칸)": 23,
+     "pri_doom(칸 밖)": 2,
+     "war_recovery(칸)": 28,
+     "arc_quickhands(칸 밖)": 2,
+     "war_shout(칸 밖)": 1,
+     "pri_grace(칸 밖)": 1,
+     "war_ironskin(칸 밖)": 1
+    },
+    "n": 200,
+    "d": 0.245,
+    "se": 0.031,
+    "win": 66,
+    "fightT": 11.1,
+    "life": 10.6,
+    "casts": 1.02,
+    "firstCast": 3.3,
+    "otherCasts": 1.78,
+    "otherInWindow": 1.55,
+    "swings": 3.9,
+    "swingsInWindow": 2.5,
+    "windowSec": 6,
+    "dmg": 2887,
+    "dmgBasic": 2011,
+    "dmgSkill": 876
+   },
+   "150/150 봉인 · 맨 뒤": {
+    "leak": [],
+    "ids": {
+     "arc_quickhands(칸 밖)": 1,
+     "war_warcry(칸 밖)": 1,
+     "pri_bind(칸 밖)": 1
+    },
+    "n": 200,
+    "d": 0.077,
+    "se": 0.016,
+    "win": 55,
+    "fightT": 11.8,
+    "life": 10.9,
+    "casts": 0.5,
+    "firstCast": 9.2,
+    "otherCasts": 1.91,
+    "otherInWindow": 0.01,
+    "swings": 3.2,
+    "swingsInWindow": 1.1,
+    "windowSec": 2.2,
+    "dmg": 1704,
+    "dmgBasic": 1241,
+    "dmgSkill": 463
+   }
+  }
+ }
+}

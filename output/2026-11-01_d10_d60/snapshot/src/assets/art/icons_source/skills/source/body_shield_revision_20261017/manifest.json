@@ -1,0 +1,136 @@
+{
+  "date": "2026-10-17",
+  "generator": "built-in image_gen",
+  "status": "installed",
+  "request": "Recovery and Iron Skin share a human body silhouette, differing in chest cross versus subtle armor seams; Resistance Shield uses Holy Shield shape with elemental cutouts.",
+  "normalization": {
+    "source_size": [
+      512,
+      512
+    ],
+    "runtime_size": [
+      256,
+      256
+    ],
+    "rgb": [
+      216,
+      217,
+      230
+    ],
+    "long_edge_percent": 88,
+    "alpha": "Generated alpha preserved; bounds use alpha >8; LANCZOS resize; centered.",
+    "encoder": "scripts/build_icons.py:encode"
+  },
+  "assets": [
+    {
+      "skill_id": "war_recovery",
+      "generated": "src/assets/art/icons_source/skills/source/body_shield_revision_20261017/war_recovery_generated.png",
+      "generated_sha256": "b1db99a1edab087d002f4a281bf05f4126a2ff60d180e0f95558b6e2f3f2b4ce",
+      "reference": "src/assets/art/icons_source/skills/source/body_shield_revision_20261017/war_ironskin_reference.png",
+      "prompt": "src/assets/art/icons_source/skills/source/body_shield_revision_20261017/war_recovery_prompt.txt",
+      "generated_size": [
+        1254,
+        1254
+      ],
+      "crop_bbox": [
+        73,
+        95,
+        1181,
+        1158
+      ],
+      "normalized_art_size": [
+        451,
+        433
+      ],
+      "normalized_offset": [
+        30,
+        39
+      ],
+      "source_png": "src/assets/art/icons_source/skills/war_recovery.png",
+      "runtime_webp": "src/assets/art/icons/skills/war_recovery.webp",
+      "runtime_bytes": 8898,
+      "previous_source": "src/assets/art/icons_source/skills/source/body_shield_revision_20261017/previous/war_recovery.png",
+      "previous_runtime": "src/assets/art/icons_source/skills/source/body_shield_revision_20261017/previous/war_recovery.webp"
+    },
+    {
+      "skill_id": "war_ironskin",
+      "generated": "src/assets/art/icons_source/skills/source/body_shield_revision_20261017/war_ironskin_generated.png",
+      "generated_sha256": "4d5ec36fe796a3d1822fb24bb82582d6d5533df1109819a07b89dcdf1274a42a",
+      "reference": "src/assets/art/icons_source/skills/source/body_shield_revision_20261017/war_recovery_generated_dark.png",
+      "prompt": "src/assets/art/icons_source/skills/source/body_shield_revision_20261017/war_ironskin_prompt.txt",
+      "generated_size": [
+        1254,
+        1254
+      ],
+      "crop_bbox": [
+        74,
+        96,
+        1180,
+        1158
+      ],
+      "normalized_art_size": [
+        451,
+        433
+      ],
+      "normalized_offset": [
+        30,
+        39
+      ],
+      "source_png": "src/assets/art/icons_source/skills/war_ironskin.png",
+      "runtime_webp": "src/assets/art/icons/skills/war_ironskin.webp",
+      "runtime_bytes": 11656,
+      "previous_source": "src/assets/art/icons_source/skills/source/body_shield_revision_20261017/previous/war_ironskin.png",
+      "previous_runtime": "src/assets/art/icons_source/skills/source/body_shield_revision_20261017/previous/war_ironskin.webp"
+    },
+    {
+      "skill_id": "kni_resistshield",
+      "generated": "src/assets/art/icons_source/skills/source/body_shield_revision_20261017/kni_resistshield_generated.png",
+      "generated_sha256": "c0619c8317884631d1dc8d36e98a42b5f2c40d7782a43118f9a1d728d512bb74",
+      "reference": "src/assets/art/icons_source/skills/source/body_shield_revision_20261017/kni_holyshield_reference.png",
+      "prompt": "src/assets/art/icons_source/skills/source/body_shield_revision_20261017/kni_resistshield_prompt.txt",
+      "generated_size": [
+        1254,
+        1254
+      ],
+      "crop_bbox": [
+        44,
+        67,
+        1203,
+        1186
+      ],
+      "normalized_art_size": [
+        451,
+        435
+      ],
+      "normalized_offset": [
+        30,
+        38
+      ],
+      "source_png": "src/assets/art/icons_source/skills/kni_resistshield.png",
+      "runtime_webp": "src/assets/art/icons/skills/kni_resistshield.webp",
+      "runtime_bytes": 22090,
+      "previous_source": "src/assets/art/icons_source/skills/source/body_shield_revision_20261017/previous/kni_resistshield.png",
+      "previous_runtime": "src/assets/art/icons_source/skills/source/body_shield_revision_20261017/previous/kni_resistshield.webp"
+    }
+  ],
+  "comparison": "src/assets/art/icons_source/skills/source/body_shield_revision_20261017/comparison.png",
+  "validation": {
+    "actual_basic_codex_icons": 50,
+    "all_runtime_images_256px": true,
+    "page_errors": [],
+    "three_revised_assets_RGBA_size_and_transparency": "passed",
+    "holy_shield_reference_unchanged": true,
+    "source_measurement": {
+      "long_percent": 88,
+      "cx_percent": 50,
+      "cy_percent": 50,
+      "colors": 1
+    },
+    "visual_review_sizes": [
+      128,
+      44,
+      32,
+      28
+    ]
+  }
+}

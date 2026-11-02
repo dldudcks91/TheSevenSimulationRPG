@@ -1,0 +1,30 @@
+option_id,cond_id,arg,stat,unit,leader_bonus,description_kr
+opt_march_atk,always,-,atk_pct,0.02,1,무조건 — 리롤의 바닥값. unit = 그 능력치의 기준값이고 등급 값은 tactic_score.csv 의 배수를 곱한다. leader_bonus = 리더 곡선(balance.csv:tactic_leader_mult_min · _max)을 받는 몫 — 1 = 전부 · 0 = 안 받음 [2026-10-24 사용자 · R340 · tactic_card_design §5-10] ⚠임시. ⚠임시 — 2026-09-22 간단 풀 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+opt_march_hp,always,-,hp_pct,0.03,1,⚠임시 — 2026-09-22 간단 풀 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+opt_march_aspd,always,-,aspd_pct,0.02,1,⚠임시 — 2026-09-22 간단 풀 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+opt_march_cdr,always,-,cooldown_reduction,0.02,1,⚠임시 — 2026-09-22 간단 풀 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+opt_march_def,always,-,def_flat,5,1,고정값 채널(_flat)은 정수로 반올림한다. ⚠임시 — 2026-09-22 간단 풀 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+opt_march_res,always,-,res_all,0.03,1,⚠임시 — 2026-09-22 간단 풀 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+opt_party_sin_wrath,party_sin3,wrath,crit_damage,0.02,1,분노 영웅 3명 → 파티 치명타 피해 · 분노의 공격 특화 · 2026-11-01 §5-11 · 효과 배정과 수치는 임시
+opt_party_sin_envy,party_sin3,envy,res_reduction,0.005,1,시기 영웅 3명 → 파티 원소 저항 감소 · 폄하 계열 · 2026-11-01 §5-11 · 효과 배정과 수치는 임시
+opt_party_sin_greed,party_sin3,greed,crit_rate,0.005,1,탐욕 영웅 3명 → 파티 치명타 확률 · 잭팟 계열의 전투 특화 · 2026-11-01 §5-11 · 효과 배정과 수치는 임시
+opt_party_sin_sloth,party_sin3,sloth,cooldown_reduction,0.015,1,나태 영웅 3명 → 파티 쿨타임 감소 · 지름길 계열 · 2026-11-01 §5-11 · 효과 배정과 수치는 임시
+opt_party_sin_gluttony,party_sin3,gluttony,hp_pct,0.02,1,폭식 영웅 3명 → 파티 최대 HP · 체력 특화 · 2026-11-01 §5-11 · 효과 배정과 수치는 임시
+opt_party_sin_lust,party_sin3,lust,buff_dur_pct,0.01,1,색욕 영웅 3명 → 파티가 거는 버프 지속시간 · 여운 계열 · 2026-11-01 §5-11 · 효과 배정과 수치는 임시
+opt_party_sin_pride,party_sin3,pride,atk_pct,0.015,1,오만 영웅 3명 → 파티 데미지 · 우월 계열 · 2026-11-01 §5-11 · 효과 배정과 수치는 임시
+opt_party_cls_warrior,party_cls2,warrior,atk_pct,0.015,1,전사 2명 이상 → 파티 데미지 · 근접 공격 특화 · 2026-11-01 §5-11 · 효과 배정과 수치는 임시
+opt_party_cls_knight,party_cls2,knight,def_flat,5,1,기사 2명 이상 → 파티 물리 방어 · 수호 특화 · 2026-11-01 §5-11 · 효과 배정과 수치는 임시
+opt_party_cls_mage,party_cls2,mage,cast_speed_pct,0.01,1,마법사 2명 이상 → 파티 캐스팅 속도 · 마법 무기 사용자에게 적용 · 2026-11-01 §5-11 · 효과 배정과 수치는 임시
+opt_party_cls_archer,party_cls2,archer,aspd_pct,0.015,1,궁수 2명 이상 → 파티 공격 속도 · 물리 무기 사용자에게 적용 · 2026-11-01 §5-11 · 효과 배정과 수치는 임시
+opt_party_cls_priest,party_cls2,priest,heal_out_pct,0.01,1,사제 2명 이상 → 파티가 거는 회복 스킬의 회복량 · 자동 회복을 만들지 않는다 · 2026-11-01 §5-11 · 효과 배정과 수치는 임시
+opt_gear_wrath,gear_sin3,wrath,crit_rate,0.02,1,arg = 조건 사전의 sin 자리를 이 옵션이 정한다. ⚠임시 — 2026-09-22 간단 풀 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+opt_gear_sloth,gear_sin3,sloth,cooldown_reduction,0.02,1,⚠임시 — 2026-09-22 간단 풀 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+opt_gear_no_pride,gear_no_sin,pride,atk_pct,0.02,1,「없으면」 — 오만 장비를 포기하고 공격으로 기운다(빠진 것을 메우지 않는다 · §2-3). ⚠임시 — 2026-09-22 간단 풀 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+opt_lead_knight,leader_cls,knight,def_flat,5,1,⚠임시 — 2026-09-22 간단 풀 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+opt_lead_priest,leader_cls,priest,hp_pct,0.03,1,⚠임시 — 2026-09-22 간단 풀 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+opt_front_priest,front_priest,-,atk_pct,0.02,1,조건이 직업을 이미 정했다(사제) — arg 는 비운다. ⚠임시 — 2026-09-22 간단 풀 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+opt_bond_100,bond_100,-,atk_pct,0.02,1,⚠임시 — 2026-09-22 간단 풀 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
+opt_lead_ldr12,leader_ldr12,-,atk_pct,0.02,0,리더 통솔 문턱이 이미 통솔을 보상하므로 leader_bonus 0 — 같은 축을 두 번 보상하지 않는다(2026-10-24 · R340 · tactic_card_design §5-10). ⚠임시 — 2026-09-27 칸 = 상황 고정(사용자 「일단」) 때 종류마다 가족 둘을 채우려고 넣었다 (tactic_card_design §5-9)
+opt_lead_ldr16,leader_ldr16,-,damage_reduction,0.02,0,리더 통솔 문턱이 이미 통솔을 보상하므로 leader_bonus 0 — 같은 축을 두 번 보상하지 않는다(2026-10-24 · R340 · tactic_card_design §5-10). ⚠임시 — 2026-09-27 칸 = 상황 고정(사용자 「일단」) 때 종류마다 가족 둘을 채우려고 넣었다 (tactic_card_design §5-9)
+opt_front_knight,front_knight,-,def_flat,5,1,⚠임시 — 2026-09-27 칸 = 상황 고정(사용자 「일단」) 때 종류마다 가족 둘을 채우려고 넣었다 (tactic_card_design §5-9)
+opt_bond_30,bond_30,-,hp_pct,0.03,1,⚠임시 — 2026-09-27 칸 = 상황 고정(사용자 「일단」) 때 종류마다 가족 둘을 채우려고 넣었다 (tactic_card_design §5-9)

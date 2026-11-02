@@ -957,6 +957,7 @@ function unitInner(u, state, v2, sprite, slots, ready = false) {
     const chip = !v2 ? '' : u.hero
         ? (u.sin && M.SINS[u.sin] ? `<span class="sin-chip" style="color:${M.SINS[u.sin].color}">${L(M.SINS[u.sin])}</span>` : '')
         : gradeChip(u);
+    const hv = hpView(u);
     const traits = v2 ? traitsHtml(u) : '';   // 정예 특성 칩 — 띠 오른쪽 · 오른쪽 맞춤 (ADR-0775)
     const top = v2 ? `<div class="unit-top"><span class="unit-ident">${identV2(u, state)}</span>${traits}</div>` : '';
     const idRow = v2
@@ -969,8 +970,8 @@ function unitInner(u, state, v2, sprite, slots, ready = false) {
             <div class="unit-info">
                 ${idRow}
                 <div class="hp-row">
-                    <div class="bar hp"><i style="transform:scaleX(${Math.max(0, u.hp / u.hpMax)})"></i></div>
-                    <span class="hp-text">${Math.max(0, Math.round(u.hp))} / ${u.hpMax}</span>
+                    <div class="bar hp"><i style="transform:scaleX(${hv.hp})"></i><b style="transform:${shieldTf(hv)}"></b></div>
+                    <span class="hp-text${hv.on ? ' shielded' : ''}">${hv.text}</span>
                 </div>
                 <div class="act-row${u.noBasic ? ' segs' : ''}" title="${t(u.noBasic ? 'bt.castTitle' : 'bt.actTitle', { s: u.period.toFixed(2) })}">
                     ${u.noBasic ? actSegs() : '<i class="act-fill k-phys"></i>'}
@@ -1011,13 +1012,26 @@ export function unitPreview(u, { combatOf = null, itemOf = null, itemTipOf = nul
     return cell;
 }
 
+/** HP 막대 · 글자 — 방어막이 있으면 빨강 오른쪽에 파랑 · 글자는 HP + 방어막(파랑) · 합이 최대 HP 를 넘으면 막대 전체를 그 합에 맞춘다 (§4-2 · ADR-1027).
+ *  표시 변환일 뿐이다 — `u.shield` 는 시뮬이 실어 온 값(`buff.amt` · `hit.bar`)이고 물약 판정은 실제 HP 를 본다 */
+function hpView(u) {
+    const hp = Math.max(0, u.hp);
+    const shield = hp > 0 ? u.shield?.amt ?? 0 : 0;
+    const whole = Math.max(u.hpMax, hp + shield);
+    return { hp: hp / whole, shield: shield / whole, on: shield > 0, text: `${Math.round(hp + shield)} / ${u.hpMax}` };
+}
+const shieldTf = v => `translateX(${v.hp * 100}%) scaleX(${v.shield})`;
+
 function refreshUnit(state, u) {
     if (!u.node || state.catchUp) return;
     // 게이지 셋(HP · 행동 · 쿨)은 폭 · 높이가 아니라 늘이고 줄인다(scaleX · scaleY) — 폭 · 높이를 바꾸면 0.1초 눈금마다 카드의 배치를 다시 잰다.
     //   HP 글자도 바뀔 때만 쓴다 (DEV_PLAN §4 #86)
-    u.node.querySelector('.bar.hp > i').style.transform = `scaleX(${Math.max(0, u.hp / u.hpMax)})`;
-    const hpText = u.node.querySelector('.hp-text'), hpNow = `${Math.max(0, Math.round(u.hp))} / ${u.hpMax}`;
-    if (hpText.textContent !== hpNow) hpText.textContent = hpNow;
+    const hv = hpView(u);
+    u.node.querySelector('.bar.hp > i').style.transform = `scaleX(${hv.hp})`;
+    u.node.querySelector('.bar.hp > b').style.transform = shieldTf(hv);
+    const hpText = u.node.querySelector('.hp-text');
+    if (hpText.textContent !== hv.text) hpText.textContent = hv.text;
+    hpText.classList.toggle('shielded', hv.on);
     u.node.classList.toggle('dead', u.hp <= 0);
     // 정신 집중 (R318 · ADR-0720) — 쓰러지면 걷힌다 · 표시는 카드가 아니라 쓰는 스킬 칸이 든다(아래 쿨 게이지 · ADR-0723)
     if (u.hp <= 0) u.chan = null;
@@ -1821,6 +1835,7 @@ function apply(state, root, opts, ev) {
             if (a) { markActed(a, ev.t); if (ev.ahp !== undefined) { a.hp = ev.ahp; refreshUnit(state, a); } }
             if (d) {
                 d.hp = ev.dhp;
+                if (ev.bar !== undefined && d.shield) d.shield.amt = ev.bar;   // 흡수 후 잔량 (ADR-1027)
                 popup(state, d, `-${ev.dmg}`, dmgPop(ev.ty, ev.crit));
                 refreshUnit(state, d);
             }
@@ -1924,6 +1939,7 @@ function apply(state, root, opts, ev) {
             const u = U(ev.u);
             if (!u) break;
             u.hp = 0;
+            u.shield = null;
             refreshUnit(state, u);
             const enemy = u.side === 'enemy';
             // 쓰러짐에는 친 쪽이 없다 — 적이 쓰러진 것은 우리 타격의 결과, 파티가 쓰러진 것은 적 타격의 결과로 거른다 (ADR-0131)
@@ -1979,6 +1995,8 @@ function apply(state, root, opts, ev) {
             }
             // 최대 HP 를 민 창 — 시뮬이 민 값을 그대로 받는다. 재생기는 계산하지 않는다 (INTERFACE §6 · 부채 #50)
             if (ev.hpMax !== undefined) { u.hpMax = ev.hpMax; u.hp = ev.dhp; }
+            // 방어막 — 총량을 받는다 · 시뮬의 `barrier` 가 한 칸이라 새 것이 앞 것을 덮는다 (ADR-1027)
+            if (ev.stat === 'barrier_pct') u.shield = { amt: ev.amt, s: ev.s };
             refreshUnit(state, u);
             fxBuff(state, u, ev);   // 좋은 창 · 나쁜 창 · 방벽 — 스킬만 · 오오라 없음 (ADR-0409)
             // 팝업은 띄우지 않는다 — 시전은 `skill` 이벤트가 이미 알렸고, 파티 창이면 대상마다 같은 이름이 세 번 뜬다.
@@ -2026,6 +2044,7 @@ function apply(state, root, opts, ev) {
             if (!u) break;
             const aura = u.buffs?.get(ev.k ?? ev.s)?.until === null;   // 오오라 창이 닫힐 때도 로그를 안 쓴다 (R98)
             u.buffs?.delete(ev.k ?? ev.s);   // 상태이상은 `k` 로 든 칩 (R178)
+            if (u.shield?.s === ev.s) u.shield = null;   // 방어막 창이 닫혔다 — 덮인 앞 스킬의 창이 닫힐 때는 안 걷는다 (ADR-1027)
             // 최대 HP 를 밀던 창이 닫혔다 — 줄어든 최대치와 **잘린** 현재 HP 를 그대로 받는다 (INTERFACE §6 · 부채 #50)
             if (ev.hpMax !== undefined) { u.hpMax = ev.hpMax; u.hp = ev.dhp; }
             refreshUnit(state, u);
@@ -2092,17 +2111,19 @@ function showResult(state, root, opts, won) {
     }
     // 다음 칸의 챕터보스가 죽어 있다 — 세기 글이 「보스 재등장까지」이고 [건너뛰기]가 안 선다(출발은 보스가 돌아오는 시각 · ADR-0590)
     const waiting = !!nx && (nx.respawn ?? -Infinity) > opts.now();
+    // 챕터보스에게 졌다 — 다음 런이 앞 칸이다(`game.nextRepeat`) · 세기 글은 「앞 칸으로」 · 버튼은 [재도전]이 아니다 (ADR-0698 일부 대체)
+    const back = !won && !!nx && nx.stageId !== opts.stageId;
     box.innerHTML = `
         <span class="${won ? 'up' : 'down'} verdict">${t(opts.result.mode === 'arena' && opts.result.reason === 'timeout' ? 'ar.draw' : won ? 'bt.won' : 'bt.lost')}</span>
         ${nx ? `<span class="muted b-next"></span>` : ''}
         ${nx?.shrine && !nx.shrine.fresh ? `<span class="b-shrine">${shrineChip(nx.shrine.id)}<span class="muted">${t('bt.shrineKeep')} — ${shrineFxText(nx.shrine.id)}</span></span>` : ''}
-        ${nx && !waiting ? `<button class="btn sm b-go">${t(won ? 'bt.skipWait' : 'bt.skipRetry')}</button>` : ''}
+        ${nx && !waiting ? `<button class="btn sm b-go">${t(won || back ? 'bt.skipWait' : 'bt.skipRetry')}</button>` : ''}
         <button class="btn primary sm b-report">${t(opts.resultLabel ?? 'bt.toReport')}</button>`;
     box.classList.add('show');
     // 리포트로 간다 — 세기는 **안 끊는다**(멈추는 길은 철수 · 게임 끄기뿐이다). 걷힌 세기는 앱 시계가 잇는다
     box.querySelector('.b-report').onclick = () => opts.onEnd(false);
     // 건너뛰기 — 세기를 걷고 다음 런이 **지금** 나간다. 갈 칸 · 편성 · 신단은 같은 답이고 출발 시각만 앱이 지금으로 바꾼다 (SCREEN_DESIGN §4-2 · ADR-0453)
-    //   진 런이면 글자가 「재도전」이다 — 졌으면 다음 런이 같은 칸이다(`game.nextRepeat`) · 같은 버튼 · 같은 동작 (ADR-0698)
+    //   진 런이고 다음 런이 같은 칸이면 글자가 「재도전」이다(`game.nextRepeat`) · 같은 버튼 · 같은 동작 (ADR-0698)
     const go = box.querySelector('.b-go');
     if (go) go.onclick = () => opts.onEnd(true, true);
     if (nx) {
@@ -2112,7 +2133,7 @@ function showResult(state, root, opts, won) {
         const next = D.stages[nx.stageId];
         // 바퀴를 넘는 다음 런 — 단이 바뀌면 칸 이름 앞에 그 단 이름이 선다 · 같은 단이면 안 붙인다 (SCREEN_DESIGN §4-2 「결과 띠」 · ADR-0779)
         const climb = opts.difficulty != null && nx.difficulty != null && nx.difficulty !== opts.difficulty && D.difficulties[nx.difficulty];
-        const key = waiting ? 'bt.respawnWait' : nx.stageId === opts.stageId && !climb ? 'bt.again' : 'bt.nextCell';
+        const key = waiting ? 'bt.respawnWait' : back ? 'bt.backCell' : nx.stageId === opts.stageId && !climb ? 'bt.again' : 'bt.nextCell';
         const name = next ? `${climb ? `${L(climb.name)} ` : ''}Ch${next.chapter}-${next.stage_num} ${L(stageName(next))}` : '';
         let left = Math.max(0, Math.ceil((nx.at - opts.now()) / 1000)), beat = opts.now();
         const tick = () => {

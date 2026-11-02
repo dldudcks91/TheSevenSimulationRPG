@@ -2329,7 +2329,7 @@ export function createBattleSystem(data) {
         // 스킬 칸 = 출처 자리 + id — 칸이 바뀌면 갈아입는다(같은 id 가 다른 칸으로 옮겨도) · 쿨을 잇는 열쇠와 같다 (R130)
         const slotKey = a => `${a.source}|${a.id}`;
         // 무기군도 입력이다 — 칸이 켜지고 꺼지는 것을 정한다 (R187)
-        const sigOf = p => JSON.stringify([p.combat, p.stats ?? null, (SK ? p.actives ?? [] : []).map(slotKey), p.weaponGroup ?? null]);
+        const sigOf = p => JSON.stringify([p.combat, p.stats ?? null, (SK ? p.actives ?? [] : []).map(a => [slotKey(a), a.up ?? 0]), p.weaponGroup ?? null]);
         const worn = new Map(partyUnits.map(p => [p.uid, { sig: sigOf(p), combat: p.combat }]));
         /** 라운드 도중인가 — 열었고 아직 안 끝났다(끝났으면 `between` · 닫혔으면 `ended`) */
         const inRound = () => started && !between && !ended;

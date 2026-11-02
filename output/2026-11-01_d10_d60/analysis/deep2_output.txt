@@ -1,0 +1,72 @@
+=== 1. same accounts: first try on a stage vs the next segment (no survivorship) ===
+basic 1033 -> 1041 n 63 firstwin 25/63 (40%) -> 47/63 (75%) | half1 14 28 / 35 | half2 11 19 / 28
+basic 1032 -> 1041 n 63 firstwin 29/63 (46%) -> 47/63 (75%) | half1 15 28 / 35 | half2 14 19 / 28
+basic 1023 -> 1031 n 76 firstwin 45/76 (59%) -> 30/76 (39%) | half1 23 15 / 38 | half2 22 15 / 38
+basic 1013 -> 1021 n 80 firstwin 67/80 (84%) -> 52/80 (65%) | half1 36 28 / 40 | half2 31 24 / 40
+basic 1043 -> 1051 n 54 firstwin 38/54 (70%) -> 10/54 (19%) | half1 22 7 / 30 | half2 16 3 / 24
+basic 1051 -> 2011 n 26 firstwin 9/26 (35%) -> 17/26 (65%) | half1 7 11 / 17 | half2 2 6 / 9
+adaptive 1033 -> 1041 n 55 firstwin 29/55 (53%) -> 47/55 (85%) | half1 13 27 / 30 | half2 16 20 / 25
+adaptive 1032 -> 1041 n 55 firstwin 22/55 (40%) -> 47/55 (85%) | half1 11 27 / 30 | half2 11 20 / 25
+adaptive 1023 -> 1031 n 74 firstwin 48/74 (65%) -> 30/74 (41%) | half1 24 16 / 38 | half2 24 14 / 36
+adaptive 1013 -> 1021 n 79 firstwin 67/79 (85%) -> 54/79 (68%) | half1 35 30 / 39 | half2 32 24 / 40
+adaptive 1043 -> 1051 n 47 firstwin 40/47 (85%) -> 13/47 (28%) | half1 21 8 / 24 | half2 19 5 / 23
+adaptive 1051 -> 2011 n 30 firstwin 13/30 (43%) -> 21/30 (70%) | half1 8 11 / 16 | half2 5 10 / 14
+
+=== 2. where runs end: rounds cleared on losses (all attempts) ===
+1013 losses 114 timeouts 0 rounds {0: 4, 1: 4, 2: 27, 3: 18, 4: 15, 5: 19, 6: 10, 7: 8, 8: 9} lostWall_med 109.95 combat_med 106.15
+1023 losses 231 timeouts 0 rounds {1: 2, 2: 36, 3: 28, 4: 18, 5: 53, 6: 14, 7: 16, 8: 64} lostWall_med 93.4 combat_med 89.7
+1031 losses 395 timeouts 1 rounds {0: 1, 1: 3, 2: 53, 3: 58, 4: 54, 5: 109, 6: 39, 7: 35, 8: 43} lostWall_med 65.45 combat_med 60.7
+1032 losses 440 timeouts 0 rounds {1: 3, 2: 67, 3: 57, 4: 63, 5: 119, 6: 31, 7: 36, 8: 64} lostWall_med 62.22 combat_med 57.1
+1033 losses 339 timeouts 2 rounds {1: 4, 2: 43, 3: 46, 4: 53, 5: 85, 6: 35, 7: 23, 8: 50} lostWall_med 62 combat_med 57.5
+1041 losses 41 timeouts 0 rounds {2: 2, 3: 2, 4: 4, 5: 14, 6: 5, 7: 5, 8: 9} lostWall_med 83.9 combat_med 76.9
+1043 losses 143 timeouts 1 rounds {2: 1, 3: 1, 4: 6, 5: 18, 6: 6, 7: 7, 8: 104} lostWall_med 99.9 combat_med 93.4
+1051 losses 1217 timeouts 0 rounds {0: 1217} lostWall_med 23.8 combat_med 23.8
+2011 losses 53 timeouts 0 rounds {0: 1, 1: 5, 2: 7, 3: 6, 4: 2, 5: 14, 6: 2, 7: 6, 8: 10} lostWall_med 80.55 combat_med 75.3
+
+=== 3. boss 1051: win rate by party median level (first attempt at each level per account) ===
+basic first at level {9: '1/12', 10: '4/23', 11: '3/16', 12: '2/3'}
+basic all attempts   {9: '6/354', 10: '12/528', 11: '9/220', 12: '2/5'}
+adaptive first at level {9: '1/9', 10: '4/21', 11: '2/10', 12: '6/8', 13: '6/10'}
+adaptive all attempts   {9: '5/32', 10: '10/80', 11: '3/36', 12: '8/10', 13: '10/17'}
+
+=== 4. boss attempts: win chance by attempt number (until first win) ===
+basic {'1': '10/54', '2': '5/44', '3': '3/39', '4': '2/35', '5': '1/33', '6-10': '5/136', '11+': '3/766'}
+adaptive {'1': '13/47', '2': '5/33', '3': '2/28', '4': '4/26', '5': '1/22', '6-10': '11/19', '11+': '0/0'}
+
+=== 5. composition, both halves, with vs without (D60 ch1) ===
+basic archer 1-40 with 13/22 (59%) without 4/18 (22%) | 41-80 with 9/23 (39%) without 3/17 (18%)
+basic mage+priest 1-40 with 2/11 (18%) without 15/29 (52%) | 41-80 with 1/11 (9%) without 11/29 (38%)
+basic warrior 1-40 with 12/28 (43%) without 5/12 (42%) | 41-80 with 7/21 (33%) without 5/19 (26%)
+basic knight 1-40 with 9/22 (41%) without 8/18 (44%) | 41-80 with 7/25 (28%) without 5/15 (33%)
+adaptive archer 1-40 with 15/22 (68%) without 4/18 (22%) | 41-80 with 12/23 (52%) without 5/17 (29%)
+adaptive mage+priest 1-40 with 2/11 (18%) without 17/29 (59%) | 41-80 with 3/11 (27%) without 14/29 (48%)
+adaptive warrior 1-40 with 14/28 (50%) without 5/12 (42%) | 41-80 with 10/21 (48%) without 7/19 (37%)
+adaptive knight 1-40 with 10/22 (45%) without 9/18 (50%) | 41-80 with 9/25 (36%) without 8/15 (53%)
+
+=== 6. two-hour horizon (80 seeds) ===
+basic ch1 cleared by min {30: 5, 45: 18, 60: 29, 90: 39, 120: 42} of 80 median of all (censored at 120) 112.0
+  D120 lv 13.5 clears 15.0 gold 1753.5 runs 80.0
+  combatSec/60min median 3180.35 share of wall 88.3 %
+  reward gap D120 median 8.83 max 97.6 >=20min 31
+  not cleared at D120: 38 [(1, ['mage', 'priest', 'warrior'], [11, 10, 9], 12, 1051, 12, 151), (10, ['warrior', 'priest', 'mage'], [11, 11, 11], 12, 1051, 12, 124), (11, ['knight', 'warrior', 'mage'], [10, 10, 10], 12, 1051, 12, 214), (12, ['knight', 'warrior', 'priest'], [10, 10, 9], 12, 1051, 12, 180), (15, ['knight', 'mage', 'priest'], [11, 12, 11], 9, 1041, 9, 66), (22, ['archer', 'priest', 'knight'], [10, 10, 9], 12, 1051, 12, 188), (23, ['warrior', 'mage', 'priest'], [9, 9, 9], 12, 1051, 12, 253), (29, ['priest', 'mage', 'warrior'], [13, 13, 12], 12, 1051, 12, 80), (3, ['mage', 'priest', 'knight'], [11, 11, 10], 12, 1051, 12, 73), (30, ['warrior', 'mage', 'priest'], [12, 12, 13], 9, 1041, 9, 64), (32, ['warrior', 'priest', 'knight'], [10, 10, 10], 12, 1051, 12, 184), (33, ['knight', 'archer', 'warrior'], [10, 11, 10], 12, 1051, 12, 173)]
+   mage+priest D120 ch1 5/22 (23%) median clear 59.17
+   archer D120 ch1 30/45 (67%) median clear 50.06
+adaptive ch1 cleared by min {30: 4, 45: 15, 60: 36, 90: 53, 120: 60} of 80 median of all (censored at 120) 68.8
+  D120 lv 17.0 clears 29.0 gold 2731.5 runs 66.0
+  combatSec/60min median 3171.65 share of wall 88.1 %
+  reward gap D120 median 2.7 max 9.3 >=20min 0
+  not cleared at D120: 20 [(1, ['mage', 'priest', 'warrior'], [15, 15, 15], 12, 1051, 37, 62), (10, ['warrior', 'priest', 'mage'], [12, 13, 12], 11, 1042, 20, 34), (12, ['knight', 'warrior', 'priest'], [15, 15, 15], 12, 1043, 36, 52), (15, ['knight', 'mage', 'priest'], [10, 10, 11], 7, 1031, 20, 55), (29, ['priest', 'mage', 'warrior'], [13, 13, 12], 12, 1043, 21, 63), (30, ['warrior', 'mage', 'priest'], [10, 11, 12], 7, 1031, 19, 57), (31, ['priest', 'mage', 'warrior'], [12, 12, 12], 12, 1043, 13, 28), (32, ['warrior', 'priest', 'knight'], [14, 14, 14], 12, 1043, 22, 36), (36, ['warrior', 'mage', 'knight'], [14, 14, 14], 11, 1042, 25, 60), (40, ['archer', 'knight', 'mage'], [15, 14, 15], 12, 1043, 26, 84), (42, ['priest', 'mage', 'knight'], [13, 13, 12], 9, 1041, 27, 48), (44, ['warrior', 'priest', 'knight'], [12, 13, 12], 8, 1032, 19, 54)]
+   mage+priest D120 ch1 10/22 (45%) median clear 60.87
+   archer D120 ch1 41/45 (91%) median clear 53.7
+h2 vs primary same clears at D60: 160 / 160
+
+=== 7. merchant weapon variant vs adaptive (same seeds) ===
+D10 lv 5.0 -> 5.0 clears 3.0 -> 3.0 ahead/same/behind 2 76 2 ch1 0 -> 0 gold 1690.5 -> 1690.5
+   half 1 40 ch1 0 -> 0 / 40
+   half 41 80 ch1 0 -> 0 / 40
+D60 lv 12.0 -> 12.0 clears 12.0 -> 12.0 ahead/same/behind 31 34 15 ch1 36 -> 34 gold 2475.5 -> 2445.0
+   half 1 40 ch1 19 -> 18 / 40
+   half 41 80 ch1 17 -> 16 / 40
+shopGold median 1200.0 weapons bought median 1.0 accts with purchase 73 rerolls 1.0
+purchase rarity Counter({'normal': 94, 'magic': 30, 'rare': 1}) first buy min 5.0 might ratio 1.0
+failures 0

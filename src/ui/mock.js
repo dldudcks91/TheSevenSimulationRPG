@@ -851,8 +851,6 @@ export const TRADE = {
         who: { ko: '떠돌이 광물상', en: 'Wandering Ore Dealer' },
         slots: 3,
     },
-    /** 교역소 — 물건 칸 수만(2026-10-30 · ADR-0960). 교환 비율 · 재화가 정해지면 CSV 로 가고 이 칸은 걷는다 (base_expedition_design §2-6) */
-    post: { slots: 3 },
 };
 
 /* 의뢰 게시판(`COMMISSIONS`)은 **CSV 로 나갔다** (2026-09-03 사용자 지시) — 종류(`commission_kind.csv`) · 틀(`commission.csv`) ·

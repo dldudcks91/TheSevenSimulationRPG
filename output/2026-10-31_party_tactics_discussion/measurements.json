@@ -1,0 +1,677 @@
+{
+  "engine": "Live createTacticSystem / createHeroSystem / createGameSystem",
+  "sampleModel": "Seeds 1..3000. Actual distinct starter trio + actual starting goblin. Additional recruits use rollHeroOf with a uniformly chosen main class; no player selection. All three-member subsets may be selected.",
+  "optionCounts": {
+    "always": 6,
+    "party": 3,
+    "leadership": 2,
+    "gear": 3,
+    "formation": 2,
+    "leader": 2,
+    "bond": 2
+  },
+  "conditionCount": 13,
+  "optionCount": 20,
+  "leaderCurve": {
+    "1": 0.5,
+    "5": 0.7222222222222222,
+    "10": 1,
+    "12": 1.2,
+    "15": 1.5,
+    "16": 1.6,
+    "18": 1.8,
+    "20": 2
+  },
+  "commandRanks": [
+    {
+      "building_id": "command",
+      "rank": 1,
+      "require": "building:storage:1",
+      "cost": "gold:600",
+      "status": "fixed"
+    },
+    {
+      "building_id": "command",
+      "rank": 2,
+      "require": "total:8|stage:1051",
+      "cost": "gold:3000|iron_ore:30|timber:30",
+      "status": "fixed"
+    },
+    {
+      "building_id": "command",
+      "rank": 3,
+      "require": "total:15|stage:2051",
+      "cost": "gold:6000|iron_ore:60|timber:60",
+      "status": "fixed"
+    },
+    {
+      "building_id": "command",
+      "rank": 4,
+      "require": "total:30|stage:3051",
+      "cost": "gold:12000|iron_ore:90|timber:90",
+      "status": "fixed"
+    },
+    {
+      "building_id": "command",
+      "rank": 5,
+      "require": "total:40|stage:4051",
+      "cost": "gold:24000|iron_ore:120|timber:120",
+      "status": "fixed"
+    },
+    {
+      "building_id": "command",
+      "rank": 6,
+      "require": "total:55|stage:5051",
+      "cost": "gold:48000|iron_ore:150|timber:150",
+      "status": "fixed"
+    },
+    {
+      "building_id": "command",
+      "rank": 7,
+      "require": "total:90|stage:6051",
+      "cost": "gold:9000|iron_ore:180|timber:180",
+      "status": "proposed"
+    }
+  ],
+  "chapterOpenMax": 5,
+  "maxRoster": 10,
+  "gradeWeights": {
+    "common": 70,
+    "magic": 25,
+    "rare": 5
+  },
+  "rosterSamples": {
+    "4": {
+      "n": 3000,
+      "classPair": 1804,
+      "sinTrio": 0,
+      "leader12": 1484,
+      "leader16": 138,
+      "leader18": 30,
+      "priestPresent": 1960,
+      "knightPresent": 2139
+    },
+    "6": {
+      "n": 3000,
+      "classPair": 3000,
+      "sinTrio": 489,
+      "leader12": 1853,
+      "leader16": 191,
+      "leader18": 39,
+      "priestPresent": 2300,
+      "knightPresent": 2445
+    },
+    "10": {
+      "n": 3000,
+      "classPair": 3000,
+      "sinTrio": 2481,
+      "leader12": 2331,
+      "leader16": 302,
+      "leader18": 63,
+      "priestPresent": 2712,
+      "knightPresent": 2786
+    }
+  },
+  "optionValues": [
+    {
+      "id": "opt_march_atk",
+      "category": "always",
+      "score": 0,
+      "stat": "atk_pct",
+      "rareLdr10": 0.05,
+      "rareLdr18": 0.09,
+      "rareLdr20": 0.1
+    },
+    {
+      "id": "opt_march_hp",
+      "category": "always",
+      "score": 0,
+      "stat": "hp_pct",
+      "rareLdr10": 0.075,
+      "rareLdr18": 0.135,
+      "rareLdr20": 0.15
+    },
+    {
+      "id": "opt_march_aspd",
+      "category": "always",
+      "score": 0,
+      "stat": "aspd_pct",
+      "rareLdr10": 0.05,
+      "rareLdr18": 0.09,
+      "rareLdr20": 0.1
+    },
+    {
+      "id": "opt_march_cdr",
+      "category": "always",
+      "score": 0,
+      "stat": "cooldown_reduction",
+      "rareLdr10": 0.05,
+      "rareLdr18": 0.09,
+      "rareLdr20": 0.1
+    },
+    {
+      "id": "opt_march_def",
+      "category": "always",
+      "score": 0,
+      "stat": "def_flat",
+      "rareLdr10": 13,
+      "rareLdr18": 23,
+      "rareLdr20": 26
+    },
+    {
+      "id": "opt_march_res",
+      "category": "always",
+      "score": 0,
+      "stat": "res_all",
+      "rareLdr10": 0.075,
+      "rareLdr18": 0.135,
+      "rareLdr20": 0.15
+    },
+    {
+      "id": "opt_sin_spread",
+      "category": "party",
+      "score": 1,
+      "stat": "res_all",
+      "rareLdr10": 0.09,
+      "rareLdr18": 0.162,
+      "rareLdr20": 0.18
+    },
+    {
+      "id": "opt_class_pair",
+      "category": "party",
+      "score": 3,
+      "stat": "aspd_pct",
+      "rareLdr10": 0.086,
+      "rareLdr18": 0.1548,
+      "rareLdr20": 0.172
+    },
+    {
+      "id": "opt_sin_trio",
+      "category": "party",
+      "score": 5,
+      "stat": "crit_damage",
+      "rareLdr10": 0.36,
+      "rareLdr18": 0.648,
+      "rareLdr20": 0.72
+    },
+    {
+      "id": "opt_gear_wrath",
+      "category": "gear",
+      "score": 3,
+      "stat": "crit_rate",
+      "rareLdr10": 0.086,
+      "rareLdr18": 0.1548,
+      "rareLdr20": 0.172
+    },
+    {
+      "id": "opt_gear_sloth",
+      "category": "gear",
+      "score": 3,
+      "stat": "cooldown_reduction",
+      "rareLdr10": 0.086,
+      "rareLdr18": 0.1548,
+      "rareLdr20": 0.172
+    },
+    {
+      "id": "opt_gear_no_pride",
+      "category": "gear",
+      "score": 3,
+      "stat": "atk_pct",
+      "rareLdr10": 0.086,
+      "rareLdr18": 0.1548,
+      "rareLdr20": 0.172
+    },
+    {
+      "id": "opt_lead_knight",
+      "category": "leader",
+      "score": 2,
+      "stat": "def_flat",
+      "rareLdr10": 18,
+      "rareLdr18": 32,
+      "rareLdr20": 36
+    },
+    {
+      "id": "opt_lead_priest",
+      "category": "leader",
+      "score": 2,
+      "stat": "hp_pct",
+      "rareLdr10": 0.108,
+      "rareLdr18": 0.1944,
+      "rareLdr20": 0.216
+    },
+    {
+      "id": "opt_front_priest",
+      "category": "formation",
+      "score": 3,
+      "stat": "atk_pct",
+      "rareLdr10": 0.086,
+      "rareLdr18": 0.1548,
+      "rareLdr20": 0.172
+    },
+    {
+      "id": "opt_bond_100",
+      "category": "bond",
+      "score": 4,
+      "stat": "atk_pct",
+      "rareLdr10": 0.1,
+      "rareLdr18": 0.18,
+      "rareLdr20": 0.2
+    },
+    {
+      "id": "opt_lead_ldr12",
+      "category": "leadership",
+      "score": 2,
+      "stat": "atk_pct",
+      "rareLdr10": 0.072,
+      "rareLdr18": 0.072,
+      "rareLdr20": 0.072
+    },
+    {
+      "id": "opt_lead_ldr16",
+      "category": "leadership",
+      "score": 4,
+      "stat": "damage_reduction",
+      "rareLdr10": 0.1,
+      "rareLdr18": 0.1,
+      "rareLdr20": 0.1
+    },
+    {
+      "id": "opt_front_knight",
+      "category": "formation",
+      "score": 1,
+      "stat": "def_flat",
+      "rareLdr10": 15,
+      "rareLdr18": 27,
+      "rareLdr20": 30
+    },
+    {
+      "id": "opt_bond_30",
+      "category": "bond",
+      "score": 2,
+      "stat": "hp_pct",
+      "rareLdr10": 0.108,
+      "rareLdr18": 0.1944,
+      "rareLdr20": 0.216
+    }
+  ],
+  "errors": [],
+  "witness": [
+    {
+      "ldr": 10,
+      "conditions": [
+        {
+          "id": "opt_march_atk",
+          "have": 1,
+          "need": 0,
+          "active": true,
+          "lead": 1,
+          "value": 0.05,
+          "bonus": 0,
+          "stat": "atk_pct"
+        },
+        {
+          "id": "opt_sin_trio",
+          "have": 3,
+          "need": 3,
+          "active": true,
+          "lead": 1,
+          "value": 0.36,
+          "bonus": 0,
+          "stat": "crit_damage"
+        },
+        {
+          "id": "opt_lead_ldr12",
+          "have": 10,
+          "need": 12,
+          "active": false,
+          "lead": 1,
+          "value": 0.072,
+          "bonus": 0,
+          "stat": "atk_pct"
+        },
+        {
+          "id": "opt_gear_no_pride",
+          "have": 0,
+          "need": 0,
+          "active": true,
+          "lead": 1,
+          "value": 0.086,
+          "bonus": 0,
+          "stat": "atk_pct"
+        },
+        {
+          "id": "opt_front_priest",
+          "have": 1,
+          "need": 1,
+          "active": true,
+          "lead": 1,
+          "value": 0.086,
+          "bonus": 0,
+          "stat": "atk_pct"
+        },
+        {
+          "id": "opt_lead_priest",
+          "have": 1,
+          "need": 1,
+          "active": true,
+          "lead": 1,
+          "value": 0.108,
+          "bonus": 0,
+          "stat": "hp_pct"
+        },
+        {
+          "id": "opt_bond_100",
+          "have": 100,
+          "need": 100,
+          "active": true,
+          "lead": 1,
+          "value": 0.1,
+          "bonus": 0,
+          "stat": "atk_pct"
+        }
+      ],
+      "allSeven": {
+        "flat": {
+          "atk_pct": 0.322,
+          "crit_damage": 0.36,
+          "hp_pct": 0.108
+        },
+        "dr": []
+      },
+      "firstSix": {
+        "flat": {
+          "atk_pct": 0.222,
+          "crit_damage": 0.36,
+          "hp_pct": 0.108
+        },
+        "dr": []
+      }
+    },
+    {
+      "ldr": 18,
+      "conditions": [
+        {
+          "id": "opt_march_atk",
+          "have": 1,
+          "need": 0,
+          "active": true,
+          "lead": 1.8,
+          "value": 0.09,
+          "bonus": 0.04,
+          "stat": "atk_pct"
+        },
+        {
+          "id": "opt_sin_trio",
+          "have": 3,
+          "need": 3,
+          "active": true,
+          "lead": 1.8,
+          "value": 0.648,
+          "bonus": 0.288,
+          "stat": "crit_damage"
+        },
+        {
+          "id": "opt_lead_ldr12",
+          "have": 18,
+          "need": 12,
+          "active": true,
+          "lead": 1,
+          "value": 0.072,
+          "bonus": 0,
+          "stat": "atk_pct"
+        },
+        {
+          "id": "opt_gear_no_pride",
+          "have": 0,
+          "need": 0,
+          "active": true,
+          "lead": 1.8,
+          "value": 0.1548,
+          "bonus": 0.0688,
+          "stat": "atk_pct"
+        },
+        {
+          "id": "opt_front_priest",
+          "have": 1,
+          "need": 1,
+          "active": true,
+          "lead": 1.8,
+          "value": 0.1548,
+          "bonus": 0.0688,
+          "stat": "atk_pct"
+        },
+        {
+          "id": "opt_lead_priest",
+          "have": 1,
+          "need": 1,
+          "active": true,
+          "lead": 1.8,
+          "value": 0.1944,
+          "bonus": 0.0864,
+          "stat": "hp_pct"
+        },
+        {
+          "id": "opt_bond_100",
+          "have": 100,
+          "need": 100,
+          "active": true,
+          "lead": 1.8,
+          "value": 0.18,
+          "bonus": 0.08,
+          "stat": "atk_pct"
+        }
+      ],
+      "allSeven": {
+        "flat": {
+          "atk_pct": 0.6516,
+          "crit_damage": 0.648,
+          "hp_pct": 0.1944
+        },
+        "dr": []
+      },
+      "firstSix": {
+        "flat": {
+          "atk_pct": 0.47159999999999996,
+          "crit_damage": 0.648,
+          "hp_pct": 0.1944
+        },
+        "dr": []
+      }
+    },
+    {
+      "ldr": 20,
+      "conditions": [
+        {
+          "id": "opt_march_atk",
+          "have": 1,
+          "need": 0,
+          "active": true,
+          "lead": 2,
+          "value": 0.1,
+          "bonus": 0.05,
+          "stat": "atk_pct"
+        },
+        {
+          "id": "opt_sin_trio",
+          "have": 3,
+          "need": 3,
+          "active": true,
+          "lead": 2,
+          "value": 0.72,
+          "bonus": 0.36,
+          "stat": "crit_damage"
+        },
+        {
+          "id": "opt_lead_ldr12",
+          "have": 20,
+          "need": 12,
+          "active": true,
+          "lead": 1,
+          "value": 0.072,
+          "bonus": 0,
+          "stat": "atk_pct"
+        },
+        {
+          "id": "opt_gear_no_pride",
+          "have": 0,
+          "need": 0,
+          "active": true,
+          "lead": 2,
+          "value": 0.172,
+          "bonus": 0.086,
+          "stat": "atk_pct"
+        },
+        {
+          "id": "opt_front_priest",
+          "have": 1,
+          "need": 1,
+          "active": true,
+          "lead": 2,
+          "value": 0.172,
+          "bonus": 0.086,
+          "stat": "atk_pct"
+        },
+        {
+          "id": "opt_lead_priest",
+          "have": 1,
+          "need": 1,
+          "active": true,
+          "lead": 2,
+          "value": 0.216,
+          "bonus": 0.108,
+          "stat": "hp_pct"
+        },
+        {
+          "id": "opt_bond_100",
+          "have": 100,
+          "need": 100,
+          "active": true,
+          "lead": 2,
+          "value": 0.2,
+          "bonus": 0.1,
+          "stat": "atk_pct"
+        }
+      ],
+      "allSeven": {
+        "flat": {
+          "atk_pct": 0.716,
+          "crit_damage": 0.72,
+          "hp_pct": 0.216
+        },
+        "dr": []
+      },
+      "firstSix": {
+        "flat": {
+          "atk_pct": 0.516,
+          "crit_damage": 0.72,
+          "hp_pct": 0.216
+        },
+        "dr": []
+      }
+    }
+  ],
+  "rerollCheck": {
+    "draws": 100000,
+    "sameFamily": 0,
+    "rare": 5121
+  },
+  "sourceHashes": {
+    "src/game_logic/tactic.js": "9f6e5d1317a495a745983c8ba673c0e85bb30d5edeb39a40b2aa0f48ef5f3a58",
+    "src/game_logic/state.js": "92ed61e5d9d53736eef82add1026efd15836ade7fc404ac0424033293d4052c3",
+    "src/game_logic/hero.js": "b9fccfbd041662898b1893d364e207a89634f278ac9aafdb7dfb1b4f136cf62d",
+    "src/data/tactic_slot.csv": "b60616d00c309d6b1cb9bfc2e8fb27f7e323d5c23012e57d3c76c9dfee224723",
+    "src/data/tactic_condition.csv": "0f916316cecec95067030a27fe040715b65e0e341ca26badc23aaa59df2512e6",
+    "src/data/tactic_option.csv": "383f4b1e8e67db85f58c7cf12c47531602813c742010388bdcea107812c2b5b9",
+    "src/data/tactic_score.csv": "bd7a99551501ece81e37f931a7db350f4b033ec156e459b53fe6336aa01963f0",
+    "src/data/balance.csv": "f2a197683ac4fb02894bdc3251c36e9f4c2331306ec4ccce4cb8805f78d6aea1",
+    "src/data/building_rank.csv": "26da6ae5388c3b0350879137533acb013a755769c2c9bfb743d981e2ee398d96",
+    "src/data/building_effect.csv": "cf3af5ee18232df17cab68a6f27a2e15c9c128e5a7293663b63bd800198b518a",
+    "src/data/class.csv": "655ca86a3d368cad5aad94f9d019bae139d6a844858706a6c8cc3166830bcdbd"
+  },
+  "browserErrors": [],
+  "rerollDistributions": [
+    {
+      "families": 2,
+      "rareProbability": 0.05,
+      "expectedRollsAbsent": 39.0,
+      "expectedRollsPresentNonrare": 40.0,
+      "quantilesAbsent": {
+        "0.5": 27,
+        "0.9": 89,
+        "0.95": 117
+      }
+    },
+    {
+      "families": 3,
+      "rareProbability": 0.05,
+      "expectedRollsAbsent": 59.0,
+      "expectedRollsPresentNonrare": 60.0,
+      "quantilesAbsent": {
+        "0.5": 41,
+        "0.9": 136,
+        "0.95": 176
+      }
+    },
+    {
+      "families": 4,
+      "rareProbability": 0.05,
+      "expectedRollsAbsent": 79.0,
+      "expectedRollsPresentNonrare": 80.0,
+      "quantilesAbsent": {
+        "0.5": 55,
+        "0.9": 182,
+        "0.95": 236
+      }
+    },
+    {
+      "families": 5,
+      "rareProbability": 0.05,
+      "expectedRollsAbsent": 99.0,
+      "expectedRollsPresentNonrare": 100.0,
+      "quantilesAbsent": {
+        "0.5": 69,
+        "0.9": 228,
+        "0.95": 296
+      }
+    },
+    {
+      "families": 6,
+      "rareProbability": 0.05,
+      "expectedRollsAbsent": 119.0,
+      "expectedRollsPresentNonrare": 120.0,
+      "quantilesAbsent": {
+        "0.5": 83,
+        "0.9": 274,
+        "0.95": 356
+      }
+    },
+    {
+      "families": 8,
+      "rareProbability": 0.05,
+      "expectedRollsAbsent": 159.0,
+      "expectedRollsPresentNonrare": 160.0,
+      "quantilesAbsent": {
+        "0.5": 110,
+        "0.9": 366,
+        "0.95": 476
+      }
+    }
+  ],
+  "lockCosts": {
+    "0": 600,
+    "1": 1200,
+    "2": 2400,
+    "3": 4800,
+    "4": 9600,
+    "5": 19200,
+    "6": 38400
+  },
+  "formulaExamples": {
+    "cdr60Plus4FrequencyGain": 0.11111111111111116,
+    "cdr80Plus4FrequencyGain": 0.24999999999999956,
+    "res60Plus3EhpGain": 0.08108108108108114,
+    "res70Plus3EhpGain": 0.11111111111111116,
+    "atk100Plus10RelativeGain": 0.050000000000000044,
+    "defense200Plus20EhpGain": 0.050000000000000044
+  }
+}

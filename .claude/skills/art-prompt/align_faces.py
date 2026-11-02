@@ -58,7 +58,7 @@ SPEC = {
  'orc_spiked_helm_skull_pauldron_elite': ('orc_troop_3_el', (0, 0, 1013, 1013),       329.7, 241.9, 1.057, '2101_elite', 71, 31),
  'orc_hood_browplate_elite'            : ('orc_troop_3_el', (1035, 0, 2048, 1013),    326.4, 234.2, 1.002, '2102_elite', 71, 31),
  'orc_bald_elder_beast_skull_elite'    : ('orc_troop_3_el', (0, 1035, 1013, 2048),    319.0, 186.8, 0.982, '2103_elite', 71, 31),
- 'orc_scaled_spiked'       : ('orc_boss',  (0, 0, 1014, 1014),   323, 207, 1.30, 2150,   0,   0),
+ 'orc_scaled_spiked'       : ('orc_boss',  (0, 0, 1014, 1014),   323, 207, 1.066, 2150,  88,  10),   # 11-01 — 트롤 전사(4101)에 맞춤(머리 폭 290 → 238 · 눈높이 225)
  'skeleton_cracked_helm_el': ('skel3',    (522, 0, 1024, 502),  310, 240, 0.95, '3201_elite', 48, 31),  # 정예 전용 — monster.csv:face_elite
  'skeleton_bloodied_quiver': ('skel_el',  (1035, 0, 2048, 1013), 312.5, 255.1, 1.024, '3202_elite', 43, 38),  # 정예 — 3202 에 맞춤
  'skeleton_bloodied_greathelm': ('skel_el', (0, 1035, 1013, 2048), 317.0, 255.1, 1.004, '3203_elite', 50, 30),  # 정예 — 3203 에 맞춤

@@ -191,7 +191,7 @@ const STRINGS = {
     'hint.forge_synth': { ko: '같은 종류의 아래 단계 재료를 써서 위 단계 재료를 만듭니다. 합성에 쓴 재료는 소모됩니다.', en: 'Combine lower-tier materials into a higher tier of the same material. Combining consumes the input materials.' },
     'hint.forge_craft': { ko: '크래프트는 준비 중입니다. 현재는 제작·강화·합성을 이용할 수 있습니다.', en: 'Craft is in development. Smithing, upgrading and combining are currently available.' },
     'hint.potion_stock': { ko: '현재 가진 물약의 종류와 개수입니다. 편성 탭에서 Party의 물약 칸에 넣을 수 있습니다.', en: 'Potion types and quantities currently in stock. Configure each Party’s potion belt in Party.' },
-    'hint.trade': { ko: '교역 기능은 준비 중입니다. 현재 판매 중인 상품은 상단에서 확인할 수 있습니다.', en: 'Trading is in development. Browse currently available goods in the shop.' },
+    'hint.trade': { ko: '받을 최하급 재료를 선택한 뒤 다른 재료 또는 골드로 구매합니다. 지불 수단별 가격과 보유량을 확인할 수 있습니다.', en: 'Choose a lowest-grade material to receive, then buy it with another material or gold. Each payment option shows its cost and available stock.' },
     'hint.special': { ko: '특수 상단 기능은 준비 중입니다.', en: 'The special trader is in development.' },
     'hint.help': { ko: '폴더를 고르거나 궁금한 말을 검색해 조작법과 게임 규칙을 찾아봅니다.', en: 'Choose a folder or search a term to find controls and game rules.' },
     'hint.codex': { ko: '몬스터·아이템·스킬 자료를 살펴봅니다. 각 항목에 마우스를 올리면 자세한 정보를 볼 수 있습니다.', en: 'Browse monster, item and skill references. Hover entries for more information.' },
@@ -364,6 +364,7 @@ const STRINGS = {
     'exp.departRespawn': { ko: '보스가 아직 돌아오지 않음', en: 'The boss has not returned yet' },   // 챕터보스 재등장 대기 (R240 · ADR-0590)
     // 출정 확인 창의 문장 — 문구는 사용자 지시 그대로다 (SCREEN_DESIGN §4-1 · ADR-0467)
     'exp.departBusy': { ko: '파티 내에 다른 행동을 실행중인 영웅이 있습니다. 그래도 출격할까요?', en: 'A hero in this party is busy with another task. Deploy anyway?' },
+    'exp.departLevelGap': { ko: '파티 평균 Lv.{avg} · 전장 Lv.{level} — 레벨 차이 {gap}. 그래도 출격할까요?', en: 'Party average Lv.{avg}, battlefield Lv.{level}: a gap of {gap}. Deploy anyway?' },   // 출정 확인 창 (R418 · ADR-1025)
     'exp.departCut': { ko: '이 파티는 지금 원정 중입니다. 진행 중인 원정을 접고 새로 출격할까요?', en: 'This party is on an expedition. End the current run and deploy anew?' },
     'exp.locked': { ko: '이전 스테이지 클리어', en: 'Clear the previous stage', lock: true },
     // 잠긴 장의 한 줄 — 그 장을 여는 앞 장 보스 (SCREEN_DESIGN §4-1 · §8-4 · ADR-0719 · R319). {ch} = 보스 칸의 장(`game.chapterGate`)
@@ -397,9 +398,9 @@ const STRINGS = {
     },
     'exp.repeat.sub': {
         ko: '원정은 <b>멈추지 않습니다</b> — 런이 끝나면 곧 다음 런이 나가고, 멈추는 길은 <b>철수</b>와 <b>게임 끄기</b> 둘뿐입니다 · <b>게임이 켜져 있는 동안만</b> 돕니다<br>'
-            + '이기면 다음 칸 · 지면(전원 전투불능 · 제한시간 초과) 같은 칸을 다시 돕니다 · <b>반복을 켜면</b> 그 장소의 칸 I → II → III → I 을 돌고, <b>끄면</b> 순서의 다음 칸으로 나아갑니다(다음 칸이 잠겼으면 같은 칸 · 다음 난이도를 여는 보스를 이기면 다음 난이도의 1-1) · 칸마다 새 런이라 전원 회복한 채 나갑니다',
+            + '이기면 다음 칸 · 지면(전원 전투불능 · 제한시간 초과) 같은 칸을 다시 돕니다 · 챕터보스에게 지면 바로 앞 칸으로 돌아갑니다 · <b>반복을 켜면</b> 그 장소의 칸 I → II → III → I 을 돌고, <b>끄면</b> 순서의 다음 칸으로 나아갑니다(다음 칸이 잠겼으면 같은 칸 · 다음 난이도를 여는 보스를 이기면 다음 난이도의 1-1) · 칸마다 새 런이라 전원 회복한 채 나갑니다',
         en: 'Expeditions <b>never stop on their own</b> — when a run ends the next one heads out shortly; only <b>Retreat</b> or <b>closing the game</b> stops them · they run <b>only while the game is open</b><br>'
-            + 'A win moves on to the next stage · a loss (whole party downed · timed out) runs the same stage again · <b>with repeat on</b> the party loops through the area\'s stages I → II → III → I; <b>with it off</b> it moves on to the next stage in order (the same stage again if the next is locked · beating the boss that unlocks the next difficulty moves on to that difficulty\'s 1-1) · every stage is a new run, so everyone heads out recovered',
+            + 'A win moves on to the next stage · a loss (whole party downed · timed out) runs the same stage again · a loss to a chapter boss goes back to the previous stage · <b>with repeat on</b> the party loops through the area\'s stages I → II → III → I; <b>with it off</b> it moves on to the next stage in order (the same stage again if the next is locked · beating the boss that unlocks the next difficulty moves on to that difficulty\'s 1-1) · every stage is a new run, so everyone heads out recovered',
     },
     'exp.notice.runClosed.h': { ko: '부재 중', en: 'While you were away' },
     'exp.notice.runClosed.body': {
@@ -471,7 +472,7 @@ const STRINGS = {
     'tutorial.loot.title': { ko: '장비 비교', en: 'Compare your gear' },
     'tutorial.loot.detail': { ko: '장비에 마우스를 올리면 선택한 영웅의 착용품과 비교합니다. 마음에 드는 장비를 클릭하면 장착합니다.', en: 'Hover over gear to compare it with the selected hero’s equipment. Click an item when you want to equip it.' },
     'tutorial.lootTouch.detail': { ko: '장비를 길게 눌러 선택한 영웅의 착용품과 비교하세요. 상세 정보의 [착용]으로 교체할 수 있습니다.', en: 'Touch and hold gear to compare it with the selected hero’s equipment. Use [Equip] in its details to replace the worn item.' },
-    'tutorial.mastery.title': { ko: '마스터리 배분', en: 'Spend mastery points' },
+    'tutorial.mastery.title': { ko: '마스터리 배분', en: 'Spend skill points' },
     'tutorial.mastery.detail': { ko: '레벨업으로 받은 포인트로 영웅을 강화하세요. 마스터리 창에서 배분하며, 초기화는 무료입니다.', en: 'Use points earned from leveling up to strengthen your hero. Open mastery to spend them; resetting is free.' },
     'tutorial.masteryTree.detail': { ko: '배울 수 있는 칸을 누르면 포인트를 사용해 강화합니다. 초기화하면 사용한 포인트를 무료로 돌려받습니다.', en: 'Click an available node to spend a point and improve your hero. Resetting returns all spent points for free.' },
     'tutorial.potions.title': { ko: '물약과 재고', en: 'Potions and stock' },
@@ -479,6 +480,13 @@ const STRINGS = {
     'tutorial.potionsShop.detail': { ko: '물약은 설정한 체력 기준에 따라 자동으로 사용하며, 마실 때마다 재고가 줄어듭니다. 부족한 물약은 상점에서 구매할 수 있습니다.', en: 'Potions are used automatically at the set health threshold, consuming stock with each drink. Buy more at the Shop when stocks run low.' },
     'tutorial.construction.title': { ko: '건설과 해금', en: 'Build to unlock features' },
     'tutorial.construction.detail': { ko: '건물의 조건과 비용을 확인해 건설하세요. 다음 랭크에서 열리는 기능과 효과도 이곳에서 확인할 수 있습니다.', en: 'Check a building’s requirements and cost before building. This panel also shows the features and effects its next rank unlocks.' },
+    'tutorial.laboratory.title': { ko: '연구소 둘러보기', en: 'Your laboratory' },
+    'tutorial.laboratory.detail': { ko: '연구소에서는 시간에 따라 재료·골드·경험치·도안을 얻거나 영웅을 수색합니다. 줄 이름을 누르면 생산과 등록 효과를, 오른쪽 지점 그림을 누르면 연구를 봅니다. 잠긴 줄은 표시된 건물을 건설하거나 랭크를 올려 여세요.', en: 'Laboratory lines produce materials, gold, XP or blueprints, or search for heroes over time. Click a line name for its output and hero effects, or a node to research it. Build or upgrade the building shown on a locked line to open it.' },
+    'tutorial.labRegistration.title': { ko: '연구소 영웅 등록', en: 'Assign laboratory heroes' },
+    'tutorial.labRegistration.detail': { ko: '강조된 [+]나 영웅 얼굴을 눌러 등록 창을 여세요. 등록한 영웅의 능력치가 이 줄의 생산·연구 효과를 더합니다. 원정과 겸직할 수 있고, 한 영웅은 한 줄에만 등록됩니다.', en: 'Click the highlighted [+] or hero portrait to assign heroes. Their stats improve that line’s production and research. Heroes can still go on expeditions; each hero can be assigned to one laboratory line at a time.' },
+    'tutorial.labRegistrationPick.detail': { ko: '영웅을 누르면 이 줄에 등록해 능력치에 따른 효과를 더합니다. 다른 줄의 영웅은 이곳으로 옮겨지고, 이 줄의 영웅을 다시 누르면 등록을 해제합니다. 등록해도 원정에 함께 참여할 수 있습니다.', en: 'Click a hero to assign them and add their stat effects to this line. Heroes assigned elsewhere move here; click a hero already on this line to unassign them. Assigned heroes can still join expeditions.' },
+    'tutorial.labResearch.title': { ko: '지점 연구하기', en: 'Research a node' },
+    'tutorial.labResearch.detail': { ko: '다음 레벨의 효과·비용·시간을 확인하고 [연구]를 누르세요. 연구소 전체에서 한 번에 하나만 진행하며, 시간이 지나면 자동으로 완료됩니다. [그만두기]를 누르면 낸 비용을 전부 돌려받습니다.', en: 'Check the next level’s effect, cost and duration, then press [Research]. The laboratory runs one research project at a time and completes it automatically. [Cancel] refunds the full cost.' },
     'nt.next': { ko: '다음 할 일', en: 'Next step' },
     'nt.empty': { ko: '대기 중인 알림 없음', en: 'No pending tasks' },
     'nt.shortcut': { ko: '바로가기', en: 'Go to' },
@@ -487,7 +495,7 @@ const STRINGS = {
     'nt.kind.commission': { ko: '의뢰 목표 달성 · 보상 수령 가능', en: 'Commission goal met · Reward ready' },
     'nt.kind.explore': { ko: '탐험 완료 · 결과 수령 가능', en: 'Exploration complete · Results ready' },
     'nt.kind.join': { ko: '가입 희망 영웅 도착', en: 'Hero awaiting recruitment' },
-    'nt.kind.mastery': { ko: '마스터리 포인트 사용 가능', en: 'Mastery points available' },
+    'nt.kind.mastery': { ko: '스킬 포인트 사용 가능', en: 'Skill points available' },
     'nt.mastery.detail': { ko: '{hero} · Lv.{level} · 사용 가능 {n}포인트', en: { one: '{hero} · Lv.{level} · {n} point available', other: '{hero} · Lv.{level} · {n} points available' } },
     'nt.guide.firstExpedition': { ko: '첫 원정 출발', en: 'Start your first expedition' },
     'nt.guide.buildShop': { ko: '상단을 건설하세요', en: 'Build the Trading House' },
@@ -611,9 +619,9 @@ const STRINGS = {
     'tv.kept': { ko: '{name} 보관 — 수색 칸', en: 'Kept {name} in Search' },
     'tv.empty.kept': { ko: '보관함 — 다음 교체 때 채워짐', en: 'Kept — refills on next refresh' },
     'tv.err.joinFull': { ko: '수색 칸 가득 참 ({n})', en: 'Search full ({n})' },
-    'tv.reroll': { ko: '교체하기 ({g} 골드)', en: 'Refresh ({g} gold)' },
-    'tv.reroll.wait': { ko: '무료까지 {t}', en: 'Free in {t}' },
+    'tv.reroll.wait': { ko: '교체까지 {t}', en: 'Refresh in {t}' },
     'tv.reroll.free': { ko: '후보 교체 (무료)', en: 'New candidates (free)' },
+    'tv.err.cooldown': { ko: '후보 교체 대기 중', en: 'Candidate refresh is on cooldown' },
     'tv.empty': { ko: '고용함 — 다음 교체 때 채워짐', en: 'Hired — refills on next refresh' },
     'tv.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
     'tv.err.roster': { ko: '영웅 로스터 가득 참 ({cap})', en: 'Hero roster full ({cap})' },
@@ -648,13 +656,14 @@ const STRINGS = {
        갈 칸이 바뀌면 「다음 칸」 · 같은 칸이면 「다시」. ~~bt.retry · bt.nextStage · bt.nextRun~~ 은 같은 날 삭제 — 두 버튼을 걷었다 */
     'bt.nextCell': { ko: '{s}초 뒤 다음 칸 — {name}', en: 'Next stage in {s}s — {name}' },
     'bt.again': { ko: '{s}초 뒤 다시 — {name}', en: 'Again in {s}s — {name}' },
+    'bt.backCell': { ko: '{s}초 뒤 앞 칸으로 — {name}', en: 'Back a stage in {s}s — {name}' },   // 챕터보스에게 졌다 — 다음 런이 바로 앞 칸이다 (ADR-1022)
     'bt.respawnWait': { ko: '보스 재등장까지 {s}초 — {name}', en: 'Boss returns in {s}s — {name}' },   // 챕터보스 재등장 대기 (R240 · ADR-0590)
     // 신단 (SCREEN_DESIGN §4-2 「신단」 · ADR-0445) — 효과 줄은 `shrine.csv` 의 능력치마다 한 키 · {v} = %
     'bt.shrineGot': { ko: '신단 획득', en: 'Shrine blessing' },
     'bt.shrineKeep': { ko: '신단 유지', en: 'Shrine kept' },
     // 결과 띠의 [건너뛰기] — 세기를 걷고 다음 런을 곧바로 보낸다 (SCREEN_DESIGN §4-2 · ADR-0453)
     'bt.skipWait': { ko: '건너뛰기', en: 'Skip' },
-    'bt.skipRetry': { ko: '재도전', en: 'Retry' },   // 같은 버튼의 진 런 글자 — 졌으면 다음 런이 같은 칸이다 (ADR-0698)
+    'bt.skipRetry': { ko: '재도전', en: 'Retry' },   // 같은 버튼의 진 런 글자 — 다음 런이 같은 칸일 때 (ADR-0698 · ADR-1022)
     'rep.shrine': { ko: '신단', en: 'Shrine' },
     // 처음 깬 런의 요약 칸 — 상자가 어디로 갔나 (SCREEN_DESIGN §4-3 · ADR-0731)
     'rep.clearBox': { ko: '클리어 보상', en: 'Clear Reward' },
@@ -741,7 +750,7 @@ const STRINGS = {
     'ar.bad.level': { ko: '레벨이 범위를 벗어남', en: 'Level is out of range' },
     'ar.bad.stats': { ko: '기본 능력치가 상한을 넘음', en: 'Base attributes exceed the cap' },
     'ar.bad.mastery': { ko: '찍을 수 없는 마스터리가 있음', en: 'Contains mastery that cannot be learned' },
-    'ar.bad.masteryPoints': { ko: '마스터리 포인트를 레벨보다 많이 씀', en: 'Spent more mastery points than the level gives' },
+    'ar.bad.masteryPoints': { ko: '마스터리·전직에 레벨이 준 스킬 포인트보다 많이 씀', en: 'Mastery and advancement exceed the skill-point budget' },
     'ar.bad.innate': { ko: '고유 스킬이 그 직업의 것이 아님', en: 'The innate skill does not belong to the class' },
     'ar.bad.book': { ko: '배울 수 없는 책 스킬', en: 'The book skill cannot be learned' },
     'ar.bad.skillLv': { ko: '스킬 업그레이드가 상한을 넘음', en: 'Skill upgrades exceed the cap' },
@@ -940,15 +949,22 @@ const STRINGS = {
 
     /* 상점 (SCREEN_DESIGN §8-3) — 구매 · 판매 패널이 나란히 선다. 상단은 탭 없이 장비 목록 하나(2026-09-30),
        오른쪽 특수상단 카드. 남은 시간은 **정보**다 — 재촉하는 말을 안 쓴다 (base_expedition_design §2-6) */
-    // 상단 목록 교체 — 고른 영웅의 레벨로 다시 굴린다 · 무료는 선술집처럼 쿨다운 · 유료는 두 배씩 (§8-3 · game.shopReroll · ADR-0648)
+    // 상단 목록 무료 교체 — 고른 영웅의 레벨로 다시 굴린다 · 쿨다운 동안 비활성 (§8-3 · ADR-1016)
     //   버튼은 행동과 값만 · 고른 영웅의 이름({name}) · 레벨({lv})은 버튼 왼쪽 따로 선 글자 (ADR-0965)
-    'td.reroll': { ko: '교체 ({g} 골드)', en: 'Refresh ({g} gold)' },
     'td.reroll.free': { ko: '교체 (무료)', en: 'Refresh (free)' },
+    'td.err.cooldown': { ko: '목록 교체 대기 중', en: 'Stock refresh is on cooldown' },
     'td.reroll.who': { ko: '{name} Lv {lv} 적용', en: 'For {name} Lv {lv}' },
     // 상단 제목 옆 `?` — 올리면 뜨는 두 문장 · {h} = [balance.csv:shop_refresh_hours] (ADR-0464 · ADR-0648)
-    'td.reroll.help': { ko: '교체하면 고른 영웅 레벨에 맞춰 다시 들어옵니다. 무료 교체 뒤 {h}시간이 지나면 다시 무료.', en: 'A refresh restocks at the selected hero\'s level. After a free refresh, it is free again in {h} hours.' },
+    'td.reroll.help': { ko: '교체하면 고른 영웅 레벨에 맞춰 다시 들어옵니다. 교체는 무료이며 {h}시간마다 가능합니다.', en: 'A refresh restocks at the selected hero\'s level. Refreshing is free and available every {h} hours.' },
     'td.special': { ko: '특수상단', en: 'Visiting trader' },
     'td.trade': { ko: '교역소', en: 'Trading Post' },
+    'td.trade.cost': { ko: '필요 {cost} · 보유 {have}', en: 'Cost {cost} · Owned {have}' },
+    'td.trade.buy': { ko: '{pay}(으)로 {name} 구매', en: 'Buy {name} with {pay}' },
+    'td.trade.bought': { ko: '{name} ×{n} 구매 (−{pay} ×{cost})', en: 'Bought {name} ×{n} (−{pay} ×{cost})' },
+    'td.trade.boughtGold': { ko: '{name} ×{n} 구매 (−{cost} G)', en: 'Bought {name} ×{n} (−{cost} G)' },
+    'td.trade.err.materials': { ko: '지불할 재료 부족', en: 'Not enough payment materials' },
+    'td.trade.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
+    'td.trade.err.missing': { ko: '교환할 재료를 다시 선택하세요.', en: 'Select the trading materials again.' },
     'td.leave': { ko: '떠나기까지 {t}', en: 'Leaves in {t}' },
     'td.next': { ko: '다음 상인까지 {t}', en: 'Next trader in {t}' },
     'td.buy': { ko: '구매', en: 'Buy' },
@@ -1129,8 +1145,8 @@ const STRINGS = {
         en: "Automatic progress and repeat",
     },
     'help.expedition.repeat.body': {
-        ko: "원정은 게임이 켜져 있는 동안 계속 이어집니다. 승리하면 다음 스테이지로 전진하고, 패배하면 같은 스테이지에 다시 도전합니다. [반복 원정]을 켜면 다른 장소로 넘어가지 않고 현재 장소의 I·II·III을 순환합니다. 다음 출발까지 기본 {restart}초를 기다리며, 관전 중 [건너뛰기]로 대기를 줄일 수 있습니다.<br><br>반복을 끄고 현재 난이도의 마지막 챕터보스를 이기면 다음 난이도가 있을 때 그 첫 스테이지로 이어집니다. 원정을 멈추려면 [철수]합니다.",
-        en: "Expeditions continue while the game is open. A win advances to the next stage; a defeat retries the same stage. Turn on [Auto-repeat] to cycle through stages I, II and III of the current area instead of moving to another area. The next departure normally waits {restart} seconds; [Skip] in spectate shortens that wait.<br><br>With Auto-repeat off, beating the final chapter boss continues from the first stage of the next difficulty, if one exists. Press [Retreat] to stop.",
+        ko: "원정은 게임이 켜져 있는 동안 계속 이어집니다. 승리하면 다음 스테이지로 전진하고, 패배하면 같은 스테이지에 다시 도전합니다. 챕터보스에게 패배하면 바로 앞 스테이지로 돌아가고(반복 원정도 꺼집니다), 그 스테이지를 이기면 다시 챕터보스로 갑니다. [반복 원정]을 켜면 다른 장소로 넘어가지 않고 현재 장소의 I·II·III을 순환합니다. 다음 출발까지 기본 {restart}초를 기다리며, 관전 중 [건너뛰기]로 대기를 줄일 수 있습니다.<br><br>반복을 끄고 현재 난이도의 마지막 챕터보스를 이기면 다음 난이도가 있을 때 그 첫 스테이지로 이어집니다. 원정을 멈추려면 [철수]합니다.",
+        en: "Expeditions continue while the game is open. A win advances to the next stage; a defeat retries the same stage. A defeat by a chapter boss goes back to the previous stage (and turns off Auto-repeat); winning there heads back to the boss. Turn on [Auto-repeat] to cycle through stages I, II and III of the current area instead of moving to another area. The next departure normally waits {restart} seconds; [Skip] in spectate shortens that wait.<br><br>With Auto-repeat off, beating the final chapter boss continues from the first stage of the next difficulty, if one exists. Press [Retreat] to stop.",
     },
     'help.expedition.farming.title': {
         ko: "전진할 때와 반복할 때",
@@ -1305,16 +1321,16 @@ const STRINGS = {
         en: "Party tactics and rerolls",
     },
     'help.party.tactics.body': {
-        ko: "파티 전술은 조건을 만족한 칸의 효과가 파티에 적용되는 기능입니다. 조건 아래의 현재 수치를 보고 어떤 영웅·장비·진형을 맞춰야 할지 확인합니다. 지휘 천막의 랭크를 올리면 더 많은 전술 칸이 열립니다. [리롤]은 열린 칸의 조건·효과를 골드로 다시 뽑습니다.<br><br>남기고 싶은 칸은 자물쇠로 잠그면 리롤되지 않으며, 잠금은 언제든 무료로 풀 수 있습니다. 전술 내용과 잠금은 편성마다 따로 저장됩니다. 잠근 칸이 많을수록 나머지 칸의 리롤 비용이 올라갑니다.",
-        en: "A party tactic applies its effect when that slot's condition is met. Use the current values shown with the condition to choose heroes, gear or formation. Higher Command Tent ranks unlock more tactic slots. [Reroll] spends gold to reroll conditions and effects in unlocked slots. Lock a slot to keep it during rerolls; locking and unlocking are free.<br><br>Tactics and locks are stored separately for each preset. Locking more slots raises the cost of rerolling the remaining ones.",
+        ko: "파티 전술은 조건을 만족한 칸의 효과가 파티에 적용되는 기능입니다. 조건 아래의 현재 수치를 보고 어떤 영웅을 맞춰야 할지 확인합니다. 지휘 천막의 랭크를 올리면 더 많은 전술 칸이 열립니다. [리롤]은 열린 칸의 조건·효과를 골드로 다시 뽑습니다.<br><br>남기고 싶은 칸은 자물쇠로 잠그면 리롤되지 않으며, 잠금은 언제든 무료로 풀 수 있습니다. 전술 내용과 잠금은 편성마다 따로 저장됩니다. 잠근 칸이 많을수록 나머지 칸의 리롤 비용이 올라갑니다.",
+        en: "A party tactic applies its effect when that slot's condition is met. Use the current values shown with the condition to choose heroes. Higher Command Tent ranks unlock more tactic slots. [Reroll] spends gold to reroll conditions and effects in unlocked slots. Lock a slot to keep it during rerolls; locking and unlocking are free.<br><br>Tactics and locks are stored separately for each preset. Locking more slots raises the cost of rerolling the remaining ones.",
     },
     'help.party.tactic_choices.title': {
         ko: "전술 조건을 맞추는 이유",
         en: "Making tactic conditions work",
     },
     'help.party.tactic_choices.body': {
-        ko: "전술은 좋은 효과가 나왔다는 것만으로 적용되지 않습니다. 현재 편성으로 조건을 만족하는지 먼저 봅니다. 예를 들어 영웅의 죄종을 요구하는 전술과 장비의 죄종을 요구하는 전술은 맞추는 대상이 다릅니다. 효과를 지키기 위해 편성을 바꿀지, 지금 파티에 맞는 전술을 다시 뽑을지 선택합니다.<br><br>리롤은 열린 칸 중 잠그지 않은 칸을 한꺼번에 바꾸며, 잠금을 많이 유지할수록 비싸집니다. 한 칸만 완벽하게 맞추려다 골드를 많이 쓰기 전에, 지금 켜져 있는 효과와 건설·강화 등에 필요한 비용도 함께 살펴봅니다. 전술은 전투 중 수동으로 발동하는 버튼이 아닙니다.",
-        en: "A promising tactic does nothing unless its condition is met by the current preset. A condition about heroes' Sins and one about equipment Sins ask for different things. Decide whether to change the party to keep an effect or reroll for a tactic that fits the party you have.<br><br>A reroll replaces every open, unlocked slot at once, and keeping more locks makes it more expensive. Before spending heavily to perfect one slot, consider the effects already active and the gold needed for buildings or upgrades. Tactics are not buttons you activate manually during combat.",
+        ko: "전술은 좋은 효과가 나왔다는 것만으로 적용되지 않습니다. 현재 편성으로 조건을 만족하는지 먼저 봅니다. 예를 들어 영웅의 죄종을 요구하는 전술과 능력치 합을 요구하는 전술은 맞추는 대상이 다릅니다. 효과를 지키기 위해 편성을 바꿀지, 지금 파티에 맞는 전술을 다시 뽑을지 선택합니다.<br><br>리롤은 열린 칸 중 잠그지 않은 칸을 한꺼번에 바꾸며, 잠금을 많이 유지할수록 비싸집니다. 한 칸만 완벽하게 맞추려다 골드를 많이 쓰기 전에, 지금 켜져 있는 효과와 건설·강화 등에 필요한 비용도 함께 살펴봅니다. 전술은 전투 중 수동으로 발동하는 버튼이 아닙니다.",
+        en: "A promising tactic does nothing unless its condition is met by the current preset. A condition about heroes' Sins and one about an Attribute total ask for different things. Decide whether to change the party to keep an effect or reroll for a tactic that fits the party you have.<br><br>A reroll replaces every open, unlocked slot at once, and keeping more locks makes it more expensive. Before spending heavily to perfect one slot, consider the effects already active and the gold needed for buildings or upgrades. Tactics are not buttons you activate manually during combat.",
     },
     'help.party.changes.title': {
         ko: "원정 중 편성을 바꿨다면",
@@ -1345,16 +1361,16 @@ const STRINGS = {
         en: "Hero levels and item levels",
     },
     'help.character.growth.body': {
-        ko: "영웅 레벨이 오르면 최대 HP가 늘고 마스터리 포인트를 받습니다. 스킬북·높은 마스터리 층·전직에는 레벨 조건도 있습니다. 기본 능력치 일곱 개나 무기의 공격력이 레벨업만으로 함께 오르는 것은 아닙니다. 기본 공격과 많은 스킬의 바탕 공격력은 장비에서 가져옵니다.<br><br>아이템 그림의 Lv는 그 장비의 아이템 레벨이며, 선택한 영웅의 레벨과 다른 값입니다. 착용하려면 장비의 요구 레벨을 만족해야 합니다. 같은 아이템 레벨이라도 희귀도·베이스·옵션·강화 단계에 따라 쓰임과 세기가 달라지므로 Lv 숫자만으로 교체하지 않습니다. 스킬 그림의 Lv는 또 다른 값으로, 그 스킬의 성장 단계를 뜻합니다.<br><br>원정 경험치는 라운드를 이긴 순간 살아 있는 영웅에게 들어갑니다. 쓰러진 채로는 그 라운드의 경험치를 받지 못하고, 자신보다 낮은 레벨의 적에게서는 경험치가 줄어듭니다. 영웅 레벨 상한은 {levelCap}이며, 상한 뒤에는 장비·스킬·마스터리 배분과 파티 조합을 더 다듬습니다.",
-        en: "Hero levels raise maximum HP and grant mastery points. Skill books, higher mastery tiers and advancement also have level requirements. Leveling alone does not raise the seven attributes or your weapon's attack. Gear supplies the base attack used by basic attacks and many skills.<br><br>Lv on an item icon is that item's level, separate from the selected hero's level. The hero must meet its level requirement to equip it. Even at the same item level, rarity, base type, options and upgrade level change its value. Do not replace gear using the Lv number alone. Lv on a skill icon is another value: that skill's growth level.<br><br>Expedition XP goes to heroes alive when a round is won. Fallen heroes miss that round's XP, and enemies below a hero's level give less XP. The hero level cap is {levelCap}. Beyond it, improve gear, skills, mastery choices and party combinations.",
+        ko: "영웅 레벨이 오르면 최대 HP가 늘고 공용 스킬 포인트를 받습니다. 스킬북·높은 마스터리 층·전직에는 레벨 조건도 있습니다. 기본 능력치 일곱 개나 무기의 공격력이 레벨업만으로 함께 오르는 것은 아닙니다. 기본 공격과 많은 스킬의 바탕 공격력은 장비에서 가져옵니다.<br><br>아이템 그림의 Lv는 그 장비의 아이템 레벨이며, 선택한 영웅의 레벨과 다른 값입니다. 착용하려면 장비의 요구 레벨을 만족해야 합니다. 같은 아이템 레벨이라도 희귀도·베이스·옵션·강화 단계에 따라 쓰임과 세기가 달라지므로 Lv 숫자만으로 교체하지 않습니다. 스킬 그림의 Lv는 또 다른 값으로, 그 스킬의 성장 단계를 뜻합니다.<br><br>원정 경험치는 라운드를 이긴 순간 살아 있는 영웅에게 들어갑니다. 쓰러진 채로는 그 라운드의 경험치를 받지 못하고, 자신보다 낮은 레벨의 적에게서는 경험치가 줄어듭니다. 영웅 레벨 상한은 {levelCap}이며, 상한 뒤에는 장비·스킬·마스터리 배분과 파티 조합을 더 다듬습니다.",
+        en: "Hero levels raise maximum HP and grant shared skill points. Skill books, higher mastery tiers and advancement also have level requirements. Leveling alone does not raise the seven attributes or your weapon's attack. Gear supplies the base attack used by basic attacks and many skills.<br><br>Lv on an item icon is that item's level, separate from the selected hero's level. The hero must meet its level requirement to equip it. Even at the same item level, rarity, base type, options and upgrade level change its value. Do not replace gear using the Lv number alone. Lv on a skill icon is another value: that skill's growth level.<br><br>Expedition XP goes to heroes alive when a round is won. Fallen heroes miss that round's XP, and enemies below a hero's level give less XP. The hero level cap is {levelCap}. Beyond it, improve gear, skills, mastery choices and party combinations.",
     },
     'help.character.goblin.title': {
         ko: "시작 영웅 외에 있는 고블린",
         en: "The extra starting goblin",
     },
     'help.character.goblin.body': {
-        ko: "새 게임에서는 고른 시작 영웅 외에 성장 등급 고블린 한 명이 로스터에 추가됩니다. 첫 편성에는 고른 시작 영웅만 들어가므로, 로스터에 더 많은 영웅이 보여도 모두 원정에 나가지는 않습니다. 편성 탭에서 누구를 보낼지 바꿀 수 있습니다.<br><br>이 고블린은 낮고 고른 기본 능력치와 미장착 상태로 시작합니다. 초반 전투에 넣으려면 장비와 버티는 힘부터 확인합니다. 현재는 성장 등급이라는 이름과 달리 레벨업마다 기본 능력치가 자라는 기능이 준비 중입니다. 레벨·HP·마스터리 포인트의 성장은 다른 영웅처럼 진행됩니다.",
-        en: "A new game adds one Growth-tier goblin to the roster alongside the heroes you selected. Only the selected starting heroes enter the first preset, so a larger roster does not mean everyone is fighting. Choose who goes in the Party tab.<br><br>The goblin starts with low, even attributes and no equipped gear. Check equipment and survivability before placing it in early combat. Despite the Growth tier name, attribute gains on level-up are currently coming later. Levels, HP and mastery points still grow as they do for other heroes.",
+        ko: "새 게임에서는 고른 시작 영웅 외에 성장 등급 고블린 한 명이 로스터에 추가됩니다. 첫 편성에는 고른 시작 영웅만 들어가므로, 로스터에 더 많은 영웅이 보여도 모두 원정에 나가지는 않습니다. 편성 탭에서 누구를 보낼지 바꿀 수 있습니다.<br><br>이 고블린은 낮고 고른 기본 능력치와 미장착 상태로 시작합니다. 초반 전투에 넣으려면 장비와 버티는 힘부터 확인합니다. 현재는 성장 등급이라는 이름과 달리 레벨업마다 기본 능력치가 자라는 기능이 준비 중입니다. 레벨·HP·스킬 포인트의 성장은 다른 영웅처럼 진행됩니다.",
+        en: "A new game adds one Growth-tier goblin to the roster alongside the heroes you selected. Only the selected starting heroes enter the first preset, so a larger roster does not mean everyone is fighting. Choose who goes in the Party tab.<br><br>The goblin starts with low, even attributes and no equipped gear. Check equipment and survivability before placing it in early combat. Despite the Growth tier name, attribute gains on level-up are currently coming later. Levels, HP and skill points still grow as they do for other heroes.",
     },
     'help.character.equipment.title': {
         ko: "장착 조건과 장비 비교",
@@ -1489,8 +1505,8 @@ const STRINGS = {
         en: "Shaping a hero with mastery",
     },
     'help.character.mastery.body': {
-        ko: "[마스터리 열기]에서 죄종·직업 마스터리에 포인트를 투자합니다. 두 마스터리는 모두 패시브 효과이며 같은 포인트를 나누어 씁니다. 공격 스킬 하나를 더 장착하는 기능이 아니라, 가진 영웅의 공격·생존·파밍 등 강점을 고르는 기능입니다.<br><br>칸을 누르면 한 랭크를 올리고 우클릭하면 한 랭크와 포인트를 돌려받습니다. [초기화]도 무료로 모두 환급하므로, 지금 막힌 원인에 맞춰 배분을 바꿔 볼 수 있습니다. 높은 층은 레벨 조건을 확인하고, 특정 무기·갑옷·장비 죄종 수를 요구하는 칸은 현재 조건까지 맞아야 효과가 적용됩니다.<br><br>도서관에서 전직하면 별도 전직 포인트로 전직 스킬 하나를 배우고 레벨을 올립니다. 배운 전직 스킬을 되돌려 같은 갈래의 다른 스킬로 바꿀 수 있지만, 선택한 전직 갈래 자체를 바꾸는 기능은 없습니다. 특수·변형·필살기 가지는 현재 준비 중입니다.",
-        en: "[Open Mastery] lets you invest in Sin and Class mastery. Both provide passive effects and share one point pool. They shape the hero's damage, survival or farming strengths rather than adding another equipped active skill.<br><br>Click a node for one rank or right-click to refund one rank and point. [Reset] also refunds everything for free, so you can change allocation to address the problem you face. Check higher-tier level requirements and any matching weapon, armor or equipment-Sin conditions; investing alone does not activate a condition you do not meet.<br><br>After advancing at the Library, use separate Advance Points to learn and level one advancement skill. Refunding it lets you choose another skill within the same path, but the chosen advancement path itself cannot be changed. Special, Variant and Ultimate branches are currently coming later.",
+        ko: "[마스터리 열기]에서 죄종·직업 마스터리에 포인트를 투자합니다. 두 마스터리는 모두 패시브 효과이며 같은 포인트를 나누어 씁니다. 공격 스킬 하나를 더 장착하는 기능이 아니라, 가진 영웅의 공격·생존·파밍 등 강점을 고르는 기능입니다.<br><br>칸을 누르면 한 랭크를 올리고 우클릭하면 한 랭크와 포인트를 돌려받습니다. [마스터리 초기화]도 마스터리에 투자한 포인트를 무료로 환급하므로, 지금 막힌 원인에 맞춰 배분을 바꿔 볼 수 있습니다. 높은 층은 레벨 조건을 확인하고, 특정 무기·갑옷·장비 죄종 수를 요구하는 칸은 현재 조건까지 맞아야 효과가 적용됩니다.<br><br>도서관에서 전직하면 마스터리와 같은 스킬 포인트로 메인 하나를 배우고 강화합니다. 메인 단계는 전직 가능 레벨부터 5레벨 간격으로 열립니다. 배운 전직 스킬을 되돌려 같은 갈래의 다른 스킬로 바꿀 수 있지만, 선택한 전직 갈래 자체를 바꾸는 기능은 없습니다. 특수·변형·필살기 가지는 현재 준비 중입니다.",
+        en: "[Open Mastery] lets you invest in Sin and Class mastery. Both provide passive effects and share one point pool. They shape the hero's damage, survival or farming strengths rather than adding another equipped active skill.<br><br>Click a node for one rank or right-click to refund one rank and point. [Reset Mastery] also refunds mastery investments for free, so you can change allocation to address the problem you face. Check higher-tier level requirements and any matching weapon, armor or equipment-Sin conditions; investing alone does not activate a condition you do not meet.<br><br>After advancing at the Library, use the same skill points as mastery to learn and upgrade one main skill. Main ranks unlock at five-level intervals from the advancement unlock level. Refunding it lets you choose another skill within the same path, but the chosen advancement path itself cannot be changed. Special, Variant and Ultimate branches are currently coming later.",
     },
     'help.character.dismiss.title': {
         ko: "영웅 해고와 남는 것",
@@ -1561,8 +1577,8 @@ const STRINGS = {
         en: "Refreshing the recruit list",
     },
     'help.tavern.reroll.body': {
-        ko: "<b>[후보 교체 (무료)]</b> 또는 <b>[교체하기]</b>를 누르면 남아 있는 후보를 포함해 명단 전체가 바뀝니다. 시간이 지나도 후보는 저절로 바뀌지 않습니다. 교체 전에 남겨 둘 후보는 <b>[보관]</b>할 수 있습니다.<br><br>무료 교체 뒤 <b>{refresh}시간</b>이 지나면 다음 교체가 무료가 됩니다. 그 전에는 <b>{reroll}G</b>부터 유료로 바꿀 수 있으며, 유료 비용은 사용할 때마다 두 배가 됩니다. 유료 교체는 무료까지 남은 시간을 늘리지 않고, 무료 교체를 쓰면 유료 비용이 처음으로 돌아갑니다.",
-        en: "<b>New candidates (free)</b> or <b>Refresh</b> replaces the entire recruit list, including candidates still present. Time never changes the list automatically. Use <b>Keep</b> before refreshing to save a candidate.<br><br>The next refresh becomes free <b>{refresh}h</b> after the last free one. Earlier refreshes cost gold, starting at <b>{reroll}G</b> and doubling with each paid use. Paid refreshes do not delay the free timer. Using a free refresh resets the paid price.",
+        ko: "<b>[후보 교체 (무료)]</b>를 누르면 남아 있는 후보를 포함해 명단 전체가 바뀝니다. 시간이 지나도 후보는 저절로 바뀌지 않습니다. 교체 전에 남겨 둘 후보는 <b>[보관]</b>할 수 있습니다.<br><br>교체는 항상 무료입니다. 교체 뒤 <b>{refresh}시간</b>이 지나야 다시 교체할 수 있으며, 대기 중에는 버튼이 비활성화되고 남은 시간이 표시됩니다. 대기 시간은 오프라인에도 흐릅니다.",
+        en: "<b>New candidates (free)</b> replaces the entire recruit list, including candidates still present. Time never changes the list automatically. Use <b>Keep</b> before refreshing to save a candidate.<br><br>Refreshing is always free. After each refresh, wait <b>{refresh}h</b> before refreshing again. The button is disabled during the cooldown and shows the remaining time beside it. The cooldown continues offline.",
     },
     'help.tavern.keep.title': {
         ko: "보관은 고용과 다릅니다",
@@ -1617,8 +1633,8 @@ const STRINGS = {
         en: "Check the hero level before refreshing",
     },
     'help.shop.restock.body': {
-        ko: "<b>[교체]</b>는 선택한 영웅의 <b>현재 레벨</b>을 기준으로 장비 목록을 다시 만듭니다. 영웅만 바꾸거나 레벨이 올라도 기존 상품은 바뀌지 않습니다. 상품은 기준보다 높거나 낮은 레벨로 나올 수 있으며, 고른 영웅의 직업에 맞는 무기만 나오는 것은 아닙니다.<br><br>무료 교체 뒤 <b>{refresh}시간</b>이 지나면 다시 무료입니다. 대기 중 유료 교체는 <b>{reroll}G</b>부터 시작해 사용할 때마다 두 배가 됩니다. 유료 교체는 무료 시계를 늦추지 않으며, 무료 교체를 쓰면 유료 비용이 처음으로 돌아갑니다.<br><br>교체는 장비와 스킬 도안 목록을 함께 바꾸고 팔린 칸도 새로 채웁니다. 남겨 둔 상품도 사라지므로 구매할 물건을 확인한 뒤 교체합니다. 시간 경과나 특수상인 방문이 일반 목록을 자동으로 바꾸지는 않습니다.",
-        en: "<b>Refresh</b> regenerates gear around the selected hero's <b>current level</b>. Selecting another hero or leveling up does not change existing goods. Products may roll above or below the target level, and weapons are not restricted to that hero's class.<br><br>A refresh becomes free <b>{refresh}h</b> after the last free one. Paid refreshes start at <b>{reroll}G</b> and double with each use. They do not delay the free timer. Using a free refresh resets the paid price.<br><br>Refreshing changes both gear and skill blueprints and refills sold slots. Unsold goods also disappear, so check intended purchases first. Time and special-trader visits never refresh the ordinary list automatically.",
+        ko: "<b>[교체]</b>는 선택한 영웅의 <b>현재 레벨</b>을 기준으로 장비 목록을 다시 만듭니다. 영웅만 바꾸거나 레벨이 올라도 기존 상품은 바뀌지 않습니다. 상품은 기준보다 높거나 낮은 레벨로 나올 수 있으며, 고른 영웅의 직업에 맞는 무기만 나오는 것은 아닙니다.<br><br>교체는 항상 무료입니다. 교체 뒤 <b>{refresh}시간</b>이 지나야 다시 교체할 수 있으며, 대기 중에는 버튼이 비활성화되고 남은 시간이 표시됩니다. 대기 시간은 오프라인에도 흐릅니다.<br><br>교체는 장비와 스킬 도안 목록을 함께 바꾸고 팔린 칸도 새로 채웁니다. 남겨 둔 상품도 사라지므로 구매할 물건을 확인한 뒤 교체합니다. 시간 경과나 특수상인 방문이 일반 목록을 자동으로 바꾸지는 않습니다.",
+        en: "<b>Refresh</b> regenerates gear around the selected hero's <b>current level</b>. Selecting another hero or leveling up does not change existing goods. Products may roll above or below the target level, and weapons are not restricted to that hero's class.<br><br>Refreshing is always free. After each refresh, wait <b>{refresh}h</b> before refreshing again. The button is disabled during the cooldown and shows the remaining time beside it. The cooldown continues offline.<br><br>Refreshing changes both gear and skill blueprints and refills sold slots. Unsold goods also disappear, so check intended purchases first. Time and special-trader visits never refresh the ordinary list automatically.",
     },
     'help.shop.consumables.title': {
         ko: "물약을 여러 개 사기",
@@ -1635,6 +1651,14 @@ const STRINGS = {
     'help.shop.blueprints.body': {
         ko: "상점의 스킬 그림에 붙은 <b>도안</b>은 영웅에게 바로 쓰는 책이 아닙니다. 도서관에서 도안 한 장과 재료로 스킬북 한 권을 만든 뒤 영웅에게 읽힙니다. 같은 도안을 여러 장 모으면 같은 책을 더 만들 수 있습니다.<br><br>일반 상단은 현재 <b>직업 스킬 1티어 도안</b>을 팝니다. 모든 스킬 도안이 상점에 나오는 것은 아닙니다. 원하는 스킬의 다른 획득처는 도감의 스킬 항목에서 확인합니다.",
         en: "The <b>blueprint</b> badge on a Shop skill icon marks a crafting ingredient, not a book to use directly on a hero. Turn one blueprint and materials into one skill book at the Library, then have a hero read it. More copies let you make more matching books.<br><br>The ordinary Trading House currently sells <b>Tier 1 class-skill blueprints</b>. It does not stock every skill. Check a skill's Codex entry for other sources.",
+    },
+    'help.shop.trade.title': {
+        ko: '재료 또는 골드로 구매하기',
+        en: 'Buy with materials or gold',
+    },
+    'help.shop.trade.body': {
+        ko: '건설에서 <b>상단 2랭크</b>를 올리면 교역소가 열립니다. <b>받을 최하급 재료</b>를 먼저 누르면 다른 재료별 필요 수·보유량과 골드 가격이 나타납니다. 지불할 재료의 <b>[구매]</b>를 눌러 그 재료 {cost}개로 선택한 재료 {receive}개를 받습니다.<br><br>철광석·약초·목재·가루의 최하급끼리 교환합니다. 선택만으로는 재료가 소모되지 않으며, 지불할 재료가 부족하면 구매할 수 없습니다. 재료로 지불할 때는 골드가 들지 않습니다. 골드 구매는 골드만 소모하며 재료별 가격이 다르고 약초가 더 비쌉니다. 시간이나 재고 제한은 없습니다. 위 단계 재료는 대장간의 합성으로 만듭니다.<br><br>상단 3랭크는 방어구·장신구·스킬 도안 판매 줄을 엽니다.',
+        en: 'Build <b>Trading House rank 2</b> to open the Trading Post. First select the <b>lowest-grade material to receive</b>. Other materials show their required and owned amounts, and a gold option shows its price. Press <b>Buy</b> on a payment row to spend {cost} of that material and receive {receive} of your selection.<br><br>Trade lowest-grade iron ore, herbs, timber and dust. Selecting a material spends nothing. Choose a material payment or gold. Only the selected currency is spent, and you must have enough of it. Gold prices vary by material, with herbs priced higher. Purchases have no timer or stock limit. Make higher grades by combining materials at the Smithy.<br><br>Trading House rank 3 opens armor, jewelry and skill-blueprint sales.',
     },
     'help.shop.special.title': {
         ko: "특수상단은 별도 방문입니다",
@@ -1713,16 +1737,16 @@ const STRINGS = {
         en: "Choose a hero, then learn",
     },
     'help.library.learn.body': {
-        ko: "위쪽 영웅 띠에서 책을 읽힐 영웅을 고르고, <b>[스킬 업그레이드]</b>에서 보유 책을 누릅니다. 영웅 레벨 <b>{level}</b>부터 사용할 수 있습니다. 새 스킬의 <b>[배우기]</b>는 책 한 권을 쓰고 그 영웅의 '배운 스킬' 칸을 채웁니다. 다른 영웅에게도 주려면 별도 책이 필요합니다.<br><br>이미 다른 스킬을 배웠으면 버튼이 <b>[덮어쓰기]</b>로 바뀝니다. 누르면 이전 스킬과 그 업그레이드는 사라지고 사용했던 책도 돌아오지 않습니다. 새 책의 효과와 필요한 무기를 먼저 확인합니다.<br><br>다른 직업의 책도 읽을 수 있지만, 무기의 힘을 쓰는 타격·회복·소환 스킬은 <b>그 스킬 직업의 무기</b>를 들어야 발동합니다. 배우는 것과 현재 장비로 사용할 수 있는 것은 별개입니다.",
-        en: "Choose the hero who will read the book in the top strip, then select an owned book in <b>Skill Upgrade</b>. Heroes can use books from level <b>{level}</b>. <b>Learn</b> spends one book to fill that hero's learned-skill slot. Teaching another hero requires another copy.<br><br>If the hero already learned a different skill, the button becomes <b>Overwrite</b>. It removes the old skill and its upgrades without returning used books. Check the new skill's effect and weapon requirement first.<br><br>A hero can read another class's book, but weapon-powered attack, healing and summoning skills require <b>a weapon belonging to that skill's class</b>. Learning a skill does not guarantee that current equipment can cast it.",
+        ko: "위쪽 영웅 띠에서 책을 읽힐 영웅을 고르고, <b>[스킬 업그레이드]</b>에서 보유 책을 누릅니다. 영웅 레벨 <b>{level}</b>부터 사용할 수 있습니다. 새 스킬의 <b>[배우기]</b>는 책 한 권을 쓰고 그 영웅의 '배운 스킬' 칸을 채웁니다. 다른 영웅에게도 주려면 별도 책이 필요합니다.<br><br>이미 다른 스킬을 배웠으면 버튼이 <b>[덮어쓰기]</b>로 바뀝니다. 누르면 확인 창이 뜨고, 확인하면 이전 스킬과 그 업그레이드는 사라지고 사용했던 책도 돌아오지 않습니다. 새 책의 효과와 필요한 무기를 먼저 확인합니다.<br><br>다른 직업의 책도 읽을 수 있지만, 무기의 힘을 쓰는 타격·회복·소환 스킬은 <b>그 스킬 직업의 무기</b>를 들어야 발동합니다. 배우는 것과 현재 장비로 사용할 수 있는 것은 별개입니다.",
+        en: "Choose the hero who will read the book in the top strip, then select an owned book in <b>Skill Upgrade</b>. Heroes can use books from level <b>{level}</b>. <b>Learn</b> spends one book to fill that hero's learned-skill slot. Teaching another hero requires another copy.<br><br>If the hero already learned a different skill, the button becomes <b>Overwrite</b> and asks for confirmation. Confirming removes the old skill and its upgrades without returning used books. Check the new skill's effect and weapon requirement first.<br><br>A hero can read another class's book, but weapon-powered attack, healing and summoning skills require <b>a weapon belonging to that skill's class</b>. Learning a skill does not guarantee that current equipment can cast it.",
     },
     'help.library.upgrade.title': {
         ko: "같은 스킬북으로 레벨 올리기",
         en: "Using matching books to raise a skill level",
     },
     'help.library.upgrade.body': {
-        ko: "선택한 영웅의 <b>고유 스킬이나 이미 배운 스킬</b>과 같은 책을 고르면 새 스킬을 배우는 대신 그 스킬을 업그레이드합니다. 다른 액티브 칸이 추가되지는 않습니다.<br><br>버튼에 표시된 같은 책 수를 내면 레벨이 한 단계 오릅니다. 높은 단계일수록 더 많은 책이 필요하며, 책을 읽힐 때 골드·가루·약초를 다시 내지는 않습니다. 업그레이드는 <b>선택한 영웅의 해당 스킬</b>에만 적용됩니다. 전직 스킬은 책이 아니라 전직 포인트로 올립니다.",
-        en: "Choose a book matching the selected hero's <b>innate or already-learned skill</b> to upgrade that skill instead of learning a new one. This does not add another active slot.<br><br>Spend the matching copies shown on the button to add one skill level. Higher steps require more books, without another gold, dust or herb charge for reading them. The upgrade affects <b>that skill on the selected hero</b>. Advance skills use Advance Points rather than books.",
+        ko: "선택한 영웅의 <b>고유 스킬이나 이미 배운 스킬</b>과 같은 책을 고르면 새 스킬을 배우는 대신 그 스킬을 업그레이드합니다. 다른 액티브 칸이 추가되지는 않습니다.<br><br>버튼에 표시된 같은 책 수를 내면 레벨이 한 단계 오릅니다. 높은 단계일수록 더 많은 책이 필요하며, 책을 읽힐 때 골드·가루·약초를 다시 내지는 않습니다. 업그레이드는 <b>선택한 영웅의 해당 스킬</b>에만 적용됩니다. 전직 메인은 공용 스킬 포인트로 올리며 각 단계의 영웅 레벨 조건도 만족해야 합니다.",
+        en: "Choose a book matching the selected hero's <b>innate or already-learned skill</b> to upgrade that skill instead of learning a new one. This does not add another active slot.<br><br>Spend the matching copies shown on the button to add one skill level. Higher steps require more books, without another gold, dust or herb charge for reading them. The upgrade affects <b>that skill on the selected hero</b>. Advance main skills use shared skill points and require the corresponding hero level.",
     },
     'help.library.advance.title': {
         ko: "전직 갈래는 신중히 선택",
@@ -1732,14 +1756,8 @@ const STRINGS = {
         ko: "도서관에서 전직 기능을 열고 레벨 <b>{level}</b> 이상인 영웅을 고릅니다. 해당 직업의 세 갈래와 스킬을 비교한 뒤 하나를 선택하고 <b>[전직]</b>합니다. 현재 비용은 <b>{gold}G</b>이며 지불하면 즉시 완료됩니다.<br><br><b>전직 갈래 자체는 되돌릴 수 없습니다.</b> 같은 갈래 안에서 배운 전직 스킬을 바꾸는 것은 가능하지만 다른 갈래로 전직을 다시 하는 것은 불가능합니다. 원정 중에도 전직할 수 있고, 탐험 중에는 먼저 돌아와야 합니다.<br><br>전직을 마친 뒤에는 <b>캐릭터 → [마스터리 열기] → 전직 트리</b>에서 전직 스킬을 직접 배웁니다. 전직 버튼만 누른 상태와 전직 스킬을 배운 상태는 다릅니다.",
         en: "Unlock advancement in the Library and select a hero of at least level <b>{level}</b>. Compare the class's three paths and their skills, choose one and press <b>Advance</b>. It currently costs <b>{gold}G</b> and completes immediately on payment.<br><br><b>The advancement path cannot be undone.</b> You can change the learned skill within that path, but cannot switch the hero to another path. Heroes can advance during Expeditions; those exploring must return first.<br><br>After advancing, go to <b>Character → Open Mastery → advancement tree</b> and learn an Advance skill. Completing advancement alone does not learn one automatically.",
     },
-    'help.library.points.title': {
-        ko: "전직 포인트와 스킬 되돌리기",
-        en: "Advance Points and skill refunds",
-    },
-    'help.library.points.body': {
-        ko: "전직 포인트는 <b>전직 가능 레벨에서 첫 포인트, 그 뒤 {interval}레벨마다 추가 포인트</b>를 받는 기준입니다. 늦게 전직해도 현재 레벨에 해당하는 포인트를 받습니다. 마스터리 포인트와는 별도로 사용합니다.<br><br>전직 트리의 세 스킬 중 <b>하나</b>를 첫 포인트로 배우면 전직 액티브 칸에 들어갑니다. 남은 포인트로 그 스킬의 레벨을 올릴 수 있습니다.<br><br>배운 전직 스킬을 우클릭해 되돌리면 배우기와 레벨에 투자한 포인트를 모두 돌려받습니다. 같은 갈래의 다른 스킬을 골라 다시 배울 수 있습니다. <b>전직 갈래와 전직할 때 낸 골드는 그대로이고, 스킬에 쓴 포인트만 환급</b>됩니다. 특수·변형·필살기 가지는 현재 준비 중입니다.",
-        en: "Advancement points are based on <b>one point at the advancement unlock level, then another every {interval} levels</b>. Advancing later still gives the points due at your current level. These are separate from mastery points.<br><br>Spend the first point to learn <b>one</b> of the three skills in the advancement tree and fill the Advance active slot. Spend remaining points to raise that skill's level.<br><br>Right-click the learned advancement skill to refund every point spent on learning and leveling it. You can then learn another skill in the same path. <b>The advancement path and its gold cost stay in place; only skill points are refunded.</b> Special, Variant and Ultimate branches are currently coming later.",
-    },
+    'help.library.points.title': { ko: "공용 스킬 포인트와 메인 해금", en: "Shared skill points and main-skill levels" },
+    'help.library.points.body': { ko: "영웅은 <b>레벨이 오를 때마다 스킬 포인트</b>를 받습니다. 죄종·직업 마스터리와 전직 메인·꼬리는 같은 포인트를 나누어 씁니다. 전직할 때 별도 포인트를 받지는 않습니다.<br><br>전직 후 세 메인 스킬 중 <b>하나</b>를 스킬 포인트 1로 배웁니다. 메인의 다음 단계는 전직 가능 레벨부터 <b>{interval}레벨 간격</b>으로 열립니다. 포인트가 있어도 다음 단계의 영웅 레벨 조건을 만족해야 하며, 조건을 만족하면 늦게 배운 단계도 차례로 올릴 수 있습니다. 이 간격은 꼬리의 포인트 지급 조건이 아닙니다.<br><br>배운 전직 스킬을 우클릭해 되돌리면 학습·강화에 투자한 포인트가 <b>공용 스킬 포인트로 환급</b>됩니다. 같은 갈래의 다른 스킬이나 마스터리에 다시 쓸 수 있습니다. 갈래와 전직 비용은 그대로이며, 특수·변형·필살기 꼬리는 현재 준비 중입니다.", en: "Heroes earn <b>skill points on every level-up</b>. Sin mastery, Class mastery and advancement main skills and branches share this pool. Advancing grants no extra points.<br><br>After advancing, learn <b>one</b> of the three main skills for one skill point. Further main-skill ranks unlock every <b>{interval} hero levels</b> from the advancement unlock level. Having points does not bypass the level requirement. Eligible ranks may be learned later in sequence. This interval does not govern branch-point income.<br><br>Right-click the learned Advance skill to refund its learning and upgrade costs to the <b>shared skill-point pool</b>. Reinvest them in another skill of the same path or in mastery. The chosen path and gold cost remain in place. Special, Variant and Ultimate branches are currently coming later." },
     'help.resource.lines.title': {
         ko: "줄 · 지점 · 랭크의 차이",
         en: "Lines, nodes and ranks",
@@ -1929,8 +1947,8 @@ const STRINGS = {
         en: "Finding skills and mastery to learn",
     },
     'help.codex.skills.body': {
-        ko: "스킬 목록은 일반 스킬과 전직 스킬을 직업·전직별로 보여줍니다. 스킬 그림에 마우스를 올려 효과와 필요한 무기를 확인합니다. 스킬북으로 만들 수 있는 일반 스킬에는 획득처와 레벨이 오를 때 좋아지는 항목도 표시됩니다. 원하는 스킬이 있다면 이 목록에서 도안의 획득처를 찾고, 얻은 도안으로 도서관에서 책을 제작할 수 있습니다.<br><br>도감에서는 스킬과 마스터리를 미리 살펴봅니다. 실제 책 제작·습득은 도서관에서, 마스터리 포인트 투자는 캐릭터의 [마스터리 열기]에서 합니다. 도감의 스킬 수치는 특정 영웅을 선택한 상태가 아니므로, 실제 영웅에게 적용되는 피해·회복량은 그 영웅의 스킬 설명에서도 확인합니다. 전직의 특수·변형·필살기 가지는 현재 준비 중입니다.",
-        en: "The Skills list groups regular and advancement skills by class and advancement. Hover an icon to read its effect and weapon requirement. Regular skills that can become books also show sources and what improves per level. To pursue a skill, find its blueprint source here, then craft its book at the Library after obtaining the blueprint.<br><br>The Codex lets you preview skills and mastery. Craft and learn books at the Library, and spend mastery points through Open Mastery in Character. Codex skill details have no selected hero context, so check the skill on your actual hero for their damage or healing values. The Special, Variant and Ultimate advancement branches are currently coming later.",
+        ko: "스킬 목록은 일반 스킬과 전직 스킬을 직업·전직별로 보여줍니다. 스킬 그림에 마우스를 올려 효과와 필요한 무기를 확인합니다. 스킬북으로 만들 수 있는 일반 스킬에는 획득처와 레벨이 오를 때 좋아지는 항목도 표시됩니다. 원하는 스킬이 있다면 이 목록에서 도안의 획득처를 찾고, 얻은 도안으로 도서관에서 책을 제작할 수 있습니다.<br><br>도감에서는 스킬과 마스터리를 미리 살펴봅니다. 실제 책 제작·습득은 도서관에서, 스킬 포인트 투자는 캐릭터의 [마스터리 열기]에서 합니다. 도감의 스킬 수치는 특정 영웅을 선택한 상태가 아니므로, 실제 영웅에게 적용되는 피해·회복량은 그 영웅의 스킬 설명에서도 확인합니다. 전직의 특수·변형·필살기 가지는 현재 준비 중입니다.",
+        en: "The Skills list groups regular and advancement skills by class and advancement. Hover an icon to read its effect and weapon requirement. Regular skills that can become books also show sources and what improves per level. To pursue a skill, find its blueprint source here, then craft its book at the Library after obtaining the blueprint.<br><br>The Codex lets you preview skills and mastery. Craft and learn books at the Library, and spend skill points through Open Mastery in Character. Codex skill details have no selected hero context, so check the skill on your actual hero for their damage or healing values. The Special, Variant and Ultimate advancement branches are currently coming later.",
     },
     'help.codex.effects.title': {
         ko: "이펙트 미리 보기",
@@ -1969,8 +1987,8 @@ const STRINGS = {
         en: "Where to look when stuck",
     },
     'help.help.when_stuck.body': {
-        ko: "출발할 수 없다면 편성에 영웅이 있는지, 그 영웅이 다른 원정이나 탐험에 나가 있는지, 고른 스테이지가 열려 있는지 확인합니다. 거절될 때 표시되는 사유가 먼저 해결할 조건입니다.<br><br>출발은 되지만 계속 진다면 원정의 Report와 관전에서 쓰러진 순서와 피해를 확인합니다. 캐릭터의 착용 장비와 남은 마스터리 포인트, 편성의 진형·물약·전술 조건을 살펴봅니다. 어떤 부분이 부족한지에 따른 자세한 예시는 원정과 캐릭터 도움말에 있습니다.<br><br>버튼이나 탭이 잠겨 있으면 건설에서 해당 건물·다음 랭크 조건을 봅니다. 재료가 부족하면 연구소 생산과 장비 분해를 확인하고, 골드가 부족하면 원정을 진행하거나 완료한 의뢰를 수령합니다. 재료의 종류와 단계가 비용에 적힌 것과 같은지도 봅니다. 도감 눈금은 찼는데 잠겨 있다면 도서관 랭크를 확인합니다. 지금 필요한 기능의 조건부터 맞추면 다음 목표를 정하기 쉽습니다.",
-        en: "If you cannot deploy, check that the Party contains heroes, that they are not away on another Expedition or Exploration, and that the selected stage is open. The displayed rejection reason tells you which requirement to solve first.<br><br>If you can deploy but keep losing, inspect Report and spectate to see who fell first and what dealt damage. Check equipped gear and unspent mastery points in Character, then formation, potions and tactic conditions in Party. Expedition and Character help give more detailed examples for each problem.<br><br>For locked buttons or tabs, check the building and next-rank requirements in Construction. For materials, check Laboratory production and gear salvage. For gold, run Expeditions or claim completed commissions. Match the material type and grade to the cost shown. A filled but locked Codex milestone needs Library ranks. Start with the requirements for the feature you need now.",
+        ko: "출발할 수 없다면 편성에 영웅이 있는지, 그 영웅이 다른 원정이나 탐험에 나가 있는지, 고른 스테이지가 열려 있는지 확인합니다. 거절될 때 표시되는 사유가 먼저 해결할 조건입니다.<br><br>출발은 되지만 계속 진다면 원정의 Report와 관전에서 쓰러진 순서와 피해를 확인합니다. 캐릭터의 착용 장비와 남은 스킬 포인트, 편성의 진형·물약·전술 조건을 살펴봅니다. 어떤 부분이 부족한지에 따른 자세한 예시는 원정과 캐릭터 도움말에 있습니다.<br><br>버튼이나 탭이 잠겨 있으면 건설에서 해당 건물·다음 랭크 조건을 봅니다. 재료가 부족하면 연구소 생산과 장비 분해를 확인하고, 골드가 부족하면 원정을 진행하거나 완료한 의뢰를 수령합니다. 재료의 종류와 단계가 비용에 적힌 것과 같은지도 봅니다. 도감 눈금은 찼는데 잠겨 있다면 도서관 랭크를 확인합니다. 지금 필요한 기능의 조건부터 맞추면 다음 목표를 정하기 쉽습니다.",
+        en: "If you cannot deploy, check that the Party contains heroes, that they are not away on another Expedition or Exploration, and that the selected stage is open. The displayed rejection reason tells you which requirement to solve first.<br><br>If you can deploy but keep losing, inspect Report and spectate to see who fell first and what dealt damage. Check equipped gear and unspent skill points in Character, then formation, potions and tactic conditions in Party. Expedition and Character help give more detailed examples for each problem.<br><br>For locked buttons or tabs, check the building and next-rank requirements in Construction. For materials, check Laboratory production and gear salvage. For gold, run Expeditions or claim completed commissions. Match the material type and grade to the cost shown. A filled but locked Codex milestone needs Library ranks. Start with the requirements for the feature you need now.",
     },
     'help.help.settings.title': {
         ko: "화면 설정과 언어",
@@ -2501,7 +2519,7 @@ const STRINGS = {
     'tr.adv.started': { ko: '{name} — {b} 전직 시작', en: '{name} — started advancing to {b}' },
     'tr.adv.left': { ko: '{t} 남음', en: '{t} left' },
     'tr.adv.learned': { ko: '배움', en: 'Learned' },
-    'tr.adv.points': { ko: '전직 포인트 {free} / {have}', en: 'Advance Points {free} / {have}' },   // 고른 영웅 줄 오른쪽 — 남은 / 받은 (R216)
+    'tr.adv.points': { ko: "스킬 포인트 {free} / {have}", en: "Skill points {free} / {have}" },
     'tr.err.missing': { ko: '없는 영웅', en: 'No such hero' },
     'tr.err.class': { ko: '이 직업의 갈래가 아님', en: 'Not a path of this class' },
     'tr.err.done': { ko: '이미 전직 완료', en: 'Already advanced' },
@@ -2513,13 +2531,8 @@ const STRINGS = {
     'tr.err.learned': { ko: '배운 스킬 되돌리기', en: 'Refund the learned skill', lock: true },
     'tr.err.skill': { ko: '이 갈래의 스킬이 아님', en: 'Not a skill of this path' },
     'tr.err.empty': { ko: '배운 전직 스킬 없음', en: 'No advancement skill learned' },
-    'tr.err.points': { ko: '전직 포인트 없음', en: 'No Advance Points left' },   // advanceLearn — 첫 전직 포인트로 배운다 (R216)
-    'tr.adv.todo': {
-        ko: '<b>{b} {n}랭크</b>부터 여기서 전직할 수 있습니다. 직업마다 세 갈래 중 하나를 고르며, 한 번 고르면 <b>되돌릴 수 없습니다</b>. 전직에는 시간이 걸리고, 그동안 그 영웅은 원정이나 탐험에 나갈 수 없습니다.<br>'
-            + '전직하면 <b>마스터리</b>에 전직 트리가 열립니다. 갈래의 전직 스킬 셋 중 하나를 <b>첫 전직 포인트</b>로 배우면 그 스킬이 액티브 전직 칸에 들어갑니다. 배운 스킬을 되돌리면 쓴 전직 포인트를 전부 돌려받습니다.',
-        en: 'Advancement opens here at <b>{b} rank {n}</b>. Each class picks one of three paths, and <b>the choice cannot be undone</b>. Advancing takes time, and meanwhile the hero cannot go on expeditions or explorations.<br>'
-            + 'Advancing opens the Advancement Tree in <b>Mastery</b>. Learn one of the path\'s three advancement skills with your <b>first Advance Point</b> and it fills the Advance active slot. Unlearning refunds every Advance Point spent.',
-    },
+    'tr.err.points': { ko: "스킬 포인트 없음", en: "No skill points left" },
+    'tr.adv.todo': { ko: "<b>{b} {n}랭크</b>부터 전직할 수 있습니다. 세 갈래 중 하나를 고르며 갈래는 되돌릴 수 없습니다. 전직 후 <b>마스터리 → 전직 트리</b>에서 공용 스킬 포인트로 메인을 배웁니다. 메인 강화는 영웅 레벨 조건을 만족해야 하며, 되돌리면 투자 포인트를 공용 지갑에 돌려받습니다.", en: "Advancement opens at <b>{b} rank {n}</b>. Choose one of three paths; the path cannot be undone. Then learn a main skill in <b>Mastery → Advancement Tree</b> using shared skill points. Further main ranks require the corresponding hero level. Refunding returns invested points to the shared pool." },
     'rs.total': { ko: '합산 레벨', en: 'Total Level' },
     'rs.open': { ko: '열린 칸', en: 'Slots Open' },
     'rs.allOpen': { ko: '전부 열림', en: 'All slots open' },
@@ -2635,10 +2648,8 @@ const STRINGS = {
     'rs.buff.noLead': { ko: '리더 없음', en: 'No leader' },
     // 리더 보너스 — 도움말 파티 전술 묶음 전용 [2026-10-24 · ADR-0753 · tactic_card_design §5-10] · 수치는 balance.csv 다섯 키
     'rs.note.lead': {
-        ko: '<b>리더</b>(편성 첫 칸)의 <b>통솔</b>이 전술 효과의 크기를 바꿉니다 — 통솔 {pivot}에서 그대로이고, {min}이면 ×{lo} · {max}이면 ×{hi}입니다. 그 사이는 고르게 변합니다. '
-            + '리더의 통솔을 조건으로 보는 칸은 그대로입니다.',
-        en: 'The <b>leader</b>\'s (first slot) <b>Leadership</b> scales tactic effects — unchanged at {pivot}, ×{lo} at {min} and ×{hi} at {max}, evenly in between. '
-            + 'Slots whose condition is the leader\'s Leadership are unaffected.',
+        ko: '<b>리더</b>(편성 첫 칸)의 <b>통솔</b>이 전술 효과의 크기를 바꿉니다 — 통솔 {pivot}에서 그대로이고, {min}이면 ×{lo} · {max}이면 ×{hi}입니다. 그 사이는 고르게 변합니다.',
+        en: 'The <b>leader</b>\'s (first slot) <b>Leadership</b> scales tactic effects — unchanged at {pivot}, ×{lo} at {min} and ×{hi} at {max}, evenly in between.',
     },
     // 전술 옵션 등급 — ⚠ 아이템 희귀도(`mock.js:RARITY`)와 **별개 축**이고 이름만 같다 (tactic_card_design §5-5)
     'rs.grade.common': { ko: '일반', en: 'Common' },
@@ -2650,24 +2661,14 @@ const STRINGS = {
     'rs.cond.sin_same': { ko: '같은 죄종 {n}명 이상', en: '{n}+ heroes sharing a sin' },
     'rs.cond.sin_kind': { ko: '죄종 {n}종 이상', en: '{n}+ different sins' },
     'rs.cond.cls_same': { ko: '같은 직업 {n}명 이상', en: '{n}+ heroes sharing a class' },
-    'rs.cond.gear_sin': { ko: '{a} 장비 {n}개 이상', en: '{n}+ {a} gear' },
-    'rs.cond.gear_sin.not': { ko: '{a} 장비 없음', en: 'No {a} gear at all' },
-    'rs.cond.leader_cls': { ko: '리더가 {a}', en: 'Leader: {a}' },
-    'rs.cond.leader_cls.not': { ko: '리더가 {a} 아님', en: 'Leader is not {a}' },
-    'rs.cond.front_cls': { ko: '전열에 {a}', en: '{a} in the front row' },
-    'rs.cond.front_cls.not': { ko: '전열에 {a} 없음', en: 'No {a} in the front row' },
+    'rs.cond.sin_count': { ko: '{a} 영웅 {n}명 이상', en: '{n}+ {a} heroes' },
+    'rs.cond.cls_count': { ko: '{a} {n}명 이상', en: '{n}+ {a} heroes' },
+    'rs.cond.attr_sum': { ko: '파티 {a} 합 {n} 이상', en: 'Party {a} total {n}+' },
+    'rs.cond.advance_count': { ko: '파티에 {a}', en: '{a} in the party' },
     'rs.cond.together': { ko: '이 파티로 스테이지 {n}회 이상 클리어', en: '{n}+ stage clears as this party' },   // 이긴 칸마다 +1 (2026-09-29 · ~~{n}회 이상 출정~~)
-    'rs.cond.leader_ldr': { ko: '리더의 통솔 {n} 이상', en: "Leader's Leadership {n}+" },   // 2026-09-27 — 칸 3(칸 = 상황)
 
     'sk.points.h': { ko: '스킬 포인트', en: 'Skill Points' },
-    'sk.points.note': {
-        ko: '죄종 마스터리와 직업 마스터리가 <b>포인트 풀을 공유</b>합니다 — 같은 축이 양쪽에 있어도 중복이 아니라 <b>기회비용이 있는 선택</b>입니다.<br>'
-            + '레벨업마다 받고, <b>초기화는 무료·수시</b>입니다 — 전액 돌려받으므로 잘못 찍어 영웅 하나를 버리는 일이 없습니다.<br>'
-            + '한 칸만 물리려면 그 칸을 <b>우클릭</b>합니다 — 랭크가 1 줄고 포인트가 1 돌아옵니다. 잠긴 칸에 찍어 둔 것도 그렇게 뺍니다.',
-        en: 'Sin mastery and class mastery <b>share one point pool</b> — the same axis appearing on both sides is not redundancy but a <b>choice with opportunity cost</b>.<br>'
-            + 'You earn points on level-up, and <b>resetting is free and always available</b> — a full refund, so no hero is ever ruined by a bad pick.<br>'
-            + 'To undo just one node, <b>right-click</b> it — one rank comes off and one point comes back. Works on locked nodes you had already invested in.',
-    },
+    'sk.points.note': { ko: "레벨마다 받는 <b>스킬 포인트</b>를 죄종·직업 마스터리와 전직 메인·꼬리에 나누어 씁니다. 전직해도 별도 포인트를 지급하지 않습니다. 메인 단계만 5레벨 간격으로 열립니다.", en: "<b>Skill points</b> earned on each level-up are shared by Sin mastery, Class mastery and advancement main skills and branches. Advancing grants no separate points. Only main-skill ranks unlock at five-level intervals." },
     'sk.points.left': { ko: '남은 포인트', en: 'Points left' },
     'sk.tip.rank': { ko: 'Rank {n}/{max}', en: 'Rank {n}/{max}' },
     'sk.tip.effect': { ko: '{effect} (랭크당 {perRank})', en: '{effect}. (Per rank {perRank})' },
@@ -2720,7 +2721,7 @@ const STRINGS = {
     'sk.masteryEffect.res_all': { ko: '모든 원소 저항 {v} 증가', en: 'All Resistances increase by {v}' },
     'sk.masteryEffect.res_max_bonus': { ko: '최대 원소 저항 {v} 증가', en: 'Max Resistances increase by {v}' },
     'sk.masteryEffect.res_reduction': { ko: '적의 원소 저항 {v} 감소', en: 'Enemy resistances are reduced by {v}' },
-    'sk.reset': { ko: '초기화', en: 'Reset' },
+    'sk.reset': { ko: '마스터리 초기화', en: 'Reset Mastery' },
     'sk.unlearn': { ko: '되돌리기', en: 'Refund' },
     'sk.reset.done': { ko: '{n} 포인트 반환', en: { one: 'Refunded {n} point', other: 'Refunded {n} points' } },
     'sk.needLv': { ko: 'Lv.{lv}', en: 'Lv.{lv}' },
@@ -2749,8 +2750,9 @@ const STRINGS = {
     'sk.emptyBook': { ko: '배운 스킬 없음', en: 'No skill learned' },
     'sk.emptyAdvance': { ko: '전직 전', en: 'Not advanced' },
     'sk.lvTag': { ko: 'Lv.{n}', en: 'Lv.{n}' },   // 스킬 레벨 — 그림 오른쪽 아래 `.sk-lv` (설명창 · 액티브 줄 · 도서관 · 전직 판 · R216 · ADR-0576) · 그림이 없는 도서관 읽기 줄만 이름 뒤
-    'sk.advPoints': { ko: '전직 포인트', en: 'Advance Points' },   // 포인트 패널 둘째 줄 — 마스터리와 따로 (R216)
-    'sk.err.advPoints': { ko: '전직 포인트 없음', en: 'No Advance Points left' },
+    'sk.adv.nextLevel': { ko: '메인 Lv{n}: 영웅 Lv{lv}부터 강화 가능', en: 'Main Lv{n}: requires hero Lv{lv}' },
+    'sk.adv.maxLevel': { ko: '메인 최대 레벨', en: 'Maximum main-skill level' },
+    'tr.err.maxLevel': { ko: '메인 최대 레벨입니다', en: 'Main skill is at its maximum level' },
     'sk.adv.leveled': { ko: '{skill} Lv.{n}', en: '{skill} Lv.{n}' },   // 전직 판 스킬 칸을 눌러 레벨이 올랐다 (R216)
     // 잠긴 액티브 칸의 툴팁 한 줄 [2026-09-30 사용자 지시 · SCREEN_DESIGN §6 · ADR-0466 — ~~`sk.lockLv` 「Level n+」~~(ADR-0428) 를 칸마다의 문장으로] · {n} = 책 `skillbook_learn_level` · 전직 `advance_unlock_level`
     'sk.lock.book': { ko: 'Lv{n}이 되면 도서관에서 스킬을 배울 수 있습니다.', en: 'At Lv{n}, skills can be learned at the Library.' },
@@ -2762,10 +2764,13 @@ const STRINGS = {
     'bk.none': { ko: '가진 책 없음', en: 'No books' },
     'bk.learn': { ko: '배우기', en: 'Learn' },
     'bk.overwrite': { ko: '덮어쓰기', en: 'Overwrite' },
+    'bk.overwrite.what': { ko: '{name}: {old} Lv.{n} → {skill}', en: '{name}: {old} Lv.{n} → {skill}' },   // 덮어쓰기 확인 창 첫 줄 (ADR-1020)
+    'bk.overwrite.warn': { ko: '기존 스킬과 레벨은 사라지고 책으로 돌아오지 않습니다.', en: 'The current skill and its level are lost. Books are not returned.' },   // 덮어쓰기 확인 창 둘째 줄 (ADR-1020)
     'bk.upgrade': { ko: '업그레이드 · {n}권', en: 'Upgrade · {n}' },   // 같은 책 — 이번에 드는 책 수 (2026-10-06 · R216 · ADR-0529 — ~~`bk.same` 「배움」~~ 퇴역)
     'bk.max': { ko: '최대', en: 'Max' },
     'bk.craft.h': { ko: '스킬 북 제작', en: 'Skill Book Crafting' },   // 도서관 오른쪽 아래 카드 제목 (2026-10-12 사용자 지시 · ADR-0597)
     'bk.make': { ko: '만들기', en: 'Craft' },
+    'bk.craft.all': { ko: '전체', en: 'All' },   // 제작 칸 직업 탭의 첫 칸 (ADR-1021)
     'bk.craft.help': { ko: '스킬 도안 한 장으로 그 스킬북 한 권을 만들 수 있습니다.', en: 'Use one skill blueprint to craft one copy of that skill book.' },   // 제목 옆 `?` 툴팁 · 도움말 도서관 섹션도 이 키 (2026-10-12 사용자 지시 · ADR-0600 · 도안이 소모된다 2026-10-20 R293)
     'bk.craft.none': { ko: '스킬 도안 없음', en: 'No skill blueprints' },   // 제작 칸이 하나도 없을 때 (ADR-0600)
     'bk.learned': { ko: '{name} — {skill} 배움', en: '{name} learned {skill}' },
@@ -2842,12 +2847,7 @@ const STRINGS = {
     'sk.adv.slot.4': { ko: '필살기', en: 'Ultimate' },
     'sk.adv.pending': { ko: '준비 중', en: 'Coming later' },   // 가지 칸 — 효과 미구현 (R216)
     'sk.adv.hold': { ko: '보류', en: 'On hold' },   // 기획이 보류 · 미정으로 둔 가지 칸
-    'sk.advTree.missing': {
-        ko: '<b>액티브를 주는 층은 전직 하나</b>입니다 — 두 마스터리는 전부 패시브입니다. 전직 3갈래 중 하나를 고르면 그 전직이 액티브 3을 주고, <b>그중 1개를 배운 것만</b> 칸에 오릅니다.<br>'
-            + '<b>전직 포인트</b>는 마스터리와 따로입니다 — 전직할 때 1점, 그 뒤 일정 레벨마다 1점을 받습니다. 첫 포인트로 스킬을 배우고 나머지로 <b>스킬 레벨</b>을 올립니다. 가지 셋(특수 · 변형 · 필살기)은 아직 찍을 수 없습니다.',
-        en: '<b>Advancement is the only layer that grants actives</b> — both masteries are purely passive. Picking one of three advancements grants three actives, and <b>only the one you learn</b> takes the slot.<br>'
-            + '<b>Advance Points</b> are separate from mastery — 1 when you advance and 1 more every few levels. The first point learns the skill and the rest raise its <b>skill level</b>. The three branches (Special · Variant · Ultimate) cannot be taken yet.',
-    },
+    'sk.advTree.missing': { ko: "전직 후 갈래의 메인 셋 중 하나를 <b>공용 스킬 포인트 1</b>로 배웁니다. 스킬 포인트는 레벨마다 받고 죄종·직업 마스터리와 나누어 씁니다.<br>메인 단계만 영웅 Lv30·35·40·45·50에 Lv1·2·3·4·5가 열립니다. 특수·변형·필살기 꼬리는 현재 준비 중입니다.", en: "Learn one of the path's three main skills for <b>one shared skill point</b>. Points come from every level-up and are shared with Sin and Class mastery.<br>Main ranks Lv1–5 unlock at hero Lv30/35/40/45/50. Special, Variant and Ultimate branches are currently coming later." },
     'sk.lockedSuffix': { ko: ' (잠김)', en: ' (locked)' },
     'sk.grid.note': {
         ko: '마스터리는 가지가 갈리는 트리가 아니라 <b>위에서 아래로 쌓는</b> 구조입니다 — <b>윗줄이 먼저 열리고 아랫줄일수록 늦게</b> 열립니다<br>'

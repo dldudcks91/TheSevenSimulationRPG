@@ -31,6 +31,8 @@
  *   scores       — tactic_score.csv 파싱 행 (점수 하나 = 등급별 배수)
  *   sins         — 죄종 id 목록 (인자 검증)
  *   classes      — 직업 정의 [{id, ...}] (인자 검증)
+ *   attributes   — hero_attribute.csv 파싱 행 [{id, ...}] (능력치 합 조건의 인자 검증)
+ *   advances     — advance.csv 원시 행 [{advance_id, ...}] (전직 조건의 인자 검증)
  *   gradeWeights — {common, magic, rare} 상대 가중치 (balance.csv:tactic_grade_weight_*) — 리롤의 등급 추첨
  *   rerollCost   — {base, lockMult} (balance.csv:tactic_reroll_base_cost · tactic_reroll_lock_mult) — 전체 리롤 비용 (§5-6)
  *   leader       — {pivot, min, max, multMin, multMax} (balance.csv:attr_dmg_pivot · hero_attr_min · hero_attr_max · tactic_leader_mult_min · _max) — 리더 보너스 (§5-10)
@@ -43,6 +45,21 @@ export function createTacticSystem(data) {
     const BASE_GRADE = GRADES[0];   // 첫 배정은 언제나 여기 (§5-5 「첫 배정은 일반 고정」)
     const SINS = data.sins ?? [];
     const CLASS_IDS = (data.classes ?? []).map(c => c.id);
+    const ATTR_IDS = (data.attributes ?? []).map(a => a.id);
+    const ADV_IDS = (data.advances ?? []).map(a => a.advance_id);
+    // 2026-11-01 이전 2번 칸의 저장 키·첫 배정 자리. 기획 값이 아니라 세이브 호환용 고정 어휘다.
+    // 이 세 자리를 셔플에 남겨 새 편성 풀의 크기가 다른 여섯 칸의 첫 배정을 바꾸지 않게 한다.
+    const legacyPartyIds = ['opt_sin_spread', 'opt_class_pair', 'opt_sin_trio'];
+    // 2026-11-01 에 지운 장비 죄종 · 리더 통솔 옵션의 셔플 자리 — 위와 같은 까닭이다. 첫 배정은 세이브에 안 들어 자리가 바뀌면 남은 칸의 내용이 바뀐다.
+    const legacyGearIds = ['opt_gear_wrath', 'opt_gear_sloth', 'opt_gear_no_pride'];
+    const legacyLdrIds = ['opt_lead_ldr12', 'opt_lead_ldr16'];
+    const LEGACY_LDR_AFTER = 'opt_bond_100';
+    // 2026-11-02 에 지운 진형 · 리더 직업 옵션 — 셔플 자리는 위와 같은 까닭이다. 저장된 칸은 새 첫 배정으로 바꾸고 등급 · 잠금을 지킨다(state.tacticState)
+    const legacyFrontIds = ['opt_front_priest', 'opt_front_knight'];
+    const legacyLeadIds = ['opt_lead_knight', 'opt_lead_priest'];
+    const LEGACY_BY_CATEGORY = { party: legacyPartyIds, attr: legacyFrontIds, advance: legacyLeadIds };
+    /** 셔플 뒤 제 풀에서 따로 뽑는 종류 — 옵션 수가 바뀌어도 나머지 칸의 첫 배정이 안 흔들린다 */
+    const DRAWN = new Set(Object.keys(LEGACY_BY_CATEGORY));
 
     /** 배열에서 같은 값이 가장 많이 나온 횟수 — 「같은 죄종 n명」 · 「같은 직업 n명」 */
     const maxCount = arr => {
@@ -55,24 +72,23 @@ export function createTacticSystem(data) {
     /**
      * 조건 어휘(`tactic_condition.csv:test`) — 이 밖의 값은 로드 시 throw. `count` 가 파티 문맥에서 숫자를 하나 뽑는다.
      * **있으면**(`has`)은 그 숫자가 문턱 `n` **이상**이면 참 · **없으면**(`not`)은 **0** 이면 참이다.
-     * `arg` = 인자의 종류 — `sin`(죄종) · `cls`(직업) · null(안 받음). 전부 편성에서 확정되는 값이다 (§2-1).
-     * 종류 여섯(무조건 · 편성 · 장비 죄종 · 리더 · 진형 · 관계)은 `category` 이고 이 어휘가 그 안을 가른다 (§5-8)
+     * `arg` = 인자의 종류 — `sin`(죄종) · `cls`(직업) · `attr`(능력치) · `adv`(전직) · null(안 받음). 전부 편성에서 확정되는 값이다 (§2-1).
+     * 종류 다섯(무조건 · 편성 · 능력치 합 · 전직 · 관계)은 `category` 이고 이 어휘가 그 안을 가른다 (§5-8)
      */
     const TESTS = {
         none: { arg: null, count: () => 1 },                                     // 무조건 — 문턱 0
         sin_kind: { arg: null, count: c => new Set(c.sins).size },               // 죄종이 몇 종인가
         sin_same: { arg: null, count: c => maxCount(c.sins) },                   // 같은 죄종이 몇 명까지 겹치나
         cls_same: { arg: null, count: c => maxCount(c.classes) },                // 같은 직업이 몇 명까지 겹치나
-        gear_sin: { arg: 'sin', count: (c, a) => c.gearSins[a] ?? 0 },           // 파티 장비 이름의 그 죄종 수 (item_design §1 「이름」)
-        leader_cls: { arg: 'cls', count: (c, a) => (c.leader?.cls === a ? 1 : 0) },   // 리더 = 편성 첫 칸
-        leader_ldr: { arg: null, count: c => c.leader?.ldr ?? 0 },                // 리더의 통솔 — 문턱 이상이면 참 (2026-09-27 · 칸 3)
-        front_cls: { arg: 'cls', count: (c, a) => c.front.filter(m => m.cls === a).length },   // 전열에 선 그 직업 인원
+        sin_count: { arg: 'sin', count: (c, a) => c.sins.filter(s => s === a).length }, // 지정한 죄종 영웅 수 — 2번 칸(2026-11-01)
+        cls_count: { arg: 'cls', count: (c, a) => c.classes.filter(cls => cls === a).length }, // 지정한 직업 영웅 수
+        attr_sum: { arg: 'attr', count: (c, a) => c.members.reduce((sum, m) => sum + (m.stats?.[a] ?? 0), 0) },   // 파티의 그 기본 능력치 합 — 3번 칸(2026-11-02)
+        advance_count: { arg: 'adv', count: (c, a) => c.members.filter(m => m.advance === a).length },   // 지정한 전직 영웅 수 — 4번 칸(2026-11-02)
         together: { arg: null, count: c => c.bond },                             // 지금 이 인원이 같이 깬 칸 수 (세이브 v36 · 이긴 칸마다 +1 · 2026-09-29)
     };
     // ~~always~~ · ~~class_same~~ · ~~affix_sin~~ · ~~skill_tag~~ 는 2026-09-22 폐지 — 조건 사전(§5-8)으로 이름이 바뀌었고
     //   **스킬 태그 조건은 삭제**다. 옛 세이브의 칸은 가족 id 로 찾으므로 없는 가족은 첫 배정으로 돌아간다(state.tacticState)
-    // `leadership` = 리더의 통솔 [2026-09-27 사용자 「일단」 — 칸 = 상황 고정 · tactic_card_design §5-9]
-    const CATEGORIES = ['always', 'party', 'gear', 'leader', 'formation', 'bond', 'leadership'];
+    const CATEGORIES = ['always', 'party', 'attr', 'advance', 'bond'];
 
     /* ── 칸 (tactic_slot.csv) ── */
 
@@ -126,6 +142,8 @@ export function createTacticSystem(data) {
         if (test.arg === null && arg !== null) bad(`test '${row.test}' 는 인자를 받지 않는다`);
         if (test.arg === 'sin' && arg !== 'sin' && !SINS.includes(arg)) bad(`죄종 인자 '${arg}'`);
         if (test.arg === 'cls' && arg !== 'cls' && !CLASS_IDS.includes(arg)) bad(`직업 인자 '${arg}'`);
+        if (test.arg === 'attr' && arg !== 'attr' && !ATTR_IDS.includes(arg)) bad(`능력치 인자 '${arg}'`);
+        if (test.arg === 'adv' && arg !== 'adv' && !ADV_IDS.includes(arg)) bad(`전직 인자 '${arg}'`);
         const n = dash(row.n);
         if (n !== null && !(Number.isInteger(n) && n >= 0)) bad(`n ${row.n}`);
         if (!scoreMult[row.score]) bad(`점수 ${row.score} — tactic_score.csv 에 없다`);
@@ -173,15 +191,17 @@ export function createTacticSystem(data) {
         if (famById[id]) bad('option_id 가 두 번 나온다');
         const cond = condById[row.cond_id];
         if (!cond) bad(`cond_id '${row.cond_id}' — tactic_condition.csv 에 없다`);
-        // 인자 — 조건이 자리를 비워 두면(`sin` · `cls`) 옵션이 채우고, 조건이 이미 정했으면 옵션은 비운다
+        // 인자 — 조건이 자리를 비워 두면(`sin` · `cls` · `attr` · `adv`) 옵션이 채우고, 조건이 이미 정했으면 옵션은 비운다
         const own = dash(row.arg);
         let arg = null;
         if (cond.arg === 'sin') { if (!SINS.includes(own)) bad(`죄종 '${own}' — 조건 ${cond.id} 가 죄종을 받는다`); arg = own; }
         else if (cond.arg === 'cls') { if (!CLASS_IDS.includes(own)) bad(`직업 '${own}' — 조건 ${cond.id} 가 직업을 받는다`); arg = own; }
+        else if (cond.arg === 'attr') { if (!ATTR_IDS.includes(own)) bad(`능력치 '${own}' — 조건 ${cond.id} 가 능력치를 받는다`); arg = own; }
+        else if (cond.arg === 'adv') { if (!ADV_IDS.includes(own)) bad(`전직 '${own}' — 조건 ${cond.id} 가 전직을 받는다`); arg = own; }
         else { if (own !== null) bad(`조건 ${cond.id} 는 인자를 안 받는다(이미 정했거나 없다)`); arg = cond.arg; }
         if (!row.stat) bad('stat 이 없다');
         if (typeof row.unit !== 'number' || !(row.unit > 0)) bad(`unit ${row.unit} — 기준값은 양수`);
-        // 리더 곡선을 받는 몫 — 1 = 전부 · 0 = 안 받음(리더 통솔 칸 — 같은 축을 두 번 보상하지 않는다) · 통솔 최소에서도 값이 0 보다 커야 한다
+        // 리더 곡선을 받는 몫 — 1 = 전부 · 0 = 안 받음 · 통솔 최소에서도 값이 0 보다 커야 한다
         const lb = row.leader_bonus;
         if (typeof lb !== 'number' || !(lb >= 0)) bad(`leader_bonus ${lb} — 0 이상 (tactic_option.csv)`);
         if (!(1 + lb * (LD.multMin - 1) > 0)) bad(`leader_bonus ${lb} — 통솔 최소에서 값이 0 이하가 된다`);
@@ -239,17 +259,14 @@ export function createTacticSystem(data) {
 
     /**
      * 파티 문맥 — 조건이 세는 숫자를 **한 번에** 뽑아 둔다. 조건마다 파티를 다시 훑지 않는다.
-     * members = [{sin, cls, items:[아이템], front}] **편성 순서대로**(첫 칸이 리더) · `extra.bond` = 이 인원이 같이 깬 칸 수(이긴 칸마다 +1 · 2026-09-29).
+     * members = [{sin, cls, ldr, stats, advance}] **편성 순서대로**(첫 칸이 리더) · `extra.bond` = 이 인원이 같이 깬 칸 수(이긴 칸마다 +1 · 2026-09-29).
      * 모으는 것은 state.js, 세는 규칙은 여기.
      */
     function contextOf(members, extra = {}) {
-        const ctx = { size: members.length, sins: [], classes: [], gearSins: {}, leader: members[0] ?? null, front: [], bond: extra.bond ?? 0 };
+        const ctx = { size: members.length, members, sins: [], classes: [], leader: members[0] ?? null, bond: extra.bond ?? 0 };
         for (const m of members) {
             ctx.sins.push(m.sin);
             ctx.classes.push(m.cls);
-            if (m.front) ctx.front.push(m);
-            // 장비 죄종은 **아이템 이름의 죄종 태그**를 센다 — 세트포인트가 아니다 (item_design §4 · INTERFACE §2-5)
-            for (const it of m.items ?? []) for (const s of it.sins ?? []) ctx.gearSins[s] = (ctx.gearSins[s] ?? 0) + 1;
         }
         return ctx;
     }
@@ -283,23 +300,38 @@ export function createTacticSystem(data) {
         return { flat, dr };
     }
 
+    /** 옵션의 조건이 지금 어휘에 있나 — 옛 세이브의 원정 스냅숏은 지운 조건을 들고 있을 수 있다 (state.snapMeasure) */
+    const hasCond = option => !!TESTS[option?.condKind];
+
     /**
-     * 칸이 처음 열렸을 때 들어 있는 옵션 — 풀을 **통째로 섞어** 앞에서부터 칸에 나눠 준다.
+     * 칸이 처음 열렸을 때 들어 있는 옵션 — 기존 배정 풀을 섞되, 개편한 칸(`DRAWN`)은 제 풀에서 따로 뽑는다.
      * 리롤 결과에 의존하지 않는 게 핵심이다: 3번 칸을 리롤했다고 아직 안 열린 5번 칸의 내용이 바뀌면
      *   플레이어가 인과를 못 읽는다(통제성 — CLAUDE.md 철학 2). 섞기라서 첫 배정에 중복도 없다.
      */
     function initialAssign(rng) {
-        const pool = familyIds.slice();
+        const pool = [];
+        let partyInserted = false;
+        for (const f of families) {
+            if (DRAWN.has(f.category)) {
+                if (f.category === 'party' && !partyInserted) pool.push(...legacyPartyIds, ...legacyGearIds, legacyLeadIds[0], legacyLeadIds[1], legacyFrontIds[0]);
+                partyInserted ||= f.category === 'party';
+            } else {
+                pool.push(f.id);
+                if (f.id === LEGACY_LDR_AFTER) pool.push(...legacyLdrIds, legacyFrontIds[1]);
+            }
+        }
         for (let i = pool.length - 1; i > 0; i--) {
             const j = Math.floor(rng() * (i + 1));
             [pool[i], pool[j]] = [pool[j], pool[i]];
         }
-        // 칸 = 상황 [2026-09-27] — 섞은 순서에서 **그 칸의 종류인 것 중 아직 안 쓴 첫 가족**을 준다. rng 소비는 섞기뿐이라 칸 수와 무관하다
+        // 개편한 칸은 셔플 뒤 칸 번호 순으로 제 풀에서 균등 추첨한다(한 칸 1회). 옛 자리의 순서는 다른 종류만 보므로 영향이 없다.
+        // 나머지는 섞은 순서에서 **그 칸의 종류인 것 중 아직 안 쓴 첫 가족**을 준다.
         // 등급은 안 굴린다 — 첫 배정은 언제나 일반이다 (§5-5): 시드 운이 초반 격차를 만들지 않고
         //   칸이 열릴 때마다 「굴릴 이유」가 같이 생긴다
         const used = new Set();
         return slotList.map(s => {
-            const id = pool.find(f => !used.has(f) && famById[f].category === s.category);
+            const rest = DRAWN.has(s.category) ? familyIds.filter(id => famById[id].category === s.category && !used.has(id)) : null;
+            const id = rest ? rest[Math.floor(rng() * rest.length)] : pool.find(f => !used.has(f) && famById[f]?.category === s.category);
             used.add(id);
             return { id, grade: BASE_GRADE };
         });
@@ -351,6 +383,7 @@ export function createTacticSystem(data) {
     return {
         slotList, slotCount, families, familyIds, optionOf, contextOf, measure, bonusOf, leadCurve,
         initialAssign, pick, pickMany, rerollCost, GRADES, COND_KINDS: Object.keys(TESTS), CATEGORIES,
-        conditions: Object.values(condById), scoreMult,
+        conditions: Object.values(condById), scoreMult, legacyPartyIds, hasCond,
+        legacyIdsOf: category => LEGACY_BY_CATEGORY[category] ?? [],
     };
 }

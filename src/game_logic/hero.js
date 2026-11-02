@@ -540,7 +540,7 @@ export function createHeroSystem(data) {
             hero.level += 1;
         }
         if (hero.level >= B.hero_level_cap) hero.xp = 0;
-        // 마스터리 포인트 — 레벨업 1회당 정액. 지급 곡선 자체가 기획 미확정이라 형태도 임시다 (skill_design §7)
+        // 공용 스킬 포인트 — 매 레벨업 지급. 죄종·직업 마스터리와 전직 메인·꼬리가 masteryPoints 지갑을 공유한다 (2026-11-01).
         const points = (hero.level - from) * B.mastery_point_per_level;
         if (points > 0) hero.masteryPoints = (hero.masteryPoints ?? 0) + points;
         return hero.level > from ? { uid: hero.uid, from, to: hero.level, gains: growLevels(hero, from, hero.level), points } : null;

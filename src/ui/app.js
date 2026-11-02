@@ -472,6 +472,7 @@ const state = {
     autoArm: false,              // 자동 분해 창 — [지금 인벤토리에도 적용]을 한 번 눌러 확인 줄이 선 상태 (ADR-0203) · 창을 닫으면 풀린다
     bookSel: null,               // 도서관 탭 — 가진 책 칸에서 고른 책 id (§17 · ADR-0573 — ~~`bookArm` 무장~~) · 영웅을 바꿔도 남는다(버튼이 그 영웅 기준으로 바뀐다) · 세이브 아님
     bookCraftSel: null,          // 도서관 탭 — 책 만들기 칸에서 고른 기본 책 id (§17 · ADR-0570) · 만들어도 고른 채 남는다 · 영웅과 무관 · 세이브 아님
+    bookCraftClass: null,        // 도서관 탭 — 책 만들기 직업 탭(class_id · null = 전체 · §17 · ADR-1021) · 세이브 아님
     repSel: null,                // 리포트에서 고른 런 — null 이면 맨 위를 따라간다 (SCREEN_DESIGN §4-3 · ADR-0063 · ADR-0123)
     repNo: null,                 // 리포트가 보는 부대 — null 이면 고른 편성 · 탭이 바꾸고 관전 · 철수에서 넘어오면 그 부대 (§4-3 · ADR-0622)
     joinCard: null,              // 선술집 셋째 칸이 카드를 든 수색의 줄 번호(`joins[].no`) — 얼굴을 누를 때마다 켜고 끈다 (SCREEN_DESIGN §8-1 · ADR-0671 · 세이브 아님)
@@ -485,7 +486,8 @@ const state = {
     forgeTab: 'up',              // 대장간의 작업 탭 — 'make' | 'up' | 'synth' | 'craft' (ADR-0142 · 합성 ADR-0856 · `?fg=` 로도 연다) · 탭 버튼은 언제나 강화 (ADR-0962)
     cnPick: null,                // 건설 탭에서 고른 건물 id — null 이면 지금 지을 수 있는 첫 건물 (SCREEN_DESIGN §13-1 · ADR-0304)
     shopPotionN: 1,              // 상단 물약을 한 번에 살 수 — 사기 줄 ×n 이 고른다 (§8-3 · 2026-10-23)
-    shopSel: null,               // 상점에서 고른 칸 {src: 'equip'|'mat'|'special', i, cycle} — 상점 전체에서 하나 · `cycle` = 그 격자의 번호(상단 = 목록 번호 `list` · 특수상단 = 방문 회차) · 바뀌면 풀린다
+    shopSel: null,               // 상점에서 고른 칸 {src, i, cycle} · 일반 목록 번호가 바뀌면 풀린다
+    shopTrade: null,             // 교역소에서 받을 재료 id · 일반 상품·방문 회차와 무관한 UI 선택
     shopSell: new Set(),         // 상단 판매 목록 — 실제 장비는 [판매]까지 보관 칸에 남는다 · 탭을 떠나면 비운다 · 세이브 아님
 advSel: null,                // 도서관 전직 패널에서 고른 갈래 {uid, branch} — 띠에서 다른 영웅을 고르면 안 먹는다 (§17 · ADR-0536 · ADR-0567)
     shopShown: null,             // 상점이 마지막으로 그린 방문 `{cycle, here}` — 앱 시계가 이것과 달라지는 순간 다시 그린다(`shopTick`)
@@ -810,9 +812,14 @@ function tutorialState() {
         || document.querySelector('.dp-panel:not([hidden])')) return null;
     const steps = [], add = (id, target) => { if (target) steps.push({ id, target }); };
     const h = heroById(state.heroUid);
-    const canLearn = () => h?.masteryPoints > 0 && SYS.game.masteryState(G, h.uid).nodes.some(n => n.canLearn);
+    const canLearn = () => {
+        if (!(h?.masteryPoints > 0)) return false;
+        const advance = SYS.game.advanceState(G, h.uid, now()).hero;
+        return SYS.game.masteryState(G, h.uid).nodes.some(n => n.canLearn) || advance.canLearn || advance.canLevelUp;
+    };
     if (state.modal) {
         if (state.modal === 'skill' && canLearn()) add('mastery', $('#modal .sk-cell.can[data-node]'));
+        if (state.modal === 'labReg') add('labRegistration', $('#modal .lr-grid .hs-card'));
         return { owner, context: `modal:${state.modal}`, steps };
     }
     if (state.tab === 'expedition' && expScreen() === 'idle') {
@@ -829,6 +836,14 @@ function tutorialState() {
     if (state.tab === 'party') add('potions', $('.pt-potion'));
     if (state.tab === 'shop' && SYS.game.hasFeature(G, 'shop')) add('potions', $('.td-potions'));
     if (state.tab === 'research' && $('.cn-next .cn-go')) add('construction', $('.cn-next'));
+    if (state.tab === 'resource') {
+        add('laboratory', $('.dp-tree-grid'));
+        if (state.labLineView) add('labRegistration', $('.dp-side-fx .hs-card:not(.lock)'));
+        // 첫 기본 선택은 줄 설명만 한다. 지점을 직접 고른 뒤 실제 연구/취소 버튼이 있을 때 연구를 설명한다.
+        else if (state.labNode?.[state.post] && $('.dp-side-next .dp-side-go'))
+            add('labResearch', $('.dp-side-next'));
+        return { owner, context: `resource:${state.post}:${state.labLineView ? 'line' : state.labNode?.[state.post] ?? 'initial'}`, steps };
+    }
     return { owner, context: state.tab, steps };
 }
 const tutorial = createTutorial({
@@ -836,6 +851,7 @@ const tutorial = createTutorial({
     describe: id => {
         const detailKey = id === 'mastery' && state.modal === 'skill' ? 'masteryTree'
             : id === 'loot' && isTouchInput() ? 'lootTouch'
+            : id === 'labRegistration' && state.modal === 'labReg' ? 'labRegistrationPick'
             : id === 'potions' ? (SYS.game.hasFeature(G, 'shop') ? 'potionsShop' : 'potions') : id;
         return { title: t(`tutorial.${id}.title`), detail: t(`tutorial.${detailKey}.detail`),
             closeLabel: t('tutorial.confirm'), progress: t('tutorial.progress') };
@@ -974,6 +990,8 @@ const MODALS = {
     skill: { title: 'nav.skill', body: skillTreeBody },
     // 해고 — 되돌릴 수 없어서 두 번 누르게 한다 (SCREEN_DESIGN §3 · §6). 대상 영웅은 캐릭터 탭이 이미 골랐다
     dismiss: { title: 'ch.dismiss', body: dismissBody },
+    // 스킬 덮어쓰기 확인 — 도서관 읽기 줄의 [덮어쓰기]가 연다 · 머리 줄 없이 문장 + 답 둘(출정 확인 창과 같다) · 그새 덮어쓰기가 아니게 되면 닫힌다 (SCREEN_DESIGN §17 · ADR-1020)
+    bookOverwrite: { bare: true, body: bookOverwriteBody, gone: () => !G || !bookOverwriteOf() },
     // 스킬 우선순위 — 「액티브 스킬」 소제목 오른쪽 끝 [우선순위]가 연다 · 줄을 끌어 순서를 바꾼다 (SCREEN_DESIGN §6 · ADR-0937). 대상 영웅은 캐릭터 탭이 이미 골랐다
     skillOrder: { title: 'ch.skill.orderH', body: skillOrderBody, cls: 'sk-order-modal' },
     /* 출정 — 스테이지를 누르면 뜨는 창 [2026-09-10 사용자 지시 · ADR-0084 · SCREEN_DESIGN §4-1].
@@ -1507,14 +1525,37 @@ function expNavBox(phase = battlePhase(state.battle)) {
         //   **노말이 아닌 단을 도는 부대는 스테이지 앞에 난이도 이름**(`diffTag` — 같은 줄임 안에 든다 · ADR-0586)
         const label = at ? t('exp.seg.partyAt', { n: M.roman(no), where: `<span class="seg-where">${diffTag(runSlot(no)?.difficulty)}${L(stageName(at))}</span>` })
             : t('exp.seg.partyIdle', { n: M.roman(no) });
-        return { id: `battle${no}`, label, disabled: !H, cls: `seg-party seg-${H ? ph : 'idle'}`,
+        return { id: `battle${no}`, label, cls: `seg-party seg-${H ? ph : 'idle'}`,
             color: at ? sinColor(chapterOf(at.chapter)?.sin ?? 'wrath') : undefined };
     });
     // 고른 칸 — **원정 탭에서 관전을 볼 때만** 선다(밖에서는 보고 있는 원정 화면이 없다 · ADR-0353) · **보는 부대의** 칸이다
     const cur = state.tab === 'expedition' && expScreen() === 'battle' ? `battle${watching}` : null;
-    const box = segmented(cells, cur, id => watchParty(Number(id.slice(6))));
+    const box = segmented(cells, cur, id => { const no = Number(id.slice(6)); if (state.battles[no]) watchParty(no); else idlePartyGo(no); });
     cells.forEach((c, i) => c.color && partyGo(box.children[i], c.color));
     return box;
+}
+
+/** 대기 중인 부대 칸 — 그 편성을 고른 채 **마지막으로 나간 곳의 출발 앞 화면**으로 (§4 · ADR-1024 · `game.lastGoOf`).
+ *  원정 = 그 칸 · 그 단의 출정 창 · 탐험 = 그 지점 창(못 여는 지점이면 `exploreSel` 이 지도만 세운다) · 기록이 없거나 그 단이 잠겼으면 스테이지 화면 */
+function idlePartyGo(no) {
+    SYS.game.selectPreset(G, no);
+    const last = SYS.game.lastGoOf(G, no);
+    clearBagSel(); state.cmArm = null; state.exArm = null; state.exSel = null;
+    if (last?.kind === 'explore') {
+        state.tab = 'explore';
+        state.exSel = { chapter: last.chapter, spot: last.spot };
+    } else {
+        state.tab = 'expedition'; state.exp = 'idle';
+        const stage = last ? D.stages[last.stageId] : null;
+        if (stage && SYS.game.selectDifficulty(G, last.difficulty).ok) {
+            state.expChapter = stage.chapter;
+            state.expStage = last.stageId;
+            state.expRepeat = false;
+            state.modal = 'depart';
+        }
+    }
+    save();
+    render();
 }
 
 /** 관전으로 가는 버튼 — 칸 모양은 세그먼트 칸 그대로(챕터 죄종 색 글자 · 얇은 테두리) · **이름 앞에 같은 색 ▶ 하나** [2026-10-21 사용자 지시 · SCREEN_DESIGN §4 · ADR-0689 가 0688 의 채운 모양을 대체].
@@ -1522,8 +1563,10 @@ function expNavBox(phase = battlePhase(state.battle)) {
 const partyGo = (b, color) => { b.classList.add('party-go'); b.style.color = color; return b; };
 
 /** 그 부대의 관전으로 간다 — 상단바 부대 칸 · 스테이지 목록 줄의 ▶ 부대 버튼 (ADR-0353 · ADR-0688).
- *  다른 탭에서 눌렀으면 원정 탭으로 — 탭 버튼과 같이 분해함이 닫힌다 (ADR-0184 · ADR-0673) */
+ *  다른 탭에서 눌렀으면 원정 탭으로 — 탭 버튼과 같이 분해함이 닫힌다 (ADR-0184 · ADR-0673) ·
+ *  그 편성이 고른 편성이 된다 — 다음에 여는 출정 창이 처음부터 이 파티로 선다 (ADR-1026) */
 function watchParty(no) {
+    SYS.game.selectPreset(G, no); save();
     if (state.tab !== 'expedition') { state.tab = 'expedition'; clearBagSel(); }
     if (no === watchNo()) { state.exp = 'battle'; render(); return; }   // 보던 부대 — 관전 그대로 (재생기를 걷지 않는다)
     watchBattle(no);
@@ -2753,7 +2796,8 @@ function goBox(z) {
     //   **다른 일을 하던 영웅이 끼어 있으면 먼저 묻는다** [2026-09-30 사용자 지시 · ADR-0467] — 나갈 수 있는 편성일 때만이다(거절될 출발은 묻지 않고 지금처럼 플래시)
     //   **원정 중인 제 부대를 끊을 때도 묻는다** [2026-10-15 · ADR-0629 — ~~묻지 않고 끊는다~~(ADR-0111)]
     go.onclick = () => {
-        if (departPulls(z.stage_id) || departCuts(z.stage_id)) { openModal('departConfirm'); return; }
+        //   **파티 평균 레벨과 칸 레벨 차이가 크면 묻는다** [2026-11-02 사용자 지시 · ADR-1025]
+        if (departPulls(z.stage_id) || departCuts(z.stage_id) || departGap(z.stage_id)) { openModal('departConfirm'); return; }
         state.modal = null; runBattle(z.stage_id, { repeat: state.expRepeat });
     };
     actions.appendChild(rep);
@@ -2988,6 +3032,13 @@ const departPulls = stageId => SYS.game.canDepart(G, stageId, now()) === null
 const departCuts = stageId => SYS.game.canDepart(G, stageId, now()) === null
     && SYS.game.partyOf(G).some(uid => SYS.game.heroBusy(G, uid) === 'run');
 
+/** 이 출발의 레벨 차이 — 고른 편성이 나갈 수 있고 문턱 이상일 때만 `{avg, level, gap}` · 아니면 null (ADR-1025 · 판정은 `game.departLevelGap`) */
+const departGap = stageId => {
+    if (SYS.game.canDepart(G, stageId, now()) !== null) return null;
+    const g = SYS.game.departLevelGap(G, stageId);
+    return g?.warn ? g : null;
+};
+
 /** 출정 확인 창 — 문장 하나 + [확인] · [취소] [2026-09-30 사용자 지시 · SCREEN_DESIGN §4-1 · ADR-0467]. 해고 창과 같은 상자다(`.dismiss-box`).
  *  [확인] = 출정 창의 [보내기]가 하던 일 그대로 · [취소] = 출정 창으로 돌아간다(고른 칸 · 편성 · 반복 스위치는 화면 상태라 그대로다) */
 function departConfirmBody() {
@@ -2997,6 +3048,8 @@ function departConfirmBody() {
     // 문장은 까닭마다 한 줄 — 제 부대를 끊는다(ADR-0629) · 다른 일을 하던 영웅을 데려간다(ADR-0467). 둘 다면 둘 다 선다
     if (departCuts(sid)) box.appendChild(el('div', '', t('exp.departCut')));
     if (departPulls(sid)) box.appendChild(el('div', '', t('exp.departBusy')));
+    const gap = departGap(sid);
+    if (gap) box.appendChild(el('div', '', t('exp.departLevelGap', gap)));
     const actions = el('div', 'dismiss-actions');
     const ok = el('button', 'btn primary', t('ui.ok'));
     ok.onclick = () => { state.modal = null; runBattle(sid, { repeat: state.expRepeat }); };
@@ -4145,7 +4198,7 @@ function dismissBody() {
 /* 스킬북 — 도서관 탭(§17) 오른쪽 열 두 카드의 속. ~~캐릭터 탭 스킬북 창(`bookBody`)~~ 은 2026-09-29 사용자 지시로 걷었다(ADR-0426).
    **판정은 `game.bookState` 가 낸다** — 화면이 규칙을 다시 쓰지 않는다. 두 카드 다 **아이콘 칸 + 위 줄**이다(ADR-0570 · ADR-0573):
    칸을 눌러 고르고(파란 겉 테두리 — 상단의 `.td-picked`) 위 줄의 버튼을 누른다 — 고르기 + 누르기가 두 번 누름이다(§3).
-   덮어쓰기는 고를 때 버튼이 이미 [덮어쓰기](위험 색)로 서 있다 — ~~첫 누름이 `state.bookArm` 으로 무장~~(ADR-0420 · 2026-10-09 걷음) */
+   덮어쓰기는 고를 때 버튼이 이미 [덮어쓰기](위험 색)로 서 있고, 누르면 확인 창이 한 번 더 묻는다(ADR-1020) — ~~첫 누름이 `state.bookArm` 으로 무장~~(ADR-0420 · 2026-10-09 걷음) */
 
 /** 책 아이콘 칸 하나 — 스킬 그림 · (있으면) 오른쪽 아래 글자 · 고르면 파란 겉 테두리 · 올리면 설명창 · 누르면 고르기 / 풀기 */
 function bookCell(id, picked, tip, onPick, corner = '') {
@@ -4153,6 +4206,39 @@ function bookCell(id, picked, tip, onPick, corner = '') {
     bindTipNode(cell, tip);
     cell.onclick = onPick;
     return cell;
+}
+
+/** 책 읽기 한 번 + 결과 플래시 — 읽기 줄 버튼과 덮어쓰기 창의 [덮어쓰기]가 같이 부른다 */
+function bookLearnGo(h, id) {
+    const res = SYS.game.learnBook(G, h.uid, id, now());
+    if (!res.ok) flashErr('bk', res.err, 'skillbook', { n: D.balance.skillbook_learn_level });
+    else { save(); flash(res.upgraded ? 'bk.upgraded' : 'bk.learned', { name: L(h.name), skill: L(skillInfo(id).name), n: (res.lv ?? 0) + 1 }); }
+}
+
+/** 덮어쓰기 창의 대상 — 고른 영웅 · 고른 책이 지금도 막힘 없는 덮어쓰기일 때만. 판정은 `game.bookState` (ADR-1020) */
+function bookOverwriteOf() {
+    const h = heroById(state.heroUid);
+    const bs = h ? SYS.game.bookState(G, h.uid) : null;
+    const book = bs?.books.find(b => b.id === state.bookSel);
+    if (!book || book.plan?.act !== 'learn' || book.plan.err || !bs.hero.skill || bs.hero.err) return null;
+    return { h, id: book.id, old: bs.hero.skill, lv: bs.hero.lv[bs.hero.skill] ?? 0 };
+}
+
+/** 덮어쓰기 확인 창 — 무엇이 무엇으로 바뀌나 · 잃는 것 · [덮어쓰기] [취소] (§17 · ADR-1020). 상자는 해고 · 출정 확인 창과 같다 */
+function bookOverwriteBody() {
+    const box = el('div', 'dismiss-box');
+    const o = bookOverwriteOf();
+    box.appendChild(el('div', '', t('bk.overwrite.what', { name: L(o.h.name), old: L(skillInfo(o.old).name), n: o.lv + 1, skill: L(skillInfo(o.id).name) })));
+    box.appendChild(el('div', 'down', t('bk.overwrite.warn')));
+    const actions = el('div', 'dismiss-actions');
+    const ok = el('button', 'btn danger', t('bk.overwrite'));
+    ok.onclick = () => { state.modal = null; bookLearnGo(o.h, o.id); render(); };
+    const no = el('button', 'btn', t('ui.cancel'));
+    no.onclick = closeModal;
+    actions.appendChild(ok);
+    actions.appendChild(no);
+    box.appendChild(actions);
+    return box;
 }
 
 /** 스킬 업그레이드 = 도서관 탭 오른쪽 위 카드(가진 책을 읽는 자리) — 제목(「스킬 업그레이드」 `bk.up.h`)은 카드가 든다 (§17 · ADR-0422 · ADR-0595 · ADR-0597) */
@@ -4172,7 +4258,7 @@ function bookLearnInto(box, h, bs) {
     // 이 영웅이 이 책을 읽으면 — `learn`(새로 배운다 · 배운 칸이 차 있으면 덮어쓴다) | `upgrade`(이미 가진 스킬 — 고유 · 배운 칸) (`game.bookState` · R216 · ADR-0529)
     const p = sel?.plan;
     const up = p?.act === 'upgrade';
-    const over = !!sel && !up && !!cur;   // 덮어쓰기 — 앞의 스킬과 그 레벨이 사라지고 책으로 안 돌아온다(§3) · 누르기 전에 버튼이 위험 색으로 말한다
+    const over = !!sel && !up && !!cur;   // 덮어쓰기 — 앞의 스킬과 그 레벨이 사라지고 책으로 안 돌아온다(§3) · 버튼이 위험 색으로 말하고 누르면 확인 창이 뜬다(ADR-1020)
     const bar = el('div', 'td-buy bk-buy', sel
         ? `<span class="td-buy-n">${L(skillInfo(sel.id).name)}${up ? `<span class="bk-lv">${t('sk.lvTag', { n: p.lv + 1 })}</span>` : ''}</span>`
         : '<span class="td-buy-n muted">—</span>');
@@ -4183,9 +4269,8 @@ function bookLearnInto(box, h, bs) {
     const btn = el('button', `btn sm ${over ? 'danger' : 'primary'}`, label);
     btn.disabled = !sel || !!err || (up && !!p.err);
     btn.onclick = () => {
-        const res = SYS.game.learnBook(G, h.uid, sel.id, now());
-        if (!res.ok) flashErr('bk', res.err, 'skillbook', { n: bs.need.need });
-        else { save(); flash(res.upgraded ? 'bk.upgraded' : 'bk.learned', { name: L(h.name), skill: L(skillInfo(sel.id).name), n: (res.lv ?? 0) + 1 }); }
+        if (over) { openModal('bookOverwrite'); return; }
+        bookLearnGo(h, sel.id);
         render();   // 그 책이 남아 있으면 고른 채 남는다 — 다 읽어 없어지면 `find` 가 못 찾아 저절로 풀린다
     };
     bar.appendChild(btn);
@@ -4211,7 +4296,12 @@ function bookCraftInto(box, h, bs) {
     // 칸 = **가진 스킬 도안**(`bookState.craft` — 한 장 이상 · 모든 책이 도안을 요구한다) · 하나도 없으면 한 줄 [2026-10-12 사용자 지시 · ADR-0600 — ~~기본 책~~ ADR-0570 ·
     //   2026-10-20 R293 도안은 쌓이는 소모품 — 만들면 한 장 준다 · 다 쓰면 칸이 빠져 고른 것이 저절로 풀린다 · ADR-0680]
     if (!bs.craft.length) { box.appendChild(el('div', 'muted bk-empty', t('bk.craft.none'))); return; }
-    const sel = bs.craft.find(c => c.id === state.bookCraftSel) ?? null;
+    // 직업 탭(ADR-1021) — 고른 직업의 도안을 다 쓰면 전체로 · 고른 책은 그 책이 있는 탭에서만 고른 채다(안 보이는 칸의 책을 만들지 않게)
+    const classOf = id => SYS.skill.defs[id]?.classId ?? null;
+    const hasClass = id => bs.craft.some(c => classOf(c.id) === id);
+    const cls = hasClass(state.bookCraftClass) ? state.bookCraftClass : null;
+    const shown = cls ? bs.craft.filter(c => classOf(c.id) === cls) : bs.craft;
+    const sel = shown.find(c => c.id === state.bookCraftSel) ?? null;
     const herbId = D.labMaterials.find(m => m.post === 'gather')?.id;
     // 만들기 줄 — 고른 책의 이름 · 비용(모자란 재화만 붉다) · [만들기]. 고른 것이 없으면 `—` 와 꺼진 [만들기]
     const part = (res, need, have) => `<span class="${have < need ? 'down' : ''}"><b>${need.toLocaleString()}</b> ${resName(res)}</span>`;
@@ -4228,9 +4318,13 @@ function bookCraftInto(box, h, bs) {
     };
     bar.appendChild(btn);
     box.appendChild(bar);
+    // 정식 직업은 늘 선다(자리가 안 움직인다) · 도안이 없으면 흐리다 · 확장 직업은 도안이 있을 때만
+    const tabs = [{ id: null, label: t('bk.craft.all') }];
+    for (const c of D.classes) if (c.stage === 'main' || hasClass(c.id)) tabs.push({ id: c.id, label: className(c.id), disabled: !hasClass(c.id) });
+    box.appendChild(segmented(tabs, cls, id => { state.bookCraftClass = id; render(); }));
     // 아이콘 칸 — 그림 + 오른쪽 아래 장수 `×n`(가진 책 칸의 권수와 같은 자리 · 1장도 찍는다 · ADR-0680) · `skill.csv` 행 순서 · 올리면 스킬 설명창 · 누르면 고르기(다시 누르면 풀린다)
     const grid = el('div', 'bk-grid');
-    for (const c of bs.craft) grid.appendChild(bookCell(c.id, sel === c, () => skillTipCard({ id: c.id }, tipCtx), () => { state.bookCraftSel = sel === c ? null : c.id; render(); },
+    for (const c of shown) grid.appendChild(bookCell(c.id, sel === c, () => skillTipCard({ id: c.id }, tipCtx), () => { state.bookCraftSel = sel === c ? null : c.id; render(); },
         `<span class="inv-lv">×${c.n}</span>`));
     box.appendChild(grid);
 }
@@ -4407,7 +4501,7 @@ function cubeToggle(it) {
 
 /**
  * 분해함 [2026-10-20 사용자 지시 「호라드림함같은 창 · 4x4 · 화면 가운데 · 아이템창 방해 x · 고정수치가 높은 값들을 살리는 로직」 · SCREEN_DESIGN §6 · ADR-0673].
- * 왼쪽 = 필터 세 열 · 오른쪽 = 6×4 격자(ADR-0934) + 가루 미리보기 · [분해하기] · [취소].
+ * 왼쪽 = 필터 세 열 · 오른쪽 = 6×4 격자(ADR-0934) · [분해하기] · [취소].
  * 필터 버튼은 체크 토글이고 **누르면 함이 바로 따라온다**(`cubeSync` · 2026-10-21 · ADR-0695 — ~~함을 바로 안 바꾸고 [올리기]가 적용~~ ADR-0673).
  * [분해하기] 뒤에는 함이 비고 **필터도 풀린다** — 켜 두면 다음 한 함이 저절로 차 [분해하기] 두 번 누름에 안 본 묶음이 녹는다. 잠긴 것은 처음부터 안 오른다(건너뛸 일이 없다)
  */
@@ -4464,11 +4558,10 @@ function salvageCube(h) {
     right.appendChild(grid);
 
     const foot = el('div', 'salv-foot');
-    const preview = SYS.game.salvagePreview(G, inCube.map(it => it.uid));
-    foot.appendChild(el('span', 'salv-dust', salvageMaterialText(preview.mats)));
     const go = el('button', 'btn sm primary', t('ch.sel.go'));
     go.disabled = !inCube.length;
     go.onclick = () => {
+        const preview = SYS.game.salvagePreview(G, inCube.map(it => it.uid));
         let n = 0;
         for (const it of inCube) {
             const r = SYS.game.salvage(G, it.uid);
@@ -5430,8 +5523,8 @@ function masteryBox({ tag, title, sub, nodes, onLearn, onUnlearn, locked, extraS
  * 스킬 창 전직 판 — **윗줄 = 고른 갈래의 전직 스킬 셋 · 그 아래 세 줄 = 스킬마다 제 열에 가지 셋(② · ③ · ④)이 세로로 · 칸 사이를 세로 선이 잇는다**
  *   [2026-10-06 · R216 · 개정 2026-10-08 · SCREEN_DESIGN §7 · ADR-0542 · 열 · 선 ADR-0544].
  *   **전직하면 판이 열린다** — 전직 스킬은 여기서 배운다(도서관은 갈래만 고른다 · 2026-10-08 사용자 지시 「전직스킬은 마스터리에서 배우는거야」).
- *   스킬 칸 = 그림(배운 것은 `Lv.n`) · 안 배운 칸 누르기 = 첫 전직 포인트로 배우기(`game.advanceLearn` — 하나만) · 배운 칸 누르기 = +1(`game.advanceLevelUp`) ·
- *   배운 칸 우클릭(손가락은 길게 눌러 뜬 툴팁의 [되돌리기]) = 되돌리기 — 쓴 전직 포인트 전부 환급(`game.advanceForget`) · 올리면 스킬 설명창(레벨을 얹은 숫자).
+ *   스킬 칸 = 그림(배운 것은 `Lv.n`) · 안 배운 칸 누르기 = 공용 스킬 포인트 1로 배우기(`game.advanceLearn` — 하나만) · 배운 칸 누르기 = +1(`game.advanceLevelUp`) ·
+ *   배운 칸 우클릭(손가락은 길게 눌러 뜬 툴팁의 [되돌리기]) = 되돌리기 — 투자한 공용 스킬 포인트 전부 환급(`game.advanceForget`) · 올리면 스킬 설명창(레벨을 얹은 숫자).
  *   가지 셋 = ② 특수 · ③ 변형 · ④ 필살기 — 효과가 없어(`advance_node.csv` · 설명만) 누를 수 없다 · 올리면 칸 이름 + 설명 + 「준비 중」 · 배우기 전에도 셋 다 선다(스킬마다 무엇이 이어지나를 견준다).
  *   판정(레벨 · 포인트 · 가지)은 `game.advanceState` 가 낸다 — 화면은 그리기만 한다
  */
@@ -5453,14 +5546,13 @@ const bindAdvNodeTips = (box, nodeOf) => box.querySelectorAll('.adv-node').forEa
 function advanceBoard(h, adv) {
     const learned = adv.hero.skill;
     const lv = adv.hero.lv;
-    const free = adv.hero.points.free;
     const skills = adv.branches.find(b => b.id === adv.hero.advance)?.skills ?? [];
     const nodeOf = (id, slot) => (adv.nodes[id] ?? []).find(x => x.slot === slot) ?? null;
     const box = el('div', 'sk-box adv-board');
     // 칸이 눌리나 — 배운 칸은 레벨을 올릴 포인트 · 안 배운 칸은 아직 하나도 안 배웠고 첫 포인트가 있어야 한다
     const cell = id => {
         const mine = id === learned;
-        const can = mine ? free > 0 : !learned && free > 0;
+        const can = mine ? adv.hero.canLevelUp : adv.hero.canLearn;
         const lvTag = mine ? t('sk.lvTag', { n: lv }) : '';
         return `<div class="sk-cell icon-only${mine ? ' taken' : ''}${can ? ' can' : ' dim'}" data-advskill="${id}" aria-label="${L(skillInfo(id).name)}${mine ? ` ${lvTag}` : ''}">`
             + `<span class="adv-ico" aria-hidden="true">${skillImg({ id })}</span>${mine ? `<span class="sk-lv" aria-hidden="true">${lvTag}</span>` : ''}</div>`;
@@ -5475,18 +5567,23 @@ function advanceBoard(h, adv) {
         </div>`;
     const cb = combatOf(h);
     const tipCtx = { period: cycleOf(h), ...rangeCtx(cb), hpMax: cb.hp_max, atkType: cb.attack_type, stats: h.stats, cdr: cb.cooldown_reduction, skillTags: cb.option_fx?.skillTags, atkPct: cb.atk_pct_sum, healOut: cb.option_fx?.healOut };
-    const done = r => { if (r.ok) { save(); runChangeFlash(h.uid); } else if (r.err === 'points') flash('sk.err.advPoints'); else flashErr('tr', r.err, 'advance'); render(); };
+    const done = r => { if (r.ok) { save(); runChangeFlash(h.uid); } else if (r.err === 'points') flash('sk.err.points'); else if (r.err === 'level') flash('sk.err.locked', { lv: r.need }); else flashErr('tr', r.err, 'advance'); render(); };
     /** 되돌리기 — 무료 · 전부 환급이라 확인을 묻지 않는다(마스터리 우클릭과 같은 문법 · §7) */
     const forget = () => done(SYS.game.advanceForget(G, h.uid));
     box.querySelectorAll('[data-advskill]').forEach(sc => {
         const id = sc.dataset.advskill;
         const mine = id === learned;
         // 설명창 — 배운 것은 레벨을 얹은 숫자다(`up` = 배운 뒤 더 넣은 포인트 · tip.js `defOf`) · 안 배운 것은 Lv.1 · 맥락은 액티브 줄과 같다
-        bindTipNode(sc, () => skillTipCard(mine ? { id, up: lv - 1, lv } : { id }, tipCtx),
+        bindTipNode(sc, () => {
+            const card = skillTipCard(mine ? { id, up: lv - 1, lv } : { id }, tipCtx);
+            if (mine) card.appendChild(el('div', 'tip-line muted', adv.hero.nextLevel === null
+                ? t('sk.adv.maxLevel') : t('sk.adv.nextLevel', { n: lv + 1, lv: adv.hero.nextLevel })));
+            return card;
+        },
             { actions: () => (mine ? [{ label: t('sk.unlearn'), run: forget }] : []) });   // 손가락은 우클릭이 없다 (ADR-0374)
         sc.onclick = () => {
             if (!mine) {
-                const r = SYS.game.advanceLearn(G, h.uid, id);   // 첫 전직 포인트 — 이미 하나를 배웠으면 `learned`(먼저 되돌린다)
+                const r = SYS.game.advanceLearn(G, h.uid, id);   // 공용 스킬 포인트 1 — 이미 배웠으면 먼저 되돌린다
                 if (r.ok) flash('sk.adv.leveled', { skill: L(skillInfo(id).name), n: 1 });
                 done(r);
                 return;
@@ -5512,6 +5609,7 @@ function skillTreeBody() {
 
     // 판정(해금·상한·포인트)은 전부 여기서 온다 — 렌더러는 그리기만 한다 (SCREEN_DESIGN §7)
     const ms = SYS.game.masteryState(G, h.uid);
+    const adv = SYS.game.advanceState(G, h.uid, now());
     const spent = ms.nodes.reduce((a, n) => a + n.rank, 0);
 
     /** 1랭크 찍기 — 거절 사유는 state 가 코드로 낸다 (INTERFACE §3) */
@@ -5539,11 +5637,9 @@ function skillTreeBody() {
     pp.appendChild(ph);
     pp.appendChild(el('div', '', `
         <div style="font-size:var(--fs-xl);text-align:center">${ms.points}
-            <span class="muted" style="font-size:var(--fs-sm)">/ ${ms.points + spent}</span>
+            <span class="muted" style="font-size:var(--fs-sm)">/ ${adv.hero.points.have}</span>
             <span class="muted" style="font-size:var(--fs-xs);margin-left:6px">${t('sk.points.left')}</span></div>`));
-    // 전직 포인트 — 전직했으면 둘째 줄 `남은 / 받은` (마스터리와 따로 · 2026-10-06 · R216 · SCREEN_DESIGN §7 · ADR-0529)
-    const adv = SYS.game.advanceState(G, h.uid, now());
-    if (h.advance) pp.appendChild(el('div', 'sk-adv-pts', `<b>${adv.hero.points.free}</b> <span class="muted">/ ${adv.hero.points.have}</span> <span class="muted sk-adv-pts-l">${t('sk.advPoints')}</span>`));
+    // 죄종 · 직업 · 전직 모두 위의 같은 스킬 포인트 지갑을 쓴다.
     // 초기화는 **한 번 클릭** — 무료·수시이고 전액 환급이라 되돌릴 수 없는 행동이 아니다 (SCREEN_DESIGN §7)
     const reset = el('button', 'btn sm', t('sk.reset'));
     reset.disabled = spent === 0;
@@ -5582,9 +5678,17 @@ function skillTreeBody() {
    칸은 **획득물이 아니다**: 지휘 천막 랭크가 칸을 열고(R137), 칸에 든 옵션은 골드로 다시 굴린다 (tactic_card_design §5).
    판정(열림 · 조건 카운터 · 비용)은 전부 `game.tacticState` 가 실어 온다 — 렌더러는 파티를 세지 않는다. */
 
-/** 조건의 인자 — 죄종 · 스킬 태그 둘 중 하나다. 스킬 태그 이름은 CSV(skill_tag.csv), 문장 틀은 i18n */
-/** 조건의 인자 — 장비 죄종은 죄종 이름 · 리더 · 진형은 직업 이름 (CSV 이름을 쓴다 — 조건 사전 §5-8) */
-const condArgName = o => !o.condArg ? '' : o.condKind === 'gear_sin' ? sinName(o.condArg) : className(o.condArg);
+/** 조건의 인자 — 죄종 · 직업 · 능력치 · 전직 이름 (조건 사전 §5-8 · §5-11 ~ 13) */
+const condArgName = o => {
+    if (!o.condArg) return '';
+    if (o.condKind === 'sin_count') return sinName(o.condArg);
+    if (o.condKind === 'attr_sum') return L(D.heroAttributes.find(a => a.id === o.condArg)) || o.condArg;
+    if (o.condKind === 'advance_count') {
+        const a = (D.advanceRows ?? []).find(x => x.advance_id === o.condArg);
+        return a ? L({ ko: a.name_kr, en: a.name_en }) : o.condArg;
+    }
+    return className(o.condArg);
+};
 /** 조건 문장 — 문구 키는 조건 어휘(`test`)이고 「없으면」은 `.not` 이 붙는다 (§5-8) */
 const condText = o => t(`rs.cond.${o.condKind}${o.polarity === 'not' ? '.not' : ''}`, { n: o.condN, a: condArgName(o) });
 /** 조건 카운터 「지금 / 필요」 — 무조건은 안 단다(§4 「안 보이면 함정」). 「없으면」은 필요가 0 이다 */
@@ -5602,7 +5706,7 @@ const lockLine = text => `<span class="lock-line"><span class="lock-inl">${lockI
 const tLock = (key, params) => (isLock(key) ? lockLine(t(key, params)) : t(key, params));
 
 /** 리더 보너스 칸 — 행의 효과 오른쪽 세로줄(§15 · ADR-0757). 값은 `tacticState` 가 낸 리더 몫(`bonus`)이고 단위는 효과와 같다(`statValue`).
- *  더하면 `.up` · 빼면 `.down` · 0 이면 흐림 · 곡선을 안 받는 칸(`leaderBonus` 0 — 리더 통솔 칸)은 「—」 */
+ *  더하면 `.up` · 빼면 `.down` · 0 이면 흐림 · 곡선을 안 받는 칸(`leaderBonus` 0)은 「—」 */
 function leadCell(slot) {
     const o = slot.option;
     if (!(o.leaderBonus > 0)) return '<div class="rs-lead muted">—</div>';
@@ -5963,7 +6067,7 @@ function advanceBody(body, locked = false) {
     if (!h) { veil(body); return; }
     const A = SYS.game.advanceState(G, h.uid, now());
     const lvOk = A.need.have >= A.need.need;
-    // 전직했으면 줄 오른쪽에 전직 포인트 `남은 / 받은` (2026-10-06 · R216 · SCREEN_DESIGN §17 · ADR-0529)
+    // 전직했으면 줄 오른쪽에 공용 스킬 포인트 `남은 / 전체` (2026-10-06 · R216 · SCREEN_DESIGN §17 · ADR-0529)
     const pts = A.hero.advance ? `<span class="muted tr-adv-pts">${t('tr.adv.points', A.hero.points)}</span>` : '';
     body.appendChild(el('div', 'tr-adv-hero', `<b>${L(h.name)}</b><span class="${lvOk ? 'muted' : 'no'}">${t('tr.adv.level', A.need)}</span>${pts}`));
     // 지금 가진 스킬 — 캐릭터 탭 「액티브 스킬」과 **같은 카드 셋**(`skillCardGrid` — 고유 · 습득 · 전직 칸이 늘 셋 · 빈 칸 · 자물쇠 · 칸 아래 출처) ·
@@ -6992,13 +7096,13 @@ function exploreTick(at) {
 /* ═══════════ 선술집 탭 — 명단 · 고용 · 의뢰 게시판 (SCREEN_DESIGN §8-1) ═══════════
    2026-09-03 사용자 지시 — 마을의 첫 칸에서 자기 탭이 됐다. 09-01 「선술집을 접는 대가」(고용이 한 단계
    깊어진다)가 이 승격으로 청산됐다. 판정은 전부 game_logic 이 낸다 */
-/** 무료 리롤까지 남은 시간 — 시:분:초 두 자리씩 · 앱 시계가 **이 글자만** 갈아 끼운다(`tavernTick`) */
+/** 다음 교체까지 남은 시간 — 시:분:초 두 자리씩 · 앱 시계가 글자만 갱신한다(`tavernTick`) */
 function tavernWaitText(ms) {
     const s = Math.max(0, Math.ceil(ms / 1000));
     const p = n => String(n).padStart(2, '0');
     return t('tv.reroll.wait', { t: `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}` });
 }
-/** 선술집 시계 — 무료가 열리는 순간 다시 그리고(버튼이 무료로 바뀐다 · 손이 바쁘면 다음 빈 눈금), 그 밖에는 남은 시간 글자만 간다 (`shopTick` 과 같은 장치) */
+/** 선술집 시계 — 교체가 열리면 다시 그려 버튼을 켠다 · 그 밖에는 남은 시간만 갱신 (`shopTick` 과 같은 장치) */
 /** 출정 창 적 구성의 무덤 명패 — 남은 시간 글자만 간다 · 보스가 돌아오는 순간 다시 그린다(초상으로 돌아온다 · 경고 줄이 걷힌다) (ADR-0590).
  *  관전 카드의 명패는 결과 띠의 세기가 간다 — 여기는 적 칸(`.foe-cell.grave`)만 본다 */
 function respawnTick(at) {
@@ -7167,15 +7271,17 @@ function renderTavern(main) {
     body.appendChild(row);
 
     const tools = el('div', 'tv-tools');
-    const rr = el('button', 'btn', T.free
-        ? t('tv.reroll.free')
-        : t('tv.reroll', { g: T.cost.toLocaleString() }));
-    rr.disabled = !T.free && G.resources.gold < T.cost;
+    const rr = el('button', 'btn', t('tv.reroll.free'));
+    rr.disabled = !T.free;
     rr.onclick = () => {
-        const r = SYS.game.tavernReroll(G, now()); if (!r.ok) flash('tv.err.gold'); else save(); render();
+        const r = SYS.game.tavernReroll(G, now());
+        if (r.ok) save();
+        else if (r.err === 'unbuilt') flashNeed('hire');
+        else flash('tv.err.' + r.err);
+        render();
     };
     tools.appendChild(rr);
-    // 무료까지 남은 시간 — 버튼 오른쪽에 따로 선다 · 앱 시계가 1초마다 글자만 간다(`tavernTick`) (SCREEN_DESIGN §8-1 · 2026-09-30)
+    // 다음 교체까지 — 버튼 오른쪽 · 쿨다운 동안 비활성 (SCREEN_DESIGN §8-1 · ADR-1016)
     if (!T.free) tools.appendChild(el('span', 'tv-wait', tavernWaitText(T.freeAt - now())));
     state.tavernShown = { freeAt: T.freeAt, free: T.free };
     body.appendChild(tools);
@@ -7927,7 +8033,7 @@ function forgeUpgrade(p) {
  * **탭 이름은 「상점」(활동), 패널 머리는 「상단」(장소 — `dp.post.trade`)** 으로 갈린다 — 대장간(§8-2)는 탭 이름도 장소다(ADR-0190).
  * **맨 위에 영웅 띠**(캐릭터 탭과 같은 패널 · 같은 「고른 영웅」 — ADR-0359) · 가운데 단 = 구매 | 판매 | 교역소 위 · 특수상단 아래 · 맨 아래 아이템창.
  * 방문 시계 · 장비 목록 · 무엇이 열렸나는 `game.shopState` 가 낸다 — 화면은 판정을 하나도 안 한다(ui 원칙 2).
- * ⚠ 교역소 교환 · 특수상단 물건은 미정이라 `?` 칸 셋만 선다(ADR-0782 · ADR-0960) · 상인 이름 · 칸 수는 `mock.js:TRADE`(거짓).
+ * 교역소는 `shopTradeState`·`shopTradeBuy`를 쓴다. 특수상단 물건은 미정이라 `?` 칸 셋만 선다(ADR-0782).
  */
 /** 판매 목록에 올리고 내린다 — 선택만 바꾸며 골드·재고는 [판매]에서 정산한다. */
 function toggleShopSell(it) {
@@ -8017,13 +8123,13 @@ function renderShop(main) {
     // 제목 「구매」 바로 오른쪽 `?` — 교체 규칙 두 문장(편성 탭 소제목 `?` 와 같은 표시 · ADR-0464 · ADR-0648)
     const head = el('h2', '', `<span>${t('td.buy')}</span>`);
     head.firstChild.appendChild(helpMark('td.buy', () => t('td.reroll.help', { h: D.balance.shop_refresh_hours })));
-    // 제목 줄 오른쪽 끝 [교체] — **고른 영웅의 레벨**로 다시 굴린다 · 무료는 선술집처럼 쿨다운 · 유료는 두 배씩 (§8-3 · ADR-0648).
+    // 제목 줄 오른쪽 끝 [교체] — 고른 영웅의 레벨로 무료 교체 · 쿨다운 동안 비활성 (§8-3 · ADR-1016).
     //   버튼은 행동과 값만 · 바로 왼쪽에 고른 영웅의 이름 · 레벨 글자(ADR-0965) · 무료가 닫혀 있으면 그 왼쪽에 남은 시간 — 앱 시계가 글자만 간다(`shopTick` · 선술집 `tv-wait` 와 같은 글자)
     const roll = el('span', 'td-roll');
     if (!S.free) roll.appendChild(el('span', 'tv-wait', tavernWaitText(S.freeAt - now())));
     if (h) roll.appendChild(el('span', 'td-roll-who', t('td.reroll.who', { name: L(h.name), lv: h.level })));
-    const rr = el('button', `btn sm${S.open ? '' : ' dim'}`, S.rerollCost ? t('td.reroll', { g: S.rerollCost.toLocaleString() }) : t('td.reroll.free'));
-    rr.disabled = S.open && G.resources.gold < S.rerollCost;
+    const rr = el('button', `btn sm${S.open ? '' : ' dim'}`, t('td.reroll.free'));
+    rr.disabled = S.open && !S.free;
     rr.onclick = () => {
         if (!S.open) { flashNeed('shop'); return; }
         const r = SYS.game.shopReroll(G, S.list, now(), h?.uid);
@@ -8046,22 +8152,15 @@ function renderShop(main) {
 
     // 상점 열 오른쪽 반 — 위 교역소 · 아래 특수상단이 높이를 반씩 나눈다 (2026-10-30 사용자 「특수상단자리를 위아래 반으로 나눠서 위에다가 교역소」 · §8-3 · ADR-0960)
     const side = el('div', 'c-shop-stack');
-    /* 교역소 — 재료끼리 바꾸는 창구(상단 랭크가 연다 · 기획 §2-6 「교환」). 교환 비율이 미정이라 `?` 만 든 빈 네모만 선다 — 특수상단 물건 칸과 같은 칸 ·
-       고를 수 없고 가격 · 툴팁 · 사기 줄이 없다 · 칸 수는 `mock.js:TRADE.post`(거짓) · 안 열렸으면 잠김 베일(특수상단과 같다) */
-    const tp = el('div', 'panel');
-    tp.appendChild(helpHeading('h2', '', `${t('td.trade')} <small class="todo-badge">${t('todo.badge')}</small>`, 'trade'));
+    // 교역소 — 받을 재료를 고른 뒤 다른 재료의 구매 줄로 지불한다(ADR-1017).
+    const tp = el('div', 'panel td-trade');
+    tp.appendChild(helpHeading('h2', '', t('td.trade'), 'trade'));
     const tpBody = el('div', 'box-body td-body');
     tpBody.dataset.keep = 'shop-tr';
     if (!S.trade) {
         tpBody.classList.add('lock-host');
         tpBody.appendChild(lockVeil('shop_trade'));
-    } else {
-        const goods = el('div', 'td-goods');
-        const unk = el('div', 'td-grid td-post');
-        for (let i = 0; i < M.TRADE.post.slots; i++) unk.appendChild(el('div', 'td-slot', '<div class="inv-cell td-unknown">?</div>'));
-        goods.appendChild(unk);
-        tpBody.appendChild(goods);
-    }
+    } else tpBody.appendChild(shopTradeGoods());
     tp.appendChild(tpBody);
     side.appendChild(tp);
 
@@ -8095,6 +8194,66 @@ function renderShop(main) {
     main.appendChild(page);
 }
 
+/** 교역소 재료 칸과 지불 줄 — 가격·보유·가능 여부는 게임 시스템이 낸다. */
+function shopTradeGoods() {
+    const S = SYS.game.shopTradeState(G, state.shopTrade);
+    state.shopTrade = S.id;
+    const goods = el('div', 'td-goods td-trade-goods');
+    const grid = el('div', 'td-grid td-post');
+    for (const x of S.items) {
+        const cell = matCell(x);
+        cell.classList.add('td-trade-item');
+        if (x.id === S.id) cell.classList.add('td-picked');
+        cell.dataset.tradeId = x.id;
+        cell.setAttribute('role', 'button');
+        cell.setAttribute('tabindex', '0');
+        cell.setAttribute('aria-label', resName(x.id));
+        cell.setAttribute('aria-pressed', String(x.id === S.id));
+        cell.onclick = () => { state.shopTrade = S.id === x.id ? null : x.id; render(); };
+        cell.onkeydown = e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cell.click(); }
+        };
+        grid.appendChild(cell);
+    }
+    goods.appendChild(grid);
+    if (S.id) {
+        goods.appendChild(el('div', 'td-trade-target', `${resName(S.id)} ×${S.n.toLocaleString()}`));
+        const offers = el('div', 'td-trade-offers');
+        for (const o of S.offers) {
+            const row = el('div', 'td-trade-offer');
+            row.dataset.tradePay = o.pay;
+            row.title = resName(o.pay);
+            const gold = o.pay === 'gold', icon = M.materialIcon(o.pay);
+            if (gold) row.appendChild(el('span', 'td-trade-icon res-gold', M.RES_ART.gold));
+            else if (icon) {
+                const img = el('img', 'td-trade-icon');
+                img.src = icon; img.alt = '';
+                row.appendChild(img);
+            }
+            const price = el('span', `td-price${o.canBuy ? '' : ' no'}`, gold ? `${o.cost.toLocaleString()} G` : `${o.cost.toLocaleString()} / ${o.have.toLocaleString()}`);
+            price.title = t('td.trade.cost', { cost: o.cost.toLocaleString(), have: o.have.toLocaleString() });
+            row.appendChild(price);
+            const buy = el('button', 'btn sm primary', t('td.buy'));
+            buy.disabled = !o.canBuy;
+            buy.setAttribute('aria-label', t('td.trade.buy', { name: resName(S.id), pay: resName(o.pay) }));
+            buy.onclick = () => {
+                const r = SYS.game.shopTradeBuy(G, S.id, o.pay);
+                if (r.ok) {
+                    save();
+                    flash(r.pay === 'gold' ? 'td.trade.boughtGold' : 'td.trade.bought', { name: resName(r.id), n: r.n, pay: resName(r.pay), cost: r.cost.toLocaleString() });
+                }
+                else if (r.err === 'unbuilt') flashNeed('shop_trade');
+                else flash(`td.trade.err.${r.err}`);
+                render();
+            };
+            row.appendChild(buy);
+            offers.appendChild(row);
+        }
+        goods.appendChild(offers);
+    }
+    return goods;
+}
+
 /**
  * 상점 탭의 시계 (SCREEN_DESIGN §8-3 · ADR-0223) — 앱 시계(`expTick`)가 이 탭을 보는 동안 부른다.
  * 방문이 바뀌는 순간(상인이 오거나 떠남 — 회차가 넘어가면 장비 목록도 갈린다) **다시 그리고**, 그 밖에는
@@ -8104,7 +8263,7 @@ function shopTick(at) {
     const v = SYS.game.shopVisit(G, at);
     const shown = state.shopShown;
     if (!shown || shown.cycle !== v.cycle || shown.here !== v.here) { render(); return; }
-    // 상단 무료 교체가 열리는 순간 — 버튼이 무료로 바뀐다(손이 바쁘면 다음 빈 눈금 · `tavernTick` 과 같다 · ADR-0648)
+    // 교체 쿨다운이 끝나면 다시 그려 버튼을 켠다(손이 바쁘면 다음 빈 눈금 · `tavernTick` 과 같다 · ADR-1016)
     if ((at >= shown.freeAt) !== shown.free) { if (handBusy()) clockRender = true; else render(); return; }
     const txt = shopClockText(v);
     for (const n of document.querySelectorAll('.td-clock')) if (n.textContent !== txt) n.textContent = txt;
@@ -8911,7 +9070,7 @@ function helpSections() {
         character: ['identity', 'stats', 'growth', 'goblin', 'equipment', 'equipment_slots', 'rarity', 'sins', 'inventory', 'salvage', 'skills', 'weapon_skills', 'speed', 'defenses', 'penetration', 'damage_kinds', 'critical_effects', 'farming_stats', 'ailments', 'channeling', 'mastery', 'dismiss'],
         research: ['build', 'first_steps', 'requirements', 'unlocks', 'locked'],
         tavern: ['hire', 'choosing', 'reroll', 'keep', 'visitors', 'commissions', 'fame', 'gambling'],
-        shop: ['buy', 'restock', 'consumables', 'blueprints', 'special'],
+        shop: ['buy', 'restock', 'consumables', 'blueprints', 'trade', 'special'],
         forge: ['overview', 'smith', 'potions', 'upgrade', 'combine', 'craft'],
         library: ['basics', 'craft', 'learn', 'upgrade', 'advance', 'points'],
         resource: ['lines', 'production', 'materials', 'research', 'assignment', 'hero_effects', 'jobs'],
@@ -8932,17 +9091,18 @@ function helpSections() {
     };
     const args = {
         'tavern.hire': { hire: B.tavern_hire_cost.toLocaleString() },
-        'tavern.reroll': { refresh: B.tavern_refresh_hours, reroll: B.tavern_reroll_cost.toLocaleString() },
+        'tavern.reroll': { refresh: B.tavern_refresh_hours },
         'tavern.commissions': { slots: limits.commissionSlots },
         'tavern.gambling': {
             lines: SYS.gamble.lines.length, trigger: B.gamble_hold_trigger,
             respins: B.gamble_hold_respins, batch: B.gamble_batch_spins,
         },
-        'shop.restock': { refresh: B.shop_refresh_hours, reroll: B.shop_reroll_cost.toLocaleString() },
+        'shop.restock': { refresh: B.shop_refresh_hours },
+        'shop.trade': { cost: B.shop_trade_cost, receive: B.shop_trade_receive },
         'library.craft': { gold: B.book_craft_gold.toLocaleString(), dust: B.book_craft_dust, herb: B.book_craft_herb },
         'library.learn': { level: B.skillbook_learn_level },
         'library.advance': { level: B.advance_unlock_level, gold: B.advance_gold.toLocaleString() },
-        'library.points': { interval: B.advance_point_interval },
+        'library.points': { interval: B.advance_skill_level_interval },
         'resource.production': { hours: B.dispatch_offline_cap_hours },
         'codex.monsters': { per: D.difficultyList.map(d => `${L(d.name)} ${d.codexExp}`).join(' · ') },
         'codex.milestones': { list: D.codexLevels.map(n => n.toLocaleString()).join(' · ') },
@@ -9556,9 +9716,9 @@ async function boot() {
         if (new URLSearchParams(location.search).get('adv') === '1') {
             const h = heroById(SYS.game.partyOf(G)[0]);
             if (h) {
-                h.level = Math.max(h.level, Math.min(D.balance.hero_level_cap, D.balance.advance_unlock_level + D.balance.advance_point_interval));
+                h.level = Math.max(h.level, Math.min(D.balance.hero_level_cap, D.balance.advance_unlock_level + D.balance.advance_skill_level_interval));
                 const br = SYS.game.advanceState(G, h.uid, now()).branches[0];
-                if (br) { h.advance = br.id; SYS.game.advanceLearn(G, h.uid, br.skills[0]); }
+                if (br) { h.masteryPoints = Math.max(h.masteryPoints ?? 0, 1); h.advance = br.id; SYS.game.advanceLearn(G, h.uid, br.skills[0]); }
             }
         }
     }
@@ -9572,11 +9732,11 @@ async function boot() {
         h0.masteryPoints = D.balance.mastery_t1_max_rank;
         const first = SYS.game.masteryState(G, h0.uid).nodes.find(n => n.canLearn);
         if (first) SYS.game.learnMastery(G, h0.uid, first.id);
-        // `&adv=1` — 전직 판이 서게 영웅 0 을 전직시키고 스킬을 배워 한 단계 올려 둔다 · 전직 포인트 하나가 남아 스킬 칸이 눌린다 (2026-10-06 · R216 · ADR-0529)
+        // `&adv=1` — 전직 판이 서게 영웅 0 을 전직시키고 스킬을 배워 한 단계 올려 둔다 · 공용 포인트와 메인 레벨 조건을 확인한다 (2026-10-06 · R216 · ADR-0529)
         if (new URLSearchParams(location.search).get('adv') === '1') {
-            h0.level = Math.max(h0.level, Math.min(D.balance.hero_level_cap, D.balance.advance_unlock_level + D.balance.advance_point_interval * 2));
+            h0.level = Math.max(h0.level, Math.min(D.balance.hero_level_cap, D.balance.advance_unlock_level + D.balance.advance_skill_level_interval * 2));
             const br = SYS.game.advanceState(G, h0.uid, now()).branches[0];
-            if (br) { h0.advance = br.id; SYS.game.advanceLearn(G, h0.uid, br.skills[0]); SYS.game.advanceLevelUp(G, h0.uid); }
+            if (br) { h0.masteryPoints = Math.max(h0.masteryPoints ?? 0, 2); h0.advance = br.id; SYS.game.advanceLearn(G, h0.uid, br.skills[0]); SYS.game.advanceLevelUp(G, h0.uid); }
         }
     }
     if (dev === 'book') {   // 책을 쥔 **도서관 탭** (§17 · §10 · ADR-0422 · ADR-0426) — 도서관 · 레벨 10 · 책이 있어야 버튼이 산다.
@@ -9604,12 +9764,15 @@ async function boot() {
         // 책 만들기 첫 칸 · 가진 책 둘째 책(배운 칸이 차 있어 [덮어쓰기]가 선다)을 고른 채 — 두 위 줄이 다 서게 (ADR-0570 · ADR-0573)
         state.bookCraftSel = SYS.game.bookState(G, h0.uid).craft[0]?.id ?? null;
         state.bookSel = own[1] ?? null;
+        // `&bkcls=<class_id>` — 제작 칸의 그 직업 탭을 고른 채(ADR-1021) · `&overwrite=1` — 덮어쓰기 확인 창을 연 채(ADR-1020)
+        state.bookCraftClass = new URLSearchParams(location.search).get('bkcls');
+        if (new URLSearchParams(location.search).get('overwrite') === '1') state.modal = 'bookOverwrite';
         // `&adv=1` — 영웅 0 을 첫 갈래로 전직시키고 첫 전직 스킬을 배운 채 — 전직 후 갈래 셋 · 주황 테두리에 닿는 길 (ADR-0592).
         //   전직은 시간이 걸려 헤드리스가 못 닿는다 · 전직시키는 방식은 `?dev=tree&adv=1` 과 같다
         if (new URLSearchParams(location.search).get('adv') === '1') {
-            h0.level = Math.max(h0.level, Math.min(D.balance.hero_level_cap, D.balance.advance_unlock_level + D.balance.advance_point_interval));
+            h0.level = Math.max(h0.level, Math.min(D.balance.hero_level_cap, D.balance.advance_unlock_level + D.balance.advance_skill_level_interval));
             const br = SYS.game.advanceState(G, h0.uid, now()).branches[0];
-            if (br) { h0.advance = br.id; SYS.game.advanceLearn(G, h0.uid, br.skills[0]); }
+            if (br) { h0.masteryPoints = Math.max(h0.masteryPoints ?? 0, 2); h0.advance = br.id; SYS.game.advanceLearn(G, h0.uid, br.skills[0]); }
         }
         // 책은 도서관 탭에서만 보인다(ADR-0426 · ADR-0460) — 옛 `&lib=1` · `&mat=1` 은 읽지 않는다
         state.tab = 'library';
