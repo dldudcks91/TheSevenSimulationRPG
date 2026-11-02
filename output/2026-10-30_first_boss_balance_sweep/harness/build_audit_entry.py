@@ -1,5 +1,6 @@
 """Restore full observation/accounting for finalist verification only."""
 from pathlib import Path
+from farm_controls import transform
 
 BASE=Path(__file__).resolve().parent.parent
 HERE=BASE/'harness'
@@ -32,6 +33,7 @@ compiled=(HERE/'generated_entry.mjs').read_text(encoding='utf-8')
 reset=compiled[compiled.index('    window.resetExperiment=function(v){'):]
 reset=reset.replace('SYS=buildSystems(D);Q=SYS.game;',"for(const c of D.classes){const add=c.startRow==='front'?(v.frontHp??0):(v.backHp??0);if(add&&c.hpBase!=null)c.hpBase+=add;}SYS=buildSystems(D);Q=SYS.game;installObservation();")
 source=observer+'\n'+active+'\n'+reset
+source=transform(source)
 import re
 source=re.sub(r"from '/(.*?)'",lambda m:"from '../snapshot/src/"+m[1]+"'",source)
 source+='''

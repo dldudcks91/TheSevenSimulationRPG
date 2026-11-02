@@ -16,7 +16,7 @@
  *     총 칸 수는 [balance.csv:active_slots] 에서 자른다
  *   · 발동(battle_design §3) — 준비된 것 중 `readyAt` 최소(가장 오래 기다린 것) → 동률이면 **칸 순서**.
  *     차례당 스킬은 하나 · 기본 공격은 스킬 뒤에 이어서 친다(마법 무기 제외 · 2026-10-06 R218 · `skill_runtime.act`)
- *   · 쿨은 실시간 초(battle_design §6) — **전투 시작 때 준비 상태로 출발한다**(2026-09-15 R100 — 동시 준비는 칸 순서라 첫 차례는 1번 칸 · 원정 도중 새로 생긴 스킬만 쿨 한 바퀴 뒤)
+ *   · 쿨은 실시간 초(battle_design §6) — **라운드가 열릴 때마다 한 바퀴부터 돈다**(2026-11-02 R427 — ~~전투 시작 때 준비 상태로 출발~~ R100 · 개시 순서는 쿨 짧은 순 · 동시 준비는 칸 순서 · 원정 도중 새로 생긴 스킬도 쿨 한 바퀴 뒤)
  *   · 발동 조건(§9-3) — 거짓이면 **준비된 것으로 치지 않는다**(쿨은 그대로, 그 차례엔 다른 것이 나간다)
  *   · 태그(skill_design §11) — 어휘·대분류·표시 이름의 SSOT 는 **`skill_tag.csv`**(주입 `tagRows`)다. 직접 적는 것
  *     (`derived=0`)은 최대 2개(`|` 구분)이고 `derived=1` 셋은 `hit` 줄 + 스킬 `target` 에서 **파생**돼 칸을 먹지 않는다.
@@ -609,7 +609,7 @@ export function createSkillSystem(data) {
      *   변형 노드가 붙으면 칸마다 덧씌울 것이 생긴다(정의 객체는 공유물이라 손대면 안 된다 — `resolve` 참조).
      * hero 를 통째로 받는 이유: 전직 출처가 붙어도 이 함수 안만 바뀌게 하려는 것.
      * ~~@param ctx.weaponSkill 착용 무기 개체가 든 스킬 id~~ — **2026-09-29 폐지 · R179** (skill_design §2-1) — 둘째 칸은 `hero.bookSkill`(책으로 배운 것)이다
-     * @param hero.skillOrder [skillId] — 플레이어가 정한 칸 순서(선택 필드) — 싣는 곳은 `game.setSkillOrder`(캐릭터 탭 스킬 우선순위 창 · 2026-10-28 · ADR-0937)
+     * ~~@param hero.skillOrder 플레이어가 정한 칸 순서~~ — **2026-11-02 폐지 · R427** (battle_design §5 — 우선순위 창이 걷혔다) — 칸 순서는 출처 순서 하나다
      * @param ctx.skillPlus {skillId: n} — 낀 장비의 특정 스킬 +n(`item.skillPlusOf` · 2026-10-08 · R225). 고유 · 배운 칸의 `up` 에 더한다 · 안 넘기면 종전과 같다
      */
     const activesFor = (hero, ctx = {}) => {
@@ -650,15 +650,8 @@ export function createSkillSystem(data) {
         //   ⚠ **딸린 규칙 — 칸이 둘이면 쿨도 둘이다.** `battle.js` 가 칸마다 `readyAt` 을 따로 들므로 겹친 스킬은 두 배로 나간다.
         //   ~~고유와 같은 스킬의 책을 배우면 실제로 일어난다~~ → **2026-10-06 같은 책은 칸을 늘리지 않고 업그레이드한다**(`state.learnBook` · R216) —
         //   이 모양은 옛 세이브에만 남는다(옮기지 않는다 — 옛 세이브는 새로 시작한다).
-        const order = hero?.skillOrder ?? null;
-        if (!order) return base.slice(0, B.active_slots);
-        // 플레이어가 고른 순서를 앞에 — 목록에 없는 id·중복은 무시하고, 안 적힌 것은 기본 순서대로 뒤에 붙는다
-        const front = [];
-        for (const id of order) {
-            const a = base.find(x => x.id === id);
-            if (a && !front.includes(a)) front.push(a);
-        }
-        return [...front, ...base.filter(a => !front.includes(a))].slice(0, B.active_slots);
+        //   ~~플레이어가 고른 순서(`hero.skillOrder`)를 앞에~~ — 2026-11-02 R427 삭제(battle_design §5) · 칸 순서 = 출처 순서
+        return base.slice(0, B.active_slots);
     };
 
     /**
@@ -711,9 +704,8 @@ export function createSkillSystem(data) {
 
     /**
      * 발동 선택 (battle_design §3) — 순수. `actives` 를 변경하지 않고 정렬도 새 배열에서 한다.
-     * 동률은 **칸 순서**다 — 우선순위는 플레이어가 정하는 값(battle_design §5 · skill_design §2)이고
-     *   `skill.csv:priority` 는 **직업 행의 기본 정렬**에만 쓴다(`activesFor`). 여기서 다시 읽으면
-     *   플레이어가 칸을 바꿔도 발동 순서가 안 바뀌어 칸 순서가 죽은 값이 된다.
+     * 동률은 **칸 순서**(출처 순서 — battle_design §5 · skill_design §2)다 — 쿨이 라운드마다 처음부터라(2026-11-02 R427)
+     *   개시 순서는 쿨 길이가 정하고 칸 순서는 쿨이 같은 칸끼리만 가른다. `skill.csv:priority` 는 **직업 행의 기본 정렬**에만 쓴다(`activesFor`).
      * @param actives [{id, def, readyAt}] — 유닛이 들고 있는 슬롯
      * @param t 현재 시각(초)
      * @param isCastable (active) → bool — 발동 조건 판정 콜백(유닛 상태는 호출자가 안다)

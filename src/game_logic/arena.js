@@ -19,7 +19,7 @@ const RANKS = [0, 1];
 /** 마스터리 트리 종류 — `mastery_node.csv:tree_kind` 의 어휘 · AI 가 주력을 여기서 하나 굴린다 */
 const TREES = ['class', 'sin'];
 /** 팀 코드에 싣는 영웅 칸 — 전투에 드는 것만. uid · XP · 남은 포인트 · 착용 표는 안 싣는다(받는 쪽이 다시 세운다) */
-const HERO_KEYS = ['name', 'tier', 'sin', 'cls', 'trait', 'face', 'level', 'stats', 'mastery', 'innate', 'bookSkill', 'skillLv', 'advance', 'advanceSkill', 'advanceUp', 'skillOrder'];
+const HERO_KEYS = ['name', 'tier', 'sin', 'cls', 'trait', 'face', 'level', 'stats', 'mastery', 'innate', 'bookSkill', 'skillLv', 'advance', 'advanceSkill', 'advanceUp'];
 /** 받은 팀 코드의 문자열에 못 들어오는 글자 — 화면이 `innerHTML` 로 그리므로 태그 · 속성을 열 수 있는 것 (INTERFACE §2-17 `text`) */
 const UNSAFE_TEXT = /[<>"`]/;
 

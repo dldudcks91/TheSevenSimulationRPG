@@ -376,8 +376,9 @@ html, body { height: 100%; overflow: hidden; }
 .tab-seg:empty { display: none; }
 .tab-seg .segmented { flex-wrap: nowrap; }
 /* 부대 칸 = 이름 + 그 부대가 있는 스테이지 (ADR-0517) — 상단바가 모자라면 **스테이지 글자만** 줄어 「…」로 끝난다.
-   부대 이름(앞 글자)은 제 폭을 지킨다 · 라벨 칸이라 고정 px 이 아니다 (Stages · Report 칸은 2026-10-18 걷혔다 · ADR-0661) */
-.tab-seg .btn.seg-party { display: inline-flex; min-width: 0; white-space: pre; }
+   부대 이름(앞 글자)은 제 폭을 지킨다 · 라벨 칸이라 고정 px 이 아니다 (Stages · Report 칸은 2026-10-18 걷혔다 · ADR-0661)
+   칸 하나의 최대 폭 18.5em(13px 에서 약 240px — 한국어 노말의 가장 긴 이름이 다 드는 폭) — 그보다 길면 자리가 남아도 스테이지 글자가 줄어든다 [2026-11-02 사용자 지시 · ADR-1036] */
+.tab-seg .btn.seg-party { display: inline-flex; min-width: 0; max-width: 18.5em; white-space: pre; }
 .tab-seg .seg-where { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 /* 원정 세그먼트의 관전 칸은 원정 상태를 든다 — 없음 회색 · 원정이 있으면(도는 중 · 끝남) 파랑. 고른 칸은 테두리까지 그 색 (SCREEN_DESIGN §4 · ADR-0147).
    파랑은 **폴백**이다 — 원정이 있는 부대 칸은 렌더러가 그 스테이지의 챕터 죄종 색을 인라인으로 덮는다(`app.js:expNavBox` · ADR-0519).
@@ -523,14 +524,27 @@ html, body { height: 100%; overflow: hidden; }
     background: none; border: 0; border-left: 3px solid transparent;
     padding: 8px 16px 8px 31px; text-align: left; color: var(--text-secondary);
 }
-/* 묶음 머리 [2026-10-09 사용자 지시 · SCREEN_DESIGN §1 · ADR-0554] — 누를 수 없는 작은 회색 글씨 · 묶음 사이 간격은 이 윗여백이 든다.
-   왼쪽 여백 19px = 탭 버튼의 왼쪽 띠(3px) + 16px — 「새 게임」과 같은 선 · 탭 이름은 이보다 안으로 든다 */
+/* 묶음 머리 [2026-10-09 사용자 지시 · SCREEN_DESIGN §1 · ADR-0554] — 누를 수 없는 회색 글씨 · 묶음 사이 간격은 이 윗여백이 든다.
+   왼쪽 여백 19px = 탭 버튼의 왼쪽 띠(3px) + 16px — 「새 게임」과 같은 선 · 탭 이름은 이보다 안으로 든다
+   굵은 글씨 + 오른쪽 끝까지 가는 선 · 묶음 사이 20px [2026-11-02 사용자 지시 · ADR-1028] — 세 덩어리가 끊겨 읽힌다 */
 .nav .nav-grp {
-    margin-top: 14px; padding: 0 16px 4px 19px;
-    font-size: var(--fs-xs); color: var(--text-muted); letter-spacing: .06em;
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 20px; padding: 0 16px 8px 19px;
+    font-size: var(--fs-sm); font-weight: 700; color: var(--text-muted); letter-spacing: .14em;
     user-select: none; cursor: default;
 }
+.nav .nav-grp::after { content: ''; flex: 1; height: 1px; background: var(--border-primary); }
 .nav .nav-grp:first-child { margin-top: 0; }
+/* 탭 아이콘 [2026-11-02 사용자 지시 · SCREEN_DESIGN §1 · ADR-1028] — 백색 실루엣을 글자색 마스크로 칠한다(흐린 탭은 `.nav-lbl` 째 흐리다 · 고른 탭은 이름처럼 밝다).
+   위아래 음의 여백 — 그림(20px)이 글줄보다 높아도 줄 높이는 그대로다 · 탭은 흐린 탭처럼 flex — 이름 칸이 글줄 기준선에 앉으면 줄이 5px 높아진다 */
+.nav button[data-tab] { display: flex; align-items: center; }
+.nav .nav-lbl { display: inline-flex; align-items: center; }
+.nav .nav-ic {
+    flex: none; width: 20px; height: 20px; margin: -2px 12px -2px 0;
+    background: currentColor; opacity: .85;
+    -webkit-mask-size: contain; mask-size: contain; -webkit-mask-position: center; mask-position: center; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+}
+.nav button.on .nav-ic { opacity: 1; }
 .nav button:hover { background: var(--bg-tertiary); color: var(--text-primary); }
 .nav button.on {
     background: var(--bg-tertiary); color: var(--text-primary);
@@ -1621,6 +1635,14 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .p-slot.locked .rs-pin-ico { width: 50%; height: 50%; }
 /* 라운드를 물약 없이 시작한 칸 [2026-10-22 사용자 지시 · ADR-0716] — 빨간 반투명. 그 라운드 안에서 마셔서 빈 칸(`.full` 이 빠진 칸)은 위 빈 칸 그대로다 */
 .b-belt .p-slot.none { background: color-mix(in srgb, var(--color-error) 35%, transparent); border-color: color-mix(in srgb, var(--color-error) 65%, transparent); }
+/* 물약 쿨 판 [2026-11-02 · R427 · SCREEN_DESIGN §4-2 · ADR-1034] — 쿨은 파티 하나라 **찬 칸 전부**가 스킬 쿨 칸(`.cd-slot .cd-mask`)과 같은 판으로 덮였다가
+   위에서부터 걷힌다 · 높이는 재생기가 scaleY 로 준다(`refreshPotionCd`) · `D2 Min` 의 회색 선(`::after`)은 판 위에 그대로 선다(뒤 형제라 위다) */
+.b-belt .p-slot { position: relative; }
+.b-belt .p-slot > .cd-mask {
+    position: absolute; left: 0; right: 0; top: 0; height: 100%; pointer-events: none;
+    background: rgba(var(--veil-rgb),.78);
+    transform-origin: top; transition: transform .1s linear;   /* 스킬 쿨 판과 같은 걸음 */
+}
 .ctrl-div { align-self: stretch; width: 1px; margin: 0 4px; background: var(--border-primary); }
 .btn.sm.on { border-color: var(--border-highlight); background: var(--surface-6); }
 
@@ -4017,27 +4039,7 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
     display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0;
     margin-top: 1px;
 }
-/* 소제목 오른쪽 끝 [우선순위] (2026-10-28 · SCREEN_DESIGN §6 · ADR-0937) — 소제목 줄 높이를 안 늘린다: 버튼 위아래 여백을 걷고 글자는 한 단 아래 ·
-   ⚠ `.btn.sm.sk-order-btn` 로 건다 — 한 단이면 `.btn.sm { padding }`(클래스 둘)에 진다(`.go-tree` 와 같은 사정) */
-.sub-h.sk-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.btn.sm.sk-order-btn { padding: 0 8px; font-size: var(--fs-xs); font-weight: normal; line-height: 1.4; }
-/* 스킬 우선순위 창 — 줄 = 순번 · 그림 · 이름 · 줄 전체가 잡는 곳이다(끌어 옮기기 · ADR-0937) */
-.sk-order-list { display: flex; flex-direction: column; gap: 6px; min-width: 260px; }
-.sk-order-row {
-    display: flex; align-items: center; gap: 10px; padding: 6px 10px; cursor: grab; user-select: none; touch-action: none;
-    background: var(--bg-input); border: 1px solid var(--border-dark);
-}
-.sk-order-row:hover { border-color: var(--border-highlight); }
-.sk-order-row.drag { opacity: .35; }
-.sk-order-no { flex: none; min-width: 1.2em; text-align: center; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.sk-order-ico { position: relative; flex: none; width: 38px; height: 38px; }   /* 그림 오른쪽 아래 `Lv.n`(`.sk-lv`)의 기준 칸 (ADR-0701) */
-.sk-order-ico img { display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: var(--face-render); }
-.sk-order-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* 삽입선 — 영웅 띠의 `.hs-insert` 를 가로로 눕힌 것(같은 색 · 같은 층) */
-.sk-order-insert {
-    position: fixed; height: 3px; transform: translateY(-50%); z-index: 46; pointer-events: none;
-    background: var(--color-drop); border-radius: 2px; box-shadow: 0 0 6px var(--color-drop);
-}
+/* ~~소제목 오른쪽 끝 [우선순위] · 스킬 우선순위 창 `.sk-order-*`~~ — 2026-11-02 걷었다(SCREEN_DESIGN §6 · ADR-1035) */
 .sk-cards { display: grid; grid-template-columns: repeat(3, clamp(44px, 30%, 52px)); gap: 8px; }
 /* 칸 + 칸 아래 출처 글자 [2026-09-15 사용자 지시 · ADR-0121] — 격자 열은 이 묶음이 받는다.
    글자는 칸 **밖**이라 빈 칸의 흐림(`.sk-card.vacant`)을 안 탄다 — 빈 칸 아래에도 자리 이름은 같은 세기로 선다 */
@@ -6254,6 +6256,8 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 :where(:root[data-skin="d2min"]) .nav button:hover { background: rgba(255, 255, 255, .03); }
 :where(:root[data-skin="d2min"]) .nav button.on { background: var(--sk-chrome), #1c1c1c; box-shadow: inset 0 0 0 1px var(--sk-lip), inset 0 2px 0 rgba(255, 255, 255, .05), 0 1px 3px rgba(0, 0, 0, .8); }
 :where(:root[data-skin="d2min"]) .nav button.todo::after { right: 12px; }
+/* 묶음 머리의 가는 선 — 이 겉모양의 `--border-primary` 는 홈 색이라 돌 위에서 안 보인다 · 돌 턱의 밝은 줄로 긋는다 (ADR-1028) */
+:where(:root[data-skin="d2min"]) .nav .nav-grp::after { background: var(--sk-lip); }
 
 /* 패널 — 어두운 돌 + 두 겹 돌 테두리(바깥으로 4px 나간다 — 글자와 안 겹친다) */
 :where(:root[data-skin="d2min"]) .panel {

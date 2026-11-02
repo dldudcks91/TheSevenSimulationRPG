@@ -416,7 +416,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 - **설치본은 손으로 만들지 않는다** — `python scripts/build_icons.py` 가 짓는다. 한 장마다 무손실 · 손실(q90)을 둘 다 인코딩해 **작은 쪽**을 쓴다(단색 실루엣은 무손실이 이긴다 — 오차 0 · 컬러 그림은 q90 이 1/4 크기에 오차가 눈에 안 띈다). 원본이 없어진 설치본은 지운다
 - **새 아이콘 · 교체** — 원본 PNG 를 `icons_source/<폴더>/<id>.png` 에 넣고 스크립트를 돌린다. `icons/` 에 PNG 를 떨어뜨려도 스크립트가 `icons_source/` 로 옮기고(같은 이름의 옛 원본을 대체) 짓는다
-- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/box · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · explore · currency · gamble · forge · lab · arena · mail · battle_buffs). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
+- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/box · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · explore · currency · gamble · forge · lab · arena · mail · nav · battle_buffs). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
 - **경로 조립** — `mock.js:ICON_EXT`(= `.webp`) 하나를 모든 아이콘 경로가 쓴다
 - **256 인 이유** — 칸은 22~44px 지만 한 장(1600×800)이 모니터에 맞춰 늘고(`fitStage`) 고해상도 배율이 겹치면 40px 칸이 기기 픽셀 100 안팎이 된다. 128 은 거기서 빠듯하다. 512 PNG 대비 7장 1.1MB → 70KB 안팎
 - 아래 폴더별 절의 트리 · 규격(512 · 투명 · 0.88)은 **원본(`icons_source/`) 기준**이다 — 설치본은 그걸 256 WebP 로 줄인 것뿐이다
@@ -531,6 +531,17 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 `items/box/clear_box.png`(상자 칸 그림 · `mock.js:CLEAR_BOX_ART`)는 512 투명 · 긴 변 0.88 · 중앙(`cut.py`). Codex 이미지 생성 2×2 시트 `items/source/sheet_box_mail.png`의 왼쪽 위 그림(피 묻은 나무 상자 · 뼈 걸쇠 · 밀랍)을 쓴다. 경계밀도는 합격이며 색 수는 133으로 기준 130을 조금 넘는다. SCREEN_DESIGN §2 · §6 · ADR-0731 · 0732.
 
 `mail/mail.png`(상단바 우편함 · `mock.js:MAIL_ART`)와 `mail/bell.png`(바로 옆 알림 · `mock.js:BELL_ART`)는 **투명 바탕의 단순한 백색 실루엣**이다. 스킬 아이콘과 어울리고 상단바의 작은 크기에서 읽히도록 질감·색 장식을 덜었다. 원본은 `icons_source/mail/`의 PNG, 설치본은 `icons/mail/`의 256 WebP이며 같은 아이콘 빌드 규칙을 따른다. 봉투는 우편함의 빈 카드 표식에도 쓴다. 내장 이미지 생성으로 각각 제작하며 봉투는 기존 경로의 그림을 교체한다. SCREEN_DESIGN §2 · ADR-0969.
+
+## icons/nav/ — 왼쪽 탭 아이콘 [신설 2026-11-02]
+
+`nav/<탭 id>.png`(`mock.js:NAV_ICON` · `app.js:NAV_GROUPS` 의 탭 id 하나에 한 장)는 **투명 바탕의 백색 실루엣**(512 · 긴 변 0.88 · 중앙)이고 화면이 이름 글자색 마스크로 칠한다. 출처가 탭마다 둘로 갈린다.
+
+| 출처 | 탭 | 원본 |
+|---|---|---|
+| **Codex 발주 — 굵은 도형 실루엣** | 원정 · 편성 · 캐릭터 · 건설 · 선술집 · 상점 · 대장간 · 도서관 · 결투장 · 콜로세움 · 도감 · 실험실 | `source/codex/sheet_0N_codex.png`(2×2 시트 · 검정 실루엣 · 흰 바탕) · 붙인 참조 `sheet_0N_ref.png` · 지시문 `sheet_0N_prompt.txt`. 01 ~ 04 = 열 탭(참조 = 직접 그린 24 격자 단순판 · 04 넷째 칸 결투장 깃발판은 안 쓴다) · 05 = 결투장(셋째 칸 · 그림체 참조는 02) · 06 = 캐릭터(넷째 칸 뿔 머리띠 · 그림체 참조는 02 · 물건 참조 없음). 쓰지 않는 칸은 버린 후보다. 칸을 잘라 검정 → 불투명 백색으로 뒤집고 긴 변 0.88 로 맞췄다 |
+| **game-icons.net (CC BY 3.0)** — **출처 표기가 조건**(도움말 탭 「도움말」 폴더 「아이콘 출처」 · `help.help.credits.*`) | 탐험(Lorc) · 연구소(Lorc) · 도움말(sbed) | `source/<저작자>/<이름>.svg`(공식 저장소 game-icons/icons 의 경로 그대로 · 바꾼 열 탭의 옛 원본도 남겨 둔다) · 라이선스 원문 `source/license.txt`. 검은 바탕 사각을 걷고 흰 칠로 512 에 그린 뒤 긴 변 0.88 |
+
+**연구소만 긴 변 1.0** 이다(목 때문에 세로가 길어 0.88 이면 옆 아이콘보다 작아 보였다 · ADR-1031). game-icons 탭이 다 빠지거나 저작자가 바뀌면 도움말 출처 문구도 같이 고친다. 탭이 새로 서면 그림을 같이 정한다. SCREEN_DESIGN §1 · ADR-1028 · ADR-1029.
 
 ## icons/battle_buffs/ — 관전 버프 출처 아이콘 [신설 2026-10-30]
 

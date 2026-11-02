@@ -49,6 +49,7 @@ GAME_DIRS = [
     "lab/node",
     "arena",
     "mail",
+    "nav",
     "battle_buffs",
 ]
 

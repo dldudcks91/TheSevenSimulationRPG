@@ -768,7 +768,7 @@ export function createHeroSystem(data) {
             vsDr: { normal: f('vs_normal_dr'), demon: f('vs_demon_dr'), undead: f('vs_undead_dr') },
             vsEliteDr: f('vs_elite_dr'), vsFrontDr: f('vs_front_dr'), vsBackDr: f('vs_back_dr'),
             drFlat: f('dr_flat'),                // 절대값 피해 감소 — 모든 감소 뒤에 뺀다(formula.strike)
-            counter: f('counter_chance'),        // 반격 확률 — 맞으면 때린 적에게 기본 공격 1회 · 차례를 쓴다(battle.strikeOnce)
+            counter: f('counter_chance'),        // 반격 확률 — 맞으면 때린 적에게 덤 기본 공격 1회 · 차례는 안 쓴다 · 반격을 부르지 않는다(battle.strikeOnce · 2026-11-02 R426)
             recv: f('hp_recovery_pct'),          // 체력 회복 +% — 재생 · 회복 스킬 · 흡혈 · 물약 · 처치 시 회복에 곱한다(보호막 제외)
             killHeal: f('kill_heal_pct'),        // 처치 시 체력 회복 — 처치마다 제 최대 HP × 값(battle.killHeal · 투구 · 장갑 색욕 ① · 2026-10-21 R299)
             startGauge: f('start_gauge_pct'),    // 전투 시작 시 행동 게이지 +% — 빈 게이지를 그만큼 채운 채 세운다 · 원정은 라운드마다(battle.primeGauge · 가죽 신발 특성 · R303)

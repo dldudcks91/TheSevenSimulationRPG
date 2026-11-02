@@ -291,10 +291,12 @@ export function mountBattle(container, opts) {
         //   물약 없이 도는 런도 칸은 전부 빈 채 선다 — 값은 항상 찍는다 (SCREEN_DESIGN §4-1)
         //   칸의 `null` = 그 라운드를 물약 없이 시작한 칸(재고가 모자랐거나 비워 둔 칸 · R124 — 빨간 반투명 · ADR-0716) · 둘째 라운드부터 `round` 의 `pots` 가 갈아 끼운다(R315).
         //   `cap` = 다 지은 칸 수 — `max` 뒤는 잠긴 칸(자물쇠 · 한 줄 = 앱이 넘긴 `potionLocks`) · 물약이 없는 런(칸 0)은 잠긴 칸도 안 선다
+        //   `firedAt` → `readyAt` = 파티 물약 쿨(R427 · ADR-1034) — `potion` 이벤트의 `ready` 가 싣는다 · 준비 상태로 출발(0) · 찬 칸 전부가 그 판을 든다(`refreshPotionCd`)
         potion: {
             max: result.potion?.max ?? 0, lock: opts.potionLocks ?? null,
             cap: (result.potion?.max ?? 0) > 0 ? Math.max(result.potion.max, opts.potionLocks?.cap ?? 0) : 0,
             slots: (result.potion?.slots ?? []).map(s => (s ? { id: s.id, heal: s.heal, full: true } : null)),
+            firedAt: 0, readyAt: 0,
         },
     };
 
@@ -310,12 +312,12 @@ export function mountBattle(container, opts) {
             rank: form?.byUid?.[p.uid] ?? 0,
             // 게이지는 **빈 채로 출발한다** — 시뮬이 실어 온 `fillAt` 부터 찬다 (R200 · ADR-0483) · 마법 무기의 칸은 0 에서
             hp: p.hpMax, hpMax: p.hpMax, period: p.period, lastAct: p.fillAt ?? 0, charges: 0, node: null,
-            // 액티브 = 시뮬이 들려 보낸 그 목록(result.party[].actives). 전투 시작엔 전부 준비 상태다
+            // 액티브 = 시뮬이 들려 보낸 그 목록(result.party[].actives). 쿨은 라운드 시작부터 돈다(R427)
             atkMin: p.atkMin, atkMax: p.atkMax, matkMin: p.matkMin, matkMax: p.matkMax, atkType: p.atkType,   // 툴팁 문장의 피해·회복량(범위 · R90) — 전투에는 안 쓴다 (INTERFACE §2-6)
             noBasic: p.noBasic,   // 마법 무기(평타 없음 · R198) — 행동 게이지 색 (ADR-0476)
             // 기본 능력치 — **전투 시작 시점 복사본**(결과가 싣는다). 설명창이 스킬 계수의 식을 푼다 (SCREEN_DESIGN §2 · ADR-0089)
             stats: p.stats ?? null,
-            // 첫 준비 시각은 결과가 싣는다(`party[].ready`). 스킬은 준비 상태로 출발해 칸은 걷힌 채 선다 (R100)
+            // 첫 준비 시각은 결과가 싣는다(`party[].ready`) — 쿨은 라운드가 열릴 때마다 처음부터라 칸은 덮인 채 선다 · 둘째 라운드부터는 `round` 의 `ready` 가 다시 덮는다 (R427 · ADR-1033)
             // 오오라도 제 칸에 선다 — 켜진 오오라는 준비 `0`(늘 걷힌 칸) · 안 켜진 오오라는 `null`(늘 덮인 칸) (R98 · ADR-0127)
             skills: (p.actives ?? []).map((id, i) => ({ ...skillInfo(id), ...slotLv(p.up, i), readyAt: slotReady(p.ready?.[i], 0), firedAt: 0 })),
             buffs: new Map(),   // 켜져 있는 창 {skillId: {until, stat, v}} — buff/buffEnd 이벤트가 켜고 끈다
@@ -428,7 +430,7 @@ function buildDom(state, stage, stageId, shrine, buffs, opts = {}) {
                 <div class="side side-enemy"></div>
                 <div class="divider"><span class="muted">VS</span></div>
                 <div class="side side-party"></div>
-                <div class="p-belt b-belt">${potionBeltHtml(state.potion)}</div>
+                <div class="p-belt b-belt">${potionBeltHtml(state.potion, state.t)}</div>
                 ${buffs ? runBuffIconsHtml() : ''}
                 <div class="battle-result"></div>
             </div>
@@ -523,8 +525,11 @@ function paintPane(state, root) {
  * 재생기는 세지 않는다 — 어느 칸이 비었나는 이벤트의 `i` 가 준다.
  * **라운드를 물약 없이 시작한 칸**(칸이 `null`)은 빨간 반투명(`.none`) · 마셔서 빈 칸(`full` 이 꺼진 칸)은 빈 칸 그대로 ·
  *   열린 칸(`max`) 뒤 다 지은 칸 수(`cap`)까지는 **잠긴 칸** — 앱이 넘긴 자물쇠 그림 (2026-10-22 · R315 · ADR-0716)
+ * **찬 칸은 쿨 판을 든다** [2026-11-02 · R427 · ADR-1034] — 파티 물약 쿨 동안 덮였다가 위에서부터 걷힌다 · `now` 의 남은 몫으로 선다(그린 뒤 첫 프레임에 튀지 않게) ·
+ *   그 뒤로는 `refreshPotionCd` 가 프레임마다 맞춘다
  */
-function potionBeltHtml(p) {
+function potionBeltHtml(p, now = 0) {
+    const mask = `<i class="cd-mask" style="transform:scaleY(${potionCdLeft(p, now)})"></i>`;
     return Array.from({ length: p.cap }, (_, i) => {
         if (i >= p.max) return `<span class="p-slot locked" data-i="${i}">${p.lock?.icon ?? ''}</span>`;
         const s = p.slots[i];
@@ -532,8 +537,15 @@ function potionBeltHtml(p) {
         const src = info ? M.potionArt(s.id) : null;
         const img = src ? `<img src="${src}" alt="" onerror="this.remove()">`
             : `<img class="p-bg" src="${M.POTION_SLOT_ART}" alt="" onerror="this.remove()">`;
-        return `<span class="p-slot${info ? ' full' : ''}${s ? '' : ' none'}" data-i="${i}">${img}</span>`;
+        return `<span class="p-slot${info ? ' full' : ''}${s ? '' : ' none'}" data-i="${i}">${img}${info ? mask : ''}</span>`;
     }).join('');
+}
+/** 물약 쿨의 남은 몫(0 ~ 1) — 시뮬이 실은 `firedAt` → `readyAt` 로만 잰다(스킬 쿨 칸과 같은 식 · 재생기는 쿨을 계산하지 않는다) */
+const potionCdLeft = (p, now) => (p.readyAt > now ? clamp01((p.readyAt - now) / Math.max(1e-6, p.readyAt - p.firedAt)) : 0);
+/** 물약 쿨 판을 지금 시각으로 맞춘다 (R427 · ADR-1034) — 찬 칸 전부가 같은 높이 · 빈 칸 · 잠긴 칸 · 물약 없이 시작한 칸은 판이 없다 */
+function refreshPotionCd(state, root) {
+    const left = potionCdLeft(state.potion, state.t);
+    for (const m of root.querySelectorAll('.b-belt .p-slot.full > .cd-mask')) m.style.transform = `scaleY(${left})`;
 }
 /**
  * 칸마다 **물약 카드**를 건다 (SCREEN_DESIGN §2 「물약 툴팁 규격」 · ADR-0315 · ~~`title` 한 줄~~) — 칸이 문자열로 서므로
@@ -557,7 +569,7 @@ function bindPotionTips(state, root) {
 function paintPotion(state, root, fired = -1) {
     const belt = root.querySelector('.b-belt');
     if (!belt || state.catchUp) return;      // 되감는 동안은 안 칠한다 — 끝에 한 번 (`paintCaughtUp`)
-    belt.innerHTML = potionBeltHtml(state.potion);
+    belt.innerHTML = potionBeltHtml(state.potion, state.t);
     bindPotionTips(state, root);
     if (fired < 0) return;
     const slot = belt.querySelector(`.p-slot[data-i="${fired}"]`);
@@ -1683,6 +1695,7 @@ function step(state, root, opts) {
     if (state.t === t0 && state.idx === i0) return;   // 선 채 — 그릴 것이 없다(② 동안 행동한 카드의 게이지가 꽉 찬 채 남는다)
     // acted 는 이 틱의 렌더까지만 산다 — 다음 틱에 눕혀야 게이지가 100% 에서 스냅으로 비워진다 (refreshUnit)
     for (const u of [...state.party, ...state.enemies]) { if (u.hp > 0) refreshUnit(state, u); u.acted = false; }
+    refreshPotionCd(state, root);   // 물약 쿨 판 — 스킬 쿨 칸과 같은 걸음에 걷는다 (R427 · ADR-1034)
     scrollLog(state, root);   // 이 걸음에 붙은 줄이 몇이든 목록은 한 번만 맞춘다
     if (state.dmgDirty) { state.dmgDirty = false; renderDmg(state, root); renderTeams(state); }   // 누적 판도 한 번 (숨어 있으면 `renderDmg` 가 그냥 지나간다) · 두 팀 판도 (ADR-0769)
 }
@@ -1754,6 +1767,12 @@ function apply(state, root, opts, ev) {
             if (state.teamPane) { for (const e of state.enemies) dmgEntry(state, e); state.dmgDirty = true; }   // 두 팀 판 — 상대도 0 부터 찍는다 (ADR-0769)
             // 전투 시작 시 행동 게이지(R303) — 원정의 라운드가 바뀌면 파티 게이지가 그 초만큼 앞당겨진다. 시뮬이 실어 온 값을 그대로 민다(계산하지 않는다)
             for (const [k, s] of Object.entries(ev.pg ?? {})) { const u = state.units.get(k); if (u) u.lastAct -= s; }
+            // 파티 칸 쿨도 라운드를 열면 처음부터 (R427 · ADR-1033) — 시뮬이 실어 온 그 라운드의 준비 시각(`ready` · 칸 순서)으로 칸을 다시 덮는다(계산하지 않는다) ·
+            //   `null` = 꺼진 칸 · 안 켜진 오오라(늘 덮임) · `0` = 켜진 오오라(늘 걷힘) · 첫 라운드는 결과의 `party[].ready` 가 이미 세웠다
+            for (const [k, r] of Object.entries(ev.ready ?? {})) {
+                const u = state.units.get(k);
+                if (u?.skills) u.skills.forEach((s, i) => { s.readyAt = slotReady(r[i], ev.t); s.firedAt = ev.t; });
+            }
             // 물약 칸 다시 채우기 — 시뮬이 실어 온 칸(`pots`)으로 갈아 끼운다 · 빈 칸(`null`)은 이 라운드를 물약 없이 시작한 칸이다 (R315 · ADR-0716)
             if (ev.pots) state.potion.slots = ev.pots.map(s => (s ? { id: s.id, heal: s.heal, full: true } : null));
             renderUnits(state, root);
@@ -1779,7 +1798,7 @@ function apply(state, root, opts, ev) {
                     grew = true;
                     continue;
                 }
-                // 되살아남 — 시뮬과 같다: HP 가득 · 창은 오오라(`until: null`)만 남는다 · 경직 창 비움 · 스킬은 부른 시각에 준비 (INTERFACE §2-6 `call`)
+                // 되살아남 — 시뮬과 같다: HP 가득 · 창은 오오라(`until: null`)만 남는다 · 경직 창 비움 · 스킬은 부른 시각부터 쿨 한 바퀴(시뮬이 실은 `ready` · R427) (INTERFACE §2-6 `call`)
                 Object.assign(old, { hp: e.hpMax, hpMax: e.hpMax, lastAct: ev.t, stalls: [] });
                 for (const [id, b] of [...old.buffs]) if (b.until !== null) old.buffs.delete(id);
                 old.skills = (e.actives ?? []).map((id, i) => ({ ...skillInfo(id), ...slotLv(e.up, i), readyAt: slotReady(e.ready?.[i], ev.t), firedAt: ev.t }));
@@ -1961,6 +1980,9 @@ function apply(state, root, opts, ev) {
             if (u) { u.hp = ev.dhp; popup(state, u, `+${ev.amt}`, 'heal'); refreshUnit(state, u); }
             const slot = state.potion.slots[ev.i];
             if (slot) slot.full = false;
+            // 파티 물약 쿨 — 시뮬이 실은 다음 준비 시각(`ready`)부터 남은 찬 칸이 덮였다가 걷힌다 (R427 · ADR-1034) · 옛 타임라인(키 없음)은 판이 안 선다
+            state.potion.firedAt = ev.t;
+            state.potion.readyAt = ev.ready ?? ev.t;
             paintPotion(state, root, ev.i);
             // 대상 칸은 빈다 · 남은 칸 수는 안 적는다 — 아레나의 물약 칸이 든다 (ADR-0189)
             if (u) logLine(state, root, u.side, ['potion', ev.amt], L(u.name), potionIcon(slot?.id), slot ? L(potionInfo(slot.id)?.name ?? '') : '', '', `+${ev.amt}`, 'heal-t');

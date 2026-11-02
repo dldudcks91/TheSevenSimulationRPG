@@ -3,8 +3,8 @@ import json
 from analyze_sweep import records,summarize
 from run_sweep import BASE
 
-source=records(BASE/'validation80')
-selection=json.loads((BASE/'validation80/selection.json').read_text(encoding='utf-8'))
+source=records(BASE/'validation80')+records(BASE/'farm_validation80')
+selection=json.loads((BASE/'validation80/selection.json').read_text(encoding='utf-8'))+json.loads((BASE/'farm_validation80/selection.json').read_text(encoding='utf-8'))
 meta={c['name']:c for c in selection}
 data=[{'r':r,'s':summarize(r),'meta':meta[r['id']]}for r in source]
 assert len(data)==len(selection)
@@ -20,7 +20,11 @@ base=next(x for x in data if x['meta']['reason']=='baseline')
 local=[x for x in data if x['meta']['origin'].split('/')[0]in['grid','refinement']and x['s']['protectedRules']and x['r']['variant']['bossHp']==1 and x['r']['variant']['bossAttack']==1]
 goals=[x for x in data if x['s']['paceGoal']]
 local_goals=[x for x in local if x['s']['paceGoal']]
-primary=sorted(local_goals or goals or[x for x in data if x is not base],key=score)[0]
+defaults={'enemyHp':1,'enemyAttack':1,'xp':1,'rounds':9,'bookLevel':10,'bossHp':1,'bossAttack':1,'starter':1}
+management_goals=[x for x in goals if all(x['r']['variant'][k]==v for k,v in defaults.items())and not x['r']['variant'].get('startFloor')and not x['r']['variant'].get('backHp')and not x['r']['variant'].get('frontHp')and x['r']['variant'].get('rareDps','off')=='off']
+farm_local_goals=[x for x in goals if x['meta']['origin'].startswith('farm_coupled/')]
+in_band=[x for x in data if x['s']['median']is not None and 30<=x['s']['median']<=40 and x is not base]
+primary=sorted(management_goals or local_goals or farm_local_goals or goals or in_band or[x for x in data if x is not base],key=score)[0]
 profiles=[];seen=set()
 
 
@@ -37,6 +41,10 @@ add(sorted([x for x in data if x is not base],key=score)[0],'most_reliable')
 for phase,label in[('startup_grid','startup_alternative'),('hero_hp_grid','hero_hp_alternative'),('policy_grid','management_only')]:
     candidates=[x for x in data if x['meta']['origin'].startswith(phase+'/')]
     if candidates:add(sorted(candidates,key=score)[0],label)
+farm=[x for x in data if x['meta']['origin'].startswith('farm_grid/')]
+if farm:add(sorted(farm,key=score)[0],'farming_only')
+coupled=[x for x in data if x['meta']['origin'].startswith('farm_coupled/')]
+if coupled:add(sorted(coupled,key=score)[0],'farming_local')
 jobs=[]
 for p in profiles:
     for policy,suffix in[('active','2m'),('active_slow','5m')]:

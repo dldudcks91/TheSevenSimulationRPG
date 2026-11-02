@@ -524,6 +524,8 @@ export const POTION_SLOT_ART = `${POTION_ART_DIR}slot${ICON_EXT}`;
 export const CLEAR_BOX_ART = `./assets/art/icons/items/box/clear_box${ICON_EXT}`;
 export const MAIL_ART = `./assets/art/icons/mail/mail${ICON_EXT}`;
 export const BELL_ART = `./assets/art/icons/mail/bell${ICON_EXT}`;
+/** 왼쪽 탭 아이콘 — 탭 id 마다 백색 실루엣 한 장 · 화면이 이름 글자색으로 칠한다 (SCREEN_DESIGN §1 · ADR-1028) */
+export const NAV_ICON = id => `./assets/art/icons/nav/${id}${ICON_EXT}`;
 /** 관전의 파티 공통 효과 — 기본 스킬과 같은 흰색 실루엣 세 장. */
 export const RUN_BUFF_ART = Object.fromEntries(['shrine', 'tactic', 'codex'].map(k => [k, `./assets/art/icons/battle_buffs/${k}${ICON_EXT}`]));
 /**

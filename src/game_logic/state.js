@@ -553,6 +553,8 @@ export function createGameSystem(deps) {
         for (const h of s.heroes) if (h.tier === 'growth' && !Number.isInteger(h.growthSeed)) h.growthSeed = growthSeedOf(s, h);
         // 지운 기본 스킬 → 대체 스킬 [2026-10-16 · R246 · R249 · R250 · 사용자 「대체 스킬로 옮김」 · 버전 무변경 — INTERFACE §4] — 아래 정리(정의 밖 id 지우기)보다 **먼저** 옮긴다
         retireSkills(s);
+        // 스킬 우선순위 칸 [2026-11-02 · R427 · 버전 무변경 — INTERFACE §4] — 창이 걷혀 아무도 안 읽는다 · 명단 · 가입 희망 둘 다 지운다
+        for (const h of [...s.heroes, ...(Array.isArray(s.joins) ? s.joins.map(j => j?.hero) : [])]) if (h && typeof h === 'object') delete h.skillOrder;
         // 마스터리 — **표에 맞춘다** [2026-09-22 · R138 · 버전 무변경] — 그 영웅의 트리에 없는 노드(표에서 걷힌 칸)와 상한을 넘은 랭크는
         //   포인트로 돌려준다. 롤백이 무료라(skill_design §5) 돌려주는 것이 곧 이관이고, 남겨 두면 못 빼는 포인트가 된다
         for (const h of s.heroes) {
@@ -836,21 +838,15 @@ export function createGameSystem(deps) {
     const RETIRED_ADVANCE = { arc_fulldraw: 'arc_overdraw' };
     /**
      * 옛 세이브의 지운 스킬을 대체 스킬로 옮긴다 [2026-10-16 · INTERFACE §4 · 버전 무변경 · rng 0] — 영웅(명단 · 가입 희망)의 고유 · 배운 칸 · 스킬 레벨(겹치면 큰 쪽) ·
-     *   칸 순서 · 책 재고(권수를 더한다) · 아이템 줄의 `skill`(특정 스킬 +n · 발동 옵션) · 목걸이 `proc.skill`. 정의 밖 · 책이 안 되는 id 를 지우는 일은 그 뒤 정리가 한다
+     *   책 재고(권수를 더한다) · 아이템 줄의 `skill`(특정 스킬 +n · 발동 옵션) · 목걸이 `proc.skill`. 정의 밖 · 책이 안 되는 id 를 지우는 일은 그 뒤 정리가 한다
      */
     function retireSkills(s) {
         const to = id => RETIRED_SKILLS[id] ?? MOVED_SKILLS[id] ?? id;
         const hero = h => {
             if (!h || typeof h !== 'object') return;
-            if (h.advanceSkill && RETIRED_ADVANCE[h.advanceSkill]) {
-                const old = h.advanceSkill;
-                h.advanceSkill = RETIRED_ADVANCE[old];
-                if (Array.isArray(h.skillOrder)) h.skillOrder = h.skillOrder.map(id => (id === old ? h.advanceSkill : id));
-            }
+            if (h.advanceSkill && RETIRED_ADVANCE[h.advanceSkill]) h.advanceSkill = RETIRED_ADVANCE[h.advanceSkill];
             if (h.innate) h.innate = to(h.innate);
             if (h.bookSkill) h.bookSkill = to(h.bookSkill);
-            // 칸 순서 — 전직 칸의 id(보우마스터 퀵 드로우 · 오버드로우)는 옮기지 않는다
-            if (Array.isArray(h.skillOrder)) h.skillOrder = [...new Set(h.skillOrder.map(id => (id === h.advanceSkill ? id : to(id))))];
             if (h.skillLv && typeof h.skillLv === 'object' && !Array.isArray(h.skillLv)) {
                 const lv = {};
                 for (const [id, n] of Object.entries(h.skillLv)) lv[to(id)] = Math.max(lv[to(id)] ?? 0, n);
@@ -4511,21 +4507,8 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
 
-    /**
-     * 스킬 우선순위 — 캐릭터 탭 스킬 우선순위 창의 끌어 옮기기 [2026-10-28 사용자 지시 · INTERFACE §2-7 · SCREEN_DESIGN §6 · ADR-0937 · battle_design §5].
-     * `order` = 그 영웅의 지금 액티브 id 를 빠짐 · 겹침 · 남의 것 없이 다시 늘어놓은 것 → `hero.skillOrder`. 칸을 내는 것은 `activesFor` 이고
-     * 전투는 그 배열 순서를 동률 결정자로 쓴다(`pickReady` — 시작엔 전부 준비라 1 → 2 → 3 · 그 뒤는 쿨이 먼저 돈 것).
-     * 무료 · 원정 중에도 된다 — 도는 원정은 다음 걸음 첫머리의 `refit` 이 칸 순서가 바뀐 영웅을 갈아입히고 쿨은 칸마다 잇는다
-     */
-    function setSkillOrder(state, uid, order) {
-        const h = heroById(state, uid);
-        if (!h || !Array.isArray(order)) return { ok: false, err: 'missing' };
-        const have = SK.activesFor(h).map(a => a.id).sort();
-        const want = [...order].sort();
-        if (want.length !== have.length || want.some((id, i) => id !== have[i])) return { ok: false, err: 'missing' };
-        h.skillOrder = [...order];
-        return { ok: true };
-    }
+    /* ~~`setSkillOrder(state, uid, order)`~~ 스킬 우선순위(2026-10-28 · ADR-0937)는 **2026-11-02 삭제** [R427 · INTERFACE §2-7 · battle_design §5] —
+       쿨이 라운드마다 처음부터라 개시 순서는 쿨이 정하고 동률은 출처 칸 순서다. `hero.skillOrder` 는 로드가 지운다(`deserialize`) */
 
     /* ── 수색 — 시간마다 한 명이 선술집 칸에 저절로 온다 [신설 2026-10-19 · base_expedition §2-4 · INTERFACE §2-7 — ~~수색~~(대기 영웅 하나를 내보낸다 · 2026-09-09 ~ 10-16) 대체] ──
        **영웅을 보내지 않는다** — 연구소 줄 「수색」의 「간격」 지점(`labNodes['visit:interval']` · 2026-10-21 R298)을 처음 연구하면 시계가 서고 `visit_hours` 마다 한 명이 칸(`joins`)에 선다.
@@ -5383,7 +5366,7 @@ export function createGameSystem(deps) {
         noteRunEnd, bossRespawnAt,   // 챕터보스 재등장 (2026-10-10 · R240)
         difficultyState, selectDifficulty, stageLevel, stageCleared,
         runTactics, runTacticsIf, runBuffs, runCombat,
-        tavernCandidates, tavernState, tavernReroll, hire, adminHero, dismissState, dismiss, moveHero, setSkillOrder,
+        tavernCandidates, tavernState, tavernReroll, hire, adminHero, dismissState, dismiss, moveHero,
         shopVisit, shopState, shopBuy, shopSellGold, shopSellPreview, shopSell, shopPotionBuy, shopPotionGold, shopBlueprintBuy, shopBlueprintPool, shopReroll, shopTradeState, shopTradeBuy, gambleState, gambleSpin, gambleSpinBatch,
         commissionState, commissionFill, commissionTake, commissionClaim, commissionDrop,
         visitSettle, visitState,

@@ -569,8 +569,11 @@ function renderShell() {
         for (const id of ids) {
             const shut = tabOpen[id] === false;
             // 흐린 탭은 오른쪽 끝에 닫힌 자물쇠(잠김 베일과 같은 그림 · 이름과 같은 회색으로 같이 흐린다) [2026-09-28 사용자 지시 · §1]
+            // 이름 왼쪽에 아이콘 — 백색 실루엣을 이름 글자색 마스크로 칠한다 · 이름과 한 칸이라 같이 흐린다 [2026-11-02 사용자 지시 · §1 · ADR-1028]
+            const src = M.NAV_ICON(id);
+            const lbl = `<span class="nav-lbl"><i class="nav-ic" aria-hidden="true" style="-webkit-mask-image:url('${src}');mask-image:url('${src}')"></i>${t(`nav.${id}`)}</span>`;
             const b = el('button', `${id === state.tab ? 'on' : ''}${shut ? ' dim' : ''}${!shut && todo[id] ? ' todo' : ''}`,
-                shut ? `<span class="nav-lbl">${t(`nav.${id}`)}</span><span class="nav-lock">${lockIcon(true)}</span>` : t(`nav.${id}`));
+                shut ? `${lbl}<span class="nav-lock">${lockIcon(true)}</span>` : lbl);
             b.dataset.tab = id;
             // 탭을 떠나면 **분해함이 닫힌다** [ADR-0184 · ADR-0673] — 모드 상태가 화면 밖으로 새지 않는다 · 탐험 지점 창도 닫힌다(들어오면 지도만 · ADR-0585)
             //   **원정 탭 버튼은 언제나 스테이지다** [2026-10-18 사용자 지시 · §4 · ADR-0661] — 관전 · 리포트를 보고 있었어도 · 이미 원정 탭이어도. 관전은 상단바 부대 칸이 연다
@@ -992,8 +995,7 @@ const MODALS = {
     dismiss: { title: 'ch.dismiss', body: dismissBody },
     // 스킬 덮어쓰기 확인 — 도서관 읽기 줄의 [덮어쓰기]가 연다 · 머리 줄 없이 문장 + 답 둘(출정 확인 창과 같다) · 그새 덮어쓰기가 아니게 되면 닫힌다 (SCREEN_DESIGN §17 · ADR-1020)
     bookOverwrite: { bare: true, body: bookOverwriteBody, gone: () => !G || !bookOverwriteOf() },
-    // 스킬 우선순위 — 「액티브 스킬」 소제목 오른쪽 끝 [우선순위]가 연다 · 줄을 끌어 순서를 바꾼다 (SCREEN_DESIGN §6 · ADR-0937). 대상 영웅은 캐릭터 탭이 이미 골랐다
-    skillOrder: { title: 'ch.skill.orderH', body: skillOrderBody, cls: 'sk-order-modal' },
+    // ~~스킬 우선순위 창 `skillOrder`~~ — 2026-11-02 걷었다(SCREEN_DESIGN §6 · ADR-1035 · R427 — 스킬 순서를 정하는 화면은 없다)
     /* 출정 — 스테이지를 누르면 뜨는 창 [2026-09-10 사용자 지시 · ADR-0084 · SCREEN_DESIGN §4-1].
        옛 접이식 전진 패널이 통째로 이 창이 됐다. `head` 를 주는 첫 창이다 — 제목이 i18n 키 하나가 아니라
        **고른 스테이지의 신원**(죄종 · Ch-스테이지 이름 · 레벨)이기 때문이다:
@@ -1037,7 +1039,7 @@ function renderModal() {
     if (m.vars) for (const [k, v] of Object.entries(m.vars())) box.style.setProperty(k, v);
     const head = el('div', 'modal-head');
     // `head` 를 주면 제목 줄을 통째로 갈아 끼운다 — 안 주면 i18n 키 하나가 든다(창 대부분이 이쪽이다)
-    const modalHints = { skill: 'skills', dismiss: 'dismiss', skillOrder: 'skill_order', frozen: 'frozen', gamble: 'gamble', arenaCode: 'team_code', mail: 'mail' };
+    const modalHints = { skill: 'skills', dismiss: 'dismiss', frozen: 'frozen',gamble: 'gamble', arenaCode: 'team_code', mail: 'mail' };
     if (!m.bare) head.appendChild(m.head ? m.head() : helpHeading('h2', '', t(m.title), modalHints[state.modal] ?? 'help'));
     // 이름 하나뿐인 머리 = 패널 제목 크기 + 머리 아래 판 전폭 선 (§2 창 레이어 · ADR-0744) — 갈아 끼우는 머리는 제 규칙을 든다
     if (!m.head) head.classList.add('plain');
@@ -1516,14 +1518,15 @@ function expNavBox(phase = battlePhase(state.battle)) {
         // 아직 안 열린 부대 — 자물쇠 + 회색 · 부대 이름만 · 안 눌린다(잠긴 챕터 칸과 같은 `seg-lock` · 무엇이 여는지는 안 적는다 · ADR-0691)
         if (no > n && !H) return { id: `battle${no}`, label: `<span class="lock-ico">${lockIcon(true)}</span>${t('exp.seg.party', { n: M.roman(no) })}`,
             disabled: true, cls: 'seg-party seg-none seg-lock' };
-        // 원정이 있는 부대는 이름 뒤에 **그 부대가 있는 스테이지**를 단다(「Party I - 파멸의 진영 II」 · ADR-0517) — 안 나간 부대는 흰 글씨 「Party I - 대기 중」(`seg-idle` · ADR-0912).
+        // 원정이 있는 부대는 이름 뒤에 **그 부대가 있는 스테이지**를 단다(「Party I - Ch1-1 파멸의 진영 II」 · ADR-0517) — 안 나간 부대는 흰 글씨 「Party I - 대기 중」(`seg-idle` · ADR-0912).
+        //   스테이지 앞에 **챕터 · 장소 번호**(출정 창 · 리포트와 같은 「Ch장-장소」 · 말줄임이 끝부터 깎아 번호는 남는다 · ADR-1032)
         //   상단바가 모자라면 **스테이지 글자만** 줄여 「…」로 끝난다 — 부대 이름은 안 줄인다(style.css `.seg-where`)
         //   **도는 중의 색은 파랑이 아니라 그 스테이지의 챕터 죄종 색**이다 — 글자 · 고른 칸 테두리 전부(스테이지 목록 줄 · 출정 창과 같은 색 · ADR-0519) · 이름 앞에 ▶(`partyGo` · ADR-0689).
         //   **끝나도(져도) 그 색 그대로다** — 빨강으로 안 바뀐다(ADR-0522) · 없음 회색만 갈린다
         const at = H ? D.stages[H.stageId] : null;
         const ph = H && H === state.battle ? phase : battlePhase(H);
         //   **노말이 아닌 단을 도는 부대는 스테이지 앞에 난이도 이름**(`diffTag` — 같은 줄임 안에 든다 · ADR-0586)
-        const label = at ? t('exp.seg.partyAt', { n: M.roman(no), where: `<span class="seg-where">${diffTag(runSlot(no)?.difficulty)}${L(stageName(at))}</span>` })
+        const label = at ? t('exp.seg.partyAt', { n: M.roman(no), where: `<span class="seg-where">${diffTag(runSlot(no)?.difficulty)}Ch${at.chapter}-${at.stage_num} ${L(stageName(at))}</span>` })
             : t('exp.seg.partyIdle', { n: M.roman(no) });
         return { id: `battle${no}`, label, cls: `seg-party seg-${H ? ph : 'idle'}`,
             color: at ? sinColor(chapterOf(at.chapter)?.sin ?? 'wrath') : undefined };
@@ -4029,13 +4032,8 @@ function skillCards(h) {
     const wrap = el('div', 'sk-cards-wrap');
     // 소제목은 이름뿐이다 (2026-09-08 사용자 지시) — 공격 속도는 **세부 옵션 1 의 제 행**이 든다
     // (`combat_stat.csv:action_period` — 세부 옵션 1 대표값). §4-1 「값은 항상 찍는다」는 그 행이 지킨다
-    // 소제목 오른쪽 끝 [우선순위] — 스킬 우선순위 창을 연다 (2026-10-28 사용자 지시 · §6 · ADR-0937) · 찬 칸이 둘 미만이면 바꿀 순서가 없어 못 누른다
-    const head = helpHeading('div', 'sub-h sk-head', `<span>${t('ch.skill.h')}</span>`, 'skills');
-    const order = el('button', 'btn sm sk-order-btn', t('ch.skill.order'));
-    order.disabled = SYS.skill.activesFor(h).length < 2;
-    order.onclick = () => openModal('skillOrder');
-    head.appendChild(order);
-    wrap.appendChild(head);
+    // ~~소제목 오른쪽 끝 [우선순위]~~ — 2026-11-02 걷었다(§6 · ADR-1035 · R427 — 동시에 준비된 스킬은 칸 순서)
+    wrap.appendChild(helpHeading('div', 'sub-h', `<span>${t('ch.skill.h')}</span>`, 'skills'));
     wrap.appendChild(skillCardGrid(h, tipCtx));
     const go = el('button', 'btn sm go-tree', t('ch.skill.go'));
     go.classList.toggle('has-points', (h.masteryPoints ?? 0) > 0);
@@ -4082,71 +4080,7 @@ function skillCardGrid(h, tipCtx) {
     return grid;
 }
 
-/**
- * 스킬 우선순위 창의 속 [2026-10-28 사용자 지시 · SCREEN_DESIGN §6 · ADR-0937] — 찬 칸의 스킬을 **지금 우선순위대로 위에서 아래로**
- * (`skill.activesFor` 의 배열 순서 = 전투의 동률 결정자). 줄 = 순번 · 그림(`Lv.n`) · 이름. 줄을 끌어 다른 줄 사이에 놓으면 그리로 들어간다
- */
-function skillOrderBody() {
-    const h = heroById(state.heroUid);
-    const list = el('div', 'sk-order-list');
-    if (!h) return list;
-    const plus = SYS.item.skillPlusOf(SYS.game.heroItems(G, h));
-    const actives = SYS.skill.activesFor(h, { skillPlus: plus });
-    const ids = actives.map(a => a.id);
-    actives.forEach((a, i) => {
-        const s = { ...skillInfo(a.id), lv: 1 + (a.up ?? 0) };
-        const row = el('div', 'sk-order-row',
-            `<span class="sk-order-no">${i + 1}</span><span class="sk-order-ico">${skillImg(s)}${skLvTag(s)}</span><span class="sk-order-name">${L(s.name)}</span>`);
-        bindSkillOrderDrag(row, list, h.uid, ids);
-        list.appendChild(row);
-    });
-    return list;
-}
-
-/**
- * 우선순위 줄 옮기기 — 영웅 띠 순서 옮기기(`bindRosterDrag` · ADR-0571)와 **같은 손**이다. 놓을 곳은 줄이 아니라 **틈** —
- * 커서에 가장 가까운 줄의 위 반이면 그 위 틈, 아래 반이면 그 아래 틈 · 끄는 동안 그 틈에 가로 삽입선(`.sk-order-insert`) ·
- * 제 위아래 틈과 목록 밖은 선도 놓기도 없다. 놓으면 옮긴 순서 전체를 `game.setSkillOrder` 에 넘긴다(계약은 순열을 받는다)
- */
-function bindSkillOrderDrag(node, list, uid, ids) {
-    const rows = () => [...list.querySelectorAll('.sk-order-row')];
-    /** 포인터 아래의 틈 번호(0 = 맨 위 … n = 맨 아래) — 목록 밖이거나 제 위아래 틈이면 -1 */
-    const gapAt = e => {
-        if (document.elementFromPoint(e.clientX, e.clientY)?.closest('.sk-order-list') !== list) return -1;
-        const rs = rows();
-        let near = 0, best = Infinity;
-        rs.forEach((r0, k) => {
-            const r = r0.getBoundingClientRect();
-            const d = Math.max(r.top - e.clientY, 0, e.clientY - r.bottom);
-            if (d < best) { best = d; near = k; }
-        });
-        const r = rs[near].getBoundingClientRect();
-        const gap = near + (e.clientY > (r.top + r.bottom) / 2 ? 1 : 0);
-        const from = rs.indexOf(node);
-        return gap === from || gap === from + 1 ? -1 : gap;
-    };
-    // 삽입선 — 틈 한가운데 · 줄 폭. 띠의 선과 같은 까닭으로 고스트와 같은 층(`#stage` 직속 · 한 장 단위)에 그 위로 선다
-    const showLine = e => {
-        const gap = e ? gapAt(e) : -1;
-        let line = $('#stage > .sk-order-insert');
-        if (gap < 0) { line?.remove(); return; }
-        const rs = rows(), half = (parseFloat(getComputedStyle(list).rowGap) || 0) / 2;
-        const r = stageRect(rs[Math.min(gap, rs.length - 1)]);
-        if (!line) line = $('#stage').appendChild(el('div', 'sk-order-insert'));
-        line.style.top = `${gap < rs.length ? r.top - half : r.bottom + half}px`;
-        line.style.left = `${r.left}px`;
-        line.style.width = `${r.right - r.left}px`;
-    };
-    bindCardDrag(node, '.sk-order-list', (_, e) => {
-        const gap = gapAt(e);
-        if (gap < 0) return false;
-        const from = rows().indexOf(node);
-        const next = ids.slice();
-        next.splice(gap > from ? gap - 1 : gap, 0, ...next.splice(from, 1));   // 아래로 가면 제가 빠진 한 칸만큼 당겨진다
-        if (SYS.game.setSkillOrder(G, uid, next).ok) save();
-        return true;
-    }, showLine);
-}
+/* ~~스킬 우선순위 창의 속 `skillOrderBody` · 줄 옮기기 `bindSkillOrderDrag`~~ — 2026-11-02 걷었다(SCREEN_DESIGN §6 · ADR-1035 · R427) */
 
 /**
  * 해고 창의 속 — 상태 셋을 한 창이 든다 (SCREEN_DESIGN §6).
@@ -9077,7 +9011,7 @@ function helpSections() {
         colosseum: ['prepare', 'floors', 'retry', 'rules'],
         arena: ['rating', 'opponents', 'friendly', 'results'],
         codex: ['monsters', 'classification', 'race_traits', 'family_formation', 'family_pressure', 'milestones', 'library_unlocks', 'art', 'skills', 'effects'],
-        help: ['browse', 'common_terms', 'controls', 'when_stuck', 'settings', 'newgame', 'saving', 'away'],
+        help: ['browse', 'common_terms', 'controls', 'when_stuck', 'settings', 'newgame', 'saving', 'away', 'credits'],
         lab: ['generator', 'rolling', 'results', 'raid_overview', 'raid_patterns', 'raid_trial'],
     };
     const common = {

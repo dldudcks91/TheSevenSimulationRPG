@@ -21,7 +21,7 @@
  *     전투 밖으로 나오면 전원 즉시·무료 회복이다 [2026-09-06, base_expedition_design §1-1]
  *   · **물약** [2026-09-15 · R103 · 칸마다 물약 R104 · battle_design §7-1] — 파티가 같이 쓰는 칸이고 **런 하나 안에서만** 산다(`createRun` 의 `potions` —
  *     칸 하나에 물약 하나 · 앞 칸부터. 스테이지마다 다시 차는 것은 부르는 쪽이 런을 새로 열기 때문이다). HP 비율이 [balance.csv:potion_use_hp_pct] 밑인 영웅이
- *     **차례를 안 쓰고 앞 칸부터** 마신다 · 영웅마다 [balance.csv:potion_cooldown_sec] · 그 칸 물약의 정해진 양 · rng 0 · 몬스터는 안 마신다
+ *     **차례를 안 쓰고 앞 칸부터** 마신다 · 쿨은 파티가 같이 쓰는 하나 [balance.csv:potion_cooldown_sec](2026-11-02 · R427 — ~~영웅마다~~) · 그 칸 물약의 정해진 양 · rng 0 · 몬스터는 안 마신다
  *
  *   · 피해 계산은 formula.js — battle_design §9 (적중 게이트 → 타격 피해 → 감소). 이 파일은 **누가 언제 때리는가**만 본다
  *   · **몬스터는 영웅과 같은 전투 능력치 체계를 쓴다** (§8-1) — 같은 `strike` 에 같은 모양의 유닛이 양쪽으로 들어간다.
@@ -203,11 +203,22 @@ export function createBattleSystem(data) {
      * 칸 하나를 전투에 세운다 — 정의를 풀고 준비 시각을 얹는다. **무기가 안 맞는 칸은 꺼진 채 선다**(R187 · R204 · battle_design §6):
      *   `readyAt = Infinity` 라 `pickReady` 가 안 고르고(차례를 안 먹는다) 쿨이 멈춘다 · 남은 쿨은 `frozen`(초).
      *   **출처를 안 본다** — 고유 · 배운 · 전직(몬스터 보스 셋째 칸 포함) 칸 모두 스킬이 정한다(2026-10-03 · R204 — ~~배운 칸(`source = book`)뿐~~ R197)
-     * @param frozen 꺼질 때 멈춰 둘 쿨(초) — 전투 시작 · 등장은 0(준비 상태로 출발 · R100)
+     * @param frozen 꺼질 때 멈춰 둘 쿨(초) — 갈아입기가 넘긴다 · 전투 시작 · 등장은 0 으로 세운 뒤 `restartCools` 가 한 바퀴로 고친다(R427)
      */
     const slotOf = (a, def, fits, readyAt, frozen = 0) => (fits(def)
         ? { id: a.id, def, readyAt, source: a.source }
         : { id: a.id, def, readyAt: Infinity, source: a.source, off: true, frozen });
+    /**
+     * 칸 쿨을 처음부터 [2026-11-02 · R427 · battle_design §6 — ~~준비 상태로 출발~~ R100] — 라운드를 열 때(파티 · 적 · 결투장) · 불러낼 때(새로 서는 무리 · 되살아난 무리) 부른다.
+     *   켜진 칸 = `at` + 쿨 한 바퀴(`cooldownSec` — 그 순간의 `cdr`) · 꺼진 칸(무기가 안 맞는 칸 · R187) = 얼린 쿨이 한 바퀴 — 켜지면 그때부터 한 바퀴다 · rng 0
+     */
+    const restartCools = (u, at) => {
+        for (const a of u.actives) {
+            const lap = cooldownSec(B, u, a.def);
+            if (a.off) a.frozen = lap;
+            else a.readyAt = at + lap;
+        }
+    };
     // 처치 XP 기준값 — 몬스터 레벨 → `level_xp.csv:monster_xp` (2026-09-28 · ~~monster_xp_base × monster_xp_growth ^ (lvl − 1)~~).
     //   몬스터 레벨은 만렙을 안 넘으므로(`hero_level_cap`) 1 ~ 만렙을 못 덮으면 생성 때 던진다
     const MONSTER_XP = new Map((data.levelXp ?? []).map(r => [r.level, r.monsterXp]));
@@ -994,9 +1005,9 @@ export function createBattleSystem(data) {
             // 첫 차례를 살짝 엇갈리게 — 동시 발동 시각 차이만 준다. 빈 게이지 한 바퀴 **뒤에** 얹는다 (R200 · INTERFACE §5-3)
             next: p.combat.action_period + i * 0.3, fillAt: i * 0.3,
             reactions: p.reactions ?? [],   // ⚠ 싣는 소비자가 아직 없다 — 마스터리 T3 자리
-            potionReadyAt: 0,            // 제 물약이 다시 준비되는 시각 — **준비 상태로 출발한다**(스킬과 같은 규칙 · R103). 갈아입기(`refit`)가 안 건드린다
-            // 칸 순서 = 출처 자리. **준비 상태로 출발한다** [개정 2026-09-15 · R100 · battle_design §6] — 첫 준비 시각 0.
-            //   동시 준비는 칸 순서라(`SK.pickReady`) 첫 차례는 1번 칸이다. rng 0
+            // ~~`potionReadyAt` 제 물약 쿨~~ — 2026-11-02 R427 로 파티 하나가 됐다(아래 `drinkPotions` 의 런 변수)
+            // 칸 순서 = 출처 자리. 첫 준비 시각은 아래 `restartCools`(전투 시작 = 첫 라운드)가 쿨 한 바퀴로 세운다 [개정 2026-11-02 · R427 · battle_design §6 —
+            //   ~~준비 상태로 출발 · 첫 준비 시각 0~~ R100] — 여기서는 0 으로 세워 둔다. 동시 준비는 칸 순서다(`SK.pickReady`) · rng 0
             //   든 무기가 안 맞는 칸(무기가 필요한 스킬 · 출처 무관)은 꺼진 채 선다 — 멈춘 쿨 0 (R187 · R204 · `slotOf`)
             actives: (fits => (SK ? p.actives ?? [] : []).map(a => {
                 const def = SK.resolve(a);
@@ -1132,6 +1143,9 @@ export function createBattleSystem(data) {
             //   `rollGear` 가 낸 그 아이템들이고(처치 드롭이 이 중 하나로 나간다 · §5-2) 얕은 복사만 한다 — `sheet` 와 같은 취급이다(표시값 · 전투는 안 읽는다 · rng 0)
             gear: (e.gear ?? []).map(it => ({ ...it })),
         });
+        // 첫 라운드의 파티 칸 쿨 — 전투 시작(0 · 첫 라운드를 여는 시각)부터 한 바퀴 [2026-11-02 · R427 · battle_design §6]. 오오라를 건 뒤라 창이 민 `cdr` 까지 든다 ·
+        //   결과 `party[].ready` 가 이 값을 싣는다(아래) · 둘째 라운드부터는 `beginRound` 가 다시 세운다 · rng 0
+        for (const p of party) restartCools(p, 0);
         const timeline = [];
         const out = {
             won: false, reason: null, durationSec: 0,
@@ -1268,22 +1282,25 @@ export function createBattleSystem(data) {
         /* 물약 [2026-09-15 · R103 · battle_design §7-1] — 칸은 **파티가 같이 쓴다**: 여기서 차고, 둘째 라운드부터는 부르는 쪽이 `restock` 으로 넘긴 목록으로
            그 라운드를 열 때 다시 찬다(게임은 정산이 재고에서 채워 넘긴다 · 안 넘기면 줄어든 칸 그대로 · 2026-10-22 · R315).
            틱마다 HP 재생 **뒤** · 행동 순회 **앞**에 한 번 본다 — 조건에 걸린 영웅이 **차례를 안 쓰고** 마신다(`next` 불변).
-           대상 = 살아 있는 파티 영웅(소환 제외) 중 HP 비율이 이 런의 기준(`potionLine` — 편성의 값 · 없으면 [balance.csv:potion_use_hp_pct] · R378) 밑이고 제 물약 쿨이 끝난 사람.
-           순서 = HP 비율 낮은 순 · 같으면 **파티 배열 순** — 동점을 배열 순으로 명시 비교한다(엔진의 정렬 안정성에 기대지 않는다 · INTERFACE §5-3).
+           대상 = 살아 있는 파티 영웅(소환 제외) 중 HP 비율이 이 런의 기준(`potionLine` — 편성의 값 · 없으면 [balance.csv:potion_use_hp_pct] · R378) 밑인 사람.
+           **쿨은 파티가 같이 쓰는 하나다** [2026-11-02 · R427 · battle_design §7-1 — ~~영웅마다~~ R103] — 누가 마시든 [balance.csv:potion_cooldown_sec] 동안 아무도 못 마신다(`potionReadyAt`).
+           순서 = HP 비율 낮은 순 · 같으면 **파티 배열 순** — 동점을 배열 순으로 명시 비교한다(엔진의 정렬 안정성에 기대지 않는다 · INTERFACE §5-3). 쿨이 0 보다 크면 그 틱엔 맨 앞 한 명뿐이다.
            **칸 하나에 물약 하나 · 앞 칸부터 마신다** [R104 사용자 지시] — 먼저 마시는 영웅이 앞의 찬 칸을 받는다. 칸은 라운드 안에서 다시 안 차므로
-           「앞의 찬 칸」은 늘 방금 마신 칸 뒤의 첫 찬 칸이다(빈 칸 `null` 은 건너뛴다 · R124). 그 칸 물약의 정해진 양을 채우고(최대치에서 자른다) 쿨은 [balance.csv:potion_cooldown_sec] 이다. **rng 를 안 쓴다** ·
+           「앞의 찬 칸」은 늘 방금 마신 칸 뒤의 첫 찬 칸이다(빈 칸 `null` 은 건너뛴다 · R124). 그 칸 물약의 정해진 양을 채운다(최대치에서 자른다). **rng 를 안 쓴다** ·
            화상의 회복 감소는 `u.recv`(창 파생 — 2026-09-28 R178)에 이미 들어 있다 */
         let potionLeft = potionSlots.filter(Boolean).length;
         let potionNext = 0;
         let potionRound = {};          // 이 라운드에 마신 물약 `{id: n}` — 요약이 싣고 정산이 재고에서 뺀다 (R124) · 세기만 한다
         let potionPending = null;      // 다음 라운드의 칸 — `restock` 이 받아 두고 그 라운드를 열 때(`beginRound`) 갈아 끼운다 · null = 받은 것 없음 (R315)
+        let potionReadyAt = 0;         // 파티 물약이 다시 준비되는 시각 — 준비 상태로 출발 · **라운드를 넘어 잇는다**(스킬 쿨과 다르다 · R427) · 갈아입기가 안 건드린다
         const drinkPotions = () => {
+            if (potionReadyAt > t + EPS) return;
             const want = party
                 .map((u, i) => ({ u, i }))
-                .filter(({ u }) => !u.summon && u.hp > 0 && u.hp / u.hpMax < potionLine && u.potionReadyAt <= t + EPS);
+                .filter(({ u }) => !u.summon && u.hp > 0 && u.hp / u.hpMax < potionLine);
             want.sort((a, b) => (a.u.hp / a.u.hpMax - b.u.hp / b.u.hpMax) || (a.i - b.i));
             for (const { u } of want) {
-                if (potionLeft <= 0) break;
+                if (potionLeft <= 0 || potionReadyAt > t + EPS) break;
                 while (!potionSlots[potionNext]) potionNext++;   // 빈 칸은 건너뛴다 (R124) — 찬 칸이 남아 있으므로 끝을 안 넘는다
                 const i = potionNext++;
                 const slot = potionSlots[i];
@@ -1297,8 +1314,9 @@ export function createBattleSystem(data) {
                 const amt = u.potionPct ? Math.round(slot.heal * (1 + u.recv) * (1 + base + u.potionPct) / (1 + base))
                     : u.recv ? Math.round(slot.heal * (1 + u.recv)) : slot.heal;
                 u.hp = Math.min(u.hpMax, u.hp + amt);
-                u.potionReadyAt = t + B.potion_cooldown_sec;
-                timeline.push({ t: r1(t), e: 'potion', u: u.key, s: slot.id, i, amt, dhp: u.hp, left: potionLeft });
+                potionReadyAt = t + B.potion_cooldown_sec;
+                // `ready` = 파티 물약이 다시 준비되는 시각 — 재생기가 물약 띠의 쿨 판을 이것으로 걷는다(쿨을 계산하지 않는다 · R427)
+                timeline.push({ t: r1(t), e: 'potion', u: u.key, s: slot.id, i, amt, dhp: u.hp, left: potionLeft, ready: r1(potionReadyAt) });
             }
         };
 
@@ -1339,7 +1357,7 @@ export function createBattleSystem(data) {
             // 장 디버프(시기 · 나태)도 라운드를 연 시각부터 다시 잰다 — 첫 틱에 걸린다 (R366) · 폭식은 `roundAt` 에서 0 부터
             curseAt = curse?.effect === 'poison' || curse?.effect === 'freeze' ? t : null;
             for (const u of [...party, ...units.enemies]) if (u.mfeast) u.feast = 0;   // 폭식 T3 겹도 라운드를 열면 비운다 (R343)
-            // 정신 집중은 이전 라운드가 끝난 순간 이미 닫혔다 — 정산 · 경계 갈아입기도 절반만 남긴 쿨을 잇는다(2026-10-30).
+            // 정신 집중은 이전 라운드가 끝난 순간 이미 닫혔다 — 그 칸의 쿨도 아래 `restartCools` 가 다시 세운다(R427).
             // 소환물은 **라운드가 끝나면 사라진다** (skill_design §12-6). 걷어내는 자리가 여기다 —
             //   적 배열이 갈리는 것과 같은 시점이라 결투 선언의 지목도 함께 사라진다(창이 적에게 붙어 있었다)
             for (let i = party.length - 1; i >= 0; i--) if (party[i].summon) party.splice(i, 1);
@@ -1395,9 +1413,9 @@ export function createBattleSystem(data) {
             // 적의 오오라 — 파티와 같은 규칙으로 **라운드 시작에** 창으로 건다 (R79 · 위 `applyAuras`). rng 0 이라 등장 지연 굴림 수열이 안 밀린다
             //   창 이벤트는 아래 `round` 이벤트 **뒤**에 낸다 — 파티 몫(`auraQueue`) 다음 (R98)
             const enemyAuras = applyAuras(units.enemies);
-            // 적 스킬도 **준비 상태로 출발한다** [개정 2026-09-15 · R100 · battle_design §6] — 등장 라운드 시작 시각에 곧바로 쓴다. rng 0 이라 아래 등장 지연 굴림 수열이 안 밀린다
-            //   꺼진 칸(무기가 안 맞는 칸 · R187 · R204 — 몬스터 데이터는 전부 맞아 지금은 없다)은 그대로 둔다 — 되돌리면 켜진다
-            for (const e of units.enemies) for (const a of e.actives) if (!a.off) a.readyAt = t;
+            // 적 스킬은 **등장 라운드 시작 시각부터 쿨 한 바퀴** [개정 2026-11-02 · R427 · battle_design §6 — ~~준비 상태로 출발~~ R100]. rng 0 이라 아래 등장 지연 굴림 수열이 안 밀린다
+            //   꺼진 칸(무기가 안 맞는 칸 · R187 · R204 — 몬스터 데이터는 전부 맞아 지금은 없다)은 얼린 쿨이 한 바퀴다(`restartCools`)
+            for (const e of units.enemies) restartCools(e, t);
             // 적 등장 시각 = 라운드 시작 + 짧은 지연 (전 라운드 마지막 타격과 겹치지 않게) — 게이지는 등장한 순간부터 빈 채로 찬다 (R200)
             for (const e of units.enemies) {
                 const lag = 0.4 + rng() * 0.6;
@@ -1409,11 +1427,20 @@ export function createBattleSystem(data) {
             for (const e of units.enemies) primeGauge(e);
             const pg = {};
             if (round > 1) for (const p of party) { const s = primeGauge(p); if (s) pg[p.key] = r1(s); }
+            // 파티 칸 쿨도 이 라운드 시작부터 한 바퀴 [2026-11-02 · R427 · battle_design §6] — 첫 라운드는 전투 시작이 이미 세웠다(`out` 위 `restartCools`).
+            //   나태 T2 겹은 라운드를 열면 0 이라(`roundAt`) 쿨감을 원값으로 먼저 되쓴다 — 다음 틱이 쓸 값과 같다(`advance`).
+            //   살아 있는 영웅의 칸 준비 시각을 아래 `round` 이벤트의 `ready` 로 싣는다(재생기가 쿨 칸을 다시 덮는다) · 소환은 위에서 걷혔다 · rng 0
+            const ready = {};
+            if (round > 1) for (const p of party) {
+                if (p.mtick) p.cdr = p.cdrBase;
+                restartCools(p, t);
+                if (p.hp > 0) ready[p.key] = slotView(p).ready;
+            }
             roundLog = { n: round, kind: sp.type, killed: [], eliteSin: units.enemies.find(e => e.grade === 'elite')?.sin ?? null };
             out.rounds.push(roundLog);
             rules?.onStart?.(ruleContext());
             timeline.push({ t: r1(t), e: 'round', n: round, kind: sp.type, enemies: units.enemies.map(enemyView), ...(Object.keys(pg).length ? { pg } : {}),
-                ...(pots ? { pots: pots.map(p => (p ? { id: p.id, heal: p.heal } : null)) } : {}) });
+                ...(pots ? { pots: pots.map(p => (p ? { id: p.id, heal: p.heal } : null)) } : {}), ...(Object.keys(ready).length ? { ready } : {}) });
             // 오오라 창 이벤트 [2026-09-15 · R98] — `round` 바로 뒤 · 파티 몫(전투 시작 · 갈아입기) 먼저, 이 라운드 적의 것 다음.
             //   창은 이미 걸려 있다 — 이벤트만 낸다(rng 0 · 전투 결과 불변)
             for (const ev of [...auraQueue.splice(0), ...enemyAuras]) timeline.push({ t: r1(t), ...ev });
@@ -1582,7 +1609,7 @@ export function createBattleSystem(data) {
         /**
          * 불러내기 [2026-09-18 · INTERFACE §2-13 · skill_design §12-9] — 시전자의 무리(`band`) 중 **서 있지 않은 것을 전부** 세운다.
          *   처음 서는 것(대기)은 적 배열 끝에 붙고, 쓰러진 것은 **그 자리에서 되살아난다** — HP 가득 · 창은 오오라만 남는다 · 경직 풀림.
-         *   둘 다 첫 차례는 **제 행동 주기 한 바퀴 뒤**(등장 지연을 굴리지 않는다) · 스킬은 준비 상태(부른 시각 — 라운드 시작과 같은 규칙 · R100).
+         *   둘 다 첫 차례는 **제 행동 주기 한 바퀴 뒤**(등장 지연을 굴리지 않는다) · 스킬은 부른 시각부터 쿨 한 바퀴(라운드 시작과 같은 규칙 · R427 — ~~준비 상태~~ R100).
          *   새로 선 것의 오오라는 **지금** 건다(라운드 시작에 없었다) — 창 이벤트는 `call` 뒤에 나가도록 `then` 으로 돌려준다 · rng 0
          * @returns `{units: [표시값], then: [t 없는 이벤트]}` — 세운 것이 없으면 `units` 가 빈다
          */
@@ -1601,7 +1628,7 @@ export function createBattleSystem(data) {
                     m.barrier = null;
                     m.stagUntil = 0;
                     m.stunUntil = 0;           // 스턴 · 중독 틱 · 알린 상태이상도 풀린다 (R178)
-                    m.chan = null;             // 쓰러질 때 열려 있던 정신 집중도 걷힌다 — 칸 쿨은 아래에서 부른 시각에 준비 (R318)
+                    m.chan = null;             // 쓰러질 때 열려 있던 정신 집중도 걷힌다 — 칸 쿨은 아래에서 부른 시각부터 한 바퀴 (R318 · R427)
                     m.dotAcc = 0;
                     m.ailShown = null;
                     m.regenAcc = 0;
@@ -1611,7 +1638,7 @@ export function createBattleSystem(data) {
                 m.next = m.period;
                 m.fillAt = at;                 // 빈 게이지가 이 시각부터 찬다 (R200)
                 m.charges = 0;                 // 되살아나도 칸은 0 에서 (R200)
-                for (const a of m.actives) if (!a.off) a.readyAt = at;   // 꺼진 칸은 그대로 (R187)
+                restartCools(m, at);           // 부른 시각부터 쿨 한 바퀴 — 꺼진 칸은 얼린 쿨이 한 바퀴 (R427 · R187)
             }
             // 오오라 — 라운드 시작과 같은 함수다. 이미 걸린 유닛은 칸에서 오오라가 빠져 있어 다시 안 걸린다
             const then = fresh ? applyAuras(units.enemies) : [];
@@ -2005,6 +2032,8 @@ export function createBattleSystem(data) {
             return units.enemies.some(e => e !== target && e.hp > 0 && e.family === 'Guardian') ? f.value : 0;
         };
 
+        // 반격 중 — 반격의 기본 공격(그 안의 추가타 · 장비 발동 포함)이 도는 동안 참이다. 그 타격을 맞은 쪽은 반격을 굴리지 않는다 (아래 「반격」 · 2026-11-02 R426)
+        let countering = false;
         function strikeOnce(u, target, mult, element, s, sk = null, spread = sk?.spread ?? false, afterStrike = null) {
             // 이베이드 [2026-10-16 · R247 · INTERFACE §2-6 「기본 스킬 50 의 장치」] — 횟수가 남은 창이 있으면 **굴리지 않고** 통째로 피한다.
             //   피해 · 경직 · 창 · 훅 · 반사 · 반격 · 집계 없음. 다 쓰면 그 창을 닫는다. 창이 없으면 아무 일도 없다(rng 불변)
@@ -2261,18 +2290,21 @@ export function createBattleSystem(data) {
                 hooks.emit('kill', u, { t, d: target });
             }
             /*
-             * 반격 [2026-09-18 · 사용자 확정 · item_design §1 「투구 옵션」 · INTERFACE §2-6 「반격」] — 맞은 쪽이 확률로 **그 자리에서 때린 적에게 기본 공격 1회**.
-             *   「그냥 평타 한 대와 모든 로직이 같다」(사용자) — 기본 공격 함수(`basicAttack`)를 그대로 지나고 **내 차례를 쓴다**(`next = period`).
-             *   ⚠ 이 타격의 사건(경직 · 창 · 훅 · 반사 · 전투불능)이 다 끝난 뒤다. 경직 중이면(이 타격이 건 경직 포함) 차례가 없어 못 한다.
+             * 반격 [2026-09-18 · 사용자 확정 · **개정 2026-11-02 · R426** · item_design §1 「투구 옵션」 · INTERFACE §2-6 「반격」] — 맞은 쪽이 확률로 **그 자리에서 때린 적에게 기본 공격 1회**를 덤으로 친다.
+             *   「그냥 평타 한 대와 모든 로직이 같다」(사용자) — 기본 공격 함수(`basicAttack`)를 그대로 지나고 **내 차례는 안 쓴다** — 행동 예약(`next`)을 건드리지 않아 스킬이 밀리지 않는다
+             *   (~~`next = period` — 차례를 쓴다~~ 2026-11-02 사용자 「둘다 살리고 반격 고쳐줘」 — 몰려 맞는 탱커의 스킬 차례가 계속 뒤로 밀렸다).
+             *   ⚠ 이 타격의 사건(경직 · 창 · 훅 · 반사 · 전투불능)이 다 끝난 뒤다. 경직 · 스턴 중이면(이 타격이 건 경직 포함) 못 한다.
              *   조건이 안 맞으면 **굴리지 않는다** — 반격 옵션이 없는 판의 rng 수열은 종전과 같다(`&&` 가 판정 앞에서 끊는다).
-             *   반격도 직격이라 맞은 쪽이 다시 반격할 수 있다 — 확률이 곱으로 줄어 끝난다(`counter_chance` 는 1 미만 — item.js 로드 검증)
+             *   **반격은 반격을 부르지 않는다** [2026-11-02 · R426 · battle_design §9-6] — 반격의 기본 공격이 도는 동안(`countering`) 맞은 쪽은 굴리지 않는다
+             *     (~~반격도 직격이라 다시 반격할 수 있다~~ — 연쇄 · 그 몫 rng 0 · `counter_chance` 는 여전히 1 미만 — item.js 로드 검증)
              *   **마법 무기는 반격하지 않는다** [2026-10-02 · 사용자 확정 · R198] — 평타가 없어서다(`noBasic`). 판정 **앞**에서 끊으므로 굴리지도 않는다
              */
-            if (target.counter > 0 && !target.noBasic && target.hp > 0 && !target.summon && u.hp > 0 && target.stagUntil <= t && (target.stunUntil ?? 0) <= t
+            if (target.counter > 0 && !countering && !target.noBasic && target.hp > 0 && !target.summon && u.hp > 0 && target.stagUntil <= t && (target.stunUntil ?? 0) <= t
                 && rng() < target.counter) {
                 timeline.push({ t: r1(t), e: 'counter', u: target.key, d: u.key });
+                countering = true;
                 rt.basicAttack(target, t, alive(rt.foesOf(target)), u);
-                target.next = target.period;
+                countering = false;
             }
             // 호출자가 붙인 후처리(추가타 결빙 · 대상 방어 감소)까지 끝낸 뒤 장비 발동을 판정한다.
             afterStrike?.(true);
@@ -2285,9 +2317,9 @@ export function createBattleSystem(data) {
 
         // `between` = 이긴 라운드의 요약을 냈고 다음 라운드를 **아직 안 열었다**(라운드 사이) — 다음 걸음의 첫머리가 연다 (R130)
         let started = false, ended = false, between = false;
-        /** 라운드 종료로 남은 방을 취소한다 — 살아 있는 양 진영 모두 쿨 절반 환급 · 마지막 라운드도 같다 · rng 0. */
+        /** 라운드 종료로 남은 방을 취소한다 — 살아 있는 양 진영 모두 · 마지막 라운드도 같다 · 쿨은 다음 라운드를 열 때 처음부터다(R427 — ~~쿨 절반 환급~~ R403) · rng 0. */
         const closeRoundChannels = () => {
-            for (const u of [...party, ...units.enemies]) if (u.hp > 0 && u.chan) rt.chanClose(u, t, 'round');
+            for (const u of [...party, ...units.enemies]) if (u.hp > 0 && u.chan) rt.chanClose(u, t);
         };
         /** 진 런 · 시간 초과의 사실 — 쓰러진 순서 · 끝난 순간 서 있던 적 · 레벨 차(마지막 라운드 적 중 가장 높은 레벨 − 파티에서 가장 낮은 레벨 · 0 아래면 0) (ADR-0623) */
         const fallNow = () => {
@@ -2517,7 +2549,7 @@ export function createBattleSystem(data) {
                 // 적의 소환 벽도 **클리어 판정에서 뺀다** [2026-09-11 · R79] — 바로 위 전멸 판정과 같은 규칙이다: 행동하지 않는 벽이 서 있다고
                 //   라운드가 안 끝나면 안 된다. 벽은 다음 라운드의 적 배열 교체(`units.enemies = sp.list`)로 함께 사라진다
                 if (alive(units.enemies).filter(u => !u.summon).length === 0) {
-                    closeRoundChannels();                // 정산 · 갈아입기 · 다음 라운드 전에 닫고 쿨 절반을 남긴다
+                    closeRoundChannels();                // 정산 · 갈아입기 · 다음 라운드 전에 닫는다
                     out.roundsCleared = round;
                     bank();                              // 이긴 라운드의 몫 — 결과로 옮긴다 (R89)
                     if (round >= rounds) { out.won = true; finish('clear'); return summary(true); }

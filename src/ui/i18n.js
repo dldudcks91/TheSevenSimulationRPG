@@ -198,7 +198,6 @@ const STRINGS = {
     'hint.settings': { ko: '그림체와 전투 연출 등 화면 설정을 조절합니다.', en: 'Adjust display preferences such as art style and battle effects.' },
     'hint.mail': { ko: '도착한 보상을 수령합니다. 받은 첨부물은 표시된 Party의 보유 아이템에 추가됩니다.', en: 'Claim delivered rewards. Attachments are added to the items of the indicated Party.' },
     'hint.dismiss': { ko: '선택한 영웅을 로스터에서 해고합니다. 확인 전에 대상 영웅을 다시 살펴보세요.', en: 'Dismiss the selected hero from the roster. Review the chosen hero before confirming.' },
-    'hint.skill_order': { ko: '스킬 줄을 드래그해 사용 우선순위를 정합니다. 먼저 쓰고 싶은 스킬을 위에 놓으세요.', en: 'Drag skill rows to set their priority. Place skills you want to use first higher in the list.' },
     'hint.frozen': { ko: '다른 탭에서 저장한 진행을 보호하기 위해 이 탭의 플레이가 멈췄습니다. 안내에 따라 다시 불러오세요.', en: 'Play in this tab has stopped to protect progress saved by another tab. Follow the instructions to reload.' },
     /* ── 셸 ── */
     'app.title': { ko: 'The Seven Simulation RPG — 화면 목업', en: 'The Seven Simulation RPG — Screen Mockup' },
@@ -1313,8 +1312,8 @@ const STRINGS = {
         en: "Choosing when to drink",
     },
     'help.party.threshold.body': {
-        ko: "물약 칸 아래 [−]/[+]로 이 편성의 사용 HP 기준을 조절합니다. 살아 있는 영웅의 HP가 그 비율 미만으로 내려가면 자동으로 마시며, 행동 차례는 사용하지 않습니다. 같은 영웅은 사용 뒤 {cooldown}초 동안 다시 마시지 못합니다.<br><br>기준을 높이면 더 일찍 마시지만, 빈 HP보다 회복량이 커서 일부를 낭비할 수 있습니다. 낮추면 한 병을 충분히 쓰기 쉬운 대신 다음 큰 공격 전에 쓰러질 위험이 있습니다. 받은 피해의 크기와 물약 회복량을 보고 정합니다. 기준은 편성마다 따로 저장되며, 원정 중 바꾼 기준을 확실히 적용하려면 철수한 뒤 다시 출발합니다.",
-        en: "Use [−]/[+] below the belt to adjust this preset's HP threshold. A living hero drinks automatically when below it, without using an action. That hero cannot drink again for {cooldown} seconds.<br><br>A higher threshold drinks earlier but can waste healing beyond the missing HP. A lower threshold can make fuller use of each bottle, but risks falling to the next heavy hit. Consider incoming hit sizes and the potion's healing amount. Thresholds are saved per preset. Retreat and deploy again to ensure a change applies to an expedition.",
+        ko: "물약 칸 아래 [−]/[+]로 이 편성의 사용 HP 기준을 조절합니다. 살아 있는 영웅의 HP가 그 비율 미만으로 내려가면 자동으로 마시며, 행동 차례는 사용하지 않습니다. 물약 쿨타임은 파티가 함께 써서, 누군가 마시면 {cooldown}초 동안 파티 누구도 다시 마시지 못합니다.<br><br>기준을 높이면 더 일찍 마시지만, 빈 HP보다 회복량이 커서 일부를 낭비할 수 있습니다. 낮추면 한 병을 충분히 쓰기 쉬운 대신 다음 큰 공격 전에 쓰러질 위험이 있습니다. 받은 피해의 크기와 물약 회복량을 보고 정합니다. 기준은 편성마다 따로 저장되며, 원정 중 바꾼 기준을 확실히 적용하려면 철수한 뒤 다시 출발합니다.",
+        en: "Use [−]/[+] below the belt to adjust this preset's HP threshold. A living hero drinks automatically when below it, without using an action. The party shares one potion cooldown: after anyone drinks, no one in the party can drink again for {cooldown} seconds.<br><br>A higher threshold drinks earlier but can waste healing beyond the missing HP. A lower threshold can make fuller use of each bottle, but risks falling to the next heavy hit. Consider incoming hit sizes and the potion's healing amount. Thresholds are saved per preset. Retreat and deploy again to ensure a change applies to an expedition.",
     },
     'help.party.tactics.title': {
         ko: "파티 전술과 리롤",
@@ -1422,11 +1421,11 @@ const STRINGS = {
     },
     'help.character.skills.title': {
         ko: "액티브 스킬과 자동 사용 순서",
-        en: "Active skills and automatic priority",
+        en: "Active skills and automatic use order",
     },
     'help.character.skills.body': {
-        ko: "액티브는 영웅 고유·스킬북으로 습득·전직의 세 출처에서 하나씩 옵니다. 레벨만 올려 여러 스킬을 자동으로 배우는 구조는 아닙니다. 스킬 그림에 마우스를 올려 효과·대상·필요 무기를 확인하고, 스킬북을 통한 습득과 업그레이드는 도서관에서 진행합니다.<br><br>차례가 오면 조건을 만족하고 사용할 수 있는 스킬 중 가장 오래 준비된 것을 자동으로 고릅니다. 동시에 준비된 스킬은 [우선순위]에서 정한 순서를 따릅니다. 우선순위 창의 스킬 줄을 끌어 바꿀 수 있지만, 앞에 두었다고 쿨타임이 남은 스킬을 강제로 쓰지는 않습니다.<br><br>물리 무기와 맨손은 보통 차례마다 기본 공격을 하며, 준비된 스킬이 있으면 먼저 씁니다. 공격 스킬이 겨눈 적이 이미 쓰러지면 뒤의 기본 공격은 생략될 수 있습니다. 마법 무기는 기본 공격 없이 충전 칸으로 스킬을 씁니다. 정신 집중 중에는 기본 공격과 다른 스킬을 사용하지 않으며, 오오라와 사건 반응 스킬도 각자의 발동 규칙을 따릅니다. 마나는 없습니다.",
-        en: "Active skills come one each from the hero's innate skill, a learned skill book and advancement. Leveling alone does not automatically teach a collection of skills. Hover an icon to check its effect, targets and weapon requirement. Learn and upgrade book skills at the Library.<br><br>On a turn, combat automatically picks the eligible skill that has been ready longest. Skills ready at the same time follow your [Priority] order. Drag rows in that window to change it. Putting a skill first does not force it to cast before its cooldown ends.<br><br>Physical weapons and bare hands normally make a basic attack each turn, using a ready skill first. The following basic attack may be skipped if the attack skill's target has already fallen. Magic weapons have no basic attack and cast using stored charges. Channeling prevents other skills and basic attacks while active; auras and event-triggered skills also follow their own activation rules. There is no mana.",
+        ko: "액티브는 영웅 고유·스킬북으로 습득·전직의 세 출처에서 하나씩 옵니다. 레벨만 올려 여러 스킬을 자동으로 배우는 구조는 아닙니다. 스킬 그림에 마우스를 올려 효과·대상·필요 무기를 확인하고, 스킬북을 통한 습득과 업그레이드는 도서관에서 진행합니다.<br><br>차례가 오면 조건을 만족하고 사용할 수 있는 스킬 중 가장 오래 준비된 것을 자동으로 고릅니다. 동시에 준비된 스킬은 앞 칸부터 씁니다. 스킬 쿨타임은 라운드가 시작될 때마다 처음부터 돌아서, 라운드 첫 스킬은 쿨타임이 짧은 것부터 나갑니다.<br><br>물리 무기와 맨손은 보통 차례마다 기본 공격을 하며, 준비된 스킬이 있으면 먼저 씁니다. 공격 스킬이 겨눈 적이 이미 쓰러지면 뒤의 기본 공격은 생략될 수 있습니다. 마법 무기는 기본 공격 없이 충전 칸으로 스킬을 씁니다. 정신 집중 중에는 기본 공격과 다른 스킬을 사용하지 않으며, 오오라와 사건 반응 스킬도 각자의 발동 규칙을 따릅니다. 마나는 없습니다.",
+        en: "Active skills come one each from the hero's innate skill, a learned skill book and advancement. Leveling alone does not automatically teach a collection of skills. Hover an icon to check its effect, targets and weapon requirement. Learn and upgrade book skills at the Library.<br><br>On a turn, combat automatically picks the eligible skill that has been ready longest. Skills ready at the same time go in slot order. Skill cooldowns restart at the start of every round, so the shortest cooldown goes first in each round.<br><br>Physical weapons and bare hands normally make a basic attack each turn, using a ready skill first. The following basic attack may be skipped if the attack skill's target has already fallen. Magic weapons have no basic attack and cast using stored charges. Channeling prevents other skills and basic attacks while active; auras and event-triggered skills also follow their own activation rules. There is no mana.",
     },
     'help.character.weapon_skills.title': {
         ko: "배울 수 있는데 왜 스킬이 꺼지나요",
@@ -1473,8 +1472,8 @@ const STRINGS = {
         en: "Critical hits, Crushing Blow, Life Steal and counters",
     },
     'help.character.critical_effects.body': {
-        ko: "치명타 확률은 치명타가 나올 빈도, 치명타 피해는 치명타가 났을 때의 배율입니다. 마법 무기의 직접 타격도 치명타가 나올 수 있습니다. 두 수치 중 하나만 보고 공격 성능 전체를 판단하지 않습니다.<br><br>강타는 타격 직전 적의 현재 HP에 비례한 피해를 더합니다. 최대 HP 기준이 아니므로 같은 적도 HP가 많이 남았을 때 추가량이 큽니다. 강타와 흡혈은 물리 무기·맨손의 직격에 적용되며, 마법 무기를 들면 적용되지 않습니다.<br><br>흡혈은 준 직격 피해에 비례해 HP를 회복합니다. 피해가 잘 나오지 않으면 회복도 작아지며, 강타로 더한 피해나 중독·반사에는 흡혈이 붙지 않습니다. 회복을 늘리려면 흡혈 수치와 실제 타격 피해를 함께 확인합니다.<br><br>반격은 맞았을 때 확률로 공격자에게 기본 공격을 돌려주며, 자기 행동 차례를 사용합니다. 받은 피해를 그대로 되돌리는 반사와 다릅니다. 마법 무기에는 기본 공격이 없어 반격하지 못하며, 경직·스턴 중에도 반격하지 못합니다.",
-        en: "Critical Chance controls how often critical hits occur; Critical Damage controls their multiplier. Direct hits with magic weapons can also critically hit. Neither stat alone describes the hero's overall damage output.<br><br>Crushing Blow adds damage based on the enemy's current HP just before the hit. It uses current rather than maximum HP, so the added amount is larger while that enemy has more HP left. Crushing Blow and Life Steal work with direct hits using Physical weapons or bare hands, but do not apply while wielding a magic weapon.<br><br>Life Steal heals in proportion to direct-hit damage dealt. Weak hits also mean little healing. Added Crushing Blow damage, Poison damage over time and reflection provide no Life Steal. Compare the Life Steal value with the damage the hero actually deals.<br><br>A counter has a chance to answer an incoming hit with a basic attack against the attacker, spending the defender's own action turn. This differs from reflection. Magic weapons have no basic attack and cannot counter; staggered or Stunned heroes cannot counter either.",
+        ko: "치명타 확률은 치명타가 나올 빈도, 치명타 피해는 치명타가 났을 때의 배율입니다. 마법 무기의 직접 타격도 치명타가 나올 수 있습니다. 두 수치 중 하나만 보고 공격 성능 전체를 판단하지 않습니다.<br><br>강타는 타격 직전 적의 현재 HP에 비례한 피해를 더합니다. 최대 HP 기준이 아니므로 같은 적도 HP가 많이 남았을 때 추가량이 큽니다. 강타와 흡혈은 물리 무기·맨손의 직격에 적용되며, 마법 무기를 들면 적용되지 않습니다.<br><br>흡혈은 준 직격 피해에 비례해 HP를 회복합니다. 피해가 잘 나오지 않으면 회복도 작아지며, 강타로 더한 피해나 중독·반사에는 흡혈이 붙지 않습니다. 회복을 늘리려면 흡혈 수치와 실제 타격 피해를 함께 확인합니다.<br><br>반격은 맞았을 때 확률로 공격자에게 기본 공격을 한 번 돌려줍니다. 자기 행동 차례는 쓰지 않으며, 반격을 맞은 쪽은 다시 반격하지 않습니다. 받은 피해를 그대로 되돌리는 반사와 다릅니다. 마법 무기에는 기본 공격이 없어 반격하지 못하며, 경직·스턴 중에도 반격하지 못합니다.",
+        en: "Critical Chance controls how often critical hits occur; Critical Damage controls their multiplier. Direct hits with magic weapons can also critically hit. Neither stat alone describes the hero's overall damage output.<br><br>Crushing Blow adds damage based on the enemy's current HP just before the hit. It uses current rather than maximum HP, so the added amount is larger while that enemy has more HP left. Crushing Blow and Life Steal work with direct hits using Physical weapons or bare hands, but do not apply while wielding a magic weapon.<br><br>Life Steal heals in proportion to direct-hit damage dealt. Weak hits also mean little healing. Added Crushing Blow damage, Poison damage over time and reflection provide no Life Steal. Compare the Life Steal value with the damage the hero actually deals.<br><br>A counter has a chance to answer an incoming hit with a bonus basic attack against the attacker. It does not use the defender's own action turn, and a counter cannot itself be countered. This differs from reflection. Magic weapons have no basic attack and cannot counter; staggered or Stunned heroes cannot counter either.",
     },
     'help.character.farming_stats.title': {
         ko: "드랍률·매직아이템 획득·골드·경험치",
@@ -2022,6 +2021,15 @@ const STRINGS = {
         ko: "게임 안에서 도움말·캐릭터·건설 같은 다른 탭을 보는 동안에도 원정과 탐험은 진행됩니다. 관전 중인 팀만 움직이는 방식이 아니므로 장비를 정리하면서 전투를 돌릴 수 있습니다.<br><br>게임을 완전히 닫으면 원정은 멈추며, 다시 접속한 뒤 출발합니다. 보낸 탐험은 꺼 둔 동안에도 남은 시간이 흘러 완료되므로 돌아왔을 때 탐험 탭에서 수령합니다. 연구소의 오프라인 생산·훈련·수익은 {offlineHours}시간분을 기준으로 제한해 계산하며, 수색은 대기 칸이 찰 때까지 진행됩니다.<br><br>PC가 절전 상태에 들어가거나 브라우저가 게임 탭을 오래 정지시키면 원정이 끊길 수 있습니다. 돌아왔을 때 멈춤 알림과 마지막 리포트를 확인하고 [보내기]로 다시 시작합니다. 연구소 생산과 탐험의 완료·수령은 각 탭에서 확인합니다.",
         en: "Expeditions and Exploration continue while you view other in-game tabs such as Help, Character or Construction. Activity is not limited to the team you are spectating, so you can organize equipment while combat runs.<br><br>Closing the game stops Expeditions; deploy again after returning. An exploration already sent can finish while the game is closed; claim it in Exploration when you return. Offline Laboratory production, Training and income use a limited {offlineHours}h calculation window. Search continues until its waiting slots fill.<br><br>If the PC sleeps or the browser suspends the game tab for a long time, Expeditions can stop. On return, check the interruption notice and last report, then Deploy again. Check Laboratory output and Exploration completion or collection in their respective tabs.",
     },
+    // 왼쪽 탭 아이콘의 출처 — CC BY 3.0 의 표기 조건 (SCREEN_DESIGN §1 · §12 · ADR-1028)
+    'help.help.credits.title': {
+        ko: "아이콘 출처",
+        en: "Icon credits",
+    },
+    'help.help.credits.body': {
+        ko: "왼쪽 탭 아이콘 일부는 game-icons.net에서 Lorc · sbed가 만든 그림입니다. CC BY 3.0 라이선스(creativecommons.org/licenses/by/3.0)로 사용합니다.",
+        en: "Some of the left tab icons are by Lorc and sbed from game-icons.net, used under the CC BY 3.0 license (creativecommons.org/licenses/by/3.0).",
+    },
     'help.lab.generator.title': {
         ko: "아이템 생성기",
         en: "Item generator",
@@ -2327,9 +2335,7 @@ const STRINGS = {
     //   위의 `ch.lv`(영웅 레벨)와 글자가 같아도 가리키는 것이 달라 키를 나눈다
     'ch.itemLv': { ko: 'Lv.{n}', en: 'Lv.{n}' },
     'ch.skill.h': { ko: '액티브 스킬', en: 'Active Skills' },
-    // 스킬 우선순위 — 소제목 오른쪽 끝 버튼 · 그 버튼이 여는 창의 제목 (SCREEN_DESIGN §6 · ADR-0937)
-    'ch.skill.order': { ko: '우선순위', en: 'Priority' },
-    'ch.skill.orderH': { ko: '스킬 우선순위', en: 'Skill Priority' },
+    // ~~스킬 우선순위 버튼 · 창 제목 `ch.skill.order` · `ch.skill.orderH`~~ — 2026-11-02 걷었다(SCREEN_DESIGN §6 · ADR-1035)
     'ch.skill.go': { ko: '마스터리 열기', en: 'Open Mastery' },
     'ch.items.h': { ko: '아이템', en: 'Items' },
 
@@ -2734,7 +2740,6 @@ const STRINGS = {
     'sk.unlearnHint': { ko: ' · 우클릭 = 1랭크 되돌리기', en: ' · Right-click to refund 1 rank' },
     // 낀 장비가 켜는 칸 (직업 T2 · 2026-09-22 R138) — 갈래 이름은 CSV 에서
     'sk.slots.h': { ko: '액티브', en: 'Actives' },
-    'sk.slots.sub': { ko: '3개 — 순서 = 우선순위', en: '3 — order = priority' },
     // 인게임 이름은 「공격 속도」 하나다 — 값은 초 / 1회 그대로 (2026-09-25 사용자 지시 · ADR-0358)
     'sk.cycle': { ko: '공격 속도', en: 'Attack Speed' },
     // 마법 무기를 든 유닛은 같은 주기를 「캐스팅 속도」라 부른다 — 이름만 · 값 그대로 (2026-10-03 사용자 지시 · R202 · ADR-0492)

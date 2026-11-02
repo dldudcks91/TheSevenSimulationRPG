@@ -36,7 +36,7 @@ def summarize(r):
     if any(x.get('error')for x in rows):
         return{'id':r['id'],'valid':False,'errors':[x for x in rows if x.get('error')]}
     clear=[x['clearSeconds']for x in rows];arrival=[x['arrivalSeconds']for x in rows]
-    policy_defaults={'management':120,'lossTrigger':3,'farmWins':3,'mastery':'balanced','rareDps':'off','startFloor':False,'backHp':0,'frontHp':0}
+    policy_defaults={'management':120,'lossTrigger':3,'farmWins':3,'mastery':'balanced','rareDps':'off','startFloor':False,'backHp':0,'frontHp':0,'farmMode':'place','farmPotions':False,'dropLosses':1}
     changed=[k for k,v in r['variant'].items()if v!=DEFAULT.get(k,policy_defaults.get(k))]
     normalized={**policy_defaults,'management':300 if r['policy']=='active_slow' else 120,**r['variant']}
     result={'id':r['id'],'policy':r['policy'],'n':n,**normalized,'changes':len(changed),'changed':changed,'valid':True,

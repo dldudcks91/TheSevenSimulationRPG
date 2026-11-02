@@ -293,7 +293,7 @@ function stockPotions(c,t){
     const available=Q.shopState(G,START+t*1000).potions;
     let id='minor_healing';
     if(boss)id=(available.find(p=>p.heal>=hp*.35)??available.at(-1)).id;
-    if(c.farm)id=null;
+    if(c.farm&&!window.__qaVariant.farmPotions)id=null;
     for(let i=0;i<Q.limitsOf(G).potionSlots;i++){
         const r=Q.setPotionSlot(G,i,id);if(!r.ok)throw Error('potion slot '+JSON.stringify(r));
     }
@@ -355,13 +355,27 @@ function activeManage(c,t){
     inspectSkills(c,t);check(c,t);
 }
 function farmStart(c,target,t){
-    const place=D.stages[target].place??Math.floor(target/10);
     const earlier=D.stageOrder.filter(id=>id<target&&id<BOSS&&Q.stageCleared(c.G,id,'normal'));
-    // CSV stage IDs encode place in the tens; all three cells repeat via nextRepeat.
+    const mode=window.__qaVariant.farmMode??'place';
+    if(mode!=='place'){
+        const eligible=earlier.filter(id=>D.stages[id].cell!==3);
+        let start=eligible.at(-1)??earlier.at(-1);
+        if(mode==='xp'){
+            const choices=eligible.map(stage=>{
+                const rows=c.runs.filter(r=>r.won&&r.stage===stage).slice(-3);
+                const seconds=sum(rows.map(r=>r.wallSec));
+                return{stage,score:seconds?sum(rows.map(r=>r.minHeroXp??r.xp))/seconds:-1};
+            }).sort((a,b)=>b.score-a.score||b.stage-a.stage);
+            if(choices[0]?.score>=0)start=choices[0].stage;
+        }
+        if(start==null)return false;
+        c.farm={stage:start,target,wins:0,attempts:0,failed:0,repeat:false};
+        c.count.guideResponses++;action(c,'farmResponse',t,{stage:start,target,mode});return true;
+    }
     const previous=earlier.filter(id=>Math.floor(id/10)<Math.floor(target/10));
     const last=previous.at(-1),start=last==null?earlier[0]:Math.floor(last/10)*10+1;
     if(start==null)return false;
-    c.farm={stage:start,target,wins:0,attempts:0,repeat:last!=null};
+    c.farm={stage:start,target,wins:0,attempts:0,failed:0,repeat:last!=null};
     c.count.guideResponses++;action(c,'farmResponse',t,{stage:start,target,repeat:c.farm.repeat});return true;
 }
 function afterLoss(c,t,R,stage){
@@ -418,7 +432,7 @@ window.runActiveQA=async function(seed,policy='active',save=true){
             if(p.done){
                 const R=ru.handle.report;Q.noteRunEnd(G,ru.handle,START+t*1000);
                 reportHashes.push(hashReport(JSON.stringify(R)));
-                c.runs.push({t:r3(t),start:r3(ru.start),stage:ru.stage,diff:'normal',won:R.won,reason:R.reason,roundsCleared:R.roundsCleared,wallSec:r3(t-ru.start),combatSec:R.durationSec,xp:sum(Object.values(R.xp)),gold:R.gold,drops:R.drops.length,overflow:R.discarded,downed:R.downed.length,potionUnits:ru.potionUnits,potionValue:ru.potionValue,farming:!!c.farm});
+                c.runs.push({t:r3(t),start:r3(ru.start),stage:ru.stage,diff:'normal',won:R.won,reason:R.reason,roundsCleared:R.roundsCleared,wallSec:r3(t-ru.start),combatSec:R.durationSec,xp:sum(Object.values(R.xp)),minHeroXp:Math.min(...party(G).map(h=>R.xp[h.uid]??0)),gold:R.gold,drops:R.drops.length,overflow:R.discarded,downed:R.downed.length,potionUnits:ru.potionUnits,potionValue:ru.potionValue,farming:!!c.farm});
                 count.runs++;count.wins+=Number(R.won);count.losses+=Number(!R.won);count.timeouts+=Number(R.reason==='timeout');count.downed+=R.downed.length;
                 if(!R.won)first(c,'defeat',t,{stage:ru.stage,reason:R.reason});
                 if(ru.stage===BOSS&&R.won){won=true;first(c,'bossClear',t,{levels:party(G).map(h=>h.level)});}
@@ -428,9 +442,12 @@ window.runActiveQA=async function(seed,policy='active',save=true){
                     const restart=START+t*1000+D.balance.repeat_restart_sec*1000;
                     if(c.farm){
                         count.farmingRuns++;c.farm.attempts++;c.farm.wins+=Number(R.won);
-                        if(!R.won){
-                            const lower=Math.floor(c.farm.stage/10)*10-9;
-                            if(lower>=1011&&Q.stageCleared(G,lower,'normal')){c.farm.stage=lower;c.farm.repeat=true;pending={stageId:lower,difficulty:'normal',at:restart,from:null};}
+                        c.farm.failed=R.won?0:(c.farm.failed??0)+1;
+                        if(!R.won&&c.farm.failed>=(window.__qaVariant.dropLosses??1)){
+                            const mode=window.__qaVariant.farmMode??'place';
+                            const pool=D.stageOrder.filter(id=>id<c.farm.stage&&D.stages[id].cell!==3&&Q.stageCleared(G,id,'normal'));
+                            const lower=mode==='place'?Math.floor(c.farm.stage/10)*10-9:pool.at(-1);
+                            if(lower>=1011&&Q.stageCleared(G,lower,'normal')){c.farm.stage=lower;c.farm.repeat=mode==='place';c.farm.failed=0;pending={stageId:lower,difficulty:'normal',at:restart,from:null};}
                         }
                         if(c.farm.wins>=(window.__qaVariant.farmWins??3)||c.farm.attempts>=((window.__qaVariant.farmWins??3)+2)){pending={stageId:c.farm.target,difficulty:'normal',at:restart,from:null};c.target=c.farm.target;c.farm=null;}
                         else if(!c.farm.repeat)pending={stageId:c.farm.stage,difficulty:'normal',at:restart,from:null};
