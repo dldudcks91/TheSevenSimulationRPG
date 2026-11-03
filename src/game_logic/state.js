@@ -4508,7 +4508,7 @@ export function createGameSystem(deps) {
     }
 
     /* ~~`setSkillOrder(state, uid, order)`~~ 스킬 우선순위(2026-10-28 · ADR-0937)는 **2026-11-02 삭제** [R427 · INTERFACE §2-7 · battle_design §5] —
-       쿨이 라운드마다 처음부터라 개시 순서는 쿨이 정하고 동률은 출처 칸 순서다. `hero.skillOrder` 는 로드가 지운다(`deserialize`) */
+       동시에 준비된 칸의 동률은 출처 칸 순서다. `hero.skillOrder` 는 로드가 지운다(`deserialize`) */
 
     /* ── 수색 — 시간마다 한 명이 선술집 칸에 저절로 온다 [신설 2026-10-19 · base_expedition §2-4 · INTERFACE §2-7 — ~~수색~~(대기 영웅 하나를 내보낸다 · 2026-09-09 ~ 10-16) 대체] ──
        **영웅을 보내지 않는다** — 연구소 줄 「수색」의 「간격」 지점(`labNodes['visit:interval']` · 2026-10-21 R298)을 처음 연구하면 시계가 서고 `visit_hours` 마다 한 명이 칸(`joins`)에 선다.

@@ -8013,10 +8013,9 @@ check('battle: 무기가 안 맞는 칸은 건너뛴다 — 출처(고유 · 배
     const pick = SYS.skill.list.filter(d => d.ownerKind === 'job' && d.ownerId === 'archer' && d.cast !== 'aura' && d.needsWeapon).slice(0, 2);
     if (pick.length < 2) fail('무기가 필요한 궁수 직업 스킬이 둘이 안 된다 — 표본 없음');
     const ids = pick.map(d => d.id);
-    // 몬스터 HP 를 키운다 — 쿨이 라운드 시작부터 돌아(2026-11-02 R427) 라운드가 쿨보다 짧으면 맞는 칸도 안 나간다
+    // 몬스터 HP 를 키운다 — 쿨이 전투 시작부터 돌아(2026-11-02 R427) 라운드가 쿨보다 짧으면 맞는 칸도 안 나간다
     const SW = buildSystems({ ...D, balance: { ...B, monster_hp_scale: B.monster_hp_scale * 1000 } });
-    // `round` 의 파티 `ready`(R427)는 표시값이다 — 꺼진 칸은 null · 칸 없음은 빈 배열이라 견줄 때 뺀다(칸 표시는 `party[0].ready` 로 따로 잰다)
-    const plain = tl => JSON.stringify(tl.map(ev => (ev.e === 'round' && ev.ready ? (({ ready, ...rest }) => rest)(ev) : ev)));
+    const plain = tl => JSON.stringify(tl);
     let cast = 0;
     for (const source of ['innate', 'book', 'advance']) {
         const kit = pick.map(d => ({ id: d.id, source }));
@@ -8027,7 +8026,6 @@ check('battle: 무기가 안 맞는 칸은 건너뛴다 — 출처(고유 · 배
                 const r = SW.battle.simulate(armedKit(kit, g), 1013, makeRng(seed));
                 if (plain(r.timeline) !== plain(bare.timeline)) fail(`${source} seed ${seed} 무기 ${g} — 꺼진 칸이 전투를 바꿨다(차례를 먹었거나 쿨이 돌았다)`);
                 if (!eq(r.party[0].actives, ids) || !r.party[0].ready.every(v => v === null)) fail(`${source} seed ${seed} 무기 ${g} — 칸 표시 ${JSON.stringify(r.party[0])} — 꺼진 칸은 null`);
-                if (r.timeline.some(ev => ev.e === 'round' && ev.ready?.p0 && !ev.ready.p0.every(v => v === null))) fail(`${source} seed ${seed} 무기 ${g} — 라운드의 칸 표시가 null 이 아니다`);
             }
             // ② 제 무기(활 · 석궁) — 나간다 · 첫 준비는 쿨 한 바퀴(0 초과 · 표기 쿨 이하 — 쿨감은 줄이기만 한다 · R427 — ~~준비 상태라 0~~ R100)
             for (const g of ['bow', 'crossbow']) {
@@ -12727,12 +12725,13 @@ check('createRun: 보상은 이긴 라운드만 — 진 라운드의 처치 · �
 });
 
 /**
- * 스킬 쿨은 라운드가 열릴 때마다 처음부터 [2026-11-02 · R427 · battle_design §6 · INTERFACE §2-6 — ~~준비 상태로 출발~~ R100] —
- *   파티 · 적 모든 칸의 첫 준비 = 그 라운드 시작 + 쿨 한 바퀴(0 초과 · 표기 쿨 이하 — 쿨감은 줄이기만 한다) · 그 전에는 그 칸이 안 나간다 ·
- *   파티는 둘째 라운드부터 `round` 의 `ready` 가 그 라운드의 준비 시각을 싣고, 쿨감이 그대로인 판이면 첫 라운드와 같은 한 바퀴다(라운드를 넘어 잇지 않는다)
+ * 스킬 쿨은 스테이지(런)를 열 때 처음부터 · 파티는 라운드를 넘어 잇는다 [2026-11-03 · R429 · battle_design §6 · INTERFACE §2-6 — ~~라운드마다 처음부터~~ R427 · ~~준비 상태로 출발~~ R100] —
+ *   파티 칸의 첫 준비 = 전투 시작 + 쿨 한 바퀴(0 초과 · 표기 쿨 이하 — 쿨감은 줄이기만 한다) · 그 전에는 그 칸이 안 나간다 ·
+ *   둘째 라운드부터 `round` 는 파티 칸을 싣지 않고, 앞 라운드에 쓴 칸이 새 라운드 시작 + 한 바퀴보다 **먼저** 나가는 판이 있다(남은 쿨을 잇는다) ·
+ *   적은 그 라운드에 새로 서므로 모든 칸의 첫 준비 = 등장 라운드 시작 + 쿨 한 바퀴
  */
-check('createRun: 스킬 쿨은 라운드가 열릴 때마다 처음부터 — 파티 · 적 모든 칸의 첫 준비 = 라운드 시작 + 쿨 한 바퀴 · 그 전엔 안 나간다 · 둘째 라운드부터 round 가 파티 칸을 싣는다 (R427 · battle_design §6)', () => {
-    let party = 0, enemy = 0, casts = 0, again = 0;
+check('createRun: 스킬 쿨은 스테이지를 열 때 처음부터 — 파티 첫 준비 = 전투 시작 + 쿨 한 바퀴 · 파티는 라운드를 넘어 남은 쿨을 잇는다(round 가 파티 칸을 안 싣는다) · 적은 등장 라운드 시작 + 한 바퀴 (R429 · battle_design §6)', () => {
+    let party = 0, enemy = 0, casts = 0, carried = 0;
     const lapOk = (lap, id) => lap > 0 && lap <= (SYS.skill.defs[id].cool ?? 0) + 0.05;
     for (let seed = 1; seed <= 4; seed++) {
         const us = skillUnits();
@@ -12741,29 +12740,28 @@ check('createRun: 스킬 쿨은 라운드가 열릴 때마다 처음부터 — �
         const firstCast = (key, id, from, to) => r.timeline.find((ev, i) => i >= from && i < to && ev.e === 'skill' && ev.u === key && ev.s === id && !ev.trigger);
         starts.forEach((i, k) => {
             const ev = r.timeline[i], to = starts[k + 1] ?? r.timeline.length;
-            // 파티 — 첫 라운드는 결과 `party[].ready`, 둘째부터는 `round.ready`
-            if (k > 0 && !ev.ready) fail(`seed ${seed} 라운드 ${ev.n} — round 에 파티 칸 준비 시각(ready)이 없다`);
-            r.party.forEach((p, pi) => {
-                const ready = k === 0 ? p.ready : ev.ready?.[p.key];
-                if (!ready) return;                                    // 쓰러진 영웅은 싣지 않는다
-                p.actives.forEach((id, j) => {
+            if (k > 0 && ev.ready) fail(`seed ${seed} 라운드 ${ev.n} — round 가 파티 칸 준비 시각(ready)을 실었다 · 파티 쿨은 라운드를 넘어 잇는다`);
+            r.party.forEach(p => p.actives.forEach((id, j) => {
+                if (SYS.skill.defs[id].cast === 'aura') {
                     // 오오라 칸은 쿨이 없다 — 켜진 것 0 · 안 켜진 것 null (R98 · 「오오라는 제 칸에 서고」 단정)
-                    if (SYS.skill.defs[id].cast === 'aura') { if (ready[j] !== 0 && ready[j] !== null) fail(`seed ${seed} 라운드 ${ev.n} ${p.key} 오오라 ${id} — 준비 ${ready[j]}`); return; }
-                    if (ready[j] === null) return;                     // 무기가 안 맞아 꺼진 칸
-                    const lap = ready[j] - ev.t;
-                    if (!lapOk(lap, id)) fail(`seed ${seed} 라운드 ${ev.n} ${p.key} ${id} — 첫 준비 ${ready[j]} · 라운드 시작 ${ev.t} — 그 뒤 쿨 한 바퀴(표기 ${SYS.skill.defs[id].cool})여야`);
-                    if (k > 0) {
-                        // 갈아입지 않은 판 — 첫 라운드와 같은 한 바퀴다(앞 라운드의 쿨을 잇지 않는다)
-                        if (Math.abs(lap - (p.ready[j] - r.timeline[starts[0]].t)) > 0.051) fail(`seed ${seed} 라운드 ${ev.n} ${p.key} ${id} — 한 바퀴 ${lap.toFixed(2)} ≠ 첫 라운드 ${p.ready[j]}`);
-                        again++;
-                    }
+                    if (k === 0 && p.ready[j] !== 0 && p.ready[j] !== null) fail(`seed ${seed} ${p.key} 오오라 ${id} — 준비 ${p.ready[j]}`);
+                    return;
+                }
+                if (p.ready[j] === null) return;                       // 무기가 안 맞아 꺼진 칸
+                const lap = p.ready[j] - r.timeline[starts[0]].t;      // 첫 라운드(전투 시작)부터 한 바퀴 — 이 판은 갈아입지 않아 쿨감이 그대로다
+                if (k === 0) {
+                    if (!lapOk(lap, id)) fail(`seed ${seed} ${p.key} ${id} — 첫 준비 ${p.ready[j]} · 전투 시작 ${ev.t} — 그 뒤 쿨 한 바퀴(표기 ${SYS.skill.defs[id].cool})여야`);
                     party++;
                     const c = firstCast(p.key, id, i, to);
                     if (!c) return;
                     casts++;
-                    if (c.t < ready[j] - 0.05) fail(`seed ${seed} 라운드 ${ev.n} ${p.key} ${id} — ${c.t}초에 썼다 · 준비 ${ready[j]} 전`);
-                });
-            });
+                    if (c.t < p.ready[j] - 0.05) fail(`seed ${seed} ${p.key} ${id} — ${c.t}초에 썼다 · 준비 ${p.ready[j]} 전`);
+                    return;
+                }
+                // 둘째 라운드부터 — 앞 라운드에 이미 쓴 칸이 이 라운드 시작 + 한 바퀴보다 먼저 나가면 남은 쿨을 이은 것이다
+                const c = firstCast(p.key, id, i, to);
+                if (c && c.t < ev.t + lap - 0.1 && firstCast(p.key, id, starts[0], i)) carried++;
+            }));
             for (const e of ev.enemies) (e.actives ?? []).forEach((id, j) => {
                 if (SYS.skill.defs[id].cast === 'aura') { if (e.ready[j] !== 0 && e.ready[j] !== null) fail(`seed ${seed} 라운드 ${ev.n} ${e.key} 오오라 ${id} — 준비 ${e.ready[j]}`); return; }
                 if (!lapOk(e.ready[j] - ev.t, id)) fail(`seed ${seed} 라운드 ${ev.n} ${e.key} ${id} — 첫 준비 ${e.ready[j]} · 등장 라운드 시작 ${ev.t} — 그 뒤 쿨 한 바퀴여야`);
@@ -12775,8 +12773,9 @@ check('createRun: 스킬 쿨은 라운드가 열릴 때마다 처음부터 — �
             });
         });
     }
-    if (!party || !enemy || !casts || !again) fail(`표본 부족 — 파티 칸 ${party} · 적 칸 ${enemy} · 시전 ${casts} · 둘째 라운드 이후 파티 칸 ${again}`);
-    return `파티 칸 ${party}(둘째 라운드 이후 ${again}) · 적 칸 ${enemy} · 준비 뒤 첫 시전 ${casts}`;
+    if (!party || !enemy || !casts) fail(`표본 부족 — 파티 칸 ${party} · 적 칸 ${enemy} · 시전 ${casts}`);
+    if (!carried) fail('둘째 라운드 이후 한 바퀴보다 먼저 나간 파티 칸이 없다 — 파티 쿨이 라운드마다 처음부터 돈다');
+    return `파티 칸 ${party} · 적 칸 ${enemy} · 준비 뒤 첫 시전 ${casts} · 라운드를 넘어 이은 파티 칸 ${carried}`;
 });
 
 check('createRun: 갈아입기 — 보스 라운드 도중도 그 시각에 먹는다 · 현재 HP 는 비율 · 남은 스킬은 칸마다 쿨 그대로 · 새 스킬은 그 순간부터 한 바퀴 (R89 · R130 · base_expedition_design §1-5 · INTERFACE §2-6)', () => {

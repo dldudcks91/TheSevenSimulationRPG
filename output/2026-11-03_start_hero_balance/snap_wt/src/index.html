@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Seven Simulation RPG — 화면 목업</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css">
+    <link rel="stylesheet" href="./ui/style.css">
+    <link rel="stylesheet" href="./ui/raid.css">
+    <link rel="stylesheet" href="./ui/tutorial.css">
+</head>
+<body>
+    <!-- 한 장 — 화면은 1600×800 한 장이고 창에 맞춰 통째로 줄이고 늘린다 (ADR-0087 · 크기는 style.css 의 #stage) -->
+    <div id="stage">
+        <!-- booting 으로 시작한다 — 첫 render 전에 빈 브랜드 · 상단바 · 내비가 비치지 않게 (ADR-0349 · ADR-0633). 첫 app.js:renderShell 이 걷는다 -->
+        <div id="app" class="booting">
+            <!-- 워드마크 = 그림 한 장 (ADR-0883) — 메뉴의 큰 워드마크도 이 마크업을 그대로 든다 -->
+            <div class="brand"><img src="assets/art/logo/the_seven.webp" alt="THE SEVEN"></div>
+            <div class="topbar">
+                <div class="crumb"></div>
+                <div class="tab-seg"></div>
+                <div class="resources"></div>
+            </div>
+            <nav class="nav"></nav>
+            <main class="main"></main>
+        </div>
+
+        <div id="tooltip" class="tooltip"></div>
+        <!-- 창 레이어 — 탭 위에 겹쳐 뜨는 판 하나 (SCREEN_DESIGN §2). 쓰는 곳은 스킬 트리(§7) · 해고(§6) · 출정(§4-1) -->
+        <div id="modal" class="modal-layer" hidden></div>
+        <!-- 플래시 자리 — 한 장 오른쪽 아래에서 튀어나왔다가 제 시간에 다시 들어가는 카드 · 세 장까지 쌓인다 (SCREEN_DESIGN §2 · ADR-0692). 채우는 것은 app.js:flash 하나 -->
+        <div id="toast" class="toast-layer" role="status" aria-live="polite"></div>
+    </div>
+
+    <!-- 세로 창 막 — 터치 기기에서 창이 세로로 길면 창 전체를 덮는다. 한 장 밖이라 배율을 안 탄다 (SCREEN_DESIGN §2 · ADR-0371). 채우는 것은 app.js:renderTurnGate 하나 -->
+    <div id="turn" class="turn-gate" hidden></div>
+
+    <!-- 부서진 글자 필터 — 이번 버전이 안 여는 장의 챕터 버튼(`.seg-crumble` · SCREEN_DESIGN §4-1 · ADR-0739).
+         fx-crumble = 글자 전체: 잡음으로 가장자리를 흔들고(feDisplacementMap) 낮은 문턱의 잡음 구멍으로 잔 조각을 판다 ·
+         fx-crumble-1 ~ 3 = 끝 글자 셋: 문턱이 높아(1 이 가장 높다) 크게 조각난다 · 씨앗이 박혀 있어 늘 같은 모양이다 -->
+    <svg class="fx-defs" width="0" height="0" aria-hidden="true" focusable="false">
+        <filter id="fx-crumble" x="-10%" y="-40%" width="120%" height="180%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="2" seed="4" result="warp"/>
+            <feDisplacementMap in="SourceGraphic" in2="warp" scale="1.5" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+            <feTurbulence type="fractalNoise" baseFrequency="0.3" numOctaves="2" seed="3" result="grain"/>
+            <feComponentTransfer in="grain" result="holes"><feFuncA type="discrete" tableValues="0 0 0 1 1 1 1 1 1 1"/></feComponentTransfer>
+            <feComposite in="rough" in2="holes" operator="in"/>
+        </filter>
+        <filter id="fx-crumble-1" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="2" seed="7" result="grain"/>
+            <feComponentTransfer in="grain" result="holes"><feFuncA type="discrete" tableValues="0 0 0 0 0 0 1 1 1 1"/></feComponentTransfer>
+            <feComposite in="SourceGraphic" in2="holes" operator="in"/>
+        </filter>
+        <filter id="fx-crumble-2" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="2" seed="11" result="grain"/>
+            <feComponentTransfer in="grain" result="holes"><feFuncA type="discrete" tableValues="0 0 0 0 0 1 1 1 1 1"/></feComponentTransfer>
+            <feComposite in="SourceGraphic" in2="holes" operator="in"/>
+        </filter>
+        <filter id="fx-crumble-3" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="2" seed="23" result="grain"/>
+            <feComponentTransfer in="grain" result="holes"><feFuncA type="discrete" tableValues="0 0 0 0 1 1 1 1 1 1"/></feComponentTransfer>
+            <feComposite in="SourceGraphic" in2="holes" operator="in"/>
+        </filter>
+    </svg>
+
+    <script type="module" src="./ui/app.js"></script>
+</body>
+</html>

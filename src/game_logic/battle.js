@@ -209,7 +209,8 @@ export function createBattleSystem(data) {
         ? { id: a.id, def, readyAt, source: a.source }
         : { id: a.id, def, readyAt: Infinity, source: a.source, off: true, frozen });
     /**
-     * 칸 쿨을 처음부터 [2026-11-02 · R427 · battle_design §6 — ~~준비 상태로 출발~~ R100] — 라운드를 열 때(파티 · 적 · 결투장) · 불러낼 때(새로 서는 무리 · 되살아난 무리) 부른다.
+     * 칸 쿨을 처음부터 [2026-11-02 · R427 · battle_design §6 — ~~준비 상태로 출발~~ R100] — 전투 시작(파티 — 스테이지 · 결투장 한 판) · 라운드를 열 때(적 — 그 라운드에 새로 선다) ·
+     *   불러낼 때(새로 서는 무리 · 되살아난 무리) 부른다. 파티는 라운드를 넘어 잇는다(2026-11-03 R429)
      *   켜진 칸 = `at` + 쿨 한 바퀴(`cooldownSec` — 그 순간의 `cdr`) · 꺼진 칸(무기가 안 맞는 칸 · R187) = 얼린 쿨이 한 바퀴 — 켜지면 그때부터 한 바퀴다 · rng 0
      */
     const restartCools = (u, at) => {
@@ -1143,8 +1144,8 @@ export function createBattleSystem(data) {
             //   `rollGear` 가 낸 그 아이템들이고(처치 드롭이 이 중 하나로 나간다 · §5-2) 얕은 복사만 한다 — `sheet` 와 같은 취급이다(표시값 · 전투는 안 읽는다 · rng 0)
             gear: (e.gear ?? []).map(it => ({ ...it })),
         });
-        // 첫 라운드의 파티 칸 쿨 — 전투 시작(0 · 첫 라운드를 여는 시각)부터 한 바퀴 [2026-11-02 · R427 · battle_design §6]. 오오라를 건 뒤라 창이 민 `cdr` 까지 든다 ·
-        //   결과 `party[].ready` 가 이 값을 싣는다(아래) · 둘째 라운드부터는 `beginRound` 가 다시 세운다 · rng 0
+        // 파티 칸 쿨 — 전투 시작(0 · 스테이지를 여는 시각)부터 한 바퀴 [2026-11-02 · R427 · battle_design §6]. 오오라를 건 뒤라 창이 민 `cdr` 까지 든다 ·
+        //   결과 `party[].ready` 가 이 값을 싣는다(아래) · 둘째 라운드부터는 남은 쿨을 잇는다(R429 — ~~`beginRound` 가 다시 세운다~~) · rng 0
         for (const p of party) restartCools(p, 0);
         const timeline = [];
         const out = {
@@ -1357,7 +1358,7 @@ export function createBattleSystem(data) {
             // 장 디버프(시기 · 나태)도 라운드를 연 시각부터 다시 잰다 — 첫 틱에 걸린다 (R366) · 폭식은 `roundAt` 에서 0 부터
             curseAt = curse?.effect === 'poison' || curse?.effect === 'freeze' ? t : null;
             for (const u of [...party, ...units.enemies]) if (u.mfeast) u.feast = 0;   // 폭식 T3 겹도 라운드를 열면 비운다 (R343)
-            // 정신 집중은 이전 라운드가 끝난 순간 이미 닫혔다 — 그 칸의 쿨도 아래 `restartCools` 가 다시 세운다(R427).
+            // 정신 집중은 이전 라운드가 끝난 순간 이미 닫혔다 — 그 칸의 쿨은 닫힌 시각부터 전체 쿨이고 파티는 다음 라운드로 잇는다(R429).
             // 소환물은 **라운드가 끝나면 사라진다** (skill_design §12-6). 걷어내는 자리가 여기다 —
             //   적 배열이 갈리는 것과 같은 시점이라 결투 선언의 지목도 함께 사라진다(창이 적에게 붙어 있었다)
             for (let i = party.length - 1; i >= 0; i--) if (party[i].summon) party.splice(i, 1);
@@ -1427,20 +1428,13 @@ export function createBattleSystem(data) {
             for (const e of units.enemies) primeGauge(e);
             const pg = {};
             if (round > 1) for (const p of party) { const s = primeGauge(p); if (s) pg[p.key] = r1(s); }
-            // 파티 칸 쿨도 이 라운드 시작부터 한 바퀴 [2026-11-02 · R427 · battle_design §6] — 첫 라운드는 전투 시작이 이미 세웠다(`out` 위 `restartCools`).
-            //   나태 T2 겹은 라운드를 열면 0 이라(`roundAt`) 쿨감을 원값으로 먼저 되쓴다 — 다음 틱이 쓸 값과 같다(`advance`).
-            //   살아 있는 영웅의 칸 준비 시각을 아래 `round` 이벤트의 `ready` 로 싣는다(재생기가 쿨 칸을 다시 덮는다) · 소환은 위에서 걷혔다 · rng 0
-            const ready = {};
-            if (round > 1) for (const p of party) {
-                if (p.mtick) p.cdr = p.cdrBase;
-                restartCools(p, t);
-                if (p.hp > 0) ready[p.key] = slotView(p).ready;
-            }
+            // 파티 칸 쿨은 **라운드를 넘어 잇는다** — 스테이지(런)를 열 때만 처음부터다(`out` 위 `restartCools`) [2026-11-03 · R429 · battle_design §6 —
+            //   ~~라운드를 열 때마다 한 바퀴~~ R427]. 재생기는 앞 라운드의 칸을 그대로 이어 그린다 — `round` 에 파티 칸을 싣지 않는다 · rng 0
             roundLog = { n: round, kind: sp.type, killed: [], eliteSin: units.enemies.find(e => e.grade === 'elite')?.sin ?? null };
             out.rounds.push(roundLog);
             rules?.onStart?.(ruleContext());
             timeline.push({ t: r1(t), e: 'round', n: round, kind: sp.type, enemies: units.enemies.map(enemyView), ...(Object.keys(pg).length ? { pg } : {}),
-                ...(pots ? { pots: pots.map(p => (p ? { id: p.id, heal: p.heal } : null)) } : {}), ...(Object.keys(ready).length ? { ready } : {}) });
+                ...(pots ? { pots: pots.map(p => (p ? { id: p.id, heal: p.heal } : null)) } : {}) });
             // 오오라 창 이벤트 [2026-09-15 · R98] — `round` 바로 뒤 · 파티 몫(전투 시작 · 갈아입기) 먼저, 이 라운드 적의 것 다음.
             //   창은 이미 걸려 있다 — 이벤트만 낸다(rng 0 · 전투 결과 불변)
             for (const ev of [...auraQueue.splice(0), ...enemyAuras]) timeline.push({ t: r1(t), ...ev });
@@ -2317,7 +2311,7 @@ export function createBattleSystem(data) {
 
         // `between` = 이긴 라운드의 요약을 냈고 다음 라운드를 **아직 안 열었다**(라운드 사이) — 다음 걸음의 첫머리가 연다 (R130)
         let started = false, ended = false, between = false;
-        /** 라운드 종료로 남은 방을 취소한다 — 살아 있는 양 진영 모두 · 마지막 라운드도 같다 · 쿨은 다음 라운드를 열 때 처음부터다(R427 — ~~쿨 절반 환급~~ R403) · rng 0. */
+        /** 라운드 종료로 남은 방을 취소한다 — 살아 있는 양 진영 모두 · 마지막 라운드도 같다 · 쿨은 닫힌 시각부터 전체 쿨이고 파티는 다음 라운드로 잇는다(R429 · ~~쿨 절반 환급~~ R403) · rng 0. */
         const closeRoundChannels = () => {
             for (const u of [...party, ...units.enemies]) if (u.hp > 0 && u.chan) rt.chanClose(u, t);
         };

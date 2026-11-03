@@ -1,0 +1,149 @@
+<!doctype html><meta charset="utf-8"><title>running</title><pre id="out"></pre>
+<script type="module">
+// 시작 영웅 밸런스 측정 (2026-11-03 qa-fun · 스냅샷 dev/ 에 두고 연다 · 저장소에 넣지 않는다)
+//   ?part=census&n=20000            — 시작 파티 굴림 분포(직업 · 등급 · 고유 · 능력치 합)
+//   ?part=desc&s=400                — 시드 1..s 의 시작 파티(sim 과 같은 makeRng(1000+seed)) · 새 게임 직후 전투 수치
+//   ?part=league&s=400&k=40         — 시드 파티끼리 결투(Lv1 · 시작 장비) · i 는 i+1..i+k 와 양쪽 자리로 한 번씩
+//   ?part=swap&s=120&m=16           — 고유 교체 실험: 영웅 하나의 고유만 그 직업 1티어 각각으로 바꿔 같은 상대 m 팀과 양쪽 자리로
+//   ?part=lvl&s=200&k=20&lv=5       — 리그와 같되 전원 레벨 lv(장비는 시작 그대로 — 레벨만 민다)
+import { loadData, buildSystems, D } from '../ui/data.js';
+import { makeRng } from '../game_logic/rng.js';
+const q = new URL(location.href).searchParams;
+const out = document.getElementById('out');
+const NOW = 1_700_000_000_000;
+const r3 = v => Math.round(v * 1000) / 1000;
+try {
+    await loadData('../data/');
+    const SYS = buildSystems(D);
+    const B = D.balance;
+    const part = q.get('part') || 'census';
+    const classes = SYS.skill.list ? null : null;
+    const starter = {};
+    for (const c of D.classes) starter[c.id] = SYS.skill.list.filter(sk => sk.innatePool && sk.ownerKind === 'job' && sk.ownerId === c.id && sk.tier === 1).map(sk => sk.id);
+    const front = new Set(D.classes.filter(c => c.startRow !== 'back').map(c => c.id));
+
+    const gameOf = seed => SYS.game.newGame(seed, SYS.hero.rollStartParty(makeRng(1000 + seed), B.party_size_max), NOW);
+    const heroesOf = G => SYS.game.partyOf(G).map(uid => SYS.game.heroById(G, uid));
+    const atkOf = c => c.atk_physical ?? c.atk_magic ?? { min: 0, max: 0 };
+    const teamOf = (G, mutate = null, level = null) => {
+        let hs = heroesOf(G);
+        if (mutate || level) hs = hs.map((h, i) => { const x = JSON.parse(JSON.stringify(h)); if (level) x.level = level; if (mutate) mutate(x, i); return x; });
+        return SYS.arena.snapshotTeam(hs, G.items, SYS.game.formationState(G).byUid, SYS.game.arenaLoadout(G));
+    };
+    // 끝난 순간 HP 비율 — 이긴 쪽 남은 몫(타임라인을 따라간다 · priest_duel 과 같은 셈)
+    const fightOf = (A, Bt, seed) => {
+        const r = SYS.arena.fight(A, Bt, makeRng(seed));
+        const hpMax = {}; A.forEach((p, i) => hpMax[`p${i}`] = p.combat.hp_max); Bt.forEach((p, i) => hpMax[`e${i}`] = p.combat.hp_max);
+        const hp = { ...hpMax };
+        for (const e of r.timeline) {
+            if ((e.e === 'hit' || e.e === 'heal') && e.d in hp) hp[e.d] = e.dhp;
+            else if (e.e === 'regen' && e.u in hp) hp[e.u] = e.dhp;
+        }
+        const frac = s => Object.keys(hp).filter(k => k[0] === s).reduce((n, k) => n + Math.max(0, hp[k]) / hpMax[k], 0) / 3;
+        return { won: r.won ? 1 : 0, sec: r3(r.durationSec), m: r3(frac('p') - frac('e')) };
+    };
+    const descOf = (G, seed) => heroesOf(G).map((h, i) => {
+        const c = SYS.game.heroCombat(G, h);
+        const a = atkOf(c);
+        const w = G.items[h.equipped.weapon], ar = G.items[h.equipped.armor];
+        return { seed, slot: i, cls: h.cls, tier: h.tier, sin: h.sin, innate: h.innate, statSum: Object.values(h.stats).reduce((x, y) => x + y, 0), stats: h.stats,
+            rank: SYS.game.formationState(G).byUid[h.uid] ?? 0, hp: r3(c.hp_max), atk: r3((a.min + a.max) / 2), period: r3(c.action_period ?? 0), basic: !!c.basic_attack,
+            def: r3(c.defense ?? 0), crit: r3(c.crit_chance ?? 0), weapon: w ? { group: w.group, base: w.base, opts: (w.options ?? w.affixes ?? []).length } : null, armor: ar ? ar.group ?? ar.base : null };
+    });
+
+    let res;
+    if (part === 'census') {
+        const n = +(q.get('n') || 20000);
+        const cls = {}, clsTier = {}, combo = {}, frontN = {}, innate = {}, statByTier = {}, slotCls = {};
+        for (let s = 1; s <= n; s++) {
+            const P = SYS.hero.rollStartParty(makeRng(s), B.party_size_max);
+            const key = P.map(h => h.cls).slice().sort().join('+');
+            combo[key] = (combo[key] ?? 0) + 1;
+            const f = P.filter(h => front.has(h.cls)).length; frontN[f] = (frontN[f] ?? 0) + 1;
+            P.forEach((h, i) => {
+                cls[h.cls] = (cls[h.cls] ?? 0) + 1;
+                const ct = `${h.cls}|${h.tier}`; clsTier[ct] = (clsTier[ct] ?? 0) + 1;
+                const ci = `${h.cls}|${h.innate}`; innate[ci] = (innate[ci] ?? 0) + 1;
+                const sl = `${i}|${h.cls}`; slotCls[sl] = (slotCls[sl] ?? 0) + 1;
+                const sum = Object.values(h.stats).reduce((x, y) => x + y, 0);
+                (statByTier[h.tier] ??= []).push(sum);
+            });
+        }
+        const st = Object.fromEntries(Object.entries(statByTier).map(([t, xs]) => { xs.sort((a, b) => a - b); return [t, { n: xs.length, min: xs[0], p50: xs[xs.length >> 1], max: xs.at(-1), mean: r3(xs.reduce((a, b) => a + b, 0) / xs.length) }]; }));
+        res = { n, starter, front: [...front], mainClasses: D.classes.filter(c => c.stage === 'main').map(c => c.id), cls, clsTier, combo, frontN, innate, slotCls, statByTier: st };
+    } else if (part === 'desc') {
+        const S = +(q.get('s') || 400);
+        const rows = [];
+        for (let seed = 1; seed <= S; seed++) rows.push(...descOf(gameOf(seed), seed));
+        res = { S, rows };
+    } else if (part === 'league' || part === 'lvl') {
+        const S = +(q.get('s') || 400), K = +(q.get('k') || 40), lv = +(q.get('lv') || 0) || null;
+        const teams = [];
+        for (let seed = 1; seed <= S; seed++) teams.push(teamOf(gameOf(seed), null, lv));
+        const fights = [];
+        for (let i = 0; i < S; i++) for (let d = 1; d <= K; d++) {
+            const j = (i + d) % S;
+            const a = fightOf(teams[i], teams[j], 500000 + i * 1000 + d);
+            const b = fightOf(teams[j], teams[i], 900000 + i * 1000 + d);
+            fights.push([i + 1, j + 1, a.won, a.m, a.sec, b.won, b.m, b.sec]);
+        }
+        res = { S, K, lv, cols: ['seedA', 'seedB', 'A_as_team_won', 'A_margin', 'sec', 'B_as_team_won', 'B_margin', 'sec2'], fights };
+    } else if (part === 'contrib') {
+        // 판 안의 기여 — 영웅마다 가한 피해 · 회복 · 시전 · 끝까지 섰나 · 쓰러진 시각 (직업 · 고유별 합)
+        const S = +(q.get('s') || 400), K = +(q.get('k') || 10), lv = +(q.get('lv') || 0) || null;
+        const teams = [], heroInfo = [];
+        for (let seed = 1; seed <= S; seed++) { const T = teamOf(gameOf(seed), null, lv); teams.push(T); heroInfo.push(T.map(p => ({ cls: p.hero.cls, innate: p.hero.innate, tier: p.hero.tier, hp: p.combat.hp_max }))); }
+        const acc = {};
+        const add = (k, f) => { const a = acc[k] ??= { n: 0, dealt: 0, healed: 0, casts: 0, alive: 0, deathSec: 0, deaths: 0, sec: 0, taken: 0, dealtShare: 0 }; f(a); };
+        for (let i = 0; i < S; i++) for (let d = 1; d <= K; d++) {
+            const j = (i + d) % S;
+            const A = teams[i], O = teams[j];
+            const r = SYS.arena.fight(A, O, makeRng(500000 + i * 1000 + d));
+            const hpMax = {}; A.forEach((p, x) => hpMax[`p${x}`] = p.combat.hp_max); O.forEach((p, x) => hpMax[`e${x}`] = p.combat.hp_max);
+            const hp = { ...hpMax }, dealt = {}, healed = {}, casts = {}, taken = {}, died = {};
+            for (const e of r.timeline) {
+                if (e.e === 'hit' && e.d in hp) { hp[e.d] = e.dhp; dealt[e.a] = (dealt[e.a] ?? 0) + e.dmg; taken[e.d] = (taken[e.d] ?? 0) + e.dmg; if (e.dhp <= 0 && died[e.d] == null) died[e.d] = e.t ?? e.at ?? null; }
+                else if (e.e === 'heal' && e.d in hp) { hp[e.d] = e.dhp; healed[e.a] = (healed[e.a] ?? 0) + e.amt; }
+                else if (e.e === 'regen' && e.u in hp) hp[e.u] = e.dhp;
+                else if (e.e === 'skill') casts[e.u] = (casts[e.u] ?? 0) + 1;
+            }
+            const sideDealt = s => Object.keys(hp).filter(k => k[0] === s).reduce((n, k) => n + (dealt[k] ?? 0), 0) || 1;
+            for (const [side, T, info] of [['p', A, heroInfo[i]], ['e', O, heroInfo[j]]]) T.forEach((p, x) => {
+                const key = `${side}${x}`, h = info[x];
+                for (const k of [h.cls, `${h.cls}|${h.innate}`]) add(k, a => {
+                    a.n++; a.dealt += dealt[key] ?? 0; a.healed += healed[key] ?? 0; a.casts += casts[key] ?? 0; a.taken += (taken[key] ?? 0) / h.hp;
+                    a.alive += hp[key] > 0 ? 1 : 0; a.sec += r.durationSec; a.dealtShare += (dealt[key] ?? 0) / sideDealt(side);
+                    if (died[key] != null) { a.deaths++; a.deathSec += died[key]; }
+                });
+            });
+        }
+        const sample = SYS.arena.fight(teams[0], teams[1], makeRng(1)).timeline.slice(0, 40);
+        res = { S, K, lv, acc: Object.fromEntries(Object.entries(acc).map(([k, a]) => [k, { n: a.n, dps: r3(a.dealt / a.sec), hps: r3(a.healed / a.sec), castsPerMin: r3(a.casts / a.sec * 60), alive: r3(a.alive / a.n), dealtShare: r3(a.dealtShare / a.n), takenHpX: r3(a.taken / a.n), deathSec: a.deaths ? r3(a.deathSec / a.deaths) : null }])), sample };
+    } else if (part === 'swap') {
+        const S = +(q.get('s') || 120), M = +(q.get('m') || 16), off = +(q.get('off') || 0);
+        const opp = [];
+        for (let k = 0; k < M; k++) opp.push(teamOf(gameOf(5000 + k)));
+        const rows = [];
+        for (let seed = 1 + off; seed <= S + off; seed++) {
+            const G = gameOf(seed);
+            heroesOf(G).forEach((h, slot) => {
+                for (const alt of starter[h.cls]) {
+                    const A = teamOf(G, (x, i) => { if (i === slot) x.innate = alt; });
+                    let w = 0, m = 0;
+                    opp.forEach((O, k) => {
+                        const a = fightOf(A, O, 700000 + seed * 100 + k), b = fightOf(O, A, 800000 + seed * 100 + k);
+                        w += a.won + (1 - b.won); m += a.m - b.m;
+                    });
+                    rows.push({ seed, slot, cls: h.cls, tier: h.tier, orig: h.innate, alt, win: r3(w / (2 * M)), margin: r3(m / (2 * M)) });
+                }
+            });
+        }
+        res = { S, M, off, rows };
+    }
+    out.textContent = JSON.stringify(res);
+    document.title = 'DONE ' + part;
+} catch (err) {
+    out.textContent = 'ERR ' + err.stack;
+    document.title = 'FAIL';
+}
+</script>

@@ -1,0 +1,54 @@
+seeds 400 · runs cap 250 · R417 fallback runs 13891 · bot equips 16083 · time = sim minutes (durationSec + restart)
+ALL {'n': '400', '1-1 I first try': '0.99', '1-3 I first try': '0.57', 'boss first try': '0.03', 'ch1 <=60m': '0.05', 'ch1 <=120m': '0.24', 'med 1-4III m': '103', 'med ch1 m': '204', 'lv@60': '10', 'cells@60': '8', 'maxLoss': '40', 'not done': '77'}
+half1 {'n': '200', '1-1 I first try': '0.99', '1-3 I first try': '0.52', 'boss first try': '0.02', 'ch1 <=60m': '0.04', 'ch1 <=120m': '0.22', 'med 1-4III m': '111', 'med ch1 m': '221', 'lv@60': '10', 'cells@60': '7', 'maxLoss': '40', 'not done': '35'}
+half2 {'n': '200', '1-1 I first try': '0.99', '1-3 I first try': '0.62', 'boss first try': '0.04', 'ch1 <=60m': '0.07', 'ch1 <=120m': '0.26', 'med 1-4III m': '94', 'med ch1 m': '187', 'lv@60': '10', 'cells@60': '8', 'maxLoss': '41', 'not done': '42'}
+
+combo: n | 1-1 I first try | 1-3 I first try | boss first try | ch1 <=60m | ch1 <=120m | med 1-4III m | med ch1 m | lv@60 | cells@60 | maxLoss | not done
+K+M+W  42 | 1.00 | 0.60 | 0.02 | 0.05 | 0.40 | 76 | 132 | 11 | 8 | 24 | 0   halves ch1<=120: 0.38/0.42 · med ch1: 141/132
+A+M+W  52 | 1.00 | 0.54 | 0.00 | 0.06 | 0.37 | 89 | 145 | 10 | 8 | 34 | 7   halves ch1<=120: 0.36/0.38 · med ch1: 135/147
+A+K+W  27 | 1.00 | 0.78 | 0.04 | 0.19 | 0.41 | 49 | 147 | 12 | 11 | 25 | 1   halves ch1<=120: 0.25/0.47 · med ch1: 161/125
+A+K+P  53 | 1.00 | 0.60 | 0.06 | 0.06 | 0.23 | 100 | 212 | 10 | 8 | 41 | 13   halves ch1<=120: 0.25/0.20 · med ch1: 226/212
+A+K+M  51 | 1.00 | 0.53 | 0.04 | 0.04 | 0.22 | 117 | 218 | 10 | 6 | 42 | 7   halves ch1<=120: 0.20/0.24 · med ch1: 247/172
+A+P+W  52 | 0.96 | 0.73 | 0.04 | 0.04 | 0.15 | 98 | 224 | 10 | 8 | 43 | 16   halves ch1<=120: 0.17/0.14 · med ch1: 260/222
+M+P+W  44 | 1.00 | 0.39 | 0.00 | 0.02 | 0.18 | 177 | 277 | 9 | 7 | 41 | 8   halves ch1<=120: 0.23/0.11 · med ch1: 230/329
+K+P+W  32 | 0.94 | 0.84 | 0.03 | 0.06 | 0.16 | 111 | 337 | 10 | 8 | 46 | 8   halves ch1<=120: 0.21/0.11 · med ch1: 278/364
+K+M+P  47 | 1.00 | 0.24 | 0.03 | 0.02 | 0.09 | 309 | 504 | 8 | 6 | 60 | 17   halves ch1<=120: 0.00/0.19 · med ch1: 504/516
+
+class with / without:
+warrior  with n 249 ch1<=60 0.06 <=120 0.27 med 169 1-4III 91 | without n 151 ch1<=60 0.04 <=120 0.18 med 256 1-4III 137 | halves <=120 with/without 0.27/0.15 · 0.28/0.21
+knight   with n 252 ch1<=60 0.06 <=120 0.24 med 206 1-4III 104 | without n 148 ch1<=60 0.04 <=120 0.24 med 191 1-4III 102 | halves <=120 with/without 0.20/0.26 · 0.28/0.21
+mage     with n 236 ch1<=60 0.04 <=120 0.25 med 197 1-4III 116 | without n 164 ch1<=60 0.07 <=120 0.22 med 206 1-4III 89 | halves <=120 with/without 0.22/0.22 · 0.28/0.22
+archer   with n 235 ch1<=60 0.06 <=120 0.26 med 188 1-4III 90 | without n 165 ch1<=60 0.04 <=120 0.21 med 225 1-4III 141 | halves <=120 with/without 0.25/0.18 · 0.27/0.23
+priest   with n 228 ch1<=60 0.04 <=120 0.16 med 278 1-4III 134 | without n 172 ch1<=60 0.07 <=120 0.34 med 153 1-4III 87 | halves <=120 with/without 0.17/0.29 · 0.15/0.38
+
+innate (observed) — ch1 <=120m · med 1-4III min:
+  archer   arc_guided         n  48  ch1<=120 0.25  med 1-4III 89  med ch1 180
+  archer   arc_multishot      n  71  ch1<=120 0.37  med 1-4III 71  med ch1 147
+  archer   arc_rapid          n  57  ch1<=120 0.11  med 1-4III 115  med ch1 260
+  archer   arc_snipe          n  59  ch1<=120 0.29  med 1-4III 90  med ch1 191
+  knight   kni_charge         n  56  ch1<=120 0.20  med 1-4III 111  med ch1 206
+  knight   kni_holyshield     n  71  ch1<=120 0.30  med 1-4III 93  med ch1 187
+  knight   kni_resistshield   n  59  ch1<=120 0.22  med 1-4III 124  med ch1 234
+  knight   kni_rush           n  66  ch1<=120 0.23  med 1-4III 97  med ch1 201
+  mage     mag_chain          n  39  ch1<=120 0.26  med 1-4III 120  med ch1 208
+  mage     mag_fireball       n  40  ch1<=120 0.25  med 1-4III 101  med ch1 172
+  mage     mag_frostnova      n  33  ch1<=120 0.06  med 1-4III 165  med ch1 257
+  mage     mag_iceblast       n  44  ch1<=120 0.50  med 1-4III 68  med ch1 123
+  mage     mag_inferno        n  41  ch1<=120 0.20  med 1-4III 151  med ch1 256
+  mage     mag_lightning      n  39  ch1<=120 0.18  med 1-4III 111  med ch1 181
+  priest   pri_cure           n  78  ch1<=120 0.27  med 1-4III 83  med ch1 221
+  priest   pri_heal           n  63  ch1<=120 0.16  med 1-4III 127  med ch1 265
+  priest   pri_judgment       n  87  ch1<=120 0.07  med 1-4III 183  med ch1 386
+  warrior  war_bash           n  52  ch1<=120 0.21  med 1-4III 101  med ch1 169
+  warrior  war_doubleswing    n  58  ch1<=120 0.48  med 1-4III 63  med ch1 127
+  warrior  war_ironskin       n  64  ch1<=120 0.20  med 1-4III 97  med ch1 182
+  warrior  war_recovery       n  75  ch1<=120 0.21  med 1-4III 91  med ch1 216
+
+tier per class (observed) — ch1 <=120m:
+  warrior  rare 0.28 · magic 0.25 · normal 0.29
+  knight   rare 0.26 · magic 0.25 · normal 0.21
+  mage     rare 0.24 · magic 0.23 · normal 0.28
+  archer   rare 0.29 · magic 0.29 · normal 0.19
+  priest   rare 0.09 · magic 0.16 · normal 0.23
+
+corr(PvP Lv1 margin, log min to ch1 clear) -0.61 · (… 1-4 III) -0.70  (negative = stronger in PvP → faster in PvE)

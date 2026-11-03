@@ -312,12 +312,12 @@ export function mountBattle(container, opts) {
             rank: form?.byUid?.[p.uid] ?? 0,
             // 게이지는 **빈 채로 출발한다** — 시뮬이 실어 온 `fillAt` 부터 찬다 (R200 · ADR-0483) · 마법 무기의 칸은 0 에서
             hp: p.hpMax, hpMax: p.hpMax, period: p.period, lastAct: p.fillAt ?? 0, charges: 0, node: null,
-            // 액티브 = 시뮬이 들려 보낸 그 목록(result.party[].actives). 쿨은 라운드 시작부터 돈다(R427)
+            // 액티브 = 시뮬이 들려 보낸 그 목록(result.party[].actives). 쿨은 스테이지 시작부터 돌고 라운드를 넘어 잇는다(R427 · R429)
             atkMin: p.atkMin, atkMax: p.atkMax, matkMin: p.matkMin, matkMax: p.matkMax, atkType: p.atkType,   // 툴팁 문장의 피해·회복량(범위 · R90) — 전투에는 안 쓴다 (INTERFACE §2-6)
             noBasic: p.noBasic,   // 마법 무기(평타 없음 · R198) — 행동 게이지 색 (ADR-0476)
             // 기본 능력치 — **전투 시작 시점 복사본**(결과가 싣는다). 설명창이 스킬 계수의 식을 푼다 (SCREEN_DESIGN §2 · ADR-0089)
             stats: p.stats ?? null,
-            // 첫 준비 시각은 결과가 싣는다(`party[].ready`) — 쿨은 라운드가 열릴 때마다 처음부터라 칸은 덮인 채 선다 · 둘째 라운드부터는 `round` 의 `ready` 가 다시 덮는다 (R427 · ADR-1033)
+            // 첫 준비 시각은 결과가 싣는다(`party[].ready`) — 쿨은 스테이지 시작부터 돌아 칸은 덮인 채 선다 · 둘째 라운드부터는 앞 라운드의 칸을 잇는다 (R427 · R429 · ADR-1037)
             // 오오라도 제 칸에 선다 — 켜진 오오라는 준비 `0`(늘 걷힌 칸) · 안 켜진 오오라는 `null`(늘 덮인 칸) (R98 · ADR-0127)
             skills: (p.actives ?? []).map((id, i) => ({ ...skillInfo(id), ...slotLv(p.up, i), readyAt: slotReady(p.ready?.[i], 0), firedAt: 0 })),
             buffs: new Map(),   // 켜져 있는 창 {skillId: {until, stat, v}} — buff/buffEnd 이벤트가 켜고 끈다
@@ -1767,12 +1767,7 @@ function apply(state, root, opts, ev) {
             if (state.teamPane) { for (const e of state.enemies) dmgEntry(state, e); state.dmgDirty = true; }   // 두 팀 판 — 상대도 0 부터 찍는다 (ADR-0769)
             // 전투 시작 시 행동 게이지(R303) — 원정의 라운드가 바뀌면 파티 게이지가 그 초만큼 앞당겨진다. 시뮬이 실어 온 값을 그대로 민다(계산하지 않는다)
             for (const [k, s] of Object.entries(ev.pg ?? {})) { const u = state.units.get(k); if (u) u.lastAct -= s; }
-            // 파티 칸 쿨도 라운드를 열면 처음부터 (R427 · ADR-1033) — 시뮬이 실어 온 그 라운드의 준비 시각(`ready` · 칸 순서)으로 칸을 다시 덮는다(계산하지 않는다) ·
-            //   `null` = 꺼진 칸 · 안 켜진 오오라(늘 덮임) · `0` = 켜진 오오라(늘 걷힘) · 첫 라운드는 결과의 `party[].ready` 가 이미 세웠다
-            for (const [k, r] of Object.entries(ev.ready ?? {})) {
-                const u = state.units.get(k);
-                if (u?.skills) u.skills.forEach((s, i) => { s.readyAt = slotReady(r[i], ev.t); s.firedAt = ev.t; });
-            }
+            // 파티 칸 쿨은 라운드를 넘어 잇는다 — 앞 라운드의 칸을 그대로 둔다 (R429 · ADR-1037 — ~~`round` 의 `ready` 로 다시 덮는다~~ ADR-1033)
             // 물약 칸 다시 채우기 — 시뮬이 실어 온 칸(`pots`)으로 갈아 끼운다 · 빈 칸(`null`)은 이 라운드를 물약 없이 시작한 칸이다 (R315 · ADR-0716)
             if (ev.pots) state.potion.slots = ev.pots.map(s => (s ? { id: s.id, heal: s.heal, full: true } : null));
             renderUnits(state, root);

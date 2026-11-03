@@ -1,0 +1,101 @@
+<!doctype html><meta charset="utf-8"><title>running</title><pre id="out"></pre>
+<script type="module">
+// 시작 파티별 초반 진행 (2026-11-03 qa-fun · 스냅샷 dev/ 에 두고 연다 · 저장소에 넣지 않는다)
+//   sim.js campaign 과 같은 봇(장착 · 분해 · 마스터리 · 물약) + R417(챕터보스에게 지면 바로 앞 칸 · 앞 칸 이기면 다시 보스)
+//   ?seeds=1-400&runs=250&until=1051
+import { loadData, buildSystems, D } from '../ui/data.js';
+import { makeRng } from '../game_logic/rng.js';
+const q = new URL(location.href).searchParams;
+const out = document.getElementById('out');
+const NOW = 1_700_000_000_000;
+const r2 = v => Math.round(v * 100) / 100;
+const parseList = spec => String(spec).split(',').flatMap(part => {
+    const m = part.trim().match(/^(\d+)-(\d+)$/);
+    return m ? Array.from({ length: +m[2] - +m[1] + 1 }, (_, i) => +m[1] + i) : [+part];
+});
+try {
+    await loadData('../data/');
+    const SYS = buildSystems(D);
+    const B = D.balance;
+    const seeds = parseList(q.get('seeds') || '1-40'), runs = +(q.get('runs') || 250), until = +(q.get('until') || 1051);
+    const partyHeroes = G => SYS.game.partyOf(G).map(uid => SYS.game.heroById(G, uid));
+    const atkOf = c => c.atk_physical ?? c.atk_magic ?? { min: 0, max: 0 };
+    const scoreOf = (c, slot) => slot === 'weapon' ? (atkOf(c).min + atkOf(c).max) / 2 / (c.action_period || 1) : c.defense;
+    // ↓ sim.js botEquip 그대로
+    function botEquip(G) {
+        let n = 0;
+        for (const uid of G.bags.flat()) if (G.items[uid]?.box) SYS.game.openBox(G, uid);
+        for (const uid of G.bags.flat()) {
+            const it = G.items[uid];
+            if (!it || SYS.game.holderOf(G, uid) !== 'bag') continue;
+            let best = null;
+            for (const h of partyHeroes(G)) {
+                const pos = SYS.game.equipTarget(h, it);
+                if (!pos) continue;
+                if (SYS.item.canEquip(h, it)) continue;
+                if (it.slot === 'weapon' && ![].concat(D.weaponGroups[it.group]?.classes ?? []).includes(h.cls)) continue;
+                const now = SYS.game.heroCombat(G, h), next = SYS.game.heroCombatIf(G, h, uid);
+                if (it.slot === 'weapon' && next.basic_attack !== now.basic_attack) continue;
+                const gain = scoreOf(next, it.slot) - scoreOf(now, it.slot);
+                if ((gain > 0 || (gain === 0 && !h.equipped[pos])) && (!best || gain > best.gain)) best = { h, gain };
+            }
+            if (best && SYS.game.equip(G, best.h.uid, uid).ok) n++;
+        }
+        return n;
+    }
+    const salvageBag = G => { for (const uid of G.bags.flat()) SYS.game.salvage(G, uid); };
+    function botMastery(G) {
+        for (const h of partyHeroes(G)) for (;;) {
+            const node = SYS.game.masteryState(G, h.uid)?.nodes.find(x => x.canLearn);
+            if (!node || !SYS.game.learnMastery(G, h.uid, node.id).ok) break;
+        }
+    }
+    function botPotion(G) {
+        const list = (SYS.game.shopState(G, NOW)?.potions ?? []).slice().sort((a, b) => b.tier - a.tier);
+        for (const p of list) while (SYS.game.shopPotionBuy(G, p.id).ok);
+    }
+    const isBoss = id => D.stages[id]?.boss_grade === 'chapter_boss';
+    const rows = [];
+    let equipsTotal = 0, fallbackRuns = 0;
+    for (const seed of seeds) {
+        const G = SYS.game.newGame(seed, SYS.hero.rollStartParty(makeRng(1000 + seed), B.party_size_max), NOW);
+        const hs = partyHeroes(G);
+        const row = { seed, cls: hs.map(h => h.cls), tier: hs.map(h => h.tier), innate: hs.map(h => h.innate), firstTry: {}, firstClear: {}, tries: {}, marks: {} };
+        let t = 0, last = null, firstWinT = null, lossStreak = 0, maxStreak = 0;
+        const markAt = [10, 30, 60, 90, 120, 180];
+        for (let n = 1; n <= runs; n++) {
+            const head = D.stageOrder.find(id => !G.progress.cleared.includes(id)) ?? D.stageOrder.at(-1);
+            let stageId = head;
+            // R417 — 챕터보스에게 진 다음 판 · 앞 칸에서 진 다음 판은 앞 칸
+            if (last && !last.won && (isBoss(last.stageId) || last.fallback)) { stageId = D.stageOrder[D.stageOrder.indexOf(head) - 1]; }
+            const fallback = stageId !== head;
+            if (fallback) fallbackRuns++;
+            const lv = r2(hs.reduce((a, h) => a + h.level, 0) / 3);
+            const r = SYS.game.resolveBattle(G, stageId, NOW);
+            if (!r.ok) throw new Error(`seed ${seed} run ${n} stage ${stageId} — ${r.err}`);
+            const rp = r.report;
+            const before = t;
+            t += rp.durationSec + B.repeat_restart_sec;
+            for (const m of markAt) if (before < m * 60 && t >= m * 60) row.marks[m] = { reached: G.progress.cleared.length, lv: r2(hs.reduce((a, h) => a + h.level, 0) / 3) };
+            if (!fallback) {
+                row.tries[stageId] = (row.tries[stageId] ?? 0) + 1;
+                if (!(stageId in row.firstTry)) row.firstTry[stageId] = [rp.won ? 1 : 0, lv];
+                if (rp.won && !(stageId in row.firstClear)) row.firstClear[stageId] = [r2(t / 60), r2(hs.reduce((a, h) => a + h.level, 0) / 3)];
+                lossStreak = rp.won ? 0 : lossStreak + 1; maxStreak = Math.max(maxStreak, lossStreak);
+            }
+            last = { stageId, won: rp.won, fallback };
+            equipsTotal += botEquip(G);
+            salvageBag(G); botMastery(G); botPotion(G);
+            if (G.progress.cleared.includes(until)) break;
+        }
+        for (const m of markAt) if (!row.marks[m]) row.marks[m] = { reached: G.progress.cleared.length, lv: r2(hs.reduce((a, h) => a + h.level, 0) / 3), ended: true };
+        row.endMin = r2(t / 60); row.maxLossStreak = maxStreak; row.done = G.progress.cleared.includes(until);
+        rows.push(row);
+    }
+    out.textContent = JSON.stringify({ seeds: seeds.length, runs, until, equipsTotal, fallbackRuns, stageOrder: D.stageOrder.slice(0, D.stageOrder.indexOf(until) + 1), rows });
+    document.title = 'DONE campaign';
+} catch (err) {
+    out.textContent = 'ERR ' + err.stack;
+    document.title = 'FAIL';
+}
+</script>
