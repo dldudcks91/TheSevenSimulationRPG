@@ -1,0 +1,155 @@
+{
+  "tool": "built-in image_gen",
+  "images": [
+    {
+      "file": "output/2026-11-04_defeat_blood/v3/style_01.png",
+      "prompt": "Create a transparent PNG game asset, 1536x1024 landscape. ONE image only.\nA very THIN irregular blood strip attached to the absolute TOP edge, all the way across the width. This is a top-edge defeat overlay for The Seven Simulation RPG, dark fantasy, Diablo 2 mood.\nCRITICAL PIXEL LAYOUT: Draw only within x=0..1535, y=0..120. Top connected strip thickness 10-25 pixels. Most downward drips end at y=40..70. Only TWO drips end at y=110..120. Unequal lengths. All pixels y=121..1023 are EXACTLY RGBA(0,0,0,0), completely empty and fully transparent. NO haze, NO gradient extending down, NO nearly invisible texture or residual alpha in the empty space. This intentionally leaves nearly 90% of the canvas blank transparent. Do not enlarge or center the subject.\nReal transparent alpha background, not black, white, or a painted checkerboard. Deep blood reds only, readable over a very dark burning-castle battle scene. Do NOT draw that scene, UI, cards, characters, frames, weapons, wounds, bodies, organs or text. No side or bottom border. No pink, magenta, orange or purple.\nSTYLE — follow this EXACT medium, making it distinctive: 01 INK BRUSH: dark crimson ink laid with a big wet calligraphy brush along the top edge; dry-brush bristle streaks, ink pooling into drips; sumi-e energy, no outlines.\nFor woodcut, carved gouge lines must be transparent negative cuts through flat single-color red; never use smooth gradients. For pixel art, use ONLY 4 flat dark red colors on a crisp 7-pixel grid, with stepped silhouettes, no gradients or anti-aliasing. These medium-specific constraints apply only if that is the requested style.",
+      "source_path": "C:\\Users\\ANGames-001\\.codex\\generated_images\\01a1a2ad-25be-7a10-9a7d-c9678a1c5267\\exec-227d07b4-7bfa-4935-8b13-160ae0573488.png",
+      "attempts": [
+        {
+          "prompt": "Use case: stylized-concept.\nAsset: DEFEAT BLOOD OVERLAY for The Seven Simulation RPG, a grim dark fantasy party RPG about the Seven Deadly Sins and Satan's armies, Diablo 2 mood.\nGenerate ONE landscape PNG, exactly 1536x1024, with a genuinely transparent alpha background. This isolated overlay will be laid over the TOP edge of a very dark wide burning-castle battle arena. The arena has enemy cards above and hero cards below; this is placement and screen darkness context ONLY. Do not draw the arena or any cards, UI, characters, or background.\nCOMPOSITION: Blood enters from and touches the TOP canvas edge across the FULL width, including both upper corners. Keep the entire blood silhouette in a very shallow strip at the very top of this otherwise empty canvas. Drips of clearly unequal lengths hang down. Most drips extend only 4-9% of canvas height (41-92 pixels); exactly two longest drips reach at most 15% (153 pixels). Everything below 18% of canvas height (y=184 through bottom) must be completely empty, alpha=0, transparent. Over 82% of the image is empty transparent space. No detached droplets below the shallow strip.\nPALETTE: Deep blood reds only, readable on a very dark screen. Never pink, magenta, orange or purple.\nBACKGROUND: actual transparency, real alpha channel; no checkerboard painted into the image, no solid, white, or black background.\nAVOID: text, frames, side borders, bottom borders, characters, weapons, wounds, organs, bodies, UI, mockup, canvas paper, environment.\nSTYLE (follow exactly): 01 INK BRUSH: dark crimson ink laid with a big wet calligraphy brush along the top edge; dry-brush bristle streaks, ink pooling into drips; sumi-e energy, no outlines.",
+          "source_path": "C:\\Users\\ANGames-001\\.codex\\generated_images\\01a1a2ad-25be-7a10-9a7d-c9678a1c5267\\exec-acbca6c7-5179-447f-9dbf-580717bd1591.png"
+        },
+        {
+          "prompt": "Create a transparent PNG game asset, 1536x1024 landscape. ONE image only.\nA very THIN irregular blood strip attached to the absolute TOP edge, all the way across the width. This is a top-edge defeat overlay for The Seven Simulation RPG, dark fantasy, Diablo 2 mood.\nCRITICAL PIXEL LAYOUT: Draw only within x=0..1535, y=0..120. Top connected strip thickness 10-25 pixels. Most downward drips end at y=40..70. Only TWO drips end at y=110..120. Unequal lengths. All pixels y=121..1023 are EXACTLY RGBA(0,0,0,0), completely empty and fully transparent. NO haze, NO gradient extending down, NO nearly invisible texture or residual alpha in the empty space. This intentionally leaves nearly 90% of the canvas blank transparent. Do not enlarge or center the subject.\nReal transparent alpha background, not black, white, or a painted checkerboard. Deep blood reds only, readable over a very dark burning-castle battle scene. Do NOT draw that scene, UI, cards, characters, frames, weapons, wounds, bodies, organs or text. No side or bottom border. No pink, magenta, orange or purple.\nSTYLE — follow this EXACT medium, making it distinctive: 01 INK BRUSH: dark crimson ink laid with a big wet calligraphy brush along the top edge; dry-brush bristle streaks, ink pooling into drips; sumi-e energy, no outlines.\nFor woodcut, carved gouge lines must be transparent negative cuts through flat single-color red; never use smooth gradients. For pixel art, use ONLY 4 flat dark red colors on a crisp 7-pixel grid, with stepped silhouettes, no gradients or anti-aliasing. These medium-specific constraints apply only if that is the requested style.",
+          "source_path": "C:\\Users\\ANGames-001\\.codex\\generated_images\\01a1a2ad-25be-7a10-9a7d-c9678a1c5267\\exec-227d07b4-7bfa-4935-8b13-160ae0573488.png"
+        }
+      ],
+      "validation": {
+        "PIL_mode": "RGBA",
+        "size": [
+          1536,
+          1024
+        ],
+        "fully_transparent_fraction": 0.9610201517740885,
+        "nontransparent_pixels_below_18_percent": 25,
+        "alpha_bbox": [
+          0,
+          0,
+          1536,
+          264
+        ]
+      }
+    },
+    {
+      "file": "output/2026-11-04_defeat_blood/v3/style_02.png",
+      "prompt": "Create a transparent PNG game asset, 1536x1024 landscape. ONE image only.\nA very THIN irregular blood strip attached to the absolute TOP edge, all the way across the width. This is a top-edge defeat overlay for The Seven Simulation RPG, dark fantasy, Diablo 2 mood.\nCRITICAL PIXEL LAYOUT: Draw only within x=0..1535, y=0..120. Top connected strip thickness 10-25 pixels. Most downward drips end at y=40..70. Only TWO drips end at y=110..120. Unequal lengths. All pixels y=121..1023 are EXACTLY RGBA(0,0,0,0), completely empty and fully transparent. NO haze, NO gradient extending down, NO nearly invisible texture or residual alpha in the empty space. This intentionally leaves nearly 90% of the canvas blank transparent. Do not enlarge or center the subject.\nReal transparent alpha background, not black, white, or a painted checkerboard. Deep blood reds only, readable over a very dark burning-castle battle scene. Do NOT draw that scene, UI, cards, characters, frames, weapons, wounds, bodies, organs or text. No side or bottom border. No pink, magenta, orange or purple.\nSTYLE — follow this EXACT medium, making it distinctive: 02 WATERCOLOR: transparent wet-on-wet watercolor pigment bleeding down from the top; soft blooming edges, pigment granulation, darker tide lines where the paint dried, drips with pale watery tails. Partial transparency is welcome.\nFor woodcut, carved gouge lines must be transparent negative cuts through flat single-color red; never use smooth gradients. For pixel art, use ONLY 4 flat dark red colors on a crisp 7-pixel grid, with stepped silhouettes, no gradients or anti-aliasing. These medium-specific constraints apply only if that is the requested style.",
+      "source_path": "C:\\Users\\ANGames-001\\.codex\\generated_images\\01a1a2ad-25be-7a10-9a7d-c9678a1c5267\\exec-81f17706-8b28-445e-a10e-6c44f396db76.png",
+      "attempts": [
+        {
+          "prompt": "Use case: stylized-concept.\nAsset: DEFEAT BLOOD OVERLAY for The Seven Simulation RPG, a grim dark fantasy party RPG about the Seven Deadly Sins and Satan's armies, Diablo 2 mood.\nGenerate ONE landscape PNG, exactly 1536x1024, with a genuinely transparent alpha background. This isolated overlay will be laid over the TOP edge of a very dark wide burning-castle battle arena. The arena has enemy cards above and hero cards below; this is placement and screen darkness context ONLY. Do not draw the arena or any cards, UI, characters, or background.\nCOMPOSITION: Blood enters from and touches the TOP canvas edge across the FULL width, including both upper corners. Keep the entire blood silhouette in a very shallow strip at the very top of this otherwise empty canvas. Drips of clearly unequal lengths hang down. Most drips extend only 4-9% of canvas height (41-92 pixels); exactly two longest drips reach at most 15% (153 pixels). Everything below 18% of canvas height (y=184 through bottom) must be completely empty, alpha=0, transparent. Over 82% of the image is empty transparent space. No detached droplets below the shallow strip.\nPALETTE: Deep blood reds only, readable on a very dark screen. Never pink, magenta, orange or purple.\nBACKGROUND: actual transparency, real alpha channel; no checkerboard painted into the image, no solid, white, or black background.\nAVOID: text, frames, side borders, bottom borders, characters, weapons, wounds, organs, bodies, UI, mockup, canvas paper, environment.\nSTYLE (follow exactly): 02 WATERCOLOR: transparent wet-on-wet watercolor pigment bleeding down from the top; soft blooming edges, pigment granulation, darker tide lines where the paint dried, drips with pale watery tails. Partial transparency is welcome.",
+          "source_path": "C:\\Users\\ANGames-001\\.codex\\generated_images\\01a1a2ad-25be-7a10-9a7d-c9678a1c5267\\exec-e8e7ee8c-2d98-40d3-9b04-6351dfacc728.png"
+        },
+        {
+          "prompt": "Create a transparent PNG game asset, 1536x1024 landscape. ONE image only.\nA very THIN irregular blood strip attached to the absolute TOP edge, all the way across the width. This is a top-edge defeat overlay for The Seven Simulation RPG, dark fantasy, Diablo 2 mood.\nCRITICAL PIXEL LAYOUT: Draw only within x=0..1535, y=0..120. Top connected strip thickness 10-25 pixels. Most downward drips end at y=40..70. Only TWO drips end at y=110..120. Unequal lengths. All pixels y=121..1023 are EXACTLY RGBA(0,0,0,0), completely empty and fully transparent. NO haze, NO gradient extending down, NO nearly invisible texture or residual alpha in the empty space. This intentionally leaves nearly 90% of the canvas blank transparent. Do not enlarge or center the subject.\nReal transparent alpha background, not black, white, or a painted checkerboard. Deep blood reds only, readable over a very dark burning-castle battle scene. Do NOT draw that scene, UI, cards, characters, frames, weapons, wounds, bodies, organs or text. No side or bottom border. No pink, magenta, orange or purple.\nSTYLE — follow this EXACT medium, making it distinctive: 02 WATERCOLOR: transparent wet-on-wet watercolor pigment bleeding down from the top; soft blooming edges, pigment granulation, darker tide lines where the paint dried, drips with pale watery tails. Partial transparency is welcome.\nFor woodcut, carved gouge lines must be transparent negative cuts through flat single-color red; never use smooth gradients. For pixel art, use ONLY 4 flat dark red colors on a crisp 7-pixel grid, with stepped silhouettes, no gradients or anti-aliasing. These medium-specific constraints apply only if that is the requested style.",
+          "source_path": "C:\\Users\\ANGames-001\\.codex\\generated_images\\01a1a2ad-25be-7a10-9a7d-c9678a1c5267\\exec-81f17706-8b28-445e-a10e-6c44f396db76.png"
+        }
+      ],
+      "validation": {
+        "PIL_mode": "RGBA",
+        "size": [
+          1536,
+          1024
+        ],
+        "fully_transparent_fraction": 0.9507268269856771,
+        "nontransparent_pixels_below_18_percent": 31,
+        "alpha_bbox": [
+          0,
+          0,
+          1536,
+          898
+        ]
+      }
+    },
+    {
+      "file": "output/2026-11-04_defeat_blood/v3/style_03.png",
+      "prompt": "Create a transparent PNG game asset, 1536x1024 landscape. ONE image only.\nA very THIN irregular blood strip attached to the absolute TOP edge, all the way across the width. This is a top-edge defeat overlay for The Seven Simulation RPG, dark fantasy, Diablo 2 mood.\nCRITICAL PIXEL LAYOUT: Draw only within x=0..1535, y=0..120. Top connected strip thickness 10-25 pixels. Most downward drips end at y=40..70. Only TWO drips end at y=110..120. Unequal lengths. All pixels y=121..1023 are EXACTLY RGBA(0,0,0,0), completely empty and fully transparent. NO haze, NO gradient extending down, NO nearly invisible texture or residual alpha in the empty space. This intentionally leaves nearly 90% of the canvas blank transparent. Do not enlarge or center the subject.\nReal transparent alpha background, not black, white, or a painted checkerboard. Deep blood reds only, readable over a very dark burning-castle battle scene. Do NOT draw that scene, UI, cards, characters, frames, weapons, wounds, bodies, organs or text. No side or bottom border. No pink, magenta, orange or purple.\nSTYLE — follow this EXACT medium, making it distinctive: 03 WOODCUT: medieval woodcut / linocut print look; solid carved blood shapes in one deep red ink with carved gouge lines and chisel-cut edges, slight print texture, no shading gradients.\nFor woodcut, carved gouge lines must be transparent negative cuts through flat single-color red; never use smooth gradients. For pixel art, use ONLY 4 flat dark red colors on a crisp 7-pixel grid, with stepped silhouettes, no gradients or anti-aliasing. These medium-specific constraints apply only if that is the requested style.",
+      "source_path": "C:\\Users\\ANGames-001\\.codex\\generated_images\\01a1a2ad-25be-7a10-9a7d-c9678a1c5267\\exec-b90bc3e7-2df7-4b67-b9dc-69bb2268ae82.png",
+      "attempts": [
+        {
+          "prompt": "Use case: stylized-concept.\nAsset: DEFEAT BLOOD OVERLAY for The Seven Simulation RPG, a grim dark fantasy party RPG about the Seven Deadly Sins and Satan's armies, Diablo 2 mood.\nGenerate ONE landscape PNG, exactly 1536x1024, with a genuinely transparent alpha background. This isolated overlay will be laid over the TOP edge of a very dark wide burning-castle battle arena. The arena has enemy cards above and hero cards below; this is placement and screen darkness context ONLY. Do not draw the arena or any cards, UI, characters, or background.\nCOMPOSITION: Blood enters from and touches the TOP canvas edge across the FULL width, including both upper corners. Keep the entire blood silhouette in a very shallow strip at the very top of this otherwise empty canvas. Drips of clearly unequal lengths hang down. Most drips extend only 4-9% of canvas height (41-92 pixels); exactly two longest drips reach at most 15% (153 pixels). Everything below 18% of canvas height (y=184 through bottom) must be completely empty, alpha=0, transparent. Over 82% of the image is empty transparent space. No detached droplets below the shallow strip.\nPALETTE: Deep blood reds only, readable on a very dark screen. Never pink, magenta, orange or purple.\nBACKGROUND: actual transparency, real alpha channel; no checkerboard painted into the image, no solid, white, or black background.\nAVOID: text, frames, side borders, bottom borders, characters, weapons, wounds, organs, bodies, UI, mockup, canvas paper, environment.\nSTYLE (follow exactly): 03 WOODCUT: medieval woodcut / linocut print look; solid carved blood shapes in one deep red ink with carved gouge lines and chisel-cut edges, slight print texture, no shading gradients.",
+          "source_path": "C:\\Users\\ANGames-001\\.codex\\generated_images\\01a1a2ad-25be-7a10-9a7d-c9678a1c5267\\exec-a51b9a2b-5efe-4082-8e56-2401a93d0c43.png"
+        },
+        {
+          "prompt": "Create a transparent PNG game asset, 1536x1024 landscape. ONE image only.\nA very THIN irregular blood strip attached to the absolute TOP edge, all the way across the width. This is a top-edge defeat overlay for The Seven Simulation RPG, dark fantasy, Diablo 2 mood.\nCRITICAL PIXEL LAYOUT: Draw only within x=0..1535, y=0..120. Top connected strip thickness 10-25 pixels. Most downward drips end at y=40..70. Only TWO drips end at y=110..120. Unequal lengths. All pixels y=121..1023 are EXACTLY RGBA(0,0,0,0), completely empty and fully transparent. NO haze, NO gradient extending down, NO nearly invisible texture or residual alpha in the empty space. This intentionally leaves nearly 90% of the canvas blank transparent. Do not enlarge or center the subject.\nReal transparent alpha background, not black, white, or a painted checkerboard. Deep blood reds only, readable over a very dark burning-castle battle scene. Do NOT draw that scene, UI, cards, characters, frames, weapons, wounds, bodies, organs or text. No side or bottom border. No pink, magenta, orange or purple.\nSTYLE — follow this EXACT medium, making it distinctive: 03 WOODCUT: medieval woodcut / linocut print look; solid carved blood shapes in one deep red ink with carved gouge lines and chisel-cut edges, slight print texture, no shading gradients.\nFor woodcut, carved gouge lines must be transparent negative cuts through flat single-color red; never use smooth gradients. For pixel art, use ONLY 4 flat dark red colors on a crisp 7-pixel grid, with stepped silhouettes, no gradients or anti-aliasing. These medium-specific constraints apply only if that is the requested style.",
+          "source_path": "C:\\Users\\ANGames-001\\.codex\\generated_images\\01a1a2ad-25be-7a10-9a7d-c9678a1c5267\\exec-b90bc3e7-2df7-4b67-b9dc-69bb2268ae82.png"
+        }
+      ],
+      "validation": {
+        "PIL_mode": "RGBA",
+        "size": [
+          1536,
+          1024
+        ],
+        "fully_transparent_fraction": 0.9563248952229818,
+        "nontransparent_pixels_below_18_percent": 59,
+        "alpha_bbox": [
+          0,
+          0,
+          1536,
+          711
+        ]
+      }
+    },
+    {
+      "file": "output/2026-11-04_defeat_blood/v3/style_04.png",
+      "prompt": "Create a transparent PNG game asset, 1536x1024 landscape. ONE image only.\nA very THIN irregular blood strip attached to the absolute TOP edge, all the way across the width. This is a top-edge defeat overlay for The Seven Simulation RPG, dark fantasy, Diablo 2 mood.\nCRITICAL PIXEL LAYOUT: Draw only within x=0..1535, y=0..120. Top connected strip thickness 10-25 pixels. Most downward drips end at y=40..70. Only TWO drips end at y=110..120. Unequal lengths. All pixels y=121..1023 are EXACTLY RGBA(0,0,0,0), completely empty and fully transparent. NO haze, NO gradient extending down, NO nearly invisible texture or residual alpha in the empty space. This intentionally leaves nearly 90% of the canvas blank transparent. Do not enlarge or center the subject.\nReal transparent alpha background, not black, white, or a painted checkerboard. Deep blood reds only, readable over a very dark burning-castle battle scene. Do NOT draw that scene, UI, cards, characters, frames, weapons, wounds, bodies, organs or text. No side or bottom border. No pink, magenta, orange or purple.\nSTYLE — follow this EXACT medium, making it distinctive: 04 PIXEL ART: crisp pixel art at a low resolution (each pixel clearly visible, roughly 6-8 screen pixels per art pixel), 4-color dark red palette with a 1-pixel darker outline and a 1-pixel highlight, no anti-aliasing, no blur.\nFor woodcut, carved gouge lines must be transparent negative cuts through flat single-color red; never use smooth gradients. For pixel art, use ONLY 4 flat dark red colors on a crisp 7-pixel grid, with stepped silhouettes, no gradients or anti-aliasing. These medium-specific constraints apply only if that is the requested style.",
+      "source_path": "C:\\Users\\ANGames-001\\.codex\\generated_images\\01a1a2ad-25be-7a10-9a7d-c9678a1c5267\\exec-cdf91c93-1411-4b30-8042-62b8e551e502.png",
+      "attempts": [
+        {
+          "prompt": "Use case: stylized-concept.\nAsset: DEFEAT BLOOD OVERLAY for The Seven Simulation RPG, a grim dark fantasy party RPG about the Seven Deadly Sins and Satan's armies, Diablo 2 mood.\nGenerate ONE landscape PNG, exactly 1536x1024, with a genuinely transparent alpha background. This isolated overlay will be laid over the TOP edge of a very dark wide burning-castle battle arena. The arena has enemy cards above and hero cards below; this is placement and screen darkness context ONLY. Do not draw the arena or any cards, UI, characters, or background.\nCOMPOSITION: Blood enters from and touches the TOP canvas edge across the FULL width, including both upper corners. Keep the entire blood silhouette in a very shallow strip at the very top of this otherwise empty canvas. Drips of clearly unequal lengths hang down. Most drips extend only 4-9% of canvas height (41-92 pixels); exactly two longest drips reach at most 15% (153 pixels). Everything below 18% of canvas height (y=184 through bottom) must be completely empty, alpha=0, transparent. Over 82% of the image is empty transparent space. No detached droplets below the shallow strip.\nPALETTE: Deep blood reds only, readable on a very dark screen. Never pink, magenta, orange or purple.\nBACKGROUND: actual transparency, real alpha channel; no checkerboard painted into the image, no solid, white, or black background.\nAVOID: text, frames, side borders, bottom borders, characters, weapons, wounds, organs, bodies, UI, mockup, canvas paper, environment.\nSTYLE (follow exactly): 04 PIXEL ART: crisp pixel art at a low resolution (each pixel clearly visible, roughly 6-8 screen pixels per art pixel), 4-color dark red palette with a 1-pixel darker outline and a 1-pixel highlight, no anti-aliasing, no blur.",
+          "source_path": "C:\\Users\\ANGames-001\\.codex\\generated_images\\01a1a2ad-25be-7a10-9a7d-c9678a1c5267\\exec-35033e83-2c3e-457a-b42b-541e74c9a386.png"
+        },
+        {
+          "prompt": "Create a transparent PNG game asset, 1536x1024 landscape. ONE image only.\nA very THIN irregular blood strip attached to the absolute TOP edge, all the way across the width. This is a top-edge defeat overlay for The Seven Simulation RPG, dark fantasy, Diablo 2 mood.\nCRITICAL PIXEL LAYOUT: Draw only within x=0..1535, y=0..120. Top connected strip thickness 10-25 pixels. Most downward drips end at y=40..70. Only TWO drips end at y=110..120. Unequal lengths. All pixels y=121..1023 are EXACTLY RGBA(0,0,0,0), completely empty and fully transparent. NO haze, NO gradient extending down, NO nearly invisible texture or residual alpha in the empty space. This intentionally leaves nearly 90% of the canvas blank transparent. Do not enlarge or center the subject.\nReal transparent alpha background, not black, white, or a painted checkerboard. Deep blood reds only, readable over a very dark burning-castle battle scene. Do NOT draw that scene, UI, cards, characters, frames, weapons, wounds, bodies, organs or text. No side or bottom border. No pink, magenta, orange or purple.\nSTYLE — follow this EXACT medium, making it distinctive: 04 PIXEL ART: crisp pixel art at a low resolution (each pixel clearly visible, roughly 6-8 screen pixels per art pixel), 4-color dark red palette with a 1-pixel darker outline and a 1-pixel highlight, no anti-aliasing, no blur.\nFor woodcut, carved gouge lines must be transparent negative cuts through flat single-color red; never use smooth gradients. For pixel art, use ONLY 4 flat dark red colors on a crisp 7-pixel grid, with stepped silhouettes, no gradients or anti-aliasing. These medium-specific constraints apply only if that is the requested style.",
+          "source_path": "C:\\Users\\ANGames-001\\.codex\\generated_images\\01a1a2ad-25be-7a10-9a7d-c9678a1c5267\\exec-cdf91c93-1411-4b30-8042-62b8e551e502.png"
+        }
+      ],
+      "validation": {
+        "PIL_mode": "RGBA",
+        "size": [
+          1536,
+          1024
+        ],
+        "fully_transparent_fraction": 0.9543348948160807,
+        "nontransparent_pixels_below_18_percent": 25,
+        "alpha_bbox": [
+          0,
+          0,
+          1536,
+          271
+        ]
+      }
+    },
+    {
+      "file": "output/2026-11-04_defeat_blood/v3/style_05.png",
+      "prompt": "Create a transparent PNG game asset, 1536x1024 landscape. ONE image only.\nA very THIN irregular blood strip attached to the absolute TOP edge, all the way across the width. This is a top-edge defeat overlay for The Seven Simulation RPG, dark fantasy, Diablo 2 mood.\nCRITICAL PIXEL LAYOUT: Draw only within x=0..1535, y=0..120. Top connected strip thickness 10-25 pixels. Most downward drips end at y=40..70. Only TWO drips end at y=110..120. Unequal lengths. All pixels y=121..1023 are EXACTLY RGBA(0,0,0,0), completely empty and fully transparent. NO haze, NO gradient extending down, NO nearly invisible texture or residual alpha in the empty space. This intentionally leaves nearly 90% of the canvas blank transparent. Do not enlarge or center the subject.\nReal transparent alpha background, not black, white, or a painted checkerboard. Deep blood reds only, readable over a very dark burning-castle battle scene. Do NOT draw that scene, UI, cards, characters, frames, weapons, wounds, bodies, organs or text. No side or bottom border. No pink, magenta, orange or purple.\nSTYLE — follow this EXACT medium, making it distinctive: 05 DIABLO PAINTERLY: grim semi-realistic matte oil painting like late-90s dark fantasy game art; thick, dark, clotted blood with rough brush texture, low saturation, NO gloss, no shiny highlights, no glow.\nFor woodcut, carved gouge lines must be transparent negative cuts through flat single-color red; never use smooth gradients. For pixel art, use ONLY 4 flat dark red colors on a crisp 7-pixel grid, with stepped silhouettes, no gradients or anti-aliasing. These medium-specific constraints apply only if that is the requested style.",
+      "source_path": "C:\\Users\\ANGames-001\\.codex\\generated_images\\01a1a2ad-25be-7a10-9a7d-c9678a1c5267\\exec-bf7bd674-5736-4cbc-aba1-7f5542abef98.png",
+      "attempts": [
+        {
+          "prompt": "Use case: stylized-concept.\nAsset: DEFEAT BLOOD OVERLAY for The Seven Simulation RPG, a grim dark fantasy party RPG about the Seven Deadly Sins and Satan's armies, Diablo 2 mood.\nGenerate ONE landscape PNG, exactly 1536x1024, with a genuinely transparent alpha background. This isolated overlay will be laid over the TOP edge of a very dark wide burning-castle battle arena. The arena has enemy cards above and hero cards below; this is placement and screen darkness context ONLY. Do not draw the arena or any cards, UI, characters, or background.\nCOMPOSITION: Blood enters from and touches the TOP canvas edge across the FULL width, including both upper corners. Keep the entire blood silhouette in a very shallow strip at the very top of this otherwise empty canvas. Drips of clearly unequal lengths hang down. Most drips extend only 4-9% of canvas height (41-92 pixels); exactly two longest drips reach at most 15% (153 pixels). Everything below 18% of canvas height (y=184 through bottom) must be completely empty, alpha=0, transparent. Over 82% of the image is empty transparent space. No detached droplets below the shallow strip.\nPALETTE: Deep blood reds only, readable on a very dark screen. Never pink, magenta, orange or purple.\nBACKGROUND: actual transparency, real alpha channel; no checkerboard painted into the image, no solid, white, or black background.\nAVOID: text, frames, side borders, bottom borders, characters, weapons, wounds, organs, bodies, UI, mockup, canvas paper, environment.\nSTYLE (follow exactly): 05 DIABLO PAINTERLY: grim semi-realistic matte oil painting like late-90s dark fantasy game art; thick, dark, clotted blood with rough brush texture, low saturation, NO gloss, no shiny highlights, no glow.",
+          "source_path": "C:\\Users\\ANGames-001\\.codex\\generated_images\\01a1a2ad-25be-7a10-9a7d-c9678a1c5267\\exec-68134d2e-ae62-4de9-944b-e881ee1d936f.png"
+        },
+        {
+          "prompt": "Create a transparent PNG game asset, 1536x1024 landscape. ONE image only.\nA very THIN irregular blood strip attached to the absolute TOP edge, all the way across the width. This is a top-edge defeat overlay for The Seven Simulation RPG, dark fantasy, Diablo 2 mood.\nCRITICAL PIXEL LAYOUT: Draw only within x=0..1535, y=0..120. Top connected strip thickness 10-25 pixels. Most downward drips end at y=40..70. Only TWO drips end at y=110..120. Unequal lengths. All pixels y=121..1023 are EXACTLY RGBA(0,0,0,0), completely empty and fully transparent. NO haze, NO gradient extending down, NO nearly invisible texture or residual alpha in the empty space. This intentionally leaves nearly 90% of the canvas blank transparent. Do not enlarge or center the subject.\nReal transparent alpha background, not black, white, or a painted checkerboard. Deep blood reds only, readable over a very dark burning-castle battle scene. Do NOT draw that scene, UI, cards, characters, frames, weapons, wounds, bodies, organs or text. No side or bottom border. No pink, magenta, orange or purple.\nSTYLE — follow this EXACT medium, making it distinctive: 05 DIABLO PAINTERLY: grim semi-realistic matte oil painting like late-90s dark fantasy game art; thick, dark, clotted blood with rough brush texture, low saturation, NO gloss, no shiny highlights, no glow.\nFor woodcut, carved gouge lines must be transparent negative cuts through flat single-color red; never use smooth gradients. For pixel art, use ONLY 4 flat dark red colors on a crisp 7-pixel grid, with stepped silhouettes, no gradients or anti-aliasing. These medium-specific constraints apply only if that is the requested style.",
+          "source_path": "C:\\Users\\ANGames-001\\.codex\\generated_images\\01a1a2ad-25be-7a10-9a7d-c9678a1c5267\\exec-bf7bd674-5736-4cbc-aba1-7f5542abef98.png"
+        }
+      ],
+      "validation": {
+        "PIL_mode": "RGBA",
+        "size": [
+          1536,
+          1024
+        ],
+        "fully_transparent_fraction": 0.9651578267415365,
+        "nontransparent_pixels_below_18_percent": 1,
+        "alpha_bbox": [
+          0,
+          0,
+          1536,
+          264
+        ]
+      }
+    }
+  ]
+}

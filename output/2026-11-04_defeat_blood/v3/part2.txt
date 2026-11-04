@@ -1,0 +1,9 @@
+Styles for this run (save each as output/2026-11-04_defeat_blood/v3/style_NN.png):
+
+06 STAINED GLASS: blood made of deep red and ruby stained glass pieces held by thick dark lead lines, each drip a glass shard, faint inner light variation inside each pane, no glow outside.
+07 ETCHED FOIL: blood embossed in dark red metal foil, like a stamped relief on a book cover; hard metallic facets, engraved hatching lines, sharp specular edges; looks forged, not wet.
+08 FLAT SILHOUETTE: minimal flat vector shapes, ONE solid deep red color plus ONE darker red shadow shape, no outline, no texture, no highlight; clean graphic UI style.
+09 CHARCOAL SKETCH: rough charcoal and red chalk drawing on transparent ground; smudged strokes, grainy dry texture, scribbled hatching inside the drips, loose sketchy edges.
+10 MANGA INK: black-and-red comic ink; bold black brush outline, red flat fill with halftone dot screentone shading, speed-line like streaks inside the long drips.
+
+After generating, copy the PNGs to the paths above and write output/2026-11-04_defeat_blood/v3/prompts_part2.json with the exact prompt you sent to image_gen for each and its source path under ~/.codex/generated_images. If an image comes back without real transparency, regenerate it once. Finally print, for each file, PIL mode, size and fraction of fully transparent pixels.

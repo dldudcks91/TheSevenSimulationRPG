@@ -1,0 +1,27 @@
+Task: generate 3 images with your built-in image_gen tool. Do NOT edit any project file. Only write inside output/2026-11-04_defeat_blood/v2/.
+
+Use case: stylized-concept.
+Asset type: DEFEAT BLOOD OVERLAY for The Seven Simulation RPG, a grim dark fantasy party RPG about the Seven Deadly Sins and Satan's armies (Diablo 2 mood). When the whole party is wiped out, this transparent image is laid over the TOP of the wide battle arena shown in reference image 2 (a 1202x452 arena: enemy cards on top, hero cards below, dark painted burning-castle background). Blood runs down from the arena's top edge. It must stay a small accent: the unit cards must remain readable.
+
+Draw in EXACTLY the existing DARK FANTASY CARTOON effect style shown in reference image 1 (the game's skill effect sheet). Reference 1 is a STYLE sample only; do not copy its 3x3 layout or subjects. Preserve: thick uneven near-black contour around every shape, broad angular cel-shaded shapes with sharp tapered points, two decisive color planes per shape (deep crimson body + one darker maroon shadow plane), one small crisp pale-red highlight stroke, serious and menacing mood. Look at the red blood shapes in reference 1 (top middle, top right, middle right cells): match that red, that contour weight and that angular cut.
+Reference 2 is only for placement, scale and the dark color of the screen; do not draw cards, UI, characters or background.
+
+NOT REALISTIC, NOT GORE: no photographic blood, no glossy wet 3D render, no soft gradients, no airbrush, no glow, bloom, haze, mist, vignette fill, red fog or light rays. No painterly texture, watercolor, noise, speckle dust or tiny spatter grain. No organs, wounds, bodies, weapons, text or frames.
+FLAT FILLS ONLY: each blood shape = one flat crimson fill + one flat dark shadow shape + one small highlight. Drops and drips are drawn as a FEW LARGE readable shapes with angular, slightly faceted edges like reference 1, never hair-thin lines.
+Colors: crimson around #a8141c, shadow around #4a070c, highlight around #e86060. Never pink, magenta, orange or purple.
+
+Canvas for every image: landscape 1536x1024, genuinely transparent alpha background (real alpha channel, not a painted checkerboard or black). Everything below 30% of the canvas height stays completely empty. The image will be scaled to the arena width, so keep shapes chunky.
+
+Image 1 (top drip band): a jagged blood band hugging the TOP edge across the full width, uneven thickness (about 2-5% of canvas height), with 8-10 drips hanging down of clearly unequal length; most are short (5-12% of canvas height), two are longer (up to 25%). The longest drips end in a heavy teardrop. Angular cartoon drips, thick contour.
+
+Image 2 (corner drips): blood smeared into the TOP-LEFT and TOP-RIGHT corners only (each corner mass about 18% of canvas width), with 3-4 drips running down from each corner (up to 25% of canvas height) and 3-5 separate chunky droplets/flicks flying toward the center. The top center stays empty.
+
+Image 3 (heavy few drips): a thinner top-edge band across the full width with only 5 drips, but each drip is THICK and bold, like heavy cartoon blood about to fall: varied lengths 8-25% of canvas height, each ending in a big angular teardrop, one drop already detached below its drip.
+
+After generating, copy the PNGs to:
+  output/2026-11-04_defeat_blood/v2/blood_1.png
+  output/2026-11-04_defeat_blood/v2/blood_2.png
+  output/2026-11-04_defeat_blood/v2/blood_3.png
+Write output/2026-11-04_defeat_blood/v2/prompts.json with the exact prompt you sent to image_gen for each and its source path under ~/.codex/generated_images.
+If an image comes back without real transparency (checkerboard painted in, or a solid background), regenerate it once.
+Finally print, for each file, PIL mode, size, fraction of fully transparent pixels, and the lowest row (as % of height) that has any pixel with alpha > 32.

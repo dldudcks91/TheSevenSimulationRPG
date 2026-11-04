@@ -1,0 +1,9 @@
+Styles for this run (save each as output/2026-11-04_defeat_blood/v3/style_NN.png):
+
+01 INK BRUSH: dark crimson ink laid with a big wet calligraphy brush along the top edge; dry-brush bristle streaks, ink pooling into drips; sumi-e energy, no outlines.
+02 WATERCOLOR: transparent wet-on-wet watercolor pigment bleeding down from the top; soft blooming edges, pigment granulation, darker tide lines where the paint dried, drips with pale watery tails. Partial transparency is welcome.
+03 WOODCUT: medieval woodcut / linocut print look; solid carved blood shapes in one deep red ink with carved gouge lines and chisel-cut edges, slight print texture, no shading gradients.
+04 PIXEL ART: crisp pixel art at a low resolution (each pixel clearly visible, roughly 6-8 screen pixels per art pixel), 4-color dark red palette with a 1-pixel darker outline and a 1-pixel highlight, no anti-aliasing, no blur.
+05 DIABLO PAINTERLY: grim semi-realistic matte oil painting like late-90s dark fantasy game art; thick, dark, clotted blood with rough brush texture, low saturation, NO gloss, no shiny highlights, no glow.
+
+After generating, copy the PNGs to the paths above and write output/2026-11-04_defeat_blood/v3/prompts_part1.json with the exact prompt you sent to image_gen for each and its source path under ~/.codex/generated_images. If an image comes back without real transparency, regenerate it once. Finally print, for each file, PIL mode, size and fraction of fully transparent pixels.
