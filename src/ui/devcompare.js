@@ -19,6 +19,7 @@
  * ⚠ 문구는 영어 · 기호다 — 다국어 대상이 아니다(유저에게 안 보인다 · devpalette.js 와 같다).
  */
 import { focusMode, FOCUS_MODES } from './battle.js';
+import { DEV_HOST } from './env.js';
 
 const FOCUS_KEY = 'devFocus';
 const read = k => { try { return localStorage.getItem(k); } catch { return null; } };
@@ -47,11 +48,13 @@ const setSkin = v => {
     else if (KIT_SKINS.some(([s]) => s === v)) { d.skin = 'd2min'; d.skinParts = v; }
     else d.skin = v;
 };
+// 저장값이 없을 때의 겉모양 — 개발 환경은 `Now` · 배포판(GitHub Pages 등 개발 환경 밖 주소)은 `D2 Min` (ADR-1038)
+const SKIN_DEFAULT = DEV_HOST ? 'now' : 'd2min';
 // Skin 도 불러올 때 1회 — 첫 그림부터 그 겉모양이어야 한다 · `?skin=now|d2min|<키트 번호>` 가 그 로드에서만 저장값보다 먼저다(저장 안 함)
 {
     const q = new URLSearchParams(location.search).get('skin');
     const s = isSkin(q) ? q : read(SKIN_KEY);
-    if (isSkin(s)) setSkin(s);
+    setSkin(isSkin(s) ? s : SKIN_DEFAULT);
 }
 
 /** 설정 탭 마지막 줄 — 공격자 포커스. 누르면 이 줄의 켜진 버튼만 갈아 끼운다(관전은 다음 행동부터 그 방식) */
