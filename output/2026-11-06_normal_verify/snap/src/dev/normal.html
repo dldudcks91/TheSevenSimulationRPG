@@ -1,0 +1,249 @@
+<!doctype html><meta charset="utf-8"><title>running</title><pre id="head"></pre><pre id="sim"></pre>
+<script type="module">
+// 노말 1 ~ 5장 완주 시간 — 칸마다 (2026-11-04 qa-fun · 스냅샷 dev/ 에 두고 연다 · 저장소에 넣지 않는다)
+//   10-28 wheel.js(자동 장착 봇)에서 노말만 떼고 고쳤다:
+//   - 길: 게임의 이어 가기 그대로(nextRepeat — 이기면 다음 칸 · 지면 같은 칸 · 챕터보스에게 지면 바로 앞 칸 · 앞 칸 이기면 다시 보스 · R417)
+//     farm>0 이면 덧붙여 보스 아닌 칸에서 patience 판 연속 지면 앞의 깬 칸(챕터보스 제외)을 farm 판 (사람 흉내)
+//   - 시계: 판마다 now 가 흐른다(판 시간 + 재출발) — 챕터보스 재등장 · 상단 회차가 실제처럼
+//   - 물약: 산 물약을 편성 칸에 꽂는다(높은 단계부터 · 재고만큼) — 10-28 봇은 1단계 칸에 3단계를 사 모아 못 썼다
+//   ?seeds=1-20&farm=0&patience=10&stall=1500&cap=20000&up=0&build=max
+//   2026-11-06 추가: shop=1 — 판마다 상단 장비 목록에서 「끼면 세기(입히는 DPS × 버티는 양 — 게임 자동 장착 · 상단 툴팁과 같은 잣대)가 오르는」 것만 산다
+//                    · 무료 교체가 열리면(1시간 쿨) 파티 최고 레벨 영웅으로 교체해 다시 본다
+//                    pcap=n — 물약을 재고 n 까지만 채운다(0 = 옛 봇처럼 남은 골드 전부) — 상단 갈래가 골드를 모을 수 있게
+import { loadData, buildSystems, D } from '../ui/data.js';
+import { makeRng } from '../game_logic/rng.js';
+import { createFormula } from '../game_logic/formula.js';
+const q = new URLSearchParams(location.search);
+const NOW = 1_700_000_000_000;
+const r2 = v => Math.round(v * 100) / 100;
+const avg = (xs, f) => xs.length ? xs.reduce((a, x) => a + f(x), 0) / xs.length : 0;
+const parseList = spec => String(spec).split(',').flatMap(part => {
+    const m = part.trim().match(/^(\d+)-(\d+)$/);
+    return m ? Array.from({ length: +m[2] - +m[1] + 1 }, (_, i) => +m[1] + i) : [+part];
+});
+const DIFF = 'normal';
+const ARMOR = ['helmet', 'armor', 'gloves', 'boots'];
+const RAR = { normal: 0, magic: 1, rare: 2, craft: 2, epic: 3, legendary: 4, unique: 5, set: 5 };
+const accKey = it => (it.ilvl ?? 0) * 10 + (RAR[it.rarity] ?? 0);
+let CNT;
+const head = document.getElementById('head');
+try {
+    await loadData('../data/');
+    const SYS = buildSystems(D);
+    const B = D.balance;
+    const opt = {
+        seeds: parseList(q.get('seeds') || '1-4'), farm: +(q.get('farm') ?? 0), patience: +(q.get('patience') ?? 10),
+        stall: +(q.get('stall') ?? 1500), cap: +(q.get('cap') ?? 20000), up: +(q.get('up') ?? 0), upAll: q.get('upAll') === '1',
+        build: q.get('build') ?? 'max', potion: q.get('potion') !== '0', mastery: q.get('mastery') !== '0',
+        log: (q.get('log') ?? '').split(',').filter(Boolean).map(Number),
+        shop: q.get('shop') === '1', pcap: +(q.get('pcap') ?? 0),
+    };
+    // 게임 자동 장착(state.js autoEquip · R313)의 세기 잣대를 그대로 옮긴다
+    const F = createFormula(B);
+    const MIGHT = new Set(['weapon', 'armor', 'helmet', 'gloves', 'boots']);
+    const dps = c => {
+        const a = c.atk_physical ?? c.atk_magic;
+        if (!a) return 0;
+        const crit = 1 + Math.min(1, c.crit_rate ?? 0) * ((c.crit_damage ?? 1) - 1);
+        return (a.min + a.max) / 2 * (c.main_attr_mult ?? 1) * (1 + (c.dmg_bonus_pct ?? 0)) * crit / (c.action_period || 1);
+    };
+    const endu = c => { const keep = (1 - F.mitigation(c.defense ?? 0)) * (1 - (c.damage_reduction ?? 0)); return keep > 0 ? (c.hp_max ?? 0) / keep : Infinity; };
+    const might = c => dps(c) * endu(c);
+    const partyHeroes = G => SYS.game.partyOf(G).map(uid => SYS.game.heroById(G, uid));
+    const lvOfParty = G => r2(avg(partyHeroes(G), h => h.level));
+    const isBoss = id => D.stages[id]?.boss_grade === 'chapter_boss';
+    const order = D.stageOrder.filter(id => D.stages[id].chapter <= 5);
+
+    function openBoxes(G) {
+        for (let guard = 0; guard < 200; guard++) {
+            const uid = G.bags.flat().find(u => G.items[u]?.box);
+            if (uid == null) return;
+            const kind = G.items[uid].box.kind;
+            const hs = partyHeroes(G);
+            const lvOf = h => kind === 'weapon' ? (G.items[h.equipped.weapon]?.ilvl ?? 0) : avg(ARMOR, p => G.items[h.equipped[p]]?.ilvl ?? 0);
+            const h = hs.reduce((a, b) => (lvOf(b) < lvOf(a) ? b : a));
+            if (!SYS.game.openBox(G, uid, h.uid).ok) { CNT.boxFail++; return; }
+            CNT.box++;
+        }
+    }
+    function forceUp(G) {
+        if (!(opt.up > 0)) return;
+        for (const it of Object.values(G.items)) {
+            if (!it || it.box || (!opt.upAll && it.slot !== 'weapon' && it.slot !== 'armor') || !SYS.item.upgradeable(it)) continue;
+            if ((it.up ?? 0) < opt.up) it.up = opt.up;
+        }
+    }
+    function botAuto(G) {
+        openBoxes(G);
+        forceUp(G);
+        for (const h of partyHeroes(G)) CNT.autoMoves += SYS.game.autoEquip(G, h.uid, 1).changes?.length ?? 0;
+        for (const h of partyHeroes(G)) for (const pos of ['amulet', 'ring1', 'ring2']) {
+            const part = pos === 'amulet' ? 'amulet' : 'ring';
+            const cur = G.items[h.equipped[pos]];
+            let best = null;
+            for (const uid of G.bags[0] ?? []) {
+                const it = G.items[uid];
+                if (!it || it.box || it.slot !== part || SYS.item.canEquip(h, it)) continue;
+                if ((!cur || accKey(it) > accKey(cur)) && (!best || accKey(it) > accKey(best))) best = it;
+            }
+            if (best && SYS.game.equip(G, h.uid, best.uid, pos).ok) CNT.accSwap++;
+        }
+    }
+    const salvageBag = G => { for (const uid of G.bags.flat()) if (SYS.game.salvage(G, uid).ok) CNT.salvage++; };
+    function botMastery(G) {
+        for (const h of partyHeroes(G)) for (;;) {
+            const node = SYS.game.masteryState(G, h.uid)?.nodes.find(x => x.canLearn);
+            if (!node || !SYS.game.learnMastery(G, h.uid, node.id).ok) break;
+            CNT.mastery++;
+        }
+    }
+    function botShop(G, now) {
+        if (!opt.shop) return;
+        const tryBuy = () => {
+            for (let guard = 0; guard < 40; guard++) {
+                const S = SYS.game.shopState(G, now);
+                if (!S.open) return;
+                let best = null;
+                for (const [i, g] of S.equip.entries()) {
+                    if (g.sold || g.locked || !MIGHT.has(g.item.slot) || g.gold > G.resources.gold) continue;
+                    for (const h of partyHeroes(G)) {
+                        if (SYS.item.canEquip(h, g.item) || !SYS.item.fitsClass(g.item, h.cls)) continue;
+                        const cur = might(SYS.game.heroCombat(G, h));
+                        const v = might(SYS.game.heroCombatWith(G, h, g.item));
+                        const gain = cur > 0 ? v / cur - 1 : (v > 0 ? 1 : 0);
+                        if (gain > 0.001 && (!best || gain > best.gain)) best = { i, h, gain, gold: g.gold, slot: g.item.slot, list: S.list };
+                    }
+                }
+                if (!best) return;
+                const r = SYS.game.shopBuy(G, best.i, best.list, now, 1);
+                if (!r.ok) { CNT.shopFail++; return; }
+                CNT.shopBuy++; CNT.shopGold += best.gold; if (best.slot === 'weapon') CNT.shopWeapon++;
+                const ch = SYS.game.autoEquip(G, best.h.uid, 1).changes?.length ?? 0;
+                CNT.autoMoves += ch;
+                if (!ch) CNT.shopUnused++;
+                salvageBag(G);
+            }
+        };
+        tryBuy();
+        const S = SYS.game.shopState(G, now);
+        if (S.open && S.free) {
+            const top = partyHeroes(G).reduce((a, b) => (b.level > a.level ? b : a));
+            if (SYS.game.shopReroll(G, S.list, now, top.uid).ok) { CNT.shopReroll++; tryBuy(); }
+        }
+    }
+    function botPotion(G, now) {
+        const list = (SYS.game.shopState(G, now)?.potions ?? []).slice().sort((a, b) => b.tier - a.tier);
+        const stockOf = () => Object.values(G.potions ?? {}).reduce((a, b) => a + b, 0);
+        if (opt.pcap > 0) {
+            // 재고 pcap 까지만 — 높은 단계부터 한 병씩 · 그 단계가 비싸 못 사면 아래 단계
+            for (const p of list) while (stockOf() < opt.pcap && SYS.game.shopPotionBuy(G, p.id, 1).ok) CNT.potionBuy++;
+        } else {
+            for (const p of list) while (SYS.game.shopPotionBuy(G, p.id, 10).ok) CNT.potionBuy += 10;
+            for (const p of list) while (SYS.game.shopPotionBuy(G, p.id, 1).ok) CNT.potionBuy++;
+        }
+        // 칸 = 높은 단계부터 재고만큼 (같은 물약이 여러 칸이면 앞 칸이 먼저 가져간다)
+        const n = SYS.game.limitsOf ? SYS.game.limitsOf(G).potionSlots : (G.presets[G.preset - 1]?.potionSlots?.length ?? 2);
+        const stock = Object.entries(G.potions ?? {}).filter(([, k]) => k > 0).map(([id, k]) => ({ id, k, tier: TIER[id] ?? 0 })).sort((a, b) => b.tier - a.tier);
+        const want = [];
+        for (const s of stock) for (let i = 0; i < s.k && want.length < n; i++) want.push(s.id);
+        for (let i = 0; i < n; i++) SYS.game.setPotionSlot(G, i, want[i] ?? null);
+    }
+    const TIER = {};
+
+    let LOG = [], LOGN = {};
+    function runSeed(seed) {
+        LOG = []; LOGN = {};
+        CNT = { box: 0, boxFail: 0, autoMoves: 0, accSwap: 0, salvage: 0, mastery: 0, potionBuy: 0, potionUsed: 0, fallback: 0, farm: 0,
+            shopBuy: 0, shopWeapon: 0, shopGold: 0, shopReroll: 0, shopUnused: 0, shopFail: 0 };
+        const G = SYS.game.newGame(seed, SYS.hero.rollStartParty(makeRng(1000 + seed), B.party_size_max), NOW);
+        for (const b of SYS.construction.list) if (opt.build === 'max' || opt.build.split(',').includes(b.id)) G.buildings[b.id] = b.maxRank;
+        if (!Object.keys(TIER).length) for (const p of SYS.game.shopState(G, NOW)?.potions ?? []) TIER[p.id] = p.tier;
+        const hs = partyHeroes(G);
+        const row = { seed, cls: hs.map(h => h.cls), tier: hs.map(h => h.tier), innate: hs.map(h => h.innate), cells: [], stuck: null };
+        let t = 0, e = 0, n = 0;
+        if (opt.potion) botPotion(G, NOW);
+        const play = stageId => {
+            const now = NOW + Math.round(t * 1000);
+            const pot0 = Object.values(G.potions ?? {}).reduce((a, b) => a + b, 0);
+            const r = SYS.game.resolveBattle(G, stageId, now, G.preset, DIFF);
+            if (!r.ok) return { err: r.err };
+            const rp = r.report;
+            n++;
+            t += rp.durationSec + B.repeat_restart_sec;
+            e += rp.durationSec;
+            CNT.potionUsed += pot0 - Object.values(G.potions ?? {}).reduce((a, b) => a + b, 0);
+            if (opt.log.includes(stageId)) {
+                const k = (LOGN[stageId] = (LOGN[stageId] ?? 0) + 1);
+                if (k <= 120 || k % 25 === 0) LOG.push({ n, k, stageId, won: rp.won ? 1 : 0, reason: rp.reason, rc: rp.roundsCleared, nr: rp.rounds?.length, sec: rp.durationSec, lv: lvOfParty(G),
+                    xp: Object.values(rp.xp ?? {}).reduce((a, b) => a + b, 0), downed: rp.downed?.length, dealt: Math.round(rp.contrib?.reduce((a, c) => a + c.dealt, 0) ?? 0), taken: Math.round(rp.contrib?.reduce((a, c) => a + c.taken, 0) ?? 0),
+                    pot: pot0 - Object.values(G.potions ?? {}).reduce((a, b) => a + b, 0), stock: k <= 2 ? JSON.stringify(G.potions) : undefined, slots: k <= 2 ? JSON.stringify(G.presets[G.preset - 1]?.potionSlots) : undefined, gold: G.resources.gold, fall: rp.fall ? JSON.stringify(rp.fall).slice(0, 400) : null,
+                    gear: partyHeroes(G).map(h => [h.level, G.items[h.equipped.weapon]?.ilvl ?? 0, G.items[h.equipped.weapon]?.base ?? G.items[h.equipped.weapon]?.baseId ?? null]) });
+            }
+            botAuto(G);
+            salvageBag(G);
+            if (opt.mastery) botMastery(G);
+            // 물약(상한까지) → 남은 골드로 상단 장비 — pcap=0 이면 물약이 골드를 다 써서 상단은 거의 못 산다
+            if (opt.potion) botPotion(G, NOW + Math.round(t * 1000));
+            botShop(G, NOW + Math.round(t * 1000));
+            return rp;
+        };
+        outer:
+        for (const [idx, stageId] of order.entries()) {
+            // cell = [stageId, 도착 t, 도착 e, 깬 t, 깬 e, 그 칸 도전 수, 그 칸 승 수, 곁 판 수(앞 칸), 도착 Lv, 깬 Lv, 첫 도전 승]
+            const c = { id: stageId, t0: r2(t), e0: r2(e), tc: null, ec: null, tries: 0, wins: 0, side: 0, lvA: lvOfParty(G), lvC: null, first: null };
+            row.cells.push(c);
+            const prev = order[idx - 1];
+            const farmAt = order.slice(0, idx).reverse().find(id => !isBoss(id)) ?? null;
+            let streak = 0, at = stageId;
+            while (!SYS.game.stageCleared(G, stageId, DIFF)) {
+                if (n >= opt.cap) { row.stuck = { why: 'cap', stageId, tries: c.tries }; break outer; }
+                if (c.tries >= opt.stall) { row.stuck = { why: 'stall', stageId, tries: c.tries }; break outer; }
+                const rp = play(at);
+                if (rp.err) { row.stuck = { why: 'err:' + rp.err, stageId: at, tries: c.tries }; break outer; }
+                if (at === stageId) {
+                    c.tries++;
+                    if (c.first == null) c.first = rp.won ? 1 : 0;
+                    if (rp.won) { c.wins++; break; }
+                    streak++;
+                    // R417 — 챕터보스에게 지면 바로 앞 칸
+                    if (isBoss(stageId) && prev != null) { at = prev; continue; }
+                    if (opt.farm > 0 && !isBoss(stageId) && streak >= opt.patience && farmAt != null) {
+                        for (let k = 0; k < opt.farm && n < opt.cap; k++) { if (play(farmAt).err) break; c.side++; CNT.farm++; }
+                        streak = 0;
+                    }
+                } else {
+                    // 앞 칸 — 이기면 다시 보스 · 지면 앞 칸 그대로 (nextRepeat)
+                    c.side++; CNT.fallback++;
+                    if (rp.won) at = stageId;
+                }
+            }
+            c.tc = r2(t); c.ec = r2(e); c.lvC = lvOfParty(G);
+        }
+        row.runs = n; row.t = r2(t); row.e = r2(e); row.lv = lvOfParty(G); row.cnt = { ...CNT };
+        row.ilvl = r2(avg(partyHeroes(G).flatMap(h => Object.values(h.equipped).filter(Boolean)), uid => G.items[uid]?.ilvl ?? 0));
+        row.done = SYS.game.stageCleared(G, order.at(-1), DIFF);
+        if (opt.log.length) row.log = LOG;
+        return row;
+    }
+
+    const t0 = performance.now();
+    const rows = [];
+    for (const s of opt.seeds) {
+        rows.push(runSeed(s));
+        head.textContent = `normal … ${rows.length}/${opt.seeds.length}`;
+        await new Promise(r => setTimeout(r, 0));
+    }
+    const meta = { opt, ms: Math.round(performance.now() - t0), restart: B.repeat_restart_sec, order,
+        bot: '게임 자동 장착(autoEquip · 파티 영웅마다) + 반지 · 목걸이는 아이템 레벨 → 등급이 높으면 교체 · 첫 클리어 상자를 무기(방어구) 아이템 레벨이 가장 낮은 영웅에게 · 남은 가방 분해' + (opt.mastery ? ' · 마스터리 첫 칸 몰아 찍기' : '') + (opt.potion ? ' · 상단 물약을 남은 골드로 높은 단계부터 사서 칸에 꽂는다' : '') + (opt.pcap ? ` (재고 ${opt.pcap} 까지만)` : '') + (opt.shop ? ' · 상단 장비 — 끼면 세기(자동 장착 잣대)가 오르는 것만 실제 골드로 산다 · 무료 교체가 열리면 최고 레벨 영웅으로 교체' : '') + ' · 건물 ' + opt.build + (opt.up ? ` · 늘 +${opt.up}강(${opt.upAll ? '다섯 부위' : '무기 · 갑옷'} · 비용 · 실패 무시)` : ''),
+        route: '게임의 이어 가기(R417 — 이기면 다음 칸 · 지면 같은 칸 · 챕터보스에게 지면 앞 칸 · 앞 칸 이기면 다시 보스)' + (opt.farm ? ` + 보스 아닌 칸에서 ${opt.patience}판 연속 지면 앞 칸 ${opt.farm}판` : ''),
+        assume: ['시작 파티 그대로 — 고용 · 해고 · 수색 없음 · 한 부대', (opt.shop ? '' : '상단 장비 · ') + (opt.up ? '' : '강화 · ') + '제작 · 책 · 전직 · 전술 · 진형 바꾸기 없음', '판마다 즉시 정산 — 라운드 사이에 장비를 안 바꾼다'] };
+    document.getElementById('sim').textContent = JSON.stringify({ meta, rows });
+    document.title = `DONE ${rows.length}`;
+} catch (err) {
+    const pre = document.createElement('pre');
+    pre.id = 'err';
+    pre.textContent = String(err && err.stack ? err.stack : err);
+    document.body.appendChild(pre);
+    document.title = 'FAIL';
+}
+</script>
