@@ -134,8 +134,9 @@ def wait_new_image(page, before, timeout=300, done_before=None):
 def run(page, gem_url, prompt, out_dir, n, prefix, files=()):
     """N fresh chats of one Gem with the same prompt (+ the same attached files); each image downloaded at original size."""
     for k in range(1, n + 1):
-        page.goto(gem_url)
-        page.wait_for_selector('div[contenteditable="true"]', timeout=30000)
+        page.goto(gem_url, timeout=60000)
+        # 입력창이 둘(숨은 옛 입력창 + 보이는 새 입력창)일 때가 있다 — 보이는 쪽을 기다린다 (2026-11-09)
+        page.wait_for_selector('div[contenteditable="true"] >> visible=true', timeout=30000)
         page.wait_for_timeout(1500)
         if files:
             attach(page, list(files))

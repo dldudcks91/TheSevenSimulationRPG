@@ -826,7 +826,8 @@ export const ELITE_TRAIT_DEF = [
 // 화면은 프레임만 갖고 내용은 전부 실데이터다 — 마스터리 노드는 mastery_node.csv,
 //   당하는 값은 balance.csv, 찍은 랭크는 세이브다 (2026-08-28 목업 폐기)
 
-export const MASTERY_GRID = { tiers: 3, nodes: 3 };
+// 판 = 4단 × 3칸 = 12칸 — 죄종 · 직업 공통 · T4 는 칸만(내용 미정 · 빈 칸은 점선 프레임) [2026-11-09 · skill_design §3 · ADR-1039]
+export const MASTERY_GRID = { tiers: 4, nodes: 3 };
 /* ═══════════ 도감 ═══════════ */
 /**
  * 몬스터 도감 — **도감 경험치 모델** (2026-10-10 사용자 지시 · 2026-09-21 처치 수 모델의 개정, monster_design §8). 08-25 몬스터 카드 모델을 대체한다(카드는 나중에 드롭형으로).

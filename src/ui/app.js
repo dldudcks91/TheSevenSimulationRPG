@@ -5404,7 +5404,7 @@ function masteryCell(node, owner = {}) {
  * 프레임(3줄 × 3칸)은 CSV 행 수와 무관하게 고정 — 비어 있어도 그려야 어디까지 갈 수 있는지가 보인다.
  * 죄종·직업 판은 프레임 아래에 빈 칸 하나를 더 둔다.
  */
-function masteryBox({ tag, title, sub, nodes, onLearn, onUnlearn, locked, extraSlot = false, preview = false, sin = null, cls = null, sinGear = null }) {
+function masteryBox({ tag, title, sub, nodes, onLearn, onUnlearn, locked, preview = false, sin = null, cls = null, sinGear = null }) {
     const owner = { sin, cls, sinGear };   // sinGear = 낀 죄종 장비 수 — 죄종 T2-1 의 「2/3」 (2026-10-05)
     const color = masteryAccent(owner);
     // `locked` — true = 흐린 판(도감의 미기획 판) · 문자열 = 격자 위 잠김 베일 + 그 한 줄(스킬 창의 전직 판)
@@ -5418,8 +5418,7 @@ function masteryBox({ tag, title, sub, nodes, onLearn, onUnlearn, locked, extraS
         for (let i = 0; i < perTier; i++) cells.push(masteryCell(mine[i] ?? null, owner));
         rows.push(`<div class="sk-row">${cells.join('')}</div>`);
     }
-    // 추가 칸 줄 — 다른 줄과 같은 간격으로 격자 넷째 줄에 선다
-    if (extraSlot) rows.push('<div class="sk-row extra"><div class="sk-cell empty"></div></div>');
+    // 넷째 줄(T4)도 세 칸 — 칸이 없는 자리는 빈 프레임 (SCREEN_DESIGN §7 · ADR-1039)
     // 죄종 판은 죄종 아이콘 · 직업 판은 직업 아이콘을 제목 앞에 — 판 색으로 칠한 마스크다 (SCREEN_DESIGN §7 · ADR-0368 · ADR-0375)
     const headArt = sin ? M.sinIcon(sin) : cls ? M.classIcon(cls) : null;
     box.innerHTML = `
@@ -5593,11 +5592,11 @@ function skillTreeBody() {
     // 판 머리는 **제목 한 줄**이다 — 부제(공유 · 직업 줄 · 전직 해금)는 뺐다 [2026-09-27 사용자 지시]
     wrap.appendChild(masteryBox({
         title: t('sk.sinTree', { sin }),
-        nodes: ms.nodes.filter(n => n.treeKind === 'sin'), onLearn: learn, onUnlearn: unlearn, extraSlot: true, sin: h.sin, sinGear: ms.sinGear,
+        nodes: ms.nodes.filter(n => n.treeKind === 'sin'), onLearn: learn, onUnlearn: unlearn, sin: h.sin, sinGear: ms.sinGear,
     }));
     wrap.appendChild(masteryBox({
         title: t('sk.mastery', { cls }),
-        nodes: ms.nodes.filter(n => n.treeKind === 'class'), onLearn: learn, onUnlearn: unlearn, extraSlot: true, cls: h.cls,
+        nodes: ms.nodes.filter(n => n.treeKind === 'class'), onLearn: learn, onUnlearn: unlearn, cls: h.cls,
     }));
     // 전직 판 [2026-10-06 · R216 · 개정 2026-10-08 · SCREEN_DESIGN §7 · ADR-0542] — 전직 전이면 **같은 프레임의 빈 판 + 잠김 베일** ·
     //   **전직하면 열린다** — 갈래의 전직 스킬 셋을 여기서 배운다(스킬을 안 배운 채로도 판이 선다)
@@ -8939,12 +8938,12 @@ function codexMastery(p) {
     if (state.codexMasterySeg === 'sin') {
         for (const id of Object.keys(M.SINS)) box.appendChild(masteryBox({
             tag: t('ix.mastery.sin'), title: t('sk.sinTree', { sin: sinName(id) }),
-            nodes: nodesFor('sin', id), extraSlot: true, preview: true, sin: id,
+            nodes: nodesFor('sin', id), preview: true, sin: id,
         }));
     } else if (state.codexMasterySeg === 'class') {
         for (const c of classes) box.appendChild(masteryBox({
             tag: t('ix.mastery.class'), title: t('sk.mastery', { cls: className(c.id) }),
-            nodes: nodesFor('class', c.id), extraSlot: true, preview: true, cls: c.id,
+            nodes: nodesFor('class', c.id), preview: true, cls: c.id,
         }));
     } else {
         // 전직 — **갈래 하나가 판 하나** · 직업 하나가 한 줄(갈래 셋 · `class.csv` 행 → `advance.csv:sort_order`) (§9-1 · ADR-0557)
