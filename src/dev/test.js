@@ -1230,7 +1230,8 @@ check('weapon_group: 본편 5직업 × 무기 2개 · 사제 전용 성경/십�
     if (!eq(groups('archer'), ['bow', 'crossbow'])) fail(`archer ${groups('archer')}`);
     if (WG.sword1h || WG.wand) fail('sword1h 삭제 · wand → orb 개명 (2026-09-01)');
     if (WG.staff.damageKind !== 'magic' || WG.orb.damageKind !== 'magic' || WG.axe.damageKind !== 'physical') fail('damageKind');
-    if (WG.crucifix.variance >= WG.spear.variance) fail('사제 무기의 변동이 기사보다 크다 — 「기사·사제가 작다」(hero_design §2)');
+    // 기사 창은 「기사·사제가 작다」의 예외다 — 느리고 한 방이 큰 쪽이라 범위가 가장 넓다(2026-11-10 · R434) · 규칙은 양손검이 진다
+    if (WG.crucifix.variance >= WG.sword2h.variance) fail('사제 무기의 변동이 기사 양손검보다 크다 — 「기사·사제가 작다」(hero_design §2)');
     if (D.weaponGroupList.some(g => 'twoHanded' in g)) fail('twoHanded 는 퇴역 필드 — 전 무기가 양손이라 표현할 게 없다');
     for (const cls of ['warrior', 'knight', 'mage', 'priest', 'archer']) {
         const gs = groups(cls);
@@ -1677,7 +1678,7 @@ check('formula: 피해 굴림 — 직격 피해는 범위 × 배율 안 · 많�
 check('formula: weaponDamage — 가운데 × (1 ∓ 폭) × 강화 배율을 한 번 반올림 · 최소 ≥ 1 · 최대 ≥ 최소 · 무기군을 모르면 전역 폭 (INTERFACE §2-3 · R90)', () => {
     for (const g of Object.values(WG)) for (const ilvl of [1, 10, 40]) for (const up of [0, 3]) {
         const d = F.weaponDamage(ilvl, g, up);
-        const mid = bandMid(ilvl), w = g.variance, m = F.upgradeMult(up);   // 폭은 비율 (R111)
+        const mid = bandMid(ilvl) * g.hitMult, w = g.variance, m = F.upgradeMult(up);   // 폭은 비율 (R111) · 가운데 × 한 방 배율 (R434)
         const want = { min: Math.max(1, Math.round(mid * (1 - w) * m)), max: 0 };
         want.max = Math.max(want.min, Math.round(mid * (1 + w) * m));
         if (!eq(d, want)) fail(`${g.id} ilvl ${ilvl} +${up} → ${JSON.stringify(d)} ≠ ${JSON.stringify(want)}`);
@@ -1688,6 +1689,27 @@ check('formula: weaponDamage — 가운데 × (1 ∓ 폭) × 강화 배율을 �
     if (F.upgradeMult(0) !== 1 || Math.abs(F.upgradeMult(2) - (1 + 2 * B.equip_upgrade_base_pct)) > 1e-12) fail('upgradeMult');
     const axe = F.weaponDamage(1, WG.axe);
     return `axe ilvl1 ${axe.min}~${axe.max} · 무기군 없음 ilvl10 ${bare.min}~${bare.max}`;
+});
+check('weapon_group: 한 방 배율 — 가운데에 곱한다 · 기사 = 양손검 빠르고 좁게 / 창 느리고 한 방 크고 넓게 · 마스터리 무기 칸이 그 성격을 따른다 (weapon_group_draft §4 · R434)', () => {
+    for (const g of Object.values(WG)) if (!(g.hitMult > 0)) fail(`${g.id} hitMult ${g.hitMult}`);
+    // 배율은 가운데에만 걸린다 — 배율 1 로 되돌린 사본과 비교하면 양끝이 배율만큼 벌어진다(반올림 하나 안)
+    const sp = F.weaponDamage(40, WG.spear), sp1 = F.weaponDamage(40, { ...WG.spear, hitMult: 1 });
+    if (Math.abs(sp.max - sp1.max * WG.spear.hitMult) > WG.spear.hitMult) fail(`창 최대 ${sp.max} ≠ ${sp1.max} × ${WG.spear.hitMult}`);
+    // 기사 두 무기의 성격 — 양손검이 빠르고 좁다 · 창은 느리고 평균 한 방이 크고 위끝이 높다
+    const sw = F.weaponDamage(40, WG.sword2h);
+    if (!(WG.sword2h.period < WG.spear.period)) fail(`양손검 ${WG.sword2h.period}초가 창 ${WG.spear.period}초보다 안 빠르다`);
+    if (!(WG.sword2h.variance < WG.spear.variance)) fail('양손검 범위가 창보다 안 좁다');
+    if (!((sp.min + sp.max) > (sw.min + sw.max) && sp.max > sw.max)) fail(`창 ${sp.min}~${sp.max} 가 양손검 ${sw.min}~${sw.max} 보다 한 방이 안 크다`);
+    // 직업 마스터리 무기 칸 — 공통 데미지 % 칸은 직업마다 빠른 무기 · 직업 공격 속도 칸은 느린 무기 (skill_design §3-5)
+    const shared = D.masteryNodes.find(n => n.node_id === 'cls_t2_weapon_damage');
+    const fastIds = shared.requires.slice('weapon:'.length).split('|');
+    for (const cls of ['warrior', 'knight', 'mage', 'priest', 'archer']) {
+        const fast = fastIds.filter(id => WG[id]?.classes.includes(cls));
+        const slowNode = D.masteryNodes.find(n => n.tree_kind === 'class' && n.tier === 2 && n.owner_id === cls && n.requires.startsWith('weapon:'));
+        const slow = slowNode.requires.slice('weapon:'.length);
+        if (fast.length !== 1 || !(WG[fast[0]].period < WG[slow].period)) fail(`${cls} 빠른 무기 칸 ${fast.join('|')} · 느린 무기 칸 ${slow} — 주기 순서가 칸과 어긋난다`);
+    }
+    return `Lv40 양손검 ${WG.sword2h.period}초 ${sw.min}~${sw.max} · 창 ${WG.spear.period}초 ×${WG.spear.hitMult} ${sp.min}~${sp.max}`;
 });
 check('formula: 피해량(bonusPct)은 따로 곱한다 · 스킬 배율은 기본 1 (battle_design §9-2 · 2026-09-18)', () => {
     const a = { atkMin: 100, atkMax: 100, atkType: 'physical', crit: 0, critDmg: 1, lvl: 5 };
@@ -2732,7 +2754,7 @@ check('csv: mastery_node 73행 — 죄종 T1 21(7×3) + 죄종 T2 21(7×3 — �
 check('mastery: 다섯 직업의 T2 세 칸은 기획한 장비군 마스터리 이름으로 풀린다', () => {
     const expected = {
         warrior: ['둔기 마스터리', '도끼 마스터리', '중갑 마스터리'],
-        knight: ['창 마스터리', '양손검 마스터리', '중갑 마스터리'],
+        knight: ['양손검 마스터리', '창 마스터리', '중갑 마스터리'],     // 2026-11-10 · R434 — 양손검이 빠른 쪽
         mage: ['오브 마스터리', '스태프 마스터리', '로브 마스터리'],
         priest: ['십자가 마스터리', '성경 마스터리', '로브 마스터리'],
         archer: ['활 마스터리', '석궁 마스터리', '경갑 마스터리'],
@@ -4202,7 +4224,7 @@ check('item: 무기 피해는 범위이고 파생이다 — 같은 무기군 · 
         n++;
         if ('watk' in it) fail(`${it.group} 에 watk 가 박혔다 — 무기 피해는 파생이다`);
         const d = SYS.item.weaponDamage(it);
-        const mid = bandMid(ILVL);
+        const mid = bandMid(ILVL) * WG[it.group].hitMult;               // 한 방 배율 (R434)
         const v = WG[it.group].variance ?? B.dmg_variance_pct;          // 비율 (R111)
         if (d.min !== Math.max(1, Math.round(mid * (1 - v))) || d.max !== Math.max(d.min, Math.round(mid * (1 + v))))
             fail(`${it.group} ${d.min}~${d.max} ≠ round(${mid.toFixed(2)} × (1 ∓ ${v}))`);

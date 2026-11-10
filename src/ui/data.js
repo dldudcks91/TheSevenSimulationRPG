@@ -231,8 +231,10 @@ export async function loadData(base = './data/') {
     D.weaponGroupList = weaponGroup.map(r => ({
         id: r.group_id, ko: r.group_kr, en: r.group_en,
         classes: String(r.classes).split('|'),
-        period: r.action_period, variance: r.variance_pct, damageKind: r.damage_kind, release: r.release,
+        period: r.action_period, variance: r.variance_pct, hitMult: r.hit_mult, damageKind: r.damage_kind, release: r.release,
     }));
+    // 한 방 배율 — 무기 피해 가운데에 곱한다(R434). 빈 칸 · 0 · 음수는 무기를 조용히 0 으로 만든다 — 로드에서 멈춘다
+    for (const g of D.weaponGroupList) if (!(typeof g.hitMult === 'number' && g.hitMult > 0)) throw new Error(`data: weapon_group.csv 의 '${g.id}' — hit_mult 는 0 보다 큰 수여야 한다 (${g.hitMult})`);
     D.weaponGroups = indexBy(D.weaponGroupList, 'id');
     // 방어구 갈래 — **부위 → 갈래** 두 단으로 묶는다. 방어 계수 · 갑옷군 고정값(공속 · 쿨감)을 든다 (2026-09-16 갑옷군 · R107 · 2026-09-18 투구 · 장갑 · 신발).
     //   **굴리는 베이스 특성** `trait` = `{stats, scale, min, max}` [2026-10-21 · R303 · item_design §1 「10-21 방어구 개정」] — 투구 · 장갑 · 신발 갈래 · 드롭이 아이템의 `[베이스]` 줄로 박는다

@@ -129,13 +129,14 @@ export function createFormula(balance) {
     /**
      * 무기 피해 범위 [2026-09-14 · R90 · battle_design §9-1] — **굴림이 아니라 파생**이다. 같은 무기군 · 같은 ilvl · 같은 강화면 같은 범위.
      *   가운데 = weapon_atk_base + 구간 단위 누적합(ilvl) [2026-09-15 확정 · R105 — ~~× growthMult(ilvl)~~ 곱셈 축을 떠났다]
-     *   양끝 = 가운데 × (1 ∓ 폭) × 강화 배율 → **반올림은 곱을 다 한 뒤 한 번**(표기 = 계산).
+     *   **× 한 방 배율** = 무기군 `hitMult`(weapon_group.csv:hit_mult) · 무기군을 모르면 1 [2026-11-10 · R434 — 센 무기의 한 방]
+     *   양끝 = 가운데 × 한 방 배율 × (1 ∓ 폭) × 강화 배율 → **반올림은 곱을 다 한 뒤 한 번**(표기 = 계산).
      *   폭(비율) = 무기군 `variance`(weapon_group.csv:variance_pct) · 없으면 dmg_variance_pct. 최소 ≥ 1 · 최대 ≥ 최소 (INTERFACE §5-3).
      *   범위 안의 굴림은 `strike` 가 직격마다 한다 — 여기는 양끝만 낸다.
      * @param group 무기군 정의(모르면 null — 전역 폭) · @returns {{min: number, max: number}}
      */
     function weaponDamage(ilvl, group, up = 0) {
-        const mid = atIlvl(weaponMidTable, ilvl);
+        const mid = atIlvl(weaponMidTable, ilvl) * (group?.hitMult ?? 1);
         const w = group?.variance ?? B.dmg_variance_pct;
         const m = upgradeMult(up);
         const min = Math.max(1, Math.round(mid * (1 - w) * m));
