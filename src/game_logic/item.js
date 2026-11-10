@@ -133,8 +133,8 @@ export function createItemSystem(data) {
     const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
     const N = data.naming;
     /**
-     * 죄종 하나를 굴린다 — **그 굴림의 남은 자리(소수부)로 이름 단어의 단 번호도 낸다** [2026-09-19 · item_design §1 「이름」 · INTERFACE §2-5 `words`].
-     * `r` 이 균등이면 `frac(r × 후보 수)` 도 균등이고 고른 죄종과 독립이라 **단어 넷 중 균등**이 된다 — rng 를 더 쓰지 않아 소비 순서가 그대로다(§5-2).
+     * 죄종 하나를 굴린다 — **그 굴림의 남은 자리(소수부)로 이름 단어의 번호도 낸다** [2026-09-19 · item_design §1 「이름」 · INTERFACE §2-5 `words`].
+     * `r` 이 균등이면 `frac(r × 후보 수)` 도 균등이고 고른 죄종과 독립이라 **그 죄종의 단어 중 균등**이 된다(지금 다섯 · R433) — rng 를 더 쓰지 않아 소비 순서가 그대로다(§5-2).
      * ⚠ 임시(사용자 지시 — 밸런싱 전) · 목표는 레벨 구간(`sin_word.csv:tier_min_ilvl`)이다
      */
     const pickSin = (rng, arr) => {

@@ -4448,7 +4448,7 @@ check('item: 죄종 수는 희귀도가 정한다 — 일반 0 · 매직 1 · �
 });
 /**
  * 아이템 이름 = 「A와 B의 베이스」 [2026-09-19 · 사용자 확정 · item_design §1 「이름」 · R118].
- * 죄종마다 단어 넷(`sin_word.csv`) · 단 번호는 그 죄종 굴림의 소수부(rng 소비 0) · 화면은 `sinPhrase` 조각으로 죄종 단어를 칠한다.
+ * 죄종마다 단어 다섯(`sin_word.csv` · 단 1 에 둘 — R433) · 단어 번호는 그 죄종 굴림의 소수부(rng 소비 0) · 화면은 `sinPhrase` 조각으로 죄종 단어를 칠한다.
  */
 check('csv: sin_word — 죄종마다 단이 같은 수 · 첫 단 = 원래 죄종 이름(ko · adj) · 단어가 서로 겹치지 않는다 (item_design §1 「이름」 · R118)', () => {
     const sins = Object.keys(M.SINS);
@@ -4459,6 +4459,8 @@ check('csv: sin_word — 죄종마다 단이 같은 수 · 첫 단 = 원래 죄�
         const ws = D.sinWords[sin] ?? [];
         if (ws.length !== n) fail(`${sin} 단 ${ws.length} ≠ ${n}`);
         if (ws[0].ko !== M.SINS[sin].ko || ws[0].en !== M.SINS[sin].adj) fail(`${sin} 첫 단 ${ws[0].ko}/${ws[0].en} ≠ ${M.SINS[sin].ko}/${M.SINS[sin].adj}`);
+        // 옛 세이브의 단어 번호 0 ~ 3 = 단 1 ~ 4 — 새 단어는 끝에만 붙는다(파일 순서 · R433)
+        if (ws.slice(0, 4).map(w => Number(w.tier)).join() !== '1,2,3,4') fail(`${sin} 번호 0 ~ 3 의 단 ${ws.slice(0, 4).map(w => w.tier)} — 옛 장비 이름이 바뀐다`);
         if (SYS.naming.wordCount(sin) !== n) fail(`wordCount(${sin}) ${SYS.naming.wordCount(sin)}`);
         all.push(...ws);
     }

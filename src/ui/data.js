@@ -261,17 +261,20 @@ export async function loadData(base = './data/') {
     // 무기 베이스 — 무기군별 7종 이름 풀. **아직 두 무기군뿐**(item_design.md §1 「이름 — 9군」 — 나머지는 미정/미발주).
     //   드롭 시 이 풀이 있는 무기군만 `item.build` 가 하나를 굴려 이름·그림을 그 베이스로 좁힌다(없으면 무기군 이름 그대로).
     //   ⚠ 행 순서가 대역 순(기본 → ①A·①B → ②A·②B → ③A·③B)이지만 **굴림은 균등** — 대역별 ilvl 경계는 아직 없다(DEV_PLAN R62)
-    // 아이템 이름의 죄종 단어 [2026-09-19 · item_design §1 「이름」] — 죄종마다 단 순서로 정렬한다(행 순서는 계약이 아니다 · **단의 순서가 계약**).
-    //   드롭이 단 번호를 굴리므로(INTERFACE §2-5 `words`) 죄종마다 단 수가 같고 1 부터 이어져야 한다 — 아니면 멈춘다.
-    //   ⚠ `tier_min_ilvl` 은 아직 안 읽는다 — 목표는 레벨 구간이고 밸런싱 전까지는 넷 중 균등이다
+    // 아이템 이름의 죄종 단어 [2026-09-19 · item_design §1 「이름」] — 죄종마다 **파일 순서**로 읽는다(`tier` 로 정렬하지 않는다 · 2026-11-10 R433).
+    //   드롭이 단어 번호를 굴려 세이브에 박으므로(INTERFACE §2-5 `words`) **그 죄종 행의 순서가 계약**이다 — 새 단어는 죄종 행의 끝에만 붙인다.
+    //   죄종마다 단 배열이 같고 · 첫 단어가 단 1 · 단 1 부터 끝까지 빠짐없어야 한다 — 아니면 멈춘다 (단 1 에 단어가 둘 — R433).
+    //   ⚠ `tier_min_ilvl` 은 아직 안 읽는다 — 목표는 레벨 구간이고 밸런싱 전까지는 그 죄종의 단어 중 균등이다
     D.sinWords = {};
-    for (const r of sinWordRow.slice().sort((a, b) => a.tier - b.tier)) {
+    for (const r of sinWordRow) {
         if (!M.SINS[r.sin]) throw new Error(`data: sin_word.csv 의 '${r.word_id}' — 모르는 죄종 '${r.sin}'`);
         (D.sinWords[r.sin] ??= []).push({ ko: r.name_kr, en: r.name_en, tier: r.tier });
     }
     const wordTiers = Object.keys(M.SINS).map(k => (D.sinWords[k] ?? []).map(w => w.tier).join(','));
-    if (new Set(wordTiers).size !== 1 || !wordTiers[0] || wordTiers[0].split(',').some((t, i) => Number(t) !== i + 1))
-        throw new Error(`data: sin_word.csv — 죄종마다 단이 1 부터 같은 수만큼 있어야 한다 (${wordTiers.join(' / ')})`);
+    const tierList = (wordTiers[0] ?? '').split(',').map(Number), tierMax = Math.max(...tierList);
+    if (new Set(wordTiers).size !== 1 || !wordTiers[0] || tierList[0] !== 1
+        || Array.from({ length: tierMax }, (_, i) => i + 1).some(t => !tierList.includes(t)))
+        throw new Error(`data: sin_word.csv — 죄종마다 단 배열이 같고 첫 단어가 단 1 · 단 1 부터 빠짐없어야 한다 (${wordTiers.join(' / ')})`);
     D.weaponBases = {};
     // `make_level` — 제작에서 이 베이스가 나오는 레벨 [2026-09-21 사용자 지시 · item_design §7-1] (드롭은 아직 안 읽는다)
     for (const r of weaponBaseRow) (D.weaponBases[r.group_id] ??= []).push({ id: r.base_id, ko: r.name_kr, en: r.name_en, makeLevel: Number(r.make_level) });

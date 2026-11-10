@@ -19,7 +19,7 @@ const hasBatchim = word => {
 /**
  * @param {object} data
  *   sins     — {sinId: {ko, en, adj}}  ko/en = 표시명 · adj = 영문 형용사(Wrathful …)
- *   sinWords — {sinId: [{ko, en}]} 아이템 이름의 죄종 단어 — **단 순서**(`sin_word.csv` 를 tier 로 정렬 · 2026-09-19).
+ *   sinWords — {sinId: [{ko, en}]} 아이템 이름의 죄종 단어 — **파일 순서**(`sin_word.csv` 의 그 죄종 행 순서 · 번호가 세이브에 박혀 tier 로 정렬하지 않는다 · 2026-11-10 R433).
  *              ko = 명사(격노) · en = 형용사(Raging). 없는 죄종은 한 단짜리 — 원래 죄종 이름(ko · adj)
  */
 export function createNaming(data) {
@@ -29,9 +29,9 @@ export function createNaming(data) {
     const pair = base => (typeof base === 'string' ? { ko: base, en: base } : base);
 
     const wordsOf = sin => (W[sin]?.length ? W[sin] : [{ ko: S[sin].ko, en: S[sin].adj }]);
-    /** 그 죄종의 단어 수 — 드롭이 단 번호를 고르는 폭 (item.js · INTERFACE §2-5 `words`) */
+    /** 그 죄종의 단어 수 — 드롭이 단어 번호를 고르는 폭 (item.js · INTERFACE §2-5 `words`) */
     const wordCount = sin => wordsOf(sin).length;
-    /** 칸의 단어 — 단 번호가 없거나 범위 밖이면 첫 단(원래 죄종 이름) */
+    /** 칸의 단어 — 단어 번호가 없거나 범위 밖이면 첫 단어(원래 죄종 이름) */
     const wordAt = (sin, i) => { const ws = wordsOf(sin); return ws[i] ?? ws[0]; };
 
     /**
