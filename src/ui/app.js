@@ -1357,6 +1357,16 @@ const NICK_MAX = 16;
 const TRACK_ON = !DEV_HOST && !new URLSearchParams(location.search).has('dev');
 // 이 탭이 마지막으로 올린 것(세이브 저장 시각 + 닉네임) — 같으면 안 올린다. 화면 상태가 아니라서 `state` 밖에 둔다
 const track = { sent: null, busy: false };
+// 콜로세움 데모 받기 간격 — 결투 뒤 이만큼 지났을 때만 다시 받는다(켤 때는 늘). 무료 한도(하루 읽기) 사정이라 CSV 가 아니다 (위와 같은 선례 · arena_design §9)
+const ARENA_PULL_MS = 10 * 60 * 1000;
+/* 콜로세움 데모 (SCREEN_DESIGN §1 「온라인 데모」 · ADR-1040 · arena_design §9) — 받은 고스트 · 방어 기록 · 마지막으로 올린 방어 편성.
+   `pool` = 검사를 지난 고스트 `[{id, nick, rating, team}]`(null = 아직 못 받음) · `log` = 방어 기록 · `nicks` = 고스트 id → 닉네임(후보가 든 id 를 푼다) ·
+   `sent` = 마지막으로 올린 방어 편성 묶음(같으면 안 올린다) · `drop` = 해제했고 아직 못 지웠다 · `fake` = `?dev=arena&ghosts=1` 의 가짜 */
+const arenaNet = { pool: null, log: null, nicks: new Map(), at: 0, busy: false, sent: null, drop: false, fake: false };
+const ARENA_DEF_RESULT = { win: 'loss', draw: 'draw', loss: 'win' };   // 공격자의 결과 → 방어자 쪽 결과
+/** 남이 정한 문자열을 화면 HTML 에 넣기 전에 — 닉네임 · 지난 기록 (받은 팀은 `validateTeam` 의 `text` 사유가 거른다) */
+const escHtml = s => String(s ?? '').replace(/[&<>"'`]/g, c => `&#${c.charCodeAt(0)};`);
+const arenaNick = nick => (typeof nick === 'string' && nick.trim() ? escHtml(nick.trim().slice(0, NICK_MAX)) : t('ar.noName'));
 
 /** 진행 요약 — 세이브에서 칸을 **고르기만** 한다. 칸의 뜻은 INTERFACE §4 「플레이 기록」 */
 function trackSummary(local, rec) {
@@ -1397,8 +1407,55 @@ async function trackPush() {
     if (sent === track.sent) return;
     track.busy = true;
     const r = await CLOUD.pushTrack(trackSummary(local, rec), local);
+    // 콜로세움 방어 편성은 따로 쓴다 — 규칙이 이 문서를 거부해도 플레이 기록은 올라간다 (cloud.js `pushArenaTeam` · arena_design §9)
+    const arena = arenaUpload(rec.nick);
+    const a = arena ? await CLOUD.pushArenaTeam(arena.doc) : null;
     track.busy = false;
     if (r.ok) track.sent = sent;
+    if (a?.ok) Object.assign(arenaNet, { sent: arena.key, drop: arena.doc === 'drop' ? false : arenaNet.drop });
+}
+
+/** 콜로세움 방어 편성 묶음 — 등록했고 세 명이 찼으면 그 편성의 지금 모습 · 해제했으면 'drop' · 지난번과 같거나 올릴 것이 없으면 null (arena_design §9) */
+function arenaUpload(nick) {
+    if (!G) return null;
+    if (arenaNet.drop) return { doc: 'drop', key: null };
+    const no = SYS.game.arenaDefense(G);
+    if (no === null) return null;
+    const heroes = SYS.game.partyOf(G, no).map(heroById).filter(Boolean);
+    if (heroes.length !== SYS.arena.teamSize) return null;
+    const team = JSON.stringify(SYS.arena.exportTeam(heroes, G.items, SYS.game.formationState(G, no).byUid));
+    const doc = { nick, rating: SYS.game.arenaState(G).rating, team };
+    const key = JSON.stringify(doc);
+    return key === arenaNet.sent ? null : { doc, key };
+}
+
+/** 받기 — 켤 때(`force`) · 결투 뒤 간격이 지났을 때. 개발 환경은 안 받는다 (SCREEN_DESIGN §1 「온라인 데모」) */
+async function arenaPull(force = false) {
+    if (!TRACK_ON || frozen || arenaNet.busy) return;
+    if (!force && now() - arenaNet.at < ARENA_PULL_MS) return;
+    arenaNet.busy = true;
+    const r = await CLOUD.pullArena();
+    arenaNet.busy = false;
+    if (!r.ok) return;
+    arenaNet.at = now();
+    arenaTake(r.teams.filter(x => x.id !== r.me), r.log);
+}
+
+/** 받은 것을 화면 상태로 — 팀은 `importTeam` 을 지난 것만 · 처음 받으면 후보를 새로 굴린다(관전 중이면 돌아올 때) */
+function arenaTake(teams, log, quiet = false) {
+    const first = arenaNet.pool === null;
+    arenaNet.pool = teams.map(x => {
+        let payload = null;
+        try { payload = JSON.parse(x.team); } catch { return null; }
+        const r = SYS.arena.importTeam(payload);
+        if (!r.ok || !Number.isInteger(x.rating) || x.rating < 0) return null;
+        arenaNet.nicks.set(x.id, x.nick);
+        return { id: x.id, rating: x.rating, team: r.team };
+    }).filter(Boolean);
+    arenaNet.log = log.filter(x => x && x.result in ARENA_DEF_RESULT && Number.isInteger(x.rating));
+    if (first && arenaNet.pool.length) state.arena.fresh = true;
+    // 글상자를 치는 중(친선전 창)이면 다시 그리지 않는다 — 커서를 잃는다
+    if (!quiet && state.tab === 'arena' && !state.modal) render();
 }
 
 /** 다른 탭이 세이브를 썼다 — 이 탭은 저장 · 원정 시계 · 올리기를 멈추고 멈춤 창만 남긴다. 먼저 쓴 쪽이 남는다 (§2-1) */
@@ -1595,10 +1652,26 @@ const arenaOutcome = result => (result.reason === 'timeout' ? 'draw' : result.wo
 const ARENA_OUTCOME_KEY = { win: 'bt.won', draw: 'ar.draw', loss: 'bt.lost' };
 /** 레이팅 변화 표기 — `+16` · `−8` · `±0` */
 const signed = n => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '±0');
-/** 콜로세움 상대 후보 셋을 새로 굴린다 — 내 레이팅 근처 · 이름은 고른 편성과 안 겹친다 · 가운데(비슷)가 골라진다 */
+/** 콜로세움 상대 후보 셋을 새로 굴린다 — 내 레이팅 근처 · 받은 고스트가 먼저(arena_design §9) · 이름은 고른 편성과 안 겹친다 · 가운데(비슷)가 골라진다 */
 function arenaRollCands(A) {
-    A.cands = SYS.arena.rollRatedCandidates(SYS.game.arenaState(G).rating, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]), arenaPicked().map(h => h.name));
+    A.cands = SYS.arena.rollRatedCandidates(SYS.game.arenaState(G).rating, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]), arenaPicked().map(h => h.name), arenaNet.pool ?? []);
     A.pick = A.pick === 'ghost' && A.ghost ? 'ghost' : 1;
+}
+
+/** 방어 편성 등록 · 해제 — 세이브에 적고 바로 올린다(해제면 지운다 · SCREEN_DESIGN §1 「온라인 데모」) */
+function arenaSetDefense(no) {
+    if (!SYS.game.setArenaDefense(G, no).ok) return;
+    Object.assign(arenaNet, { drop: no === null, sent: null });
+    save();
+    render();
+    trackPush();
+}
+
+/** 방어 편성 상태 줄의 문구 키 — 등록 안 함 / 세 명이 안 찼다 / 배포판에서만 / 올라감 */
+function arenaDefStatus(no) {
+    if (no === null) return 'ar.def.off';
+    if (SYS.game.partyOf(G, no).length !== SYS.arena.teamSize) return 'ar.def.need';
+    return TRACK_ON || arenaNet.fake ? 'ar.def.up' : 'ar.def.local';
 }
 
 /** 팀 코드 ↔ 글상자 문자열 — UTF-8 JSON 을 base64 로 싼다. 운반 포장은 화면의 일이다(로직은 엔진 중립 JSON 까지 · INTERFACE §2-17) */
@@ -1740,13 +1813,20 @@ function renderArena(main) {
     arenaShell(main, 'nav.arena', 'colosseum', arenaRail(A), arenaStage(A, {
         bg: M.COLOSSEUM_BG,
         opponent: ghost ? A.ghost : cand?.team ?? null,
-        from: ghost ? t('ar.friendlyCard') : cand ? t('ar.from', { tier: tierName(cand.tier), rating: cand.rating }) : null,
+        from: ghost ? t('ar.friendlyCard')
+            : cand?.ghost ? t('ar.fromGhost', { name: arenaNick(arenaNet.nicks.get(cand.ghost)), tier: tierName(cand.tier), rating: cand.rating })
+            : cand ? t('ar.from', { tier: tierName(cand.tier), rating: cand.rating }) : null,
         fightLabel: t('ar.fight'),
         onFight: result => {
             const outcome = arenaOutcome(result);
             // 친선전은 레이팅을 안 움직인다 · 랭크전은 **싸운 순간** 적는다 — 관전 중에 창을 닫아도 이미 적혔다 (arena_design §8)
             if (ghost) { A.last = { outcome, sec: result.durationSec, rated: false }; return; }
             const r = SYS.game.arenaRecord(G, cand.rating, outcome);
+            // 고스트였으면 방어자의 기록함에 한 줄 — 방어자 레이팅은 안 움직인다 · 받기는 간격이 지났을 때만 (arena_design §9)
+            if (cand.ghost && TRACK_ON) {
+                CLOUD.pushArenaHit(cand.ghost, { nick: loadTrack().nick, rating: r.before, result: ARENA_DEF_RESULT[outcome] });
+                arenaPull();
+            }
             save();
             A.last = { outcome, rated: true, after: r.after, delta: r.delta };
             A.fresh = true;
@@ -1778,12 +1858,26 @@ function arenaRail(A) {
     card.appendChild(info);
     rail.appendChild(card);
     rail.appendChild(el('div', 'ar-record muted', `${t('ar.peak', { n: s.peak })} · ${t('ar.record', { w: s.win, d: s.draw, l: s.loss })}`));
+    // 방어 편성 — [없음] · 열린 편성 번호 · 아래 상태 한 줄 (ADR-1040 · arena_design §9)
+    rail.appendChild(helpHeading('h3', 'sub-h ar-def-h', t('ar.def'), 'defense'));
+    const def = SYS.game.arenaDefense(G);
+    const defRow = el('div', 'ar-def');
+    const defBtn = (no, label) => {
+        const b = el('button', `btn sm${def === no ? ' on' : ''}`, label);
+        b.onclick = () => { if (def !== no) arenaSetDefense(no); };
+        defRow.appendChild(b);
+    };
+    defBtn(null, t('ar.def.none'));
+    for (let no = 1; no <= SYS.game.presetState(G).count; no++) defBtn(no, M.roman(no));
+    rail.appendChild(defRow);
+    rail.appendChild(el('div', 'ar-def-st muted', t(arenaDefStatus(def))));
     rail.appendChild(helpHeading('h3', 'sub-h ar-cands-h', t('ar.cands'), 'opponents'));
     const list = el('div', 'ar-cands');
     A.cands.forEach((c, k) => {
         const st = SYS.game.arenaStakes(G, c.rating);
-        const b = el('button', `ar-cand${A.pick === k ? ' on' : ''}`,
-            `${M.arenaArt(c.tier)}<span class="ar-cand-r"><b>${c.rating}</b><small>${t('ar.ai')}</small></span>`
+        const who = c.ghost ? arenaNick(arenaNet.nicks.get(c.ghost)) : t('ar.ai');
+        const b = el('button', `ar-cand${A.pick === k ? ' on' : ''}${c.ghost ? ' player' : ''}`,
+            `${M.arenaArt(c.tier)}<span class="ar-cand-r"><b>${c.rating}</b><small>${who}</small></span>`
             + `<span class="ar-cand-stake"><em class="up">${signed(st.win)}</em><em class="down">${signed(st.loss)}</em></span>`);
         b.onclick = () => { if (A.pick !== k) { A.pick = k; render(); } };
         list.appendChild(b);
@@ -1802,6 +1896,18 @@ function arenaRail(A) {
     friendly.onclick = () => openModal('arenaCode');
     btns.append(fresh, friendly);
     rail.appendChild(btns);
+    // 방어 기록 — 받기를 하는 환경에만 선다 · 보기 전용(레이팅 무관 · arena_design §9)
+    if (TRACK_ON || arenaNet.fake) {
+        rail.appendChild(helpHeading('h3', 'sub-h ar-log-h', t('ar.log'), 'defense'));
+        const box = el('div', 'ar-log');
+        const rows = arenaNet.log ?? [];
+        if (!rows.length) box.appendChild(el('div', 'ar-log-none muted', t('ar.log.none')));
+        for (const x of rows) {
+            const tone = x.result === 'win' ? 'up' : x.result === 'loss' ? 'down' : '';
+            box.appendChild(el('div', 'ar-log-row', `<span class="ar-log-at muted">${x.at ? agoText(x.at) : ''}</span><b>${arenaNick(x.nick)}</b><small>${x.rating}</small><em class="${tone}">${t(`ar.log.${x.result}`)}</em>`));
+        }
+        rail.appendChild(box);
+    }
     // 리그 표 — 어느 문턱을 넘으면 무엇이 되는지가 늘 보인다(맨 위 = 가장 높은 리그 · 내 리그 강조 · 위 리그는 흐린 휘장)
     const lgs = el('div', 'ar-leagues');
     tiers.forEach((x, k) => lgs.prepend(el('div', `ar-lg${k === i ? ' on' : k > i ? ' above' : ''}`, `${M.arenaArt(x.id)}<span>${L(x.name)}</span><em>${x.ratingMin}</em>`)));
@@ -9008,7 +9114,7 @@ function helpSections() {
         library: ['basics', 'craft', 'learn', 'upgrade', 'advance', 'points'],
         resource: ['lines', 'production', 'materials', 'research', 'assignment', 'hero_effects', 'jobs'],
         colosseum: ['prepare', 'floors', 'retry', 'rules'],
-        arena: ['rating', 'opponents', 'friendly', 'results'],
+        arena: ['rating', 'opponents', 'defense', 'friendly', 'results'],
         codex: ['monsters', 'classification', 'race_traits', 'family_formation', 'family_pressure', 'milestones', 'library_unlocks', 'art', 'skills', 'effects'],
         help: ['browse', 'common_terms', 'controls', 'when_stuck', 'settings', 'newgame', 'saving', 'away', 'credits'],
         lab: ['generator', 'rolling', 'results', 'raid_overview', 'raid_patterns', 'raid_trial'],
@@ -9732,7 +9838,25 @@ async function boot() {
             // `&rating=n` 레이팅(세이브에 적는다 · 개발 장치) · 후보는 시드 1 로 굴린다(헤드리스 재현)
             const A = arenaReset(state.arena);
             if (q.has('rating') && Number.isFinite(Number(q.get('rating')))) G.arena = { ...SYS.game.arenaState(G), rating: Number(q.get('rating')), peak: Math.max(SYS.game.arenaState(G).peak, Number(q.get('rating'))) };
-            A.cands = SYS.arena.rollRatedCandidates(SYS.game.arenaState(G).rating, makeRng(1), picked.map(h => h.name));
+            // `&def=n` 방어 편성 등록(세이브에 적는다) · `&ghosts=1` 가짜 고스트 넷 · 방어 기록 둘 — AI 팀을 팀 코드로 싸서 받기와 같은 길(`arenaTake`)로 넣는다
+            //   (닉네임 하나는 태그 글자를 품는다 — 화면이 글자를 거르는지 본다 · ADR-1040)
+            if (q.has('def')) SYS.game.setArenaDefense(G, Number(q.get('def')) || null);
+            if (q.get('ghosts') === '1') {
+                arenaNet.fake = true;
+                const at = SYS.game.arenaState(G).rating, rng = makeRng(2);
+                const teams = [-150, 40, 120, 400].map((d, k) => {
+                    const r = Math.max(0, at + d), team = SYS.arena.rollTierOpponent(SYS.arena.tierOfRating(r), rng);
+                    const items = Object.fromEntries(team.flatMap(p => p.gear).map(it => [it.uid, it]));
+                    const payload = SYS.arena.exportTeam(team.map(p => p.hero), items, Object.fromEntries(team.map(p => [p.uid, p.rank])));
+                    return { id: `dev-ghost-${k}`, nick: k === 1 ? '<b>Ghost</b>' : `Ghost ${k + 1}`, rating: r, team: JSON.stringify(payload) };
+                });
+                arenaTake(teams, [
+                    { by: 'dev', nick: 'Ghost 2', rating: at + 40, result: 'loss', at: now() - 3 * 3600 * 1000 },
+                    { by: 'dev', nick: '', rating: at - 150, result: 'win', at: now() - 26 * 3600 * 1000 },
+                ], true);
+            }
+            A.cands = SYS.arena.rollRatedCandidates(SYS.game.arenaState(G).rating, makeRng(1), picked.map(h => h.name), arenaNet.pool ?? []);
+            A.fresh = false;   // 가짜 고스트를 받으며 켜진 「새로 굴림」을 끈다 — 후보는 시드 1 그대로
             // `&friendly=1` 친선전 창 — 내 팀 코드를 만들고 그 코드를 불러온 채(자기 팀과 붙는다) · `&bad=1` 첫 영웅 레벨을 만렙 위로(사유 줄)
             if (q.get('friendly') === '1' && picked.length === SYS.arena.teamSize) {
                 const payload = SYS.arena.exportTeam(picked, G.items, ranks);
@@ -10021,6 +10145,8 @@ async function boot() {
         node?.onmouseenter?.(new MouseEvent('mouseenter', { clientX: 40, clientY: 40 }));
         // `&alt=1` — 올린 뒤 **Alt 를 누른 채** — 아이템 툴팁의 착용 델타도 누르는 동안만 선다(ADR-0658 · `?dev=play` 의 `&alt=1` 과 같다)
         if (q.get('alt') === '1') window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Alt' }));
+        // `&shift=1` — 올린 뒤 **Shift 를 누른 채** — 옵션 줄 끝의 굴림 범위(ADR-0617 · 줄 종류 · 단어마다 다른 범위 ADR-1041)
+        if (q.get('shift') === '1') window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift' }));
     }
     // `&cxtip=<skill_id>` — 도감 스킬 타일의 툴팁이 뜬 채 (§9-1 · §10 · ADR-0650) · 카드 옆에 붙는 툴팁이라 커서 자리는 상관없다
     //   숫자면 몬스터 idx — 도감 몬스터 카드의 툴팁(§9 · 2칸 줄을 보는 길 · ADR-0664)
@@ -10052,6 +10178,8 @@ function startClocks() {
     setInterval(trackPush, TRACK_PUSH_MS);
     window.addEventListener('pagehide', () => trackPush());
     trackPush();
+    // 콜로세움 데모 — 켤 때 한 번 받아 둔다(남의 방어 편성 · 내 방어 기록 · SCREEN_DESIGN §1 「온라인 데모」)
+    arenaPull(true);
 }
 
 boot().catch(e => {

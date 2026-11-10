@@ -1,0 +1,43 @@
+slot,slot_kind_kr,unlock_kr,option_id,cond_kr,score,stat,stat_kr,unit,common,magic,rare,leader_bonus
+1,무조건,지휘 천막 r1,opt_march_atk,조건 없음,0,atk_pct,데미지,0.02,0.02,0.03,0.05,1
+1,무조건,지휘 천막 r1,opt_march_hp,조건 없음,0,hp_pct,최대 HP,0.03,0.03,0.045,0.075,1
+1,무조건,지휘 천막 r1,opt_march_aspd,조건 없음,0,aspd_pct,공격 속도,0.02,0.02,0.03,0.05,1
+1,무조건,지휘 천막 r1,opt_march_cdr,조건 없음,0,cooldown_reduction,쿨타임 감소,0.02,0.02,0.03,0.05,1
+1,무조건,지휘 천막 r1,opt_march_def,조건 없음,0,def_flat,물리 방어,5,5,8,13,1
+1,무조건,지휘 천막 r1,opt_march_res,조건 없음,0,res_all,모든 원소 저항,0.03,0.03,0.045,0.075,1
+2,편성 구성,지휘 천막 r2,opt_party_sin_wrath,분노 영웅 3명 이상,5,crit_damage,치명타 피해,0.02,0.04,0.07,0.12,1
+2,편성 구성,지휘 천막 r2,opt_party_sin_envy,시기 영웅 3명 이상,5,res_reduction,원소 저항 감소,0.005,0.01,0.0175,0.03,1
+2,편성 구성,지휘 천막 r2,opt_party_sin_greed,탐욕 영웅 3명 이상,5,crit_rate,치명타 확률,0.005,0.01,0.0175,0.03,1
+2,편성 구성,지휘 천막 r2,opt_party_sin_sloth,나태 영웅 3명 이상,5,cooldown_reduction,쿨타임 감소,0.015,0.03,0.0525,0.09,1
+2,편성 구성,지휘 천막 r2,opt_party_sin_gluttony,폭식 영웅 3명 이상,5,hp_pct,최대 HP,0.02,0.04,0.07,0.12,1
+2,편성 구성,지휘 천막 r2,opt_party_sin_lust,색욕 영웅 3명 이상,5,buff_dur_pct,버프 지속시간,0.01,0.02,0.035,0.06,1
+2,편성 구성,지휘 천막 r2,opt_party_sin_pride,오만 영웅 3명 이상,5,atk_pct,데미지,0.015,0.03,0.0525,0.09,1
+2,편성 구성,지휘 천막 r2,opt_party_cls_warrior,전사 2명 이상,3,atk_pct,데미지,0.015,0.024,0.0405,0.0645,1
+2,편성 구성,지휘 천막 r2,opt_party_cls_knight,기사 2명 이상,3,def_flat,물리 방어,5,8,14,22,1
+2,편성 구성,지휘 천막 r2,opt_party_cls_mage,마법사 2명 이상,3,cast_speed_pct,캐스팅 속도,0.01,0.016,0.027,0.043,1
+2,편성 구성,지휘 천막 r2,opt_party_cls_archer,궁수 2명 이상,3,aspd_pct,공격 속도,0.015,0.024,0.0405,0.0645,1
+2,편성 구성,지휘 천막 r2,opt_party_cls_priest,사제 2명 이상,3,heal_out_pct,회복량,0.01,0.016,0.027,0.043,1
+3,능력치 합,지휘 천막 r3,opt_attr_str,파티 힘 합 40 이상,3,def_ignore,방어 무시,0.02,0.032,0.054,0.086,1
+3,능력치 합,지휘 천막 r3,opt_attr_agi,파티 민첩 합 35 이상,3,cooldown_reduction,쿨타임 감소,0.01,0.016,0.027,0.043,1
+3,능력치 합,지휘 천막 r3,opt_attr_int,파티 지능 합 35 이상,3,res_reduction,원소 저항 감소,0.01,0.016,0.027,0.043,1
+3,능력치 합,지휘 천막 r3,opt_attr_vit,파티 건강 합 35 이상,3,hp_pct,최대 HP,0.02,0.032,0.054,0.086,1
+3,능력치 합,지휘 천막 r3,opt_attr_luck,파티 운 합 35 이상,3,crit_damage,치명타 피해,0.02,0.032,0.054,0.086,1
+3,능력치 합,지휘 천막 r3,opt_attr_ldr,파티 통솔 합 35 이상,3,buff_dur_pct,버프 지속시간,0.01,0.016,0.027,0.043,1
+3,능력치 합,지휘 천막 r3,opt_attr_cha,파티 매력 합 35 이상,3,heal_out_pct,회복량,0.01,0.016,0.027,0.043,1
+4,전직,지휘 천막 r4,opt_adv_berserker,파티에 광전사,3,life_steal,흡혈,0.005,0.008,0.0135,0.0215,1
+4,전직,지휘 천막 r4,opt_adv_barbarian,파티에 바바리안,3,atk_pct,데미지,0.015,0.024,0.0405,0.0645,1
+4,전직,지휘 천막 r4,opt_adv_vanguard,파티에 선봉장,3,buff_dur_pct,버프 지속시간,0.01,0.016,0.027,0.043,1
+4,전직,지휘 천막 r4,opt_adv_guardian,파티에 가디언,3,def_flat,물리 방어,5,8,14,22,1
+4,전직,지휘 천막 r4,opt_adv_paladin,파티에 팔라딘,3,res_all,모든 원소 저항,0.02,0.032,0.054,0.086,1
+4,전직,지휘 천막 r4,opt_adv_crusader,파티에 크루세이더,3,reflect_damage,피해 반사,0.02,0.032,0.054,0.086,1
+4,전직,지휘 천막 r4,opt_adv_fire_mage,파티에 파이어 메이지,3,res_reduction,원소 저항 감소,0.01,0.016,0.027,0.043,1
+4,전직,지휘 천막 r4,opt_adv_frost_mage,파티에 프로스트 메이지,3,status_dur_pct,상태이상 지속시간,0.02,0.032,0.054,0.086,1
+4,전직,지휘 천막 r4,opt_adv_thunder_mage,파티에 썬더 메이지,3,crit_damage,치명타 피해,0.02,0.032,0.054,0.086,1
+4,전직,지휘 천막 r4,opt_adv_sniper,파티에 스나이퍼,3,def_ignore,방어 무시,0.02,0.032,0.054,0.086,1
+4,전직,지휘 천막 r4,opt_adv_bowmaster,파티에 보우마스터,3,aspd_pct,공격 속도,0.015,0.024,0.0405,0.0645,1
+4,전직,지휘 천막 r4,opt_adv_ranger,파티에 레인저,3,crit_rate,치명타 확률,0.005,0.008,0.0135,0.0215,1
+4,전직,지휘 천막 r4,opt_adv_bishop,파티에 비숍,3,heal_out_pct,회복량,0.01,0.016,0.027,0.043,1
+4,전직,지휘 천막 r4,opt_adv_black_priest,파티에 검은사제,3,debuff_dur_pct,디버프 지속시간,0.02,0.032,0.054,0.086,1
+4,전직,지휘 천막 r4,opt_adv_monk,파티에 몽크,3,hp_pct,최대 HP,0.02,0.032,0.054,0.086,1
+5,관계,지휘 천막 r5,opt_bond_100,셋이 함께 깬 칸 100개 이상,4,atk_pct,데미지,0.02,0.036,0.062,0.1,1
+5,관계,지휘 천막 r5,opt_bond_30,셋이 함께 깬 칸 30개 이상,2,hp_pct,최대 HP,0.03,0.042,0.069,0.108,1

@@ -41,12 +41,8 @@ attr_growth_chance_pct,0.35,proposed,0,⚠ **퇴역 — 코드가 안 읽는다*
 depart_level_gap_warn,10,proposed,1,출정 확인 창이 레벨 차이를 묻는 문턱 — 파티 평균 레벨과 칸 레벨의 차이가 이 값 이상이면 [보내기]에서 묻는다(위아래 모두 · 창에서 보낸 출발만 · game.departLevelGap · SCREEN_DESIGN §4-1 · R418)
 xp_rate,1,proposed,1,전투 XP 합 → 영웅 각자 지급 배율 (그 라운드를 이긴 순간 살아 있는 영웅만 — 2026-09-14 R89 · ~~전원 동일 지급~~) (2026-08-25 초반 루프 구현하면서 발생) (2026-09-22 사용자 「1배율 기준」 0.5→1 — 레벨 속도는 level_xp.csv 가 맡는다)
 xp_level_gap_mult,0.9,proposed,1,레벨 차 경험치 감쇠 — 영웅이 몬스터보다 **높은 레벨 하나마다** 그 몬스터의 처치 XP 에 이 값을 곱한다(`× 값 ^ 레벨 차` · 1 = 감쇠 없음). 영웅마다 따로 재고 몬스터가 같거나 높으면 안 깎는다 · 저레벨 칸만 돌아 끝없이 오르는 것을 막는다 ⚠임시 [신설 2026-09-30 사용자 「일단 10%로 적용해보자」 · hero_design §5]
-monster_gold_base,40,proposed,1,처치 골드의 레벨 1 기준값 — 처치 골드 = monster_gold_base × monster_gold_growth ^ (몬스터 레벨 − 1) × monster.csv:exp_coef × 초반 지원 배수(monster_gold_support_*) × spawn_grade.gold_mult × gold_rate — 등급의 exp_mult 는 안 탄다(2026-10-23 R330). 처치 XP 는 level_xp.csv:monster_xp 로 갈라졌다 — 이 곡선은 골드만 탄다 (2026-09-28 ~~monster_xp_base~~ 에서 이름만 옮김 · PLAN_early_progression D3)
-monster_gold_growth,1.06,proposed,1,처치 골드 기본 곡선의 레벨당 배율 — 초반 지원 배수를 적용하기 전 몬스터 레벨이 1 오르면 이만큼 곱한다 (2026-09-28 ~~monster_xp_growth~~ 에서 이름만 옮김 · D3)
-monster_gold_support_start_mult,2,proposed,1,초반 처치 골드 지원 — 실제 몬스터 레벨 1의 배수 · mid_level의 mid_mult까지 선형 감소하고 end_level부터 중립 배수 · 기존 골드 곡선과 등급·파티·도감 보정에 곱한 뒤 한 번 반올림 (2026-10-30 사용자 선택)
-monster_gold_support_mid_level,10,proposed,1,초반 처치 골드 지원의 중간 몬스터 레벨 — 시작 배수에서 mid_mult로 이어지는 지점 (2026-10-30 사용자 선택)
-monster_gold_support_mid_mult,1.5,proposed,1,초반 처치 골드 지원의 중간 배수 — mid_level부터 end_level의 중립 배수까지 선형 감소 (2026-10-30 사용자 선택)
-monster_gold_support_end_level,20,proposed,1,초반 처치 골드 지원이 끝나는 실제 몬스터 레벨 — 이 레벨부터 기존 처치 골드와 같음 (2026-10-30 사용자 선택)
+monster_gold_base,40,proposed,1,처치 골드의 레벨 1 기준값 — 처치 골드 = monster_gold_base × monster_gold_growth ^ (몬스터 레벨 − 1) × monster.csv:exp_coef × spawn_grade.gold_mult × gold_rate — 등급의 exp_mult 는 안 탄다(2026-10-23 R330). 처치 XP 는 level_xp.csv:monster_xp 로 갈라졌다 — 이 곡선은 골드만 탄다 (2026-09-28 ~~monster_xp_base~~ 에서 이름만 옮김 · PLAN_early_progression D3)
+monster_gold_growth,1.06,proposed,1,처치 골드 곡선의 레벨당 배율 — 몬스터 레벨이 1 오르면 이만큼 곱한다 (2026-09-28 ~~monster_xp_growth~~ 에서 이름만 옮김 · D3)
 unarmed_atk,3.0,proposed,0,무기 없을 때 기본 데미지 (2026-08-25 초반 루프 구현하면서 발생) (2026-10-02 사용자 「공격속도 절반 · 데미지 2배」 — 무기 피해 ×2 에 맞춰 1.5 → 3.0)
 unarmed_period,2.7,proposed,0,무기 없을 때 행동 주기(초) (2026-08-25 초반 루프 구현하면서 발생) (2026-09-25 사용자 「공격속도 절반」 — 전 무기 주기 ×2 에 맞춰 1.3 → 2.6 · 안 올리면 맨손이 모든 무기보다 빨라진다) (2026-09-28 사용자 「30% 정도만 올려보자」 — 전 무기 공격 속도 ×1.3 에 맞춰 2.6 → 2.0 · 가장 빠른 본편 무기와 같다) (2026-10-02 사용자 「공격속도 절반 · 데미지 2배」 — 전 무기 주기 ×2 에 맞춰 2.0 → 4.0) (2026-10-14 사용자 「지금의 1.5배 정도로」 — 전 무기 공격 속도 ×1.5 에 맞춰 4.0 → 2.7 · 가장 빠른 본편 무기와 같다)
 period_floor_sec,0.4,proposed,1,행동 주기의 바닥(초) [2026-10-29 · R386 · battle_design §2] — 장비 · 마스터리 · 버프 공속을 다 거친 **최종 주기**가 이 밑으로 안 간다 · 옛 hero.js 상수 0.4 를 옮겼다(그때는 장비 층에만 걸렸다) · 공속 식(÷ (1 + 공속 합))이라 현실적인 최대 쌓기에서는 거의 안 걸리는 안전판 ⚠임시
@@ -122,7 +118,13 @@ item_random_lines_magic,1,fixed,0,랜덤 줄 수 — 매직 [신설 2026-10-24 �
 item_random_lines_rare,1,fixed,0,랜덤 줄 수 — 레어 [신설 2026-10-24 · R342] — 일반 행과 같은 규칙 · 크래프트(매직 + 고른 죄종)도 레어와 줄 수가 같다
 item_random_lines_epic,2,fixed,0,랜덤 줄 수 — 에픽(나이트메어부터) [신설 2026-10-24 사용자 「에픽은 나이트메어부터」 · R342] — 일반 행과 같은 규칙
 item_random_lines_legendary,3,fixed,0,랜덤 줄 수 — 레전더리(헬에서만) [신설 2026-10-24 사용자 「레전더리는 헬에서만」 · R342] — 일반 행과 같은 규칙 · 이 개정 전 랜덤 칸이 다 붙은 레어와 줄 수가 같다
-item_roll_skew,2,proposed,1,값 굴림의 치우침 세기 — 아이템 레벨 1 = 낮은 값 쪽 삼각 분포 · 그 가운데 = 균등 · 만렙 = 높은 값 쪽 삼각 분포(1 = 언제나 균등 · 클수록 끝이 세다) · 범위 양끝은 그대로 · 거는 곳 = 베이스 옵션 · 죄종 줄 · 랜덤 줄 · 목걸이 발동 확률(쿨타임 배수는 균등 — 미정) [2026-10-20 사용자 「좌로치우친분포에서 우로치우친분포」 · 「전부 걸어야해」 · item_design §2-1 · R291 — ~~magic_option_max_mult~~(10-18) 퇴역]
+item_roll_skew,2,proposed,1,값 굴림의 치우침 세기 — 아이템 레벨 1 = 낮은 값 쪽 삼각 분포 · 그 가운데 = 균등 · 만렙 = 높은 값 쪽 삼각 분포(1 = 언제나 균등 · 클수록 끝이 세다) · 범위 양끝은 그대로 · 거는 곳 = 베이스 옵션 · 방어구 갈래 특성 · 목걸이 · 반지 베이스 · 목걸이 발동 확률(쿨타임 배수는 균등 — 미정) · **죄종 줄 · 랜덤 줄에는 안 건다**(레벨이 단어를 열어 대신한다 — 2026-11-10 · R436 · 아래 sin_word_*) [2026-10-20 사용자 「좌로치우친분포에서 우로치우친분포」 · 「전부 걸어야해」 · item_design §2-1 · R291 — ~~magic_option_max_mult~~(10-18) 퇴역]
+sin_word_band_step,0.2,fixed,1,죄종 줄 · 랜덤 줄 값의 한 칸 = 그 옵션 표 위끝(max) × 이 값 [2026-11-11 사용자 결정 U2 「규칙으로 계산」 · 11-10 「범위를 쪼개는거야」 · R436 · item_design §1 「값은 단어 범위가 정한다」] — 단어 하나 오르면 범위가 한 칸 위로 · 옵션 표의 아래끝(min)은 안 쓴다 · item.js tierBand · 초안 표 output/2026-11-10_sin_word_bands/bands.md
+sin_word_band_width,2,fixed,0,단어 범위의 폭(칸 수) [U2 · R436] — 이웃 단어와 (폭 − 1)칸 겹친다 · 범위 = [위끝 − 폭 × 칸 · 위끝]
+sin_word_band_anchor,3,fixed,0,위끝이 옵션 표 위끝(max)인 단 [U2 · R436 — 셋째 단어(광란)의 위끝 = 옵션 표 위끝] — 단 k 의 위끝 = max × (1 + (k − 이 값) × sin_word_band_step)
+sin_word_weight_low,6,fixed,0,메인 줄 단어 확률 — 메인 후보(열린 단어 중 위 셋)의 맨 아래 [사용자 11-10 「6:3:1로 가보자」 · R436 · item_design §1 「굴림」] — 후보가 둘이면 low : mid · 하나면 그 하나 · 단어는 죄종 굴림의 소수부로 고른다(rng 소비 무변경 · INTERFACE §2-5 words)
+sin_word_weight_mid,3,fixed,0,메인 줄 단어 확률 — 메인 후보의 가운데 [11-10 · R436] — sin_word_weight_low 행과 같은 규칙
+sin_word_weight_high,1,fixed,0,메인 줄 단어 확률 — 메인 후보의 맨 위(가장 드물다) [11-10 · R436] — sin_word_weight_low 행과 같은 규칙
 weapon_fixed_atk_pct_min,0.01,proposed,0,무기 베이스 옵션 「무기 데미지 +%」 최소 — 무기면 무조건 1개 · 값만 굴린다 · 1~200% 균등 굴림(아이템 레벨 무관) ⚠제안 (2026-09-21 사용자 지시)
 weapon_fixed_atk_pct_max,2,proposed,0,무기 베이스 옵션 「무기 데미지 +%」 최대 — 200% ⚠제안 (2026-09-21 사용자 지시)
 armor_fixed_def_pct_min,0.01,proposed,0,방어구 베이스 옵션 방어력 +% 최소 — 방어구면 무조건 1개 · 값만 굴린다 · 그 장비 자신의 고유 방어력에만 곱한다(개체 편차를 대신한다) · 1~200% 균등 굴림(아이템 레벨 무관) ⚠제안 (2026-09-21 사용자 지시)

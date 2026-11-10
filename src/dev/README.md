@@ -143,14 +143,14 @@ $b = [System.IO.File]::ReadAllBytes($json); "$($b.Length) bytes · first3 = $($b
 | `?dev=prologue` | 프롤로그 (SCREEN_DESIGN §3-1) — `&s=n` 이면 n번째 씬. 마지막 씬(5)만 인용·챕터 줄이 선다 (2026-09-03) |
 | `?dev=book` | **책을 쥔 도서관 탭** (SCREEN_DESIGN §17 · R179 · ADR-0426) — 도서관 끝까지(책 · 전직 — ADR-0567) · 책 만들기 첫 칸 · 가진 책 둘째 칸을 고른 채(ADR-0570 · ADR-0573) · 영웅 0 레벨 `skillbook_learn_level` · 책 셋(제 직업 책은 두 권씩 — 권수 `×n` 이 보인다 · ADR-0460) 중 하나를 배운 채로 연다 · **고유 책 한 권**도 쥔다 — 배운 책 · 고유 책 줄이 [업그레이드] 로 선다 (2026-10-06 · R216 · ADR-0529) · **`&bkcls=<class_id>`** 제작 칸의 그 직업 탭을 고른 채(ADR-1021) · **`&overwrite=1`** 덮어쓰기 확인 창을 연 채(ADR-1020) |
 | `?dev=tree` | **스킬 창이 열린** 캐릭터 탭 — 창은 버튼으로만 열린다. 영웅 0 에게 포인트 [balance.csv:mastery_t1_max_rank] 를 주고 **한 칸을 미리 찍어 둔다** (2026-09-08) — 새 게임은 포인트가 0 이라 창의 결정 둘(찍기 · **우클릭 되돌리기**)에 못 닿았다 · **`&adv=1`** 이면 영웅 0 을 전직시키고 전직 스킬을 배워 한 단계 올린 채로 연다 — 전직 판(메인 + 꼬리 셋)이 열리며 공용 스킬 포인트 한 줄과 메인 다음 단계의 영웅 레벨 조건을 확인한다 (2026-10-06 · R216 · ADR-0529) |
-| `?dev=arena` | **결투장 탭(ELO)** (2026-10-12 · SCREEN_DESIGN §1 · ADR-0602 · 탭 둘 2026-10-18 · ADR-0670) — 후보 셋을 **고정 씨앗 1** 로 굴린 채(늘 같다 · 가운데가 골라짐) · `&rating=n` 레이팅을 세이브에 적고 그 근처로 · `&friendly=1` 내 팀 코드를 만들고 **그 코드를 불러온 채**(자기 팀과 붙는 친선전 카드가 골라진다) · `&bad=1` 을 겹치면 받은 코드의 첫 영웅 레벨을 만렙 위로 바꿔 불러온 채(친선전 창이 사유 줄을 든 채 뜬다) · `&modal=1` 친선전 창을 연 채 · `&lv=n` 고른 편성 영웅을 레벨 n 까지(이긴 쪽 화면을 본다) · `&tpl=<formation_template.csv:tpl_id>` 고른 편성의 진형(`2-1` · `1-2` · `0-3`) (`&tab=party` 를 겹치면 그 진형의 편성 보드) |
+| `?dev=arena` | **결투장 탭(ELO)** (2026-10-12 · SCREEN_DESIGN §1 · ADR-0602 · 탭 둘 2026-10-18 · ADR-0670) — 후보 셋을 **고정 씨앗 1** 로 굴린 채(늘 같다 · 가운데가 골라짐) · `&rating=n` 레이팅을 세이브에 적고 그 근처로 · `&friendly=1` 내 팀 코드를 만들고 **그 코드를 불러온 채**(자기 팀과 붙는 친선전 카드가 골라진다) · `&bad=1` 을 겹치면 받은 코드의 첫 영웅 레벨을 만렙 위로 바꿔 불러온 채(친선전 창이 사유 줄을 든 채 뜬다) · `&modal=1` 친선전 창을 연 채 · `&lv=n` 고른 편성 영웅을 레벨 n 까지(이긴 쪽 화면을 본다) · `&tpl=<formation_template.csv:tpl_id>` 고른 편성의 진형(`2-1` · `1-2` · `0-3`) (`&tab=party` 를 겹치면 그 진형의 편성 보드) · **`&def=n`** 방어 편성 n 을 등록한 채(세이브에 적는다 · 2026-11-11) · **`&ghosts=1`** 가짜 고스트 넷(레이팅 −150 · +40 · +120 · +400 의 AI 팀을 팀 코드로 싸서 받기와 같은 길로 · 닉네임 하나는 태그 글자를 품는다) · 가짜 방어 기록 둘 — Firebase 를 안 부른다(SCREEN_DESIGN §1 「온라인 데모」 · ADR-1040) |
 | `?dev=colosseum` | **콜로세움 탭(층 사다리)** (2026-10-18 · SCREEN_DESIGN §1 · ADR-0670) — `&cleared=n` 오른 층을 세이브에 적은 채 · `&floor=n` 고른 층(깬 층 · 다음 층만 — 아니면 다음 층) · `&lv=n` · `&tpl=` 는 위와 같다. 층의 상대는 시드가 층 번호라 늘 같다 · **`&tdm=cols`** 는 두 탭 다 결투 관전 아래 두 팀 판을 **스킬별 보기**로 연다(2026-10-24 · ADR-0772 — 탭 id `colosseum` = 화면 「결투장」 · `arena` = 「콜로세움」 · ADR-0760) |
 | `?dev=tactics` | **편성 탭** — 전술 칸이 **전부 열린** 상태 (칸은 지휘 천막 랭크가 연다 — **지휘 천막을 끝까지 지은 채**로 연다 · R137 · SCREEN_DESIGN §15) |
 | `&cn=max` | **모든 건물을 끝까지 지은** 판 (R137 · SCREEN_DESIGN §10) — 새 게임은 대장간 · 선술집이 안 지어져 그 탭 · 기능에 곧장 못 닿는다. 문턱 · 비용을 건너뛰고 편성 수 · 물약 칸도 따라 는다. `?dev=search` · `?dev=gamble` · `?dev=form&lvl=n` · `?dev=mats` 는 제 건물만 끝까지 짓는다 |
 | `&cn=<건물>:<랭크>` | **그 건물 하나를 그 랭크로 둔** 건설 탭 — 그 건물을 고른 채 (2026-09-28 · SCREEN_DESIGN §10). 「다음 랭크」 칸이 건물 · 랭크마다 높이가 달라 가장 긴 판(예: `?dev=tactics&cn=forge:3&tab=research`)을 잴 때 쓴다 |
 | `&diff=<단>` | **그 난이도를 연 채 고른** 판 (2026-10-10 · R236 · SCREEN_DESIGN §4-1 · ADR-0586) — `difficulty_tier.csv:difficulty_id`(`nightmare` · `hell`). 앞 단마다 여는 칸(5장 보스)을 그 단의 기록에 넣고 고른다 — 새 게임은 노말만 열려 난이도 줄의 열린 모습 · 다른 단을 도는 부대 칸(`?dev=play&diff=nightmare`) · 리포트 머리(`?dev=battle&diff=nightmare`)에 못 닿는다 |
 | `&traits=<단>` | **관전 정예 카드의 특성 칩 예시** (2026-10-24 · SCREEN_DESIGN §4-2 · ADR-0775) — 로직이 굴린 칸(R344 — 그 런의 단만큼)을 **예시로 덮는다**: 헤드리스가 나이트메어 · 헬의 정예 라운드까지 못 가도 칸 둘 · 셋을 본다. `normal` · `nightmare` · `hell` = 칸 하나 · 둘 · 셋 · 정예마다 그 죄종 · 키에서 고른 고정 예시(난수 아님 · 이름은 실제 마스터리 T1 · 정예 특성 이름) · **`max` = 칸마다 지금 언어에서 가장 긴 이름** — 띠에서 신원이 얼마나 줄어드는지 보는 값(`&lang=en` 과 같이). 예: `?dev=play&stage=1051&lv=30&traits=hell`(챕터보스 판 — 첫 라운드부터 정예 호위 둘) |
-| `?dev=tip` | **아이템 툴팁이 떠 있는** 캐릭터 탭 (2026-09-10) — 툴팁은 hover 로만 뜬다. 한 런을 정산해 **주운 것을 다 입히고** 한 번 더 정산해 **가방에 비교 상대가 있는 물건**을 남긴다(새 게임은 몸에 무기 하나뿐이라 비교 두 장에 못 닿는다). `&i=n` 이면 n번째 찬 칸(기본 1 — 가방에 무엇이 떨어질지는 시드가 정하므로 무기 칸을 골라 잡는 유일한 길) · `&t=doll` 이면 페이퍼돌 칸(한 장) · **`&alt=1` 을 더하면 Alt 를 누른 채**(가방 칸의 착용 델타 · 비교 두 장은 기본 상태에 선다 · ADR-0658) · `&t=skill` 이면 액티브 카드의 **스킬 설명창**(`&i=n` 이 n번째 칸 · ADR-0118) · **`&t=potion` 이면 편성 탭 물약 칸의 물약 카드**(이 길만 탭이 편성으로 갈린다 — 칸이 거기 있다 · `&i=1` 이 첫 칸(찬 칸) · `&i=2` 부터가 빈 칸 · SCREEN_DESIGN §2 「물약 툴팁 규격」 · ADR-0315) · **`&t=hero` 면 편성 띠 첫 영웅의 유닛 툴팁**(편성 탭 · `&alt=1` 이면 세부 옵션까지 · SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0498) |
+| `?dev=tip` | **아이템 툴팁이 떠 있는** 캐릭터 탭 (2026-09-10) — 툴팁은 hover 로만 뜬다. 한 런을 정산해 **주운 것을 다 입히고** 한 번 더 정산해 **가방에 비교 상대가 있는 물건**을 남긴다(새 게임은 몸에 무기 하나뿐이라 비교 두 장에 못 닿는다). `&i=n` 이면 n번째 찬 칸(기본 1 — 가방에 무엇이 떨어질지는 시드가 정하므로 무기 칸을 골라 잡는 유일한 길) · `&t=doll` 이면 페이퍼돌 칸(한 장) · **`&alt=1` 을 더하면 Alt 를 누른 채**(가방 칸의 착용 델타 · 비교 두 장은 기본 상태에 선다 · ADR-0658) · **`&shift=1` 이면 Shift 를 누른 채**(옵션 줄 끝의 굴림 범위 · ADR-0617 · ADR-1041) · `&t=skill` 이면 액티브 카드의 **스킬 설명창**(`&i=n` 이 n번째 칸 · ADR-0118) · **`&t=potion` 이면 편성 탭 물약 칸의 물약 카드**(이 길만 탭이 편성으로 갈린다 — 칸이 거기 있다 · `&i=1` 이 첫 칸(찬 칸) · `&i=2` 부터가 빈 칸 · SCREEN_DESIGN §2 「물약 툴팁 규격」 · ADR-0315) · **`&t=hero` 면 편성 띠 첫 영웅의 유닛 툴팁**(편성 탭 · `&alt=1` 이면 세부 옵션까지 · SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0498) |
 | `?dev=box` | **첫 클리어 상자 · 우편함** (2026-10-24 · R333 · SCREEN_DESIGN §2 · §6 · ADR-0742 · ADR-0743) — 상자는 처음 깬 칸에서만 와 헤드리스가 못 닿는다. 캐릭터 탭 · 인벤토리 1 앞에 무기 상자 ×3 · 방어구 상자 ×1 · 우편 셋. `&open=mail` 이면 우편함 창 · `&t=box` 면 첫 상자 칸 툴팁 · `&tier=mid|high` 면 상자 · 우편이 그 등급(기본 하급 — 다른 등급은 들어오는 길이 없다 · ADR-0776) |
 | `?dev=frozen` | **멈춤 창 — 다른 탭에서 게임이 열렸다** (SCREEN_DESIGN §2-1) — 다른 탭이 세이브를 써야만 닿는 화면이다 · `?dev=cloud`(계정 창)는 로그인과 함께 걷혔다(2026-10-16 · ADR-0633) · `?guest=1` 도 걷혔다(붙여도 무시 — 관문이 없다) |
 | `?dev=watch` | **파견 관전 창이 열린 자원 탭** (2026-09-28 · SCREEN_DESIGN §8 · ADR-0415) — 로스터 앞 영웅들을 채광 · 채집 · 벌목 1단계에 하나씩 앉힌 채 · `&dw=<파견처>:<단계>` 면 그 탭을 고른 채 · `&open=0` 이면 창을 닫은 채 |
@@ -240,9 +240,31 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == uid;
       allow read: if isAdmin();
     }
+    // 콜로세움 데모 — 방어 편성(누구나 읽고 본인만 쓴다) · 방어 기록(공격자가 쓰고 방어자만 읽는다) (arena_design §9 · 2026-11-11)
+    match /arenaTeams/{uid} {
+      allow read: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['nick', 'rating', 'team', 'at'])
+        && request.resource.data.nick is string && request.resource.data.nick.size() <= 16
+        && request.resource.data.rating is int
+        && request.resource.data.team is string && request.resource.data.team.size() <= 200000
+        && request.resource.data.at == request.time;
+    }
+    match /arenaLog/{def}/hits/{hit} {
+      allow read, delete: if request.auth != null && request.auth.uid == def;
+      allow create: if request.auth != null && request.resource.data.by == request.auth.uid
+        && request.resource.data.keys().hasOnly(['by', 'nick', 'rating', 'result', 'at'])
+        && request.resource.data.nick is string && request.resource.data.nick.size() <= 16
+        && request.resource.data.rating is int
+        && request.resource.data.result in ['win', 'draw', 'loss']
+        && request.resource.data.at == request.time;
+    }
   }
 }
 ```
+
+- **콜로세움 데모의 두 칸**(`arenaTeams` · `arenaLog`)은 2026-11-11 에 더해졌다 — 규칙을 다시 게시하기 전에는 방어 편성 올리기 · 받기 · 방어 기록이 거부되고 후보는 전부 AI 다(플레이 기록은 따로 쓰므로 그대로 올라간다). `16` 은 닉네임 상한(`app.js:NICK_MAX`)과 같은 값이다
 
 - 콘솔 설정 전에도 게임은 그대로 돈다 — 올리기만 실패하고 콘솔 경고가 남는다
 - 옛 Google 계정의 `saves/<uid>` 문서는 남아 있다 — 퍼널은 `players` 만 읽어 안 섞인다
@@ -289,4 +311,4 @@ service cloud.firestore {
 옛 측정표(2026-08-27 ~ 09-10)는 [DEV_LOG.md §3](../../docs/client/DEV_LOG.md) 로 옮겼다 — 새로 재면 이 절을 **갈아 끼운다**(옛 표를 「직전 측정」으로 남기지 않는다 · [DEV_PLAN.md §7](../../docs/client/DEV_PLAN.md)).
 
 ---
-*마지막 업데이트: 2026-11-04*
+*마지막 업데이트: 2026-11-11*

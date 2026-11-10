@@ -318,6 +318,7 @@ export function createGameSystem(deps) {
             visit: null,     // 수색 시계 {nextAt, left} — 연구소 줄을 열면 선다 (2026-10-19 · INTERFACE §4)
             arena: freshArena(),       // 결투장 ELO {rating, peak, win, draw, loss} — `arenaRecord` 만 바꾼다 (2026-10-18 · arena_design §8 · INTERFACE §4)
             colosseum: { cleared: 0 }, // 콜로세움 오른 층 — `colosseumRecord` 만 바꾼다 (2026-10-18 · arena_design §7)
+            arenaDefense: null,        // 콜로세움 방어 편성 번호 · null = 등록 안 함 — `setArenaDefense` 만 바꾼다 (2026-11-11 · arena_design §9)
             // 의뢰 게시판 — 빈 채로 시작한다. 선술집을 짓고 화면이 그릴 때 `commissionFill` 이 채운다 (R153)
             commissions: { cards: [], fame: 0 },
             // 편성 — **편성 1 에 시작 영웅 셋**(아래에서 채운다 · ADR-0227) · 편성 2 부터는 빈 파티다.
@@ -660,6 +661,8 @@ export function createGameSystem(deps) {
         // 편성 — **편성 수 · 칸 수를 그 세이브의 상한에 맞춘다**(모자라면 빈 편성 · 빈 칸을 붙이고 넘치면 뒤를 자른다) · 고른 번호는 범위로 자른다 (INTERFACE §2-7 · R122)
         s.presets = fitPresets(s, s.presets);
         s.preset = Math.min(limitsOf(s).presets, Math.max(1, Number.isInteger(s.preset) ? s.preset : 1));
+        // 콜로세움 방어 편성 — 없으면 「등록 안 함」이 새 게임과 같아 버전을 안 올린다 · 편성 밖의 번호 · 정수가 아니면 null (2026-11-11 · INTERFACE §4)
+        s.arenaDefense = Number.isInteger(s.arenaDefense) && s.arenaDefense >= 1 && s.arenaDefense <= limitsOf(s).presets ? s.arenaDefense : null;
         // 한 영웅은 한 편성에만 든다 — 겹치면 **앞 편성이 갖는다** (v38 · 다부대 · `toggleParty` 와 같은 규칙)
         dedupeParties(s);
         // 소유권은 잘라내기 전에 검사하고, 사라지는 편성의 미완료 판은 먼저 돌려준다.
@@ -5220,6 +5223,16 @@ export function createGameSystem(deps) {
         return { ok: true, cleared: state.colosseum.cleared, advanced };
     }
 
+    /** 콜로세움 방어 편성 — 등록한 편성 번호 · null = 등록 안 함 (arena_design §9 · 2026-11-11) */
+    const arenaDefense = state => state.arenaDefense ?? null;
+
+    /** 방어 편성 등록 · 해제 — 편성 번호(1 … 편성 수) 또는 null. 인원은 안 본다(올리기는 화면이 세 명일 때만) · in-place · rng 0 */
+    function setArenaDefense(state, no) {
+        if (no !== null && !(Number.isInteger(no) && no >= 1 && no <= limitsOf(state).presets)) return { ok: false, err: 'missing' };
+        state.arenaDefense = no;
+        return { ok: true, no };
+    }
+
     /** 고른 편성의 전술 칸 세이브 — 없으면 빈 자리를 세운다 (옛 세이브 · 테스트가 `{slots}` 만 꽂은 경우) */
     const ownTactics = state => {
         const p = curPreset(state);
@@ -5378,7 +5391,7 @@ export function createGameSystem(deps) {
         advanceState, advanceStart, advanceSettle, advanceLearn, advanceForget, advanceLevelUp,
         bookState, learnBook, craftBook, sortBooks,
         masteryState, learnMastery, unlearnMastery, resetMastery,
-        tacticState, tacticBonus, arenaLoadout, arenaState, arenaStakes, arenaRecord, colosseumState, colosseumRecord, rerollTactic, toggleTacticLock, weaponGroupOf,
+        tacticState, tacticBonus, arenaLoadout, arenaState, arenaStakes, arenaRecord, colosseumState, colosseumRecord, arenaDefense, setArenaDefense, rerollTactic, toggleTacticLock, weaponGroupOf,
         constructionState, construct, hasFeature, needOf, peakTotal,
         navTodo,     // 탭 할 일 점 (2026-10-16 · ADR-0637)
         notificationState,   // 상단 종 — 다음 할 일 · 처리 대기 (2026-10-30)

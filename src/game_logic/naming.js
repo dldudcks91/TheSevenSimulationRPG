@@ -19,8 +19,9 @@ const hasBatchim = word => {
 /**
  * @param {object} data
  *   sins     — {sinId: {ko, en, adj}}  ko/en = 표시명 · adj = 영문 형용사(Wrathful …)
- *   sinWords — {sinId: [{ko, en}]} 아이템 이름의 죄종 단어 — **파일 순서**(`sin_word.csv` 의 그 죄종 행 순서 · 번호가 세이브에 박혀 tier 로 정렬하지 않는다 · 2026-11-10 R433).
- *              ko = 명사(격노) · en = 형용사(Raging). 없는 죄종은 한 단짜리 — 원래 죄종 이름(ko · adj)
+ *   sinWords — {sinId: [{ko, en, tier, minIlvl}]} 아이템 이름의 죄종 단어 — **파일 순서**(`sin_word.csv` 의 그 죄종 행 순서 · 번호가 세이브에 박혀 tier 로 정렬하지 않는다 · 2026-11-10 R433).
+ *              ko = 명사(격노) · en = 형용사(Raging) · tier = 단(1 = 맨 아래) · minIlvl = 그 단이 열리는 아이템 레벨(2026-11-11 R436).
+ *              첫 줄(번호 0) = 원래 죄종 이름 = 맨 위 단. 없는 죄종은 한 단짜리 — 원래 죄종 이름(ko · adj · 단 1 · 해금 1)
  */
 export function createNaming(data) {
     const S = data.sins;
@@ -33,6 +34,12 @@ export function createNaming(data) {
     const wordCount = sin => wordsOf(sin).length;
     /** 칸의 단어 — 단어 번호가 없거나 범위 밖이면 첫 단어(원래 죄종 이름) */
     const wordAt = (sin, i) => { const ws = wordsOf(sin); return ws[i] ?? ws[0]; };
+    /**
+     * 그 죄종의 단어 사다리 — **단 순서(아래 → 위)** 로 `{i: 단어 번호, tier, minIlvl}` [2026-11-11 · R436 · item_design §1 「값은 단어 범위가 정한다」].
+     * 드롭이 열린 단어(메인 줄 후보) · 단어 범위를 이것으로 낸다(item.js). 단 · 해금 레벨이 없는 단어는 단 1 · 해금 1 · 새 배열
+     */
+    const wordLadder = sin => wordsOf(sin).map((w, i) => ({ i, tier: Number(w.tier) || 1, minIlvl: Number(w.minIlvl) || 1 }))
+        .sort((a, b) => a.tier - b.tier);
 
     /**
      * 이름 앞머리의 조각들 — ko 「격노와 찬탈의 」 / en 「Raging and Usurping 」 (item_design §1 「이름」 · 2026-09-19).
@@ -69,5 +76,5 @@ export function createNaming(data) {
         return { ko: `${s.ko}의 ${b.ko}`, en: `${s.adj} ${b.en}` };
     };
 
-    return { composeName, sinPhrase, wordCount, eliteName };
+    return { composeName, sinPhrase, wordCount, wordLadder, eliteName };
 }

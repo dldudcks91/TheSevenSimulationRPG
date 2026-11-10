@@ -125,19 +125,6 @@ const NO_DMG = Object.freeze({ min: 0, max: 0 });
  */
 export function createBattleSystem(data) {
     const B = data.balance;
-    if (!Number.isInteger(B.monster_gold_support_mid_level) || B.monster_gold_support_mid_level <= 1
-        || !Number.isInteger(B.monster_gold_support_end_level) || B.monster_gold_support_end_level <= B.monster_gold_support_mid_level
-        || !Number.isFinite(B.monster_gold_support_start_mult) || !Number.isFinite(B.monster_gold_support_mid_mult)
-        || B.monster_gold_support_start_mult < B.monster_gold_support_mid_mult || B.monster_gold_support_mid_mult < 1)
-        throw new Error('battle: 초반 골드 지원의 레벨 순서·배수가 잘못됐다');
-    // 실제 몬스터 레벨(level_add 포함) 기준. 기존 보상 곡선은 그대로 두고 최종 반올림 전에 한 번 곱한다.
-    const goldSupportMult = lvl => {
-        const mid = B.monster_gold_support_mid_level, end = B.monster_gold_support_end_level;
-        if (lvl >= end) return 1;
-        if (lvl <= mid) return B.monster_gold_support_start_mult
-            + (B.monster_gold_support_mid_mult - B.monster_gold_support_start_mult) * (lvl - 1) / (mid - 1);
-        return 1 + (B.monster_gold_support_mid_mult - 1) * (end - lvl) / (end - mid);
-    };
     const F = createFormula(B);
     const SK = data.skillSystem ?? null;
     const HS = data.heroSystem ?? null;            // 몬스터도 computeCombat 을 지난다 (R79)
@@ -1463,7 +1450,7 @@ export function createBattleSystem(data) {
             const xp = e.expReward * (1 + (farm?.xp ?? 0));
             loot.xp += xp;
             loot.xpByLevel[e.lvl] = (loot.xpByLevel[e.lvl] ?? 0) + xp;
-            loot.gold += Math.round(e.goldReward * goldSupportMult(e.lvl) * e.goldMult * B.gold_rate * goldMult * (1 + (farm?.gold ?? 0)));
+            loot.gold += Math.round(e.goldReward * e.goldMult * B.gold_rate * goldMult * (1 + (farm?.gold ?? 0)));
             // ~~정예·보스 처치가 가루를 뱉던 두 줄~~ 은 2026-09-09 삭제 — **처치가 뱉는 재료는 없다**
             // (item_design §5-3 확정 · GAME_DESIGN §9 09-09). 처치의 산출은 **장비 · 골드**뿐이다.
             // 가루 자체는 남는다 — 공급원이 **분해** 하나로 줄었을 뿐이다(`item.salvageDust`)

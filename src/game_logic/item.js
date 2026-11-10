@@ -22,8 +22,11 @@
  *   난이도가 연다(부르는 쪽이 넘기는 `rarityWeights` 의 0 — 몬스터는 등급 × 단 한 행 `gear_rarity.csv` · R350).
  *   **랜덤 줄 수는 희귀도가 정한다 — 굴리지 않는다** [2026-10-24 · R342 — ~~칸마다 붙을지 굴린다 · `item_random_slots` · `item_random_min` · `slotChance`~~(10-20 R291 · 10-21 R297)] —
  *   [balance.csv:item_random_lines_<rarity>] · 전 부위 같다(`randomLines`).
- *   **값 굴림은 아이템 레벨 따라 치우친다 — 범위는 그대로** [2026-10-20 · R291 · item_design §2-1 — ~~매직 고점 `magic_option_max_mult`~~ 퇴역] —
+ *   **베이스 · 특성 줄의 값 굴림은 아이템 레벨 따라 치우친다 — 범위는 그대로** [2026-10-20 · R291 · item_design §2-1 — ~~매직 고점 `magic_option_max_mult`~~ 퇴역] —
  *   1레벨 = 낮은 쪽 · 만렙 = 높은 쪽(`lean` · [balance.csv:item_roll_skew]). **반지 · 목걸이는 일반이 없다**(`rollGear` 가 매직으로 올린다).
+ *   **죄종 줄 · 랜덤 줄의 값은 단어 범위다** [2026-11-11 · 사용자 확정 U2 · R436 · item_design §1 「값은 단어 범위가 정한다」 · INTERFACE §2-5] —
+ *   메인 줄 = 이름 단어(열린 단어 중 위 셋에서 6 : 3 : 1 · 죄종 굴림의 소수부 · rng 소비 무변경)의 범위 · 랜덤 줄 = 맨 아래 단 ~ 메인 후보 맨 아래 단 ·
+ *   범위 = 옵션 표 위끝 × 단 비율(`tierBand` · [balance.csv:sin_word_band_*]) · 그 안에서 균등(치우침 없음).
  *   두 줄 모두 `src` 에 그 옵션의 죄종 id 를 든다. 무기 표 `weapon_sin_option.csv` · 갑옷 표 `armor_sin_option.csv` 의 갑옷 행. ~~`weapon_common_option.csv`~~ 퇴역.
  *   **발동 옵션**(`proc_*`)은 `affixes` 줄에 스킬 id(`skill`)와 실제 레벨(`skillLv` · 생략된 옛 줄은 Lv1)을 함께 든다 — 모든 착용 부위의 타격 · 시전 · 피격 발동을 전투에 적용한다(2026-10-30). 퇴역한 옛 목걸이 `item.proc` 은 미적용이다.
  *   **방어구 넷 모두 죄종 계열표다** [투구 2026-10-21 R299 · 장갑 · 신발 2026-10-21 R303 · item_design §1 「10-21 방어구 개정」 — ~~투구 · 장갑 · 신발 세 층 ·
@@ -100,7 +103,8 @@ import { createFormula } from './formula.js';
  *   armorSinOptions    — [{slot, sin, option, stat, scale, min, max, perIlvl?}] ← armor_sin_option.csv — **방어구 넷의 죄종 계열표** (2026-09-18 · `option` 2026-10-05 ·
  *                         네 부위 2026-10-21 R303). 같은 (부위, 죄종, option) 의 행 여럿 = 변형 · **행 순서가 결정론 계약**
  *   ~~armorCommonOptions~~ — 2026-10-21 R303 퇴역(`armor_common_option.csv` 삭제 — 방어구 넷이 계열표다)
- *   naming       — game_logic/naming.js 의 조립기 — `composeName(prefixSin, base, suffixSin|null, words)` · `wordCount(sin)`
+ *   naming       — game_logic/naming.js 의 조립기 — `composeName(prefixSin, base, suffixSin|null, words)` · `wordLadder(sin)`(단어 번호 → 단 · 해금 레벨 · R436 —
+ *                  **죄종마다 사다리가 같아야 한다** · 아니면 생성 때 던진다)
  *   upgradeChances — [{step, chance}] ← upgrade_chance.csv — 강화 단계마다 성공 확률(비율) (2026-10-14 · R253).
  *                    단계는 1 부터 이어지고 `0 < chance ≤ 1` — 어기면 생성 때 던진다
  */
@@ -132,15 +136,58 @@ export function createItemSystem(data) {
     const F = createFormula(B);        // 성장 곡선(growthMult) — 시뮬·영웅과 같은 함수를 쓴다
     const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
     const N = data.naming;
+
+    /* ── 죄종 줄 · 랜덤 줄의 값 = 단어 범위 (2026-11-11 · 사용자 확정 U2 · R436 · item_design §1 「값은 단어 범위가 정한다」 · INTERFACE §2-5) ── */
+    // 단어 확률 — 메인 후보(열린 단 중 위의 이 수만큼)의 아래 → 위 [balance.csv:sin_word_weight_low · _mid · _high] (6 : 3 : 1 · 사용자 11-10)
+    const WORD_W = [B.sin_word_weight_low, B.sin_word_weight_mid, B.sin_word_weight_high];
+    if (!WORD_W.every(w => Number.isFinite(w) && w >= 0) || !(WORD_W[0] > 0))
+        throw new Error(`item: balance.csv sin_word_weight_* '${WORD_W}' — 0 이상 · 맨 아래(low)는 0 보다 커야 한다`);
+    if (!(B.sin_word_band_step > 0) || !(Number.isInteger(B.sin_word_band_width) && B.sin_word_band_width >= 1) || !Number.isInteger(B.sin_word_band_anchor))
+        throw new Error(`item: balance.csv sin_word_band_step '${B.sin_word_band_step}' · _width '${B.sin_word_band_width}' · _anchor '${B.sin_word_band_anchor}'`);
+    /**
+     * 단 `tier` 의 범위 — 옵션 표 위끝(`max`)에 대한 비율 `{lo, hi}` · `hi = 1 + (tier − anchor) × step` · `lo = hi − width × step`.
+     * 단 하나 오르면 한 칸 위로 · 폭은 칸 `width` 개라 이웃 단과 겹친다 · 셋째 단(anchor)의 위끝 = 표 위끝 · 표 아래끝(`min`)은 안 쓴다
+     */
+    const tierBand = tier => {
+        const hi = 1 + (tier - B.sin_word_band_anchor) * B.sin_word_band_step;
+        return { lo: hi - B.sin_word_band_width * B.sin_word_band_step, hi };
+    };
+    // 단어 사다리 — 단 순서(아래 → 위) `{i, tier, minIlvl}` · **죄종마다 같아야 한다**(랜덤 줄 범위 · 열린 단이 죄종을 안 가린다 · 로더 검사와 같은 규칙)
+    const ladderKey = l => l.map(w => `${w.tier}@${w.minIlvl}`).join(',');
+    const LADDER = N.wordLadder(data.sins[0]);
+    for (const s of data.sins) if (ladderKey(N.wordLadder(s)) !== ladderKey(LADDER)) throw new Error(`item: 죄종 '${s}' 의 단어 사다리 ${ladderKey(N.wordLadder(s))} ≠ ${ladderKey(LADDER)} — 죄종마다 같아야 한다`);
+    if (new Set(LADDER.map(w => w.tier)).size !== LADDER.length) throw new Error(`item: 단어 사다리 ${ladderKey(LADDER)} — 한 단에 단어가 둘이다`);
+    if (!(tierBand(LADDER[0].tier).lo > 0)) throw new Error(`item: 맨 아래 단의 범위 아래끝 ${tierBand(LADDER[0].tier).lo} — 0 보다 커야 한다(sin_word_band_*)`);
+    /** 단어 범위가 닿는 가장 높은 비율 — 맨 위 단의 위끝(로드 검사 · 반격 확률 상한이 쓴다) */
+    const TOP_BAND = tierBand(LADDER.at(-1).tier).hi;
+    /** 그 아이템 레벨에서 열린 단 — 아래 → 위 · 하나도 안 열렸으면 맨 아래 단 하나 */
+    const openTiers = ilvl => {
+        const o = LADDER.filter(w => w.minIlvl <= ilvl).map(w => w.tier);
+        return o.length ? o : [LADDER[0].tier];
+    };
+    /** 메인 줄 단어 후보 — 열린 단 중 **위의** `WORD_W.length` 개 · 아래 → 위 (item_design §1 「메인 줄」) */
+    const mainTiers = ilvl => openTiers(ilvl).slice(-WORD_W.length);
+    /** 랜덤 줄의 범위 비율 — 맨 아래 단의 아래끝 ~ 메인 후보 맨 아래 단의 위끝 (item_design §1 「랜덤 줄」) */
+    const randomBand = ilvl => ({ lo: tierBand(LADDER[0].tier).lo, hi: tierBand(mainTiers(ilvl)[0]).hi });
+    /** 그 죄종 칸 단어(번호)의 범위 비율 — 번호가 없거나 사다리 밖이면 번호 0(원래 죄종 이름 · `naming.wordAt` 과 같은 규칙) */
+    const wordBand = (sin, word) => {
+        const l = N.wordLadder(sin);
+        return tierBand((l.find(w => w.i === word) ?? l.find(w => w.i === 0) ?? l[0]).tier);
+    };
+    /** 범위 비율 안의 굴림 — `max × (lo + u × (hi − lo))` · 치우침(`lean`) 없이 균등 · `valueOf` 가 값으로 바꾼다 */
+    const bandRoll = (d, band, u) => d.max * (band.lo + u * (band.hi - band.lo));
+
     /**
      * 죄종 하나를 굴린다 — **그 굴림의 남은 자리(소수부)로 이름 단어의 번호도 낸다** [2026-09-19 · item_design §1 「이름」 · INTERFACE §2-5 `words`].
-     * `r` 이 균등이면 `frac(r × 후보 수)` 도 균등이고 고른 죄종과 독립이라 **그 죄종의 단어 중 균등**이 된다(지금 다섯 · R433) — rng 를 더 쓰지 않아 소비 순서가 그대로다(§5-2).
-     * ⚠ 임시(사용자 지시 — 밸런싱 전) · 목표는 레벨 구간(`sin_word.csv:tier_min_ilvl`)이다
+     * `r` 이 균등이면 `f = frac(r × 후보 수)` 도 균등이고 고른 죄종과 독립이다 — rng 를 더 쓰지 않아 소비 순서가 그대로다(§5-2).
+     * 단어 = 그 아이템 레벨의 메인 후보 단(`mainTiers`)에 단어 확률(`WORD_W` — 후보 수만큼 앞에서)을 놓고 `f × 합` 이 떨어지는 칸 [2026-11-11 · R436 — ~~그 죄종의 단어 중 균등~~]
      */
-    const pickSin = (rng, arr) => {
+    const pickSin = (rng, arr, ilvl) => {
         const x = rng() * arr.length, i = Math.floor(x), sin = arr[i];
-        const n = N.wordCount(sin);
-        return { sin, word: Math.min(n - 1, Math.floor((x - i) * n)) };
+        const tiers = mainTiers(ilvl), w = WORD_W.slice(0, tiers.length);
+        let f = (x - i) * w.reduce((a, b) => a + b, 0), k = 0;
+        while (k < tiers.length - 1 && f >= w[k]) f -= w[k++];
+        return { sin, word: N.wordLadder(sin).find(e => e.tier === tiers[k]).i };
     };
 
     /** 베이스 능력치가 없는 부위 — 무기(피해 범위)도 방어구(고유값)도 아닌 둘. 고유값 굴림과 강화가 같은 판정을 쓴다 (R95) */
@@ -253,8 +300,9 @@ export function createItemSystem(data) {
             if (!optionsOf(r.slot, r.sin).includes(r.option)) throw new Error(`item: armor_sin_option ${r.slot} ${r.sin} ${r.stat} option '${r.option}'`);
             if (isProc(r.stat) && !PROC_POOL[r.stat]) throw new Error(`item: armor_sin_option 발동 '${r.stat}' 의 풀이 없다 (PROC_POOL)`);
             if (r.stat === SKILL_PLUS) throw new Error(`item: armor_sin_option ${r.slot} ${r.sin} 의 ${SKILL_PLUS} — 2026-10-21 장비에서 뺐다(R303)`);
-            // 반격은 반격을 부른다(평타와 같은 규칙 · INTERFACE §2-6) — 한 출처가 1 이면 양쪽이 끝없이 되받아 친다
-            if (r.stat === 'counter_chance' && !(r.max < 1)) throw new Error(`item: armor_sin_option counter_chance max ${r.max} — 1 미만이어야 한다`);
+            // 반격은 반격을 부른다(평타와 같은 규칙 · INTERFACE §2-6) — 한 출처가 1 이면 양쪽이 끝없이 되받아 친다.
+            //   죄종 줄의 위끝은 표 위끝 × 맨 위 단의 비율이다(단어 범위 · R436) — 그 값이 1 미만이어야 한다
+            if (r.stat === 'counter_chance' && !(r.max * TOP_BAND < 1)) throw new Error(`item: armor_sin_option counter_chance max ${r.max} × 맨 위 단 ${TOP_BAND} — 1 미만이어야 한다`);
         }
         for (const slot of ARMOR_SLOTS) {
             for (const sin of data.sins) {
@@ -367,7 +415,8 @@ export function createItemSystem(data) {
     /**
      * 균등 굴림 `u` → 아이템 레벨이 치우친 굴림 [2026-10-20 · 사용자 「좌로치우친분포에서 우로치우친분포」 · R291 · item_design §2-1 · INTERFACE §2-5].
      * `s = 2t − 1` · `a = 1 + |s| × (item_roll_skew − 1)` — 1레벨 = 낮은 쪽 삼각(`1 − (1−u)^(1/a)`) · 가운데 = 균등 · 만렙 = 높은 쪽 삼각(`u^(1/a)`).
-     * 양끝은 그대로(0 → 0 · 1 → 1) · 같은 `u` 면 레벨이 높을수록 크다 · 소비는 부르는 쪽의 `u` 하나 그대로다
+     * 양끝은 그대로(0 → 0 · 1 → 1) · 같은 `u` 면 레벨이 높을수록 크다 · 소비는 부르는 쪽의 `u` 하나 그대로다.
+     * 거는 곳 = 베이스 옵션 · 갈래 특성 · 목걸이 · 반지 베이스 — **죄종 줄 · 랜덤 줄은 안 건다**(단어 범위 `bandRoll` · 2026-11-11 R436)
      */
     const lean = (u, ilvl) => {
         const s = 2 * levelT(ilvl) - 1;
@@ -376,8 +425,8 @@ export function createItemSystem(data) {
     };
 
     /**
-     * 옵션 줄의 굴림값 `min + lean(u, ilvl) × (max − min)` — 희귀도는 범위를 안 바꾼다 [2026-10-20 · R291 — ~~매직은 위끝 × `magic_option_max_mult`~~(10-18 R285) 퇴역].
-     * `optionRange` 가 `u` = 0 · 1 로 양끝을 낸다
+     * 베이스 · 특성 줄의 굴림값 `min + lean(u, ilvl) × (max − min)` — 희귀도는 범위를 안 바꾼다 [2026-10-20 · R291 — ~~매직은 위끝 × `magic_option_max_mult`~~(10-18 R285) 퇴역].
+     * `optionRange` 가 `u` = 0 · 1 로 양끝을 낸다 · 죄종 줄 · 랜덤 줄은 `bandRoll`(R436)
      */
     const rollOf = (d, u, ilvl) => d.min + lean(u, ilvl) * (d.max - d.min);
 
@@ -436,28 +485,29 @@ export function createItemSystem(data) {
      * 목걸이 옵션 — 죄종 칸 → 공통옵션 [2026-09-21 · 사용자 확정 · R127 · item_design §1 「반지 · 목걸이」] — 순서가 곧 표시 순서다.
      * rng 소비(계약 — INTERFACE §5-2): 죄종마다 (행 1 → 값 1) → 공통 줄마다 (종류 1 → 변형 1 → 값 1 · R342 — ~~붙나 1 먼저~~ R291).
      * 베이스 층은 `amuletProc` 가 따로 든다(`affixes` 밖). ⚠ 후보가 비어도 소비 수는 같다 · ~~반지도 여기~~ — 2026-10-29 R382 로 반지는 `familyOptions`(아래 `build`)
+     * 값 — 죄종 칸 = 그 칸 단어(`words[k]`)의 범위 · 공통 줄 = 랜덤 줄 범위(2026-11-11 · R436 · 소비 무변경)
      */
-    function accessoryOptions(rng, slot, sins, rarity, ilvl) {
+    function accessoryOptions(rng, slot, sins, words, rarity, ilvl) {
         const out = [];
         // 죄종 칸 — 이름의 죄종마다 하나. 한 칸에 후보가 여럿이면(목걸이 시기 둘 · 탐욕 셋) 그중 하나를 균등으로 굴린다
-        for (const sin of sins) {
+        sins.forEach((sin, k) => {
             const rows = accSinRows(slot, sin);
             const pr = rng(), vr = rng();
-            if (!rows.length) continue;
+            if (!rows.length) return;
             const d = rows[Math.floor(pr * rows.length)];
-            out.push({ stat: d.stat, v: valueOf(d, rollOf(d, vr, ilvl), ilvl), src: sin });
-        }
+            out.push({ stat: d.stat, v: valueOf(d, bandRoll(d, wordBand(sin, words[k]), vr), ilvl), src: sin });
+        });
         // 공통옵션 — 한 풀. **종류를 먼저 뽑고 그 안에서 변형**(원소 ×4 · 상태이상 ×4 가 행 수만큼 비중을 먹지 않게) · 같은 종류는 한 번
         //   줄 수는 희귀도가 정한다(R342 — ~~칸마다 붙을지 먼저 굴린다~~ R291 · R297)
         const families = [...new Set(accCommonOpts.map(r => r.family))];   // 첫 등장 순 = CSV 행 순서
-        const n = randomLines(rarity);
+        const n = randomLines(rarity), rb = randomBand(ilvl);
         for (let i = 0; i < n; i++) {
             const fr = rng(), sr = rng(), vr = rng();
             if (!families.length) continue;
             const fam = families.splice(Math.floor(fr * families.length), 1)[0];
             const variants = accCommonOpts.filter(r => r.family === fam);
             const d = variants[Math.floor(sr * variants.length)];
-            out.push({ stat: d.stat, v: valueOf(d, rollOf(d, vr, ilvl), ilvl), src: 'random' });
+            out.push({ stat: d.stat, v: valueOf(d, bandRoll(d, rb, vr), ilvl), src: 'random' });
         }
         return out;
     }
@@ -466,17 +516,19 @@ export function createItemSystem(data) {
      * 죄종 계열 옵션 — 메인 줄 → 랜덤 줄 [2026-10-05 · 사용자 확정 · R206 · R208 · R209 · R210 · item_design §1 「무기 옵션 — 죄종 계열」 · INTERFACE §2-5].
      * 옵션 = (죄종, `option`) — `rows` 는 **그 아이템에 붙는 행만** 받는다(무기 = `appliesTo` · 갑옷 = 그 부위). 같은 옵션의 행 여럿은 변형(종족 셋 · 원소 셋)이다.
      *   메인 줄 — `sins` 마다 그 죄종의 옵션 중 아직 안 붙은 것에서 하나(**반드시**) · 랜덤 줄 — `n` 줄(희귀도가 정한다 · R342) · 계열표 옵션 중 아직 안 붙은 것에서(계열 무관 — 겹쳐도 된다)
-     *   **같은 옵션은 한 번** · **발동은 아이템당 하나**(발동 옵션이 붙으면 다른 발동 옵션이 후보에서 빠진다) · **대역은 하나**(메인 · 랜덤 같은 범위 · 희귀도 무관 — `rollOf`)
+     *   **같은 옵션은 한 번** · **발동은 아이템당 하나**(발동 옵션이 붙으면 다른 발동 옵션이 후보에서 빠진다) ·
+     *   **값은 단어 범위**(메인 = 그 칸 단어 `words[k]` 의 범위 · 랜덤 = 랜덤 줄 범위 · 희귀도 무관 · 치우침 없음 — `bandRoll` · 2026-11-11 R436)
      *   **오만(`MAIN_ONLY_SINS`)은 랜덤 줄 후보가 아니다** — 이름에 오만이 뜰 때 메인 줄 하나로만 붙는다(2026-10-06 오만 규칙 · R225)
      *   **풀이 빈 특정 스킬 +n 옵션은 후보가 아니다**(갈래 없는 시작 갑옷 · 방어 관련 스킬이 없는 갑옷군 — R225)
      *   두 줄 모두 `src` 에 그 옵션의 죄종 id 를 든다 — 메인 줄은 `sins` 순서대로 앞에 선다
      * rng 소비(계약 — INTERFACE §5-2): 메인 줄마다 **옵션 1 → 변형 1 → 값 1 → 스킬 1** · 랜덤 줄마다 같은 넷(R342 — ~~붙나 1 먼저~~ R291) —
      *   스킬은 발동 · 특정 스킬 +n 이 아니어도 소비하고, 후보가 비어도 소비 수는 그대로다
+     * @param words 이름의 죄종 단어 번호 — `sins` 와 같은 길이(메인 줄의 범위 · R436)
      * @param n 랜덤 줄 수(`randomLines`)
      * @param classes 발동 공격 풀의 직업(무기 = 무기군 직업 · 갑옷 = [])
      * @param plusPool 특정 스킬 +n 의 스킬 후보 — 비면 그 옵션이 안 뜬다 · **장비는 안 준다**(2026-10-21 R303 — ~~무기 `plusPoolWeapon` · 갑옷 `plusPoolArmor` · 투구 버프 풀~~ · 유니크 논의 대기)
      */
-    function familyOptions(rng, rows, sins, n, ilvl, classes, plusPool = []) {
+    function familyOptions(rng, rows, sins, words, n, ilvl, classes, plusPool = []) {
         const options = [], byKey = {};
         for (const r of rows) {                                       // 첫 등장 순 = CSV 행 순서
             const key = `${r.sin}:${r.option}`;
@@ -488,14 +540,14 @@ export function createItemSystem(data) {
         const out = [], used = new Set();
         let procTaken = false;
         const open = o => !used.has(o.key) && !(procTaken && o.proc) && !(o.plus && !plusPool.length);
-        // 줄 하나 — 후보가 비어도 넷은 소비한다
-        const line = cands => {
+        // 줄 하나 — 후보가 비어도 넷은 소비한다 · `band` = 그 줄의 범위 비율(메인 = 단어 · 랜덤 = 랜덤 줄 · R436)
+        const line = (cands, band) => {
             const or = rng(), sr = rng(), vr = rng(), kr = rng();
             if (!cands.length) return;
             const o = cands[Math.floor(or * cands.length)];
             used.add(o.key);
             const d = o.rows[Math.floor(sr * o.rows.length)];
-            const a = { stat: d.stat, v: valueOf(d, rollOf(d, vr, ilvl), ilvl), src: o.sin };
+            const a = { stat: d.stat, v: valueOf(d, bandRoll(d, band, vr), ilvl), src: o.sin };
             if (isProc(d.stat)) {
                 procTaken = true;
                 const pool = procPool(d.stat, classes);
@@ -505,8 +557,9 @@ export function createItemSystem(data) {
             if (d.stat === SKILL_PLUS) a.skill = plusPool[Math.floor(kr * plusPool.length)];   // 풀이 비면 `open` 이 이미 뺐다
             out.push(a);
         };
-        for (const sin of sins) line(options.filter(o => o.sin === sin && open(o)));
-        for (let i = 0; i < n; i++) line(options.filter(o => open(o) && !MAIN_ONLY_SINS.has(o.sin)));
+        sins.forEach((sin, k) => line(options.filter(o => o.sin === sin && open(o)), wordBand(sin, words[k])));
+        const rb = randomBand(ilvl);
+        for (let i = 0; i < n; i++) line(options.filter(o => open(o) && !MAIN_ONLY_SINS.has(o.sin)), rb);
         return out;
     }
 
@@ -515,12 +568,12 @@ export function createItemSystem(data) {
      * rng 소비(계약 — INTERFACE §5-2): 베이스 옵션 값 1 → `familyOptions`.
      * ⚠ **후보가 비어도 소비 수는 같다** — 무기군 · 표 내용이 소비 수를 바꾸면 같은 시드가 다른 드롭을 낸다(베이스 굴림과 같은 규칙)
      */
-    function weaponOptions(rng, g, sins, rarity, ilvl) {
+    function weaponOptions(rng, g, sins, words, rarity, ilvl) {
         const lo = B.weapon_fixed_atk_pct_min, hi = B.weapon_fixed_atk_pct_max;
         // 베이스 옵션 — 무기면 무조건 「공격력 +%」 하나. 붙는 것은 규칙이고 값만 굴린다 (item_design §1 베이스 옵션) · 값도 아이템 레벨이 치우친다(R291)
         const out = [{ stat: 'atk_pct', v: F.pctOption(lo + lean(rng(), ilvl) * (hi - lo)), src: 'fixed' }];
         // 특정 스킬 +n 풀은 안 준다 — 2026-10-21 장비에서 뺐다(R303 · 표에 서면 로드가 던진다)
-        return out.concat(familyOptions(rng, sinOpts.filter(r => appliesTo(r, g)), sins, randomLines(rarity), ilvl, g.classes ?? []));
+        return out.concat(familyOptions(rng, sinOpts.filter(r => appliesTo(r, g)), sins, words, randomLines(rarity), ilvl, g.classes ?? []));
     }
 
     /**
@@ -532,14 +585,14 @@ export function createItemSystem(data) {
      *   베이스 「방어력 +%」(`armor_def_pct`)는 **그 아이템 자신의 고유 방어력에만** 곱한다 — 합산은 `hero.computeCombat` 이 아이템마다 한다.
      *   특성 줄은 다른 접사와 같은 채널이다(`src: 'fixed'` · 공속 · 쿨감 · 최대 체력 % · 명중률 · 피해 감소 · 행동 게이지 · 절대값 피해 감소)
      */
-    function armorOptions(rng, slot, group, sins, rarity, ilvl) {
+    function armorOptions(rng, slot, group, sins, words, rarity, ilvl) {
         const lo = B.armor_fixed_def_pct_min, hi = B.armor_fixed_def_pct_max;
         const out = [{ stat: 'armor_def_pct', v: F.pctOption(lo + lean(rng(), ilvl) * (hi - lo)), src: 'fixed' }];
         const tr = groupDef(slot, group)?.trait ?? null;
         const kr = rng(), vr = rng();
         if (tr) out.push({ stat: tr.stats[Math.floor(kr * tr.stats.length)], v: valueOf(tr, rollOf(tr, vr, ilvl), ilvl), src: 'fixed' });
         // 특정 스킬 +n 풀은 안 준다 — 2026-10-21 장비에서 뺐다(R303)
-        return out.concat(familyOptions(rng, armorSinOpts.filter(r => r.slot === slot), sins, randomLines(rarity), ilvl, []));
+        return out.concat(familyOptions(rng, armorSinOpts.filter(r => r.slot === slot), sins, words, randomLines(rarity), ilvl, []));
     }
 
     /**
@@ -547,8 +600,8 @@ export function createItemSystem(data) {
      *   베이스 옵션(스킬 태그 — R321)이 아직 없어 메인 줄부터다 · 랜덤 줄도 반지 계열표에서 고른다(오만 제외 · 무기 · 방어구와 같다).
      * rng 소비(계약 — INTERFACE §5-2): `familyOptions` 그대로 — 줄마다 옵션 1 → 변형 1 → 값 1 → 스킬 1(발동 · 특정 스킬 +n 행이 없어도 소비)
      */
-    function ringOptions(rng, sins, rarity, ilvl) {
-        return familyOptions(rng, familyRows('ring'), sins, randomLines(rarity), ilvl, []);
+    function ringOptions(rng, sins, words, rarity, ilvl) {
+        return familyOptions(rng, familyRows('ring'), sins, words, randomLines(rarity), ilvl, []);
     }
 
     /**
@@ -583,10 +636,10 @@ export function createItemSystem(data) {
         // 죄종 수는 희귀도가 정한다 — 일반 0 · 매직 1 · 레어 · 에픽 · 레전더리 2 (item_design §1 확정 2026-09-11 · 계승 TheSevenRPG 규칙 채택 · 일반 2026-09-14 R86 · 위 두 등급 2026-10-24 R342).
         //   **일반은 접두도 굴리지 않는다** — 레어가 접미를 한 번 더 굴리는 것과 같은 규칙이다(희귀도가 소비 수를 정한다 · INTERFACE §5-2).
         //   ~~레어 접미 확률 판정(suffix_sin_chance_pct)~~ 은 08-25 초반 루프의 임시값이라 걷었다 — 판정 rng 1회가 함께 빠졌다
-        //   이름 단어의 단 번호는 같은 굴림의 소수부에서 낸다(`pickSin`) — 소비 수는 그대로다 (2026-09-19)
-        const pre = rarity === 'normal' ? null : pickSin(rng, data.sins);
+        //   이름 단어의 번호는 같은 굴림의 소수부에서 낸다(`pickSin` — 그 아이템 레벨의 메인 후보 단 · 6 : 3 : 1 · R436) — 소비 수는 그대로다 (2026-09-19)
+        const pre = rarity === 'normal' ? null : pickSin(rng, data.sins, ilvl);
         const prefix = pre?.sin ?? null;
-        const suf = TWO_SINS.has(rarity) ? pickSin(rng, data.sins.filter(s => s !== prefix)) : null;
+        const suf = TWO_SINS.has(rarity) ? pickSin(rng, data.sins.filter(s => s !== prefix), ilvl) : null;
         const suffix = suf?.sin ?? null;
         const sins = [prefix, suffix].filter(Boolean);
         const words = [pre, suf].filter(Boolean).map(x => x.word);
@@ -599,10 +652,10 @@ export function createItemSystem(data) {
             name: N.composeName(prefix, base, suffix, words),
             implicit: null,
             // 무기(R78) · 방어구(2026-09-18) · 목걸이(2026-09-21 · R127) · 반지(계열표 — 2026-10-29 R382) — 모두 베이스 굴림보다 **앞**에서 굴린다 (§5-2)
-            affixes: slot === 'weapon' ? weaponOptions(rng, base, sins, rarity, ilvl)
-                : isArmor(slot) ? armorOptions(rng, slot, base?.group ?? null, sins, rarity, ilvl)
-                    : slot === 'ring' ? ringOptions(rng, sins, rarity, ilvl)
-                        : accessoryOptions(rng, slot, sins, rarity, ilvl),
+            affixes: slot === 'weapon' ? weaponOptions(rng, base, sins, words, rarity, ilvl)
+                : isArmor(slot) ? armorOptions(rng, slot, base?.group ?? null, sins, words, rarity, ilvl)
+                    : slot === 'ring' ? ringOptions(rng, sins, words, rarity, ilvl)
+                        : accessoryOptions(rng, slot, sins, words, rarity, ilvl),
             sins,
             words,                             // 이름의 죄종 단어 — sins 와 같은 길이 (2026-09-19)
         };
@@ -842,23 +895,49 @@ export function createItemSystem(data) {
      * 옵션 줄 하나가 **굴릴 수 있었던 범위** `{min, max}` [신설 2026-10-14 · SCREEN_DESIGN §6 「비교 툴팁 규격」 Shift 범위 · ADR-0617 · INTERFACE §2-5].
      * 그 줄의 표 행을 **굴림이 고른 것과 같은 표**에서 찾는다 — `stat` · `src`(죄종 id · `fixed` · `random`) · 부위 · 무기군(`appliesTo`) · 방어구 갈래.
      * 양끝은 굴림과 **같은 규칙**(`valueOf` — 그 아이템 레벨 · 베이스 옵션은 `pctOption` · `rollOf` 의 `u` = 0 · 1 — 치우침 `lean` 은 양끝을 안 바꾼다 · R291)이라 표기 = 굴릴 수 있었던 값이다. 순수 · rng 0.
-     * 행을 못 찾으면(표에서 빠진 옛 옵션 · `src` 가 없는 줄 · 옛 무기의 `random` 줄) `null`. 목걸이 `proc` 은 `affixes` 밖이라 안 든다
+     * 행을 못 찾으면(표에서 빠진 옛 옵션 · `src` 가 없는 줄 · 옛 무기의 `random` 줄) `null`. 목걸이 `proc` 은 `affixes` 밖이라 안 든다.
+     * **죄종 줄 · 랜덤 줄은 단어 범위다** [2026-11-11 · R436 · ADR-1041] — 줄 종류는 `optionSources` 가 가른다: 메인 줄 = 그 죄종 칸 단어(`words[k]` · 없으면 번호 0)의 범위 ·
+     *   랜덤 줄 = 그 아이템 레벨의 랜덤 줄 범위(`bandRoll` 의 `u` = 0 · 1). 이 규칙 전에 굴린 옛 장비는 값이 범위 밖일 수 있다(`optionTableRange`)
      */
     function optionRange(item, i) {
+        const line = optionLine(item, i);
+        if (!line) return null;
+        if (line.range) return line.range;
+        const { d, band } = line;
+        return { min: valueOf(d, bandRoll(d, band, 0), item.ilvl), max: valueOf(d, bandRoll(d, band, 1), item.ilvl) };
+    }
+
+    /**
+     * 옵션 표 양끝 그대로의 범위 — **단어 범위 이전(R436 전) 굴림** [신설 2026-11-11 · R436 · INTERFACE §2-5].
+     * 행을 찾는 규칙은 `optionRange` 와 같고 죄종 줄 · 랜덤 줄만 표의 `min` · `max` 를 `valueOf` 로 낸다(베이스 · 특성 줄은 `optionRange` 와 같다).
+     * 옛 세이브의 장비는 이 범위에서 굴렸다 — 결투장 검사가 옛 장비를 거절하지 않으려고 부른다(`arena.validateTeam`). 순수 · rng 0
+     */
+    function optionTableRange(item, i) {
+        const line = optionLine(item, i);
+        if (!line) return null;
+        if (line.range) return line.range;
+        return { min: valueOf(line.d, line.d.min, item.ilvl), max: valueOf(line.d, line.d.max, item.ilvl) };
+    }
+
+    /**
+     * 옵션 줄 하나의 표 행과 범위 비율 — `{range}`(베이스 · 특성 줄 — 범위가 이미 정해진 줄) 또는 `{d, band}`(죄종 줄 · 랜덤 줄) 또는 null.
+     * 그 줄의 표 행을 **굴림이 고른 것과 같은 표**에서 찾는다 — `stat` · `src`(죄종 id · `fixed` · `random`) · 부위 · 무기군(`appliesTo`) · 방어구 갈래
+     */
+    function optionLine(item, i) {
         const a = item?.affixes?.[i];
         if (!a) return null;
         if (a.src === 'fixed') {
-            if (a.stat === SKILL_PLUS && item.slot === 'amulet') return { min: B.amulet_skill_plus_min, max: B.amulet_skill_plus_max };
+            if (a.stat === SKILL_PLUS && item.slot === 'amulet') return { range: { min: B.amulet_skill_plus_min, max: B.amulet_skill_plus_max } };
             if (a.stat === 'skill_tag' && item.slot === 'ring') {
                 const row = ringBaseOpts.find(r => r.tag === a.tag && r.effect === a.effect);
-                return row ? { min: F.pctOption(row.min), max: F.pctOption(row.max) } : null;
+                return row ? { range: { min: F.pctOption(row.min), max: F.pctOption(row.max) } } : null;
             }
             const lohi = a.stat === 'atk_pct' ? [B.weapon_fixed_atk_pct_min, B.weapon_fixed_atk_pct_max]
                 : a.stat === 'armor_def_pct' ? [B.armor_fixed_def_pct_min, B.armor_fixed_def_pct_max] : null;
-            if (lohi) return { min: F.pctOption(lohi[0]), max: F.pctOption(lohi[1]) };
+            if (lohi) return { range: { min: F.pctOption(lohi[0]), max: F.pctOption(lohi[1]) } };
             // 갈래 특성 줄(R303) — 그 아이템 갈래의 특성 범위 · 굴림과 같은 `valueOf`
             const tr = groupDef(item.slot, item.group)?.trait;
-            return tr?.stats.includes(a.stat) ? { min: valueOf(tr, rollOf(tr, 0, item.ilvl), item.ilvl), max: valueOf(tr, rollOf(tr, 1, item.ilvl), item.ilvl) } : null;
+            return tr?.stats.includes(a.stat) ? { range: { min: valueOf(tr, rollOf(tr, 0, item.ilvl), item.ilvl), max: valueOf(tr, rollOf(tr, 1, item.ilvl), item.ilvl) } } : null;
         }
         const slot = item.slot, src = a.src;
         const g = slot === 'weapon' ? WG[item.group] ?? null : null;
@@ -869,7 +948,11 @@ export function createItemSystem(data) {
                 : FAMILY_SLOTS.has(slot) ? familyRows(slot).filter(r => r.sin === src)
                     : baseless(slot) ? accSinRows(slot, src) : [];
         const d = rows.find(r => r.stat === a.stat);
-        return d ? { min: valueOf(d, rollOf(d, 0, item.ilvl), item.ilvl), max: valueOf(d, rollOf(d, 1, item.ilvl), item.ilvl) } : null;
+        if (!d) return null;
+        // 줄 종류 — 메인 죄종 줄이면 그 칸 단어의 범위 · 아니면(계열 굴림의 랜덤 줄 · 공통 줄) 랜덤 줄 범위 (R436)
+        const tag = optionSources(item)[i];
+        const k = (item.sins ?? []).indexOf(tag);
+        return { d, band: k >= 0 ? wordBand(tag, item.words?.[k]) : randomBand(item.ilvl) };
     }
 
     /**
@@ -942,5 +1025,5 @@ export function createItemSystem(data) {
         return { ...item, implicit: { ...item.implicit, v: Math.round(item.implicit.v * F.upgradeMult(item.up)) } };
     }
 
-    return { rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources, optionRange, skillPlusOf, procSkillLevel };
+    return { rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources, optionRange, optionTableRange, skillPlusOf, procSkillLevel };
 }

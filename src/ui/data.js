@@ -77,7 +77,7 @@ export const D = {
     equipSlots: [],           // equip_slot.csv — 착용 **위치** 9 [{id, part}] · slot_order 순
     classes: [],              // class.csv — [{id, keyAttr, subAttr, ko, en, role:{ko,en}, roleText:{ko,en}, stage, color}] (stage = CSV 의 release)
     sinAttrs: null,           // sin_attr.csv — {sinId: statId} · 죄종이 능력치 굴림에서 미는 칸 한 개 ⚠제안 (hero_design §4-3 · 2026-10-22 · R308)
-    sinWords: null,           // sin_word.csv — {sinId: [{ko, en}...]} **단 순서**(tier 로 정렬) · 아이템 이름의 죄종 단어 (item_design §1 「이름」 · 2026-09-19)
+    sinWords: null,           // sin_word.csv — {sinId: [{ko, en, tier, minIlvl}...]} **파일 순서**(번호가 세이브에 박힌다 · R433) · 아이템 이름의 죄종 단어 · 단 · 해금 아이템 레벨 (item_design §1 「이름」 · 2026-09-19 · R436)
     itemBases: null,          // item_base.csv — {slot: [{id,ko,en,group,tierMin}...]} · 부위별 CSV 행 순서 (드롭 굴림이 인덱스를 쓴다)
     // ~~affixDefs~~ (affix.csv) — 2026-09-21 R127 퇴역. 반지 · 목걸이가 아래 세 표로 옮겼다
     accessorySinOptions: [],  // accessory_sin_option.csv — [{slot, sin, option, stat, scale, min, max, perIlvl?}] · 반지 죄종 계열표(R382) · 목걸이 죄종 칸 후보 · CSV 행 순서 (2026-09-21 · R127)
@@ -263,18 +263,22 @@ export async function loadData(base = './data/') {
     //   ⚠ 행 순서가 대역 순(기본 → ①A·①B → ②A·②B → ③A·③B)이지만 **굴림은 균등** — 대역별 ilvl 경계는 아직 없다(DEV_PLAN R62)
     // 아이템 이름의 죄종 단어 [2026-09-19 · item_design §1 「이름」] — 죄종마다 **파일 순서**로 읽는다(`tier` 로 정렬하지 않는다 · 2026-11-10 R433).
     //   드롭이 단어 번호를 굴려 세이브에 박으므로(INTERFACE §2-5 `words`) **그 죄종 행의 순서가 계약**이다 — 새 단어는 죄종 행의 끝에만 붙인다.
-    //   죄종마다 단 배열이 같고 · 첫 단어가 단 1 · 단 1 부터 끝까지 빠짐없어야 한다 — 아니면 멈춘다 (단 1 에 단어가 둘 — R433).
-    //   ⚠ `tier_min_ilvl` 은 아직 안 읽는다 — 목표는 레벨 구간이고 밸런싱 전까지는 그 죄종의 단어 중 균등이다
+    //   `tier_min_ilvl` = 그 단이 열리는 아이템 레벨 — 드롭이 메인 줄 단어 후보 · 단어 범위를 낸다(`naming.wordLadder` → item.js · 2026-11-11 R436).
+    //   죄종마다 (단 · 해금 레벨) 배열이 같고 · 단 1 부터 하나씩 빠짐없이 · 해금 레벨은 단 따라 오르고 단 1 = 1 ·
+    //   **첫 줄(번호 0) = 맨 위 단**(원래 죄종 이름 — 옛 장비의 번호 0 이 그대로 원래 이름으로 읽힌다 · R436) — 아니면 멈춘다
     D.sinWords = {};
     for (const r of sinWordRow) {
         if (!M.SINS[r.sin]) throw new Error(`data: sin_word.csv 의 '${r.word_id}' — 모르는 죄종 '${r.sin}'`);
-        (D.sinWords[r.sin] ??= []).push({ ko: r.name_kr, en: r.name_en, tier: r.tier });
+        (D.sinWords[r.sin] ??= []).push({ ko: r.name_kr, en: r.name_en, tier: r.tier, minIlvl: r.tier_min_ilvl });
     }
-    const wordTiers = Object.keys(M.SINS).map(k => (D.sinWords[k] ?? []).map(w => w.tier).join(','));
-    const tierList = (wordTiers[0] ?? '').split(',').map(Number), tierMax = Math.max(...tierList);
-    if (new Set(wordTiers).size !== 1 || !wordTiers[0] || tierList[0] !== 1
-        || Array.from({ length: tierMax }, (_, i) => i + 1).some(t => !tierList.includes(t)))
-        throw new Error(`data: sin_word.csv — 죄종마다 단 배열이 같고 첫 단어가 단 1 · 단 1 부터 빠짐없어야 한다 (${wordTiers.join(' / ')})`);
+    const wordTiers = Object.keys(M.SINS).map(k => (D.sinWords[k] ?? []).map(w => `${w.tier}@${w.minIlvl}`).join(','));
+    const ws0 = D.sinWords[Object.keys(M.SINS)[0]] ?? [];
+    const byTier = [...ws0].sort((a, b) => a.tier - b.tier);
+    if (new Set(wordTiers).size !== 1 || !ws0.length
+        || byTier.some((w, i) => w.tier !== i + 1)
+        || byTier[0].minIlvl !== 1 || byTier.some((w, i) => i > 0 && !(w.minIlvl > byTier[i - 1].minIlvl))
+        || ws0[0].tier !== byTier.at(-1).tier)
+        throw new Error(`data: sin_word.csv — 죄종마다 (단@해금 레벨) 배열이 같고 · 단 1 부터 하나씩 · 해금 레벨이 단 따라 오르고(단 1 = 1) · 첫 줄이 맨 위 단이어야 한다 (${wordTiers.join(' / ')})`);
     D.weaponBases = {};
     // `make_level` — 제작에서 이 베이스가 나오는 레벨 [2026-09-21 사용자 지시 · item_design §7-1] (드롭은 아직 안 읽는다)
     for (const r of weaponBaseRow) (D.weaponBases[r.group_id] ??= []).push({ id: r.base_id, ko: r.name_kr, en: r.name_en, makeLevel: Number(r.make_level) });

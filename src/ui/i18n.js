@@ -724,6 +724,20 @@ const STRINGS = {
     'ar.cands': { ko: '상대 후보', en: 'Opponents' },
     'ar.ai': { ko: 'AI 팀', en: 'AI team' },
     'ar.from': { ko: 'AI 팀 · {tier} · {rating}', en: 'AI team · {tier} · {rating}' },
+    // 콜로세움 데모 — 고스트 · 방어 편성 · 방어 기록 (ADR-1040 · arena_design §9 · 2026-11-11)
+    'ar.fromGhost': { ko: '{name} · {tier} · {rating}', en: '{name} · {tier} · {rating}' },
+    'ar.noName': { ko: '이름 없음', en: 'No name' },
+    'ar.def': { ko: '방어 편성', en: 'Defense party' },
+    'ar.def.none': { ko: '없음', en: 'None' },
+    'ar.def.off': { ko: '등록 안 함', en: 'Not registered' },
+    'ar.def.need': { ko: '3명을 채워야 올라감', en: 'Needs 3 heroes to be listed' },
+    'ar.def.local': { ko: '배포판에서만 올라감', en: 'Listed only on the live build' },
+    'ar.def.up': { ko: '상대 목록에 올라감', en: 'Listed for other players' },
+    'ar.log': { ko: '방어 기록', en: 'Defense log' },
+    'ar.log.none': { ko: '기록 없음', en: 'No records' },
+    'ar.log.win': { ko: '방어 성공', en: 'Defense won' },
+    'ar.log.loss': { ko: '방어 실패', en: 'Defense lost' },
+    'ar.log.draw': { ko: '무승부', en: 'Draw' },
     'ar.newCands': { ko: '새 상대', en: 'New opponents' },
     'ar.friendly': { ko: '친선전', en: 'Friendly' },
     'ar.friendlyCard': { ko: '친선전 · 받은 팀', en: 'Friendly · received team' },
@@ -1850,8 +1864,8 @@ const STRINGS = {
         en: "Understanding rating and leagues",
     },
     'help.arena.rating.body': {
-        ko: "콜로세움은 승패에 따라 바뀌는 대전 점수인 레이팅을 올리는 곳입니다. 결투장이 층을 차례로 여는 방식이라면, 콜로세움에서는 내 점수 근처의 상대를 골라 겨룹니다. 현재 레이팅 상대는 점수에 맞는 장비와 스킬을 갖춘 AI 팀입니다.<br><br>선택한 Party의 영웅 {duelSize}명으로 겨루며, 승리하면 레이팅이 오르고 패배하면 내려갑니다. 나보다 높은 레이팅의 상대를 이길수록 더 많이 오르고, 그런 상대에게 질 때는 덜 내려갑니다. 무승부도 상대와의 점수 차이에 따라 레이팅이 바뀔 수 있습니다. 예를 들어 나보다 높은 점수의 상대와 비기면 레이팅이 오를 수 있습니다.<br><br>리그는 레이팅 구간의 이름입니다. 왼쪽 리그표에서 다음 등급의 문턱을 확인할 수 있으며, 문턱에 도달하면 표시되는 리그가 바뀝니다. 레이팅과 리그는 이 콘텐츠의 기록이며 영웅의 레벨이나 원정 장비를 직접 올리지는 않습니다.",
-        en: "The Colosseum tracks rating: a duel score that changes with wins, draws and losses. The Arena opens floors in order, while the Colosseum lets you choose opponents near your score. Current rated opponents are AI teams with equipment and skills suited to their rating.<br><br>Fight with the {duelSize} heroes in your chosen Party. Wins raise rating and losses lower it. Beating a higher-rated opponent gains more, while losing to one costs less. A draw can also change rating depending on the difference between your scores. For example, drawing against a higher-rated opponent can raise your rating.<br><br>A league is the name of a rating range. Check the league table on the left for the next threshold; crossing it changes your displayed league. Rating and leagues track progress in this mode and do not directly raise hero levels or Expedition equipment.",
+        ko: "콜로세움은 승패에 따라 바뀌는 대전 점수인 레이팅을 올리는 곳입니다. 결투장이 층을 차례로 여는 방식이라면, 콜로세움에서는 내 점수 근처의 상대를 골라 겨룹니다. 상대는 다른 플레이어가 등록한 방어 편성이 먼저 나오고, 모자란 자리는 점수에 맞는 장비와 스킬을 갖춘 AI 팀이 채웁니다.<br><br>선택한 Party의 영웅 {duelSize}명으로 겨루며, 승리하면 레이팅이 오르고 패배하면 내려갑니다. 나보다 높은 레이팅의 상대를 이길수록 더 많이 오르고, 그런 상대에게 질 때는 덜 내려갑니다. 무승부도 상대와의 점수 차이에 따라 레이팅이 바뀔 수 있습니다. 예를 들어 나보다 높은 점수의 상대와 비기면 레이팅이 오를 수 있습니다.<br><br>리그는 레이팅 구간의 이름입니다. 왼쪽 리그표에서 다음 등급의 문턱을 확인할 수 있으며, 문턱에 도달하면 표시되는 리그가 바뀝니다. 레이팅과 리그는 이 콘텐츠의 기록이며 영웅의 레벨이나 원정 장비를 직접 올리지는 않습니다.",
+        en: "The Colosseum tracks rating: a duel score that changes with wins, draws and losses. The Arena opens floors in order, while the Colosseum lets you choose opponents near your score. Defense parties registered by other players come first, and AI teams with equipment and skills suited to the rating fill any remaining spots.<br><br>Fight with the {duelSize} heroes in your chosen Party. Wins raise rating and losses lower it. Beating a higher-rated opponent gains more, while losing to one costs less. A draw can also change rating depending on the difference between your scores. For example, drawing against a higher-rated opponent can raise your rating.<br><br>A league is the name of a rating range. Check the league table on the left for the next threshold; crossing it changes your displayed league. Rating and leagues track progress in this mode and do not directly raise hero levels or Expedition equipment.",
     },
     'help.arena.opponents.title': {
         ko: "상대 후보를 고르는 순서",
@@ -1860,6 +1874,14 @@ const STRINGS = {
     'help.arena.opponents.body': {
         ko: "왼쪽 후보는 내 레이팅보다 낮은 팀, 비슷한 팀, 높은 팀입니다. 카드의 +는 이겼을 때 오르는 점수이고 −는 졌을 때 잃는 점수입니다. 낮은 상대는 예상 승리 점수가 작고, 높은 상대는 예상 승리 점수가 큽니다. 점수뿐 아니라 상대 직업·스킬과 내 파티가 잘 맞는지도 함께 살펴봅니다.<br><br>후보를 누르면 오른쪽에 그 팀이 나옵니다. 내 Party와 아래 물약·전술을 확인한 뒤 [결투 시작]을 누릅니다. [새 상대]는 후보 목록을 새로 고르는 버튼이며 결투를 시작하지 않습니다. 레이팅 결투를 마치면 후보가 새로 나옵니다. 결과와 레이팅은 전투를 시작하는 순간 기록되므로 관전을 닫아도 바뀐 점수는 남습니다.",
         en: "The candidates on the left are below, near and above your rating. A card's + shows the points gained for a win, and − shows the points lost for a defeat. Lower-rated opponents offer smaller winning gains; higher-rated opponents offer larger ones. Also inspect their classes and skills to judge how your party matches up.<br><br>Select a candidate to reveal that team on the right. Check your Party and the potions and tactics below it, then press Start duel. New opponents refreshes the candidate list without starting a fight. Candidates also refresh after a rated duel. The result and rating are recorded when the fight starts, so leaving the replay keeps the changed score.",
+    },
+    'help.arena.defense.title': {
+        ko: "방어 편성과 방어 기록",
+        en: "Defense party and defense log",
+    },
+    'help.arena.defense.body': {
+        ko: "왼쪽 [방어 편성]에서 Party 하나를 고르면 그 편성이 다른 플레이어의 콜로세움 상대로 올라갑니다. 영웅 {duelSize}명이 찬 편성만 올라가며, 장비나 진형을 바꾸면 바뀐 모습이 다시 올라갑니다. 레이팅과 설정의 닉네임도 함께 보입니다. [없음]을 누르면 등록을 풀고 올린 팀을 지웁니다. 결투를 하러 나가는 편성은 오른쪽 판에서 고르는 Party이며, 방어 편성과 같아도 됩니다.<br><br>다른 플레이어가 내 방어 편성과 싸우면 [방어 기록]에 언제 · 누가 · 그 레이팅 · 결과가 남습니다. 방어 결과는 내 레이팅을 바꾸지 않습니다. 등록과 받기는 배포판에서만 동작하고, 상대 목록과 기록은 게임을 켤 때와 결투 뒤 일정 시간이 지났을 때 새로 받습니다. 다른 플레이어의 팀은 규칙 검사를 통과한 것만 나오고, 파티 전술과 물약 없이 싸웁니다.",
+        en: "Pick a Party under Defense party on the left to list it as a Colosseum opponent for other players. Only a party with {duelSize} heroes is listed, and changing its gear or formation uploads the new version. Your rating and the nickname from Settings are shown with it. Press None to unregister and remove the uploaded team. The party you attack with is the one chosen on the right, and it may be the same as your defense party.<br><br>When another player fights your defense party, the Defense log records when, who, their rating and the result. Defense results do not change your rating. Registering and receiving work only on the live build; opponents and records are refreshed when the game starts and after a while following a duel. Other players' teams appear only if they pass the rule check, and they fight without party tactics or potions.",
     },
     'help.arena.friendly.title': {
         ko: "친선전과 팀 코드 교환",

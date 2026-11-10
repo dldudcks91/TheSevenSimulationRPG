@@ -1,7 +1,7 @@
 /** 콜로세움 · 결투장 — 저장 상태와 독립된 3인 팀 스냅샷 · 상대 셋의 출처 · `battle.simulateTeams` 단판. RNG는 상대/전투마다 주입한다.
  * 순수 — DOM · 저장소 · 시계 · `Math.random` 을 모른다 · 데이터는 생성자 주입 · 세이브를 모른다 (INTERFACE §2-17).
  * **상대는 셋에서 온다** [2026-10-17 · 탭 둘 2026-10-18 · arena_design §0 · §7 · §8] — 콜로세움 = 층마다 정해진 AI 팀(`rollFloorOpponent` —
- *   시드를 층 번호로 파서 rng 를 안 받는다) / 결투장 = 레이팅 근처 AI 팀 셋(`rollRatedCandidates`) / 친선전 = 남이 올린 팀 그대로
+ *   시드를 층 번호로 파서 rng 를 안 받는다) / 결투장 = 레이팅 근처 셋(`rollRatedCandidates` — 받은 고스트가 먼저 · 모자란 자리는 AI 팀 · 2026-11-11 · §9) / 친선전 = 남이 올린 팀 그대로
  *   (`exportTeam` → 운반 → `importTeam` · 받은 팀은 `validateTeam` 을 지나야 선다 — arena_design §2).
  *   운반(문자열로 싸기 · 서버)은 이 모듈 밖이다. 어느 출처든 결과는 `snapshotTeam` 모양이라 `fight` 하나가 받는다.
  *   레이팅 · 오른 층은 세이브라 여기 없다(`state.arenaRecord` · `colosseumRecord`).
@@ -259,15 +259,34 @@ export function createArenaSystem({ hero, item, skill, battle, balance = {}, equ
 
     /* ── 결투장 — 레이팅 근처 AI 팀 셋 (arena_design §8) ── */
 
-    /** 아래 · 비슷 · 위 — 후보마다 흔들림 1회 → 그 팀의 굴림. 이름은 `taken` 과도 앞 후보와도 안 겹친다 */
-    function rollRatedCandidates(rating, rng, taken = []) {
+    /** 아래 · 비슷 · 위 — 후보마다 흔들림 1회 → 그 팀의 굴림. 이름은 `taken` 과도 앞 후보와도 안 겹친다.
+     *  `ghosts` = 받은 방어 편성 `[{id, rating, team}]` (arena_design §9 · 2026-11-11) — 있으면 흔들림 셋을 먼저 굴리고,
+     *  자리와 고스트를 레이팅 차가 작은 쌍부터 짝지은 뒤 남은 자리만 AI 팀을 굴린다 · 셋을 레이팅 순으로 다시 놓는다.
+     *  고스트가 없으면 rng 순서가 옛 것과 같다 (INTERFACE §2-17) */
+    function rollRatedCandidates(rating, rng, taken = [], ghosts = []) {
         const names = (taken ?? []).slice();
-        return [-1, 0, 1].map(d => {
-            const r = Math.max(0, Math.round(rating + d * B.arena_pick_spread + (rng() * 2 - 1) * B.arena_pick_jitter));
+        const seat = d => Math.max(0, Math.round(rating + d * B.arena_pick_spread + (rng() * 2 - 1) * B.arena_pick_jitter));
+        const ai = r => {
             const team = rollKit(kitOfRating(r), rng, names);
             names.push(...team.map(p => p.hero.name));
             return { rating: r, tier: tierOfRating(r), team };
+        };
+        const pool = (ghosts ?? []).filter(g => g && Number.isInteger(g.rating) && g.rating >= 0 && Array.isArray(g.team) && g.team.length === teamSize);
+        if (!pool.length) return [-1, 0, 1].map(d => ai(seat(d)));
+        const seats = [-1, 0, 1].map(seat);
+        // 짝짓기 — (자리, 고스트) 쌍을 레이팅 차 → 자리 → 고스트 순으로 놓고 앞에서부터 둘 다 빈 쌍을 고른다 · rng 0
+        const pairs = [];
+        seats.forEach((r, s) => pool.forEach((g, k) => pairs.push({ s, k, gap: Math.abs(g.rating - r) })));
+        pairs.sort((a, b) => a.gap - b.gap || a.s - b.s || a.k - b.k);
+        const byseat = seats.map(() => null), used = new Set();
+        for (const p of pairs) if (byseat[p.s] === null && !used.has(p.k)) { byseat[p.s] = p.k; used.add(p.k); }
+        byseat.forEach(k => { if (k !== null) names.push(...pool[k].team.map(p => p.hero.name)); });
+        const out = seats.map((r, s) => {
+            if (byseat[s] === null) return ai(r);
+            const g = pool[byseat[s]];
+            return { rating: g.rating, tier: tierOfRating(g.rating), team: clone(g.team), ghost: g.id };
         });
+        return out.map((c, s) => ({ c, s })).sort((a, b) => a.c.rating - b.c.rating || a.s - b.s).map(x => x.c);
     }
 
     /* ── 온라인 — 남이 올린 팀 그대로 (arena_design §0 · §2) ── */
@@ -350,7 +369,9 @@ export function createArenaSystem({ hero, item, skill, battle, balance = {}, equ
                 (it.affixes ?? []).forEach((a, k) => {
                     const r = item.optionRange(it, k);
                     if (!r) return;   // ⚠ 범위를 못 찾는 줄은 막지 않는다 (INTERFACE §2-17)
-                    if (typeof a.v !== 'number' || a.v < Math.min(r.min, r.max) || a.v > Math.max(r.min, r.max)) bad('option', i, { pos: p.id, detail: a.stat });
+                    // 옛 표 범위도 받는다 — 단어 범위(R436) 전에 굴린 옛 장비는 값이 표 양끝 사이에 있다 (2026-11-11)
+                    const inside = x => !!x && a.v >= Math.min(x.min, x.max) && a.v <= Math.max(x.min, x.max);
+                    if (typeof a.v !== 'number' || !(inside(r) || inside(item.optionTableRange(it, k)))) bad('option', i, { pos: p.id, detail: a.stat });
                 });
             }
         });
