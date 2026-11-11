@@ -10,10 +10,13 @@ active_slots,3,fixed,0,액티브 칸 수 — 고유 · 무기군 · 전직 각 �
 skill_cd_floor_mult,0.1,proposed,1,쿨타임 감소의 바닥 — 표기 쿨의 이 배수 밑으로 안 내려간다. 0 이면 스킬이 매 차례 나가 예산이 무너진다 (2026-09-01 코드 상수 CD_MIN_MULT 이관 · battle_design §6)
 cast_charge_max,4,fixed,0,마법 무기 시전 게이지의 칸 수 [2026-10-02 사용자 확정 「캐스팅창을 4개로 나눠 · 채워 둔 칸을 하나씩 소모」 · R200 · battle_design §3] — 게이지 한 바퀴(행동 주기)에 칸 하나가 쌓이고 · 시전 한 번이 칸 하나를 쓴다 · 다 차면 게이지가 선다
 skill_decay_cap_pct,0.9,proposed,0,스케일링 슬롯이 민 감쇠(decay_pct)의 상한(%) — 연쇄 배율 감쇠·광역 약화·방어 감소가 민첩으로 100 에 닿으면 두 번째 대상부터 0 이 되거나 방어가 한 방에 사라진다. 슬롯이 더한 뒤에만 건다 — CSV 원값은 skill.js 의 0 이상 100 미만 검증 그대로다. 안전 상한이라 손잡이(knob)가 아니다(~~crit_cap_pct 와 같은~~ — 치명 상한은 2026-09-25 삭제) (skill_design §13-5 · DEV_PLAN R72) (2026-09-10 R72 발행)
-hero_level_cap,50,fixed,0,영웅 레벨 상한 = **만렙** [2026-09-30 사용자 「만렙50으로 갈거고」 · GAME_DESIGN §9 09-30 · hero_design §5 · R194] — 나이트메어를 깼을 때 45 ~ 50 이고 헬은 레벨이 아니라 난이도로 오른다. 상한에 닿으면 XP 를 더 쌓지 않는다. 몬스터 레벨(stage.csv:dlvl + monster.csv:level_add)도 이 값을 넘지 않는다 — HP 구간 키(hero_hp_band{b}_unit)가 만렙까지만 있다. 아이템 레벨도 이 값을 넘지 않는다(어느 경로든 item.rollGear 가 자른다 · 2026-10-24). ~~7장 끝 · 챕터 하나가 10레벨~~(2026-09-14 · R88) (2026-08-30 발행 · 2026-09-14 50 → 70 · 2026-09-30 70 → 50)
+hero_level_cap,50,fixed,0,영웅 레벨 상한 = **만렙** [2026-09-30 사용자 「만렙50으로 갈거고」 · GAME_DESIGN §9 09-30 · hero_design §5 · R194] — 나이트메어를 깼을 때 45 ~ 50 이고 헬은 레벨이 아니라 난이도로 오른다. 상한에 닿으면 레벨은 멈추고 XP 는 **별**로 쌓인다(hero_star_* · 2026-11-11 · ~~상한에서 XP 를 더 쌓지 않는다~~). 몬스터 레벨(stage.csv:dlvl + monster.csv:level_add)도 이 값을 넘지 않는다 — HP 구간 키(hero_hp_band{b}_unit)가 만렙까지만 있다. 아이템 레벨도 이 값을 넘지 않는다(어느 경로든 item.rollGear 가 자른다 · 2026-10-24). ~~7장 끝 · 챕터 하나가 10레벨~~(2026-09-14 · R88) (2026-08-30 발행 · 2026-09-14 50 → 70 · 2026-09-30 70 → 50)
 hero_attr_min,1,fixed,0,영웅 기본 능력치 최소값 — 7종 공통 (2026-08-22 확정)
 hero_attr_max,20,fixed,0,영웅 기본 능력치 최종 상한 — 전 영웅 공통이며 생성 상한(hero_attr_roll_max)과 구분한다. 남은 2는 만렙 50 이후 직접 올리는 몫으로 남긴다 · 생성이나 레벨업으로 미리 주지 않는다 [2026-10-30 사용자 재확인 · hero_design §4-3]
 hero_attr_roll_max,18,fixed,0,영웅 생성 시 각 기본 능력치의 최대값 — 시작 파티 · 선술집 · 수색 · 결투장 상대 · 관리자 생성 공통. 성장 고블린의 자동 성장도 여기서 멈춘다 · 최종 상한 20까지 남은 2는 만렙 50 이후 수동 성장용 [2026-10-30 사용자 재확인 · hero_design §4-3]
+hero_star_max,5,fixed,0,**만렙 뒤 별** 개수 — 만렙(hero_level_cap) 뒤의 경험치가 별을 하나씩 채운다 · 다 차면 경험치를 더 쌓지 않는다 · 찬 별 하나 = 플레이어가 고른 기본 능력치 하나 +1(hero_attr_max 에서 멈춘다 · 되돌리지 않는다) [신설 2026-11-11 사용자 「별을 1개씩줘」 · 「그 별이 생기면 내가 원하는 스탯을 1개 올릴 수 있음」 · hero_design §5]
+hero_star_xp_first,2,fixed,1,첫 별에 드는 경험치 = 레벨 1 → 만렙 필요 경험치의 합(level_xp.csv:xp_need) × 이 값 [신설 2026-11-11 사용자 「별1개 = 50레벨 2번찍는 경험치」 · hero_design §5]
+hero_star_xp_growth,1.5,fixed,1,다음 별에 드는 경험치 = 앞 별 × 이 값(정수로 반올림) — 뒤 별일수록 길다 [신설 2026-11-11 사용자 「1.5배로 낮춰보자」 — 처음 안 2배 · hero_design §5]
 growth_attr_per_level,1,proposed,1,등급 「성장」 영웅(고블린)이 레벨 하나 오를 때 자라는 양 — 자동 성장 상한(hero_attr_roll_max) 미만 칸 중 무작위 한 칸에 더한다 · 상한에서 자른다 (2026-10-29 · R365 · hero_design §1)
 hero_attr_key_weight,1.6,proposed,1,능력치 굴림에서 **직업 주력**(`class.csv:key_attr`) 칸의 비율 — 칸의 중심 = 등급 대역 가운데 × 그 칸 비율 ÷ 일곱 칸 비율 합이고 나머지 칸의 비율은 1 [2026-10-22 사용자 · R308 · hero_design §4-3] — 크게 할수록 주력이 높게 나오고 나머지가 낮아진다
 hero_attr_sub_weight,1.3,proposed,1,능력치 굴림에서 **직업 보조**(`class.csv:sub_attr`) 칸의 비율 — 주력과 같은 식 (2026-10-22 · R308)
@@ -212,24 +215,24 @@ shop_potion_bulk_3,100,proposed,0,상단 물약 수 고르기 버튼 셋째 수 
 mastery_t1_max_rank,5,proposed,1,T1·T2·T3 스택형 마스터리 노드 공통 최대 랭크 — 5랭크 상한 (2026-08-28 확정)
 mastery_t2_unlock_level,10,proposed,0,마스터리 T2 해금 레벨 — 죄종 T2 · 직업 T2 공통 (2026-08-28 확정 · 2026-10-05 죄종 T2 = 조건부 층)
 mastery_t3_unlock_level,20,fixed,0,마스터리 T3 해금 영웅 레벨 — 죄종 · 직업 T3 공통 · 스킬북(skillbook_learn_level)과 전직(advance_unlock_level) 사이 [2026-10-06 사용자 확정 「20레벨에서 마스터리 3번째꺼를 찍을 수 있게」 · ~~전직과 같은 레벨~~(09-07) 대체 · skill_design §3-3 · R216 — T3 노드가 아직 없어 코드는 안 읽는다]
-mastery_wrath_t1_atkspeed_pct,0.01,proposed,1,분노 마스터리 T1-1 격분 — 랭크당 [combat_stat.csv:action_period] 감소 % · 레벨 1 (skill_design §3-1 · 2026-10-05 옛 T2-1 을 당겼다 · 옛 공통 T1 은 폐지)
+mastery_wrath_t1_lifesteal_pct,0.01,proposed,1,분노 마스터리 T1-1 붉은 갈증 — 랭크당 [combat_stat.csv:life_steal] % · 색욕 T1 흡혈과 같은 값 ⚠임시 (PLAN_mastery_tiers §0-1 · 2026-11-11 — 옛 mastery_wrath_t1_atkspeed_pct 대체)
 mastery_wrath_t1_critchance_pct,0.01,proposed,1,분노 마스터리 T1-2 살의 — 랭크당 [combat_stat.csv:crit_rate] % (skill_design §3-1 · 2026-10-05)
 mastery_wrath_t1_critdamage_pct,0.005,proposed,1,분노 마스터리 T1-3 피의 갈망 — 랭크당 [combat_stat.csv:crit_damage] % · 치명 배수 마스터리 금지 원칙의 **유일한** 예외(분노만) · 낮은 계수로 캡 (skill_design §3 · 2026-09-22 0.02 → 0.005 · 2026-10-05 T1 로)
-mastery_envy_t1_defignore_pct,0.01,proposed,1,시기 마스터리 T1-1 사안 — 랭크당 [combat_stat.csv:def_ignore] % (skill_design §3-1 · 2026-10-05)
-mastery_envy_t1_reflect_pct,0.01,proposed,1,시기 마스터리 T1-2 원한 — 랭크당 [combat_stat.csv:reflect_damage] % (skill_design §3-1 · 2026-10-05)
-mastery_envy_t1_resignore_pct,0.01,proposed,1,시기 마스터리 T1-3 폄하 — 랭크당 모든 원소 저항 무시([combat_stat.csv:res_reduction]) · ⚠ 저항 하한이 없어 투자 상한이 안 생긴다 (skill_design §3-1 · battle_design §9-5 · 2026-10-05)
+mastery_envy_t1_dr_pct,0.005,proposed,1,시기 마스터리 T1-1 악문 이 — 랭크당 [combat_stat.csv:damage_reduction] % · 오만 T1 · 기사와 같은 값 · 원천별 곱 ⚠임시 (PLAN_mastery_tiers §0-1 · 2026-11-11 — 옛 mastery_envy_t1_defignore_pct 대체)
+mastery_envy_t1_atk_pct,0.01,proposed,1,시기 마스터리 T1-2 초록 눈 — 랭크당 데미지 %(데미지 % 괄호) · 오만 T1 데미지 % 와 같은 값 ⚠임시 (PLAN_mastery_tiers §0-1 · 2026-11-11 — 옛 mastery_envy_t1_reflect_pct 대체)
+mastery_envy_t1_resall_pct,0.02,proposed,1,시기 마스터리 T1-3 차가운 외면 — 랭크당 모든 원소 저항(`res_all`) · 폭식 T1 저항과 같은 값 · 상한형 ⚠임시 (PLAN_mastery_tiers §0-1 · 2026-11-11 — 옛 mastery_envy_t1_resignore_pct 대체)
 mastery_greed_t1_gold_pct,0.05,proposed,1,탐욕 마스터리 T1-1 미다스의 손 — 랭크당 [combat_stat.csv:gold_find] % · 운 계수를 탄다 · 파티 합산 뒤 체감 [balance.csv:party_gold_find_k] · 결투장과 무관한 경제 손잡이 (skill_design §3-1 · 2026-10-05 · 2026-10-15 사용자 「탐욕 골드, 드랍률 2%씩으로 상승해도될거같고 일단」 0.01 → 0.02 → 같은 날 「ㅇㅇ5%까지 올리고」 0.05)
 mastery_greed_t1_xp_pct,0.02,proposed,1,탐욕 마스터리 T1-2 복리 — 랭크당 경험치 획득 %(`xp_gain_pct` · 본인 몫 · 파티 합산 · 운 계수 없음) ⚠제안 — 옛 드랍률 노드 값 그대로 (skill_design §3-1 · 2026-10-30 사용자 「아이템드랍확률 모두 삭제하고 그자리에 경험치 증가」)
 mastery_greed_t1_magicfind_pct,0.02,proposed,1,탐욕 마스터리 T1-3 감정사의 눈 — 랭크당 매직아이템 획득확률(`magic_find` — 장비 탐욕 칸과 같은 채널) · 파티 합산 뒤 체감 [balance.csv:party_magic_find_k] (skill_design §3-1 · 2026-10-05)
 mastery_sloth_t1_hp_flat,10,proposed,1,나태 마스터리 T1-1 깊은 잠 — 랭크당 체력 +상수(`hp_flat` — 체력 % 보다 먼저 더해진다) · 초반에 강하게가 목표 · T1 체력 칸 넷(나태 · 폭식 · 전사 · 기사)이 같은 값 (skill_design §3-1 · 2026-10-05 사용자 「20씩 5번」 · 옛 최대 HP % 대체 · 2026-10-15 사용자 「+10으로 모두」 20 → 10)
-mastery_sloth_t1_dr_pct,0.005,proposed,1,나태 마스터리 T1-2 무관심 — 랭크당 [combat_stat.csv:damage_reduction] % · 오만 T1-1 · 기사 T1-3 과 같은 값 · 원천별 곱 (skill_design §3-1 · 2026-10-05 사용자 「오만이랑 수치 맞추고」 0.01 → 0.005)
+mastery_sloth_t1_def_flat,5,proposed,1,나태 마스터리 T1-2 무거운 이불 — 랭크당 [combat_stat.csv:defense] 고정치 · 기사 T1 물리 방어와 같은 값 ⚠임시 (PLAN_mastery_tiers §0-1 · 2026-11-11 — 옛 mastery_sloth_t1_dr_pct 대체)
 mastery_sloth_t1_cdr_pct,0.01,proposed,1,나태 마스터리 T1-3 지름길 — 랭크당 [combat_stat.csv:cooldown_reduction] % (skill_design §3-1 · 2026-10-05)
 mastery_gluttony_t1_hp_flat,10,proposed,1,폭식 마스터리 T1-1 끝없는 만찬 — 랭크당 체력 +상수(`hp_flat`) · 나태 T1-1 과 같은 값 (skill_design §3-1 · 2026-10-05 사용자 — 옛 HP 재생 삭제 · 2026-10-15 20 → 10)
-mastery_gluttony_t1_crush_pct,0.004,proposed,1,폭식 마스터리 T1-2 집어삼킴 — 랭크당 강타(`crushing_blow_pct` — 맞기 직전 대상 현재 체력 × %) (skill_design §3-1 · 2026-10-05)
+mastery_gluttony_t1_def_flat,5,proposed,1,폭식 마스터리 T1-2 두툼한 배 — 랭크당 [combat_stat.csv:defense] 고정치 · 기사 T1 물리 방어와 같은 값 ⚠임시 (PLAN_mastery_tiers §0-1 · 2026-11-11 — 옛 mastery_gluttony_t1_crush_pct 대체)
 mastery_gluttony_t1_resall_pct,0.02,proposed,1,폭식 마스터리 T1-3 무쇠 위장 — 랭크당 모든 원소 저항(`res_all`) · ⚠ 상한형이라 [balance.csv:res_cap_base] 대비 역산이 남아 있다 (skill_design §3-1 · 2026-10-05)
 mastery_lust_t1_lifesteal_pct,0.01,proposed,1,색욕 마스터리 T1-1 피의 입맞춤 — 랭크당 [combat_stat.csv:life_steal] % (skill_design §3-1 · 2026-10-05)
 mastery_lust_t1_critchance_pct,0.01,proposed,1,색욕 마스터리 T1-2 유혹 — 랭크당 [combat_stat.csv:crit_rate] % · 분노 T1-2 와 같은 값 (skill_design §3-1 · 2026-10-05)
-mastery_lust_t1_buffdur_pct,0.03,proposed,1,색욕 마스터리 T1-3 여운 — 랭크당 버프 지속시간 +%(`buff_dur_pct`) · 사제 T1-3 과 같은 값 (skill_design §3-1 · 2026-10-05 사용자 — 옛 체력 회복 +% 대체)
+mastery_lust_t1_hp_flat,10,proposed,1,색욕 마스터리 T1-1 따뜻한 살결 — 랭크당 체력 +상수(`hp_flat` — 체력 % 보다 먼저 더해진다) · 나태 · 폭식 T1 체력과 같은 값 ⚠임시 (PLAN_mastery_tiers §0-1 · 2026-11-11 — 옛 mastery_lust_t1_buffdur_pct 대체)
 mastery_pride_t1_dr_pct,0.005,proposed,1,오만 마스터리 T1-1 불굴 — 랭크당 [combat_stat.csv:damage_reduction] % · 원천별 곱이라 작게 (skill_design §3-1 · 2026-10-05)
 mastery_pride_t1_atk_pct,0.01,proposed,1,오만 마스터리 T1-2 우월 — 랭크당 데미지 %(데미지 % 괄호) · 전사 T1-3 과 같은 값 (skill_design §3-1 · 2026-10-05 사용자 — 옛 최대 원소 저항 대체 · 2026-10-15 사용자 「1%하고」 0.02 → 0.01 — 데미지 % 괄호는 레벨과 무관한 최종 배율이라 작게)
 mastery_pride_t1_fhr,0.05,proposed,1,오만 마스터리 T1-3 평정 — 랭크당 [combat_stat.csv:fhr] 타격 회복(비율 — 물리 경직 시간 −) (skill_design §3-1 · 2026-10-05)
@@ -302,6 +305,10 @@ tactic_reroll_base_cost,600,proposed,1,전술 **전체 리롤**의 기본가(지
 tactic_reroll_lock_mult,2,proposed,1,전술 리롤 비용이 **잠금 1개마다** 곱해지는 배수 — 가파른 곱이라 다 잠그고 하나만 굴리기가 가장 비싸다 (tactic_card_design §5-6 · 2026-09-22 사용자 확정 「잠금마다 ×2 · 나중에 더 올린다」). 1 미만이면 로드가 멈춘다(지킬수록 싸지면 안 된다)
 tactic_leader_mult_min,0.5,proposed,1,파티 전술 **리더 보너스** — 리더(편성 첫 칸)의 통솔이 **최소**(hero_attr_min)일 때 전술 옵션 값에 곱하는 배수 · 기준(attr_dmg_pivot)에서 1 · 그 사이는 직선 · 옵션마다 받는 몫은 tactic_option.csv:leader_bonus [2026-10-24 사용자 「통솔 10을 기준으로 10보다 낮으면 감소해서 1이면 50%」 · tactic_card_design §5-10 · R340] ⚠임시
 tactic_leader_mult_max,2,proposed,1,파티 전술 **리더 보너스** — 리더의 통솔이 **최대**(hero_attr_max)일 때 전술 옵션 값에 곱하는 배수 · 기준에서 1 · 그 사이는 직선 [2026-10-24 사용자 「20이면 2배」 · tactic_card_design §5-10 · R340] ⚠임시
+tactic_grade_mult_common,1,proposed,1,파티 전술 **등급 배수 — 일반**. 값 = 기준값(tactic_option.csv:unit) × (1 + mult_share × (등급 배수 × 조건 단계 − 1)) · 등급 순으로 커져야 한다(로드 검증) [2026-11-11 · tactic_card_design §5-14 · R441] ⚠제안
+tactic_grade_mult_magic,1.5,proposed,1,파티 전술 **등급 배수 — 매직** (tactic_card_design §5-14 · R441) ⚠제안
+tactic_grade_mult_rare,2,proposed,1,파티 전술 **등급 배수 — 레어** — 최대치 = 레어 × 3단계(예산 검사의 기준 · tactic_card_design §5-14 · R441) ⚠제안
+tactic_sin_gear_pct,0.01,proposed,1,파티 전술 **장비 죄종 버프** — 출전 파티 셋이 낀 장비의 그 죄종 개수(이름의 첫째 · 둘째 죄종 둘 다) × 이 값이 그 죄종 칸의 버프 효과에 더해진다(리더 몫과 더한다 · leader_bonus 와 무관) [2026-11-11 · tactic_card_design §5-14 「장비 죄종 버프」 · R441] ⚠제안
 chapter_open_max,5,fixed,0,**이번 버전이 여는 마지막 장** — 이 장보다 뒤(6 · 7장)는 **무엇으로도 안 열린다**: 앞 장 보스가 여는 장(`limitsOf.chapters` — 2026-10-22 원정 건물 삭제 · R319)이 여기서 잘리고 · 관리자 모드(Admin)도 이 장까지만 연다 · 그 장을 여는 칸(`chapterGate`)도 이 뒤면 null(챕터 세그먼트 자물쇠). 다음 버전에서 장을 열 때 이 값을 올린다 [2026-10-09 사용자 지시 「챕터6이랑 7은 admin이고 뭐고 이번 버전에서는 절대 안열거야」 · ADR-0552 · R227]
 difficulty_unlock_chapter,5,fixed,0,**다음 난이도를 여는 장** — 한 난이도에서 이 장의 보스 칸(`stage.csv:boss_grade` = `chapter_boss`)을 깨면 `difficulty_tier.csv` 의 다음 단이 열린다(노말은 처음부터 · 관리자 모드는 전부) [2026-10-10 사용자 「챕터 5보스를 깰 때마다 다음 난이도가 열리는식」 · base_expedition_design §1-4 · R236]. `chapter_open_max` 와 따로다 — 6 · 7장이 열려도 바퀴는 1 ~ 5장을 돈다
 admin_gold,1000000,fixed,0,**개발 장치** — 관리자 모드(Admin) 판의 Gold [Add] 가 골드를 이 값까지 채운다(모자란 만큼 · 진짜 골드 · 세이브에 남는다) · 게임 기능이 아니다 [2026-09-27 사용자 지시 「Admin 누르면 돈 100만 쓸 수 있도록」 · 2026-10-23 켤 때 → 판의 줄 · R332 · SCREEN_DESIGN §10-3]
@@ -318,7 +325,7 @@ lab_skill_hours,24,proposed,1,숙련이 다 차는 시간(시간) — 등록한 
 lab_ldr_peer_pct,0.005,proposed,1,연구소 등록 효과 — **통솔** 1 이 같은 줄 **다른** 영웅들의 효과에 더하는 몫(비율) ⚠임시 [2026-10-21 · R298]
 lab_agi_cost_pct,0.005,proposed,1,연구소 등록 효과 — **민첩** 1 이 그 줄 지점의 연구 비용(골드 · 재료)을 깎는 몫(비율) — 상한 lab_cost_cut_max ⚠임시 [2026-10-21 · R298]
 lab_cost_cut_max,0.5,proposed,1,민첩이 연구 비용을 깎는 상한(비율) ⚠임시 [2026-10-21 · R298]
-train_level_per_hour,0.1,proposed,1,연구소 훈련 줄 — 등록한 영웅이 한 시간에 받는 경험치 = 지금 레벨의 필요 경험치(level_xp.csv) × 이 값 × 「속도」 지점 × 힘 효과 · 상한 = 로스터 최고 레벨 − 「범위」 거리 ⚠임시 [신설 2026-10-21 사용자 「훈련은 거기에 투입된 영웅들이 기본적으로 받는거임」 · R298]
+train_level_per_hour,0.1,proposed,1,연구소 훈련 줄 — 등록한 영웅이 한 시간에 받는 경험치 = 지금 레벨의 필요 경험치(level_xp.csv) × 이 값 × 「속도」 지점 × 힘 효과 · 상한 = 로스터 최고 레벨 − 「범위」 거리 ⚠임시 [신설 2026-10-21 사용자 「훈련은 거기에 투입된 영웅들이 기본적으로 받는거임」 · R298] · **만렙 영웅은 별 경험치를 받는다** — 지금 레벨 = 만렙 행의 필요 경험치 · 범위 상한은 레벨에만 걸고 별엔 안 건다 [2026-11-11 사용자 「연구소 훈련도 그냥 쌓으라고해」 · hero_design §5]
 lab_blueprint_hours,2,proposed,1,연구소 도서관 — 등록한 영웅마다 기본 도안 한 장 생산 간격(시간) · 간격 지점과 등록 효과가 속도를 올린다 · 사용자 임시값 승인(R399)
 amulet_skill_plus_min,0,fixed,1,목걸이 특정 기본 스킬 레벨 증가 아래끝 · 0이면 줄을 만들지 않는다(R309)
 amulet_skill_plus_max,2,proposed,1,목걸이 특정 기본 스킬 레벨 증가 위끝 · 사용자 제시값 · 아이템 레벨 치우침 적용(R309)
@@ -372,6 +379,7 @@ arena_ai_continue_weight,2,proposed,1,결투장 등급 AI 가 마스터리를 �
 arena_elo_start,1000,proposed,1,콜로세움 ELO **시작 레이팅** — 새 게임 · 레이팅이 없는 세이브가 여기서 시작한다 · arena_tier.csv 첫 행 rating_min 근처 · ⚠임시 [2026-10-18 사용자 「온라인 결투장은 elo 방식」 · arena_design §8 · INTERFACE §2-7]
 arena_elo_k,32,proposed,1,콜로세움 ELO **K 계수** — 한 판의 레이팅 변화 = K × (결과 − 기대 승률) · 결과 승 1 · 무 0.5 · 패 0 · 반올림 · ⚠임시 [2026-10-18 · arena_design §8]
 arena_elo_scale,400,fixed,0,콜로세움 ELO 기대 승률의 **눈금** — 레이팅이 이만큼 높으면 기대 승률 10:1 · E = 1 / (1 + 10^((상대 − 나) / 이 값)) · 표준 ELO 값 [2026-10-18 · arena_design §8]
-arena_pick_spread,100,proposed,1,콜로세움 상대 후보 셋의 **레이팅 간격** — 내 레이팅 − 이 값 · 그대로 · + 이 값(아래 · 비슷 · 위) · ⚠임시 [2026-10-18 · arena_design §8 · INTERFACE §2-17]
-arena_pick_jitter,30,proposed,1,콜로세움 상대 후보 레이팅의 **흔들림** — 후보마다 ± 이 값 안에서 고르게 굴린다(정수) · 간격보다 작아야 셋의 순서가 안 뒤집힌다 · ⚠임시 [2026-10-18 · arena_design §8]
+arena_pick_spread,100,proposed,1,콜로세움 상대 후보 자리 사이의 **레이팅 간격** — 내 레이팅을 가운데로 아래 · 위에 이 값마다 한 자리(후보 수 = arena_pick_count · 다섯이면 −2 · −1 · 0 · +1 · +2 배) · ⚠임시 [2026-10-18 · arena_design §8 · INTERFACE §2-17]
+arena_pick_jitter,30,proposed,1,콜로세움 상대 후보 레이팅의 **흔들림** — 후보마다 ± 이 값 안에서 고르게 굴린다(정수) · 간격보다 작아야 후보 순서가 안 뒤집힌다 · ⚠임시 [2026-10-18 · arena_design §8]
+arena_pick_count,5,fixed,0,콜로세움 상대 후보 **수** — 내 레이팅을 가운데로 아래 · 위에 간격(arena_pick_spread)마다 하나씩 · 홀수면 가운데 = 비슷 [2026-11-11 사용자 지시 · arena_design §8]
 colosseum_seed,7300,fixed,0,결투장 **층 상대의 시드 바탕** — 층 n 의 AI 팀 = deriveSeed(이 값 · n) 으로 굴린다 · 같은 층은 언제 · 누가 가도 같은 팀이다 · 바꾸면 사다리 전체의 상대가 바뀐다 [2026-10-18 · arena_design §7 · INTERFACE §2-17]

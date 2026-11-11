@@ -344,6 +344,7 @@ export function mountBattle(container, opts) {
     if (resume) state.catchUp = true;
     drain(state, container, opts);
     if (state.catchUp) { state.catchUp = false; paintCaughtUp(state, container); }
+    paintClock(state, container);   // 남은 시간 — 첫 프레임 · 되감아 선 자리 (ADR-1047)
     scrollLog(state, container);
     if (!state.ended) { start(state, container, opts); wake(state, container, opts); }   // 세운 자리에 다시 섰으면 풀리는 순간에 깨운다
     renderDmg(state, container);
@@ -382,6 +383,20 @@ function stageIntro(state, root, stage, intro) {
         </div>`;
     node.addEventListener('animationend', e => { if (e.target === node) node.remove(); });
     arena.appendChild(node);
+}
+
+/* 남은 시간 [2026-11-11 사용자 지시 · SCREEN_DESIGN §4-2 「남은 시간」 · ADR-1047] — 원정 아레나 오른쪽 위에 그 스테이지의 남은 제한 시간을 **숫자만**(`m:ss`).
+   제한은 스테이지 하나의 시계다(`game_logic/battle.js` — 스테이지를 열 때 0 · 라운드를 넘어 잇는다) — 재생 시각을 그대로 뺀다 · 초 올림 ·
+   시각 꼬리(0.1 을 거듭 더한 부동소수)가 초 하나를 더 올리지 않게 아주 작은 여유를 뺀다 · 글자가 바뀔 때만 갈아 끼운다 · 결투 관전엔 칸이 없다 */
+const clockLeftText = sec => {
+    const s = Math.max(0, Math.ceil(sec - 1e-6));
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+};
+function paintClock(state, root) {
+    const node = root.querySelector('.stage-clock');
+    if (!node) return;
+    const txt = clockLeftText(D.balance.battle_timeout_sec - state.t);
+    if (node.textContent !== txt) node.textContent = txt;
 }
 
 /* ───────── 구성 ───────── */
@@ -432,6 +447,7 @@ function buildDom(state, stage, stageId, shrine, buffs, opts = {}) {
                 <div class="side side-party"></div>
                 <div class="p-belt b-belt">${potionBeltHtml(state.potion, state.t)}</div>
                 ${buffs ? runBuffIconsHtml() : ''}
+                ${stageId != null ? '<div class="stage-clock"></div>' : ''}
                 <div class="battle-result"></div>
             </div>
             <div class="battle-side" hidden>
@@ -1696,6 +1712,7 @@ function step(state, root, opts) {
     // acted 는 이 틱의 렌더까지만 산다 — 다음 틱에 눕혀야 게이지가 100% 에서 스냅으로 비워진다 (refreshUnit)
     for (const u of [...state.party, ...state.enemies]) { if (u.hp > 0) refreshUnit(state, u); u.acted = false; }
     refreshPotionCd(state, root);   // 물약 쿨 판 — 스킬 쿨 칸과 같은 걸음에 걷는다 (R427 · ADR-1034)
+    paintClock(state, root);        // 남은 시간 — 같은 걸음 (ADR-1047)
     scrollLog(state, root);   // 이 걸음에 붙은 줄이 몇이든 목록은 한 번만 맞춘다
     if (state.dmgDirty) { state.dmgDirty = false; renderDmg(state, root); renderTeams(state); }   // 누적 판도 한 번 (숨어 있으면 `renderDmg` 가 그냥 지나간다) · 두 팀 판도 (ADR-0769)
 }

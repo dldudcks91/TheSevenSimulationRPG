@@ -82,8 +82,11 @@ import { createFormula } from './formula.js';
  *   weaponGroups — {id: {id, ko, en, classes:[cls...], period, variance, damageKind, release}}  ← weapon_group.csv
  *   itemBases    — {slot: [{id,ko,en,group,tierMin}...]}  무기 외 부위의 베이스 풀. 무기의 베이스는 무기군 자체다
  *                  `id` 는 `item_base.csv:base_id` — 드롭이 `item.baseId` 에 박는다 (2026-09-17)
- *   weaponBases  — {groupId: [{id,ko,en}...]}  무기군별 세부 베이스 풀(weapon_base.csv) — **아직 일부 무기군뿐**.
- *                  풀이 있는 무기군만 드롭 때 하나를 굴려 이름·그림을 그 베이스로 좁힌다(2026-09-10). 없으면 무기군 이름 그대로
+ *   weaponBases  — {groupId: [{id, ko, en, tier, minIlvl, line, periodMult}...]}  무기군별 세부 베이스 풀(weapon_base.csv) — 본편 열 무기군마다
+ *                  **기본 1 + 단 3 × 계보 3**(2026-11-11 · R445 · item_design §1 「무기 베이스」). 드롭 때 **그 아이템 레벨 단의 행**에서 하나를 굴려
+ *                  이름·그림을 그 베이스로 좁힌다(`weaponBasesAt`). 풀이 없는 무기군(확장 둘)은 무기군 이름 그대로.
+ *                  단 해금 레벨은 방어구 `itemBases.armor` 의 단과 같아야 하고 단 0 하나 · 단마다 계보 셋(fast · mid · slow) — 아니면 생성 때 던진다.
+ *                  `periodMult` = 계보 공속 배율(`formula.weaponLine` — 주기와 한 방에 같은 배율)
  *   ~~classSkills · starterSkills~~ — 2026-09-29 R179 퇴역(무기가 스킬을 안 담는다 — skill_design §2-1 스킬북)
  *   ~~affixDefs~~ — 2026-09-21 R127 퇴역(`affix.csv` 삭제 — 마지막 사용자였던 목걸이 · 반지가 아래 세 표로 옮겼다)
  *   accessorySinOptions    — [{slot, sin, option, stat, scale, min, max, perIlvl?}] ← accessory_sin_option.csv — 반지 죄종 계열표(`option` · 2026-10-29 R382) ·
@@ -255,6 +258,54 @@ export function createItemSystem(data) {
     const dropGroups = Object.values(WG).filter(g => g.release === 'main');
     /** 그 직업의 **스킬이 붙는** 무기군들 — 09-10 장착 개방 뒤로는 착용 제한이 아니라 시작 무기 선정에만 쓴다 */
     const groupsFor = cls => dropGroups.filter(g => g.classes.includes(cls));
+
+    /* ── 무기 베이스 — 무기군당 10 = 기본 1 + 단 3 × 계보 3 (2026-11-11 · 사용자 확정 · R445 · item_design §1 「무기 베이스」) ──
+       단은 **아이템 레벨이 무조건 정한다**(방어구 단과 같은 경계) — 그 단의 셋(첫 단 아래면 기본 하나)에서만 굴린다 · 단은 이름 · 그림만 바꾼다.
+       계보(빠름 · 보통 · 느림)는 공속을 조금씩 다르게 하고 평균 데미지로 평타 DPS 를 맞춘다(`periodMult` → `formula.weaponLine`). */
+    /** 계보 어휘 = 단 안의 행 순서 (구조 상수 — INTERFACE §5-3) */
+    const WEAPON_LINES = ['fast', 'mid', 'slow'];
+    const WB = data.weaponBases ?? {};
+    /** 베이스 id → 행 (무기군을 넘는 유일 id) */
+    const WB_BY_ID = {};
+    (() => {
+        const bad = why => { throw new Error(`item: weapon_base.csv — ${why}`); };
+        const armorTiers = [...new Set((data.itemBases?.armor ?? []).map(b => b.tierMin ?? 1))].sort((a, b) => a - b);
+        for (const [gid, rows] of Object.entries(WB)) {
+            if (!WG[gid]) bad(`모르는 무기군 '${gid}'`);
+            const base0 = rows.filter(r => r.tier === 0);
+            if (base0.length !== 1 || base0[0].line !== null) bad(`'${gid}' — 단 0(기본)은 계보 없이 하나여야 한다`);
+            // 행 순서 = 단 오름차순 · 단 안은 계보 순서 — 드롭이 CSV 순서로 후보를 쓴다(결정론 계약)
+            if (rows.some((r, i) => i > 0 && r.tier < rows[i - 1].tier)) bad(`'${gid}' — 행이 단 순서가 아니다`);
+            const tiers = [...new Set(rows.map(r => r.tier))];
+            if (tiers.some((t, i) => t !== i)) bad(`'${gid}' — 단이 0 부터 하나씩 이어지지 않는다 (${tiers.join(',')})`);
+            const mins = tiers.map(t => {
+                const ls = rows.filter(r => r.tier === t);
+                if (t > 0 && ls.map(r => r.line).join() !== WEAPON_LINES.join()) bad(`'${gid}' 단 ${t} — 계보가 ${WEAPON_LINES.join(' · ')} 하나씩이 아니다 (${ls.map(r => r.line).join(',')})`);
+                const m = [...new Set(ls.map(r => r.minIlvl))];
+                if (m.length !== 1 || !Number.isInteger(m[0])) bad(`'${gid}' 단 ${t} — 해금 레벨이 하나의 정수가 아니다 (${m.join(',')})`);
+                return m[0];
+            });
+            if (mins[0] !== 1 || mins.some((m, i) => i > 0 && !(m > mins[i - 1]))) bad(`'${gid}' — 해금 레벨이 단 0 = 1 부터 단 따라 올라야 한다 (${mins.join(',')})`);
+            if (armorTiers.length && mins.join() !== armorTiers.join()) bad(`'${gid}' — 단 해금 레벨 ${mins.join(',')} ≠ 방어구 단 ${armorTiers.join(',')}(item_base.csv:tier_min_ilvl) · 단 경계는 방어구와 같다`);
+            for (const r of rows) {
+                if (!(typeof r.periodMult === 'number' && r.periodMult > 0)) bad(`'${r.id}' — period_mult 는 0 보다 큰 수여야 한다 (${r.periodMult})`);
+                if (WB_BY_ID[r.id]) bad(`base_id '${r.id}' 가 겹친다`);
+                WB_BY_ID[r.id] = r;
+            }
+        }
+    })();
+    /** 그 무기군 · 그 아이템 레벨의 **단 행**(원본 행 · CSV 순서) — 열린(`minIlvl ≤ ilvl`) 행 중 해금 레벨이 가장 높은 행들 · 풀이 없으면 [] */
+    function weaponTier(groupId, ilvl) {
+        const open = (WB[groupId] ?? []).filter(r => r.minIlvl <= ilvl);
+        if (!open.length) return [];
+        const top = Math.max(...open.map(r => r.minIlvl));
+        return open.filter(r => r.minIlvl === top);
+    }
+    /**
+     * 그 무기군에서 그 아이템 레벨에 나오는 세부 베이스 `[{id, ko, en, tier, line}]` [신설 2026-11-11 · R445 — ~~`weaponBaseAt`(제작 레벨 사다리 · 하나)~~ 대체] —
+     * 그 단의 셋(첫 단 아래면 기본 하나) · CSV 순서. **드롭(`build`)과 제작(`state.makeState`)이 같은 후보를 쓴다.** rng 0 · 새 객체
+     */
+    const weaponBasesAt = (groupId, ilvl) => weaponTier(groupId, ilvl).map(b => ({ id: b.id, ko: b.ko, en: b.en, tier: b.tier, line: b.line }));
 
     /* ── 무기 옵션 표 — 죄종 계열표 (item_design §1 「무기 옵션 — 죄종 계열」 · 2026-09-11 · R78 · 계열표 2026-10-05 · R206 · R208) ── */
     const sinOpts = data.weaponSinOptions ?? [];
@@ -623,7 +674,7 @@ export function createItemSystem(data) {
 
     /**
      * base = 무기면 무기군 정의, 아니면 {ko,en} 이름.
-     * opts.weaponBase = (무기) 세부 베이스 고정 — 제작이 레벨의 베이스를 넘긴다(2026-09-21 · `weaponBaseAt`). **베이스 굴림은 1회 그대로 소비한다**(값만 안 쓴다).
+     * opts.weaponBase = (무기) 세부 베이스 고정 — 제작이 고른 줄의 베이스를 넘긴다(2026-09-21 · R445 `weaponBasesAt`). **베이스 굴림은 1회 그대로 소비한다**(값만 안 쓴다).
      * rng 소비 순서(계약 — INTERFACE §5-2): (매직 이상) 접두 죄종 → (레어 · 에픽 · 레전더리) 접미 죄종 →
      *   **(무기 · 방어구 넷) 베이스 옵션 1 + 죄종 계열**(`weaponOptions` · `armorOptions` → `familyOptions` — 줄마다 옵션 1 → 변형 1 → 값 1 → 스킬 1 · 2026-10-05 · 랜덤 줄 수는 희귀도가 정한다 · 붙나 굴림 없음 — 2026-10-24 R342 ·
      *   **방어구는 베이스 옵션 뒤에 갈래 특성 변형 1 → 값 1** — 2026-10-21 R303 · ~~(투구 · 장갑 · 신발) 옵션 세 층~~ R303 퇴역) /
@@ -662,14 +713,14 @@ export function createItemSystem(data) {
         if (accBase.length) item.affixes.unshift(...accBase);
         if (slot === 'weapon') {
             item.group = base.id;
-            // 무기 베이스 — 이름이 실제로 갈리는 무기군만 풀이 있다(weapon_base.csv · 지금 본편 열 전부 — 스태프·오브·십자가·성경·석궁 2026-09-14 · 확장 둘은 없다).
-            //   드롭되는 레벨·성격(A/B/C)은 아직 안 갈라 **대역 전부에서 균등 굴림**이다(item_design §1 대역 경계 미정).
-            // ⚠ **풀이 비어도 1회 소비한다** — 소비 수가 무기군에 의존하면 같은 시드가 다른 드롭을 낸다
-            const bases = data.weaponBases?.[base.id] ?? [];
+            // 무기 베이스 — 이름이 실제로 갈리는 무기군만 풀이 있다(weapon_base.csv · 본편 열 전부 · 확장 둘은 없다).
+            //   후보 = **그 아이템 레벨 단의 행**(그 단의 셋 · 첫 단 아래면 기본 하나 — `weaponTier` · 2026-11-11 · R445 — ~~무기군의 일곱에서 균등~~)
+            // ⚠ **풀이 비어도 1회 소비한다** — 소비 수가 무기군 · 단에 의존하면 같은 시드가 다른 드롭을 낸다
+            const cand = weaponTier(base.id, ilvl);
             const br = rng();
-            // `opts.weaponBase` — 제작이 고른 레벨의 베이스(2026-09-21). 굴림은 위에서 이미 1회 소비했다 — 소비 수가 경로에 의존하지 않게
-            const wbase = opts.weaponBase ? bases.find(b => b.id === opts.weaponBase) ?? null
-                : bases.length ? bases[Math.floor(br * bases.length)] : null;
+            // `opts.weaponBase` — 제작이 고른 줄의 베이스(2026-09-21 · R445). 굴림은 위에서 이미 1회 소비했다 — 소비 수가 경로에 의존하지 않게
+            const wbase = opts.weaponBase ? (WB[base.id] ?? []).find(b => b.id === opts.weaponBase) ?? null
+                : cand.length ? cand[Math.floor(br * cand.length)] : null;
             if (wbase) {
                 item.baseId = wbase.id;
                 item.name = N.composeName(prefix, wbase, suffix, words);  // 이름은 베이스 이름으로 다시 조립 — 무기군 이름을 덮는다
@@ -715,17 +766,6 @@ export function createItemSystem(data) {
             : tierBases(slot, ilvl).map(b => ({ id: b.id, ko: b.ko, en: b.en, group: b.group ?? null }));
     }
 
-    /**
-     * 그 무기군에서 그 제작 레벨에 나오는 세부 베이스 [신설 2026-09-21 · 사용자 지시 「레벨 바꾸면 그 레벨의 아이템」 · item_design §7-1] —
-     * `make_level ≤ level` 인 행 중 **`make_level` 이 가장 높은 것 하나**(`weapon_base.csv:make_level`). 없으면 null. rng 0 · 새 객체.
-     * ⚠ 제작만 읽는다 — 드롭은 여전히 무기군 안 7개에서 균등으로 굴린다(`build`)
-     */
-    function weaponBaseAt(groupId, level) {
-        const open = (data.weaponBases?.[groupId] ?? []).filter(b => b.makeLevel <= level);
-        if (!open.length) return null;
-        const b = open.reduce((a, x) => (x.makeLevel > a.makeLevel ? x : a));
-        return { id: b.id, ko: b.ko, en: b.en };
-    }
 
     /**
      * **한 벌** — 주어진 부위마다 아이템 하나 [신설 2026-09-11 · R79 · monster_design §5-1 · item_design §1].
@@ -741,7 +781,7 @@ export function createItemSystem(data) {
      *   · `magicFind` 파티 평균(비율) — 레어 이상 가중치에 곱한다(~~`rareBonusPct` 등급이 같은 채널로 더 밀던 자리~~ 2026-10-24 R350 퇴역 — 등급 차는 희귀도 표의 행이 낸다)
      *   · `weaponGroup` 무기군 고정. 몬스터는 제 무기군(`monster.csv:weapon_group`)을 들고, 안 주면 본편 무기군에서 굴린다
      *   · `itemBase` 무기 외 베이스 고정(`itemBases` 의 id — **소비 0**). 제작이 고른 종류를 넘긴다(2026-09-21) · 후보 밖인지는 부르는 쪽이 본다
-     *   · `weaponBase` 무기 세부 베이스 고정(`weaponBases` 의 id) — `build` 로 넘긴다. **소비는 그대로**(베이스 굴림 1회를 하고 값만 버린다 · 2026-09-21)
+     *   · `weaponBase` 무기 세부 베이스 고정(`weaponBases` 의 id — 제작이 고른 줄) — `build` 로 넘긴다. **소비는 그대로**(베이스 굴림 1회를 하고 값만 버린다 · 2026-09-21)
      *   · `rarityWeights` 희귀도 가중치 `{normal, magic, rare, epic?, legendary?}`(없는 칸은 0) — 제작이 넘긴다 · 몬스터는 등급 × 단 한 행(`gear_rarity.csv` — 난이도가 안 연 등급은 0 · R350)
      *     없으면 드롭 가중치 · 굴림 수 불변 (R96 · R342 · ~~`rarityMax`~~ 2026-10-24 R350 퇴역)
      */
@@ -840,7 +880,8 @@ export function createItemSystem(data) {
      * 강화 배율까지 든 값이다 — 식은 `formula.weaponDamage` 하나다(전투는 hero.computeCombat 이 같은 함수를 부른다).
      * 무기군을 모르면 전역 폭(`dmg_variance_pct`)으로 낸다 — 전투 쪽과 같은 규칙
      */
-    const weaponDamage = item => (item?.slot === 'weapon' ? F.weaponDamage(item.ilvl, WG[item.group] ?? null, item.up) : null);
+    //   계보 배율(그 무기의 베이스 행 — `formula.weaponLine` · 2026-11-11 · R445)을 전투(`hero.computeCombat`)와 같은 함수로 먹인다
+    const weaponDamage = item => (item?.slot === 'weapon' ? F.weaponDamage(item.ilvl, F.weaponLine(WG[item.group] ?? null, WB_BY_ID[item.baseId] ?? null), item.up) : null);
 
     /**
      * 무기 피해 범위에 **베이스 옵션 「무기 데미지 +%」**(`src: 'fixed'` 의 `atk_pct` — 화면 이름 2026-10-15)를 먹인 값 [2026-09-23 사용자 지시] — 아이템 툴팁 메인 옵션이 부른다.
@@ -1025,5 +1066,5 @@ export function createItemSystem(data) {
         return { ...item, implicit: { ...item.implicit, v: Math.round(item.implicit.v * F.upgradeMult(item.up)) } };
     }
 
-    return { rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBaseAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources, optionRange, optionTableRange, skillPlusOf, procSkillLevel };
+    return { rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBasesAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, implicitFixed, optionSources, optionRange, optionTableRange, skillPlusOf, procSkillLevel };
 }

@@ -144,8 +144,10 @@ const STRINGS = {
     'hint.colosseum': { ko: '상대 팀을 확인하고 선택한 Party로 겨룹니다. 영웅의 장비·스킬과 편성을 함께 준비하세요.', en: 'Inspect the opposing team and fight with your selected Party. Prepare its equipment, skills and formation together.' },
     'hint.arena': { ko: '상대를 고르고 선택한 Party로 결투합니다. 전투 전에 상대 구성과 내 물약·전술을 확인하세요.', en: 'Choose an opponent and duel with the selected Party. Check both teams and your potions and tactics before starting.' },
     'hint.opponents': { ko: '후보를 누르면 상대 팀을 확인할 수 있습니다. 새 상대는 후보 목록을 다시 고릅니다.', en: 'Select a candidate to inspect its team. New opponents refreshes the candidate list.' },
+    'hint.defense': { ko: '다른 플레이어가 상대로 만나는 Party입니다. 영웅 3명이 찬 편성만 올라갑니다.', en: 'The Party other players face as your defense. Only a party with 3 heroes is listed.' },
+    'hint.reg_name': { ko: '다른 플레이어에게 이름과 태그가 보입니다. 이름은 설정에서 바꿀 수 있습니다.', en: 'Other players see your name and tag. You can change the name in Settings.' },
+    'hint.users': { ko: '이름이나 태그로 다른 플레이어를 찾아 친선전 상대로 고릅니다. 친선전은 레이팅이 바뀌지 않습니다.', en: 'Find other players by name or tag and pick one as a friendly opponent. Friendly duels do not change rating.' },
     'hint.team': { ko: '선택한 Party의 영웅과 진형입니다. 편성 탭에서 인원과 자리를 바꿀 수 있습니다.', en: 'The heroes and formation of the selected Party. Change members and positions in Party.' },
-    'hint.team_code': { ko: '내 팀 코드를 만들어 공유하거나 받은 코드를 불러와 친선전 상대를 정합니다.', en: 'Create a code to share your team, or load a received code to choose a friendly opponent.' },
     'hint.depart': { ko: '선택한 지역의 적과 출정 준비를 확인합니다. Party와 출정 방식을 고른 뒤 출발하세요.', en: 'Review this area’s enemies and your preparations. Choose a Party and departure mode, then deploy.' },
     'hint.cell': { ko: '같은 지역 안에서 도전할 칸을 고릅니다. 칸마다 적 구성과 진행 조건을 확인하세요.', en: 'Choose a stage within this area. Check its enemies and progression requirements.' },
     'hint.departure': { ko: '한 번 출정할지 반복할지 고릅니다. 출발하면 선택한 Party의 준비 상태가 적용됩니다.', en: 'Choose a single or repeating expedition. Deployment uses the selected Party’s preparation.' },
@@ -722,14 +724,10 @@ const STRINGS = {
     'ar.toNext': { ko: '{tier}까지 {n}', en: '{n} to {tier}' },
     'ar.topLeague': { ko: '최고 리그', en: 'Top league' },
     'ar.cands': { ko: '상대 후보', en: 'Opponents' },
-    'ar.ai': { ko: 'AI 팀', en: 'AI team' },
-    'ar.from': { ko: 'AI 팀 · {tier} · {rating}', en: 'AI team · {tier} · {rating}' },
     // 콜로세움 데모 — 고스트 · 방어 편성 · 방어 기록 (ADR-1040 · arena_design §9 · 2026-11-11)
     'ar.fromGhost': { ko: '{name} · {tier} · {rating}', en: '{name} · {tier} · {rating}' },
     'ar.noName': { ko: '이름 없음', en: 'No name' },
     'ar.def': { ko: '방어 편성', en: 'Defense party' },
-    'ar.def.none': { ko: '없음', en: 'None' },
-    'ar.def.off': { ko: '등록 안 함', en: 'Not registered' },
     'ar.def.need': { ko: '3명을 채워야 올라감', en: 'Needs 3 heroes to be listed' },
     'ar.def.local': { ko: '배포판에서만 올라감', en: 'Listed only on the live build' },
     'ar.def.up': { ko: '상대 목록에 올라감', en: 'Listed for other players' },
@@ -740,46 +738,28 @@ const STRINGS = {
     'ar.log.draw': { ko: '무승부', en: 'Draw' },
     'ar.newCands': { ko: '새 상대', en: 'New opponents' },
     'ar.friendly': { ko: '친선전', en: 'Friendly' },
-    'ar.friendlyCard': { ko: '친선전 · 받은 팀', en: 'Friendly · received team' },
     'ar.unrated': { ko: '레이팅 변동 없음', en: 'Unrated' },
+    // 등록 판 · 친구와 전투 목록 · 친선전 출처 (ADR-1042 · 2026-11-11)
+    'ar.fromFriend': { ko: '친선전 · {name} · {rating}', en: 'Friendly · {name} · {rating}' },
+    'ar.reg.name': { ko: '이름', en: 'Name' },
+    'ar.reg.namePh': { ko: '이름 입력', en: 'Enter a name' },
+    'ar.reg.noParty': { ko: '영웅 {n}명을 채운 편성이 필요합니다', en: 'You need a party with {n} heroes', lock: true },
+    'ar.reg.go': { ko: '등록', en: 'Register' },
+    'ar.users': { ko: '친구와 전투', en: 'Fight a friend' },
+    'ar.leagues': { ko: '전체 리그', en: 'Leagues' },   // 리그 카드 버튼 · 리그 창 제목 (ADR-1046)
+    'ar.cands.none': { ko: '아직 상대가 없습니다', en: 'No opponents yet' },
+    'ar.users.ph': { ko: '이름 또는 #1234', en: 'Name or #1234' },
+    'ar.users.find': { ko: '찾기', en: 'Search' },
+    'ar.users.more': { ko: '더 보기', en: 'More' },
+    'ar.users.loading': { ko: '불러오는 중', en: 'Loading' },
+    'ar.users.none': { ko: '찾은 사람 없음', en: 'No players found' },
+    'ar.users.local': { ko: '배포판에서만', en: 'Live build only' },
     'ar.ratingFlash': { ko: '레이팅 {after} ({delta})', en: 'Rating {after} ({delta})' },
     'ar.last.rated': { ko: '지난 결투: {result} · 레이팅 {after} ({delta})', en: 'Last duel: {result} · Rating {after} ({delta})' },
-    'ar.ghostTeam': { ko: '받은 팀', en: 'Received team' },
-    'ar.code.h': { ko: '친선전 — 팀 코드', en: 'Friendly — team codes' },
-    'ar.code.mine': { ko: '내 팀 코드', en: 'My team code' },
-    'ar.code.make': { ko: '코드 만들기', en: 'Make code' },
-    'ar.code.copy': { ko: '복사', en: 'Copy' },
-    'ar.code.copied': { ko: '팀 코드 복사 완료', en: 'Team code copied' },
-    'ar.code.paste': { ko: '받은 코드', en: 'Received code' },
-    'ar.code.placeholder': { ko: '여기에 팀 코드 붙여넣기', en: 'Paste a team code here' },
-    'ar.code.load': { ko: '불러오기', en: 'Load' },
-    'ar.code.broken': { ko: '코드를 읽을 수 없음', en: 'This code cannot be read' },
-    'ar.bad.row': { ko: '{who} — {why}', en: '{who} — {why}' },
-    'ar.bad.team': { ko: '팀', en: 'Team' },
-    'ar.bad.hero': { ko: '영웅 {n}', en: 'Hero {n}' },
-    'ar.bad.format': { ko: '코드 모양이 맞지 않음', en: 'The code is malformed' },
-    'ar.bad.text': { ko: '쓸 수 없는 글자가 들어 있음', en: 'Contains characters that are not allowed' },
-    'ar.bad.class': { ko: '없는 직업', en: 'Unknown class' },
-    'ar.bad.level': { ko: '레벨이 범위를 벗어남', en: 'Level is out of range' },
-    'ar.bad.stats': { ko: '기본 능력치가 상한을 넘음', en: 'Base attributes exceed the cap' },
-    'ar.bad.mastery': { ko: '찍을 수 없는 마스터리가 있음', en: 'Contains mastery that cannot be learned' },
-    'ar.bad.masteryPoints': { ko: '마스터리·전직에 레벨이 준 스킬 포인트보다 많이 씀', en: 'Mastery and advancement exceed the skill-point budget' },
-    'ar.bad.innate': { ko: '고유 스킬이 그 직업의 것이 아님', en: 'The innate skill does not belong to the class' },
-    'ar.bad.book': { ko: '배울 수 없는 책 스킬', en: 'The book skill cannot be learned' },
-    'ar.bad.skillLv': { ko: '스킬 업그레이드가 상한을 넘음', en: 'Skill upgrades exceed the cap' },
-    'ar.bad.advance': { ko: '전직이 규칙에 맞지 않음', en: 'The advancement breaks the rules' },
-    'ar.bad.slot': { ko: '장비 자리가 맞지 않음', en: 'Gear is in the wrong slot' },
-    'ar.bad.reqLevel': { ko: '레벨이 모자라 낄 수 없는 장비가 있음', en: 'Wears gear above its level' },
-    'ar.bad.up': { ko: '강화 단계가 상한을 넘음', en: 'Upgrade level exceeds the cap' },
-    'ar.bad.option': { ko: '옵션 수치가 범위를 벗어남', en: 'An option value is out of range' },
     'ar.rules': { ko: '결투 규칙', en: 'Duel rules' },
     'ar.help.rating': {
-        ko: '콜로세움은 레이팅으로 겨룹니다. 이기면 오르고 지면 내려가며, 센 상대를 이길수록 많이 오르고 센 상대에게 질수록 적게 내려갑니다. 레이팅이 문턱을 넘으면 리그가 오릅니다.<br>상대 후보 셋은 내 레이팅의 아래 · 비슷 · 위에서 나옵니다. 카드의 + / − 가 이기고 질 때 바뀔 레이팅입니다. 결투가 끝나면 후보가 새로 섭니다.<br>레이팅은 결투를 시작하는 순간 정해집니다 — 관전을 닫아도 결과는 그대로입니다. 서버가 열리기 전까지 상대는 그 레이팅에 맞춰 갖춘 AI 팀입니다.',
-        en: 'The Colosseum is ranked by rating. Wins raise it and losses lower it; beating stronger opponents gains more, and losing to them costs less. Cross a threshold to move up a league.<br>Three opponents are drawn from below, near and above your rating. The + / − on each card is how much your rating changes if you win or lose. New opponents appear after each duel.<br>Your rating is settled the moment the duel starts — closing the replay does not change the result. Until the server opens, opponents are AI teams equipped for their rating.',
-    },
-    'ar.help.friendly': {
-        ko: '친선전 창에서 코드 만들기로 고른 편성의 세 영웅을 팀 코드로 만듭니다. 다른 사람의 코드를 붙여넣고 불러오면 규칙에 맞는지 검사한 뒤 그 팀이 그대로 상대로 나옵니다. 친선전은 레이팅이 바뀌지 않습니다.',
-        en: 'In the Friendly window, Make code turns the chosen party’s three heroes into a team code. Paste someone else’s code and load it; once it passes the rule check, that team appears as your opponent exactly as it is. Friendly duels do not change your rating.',
+        ko: '콜로세움은 레이팅으로 겨룹니다. 이기면 오르고 지면 내려가며, 센 상대를 이길수록 많이 오르고 센 상대에게 질수록 적게 내려갑니다. 레이팅이 문턱을 넘으면 리그가 오릅니다.<br>상대 후보는 내 레이팅의 아래 · 비슷 · 위에 고르게 나옵니다. 카드의 + / − 가 이기고 질 때 바뀔 레이팅입니다. 결투가 끝나면 후보가 새로 섭니다.<br>레이팅은 결투를 시작하는 순간 정해집니다 — 관전을 닫아도 결과는 그대로입니다. 상대는 방어 편성을 등록한 다른 플레이어입니다.',
+        en: 'The Colosseum is ranked by rating. Wins raise it and losses lower it; beating stronger opponents gains more, and losing to them costs less. Cross a threshold to move up a league.<br>Opponents are spread below, near and above your rating. The + / − on each card is how much your rating changes if you win or lose. New opponents appear after each duel.<br>Your rating is settled the moment the duel starts — closing the replay does not change the result. Opponents are defense parties registered by other players.',
     },
     'ar.select': { ko: '출전 인원 {n} / 3', en: 'Team members {n} / 3' },
     'ar.edit': { ko: '편성 수정', en: 'Edit party' },
@@ -1078,6 +1058,10 @@ const STRINGS = {
     // 제작 칸 (R96) — 오류 키는 결과 코드와 짝을 맞춘다(`fg.err.<코드>` — game.makeItem)
     'fg.make.lv': { ko: 'Lv{n}', en: 'Lv{n}' },   // 제작 레벨 버튼 — 대역이 아니라 레벨 하나다 (ADR-0263)
     'fg.make.go': { ko: '만들기', en: 'Make' },
+    // 제작 무기의 계보 줄 — 레벨 줄 아래 · 고른 계보의 세부 베이스를 무기군마다 한 줄씩 편다 (ADR-1044 · R445 · item_design §1 「무기 베이스」)
+    'fg.make.line.fast': { ko: '빠름', en: 'Fast' },
+    'fg.make.line.mid': { ko: '보통', en: 'Mid' },   // 칸 폭 = 레벨 버튼 — 「Balanced」는 넘친다
+    'fg.make.line.slow': { ko: '느림', en: 'Slow' },
     'fg.make.potion': { ko: '물약', en: 'Potions' },   // 제작 고르개 줄 끝의 물약 칸 이름 — 올리면 뜬다 (ADR-0219)
     'fg.made': { ko: '제작 — {name}', en: 'Made — {name}' },
     'fg.synthed': { ko: '합성 — {name} ×{n}', en: 'Combined — {name} ×{n}' },
@@ -1334,24 +1318,24 @@ const STRINGS = {
         en: "Party tactics and rerolls",
     },
     'help.party.tactics.body': {
-        ko: "파티 전술은 조건을 만족한 칸의 효과가 파티에 적용되는 기능입니다. 조건 아래의 현재 수치를 보고 어떤 영웅을 맞춰야 할지 확인합니다. 지휘 천막의 랭크를 올리면 더 많은 전술 칸이 열립니다. [리롤]은 열린 칸의 조건·효과를 골드로 다시 뽑습니다.<br><br>남기고 싶은 칸은 자물쇠로 잠그면 리롤되지 않으며, 잠금은 언제든 무료로 풀 수 있습니다. 전술 내용과 잠금은 편성마다 따로 저장됩니다. 잠근 칸이 많을수록 나머지 칸의 리롤 비용이 올라갑니다.",
-        en: "A party tactic applies its effect when that slot's condition is met. Use the current values shown with the condition to choose heroes. Higher Command Tent ranks unlock more tactic slots. [Reroll] spends gold to reroll conditions and effects in unlocked slots. Lock a slot to keep it during rerolls; locking and unlocking are free.<br><br>Tactics and locks are stored separately for each preset. Locking more slots raises the cost of rerolling the remaining ones.",
+        ko: "파티 전술은 조건을 만족한 칸의 효과가 파티에 적용되는 기능입니다. 조건 아래의 현재 수치를 보고 어떤 영웅을 맞춰야 할지 확인합니다. 지휘 천막의 랭크를 올리면 더 많은 전술 칸이 열립니다. [리롤]은 열린 칸의 죄종·효과·등급을 골드로 다시 뽑습니다. 칸마다 조건은 정해져 있습니다.<br><br>남기고 싶은 칸은 자물쇠로 잠그면 리롤되지 않으며, 잠금은 언제든 무료로 풀 수 있습니다. 전술 내용과 잠금은 편성마다 따로 저장됩니다. 잠근 칸이 많을수록 나머지 칸의 리롤 비용이 올라갑니다.",
+        en: "A party tactic applies its effect when that slot's condition is met. Use the current values shown with the condition to choose heroes. Higher Command Tent ranks unlock more tactic slots. [Reroll] spends gold to reroll the Sin, effect and grade in unlocked slots. Each slot keeps its own condition. Lock a slot to keep it during rerolls; locking and unlocking are free.<br><br>Tactics and locks are stored separately for each preset. Locking more slots raises the cost of rerolling the remaining ones.",
     },
     'help.party.tactic_choices.title': {
         ko: "전술 조건을 맞추는 이유",
         en: "Making tactic conditions work",
     },
     'help.party.tactic_choices.body': {
-        ko: "전술은 좋은 효과가 나왔다는 것만으로 적용되지 않습니다. 현재 편성으로 조건을 만족하는지 먼저 봅니다. 예를 들어 영웅의 죄종을 요구하는 전술과 능력치 합을 요구하는 전술은 맞추는 대상이 다릅니다. 효과를 지키기 위해 편성을 바꿀지, 지금 파티에 맞는 전술을 다시 뽑을지 선택합니다.<br><br>리롤은 열린 칸 중 잠그지 않은 칸을 한꺼번에 바꾸며, 잠금을 많이 유지할수록 비싸집니다. 한 칸만 완벽하게 맞추려다 골드를 많이 쓰기 전에, 지금 켜져 있는 효과와 건설·강화 등에 필요한 비용도 함께 살펴봅니다. 전술은 전투 중 수동으로 발동하는 버튼이 아닙니다.",
-        en: "A promising tactic does nothing unless its condition is met by the current preset. A condition about heroes' Sins and one about an Attribute total ask for different things. Decide whether to change the party to keep an effect or reroll for a tactic that fits the party you have.<br><br>A reroll replaces every open, unlocked slot at once, and keeping more locks makes it more expensive. Before spending heavily to perfect one slot, consider the effects already active and the gold needed for buildings or upgrades. Tactics are not buttons you activate manually during combat.",
+        ko: "전술은 좋은 효과가 나왔다는 것만으로 적용되지 않습니다. 현재 편성으로 조건을 만족하는지 먼저 봅니다. 예를 들어 그 칸 죄종의 영웅 수를 세는 칸과 이 파티가 함께 잡은 몬스터 수를 세는 칸은 맞추는 대상이 다릅니다. 효과를 지키기 위해 편성을 바꿀지, 지금 파티에 맞는 전술을 다시 뽑을지 선택합니다.<br><br>리롤은 열린 칸 중 잠그지 않은 칸을 한꺼번에 바꾸며, 잠금을 많이 유지할수록 비싸집니다. 한 칸만 완벽하게 맞추려다 골드를 많이 쓰기 전에, 지금 켜져 있는 효과와 건설·강화 등에 필요한 비용도 함께 살펴봅니다. 전술은 전투 중 수동으로 발동하는 버튼이 아닙니다.",
+        en: "A promising tactic does nothing unless its condition is met by the current preset. A slot that counts heroes of its Sin and one that counts monsters this party has slain together ask for different things. Decide whether to change the party to keep an effect or reroll for a tactic that fits the party you have.<br><br>A reroll replaces every open, unlocked slot at once, and keeping more locks makes it more expensive. Before spending heavily to perfect one slot, consider the effects already active and the gold needed for buildings or upgrades. Tactics are not buttons you activate manually during combat.",
     },
     'help.party.changes.title': {
         ko: "원정 중 편성을 바꿨다면",
         en: "Changing a preset during an expedition",
     },
     'help.party.changes.body': {
-        ko: "원정 중 편성 인원·진형·물약·전술을 바꿔도 진행 중인 부대에는 출발 당시 구성이 유지됩니다. 승리 후 자동 출정도 그 구성을 이어 쓰므로, 새 구성을 쓰려면 철수한 뒤 다시 보냅니다.<br><br>패배 후 자동 재도전은 변경한 편성으로 출발할 수 있을 때 현재 편성을 반영합니다. 단, 출발 때 켜진 전술의 장비 조건이 전투 중 바뀌면 그 조건의 충족 여부에 따라 효과가 꺼지거나 다시 켜질 수 있습니다. 탐험 중인 편성의 명단은 귀환까지 바꿀 수 없습니다.",
-        en: "Changing members, formation, potions or rolled tactics does not replace an active party's departure configuration. Automatic departures after wins keep that configuration; retreat and deploy again to use your changes.<br><br>Retries after defeats use the current preset when it can depart. However, equipment changes can disable or reactivate the gear conditions of tactics active at departure. The roster of an exploring preset stays locked until it returns.",
+        ko: "원정 중 편성 인원·진형·물약·전술을 바꿔도 진행 중인 부대에는 출발 당시 구성이 유지됩니다. 승리 후 자동 출정도 그 구성을 이어 쓰므로, 새 구성을 쓰려면 철수한 뒤 다시 보냅니다.<br><br>패배 후 자동 재도전은 변경한 편성으로 출발할 수 있을 때 현재 편성을 반영합니다. 단, 원정 중 장비를 바꾸면 출발 때 켜진 전술의 장비 죄종 몫은 그 순간부터 달라집니다. 탐험 중인 편성의 명단은 귀환까지 바꿀 수 없습니다.",
+        en: "Changing members, formation, potions or rolled tactics does not replace an active party's departure configuration. Automatic departures after wins keep that configuration; retreat and deploy again to use your changes.<br><br>Retries after defeats use the current preset when it can depart. However, changing equipment mid-run changes the gear Sin share of tactics active at departure from that moment. The roster of an exploring preset stays locked until it returns.",
     },
     'help.character.identity.title': {
         ko: "직업·죄종·등급·고유 스킬",
@@ -1864,8 +1848,8 @@ const STRINGS = {
         en: "Understanding rating and leagues",
     },
     'help.arena.rating.body': {
-        ko: "콜로세움은 승패에 따라 바뀌는 대전 점수인 레이팅을 올리는 곳입니다. 결투장이 층을 차례로 여는 방식이라면, 콜로세움에서는 내 점수 근처의 상대를 골라 겨룹니다. 상대는 다른 플레이어가 등록한 방어 편성이 먼저 나오고, 모자란 자리는 점수에 맞는 장비와 스킬을 갖춘 AI 팀이 채웁니다.<br><br>선택한 Party의 영웅 {duelSize}명으로 겨루며, 승리하면 레이팅이 오르고 패배하면 내려갑니다. 나보다 높은 레이팅의 상대를 이길수록 더 많이 오르고, 그런 상대에게 질 때는 덜 내려갑니다. 무승부도 상대와의 점수 차이에 따라 레이팅이 바뀔 수 있습니다. 예를 들어 나보다 높은 점수의 상대와 비기면 레이팅이 오를 수 있습니다.<br><br>리그는 레이팅 구간의 이름입니다. 왼쪽 리그표에서 다음 등급의 문턱을 확인할 수 있으며, 문턱에 도달하면 표시되는 리그가 바뀝니다. 레이팅과 리그는 이 콘텐츠의 기록이며 영웅의 레벨이나 원정 장비를 직접 올리지는 않습니다.",
-        en: "The Colosseum tracks rating: a duel score that changes with wins, draws and losses. The Arena opens floors in order, while the Colosseum lets you choose opponents near your score. Defense parties registered by other players come first, and AI teams with equipment and skills suited to the rating fill any remaining spots.<br><br>Fight with the {duelSize} heroes in your chosen Party. Wins raise rating and losses lower it. Beating a higher-rated opponent gains more, while losing to one costs less. A draw can also change rating depending on the difference between your scores. For example, drawing against a higher-rated opponent can raise your rating.<br><br>A league is the name of a rating range. Check the league table on the left for the next threshold; crossing it changes your displayed league. Rating and leagues track progress in this mode and do not directly raise hero levels or Expedition equipment.",
+        ko: "콜로세움은 승패에 따라 바뀌는 대전 점수인 레이팅을 올리는 곳입니다. 결투장이 층을 차례로 여는 방식이라면, 콜로세움에서는 내 점수 근처의 상대를 골라 겨룹니다. 상대는 다른 플레이어가 등록한 방어 편성이며, 내 점수 근처의 플레이어가 없으면 후보가 적거나 비어 있습니다.<br><br>선택한 Party의 영웅 {duelSize}명으로 겨루며, 승리하면 레이팅이 오르고 패배하면 내려갑니다. 나보다 높은 레이팅의 상대를 이길수록 더 많이 오르고, 그런 상대에게 질 때는 덜 내려갑니다. 무승부도 상대와의 점수 차이에 따라 레이팅이 바뀔 수 있습니다. 예를 들어 나보다 높은 점수의 상대와 비기면 레이팅이 오를 수 있습니다.<br><br>리그는 레이팅 구간의 이름입니다. 왼쪽 리그표에서 다음 등급의 문턱을 확인할 수 있으며, 문턱에 도달하면 표시되는 리그가 바뀝니다. 레이팅과 리그는 이 콘텐츠의 기록이며 영웅의 레벨이나 원정 장비를 직접 올리지는 않습니다.",
+        en: "The Colosseum tracks rating: a duel score that changes with wins, draws and losses. The Arena opens floors in order, while the Colosseum lets you choose opponents near your score. Opponents are defense parties registered by other players; if few players are near your score, the list is short or empty.<br><br>Fight with the {duelSize} heroes in your chosen Party. Wins raise rating and losses lower it. Beating a higher-rated opponent gains more, while losing to one costs less. A draw can also change rating depending on the difference between your scores. For example, drawing against a higher-rated opponent can raise your rating.<br><br>A league is the name of a rating range. Check the league table on the left for the next threshold; crossing it changes your displayed league. Rating and leagues track progress in this mode and do not directly raise hero levels or Expedition equipment.",
     },
     'help.arena.opponents.title': {
         ko: "상대 후보를 고르는 순서",
@@ -1880,16 +1864,16 @@ const STRINGS = {
         en: "Defense party and defense log",
     },
     'help.arena.defense.body': {
-        ko: "왼쪽 [방어 편성]에서 Party 하나를 고르면 그 편성이 다른 플레이어의 콜로세움 상대로 올라갑니다. 영웅 {duelSize}명이 찬 편성만 올라가며, 장비나 진형을 바꾸면 바뀐 모습이 다시 올라갑니다. 레이팅과 설정의 닉네임도 함께 보입니다. [없음]을 누르면 등록을 풀고 올린 팀을 지웁니다. 결투를 하러 나가는 편성은 오른쪽 판에서 고르는 Party이며, 방어 편성과 같아도 됩니다.<br><br>다른 플레이어가 내 방어 편성과 싸우면 [방어 기록]에 언제 · 누가 · 그 레이팅 · 결과가 남습니다. 방어 결과는 내 레이팅을 바꾸지 않습니다. 등록과 받기는 배포판에서만 동작하고, 상대 목록과 기록은 게임을 켤 때와 결투 뒤 일정 시간이 지났을 때 새로 받습니다. 다른 플레이어의 팀은 규칙 검사를 통과한 것만 나오고, 파티 전술과 물약 없이 싸웁니다.",
-        en: "Pick a Party under Defense party on the left to list it as a Colosseum opponent for other players. Only a party with {duelSize} heroes is listed, and changing its gear or formation uploads the new version. Your rating and the nickname from Settings are shown with it. Press None to unregister and remove the uploaded team. The party you attack with is the one chosen on the right, and it may be the same as your defense party.<br><br>When another player fights your defense party, the Defense log records when, who, their rating and the result. Defense results do not change your rating. Registering and receiving work only on the live build; opponents and records are refreshed when the game starts and after a while following a duel. Other players' teams appear only if they pass the rule check, and they fight without party tactics or potions.",
+        ko: "콜로세움에 처음 들어오면 이름과 방어 편성을 등록합니다. 영웅 {duelSize}명이 찬 Party만 고를 수 있고, [등록]을 누르면 그 편성이 바로 다른 플레이어의 상대 후보와 [친구와 전투] 목록에 올라갑니다. 이름 뒤에는 계정마다 정해진 네 자리 태그가 붙어 같은 이름을 구별합니다. 이름은 설정에서 바꿀 수 있고 비워 둘 수는 없습니다.<br><br>방어 편성은 왼쪽 [방어 편성]에서 다른 Party로 바꿀 수 있으며 등록을 풀 수는 없습니다. 장비나 진형을 바꾸면 바뀐 모습이 다시 올라가고, 레이팅도 함께 보입니다. 결투를 하러 나가는 편성은 오른쪽 판에서 고르는 Party이며, 방어 편성과 같아도 됩니다.<br><br>다른 플레이어가 내 방어 편성과 싸우면 [방어 기록]에 언제 · 누가 · 그 레이팅 · 결과가 남고, 친선전이면 「친선전」이 붙습니다. 방어 결과는 내 레이팅을 바꾸지 않습니다. 등록과 받기는 배포판에서만 동작하고, 상대 목록과 기록은 게임을 켤 때 · 콜로세움에 들어올 때 · [새 상대]를 누를 때 새로 받습니다. 바로 앞에 받았다면 받아 둔 목록을 씁니다. 다른 플레이어의 팀은 규칙 검사를 통과한 것만 나오고, 파티 전술과 물약 없이 싸웁니다.",
+        en: "The first time you enter the Colosseum, register a name and a defense party. Only a Party with {duelSize} heroes can be chosen, and pressing Register lists it right away in other players' opponents and in Fight a friend. A four-digit tag fixed to your account follows your name so players with the same name can be told apart. You can change the name in Settings, but it cannot be left empty.<br><br>Switch your defense to another Party under Defense party on the left; it cannot be unregistered. Changing its gear or formation uploads the new version, and your rating is shown with it. The party you attack with is the one chosen on the right, and it may be the same as your defense party.<br><br>When another player fights your defense party, the Defense log records when, who, their rating and the result, marked Friendly for friendly duels. Defense results do not change your rating. Registering and receiving work only on the live build; opponents and records are refreshed when the game starts, when you enter the Colosseum and when you press New opponents. If they were just received, the stored list is used. Other players' teams appear only if they pass the rule check, and they fight without party tactics or potions.",
     },
     'help.arena.friendly.title': {
-        ko: "친선전과 팀 코드 교환",
-        en: "Friendly duels and team codes",
+        ko: "친구와 전투",
+        en: "Fight a friend",
     },
     'help.arena.friendly.body': {
-        ko: "친선전은 다른 사람이 공유한 팀 구성을 상대로 연습하는 방식입니다. [친선전] 창에서 [코드 만들기]를 누르면 선택한 Party의 영웅 {duelSize}명과 그때의 장비·스킬·진형을 글자로 된 팀 코드에 담습니다. [복사]로 코드를 공유할 수 있습니다. 이후 장비나 편성을 바꾼 모습을 공유하려면 코드를 다시 만듭니다.<br><br>받은 코드를 오른쪽 칸에 전부 붙여넣고 [불러오기]를 누릅니다. 검사에 통과하면 창이 닫히고 받은 팀이 친선전 상대로 표시됩니다. 그 팀을 확인한 뒤 [결투 시작]으로 겨룹니다. 불러오기에 실패하면 표시된 사유를 확인하고 코드를 빠짐없이 복사했는지 살펴봅니다.<br><br>팀 코드는 연습 상대를 불러오는 것으로, 내 로스터에 영웅이나 장비를 추가하지 않습니다. 코드에는 파티 전술과 물약이 포함되지 않습니다. 친선전 결과는 레이팅과 레이팅 전적에 영향을 주지 않습니다.",
-        en: "Friendly duels let you practice against a team shared by someone else. In Friendly, press Make code to package the selected Party's {duelSize} heroes and their current gear, skills and formation as a text team code. Use Copy to share it. Make a new code whenever you want to share later equipment or formation changes.<br><br>Paste the entire received code into the right-hand box and press Load. If it passes the check, the window closes and the imported team appears as a Friendly opponent. Inspect that team, then press Start duel. If loading fails, read the displayed reason and check that the whole code was copied.<br><br>A team code loads a practice opponent; it does not add heroes or equipment to your roster. Codes do not include party tactics or potions. Friendly results do not affect rating or rated win/draw/loss records.",
+        ko: "[친구와 전투]를 누르면 방어 편성을 등록한 플레이어가 최근에 올라온 순서로 나옵니다. 찾기 칸에 이름의 앞 글자를 넣으면 그 글자로 시작하는 이름을, #1234처럼 태그를 넣으면 그 태그를, 이름#1234를 넣으면 그 사람을 찾습니다. 이름은 대소문자를 가립니다. 한 번에 한 쪽씩 나오며 [더 보기]로 이어서 봅니다.<br><br>목록에서 한 사람을 고르면 창이 닫히고 그 팀이 친선전 상대로 표시됩니다. 그 팀을 확인한 뒤 [결투 시작]으로 겨룹니다. 상대 팀은 그 사람이 마지막으로 올린 모습이며 파티 전술과 물약 없이 싸웁니다.<br><br>친선전은 연습입니다. 결과가 레이팅과 레이팅 전적에 영향을 주지 않고, 상대의 방어 기록에는 「친선전」으로 남습니다.",
+        en: "Press Fight a friend to list players who registered a defense party, most recently updated first. Type the start of a name to find names beginning with it, a tag such as #1234 to find that tag, or Name#1234 to find that player. Names are case-sensitive. Results come one page at a time; press More to continue.<br><br>Pick a player to close the window and show their team as your friendly opponent. Inspect that team, then press Start duel. The team is as that player last uploaded it and fights without party tactics or potions.<br><br>Friendly duels are practice. Results do not affect rating or rated records; the other player's defense log shows them marked Friendly.",
     },
     'help.arena.results.title': {
         ko: "전적과 원정의 관계",
@@ -2353,6 +2337,12 @@ const STRINGS = {
     'ch.lv': { ko: 'Lv.{n}', en: 'Lv.{n}' },
     'ch.xp': { ko: '경험치 {a} / {b}', en: 'XP {a} / {b}' },
     'ch.xp.max': { ko: 'MAX', en: 'MAX' },
+    // 만렙 뒤 별 — 레벨 오른쪽 별 칸 툴팁 · 능력치 줄 [+] · 확인 창 (2026-11-11 · SCREEN_DESIGN §6 · ADR-1043)
+    'ch.star.name': { ko: '별', en: 'Stars' },   // 별 칸 설명 카드 — 능력치 줄과 같은 모양(이름 / 선 아래 효과 · SCREEN_DESIGN §2 「능력치 설명 툴팁 규격」)
+    'ch.star.desc': { ko: '별 하나마다 고른 능력치 +1', en: '+1 to a chosen attribute per star' },
+    'ch.star.add': { ko: '별 하나로 {stat} +1', en: 'Spend a star: +1 {stat}' },
+    'ch.star.what': { ko: '{stat} {a} → {b}', en: '{stat} {a} → {b}' },
+    'ch.star.warn': { ko: '별 하나를 씁니다. 되돌릴 수 없습니다.', en: 'This uses one star and cannot be undone.' },
     // 아이템 칸 오른쪽 아래 배지 — **아이템** 레벨이다 (2026-09-18 · SCREEN_DESIGN §6 · ADR-0168).
     //   위의 `ch.lv`(영웅 레벨)와 글자가 같아도 가리키는 것이 달라 키를 나눈다
     'ch.itemLv': { ko: 'Lv.{n}', en: 'Lv.{n}' },
@@ -2662,18 +2652,26 @@ const STRINGS = {
         en: 'Conditions read only what the formation fixes — sins, classes, gear sins, the leader, the formation and runs taken as this party. <b>The harder the condition</b> (Difficulty), the higher a roll can go. '
             + 'Nothing that changes mid-battle (current HP, enemies left). Effects apply only to heroes in the party.',
     },
-    // 열 이름 줄 — 칸 목록 위 · 행의 여섯 세로줄 (ADR-0763) · 진행 = 조건 카운터 「지금 / 필요」 · 리더 = 리더 보너스 양
+    // 열 이름 줄 — 칸 목록 위 · 행의 일곱 세로줄 (ADR-0763 · ADR-1048) · 진행 = 카운터 「지금 / 다음 문턱」 + 단계 「×n」
     'rs.col.state': { ko: '상태', en: 'State' },
+    'rs.col.sin': { ko: '죄종', en: 'Sin' },
     'rs.col.cond': { ko: '조건', en: 'Condition' },
     'rs.col.prog': { ko: '진행', en: 'Progress' },
-    // 버프 = 칸의 효과(등급 값) · 추가 버프 = 그 위에 더해지는 양 — 오른쪽 위 「추가 버프」 칸과 같은 이름 (ADR-0764)
+    // 버프 = 칸의 효과(적용 값) · 버프 몫 = 리더 통솔 + 그 죄종 장비 수가 더한 % — 출처는 카드 아래 판 (ADR-0764 · ADR-1048)
     'rs.col.buff': { ko: '버프', en: 'Buff' },
-    'rs.col.extra': { ko: '추가 버프', en: 'Extra Buff' },
+    'rs.col.extra': { ko: '버프 몫', en: 'Buff Share' },
     'rs.col.lock': { ko: '잠금', en: 'Lock' },
-    // 「추가 버프」 — 「파티 전술」 소제목 줄 오른쪽 끝 · 올리면 **출처마다 한 줄** [2026-10-24 · ADR-0757 · ADR-0758 — 칸마다 안 적는다]
-    'rs.buff': { ko: '추가 버프', en: 'Extra Buffs' },
-    'rs.buff.lead': { ko: '리더 통솔 {n} — 버프 효과 {p}%', en: 'Leader Leadership {n} — Buff Effect {p}%' },   // 배수가 아니라 늘고 준 양 (ADR-0938)
-    'rs.buff.noLead': { ko: '리더 없음', en: 'No leader' },
+    // 카드 아래 판 — 왼쪽 맨 위 리더 통솔 · 죄종 일곱의 장비 수 [2026-11-11 · ADR-1048 — ~~「추가 버프」 hover~~ 대체] · {p} = 부호 붙은 정수 %
+    'rs.board.lead': { ko: '리더 통솔 {n} → 버프 효과 {p}', en: 'Leader Leadership {n} → Buff Effect {p}' },   // 배수가 아니라 늘고 준 양 (ADR-0938)
+    'rs.board.noLead': { ko: '리더 없음', en: 'No leader' },
+    'rs.board.sin': { ko: '{sin} {n} → {p}', en: '{sin} {n} → {p}' },
+    'rs.board.sin0': { ko: '{sin} —', en: '{sin} —' },
+    // 효과 이름 — 시기 둘만 대상 쪽 말 [2026-11-11 · tactic_card_design §5-14 · ADR-1048] · 계산은 파티 전원의 방어 무시 · 원소 저항 감소 · {v} = 부호 · 단위 붙은 값
+    'rs.eff.def_ignore': { ko: '적 방어력 감소 {v}', en: '{v} Enemy Defense Reduction' },
+    'rs.eff.res_reduction_fire': { ko: '적 화염 저항 감소 {v}', en: '{v} Enemy Fire Resist Reduction' },
+    'rs.eff.res_reduction_cold': { ko: '적 냉기 저항 감소 {v}', en: '{v} Enemy Cold Resist Reduction' },
+    'rs.eff.res_reduction_lightning': { ko: '적 전기 저항 감소 {v}', en: '{v} Enemy Lightning Resist Reduction' },
+    'rs.eff.res_reduction_poison': { ko: '적 독 저항 감소 {v}', en: '{v} Enemy Poison Resist Reduction' },
     // 리더 보너스 — 도움말 파티 전술 묶음 전용 [2026-10-24 · ADR-0753 · tactic_card_design §5-10] · 수치는 balance.csv 다섯 키
     'rs.note.lead': {
         ko: '<b>리더</b>(편성 첫 칸)의 <b>통솔</b>이 전술 효과의 크기를 바꿉니다 — 통솔 {pivot}에서 그대로이고, {min}이면 ×{lo} · {max}이면 ×{hi}입니다. 그 사이는 고르게 변합니다.',
@@ -2683,17 +2681,11 @@ const STRINGS = {
     'rs.grade.common': { ko: '일반', en: 'Common' },
     'rs.grade.magic': { ko: '매직', en: 'Magic' },
     'rs.grade.rare': { ko: '레어', en: 'Rare' },
-    // 조건 문장 — 키 = 조건 어휘(`tactic_condition.csv:test`) · 「없으면」은 `.not` [2026-09-22 · tactic_card_design §5-8 · R134]
-    //   ~~always · class_same · affix_sin · skill_tag~~ 는 조건 사전으로 바뀌며 걷었다(스킬 태그 조건은 삭제)
+    // 조건 문장 — 키 = 칸 조건의 어휘(`tactic_condition.csv:test`) [2026-11-11 · tactic_card_design §5-14 · ADR-1048] · {a} = 그 칸의 죄종 이름 ·
+    //   카운터 「지금 / 다음 문턱」과 단계 「×n」은 진행 칸이 단다 — ~~편성 구성 · 능력치 합 · 전직 · 관계 문장~~ 은 걷었다(R441)
     'rs.cond.none': { ko: '조건 없음', en: 'No condition' },
-    'rs.cond.sin_same': { ko: '같은 죄종 {n}명 이상', en: '{n}+ heroes sharing a sin' },
-    'rs.cond.sin_kind': { ko: '죄종 {n}종 이상', en: '{n}+ different sins' },
-    'rs.cond.cls_same': { ko: '같은 직업 {n}명 이상', en: '{n}+ heroes sharing a class' },
-    'rs.cond.sin_count': { ko: '{a} 영웅 {n}명 이상', en: '{n}+ {a} heroes' },
-    'rs.cond.cls_count': { ko: '{a} {n}명 이상', en: '{n}+ {a} heroes' },
-    'rs.cond.attr_sum': { ko: '파티 {a} 합 {n} 이상', en: 'Party {a} total {n}+' },
-    'rs.cond.advance_count': { ko: '파티에 {a}', en: '{a} in the party' },
-    'rs.cond.together': { ko: '이 파티로 스테이지 {n}회 이상 클리어', en: '{n}+ stage clears as this party' },   // 이긴 칸마다 +1 (2026-09-29 · ~~{n}회 이상 출정~~)
+    'rs.cond.slot_sin_heroes': { ko: '{a} 영웅', en: '{a} heroes' },
+    'rs.cond.kills_together': { ko: '함께 잡은 몬스터', en: 'Monsters slain together' },
 
     'sk.points.h': { ko: '스킬 포인트', en: 'Skill Points' },
     'sk.points.note': { ko: "레벨마다 받는 <b>스킬 포인트</b>를 죄종·직업 마스터리와 전직 메인·꼬리에 나누어 씁니다. 전직해도 별도 포인트를 지급하지 않습니다. 메인 단계만 5레벨 간격으로 열립니다.", en: "<b>Skill points</b> earned on each level-up are shared by Sin mastery, Class mastery and advancement main skills and branches. Advancing grants no separate points. Only main-skill ranks unlock at five-level intervals." },

@@ -111,7 +111,7 @@ $b = [System.IO.File]::ReadAllBytes($json); "$($b.Length) bytes · first3 = $($b
 - **수색** [2026-10-19 — ~~수색~~ 대체] — `visitRoll` 0회. 스트림 `^ 0x5EA7` 을 40런이 한 번도 안 밟는다. 시계 · 칸 · 레어 확률 · 결정론은 전부 `dev/test.js` 의 `visit:` · `join:` 단정이 유일한 그물이다
 - **직업 풀의 뒷자리 스킬** [개정 2026-09-09 · R59] — 배정은 **고유 + 무기 둘**이고 둘 다 그 직업 풀에서 **굴린 것**이라, 풀이 5~7행인 직업은 뒷자리 스킬이 40런에 한 번도 안 나갈 수 있다(전직 칸은 아예 빈다 · R52). 버프·회복·도발의 **실행**은 `clsUnits` 로 킷을 손으로 실은 단정만 본다 — 40런에도 캘리브레이션에도 없다
 - **`barrier_pct`** [2026-09-09] — 기사 「수호의 방벽」이 직업 풀 8 에서 빠져 **이 효과를 쓰는 행이 하나도 없다.** 전투로는 그 코드에 못 닿으므로 `runtime:` 단위 단정이 유일한 그물이다
-- **전술 리롤** — `rerollTactic` 0회. `tactics` 필드는 **첫 배정**(`initialAssign`)만 보고 첫 배정은 언제나 `common` 이라, **골든에 매직·레어가 한 번도 안 나온다**(등급 굴림은 `dev/test.js` 의 단정이 본다 — 2026-09-02). `TC.pick` 의 「든 가족 제외」 규칙도 골든 밖이다
+- **전술 리롤** — `rerollTactic` 0회. `tactics` 필드는 **첫 배정**(`initialAssign`)만 보고 첫 배정은 언제나 `common` 이라, **골든에 매직·레어가 한 번도 안 나온다**(등급 굴림은 `dev/test.js` 의 단정이 본다 — 2026-09-02). `TC.pick` 의 「그 칸의 직전 가족 제외」 규칙도 골든 밖이다
 - **`chapter_boss`** — 표본 1 (칸 1051 뿐 — 보스 단독 1라운드 · 2026-09-11). `boss_guaranteed_drop` · `dust_boss` 의 보스 분기는 한 종류만 지난다
 - **`inventory_cap` 넘침** — 0회. 런당 드롭이 3 안팎이라 `discarded` 경로가 안 열린다
 - **마스터리 랭크 > 0** — 0회. 시작 파티는 포인트를 쓴 적이 없어 `masteryBonus` 는 항상 빈 값이다 (`grew` 는 포인트 **합**만 본다)
@@ -143,7 +143,7 @@ $b = [System.IO.File]::ReadAllBytes($json); "$($b.Length) bytes · first3 = $($b
 | `?dev=prologue` | 프롤로그 (SCREEN_DESIGN §3-1) — `&s=n` 이면 n번째 씬. 마지막 씬(5)만 인용·챕터 줄이 선다 (2026-09-03) |
 | `?dev=book` | **책을 쥔 도서관 탭** (SCREEN_DESIGN §17 · R179 · ADR-0426) — 도서관 끝까지(책 · 전직 — ADR-0567) · 책 만들기 첫 칸 · 가진 책 둘째 칸을 고른 채(ADR-0570 · ADR-0573) · 영웅 0 레벨 `skillbook_learn_level` · 책 셋(제 직업 책은 두 권씩 — 권수 `×n` 이 보인다 · ADR-0460) 중 하나를 배운 채로 연다 · **고유 책 한 권**도 쥔다 — 배운 책 · 고유 책 줄이 [업그레이드] 로 선다 (2026-10-06 · R216 · ADR-0529) · **`&bkcls=<class_id>`** 제작 칸의 그 직업 탭을 고른 채(ADR-1021) · **`&overwrite=1`** 덮어쓰기 확인 창을 연 채(ADR-1020) |
 | `?dev=tree` | **스킬 창이 열린** 캐릭터 탭 — 창은 버튼으로만 열린다. 영웅 0 에게 포인트 [balance.csv:mastery_t1_max_rank] 를 주고 **한 칸을 미리 찍어 둔다** (2026-09-08) — 새 게임은 포인트가 0 이라 창의 결정 둘(찍기 · **우클릭 되돌리기**)에 못 닿았다 · **`&adv=1`** 이면 영웅 0 을 전직시키고 전직 스킬을 배워 한 단계 올린 채로 연다 — 전직 판(메인 + 꼬리 셋)이 열리며 공용 스킬 포인트 한 줄과 메인 다음 단계의 영웅 레벨 조건을 확인한다 (2026-10-06 · R216 · ADR-0529) |
-| `?dev=arena` | **결투장 탭(ELO)** (2026-10-12 · SCREEN_DESIGN §1 · ADR-0602 · 탭 둘 2026-10-18 · ADR-0670) — 후보 셋을 **고정 씨앗 1** 로 굴린 채(늘 같다 · 가운데가 골라짐) · `&rating=n` 레이팅을 세이브에 적고 그 근처로 · `&friendly=1` 내 팀 코드를 만들고 **그 코드를 불러온 채**(자기 팀과 붙는 친선전 카드가 골라진다) · `&bad=1` 을 겹치면 받은 코드의 첫 영웅 레벨을 만렙 위로 바꿔 불러온 채(친선전 창이 사유 줄을 든 채 뜬다) · `&modal=1` 친선전 창을 연 채 · `&lv=n` 고른 편성 영웅을 레벨 n 까지(이긴 쪽 화면을 본다) · `&tpl=<formation_template.csv:tpl_id>` 고른 편성의 진형(`2-1` · `1-2` · `0-3`) (`&tab=party` 를 겹치면 그 진형의 편성 보드) · **`&def=n`** 방어 편성 n 을 등록한 채(세이브에 적는다 · 2026-11-11) · **`&ghosts=1`** 가짜 고스트 넷(레이팅 −150 · +40 · +120 · +400 의 AI 팀을 팀 코드로 싸서 받기와 같은 길로 · 닉네임 하나는 태그 글자를 품는다) · 가짜 방어 기록 둘 — Firebase 를 안 부른다(SCREEN_DESIGN §1 「온라인 데모」 · ADR-1040) |
+| `?dev=arena` | **결투장 탭(ELO)** (2026-10-12 · SCREEN_DESIGN §1 · ADR-0602 · 탭 둘 2026-10-18 · ADR-0670) — 후보 셋을 **고정 씨앗 1** 로 굴린 채(늘 같다 · 가운데가 골라짐) · `&rating=n` 레이팅을 세이브에 적고 그 근처로 · `&friendly=1` **친선전 카드가 골라진 채**(가짜 고스트가 있으면 그 첫째 · 없으면 내 고른 편성을 받은 팀처럼 세워 자기 팀과 붙는다 · ADR-1042) · **`&users=1`** 친구와 전투 창을 연 채(`&q=` 찾기 글 — `Ghost` · `#1234` · `이름#1234` · 가짜 고스트가 목록을 채운다) · **`&reg=1`** 등록 판(이름 · 방어 편성을 비운 채 · ADR-1042) — 안 주면 비어 있는 이름을 「Tester」로 · 방어 편성을 고른 편성으로 채워 본 화면이 선다(이 브라우저 · 세이브에 적는다) · `&lv=n` 고른 편성 영웅을 레벨 n 까지(이긴 쪽 화면을 본다) · `&tpl=<formation_template.csv:tpl_id>` 고른 편성의 진형(`2-1` · `1-2` · `0-3`) (`&tab=party` 를 겹치면 그 진형의 편성 보드) · **`&def=n`** 방어 편성 n 을 등록한 채(세이브에 적는다 · 2026-11-11) · **`&ghosts=1`** 가짜 고스트 넷(레이팅 −150 · +40 · +120 · +400 의 AI 팀을 팀 코드로 싸서 받기와 같은 길로 · 닉네임 하나는 태그 글자를 품는다) · 가짜 방어 기록 셋(하나는 친선전) · 내 태그 자리(`dev-me`) — Firebase 를 안 부른다(SCREEN_DESIGN §1 「온라인 데모」 · ADR-1040 · ADR-1042) |
 | `?dev=colosseum` | **콜로세움 탭(층 사다리)** (2026-10-18 · SCREEN_DESIGN §1 · ADR-0670) — `&cleared=n` 오른 층을 세이브에 적은 채 · `&floor=n` 고른 층(깬 층 · 다음 층만 — 아니면 다음 층) · `&lv=n` · `&tpl=` 는 위와 같다. 층의 상대는 시드가 층 번호라 늘 같다 · **`&tdm=cols`** 는 두 탭 다 결투 관전 아래 두 팀 판을 **스킬별 보기**로 연다(2026-10-24 · ADR-0772 — 탭 id `colosseum` = 화면 「결투장」 · `arena` = 「콜로세움」 · ADR-0760) |
 | `?dev=tactics` | **편성 탭** — 전술 칸이 **전부 열린** 상태 (칸은 지휘 천막 랭크가 연다 — **지휘 천막을 끝까지 지은 채**로 연다 · R137 · SCREEN_DESIGN §15) |
 | `&cn=max` | **모든 건물을 끝까지 지은** 판 (R137 · SCREEN_DESIGN §10) — 새 게임은 대장간 · 선술집이 안 지어져 그 탭 · 기능에 곧장 못 닿는다. 문턱 · 비용을 건너뛰고 편성 수 · 물약 칸도 따라 는다. `?dev=search` · `?dev=gamble` · `?dev=form&lvl=n` · `?dev=mats` 는 제 건물만 끝까지 짓는다 |
@@ -156,7 +156,7 @@ $b = [System.IO.File]::ReadAllBytes($json); "$($b.Length) bytes · first3 = $($b
 | `?dev=watch` | **파견 관전 창이 열린 자원 탭** (2026-09-28 · SCREEN_DESIGN §8 · ADR-0415) — 로스터 앞 영웅들을 채광 · 채집 · 벌목 1단계에 하나씩 앉힌 채 · `&dw=<파견처>:<단계>` 면 그 탭을 고른 채 · `&open=0` 이면 창을 닫은 채 |
 | `?dev=mg` | **자원 미니게임 창이 열린 연구소 탭** (2026-10-06 · SCREEN_DESIGN §8 · ADR-0532) — 연구소를 끝까지 지은 채 · `&open=0` 이면 창 없이 탭만 · `&mg=<파견처>`(mine · gather · log · 기본 mine) · `&go=1` 이면 1단계 판을 연 채 · `&rk=n` 연구소 n랭크 · `&lv=n` 열린 칸 전부 칸 레벨 n + 골드 · 재료 채움 · `&tier=k` 그 줄의 k 단계를 고른 채 (2026-10-18 · ADR-0669) · `&reg=1` 로스터 앞 영웅들을 채광 · 채집 · 벌목에 하나씩 등록한 채 · `&lr=1` 고른 줄의 **등록 창**을 연 채(미니게임 창 대신 · 2026-10-21 · ADR-0677) |
 | `?dev=explore` | **탐험 탭 — 지점 패널이 나간 · 끝난 상태** (SCREEN_DESIGN §8-4 · ADR-0582) — 상태가 시간으로만 갈려 클릭으로 못 닿는다. 건물을 다 지은 판 · 장을 다 연 판(앞 장 보스를 깬 기록 · R319) · 편성 I 이 1장 동굴을 끝낸 채 · 편성 II(둘째 영웅)가 2장 동굴을 절반 간 채 · 편성 III 을 고른 채 · `&s=idle` 이면 아무도 안 보낸다 · `&sel=<장>:<지점>` 이면 그 지점을 고른 채(기본 `1:cave`) |
-| `?dev=mats` | **제작 재료를 쥔 대장간 탭** (2026-09-15 · R96 · SCREEN_DESIGN §8-2) — 광석 · 목재는 파견이 채우는데 파견이 아직 없어 제작 칸의 [만들기]가 늘 잠긴다. 모든 레벨의 광석 · 목재와 가루를 **레시피 표(`make_recipe.csv`)가 정한 양으로** — 부위 전부를 레벨마다 한 번씩 만들 만큼(같은 단계를 쓰는 Lv1 · Lv10 은 두 몫) — 채운다 |
+| `?dev=mats` | **제작 재료를 쥔 대장간 탭** (2026-09-15 · R96 · SCREEN_DESIGN §8-2) — 광석 · 목재는 파견이 채우는데 파견이 아직 없어 제작 칸의 [만들기]가 늘 잠긴다. 모든 레벨의 광석 · 목재와 가루를 **레시피 표(`make_recipe.csv`)가 정한 양으로** — 부위 전부를 레벨마다 한 번씩 만들 만큼(같은 단계를 쓰는 Lv1 · Lv10 은 두 몫) — 채운다 · **`&mlv=<레벨>` · `&mln=fast\|mid\|slow`** 면 그 제작 레벨 · 무기 계보를 고른 채(2026-11-11 · ADR-1044 · 예 `?dev=mats&mlv=30&mln=slow`) |
 | `?screen=start` | 시작 화면 |
 | `?flash=<i18n 키>` | **플래시가 떠 있는 화면** (SCREEN_DESIGN §2 · ADR-0692) — `?dev=` · `?tab=` 에 겹쳐 쓴다(예: `?dev=newgame&tab=tavern&flash=tv.hired` · 창 위는 `?dev=tree&flash=sk.err.points`). 쉼표로 키를 여럿 주면 그 차례대로 쌓인다(`flash=tv.hired,ch.err.bagFull` · 세 장까지). `{name}` 에는 로스터 첫 영웅. 기본은 멈춰 선다(스크린샷) · `&hold=0` 이면 제 시간에 다시 들어간다(덤프로 확인) · ⚠ `?dev=play` 는 `&tab=` 을 줄 때만 닿는다 |
 | `?tab=<탭>` | 탭 바로 열기 — **탭 14** (2026-10-18 · 목록의 SSOT 는 `app.js:NAV_GROUPS`): `expedition` · `explore`(탐험) · `party`(편성) · `character` · `research`(건설) · `tavern` · `shop`(상점) · `forge`(강화) · **`library`**(도서관 — 스킬북 · 전직) · `resource`(자원) · `arena` · `codex` · `help` · `lab`(실험실). ⚠ 옛 이름은 **죽었다**(무시하고 원정으로 연다) — `town`(09-04 자원·탐험으로 갈림) · `imagedex`(09-08 도감에 흡수 — SCREEN_DESIGN §9) · `training`(10-09 훈련장 탭 삭제 — 전직은 도서관 · ADR-0567). 세이브가 없으면 `?dev=newgame&tab=forge` 처럼 겹쳐 쓴다. ⚠ `?dev=forge` · `?dev=trade` 는 **삭제**됐다 — 강화·상점이 탭이 되어 `?tab=` 이 바로 닿는다. **`&fg=make\|up\|craft`** 는 대장간의 작업 탭을 고른 채 연다 (2026-09-15 · ADR-0142) · **`&bld=<건물 id>`** 는 **건설 탭에서 그 건물을 고른 채** 연다 (2026-09-24 · ADR-0354 — 부지는 클릭으로만 골라진다 · ~~`&crew=`~~ 는 건설 인력과 함께 걷혔다 · 예: `&bld=forge`) · **`&hero=n`** 은 **로스터 n 번째 영웅(1 부터)을 고른 채** 연다(띠의 고른 영웅 — 2026-09-28) · **`&ps=n`** 은 **편성 n 을 고른 채** 연다(편성 탭 · 출정 창이 같은 값 — 2026-09-21 · ~~`&rs=`~~ 는 연구 탭의 위쪽 탭과 함께 걷혔다) · **`&rsl=col\|row`** 는 연구의 배치(세로 · 가로)를 고른 채 연다 (2026-09-15 · ⚠ 비교용 — 하나로 정해지면 걷는다) |
@@ -245,26 +245,28 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow delete: if request.auth != null && request.auth.uid == uid;
       allow create, update: if request.auth != null && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['nick', 'rating', 'team', 'at'])
+        && request.resource.data.keys().hasOnly(['nick', 'rating', 'tag', 'team', 'at'])
         && request.resource.data.nick is string && request.resource.data.nick.size() <= 16
         && request.resource.data.rating is int
+        && request.resource.data.tag is int && request.resource.data.tag >= 0 && request.resource.data.tag < 10000
         && request.resource.data.team is string && request.resource.data.team.size() <= 200000
         && request.resource.data.at == request.time;
     }
     match /arenaLog/{def}/hits/{hit} {
       allow read, delete: if request.auth != null && request.auth.uid == def;
       allow create: if request.auth != null && request.resource.data.by == request.auth.uid
-        && request.resource.data.keys().hasOnly(['by', 'nick', 'rating', 'result', 'at'])
+        && request.resource.data.keys().hasOnly(['by', 'nick', 'rating', 'result', 'friendly', 'at'])
         && request.resource.data.nick is string && request.resource.data.nick.size() <= 16
         && request.resource.data.rating is int
         && request.resource.data.result in ['win', 'draw', 'loss']
+        && request.resource.data.get('friendly', true) == true
         && request.resource.data.at == request.time;
     }
   }
 }
 ```
 
-- **콜로세움 데모의 두 칸**(`arenaTeams` · `arenaLog`)은 2026-11-11 에 더해졌다 — 규칙을 다시 게시하기 전에는 방어 편성 올리기 · 받기 · 방어 기록이 거부되고 후보는 전부 AI 다(플레이 기록은 따로 쓰므로 그대로 올라간다). `16` 은 닉네임 상한(`app.js:NICK_MAX`)과 같은 값이다
+- **콜로세움 데모의 두 칸**(`arenaTeams` · `arenaLog`)은 2026-11-11 에 더해졌다 — 규칙을 다시 게시하기 전에는 방어 편성 올리기 · 받기 · 방어 기록이 거부되고 후보가 없다(플레이 기록은 따로 쓰므로 그대로 올라간다). `16` 은 닉네임 상한(`app.js:NICK_MAX`)과 같은 값이다. **2026-11-11 방어 편성 문서에 `tag` 칸이 더해졌다**(친구와 전투 창의 태그 찾기 · ADR-1042) — 이 규칙을 다시 게시하기 전에는 새 게임판의 방어 편성 올리기가 거부된다(옛 규칙의 `hasOnly` 에 `tag` 가 없다). **같은 날 방어 기록 문서에 `friendly` 칸**(친구와 전투 친선전일 때만 `true`)도 더해졌다 — 게시 전에는 친선전 기록만 거부되고 레이팅 결투 기록은 옛 모양이라 그대로 들어간다
 
 - 콘솔 설정 전에도 게임은 그대로 돈다 — 올리기만 실패하고 콘솔 경고가 남는다
 - 옛 Google 계정의 `saves/<uid>` 문서는 남아 있다 — 퍼널은 `players` 만 읽어 안 섞인다

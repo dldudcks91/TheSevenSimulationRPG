@@ -1,39 +1,39 @@
 /**
- * 파티 전술 — 「조건 → 효과」 옵션이 하나씩 든 칸. **획득물이 아니다** (tactic_card_design §5 확정 2026-08-30):
+ * 파티 전술 — 칸마다 **죄종 옵션** 하나가 든다. **획득물이 아니다** (tactic_card_design §5 확정 2026-08-30):
  *   칸은 **지휘 천막 랭크**로 하나씩 열리고(로스터 합산 레벨은 그 랭크의 문턱 · 2026-09-22 · R137), 칸에 든 옵션은 **재화로 리롤**한다. 카드를 줍는 파밍 축이 없다.
  *
  * 순수 모듈 — DOM·저장소·시계·Math.random 접근 없음. 난수는 인자(`rng`), 정의는 생성자 주입.
  * 이 모듈은 상태를 들지 않는다 — 어느 칸에 무엇이 들었는지 · 어느 칸을 잠갔는지는 세이브(`state.presets[*].tactics` — 편성마다 · v34 · 잠금 v35)가 들고, 여기는 규칙만 낸다.
  *
- * **정의는 CSV · 종류는 코드** — 조건의 `test` 어휘는 아래 고정 사전이고 값(문턱 · 점수 · 기준값 · 배수)은 전부 CSV 다.
+ * **정의는 CSV · 종류는 코드** — 조건의 `test` 어휘는 아래 고정 사전이고 값(문턱 · 기준값 · 배수)은 전부 CSV 다.
  *   미니 DSL 을 두지 않는다 (skill.js 와 같은 규약).
  *
- * **표가 셋이다** [2026-09-22 · tactic_card_design §5-8 · R134] — 값을 고치는 자리를 셋으로 좁혔다:
- *   `tactic_condition.csv` (조건 사전 — 무엇을 세나 · 문턱 · **점수**) → `tactic_option.csv` (옵션 = 조건 하나 + 능력치 + **기준값**)
- *   → `tactic_score.csv` (**점수 × 등급 배수**). 옵션 값 = 기준값 × 배수(조건의 점수, 등급). 점수를 바꾸면 그 조건의 옵션이 전부 따라간다.
- *   ~~`(option_id, grade)` 복합키 — 등급마다 값을 손으로 적는다~~ 는 2026-09-22 폐지(§5-5 SSOT 행 모양 개정).
+ * **죄종 옵션** [2026-11-11 · R441 · tactic_card_design §5-14] — 표가 셋이다:
+ *   `tactic_option.csv` (1행 = 가족 하나 = 죄종 + 효과 + 능력치 + 기준값 · 같은 효과의 여러 행 = 변형) ·
+ *   `tactic_condition.csv` (조건 사전 — 무엇을 세나 · 단계 문턱 셋) · `tactic_slot.csv` (칸마다 조건 하나 — 칸 = 상황 · §5-9).
+ *   효과는 **모든 칸이 같은 풀**이다. 굴림 = 죄종(균등) → 그 죄종의 효과(균등) → 변형(균등) → 등급(가중).
+ *   값 = 기준값 × (1 + 몫 × (등급 배수 × 단계 − 1)) · 단계 = 칸 조건이 넘은 문턱 수(0 이면 꺼짐) ·
+ *   적용 값 = 값 × (1 + 리더 몫 + 그 죄종 장비 몫) (§5-10 · §5-14 「장비 죄종 버프」).
+ *   ~~`tactic_score.csv`(점수 × 등급 배수) · 칸 종류(`category`) · 「같은 옵션 두 칸 금지」~~ 는 2026-11-11 걷었다.
  *
  * tactic_card_design.md 확정 규칙:
  *   · 조건은 **편성 시점에 확정되는 것만** (§2-1) — 현재 HP·남은 적 수 같은 전투 중 값은 세지 않는다.
  *   · 효과는 **기존 공식의 항**으로 들어간다 (§2-4) — 마스터리·접사와 같은 채널이고 새 곱셈 층을 만들지 않는다.
  *     피해 감소만 따로 낸다 (원천별 곱 — battle_design §9-3)
  *   · 효과는 **파티에만** 걸린다 (§1) — 벤치 영웅에게는 안 붙는다. 그 판정은 state.js 가 한다
- *   · 중복 방지·첫 배정·리롤 후보의 단위는 전부 **가족(옵션 하나)**이다 — 등급은 값만 가른다(§5-5):
- *     「일반 데미지」와 「레어 데미지」는 같은 옵션이라 두 칸에 서면 같은 stat 이 두 번 곱해진다
- *   · 「없으면」 조건의 효과는 빠진 것이 하던 일을 메우지 않는다 (§2-3) — 데이터를 짜는 규칙이라 코드는 세지 않는다
+ *   · 첫 배정 · 리롤 · 직전 옵션 제외의 단위는 **가족(옵션 하나)**이다 — 등급은 값만 가른다(§5-5).
+ *     **같은 가족이 두 칸에 서도 된다 — 값이 더해진다**(§5-14)
  */
 
 /**
  * @param {object} data
- *   slots        — tactic_slot.csv 파싱 행 (칸 수 = 행 수 · 여는 것은 건설 표 — 지휘 천막)
- *   conditions   — tactic_condition.csv 파싱 행 (조건 사전 — 1행 = 조건 하나 · 점수)
- *   options      — tactic_option.csv 파싱 행 (1행 = 옵션 하나 = 조건 id + 인자 + 능력치 + 기준값)
- *   scores       — tactic_score.csv 파싱 행 (점수 하나 = 등급별 배수)
- *   sins         — 죄종 id 목록 (인자 검증)
- *   classes      — 직업 정의 [{id, ...}] (인자 검증)
- *   attributes   — hero_attribute.csv 파싱 행 [{id, ...}] (능력치 합 조건의 인자 검증)
- *   advances     — advance.csv 원시 행 [{advance_id, ...}] (전직 조건의 인자 검증)
+ *   slots        — tactic_slot.csv 파싱 행 (칸 수 = 행 수 · 칸마다 조건 하나 · 여는 것은 건설 표 — 지휘 천막)
+ *   conditions   — tactic_condition.csv 파싱 행 (조건 사전 — 1행 = 조건 하나 · 단계 문턱 셋)
+ *   options      — tactic_option.csv 파싱 행 (1행 = 가족 하나 = 죄종 + 효과 + 능력치 + 기준값 + 배수 몫 + 리더 몫)
+ *   sins         — 죄종 id 목록 — **이 순서가 굴림의 죄종 순서**다
  *   gradeWeights — {common, magic, rare} 상대 가중치 (balance.csv:tactic_grade_weight_*) — 리롤의 등급 추첨
+ *   gradeMult    — {common, magic, rare} 등급 배수 (balance.csv:tactic_grade_mult_*) — 값의 등급 항 (§5-14)
+ *   gearPct      — 장비 죄종 하나의 버프 몫 (balance.csv:tactic_sin_gear_pct) (§5-14 「장비 죄종 버프」)
  *   rerollCost   — {base, lockMult} (balance.csv:tactic_reroll_base_cost · tactic_reroll_lock_mult) — 전체 리롤 비용 (§5-6)
  *   leader       — {pivot, min, max, multMin, multMax} (balance.csv:attr_dmg_pivot · hero_attr_min · hero_attr_max · tactic_leader_mult_min · _max) — 리더 보너스 (§5-10)
  */
@@ -43,87 +43,20 @@ export function createTacticSystem(data) {
     /** 등급 어휘 — **이 배열 순서가 계약이다** (INTERFACE §5-3): 가중 추첨이 이 순서로 훑는다 */
     const GRADES = ['common', 'magic', 'rare'];
     const BASE_GRADE = GRADES[0];   // 첫 배정은 언제나 여기 (§5-5 「첫 배정은 일반 고정」)
-    const SINS = data.sins ?? [];
-    const CLASS_IDS = (data.classes ?? []).map(c => c.id);
-    const ATTR_IDS = (data.attributes ?? []).map(a => a.id);
-    const ADV_IDS = (data.advances ?? []).map(a => a.advance_id);
-    // 2026-11-01 이전 2번 칸의 저장 키·첫 배정 자리. 기획 값이 아니라 세이브 호환용 고정 어휘다.
-    // 이 세 자리를 셔플에 남겨 새 편성 풀의 크기가 다른 여섯 칸의 첫 배정을 바꾸지 않게 한다.
-    const legacyPartyIds = ['opt_sin_spread', 'opt_class_pair', 'opt_sin_trio'];
-    // 2026-11-01 에 지운 장비 죄종 · 리더 통솔 옵션의 셔플 자리 — 위와 같은 까닭이다. 첫 배정은 세이브에 안 들어 자리가 바뀌면 남은 칸의 내용이 바뀐다.
-    const legacyGearIds = ['opt_gear_wrath', 'opt_gear_sloth', 'opt_gear_no_pride'];
-    const legacyLdrIds = ['opt_lead_ldr12', 'opt_lead_ldr16'];
-    const LEGACY_LDR_AFTER = 'opt_bond_100';
-    // 2026-11-02 에 지운 진형 · 리더 직업 옵션 — 셔플 자리는 위와 같은 까닭이다. 저장된 칸은 새 첫 배정으로 바꾸고 등급 · 잠금을 지킨다(state.tacticState)
-    const legacyFrontIds = ['opt_front_priest', 'opt_front_knight'];
-    const legacyLeadIds = ['opt_lead_knight', 'opt_lead_priest'];
-    const LEGACY_BY_CATEGORY = { party: legacyPartyIds, attr: legacyFrontIds, advance: legacyLeadIds };
-    /** 셔플 뒤 제 풀에서 따로 뽑는 종류 — 옵션 수가 바뀌어도 나머지 칸의 첫 배정이 안 흔들린다 */
-    const DRAWN = new Set(Object.keys(LEGACY_BY_CATEGORY));
-
-    /** 배열에서 같은 값이 가장 많이 나온 횟수 — 「같은 죄종 n명」 · 「같은 직업 n명」 */
-    const maxCount = arr => {
-        const n = {};
-        let best = 0;
-        for (const v of arr) best = Math.max(best, n[v] = (n[v] ?? 0) + 1);
-        return best;
-    };
+    /** 죄종 — 굴림의 첫 단계가 이 순서에서 균등하게 뽑는다 (INTERFACE §5-2) */
+    const SINS = (data.sins ?? []).slice();
+    if (!SINS.length) throw new Error('tactic: 죄종 목록이 비었다 (sins)');
 
     /**
-     * 조건 어휘(`tactic_condition.csv:test`) — 이 밖의 값은 로드 시 throw. `count` 가 파티 문맥에서 숫자를 하나 뽑는다.
-     * **있으면**(`has`)은 그 숫자가 문턱 `n` **이상**이면 참 · **없으면**(`not`)은 **0** 이면 참이다.
-     * `arg` = 인자의 종류 — `sin`(죄종) · `cls`(직업) · `attr`(능력치) · `adv`(전직) · null(안 받음). 전부 편성에서 확정되는 값이다 (§2-1).
-     * 종류 다섯(무조건 · 편성 · 능력치 합 · 전직 · 관계)은 `category` 이고 이 어휘가 그 안을 가른다 (§5-8)
+     * 조건 어휘(`tactic_condition.csv:test`) — 이 밖의 값은 로드 시 throw. `count` 가 파티 문맥에서 숫자를 하나 뽑고,
+     * **단계 = 그 숫자가 넘은 문턱 수**다(0 ~ 3 · 0 이면 꺼짐). `none` 은 세지 않고 언제나 단계 1 이다.
+     * 전부 편성에서 확정되는 값이다 (§2-1) [2026-11-11 · R441 · §5-14 「랭크 조건」 — ~~점수 · 있으면/없으면 · 종류 다섯~~]
      */
     const TESTS = {
-        none: { arg: null, count: () => 1 },                                     // 무조건 — 문턱 0
-        sin_kind: { arg: null, count: c => new Set(c.sins).size },               // 죄종이 몇 종인가
-        sin_same: { arg: null, count: c => maxCount(c.sins) },                   // 같은 죄종이 몇 명까지 겹치나
-        cls_same: { arg: null, count: c => maxCount(c.classes) },                // 같은 직업이 몇 명까지 겹치나
-        sin_count: { arg: 'sin', count: (c, a) => c.sins.filter(s => s === a).length }, // 지정한 죄종 영웅 수 — 2번 칸(2026-11-01)
-        cls_count: { arg: 'cls', count: (c, a) => c.classes.filter(cls => cls === a).length }, // 지정한 직업 영웅 수
-        attr_sum: { arg: 'attr', count: (c, a) => c.members.reduce((sum, m) => sum + (m.stats?.[a] ?? 0), 0) },   // 파티의 그 기본 능력치 합 — 3번 칸(2026-11-02)
-        advance_count: { arg: 'adv', count: (c, a) => c.members.filter(m => m.advance === a).length },   // 지정한 전직 영웅 수 — 4번 칸(2026-11-02)
-        together: { arg: null, count: c => c.bond },                             // 지금 이 인원이 같이 깬 칸 수 (세이브 v36 · 이긴 칸마다 +1 · 2026-09-29)
+        none: { count: () => null },                                                 // 조건 없음 — 1 · 3 · 4랭크
+        slot_sin_heroes: { count: (c, o) => c.sins.filter(s => s === o.sin).length }, // 그 칸 죄종의 영웅 수 — 2랭크
+        kills_together: { count: c => c.kills },                                     // 지금 이 셋이 함께 잡은 몬스터 수 — 5랭크 (state.killsTogether)
     };
-    // ~~always~~ · ~~class_same~~ · ~~affix_sin~~ · ~~skill_tag~~ 는 2026-09-22 폐지 — 조건 사전(§5-8)으로 이름이 바뀌었고
-    //   **스킬 태그 조건은 삭제**다. 옛 세이브의 칸은 가족 id 로 찾으므로 없는 가족은 첫 배정으로 돌아간다(state.tacticState)
-    const CATEGORIES = ['always', 'party', 'attr', 'advance', 'bond'];
-
-    /* ── 칸 (tactic_slot.csv) ── */
-
-    const slotList = (data.slots ?? []).slice().sort((a, b) => a.slot_no - b.slot_no).map((row, i) => {
-        const no = row.slot_no;
-        if (no !== i + 1) throw new Error(`tactic: slot_no 는 1부터 빈틈없이 — ${no} (${i + 1} 자리)`);
-        // ~~reroll_cost_gold~~ 는 2026-09-22 삭제 — 비용은 칸이 아니라 **잠근 칸 수**가 정한다 (§5-6 · 아래 rerollCost)
-        // ~~unlock_total_level~~ 도 2026-09-22 삭제 — 칸은 **지휘 천막 랭크**가 연다(`building_effect.csv` 의 `tactic_slots` · 합산 레벨은 그 랭크의 문턱 · R137).
-        //   이 표는 칸 **수**만 든다 — 몇 칸이 열렸나는 `state.tacticState` 가 `limitsOf` 로 센다
-        // **칸 = 상황** [2026-09-27 사용자 「일단」 · tactic_card_design §5-9] — 칸마다 조건 종류가 고정이고 첫 배정 · 리롤은 그 종류 안에서만 뽑는다
-        const category = row.category;
-        if (!CATEGORIES.includes(category)) throw new Error(`tactic: 칸 ${no} category '${category}' — 어휘는 ${CATEGORIES.join('/')}`);
-        return { no, category };
-    });
-    const slotCount = slotList.length;
-
-    /* ── 점수 × 등급 배수 (tactic_score.csv) ── */
-
-    const scoreMult = {};
-    for (const row of data.scores ?? []) {
-        const s = row.score;
-        if (!Number.isInteger(s) || s < 0) throw new Error(`tactic: 점수 ${s} — 0 이상 정수`);
-        if (scoreMult[s]) throw new Error(`tactic: 점수 ${s} 가 두 번 나온다`);
-        const m = GRADES.map(g => row[g]);
-        if (m.some(v => typeof v !== 'number' || !(v > 0))) throw new Error(`tactic: 점수 ${s} 배수 ${m.join('/')}`);
-        // 등급이 오르면 값이 커진다 (§5-5) — 한 점수 안에서 일반 < 매직 < 레어
-        for (let i = 1; i < m.length; i++) if (!(m[i] > m[i - 1])) throw new Error(`tactic: 점수 ${s} — ${GRADES[i]} ${m[i]} 가 ${GRADES[i - 1]} ${m[i - 1]} 보다 크지 않다`);
-        scoreMult[s] = Object.fromEntries(GRADES.map((g, i) => [g, m[i]]));
-    }
-    const scoreList = Object.keys(scoreMult).map(Number).sort((a, b) => a - b);
-    if (!scoreList.length) throw new Error('tactic: 점수 배수 표가 비었다 (tactic_score.csv)');
-    scoreList.forEach((s, i) => { if (s !== i) throw new Error(`tactic: 점수는 0 부터 빈틈없이 — ${s} (${i} 자리)`); });
-    // 어려울수록 천장이 높다 (§5-8) — 같은 등급에서 점수가 오르면 배수가 줄지 않는다
-    for (let i = 1; i < scoreList.length; i++) for (const g of GRADES)
-        if (scoreMult[i][g] < scoreMult[i - 1][g]) throw new Error(`tactic: 점수 ${i} 의 ${g} 배수가 점수 ${i - 1} 보다 작다 — 어려운 조건이 더 약해진다`);
 
     /* ── 조건 사전 (tactic_condition.csv) ── */
 
@@ -133,29 +66,34 @@ export function createTacticSystem(data) {
         const bad = why => { throw new Error(`tactic: 조건 ${id} — ${why}`); };
         if (!id) bad('cond_id 가 없다');
         if (condById[id]) bad('cond_id 가 두 번 나온다');
-        if (!CATEGORIES.includes(row.category)) bad(`category '${row.category}' — 어휘는 ${CATEGORIES.join('/')}`);
-        if (!['has', 'not'].includes(row.polarity)) bad(`polarity '${row.polarity}' — has / not`);
-        const test = TESTS[row.test];
-        if (!test) bad(`test '${row.test}'`);
-        // 인자 — 옵션이 정하는 자리(`sin` · `cls`)이거나, 조건이 이미 정한 직업 id 이거나, 없다
-        const arg = dash(row.arg);
-        if (test.arg === null && arg !== null) bad(`test '${row.test}' 는 인자를 받지 않는다`);
-        if (test.arg === 'sin' && arg !== 'sin' && !SINS.includes(arg)) bad(`죄종 인자 '${arg}'`);
-        if (test.arg === 'cls' && arg !== 'cls' && !CLASS_IDS.includes(arg)) bad(`직업 인자 '${arg}'`);
-        if (test.arg === 'attr' && arg !== 'attr' && !ATTR_IDS.includes(arg)) bad(`능력치 인자 '${arg}'`);
-        if (test.arg === 'adv' && arg !== 'adv' && !ADV_IDS.includes(arg)) bad(`전직 인자 '${arg}'`);
-        const n = dash(row.n);
-        if (n !== null && !(Number.isInteger(n) && n >= 0)) bad(`n ${row.n}`);
-        if (!scoreMult[row.score]) bad(`점수 ${row.score} — tactic_score.csv 에 없다`);
-        // 점수 0 은 무조건만이다 — 조건부가 바닥값과 같으면 조건을 맞출 이유가 없다 (§5-2 「무조건 = 리롤 바닥값」)
-        if ((row.score === 0) !== (row.category === 'always')) bad('점수 0 은 무조건만이다');
-        if (row.category === 'bond' && row.polarity !== 'has') bad('관계는 있으면만이다 (§5-8)');
-        condById[id] = {
-            id, category: row.category, polarity: row.polarity, test: row.test, argSlot: test.arg, arg, score: row.score,
-            // 문턱 — 있으면은 적힌 값(비었으면 1 명 · 1 개) · 없으면은 언제나 0
-            n: row.polarity === 'not' ? 0 : (n ?? (row.test === 'none' ? 0 : 1)),
-        };
+        if (!TESTS[row.test]) bad(`test '${row.test}' — 어휘는 ${Object.keys(TESTS).join('/')}`);
+        const raw = [row.step1, row.step2, row.step3].map(dash);
+        let steps = [];
+        if (row.test === 'none') {
+            if (raw.some(v => v !== null)) bad('조건 없음은 문턱을 안 받는다 — step1 ~ step3 은 셋 다 -');
+        } else {
+            if (raw.some(v => !(Number.isInteger(v) && v >= 1))) bad(`문턱 ${raw.join('/')} — 1 이상 정수 셋`);
+            // 단계 = 넘은 문턱 수 — 문턱이 오름차순이 아니면 「위 단계가 더 쉽다」가 된다
+            for (let i = 1; i < raw.length; i++) if (!(raw[i] > raw[i - 1])) bad(`문턱 ${raw.join('/')} — 오름차순이어야 한다`);
+            steps = raw;
+        }
+        condById[id] = { id, test: row.test, steps };
     }
+
+    /* ── 칸 (tactic_slot.csv) ── */
+
+    const slotList = (data.slots ?? []).slice().sort((a, b) => a.slot_no - b.slot_no).map((row, i) => {
+        const no = row.slot_no;
+        if (no !== i + 1) throw new Error(`tactic: slot_no 는 1부터 빈틈없이 — ${no} (${i + 1} 자리)`);
+        // 이 표는 칸 **수**와 **칸마다의 조건**만 든다 — 몇 칸이 열렸나는 `state.tacticState` 가 `limitsOf` 로 센다(지휘 천막 · R137) ·
+        //   비용은 칸이 아니라 잠근 칸 수가 정한다(§5-6). **칸 = 상황** [2026-09-27 · §5-9] — 칸마다 조건이 고정이고 효과 풀은 모든 칸이 같다(§5-14)
+        const cond = condById[row.cond_id];
+        if (!cond) throw new Error(`tactic: 칸 ${no} cond_id '${row.cond_id}' — tactic_condition.csv 에 없다`);
+        return { no, condId: cond.id, condKind: cond.test, steps: cond.steps.slice() };
+    });
+    const slotCount = slotList.length;
+    /** 칸 없이 편 옵션의 조건 — 조건 없음(언제나 단계 1) */
+    const NO_COND = { condId: null, condKind: 'none', steps: [] };
 
     /* ── 리더 보너스 (balance.csv:tactic_leader_mult_* — 2026-10-24 · R340 · §5-10) ── */
 
@@ -177,54 +115,64 @@ export function createTacticSystem(data) {
             : 1 - (1 - LD.multMin) * (LD.pivot - v) / (LD.pivot - LD.min);
     };
 
+    /* ── 등급 배수 · 장비 죄종 몫 (balance.csv — 2026-11-11 · R441 · §5-14) ── */
+
+    const gradeMult = Object.fromEntries(GRADES.map(g => {
+        const m = data.gradeMult?.[g];
+        if (typeof m !== 'number' || !(m > 0)) throw new Error(`tactic: 등급 배수 '${g}' 가 없다 (balance.csv:tactic_grade_mult_${g})`);
+        return [g, m];
+    }));
+    // 등급이 오르면 값이 커진다 (§5-5) — 일반 < 매직 < 레어
+    for (let i = 1; i < GRADES.length; i++)
+        if (!(gradeMult[GRADES[i]] > gradeMult[GRADES[i - 1]])) throw new Error(`tactic: 등급 배수 ${GRADES[i]} ${gradeMult[GRADES[i]]} 가 ${GRADES[i - 1]} ${gradeMult[GRADES[i - 1]]} 보다 크지 않다`);
+    const gearPct = data.gearPct;
+    if (typeof gearPct !== 'number' || !(gearPct >= 0)) throw new Error('tactic: 장비 죄종 몫이 없다 (balance.csv:tactic_sin_gear_pct)');
+
     /* ── 옵션 (tactic_option.csv — 1행 = 가족 하나) ── */
 
-    /** 기준값 × 배수 — 고정값 채널(`_flat`)은 정수, 나머지는 비율이라 부동소수 꼬리만 자른다 */
-    const valueOf = (stat, unit, mult) => (stat.endsWith('_flat') ? Math.round(unit * mult) : Math.round(unit * mult * 1e4) / 1e4);
+    /** 고정값 채널(`_flat`)은 정수, 나머지는 비율이라 부동소수 꼬리만 자른다 */
+    const round = (stat, v) => (stat.endsWith('_flat') ? Math.round(v) : Math.round(v * 1e4) / 1e4);
+    /** 값 = 기준값 × (1 + 몫 × (등급 배수 × 단계 − 1)) — 몫 1 이면 기준값 × 등급 배수 × 단계 (§5-14 · 피해 감소만 몫이 1 밑) */
+    const valueAt = (o, step) => round(o.stat, o.unit * (1 + o.multShare * (gradeMult[o.grade] * step - 1)));
 
     const families = [];
     const famById = {};
+    /** 죄종마다 효과 목록 `[{effect, ids}]` — 효과 · 변형의 순서 = 행 순서(굴림 순서라 계약이다) */
+    const effectsBySin = Object.fromEntries(SINS.map(s => [s, []]));
     for (const row of data.options ?? []) {
         const id = row.option_id;
         const bad = why => { throw new Error(`tactic: ${id} — ${why}`); };
         if (!id) bad('option_id 가 없다');
         if (famById[id]) bad('option_id 가 두 번 나온다');
-        const cond = condById[row.cond_id];
-        if (!cond) bad(`cond_id '${row.cond_id}' — tactic_condition.csv 에 없다`);
-        // 인자 — 조건이 자리를 비워 두면(`sin` · `cls` · `attr` · `adv`) 옵션이 채우고, 조건이 이미 정했으면 옵션은 비운다
-        const own = dash(row.arg);
-        let arg = null;
-        if (cond.arg === 'sin') { if (!SINS.includes(own)) bad(`죄종 '${own}' — 조건 ${cond.id} 가 죄종을 받는다`); arg = own; }
-        else if (cond.arg === 'cls') { if (!CLASS_IDS.includes(own)) bad(`직업 '${own}' — 조건 ${cond.id} 가 직업을 받는다`); arg = own; }
-        else if (cond.arg === 'attr') { if (!ATTR_IDS.includes(own)) bad(`능력치 '${own}' — 조건 ${cond.id} 가 능력치를 받는다`); arg = own; }
-        else if (cond.arg === 'adv') { if (!ADV_IDS.includes(own)) bad(`전직 '${own}' — 조건 ${cond.id} 가 전직을 받는다`); arg = own; }
-        else { if (own !== null) bad(`조건 ${cond.id} 는 인자를 안 받는다(이미 정했거나 없다)`); arg = cond.arg; }
+        if (!SINS.includes(row.sin)) bad(`죄종 '${row.sin}' — 어휘는 ${SINS.join('/')}`);
+        if (!row.effect) bad('effect 가 없다');
         if (!row.stat) bad('stat 이 없다');
         if (typeof row.unit !== 'number' || !(row.unit > 0)) bad(`unit ${row.unit} — 기준값은 양수`);
+        // 배수 받는 몫 — 1 = 등급 × 단계를 전부 · 0 = 안 받음. 원천별 곱(피해 감소)처럼 일률 배수에서 터지는 채널만 1 밑이다 (§5-5 · §5-14)
+        const share = row.mult_share;
+        if (typeof share !== 'number' || !(share >= 0 && share <= 1)) bad(`mult_share ${share} — 0 ~ 1 (tactic_option.csv)`);
         // 리더 곡선을 받는 몫 — 1 = 전부 · 0 = 안 받음 · 통솔 최소에서도 값이 0 보다 커야 한다
         const lb = row.leader_bonus;
         if (typeof lb !== 'number' || !(lb >= 0)) bad(`leader_bonus ${lb} — 0 이상 (tactic_option.csv)`);
         if (!(1 + lb * (LD.multMin - 1) > 0)) bad(`leader_bonus ${lb} — 통솔 최소에서 값이 0 이하가 된다`);
-        const mult = scoreMult[cond.score];
-        const grades = Object.fromEntries(GRADES.map(g => [g, valueOf(row.stat, row.unit, mult[g])]));
-        // 반올림 뒤에도 등급 순으로 커져야 한다 — 고정값 채널은 기준값이 작으면 둘이 같은 정수로 뭉칠 수 있다
+        const list = effectsBySin[row.sin];
+        let eff = list.find(e => e.effect === row.effect);
+        // 같은 효과의 변형은 붙여 둔다 — 떨어져 있으면 행 순서로 읽는 효과 순서가 두 갈래가 된다
+        if (eff && list[list.length - 1] !== eff) bad(`effect '${row.effect}' 의 행이 떨어져 있다 — 같은 효과의 변형은 붙여 둔다`);
+        if (!eff) list.push(eff = { effect: row.effect, ids: [] });
+        eff.ids.push(id);
+        const fam = { id, sin: row.sin, effect: row.effect, stat: row.stat, unit: row.unit, multShare: share, leaderBonus: lb };
+        // 등급별 **단계 1 값** — 화면 · 검증용. 반올림 뒤에도 등급 순으로 커져야 한다(고정값 채널은 기준값이 작으면 같은 정수로 뭉칠 수 있다)
+        fam.grades = Object.fromEntries(GRADES.map(g => [g, valueAt({ ...fam, grade: g }, 1)]));
         for (let i = 1; i < GRADES.length; i++)
-            if (!(grades[GRADES[i]] > grades[GRADES[i - 1]])) bad(`${GRADES[i]} ${grades[GRADES[i]]} 가 ${GRADES[i - 1]} ${grades[GRADES[i - 1]]} 보다 크지 않다 — 기준값이 너무 작다`);
-        const fam = famById[id] = {
-            id, condId: cond.id, category: cond.category, polarity: cond.polarity, condKind: cond.test, condArg: arg, condN: cond.n,
-            score: cond.score, stat: row.stat, unit: row.unit, leaderBonus: lb, grades,
-        };
+            if (!(fam.grades[GRADES[i]] > fam.grades[GRADES[i - 1]])) bad(`${GRADES[i]} ${fam.grades[GRADES[i]]} 가 ${GRADES[i - 1]} ${fam.grades[GRADES[i - 1]]} 보다 크지 않다 — 기준값이 너무 작다`);
         families.push(fam);
+        famById[id] = fam;
     }
     const familyIds = families.map(f => f.id);
-    // 가족이 **그 종류의 칸의 두 배** 이상이어야 한다 [2026-09-27 — 칸 = 상황] — 전체 리롤은 굴리기 직전에 든 것과 이번에 이미 뽑은 것을 빼고
-    //   **그 칸의 종류 안에서** 뽑으므로, 종류마다 `칸 수 + (칸 수 − 1)` 가족이 후보에서 빠진다 (§5-6 중복 규칙)
-    for (const cat of CATEGORIES) {
-        const slotsOf = slotList.filter(s => s.category === cat).length;
-        const famsOf = families.filter(f => f.category === cat).length;
-        if (slotsOf && famsOf < slotsOf * 2)
-            throw new Error(`tactic: 종류 ${cat} — 가족 ${famsOf}개 < 칸 ${slotsOf}개 × 2 — 전체 리롤이 후보를 다 쓴다`);
-    }
+    // 죄종마다 효과가 둘 이상 — 리롤의 직전 제외는 효과 단계에서 「변형이 직전 가족 하나뿐인 효과」를 빼므로, 하나뿐이면 후보가 빈다 (§5-6 · INTERFACE §5-2)
+    for (const s of SINS)
+        if (effectsBySin[s].length < 2) throw new Error(`tactic: 죄종 ${s} 의 효과가 ${effectsBySin[s].length}개 — 둘 이상이어야 한다 (tactic_option.csv · 리롤의 직전 제외)`);
 
     /** 등급 가중치 — 값은 CSV. 하나라도 빠지거나 음수면 리롤이 조용히 한쪽으로 쏠리므로 로드 시 막는다 */
     const gradeWeights = GRADES.map(g => {
@@ -242,52 +190,62 @@ export function createTacticSystem(data) {
     if (typeof lockMult !== 'number' || !(lockMult >= 1)) throw new Error('tactic: 잠금 배수가 없거나 1 미만 (balance.csv:tactic_reroll_lock_mult)');
     const rerollCost = lockedCount => Math.round(costBase * lockMult ** lockedCount);
 
-    /** 칸이 든 `{id, grade}` 한 쌍 → 옵션 하나. 없는 가족·없는 등급이면 `null` (CSV 가 바뀐 세이브) */
-    function optionOf(ref) {
+    /**
+     * 칸이 든 `{id, grade}` 한 쌍 → 옵션 하나. 조건은 **그 칸**(`slotNo`)의 것을 싣는다 — 원정 스냅숏이 칸 없이도 다시 잴 수 있게.
+     * 칸을 안 주면 조건 없음 · 없는 가족 · 없는 등급이면 `null` (CSV 가 바뀐 세이브)
+     */
+    function optionOf(ref, slotNo = null) {
         const fam = ref && famById[ref.id];
-        if (!fam) return null;
-        const value = fam.grades[ref.grade];
-        if (value === undefined) return null;
+        if (!fam || !GRADES.includes(ref.grade)) return null;
+        const c = (slotNo == null ? null : slotList[slotNo - 1]) ?? NO_COND;
         return {
-            id: fam.id, grade: ref.grade, condId: fam.condId, category: fam.category, polarity: fam.polarity,
-            condKind: fam.condKind, condArg: fam.condArg, condN: fam.condN, score: fam.score, stat: fam.stat, leaderBonus: fam.leaderBonus, value,
+            id: fam.id, grade: ref.grade, sin: fam.sin, effect: fam.effect, stat: fam.stat, unit: fam.unit,
+            multShare: fam.multShare, leaderBonus: fam.leaderBonus, value: fam.grades[ref.grade],
+            condId: c.condId, condKind: c.condKind, steps: c.steps.slice(),
         };
     }
 
     /* ── 판정 ── */
-    // ~~openCount(totalLevel)~~ 는 2026-09-22 삭제 — 열린 칸 수는 지휘 천막 랭크가 정한다(`state.limitsOf(state).tacticSlots` · R137)
 
     /**
-     * 파티 문맥 — 조건이 세는 숫자를 **한 번에** 뽑아 둔다. 조건마다 파티를 다시 훑지 않는다.
-     * members = [{sin, cls, ldr, stats, advance}] **편성 순서대로**(첫 칸이 리더) · `extra.bond` = 이 인원이 같이 깬 칸 수(이긴 칸마다 +1 · 2026-09-29).
-     * 모으는 것은 state.js, 세는 규칙은 여기.
+     * 파티 문맥 — 조건 · 버프가 세는 숫자를 **한 번에** 뽑아 둔다. 칸마다 파티를 다시 훑지 않는다.
+     * members = [{sin, cls, ldr, gear}] **편성 순서대로**(첫 칸이 리더) · `gear` = 그 영웅이 낀 장비의 죄종 목록(이름의 첫째 · 둘째 둘 다 · 유니크는 없다) ·
+     * `extra.kills` = 이 셋이 함께 잡은 몬스터 수(state.killsTogether). 모으는 것은 state.js, 세는 규칙은 여기.
      */
     function contextOf(members, extra = {}) {
-        const ctx = { size: members.length, members, sins: [], classes: [], leader: members[0] ?? null, bond: extra.bond ?? 0 };
+        const gear = Object.fromEntries(SINS.map(s => [s, 0]));
+        const ctx = { size: members.length, members, sins: [], leader: members[0] ?? null, kills: extra.kills ?? 0, gear };
         for (const m of members) {
             ctx.sins.push(m.sin);
-            ctx.classes.push(m.cls);
+            for (const s of m.gear ?? []) if (s in gear) gear[s] += 1;
         }
         return ctx;
     }
 
     /**
-     * 조건이 참인가 — 지금 센 숫자와 함께 낸다 (화면이 「3 / 2」 처럼 카운터를 찍는다 — §4 「안 보이면 함정」). 없으면은 `need` 0.
-     *   `lead` · `value` = 리더 보너스 [2026-10-24 · R340 · §5-10] — 적용 값 = 등급 값 × (1 + leader_bonus × (리더 곡선 − 1)).
-     *   켜짐과 무관하게 낸다(화면이 꺼진 칸의 값도 찍는다) · `leaderBonus` 가 없는 옵션(옛 세이브의 원정 스냅숏)은 곡선을 안 받는다
+     * 칸 하나를 잰다 — 조건 카운터 · 단계 · 값 · 버프 몫 (화면이 「지금 / 다음 문턱」 · ×단계 · 버프 몫을 찍는다 — §4 「안 보이면 함정」).
+     *   단계 = 넘은 문턱 수(0 ~ 3) · 조건 없음은 1 · **0 이면 꺼짐**. `base` = 값(**꺼진 칸은 단계 1 값** — 「켜면 얼마」) ·
+     *   `value` = 적용 값 = `base × (1 + leadPart + gearPart)` [§5-10 · §5-14 「장비 죄종 버프」] — 켜짐과 무관하게 낸다
      */
     function measure(option, ctx) {
-        const have = TESTS[option.condKind].count(ctx, option.condArg);
-        const active = option.polarity === 'not' ? have === 0 : have >= option.condN;
-        const lead = 1 + (option.leaderBonus ?? 0) * (leadCurve(ctx.leader?.ldr) - 1);
-        const value = valueOf(option.stat, option.value, lead);
-        // 리더 몫 = 적용 값 − 등급 값 — 편성 탭 행의 리더 보너스 칸이 찍는다(ADR-0757) · 고정값 채널은 정수 차 · 나머지는 같은 자리에서 자른다
-        const bonus = option.stat.endsWith('_flat') ? value - option.value : Math.round((value - option.value) * 1e4) / 1e4;
-        return { have, need: option.condN, active, lead, value, bonus };
+        const none = option.condKind === 'none';
+        const have = TESTS[option.condKind].count(ctx, option);
+        const steps = option.steps ?? [];
+        const step = none ? 1 : steps.filter(n => have >= n).length;
+        const need = none ? null : (steps[step] ?? null);
+        const base = valueAt(option, Math.max(step, 1));
+        const leadPart = (option.leaderBonus ?? 0) * (leadCurve(ctx.leader?.ldr) - 1);
+        const gearPart = (ctx.gear?.[option.sin] ?? 0) * gearPct;
+        const value = round(option.stat, base * (1 + leadPart + gearPart));
+        return {
+            have, steps: steps.slice(), step, need, active: step >= 1, base,
+            leadPart: Math.round(leadPart * 1e4) / 1e4, gearPart: Math.round(gearPart * 1e4) / 1e4,
+            value, bonus: round(option.stat, value - base),
+        };
     }
 
     /**
-     * 켜진 옵션들 → 접사·마스터리와 **같은 채널**의 가산치 (§2-4).
+     * 켜진 옵션들 → 접사·마스터리와 **같은 채널**의 가산치 (§2-4). 같은 능력치는 더한다 — 같은 가족이 두 칸이면 둘 다(§5-14).
      * 피해 감소만 따로 낸다 — 원천별 곱이라 합치면 안 된다 (battle_design §9-3). **옵션 하나 = 원천 하나**.
      */
     function bonusOf(options) {
@@ -300,74 +258,47 @@ export function createTacticSystem(data) {
         return { flat, dr };
     }
 
-    /** 옵션의 조건이 지금 어휘에 있나 — 옛 세이브의 원정 스냅숏은 지운 조건을 들고 있을 수 있다 (state.snapMeasure) */
-    const hasCond = option => !!TESTS[option?.condKind];
+    /** 옵션의 조건이 지금 어휘에 있고 가족이 지금 표에 있나 — 옛 세이브 · 옛 풀의 원정 스냅숏을 거른다 (state.snapMeasure) */
+    const hasCond = option => !!TESTS[option?.condKind] && !!famById[option?.id] && Array.isArray(option?.steps) && GRADES.includes(option?.grade);
 
     /**
-     * 칸이 처음 열렸을 때 들어 있는 옵션 — 기존 배정 풀을 섞되, 개편한 칸(`DRAWN`)은 제 풀에서 따로 뽑는다.
-     * 리롤 결과에 의존하지 않는 게 핵심이다: 3번 칸을 리롤했다고 아직 안 열린 5번 칸의 내용이 바뀌면
-     *   플레이어가 인과를 못 읽는다(통제성 — CLAUDE.md 철학 2). 섞기라서 첫 배정에 중복도 없다.
+     * 가족 하나 — **죄종 → 효과 → 변형**, 각 1회 · 균등 (INTERFACE §5-2). `prevId` = 그 칸이 굴리기 직전 든 가족 — 그것만 피한다:
+     *   효과 단계에서 「변형이 그 가족 하나뿐인 효과」를 빼고 변형 단계에서 그 가족을 뺀다. 죄종 단계는 안 뺀다(죄종마다 효과가 둘 이상 — 로드 검증).
+     *   그래서 **rng 횟수가 직전 가족과 무관하다** — 변형이 하나뿐이어도 1회를 쓴다
      */
-    function initialAssign(rng) {
-        const pool = [];
-        let partyInserted = false;
-        for (const f of families) {
-            if (DRAWN.has(f.category)) {
-                if (f.category === 'party' && !partyInserted) pool.push(...legacyPartyIds, ...legacyGearIds, legacyLeadIds[0], legacyLeadIds[1], legacyFrontIds[0]);
-                partyInserted ||= f.category === 'party';
-            } else {
-                pool.push(f.id);
-                if (f.id === LEGACY_LDR_AFTER) pool.push(...legacyLdrIds, legacyFrontIds[1]);
-            }
-        }
-        for (let i = pool.length - 1; i > 0; i--) {
-            const j = Math.floor(rng() * (i + 1));
-            [pool[i], pool[j]] = [pool[j], pool[i]];
-        }
-        // 개편한 칸은 셔플 뒤 칸 번호 순으로 제 풀에서 균등 추첨한다(한 칸 1회). 옛 자리의 순서는 다른 종류만 보므로 영향이 없다.
-        // 나머지는 섞은 순서에서 **그 칸의 종류인 것 중 아직 안 쓴 첫 가족**을 준다.
-        // 등급은 안 굴린다 — 첫 배정은 언제나 일반이다 (§5-5): 시드 운이 초반 격차를 만들지 않고
-        //   칸이 열릴 때마다 「굴릴 이유」가 같이 생긴다
-        const used = new Set();
-        return slotList.map(s => {
-            const rest = DRAWN.has(s.category) ? familyIds.filter(id => famById[id].category === s.category && !used.has(id)) : null;
-            const id = rest ? rest[Math.floor(rng() * rest.length)] : pool.find(f => !used.has(f) && famById[f]?.category === s.category);
-            used.add(id);
-            return { id, grade: BASE_GRADE };
-        });
+    function drawFamily(rng, prevId) {
+        const sin = SINS[Math.floor(rng() * SINS.length)];
+        const effs = effectsBySin[sin].filter(e => !(e.ids.length === 1 && e.ids[0] === prevId));
+        const eff = effs[Math.floor(rng() * effs.length)];
+        const ids = eff.ids.filter(id => id !== prevId);
+        return ids[Math.floor(rng() * ids.length)];
     }
 
     /**
-     * 한 칸 뽑기 — **가족과 등급을 같이 굴린다** (§5-5 확정 2026-09-01). rng 소비는 **가족 1회 → 등급 1회** 이 순서다.
-     *
-     * `excludeIds` 는 **가족 id** 다 — 같은 것이 다시 나오면 돈을 내고 아무 일도 안 일어나고, 칸끼리 겹치면 같은 stat 이 두 번 곱해진다.
-     *   **등급이 달라도 같은 가족이면 같은 옵션이다** — 「일반 데미지」와 「레어 데미지」를 두 칸에 세우면 안 된다.
-     *   점수는 출현에 안 걸린다 — 어려운 조건도 쉬운 조건만큼 뜬다(§5-8 「출현은 균등」)
+     * 칸이 처음 열렸을 때 들어 있는 옵션 — 칸 번호 순으로 칸마다 가족 하나(rng 3회). 등급은 안 굴린다 — 첫 배정은 언제나 일반이다 (§5-5):
+     *   시드 운이 초반 격차를 만들지 않고 칸이 열릴 때마다 「굴릴 이유」가 같이 생긴다. 칸끼리 겹쳐도 된다(§5-14).
+     * 리롤 결과에 의존하지 않는 게 핵심이다: 리롤했다고 아직 안 열린 칸의 내용이 바뀌면 플레이어가 인과를 못 읽는다(통제성 — CLAUDE.md 철학 2)
      */
-    function pick(rng, excludeIds = [], category = null) {
-        // `category` = 그 칸의 조건 종류 [2026-09-27 — 칸 = 상황] · null 이면 풀 전체
-        const rest = familyIds.filter(id => !excludeIds.includes(id) && (category === null || famById[id].category === category));
-        if (!rest.length) return null;
-        const id = rest[Math.floor(rng() * rest.length)];
+    function initialAssign(rng) {
+        return slotList.map(() => ({ id: drawFamily(rng, null), grade: BASE_GRADE }));
+    }
+
+    /**
+     * 한 칸 뽑기 — **죄종 → 효과 → 변형 → 등급, rng 4회 고정** (§5-14 · INTERFACE §5-2).
+     * `prevId` = 그 칸이 굴리기 직전 든 가족(등급 무관 — 「일반 데미지」와 「레어 데미지」는 같은 옵션 · §5-5) — 돈을 내고 아무 일도 안 일어나는 일만 막는다(§5-6)
+     */
+    function pick(rng, prevId = null) {
+        const id = drawFamily(rng, prevId);
         return { id, grade: rollGrade(rng) };
     }
 
     /**
-     * 전체 리롤의 뽑기 — rng **하나로** `pick` 을 `count` 번 잇는다 (§5-6 · INTERFACE §5-2). 부르는 쪽이 칸 번호 오름차순으로 나눠 준다.
-     * `excludeIds` = **잠긴 칸의 옵션 + 굴리기 직전 열린 칸이 들고 있던 옵션**이고, 이번에 뽑은 가족은 다음 뽑기에서 빠진다.
-     * 후보가 모자라면 `null` — 로드가 「가족 ≥ 칸 × 2」를 검증하므로 평소엔 안 탄다
+     * 전체 리롤의 뽑기 — rng **하나로** `pick` 을 굴릴 칸마다 잇는다 (§5-6 · INTERFACE §5-2). 부르는 쪽이 칸 번호 오름차순으로 나눠 준다.
+     * `prevIds` = 칸마다 굴리기 직전 든 가족(수를 주면 직전 없이 그만큼). 다른 칸 · 잠긴 칸 · 이번에 뽑은 것과 겹쳐도 된다(§5-14)
      */
-    function pickMany(rng, categories, excludeIds = []) {
-        // `categories` = 굴릴 칸들의 조건 종류(칸 번호 오름차순) [2026-09-27 — 칸 = 상황] · 수를 주면 종류 없이 그만큼
-        const cats = typeof categories === 'number' ? Array(categories).fill(null) : categories;
-        const out = [], taken = excludeIds.slice();
-        for (let i = 0; i < cats.length; i++) {
-            const got = pick(rng, taken, cats[i]);
-            if (!got) return null;
-            out.push(got);
-            taken.push(got.id);
-        }
-        return out;
+    function pickMany(rng, prevIds) {
+        const prev = typeof prevIds === 'number' ? Array(prevIds).fill(null) : prevIds;
+        return prev.map(p => pick(rng, p));
     }
 
     /** 등급 가중 추첨 — `GRADES` 순서로 훑는다. 그 순서가 계약이다 (INTERFACE §5-3) */
@@ -381,9 +312,10 @@ export function createTacticSystem(data) {
     }
 
     return {
-        slotList, slotCount, families, familyIds, optionOf, contextOf, measure, bonusOf, leadCurve,
-        initialAssign, pick, pickMany, rerollCost, GRADES, COND_KINDS: Object.keys(TESTS), CATEGORIES,
-        conditions: Object.values(condById), scoreMult, legacyPartyIds, hasCond,
-        legacyIdsOf: category => LEGACY_BY_CATEGORY[category] ?? [],
+        slotList, slotCount, families, familyIds, sinList: SINS.slice(),
+        effectsOf: sin => (effectsBySin[sin] ?? []).map(e => ({ effect: e.effect, ids: e.ids.slice() })),
+        conditions: Object.values(condById), gradeMult, gearPct,
+        optionOf, valueAt, contextOf, measure, bonusOf, leadCurve,
+        initialAssign, pick, pickMany, rerollCost, GRADES, COND_KINDS: Object.keys(TESTS), hasCond,
     };
 }

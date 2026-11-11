@@ -359,9 +359,11 @@ export const PAPERDOLL = [
    — 2026-09-21 사용자 지시로 warrior 3 → 5. 역시 늘리는 방향이다.
    2026-10-21 사용자 지시로 노스트라다무스를 사제로 옮겼다 — mage_3 → priest_5 · mage 3 → 2 · priest 4 → 5.
    ⚠ mage 는 **줄이는 방향**이라 세이브에 `mage_3` 이 박힌 마법사는 접혀서 mage_1 을 받는다(새 마법사 초상이 mage_3 에 들어오면 그 그림이 된다).
+   2026-11-11 사용자 지시로 유니크 다섯 추가 — knight_6 리처드 1세 · knight_7 팔라딘 · mage_3 오딘 · mage_4 제우스 · archer_2 빌헬름 텔
+   (knight 5 → 7 · mage 2 → 4 · archer 1 → 2). 늘리는 방향이다. 단 세이브에 옛 `mage_3` 이 박힌 마법사는 이제 오딘 얼굴이 된다.
    ⚠ **드디어 직업 대응이다** — 영웅은 제 직업 풀에서만 굴리므로 궁수 얼굴이 전사에게 가지 않는다.
    풀이 0장인 직업(지금은 확장 직업만)은 `face = null` 이고 화면은 **빈 칸**으로 둔다 (자리표시를 안 깐다). */
-export const HERO_FACES = { warrior: 5, knight: 5, mage: 2, archer: 1, priest: 5 };
+export const HERO_FACES = { warrior: 5, knight: 7, mage: 4, archer: 2, priest: 5 };
 
 /**
  * 초상 이름 — `'<직업id>_<k>'` → `{ko, en}` (2026-09-10 사용자 지시 · ADR-0081).
@@ -384,7 +386,12 @@ export const HERO_FACE_NAMES = {
     warrior_5: { ko: '삼손', en: 'Samson' },               // 헝클어진 장발·수염
     knight_1: { ko: '오디세우스', en: 'Odysseus' },        // 무안면 로마군 1
     knight_5: { ko: '한니발', en: 'Hannibal' },            // 외치는 기사
+    knight_6: { ko: '리처드 1세', en: 'Richard the Lionheart' }, // 금관 · 사슬 코이프 · 붉은 십자 서코트 (11-11)
+    knight_7: { ko: '팔라딘', en: 'Paladin' },             // 순백 판금 · 회색 짧은 머리 노기사 (11-11)
     mage_2: { ko: '포세이돈', en: 'Poseidon' },            // 청록 장발·수염 노인
+    mage_3: { ko: '오딘', en: 'Odin' },                    // 붕대로 한 눈을 가린 후드 노인 (11-11)
+    mage_4: { ko: '제우스', en: 'Zeus' },                  // 왕관 · 흰 장발 · 수염 · 손에 번개 (11-11)
+    archer_2: { ko: '빌헬름 텔', en: 'William Tell' },     // 머리띠 · 모피 · 어깨에 멘 석궁 (11-11)
     priest_3: { ko: '잔 다르크', en: 'Joan of Arc' },      // 흰 두건(윔플) — 사제 초상 중 유일한 여자
     priest_4: { ko: '닥터 슈나벨', en: 'Doctor Schnabel' }, // 역병 의사 — 흰 부리 가면
     priest_1: { ko: '베네딕토', en: 'Benedict' },          // 반삭 · 검은 수단 · 금 십자가 (10-20 이름)
@@ -558,7 +565,8 @@ export const ITEM_BASE_ART_IDS = ['armor_cloth', 'armor_robe_1', 'armor_robe_2',
  *   열 모두 `weapon_base.csv` 행이 서서 새 개체는 `baseId` 를 들고(아래 `itemArt`) 이름도 그 베이스다 (둔기 · 창 · 활 2026-09-11 · 스태프 · 오브 · 십자가 · 성경 · 석궁 2026-09-14).
  *   아래 문단(uid 해시)은 **`baseId` 없는 옛 개체의 폴백**으로만 산다.
  *
- * ⚠ **파일명이 id 가 아니다.** 무기 베이스는 기획 확정(무기군당 7 · `item_design.md` §1)이지만 `weapon_base` CSV 가
+ * (아래 네 문단은 `weapon_base.csv` 가 서기 전 — 2026-09-10 이전 — 의 기록이다. 지금 이 해시는 `baseId` 없는 옛 개체에만 쓴다)
+ * ⚠ **파일명이 id 가 아니다.** 무기 베이스는 기획 확정(무기군당 7 — 2026-11-11 R445 에 10 · `item_design.md` §1)이지만 `weapon_base` CSV 가
  *   아직 없다(DEV_PLAN R62 — 대역 경계 · 수치 미발행). 그래서 **개체가 어느 베이스인지는 아무 데도 안 적혀 있다.**
  * 그런데도 그림은 고를 수 있다 — **uid 해시**로 그 무기군의 7장 중 하나를 잡는다(`itemArt`). 스킬 아이콘의 해시
  *   폴백과 같은 문법이고, 계약도 같다: **uid 는 세이브에 남으므로 한 개체는 평생 같은 무기로 보인다** (다시 그려도 · 껐다 켜도 안 바뀐다).
@@ -567,14 +575,17 @@ export const ITEM_BASE_ART_IDS = ['armor_cloth', 'armor_robe_1', 'armor_robe_2',
  * ⚠ **이름은 안 따라온다** — 아이템 이름 · 툴팁은 여전히 무기군 이름이다(`item.js:build` 가 무기군을 그대로 base 로 쓴다).
  *   그림과 이름이 어긋나는 것을 **알고 켠 것**이고, `weapon_base` 가 서면 굴림이 `game_logic` 으로 옮겨 가며 둘이 붙는다.
  * 이름 표시(도감)는 `i18n:ix.b.<stem>` 이 든다 — CSV 가 없어 `L()` 로 읽을 데이터 행이 없기 때문이고, 이것도 **임시**다.
- * 목록 순서 = 대역 순(기본 → ①-A · ①-B → ②-A · ②-B → ③-A · ③-B) — `item_design.md` §1 「이름 — 9군」 표의 행 순서다.
+ * 목록 순서는 R445(2026-11-11) 전 일곱의 순서 그대로다 — 그림은 id 나 해시로 찾으므로 순서가 결정론에 안 걸린다(드롭 순서는 `weapon_base.csv` 가 든다).
  */
 export const WEAPON_BASE_DIR = './assets/art/icons/items/weapon_base/';
-/** 베이스 그림이 있는 무기군 → 그 7장의 파일 stem. 키 순서는 도감의 묶음 순서다(활 다음 석궁 · ADR-0180). 늘어나면 `<group>/` 폴더를 파고 여기 한 줄 */
+/** **설치된 무기 베이스 그림** — 무기군 → 파일 stem(= `weapon_base.csv:base_id`). 키 순서는 도감의 묶음 순서다(활 다음 석궁 · ADR-0180).
+ *  [2026-11-11 · R445] 무기군당 10(기본 1 + 단 3 × 계보 3)이 되며 **CSV 와 이 목록이 같은 벌이 아니게 됐다** — 여기는 그림이 있는 것만 든다:
+ *  ① CSV 베이스 중 그림이 있는 것 ② **퇴역한 베이스**(`WEAPON_BASE_RETIRED` — CSV 에서 빠졌지만 옛 세이브 무기가 `baseId` 로 든다).
+ *  그림이 아직 없는 CSV 베이스(R445 의 새 이름 42)는 `itemArt` 가 같은 무기군 그림 하나로 대신한다(아래). 그림이 오면 `<group>/` 에 넣고 여기 한 줄 */
 export const WEAPON_BASE_STEMS = {
     sword2h: ['long_sword', 'claymore', 'highland_blade', 'bastard_sword', 'balrog_blade', 'zweihander', 'colossus_blade'],
     axe: ['hatchet', 'axe', 'tomahawk', 'great_axe', 'berserker_axe', 'battle_axe', 'decapitator'],
-    // ⚠ 무기군마다 id · 순서가 `weapon_base.csv` 와 같아야 한다 — 두 벌이라, 어긋난 베이스는 제 그림 대신 uid 해시 그림을 들어 이름과 갈린다 (단정: dev/test.js)
+    // ⚠ id 는 `weapon_base.csv:base_id` 또는 `WEAPON_BASE_RETIRED` 여야 한다 — 아니면 그 그림을 아무 개체도 못 든다 (단정: dev/test.js)
     mace: ['club', 'flanged_mace', 'reinforced_mace', 'battle_hammer', 'legendary_mallet', 'war_club', 'ogre_maul'],
     spear: ['pike', 'thresher', 'giant_thresher', 'halberd', 'cryptic_axe', 'lance', 'war_pike'],
     bow: ['short_bow', 'long_bow', 'great_bow', 'rune_bow', 'diamond_bow', 'gothic_bow', 'hydra_bow'],
@@ -584,10 +595,15 @@ export const WEAPON_BASE_STEMS = {
     crucifix: ['scepter', 'divine_scepter', 'caduceus', 'rune_scepter', 'mighty_scepter', 'grand_scepter', 'seraph_rod'],
     bible: ['psalter', 'breviary', 'missal', 'lectern_bible', 'great_bible', 'wicked_bible', 'apocrypha'],
 };
+/** **퇴역한 무기 베이스** [2026-11-11 · R445] — `weapon_base.csv` 에서 빠졌지만 그림은 남긴다. 옛 세이브의 무기가 이 `baseId` 와 이름을 그대로 든다 */
+export const WEAPON_BASE_RETIRED = ['berserker_axe', 'war_club', 'cryptic_axe', 'great_bow', 'rune_bow', 'gothic_bow', 'demon_crossbow',
+    'gnarled_staff', 'demon_heart', 'divine_scepter', 'caduceus', 'grand_scepter'];
 export const weaponBaseArt = (group, stem) => WEAPON_BASE_STEMS[group]?.includes(stem) ? `${WEAPON_BASE_DIR}${group}/${stem}${ICON_EXT}` : null;
 /**
  * `baseId` 가 있으면(2026-09-10 · `weapon_base.csv` 로 실제 굴린 개체 — `item.baseId`) **그 그림을 그대로** 쓴다 —
  * 이름과 그림이 같은 베이스를 가리키게 된다. 없으면(구 세이브 · 베이스 풀이 아직 없는 무기군) **uid 해시**로 옛날처럼 고른다.
+ * **그림이 아직 없는 베이스**(R445 의 새 이름 — 2026-11-11)는 **`baseId` 해시**로 같은 무기군의 지금 그림(퇴역 제외) 하나를 든다 —
+ *   같은 베이스는 언제나 같은 그림이다(rng 0 · 그리는 시각의 해시). ⚠ 이름과 그림이 어긋나는 **임시**다 — 그림이 오면 `WEAPON_BASE_STEMS` 에 한 줄
  */
 export const itemArt = (slot, group, uid, baseId) => {
     if (slot === 'weapon') {
@@ -596,6 +612,11 @@ export const itemArt = (slot, group, uid, baseId) => {
         const stems = WEAPON_BASE_STEMS[group];
         if (stems) {
             if (baseId && stems.includes(baseId)) return `${WEAPON_BASE_DIR}${group}/${baseId}${ICON_EXT}`;
+            if (baseId) {
+                const live = stems.filter(s => !WEAPON_BASE_RETIRED.includes(s));
+                const pool = live.length ? live : stems;
+                return `${WEAPON_BASE_DIR}${group}/${pool[strHash(`${baseId}:${group}`) % pool.length]}${ICON_EXT}`;
+            }
             if (uid)
                 // 해시 키에 무기군을 섞는다 — uid 만 쓰면 `i1`·`i2` 같은 **짧은 키**라 7 로 나눈 나머지가 쏠린다
                 //   (실측 60개: 발록 17 · 츠바이핸더 3). `<uid>:<group>` 이면 고르게 퍼지고, 무기군이 늘어도 서로 독립이다

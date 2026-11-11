@@ -1,7 +1,7 @@
 /** 콜로세움 · 결투장 — 저장 상태와 독립된 3인 팀 스냅샷 · 상대 셋의 출처 · `battle.simulateTeams` 단판. RNG는 상대/전투마다 주입한다.
  * 순수 — DOM · 저장소 · 시계 · `Math.random` 을 모른다 · 데이터는 생성자 주입 · 세이브를 모른다 (INTERFACE §2-17).
  * **상대는 셋에서 온다** [2026-10-17 · 탭 둘 2026-10-18 · arena_design §0 · §7 · §8] — 콜로세움 = 층마다 정해진 AI 팀(`rollFloorOpponent` —
- *   시드를 층 번호로 파서 rng 를 안 받는다) / 결투장 = 레이팅 근처 셋(`rollRatedCandidates` — 받은 고스트가 먼저 · 모자란 자리는 AI 팀 · 2026-11-11 · §9) / 친선전 = 남이 올린 팀 그대로
+ *   시드를 층 번호로 파서 rng 를 안 받는다) / 결투장 = 레이팅 근처 후보(`rollRatedCandidates` — 수는 `arena_pick_count` — 받은 고스트만 · AI 팀 없음 · 2026-11-11 · §9 · R452) / 친선전 = 남이 올린 팀 그대로
  *   (`exportTeam` → 운반 → `importTeam` · 받은 팀은 `validateTeam` 을 지나야 선다 — arena_design §2).
  *   운반(문자열로 싸기 · 서버)은 이 모듈 밖이다. 어느 출처든 결과는 `snapshotTeam` 모양이라 `fight` 하나가 받는다.
  *   레이팅 · 오른 층은 세이브라 여기 없다(`state.arenaRecord` · `colosseumRecord`).
@@ -257,36 +257,28 @@ export function createArenaSystem({ hero, item, skill, battle, balance = {}, equ
         return rollKit(F.kit, makeRng(deriveSeed(B.colosseum_seed, no)), taken);
     }
 
-    /* ── 결투장 — 레이팅 근처 AI 팀 셋 (arena_design §8) ── */
+    /* ── 콜로세움 — 레이팅 근처 다른 플레이어 후보 (arena_design §8 · §9) ── */
 
-    /** 아래 · 비슷 · 위 — 후보마다 흔들림 1회 → 그 팀의 굴림. 이름은 `taken` 과도 앞 후보와도 안 겹친다.
-     *  `ghosts` = 받은 방어 편성 `[{id, rating, team}]` (arena_design §9 · 2026-11-11) — 있으면 흔들림 셋을 먼저 굴리고,
-     *  자리와 고스트를 레이팅 차가 작은 쌍부터 짝지은 뒤 남은 자리만 AI 팀을 굴린다 · 셋을 레이팅 순으로 다시 놓는다.
-     *  고스트가 없으면 rng 순서가 옛 것과 같다 (INTERFACE §2-17) */
+    /** 내 레이팅을 가운데로 간격마다 한 자리 — 자리 수 `arena_pick_count`(다섯이면 아래2 · 아래1 · 비슷 · 위1 · 위2 · R450).
+     *  `ghosts` = 받은 방어 편성 `[{id, rating, team}]` (arena_design §9 · 2026-11-11) — 자리마다 흔들림 1회(자리 순) →
+     *  자리와 고스트를 레이팅 차가 작은 쌍부터 짝짓는다 · **짝 없는 자리는 버린다 — AI 팀이 없다**(R452 · ADR-1045) ·
+     *  후보를 레이팅 순으로 다시 놓는다. 고스트가 없으면 `[]`(rng 0). `taken` 은 읽지 않는다(AI 이름 피하기였다 — 부르는 쪽 호환) (INTERFACE §2-17) */
     function rollRatedCandidates(rating, rng, taken = [], ghosts = []) {
-        const names = (taken ?? []).slice();
-        const seat = d => Math.max(0, Math.round(rating + d * B.arena_pick_spread + (rng() * 2 - 1) * B.arena_pick_jitter));
-        const ai = r => {
-            const team = rollKit(kitOfRating(r), rng, names);
-            names.push(...team.map(p => p.hero.name));
-            return { rating: r, tier: tierOfRating(r), team };
-        };
+        const n = B.arena_pick_count;
+        if (!Number.isInteger(n) || n < 1) throw new Error(`arena: arena_pick_count ${n}`);
         const pool = (ghosts ?? []).filter(g => g && Number.isInteger(g.rating) && g.rating >= 0 && Array.isArray(g.team) && g.team.length === teamSize);
-        if (!pool.length) return [-1, 0, 1].map(d => ai(seat(d)));
-        const seats = [-1, 0, 1].map(seat);
+        if (!pool.length) return [];
+        const steps = Array.from({ length: n }, (_, k) => k - (n - 1) / 2);   // 간격의 몇 배 — 다섯이면 −2 · −1 · 0 · +1 · +2
+        const seats = steps.map(d => Math.max(0, Math.round(rating + d * B.arena_pick_spread + (rng() * 2 - 1) * B.arena_pick_jitter)));
         // 짝짓기 — (자리, 고스트) 쌍을 레이팅 차 → 자리 → 고스트 순으로 놓고 앞에서부터 둘 다 빈 쌍을 고른다 · rng 0
         const pairs = [];
         seats.forEach((r, s) => pool.forEach((g, k) => pairs.push({ s, k, gap: Math.abs(g.rating - r) })));
         pairs.sort((a, b) => a.gap - b.gap || a.s - b.s || a.k - b.k);
         const byseat = seats.map(() => null), used = new Set();
         for (const p of pairs) if (byseat[p.s] === null && !used.has(p.k)) { byseat[p.s] = p.k; used.add(p.k); }
-        byseat.forEach(k => { if (k !== null) names.push(...pool[k].team.map(p => p.hero.name)); });
-        const out = seats.map((r, s) => {
-            if (byseat[s] === null) return ai(r);
-            const g = pool[byseat[s]];
-            return { rating: g.rating, tier: tierOfRating(g.rating), team: clone(g.team), ghost: g.id };
-        });
-        return out.map((c, s) => ({ c, s })).sort((a, b) => a.c.rating - b.c.rating || a.s - b.s).map(x => x.c);
+        return byseat.map((k, s) => ({ k, s })).filter(x => x.k !== null)
+            .map(({ k, s }) => ({ s, c: { rating: pool[k].rating, tier: tierOfRating(pool[k].rating), team: clone(pool[k].team), ghost: pool[k].id } }))
+            .sort((a, b) => a.c.rating - b.c.rating || a.s - b.s).map(x => x.c);
     }
 
     /* ── 온라인 — 남이 올린 팀 그대로 (arena_design §0 · §2) ── */

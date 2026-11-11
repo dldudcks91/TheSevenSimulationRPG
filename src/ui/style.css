@@ -1595,6 +1595,14 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .run-buff-icon img { width: 28px; height: 28px; object-fit: contain; pointer-events: none; }
 .run-buff-icon.empty img { opacity: .3; }
 .run-buff-icon:hover, .run-buff-icon:focus-visible { border-color: var(--border-highlight); }
+/* 남은 시간 [2026-11-11 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-1047] — 원정 아레나 오른쪽 위 구석 · 숫자만(`m:ss`) ·
+   왼쪽 위 버프 아이콘과 같은 바탕 · 테두리 · 높이 · 여백 · 자릿수 폭을 고정해 초가 바뀌어도 칸이 안 흔들린다 · 누름 · 툴팁 없음 */
+.arena > .stage-clock {
+    position: absolute; right: 12px; top: 10px; z-index: 2; pointer-events: none;
+    display: inline-flex; align-items: center; height: 34px; padding: 0 10px; box-sizing: border-box;
+    background: rgba(var(--veil-rgb), .85); border: 1px solid var(--border-secondary);
+    font-size: var(--fs-md); font-variant-numeric: tabular-nums; color: var(--text-primary);
+}
 .run-buff-icon:focus-visible { outline: 1px solid var(--text-primary); outline-offset: 2px; }
 .run-buff-tip .tip-effect-summary { white-space: normal; word-break: keep-all; }
 .run-buff-line + .run-buff-line { margin-top: 4px; }
@@ -1725,11 +1733,12 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 @keyframes cs-next { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 140, 0, 0); } 50% { box-shadow: 0 0 8px 1px rgba(255, 140, 0, .45); } }
 @media (prefers-reduced-motion: reduce) { .cs-floor.next { animation: none; } }
 
-/* 결투장 레일 — 리그 카드 + 상대 후보 셋 + [새 상대] · [친선전] */
+/* 결투장 레일 — 리그 카드 + 상대 후보 + [새 상대] · [친구와 전투] */
 .ar-league { display: flex; gap: 12px; align-items: center; padding: 10px; border: 1px solid var(--border-secondary); background: var(--surface-4); }
 .ar-league-ico { flex: none; width: 84px; height: 84px; }
 .ar-league-info { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.ar-league-name { font-weight: 700; color: var(--text-secondary); }
+.ar-league-name { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--text-secondary); }
+.ar-league-all { flex: none; font-weight: 400; }
 .ar-rating { display: flex; align-items: baseline; gap: 6px; }
 .ar-rating b { font-size: 30px; line-height: 1; color: var(--text-primary); font-variant-numeric: tabular-nums; }
 .ar-rating small { font-size: var(--fs-xs); color: var(--text-muted); }
@@ -1749,7 +1758,10 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .ar-cand-stake em { font-style: normal; }
 .ar-cand-stake .up { color: var(--color-success); }
 .ar-cand-stake .down { color: var(--color-error); }
-.ar-cand.ghost .ar-cand-r b { font-size: var(--fs-md, 15px); }
+.ar-cand.friend .ar-cand-r b { font-size: var(--fs-md, 15px); }
+/*   이름 뒤 태그 · 내 이름 줄 (ADR-1042) — 태그는 이름보다 작고 흐리다(같은 이름을 가르는 꼬리) */
+.ar-tag { margin-left: 2px; font-size: .78em; font-weight: 400; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.ar-me { flex: none; font-size: var(--fs-sm); color: var(--text-primary); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }   /* flex: none — 레일이 넘치면 overflow 칸만 0 으로 눌린다 */
 .ar-rail-btns { display: flex; gap: 8px; }
 /*   방어 편성 · 방어 기록 (ADR-1040 · 2026-11-11) — 고른 번호는 강조색 테두리 + 밝은 글자(공용 `.btn.sm.on` 은 한 단 밝아질 뿐이라 안 갈린다 · 물약 수 고르기와 같은 처방) */
 .ar-rail { overflow-y: auto; }   /* 칸이 둘 늘어 화면 높이를 넘는다 — 레일 안에서 스크롤 (ADR-1040) */
@@ -1766,7 +1778,11 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .ar-log-row .up { color: var(--color-success); }
 .ar-log-row .down { color: var(--color-error); }
 /*   리그 표 — 레일 아래 · 등급마다 한 줄(휘장 · 이름 · 문턱) · 맨 위 = 가장 높은 리그 · 내 리그 강조 · 아래 리그는 흐림 없이, 위 리그는 흐린 휘장 */
-.ar-leagues { margin-top: auto; display: flex; flex-direction: column; gap: 2px; border-top: 1px solid var(--border-dark); padding-top: 8px; }
+/* 리그 창 (ADR-1046) — 옛 레일 리그 표의 줄을 그대로 쓴다 */
+.ar-leagues-modal { width: min(360px, 92%); }
+.ar-leagues { display: flex; flex-direction: column; gap: 2px; }
+.ar-leagues-modal .ar-lg { padding: 4px 8px; font-size: var(--fs-sm); }
+.ar-leagues-modal .ar-lg .ar-ico { width: 32px; height: 32px; }
 .ar-lg { display: flex; align-items: center; gap: 8px; padding: 2px 6px; font-size: var(--fs-xs); color: var(--text-muted); }
 .ar-lg .ar-ico { flex: none; width: 24px; height: 24px; }
 .ar-lg.above .ar-ico { filter: grayscale(1) brightness(.5); }
@@ -1774,15 +1790,35 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .ar-lg em { font-style: normal; font-variant-numeric: tabular-nums; }
 .ar-lg.on { color: var(--text-primary); background: var(--surface-5); outline: 1px solid var(--border-secondary); }
 
-/* 친선전 창 — 글상자 둘이 나란히 · 한 칸 = 제목 / 글상자 / 버튼 (옛 온라인 갈래의 줄 · ADR-0656 → ADR-0670) · 사유 줄은 그 아래 */
-.ar-code-modal { width: min(920px, 92%); }
-.arena-code { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px 24px; align-items: start; }
-.arena-code-box { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; min-width: 0; }
-.arena-code-box .sub-h { margin: 0; white-space: nowrap; flex-basis: 100%; }
-.arena-code-text { flex: 1 1 100%; min-width: 0; height: 110px; resize: none; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary);
-    font-size: var(--fs-xs); font-family: var(--font-main); padding: 4px 6px; word-break: break-all; overflow: auto; user-select: text; caret-color: auto; }
-.arena-code-btns { display: flex; gap: 8px; }
-.arena-bad { flex-basis: 100%; color: var(--color-error); font-size: var(--fs-sm); margin: 0; padding: 0; list-style: none; }
+/* 등록 판 (ADR-1042) — 박스 가운데 한 장 · 이름 글 칸(+ 태그) / 편성마다 한 줄(로마 숫자 · 초상 · n / 3) / [등록] 오른쪽 끝 */
+.ar-reg { align-self: center; width: min(560px, 100%); margin: 24px 0; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--border-secondary); background: var(--surface-4); }
+.ar-reg .sub-h { margin: 4px 0 0; }
+.ar-reg-name { display: flex; align-items: center; gap: 8px; }
+.ar-reg-input { flex: 1 1 auto; }
+.ar-reg-parties { display: flex; flex-direction: column; gap: 6px; padding: 3px; }   /* 3px — 고른 줄의 겉 테두리가 안 잘린다 */
+.ar-reg-party { display: flex; align-items: center; gap: 12px; padding: 6px 10px; border: 1px solid var(--border-primary); background: var(--surface-1); color: var(--text-secondary); text-align: left; cursor: pointer; }
+.ar-reg-party > b { flex: none; min-width: 2em; font-size: var(--fs-lg); color: var(--text-primary); }
+.ar-reg-faces { flex: 1 1 0; min-width: 0; display: flex; gap: 6px; }
+.ar-reg-faces .hero-face { width: 44px; height: 44px; }
+.ar-reg-party small { flex: none; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.ar-reg-party:not(:disabled):hover { border-color: var(--border-highlight); }
+.ar-reg-party.on { outline: 3px solid var(--text-primary); outline-offset: 1px; background: var(--surface-5); }
+.ar-reg-party:disabled { opacity: .45; cursor: default; }
+.ar-reg-need { display: flex; align-items: center; gap: 10px; font-size: var(--fs-sm); }
+.ar-reg-go { align-self: flex-end; min-width: 8em; }
+/* 친구와 전투 창 (ADR-1042) — 찾기 줄 / 목록(한 줄 = 휘장 · 이름#태그 · 레이팅 · 안에서 스크롤) / [더 보기] */
+.ar-users-modal { width: min(560px, 92%); }
+.ar-users { display: flex; flex-direction: column; gap: 8px; }
+.ar-users-bar { display: flex; gap: 8px; align-items: center; }
+.ar-users-q { flex: 1 1 auto; }
+.ar-users-list { display: flex; flex-direction: column; gap: 4px; max-height: 440px; overflow-y: auto; }
+.ar-users-none, .ar-cands-none { padding: 8px 2px; font-size: var(--fs-sm); }
+.ar-user { display: flex; align-items: center; gap: 10px; padding: 4px 10px 4px 4px; border: 1px solid var(--border-primary); background: var(--surface-1); color: var(--text-secondary); text-align: left; cursor: pointer; }
+.ar-user .ar-ico { flex: none; width: 32px; height: 32px; }
+.ar-user b { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); font-weight: 600; }
+.ar-user em { flex: none; font-style: normal; font-variant-numeric: tabular-nums; }
+.ar-user:hover { border-color: var(--border-highlight); }
+.ar-users-more { align-self: center; }
 /* 두 팀 = 관전 판 그대로 [2026-10-12 사용자 지시 · ADR-0606] — `.arena` · `.side-*` · `.divider` · `.unit-slot` 규칙을 그대로 입는다
    (위 상대 · VS · 아래 우리 팀 · 후열은 VS 반대쪽으로 `--form-step`). 판은 남는 세로를 받는다(`.arena` 의 flex · 바닥 높이) */
 /* 빈자리 · 상대 없음 = 관전 카드와 같은 크기의 점선 카드 — 띠 · 본문 높이는 카드 규칙이 그대로 잡는다 */
@@ -3906,6 +3942,19 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .ch-lv { font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); white-space: nowrap; }
 .ch-xp-n { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
 .ch-xp .bar { height: 5px; }
+/* 만렙 뒤 별 — `Lv.n` 바로 오른쪽 별 칸 (2026-11-11 · SCREEN_DESIGN §6 · ADR-1043).
+   빈 별 = **돌에 판 홈** — 빛이 위 왼쪽에서 온다고 보고 속은 어둡게 · 한 칸 밀린 아래 장(`st-rim`)이 아래 오른쪽 벽의 밝은 가장자리다.
+   찬 별 = **금빛** — 같은 아래 장이 그림자가 된다. 색은 이 블록 안에서만 쓰여 칸의 사용자 지정 속성으로 둔다 */
+.ch-stars {
+    --star-cut: rgba(0, 0, 0, .6); --star-cut-edge: rgba(0, 0, 0, .85); --star-lit: rgba(255, 236, 200, .34);
+    --star-gold: #e2b049; --star-gold-edge: #7a5414; --star-shade: rgba(0, 0, 0, .5);
+    display: inline-flex; gap: 2px; margin-left: 8px; vertical-align: -3px;
+}
+.ch-star { width: 15px; height: 15px; display: block; overflow: visible; }
+.ch-star .st-rim { fill: var(--star-lit); }
+.ch-star .st-face { fill: var(--star-cut); stroke: var(--star-cut-edge); stroke-width: .7; stroke-linejoin: round; }
+.ch-star.on .st-rim { fill: var(--star-shade); }
+.ch-star.on .st-face { fill: var(--star-gold); stroke: var(--star-gold-edge); stroke-width: .9; }
 
 /* ②-2 기본 능력치 막대 — 범위는 [balance.csv:hero_attr_min ~ hero_attr_max] */
 /* **격자는 줄이 아니라 목록이 든다** (2026-09-01 사용자 지시) — 줄마다 자기 격자를 가지면 라벨 열이
@@ -3927,6 +3976,16 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .attr-bar { height: 7px; background: var(--bg-input); border: 1px solid var(--border-dark); }
 .attr-bar > i { display: block; height: 100%; }
 .attr-v { font-size: var(--fs-sm); text-align: right; }
+/* 쓸 별이 남으면 넷째 열 [+] (2026-11-11 · SCREEN_DESIGN §6 · ADR-1043) — 열은 이 영웅에게 쓸 별이 있을 때만 선다(`.star-open`) ·
+   최종 상한 줄은 같은 폭의 빈 칸(`.attr-add-gap`)이라 열이 안 어긋난다. 금빛은 별 칸과 같은 색이다 */
+.attr-list.star-open { grid-template-columns: minmax(0, auto) minmax(38px, 1fr) 24px 16px; }
+.attr-add {
+    width: 16px; height: 16px; padding: 0; display: grid; place-items: center;
+    font-size: var(--fs-xs); font-weight: 700; line-height: 1; cursor: pointer;
+    color: #2a1c06; background: #e2b049; border: 1px solid #7a5414;
+}
+.attr-add:hover { background: #f0c45e; }
+.attr-add-gap { width: 16px; }
 
 /* 능력치 약어 배지 — 언어 중립(STR/AGI…)이라 한/영 어느 쪽에서도 폭이 같다.
    **기본 옵션 막대 줄(`.attr-n`) 전용** — 세부 옵션 행에는 안 붙는다 (2026-09-08 사용자 지시, SCREEN_DESIGN §6) */
@@ -4025,6 +4084,7 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
     -webkit-user-select: text; user-select: text; caret-color: auto;
 }
 .set-nick:focus { border-color: var(--text-accent); }
+.set-nick-cell { justify-self: start; display: flex; align-items: center; gap: 6px; }   /* 닉네임 칸 + 내 태그 (ADR-1042) */
 /* 고른 버튼 — 빨강 테두리 · 짙은 붉은 바탕 · 흰 굵은 글씨 (2026-10-09 사용자 지시 · §2-2). 공용 `.btn.sm.on` 은 바탕이 한 단 바뀔 뿐이라 On · Off 가 안 갈렸다.
    안 고른 버튼은 공용 그대로 — 흐리지 않는다(흐린 것은 못 누르는 버튼 `:disabled` 이다) */
 .set-box .btn.on { background: var(--btn-primary-bg); border-color: var(--text-accent); color: var(--text-primary); font-weight: 700; }
@@ -5521,25 +5581,31 @@ html[lang="en"] .ng-role { line-height: 1.2; }
    일곱 칸을 위에서 아래로 훑어 견준다. 조건 · 효과는 글이 길면 **그 행 안에서** 줄을 바꾼다(칸 폭은 안 준다 — 행이 높아진다).
    글자는 연구 노드(`.rs-cell` 공용)보다 한 단 작다(--fs-xs). 행 높이는 위아래 여백이 준다 — 오른쪽 열 아래가 남아
    한 단 키웠다 [2026-09-21 사용자 지시 「좀만 더 키워보자」] · 일곱 행이 오른쪽 열 안에 드는 것은 그대로 지킨다 */
-/* 세로줄 여섯 — 등급 · 켜짐 | 조건 | 카운터 | 효과 | 리더 보너스 | 잠금 · **전부 왼쪽 정렬** [2026-10-24 사용자 「다같이 칸 맞춰서 왼쪽정렬」 · ADR-0757].
-   **칸은 전부 내용 폭**(조건은 열 폭의 일부까지 — 넘치면 줄을 바꾼다)이고 **남는 폭은 칸 사이에 고르게** 나눈다 — 한 칸이 다 먹으면
-   행이 왼쪽 · 오른쪽 두 덩어리로 갈린다 [2026-10-24 사용자 「왼쪽 오른쪽 너무 극명하게 나뉘었잖아」 · ADR-0758] */
-.pt-tactics .rs-grid { grid-template-columns: max-content fit-content(42%) max-content max-content max-content max-content; justify-content: space-between; gap: 8px 10px; }
+/* 세로줄 일곱 — 등급 · 켜짐 | 죄종 | 조건 | 진행(카운터 · 단계) | 효과 | 버프 몫 | 잠금 · **전부 왼쪽 정렬** [2026-10-24 사용자 「다같이 칸 맞춰서 왼쪽정렬」 · ADR-0757 ·
+   죄종 · 단계 · 버프 몫 2026-11-11 · ADR-1048]. **칸은 전부 내용 폭**(조건은 열 폭의 일부까지 — 넘치면 줄을 바꾼다)이고 **남는 폭은 칸 사이에 고르게** 나눈다 —
+   한 칸이 다 먹으면 행이 왼쪽 · 오른쪽 두 덩어리로 갈린다 [2026-10-24 사용자 「왼쪽 오른쪽 너무 극명하게 나뉘었잖아」 · ADR-0758] */
+.pt-tactics .rs-grid { grid-template-columns: max-content max-content fit-content(34%) max-content max-content max-content max-content; justify-content: space-between; gap: 8px 10px; }
 .pt-tactics .rs-cond { justify-content: flex-start; }
-.pt-tactics .rs-cnt-c, .pt-tactics .rs-eff, .pt-tactics .rs-lead { justify-self: start; white-space: nowrap; }
-.pt-tactics .rs-cnt-c { font-size: calc(var(--fs-xs) + 1px); }
-/* 리더 보너스 칸 — 효과 오른쪽 (§15 · ADR-0757) · 더하면 성공색 · 빼면 오류색 · 0 · 곡선을 안 받는 칸(「—」)은 흐림 */
+.pt-tactics .rs-sin, .pt-tactics .rs-cnt-c, .pt-tactics .rs-eff, .pt-tactics .rs-lead { justify-self: start; white-space: nowrap; }
+.pt-tactics .rs-sin { font-size: calc(var(--fs-xs) + 1px); }   /* 그 칸의 죄종 — 글자색 = 죄종 색(인라인) */
+.pt-tactics .rs-cnt-c { font-size: calc(var(--fs-xs) + 1px); display: flex; align-items: baseline; gap: 6px; }
+/* 단계 「×n」 — 진행 칸의 카운터 뒤 · 0 이면 흐림(꺼진 칸) */
+.rs-step { font-size: var(--fs-xs); color: var(--text-secondary); }
+.rs-step.zero { color: var(--text-muted); }
+/* 버프 몫 칸 — 효과 오른쪽 (§15 · ADR-1048) · 리더 몫 + 그 죄종 장비 몫 % · 더하면 성공색 · 빼면 오류색 · 0 은 흐림 */
 .pt-tactics .rs-lead { font-size: calc(var(--fs-xs) + 1px); color: var(--text-secondary); }
 .pt-tactics .rs-lead.up { color: var(--color-success); }
 .pt-tactics .rs-lead.down { color: var(--color-error); }
 .pt-tactics .rs-lead.muted { color: var(--text-muted); }
-/* 「추가 버프」 — 「파티 전술」 소제목 줄 오른쪽 끝 · 올리면 받는 보너스 툴팁 (ADR-0757) */
-.pt-tactics > .sub-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.rs-buff-btn {
-    font-size: var(--fs-xs); font-weight: normal; color: var(--text-secondary); cursor: help;
-    border: 1px solid var(--border-secondary); border-radius: 3px; padding: 1px 7px;
+/* 카드 아래 판 — 두 열 (§15 · ADR-1048): 왼쪽 = 리더 통솔 + 분노 · 시기 · 탐욕 · 오른쪽 = 나태 · 폭식 · 색욕 · 오만. 폰 폭에서도 두 열 그대로(줄이 짧다 · 넘치면 말줄임) */
+.pt-tactics .rs-board {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 18px; margin-top: 10px; padding: 9px 13px;
+    border: 1px solid var(--border-secondary); border-radius: 4px; font-size: calc(var(--fs-xs) + 1px); color: var(--text-secondary);
 }
-.rs-buff-btn:hover { color: var(--text-primary); border-color: var(--border-highlight); }
+.rs-bd-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.rs-bd-row { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rs-bd-row.muted { opacity: .55; }
+.rs-bd-lead { color: var(--text-primary); }
 .pt-tactics .rs-cell { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; padding: 11px 12px; column-gap: normal; }   /* 목록의 칸 사이(gap + 고르게 나눈 폭)를 그대로 — 공용 `.rs-cell` 의 gap 5px 이 덮으면 열 이름 줄과 어긋난다 (ADR-0763) */
 .pt-tactics .rs-top { gap: 6px; }
 .pt-tactics .rs-state { margin-left: 0; min-width: 3ch; }   /* 맨 왼쪽 (2026-09-27) — On · Off 글자 폭이 달라도 등급 칩이 같은 자리에 선다 */

@@ -310,47 +310,42 @@ check('결투장: 레이팅 → 리그 · 차림 — 문턱에서 등급이 바�
     if (over.level !== top.level || SYS.arena.tierOfRating(top.ratingMin + 1e6) !== top.id) fail(`끝 위 ${JSON.stringify(over)}`);
     return true;
 });
-check('결투장: 상대 후보 — 아래 · 비슷 · 위 셋 · 간격 ± 흔들림 안 · 그 레이팅의 차림 · 이름이 안 겹친다 · 같은 시드 = 같은 셋', () => {
+check('콜로세움: 상대 후보 — 고스트가 없으면 빈 배열 · AI 팀 없음 · rng 를 안 쓴다 (R452 · ADR-1045 · INTERFACE §2-17)', () => {
     const r = B.arena_elo_start + 150;
-    const c = SYS.arena.rollRatedCandidates(r, makeRng(61), ['아무개']);
-    if (c.length !== 3) fail(`후보 ${c.length}`);
-    c.forEach((x, i) => {
-        const centre = r + (i - 1) * B.arena_pick_spread;
-        if (Math.abs(x.rating - centre) > B.arena_pick_jitter) fail(`후보 ${i} 레이팅 ${x.rating} (가운데 ${centre})`);
-        if (x.tier !== SYS.arena.tierOfRating(x.rating)) fail(`후보 ${i} 리그`);
-        if (x.team.some(p => p.hero.level !== SYS.arena.kitOfRating(x.rating).level)) fail(`후보 ${i} 레벨`);
-    });
-    if (!(c[0].rating < c[1].rating && c[1].rating < c[2].rating)) fail(`순서 ${c.map(x => x.rating)}`);
-    const names = c.flatMap(x => x.team.map(p => p.hero.name?.ko ?? p.hero.name));
-    if (new Set(names).size !== names.length || names.includes('아무개')) fail(`이름 겹침 ${names}`);
-    if (!eq(c, SYS.arena.rollRatedCandidates(r, makeRng(61), ['아무개']))) fail('같은 시드가 다른 셋');
-    return c.map(x => `${x.rating}(${x.tier})`).join(' · ');
+    let calls = 0;
+    const rng = () => { calls++; return 0.5; };
+    for (const ghosts of [undefined, [], [null, { id: 'x', rating: 1.5, team: [] }]]) {
+        const c = SYS.arena.rollRatedCandidates(r, rng, ['아무개'], ghosts);
+        if (!Array.isArray(c) || c.length) fail(`후보 ${JSON.stringify(c)}`);
+    }
+    if (calls) fail(`rng ${calls}회`);
+    return '빈 후보';
 });
-check('콜로세움: 상대 후보 + 고스트 — 가까운 자리와 짝 · 모자란 자리는 AI · 레이팅 순 · 사본 · 빈 · 어긋난 고스트면 옛 셋 그대로 (arena_design §9 · INTERFACE §2-17)', () => {
-    const r = B.arena_elo_start + 150;
-    const nameOf = p => p.hero.name?.ko ?? p.hero.name;
-    const old = SYS.arena.rollRatedCandidates(r, makeRng(61), ['아무개']);
-    if (!eq(old, SYS.arena.rollRatedCandidates(r, makeRng(61), ['아무개'], []))) fail('빈 고스트가 셋을 바꿨다 — rng 순서');
+check('콜로세움: 상대 후보 = 고스트만 — 자리(arena_pick_count)마다 가까운 고스트 · 짝 없는 자리는 버린다 · 레이팅 순 · 사본 · 흔들림 = 자리 수 · 같은 시드 = 같은 후보 (arena_design §9 · INTERFACE §2-17 · R450 · R452)', () => {
+    const r = B.arena_elo_start + 150, n = B.arena_pick_count;
     const ghostTeam = seed => SYS.arena.rollTierOpponent(SYS.arena.tiers[0].id, makeRng(seed));
-    const bad = [{ id: 'x', rating: 1.5, team: ghostTeam(67) }, { id: 'y', rating: r, team: [] }, { id: 'z', rating: -1, team: ghostTeam(68) }, null];
-    if (!eq(SYS.arena.rollRatedCandidates(r, makeRng(61), ['아무개'], bad), old)) fail('어긋난 고스트가 들었다');
-    // 하나 — 위 자리 근처라 위 자리를 차지한다 · 아래 · 비슷은 AI(이름이 고스트와도 안 겹친다)
+    // 자리 수 + 1 — 자리마다 그 자리 가운데의 고스트가 다 차지하고 먼 것은 빠진다
+    const near = Array.from({ length: n }, (_, k) => ({ id: `s${k}`, rating: r + (k - (n - 1) / 2) * B.arena_pick_spread, team: ghostTeam(70 + k) }));
+    const pool = [{ id: 'far', rating: r + 5000, team: ghostTeam(63) }, ...near];
+    let calls = 0;
+    const base = makeRng(61), counted = () => { calls++; return base(); };
+    const c = SYS.arena.rollRatedCandidates(r, counted, [], pool);
+    if (calls !== n) fail(`흔들림 ${calls}회 (자리 ${n})`);
+    if (c.map(x => x.ghost).join() !== near.map(g => g.id).join()) fail(`짝 ${c.map(x => x.ghost)}`);
+    c.forEach((x, i) => {
+        if (x.rating !== near[i].rating || x.tier !== SYS.arena.tierOfRating(x.rating)) fail(`후보 ${i} ${x.rating} · ${x.tier}`);
+    });
+    if (!eq(c, SYS.arena.rollRatedCandidates(r, makeRng(61), [], pool))) fail('같은 시드가 다른 후보');
+    // 하나 — 고스트가 자리보다 적으면 후보도 그만큼 · AI 로 안 채운다 · 팀은 사본
     const g1 = { id: 'g1', rating: r + B.arena_pick_spread + 1, team: ghostTeam(62) };
     const c1 = SYS.arena.rollRatedCandidates(r, makeRng(61), ['아무개'], [g1]);
-    if (!eq(c1, SYS.arena.rollRatedCandidates(r, makeRng(61), ['아무개'], [g1]))) fail('같은 시드가 다른 셋');
-    const gh = c1.filter(x => x.ghost);
-    if (gh.length !== 1 || c1[2] !== gh[0] || gh[0].ghost !== 'g1' || gh[0].rating !== g1.rating || gh[0].tier !== SYS.arena.tierOfRating(g1.rating)) fail(`고스트 자리 ${c1.map(x => `${x.rating}:${x.ghost ?? 'AI'}`)}`);
-    if (!(c1[0].rating <= c1[1].rating && c1[1].rating <= c1[2].rating)) fail(`순서 ${c1.map(x => x.rating)}`);
-    const aiNames = c1.filter(x => !x.ghost).flatMap(x => x.team.map(nameOf));
-    if (g1.team.map(nameOf).some(n => aiNames.includes(n)) || aiNames.includes('아무개')) fail(`AI 이름 겹침 ${aiNames}`);
-    gh[0].team[0].hero.level = -1;
+    if (c1.length !== 1 || c1[0].ghost !== 'g1' || c1[0].rating !== g1.rating) fail(`하나 ${JSON.stringify(c1.map(x => [x.rating, x.ghost]))}`);
+    c1[0].team[0].hero.level = -1;
     if (g1.team[0].hero.level === -1) fail('고스트 팀을 사본으로 안 넘겼다');
-    // 넷 — 가까운 셋이 세 자리를 다 차지하고 먼 것은 빠진다 · AI 가 없다
-    const pool = [{ id: 'far', rating: r + 5000, team: ghostTeam(63) }, { id: 'a', rating: r - B.arena_pick_spread, team: ghostTeam(64) },
-        { id: 'b', rating: r, team: ghostTeam(65) }, { id: 'c', rating: r + B.arena_pick_spread, team: ghostTeam(66) }];
-    const c4 = SYS.arena.rollRatedCandidates(r, makeRng(61), [], pool);
-    if (c4.map(x => x.ghost).join() !== 'a,b,c') fail(`짝 ${c4.map(x => x.ghost)}`);
-    return c1.map(x => `${x.rating}${x.ghost ? '(고스트)' : ''}`).join(' · ');
+    // 둘 — 레이팅 순
+    const c2 = SYS.arena.rollRatedCandidates(r, makeRng(61), [], [near[n - 1], near[0]]);
+    if (c2.length !== 2 || !(c2[0].rating < c2[1].rating)) fail(`둘 ${c2.map(x => x.rating)}`);
+    return c.map(x => `${x.rating}(${x.ghost})`).join(' · ');
 });
 check('콜로세움: 방어 편성 — 처음은 없음 · 열린 편성만 · 해제 · 세이브 왕복 · 옛 세이브 · 범위 밖은 null (arena_design §9 · INTERFACE §2-7 · §4)', () => {
     const g = SYS.game.newGame(173, SYS.hero.rollCandidates(makeRng(173), 3), 0);
@@ -526,20 +521,89 @@ check('csv: 이관 5종 + 장신구 표 셋 — class 7 / equip_slot 8 / item_ba
     return got.every((n, i) => n === want[i]) || fail(`${got.join('/')} ≠ ${want.join('/')}`);
 });
 /**
- * 무기 베이스 — 행이 전부 실재 무기군이고, **그림 목록(`mock.js:WEAPON_BASE_STEMS`)과 무기군마다 id · 순서가 같다** (2026-09-11).
- * 같은 사실이 두 벌이라 한쪽만 고치면 예외 없이 **그 베이스만 제 그림 대신 uid 해시 그림**을 들고 이름과 갈린다.
- * 행 순서는 결정론에 걸린다 — `item.js:build` 가 `bases[floor(r × len)]` 로 고른다.
+ * 무기 베이스 — **무기군당 10 = 기본 1 + 단 3 × 계보 3** [2026-11-11 · R445 · item_design §1 「무기 베이스」]. 모양 검증 자체는 `item.js` 가 생성 때 한다(아래 단정이 깨 본다) —
+ * 여기서는 지금 CSV 가 그 모양으로 서 있고 **본편 무기군 전부가 풀을 갖고**, 단 해금 레벨이 방어구 단과 같은지를 본다.
+ * 그림 — `mock.js:WEAPON_BASE_STEMS` 는 **설치된 그림**만 든다: id 는 CSV 베이스이거나 퇴역(`WEAPON_BASE_RETIRED` — 옛 세이브 무기가 든다)이고,
+ * 그림이 아직 없는 CSV 베이스도 `itemArt` 가 같은 무기군 그림 하나를 낸다(이모지로 안 떨어진다 · 임시).
+ * 행 순서는 결정론에 걸린다 — `item.js:build` 가 그 단의 행에서 `cand[floor(r × len)]` 로 고른다.
  */
-check('csv: weapon_base — 무기군 실재 · base_id 유일 · 그림 목록과 무기군마다 id·순서가 같다', () => {
+check('csv: weapon_base — 본편 무기군마다 기본 1 + 단 3 × 계보 3 · 단 = 방어구 단 · 그림 목록 = CSV 베이스 + 퇴역 · 그림 없는 베이스도 그림을 든다 (R445)', () => {
     const groups = Object.keys(D.weaponBases);
     const ghost = groups.filter(g => !WG[g]);
     if (ghost.length) fail(`없는 무기군: ${ghost.join(',')}`);
+    const main = D.weaponGroupList.filter(w => w.release === 'main').map(w => w.id);
+    const noPool = main.filter(g => !D.weaponBases[g]);
+    if (noPool.length) fail(`풀이 없는 본편 무기군: ${noPool.join(',')}`);
     const ids = Object.values(D.weaponBases).flat().map(b => b.id);
     if (new Set(ids).size !== ids.length) fail(`base_id 중복: ${ids.filter((id, i) => ids.indexOf(id) !== i).join(',')}`);
-    const all = [...new Set([...groups, ...Object.keys(M.WEAPON_BASE_STEMS)])];
-    const off = all.filter(g => !eq((D.weaponBases[g] ?? []).map(b => b.id), M.WEAPON_BASE_STEMS[g] ?? []));
-    if (off.length) fail(`CSV 와 그림 목록이 다른 무기군: ${off.join(',')}`);
-    return groups.map(g => `${g} ${D.weaponBases[g].length}`).join(' · ');
+    const armorTiers = [...new Set(D.itemBases.armor.map(b => b.tierMin ?? 1))].sort((a, b) => a - b);
+    for (const [g, rows] of Object.entries(D.weaponBases)) {
+        const shape = rows.map(r => `${r.tier}${r.line ?? '-'}`).join(' ');
+        if (shape !== '0- 1fast 1mid 1slow 2fast 2mid 2slow 3fast 3mid 3slow') fail(`${g} 모양 ${shape}`);
+        const mins = [...new Set(rows.map(r => r.minIlvl))];
+        if (mins.join() !== armorTiers.join()) fail(`${g} 단 해금 ${mins} ≠ 방어구 단 ${armorTiers}`);
+        if (rows.some(r => !(r.periodMult > 0))) fail(`${g} period_mult 가 0 보다 큰 수가 아닌 행이 있다`);
+        for (const t of [1, 2, 3]) {   // 계보 이름 = 공속 순서 — 빠름이 가장 빠르고 느림이 가장 느리다
+            const pm = Object.fromEntries(rows.filter(r => Number(r.tier) === t).map(r => [r.line, r.periodMult]));
+            if (!(pm.fast < pm.mid && pm.mid < pm.slow)) fail(`${g} 단 ${t} 계보 배율이 빠름 < 보통 < 느림이 아니다 (${pm.fast} · ${pm.mid} · ${pm.slow})`);
+        }
+    }
+    const retired = M.WEAPON_BASE_RETIRED;
+    const stems = Object.values(M.WEAPON_BASE_STEMS).flat();
+    const back = retired.filter(id => ids.includes(id));
+    if (back.length) fail(`퇴역인데 CSV 에 있다: ${back.join(',')}`);
+    const lost = retired.filter(id => !stems.includes(id));
+    if (lost.length) fail(`퇴역인데 그림 목록에서 빠졌다(옛 세이브 무기가 그림을 잃는다): ${lost.join(',')}`);
+    const stray = Object.entries(M.WEAPON_BASE_STEMS).flatMap(([g, ss]) =>
+        ss.filter(s => !(D.weaponBases[g] ?? []).some(b => b.id === s) && !retired.includes(s)).map(s => `${g}/${s}`));
+    if (stray.length) fail(`그림 목록에 CSV 에도 퇴역에도 없는 id: ${stray.join(',')}`);
+    const noArt = Object.entries(D.weaponBases).flatMap(([g, rows]) => rows.filter(b => !M.itemArt('weapon', g, null, b.id)).map(b => b.id));
+    if (noArt.length) fail(`그림을 못 드는 베이스: ${noArt.join(',')}`);
+    // 그림이 없는 베이스는 퇴역 그림을 안 든다 · 같은 베이스는 언제나 같은 그림
+    const proxy = Object.entries(D.weaponBases).flatMap(([g, rows]) => rows.filter(b => !stems.includes(b.id)).map(b => [g, b.id]));
+    for (const [g, id] of proxy) {
+        const a = M.itemArt('weapon', g, null, id);
+        if (retired.some(r => a.endsWith(`/${r}${a.slice(a.lastIndexOf('.'))}`))) fail(`${id} 가 퇴역 그림 ${a} 를 든다`);
+        if (a !== M.itemArt('weapon', g, 'i99', id)) fail(`${id} 그림이 uid 따라 바뀐다`);
+    }
+    return `${groups.length}군 × 10 · 단 ${armorTiers.join('/')} · 제 그림 ${ids.length - proxy.length} · 대신 그림 ${proxy.length} · 퇴역 ${retired.length}`;
+});
+check('data: weapon_base 모양이 어긋나면 item 생성이 멈춘다 — 단 해금 ≠ 방어구 · 계보 빠짐 · 기본에 계보 · period_mult 0 · 단 순서 (R445)', () => {
+    const throws = (label, edit) => {
+        const wb = Object.fromEntries(Object.entries(D.weaponBases).map(([g, rows]) => [g, rows.map(r => ({ ...r }))]));
+        edit(wb.sword2h);
+        try { buildSystems({ ...D, weaponBases: wb }); } catch { return; }
+        fail(`${label} 인데 안 던졌다`);
+    };
+    throws('단 3 해금 레벨이 방어구와 다르다', rows => rows.filter(r => r.tier === 3).forEach(r => { r.minIlvl -= 1; }));
+    throws('단 2 의 느림 계보가 빠졌다', rows => { rows.splice(rows.findIndex(r => r.tier === 2 && r.line === 'slow'), 1); });
+    throws('기본에 계보가 붙었다', rows => { rows[0].line = 'fast'; });
+    throws('period_mult 0', rows => { rows[1].periodMult = 0; });
+    throws('단 순서가 뒤집혔다', rows => { rows.push(rows.splice(1, 1)[0]); });
+    buildSystems(D);   // 원본은 통과
+    return '다섯 가지 모두 멈춤';
+});
+/**
+ * 드롭의 무기 베이스 = **그 아이템 레벨 단의 셋** [2026-11-11 · 사용자 「10~29레벨은 그냥 무조건 1티어」 · R445] — 첫 단 아래는 기본 하나 · 앞 단은 안 섞인다.
+ * 경계 양쪽(단 해금 레벨 − 1 · 해금 레벨)을 본다. 베이스 굴림은 **1회 그대로**라 같은 희귀도면 단이 달라도 rng 소비 수가 같다(INTERFACE §5-2)
+ */
+check('item: 무기 드롭 베이스 = 그 아이템 레벨 단의 셋 — 첫 단 아래는 기본 하나 · 앞 단 안 섞임 · 굴림 수는 단과 무관 (item_design §1 「무기 베이스」 · R445)', () => {
+    const edges = [...new Set(Object.values(D.weaponBases).flat().flatMap(b => [b.minIlvl - 1, b.minIlvl]))].filter(v => v >= 1).sort((a, b) => a - b);
+    const out = [];
+    for (const gid of Object.keys(D.weaponBases)) for (const ilvl of edges) {
+        const want = SYS.item.weaponBasesAt(gid, ilvl).map(b => b.id);
+        const rows = D.weaponBases[gid], top = Math.max(...rows.filter(b => b.minIlvl <= ilvl).map(b => b.minIlvl));
+        if (want.join() !== rows.filter(b => b.minIlvl === top).map(b => b.id).join()) fail(`${gid} ilvl ${ilvl} weaponBasesAt ${want}`);
+        const got = new Set();
+        const rng = makeRng(ilvl * 131 + gid.length);
+        for (let i = 0; i < 60; i++) got.add(SYS.item.rollGear(rng, { slots: ['weapon'], ilvl, weaponGroup: gid })[0].baseId);
+        if ([...got].sort().join() !== [...want].sort().join()) fail(`${gid} ilvl ${ilvl} 나온 ${[...got].join('/')} ≠ 단 ${want.join('/')}`);
+        if (gid === 'axe') out.push(`${ilvl} ${want.join('/')}`);
+    }
+    const count = ilvl => { let n = 0; const r0 = makeRng(5); const r = () => { n++; return r0(); }; SYS.item.rollGear(r, { slots: ['weapon'], ilvl, weaponGroup: 'sword2h', rarityWeights: { normal: 1 } }); return n; };
+    const ns = edges.map(count);
+    if (new Set(ns).size !== 1) fail(`단마다 굴림 수가 다르다 ${edges.map((v, i) => `${v}:${ns[i]}`).join(' ')}`);
+    return `도끼 ilvl ${out.join(' · ')} · 일반 무기 굴림 ${ns[0]}회`;
 });
 /**
  * 부위는 **7개**여야 한다 — `rollDrop` 이 `pick(rng, slots)` 로 부위를 고르므로 목록 길이가 곧 드롭 분포다.
@@ -1057,7 +1121,7 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         'advance_gold', 'salvage_mat_magic', 'salvage_mat_rare', 'equip_upgrade_mat_base', 'equip_upgrade_mat_step', 'equip_upgrade_dust_base', 'equip_upgrade_dust_step', 'equip_upgrade_gold_ilvl_growth', 'equip_upgrade_mat_ilvl_band',   // 재료 · 비용 개편 (R373) · 아이템 레벨 비용 (R419)
         'skillbook_upgrade_books_1', 'skillbook_upgrade_books_2', 'skillbook_upgrade_max', 'advance_skill_level_interval',   // 스킬 레벨 · 상한 · 전직 포인트 (R216 · R293)
         'arena_ai_main_tree_weight', 'arena_ai_continue_weight',   // 결투장 등급 AI 의 마스터리 가중치 (2026-10-17 · INTERFACE §2-17)
-        'arena_elo_start', 'arena_elo_k', 'arena_elo_scale', 'arena_pick_spread', 'arena_pick_jitter', 'colosseum_seed',   // 결투장 ELO · 후보 · 콜로세움 층 시드 (2026-10-18 · arena_design §7 · §8)
+        'arena_elo_start', 'arena_elo_k', 'arena_elo_scale', 'arena_pick_spread', 'arena_pick_jitter', 'arena_pick_count', 'colosseum_seed',   // 결투장 ELO · 후보 · 콜로세움 층 시드 (2026-10-18 · arena_design §7 · §8)
         'dispatch_offline_cap_hours',   // ~~dispatch_base_ratio~~ 2026-10-18 퇴역(영웅 배치 삭제 · R283)
         'transform_max_sec', 'swarm_fly_count',   // 장 보스 고유 — 골드 피버 늘어나는 끝 · 스웜 파리 수 (2026-10-29 · R380)
         'period_floor_sec',   // 행동 주기 바닥 — 최종 주기 (2026-10-29 · R386 · ~~hero.js 상수 0.4~~)
@@ -1070,6 +1134,7 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         'mg_pluck_gap_ms', 'mg_pluck_life_ms', 'mg_pluck_power_ms', 'mg_pluck_window', 'mg_pluck_rare_window', 'mg_pluck_perfect',
         'mg_chop_height', 'mg_chop_branch_pct', 'mg_chop_drain_start', 'mg_chop_drain_end', 'mg_chop_refill',
         'party_size_max','party_preset_count', 'roster_cap', 'wave_monster_max', 'hero_attr_min', 'hero_attr_max', 'hero_attr_roll_max',
+        'hero_star_max', 'hero_star_xp_first', 'hero_star_xp_growth',   // 만렙 뒤 별 (2026-11-11 · hero_design §5)
         'hero_attr_key_weight', 'hero_attr_sub_weight', 'hero_attr_sin_weight', 'hero_attr_reroll_max',   // 능력치 굴림 (2026-10-22 · R308)
         'hero_hp_base', 'monster_hp_base', 'hero_hp_band_levels', 'attr_bonus_per_point', 'power_growth_per_level', 'attr_growth_chance_pct', 'xp_rate', 'xp_level_gap_mult', 'monster_gold_base', 'monster_gold_growth',
         'unarmed_atk', 'unarmed_period', 'weapon_atk_base', 'weapon_atk_band_levels', 'weapon_atk_band1_unit', 'weapon_atk_band8_unit',
@@ -1099,6 +1164,7 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         'tactic_grade_weight_common', 'tactic_grade_weight_magic', 'tactic_grade_weight_rare',
         'tactic_reroll_base_cost', 'tactic_reroll_lock_mult',
         'tactic_leader_mult_min', 'tactic_leader_mult_max',   // 전술 리더 보너스 (2026-10-24 · R340)
+        'tactic_grade_mult_common', 'tactic_grade_mult_magic', 'tactic_grade_mult_rare', 'tactic_sin_gear_pct',   // 전술 등급 배수 · 장비 죄종 몫 (2026-11-11 · R441)
         'potion_slot_max', 'potion_use_hp_pct', 'potion_use_hp_steps', 'potion_cooldown_sec', 'stagger_hp_pct', 'stagger_sec', 'burn_heal_cut', 'chapter_debuff_boss_mult', 'dot_tick_sec', 'channel_strike_sec', 'channel_tick_sec', 'repeat_restart_sec',
         'boss_respawn_sec',    // 챕터보스 재등장 (2026-10-10 · R240)
         'gamble_batch_spins', 'gamble_stake_steps', 'gamble_stake_gold', 'gamble_stake_chapter_mult',
@@ -2689,14 +2755,70 @@ check('xp: 챕터 하나를 오르는 마리 수가 챕터마다 는다 (level_x
     for (let i = 1; i < per.length; i++) if (!(per[i] > per[i - 1])) fail(`${i + 1}장 ${per[i]} ≤ ${i}장 ${per[i - 1]} (${per.join(' · ')})`);
     return per.join(' → ');
 });
-check('xp: 레벨 상한 hero_level_cap 에서 멈추고 XP 를 더 쌓지 않는다 (GAME_DESIGN §9 08-26 · R12)', () => {
+check('xp: 레벨 상한 hero_level_cap 에서 멈추고 별이 다 차면 XP 를 더 쌓지 않는다 (GAME_DESIGN §9 08-26 · R12 · 별 2026-11-11)', () => {
     const h = JSON.parse(JSON.stringify(G.heroes[0]));
     SYS.hero.grantXp(h, 1e12, makeRng(3));
     if (h.level !== B.hero_level_cap) fail(`Lv ${h.level} ≠ ${B.hero_level_cap}`);
-    if (h.xp !== 0) fail(`상한에서 xp ${h.xp} 가 남았다`);
-    // 상한에 닿은 뒤의 지급은 아무 일도 하지 않는다 — 레벨업 결과도 null
-    if (SYS.hero.grantXp(h, 1e9, makeRng(4)) !== null || h.xp !== 0) fail('상한 뒤에도 XP 가 쌓인다');
-    return `Lv ${B.hero_level_cap} 에서 정지`;
+    if ((h.stars ?? 0) !== B.hero_star_max) fail(`별 ${h.stars} ≠ ${B.hero_star_max}`);
+    if (h.xp !== 0) fail(`별이 다 찼는데 xp ${h.xp} 가 남았다`);
+    // 별이 다 찬 뒤의 지급은 아무 일도 하지 않는다 — 레벨업 결과도 null
+    if (SYS.hero.grantXp(h, 1e9, makeRng(4)) !== null || h.xp !== 0) fail('별이 다 찬 뒤에도 XP 가 쌓인다');
+    return `Lv ${B.hero_level_cap} · 별 ${B.hero_star_max} 에서 정지`;
+});
+// 만렙 뒤 별 [2026-11-11 · hero_design §5 · INTERFACE §2-4] — 만렙의 XP 가 별을 채운다 · 남은 XP 는 이어진다 · 반환은 레벨업만
+check('star: 첫 별 = 1 → 만렙 XP × hero_star_xp_first · 다음 별 × hero_star_xp_growth · 남은 XP 이어짐 · 다 차면 0 · 반환 · 포인트는 레벨업만 (hero_design §5)', () => {
+    let total = 0;
+    for (let l = 1; l < B.hero_level_cap; l++) total += SYS.hero.xpNeeded(l);
+    const need = n => SYS.hero.starXpNeeded(n);
+    for (let n = 0; n < B.hero_star_max; n++)
+        if (need(n) !== Math.round(total * B.hero_star_xp_first * B.hero_star_xp_growth ** n)) fail(`별 ${n + 1} = ${need(n)}`);
+    if (need(B.hero_star_max) !== null || need(-1) !== null) fail('상한 밖 별이 값을 낸다');
+    if (B.hero_star_max < 3) return `별 ${B.hero_star_max} — 셋 미만이라 이어짐 검사 생략`;
+    const h = JSON.parse(JSON.stringify(G.heroes[0]));
+    delete h.stars; delete h.starSpent;
+    h.level = B.hero_level_cap - 1; h.xp = 0;
+    // 만렙에 닿는 지급의 남은 XP 가 첫 별로 이어진다
+    const lu = SYS.hero.grantXp(h, SYS.hero.xpNeeded(B.hero_level_cap - 1) + 123, null);
+    if (!(lu && lu.to === B.hero_level_cap) || h.xp !== 123 || h.stars !== undefined) fail(`만렙 도달 xp ${h.xp} · 별 ${h.stars}`);
+    const pts = h.masteryPoints;
+    // 별 하나가 딱 찬다 — 반환은 null(레벨이 안 올랐다) · 포인트 그대로
+    if (SYS.hero.grantXp(h, need(0) - 123, null) !== null || h.stars !== 1 || h.xp !== 0) fail(`첫 별 별 ${h.stars} · xp ${h.xp}`);
+    // 한 번에 두 별 + 남은 것
+    SYS.hero.grantXp(h, need(1) + need(2) + 7, null);
+    if (h.stars !== 3 || h.xp !== 7) fail(`두 별 한 번에 별 ${h.stars} · xp ${h.xp}`);
+    if (h.level !== B.hero_level_cap || h.masteryPoints !== pts) fail('별이 레벨 · 포인트를 바꿨다');
+    SYS.hero.grantXp(h, 1e15, null);
+    if (h.stars !== B.hero_star_max || h.xp !== 0) fail(`다 채움 별 ${h.stars} · xp ${h.xp}`);
+    return `별 XP ${Array.from({ length: B.hero_star_max }, (_, n) => need(n).toLocaleString()).join(' · ')}`;
+});
+check('star: spendStar — 쓸 별 하나로 고른 능력치 +1 · 최종 상한 maxStat · 별 없으면 points · 모르는 칸 invalid · 거절은 상태 불변 · 로드가 맞춘다 (hero_design §5)', () => {
+    const g = SYS.game.newGame(99, cands, NOW);
+    const h = g.heroes[0], other = g.heroes[1];
+    const [a, b] = Object.keys(h.stats);
+    if (SYS.game.spendStar(g, h.uid, a).err !== 'points') fail('별 없이 넣었다');
+    h.level = B.hero_level_cap; h.xp = 0; h.stars = 2;
+    h.stats[a] = B.hero_attr_max - 1; h.stats[b] = B.hero_attr_min;
+    if (!SYS.game.spendStar(g, h.uid, a).ok || h.stats[a] !== B.hero_attr_max || h.starSpent !== 1) fail(`첫 별 ${h.stats[a]} · 쓴 별 ${h.starSpent}`);
+    const snap = JSON.stringify(h);
+    for (const [uid, id, err] of [[h.uid, a, 'maxStat'], [h.uid, 'nope', 'invalid'], ['nobody', b, 'missing']]) {
+        const r = SYS.game.spendStar(g, uid, id);
+        if (r.ok || r.err !== err) fail(`${id} → ${JSON.stringify(r)} (기대 ${err})`);
+    }
+    if (JSON.stringify(h) !== snap) fail('거절이 상태를 바꿨다');
+    if (!SYS.game.spendStar(g, h.uid, b).ok || h.stats[b] !== B.hero_attr_min + 1 || h.starSpent !== 2) fail('둘째 별');
+    if (SYS.game.spendStar(g, h.uid, b).err !== 'points') fail('쓴 별을 또 썼다');
+    // 세이브 왕복 그대로
+    const sv = SYS.game.serialize(g, NOW);
+    const back = SYS.game.deserialize(sv).heroes[0];
+    if (back.stars !== 2 || back.starSpent !== 2 || !eq(back.stats, h.stats)) fail('세이브 왕복');
+    // 로드가 맞춘다 — 범위 밖은 자르고 · 별이 다 차면 xp 0 · 만렙 아래 영웅의 키는 지운다
+    const bad = JSON.parse(JSON.stringify(sv));
+    Object.assign(bad.heroes[0], { stars: 99, starSpent: 100, xp: 5 });
+    bad.heroes[1].stars = 3; bad.heroes[1].starSpent = 1; bad.heroes[1].level = Math.min(other.level, B.hero_level_cap - 1);
+    const fit = SYS.game.deserialize(bad);
+    if (fit.heroes[0].stars !== B.hero_star_max || fit.heroes[0].starSpent !== B.hero_star_max || fit.heroes[0].xp !== 0) fail(`범위 밖 ${JSON.stringify([fit.heroes[0].stars, fit.heroes[0].starSpent, fit.heroes[0].xp])}`);
+    if ('stars' in fit.heroes[1] || 'starSpent' in fit.heroes[1]) fail('만렙 아래 영웅에게 별이 남았다');
+    return `+1 ${a} · ${b} · 거절 셋 · 로드 정규화`;
 });
 check('xp: 레벨업해도 기본 능력치는 안 바뀐다 — gains 는 비고 rng 를 안 쓴다 (hero_design §4-3 · 2026-09-14 · R83)', () => {
     const h = JSON.parse(JSON.stringify(G.heroes[0]));
@@ -3485,36 +3607,41 @@ check('make: 레벨 = 1 + 챕터마다 끝 레벨(stage.csv) · 재료는 모든
     return levels.map(l => `Lv${l.level}(${l.chapter})`).join(' · ');
 });
 
-check('make: 종류 = item.basesAt — 무기는 본편 무기군 · 무기 외는 그 레벨의 티어 베이스(Lv1 = 시작 칸) (item_design §7-1 · §1 「베이스」)', () => {
+check('make: 종류 — 무기는 그 레벨의 세부 베이스 한 줄씩(본편 무기군 × 단의 셋) · 무기 외는 item.basesAt(Lv1 = 시작 칸) (item_design §7-1 · §1 「베이스」 · R445)', () => {
     const g = makeFixture(1);
     const l1 = SYS.game.makeLevels()[0].level;
     const ids = (part, lv) => SYS.game.makeState(g, part, lv).kinds.map(k => k.id);
     const main = D.weaponGroupList.filter(w => w.release === 'main').map(w => w.id);
-    if (JSON.stringify(ids('weapon', l1)) !== JSON.stringify(main)) fail(`무기 종류 ${ids('weapon', l1)} ≠ ${main}`);
-    for (const part of D.slots.map(s => s.id)) for (const l of SYS.game.makeLevels())
+    for (const l of SYS.game.makeLevels()) {
+        const want = main.flatMap(gid => SYS.item.weaponBasesAt(gid, l.level).map(b => b.id));
+        if (ids('weapon', l.level).join() !== want.join()) fail(`무기 Lv${l.level} 종류 ${ids('weapon', l.level)} ≠ ${want}`);
+    }
+    // Lv1 무기 = 무기군마다 기본 하나(계보 없음) · 줄 id = 베이스 id
+    const w1 = SYS.game.makeState(g, 'weapon', l1).kinds;
+    if (w1.length !== main.length || w1.some((k, i) => k.line !== null || !k.baseId || k.id !== k.baseId || k.group !== main[i]))
+        fail(`Lv1 무기 = 무기군마다 기본 하나여야 ${JSON.stringify(w1.map(k => [k.id, k.group, k.line]))}`);
+    for (const part of D.slots.map(s => s.id).filter(p => p !== 'weapon')) for (const l of SYS.game.makeLevels())
         if (JSON.stringify(ids(part, l.level)) !== JSON.stringify(SYS.item.basesAt(part, l.level).map(b => b.id))) fail(`${part} Lv${l.level} 종류가 basesAt 과 다르다`);
     // Lv1 방어구 = 시작 칸 하나(갈래 없음) · 첫 티어가 열리는 레벨부터는 갈래 셋
     const a1 = SYS.game.makeState(g, 'armor', l1).kinds;
     if (a1.length !== 1 || a1[0].group !== null) fail(`Lv1 갑옷 ${JSON.stringify(a1)}`);
-    return `무기 ${main.length} · 갑옷 Lv1 ${a1[0].id}`;
+    return `무기 Lv1 ${w1.length}줄(${w1.slice(0, 3).map(k => k.id).join(' · ')} …) · 갑옷 Lv1 ${a1[0].id}`;
 });
 
-check('make: 무기 줄은 그 레벨의 세부 베이스 — make_level ≤ 레벨 중 가장 높은 하나 · 무기군마다 Lv1 베이스가 있고 제작 레벨이 겹치지 않는다 (weapon_base.csv:make_level · 2026-09-21)', () => {
+check('make: 무기 줄 = 그 레벨 단의 세부 베이스 — 단은 아이템 레벨이 무조건 정한다 · 첫 단 아래는 기본 하나 · 단마다 계보 셋(빠름 · 보통 · 느림) · 줄이 이름 · 계보를 든다 (R445)', () => {
     const g = makeFixture(1);
-    const levels = SYS.game.makeLevels().map(l => l.level);
-    for (const [gid, bases] of Object.entries(D.weaponBases)) {
-        const ml = bases.map(b => b.makeLevel);
-        if (ml.some(v => !Number.isInteger(v) || v < 1)) fail(`${gid} make_level ${ml}`);
-        if (new Set(ml).size !== ml.length) fail(`${gid} — 제작 레벨이 겹친다 ${ml}`);
-        if (!ml.includes(1)) fail(`${gid} — Lv1 베이스가 없다`);
+    const first = Math.min(...Object.values(D.weaponBases).flat().filter(b => b.tier > 0).map(b => b.minIlvl));
+    const out = [];
+    for (const l of SYS.game.makeLevels()) for (const [gid, rows] of Object.entries(D.weaponBases)) {
+        const ks = SYS.game.makeState(g, 'weapon', l.level).kinds.filter(k => k.group === gid);
+        const top = Math.max(...rows.filter(b => b.minIlvl <= l.level).map(b => b.minIlvl));
+        const want = rows.filter(b => b.minIlvl === top);
+        if (JSON.stringify(ks.map(k => [k.id, k.baseId, k.ko, k.en, k.line])) !== JSON.stringify(want.map(b => [b.id, b.id, b.ko, b.en, b.line])))
+            fail(`${gid} Lv${l.level} ${ks.map(k => k.id)} ≠ ${want.map(b => b.id)}`);
+        if (l.level < first ? !(ks.length === 1 && ks[0].line === null) : ks.map(k => k.line).join() !== 'fast,mid,slow') fail(`${gid} Lv${l.level} 계보 ${ks.map(k => k.line)}`);
+        if (gid === 'sword2h') out.push(`Lv${l.level} ${ks.map(k => k.id).join('/')}`);
     }
-    const seq = {};
-    for (const lv of levels) for (const k of SYS.game.makeState(g, 'weapon', lv).kinds) {
-        const want = D.weaponBases[k.id].filter(b => b.makeLevel <= lv).sort((a, b) => b.makeLevel - a.makeLevel)[0];
-        if (k.baseId !== want.id || k.ko !== want.ko || k.en !== want.en) fail(`${k.id} Lv${lv} — ${k.baseId} ≠ ${want.id}`);
-        (seq[k.id] ??= []).push(k.baseId);
-    }
-    return `양손검 ${levels.map((lv, i) => `Lv${lv} ${seq.sword2h[i]}`).join(' · ')}`;
+    return `양손검 ${out.join(' · ')}`;
 });
 
 check('make: 재료가 모자라면 `materials` — 재료 · 가방 · 카운터가 안 움직인다', () => {
@@ -3544,7 +3671,8 @@ check('make: 만들면 재료를 레시피만큼 내고 인벤토리 끝에 하�
     const got = [];
     // 열린 레벨만 — 대장간 랭크가 앞에서부터 연다(다 지은 판 · R137). 안 열린 레벨은 아래에서 `unbuilt` 를 본다
     const lv = SYS.game.makeLevels(makeFixture(0));
-    for (const l of lv.filter(x => x.open)) for (const part of D.slots.map(s => s.id)) for (const k of SYS.item.basesAt(part, l.level)) {
+    // 종류 = 제작 화면이 보이는 줄 그대로(`makeState` — 무기는 그 단의 세부 베이스 한 줄씩 · R445)
+    for (const l of lv.filter(x => x.open)) for (const part of D.slots.map(s => s.id)) for (const k of SYS.game.makeState(makeFixture(0), part, l.level).kinds) {
         const g = makeFixture(0);
         const r0 = D.makeRecipes[part];
         payRecipe(g, part, 1);
@@ -3553,11 +3681,11 @@ check('make: 만들면 재료를 레시피만큼 내고 인벤토리 끝에 하�
         if (!r.ok) fail(`${part} Lv${l.level} ${k.id} ${r.err}`);
         const it = g.items[r.uid];
         if (it.slot !== part) fail(`부위 ${it.slot} ≠ ${part}`);
-        // 종류 — 무기는 무기군(세부 베이스는 굴림) · 무기 외는 베이스 id
-        if ((part === 'weapon' ? it.group : it.baseId) !== k.id) fail(`${part} 종류 ${part === 'weapon' ? it.group : it.baseId} ≠ ${k.id}`);
-        // 줄이 보인 베이스가 그대로 나온다 — 무기는 그 레벨의 세부 베이스(2026-09-21)
-        const shown = SYS.game.makeState(makeFixture(0), part, l.level).kinds.find(x => x.id === k.id);
-        if (it.baseId !== shown.baseId) fail(`${part} Lv${l.level} ${k.id} — 보인 베이스 ${shown.baseId} ≠ 나온 ${it.baseId}`);
+        // 종류 — 무기는 그 줄의 무기군 + 세부 베이스(줄 id = 베이스 id · R445) · 무기 외는 베이스 id
+        if (part === 'weapon' ? (it.group !== k.group || it.baseId !== k.baseId) : it.baseId !== k.id)
+            fail(`${part} 종류 ${it.group}/${it.baseId} ≠ ${k.group}/${k.id}`);
+        // 줄이 보인 베이스가 그대로 나온다 — 무기는 고른 줄의 세부 베이스(2026-09-21 · R445)
+        if (it.baseId !== k.baseId) fail(`${part} Lv${l.level} ${k.id} — 보인 베이스 ${k.baseId} ≠ 나온 ${it.baseId}`);
         if (it.ilvl !== l.level) fail(`ilvl ${it.ilvl} ≠ Lv${l.level}`);
         if (!['normal', 'magic', 'rare'].includes(it.rarity)) fail(`희귀도 ${it.rarity}`);
         if (it.up !== 0) fail(`up ${it.up}`);
@@ -4038,6 +4166,36 @@ check('combat: 무기가 공격력을 올린다', () => {
  * 민첩의 행동 주기 계수 [2026-10-17 · 사용자 확정 · hero_design §4-1] — `무기 주기 ÷ (1 + attr_speed_step_pct) ^ (민첩 − attr_dmg_pivot)`.
  * 피해 계수와 같은 기준 · 비율은 따로 · ~~선형 1 + 0.01n~~ 대체 — 기준이면 무기 주기 그대로 · 1점마다 같은 비율 · 기준 아래면 느려진다
  */
+/**
+ * 무기 베이스 **계보 배율** [2026-11-11 · 사용자 「공속에서 약간의차이를 보이고 대신에 평균 데미지 범위를 바꿔서 dps는 맞추는방향으로」 · R445] —
+ * `period_mult` 가 행동 주기와 한 방(무기 피해 가운데)에 **같은 배율**로 걸려 평타 DPS 가 그대로다(`formula.weaponLine`).
+ * 배율을 크게 바꾼 판(`buildSystems`)으로 잰다 — CSV 값(빠름 · 느림이 보통에서 위아래 · 2026-11-11 사용자 「+-5%로 하자 일단」)과 무관하게 식을 본다. 툴팁(`item.weaponDamage`)도 같은 배율을 먹는다
+ */
+check('combat: 계보 배율 — 주기와 한 방에 같은 배율 · 평타 DPS 그대로 · 툴팁도 같은 배율 · 모르는 베이스는 배율 1 (formula.weaponLine · R445)', () => {
+    const m = 1.25;
+    const wb = Object.fromEntries(Object.entries(D.weaponBases).map(([g, rows]) => [g, rows.map(r => (r.id === 'great_sword' ? { ...r, periodMult: m } : r))]));
+    const S2 = buildSystems({ ...D, weaponBases: wb });
+    const h = { ...G.heroes[0], mastery: {}, stats: { ...G.heroes[0].stats, agi: B.attr_dmg_pivot } };
+    const w = baseId => mkItem('weapon', [], { group: 'sword2h', ilvl: 40, rarity: 'normal', ...(baseId ? { baseId } : {}) });
+    const ref = S2.hero.computeCombat(h, [w('two_handed_sword')]), lin = S2.hero.computeCombat(h, [w('great_sword')]);
+    const avg = c => (c.atk_physical.min + c.atk_physical.max) / 2;
+    if (Math.abs(lin.period_weapon / ref.period_weapon - m) > 1e-9) fail(`무기 주기 ×${lin.period_weapon / ref.period_weapon} ≠ ×${m}`);
+    if (Math.abs(lin.action_period / ref.action_period - m) > 3e-3) fail(`행동 주기 ×${(lin.action_period / ref.action_period).toFixed(4)} ≠ ×${m}`);
+    if (Math.abs(avg(lin) / avg(ref) - m) > 0.02) fail(`평균 한 방 ×${(avg(lin) / avg(ref)).toFixed(4)} ≠ ×${m}`);
+    const dps = c => avg(c) / c.action_period;
+    if (Math.abs(dps(lin) / dps(ref) - 1) > 0.02) fail(`평타 DPS ×${(dps(lin) / dps(ref)).toFixed(4)} — 같아야 한다`);
+    // 툴팁 = 같은 배율 · 보통 계보(배율 1)면 무기군 그대로 · 모르는 베이스(옛 세이브의 퇴역 id)도 배율 1
+    const t0 = S2.item.weaponDamage(w('two_handed_sword')), t1 = S2.item.weaponDamage(w('great_sword'));
+    if (Math.abs((t1.min + t1.max) / (t0.min + t0.max) - m) > 0.02) fail(`툴팁 한 방 ×${((t1.min + t1.max) / (t0.min + t0.max)).toFixed(4)} ≠ ×${m}`);
+    const bare = SYS.hero.computeCombat(h, [w(null)]);
+    for (const id of ['two_handed_sword', 'berserker_axe', 'no_such_base']) {
+        const c = SYS.hero.computeCombat(h, [w(id)]);
+        if (c.action_period !== bare.action_period || c.atk_physical.min !== bare.atk_physical.min || c.atk_physical.max !== bare.atk_physical.max)
+            fail(`보통 계보 · 모르는 베이스 ${id} 인데 무기군 값과 다르다`);
+    }
+    const ones = Object.values(D.weaponBases).flat().filter(b => b.periodMult !== 1).map(b => b.id);
+    return `×${m} — 주기 ${ref.action_period}→${lin.action_period}s · 한 방 ${avg(ref)}→${avg(lin)} · DPS ${dps(ref).toFixed(2)}→${dps(lin).toFixed(2)} · 지금 CSV 배율 ≠ 1: ${ones.length}행`;
+});
 check('combat: 민첩 행동 주기 계수는 복리 — 기준 민첩이면 무기 주기 그대로 · 1점마다 같은 비율 · 기준 아래면 느려진다 (hero_design §4-1 · 2026-10-17)', () => {
     const p = B.attr_dmg_pivot, s = B.attr_speed_step_pct;
     if (!(s > 0)) fail(`balance.csv 손잡이 attr_speed_step_pct ${s}`);
@@ -4266,8 +4424,9 @@ check('item: rollGear — 매직찬스는 레어 이상 가중치에만 곱한�
     if (!eq(a, b)) fail('rareBonusPct 가 아직 먹는다 — 2026-10-24 R350 퇴역');
     return `레어 ${lo.rare} → ${hi.rare} /1500 (+250%) · 일반 : 매직 ${B0.lo.toFixed(2)} → ${B0.hi.toFixed(2)}`;
 });
-check('item: 무기 피해는 범위이고 파생이다 — 같은 무기군 · 같은 ilvl 이면 같은 범위 · 아이템에 박히지 않는다 · 양끝 정수 (battle_design §9-1 · R90)', () => {
+check('item: 무기 피해는 범위이고 파생이다 — 같은 베이스 · 같은 ilvl 이면 같은 범위 · 아이템에 박히지 않는다 · 양끝 정수 (battle_design §9-1 · R90 · 계보 배율 R445)', () => {
     const rng = makeRng(41);
+    const PM = Object.fromEntries(Object.values(D.weaponBases).flat().map(b => [b.id, b.periodMult]));   // 계보 배율 — 한 방에 곱한다(formula.weaponLine)
     const ILVL = 10;
     const byGroup = {};
     let n = 0;
@@ -4277,14 +4436,14 @@ check('item: 무기 피해는 범위이고 파생이다 — 같은 무기군 · 
         n++;
         if ('watk' in it) fail(`${it.group} 에 watk 가 박혔다 — 무기 피해는 파생이다`);
         const d = SYS.item.weaponDamage(it);
-        const mid = bandMid(ILVL) * WG[it.group].hitMult;               // 한 방 배율 (R434)
+        const mid = bandMid(ILVL) * (WG[it.group].hitMult * (PM[it.baseId] ?? 1));   // 한 방 배율 (R434) × 계보 배율 (R445)
         const v = WG[it.group].variance ?? B.dmg_variance_pct;          // 비율 (R111)
         if (d.min !== Math.max(1, Math.round(mid * (1 - v))) || d.max !== Math.max(d.min, Math.round(mid * (1 + v))))
-            fail(`${it.group} ${d.min}~${d.max} ≠ round(${mid.toFixed(2)} × (1 ∓ ${v}))`);
+            fail(`${it.group}/${it.baseId} ${d.min}~${d.max} ≠ round(${mid.toFixed(2)} × (1 ∓ ${v}))`);
         if (!Number.isInteger(d.min) || !Number.isInteger(d.max) || d.min < 1 || d.max < d.min) fail(`양끝 규칙 ${d.min}~${d.max}`);
-        const key = `${d.min}~${d.max}`;
-        if (byGroup[it.group] && byGroup[it.group] !== key) fail(`${it.group} 같은 ilvl 인데 범위가 갈린다 ${byGroup[it.group]} vs ${key}`);
-        byGroup[it.group] = key;
+        const key = `${d.min}~${d.max}`, id = `${it.group}/${it.baseId}`;
+        if (byGroup[id] && byGroup[id] !== key) fail(`${id} 같은 ilvl 인데 범위가 갈린다 ${byGroup[id]} vs ${key}`);
+        byGroup[id] = key;
     }
     if (n < 10) fail(`무기 표본 부족 ${n}`);
     if (SYS.item.weaponDamage(mkItem('boots', [])) !== null) fail('무기가 아닌데 범위가 났다');
@@ -5648,7 +5807,7 @@ check('캐릭터 시트: 전술 제외 · 장비/마스터리/도감 유지 · �
     for (const h of g.heroes) h.level = B.hero_level_cap;
     g.buildings.command = 1;
     const [h, other] = g.heroes;
-    g.presets[0].tactics.slots[1] = { id: 'opt_march_atk', grade: 'rare' };
+    g.presets[0].tactics.slots[1] = { id: 'opt_pride_dmg', grade: 'rare' };
     const own = SYS.game.heroCombat(g, h, []);
     const expected = SYS.hero.computeCombat(h, SYS.game.heroItems(g, h).map(SYS.item.effective), SYS.game.codexOptions(g));
     if (!eq(own, expected)) fail('영웅의 영구 능력치가 빠지거나 파티 전술이 섞였다');
@@ -5665,7 +5824,7 @@ check('캐릭터 시트: 전술 제외 · 장비/마스터리/도감 유지 · �
     if (!eq(SYS.game.heroCombatIf(g, h, item.uid, []), preview)
         || !eq(SYS.game.heroCombatWith(g, h, { ...item, uid: null }, []), preview)) fail('보유품/상점 물건의 미리보기 기준이 다르다');
     if (JSON.stringify(g) !== before) fail('시트/미리보기가 원본을 바꿨다');
-    g.presets[0].tactics.slots[1] = { id: 'opt_march_aspd', grade: 'rare' };
+    g.presets[0].tactics.slots[1] = { id: 'opt_sloth_aspd', grade: 'rare' };
     SYS.game.selectPreset(g, 2);
     if (!eq(SYS.game.heroCombat(g, h, []), own)
         || !eq(SYS.game.heroCombatWith(g, h, item, []), preview)) fail('전술/선택 편성을 바꾸자 영웅 자체 값이 바뀌었다');
@@ -13211,50 +13370,42 @@ check('stepRun: 원정 중 교체는 다음 걸음 첫머리(= 바꾼 시각)에
     return `① seed ${one.seed} ${one.t}초에 갈아입음 ② seed ${two.seed} 쓰러진 영웅 — 장비 · 마스터리 · 전직 스킬 · 스킬북 거절 없음 · 안 갈아입음 · fallen 안 적음 · 옛 fallen 로드가 지움 ③ 챕터보스 도중 무기 해제 · 재장착 즉시 적용 · 스킬 쿨 유지`;
 });
 
-check('departRun: 전술은 출발 판정이 상한 — 도중 리롤 · 출발 때 꺼진 칸은 그 런에서 안 켜진다 · 교체로 조건이 깨지면 꺼지고 되찾으면 켜진다 · 다음 런은 지금 모습 (tactic_card_design §2-1 · INTERFACE §2-7 · R130)', () => {
+check('departRun: 전술은 출발 판정이 상한 — 도중 리롤 · 출발 때 꺼진 칸은 그 런에서 안 켜진다 · 조건이 깨지면 꺼지고 되찾으면 켜진다 · 다음 런은 지금 모습 (tactic_card_design §2-1 · INTERFACE §2-7 · R130)', () => {
     const g = newGameP(9, cands, NOW);
     for (const h of g.heroes) h.level = B.hero_level_cap;       // 칸이 열리게 — 로스터 합산 레벨
     g.resources.gold = 1e9;
     const party = SYS.game.partyOf(g);
-    for (const uid of party) SYS.game.heroById(g, uid).sin = 'wrath';   // 분노 영웅 셋 — 조건 3 을 딱 채운다
-    // 열린 칸을 전부 정한다 — 무조건 칸(늘 켜짐) · 편성 칸 분노(켜짐) · 관계 칸 30회(꺼짐 — 나중에 켠다) · 나머지는 출발 때 꺼진 가족.
-    //   안 정한 칸은 첫 배정이 들어가 결과가 흐려진다 · **칸 = 상황**(2026-09-27)이라 가족은 그 칸의 종류에서만 고른다
-    //   진형은 모두 후열 — 「전열에 ~」 조건이 저절로 켜지지 않게 (과녁은 모두 전열과 같다 — battle_design §3-1)
-    const noOf = cat => SYS.tactic.slotList.find(s => s.category === cat).no;
-    const P_ = noOf('party'), B_ = noOf('bond');
-    const slots = { 1: { id: 'opt_march_res', grade: 'common' }, [P_]: { id: 'opt_party_sin_wrath', grade: 'common' }, [B_]: { id: 'opt_bond_30', grade: 'common' } };
+    // 분노 영웅 하나 · 나머지 시기 — 2랭크(그 칸 죄종의 영웅 수) 분노 칸이 단계 1 로 켜진다 (§5-14)
+    party.forEach((uid, i) => { SYS.game.heroById(g, uid).sin = i === 0 ? 'wrath' : 'envy'; });
+    // 열린 칸을 전부 정한다 — 조건 없음 셋(늘 켜짐) · 2랭크 분노(켜짐) · 5랭크(처치 0 — 꺼짐 · 나중에 켠다).
+    //   안 정한 칸은 첫 배정이 들어가 결과가 흐려진다
+    const S2 = SYS.tactic.slotList.find(s => s.condKind === 'slot_sin_heroes').no, S5 = SYS.tactic.slotList.find(s => s.condKind === 'kills_together').no;
+    const slots = { 1: { id: 'opt_gluttony_res', grade: 'common' }, [S2]: { id: 'opt_wrath_crit_dmg', grade: 'common' }, 3: { id: 'opt_sloth_cdr', grade: 'common' }, 4: { id: 'opt_lust_regen', grade: 'common' }, [S5]: { id: 'opt_pride_fhr', grade: 'common' } };
     g.presets[g.preset - 1].tactics = { slots, locked: [] };
-    g.presets[g.preset - 1].formation = { tpl: '0-3', ranks: [[], party.slice()] };
-    for (const s of SYS.tactic.slotList) {
-        if (slots[s.no]) continue;
-        // 조건은 파티 구성에 달려 있어 이름으로 못 박는다 — 이 파티로 **꺼지는** 그 종류의 가족을 앞에서부터 고른다
-        const pool = SYS.tactic.families.filter(f => f.category === s.category).map(f => f.id);
-        const id = pool.find(f => { slots[s.no] = { id: f, grade: 'common' }; return !SYS.game.tacticState(g).slots[s.no - 1].active; });
-        if (!id) fail(`픽스처 — ${s.no}번 칸(${s.category})에 꺼진 가족이 없다`);
-    }
     const st = SYS.game.tacticState(g);
-    if (!st.slots[P_ - 1].open || !st.slots[P_ - 1].active || !st.slots[B_ - 1].open || st.slots[B_ - 1].active) fail(`출발 전 칸 — 편성 ${st.slots[P_ - 1].active} · 관계 ${st.slots[B_ - 1].active} (편성 켜짐 · 관계 꺼짐 · 둘 다 열림이어야)`);
+    if (!st.slots[S2 - 1].open || !st.slots[S2 - 1].active || !st.slots[S5 - 1].open || st.slots[S5 - 1].active) fail(`출발 전 칸 — 2랭크 ${st.slots[S2 - 1].active} · 5랭크 ${st.slots[S5 - 1].active} (2랭크 켜짐 · 5랭크 꺼짐 · 둘 다 열림이어야)`);
     const d = SYS.game.departRun(g, 1011, NOW);
-    if (!eq(d.run.tactics.map(o => o.id), ['opt_march_res', 'opt_party_sin_wrath'])) fail(`스냅숏 [${d.run.tactics.map(o => o.id)}] — 출발 때 켜진 것만`);
-    const wrathOf = list => list.find(m => m.option.id === 'opt_party_sin_wrath');
+    const on0 = ['opt_gluttony_res', 'opt_wrath_crit_dmg', 'opt_sloth_cdr', 'opt_lust_regen'];
+    if (!eq(d.run.tactics.map(o => o.id), on0)) fail(`스냅숏 [${d.run.tactics.map(o => o.id)}] — 출발 때 켜진 것만`);
+    const wrathOf = list => list.find(m => m.option.id === 'opt_wrath_crit_dmg');
     let T = 0;
     const step = dt => SYS.game.stepRun(g, d.run, (T += dt));
     const refits = key => d.run.result.timeline.filter(ev => ev.e === 'refit' && (!key || ev.u === key)).length;
     step(0.5);
-    // ① 도중 리롤 · 꺼진 칸의 조건 충족 — 도는 원정은 안 흔들린다(갈아입기 없음 · 태그는 전투 능력치가 아니다)
+    // ① 도중 리롤 · 꺼진 칸의 조건 충족 — 도는 원정은 안 흔들린다(갈아입기 없음)
     const f0 = refits();
     g.resources.gold = 999_999;                    // 나머지 칸을 잠그고 1번만 굴린다 — 잠근 만큼 비싸다 (§5-6)
     if (!rollOnly(g, [1]).ok) fail('원정 중 리롤이 거절됐다');
-    g.bonds[party.slice().sort().join('|')] = 30;    // 관계 칸의 조건을 채운다 — 출발 때 꺼져 있었으니 도는 런에선 안 켜진다
+    g.killsTogether[party.slice().sort().join('|')] = SYS.tactic.slotList[S5 - 1].steps[0];   // 5랭크 조건을 채운다 — 출발 때 꺼져 있었으니 도는 런에선 안 켜진다
     step(0.5);
     if (refits() !== f0) fail('도중 리롤 · 출발 때 꺼진 칸의 조건 충족이 도는 원정을 갈아입혔다 — 다음 런부터여야');
-    if (!eq(SYS.game.runTactics(g, d.run).map(m => [m.option.id, m.active]), [['opt_march_res', true], ['opt_party_sin_wrath', true]])) fail(`도는 원정의 전술 ${JSON.stringify(SYS.game.runTactics(g, d.run))}`);
+    if (!eq(SYS.game.runTactics(g, d.run).map(m => [m.option.id, m.active]), on0.map(id => [id, true]))) fail(`도는 원정의 전술 ${JSON.stringify(SYS.game.runTactics(g, d.run))}`);
     if (d.run.done) fail('원정이 벌써 끝났다 — 시험이 헛돈다');
-    // ② 깨짐 — 지금 풀에 장비를 읽는 조건이 없어 실제 조작으로는 안 깨진다(2026-11-01). 재판정은 남아 있어 픽스처로 찌른다 — 분노 하나를 빼면 2/3 → 꺼진다
+    // ② 깨짐 — 죄종은 실제 조작으로 안 바뀐다(재판정은 남아 있어 픽스처로 찌른다) — 분노 하나를 시기로 바꾸면 0명 → 꺼진다
     const [a0, a1] = party, key1 = d.run.result.party.find(x => x.uid === a1).key;
     SYS.game.heroById(g, a0).sin = 'envy';
     const off = wrathOf(SYS.game.runTactics(g, d.run));
-    if (off.active || off.have !== 2) fail(`뺀 뒤 ${off.have}/${off.need} · ${off.active} — 꺼져야`);
+    if (off.active || off.have !== 0 || off.step !== 0) fail(`뺀 뒤 ${off.have}/${off.need} 단계 ${off.step} · ${off.active} — 꺼져야`);
     const r1 = refits(key1);
     step(0.5);
     if (!(refits(key1) > r1)) fail('전술이 꺼졌는데 다른 영웅이 안 갈아입었다 — 보너스가 그대로다');
@@ -13264,10 +13415,10 @@ check('departRun: 전술은 출발 판정이 상한 — 도중 리롤 · 출발 
     const r2 = refits(key1);
     step(0.5);
     if (!(refits(key1) > r2)) fail('되찾았는데 다른 영웅이 다시 안 갈아입었다');
-    // ④ 다음 런은 지금 모습 — 출발 때 켜진 관계 칸이 든다
-    const ids2 = SYS.game.departRun(g, 1011, NOW + 1).run.tactics.map(o => o.id);
-    if (!ids2.includes('opt_bond_30')) fail(`다음 런 스냅숏 [${ids2}] — 켜진 관계 칸이 들어야`);
-    return `스냅숏 [분노] · 리롤 · 꺼진 칸 무시 · 깨짐 2/3 · 되찾음 · 다음 런 [${ids2}]`;
+    // ④ 다음 런은 지금 모습 — 출발 때 켜진 5랭크 칸이 든다
+    const ids2 = SYS.game.departRun(g, 1011, NOW + 1).run.tactics;
+    if (!ids2.some(o => o.condKind === 'kills_together')) fail(`다음 런 스냅숏 [${ids2.map(o => o.id)}] — 켜진 5랭크 칸이 들어야`);
+    return `스냅숏 [${on0.length}칸] · 리롤 · 꺼진 칸 무시 · 깨짐 0명 · 되찾음 · 다음 런 [${ids2.map(o => o.id)}]`;
 });
 
 // 그 영웅의 라운드 몫 — 레벨 차 감쇠를 뺀 값 · `state.js` 의 `xpGapCut` 과 같은 식 (hero_design §5 · 2026-09-30)
@@ -14417,6 +14568,38 @@ check('level book: 훈련으로 문턱 도달 · 정산 분할·저장 복원 �
     const old = SYS.game.deserialize(SYS.game.serialize(back, NOW + 48 * hour));
     SYS.game.labSettle(old, NOW + 49 * hour);
     if (Object.keys(old.books).length) fail('기존 문턱 이상 영웅 소급 지급');
+});
+check('star: 연구소 훈련 — 만렙 영웅은 만렙 행 필요 XP 의 속도로 별 경험치를 받는다 · 범위 상한은 별에 안 건다 · 별이 다 차면 멈춘다 (2026-11-11 · hero_design §5)', () => {
+    const g = newGameS(42), hour = 3600_000;
+    for (const x of g.heroes) setStats(x, {});   // 등록 영웅의 능력치가 속도 효과를 바꾼다 — 두 판을 같은 값으로
+    const h = g.heroes[0];
+    h.level = B.hero_level_cap; h.xp = 0;
+    if (!SYS.game.labRegister(g, h.uid, 'train', NOW).ok) fail('훈련 등록');
+    SYS.game.labSettle(g, NOW);
+    SYS.game.labSettle(g, NOW + hour);
+    if (!(h.xp > 0) || h.level !== B.hero_level_cap) fail(`한 시간 별 경험치 ${h.xp}`);
+    // 같은 속도 — 같은 판에서 만렙 − 1 영웅만 등록한 시간당 몫과의 비 = 두 레벨 행의 필요 XP 비
+    //   (등록 칸이 하나라 판을 따로 연다 · 범위 상한에 걸린 영웅은 0 이라 그때는 비를 안 잰다)
+    const g2 = newGameS(42), low = g2.heroes[1];
+    for (const x of g2.heroes) setStats(x, {});
+    g2.heroes[0].level = B.hero_level_cap; g2.heroes[0].xp = 0;
+    low.level = B.hero_level_cap - 1; low.xp = 0;
+    if (!SYS.game.labRegister(g2, low.uid, 'train', NOW).ok) fail('훈련 등록 (만렙 − 1)');
+    SYS.game.labSettle(g2, NOW);
+    SYS.game.labSettle(g2, NOW + hour);
+    if (low.xp > 0 && low.level === B.hero_level_cap - 1) {
+        const want = SYS.hero.xpNeeded(B.hero_level_cap) / SYS.hero.xpNeeded(B.hero_level_cap - 1);
+        if (Math.abs(h.xp / low.xp - want) > 0.01) fail(`속도 비 ${(h.xp / low.xp).toFixed(3)} ≠ ${want.toFixed(3)}`);
+    }
+    // 별 하나가 차도록 — 다음 정산에 별 +1 · 남은 것은 이어진다
+    h.xp = SYS.hero.starXpNeeded(0) - 1;
+    SYS.game.labSettle(g, NOW + 2 * hour);
+    if (h.stars !== 1 || !(h.xp > 0)) fail(`훈련 별 ${h.stars} · xp ${h.xp}`);
+    // 다 찬 영웅은 더 안 쌓고 소수 몫도 안 남긴다
+    h.stars = B.hero_star_max; h.xp = 0;
+    SYS.game.labSettle(g, NOW + 3 * hour);
+    if (h.xp !== 0 || (g.labClock?.train?.carry ?? {})[h.uid] !== undefined) fail(`다 찬 뒤 xp ${h.xp}`);
+    return `한 시간 별 경험치 ${SYS.hero.xpNeeded(B.hero_level_cap) * B.train_level_per_hour} 기준`;
 });
 check('level book: 원정 도달 보상은 책 재고와 리포트에 한 번 · 처치 도안과 구분', () => {
     const g = newGameS(42);
@@ -15998,38 +16181,54 @@ check('원정 이어 가기: 칸 사이(런이 끝나 다음 칸을 기다리는
     if (r.runs[0].auto !== false || SYS.game.runParty(r).length) fail('resolveBattle 뒤에 부대가 나가 있다');
     return '칸 사이 = 전직 · 해고 막힘 · 자리 유지 · 철수 = 풀림 · resolveBattle = 한 판';
 });
-check('관계(bonds): 같이 깬 칸 수는 칸을 이길 때마다 +1 — 출정 → 철수 연타 · 진 칸은 안 센다 · 이어 가는 칸도 센다 (2026-09-29 사용자 지시 · tactic_card_design §5-8)', () => {
+check('함께 잡은 몬스터 수(killsTogether): 라운드를 정산할 때마다 그 라운드에 쓰러뜨린 수를 더한다 — 이긴 판 · 진 판 모두 · 이어 가는 칸도 · 출정 → 철수 연타는 0 · 옛 bonds 는 로드가 지운다 (tactic_card_design §5-14 · D12 · R441)', () => {
     const g = newGameS(49);
     for (const h of g.heroes) h.level = B.hero_level_cap;   // 이기는 판 — 1011 을 늘 깬다
     const party = SYS.game.partyOf(g), key = party.slice().sort().join('|');
-    // 출정 → 철수 연타 — 한 칸도 안 이겼으니 0 (~~출발할 때 +1~~ 이던 판은 여기서 20 이었다)
+    const killedIn = run => run.result.rounds.reduce((a, r) => a + r.killed.length, 0);
+    // 출정 → 철수 연타 — 정산한 라운드가 없으니 0
     for (let i = 0; i < 20; i++) {
         const d = SYS.game.departRun(g, 1011, NOW + i);
         if (!d.ok) fail(`출발 ${d.err}`);
         SYS.game.retreatRun(g, d.run, NOW + i);
     }
-    if ((g.bonds[key] ?? 0) !== 0) fail(`출정 → 철수 연타로 ${g.bonds[key]}`);
-    // 이긴 칸마다 +1 — 이어 가는 칸(`from`)도 센다
-    let wins = 0, prev = null;
+    if ((g.killsTogether[key] ?? 0) !== 0) fail(`출정 → 철수 연타로 ${g.killsTogether[key]}`);
+    // 이긴 판 — 정산한 라운드마다 그 라운드의 처치를 더한다 · 이어 가는 칸(`from`)도 센다
+    let sum = 0, prev = null;
     for (let i = 0; i < 4; i++) {
         const t = NOW + 1000 * (i + 1);
         const d = prev ? SYS.game.departRun(g, 1011, t, 1, prev) : SYS.game.departRun(g, 1011, t);
         if (!d.ok) fail(`${i + 1}번째 출발 ${d.err}`);
         while (!SYS.game.advanceRun(g, d.run, t).done);
-        if (d.report.won) wins++;
-        if ((g.bonds[key] ?? 0) !== wins) fail(`${i + 1}판 뒤 ${g.bonds[key]} ≠ 이긴 칸 ${wins}`);
+        if (!d.report.won) fail(`만렙 파티가 1011 을 ${i + 1}번째에 못 깼다 — 표본 조건`);
+        sum += killedIn(d.run);
+        if ((g.killsTogether[key] ?? 0) !== sum) fail(`${i + 1}판 뒤 ${g.killsTogether[key]} ≠ 처치 합 ${sum}`);
         prev = d.run;
     }
-    if (wins !== 4) fail(`만렙 파티가 1011 을 ${wins}/4 만 깼다 — 표본 조건`);
-    // 진 칸은 안 센다 — 몬스터 데미지를 크게 올린 판에서 전멸
-    const HARD = buildSystems({ ...D, balance: { ...B, monster_atk_scale: B.monster_atk_scale * 1000 } });
-    const h = openAll(HARD.game.newGame(49, cands, NOW), HARD);
-    const hk = HARD.game.partyOf(h).slice().sort().join('|');
-    const e = HARD.game.departRun(h, 1011, NOW);
-    while (!HARD.game.advanceRun(h, e.run, NOW).done);
-    if (e.report.won) fail('시험 조건 — 진 판이어야');
-    if ((h.bonds[hk] ?? 0) !== 0) fail(`진 칸이 ${h.bonds[hk]} 을 쌓았다`);
-    return `연타 20번 = 0 · 이긴 칸 ${wins} = ${g.bonds[key]} · 진 칸 = 0`;
+    if (!(sum > 0)) fail('fixture: 처치가 없다');
+    // 진 판도 센다 — 진 라운드에서 잡은 것까지. 몬스터 데미지를 올린 판에서 「진 라운드에 처치가 있는」 런을 찾는다
+    let lost = null;
+    for (const mult of [2, 5, 10, 25]) {
+        const HARD = buildSystems({ ...D, balance: { ...B, monster_atk_scale: B.monster_atk_scale * mult } });
+        for (let seed = 49; seed < 57 && !lost; seed++) {
+            const h = openAll(HARD.game.newGame(seed, cands, NOW), HARD);
+            const e = HARD.game.departRun(h, 1011, NOW);
+            if (!e.ok) continue;
+            while (!HARD.game.advanceRun(h, e.run, NOW).done);
+            const last = e.run.result.rounds.at(-1);
+            if (!e.report.won && last?.killed.length > 0) lost = { h, e, hk: HARD.game.partyOf(h).slice().sort().join('|'), mult, seed };
+        }
+        if (lost) break;
+    }
+    if (!lost) fail('시험 조건 — 진 라운드에 처치가 있는 런을 못 찾았다');
+    const lostN = killedIn(lost.e.run);
+    if ((lost.h.killsTogether[lost.hk] ?? 0) !== lostN) fail(`진 판 ${lost.h.killsTogether[lost.hk]} ≠ 처치 ${lostN} (진 라운드 ${lost.e.run.result.rounds.at(-1).killed.length} 포함)`);
+    // 옛 bonds — 로드가 지운다 · 새 카운터는 그대로 든다
+    const s = JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW)));
+    s.bonds = { [key]: 77 };
+    const back = SYS.game.deserialize(s);
+    if ('bonds' in back || back.killsTogether[key] !== sum) fail(`로드 — bonds ${JSON.stringify(back.bonds)} · 처치 ${back.killsTogether[key]}`);
+    return `연타 20번 = 0 · 이긴 4판 처치 ${sum} · 진 판(몬스터 ×${lost.mult} · 시드 ${lost.seed}) ${lostN} · 옛 bonds 지움`;
 });
 check('nextRepeat: 반복 원정은 처음부터 열려 있다 — 새 게임도 이긴 런은 다음 출발이 선다 · 건물 어휘에 없다 (2026-09-24 사용자 지시 · R152)', () => {
     const g = SYS.game.newGame(42, cands, NOW);
@@ -16902,50 +17101,71 @@ check('save: 원정 플레이 시간 — 새 게임 0 · 더하면 쌓이고 0 �
     return old.expMs === 0 ? '4000ms · 옛 세이브 0 · playMs 지움' : fail(`옛 세이브 ${old.expMs}`);
 });
 
-/* ── 파티 전술 (tactic_card_design §5 확정 2026-08-30) ── */
-check('csv: tactic_slot 은 1부터 빈틈없이 · 문턱은 오름차순 · 가족이 칸의 두 배 이상 (전체 리롤의 후보) · 칸별 비용 컬럼은 없다', () => {
+/* ── 파티 전술 (tactic_card_design §5 확정 2026-08-30 · 죄종 옵션 §5-14 · R441) ── */
+/** §5-14 표 그대로 — 죄종 → 효과(행 순서) → 변형 stat. 단정이 CSV 를 다시 읽어 맞추지 않게 손으로 적는다 */
+const TACTIC_TABLE = {
+    wrath: [['crit_rate', ['crit_rate']], ['crit_damage', ['crit_damage']]],
+    envy: [['def_reduction', ['def_ignore']], ['res_reduction', ['res_reduction_fire', 'res_reduction_cold', 'res_reduction_lightning', 'res_reduction_poison']]],
+    greed: [['xp', ['xp_gain_pct']], ['gold', ['gold_find']], ['magic', ['magic_find']]],
+    sloth: [['cdr', ['cooldown_reduction']], ['aspd', ['aspd_pct']], ['cast', ['cast_speed_pct']]],
+    gluttony: [['hp', ['hp_pct']], ['res', ['res_all']], ['def', ['def_flat']]],
+    lust: [['life_steal', ['life_steal']], ['regen', ['hp_regen']], ['kill_heal', ['kill_heal_pct']]],
+    pride: [['dmg', ['atk_pct']], ['dr', ['damage_reduction']], ['fhr', ['fhr']]],
+};
+/** 랭크 조건 (§5-14) — 칸 번호 순 */
+const TACTIC_RANK_COND = ['none', 'slot_sin_heroes', 'none', 'none', 'kills_together'];
+check('csv: tactic_slot — 1부터 빈틈없이 · 칸마다 조건 하나 · 랭크 조건 1 없음 · 2 그 칸 죄종 영웅 수 · 3 · 4 비움 · 5 함께 잡은 몬스터 수 · 칸별 비용 · 종류 컬럼은 없다 (§5-9 · §5-14)', () => {
     const slots = SYS.tactic.slotList;
     if (slots.length !== D.tacticSlots.length) fail(`칸 ${slots.length} ≠ CSV ${D.tacticSlots.length}행`);
     slots.forEach((s, i) => { if (s.no !== i + 1) fail(`slot_no ${s.no}`); });
-    for (let i = 1; i < slots.length; i++)
-        if (slots[i].unlockTotalLevel <= slots[i - 1].unlockTotalLevel) fail(`문턱이 안 오른다 (칸 ${slots[i].no})`);
-    // **가족**으로 센다 — 66행 22가족 7칸에서 행으로 세면 통과하지만 첫 배정도 리롤도 가족 단위다 (§5-5).
-    //   전체 리롤은 굴리기 직전에 든 것 + 이번에 뽑은 것을 빼고 뽑으므로 칸의 두 배가 있어야 모든 칸이 새로 뽑힌다 (§5-6)
-    //   **칸 = 상황**(2026-09-27) — 뽑기가 그 칸의 종류 안에서라 **종류마다** 센다
-    for (const cat of new Set(slots.map(s => s.category))) {
-        const ns = slots.filter(s => s.category === cat).length, nf = SYS.tactic.families.filter(f => f.category === cat).length;
-        if (nf < ns * 2) fail(`종류 ${cat} — 가족 ${nf} < 칸 ${ns} × 2`);
-    }
-    // 칸별 리롤 비용은 2026-09-01 기획에서 폐기 · 2026-09-22 코드에서 삭제 — 비용은 잠근 칸 수가 정한다 (§5-6 · R28)
-    if (D.tacticSlots.some(r => 'reroll_cost_gold' in r)) fail('tactic_slot.csv 에 reroll_cost_gold 가 남았다');
-    return `칸 ${slots.length} · 가족 ${SYS.tactic.families.length}(행 ${D.tacticOptions.length}) · 문턱 ${slots.map(s => s.unlockTotalLevel).join('/')}`;
+    if (!eq(slots.map(s => s.condKind), TACTIC_RANK_COND)) fail(`랭크 조건 ${slots.map(s => s.condKind)} ≠ ${TACTIC_RANK_COND}`);
+    // 칸별 리롤 비용은 2026-09-01 기획에서 폐기 · 2026-09-22 코드에서 삭제 — 비용은 잠근 칸 수가 정한다 (§5-6 · R28) · 칸 종류는 2026-11-11 삭제(R441)
+    if (D.tacticSlots.some(r => 'reroll_cost_gold' in r || 'category' in r)) fail('tactic_slot.csv 에 reroll_cost_gold · category 가 남았다');
+    return `칸 ${slots.length} · ${slots.map(s => `${s.no}:${s.condId}`).join(' · ')}`;
 });
-check('csv: tactic_condition — 조건 사전 (§5-8 · ⚠ 점수 임시 · R134) — 종류 6 · 있으면/없으면 · 점수 0~5 · 0 은 무조건만 · 관계는 있으면만 · 우연 비율은 0~1', () => {
-    // 로드 검증은 game_logic/tactic.js 가 한다(옵션이 조건을 가리킨다) — 여기는 표 자체의 형태만 본다
+check('csv: tactic_condition — 조건 사전 (§5-14 · ⚠ 5랭크 문턱 임시) — 어휘 셋 · 문턱 셋 오름차순 · 조건 없음은 문턱이 없다 · 2랭크 = 1 · 2 · 3명', () => {
     const rows = D.tacticConditions;
     if (!rows.length) fail('행이 없다');
-    const CAT = ['always', 'party', 'attr', 'advance', 'bond'];      // §5-8 조건 종류 5
-    const ids = new Set();
     for (const r of rows) {
-        if (!r.cond_id || ids.has(r.cond_id)) fail(`cond_id '${r.cond_id}' 가 비었거나 겹친다`);
-        ids.add(r.cond_id);
-        if (!CAT.includes(r.category)) fail(`${r.cond_id} 종류 '${r.category}'`);
-        if (!['has', 'not'].includes(r.polarity)) fail(`${r.cond_id} polarity '${r.polarity}'`);
-        if (r.category === 'bond' && r.polarity !== 'has') fail(`${r.cond_id} — 관계는 있으면만이다 (§5-8)`);
-        if (!(Number.isInteger(r.score) && r.score >= 0 && r.score <= 5)) fail(`${r.cond_id} 점수 ${r.score}`);
-        if ((r.score === 0) !== (r.category === 'always')) fail(`${r.cond_id} — 점수 0 은 무조건만이다`);
-        if (r.chance !== '-' && !(typeof r.chance === 'number' && r.chance >= 0 && r.chance <= 1)) fail(`${r.cond_id} 우연 비율 ${r.chance} — 비율(0~1)이다`);
+        if (!SYS.tactic.COND_KINDS.includes(r.test)) fail(`${r.cond_id} test '${r.test}'`);
+        const st = [r.step1, r.step2, r.step3];
+        if (r.test === 'none') { if (st.some(v => v !== '-')) fail(`${r.cond_id} — 조건 없음에 문턱 ${st}`); continue; }
+        if (!st.every(v => Number.isInteger(v) && v >= 1) || !(st[0] < st[1] && st[1] < st[2])) fail(`${r.cond_id} 문턱 ${st} — 1 이상 정수 오름차순`);
+        if ('score' in r || 'polarity' in r || 'category' in r) fail(`${r.cond_id} — 옛 점수 · 있으면/없으면 · 종류 열이 남았다`);
     }
-    return `${rows.length}행 · 종류 ${[...new Set(rows.map(r => r.category))].join('/')} · 점수 ${rows.map(r => r.score).join('/')}`;
+    const sinRow = rows.find(r => r.test === 'slot_sin_heroes') ?? fail('2랭크 조건 행이 없다');
+    if (!eq([sinRow.step1, sinRow.step2, sinRow.step3], [1, 2, 3])) fail(`그 칸 죄종 영웅 수 문턱 ${[sinRow.step1, sinRow.step2, sinRow.step3]} ≠ 1 · 2 · 3`);
+    return rows.map(r => `${r.cond_id}(${r.test === 'none' ? '-' : [r.step1, r.step2, r.step3].join('/')})`).join(' · ');
 });
-/** 전술 시스템을 CSV 말고 임의의 행으로 세운다 — 로드 검증을 찌를 때 쓴다 (표 셋 — 조건 사전 · 옵션 · 점수 배수 · §5-8) */
+check('csv: tactic_option — 죄종 일곱 × 효과 19 (§5-14 표) · 시기 원소 변형 넷 = 22가족 · 효과 · 변형 순서 = 행 순서 · 피해 감소만 배수 몫 1 밑 · 리더 몫 전부 1', () => {
+    const T = SYS.tactic;
+    if (!eq(T.sinList, Object.keys(M.SINS))) fail(`죄종 순서 ${T.sinList} ≠ ${Object.keys(M.SINS)}`);
+    if (!eq(Object.keys(TACTIC_TABLE).sort(), T.sinList.slice().sort())) fail('표의 죄종이 일곱이 아니다');
+    let effects = 0;
+    for (const sin of T.sinList) {
+        const got = T.effectsOf(sin).map(e => [e.effect, e.ids.map(id => T.families.find(f => f.id === id).stat)]);
+        if (!eq(got, TACTIC_TABLE[sin])) fail(`${sin} 효과 ${JSON.stringify(got)} ≠ ${JSON.stringify(TACTIC_TABLE[sin])}`);
+        effects += got.length;
+    }
+    if (effects !== 19) fail(`효과 ${effects} ≠ 19`);
+    if (T.families.length !== 22 || D.tacticOptions.length !== 22) fail(`가족 ${T.families.length} · 행 ${D.tacticOptions.length} ≠ 22`);
+    for (const f of T.families) {
+        if (f.leaderBonus !== 1) fail(`${f.id} leader_bonus ${f.leaderBonus}`);
+        if ((f.stat === 'damage_reduction') !== (f.multShare < 1)) fail(`${f.id} 배수 몫 ${f.multShare} — 피해 감소만 1 밑`);
+    }
+    if (D.tacticOptions.some(r => 'cond_id' in r || 'arg' in r)) fail('tactic_option.csv 에 옛 cond_id · arg 열이 남았다');
+    return `죄종 ${T.sinList.length} · 효과 ${effects} · 가족 ${T.families.length}`;
+});
+/** 전술 시스템을 CSV 말고 임의의 행으로 세운다 — 로드 검증을 찌를 때 쓴다 (표 셋 — 칸 · 조건 사전 · 옵션 · §5-14) */
 const TACTIC_WEIGHTS = { common: 70, magic: 25, rare: 5 };
 const TACTIC_COST = () => ({ base: B.tactic_reroll_base_cost, lockMult: B.tactic_reroll_lock_mult });
 /** 리더 보너스 곡선 — 조립(`data.js`)과 같은 다섯 키 (§5-10 · R340) */
 const TACTIC_LEADER = () => ({ pivot: B.attr_dmg_pivot, min: B.hero_attr_min, max: B.hero_attr_max, multMin: B.tactic_leader_mult_min, multMax: B.tactic_leader_mult_max });
+/** 등급 배수 — 조립과 같은 세 키 (§5-14 · R441) */
+const TACTIC_GMULT = () => ({ common: B.tactic_grade_mult_common, magic: B.tactic_grade_mult_magic, rare: B.tactic_grade_mult_rare });
 const mkTactic = (rows, over = {}) => createTacticSystem({
-    slots: D.tacticSlots, options: rows, conditions: D.tacticConditions, scores: D.tacticScores, sins: Object.keys(M.SINS),
-    classes: D.classes, attributes: D.heroAttributes, advances: D.advanceRows, gradeWeights: TACTIC_WEIGHTS, rerollCost: TACTIC_COST(), leader: TACTIC_LEADER(), ...over,
+    slots: D.tacticSlots, options: rows, conditions: D.tacticConditions, sins: Object.keys(M.SINS),
+    gradeWeights: TACTIC_WEIGHTS, gradeMult: TACTIC_GMULT(), gearPct: B.tactic_sin_gear_pct, rerollCost: TACTIC_COST(), leader: TACTIC_LEADER(), ...over,
 });
 /**
  * 전술 칸 몇 개만 굴린다 — 나머지 열린 칸을 잠갔다가 전체 리롤 뒤 **원래 잠금으로 되돌린다** (§5-6 — 칸별 리롤은 없다).
@@ -16959,185 +17179,220 @@ function rollOnly(g, nos) {
     for (const no of flip) SYS.game.toggleTacticLock(g, no);
     return r;
 }
-/** 옵션 한 행 — 검증을 찌를 때 「나머지는 멀쩡한」 옵션을 만들어야 해서 자주 쓴다 (1행 = 가족 하나 · §5-8) */
-const optRow = (id, over = {}) => ({ option_id: id, cond_id: 'always', arg: '-', stat: 'atk_pct', unit: 0.02, leader_bonus: 1, ...over });
+/** 옵션 한 행 — 검증을 찌를 때 「나머지는 멀쩡한」 옵션을 만들어야 해서 자주 쓴다 (1행 = 가족 하나 · §5-14) */
+//   효과 이름은 표에 없는 `probe` — 표 끝에 붙여도 「같은 효과 행이 떨어져 있다」에 안 걸린다
+const optRow = (id, over = {}) => ({ option_id: id, sin: 'pride', effect: 'probe', stat: 'atk_pct', unit: 0.02, mult_share: 1, leader_bonus: 1, ...over });
 /** 조건 한 행 — 조건 사전을 일부러 깨뜨릴 때 */
-const condRow = (id, over = {}) => ({ cond_id: id, category: 'party', polarity: 'has', test: 'sin_same', arg: '-', n: 2, score: 2, chance: '-', ...over });
+const condRow = (id, over = {}) => ({ cond_id: id, test: 'kills_together', step1: 10, step2: 20, step3: 30, ...over });
+/** 파티 문맥의 영웅 한 명 — 죄종 · 통솔 · 낀 장비의 죄종 */
+const tacMember = (sin, ldr = B.attr_dmg_pivot, gear = []) => ({ sin, cls: 'knight', ldr, gear });
+/** 손으로 다시 세운 값 식 — 코드와 같은 함수를 부르면 서로를 못 잡는다 (§5-14) */
+const tacValue = (f, grade, step) => {
+    const raw = f.unit * (1 + f.multShare * (B[`tactic_grade_mult_${grade}`] * step - 1));
+    return f.stat.endsWith('_flat') ? Math.round(raw) : Math.round(raw * 1e4) / 1e4;
+};
 
-check('tactic: 옵션 · 조건 사전의 어휘 · 인자 · 기준값을 로드 시 검증한다 — 오타는 조용히 안 넘어간다 (§5-8)', () => {
+check('tactic: 로드 검증 — 옵션 · 조건 사전 · 칸 · 등급 배수 · 장비 몫의 오타 · 빈 값은 조용히 안 넘어간다 (§5-14 · INTERFACE §2-9)', () => {
     // 양성 대조 — 멀쩡한 표는 통과해야 한다. 이게 던지면 아래 「던졌다」가 전부 다른 이유로 던진 것이다
     mkTactic(D.tacticOptions);
-    mkTactic([...D.tacticOptions, optRow('ok1', { cond_id: 'party_sin3', arg: 'envy' }), optRow('ok2', { cond_id: 'party_cls2', arg: 'mage' }), optRow('ok3', { cond_id: 'attr_sum_35', arg: 'str' }), optRow('ok4', { cond_id: 'advance_has', arg: 'monk' })]);
+    mkTactic([...D.tacticOptions, optRow('ok1', { stat: 'damage_reduction', mult_share: 0.3 }), optRow('ok2', { stat: 'hp_pct' })]);
+    const opts = D.tacticOptions;
+    const lastOfSin = sin => opts.map(r => r.sin).lastIndexOf(sin);
     const badOpt = [
-        ['없는 조건 id', optRow('x1', { cond_id: 'nope' })],
-        ['죄종 자리에 죄종이 없다', optRow('x2', { cond_id: 'party_sin3' })],
-        ['없는 죄종', optRow('x3', { cond_id: 'party_sin3', arg: 'nosin' })],
-        ['직업 자리에 없는 직업', optRow('x4', { cond_id: 'party_cls2', arg: 'nocls' })],
-        ['능력치 자리에 없는 능력치', optRow('x4a', { cond_id: 'attr_sum_35', arg: 'wrath' })],
-        ['전직 자리에 없는 전직', optRow('x4b', { cond_id: 'advance_has', arg: 'knight' })],
-        ['인자를 안 받는 조건에 인자', optRow('x5', { arg: 'wrath' })],
-        ['인자를 안 받는 관계에 인자', optRow('x6', { cond_id: 'bond_30', arg: 'knight' })],
-        ['기준값 0', optRow('x7', { unit: 0 })],
-        ['지정 죄종에 직업 id', optRow('x8', { cond_id: 'party_sin3', arg: 'knight' })],
-        ['지정 직업에 죄종 id', optRow('x9', { cond_id: 'party_cls2', arg: 'wrath' })],
-        ['option_id 중복', optRow(D.tacticOptions[0].option_id)],
+        ['없는 죄종', [...opts, optRow('x1', { sin: 'nosin' })]],
+        ['effect 빈 칸', [...opts, optRow('x2', { effect: '' })]],
+        ['stat 빈 칸', [...opts, optRow('x3', { stat: '' })]],
+        ['기준값 0', [...opts, optRow('x4', { unit: 0 })]],
+        ['배수 몫 1 초과', [...opts, optRow('x5', { mult_share: 1.5 })]],
+        ['배수 몫 음수', [...opts, optRow('x6', { mult_share: -0.1 })]],
+        ['배수 몫 빈 칸', [...opts, optRow('x7', { mult_share: undefined })]],
+        ['option_id 중복', [...opts, optRow(opts[0].option_id)]],
+        // 같은 효과의 변형이 떨어져 있다 — 오만 「데미지」를 오만 마지막 행 뒤에 한 줄 더
+        ['같은 효과 행이 떨어져 있다', [...opts.slice(0, lastOfSin('pride') + 1), optRow('x8', { effect: 'dmg' }), ...opts.slice(lastOfSin('pride') + 1)]],
+        // 효과가 하나뿐인 죄종 — 리롤의 직전 제외가 후보를 다 지운다
+        ['효과가 하나뿐인 죄종', opts.filter(r => !(r.sin === 'wrath' && r.effect === 'crit_damage'))],
+        ['죄종 하나가 통째로 빠짐', opts.filter(r => r.sin !== 'lust')],
+        // 고정값 채널 — 기준값이 작으면 등급 값이 같은 정수로 뭉친다(1 · 1.5→2 · 2)
+        ['고정값 채널 등급 뭉침', [...opts, optRow('x9', { effect: 'def2', stat: 'def_flat', unit: 1 })]],
+        ['leader_bonus 음수', [...opts, optRow('x10', { leader_bonus: -0.1 })]],
+        ['통솔 최소에서 0 이하', [...opts, optRow('x11', { leader_bonus: 1 / (1 - B.tactic_leader_mult_min) })]],
     ];
-    for (const [why, row] of badOpt) {
+    for (const [why, rows] of badOpt) {
         let threw = false;
-        try { mkTactic([...D.tacticOptions, row]); } catch { threw = true; }
+        try { mkTactic(rows); } catch { threw = true; }
         if (!threw) fail(`옵션 — ${why} 가 통과했다`);
     }
     const badCond = [
         ['조건 어휘 오타', condRow('c1', { test: 'nope' })],
-        // 폐기된 어휘 — 스킬 태그 조건은 2026-09-22 삭제 · 옛 이름은 조건 사전으로 바뀌었다 (§5-8)
-        ['폐기 어휘 skill_tag', condRow('c2', { test: 'skill_tag', arg: 'shout', n: 1 })],
-        ['폐기 어휘 affix_sin', condRow('c3', { test: 'affix_sin', arg: 'wrath', n: 3 })],
-        ['없는 종류', condRow('c4', { category: 'skill' })],
-        ['polarity 오타', condRow('c5', { polarity: 'maybe' })],
-        ['점수 표에 없는 점수', condRow('c6', { score: 9 })],
-        ['조건부인데 점수 0', condRow('c7', { score: 0 })],
-        ['관계의 없으면', condRow('c8', { category: 'bond', polarity: 'not', test: 'together', n: 10 })],
+        // 폐기 어휘 — 2026-11-11 랭크 조건으로 바뀌었다 (§5-14)
+        ['폐기 어휘 sin_count', condRow('c2', { test: 'sin_count' })],
+        ['폐기 어휘 together', condRow('c3', { test: 'together' })],
+        ['문턱 내림차순', condRow('c4', { step1: 30, step2: 20, step3: 10 })],
+        ['문턱 같음', condRow('c5', { step2: 10 })],
+        ['문턱 0', condRow('c6', { step1: 0 })],
+        ['문턱 빈 칸', condRow('c7', { step3: '-' })],
+        ['조건 없음에 문턱', condRow('c8', { test: 'none' })],
         ['cond_id 중복', condRow(D.tacticConditions[0].cond_id)],
     ];
     for (const [why, row] of badCond) {
         let threw = false;
-        try { mkTactic(D.tacticOptions, { conditions: [...D.tacticConditions, row] }); } catch { threw = true; }
+        try { mkTactic(opts, { conditions: [...D.tacticConditions, row] }); } catch { threw = true; }
         if (!threw) fail(`조건 — ${why} 가 통과했다`);
     }
-    const want = ['none', 'sin_kind', 'sin_same', 'cls_same', 'sin_count', 'cls_count', 'attr_sum', 'advance_count', 'together'];   // 지정 죄종·직업 인원 2026-11-01
-    if (!eq(SYS.tactic.COND_KINDS.slice().sort(), want.slice().sort())) fail(`조건 어휘 ${SYS.tactic.COND_KINDS.join('/')}`);
-    return `옵션 ${badOpt.length} · 조건 ${badCond.length}종 거부 · 어휘 ${SYS.tactic.COND_KINDS.join('/')}`;
+    const badSys = [
+        ['칸이 없는 조건을 가리킨다', { slots: D.tacticSlots.map(r => (r.slot_no === 2 ? { ...r, cond_id: 'nope' } : r)) }],
+        ['칸 번호 빈틈', { slots: D.tacticSlots.filter(r => r.slot_no !== 3) }],
+        ['등급 배수 없음', { gradeMult: undefined }],
+        ['등급 배수가 등급 순이 아니다', { gradeMult: { ...TACTIC_GMULT(), magic: TACTIC_GMULT().rare } }],
+        ['등급 배수 0', { gradeMult: { ...TACTIC_GMULT(), common: 0 } }],
+        ['장비 몫 없음', { gearPct: undefined }],
+        ['장비 몫 음수', { gearPct: -0.01 }],
+        ['등급 가중치 없음', { gradeWeights: undefined }],
+        ['죄종 목록 없음', { sins: [] }],
+    ];
+    for (const [why, over] of badSys) {
+        let threw = false;
+        try { mkTactic(opts, over); } catch { threw = true; }
+        if (!threw) fail(`설정 — ${why} 가 통과했다`);
+    }
+    if (!eq(SYS.tactic.COND_KINDS, ['none', 'slot_sin_heroes', 'kills_together'])) fail(`조건 어휘 ${SYS.tactic.COND_KINDS.join('/')}`);
+    return `옵션 ${badOpt.length} · 조건 ${badCond.length} · 설정 ${badSys.length} 거부 · 어휘 ${SYS.tactic.COND_KINDS.join('/')}`;
 });
-check('tactic: 리더 보너스 — 적용 값 = 등급 값 × (1 + leader_bonus × (리더 곡선 − 1)) · 곡선은 기준 1 · 끝값 CSV · 사이는 직선 · 리더 통솔 칸은 안 받는다 · 로드 검증 (§5-10 · R340 · INTERFACE §2-9)', () => {
+check('tactic: 값 = 기준값 × (1 + 몫 × (등급 배수 × 단계 − 1)) — 등급 배수 balance · 단계 1 ~ 3 · 피해 감소는 몫만큼 · 등급 순으로 커진다 · 일반 × 3단계 > 레어 × 1단계 (§5-14 · §5-5)', () => {
+    const T = SYS.tactic;
+    if (!eq(T.GRADES, ['common', 'magic', 'rare'])) fail(`등급 어휘 ${T.GRADES.join('/')}`);
+    if (!eq(T.gradeMult, TACTIC_GMULT())) fail(`등급 배수 ${JSON.stringify(T.gradeMult)}`);
+    for (const f of T.families) {
+        for (const g of T.GRADES) {
+            if (f.grades[g] !== tacValue(f, g, 1)) fail(`${f.id} ${g} 단계 1 ${f.grades[g]} ≠ ${tacValue(f, g, 1)}`);
+            const o = T.optionOf({ id: f.id, grade: g });
+            for (const step of [1, 2, 3]) if (T.valueAt(o, step) !== tacValue(f, g, step)) fail(`${f.id} ${g} 단계 ${step} ${T.valueAt(o, step)} ≠ ${tacValue(f, g, step)}`);
+        }
+        for (let i = 1; i < T.GRADES.length; i++) if (!(f.grades[T.GRADES[i]] > f.grades[T.GRADES[i - 1]])) fail(`${f.id} 값이 등급 순으로 안 커진다`);
+        // 등급은 운 · 단계는 편성 — 일반 × 3단계가 레어 × 1단계보다 크다 (§5-14 「등급이 편성을 누르지 않는 겹침」 · 몫 1 인 가족)
+        if (f.multShare === 1 && !(tacValue(f, 'common', 3) > tacValue(f, 'rare', 1))) fail(`${f.id} 일반 × 3 ${tacValue(f, 'common', 3)} ≤ 레어 × 1 ${tacValue(f, 'rare', 1)}`);
+    }
+    // 피해 감소 — 배수를 몫만큼만 받는다: 레어 × 3단계가 기준값 × 6 이 아니라 × (1 + 몫 × 5)
+    const dr = T.families.find(f => f.stat === 'damage_reduction') ?? fail('fixture: 피해 감소 가족이 없다');
+    const top = T.valueAt(T.optionOf({ id: dr.id, grade: 'rare' }), 3);
+    if (!(top < tacValue({ ...dr, multShare: 1 }, 'rare', 3))) fail(`피해 감소 레어 × 3 ${top} — 몫이 안 걸렸다`);
+    // 최대치 = 레어 × 3단계 (예산 검사의 기준 · §5-14)
+    const best = T.families.map(f => `${f.id} ${tacValue(f, 'rare', 3)}`);
+    return `가족 ${T.families.length} · 배수 ${T.GRADES.map(g => T.gradeMult[g]).join('/')} · 피해 감소 최대 ${top} · 예) ${best[0]}`;
+});
+check('tactic: 단계 = 칸 조건이 넘은 문턱 수 — 2랭크 그 칸 죄종 영웅 0 ~ 3명 · 다른 죄종 · 장비 죄종은 인원에 안 든다 · 5랭크 처치 수 경계 · 조건 없음은 언제나 1 · 단계 0 이면 꺼지고 값은 단계 1 (§5-14)', () => {
+    const T = SYS.tactic;
+    const sinSlot = T.slotList.find(s => s.condKind === 'slot_sin_heroes'), killSlot = T.slotList.find(s => s.condKind === 'kills_together');
+    const free = T.slotList.find(s => s.condKind === 'none');
+    // 2랭크 — 그 칸(옵션)의 죄종 영웅 수. 다른 죄종 영웅 · 장비에 붙은 그 죄종은 대신 채우지 않는다
+    const o = T.optionOf({ id: 'opt_wrath_crit_dmg', grade: 'magic' }, sinSlot.no);
+    if (o.condKind !== 'slot_sin_heroes' || !eq(o.steps, [1, 2, 3])) fail(`2번 칸 옵션의 조건 ${o.condKind} ${o.steps}`);
+    for (let matched = 0; matched <= 3; matched++) {
+        const members = Array.from({ length: 3 }, (_, i) => tacMember(i < matched ? 'wrath' : 'envy', B.attr_dmg_pivot, ['wrath']));
+        const m = T.measure(o, T.contextOf(members));
+        const want = { have: matched, step: matched, need: [1, 2, 3][matched] ?? null, active: matched >= 1, base: T.valueAt(o, Math.max(matched, 1)) };
+        for (const [k, v] of Object.entries(want)) if (m[k] !== v) fail(`분노 영웅 ${matched}명 — ${k} ${m[k]} ≠ ${v}`);
+    }
+    // 5랭크 — 문턱 셋의 경계
+    const k = T.optionOf({ id: 'opt_pride_dmg', grade: 'common' }, killSlot.no);
+    const [a, b, c] = killSlot.steps;
+    for (const [n, step] of [[0, 0], [a - 1, 0], [a, 1], [b - 1, 1], [b, 2], [c - 1, 2], [c, 3], [c * 10, 3]]) {
+        const m = T.measure(k, T.contextOf([tacMember('pride')], { kills: n }));
+        if (m.have !== n || m.step !== step || m.active !== step >= 1 || m.need !== (killSlot.steps[step] ?? null)) fail(`처치 ${n} → 단계 ${m.step}(기대 ${step}) · 다음 ${m.need}`);
+    }
+    // 조건 없음 — 언제나 단계 1 · 카운터가 없다
+    const n0 = T.measure(T.optionOf({ id: 'opt_pride_dmg', grade: 'rare' }, free.no), T.contextOf([]));
+    if (n0.step !== 1 || !n0.active || n0.have !== null || n0.need !== null) fail(`조건 없음 ${JSON.stringify(n0)}`);
+    // 칸 없이 편 옵션도 조건 없음이다
+    if (T.optionOf({ id: 'opt_pride_dmg', grade: 'rare' }).condKind !== 'none') fail('칸 없이 편 옵션의 조건이 조건 없음이 아니다');
+    return `2랭크 0~3명 · 5랭크 문턱 ${killSlot.steps.join('/')} 경계 · 조건 없음 단계 1`;
+});
+check('tactic: 적용 값 = 값 × (1 + 리더 몫 + 장비 죄종 몫) — 리더 곡선 · 그 칸 죄종 장비만 · leader_bonus 와 무관 · 첫째 · 둘째 죄종 둘 다 센다 (§5-10 · §5-14 「장비 죄종 버프」)', () => {
     const T = SYS.tactic;
     const lo = B.hero_attr_min, mid = B.attr_dmg_pivot, hi = B.hero_attr_max;
     const close = (x, y) => Math.abs(x - y) < 1e-9;
+    const r4 = v => Math.round(v * 1e4) / 1e4;
     // 곡선 — 기준 1 · 끝값은 CSV · 기준 양쪽이 각각 직선 · 범위 밖은 자른다 · 숫자가 아니면 1
     if (!close(T.leadCurve(mid), 1) || !close(T.leadCurve(lo), B.tactic_leader_mult_min) || !close(T.leadCurve(hi), B.tactic_leader_mult_max))
         fail(`끝값 ${T.leadCurve(lo)} / ${T.leadCurve(mid)} / ${T.leadCurve(hi)}`);
     if (!close(T.leadCurve((mid + hi) / 2), (1 + B.tactic_leader_mult_max) / 2) || !close(T.leadCurve((lo + mid) / 2), (1 + B.tactic_leader_mult_min) / 2)) fail('기준 양쪽이 직선이 아니다');
     if (!close(T.leadCurve(hi + 5), B.tactic_leader_mult_max) || !close(T.leadCurve(lo - 5), B.tactic_leader_mult_min) || T.leadCurve(undefined) !== 1) fail('범위 밖 · 모름');
-    // 적용 값 — 리더 = 편성 첫 칸의 `ldr` · 리더가 없으면 등급 값 그대로 · 켜짐과 무관하게 낸다
-    const ctxOf = ldr => T.contextOf(ldr === null ? [] : [{ sin: 'wrath', cls: 'knight', ldr, items: [], front: true }]);
-    const pct = (v, m) => Math.round(v * m * 1e4) / 1e4;
-    const march = T.optionOf({ id: 'opt_march_atk', grade: 'rare' });
-    if (march.leaderBonus !== 1) fail(`무조건 공격의 leader_bonus ${march.leaderBonus} — 1 이어야`);
-    for (const [ldr, want] of [[mid, march.value], [null, march.value], [hi, pct(march.value, B.tactic_leader_mult_max)], [lo, pct(march.value, B.tactic_leader_mult_min)]]) {
-        const m = T.measure(march, ctxOf(ldr));
-        if (!m.active || m.value !== want) fail(`통솔 ${ldr} → ${m.value} (기대 ${want} · 배수 ${m.lead})`);
+    const o = T.optionOf({ id: 'opt_wrath_crit_dmg', grade: 'rare' }, 1);   // 1번 칸 = 조건 없음 · 단계 1
+    const base = T.valueAt(o, 1);
+    const pct = B.tactic_sin_gear_pct;
+    const cases = [
+        // [리더 통솔, 파티 장비 죄종(영웅마다), 기대 리더 몫, 기대 장비 몫]
+        [mid, [[], [], []], 0, 0],
+        [hi, [[], [], []], B.tactic_leader_mult_max - 1, 0],
+        [lo, [[], [], []], B.tactic_leader_mult_min - 1, 0],
+        // 첫째 · 둘째 죄종 둘 다 · 영웅 셋 모두 · 다른 죄종은 안 센다
+        [mid, [['wrath', 'envy'], ['wrath'], ['pride', 'wrath']], 0, 3 * pct],
+        [hi, [['wrath'], ['envy', 'greed'], []], B.tactic_leader_mult_max - 1, 1 * pct],
+    ];
+    for (const [ldr, gear, lead, gp] of cases) {
+        const ctx = T.contextOf(gear.map((gs, i) => tacMember('envy', i === 0 ? ldr : mid, gs)));
+        const m = T.measure(o, ctx);
+        const want = r4(base * (1 + lead + gp));
+        if (m.base !== base || !close(m.leadPart, r4(lead)) || !close(m.gearPart, r4(gp)) || m.value !== want || m.bonus !== r4(want - base))
+            fail(`통솔 ${ldr} · 장비 ${JSON.stringify(gear)} → ${JSON.stringify(m)} (기대 ${want} = ${base} × (1 + ${lead} + ${gp}))`);
     }
-    if (march.value !== T.optionOf({ id: 'opt_march_atk', grade: 'rare' }).value) fail('measure 가 옵션의 등급 값을 바꿨다');
-    // 고정값 채널은 정수로 반올림
-    const def = T.optionOf({ id: 'opt_march_def', grade: 'magic' });
-    if (T.measure(def, ctxOf(hi)).value !== Math.round(def.value * B.tactic_leader_mult_max)) fail('고정값 채널 반올림');
-    // 받는 몫 0 — 곡선을 안 받는다 (지금 표엔 그런 옵션이 없어 임의의 행으로 찌른다)
+    // 판의 장비 죄종 수 — 일곱 전부 · 없으면 0
+    const g = T.contextOf([tacMember('wrath', mid, ['wrath', 'envy']), tacMember('envy', mid, ['wrath'])]).gear;
+    if (!eq(Object.keys(g), T.sinList) || g.wrath !== 2 || g.envy !== 1 || g.pride !== 0) fail(`장비 죄종 수 ${JSON.stringify(g)}`);
+    // 받는 몫 0 — 리더 곡선은 안 받고 장비 죄종 몫은 그대로 받는다 (지금 표엔 그런 옵션이 없어 임의의 행으로 찌른다)
     {
-        const o = mkTactic([...D.tacticOptions, optRow('lb0', { leader_bonus: 0 })]).optionOf({ id: 'lb0', grade: 'rare' });
-        const m = T.measure(o, ctxOf(hi));
-        if (o.leaderBonus !== 0 || m.lead !== 1 || m.value !== o.value) fail(`lb0 — leader_bonus ${o.leaderBonus} · 배수 ${m.lead}`);
+        const t0 = mkTactic(D.tacticOptions.map(r => (r.option_id === 'opt_wrath_crit_dmg' ? { ...r, leader_bonus: 0 } : r)));
+        const z = t0.optionOf({ id: 'opt_wrath_crit_dmg', grade: 'rare' }, 1);
+        const m = t0.measure(z, t0.contextOf([tacMember('envy', hi, ['wrath', 'wrath'])]));
+        if (z.leaderBonus !== 0 || m.leadPart !== 0 || !close(m.gearPart, r4(2 * pct)) || m.value !== r4(base * (1 + 2 * pct))) fail(`leader_bonus 0 — ${JSON.stringify(m)}`);
     }
-    // 로드 검증 — 열 · 곡선 설정 (양성 대조는 위 「로드 시 검증」 단정의 mkTactic(D.tacticOptions))
-    const badRow = [
-        ['leader_bonus 빈 칸', optRow('lb1', { leader_bonus: undefined })],
-        ['leader_bonus 음수', optRow('lb2', { leader_bonus: -0.1 })],
-        ['통솔 최소에서 0 이하', optRow('lb3', { leader_bonus: 1 / (1 - B.tactic_leader_mult_min) })],
-    ];
-    for (const [why, row] of badRow) {
-        let threw = false;
-        try { mkTactic([...D.tacticOptions, row]); } catch { threw = true; }
-        if (!threw) fail(`옵션 — ${why} 가 통과했다`);
-    }
+    // 고정값 채널은 정수로 반올림
+    const def = T.optionOf({ id: 'opt_gluttony_def', grade: 'magic' }, 1);
+    const dm = T.measure(def, T.contextOf([tacMember('pride', hi, ['gluttony'])]));
+    if (dm.value !== Math.round(T.valueAt(def, 1) * (1 + B.tactic_leader_mult_max - 1 + pct)) || !Number.isInteger(dm.bonus)) fail(`고정값 채널 ${JSON.stringify(dm)}`);
+    // 리더 설정 로드 검증
     const L0 = TACTIC_LEADER();
-    const badLead = [
-        ['최소 배수 0', { ...L0, multMin: 0 }], ['최소 배수 1 초과', { ...L0, multMin: 1.1 }], ['최대 배수 1 미만', { ...L0, multMax: 0.9 }],
-        ['기준이 최대', { ...L0, pivot: L0.max }], ['설정 없음', undefined],
-    ];
-    for (const [why, leader] of badLead) {
+    for (const [why, leader] of [['최소 배수 0', { ...L0, multMin: 0 }], ['최소 배수 1 초과', { ...L0, multMin: 1.1 }], ['최대 배수 1 미만', { ...L0, multMax: 0.9 }], ['기준이 최대', { ...L0, pivot: L0.max }], ['설정 없음', undefined]]) {
         let threw = false;
         try { mkTactic(D.tacticOptions, { leader }); } catch { threw = true; }
         if (!threw) fail(`리더 — ${why} 가 통과했다`);
     }
-    return `통솔 ${lo} / ${mid} / ${hi} → ×${T.leadCurve(lo)} / ×1 / ×${T.leadCurve(hi)} · 레어 무조건 공격 ${march.value} → ${pct(march.value, B.tactic_leader_mult_max)} · 거부 ${badRow.length + badLead.length}`;
+    return `레어 치명타 피해 ${base} · 통솔 ${hi} → ×${T.leadCurve(hi)} · 분노 장비 3 → +${r4(3 * pct)} · 합은 더한다`;
 });
-check('tactic: 리더를 바꾸면 칸의 적용 값 · 전투 능력치가 같이 움직인다 — 통솔 기준이면 등급 값 그대로 (§5-10 · R340 · ADR-0753)', () => {
+check('tactic: 장비 죄종 세기 — 출전 파티 셋이 낀 장비의 죄종(이름의 첫째 · 둘째 둘 다) · 벤치 · 가방은 안 센다 · 죄종 없는 장비 0 · 그 죄종 칸의 버프 몫이 된다 (§5-14 · INTERFACE §2-9)', () => {
     const G2 = newGameP(42, cands, NOW);
-    for (const h of G2.heroes) h.level = B.hero_level_cap;       // 전 칸 개방
-    const p = G2.presets[G2.preset - 1];
+    for (const h of G2.heroes) h.level = B.hero_level_cap;
     const party = SYS.game.partyOf(G2);
-    const hero = uid => SYS.game.heroById(G2, uid);
-    const no = SYS.tactic.slotList.find(s => s.category === 'always').no;
-    p.tactics.slots[no] = { id: 'opt_march_atk', grade: 'rare' };
-    const slot = () => SYS.game.tacticState(G2).slots[no - 1];
-    const base = SYS.tactic.optionOf({ id: 'opt_march_atk', grade: 'rare' }).value;
-    const atkSum = uid => SYS.game.heroCombat(G2, hero(uid)).atk_pct_sum;
-    hero(party[0]).stats.ldr = B.attr_dmg_pivot;
-    hero(party[1]).stats.ldr = B.hero_attr_max;
-    const s0 = slot();
-    if (!s0.active || s0.value !== base || s0.option.value !== base || s0.lead !== 1) fail(`통솔 기준 리더 — ${s0.value} (등급 값 ${base}) · 배수 ${s0.lead}`);
-    const a0 = atkSum(party[2]);
-    p.party = [party[1], party[0], party[2]];                  // 통솔 최대 영웅이 리더
-    const s1 = slot();
-    const want = Math.round(base * B.tactic_leader_mult_max * 1e4) / 1e4;
-    if (s1.value !== want || s1.option.value !== base) fail(`통솔 최대 리더 — ${s1.value} (기대 ${want}) · 등급 값 ${s1.option.value}`);
-    // 리더 몫(`bonus` = 적용 값 − 등급 값 — 편성 탭 행의 리더 보너스 칸) · 판의 `leader`(「추가 버프」 툴팁 — ADR-0757)
-    if (s0.bonus !== 0 || s1.bonus !== Math.round((want - base) * 1e4) / 1e4) fail(`리더 몫 ${s0.bonus} → ${s1.bonus} (기대 0 → ${want - base})`);
-    const L1 = SYS.game.tacticState(G2).leader;
-    if (L1?.uid !== party[1] || L1.ldr !== B.hero_attr_max || L1.curve !== B.tactic_leader_mult_max) fail(`판의 리더 ${JSON.stringify(L1)}`);
-    // 셋째 영웅의 전투 능력치 — 리더가 바뀐 몫만큼 상시 피해 % 합이 오른다(그 칸 말고는 같은 인원 · 같은 조건)
-    const others = SYS.game.tacticState(G2).slots.filter(x => x.open && x.active && x.no !== no).map(x => ({ ...x.option, value: x.value }));
-    p.party = party.slice();
-    const othersBefore = SYS.game.tacticState(G2).slots.filter(x => x.open && x.active && x.no !== no).map(x => ({ ...x.option, value: x.value }));
-    p.party = [party[1], party[0], party[2]];
-    const otherDelta = (SYS.tactic.bonusOf(others).flat.atk_pct ?? 0) - (SYS.tactic.bonusOf(othersBefore).flat.atk_pct ?? 0);
-    const a1 = atkSum(party[2]);
-    if (Math.abs((a1 - a0) - (want - base) - otherDelta) > 1e-9) fail(`전투 능력치 ${a0} → ${a1} (기대 +${want - base} + 다른 칸 ${otherDelta})`);
-    return `레어 무조건 공격 ${base} → 리더 통솔 ${B.hero_attr_max} ${s1.value} · 상시 피해 % ${a0} → ${a1}`;
-});
-check('tactic: 값 = 기준값 × 배수(조건의 점수, 등급) — 가족 = 옵션 한 행 · 등급 순으로 커진다 · 어려울수록 천장이 높다 (§5-8 · §5-5)', () => {
-    const fams = SYS.tactic.families;
-    if (fams.length !== D.tacticOptions.length) fail(`가족 ${fams.length} ≠ CSV ${D.tacticOptions.length}행`);
-    if (!eq(SYS.tactic.GRADES, ['common', 'magic', 'rare'])) fail(`등급 어휘 ${SYS.tactic.GRADES.join('/')}`);
-    const multOf = s => D.tacticScores.find(r => r.score === s);
-    for (const f of fams) {
-        const row = D.tacticOptions.find(r => r.option_id === f.id);
-        const cond = D.tacticConditions.find(c => c.cond_id === row.cond_id);
-        if (f.score !== cond.score) fail(`${f.id} 점수 ${f.score} ≠ 조건 ${cond.score}`);
-        for (const g of SYS.tactic.GRADES) {
-            // 식을 손으로 다시 세운다 — 코드와 같은 함수를 부르면 서로를 못 잡는다
-            const raw = row.unit * multOf(cond.score)[g];
-            const want = row.stat.endsWith('_flat') ? Math.round(raw) : Math.round(raw * 1e4) / 1e4;
-            if (f.grades[g] !== want) fail(`${f.id} ${g} ${f.grades[g]} ≠ ${row.unit} × ${multOf(cond.score)[g]} = ${want}`);
-        }
-        for (let i = 1; i < SYS.tactic.GRADES.length; i++)
-            if (!(f.grades[SYS.tactic.GRADES[i]] > f.grades[SYS.tactic.GRADES[i - 1]])) fail(`${f.id} 값이 등급 순으로 안 커진다`);
+    // 낀 장비의 죄종을 다 지운 뒤 정해서 붙인다 — 시작 장비의 희귀도에 기대지 않는다
+    for (const h of G2.heroes) for (const uid of Object.values(h.equipped)) if (uid) G2.items[uid].sins = [];
+    const worn = uid => Object.values(SYS.game.heroById(G2, uid).equipped).filter(Boolean);
+    const w0 = worn(party[0]), w1 = worn(party[1]);
+    if (w0.length < 2 || !w1.length) fail('fixture: 시작 영웅이 장비를 안 입었다');
+    G2.items[w0[0]].sins = ['wrath', 'envy'];      // 레어 — 첫째 · 둘째 둘 다
+    G2.items[w0[1]].sins = ['wrath'];              // 매직
+    G2.items[w1[0]].sins = ['wrath', 'pride'];
+    // 벤치 영웅의 장비 · 가방의 장비는 안 센다
+    const bench = G2.heroes.find(h => !party.includes(h.uid));
+    const bw = bench && Object.values(bench.equipped).find(Boolean);
+    if (bw) G2.items[bw].sins = ['wrath', 'wrath'];
+    const bagUid = G2.bags[0]?.[0];
+    if (bagUid && G2.items[bagUid]) G2.items[bagUid].sins = ['wrath'];
+    const st = SYS.game.tacticState(G2);
+    const want = Object.fromEntries(SYS.tactic.sinList.map(s => [s, 0]));
+    Object.assign(want, { wrath: 3, envy: 1, pride: 1 });
+    if (!eq(st.gear, want)) fail(`장비 죄종 수 ${JSON.stringify(st.gear)} ≠ ${JSON.stringify(want)}`);
+    if (st.gearPct !== B.tactic_sin_gear_pct) fail(`장비 몫 ${st.gearPct}`);
+    // 그 죄종 칸의 버프 몫 — 1번 칸(조건 없음)에 분노 · 시기 옵션을 차례로 꽂는다
+    const p = G2.presets[G2.preset - 1];
+    for (const [id, sin] of [['opt_wrath_crit_rate', 'wrath'], ['opt_envy_def_down', 'envy'], ['opt_greed_gold', 'greed']]) {
+        p.tactics.slots[1] = { id, grade: 'common' };
+        const s = SYS.game.tacticState(G2).slots[0];
+        if (Math.abs(s.gearPart - want[sin] * B.tactic_sin_gear_pct) > 1e-9) fail(`${id} 장비 몫 ${s.gearPart} ≠ ${want[sin]} × ${B.tactic_sin_gear_pct}`);
     }
-    // 어려울수록 천장이 높다 — 같은 능력치 · 같은 기준값이면 점수가 높은 쪽의 레어가 더 크다
-    const unitAtk = D.tacticOptions.find(r => r.option_id === 'opt_march_atk').unit;
-    const atk = fams.filter(f => f.stat === 'atk_pct' && f.unit === unitAtk).sort((a, b) => a.score - b.score);
-    for (let i = 1; i < atk.length; i++)
-        if (atk[i].score > atk[i - 1].score && !(atk[i].grades.rare > atk[i - 1].grades.rare)) fail(`${atk[i].id} 레어가 ${atk[i - 1].id} 보다 안 크다`);
-    // 무조건은 같은 등급의 조건부보다 낮다 (§5-5) — 같은 능력치 · 기준값끼리
-    const base = atk.find(f => f.score === 0) ?? fail('fixture: 데미지 무조건 옵션이 없다');
-    for (const f of atk) if (f.score > 0) for (const g of SYS.tactic.GRADES) if (!(f.grades[g] > base.grades[g])) fail(`${f.id} ${g} 가 무조건보다 안 크다`);
-    // 배수 표를 일부러 깨뜨린다
-    const sc = D.tacticScores;
-    const broken = [
-        ['점수 빠짐', sc.filter(r => r.score !== 3)],
-        ['한 점수 안에서 등급이 안 커진다', sc.map(r => (r.score === 2 ? { ...r, rare: r.common } : r))],
-        ['점수가 오르는데 배수가 준다', sc.map(r => (r.score === 4 ? { ...r, rare: sc.find(x => x.score === 3).rare - 0.1 } : r))],
-        ['점수 중복', [...sc, { ...sc[0] }]],
-    ];
-    for (const [why, rows] of broken) {
-        let threw = false;
-        try { mkTactic(D.tacticOptions, { scores: rows }); } catch { threw = true; }
-        if (!threw) fail(`배수 표 — ${why} 가 통과했다`);
-    }
-    // 등급 가중치가 없으면 로드가 멈춘다 (조용히 한쪽으로 쏠리는 것보다 낫다)
-    let noWeight = false;
-    try { mkTactic(D.tacticOptions, { gradeWeights: undefined }); } catch { noWeight = true; }
-    if (!noWeight) fail('등급 가중치 없이 로드됐다');
-    const top = fams.slice().sort((a, b) => b.score - a.score)[0];
-    return `가족 ${fams.length} · ${top.id}(점수 ${top.score}) ${SYS.tactic.GRADES.map(g => top.grades[g]).join('/')}`;
+    // 벤치로 빼면 그 영웅의 장비가 빠진다
+    p.party = [party[1], party[2]];
+    if (SYS.game.tacticState(G2).gear.wrath !== 1) fail(`첫 영웅을 뺐는데 분노 ${SYS.game.tacticState(G2).gear.wrath}`);
+    return `분노 3 · 시기 1 · 오만 1 (벤치 · 가방 제외) · 분노 칸 +${3 * B.tactic_sin_gear_pct}`;
 });
 check('tactic: 칸은 **지휘 천막 랭크**가 연다 — 열린 칸 = 더하기(tactic_slots) · 표의 칸 수에서 자른다 · 합산 레벨만으로는 안 열린다 (R137 · ~~합산 레벨이 곧장 연다~~)', () => {
     const raw = SYS.game.newGame(42, cands, NOW);
@@ -17157,14 +17412,32 @@ check('tactic: 칸은 **지휘 천막 랭크**가 연다 — 열린 칸 = 더하
     const need = SYS.game.needOf('tactic_slots', SYS.tactic.slotCount);
     return `새 게임 ${st.open}칸 · 합산 500 이어도 ${st.open}칸 · 다 지으면 ${st2.open}칸 · 마지막 칸 = ${need ? `${need.id} ${need.rank}랭크` : '표에 없음'}`;
 });
-check('tactic: 첫 배정은 시드 결정론 · **등급은 전부 일반** · 가족끼리 안 겹친다 — 리롤이 다른 칸을 흔들지 않는다 (§5-5)', () => {
+check('tactic: 첫 배정은 시드 결정론 · **등급은 전부 일반** · 칸마다 죄종 → 효과 → 변형 rng 3회 · 칸끼리 겹쳐도 된다 · 리롤이 다른 칸을 흔들지 않는다 (§5-5 · §5-14 · INTERFACE §5-2)', () => {
+    const T = SYS.tactic;
+    // rng 계약 — 칸마다 3회(등급 없음) · 손으로 다시 세운 굴림과 같다
+    for (let seed = 1; seed <= 30; seed++) {
+        let used = 0;
+        const probe = makeRng(seed);
+        const got = T.initialAssign(() => { used++; return probe(); });
+        if (used !== 3 * T.slotCount) fail(`시드 ${seed} rng ${used}회 ≠ 칸 ${T.slotCount} × 3`);
+        const r = makeRng(seed);
+        const want = T.slotList.map(() => {
+            const sin = T.sinList[Math.floor(r() * T.sinList.length)];
+            const effs = T.effectsOf(sin);
+            const e = effs[Math.floor(r() * effs.length)];
+            return { id: e.ids[Math.floor(r() * e.ids.length)], grade: 'common' };
+        });
+        if (!eq(got, want)) fail(`시드 ${seed} 첫 배정 ${JSON.stringify(got)} ≠ ${JSON.stringify(want)}`);
+    }
+    // 같은 가족이 두 칸에 서는 첫 배정이 실제로 나온다 — 중복을 막는 장치가 없다 (§5-14)
+    let dup = 0;
+    for (let seed = 1; seed <= 300; seed++) { const ids = T.initialAssign(makeRng(seed)).map(x => x.id); if (new Set(ids).size < ids.length) dup++; }
+    if (!dup) fail('첫 배정 300번에 같은 가족 두 칸이 한 번도 없다 — 중복 제외가 남아 있다');
     const G2 = newGameP(42, cands, NOW);
     G2.heroes[0].level = 500;                     // 전 칸 개방
     const ids = () => SYS.game.tacticState(G2).slots.map(x => x.option.id);
     const a = ids();
     if (!eq(a, ids())) fail('같은 상태에서 다른 배정이 나온다');
-    // 중복 판정의 단위는 **가족**이다 — 등급으로 갈라 세면 같은 stat 이 두 칸에서 곱해진다
-    if (new Set(a).size !== a.length) fail(`첫 배정에 같은 가족 중복 ${a.join(',')}`);
     // 첫 배정은 언제나 일반 — 시드 운이 초반 격차를 만들지 않는다
     const grades = SYS.game.tacticState(G2).slots.map(x => x.option.grade);
     if (grades.some(g => g !== 'common')) fail(`첫 배정에 일반이 아닌 등급 ${grades.join(',')}`);
@@ -17174,8 +17447,7 @@ check('tactic: 첫 배정은 시드 결정론 · **등급은 전부 일반** · 
     const b = ids();
     if (b[2] === a[2]) fail('리롤인데 같은 것이 나왔다');
     if (!eq(a.filter((_, i) => i !== 2), b.filter((_, i) => i !== 2))) fail('잠근 칸이 흔들렸다');
-    if (new Set(b).size !== b.length) fail('리롤이 칸끼리 겹치게 만들었다');
-    return `${a.length}칸 · 3번 ${a[2]} → ${b[2]}`;
+    return `${a.length}칸 · 3번 ${a[2]} → ${b[2]} · 첫 배정 중복 ${dup}/300`;
 });
 check('tactic: 리롤 비용 = 기본가 × 배수 ^ 잠근 칸 수 · 골드 게이트는 아무것도 안 바꾼다 · 전부 잠그면 allLocked (§5-6 · 결과 코드 INTERFACE §3)', () => {
     const G2 = newGameP(42, cands, NOW);
@@ -17234,47 +17506,23 @@ check('tactic: 잠금은 무료 · rng · 카운터를 안 탄다 · 안 열린 
     if (!eq(G2.presets[G2.preset - 1].tactics.locked, [1])) fail(`풀린 뒤 ${G2.presets[G2.preset - 1].tactics.locked}`);
     return `안 열린 칸 ${shut.no} 거절 · 잠금 [1,3] → 풀기 [1] · 골드 · 카운터 그대로`;
 });
-check('tactic: 칸 = 상황 — 칸마다 조건 종류가 고정이고 첫 배정 · 리롤 · 옛 세이브 모두 그 종류만 든다 (tactic_card_design §5-9 · 2026-09-27)', () => {
-    const want = ['always', 'party', 'attr', 'advance', 'bond'];
-    const got = SYS.tactic.slotList.map(s => s.category);
-    if (!eq(got, want)) fail(`칸 종류 ${got} ≠ ${want}`);
+check('tactic: 칸 = 상황 — 칸마다 조건이 고정이고 효과는 모든 칸이 같은 풀 · 칸의 옵션은 그 칸의 조건을 싣는다 · 어느 가족이든 어느 칸에나 선다 (§5-9 · §5-14)', () => {
     const G2 = newGameP(42, cands, NOW);
     G2.heroes[0].level = 500;                     // 전 칸 개방
-    for (const s of SYS.game.tacticState(G2).slots)
-        if (s.option.category !== want[s.no - 1]) fail(`첫 배정 ${s.no}번 칸 = ${s.option.category}`);
-    // 옛 세이브 — 다른 종류 옵션이 든 칸은 첫 배정으로 돌아간다
-    const wrong = SYS.tactic.families.find(f => f.category !== 'always');
     const p = G2.presets[G2.preset - 1];
-    p.tactics = { slots: { 1: { id: wrong.id, grade: 'rare' } }, locked: [] };
-    const s1 = SYS.game.tacticState(G2).slots[0];
-    if (s1.option.category !== 'always') fail(`옛 세이브의 다른 종류(${wrong.id})가 1번 칸에 남았다`);
-    return got.join(' · ');
+    for (const s of SYS.game.tacticState(G2).slots)
+        if (s.condKind !== TACTIC_RANK_COND[s.no - 1] || s.option.condKind !== s.condKind || !eq(s.option.steps, s.steps)) fail(`${s.no}번 칸 조건 ${s.condKind} · 옵션 ${s.option.condKind}`);
+    // 가족 하나를 다섯 칸 모두에 꽂아도 그대로 선다 — 칸마다 그 칸의 조건으로 잰다
+    const id = 'opt_greed_magic';
+    p.tactics = { slots: Object.fromEntries(SYS.tactic.slotList.map(s => [s.no, { id, grade: 'magic' }])), locked: [] };
+    const st = SYS.game.tacticState(G2);
+    if (st.slots.some(s => s.option.id !== id || s.option.grade !== 'magic')) fail(`같은 가족 다섯 칸 ${st.slots.map(s => s.option.id)}`);
+    return TACTIC_RANK_COND.join(' · ');
 });
-check('tactic: 지휘 천막 랭크 수 = 칸 수 · 칸을 지워도 남은 칸의 첫 배정은 그대로 · v45 세이브의 칸 · 잠금은 새 번호로 옮긴다 (2026-11-01 · v46)', () => {
+check('tactic: 지휘 천막 랭크 수 = 칸 수 · v45 세이브의 칸 · 잠금은 새 번호로 옮긴다 · 옛 풀 가족은 그 칸만 첫 배정 가족으로 읽고 등급 · 잠금을 지킨다 (2026-11-01 · v46 · R441)', () => {
     const T = SYS.tactic;
     if (SYS.game.needOf('tactic_slots', T.slotCount)?.rank !== T.slotCount) fail(`마지막 칸을 여는 랭크 ${JSON.stringify(SYS.game.needOf('tactic_slots', T.slotCount))}`);
     if (SYS.game.needOf('tactic_slots', T.slotCount + 1)) fail('칸보다 많은 랭크가 칸을 연다 — 여는 것이 없는 랭크다');
-    // 옛 일곱 칸의 셔플 — 지운 옵션 자리까지 같아야 같은 순서가 나온다
-    const OLD = ['opt_march_atk', 'opt_march_hp', 'opt_march_aspd', 'opt_march_cdr', 'opt_march_def', 'opt_march_res',
-        'opt_sin_spread', 'opt_class_pair', 'opt_sin_trio', 'opt_gear_wrath', 'opt_gear_sloth', 'opt_gear_no_pride',
-        'opt_lead_knight', 'opt_lead_priest', 'opt_front_priest', 'opt_bond_100', 'opt_lead_ldr12', 'opt_lead_ldr16', 'opt_front_knight', 'opt_bond_30'];
-    const catOf = id => T.families.find(f => f.id === id)?.category;
-    for (let seed = 1; seed <= 20; seed++) {
-        const rng = makeRng(seed), pool = OLD.slice();
-        for (let i = pool.length - 1; i > 0; i--) {
-            const j = Math.floor(rng() * (i + 1));
-            [pool[i], pool[j]] = [pool[j], pool[i]];
-        }
-        const got = T.initialAssign(makeRng(seed));
-        for (const s of T.slotList) {
-            if (['party', 'attr', 'advance'].includes(s.category)) {   // 셔플 뒤 제 풀에서 따로 뽑는 칸
-                if (catOf(got[s.no - 1].id) !== s.category) fail(`시드 ${seed} ${s.no}번 칸 ${got[s.no - 1].id} — 종류가 ${s.category} 가 아니다`);
-                continue;
-            }
-            const want = pool.find(id => catOf(id) === s.category);
-            if (got[s.no - 1].id !== want) fail(`시드 ${seed} ${s.no}번 칸 ${got[s.no - 1].id} ≠ 옛 첫 배정 ${want}`);
-        }
-    }
     // v45 세이브 — 3 · 4번은 버리고 5 · 6 · 7번이 3 · 4 · 5번으로 당겨진다
     const s = JSON.parse(JSON.stringify(SYS.game.serialize(newGameP(42, cands, NOW), NOW)));
     s.version = 45;
@@ -17294,12 +17542,36 @@ check('tactic: 지휘 천막 랭크 수 = 칸 수 · 칸을 지워도 남은 칸
     if (!eq(back.presets[0].tactics.locked, [3, 5])) fail(`옮긴 잠금 ${back.presets[0].tactics.locked}`);
     const x = back.explores[0]?.squad?.tactics;
     if (!x || !eq(flat(x), want) || !eq(x.locked, [3, 5])) fail(`탐험 스냅숏 ${JSON.stringify(x)}`);
+    // 옛 풀의 가족은 새 표에 없다 — 그 칸만 첫 배정 가족 · 등급 · 잠금은 그대로 (D13)
+    const init = T.initialAssign(makeRng(deriveSeed(back.seed ^ 0x7AC7, 0)));
     const st = SYS.game.tacticState(back).slots;
-    if (st[2].option?.category !== 'attr' || st[2].option.grade !== 'rare' || !st[2].locked) fail(`3번 칸 — 옛 진형 옵션은 새 첫 배정 · 등급 · 잠금 유지여야 ${JSON.stringify(st[2])}`);
-    if (st[3].option?.category !== 'advance' || st[3].option.grade !== 'magic') fail(`4번 칸 — 옛 리더 직업 옵션은 새 첫 배정 · 등급 유지여야 ${JSON.stringify(st[3])}`);
-    return `칸 ${T.slotCount} = 랭크 ${T.slotCount} · 시드 20 첫 배정 그대로 · 칸 · 잠금 · 탐험 스냅숏 이관`;
+    const wantGrade = { 1: 'rare', 2: 'common', 3: 'rare', 4: 'magic', 5: 'rare' };
+    for (const sl of st) {
+        if (sl.option?.id !== init[sl.no - 1].id || sl.option.grade !== wantGrade[sl.no]) fail(`${sl.no}번 칸 ${sl.option?.id}:${sl.option?.grade} ≠ 첫 배정 ${init[sl.no - 1].id}:${wantGrade[sl.no]}`);
+        if (sl.locked !== [3, 5].includes(sl.no)) fail(`${sl.no}번 칸 잠금 ${sl.locked}`);
+    }
+    return `칸 ${T.slotCount} = 랭크 ${T.slotCount} · 칸 · 잠금 · 탐험 스냅숏 이관 · 옛 가족 → 첫 배정 + 등급 · 잠금 유지`;
 });
-check('tactic: 전체 리롤 — 안 잠근 칸을 한 번에 · 판 안에서 안 겹치고 직전 옵션도 안 나온다 · 카운터 1회 · 한 rng 로 칸 번호 오름차순 (§5-6 · INTERFACE §5-2)', () => {
+check('tactic: 옛 세이브 — 새 표에 없는 가족이 든 칸만 첫 배정 가족으로 읽고 등급 · 잠금을 지킨다 · 표에 있는 칸은 그대로 · 조회는 세이브 · 골드 · 카운터 불변 · 세이브 왕복 (D13 · INTERFACE §4)', () => {
+    const G2 = newGameP(42, cands, NOW), T = SYS.tactic;
+    const init = SYS.game.tacticState(G2).slots.map(s => s.option.id);
+    for (const id of ['opt_party_sin_wrath', 'opt_attr_str', 'opt_adv_monk', 'opt_bond_100', 'opt_sin_spread']) for (const grade of T.GRADES) {
+        G2.presets[0].tactics = { slots: { 2: { id, grade }, 4: { id: 'opt_pride_dr', grade: 'rare' } }, locked: [2] };
+        const before = JSON.stringify(G2);
+        const st = SYS.game.tacticState(G2), slot = st.slots[1];
+        if (slot.option.id !== init[1] || slot.option.grade !== grade || !slot.locked) fail(`${id}/${grade} → ${slot.option.id}/${slot.option.grade} · 잠금 ${slot.locked}`);
+        if (st.slots[3].option.id !== 'opt_pride_dr' || st.slots[3].option.grade !== 'rare') fail('표에 있는 가족이 바뀌었다');
+        if (JSON.stringify(G2) !== before) fail('조회가 세이브를 바꿨다');
+        const back = SYS.game.deserialize(SYS.game.serialize(G2, NOW));
+        if (!eq(SYS.game.tacticState(back).slots[1], slot)) fail('세이브 왕복에서 결과가 바뀌었다');
+    }
+    // 등급이 틀린 칸 — 첫 배정(일반)
+    G2.presets[0].tactics = { slots: { 2: { id: 'opt_pride_dmg', grade: 'legendary' } }, locked: [] };
+    const bad = SYS.game.tacticState(G2).slots[1].option;
+    if (bad.id !== init[1] || bad.grade !== 'common') fail(`없는 등급 ${JSON.stringify(bad)}`);
+    return '옛 가족 5 × 3등급 · 잠금 유지 · 표에 있는 칸 그대로 · 조회 불변 · 세이브 왕복';
+});
+check('tactic: 전체 리롤 — 안 잠근 칸을 한 번에 · 칸마다 직전 가족만 피한다 · 카운터 1회 · 한 rng 로 칸 번호 오름차순 · 칸마다 4회 (§5-6 · §5-14 · INTERFACE §5-2)', () => {
     const G2 = newGameP(42, cands, NOW);
     G2.heroes[0].level = 500;                     // 전 칸 개방
     G2.resources.gold = 99_999_999;
@@ -17314,235 +17586,192 @@ check('tactic: 전체 리롤 — 안 잠근 칸을 한 번에 · 판 안에서 �
     if (G2.counters.tactic !== c0 + 1) fail(`카운터 ${c0} → ${G2.counters.tactic} (한 번만 올라야)`);
     const b = ids();
     if (b[1] !== a[1] || b[4] !== a[4]) fail('잠근 칸이 굴러갔다');
-    for (const no of want) if (a.includes(b[no - 1])) fail(`${no}번 칸에 직전 판의 옵션 ${b[no - 1]} 이 나왔다`);
-    if (new Set(b).size !== b.length) fail(`판 안에 같은 가족 ${b.join(',')}`);
-    // rng 계약 — 시드 하나 · 카운터 + 1 · 칸 번호 오름차순으로 pickMany. 제외는 굴리기 직전 판 전부
-    const again = SYS.tactic.pickMany(makeRng(deriveSeed(G2.seed ^ 0x7AC7, c0 + 1)), want.map(no => SYS.tactic.slotList[no - 1].category), a);
-    // 칸 = 상황(2026-09-27) — 굴린 칸마다 그 칸의 종류 옵션만 나온다
-    for (const x of r.rolled) if (x.option.category !== SYS.tactic.slotList[x.no - 1].category) fail(`${x.no}번 칸에 다른 종류 ${x.option.category}`);
+    for (const no of want) if (b[no - 1] === a[no - 1]) fail(`${no}번 칸에 직전 가족 ${b[no - 1]} 이 다시 나왔다`);
+    // 굴린 칸의 옵션은 그 칸의 조건을 싣는다
+    for (const x of r.rolled) if (x.option.condKind !== SYS.tactic.slotList[x.no - 1].condKind) fail(`${x.no}번 칸 옵션의 조건 ${x.option.condKind}`);
+    // rng 계약 — 시드 하나 · 카운터 + 1 · 칸 번호 오름차순으로 pickMany(칸마다 직전 가족) · 칸마다 4회
+    let used = 0;
+    const probe = makeRng(deriveSeed(G2.seed ^ 0x7AC7, c0 + 1));
+    const again = SYS.tactic.pickMany(() => { used++; return probe(); }, want.map(no => a[no - 1]));
     if (!eq(again, r.rolled.map(x => ({ id: x.option.id, grade: x.option.grade })))) fail('같은 시드 · 카운터로 다시 뽑았더니 다르다 — rng 순서가 계약과 어긋난다');
-    return `잠금 2·5 · 굴린 칸 ${want.join(',')} · 카운터 +1`;
+    if (used !== 4 * want.length) fail(`rng ${used}회 ≠ 4 × ${want.length}`);
+    return `잠금 2·5 · 굴린 칸 ${want.join(',')} · 카운터 +1 · rng ${used}회`;
+});
+check('tactic: 같은 효과 두 칸 허용 — 값이 더해진다 · 피해 감소는 칸마다 원천 하나 · 리롤도 다른 칸 · 잠긴 칸 · 이번에 뽑은 것과 겹칠 수 있다 (D8 · §5-14)', () => {
+    const G2 = newGameP(42, cands, NOW);
+    for (const h of G2.heroes) h.level = B.hero_level_cap;
+    const p = G2.presets[G2.preset - 1];
+    // 3 · 4번 칸 = 조건 없음 — 둘 다 켜진다
+    p.tactics = { slots: { 3: { id: 'opt_pride_dmg', grade: 'rare' }, 4: { id: 'opt_pride_dmg', grade: 'common' } }, locked: [] };
+    const st = SYS.game.tacticState(G2);
+    const v3 = st.slots[2].value, v4 = st.slots[3].value;
+    if (!st.slots[2].active || !st.slots[3].active) fail('조건 없는 칸이 꺼졌다');
+    const on = st.slots.filter(s => s.open && s.active).map(s => ({ ...s.option, value: s.value }));
+    const others = on.filter(o => o.stat === 'atk_pct').reduce((sum, o) => sum + o.value, 0) - v3 - v4;
+    const bonus = SYS.game.tacticBonus(G2);
+    if (Math.abs((bonus.flat.atk_pct ?? 0) - (v3 + v4 + others)) > 1e-12) fail(`데미지 합 ${bonus.flat.atk_pct} ≠ ${v3} + ${v4} + 다른 칸 ${others}`);
+    // 피해 감소 — 두 칸이면 원천 둘
+    p.tactics = { slots: { 3: { id: 'opt_pride_dr', grade: 'rare' }, 4: { id: 'opt_pride_dr', grade: 'rare' } }, locked: [] };
+    const drs = SYS.game.tacticBonus(G2).dr;
+    const nDr = SYS.game.tacticState(G2).slots.filter(s => s.open && s.active && s.option.stat === 'damage_reduction').length;
+    if (drs.length !== nDr || nDr < 2) fail(`피해 감소 원천 ${drs.length} ≠ 켜진 칸 ${nDr}`);
+    // 리롤 — 한 판 안에서 같은 가족 · 잠긴 칸과 같은 가족이 실제로 나온다 (중복 제외가 없다)
+    const T = SYS.tactic;
+    let inside = 0, withLocked = 0;
+    for (let seed = 1; seed <= 400; seed++) {
+        const prev = T.initialAssign(makeRng(seed)).map(x => x.id);
+        const got = T.pickMany(makeRng(seed + 7777), prev.slice(1)).map(x => x.id);   // 1번 칸은 잠갔다 치고 2 ~ 5번만
+        if (new Set(got).size < got.length) inside++;
+        if (got.includes(prev[0])) withLocked++;
+        got.forEach((id, i) => { if (id === prev[i + 1]) fail(`시드 ${seed} ${i + 2}번 칸에 직전 가족 ${id}`); });
+    }
+    if (!inside || !withLocked) fail(`400판에 판 안 중복 ${inside} · 잠긴 칸과 같음 ${withLocked} — 0 이면 중복 제외가 남아 있다`);
+    return `데미지 두 칸 ${v3} + ${v4} · 피해 감소 원천 ${drs.length} · 리롤 400판 중 판 안 중복 ${inside} · 잠긴 칸과 같음 ${withLocked}`;
+});
+check('tactic: 한 칸 뽑기 — 죄종 → 효과 → 변형 → 등급 rng 4회 고정 · 직전 가족이 변형 하나뿐인 효과든 넷인 효과든 같은 횟수 · 직전 가족은 안 나온다 · 죄종 균등 · 등급 가중 (D2 · D9 · INTERFACE §5-2)', () => {
+    const T = SYS.tactic;
+    // 직전 가족마다 — 회수 4 고정 · 그 가족은 안 나온다
+    for (const prev of [null, ...T.familyIds]) for (let seed = 1; seed <= 60; seed++) {
+        let used = 0;
+        const probe = makeRng(seed * 31 + 7);
+        const r = T.pick(() => { used++; return probe(); }, prev);
+        if (used !== 4) fail(`직전 ${prev} 시드 ${seed} — rng ${used}회 (4 여야)`);
+        if (r.id === prev) fail(`직전 가족 ${prev} 이 다시 나왔다`);
+        if (!T.familyIds.includes(r.id) || !T.GRADES.includes(r.grade)) fail(`없는 결과 ${JSON.stringify(r)}`);
+    }
+    // 결정론 · 죄종 균등 · 등급 가중(70/25/5 방향)
+    if (!eq(T.pick(makeRng(7)), T.pick(makeRng(7)))) fail('같은 시드가 다른 것을 냈다');
+    const rng = makeRng(20261111), bySin = {}, byGrade = {}, byRes = {};
+    const sinOf = id => T.families.find(f => f.id === id).sin;
+    const N = 7000;
+    for (let i = 0; i < N; i++) {
+        const r = T.pick(rng);
+        bySin[sinOf(r.id)] = (bySin[sinOf(r.id)] ?? 0) + 1;
+        byGrade[r.grade] = (byGrade[r.grade] ?? 0) + 1;
+        const f = T.families.find(x => x.id === r.id);
+        if (f.effect === 'res_reduction') byRes[f.id] = (byRes[f.id] ?? 0) + 1;
+    }
+    const mean = N / T.sinList.length;
+    for (const s of T.sinList) if (!(bySin[s] > mean * 0.85 && bySin[s] < mean * 1.15)) fail(`${s} ${bySin[s]}회 — 죄종이 균등하지 않다(평균 ${mean})`);
+    if (!(byGrade.common > byGrade.magic && byGrade.magic > byGrade.rare)) fail(`가중치와 반대 방향 ${JSON.stringify(byGrade)}`);
+    // 시기 원소 넷 — 같은 효과 안에서 균등
+    const res = Object.values(byRes), rmean = res.reduce((a, v) => a + v, 0) / 4;
+    if (res.length !== 4 || res.some(v => !(v > rmean * 0.7 && v < rmean * 1.3))) fail(`시기 원소 ${JSON.stringify(byRes)}`);
+    return `직전 ${T.familyIds.length + 1}가지 × 60 = 4회 · 죄종 ${Math.min(...Object.values(bySin))}~${Math.max(...Object.values(bySin))} · 등급 ${byGrade.common}/${byGrade.magic}/${byGrade.rare}`;
 });
 check('tactic: 조건이 참일 때만 효과가 전투 능력치에 합류한다 · **벤치는 안 받는다** (§1 파티 단위)', () => {
     const G2 = newGameP(42, cands, NOW);
     // 만렙까지만 — HP 가 구간 표를 읽어 만렙 밖 레벨은 computeCombat 이 던진다 (R84). 칸은 합산 레벨이 연다
     G2.heroes[0].level = B.hero_level_cap;
-    // 조건 없는 옵션(always)만 남기고 나머지 칸은 조건이 거짓인 옵션으로 몰아 확인한다 —
-    // 여기서는 켜진 칸의 효과 합이 그대로 시트에 오르는지만 본다
     const st = SYS.game.tacticState(G2);
-    // 값은 칸의 `value` — 리더 보너스를 탄 적용 값이다 (§5-10 · R340 · `option.value` 는 등급 값)
+    // 값은 칸의 `value` — 리더 · 장비 죄종 몫을 탄 적용 값이다 (§5-10 · §5-14 · `option.value` 는 단계 1 등급 값)
     const on = st.slots.filter(x => x.open && x.active).map(x => ({ ...x.option, value: x.value }));
     const bonus = SYS.tactic.bonusOf(on);
     const h = SYS.game.heroById(G2, SYS.game.partyOf(G2)[0]);
     const withParty = SYS.game.heroCombat(G2, h);
-    const bare = SYS.hero.computeCombat(h, SYS.game.heroItems(G2, h), SYS.game.codexOptions(G2));
+    const bare = SYS.hero.computeCombat(h, SYS.game.heroItems(G2, h).map(SYS.item.effective), SYS.game.codexOptions(G2));
     // 상시 피해 %는 **괄호 안의 합**으로 본다 — 최종 공격력은 반올림돼서 밑수가 작을 때 차이를 삼킨다 (§9-2)
     const pct = bonus.flat.atk_pct ?? 0;
     // 값은 비율이라 덧셈 꼬리가 남는다 (R111) — 허용치로 본다
     if (Math.abs(withParty.atk_pct_sum - bare.atk_pct_sum - pct) > 1e-12) fail(`상시 피해 % 합류 ${bare.atk_pct_sum} → ${withParty.atk_pct_sum} (기대 +${pct})`);
     if (Math.abs(withParty.crit_rate - bare.crit_rate - (bonus.flat.crit_rate ?? 0)) > 1e-12) fail('치명타 확률 채널이 안 맞는다');
     if ((bonus.dr.length > 0) !== (withParty.damage_reduction > bare.damage_reduction)) fail('피해 감소는 원천별 곱으로 들어가야 한다');
+    // 꺼진 칸(5랭크 — 처치 0)은 안 든다
+    if (st.slots[4].open && st.slots[4].active) fail('fixture: 처치 0 인데 5랭크가 켜졌다');
     // 벤치 영웅 — 파티 밖이라 전술이 안 붙는다
     G2.presets[G2.preset - 1].party = [SYS.game.partyOf(G2)[0]];
     const bench = G2.heroes.find(x => !SYS.game.partyOf(G2).includes(x.uid));
     const bc = SYS.game.heroCombat(G2, bench);
-    const bbare = SYS.hero.computeCombat(bench, SYS.game.heroItems(G2, bench), SYS.game.codexOptions(G2));
+    const bbare = SYS.hero.computeCombat(bench, SYS.game.heroItems(G2, bench).map(SYS.item.effective), SYS.game.codexOptions(G2));
     if (!eq(bc, bbare)) fail('벤치 영웅이 전술 효과를 받았다');
     return `켜진 칸 ${on.length} · 상시 피해 % ${bare.atk_pct_sum} → ${withParty.atk_pct_sum}`;
 });
-check('tactic: 편성 전술은 지정 죄종 3명 · 지정 직업 2명만 센다 — 다른 종류 셋 · 벤치 · 장비 태그는 대신 채우지 않는다 (2026-11-01)', () => {
-    const T = SYS.tactic, fs = T.families.filter(f => f.category === 'party');
-    const sins = Object.keys(M.SINS), classes = SYS.hero.mainClasses;
-    if (fs.length !== sins.length + classes.length) fail(`편성 풀 ${fs.length} ≠ 죄종 ${sins.length} + 직업 ${classes.length}`);
-    const sinsSeen = fs.filter(f => f.condKind === 'sin_count').map(f => f.condArg).sort();
-    const classesSeen = fs.filter(f => f.condKind === 'cls_count').map(f => f.condArg).sort();
-    if (!eq(sinsSeen, sins.slice().sort()) || !eq(classesSeen, classes.slice().sort())) fail('죄종·본편 직업이 빠지거나 중복됐다');
-    for (const f of fs) {
-        const sin = f.condKind === 'sin_count';
-        const list = sin ? sins : classes, other = list.find(x => x !== f.condArg);
-        const need = sin ? 3 : 2;
-        if (f.condN !== need) fail(`${f.id} 문턱 ${f.condN} ≠ ${need}`);
-        const o = T.optionOf({ id: f.id, grade: 'common' });
-        for (let matched = 0; matched <= 3; matched++) {
-            const members = Array.from({ length: 3 }, (_, i) => ({
-                sin: sin ? (i < matched ? f.condArg : other) : 'wrath',
-                cls: sin ? 'knight' : (i < matched ? f.condArg : other),
-                ldr: 10, front: i === 0, items: [{ sins: sin ? [f.condArg] : [] }],
-            }));
-            const m = T.measure(o, T.contextOf(members));
-            if (m.have !== matched || m.active !== (matched >= need)) fail(`${f.id} 지정 인원 ${matched} → ${m.have}/${m.need} ${m.active}`);
-        }
-    }
-    return `죄종 ${sinsSeen.length} · 직업 ${classesSeen.length} · 0~3명 경계 · 다른 종류·장비 태그 불인정`;
-});
-check('tactic: 편성 조건부 버프는 같은 능력치·등급의 무조건 버프보다 크다 — 조건을 맞춘 보상 (2026-11-01)', () => {
-    const T = SYS.tactic, unconditional = T.families.filter(f => f.category === 'always');
-    let pairs = 0;
-    for (const f of T.families.filter(f => f.category === 'party')) for (const base of unconditional.filter(b => b.stat === f.stat)) {
-        for (const grade of T.GRADES) if (!(f.grades[grade] > base.grades[grade])) fail(`${f.id}/${grade} ${f.grades[grade]} ≤ ${base.id} ${base.grades[grade]}`);
-        pairs++;
-    }
-    if (!pairs) fail('비교한 능력치가 없다');
-    return `${pairs}쌍 × 3등급 · 조건부 > 무조건`;
-});
-check('tactic: 편성 전술 리롤은 현재 파티와 무관하게 12개 목표를 균등 추첨한다 — 직전 옵션 제외 · 등급 별도 추첨 (2026-11-01)', () => {
-    const T = SYS.tactic, counts = {}, rng = makeRng(20261101);
-    for (let i = 0; i < 6000; i++) {
-        const r = T.pick(rng, [], 'party');
-        counts[r.id] = (counts[r.id] ?? 0) + 1;
-        if (!T.GRADES.includes(r.grade)) fail(`없는 등급 ${r.grade}`);
-        if (T.pick(makeRng(i + 1), [r.id], 'party').id === r.id) fail('직전 옵션이 다시 나왔다');
-    }
-    const fs = T.families.filter(f => f.category === 'party');
-    const mean = 6000 / fs.length;
-    for (const f of fs) if (!(counts[f.id] > mean * 0.75 && counts[f.id] < mean * 1.25)) fail(`${f.id} 횟수 ${counts[f.id]} — 한 계열이 누락되거나 추첨이 편향됐다`);
-    return `${fs.length}개 목표 · 6000회 · ${Math.min(...Object.values(counts))}~${Math.max(...Object.values(counts))}회`;
-});
-check('tactic: 편성 전술은 같은 직업 두 명으로 켜지고 파티 전체의 해당 전투 채널에 합류한다 · 벤치는 인원·효과에서 제외 (2026-11-01)', () => {
-    const rng = makeRng(812);
-    const G2 = openAll(SYS.game.newGame(812, ['mage', 'mage', 'knight'].map(cls => SYS.hero.rollHeroOf(rng, cls)), NOW));
-    const p = G2.presets[0], ids = p.party.slice();
-    p.tactics.slots[2] = { id: 'opt_party_cls_mage', grade: 'rare' };
-    const st = () => SYS.game.tacticState(G2).slots[1];
-    const h = SYS.game.heroById(G2, ids[0]);
-    if (!st().active || st().have !== 2) fail('마법사 둘인데 꺼졌다');
-    const bare = SYS.game.heroCombat(G2, h, []);
-    const buffed = SYS.game.heroCombat(G2, h);
-    if (!(buffed.action_period < bare.action_period)) fail('캐스팅 속도가 실제 행동 주기에 적용되지 않았다');
-    p.party = [ids[0], ids[2]];
-    if (st().active || st().have !== 1) fail('벤치 마법사를 인원에 셌다');
-    const bench = SYS.game.heroById(G2, ids[1]);
-    if (!eq(SYS.game.heroCombat(G2, bench), SYS.game.heroCombat(G2, bench, []))) fail('벤치가 전술 효과를 받았다');
-    return `마법사 2 → 1 · 행동 주기 ${bare.action_period} → ${buffed.action_period} · 벤치 제외`;
-});
-check('tactic: 옛 편성 옵션은 새 목표로 치환하고 등급·잠금·다른 칸을 보존한다 — 조회는 저장·골드·카운터 불변 (2026-11-01)', () => {
-    const G2 = newGameP(42, cands, NOW), T = SYS.tactic;
-    const beforeOthers = SYS.game.tacticState(G2).slots.filter(s => s.no !== 2);
-    for (const id of ['opt_sin_spread', 'opt_class_pair', 'opt_sin_trio']) for (const grade of T.GRADES) {
-        G2.presets[0].tactics = { slots: { 2: { id, grade } }, locked: [2] };
-        const before = JSON.stringify(G2);
-        const st = SYS.game.tacticState(G2), slot = st.slots[1];
-        if (T.legacyPartyIds.includes(slot.option.id) || slot.option.category !== 'party' || slot.option.grade !== grade || !slot.locked) fail(`${id}/${grade} 치환 · 등급 · 잠금`);
-        if (JSON.stringify(G2) !== before) fail('조회가 세이브를 바꿨다');
-        if (!eq(st.slots.filter(s => s.no !== 2), beforeOthers)) fail('다른 칸이 바뀌었다');
-        const back = SYS.game.deserialize(SYS.game.serialize(G2, NOW));
-        if (!eq(SYS.game.tacticState(back).slots[1], slot)) fail('세이브 왕복에서 치환 결과가 바뀌었다');
-    }
-    return '옛 3옵션 × 3등급 · 잠금 유지 · 조회 불변 · 세이브 왕복';
-});
-check('tactic: 조건은 편성에서 확정되는 것만 센다 — 편성을 바꾸면 카운터가 따라 움직인다 (§2-1)', () => {
+check('tactic: 2랭크는 그 칸 죄종의 영웅 수로 단계가 오른다 — 파티 전원의 채널에 합류 · 편성을 바꾸면 따라 움직인다 · 벤치는 인원 · 효과에서 제외 (§2-1 · §5-14)', () => {
     const G2 = newGameP(42, cands, NOW);
-    G2.heroes[0].level = 500;
-    // 첫 배정이 어느 옵션을 줄지는 시드가 정하므로, 세는 축을 보려면 그 칸에 **직접 꽂는다**.
-    // `party_size` 는 2026-09-02 폐기라(§5-4) 편성을 세는 살아 있는 어휘 중 하나로 본다
-    const opt = SYS.tactic.families.find(o => o.condKind === 'sin_count') ?? fail('풀에 sin_count 옵션이 없다');
-    const no = SYS.tactic.slotList.find(s => s.category === opt.category).no;   // 칸 = 상황(2026-09-27) — 그 종류의 칸에 꽂는다
-    G2.presets[G2.preset - 1].tactics.slots[no] = { id: opt.id, grade: 'common' };
-    for (const uid of SYS.game.partyOf(G2)) SYS.game.heroById(G2, uid).sin = opt.condArg;
-    const sins = SYS.game.partyOf(G2).map(uid => SYS.game.heroById(G2, uid).sin);
-    const before = SYS.game.tacticState(G2).slots[no - 1];
-    if (before.have !== sins.length || !before.active) fail(`카운터 ${before.have} ≠ 지정 죄종 인원 ${sins.length}`);
-    G2.presets[G2.preset - 1].party = [SYS.game.partyOf(G2)[0]];
-    const after = SYS.game.tacticState(G2).slots[no - 1];
-    if (after.have !== 1 || after.active) fail(`파티 1명인데 지정 죄종 ${after.have}명 · ${after.active}`);
-    if (after.have >= after.need && !after.active) fail('카운터가 문턱을 넘었는데 안 켜졌다');
-    return `지정 죄종 ${before.have}명(${before.active ? '켜짐' : '꺼짐'}) → 1명(${after.active ? '켜짐' : '꺼짐'})`;
+    for (const h of G2.heroes) h.level = B.hero_level_cap;
+    const p = G2.presets[G2.preset - 1], ids = p.party.slice();
+    const hero = uid => SYS.game.heroById(G2, uid);
+    hero(ids[0]).sin = 'wrath'; hero(ids[1]).sin = 'wrath'; hero(ids[2]).sin = 'envy';
+    p.tactics.slots[2] = { id: 'opt_wrath_crit_dmg', grade: 'rare' };
+    const slot = () => SYS.game.tacticState(G2).slots[1];
+    const o = SYS.tactic.optionOf({ id: 'opt_wrath_crit_dmg', grade: 'rare' }, 2);
+    let s = slot();
+    if (s.have !== 2 || s.step !== 2 || s.need !== 3 || !s.active || s.base !== SYS.tactic.valueAt(o, 2)) fail(`분노 둘 — ${s.have}/${s.need} 단계 ${s.step} 값 ${s.base}`);
+    hero(ids[2]).sin = 'wrath';
+    s = slot();
+    if (s.step !== 3 || s.need !== null || s.base !== SYS.tactic.valueAt(o, 3)) fail(`분노 셋 — 단계 ${s.step} · 다음 ${s.need}`);
+    // 파티 전원의 채널 — 치명타 피해가 오른다(운 계수를 타므로 크기만 본다)
+    const h = hero(ids[2]);
+    if (!(SYS.game.heroCombat(G2, h).crit_damage > SYS.game.heroCombat(G2, h, []).crit_damage)) fail('치명타 피해가 합류하지 않았다');
+    // 편성을 바꾸면 따라 움직인다 — 둘만 남기면 단계 2 · 하나면 1 · 0 이면 꺼짐
+    p.party = [ids[0], ids[1]];
+    if (slot().step !== 2) fail(`둘 남겼는데 단계 ${slot().step}`);
+    p.party = [ids[0]];
+    if (slot().step !== 1) fail(`하나 남겼는데 단계 ${slot().step}`);
+    hero(ids[0]).sin = 'pride';
+    s = slot();
+    if (s.active || s.step !== 0 || s.have !== 0 || s.base !== SYS.tactic.valueAt(o, 1)) fail(`분노 0 — 켜짐 ${s.active} · 값 ${s.base}(꺼져도 단계 1 값)`);
+    // 벤치 — 인원에도 효과에도 안 든다
+    const bench = hero(ids[1]);
+    if (!eq(SYS.game.heroCombat(G2, bench), SYS.game.heroCombat(G2, bench, []))) fail('벤치가 전술 효과를 받았다');
+    return `분노 2 → 단계 2 · 3 → 단계 3 · 편성 2 · 1 · 0 → 단계 2 · 1 · 꺼짐`;
 });
-
-check('tactic: 리롤은 가족과 등급을 **같이** 굴린다 — rng 는 가족 1회 → 등급 1회 순서로 2번 (§5-5 · INTERFACE §5-2)', () => {
-    // 같은 rng 를 두 번 태워 같은 답이 나오는지(결정론) · 등급이 실제로 굴러가는지(고정이 아닌지) 둘 다 본다
-    const roll = (seed, exclude = []) => SYS.tactic.pick(makeRng(seed), exclude);
-    if (!eq(roll(7), roll(7))) fail('같은 시드가 다른 것을 냈다');
-    const many = [];
-    for (let i = 1; i <= 400; i++) many.push(roll(i));
-    for (const r of many) {
-        if (!SYS.tactic.familyIds.includes(r.id)) fail(`없는 가족 ${r.id}`);
-        if (!SYS.tactic.GRADES.includes(r.grade)) fail(`없는 등급 ${r.grade}`);
-    }
-    const seen = SYS.tactic.GRADES.filter(g => many.some(r => r.grade === g));
-    if (seen.length !== SYS.tactic.GRADES.length) fail(`400번 굴려 나온 등급이 ${seen.join('/')} 뿐 — 등급이 안 굴러간다`);
-    // 가중치가 방향을 정한다 — 일반이 레어보다 흔해야 한다 (tactic_grade_weight_* 70/25/5)
-    const n = g => many.filter(r => r.grade === g).length;
-    if (!(n('common') > n('magic') && n('magic') > n('rare')))
-        fail(`가중치와 반대 방향 — 일반 ${n('common')} · 매직 ${n('magic')} · 레어 ${n('rare')}`);
-    // 제외는 **가족** 단위 — 등급이 달라도 같은 가족이면 안 나와야 한다
-    const drop = SYS.tactic.familyIds.slice(0, SYS.tactic.familyIds.length - 1);
-    for (let i = 1; i <= 30; i++) {
-        const r = roll(i, drop);
-        if (drop.includes(r.id)) fail(`제외한 가족 ${r.id} 가 나왔다`);
-    }
-    // rng 를 **2회** 쓴다 — 소비 횟수는 계약이다(같은 시드가 다른 게임이 된다 · INTERFACE §5-2)
-    let used = 0;
-    const probe = makeRng(11);
-    SYS.tactic.pick(() => { used++; return probe(); });
-    if (used !== 2) fail(`rng 소비 ${used}회 (기대 2 — 가족 1 + 등급 1)`);
-    return `일반 ${n('common')} · 매직 ${n('magic')} · 레어 ${n('rare')} / 400`;
-});
-
-check('tactic: 새 조건 — 리더(편성 첫 칸) · 전열의 직업 · 관계(같이 깬 칸 수 — 출발로는 안 센다 · 그 런은 지금까지 센 값 · 2026-09-29) (§5-8 · R134)', () => {
+check('tactic: 5랭크 함께 잡은 몬스터 수 — 이 셋의 키(순서 무관) · 출발로는 안 센다 · 도는 런은 출발 때 값(fixed.kills) · 편성의 칸은 지금 값 · 옛 스냅숏의 지운 조건 · 옛 가족은 빠진다 (§5-14 · D12 · D13)', () => {
     const G2 = newGameP(42, cands, NOW);
     for (const h of G2.heroes) h.level = B.hero_level_cap;       // 전 칸 개방
     const p = G2.presets[G2.preset - 1];
     const party = SYS.game.partyOf(G2);
-    const hero = uid => SYS.game.heroById(G2, uid);
-    // 칸 = 상황(2026-09-27) — 옵션은 **그 종류의 칸**에 꽂고 그 칸을 읽는다
-    const noOf = cat => SYS.tactic.slotList.find(s => s.category === cat).no;
-    const slot1 = id => { const no = noOf(SYS.tactic.families.find(f => f.id === id).category); p.tactics.slots[no] = { id, grade: 'common' }; return SYS.game.tacticState(G2).slots[no - 1]; };
-    // 능력치 합 — 파티 세 명의 그 기본 능력치를 더한다. 문턱 바로 아래면 꺼지고 문턱이면 켜진다 · 순서 · 자리와 무관하다
-    const strN = SYS.tactic.families.find(f => f.id === 'opt_attr_str').condN;
-    party.forEach(uid => { hero(uid).stats.str = Math.floor((strN - 1) / 3); });
-    hero(party[0]).stats.str += (strN - 1) % 3;
-    let s1 = slot1('opt_attr_str');
-    if (s1.active || s1.have !== strN - 1 || s1.need !== strN) fail(`힘 합 ${s1.have}/${s1.need} ${s1.active}`);
-    hero(party[2]).stats.str += 1;
-    s1 = slot1('opt_attr_str');
-    if (!s1.active || s1.have !== strN) fail(`힘 합이 문턱인데 ${s1.have}/${s1.need} ${s1.active}`);
-    p.formation = { tpl: '2-1', ranks: [[party[0], party[2]], [party[1]]] };
-    p.party = [party[1], party[0], party[2]];
-    if (!slot1('opt_attr_str').active) fail('순서 · 자리를 바꿨더니 능력치 합이 달라졌다');
-    p.party = party.slice();
-    // 전직 — 지정한 전직이 파티에 있어야 켜진다. 다른 전직으로는 안 켜진다
-    hero(party[0]).advance = 'bishop';
-    s1 = slot1('opt_adv_monk');
-    if (s1.active || s1.have !== 0) fail(`비숍인데 몽크 조건이 ${s1.have} ${s1.active}`);
-    hero(party[1]).advance = 'monk';
-    s1 = slot1('opt_adv_monk');
-    if (!s1.active || s1.have !== 1) fail(`몽크가 있는데 ${s1.have}/${s1.need} ${s1.active}`);
-    // 관계 — 이 인원의 키(순서 무관)로 센다 · **출발로는 안 센다**(이긴 칸마다 +1 — 「관계(bonds)」 단정 · 2026-09-29) · 그 런의 판정은 지금까지 센 값
+    const ks = SYS.tactic.slotList.find(s => s.condKind === 'kills_together');
+    p.tactics.slots[ks.no] = { id: 'opt_pride_fhr', grade: 'common' };
     const key = party.slice().sort().join('|');
-    G2.bonds[key] = 99;
-    s1 = slot1('opt_bond_100');
-    if (s1.active || s1.have !== 99 || s1.need !== 100) fail(`관계 ${s1.have}/${s1.need} ${s1.active}`);
+    G2.killsTogether[key] = ks.steps[0] - 1;
+    let s = SYS.game.tacticState(G2).slots[ks.no - 1];
+    if (s.active || s.have !== ks.steps[0] - 1 || s.need !== ks.steps[0]) fail(`처치 ${s.have}/${s.need} ${s.active}`);
     const d = SYS.game.departRun(G2, 1011, NOW);
     if (!d.ok) fail(`depart ${d.err}`);
-    if (d.run.fixed?.bond !== 99 || G2.bonds[key] !== 99) fail(`출발 뒤 관계 — 런 ${d.run.fixed?.bond} · 세이브 ${G2.bonds[key]} (99 · 99 여야 — 출발로는 안 센다)`);
-    if (d.run.tactics.some(o => o.id === 'opt_bond_100')) fail('출발 때 99 였는데 관계 칸이 스냅숏에 들었다');
-    G2.bonds[key] = 100;   // 이긴 칸이 하나 쌓였다 — 도는 런의 스냅숏은 그대로 · 편성의 칸은 지금 값으로 센다
-    if (!SYS.game.tacticState(G2).slots[noOf('bond') - 1].active) fail('100 이 됐는데 편성의 관계 칸이 안 켜졌다');
+    if (d.run.fixed?.kills !== ks.steps[0] - 1 || G2.killsTogether[key] !== ks.steps[0] - 1) fail(`출발 뒤 — 런 ${d.run.fixed?.kills} · 세이브 ${G2.killsTogether[key]} (출발로는 안 센다)`);
+    if (d.run.tactics.some(o => o.condKind === 'kills_together')) fail('출발 때 꺼졌는데 5랭크 칸이 스냅숏에 들었다');
+    G2.killsTogether[key] = ks.steps[0];   // 처치가 쌓였다 — 도는 런의 스냅숏은 그대로 · 편성의 칸은 지금 값으로 센다
+    if (!SYS.game.tacticState(G2).slots[ks.no - 1].active) fail('문턱에 닿았는데 편성의 5랭크 칸이 안 켜졌다');
     p.party = [party[2], party[1], party[0]];
-    if (SYS.game.tacticState(G2).slots[noOf('bond') - 1].have !== 100) fail('순서를 바꿨더니 같이 깬 칸 수가 달라졌다');
+    if (SYS.game.tacticState(G2).slots[ks.no - 1].have !== ks.steps[0]) fail('순서를 바꿨더니 처치 수가 달라졌다');
+    p.party = party.slice(0, 2);
+    if (SYS.game.tacticState(G2).slots[ks.no - 1].have !== 0) fail('한 명을 뺐는데 같은 조합으로 셌다');
     p.party = party.slice();
-    // 옛 세이브의 원정 스냅숏 — 지운 조건을 들고 있어도 던지지 않고 그 옵션만 빠진다
-    const live = SYS.game.runTactics(G2, { ...d.run, tactics: [{ id: 'opt_lead_knight', condKind: 'leader_cls', condArg: 'knight', condN: 1, polarity: 'has', stat: 'def_flat', value: 5 }] });
-    if (live.length) fail(`지운 조건의 스냅숏이 남았다 ${JSON.stringify(live)}`);
-    return `능력치 합 · 전직 · 관계 99 → 출발 → 100 · 옛 스냅숏의 지운 조건은 빠진다`;
+    // 옛 원정 스냅숏 — 지운 조건 · 옛 가족을 들고 있어도 던지지 않고 그 옵션만 빠진다
+    const live = SYS.game.runTactics(G2, { ...d.run, tactics: [
+        { id: 'opt_lead_knight', condKind: 'leader_cls', condArg: 'knight', condN: 1, polarity: 'has', stat: 'def_flat', value: 5 },
+        { id: 'opt_march_atk', grade: 'rare', condKind: 'none', stat: 'atk_pct', value: 0.05 },
+    ] });
+    if (live.length) fail(`옛 스냅숏이 남았다 ${JSON.stringify(live)}`);
+    return `처치 ${ks.steps[0] - 1} → 출발 → ${ks.steps[0]} · 순서 무관 · 다른 조합 0 · 옛 스냅숏 빠짐`;
 });
-check('tactic: 3번 능력치 합 · 4번 전직 옵션 — 능력치 7종 · 전직 15종이 하나씩 · 옵션 능력치는 전부 전투 값에 닿는다 (§5-12 · §5-13)', () => {
+check('tactic: 옵션 능력치는 전부 전투 값에 닿는다 — 19효과 22가족 · 장비 옵션과 같은 자리 · 경험치 획득은 그 런의 정산이 읽는다(runCombat) (§2-4 · §5-14)', () => {
     const T = SYS.tactic;
-    const got = kind => T.families.filter(f => f.condKind === kind).map(f => f.condArg).sort();
-    if (!eq(got('attr_sum'), D.heroAttributes.map(a => a.id).sort())) fail(`능력치 ${got('attr_sum')}`);
-    if (!eq(got('advance_count'), D.advanceRows.map(a => a.advance_id).sort())) fail(`전직 ${got('advance_count')}`);
-    const G2 = newGameP(42, cands, NOW);
-    const h = G2.heroes[0];
-    const base = JSON.stringify(SYS.hero.computeCombat(h, [], {}, { flat: {}, dr: [] }));
-    const added = T.families.filter(f => f.category === 'attr' || f.category === 'advance');
-    for (const f of added) {
-        const combat = JSON.stringify(SYS.hero.computeCombat(h, [], {}, { flat: { [f.stat]: f.grades.rare }, dr: [] }));
+    const rng = makeRng(812);
+    const G2 = openAll(SYS.game.newGame(812, ['mage', 'knight', 'archer'].map(cls => SYS.hero.rollHeroOf(rng, cls)), NOW));
+    const [mage, knight] = SYS.game.partyOf(G2).map(uid => SYS.game.heroById(G2, uid));
+    for (const f of T.families) {
+        // 캐스팅 속도는 마법 무기만 먹는다 — 마법사로 잰다 · 나머지는 물리 무기
+        const h = f.stat === 'cast_speed_pct' ? mage : knight;
+        const items = SYS.game.heroItems(G2, h).map(SYS.item.effective);
+        const base = JSON.stringify(SYS.hero.computeCombat(h, items, {}, { flat: {}, dr: [] }));
+        const combat = JSON.stringify(SYS.hero.computeCombat(h, items, {}, T.bonusOf([{ stat: f.stat, value: f.grades.rare }])));
         if (combat === base) fail(`${f.id} 의 ${f.stat} 가 전투 값을 안 바꾼다`);
     }
-    return `능력치 ${got('attr_sum').length} · 전직 ${got('advance_count').length} · 옵션 ${added.length} 전부 전투 값에 닿는다`;
+    // 탐욕 경험치 — 정산은 그 런의 전투 능력치(`runCombat`)에서 경험치 획득을 읽는다
+    for (const h of G2.heroes) h.level = 5;
+    const p = G2.presets[G2.preset - 1];
+    p.tactics.slots[1] = { id: 'opt_greed_xp', grade: 'rare' };
+    const d = SYS.game.departRun(G2, 1011, NOW);
+    if (!d.ok) fail(`depart ${d.err}`);
+    const xpOn = SYS.game.runCombat(G2, d.run, knight).option_fx?.xpGain ?? 0;
+    p.tactics.slots[1] = { id: 'opt_greed_gold', grade: 'rare' };   // 편성을 바꿔도 도는 런은 출발 때 것
+    const xpRun = SYS.game.runCombat(G2, d.run, knight).option_fx?.xpGain ?? 0;
+    const xpNow = SYS.game.heroCombat(G2, knight).option_fx?.xpGain ?? 0;
+    if (!(xpOn > 0) || xpRun !== xpOn || !(xpNow < xpOn)) fail(`경험치 획득 — 런 ${xpOn} · 편성 고친 뒤 런 ${xpRun} · 지금 편성 ${xpNow}`);
+    return `가족 ${T.families.length} 전부 전투 값에 닿는다 · 런의 경험치 획득 ${xpOn}`;
 });
-
 check('tactic: 칸은 편성마다 — 편성 2 에서 굴려도 편성 1 의 칸은 그대로 · 첫 배정 · 열린 칸 수는 모든 편성이 같다 (R129 · ADR-0250)', () => {
     const G2 = newGameP(42, cands, NOW);
     G2.heroes[0].level = 500;                     // 전 칸 개방
@@ -17566,8 +17795,8 @@ check('tactic: 칸은 편성마다 — 편성 2 에서 굴려도 편성 1 의 �
     return `편성 2 의 3번 ${a2[2]} → ${b2[2]} · 편성 1 그대로 · 열린 칸 ${opens[0]} × ${opens.length}`;
 });
 check('tactic: 원정은 **나간 편성의** 전술 칸으로 싸운다 — 다른 편성을 골라 두어도 전투가 한 글자도 안 다르다 (R129 · ADR-0250)', () => {
-    const strong = { id: 'opt_march_aspd', grade: 'rare' };
-    if (!SYS.tactic.optionOf(strong)) fail('fixture: opt_march_aspd 가 표에 없다');
+    const strong = { id: 'opt_sloth_aspd', grade: 'rare' };
+    if (!SYS.tactic.optionOf(strong)) fail('fixture: opt_sloth_aspd 가 표에 없다');
     const fight = (pick, copyToOne = false) => {
         const g = newGameP(42, cands, NOW);
         for (const h of g.heroes) h.level = B.hero_level_cap;

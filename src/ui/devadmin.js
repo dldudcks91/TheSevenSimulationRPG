@@ -2,7 +2,7 @@
  * devadmin.js — 관리자 모드 `Admin` (**개발 장치** · 2026-09-24 사용자 지시 · SCREEN_DESIGN §10-3)
  *
  * 상단바 언어 버튼 오른쪽의 `Admin` — **누르면 바로 아래에 판이 열린다 · 누르기만으로는 아무것도 안 넣는다** [2026-10-23 사용자 「어떤 것들을 추가할지」 · R332].
- *   판의 줄 = Unlock(켜기 · 끄기) · Gold · Materials · Blueprints · Hero([Add]). **게임 기능이 아니다.**
+ *   판의 줄 = Unlock(켜기 · 끄기) · Gold · Materials · Blueprints · Hero 둘(`admin_hero_level` · 만렙 `hero_level_cap` — [Add]). **게임 기능이 아니다.**
  *   판은 창 레이어가 아니다 — `Admin` 이나 × 로만 여닫고, 화면을 다시 그려도 열린 채다(페이지를 연 동안 · 상단바가 그려질 때마다 새로 붙는다).
  *
  * **Unlock** — 켜 두면 건물 때문에 막힌 것(탭 · 기능 · 상한)과 **스테이지가 열린 척한다**(이번 버전의 장까지 — 6 · 7장은 켜도 잠긴다 · ADR-0552).
@@ -39,6 +39,7 @@ const ROWS = [
     { id: 'materials',  label: 'Materials',  value: n => `${n} each` },
     { id: 'blueprints', label: 'Blueprints', value: n => `${n} each` },
     { id: 'hero',       label: 'Hero',       value: n => `Random Lv${n}` },
+    { id: 'heroCap',    label: 'Hero',       value: n => `Random Lv${n}` },   // 만렙 영웅 — 별 시험용 (2026-11-11 · SCREEN_DESIGN §10-3)
 ];
 
 let styled = false;

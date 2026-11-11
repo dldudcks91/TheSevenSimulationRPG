@@ -49,6 +49,8 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  *   armorGroups  — {slot: {groupId: {defMult, aspdPct, cdrPct, trait, ...}}} ← armor_group.csv — **부위 → 갈래** (2026-09-16 갑옷군 · R107 · 2026-09-18 네 부위).
  *                  **낀 방어구마다** 제 갈래의 공속 · 쿨감을 더한다 — 값이 있는 것은 갑옷군뿐이다. 투구 · 장갑 · 신발 갈래 특성(`trait`)은 드롭이 아이템 줄로 박아
  *                  접사 합산이 읽는다(2026-10-21 R303)
+ *   weaponBases  — {groupId: [{id, periodMult, …}]} ← weapon_base.csv — 든 무기(`item.baseId`)의 **계보 공속 배율**을 무기군에 먹인다
+ *                  (`formula.weaponLine` — 주기와 한 방에 같은 배율 · 2026-11-11 · R445). 없거나 행이 없는 베이스는 배율 1
  *   namePool     — 레어 영웅 이름 풀 [{ko,en}...]
  *   traitPool    — 시작 특성 풀 [{ko,en}...] (효과 미작성 — 이름표만 굴린다)
  *   skillPool    — **직업별** 고유 스킬 후보 `{classId: [skillId...]}` ← skill.csv **행 순서**(순서가 굴림 결과를 정한다).
@@ -74,6 +76,8 @@ export function createHeroSystem(data) {
     const skillPool = data.skillPool ?? {};      // {classId: [skillId...]} — 직업 풀 (skill_design §12)
     const starterPool = data.starterPool ?? {};  // {classId: [skillId...]} — 직업 풀의 1티어 · 첫 파티 고유만 (2026-10-16 · R271)
     const faceCounts = data.heroFaces ?? {};       // {classId: 장수} — 없는 직업은 0장 = 초상 없음
+    // 무기 베이스 id → 행 — 든 무기의 계보 공속 배율을 찾는다(`formula.weaponLine` · 2026-11-11 · R445). 행이 없는 베이스(옛 세이브의 퇴역 id)는 배율 1
+    const weaponBaseById = Object.fromEntries(Object.values(data.weaponBases ?? {}).flat().map(b => [b.id, b]));
     // 레벨 1 최대 HP — **직업마다** [2026-10-02 사용자 「궁수 · 마법사 50 · 사제 70」] · 빈 칸이면 전역 `hero_hp_base`
     const hpBaseOf = id => data.classes.find(c => c.id === id)?.hpBase ?? B.hero_hp_base;
     // 새 게임 첫 진형의 랭크 — `class.csv:start_row` 가 `back` 이면 1(후열) · 그 밖은 0(전열) (INTERFACE §2-4 · 2026-10-21 사용자 지시)
@@ -504,6 +508,18 @@ export function createHeroSystem(data) {
     const xpNeeded = level => XP_NEED.get(level);
 
     /**
+     * 만렙 뒤 별 [신설 2026-11-11 · hero_design §5 · INTERFACE §2-4] — 만렙에서 XP 를 버리지 않고 별을 하나씩 채운다.
+     *   별을 `n` 개 채운 영웅의 다음 별 = 레벨 1 → 만렙의 필요 XP 합 × `hero_star_xp_first` × `hero_star_xp_growth` ^ n (정수로 반올림) ·
+     *   `n` 이 `hero_star_max` 이상이면 `null`(더 찰 별이 없다). 레벨이 아니라 체력 · 적중 · 포인트는 안 바뀐다
+     */
+    if (!(Number.isInteger(B.hero_star_max) && B.hero_star_max >= 0)) throw new Error('hero: balance.csv 의 hero_star_max 가 0 이상 정수가 아니다');
+    if (!(B.hero_star_xp_first > 0) || !(B.hero_star_xp_growth > 0)) throw new Error('hero: balance.csv 의 hero_star_xp_first · hero_star_xp_growth 가 없거나 0 이하다');
+    let LEVEL_XP_TOTAL = 0;
+    for (let l = 1; l < B.hero_level_cap; l++) LEVEL_XP_TOTAL += xpNeeded(l);
+    const starXpNeeded = n => Number.isInteger(n) && n >= 0 && n < B.hero_star_max
+        ? Math.round(LEVEL_XP_TOTAL * B.hero_star_xp_first * B.hero_star_xp_growth ** n) : null;
+
+    /**
      * XP 지급 → 레벨업 처리.
      * **일반 영웅의 기본 능력치는 레벨업으로 안 바꾼다** [hero_design §4-3 · R83] — 만렙 이후 수동 성장분도 자동 지급하지 않는다.
      *   ~~레벨업마다 축별 [balance.csv:attr_growth_chance_pct]% 확률로 +1~~ 은 폐지됐다 — 7축을 공통 상한으로 모아
@@ -530,16 +546,23 @@ export function createHeroSystem(data) {
         return gains;
     }
     function grantXp(hero, amount, rng) {
-        // 레벨 상한 — 상한에 닿으면 XP 를 쌓지 않는다 (GAME_DESIGN §9 08-26 「레벨 상한 99」).
-        // 남은 XP 를 들고 있어 봐야 쓸 곳이 없고, 세이브에 의미 없는 잔량이 남는다
-        if (hero.level >= B.hero_level_cap) { hero.xp = 0; return null; }
-        hero.xp += amount;
         const from = hero.level;
+        hero.xp += amount;
         while (hero.level < B.hero_level_cap && hero.xp >= xpNeeded(hero.level)) {
             hero.xp -= xpNeeded(hero.level);
             hero.level += 1;
         }
-        if (hero.level >= B.hero_level_cap) hero.xp = 0;
+        // 만렙 뒤 별 [2026-11-11 · hero_design §5] — 만렙의 XP 는 다음 별로 쌓는다(이 지급의 남은 XP 도 이어진다) ·
+        //   별이 다 차면 더 안 쌓는다(남겨 봐야 쓸 곳이 없다 · ~~상한에서 XP 를 버린다~~). 별은 반환에 안 적는다 — 레벨업 회복 · 책이 별에 안 걸린다
+        if (hero.level >= B.hero_level_cap) {
+            let stars = hero.stars ?? 0;
+            for (let need = starXpNeeded(stars); need !== null && hero.xp >= need; need = starXpNeeded(stars)) {
+                hero.xp -= need;
+                stars += 1;
+            }
+            if (stars > 0) hero.stars = stars;
+            if (starXpNeeded(stars) === null) hero.xp = 0;
+        }
         // 공용 스킬 포인트 — 매 레벨업 지급. 죄종·직업 마스터리와 전직 메인·꼬리가 masteryPoints 지갑을 공유한다 (2026-11-01).
         const points = (hero.level - from) * B.mastery_point_per_level;
         if (points > 0) hero.masteryPoints = (hero.masteryPoints ?? 0) + points;
@@ -693,7 +716,8 @@ export function createHeroSystem(data) {
             if (channel && typeof a.skill === 'string' && a.skill.length > 0 && Number.isFinite(a.v) && a.v > 0)
                 procs[channel].push({ skill: a.skill, chance: Math.min(1, a.v), level: procSkillLevel(a.skillLv) });
         }
-        const group = weapon ? data.weaponGroups[weapon.group] ?? null : null;
+        // 무기군 × **계보 배율**(그 무기의 베이스 행 — 주기와 한 방에 같은 배율 · 평타 DPS 불변 · 2026-11-11 · R445). 배율이 1 이면 무기군 그대로다
+        const group = weapon ? F.weaponLine(data.weaponGroups[weapon.group] ?? null, weaponBaseById[weapon.baseId] ?? null) : null;
         const magic = group?.damageKind === 'magic';
         // 밑수 = **무기 피해 범위**(양끝 · 무기군 × ilvl × 강화에서 파생 · R90) + 무기 슬롯 접사의 고정 공격력(양끝에 같이). 맨손이면 양끝 모두 unarmed_atk
         //   ⚠ 2026-09-11 R78 부터 새 무기에는 `atk_flat` 이 안 붙는다(최소/최대 피해 보류) — 옛 무기만 든다
@@ -879,7 +903,7 @@ export function createHeroSystem(data) {
     }
 
     return {
-        rollAttributes, rollAttributesTrace, attrCenters, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, avoidNames, rollHeroOf, rollGoblin, xpNeeded, grantXp, computeCombat,
+        rollAttributes, rollAttributesTrace, attrCenters, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, avoidNames, rollHeroOf, rollGoblin, xpNeeded, starXpNeeded, grantXp, computeCombat,
         masteryNodes, masteryById, masteryNodesFor, masteryBonus, masteryWiden, gateOn, sinGearCount, levelScaled,
         classIds: data.classes.map(c => c.id),   // 「직업 순」 = `class.csv` 행 순서 — 책 정렬(`game.sortBooks`)이 읽는다 (2026-10-14 · ADR-0620)
         mainClasses: mainClasses.slice(),        // 본편 직업 — 결투장 등급 상대가 직업 셋을 여기서 뽑는다 (INTERFACE §2-17 · 2026-10-17)

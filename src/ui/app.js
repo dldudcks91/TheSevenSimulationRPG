@@ -333,7 +333,7 @@ const skillImg = s => {
     return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : s?.id ? '<i class="sk-noart"></i>' : '';
 };
 /* 아이템 그림 — 무기 · 방어구 둘 다 **개체가 든 `baseId` 의 그림**이다 (SCREEN_DESIGN §2 · 규칙은 `mock.itemArt` 한 곳 · 방어구 2026-09-17).
-   무기는 그 무기군의 베이스 7장 중 하나를 든다. 개체가 `weapon_base.csv` 로 실제 그 베이스를
+   무기는 그 무기군의 베이스 그림 중 하나를 든다(그림이 아직 없는 베이스는 같은 무기군 그림 하나 — `mock.itemArt` · R445 임시). 개체가 `weapon_base.csv` 로 실제 그 베이스를
    굴렸으면(`item.baseId` · 2026-09-10 · game_logic/item.js) **그 그림**이고, 이름도 같은 베이스로 이미 붙어 있다 —
    그림과 이름이 어긋나지 않는다. `baseId` 가 없는 옛 개체(이 기능 전에 드롭된 것)만 `uid` 해시로 예전처럼 고른다.
    그림이 없는 부위·베이스(투구 · 장갑 · 신발 · 장신구)는 부위 이모지로 떨어진다 — 부위는 스킬과 달리 해시 폴백을 안 쓴다(틀린 그림 = 틀린 정보) */
@@ -413,10 +413,10 @@ const state = {
     screen: 'menu',         // menu | start | prologue | game — 켜면 메뉴 (SCREEN_DESIGN §3 · ADR-0641)
     tab: 'expedition',
     // `unfold` = Party 버튼을 누른 직후 첫 그리기에만 우리 팀 아래 진형 · 물약 · 전술이 차례로 내려오는 연출을 단다(그 그리기가 끈다 · ADR-0497)
-    //   콜로세움(`arena`) — `cands` = 상대 후보 셋(`arena.rollRatedCandidates`) · `pick` = 고른 칸(0 · 1 · 2 · 'ghost') · `ghost` = 친선전으로 받은 팀 · `code` · `paste` = 친선전 창의 두 글상자 ·
-    //   `problems` · `broken` = 불러오기 결과 · `fresh` = 결투 뒤 돌아오면 후보를 새로 굴린다 · `toast` = 돌아오면 띄울 플래시 —
-    //   전부 화면 상태다(세이브 아님 — 레이팅만 세이브 · ADR-0670)
-    arena: { owner: null, match: null, last: null, unfold: false, cands: null, pick: 1, ghost: null, code: '', paste: '', problems: null, broken: false, fresh: false, toast: null },
+    //   콜로세움(`arena`) — `cands` = 상대 후보(`arena.rollRatedCandidates` — 수는 `arena_pick_count`) · `pick` = 고른 칸(0 ~ 후보 수 − 1 · 'friend') · `friend` = 친구와 전투 목록에서 고른 친선전 상대 ·
+    //   `reg` · `forceReg` = 등록 판 · `users` = 친구와 전투 창 · `fresh` = 결투 뒤 돌아오면 후보를 새로 굴린다 · `toast` = 돌아오면 띄울 플래시 —
+    //   전부 화면 상태다(세이브 아님 — 레이팅 · 방어 편성만 세이브 · ADR-0670 · ADR-1042) · 칸 목록은 `arenaReset`
+    arena: { owner: null, match: null, last: null, unfold: false, cands: null, pick: 1, friend: null, reg: null, forceReg: false, users: null, fresh: false, toast: null },
     // 결투장(`colosseum`) — `floor` = 고른 층(null = 다음 층) · `opp` = 그 층 상대의 캐시 `{key, team}`(같은 층은 같은 팀 · 그릴 때마다 다시 굴리지 않는다) · `toast` = 돌아오면 띄울 휘장 플래시 ·
     //   화면 상태다(오른 층만 세이브 · ADR-0670)
     colosseum: { owner: null, match: null, last: null, unfold: false, floor: null, opp: null, toast: null },
@@ -483,6 +483,7 @@ const state = {
     forgeItem: null,             // 대장간에서 직접 고른 장비 uid — 진입 시 비운다
     makePart: null,              // 제작 칸에서 고른 부위 — 없으면 부위 목록의 첫 칸 · 'potion' 이면 물약 칸 (SCREEN_DESIGN §8-2 · ADR-0219)
     makeLevel: null,             // 제작 칸에서 고른 레벨(Lv1 · Lv10 …) — 없으면 첫 레벨 (ADR-0263)
+    makeLine: null,              // 제작 무기에서 고른 계보(fast · mid · slow) — 없거나 그 레벨에 없으면 첫 계보 (ADR-1044 · R445)
     forgeTab: 'up',              // 대장간의 작업 탭 — 'make' | 'up' | 'synth' | 'craft' (ADR-0142 · 합성 ADR-0856 · `?fg=` 로도 연다) · 탭 버튼은 언제나 강화 (ADR-0962)
     cnPick: null,                // 건설 탭에서 고른 건물 id — null 이면 지금 지을 수 있는 첫 건물 (SCREEN_DESIGN §13-1 · ADR-0304)
     shopPotionN: 1,              // 상단 물약을 한 번에 살 수 — 사기 줄 ×n 이 고른다 (§8-3 · 2026-10-23)
@@ -583,6 +584,8 @@ function renderShell() {
                 if (id === 'expedition') state.exp = 'idle';
                 if (id === 'forge') { state.forgeTab = 'up'; state.forgeItem = null; }
                 render();
+                // 콜로세움에 들어오면 남의 방어 편성을 받는다 — 간격 안이면 안 받는다 · 받으면 후보를 새로 굴린다 (SCREEN_DESIGN §1 「온라인 데모」 · ADR-1042)
+                if (id === 'arena') arenaPull(false, true);
             };
             nav.appendChild(b);
         }
@@ -627,6 +630,8 @@ function renderShell() {
             for (const { id } of SYS.skill.list) if (SYS.skill.bookable(id)) top(G.blueprints, id, AB.admin_blueprints);
         }) },
         hero: { n: AB.admin_hero_level, full: !!G && G.heroes.length >= SYS.game.limitsOf(G).roster, run: add(() => SYS.game.adminHero(G, null, AB.admin_hero_level)) },
+        // 만렙 영웅 — 별 시험용(별 0개 · 경험치 0 으로 선다) [2026-11-11 사용자 「50레벨 영웅 주는 기능 넣어봐 Hero Random Lv30 아래에」 · SCREEN_DESIGN §10-3]
+        heroCap: { n: AB.hero_level_cap, full: !!G && G.heroes.length >= SYS.game.limitsOf(G).roster, run: add(() => SYS.game.adminHero(G, null, AB.hero_level_cap)) },
     });
     // 아트 스타일 고르개는 상단바에 안 선다 — ⚙ 설정 첫 줄 · 도감에 있다 [2026-10-06 사용자 지시 · SCREEN_DESIGN §2-2]
     // 원정 플레이 시간 — ⚙ 바로 왼쪽 · 게임 화면에서만 [2026-09-25 · SCREEN_DESIGN §2 · ADR-0356 · 2026-10-05 · ADR-0514]. `data-exp-time` — 앱 시계가 눈금마다 이 숫자만 갈아 끼운다(`refreshExpTime`)
@@ -995,6 +1000,8 @@ const MODALS = {
     dismiss: { title: 'ch.dismiss', body: dismissBody },
     // 스킬 덮어쓰기 확인 — 도서관 읽기 줄의 [덮어쓰기]가 연다 · 머리 줄 없이 문장 + 답 둘(출정 확인 창과 같다) · 그새 덮어쓰기가 아니게 되면 닫힌다 (SCREEN_DESIGN §17 · ADR-1020)
     bookOverwrite: { bare: true, body: bookOverwriteBody, gone: () => !G || !bookOverwriteOf() },
+    // 별 넣기 확인 — 능력치 줄의 [+] 가 연다 · 되돌릴 수 없어서 두 번 누르게 한다 · 그새 쓸 별 · 줄이 사라지면 닫힌다 (SCREEN_DESIGN §6 · ADR-1043)
+    starSpend: { bare: true, body: starSpendBody, gone: () => !G || !starSpendOf() },
     // ~~스킬 우선순위 창 `skillOrder`~~ — 2026-11-02 걷었다(SCREEN_DESIGN §6 · ADR-1035 · R427 — 스킬 순서를 정하는 화면은 없다)
     /* 출정 — 스테이지를 누르면 뜨는 창 [2026-09-10 사용자 지시 · ADR-0084 · SCREEN_DESIGN §4-1].
        옛 접이식 전진 패널이 통째로 이 창이 됐다. `head` 를 주는 첫 창이다 — 제목이 i18n 키 하나가 아니라
@@ -1020,8 +1027,10 @@ const MODALS = {
     mg: { head: mgHead, body: mgBody, cls: 'mg-modal', gone: () => !mgCur() },
     // 연구소 줄 등록 — 고른 칸의 등록 자리가 연다 (SCREEN_DESIGN §8 · ADR-0677) · 줄 = 고른 줄 · 그 줄이 닫혀 있으면 닫힌다(`gone`)
     labReg: { head: labRegHead, body: labRegBody, cls: 'lr-modal', gone: () => !G || !SYS.game.labState(G, now()).lines.find(l => l.line === labRegPost().id)?.open },
-    // 친선전 — 콜로세움 레일의 [친선전]이 연다 · 팀 코드 글상자 둘(SCREEN_DESIGN §1 · ADR-0670) · 받은 팀이 서면 닫힌다
-    arenaCode: { title: 'ar.code.h', body: arenaCodeBody, cls: 'ar-code-modal' },
+    // 친구와 전투 목록 — 콜로세움 레일의 [친구와 전투]가 연다 · 찾기 줄 + 목록(SCREEN_DESIGN §1 · ADR-1042) · 한 사람을 고르면 닫힌다(친선전 상대)
+    arenaUsers: { title: 'ar.users', body: arenaUsersBody, cls: 'ar-users-modal' },
+    // 리그 창 — 콜로세움 리그 카드의 [전체 리그]가 연다 · 보기 전용 (SCREEN_DESIGN §1 「리그 창」 · ADR-1046)
+    arenaLeagues: { title: 'ar.leagues', body: arenaLeaguesBody, cls: 'ar-leagues-modal', gone: () => !G },
     // 우편함 — 상단바 골드 오른쪽 편지봉투가 연다 (SCREEN_DESIGN §2 「상단바」 · ADR-0732 · R328)
     mail: { title: 'mail.h', body: mailBody, cls: 'mail-modal' },
 };
@@ -1039,7 +1048,7 @@ function renderModal() {
     if (m.vars) for (const [k, v] of Object.entries(m.vars())) box.style.setProperty(k, v);
     const head = el('div', 'modal-head');
     // `head` 를 주면 제목 줄을 통째로 갈아 끼운다 — 안 주면 i18n 키 하나가 든다(창 대부분이 이쪽이다)
-    const modalHints = { skill: 'skills', dismiss: 'dismiss', frozen: 'frozen',gamble: 'gamble', arenaCode: 'team_code', mail: 'mail' };
+    const modalHints = { skill: 'skills', dismiss: 'dismiss', frozen: 'frozen',gamble: 'gamble', arenaUsers: 'users', mail: 'mail' };
     if (!m.bare) head.appendChild(m.head ? m.head() : helpHeading('h2', '', t(m.title), modalHints[state.modal] ?? 'help'));
     // 이름 하나뿐인 머리 = 패널 제목 크기 + 머리 아래 판 전폭 선 (§2 창 레이어 · ADR-0744) — 갈아 끼우는 머리는 제 규칙을 든다
     if (!m.head) head.classList.add('plain');
@@ -1152,22 +1161,28 @@ function settingsBody() {
     logSet.appendChild(segmented(LOG_STYLES.map(s => ({ id: s, label: t(s === 'grid' ? 'set.logGrid' : 'set.logText') })),
         logStyle(), id => { setLogStyle(id); box.replaceWith(settingsBody()); }));
     box.appendChild(logSet);
-    // 닉네임 — 퍼널 페이지가 유저를 알아보는 이름 · 게임 안엔 안 찍힌다 · 이 브라우저에만 (§2-1 · §2-2 · ADR-0633).
-    //   칸을 떠나거나 Enter 로 정한다 — 다시 그리지 않는다(다음 올리기가 가져간다)
+    // 닉네임 — 콜로세움의 이름(뒤에 태그)이자 퍼널 페이지가 유저를 알아보는 이름 · 이 브라우저에만 (§2-1 · §2-2 · ADR-0633 · ADR-1042).
+    //   칸을 떠나거나 Enter 로 정한다 — 다시 그리지 않는다 · `#` 는 안 들어간다(태그 자리) · 이미 이름이 있으면 비워서 정할 수 없다(앞 이름으로 돌아간다) ·
+    //   정하면 곧바로 올린다(콜로세움 방어 편성의 이름이 바뀐다)
     const nickRow = el('div', 'set-row');
     nickRow.appendChild(el('span', 'set-k', t('set.nick')));
+    const nickCell = el('span', 'set-nick-cell');
     const nick = el('input', 'set-nick');
     nick.maxLength = NICK_MAX;
     nick.spellcheck = false;
     nick.value = loadTrack().nick;
+    nick.oninput = () => { if (nick.value.includes('#')) nick.value = cleanNick(nick.value, false); };
     nick.onchange = () => {
-        const rec = loadTrack();
-        rec.nick = nick.value.trim().slice(0, NICK_MAX);
+        const rec = loadTrack(), v = cleanNick(nick.value);
+        if (v || !rec.nick) rec.nick = v;
         writeTrack(rec);
         nick.value = rec.nick;
+        trackPush();
     };
     nick.onkeydown = e => { if (e.key === 'Enter') nick.blur(); };
-    nickRow.appendChild(nick);
+    nickCell.appendChild(nick);
+    if (arenaNet.me) nickCell.appendChild(el('small', 'ar-tag', tagText(arenaNet.me)));
+    nickRow.appendChild(nickCell);
     box.appendChild(nickRow);
     mountFocusCompare(box);   // 임시 — 마지막 줄 Focus [Off | Stop | Dim] (devcompare.js · SCREEN_DESIGN §10-2) · Card [Before | After] 는 걷었다(ADR-0566)
     mountSkinCompare(box);    // 임시 — 맨 끝 줄 Skin [Now | D2 Min] (devcompare.js · SCREEN_DESIGN §10-5 · ADR-0791)
@@ -1357,16 +1372,32 @@ const NICK_MAX = 16;
 const TRACK_ON = !DEV_HOST && !new URLSearchParams(location.search).has('dev');
 // 이 탭이 마지막으로 올린 것(세이브 저장 시각 + 닉네임) — 같으면 안 올린다. 화면 상태가 아니라서 `state` 밖에 둔다
 const track = { sent: null, busy: false };
-// 콜로세움 데모 받기 간격 — 결투 뒤 이만큼 지났을 때만 다시 받는다(켤 때는 늘). 무료 한도(하루 읽기) 사정이라 CSV 가 아니다 (위와 같은 선례 · arena_design §9)
-const ARENA_PULL_MS = 10 * 60 * 1000;
-/* 콜로세움 데모 (SCREEN_DESIGN §1 「온라인 데모」 · ADR-1040 · arena_design §9) — 받은 고스트 · 방어 기록 · 마지막으로 올린 방어 편성.
+// 콜로세움 데모 받기 간격 — 콜로세움 탭에 들어올 때 · [새 상대] · 결투 뒤에 받되, 마지막 시도에서 이만큼 지났을 때만(켤 때는 늘).
+//   연타 · 탭 오가기를 막는 간격이다 — 무료 한도(하루 읽기) 사정이라 CSV 가 아니다 (위와 같은 선례 · arena_design §9 · ADR-1042)
+const ARENA_PULL_MS = 60 * 1000;
+/* 콜로세움 데모 (SCREEN_DESIGN §1 「온라인 데모」 · ADR-1040 · ADR-1042 · arena_design §9) — 받은 고스트 · 방어 기록 · 마지막으로 올린 방어 편성.
    `pool` = 검사를 지난 고스트 `[{id, nick, rating, team}]`(null = 아직 못 받음) · `log` = 방어 기록 · `nicks` = 고스트 id → 닉네임(후보가 든 id 를 푼다) ·
-   `sent` = 마지막으로 올린 방어 편성 묶음(같으면 안 올린다) · `drop` = 해제했고 아직 못 지웠다 · `fake` = `?dev=arena&ghosts=1` 의 가짜 */
-const arenaNet = { pool: null, log: null, nicks: new Map(), at: 0, busy: false, sent: null, drop: false, fake: false };
+   `at` = 마지막 받기 **시도** 시각(실패해도 간격을 지킨다) · `me` = 내 계정 id(태그 — 모르면 null) ·
+   `sent` = 마지막으로 올린 방어 편성 묶음(같으면 안 올린다) · `drop` = 해제했고 아직 못 지웠다(화면에 해제가 없다 — 어댑터의 길만 남았다) · `fake` = `?dev=arena&ghosts=1` 의 가짜 */
+const arenaNet = { pool: null, log: null, nicks: new Map(), at: 0, busy: false, sent: null, drop: false, fake: false, me: null };
 const ARENA_DEF_RESULT = { win: 'loss', draw: 'draw', loss: 'win' };   // 공격자의 결과 → 방어자 쪽 결과
 /** 남이 정한 문자열을 화면 HTML 에 넣기 전에 — 닉네임 · 지난 기록 (받은 팀은 `validateTeam` 의 `text` 사유가 거른다) */
 const escHtml = s => String(s ?? '').replace(/[&<>"'`]/g, c => `&#${c.charCodeAt(0)};`);
 const arenaNick = nick => (typeof nick === 'string' && nick.trim() ? escHtml(nick.trim().slice(0, NICK_MAX)) : t('ar.noName'));
+/** 이름 칸에 친 글 → 이름 — `#` 는 태그 자리라 빼고(ADR-1042) · `trim` 이면 앞뒤 공백을 자르고 상한까지 */
+const cleanNick = (v, trim = true) => { const s = String(v ?? '').replace(/#/g, ''); return trim ? s.trim().slice(0, NICK_MAX) : s; };
+/** 계정 id → `#0427` (태그 — `cloud.js:tagOf`) */
+const tagText = uid => `#${String(CLOUD.tagOf(uid)).padStart(4, '0')}`;
+/** 이름 + 태그 HTML — 계정을 모르면 이름만 */
+const arenaWho = (nick, uid) => `${arenaNick(nick)}${uid ? `<small class="ar-tag">${tagText(uid)}</small>` : ''}`;
+/** 받은 방어 편성 한 줄 → 쓸 수 있는 팀(`importTeam` 을 지난 것) · 못 쓰면 null — 후보 고스트 · 친구와 전투 목록이 같이 쓴다 */
+function arenaGhostOf(x) {
+    let payload = null;
+    try { payload = JSON.parse(x.team); } catch { return null; }
+    const r = SYS.arena.importTeam(payload);
+    if (!r.ok || !Number.isInteger(x.rating) || x.rating < 0) return null;
+    return { id: x.id, nick: x.nick, rating: x.rating, team: r.team };
+}
 
 /** 진행 요약 — 세이브에서 칸을 **고르기만** 한다. 칸의 뜻은 INTERFACE §4 「플레이 기록」 */
 function trackSummary(local, rec) {
@@ -1429,33 +1460,32 @@ function arenaUpload(nick) {
     return key === arenaNet.sent ? null : { doc, key };
 }
 
-/** 받기 — 켤 때(`force`) · 결투 뒤 간격이 지났을 때. 개발 환경은 안 받는다 (SCREEN_DESIGN §1 「온라인 데모」) */
-async function arenaPull(force = false) {
-    if (!TRACK_ON || frozen || arenaNet.busy) return;
-    if (!force && now() - arenaNet.at < ARENA_PULL_MS) return;
+/** 받기 — 켤 때(`force`) · 콜로세움 탭에 들어올 때 · [새 상대] · 결투 뒤 — 마지막 시도에서 간격이 지났을 때만. 개발 환경은 안 받는다 (SCREEN_DESIGN §1 「온라인 데모」 · ADR-1042).
+ *  `reroll` = 받으면 후보를 새로 굴린다(탭 진입 · [새 상대]). 받았으면 true — 안 받았거나(간격 · 환경) 실패면 false */
+async function arenaPull(force = false, reroll = false) {
+    if (!TRACK_ON || frozen || arenaNet.busy) return false;
+    if (!force && now() - arenaNet.at < ARENA_PULL_MS) return false;
     arenaNet.busy = true;
+    arenaNet.at = now();   // 시도 시각 — 실패해도 간격을 지킨다(규칙 게시 전 · 끊긴 동안 탭을 오갈 때마다 다시 부르지 않게)
     const r = await CLOUD.pullArena();
     arenaNet.busy = false;
-    if (!r.ok) return;
-    arenaNet.at = now();
-    arenaTake(r.teams.filter(x => x.id !== r.me), r.log);
+    if (!r.ok) return false;
+    arenaNet.me = r.me;
+    arenaTake(r.teams.filter(x => x.id !== r.me), r.log, false, reroll);
+    return true;
 }
 
-/** 받은 것을 화면 상태로 — 팀은 `importTeam` 을 지난 것만 · 처음 받으면 후보를 새로 굴린다(관전 중이면 돌아올 때) */
-function arenaTake(teams, log, quiet = false) {
+/** 받은 것을 화면 상태로 — 팀은 `importTeam` 을 지난 것만 · 처음 받으면(또는 `reroll`) 후보를 새로 굴린다(관전 중이면 돌아올 때) */
+function arenaTake(teams, log, quiet = false, reroll = false) {
     const first = arenaNet.pool === null;
-    arenaNet.pool = teams.map(x => {
-        let payload = null;
-        try { payload = JSON.parse(x.team); } catch { return null; }
-        const r = SYS.arena.importTeam(payload);
-        if (!r.ok || !Number.isInteger(x.rating) || x.rating < 0) return null;
-        arenaNet.nicks.set(x.id, x.nick);
-        return { id: x.id, rating: x.rating, team: r.team };
-    }).filter(Boolean);
-    arenaNet.log = log.filter(x => x && x.result in ARENA_DEF_RESULT && Number.isInteger(x.rating));
-    if (first && arenaNet.pool.length) state.arena.fresh = true;
-    // 글상자를 치는 중(친선전 창)이면 다시 그리지 않는다 — 커서를 잃는다
-    if (!quiet && state.tab === 'arena' && !state.modal) render();
+    arenaNet.pool = teams.map(arenaGhostOf).filter(Boolean).map(g => {
+        arenaNet.nicks.set(g.id, g.nick);
+        return { id: g.id, rating: g.rating, team: g.team };
+    });
+    arenaNet.log = log.filter(x => x && x.result in ARENA_DEF_RESULT && Number.isInteger(x.rating)).map(x => ({ ...x, friendly: x.friendly === true }));
+    if (reroll || (first && arenaNet.pool.length)) state.arena.fresh = true;
+    // 글 칸을 치는 중(친구와 전투 창 · 등록 판)이면 다시 그리지 않는다 — 커서를 잃는다
+    if (!quiet && state.tab === 'arena' && !state.modal && !arenaGateOpen(state.arena)) render();
 }
 
 /** 다른 탭이 세이브를 썼다 — 이 탭은 저장 · 원정 시계 · 올리기를 멈추고 멈춤 창만 남긴다. 먼저 쓴 쪽이 남는다 (§2-1) */
@@ -1639,10 +1669,14 @@ const expScreen = () => (state.exp === 'battle' && state.battle ? 'battle' : sta
 /* ═══════════ 결투장(`colosseum` · 층 사다리) · 콜로세움(`arena` · ELO) (SCREEN_DESIGN §1 · ADR-0670 · 이름 맞바꿈 ADR-0760) ═══════════
    두 탭은 뼈대가 같다 — 왼쪽 레일(상대의 출처 · 결과가 움직이는 것)만 다르고 오른쪽 판은 `arenaStage` 하나가 그린다 */
 
-/** 콜로세움(`arena`) 화면 상태를 그 세이브의 처음으로 — 후보는 처음 그릴 때 굴린다 */
+/** 콜로세움(`arena`) 화면 상태를 그 세이브의 처음으로 — 후보는 처음 그릴 때 굴린다.
+ *  `friend` = 친구와 전투 목록에서 고른 친선전 상대 `{id, nick, rating, team}` · `pick` = 고른 칸(0 ~ 후보 수 − 1 · 'friend') ·
+ *  `reg` = 등록 판에 친 것 `{nick, no}` · `forceReg` = 등록했어도 등록 판을 세운다(`?dev=arena&reg=1`) · `users` = 친구와 전투 창 `{q, rows, cursor, busy}` (ADR-1042) */
 const arenaReset = A => Object.assign(A, {
-    owner: G, match: null, last: null, unfold: false, cands: null, pick: 1, ghost: null, code: '', paste: '', problems: null, broken: false, fresh: false, toast: null,
+    owner: G, match: null, last: null, unfold: false, cands: null, pick: 1, friend: null, reg: null, forceReg: false, users: null, fresh: false, toast: null,
 });
+/** 등록 판이 서나 — 이름이 비었거나 방어 편성이 없다 (SCREEN_DESIGN §1 「등록 판」 · ADR-1042) */
+const arenaGateOpen = A => !!G && (A.forceReg || !cleanNick(loadTrack().nick) || SYS.game.arenaDefense(G) === null);
 /** 결투장(`colosseum`) 화면 상태를 그 세이브의 처음으로 — 고른 층은 다음 층부터 */
 const colosseumReset = C => Object.assign(C, { owner: G, match: null, last: null, unfold: false, floor: null, opp: null, toast: null });
 /** 고른 편성의 영웅 — 판 · 후보 이름 피하기가 같이 쓴다 */
@@ -1652,13 +1686,13 @@ const arenaOutcome = result => (result.reason === 'timeout' ? 'draw' : result.wo
 const ARENA_OUTCOME_KEY = { win: 'bt.won', draw: 'ar.draw', loss: 'bt.lost' };
 /** 레이팅 변화 표기 — `+16` · `−8` · `±0` */
 const signed = n => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '±0');
-/** 콜로세움 상대 후보 셋을 새로 굴린다 — 내 레이팅 근처 · 받은 고스트가 먼저(arena_design §9) · 이름은 고른 편성과 안 겹친다 · 가운데(비슷)가 골라진다 */
+/** 콜로세움 상대 후보를 새로 굴린다 — 내 레이팅 근처 · 받은 고스트가 먼저(arena_design §9) · 이름은 고른 편성과 안 겹친다 · 가운데(비슷)가 골라진다 */
 function arenaRollCands(A) {
     A.cands = SYS.arena.rollRatedCandidates(SYS.game.arenaState(G).rating, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]), arenaPicked().map(h => h.name), arenaNet.pool ?? []);
-    A.pick = A.pick === 'ghost' && A.ghost ? 'ghost' : 1;
+    A.pick = A.pick === 'friend' && A.friend ? 'friend' : Math.floor(A.cands.length / 2);
 }
 
-/** 방어 편성 등록 · 해제 — 세이브에 적고 바로 올린다(해제면 지운다 · SCREEN_DESIGN §1 「온라인 데모」) */
+/** 방어 편성 바꾸기 — 세이브에 적고 바로 올린다 (SCREEN_DESIGN §1 「온라인 데모」 · 해제는 화면에 없다 — ADR-1042) */
 function arenaSetDefense(no) {
     if (!SYS.game.setArenaDefense(G, no).ok) return;
     Object.assign(arenaNet, { drop: no === null, sent: null });
@@ -1667,23 +1701,156 @@ function arenaSetDefense(no) {
     trackPush();
 }
 
-/** 방어 편성 상태 줄의 문구 키 — 등록 안 함 / 세 명이 안 찼다 / 배포판에서만 / 올라감 */
+/** 방어 편성 상태 줄의 문구 키 — 세 명이 안 찼다 / 배포판에서만 / 올라감 (등록 전은 등록 판이 선다) */
 function arenaDefStatus(no) {
-    if (no === null) return 'ar.def.off';
-    if (SYS.game.partyOf(G, no).length !== SYS.arena.teamSize) return 'ar.def.need';
+    if (no === null || SYS.game.partyOf(G, no).length !== SYS.arena.teamSize) return 'ar.def.need';
     return TRACK_ON || arenaNet.fake ? 'ar.def.up' : 'ar.def.local';
 }
 
-/** 팀 코드 ↔ 글상자 문자열 — UTF-8 JSON 을 base64 로 싼다. 운반 포장은 화면의 일이다(로직은 엔진 중립 JSON 까지 · INTERFACE §2-17) */
-const encodeTeam = payload => {
-    let s = '';
-    for (const b of new TextEncoder().encode(JSON.stringify(payload))) s += String.fromCharCode(b);
-    return btoa(s);
-};
-/** 못 풀면 null — 사유는 화면이 「코드를 읽을 수 없다」 한 줄로 낸다 */
-const decodeTeam = text => {
-    try { return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(text.replace(/\s+/g, '')), c => c.charCodeAt(0)))); } catch { return null; }
-};
+/**
+ * 등록 판 (SCREEN_DESIGN §1 「등록 판」 · ADR-1042) — 이름이 비었거나 방어 편성이 없으면 레일 · 판 대신 이것만 선다. 건너뛰는 길이 없다(다른 탭으로는 간다).
+ * 이름 글 칸(+ 내 태그) · 열린 편성마다 한 줄(세 명이 찬 줄만 눌린다) · [등록]. 이름을 치는 동안은 다시 그리지 않는다 — [등록]의 눌림만 따라간다
+ */
+function arenaRegPage(main, A) {
+    const ps = SYS.game.presetState(G), size = SYS.arena.teamSize;
+    const full = no => SYS.game.partyOf(G, no).length === size;
+    // 처음 채움 — 이미 정한 이름 · 방어 편성 · 아니면 고른 편성(세 명이 찼으면)
+    A.reg ??= { nick: loadTrack().nick, no: SYS.game.arenaDefense(G) ?? (full(ps.activeNo) ? ps.activeNo : null) };
+    const R = A.reg;
+    const page = el('div', 'panel page arena-page');
+    main.appendChild(page);
+    page.appendChild(helpHeading('h2', 'arena-h', `${M.arenaArt('colosseum', 'arena-h-ico')}${t('nav.arena')}`, 'arena'));
+    const card = el('div', 'ar-reg');
+    card.appendChild(helpHeading('h3', 'sub-h', t('ar.reg.name'), 'reg_name'));
+    const nameRow = el('div', 'ar-reg-name');
+    const inp = el('input', 'set-nick ar-reg-input');
+    inp.maxLength = NICK_MAX;
+    inp.spellcheck = false;
+    inp.value = R.nick;
+    inp.placeholder = t('ar.reg.namePh');
+    nameRow.appendChild(inp);
+    if (arenaNet.me) nameRow.appendChild(el('small', 'ar-tag', tagText(arenaNet.me)));
+    card.appendChild(nameRow);
+    card.appendChild(helpHeading('h3', 'sub-h', t('ar.def'), 'defense'));
+    const list = el('div', 'ar-reg-parties');
+    for (let no = 1; no <= ps.count; no++) {
+        const heroes = SYS.game.partyOf(G, no).map(heroById).filter(Boolean);
+        const b = el('button', `ar-reg-party${R.no === no ? ' on' : ''}`,
+            `<b>${M.roman(no)}</b><span class="ar-reg-faces">${heroes.map(heroFace).join('')}</span><small>${heroes.length} / ${size}</small>`);
+        b.disabled = !full(no);
+        b.onclick = () => { if (R.no !== no) { R.no = no; render(); } };
+        list.appendChild(b);
+    }
+    card.appendChild(list);
+    // 세 명이 찬 편성이 하나도 없다 — 편성 탭으로 가는 길
+    if (!Array.from({ length: ps.count }, (_, i) => i + 1).some(full)) {
+        const need = el('div', 'ar-reg-need');
+        need.appendChild(el('span', 'muted', tLock('ar.reg.noParty', { n: size })));
+        const edit = el('button', 'btn sm', t('ar.edit'));
+        edit.onclick = () => { state.tab = 'party'; clearBagSel(); render(); };
+        need.appendChild(edit);
+        card.appendChild(need);
+    }
+    const go = el('button', 'btn primary ar-reg-go', t('ar.reg.go'));
+    const ready = () => !!cleanNick(R.nick) && R.no !== null && full(R.no);
+    go.disabled = !ready();
+    inp.oninput = () => {
+        if (inp.value.includes('#')) inp.value = cleanNick(inp.value, false);
+        R.nick = inp.value;
+        go.disabled = !ready();
+    };
+    inp.onkeydown = e => { if (e.key === 'Enter' && ready()) go.click(); };
+    go.onclick = () => { if (ready()) arenaRegister(A); };
+    card.appendChild(go);
+    page.appendChild(card);
+}
+
+/** 등록 — 이름을 이 브라우저에(설정 닉네임과 같은 칸) · 방어 편성을 세이브에 적고 **곧바로 올린다** (ADR-1042) */
+function arenaRegister(A) {
+    const R = A.reg, nick = cleanNick(R.nick);
+    if (!nick || !SYS.game.setArenaDefense(G, R.no).ok) return;
+    const rec = loadTrack();
+    rec.nick = nick;
+    writeTrack(rec);
+    Object.assign(arenaNet, { drop: false, sent: null });
+    Object.assign(A, { reg: null, forceReg: false, fresh: true });
+    save();
+    render();
+    trackPush();
+}
+
+/**
+ * 친구와 전투 창 (SCREEN_DESIGN §1 「친구와 전투 창」 · ADR-1042) — 찾기 줄(글 칸 + [찾기]) · 목록(휘장 · 이름#태그 · 레이팅) · [더 보기].
+ * 고르면 창이 닫히고 그 팀이 친선전 카드로 골라진 채 판에 선다(레이팅 변동 없음). 글 칸은 화면 상태에만 담는다(치는 동안 커서를 안 잃는다)
+ */
+function arenaUsersBody() {
+    const A = state.arena;
+    const U = A.users ??= { q: '', rows: null, cursor: null, busy: false };
+    const box = el('div', 'ar-users');
+    const bar = el('div', 'ar-users-bar');
+    const inp = el('input', 'set-nick ar-users-q');
+    inp.spellcheck = false;
+    inp.maxLength = NICK_MAX + 5;   // 이름 + `#` + 태그 넷
+    inp.value = U.q;
+    inp.placeholder = t('ar.users.ph');
+    inp.oninput = () => { U.q = inp.value; };
+    inp.onkeydown = e => { if (e.key === 'Enter') arenaUsersFind(); };
+    const find = el('button', 'btn sm', t('ar.users.find'));
+    find.onclick = () => arenaUsersFind();
+    bar.append(inp, find);
+    box.appendChild(bar);
+    const list = el('div', 'ar-users-list');
+    const live = TRACK_ON || arenaNet.fake;
+    if (!live) list.appendChild(el('div', 'ar-users-none muted', t('ar.users.local')));
+    else if (U.rows === null) list.appendChild(el('div', 'ar-users-none muted', t('ar.users.loading')));
+    else if (!U.rows.length) list.appendChild(el('div', 'ar-users-none muted', t('ar.users.none')));
+    for (const x of (live ? U.rows : null) ?? []) {
+        const row = el('button', 'ar-user', `${M.arenaArt(SYS.arena.tierOfRating(x.rating))}<b>${arenaWho(x.nick, x.id)}</b><em>${x.rating}</em>`);
+        row.onclick = () => { Object.assign(A, { friend: x, pick: 'friend' }); state.modal = null; render(); };
+        list.appendChild(row);
+    }
+    box.appendChild(list);
+    if (live && U.cursor && !U.busy) {
+        const more = el('button', 'btn sm ar-users-more', t('ar.users.more'));
+        more.onclick = () => arenaUsersFind(true);
+        box.appendChild(more);
+    }
+    return box;
+}
+
+/** 찾기 글 → `{name, tag}` — `#1234` = 태그 · `이름#1234` = 이름 + 태그 · 아니면 이름 앞 글자(빈 글 = 최근 순) */
+function arenaUserQuery(text) {
+    const m = String(text ?? '').trim().match(/^(.*?)#([0-9]{1,4})$/);
+    return m ? { name: cleanNick(m[1]), tag: Number(m[2]) } : { name: cleanNick(text), tag: null };
+}
+
+/** 친구와 전투 목록 한 쪽을 받는다 — `more` 면 앞 쪽 뒤에 잇는다. 내 팀 · 검사를 못 지난 팀은 뺀다 · 가짜 고스트(`?dev=arena&ghosts=1`)는 받은 것에서 거른다
+ *  (`quiet` = 가짜를 채우고 다시 그리지 않는다 — 부팅 중의 개발 장치) */
+async function arenaUsersFind(more = false, quiet = false) {
+    const U = state.arena.users;
+    if (!U || U.busy) return;
+    const q = arenaUserQuery(U.q);
+    if (arenaNet.fake) {
+        U.rows = (arenaNet.pool ?? []).map(p => ({ ...p, nick: arenaNet.nicks.get(p.id) ?? '' }))
+            .filter(x => (q.tag === null || CLOUD.tagOf(x.id) === q.tag) && (q.tag === null ? x.nick.startsWith(q.name) : !q.name || x.nick === q.name));
+        U.cursor = null;
+        if (!quiet && state.modal === 'arenaUsers') render();
+        return;
+    }
+    if (!TRACK_ON) return;
+    U.busy = true;
+    if (!more) Object.assign(U, { rows: null, cursor: null });
+    if (state.modal === 'arenaUsers') render();
+    const r = await CLOUD.listArena({ ...q, cursor: more ? U.cursor : null });
+    U.busy = false;
+    if (r.ok) {
+        arenaNet.me = r.me;
+        const rows = r.teams.filter(x => x.id !== r.me).map(arenaGhostOf).filter(Boolean);
+        U.rows = more ? [...(U.rows ?? []), ...rows] : rows;
+        U.cursor = r.cursor;
+    } else if (!more) U.rows = [];
+    if (state.arena.users === U && state.modal === 'arenaUsers') render();
+}
 
 /** 결투 관전 — 두 탭이 같은 재생기를 쓴다. 돌아오는 버튼 · 제목 · 배경(싸운 순간 판의 배경 — `match.bg`)만 다르다 · 재생 위치는 `arenaWatching` 이 받아 둔다 */
 function arenaWatchPage(main, A, title, backLabel) {
@@ -1802,25 +1969,30 @@ function renderArena(main) {
     const A = state.arena;
     if (A.owner !== G) arenaReset(A);
     if (A.match) { arenaWatchPage(main, A, t('nav.arena'), 'ar.back'); return; }
+    // 이름이 비었거나 방어 편성이 없으면 등록 판만 선다 (ADR-1042)
+    if (arenaGateOpen(A)) { arenaRegPage(main, A); return; }
     arenaToast(A);
     // 결투 뒤 돌아오면 후보를 새로 굴린다 — 같은 상대를 되풀이 고르지 않게 (ADR-0670)
     if (!A.cands || A.fresh) { arenaRollCands(A); A.fresh = false; }
-    if (A.pick === 'ghost' && !A.ghost) A.pick = 1;
-    const ghost = A.pick === 'ghost';
-    const cand = ghost ? null : A.cands[A.pick] ?? null;
+    if (A.pick === 'friend' && !A.friend) A.pick = Math.floor(A.cands.length / 2);
+    const friend = A.pick === 'friend' ? A.friend : null;
+    const cand = friend ? null : A.cands[A.pick] ?? null;
     const tierName = id => L(SYS.arena.tiers.find(x => x.id === id)?.name ?? { ko: id, en: id });
     const last = A.last;
     arenaShell(main, 'nav.arena', 'colosseum', arenaRail(A), arenaStage(A, {
         bg: M.COLOSSEUM_BG,
-        opponent: ghost ? A.ghost : cand?.team ?? null,
-        from: ghost ? t('ar.friendlyCard')
-            : cand?.ghost ? t('ar.fromGhost', { name: arenaNick(arenaNet.nicks.get(cand.ghost)), tier: tierName(cand.tier), rating: cand.rating })
-            : cand ? t('ar.from', { tier: tierName(cand.tier), rating: cand.rating }) : null,
+        opponent: friend ? friend.team : cand?.team ?? null,
+        from: friend ? t('ar.fromFriend', { name: arenaWho(friend.nick, friend.id), rating: friend.rating })
+            : cand ? t('ar.fromGhost', { name: arenaWho(arenaNet.nicks.get(cand.ghost), cand.ghost), tier: tierName(cand.tier), rating: cand.rating }) : null,
         fightLabel: t('ar.fight'),
         onFight: result => {
             const outcome = arenaOutcome(result);
-            // 친선전은 레이팅을 안 움직인다 · 랭크전은 **싸운 순간** 적는다 — 관전 중에 창을 닫아도 이미 적혔다 (arena_design §8)
-            if (ghost) { A.last = { outcome, sec: result.durationSec, rated: false }; return; }
+            // 친선전(친구와 전투 목록)은 레이팅 · 전적을 안 움직이고 방어자의 기록함에 「친선전」 한 줄만 · 랭크전은 **싸운 순간** 적는다 — 관전 중에 창을 닫아도 이미 적혔다 (arena_design §8 · ADR-1042)
+            if (friend) {
+                if (TRACK_ON && friend.id !== arenaNet.me) CLOUD.pushArenaHit(friend.id, { nick: loadTrack().nick, rating: SYS.game.arenaState(G).rating, result: ARENA_DEF_RESULT[outcome], friendly: true });
+                A.last = { outcome, sec: result.durationSec, rated: false };
+                return;
+            }
             const r = SYS.game.arenaRecord(G, cand.rating, outcome);
             // 고스트였으면 방어자의 기록함에 한 줄 — 방어자 레이팅은 안 움직인다 · 받기는 간격이 지났을 때만 (arena_design §9)
             if (cand.ghost && TRACK_ON) {
@@ -1839,7 +2011,7 @@ function renderArena(main) {
 }
 
 /**
- * 콜로세움 레일 — 리그 카드(휘장 · 리그 · 레이팅 · 다음 리그까지 막대 · 최고 · 전적) + 상대 후보 셋(± 레이팅) + [새 상대] · [친선전].
+ * 콜로세움 레일 — 리그 카드(휘장 · 리그 · 레이팅 · 다음 리그까지 막대 · 최고 · 전적 · 내 이름#태그) + 방어 편성 + 상대 후보(± 레이팅) + [새 상대] · [친구와 전투] + 방어 기록.
  * 후보 카드의 + / − 는 `arenaStakes` 그대로 — 고르기 전에 보여야 고르기가 판단이 된다 (arena_design §8)
  */
 function arenaRail(A) {
@@ -1849,7 +2021,12 @@ function arenaRail(A) {
     const card = el('div', 'ar-league');
     card.appendChild(el('span', 'ar-league-ico', M.arenaArt(T.id)));
     const info = el('div', 'ar-league-info');
-    info.appendChild(el('div', 'ar-league-name', L(T.name)));
+    // 리그 이름 + 바로 오른쪽 [전체 리그] — 리그 표는 레일에 없고 이 버튼이 여는 창에 있다 (ADR-1046)
+    const nameRow = el('div', 'ar-league-name', `<span>${L(T.name)}</span>`);
+    const allLeagues = el('button', 'btn sm ar-league-all', t('ar.leagues'));
+    allLeagues.onclick = () => openModal('arenaLeagues');
+    nameRow.appendChild(allLeagues);
+    info.appendChild(nameRow);
     info.appendChild(el('div', 'ar-rating', `<b>${s.rating}</b><small>${t('ar.rating')}</small>`));
     // 막대 — 지금 리그 문턱에서 다음 문턱까지 어디쯤인가(마지막 리그면 가득 · 첫 문턱 아래면 빈 채)
     const pct = N ? Math.max(0, Math.min(1, (s.rating - T.ratingMin) / (N.ratingMin - T.ratingMin))) : 1;
@@ -1858,7 +2035,9 @@ function arenaRail(A) {
     card.appendChild(info);
     rail.appendChild(card);
     rail.appendChild(el('div', 'ar-record muted', `${t('ar.peak', { n: s.peak })} · ${t('ar.record', { w: s.win, d: s.draw, l: s.loss })}`));
-    // 방어 편성 — [없음] · 열린 편성 번호 · 아래 상태 한 줄 (ADR-1040 · arena_design §9)
+    // 내 이름#태그 — 다른 플레이어에게 보이는 그대로 (ADR-1042 · 이름은 설정에서 바꾼다)
+    rail.appendChild(el('div', 'ar-me', arenaWho(loadTrack().nick, arenaNet.me)));
+    // 방어 편성 — 열린 편성 번호 · 아래 상태 한 줄 · 해제는 없다 (ADR-1040 · ADR-1042 · arena_design §9)
     rail.appendChild(helpHeading('h3', 'sub-h ar-def-h', t('ar.def'), 'defense'));
     const def = SYS.game.arenaDefense(G);
     const defRow = el('div', 'ar-def');
@@ -1867,7 +2046,6 @@ function arenaRail(A) {
         b.onclick = () => { if (def !== no) arenaSetDefense(no); };
         defRow.appendChild(b);
     };
-    defBtn(null, t('ar.def.none'));
     for (let no = 1; no <= SYS.game.presetState(G).count; no++) defBtn(no, M.roman(no));
     rail.appendChild(defRow);
     rail.appendChild(el('div', 'ar-def-st muted', t(arenaDefStatus(def))));
@@ -1875,26 +2053,31 @@ function arenaRail(A) {
     const list = el('div', 'ar-cands');
     A.cands.forEach((c, k) => {
         const st = SYS.game.arenaStakes(G, c.rating);
-        const who = c.ghost ? arenaNick(arenaNet.nicks.get(c.ghost)) : t('ar.ai');
-        const b = el('button', `ar-cand${A.pick === k ? ' on' : ''}${c.ghost ? ' player' : ''}`,
+        const who = arenaWho(arenaNet.nicks.get(c.ghost), c.ghost);
+        const b = el('button', `ar-cand player${A.pick === k ? ' on' : ''}`,
             `${M.arenaArt(c.tier)}<span class="ar-cand-r"><b>${c.rating}</b><small>${who}</small></span>`
             + `<span class="ar-cand-stake"><em class="up">${signed(st.win)}</em><em class="down">${signed(st.loss)}</em></span>`);
         b.onclick = () => { if (A.pick !== k) { A.pick = k; render(); } };
         list.appendChild(b);
     });
-    if (A.ghost) {
-        const b = el('button', `ar-cand ghost${A.pick === 'ghost' ? ' on' : ''}`,
-            `${M.arenaArt('duel')}<span class="ar-cand-r"><b>${t('ar.friendly')}</b><small>${t('ar.ghostTeam')}</small></span><span class="ar-cand-stake muted">${t('ar.unrated')}</span>`);
-        b.onclick = () => { if (A.pick !== 'ghost') { A.pick = 'ghost'; render(); } };
+    // 후보는 다른 플레이어뿐 — 없으면 한 줄(받기를 안 하는 환경 · 받는 중 · 아무도 없음 · ADR-1045)
+    if (!A.cands.length) list.appendChild(el('div', 'ar-cands-none muted', t(!(TRACK_ON || arenaNet.fake) ? 'ar.users.local' : arenaNet.pool === null ? 'ar.users.loading' : 'ar.cands.none')));
+    // [친구와 전투]에서 고른 친선전 상대 — 후보 아래 한 장 · 레이팅 변동 없음 (ADR-1042 · ADR-1045)
+    if (A.friend) {
+        const F = A.friend;
+        const b = el('button', `ar-cand friend player${A.pick === 'friend' ? ' on' : ''}`,
+            `${M.arenaArt(SYS.arena.tierOfRating(F.rating))}<span class="ar-cand-r"><b>${arenaWho(F.nick, F.id)}</b><small>${t('ar.friendly')} · ${F.rating}</small></span><span class="ar-cand-stake muted">${t('ar.unrated')}</span>`);
+        b.onclick = () => { if (A.pick !== 'friend') { A.pick = 'friend'; render(); } };
         list.appendChild(b);
     }
     rail.appendChild(list);
     const btns = el('div', 'ar-rail-btns');
+    // [새 상대] — 받을 수 있으면 받은 뒤 굴린다(`arenaTake` 가 굴리고 그린다) · 간격 안이면 받아 둔 것으로 곧바로 (ADR-1042)
     const fresh = el('button', 'btn sm', t('ar.newCands'));
-    fresh.onclick = () => { arenaRollCands(A); render(); };
-    const friendly = el('button', 'btn sm', t('ar.friendly'));
-    friendly.onclick = () => openModal('arenaCode');
-    btns.append(fresh, friendly);
+    fresh.onclick = async () => { if (!(await arenaPull(false, true))) { arenaRollCands(A); render(); } };
+    const users = el('button', 'btn sm', t('ar.users'));
+    users.onclick = () => { A.users = { q: '', rows: null, cursor: null, busy: false }; openModal('arenaUsers'); arenaUsersFind(); };
+    btns.append(fresh, users);
     rail.appendChild(btns);
     // 방어 기록 — 받기를 하는 환경에만 선다 · 보기 전용(레이팅 무관 · arena_design §9)
     if (TRACK_ON || arenaNet.fake) {
@@ -1904,15 +2087,20 @@ function arenaRail(A) {
         if (!rows.length) box.appendChild(el('div', 'ar-log-none muted', t('ar.log.none')));
         for (const x of rows) {
             const tone = x.result === 'win' ? 'up' : x.result === 'loss' ? 'down' : '';
-            box.appendChild(el('div', 'ar-log-row', `<span class="ar-log-at muted">${x.at ? agoText(x.at) : ''}</span><b>${arenaNick(x.nick)}</b><small>${x.rating}</small><em class="${tone}">${t(`ar.log.${x.result}`)}</em>`));
+            box.appendChild(el('div', 'ar-log-row', `<span class="ar-log-at muted">${x.at ? agoText(x.at) : ''}</span><b>${arenaWho(x.nick, x.by)}</b><small>${x.friendly ? `${t('ar.friendly')} · ` : ''}${x.rating}</small><em class="${tone}">${t(`ar.log.${x.result}`)}</em>`));
         }
         rail.appendChild(box);
     }
-    // 리그 표 — 어느 문턱을 넘으면 무엇이 되는지가 늘 보인다(맨 위 = 가장 높은 리그 · 내 리그 강조 · 위 리그는 흐린 휘장)
+    return rail;
+}
+
+/** 리그 창 (SCREEN_DESIGN §1 「리그 창」 · ADR-1046) — 리그마다 한 줄(휘장 · 이름 · 문턱 레이팅) · 맨 위 = 가장 높은 리그 · 내 리그 강조 · 위 리그는 흐린 휘장 */
+function arenaLeaguesBody() {
+    const tiers = SYS.arena.tiers, mine = SYS.arena.tierOfRating(SYS.game.arenaState(G).rating);
+    const i = tiers.findIndex(x => x.id === mine);
     const lgs = el('div', 'ar-leagues');
     tiers.forEach((x, k) => lgs.prepend(el('div', `ar-lg${k === i ? ' on' : k > i ? ' above' : ''}`, `${M.arenaArt(x.id)}<span>${L(x.name)}</span><em>${x.ratingMin}</em>`)));
-    rail.appendChild(lgs);
-    return rail;
+    return lgs;
 }
 
 /**
@@ -2028,68 +2216,6 @@ function arenaLoadPanel(unfold) {
     panel.appendChild(potionReadBlock(SYS.game.presetState(G)));
     panel.appendChild(tacticReadBlock('ar.noTactic'));
     return panel;
-}
-
-/**
- * 친선전 창 — 글상자 둘이 나란히 (ADR-0670 · 옛 온라인 갈래의 글상자 줄 ADR-0656). 왼쪽 = 내 팀 코드(고른 편성의 세 영웅 · `exportTeam` → 문자열) · 오른쪽 = 받은 코드(`importTeam` 이 검사한다).
- * 통과하면 창이 닫히고 받은 팀이 「친선전」 칸으로 골라진 채 판에 선다(레이팅 변동 없음).
- * 글상자에 친 글은 다시 그리지 않고 화면 상태에만 담는다(치는 동안 커서를 안 잃는다). ⚠ 서버가 없어 운반은 복사 · 붙여넣기다
- */
-function arenaCodeBody() {
-    const A = state.arena;
-    const picked = arenaPicked(), ranks = formState().byUid;
-    const row = el('div', 'arena-code');
-    const mine = el('div', 'arena-code-box');
-    mine.appendChild(helpHeading('h3', 'sub-h', t('ar.code.mine'), 'team_code'));
-    const out = el('textarea', 'arena-code-text');
-    out.readOnly = true;
-    out.value = A.code;
-    mine.appendChild(out);
-    const mineBtns = el('div', 'arena-code-btns');
-    const make = el('button', 'btn sm', t('ar.code.make'));
-    make.disabled = picked.length !== SYS.arena.teamSize;
-    make.onclick = () => { A.code = encodeTeam(SYS.arena.exportTeam(picked, G.items, ranks)); render(); };
-    const copy = el('button', 'btn sm', t('ar.code.copy'));
-    copy.disabled = !A.code;
-    // 클립보드가 막힌 환경이면 글을 골라 둔다 — 손으로 복사한다
-    copy.onclick = () => navigator.clipboard?.writeText(A.code).then(() => flash('ar.code.copied'), () => out.select()) ?? out.select();
-    mineBtns.append(make, copy);
-    mine.appendChild(mineBtns);
-
-    const got = el('div', 'arena-code-box');
-    got.appendChild(helpHeading('h3', 'sub-h', t('ar.code.paste'), 'team_code'));
-    const inp = el('textarea', 'arena-code-text');
-    inp.value = A.paste;
-    inp.placeholder = t('ar.code.placeholder');
-    inp.oninput = () => { A.paste = inp.value; };
-    got.appendChild(inp);
-    const gotBtns = el('div', 'arena-code-btns');
-    const load = el('button', 'btn sm primary', t('ar.code.load'));
-    load.onclick = () => {
-        const payload = decodeTeam(A.paste);
-        Object.assign(A, { problems: null, broken: false });
-        if (!payload) A.broken = true;
-        else {
-            const r = SYS.arena.importTeam(payload);
-            if (r.ok) { A.ghost = r.team; A.pick = 'ghost'; state.modal = null; }
-            // 사유 줄의 이름은 검사를 통과한 줄에만 싣는다 — 걸린 코드의 문자열은 화면 HTML 에 안 넣는다(`text` 사유)
-            //   같은 영웅의 같은 사유는 한 줄로 모은다(옵션 줄이 여럿 걸려도)
-            else A.problems = [...new Map(r.problems.map(p => [`${p.hero ?? '-'}:${p.code}`, { code: p.code, hero: p.hero ?? null }])).values()];
-        }
-        render();
-    };
-    gotBtns.appendChild(load);
-    got.appendChild(gotBtns);
-    if (A.broken) got.appendChild(el('div', 'arena-bad', t('ar.code.broken')));
-    if (A.problems) {
-        const list = el('ul', 'arena-bad');
-        for (const p of A.problems) list.appendChild(el('li', '', t('ar.bad.row', {
-            who: p.hero === null ? t('ar.bad.team') : t('ar.bad.hero', { n: p.hero + 1 }), why: t(`ar.bad.${p.code}`),
-        })));
-        got.appendChild(list);
-    }
-    row.append(mine, got);
-    return row;
 }
 
 function renderExpedition(main) {
@@ -2774,9 +2900,8 @@ function tacticsBlock() {
         render();
     };
     const box = el('div', 'pt-tactics');     // 오른쪽 열 — 왼쪽 열과는 세로 가림선 하나 (ADR-0260)
-    const head = helpHeading('div', 'sub-h', t('rs.h'), 'tactics');
-    head.appendChild(buffMark(ts));          // 오른쪽 끝 「추가 버프」 — 올리면 받는 보너스 (ADR-0757)
-    box.appendChild(head);
+    // ~~오른쪽 끝 「추가 버프」 hover~~ — 2026-11-11 카드 아래 판(`tacticBoard`)이 대신한다 (ADR-1048)
+    box.appendChild(helpHeading('div', 'sub-h', t('rs.h'), 'tactics'));
     const progress = el('div', 'rs-head', `
         <span>${t('rs.total')} <b>${ts.totalLevel}</b></span>
         <span>${t('rs.open')} <b>${ts.open}</b> <span class="muted">/ ${ts.count}</span></span>
@@ -2792,10 +2917,11 @@ function tacticsBlock() {
     progress.appendChild(b);
     box.appendChild(progress);
     const grid = el('div', 'rs-grid');
-    // 열 이름 줄 — 칸 목록과 같은 격자(subgrid)라 글자가 각 세로줄의 왼쪽 끝에 맞는다 · 잠금만 오른쪽 끝 (ADR-0763)
-    grid.appendChild(el('div', 'rs-colh', ['state', 'cond', 'prog', 'buff', 'extra', 'lock'].map(k => `<span class="c-${k}">${t(`rs.col.${k}`)}</span>`).join('')));
+    // 열 이름 줄 — 칸 목록과 같은 격자(subgrid)라 글자가 각 세로줄의 왼쪽 끝에 맞는다 · 잠금만 오른쪽 끝 (ADR-0763 · 죄종 · 버프 몫 ADR-1048)
+    grid.appendChild(el('div', 'rs-colh', ['state', 'sin', 'cond', 'prog', 'buff', 'extra', 'lock'].map(k => `<span class="c-${k}">${t(`rs.col.${k}`)}</span>`).join('')));
     for (const slot of ts.slots) grid.appendChild(tacticCell(slot, lock));
     box.appendChild(grid);
+    box.appendChild(tacticBoard(ts));        // 카드 아래 판 — 리더 통솔 · 죄종 일곱의 장비 수 (ADR-1048)
     return box;
 }
 
@@ -3079,8 +3205,8 @@ function tacticReadBlock(emptyKey = null) {
         if (!s.open || !s.option) continue;
         const row = el('div', `dw-tac-row${s.active ? ' on' : ''}`,
             `<span class="rs-eff">${optionEffect(s.option, s.value)}</span>`
-            + condCounter(s.option, s.have, s.need));
-        row.title = `${condText(s.option)} · ${t(s.active ? 'rs.on' : 'rs.off')}`;
+            + condCounter(s));
+        row.title = `${sinName(s.option.sin)} · ${condText(s.option)} · ${t(s.active ? 'rs.on' : 'rs.off')}`;
         tac.appendChild(row);
     }
     if (emptyKey && tac.childElementCount === 1) tac.appendChild(el('span', 'muted', t(emptyKey)));
@@ -4103,6 +4229,20 @@ function attrPanel(h) {
     // 줄 조립은 유닛 툴팁과 같은 함수다 — 두 자리가 따로 짜면 한쪽만 고쳐진다 (tip.js · SCREEN_DESIGN §2 「유닛 툴팁 규격」 · ADR-0114)
     box.innerHTML = attrRowsHtml(h.stats, tierColor(h));
     bindStatTips(box);   // 줄에 올리면 설명 카드 (SCREEN_DESIGN §2 「능력치 설명 툴팁 규격」 · ADR-0581)
+    // 만렙 뒤 별 [2026-11-11 · SCREEN_DESIGN §6 · ADR-1043] — 쓸 별이 남으면 줄마다 값 오른쪽에 [+] 열 · 최종 상한 줄은 빈 칸 · 누르면 확인 창.
+    //   줄 조립(`attrRowsHtml`)은 유닛 툴팁과 같이 쓰므로 열은 여기서만 붙인다
+    if ((h.stars ?? 0) - (h.starSpent ?? 0) > 0) {
+        box.classList.add('star-open');
+        box.querySelectorAll('.attr-row').forEach(row => {
+            const id = row.querySelector('.attr-v')?.dataset.stat;
+            const attr = D.heroAttributes.find(a => a.id === id);
+            if (!attr || (h.stats[id] ?? 0) >= D.balance.hero_attr_max) { row.appendChild(el('span', 'attr-add-gap')); return; }
+            const b = el('button', 'attr-add', '+');
+            b.setAttribute('aria-label', t('ch.star.add', { stat: L(attr) }));
+            b.onclick = () => { state.starStat = { uid: h.uid, id }; openModal('starSpend'); };
+            row.appendChild(b);
+        });
+    }
     p.appendChild(box);
     p.appendChild(skillCards(h));
     return p;
@@ -4111,16 +4251,61 @@ function attrPanel(h) {
 /**
  * 레벨 · 경험치 — 기본 옵션 칸 맨 위, 능력치 막대 위 (2026-09-15 · SCREEN_DESIGN §6 · ADR-0129).
  * 막대 폭은 `현재 / 필요` 의 표시 비율이다(능력치 막대와 같은 종류 — 전투 계산이 아니다).
- * **만렙이면 숫자 대신 MAX · 막대는 가득** — 줄을 걷으면 만렙 영웅을 고를 때만 아래 막대 · 스킬이 한 줄 올라가 칸이 흔들린다
+ * **만렙이면 `Lv.n` 오른쪽에 별 칸 · 숫자와 막대는 다음 별까지**(2026-11-11 · ADR-1043) · **별이 다 차면 숫자 대신 MAX · 막대는 가득** —
+ *   줄을 걷으면 만렙 영웅을 고를 때만 아래 막대 · 스킬이 한 줄 올라가 칸이 흔들린다
  */
 function xpBlock(h) {
     const atCap = h.level >= D.balance.hero_level_cap;
-    const need = xpNext(h);
-    const pct = atCap ? 100 : Math.max(0, Math.min(100, h.xp / need * 100));
-    const text = atCap ? t('ch.xp.max') : t('ch.xp', { a: h.xp.toLocaleString(), b: need.toLocaleString() });
+    const stars = h.stars ?? 0, max = D.balance.hero_star_max;
+    const need = atCap ? SYS.hero.starXpNeeded(stars) : xpNext(h);   // 만렙 = 다음 별 · `null` = 별이 다 찼다
+    const full = need === null;
+    const pct = full ? 100 : Math.max(0, Math.min(100, h.xp / need * 100));
+    const text = full ? t('ch.xp.max') : t('ch.xp', { a: h.xp.toLocaleString(), b: need.toLocaleString() });
+    const starRow = atCap && max > 0 ? `<span class="ch-stars">${Array.from({ length: max }, (_, i) => starSvg(i < stars)).join('')}</span>` : '';
     const box = el('div', 'ch-xp');
-    box.innerHTML = `<div class="ch-xp-line"><span class="ch-lv">${t('ch.lv', { n: h.level })}</span><span class="ch-xp-n">${text}</span></div>`
+    box.innerHTML = `<div class="ch-xp-line"><span class="ch-lv">${t('ch.lv', { n: h.level })}${starRow}</span><span class="ch-xp-n">${text}</span></div>`
         + `<div class="bar xp"><i style="width:${pct}%"></i></div>`;
+    const st = box.querySelector('.ch-stars');
+    // 올리면 능력치 줄과 같은 설명 카드 — 이름 / 선 아래 효과 · 값은 안 든다(별 칸이 이미 든다) (SCREEN_DESIGN §2 「능력치 설명 툴팁 규격」 · `tip.js:bindStatTips`)
+    if (st) bindTipNode(st, () => el('div', 'tip-card stat-tip',
+        `<div class="tip-effect-head"><div class="tip-name">${t('ch.star.name')}</div></div><div class="tip-effect-summary">${t('ch.star.desc')}</div>`));
+    return box;
+}
+
+/** 별 한 칸 (ADR-1043) — 같은 별 둘을 겹친다: 아래 장(`st-rim`)이 아래 오른쪽으로 한 칸 밀린 가장자리다.
+ *  빈 별 = 돌에 판 홈(어두운 속 + 빛을 받는 아래 오른쪽 벽) · 찬 별 = 금빛(가장자리는 그림자) — 색은 style.css `.ch-star` */
+const STAR_PATH = 'M12 2.6L14.53 9.12L21.51 9.51L16.09 13.93L17.88 20.69L12 16.9L6.12 20.69L7.91 13.93L2.49 9.51L9.47 9.12Z';
+const starSvg = on => `<svg class="ch-star${on ? ' on' : ''}" viewBox="0 0 24 24" aria-hidden="true">`
+    + `<path class="st-rim" d="${STAR_PATH}" transform="translate(.9 .9)"/><path class="st-face" d="${STAR_PATH}"/></svg>`;
+
+/** 별 넣기 확인 창의 대상 — 고른 영웅 · 고른 줄 · 쓸 별이 다 있어야 선다(그새 사라지면 창이 닫힌다 — `MODALS.starSpend.gone`) */
+function starSpendOf() {
+    const s = state.starStat, h = s && heroById(s.uid), attr = s && D.heroAttributes.find(a => a.id === s.id);
+    if (!h || !attr || (h.stars ?? 0) - (h.starSpent ?? 0) < 1 || (h.stats[attr.id] ?? 0) >= D.balance.hero_attr_max) return null;
+    return { h, attr };
+}
+/** 별 넣기 확인 창 [2026-11-11 · SCREEN_DESIGN §6 · ADR-1043] — 「능력치 a → b」 + 되돌릴 수 없다는 한 줄 + [확인] · [취소] (해고 창과 같은 상자 · §3) */
+function starSpendBody() {
+    const box = el('div', 'dismiss-box');
+    const o = starSpendOf();
+    if (!o) return box;
+    const v = o.h.stats[o.attr.id];
+    box.appendChild(el('div', '', t('ch.star.what', { stat: L(o.attr), a: v, b: v + 1 })));
+    box.appendChild(el('div', 'down', t('ch.star.warn')));
+    const actions = el('div', 'dismiss-actions');
+    const ok = el('button', 'btn primary', t('ui.ok'));
+    ok.onclick = () => {
+        // 거절은 화면이 [+] 를 안 띄우는 경우뿐이라 문구가 없다(INTERFACE §3 `maxStat` · `points`) — 창만 닫는다
+        const r = SYS.game.spendStar(G, o.h.uid, o.attr.id);
+        state.modal = null; state.starStat = null;
+        if (r.ok) save();
+        render();
+    };
+    const no = el('button', 'btn', t('ui.cancel'));
+    no.onclick = closeModal;
+    actions.appendChild(ok);
+    actions.appendChild(no);
+    box.appendChild(actions);
     return box;
 }
 
@@ -5717,24 +5902,20 @@ function skillTreeBody() {
    칸은 **획득물이 아니다**: 지휘 천막 랭크가 칸을 열고(R137), 칸에 든 옵션은 골드로 다시 굴린다 (tactic_card_design §5).
    판정(열림 · 조건 카운터 · 비용)은 전부 `game.tacticState` 가 실어 온다 — 렌더러는 파티를 세지 않는다. */
 
-/** 조건의 인자 — 죄종 · 직업 · 능력치 · 전직 이름 (조건 사전 §5-8 · §5-11 ~ 13) */
-const condArgName = o => {
-    if (!o.condArg) return '';
-    if (o.condKind === 'sin_count') return sinName(o.condArg);
-    if (o.condKind === 'attr_sum') return L(D.heroAttributes.find(a => a.id === o.condArg)) || o.condArg;
-    if (o.condKind === 'advance_count') {
-        const a = (D.advanceRows ?? []).find(x => x.advance_id === o.condArg);
-        return a ? L({ ko: a.name_kr, en: a.name_en }) : o.condArg;
-    }
-    return className(o.condArg);
+/** 조건 문장 — 문구 키는 칸 조건의 어휘(`tactic_condition.csv:test`) · 죄종을 묻는 조건은 **그 칸의 죄종** 이름 (§15 · tactic_card_design §5-14) */
+const condText = o => t(`rs.cond.${o.condKind}`, { a: sinName(o.sin) });
+/** 진행 — 카운터 「지금 / 다음 문턱」(다 넘었으면 마지막 문턱 · 조건 없음은 안 단다 · §4 「안 보이면 함정」) + 단계 「×n」 (§15 · ADR-1048).
+ *  `m` = 잰 결과(`tacticState` 의 칸 · `runTactics` 의 줄) — 판정은 game_logic 이 냈다 */
+const condCounter = m => {
+    const steps = m.steps ?? [];
+    const cnt = steps.length ? `<b class="rs-cnt">${(m.have ?? 0).toLocaleString()} / ${(m.need ?? steps[steps.length - 1]).toLocaleString()}</b>` : '';
+    return `${cnt}<span class="rs-step${m.step > 0 ? '' : ' zero'}">×${m.step ?? 0}</span>`;
 };
-/** 조건 문장 — 문구 키는 조건 어휘(`test`)이고 「없으면」은 `.not` 이 붙는다 (§5-8) */
-const condText = o => t(`rs.cond.${o.condKind}${o.polarity === 'not' ? '.not' : ''}`, { n: o.condN, a: condArgName(o) });
-/** 조건 카운터 「지금 / 필요」 — 무조건은 안 단다(§4 「안 보이면 함정」). 「없으면」은 필요가 0 이다 */
-const condCounter = (o, have, need) => (o.condKind === 'none' ? '' : `<b class="rs-cnt">${have} / ${need}</b>`);
-/** 효과 한 줄 — 축 이름·단위는 `stat` 에서 파생한다 (마스터리 칸과 같은 규칙 · §13).
- *  `v` = 찍을 값 — 칸 · 잰 결과의 **리더 보너스를 탄 값**(`value` · §15 · ADR-0753)을 넘긴다. 안 주면 등급 값 */
-const optionEffect = (o, v = o.value) => L(M.affixText(o.stat, v, statRow(o.stat)));
+/** 효과 한 줄 — 축 이름·단위는 `stat` 에서 파생한다 (마스터리 칸과 같은 규칙 · §13). **시기 둘만 대상 쪽 이름**(`rs.eff.<stat>` — 「적 방어력 감소」 · §15 · ADR-1048)
+ *  `v` = 찍을 값 — 칸 · 잰 결과의 **적용 값**(`value` · §15 · ADR-0753)을 넘긴다. 안 주면 단계 1 등급 값 */
+const optionEffect = (o, v = o.value) => (has(`rs.eff.${o.stat}`)
+    ? t(`rs.eff.${o.stat}`, { v: M.statValue(o.stat, v, statRow(o.stat)) })
+    : L(M.affixText(o.stat, v, statRow(o.stat))));
 
 /** 자물쇠 — 닫힘 · 열림 두 모양(몸통은 같고 고리만 다르다) · 색은 버튼 글자색(currentColor)을 따른다 (§15 · 2026-09-27) */
 const lockIcon = M.lockIcon;
@@ -5744,31 +5925,37 @@ const lockLine = text => `<span class="lock-line"><span class="lock-inl">${lockI
 /** 키를 푼다 — 잠김 문구(i18n `lock: true`)면 앞에 자물쇠 */
 const tLock = (key, params) => (isLock(key) ? lockLine(t(key, params)) : t(key, params));
 
-/** 리더 보너스 칸 — 행의 효과 오른쪽 세로줄(§15 · ADR-0757). 값은 `tacticState` 가 낸 리더 몫(`bonus`)이고 단위는 효과와 같다(`statValue`).
- *  더하면 `.up` · 빼면 `.down` · 0 이면 흐림 · 곡선을 안 받는 칸(`leaderBonus` 0)은 「—」 */
-function leadCell(slot) {
-    const o = slot.option;
-    if (!(o.leaderBonus > 0)) return '<div class="rs-lead muted">—</div>';
-    const b = slot.bonus;
-    return `<div class="rs-lead${b > 0 ? ' up' : b < 0 ? ' down' : ' muted'}">${M.statValue(o.stat, b, statRow(o.stat))}</div>`;
+/** 버프 몫 % — 비율 하나를 부호 붙인 정수 % 로(1배면 「±0%」 · ADR-0938 의 문구 규칙). 카드 아래 판 · 행의 버프 몫 칸이 같이 쓴다 */
+const buffPct = v => `${signed(Math.round(v * 100))}%`;
+
+/** 버프 몫 칸 — 행의 효과 오른쪽 세로줄(§15 · ADR-1048). 리더 몫 + 그 칸 죄종의 장비 몫(`tacticState` 칸의 `leadPart` · `gearPart`)을 % 로.
+ *  더하면 `.up` · 빼면 `.down` · 0 이면 흐림 — 출처는 카드 아래 판이 적는다 */
+function buffCell(slot) {
+    const v = (slot.leadPart ?? 0) + (slot.gearPart ?? 0);
+    const p = Math.round(v * 100);
+    return `<div class="rs-lead${p > 0 ? ' up' : p < 0 ? ' down' : ' muted'}">${buffPct(v)}</div>`;
 }
 
-/** 「추가 버프」 — 「파티 전술」 소제목 줄 오른쪽 끝(§15 · ADR-0757). 올리면 **전술에 걸리는 출처마다 한 줄**(ADR-0758 — 칸마다 안 적는다):
- *  지금은 리더 통솔 → 버프 효과 ±n%(`tacticState.leader` 배수에서 1 을 뺀 정수 % · ADR-0938) 하나. 도감 옵션은 안 적는다(능력치마다라 수십 줄 — 관전 「버프」 창의 몫) */
-function buffMark(ts) {
-    const b = el('span', 'rs-buff-btn', t('rs.buff'));
-    bindTipNode(b, () => {
-        const lines = [ts.leader ? t('rs.buff.lead', { n: ts.leader.ldr, p: signed(Math.round((ts.leader.curve - 1) * 100)) }) : t('rs.buff.noLead')];
-        return el('div', 'tip-card q-tip',
-            `<div class="tip-effect-head"><div class="tip-name">${t('rs.buff')}</div></div>`
-            + `<div class="tip-effect-summary">${lines.map(x => `<div>${x}</div>`).join('')}</div>`);
-    });
-    return b;
+/** 카드 아래 판 — 두 열(§15 · ADR-1048). 왼쪽 = 리더 통솔 → 버프 효과 ±p% · 분노 · 시기 · 탐욕 / 오른쪽 = 나태 · 폭식 · 색욕 · 오만.
+ *  죄종 줄 = 「분노 5 → +5%」(고른 편성 파티 셋이 낀 장비의 그 죄종 수 → 그 죄종 칸의 버프 몫) · 0 이면 「분노 —」. 수는 `tacticState.gear` 가 냈다 */
+function tacticBoard(ts) {
+    const sins = Object.keys(M.SINS);
+    const sinLine = sin => {
+        const n = ts.gear?.[sin] ?? 0;
+        const name = `<span class="rs-bd-sin" style="color:${sinColor(sin)}">${sinName(sin)}</span>`;
+        return n > 0
+            ? `<div class="rs-bd-row">${t('rs.board.sin', { sin: name, n, p: buffPct(n * (ts.gearPct ?? 0)) })}</div>`
+            : `<div class="rs-bd-row muted">${t('rs.board.sin0', { sin: name })}</div>`;
+    };
+    const lead = ts.leader ? t('rs.board.lead', { n: ts.leader.ldr, p: buffPct(ts.leader.pct) }) : t('rs.board.noLead');
+    const left = `<div class="rs-bd-col"><div class="rs-bd-row rs-bd-lead">${lead}</div>${sins.slice(0, 3).map(sinLine).join('')}</div>`;
+    const right = `<div class="rs-bd-col">${sins.slice(3).map(sinLine).join('')}</div>`;
+    return el('div', 'rs-board', left + right);
 }
 
-/** 칸 하나 — 안 열린 칸도 그린다(어디까지 열리는지가 보여야 한다 · §13). 무조건 옵션은 카운터를 달지 않는다.
- *  열린 칸의 여섯째 칸은 **잠금 토글**이다(§15 · R28) — 안 열린 칸의 `.locked` 와 헷갈리지 않게 잠근 칸은 `.held` 로 단다.
- *  칸은 등급 · 켜짐 | 조건 | 카운터 | 효과(등급 값) | 리더 보너스 | 잠금 — 카운터는 제 세로줄이다(왼쪽 정렬 · ADR-0757) */
+/** 칸 하나 — 안 열린 칸도 그린다(어디까지 열리는지가 보여야 한다 · §13). 조건 없는 칸은 카운터 없이 단계 「×1」 만 단다.
+ *  열린 칸의 일곱째 칸은 **잠금 토글**이다(§15 · R28) — 안 열린 칸의 `.locked` 와 헷갈리지 않게 잠근 칸은 `.held` 로 단다.
+ *  칸은 등급 · 켜짐 | 죄종 | 조건 | 진행(카운터 · 단계) | 효과(적용 값) | 버프 몫 | 잠금 (왼쪽 정렬 · ADR-0757 · ADR-1048) */
 function tacticCell(slot, onLock) {
     const c = el('div', `rs-cell${slot.open ? (slot.active ? ' on' : ' off') + (slot.locked ? ' held' : '') : ' locked'}`);
     // 칸 번호는 안 적는다 [2026-09-21 사용자 지시 · ADR-0261] — 세로 목록에서는 행의 순서가 번호다. 잠긴 행은 **지을 지휘 천막 랭크** 한 줄뿐 (R137)
@@ -5777,15 +5964,15 @@ function tacticCell(slot, onLock) {
         return c;
     }
     const o = slot.option;
-    const counter = condCounter(o, slot.have, slot.need);
     // 켜짐/꺼짐이 **맨 왼쪽** [2026-09-27 사용자 지시 · §15] — 그 옆이 등급(값만 가르므로 조건·효과 칸이 아니라 행 머리 · ADR-0261 · tactic_card_design §5-5)
     c.innerHTML = `
         <div class="rs-top"><span class="rs-state">${t(slot.active ? 'rs.on' : 'rs.off')}</span>
             <span class="rs-grade ${o.grade}">${t(`rs.grade.${o.grade}`)}</span></div>
+        <div class="rs-sin" style="color:${sinColor(o.sin)}">${sinName(o.sin)}</div>
         <div class="rs-cond">${condText(o)}</div>
-        <div class="rs-cnt-c">${counter}</div>
-        <div class="rs-eff">${optionEffect(o)}</div>
-        ${leadCell(slot)}`;
+        <div class="rs-cnt-c">${condCounter(slot)}</div>
+        <div class="rs-eff">${optionEffect(o, slot.value)}</div>
+        ${buffCell(slot)}`;
     // 자물쇠 아이콘 [2026-09-27 사용자 지시 · §15] — 잠긴 칸 = 닫힌 자물쇠 · 안 잠긴 칸 = 열린 자물쇠.
     //   누르면 일어날 일(잠그기 / 풀기)은 hover 제목이 말한다 — 잠근 상태는 버튼 강조와 행의 `.held` 도 말한다
     const b = el('button', `btn sm rs-pin${slot.locked ? ' on' : ''}`, lockIcon(slot.locked));
@@ -7896,6 +8083,26 @@ function forgeMake(p) {
 
     const ms = SYS.game.makeState(G, part, level, invNo());   // 만든 것은 보고 있는 인벤토리로 — 가득 판정도 그것으로 (ADR-0521)
     if (!ms) return;
+    // 계보 줄 — 무기 줄이 계보(`line`)를 들면 레벨 줄 아래 `빠름` · `보통` · `느림` 을 세우고 고른 계보의 줄만 편다(무기군마다 한 줄 · ADR-1044 · R445).
+    //   첫 단 아래 레벨은 무기군마다 기본 하나라(계보 없음) 줄이 안 선다. 칸 폭 = 위 두 줄 (`.fg-make > .segmented > .btn`)
+    const lines = [...new Set(ms.kinds.map(k => k.line).filter(Boolean))];
+    const line = lines.includes(state.makeLine) ? state.makeLine : lines[0] ?? null;
+    if (lines.length) {
+        const lr = el('div', 'segmented');
+        for (const ln of lines) {
+            const btn = el('button', `btn sm${line === ln ? ' on' : ''}`, t(`fg.make.line.${ln}`));
+            btn.onclick = () => { state.makeLine = ln; render(); };
+            lr.appendChild(btn);
+        }
+        col.appendChild(lr);
+    }
+    /** 목록에 보이는 줄 — 계보를 든 줄이면 고른 계보(없으면 첫 계보)의 것만 */
+    const shownKinds = (kinds, ln) => {
+        const ls = kinds.map(k => k.line).filter(Boolean);
+        if (!ls.length) return kinds;
+        const pickLn = ls.includes(ln) ? ln : ls[0];
+        return kinds.filter(k => k.line === pickLn);
+    };
     // 필요 재료 칸 셋 — 그림 자리에 **재료 이름 글자**(재료 아트가 없다 · 상점 재료 칸과 같은 규칙) · 칸 아래 `보유/필요`.
     //   필요량은 부위마다 한 줄이라 모든 줄이 같은 칸을 든다 (ADR-0263)
     const mats = ms.cost.map(c => {
@@ -7904,8 +8111,9 @@ function forgeMake(p) {
     }).join('');
     const list = el('div', 'fg-kinds');
     // 줄 높이 — 목록이 패널 맨 아래에 닿게 가르는 줄 수 = 이 레벨에서 줄이 가장 많은 부위의 줄 수 (부위를 바꿔도 줄 높이가 같다 · style.css `.fg-kinds`)
-    list.style.setProperty('--kind-rows', Math.max(...D.slots.map(s => SYS.game.makeState(G, s.id, level)?.kinds.length ?? 0)));
-    for (const k of ms.kinds) {
+    //   셀 때는 **보이는** 줄 — 무기는 고른 계보의 줄(무기군마다 한 줄 · ADR-1044)
+    list.style.setProperty('--kind-rows', Math.max(...D.slots.map(s => shownKinds(SYS.game.makeState(G, s.id, level)?.kinds ?? [], line).length)));
+    for (const k of shownKinds(ms.kinds, line)) {
         // 그림 · 이름 = **만들어질 베이스** — 인벤토리 칸과 같은 규칙(`itemImg`). 무기는 그 레벨의 세부 베이스다(레벨을 바꾸면 바뀐다 · `makeState` 의 `baseId`)
         const look = { slot: part, group: k.group, baseId: k.baseId };
         const row = el('div', 'fg-kind', `<span class="fg-ic">${itemImg(look)}</span><span class="fg-kname">${L(k)}</span><span class="fg-kmats">${mats}</span>`);
@@ -9551,6 +9759,8 @@ async function boot() {
     if (DEV_HOST && (boot.has('dev') || boot.has('tab'))) { state.screen = 'start'; if (loadSave()) continueGame(); }
     // 같은 브라우저의 다른 탭이 세이브를 쓰면 이 탭은 멈춘다 (§2-1)
     onSaveWrittenElsewhere(freeze);
+    // 방문 집계 — 플레이 기록과 같은 주소에서만 Analytics 를 켠다 · 안 기다린다 (§2-1 · ADR-1049)
+    if (TRACK_ON) CLOUD.startAnalytics();
     // 창을 닫는 셋째 길 — 닫기 버튼 · 판 바깥 클릭 · 여기 (SCREEN_DESIGN §2 창 레이어). 한 번만 건다 · 닫는 길이 없는 창(`lock`)은 뺀다
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.modal && !MODALS[state.modal]?.lock) closeModal(); });
     // 자원 미니게임의 방향키 (§8 · ADR-0532) — 판이 도는 동안만 먹는다
@@ -9838,11 +10048,21 @@ async function boot() {
             // `&rating=n` 레이팅(세이브에 적는다 · 개발 장치) · 후보는 시드 1 로 굴린다(헤드리스 재현)
             const A = arenaReset(state.arena);
             if (q.has('rating') && Number.isFinite(Number(q.get('rating')))) G.arena = { ...SYS.game.arenaState(G), rating: Number(q.get('rating')), peak: Math.max(SYS.game.arenaState(G).peak, Number(q.get('rating'))) };
-            // `&def=n` 방어 편성 등록(세이브에 적는다) · `&ghosts=1` 가짜 고스트 넷 · 방어 기록 둘 — AI 팀을 팀 코드로 싸서 받기와 같은 길(`arenaTake`)로 넣는다
+            // `&def=n` 방어 편성 등록(세이브에 적는다) · `&ghosts=1` 가짜 고스트 넷 · 방어 기록 셋(하나는 친선전) — AI 팀을 팀 코드로 싸서 받기와 같은 길(`arenaTake`)로 넣는다
             //   (닉네임 하나는 태그 글자를 품는다 — 화면이 글자를 거르는지 본다 · ADR-1040)
             if (q.has('def')) SYS.game.setArenaDefense(G, Number(q.get('def')) || null);
+            // 등록 판(ADR-1042) — `&reg=1` 이면 이름 · 방어 편성을 비운 채 그 판이 선다 · 아니면 헤드리스가 본 화면에 닿게 비어 있는 쪽을 채운다
+            //   (이름 = 「Tester」 · 방어 편성 = 고른 편성 — 이 브라우저 · 세이브에 적는다 · 개발 장치)
+            if (q.get('reg') === '1') {
+                SYS.game.setArenaDefense(G, null);
+                Object.assign(A, { forceReg: true, reg: { nick: '', no: null } });
+            } else {
+                if (!cleanNick(loadTrack().nick)) { const rec = loadTrack(); rec.nick = 'Tester'; writeTrack(rec); }
+                if (SYS.game.arenaDefense(G) === null) SYS.game.setArenaDefense(G, G.preset ?? 1);
+            }
             if (q.get('ghosts') === '1') {
                 arenaNet.fake = true;
+                arenaNet.me ??= 'dev-me';   // 내 태그가 서는 자리를 본다(계정 없이)
                 const at = SYS.game.arenaState(G).rating, rng = makeRng(2);
                 const teams = [-150, 40, 120, 400].map((d, k) => {
                     const r = Math.max(0, at + d), team = SYS.arena.rollTierOpponent(SYS.arena.tierOfRating(r), rng);
@@ -9853,21 +10073,26 @@ async function boot() {
                 arenaTake(teams, [
                     { by: 'dev', nick: 'Ghost 2', rating: at + 40, result: 'loss', at: now() - 3 * 3600 * 1000 },
                     { by: 'dev', nick: '', rating: at - 150, result: 'win', at: now() - 26 * 3600 * 1000 },
+                    { by: 'dev-ghost-2', nick: 'Ghost 3', rating: at + 120, result: 'draw', friendly: true, at: now() - 50 * 3600 * 1000 },   // 친선전 줄(ADR-1042)
                 ], true);
             }
             A.cands = SYS.arena.rollRatedCandidates(SYS.game.arenaState(G).rating, makeRng(1), picked.map(h => h.name), arenaNet.pool ?? []);
+            A.pick = Math.floor(A.cands.length / 2);   // 가운데(비슷)가 골라진 채
             A.fresh = false;   // 가짜 고스트를 받으며 켜진 「새로 굴림」을 끈다 — 후보는 시드 1 그대로
-            // `&friendly=1` 친선전 창 — 내 팀 코드를 만들고 그 코드를 불러온 채(자기 팀과 붙는다) · `&bad=1` 첫 영웅 레벨을 만렙 위로(사유 줄)
-            if (q.get('friendly') === '1' && picked.length === SYS.arena.teamSize) {
-                const payload = SYS.arena.exportTeam(picked, G.items, ranks);
-                A.code = encodeTeam(payload);
-                if (q.get('bad') === '1') payload.heroes[0].hero.level = D.balance.hero_level_cap + 1;
-                A.paste = encodeTeam(payload);
-                const r = SYS.arena.importTeam(decodeTeam(A.paste));
-                if (r.ok) Object.assign(A, { ghost: r.team, pick: 'ghost' });
-                else { A.problems = r.problems.map(p => ({ code: p.code, hero: p.hero ?? null })); state.modal = 'arenaCode'; }
+            // `&friendly=1` 친선전 카드가 골라진 채 — 가짜 고스트가 있으면 그 첫째 · 없으면 내 고른 편성을 받은 팀처럼 세운다(자기 팀과 붙는다 · ADR-1042)
+            if (q.get('friendly') === '1') {
+                const p = arenaNet.pool?.[0];
+                const own = !p && picked.length === SYS.arena.teamSize ? SYS.arena.importTeam(SYS.arena.exportTeam(picked, G.items, ranks)) : null;
+                const friend = p ? { id: p.id, nick: arenaNet.nicks.get(p.id) ?? '', rating: p.rating, team: p.team }
+                    : own?.ok ? { id: 'dev-self', nick: loadTrack().nick, rating: SYS.game.arenaState(G).rating, team: own.team } : null;
+                if (friend) Object.assign(A, { friend, pick: 'friend' });
             }
-            if (q.get('modal') === '1') state.modal = 'arenaCode';
+            // `&users=1` 친구와 전투 창을 연 채 · `&q=` 찾기 글 — 가짜 고스트(`&ghosts=1`)가 목록을 채운다
+            if (q.get('users') === '1') {
+                A.users = { q: q.get('q') ?? '', rows: null, cursor: null, busy: false };
+                state.modal = 'arenaUsers';
+                arenaUsersFind(false, true);
+            }
         }
     }
     if (dev === 'tactics') {   // 전술 칸이 전부 열린 상태 — 칸은 지휘 천막 랭크로만 열리므로 헤드리스가 닿을 길을 따로 낸다
@@ -9885,6 +10110,11 @@ async function boot() {
         Object.assign(G.materials, per);
         G.resources.gold = Math.max(G.resources.gold, rs.reduce((a, r) => a + r.gold, 0) * levels.length);
         state.tab = 'forge';
+        // `&mlv=<레벨>` · `&mln=<계보>` — 그 제작 레벨 · 무기 계보를 고른 채(ADR-1044 · 클릭 없이 닿는 길). 없는 레벨이면 첫 레벨 · 없는 계보면 첫 계보
+        const mq = new URLSearchParams(location.search);
+        const mlv = Number(mq.get('mlv'));
+        if (levels.some(l => l.level === mlv)) state.makeLevel = mlv;
+        if (mq.get('mln')) state.makeLine = mq.get('mln');
     }
     // ~~`?dev=watch` 파견 관전 창~~ — 2026-10-18 창째 걷었다 (ADR-0665)
     if (dev === 'mg') {   // 자원 미니게임 창 (§8 · §10 · ADR-0532) — 판은 연구소가 서면 연다 · `&mg=<줄>` · `&go=1` 이면 판을 연 채 · `&open=0` 이면 창 없이
@@ -10180,6 +10410,8 @@ function startClocks() {
     trackPush();
     // 콜로세움 데모 — 켤 때 한 번 받아 둔다(남의 방어 편성 · 내 방어 기록 · SCREEN_DESIGN §1 「온라인 데모」)
     arenaPull(true);
+    // 내 태그 — 받기가 규칙에 막혀도 설정 · 등록 판에 선다(계정 id 만 · ADR-1042)
+    if (TRACK_ON) CLOUD.myId().then(id => { if (id && !arenaNet.me) arenaNet.me = id; });
 }
 
 boot().catch(e => {

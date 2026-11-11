@@ -144,6 +144,19 @@ export function createFormula(balance) {
     }
 
     /**
+     * **무기 베이스 계보 배율을 먹인 무기군** [신설 2026-11-11 · R445 · item_design §1 「무기 베이스」] — 계보(빠름 · 보통 · 느림)는 공속을 조금씩 다르게 하고
+     *   평균 데미지로 평타 DPS 를 맞춘다: 행동 주기와 한 방 배율에 **같은 배율** `base.periodMult` 를 곱한다(한 방 ÷ 주기가 그대로).
+     *   배율이 없거나 1 이면(베이스 모름 · 옛 세이브의 퇴역 id · 몬스터 무기군 풀 밖) **무기군을 그대로** 돌려준다 — 새 객체를 안 만든다.
+     *   소비자는 `hero.computeCombat`(전투) · `item.weaponDamage`(화면) 둘 — 같은 함수라 툴팁 표기 = 계산
+     * @param group 무기군 정의(없으면 그대로 null) · @param base 무기 베이스 행(`weapon_base.csv` — `{periodMult}`) 또는 null
+     */
+    function weaponLine(group, base) {
+        const m = base?.periodMult;
+        if (!group || m === undefined || m === null || m === 1) return group ?? null;
+        return { ...group, period: group.period * m, hitMult: (group.hitMult ?? 1) * m };
+    }
+
+    /**
      * 무기 피해의 **가운데 값**(강화 · 폭 없음 · 반올림 없음) [신설 2026-10-05 · R206] — 무기 옵션 `wdmg` 스케일(색욕 최소 · 최대 데미지)이
      * 「무기 피해와 같이 자란다」(item_design §1 · battle_design §9-0)를 지키려고 이 값에 비율을 곱한다. `weaponDamage` 와 같은 표를 읽는다
      */
@@ -281,7 +294,7 @@ export function createFormula(balance) {
     const effectiveCd = (cd, period) => Math.ceil(cd / period) * period;
 
     return {
-        roundPct, pctOption, growthMult, upgradeMult, weaponDamage, weaponMid, armorDefense, mitigation, physicalDefense, resCap, appliedResist, reductionMult,
+        roundPct, pctOption, growthMult, upgradeMult, weaponDamage, weaponLine, weaponMid, armorDefense, mitigation, physicalDefense, resCap, appliedResist, reductionMult,
         hitChance, hitLevelMult, statCoef, strike, indirect, leech, effectiveCd, statBetter,
     };
 }

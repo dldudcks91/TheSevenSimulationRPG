@@ -49,7 +49,7 @@ export const D = {
     armorSinOptions: [],      // armor_sin_option.csv — [{slot, sin, option, stat, scale, min, max, perIlvl?}] · 방어구 죄종 칸 후보(갑옷은 죄종 계열표 · 2026-10-05) · CSV 행 순서 (2026-09-18)
     weaponGroups: null,       // weapon_group.csv — {id: {id, ko, en, classes, period, variance, damageKind, release}}
     weaponGroupList: [],
-    weaponBases: null,        // weapon_base.csv — {groupId: [{id, ko, en}...]} · CSV 행 순서(대역 순) — 무기군마다 7 갖춰지면 굴림 폭 · 지금은 본편 열 전부(staff·orb·crucifix·bible·crossbow 2026-09-14) · 확장 dagger·scythe 는 없다
+    weaponBases: null,        // weapon_base.csv — {groupId: [{id, ko, en, tier, minIlvl, line, periodMult}...]} · CSV 행 순서(단 → 계보) · 본편 열 무기군마다 10(R445) · 확장 dagger·scythe 는 없다
     skillRows: [],            // skill.csv 원시 행 — 스킬마다 하나뿐인 것. 정규화·검증은 game_logic/skill.js
     skillEffectRows: [],      // skill_effect.csv 원시 행 — 스킬이 하는 일(한 줄에 하나 · 2026-09-22)
     skillStatusRows: [],      // skill_status.csv 원시 행 — 걸린 효과(버프 · 디버프 · 오오라가 거는 창 · 2026-09-22)
@@ -69,10 +69,9 @@ export const D = {
     makeRecipes: {},          // make_recipe.csv — {part: {gold, mat, matUnits, dust, salvageMat}} · 제작 · 강화 · 분해의 부위 재료 ⚠임시 (item_design §7-1 · R96 · R373)
     potions: [],              // potion.csv — [{id, kind, tier, ko, en, heal, craftGold, startOwned(시작 개수)}] · CSV 행 순서 · 물약 단계 ⚠임시값 (battle_design §7-1 · item_design §7-4 · R103) · 만들 수 있는 단계는 대장간 랭크(R137)
     shrines: [],              // shrine.csv — [{id, sin, ko, en, fx:{stat: value}}] · shrine_id 로 묶음 · 첫 줄 순서 = 뽑기 순서 ⚠임시값 (base_expedition_design §1-2 · 2026-09-29)
-    tacticSlots: [],          // tactic_slot.csv 원시 행 — 칸 수 = 행 수 (정규화·검증은 game_logic/tactic.js)
-    tacticOptions: [],        // tactic_option.csv 원시 행 — 1행 = 옵션 하나(조건 id + 인자 + 능력치 + 기준값) · ~~`(option_id, grade)` 복합키~~ 2026-09-22 폐지
-    tacticConditions: [],     // tactic_condition.csv 원시 행 — 조건 사전 · 점수 ⚠임시 (tactic_card_design §5-8 · R134)
-    tacticScores: [],         // tactic_score.csv 원시 행 — 점수 하나 = 등급별 배수 ⚠제안 (§5-8)
+    tacticSlots: [],          // tactic_slot.csv 원시 행 — 칸 수 = 행 수 · 칸마다 조건 하나 (정규화·검증은 game_logic/tactic.js)
+    tacticOptions: [],        // tactic_option.csv 원시 행 — 1행 = 가족 하나(죄종 + 효과 + 능력치 + 기준값 + 배수 몫 · 2026-11-11 · R441 · tactic_card_design §5-14)
+    tacticConditions: [],     // tactic_condition.csv 원시 행 — 조건 사전 · 단계 문턱 셋 ⚠임시 (§5-14 · R441) · ~~tactic_score.csv~~ 2026-11-11 삭제
     slots: [],                // equip_slot.csv — 장비 **부위** 8 [{id, ko, en, icon}] · part_order 순
     equipSlots: [],           // equip_slot.csv — 착용 **위치** 9 [{id, part}] · slot_order 순
     classes: [],              // class.csv — [{id, keyAttr, subAttr, ko, en, role:{ko,en}, roleText:{ko,en}, stage, color}] (stage = CSV 의 release)
@@ -129,7 +128,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'lab_material', 'hero_tier', 'monster_role', 'formation_template',
     'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option',   // ~~armor_common_option~~ 2026-10-21 R303 퇴역(방어구 넷이 계열표)
-    'tactic_condition', 'tactic_score', 'building', 'building_rank', 'building_effect',
+    'tactic_condition', 'building', 'building_rank', 'building_effect',   // ~~tactic_score~~ 2026-11-11 R441 삭제(등급 배수는 balance.csv:tactic_grade_mult_*)
     'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff', 'commission_fame', 'ring_base_option', 'raid_boss', 'raid_pattern'];
 
 export async function loadData(base = './data/') {
@@ -146,7 +145,7 @@ export async function loadData(base = './data/') {
         heroTierRow, monsterRoleRow, formationTplRow,
         heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow,
-        tacticConditionRow, tacticScoreRow, buildingRow, buildingRankRow, buildingEffectRow,
+        tacticConditionRow, buildingRow, buildingRankRow, buildingEffectRow,
         slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow, commissionFameRow, ringBaseRow, raidBossRow, raidPatternRow] = texts.map(parseCsv);
 
     D.ringBaseOptions = ringBaseRow;
@@ -258,9 +257,8 @@ export async function loadData(base = './data/') {
     //   방어구 표와 같은 규약 · 검증은 `item.js` 가 로드 시 한다. ⚠ 행 순서가 결정론 계약이다
     D.accessorySinOptions = accSinOptionRow.map(r => ({ slot: r.slot, sin: r.sin, option: r.option, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r) }));
     D.accessoryCommonOptions = accCommonOptionRow.map(r => ({ family: r.family, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r) }));
-    // 무기 베이스 — 무기군별 7종 이름 풀. **아직 두 무기군뿐**(item_design.md §1 「이름 — 9군」 — 나머지는 미정/미발주).
-    //   드롭 시 이 풀이 있는 무기군만 `item.build` 가 하나를 굴려 이름·그림을 그 베이스로 좁힌다(없으면 무기군 이름 그대로).
-    //   ⚠ 행 순서가 대역 순(기본 → ①A·①B → ②A·②B → ③A·③B)이지만 **굴림은 균등** — 대역별 ilvl 경계는 아직 없다(DEV_PLAN R62)
+    // 무기 베이스 — 본편 열 무기군마다 10(아래 `D.weaponBases`). 드롭은 `item.build` 가 그 아이템 레벨 단의 행에서 하나를 굴려
+    //   이름 · 그림을 그 베이스로 좁힌다(풀이 없는 무기군은 무기군 이름 그대로). ⚠ 행 순서가 결정론 계약이다(단 → 계보 순 · R445)
     // 아이템 이름의 죄종 단어 [2026-09-19 · item_design §1 「이름」] — 죄종마다 **파일 순서**로 읽는다(`tier` 로 정렬하지 않는다 · 2026-11-10 R433).
     //   드롭이 단어 번호를 굴려 세이브에 박으므로(INTERFACE §2-5 `words`) **그 죄종 행의 순서가 계약**이다 — 새 단어는 죄종 행의 끝에만 붙인다.
     //   `tier_min_ilvl` = 그 단이 열리는 아이템 레벨 — 드롭이 메인 줄 단어 후보 · 단어 범위를 낸다(`naming.wordLadder` → item.js · 2026-11-11 R436).
@@ -280,8 +278,13 @@ export async function loadData(base = './data/') {
         || ws0[0].tier !== byTier.at(-1).tier)
         throw new Error(`data: sin_word.csv — 죄종마다 (단@해금 레벨) 배열이 같고 · 단 1 부터 하나씩 · 해금 레벨이 단 따라 오르고(단 1 = 1) · 첫 줄이 맨 위 단이어야 한다 (${wordTiers.join(' / ')})`);
     D.weaponBases = {};
-    // `make_level` — 제작에서 이 베이스가 나오는 레벨 [2026-09-21 사용자 지시 · item_design §7-1] (드롭은 아직 안 읽는다)
-    for (const r of weaponBaseRow) (D.weaponBases[r.group_id] ??= []).push({ id: r.base_id, ko: r.name_kr, en: r.name_en, makeLevel: Number(r.make_level) });
+    // 무기군당 10 = 기본 1 + 단 3 × 계보 3 [2026-11-11 · R445 · item_design §1 「무기 베이스」 — ~~`make_level` 제작 레벨 일곱 계단~~ 대체].
+    //   `tier` 0(기본) ~ 3 · `minIlvl` = 그 단이 열리는 아이템 레벨(방어구 단과 같은 값 — `item.js` 가 로드 때 대조) · `line` = fast | mid | slow(기본은 `-` → null)
+    //   · `periodMult` = 계보 공속 배율(주기와 한 방에 같이 곱한다 — `formula.weaponLine`). 모양 검증(단 0 하나 · 단마다 계보 셋)도 `item.js` 가 한다
+    for (const r of weaponBaseRow) (D.weaponBases[r.group_id] ??= []).push({
+        id: r.base_id, ko: r.name_kr, en: r.name_en,
+        tier: r.tier, minIlvl: r.tier_min_ilvl, line: r.line === '-' ? null : r.line, periodMult: r.period_mult,
+    });
     // 무기 죄종 계열표 [2026-09-11 · R78 · 계열표 2026-10-05 · R206 · item_design §1 「무기 옵션 — 죄종 계열」] — 무기는 베이스 옵션 1 + 메인 줄 + 랜덤 줄을 받고 `affix.csv` 를 안 쓴다.
     //   `option` = 계열 안의 옵션 번호(1 · 2 · 3 — 같은 번호의 행 여럿은 변형) · `applies_to` = `all` · damage_kind · 직업 id — 검증은 `item.js` 가 로드 시 한다. ⚠ 행 순서가 결정론 계약이다
     D.weaponSinOptions = weaponSinOptionRow.map(r => ({ sin: r.sin, option: r.option, appliesTo: r.applies_to, stat: r.stat, scale: r.scale, min: r.min, max: r.max }));
@@ -292,9 +295,8 @@ export async function loadData(base = './data/') {
     D.masteryNodes = masteryNode;
     D.tacticSlots = tacticSlot;
     D.tacticOptions = tacticOption;
-    // 조건 사전 · 점수 × 등급 배수 — 옵션 값 = 기준값 × 배수(조건의 점수, 등급) (tactic_card_design §5-8 · 2026-09-22 · R134). 검증은 game_logic/tactic.js
+    // 조건 사전 — 칸 조건의 단계 문턱 셋 · 값 = 기준값 × 등급 배수 × 단계 (tactic_card_design §5-14 · 2026-11-11 · R441). 검증은 game_logic/tactic.js
     D.tacticConditions = tacticConditionRow;
-    D.tacticScores = tacticScoreRow;
     // 의뢰 — **유형 둘은 확정 기획**(GAME_DESIGN §9 09-07 「의뢰는 목표형」)이고, 카드는 틀(commission) · 등급(commission_grade) ·
     // 대상을 굴려 만든다(GAME_DESIGN §9 09-24 · R153 — ~~게시판 행 = CSV 행~~ 폐기). 수치는 ⚠제안.
     // ⚠ 09-07 전면 개정 — ~~4종(사냥·파견·약탈·보호)~~ 은 「전장을 여는 의뢰」를 전제한 모델이라 통째로 폐기됐다.
@@ -593,6 +595,7 @@ export function buildSystems(d, dev = {}) {
         [c, ids.filter(id => skill.defs[id].tier === 1)]));
     const hero = createHeroSystem({
         balance: d.balance, stats: d.heroAttributes, sins, classes: d.classes, weaponGroups: d.weaponGroups, armorGroups: d.armorGroups,
+        weaponBases: d.weaponBases,   // 든 무기의 베이스 행 — 계보 공속 배율(`formula.weaponLine` · 2026-11-11 · R445)
         sinAttrs: d.sinAttrs ?? undefined,   // 죄종 → 능력치 한 칸 — 능력치 굴림의 죄종 비율 (sin_attr.csv · 2026-10-22 · R308)
         levelXp: d.levelXp,   // 레벨업 필요 XP 표 (level_xp.csv)
         namePool: d.heroNamePool, traitPool: d.heroTraitPool, masteryNodes: d.masteryNodes ?? [],
@@ -622,11 +625,17 @@ export function buildSystems(d, dev = {}) {
         // ~~classSkills · starterSkills~~ — 무기가 스킬을 안 담는다 (2026-09-29 · R179 · skill_design §2-1)
     });
     // 전술은 규칙만 든다(무상태) — 어느 칸에 무엇이 들었는지는 세이브가 들고 state 가 묻는다
-    // 표가 셋이다 — 조건 사전(점수) · 옵션(조건 + 능력치 + 기준값) · 점수 × 등급 배수 (tactic_card_design §5-8 · 2026-09-22 · R134)
+    // 표가 셋이다 — 칸(조건 하나) · 조건 사전(단계 문턱) · 옵션(죄종 × 효과 가족) (tactic_card_design §5-14 · 2026-11-11 · R441) · `sins` 순서 = 굴림의 죄종 순서
     const tactic = createTacticSystem({
-        slots: d.tacticSlots ?? [], options: d.tacticOptions ?? [], sins, classes: d.classes,
-        conditions: d.tacticConditions ?? [], scores: d.tacticScores ?? [],
-        attributes: d.heroAttributes ?? [], advances: d.advanceRows ?? [],   // 능력치 합 · 전직 조건의 인자 검증 (2026-11-02)
+        slots: d.tacticSlots ?? [], options: d.tacticOptions ?? [], sins,
+        conditions: d.tacticConditions ?? [],
+        // 등급 배수 · 장비 죄종 몫 — 값 = 기준값 × 등급 배수 × 단계 · 적용 값의 장비 죄종 몫 (tactic_card_design §5-14 · R441). 값은 CSV
+        gradeMult: {
+            common: d.balance.tactic_grade_mult_common,
+            magic: d.balance.tactic_grade_mult_magic,
+            rare: d.balance.tactic_grade_mult_rare,
+        },
+        gearPct: d.balance.tactic_sin_gear_pct,
         // 등급 가중치 — 리롤이 옵션과 등급을 같이 굴린다 (tactic_card_design §5-5). 값은 CSV
         gradeWeights: {
             common: d.balance.tactic_grade_weight_common,

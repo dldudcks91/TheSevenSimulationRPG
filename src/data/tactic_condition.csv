@@ -1,9 +1,4 @@
-cond_id,category,polarity,test,arg,n,score,chance,description_kr
-always,always,has,none,-,-,0,1,조건 없음 — 리롤의 바닥값. 점수 0 은 무조건만이다. ⚠임시 — 2026-09-22 측정 출발점 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
-party_sin3,party,has,sin_count,sin,3,5,-,옵션이 지정한 죄종 영웅 3명 이상 — 다른 죄종 셋은 켜지 않는다. 2026-11-01 사용자 확정 · 죄종 7종의 전투 능력치 옵션을 균등 추첨 · 점수와 수치는 임시 (tactic_card_design §5-11)
-party_cls2,party,has,cls_count,cls,2,3,-,옵션이 지정한 직업 영웅 2명 이상 — 다른 직업 둘은 켜지 않는다. 2026-11-01 사용자 확정 · 본편 5직업의 전투 능력치 옵션을 균등 추첨 · 점수와 수치는 임시 (tactic_card_design §5-11)
-attr_sum_40,attr,has,attr_sum,attr,40,3,-,파티 세 명의 지정 능력치 합이 40 이상 — 힘은 전사 · 기사 · 궁수 셋이 밀어 평균이 높아 문턱이 다르다(2026-11-02 측정 · 무작위 파티 5%). ⚠임시 — 문턱 · 점수는 나중에 다시 정한다 (tactic_card_design §5-12)
-attr_sum_35,attr,has,attr_sum,attr,35,3,-,파티 세 명의 지정 능력치 합이 35 이상 — 2026-11-02 측정 · 무작위 파티 4 ~ 9%. ⚠임시 — 문턱 · 점수는 나중에 다시 정한다 (tactic_card_design §5-12)
-advance_has,advance,has,advance_count,adv,1,3,-,파티에 지정 전직이 있으면. ⚠임시 — 점수는 나중에 다시 정한다 (tactic_card_design §5-13)
-bond_100,bond,has,together,-,100,4,-,지금 셋이 같이 깬 칸이 100개 이상(이긴 칸마다 +1 · 2026-09-29) — 확률이 아니라 시간(칸 하나 2~4분이면 약 5시간 이상). ⚠임시 — 2026-09-22 측정 출발점 · 기획 완료 뒤 다시 정한다 (tactic_card_design §5-8)
-bond_30,bond,has,together,-,30,2,-,지금 셋이 같이 깬 칸이 30개 이상 — bond_100 의 앞 단. ⚠임시 — 2026-09-27 칸 = 상황 고정(사용자 「일단」) 때 종류마다 가족 둘을 채우려고 넣었다 (tactic_card_design §5-9)
+cond_id,test,step1,step2,step3,description_kr
+none,none,-,-,-,조건 없음 — 언제나 단계 1 (1랭크 · 비운 3 · 4랭크 · tactic_card_design §5-14)
+sin_heroes,slot_sin_heroes,1,2,3,그 칸 죄종의 영웅 수 — 1 · 2 · 3명이면 단계 1 · 2 · 3 · 0명이면 꺼짐. 단계 = 넘은 문턱 수 · 문턱은 오름차순 (2랭크 · tactic_card_design §5-14)
+kills_together,kills_together,200,600,2000,지금 셋이 함께 잡은 몬스터 수 — 이긴 판 · 진 판 모두 센다 · 한 명이라도 바뀌면 다른 조합 (5랭크 · tactic_card_design §5-14). ⚠임시 — 1~5장 칸 하나의 평균 몬스터 약 19마리(일반 라운드 1~3 · 정예 라운드 3 · 스테이지보스 라운드 2~3 · 챕터보스 칸 1 — stage.csv · stage_round.csv · round_budget.csv)로 옛 관계 문턱(30 · 100칸)에 10칸을 앞에 더해 10 · 30 · 100칸 분량을 환산했다
