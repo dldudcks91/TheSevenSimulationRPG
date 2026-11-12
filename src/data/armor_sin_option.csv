@@ -3,12 +3,13 @@ armor,wrath,1,fhr,flat,0.1,0.25,-,갑옷 분노 ① — 타격 회복(물리 경
 armor,wrath,2,damage_reduction,flat,0.02,0.05,-,갑옷 분노 ② — 피해 감소(조건 없음 · 원천별 곱) · 탱커가 모든 갑옷에서 찾는 줄이 되기 쉬워 값은 낮게 ⚠제안 수치
 armor,wrath,3,res_fire,flat,0.06,0.2,-,갑옷 분노 ③ — 화염 저항 ⚠제안 수치
 armor,sloth,1,hp_pct,flat,0.03,0.08,-,갑옷 나태 ① — 최대 체력 +% ⚠제안 수치
+armor,sloth,2,proc_struck_defense,flat,0.05,0.12,-,갑옷 나태 ② — 피격 시 방어 스킬 발동 확률 · 방어 풀(skill.csv:armor_pool · 오오라는 발동이 못 거는 시전이라 뺀다) · 직업 무관 · 옛 갑옷 시기 ② 디버프 발동과 같은 대역 ⚠제안 수치 (2026-11-11 사용자 「피격 시 방어스킬 발동으로 나태에 넣어봐」 · R444)
 armor,sloth,3,res_cold,flat,0.06,0.2,-,갑옷 나태 ③ — 냉기 저항 ⚠제안 수치
 armor,lust,1,hp_flat,growth,8,20,-,갑옷 색욕 ① — 체력 +수치 ⚠제안 수치
 armor,lust,2,hp_regen,tenth,0.2,0.6,-,갑옷 색욕 ② — 체력 재생(초당 고정 · 0.1 단위) · ⚠ 아이템 레벨을 따라 자라는지 미정 ⚠제안 수치
 armor,lust,3,res_lightning,flat,0.06,0.2,-,갑옷 색욕 ③ — 전기 저항 ⚠제안 수치
 armor,envy,1,counter_chance,flat,0.02,0.04,-,갑옷 시기 ① — 반격 확률(맞으면 때린 적에게 덤 기본 공격 1회 · 차례는 안 쓴다) · 투구 반격과 같은 대역 · ~~0.05 ~ 0.12~~ 2026-11-02 칸당 3% 안팎(R426) ⚠제안 수치 (2026-10-06 사용자 — ~~반사 피해~~ 대체 · 장비 반사 피해 폐지 · item_design §1 「10-06 옵션 개정」 · R225)
-armor,envy,2,proc_struck_debuff,flat,0.05,0.12,-,갑옷 시기 ② — 피격 시 디버프 스킬 발동 확률 · 저주 중 드롭 때 하나 · ⚠ 전투 미적용 ⚠제안 수치
+armor,envy,2,reflect_damage,flat,0.02,0.05,-,갑옷 시기 ② — 반사 피해(받은 최종 피해 × 값을 때린 쪽에) · 갑옷 분노 ② 피해 감소와 같은 대역 ⚠제안 수치 (2026-11-11 사용자 「시기의 빈칸을 반사데미지로넣어봐 일단」 · R444)
 armor,envy,3,res_poison,flat,0.06,0.2,-,갑옷 시기 ③ — 독 저항 ⚠제안 수치
 armor,pride,1,def_per_level,band,1,2,0,갑옷 오만 — 레벨당 방어력(영웅 레벨 × 값을 더한다 · 정수 · per_ilvl 0) · 오만은 이 한 칸(~~특정 스킬 +n · 레벨당 체력~~ 2026-10-21 삭제) ⚠제안 수치 (2026-10-21 사용자 · item_design §1 「10-21 방어구 개정」 · R303)
 armor,gluttony,1,vs_elite_dr,flat,0.04,0.1,-,갑옷 폭식 ① — 정예·보스에게 받는 피해 감소 ⚠제안 수치
@@ -22,6 +23,7 @@ armor,greed,3,xp_gain_pct,flat,0.05,0.12,-,갑옷 탐욕 ③ — 경험치 획�
 helmet,wrath,1,fhr,flat,0.1,0.25,-,투구 분노 ① — 타격 회복 · 갑옷 분노 ① 과 같은 대역 ⚠제안 수치 (2026-10-21 사용자 · item_design §1 「10-21 투구 개정」 · 세 갈래가 같은 표)
 helmet,wrath,2,crit_rate,flat,0.02,0.05,-,투구 분노 ② — 치명타 확률 · 옛 가죽 공통옵션과 같은 대역 ⚠제안 수치 (2026-10-09)
 helmet,wrath,3,res_fire,flat,0.06,0.2,-,투구 분노 ③ — 화염 저항 ⚠제안 수치
+helmet,sloth,1,proc_struck_debuff,flat,0.05,0.12,-,투구 나태 ① — 피격 시 디버프 스킬 발동 확률 · 저주 태그 풀(PROC_POOL curse) · 옛 갑옷 시기 ② 와 같은 대역 ⚠제안 수치 (2026-11-11 사용자 「투구의 나태에다가 피격 시 디버프 스킬 사용되는걸로넣자」 · R447)
 helmet,sloth,2,buff_dur_pct,flat,0.05,0.15,-,투구 나태 ② — 버프 지속시간 +%(낀 영웅이 거는 버프 창) · 반지 · 목걸이 공통과 같은 대역 · ~~쿨타임 감소~~(티아라 특성으로) ⚠제안 수치 (2026-10-21 사용자 · item_design §1 「10-21 방어구 개정」 · R303)
 helmet,sloth,3,res_cold,flat,0.06,0.2,-,투구 나태 ③ — 냉기 저항 ⚠제안 수치
 helmet,lust,1,kill_heal_pct,flat,0.02,0.05,-,투구 색욕 ① — 처치 시 체력 회복(처치마다 최대 HP × 값 · 체력 회복 +% 가 곱한다) · 새 능력치 ⚠제안 수치 (2026-10-06 새 옵션 · 값 규칙 2026-10-21 사용자)
@@ -43,7 +45,7 @@ helmet,greed,3,xp_gain_pct,flat,0.05,0.12,-,투구 탐욕 ③ — 경험치 획�
 gloves,wrath,1,crit_rate,flat,0.02,0.05,-,장갑 분노 ① — 치명타 확률 · 무기 분노 ② 와 같은 대역 ⚠제안 수치 (2026-10-21 사용자 · item_design §1 「10-21 방어구 개정」 · R303)
 gloves,wrath,2,atk_pct,flat,0.03,0.08,-,장갑 분노 ② — 데미지 +%(데미지 % 괄호) · 옛 장갑 풀과 같은 대역 ⚠제안 수치
 gloves,wrath,3,crit_damage,flat,0.04,0.09,-,장갑 분노 ③ — 치명타 피해 · 무기 분노 ① 과 같은 대역 ⚠제안 수치
-gloves,sloth,1,hp_pct,flat,0.03,0.08,-,장갑 나태 ① — 최대 체력 +% · 갑옷 나태 ① 과 같은 대역 ⚠제안 수치
+gloves,sloth,1,proc_hit_buff,flat,0.05,0.12,-,장갑 나태 ① — 타격 시 버프 스킬 발동 확률 · 버프 태그 풀(PROC_POOL buff — 함성 · 강화 · 축복) · 옛 무기 나태 ③ 과 같은 대역 ⚠제안 수치 (2026-11-11 사용자 「장갑의 나태에 최대 체력%가 아니라 타격 시 버프스킬발동으로 수정」 · R449)
 gloves,sloth,2,cooldown_reduction,flat,0.03,0.08,-,장갑 나태 ② — 쿨타임 감소 ⚠제안 수치
 gloves,sloth,3,buff_dur_pct,flat,0.05,0.15,-,장갑 나태 ③ — 버프 지속시간 +% ⚠제안 수치
 gloves,lust,1,kill_heal_pct,flat,0.02,0.05,-,장갑 색욕 ① — 처치 시 체력 회복(처치마다 최대 HP × 값) · 투구 색욕 ① 과 같다 ⚠제안 수치
@@ -74,6 +76,7 @@ boots,envy,1,counter_chance,flat,0.02,0.04,-,신발 시기 ① — 반격 확률
 boots,envy,2,poison_dur_reduction,flat,0.1,0.25,-,신발 시기 ② — 중독 시간 감소 ⚠제안 수치
 boots,envy,3,res_poison,flat,0.06,0.2,-,신발 시기 ③ — 독 저항 ⚠제안 수치
 boots,pride,1,res_all_per_level,fine,0.001,0.002,-,신발 오만 — 한 칸 · 레벨당 모든 원소 저항(영웅 레벨 × 값 · 0.1% 단위) · 새 능력치 ⚠제안 수치 (2026-10-21 사용자 「모든 원소저항으로」)
+boots,gluttony,1,debuff_dur_reduction,flat,0.05,0.12,-,신발 폭식 ① — 상태이상 · 디버프 시간 감소(받는 쪽 · 매력과 더한다 · 원소별 시간 감소와는 곱) · 신발 ② 원소별의 절반 대역 ⚠제안 수치 (2026-11-11 사용자 「ㅇㅇ그렇게해보자 디버프 시간 감소로」 · R451)
 boots,gluttony,2,def_flat,band,2,6,0.3,신발 폭식 ② — 방어력 +수치 ⚠제안 수치
 boots,gluttony,3,res_all,flat,0.03,0.1,-,신발 폭식 ③ — 모든 원소 저항 ⚠제안 수치
 boots,greed,1,magic_find,flat,0.05,0.15,-,신발 탐욕 ① — 매직아이템 획득확률 ⚠제안 수치

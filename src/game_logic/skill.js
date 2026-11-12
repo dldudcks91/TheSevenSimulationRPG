@@ -471,7 +471,7 @@ export function createSkillSystem(data) {
         // 광역·연쇄는 **대상 수가 타수를 정한다** — hits 를 따로 적으면 두 곳 관리가 된다 (§9-3).
         //   ⚠ `hit` 에만 건다 — 같은 대상어를 **적에게 거는 창**(참회·속박)도 쓰는데 그쪽은 타수가 0 이다
         //   정신 집중은 빼고 — 그 타수는 한 방의 타수가 아니라 **방 수**다(방마다 대상 수만큼 · R318)
-        if (e.effect === 'hit' && !CASTS[d.cast]?.chan && (t === 'enemy_all' || t === 'enemy_chain' || t === 'enemy_front' || t === 'enemy_back') && e.hits !== 1)
+        if (e.effect === 'hit' && !CASTS[d.cast]?.chan && (t === 'enemy_all' || t === 'enemy_chain' || t === 'enemy_front' || t === 'enemy_back' || t === 'enemy_hp_max_splash') && e.hits !== 1)
             bad(`${t} 인데 hits ${e.hits} — 타수는 대상 수가 정한다`);
         // 감쇠 — 세 공격 대상이 쓴다(`HIT_DECAY`). 뜻이 다르다: 연쇄는 **배율**이 줄고, 최고 방어 다단은 **대상의 방어값**이 주고,
         //   광역 공격은 **주 대상 밖의 배율**이 준다(멀티샷 광역 약화 · skill_design §13-5 · 2026-09-10).
@@ -539,11 +539,12 @@ export function createSkillSystem(data) {
         const hit = d.effects.find(e => e.effect === 'hit');
         if (!hit) return out;
         const t = lineTarget(d, hit);
-        if (t === 'enemy_all' || t === 'enemy_chain' || t === 'enemy_front' || t === 'enemy_back') out.push('aoe');
-        if (t === 'enemy_single' || t === 'enemy_highest_def' || t === 'enemy_hp_max') out.push('single');   // HP 최대 — 스나이프(2026-10-26 · R357)
-        // 정신 집중 [2026-10-22 · R318] — 나가는 방식에서 파생한다 · 그 타수는 방 수라 다단히트로 세지 않는다
-        if (CASTS[d.cast]?.chan) out.push('channel');   // 끊어 치기 · 계속 닳기 · 모으기 셋 다
-        else if (hit.hits > 1) out.push('multihit');
+        if (t === 'enemy_all' || t === 'enemy_chain' || t === 'enemy_front' || t === 'enemy_back' || t === 'enemy_hp_max_splash') out.push('aoe');   // 주 대상 + 나머지 튀김(R423)도 전원에 닿는다
+        if (t === 'enemy_single' || t === 'enemy_highest_def' || t === 'enemy_hp_max' || t === 'enemy_random') out.push('single');   // 6자리 무작위 한 마리(메테오 · R430)   // HP 최대 — 스나이프(2026-10-26 · R357)
+        // 정신 집중 = **모으기만**(모았다가 한 방) · 다단히트 = **타수 둘 이상 전부**(끊어 치기 · 계속 닳기 포함) [2026-11-02 · 사용자 · R421 · battle_design §3-2 —
+        //   ~~정신 집중 = 정신 집중 셋 다 · 그 타수는 방 수라 다단히트로 세지 않는다~~(10-22 R318)] — 모으기의 `hit` 줄은 타수 1 이라(로드 검사) 둘이 안 겹친다
+        if (CASTS[d.cast]?.burst) out.push('channel');
+        if (hit.hits > 1) out.push('multihit');
         return out;
     }
 
@@ -868,7 +869,7 @@ export function createSkillSystem(data) {
             parts[key] = { value, raw: of(raw), terms };
         }
         const everySec = period === null ? null : F.effectiveCd(def.cool, period);
-        const coolSec = cooldownSec(B, { cdr: ctx.cdr ?? 0, fx: { skillTags: ctx.skillTags } }, def);
+        const coolSec = cooldownSec(B, { cdr: ctx.cdr ?? 0, coolMinus: ctx.coolMinus ?? 0, fx: { skillTags: ctx.skillTags } }, def);   // 쿨 −n초(R432)
         return {
             baseSec: def.cool,
             // 실제 쿨 — 전투가 시전 순간 잡는 것과 같은 함수다(쿨감 곱 · 바닥). 전투 중에 쌓이는 쿨감(나태 T2 겹)은 안 든다 (2026-10-21 · ADR-0703)

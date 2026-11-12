@@ -196,5 +196,24 @@ for no, chunk in RETRY.items():
             lines.append(f'{r + j + 1}. {T[k]}')
         lines.append('')
     open(os.path.join(HERE, f'sheet_{no}_prompt.txt'), 'w', encoding='utf-8').write(HEAD + '\n'.join(lines))
-json.dump({'sheets': sheets, 'dest': dest, 'nodes': keys, 'pick': PICK}, open(os.path.join(HERE, 'plan.json'), 'w'), indent=1)
+# 2026-11-12 — new sin T1 / T3 nodes (PLAN_mastery_tiers §0-1). Tile text = sheet_NN_prompt.txt (HEAD + a FLAT FILL line),
+#   anchor = sheet_01_codex.png. 14 = first takes · 15 = 3 first takes + second takes of risky tiles · 16 = re-roll of
+#   tiles weak at 40px. NEW_PICK = installed 'sheet-tile'. The T2 g3/g6/g9 copies of a T1 picture are file copies.
+NEW_SHEETS = {
+    '14': ['sin_wrath_t1_dmgmax', 'sin_gluttony_t1_dmgmax', 'sin_lust_t1_regen', 'sin_lust_t1_hp', 'sin_envy_t1_dr',
+           'sin_envy_t1_atk', 'sin_envy_t1_resall', 'sin_sloth_t1_def', 'sin_envy_t3_gap'],
+    '15': ['sin_sloth_t3_opening_regen', 'sin_lust_t3_lure', 'sin_pride_t3_gap', 'sin_wrath_t1_dmgmax', 'sin_envy_t3_gap',
+           'sin_pride_t3_gap', 'sin_sloth_t3_opening_regen', 'sin_envy_t1_resall', 'sin_envy_t1_atk'],
+    '16': ['sin_gluttony_t1_dmgmax', 'sin_gluttony_t1_dmgmax', 'sin_sloth_t3_opening_regen', 'sin_sloth_t3_opening_regen',
+           'sin_lust_t3_lure', 'sin_lust_t3_lure', 'sin_envy_t3_gap', 'sin_lust_t1_hp', 'sin_lust_t3_lure'],
+}
+NEW_PICK = {'sin_wrath_t1_dmgmax': '14-1', 'sin_gluttony_t1_dmgmax': '16-2', 'sin_lust_t1_regen': '14-3',
+            'sin_lust_t1_hp': '14-4', 'sin_envy_t1_dr': '14-5', 'sin_envy_t1_atk': '14-6', 'sin_envy_t1_resall': '14-7',
+            'sin_sloth_t1_def': '14-8', 'sin_envy_t3_gap': '16-7', 'sin_sloth_t3_opening_regen': '16-4',
+            'sin_lust_t3_lure': '16-5', 'sin_pride_t3_gap': '15-3'}
+sheets.update(NEW_SHEETS)
+for k in NEW_PICK:
+    dest[k] = f'sin/{k}.png'
+json.dump({'sheets': sheets, 'dest': dest, 'nodes': keys, 'pick': PICK, 'new_pick': NEW_PICK},
+          open(os.path.join(HERE, 'plan.json'), 'w'), indent=1)
 print('nodes', len(keys), 'sheets', {k: len(v) for k, v in sheets.items()})

@@ -60,9 +60,11 @@ war_ragnarok,1,apply,-,0,0,0,0,0,-,war_ragnarok,effect_value,str,0,duration_sec,
 war_berserk,1,apply,-,0,0,0,0,0,-,war_berserk,effect_value,str,0,duration_sec,vit,0,-,-,0,duration_sec,0.8,-,-,-
 war_mutualruin,1,hit,-,1,4.2,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.42,-,-,-
 war_whirlwind,1,hit,-,5,0.5,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.05,-,-,-
-war_thorswrath,1,hit,-,1,4.2,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,cool_sec,-2.2,-,-,-
+war_thorswrath,1,hit,-,1,4.2,0.7,0,0,-,war_thorswrath,mult_pct,str,0,-,-,0,-,-,0,cool_sec,-2.2,주 대상 = 전열 HP 최대 · 나머지 전원 × (1 − decay 0.7) = 30%(사용자 11-02 「주상대 100% · 다른상대 30%」) · 맞은 적마다 스턴(나머지는 시간 × splash_stun_mult) · 2026-11-02 R423,-,-
 war_shockwave,1,hit,-,1,1.5,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.15,-,-,-
-war_lionsroar,1,hit,-,1,1.3,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.13,-,-,-
+war_shockwave,2,apply,enemy_all,0,0,0,0,0,-,war_shockwave_break,-,-,0,-,-,0,-,-,0,-,-,진형 붕괴 — 맞은 편 전열 ↔ 후열(2026-11-02 R424 · 노드 넷은 다시 맞춘 뒤),-,-
+war_divinedescent,1,apply,-,0,0,0,0,0,-,war_divinedescent,effect_value,vit,0,duration_sec,vit,0,-,-,0,effect_value,0.05,⚠값 임시 2026-11-12 R425,-,-
+war_divinedescent,2,apply,-,0,0,0,0,0,-,war_divinedescent_regen,-,-,0,-,-,0,-,-,0,-,-,둘째 창 — 재생(첫 줄과 같은 시간 · 레벨은 첫 줄 최대 HP 만 · 2026-11-12 R425),-,-
 war_command,1,apply,-,0,0,0,0,0,-,war_command,effect_value,ldr,0,duration_sec,vit,0,-,-,0,duration_sec,1,-,-,-
 war_intimidate,1,apply,-,0,0,0,0,0,-,war_intimidate,effect_value,cha,0,duration_sec,vit,0,-,-,0,duration_sec,1,-,-,-
 kni_lastbastion,1,apply,-,0,0,0,0,0,-,kni_lastbastion,effect_value,vit,0,duration_sec,vit,0,-,-,0,duration_sec,1,-,-,-

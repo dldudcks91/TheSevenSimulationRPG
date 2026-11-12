@@ -98,8 +98,8 @@ const clamp01 = v => Math.max(0, Math.min(1, v));
    창은 행동을 넘지 않는다 — 시뮬이 행동 예약을 끝 시각 뒤로 밀기 때문이다(INTERFACE §2-6 「경직」). 계산이 아니라 이벤트 시각을 빼는 표시값이다 */
 /** 마지막 행동 이후 경직으로 선 시간 — 행동 게이지가 그만큼 덜 찬다 */
 const stalledFor = (u, now) => (u.stalls ?? []).reduce((s, w) => s + Math.max(0, Math.min(w.to, now) - Math.max(w.from, u.lastAct)), 0);
-/** 빠른 연타는 공격 바를 가득 유지한다 — 러시 · 래피드 샷 (ADR-0994) */
-const isBurstChannel = id => id === 'kni_rush' || id === 'arc_rapid';
+/** 빠른 연타는 공격 바를 가득 유지한다 — **끊어 치기 전부**(`cast = channel` — 러시 · 래피드 샷 · 더블스윙 · 휠윈드) (ADR-0994 · 2026-11-12 R421 — ~~id 목록 둘~~) */
+const isBurstChannel = id => SYS.skill?.defs?.[id]?.cast === 'channel';
 /**
  * 정신 집중의 게이지 [R318 · ADR-0720 · ADR-0994] — 러시 · 래피드 샷은 **가득 유지**, 나머지는 **거꾸로 닳는다**:
  *   방(`skill` 의 `chan` · `chan`)마다 남은 방 ÷ (방 수 − 1) 로 맞추고 다음 방까지 시뮬이 실은 `iv` 로 닳린다.
@@ -113,6 +113,8 @@ const chanFill = (u, now) => {
     const stall = (u.stalls ?? []).reduce((s, w) => s + Math.max(0, Math.min(w.to, now) - Math.max(w.from, c.at)), 0);
     return clamp01((c.left - Math.min(1, Math.max(0, now - c.at - stall) / (c.iv ?? u.period))) / (c.n - 1));
 };
+/** 칸의 줄을 바꾼다 — 진형 붕괴(쇼크웨이브 · 2026-11-02 R424)가 실은 랭크 · 가로 차례(`order`)는 그대로 · 세로는 `data-rank` 를 CSS 가 */
+const setRank = (u, rank) => { u.rank = rank; const cell = u.buffRow?.parentElement; if (cell) cell.dataset.rank = rank; };
 /** 지금 경직 중인가 — 창 뱃지 줄의 칩이 이것을 본다 */
 const staggered = (u, now) => (u.stalls?.[u.stalls.length - 1]?.to ?? -Infinity) > now;
 /** 행동했다 — 게이지를 비우고 경직 창을 걷는다(skill · hit · dodge 가 부른다).
@@ -180,9 +182,37 @@ const runBuffName = (key, b) => {
     const shrine = key === 'shrine' ? shrineInfo(b.shrine) : null;
     return t(`bt.buff.${key}`) + (shrine ? ` · ${L(shrine.name)}` : '');
 };
-const runBuffIconsHtml = () => `<div class="run-buff-icons">${RUN_BUFF_KEYS.map(key =>
+/**
+ * 헬 디버프 칸 [2026-11-12 · SCREEN_DESIGN §4-2 「헬 디버프」 · ADR-1061] — 그 칸 × 그 런의 단의 장 디버프(`battle.debuffOf` — 헬)와
+ *   설명창의 이름(「단 이름 · 죄종 이름」) · 효과 한 줄(출정 창 머리와 같은 문구 · 같은 값 — 챕터보스 칸은 배수가 곱해진 값). 장 디버프가 없으면 null
+ */
+function curseOf(stageId, diff) {
+    const d = stageId != null && diff != null ? SYS.battle.debuffOf(stageId, diff) : null;
+    if (!d) return null;
+    const pc = v => +(Math.abs(v) * 100).toFixed(1);   // 비율 → % 글자 — 출정 창 머리(`app.js:departDebuff`)와 같은 표기
+    return {
+        color: M.SINS[d.sin]?.color ?? 'var(--text-muted)', art: M.sinIcon(d.sin),
+        name: t('bt.buff.curse', { sin: L(M.SINS[d.sin]) || d.sin }),
+        lore: t(`bt.curse.lore.${d.effect}`),   // 이름 아래 장면 한 줄 글 — 효과마다 하나 (ADR-1064)
+        fx: t(`exp.debuff.${d.effect}`, { v: pc(d.value), i: d.intervalSec, d: d.durationSec, c: pc(d.cap) }),
+    };
+}
+/** 죄종 아이콘을 죄종 색으로 칠한 마스크 — 마스터리 판 머리와 같은 칠(ADR-0368) · 그림이 없으면 빈 칸 */
+const curseMask = c => c.art ? `<i class="sk-icon-mask" style="background:${c.color};-webkit-mask-image:url('${c.art}');mask-image:url('${c.art}')"></i>` : '';
+/** 버프 줄 — 신단 → 전술 → 도감 · 장 디버프가 있으면 오른쪽 끝에 붉은 테두리 칸 하나 (ADR-0992 · ADR-1061) */
+const runBuffIconsHtml = curse => `<div class="run-buff-icons">${RUN_BUFF_KEYS.map(key =>
     `<span class="run-buff-icon" data-buff="${key}" role="img" tabindex="0" aria-label="${t(`bt.buff.${key}`)}"><img src="${M.RUN_BUFF_ART[key]}" alt="" draggable="false"></span>`
-).join('')}</div>`;
+).join('')}${curse ? `<span class="run-buff-icon curse" role="img" tabindex="0" aria-label="${curse.name}: ${curse.fx}">${curseMask(curse)}</span>` : ''}</div>`;
+/** 헬 디버프 칸의 설명창 — 버프 카드와 같은 틀 · 이름 「죄종의 저주」 → 흐린 장면 한 줄 글 → 선 아래 효과 한 줄 (ADR-1064) */
+function curseTipCard(curse) {
+    const c = document.createElement('div');
+    c.className = 'tip-card effect-tip run-buff-tip curse';
+    c.innerHTML = `<div class="tip-effect-head"><div class="tip-name"><span class="tip-sk-ico">${curseMask(curse)}</span><span class="tip-name-text"></span></div></div><div class="tip-curse-lore"></div><div class="tip-effect-summary"><div class="run-buff-line"></div></div>`;
+    c.querySelector('.tip-name-text').textContent = curse.name;
+    c.querySelector('.tip-curse-lore').textContent = curse.lore;
+    c.querySelector('.run-buff-line').textContent = curse.fx;
+    return c;
+}
 /** 기존 효과 카드의 틀 — 이름 아래 효과마다 한 줄, 조건·남은 시간은 적지 않는다. */
 function runBuffTipCard(key, b) {
     const c = document.createElement('div');
@@ -205,7 +235,11 @@ function runBuffTipCard(key, b) {
 }
 /** 첫 그리기와 hover·키보드 포커스 때만 읽는다 — 재생 걸음마다 버프를 다시 계산하지 않는다. */
 function bindRunBuffTips(root, opts) {
-    const icons = [...root.querySelectorAll('.run-buff-icon')];
+    // 헬 디버프 칸 — 값이 그 런 내내 같아 묶을 때 한 번 읽는다 (ADR-1061)
+    const curseNode = root.querySelector('.run-buff-icon.curse');
+    const curse = curseNode ? curseOf(opts.stageId, opts.difficulty) : null;
+    if (curse) bindTipNode(curseNode, () => curseTipCard(curse), { keyboard: true });
+    const icons = [...root.querySelectorAll('.run-buff-icon[data-buff]')];
     if (!icons.length) return;
     const paint = b => {
         for (const node of icons) {
@@ -446,7 +480,7 @@ function buildDom(state, stage, stageId, shrine, buffs, opts = {}) {
                 <div class="divider"><span class="muted">VS</span></div>
                 <div class="side side-party"></div>
                 <div class="p-belt b-belt">${potionBeltHtml(state.potion, state.t)}</div>
-                ${buffs ? runBuffIconsHtml() : ''}
+                ${buffs ? runBuffIconsHtml(curseOf(stageId, opts.difficulty)) : ''}
                 ${stageId != null ? '<div class="stage-clock"></div>' : ''}
                 <div class="battle-result"></div>
             </div>
@@ -1745,6 +1779,7 @@ const unitSkillCtx = (u, combatOf = null) => ({
     // 설명창의 실제 쿨 — 쿨감 (ADR-0703) = **그 유닛 툴팁 세부 옵션의 지금 값**(ADR-0708): 바탕(영웅 `combatOf` — 원정은 그 런의 전투 능력치 · 신단 포함 /
     //   몬스터 · 결투 상대 `sheet`) 위에 `stat` 줄(`u.live` — 나태 겹 등). 파티 카드엔 `sheet` 가 없다
     cdr: withLive(u.side === 'party' ? combatOf?.(u.hero) ?? null : u.sheet ?? null, u.live)?.cooldown_reduction ?? 0,
+    coolMinus: (u.side === 'party' ? combatOf?.(u.hero) ?? null : u.sheet ?? null)?.option_fx?.coolMinus ?? 0,   // 쿨 −n초(R432)
 });
 
 /** 적 카드 한 장의 상태 — `round` 의 `enemies` 와 `call`(불러내기 · ADR-0161)의 `units` 가 **같은 모양**이라 한 곳에서 만든다 (INTERFACE §2-6).
@@ -2019,6 +2054,8 @@ function apply(state, root, opts, ev) {
             if (ev.ext) { refreshUnit(state, u); break; }
             // 파리 떼가 섰다(스웜 · `fly` · R380) — 마리마다 HP · 막대의 한 칸 = 연 순간의 한 마리
             if (ev.fly) { u.fly = ev.fly.slice(); u.flyMax = Math.max(1, ...ev.fly); }
+            // 진형 붕괴(쇼크웨이브 · R424) — 시뮬이 실은 랭크로 칸이 줄을 바꿔 선다(세로 자리는 `data-rank` 를 CSS 가 · SCREEN_DESIGN §4-2 「진형 붕괴」)
+            if (ev.rank !== undefined) setRank(u, ev.rank);
             // 스턴 — 경직과 같은 창으로 행동 게이지를 세우고(겹치면 늦은 끝) 아직 안 준비된 칸의 쿨을 시뮬이 민 만큼(`cd`) 민다. 계산이 아니라 실려 온 값이다
             if (ev.k === 'stun') {
                 u.stalls = u.stalls ?? [];
@@ -2079,6 +2116,7 @@ function apply(state, root, opts, ev) {
             const aura = u.buffs?.get(ev.k ?? ev.s)?.until === null;   // 오오라 창이 닫힐 때도 로그를 안 쓴다 (R98)
             u.buffs?.delete(ev.k ?? ev.s);   // 상태이상은 `k` 로 든 칩 (R178)
             if (u.shield?.s === ev.s) u.shield = null;   // 방어막 창이 닫혔다 — 덮인 앞 스킬의 창이 닫힐 때는 안 걷는다 (ADR-1027)
+            if (ev.rank !== undefined) setRank(u, ev.rank);   // 진형 붕괴가 풀렸다 — 원래 줄로 (R424)
             // 최대 HP 를 밀던 창이 닫혔다 — 줄어든 최대치와 **잘린** 현재 HP 를 그대로 받는다 (INTERFACE §6 · 부채 #50)
             if (ev.hpMax !== undefined) { u.hpMax = ev.hpMax; u.hp = ev.dhp; }
             refreshUnit(state, u);

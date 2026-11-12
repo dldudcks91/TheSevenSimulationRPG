@@ -45,9 +45,9 @@ export const D = {
     chapterList: [],
     heroAttributes: [],       // hero_attribute.csv — [{id, ko, en, abbr, combatStat, dispatch}]
     combatStats: [],          // combat_stat.csv — [{id, ko, en, cat, attr, fmt, impl, sheetOrder}]
-    armorGroups: null,        // armor_group.csv — {slot: {groupId: {id, slot, ko, en, classes, defMult, aspdPct, cdrPct, release}}} · 방어구 갈래 — 갑옷군 3 (2026-09-16 · R107) + 투구 3 · 장갑 2 · 신발 2 (2026-09-18)
+    armorGroups: null,        // armor_group.csv — {slot: {groupId: {id, slot, ko, en, classes, defMult, trait, release}}} · 방어구 갈래 — 갑옷군 3 (2026-09-16 · R107) + 투구 3 · 장갑 2 · 신발 2 (2026-09-18)
     armorSinOptions: [],      // armor_sin_option.csv — [{slot, sin, option, stat, scale, min, max, perIlvl?}] · 방어구 죄종 칸 후보(갑옷은 죄종 계열표 · 2026-10-05) · CSV 행 순서 (2026-09-18)
-    weaponGroups: null,       // weapon_group.csv — {id: {id, ko, en, classes, period, variance, damageKind, release}}
+    weaponGroups: null,       // weapon_group.csv — {id: {id, ko, en, classes, period, variance, hitMult, damageKind, release, trait}} · trait = 무기군 특성(R443 · 굴림 없음)
     weaponGroupList: [],
     weaponBases: null,        // weapon_base.csv — {groupId: [{id, ko, en, tier, minIlvl, line, periodMult}...]} · CSV 행 순서(단 → 계보) · 본편 열 무기군마다 10(R445) · 확장 dagger·scythe 는 없다
     skillRows: [],            // skill.csv 원시 행 — 스킬마다 하나뿐인 것. 정규화·검증은 game_logic/skill.js
@@ -80,7 +80,6 @@ export const D = {
     itemBases: null,          // item_base.csv — {slot: [{id,ko,en,group,tierMin}...]} · 부위별 CSV 행 순서 (드롭 굴림이 인덱스를 쓴다)
     // ~~affixDefs~~ (affix.csv) — 2026-09-21 R127 퇴역. 반지 · 목걸이가 아래 세 표로 옮겼다
     accessorySinOptions: [],  // accessory_sin_option.csv — [{slot, sin, option, stat, scale, min, max, perIlvl?}] · 반지 죄종 계열표(R382) · 목걸이 죄종 칸 후보 · CSV 행 순서 (2026-09-21 · R127)
-    accessoryCommonOptions: [], // accessory_common_option.csv — [{family, stat, scale, min, max, perIlvl?}] · 두 부위 한 풀 · CSV 행 순서 (R127)
     weaponSinOptions: [],     // weapon_sin_option.csv — [{sin, option, appliesTo, stat, scale, min, max}] · 무기 죄종 계열표 · CSV 행 순서 (2026-09-11 R78 · 계열표 2026-10-05 R206)
     // ~~weaponCommonOptions~~ — weapon_common_option.csv 퇴역 (2026-10-05 R206 — 무기 옵션은 전부 죄종 계열 중 하나다)
     heroNamePool: [],         // hero_name.csv — [{ko,en}] · CSV 행 순서
@@ -127,7 +126,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
     'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'lab_material', 'hero_tier', 'monster_role', 'formation_template',
     'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
-    'armor_sin_option', 'sin_word', 'accessory_sin_option', 'accessory_common_option',   // ~~armor_common_option~~ 2026-10-21 R303 퇴역(방어구 넷이 계열표)
+    'armor_sin_option', 'sin_word', 'accessory_sin_option',   // ~~armor_common_option~~ 2026-10-21 R303 퇴역(방어구 넷이 계열표) · ~~accessory_common_option~~ 2026-11-12 삭제(목걸이도 계열표 R453)
     'tactic_condition', 'building', 'building_rank', 'building_effect',   // ~~tactic_score~~ 2026-11-11 R441 삭제(등급 배수는 balance.csv:tactic_grade_mult_*)
     'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff', 'commission_fame', 'ring_base_option', 'raid_boss', 'raid_pattern'];
 
@@ -144,7 +143,7 @@ export async function loadData(base = './data/') {
         itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, labMaterialRow,
         heroTierRow, monsterRoleRow, formationTplRow,
         heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
-        armorSinOptionRow, sinWordRow, accSinOptionRow, accCommonOptionRow,
+        armorSinOptionRow, sinWordRow, accSinOptionRow,
         tacticConditionRow, buildingRow, buildingRankRow, buildingEffectRow,
         slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow, commissionFameRow, ringBaseRow, raidBossRow, raidPatternRow] = texts.map(parseCsv);
 
@@ -231,17 +230,19 @@ export async function loadData(base = './data/') {
         id: r.group_id, ko: r.group_kr, en: r.group_en,
         classes: String(r.classes).split('|'),
         period: r.action_period, variance: r.variance_pct, hitMult: r.hit_mult, damageKind: r.damage_kind, release: r.release,
+        // 무기군 특성 [2026-11-11 · R443 · weapon_group_draft §1] — 방어구 갈래 `trait` 와 같은 모양 · **굴림 없음**(최소 = 최대) · 그 무기를 든 유닛의 전투 능력치에 더한다(`hero.computeCombat`) · `-` 면 null
+        trait: r.trait_stat === '-' ? null : { stats: String(r.trait_stat).split('|'), scale: r.trait_scale, min: r.trait_min, max: r.trait_max },
     }));
     // 한 방 배율 — 무기 피해 가운데에 곱한다(R434). 빈 칸 · 0 · 음수는 무기를 조용히 0 으로 만든다 — 로드에서 멈춘다
     for (const g of D.weaponGroupList) if (!(typeof g.hitMult === 'number' && g.hitMult > 0)) throw new Error(`data: weapon_group.csv 의 '${g.id}' — hit_mult 는 0 보다 큰 수여야 한다 (${g.hitMult})`);
     D.weaponGroups = indexBy(D.weaponGroupList, 'id');
-    // 방어구 갈래 — **부위 → 갈래** 두 단으로 묶는다. 방어 계수 · 갑옷군 고정값(공속 · 쿨감)을 든다 (2026-09-16 갑옷군 · R107 · 2026-09-18 투구 · 장갑 · 신발).
+    // 방어구 갈래 — **부위 → 갈래** 두 단으로 묶는다. 방어 계수 · 굴리는 베이스 특성을 든다(~~갑옷군 고정값 공속 · 쿨감~~ 2026-11-12 칸 삭제) (2026-09-16 갑옷군 · R107 · 2026-09-18 투구 · 장갑 · 신발).
     //   **굴리는 베이스 특성** `trait` = `{stats, scale, min, max}` [2026-10-21 · R303 · item_design §1 「10-21 방어구 개정」] — 투구 · 장갑 · 신발 갈래 · 드롭이 아이템의 `[베이스]` 줄로 박는다
     //   (`stats` 가 둘 이상이면 드롭 때 하나 · `-` 면 null). 갈래 id 가 부위마다 겹친다(`leather` — 투구 · 장갑 · 신발) — 그래서 id 하나로 색인하지 않는다. 직업(`classes`) — 갑옷은 숙련 게이트 · 투구 · 장갑 · 신발은 **자동 장착의 직업 어울림**에만(`item.fitsClass` · 2026-10-22 · R307 · ⚠임시)
     D.armorGroupList = armorGroupRow.map(r => ({
         id: r.group_id, slot: r.slot, ko: r.group_kr, en: r.group_en,
         classes: r.classes === '-' ? [] : String(r.classes).split('|'),
-        defMult: r.def_mult, aspdPct: r.aspd_pct, cdrPct: r.cdr_pct,
+        defMult: r.def_mult,
         trait: r.trait_stat === '-' ? null : { stats: String(r.trait_stat).split('|'), scale: r.trait_scale, min: r.trait_min, max: r.trait_max },
         release: r.release,
     }));
@@ -252,11 +253,10 @@ export async function loadData(base = './data/') {
     //   `perIlvl` 은 `band` 행만 든다(affix.csv 와 같은 규약) · 검증은 `item.js` 가 로드 시 한다. ⚠ 행 순서가 결정론 계약이다
     const bandIlvl = r => (r.scale === 'band' ? { perIlvl: r.per_ilvl } : {});
     D.armorSinOptions = armorSinOptionRow.map(r => ({ slot: r.slot, sin: r.sin, option: r.option, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r) }));
-    // 반지 · 목걸이 옵션 표 셋 [2026-09-21 · R127 · item_design §1 「반지 · 목걸이」] — 죄종 표 · 공통옵션 한 풀 · 목걸이 발동 조건(베이스마다).
-    //   반지 행은 방어구 표와 같은 계열표(`option` · 2026-10-29 R382) · 목걸이 행은 죄종 칸(`option` 1) · 공통옵션은 목걸이만 굴린다.
+    // 반지 · 목걸이 옵션 표 [2026-09-21 · R127 · item_design §1 「반지 · 목걸이」] — 둘 다 죄종 계열표(`option` — 반지 2026-10-29 R382 · 목걸이 2026-11-11 R453).
+    //   ~~공통옵션 `accessory_common_option.csv`~~ 2026-11-12 삭제 — 읽는 굴림이 없다(옛 `random` 줄은 값 그대로 · Shift 범위만 안 붙는다).
     //   방어구 표와 같은 규약 · 검증은 `item.js` 가 로드 시 한다. ⚠ 행 순서가 결정론 계약이다
     D.accessorySinOptions = accSinOptionRow.map(r => ({ slot: r.slot, sin: r.sin, option: r.option, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r) }));
-    D.accessoryCommonOptions = accCommonOptionRow.map(r => ({ family: r.family, stat: r.stat, scale: r.scale, min: r.min, max: r.max, ...bandIlvl(r) }));
     // 무기 베이스 — 본편 열 무기군마다 10(아래 `D.weaponBases`). 드롭은 `item.build` 가 그 아이템 레벨 단의 행에서 하나를 굴려
     //   이름 · 그림을 그 베이스로 좁힌다(풀이 없는 무기군은 무기군 이름 그대로). ⚠ 행 순서가 결정론 계약이다(단 → 계보 순 · R445)
     // 아이템 이름의 죄종 단어 [2026-09-19 · item_design §1 「이름」] — 죄종마다 **파일 순서**로 읽는다(`tier` 로 정렬하지 않는다 · 2026-11-10 R433).
@@ -595,6 +595,7 @@ export function buildSystems(d, dev = {}) {
         [c, ids.filter(id => skill.defs[id].tier === 1)]));
     const hero = createHeroSystem({
         balance: d.balance, stats: d.heroAttributes, sins, classes: d.classes, weaponGroups: d.weaponGroups, armorGroups: d.armorGroups,
+        ringBaseOptions: d.ringBaseOptions ?? [],   // 무기군 특성 `skill_tag_value` 가 닿는 태그 = 반지 베이스 「태그 수치 증가」(`*_value` 행)의 태그 (2026-11-11 · R443)
         weaponBases: d.weaponBases,   // 든 무기의 베이스 행 — 계보 공속 배율(`formula.weaponLine` · 2026-11-11 · R445)
         sinAttrs: d.sinAttrs ?? undefined,   // 죄종 → 능력치 한 칸 — 능력치 굴림의 죄종 비율 (sin_attr.csv · 2026-10-22 · R308)
         levelXp: d.levelXp,   // 레벨업 필요 XP 표 (level_xp.csv)
@@ -620,7 +621,7 @@ export function buildSystems(d, dev = {}) {
         procSkillDefs: skill.list.filter(sk => sk.ownerKind === 'job').map(sk => ({ id: sk.id, cls: sk.ownerId, tier: sk.tier, tags: sk.tags, target: sk.target, armorPool: sk.armorPool, buffPool: sk.buffPool })),
         armorSinOptions: d.armorSinOptions ?? [],       // 방어구 옵션 표 (2026-09-18 · ~~공통옵션~~ 2026-10-21 R303 퇴역)
         // 장신구 옵션 표와 베이스 — 목걸이는 모든 직업 기본 스킬 후보 · 반지는 태그·효과별 범위(R309·R321)
-        accessorySinOptions: d.accessorySinOptions ?? [], accessoryCommonOptions: d.accessoryCommonOptions ?? [],
+        accessorySinOptions: d.accessorySinOptions ?? [],
         amuletSkills: skill.list.filter(sk => sk.ownerKind === 'job').map(sk => sk.id), ringBaseOptions: d.ringBaseOptions ?? [],
         // ~~classSkills · starterSkills~~ — 무기가 스킬을 안 담는다 (2026-09-29 · R179 · skill_design §2-1)
     });

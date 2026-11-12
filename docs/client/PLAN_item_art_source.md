@@ -1,7 +1,7 @@
 # PLAN — 설정 하위 탭 + 아이템 그림 Gemini / Codex 전환
 
 > 사용자 요청(2026-11-11): 「설정탭을 좀 여러개로 나누고, 그중에 화면 탭 만들어서 거기에 gemini랑 codex만들어서 codex와 gemini 아이템 변경하면서 볼 수 있게 … 없으면 검정화면으로 나오도록」
-> 상태: **ADR-1050 만 썼다** — 코드 · 그림 설치 · SCREEN_DESIGN 은 아직 손 안 댔다. 이 문서를 보고 이어서 한다.
+> 상태: **[11-12] 구현했다** — 설정 하위 탭 · 아이템 그림 줄 · 검은 칸 · Codex 100 설치(`icons/items/weapon_base_codex/`) · 도감 무기 묶음 = 고른 묶음(Gemini 쪽 목록 · 이름은 그대로) · 단정 · SCREEN_DESIGN · ADR-1051. **남은 것: Gemini 판 설치**(사용자 확인 대기) — 11-12 검수(단이 오를수록 세게 · 같은 무기군은 같은 형태)로 100장 중 37장을 다시 그렸다(`icons_source/items/source/gemini_weapon/redo_1112/tiles/` — 새 42 중 23 · 설치본 14). 설치하면 새 42(19장은 `gemini_weapon/tiles/` · 23장은 `redo_1112/tiles/`) + 설치본 14장 교체
 
 ## 정한 것
 
@@ -11,7 +11,7 @@
 | D2 | 줄 배정 — **게임** = 초반 안내 · 닉네임 / **화면** = 아트 스타일(초상 스타일 둘 이상일 때만) · **아이템 그림** · 로그 · Skin / **연출** = 스킬 이펙트 · 이펙트 그림체 · 이펙트 투명도 · 기본 공격 이펙트 · 피격 반응 · 피격 시 흔들림 · 공격 시 흔들림 · Focus |
 | D3 | **아이템 그림** 줄 `Gemini` · `Codex`(기본 Gemini) — 누르면 `render()` 전체 다시 그림 · localStorage(`thesevensim.itemArt`) · `?itemart=codex` 는 그 로드에서 저장까지(초상 `?face=` 와 같은 문법) |
 | D4 | **고른 묶음에 그림이 없으면 검은 칸** — 두 묶음 모두. 부위 이모지 · 같은 무기군 대신 그림(R445 임시)으로 안 떨어진다. 스킬 아이콘 검은 칸(ADR-0162 · `.sk-noart`)과 같은 칸 |
-| D5 | Gemini = 지금 설치본(`weapon_base/` 70장 중 CSV 58 + 퇴역 12 · `item_base/`) · Codex = **무기 베이스 100장만**(방어구 · 장신구는 Codex 에서 전부 검은 칸) |
+| D5 | Gemini = 지금 설치본(`weapon_base/` 70장 중 CSV 58 + 퇴역 12 · `item_base/`) · Codex = **무기 베이스 100장만**(방어구 · 장신구는 Codex 에서 전부 검은 칸) · **[11-12] Gemini 빈 42장도 그렸다** — `icons_source/items/source/gemini_weapon/`(시트 10 · `tiles/<group>/<base_id>.png` 42) · 아직 설치 전: 넣으면 `icons_source/items/weapon_base/<group>/` + `mock.js:WEAPON_BASE_STEMS` 줄 + 빌드 → Gemini 도 100 이 된다 |
 | D6 | `baseId` 없는 옛 무기 — Gemini 는 지금처럼 `uid` 해시 그림 · Codex 는 검은 칸 |
 | D7 | 도감 아이템 › 무기 묶음 = **`weapon_base.csv` 100행**(CSV 순 · 이름 `L(row)`) · 그림 = 고른 묶음 · 없으면 검은 칸 · 퇴역 12 는 도감에서 빠진다 |
 
@@ -53,4 +53,4 @@
 - 커밋은 안 했다 — 사용자가 말할 때만
 
 ---
-*마지막 업데이트: 2026-11-11*
+*마지막 업데이트: 2026-11-12*

@@ -101,8 +101,8 @@ export function createArenaSystem({ hero, item, skill, battle, balance = {}, equ
         const over = level - B.advance_unlock_level;
         return over >= 0 ? 1 + Math.floor(over / B.advance_skill_level_interval) : 0;
     };
-    /** 레벨 1 에서 그 레벨까지 받은 마스터리 포인트 — `hero.grantXp` 와 같은 정액 */
-    const masteryBudget = level => (level - 1) * B.mastery_point_per_level;
+    /** 그 레벨까지 받은 마스터리 포인트 — 태어날 때 몫(`rollHero`) + 레벨업 몫(`hero.grantXp`)과 같은 정액 (포인트 = 레벨 · R435) */
+    const masteryBudget = level => B.mastery_point_start + (level - 1) * B.mastery_point_per_level;
 
     /* ── 스냅샷 · 단판 ── */
 

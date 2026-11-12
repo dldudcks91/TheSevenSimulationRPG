@@ -1,0 +1,4 @@
+cond_id,test,step1,step2,step3,description_kr
+none,none,-,-,-,조건 없음 — 언제나 단계 1 (1랭크 · 비운 3 · 4랭크 · tactic_card_design §5-14)
+sin_heroes,slot_sin_heroes,1,2,3,그 칸 죄종의 영웅 수 — 1 · 2 · 3명이면 단계 1 · 2 · 3 · 0명이면 꺼짐. 단계 = 넘은 문턱 수 · 문턱은 오름차순 (2랭크 · tactic_card_design §5-14)
+kills_together,kills_together,200,600,2000,지금 셋이 함께 잡은 몬스터 수 — 이긴 판 · 진 판 모두 센다 · 한 명이라도 바뀌면 다른 조합 (5랭크 · tactic_card_design §5-14). ⚠임시 — 1~5장 칸 하나의 평균 몬스터 약 19마리(일반 라운드 1~3 · 정예 라운드 3 · 스테이지보스 라운드 2~3 · 챕터보스 칸 1 — stage.csv · stage_round.csv · round_budget.csv)로 옛 관계 문턱(30 · 100칸)에 10칸을 앞에 더해 10 · 30 · 100칸 분량을 환산했다

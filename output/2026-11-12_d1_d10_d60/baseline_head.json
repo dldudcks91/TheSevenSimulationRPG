@@ -1,0 +1,11 @@
+{
+ "kind": "head",
+ "title": "FAIL 839/840",
+ "passed": 839,
+ "failed": 1,
+ "failures": [
+  "golden: 시드 10 × 스테이지 6 = 60런 지문이 golden.json 과 일치한다39/60 런 불일치 / 입력 변화 — CSV 7종이 달라졌다: balance: 2eff9628 → eba65dce · mastery_node: 618abe3b → 818f401d · tactic_slot: 1ea658b6 → 41916245 · tactic_option: e136627d → 43d560e2 · hero_unique_candidates: c0ef3e9d → 8af59ee2 · tactic_condition: 8817b78a → 803a58cf · tactic_score: 739ec256 → 없음 · balance 22키가 달라졌다: mastery_wrath_t1_atkspeed_pct: 0.01 → 없음 · mastery_envy_t1_defignore_pct: 0.01 → 없음 · mastery_envy_t1_reflect_pct: 0.01 → 없음 · mastery_envy_t1_resignore_pct: 0.01 → 없음 · mastery_sloth_t1_dr_pct: 0.005 → 없음 · mastery_gluttony_t1_crush_pct: 0.004 → 없음 · mastery_lust_t1_buffdur_pct: 0.03 → 없음 · hero_star_max: 없음 → 5 (+14) → 의도한 변경이면 **다시 찍는다** (test.html?golden=write) / [seed 1 stage 1011] elites: 3:envy:sin_envy_t1_defignore 6:wrath:sin_wrath_t1_critdamage 9:wrath:sin_wrath_t1_critchance → 3:envy:sin_envy_t1_dr 6:wrath:sin_wrath_t1_critdamage 9:wrath:sin_wrath_t1_critchance · tl: c420959d → 1815ca6c / [seed 2 stage 1011] elites: 3:sloth:sin_sloth_t1_hp 6:gluttony:sin_gluttony_t1_resall 9:lust:sin_lust_t1_critchance → 3:sloth:sin_sloth_t1_hp 6:gluttony:sin_gluttony_t1_resall 9:lust:sin_lust_t1_lifesteal · tl: 05d4bbd1 → b93389fe / [seed 3 stage 1011] elites: 3:pride:sin_pride_t1_atk 6:gluttony:sin_gluttony_t1_hp 9:lust:sin_lust_t1_buffdur → 3:pride:sin_pride_t1_dr 6:gluttony:sin_gluttony_t1_hp 9:lust:sin_lust_t1_critchance · tl: 356fce61 → d7fb60bf / [seed 4 stage 1011] elites: 3:sloth:sin_sloth_t1_dr 6:sloth:sin_sloth_t1_cdr 9:greed:sin_greed_t1_gold → 3:sloth:sin_sloth_t1_def 6:sloth:sin_sloth_t1_cdr 9:greed:sin_greed_t1_gold · tl: 761e58ba → e3fc19ad / [seed 5 stage 1011] elites: 3:pride:sin_pride_t1_atk 6:wrath:sin_wrath_t1_critchance 9:wrath:sin_wrath_t1_critdamage → 3:pride:sin_pride_t1_dr 6:wrath:sin_wrath_t1_critchance 9:wrath:sin_wrath_t1_critdamage · tl: 3f70abec → 3d205368 / [seed 6 stage 1011] elites: 3:gluttony:sin_gluttony_t1_hp 6:greed:sin_greed_t1_itemfind 9:wrath:sin_wrath_t1_atkspeed → 3:gluttony:sin_gluttony_t1_hp 6:greed:sin_greed_t1_itemfind 9:wrath:sin_wrath_t1_lifesteal · tl: fbd0815e → 7966d02a"
+ ],
+ "elapsed_sec": 24.4,
+ "page_errors": []
+}

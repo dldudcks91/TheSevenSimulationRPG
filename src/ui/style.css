@@ -1595,14 +1595,42 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .run-buff-icon img { width: 28px; height: 28px; object-fit: contain; pointer-events: none; }
 .run-buff-icon.empty img { opacity: .3; }
 .run-buff-icon:hover, .run-buff-icon:focus-visible { border-color: var(--border-highlight); }
+/* 헬 디버프 칸 [2026-11-12 · SCREEN_DESIGN §4-2 「헬 디버프」 · ADR-1061] — 버프 줄 오른쪽 끝 · 버프 칸과 조금 떨어진다 · 테두리가 붉다 ·
+   그림은 그 장 죄종 아이콘을 죄종 색으로 칠한 마스크(`.sk-icon-mask` — 색 · 그림 주소는 렌더러가 인라인으로 준다) */
+.run-buff-icon.curse { margin-left: 6px; border-color: var(--color-error); }
+.run-buff-icon.curse:hover, .run-buff-icon.curse:focus-visible { border-color: var(--danger-fg); }
+.run-buff-icon.curse .sk-icon-mask { width: 28px; height: 28px; pointer-events: none; }
+/* 설명창 — 이름 「죄종의 저주」 아래 흐린 장면 한 줄 글 · 선 아래 효과 한 줄 (ADR-1064) · 폭은 글자만큼이고 긴 글은 낱말 단위로 접힌다 */
+.run-buff-tip.curse { width: max-content; max-width: 22em; }
+.tip-curse-lore { margin-top: 5px; font-size: var(--fs-xs); color: var(--text-muted); white-space: normal; word-break: keep-all; }
 /* 남은 시간 [2026-11-11 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-1047] — 원정 아레나 오른쪽 위 구석 · 숫자만(`m:ss`) ·
-   왼쪽 위 버프 아이콘과 같은 바탕 · 테두리 · 높이 · 여백 · 자릿수 폭을 고정해 초가 바뀌어도 칸이 안 흔들린다 · 누름 · 툴팁 없음 */
+   바탕 없음(투명 · 2026-11-12 사용자 지시) · 테두리 · 높이는 왼쪽 위 버프 아이콘과 같다 · 여백 · 자릿수 폭을 고정해 초가 바뀌어도 칸이 안 흔들린다 · 누름 · 툴팁 없음 */
 .arena > .stage-clock {
     position: absolute; right: 12px; top: 10px; z-index: 2; pointer-events: none;
     display: inline-flex; align-items: center; height: 34px; padding: 0 10px; box-sizing: border-box;
-    background: rgba(var(--veil-rgb), .85); border: 1px solid var(--border-secondary);
+    background: transparent; border: 1px solid var(--border-secondary);
     font-size: var(--fs-md); font-variant-numeric: tabular-nums; color: var(--text-primary);
 }
+/* 최대화 버튼 [2026-11-12 사용자 지시 · SCREEN_DESIGN §4-2 「최대화」 · ADR-1059] — 원정 아레나 오른쪽 아래 구석(물약 칸 맞은편 · 아랫변이 칸 줄과 같다) ·
+   모양은 남은 시간 칸과 같다(34 정사각 · 바탕 없음 · 테두리) · 그림은 선 SVG(네 모서리 / 안쪽 모서리 — 글꼴을 안 탄다) · 결과 띠(층 3)가 길면 그 아래로 든다 */
+.arena > .bt-max-btn {
+    position: absolute; right: 12px; bottom: 10px; z-index: 2;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; padding: 0; box-sizing: border-box;
+    background: transparent; border: 1px solid var(--border-secondary); border-radius: 0;
+    color: var(--text-primary); cursor: pointer;
+}
+.arena > .bt-max-btn svg { display: block; width: 18px; height: 18px; pointer-events: none; }
+.arena > .bt-max-btn:hover, .arena > .bt-max-btn:focus-visible { border-color: var(--border-highlight); }
+/* 관전 최대화 (ADR-1060 · ADR-1066) — 내비를 접고 보관 칸을 걷어 메인이 위 줄(브랜드 · 상단바 — 남는다) 아래 전체를 받는다(게임 밖 화면과 같은 칸 나눔).
+   한 장은 창 크기 그대로 펴진다(`app.js:fitStage` — 2:1 을 안 지킨다). 메인 배율 `--bt-max-zoom` 은 `app.js:fitBtMaxZoom` 이 잡는다:
+   카드의 화면 크기를 `--bt-max-card`(화면 px ÷ 설계 px)에 두고, 창이 줄어 카드 세 장 줄이 아레나 좌우에 닿거나 아레나가 `--bt-max-arena`(설계 px)보다 낮아지면 같이 줄인다.
+   `--bt-max-card` 1.36 = 평소 최대화 배율(.9 × 1600 ÷ 1270) × 1920 폭 창의 한 장 배율(1920 ÷ 1600) · `--bt-max-arena` 500 = 카드 두 줄 + 구분선 + 후열 물러섬 · 창 뱃지 줄 + 아레나 여백.
+   아래 calc 는 재기 전(첫 그리기)의 값이다 (src/ui/README.md 크기 정책) */
+#app.bt-max { --bt-max-card: 1.36; --bt-max-arena: 500; grid-template-areas: "brand topbar" "main main"; }
+#app.bt-max > .nav { display: none; }
+#app.bt-max:not(.pregame) > .main { zoom: var(--bt-max-zoom, calc(.9 * 1600 / 1270)); }
+#app.bt-max .bt-page > :not(.battle-panel) { display: none; }
 .run-buff-icon:focus-visible { outline: 1px solid var(--text-primary); outline-offset: 2px; }
 .run-buff-tip .tip-effect-summary { white-space: normal; word-break: keep-all; }
 .run-buff-line + .run-buff-line { margin-top: 4px; }
@@ -2344,7 +2372,7 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .cd-slot .cd-g { display: block; width: 100%; height: 100%; }
 .cd-slot .cd-g img { width: 100%; height: 100%; object-fit: contain; image-rendering: var(--face-render); }
 /* 제 그림이 없는 스킬 = 검은 칸 (2026-09-18 사용자 지시 · ADR-0162) — 스킬 그림을 그리는 칸 전부가 같은 한 줄을 쓴다 (`skillImg` 셋) */
-.sk-noart { display: block; width: 100%; height: 100%; background: #000; border-radius: inherit; }
+.sk-noart, .it-noart { display: block; width: 100%; height: 100%; background: #000; border-radius: inherit; }   /* 그림 없는 아이템도 같은 검은 칸 (ADR-1051) */
 /* 쿨 마스크 — 남은 쿨만큼 위에서 덮는다. 다 걷히면 아이콘이 전부 드러난다 = 준비 완료 */
 .cd-slot .cd-mask {
     position: absolute; left: 0; right: 0; top: 0; height: 100%;
@@ -3677,6 +3705,11 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .ix-art.round img { object-fit: cover; }
 .ix-name { font-size: var(--fs-xs); line-height: 1.25; text-align: center; word-break: keep-all; }
 .ix-file { font-size: var(--fs-xs); line-height: 1.2; text-align: center; word-break: break-all; }
+/* 아이템 세그먼트의 그림 칸 — **인벤토리 칸 그대로**(`.inv-cell.filled` · 같은 크기 · 같은 그림 크기) [2026-11-12 사용자 지시 · SCREEN_DESIGN §9-1 · ADR-1055].
+   가방 칸은 폭을 열 수로 나눈 1fr 이라 한 장(1600) 폭에서 나온 한 변을 박는다(분해함 `.salv-grid` 와 같은 처방) · 그림은 `.bag .inv-icon` 과 같다.
+   누르는 칸이 아니라 손 모양 · 올림 밝힘(`.inv-cell.filled:hover` · 스킨마다 다르다)을 칸이 포인터를 안 받게 해 통째로 뺀다 — 물약 툴팁은 타일이 받는다 */
+.ix-tile > .inv-cell.ix-inv { width: 50px; flex: 0 0 auto; pointer-events: none; }
+.ix-inv .inv-icon { width: 40px; height: 40px; }
 
 /* 조밀 격자 — 스킬 세그먼트 전용 (ADR-0075 · 2026-09-10).
    묶음이 다섯이라(직업) 92px 그림으로는 하한 1280x700 에서 둘 반만 보이고 나머지는 스크롤 아래였다.
@@ -3737,6 +3770,11 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 }
 .pd-cell:hover { background: var(--surface-2); }
 .pd-cell.filled { background: var(--bg-tertiary); }
+/* 잠긴 「죄종 인장」 칸 [2026-11-12 · ADR-1058] — 액티브 잠긴 칸(`.sk-card .sk-lock`)과 같은 자물쇠 크기 · 색 · 누를 수 없어 손가락 · hover 색이 없다 */
+.pd-cell.locked { cursor: default; }
+.pd-cell.locked:hover { background: var(--bg-input); }
+.pd-cell .pd-lock { display: inline-flex; width: 45%; height: 45%; color: var(--text-muted); }
+.pd-cell .pd-lock svg { width: 100%; height: 100%; }
 
 .pd-icon { font-size: 22px; line-height: 1; filter: grayscale(1) brightness(.55); }
 .pd-cell.filled .pd-icon { filter: none; }
@@ -4075,6 +4113,7 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
    라벨 폭은 글자가 정한다(영어가 길다 · 고정 px 금지). 판 · 탭의 모양은 devpalette.js 가 든다 */
 .set-box { display: grid; grid-template-columns: max-content auto; gap: 14px 18px; align-items: center; font-size: var(--fs-sm); }
 .set-row { display: contents; }
+.set-panes { grid-column: 1 / -1; padding-bottom: 10px; border-bottom: 1px solid var(--border-dark); }   /* 하위 탭 셋 — 두 열을 다 쓰는 한 줄 (ADR-1050) */
 .set-k { color: var(--text-secondary); white-space: nowrap; }
 /* 닉네임 칸 — 판에서 하나뿐인 글 입력 (§2-2 · ADR-0633). 게임 화면 기본기(①②)가 죽인 선택 · 캐럿을 이 칸만 살린다 */
 .set-nick {
@@ -4753,9 +4792,8 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .dp-gauge { display: block; width: 100%; height: 5px; background: var(--bg-input); border: 1px solid var(--border-dark); }
 .dp-gauge > b { display: block; height: 100%; background: var(--color-success); }
 /* 레벨 눈금 — 칸 수 = 지점 상한(`lab_node.csv:max_lv`) · 찬 칸 = 레벨 (고른 지점 머리) */
-.dp-pips { display: flex; gap: 2px; }
-.dp-pips i { display: block; width: 10px; height: 7px; background: var(--bg-input); border: 1px solid var(--border-dark); }
-.dp-pips i.on { background: var(--color-success); border-color: var(--color-success); }
+/* 레벨 눈금은 건설 랭크 눈금(`.cn-pips`)을 그대로 쓴다 — 주황 막대 (ADR-1054 · ~~초록 작은 네모~~) */
+.dp-side-lv .cn-pips { flex: 1 1 auto; min-width: 0; }
 
 /* 고른 지점 — 오른쪽 열 · **늘어나지 않고 위에서부터** 머리 → 「다음 레벨」 → 지금 → 올린 뒤 · 걸리는 시간 → 재료 칸(건설 `.cn-mats` 그대로) + [연구] / [그만두기] → 레벨 목록 → 이 줄.
    글자는 건설 상세(`.cn-side`)처럼 한 벌 +2px — 크기 토큰을 여기서 다시 선언한다 (ADR-0674 · ADR-0684) · 섹션 사이 10 — 1600×800 에서 레벨 목록까지 스크롤 없이 (ADR-0694) */
@@ -4786,23 +4824,17 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 재료 칸 왼쪽 · [연구] 오른쪽 끝(바닥선) — 건설 「다음 랭크」 재료 줄과 같은 배치. 「보유/필요」 가 칸 폭을 넘으면 왼쪽으로 삐져나온다(ADR-0397) · 옆 칸과 안 겹치게 건설보다 넓게 띄운다 */
 .dp-side-act { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
 .dp-side-act .cn-mats { gap: 8px 22px; }
-/* 레벨 목록 (ADR-0694) — 건설 랭크 목록(`.cn-rank`)의 글 문법: 상자 · 배지 없이 글 · 줄 사이 가는 선 · 오른 레벨 흰 글 + 초록 ✓ · 다음 레벨 옅은 붉은 바탕 · 그 뒤 흐림.
-   **한 줄 높이 · 두 단**(단마다 위에서 아래로 — 행 수 `--dp-lv-rows` = 레벨 수의 절반 올림) · 줄어들지 않는다 — 「이 줄」이 길면 고른 지점 열 전체가 스크롤한다 */
+/* 레벨 목록 (ADR-1054 — ADR-0694 대체) — 줄은 건설 랭크 줄(`.cn-rank` · `.cn-rno` · `.cn-eff-t` · `.cn-state`) 그대로: 높이 · 구분선 · 오른 레벨 흰 글 + 초록 ✓ · 다음 레벨 옅은 붉은 바탕 · 그 뒤 흐림 ·
+   아직 안 연 레벨은 상태 칸에 「연구소 n랭크」. **두 단**(단마다 위에서 아래로 — 행 수 `--dp-lv-rows` = 레벨 수의 절반 올림) · 줄어들지 않는다 — 「이 줄」이 길면 고른 지점 열 전체가 스크롤한다 */
 .dp-lvl { flex: none; display: flex; flex-direction: column; gap: 6px; }
 .dp-lvs {
     display: grid; grid-auto-flow: column; grid-template-rows: repeat(var(--dp-lv-rows, 5), auto); grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 16px;
 }
-.dp-lv {
-    display: grid; grid-template-columns: 3em minmax(0, 1fr) auto; align-items: center; column-gap: 8px;
-    padding: 1px 6px; font-size: var(--fs-xs); line-height: 1.3; border-bottom: 1px solid var(--border-dark);
-}
-.dp-lv.next { background: rgba(var(--accent-rgb), .07); font-weight: bold; }
-.dp-lv.later { opacity: .6; }
-.dp-lv-no { font-weight: bold; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-muted); }
-.dp-lv.on .dp-lv-no, .dp-lv.next .dp-lv-no { color: var(--text-primary); }
-.dp-lv-v { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-primary); }
-.dp-lv-ok { white-space: nowrap; color: var(--color-success); }
+/* 값은 안 자른다 — 상태 칸(「연구소 n랭크」)이 남은 폭을 갖고 거기서 줄을 바꾼다(영어 「Laboratory rank n」이 길다 · 줄 높이는 건설 줄의 두 줄 그대로) */
+.dp-lvs .cn-rank { grid-template-columns: max-content max-content minmax(0, 1fr); }
+.dp-lvs .cn-eff-t { display: block; white-space: nowrap; }
+.dp-lvs .cn-state { white-space: normal; text-align: right; text-wrap: balance; }   /* 고르게 — 「Laboratory / rank 3」(숫자만 떨어지지 않게) */
 .dp-side-go { flex: none; min-width: 8em; padding: 8px 18px; }
 .dp-side-end { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--text-muted); }
 .dp-side-end .lock-ico { display: inline-flex; }
@@ -4848,13 +4880,8 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .dp-kv.dim .dp-kv-n, .dp-fx .dp-kv.dim .dp-kv-v { color: var(--text-muted); }
 .dp-reg-face .hero-face { width: 100%; height: 100%; border: 0; }
 .dp-reg-face.empty { display: flex; align-items: center; justify-content: center; border-style: dashed; background: transparent; color: var(--text-muted); font-size: var(--fs-sm); }
-/* 안 열린 칸 — 흐린 점선 칸 + 자물쇠 · 칸 수의 끝은 「등록 칸」 지점의 최대 (ADR-0702) · 누르면 그 지점을 고른다 */
-.dp-reg-face.lock { opacity: .6; }
-.dp-reg-face.lock svg { width: 16px; height: 16px; }
-/* 영웅 띠의 잠긴 칸도 같은 그림이다 — 선술집 뒤 랭크가 여는 칸(§5 · ADR-0913) */
-.dp-fx-heroes .hs-card.lock,
+/* 영웅 띠의 잠긴 칸 — 선술집 뒤 랭크가 여는 칸(§5 · ADR-0913) · 연구소 영웅 칸의 자물쇠는 걷었다(ADR-1053) */
 .hero-strip .hs-card.lock { opacity: .6; }
-.dp-fx-heroes .hs-card.lock svg,
 .hero-strip .hs-card.lock svg { width: 22px; height: 22px; }
 /* 등록 창 — 로스터 카드가 띠와 같은 얼굴로 줄을 바꿔 가며 선다 · 이 줄의 카드는 띠의 「고른」 표시(`.hs-card.on`) 그대로 */
 .modal-box.lr-modal { width: min(720px, 100%); }
@@ -5163,7 +5190,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .bag-row .items-tools > * { flex-shrink: 0; }
 /* 분해함 [2026-10-20 사용자 지시 「4x4 · 화면 가운데 · 아이템창 방해 x」 · SCREEN_DESIGN §6 · ADR-0673] — 보관 줄(`.bag-row`) **바로 위 · 박스 가로 가운데**.
    보관 칸은 안 덮고 위 패널(세부 옵션 · 관전 아레나 · 대장간 작업 칸)을 덮는다 — 칸을 눌러 올리는 손짓이 본체라 칸이 보여야 한다.
-   왼쪽 = 필터 세 열(등급 · 레벨 · 베이스 — 누르면 바로 함에 오른다 · ADR-0695) · 오른쪽 = 6×4 격자(ADR-0934) + 가루 · [분해하기] · [취소]. 세 열을 세로로 둬 높이가 격자와 맞는다.
+   왼쪽 = 필터 세 열(등급 · 레벨 · 베이스 — 누르면 바로 함에 오른다 · ADR-0695) · 오른쪽 = 10×4 격자(ADR-1063 · 열 수는 app.js `CUBE_COLS` 와 같이 고친다) + 가루 · [분해하기] · [취소]. 세 열을 세로로 둬 높이가 격자와 맞는다.
    격자 칸은 보관 칸과 같은 크기 — 보관 칸은 폭을 열 수로 나눈 1fr 이라(위 `.bag .inv-cells.wide`) 한 장(1600) 폭에서 나온 값을 박는다.
    필터 글자색(등급 색)은 JS 인라인이다 — 크래프트엔 `--rarity-*` 토큰이 없다 */
 .bag-row { position: relative; }
@@ -5181,7 +5208,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .salv-col > .btn.sm { padding-top: 2px; padding-bottom: 2px; }
 .salv-k { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
 .salv-right { display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }
-.salv-grid { display: grid; grid-template-columns: repeat(6, 50px); gap: 4px; }
+.salv-grid { display: grid; grid-template-columns: repeat(10, 50px); gap: 4px; }
 .salv-foot { display: flex; justify-content: flex-end; align-items: center; gap: 6px; }
 .pd-cell.filled { cursor: pointer; }
 .pd-cell.filled:hover { background: var(--surface-7); }
@@ -6800,11 +6827,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 :where(:root[data-skin="d2min"]) .dp-reg-face { width: 56px; height: 56px; background: #080808; border-color: var(--sk-lip); }
 :where(:root[data-skin="d2min"]) .dp-reg-face.empty { background: #080808; border-color: transparent; border-image: var(--sk-slot) 6 fill / 6px stretch; font-size: var(--fs-lg); }
 :where(:root[data-skin="d2min"]) .dp-reg-face.empty:hover { filter: brightness(1.35); }
-:where(:root[data-skin="d2min"]) .dp-reg-face.lock,
-:where(:root[data-skin="d2min"]) .dp-fx-heroes .hs-card.lock,
 :where(:root[data-skin="d2min"]) .hero-strip .hs-card.lock { opacity: 1; }
-:where(:root[data-skin="d2min"]) .dp-reg-face.lock svg { width: 18px; height: 18px; opacity: .6; }
-:where(:root[data-skin="d2min"]) .dp-fx-heroes .hs-card.lock svg,
 :where(:root[data-skin="d2min"]) .hero-strip .hs-card.lock svg { opacity: .6; }
 /*   지점 = 빈 칸 그림 네모 56(원을 걷는다) · 그림 40(56 × .72) · 잠김은 흐린 그림 + 자물쇠 그대로 · `Lv.n` 은 칸 안 오른쪽 아래(회색 선 3.6 안쪽 — 장비 칸 레벨 글자와 같은 자리) ·
      연구 중 = 회색 네모를 지우고 주황 선 2px(테두리 1 + 안쪽 1)이 칸 바깥 끝 — 스킬 창 찍은 칸과 같은 말 (ADR-0865) · 고른 지점의 파란 겉 테두리는 그대로 ·
@@ -6825,10 +6848,8 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /*   오른쪽 머리 그림 = 빈 칸 그림의 테 안 — 지점 96 네모(9-slice · 테두리 6 은 원본 그대로 · ADR-0798) · 줄 그림 120×80 은 줄 카드 그림과 같은 그림 자리 */
 :where(:root[data-skin="d2min"]) .dp-side-orb { border-radius: 0; border: 1px solid transparent; border-image: var(--sk-slot) 6 fill / 6px stretch; background: #080808; }
 :where(:root[data-skin="d2min"]) .dp-side-orb.sq { border-radius: 0; padding: 7px 6px 5px 7px; border-image: var(--sk-slot) 6 / 6px stretch; }
-/*   Lv 눈금의 안 찬 칸 = 턱 줄 색 테두리만(건설 랭크 눈금과 같다 · 찬 칸 초록 그대로) · 게이지 = 홈 막대(`.bar` 와 같다) · 레벨 목록 줄 사이 = 홈 줄(건설 랭크 줄과 같다) */
-:where(:root[data-skin="d2min"]) .dp-pips i { background: transparent; border-color: rgba(168, 160, 148, .45); }
+/*   게이지 = 홈 막대(`.bar` 와 같다) · Lv 눈금 · 레벨 목록 줄은 건설 랭크 눈금 · 줄(`.cn-pips` · `.cn-rank`)의 규칙을 그대로 받는다 (ADR-1054) */
 :where(:root[data-skin="d2min"]) .dp-gauge { background: #050505; border-color: #050505; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .9), 0 1px 0 rgba(255, 255, 255, .04); }
-:where(:root[data-skin="d2min"]) .dp-lv { border-bottom-color: #050505; box-shadow: 0 1px 0 rgba(255, 255, 255, .05); }
 /*   「이 줄」 재료 그림 = 빈 칸 그림 칸 40 안의 28(재료 칸 그림과 같은 크기) */
 :where(:root[data-skin="d2min"]) .dp-tier { grid-template-columns: 40px minmax(0, 1fr) auto; }
 :where(:root[data-skin="d2min"]) .dp-tier > img { width: 40px; height: 40px; padding: 6px; background: var(--sk-slot) center / 100% 100% no-repeat, #080808; }

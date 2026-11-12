@@ -138,7 +138,8 @@ GPT 판 작업 기록(PNG · 생성 원본 · 프롬프트 · 비교)은 게임�
 ⚠ 이제 `HERO_FACES[<직업>]` 은 **줄일 때만** 영향이 있다(범위 밖 저장값은 그 직업 풀 안에서 접어서 쓴다).
 늘리는 쪽은 기존 영웅에 무해하다.
 
-**⚠ 영웅 초상은 23장 · 5직업 풀(`HERO_FACES = {warrior:5, knight:7, mage:4, archer:2, priest:5}`)이다**
+**⚠ 영웅 초상은 28장 · 5직업 풀(`HERO_FACES = {warrior:5, knight:8, mage:5, archer:5, priest:5}`)이다**
+[2026-11-12 — **유니크 넷 추가 · 11-11 다섯 크기 다시 맞춤** — `hero/knight_8` 살라딘 · `hero/mage_5` 하데스 · `hero/archer_3` 주몽 · `hero/archer_4` 아마존(시트 `knight_saladin_dev3_3x3_2` 5번 · `mage_hades_r4_3x3_2` 6번 · `archer_jumong_r4_3x3_2` 2번 · `archer_amazon_dev3_3x3_2` 2번). 빌헬름 텔이 옛 영웅보다 작게 보인다는 지적(사용자)에 11-11 다섯도 같은 칸에서 다시 앉혔다 — 몸이 넓은 그림은 몸까지 옆 여백 20 에 맞추느라 얼굴이 줄었다(텔 눈 사이 72). **새 기준: 눈 사이 = 검황 85(삼손 선례) · 눈 x 315 · 눈높이 235 ~ 255 · 위 여백 30 · 옆 여백은 머리(코 위)에만** — 어깨 · 모피는 옆으로 잘려도 된다(레오니다스 선례). 몸이 짧아 바닥이 뜨면 눈이 내려가고, 255 아래로 처지면 얼굴을 눈 사이 90 까지 키워 올린다(팔라딘). **오딘은 다시 앉힌 판이 왼쪽으로 쏠려 11-11 판으로 되돌렸다**(사용자 · 붕대로 한 눈을 읽을 수 없어 새 기준이 안 맞는다). 같은 날 `hero/archer_5` 아르테미스(`archer_artemis_r6_3x3_2` 1번 · 새 기준) 하나 더 · 팔라딘은 밝기를 내리되 **음영을 지키도록** 다시 어둡게 했다(무릎 곡선이 판금 명암을 지웠다 → 휘도 감마).]
 [2026-11-11 — **유니크 다섯 추가** — `hero/knight_6` 리처드 1세 · `hero/knight_7` 팔라딘 · `hero/mage_3` 오딘 · `hero/mage_4` 제우스 · `hero/archer_2` 빌헬름 텔. 초안 시트(`source_sheet_knight_richard_r2_3x3_2` 2번 · `knight_paladin_r3_3x3_3` 5번 · `mage_odin_r2_3x3_2` 2번 · `mage_zeus_dev_3x3_1` 5번 · `archer_tell_r3_3x3_3` 6번)의 칸을 키잉해 **눈으로 앉혔다**(`align_hero_faces` 기준 — 오딘은 한 눈이 붕대라 보이는 눈을 코 기준으로 접어 눈 사이 108 로 읽었다). 후보 표 id 도 `knight_6` · `knight_7` · `mage_3` · `mage_4` · `archer_2` 로 바꿨다. ⚠ 세이브에 옛 `mage_3`(노스트라다무스 시절)이 박힌 마법사는 이제 오딘 얼굴이다.]
 [2026-10-21 — **노스트라다무스를 사제로 옮겼다** — `hero/mage_3` → `hero/priest_5`(gemini · gpt 둘 다 · `source/ready` 원본도). mage 3 → 2 는 **줄이는 방향**이라 세이브에 `mage_3` 이 박힌 마법사는 `mage_1` 로 접힌다.]
 [2026-10-16 — **`hero/warrior_4` 레오니다스 교체**(장수 그대로) — 시트 `source_sheet_warrior_leonidas_redraw_3x3_1` 의 2번 타일 → `../source/hero/warrior_leonidas_bronze`. 옛 그림은 `../source/hero/warrior_leonidas` 원본만 남는다 · `gpt/hero/warrior_4` 는 옛 그림 그대로다.]
@@ -190,10 +191,15 @@ GPT 판 작업 기록(PNG · 생성 원본 · 프롬프트 · 비교)은 게임�
 | — (신규) | `hero/mage_2` | **포세이돈** — 청록 장발·수염 · 갈색 가죽 조끼 | `../source/mage_poseidon` |
 | — (신규) | `hero/priest_5` | **노스트라다무스** — 황도 기호 검은 로브 · 회백 장발 (10-21 `mage_3` 에서 옮김) | `../source/mage_nostradamus` |
 | — (신규) | `hero/knight_6` | **리처드 1세** — 금관 · 사슬 코이프 · 붉은 십자 흰 서코트 (11-11) | `../source/hero/knight_richard_crown_coif` |
-| — (신규) | `hero/knight_7` | **팔라딘** — 순백 판금 · 회색 짧은 머리 노기사 (11-11) | `../source/hero/knight_paladin_white_plate` |
+| — (신규) | `hero/knight_7` | **팔라딘** — 회색 강철 판금 · 회색 짧은 머리 노기사 (11-11 · 11-12 어둡게) | `../source/hero/knight_paladin_white_plate` |
 | — (신규) | `hero/mage_3` | **오딘** — 붕대로 한 눈을 가린 후드 · 회백 장발 · 긴 수염 (11-11) | `../source/hero/mage_odin_bandage_hood` |
-| — (신규) | `hero/mage_4` | **제우스** — 왕관 · 흰 장발 · 수염 · 손에 번개 (11-11) | `../source/hero/mage_zeus_crown_bolt` |
+| — (신규) | `hero/mage_4` | **제우스** — 헝클어진 흰 장발 · 긴 수염 · 노한 얼굴 · 손가의 불티 (11-11 · 11-12 다시 그림 — 파일 이름은 옛 왕관 그림 때 것) | `../source/hero/mage_zeus_crown_bolt` |
 | — (신규) | `hero/archer_2` | **빌헬름 텔** — 머리띠 · 모피 · 어깨에 멘 석궁 (11-11) | `../source/hero/archer_tell_crossbow_fur` |
+| — (신규) | `hero/knight_8` | **살라딘** — 흰 터번 · 머리와 목을 감싼 천 · 검은 수염 · 천 겉옷 (11-12 · 같은 날 다시 그림) | `../source/hero/knight_saladin_turban_mail` |
+| — (신규) | `hero/mage_5` | **하데스** — 창백한 대머리 · 늘어진 흰 머리 · 검은 로브 (11-12) | `../source/hero/mage_hades_pale_hollow` |
+| — (신규) | `hero/archer_3` | **주몽** — 상투 · 늑대 가죽 머리쓰개 · 등에 멘 활 · 녹슨 갑주 (11-12) | `../source/hero/archer_jumong_wolf_pelt` |
+| — (신규) | `hero/archer_4` | **아마존** — 헝클어진 장발 · 뼈 장식 · 얼굴 칠 · 모피 (11-12) | `../source/hero/archer_amazon_bone_paint` |
+| — (신규) | `hero/archer_5` | **아르테미스** — 땋은 검은 머리 · 뼈 · 깃털 장식 · 모피 깃 · 등의 활 (11-12) | `../source/hero/archer_artemis_braid_bone` |
 
 ⚠ **분류는 그림의 인상으로 정한 것이다** (사용자 확정) — 백발백염(구 7)은 기사 시트에서 왔지만 전사로, 민머리(구 6)·외치는 기사(구 9)는 기사로 갔다. 위 이력 문단의 번호는 전부 **구 파일명**이라 이 표로 읽는다.
 새 파일 열은 2026-09-14 폴더 분리 뒤의 이름이다 — 09-07 ~ 09-14 사이에는 `hero_<직업id>_<k>.png` 였다(이력 문단의 `hero_priest_2` 같은 이름).
@@ -224,4 +230,4 @@ GPT 판 작업 기록(PNG · 생성 원본 · 프롬프트 · 비교)은 게임�
 - ⚠ **「화면에서 깨져 보인다」를 해상도 문제로 읽지 말 것** (2026-09-01) — 원인은 `image-rendering: pixelated` 가 이 스타일에도 걸려 있던 것이었다. 512는 가장 큰 칸(152px @ DPR2 = 304px)을 덮는 정상 해상도다. 줄이는 것은 **용량**을 위한 선택이지 화질을 위한 선택이 아니다 (`../../README.md` 규격)
 
 ---
-*마지막 업데이트: 2026-11-11*
+*마지막 업데이트: 2026-11-12*

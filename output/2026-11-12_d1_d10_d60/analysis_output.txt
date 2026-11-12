@@ -1,0 +1,143 @@
+## per mark (median, [min~max])
+basic 600 lv 5.0 cleared 4.0 [2~7] runs 4.0 wins 4.0 drops 7.0 ilvl 1.1 ch1 0/80 gold 1240.0 mastery 12.0 up 0.0 bld 4.0
+basic 3600 lv 13.5 cleared 13.5 [5~35] runs 32.5 wins 21.0 drops 38.5 ilvl 7.1 ch1 43/80 gold 1769.5 mastery 39.0 up 7.0 bld 7.0
+basic d1ret lv 13.5 cleared 13.5 [5~35] runs 32.5 wins 21.0 drops 38.5 ilvl 7.1 ch1 43/80 gold 1769.5 mastery 39.0 up 7.0 bld 7.0
+basic d1 lv 14.0 cleared 17.0 [6~40] runs 38.0 wins 25.0 drops 46.0 ilvl 7.7 ch1 52/80 gold 2047.0 mastery 41.5 up 7.0 bld 7.0
+adaptive 600 lv 5.0 cleared 4.0 [2~7] runs 4.0 wins 4.0 drops 6.5 ilvl 1.1 ch1 0/80 gold 1211.5 mastery 12.0 up 0.0 bld 4.0
+adaptive 3600 lv 14.0 cleared 17.5 [4~38] runs 30.0 wins 24.5 drops 42.0 ilvl 7.7 ch1 49/80 gold 2053.0 mastery 49.0 up 6.0 bld 7.0
+adaptive d1ret lv 14.0 cleared 17.5 [4~38] runs 30.0 wins 24.5 drops 42.0 ilvl 7.7 ch1 49/80 gold 2053.0 mastery 49.0 up 6.0 bld 7.0
+adaptive d1 lv 15.0 cleared 21.0 [7~43] runs 36.0 wins 28.5 drops 48.5 ilvl 8.7 ch1 61/80 gold 2019.0 mastery 53.0 up 7.0 bld 7.0
+passive 600 lv 5.0 cleared 4.0 [2~5] runs 4.0 wins 4.0 drops 6.0 ilvl 1.0 ch1 0/10 gold 2408.5 mastery 0.0 up 0.0 bld 2.0
+passive 3600 lv 9.5 cleared 5.5 [4~12] runs 29.0 wins 5.5 drops 24.5 ilvl 1.0 ch1 0/10 gold 8555.5 mastery 0.0 up 0.0 bld 2.0
+passive d1ret lv 9.5 cleared 5.5 [4~12] runs 29.0 wins 5.5 drops 24.5 ilvl 1.0 ch1 0/10 gold 8555.5 mastery 0.0 up 0.0 bld 2.0
+passive d1 lv 10.0 cleared 5.5 [4~12] runs 32.0 wins 5.5 drops 27.0 ilvl 1.0 ch1 0/10 gold 9396.0 mastery 0.0 up 0.0 bld 2.0
+
+## halves (seeds 1-40 | 41-80)
+basic 600 lv 5.5 cl 4.0 ch1 0/40 | lv 5.0 cl 4.0 ch1 0/40
+basic 3600 lv 13.5 cl 14.5 ch1 23/40 | lv 13.5 cl 12.5 ch1 20/40
+basic d1 lv 14.0 cl 17.5 ch1 29/40 | lv 14.5 cl 15.0 ch1 23/40
+adaptive 600 lv 5.0 cl 4.0 ch1 0/40 | lv 5.0 cl 4.0 ch1 0/40
+adaptive 3600 lv 14.0 cl 18.0 ch1 29/40 | lv 14.0 cl 12.5 ch1 20/40
+adaptive d1 lv 15.0 cl 22.0 ch1 32/40 | lv 15.0 cl 17.5 ch1 29/40
+
+## first events (basic, seconds: median / max)
+departure 80 0.0 0
+xp 80 12.0 27.3
+levelUp 80 39.8 92.8
+drop 80 58.4 250.35
+stageClear 80 124.6 263.7
+equipmentGain 80 300.0 600
+boxGranted 80 395.4 804.8
+defeat 80 1146.3 3598.5
+retryGuide 57 2209.3 90399.8
+masterySpent 80 0.0 0
+construct 80 0.0 0
+upgrade 79 900 90300
+
+## D60 frontier (furthest cleared stage) distribution
+basic 3600 {'2 1-2': 1, '3 1-3': 1, '4 1-4': 6, '5 at boss': 32, '6 ch2+': 40}
+basic d1 {'2 1-2': 1, '4 1-4': 5, '5 at boss': 23, '6 ch2+': 51}
+adaptive 3600 {'2 1-2': 3, '3 1-3': 4, '4 1-4': 4, '5 at boss': 23, '6 ch2+': 46}
+adaptive d1 {'3 1-3': 3, '4 1-4': 6, '5 at boss': 12, '6 ch2+': 59}
+passive 3600 {'2 1-2': 6, '4 1-4': 1, '5 at boss': 3}
+passive d1 {'2 1-2': 6, '4 1-4': 1, '5 at boss': 3}
+
+## gaps at D60 (minutes >= 20)
+basic no-new-stage>=20m 39 med 19.5 | no-reward>=20m 0 max 8.6
+adaptive no-new-stage>=20m 41 med 20.6 | no-reward>=20m 0 max 2.9
+passive no-new-stage>=20m 9 med 40.7 | no-reward>=20m 0 max 3.7
+
+## stage funnel within D60 (first try win, accounts cleared, first clear min median)
+-- basic
+1-1 I      first 80/80 = 100% cleared 80 min 2.1
+1-1 II     first 80/80 = 100% cleared 80 min 4.4
+1-1 III    first 80/80 = 100% cleared 80 min 6.6
+1-2 I      first 76/80 = 95% cleared 80 min 8.6
+1-2 II     first 69/80 = 86% cleared 80 min 11.2
+1-2 III    first 56/80 = 70% cleared 79 min 14.9
+1-3 I      first 65/79 = 82% cleared 79 min 17.2
+1-3 II     first 67/79 = 85% cleared 79 min 19.4
+1-3 III    first 66/79 = 84% cleared 78 min 21.7
+1-4 I      first 77/78 = 99% cleared 78 min 24.6
+1-4 II     first 77/77 = 100% cleared 77 min 26.4
+1-4 III    first 62/77 = 81% cleared 75 min 29.1
+1-5 boss   first 3/75 = 4% cleared 43 min 40.7
+2-1 I      first 32/41 = 78% cleared 40 min 42.4
+2-1 II     first 31/38 = 82% cleared 38 min 44.2
+2-1 III    first 30/37 = 81% cleared 36 min 46.8
+2-2 I      first 24/34 = 71% cleared 32 min 48.0
+2-2 II     first 24/31 = 77% cleared 29 min 49.4
+2-2 III    first 24/27 = 89% cleared 27 min 50.0
+-- adaptive
+1-1 I      first 80/80 = 100% cleared 80 min 2.1
+1-1 II     first 80/80 = 100% cleared 80 min 4.3
+1-1 III    first 80/80 = 100% cleared 80 min 6.6
+1-2 I      first 78/80 = 98% cleared 80 min 8.7
+1-2 II     first 72/80 = 90% cleared 79 min 11.1
+1-2 III    first 61/79 = 77% cleared 77 min 14.2
+1-3 I      first 69/77 = 90% cleared 77 min 16.6
+1-3 II     first 72/75 = 96% cleared 75 min 18.1
+1-3 III    first 71/75 = 95% cleared 75 min 20.2
+1-4 I      first 72/73 = 99% cleared 73 min 22.4
+1-4 II     first 73/73 = 100% cleared 73 min 24.4
+1-4 III    first 66/73 = 90% cleared 72 min 27.4
+1-5 boss   first 12/71 = 17% cleared 49 min 35.6
+2-1 I      first 36/46 = 78% cleared 46 min 38.2
+2-1 II     first 40/45 = 89% cleared 45 min 40.2
+2-1 III    first 38/45 = 84% cleared 43 min 42.5
+2-2 I      first 34/43 = 79% cleared 41 min 46.4
+2-2 II     first 39/40 = 98% cleared 40 min 48.4
+2-2 III    first 29/33 = 88% cleared 33 min 47.6
+
+## boss 1051 attempts by index (whole session incl. D1)
+basic {'1-5': '25/324', '6-10': '19/153', '11+': '8/80'}
+adaptive {'1-5': '44/267', '6-10': '16/62', '11+': '1/2'}
+
+## D1 return (24h away, offline cap)
+basic notice Counter({'runClosed': 80}) midRun 74 gold 0.0 mats {'iron_ore': 36.0, 'timber': 36.0, 'herb': 36.0} other {} joins 4 mail 0 labRegHeroes 3.0 linesOpen Counter({'res': 80, 'visit': 2}) research 2
+basic resume=closed stage 49 / 80
+basic D1+10: runs 6.0 wins 4.0 newClears 3.0 [0~7] zeroNew 27 zeroWins 7 lvGain 1.0 gold 3096.5 drops 5.5
+   half 1 newClears 3.0 zeroNew 10 zeroWins 4
+   half 41 newClears 2.5 zeroNew 17 zeroWins 3
+adaptive notice Counter({'runClosed': 80}) midRun 76 gold 0.0 mats {'iron_ore': 36.5, 'timber': 36.0, 'herb': 36.0} other {} joins 2 mail 0 labRegHeroes 3.0 linesOpen Counter({'res': 80, 'lib': 3, 'visit': 1}) research 1
+adaptive resume=closed stage 52 / 80
+adaptive D1+10: runs 5.0 wins 4.0 newClears 4.0 [0~8] zeroNew 13 zeroWins 3 lvGain 1.0 gold 3172.0 drops 6.5
+   half 1 newClears 4.0 zeroNew 6 zeroWins 2
+   half 41 newClears 3.5 zeroNew 7 zeroWins 1
+passive notice Counter({'runClosed': 10}) midRun 10 gold 0.0 mats {'iron_ore': 0.0, 'timber': 0.0, 'herb': 0.0} other {} joins 0 mail 0 labRegHeroes 0.0 linesOpen Counter() research 0
+passive resume=closed stage 7 / 10
+passive D1+10: runs 4.0 wins 0.0 newClears 0.0 [0~0] zeroNew 10 zeroWins 10 lvGain 0.0 gold 721.0 drops 3.0
+
+## D1 resume stage vs result (basic+adaptive)
+basic {'2 1-2': 'n1 zeroWin 0 zeroNew 0', '3 1-3': 'n1 zeroWin 0 zeroNew 0', '4 1-4': 'n1 zeroWin 0 zeroNew 0', '5 at boss': 'n2 zeroWin 2 zeroNew 2', '6 ch2+': 'n43 zeroWin 2 zeroNew 2', 'boss 1051': 'n32 zeroWin 3 zeroNew 23'}
+adaptive {'2 1-2': 'n3 zeroWin 0 zeroNew 0', '3 1-3': 'n2 zeroWin 0 zeroNew 0', '4 1-4': 'n2 zeroWin 0 zeroNew 0', '5 at boss': 'n1 zeroWin 1 zeroNew 1', '6 ch2+': 'n49 zeroWin 1 zeroNew 1', 'boss 1051': 'n23 zeroWin 1 zeroNew 11'}
+
+## ch1 complete by minute (session 1)
+basic {30: 6, 45: 29, 60: 43} median of finishers 40.7
+adaptive {30: 13, 45: 36, 60: 49} median of finishers 35.6
+
+## boss 1051 by party median level at attempt (whole session)
+basic {'11': '15/145', '12': '14/133', '13': '10/103', '14+': '6/46', '<=10': '7/130'} first attempt lv median 10
+adaptive {'11': '17/112', '12': '10/37', '13': '2/22', '14+': '16/36', '<=10': '16/124'} first attempt lv median 10
+
+## class mix vs D60 ch1 (and D1)
+basic archer       D60 32/45 D1 37/45 halves 18/22 14/23
+basic no archer    D60 11/35 D1 15/35 halves 5/18 6/17
+basic mage+priest  D60 5/22 D1 8/22 halves 2/11 3/11
+basic priest       D60 18/48 D1 25/48 halves 10/23 8/25
+basic no priest    D60 25/32 D1 27/32 halves 13/17 12/15
+adaptive archer       D60 35/45 D1 41/45 halves 20/22 15/23
+adaptive no archer    D60 14/35 D1 20/35 halves 9/18 5/17
+adaptive mage+priest  D60 8/22 D1 11/22 halves 6/11 2/11
+adaptive priest       D60 25/48 D1 31/48 halves 16/23 9/25
+adaptive no priest    D60 24/32 D1 30/32 halves 13/17 11/15
+
+## features at D60 (basic/adaptive)
+basic buildings r1+ {'library': 80, 'resource': 80, 'shop': 80, 'tavern': 80, 'forge': 80, 'storage': 80, 'command': 80, 'explore': 6}
+basic r2+ {'shop': 11, 'storage': 3, 'tavern': 2}
+basic newActiveSkills 0 boxes opened med 4.0 pot used med 76.5 upg med 10.0 dropEquippedRatio med 0.5
+basic advance open 0 craftable books 0
+adaptive buildings r1+ {'library': 80, 'resource': 80, 'shop': 80, 'tavern': 80, 'forge': 80, 'storage': 80, 'command': 80, 'explore': 9}
+adaptive r2+ {'shop': 11, 'tavern': 1, 'library': 3, 'storage': 4}
+adaptive newActiveSkills 0 boxes opened med 5.0 pot used med 64.0 upg med 10.0 dropEquippedRatio med 0.5
+adaptive advance open 0 craftable books 1

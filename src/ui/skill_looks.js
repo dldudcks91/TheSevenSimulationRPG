@@ -84,9 +84,9 @@ export const SKILL_LOOKS = {
     war_shockwave: { hit: [['ring', { c: 'earth', fy: 0.4, oy: 20, n: 3, s: 130, step: 80 }], ['quake']] },   // 쇼크웨이브 — 땅 고리 셋
 
     /* ── 선봉장 — 금빛 함성 ── */
-    war_lionsroar: { hit: [['ring', { c: 'gold', n: 2, s: 120, w: 5, step: 100 }], ['spray', { c: 'gold', n: 8, shape: 'dash' }]] },   // 사자후 — 큰 금빛 고리
+    war_divinedescent: { buff: [['pillar', { c: 'gold', w: 30, t: 600 }], ['rise', { c: 'gold', n: 8 }]] },   // 강신 — 금빛 기둥이 내려앉는다(2026-11-12 R425 · 옛 사자후 자리)
     war_command: { buff: [['sigil', { c: 'gold', s: 96 }], ['chevron', { c: 'gold', n: 2 }]] },          // 호령 — 금빛 문양 + 꺾쇠
-    war_intimidate: { buff: [['haze', { c: 'blood' }], ['xmark', { c: 'blood', s: 26 }]] },              // 일갈 — 피 기운 + ×
+    war_intimidate: { buff: [['haze', { c: 'blood' }], ['xmark', { c: 'blood', s: 26 }]] },              // 사자후(옛 일갈) — 피 기운 + ×
 
     /* ── 가디언 ── */
     kni_lastbastion: { buff: [['shell', { c: 'holy' }], ['pillar', { c: 'holy', w: 24, t: 500 }]] },     // 최후의 보루 — 성광 막 + 가는 빛기둥

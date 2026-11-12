@@ -5,7 +5,7 @@
  * 저장은 **엔진 중립 JSON** 이다: 상태 객체 자체가 평문 데이터라 serialize 는 버전 도장만 찍는다.
  * localStorage 접근은 ui/storage.js 어댑터 한 곳에서만 한다 (CLAUDE.md 이식성 규칙 3).
  *
- * 세이브 형식 v46 (2026-11-01 · 파티 전술 칸 7 → 5)
+ * 세이브 형식 v47 (2026-11-12 · 레벨 1 스킬 포인트 · R435)
  * {
  *   version, seed, createdAt, savedAt,
  *   expMs    — **누적 원정 플레이 시간**(ms · 배속을 탄다). 더하는 것은 `addExpTime` 하나 · 얼마를 더할지는 화면이 정한다 · 없으면 0 · 버전 무변경 (2026-10-05 · ADR-0514 — 옛 `playMs` 는 로드가 지운다)
@@ -28,6 +28,7 @@
  *       배정은 `skill.activesFor` 가 1번 칸에 싣는다 — 저장하는 건 굴린 결과 하나뿐
  *     — mastery = {nodeId: rank} 찍은 것만 담는다(0은 안 담는다) · masteryPoints = 남은 포인트.
  *       죄종·직업 마스터리와 전직 트리가 같은 스킬 포인트 지갑을 쓴다 (2026-11-01 · skill_design §4).
+ *       **포인트 = 레벨** — 태어날 때 `mastery_point_start` · 레벨업마다 `mastery_point_per_level` (v47 · 2026-11-12 · R435)
  *     — position = 착용 위치 id. 부위 7종 · 위치 8개 (반지 ×2 = ring1/ring2, 나머지는 부위 id 그대로).
  *       보조(offhand)는 2026-09-01 한손 개념 폐지와 함께 사라졌다
  *   presets: [{party: [uid], formation: {tpl, ranks}, potionSlots: [potionId|null], potionHp?, tactics: {slots}}], preset: n, items: {uid: item}, bags: [[uid]],
@@ -90,7 +91,7 @@
  *   progress.peakTotal              — 로스터 합산 레벨의 **도달 최고치**(v37) — 해고가 합산을 내리기 전에 적는다(건설 문턱 `total:`)
  * }
  *
- * **버전** — `deserialize` 는 **v38 ~ v46을 연다** — 옛 버전은 한 단계씩 올린다. 그 전 세이브(v1 ~ v37)는 던지고 시작 화면이 새 게임으로 받는다
+ * **버전** — `deserialize` 는 **v38 ~ v47을 연다** — 옛 버전은 한 단계씩 올린다. 그 전 세이브(v1 ~ v37)는 던지고 시작 화면이 새 게임으로 받는다
  *   [2026-09-23 · 사용자 지시 「끊어」 · 다부대]. 다음 버전이 생기면 같은 자리에서 한 단계씩 올린다 (INTERFACE §4)
  */
 
@@ -104,7 +105,7 @@ import { TARGETS as CN_TARGETS } from './construction.js';
 // 의뢰 어휘 — 로드가 모르는 어휘의 카드를 거르는 데만 쓴다(같은 취급 · R153)
 import { AXES as CM_AXES } from './commission.js';
 
-export const SAVE_VERSION = 46;
+export const SAVE_VERSION = 47;
 
 /**
  * @param {object} deps
@@ -342,7 +343,7 @@ export function createGameSystem(deps) {
             name: { ...gob.kind.name },
             tier: 'growth', sin: gob.sin, cls: gob.kind.cls,
             trait: gob.trait, face: gob.kind.face,
-            level: 1, xp: 0, mastery: {}, masteryPoints: 0, innate: gob.innate,
+            level: 1, xp: 0, mastery: {}, masteryPoints: B.mastery_point_start, innate: gob.innate,   // 레벨 1 에도 한 점(R435 — `rollHero` 와 같다)
             stats: { str: 5, agi: 5, int: 5, vit: 5, luck: 5, ldr: 5, cha: 5 },
             equipped: {},
         });
@@ -532,7 +533,19 @@ export function createGameSystem(deps) {
         return s;
     }
 
-    /** **v38 ~ v46 을 연다** — 옛 버전은 한 단계씩 올린다. 그 전은 끊었다(2026-09-23 · 다부대 · 파일 머리 참조) */
+    /**
+     * v46 → v47 [2026-11-12 · R435 · skill_design §4 — 포인트 = 레벨] — 레벨 1 에 주는 포인트(`mastery_point_start`)를 **이미 있는 영웅에게 한 번만** 더한다.
+     *   명단(`heroes`)과 수색 칸에 박힌 후보(`joins[].hero`)가 대상이다 — 선술집 명단은 저장하지 않아(시드 재현) 새 `rollHero` 가 이미 준다 · rng 0
+     */
+    function upgradeV46(s) {
+        const add = h => { if (h && typeof h === 'object') h.masteryPoints = Math.max(0, Number.isInteger(h.masteryPoints) ? h.masteryPoints : 0) + B.mastery_point_start; };
+        for (const h of Array.isArray(s.heroes) ? s.heroes : []) add(h);
+        for (const j of Array.isArray(s.joins) ? s.joins : []) add(j?.hero);
+        s.version = 47;
+        return s;
+    }
+
+    /** **v38 ~ v47 을 연다** — 옛 버전은 한 단계씩 올린다. 그 전은 끊었다(2026-09-23 · 다부대 · 파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
         const separateAdvancePoints = obj.version <= 44;
@@ -544,6 +557,7 @@ export function createGameSystem(deps) {
         if (src.version === 43) src = upgradeV43(src === obj ? clone(obj) : src);
         if (src.version === 44) src = upgradeV44(src === obj ? clone(obj) : src);
         if (src.version === 45) src = upgradeV45(src === obj ? clone(obj) : src);
+        if (src.version === 46) src = upgradeV46(src === obj ? clone(obj) : src);
         if (src.version !== SAVE_VERSION)
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         const s = clone(src);
@@ -766,6 +780,12 @@ export function createGameSystem(deps) {
         }
         const labR = s.labResearch;
         const paidOk = p => p && Number.isFinite(p.gold) && p.gold >= 0 && (p.mat == null || (typeof p.mat.id === 'string' && Number.isInteger(p.mat.n) && p.mat.n >= 0));
+        // 표에서 빠진 지점을 연구 중이던 세이브 — 낸 비용을 돌려준다(2026-11-12 R454 — 「등록 칸」 지점 삭제 · 모양이 틀린 것은 그대로 안 돌려준다 ·
+        //   끝난 레벨은 위 정리가 지우고 안 돌려준다 — 끝난 연구는 되돌리지 않는다)
+        if (labR && typeof labR === 'object' && !labNodeRow(labR.line, labR.node) && paidOk(labR.paid)) {
+            s.resources.gold = (s.resources.gold ?? 0) + labR.paid.gold;
+            if (labR.paid.mat) s.materials[labR.paid.mat.id] = (s.materials[labR.paid.mat.id] ?? 0) + labR.paid.mat.n;
+        }
         s.labResearch = labR && labNodeRow(labR.line, labR.node) && Number.isInteger(labR.lv) && labR.lv >= 1 && labR.lv <= labNodeRow(labR.line, labR.node).max
             && Number.isFinite(labR.at) && Number.isFinite(labR.until) && paidOk(labR.paid)
             ? { line: labR.line, node: labR.node, lv: labR.lv, at: labR.at, until: labR.until,
@@ -852,7 +872,8 @@ export function createGameSystem(deps) {
     //   그 자리를 받은 기본 스킬로 옮긴다 · 전직 칸(`advanceSkill`)과 그 칸 순서는 그대로 둔다
     const MOVED_SKILLS = { arc_quickdraw: 'arc_quickhands', arc_overdraw: 'arc_eagleeye' };
     // 지운 전직 스킬 — 같은 갈래의 대체로 옮긴다(배운 뒤 넣은 포인트 `advanceUp` 도 그대로) [2026-10-29 · R383 — 풀 드로우 → 오버드로우]
-    const RETIRED_ADVANCE = { arc_fulldraw: 'arc_overdraw' };
+    //   옛 사자후(적 전원 데미지) → 새 사자후(옛 일갈 — 같은 함성 · 적 전원) [2026-11-12 · R425 · 사용자 「이미 배운 영웅 옮겨야지」]
+    const RETIRED_ADVANCE = { arc_fulldraw: 'arc_overdraw', war_lionsroar: 'war_intimidate' };
     /**
      * 옛 세이브의 지운 스킬을 대체 스킬로 옮긴다 [2026-10-16 · INTERFACE §4 · 버전 무변경 · rng 0] — 영웅(명단 · 가입 희망)의 고유 · 배운 칸 · 스킬 레벨(겹치면 큰 쪽) ·
      *   책 재고(권수를 더한다) · 아이템 줄의 `skill`(특정 스킬 +n · 발동 옵션) · 목걸이 `proc.skill`. 정의 밖 · 책이 안 되는 id 를 지우는 일은 그 뒤 정리가 한다
@@ -2838,7 +2859,7 @@ export function createGameSystem(deps) {
     /** 연구소 줄 — 순서 = 화면 · 대박 굴림 순서 (INTERFACE §5-3) */
     const LAB_LINES = [RES_KEY, VISIT_KEY, TRAIN_KEY, GAMBLE_KEY, LIB_KEY];
     /** 지점 id — 무엇을 미는가는 코드가 안다(값 · 비용 · 시간은 표 — INTERFACE §5-3) · 재료 지점 셋 = 그 재료의 생산 배수 */
-    const LAB_NODE_IDS = [...MAT_POSTS, 'burst', 'seats', 'interval', 'quality', 'waiting', 'speed', 'range', 'income'];
+    const LAB_NODE_IDS = [...MAT_POSTS, 'burst', 'interval', 'quality', 'waiting', 'speed', 'range', 'income'];   // ~~seats~~ 2026-11-12 R454 — 등록 칸은 `B.lab_seats`
     const LAB_NODES = deps.labNodes ?? [];
     for (const n of LAB_NODES) {
         if (!LAB_LINES.includes(n.line) || !LAB_NODE_IDS.includes(n.node)) throw new Error(`state: lab_node.csv — 모르는 줄 · 지점 '${n.line}:${n.node}' (INTERFACE §5-3)`);
@@ -2857,6 +2878,10 @@ export function createGameSystem(deps) {
     /** 연구소 랭크 — 연구소의 더하기 `resource_tier` 가 랭크마다 1 이라 랭크와 같다 (INTERFACE §2-7 `limitsOf`) */
     const labRank = state => limitsOf(state).resourceTiers;
     const labNodeOpen = (state, r) => labRank(state) >= r.unlockRank;
+    /** 지점 레벨 상한 — 연구소 랭크가 연다: 그 지점이 생긴 랭크부터 랭크마다 `B.lab_node_lv_per_rank` 레벨씩 · 최대 레벨에서 자른다 (2026-11-12 · R455) */
+    const labNodeCap = (state, r) => Math.min(r.max, Math.max(0, labRank(state) - r.unlockRank + 1) * B.lab_node_lv_per_rank);
+    /** 레벨 lv 를 여는 연구소 랭크 (R455) */
+    const labLvRank = (r, lv) => r.unlockRank + Math.ceil(lv / B.lab_node_lv_per_rank) - 1;
     /** 줄이 열렸나 — 연구 · 등록을 받는다(지점이 하나라도 열렸다 · 도박장은 선술집 도박장도 — 사용자 「선술집 r4를 짓고 열리도록」 ·
      *  자원은 창고도 — 사용자 「창고가 지어져야 연구소의 자원이 열리도록」 2026-10-27 · R361 ·
      *  수색은 선술집 영웅 고용도 — 사용자 「수색은 랭크2 영웅고용과 함께 열리는걸로」 2026-10-30) */
@@ -3085,13 +3110,15 @@ export function createGameSystem(deps) {
     function labNodeInfo(state, line, r, now) {
         const lv = labLv(state, line, r.node);
         const open = labLineOpen(state, line) && labNodeOpen(state, r);
-        const out = { node: r.node, ord: r.ord, open, unlockRank: r.unlockRank, lv, max: r.max, value: nodeValue(r, lv),
-            levels: Array.from({ length: r.max }, (_, i) => nodeValue(r, i + 1)), next: null, err: null };   // 레벨 1 ~ 최대의 값 — 고른 지점의 레벨 목록
+        const out = { node: r.node, ord: r.ord, open, unlockRank: r.unlockRank, lv, max: r.max, cap: labNodeCap(state, r), value: nodeValue(r, lv),
+            levels: Array.from({ length: r.max }, (_, i) => nodeValue(r, i + 1)),   // 레벨 1 ~ 최대의 값 — 고른 지점의 레벨 목록
+            levelRanks: Array.from({ length: r.max }, (_, i) => labLvRank(r, i + 1)), next: null, err: null };   // 그 레벨을 여는 연구소 랭크 (R455)
         if (lv < r.max) {
             const c = labCost(state, line, r, lv, now);
             out.next = { value: nodeValue(r, lv + 1), gold: c.gold, mat: c.mat, ms: c.ms };
         }
         out.err = !open ? 'locked' : state.labResearch ? 'busy' : !out.next ? 'maxUp'
+            : lv >= out.cap ? 'rank'   // 다음 레벨을 연구소 랭크가 아직 안 열었다 (R455)
             : (state.resources.gold ?? 0) < out.next.gold ? 'gold'
             : out.next.mat && (state.materials?.[out.next.mat.id] ?? 0) < out.next.mat.n ? 'materials' : null;
         return out;
@@ -4661,13 +4688,13 @@ export function createGameSystem(deps) {
     // ~~visitLevelInfo · visitLevelUp~~ — 2026-10-21 퇴역(R298) · 수색 줄의 레벨이 지점으로 바뀌었다 → labState · labResearchStart(state, 'visit', 'interval', now)
 
     /* ── 연구소 줄 등록 [신설 2026-10-21 사용자 「연구소 내에서 뭐하는지가 나와야해」 · GAME_DESIGN §9 10-21 · INTERFACE §2-7] ──
-       영웅을 줄(`LAB_LINES`)에 **등록**한다 — `labReg = {uid: 줄}` · 한 영웅은 한 줄 · 줄마다 「등록 칸」 지점만큼(같은 날 R298).
+       영웅을 줄(`LAB_LINES`)에 **등록**한다 — `labReg = {uid: 줄}` · 한 영웅은 한 줄 · 줄마다 `B.lab_seats` 만큼(같은 날 R298 · 2026-11-12 R454 — ~~「등록 칸」 지점~~ 삭제 · 다섯 줄 같다).
        **효과 = 그 영웅의 능력치 일곱**(같은 날 R298 — `labEffects` · ~~효과 없음(표시만)~~) · **편성 · 원정 · 탐험 · 전직과 겸직**이라 `heroBusy` 와 서로 안 본다.
        ~~영웅 배치(자리 · 담당 능력치 효율)~~(2026-10-18 걷음)과 다르다 — 붙잡지 않는다. 등록한 시각(`labSince`)을 숙련이 센다 */
     const labRegOf = (state, uid) => state.labReg?.[uid] ?? null;
     const labRegList = (state, line) => state.heroes.filter(h => labRegOf(state, h.uid) === line).map(h => h.uid);
-    /** 그 줄에 등록할 수 있는 수 — 「등록 칸」 지점 */
-    const labSeats = (state, line) => Math.max(0, Math.floor(labVal(state, line, 'seats', 1)));
+    /** 그 줄에 등록할 수 있는 수 — `B.lab_seats`(다섯 줄 같다 · 연구로 안 는다 — 2026-11-12 R454) */
+    const labSeats = (state, line) => Math.max(0, Math.floor(B.lab_seats));
     /** 등록 — in-place · 먼저 정산 · 다른 줄에 있으면 옮긴다(거절이 아니라 이동) · 같은 줄이면 그대로. 거절: `missing` · `locked` · `full` */
     function labRegister(state, uid, line, now) {
         if (Number.isFinite(now)) labSettle(state, now);
@@ -5012,16 +5039,17 @@ export function createGameSystem(deps) {
     /**
      * 탭 할 일 점 [신설 2026-10-16 · SCREEN_DESIGN §1 · ADR-0637] — 탭마다 **하면 꺼지는 일**이 기다리나. 키 = 화면 탭 id(`constructionState.tabs` 와 같은 어휘).
      *   건설 = 다음 랭크를 지금 지을 수 있는 건물(부지 초록 점과 같은 `CN.nextState`) · 선술집 = 수색 칸에 누가 기다린다(출처 무관 ·
-     *   ~~보관 수색 결과 · 끝난 나간 수색~~ 2026-10-19) · 다 채운 의뢰 · 상점 = 특수상인이 와 있다 · 탐험 = 끝난 탐험.
+     *   ~~보관 수색 결과 · 끝난 나간 수색~~ 2026-10-19) · 다 채운 의뢰 · 받을 수 있는 의뢰(게시판이 열렸고 받아 둔 수 < 동시 한도 —
+     *   카드가 아니라 남은 자리로 잰다: 게시판은 화면이 그릴 때 채워 막 열린 판은 0장이다 · 2026-11-12 ADR-1062) · 상점 = 특수상인이 와 있다 · 탐험 = 끝난 탐험.
      *   **정산하지 않는다** — 시계가 지났어도 아직 안 온 사람은 안 센다(앱 시계가 `visitSettle` 을 먼저 부른다).
      *   흐린 탭은 안 본다(화면이 안 단다) · rng 0 · 상태 불변 — 앱 시계가 1초에 한 번 부른다
      * @returns `{research, tavern, shop, explore}` (bool)
      */
     function navTodo(state, now) {
-        const ctx = buildCtx(state), wallet = walletOf(state);
+        const ctx = buildCtx(state), wallet = walletOf(state), cm = commissionState(state);
         return {
             research: CN.list.some(b => !CN.nextState(b.id, state.buildings, ctx, wallet).err),
-            tavern: (state.joins ?? []).length > 0 || commissionState(state).cards.some(c => c.taken && c.done),
+            tavern: (state.joins ?? []).length > 0 || cm.cards.some(c => c.taken && c.done) || (cm.open && cm.taken < cm.slots),
             shop: hasFeature(state, 'shop_special') && shopVisit(state, now).here,
             explore: exploreList(state).some(x => now >= x.startedAt + exploreMs()),
         };

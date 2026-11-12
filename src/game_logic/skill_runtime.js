@@ -51,7 +51,10 @@ export function createHooks() {
  * 0 이면 스킬이 매 차례 나가 예산이 무너진다 (battle_design §6)
  */
 export function cooldownSec(B, u, def) {
-    return (def.cool ?? 0) * Math.max(B.skill_cd_floor_mult, 1 - (u.cdr ?? 0) - skillTagBonus(u.fx?.skillTags, def, 'cooldown'));
+    const cool = def.cool ?? 0;
+    // 쿨타임 −n초(`u.coolMinus` — 직업 T1-2 · 2026-11-09 R432)는 표기 쿨에서 **먼저** 빼고 쿨감 % 를 곱한다 · 바닥은 표기 쿨 × 바닥 배수(같다) — 0 이면 종전 값 그대로
+    const cut = (cool - (u.coolMinus ?? 0)) * Math.max(B.skill_cd_floor_mult, 1 - (u.cdr ?? 0) - skillTagBonus(u.fx?.skillTags, def, 'cooldown'));
+    return Math.max(cool * B.skill_cd_floor_mult, cut);
 }
 
 /**
@@ -103,6 +106,8 @@ export function createSkillRuntime(ctx) {
                 if (!b.quiet) {
                     const ev = { t: r1(at), e: 'buffEnd', u: u.key, s: b.s ?? id };
                     if (b.ail) ev.k = b.ail;
+                    // 진형 붕괴가 풀리면 되돌아간 랭크를 싣는다 — 재생기가 칸을 옮긴다(2026-11-02 R424 · 아래 `end` 가 랭크를 되돌린 값)
+                    if (b.stat === 'formation_break') ev.rank = u.rankBase ?? u.rank ?? 0;
                     shown.push(ev); timeline.push(ev);
                 } else if (b.ail) ails.add(b.ail);
                 // 닫힐 때 할 일이 있는 효과 — 스웜이 뭉친다(`EFFECTS.swarm.end` · 2026-10-29 R380) · 없으면 아무 일도 없다 · rng 0
@@ -604,6 +609,8 @@ export function createSkillRuntime(ctx) {
         rng, F, strikeOnce: skillStrike, pickTarget: ctx.pickTarget, dealIndirect: ctx.dealIndirect,
         // 가이디드 애로우 방어 깎기의 겹 상한 — 무기 시기 ② 겹과 같은 값 (2026-10-29 · R383 · `skill_effects.ATTACK_TARGETS.enemy_highest_def`)
         shredMax: B.weapon_def_down_stack_max,
+        // 튀김 대상의 걸린 효과 시간 배수 — 주 대상 + 나머지(`enemy_hp_max_splash` · 토르의 분노 · 2026-11-02 R423)
+        splashStunMult: B.splash_stun_mult,
         // 파리 떼 여닫기 — HP · 타임라인 · 판 크기를 아는 battle.js 가 한다(`EFFECTS.swarm` · 2026-10-29 R380)
         swarmOpen: ctx.swarmOpen, swarmClose: ctx.swarmClose,
         alive, alliesOf, foesOf, pick, act, cast, fire, procHit, procCast, procStruck, expire, castHeal, castMend, castBuff, applyStatus, castSummon, castCall, basicAttack, targetsOf, chanHit, chanClose,

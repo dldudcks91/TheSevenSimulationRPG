@@ -416,14 +416,14 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 - **설치본은 손으로 만들지 않는다** — `python scripts/build_icons.py` 가 짓는다. 한 장마다 무손실 · 손실(q90)을 둘 다 인코딩해 **작은 쪽**을 쓴다(단색 실루엣은 무손실이 이긴다 — 오차 0 · 컬러 그림은 q90 이 1/4 크기에 오차가 눈에 안 띈다). 원본이 없어진 설치본은 지운다
 - **새 아이콘 · 교체** — 원본 PNG 를 `icons_source/<폴더>/<id>.png` 에 넣고 스크립트를 돌린다. `icons/` 에 PNG 를 떨어뜨려도 스크립트가 `icons_source/` 로 옮기고(같은 이름의 옛 원본을 대체) 짓는다
-- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/box · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · explore · currency · gamble · forge · lab · arena · mail · nav · battle_buffs). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
+- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/box · items/weapon_base/* · items/weapon_base_codex/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · explore · currency · gamble · forge · lab · arena · mail · nav · battle_buffs). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
 - **경로 조립** — `mock.js:ICON_EXT`(= `.webp`) 하나를 모든 아이콘 경로가 쓴다
 - **256 인 이유** — 칸은 22~44px 지만 한 장(1600×800)이 모니터에 맞춰 늘고(`fitStage`) 고해상도 배율이 겹치면 40px 칸이 기기 픽셀 100 안팎이 된다. 128 은 거기서 빠듯하다. 512 PNG 대비 7장 1.1MB → 70KB 안팎
 - 아래 폴더별 절의 트리 · 규격(512 · 투명 · 0.88)은 **원본(`icons_source/`) 기준**이다 — 설치본은 그걸 256 WebP 로 줄인 것뿐이다
 
 ## icons/mastery/ — 마스터리 아이콘
 
-**게임이 읽는 것은 `sin/<node_id>.webp`(죄종 판 47 — T3 는 탐욕 셋 · 분노 · 폭식 하나씩) · `class/<node_id>.webp`(직업 판 25 — T2-2 무기 노드는 10-09 R230 부터 직업별) · `class/<node_id>_<class_id>.webp`(직업 공통 무기 노드 T2-1 × 5직업)** [2026-10-09] — 고리 없는 굵은 실루엣 하나(전직 가지 칸과 같은 그림체 · **단색** · **정적** — 정면 · 똑바로)의 회색 `#d8d8e6`(512 투명 · 긴 변 0.88 에서 **크기 보정** — 가는 그림(분노 단검)과 꽉 찬 그림(폭식 냄비)이 같은 긴 변이면 꽉 찬 쪽이 커 보여, `mastery/source/optical.py` 가 분노 판 평균에 맞춰 큰 그림만 줄였다 · 다시 돌려도 그대로 · 2026-10-24). 화면이 판 색 마스크로 칠한다(`app.js:masteryIconHtml` · `masteryIconPath` · SCREEN_DESIGN §7 · ADR-0555). 죄종 칸은 노드 이름을 그 죄종 소재로, 직업 칸은 능력치 기호에 직업 물건을 붙였다. 원본은 `mastery/source/` — Codex 이미지 생성 시트 10장(`sheet_NN_codex.png` · 01~08 = 72칸 · 09 = 40px 에서 약했던 9칸 재발주 · 10 = 효과가 바뀐 직업 칸 다섯(R230 — 마법사 · 사제 캐스팅 속도 · 마법사 데미지 증가 · 로브 체력 · 6~9 칸은 1~4 의 두 번째 판 · 설치한 칸은 `plan.py:PICK`) · 11 = 탐욕 T3 셋(칼 · 하트 주머니 · 동전 모래시계 — 세 줄이 같은 문장의 세 판 · 1행을 설치) · 12 = 11 의 칼이 40px 에서 가늘어 다시(셋째 열 「동전 더미에 꽂힌 넓은 칼」 1행을 설치) · 13 = 분노 · 폭식 T3(피 흘리는 주먹 · 엇갈린 포크와 칼 — 1행 왼쪽 두 칸을 설치) · 앵커 = `advance/source/sheet_01_codex.png`(11 ~ 13 은 `mastery/source/sheet_01_codex.png`)) · 지시문 `sheet_NN_prompt.txt` · 칸 문장 표 `plan.py`(노드 키 → 그림 문장 · 시트 배치 · `plan.json` 이 칸 → 파일 대응) · 단색 칠 `mono.py`(검정 → 회색 · 흰 틈 → 투명). ⚠ 안 읽히는 옛 고리 그림이 남았다 — `class/cls_t2_weapon_damage`(직업 없는 경로의 대비책) · `sin/sin_t1_{atkspeed,damage,hp}`(폐지된 옛 공통 T1)
+**게임이 읽는 것은 `sin/<node_id>.webp`(죄종 판 63 — 일곱 죄종 × T1 · T2 · T3 세 칸 · T2 는 같은 능력치의 T1 그림 · T3 ② ③ 은 옛 T2 조건 칸 그림을 옮겼다 · 2026-11-12 R458) · `class/<node_id>.webp`(직업 판 25 — T2-2 무기 노드는 10-09 R230 부터 직업별) · `class/<node_id>_<class_id>.webp`(직업 공통 무기 노드 T2-1 × 5직업)** [2026-10-09] — 고리 없는 굵은 실루엣 하나(전직 가지 칸과 같은 그림체 · **단색** · **정적** — 정면 · 똑바로)의 회색 `#d8d8e6`(512 투명 · 긴 변 0.88 에서 **크기 보정** — 가는 그림(분노 단검)과 꽉 찬 그림(폭식 냄비)이 같은 긴 변이면 꽉 찬 쪽이 커 보여, `mastery/source/optical.py` 가 분노 판 평균에 맞춰 큰 그림만 줄였다 · 다시 돌려도 그대로 · 2026-10-24). 화면이 판 색 마스크로 칠한다(`app.js:masteryIconHtml` · `masteryIconPath` · SCREEN_DESIGN §7 · ADR-0555). 죄종 칸은 노드 이름을 그 죄종 소재로, 직업 칸은 능력치 기호에 직업 물건을 붙였다. 원본은 `mastery/source/` — Codex 이미지 생성 시트 10장(`sheet_NN_codex.png` · 01~08 = 72칸 · 09 = 40px 에서 약했던 9칸 재발주 · 10 = 효과가 바뀐 직업 칸 다섯(R230 — 마법사 · 사제 캐스팅 속도 · 마법사 데미지 증가 · 로브 체력 · 6~9 칸은 1~4 의 두 번째 판 · 설치한 칸은 `plan.py:PICK`) · 11 = 탐욕 T3 셋(칼 · 하트 주머니 · 동전 모래시계 — 세 줄이 같은 문장의 세 판 · 1행을 설치) · 12 = 11 의 칼이 40px 에서 가늘어 다시(셋째 열 「동전 더미에 꽂힌 넓은 칼」 1행을 설치) · 13 = 분노 · 폭식 T3(피 흘리는 주먹 · 엇갈린 포크와 칼 — 1행 왼쪽 두 칸을 설치) · 14 ~ 16 = 새 죄종 T1 여덟 · T3 넷(2026-11-12 · 지시문에 「FLAT FILL ONLY」 줄 · 15 는 위험한 칸의 두 번째 구도 · 16 은 40px 에서 약했던 칸 다시 · 설치한 칸은 `plan.py:NEW_PICK` · T2 g3 · g6 · g9 는 같은 T1 그림 복사본) · 앵커 = `advance/source/sheet_01_codex.png`(11 ~ 16 은 `mastery/source/sheet_01_codex.png`)) · 지시문 `sheet_NN_prompt.txt` · 칸 문장 표 `plan.py`(노드 키 → 그림 문장 · 시트 배치 · `plan.json` 이 칸 → 파일 대응) · 단색 칠 `mono.py`(검정 → 회색 · 흰 틈 → 투명). ⚠ 안 읽히는 옛 고리 그림이 남았다 — `class/cls_t2_weapon_damage`(직업 없는 경로의 대비책) · `sin/sin_t1_{atkspeed,damage,hp}`(폐지된 옛 공통 T1)
 
 아래 옛 봉인 문양(`nodes/` · `nodes/variants/` · `*_seal.png` · `generate.ps1` · `IconRenderer.cs` · `icon_plan.csv` · `ART_DIRECTION.md`)은 **이제 어디서도 안 읽힌다** — 비교용으로 남겨 두었다.
 
@@ -718,7 +718,7 @@ icons_source/items/
 완드는 `weapon_group.csv` 의 어느 행도 아니다(2026-09-01 「완드 → 오브」 개명으로 자리가 사라졌다). id 가 생기면 위로 올린다.
 
 `weapon_base/` 는 **폴더 이름부터 id 축**이다 — 폴더 = `weapon_base.csv` · 하위 폴더 = `group_id` · 파일명 = `base_id`. 화면이 이 경로를 조립하는 곳은 `mock.js:WEAPON_BASE_DIR` 하나다(아래 「무기 베이스 7종 × 10군」 · DEV_PLAN R62).
-⚠ **폴더에 있다고 게임이 읽는 것은 아니다** — `weapon_base.csv` 행과 `mock.js:WEAPON_BASE_STEMS` 줄이 서야 뜬다. [2026-11-11 · R445] 베이스가 무기군당 10 이 되며 **CSV 와 그림 목록이 같은 벌이 아니다** — 그림 목록은 설치된 그림만 들고(퇴역 12 — `WEAPON_BASE_RETIRED` — 도 옛 세이브 무기를 위해 남긴다) · 그림이 아직 없는 새 베이스 42 는 `itemArt` 가 같은 무기군 그림 하나를 대신 든다(임시). 새 그림을 넣으면 `<group>/<base_id>.webp` + 그림 목록 한 줄.
+⚠ **폴더에 있다고 게임이 읽는 것은 아니다** — `weapon_base.csv` 행과 `mock.js:WEAPON_BASE_STEMS` 줄이 서야 뜬다. [2026-11-11 · R445] 베이스가 무기군당 10 이 되며 **CSV 와 그림 목록이 같은 벌이 아니다** — 그림 목록은 설치된 그림만 들고(퇴역 12 — `WEAPON_BASE_RETIRED` — 도 옛 세이브 무기를 위해 남긴다) · 그림이 아직 없는 새 베이스 42 는 검은 칸이다(2026-11-12 · ADR-1051 — Gemini 로 그린 42장은 `source/gemini_weapon/` 에 있고 설치 전이다). 새 그림을 넣으면 `<group>/<base_id>.webp` + 그림 목록 한 줄.
 
 ### 채워진 것 / 빈 것
 
@@ -818,7 +818,8 @@ icons_source/items/empty/
 |---|---|---|
 | `empty/<part>.webp` | **캐릭터 탭 페이퍼돌의 빈 칸** (SCREEN_DESIGN §6) | `ui/mock.js:slotArt` |
 | ~~`<group_id>.png` (무기 8)~~ **삭제 2026-09-17** | **착용 칸 · 가방 칸 · 대장간 목록·머리** (SCREEN_DESIGN §2) — `item.group` 이 곧 파일명이라 **제 그림이다**. ⚠ **본편 열 전부 베이스 그림이 서서 실칸에서는 안 쓰인다** — 아래 베이스 7장이 대신 뜬다. 무기군 그림은 **도감 「무기」 줄에만** 남았다 | `ui/mock.js:itemArt` |
-| `weapon_base/<group>/*.webp` (본편 열 무기군 베이스 — 그림이 선 것만 · R445 뒤 무기군당 10 중 일부 + 퇴역) | 같은 칸들 — **개체마다 제 베이스의 그림** [2026-09-10 · 둔기·창·활 2026-09-11 · 스태프·오브·십자가·성경·석궁 2026-09-14 · 그림 없는 새 베이스는 같은 무기군 그림 하나 — 2026-11-11 · R445]. 개체가 든 `baseId` 의 그림이다(`weapon_base.csv` 가 드롭 때 굴린다 · **이름도 그 베이스**). `baseId` 가 없는 옛 개체만 **`uid`+무기군 해시**로 고른다 — **rng 가 아니라** 그리는 시각의 해시라 골든이 안 움직이고, uid 가 세이브에 남으므로 **한 개체는 평생 같은 무기**다. ⚠ 해시로 고른 옛 개체는 이름·툴팁이 무기군 이름이라 **그림과 이름이 어긋난다** | `ui/mock.js:itemArt` (`WEAPON_BASE_STEMS` — 무기군별 맵) |
+| `weapon_base/<group>/*.webp` (본편 열 무기군 베이스 — 그림이 선 것만 · R445 뒤 무기군당 10 중 일부 + 퇴역) | 같은 칸들 — **개체마다 제 베이스의 그림** [2026-09-10 · 둔기·창·활 2026-09-11 · 스태프·오브·십자가·성경·석궁 2026-09-14 · 그림 없는 새 베이스는 검은 칸 — 2026-11-12 · ADR-1051]. 개체가 든 `baseId` 의 그림이다(`weapon_base.csv` 가 드롭 때 굴린다 · **이름도 그 베이스**). `baseId` 가 없는 옛 개체만 **`uid`+무기군 해시**로 고른다 — **rng 가 아니라** 그리는 시각의 해시라 골든이 안 움직이고, uid 가 세이브에 남으므로 **한 개체는 평생 같은 무기**다. ⚠ 해시로 고른 옛 개체는 이름·툴팁이 무기군 이름이라 **그림과 이름이 어긋난다** | `ui/mock.js:itemArt` (`WEAPON_BASE_STEMS` — 무기군별 맵) |
+| `weapon_base_codex/<group>/*.webp` (무기 베이스 100 — `weapon_base.csv` 전 행 · Codex 그림 · 2026-11-12) | 같은 칸들 — 설정 「아이템 그림」이 **`Codex`** 일 때만 읽는다(기본은 `Gemini` = 위 `weapon_base/` · `item_base/`). `Codex` 묶음엔 방어구 · 장신구 그림이 없어 그 칸은 검은 칸이다 (SCREEN_DESIGN §2 · ADR-1051) | `ui/mock.js:itemArt` (`WEAPON_BASE_CODEX_STEMS`) |
 | `item_base/<base_id>.webp` (갑옷 10 · 투구 10 · 장갑 7 · 신발 7 · 반지 3 · 목걸이 3) | 같은 칸들 — **개체가 든 `baseId` 의 그림** [2026-09-17]. 드롭 때 굴린 베이스 id 를 개체가 들고(`item.js:build`) 화면은 그대로 읽어, 퀼티드와 더스크 슈라우드가 다른 그림이다. ⚠ **옛 세이브의 방어구는 `baseId` 가 없어** 이모지로 떨어진다 — 새로 먹는 것부터 그림이 붙는다 | `ui/mock.js:itemArt` (`ITEM_BASE_ART_IDS`) |
 | ~~반지 · 목걸이의 **넷째 이름**(`ring_4` · `amulet_4`)~~ **해소 2026-09-21** | 그림 없는 그 두 베이스를 `item_base.csv` 에서 **뺐다** — 「베이스 풀 = 설치된 그림」(item_design §1 · `dev/test.js` 단정이 양방향으로 지킨다). 이모지로 떨어지는 것은 이제 **옛 세이브의 개체**뿐이다 | — |
 
@@ -828,4 +829,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-10-30*
+*마지막 업데이트: 2026-11-12*

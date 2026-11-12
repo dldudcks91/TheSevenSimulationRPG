@@ -1,0 +1,45 @@
+basic at boss 32 skip {'cleared': 43, 'before': 5} state matches main D60 32
+adaptive at boss 23 skip {'cleared': 49, 'before': 8} state matches main D60 23
+
+## per-account win rate, as-is (40 fights each)
+basic n 32 mean 0.084 median 0.038 hist {'<=10%': 9, '<=25%': 5, '0%': 15, '<=50%': 2, '>50%': 1} | between-account var share 0.87
+adaptive n 23 mean 0.166 median 0.075 hist {'0%': 9, '>50%': 3, '<=25%': 5, '<=50%': 3, '<=10%': 3} | between-account var share 0.9
+all n 55 mean 0.119 median 0.05 hist {'<=10%': 12, '<=25%': 10, '0%': 24, '<=50%': 5, '>50%': 4} | between-account var share 0.9
+
+## level raised (same gear) — mean win rate
+basic {'0': 0.084, '3': 0.17, '6': 0.29} accounts improved +6 18 / 32 still <=10% at +6 14
+adaptive {'0': 0.166, '3': 0.28, '6': 0.409} accounts improved +6 16 / 23 still <=10% at +6 7
+all {'0': 0.119, '3': 0.216, '6': 0.34} accounts improved +6 34 / 55 still <=10% at +6 21
+
+## fight shape (as-is, all accounts)
+fights 2200 won 261 sec won/lost 34.5 33
+lost: escorts killed {1: 416, 2: 709, 0: 814} | reached boss 1197 / 1939
+lost: boss HP left (of those that reached it) median 0.671 | boss <25% left 120 | boss untouched 742
+reached boss at sec: won/lost 17.1 12
+party miss rate won/lost 0.125 0.15
+party hero hp median 172.0
+mag_inferno first cast sec median 11.4 | dmg per cast median 151.5 p10~p90 [62, 309] | casts per fight won/lost 0 0
+   first-cast dmg won/lost 140 219
+mon_hellfire first cast sec median 13.3 | dmg per cast median 149.0 p10~p90 [71, 255] | casts per fight won/lost 2 2
+   first-cast dmg won/lost 145 187
+first hero down sec: lost 17 | won with 0 hero downs 62 / 261
+first hero down class (lost) {'priest': 26, 'warrior': 969, 'mage': 32, 'knight': 893, 'archer': 19}
+
+## same account: wins vs losses (accounts with 4..36 wins of 40)
+mixed accounts 23
+  inferno1   win 0 | loss 0
+  hellfire1  win 144.762 | loss 159.167
+  missRate   win 0.127 | loss 0.165
+  crits      win 8.833 | loss 5.758
+  reachBoss  win 19.538 | loss 25.411
+
+## account traits vs win rate (as-is)
+archer     0.161 (n20)
+no archer  0.094 (n35)
+priest     0.108 (n40)
+no priest  0.147 (n15)
+mage       0.112 (n37)
+warrior    0.134 (n37)
+knight     0.094 (n31)
+by party median level {10: '0.138 (n2)', 11: '0.073 (n14)', 12: '0.066 (n11)', 13: '0.115 (n17)', 14: '0.193 (n7)', 15: '0.3 (n4)'}
+by party might quartile (low->high) [0.069, 0.14, 0.073, 0.178]

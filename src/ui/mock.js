@@ -170,11 +170,12 @@ export const AFFIX_LABELS = {
     freeze_dur_reduction: { ko: '빙결 시간 감소', en: 'Freeze Duration Reduction', fmt: 'pct' },   // 결빙이 읽는다(2026-09-28 · R177 · battle_design §2-4)
     poison_dur_reduction: { ko: '중독 시간 감소', en: 'Poison Duration Reduction', fmt: 'pct' },   // 중독이 읽는다(2026-09-28 · R178 · battle_design §2-5)
     // ── 반지 · 목걸이 옵션 (item_design §1 「반지 · 목걸이」 · 2026-09-21 · R127) — 반지 시기 칸 · 공통옵션이 쓰는 새 축.
-    //    원소별 저항 감소는 무기 시기 칸 `res_reduction`(저항 감소)과 같은 메커니즘이라 이름도 그 계열로 둔다 — **그 원소의 타격에만** 붙는다
-    res_reduction_fire: { ko: '화염 저항 감소', en: 'Fire Resist Reduction', fmt: 'pct' },
-    res_reduction_cold: { ko: '냉기 저항 감소', en: 'Cold Resist Reduction', fmt: 'pct' },
-    res_reduction_lightning: { ko: '전기 저항 감소', en: 'Lightning Resist Reduction', fmt: 'pct' },
-    res_reduction_poison: { ko: '독 저항 감소', en: 'Poison Resist Reduction', fmt: 'pct' },
+    //    원소별 저항 무시는 **「원소 관통」**이다 [2026-11-11 · 사용자 「관통이라는 단어가 좋을거같에」 · R442 · GAME_DESIGN §9] — 내 그 원소 타격만 대상 저항을 %p 깎는다(장갑 · 반지 시기 · 마법 무기 시기).
+    //    대상에게 거는 디버프는 「원소 저항 감소」(아래 `res_down_stack_*` · 옛 `res_down_pct`) — 방어력 무시 · 감소와 같은 짝
+    res_reduction_fire: { ko: '화염 관통', en: 'Fire Penetration', fmt: 'pct' },
+    res_reduction_cold: { ko: '냉기 관통', en: 'Cold Penetration', fmt: 'pct' },
+    res_reduction_lightning: { ko: '전기 관통', en: 'Lightning Penetration', fmt: 'pct' },
+    res_reduction_poison: { ko: '독 관통', en: 'Poison Penetration', fmt: 'pct' },
     burn_dur_reduction: { ko: '화상 시간 감소', en: 'Burn Duration Reduction', fmt: 'pct' },   // 화상이 읽는다(R178)
     stun_dur_reduction: { ko: '스턴 시간 감소', en: 'Stun Duration Reduction', fmt: 'pct' },   // 스턴이 읽는다(R178)
     buff_dur_pct: { ko: '버프 지속시간', en: 'Buff Duration', fmt: 'pct' },
@@ -186,7 +187,15 @@ export const AFFIX_LABELS = {
     dmg_min_flat: { ko: '최소 데미지', en: 'Minimum Damage', fmt: 'n' },
     dmg_max_flat: { ko: '최대 데미지', en: 'Maximum Damage', fmt: 'n' },
     dmg_max_per_level: { ko: '레벨당 최대 데미지', en: 'Maximum Damage per Level', fmt: 'n' },
+    dmg_min_per_level: { ko: '레벨당 최소 데미지', en: 'Minimum Damage per Level', fmt: 'n' },   // 무기 오만 ① 의 짝(2026-11-11 · R442)
     def_down_stack_pct: { ko: '타격 시 대상 방어력 감소 (겹침)', en: 'Stacking Defense Shred on Hit', fmt: 'pct' },
+    // 원소 저항 감소 겹 — 마법 무기 시기(그 무기의 원소 · 2026-11-11 · R442) · 방어력 감소 겹과 같은 규칙
+    res_down_stack_fire: { ko: '타격 시 대상 화염 저항 감소 (겹침)', en: 'Stacking Fire Resist Shred on Hit', fmt: 'pct' },
+    res_down_stack_cold: { ko: '타격 시 대상 냉기 저항 감소 (겹침)', en: 'Stacking Cold Resist Shred on Hit', fmt: 'pct' },
+    res_down_stack_lightning: { ko: '타격 시 대상 전기 저항 감소 (겹침)', en: 'Stacking Lightning Resist Shred on Hit', fmt: 'pct' },
+    res_down_stack_poison: { ko: '타격 시 대상 독 저항 감소 (겹침)', en: 'Stacking Poison Resist Shred on Hit', fmt: 'pct' },
+    res_down_stack_pct: { ko: '타격 시 대상 원소 저항 감소 (겹침)', en: 'Stacking Resist Shred on Hit', fmt: 'pct' },   // 그 타격의 원소 — 목걸이 시기 ③ (2026-11-11 · R453)
+    weapon_atk_pct: { ko: '무기 데미지', en: 'Weapon Damage', fmt: 'pct' },   // 무기 밖 출처 — 목걸이 오만 (2026-11-11 · R453) · 무기 베이스 옵션과 더한다
     stagger_dur_pct: { ko: '경직 시간 증가', en: 'Stagger Duration', fmt: 'pct' },
     cast_refund_chance: { ko: '시전 시 시전 칸 충전', en: 'Charge Refund on Cast', fmt: 'pct' },
     status_dur_pct: { ko: '상태이상 시간 증가', en: 'Ailment Duration', fmt: 'pct' },
@@ -194,6 +203,7 @@ export const AFFIX_LABELS = {
     cast_stack_pct: { ko: '시전 누적 데미지', en: 'Stacking Damage per Cast', fmt: 'pct' },
     heal_out_pct: { ko: '회복량 증가', en: 'Healing Done', fmt: 'pct' },
     debuff_dur_pct: { ko: '디버프 시간 증가', en: 'Debuff Duration', fmt: 'pct' },
+    debuff_dur_reduction: { ko: '상태이상 · 디버프 시간 감소', en: 'Ailment & Debuff Duration Reduction', fmt: 'pct' },   // 받는 쪽 · 신발 폭식 ① (2026-11-11 · R451) — combat_stat.csv 이름 그대로
     hp_regen: { ko: 'HP 재생', en: 'HP Regen', fmt: 'n' },
     // 발동 옵션 — 줄에 스킬 id(`a.skill`)를 함께 든다. `proc` = 발동 조건(툴팁 문장 `tip.proc.<조건>` · app.js `affixText`).
     proc_hit_attack: { ko: '타격 시 공격 스킬 발동', en: 'Attack Skill on Hit', fmt: 'pct', proc: 'hit' },
@@ -203,6 +213,7 @@ export const AFFIX_LABELS = {
     proc_cast_debuff: { ko: '시전 시 디버프 스킬 발동', en: 'Debuff Skill on Cast', fmt: 'pct', proc: 'cast' },
     proc_struck_debuff: { ko: '피격 시 디버프 스킬 발동', en: 'Debuff Skill when Struck', fmt: 'pct', proc: 'struck' },
     proc_struck_buff: { ko: '피격 시 버프 스킬 발동', en: 'Buff Skill when Struck', fmt: 'pct', proc: 'struck' },
+    proc_struck_defense: { ko: '피격 시 방어 스킬 발동', en: 'Defense Skill when Struck', fmt: 'pct', proc: 'struck' },   // 갑옷 나태 ② (2026-11-11 · R444)
     // 특정 스킬 +n — 줄에 스킬 id(`a.skill`)를 든다. `skill` = 툴팁 문장 `tip.skillPlus`(「파이어볼 +1」 · app.js `affixText`) [2026-10-08 · R225 · ADR-0535]
     skill_plus: { ko: '스킬 레벨', en: 'Skill Level', fmt: 'n', skill: true },
     skill_tag: { ko: '스킬 태그 강화', en: 'Skill Tag Bonus', fmt: 'pct' },
@@ -225,6 +236,9 @@ export const MASTERY_LABELS = {
     atk_pct_per_greed: { ko: '탐욕 비례 데미지', en: 'Damage per Greed', fmt: 'pct' },
     hp_pct_per_greed: { ko: '탐욕 비례 최대 HP', en: 'Max HP per Greed', fmt: 'pct' },
     cdr_per_greed: { ko: '탐욕 비례 쿨타임 감소', en: 'Cooldown Reduction per Greed', fmt: 'pct' },
+    // 직업 T1-2 초 단위 칸 (2026-11-09 · R432 · skill_design §3-4) — 값은 초 · 문장은 `sk.masteryEffect.<stat>` 이 단위를 든다
+    cool_minus_sec: { ko: '쿨타임 감소', en: 'Cooldown Reduction', fmt: 'n' },
+    period_minus_sec: { ko: '공격 속도', en: 'Attack Speed', fmt: 'n' },
 };
 
 /** 전투가 아직 안 읽는 옵션인가 — 툴팁의 「(미적용)」 표지 (SCREEN_DESIGN §6 · ADR-0213). 판정은 사전의 고정 표지다 — 렌더러가 계산하지 않는다 */
@@ -269,7 +283,8 @@ export const statValue = (stat, v, fallback) => {
  */
 export const baseValue = (stat, v, fallback) => {
     const pct = statLabel(stat, fallback).fmt === 'pct';
-    return `${pct ? pctNum(v) : v}${pct ? '%' : ''}`;
+    // 소수 값(초 단위 마스터리 × 랭크 — 0.05 × 3)은 부동소수 꼬리를 자른다 · 정수는 그대로 (2026-11-12 · R432)
+    return `${pct ? pctNum(v) : typeof v === 'number' && !Number.isInteger(v) ? Number(v.toFixed(3)) : v}${pct ? '%' : ''}`;
 };
 
 /** 범위만 — `최소~최대` · 양끝이 같으면 한 수(데미지 범위와 같다 — ADR-0108) · 부호 없음 · 단위(%)는 끝에 한 번
@@ -292,6 +307,12 @@ export const itemAffixText = (slot, stat, v) => {
     const d = SLOT_LABELS[slot]?.[stat];
     return d ? { ko: `${d.ko} ${statValue(stat, v)}`, en: `${statValue(stat, v)} ${d.en}` } : affixText(stat, v);
 };
+/** `itemAffixText` 의 범위판 — 「무기 데미지 +1~200%」(도감 무기 툴팁 · SCREEN_DESIGN §9-1 · ADR-1056). 부호는 `statValue` · 범위 · 단위는 `rangeValue` 와 같다 */
+export const itemAffixRangeText = (slot, stat, min, max) => {
+    const d = SLOT_LABELS[slot]?.[stat] ?? statLabel(stat);
+    const v = `${min >= 0 ? '+' : ''}${rangeValue(stat, min, max)}`;
+    return { ko: `${d.ko} ${v}`, en: `${v} ${d.en}` };
+};
 
 /** 페이퍼돌 배치 — 3열 × 3행, 신체 위치를 따른다. 칸은 착용 **위치**(equip_slot.csv:equip_slot_id) — 반지 두 칸.
  *  **화면 레이아웃이지 데이터가 아니라서** CSV 로 가지 않는다 (부위·위치 표는 equip_slot.csv).
@@ -302,6 +323,9 @@ export const PAPERDOLL = [
     ['weapon', 'armor', 'gloves'],
     ['ring1', 'boots', 'ring2'],
 ];
+/** 잠긴 「죄종 인장」 칸의 자리 `[행, 열]` — 페이퍼돌의 빈자리(`PAPERDOLL` 의 `null`) 중 이 자리만 잠긴 칸으로 그린다 [2026-11-12 · ADR-1058].
+ *  **화면에만 있는 칸이다** — 착용 위치(equip_slot.csv)가 아니라서 `PAPERDOLL` 에 넣지 않는다(유닛 툴팁 · 한 벌 읽기가 위치로 읽는다) */
+export const PAPERDOLL_SEAL = [0, 0];
 
 /* ═══════════ 영웅 생성 풀 ═══════════
    굴리는 규칙은 game_logic/hero.js 에 있고, 풀(데이터)은 **CSV 로 나갔다** (2026-08-31):
@@ -361,9 +385,11 @@ export const PAPERDOLL = [
    ⚠ mage 는 **줄이는 방향**이라 세이브에 `mage_3` 이 박힌 마법사는 접혀서 mage_1 을 받는다(새 마법사 초상이 mage_3 에 들어오면 그 그림이 된다).
    2026-11-11 사용자 지시로 유니크 다섯 추가 — knight_6 리처드 1세 · knight_7 팔라딘 · mage_3 오딘 · mage_4 제우스 · archer_2 빌헬름 텔
    (knight 5 → 7 · mage 2 → 4 · archer 1 → 2). 늘리는 방향이다. 단 세이브에 옛 `mage_3` 이 박힌 마법사는 이제 오딘 얼굴이 된다.
+   2026-11-12 사용자 지시로 넷 더 — knight_8 살라딘 · mage_5 하데스 · archer_3 주몽 · archer_4 아마존
+   (knight 7 → 8 · mage 4 → 5 · archer 2 → 4). 늘리는 방향이다. 같은 날 archer_5 아르테미스 하나 더 (archer 4 → 5).
    ⚠ **드디어 직업 대응이다** — 영웅은 제 직업 풀에서만 굴리므로 궁수 얼굴이 전사에게 가지 않는다.
    풀이 0장인 직업(지금은 확장 직업만)은 `face = null` 이고 화면은 **빈 칸**으로 둔다 (자리표시를 안 깐다). */
-export const HERO_FACES = { warrior: 5, knight: 7, mage: 4, archer: 2, priest: 5 };
+export const HERO_FACES = { warrior: 5, knight: 8, mage: 5, archer: 5, priest: 5 };
 
 /**
  * 초상 이름 — `'<직업id>_<k>'` → `{ko, en}` (2026-09-10 사용자 지시 · ADR-0081).
@@ -387,11 +413,16 @@ export const HERO_FACE_NAMES = {
     knight_1: { ko: '오디세우스', en: 'Odysseus' },        // 무안면 로마군 1
     knight_5: { ko: '한니발', en: 'Hannibal' },            // 외치는 기사
     knight_6: { ko: '리처드 1세', en: 'Richard the Lionheart' }, // 금관 · 사슬 코이프 · 붉은 십자 서코트 (11-11)
-    knight_7: { ko: '팔라딘', en: 'Paladin' },             // 순백 판금 · 회색 짧은 머리 노기사 (11-11)
+    knight_7: { ko: '팔라딘', en: 'Paladin' },             // 회색 강철 판금 · 회색 짧은 머리 노기사 (11-11 · 11-12 어둡게 — 음영 유지)
+    knight_8: { ko: '살라딘', en: 'Saladin' },             // 흰 터번 · 머리와 목을 감싼 천 · 검은 수염 (11-12 · 같은 날 다시 그림)
     mage_2: { ko: '포세이돈', en: 'Poseidon' },            // 청록 장발·수염 노인
     mage_3: { ko: '오딘', en: 'Odin' },                    // 붕대로 한 눈을 가린 후드 노인 (11-11)
-    mage_4: { ko: '제우스', en: 'Zeus' },                  // 왕관 · 흰 장발 · 수염 · 손에 번개 (11-11)
+    mage_4: { ko: '제우스', en: 'Zeus' },                  // 헝클어진 흰 장발 · 긴 수염 · 노한 얼굴 · 손가의 불티 (11-11 · 11-12 다시 그림)
+    mage_5: { ko: '하데스', en: 'Hades' },                 // 창백한 대머리 · 늘어진 흰 머리 · 검은 로브 (11-12)
     archer_2: { ko: '빌헬름 텔', en: 'William Tell' },     // 머리띠 · 모피 · 어깨에 멘 석궁 (11-11)
+    archer_3: { ko: '주몽', en: 'Jumong' },                // 상투 · 늑대 가죽 머리쓰개 · 등에 멘 활 · 녹슨 갑주 (11-12)
+    archer_4: { ko: '아마존', en: 'Amazon' },              // 헝클어진 장발 · 뼈 장식 · 얼굴 칠 · 모피 (11-12)
+    archer_5: { ko: '아르테미스', en: 'Artemis' },         // 땋은 검은 머리 · 뼈 · 깃털 장식 · 모피 깃 · 활 (11-12)
     priest_3: { ko: '잔 다르크', en: 'Joan of Arc' },      // 흰 두건(윔플) — 사제 초상 중 유일한 여자
     priest_4: { ko: '닥터 슈나벨', en: 'Doctor Schnabel' }, // 역병 의사 — 흰 부리 가면
     priest_1: { ko: '베네딕토', en: 'Benedict' },          // 반삭 · 검은 수단 · 금 십자가 (10-20 이름)
@@ -466,7 +497,7 @@ export const SKILL_ICON_FILES = [
     // 전직 스킬 — 행이 섰다(2026-09-28 · R16). 그림은 **투톤**(회백 실루엣 + 효과 강조색 하나 · ADR-0401) — 다섯 직업 45 전부(궁수 9 는 2026-10-09)
     //   · `arc_quickdraw` 는 2026-10-16 궁수 기본 스킬로 내려왔다(R247) — 그림은 전직 투톤 그대로 둔다
     'war_ragnarok', 'war_berserk', 'war_mutualruin', 'war_whirlwind', 'war_thorswrath', 'war_shockwave',
-    'war_lionsroar', 'war_command', 'war_intimidate',
+    'war_command', 'war_intimidate',   // 옛 사자후(`war_lionsroar`)는 2026-11-12 행이 지워져 뺐다 · 강신(`war_divinedescent`)은 그림이 아직 없다(R425)
     'kni_lastbastion', 'kni_unbreakablewill', 'kni_divinejudgment', 'kni_unyieldingoath', 'kni_holywar', 'kni_vow',
     'kni_retribution', 'kni_condemnation', 'kni_showdown',
     'arc_trueaim', 'arc_singlestrike', 'arc_reload', 'arc_quickdraw', 'arc_fulldraw', 'arc_chaindraw',
@@ -541,9 +572,9 @@ export const RUN_BUFF_ART = Object.fromEntries(['shrine', 'tactic', 'codex'].map
  * 축은 `item_base.csv:base_id` 다 — 개체가 드롭 때 그 id 를 들고(`item.js:build` · INTERFACE 「item 객체」) 화면은 그대로 읽는다.
  *   그래서 퀼티드와 더스크 슈라우드가 **다른 그림**이다. 옛 「부위당 한 장」 표(`ITEM_ART_BY_SLOT`)와
  *   무기군 그림(`<group_id>.png` · `ITEM_ART_GROUPS`)은 2026-09-17 에 걷었다 — 파일 12장도 같이 지웠다(사용자 지시).
- * 목록에 없는 베이스(투구 · 장갑 · 신발 · 장신구 전부)는 `null` 이고 그 칸은 부위 이모지(`equip_slot.csv:icon`)로 떨어진다 —
+ * 목록에 없는 베이스는 `null` 이고 그 칸은 검은 칸이다(2026-11-12 ADR-1051 — 그 전엔 부위 이모지 `equip_slot.csv:icon`) —
  *   해시 폴백을 안 쓰는 이유는 `slotArt` · `potionArt` 와 같다(틀린 그림 = 틀린 정보).
- * ⚠ **옛 세이브의 방어구는 `baseId` 가 없다** — 그 개체들도 이모지로 떨어진다(새로 먹는 것부터 그림이 붙는다).
+ * ⚠ **옛 세이브의 방어구는 `baseId` 가 없다** — 그 개체들도 검은 칸이다(새로 먹는 것부터 그림이 붙는다).
  */
 export const ITEM_BASE_ART_DIR = './assets/art/icons/items/item_base/';   // 파일명 = item_base.csv:base_id
 /** 그림이 있는 베이스 id — 그림이 오면 여기 한 줄 (`POTION_ART_IDS` 와 같은 문법) */
@@ -581,7 +612,7 @@ export const WEAPON_BASE_DIR = './assets/art/icons/items/weapon_base/';
 /** **설치된 무기 베이스 그림** — 무기군 → 파일 stem(= `weapon_base.csv:base_id`). 키 순서는 도감의 묶음 순서다(활 다음 석궁 · ADR-0180).
  *  [2026-11-11 · R445] 무기군당 10(기본 1 + 단 3 × 계보 3)이 되며 **CSV 와 이 목록이 같은 벌이 아니게 됐다** — 여기는 그림이 있는 것만 든다:
  *  ① CSV 베이스 중 그림이 있는 것 ② **퇴역한 베이스**(`WEAPON_BASE_RETIRED` — CSV 에서 빠졌지만 옛 세이브 무기가 `baseId` 로 든다).
- *  그림이 아직 없는 CSV 베이스(R445 의 새 이름 42)는 `itemArt` 가 같은 무기군 그림 하나로 대신한다(아래). 그림이 오면 `<group>/` 에 넣고 여기 한 줄 */
+ *  그림이 아직 없는 CSV 베이스(R445 의 새 이름 42)는 검은 칸이다(`itemArt` → null · 2026-11-12 ADR-1051). 그림이 오면 `<group>/` 에 넣고 여기 한 줄 */
 export const WEAPON_BASE_STEMS = {
     sword2h: ['long_sword', 'claymore', 'highland_blade', 'bastard_sword', 'balrog_blade', 'zweihander', 'colossus_blade'],
     axe: ['hatchet', 'axe', 'tomahawk', 'great_axe', 'berserker_axe', 'battle_axe', 'decapitator'],
@@ -599,32 +630,71 @@ export const WEAPON_BASE_STEMS = {
 export const WEAPON_BASE_RETIRED = ['berserker_axe', 'war_club', 'cryptic_axe', 'great_bow', 'rune_bow', 'gothic_bow', 'demon_crossbow',
     'gnarled_staff', 'demon_heart', 'divine_scepter', 'caduceus', 'grand_scepter'];
 export const weaponBaseArt = (group, stem) => WEAPON_BASE_STEMS[group]?.includes(stem) ? `${WEAPON_BASE_DIR}${group}/${stem}${ICON_EXT}` : null;
+
 /**
- * `baseId` 가 있으면(2026-09-10 · `weapon_base.csv` 로 실제 굴린 개체 — `item.baseId`) **그 그림을 그대로** 쓴다 —
- * 이름과 그림이 같은 베이스를 가리키게 된다. 없으면(구 세이브 · 베이스 풀이 아직 없는 무기군) **uid 해시**로 옛날처럼 고른다.
- * **그림이 아직 없는 베이스**(R445 의 새 이름 — 2026-11-11)는 **`baseId` 해시**로 같은 무기군의 지금 그림(퇴역 제외) 하나를 든다 —
- *   같은 베이스는 언제나 같은 그림이다(rng 0 · 그리는 시각의 해시). ⚠ 이름과 그림이 어긋나는 **임시**다 — 그림이 오면 `WEAPON_BASE_STEMS` 에 한 줄
+ * **아이템 그림 묶음** [2026-11-12 · SCREEN_DESIGN §2 · §2-2 · ADR-1051] — 설정 `화면` 탭의 「아이템 그림」 줄이 고른다.
+ *   `gemini` = 지금 설치본(위 `WEAPON_BASE_STEMS` · `ITEM_BASE_ART_IDS`) · `codex` = **무기 베이스 100장뿐**(아래 `WEAPON_BASE_CODEX_STEMS`).
+ *   고른 묶음에 그 그림이 없으면 `itemArt` 가 `null` 을 내고 화면은 **검은 칸**이다(부위 이모지 · 남의 그림으로 안 떨어진다).
+ * 고르는 순서는 초상(`FACE_STYLES`)과 같다: URL `?itemart=<묶음>`(그 자리에서 저장) → localStorage → 목록의 **첫 항목**.
+ * 그리는 시각의 값이라 rng · 세이브에 안 닿는다(골든 불변).
  */
-export const itemArt = (slot, group, uid, baseId) => {
-    if (slot === 'weapon') {
-        // 그 무기군에 베이스 그림이 있으면 **베이스 그림**, 아니면 무기군 그림.
-        // 도감의 「무기」 묶음은 uid 없이 부르므로 거기서는 무기군 그림 그대로다 (재고를 보는 자리다 · §9-1)
-        const stems = WEAPON_BASE_STEMS[group];
-        if (stems) {
-            if (baseId && stems.includes(baseId)) return `${WEAPON_BASE_DIR}${group}/${baseId}${ICON_EXT}`;
-            if (baseId) {
-                const live = stems.filter(s => !WEAPON_BASE_RETIRED.includes(s));
-                const pool = live.length ? live : stems;
-                return `${WEAPON_BASE_DIR}${group}/${pool[strHash(`${baseId}:${group}`) % pool.length]}${ICON_EXT}`;
-            }
-            if (uid)
-                // 해시 키에 무기군을 섞는다 — uid 만 쓰면 `i1`·`i2` 같은 **짧은 키**라 7 로 나눈 나머지가 쏠린다
-                //   (실측 60개: 발록 17 · 츠바이핸더 3). `<uid>:<group>` 이면 고르게 퍼지고, 무기군이 늘어도 서로 독립이다
-                return `${WEAPON_BASE_DIR}${group}/${stems[strHash(`${uid}:${group}`) % stems.length]}${ICON_EXT}`;
-        }
-        return null;   // 무기군 그림 8장은 2026-09-17 삭제 — 베이스 풀이 없는 무기군은 부위 이모지로 떨어진다
+export const ITEM_ART_SOURCES = ['gemini', 'codex'];
+const ITEM_ART_STORE_KEY = 'thesevensim.itemArt';
+let itemArtCur = (() => {
+    const q = new URLSearchParams(location.search).get('itemart');
+    if (ITEM_ART_SOURCES.includes(q)) {
+        try { localStorage.setItem(ITEM_ART_STORE_KEY, q); } catch { /* 저장 실패는 무해 — 이번 판만 그 묶음 */ }
+        return q;
     }
-    // 방어구 · 장신구 — 개체가 든 베이스의 그림. 그림이 없는 베이스는 `null` → 부위 이모지 (2026-09-17)
+    try {
+        const saved = localStorage.getItem(ITEM_ART_STORE_KEY);
+        if (ITEM_ART_SOURCES.includes(saved)) return saved;
+    } catch { /* 프라이빗 모드 등 — 기본값으로 */ }
+    return ITEM_ART_SOURCES[0];
+})();
+export const itemArtSource = () => itemArtCur;
+/** 묶음 전환 — 그림 경로는 매 렌더에 다시 만들므로 호출한 쪽이 render() 하면 그대로 갈린다 */
+export function setItemArtSource(id) {
+    if (!ITEM_ART_SOURCES.includes(id)) return;
+    itemArtCur = id;
+    try { localStorage.setItem(ITEM_ART_STORE_KEY, id); } catch { /* 저장 실패는 무해 */ }
+}
+/** Codex 묶음의 무기 베이스 그림 — `icons/items/weapon_base_codex/<group>/<base_id>.webp` · 무기군 → `weapon_base.csv:base_id` 전 행(CSV 순).
+ *  원본은 `icons_source/items/weapon_base_codex/`(512 PNG · `scripts/build_icons.py` 가 짓는다) · CSV 와 같은 벌인지는 단정(dev/test.js)이 본다 */
+export const WEAPON_BASE_CODEX_DIR = './assets/art/icons/items/weapon_base_codex/';
+export const WEAPON_BASE_CODEX_STEMS = {
+    sword2h: ['long_sword', 'bastard_sword', 'two_handed_sword', 'great_sword', 'espandon', 'claymore', 'zweihander', 'highland_blade', 'balrog_blade', 'colossus_blade'],
+    axe: ['axe', 'hand_axe', 'battle_axe', 'great_axe', 'hatchet', 'tabar', 'giant_axe', 'tomahawk', 'decapitator', 'champion_axe'],
+    mace: ['club', 'mace', 'war_hammer', 'maul', 'flanged_mace', 'battle_hammer', 'martel_de_fer', 'reinforced_mace', 'legendary_mallet', 'ogre_maul'],
+    spear: ['spear', 'pike', 'polearm', 'scythe', 'lance', 'halberd', 'thresher', 'war_pike', 'great_polearm', 'giant_thresher'],
+    bow: ['bow', 'short_bow', 'hunters_bow', 'long_bow', 'short_battle_bow', 'razor_bow', 'long_battle_bow', 'diamond_bow', 'blade_bow', 'hydra_bow'],
+    crossbow: ['crossbow', 'repeating_crossbow', 'light_crossbow', 'heavy_crossbow', 'chu_ko_nu', 'arbalest', 'ballista', 'highland_crossbow', 'balrog_crossbow', 'colossus_crossbow'],
+    staff: ['staff', 'short_staff', 'long_staff', 'war_staff', 'jo_staff', 'gothic_staff', 'rune_staff', 'walking_staff', 'elder_staff', 'archon_staff'],
+    orb: ['orb', 'eagle_orb', 'sacred_globe', 'jareds_stone', 'glowing_orb', 'crystal_globe', 'swirling_crystal', 'heavenly_stone', 'eldritch_orb', 'dimensional_shard'],
+    crucifix: ['crucifix', 'scepter', 'rood', 'archangel_rod', 'rune_scepter', 'crozier', 'cherub_rod', 'mighty_scepter', 'ferula', 'seraph_rod'],
+    bible: ['bible', 'psalter', 'martyrology', 'lectern_bible', 'breviary', 'wicked_bible', 'great_bible', 'missal', 'apocrypha', 'devils_bible'],
+};
+/**
+ * 아이템 그림 — **고른 묶음**(`src` · 기본 = 설정이 고른 것)의 그 개체 그림 경로, 없으면 `null`(화면은 검은 칸 · ADR-1051).
+ * 무기는 개체가 든 **`baseId` 의 그림**이다(2026-09-10 · `weapon_base.csv` 로 굴린 개체 — 이름과 그림이 같은 베이스를 가리킨다).
+ * **`baseId` 없는 옛 무기**는 `gemini` 에서만 **uid 해시**로 그 무기군 그림 하나를 든다(아래 · rng 0 · 개체마다 고정).
+ * 그림이 아직 없는 베이스(R445 의 새 이름 중 `gemini` 에 없는 것)는 `null` 이다 — 같은 무기군 그림을 대신 들던 임시(2026-11-11)는 걷었다(2026-11-12)
+ */
+export const itemArt = (slot, group, uid, baseId, src = itemArtCur) => {
+    if (src === 'codex')   // 무기 베이스만 그렸다 — 방어구 · 장신구 · 퇴역 베이스 · `baseId` 없는 옛 무기는 null
+        return slot === 'weapon' && baseId && WEAPON_BASE_CODEX_STEMS[group]?.includes(baseId)
+            ? `${WEAPON_BASE_CODEX_DIR}${group}/${baseId}${ICON_EXT}` : null;
+    if (slot === 'weapon') {
+        const stems = WEAPON_BASE_STEMS[group];
+        if (!stems) return null;   // 무기군 그림 8장은 2026-09-17 삭제 — 베이스 풀이 없는 무기군은 그림이 없다
+        if (baseId) return stems.includes(baseId) ? `${WEAPON_BASE_DIR}${group}/${baseId}${ICON_EXT}` : null;
+        if (uid)
+            // 해시 키에 무기군을 섞는다 — uid 만 쓰면 `i1`·`i2` 같은 **짧은 키**라 7 로 나눈 나머지가 쏠린다
+            //   (실측 60개: 발록 17 · 츠바이핸더 3). `<uid>:<group>` 이면 고르게 퍼지고, 무기군이 늘어도 서로 독립이다
+            return `${WEAPON_BASE_DIR}${group}/${stems[strHash(`${uid}:${group}`) % stems.length]}${ICON_EXT}`;
+        return null;
+    }
+    // 방어구 · 장신구 — 개체가 든 베이스의 그림. 그림이 없는 베이스는 `null` → 검은 칸 (2026-09-17 · 이모지 폴백은 2026-11-12 삭제)
     return baseId && ITEM_BASE_ART_IDS.includes(baseId) ? `${ITEM_BASE_ART_DIR}${baseId}${ICON_EXT}` : null;
 };
 /* 직업 글리프 표(`CLASS_GLYPH`·`classGlyph`)는 **삭제했다** (2026-09-03 사용자 지시) — 아트가 없는 영웅의

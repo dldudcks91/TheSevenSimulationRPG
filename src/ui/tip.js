@@ -369,7 +369,8 @@ const tipSlotDef = id => D.slots.find(s => s.id === id);
 const tipPosDef = pos => tipSlotDef(D.equipSlots.find(s => s.id === pos)?.part);
 const tipItemImg = it => {
     const src = M.itemArt(it?.slot, it?.group, it?.uid, it?.baseId);
-    return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : (tipSlotDef(it?.slot)?.icon ?? '');
+    // 고른 그림 묶음에 그림이 없으면 검은 칸 — 앱의 `itemImg` 와 같은 규칙 (SCREEN_DESIGN §2 · ADR-1051)
+    return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : it ? '<i class="it-noart"></i>' : '';
 };
 
 /** 영웅의 한 벌 — `equipped` 는 **착용 위치**(equip_slot.csv) → uid 다. uid 를 아이템으로 푸는 것은 앱이 넘긴 `itemOf` 몫이다 */

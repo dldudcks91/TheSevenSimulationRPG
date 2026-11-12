@@ -81,7 +81,7 @@ const skillHit = def => ({ statMult: def.statMult ?? 1, procChance: def.procChan
  * **여럿을 치는 공격 대상** [2026-10-29 · R380 · skill_design §12-9 스웜] — 이 대상의 타격은 `spread` 를 싣고, 맞는 쪽이 파리 떼(`swarm`)면
  *   **산 파리마다** 그 피해를 받는다(단일 · 순환 · 최고 방어 · HP 최대는 한 마리) — battle.js `swarmTake`. 파리 떼가 없으면 아무 뜻이 없다
  */
-const SPREAD = new Set(['enemy_all', 'enemy_chain', 'enemy_front', 'enemy_back']);
+const SPREAD = new Set(['enemy_all', 'enemy_chain', 'enemy_front', 'enemy_back', 'enemy_hp_max_splash']);
 
 /**
  * 전열만 남긴다 — battle.js `frontOf` 와 같은 규칙(랭크가 없으면 전열 · 전열 생존자가 없으면 받은 목록 그대로).
@@ -177,7 +177,7 @@ export const ATTACK_TARGETS = {
                 //   % 로 깎으므로 **양수 밑수만** 깎고, 깎은 비율을 `defKeep` 에 곱한다 — 갈아입기가 이 비율로 잇는다(벗었다 입어도 안 씻긴다 · R130).
                 //   `def` 도 같은 비율로 — 밑수 × 창 배수라 둘을 같이 곱하면 다시 파생한 것과 같다(0 밑으로 자르지 않는다 · 음수 방어 R130)
                 //   **겹 상한** [2026-10-29 · R383 · battle_design §9-3 「쌓이는 방어 감소는 상한이 같다」] — 대상마다 깎은 횟수(`shredN`)가
-                //   `rt.shredMax`([balance.csv:weapon_def_down_stack_max] — 무기 시기 ② 겹과 같은 값)에 닿으면 더 안 깎는다 · 감쇠가 0 인 줄은 세지 않는다
+                //   `rt.shredMax`([balance.csv:weapon_def_down_stack_max] — 2026-11-12 부터 이 깎기만 읽는다 · 무기 · 목걸이 시기 겹은 상한이 없다)에 닿으면 더 안 깎는다 · 감쇠가 0 인 줄은 세지 않는다
                 if (tgt.defBase > 0 && def.decay > 0 && (tgt.shredN ?? 0) < rt.shredMax) {
                     tgt.defBase = tgt.defBase * (1 - def.decay);
                     tgt.defKeep = (tgt.defKeep ?? 1) * (1 - def.decay);
@@ -194,6 +194,42 @@ export const ATTACK_TARGETS = {
      */
     enemy_hp_max: (rt, u, def, foes) => {
         const tgt = frontOf(foes).reduce((a, b) => (b.hp > a.hp ? b : a));
+        const sk = skillHit(def);
+        for (let k = 0; k < def.hits; k++) {
+            if (u.hp <= 0 || tgt.hp <= 0) break;
+            rt.strikeOnce(u, tgt, def.mult, def.element, def.id, sk);
+        }
+        return tgt;
+    },
+    /**
+     * 체력이 가장 많은 적 + 나머지 튀김 [2026-11-02 · 사용자 · R423 · skill_design §10-2 토르의 분노] — 주 대상 = `enemy_hp_max` 와 같다(전열 HP 최대 · rng 0).
+     *   주 대상은 그 줄의 배율 · 걸린 효과 그대로 · **나머지 생존 적 전원**(전열 · 후열)은 배율 × (1 − `decay`)(「주 대상 외 비율」) ·
+     *   걸린 효과(스턴)의 시간 × `rt.splashStunMult`([balance.csv:splash_stun_mult] — 「그 외」 스턴이 주 대상보다 짧다) · 기준 = 주 대상 · rng 0
+     */
+    enemy_hp_max_splash: (rt, u, def, foes) => {
+        const main = frontOf(foes).reduce((a, b) => (b.hp > a.hp ? b : a));
+        const sk = skillHit(def);
+        const side = sk.onHit ? { ...sk, onHit: { ...sk.onHit, dur: sk.onHit.dur * (rt.splashStunMult ?? 1) } } : sk;
+        const rest = foes.filter(f => f !== main);
+        for (let k = 0; k < def.hits; k++) {
+            if (u.hp <= 0) break;
+            if (main.hp > 0) rt.strikeOnce(u, main, def.mult, def.element, def.id, sk);
+            for (const tgt of rest) {
+                if (u.hp <= 0) break;
+                if (tgt.hp > 0) rt.strikeOnce(u, tgt, def.mult * (1 - def.decay), def.element, def.id, side);
+            }
+        }
+        return main;
+    },
+    /**
+     * 6자리 무작위 [2026-11-03 · 사용자 · R430 · skill_design §10-1 메테오] — **전열 게이트 · 지목 · 도발을 안 보고** 살아 있는 적 전원에서 하나를 **rng 1회**로 고른다
+     *   (`pickTarget` 을 안 부른다) · `hits` 회 그 대상 · 쓰러지면 남은 타수는 버린다 · 기준 = 그 대상
+     */
+    enemy_random: (rt, u, def, foes) => {
+        const live = foes.filter(f => f.hp > 0);
+        const r = rt.rng();
+        if (!live.length) return null;
+        const tgt = live[Math.floor(r * live.length)];
         const sk = skillHit(def);
         for (let k = 0; k < def.hits; k++) {
             if (u.hp <= 0 || tgt.hp <= 0) break;
@@ -248,6 +284,7 @@ export const HIT_DECAY = {
     enemy_all: 'back',               // 전열이 살아 있는 동안 후열의 배율이 준다 (멀티샷 · 2026-10-29 R383 — ~~주 대상 밖 · 2026-09-10~~)
     enemy_chain: 'by_order',         // 순서마다 배율이 곱으로 준다
     enemy_highest_def: 'def_shred',  // 타격마다 대상 방어가 준다 (가이디드 애로우)
+    enemy_hp_max_splash: 'splash',   // 주 대상 밖의 배율이 준다 — 「주 대상 외 비율」(토르의 분노 · 2026-11-02 R423)
 };
 
 /**
@@ -440,6 +477,17 @@ export const EFFECTS = {
         apply: (rt, tgt, def, until, ev) => rt.swarmOpen(tgt, def, ev),
         end: (rt, u, b, at) => rt.swarmClose(u, at),
     },
+    // 진형 붕괴 [2026-11-02 · 사용자 · R424 · battle_design §3-1 「진형 붕괴」 · skill_design §10-2 쇼크웨이브] — 맞은 유닛의 **랭크(전열 ↔ 후열)를 뒤집는다**.
+    //   처음 열 때만 뒤집고 원래 랭크를 `rankBase` 에 둔다 — **다시 걸면 시간만 새로**(`applyStatus` 가 창을 덮어쓴다 · 다시 안 뒤집는다) ·
+    //   닫힐 때(만료 · 라운드 끝 — battle.js) 원래 랭크로 · 대상 선택은 바뀐 랭크를 그대로 읽는다(rng 소비 그대로) · `ev.rank` = 지금 랭크(재생기가 칸을 옮긴다)
+    formation_break: {
+        state: true,
+        apply: (rt, tgt, def, until, ev) => {
+            if (tgt.rankBase === undefined) { tgt.rankBase = tgt.rank ?? 0; tgt.rank = tgt.rankBase === 0 ? 1 : 0; }
+            ev.rank = tgt.rank;
+        },
+        end: (rt, u) => { if (u.rankBase !== undefined) { u.rank = u.rankBase; delete u.rankBase; } },
+    },
 };
 
 export const EFFECT_STATS = Object.keys(EFFECTS);
@@ -616,10 +664,9 @@ export function refreshDerived(u) {
  *     [개정 2026-10-02 · R198 — ~~평타의 공격 타입(물리 · 원소)~~ — 평타가 언제나 물리라 마법 감소가 아무에게도 안 걸리게 됐다]
  * @param u 공격자 · @param fx 공격자의 무기 옵션 묶음(`hero.computeCombat:option_fx`) · @param d 대상 · @param type 그 타격의 공격 타입
  *   **방어력 감소 겹**(`fx.defStack` — 무기 시기 ② · 2026-10-05 R206 · item_design §1) = 대상의 창 `wx:def_stack` **하나에 겹이 쌓인다** —
- *     겹 수 `n` 은 `sec.stackMax` 까지 · 겹 값 `per` 는 지금까지 건 것 중 가장 센 값(⚠제안 — 여러 영웅의 겹이 한 줄에 함께 쌓인다) · 값 = `−per × n` ·
+ *     겹 수 `n` 은 **상한 없이** 오른다(2026-11-12 사용자 「일단 겹 제한 두지 말고 나중에 수정」) · 겹 값 `per` 는 지금까지 건 것 중 가장 센 값(여러 영웅의 겹이 한 줄에 함께 쌓인다 · 11-12) · 값 = **겹마다 곱** `(1 − per)^n − 1`(2026-11-12 사용자 「방어력 감소는 합연산이 아니라 곱연산」 — 방어 파생(`refreshDerived`)이 이 창을 다른 감소 창과도 곱한다) ·
  *     **시간으로 안 풀린다**(`until = ∞`) — 적은 라운드마다 새로 서고 파티 유닛의 이 창은 `battle.beginRound` 가 지운다
- * @param t 지금 시각(초) · @param sec `{def, res, atk, stackMax}` 창 길이 — [balance.csv:weapon_def_down_sec] · `weapon_res_down_sec` · `weapon_atk_down_sec` ·
- *   최대 겹 [balance.csv:weapon_def_down_stack_max]
+ * @param t 지금 시각(초) · @param sec `{def, res, atk}` 창 길이 — [balance.csv:weapon_def_down_sec] · `weapon_res_down_sec` · `weapon_atk_down_sec`
  * @returns 창이 하나라도 섰는가
  */
 export function weaponOnHit(u, fx, d, type, t, sec) {
@@ -634,14 +681,25 @@ export function weaponOnHit(u, fx, d, type, t, sec) {
     if (fx.defDown > 0) strongest('wx:def_down', 'def_pct', fx.defDown, sec.def);
     if (fx.defStack > 0) {
         const cur = d.buffs['wx:def_stack'];
-        const n = Math.min(sec.stackMax ?? 1, (cur?.n ?? 0) + 1);
+        const n = (cur?.n ?? 0) + 1;   // 상한 없음 (2026-11-12)
         const per = Math.max(cur?.per ?? 0, fx.defStack);
-        d.buffs['wx:def_stack'] = { stat: 'def_pct', v: -per * n, n, per, until: Infinity, element: null, by: u.key, quiet: true };
+        d.buffs['wx:def_stack'] = { stat: 'def_pct', v: (1 - per) ** n - 1, n, per, until: Infinity, element: null, by: u.key, quiet: true };   // 겹마다 곱 (2026-11-12)
         changed = true;
     }
     const atkDown = d.noBasic ? fx.atkDownMag : fx.atkDownPhys;
     // 데미지 감소 — 스킬 디버프와 같은 자리 · 직격의 최종 피해에 곱 (2026-10-28 R368 — ~~atk_pct 음수 · 데미지 % 괄호~~)
     if (atkDown > 0) strongest('wx:atk_down', 'final_dmg_pct', atkDown, sec.atk);
+    // 원소 저항 감소 겹 [2026-11-11 · R442 · item_design §1 「마법 무기 — 죄종 계열」 · 「감소는 겹치는걸로」] — 방어력 감소 겹과 같은 규칙을 **원소마다** —
+    //   그 원소의 타격일 때만 대상의 창 `wx:res_stack:<원소>` 하나에 겹이 쌓인다(상한 없음 · 겹 값 = 지금까지 건 것 중 센 값 · 시간으로 안 풀린다)
+    //   목걸이 시기 ③(`resStackAll` — 그 타격의 원소 · 2026-11-11 R453)도 같은 줄에 더한다
+    const resStack = (fx.resStack?.[type] ?? 0) + (type !== 'physical' ? fx.resStackAll ?? 0 : 0);
+    if (resStack > 0 && type in d.res) {
+        const key = `wx:res_stack:${type}`, cur = d.buffs[key];
+        const n = (cur?.n ?? 0) + 1;
+        const per = Math.max(cur?.per ?? 0, resStack);
+        d.buffs[key] = { stat: 'res_elem', v: -per * n, n, per, until: Infinity, element: type, by: u.key, quiet: true };
+        changed = true;
+    }
     if (fx.resDown > 0 && type !== 'physical' && type in d.res) {
         d.buffs[`wx:res_down:${u.key}:${type}`] = { stat: 'res_elem', v: -fx.resDown, until: t + len(sec.res), element: type, by: u.key, quiet: true };
         changed = true;

@@ -811,6 +811,14 @@ const STRINGS = {
        버튼 글은 한국어도 On / Off 그대로(2026-09-27 사용자 지시 「한글이어도 무조건 On Off」 — 파티 전술 칸 `rs.on` 과 같다) */
     'set.h': { ko: '설정', en: 'Settings' },
     'set.artStyle': { ko: '아트 스타일', en: 'Art Style' },
+    // 설정 탭의 하위 탭 셋 (2026-11-12 · SCREEN_DESIGN §2-2 · ADR-1050)
+    'set.pane.game': { ko: '게임', en: 'Game' },
+    'set.pane.screen': { ko: '화면', en: 'Display' },
+    'set.pane.fx': { ko: '연출', en: 'Effects' },
+    // 아이템 그림 묶음 — 버튼 글은 언어와 상관없이 묶음 이름 (2026-11-12 · ADR-1051)
+    'set.itemArt': { ko: '아이템 그림', en: 'Item Art' },
+    'set.itemArt.gemini': { ko: 'Gemini', en: 'Gemini' },
+    'set.itemArt.codex': { ko: 'Codex', en: 'Codex' },
     'set.skillFx': { ko: '스킬 이펙트', en: 'Skill Effects' },
     'set.fxArt': { ko: '이펙트 그림체', en: 'Effect Style' },   // 관전 스킬 이펙트의 그림체 — 버튼 글은 ix.fxs.* (2026-10-09 · ADR-0561)
     'set.fxAlpha': { ko: '이펙트 투명도(%)', en: 'Transparency (%)' },   // 영어는 짧게 — 이름 칸이 넓어지면 다른 줄 버튼까지 접힌다   // 스킬 조각만 옅게 — 버튼 글은 0 · 25 · 50 · 75 (단위는 이 이름이 든다 · 2026-10-09 · ADR-0562)
@@ -856,14 +864,12 @@ const STRINGS = {
     'dp.node.gather': { ko: '채집', en: 'Gathering' },
     'dp.node.log': { ko: '벌목', en: 'Logging' },
     'dp.node.burst': { ko: '대박', en: 'Jackpot' },
-    'dp.node.seats': { ko: '등록 칸', en: 'Seats' },
     'dp.node.interval': { ko: '간격', en: 'Interval' },
     'dp.node.quality': { ko: '품질', en: 'Quality' },
     'dp.node.waiting': { ko: '대기 칸', en: 'Waiting Slots' },
     'dp.node.speed': { ko: '속도', en: 'Speed' },
     'dp.node.range': { ko: '범위', en: 'Range' },
     'dp.node.income': { ko: '수익', en: 'Income' },
-    'dp.val.seats': { ko: '{n}명', en: '{n}' },
     'dp.val.slots': { ko: '+{n}칸', en: '+{n}' },
     'dp.val.range': { ko: '최고 −{n}', en: 'Top −{n}' },
     'dp.res.go': { ko: '연구', en: 'Research' },
@@ -1754,14 +1760,14 @@ const STRINGS = {
         en: "Unlock advancement in the Library and select a hero of at least level <b>{level}</b>. Compare the class's three paths and their skills, choose one and press <b>Advance</b>. It currently costs <b>{gold}G</b> and completes immediately on payment.<br><br><b>The advancement path cannot be undone.</b> You can change the learned skill within that path, but cannot switch the hero to another path. Heroes can advance during Expeditions; those exploring must return first.<br><br>After advancing, go to <b>Character → Open Mastery → advancement tree</b> and learn an Advance skill. Completing advancement alone does not learn one automatically.",
     },
     'help.library.points.title': { ko: "공용 스킬 포인트와 메인 해금", en: "Shared skill points and main-skill levels" },
-    'help.library.points.body': { ko: "영웅은 <b>레벨이 오를 때마다 스킬 포인트</b>를 받습니다. 죄종·직업 마스터리와 전직 메인·꼬리는 같은 포인트를 나누어 씁니다. 전직할 때 별도 포인트를 받지는 않습니다.<br><br>전직 후 세 메인 스킬 중 <b>하나</b>를 스킬 포인트 1로 배웁니다. 메인의 다음 단계는 전직 가능 레벨부터 <b>{interval}레벨 간격</b>으로 열립니다. 포인트가 있어도 다음 단계의 영웅 레벨 조건을 만족해야 하며, 조건을 만족하면 늦게 배운 단계도 차례로 올릴 수 있습니다. 이 간격은 꼬리의 포인트 지급 조건이 아닙니다.<br><br>배운 전직 스킬을 우클릭해 되돌리면 학습·강화에 투자한 포인트가 <b>공용 스킬 포인트로 환급</b>됩니다. 같은 갈래의 다른 스킬이나 마스터리에 다시 쓸 수 있습니다. 갈래와 전직 비용은 그대로이며, 특수·변형·필살기 꼬리는 현재 준비 중입니다.", en: "Heroes earn <b>skill points on every level-up</b>. Sin mastery, Class mastery and advancement main skills and branches share this pool. Advancing grants no extra points.<br><br>After advancing, learn <b>one</b> of the three main skills for one skill point. Further main-skill ranks unlock every <b>{interval} hero levels</b> from the advancement unlock level. Having points does not bypass the level requirement. Eligible ranks may be learned later in sequence. This interval does not govern branch-point income.<br><br>Right-click the learned Advance skill to refund its learning and upgrade costs to the <b>shared skill-point pool</b>. Reinvest them in another skill of the same path or in mastery. The chosen path and gold cost remain in place. Special, Variant and Ultimate branches are currently coming later." },
+    'help.library.points.body': { ko: "영웅은 <b>레벨 1 부터 레벨마다 스킬 포인트</b>를 받습니다. 죄종·직업 마스터리와 전직 메인·꼬리는 같은 포인트를 나누어 씁니다. 전직할 때 별도 포인트를 받지는 않습니다.<br><br>전직 후 세 메인 스킬 중 <b>하나</b>를 스킬 포인트 1로 배웁니다. 메인의 다음 단계는 전직 가능 레벨부터 <b>{interval}레벨 간격</b>으로 열립니다. 포인트가 있어도 다음 단계의 영웅 레벨 조건을 만족해야 하며, 조건을 만족하면 늦게 배운 단계도 차례로 올릴 수 있습니다. 이 간격은 꼬리의 포인트 지급 조건이 아닙니다.<br><br>배운 전직 스킬을 우클릭해 되돌리면 학습·강화에 투자한 포인트가 <b>공용 스킬 포인트로 환급</b>됩니다. 같은 갈래의 다른 스킬이나 마스터리에 다시 쓸 수 있습니다. 갈래와 전직 비용은 그대로이며, 특수·변형·필살기 꼬리는 현재 준비 중입니다.", en: "Heroes earn <b>skill points at every level, starting at Lv1</b>. Sin mastery, Class mastery and advancement main skills and branches share this pool. Advancing grants no extra points.<br><br>After advancing, learn <b>one</b> of the three main skills for one skill point. Further main-skill ranks unlock every <b>{interval} hero levels</b> from the advancement unlock level. Having points does not bypass the level requirement. Eligible ranks may be learned later in sequence. This interval does not govern branch-point income.<br><br>Right-click the learned Advance skill to refund its learning and upgrade costs to the <b>shared skill-point pool</b>. Reinvest them in another skill of the same path or in mastery. The chosen path and gold cost remain in place. Special, Variant and Ultimate branches are currently coming later." },
     'help.resource.lines.title': {
         ko: "줄 · 지점 · 랭크의 차이",
         en: "Lines, nodes and ranks",
     },
     'help.resource.lines.body': {
-        ko: "연구소의 <b>줄</b>은 자원·수색·훈련·도박장·도서관처럼 자동으로 얻는 것의 분야입니다. <b>지점</b>은 그 줄의 생산량·간격·품질·등록 칸 등을 올리는 연구 항목입니다.<br><br>왼쪽 <b>줄 카드</b>를 누르면 오른쪽에 생산량과 등록 효과가 나옵니다. 동그란 <b>지점</b>을 누르면 현재 값·다음 효과·비용·연구 시간을 볼 수 있습니다. 연구소의 위쪽 영웅 띠는 현황을 보는 자리이며, 실제 등록은 줄 카드의 얼굴이나 <b>+</b>에서 합니다.<br><br>잠긴 지점은 필요한 건물·랭크부터 갖춰야 합니다. <b>건설</b>에서 연구소 랭크를 올리면 새 지점이 열리고, 이 화면의 <b>연구</b>로 열린 지점의 레벨을 올립니다.<br><br>도서관의 책 제작 기능을 열면 연구소 도서관 줄에 영웅을 등록할 수 있습니다. 등록한 영웅의 고유·배운 기본 스킬 중 하나의 도안을 생산합니다. 전직 스킬은 제외하며, 스킬이 업그레이드 상한에 닿아도 도안은 생산합니다.",
-        en: "A Laboratory <b>line</b> is a field of automatic output: Resources, Search, Training, Gambling Den or Library. A <b>node</b> is research that improves a line's output, interval, quality, assignment seats or another property.<br><br>Select a <b>line card</b> on the left to see output and hero bonuses on the right. Select a round <b>node</b> for its current value, next effect, cost and research time. The hero strip at the top shows assignments; open an actual assignment from a line's portrait or <b>+</b>.<br><br>Locked nodes need the shown building or rank first. Raise Laboratory ranks in <b>Construction</b> to open nodes, then use <b>Research</b> here to raise their levels.<br><br>Unlock book crafting in the Library to assign heroes to the Laboratory Library line. Each assigned hero produces blueprints of a randomly chosen innate or learned basic skill. Advance skills are excluded; reaching a skill upgrade cap does not stop production.",
+        ko: "연구소의 <b>줄</b>은 자원·수색·훈련·도박장·도서관처럼 자동으로 얻는 것의 분야입니다. <b>지점</b>은 그 줄의 생산량·간격·품질 등을 올리는 연구 항목입니다.<br><br>왼쪽 <b>줄 카드</b>를 누르면 오른쪽에 생산량과 등록 효과가 나옵니다. 동그란 <b>지점</b>을 누르면 현재 값·다음 효과·비용·연구 시간을 볼 수 있습니다. 연구소의 위쪽 영웅 띠는 현황을 보는 자리이며, 실제 등록은 줄 카드의 얼굴이나 <b>+</b>에서 합니다.<br><br>잠긴 지점은 필요한 건물·랭크부터 갖춰야 합니다. <b>건설</b>에서 연구소 랭크를 올리면 새 지점이 열리고 지점마다 올릴 수 있는 레벨도 높아집니다. 이 화면의 <b>연구</b>로 열린 지점의 레벨을 올립니다.<br><br>도서관의 책 제작 기능을 열면 연구소 도서관 줄에 영웅을 등록할 수 있습니다. 등록한 영웅의 고유·배운 기본 스킬 중 하나의 도안을 생산합니다. 전직 스킬은 제외하며, 스킬이 업그레이드 상한에 닿아도 도안은 생산합니다.",
+        en: "A Laboratory <b>line</b> is a field of automatic output: Resources, Search, Training, Gambling Den or Library. A <b>node</b> is research that improves a line's output, interval, quality or another property.<br><br>Select a <b>line card</b> on the left to see output and hero bonuses on the right. Select a round <b>node</b> for its current value, next effect, cost and research time. The hero strip at the top shows assignments; open an actual assignment from a line's portrait or <b>+</b>.<br><br>Locked nodes need the shown building or rank first. Raising the Laboratory rank in <b>Construction</b> opens new nodes and raises how far each node can be researched. Use <b>Research</b> here to raise their levels.<br><br>Unlock book crafting in the Library to assign heroes to the Laboratory Library line. Each assigned hero produces blueprints of a randomly chosen innate or learned basic skill. Advance skills are excluded; reaching a skill upgrade cap does not stop production.",
     },
     'help.resource.production.title': {
         ko: "자동 생산과 게임을 닫은 동안",
@@ -1792,8 +1798,8 @@ const STRINGS = {
         en: "Hero assignment and the two slot types",
     },
     'help.resource.assignment.body': {
-        ko: "줄 카드의 영웅 얼굴이나 <b>+</b>를 누르면 등록 창이 열립니다. 영웅을 눌러 그 줄에 등록하고, 같은 영웅을 다시 누르면 해제합니다. 다른 줄에 등록된 영웅을 고르면 이 줄로 이동합니다. <b>한 영웅은 한 줄</b>에만 등록할 수 있습니다.<br><br>연구소 등록은 영웅을 붙잡지 않습니다. 등록한 채로 Party에 넣거나 원정·탐험·전직을 진행할 수 있습니다. 다만 훈련 경험치는 <b>훈련 줄에 등록한 영웅</b>만 받습니다.<br><br><b>등록 칸</b>은 연구소 줄에 효과를 보탤 내 영웅의 자리입니다. <b>대기 칸</b>은 선술집에서 고용을 기다리는 후보의 자리입니다. 수색 줄에 영웅을 더 등록하고 싶을 때와 새 후보를 더 보관하고 싶을 때는 서로 다른 지점을 연구합니다.",
-        en: "Select a line's hero portrait or <b>+</b> to open assignments. Click a hero to assign them and click them again to remove them. Selecting a hero assigned elsewhere moves them to this line. <b>Each hero can be assigned to only one line at a time</b>.<br><br>Assignment does not occupy the hero. They can stay assigned while joining a Party, fighting Expeditions, exploring or advancing. Training XP, however, goes only to <b>heroes assigned to Training</b>.<br><br><b>Seats</b> hold your heroes who boost a Laboratory line. <b>Waiting Slots</b> hold candidate heroes awaiting hire in the Tavern. Research different nodes to assign more heroes to Search and to keep more arriving candidates.",
+        ko: "줄 카드의 영웅 얼굴이나 <b>+</b>를 누르면 등록 창이 열립니다. 영웅을 눌러 그 줄에 등록하고, 같은 영웅을 다시 누르면 해제합니다. 다른 줄에 등록된 영웅을 고르면 이 줄로 이동합니다. <b>한 영웅은 한 줄</b>에만 등록할 수 있습니다.<br><br>연구소 등록은 영웅을 붙잡지 않습니다. 등록한 채로 Party에 넣거나 원정·탐험·전직을 진행할 수 있습니다. 다만 훈련 경험치는 <b>훈련 줄에 등록한 영웅</b>만 받습니다.<br><br><b>등록 칸</b>은 연구소 줄에 효과를 보탤 내 영웅의 자리이며, 모든 줄의 칸 수가 같습니다. <b>대기 칸</b>은 선술집에서 고용을 기다리는 후보의 자리입니다. 새 후보를 더 보관하려면 수색 줄의 대기 칸 지점을 연구해야 합니다.",
+        en: "Select a line's hero portrait or <b>+</b> to open assignments. Click a hero to assign them and click them again to remove them. Selecting a hero assigned elsewhere moves them to this line. <b>Each hero can be assigned to only one line at a time</b>.<br><br>Assignment does not occupy the hero. They can stay assigned while joining a Party, fighting Expeditions, exploring or advancing. Training XP, however, goes only to <b>heroes assigned to Training</b>.<br><br><b>Seats</b> hold your heroes who boost a Laboratory line, and every line has the same number of seats. <b>Waiting Slots</b> hold candidate heroes awaiting hire in the Tavern. To keep more arriving candidates, research the Waiting Slots node on the Search line.",
     },
     'help.resource.hero_effects.title': {
         ko: "등록할 영웅을 고르는 기준",
@@ -2346,6 +2352,9 @@ const STRINGS = {
     // 아이템 칸 오른쪽 아래 배지 — **아이템** 레벨이다 (2026-09-18 · SCREEN_DESIGN §6 · ADR-0168).
     //   위의 `ch.lv`(영웅 레벨)와 글자가 같아도 가리키는 것이 달라 키를 나눈다
     'ch.itemLv': { ko: 'Lv.{n}', en: 'Lv.{n}' },
+    // 페이퍼돌 왼쪽 위의 잠긴 칸 — 이름은 영어가 원본 · 한글은 직역 · 툴팁은 열리는 길 한 줄 (2026-11-12 · SCREEN_DESIGN §6 · ADR-1058)
+    'ch.seal': { ko: '죄종 인장', en: 'Sin Seal' },
+    'ch.seal.lock': { ko: '죄종 인장은 레이드에서 얻을 수 있습니다.', en: 'Sin Seals can be obtained from Raids.' },
     'ch.skill.h': { ko: '액티브 스킬', en: 'Active Skills' },
     // ~~스킬 우선순위 버튼 · 창 제목 `ch.skill.order` · `ch.skill.orderH`~~ — 2026-11-02 걷었다(SCREEN_DESIGN §6 · ADR-1035)
     'ch.skill.go': { ko: '마스터리 열기', en: 'Open Mastery' },
@@ -2378,6 +2387,8 @@ const STRINGS = {
     // 출처가 없는 옛 접사는 랜덤으로 찍는다 (2026-09-08 신설 · 2026-09-11 셋으로 — R78)
     'tip.src.random': { ko: '랜덤', en: 'Random' },
     'tip.src.fixed': { ko: '베이스', en: 'Base' },
+    // 무기군 특성 — 성경의 버프 · 디버프 수치(태그 다섯에 같은 값)를 한 줄로 (§6 · ADR-1052 · R443) · 나머지 특성은 옵션 이름 그대로(`mock.itemAffixText`)
+    'tip.weaponTrait.tagValue': { ko: '버프 · 디버프 효과 수치 +{p}', en: 'Buff & Debuff Effect Strength +{p}' },
     'tip.ringSlot': { ko: '반지 {n}번 칸에 착용', en: 'Goes on ring slot {n}' },
     'tip.tacticOff': { ko: '끼우면 전술 꺼짐 — {eff}', en: 'Equipping turns a tactic off — {eff}' },
     // 아이템 툴팁 각주 — 기본은 착용품과 비교 두 장이고 Alt 동안 「이 아이템」 카드에 착용 델타가 선다 (SCREEN_DESIGN §6 · 2026-10-18 · ADR-0658)
@@ -2567,6 +2578,7 @@ const STRINGS = {
     'dp.lvDone': { ko: '{name} Lv {n}', en: '{name} Lv {n}' },
     'dp.offline': { ko: '오프라인 최대 {h}시간', en: 'Offline up to {h}h' },
     'dp.err.maxUp': { ko: '최대 레벨', en: 'Already at max level' },
+    'dp.err.rank': { ko: '연구소 랭크 부족', en: 'Laboratory rank too low' },
     'dp.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
     'dp.err.materials': { ko: '재료 부족', en: 'Not enough materials' },
     'dp.err.busy': { ko: '다른 연구 진행 중', en: 'Another research is in progress' },
@@ -2694,16 +2706,24 @@ const STRINGS = {
     'sk.tip.effect': { ko: '{effect} (랭크당 {perRank})', en: '{effect}. (Per rank {perRank})' },
     'sk.gate.weapon': { ko: '착용 무기: {groups}일 때 효과 적용', en: 'Active with weapon: {groups}' },
     'sk.gate.armor': { ko: '착용 갑옷: {groups}일 때 효과 적용', en: 'Active with armor: {groups}' },
-    // 죄종 T2-1 — 그 죄종 장비 수가 켠다 [2026-10-05 · skill_design §3-2] · {n} = 지금 낀 수 · {need} = 문턱
+    // 죄종 T2 — 그 죄종 장비 수가 켠다(3 · 6 · 9 단 — 2026-11-12) · {n} = 지금 낀 수 · {need} = 그 칸의 문턱
     'sk.gate.sin_gear': { ko: '{sin} 장비 {need}개 이상일 때 효과 적용 ({n}/{need})', en: 'Active with {need}+ {sin} items ({n}/{need})' },
-    // 죄종 T2-2 · T2-3 조건 [2026-10-05 · skill_design §3-2] — 효과 문장 위 한 줄. 판정은 전투가 타격마다 한다
-    'sk.cond.wounded': { ko: '내 HP 가 {pct} 미만일 때', en: 'While below {pct} HP' },
-    'sk.cond.sated': { ko: '내 HP 가 {pct} 이상일 때', en: 'While at {pct} HP or more' },
-    'sk.cond.stronger': { ko: '상대의 HP 가 나보다 많을 때', en: 'When the foe has more HP than you' },
-    'sk.cond.weaker': { ko: '상대의 HP 가 나보다 적을 때', en: 'When the foe has less HP than you' },
-    'sk.cond.elite': { ko: '정예 · 보스에게', en: 'Against elites and bosses' },
-    'sk.cond.ailing': { ko: '상태이상에 걸린 대상에게', en: 'Against ailing targets' },
-    'sk.cond.tick': { ko: '라운드 {sec}초마다 한 겹 · 최대 {max}겹', en: 'One stack per {sec}s in a round · up to {max}' },
+    // 죄종 T3 조건 [2026-11-12 — 옛 T2 조건 칸이 T3 로 · PLAN_mastery_tiers §0-1] — 효과 문장 위 한 줄. HP 는 비율 · 판정은 전투가 한다
+    'sk.cond.hurt': { ko: '내 HP 가 {pct} 미만일 때', en: 'While below {pct} HP' },
+    'sk.cond.hurt_deep': { ko: '내 HP 가 {pct} 미만일 때', en: 'While below {pct} HP' },
+    'sk.cond.higher': { ko: '상대의 HP 비율이 나보다 높을 때', en: "When the foe's HP % is higher than yours" },
+    'sk.cond.higher_deep': { ko: '상대의 HP 비율이 나보다 {gap} 이상 높을 때', en: "When the foe's HP % is {gap} or more above yours" },
+    'sk.cond.higher_gap': { ko: '상대의 HP 비율이 나보다 높은 만큼 (차이 100% 기준)', en: "Scales with how far the foe's HP % is above yours (per 100%)" },
+    'sk.cond.lower': { ko: '상대의 HP 비율이 나보다 낮을 때', en: "When the foe's HP % is lower than yours" },
+    'sk.cond.lower_deep': { ko: '상대의 HP 비율이 나보다 {gap} 이상 낮을 때', en: "When the foe's HP % is {gap} or more below yours" },
+    'sk.cond.lower_gap': { ko: '상대의 HP 비율이 나보다 낮은 만큼 (차이 100% 기준)', en: "Scales with how far the foe's HP % is below yours (per 100%)" },
+    'sk.cond.fresh': { ko: '대상의 HP 가 {pct} 이상일 때', en: 'Against targets at {pct} HP or more' },
+    'sk.cond.full': { ko: '대상의 HP 가 가득 찼을 때', en: 'Against targets at full HP' },
+    'sk.cond.opening': { ko: '라운드 시작 후 {sec}초 동안', en: 'For the first {sec}s of a round' },
+    'sk.cond.opening_deep': { ko: '라운드 시작 후 {sec}초 동안', en: 'For the first {sec}s of a round' },
+    'sk.cond.gorge': { ko: '라운드 {sec}초마다 한 겹 · 최대 {max}겹', en: 'One stack per {sec}s in a round · up to {max}' },
+    'sk.cond.gorge_deep': { ko: '라운드 겹이 {n}겹 이상일 때 ({sec}초마다 한 겹)', en: 'At {n}+ round stacks (one per {sec}s)' },
+    'sk.cond.lure': { ko: '대상의 HP 가 {pct} 이상일 때 (랭크당 문턱 −{step})', en: 'Against targets at {pct} HP or more (threshold −{step} per rank)' },
     // 분노 · 폭식 T3 — 랭크가 한계(문턱 · 겹 상한)를 넓힌다 [2026-10-24 · R343 · skill_design §3-3] · {pct} · {cap} = 지금 랭크(안 찍었으면 1랭크)의 값
     'sk.cond.fury': { ko: '내 HP 가 {pct} 미만일 때 (랭크당 문턱 +{step})', en: 'While below {pct} HP (threshold +{step} per rank)' },
     'sk.cond.feast': { ko: '라운드 동안 직격이 맞을 때마다 한 겹 · 최대 {cap}겹 (랭크당 +{per}겹)', en: 'One stack per landed direct hit in a round · up to {cap} (+{per} per rank)' },
@@ -2717,6 +2737,9 @@ const STRINGS = {
     'sk.masteryEffect.buff_dur_pct': { ko: '버프 지속시간 {v} 증가', en: 'Buff Duration increases by {v}' },
     'sk.masteryEffect.cast_speed_pct': { ko: '캐스팅 속도 {v} 증가', en: 'Casting Speed increases by {v}' },
     'sk.masteryEffect.cooldown_reduction': { ko: '쿨타임 {v} 감소', en: 'Cooldowns are reduced by {v}' },
+    // 초 단위 칸 — 직업 T1-2 쿨타임 −n초 · 궁수 공격 속도 −n초 (2026-11-09 · R432 · skill_design §3-4)
+    'sk.masteryEffect.cool_minus_sec': { ko: '쿨타임 {v}초 감소', en: 'Cooldowns are {v}s shorter' },
+    'sk.masteryEffect.period_minus_sec': { ko: '공격 속도 {v}초 단축', en: 'Attacks come {v}s sooner' },
     'sk.masteryEffect.crit_damage': { ko: '치명타 피해 {v} 증가', en: 'Crit Damage increases by {v}' },
     'sk.masteryEffect.crit_rate': { ko: '치명타 확률 {v} 증가', en: 'Crit Chance increases by {v}' },
     'sk.masteryEffect.crushing_blow_pct': { ko: '강타 {v} 증가', en: 'Crushing Blow increases by {v}' },
@@ -2866,7 +2889,7 @@ const STRINGS = {
     'sk.adv.slot.4': { ko: '필살기', en: 'Ultimate' },
     'sk.adv.pending': { ko: '준비 중', en: 'Coming later' },   // 가지 칸 — 효과 미구현 (R216)
     'sk.adv.hold': { ko: '보류', en: 'On hold' },   // 기획이 보류 · 미정으로 둔 가지 칸
-    'sk.advTree.missing': { ko: "전직 후 갈래의 메인 셋 중 하나를 <b>공용 스킬 포인트 1</b>로 배웁니다. 스킬 포인트는 레벨마다 받고 죄종·직업 마스터리와 나누어 씁니다.<br>메인 단계만 영웅 Lv30·35·40·45·50에 Lv1·2·3·4·5가 열립니다. 특수·변형·필살기 꼬리는 현재 준비 중입니다.", en: "Learn one of the path's three main skills for <b>one shared skill point</b>. Points come from every level-up and are shared with Sin and Class mastery.<br>Main ranks Lv1–5 unlock at hero Lv30/35/40/45/50. Special, Variant and Ultimate branches are currently coming later." },
+    'sk.advTree.missing': { ko: "전직 후 갈래의 메인 셋 중 하나를 <b>공용 스킬 포인트 1</b>로 배웁니다. 스킬 포인트는 레벨마다 받고 죄종·직업 마스터리와 나누어 씁니다.<br>메인 단계만 영웅 Lv30·35·40·45·50에 Lv1·2·3·4·5가 열립니다. 특수·변형·필살기 꼬리는 현재 준비 중입니다.", en: "Learn one of the path's three main skills for <b>one shared skill point</b>. Points come with every level from Lv1 and are shared with Sin and Class mastery.<br>Main ranks Lv1–5 unlock at hero Lv30/35/40/45/50. Special, Variant and Ultimate branches are currently coming later." },
     'sk.lockedSuffix': { ko: ' (잠김)', en: ' (locked)' },
     'sk.grid.note': {
         ko: '마스터리는 가지가 갈리는 트리가 아니라 <b>위에서 아래로 쌓는</b> 구조입니다 — <b>윗줄이 먼저 열리고 아랫줄일수록 늦게</b> 열립니다<br>'
@@ -3086,6 +3109,9 @@ const STRINGS = {
     'bt.pause': { ko: '일시정지', en: 'Pause' },
     'bt.resume': { ko: '재개', en: 'Resume' },
     'bt.retreat': { ko: '철수', en: 'Retreat' },
+    // 원정 아레나 오른쪽 아래 최대화 버튼의 툴팁 · 이름 (SCREEN_DESIGN §4-2 「최대화」 · ADR-1059)
+    'bt.max': { ko: '최대화', en: 'Maximize' },
+    'bt.unmax': { ko: '원래 크기', en: 'Restore' },
     // ~~`bt.potion.empty` · `bt.potion.slot`~~ (아레나 칸의 `title` 한 줄 · R104 · ADR-0148) 는 2026-09-24 삭제 —
     //   칸도 **물약 카드**를 띄운다(ADR-0315). 빈 칸 이름은 `pt.potion.empty` 한 벌로 합쳤다   // ~~건너뛰기~~ 2026-09-14 — 진행 중 라운드를 버리고 원정을 끝낸다 (R89)
     'bt.log.h': { ko: '전투 로그', en: 'Combat Log' },
@@ -3095,6 +3121,14 @@ const STRINGS = {
     'bt.buff.tactic': { ko: '전술', en: 'Tactics' },
     'bt.buff.codex': { ko: '도감', en: 'Codex' },
     'bt.buff.none': { ko: '없음', en: 'None' },
+    // 헬 디버프 칸의 설명창 — 이름 「죄종의 저주」({sin} = 그 장 죄종 이름 · 영어가 원본 · 한글은 직역) · 그 아래 장면 한 줄 글(효과마다 · `chapter_debuff.csv:effect`).
+    //   한 줄 글은 규칙 · 조건을 안 적는 분위기 글이고 **현재형**이다(ADR-1065) · 효과 한 줄은 출정 창의 `exp.debuff.*` 를 그대로 부른다 (SCREEN_DESIGN §4-2 「헬 디버프」 · ADR-1061 · ADR-1064)
+    'bt.buff.curse': { ko: '{sin}의 저주', en: 'Curse of {sin}' },
+    'bt.curse.lore.taken_pct': { ko: '불타는 전장의 열기가 갑옷을 달군다.', en: 'The heat of the burning field sears through their armor.' },
+    'bt.curse.lore.poison': { ko: '뒤틀린 숲의 가시마다 독이 맺혀 있다.', en: 'Poison beads on every thorn of the twisted wood.' },
+    'bt.curse.lore.heal_cut': { ko: '황금빛 모래가 상처의 약을 빨아들인다.', en: 'The golden sand drinks the salve from every wound.' },
+    'bt.curse.lore.freeze': { ko: '동토의 냉기가 손발을 느리게 묶는다.', en: 'The frozen cold binds their hands and feet to a crawl.' },
+    'bt.curse.lore.feast': { ko: '심연의 짐승들은 싸울수록 배를 불린다.', en: 'The beasts of the abyss grow fatter with every blow.' },
     'bt.note': {
         ko: '관전은 가능하되 <b>의무가 아닙니다</b> — 배속은 진행 속도만 바꿉니다. 원정 중에 바꾼 장비 · 스킬 트리는 보스전에서도 <b>그 순간</b> 적용됩니다 · <b>라운드를 이긴 순간 그 보상이 들어옵니다</b>(가방 · 골드 · 경험치 · 도감).<br>'
             + '<b>철수</b>하면 원정이 멈춥니다 — 진행 중이던 라운드는 사라지고 이긴 라운드까지의 보상은 남습니다 · 런이 끝나 다음 런을 세는 동안 누르면 다음 런이 안 나갑니다. 게임을 끄면 원정도 그 자리에서 끊깁니다.',

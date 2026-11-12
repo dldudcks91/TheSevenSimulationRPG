@@ -25,11 +25,12 @@ const meter = cls => {
     return { wrap, fill };
 };
 const setText = (n, value) => { if (n.textContent !== value) n.textContent = value; };
+// The fill fraction lives on the wrapper so a meter's lagging trail (::before) reads the same value.
 const setMeter = (meter, value) => {
     const fraction = Math.max(0, Math.min(1, value));
     if (meter.value === fraction) return;
     meter.value = fraction;
-    meter.fill.style.setProperty('--raid-fill', String(fraction));
+    meter.wrap.style.setProperty('--raid-fill', String(fraction));
 };
 // Ten units share a busy battlefield. Reuse small marks instead of spawning the
 // ordinary viewer's layered skill artwork and filter animations for every event.
@@ -111,7 +112,8 @@ export function mountRaid(main, { session: s, system, game, onHelp, canPlay = ()
     });
     const help = button('', '?', onHelp);
     help.setAttribute('aria-label', t('raid.help'));
-    controls.append(source, reroll, pause, speed, retreat, expand, help);
+    const group = (...buttons) => { const g = node('div', 'raid-group'); g.append(...buttons); return g; };
+    controls.append(group(source, reroll), group(pause, speed, retreat), group(expand, help));
     head.append(heading, badge, controls);
     root.append(head);
     const announcer = node('span', 'raid-sr-only');
@@ -126,8 +128,8 @@ export function mountRaid(main, { session: s, system, game, onHelp, canPlay = ()
     bossMeta.append(phaseLabel, bossHealth, timeLabel);
     const bossHp = meter('raid-boss-hp');
     const markers = node('div', 'raid-phase-markers');
-    for (const threshold of [d.phase2_hp, d.phase3_hp]) {
-        const mark = node('i'); mark.style.left = `${threshold * 100}%`; markers.append(mark);
+    for (const [i, threshold] of [d.phase2_hp, d.phase3_hp].entries()) {
+        const mark = node('i'); mark.style.left = `${threshold * 100}%`; mark.dataset.phase = M.roman(i + 2); markers.append(mark);
     }
     bossHp.wrap.append(markers);
     bossHud.append(bossMeta, bossHp.wrap);
@@ -141,10 +143,7 @@ export function mountRaid(main, { session: s, system, game, onHelp, canPlay = ()
     const bossFloats = floats(), bossMarks = marks(bossBody);
     bossSprite.append(art); bossBody.append(bossSprite); boss.append(ring, bossBody, bossState, bossFloats);
     const bossFxUnit = { key: 'e0', side: 'enemy', node: bossBody, ...bossMarks };
-    const leftSeal = node('div', 'raid-seal left'), rightSeal = node('div', 'raid-seal right');
-    leftSeal.textContent = 'I'; rightSeal.textContent = 'III';
-    leftSeal.setAttribute('aria-hidden', 'true'); rightSeal.setAttribute('aria-hidden', 'true');
-    front.append(leftSeal, boss, rightSeal, bossHud);
+    front.append(boss, bossHud);
     battlefield.append(front);
 
     const telegraph = node('div', 'raid-telegraph');
@@ -223,6 +222,8 @@ export function mountRaid(main, { session: s, system, game, onHelp, canPlay = ()
             for (const p of [...team].sort((a, b) => a.rank - b.rank)) {
                 const card = node('div', `raid-hero rank-${p.rank ?? 0}`); card.dataset.raidHero = p.uid;
                 const seat = node('div', 'raid-hero-seat');
+                // Portrait on top carries only glanceable overlays; name and HP read below it.
+                const shot = node('div', 'raid-hero-shot');
                 const portrait = node('img', 'sprite');
                 const face = M.heroFace(p.hero); if (face) portrait.src = face;
                 portrait.alt = L(p.hero.name);
@@ -237,8 +238,11 @@ export function mountRaid(main, { session: s, system, game, onHelp, canPlay = ()
                     skillRow.append(image);
                 }
                 const stateLabel = node('span', 'raid-hero-state');
+                shot.append(portrait, rank, skillRow, stateLabel);
+                const info = node('div', 'raid-hero-info');
+                info.append(label, hp.wrap, hpText);
                 const numbers = floats(), cardMarks = marks(card);
-                card.append(portrait, label, rank, hp.wrap, hpText, action.wrap, skillRow, stateLabel, numbers);
+                card.append(shot, info, action.wrap, numbers);
                 card.title = `${L(p.hero.name)} · ${L(D.classes.find(c => c.id === p.hero.cls))} · Lv.${p.hero.level}`;
                 seat.append(card); v.heroes.append(seat);
                 const current = currentUnits.get(p.uid);
@@ -350,13 +354,19 @@ export function mountRaid(main, { session: s, system, game, onHelp, canPlay = ()
         if (finished) return;
         ready = system.readiness(game, d.raid_id);
         finished = true; report.hidden = false; report.replaceChildren();
-        const panel = node('div', 'raid-result-panel');
+        const panel = node('div', `raid-result-panel ${v.won ? 'won' : 'lost'}`);
         panel.append(node('span', 'raid-eyebrow', t('raid.trial')), node('h2', v.won ? 'success' : 'danger', t(v.won ? 'raid.victory' : v.reason === 'timeout' ? 'raid.timeout' : v.reason === 'retreat' ? 'raid.retreated' : 'raid.defeat')),
             node('div', 'raid-result-summary', t('raid.resultSummary', { time: clock(v.t), n: v.parties.reduce((n, p) => n + p.alive, 0), breaks: v.breaks, failed: v.failedBreaks })));
         const rows = node('div', 'raid-result-rows');
+        const total = v.parties.reduce((n, p) => n + p.dealt, 0);
         for (const p of v.parties) {
-            const row = node('div');
-            row.append(node('b', '', t(`raid.lane.${p.no}`)), node('span', '', t('raid.damageValue', { n: fmt(p.dealt) })),
+            // Damage share draws as the row's underline (::after), keeping the four cells.
+            const row = node('div', 'raid-result-row');
+            const share = total > 0 ? p.dealt / total : 0;
+            row.style.setProperty('--share', String(share));
+            const damage = node('span', '', t('raid.damageValue', { n: fmt(p.dealt) }));
+            damage.append(node('small', '', `${Math.round(share * 100)}%`));
+            row.append(node('b', '', t(`raid.lane.${p.no}`)), damage,
                 node('span', '', t('raid.healValue', { n: fmt(p.healed) })), node('span', '', t('raid.aliveValue', { n: p.alive })));
             rows.append(row);
         }

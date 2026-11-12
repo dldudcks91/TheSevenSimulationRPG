@@ -240,6 +240,8 @@ export function createBattleSystem(data) {
      */
     const DEBUFFS = data.chapterDebuffs ?? [];
     const DEBUFF_EFFECTS = ['taken_pct', 'poison', 'heal_cut', 'freeze', 'feast'];
+    /** 마스터리 조건부 줄 중 **틱마다** 다시 쓰는 능력치 — 시간 조건(라운드 시작 창 · 시간 겹)만 든다(hero.js `COND_STATS` · 2026-11-12) */
+    const TICK_STATS = new Set(['cooldown_reduction', 'hp_regen']);
     function debuffOf(stageId, difficulty = null) {
         const stage = data.stages[stageId], d = diffOf(difficulty);
         if (!stage || !d) return null;
@@ -627,11 +629,13 @@ export function createBattleSystem(data) {
             // sustain 두 축 중 재생 쪽 (battle_design §8) — 초당 회복이라 틱마다 누산한다
             regen: c.hp_regen ?? 0, regenBase: c.hp_regen ?? 0, regenAcc: 0,
             cdr: c.cooldown_reduction ?? 0,          // 표기 쿨 단축(비율) — 시전 시점에 곱한다
-            // 나태 T2 겹이 미는 쿨감의 원값 [2026-10-05] — 겹이 있으면 틱마다 `cdr = cdrBase + 겹 몫`(advance) · 없으면 `cdr` 그대로
+            coolMinus: c.option_fx?.coolMinus ?? 0,  // 표기 쿨에서 먼저 빼는 초(직업 T1-2 · 2026-11-09 R432 · `skill_runtime.cooldownSec`)
+            // 시간 조건이 미는 쿨감의 원값 [2026-10-05 · 2026-11-12] — 틱 줄이 있으면 틱마다 `cdr = cdrBase + 켜진 몫`(advance) · 없으면 `cdr` 그대로
             cdrBase: c.cooldown_reduction ?? 0,
-            // 죄종 마스터리 T2 조건부 [2026-10-05 · skill_design §3-2 · INTERFACE §2-6 「마스터리 조건부」] — `strikeOnce` 가 그 타격 동안만 얹는다 · 겹(`tick`) 줄은 따로 든다. 없으면 null
+            // 죄종 마스터리 조건부 [2026-10-05 · INTERFACE §2-6 「마스터리 조건부」 · 2026-11-12 죄종 T3] — `strikeOnce` 가 그 타격 동안만 얹는다 ·
+            //   틱 능력치(쿨감 · HP 재생) 줄은 `mtime` 으로 따로 든다(시간 조건만 · 틱마다 판정). 없으면 null
             mcond: c.mastery_cond ?? null,
-            mtick: c.mastery_cond?.some(m => m.cond === 'tick') ? c.mastery_cond.filter(m => m.cond === 'tick') : null,
+            mtime: c.mastery_cond?.some(m => TICK_STATS.has(m.stat)) ? c.mastery_cond.filter(m => TICK_STATS.has(m.stat)) : null,
             // 폭식 T3 겹 [2026-10-24 · R343 · skill_design §3-3] — `mfeast` = 그 줄(`{v, cap}` — 상한은 랭크가 정한다) · `feast` = 지금 겹(직격이 맞을 때마다 +1 · 라운드를 열면 0). 없으면 null
             mfeast: c.mastery_cond?.find(m => m.cond === 'feast') ?? null, feast: 0,
             period: c.action_period, basePeriod: c.action_period,
@@ -679,7 +683,7 @@ export function createBattleSystem(data) {
         'resReductionEl', 'buffDur', 'freezeDur', 'recvBase', 'burnDur', 'poisonDur', 'stunDur', 'ddr',
         'staggerDur', 'castRefund', 'castStack', 'statusDur', 'debuffDur', 'healOut', 'potionPct',
         'bonusPct', 'crit', 'critDmg', 'ls', 'reflect', 'regen', 'regenBase', 'cdr', 'cdrBase', 'period', 'basePeriod', 'periodRaw', 'speedBase', 'periodWeapon', 'fhr',
-        'goldFind', 'itemFind', 'findParty', 'fx', 'magicFind', 'stats', 'mcond', 'mtick', 'mfeast', 'liveAtk'];
+        'goldFind', 'itemFind', 'findParty', 'fx', 'magicFind', 'stats', 'mcond', 'mtime', 'mfeast', 'liveAtk'];
 
     /**
      * 소환 유닛 — **HP 와 대상 풀 참여만** 있는 유닛 (skill_design §12-6 프로즌월).
@@ -1087,8 +1091,8 @@ export function createBattleSystem(data) {
         };
         measureParty();
         // 무기 옵션 타격 시 창의 길이 (R78) — 전투 시작에 한 번 묶는다
-        // 타격 시 창 길이 + 방어력 감소 겹의 상한(무기 시기 ② · 2026-10-05 R206) — `weaponOnHit` 가 읽는다
-        const windowSec = { def: B.weapon_def_down_sec, res: B.weapon_res_down_sec, atk: B.weapon_atk_down_sec, stackMax: B.weapon_def_down_stack_max };
+        // 타격 시 창 길이 — `weaponOnHit` 가 읽는다 · 겹(방어력 · 원소 저항 감소)은 상한이 없다(2026-11-12 사용자 「일단 겹 제한 두지 말고」 — `weapon_def_down_stack_max` 는 가이디드 애로우 깎기만 읽는다)
+        const windowSec = { def: B.weapon_def_down_sec, res: B.weapon_res_down_sec, atk: B.weapon_atk_down_sec };
 
         /** 칸 표시값 [2026-09-15 · R98 · INTERFACE §2-6] — 칸 순서 그대로의 스킬 id(`actives`)와 첫 준비 시각(`ready`) · 칸 레벨(`up` — R302).
          *  오오라도 제 칸에 선다: 켜진 오오라 `0`(쿨이 없다) · 안 켜진 오오라 `null`. 결과 `party[]` · `round` · `refit` 이 같이 쓴다 · 전투는 안 읽는다 */
@@ -1341,7 +1345,7 @@ export function createBattleSystem(data) {
             //   그 목록을 아래 `round` 이벤트의 `pots` 로 싣는다(재생기가 칸을 다시 그린다) · 첫 라운드는 `createRun` 이 이미 채웠다 · rng 0
             const pots = round > 1 && potionPending ? potionPending : null;
             if (pots) { potionSlots = pots; potionNext = 0; potionLeft = pots.filter(Boolean).length; potionPending = null; }
-            roundAt = t;   // 나태 T2 겹이 0 으로 돌아간다 — 쿨감은 다음 틱이 원값으로 되쓴다(advance)
+            roundAt = t;   // 시간 조건(나태 라운드 시작 창 · 폭식 시간 겹 — 죄종 T3)이 0 부터 다시 잰다 — 쿨감은 다음 틱이 되쓴다(advance)
             // 장 디버프(시기 · 나태)도 라운드를 연 시각부터 다시 잰다 — 첫 틱에 걸린다 (R366) · 폭식은 `roundAt` 에서 0 부터
             curseAt = curse?.effect === 'poison' || curse?.effect === 'freeze' ? t : null;
             for (const u of [...party, ...units.enemies]) if (u.mfeast) u.feast = 0;   // 폭식 T3 겹도 라운드를 열면 비운다 (R343)
@@ -1361,6 +1365,8 @@ export function createBattleSystem(data) {
                     if (b.roundEnd !== 'close') continue;
                     delete p.buffs[id];
                     last = { t: r1(t), e: 'buffEnd', u: p.key, s: b.s ?? id };
+                    // 진형 붕괴가 닫히면 원래 랭크로(만료와 같은 일 — `EFFECTS.formation_break.end` · 2026-11-02 R424) · 재생기는 이 `rank` 로 칸을 되돌린다
+                    if (b.stat === 'formation_break' && p.rankBase !== undefined) { p.rank = p.rankBase; delete p.rankBase; last.rank = p.rank; }
                     timeline.push(last);
                 }
                 if (!last) continue;
@@ -1369,11 +1375,12 @@ export function createBattleSystem(data) {
             }
             // 라운드 동안만 사는 겹 둘을 **조용히** 지운다 [2026-10-05 · R206 · R208 · INTERFACE §2-6 「죄종 계열 옵션」] — 시전 누적(`cx:cast_stack`)은 라운드가 끝나면 0,
             //   적 무기가 파티에 쌓은 방어력 감소 겹(`wx:def_stack` — 시간으로 안 풀린다)도 라운드를 넘기지 않는다. 둘 다 `quiet` 창이라 이벤트가 없다 · rng 0
+            //   원소 저항 감소 겹(`wx:res_stack:<원소>` — 마법 무기 시기 · 2026-11-11 R442)도 같은 규칙
             for (const p of party) {
                 p.castStacks = 0;
-                if (!p.buffs['cx:cast_stack'] && !p.buffs['wx:def_stack']) continue;
-                delete p.buffs['cx:cast_stack'];
-                delete p.buffs['wx:def_stack'];
+                const stacks = Object.keys(p.buffs).filter(k => k === 'cx:cast_stack' || k === 'wx:def_stack' || k.startsWith('wx:res_stack:'));
+                if (!stacks.length) continue;
+                for (const k of stacks) delete p.buffs[k];
                 refreshDerived(p);
             }
             // 이형 겹(R388 · D8)도 라운드를 넘기지 않는다 — 조용한 창이라 이벤트가 없다 · rng 0
@@ -1948,39 +1955,49 @@ export function createBattleSystem(data) {
             + (a.rank === 0 ? fx.vsFrontDr ?? 0 : a.rank === 1 ? fx.vsBackDr ?? 0 : 0);
 
         /*
-         * 죄종 마스터리 T2 조건부 [2026-10-05 · 사용자 확정 · skill_design §3-2 · INTERFACE §2-6 「마스터리 조건부」] — 무기 `condPct` · 방어구 `condDr` 와 같은 자리다:
-         *   `strikeOnce` 가 `F.strike` 직전에 판정해 **그 타격 동안만** 얹고 원복한다. HP 는 그 타격 직전 값 · rng 0 · 이벤트 없음.
-         *   `self` = 노드 주인 · `other` = 상대(때리는 쪽이면 맞는 쪽 · 맞는 쪽이면 때린 쪽)
+         * 죄종 마스터리 조건부 [2026-10-05 · INTERFACE §2-6 「마스터리 조건부」 · 2026-11-12 옛 T2 조건 칸이 T3 로 · 조건 개정 — PLAN_mastery_tiers §0-1] —
+         *   무기 `condPct` · 방어구 `condDr` 와 같은 자리다: `strikeOnce` 가 `F.strike` 직전에 판정해 **그 타격 동안만** 얹고 원복한다.
+         *   HP 는 그 타격 직전 값 · HP 조건은 **비율**로 본다 · rng 0 · 이벤트 없음. `self` = 노드 주인 · `other` = 상대(때리는 쪽이면 맞는 쪽 · 맞는 쪽이면 때린 쪽) ·
+         *   시간 조건(`opening*` · `gorge*`)은 상대를 안 본다 — 틱 능력치(쿨감 · HP 재생)도 같은 판정을 틱마다 쓴다(`timeSum`)
          */
+        const hpRatio = u => u.hpMax > 0 ? u.hp / u.hpMax : 0;
+        /** 폭식 시간 겹 — 라운드가 열린 뒤 [balance.csv:mastery_gluttony_t3_gorge_sec] 마다 하나 · 상한 [balance.csv:mastery_gluttony_t3_gorge_max]. 시각 꼬리는 걸음과 같은 여유로 판정한다 */
+        const gorgeStacks = () => Math.max(0, Math.min(B.mastery_gluttony_t3_gorge_max, Math.floor((t - roundAt) / B.mastery_gluttony_t3_gorge_sec + STEP_EPS)));
         const condOn = (cond, self, other, m = null) => {
             switch (cond) {
-                case 'wounded': return self.hp < self.hpMax * B.mastery_t2_hp_threshold_pct;    // 분노 — 문턱 **미만**
-                case 'fury': return self.hp < self.hpMax * m.thr;                                 // 분노 T3 — 랭크가 올린 문턱 **미만** (R343)
-                case 'sated': return self.hp >= self.hpMax * B.mastery_t2_hp_threshold_pct;     // 폭식 — 문턱 **이상**
-                case 'stronger': return other.hp > self.hp;                                       // 시기 — 현재 HP **수치** 비교
-                case 'weaker': return other.hp < self.hp;                                         // 오만
-                case 'elite': return !!other.grade && other.grade !== 'normal';                   // 탐욕 — 정예 · 보스
-                case 'ailing': return Object.values(other.buffs ?? {}).some(b => b.ail);          // 색욕 — 결빙 · 화상 · 중독 · 스턴 창
-                default: return false;                                                            // `tick` · `feast` 는 겹으로 따로 잰다
+                case 'hurt': return hpRatio(self) < B.mastery_wrath_t3_hurt_pct;                    // 분노 — 내 HP 문턱 **미만**
+                case 'hurt_deep': return hpRatio(self) < B.mastery_wrath_t3_hurt_deep_pct;
+                case 'fury': return self.hp < self.hpMax * m.thr;                                     // 분노 T3 ① — 랭크가 올린 문턱 **미만** (R343)
+                case 'higher': return hpRatio(other) > hpRatio(self);                                 // 시기 — 상대 HP 비율이 나보다 높다
+                case 'higher_deep': return hpRatio(other) - hpRatio(self) >= B.mastery_envy_t3_gap_deep_pct - STEP_EPS;
+                case 'lower': return hpRatio(other) < hpRatio(self);                                  // 오만 — 상대 HP 비율이 나보다 낮다
+                case 'lower_deep': return hpRatio(self) - hpRatio(other) >= B.mastery_pride_t3_gap_deep_pct - STEP_EPS;
+                case 'fresh': return hpRatio(other) >= B.mastery_lust_t3_fresh_pct;                   // 색욕 — 대상 HP 문턱 **이상**
+                case 'full': return other.hp >= other.hpMax;                                          // 색욕 — 대상 HP 가득
+                case 'lure': return hpRatio(other) >= m.thr;                                          // 색욕 T3 ① — 랭크가 내린 문턱 **이상**
+                case 'opening': return t - roundAt < B.mastery_sloth_t3_opening_sec - STEP_EPS;      // 나태 — 라운드가 열린 뒤 그 초 동안
+                case 'opening_deep': return t - roundAt < B.mastery_sloth_t3_opening_deep_sec - STEP_EPS;
+                case 'gorge_deep': return gorgeStacks() >= B.mastery_gluttony_t3_gorge_deep;         // 폭식 — 겹 문턱 이상
+                default: return false;                                                                // 비례(`*_gap`) · 겹(`gorge` · `feast`)은 `condVal` 이 따로 잰다
             }
         };
-        /** 나태 겹 — 라운드가 열린 뒤 [balance.csv:mastery_sloth_t2_tick_sec] 마다 하나 · 상한 [balance.csv:mastery_sloth_t2_max_stack]. 시각 꼬리는 걸음과 같은 여유로 판정한다 */
-        const tickStacks = () => Math.min(B.mastery_sloth_t2_max_stack, Math.floor((t - roundAt) / B.mastery_sloth_t2_tick_sec + STEP_EPS));
-        /** 그 유닛의 겹 줄 중 한 능력치의 지금 합(줄마다 `v × 겹`) */
-        const tickSum = (u, stat) => {
-            const n = tickStacks();
-            return n > 0 ? u.mtick.reduce((s, m) => s + (m.stat === stat ? m.v * n : 0), 0) : 0;
-        };
-        // 때리는 쪽에서 얹는 능력치 — 나머지(피해 감소 · 모든 저항 · 반사)는 맞는 쪽에서 얹는다 · 쿨감은 틱이 되쓴다
+        /** 그 줄이 지금 내는 값 — 켜짐 · 꺼짐 조건은 `v` 또는 0 · 비례는 `v × 차이` · 겹은 `v × 겹` */
+        const condVal = (m, self, other) =>
+            m.cond === 'gorge' ? m.v * gorgeStacks()
+                : m.cond === 'feast' ? m.v * (self.feast ?? 0)                                       // 폭식 T3 ① — 이 타격 **전**까지 쌓인 겹 (R343)
+                    : m.cond === 'higher_gap' ? m.v * Math.max(0, hpRatio(other) - hpRatio(self))    // 시기 T3 ①
+                        : m.cond === 'lower_gap' ? m.v * Math.max(0, hpRatio(self) - hpRatio(other)) // 오만 T3 ①
+                            : condOn(m.cond, self, other, m) ? m.v : 0;
+        /** 그 유닛의 틱 줄 중 한 능력치의 지금 합 — 시간 조건만 실린다(hero.js 검증) */
+        const timeSum = (u, stat) => u.mtime.reduce((s, m) => s + (m.stat === stat ? condVal(m, u, null) : 0), 0);
+        // 때리는 쪽에서 얹는 능력치 — 나머지(피해 감소 · 모든 저항 · 반사)는 맞는 쪽에서 얹는다 · 틱 능력치는 틱이 되쓴다
         const COND_ATK = new Set(['crit_rate', 'crit_damage', 'def_ignore', 'atk_pct', 'crushing_blow_pct', 'life_steal']);
         /** 그 타격에 켜진 몫 — `{sum: {stat: v}, dr: [원천…]}` · `atk` 면 때리는 쪽 능력치만 · 아니면 맞는 쪽 능력치만. **노드 하나 = 피해 감소 원천 하나**(겹은 줄마다 하나) */
         const condSum = (self, other, atk) => {
             const out = { sum: {}, dr: [] };
             for (const m of self.mcond) {
-                if (m.stat === 'cooldown_reduction' || COND_ATK.has(m.stat) !== atk) continue;
-                const v = m.cond === 'tick' ? m.v * Math.max(0, tickStacks())
-                    : m.cond === 'feast' ? m.v * (self.feast ?? 0)                  // 폭식 T3 — 이 타격 **전**까지 쌓인 겹 (R343)
-                    : condOn(m.cond, self, other, m) ? m.v : 0;
+                if (TICK_STATS.has(m.stat) || COND_ATK.has(m.stat) !== atk) continue;
+                const v = condVal(m, self, other);
                 if (!(v > 0)) continue;
                 if (m.stat === 'damage_reduction') out.dr.push(Math.min(1, v));   // 원천 하나가 100% 를 넘으면 피해가 회복으로 뒤집힌다 — 겹이 커도 1 에서 자른다
                 else out.sum[m.stat] = (out.sum[m.stat] ?? 0) + v;
@@ -2469,8 +2486,8 @@ export function createBattleSystem(data) {
                 rules?.beforeTick?.(ruleContext());
                 // 장 디버프 — 시기 · 나태는 간격마다 영웅 전원에게 건다 — 창 만료 **뒤** · 중독 틱 **앞** (2026-10-28 · R366 · INTERFACE §5-2) · rng 0
                 if (curseAt !== null && t + STEP_EPS >= curseAt) { curseCast(); curseAt += curse.intervalSec; }
-                // 나태 T2 겹의 쿨감 [2026-10-05 · skill_design §3-2] — 행동 **앞**에서 그 틱의 겹으로 `cdr` 를 되쓴다(시전 순간 `cooldownSec` 이 읽는다). 겹 줄이 없는 유닛은 안 건드린다 · rng 0
-                for (const u of [...party, ...units.enemies]) if (u.mtick) u.cdr = u.cdrBase + tickSum(u, 'cooldown_reduction');
+                // 시간 조건의 쿨감 [2026-10-05 · 2026-11-12 나태 T3 라운드 시작 창] — 행동 **앞**에서 그 틱의 조건으로 `cdr` 를 되쓴다(시전 순간 `cooldownSec` 이 읽는다). 틱 줄이 없는 유닛은 안 건드린다 · rng 0
+                for (const u of [...party, ...units.enemies]) if (u.mtime) u.cdr = u.cdrBase + timeSum(u, 'cooldown_reduction');
                 // 중독 틱 — 창 만료 **뒤** · 재생 **앞** (2026-09-28 · R178 · INTERFACE §5-2). 앞 유닛의 틱이 쓰러뜨려도 배열은 그대로 돈다
                 for (const u of [...party, ...units.enemies]) if (u.hp > 0) poisonTick(u);
                 // 오오라 피해 틱 — 중독 틱 **뒤** · 재생 **앞** (홀리 파이어 · 2026-10-16 · R249 · INTERFACE §5-2). 창이 없으면 누산만 비운다
@@ -2479,7 +2496,8 @@ export function createBattleSystem(data) {
                 // (매 틱 소수점을 더하면 타임라인이 흘러넘치고 재생기가 정수 HP 와 어긋난다). rng 를 안 쓴다
                 for (const u of [...party, ...units.enemies]) {
                     // 도감 Lv2 HP 재생 — 그 종족이 나온 라운드 동안 파티의 초당 재생에 더한다(R314 · `codexRound`) · 없으면 종전 값
-                    const rg = u.side === 'party' && units.codexRound?.regen ? u.regen + units.codexRound.regen : u.regen;
+                    //   시간 조건의 HP 재생(나태 T3 라운드 시작 창 · 2026-11-12)도 같은 자리에 더한다 — `regen` 을 되쓰지 않는다(버프 재계산이 덮는다)
+                    const rg = (u.side === 'party' && units.codexRound?.regen ? u.regen + units.codexRound.regen : u.regen) + (u.mtime ? timeSum(u, 'hp_regen') : 0);
                     if (u.hp <= 0 || !(rg > 0) || u.hp >= u.hpMax) continue;
                     // 체력 회복 +%(갑옷 나태 · 2026-09-18)가 재생(바탕값 포함)에 곱한다 — 0 이면 종전과 같은 누산
                     u.regenAcc += (u.recv ? rg * (1 + u.recv) : rg) * TICK;

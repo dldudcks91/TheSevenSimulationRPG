@@ -1,0 +1,37 @@
+sin,option,applies_to,stat,scale,min,max,description_kr
+wrath,1,all,crit_damage,flat,0.04,0.09,분노 ① — 치명타 피해(낮은 값 · 치명 배수를 귀하게 둔다) ⚠제안 수치 (item_design §1 「무기 옵션 — 죄종 계열」 · 2026-10-04 · R206)
+wrath,2,all,crit_rate,flat,0.02,0.05,분노 ② — 치명타 확률 ⚠제안 수치
+wrath,3,physical,aspd_pct,flat,0.02,0.05,분노 ③(물리) — 공격 속도 · 옛 나태 ① 과 같은 대역 ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
+wrath,3,magic,cast_speed_pct,flat,0.02,0.05,분노 ③(마법) — 캐스팅 속도 · 옛 나태 ① 과 같은 대역 ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
+sloth,1,physical,proc_hit_attack,flat,0.05,0.12,나태 ①(물리) — 타격 시 기본 공격 스킬 발동 확률(그 무기군 직업의 1티어 공격 스킬 하나 · 드롭 때 박힌다) · 옛 분노 ③ 과 같은 대역 ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
+sloth,1,magic,proc_cast_attack,flat,0.05,0.12,나태 ①(마법) — 시전 시 기본 공격 스킬 발동 확률(마법사 = 파이어볼 · 아이스 블라스트 · 라이트닝 · 사제 = 심판 · 무기 원소를 안 따른다) ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
+sloth,2,all,cooldown_reduction,flat,0.02,0.05,나태 ② — 쿨타임 감소 ⚠제안 수치
+sloth,3,physical,hit_bonus,flat,0.1,0.2,나태 ③(물리) — 명중률 · 옛 색욕 ② 와 같은 대역 ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
+sloth,3,magic,buff_dur_pct,flat,0.05,0.15,나태 ③(마법) — 버프 지속시간 +%(낀 영웅이 거는 버프 · 약화 창) · 투구 나태 ② 와 같은 대역 ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
+lust,1,physical,life_steal,flat,0.01,0.03,색욕 ①(물리) — 흡혈 ⚠제안 수치
+lust,1,magic,cast_refund_chance,flat,0.05,0.12,색욕 ①(마법) — 시전 시 확률로 시전 칸 1 충전 · 마법 무기는 흡혈을 안 받는다(10-04) ⚠제안 수치 (R208)
+lust,2,physical,dmg_min_flat,wdmg,0.04,0.1,색욕 ②(물리) — 최소 데미지 +수치(무기 피해 가운데 × 굴림 · 무기 % · 강화 뒤에 더한다) · 옛 마법 색욕 ② 와 같은 대역 ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
+lust,2,magic,fire_dmg_pct,flat,0.06,0.15,색욕 ②(마법) — 화염 데미지 증가 · 그 무기의 원소(무기 하나에 원소 하나) · 옛 마법사 시기 ② 와 같은 대역 ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
+lust,2,magic,cold_dmg_pct,flat,0.06,0.15,색욕 ②(마법) — 냉기 데미지 증가 · 그 무기의 원소 ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
+lust,2,magic,lightning_dmg_pct,flat,0.06,0.15,색욕 ②(마법) — 전기 데미지 증가 · 그 무기의 원소 ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
+lust,3,physical,dmg_max_flat,wdmg,0.06,0.15,색욕 ③(물리) — 최대 데미지 +수치(무기 피해 가운데 × 굴림) · 마법 무기 색욕 ③ 은 빈 칸(EMPTY_CELLS weapon/magic) ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
+envy,1,physical,def_ignore,flat,0.03,0.08,시기 ①(물리) — 방어력 무시 % ⚠제안 수치
+envy,2,physical,def_down_stack_pct,flat,0.01,0.03,시기 ②(물리) — 타격 시 대상 방어력 감소 · 겹 하나의 값 · 겹쳐 쌓인다(최대 겹 [balance.csv:weapon_def_down_stack_max]) · 시간으로 안 풀린다 ⚠제안 수치
+envy,3,physical,stagger_dur_pct,flat,0.1,0.3,시기 ③(물리) — 경직 시간 증가 · 내가 건 경직이 길어진다 ⚠제안 수치
+envy,1,magic,res_reduction_fire,flat,0.03,0.08,시기(마법 · 한 칸) — 화염 관통(낀 영웅의 화염 타격만 저항 %p) · 그 무기의 원소 · 옛 마법사 시기 ① 과 같은 대역 ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
+envy,1,magic,res_reduction_cold,flat,0.03,0.08,시기(마법 · 한 칸) — 냉기 관통 · 그 무기의 원소 ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
+envy,1,magic,res_reduction_lightning,flat,0.03,0.08,시기(마법 · 한 칸) — 전기 관통 · 그 무기의 원소 ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
+envy,1,magic,res_down_stack_fire,flat,0.01,0.03,시기(마법 · 한 칸) — 타격 시 대상 화염 저항 감소(겹 — 물리 시기 ② 방어력 감소와 같은 규칙 · 최대 겹 weapon_def_down_stack_max) · 물리 겹과 같은 대역 ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
+envy,1,magic,res_down_stack_cold,flat,0.01,0.03,시기(마법 · 한 칸) — 타격 시 대상 냉기 저항 감소(겹) ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
+envy,1,magic,res_down_stack_lightning,flat,0.01,0.03,시기(마법 · 한 칸) — 타격 시 대상 전기 저항 감소(겹) ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
+pride,1,all,dmg_max_per_level,tenth,0.2,0.5,오만 — 레벨당 최대 데미지(고정 수치 × 영웅 레벨 · 0.1 단위) · 오만은 이 한 칸(~~특정 스킬 +n · 레벨당 데미지~~ 2026-10-21 삭제) ⚠제안 수치 (2026-10-21 사용자 · item_design §1 「10-21 방어구 개정」 · R303)
+pride,1,all,dmg_min_per_level,tenth,0.2,0.5,오만 ①(한 칸 · 드롭 때 최대 / 최소 중 하나) — 레벨당 최소 데미지(× 영웅 레벨 · 무기 피해 아래끝에 더한다) · 레벨당 최대와 같은 대역 ⚠제안 수치 (2026-11-11 사용자 「오만에 레벨당 최소데미지도 넣어줘」 · R442)
+gluttony,1,physical,crushing_blow_pct,flat,0.01,0.03,폭식 ①(물리) — 강타: 맞기 직전 대상 현재 체력 × % 고정 피해 · 직격만 · 치명·방어·저항 무관 ⚠제안 수치
+gluttony,1,magic,cast_stack_pct,flat,0.01,0.02,폭식 ①(마법) — 시전 누적: 시전마다 데미지 % 한 겹 · 라운드 동안 · 최대 겹 [balance.csv:cast_stack_max] ⚠제안 수치 (R208)
+gluttony,2,all,vs_elite_dmg,flat,0.06,0.15,폭식 ② — 정예·보스 대상 추가 피해 · 데미지 % 괄호(조건이 맞을 때) ⚠제안 수치
+gluttony,3,all,vs_normal_dmg,flat,0.06,0.15,폭식 ③ — 종족 추가 데미지(셋 중 하나 — 변형) · 일반(Normal) ⚠제안 수치
+gluttony,3,all,vs_demon_dmg,flat,0.06,0.15,폭식 ③ — 종족 추가 데미지 · 데몬(Demon) ⚠제안 수치
+gluttony,3,all,vs_undead_dmg,flat,0.06,0.15,폭식 ③ — 종족 추가 데미지 · 언데드(Undead) ⚠제안 수치
+greed,1,all,magic_find,flat,0.05,0.15,탐욕 ① — 매직아이템 획득확률 · 레어 가중치 × (1 + 파티 값) ⚠제안 수치
+greed,2,all,gold_find,flat,0.05,0.12,탐욕 ② — 골드 획득 ⚠제안 수치
+greed,3,all,xp_gain_pct,flat,0.05,0.12,탐욕 ③ — 경험치 획득 증가(본인 몫) ⚠제안 수치 (다른 부위 경험치 칸과 같은 대역 · 2026-10-30 아이템 드랍확률을 대체)

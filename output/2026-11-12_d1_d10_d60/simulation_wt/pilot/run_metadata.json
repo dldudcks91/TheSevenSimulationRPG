@@ -1,0 +1,32 @@
+{
+  "snapshot_capture": "2026-11-12T15:34:03",
+  "head": "58da2dcf7c25f857bed665a6bb0c88dc68b95ae5",
+  "source_manifest_sha256": "073e43b7963f9f9b4d69943dead4ef58bcc383778087773ba63d67cf34d56b10",
+  "harness_sha256": "38e394b5bd97f1c3f6c0122584b402cbbf4bea8520d77396a1a5b6be48e70541",
+  "paired": 80,
+  "passive": 10,
+  "workers": 3,
+  "speed": 1,
+  "marks": [
+    600,
+    3600
+  ],
+  "d1": "close at 3600 -> +86400 reopen -> +600 play",
+  "jobs": [
+    [
+      1,
+      "basic",
+      false
+    ],
+    [
+      1,
+      "adaptive",
+      false
+    ],
+    [
+      1,
+      "passive",
+      false
+    ]
+  ]
+}

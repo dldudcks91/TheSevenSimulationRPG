@@ -77,7 +77,6 @@ export const SKILL_ART = {
         then: { file: 'war_thorswrath_impact', motion: 'shatter', size: 132, duration: 440 },
     } },
     war_shockwave: { hit: { file: 'war_shockwave', motion: 'ground', size: 140, duration: 520, quake: true } },
-    war_lionsroar: { hit: { file: 'war_lionsroar', motion: 'wave', size: 132, duration: 520 } },
     war_command: { buff: { file: 'war_command', motion: 'orders', size: 132, duration: 620 } },
     war_intimidate: { bad: { file: 'war_intimidate', motion: 'inward', size: 128, duration: 580 } },
 
