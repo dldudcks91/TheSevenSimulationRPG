@@ -1,6 +1,6 @@
 {
  "meta": {
-  "created": "2026-11-12",
+  "created": "2026-11-13",
   "seeds": 10,
   "stages": [
    1011,
@@ -234,49 +234,34 @@
    "shop_potion_bulk_2": 50,
    "shop_potion_bulk_3": 100,
    "mastery_t1_max_rank": 5,
+   "mastery_t1_cdr_pct": 0.01,
+   "mastery_t1_aspd_pct": 0.01,
+   "mastery_t1_castspeed_pct": 0.01,
+   "mastery_t1_atk_pct": 0.01,
+   "mastery_t1_def_flat": 5,
+   "mastery_t1_resall_pct": 0.02,
    "mastery_t2_unlock_level": 10,
    "mastery_t3_unlock_level": 20,
-   "mastery_wrath_t1_dmgmax_flat": 2,
-   "mastery_wrath_t1_critchance_pct": 0.01,
-   "mastery_wrath_t1_critdamage_pct": 0.005,
-   "mastery_envy_t1_dr_pct": 0.005,
-   "mastery_envy_t1_atk_pct": 0.01,
-   "mastery_envy_t1_resall_pct": 0.02,
-   "mastery_greed_t1_gold_pct": 0.05,
-   "mastery_greed_t1_xp_pct": 0.02,
-   "mastery_greed_t1_magicfind_pct": 0.02,
-   "mastery_sloth_t1_hp_flat": 10,
-   "mastery_sloth_t1_def_flat": 5,
-   "mastery_sloth_t1_cdr_pct": 0.01,
-   "mastery_gluttony_t1_hp_flat": 10,
-   "mastery_gluttony_t1_dmgmax_flat": 2,
-   "mastery_gluttony_t1_resall_pct": 0.02,
-   "mastery_lust_t1_hpregen_flat": 0.1,
-   "mastery_lust_t1_critchance_pct": 0.01,
-   "mastery_lust_t1_hp_flat": 10,
-   "mastery_pride_t1_dr_pct": 0.005,
-   "mastery_pride_t1_atk_pct": 0.01,
-   "mastery_pride_t1_fhr": 0.05,
    "mastery_t2_sin_gear_1": 3,
    "mastery_t2_sin_gear_2": 6,
    "mastery_t2_sin_gear_3": 9,
    "mastery_wrath_t2_g3_dmgmax_flat": 2,
    "mastery_wrath_t2_g6_critchance_pct": 0.01,
    "mastery_wrath_t2_g9_critdamage_pct": 0.005,
-   "mastery_envy_t2_g3_dr_pct": 0.005,
-   "mastery_envy_t2_g6_atk_pct": 0.01,
-   "mastery_envy_t2_g9_resall_pct": 0.02,
+   "mastery_envy_t2_critchance_pct": 0.01,
+   "mastery_envy_t2_resall_pct": 0.02,
+   "mastery_envy_t2_cdr_pct": 0.01,
+   "mastery_sloth_t2_hp_pct": 0.02,
+   "mastery_sloth_t2_hpregen_flat": 0.1,
+   "mastery_gluttony_t2_hp_pct": 0.02,
+   "mastery_gluttony_t2_atk_pct": 0.01,
+   "mastery_gluttony_t2_drflat": 1,
+   "mastery_lust_t2_hpregen_flat": 0.1,
+   "mastery_lust_t2_resall_pct": 0.02,
    "mastery_greed_t2_g3_gold_pct": 0.05,
    "mastery_greed_t2_g6_xp_pct": 0.02,
    "mastery_greed_t2_g9_magicfind_pct": 0.02,
-   "mastery_sloth_t2_g3_hp_flat": 10,
-   "mastery_sloth_t2_g6_def_flat": 5,
    "mastery_sloth_t2_g9_cdr_pct": 0.01,
-   "mastery_gluttony_t2_g3_hp_flat": 10,
-   "mastery_gluttony_t2_g6_dmgmax_flat": 2,
-   "mastery_gluttony_t2_g9_resall_pct": 0.02,
-   "mastery_lust_t2_g3_hp_flat": 10,
-   "mastery_lust_t2_g6_hpregen_flat": 0.1,
    "mastery_lust_t2_g9_critchance_pct": 0.01,
    "mastery_pride_t2_g3_atk_pct": 0.01,
    "mastery_pride_t2_g6_dr_pct": 0.005,
@@ -328,33 +313,23 @@
    "mastery_point_per_level": 1,
    "mastery_point_start": 1,
    "mastery_warrior_t1_hp_flat": 10,
-   "mastery_warrior_t1_resall_pct": 0.02,
+   "mastery_warrior_t2_fhr": 0.05,
    "mastery_knight_t1_hp_flat": 10,
    "mastery_knight_t1_def_flat": 5,
-   "mastery_warrior_t1_def_flat": 5,
-   "mastery_warrior_t1_dmgmax_flat": 2,
-   "mastery_knight_t1_drflat": 1,
-   "mastery_knight_t1_dmgmin_flat": 2,
    "mastery_mage_t1_hp_flat": 10,
-   "mastery_mage_t1_cool_sec": 0.25,
-   "mastery_mage_t1_dmgmax_flat": 2,
    "mastery_priest_t1_hp_flat": 10,
-   "mastery_priest_t1_cool_sec": 0.25,
-   "mastery_priest_t1_dmgmin_flat": 2,
    "mastery_archer_t1_hp_flat": 10,
-   "mastery_archer_t1_period_sec": 0.05,
-   "mastery_archer_t1_dmgmax_flat": 2,
    "mastery_warrior_t2_hp_pct": 0.02,
    "mastery_knight_t2_fhr": 0.05,
    "mastery_knight_t2_debuffdur_pct": 0.03,
    "mastery_robe_t3_resall_pct": 0.02,
    "mastery_light_t3_resall_pct": 0.02,
    "mastery_knight_t1_dr_pct": 0.005,
-   "mastery_mage_t1_castspeed_pct": 0.01,
-   "mastery_mage_t1_cdr_pct": 0.01,
-   "mastery_mage_t1_atk_pct": 0.01,
-   "mastery_priest_t1_castspeed_pct": 0.01,
-   "mastery_priest_t1_cdr_pct": 0.01,
+   "mastery_mage_t2_fire_pct": 0.02,
+   "mastery_mage_t2_cold_pct": 0.02,
+   "mastery_mage_t2_lightning_pct": 0.02,
+   "mastery_priest_t2_resdown_pct": 0.005,
+   "mastery_priest_t2_fhr": 0.05,
    "mastery_priest_t1_buffdur_pct": 0.03,
    "mastery_archer_t1_atkspeed_pct": 0.01,
    "mastery_archer_t1_critchance_pct": 0.01,
@@ -455,7 +430,7 @@
    "colosseum_seed": 7300
   },
   "csvHash": {
-   "balance": "44717d40",
+   "balance": "cfd80078",
    "monster": "2ef14c3c",
    "stage": "d8645b77",
    "stage_round": "a0da60c5",
@@ -465,18 +440,18 @@
    "codex_option": "5ee18820",
    "monster_base": "506c8cc5",
    "weapon_group": "bee8c14a",
-   "skill": "42d4b574",
-   "skill_effect": "2463e27a",
-   "skill_status": "83ba1952",
+   "skill": "6422a448",
+   "skill_effect": "1f54f0f0",
+   "skill_status": "0449d4e4",
    "skill_tag": "9787a661",
    "hero_attribute": "ffaf2c88",
-   "combat_stat": "4f28ed52",
+   "combat_stat": "14b8cf67",
    "chapter": "caebe8a3",
-   "mastery_node": "0903db21",
+   "mastery_node": "8b682dd6",
    "tactic_slot": "41916245",
    "tactic_option": "43d560e2",
-   "commission_kind": "ce5e189b",
-   "commission": "5e304e5d",
+   "commission_kind": "006d3347",
+   "commission": "14a7ba6f",
    "item_base": "e2f79e19",
    "equip_slot": "bc484511",
    "class": "123c3123",
@@ -486,13 +461,13 @@
    "hero_tier": "f724d0c1",
    "monster_role": "fd705980",
    "formation_template": "6d82b61e",
-   "hero_unique_candidates": "33d165e2",
-   "weapon_base": "c6390aca",
+   "hero_unique_candidates": "1f8b54e5",
+   "weapon_base": "d0559c0c",
    "weapon_sin_option": "e50cbf40",
    "make_recipe": "fade7f65",
    "potion": "142fea84",
    "armor_group": "fad046fe",
-   "armor_sin_option": "79f14acd",
+   "armor_sin_option": "0f3aa11e",
    "sin_word": "5828e7ec",
    "accessory_sin_option": "5cb1916b",
    "tactic_condition": "803a58cf",
@@ -503,7 +478,7 @@
    "slot_coin": "a7d0ba7d",
    "slot_line": "690d700e",
    "slot_stake": "c9503993",
-   "commission_grade": "7c518c20",
+   "commission_grade": "b887d3e9",
    "monster_type": "81eb45ed",
    "advance": "88bd3ded",
    "level_xp": "d2c14531",
@@ -513,7 +488,7 @@
    "explore_story": "f72cecef",
    "difficulty_tier": "e665ad92",
    "upgrade_chance": "0b8106fa",
-   "arena_tier": "4fc9b72a",
+   "arena_tier": "6f362e0b",
    "lab_node": "b9d58acc",
    "sin_attr": "2acb29a6",
    "gear_rarity": "e4eb3b1c",
@@ -595,14 +570,14 @@
    "strikes": "86/12 · 119/26",
    "kills": "1101:8|1102:10|1103:6",
    "casts": "arc_rapid:16|mag_chain:19|pri_heal:17|pri_penitence:9|war_bash:4|war_recovery:8",
-   "elites": "3:envy:sin_envy_t1_dr 6:wrath:sin_wrath_t1_critdamage 9:wrath:sin_wrath_t1_critchance",
+   "elites": "3:envy:sin_envy_t2_crit 6:wrath:sin_wrath_t2_g9 9:wrath:sin_wrath_t2_g6",
    "grew": "L9/A201/M9",
    "tactics": "-",
    "drops": [
     "rare|weapon|1|gluttony+lust|crucifix|crucifix|-|-|-|fixed/atk_pct:1.29;gluttony/vs_demon_dmg:0.05;lust/cast_refund_chance:0.03;wrath/crit_damage:0.02"
    ],
    "blueprints": "war_bash",
-   "tl": "1a31e28a"
+   "tl": "f6960545"
   },
   {
    "seed": 2,
@@ -620,14 +595,14 @@
    "strikes": "82/22 · 80/26",
    "kills": "1101:9|1102:10|1103:5",
    "casts": "arc_rapid:12|kni_holyshield:6|pri_heal:13|war_bash:9|war_battleorders:1",
-   "elites": "3:sloth:sin_sloth_t1_hp 6:gluttony:sin_gluttony_t1_resall 9:lust:sin_lust_t1_regen",
+   "elites": "3:sloth:sin_sloth_t2_hppct 6:gluttony:sin_gluttony_t2_drflat 9:lust:sin_lust_t2_resall",
    "grew": "L9/A212/M9",
    "tactics": "-",
    "drops": [
     "normal|helmet|1||Cloth Hood|-|-|def_flat:5|-|fixed/armor_def_pct:1.31;gluttony/res_all:0.03"
    ],
    "blueprints": "-",
-   "tl": "e5e31333"
+   "tl": "456d62bc"
   },
   {
    "seed": 3,
@@ -645,7 +620,7 @@
    "strikes": "95/13 · 131/34",
    "kills": "1101:10|1102:9|1103:5",
    "casts": "arc_rapid:20|kni_holyshield:9|mag_chain:23|pri_heal:20|pri_summon:1|war_bash:1",
-   "elites": "3:pride:sin_pride_t1_dr 6:gluttony:sin_gluttony_t1_hp 9:lust:sin_lust_t1_critchance",
+   "elites": "3:pride:sin_pride_t2_g6 6:gluttony:sin_gluttony_t2_hppct 9:lust:sin_lust_t2_g9",
    "grew": "L9/A204/M9",
    "tactics": "-",
    "drops": [
@@ -654,7 +629,7 @@
     "magic|weapon|1|envy|crucifix|crucifix|-|-|-|fixed/atk_pct:0.79;envy/res_down_stack_cold:0.01;sloth/buff_dur_pct:0.07"
    ],
    "blueprints": "-",
-   "tl": "6156543a"
+   "tl": "86123cc1"
   },
   {
    "seed": 4,
@@ -672,7 +647,7 @@
    "strikes": "109/24 · 66/12",
    "kills": "1101:10|1102:10|1103:4",
    "casts": "arc_multishot:19|arc_rapid:12|kni_holyshield:5|mag_lightning:11|pri_doom:1",
-   "elites": "3:sloth:sin_sloth_t1_def 6:sloth:sin_sloth_t1_cdr 9:greed:sin_greed_t1_gold",
+   "elites": "3:sloth:sin_sloth_t2_regen 6:sloth:sin_sloth_t2_g9 9:greed:sin_greed_t2_g3",
    "grew": "L9/A200/M9",
    "tactics": "-",
    "drops": [
@@ -680,7 +655,7 @@
     "normal|boots|1||Boots|-|-|def_flat:3|-|fixed/armor_def_pct:1.01;gluttony/debuff_dur_reduction:0.05"
    ],
    "blueprints": "-",
-   "tl": "e063f049"
+   "tl": "bc238190"
   },
   {
    "seed": 5,
@@ -698,14 +673,14 @@
    "strikes": "165/47 · 110/38",
    "kills": "1101:9|1102:9|1103:5",
    "casts": "arc_rapid:19|kni_rush:15|pri_heal:18|war_recovery:9",
-   "elites": "3:pride:sin_pride_t1_dr 6:wrath:sin_wrath_t1_critchance 9:wrath:sin_wrath_t1_critdamage",
+   "elites": "3:pride:sin_pride_t2_g6 6:wrath:sin_wrath_t2_g6 9:wrath:sin_wrath_t2_g9",
    "grew": "L9/A193/M9",
    "tactics": "-",
    "drops": [
     "normal|armor|1||Cloth Armor|-|-|def_flat:10|-|fixed/armor_def_pct:0.25;gluttony/res_all:0.05"
    ],
    "blueprints": "-",
-   "tl": "a9c50923"
+   "tl": "bb912e21"
   },
   {
    "seed": 6,
@@ -714,16 +689,16 @@
    "reason": "clear",
    "rounds": 9,
    "cleared": 9,
-   "sec": 110.9,
+   "sec": 115.5,
    "downed": "-",
    "gold": 390,
    "xp": 900,
    "xpBy": "822|822|822",
-   "events": 496,
-   "strikes": "113/19 · 70/24",
+   "events": 485,
+   "strikes": "110/17 · 68/22",
    "kills": "1101:8|1102:11|1103:5",
-   "casts": "arc_multishot:13|arc_rapid:10|kni_enchant:1|mag_frostnova:9|war_ironskin:5",
-   "elites": "3:gluttony:sin_gluttony_t1_hp 6:greed:sin_greed_t1_itemfind 9:wrath:sin_wrath_t1_dmgmax",
+   "casts": "arc_multishot:13|arc_rapid:9|kni_enchant:1|mag_frostnova:9|war_ironskin:5",
+   "elites": "3:gluttony:sin_gluttony_t2_hppct 6:greed:sin_greed_t2_g6 9:wrath:sin_wrath_t2_g3",
    "grew": "L9/A202/M9",
    "tactics": "-",
    "drops": [
@@ -733,7 +708,7 @@
     "magic|weapon|1|envy|mace|club|-|-|-|fixed/atk_pct:0.69;envy/def_down_stack_pct:0.02;greed/xp_gain_pct:0.03"
    ],
    "blueprints": "war_bash",
-   "tl": "59016b1b"
+   "tl": "f497c465"
   },
   {
    "seed": 7,
@@ -751,14 +726,14 @@
    "strikes": "137/42 · 57/19",
    "kills": "1101:11|1102:9|1103:5",
    "casts": "arc_multishot:19|arc_rapid:11|kni_resistshield:5|war_recovery:5",
-   "elites": "3:envy:sin_envy_t1_resall 6:lust:sin_lust_t1_critchance 9:wrath:sin_wrath_t1_critchance",
+   "elites": "3:envy:sin_envy_t2_cdr 6:lust:sin_lust_t2_g9 9:wrath:sin_wrath_t2_g6",
    "grew": "L9/A201/M9",
    "tactics": "-",
    "drops": [
     "normal|boots|1||Boots|-|-|def_flat:3|-|fixed/armor_def_pct:0.77;envy/counter_chance:0.02"
    ],
    "blueprints": "-",
-   "tl": "e7cb6b8c"
+   "tl": "cd21bfec"
   },
   {
    "seed": 8,
@@ -776,7 +751,7 @@
    "strikes": "71/11 · 46/13",
    "kills": "1101:6|1102:9|1103:5",
    "casts": "arc_rapid:5|mag_iceblast:23|pri_judgment:12|war_ironskin:6",
-   "elites": "3:greed:sin_greed_t1_itemfind 6:gluttony:sin_gluttony_t1_hp 9:sloth:sin_sloth_t1_cdr",
+   "elites": "3:greed:sin_greed_t2_g6 6:gluttony:sin_gluttony_t2_hppct 9:sloth:sin_sloth_t2_g9",
    "grew": "L9/A198/M9",
    "tactics": "-",
    "drops": [
@@ -784,7 +759,7 @@
     "normal|armor|1||Cloth Armor|-|-|def_flat:10|-|fixed/armor_def_pct:0.41;wrath/res_fire:0.06"
    ],
    "blueprints": "arc_rapid",
-   "tl": "0b5c9a81"
+   "tl": "94898761"
   },
   {
    "seed": 9,
@@ -802,7 +777,7 @@
    "strikes": "86/24 · 48/16",
    "kills": "1101:10|1102:7|1103:5",
    "casts": "arc_rapid:9|arc_snipe:5|kni_resistshield:5|pri_regen:1|war_recovery:5",
-   "elites": "3:lust:sin_lust_t1_hp 6:sloth:sin_sloth_t1_hp 9:greed:sin_greed_t1_gold",
+   "elites": "3:lust:sin_lust_t2_regen 6:sloth:sin_sloth_t2_hppct 9:greed:sin_greed_t2_g3",
    "grew": "L9/A207/M9",
    "tactics": "-",
    "drops": [
@@ -810,7 +785,7 @@
     "normal|gloves|1||Cloth Gloves|-|-|def_flat:3|-|fixed/armor_def_pct:0.6;greed/gold_find:0.04"
    ],
    "blueprints": "-",
-   "tl": "aeb49014"
+   "tl": "38c07917"
   },
   {
    "seed": 10,
@@ -819,16 +794,16 @@
    "reason": "clear",
    "rounds": 9,
    "cleared": 9,
-   "sec": 146.2,
+   "sec": 156.2,
    "downed": "-",
    "gold": 348,
    "xp": 870,
    "xpBy": "805|791|791",
-   "events": 415,
-   "strikes": "79/13 · 64/16",
+   "events": 536,
+   "strikes": "56/15 · 81/30",
    "kills": "1101:5|1102:12|1103:6",
-   "casts": "arc_rapid:5|mag_inferno:12|pri_judgment:16|war_bash:1|war_recovery:7|war_warcry:1",
-   "elites": "3:wrath:sin_wrath_t1_critchance 6:sloth:sin_sloth_t1_hp 9:greed:sin_greed_t1_magicfind",
+   "casts": "arc_eagleeye:1|arc_rapid:8|mag_inferno:13|pri_judgment:17|war_bash:2|war_recovery:7",
+   "elites": "3:wrath:sin_wrath_t2_g6 6:sloth:sin_sloth_t2_hppct 9:greed:sin_greed_t2_g9",
    "grew": "L9/A198/M9",
    "tactics": "-",
    "drops": [
@@ -836,7 +811,7 @@
     "magic|armor|1|sloth|Lazy Cloth Armor|-|-|def_flat:10|-|fixed/armor_def_pct:0.05;sloth/res_cold:0.11;wrath/fhr:0.11"
    ],
    "blueprints": "-",
-   "tl": "e228c730"
+   "tl": "b4e57cd8"
   },
   {
    "seed": 1,
@@ -854,7 +829,7 @@
    "strikes": "76/10 · 85/17",
    "kills": "1101:6|1102:8|1103:4|1150:1",
    "casts": "arc_rapid:9|mag_chain:19|pri_heal:17|pri_penitence:5|war_bash:1|war_leap:3|war_recovery:9",
-   "elites": "3:lust:sin_lust_t1_critchance 6:greed:sin_greed_t1_itemfind",
+   "elites": "3:lust:sin_lust_t2_g9 6:greed:sin_greed_t2_g6",
    "grew": "L12/A201/M12",
    "tactics": "-",
    "drops": [
@@ -863,7 +838,7 @@
     "magic|weapon|5|gluttony|axe|axe|-|-|-|fixed/atk_pct:1.3;gluttony/crushing_blow_pct:0.01;gluttony/vs_undead_dmg:0.04"
    ],
    "blueprints": "-",
-   "tl": "652cb508"
+   "tl": "75c8ad45"
   },
   {
    "seed": 2,
@@ -881,14 +856,14 @@
    "strikes": "79/18 · 79/17",
    "kills": "1101:6|1102:11|1103:3|1150:1",
    "casts": "arc_rapid:13|kni_holyshield:6|pri_heal:13|war_bash:9|war_battleorders:1",
-   "elites": "3:sloth:sin_sloth_t1_hp 6:gluttony:sin_gluttony_t1_resall",
+   "elites": "3:sloth:sin_sloth_t2_hppct 6:gluttony:sin_gluttony_t2_drflat",
    "grew": "L12/A212/M12",
    "tactics": "-",
    "drops": [
     "normal|armor|5||Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.89;envy/res_poison:0.07"
    ],
    "blueprints": "arc_rapid",
-   "tl": "3bfcbb3f"
+   "tl": "5a1e2840"
   },
   {
    "seed": 3,
@@ -906,7 +881,7 @@
    "strikes": "93/12 · 138/36",
    "kills": "1101:8|1102:8|1103:2|1150:1",
    "casts": "arc_rapid:21|kni_holyshield:10|mag_chain:24|pri_heal:21|pri_summon:2|war_bash:2|war_leap:1",
-   "elites": "3:sloth:sin_sloth_t1_hp 6:greed:sin_greed_t1_gold",
+   "elites": "3:sloth:sin_sloth_t2_hppct 6:greed:sin_greed_t2_g3",
    "grew": "L12/A204/M12",
    "tactics": "-",
    "drops": [
@@ -915,7 +890,7 @@
     "rare|ring|5|pride+lust|Conceited and Amorous Signet|-|-|-|-|fixed/skill_tag/restore/cooldown:0.02;pride/dmg_max_flat:1;lust/res_lightning:0.06;sloth/res_cold:0.11"
    ],
    "blueprints": "-",
-   "tl": "9caeaa9b"
+   "tl": "a413fc00"
   },
   {
    "seed": 4,
@@ -933,14 +908,14 @@
    "strikes": "106/21 · 56/9",
    "kills": "1101:8|1102:7|1103:4|1150:1",
    "casts": "arc_multishot:19|arc_rapid:9|kni_holyshield:4|mag_lightning:10|war_ironskin:1",
-   "elites": "3:pride:sin_pride_t1_dr 6:wrath:sin_wrath_t1_dmgmax",
+   "elites": "3:pride:sin_pride_t2_g6 6:wrath:sin_wrath_t2_g3",
    "grew": "L12/A200/M12",
    "tactics": "-",
    "drops": [
     "rare|ring|5|pride+wrath|Conceited and Indignant Silver Ring|-|-|-|-|fixed/skill_tag/restore/cooldown:0.04;pride/dmg_max_flat:1;wrath/res_fire:0.07;wrath/crit_rate:0.02"
    ],
    "blueprints": "-",
-   "tl": "25d0d5d5"
+   "tl": "063e988c"
   },
   {
    "seed": 5,
@@ -958,7 +933,7 @@
    "strikes": "213/51 · 147/42",
    "kills": "1101:5|1102:13|1103:5|1150:1",
    "casts": "arc_coldarrow:1|arc_rapid:15|kni_holyshield:1|kni_rush:21|pri_heal:24|pri_summon:1|war_bash:9|war_ironskin:1|war_leap:1|war_recovery:12",
-   "elites": "3:envy:sin_envy_t1_atk 6:gluttony:sin_gluttony_t1_resall",
+   "elites": "3:envy:sin_envy_t2_resall 6:gluttony:sin_gluttony_t2_drflat",
    "grew": "L12/A193/M12",
    "tactics": "-",
    "drops": [
@@ -968,7 +943,7 @@
     "magic|amulet|5|lust|Amorous Gold Necklace|-|-|-|-|fixed/skill_plus/pri_judgment:1;lust/hit_bonus:0.06;sloth/cast_speed_pct:0.01"
    ],
    "blueprints": "war_bash",
-   "tl": "f3910e1f"
+   "tl": "07f19a0e"
   },
   {
    "seed": 6,
@@ -977,23 +952,23 @@
    "reason": "clear",
    "rounds": 9,
    "cleared": 9,
-   "sec": 131.7,
+   "sec": 144.5,
    "downed": "-",
    "gold": 538,
    "xp": 1950,
    "xpBy": "1950|1950|1950",
-   "events": 537,
-   "strikes": "126/31 · 74/15",
+   "events": 573,
+   "strikes": "130/32 · 76/15",
    "kills": "1101:8|1102:9|1103:4|1150:1",
-   "casts": "arc_multishot:15|arc_rapid:14|mag_frostnova:10|war_ironskin:6",
-   "elites": "3:lust:sin_lust_t1_critchance 6:wrath:sin_wrath_t1_critdamage",
+   "casts": "arc_multishot:17|arc_rapid:10|mag_frostnova:11|war_ironskin:8|war_leap:1",
+   "elites": "3:lust:sin_lust_t2_g9 6:wrath:sin_wrath_t2_g9",
    "grew": "L12/A202/M12",
    "tactics": "-",
    "drops": [
     "magic|ring|5|lust|Amorous Glutton Ring|-|-|-|-|fixed/skill_tag/restore/cooldown:0.03;lust/hp_regen:0.3;sloth/res_cold:0.1"
    ],
    "blueprints": "-",
-   "tl": "dd325bd6"
+   "tl": "9ed731a2"
   },
   {
    "seed": 7,
@@ -1011,14 +986,14 @@
    "strikes": "130/33 · 36/14",
    "kills": "1101:4|1102:11|1103:5|1150:1",
    "casts": "arc_multishot:18|arc_rapid:5|kni_resistshield:5|war_ironskin:1|war_recovery:4",
-   "elites": "3:pride:sin_pride_t1_dr 6:greed:sin_greed_t1_itemfind",
+   "elites": "3:pride:sin_pride_t2_g6 6:greed:sin_greed_t2_g6",
    "grew": "L12/A201/M12",
    "tactics": "-",
    "drops": [
     "normal|boots|3||Boots|-|-|def_flat:3|-|fixed/armor_def_pct:1.87;sloth/res_cold:0.06"
    ],
    "blueprints": "war_leap",
-   "tl": "761c980a"
+   "tl": "d42a94de"
   },
   {
    "seed": 8,
@@ -1036,7 +1011,7 @@
    "strikes": "92/16 · 84/22",
    "kills": "1101:8|1102:9|1103:5|1150:1",
    "casts": "arc_rapid:15|mag_iceblast:30|pri_judgment:16|war_ironskin:7|war_leap:1",
-   "elites": "3:sloth:sin_sloth_t1_cdr 6:lust:sin_lust_t1_critchance",
+   "elites": "3:sloth:sin_sloth_t2_g9 6:lust:sin_lust_t2_g9",
    "grew": "L12/A198/M12",
    "tactics": "-",
    "drops": [
@@ -1044,7 +1019,7 @@
     "normal|weapon|5||axe|axe|-|-|-|fixed/atk_pct:0.09;envy/def_ignore:0.02"
    ],
    "blueprints": "war_bash",
-   "tl": "dfe5e5c0"
+   "tl": "badfb471"
   },
   {
    "seed": 9,
@@ -1062,7 +1037,7 @@
    "strikes": "100/26 · 62/16",
    "kills": "1101:9|1102:8|1103:5|1150:1",
    "casts": "arc_rapid:10|arc_snipe:6|kni_resistshield:6|war_leap:1|war_recovery:6",
-   "elites": "3:wrath:sin_wrath_t1_critdamage 6:envy:sin_envy_t1_dr",
+   "elites": "3:wrath:sin_wrath_t2_g9 6:envy:sin_envy_t2_crit",
    "grew": "L12/A207/M12",
    "tactics": "-",
    "drops": [
@@ -1071,7 +1046,7 @@
     "normal|armor|3||Cloth Armor|-|-|def_flat:11|-|fixed/armor_def_pct:0.61;wrath/fhr:0.06"
    ],
    "blueprints": "arc_rapid|war_battleorders",
-   "tl": "33fb8d07"
+   "tl": "9043cee4"
   },
   {
    "seed": 10,
@@ -1080,16 +1055,16 @@
    "reason": "clear",
    "rounds": 9,
    "cleared": 9,
-   "sec": 211.8,
+   "sec": 208.2,
    "downed": "-",
    "gold": 491,
    "xp": 2000,
    "xpBy": "2064|2000|2000",
-   "events": 674,
-   "strikes": "106/17 · 117/27",
+   "events": 827,
+   "strikes": "70/18 · 129/35",
    "kills": "1101:6|1102:11|1103:5|1150:1",
-   "casts": "arc_rapid:10|mag_inferno:17|pri_judgment:23|pri_summon:1|war_bash:3|war_doubleswing:3|war_leap:2|war_recovery:10",
-   "elites": "3:greed:sin_greed_t1_gold 6:envy:sin_envy_t1_dr",
+   "casts": "arc_multishot:1|arc_rapid:13|mag_inferno:17|pri_doom:1|pri_judgment:23|pri_summon:1|war_bash:4|war_battlecry:1|war_doubleswing:2|war_leap:1|war_recovery:10",
+   "elites": "3:greed:sin_greed_t2_g3 6:envy:sin_envy_t2_crit",
    "grew": "L12/A198/M12",
    "tactics": "-",
    "drops": [
@@ -1097,7 +1072,7 @@
     "normal|helmet|5||Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:0.53;sloth/proc_struck_debuff/war_battlecry/1:0.04"
    ],
    "blueprints": "war_bash|war_bash",
-   "tl": "2cc98450"
+   "tl": "268567c5"
   },
   {
    "seed": 1,
@@ -1115,14 +1090,14 @@
    "strikes": "77/9 · 200/41",
    "kills": "1201:10|1202:6|1203:4",
    "casts": "arc_guided:3|arc_multishot:21|arc_rapid:3|kni_rush:7|mag_chain:18|pri_heal:16|pri_penitence:9|war_ironskin:1|war_recovery:7",
-   "elites": "3:gluttony:sin_gluttony_t1_hp 6:wrath:sin_wrath_t1_critchance",
+   "elites": "3:gluttony:sin_gluttony_t2_hppct 6:wrath:sin_wrath_t2_g6",
    "grew": "L12/A201/M12",
    "tactics": "-",
    "drops": [
     "magic|armor|5|sloth|Lazy Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.51;sloth/res_cold:0.09;wrath/fhr:0.08"
    ],
    "blueprints": "war_ironskin",
-   "tl": "5ee982a3"
+   "tl": "7e9b5991"
   },
   {
    "seed": 2,
@@ -1140,7 +1115,7 @@
    "strikes": "110/32 · 186/39",
    "kills": "1201:13|1202:8|1203:2|1251:1",
    "casts": "arc_guided:3|arc_multishot:26|arc_snipe:1|kni_holyshield:9|kni_rush:1|pri_heal:18|war_bash:11|war_battleorders:3",
-   "elites": "3:envy:sin_envy_t1_dr 6:envy:sin_envy_t1_dr",
+   "elites": "3:envy:sin_envy_t2_crit 6:envy:sin_envy_t2_crit",
    "grew": "L12/A212/M12",
    "tactics": "-",
    "drops": [
@@ -1148,7 +1123,7 @@
     "rare|armor|7|envy+lust|Begrudging and Amorous Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.57;envy/reflect_damage:0.02;lust/hp_flat:16;wrath/damage_reduction:0.03"
    ],
    "blueprints": "-",
-   "tl": "c1a6ad0b"
+   "tl": "80efa6a3"
   },
   {
    "seed": 3,
@@ -1166,7 +1141,7 @@
    "strikes": "84/11 · 222/59",
    "kills": "1201:10|1202:5|1203:2|1251:1",
    "casts": "arc_guided:6|arc_multishot:28|arc_rapid:5|kni_holyshield:9|kni_rush:2|mag_chain:23|pri_heal:20|war_ironskin:3",
-   "elites": "3:envy:sin_envy_t1_atk 6:envy:sin_envy_t1_atk",
+   "elites": "3:envy:sin_envy_t2_resall 6:envy:sin_envy_t2_resall",
    "grew": "L11/A204/M11",
    "tactics": "-",
    "drops": [
@@ -1174,7 +1149,7 @@
     "rare|weapon|7|greed+envy|bow|bow|-|-|-|fixed/atk_pct:0.54;greed/magic_find:0.06;envy/stagger_dur_pct:0.16;gluttony/vs_normal_dmg:0.05"
    ],
    "blueprints": "-",
-   "tl": "d8c53062"
+   "tl": "ff6fc000"
   },
   {
    "seed": 4,
@@ -1192,14 +1167,14 @@
    "strikes": "128/30 · 110/31",
    "kills": "1201:7|1202:7|1203:6|1251:1",
    "casts": "arc_guided:1|arc_multishot:36|kni_holyshield:5|kni_rush:2|mag_lightning:13",
-   "elites": "3:greed:sin_greed_t1_gold 6:greed:sin_greed_t1_gold",
+   "elites": "3:greed:sin_greed_t2_g3 6:greed:sin_greed_t2_g3",
    "grew": "L12/A200/M12",
    "tactics": "-",
    "drops": [
     "normal|helmet|7||Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:1.91;lust/kill_heal_pct:0.02"
    ],
    "blueprints": "war_ironskin|arc_multishot",
-   "tl": "754adf6b"
+   "tl": "0526f503"
   },
   {
    "seed": 5,
@@ -1217,12 +1192,12 @@
    "strikes": "62/17 · 130/37",
    "kills": "1201:2|1203:2",
    "casts": "arc_multishot:21|kni_rush:10|pri_heal:10|war_ironskin:2|war_recovery:4",
-   "elites": "3:lust:sin_lust_t1_hp",
+   "elites": "3:lust:sin_lust_t2_regen",
    "grew": "L6/A193/M6",
    "tactics": "-",
    "drops": [],
    "blueprints": "-",
-   "tl": "818f4973"
+   "tl": "02710f4d"
   },
   {
    "seed": 6,
@@ -1231,23 +1206,23 @@
    "reason": "wipe",
    "rounds": 9,
    "cleared": 8,
-   "sec": 144.6,
+   "sec": 157.6,
    "downed": "0|1|2",
    "gold": 355,
    "xp": 1470,
    "xpBy": "1470|1470|1470",
-   "events": 701,
-   "strikes": "129/30 · 145/29",
+   "events": 761,
+   "strikes": "140/29 · 153/36",
    "kills": "1201:6|1202:7|1203:4",
-   "casts": "arc_eagleeye:1|arc_guided:6|arc_multishot:35|kni_rush:2|mag_frostnova:12|war_ironskin:7",
-   "elites": "3:lust:sin_lust_t1_hp 6:gluttony:sin_gluttony_t1_dmgmax",
+   "casts": "arc_eagleeye:1|arc_guided:4|arc_multishot:39|arc_snipe:1|kni_rush:3|mag_frostnova:13|war_ironskin:8",
+   "elites": "3:lust:sin_lust_t2_regen 6:gluttony:sin_gluttony_t2_atk",
    "grew": "L9/A202/M9",
    "tactics": "-",
    "drops": [
     "normal|armor|5||Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:0.29;sloth/proc_struck_defense/war_battleorders/1:0.06"
    ],
    "blueprints": "-",
-   "tl": "3f9db456"
+   "tl": "30fb1b5e"
   },
   {
    "seed": 7,
@@ -1265,7 +1240,7 @@
    "strikes": "178/64 · 114/28",
    "kills": "1201:12|1202:7|1203:2|1251:1",
    "casts": "arc_guided:10|arc_multishot:39|kni_resistshield:6|war_recovery:7",
-   "elites": "3:wrath:sin_wrath_t1_critchance 6:greed:sin_greed_t1_itemfind",
+   "elites": "3:wrath:sin_wrath_t2_g6 6:greed:sin_greed_t2_g6",
    "grew": "L12/A201/M12",
    "tactics": "-",
    "drops": [
@@ -1273,7 +1248,7 @@
     "magic|weapon|7|pride|bow|bow|-|-|-|fixed/atk_pct:1.19;pride/dmg_max_per_level:0.2;lust/dmg_min_flat:1"
    ],
    "blueprints": "-",
-   "tl": "4c068acc"
+   "tl": "657e2af8"
   },
   {
    "seed": 8,
@@ -1291,12 +1266,12 @@
    "strikes": "66/8 · 121/37",
    "kills": "1201:4|1202:5|1203:7",
    "casts": "arc_guided:6|arc_multishot:14|kni_rush:4|mag_iceblast:23|pri_judgment:13|war_ironskin:5",
-   "elites": "3:envy:sin_envy_t1_dr 6:wrath:sin_wrath_t1_critchance",
+   "elites": "3:envy:sin_envy_t2_crit 6:wrath:sin_wrath_t2_g6",
    "grew": "L9/A198/M9",
    "tactics": "-",
    "drops": [],
    "blueprints": "kni_rush",
-   "tl": "46b09e2e"
+   "tl": "e795feca"
   },
   {
    "seed": 9,
@@ -1314,7 +1289,7 @@
    "strikes": "122/38 · 146/44",
    "kills": "1201:4|1202:3|1203:12|1251:1",
    "casts": "arc_coldarrow:1|arc_guided:4|arc_multishot:11|arc_poison:1|arc_snipe:8|kni_resistshield:7|kni_rush:8|pri_penitence:1|war_ironskin:2|war_recovery:7",
-   "elites": "3:gluttony:sin_gluttony_t1_resall 6:pride:sin_pride_t1_fhr",
+   "elites": "3:gluttony:sin_gluttony_t2_drflat 6:pride:sin_pride_t2_g9",
    "grew": "L12/A207/M12",
    "tactics": "-",
    "drops": [
@@ -1322,33 +1297,34 @@
     "normal|weapon|7||bow|bow|-|-|-|fixed/atk_pct:0.24;lust/dmg_min_flat:1"
    ],
    "blueprints": "-",
-   "tl": "a923a42e"
+   "tl": "3c11d0a6"
   },
   {
    "seed": 10,
    "stage": 1023,
-   "won": false,
-   "reason": "wipe",
+   "won": true,
+   "reason": "clear",
    "rounds": 9,
-   "cleared": 8,
-   "sec": 167.6,
-   "downed": "0|1|2",
-   "gold": 315,
-   "xp": 1470,
-   "xpBy": "1009|1470|1470",
-   "events": 673,
-   "strikes": "67/6 · 183/49",
-   "kills": "1201:3|1202:7|1203:7",
-   "casts": "arc_guided:4|arc_multishot:23|arc_pierce:1|kni_rush:8|mag_inferno:13|pri_judgment:18|war_recovery:5",
-   "elites": "3:gluttony:sin_gluttony_t1_hp 6:pride:sin_pride_t1_fhr",
-   "grew": "L9/A198/M9",
+   "cleared": 9,
+   "sec": 180,
+   "downed": "-",
+   "gold": 500,
+   "xp": 2440,
+   "xpBy": "2513|2440|2440",
+   "events": 828,
+   "strikes": "59/16 · 196/57",
+   "kills": "1201:3|1202:8|1203:7|1251:1",
+   "casts": "arc_guided:6|arc_multishot:24|arc_pierce:1|kni_rush:7|mag_inferno:14|pri_doom:1|pri_judgment:20|war_recovery:8",
+   "elites": "3:gluttony:sin_gluttony_t2_hppct 6:pride:sin_pride_t2_g9",
+   "grew": "L12/A198/M12",
    "tactics": "-",
    "drops": [
     "normal|helmet|5||Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:1.72;sloth/proc_struck_debuff/pri_doom/1:0.03",
-    "magic|boots|5|wrath|Indignant Boots|-|-|def_flat:3|-|fixed/armor_def_pct:1.15;wrath/res_fire:0.09;envy/res_poison:0.11"
+    "magic|boots|5|wrath|Indignant Boots|-|-|def_flat:3|-|fixed/armor_def_pct:1.15;wrath/res_fire:0.09;envy/res_poison:0.11",
+    "magic|ring|7|gluttony|Gorging Signet|-|-|-|-|fixed/skill_tag/curse/value:0.02;gluttony/res_all:0.04;sloth/cooldown_reduction:0.04"
    ],
-   "blueprints": "war_ironskin",
-   "tl": "70160928"
+   "blueprints": "war_ironskin|arc_multishot",
+   "tl": "7738037c"
   },
   {
    "seed": 1,
@@ -1366,12 +1342,12 @@
    "strikes": "21/3 · 25/5",
    "kills": "1301:1|1302:1|1303:2",
    "casts": "kni_charge:2|mag_chain:5|mag_fireball:5|pri_heal:5|war_doubleswing:2|war_recovery:1",
-   "elites": "3:wrath:sin_wrath_t1_critchance",
+   "elites": "3:wrath:sin_wrath_t2_g6",
    "grew": "L6/A201/M6",
    "tactics": "-",
    "drops": [],
    "blueprints": "-",
-   "tl": "ae5d5893"
+   "tl": "0f5fc311"
   },
   {
    "seed": 2,
@@ -1389,14 +1365,14 @@
    "strikes": "50/18 · 57/17",
    "kills": "1301:8|1302:2|1303:2",
    "casts": "kni_charge:6|kni_holyshield:5|mag_fireball:5|pri_heal:12|war_bash:4|war_doubleswing:5",
-   "elites": "3:envy:sin_envy_t1_resall 6:sloth:sin_sloth_t1_def",
+   "elites": "3:envy:sin_envy_t2_cdr 6:sloth:sin_sloth_t2_regen",
    "grew": "L9/A212/M9",
    "tactics": "-",
    "drops": [
     "normal|weapon|5||mace|club|-|-|-|fixed/atk_pct:0.28;gluttony/vs_demon_dmg:0.04"
    ],
    "blueprints": "-",
-   "tl": "5cdfee00"
+   "tl": "2d606b58"
   },
   {
    "seed": 3,
@@ -1414,7 +1390,7 @@
    "strikes": "124/28 · 119/28",
    "kills": "1250:1|1301:9|1302:3|1303:7",
    "casts": "kni_charge:3|kni_holyshield:14|mag_chain:35|mag_fireball:8|pri_bind:1|pri_heal:31|war_battleorders:8|war_doubleswing:8|war_recovery:7",
-   "elites": "3:lust:sin_lust_t1_hp 6:greed:sin_greed_t1_magicfind",
+   "elites": "3:lust:sin_lust_t2_regen 6:greed:sin_greed_t2_g9",
    "grew": "L12/A204/M12",
    "tactics": "-",
    "drops": [
@@ -1423,7 +1399,7 @@
     "normal|weapon|9||axe|axe|-|-|-|fixed/atk_pct:0.93;sloth/cooldown_reduction:0.03"
    ],
    "blueprints": "-",
-   "tl": "3b959d78"
+   "tl": "72bf818f"
   },
   {
    "seed": 4,
@@ -1441,14 +1417,14 @@
    "strikes": "103/30 · 37/9",
    "kills": "1250:1|1301:4|1302:9|1303:5",
    "casts": "arc_multishot:19|kni_charge:3|kni_holyshield:4|mag_fireball:2|mag_lightning:10|war_bash:1|war_doubleswing:3",
-   "elites": "3:envy:sin_envy_t1_atk 6:lust:sin_lust_t1_critchance",
+   "elites": "3:envy:sin_envy_t2_resall 6:lust:sin_lust_t2_g9",
    "grew": "L12/A200/M12",
    "tactics": "-",
    "drops": [
     "normal|gloves|9||Cloth Gloves|-|-|def_flat:4|-|fixed/armor_def_pct:0.81;greed/xp_gain_pct:0.06"
    ],
    "blueprints": "mag_fireball",
-   "tl": "5bea1935"
+   "tl": "9dd9ec5e"
   },
   {
    "seed": 5,
@@ -1466,38 +1442,37 @@
    "strikes": "39/11 · 75/19",
    "kills": "1301:3|1302:2",
    "casts": "kni_charge:5|kni_rush:1|mag_fireball:2|pri_heal:10|war_doubleswing:11|war_recovery:5",
-   "elites": "3:greed:sin_greed_t1_magicfind",
+   "elites": "3:greed:sin_greed_t2_g9",
    "grew": "L5/A193/M5",
    "tactics": "-",
    "drops": [],
    "blueprints": "-",
-   "tl": "2fc1219e"
+   "tl": "8ad425c7"
   },
   {
    "seed": 6,
    "stage": 1033,
    "won": false,
    "reason": "wipe",
-   "rounds": 5,
-   "cleared": 4,
-   "sec": 79.6,
+   "rounds": 4,
+   "cleared": 3,
+   "sec": 70.2,
    "downed": "0|1|2",
-   "gold": 251,
-   "xp": 1120,
-   "xpBy": "480|1120|880",
-   "events": 284,
-   "strikes": "57/12 · 35/8",
-   "kills": "1301:2|1302:8|1303:2",
-   "casts": "arc_multishot:7|kni_charge:4|mag_fireball:5|mag_frostnova:6|war_battlecry:1|war_ironskin:2",
-   "elites": "3:greed:sin_greed_t1_gold",
-   "grew": "L8/A202/M8",
+   "gold": 197,
+   "xp": 880,
+   "xpBy": "480|880|480",
+   "events": 245,
+   "strikes": "51/14 · 36/10",
+   "kills": "1301:2|1302:5|1303:2",
+   "casts": "arc_multishot:6|kni_charge:5|mag_fireball:4|mag_frostnova:5|war_doubleswing:1|war_ironskin:2",
+   "elites": "3:greed:sin_greed_t2_g3",
+   "grew": "L7/A202/M7",
    "tactics": "-",
    "drops": [
-    "normal|armor|6||Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:1.11;sloth/hp_pct:0.05",
-    "normal|weapon|6||sword2h|long_sword|-|-|-|fixed/atk_pct:1.53;gluttony/vs_undead_dmg:0.04"
+    "normal|armor|6||Cloth Armor|-|-|def_flat:12|-|fixed/armor_def_pct:1.11;sloth/hp_pct:0.05"
    ],
    "blueprints": "-",
-   "tl": "7378a310"
+   "tl": "44eca50c"
   },
   {
    "seed": 7,
@@ -1515,7 +1490,7 @@
    "strikes": "173/60 · 40/11",
    "kills": "1250:1|1301:5|1302:8|1303:11",
    "casts": "arc_multishot:24|kni_charge:1|kni_resistshield:6|mag_chain:1|mag_fireball:6|war_battleorders:1|war_doubleswing:1|war_frenzy:1|war_recovery:6|war_shout:1",
-   "elites": "3:sloth:sin_sloth_t1_hp 6:greed:sin_greed_t1_magicfind",
+   "elites": "3:sloth:sin_sloth_t2_hppct 6:greed:sin_greed_t2_g9",
    "grew": "L15/A201/M15",
    "tactics": "-",
    "drops": [
@@ -1524,7 +1499,7 @@
     "rare|amulet|9|envy+pride|Begrudging and Conceited Talisman|-|-|-|-|fixed/skill_plus/arc_rapid:1;envy/res_down_stack_pct:0.02;pride/weapon_atk_pct:0.13;lust/hp_recovery_pct:0.04"
    ],
    "blueprints": "-",
-   "tl": "90f0c2da"
+   "tl": "435df59f"
   },
   {
    "seed": 8,
@@ -1565,62 +1540,62 @@
    "strikes": "88/30 · 40/3",
    "kills": "1250:1|1301:7|1302:5|1303:6",
    "casts": "arc_snipe:6|kni_charge:1|kni_resistshield:5|mag_fireball:3|war_doubleswing:4|war_recovery:5",
-   "elites": "3:envy:sin_envy_t1_dr 6:lust:sin_lust_t1_hp",
+   "elites": "3:envy:sin_envy_t2_crit 6:lust:sin_lust_t2_regen",
    "grew": "L12/A207/M12",
    "tactics": "-",
    "drops": [],
    "blueprints": "kni_charge|war_recovery",
-   "tl": "ab64d7d5"
+   "tl": "a1402a4c"
   },
   {
    "seed": 10,
    "stage": 1033,
-   "won": true,
-   "reason": "clear",
-   "rounds": 9,
-   "cleared": 9,
-   "sec": 144,
-   "downed": "-",
-   "gold": 543,
-   "xp": 2860,
-   "xpBy": "2944|2860|2860",
-   "events": 412,
-   "strikes": "73/11 · 54/13",
-   "kills": "1250:1|1301:7|1302:5|1303:6",
-   "casts": "kni_charge:5|mag_fireball:4|mag_inferno:12|pri_judgment:16|war_battleorders:1|war_doubleswing:3|war_recovery:7|war_shout:1",
-   "elites": "3:lust:sin_lust_t1_regen 6:pride:sin_pride_t1_fhr",
-   "grew": "L12/A198/M12",
+   "won": false,
+   "reason": "wipe",
+   "rounds": 3,
+   "cleared": 2,
+   "sec": 65,
+   "downed": "0|1|2",
+   "gold": 80,
+   "xp": 400,
+   "xpBy": "0|400|400",
+   "events": 234,
+   "strikes": "10/1 · 45/13",
+   "kills": "1301:3|1302:2",
+   "casts": "kni_charge:3|mag_fireball:2|mag_inferno:4|pri_judgment:7|war_doubleswing:5",
+   "elites": "3:lust:sin_lust_t2_resall",
+   "grew": "L5/A198/M5",
    "tactics": "-",
    "drops": [
-    "magic|weapon|5|lust|sword2h|long_sword|-|-|-|fixed/atk_pct:0.33;lust/dmg_max_flat:1;wrath/aspd_pct:0.02",
-    "rare|helmet|6|pride+greed|Conceited and Acquisitive Cloth Hood|-|-|def_flat:6|-|fixed/armor_def_pct:0.04;pride/hp_per_level:1;greed/xp_gain_pct:0.05;gluttony/def_flat:5",
-    "magic|amulet|9|envy|Begrudging Gold Necklace|-|-|-|-|envy/def_down_stack_pct:0.01;envy/res_poison:0.03"
+    "magic|weapon|5|lust|sword2h|long_sword|-|-|-|fixed/atk_pct:0.33;lust/dmg_max_flat:1;wrath/aspd_pct:0.02"
    ],
    "blueprints": "-",
-   "tl": "d03ed0ac"
+   "tl": "94a5887a"
   },
   {
    "seed": 1,
    "stage": 1043,
    "won": false,
    "reason": "wipe",
-   "rounds": 3,
-   "cleared": 2,
-   "sec": 125.8,
+   "rounds": 9,
+   "cleared": 8,
+   "sec": 361,
    "downed": "0|1|2",
-   "gold": 95,
-   "xp": 500,
-   "xpBy": "500|500|500",
-   "events": 425,
-   "strikes": "63/13 · 44/2",
-   "kills": "1401:2|1402:1|1403:2",
-   "casts": "kni_resistshield:4|mag_chain:13|mag_inferno:9|pri_cure:11|pri_heal:11|pri_penitence:3|war_recovery:5|war_warcry:1",
-   "elites": "3:envy:sin_envy_t1_dr",
-   "grew": "L6/A201/M6",
+   "gold": 439,
+   "xp": 2300,
+   "xpBy": "2300|2300|2300",
+   "events": 1407,
+   "strikes": "175/28 · 69/13",
+   "kills": "1401:6|1402:4|1403:9",
+   "casts": "kni_resistshield:10|mag_chain:40|mag_iceblast:12|mag_inferno:20|pri_cure:19|pri_heal:35|war_battlecry:1|war_recovery:17|war_warcry:1",
+   "elites": "3:envy:sin_envy_t2_crit 6:pride:sin_pride_t2_g3",
+   "grew": "L12/A201/M12",
    "tactics": "-",
-   "drops": [],
+   "drops": [
+    "normal|weapon|8||spear|spear|-|-|-|fixed/atk_pct:1.93;envy/def_ignore:0.02"
+   ],
    "blueprints": "-",
-   "tl": "631b7cbd"
+   "tl": "dcbc281a"
   },
   {
    "seed": 2,
@@ -1629,21 +1604,21 @@
    "reason": "wipe",
    "rounds": 9,
    "cleared": 8,
-   "sec": 339.4,
+   "sec": 265.2,
    "downed": "0|1|2",
    "gold": 396,
    "xp": 2200,
    "xpBy": "2200|2200|2200",
-   "events": 1059,
-   "strikes": "214/74 · 68/8",
+   "events": 984,
+   "strikes": "170/59 · 27/2",
    "kills": "1401:3|1402:9|1403:6",
-   "casts": "arc_evade:1|kni_holyshield:17|kni_resistshield:5|mag_chain:3|mag_inferno:13|pri_cure:44|pri_heal:32|war_bash:19|war_battleorders:1",
-   "elites": "3:wrath:sin_wrath_t1_critchance 6:sloth:sin_sloth_t1_hp",
+   "casts": "kni_holyshield:13|kni_resistshield:3|mag_chain:4|mag_inferno:14|pri_cure:28|pri_heal:26|war_bash:15",
+   "elites": "3:wrath:sin_wrath_t2_g6 6:sloth:sin_sloth_t2_hppct",
    "grew": "L12/A212/M12",
    "tactics": "-",
    "drops": [],
    "blueprints": "pri_cure",
-   "tl": "7e337279"
+   "tl": "5ea36bb9"
   },
   {
    "seed": 3,
@@ -1652,23 +1627,23 @@
    "reason": "wipe",
    "rounds": 3,
    "cleared": 2,
-   "sec": 169.3,
+   "sec": 156.2,
    "downed": "0|1|2",
    "gold": 108,
    "xp": 600,
    "xpBy": "600|600|600",
-   "events": 534,
-   "strikes": "77/10 · 63/8",
+   "events": 578,
+   "strikes": "74/6 · 41/7",
    "kills": "1401:3|1402:1|1403:2",
-   "casts": "kni_charge:1|kni_holyshield:6|kni_resistshield:9|mag_chain:18|mag_inferno:6|pri_cure:15|pri_heal:16",
-   "elites": "3:greed:sin_greed_t1_gold",
+   "casts": "kni_holyshield:5|kni_resistshield:9|mag_chain:17|mag_inferno:7|pri_cure:15|pri_heal:14",
+   "elites": "3:greed:sin_greed_t2_g3",
    "grew": "L9/A204/M9",
    "tactics": "-",
    "drops": [
     "normal|armor|8||Cloth Armor|-|-|def_flat:13|-|fixed/armor_def_pct:0.62;lust/res_lightning:0.06"
    ],
    "blueprints": "-",
-   "tl": "93618e42"
+   "tl": "44e05a4a"
   },
   {
    "seed": 4,
@@ -1677,23 +1652,23 @@
    "reason": "wipe",
    "rounds": 9,
    "cleared": 8,
-   "sec": 185.3,
+   "sec": 218,
    "downed": "0|1|2",
    "gold": 458,
    "xp": 2400,
-   "xpBy": "2400|2400|2400",
-   "events": 753,
-   "strikes": "211/70 · 40/5",
+   "xpBy": "2400|2400|400",
+   "events": 783,
+   "strikes": "203/58 · 23/3",
    "kills": "1401:7|1402:4|1403:9",
-   "casts": "arc_multishot:35|kni_enchant:1|kni_holyshield:9|kni_resistshield:2|mag_fireball:2|mag_inferno:7|mag_lightning:19|pri_cure:11|war_shout:1",
-   "elites": "3:pride:sin_pride_t1_atk 6:envy:sin_envy_t1_resall",
-   "grew": "L12/A200/M12",
+   "casts": "arc_multishot:40|kni_holyshield:3|kni_resistshield:2|mag_fireball:2|mag_inferno:8|mag_lightning:24|pri_cure:15",
+   "elites": "3:pride:sin_pride_t2_g3 6:envy:sin_envy_t2_cdr",
+   "grew": "L10/A200/M10",
    "tactics": "-",
    "drops": [
     "normal|armor|8||Cloth Armor|-|-|def_flat:13|-|fixed/armor_def_pct:1.29;lust/res_lightning:0.11"
    ],
    "blueprints": "kni_resistshield",
-   "tl": "9333c619"
+   "tl": "ba4089a4"
   },
   {
    "seed": 5,
@@ -1702,46 +1677,46 @@
    "reason": "wipe",
    "rounds": 9,
    "cleared": 8,
-   "sec": 508.1,
+   "sec": 496.7,
    "downed": "0|1|2",
    "gold": 382,
    "xp": 1900,
    "xpBy": "1900|1900|2033",
-   "events": 1804,
-   "strikes": "456/193 · 126/12",
+   "events": 2065,
+   "strikes": "408/145 · 70/13",
    "kills": "1401:6|1402:3|1403:6",
-   "casts": "kni_resistshield:8|kni_rush:41|mag_frostnova:3|mag_inferno:27|pri_cure:37|pri_heal:50|war_recovery:25",
-   "elites": "3:envy:sin_envy_t1_dr 6:sloth:sin_sloth_t1_def",
+   "casts": "kni_resistshield:12|kni_rush:38|mag_deepfreeze:2|mag_frostnova:8|mag_inferno:28|pri_cure:27|pri_heal:49|war_recovery:22",
+   "elites": "3:envy:sin_envy_t2_crit 6:sloth:sin_sloth_t2_regen",
    "grew": "L12/A193/M12",
    "tactics": "-",
    "drops": [
     "normal|gloves|8||Cloth Gloves|-|-|def_flat:4|-|fixed/armor_def_pct:1.16;sloth/proc_hit_buff/mag_deepfreeze/1:0.06"
    ],
    "blueprints": "-",
-   "tl": "3f64d347"
+   "tl": "04b339d0"
   },
   {
    "seed": 6,
    "stage": 1043,
    "won": false,
    "reason": "wipe",
-   "rounds": 1,
-   "cleared": 0,
-   "sec": 72,
+   "rounds": 9,
+   "cleared": 8,
+   "sec": 330.4,
    "downed": "0|1|2",
-   "gold": 0,
-   "xp": 0,
-   "xpBy": "0|0|0",
-   "events": 267,
-   "strikes": "60/21 · 21/2",
-   "kills": "-",
-   "casts": "arc_multishot:5|kni_resistshield:2|mag_frostnova:6|mag_inferno:6|pri_cure:8|war_ironskin:2",
-   "elites": "-",
-   "grew": "L3/A202/M3",
+   "gold": 438,
+   "xp": 2200,
+   "xpBy": "2200|2200|2200",
+   "events": 1496,
+   "strikes": "332/110 · 12/4",
+   "kills": "1401:3|1402:11|1403:4",
+   "casts": "arc_multishot:38|kni_resistshield:2|mag_frostnova:27|mag_inferno:15|pri_cure:36|war_ironskin:16",
+   "elites": "3:sloth:sin_sloth_t2_regen 6:greed:sin_greed_t2_g6",
+   "grew": "L12/A202/M12",
    "tactics": "-",
    "drops": [],
-   "blueprints": "-",
-   "tl": "8be51582"
+   "blueprints": "kni_resistshield",
+   "tl": "7bce39fc"
   },
   {
    "seed": 7,
@@ -1750,16 +1725,16 @@
    "reason": "wipe",
    "rounds": 9,
    "cleared": 8,
-   "sec": 185,
+   "sec": 193.7,
    "downed": "0|1|2",
    "gold": 380,
    "xp": 2000,
    "xpBy": "2000|2060|2080",
-   "events": 818,
-   "strikes": "262/99 · 39/4",
+   "events": 918,
+   "strikes": "272/110 · 26/4",
    "kills": "1401:3|1402:6|1403:7",
-   "casts": "arc_multishot:36|kni_resistshield:11|mag_iceblast:4|mag_inferno:6|pri_cure:12|war_recovery:9|war_shout:1",
-   "elites": "3:sloth:sin_sloth_t1_cdr 6:sloth:sin_sloth_t1_cdr",
+   "casts": "arc_evade:1|arc_multishot:38|kni_resistshield:12|mag_iceblast:6|mag_inferno:6|pri_cure:11|war_recovery:9|war_shout:1",
+   "elites": "3:sloth:sin_sloth_t2_g9 6:sloth:sin_sloth_t2_g9",
    "grew": "L12/A201/M12",
    "tactics": "-",
    "drops": [
@@ -1767,80 +1742,83 @@
     "normal|weapon|7||spear|spear|-|-|-|fixed/atk_pct:0.28;lust/life_steal:0.01"
    ],
    "blueprints": "-",
-   "tl": "dcda6d8a"
+   "tl": "a51041e6"
   },
   {
    "seed": 8,
    "stage": 1043,
-   "won": false,
-   "reason": "wipe",
-   "rounds": 4,
-   "cleared": 3,
-   "sec": 132.9,
-   "downed": "0|1|2",
-   "gold": 132,
-   "xp": 700,
-   "xpBy": "700|200|200",
-   "events": 409,
-   "strikes": "59/16 · 29/4",
-   "kills": "1401:1|1402:1|1403:3",
-   "casts": "kni_resistshield:2|mag_iceblast:12|mag_inferno:8|pri_bind:1|pri_cure:10|pri_judgment:6|pri_penitence:1|war_ironskin:6",
-   "elites": "3:gluttony:sin_gluttony_t1_hp",
-   "grew": "L7/A198/M7",
+   "won": true,
+   "reason": "clear",
+   "rounds": 9,
+   "cleared": 9,
+   "sec": 225,
+   "downed": "-",
+   "gold": 656,
+   "xp": 3600,
+   "xpBy": "3600|3600|3600",
+   "events": 990,
+   "strikes": "142/28 · 17/8",
+   "kills": "1401:7|1402:4|1403:8|1450:1",
+   "casts": "kni_resistshield:1|mag_frostnova:1|mag_iceblast:44|mag_inferno:13|pri_cure:12|pri_judgment:25|pri_penitence:1|war_ironskin:12",
+   "elites": "3:gluttony:sin_gluttony_t2_hppct 6:wrath:sin_wrath_t2_g3",
+   "grew": "L15/A198/M15",
    "tactics": "-",
-   "drops": [],
-   "blueprints": "kni_resistshield",
-   "tl": "540812a4"
+   "drops": [
+    "normal|weapon|8||orb|orb|-|-|-|fixed/atk_pct:0.61;wrath/crit_damage:0.02",
+    "normal|armor|11||robe|-|-|def_flat:7|-|fixed/armor_def_pct:0.21;fixed/cooldown_reduction:0.05;gluttony/res_all:0.03"
+   ],
+   "blueprints": "kni_resistshield|pri_cure",
+   "tl": "1899fb58"
   },
   {
    "seed": 9,
    "stage": 1043,
-   "won": false,
-   "reason": "wipe",
+   "won": true,
+   "reason": "clear",
    "rounds": 9,
-   "cleared": 8,
-   "sec": 174,
-   "downed": "0|1|2",
-   "gold": 342,
-   "xp": 1900,
-   "xpBy": "1900|1900|1900",
+   "cleared": 9,
+   "sec": 162,
+   "downed": "-",
+   "gold": 575,
+   "xp": 3300,
+   "xpBy": "3300|3300|3300",
    "events": 562,
-   "strikes": "144/54 · 23/1",
-   "kills": "1401:3|1402:9|1403:3",
-   "casts": "arc_snipe:9|kni_resistshield:9|mag_inferno:7|pri_cure:14|war_recovery:9",
-   "elites": "3:lust:sin_lust_t1_regen 6:gluttony:sin_gluttony_t1_dmgmax",
-   "grew": "L12/A207/M12",
+   "strikes": "137/44 · 1/0",
+   "kills": "1401:3|1402:10|1403:3|1450:1",
+   "casts": "arc_snipe:9|kni_resistshield:8|mag_inferno:5|pri_cure:13|war_recovery:8|war_warcry:1",
+   "elites": "3:lust:sin_lust_t2_resall 6:gluttony:sin_gluttony_t2_atk",
+   "grew": "L15/A207/M15",
    "tactics": "-",
    "drops": [
     "magic|weapon|8|gluttony|crucifix|crucifix|-|-|-|fixed/atk_pct:0.68;gluttony/vs_normal_dmg:0.07;lust/cast_refund_chance:0.05"
    ],
-   "blueprints": "pri_cure",
-   "tl": "209b0cfd"
+   "blueprints": "pri_cure|mag_inferno",
+   "tl": "67f27de9"
   },
   {
    "seed": 10,
    "stage": 1043,
    "won": false,
    "reason": "wipe",
-   "rounds": 6,
-   "cleared": 5,
-   "sec": 188.7,
+   "rounds": 5,
+   "cleared": 4,
+   "sec": 213.1,
    "downed": "0|1|2",
-   "gold": 198,
-   "xp": 1100,
-   "xpBy": "1133|800|1100",
-   "events": 477,
-   "strikes": "92/16 · 30/2",
-   "kills": "1401:3|1402:2|1403:4",
-   "casts": "kni_resistshield:2|mag_inferno:21|pri_cure:15|pri_judgment:17|war_recovery:9",
-   "elites": "3:greed:sin_greed_t1_magicfind 6:pride:sin_pride_t1_atk",
-   "grew": "L9/A198/M9",
+   "gold": 144,
+   "xp": 800,
+   "xpBy": "824|200|200",
+   "events": 584,
+   "strikes": "65/27 · 27/2",
+   "kills": "1401:2|1402:1|1403:3",
+   "casts": "kni_resistshield:6|mag_inferno:20|pri_cure:15|pri_judgment:11|war_recovery:10",
+   "elites": "3:greed:sin_greed_t2_g9",
+   "grew": "L7/A198/M7",
    "tactics": "-",
    "drops": [
     "normal|weapon|8||spear|spear|-|-|-|fixed/atk_pct:0.38;gluttony/crushing_blow_pct:0.01"
    ],
    "blueprints": "-",
-   "tl": "fafa9361"
+   "tl": "c18b75c8"
   },
   {
    "seed": 1,
@@ -1849,21 +1827,21 @@
    "reason": "wipe",
    "rounds": 1,
    "cleared": 0,
-   "sec": 13.5,
+   "sec": 18,
    "downed": "0|1|2",
    "gold": 0,
    "xp": 0,
    "xpBy": "0|0|0",
-   "events": 43,
-   "strikes": "5/2 · 8/0",
+   "events": 79,
+   "strikes": "6/2 · 16/1",
    "kills": "-",
    "casts": "mag_chain:1|mag_inferno:1|mon_hellfire:1|pri_heal:1",
-   "elites": "1:wrath:sin_wrath_t1_critchance 1:lust:sin_lust_t1_hp",
+   "elites": "1:wrath:sin_wrath_t2_g6 1:lust:sin_lust_t2_regen",
    "grew": "L3/A201/M3",
    "tactics": "-",
    "drops": [],
    "blueprints": "-",
-   "tl": "714117d2"
+   "tl": "fdafdc05"
   },
   {
    "seed": 2,
@@ -1872,21 +1850,21 @@
    "reason": "wipe",
    "rounds": 1,
    "cleared": 0,
-   "sec": 16,
+   "sec": 28.1,
    "downed": "0|1|2",
    "gold": 0,
    "xp": 0,
    "xpBy": "0|0|0",
-   "events": 51,
-   "strikes": "7/1 · 13/3",
+   "events": 111,
+   "strikes": "9/2 · 20/5",
    "kills": "-",
-   "casts": "mag_inferno:1|mon_hellfire:1|pri_heal:1",
-   "elites": "1:wrath:sin_wrath_t1_critdamage 1:pride:sin_pride_t1_dr",
+   "casts": "kni_resistshield:2|mag_inferno:2|mon_hellfire:1|pri_heal:2",
+   "elites": "1:wrath:sin_wrath_t2_g9 1:pride:sin_pride_t2_g6",
    "grew": "L3/A212/M3",
    "tactics": "-",
    "drops": [],
    "blueprints": "-",
-   "tl": "4af60331"
+   "tl": "5191f131"
   },
   {
    "seed": 3,
@@ -1895,70 +1873,24 @@
    "reason": "wipe",
    "rounds": 1,
    "cleared": 0,
-   "sec": 16,
+   "sec": 19.3,
    "downed": "0|1|2",
    "gold": 0,
    "xp": 0,
    "xpBy": "0|0|0",
-   "events": 61,
-   "strikes": "6/1 · 13/1",
+   "events": 95,
+   "strikes": "9/1 · 20/1",
    "kills": "-",
-   "casts": "mag_chain:1|mag_frostnova:1|mon_hellfire:1|pri_heal:1",
-   "elites": "1:sloth:sin_sloth_t1_cdr 1:envy:sin_envy_t1_resall",
+   "casts": "kni_resistshield:2|mag_chain:2|mag_frostnova:1|mon_hellfire:1|pri_heal:1",
+   "elites": "1:sloth:sin_sloth_t2_g9 1:envy:sin_envy_t2_cdr",
    "grew": "L3/A204/M3",
    "tactics": "-",
    "drops": [],
    "blueprints": "-",
-   "tl": "1eb17db6"
+   "tl": "84665d17"
   },
   {
    "seed": 4,
-   "stage": 1051,
-   "won": false,
-   "reason": "wipe",
-   "rounds": 1,
-   "cleared": 0,
-   "sec": 16,
-   "downed": "0|1|2",
-   "gold": 0,
-   "xp": 0,
-   "xpBy": "0|0|0",
-   "events": 66,
-   "strikes": "13/3 · 12/2",
-   "kills": "-",
-   "casts": "arc_multishot:2|mag_inferno:1|mag_lightning:1|mon_hellfire:1",
-   "elites": "1:wrath:sin_wrath_t1_critdamage 1:lust:sin_lust_t1_regen",
-   "grew": "L3/A200/M3",
-   "tactics": "-",
-   "drops": [],
-   "blueprints": "-",
-   "tl": "83998903"
-  },
-  {
-   "seed": 5,
-   "stage": 1051,
-   "won": false,
-   "reason": "wipe",
-   "rounds": 1,
-   "cleared": 0,
-   "sec": 33.2,
-   "downed": "0|1|2",
-   "gold": 0,
-   "xp": 0,
-   "xpBy": "0|0|0",
-   "events": 129,
-   "strikes": "16/5 · 33/4",
-   "kills": "-",
-   "casts": "kni_resistshield:2|kni_rush:1|mag_inferno:2|mon_hellfire:2|pri_heal:3|war_recovery:1",
-   "elites": "1:greed:sin_greed_t1_gold 1:gluttony:sin_gluttony_t1_resall",
-   "grew": "L3/A193/M3",
-   "tactics": "-",
-   "drops": [],
-   "blueprints": "-",
-   "tl": "c3982709"
-  },
-  {
-   "seed": 6,
    "stage": 1051,
    "won": false,
    "reason": "wipe",
@@ -1969,16 +1901,62 @@
    "gold": 0,
    "xp": 0,
    "xpBy": "0|0|0",
-   "events": 87,
-   "strikes": "13/5 · 18/4",
+   "events": 92,
+   "strikes": "20/7 · 14/3",
    "kills": "-",
-   "casts": "arc_multishot:1|mag_frostnova:1|mag_iceblast:1|mag_inferno:1|mon_hellfire:1",
-   "elites": "1:wrath:sin_wrath_t1_dmgmax 1:gluttony:sin_gluttony_t1_hp",
+   "casts": "arc_multishot:3|mag_inferno:1|mag_lightning:1|mon_hellfire:1",
+   "elites": "1:wrath:sin_wrath_t2_g9 1:lust:sin_lust_t2_resall",
+   "grew": "L3/A200/M3",
+   "tactics": "-",
+   "drops": [],
+   "blueprints": "-",
+   "tl": "af896b35"
+  },
+  {
+   "seed": 5,
+   "stage": 1051,
+   "won": false,
+   "reason": "wipe",
+   "rounds": 1,
+   "cleared": 0,
+   "sec": 38.9,
+   "downed": "0|1|2",
+   "gold": 0,
+   "xp": 0,
+   "xpBy": "0|0|0",
+   "events": 184,
+   "strikes": "22/8 · 35/3",
+   "kills": "-",
+   "casts": "kni_resistshield:3|kni_rush:3|mag_inferno:3|mon_hellfire:2|pri_heal:3",
+   "elites": "1:greed:sin_greed_t2_g3 1:gluttony:sin_gluttony_t2_drflat",
+   "grew": "L3/A193/M3",
+   "tactics": "-",
+   "drops": [],
+   "blueprints": "-",
+   "tl": "7b6ff82b"
+  },
+  {
+   "seed": 6,
+   "stage": 1051,
+   "won": false,
+   "reason": "wipe",
+   "rounds": 1,
+   "cleared": 0,
+   "sec": 24.4,
+   "downed": "0|1|2",
+   "gold": 0,
+   "xp": 0,
+   "xpBy": "0|0|0",
+   "events": 142,
+   "strikes": "22/9 · 20/3",
+   "kills": "-",
+   "casts": "arc_multishot:2|kni_resistshield:2|mag_frostnova:3|mag_inferno:2|mon_hellfire:1",
+   "elites": "1:wrath:sin_wrath_t2_g3 1:gluttony:sin_gluttony_t2_hppct",
    "grew": "L3/A202/M3",
    "tactics": "-",
    "drops": [],
    "blueprints": "-",
-   "tl": "97def3ec"
+   "tl": "8ba07210"
   },
   {
    "seed": 7,
@@ -1996,12 +1974,12 @@
    "strikes": "21/13 · 11/2",
    "kills": "-",
    "casts": "arc_multishot:3|mag_fireball:1|mag_ignite:1|mon_hellfire:1",
-   "elites": "1:sloth:sin_sloth_t1_hp 1:envy:sin_envy_t1_atk",
+   "elites": "1:sloth:sin_sloth_t2_hppct 1:envy:sin_envy_t2_resall",
    "grew": "L3/A201/M3",
    "tactics": "-",
    "drops": [],
    "blueprints": "-",
-   "tl": "6d822493"
+   "tl": "112ff4c5"
   },
   {
    "seed": 8,
@@ -2015,16 +1993,16 @@
    "gold": 0,
    "xp": 0,
    "xpBy": "0|0|0",
-   "events": 119,
+   "events": 121,
    "strikes": "8/2 · 23/3",
    "kills": "-",
    "casts": "kni_resistshield:2|mag_frostnova:2|mag_iceblast:2|mon_hellfire:1|pri_judgment:2",
-   "elites": "1:wrath:sin_wrath_t1_dmgmax 1:sloth:sin_sloth_t1_def",
+   "elites": "1:wrath:sin_wrath_t2_g3 1:sloth:sin_sloth_t2_regen",
    "grew": "L3/A198/M3",
    "tactics": "-",
    "drops": [],
    "blueprints": "-",
-   "tl": "6c9305d9"
+   "tl": "bb63f32a"
   },
   {
    "seed": 9,
@@ -2042,12 +2020,12 @@
    "strikes": "12/1 · 17/1",
    "kills": "-",
    "casts": "arc_snipe:1|mag_iceblast:2|mon_hellfire:1",
-   "elites": "1:sloth:sin_sloth_t1_hp 1:greed:sin_greed_t1_itemfind",
+   "elites": "1:sloth:sin_sloth_t2_hppct 1:greed:sin_greed_t2_g6",
    "grew": "L3/A207/M3",
    "tactics": "-",
    "drops": [],
    "blueprints": "-",
-   "tl": "1752f237"
+   "tl": "1173aa73"
   },
   {
    "seed": 10,
@@ -2056,21 +2034,21 @@
    "reason": "wipe",
    "rounds": 1,
    "cleared": 0,
-   "sec": 14.2,
+   "sec": 14.7,
    "downed": "0|1|2",
    "gold": 0,
    "xp": 0,
    "xpBy": "0|0|0",
-   "events": 59,
-   "strikes": "5/0 · 12/1",
+   "events": 60,
+   "strikes": "2/0 · 13/1",
    "kills": "-",
    "casts": "mag_inferno:1|mag_lightning:1|mon_hellfire:1|pri_judgment:1",
-   "elites": "1:pride:sin_pride_t1_fhr 1:lust:sin_lust_t1_critchance",
+   "elites": "1:pride:sin_pride_t2_g9 1:lust:sin_lust_t2_g9",
    "grew": "L3/A198/M3",
    "tactics": "-",
    "drops": [],
    "blueprints": "-",
-   "tl": "3414b0ce"
+   "tl": "1353ae1e"
   }
  ]
 }

@@ -254,6 +254,7 @@ const STRINGS = {
     /* ── 새 게임 · 세이브 (2026-08-25) ── */
     // 메뉴 — 켜면 먼저 선다 · 새 게임(`ng.h`) 아래 (SCREEN_DESIGN §3 · ADR-0641 · app.js:renderMenu) · 뒤로가기(ADR-0643)
     'mn.load': { ko: '불러오기', en: 'Load Game' },
+    'mn.loading': { ko: '그림 불러오는 중 {p}%', en: 'Loading art {p}%' },   // 켤 때 그림 미리 받기 막대 (SCREEN_DESIGN §3 · ADR-1080)
     'ng.back': { ko: '뒤로가기', en: 'Back' },
     'ng.hasSave': { ko: '저장된 게임 있음 — {t}', en: 'A saved game exists — {t}' },
     'ng.saveLine': { ko: '영웅 {h}명 · 클리어 {c} · 골드 {g}', en: '{h} heroes · {c} cleared · {g} gold' },
@@ -699,8 +700,8 @@ const STRINGS = {
        아래 나열 순서는 탭 바 순서와 같다 — 읽는 사람이 화면과 대조할 수 있게. */
     'nav.expedition': { ko: '원정', en: 'Expedition' },
     'nav.explore': { ko: '탐험', en: 'Exploration' },
-    // 결투장(탭 id `colosseum`) [2026-10-18 사용자 지시 · SCREEN_DESIGN §1 · ADR-0670 · 이름 맞바꿈 2026-10-24 ADR-0760] — 콜로세움 바로 앞 · 오프라인 층 사다리 · 레일(사다리) | 판
-    'nav.colosseum': { ko: '결투장', en: 'Arena' },
+    // 시련의 탑(탭 id `colosseum`) [2026-10-18 사용자 지시 · SCREEN_DESIGN §1 · ADR-0670 · 이름 2026-11-13 ADR-1071] — 결투장(`arena`) 바로 앞 · 오프라인 층 사다리 · 레일(사다리) | 판
+    'nav.colosseum': { ko: '시련의 탑', en: 'Tower of Trials' },
     'cs.progress': { ko: '{n} / {total}층', en: 'Floor {n} / {total}' },
     'cs.progressDone': { ko: '{total}층 완주', en: 'All {total} floors cleared' },
     'cs.lv': { ko: 'Lv.{a}~{b}', en: 'Lv.{a}–{b}' },
@@ -708,23 +709,23 @@ const STRINGS = {
     'cs.from': { ko: '{n}층 · {tier} · AI 팀', en: 'Floor {n} · {tier} · AI team' },
     'cs.fromGate': { ko: '{n}층 · {tier} 승급전 · AI 팀', en: 'Floor {n} · {tier} promotion bout · AI team' },
     'cs.fight': { ko: '도전', en: 'Challenge' },
-    'cs.back': { ko: '결투장으로', en: 'Back to Arena' },
+    'cs.back': { ko: '시련의 탑으로', en: 'Back to the Tower' },
     'cs.last': { ko: '지난 도전: {result} · {sec}초', en: 'Last challenge: {result} · {sec}s' },
     'cs.last.open': { ko: '지난 도전: {result} · {sec}초 · {n}층 열림', en: 'Last challenge: {result} · {sec}s · Floor {n} unlocked' },
     'cs.emblem': { ko: '{tier} 휘장 획득', en: '{tier} emblem earned' },
     'cs.help': {
-        ko: '결투장은 한 층씩 올라가는 사다리입니다. 처음엔 첫 층만 열려 있고, 열린 가장 높은 층을 이기면 다음 층이 열립니다. 깬 층은 다시 도전할 수 있고, 져도 잃는 것이 없습니다.<br>층마다 상대 AI 팀이 정해져 있습니다 — 같은 층은 언제 가도 같은 팀입니다. 위층일수록 상대의 레벨 · 장비 · 강화 · 스킬이 오릅니다.<br>등급의 마지막 층은 승급전입니다. 이기면 그 등급의 휘장을 얻습니다.',
-        en: 'The Arena is a ladder you climb one floor at a time. Only the first floor is open at the start; beat the highest open floor to unlock the next. You can challenge cleared floors again, and losing costs nothing.<br>Each floor has a fixed AI team — the same floor always fields the same team. Higher floors bring higher level, gear, upgrades and skills.<br>The last floor of each tier is a promotion bout. Win it to earn that tier’s emblem.',
+        ko: '시련의 탑은 한 층씩 올라가는 탑입니다. 처음엔 첫 층만 열려 있고, 열린 가장 높은 층을 이기면 다음 층이 열립니다. 깬 층은 다시 도전할 수 있고, 져도 잃는 것이 없습니다.<br>층마다 상대 AI 팀이 정해져 있습니다 — 같은 층은 언제 가도 같은 팀입니다. 위층일수록 상대의 레벨 · 장비 · 강화 · 스킬이 오릅니다.<br>등급의 마지막 층은 승급전입니다. 이기면 그 등급의 휘장을 얻습니다.',
+        en: 'The Tower of Trials is climbed one floor at a time. Only the first floor is open at the start; beat the highest open floor to unlock the next. You can challenge cleared floors again, and losing costs nothing.<br>Each floor has a fixed AI team — the same floor always fields the same team. Higher floors bring higher level, gear, upgrades and skills.<br>The last floor of each tier is a promotion bout. Win it to earn that tier’s emblem.',
     },
-    'nav.arena': { ko: '콜로세움', en: 'Colosseum' },
-    // 콜로세움(탭 id `arena`) = 온라인 ELO [2026-10-18 · ADR-0670 · 이름 맞바꿈 2026-10-24 ADR-0760 — ~~오프라인 | 온라인 갈래~~ ADR-0656] — 리그 카드 · 상대 후보 셋 · 친선전 창 · 검사 사유(INTERFACE §2-17 의 코드마다 하나)
+    'nav.arena': { ko: '결투장', en: 'Arena' },
+    // 결투장(탭 id `arena`) = 온라인 ELO [2026-10-18 · ADR-0670 · 이름 2026-11-13 ADR-1071 — ~~오프라인 | 온라인 갈래~~ ADR-0656] — 리그 카드 · 상대 후보 셋 · 친선전 창 · 검사 사유(INTERFACE §2-17 의 코드마다 하나)
     'ar.rating': { ko: '레이팅', en: 'Rating' },
     'ar.peak': { ko: '최고 {n}', en: 'Best {n}' },
     'ar.record': { ko: '{w}승 {d}무 {l}패', en: '{w}W {d}D {l}L' },
     'ar.toNext': { ko: '{tier}까지 {n}', en: '{n} to {tier}' },
     'ar.topLeague': { ko: '최고 리그', en: 'Top league' },
     'ar.cands': { ko: '상대 후보', en: 'Opponents' },
-    // 콜로세움 데모 — 고스트 · 방어 편성 · 방어 기록 (ADR-1040 · arena_design §9 · 2026-11-11)
+    // 결투장 데모 — 고스트 · 방어 편성 · 방어 기록 (ADR-1040 · arena_design §9 · 2026-11-11)
     'ar.fromGhost': { ko: '{name} · {tier} · {rating}', en: '{name} · {tier} · {rating}' },
     'ar.noName': { ko: '이름 없음', en: 'No name' },
     'ar.def': { ko: '방어 편성', en: 'Defense party' },
@@ -758,8 +759,8 @@ const STRINGS = {
     'ar.last.rated': { ko: '지난 결투: {result} · 레이팅 {after} ({delta})', en: 'Last duel: {result} · Rating {after} ({delta})' },
     'ar.rules': { ko: '결투 규칙', en: 'Duel rules' },
     'ar.help.rating': {
-        ko: '콜로세움은 레이팅으로 겨룹니다. 이기면 오르고 지면 내려가며, 센 상대를 이길수록 많이 오르고 센 상대에게 질수록 적게 내려갑니다. 레이팅이 문턱을 넘으면 리그가 오릅니다.<br>상대 후보는 내 레이팅의 아래 · 비슷 · 위에 고르게 나옵니다. 카드의 + / − 가 이기고 질 때 바뀔 레이팅입니다. 결투가 끝나면 후보가 새로 섭니다.<br>레이팅은 결투를 시작하는 순간 정해집니다 — 관전을 닫아도 결과는 그대로입니다. 상대는 방어 편성을 등록한 다른 플레이어입니다.',
-        en: 'The Colosseum is ranked by rating. Wins raise it and losses lower it; beating stronger opponents gains more, and losing to them costs less. Cross a threshold to move up a league.<br>Opponents are spread below, near and above your rating. The + / − on each card is how much your rating changes if you win or lose. New opponents appear after each duel.<br>Your rating is settled the moment the duel starts — closing the replay does not change the result. Opponents are defense parties registered by other players.',
+        ko: '결투장은 레이팅으로 겨룹니다. 이기면 오르고 지면 내려가며, 센 상대를 이길수록 많이 오르고 센 상대에게 질수록 적게 내려갑니다. 레이팅이 문턱을 넘으면 리그가 오릅니다.<br>상대 후보는 내 레이팅의 아래 · 비슷 · 위에 고르게 나옵니다. 카드의 + / − 가 이기고 질 때 바뀔 레이팅입니다. 결투가 끝나면 후보가 새로 섭니다.<br>레이팅은 결투를 시작하는 순간 정해집니다 — 관전을 닫아도 결과는 그대로입니다. 상대는 방어 편성을 등록한 다른 플레이어입니다.',
+        en: 'The Arena is ranked by rating. Wins raise it and losses lower it; beating stronger opponents gains more, and losing to them costs less. Cross a threshold to move up a league.<br>Opponents are spread below, near and above your rating. The + / − on each card is how much your rating changes if you win or lose. New opponents appear after each duel.<br>Your rating is settled the moment the duel starts — closing the replay does not change the result. Opponents are defense parties registered by other players.',
     },
     'ar.select': { ko: '출전 인원 {n} / 3', en: 'Team members {n} / 3' },
     'ar.edit': { ko: '편성 수정', en: 'Edit party' },
@@ -768,12 +769,12 @@ const STRINGS = {
     'ar.noOpponent': { ko: '상대를 고르면 팀이 나타납니다', en: 'Pick an opponent to reveal their team' },
     'ar.noTactic': { ko: '열린 전술 칸 없음', en: 'No tactic slots open' },   // Party 판의 전술 칸이 빌 때 (ADR-0495)
     'ar.fight': { ko: '결투 시작', en: 'Start duel' },
-    'ar.back': { ko: '콜로세움으로', en: 'Back to Colosseum' },
+    'ar.back': { ko: '결투장으로', en: 'Back to Arena' },
     'ar.draw': { ko: '무승부', en: 'Draw' },
     'ar.last': { ko: '지난 결투: {result} · {sec}초', en: 'Last duel: {result} · {sec}s' },
     'ar.help': {
-        ko: '저장된 편성을 고르면 그 편성의 영웅과 전열·후열이 그대로 출전합니다. 인원과 진형은 편성 탭에서 수정합니다. 영웅 3명을 채워야 결투를 시작할 수 있습니다.<br>개인 능력치·장비·스킬에 고른 편성의 파티 전술·물약을 더해 단판 전투를 합니다. 도감 보너스는 적용하지 않고, 상대는 파티 전술·물약이 없습니다. 제한시간이 지나면 무승부입니다.<br>결투는 원정과 독립되어 보상·도감 처치·자원 소모가 없습니다. 마신 물약도 재고에서 줄지 않습니다. 콜로세움 레이팅과 결투장에서 오른 층은 저장되고, 고른 상대와 지난 결과는 재접속하면 초기화됩니다.',
-        en: 'Choose a saved party to use its heroes and front or back ranks. Edit members and formation in the Party tab. Assign three heroes to start a duel.<br>A single round uses individual stats, gear and skills plus the chosen party’s tactics and potions. Codex bonuses do not apply, and opponents have no tactics or potions. Reaching the time limit ends in a draw.<br>Duels run independently of expeditions, with no rewards, codex kills or resource costs. Potions drunk are not taken from your stock. Your Colosseum rating and Arena progress are saved; the picked opponent and last result reset when you reload.',
+        ko: '저장된 편성을 고르면 그 편성의 영웅과 전열·후열이 그대로 출전합니다. 인원과 진형은 편성 탭에서 수정합니다. 영웅 3명을 채워야 결투를 시작할 수 있습니다.<br>개인 능력치·장비·스킬에 고른 편성의 파티 전술·물약을 더해 단판 전투를 합니다. 도감 보너스는 적용하지 않고, 상대도 자기 파티 전술·물약을 씁니다. 제한시간이 지나면 무승부입니다.<br>결투는 원정과 독립되어 보상·도감 처치·자원 소모가 없습니다. 마신 물약도 재고에서 줄지 않습니다. 결투장 레이팅과 시련의 탑에서 오른 층은 저장되고, 고른 상대와 지난 결과는 재접속하면 초기화됩니다.',
+        en: 'Choose a saved party to use its heroes and front or back ranks. Edit members and formation in the Party tab. Assign three heroes to start a duel.<br>A single round uses individual stats, gear and skills plus the chosen party’s tactics and potions. Codex bonuses do not apply, and opponents use their own tactics and potions. Reaching the time limit ends in a draw.<br>Duels run independently of expeditions, with no rewards, codex kills or resource costs. Potions drunk are not taken from your stock. Your Arena rating and Tower of Trials progress are saved; the picked opponent and last result reset when you reload.',
     },
     'nav.party': { ko: '편성', en: 'Party' },
     'nav.character': { ko: '캐릭터', en: 'Character' },
@@ -815,10 +816,6 @@ const STRINGS = {
     'set.pane.game': { ko: '게임', en: 'Game' },
     'set.pane.screen': { ko: '화면', en: 'Display' },
     'set.pane.fx': { ko: '연출', en: 'Effects' },
-    // 아이템 그림 묶음 — 버튼 글은 언어와 상관없이 묶음 이름 (2026-11-12 · ADR-1051)
-    'set.itemArt': { ko: '아이템 그림', en: 'Item Art' },
-    'set.itemArt.gemini': { ko: 'Gemini', en: 'Gemini' },
-    'set.itemArt.codex': { ko: 'Codex', en: 'Codex' },
     'set.skillFx': { ko: '스킬 이펙트', en: 'Skill Effects' },
     'set.fxArt': { ko: '이펙트 그림체', en: 'Effect Style' },   // 관전 스킬 이펙트의 그림체 — 버튼 글은 ix.fxs.* (2026-10-09 · ADR-0561)
     'set.fxAlpha': { ko: '이펙트 투명도(%)', en: 'Transparency (%)' },   // 영어는 짧게 — 이름 칸이 넓어지면 다른 줄 버튼까지 접힌다   // 스킬 조각만 옅게 — 버튼 글은 0 · 25 · 50 · 75 (단위는 이 이름이 든다 · 2026-10-09 · ADR-0562)
@@ -907,7 +904,7 @@ const STRINGS = {
     'dp.fx.quality': { ko: '레어 확률', en: 'Rare chance' },
     'dp.fx.research': { ko: '연구 속도', en: 'Research speed' },
     'dp.fx.cost': { ko: '연구 비용', en: 'Research cost' },
-    // 도움말 연구소 섹션 (SCREEN_DESIGN §12 · 2026-10-21 R298 — ~~벤치(파견 대기)~~ 문장 대체) — 탐험 `ex.help` · 결투장 `cs.help` 와 같은 도움말 전용 문장
+    // 도움말 연구소 섹션 (SCREEN_DESIGN §12 · 2026-10-21 R298 — ~~벤치(파견 대기)~~ 문장 대체) — 탐험 `ex.help` · 시련의 탑 `cs.help` 와 같은 도움말 전용 문장
     'dp.help': {
         ko: '줄은 <b>영웅이 없어도</b> 시간마다 생산합니다 — 게임을 꺼 둔 동안에도(최대 {h}시간 · 수색은 칸이 찰 때까지)<br>'
             + '지점을 골라 <b>연구</b>하면 레벨이 오릅니다 — 시간이 걸리고 연구소 전체에 <b>한 번에 하나</b> · 그만두면 비용을 전부 돌려받습니다 · 연구소 랭크가 새 지점을 엽니다<br>'
@@ -990,7 +987,8 @@ const STRINGS = {
 
     /* 의뢰 게시판 (SCREEN_DESIGN §14 · 자리는 선술집 탭 §8-1 · ADR-0352) — 제목은 `nav.commission` 재사용(옛 탭 라벨이 패널 제목으로 내려왔다).
        ⚠ **종류 · 등급 이름은 여기 없다** — `commission_kind.csv` · `commission_grade.csv` 의 `_kr`/`_en` 쌍이고 화면은 `L()` 로 푼다.
-       남는 것은 화면 라벨 · **목표 틀**(어휘마다 하나 — `{t}` = 대상 이름 · `{n}` = 목표 수) · 플래시다. `cm.fameLv` · `cm.fameMax` · `cm.claimedUp` = 명성 레벨(게시판 위 막대 줄 · 오른 수령 플래시 — §14 · ADR-0958 · R375) */
+       남는 것은 화면 라벨 · **목표 틀**(종류 × 어휘마다 하나 `cm.goal.<kind>.<axis>` — `{t}` = 대상 이름 · `{n}` = 목표 수 · R457 · ADR-1068) · 부위 갈래 이름 · 플래시다.
+       `cm.goal.kill.monster` · `kill.grade.*` · `collect.rarity` = 옛 카드(R457 이전에 받은 것)만. `cm.fameLv` · `cm.fameMax` · `cm.claimedUp` = 명성 레벨(게시판 위 막대 줄 · 오른 수령 플래시 — §14 · ADR-0958 · R375) */
     'cm.accept': { ko: '수락', en: 'Accept' },
     'cm.claim': { ko: '수령', en: 'Claim' },
     'cm.drop': { ko: '포기', en: 'Abandon' },
@@ -998,12 +996,28 @@ const STRINGS = {
     'cm.slots': { ko: '받음 {n} / {max}', en: 'Taken {n} / {max}' },
     'cm.fameLv': { ko: '명성 Lv {lv}', en: 'Fame Lv {lv}' },
     'cm.fameMax': { ko: '최고', en: 'Max' },
-    'cm.goal.chapter': { ko: '{t}의 몬스터 {n}마리', en: { one: '{n} monster in the {t}', other: '{n} monsters in the {t}' } },
-    'cm.goal.race': { ko: '{t} 종족 {n}마리', en: { one: '{n} {t} foe', other: '{n} {t} foes' } },
-    'cm.goal.monster': { ko: '{t} {n}마리', en: '{t} ×{n}' },
-    'cm.goal.elite': { ko: '정예 {n}마리', en: { one: '{n} elite', other: '{n} elites' } },
-    'cm.goal.boss': { ko: '보스 {n}마리', en: { one: '{n} boss', other: '{n} bosses' } },
-    'cm.goal.rarity': { ko: '{t} 장비 {n}개', en: { one: '{n} {t} item', other: '{n} {t} items' } },
+    'cm.goal.kill.any': { ko: '몬스터 {n}마리', en: { one: '{n} monster', other: '{n} monsters' } },
+    'cm.goal.kill.chapter': { ko: '{t}의 몬스터 {n}마리', en: { one: '{n} monster in the {t}', other: '{n} monsters in the {t}' } },
+    'cm.goal.kill.race': { ko: '{t} 종족 {n}마리', en: { one: '{n} {t} foe', other: '{n} {t} foes' } },
+    'cm.goal.kill.place': { ko: '{t}의 몬스터 {n}마리', en: { one: '{n} monster at {t}', other: '{n} monsters at {t}' } },
+    'cm.goal.kill.monster': { ko: '{t} {n}마리', en: '{t} ×{n}' },
+    'cm.goal.kill.grade.elite': { ko: '정예 {n}마리', en: { one: '{n} elite', other: '{n} elites' } },
+    'cm.goal.kill.grade.boss': { ko: '보스 {n}마리', en: { one: '{n} boss', other: '{n} bosses' } },
+    'cm.goal.elite.any': { ko: '정예 {n}마리', en: { one: '{n} elite', other: '{n} elites' } },
+    'cm.goal.elite.chapter': { ko: '{t}의 정예 {n}마리', en: { one: '{n} elite in the {t}', other: '{n} elites in the {t}' } },
+    'cm.goal.elite.place': { ko: '{t}의 정예 {n}마리', en: { one: '{n} elite at {t}', other: '{n} elites at {t}' } },
+    'cm.goal.salvage.any': { ko: '장비 {n}개 분해', en: { one: 'Salvage {n} item', other: 'Salvage {n} items' } },
+    'cm.goal.salvage.part': { ko: '{t} {n}개 분해', en: 'Salvage {t} ×{n}' },
+    'cm.goal.salvage.rarity_min': { ko: '{t} 이상 장비 {n}개 분해', en: { one: 'Salvage {n} {t}+ item', other: 'Salvage {n} {t}+ items' } },
+    'cm.goal.material.any': { ko: '재료 {n}개', en: { one: '{n} material', other: '{n} materials' } },
+    'cm.goal.material.mat': { ko: '{t} {n}개', en: '{t} ×{n}' },
+    'cm.goal.upgrade.any': { ko: '강화 {n}번', en: { one: 'Enhance {n} time', other: 'Enhance {n} times' } },
+    'cm.goal.upgrade.up_min': { ko: '+{t} 이상으로 강화 {n}번', en: { one: 'Enhance to +{t} or higher {n} time', other: 'Enhance to +{t} or higher {n} times' } },
+    'cm.goal.craft.any': { ko: '장비 제작 {n}개', en: { one: 'Craft {n} item', other: 'Craft {n} items' } },
+    'cm.goal.collect.rarity': { ko: '{t} 장비 {n}개', en: { one: '{n} {t} item', other: '{n} {t} items' } },
+    'cm.part.weapon': { ko: '무기', en: 'Weapon' },
+    'cm.part.armor': { ko: '방어구', en: 'Armor' },
+    'cm.part.accessory': { ko: '장신구', en: 'Accessory' },
     'cm.taken': { ko: '의뢰 수락 — {goal}', en: 'Commission taken — {goal}' },
     'cm.claimed': { ko: '의뢰 완료 — {g} G', en: 'Commission complete — {g} G' },
     'cm.claimedUp': { ko: '의뢰 완료 — {g} G · 명성 Lv {lv}', en: 'Commission complete — {g} G · Fame Lv {lv}' },
@@ -1604,8 +1618,8 @@ const STRINGS = {
         en: "Adding a commission to your expeditions",
     },
     'help.tavern.commissions.body': {
-        ko: "게시판에서 목표와 골드 보상을 보고 <b>[수락]</b>합니다. 동시에 진행할 수 있는 의뢰는 <b>{slots}개</b>입니다. 별도 파티나 전투를 시작하지 않으며, 수락한 뒤 모든 부대의 <b>승리 라운드</b>가 목표를 함께 채웁니다.<br><br>처치 의뢰는 적힌 지역·종족·몬스터·등급을 맞춰야 합니다. 수집 의뢰는 해당 희귀도의 원정 장비를 셉니다. 자동 분해 규칙으로 분해한 장비도 포함하지만, 가방이 가득 차 넘친 장비와 패배한 라운드는 세지 않습니다. 수락 전에 얻은 장비는 세지 않으며, 상점 구매·탐험 보상·연구소 생산도 현재 수집 목표에 포함되지 않습니다.<br><br>다 채우면 <b>[수령]</b>해야 골드를 받습니다. 기한은 없습니다. <b>[포기]</b>하면 진행도는 사라지지만 벌금은 없고, 수령·포기한 자리는 새 의뢰로 바뀝니다. 현재 돌고 있는 지역이나 앞으로 잡을 적과 맞는 목표를 고르면 원정과 함께 진행할 수 있습니다.",
-        en: "Check a card's goal and gold reward, then <b>Accept</b>. Your active limit is <b>{slots}</b>. No extra Party or battle starts: <b>won rounds</b> from all your expeditions contribute after acceptance.<br><br>Kill goals require the stated area, race, monster or enemy grade. Collection goals count expedition gear of the stated rarity. Auto-salvaged drops count, but full-bag overflow and defeated rounds do not. Gear from before acceptance, Shop purchases, Exploration rewards and Laboratory output do not count toward current collection goals.<br><br>Use <b>Claim</b> after completion to receive the gold. There is no deadline. <b>Abandon</b> loses progress without a fee. Claiming or abandoning replaces that card. A goal matching your current farming area or next enemies can progress alongside your expeditions.",
+        ko: "게시판에서 목표와 골드 보상을 보고 <b>[수락]</b>합니다. 동시에 진행할 수 있는 의뢰는 <b>{slots}개</b>입니다. 별도 파티나 전투를 시작하지 않으며, 수락한 뒤 모든 부대의 <b>승리 라운드</b>가 목표를 함께 채웁니다.<br><br>토벌·현상금 의뢰는 적힌 장·종족·장소를 맞춰 잡아야 하고 패배한 라운드는 세지 않습니다. 분해 의뢰는 직접 분해하거나 자동 분해 규칙으로 분해한 장비를 세며, 가방이 가득 차 넘친 장비는 세지 않습니다. 재료 의뢰는 분해와 연구소에서 얻은 철광석·약초·목재를 세며, 상점 구매·교환·합성은 세지 않습니다. 강화 의뢰는 실패한 시도도 셉니다. 수락 전에 일어난 것은 세지 않습니다.<br><br>다 채우면 <b>[수령]</b>해야 골드를 받습니다. 기한은 없습니다. <b>[포기]</b>하면 진행도는 사라지지만 벌금은 없고, 수령·포기한 자리는 새 의뢰로 바뀝니다. 현재 돌고 있는 지역이나 앞으로 잡을 적과 맞는 목표를 고르면 원정과 함께 진행할 수 있습니다.",
+        en: "Check a card's goal and gold reward, then <b>Accept</b>. Your active limit is <b>{slots}</b>. No extra Party or battle starts: <b>won rounds</b> from all your expeditions contribute after acceptance.<br><br>Hunt and Bounty goals require the stated chapter, race or place, and defeated rounds do not count. Salvage goals count gear you salvage by hand or by auto-salvage rules, but not full-bag overflow. Gathering goals count ore, herbs and timber from salvage and the Laboratory, not Shop purchases, trades or synthesis. Enhance goals count failed attempts too. Nothing from before acceptance counts.<br><br>Use <b>Claim</b> after completion to receive the gold. There is no deadline. <b>Abandon</b> loses progress without a fee. Claiming or abandoning replaces that card. A goal matching your current farming area or next enemies can progress alongside your expeditions.",
     },
     'help.tavern.fame.title': {
         ko: "카드 등급과 명성 레벨",
@@ -1759,8 +1773,8 @@ const STRINGS = {
         ko: "도서관에서 전직 기능을 열고 레벨 <b>{level}</b> 이상인 영웅을 고릅니다. 해당 직업의 세 갈래와 스킬을 비교한 뒤 하나를 선택하고 <b>[전직]</b>합니다. 현재 비용은 <b>{gold}G</b>이며 지불하면 즉시 완료됩니다.<br><br><b>전직 갈래 자체는 되돌릴 수 없습니다.</b> 같은 갈래 안에서 배운 전직 스킬을 바꾸는 것은 가능하지만 다른 갈래로 전직을 다시 하는 것은 불가능합니다. 원정 중에도 전직할 수 있고, 탐험 중에는 먼저 돌아와야 합니다.<br><br>전직을 마친 뒤에는 <b>캐릭터 → [마스터리 열기] → 전직 트리</b>에서 전직 스킬을 직접 배웁니다. 전직 버튼만 누른 상태와 전직 스킬을 배운 상태는 다릅니다.",
         en: "Unlock advancement in the Library and select a hero of at least level <b>{level}</b>. Compare the class's three paths and their skills, choose one and press <b>Advance</b>. It currently costs <b>{gold}G</b> and completes immediately on payment.<br><br><b>The advancement path cannot be undone.</b> You can change the learned skill within that path, but cannot switch the hero to another path. Heroes can advance during Expeditions; those exploring must return first.<br><br>After advancing, go to <b>Character → Open Mastery → advancement tree</b> and learn an Advance skill. Completing advancement alone does not learn one automatically.",
     },
-    'help.library.points.title': { ko: "공용 스킬 포인트와 메인 해금", en: "Shared skill points and main-skill levels" },
-    'help.library.points.body': { ko: "영웅은 <b>레벨 1 부터 레벨마다 스킬 포인트</b>를 받습니다. 죄종·직업 마스터리와 전직 메인·꼬리는 같은 포인트를 나누어 씁니다. 전직할 때 별도 포인트를 받지는 않습니다.<br><br>전직 후 세 메인 스킬 중 <b>하나</b>를 스킬 포인트 1로 배웁니다. 메인의 다음 단계는 전직 가능 레벨부터 <b>{interval}레벨 간격</b>으로 열립니다. 포인트가 있어도 다음 단계의 영웅 레벨 조건을 만족해야 하며, 조건을 만족하면 늦게 배운 단계도 차례로 올릴 수 있습니다. 이 간격은 꼬리의 포인트 지급 조건이 아닙니다.<br><br>배운 전직 스킬을 우클릭해 되돌리면 학습·강화에 투자한 포인트가 <b>공용 스킬 포인트로 환급</b>됩니다. 같은 갈래의 다른 스킬이나 마스터리에 다시 쓸 수 있습니다. 갈래와 전직 비용은 그대로이며, 특수·변형·필살기 꼬리는 현재 준비 중입니다.", en: "Heroes earn <b>skill points at every level, starting at Lv1</b>. Sin mastery, Class mastery and advancement main skills and branches share this pool. Advancing grants no extra points.<br><br>After advancing, learn <b>one</b> of the three main skills for one skill point. Further main-skill ranks unlock every <b>{interval} hero levels</b> from the advancement unlock level. Having points does not bypass the level requirement. Eligible ranks may be learned later in sequence. This interval does not govern branch-point income.<br><br>Right-click the learned Advance skill to refund its learning and upgrade costs to the <b>shared skill-point pool</b>. Reinvest them in another skill of the same path or in mastery. The chosen path and gold cost remain in place. Special, Variant and Ultimate branches are currently coming later." },
+    'help.library.points.title': { ko: "공용 스킬 포인트와 전직 트리", en: "Shared skill points and the Advancement Tree" },
+    'help.library.points.body': { ko: "영웅은 <b>레벨 1 부터 레벨마다 스킬 포인트</b>를 받습니다. 죄종·직업 마스터리와 전직 트리는 같은 포인트를 나누어 씁니다.<br><br>전직하면 갈래의 전직 스킬 셋 중 <b>하나</b>를 배웁니다 — 스킬 포인트를 쓰지 않습니다. 전직 트리에는 줄이 둘 있습니다. <b>공통 줄</b>은 갈래 전체에 닿고, <b>스킬 줄</b>(크기 · 변형 1 · 변형 2)은 배운 스킬에 닿습니다. 줄마다 칸 셋에 합 <b>{row}</b>까지 자유롭게 나눠 찍고, 한 칸에 {row}을 모두 넣으면 그 칸의 덤이 켜집니다.<br><br>칸을 우클릭하면 1랭크가, 배운 전직 스킬을 우클릭하면 스킬 줄 전체가 <b>공용 스킬 포인트로 환급</b>됩니다. 갈래와 전직 비용은 그대로입니다.", en: "Heroes earn <b>skill points at every level, starting at Lv1</b>. Sin mastery, Class mastery and the Advancement Tree share this pool.<br><br>After advancing, learn <b>one</b> of the path's three skills — it costs no skill points. The tree has two rows. The <b>common row</b> affects the whole path; the <b>skill row</b> (Power · Variant 1 · Variant 2) affects the learned skill. Split up to <b>{row}</b> ranks per row freely across its three cells; putting all {row} into one cell turns on its bonus.<br><br>Right-click a cell to refund one rank, or the learned skill to refund its whole skill row to the <b>shared skill-point pool</b>. The chosen path and gold cost remain." },
     'help.resource.lines.title': {
         ko: "줄 · 지점 · 랭크의 차이",
         en: "Lines, nodes and ranks",
@@ -1818,12 +1832,12 @@ const STRINGS = {
         en: "<b>Search</b> starts real arrivals after its first Interval research completes. Full Tavern waiting slots pause it; freeing a slot resumes the remaining wait. Quality raises Rare chance, and Waiting Slots adds candidate capacity.<br><br><b>Training</b> helps assigned heroes catch up toward the roster's leading level. Its cap is <b>the highest roster level minus the gap shown by Range</b>. Research Range to reduce that gap. Heroes at or above the cap gain no Training XP, so Expeditions must push the leading level forward.<br><br>The <b>Gambling Den line</b> automatically produces gold once the Tavern's Gambling Den is unlocked. It needs no stake or spin button. Income raises output, while Jackpot raises the chance of an extra payout. This is separate from manually playing Tavern slots.",
     },
     'help.colosseum.prepare.title': {
-        ko: "결투장에서 파티 시험하기",
-        en: "Testing your party in the Arena",
+        ko: "시련의 탑에서 파티 시험하기",
+        en: "Testing your party in the Tower of Trials",
     },
     'help.colosseum.prepare.body': {
-        ko: "결투장은 정해진 영웅 팀을 상대로 한 층씩 도전하는 곳입니다. 원정에서 맞춘 장비와 편성이 영웅 팀끼리의 전투에서는 어떤지 시험할 수 있습니다. 챕터 진행과 별개이므로 원정을 진행하다가 원하는 때 도전해도 됩니다.<br><br>사용할 Party를 고르고 영웅 {duelSize}명을 채운 뒤 열린 층을 선택합니다. [편성 수정]은 편성 탭으로 이동하는 버튼입니다. 거기서 인원·전열/후열·물약·파티 전술을 준비한 뒤 결투장으로 돌아옵니다. 상대 카드에서 장비와 스킬을 살펴보고 [도전]을 누르면 한 판의 자동전투가 시작됩니다.",
-        en: "The Arena lets you challenge fixed hero teams one floor at a time. It is a place to test how the equipment and formations you built during Expeditions perform against another hero team. It is separate from chapter progress, so you can challenge it whenever you choose.<br><br>Choose a Party, fill all {duelSize} hero slots and select an open floor. Edit party takes you to the Party tab. Prepare members, front/back rows, potions and tactics there, then return to the Arena. Inspect the enemy cards for gear and skills, and press Challenge to start one automatic battle.",
+        ko: "시련의 탑은 정해진 영웅 팀을 상대로 한 층씩 도전하는 곳입니다. 원정에서 맞춘 장비와 편성이 영웅 팀끼리의 전투에서는 어떤지 시험할 수 있습니다. 챕터 진행과 별개이므로 원정을 진행하다가 원하는 때 도전해도 됩니다.<br><br>사용할 Party를 고르고 영웅 {duelSize}명을 채운 뒤 열린 층을 선택합니다. [편성 수정]은 편성 탭으로 이동하는 버튼입니다. 거기서 인원·전열/후열·물약·파티 전술을 준비한 뒤 시련의 탑으로 돌아옵니다. 상대 카드에서 장비와 스킬을 살펴보고 [도전]을 누르면 한 판의 자동전투가 시작됩니다.",
+        en: "The Tower of Trials lets you challenge fixed hero teams one floor at a time. It is a place to test how the equipment and formations you built during Expeditions perform against another hero team. It is separate from chapter progress, so you can challenge it whenever you choose.<br><br>Choose a Party, fill all {duelSize} hero slots and select an open floor. Edit party takes you to the Party tab. Prepare members, front/back rows, potions and tactics there, then return to the Tower. Inspect the enemy cards for gear and skills, and press Challenge to start one automatic battle.",
     },
     'help.colosseum.floors.title': {
         ko: "층과 승급전",
@@ -1846,16 +1860,16 @@ const STRINGS = {
         en: "Rules shared by both duel modes",
     },
     'help.colosseum.rules.body': {
-        ko: "결투장과 콜로세움은 내 영웅의 능력치·장비·스킬에 선택한 Party의 파티 전술과 물약을 더해 한 판을 겨룹니다. 도감 보너스는 적용되지 않아 원정에서 본 전투 수치와 달라질 수 있습니다. 상대 팀은 파티 전술과 물약을 사용하지 않습니다. 제한시간 안에 승부가 나지 않으면 무승부입니다.<br><br>물약은 보유 재고에서 채울 수 있는 만큼 가져가며, 결투 중 마셔도 실제 재고는 줄지 않습니다. 결투에는 골드·재료 비용이 없고 장비나 도감 경험치 보상도 없습니다. 결투장의 층·휘장과 콜로세움의 레이팅·전적이 각각 진행 기록입니다.<br><br>결과는 [도전] 또는 [결투 시작]을 누를 때의 영웅과 장비·편성을 기준으로 정해집니다. 관전은 그 전투를 재생하는 화면입니다. 그 뒤 장비나 편성을 바꾸면 다음 결투부터 반영되며, 관전을 닫아도 이미 기록된 결과는 유지됩니다.",
-        en: "Arena and Colosseum duels use your heroes' attributes, gear and skills plus the selected Party's tactics and potions for one battle. Codex bonuses are excluded, so combat values can differ from those seen in Expeditions. Opponents have no party tactics or potions. Reaching the time limit ends in a draw.<br><br>Potions are filled from the stock you own, but drinking them in a duel does not reduce that stock. Duels cost no gold or materials and grant no equipment or Codex EXP. Arena floors and emblems, and Colosseum rating and records, track your progress in each mode.<br><br>The result is determined using the heroes, gear and Party configuration present when you press Challenge or Start duel. Spectating replays that battle. Later equipment or formation changes apply to the next duel, and leaving the replay keeps the result already recorded.",
+        ko: "시련의 탑과 결투장은 내 영웅의 능력치·장비·스킬에 선택한 Party의 파티 전술과 물약을 더해 한 판을 겨룹니다. 도감 보너스는 적용되지 않아 원정에서 본 전투 수치와 달라질 수 있습니다. 상대 팀도 자기 파티 전술과 물약을 같은 규칙으로 사용합니다. 제한시간 안에 승부가 나지 않으면 무승부입니다.<br><br>물약은 보유 재고에서 채울 수 있는 만큼 가져가며, 결투 중 마셔도 실제 재고는 줄지 않습니다. 결투에는 골드·재료 비용이 없고 장비나 도감 경험치 보상도 없습니다. 시련의 탑의 층·휘장과 결투장의 레이팅·전적이 각각 진행 기록입니다.<br><br>결과는 [도전] 또는 [결투 시작]을 누를 때의 영웅과 장비·편성을 기준으로 정해집니다. 관전은 그 전투를 재생하는 화면입니다. 그 뒤 장비나 편성을 바꾸면 다음 결투부터 반영되며, 관전을 닫아도 이미 기록된 결과는 유지됩니다.",
+        en: "Tower of Trials and Arena duels use your heroes' attributes, gear and skills plus the selected Party's tactics and potions for one battle. Codex bonuses are excluded, so combat values can differ from those seen in Expeditions. Opponents use their own party tactics and potions under the same rules. Reaching the time limit ends in a draw.<br><br>Potions are filled from the stock you own, but drinking them in a duel does not reduce that stock. Duels cost no gold or materials and grant no equipment or Codex EXP. Tower floors and emblems, and Arena rating and records, track your progress in each mode.<br><br>The result is determined using the heroes, gear and Party configuration present when you press Challenge or Start duel. Spectating replays that battle. Later equipment or formation changes apply to the next duel, and leaving the replay keeps the result already recorded.",
     },
     'help.arena.rating.title': {
         ko: "레이팅과 리그 이해하기",
         en: "Understanding rating and leagues",
     },
     'help.arena.rating.body': {
-        ko: "콜로세움은 승패에 따라 바뀌는 대전 점수인 레이팅을 올리는 곳입니다. 결투장이 층을 차례로 여는 방식이라면, 콜로세움에서는 내 점수 근처의 상대를 골라 겨룹니다. 상대는 다른 플레이어가 등록한 방어 편성이며, 내 점수 근처의 플레이어가 없으면 후보가 적거나 비어 있습니다.<br><br>선택한 Party의 영웅 {duelSize}명으로 겨루며, 승리하면 레이팅이 오르고 패배하면 내려갑니다. 나보다 높은 레이팅의 상대를 이길수록 더 많이 오르고, 그런 상대에게 질 때는 덜 내려갑니다. 무승부도 상대와의 점수 차이에 따라 레이팅이 바뀔 수 있습니다. 예를 들어 나보다 높은 점수의 상대와 비기면 레이팅이 오를 수 있습니다.<br><br>리그는 레이팅 구간의 이름입니다. 왼쪽 리그표에서 다음 등급의 문턱을 확인할 수 있으며, 문턱에 도달하면 표시되는 리그가 바뀝니다. 레이팅과 리그는 이 콘텐츠의 기록이며 영웅의 레벨이나 원정 장비를 직접 올리지는 않습니다.",
-        en: "The Colosseum tracks rating: a duel score that changes with wins, draws and losses. The Arena opens floors in order, while the Colosseum lets you choose opponents near your score. Opponents are defense parties registered by other players; if few players are near your score, the list is short or empty.<br><br>Fight with the {duelSize} heroes in your chosen Party. Wins raise rating and losses lower it. Beating a higher-rated opponent gains more, while losing to one costs less. A draw can also change rating depending on the difference between your scores. For example, drawing against a higher-rated opponent can raise your rating.<br><br>A league is the name of a rating range. Check the league table on the left for the next threshold; crossing it changes your displayed league. Rating and leagues track progress in this mode and do not directly raise hero levels or Expedition equipment.",
+        ko: "결투장은 승패에 따라 바뀌는 대전 점수인 레이팅을 올리는 곳입니다. 시련의 탑이 층을 차례로 여는 방식이라면, 결투장에서는 내 점수 근처의 상대를 골라 겨룹니다. 상대는 다른 플레이어가 등록한 방어 편성이며, 내 점수 근처의 플레이어가 없으면 후보가 적거나 비어 있습니다.<br><br>선택한 Party의 영웅 {duelSize}명으로 겨루며, 승리하면 레이팅이 오르고 패배하면 내려갑니다. 나보다 높은 레이팅의 상대를 이길수록 더 많이 오르고, 그런 상대에게 질 때는 덜 내려갑니다. 무승부도 상대와의 점수 차이에 따라 레이팅이 바뀔 수 있습니다. 예를 들어 나보다 높은 점수의 상대와 비기면 레이팅이 오를 수 있습니다.<br><br>리그는 레이팅 구간의 이름입니다. 왼쪽 리그표에서 다음 등급의 문턱을 확인할 수 있으며, 문턱에 도달하면 표시되는 리그가 바뀝니다. 레이팅과 리그는 이 콘텐츠의 기록이며 영웅의 레벨이나 원정 장비를 직접 올리지는 않습니다.",
+        en: "The Arena tracks rating: a duel score that changes with wins, draws and losses. The Tower of Trials opens floors in order, while the Arena lets you choose opponents near your score. Opponents are defense parties registered by other players; if few players are near your score, the list is short or empty.<br><br>Fight with the {duelSize} heroes in your chosen Party. Wins raise rating and losses lower it. Beating a higher-rated opponent gains more, while losing to one costs less. A draw can also change rating depending on the difference between your scores. For example, drawing against a higher-rated opponent can raise your rating.<br><br>A league is the name of a rating range. Check the league table on the left for the next threshold; crossing it changes your displayed league. Rating and leagues track progress in this mode and do not directly raise hero levels or Expedition equipment.",
     },
     'help.arena.opponents.title': {
         ko: "상대 후보를 고르는 순서",
@@ -1870,24 +1884,24 @@ const STRINGS = {
         en: "Defense party and defense log",
     },
     'help.arena.defense.body': {
-        ko: "콜로세움에 처음 들어오면 이름과 방어 편성을 등록합니다. 영웅 {duelSize}명이 찬 Party만 고를 수 있고, [등록]을 누르면 그 편성이 바로 다른 플레이어의 상대 후보와 [친구와 전투] 목록에 올라갑니다. 이름 뒤에는 계정마다 정해진 네 자리 태그가 붙어 같은 이름을 구별합니다. 이름은 설정에서 바꿀 수 있고 비워 둘 수는 없습니다.<br><br>방어 편성은 왼쪽 [방어 편성]에서 다른 Party로 바꿀 수 있으며 등록을 풀 수는 없습니다. 장비나 진형을 바꾸면 바뀐 모습이 다시 올라가고, 레이팅도 함께 보입니다. 결투를 하러 나가는 편성은 오른쪽 판에서 고르는 Party이며, 방어 편성과 같아도 됩니다.<br><br>다른 플레이어가 내 방어 편성과 싸우면 [방어 기록]에 언제 · 누가 · 그 레이팅 · 결과가 남고, 친선전이면 「친선전」이 붙습니다. 방어 결과는 내 레이팅을 바꾸지 않습니다. 등록과 받기는 배포판에서만 동작하고, 상대 목록과 기록은 게임을 켤 때 · 콜로세움에 들어올 때 · [새 상대]를 누를 때 새로 받습니다. 바로 앞에 받았다면 받아 둔 목록을 씁니다. 다른 플레이어의 팀은 규칙 검사를 통과한 것만 나오고, 파티 전술과 물약 없이 싸웁니다.",
-        en: "The first time you enter the Colosseum, register a name and a defense party. Only a Party with {duelSize} heroes can be chosen, and pressing Register lists it right away in other players' opponents and in Fight a friend. A four-digit tag fixed to your account follows your name so players with the same name can be told apart. You can change the name in Settings, but it cannot be left empty.<br><br>Switch your defense to another Party under Defense party on the left; it cannot be unregistered. Changing its gear or formation uploads the new version, and your rating is shown with it. The party you attack with is the one chosen on the right, and it may be the same as your defense party.<br><br>When another player fights your defense party, the Defense log records when, who, their rating and the result, marked Friendly for friendly duels. Defense results do not change your rating. Registering and receiving work only on the live build; opponents and records are refreshed when the game starts, when you enter the Colosseum and when you press New opponents. If they were just received, the stored list is used. Other players' teams appear only if they pass the rule check, and they fight without party tactics or potions.",
+        ko: "결투장에 처음 들어오면 이름과 방어 편성을 등록합니다. 영웅 {duelSize}명이 찬 Party만 고를 수 있고, [등록]을 누르면 그 편성이 바로 다른 플레이어의 상대 후보와 [친구와 전투] 목록에 올라갑니다. 이름 뒤에는 계정마다 정해진 네 자리 태그가 붙어 같은 이름을 구별합니다. 이름은 설정에서 바꿀 수 있고 비워 둘 수는 없습니다.<br><br>방어 편성은 왼쪽 [방어 편성]에서 다른 Party로 바꿀 수 있으며 등록을 풀 수는 없습니다. 장비나 진형을 바꾸면 바뀐 모습이 다시 올라가고, 레이팅도 함께 보입니다. 결투를 하러 나가는 편성은 오른쪽 판에서 고르는 Party이며, 방어 편성과 같아도 됩니다.<br><br>다른 플레이어가 내 방어 편성과 싸우면 [방어 기록]에 언제 · 누가 · 그 레이팅 · 결과가 남고, 친선전이면 「친선전」이 붙습니다. 방어 결과는 내 레이팅을 바꾸지 않습니다. 등록과 받기는 배포판에서만 동작하고, 상대 목록과 기록은 게임을 켤 때 · 결투장에 들어올 때 · [새 상대]를 누를 때 새로 받습니다. 바로 앞에 받았다면 받아 둔 목록을 씁니다. 다른 플레이어의 팀은 규칙 검사를 통과한 것만 나오고, 올린 편성의 파티 전술과 물약을 씁니다.",
+        en: "The first time you enter the Arena, register a name and a defense party. Only a Party with {duelSize} heroes can be chosen, and pressing Register lists it right away in other players' opponents and in Fight a friend. A four-digit tag fixed to your account follows your name so players with the same name can be told apart. You can change the name in Settings, but it cannot be left empty.<br><br>Switch your defense to another Party under Defense party on the left; it cannot be unregistered. Changing its gear or formation uploads the new version, and your rating is shown with it. The party you attack with is the one chosen on the right, and it may be the same as your defense party.<br><br>When another player fights your defense party, the Defense log records when, who, their rating and the result, marked Friendly for friendly duels. Defense results do not change your rating. Registering and receiving work only on the live build; opponents and records are refreshed when the game starts, when you enter the Arena and when you press New opponents. If they were just received, the stored list is used. Other players' teams appear only if they pass the rule check, and they use the party tactics and potions of the uploaded party.",
     },
     'help.arena.friendly.title': {
         ko: "친구와 전투",
         en: "Fight a friend",
     },
     'help.arena.friendly.body': {
-        ko: "[친구와 전투]를 누르면 방어 편성을 등록한 플레이어가 최근에 올라온 순서로 나옵니다. 찾기 칸에 이름의 앞 글자를 넣으면 그 글자로 시작하는 이름을, #1234처럼 태그를 넣으면 그 태그를, 이름#1234를 넣으면 그 사람을 찾습니다. 이름은 대소문자를 가립니다. 한 번에 한 쪽씩 나오며 [더 보기]로 이어서 봅니다.<br><br>목록에서 한 사람을 고르면 창이 닫히고 그 팀이 친선전 상대로 표시됩니다. 그 팀을 확인한 뒤 [결투 시작]으로 겨룹니다. 상대 팀은 그 사람이 마지막으로 올린 모습이며 파티 전술과 물약 없이 싸웁니다.<br><br>친선전은 연습입니다. 결과가 레이팅과 레이팅 전적에 영향을 주지 않고, 상대의 방어 기록에는 「친선전」으로 남습니다.",
-        en: "Press Fight a friend to list players who registered a defense party, most recently updated first. Type the start of a name to find names beginning with it, a tag such as #1234 to find that tag, or Name#1234 to find that player. Names are case-sensitive. Results come one page at a time; press More to continue.<br><br>Pick a player to close the window and show their team as your friendly opponent. Inspect that team, then press Start duel. The team is as that player last uploaded it and fights without party tactics or potions.<br><br>Friendly duels are practice. Results do not affect rating or rated records; the other player's defense log shows them marked Friendly.",
+        ko: "[친구와 전투]를 누르면 방어 편성을 등록한 플레이어가 최근에 올라온 순서로 나옵니다. 찾기 칸에 이름의 앞 글자를 넣으면 그 글자로 시작하는 이름을, #1234처럼 태그를 넣으면 그 태그를, 이름#1234를 넣으면 그 사람을 찾습니다. 이름은 대소문자를 가립니다. 한 번에 한 쪽씩 나오며 [더 보기]로 이어서 봅니다.<br><br>목록에서 한 사람을 고르면 창이 닫히고 그 팀이 친선전 상대로 표시됩니다. 그 팀을 확인한 뒤 [결투 시작]으로 겨룹니다. 상대 팀은 그 사람이 마지막으로 올린 모습이며, 그 편성의 파티 전술과 물약도 함께 씁니다.<br><br>친선전은 연습입니다. 결과가 레이팅과 레이팅 전적에 영향을 주지 않고, 상대의 방어 기록에는 「친선전」으로 남습니다.",
+        en: "Press Fight a friend to list players who registered a defense party, most recently updated first. Type the start of a name to find names beginning with it, a tag such as #1234 to find that tag, or Name#1234 to find that player. Names are case-sensitive. Results come one page at a time; press More to continue.<br><br>Pick a player to close the window and show their team as your friendly opponent. Inspect that team, then press Start duel. The team is as that player last uploaded it, including its party tactics and potions.<br><br>Friendly duels are practice. Results do not affect rating or rated records; the other player's defense log shows them marked Friendly.",
     },
     'help.arena.results.title': {
         ko: "전적과 원정의 관계",
         en: "Records and Expeditions",
     },
     'help.arena.results.body': {
-        ko: "전투 준비와 물약·도감 적용은 결투장의 공통 규칙을 따릅니다. 결투를 해도 원정 스테이지나 도감 경험치가 진행되지는 않으며, 콜로세움에는 별도의 장비·골드 보상이 없습니다.<br><br>현재 레이팅, 최고 레이팅, 레이팅 결투의 승·무·패는 자동 저장됩니다. 이미 고른 상대와 지난 전투 결과의 화면 표시는 다시 접속하면 새로 시작됩니다. 전적이 남는 것과 이전 관전을 다시 여는 것은 서로 다릅니다.",
-        en: "Battle preparation, potions and Codex bonuses follow the shared rules in the Arena section. A duel does not advance Expedition stages or Codex EXP, and the Colosseum has no separate equipment or gold rewards.<br><br>Current rating, best rating and rated wins, draws and losses are saved automatically. Selected opponents and the last-battle display reset when you return. A saved record does not mean the previous replay remains available.",
+        ko: "전투 준비와 물약·도감 적용은 시련의 탑 묶음의 공통 규칙을 따릅니다. 결투를 해도 원정 스테이지나 도감 경험치가 진행되지는 않으며, 결투장에는 별도의 장비·골드 보상이 없습니다.<br><br>현재 레이팅, 최고 레이팅, 레이팅 결투의 승·무·패는 자동 저장됩니다. 이미 고른 상대와 지난 전투 결과의 화면 표시는 다시 접속하면 새로 시작됩니다. 전적이 남는 것과 이전 관전을 다시 여는 것은 서로 다릅니다.",
+        en: "Battle preparation, potions and Codex bonuses follow the shared rules in the Tower of Trials section. A duel does not advance Expedition stages or Codex EXP, and the Arena has no separate equipment or gold rewards.<br><br>Current rating, best rating and rated wins, draws and losses are saved automatically. Selected opponents and the last-battle display reset when you return. A saved record does not mean the previous replay remains available.",
     },
     'help.codex.monsters.title': {
         ko: "몬스터 살펴보기와 도감 경험치",
@@ -1934,8 +1948,8 @@ const STRINGS = {
         en: "What Codex milestones grant",
     },
     'help.codex.milestones.body': {
-        ko: "몬스터별 누적 도감 경험치가 {list}에 도달하면 차례로 Lv1~Lv4에 해당하는 기록을 채웁니다. 이미 얻은 단계의 효과는 이후 단계에도 유지됩니다.<br><br>Lv1은 같은 부류를 잡을 때 경험치·드롭·골드 등 보상을 늘리는 파밍 옵션을, Lv2는 같은 부류를 상대할 때 적용되는 전투 옵션을 엽니다. 어떤 옵션인지는 몬스터마다 다르며, 같은 부류의 여러 몬스터에서 연 보너스는 함께 적용됩니다. 보스 등 일부 몬스터에는 Lv1·Lv2 보너스가 없습니다.<br><br>Lv3에는 추가 효과가 없습니다. Lv4는 그 몬스터의 전투 옵션 하나를 모든 파티원에게 항상 더합니다. 각 단계의 구체적인 효과와 값은 몬스터 카드에서 확인합니다. 결투장과 콜로세움에는 도감 보너스가 적용되지 않습니다.",
-        en: "Each monster fills its Lv1–Lv4 milestones as its cumulative Codex EXP reaches {list}. Effects already unlocked remain in place at later milestones.<br><br>Lv1 unlocks a farming option that improves rewards such as XP, drops or gold from that family. Lv2 unlocks a combat option used against the same family. The option varies by monster, and bonuses unlocked from different members of one family combine. Bosses and some other monsters have no Lv1 or Lv2 bonuses.<br><br>Lv3 adds no effect. Lv4 permanently adds one combat option from that monster to every party member. Inspect its card for the exact effects and values at each milestone. Codex bonuses do not apply in Arena or Colosseum duels.",
+        ko: "몬스터별 누적 도감 경험치가 {list}에 도달하면 차례로 Lv1~Lv4에 해당하는 기록을 채웁니다. 이미 얻은 단계의 효과는 이후 단계에도 유지됩니다.<br><br>Lv1은 같은 부류를 잡을 때 경험치·드롭·골드 등 보상을 늘리는 파밍 옵션을, Lv2는 같은 부류를 상대할 때 적용되는 전투 옵션을 엽니다. 어떤 옵션인지는 몬스터마다 다르며, 같은 부류의 여러 몬스터에서 연 보너스는 함께 적용됩니다. 보스 등 일부 몬스터에는 Lv1·Lv2 보너스가 없습니다.<br><br>Lv3에는 추가 효과가 없습니다. Lv4는 그 몬스터의 전투 옵션 하나를 모든 파티원에게 항상 더합니다. 각 단계의 구체적인 효과와 값은 몬스터 카드에서 확인합니다. 시련의 탑과 결투장에는 도감 보너스가 적용되지 않습니다.",
+        en: "Each monster fills its Lv1–Lv4 milestones as its cumulative Codex EXP reaches {list}. Effects already unlocked remain in place at later milestones.<br><br>Lv1 unlocks a farming option that improves rewards such as XP, drops or gold from that family. Lv2 unlocks a combat option used against the same family. The option varies by monster, and bonuses unlocked from different members of one family combine. Bosses and some other monsters have no Lv1 or Lv2 bonuses.<br><br>Lv3 adds no effect. Lv4 permanently adds one combat option from that monster to every party member. Inspect its card for the exact effects and values at each milestone. Codex bonuses do not apply in Tower of Trials or Arena duels.",
     },
     'help.codex.library_unlocks.title': {
         ko: "경험치는 찼는데 단계가 잠겨 있다면",
@@ -2122,19 +2136,21 @@ const STRINGS = {
     'exp.commission.h': { ko: '의뢰', en: 'Commissions' },
     'exp.commission.note': {
         ko: '의뢰는 <b>받아 두는 목표</b>입니다 — 전장이 열리지 않습니다. 게시판에서 골라 받아 두면 <b>평소 활동 위에 얹혀</b> 저절로 진행됩니다<br>'
-            + '유형은 <b>둘</b> — <b>처치</b>(「x를 잡아라」 · 돌던 전투가 저절로 셈) · <b>수집</b>(「x를 모아라」 · 드롭과 파견·탐험 산출로 채움)<br>'
-            + '<b>오프라인에도 진행됩니다</b> — 자리를 비운 사이에도 목표가 나아갑니다. 그래서 따로 나갈 파티도, 의뢰만의 전장도 없습니다<br>'
-            + '카드는 <b>틀 · 등급 · 대상</b>을 굴려 섭니다 — 대상은 지금 갈 수 있는 곳에서만 나옵니다. 등급은 <b>일반 · 매직 · 레어</b> — 윗 등급일수록 드물고 목표당 골드가 좋습니다<br>'
-            + '<b>수락하면 그 카드가 소진됩니다</b> — 받은 카드는 그 자리에서 진행 중이 되고, 받아 둘 수 있는 수는 선술집 랭크가 늘립니다. 그래서 「어느 의뢰를 받을까」가 결정이 됩니다<br>'
-            + '<b>받은 뒤</b> 이긴 라운드의 처치와 들어온 드롭만 셉니다(가방이 차서 넘쳐 분해된 것은 빼고) · 모든 부대가 같이 채웁니다 · <b>기한은 없습니다</b><br>'
+            + '카드마다 <b>죄종 하나</b>가 미션을 정합니다 — 분노 토벌 · 시기 현상금(정예) · 탐욕 분해 · 나태 재료 획득 · 폭식 강화 · 제작. 죄종은 <b>장마다 하나씩</b> 열립니다<br>'
+            + '<b>재료 획득은 오프라인에도 진행됩니다</b> — 연구소 생산이 채웁니다. 따로 나갈 파티도, 의뢰만의 전장도 없습니다<br>'
+            + '등급은 <b>일반 · 매직 · 레어</b> — 윗 등급일수록 대상이 좁고(한 장 · 한 장소 · 한 갈래) 드물며 골드가 많습니다. 대상은 지금 갈 수 있는 곳에서만 나옵니다<br>'
+            + '<b>수락하면 그 카드가 소진됩니다</b> — 받은 카드는 그 자리에서 진행 중이 되고, 받아 둘 수 있는 수는 정해져 있습니다. 그래서 「어느 의뢰를 받을까」가 결정이 됩니다<br>'
+            + '<b>받은 뒤</b>에 일어난 것만 셉니다 — 이긴 라운드의 처치 · 직접 하거나 알아서 분해로 한 분해(가방이 차서 녹은 것은 빼고) · 분해와 연구소에서 얻은 재료 · 강화 시도(실패 포함) · 제작 · 모든 부대가 같이 채웁니다 · <b>기한은 없습니다</b><br>'
+            + '[수령]할 때마다 도감의 그 <b>죄종 칸</b>에 수령 횟수가 하나씩 쌓입니다<br>'
             + '다 채우면 <b>[수령]</b>으로 골드를 받습니다 · <b>[포기]</b>는 벌이 없습니다(진행만 버림) — 비는 자리에는 새 카드가 섭니다<br>'
             + '<b>명성 레벨</b> — [수령]할 때마다 명성이 하나 쌓이고(포기는 0 · 떨어지지 않음) 문턱을 넘으면 레벨이 오릅니다. 레벨이 오르면 <b>새로 서는 카드</b>의 목표와 골드가 같이 커지고 골드가 더 크게 오릅니다 — 레벨이 오르는 순간 받지 않은 카드는 모두 새 레벨로 다시 서고, 받아 둔 의뢰는 진행도 그대로입니다',
         en: 'A commission is a <b>goal you take on</b> — no battlefield opens. Pick one from the board and it fills itself <b>on top of what you already do</b><br>'
-            + 'There are <b>two kinds</b> — <b>Slay</b> ("kill x" · the battles you already run count it) and <b>Collect</b> ("gather x" · drops and dispatch/exploration yields fill it)<br>'
-            + '<b>It advances offline too</b> — the goal moves while you are away. So there is no party to send and no commission-only battlefield<br>'
-            + 'Each card rolls a <b>template, grade and target</b> — targets only come from places you can reach now. Grades are <b>Normal · Magic · Rare</b> — higher grades are rarer and pay more gold per goal<br>'
-            + '<b>Accepting spends that card</b> — it turns into an active commission in place, and the Tavern rank raises how many you can hold. That is what makes "which one do I take" a decision<br>'
-            + 'Only kills in won rounds and drops that come in <b>after you accept</b> count (items salvaged because the bag was full do not) · every party fills it · <b>there is no deadline</b><br>'
+            + 'Each card carries <b>one Sin</b> that sets its mission — Wrath Hunt · Envy Bounty (elites) · Greed Salvage · Sloth Gathering · Gluttony Enhance · Craft. Sins open <b>one per chapter</b><br>'
+            + '<b>Gathering advances offline too</b> — Laboratory output fills it. There is no party to send and no commission-only battlefield<br>'
+            + 'Grades are <b>Normal · Magic · Rare</b> — higher grades narrow the target (one chapter · one place · one group), appear less often and pay more gold. Targets only come from places you can reach now<br>'
+            + '<b>Accepting spends that card</b> — it turns into an active commission in place, and you can only hold a set number. That is what makes "which one do I take" a decision<br>'
+            + 'Only what happens <b>after you accept</b> counts — kills in won rounds · salvage you do by hand or by auto-salvage (not full-bag overflow) · materials from salvage and the Laboratory · enhance attempts (failures too) · crafting · every party fills it · <b>there is no deadline</b><br>'
+            + 'Each [Claim] adds one to that <b>Sin</b> in the Codex<br>'
             + 'When it is full, <b>[Claim]</b> pays the gold · <b>[Abandon]</b> costs nothing but the progress — a new card takes the empty place<br>'
             + '<b>Fame level</b> — every [Claim] adds one fame (abandoning adds none · it never drops), and passing a threshold raises the level. A higher level makes <b>newly posted cards</b> ask for more and pay more, with gold rising faster — when the level rises, every card you have not accepted is rerolled at the new level, while accepted commissions keep their progress',
     },
@@ -2561,6 +2577,12 @@ const STRINGS = {
     'tr.err.skill': { ko: '이 갈래의 스킬이 아님', en: 'Not a skill of this path' },
     'tr.err.empty': { ko: '배운 전직 스킬 없음', en: 'No advancement skill learned' },
     'tr.err.points': { ko: "스킬 포인트 없음", en: "No skill points left" },
+    // 전직 트리 칸 ±1 의 거절 (game.advanceRank · 2026-11-13 R471)
+    'tr.err.cellMax': { ko: '이 칸은 최대 랭크', en: 'This cell is at max rank' },
+    'tr.err.rowMax': { ko: '이 줄의 랭크 합이 가득 참', en: 'This row is full' },
+    'tr.err.zero': { ko: '되돌릴 랭크 없음', en: 'No rank to refund' },
+    'tr.err.line': { ko: '없는 줄', en: 'No such row' },
+    'tr.err.slot': { ko: '없는 칸', en: 'No such cell' },
     'tr.adv.todo': { ko: "<b>{b} {n}랭크</b>부터 전직할 수 있습니다. 세 갈래 중 하나를 고르며 갈래는 되돌릴 수 없습니다. 전직 후 <b>마스터리 → 전직 트리</b>에서 공용 스킬 포인트로 메인을 배웁니다. 메인 강화는 영웅 레벨 조건을 만족해야 하며, 되돌리면 투자 포인트를 공용 지갑에 돌려받습니다.", en: "Advancement opens at <b>{b} rank {n}</b>. Choose one of three paths; the path cannot be undone. Then learn a main skill in <b>Mastery → Advancement Tree</b> using shared skill points. Further main ranks require the corresponding hero level. Refunding returns invested points to the shared pool." },
     'rs.total': { ko: '합산 레벨', en: 'Total Level' },
     'rs.open': { ko: '열린 칸', en: 'Slots Open' },
@@ -2697,6 +2719,7 @@ const STRINGS = {
     //   카운터 「지금 / 다음 문턱」과 단계 「×n」은 진행 칸이 단다 — ~~편성 구성 · 능력치 합 · 전직 · 관계 문장~~ 은 걷었다(R441)
     'rs.cond.none': { ko: '조건 없음', en: 'No condition' },
     'rs.cond.slot_sin_heroes': { ko: '{a} 영웅', en: '{a} heroes' },
+    'rs.cond.slot_sin_attr_sum': { ko: '{s} 합', en: 'Total {s}' },   // 3랭크 — {s} = 그 칸 죄종의 짝 능력치 이름 (R466)
     'rs.cond.kills_together': { ko: '함께 잡은 몬스터', en: 'Monsters slain together' },
 
     'sk.points.h': { ko: '스킬 포인트', en: 'Skill Points' },
@@ -2708,26 +2731,17 @@ const STRINGS = {
     'sk.gate.armor': { ko: '착용 갑옷: {groups}일 때 효과 적용', en: 'Active with armor: {groups}' },
     // 죄종 T2 — 그 죄종 장비 수가 켠다(3 · 6 · 9 단 — 2026-11-12) · {n} = 지금 낀 수 · {need} = 그 칸의 문턱
     'sk.gate.sin_gear': { ko: '{sin} 장비 {need}개 이상일 때 효과 적용 ({n}/{need})', en: 'Active with {need}+ {sin} items ({n}/{need})' },
-    // 죄종 T3 조건 [2026-11-12 — 옛 T2 조건 칸이 T3 로 · PLAN_mastery_tiers §0-1] — 효과 문장 위 한 줄. HP 는 비율 · 판정은 전투가 한다
-    'sk.cond.hurt': { ko: '내 HP 가 {pct} 미만일 때', en: 'While below {pct} HP' },
-    'sk.cond.hurt_deep': { ko: '내 HP 가 {pct} 미만일 때', en: 'While below {pct} HP' },
-    'sk.cond.higher': { ko: '상대의 HP 비율이 나보다 높을 때', en: "When the foe's HP % is higher than yours" },
-    'sk.cond.higher_deep': { ko: '상대의 HP 비율이 나보다 {gap} 이상 높을 때', en: "When the foe's HP % is {gap} or more above yours" },
-    'sk.cond.higher_gap': { ko: '상대의 HP 비율이 나보다 높은 만큼 (차이 100% 기준)', en: "Scales with how far the foe's HP % is above yours (per 100%)" },
-    'sk.cond.lower': { ko: '상대의 HP 비율이 나보다 낮을 때', en: "When the foe's HP % is lower than yours" },
-    'sk.cond.lower_deep': { ko: '상대의 HP 비율이 나보다 {gap} 이상 낮을 때', en: "When the foe's HP % is {gap} or more below yours" },
-    'sk.cond.lower_gap': { ko: '상대의 HP 비율이 나보다 낮은 만큼 (차이 100% 기준)', en: "Scales with how far the foe's HP % is below yours (per 100%)" },
-    'sk.cond.fresh': { ko: '대상의 HP 가 {pct} 이상일 때', en: 'Against targets at {pct} HP or more' },
-    'sk.cond.full': { ko: '대상의 HP 가 가득 찼을 때', en: 'Against targets at full HP' },
-    'sk.cond.opening': { ko: '라운드 시작 후 {sec}초 동안', en: 'For the first {sec}s of a round' },
-    'sk.cond.opening_deep': { ko: '라운드 시작 후 {sec}초 동안', en: 'For the first {sec}s of a round' },
-    'sk.cond.gorge': { ko: '라운드 {sec}초마다 한 겹 · 최대 {max}겹', en: 'One stack per {sec}s in a round · up to {max}' },
-    'sk.cond.gorge_deep': { ko: '라운드 겹이 {n}겹 이상일 때 ({sec}초마다 한 겹)', en: 'At {n}+ round stacks (one per {sec}s)' },
-    'sk.cond.lure': { ko: '대상의 HP 가 {pct} 이상일 때 (랭크당 문턱 −{step})', en: 'Against targets at {pct} HP or more (threshold −{step} per rank)' },
-    // 분노 · 폭식 T3 — 랭크가 한계(문턱 · 겹 상한)를 넓힌다 [2026-10-24 · R343 · skill_design §3-3] · {pct} · {cap} = 지금 랭크(안 찍었으면 1랭크)의 값
-    'sk.cond.fury': { ko: '내 HP 가 {pct} 미만일 때 (랭크당 문턱 +{step})', en: 'While below {pct} HP (threshold +{step} per rank)' },
-    'sk.cond.feast': { ko: '라운드 동안 직격이 맞을 때마다 한 겹 · 최대 {cap}겹 (랭크당 +{per}겹)', en: 'One stack per landed direct hit in a round · up to {cap} (+{per} per rank)' },
-    'sk.tip.perStack': { ko: '겹당 {effect}', en: '{effect} per stack' },
+    // 죄종 T3 조건 [2026-11-13 R468 — 죄종마다 조건 하나 · 랭크가 조건을 넓힌다 · PLAN_mastery_tiers §0-1] — 효과 문장 위 한 줄 · 판정은 전투가 한다.
+    //   {pct} · {sec} = 지금 랭크(안 찍었으면 1랭크)의 문턱 · {step} = 랭크당 폭 · 문턱이 끝(차이 0 · 가득)이면 `_any` · `_full`
+    'sk.cond.hurt': { ko: '내 HP 가 {pct} 미만일 때 (랭크당 문턱 +{step})', en: 'While below {pct} HP (threshold +{step} per rank)' },
+    'sk.cond.higher': { ko: '상대의 HP 비율이 나보다 {pct} 이상 높을 때 (랭크당 문턱 −{step})', en: "When the foe's HP % is {pct} or more above yours (threshold −{step} per rank)" },
+    'sk.cond.higher_any': { ko: '상대의 HP 비율이 나보다 높을 때', en: "When the foe's HP % is higher than yours" },
+    'sk.cond.lower': { ko: '상대의 HP 비율이 나보다 {pct} 이상 낮을 때 (랭크당 문턱 −{step})', en: "When the foe's HP % is {pct} or more below yours (threshold −{step} per rank)" },
+    'sk.cond.lower_any': { ko: '상대의 HP 비율이 나보다 낮을 때', en: "When the foe's HP % is lower than yours" },
+    'sk.cond.fresh': { ko: '상대의 HP 가 {pct} 이상일 때 (랭크당 문턱 −{step})', en: 'Against foes at {pct} HP or more (threshold −{step} per rank)' },
+    'sk.cond.fresh_full': { ko: '상대의 HP 가 가득 찼을 때 (랭크당 문턱 −{step})', en: 'Against foes at full HP (threshold −{step} per rank)' },
+    'sk.cond.opening': { ko: '라운드 시작 후 {sec}초 동안 (랭크당 +{step}초)', en: 'For the first {sec}s of a round (+{step}s per rank)' },
+    'sk.cond.late': { ko: '라운드 시작 후 {sec}초부터 (랭크당 −{step}초)', en: 'From {sec}s into a round (−{step}s per rank)' },
     /* 마스터리 효과 문장 — 「무엇이 n 증가한다」 (SCREEN_DESIGN §7 · ADR-0332). 축마다 **통째로** 든다 — 조사(이/가)와
        동사(증가/감소)를 렌더러가 고르지 않는다. 이름이 「감소」인 축은 줄어드는 것이 주어다. {v} 는 부호 없는 값.
        사전에 없는 축은 맨 위 틀로 떨어진다 */
@@ -2771,6 +2785,7 @@ const STRINGS = {
     'sk.err.locked': { ko: 'Lv.{lv} 달성', en: 'Reach Lv.{lv}', lock: true },
     'sk.err.maxRank': { ko: '이미 최대 랭크', en: 'Already at max rank' },
     'sk.err.points': { ko: '스킬 포인트 없음', en: 'No skill points left' },
+    'sk.err.rowFull': { ko: '이 줄에는 {n}점까지 찍을 수 있습니다', en: 'This row holds up to {n} points' },   // 마스터리 줄마다 점수 합 (R473)
     'sk.err.noRank': { ko: '아직 찍지 않은 칸', en: 'Nothing invested here yet' },
     /* ~~'sk.err.downed'~~ · ~~'tr.err.downed'~~ · ~~'bk.err.downed'~~ 은 2026-10-21 삭제 — 쓰러짐은 원정 밖 행동을 막지 않는다 (R300 · ADR-0687) */
     // 찍은 칸의 툴팁 꼬리 — 우클릭이 있다는 것 자체가 안 보이면 못 쓴다 (SCREEN_DESIGN §7)
@@ -2792,8 +2807,6 @@ const STRINGS = {
     'sk.emptyBook': { ko: '배운 스킬 없음', en: 'No skill learned' },
     'sk.emptyAdvance': { ko: '전직 전', en: 'Not advanced' },
     'sk.lvTag': { ko: 'Lv.{n}', en: 'Lv.{n}' },   // 스킬 레벨 — 그림 오른쪽 아래 `.sk-lv` (설명창 · 액티브 줄 · 도서관 · 전직 판 · R216 · ADR-0576) · 그림이 없는 도서관 읽기 줄만 이름 뒤
-    'sk.adv.nextLevel': { ko: '메인 Lv{n}: 영웅 Lv{lv}부터 강화 가능', en: 'Main Lv{n}: requires hero Lv{lv}' },
-    'sk.adv.maxLevel': { ko: '메인 최대 레벨', en: 'Maximum main-skill level' },
     'tr.err.maxLevel': { ko: '메인 최대 레벨입니다', en: 'Main skill is at its maximum level' },
     'sk.adv.leveled': { ko: '{skill} Lv.{n}', en: '{skill} Lv.{n}' },   // 전직 판 스킬 칸을 눌러 레벨이 올랐다 (R216)
     // 잠긴 액티브 칸의 툴팁 한 줄 [2026-09-30 사용자 지시 · SCREEN_DESIGN §6 · ADR-0466 — ~~`sk.lockLv` 「Level n+」~~(ADR-0428) 를 칸마다의 문장으로] · {n} = 책 `skillbook_learn_level` · 전직 `advance_unlock_level`
@@ -2884,11 +2897,13 @@ const STRINGS = {
     },
     'sk.advTree': { ko: '전직 트리', en: 'Advancement Tree' },
     'sk.advNeed': { ko: '전직', en: 'Advance', lock: true },   // 전직 판의 잠김 베일 (§7 · §13-1)
-    'sk.adv.slot.2': { ko: '특수', en: 'Special' },   // 전직 가지 칸 이름 — ② · ③ · ④ (skill_design §4)
-    'sk.adv.slot.3': { ko: '변형', en: 'Variant' },
-    'sk.adv.slot.4': { ko: '필살기', en: 'Ultimate' },
-    'sk.adv.pending': { ko: '준비 중', en: 'Coming later' },   // 가지 칸 — 효과 미구현 (R216)
-    'sk.adv.hold': { ko: '보류', en: 'On hold' },   // 기획이 보류 · 미정으로 둔 가지 칸
+    'sk.adv.slot.size': { ko: '크기', en: 'Power' },   // 전직 스킬 줄 칸 이름 — 크기 · 변형 1 · 변형 2 (2026-11-13 · R471 · ADR-1081)
+    'sk.adv.slot.var1': { ko: '변형 1', en: 'Variant 1' },
+    'sk.adv.slot.var2': { ko: '변형 2', en: 'Variant 2' },
+    'sk.adv.bonusAt': { ko: '{max}랭크: {b}', en: 'Rank {max}: {b}' },   // 칸 툴팁 끝줄 — 5랭크 덤
+    'sk.adv.commonNow': { ko: '효과 {v}', en: 'Effect {v}' },   // 공통 줄 칸 툴팁 — 지금 값(0 랭크면 1랭크 값)
+    'sk.adv.commonFull': { ko: '{v}', en: '{v}' },   // 공통 줄 5랭크 값
+    'sk.adv.sec': { ko: '{n}초', en: '{n}s' },
     'sk.advTree.missing': { ko: "전직 후 갈래의 메인 셋 중 하나를 <b>공용 스킬 포인트 1</b>로 배웁니다. 스킬 포인트는 레벨마다 받고 죄종·직업 마스터리와 나누어 씁니다.<br>메인 단계만 영웅 Lv30·35·40·45·50에 Lv1·2·3·4·5가 열립니다. 특수·변형·필살기 꼬리는 현재 준비 중입니다.", en: "Learn one of the path's three main skills for <b>one shared skill point</b>. Points come with every level from Lv1 and are shared with Sin and Class mastery.<br>Main ranks Lv1–5 unlock at hero Lv30/35/40/45/50. Special, Variant and Ultimate branches are currently coming later." },
     'sk.lockedSuffix': { ko: ' (잠김)', en: ' (locked)' },
     'sk.grid.note': {
@@ -2915,6 +2930,15 @@ const STRINGS = {
     /* ── 실험실 (SCREEN_DESIGN §18 · ADR-0580 · ADR-0610) — 개발 장치 · 패널에 규칙 문장이 없다(숫자 · 이름 · 버튼만) ── */
     'lab.tool.item': { ko: '아이템 생성기', en: 'Item Generator' },
     'lab.tool.raid': { ko: '레이드', en: 'Raid' },
+    // 실험실 결투 — AI 챔피언 팀 둘 · 측정 스위치 둘 (SCREEN_DESIGN §18 「결투 시험」 · ADR-1070)
+    'lab.tool.duel': { ko: '결투', en: 'Duel' },
+    'lab.duel.kit': { ko: '{tier} · Lv{lv}', en: '{tier} · Lv{lv}' },
+    'lab.duel.reroll': { ko: '조합 돌리기', en: 'Reroll Teams' },
+    'lab.duel.again': { ko: '다시 싸우기', en: 'Fight Again' },
+    'lab.duel.res': { ko: '저항 {v}%', en: 'Resist {v}%' },
+    'lab.duel.win.top': { ko: '위 승 · {sec}초', en: 'Top wins · {sec}s' },
+    'lab.duel.win.bottom': { ko: '아래 승 · {sec}초', en: 'Bottom wins · {sec}s' },
+    'lab.duel.timeout': { ko: '시간 초과 · {sec}초', en: 'Timeout · {sec}s' },
     'lab.h.chapter': { ko: '챕터', en: 'Chapter' },
     'lab.h.monster': { ko: '몬스터', en: 'Monster' },
     'lab.h.grade': { ko: '등급', en: 'Grade' },
@@ -2938,6 +2962,8 @@ const STRINGS = {
     'cx.seg.skill': { ko: '스킬', en: 'Skills' },
     'cx.seg.fx': { ko: '이펙트', en: 'Effects' },
     'cx.seg.mastery': { ko: '마스터리', en: 'Masteries' },
+    'cx.seg.sin': { ko: '죄종', en: 'Sins' },   // 의뢰 죄종별 수령 횟수 (§9 · ADR-1069 · R457)
+    'cx.sin.n': { ko: '수령 {n}회', en: 'Claimed {n}' },
     'cx.h': { ko: '몬스터 도감', en: 'Monster Codex' },
     'cx.sub': { ko: '도감 경험치 {list}에서 레벨이 오릅니다 — 처치 하나에 {per} · Lv1 · Lv2 의 보너스 효과는 그 몬스터와 같은 부류 전체에 붙습니다', en: 'Levels up at {list} codex EXP — each kill gives {per} · Lv1 and Lv2 bonus effects apply to every monster of the same family' },   // 부류 = monster_base(군대 · 부족 · 거인 · 수호자 · 이형 — 2026-10-24)
     /* 잠금 문구 셋(cx.chLocked · cx.chLockedTail · cx.locked)은 2026-09-06 삭제 — 도감이 해금을 안 본다 (SCREEN_DESIGN §9) */

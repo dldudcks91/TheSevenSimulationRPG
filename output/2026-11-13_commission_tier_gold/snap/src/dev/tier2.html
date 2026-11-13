@@ -1,0 +1,195 @@
+﻿<!doctype html><meta charset="utf-8"><title>running</title><pre id="head"></pre><pre id="sim"></pre>
+<script type="module">
+// 의뢰 카드 등급 골드 — 좁힌 대상이 앞 칸을 얼마나 오래 멈추게 하나 (2026-11-13 · 스냅샷 dev/ 에 두고 연다 · 저장소에 넣지 않는다)
+//   캠페인 = 2026-11-06 normal.html 의 P 갈래(게임 이어 가기 + 10판 연속 지면 앞 칸 10판 · 물약 재고 60 · 마스터리 · 건물 끝까지)
+//   측정점 = 장마다 X-3 I 칸에 처음 도착한 순간 — 상태를 복제해
+//     (1) 갈 수 있는 장소(1 ~ X-1 장 장소 1 ~ 4 + X 장 장소 1 ~ 3)마다 칸 I 을 K 판 — 이긴 라운드 처치 · 정예 처치 · 골드 · 시간(판 + 재출발)
+//     (2) 캠페인은 그대로 이어 가며 측정점 뒤 WIN 초 동안의 처치 · 정예 · 골드 · 시간 = 앞 칸 속도
+//   ?seeds=1-4&k=6&win=1800
+import { loadData, buildSystems, D } from '../ui/data.js';
+import { makeRng } from '../game_logic/rng.js';
+const q = new URLSearchParams(location.search);
+const NOW = 1_700_000_000_000;
+const r2 = v => Math.round(v * 100) / 100;
+const avg = (xs, f) => xs.length ? xs.reduce((a, x) => a + f(x), 0) / xs.length : 0;
+const parseList = spec => String(spec).split(',').flatMap(part => {
+    const m = part.trim().match(/^(\d+)-(\d+)$/);
+    return m ? Array.from({ length: +m[2] - +m[1] + 1 }, (_, i) => +m[1] + i) : [+part];
+});
+const DIFF = 'normal';
+const ARMOR = ['helmet', 'armor', 'gloves', 'boots'];
+const RAR = { normal: 0, magic: 1, rare: 2, craft: 2, epic: 3, legendary: 4, unique: 5, set: 5 };
+const accKey = it => (it.ilvl ?? 0) * 10 + (RAR[it.rarity] ?? 0);
+const head = document.getElementById('head');
+try {
+    await loadData('../data/');
+    const SYS = buildSystems(D);
+    const B = D.balance;
+    const opt = { seeds: parseList(q.get('seeds') || '1-4'), k: +(q.get('k') ?? 6), win: +(q.get('win') ?? 1800),
+        farm: 10, patience: 10, stall: 1500, cap: 20000, pcap: 60 };
+    const partyHeroes = G => SYS.game.partyOf(G).map(uid => SYS.game.heroById(G, uid));
+    const lvOfParty = G => r2(avg(partyHeroes(G), h => h.level));
+    const isBoss = id => D.stages[id]?.boss_grade === 'chapter_boss';
+    const order = D.stageOrder.filter(id => D.stages[id].chapter <= 5);
+    const TIER = {};
+    let CNT;
+
+    function openBoxes(G) {
+        for (let guard = 0; guard < 200; guard++) {
+            const uid = G.bags.flat().find(u => G.items[u]?.box);
+            if (uid == null) return;
+            const kind = G.items[uid].box.kind;
+            const hs = partyHeroes(G);
+            const lvOf = h => kind === 'weapon' ? (G.items[h.equipped.weapon]?.ilvl ?? 0) : avg(ARMOR, p => G.items[h.equipped[p]]?.ilvl ?? 0);
+            const h = hs.reduce((a, b) => (lvOf(b) < lvOf(a) ? b : a));
+            if (!SYS.game.openBox(G, uid, h.uid).ok) return;
+        }
+    }
+    function botAuto(G) {
+        openBoxes(G);
+        for (const h of partyHeroes(G)) SYS.game.autoEquip(G, h.uid, 1);
+        for (const h of partyHeroes(G)) for (const pos of ['amulet', 'ring1', 'ring2']) {
+            const part = pos === 'amulet' ? 'amulet' : 'ring';
+            const cur = G.items[h.equipped[pos]];
+            let best = null;
+            for (const uid of G.bags[0] ?? []) {
+                const it = G.items[uid];
+                if (!it || it.box || it.slot !== part || SYS.item.canEquip(h, it)) continue;
+                if ((!cur || accKey(it) > accKey(cur)) && (!best || accKey(it) > accKey(best))) best = it;
+            }
+            if (best) SYS.game.equip(G, h.uid, best.uid, pos);
+        }
+    }
+    const salvageBag = G => { for (const uid of G.bags.flat()) SYS.game.salvage(G, uid); };
+    function botMastery(G) {
+        for (const h of partyHeroes(G)) for (;;) {
+            const node = SYS.game.masteryState(G, h.uid)?.nodes.find(x => x.canLearn);
+            if (!node || !SYS.game.learnMastery(G, h.uid, node.id).ok) break;
+        }
+    }
+    function botPotion(G, now) {
+        const list = (SYS.game.shopState(G, now)?.potions ?? []).slice().sort((a, b) => b.tier - a.tier);
+        const stockOf = () => Object.values(G.potions ?? {}).reduce((a, b) => a + b, 0);
+        for (const p of list) while (stockOf() < opt.pcap && SYS.game.shopPotionBuy(G, p.id, 1).ok) CNT.potionBuy++;
+        const n = SYS.game.limitsOf ? SYS.game.limitsOf(G).potionSlots : (G.presets[G.preset - 1]?.potionSlots?.length ?? 2);
+        const stock = Object.entries(G.potions ?? {}).filter(([, k]) => k > 0).map(([id, k]) => ({ id, k, tier: TIER[id] ?? 0 })).sort((a, b) => b.tier - a.tier);
+        const want = [];
+        for (const s of stock) for (let i = 0; i < s.k && want.length < n; i++) want.push(s.id);
+        for (let i = 0; i < n; i++) SYS.game.setPotionSlot(G, i, want[i] ?? null);
+    }
+    // 한 판의 셈 — 이긴 라운드의 처치(result.kills = 의뢰가 세는 것) · 그중 정예 · 골드 · 시간
+    const tally = (r, gold0, G) => {
+        const kills = Object.values(r.result?.kills ?? {}).reduce((a, b) => a + b, 0);
+        let elite = 0;
+        for (const byG of Object.values(r.result?.killGrades ?? {})) elite += byG.elite ?? 0;
+        const drops = (r.result?.drops ?? []).flatMap(it => it ? ['n', 'r:' + it.rarity, 's:' + it.slot, 'rs:' + it.rarity + ':' + it.slot] : []);
+        return { sec: r.report.durationSec + B.repeat_restart_sec, kills, elite, gold: G.resources.gold - gold0, won: r.report.won ? 1 : 0, drops };
+    };
+    const addT = (acc, x) => { if (x.drops) { acc.dr ??= {}; for (const k of x.drops) acc.dr[k] = (acc.dr[k] ?? 0) + 1; } acc.sec += x.sec; acc.kills += x.kills; acc.elite += x.elite; acc.gold += x.gold; acc.wins += x.won; acc.runs++; return acc; };
+    const zero = () => ({ sec: 0, kills: 0, elite: 0, gold: 0, wins: 0, runs: 0 });
+    const cloneG = G => (typeof structuredClone === 'function' ? structuredClone(G) : JSON.parse(JSON.stringify(G)));
+
+    function probe(G, t, X, frontId) {
+        const places = order.filter(id => {
+            const s = D.stages[id];
+            if (s.cell !== 1 || s.stage_num > 4) return false;
+            return s.chapter < X || (s.chapter === X && s.stage_num <= 3);
+        });
+        const out = [];
+        if (q.get('noprobe') === '1') return out;
+        for (const id of places) {
+            const C = cloneG(G);
+            const acc = zero();
+            let tt = t, err = null;
+            for (let i = 0; i < opt.k; i++) {
+                const g0 = C.resources.gold;
+                const r = SYS.game.resolveBattle(C, id, NOW + Math.round(tt * 1000), C.preset, DIFF);
+                if (!r.ok) { err = r.err; break; }
+                const x = tally(r, g0, C);
+                addT(acc, x); tt += x.sec;
+            }
+            const s = D.stages[id];
+            out.push({ id, ch: s.chapter, sn: s.stage_num, race: s.monster_type, front: id === frontId ? 1 : 0, err, ...acc, sec: r2(acc.sec) });
+        }
+        return out;
+    }
+
+    function runSeed(seed) {
+        CNT = { potionBuy: 0, probes: 0 };
+        const G = SYS.game.newGame(seed, SYS.hero.rollStartParty(makeRng(1000 + seed), B.party_size_max), NOW);
+        for (const b of SYS.construction.list) G.buildings[b.id] = b.maxRank;
+        if (!Object.keys(TIER).length) for (const p of SYS.game.shopState(G, NOW)?.potions ?? []) TIER[p.id] = p.tier;
+        const row = { seed, cls: partyHeroes(G).map(h => h.cls), cps: [], stuck: null };
+        let t = 0, n = 0;
+        const wins = [];   // 열린 창 — 측정점 뒤 WIN 초의 캠페인 셈
+        botPotion(G, NOW);
+        const play = stageId => {
+            const now = NOW + Math.round(t * 1000);
+            const g0 = G.resources.gold;
+            const r = SYS.game.resolveBattle(G, stageId, now, G.preset, DIFF);
+            if (!r.ok) return { err: r.err };
+            n++;
+            const x = tally(r, g0, G);
+            t += x.sec;
+            for (const w of wins) if (w.acc.sec < opt.win) { addT(w.acc, x); (w.at[stageId] = (w.at[stageId] ?? 0) + 1); }
+            botAuto(G); salvageBag(G); botMastery(G); botPotion(G, NOW + Math.round(t * 1000));
+            return r.report;
+        };
+        outer:
+        for (const [idx, stageId] of order.entries()) {
+            const s = D.stages[stageId];
+            if (s.stage_num === 3 && s.cell === 1) {
+                const cp = { X: s.chapter, frontId: stageId, t: r2(t), lv: lvOfParty(G), places: probe(G, t, s.chapter, stageId) };
+                cp.window = { acc: zero(), at: {} };
+                wins.push(cp.window);
+                row.cps.push(cp);
+                CNT.probes++;
+            }
+            const prev = order[idx - 1];
+            const farmAt = order.slice(0, idx).reverse().find(id => !isBoss(id)) ?? null;
+            let streak = 0, at = stageId, tries = 0;
+            while (!SYS.game.stageCleared(G, stageId, DIFF)) {
+                if (n >= opt.cap) { row.stuck = { why: 'cap', stageId }; break outer; }
+                if (tries >= opt.stall) { row.stuck = { why: 'stall', stageId }; break outer; }
+                const rp = play(at);
+                if (rp.err) { row.stuck = { why: 'err:' + rp.err, stageId: at }; break outer; }
+                if (at === stageId) {
+                    tries++;
+                    if (rp.won) break;
+                    streak++;
+                    if (isBoss(stageId) && prev != null) { at = prev; continue; }
+                    if (!isBoss(stageId) && streak >= opt.patience && farmAt != null) {
+                        for (let k = 0; k < opt.farm && n < opt.cap; k++) { if (play(farmAt).err) break; }
+                        streak = 0;
+                    }
+                } else if (rp.won) at = stageId;
+            }
+            // 5-3 I 측정점의 창이 다 차면 멈춘다
+            const last = row.cps.at(-1);
+            if (last?.X === 5 && last.window.acc.sec >= opt.win) break;
+        }
+        for (const cp of row.cps) { cp.window.acc.sec = r2(cp.window.acc.sec); }
+        row.runs = n; row.t = r2(t); row.lv = lvOfParty(G); row.cnt = { ...CNT };
+        return row;
+    }
+
+    const t0 = performance.now();
+    const rows = [];
+    for (const s of opt.seeds) {
+        rows.push(runSeed(s));
+        head.textContent = `tier … ${rows.length}/${opt.seeds.length}`;
+        await new Promise(r => setTimeout(r, 0));
+    }
+    const meta = { opt, ms: Math.round(performance.now() - t0), restart: B.repeat_restart_sec,
+        bot: '11-06 normal.html P 갈래 — 자동 장착 · 반지/목걸이 · 첫 클리어 상자 · 분해 · 마스터리 · 물약 재고 60 · 건물 끝까지 · 상단 장비 · 강화 없음',
+        probe: `장마다 X-3 I 도착 때 상태 복제 → 갈 수 있는 장소마다 칸 I ${opt.k}판(장비 안 바꿈) · 창 = 측정점 뒤 캠페인 ${opt.win}초` };
+    document.getElementById('sim').textContent = JSON.stringify({ meta, rows });
+    document.title = `DONE ${rows.length}`;
+} catch (err) {
+    const pre = document.createElement('pre');
+    pre.id = 'err';
+    pre.textContent = String(err && err.stack ? err.stack : err);
+    document.body.appendChild(pre);
+    document.title = 'FAIL';
+}
+</script>

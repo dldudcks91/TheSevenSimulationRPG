@@ -48,7 +48,9 @@
  *   blueprints: {skillId: n} — **스킬 도안 재고**(2026-10-20 · R293 · 버전 무변경) — 처치 · 상단이 한 장씩 준다 · `craftBook` 이 한 장을 쓰고 0 이면 키를 지운다
  *     heroes[*].bookSkill = 책으로 배운 액티브 id(선택 필드) — 액티브 둘째 칸(`skill.activesFor`) · 다른 책을 쓰면 덮어쓴다
  *     heroes[*].skillLv = {skillId: n}(선택 필드 · 2026-10-06 · R216) — 기본 스킬(고유 · 배운 칸)의 업그레이드 횟수 · 같은 책을 읽으면 +1
- *     heroes[*].advanceUp = n(선택 필드 · R216) — 전직 메인에 추가 투자한 공용 스킬 포인트(레벨 = 1 + n). 메인 단계는 5레벨 간격으로 해금한다.
+ *     heroes[*].advanceUp = n(선택 필드 · R216) — 전직 스킬 줄 **크기** 랭크(레벨 = 1 + n · 공용 스킬 포인트 n) · 2026-11-13 R471 — 5레벨 간격 해금 퇴역
+ *     heroes[*].advanceVar = [변형1, 변형2](선택 필드 · v48 · R471) — 스킬 줄 변형 랭크 · 둘 다 0 이면 키가 없다
+ *     heroes[*].advanceCommon = [칸1, 칸2, 칸3](선택 필드 · v48 · R471) — 갈래 공통 줄 랭크 · 다 0 이면 키가 없다 · 줄마다 합 ≤ [balance.csv:advance_row_points]
  *     heroes[*].stars · starSpent = n(선택 필드 · 2026-11-11) — 만렙 뒤 채운 별 · 능력치에 넣은 별(`spendStar`) · 만렙 영웅의 xp 는 다음 별까지 모은 양
  *   progress: {cleared: [stageId], clearedIn: {단: [stageId]}, peakTotal},   // ~~levelUp = 스테이지별 올린 양~~(R87) — **2026-09-29 위험도 폐지로 삭제** · 로드가 지운다 · cleared = 첫 단(노말) · clearedIn = 나머지 단 (2026-10-10 · R236 · 버전 무변경)
  *   difficulty: 단 id            — **고른 난이도** (2026-10-10 · R236 · 없으면 첫 단) · 부대 자리 · 리포트의 `difficulty` = 그 런의 단 (몬스터 레벨 = `stage.csv:dlvl` + 단의 더하기 · 만렙에서 자른다)
@@ -56,7 +58,7 @@
  *   ~~skillCodexExp~~ — 2026-10-20 걷었다(R293 · 스킬 도감 = 레벨 없는 목록 — monster_design §8-1) · 로드가 지운다
  *   bossDown: {"단|stageId": ms} — **챕터보스가 죽은 실제 시각** (2026-10-10 · R240 · 버전 무변경) — 돌아오는 시각 = 값 + `boss_respawn_sec` 초 · 그동안 그 칸 × 단으로는 어느 부대도 못 나간다 (base_expedition_design §1-2)
  *   counters: {hero, item, battle, tavern, tactic, upgrade, visit, make, gamble, commission, shop},   // visit = 수색 번호(시간으로 온 영웅마다 +1 · 2026-10-19 · ~~search~~ 수색 회차는 로드가 지운다) · shop =상단 목록 번호(교체마다 +1 · 2026-10-16 · 없으면 0) · upgrade = 강화 굴림 회차(R253 · 2026-10-14 다시 오른다 — R95(2026-09-15)부터 그때까지는 자리만 있었다 · 옛 값에서 이어 센다) · make = 제작 회차(R96 · 없으면 0) · gamble = 도박장 판 수(R149 · 없으면 0) · commission = 굴린 의뢰 카드 수(R153 · 없으면 0) · mg = 자원 미니게임 판 수(2026-10-06 · 없으면 0 · 짝 필드 `mgPlay = {no, post, done}`(v42 `tier` 걷음) — 옛 세이브의 `hour` · `n` 은 안 읽는다 · 옛 관전 창 미니게임의 `dwatch` · `dwBoost` 는 안 읽는다)
- *   commissions: {cards: [{no, tpl, kind, axis, ref, need, grade, gold, have?}], fame}   — **의뢰 게시판** (R153 · 버전 무변경 · base_expedition_design §1-3).
+ *   commissions: {cards: [{no, sin, grade, tpl, kind, axis, ref, need, gold, have?}], fame, sins}   — **의뢰 게시판** (R153 · 버전 무변경 · base_expedition_design §1-3) · `sins` = 죄종별 수령 횟수(도감 죄종 칸 · R457).
  *     `fame` = 명성 경험치 = 누적 수령 수(레벨은 `commission_fame.csv` 로 푼다 · 2026-10-29 · R375 · 버전 무변경 — 없으면 0) ·
  *     자리 순서 그대로 · **굴린 순간의 내용을 박는다**(대상 풀이 그때의 진행에 달려 있다 — 수색 스냅샷과 같은 이유) · `have` 가 있으면 받아 둔 것 · 없으면 게시판에 걸린 것
  *   stageDecks: {"난이도|칸|라운드": {next, free:[{no,seed}]}} — v44. 소진한 판은 돌아오지 않는다. 미완료 판은 씨앗과 함께 반환한다.
@@ -105,7 +107,7 @@ import { TARGETS as CN_TARGETS } from './construction.js';
 // 의뢰 어휘 — 로드가 모르는 어휘의 카드를 거르는 데만 쓴다(같은 취급 · R153)
 import { AXES as CM_AXES } from './commission.js';
 
-export const SAVE_VERSION = 47;
+export const SAVE_VERSION = 48;
 
 /**
  * @param {object} deps
@@ -122,8 +124,8 @@ export const SAVE_VERSION = 47;
  */
 export function createGameSystem(deps) {
     const { hero: H, item: I, battle: BT, skill: SK, tactic: TC, construction: CN, gamble: GB, commission: CM, balance: B } = deps;
-    if (!Number.isInteger(B.advance_skill_level_interval) || B.advance_skill_level_interval < 1)
-        throw new Error('advance: advance_skill_level_interval must be a positive integer');
+    if (!Number.isInteger(B.advance_row_points) || B.advance_row_points < 1)
+        throw new Error('advance: advance_row_points must be a positive integer');
     const clone = v => JSON.parse(JSON.stringify(v));
 
     const positions = deps.equipSlots.map(s => s.id);
@@ -323,7 +325,7 @@ export function createGameSystem(deps) {
             colosseum: { cleared: 0 }, // 콜로세움 오른 층 — `colosseumRecord` 만 바꾼다 (2026-10-18 · arena_design §7)
             arenaDefense: null,        // 콜로세움 방어 편성 번호 · null = 등록 안 함 — `setArenaDefense` 만 바꾼다 (2026-11-11 · arena_design §9)
             // 의뢰 게시판 — 빈 채로 시작한다. 선술집을 짓고 화면이 그릴 때 `commissionFill` 이 채운다 (R153)
-            commissions: { cards: [], fame: 0 },
+            commissions: { cards: [], fame: 0, sins: {} },
             // 편성 — **편성 1 에 시작 영웅 셋**(아래에서 채운다 · ADR-0227) · 편성 2 부터는 빈 파티다.
             //   물약 칸도 **편성 1 에만** 시작 물약이 한 칸씩 든다 (v32 · R122 · R124)
             presets: newPresets(), preset: 1,     // 전술 칸도 편성마다 든다(`presets[*].tactics` · v34 · R129)
@@ -545,10 +547,22 @@ export function createGameSystem(deps) {
         return s;
     }
 
-    /** **v38 ~ v47 을 연다** — 옛 버전은 한 단계씩 올린다. 그 전은 끊었다(2026-09-23 · 다부대 · 파일 머리 참조) */
+    /**
+     * v47 → v48 [2026-11-13 · R471 · advance_tree_draft §1 · INTERFACE §4] — 전직 스킬을 **전직 포인트**로 배운다(공용 스킬 포인트를 안 쓴다) ·
+     *   스킬 줄 · 공통 줄 랭크(`advanceVar` · `advanceCommon`)가 생겼다. 옛 배움에 쓴 1포인트는 돌려준다 — 돌려주는 일은 영웅 정리(`deserialize`)가 한다
+     *   (v44 이하는 그때 별도 포인트였으니 돌려줄 것이 없다 · 크기 = 옛 `advanceUp` 그대로 → 세기가 같다) · 여기는 버전만 올린다 · rng 0
+     */
+    function upgradeV47(s) {
+        s.version = 48;
+        return s;
+    }
+
+    /** **v38 ~ v48 을 연다** — 옛 버전은 한 단계씩 올린다. 그 전은 끊었다(2026-09-23 · 다부대 · 파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
         const separateAdvancePoints = obj.version <= 44;
+        // v45 ~ v47 — 전직 스킬을 공용 포인트 1로 배웠다 · v48 부터 전직 포인트(무료)라 그 1을 돌려준다 (R471)
+        const learnRefund = obj.version >= 45 && obj.version <= 47;
         let src = obj.version === 38 ? upgradeV38(clone(obj)) : obj;
         if (src.version === 39) src = upgradeV39(src === obj ? clone(obj) : src);
         if (src.version === 40) src = upgradeV40(src === obj ? clone(obj) : src);
@@ -558,6 +572,7 @@ export function createGameSystem(deps) {
         if (src.version === 44) src = upgradeV44(src === obj ? clone(obj) : src);
         if (src.version === 45) src = upgradeV45(src === obj ? clone(obj) : src);
         if (src.version === 46) src = upgradeV46(src === obj ? clone(obj) : src);
+        if (src.version === 47) src = upgradeV47(src === obj ? clone(obj) : src);
         if (src.version !== SAVE_VERSION)
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         const s = clone(src);
@@ -591,6 +606,21 @@ export function createGameSystem(deps) {
                 if (keep === r) continue;
                 h.masteryPoints = (h.masteryPoints ?? 0) + (r - keep);
                 if (keep > 0) h.mastery[id] = keep; else delete h.mastery[id];
+            }
+            //   줄마다 점수 합 [2026-11-13 · R473 · 버전 무변경] — 합이 [balance.csv:mastery_row_points] 를 넘은 줄은 **그 줄을 통째로** 돌려준다
+            //   (어느 칸을 깎을지 고르지 않는다 — 롤백이 무료라 플레이어가 다시 나눈다)
+            const byRow = new Map();
+            for (const n of own.values()) {
+                const r = h.mastery?.[n.id] ?? 0;
+                if (!r) continue;
+                const key = H.masteryRowKey(n);
+                byRow.set(key, [...(byRow.get(key) ?? []), n.id]);
+            }
+            for (const ids of byRow.values()) {
+                const sum = ids.reduce((a, id) => a + h.mastery[id], 0);
+                if (sum <= B.mastery_row_points) continue;
+                h.masteryPoints = (h.masteryPoints ?? 0) + sum;
+                for (const id of ids) delete h.mastery[id];
             }
         }
         // 도감 카드는 걷혔다 [2026-09-21 · 버전 무변경] — 레벨은 이미 있던 `codexKills` 에서 다시 계산되므로 소급할 판단이 없다 · 필드만 지운다 (INTERFACE §4)
@@ -668,9 +698,16 @@ export function createGameSystem(deps) {
         s.counters.commission = s.counters.commission ?? 0;
         //   명성 경험치 — 없거나 0 이상 정수가 아니면 0(= 명성 레벨 1 · 새 게임과 같다 · R375)
         const fame0 = s.commissions?.fame;
+        //   죄종 (R457) — `sins` = 죄종별 수령 횟수(없으면 {} · 0 이상 정수가 아닌 값은 지운다 · 옛 수령은 죄종을 몰라 소급 안 한다) ·
+        //   `sin` 이 없는 카드 — 안 받은 것은 지운다(빈 자리는 새 규칙으로 굴린다) · 받아 둔 것은 종류 · 어휘로 죄종을 붙여 진행도째 이어 센다
+        const sins0 = s.commissions?.sins && typeof s.commissions.sins === 'object' && !Array.isArray(s.commissions.sins) ? s.commissions.sins : {};
+        const legacySin = c => (c.kind === 'collect' ? 'greed' : c.axis === 'grade' && c.ref === 'elite' ? 'envy' : c.axis === 'grade' ? 'pride' : 'wrath');
         s.commissions = {
-            cards: (Array.isArray(s.commissions?.cards) ? s.commissions.cards : []).filter(c => c && CM_AXES[c.axis]),
+            cards: (Array.isArray(s.commissions?.cards) ? s.commissions.cards : [])
+                .filter(c => c && CM_AXES[c.axis] && (c.sin || (c.have !== undefined && c.have !== null)))
+                .map(c => (c.sin ? c : { ...c, sin: legacySin(c) })),
             fame: Number.isInteger(fame0) && fame0 > 0 ? fame0 : 0,
+            sins: Object.fromEntries(Object.entries(sins0).filter(([, n]) => Number.isInteger(n) && n >= 0)),
         };
         // 물약 재고 — 개수 표다. 모양이 틀리면 시작 재고로 연다 (INTERFACE §4 · R124)
         if (!s.potions || typeof s.potions !== 'object' || Array.isArray(s.potions)) s.potions = startStock();
@@ -724,17 +761,23 @@ export function createGameSystem(deps) {
         delete s.playMs;
         // 전직 — 없으면 「아무도 안 한다 · 전직 안 함」이 정확한 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-09-28 · R16).
         //   모르는 갈래 · 직업이 안 맞는 갈래는 지운다 · 배운 스킬이 그 갈래의 것이 아니면 빈 칸으로 (표가 바뀌어도 못 여는 세이브가 없게)
+        //   전직 트리 [2026-11-13 · R471 · v48] — 스킬 줄(크기 `advanceUp` · 변형 `advanceVar`) · 공통 줄(`advanceCommon`)은 칸마다 · 줄마다 합 ≤ `advance_row_points` 로 자르고
+        //   잘린 랭크는 공용 포인트로 돌려준다 · 스킬이 없으면 스킬 줄 · 갈래가 없으면 공통 줄이 통째로 돌아온다 · 배움은 전직 포인트(무료)라 v45 ~ v47 의 배움 1포인트를 돌려준다.
+        //   v44 이하(그때 별도 포인트)는 크기만 공용 잔액에서 낼 수 있는 만큼 남긴다(배움은 무료라 안 뗀다)
         for (const h of s.heroes) {
-            const paid = h.advanceSkill ? 1 + (Number.isInteger(h.advanceUp) && h.advanceUp > 0 ? h.advanceUp : 0) : 0;
+            const learned0 = !!h.advanceSkill;
+            const row0 = [advNat(h.advanceUp), advNat(h.advanceVar?.[0]), advNat(h.advanceVar?.[1])];
+            const com0 = [0, 1, 2].map(i => advNat(h.advanceCommon?.[i]));
             if (h.advance && advanceById[h.advance]?.cls !== h.cls) h.advance = null;
             if (h.advanceSkill && !(h.advance && advanceSkills(h.advance).includes(h.advanceSkill))) h.advanceSkill = null;
-            const free = Math.max(0, Number.isInteger(h.masteryPoints) ? h.masteryPoints : 0);
-            let kept = h.advanceSkill ? Math.min(paid, advanceLevelCapOf(h)) : 0;
-            // 옛 전직 투자는 공용 잔액에서 비용을 낼 수 있는 만큼 유지한다. 별도 포인트를 공용 지갑에 새로 지급하지 않는다.
-            if (separateAdvancePoints) kept = Math.min(kept, free);
-            h.masteryPoints = separateAdvancePoints ? free - kept : free + paid - kept;
-            if (!kept && h.advanceSkill) h.advanceSkill = null;
-            if (kept > 1) h.advanceUp = kept - 1; else delete h.advanceUp;
+            let free = Math.max(0, Number.isInteger(h.masteryPoints) ? h.masteryPoints : 0);
+            if (learnRefund && learned0) free += 1;
+            const row = h.advanceSkill ? advFit(row0) : [0, 0, 0];
+            const com = h.advance ? advFit(com0) : [0, 0, 0];
+            if (separateAdvancePoints) { row[0] = Math.min(row[0], free); free -= row[0]; row[1] = row[2] = 0; com.fill(0); }
+            else free += advSum(row0) + advSum(com0) - advSum(row) - advSum(com);
+            h.masteryPoints = free;
+            advWrite(h, row, com);
         }
         // 스킬북 [2026-09-29 · R179 · 버전 무변경 — INTERFACE §4] — 없으면 「가진 책이 없다 · 안 배웠다」가 정확한 초기 상태다.
         //   책은 쌓인다(권수 그대로 · 2026-09-30) · 정의에 없는 id · 양의 정수가 아닌 값은 지운다 · 배운 스킬이 정의에 없으면 빈 칸으로. **무기의 `skill` 은 지운다**(무기가 스킬을 안 담는다 —
@@ -873,7 +916,11 @@ export function createGameSystem(deps) {
     const MOVED_SKILLS = { arc_quickdraw: 'arc_quickhands', arc_overdraw: 'arc_eagleeye' };
     // 지운 전직 스킬 — 같은 갈래의 대체로 옮긴다(배운 뒤 넣은 포인트 `advanceUp` 도 그대로) [2026-10-29 · R383 — 풀 드로우 → 오버드로우]
     //   옛 사자후(적 전원 데미지) → 새 사자후(옛 일갈 — 같은 함성 · 적 전원) [2026-11-12 · R425 · 사용자 「이미 배운 영웅 옮겨야지」]
-    const RETIRED_ADVANCE = { arc_fulldraw: 'arc_overdraw', war_lionsroar: 'war_intimidate' };
+    //   전직 트리 아홉 교체 [2026-11-13 · R471 · advance_tree_draft — 같은 갈래 같은 자리(priority)의 새 스킬 · 크기 랭크 그대로]
+    const RETIRED_ADVANCE = { arc_fulldraw: 'arc_overdraw', war_lionsroar: 'war_intimidate',
+        mag_firewall: 'mag_ember', mag_frostburst: 'mag_frostarmor', mag_staticfield: 'mag_thundergod',
+        kni_unyieldingoath: 'kni_cleansing', kni_holywar: 'kni_offenseaura', kni_vow: 'kni_elemconvert', kni_showdown: 'kni_fallingstrike',
+        pri_aegis: 'pri_endure', pri_benediction: 'pri_purify' };
     /**
      * 옛 세이브의 지운 스킬을 대체 스킬로 옮긴다 [2026-10-16 · INTERFACE §4 · 버전 무변경 · rng 0] — 영웅(명단 · 가입 희망)의 고유 · 배운 칸 · 스킬 레벨(겹치면 큰 쪽) ·
      *   책 재고(권수를 더한다) · 아이템 줄의 `skill`(특정 스킬 +n · 발동 옵션) · 목걸이 `proc.skill`. 정의 밖 · 책이 안 되는 id 를 지우는 일은 그 뒤 정리가 한다
@@ -1161,10 +1208,13 @@ export function createGameSystem(deps) {
         state.materials = state.materials ?? {};
         state.materials[id] = (state.materials[id] ?? 0) + n;
     };
-    /** 분해 산출을 지갑에 — 가루 · 부위 재료 (R373) */
+    /** 분해 산출을 지갑에 — 가루 · 부위 재료 (R373) · 부위 재료는 의뢰 「재료」가 센다(넘쳐 녹은 것 포함 · 가루는 안 센다 — R457) */
     const gainSalvage = (state, y) => {
         addMat(state, DUST_ID, y.dust);
-        if (y.mat) addMat(state, y.mat.id, y.mat.n);
+        if (y.mat) {
+            addMat(state, y.mat.id, y.mat.n);
+            noteMaterial(state, y.mat.id, y.mat.n);
+        }
     };
     /** 분해 산출을 묶음에 센다 — `{재료 id: n}` · 가루도 한 칸 */
     const tallySalvage = (acc, y) => {
@@ -1185,6 +1235,7 @@ export function createGameSystem(deps) {
         dropFrom(state, itemUid);
         delete state.items[itemUid];
         gainSalvage(state, y);
+        commissionNote(state, 'salvage', it);   // 의뢰 「분해」 — 손 · 일괄 알아서 분해 (R457)
         return { ok: true, dust: y.dust, mat: y.mat, from };
     }
 
@@ -1560,6 +1611,7 @@ export function createGameSystem(deps) {
         const chance = I.upgradeChance(it, max);
         state.resources.gold -= cost;
         for (const m of mats) state.materials[m.id] -= m.need;
+        commissionNote(state, 'upgrade', { to: (it.up ?? 0) + 1 });   // 의뢰 「강화」 — 시도마다 · 성패 무관 (R457)
         state.counters.upgrade = (state.counters.upgrade ?? 0) + 1;
         const success = makeRng(deriveSeed(state.seed ^ 0xF0C5, state.counters.upgrade))() < chance;
         const up = success ? I.upgrade(it).up : (it.up ?? 0);
@@ -1685,6 +1737,7 @@ export function createGameSystem(deps) {
         const [it] = I.rollGear(rng, { slots: [part], ilvl: level, rarityWeights: MAKE_WEIGHTS, ...fix });
         addItem(state, it);
         bagOf(state, no).push(it.uid);
+        commissionNote(state, 'craft', it);   // 의뢰 「제작」 (R457)
         return { ok: true, uid: it.uid };
     }
 
@@ -2470,8 +2523,9 @@ export function createGameSystem(deps) {
 
     /* ── 전직 — 도서관 작업 [신설 2026-09-28 · R16 · skill_design §4 · GAME_DESIGN §9 09-27 · INTERFACE §2-7 · 2026-10-09 ~~훈련장~~ → 도서관 r2 · R231 · 2026-10-16 → r3 · R263] ──
        갈래는 직업마다 셋(`advance.csv`) · **갈래는 되돌릴 수 없다** · 영웅을 넣어 두면 `[balance.csv:advance_hours]` 뒤에 끝난다.
-       전직 스킬은 그 갈래의 `skill.csv` 행(`owner_kind=advance`) 중 **하나를 공용 스킬 포인트 1로 배운다 · 되돌리면 포인트가 전부 돌아온다** — 배운 것이 액티브 전직 칸(`skill.activesFor`)
-       [2026-11-01 정정 · skill_design §4] 마스터리와 같은 공용 스킬 포인트를 쓴다 — 메인 단계만 5레벨 간격으로 열린다(`advanceLevelUp`) · 가지 셋은 설명만(`advance_node.csv`) */
+       전직 스킬은 그 갈래의 `skill.csv` 행(`owner_kind=advance`) 중 **하나를 전직 포인트로 배운다**(무료 · 2026-11-13 R471) — 배운 것이 액티브 전직 칸(`skill.activesFor`)
+       전직 트리 [2026-11-13 · R471 · advance_tree_draft §1] — **공통 줄**(갈래 칸 셋 · `advance_common.csv`) · **스킬 줄**(크기 · 변형 1 · 변형 2 · `advance_node.csv`) ·
+       마스터리와 같은 공용 스킬 포인트 · 줄마다 합 ≤ `[balance.csv:advance_row_points]` · 칸마다도 같은 상한 · 레벨 문턱 없음(갈래가 서면 다 열린다) · 되돌리면 그 랭크만큼 돌아온다 */
     const advanceRows = (deps.advances ?? []).map(r => ({
         id: r.advance_id, cls: r.class_id, order: Number(r.sort_order) || 0, name: { ko: r.name_kr, en: r.name_en },
         desc: { ko: r.desc_kr ?? '', en: r.desc_en ?? '' },   // 갈래를 상징하는 한 줄 (2026-09-28 사용자 지시)
@@ -2493,38 +2547,21 @@ export function createGameSystem(deps) {
     /** 갈래의 스킬 — `priority` 순 */
     const advanceSkills = id => (SK?.list ?? []).filter(d => d.ownerKind === 'advance' && d.ownerId === id)
         .sort((a, b) => a.priority - b.priority).map(d => d.id);
-    /* 전직 가지 — `advance_node.csv` [2026-10-06 · R216 · skill_design §4 · §10] — 전직 스킬마다 ② 특수 · ③ 변형 · ④ 필살기(`slot` 2 · 3 · 4).
-       **설명만이다** — 효과는 아직 전투에 안 걸리고 찍을 수 없다. `hold` = 기획서의 보류 · 미정 칸(설명이 `-`) */
-    const advanceNodesBy = new Map();
-    (() => {
-        const bad = why => { throw new Error(`advance_node: ${why}`); };
-        const rows = deps.advanceNodes ?? [];
-        for (const r of rows) {
-            const d = SK?.defs?.[r.skill_id];
-            if (!d || d.ownerKind !== 'advance') bad(`${r.skill_id} — 전직 스킬이 아니다`);
-            if (![2, 3, 4].includes(r.slot)) bad(`${r.skill_id} — slot '${r.slot}' (2 · 3 · 4 = ② · ③ · ④)`);
-            if (r.hold !== 0 && r.hold !== 1) bad(`${r.skill_id}#${r.slot} — hold '${r.hold}' (0 · 1)`);
-            // 보류 칸은 설명이 없다 · 선 칸은 ko · en 둘 다 있다 — 한쪽만 비면 화면이 반쪽 칸을 그린다
-            const blank = v => v === '-' || v === '' || v === undefined;
-            if (r.hold === 1 ? !(blank(r.desc_kr) && blank(r.desc_en)) : (blank(r.desc_kr) || blank(r.desc_en))) bad(`${r.skill_id}#${r.slot} — hold ${r.hold} 인데 설명 '${r.desc_kr}' · '${r.desc_en}'`);
-            const list = advanceNodesBy.get(r.skill_id) ?? [];
-            if (list.some(x => x.slot === r.slot)) bad(`${r.skill_id}#${r.slot} — 칸이 두 번`);
-            list.push({ slot: r.slot, hold: r.hold === 1, desc: r.hold === 1 ? null : { ko: r.desc_kr, en: r.desc_en } });
-            advanceNodesBy.set(r.skill_id, list);
-        }
-        // 표를 넘겼으면 전직 스킬마다 칸 셋이 다 있어야 한다 — 빠진 스킬은 판에 빈 칸이 선다
-        if (rows.length) for (const d of SK?.list ?? []) if (d.ownerKind === 'advance') {
-            const got = (advanceNodesBy.get(d.id) ?? []).map(x => x.slot).sort().join(' · ');
-            if (got !== '2 · 3 · 4') bad(`${d.id} — 가지 칸이 [${got}] — ② · ③ · ④ 셋이어야 한다`);
-        }
-        for (const list of advanceNodesBy.values()) list.sort((a, b) => a.slot - b.slot);
-    })();
-    /** 메인 단계의 해금만 5레벨 간격이다. 포인트는 레벨업 때 받는 공용 masteryPoints 지갑을 쓴다. */
-    const advanceLevelNeed = rank => B.advance_unlock_level + (rank - 1) * B.advance_skill_level_interval;
-    const advanceLevelCapOf = h => !h?.advance || h.level < B.advance_unlock_level ? 0
-        : 1 + Math.floor((Math.min(h.level, B.hero_level_cap) - B.advance_unlock_level) / B.advance_skill_level_interval);
-    /** 전직 메인에 쓴 공용 포인트 — 학습 1 + 추가 강화(`advanceUp`). 꼬리 효과는 아직 미구현이다. */
-    const advanceSpentOf = h => (h?.advanceSkill ? 1 : 0) + (h?.advanceUp ?? 0);
+    /** 스킬 줄 · 공통 줄 랭크 — 칸 셋 · 줄마다 합 ≤ P (2026-11-13 R471) · 세이브 정리 · 찍기가 같은 규칙을 쓴다 */
+    const ADV_P = B.advance_row_points;
+    const advNat = v => (Number.isInteger(v) && v > 0 ? v : 0);
+    const advSum = a => a.reduce((n, v) => n + v, 0);
+    const advFit = a => { let left = ADV_P; return a.map(v => { const k = Math.min(v, ADV_P, left); left -= k; return k; }); };
+    const advRow = h => [advNat(h?.advanceUp), advNat(h?.advanceVar?.[0]), advNat(h?.advanceVar?.[1])];
+    const advCom = h => [0, 1, 2].map(i => advNat(h?.advanceCommon?.[i]));
+    /** 랭크를 영웅에 쓴다 — 0 은 키가 없다(세이브가 옛 모양 그대로 남는다) */
+    function advWrite(h, row, com) {
+        if (row[0] > 0) h.advanceUp = row[0]; else delete h.advanceUp;
+        if (row[1] > 0 || row[2] > 0) h.advanceVar = [row[1], row[2]]; else delete h.advanceVar;
+        if (com.some(v => v > 0)) h.advanceCommon = com.slice(); else delete h.advanceCommon;
+    }
+    /** 전직 트리에 쓴 공용 포인트 — 스킬 줄(크기 · 변형) + 공통 줄. 배움은 전직 포인트라 안 센다 (R471) */
+    const advanceSpentOf = h => advSum(advRow(h)) + advSum(advCom(h));
     const skillPointsOf = h => {
         const spent = Object.values(h?.mastery ?? {}).reduce((n, rank) => n + rank, 0) + advanceSpentOf(h);
         const free = h?.masteryPoints ?? 0;
@@ -2552,24 +2589,37 @@ export function createGameSystem(deps) {
         const h = heroById(state, uid);
         const w = h ? advancingOf(state, uid) : null;
         const span = w ? Math.max(1, w.until - w.since) : 1;
+        const pts = skillPointsOf(h);
+        const row = advRow(h), com = advCom(h);
+        const cells = h?.advance ? SK?.commons?.get(h.advance) ?? [] : [];
+        const tail = h?.advanceSkill ? SK?.tails?.get(h.advanceSkill) ?? null : null;
+        // 칸 하나를 +1 할 수 있나 — 포인트 · 칸 상한 · 줄 합 (R471)
+        const canUp = (a, i) => pts.free > 0 && a[i] < ADV_P && advSum(a) < ADV_P;
         return {
             open: hasFeature(state, 'advance'),
             need: { have: h?.level ?? 0, need: B.advance_unlock_level },
             gold: { have: state.resources.gold ?? 0, need: B.advance_gold },   // 전직 비용 (R373)
             hero: {
                 advance: h?.advance ?? null, skill: h?.advanceSkill ?? null,
-                // 공용 스킬 포인트와 메인 해금 레벨은 별개다. 전직 완료는 포인트를 지급하지 않는다.
-                lv: h?.advanceSkill ? 1 + (h.advanceUp ?? 0) : 0,
-                points: skillPointsOf(h),
-                levelCap: advanceLevelCapOf(h),
-                nextLevel: advanceLevelNeed(advanceSpentOf(h) + 1) <= B.hero_level_cap ? advanceLevelNeed(advanceSpentOf(h) + 1) : null,
-                canLearn: !!h?.advance && !h.advanceSkill && advanceLevelCapOf(h) > 0 && (h.masteryPoints ?? 0) > 0,
-                canLevelUp: !!h?.advanceSkill && advanceSpentOf(h) < advanceLevelCapOf(h) && (h.masteryPoints ?? 0) > 0,
+                lv: h?.advanceSkill ? 1 + row[0] : 0,
+                points: pts,
+                rowMax: ADV_P,
+                // 공통 줄 — 칸마다 랭크 · 지금 값 · 다음 랭크 값(5랭크면 null) · 찍을 수 있나 (R471)
+                common: cells.map((c, i) => ({ slot: c.slot, name: c.name, stat: c.stat, tag: c.tag, effect: c.effect, unit: c.unit, rank: com[i],
+                    value: SK.commonValue(c, com[i]), next: com[i] < ADV_P ? SK.commonValue(c, com[i] + 1) : null, canUp: canUp(com, i), canDown: com[i] > 0 })),
+                // 스킬 줄 — 크기 · 변형 1 · 변형 2 (R471)
+                row: tail ? SK.ROW_SLOTS.map((slot, i) => ({ ...tail[slot], rank: row[i], canUp: canUp(row, i), canDown: row[i] > 0 })) : [],
+                canLearn: !!h?.advance && !h.advanceSkill,
+                canLevelUp: !!h?.advanceSkill && canUp(row, 0),
+                // 전직 트리 어디든 +1 할 칸이 있나 — 알림 · 점(`game.notices` · 화면)이 읽는다
+                canRank: (!!h?.advanceSkill && [0, 1, 2].some(i => canUp(row, i))) || (cells.length > 0 && [0, 1, 2].some(i => canUp(com, i))),
                 working: w ? { branch: w.branch, since: w.since, until: w.until, frac: Math.min(1, Math.max(0, (now - w.since) / span)) } : null,
             },
-            branches: h ? advanceRows.filter(a => a.cls === h.cls).map(a => ({ id: a.id, name: a.name, desc: a.desc, skills: advanceSkills(a.id) })) : [],
-            // 그 영웅 갈래의 스킬마다 가지 셋 — 설명만(찍을 수 없다 · `advance_node.csv` · R216)
-            nodes: h ? Object.fromEntries(advanceRows.filter(a => a.cls === h.cls).flatMap(a => advanceSkills(a.id)).map(id => [id, advanceNodesBy.get(id) ?? []])) : {},
+            branches: h ? advanceRows.filter(a => a.cls === h.cls).map(a => ({ id: a.id, name: a.name, desc: a.desc, skills: advanceSkills(a.id),
+                common: (SK?.commons?.get(a.id) ?? []).map(c => ({ slot: c.slot, name: c.name, stat: c.stat, unit: c.unit, per: c.per, rank5: c.rank5 })) })) : [],
+            // 그 영웅 직업 갈래의 스킬마다 스킬 줄 칸 셋 — 고르기 전 설명용(`advance_node.csv`)
+            nodes: h ? Object.fromEntries(advanceRows.filter(a => a.cls === h.cls).flatMap(a => advanceSkills(a.id))
+                .map(id => [id, SK?.tails?.has(id) ? SK.ROW_SLOTS.map(slot => SK.tails.get(id)[slot]) : []])) : {},
             err: advanceErr(state, uid),
         };
     }
@@ -2587,46 +2637,63 @@ export function createGameSystem(deps) {
         state.advancing = advancingList(state).filter(w => {
             if (w.until > now) return true;
             const h = heroById(state, w.uid);
-            if (h && !h.advance) { h.advance = w.branch; h.advanceSkill = null; delete h.advanceUp; done.push(w.uid); }
+            if (h && !h.advance) { h.advance = w.branch; h.advanceSkill = null; advWrite(h, [0, 0, 0], [0, 0, 0]); done.push(w.uid); }
             return false;
         });
         return { done };
     }
+    /** 전직 스킬 배우기 — **전직 포인트**(갈래가 서면 하나 · 무료 · 2026-11-13 R471 — ~~공용 포인트 1~~) · 하나만 · 되돌리면 다시 고른다 */
     function advanceLearn(state, uid, skillId) {
         const h = heroById(state, uid);
         if (!h) return { ok: false, err: 'missing' };
         if (!h.advance) return { ok: false, err: 'none' };
         if (h.advanceSkill) return { ok: false, err: 'learned' };
         if (!advanceSkills(h.advance).includes(skillId)) return { ok: false, err: 'skill' };
-        if (advanceLevelCapOf(h) < 1) return { ok: false, err: 'level', need: B.advance_unlock_level };
-        if ((h.masteryPoints ?? 0) < 1) return { ok: false, err: 'points' };
-        h.masteryPoints -= 1;
         h.advanceSkill = skillId;
         return { ok: true };
     }
+    /** 전직 스킬 되돌리기 — 스킬 줄(크기 · 변형)에 넣은 공용 포인트를 전부 돌려준다 · 공통 줄은 갈래 몫이라 그대로 (R471) */
     function advanceForget(state, uid) {
         const h = heroById(state, uid);
         if (!h) return { ok: false, err: 'missing' };
         if (!h.advanceSkill) return { ok: false, err: 'empty' };
-        const refunded = advanceSpentOf(h);
+        const refunded = advSum(advRow(h));
         h.masteryPoints = (h.masteryPoints ?? 0) + refunded;
         h.advanceSkill = null;
-        delete h.advanceUp;
+        advWrite(h, [0, 0, 0], advCom(h));
         return { ok: true, refunded };
     }
-    /** 전직 메인 +1 — 공용 스킬 포인트 1 소비. 다음 단계의 영웅 레벨 조건을 먼저 검사한다. */
-    function advanceLevelUp(state, uid) {
+    /**
+     * 전직 트리 칸 하나 ±1 [2026-11-13 · R471 · advance_tree_draft §1 · INTERFACE §2-7] — `line` = `common`(공통 줄 · 갈래가 있으면) · `skill`(스킬 줄 · 배운 스킬이 있으면) ·
+     *   `slot` = 0 · 1 · 2(스킬 줄은 크기 · 변형 1 · 변형 2) · `delta` = +1 · −1. +1 은 공용 포인트 1 · 칸 상한 · 줄 합 ≤ `advance_row_points` ·
+     *   −1 은 그 포인트를 돌려준다(롤백 — skill_design §5). 도는 원정이면 다음 걸음 첫머리의 `refit` 이 먹는다(마스터리와 같다) · rng 0
+     */
+    function advanceRank(state, uid, line, slot, delta) {
         const h = heroById(state, uid);
         if (!h) return { ok: false, err: 'missing' };
         if (!h.advance) return { ok: false, err: 'none' };
-        if (!h.advanceSkill) return { ok: false, err: 'empty' };
-        const need = advanceLevelNeed(advanceSpentOf(h) + 1);
-        if (need > B.hero_level_cap) return { ok: false, err: 'maxLevel' };
-        if (h.level < need) return { ok: false, err: 'level', need };
-        if ((h.masteryPoints ?? 0) < 1) return { ok: false, err: 'points' };
-        h.masteryPoints -= 1;
-        h.advanceUp = (h.advanceUp ?? 0) + 1;   // 도는 원정이면 다음 걸음 첫머리의 `refit` 이 먹는다 (마스터리와 같다)
-        return { ok: true, lv: 1 + h.advanceUp };
+        if (line !== 'common' && line !== 'skill') return { ok: false, err: 'line' };
+        if (line === 'skill' && !h.advanceSkill) return { ok: false, err: 'empty' };
+        if (![0, 1, 2].includes(slot) || (delta !== 1 && delta !== -1)) return { ok: false, err: 'slot' };
+        const row = advRow(h), com = advCom(h);
+        const a = line === 'skill' ? row : com;
+        if (delta > 0) {
+            if ((h.masteryPoints ?? 0) < 1) return { ok: false, err: 'points' };
+            if (a[slot] >= ADV_P) return { ok: false, err: 'cellMax' };
+            if (advSum(a) >= ADV_P) return { ok: false, err: 'rowMax' };
+            h.masteryPoints -= 1;
+        } else {
+            if (a[slot] <= 0) return { ok: false, err: 'zero' };
+            h.masteryPoints = (h.masteryPoints ?? 0) + 1;
+        }
+        a[slot] += delta;
+        advWrite(h, row, com);
+        return { ok: true, rank: a[slot] };
+    }
+    /** 전직 스킬 크기 +1 — `advanceRank(…, 'skill', 0, +1)` 의 짧은 이름(옛 메인 +1 · 레벨 문턱은 2026-11-13 퇴역) */
+    function advanceLevelUp(state, uid) {
+        const r = advanceRank(state, uid, 'skill', 0, 1);
+        return r.ok ? { ok: true, lv: 1 + (heroById(state, uid).advanceUp ?? 0) } : r;
     }
 
     /** 만렙 뒤 별 하나 → 기본 능력치 하나 +1 [신설 2026-11-11 · hero_design §5 · INTERFACE §2-7] — **되돌리는 길이 없다**(화면이 확인을 받는다) ·
@@ -2975,6 +3042,7 @@ export function createGameSystem(deps) {
                 state.materials[r.yieldId] = (state.materials[r.yieldId] ?? 0) + n;
                 gained[r.yieldId] = (gained[r.yieldId] ?? 0) + n;
                 total += n;
+                noteMaterial(state, r.yieldId, n);   // 의뢰 「재료」 — 꺼진 동안 · 대박 포함 (R457)
             }
         }
         return { gained, total };
@@ -3715,6 +3783,7 @@ export function createGameSystem(deps) {
                     const gone = addItem(state, it);
                     R.drops.push(gone.uid);
                     if (auto) gained.push(gone); else R.discarded++;
+                    if (auto) commissionNote(state, 'salvage', gone);   // 의뢰 「분해」 — 알아서 분해만 · 넘쳐 녹은 것은 안 센다 (R457)
                     gainSalvage(state, salvageYield(gone));   // 가루 + 부위 재료 (R373)
                     logSalvaged(state, run.preset, gone);
                     delete state.items[gone.uid];
@@ -4391,23 +4460,27 @@ export function createGameSystem(deps) {
 
     const isTaken = c => c.have !== undefined && c.have !== null;
     const boardOf = state => state.commissions?.cards ?? [];
-    const ownBoard = state => (state.commissions ??= { cards: [], fame: 0 }).cards;
+    const ownBoard = state => (state.commissions ??= { cards: [], fame: 0, sins: {} }).cards;
     /** 명성 경험치 — 누적 수령 수 (R375) */
     const fameXp = state => state.commissions?.fame ?? 0;
+    /** 장소 키 — `"장-장소"`(칸 I ~ III 를 묶는다 · 의뢰 「한 장소」 · R457) */
+    const placeKey = st => `${st.chapter}-${st.stage_num}`;
 
-    /** 굴릴 대상 — **지금 들어갈 수 있는 스테이지**의 챕터 · 일반몹 · 그 종족 + 진행 챕터. 순서가 계약이다(챕터 · 몬스터 오름차순 · 종족은 표 순서 · INTERFACE §2-16) */
+    /** 굴릴 대상 — **지금 들어갈 수 있는 스테이지**의 챕터 · 장소(챕터보스 장소 빼고) · 일반몹 · 그 종족 + 진행 챕터. 순서가 계약이다(챕터 · 몬스터 오름차순 · 장소는 장 · 장소 순 · 종족은 표 순서 · INTERFACE §2-16) */
     function commissionCtx(state) {
-        const chapters = new Set(), monsters = new Set();
+        const chapters = new Set(), monsters = new Set(), places = new Set();
         for (const id of deps.stageOrder) {
             if (!stageUnlocked(state, id, BASE_DIFF)) continue;   // 첫 단(노말)의 기록 — 고른 난이도와 무관 (2026-10-10 · R236)
             const st = deps.stages[id];
             chapters.add(st.chapter);
+            if (st.boss_grade !== 'chapter_boss') places.add(placeKey(st));   // 챕터보스 장소는 「한 장소」 풀에 없다 (R457)
             for (const m of BT.stagePool(st)) monsters.add(m);
         }
         const mons = [...monsters].sort((a, b) => a - b);
         const present = new Set(mons.map(id => deps.monsters[id]?.monster_type));
         return {
             chapters: [...chapters].sort((a, b) => a - b),
+            places: [...places],   // stageOrder 차례 = 장 · 장소 순
             monsters: mons,
             races: CM.races.map(r => r.id).filter(id => present.has(id)),
             chapter: frontierChapter(state),
@@ -4429,8 +4502,12 @@ export function createGameSystem(deps) {
         const slots = limitsOf(state).commissionSlots;
         const list = boardOf(state);
         const taken = list.filter(isTaken).length;
+        // 도감 죄종 칸 — 장 순서의 죄종 일곱 · 수령 횟수 · 열렸나(들어갈 수 있는 장의 죄종 — R457)
+        const counts = state.commissions?.sins ?? {};
+        const opened = new Set(CM.openSins(commissionCtx(state).chapters));
         return {
             open, slots, taken, fame: CM.fameOf(fameXp(state)),
+            sins: CM.sins.map(s => ({ id: s.id, chapter: s.chapter, n: counts[s.id] ?? 0, open: opened.has(s.id) })),
             cards: list.map(c => {
                 const t = isTaken(c);
                 return { ...c, taken: t, have: t ? c.have : null, done: t && c.have >= c.need, canTake: open && !t && taken < slots };
@@ -4481,6 +4558,8 @@ export function createGameSystem(deps) {
         const before = CM.fameOf(fameXp(state)).level;
         const cards = ownBoard(state);
         state.commissions.fame = fameXp(state) + 1;
+        // 도감 죄종 칸 — 그 죄종의 수령 횟수 +1 · 등급 무관 (R457 · base_expedition_design §1-3 「도감의 죄종 칸」)
+        if (c.sin) (state.commissions.sins ??= {})[c.sin] = (state.commissions.sins[c.sin] ?? 0) + 1;
         const fame = CM.fameOf(state.commissions.fame);
         const fameUp = fame.level > before;
         let rerolled = 0;
@@ -4508,18 +4587,28 @@ export function createGameSystem(deps) {
      *   모든 부대가 같이 채운다(의뢰에는 파티가 없다) · 진 라운드 · 끊긴 라운드는 여기 안 온다(도감 처치 수와 같은 규칙) · rng 0
      */
     function commissionCount(state, stageId, killGrades, gained) {
-        const open = boardOf(state).filter(c => isTaken(c) && c.have < c.need);
-        if (!open.length) return;
-        const chapter = deps.stages[stageId]?.chapter ?? null;
-        const add = (c, n) => { c.have = Math.min(c.need, c.have + n); };
+        if (!boardOf(state).some(c => isTaken(c) && c.have < c.need)) return;
+        const st = deps.stages[stageId];
+        const chapter = st?.chapter ?? null, place = st ? placeKey(st) : null;
         for (const [id, byGrade] of Object.entries(killGrades)) {
-            const ev0 = { chapter, monster: Number(id), race: deps.monsters[id]?.monster_type ?? null };
-            for (const [grade, n] of Object.entries(byGrade)) {
-                const ev = { ...ev0, grade };
-                for (const c of open) if (CM.matchKill(c, ev)) add(c, n);
-            }
+            const ev0 = { chapter, place, monster: Number(id), race: deps.monsters[id]?.monster_type ?? null };
+            for (const [grade, n] of Object.entries(byGrade)) commissionNote(state, 'battle', { ...ev0, grade }, n);
         }
-        for (const it of gained) for (const c of open) if (CM.matchDrop(c, it)) add(c, 1);
+        for (const it of gained) commissionNote(state, 'yield', it);   // 옛 「수집」 카드만 (R457)
+    }
+
+    /**
+     * 사건 하나를 센다 — 받아 둔 · 안 찬 카드마다 `CM.match(card, on, ev)` 가 맞으면 `n` 을 더하고 `need` 에서 자른다 · rng 0 (R457).
+     *   `on` = `battle`(위 `commissionCount`) · `salvage`(`salvage` · 알아서 분해) · `material`(`noteMaterial`) · `upgrade`(`upgradeItem` 시도) · `craft`(`makeItem`) · `yield`(옛 수집)
+     */
+    function commissionNote(state, on, ev, n = 1) {
+        if (!(n > 0)) return;
+        for (const c of boardOf(state)) if (isTaken(c) && c.have < c.need && CM.match(c, on, ev)) c.have = Math.min(c.need, c.have + n);
+    }
+    /** 재료를 얻은 순간 — 연구소 재료 갈래로 묶어 센다 · 갈래가 없는 것(가루)은 안 센다 (R457) */
+    function noteMaterial(state, id, n) {
+        const family = CM.familyOf(id);
+        if (family) commissionNote(state, 'material', { family }, n);
     }
 
     /**
@@ -5075,7 +5164,7 @@ export function createGameSystem(deps) {
             if (!(h.masteryPoints > 0)) continue;
             const mastery = masteryState(state, h.uid);
             const advance = advanceState(state, h.uid, now).hero;
-            if (mastery.nodes.some(n => n.canLearn) || advance.canLearn || advance.canLevelUp)
+            if (mastery.nodes.some(n => n.canLearn) || advance.canLearn || advance.canRank)
                 // 확인한 뒤 다음 레벨업에서 받은 포인트는 새 알림으로 보인다. 일부 배분은 같은 알림을 갱신한다.
                 items.push({ id: `mastery:${h.uid}:${h.level}`, kind: 'mastery', tab: 'character',
                     target: { hero: h.uid }, points: mastery.points });
@@ -5180,10 +5269,10 @@ export function createGameSystem(deps) {
     /**
      * 전술 조건 · 버프가 세는 파티 — **편성 순서대로**(첫 칸이 리더 · §5-10) · 죄종 · 직업 · 통솔 · **낀 장비의 죄종**(이름의 첫째 · 둘째 둘 다 — `item.sins` ·
      * 장비 죄종 버프 · 2026-11-11 · R441 · tactic_card_design §5-14). 세는 대상 = **파티**(기본은 칸을 읽는 편성의 파티 · 원정은 나간 인원을 넘긴다 · R92 · R122) —
-     * 벤치는 안 든다. ~~`stats` · `advance`(능력치 합 · 전직 조건)~~ 은 2026-11-11 삭제(R441)
+     * 벤치는 안 든다. **`stats`**(능력치 — 3랭크 짝 능력치 합 · 2026-11-13 · R466) · ~~`advance`(전직 조건)~~ 은 2026-11-11 삭제(R441)
      */
     const partyMembers = (state, party = partyOf(state)) => party.map(uid => heroById(state, uid)).filter(Boolean)
-        .map(h => ({ sin: h.sin, cls: h.cls, ldr: h.stats?.ldr ?? 0, gear: heroItems(state, h).flatMap(it => it.sins ?? []) }));
+        .map(h => ({ sin: h.sin, cls: h.cls, ldr: h.stats?.ldr ?? 0, stats: h.stats ?? {}, gear: heroItems(state, h).flatMap(it => it.sins ?? []) }));
     /** 함께 잡은 몬스터 수의 키 — 나간 인원의 uid 를 정렬해 잇는다(순서 · 자리와 무관 · 한 명이라도 바뀌면 다른 키) · 전술 5랭크 조건 (2026-11-11 · R441) */
     const teamKey = party => party.slice().sort().join('|');
     const killsOf = (state, party) => state.killsTogether?.[teamKey(party)] ?? 0;
@@ -5223,7 +5312,7 @@ export function createGameSystem(deps) {
             return {
                 no: s.no, open: opened, locked: opened && held.has(s.no),
                 option, condId: s.condId, condKind: s.condKind, steps: s.steps.slice(),
-                have: m?.have ?? null, need: m?.need ?? null, step: m?.step ?? 0, active: m?.active ?? false,
+                have: m?.have ?? null, need: m?.need ?? null, step: m?.step ?? 0, active: m?.active ?? false, attr: m?.attr ?? null,
                 // 값 [§5-14] — `base` = 등급 × 단계(꺼진 칸은 단계 1 값 — 「켜면 얼마」) · `value` = 적용 값(리더 몫 + 장비 죄종 몫 — 화면 · `tacticBonus` 가 쓴다)
                 base: m?.base ?? null, leadPart: m?.leadPart ?? 0, gearPart: m?.gearPart ?? 0, value: m?.value ?? null, bonus: m?.bonus ?? 0,
             };
@@ -5248,6 +5337,18 @@ export function createGameSystem(deps) {
     function arenaLoadout(state, no = state.preset) {
         const p = presetAt(state, no) ?? curPreset(state);
         return { tactic: tacticBonus(state, p.party, no), potions: fillSlots(state, p), slotMax: limitsOf(state).potionSlots, potionHp: potionHpOf(p) };
+    }
+
+    /** 콜로세움 방어 편성이 올라갈 때 싣는 것 — 물약 칸(재고에서 채운 칸의 id · 자리 순 — `arenaLoadout` 과 같은 칸) · 마시는 기준 ·
+     *  열린 전술 칸의 가족 · 등급과 그 셋이 함께 잡은 수 (2026-11-13 · R460 · INTERFACE §2-17 `exportTeam`). 값은 받는 쪽이 다시 잰다 · 상태 불변 · rng 0 */
+    function arenaExport(state, no = state.preset) {
+        const p = presetAt(state, no) ?? curPreset(state);
+        const ts = tacticState(state, p.party, no);
+        return {
+            potions: fillSlots(state, p).map(s => (s ? s.id : null)),
+            potionHp: potionHpOf(p),
+            tactic: { slots: ts.slots.filter(s => s.open && s.option).map(s => ({ no: s.no, id: s.option.id, grade: s.option.grade })), kills: killsOf(state, p.party) },
+        };
     }
 
     /* ── 결투장 ELO · 콜로세움 층 — 세이브 쪽 [2026-10-18 · arena_design §7 · §8 · INTERFACE §2-7] ──
@@ -5364,19 +5465,29 @@ export function createGameSystem(deps) {
         if (!h) return null;
         const points = h.masteryPoints ?? 0;
         const items = heroItems(state, h);
+        // 줄마다 점수 합 [R473] — `rows` = {줄 키: {used, cap}} · 칸마다 `row` 키와 그 줄의 쓴 점수 · 줄이 차면 그 줄 칸은 못 찍는다
+        const rowCap = B.mastery_row_points;
+        const rows = {};
+        for (const n of H.masteryNodesFor(h)) {
+            const key = H.masteryRowKey(n);
+            rows[key] = rows[key] ?? { used: 0, cap: rowCap };
+            rows[key].used += h.mastery?.[n.id] ?? 0;
+        }
         return {
-            points,
+            points, rows,
             // 지금 낀 장비 중 그 영웅 죄종 장비 수 — 죄종 T2-1 의 「2/3」 표시 [2026-10-05 · skill_design §3-2]
             sinGear: H.sinGearCount(h, items),
             nodes: H.masteryNodesFor(h).map(n => {
                 const rank = h.mastery?.[n.id] ?? 0;
                 const unlocked = h.level >= n.unlockLevel;
+                const row = H.masteryRowKey(n);
                 return {
                     id: n.id, treeKind: n.treeKind, ownerId: n.ownerId, tier: n.tier, stat: n.stat, name: n.name,
                     value: n.value, rank, maxRank: n.maxRank, unlockLevel: n.unlockLevel, unlocked,
                     // 랭크가 한계를 넓히는 칸(분노 · 폭식 T3 · R343)은 값이 랭크와 상관없이 하나다 — 찍었으면 값 그대로
                     total: Number((H.masteryWiden(n.cond, 1) ? (rank > 0 ? n.value : 0) : n.value * rank).toFixed(3)),
-                    canLearn: unlocked && rank < n.maxRank && points > 0,
+                    row, rowUsed: rows[row].used, rowCap,
+                    canLearn: unlocked && rank < n.maxRank && points > 0 && rows[row].used < rowCap,
                     // 낀 장비가 켜는 칸 [2026-09-22 · skill_design §3-5 · R138] — `gate` = {slot, groups} 또는 null · `on` = 지금 장비로 켜졌나.
                     //   꺼져 있어도 찍을 수 있다 — 랭크는 캐릭터에 쌓이고 장비를 바꾸면 켜진다
                     //   죄종 T2-1 은 `{slot: 'sin_gear', need}` — 그 영웅 죄종 장비 수가 켠다(2026-10-05)
@@ -5400,6 +5511,8 @@ export function createGameSystem(deps) {
         const rank = h.mastery?.[nodeId] ?? 0;
         if (rank >= n.maxRank) return { ok: false, err: 'maxRank' };
         if ((h.masteryPoints ?? 0) < 1) return { ok: false, err: 'points' };
+        // 줄마다 점수 합 [R473] — 그 칸의 줄(같은 탭 · 같은 단)에 찍은 합이 [balance.csv:mastery_row_points] 면 못 찍는다
+        if (H.masteryRowUsed(h, n) >= B.mastery_row_points) return { ok: false, err: 'rowFull' };
         h.mastery = h.mastery ?? {};
         h.mastery[nodeId] = rank + 1;
         h.masteryPoints -= 1;
@@ -5458,10 +5571,10 @@ export function createGameSystem(deps) {
         dispatchSettle, dispatchProgress, labState, labSettle, labResearchStart, labResearchCancel, labRegOf, labRegList, labRegister, labUnregister, materialsState,
         materialLadder, synthState, synthesize,   // 재료 단계 · 대장간 합성 (2026-10-27 · R359)
         mgRound, mgJudge, mgClaim,
-        advanceState, advanceStart, advanceSettle, advanceLearn, advanceForget, advanceLevelUp, spendStar,
+        advanceState, advanceStart, advanceSettle, advanceLearn, advanceForget, advanceLevelUp, advanceRank, spendStar,
         bookState, learnBook, craftBook, sortBooks,
         masteryState, learnMastery, unlearnMastery, resetMastery,
-        tacticState, tacticBonus, arenaLoadout, arenaState, arenaStakes, arenaRecord, colosseumState, colosseumRecord, arenaDefense, setArenaDefense, rerollTactic, toggleTacticLock, weaponGroupOf,
+        tacticState, tacticBonus, arenaLoadout, arenaExport, arenaState, arenaStakes, arenaRecord, colosseumState, colosseumRecord, arenaDefense, setArenaDefense, rerollTactic, toggleTacticLock, weaponGroupOf,
         constructionState, construct, hasFeature, needOf, peakTotal,
         navTodo,     // 탭 할 일 점 (2026-10-16 · ADR-0637)
         notificationState,   // 상단 종 — 다음 할 일 · 처리 대기 (2026-10-30)

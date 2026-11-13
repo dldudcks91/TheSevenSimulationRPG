@@ -1,8 +1,8 @@
-sin_id,attr_id,description_kr
-wrath,luck,분노 — 운 · 모든 직업이 쓰는 능력치 보정(R389)
-envy,agi,시기 — 민첩 · ⚠ 근거가 약하다(sin_mapping 때 다시 본다)
-greed,luck,탐욕 — 운 · 마스터리(미다스의 손 · 약탈)가 골드 · 드롭을 민다 — 운과 같은 쪽
-sloth,vit,나태 — 건강 · 모든 직업이 쓰는 능력치 보정(R389)
-gluttony,vit,폭식 — 건강 · 마스터리(두꺼운 가죽 · 무쇠 위장)가 체력을 민다
-lust,cha,색욕 — 매력
-pride,ldr,오만 — 통솔 · 남 위에 서는 죄종
+sin_id,attr_id,tactic_attr_id,description_kr
+wrath,luck,str,분노 — 운 · 모든 직업이 쓰는 능력치 보정(R389) · 전술 짝(tactic_attr_id) = 3랭크 조건이 읽는 1대1 짝 — 굴림 짝(attr_id)과 다른 열이다: 굴림은 힘 · 지능을 직업 몫으로 일부러 뺐다 [2026-11-13 사용자 「영웅능력치 굴림은 힘/지능을 줘야되서 일부러 뺴고 계산한거임」 · tactic_card_design §5-14 · R466]
+envy,agi,int,시기 — 민첩 · ⚠ 근거가 약하다(sin_mapping 때 다시 본다)
+greed,luck,luck,탐욕 — 운 · 마스터리(미다스의 손 · 약탈)가 골드 · 드롭을 민다 — 운과 같은 쪽
+sloth,vit,agi,나태 — 건강 · 모든 직업이 쓰는 능력치 보정(R389)
+gluttony,vit,vit,폭식 — 건강 · 마스터리(두꺼운 가죽 · 무쇠 위장)가 체력을 민다
+lust,cha,cha,색욕 — 매력
+pride,ldr,ldr,오만 — 통솔 · 남 위에 서는 죄종

@@ -57,6 +57,14 @@ export const CASTS = {
     // 모으기 [2026-10-26 · R357 · 사용자 「기모아서 마지막에 한발」 · 초 시계 R358 「그냥 n초로해」] — 같은 초 시계인데 **방이 둘**(여는 순간 · 쏘는 순간)이고
     //   **마지막 방에만 친다**(`burst`) · 그 사이 = 그 스킬의 `charge_sec`(공속과 상관없다 · 스킬마다 — 2026-10-28 R371) · `hit` 줄은 한 발(타수 1 — 로드 검사)
     channel_charge: { picked: true, cooled: true, chan: true, burst: true },
+    // 전직 트리 셋 [2026-11-13 · R471 · advance_tree_draft §3 ~ §7] —
+    //   `auto`    자동 — **전투 시작에 켜지고 그 뒤 쿨마다 켜지며 차례를 안 먹는다**(가디언 셋 · 버서크 · skill_design §10-3 「자동 발동」) · 켜는 주체는 battle.js 의 틱
+    //   `passive` 늘 켜짐 — 쿨 없이 상시 · 행동을 안 먹는다 · 오오라와 같이 칸에서 빠져 전투 시작에 `until: Infinity` 창으로 걸린다(불씨 · 썬더 스트라이크 · 재장전) ·
+    //             오오라의 「한 번에 하나」를 안 탄다 — 읽는 쪽은 그 창의 표식 능력치다
+    //   `spend`   쌓인 캐스팅 칸 전부 — 차례 스킬인데 **시전 순간 쌓인 칸을 모두 쓰고 칸 하나에 타격 하나**(천둥신의 분노) · 타수 = max(1, 칸 수) · battle.js 의 시전 칸 소비가 읽는다
+    auto: { picked: false, cooled: true, auto: true },
+    passive: { picked: false, cooled: false },
+    spend: { picked: true, cooled: true, spend: true },
 };
 export const CAST_IDS = Object.keys(CASTS);
 
@@ -238,6 +246,24 @@ export const ATTACK_TARGETS = {
         return tgt;
     },
     /**
+     * 후열 하나 [2026-11-13 · R471 · advance_tree_draft §5 낙하 검격] — **전열 게이트 · 지목 · 도발을 안 보고** 살아 있는 후열에서 하나를 **rng 1회**로 고른다 ·
+     *   후열이 비면 살아 있는 전원에서(같은 1회) · `hits` 회 그 대상 · 쓰러지면 남은 타수는 버린다 · 기준 = 그 대상
+     */
+    enemy_back_one: (rt, u, def, foes) => {
+        const live = foes.filter(f => f.hp > 0);
+        const back = live.filter(f => (f.rank ?? 0) !== 0);
+        const pool = back.length ? back : live;
+        const r = rt.rng();
+        if (!pool.length) return null;
+        const tgt = pool[Math.floor(r * pool.length)];
+        const sk = skillHit(def);
+        for (let k = 0; k < def.hits; k++) {
+            if (u.hp <= 0 || tgt.hp <= 0) break;
+            rt.strikeOnce(u, tgt, def.mult, def.element, def.id, sk);
+        }
+        return tgt;
+    },
+    /**
      * 연쇄 — 시작점만 굴리고(rng 1회 · **전열 우선**) 전원을 한 바퀴, 순서마다 배율이 `decay` 만큼 곱으로 준다.
      * 도는 순서는 **전열 먼저**다 [2026-10-03] — 시작점부터 전열을 한 바퀴 돈 뒤 나머지를 배열 순으로(센 앞 순번이 후열로 새지 않는다) · 기준 = 시작점
      */
@@ -346,11 +372,13 @@ export const TARGETS = [...new Set([...Object.keys(ATTACK_TARGETS), ...Object.ke
  *              `event` 스킬이라 사건(`rt.fire`)이 부른다 [`run` 2026-09-24 R151 — ~~`battle.js:blast` 전용 함수~~]
  */
 export const EFFECT_TYPES = {
-    hit: { casts: ['turn', 'channel', 'channel_tick', 'channel_charge'], foes: true, weapon: true, run: (rt, u, x, t, foes) => ATTACK_TARGETS[x.target](rt, u, x, foes) },
+    hit: { casts: ['turn', 'channel', 'channel_tick', 'channel_charge', 'spend'], foes: true, weapon: true, run: (rt, u, x, t, foes) => ATTACK_TARGETS[x.target](rt, u, x, foes) },
     heal: { casts: ['turn'], weapon: true, run: (rt, u, x, t) => rt.castHeal(u, x, t) },
+    // 지우기 [2026-11-13 · R471 · advance_tree_draft §7 정화] — 고른 아군의 상태이상 · 상대 편이 건 창을 지우고 **지운 아군만** 회복(회복과 같은 굴림 · 같은 식) · `skill_runtime.castCleanse`
+    cleanse: { casts: ['turn'], weapon: true, run: (rt, u, x, t) => rt.castCleanse(u, x, t) },
     // 자기 회복 — 시전자 최대 HP 비율만큼 바로(리커버리 · 2026-10-16) · 굴리지 않는다(rng 0) · 무기의 힘을 안 끌어 쓰므로 `weapon` 이 없다
     mend: { casts: ['turn'], run: (rt, u, x, t) => rt.castMend(u, x, t) },
-    apply: { casts: ['turn', 'aura'], run: (rt, u, x, t) => rt.castBuff(u, x, t) },
+    apply: { casts: ['turn', 'aura', 'passive', 'auto'], run: (rt, u, x, t) => rt.castBuff(u, x, t) },
     summon: { casts: ['turn'], weapon: true, run: (rt, u, x, t) => rt.castSummon(u, x, t) },
     call: { casts: ['turn'], run: (rt, u, x, t) => rt.castCall(u, x, t) },
     fixed: {
@@ -449,6 +477,8 @@ export const EFFECTS = {
         },
     },
     imbue: { state: true },
+    // 화상 걸린 적에게 주는 데미지 % (이그나이트 둘째 줄 · 2026-11-13 R471) — battle.strikeOnce 가 대상에게 화상이 있으면 그 타격의 데미지 % 괄호에 더한다
+    vs_burn_pct: { state: true },
     pulse: { state: true },
     echo: { state: true },
     // 2026-10-29 기본 스킬 개편 셋 [R383 · R385 · INTERFACE §2-6 「기본 스킬 50 의 장치」] — 전부 표식:
@@ -488,6 +518,25 @@ export const EFFECTS = {
         },
         end: (rt, u) => { if (u.rankBase !== undefined) { u.rank = u.rankBase; delete u.rankBase; } },
     },
+    // 전직 트리 장치 [2026-11-13 · R471 · advance_tree_draft §8 · INTERFACE §2-6 「전직 트리 장치」] — 전부 표식이고 읽는 쪽이 따로 있다:
+    //   ember        불씨(늘 켜짐) — 값 = 터질 때의 배율 · 화염 직격이 맞을 때마다 그 적에게 겹 · 겹이 차면 터진다(battle.js `emberHit`)
+    //   elem_shield  원소 보호막(프로스트 아머) — 열 때 시전자 마법 데미지 중앙값 × 값만큼의 흡수량(`amt`) · 원소 직격만 먼저 깎는다 · 평타로 친 적은 결빙(battle.js)
+    //   ailment_cut  상태이상 · 디버프 시간 감소(클렌징 오오라) — 받는 쪽 창의 합이 `rt.applyStatus` 의 시간에 곱으로 들어간다
+    //   phys_to_fire 물리 → 화염 전환(원소 전환 오오라) — 값 = 바꾸는 몫 · 물리 직격을 그 몫만 화염 타격으로 나눠 따로 깎는다(battle.strikeOnce)
+    //   conv_amp     전환된 화염 피해 증가(원소 전환 크기)
+    //   endure       버티기 — 쓰러질 피해를 받으면 HP 를 최대 HP × 값으로 남기고 창이 닫힌다(battle.js 피해 적용)
+    ember: { state: true },
+    //   tick_hit     창 동안의 주기 타격(히드라 · 블리자드) — 값 = 한 번의 배율 · 간격 · 대상은 battle.js `advTick` 이 스킬마다 안다
+    //   strike_passive 늘 켜진 벼락(썬더 스트라이크) — 값 = 벼락 배율 · 간격 · 확률은 balance(`thunderstrike_*`)
+    tick_hit: { state: true },
+    strike_passive: { state: true },
+    // ⚠ 3b · 3c 표식(2026-11-13 R471) — 표만 섰고 읽는 엔진은 아직 없다(PLAN_advance_tree_impl.md 「남은 일」)
+    berserk: { state: true }, devotion: { state: true }, devotion_dr: { state: true }, will: { state: true }, reflect_win: { state: true }, phys_conv: { state: true },
+    elem_shield: { state: true },
+    ailment_cut: { state: true },
+    phys_to_fire: { state: true },
+    conv_amp: { state: true },
+    endure: { state: true },
 };
 
 export const EFFECT_STATS = Object.keys(EFFECTS);
@@ -502,7 +551,8 @@ export const EFFECT_STATS = Object.keys(EFFECTS);
  *   `hold`  — 창을 건 뒤 런타임이 `ctx.stun` 을 부른다(행동 · 쿨 정지 — battle.js)
  */
 export const AILMENTS = {
-    freeze: { cut: 'freezeDur', stack: 'one' },                         // 결빙 — 공속 감소(`period_pct` 음수) · 「빙결 시간 감소」가 줄인다
+    // 결빙 — 공속 감소(`period_pct` 음수) · 「빙결 시간 감소」가 줄인다 · **거는 것마다 제 시간 · 가장 센 하나만**(2026-11-13 사용자 「가장센하나만 적용으로수정」 · R471 — ~~창 하나 · 시간만 새로~~)
+    freeze: { cut: 'freezeDur', stack: 'strongest' },
     burn: { cut: 'burnDur', stack: 'strongest', stat: 'burn' },         // 화상 — 받는 피해 +값 · 받는 회복 −[balance.csv:burn_heal_cut]
     poison: { cut: 'poisonDur', stack: 'strongest', stat: 'poison' },   // 중독 — 초당 피해(거는 순간 굳힌다) · 독 저항만
     stun: { cut: 'stunDur', stack: 'one', stat: 'stun', hold: true },   // 스턴 — 행동 차례 · 스킬 쿨 정지 · 경직과 누적 안 함
@@ -517,7 +567,9 @@ export function strongestOf(u, ail) {
     let best = null;
     for (const b of Object.values(u.buffs)) {
         if (b.ail !== ail) continue;
-        if (!best || b.v > best.v || (b.v === best.v && b.until > best.until)) best = b;
+        // 세기 = 값의 크기 — 결빙은 음수(공속 감소)라 크기로 견준다(2026-11-13 R471) · 화상 · 중독은 양수라 종전과 같다
+        const m = Math.abs(b.v), bm = best ? Math.abs(best.v) : -1;
+        if (!best || m > bm || (m === bm && b.until > best.until)) best = b;
     }
     return best;
 }
@@ -580,9 +632,12 @@ const ATTRS = [
         if (fix) { u.period = Math.max(u.periodFloor ?? 0, (u.periodWeapon ?? u.basePeriod) * fix[1].v); return; }
         let fast = 0, slow = 0, any = false;
         for (const b of Object.values(u.buffs)) {
-            if (b.stat === 'period_pct') { any = true; if (b.v >= 0) fast += b.v; else slow -= b.v; }
+            if (b.stat === 'period_pct') { if (b.ail === 'freeze') continue; any = true; if (b.v >= 0) fast += b.v; else slow -= b.v; }
             else if (b.stat === 'frenzy' && (b.n ?? 0) > 0) { any = true; fast += b.v * b.n; }
         }
+        // 결빙은 가장 센 창 하나만 둔화에 든다 (2026-11-13 R471)
+        const fz = strongestOf(u, 'freeze');
+        if (fz) { any = true; slow -= fz.v; }
         if (!any) { u.period = u.basePeriod; return; }
         const base = u.speedBase ?? 0;
         u.period = Math.max(u.periodFloor ?? 0, (u.periodRaw ?? u.basePeriod) * (1 + slow) / (1 + base + fast));
@@ -615,8 +670,7 @@ const ATTRS = [
     u => {
         const wins = [];
         for (const b of Object.values(u.buffs)) if (b.stat === 'dr_pct') wins.push(b.v);
-        const burn = strongestOf(u, 'burn');
-        if (burn) wins.push(-burn.v);
+        // ~~화상 = 받는 피해 증가 원천 하나~~ — 2026-11-13 사용자 「화상은 받는회복감소로 하자」 · R471: 화상은 받는 회복 감소만(아래 `recv`)
         u.dr = wins.length ? 1 - (1 - u.drBase) * reductionMult(wins) : u.drBase;
     },
     // 받는 회복 — 화상이 걸려 있으면 장비의 체력 회복 +% 와 **곱**으로 줄인다(`cut` = 창에 굳힌 [balance.csv:burn_heal_cut]) [2026-09-28 · R178].
@@ -643,6 +697,8 @@ export const CONDITIONS = {
     // 무리 중 서 있지 않은 것(아직 안 나왔거나 쓰러진 것)이 있다 — 불러내기(`call`)의 조건 (2026-09-18 · INTERFACE §2-8).
     //   무리가 없는 유닛은 늘 거짓이다 — 소환사 규칙이 안 걸린 판에서는 이 스킬이 안 나간다
     band_missing: (def, ctx) => (ctx.self.band ?? []).some(m => !m.called || m.hp <= 0),
+    // 상태이상 · 상대 편이 건 창을 든 아군이 있다 — 정화(지우기 · 2026-11-13 R471)의 조건 · 지울 것이 없으면 안 나간다
+    ally_ailed: (def, ctx) => (ctx.allies ?? []).some(a => a.hp > 0 && Object.values(a.buffs ?? {}).some(b => b.ail || (b.by && b.foe))),
 };
 
 export const CONDITION_IDS = Object.keys(CONDITIONS);

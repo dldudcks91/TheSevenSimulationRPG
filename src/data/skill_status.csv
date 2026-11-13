@@ -29,20 +29,10 @@ pri_regen,regen_hp_pct,0.02,10,-,keep,-,-,HP 재생 + 받는 쪽 최대 HP × va
 pri_penitence,final_dmg_pct,-0.25,10,-,keep,-,-,직격의 최종 피해 % — 적에게 음수 · 곱 · ~~atk_pct 음수~~ 2026-10-28 R368 · ⚠값은 곱으로 다시 잰다(사제 차례)
 pri_bind,period_pct,-0.4,10,-,keep,-,-,~~-0.2~~ 2026-10-30 R396 결투 측정 · ⚠값 임시
 pri_doom,dr_pct,-0.2,10,-,keep,-,-,받는 피해 감소 — 적에게 음수(받는 피해 증가) · ~~-0.15~~ 2026-10-30 R396 결투 측정(그레이스 · 페니턴스와 같은 무게) · ⚠값 임시
-war_ragnarok,atk_pct,0.35,10,-,keep,-,-,-
-war_berserk,atk_pct,0.4,8,-,keep,-,-,-
 war_divinedescent,hp_max_pct,0.5,10,-,keep,-,-,강신 — 열 때 늘어난 만큼 현재 HP · 닫힐 때 넘친 HP 만 자른다(배틀 오더스 장치) · ⚠값 임시 2026-11-12 R425
 war_divinedescent_regen,regen_hp_pct,0.02,10,-,keep,-,-,강신 둘째 창 — 초당 자기 최대 HP × value(프레이어 장치 · 자기만) · ⚠값 임시 2026-11-12 R425
 war_command,atk_pct,0.3,10,-,keep,-,-,-
 war_intimidate,final_dmg_pct,-0.25,10,-,keep,-,-,페니턴스와 같은 장치 · ~~atk_pct 음수~~ 2026-10-28 R368
-kni_lastbastion,dr_pct,0.25,10,-,keep,-,-,-
-kni_unbreakablewill,dr_pct,0.3,10,-,keep,-,-,-
-kni_divinejudgment,barrier_pct,0.4,10,-,keep,-,-,-
-kni_unyieldingoath,barrier_pct,0.3,8,-,keep,-,-,-
-kni_holywar,barrier_pct,0.3,12,-,keep,-,-,-
-kni_vow,hp_max_pct,0.2,12,-,keep,-,-,-
-kni_retribution,atk_pct,0.35,10,-,keep,-,-,-
-kni_showdown,atk_pct,0.4,10,-,keep,-,-,-
 arc_trueaim,atk_pct,0.4,10,-,keep,-,-,-
 arc_reload,period_pct,0.3,8,-,keep,-,-,-
 arc_quickdraw,period_fix,0.5,10,-,keep,-,-,퀵 드로우 첫 줄 — 주기 = 무기 주기 × 값 고정(다른 공속 · 둔화 · 민첩 무시 · 2026-10-29 R383) · ⚠값 임시
@@ -52,13 +42,13 @@ arc_overdraw_power,basic_pct,0.7,10,-,keep,-,-,오버드로우 둘째 줄 — �
 arc_chaindraw,attack_splash,0.75,10,-,keep,-,-,-
 arc_huntersmark,final_dmg_pct,-0.2,10,-,keep,-,-,페니턴스와 같은 장치 · ~~atk_pct 음수~~ 2026-10-28 R368
 arc_supportingfire,atk_pct,0.2,10,-,keep,-,-,-
-pri_aegis,barrier_pct,0.45,10,-,keep,-,-,-
 pri_atonement,final_dmg_pct,-0.15,12,-,keep,-,-,페니턴스와 같은 장치 · ~~atk_pct 음수~~ 2026-10-28 R368
 pri_diamondbody,dr_pct,0.3,10,-,keep,-,-,-
 pri_counter,barrier_pct,0.35,10,-,keep,-,-,-
 freeze,period_pct,-0.25,3,-,keep,freeze,-,결빙 — 공속 감소(battle_design §2-4) · 아이스 블라스트 · 프로스트 노바의 타격 줄이 맞은 대상에게 건다 · id 가 곧 상태이상 이름(skill_effects.js:AILMENTS) — 어느 스킬이 걸어도 창 하나 · ⚠값 임시 2026-09-28 R177
+mag_inferno,pulse,0.4,8,fire,keep,-,-,인페르노의 깔린 불 — 간격 [balance.csv:aura_pulse_sec] 마다 시전자 데미지 범위 중앙값 × value 의 화염 비직격 · 시간 있는 창(홀리 파이어는 0 = 오오라) · ⚠값 임시 2026-11-13 R462
 mag_ignite,imbue,1,10,fire,keep,-,mag_ignite_burn,창 동안 화염 스킬 타격 → 화상 · value = 거는 확률 · ⚠값 임시 2026-10-16
-mag_ignite_burn,burn,0.15,4,-,keep,burn,-,이그나이트의 화상 — 받는 피해 +value · 받는 회복 −[balance.csv:burn_heal_cut] · ⚠값 임시 2026-10-16
+mag_ignite_burn,burn,0.15,4,-,keep,burn,-,이그나이트의 화상 — **받는 회복 감소만**(고정 [balance.csv:burn_heal_cut] · 사용자 「회복감소는 50%로 고정」) · 값은 센 창을 가르는 세기일 뿐 효과가 없다 · 2026-11-13 R471 · advance_tree_draft §2
 mag_deepfreeze,imbue,1,10,cold,keep,-,mag_deepfreeze_freeze,창 동안 냉기 스킬 타격 → 센 결빙 · ⚠값 임시 2026-10-16
 mag_deepfreeze_shatter,shatter,1,10,cold,keep,-,mag_deepfreeze_stun,딥 프리즈 둘째 줄 — 이미 결빙된 적을 냉기 스킬로 다시 맞히면 스턴 · ⚠값 임시 2026-10-29 R385
 mag_deepfreeze_stun,stun,0,1,-,keep,stun,-,딥 프리즈의 스턴 · ⚠값 임시 2026-10-29 R385
@@ -71,3 +61,25 @@ mon_goldfever,transform,1,4,-,keep,-,-,변신 — 액티브 봉인 · 값 = 직�
 mon_goldfever_atk,atk_pct,0.3,4,-,keep,-,-,골드 피버의 데미지 % — 변신 창과 함께 늘어난다 · ⚠값 임시 2026-10-29
 mon_delegate,delegate,0,0,-,keep,-,-,오오라 표식 — 값은 안 읽는다
 mon_swarm,swarm,0.5,6,-,keep,-,-,파리 한 마리의 몫(지금 HP · 기본 공격 배율) · 셋의 합이 본체보다 크게 · ⚠값 임시 2026-10-29
+mag_ember,ember,1.2,0,fire,keep,-,-,불씨 — 값 = 터질 때 시전자 데미지 × 값의 화염 직격 · 겹 [balance.csv:ember_stacks] · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
+mag_frostarmor,elem_shield,3,10,cold,keep,-,-,프로스트 아머 — 흡수량 = 시전자 마법 데미지 중앙값 × 값 · 원소 직격만 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
+kni_cleansing,ailment_cut,0.15,0,-,keep,-,-,클렌징 — 받는 상태이상 · 상대 편이 건 창의 시간 × (1 − 값) · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
+kni_offenseaura,atk_pct,0.05,0,-,keep,-,-,공세 오오라 ① 데미지 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
+kni_offenseaura_speed,period_pct,0.05,0,-,keep,-,-,공세 오오라 ② 공격 · 캐스팅 속도(주기 창 — 마법 무기는 캐스팅) · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
+kni_elemconvert,phys_conv,0.5,0,fire,keep,-,-,원소 전환 — 물리 직격의 값만큼을 화염 타격으로(사용자 「50%」) · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
+kni_elemconvert_amp,conv_amp,0.05,0,fire,keep,-,-,원소 전환 크기 — 바뀐 화염 몫의 피해 +값 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
+pri_endure,endure,0.1,12,-,keep,-,-,버티기 — 쓰러질 피해에 최대 HP × 값으로 남고 창이 닫힌다 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
+mag_ignite_amp,vs_burn_pct,0.1,10,-,keep,-,-,이그나이트 둘째 창 — 화상 걸린 적에게 주는 데미지 +값(사용자 「10%에서부터 +1%씩」) · 첫 창과 같은 시간 · 2026-11-13 R471 · advance_tree_draft §2
+mag_hydra,tick_hit,0.9,8,fire,keep,-,-,히드라 — 값 = 한 번 물 때의 배율 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft §3
+mag_blizzard,tick_hit,0.5,6,cold,close,-,-,블리자드 — 값 = 매초 적 전원 냉기 직격의 배율 · 라운드를 넘기지 않는다 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft §3
+mag_thunderstrike,strike_passive,2.4,0,lightning,keep,-,-,썬더 스트라이크 — 값 = 벼락 배율 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft §3
+war_ragnarok,atk_pct,0.35,10,-,keep,-,-,라그나로크 ① 데미지 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
+war_ragnarok_speed,period_pct,0.35,10,-,keep,-,-,라그나로크 ② 공격 속도 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
+war_ragnarok_seal,transform,0,10,-,keep,-,-,라그나로크 ③ 변신 — 액티브 봉인(값 0 = 창을 안 늘린다) · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
+war_berserk,berserk,0.25,8,-,keep,-,-,버서크 — 값 = 다른 액티브 스킬 타격 데미지 % · 타격마다 HP 소모 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
+kni_lastbastion,devotion,0.5,8,-,keep,-,-,헌신 — 다른 아군 직격의 값만큼 가디언이 대신 받는다(사용자 「50%」) · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
+kni_lastbastion_dr,devotion_dr,0.1,8,-,keep,-,-,헌신 크기 — 가져온 피해 감소 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
+kni_unbreakablewill,will,0.04,8,-,keep,-,-,꺾을 수 없는 의지 — 맞을 때마다 겹 · 겹 하나의 받는 피해 감소 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
+kni_divinejudgment,reflect_win,0.3,8,-,keep,-,-,신성한 심판 — 받은 직격의 값만큼 공격자에게(비직격) · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
+kni_retribution,period_pct,0.4,8,-,keep,-,-,크루세이더 (1) ① 공격 속도 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
+kni_retribution_conv,phys_conv,0.3,8,lightning,keep,-,-,크루세이더 (1) ② 물리 직격의 값만큼 번개로(나눠 따로 깎는다) · ⚠값 제안 2026-11-13 R471 · advance_tree_draft

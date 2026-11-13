@@ -56,11 +56,11 @@ export const D = {
     skillTagRows: [],         // skill_tag.csv 원시 행 — 태그 어휘·대분류·표시 이름의 SSOT (skill_design §11)
     masteryNodes: [],         // mastery_node.csv 원시 행 — 정규화·검증은 game_logic/hero.js
     heroTiers: [],            // hero_tier.csv — [{id, weight, totalMin, totalMax, attrSd, color, ko, en, desc:{ko,en}}] · 굴림 SSOT + 화면 표기
-    commissionKinds: null,    // commission_kind.csv — {id: {id, ridesOn, ko, en, how:{ko,en}}} · ridesOn = battle(전투가 센다) | yield(드롭·산출이 채운다)
+    commissionKinds: null,    // commission_kind.csv — {id: {id, ridesOn, ko, en, how:{ko,en}}} · ridesOn = battle(처치) | salvage(분해) | material(재료) | upgrade(강화) | craft(제작) | yield(옛 수집 카드) (R457)
     // 의뢰 표 셋 — 원시 행 그대로 넘긴다. 검증 · 굴림 · 대조는 game_logic/commission.js (base_expedition_design §1-3 · 2026-09-24 · R153) · ⚠ 행 순서가 굴림 순서다
     commissionKindRows: [],   // commission_kind.csv 원시 행
     commissionRows: [],       // commission.csv — 의뢰의 **틀**(종류 × 대상 어휘 · 기본 수 · 기본 골드 · 가중치) ⚠제안 · ~~게시판 행(칸 수 = 행 수)~~ 은 R153 로 폐기 — 카드는 굴린다
-    commissionGradeRows: [],  // commission_grade.csv — 의뢰 등급 일반 · 매직 · 레어(카드 희귀도) ⚠제안
+    commissionGradeRows: [],  // commission_grade.csv — 카드 등급 일반 · 매직 · 레어(대상의 좁기 · 드물기 · 골드 배수 — R457) ⚠제안
     commissionFameRows: [],   // commission_fame.csv — 명성 레벨(누적 수령 수 문턱 · 목표 · 골드 배수) ⚠제안 (2026-10-29 · R375)
     monsterTypeRows: [],      // monster_type.csv — 종족 표시 이름 · 행 순서가 의뢰 종족 풀의 순서
     labMaterials: [],         // lab_material.csv — 연구소 「자원」 줄의 재료 셋 [{post, id, ko, en, yieldPerHour}] · 행 순서(채광 · 채집 · 벌목) ⚠임시 (2026-10-25 · R356 — ~~단계 표 셋 mine_node · gather_node · log_node~~)
@@ -92,7 +92,8 @@ export const D = {
     buildingRankRows: [],     // building_rank.csv — 건물 × 랭크마다 한 줄 (문턱 · 비용)
     buildingEffectRows: [],   // building_effect.csv — 여는 것 **한 줄에 하나** (켜기 · 더하기)
     levelXp: [],              // level_xp.csv — 레벨순 [{level, xpNeed, monsterXp}] · 레벨업 필요 XP · 같은 레벨 몬스터 처치 XP (2026-09-28)
-    advanceNodeRows: [],      // advance_node.csv — 전직 가지 [{skill_id, slot, hold, desc_kr, desc_en}] (skill_design §4 · §10 · R216 · 2026-10-06 — 설명만)
+    advanceNodeRows: [],      // advance_node.csv — 전직 스킬 줄 [{skill_id, slot(size · var1 · var2), fx, per_rank, arg, unit, desc_*, bonus_*}] (2026-11-13 · R471)
+    advanceCommonRows: [],    // advance_common.csv — 전직 공통 줄 [{advance_id, slot, stat, tag, effect, per_rank, rank5, unit, name_*}] (2026-11-13 · R471)
     exploreStories: [],       // explore_story.csv 원시 행 — 탐험 진행 문구(지점 × 막 × 죄종). 검증·막 순서는 game_logic/state.js (⚠ 행 순서가 굴림 순서다 · R235)
     difficultyList: [],       // difficulty_tier.csv — 순서(`order`)대로 [{id, order, name:{ko,en}, levelCol, levelAdd, codexExp, chapterGate}] · 난이도 바퀴 (base_expedition_design §1-4 · R236) · codexExp = 처치 하나의 도감 경험치(R239) · chapterGate = 장 순서 해금 1/0(R242)
     difficulties: {},         // 같은 것 byId
@@ -128,7 +129,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'sin_word', 'accessory_sin_option',   // ~~armor_common_option~~ 2026-10-21 R303 퇴역(방어구 넷이 계열표) · ~~accessory_common_option~~ 2026-11-12 삭제(목걸이도 계열표 R453)
     'tactic_condition', 'building', 'building_rank', 'building_effect',   // ~~tactic_score~~ 2026-11-11 R441 삭제(등급 배수는 balance.csv:tactic_grade_mult_*)
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff', 'commission_fame', 'ring_base_option', 'raid_boss', 'raid_pattern'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'advance_common', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff', 'commission_fame', 'ring_base_option', 'raid_boss', 'raid_pattern'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -145,7 +146,7 @@ export async function loadData(base = './data/') {
         heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, sinWordRow, accSinOptionRow,
         tacticConditionRow, buildingRow, buildingRankRow, buildingEffectRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow, commissionFameRow, ringBaseRow, raidBossRow, raidPatternRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, advanceCommonRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow, commissionFameRow, ringBaseRow, raidBossRow, raidPatternRow] = texts.map(parseCsv);
 
     D.ringBaseOptions = ringBaseRow;
     D.raidBosses = raidBossRow;
@@ -370,6 +371,8 @@ export async function loadData(base = './data/') {
     }));
     // 죄종 → 능력치 한 칸 — 능력치 굴림의 죄종 비율 (2026-10-22 · R308) · 빠진 죄종 · 어휘 밖 id 는 hero.js 가 생성 때 던진다
     D.sinAttrs = Object.fromEntries(sinAttrRow.map(r => [r.sin_id, r.attr_id]));
+    // 죄종 → 능력치 1대1 짝 — 파티 전술 3랭크가 읽는다(굴림 짝과 다른 열 · 2026-11-13 · R466) · 빠진 죄종 · 어휘 밖 · 겹침은 tactic.js 가 던진다
+    D.sinTacticAttrs = Object.fromEntries(sinAttrRow.map(r => [r.sin_id, r.tactic_attr_id]));
     // 아이템 베이스 — 부위별 풀. **무기는 없다**(무기의 베이스는 무기군 자체 = weapon_group.csv)
     D.itemBases = {};
     //   갑옷은 `group`(갑옷군)과 `tierMin`(티어가 열리는 ilvl)을 같이 든다 — 나머지 부위는 group 이 null (2026-09-16 · R107)
@@ -401,6 +404,8 @@ export async function loadData(base = './data/') {
     D.advanceRows = advanceRow;
     // 전직 가지 — 전직 스킬마다 ② · ③ · ④ 설명(`advance_node.csv` · 2026-10-06 · R216). 원시 행 그대로 — 검증은 state.js 가 로드 시 한다
     D.advanceNodeRows = advanceNodeRow;
+    // 전직 공통 줄 — 갈래마다 칸 셋(`advance_common.csv` · 2026-11-13 · R471). 원시 행 그대로 — 검증은 skill.js 가 로드 시 한다
+    D.advanceCommonRows = advanceCommonRow;
     // 레벨 표 — 레벨마다 필요 XP · 같은 레벨 몬스터 처치 XP (2026-09-28 · PLAN_early_progression D1 · D2). 레벨순 · 검증은 hero.js · battle.js 가 생성 때 한다
     D.levelXp = levelXpRow.slice().sort((a, b) => a.level - b.level).map(r => ({ level: r.level, xpNeed: r.xp_need, monsterXp: r.monster_xp }));
     // 도박장 표 넷 — 원시 행 그대로 (검증 · 굴림은 game_logic/gamble.js · R149)
@@ -581,6 +586,8 @@ export function buildSystems(d, dev = {}) {
         balance: d.balance, rows: d.skillRows ?? [], effectRows: d.skillEffectRows ?? [], statusRows: d.skillStatusRows ?? [],
         tagRows: d.skillTagRows ?? [], attributes: d.heroAttributes ?? [],
         advances: d.advanceRows ?? [],   // 전직 갈래 → 직업 — 전직 스킬의 무기 판정 (2026-10-03 · R204 · skill_design §2-2)
+        // 전직 트리 — 스킬 줄(`advance_node.csv`) · 공통 줄(`advance_common.csv`) (2026-11-13 · R471 · INTERFACE §2-8 「전직 트리」)
+        advanceNodes: d.advanceNodeRows ?? [], advanceCommon: d.advanceCommonRows ?? [],
     });
     /**
      * 직업 풀 `{classId: [skillId...]}` — **1스킬 = 1직업** (skill_design §12-1 확정 2026-09-08).
@@ -609,6 +616,8 @@ export function buildSystems(d, dev = {}) {
         // 고유 스킬 풀 — **직업별**이다 (skill_design §12-1 규칙 1). hero 는 skill 시스템이 아니라 id 목록을 받는다
         skillPool: classSkills,
         starterPool: starterSkills,   // 첫 파티의 고유 — 직업 풀의 1티어 (2026-10-16 · R271)
+        // 전직 공통 줄 — 표는 skill 이 풀었다 · 랭크 → 값도 skill 의 함수(같은 규칙 한 곳 · 2026-11-13 R471)
+        advanceCommon: skill.commons, advanceCommonValue: skill.commonValue,
     });
     const item = createItemSystem({
         // ~~elements~~ 는 2026-09-11 R80 으로 주입 목록에서 빠졌다 — 마법 무기 원소 굴림이 사라져 item.js 가 원소 어휘를 안 읽는다
@@ -653,14 +662,17 @@ export function buildSystems(d, dev = {}) {
             pivot: d.balance.attr_dmg_pivot, min: d.balance.hero_attr_min, max: d.balance.hero_attr_max,
             multMin: d.balance.tactic_leader_mult_min, multMax: d.balance.tactic_leader_mult_max,
         },
+        // 3랭크 짝 — 그 칸 죄종의 짝 능력치 파티 합 ÷ hero_attr_max(위 `leader.max`) = 연속 단계 (tactic_card_design §5-14 · 2026-11-13 · R466)
+        attrBySin: d.sinTacticAttrs ?? {}, attrIds: (d.heroAttributes ?? []).map(a => a.id),
     });
     const battle = createBattleSystem({
         balance: d.balance, monsters: d.monsters, stages: d.stages, roundSets: d.roundSets,
         budgets: d.budgets, grades: d.grades, sins,
         levelXp: d.levelXp,                        // 처치 XP 표 (level_xp.csv:monster_xp)
-        // 정예 특성 칸의 풀 (monster_design §6 · R344) — 죄종 칸 = 그 죄종 마스터리 T1 노드(CSV 행 순서) · 능력치 · 방어 칸 = ⚠ mock 이름표 목록
+        // 정예 특성 칸의 풀 (monster_design §6 · R344) — 죄종 칸 = 그 죄종 마스터리 T2 노드(CSV 행 순서 · 2026-11-13 R459 — 죄종 T1 은 일곱 공통이라
+        //   그 죄종만의 칸 셋인 T2 를 본다) · 능력치 · 방어 칸 = ⚠ mock 이름표 목록
         eliteTraits: {
-            sin: Object.fromEntries(sins.map(s => [s, d.masteryNodes.filter(n => n.tree_kind === 'sin' && n.owner_id === s && Number(n.tier) === 1).map(n => n.node_id)])),
+            sin: Object.fromEntries(sins.map(s => [s, d.masteryNodes.filter(n => n.tree_kind === 'sin' && n.owner_id === s && Number(n.tier) === 2).map(n => n.node_id)])),
             stat: M.ELITE_TRAIT_STAT.map(x => x.attr), def: M.ELITE_TRAIT_DEF.map(x => x.dt),
         },
         itemSystem: item, skillSystem: skill,
@@ -695,6 +707,8 @@ export function buildSystems(d, dev = {}) {
     const commission = createCommission({
         templates: d.commissionRows ?? [], kinds: d.commissionKindRows ?? [], grades: d.commissionGradeRows ?? [], races: d.monsterTypeRows ?? [],
         fame: d.commissionFameRows ?? [], monsters: d.monsters, balance: d.balance,
+        // 장마다 열리는 죄종 · 재료 갈래 (R457)
+        chapters: d.chapters ?? {}, labMaterials: d.labMaterials ?? [], materialSynth: d.materialSynth ?? [],
     });
     const game = createGameSystem({
         hero, item, battle, skill, tactic, construction, gamble, commission, balance: d.balance,
@@ -720,21 +734,42 @@ export function buildSystems(d, dev = {}) {
         shrines: d.shrines ?? [],
         // 전직 — 갈래 표. 갈래의 스킬은 `skill.csv` 의 `owner_kind=advance` 행이다 (skill_design §4 · R16)
         advances: d.advanceRows ?? [],
-        // 전직 가지 — 설명만(찍을 수 없다 · 효과 미구현) · 전직 포인트는 balance 가 든다 (skill_design §4 · R216)
-        advanceNodes: d.advanceNodeRows ?? [],
         openAll: dev.openAll,   // 관리자 모드 — 켜져 있으면 모든 건물을 최대 랭크로 센다(INTERFACE §2-7)
     });
     // formula 도 함께 내보낸다 — 화면의 감쇠율 표기가 시뮬과 같은 곡선을 쓰게 (battle_design §9-8)
     // naming 도 내보낸다 — 이름 규칙(`sinPhrase` · `wordCount`)을 단정이 읽고, 화면이 단어를 따로 다룰 때도 여기서 받는다 (2026-09-19)
     // 결투장 — 오프라인 등급 표 · 온라인 팀 검사기가 볼 끝값 둘을 함께 넘긴다 (INTERFACE §2-17 · 2026-10-17).
     //   강화 상한은 **건물을 다 지었을 때**다 — 남이 올린 팀이 어디까지 지었는지 모르므로 검사기는 끝을 본다 · 스킬 업그레이드는 그 상한 하나(`skillbook_upgrade_max` · R293)
+    //   물약 칸 · 열린 전술 칸의 끝도 같은 이유로 다 지었을 때다 · 받은 팀의 전술 값은 전술 시스템이 다시 재고 물약 회복량은 물약 표에서 읽는다 (2026-11-13 · R460)
+    const maxLimits = game.limitsOf({ buildings: Object.fromEntries(construction.list.map(b => [b.id, b.maxRank])) });
     const arena = createArenaSystem({
-        hero, item, skill, battle, balance: d.balance, equipSlots: d.equipSlots, advances: d.advanceRows ?? [], classSkills,
-        tiers: d.arenaTiers ?? [],
-        upgradeCeiling: game.limitsOf({ buildings: Object.fromEntries(construction.list.map(b => [b.id, b.maxRank])) }).upgrade,
+        hero, item, skill, battle, tactic, balance: d.balance, equipSlots: d.equipSlots, advances: d.advanceRows ?? [], classSkills,
+        tiers: d.arenaTiers ?? [], potions: d.potions ?? [],
+        upgradeCeiling: maxLimits.upgrade,
         skillCapMax: game.skillCapMax(),
+        potionSlotCeiling: maxLimits.potionSlots, tacticSlotCeiling: maxLimits.tacticSlots,
     });
     const raid = createRaidSystem({ battle, arena, game, monsters: d.monsters, chapters: d.chapters,
         bosses: d.raidBosses ?? [], patterns: d.raidPatterns ?? [], balance: d.balance });
     return { hero, item, battle, arena, raid, skill, tactic, construction, gamble, commission, game, naming, formula: createFormula(d.balance) };
+}
+
+/* ── 실험실 결투 — 측정 스위치 (SCREEN_DESIGN §18 「결투 시험」 · ADR-1070) ──
+   **개발 장치다 · 게임 규칙이 아니다** — 게임의 `SYS` 는 그대로 두고, 스위치가 켜진 조건의 팀 사본을 따로 낸다.
+   걷어내려면 이 묶음 · app.js `renderLabDuel` · i18n `lab.duel.*` */
+/** 「저항 75%」 — 팀 스냅샷(`arena.snapshotTeam` 모양) 전원의 원소 저항 넷을 저항 기본 상한(`[balance.csv:res_cap_base]`)으로 고정한 사본 · 전투는 이 칸을 그대로 받는다(`battle.makeUnit`) */
+export function labFixResist(team) {
+    const cap = D.balance.res_cap_base;
+    return team.map(p => ({ ...p, combat: { ...p.combat, res_fire: cap, res_cold: cap, res_lightning: cap, res_poison: cap } }));
+}
+/** 두 팀이 같은 굴림 길(`arena.rollTierOpponent`)이라 uid(`arena-enemy-i` · `arena-gear-i-j`)가 겹친다 — 관전이 uid 로 카드 · 장비를 찾으므로 접두를 붙인 사본을 낸다 */
+export function labRelabel(team, pre) {
+    return team.map(p => {
+        const x = JSON.parse(JSON.stringify(p));
+        x.uid = `${pre}${p.uid}`;
+        x.hero.uid = x.uid;
+        x.gear.forEach(it => { it.uid = `${pre}${it.uid}`; });
+        for (const k of Object.keys(x.hero.equipped ?? {})) if (x.hero.equipped[k]) x.hero.equipped[k] = `${pre}${x.hero.equipped[k]}`;
+        return x;
+    });
 }

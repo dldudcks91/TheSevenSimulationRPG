@@ -43,7 +43,7 @@ helmet,greed,1,magic_find,flat,0.05,0.15,-,투구 탐욕 ① — 매직아이템
 helmet,greed,2,gold_find,flat,0.05,0.12,-,투구 탐욕 ② — 골드 획득 ⚠제안 수치
 helmet,greed,3,xp_gain_pct,flat,0.05,0.12,-,투구 탐욕 ③ — 경험치 획득 증가(본인 몫) ⚠제안 수치 (2026-10-30 아이템 드랍확률을 대체)
 gloves,wrath,1,crit_rate,flat,0.02,0.05,-,장갑 분노 ① — 치명타 확률 · 무기 분노 ② 와 같은 대역 ⚠제안 수치 (2026-10-21 사용자 · item_design §1 「10-21 방어구 개정」 · R303)
-gloves,wrath,2,atk_pct,flat,0.03,0.08,-,장갑 분노 ② — 데미지 +%(데미지 % 괄호) · 옛 장갑 풀과 같은 대역 ⚠제안 수치
+gloves,wrath,2,weapon_atk_pct,flat,0.03,0.08,-,장갑 분노 ② — 무기 데미지 +%(무기 밖 출처 — 목걸이 오만과 같은 채널 · 무기 베이스 옵션과 더해 무기 피해 양끝에만 곱한다) · 값은 옛 데미지 +% 대역 그대로 ⚠제안 수치 (2026-11-13 사용자 「그냥 데미지로 넣자」 · 「무기 데미지로 넣어줘 그냥 데미지 아니고」 · item_design §1 장갑 표)
 gloves,wrath,3,crit_damage,flat,0.04,0.09,-,장갑 분노 ③ — 치명타 피해 · 무기 분노 ① 과 같은 대역 ⚠제안 수치
 gloves,sloth,1,proc_hit_buff,flat,0.05,0.12,-,장갑 나태 ① — 타격 시 버프 스킬 발동 확률 · 버프 태그 풀(PROC_POOL buff — 함성 · 강화 · 축복) · 옛 무기 나태 ③ 과 같은 대역 ⚠제안 수치 (2026-11-11 사용자 「장갑의 나태에 최대 체력%가 아니라 타격 시 버프스킬발동으로 수정」 · R449)
 gloves,sloth,2,cooldown_reduction,flat,0.03,0.08,-,장갑 나태 ② — 쿨타임 감소 ⚠제안 수치
@@ -76,7 +76,7 @@ boots,envy,1,counter_chance,flat,0.02,0.04,-,신발 시기 ① — 반격 확률
 boots,envy,2,poison_dur_reduction,flat,0.1,0.25,-,신발 시기 ② — 중독 시간 감소 ⚠제안 수치
 boots,envy,3,res_poison,flat,0.06,0.2,-,신발 시기 ③ — 독 저항 ⚠제안 수치
 boots,pride,1,res_all_per_level,fine,0.001,0.002,-,신발 오만 — 한 칸 · 레벨당 모든 원소 저항(영웅 레벨 × 값 · 0.1% 단위) · 새 능력치 ⚠제안 수치 (2026-10-21 사용자 「모든 원소저항으로」)
-boots,gluttony,1,debuff_dur_reduction,flat,0.05,0.12,-,신발 폭식 ① — 상태이상 · 디버프 시간 감소(받는 쪽 · 매력과 더한다 · 원소별 시간 감소와는 곱) · 신발 ② 원소별의 절반 대역 ⚠제안 수치 (2026-11-11 사용자 「ㅇㅇ그렇게해보자 디버프 시간 감소로」 · R451)
+boots,gluttony,1,debuff_dur_reduction,flat,0.05,0.12,-,신발 폭식 ① — 상태이상 · 디버프 시간 감소(받는 쪽 · 매력 · 다른 출처와 곱한다 R465 · 원소별 시간 감소와도 곱) · 신발 ② 원소별의 절반 대역 ⚠제안 수치 (2026-11-11 사용자 「ㅇㅇ그렇게해보자 디버프 시간 감소로」 · R451)
 boots,gluttony,2,def_flat,band,2,6,0.3,신발 폭식 ② — 방어력 +수치 ⚠제안 수치
 boots,gluttony,3,res_all,flat,0.03,0.1,-,신발 폭식 ③ — 모든 원소 저항 ⚠제안 수치
 boots,greed,1,magic_find,flat,0.05,0.15,-,신발 탐욕 ① — 매직아이템 획득확률 ⚠제안 수치

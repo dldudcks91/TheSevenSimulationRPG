@@ -264,6 +264,9 @@ export function createFormula(balance) {
         // 고정 피해 [2026-10-06 · 사용자 확정 · R221 · battle_design §9] — 사제의 직격(원소 칸 `fixed`). **방어 · 저항 · 피해 감소 · 절대값 감소를 하나도 안 뺀다** ·
         //   무기 피해 굴림 · 배율 · 데미지 % · 치명 · 추가 피해는 위에서 이미 받았다(사망 폭발의 고정 피해와 다른 점 — 그쪽은 굴림 · 치명이 없다). rng 소비는 같다
         if (a.atkType === FIXED_DMG) return { hit: true, dmg: Math.max(B.dmg_min, Math.round(v)), crit, proc };
+        // 고정 피해 몫(`a.fixedShare` · 전직 공통 줄 크루세이더 3 · 2026-11-13 R471) — 그 몫은 아래 방어 · 저항 · 피해 감소를 안 받고 끝에 더한다 · 없으면 0 이라 종전 그대로
+        const fixedPart = a.fixedShare > 0 ? v * Math.min(1, a.fixedShare) : 0;
+        if (fixedPart) v -= fixedPart;
         if (a.atkType === 'physical') {
             v *= 1 - mitigation(physicalDefense(d.def ?? 0, a.defIgnore ?? 0));
         } else {
@@ -274,6 +277,7 @@ export function createFormula(balance) {
         }
         v *= 1 - (d.dr ?? 0);
         v -= d.drFlat ?? 0;                                        // 절대값 피해 감소 — 모든 감소 뒤 · 하한은 아래 dmg_min (2026-09-18)
+        if (fixedPart) v = Math.max(0, v) + fixedPart;
         return { hit: true, dmg: Math.max(B.dmg_min, Math.round(v)), crit, proc };
     }
 

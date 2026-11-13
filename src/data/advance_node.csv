@@ -1,136 +1,136 @@
-skill_id,slot,hold,desc_kr,desc_en,note
-war_ragnarok,2,0,때린 데미지의 일부를 HP 로 회복,Heals HP for part of the damage dealt,-
-war_ragnarok,3,0,창 동안 오르는 능력치 증가,Larger stat gains during the window,-
-war_ragnarok,4,0,창 동안 모든 디버프 면역,Immune to all debuffs during the window,-
-war_berserk,2,0,쓰는 HP 감소,Costs less HP,-
-war_berserk,3,0,HP 가 낮을수록 피해 증가,Deals more damage the lower your HP,-
-war_berserk,4,0,창 동안 적을 쓰러뜨리면 지속 시간 증가 — 스테이지를 넘어도 유지,Kills during the window extend its duration — carries across stages,-
-war_mutualruin,2,0,스턴 부여,Inflicts Stun,-
-war_mutualruin,3,0,적을 쓰러뜨리면 쓴 HP 의 일부 회수,A kill refunds part of the HP spent,-
-war_mutualruin,4,1,-,-,보류
-war_whirlwind,2,0,경직 확률 증가,Higher Stagger chance,-
-war_whirlwind,3,0,타수 증가,More hits,-
-war_whirlwind,4,0,맞은 적의 방어 감소,Lowers the Defense of enemies hit,-
-war_thorswrath,2,0,강타 데미지 증가,More Crushing Blow damage,-
-war_thorswrath,3,0,적을 쓰러뜨리면 남은 데미지가 다음으로 체력이 많은 적에게 넘어감,On a kill the leftover damage carries to the next highest-HP enemy,-
-war_thorswrath,4,1,-,-,보류
-war_shockwave,2,0,슬로우 부여,Inflicts Slow,-
-war_shockwave,3,0,스턴 부여,Inflicts Stun,-
-war_shockwave,4,1,-,-,보류
-war_divinedescent,2,1,-,-,보류 — 강신 노드 미정(2026-11-02 · R425)
-war_divinedescent,3,1,-,-,보류 — 강신 노드 미정(2026-11-02 · R425)
-war_divinedescent,4,1,-,-,보류 — 강신 노드 미정(2026-11-02 · R425)
-war_command,2,0,아군 치명타 확률 증가,Raises ally Critical Chance,-
-war_command,3,0,아군 흡혈 증가,Raises ally Life Steal,-
-war_command,4,1,-,-,보류
-war_intimidate,2,0,적 스킬 쿨타임 증가,Lengthens enemy skill cooldowns,-
-war_intimidate,3,0,도발 능력 추가,Adds Taunt,-
-war_intimidate,4,0,적 공격 속도 감소,Lowers enemy Attack Speed,-
-kni_lastbastion,2,0,대신 받은 피해 감소,Takes less from damage taken in an ally's place,-
-kni_lastbastion,3,0,아군 HP 가 낮으면 자동 발동,Turns on by itself when an ally's HP is low,-
-kni_lastbastion,4,0,창 동안 가디언은 쓰러지지 않음(HP 1 에서 버팀),The Guardian cannot fall during the window (holds at 1 HP),-
-kni_unbreakablewill,2,0,겹마다 원소 저항도 증가,Each stack also raises Elemental Resistance,-
-kni_unbreakablewill,3,0,창이 끝나도 겹이 한 번에 사라지지 않고 하나씩 빠짐,When the window ends stacks fall off one at a time,-
-kni_unbreakablewill,4,0,겹이 가득 차면 파티 전원에게 겹을 나눠 줌,At full stacks shares stacks with the whole party,-
-kni_divinejudgment,2,0,반사당한 적은 주는 피해가 잠깐 감소,Reflected enemies deal less damage for a moment,-
-kni_divinejudgment,3,0,공격자 한 명이 아니라 적 전원에게 나눠 되돌림,Returns damage split across all enemies instead of only the attacker,-
-kni_divinejudgment,4,0,창이 끝날 때 그동안 되돌린 양만큼 적 전원에게 한 번 더 터짐,When the window ends bursts on all enemies for the total returned,-
-kni_unyieldingoath,2,0,무효가 터진 아군은 잠깐 받는 피해 감소,An ally whose negation triggered takes less damage for a moment,-
-kni_unyieldingoath,3,0,파티 합쳐 1회가 아니라 아군마다 1회,Once per ally instead of once for the party,-
-kni_unyieldingoath,4,0,창 동안 쓰러진 아군이 그 자리에서 한 번 일어남,Allies who fall during the window rise once on the spot,-
-kni_holywar,2,0,창 동안 배리어 조금씩 재충전,The barrier slowly refills during the window,-
-kni_holywar,3,0,창이 끝날 때가 아니라 배리어가 깨지는 순간 그 아군 자리에서 터집니다(여러 번 작게),Bursts where a barrier breaks instead of at window end (many small bursts),-
-kni_holywar,4,0,창 동안 파티가 받은 피해의 일부도 배리어 잔량에 쌓여 폭발에 더해짐,Part of the damage the party takes during the window adds to the burst,-
-kni_vow,2,0,창 동안 파티가 받는 회복량 증가,The party receives more healing during the window,-
-kni_vow,3,0,서약이 걸린 아군이 쓰러지면 남은 파티의 서약이 그만큼 강화,When a vowed ally falls the rest of the party's Vow grows by that much,-
-kni_vow,4,1,-,-,보류
-kni_retribution,2,0,겹이 가득 차면 다음 공격이 적 전열 전원을 공격,At full stacks the next attack hits the whole enemy front row,-
-kni_retribution,3,0,파티가 아니라 크루세이더 자신이 맞을 때만 쌓이는 대신 겹당 더 큼,Stacks only when the Crusader is hit but each stack is larger,-
-kni_retribution,4,0,창 동안 아군이 쓰러지면 겹이 가득 찹니다(순교),If an ally falls during the window stacks fill up (Martyrdom),-
-kni_condemnation,2,0,배율이 오르기 시작하는 HP 선 상승,Raises the HP line where the multiplier starts to climb,-
-kni_condemnation,3,0,단죄로 쓰러뜨리면 쿨타임 초기화,A kill with Condemnation resets its cooldown,-
-kni_condemnation,4,0,단죄로 쓰러뜨리면 파티 전원이 잠깐 피해 증가(본보기),A kill with Condemnation briefly raises the whole party's damage (Example),-
-kni_showdown,2,0,다른 적에게 주는 피해 감소 제거,Removes the damage penalty against other enemies,-
-kni_showdown,3,0,대상이 쓰러지면 남은 창이 다음으로 체력이 많은 적에게 옮겨 감,If the target falls the rest of the window moves to the next highest-HP enemy,-
-kni_showdown,4,0,창이 끝날 때 대상이 살아 있으면 그동안 준 피해의 일부가 한 번 더 들어감,If the target survives the window part of the damage dealt lands again,-
-mag_meteor,2,0,화상 부여,Inflicts Burn,-
-mag_meteor,3,0,맞은 자리에 잔여(도트) 데미지가 남음,Leaves lingering damage (DoT) where it lands,-
-mag_meteor,4,0,유성우 — 여러 개가 무작위 적에게 떨어짐,Meteor Shower — several fall on random enemies,-
-mag_firewall,2,0,화상 부여,Inflicts Burn,-
-mag_firewall,3,1,-,-,보류
-mag_firewall,4,1,-,-,보류
-mag_hydra,2,0,화상 부여,Inflicts Burn,-
-mag_hydra,3,0,머릿수 증가,Adds more heads,-
-mag_hydra,4,0,타격마다 화염 저항 감소,Each hit lowers Fire Resistance,-
-mag_frozenorb,2,0,결빙 부여,Inflicts Freeze,-
-mag_frozenorb,3,0,사방으로 약한 아이스 조각이 튐,Weak ice shards burst in every direction,-
-mag_frozenorb,4,1,-,-,보류 — 후보 「조각도 얼린다」
-mag_blizzard,2,0,결빙 부여,Inflicts Freeze,-
-mag_blizzard,3,0,구름 속 적의 데미지 감소,Enemies in the cloud deal less Damage,-
-mag_blizzard,4,0,구름 속 적이 받는 피해 증가,Enemies in the cloud take more damage,-
-mag_frostburst,2,0,결빙 부여,Inflicts Freeze,-
-mag_frostburst,3,0,스택을 터뜨릴 때 스턴,Stuns when the stacks burst,-
-mag_frostburst,4,0,스택이 쌓일 때마다 냉기 저항 감소,Each stack lowers Cold Resistance,-
-mag_thunderstrike,2,0,추가 피해가 나갈 확률 증가,Higher chance of bonus damage,-
-mag_thunderstrike,3,0,n초마다 한 번 무작위 적에게 자동 시전,Casts itself on a random enemy once every n seconds,-
-mag_thunderstrike,4,1,-,-,보류
-mag_nova,2,0,추가 피해가 나갈 확률 증가,Higher chance of bonus damage,-
-mag_nova,3,0,쓸 때마다 다음 노바 강화(최대 n회 · 라운드가 끝나면 초기화),Each cast strengthens the next Nova (up to n times · resets at round end),-
-mag_nova,4,1,-,-,보류
-mag_staticfield,2,1,-,-,미정
-mag_staticfield,3,1,-,-,미정
-mag_staticfield,4,1,-,-,미정
-arc_trueaim,2,0,느려짐 감소,Less slowdown,-
-arc_trueaim,3,0,창 동안 평타를 아예 쏘지 않는 대신 스킬 쿨타임 가속,No basic attacks during the window but skill cooldowns run faster,-
-arc_trueaim,4,0,창 동안 단일 스킬이 후열을 먼저 노림,During the window single-target skills aim at the back row first,-
-arc_singlestrike,2,0,남은 적이 적을수록 피해 증가 — 혼자 남은 적에게 가장 강함,More damage the fewer enemies remain — strongest against a lone enemy,-
-arc_singlestrike,3,0,조준 — 행동 n회를 쏘지 않고 겨눈 뒤 발사 · 대신 피해 대폭 증가,Aim — skips n actions to aim then fires · deals much more damage,-
-arc_singlestrike,4,0,일격이 한 발 더 따라갑니다(같은 대상 · 먼저 쓰러지면 다음 대상),A second shot follows (same target · the next one if it falls),-
-arc_reload,2,0,초기화된 스킬의 다음 한 방 강화,The next shot of the reset skill hits harder,-
-arc_reload,3,0,쓰러뜨린 스킬만이 아니라 모든 액티브의 쿨타임 초기화,Resets the cooldowns of all actives and not only the skill that got the kill,-
-arc_reload,4,0,창 동안 스킬로 쓰러뜨리면 적 전원 짧게 경직,During the window skill kills briefly Stagger all enemies,-
-arc_quickdraw,2,0,경직 확률 증가,Higher Stagger chance,-
-arc_quickdraw,3,0,평타가 6자리 중 무작위로 흩어짐(후열까지),Basic attacks scatter across all six spots (back row included),-
-arc_quickdraw,4,0,평타의 적중 효과가 한 번 더 걸림,On-hit effects of basic attacks trigger once more,-
-arc_overdraw,2,1,-,-,⚠ 미정 — 후보 평타에 강타(skill_design §10-4)
-arc_overdraw,3,1,-,-,⚠ 미정 — 후보 평타가 체력이 가장 많은 적을 노림
-arc_overdraw,4,1,-,-,⚠ 미정
-arc_chaindraw,2,0,후열 적에게 주는 피해 증가 — 관통해 뒤에 닿은 화살이 더 강함,More damage to back-row enemies — arrows that pierce through hit harder,-
-arc_chaindraw,3,0,적을 쓰러뜨리면 다음 평타가 곧바로 나갑니다(연속 최대 n),A kill fires the next basic attack at once (up to n in a row),-
-arc_chaindraw,4,0,창 동안 쓰러진 적이 터져 같은 줄의 적에게 피해,During the window fallen enemies explode and damage their row,-
-arc_huntersmark,2,0,표식이 붙은 적이 쓰러지면 다음으로 체력이 많은 적에게 옮겨 감,When the marked enemy falls the mark moves to the next highest-HP enemy,-
-arc_huntersmark,3,0,표식이 한 명이 아니라 적 전원에게 붙음(대신 증가량이 낮음),Marks all enemies instead of one (with a smaller increase),-
-arc_huntersmark,4,0,표식이 붙은 적이 받은 피해의 일부가 적 전원에게 나뉘어 번짐,Part of the damage the marked enemy takes spreads to all enemies,-
-arc_supportingfire,2,0,지원 화살에 맞은 적은 잠깐 공격 속도가 줄어듭니다(제압),Enemies hit by support arrows briefly lose Attack Speed (Suppression),-
-arc_supportingfire,3,0,지원 화살이 아군의 스킬에도 따라감,Support arrows also follow ally skills,-
-arc_supportingfire,4,0,창 동안 아군이 맞으면 때린 적에게 레인저가 반격 사격,During the window the Ranger shoots back at enemies that hit allies,-
-arc_trap,2,0,경직 대신 스턴,Stun instead of Stagger,-
-arc_trap,3,0,덫을 전열 모든 자리에 설치,Lays traps on every front-row spot,-
-arc_trap,4,0,덫이 터져도 사라지지 않고 n번까지 다시 터짐,The trap stays after it triggers and fires up to n times,-
-pri_aegis,2,0,배리어가 있는 동안 그 아군은 경직되지 않음,Allies with the barrier cannot be Staggered,-
-pri_aegis,3,0,한 명이 아니라 전열 전원에게(총량은 나눔),Covers the whole front row instead of one ally (the total is split),-
-pri_aegis,4,0,창이 끝날 때 남은 배리어만큼 그 아군을 회복,When the window ends heals the ally for the barrier left,-
-pri_benediction,2,0,상태이상 해제,Removes ailments,-
-pri_benediction,3,0,넘친 회복은 배리어로 남음,Overhealing stays as a barrier,-
-pri_benediction,4,0,잃은 체력 비례가 아니라 파티 전원을 가득 채움,Fully heals the whole party instead of healing by HP lost,-
-pri_resurrection,2,0,일어난 아군은 쿨이 전부 초기화된 채 돌아옴,The revived ally returns with every cooldown reset,-
-pri_resurrection,3,0,한 명이 아니라 쓰러진 아군 전원(대신 HP 가 낮음),Revives every fallen ally instead of one (with less HP),-
-pri_resurrection,4,0,일어난 아군은 잠깐 모든 피해 대폭 증가,The revived ally briefly deals much more damage,-
-pri_punishment,2,0,가산 폭 증가,Larger bonus,-
-pri_punishment,3,0,가산 대신 걸린 것을 지우고 그만큼 크게 터뜨림,Instead of a bonus clears the effects and bursts that much harder,-
-pri_punishment,4,0,천벌로 쓰러진 적의 디버프 · 상태이상이 주변 적에게 옮겨 감,Debuffs and ailments on an enemy killed by Punishment spread to nearby enemies,-
-pri_atonement,2,0,저주받은 적이 쓰러지면 남은 창이 다음으로 체력이 많은 적에게 옮겨 감,When the cursed enemy falls the rest of the window moves to the next highest-HP enemy,-
-pri_atonement,3,0,한 명이 아니라 적 전원(회복 비율은 낮음),All enemies instead of one (a lower healing ratio),-
-pri_atonement,4,0,저주받은 적이 쓰러지면 파티 전원이 크게 회복,When a cursed enemy falls the whole party heals a lot,-
-pri_excommunication,2,0,벗긴 적은 잠깐 버프를 다시 걸 수 없음,Stripped enemies briefly cannot rebuff,-
-pri_excommunication,3,0,한 명이 아니라 적 전원의 버프를 벗김(피해는 나눔),Strips buffs from all enemies instead of one (damage is split),-
-pri_excommunication,4,0,벗긴 버프를 아군에게 옮겨 옴,Moves the stripped buffs to allies,-
-pri_diamondbody,2,0,상태이상에 걸리면 곧바로 해제,Shakes off ailments at once,-
-pri_diamondbody,3,0,창이 끝날 때 그동안 막은 피해만큼 다음 공격 강화,When the window ends the next attack grows by the damage blocked,-
-pri_diamondbody,4,0,받는 피해 감소가 아군 전열에도 나뉨,The damage reduction is shared with the ally front row,-
-pri_sweep,2,0,경직 확률 증가,Higher Stagger chance,-
-pri_sweep,3,0,전열만이 아니라 후열까지(적 전원),Reaches the back row too (all enemies),-
-pri_sweep,4,0,한 번 더 휘두름,Swings once more,-
-pri_counter,2,0,반격에 경직 부여,Counters inflict Stagger,-
-pri_counter,3,0,몽크만이 아니라 아군 전열 누가 맞아도 몽크가 반격,The Monk counters whenever any front-row ally is hit,-
-pri_counter,4,0,반격이 공격자 한 명이 아니라 적 전열 전원에게,Counters hit the whole enemy front row instead of only the attacker,-
+skill_id,slot,fx,per_rank,arg,unit,desc_kr,desc_en,bonus_fx,bonus_v,bonus_unit,bonus_kr,bonus_en,note
+mag_meteor,size,-,0,0,-,데미지 증가,More damage,meteor_burn,1,-,맞은 적에게 화상,Burns the enemy hit,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+mag_meteor,var1,meteor_shards,0.08,2,pct,작은 운석 {a}개가 무작위 적에게 떨어진다(메테오의 {v}),{a} small meteors fall on random enemies ({v} of Meteor),meteor_shards_more,1,n,작은 운석이 하나 더,One more small meteor,⚠값 제안 2026-11-13 R471
+mag_meteor,var2,meteor_dot,0.12,4,pct,맞은 적이 {a}초 동안 메테오의 {v}만큼 불탄다,The enemy hit burns for {v} of Meteor over {a}s,meteor_dot_row,1,-,불길이 같은 줄 옆 적에게 옮는다,The flames spread to the same row,⚠값 제안 2026-11-13 R471
+mag_ember,size,-,0,0,-,터지는 데미지 증가,More burst damage,ember_need_less,1,n,터지는 데 필요한 겹이 하나 준다,Needs one fewer stack to burst,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+mag_ember,var1,ember_spread,0.12,0,pct,터질 때 같은 줄 적에게 {v}로 번진다,Bursts spread to the same row at {v},ember_seed,1,n,번진 적에게 불씨 한 겹,Spread leaves one Ember stack,⚠값 제안 2026-11-13 R471
+mag_ember,var2,ember_burn,0.2,0,pct,터진 적에게 {v} 확률로 화상,Burst enemies are Burned ({v} chance),burn_shield_cut,0.5,pct,화상 걸린 적이 받는 보호막 {v} 감소,Burned enemies get {v} less from shields,⚠값 제안 2026-11-13 R471
+mag_hydra,size,-,0,0,-,지속 시간 증가,Longer duration,hydra_heads,2,n,머리가 둘 — 동시에 두 곳을 문다,Two heads — bites two at once,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+mag_hydra,var1,hydra_faster,0.08,0,pct,무는 간격 {v} 단축,Bites {v} faster,hydra_focus,0.1,pct,같은 적을 연달아 물 때마다 {v} 세진다,Each repeat bite on the same enemy hits {v} harder,⚠값 제안 2026-11-13 R471
+mag_hydra,var2,hydra_shred,0.02,5,pct,물 때마다 화염 저항 {v} 감소(최대 {a}겹),Each bite lowers Fire Resistance by {v} (up to {a} stacks),hydra_shred_cap,5,n,저항 감소 상한 +{v}겹,Resistance shred cap +{v} stacks,⚠값 제안 2026-11-13 R471
+mag_frozenorb,size,-,0,0,-,데미지 증가,More damage,orb_finale,1.5,pct,마지막 방이 전열 전원에게 {v} 한 방,The last tick hits the whole front row for {v},크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+mag_frozenorb,var1,orb_faster,1,0,n,같은 시간에 {v}방 더 긁는다,{v} more ticks in the same time,orb_guard,0.2,pct,긁는 동안 받는 피해 {v} 감소,Take {v} less damage while channeling,⚠값 제안 2026-11-13 R471
+mag_frozenorb,var2,orb_shard,0.15,0,pct,방마다 후열 무작위 하나에게 조각({v} · 결빙),Each tick a shard hits a random back-row enemy ({v} · Freeze),orb_shard_two,2,n,조각이 둘,Two shards,⚠값 제안 2026-11-13 R471
+mag_blizzard,size,-,0,0,-,데미지 증가,More damage,blizzard_hail,1.2,pct,마지막 틱에 우박 — 적 전원 {v},Hail on the last tick — {v} to every enemy,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+mag_blizzard,var1,blizzard_ramp,0.04,0,pct,구름 속에서 틱마다 피해 {v}씩 증가,Damage grows by {v} each tick inside the storm,blizzard_ramp_keep,1,-,쌓인 세기가 다음 블리자드로 이어진다,The build-up carries into the next Blizzard,⚠값 제안 2026-11-13 R471
+mag_blizzard,var2,blizzard_vuln,0.03,0,pct,구름 속 적이 받는 피해 {v} 증가,Enemies in the storm take {v} more damage,blizzard_vuln_linger,3,sec,받는 피해 증가가 걷힌 뒤 {v}초 남는다,The vulnerability lingers {v}s after the storm,⚠값 제안 2026-11-13 R471
+mag_frostarmor,size,-,0,0,-,보호막 증가,Stronger shield,armor_refill,0.5,pct,깨지면 한 번 다시 찬다(처음의 {v}),Refills once when broken ({v} of the first),크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+mag_frostarmor,var1,armor_phys,0.1,0,pct,물리 피해도 {v} 막는다,Also absorbs {v} of physical damage,armor_phys_double,2,x,물리를 막는 몫 두 배,Doubles the physical share,⚠값 제안 2026-11-13 R471
+mag_frostarmor,var2,armor_burst,0.4,0,pct,깨질 때 깬 적에게 냉기 {v}(결빙),"When broken, deals {v} Cold to the breaker (Freeze)",armor_burst_row,1,-,터짐이 깬 적의 같은 줄 전원,The burst hits the breaker's whole row,⚠값 제안 2026-11-13 R471
+mag_thunderstrike,size,-,0,0,-,데미지 증가,More damage,ts_fork,0.4,pct,벼락이 옆 적에게 {v} 튄다,Bolts fork to a neighbor for {v},크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+mag_thunderstrike,var1,ts_chain,1,0,n,「한 번 더」 최대 +{v},"""Strike again"" cap +{v}",ts_chain_jump,1,-,「한 번 더」가 다른 적에게 튈 수 있다,"""Strike again"" may jump to another enemy",⚠값 제안 2026-11-13 R471
+mag_thunderstrike,var2,ts_stun,0.1,0.5,pct,맞은 적 {v} 확률로 {a}초 스턴,{v} chance to Stun the enemy hit for {a}s,ts_stun_long,2,x,스턴 시간 두 배,Double Stun duration,⚠값 제안 2026-11-13 R471
+mag_nova,size,-,0,0,-,쿨타임 감소,Shorter cooldown,nova_echo,0.5,pct,두 번 퍼진다(두 번째는 {v}),Pulses twice (the second at {v}),크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+mag_nova,var1,nova_ramp,0.04,5,pct,쓸 때마다 다음 노바 {v} 세진다(최대 {a}겹 · 라운드마다 처음부터),Each cast makes the next Nova {v} stronger (up to {a} · resets each round),nova_ramp_keep,1,-,쌓인 세기가 라운드를 넘는다,The build-up carries across rounds,⚠값 제안 2026-11-13 R471
+mag_nova,var2,nova_shred,0.02,5,pct,맞은 적 번개 저항 {v} 감소(최대 {a}겹),Lowers Lightning Resistance by {v} (up to {a} stacks),nova_full_crit,1,-,겹이 가득 찬 적은 다음 번개 타격이 반드시 터진다,At full stacks the next Lightning hit always bursts,⚠값 제안 2026-11-13 R471
+mag_thundergod,size,-,0,0,-,벼락 데미지 증가,More bolt damage,tg_min_two,2,n,칸이 하나뿐이어도 벼락 둘,At least two bolts,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+mag_thundergod,var1,tg_ramp,0.06,0,pct,터질 때마다 남은 벼락 {v} 세진다,Each burst makes the remaining bolts {v} stronger,tg_last_crit,1,-,마지막 벼락은 반드시 터진다,The last bolt always bursts,⚠값 제안 2026-11-13 R471
+mag_thundergod,var2,tg_push,0.4,0,sec,맞은 적의 스킬 쿨 {v}초 밀림,Pushes the target's skill cooldowns back {v}s,tg_push_double,2,x,밀리는 시간 두 배,Double the push,⚠값 제안 2026-11-13 R471
+war_ragnarok,size,-,0,0,-,데미지 · 공격 속도 증가,More Damage and Attack Speed,rag_afterglow,4,sec,창이 끝나도 공속 절반이 {v}초 남는다,Half the Attack Speed lingers {v}s after the window,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+war_ragnarok,var1,rag_cleave,0.1,0,pct,창 동안 평타가 같은 줄 적에게 {v} 튄다,During the window basic attacks splash the same row for {v},rag_cleave_all,1,-,튀는 범위가 적 전원,Splash reaches every enemy,⚠값 제안 2026-11-13 R471
+war_ragnarok,var2,rag_debuff_cut,0.1,0,pct,창 동안 받는 디버프 시간 {v} 감소,Debuffs on you last {v} shorter during the window,rag_immune,1,-,창 동안 디버프 면역,Immune to debuffs during the window,⚠값 제안 2026-11-13 R471
+war_berserk,size,-,0,0,-,다른 액티브 데미지 증가,More damage for other actives,berserk_refund,0.5,pct,창이 끝날 때 쓴 HP의 {v}가 돌아온다,Refunds {v} of the HP spent when the window ends,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+war_berserk,var1,berserk_low,0.06,0,pct,HP가 낮을수록 피해 증가(최대 {v}),More damage the lower your HP (up to {v}),berserk_reset,0.3,pct,HP가 처음 {v} 아래로 떨어지면 다른 액티브 쿨 초기화,"First time HP drops below {v}, other actives come off cooldown",⚠값 제안 2026-11-13 R471
+war_berserk,var2,berserk_cost_cut,0.15,0,pct,쓰는 HP {v} 감소,Costs {v} less HP,berserk_free,1,-,HP를 쓰지 않는다,Costs no HP,⚠값 제안 2026-11-13 R471
+war_mutualruin,size,-,0,0,-,데미지 증가,More damage,ruin_overflow,1,-,쓰러뜨리면 남은 데미지가 다음 적에게,Leftover damage carries to the next enemy on a kill,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+war_mutualruin,var1,ruin_double,0.12,0,pct,같은 적을 한 번 더 내려친다({v}),Strikes the same enemy again ({v}),ruin_triple,1,-,세 번 내려친다,Strikes three times,⚠값 제안 2026-11-13 R471
+war_mutualruin,var2,ruin_stun,0.4,0,sec,맞은 적 {v}초 스턴,Stuns the enemy hit for {v}s,ruin_stun_row,1,-,스턴이 같은 줄로 번진다,The Stun spreads to the same row,⚠값 제안 2026-11-13 R471
+war_whirlwind,size,-,0,0,-,데미지 증가,More damage,ww_steady,0.5,pct,휘두르는 동안 받는 경직 · 스턴 시간 {v} 감소,Stagger and Stun on you are {v} shorter while spinning,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+war_whirlwind,var1,hits_add,1,0,n,타수 +{v},+{v} hits,ww_two,1,-,방마다 대상이 둘,Two targets per hit,⚠값 제안 2026-11-13 R471
+war_whirlwind,var2,ww_shred,0.03,5,pct,맞은 적 방어 {v} 깎기(최대 {a}겹),Shreds {v} Defense per hit (up to {a} stacks),ww_shred_long,1,-,깎은 방어가 라운드 끝까지 남는다,Shredded Defense lasts the rest of the round,⚠값 제안 2026-11-13 R471
+war_thorswrath,size,-,0,0,-,쿨타임 감소,Shorter cooldown,thor_quick,0.5,pct,모으는 시간 {v} 단축,Charges {v} faster,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+war_thorswrath,var1,thor_splash,0.08,0,pct,나머지 적이 받는 비율 +{v},Other enemies take +{v} of the blow,thor_overflow,1,-,쓰러지면 남은 데미지가 다음 적에게,Leftover damage carries to the next enemy on a kill,⚠값 제안 2026-11-13 R471
+war_thorswrath,var2,thor_stun_long,0.3,0,sec,스턴 시간 +{v}초,Stun +{v}s,thor_stun_equal,1,-,나머지 적도 주 대상과 같은 시간 스턴,Other enemies are stunned as long as the main target,⚠값 제안 2026-11-13 R471
+war_shockwave,size,-,0,0,-,데미지 증가,More damage,shock_twice,0.5,pct,두 번 흔든다(두 번째는 {v}),Quakes twice (the second at {v}),크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+war_shockwave,var1,shock_break_long,0.5,0,sec,진형 붕괴 +{v}초,Formation break +{v}s,shock_end_hit,0.8,pct,붕괴가 풀릴 때 적 전원 {v},"When the break ends, hits every enemy for {v}",⚠값 제안 2026-11-13 R471
+war_shockwave,var2,shock_pulled_vuln,0.05,0,pct,앞으로 끌려나온 후열이 받는 물리 피해 {v} 증가,Pulled-forward back row takes {v} more physical damage,shock_pulled_stagger,1,-,끌려나온 후열 경직,Pulled-forward back row is Staggered,⚠값 제안 2026-11-13 R471
+war_divinedescent,size,-,0,0,-,최대 HP 증가,More max HP,descent_shield,1,-,끝날 때 넘친 HP를 자르지 않고 보호막으로 남긴다,Excess HP becomes a shield instead of being cut,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+war_divinedescent,var1,descent_regen_low,0.2,0,pct,잃은 HP가 많을수록 재생 증가(최대 {v}),Regeneration grows with missing HP (up to {v}),descent_regen_front,0.5,pct,재생이 아군 전열에도 {v},Front-row allies also regenerate at {v},⚠값 제안 2026-11-13 R471
+war_divinedescent,var2,descent_steady,0.12,0,pct,창 동안 받는 경직 시간 {v} 감소,Stagger on you is {v} shorter during the window,descent_unstaggerable,1,-,창 동안 경직 면역,Immune to Stagger during the window,⚠값 제안 2026-11-13 R471
+war_command,size,-,0,0,-,데미지 증가량 증가,Bigger Damage boost,cmd_haste,0.08,pct,창 동안 아군 공격 속도 {v},Allies also gain {v} Attack Speed,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+war_command,var1,cmd_crit,0.02,0,pct,아군 치명 확률 {v},Allies gain {v} Critical Chance,cmd_crit_dmg,0.25,pct,아군 치명 피해 {v},Allies gain {v} Critical Damage,⚠값 제안 2026-11-13 R471
+war_command,var2,cmd_lifesteal,0.02,0,pct,아군 흡혈 {v},Allies gain {v} Life Steal,cmd_overheal_shield,1,-,흡혈로 넘친 HP가 보호막으로,Overflowing Life Steal becomes a shield,⚠값 제안 2026-11-13 R471
+war_intimidate,size,-,0,0,-,데미지 감소량 증가,Bigger Damage reduction,roar_linger,4,sec,창이 끝난 뒤 절반이 {v}초 남는다,Half the reduction lingers {v}s after the window,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+war_intimidate,var1,roar_stagger,0.3,0,sec,맞은 적 {v}초 경직,Staggers enemies for {v}s,roar_stun,1,-,경직 대신 스턴,Stuns instead of Staggering,⚠값 제안 2026-11-13 R471
+war_intimidate,var2,roar_buff_cut,0.1,0,pct,맞은 적이 거는 버프 시간 {v} 감소,Buffs cast by enemies hit are {v} shorter,roar_buff_cut_double,2,x,버프 시간 감소 두 배,Doubles the buff duration cut,⚠값 제안 2026-11-13 R471
+kni_lastbastion,size,-,0,0,-,가져온 피해 감소,Less damage from what you take,devotion_more,0.15,pct,가져오는 비율 +{v},Takes +{v} more of allies' damage,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+kni_lastbastion,var1,devotion_auto,0.08,0,pct,아군 HP가 {v} 아래면 저절로 켜진다,Turns on by itself when an ally drops below {v} HP,devotion_lowest,1,-,HP가 가장 낮은 아군 하나는 피해를 전부 가져온다,Takes all damage for the lowest-HP ally,⚠값 제안 2026-11-13 R471
+kni_lastbastion,var2,devotion_undying,0.2,0,pct,창 동안 쓰러지지 않는다 — 버틸 때 받는 피해 {v} 감소,Cannot fall during the window — {v} less damage while holding on,devotion_end_heal,0.3,pct,창이 끝날 때 HP 1이었으면 최대 HP {v} 회복,"If at 1 HP when the window ends, heals {v} of max HP",⚠값 제안 2026-11-13 R471
+kni_unbreakablewill,size,-,0,0,-,겹 하나의 피해 감소 증가,More reduction per stack,will_more_stacks,2,n,겹 최대 수 +{v},Max stacks +{v},크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+kni_unbreakablewill,var1,will_decay,1,0,sec,창이 끝나면 겹이 {v}초마다 하나씩 빠진다,After the window stacks fall off one every {v}s,will_decay_slow,2,x,빠지는 속도 절반,Stacks fall off half as fast,⚠값 제안 2026-11-13 R471
+kni_unbreakablewill,var2,will_share,0.2,0,pct,겹이 가득 차면 파티에 겹의 {v}를 나눠 준다,At full stacks shares {v} of them with the party,will_share_long,2,x,나눠 준 겹이 두 배 오래 남는다,Shared stacks last twice as long,⚠값 제안 2026-11-13 R471
+kni_divinejudgment,size,-,0,0,-,반사 증가,More reflection,judg_heal,0.3,pct,되돌린 피해의 {v}만큼 HP 회복,Heals {v} of the damage returned,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+kni_divinejudgment,var1,judg_split,0.1,0,pct,되돌린 피해의 {v}를 적 전원에게 나눠 준다,Splits {v} of reflected damage across every enemy,judg_split_full,1,-,나누지 않고 전원에게 같은 양,Every enemy takes the full amount,⚠값 제안 2026-11-13 R471
+kni_divinejudgment,var2,judg_burst,0.15,0,pct,창이 끝날 때 되돌린 양의 {v}가 적 전원에게 터진다,"When the window ends, bursts every enemy for {v} of the total reflected",judg_early,0.3,pct,되돌린 양이 내 최대 HP의 {v}를 넘으면 바로 터진다,Bursts early once reflection passes {v} of your max HP,⚠값 제안 2026-11-13 R471
+kni_cleansing,size,-,0,0,-,상태이상 · 디버프 시간 감소 증가,Bigger duration cut,cleanse_block,1,-,라운드마다 아군마다 처음 걸리는 상태이상을 막는다,Blocks each ally's first Ailment every round,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+kni_cleansing,var1,cleanse_chance,0.06,0,pct,상태이상이 걸리는 순간 {v} 확률로 바로 풀린다,{v} chance to shake off an Ailment instantly,cleanse_chain,1,-,한 아군이 풀리면 다른 아군의 같은 상태이상도 풀린다,"When one ally shakes it off, so do the others",⚠값 제안 2026-11-13 R471
+kni_cleansing,var2,cleanse_heal,0.03,0,pct,상태이상이 풀릴 때 그 아군 최대 HP {v} 회복,Heals {v} of max HP when an Ailment ends,cleanse_heal_party,0.5,pct,회복이 파티 전원에게({v}),The heal reaches the whole party ({v}),⚠값 제안 2026-11-13 R471
+kni_offenseaura,size,-,0,0,-,세 수치 증가,Bigger bonuses,oa_self_double,2,x,켠 기사 자신은 두 배,Doubled on the Knight,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+kni_offenseaura,var1,oa_caster,0.2,0,pct,마법 무기 아군 캐스팅 속도 +{v} 더,Magic-weapon allies gain +{v} more Cast Speed,oa_cast_charge,1,n,마법 무기 아군의 캐스팅 칸 +{v},Magic-weapon allies gain +{v} cast charge,⚠값 제안 2026-11-13 R471
+kni_offenseaura,var2,oa_fighter,0.2,0,pct,물리 무기 아군 공격 속도 +{v} 더,Physical-weapon allies gain +{v} more Attack Speed,oa_double_shot,0.1,pct,물리 무기 아군의 평타가 {v} 확률로 한 번 더,Physical-weapon allies' basic attacks have {v} chance to repeat,⚠값 제안 2026-11-13 R471
+kni_elemconvert,size,-,0,0,-,바뀐 화염 피해 증가,More converted Fire damage,conv_caster,0.15,pct,바꿀 물리가 없는 아군 타격에도 화염 {v},Allies without physical damage add {v} Fire,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+kni_elemconvert,var1,conv_burn,0.08,0,pct,바뀐 화염이 {v} 확률로 화상,Converted Fire Burns ({v} chance),conv_burn_spread,1,-,화상 걸린 적이 쓰러지면 옆 적에게 화상이 옮는다,Burn jumps to a neighbor when a Burned enemy falls,⚠값 제안 2026-11-13 R471
+kni_elemconvert,var2,conv_pen,0.04,0,pct,파티 화염 관통 {v},Party Fire penetration {v},conv_vs_def,0.002,pct,적 방어 100마다 전환 몫 +{v},Conversion share +{v} per 100 enemy Defense,⚠값 제안 2026-11-13 R471
+kni_retribution,size,-,0,0,-,공격 속도 증가,More Attack Speed,ret_open_bolt,0.6,pct,창을 열 때 적 전열 전원에게 번개 {v},Opening the window strikes the enemy front row with lightning for {v},크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+kni_retribution,var1,ret_crit,0.1,1.5,pct,바뀐 번개가 {v} 확률로 터진다(×{a}),Converted lightning bursts ({v} chance · ×{a}),ret_crit_jump,0.5,pct,터지면 옆 적에게 번개가 {v} 튄다,Bursts arc to a neighbor for {v},⚠값 제안 2026-11-13 R471
+kni_retribution,var2,ret_extend,1,4,sec,창 동안 처치마다 창 +{v}초(최대 +{a}초),Each kill in the window extends it {v}s (up to +{a}s),ret_kill_haste,0.06,pct,창 동안 처치마다 공속 +{v} 한 겹,Each kill in the window adds a {v} Attack Speed stack,⚠값 제안 2026-11-13 R471
+kni_condemnation,size,-,0,0,-,기본 피해 증가,More base damage,cond_missing_more,0.5,pct,잃은 체력 비례 몫 +{v},Missing-HP share +{v},크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+kni_condemnation,var1,cond_overflow,0.2,0,pct,쓰러뜨리면 남은 피해의 {v}가 다음 적에게,On a kill {v} of the leftover carries to the next enemy,cond_overflow_two,1,-,넘김이 두 번까지,Carries over up to twice,⚠값 제안 2026-11-13 R471
+kni_condemnation,var2,cond_lowest,0.05,0,pct,대상 = 체력 비율이 가장 낮은 전열 적 · 피해 +{v},Targets the lowest-HP% front enemy · +{v} damage,cond_back_too,1,-,후열까지 고른다,Can pick the back row too,⚠값 제안 2026-11-13 R471
+kni_fallingstrike,size,-,0,0,-,데미지 증가,More damage,fall_guard,0.3,pct,내려꽂은 뒤 3초 동안 받는 피해 {v} 감소,Take {v} less damage for 3s after landing,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+kni_fallingstrike,var1,fall_row,0.12,0,pct,착지할 때 같은 줄 적에게 번개 {v},Landing arcs lightning to the same row for {v},fall_row_crit,1,-,튄 번개도 터질 수 있다,The arcs can burst too,⚠값 제안 2026-11-13 R471
+kni_fallingstrike,var2,fall_stun,0.06,1,pct,맞은 적 {v} 확률로 {a}초 스턴,{v} chance to Stun for {a}s,fall_stun_ramp,0.15,pct,스턴이 안 걸리면 다음 낙하 검격의 스턴 확률 +{v},A miss raises the next Stun chance by {v},⚠값 제안 2026-11-13 R471
+arc_trueaim,size,-,0,0,-,스나이프 데미지 증가량 증가,Bigger Snipe boost,aim_ready,1,-,창을 열 때 스나이프가 바로 준비된다,Snipe is ready the moment the window opens,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+arc_trueaim,var1,aim_less_slow,0.08,0,pct,느려짐 {v} 감소,Slow reduced by {v},aim_no_slow,1,-,느려짐 없음,No slow,⚠값 제안 2026-11-13 R471
+arc_trueaim,var2,aim_back,0.04,0,pct,창 동안 스나이프가 후열을 먼저 노린다 · 후열 피해 +{v},Snipe targets the back row first · +{v} to the back row,aim_back_bonus,0.25,pct,후열 대상에게 추가 피해 {v},{v} bonus damage to back-row targets,⚠값 제안 2026-11-13 R471
+arc_singlestrike,size,-,0,0,-,데미지 증가,More damage,ss_refund,0.5,pct,쓰러뜨리면 쿨 {v}가 돌아온다,A kill refunds {v} of the cooldown,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+arc_singlestrike,var1,ss_follow,0.12,0,pct,한 발 더 따라간다({v} · 먼저 쓰러지면 다음 적),A follow-up shot ({v} · moves on if the target falls),ss_follow_any,1,-,따라가는 한 발이 후열까지 고를 수 있다,The follow-up can pick the back row,⚠값 제안 2026-11-13 R471
+arc_singlestrike,var2,ss_few_left,0.06,0,pct,남은 적이 하나 줄 때마다 피해 +{v},+{v} damage for each enemy fewer than six,ss_last_double,2,x,혼자 남은 적이면 두 배,Double damage on the last enemy,⚠값 제안 2026-11-13 R471
+arc_reload,size,-,0,0,-,라운드당 초기화 상한 증가,More resets per round,reload_all,1,-,초기화될 때 모든 액티브의 쿨이 초기화된다,Resets every active's cooldown,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+arc_reload,var1,reload_empower,0.1,0,pct,초기화된 스킬의 다음 한 방 +{v},The reset skill's next hit +{v},reload_empower_two,2,n,다음 두 방이 세진다,The next two hits are empowered,⚠값 제안 2026-11-13 R471
+arc_reload,var2,reload_stagger,0.2,0,sec,스킬로 쓰러뜨리면 적 전원 {v}초 경직,Skill kills Stagger every enemy for {v}s,reload_stagger_long,2,x,경직 시간 두 배,Double Stagger duration,⚠값 제안 2026-11-13 R471
+arc_quickdraw,size,-,0,0,-,고정 주기 단축,Even shorter interval,qd_finale,3,pct,창이 끝날 때 마지막 한 발이 {v},A final shot for {v} when the window ends,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+arc_quickdraw,var1,qd_scatter,0.05,0,pct,평타가 6자리 무작위로 흩어진다 · 후열 피해 +{v},Basic attacks scatter across all six slots · +{v} to the back row,qd_back_bonus,0.3,pct,후열에 맞은 화살 +{v},Arrows hitting the back row +{v},⚠값 제안 2026-11-13 R471
+arc_quickdraw,var2,qd_onhit_again,0.12,0,pct,평타의 덤이 {v} 확률로 한 번 더 붙는다,Basic attack on-hit effects repeat ({v} chance),qd_onhit_more,2,n,덤이 두 번 더,On-hit effects repeat twice,⚠값 제안 2026-11-13 R471
+arc_overdraw,size,-,0,0,-,평타 피해 증가,More basic attack damage,od_third,2,x,세 번째 평타마다 두 배,Every third basic attack deals double,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+arc_overdraw,var1,od_hp_max,0.05,0,pct,평타가 HP가 가장 많은 적을 노린다 · 피해 +{v},Basic attacks target the highest-HP enemy · +{v},od_hp_max_bonus,0.25,pct,HP 최다 적에게 추가 피해 {v},{v} bonus damage to the highest-HP enemy,⚠값 제안 2026-11-13 R471
+arc_overdraw,var2,od_pierce,0.12,0,pct,평타가 관통해 같은 자리 뒤 적에게 {v},Basic attacks pierce to the enemy behind for {v},od_pierce_stagger,0.3,sec,관통한 화살이 뒤 적을 {v}초 경직,Pierced arrows Stagger for {v}s,⚠값 제안 2026-11-13 R471
+arc_chaindraw,size,-,0,0,-,주 대상 외 피해 비율 증가,Bigger chain share,cd_explode,0.4,pct,창 동안 쓰러진 적이 터져 같은 줄에 {v},Enemies killed in the window explode on their row for {v},크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+arc_chaindraw,var1,cd_onhit_all,0.2,0,pct,추가 대상에도 평타의 덤이 붙는다({v}),On-hit effects reach extra targets ({v}),cd_onhit_full,1,-,추가 대상의 덤이 주 대상과 같은 세기,Full-strength on-hit effects on extra targets,⚠값 제안 2026-11-13 R471
+arc_chaindraw,var2,cd_kill_chain,1,0,n,쓰러뜨리면 다음 평타가 곧바로 나간다(연속 최대 {v}),A kill fires the next basic attack at once (up to {v} in a row),cd_chain_full,1,-,연속 평타는 관통 비율이 줄지 않는다,Chained shots keep the full chain share,⚠값 제안 2026-11-13 R471
+arc_huntersmark,size,-,0,0,-,받는 피해 증가량 증가,Bigger vulnerability,mark_share,0.15,pct,표식 적이 받은 피해의 {v}가 적 전원에게 번진다,{v} of damage to the marked enemy spreads to every enemy,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+arc_huntersmark,var1,mark_move,0.03,0,pct,표식 적이 쓰러지면 다음 HP 최다 적에게 옮는다 · 증가량 +{v},The mark moves on when its target falls · +{v},mark_move_refresh,1,-,옮을 때 창 시간이 새로 시작,Moving refreshes the window,⚠값 제안 2026-11-13 R471
+arc_huntersmark,var2,mark_all,0.04,0,pct,표식이 적 전원 — 증가량 {v},Marks every enemy at {v},mark_all_double,2,x,전원 증가량 두 배,Doubles the all-enemy value,⚠값 제안 2026-11-13 R471
+arc_supportingfire,size,-,0,0,-,화살 데미지 증가,More arrow damage,sf_two,2,n,화살 두 발,Two arrows,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+arc_supportingfire,var1,sf_skills,0.1,0,pct,아군 스킬에도 따라간다 · 화살 +{v},Also follows ally skills · arrows +{v},sf_skill_two,2,n,스킬엔 두 발,Two arrows on skills,⚠값 제안 2026-11-13 R471
+arc_supportingfire,var2,sf_counter,0.3,0,pct,창 동안 아군이 맞으면 때린 적에게 반격 사격({v}),Return fire on enemies that hit allies ({v}),sf_counter_two,2,n,반격 사격 두 발,Two return shots,⚠값 제안 2026-11-13 R471
+arc_trap,size,-,0,0,-,덫 피해 증가,More trap damage,trap_rearm,2,n,터져도 {v}번까지 다시 터진다,Re-arms up to {v} times,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+arc_trap,var1,trap_all_front,0.1,0,pct,적 전열 모든 자리에 깐다 · 덫 피해 +{v},Traps every front slot · +{v} damage,trap_back,1,-,후열 자리까지,The back row too,⚠값 제안 2026-11-13 R471
+arc_trap,var2,trap_stun,0.15,0,sec,경직 대신 스턴 · 시간 +{v}초,Stuns instead of Staggering · +{v}s,trap_extra,1,-,스턴 걸린 적의 옆 자리에 덫이 하나 더,A stunned enemy's neighbor gets another trap,⚠값 제안 2026-11-13 R471
+pri_endure,size,-,0,0,-,버틸 때 남는 HP 증가,More HP when holding on,endure_twice,2,n,아군마다 두 번 버틴다,Each ally holds on twice,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+pri_endure,var1,endure_guard,0.08,3,pct,버틴 아군 {a}초 동안 받는 피해 {v} 감소,An ally who holds on takes {v} less damage for {a}s,endure_guard_double,2,x,감소 두 배,Doubles the reduction,⚠값 제안 2026-11-13 R471
+pri_endure,var2,endure_heal_up,0.12,3,pct,버틴 아군 {a}초 동안 받는 회복 {v} 증가,An ally who holds on receives {v} more healing for {a}s,endure_heal_double,2,x,회복 증가 두 배,Doubles the healing boost,⚠값 제안 2026-11-13 R471
+pri_purify,size,-,0,0,-,지운 아군 HP 회복 증가,More healing on cleansed allies,purify_cool,1,sec,지운 상태이상 하나마다 쿨 {v}초 감소,Cooldown −{v}s per Ailment removed,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+pri_purify,var1,purify_return,0.2,0,pct,지운 상태이상을 {v} 확률로 건 적에게 되돌린다,Returns removed Ailments to their caster ({v} chance),purify_return_row,1,-,되돌린 상태이상이 그 적의 같은 줄 전원에게,Returned Ailments hit the caster's whole row,⚠값 제안 2026-11-13 R471
+pri_purify,var2,purify_immune,0.6,0,sec,지운 뒤 {v}초 상태이상 면역,Immune to Ailments for {v}s after cleansing,purify_immune_shield,0.05,pct,면역 중 막은 상태이상마다 최대 HP {v} 보호막,Each Ailment blocked while immune grants a shield of {v} max HP,⚠값 제안 2026-11-13 R471
+pri_resurrection,size,-,0,0,-,일어날 때의 HP 증가,More HP on rising,res_power,0.5,pct,일어난 아군 5초 동안 모든 피해 +{v},The raised ally deals {v} more damage for 5s,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+pri_resurrection,var1,res_fresh,1,0,-,일어난 아군은 쿨이 전부 초기화된 채 돌아온다,The raised ally returns with every cooldown ready,res_shield,0.2,pct,일어날 때 최대 HP {v} 보호막,Rises with a shield of {v} max HP,⚠값 제안 2026-11-13 R471
+pri_resurrection,var2,res_all,0.4,0,pct,쓰러진 아군 전원(HP {v}로),Raises every fallen ally (at {v} of the HP),res_all_full,1,-,전원이어도 HP가 줄지 않는다,No HP penalty for raising everyone,⚠값 제안 2026-11-13 R471
+pri_punishment,size,-,0,0,-,데미지 증가,More damage,pun_spread,1,-,천벌로 쓰러진 적의 디버프 · 상태이상이 주변 적에게 옮는다,Debuffs on enemies it kills spread to their neighbors,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+pri_punishment,var1,pun_more,0.06,0,pct,걸린 것 하나마다 가산 +{v},+{v} per debuff or ailment,pun_cap,3,n,가산 상한 +{v},Bonus cap +{v},⚠값 제안 2026-11-13 R471
+pri_punishment,var2,pun_consume,0.1,0,pct,가산 대신 걸린 것을 지우고 하나마다 +{v} 터뜨린다,Consumes debuffs instead for +{v} each,pun_consume_double,2,x,지운 것 하나당 터짐 두 배,Doubles the burst per consumed debuff,⚠값 제안 2026-11-13 R471
+pri_atonement,size,-,0,0,-,회복 비율 증가,Bigger heal share,aton_kill_heal,0.15,pct,저주받은 적이 쓰러지면 파티 전원 최대 HP {v} 회복,"When the cursed enemy falls, heals the party for {v} of max HP",크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+pri_atonement,var1,aton_move,0.03,0,pct,저주받은 적이 쓰러지면 다음 HP 최다 적에게 옮는다 · 회복 +{v},The curse moves on when its target falls · +{v} heal share,aton_move_refresh,1,-,옮을 때 창 시간이 새로 시작,Moving refreshes the window,⚠값 제안 2026-11-13 R471
+pri_atonement,var2,aton_all,0.03,0,pct,적 전원에게 저주 — 회복 비율 {v},Curses every enemy at {v} heal share,aton_focus,1,-,전원 저주의 회복이 가장 다친 아군에게 몰린다,All-enemy healing goes to the most wounded ally,⚠값 제안 2026-11-13 R471
+pri_excommunication,size,-,0,0,-,데미지 증가,More damage,exc_steal,1,-,벗긴 버프를 아군에게 옮겨 온다,Stolen buffs go to your allies,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+pri_excommunication,var1,exc_all,0.3,0,pct,적 전원의 버프를 벗긴다(피해는 {v}씩 나눈다),Strips every enemy's buffs (damage split at {v} each),exc_all_full,1,-,나눈 피해가 줄지 않는다,No split penalty,⚠값 제안 2026-11-13 R471
+pri_excommunication,var2,exc_lock,0.8,0,sec,벗긴 적은 {v}초 동안 버프를 다시 못 건다,Stripped enemies cannot gain buffs for {v}s,exc_lock_punish,0.5,pct,그 사이 버프를 걸려 하면 그 순간 피해 {v},Trying to buff in that time deals {v} to them,⚠값 제안 2026-11-13 R471
+pri_diamondbody,size,-,0,0,-,받는 피해 감소 증가,More damage reduction,diamond_unstaggerable,1,-,창 동안 경직 면역,Immune to Stagger during the window,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+pri_diamondbody,var1,diamond_shake,0.12,0,pct,상태이상에 걸리면 {v} 확률로 곧바로 털어낸다,Shakes off Ailments instantly ({v} chance),diamond_shake_heal,0.05,pct,털어낼 때 최대 HP {v} 회복,Heals {v} of max HP when shaking off,⚠값 제안 2026-11-13 R471
+pri_diamondbody,var2,diamond_share,0.2,0,pct,받는 피해 감소의 {v}가 아군 전열에도,Front-row allies get {v} of the reduction,diamond_share_back,1,-,나누는 대상이 후열까지,The back row too,⚠값 제안 2026-11-13 R471
+pri_sweep,size,-,0,0,-,데미지 증가,More damage,sweep_heal,0.02,pct,맞힌 적 하나마다 최대 HP {v} 회복,Heals {v} of max HP per enemy hit,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+pri_sweep,var1,sweep_back,0.12,0,pct,후열까지(후열은 {v}),Reaches the back row (at {v}),sweep_back_full,1,-,후열도 전열과 같은 피해,Full damage on the back row,⚠값 제안 2026-11-13 R471
+pri_sweep,var2,sweep_twice,0.12,0,pct,한 번 더 휘두른다({v}),Sweeps again ({v}),sweep_stagger,0.3,sec,두 번째 휘두르기에 맞은 적 {v}초 경직,The second sweep Staggers for {v}s,⚠값 제안 2026-11-13 R471
+pri_counter,size,-,0,0,-,반격 피해 증가,More counter damage,counter_stagger,0.3,sec,반격이 {v}초 경직을 건다,Counters Stagger for {v}s,크기 = 스킬 레벨(skill_effect.csv level_field) · ⚠값 제안 2026-11-13 R471
+pri_counter,var1,counter_front,0.1,0,pct,아군 전열 누가 맞아도 반격 · 반격 +{v},Counters for any front-row ally · +{v},counter_back,1,-,후열 아군이 맞아도,For back-row allies too,⚠값 제안 2026-11-13 R471
+pri_counter,var2,counter_row,0.1,0,pct,반격이 적 전열 전원에게 · 반격 +{v},Counters hit the whole enemy front row · +{v},counter_all,1,-,적 전원에게,Every enemy,⚠값 제안 2026-11-13 R471

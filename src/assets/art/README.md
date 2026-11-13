@@ -12,7 +12,7 @@
 | `gpt/` | **GPT 스테이지 배경 25장(Ch1~Ch5)** — **비교용**(`?bg=gpt`). 함께 고르던 GPT 초상이 지워져 버튼으로는 안 열린다(ADR-0986). 1~3장은 새 그림 15장, 4~5장은 먼저 만든 10장을 그대로 복사했다. 원본·프롬프트는 `source/gpt/` |
 | `illustrate/` | **스테이지 배경 설치본 — 일러스트 스타일** 25장(Ch1~Ch5 전부). **`BG_STYLES` 첫 항목 = 정식** [2026-09-16 · ADR-0152] · `background_stage_101.webp` 은 **로그인 첫 화면 배경도 겸한다** — 로그인은 스타일 설정 이전이라 CSS 가 이 폴더를 직접 박는다(거점 `pixel/town.webp` 와 같은 예외 · 2026-09-18 사용자 지시) |
 | `pixel/` | **스테이지 배경 설치본 — 도트 스타일** 15장(Ch1~Ch3) + `town.webp`(앱 전역 배경 · 한 장 뒤 하나뿐 — 탭 패널은 안 깐다 · ADR-0110). **비교용으로 남긴다**(`?bg=pixel`) · 거점 배경은 스타일을 안 타고 늘 여기서 읽는다 |
-| `illustrate/background_colosseum.webp` · `illustrate/background_duel_<tier_id>.webp` | **결투 배경** [2026-10-24 사용자 지시 · ADR-0749 · ADR-0760 · ADR-0761] — 콜로세움(온라인 ELO · 탭 id `arena`) = 로마 콜로세움 한 장 · 결투장(층 사다리 · 탭 id `colosseum`) = **고른 층의 등급마다 한 장**(`arena_tier.csv:tier_id` 여섯 — 브론즈 뒷골목 → 챔피언 정상). 판과 결투 관전이 깐다. ⚠ 스테이지 배경이 아니라 **스타일을 안 탄다** — 화면은 `mock.js:COLOSSEUM_BG` · `duelBg` 로 이 경로를 박는다(아래 「결투 배경」) |
+| `illustrate/background_colosseum.webp` · `illustrate/background_duel_<tier_id>.webp` | **결투 배경** [2026-10-24 사용자 지시 · ADR-0749 · ADR-0760 · ADR-0761 · 이름 ADR-1071] — 결투장(온라인 ELO · 탭 id `arena`) = 로마 콜로세움 한 장 · 시련의 탑(층 사다리 · 탭 id `colosseum`) = **고른 층의 등급마다 한 장**(`arena_tier.csv:tier_id` 여섯 — 브론즈 뒷골목 → 챔피언 정상). 판과 결투 관전이 깐다. ⚠ 스테이지 배경이 아니라 **스타일을 안 탄다** — 화면은 `mock.js:COLOSSEUM_BG` · `duelBg` 로 이 경로를 박는다(아래 「결투 배경」) |
 | `explore_world.webp` | **탐험 탭 — 세계지도 한 장 · 일곱 챕터가 구간** [2026-10-08 사용자 지시 · ADR-0537] ⚠ 스테이지 배경이 아니라 스타일 축을 안 탄다 (아래) |
 | `explore_world_mask/<챕터 id>.png` | **탐험 지도 — 잠긴 챕터 구간의 막 모양** [2026-10-08 · ADR-0543] — 그림과 같은 크기의 알파 그림(땅만 · 물은 안 든다). `python scripts/build_explore_masks.py` 가 짓는다 (아래 「구간 마스크」) · **게임은 안 읽는다** — 아래 조각의 재료다 |
 | `explore_world_locked/<챕터 id>.webp` | **탐험 지도 — 잠긴 구간에 얹는 「빛 바랜 땅」 조각** [2026-10-09] — 그림을 회색 · 어둡게 칠해(CSS `grayscale(.85)` · `brightness(.48)` 과 같은 값) 그 장의 마스크로 잘라 **구간 크기로** 굽는다(장당 약 400×400 · 20KB 안팎). `python scripts/build_explore_locked.py` 가 짓고 조각 자리(`tile` %)를 찍는다 → `mock.js:EXPLORE_REGIONS` 에 옮긴다. 실행 중 필터 · 마스크를 안 돌리려고 굽는다(탭이 늦게 켜졌다) — **그림 · 마스크를 바꾸면 다시 돌린다** |
@@ -209,19 +209,19 @@ Image.open(src_png).convert('RGB').save(dst_webp, 'WEBP', quality=88, method=6)
 - 재내보내기: `python scripts/build_ch4_ch5_backgrounds.py` — 위 열 장만 내보내고 [`ch4_ch5_preview.jpg`](backgrounds/source/illustrate/ch4_ch5_preview.jpg) 비교 시트를 만든다.
 - `stage.csv` 의 챕터 4·5 **26개 구간 모두 `bg=1`**. `stageBgOf` 가 같은 스테이지의 배경을 공유한다. 도트 비교 스타일의 챕터 4·5 파일은 없으므로 기존 그라디언트 폴백을 쓴다.
 
-### 결투 배경 — 콜로세움 · 결투장 [2026-10-24 사용자 지시]
+### 결투 배경 — 결투장 · 시련의 탑 [2026-10-24 사용자 지시 · 이름 2026-11-13]
 
-판과 결투 관전이 까는 그림이다(ADR-0749 · ADR-0760 · ADR-0761). **콜로세움**(온라인 ELO)은 로마 콜로세움 한 장 · **결투장**(층 사다리)은 고른 층의 등급마다 한 장이다 — 등급이 오를수록 허름한 곳에서 장엄한 곳으로 간다. ⚠ 화면 이름은 같은 날 맞바꿨다 — 탭 id 는 `arena` = 콜로세움 · `colosseum` = 결투장.
+판과 결투 관전이 까는 그림이다(ADR-0749 · ADR-0760 · ADR-0761). **결투장**(온라인 ELO)은 로마 콜로세움 한 장 · **시련의 탑**(층 사다리)은 고른 층의 등급마다 한 장이다 — 등급이 오를수록 허름한 곳에서 장엄한 곳으로 간다. ⚠ 화면 이름은 2026-11-13 다시 바꿨다(ADR-1071) — 탭 id 는 `arena` = 결투장 · `colosseum` = 시련의 탑.
 
 | 파일 | 탭 · 등급 | 장소 | 설치본 |
 |---|---|---|---|
-| `background_colosseum` | 콜로세움 | 로마 콜로세움 — 3층 아치 관중석 · 쇠창살 문과 황제석 · 빈 무늬 깃발 · 늦은 황혼 | 326KB |
-| `background_duel_bronze` | 결투장 브론즈 | 빈민가 뒷골목들이 만나는 좁은 마당 — 밧줄 링 · 판잣집 · 빨랫줄 · 드럼통 불 · 밤 | 285KB |
-| `background_duel_silver` | 결투장 실버 | 장터 선술집 뒤 싸움 구덩이 — 말뚝 울타리 · 나무 관람석 · 등불 · 해 질 녘 | 286KB |
-| `background_duel_gold` | 결투장 골드 | 영주 성 안뜰의 시합장 — 성벽 · 지붕 덮인 관람석 · 영주 발코니 · 일곱 깃발 | 263KB |
-| `background_duel_platinum` | 결투장 플래티넘 | 요새 지하 결투 홀 — 둥근 돌 바닥 · 쇠사슬 기둥 · 빈 발코니 · 쇠 화로 · 챔피언 석상 일곱 | 252KB |
-| `background_duel_diamond` | 결투장 다이아 | 대성당 같은 대리석 결투 전당 — 높은 궁륭 · 수정 샹들리에 · 거대 석상 · 일곱 깃발 | 309KB |
-| `background_duel_champion` | 결투장 챔피언 | 구름 위 산꼭대기의 원형 정상 — 둥근 열주 · 빈 돌 왕좌 · 역대 챔피언 석상 · 폭풍 노을 | 248KB |
+| `background_colosseum` | 결투장 | 로마 콜로세움 — 3층 아치 관중석 · 쇠창살 문과 황제석 · 빈 무늬 깃발 · 늦은 황혼 | 326KB |
+| `background_duel_bronze` | 시련의 탑 브론즈 | 빈민가 뒷골목들이 만나는 좁은 마당 — 밧줄 링 · 판잣집 · 빨랫줄 · 드럼통 불 · 밤 | 285KB |
+| `background_duel_silver` | 시련의 탑 실버 | 장터 선술집 뒤 싸움 구덩이 — 말뚝 울타리 · 나무 관람석 · 등불 · 해 질 녘 | 286KB |
+| `background_duel_gold` | 시련의 탑 골드 | 영주 성 안뜰의 시합장 — 성벽 · 지붕 덮인 관람석 · 영주 발코니 · 일곱 깃발 | 263KB |
+| `background_duel_platinum` | 시련의 탑 플래티넘 | 요새 지하 결투 홀 — 둥근 돌 바닥 · 쇠사슬 기둥 · 빈 발코니 · 쇠 화로 · 챔피언 석상 일곱 | 252KB |
+| `background_duel_diamond` | 시련의 탑 다이아 | 대성당 같은 대리석 결투 전당 — 높은 궁륭 · 수정 샹들리에 · 거대 석상 · 일곱 깃발 | 309KB |
+| `background_duel_champion` | 시련의 탑 챔피언 | 구름 위 산꼭대기의 원형 정상 — 둥근 열주 · 빈 돌 왕좌 · 역대 챔피언 석상 · 폭풍 노을 | 248KB |
 
 - **원본** `source/illustrate/<파일>.png`(2752×1536 RGBA · 생성 결과 그대로) · **지시문** `source/illustrate/colosseum_prompt.txt` · `duel_<tier_id>_prompt.txt`
 - **설치본** **1376×615 · RGB · WebP q92 · method 6** — 스테이지 일러스트와 같은 규격이라 아레나 CSS(`cover` · `center 95.2%`)를 그대로 쓴다. 50% 로 줄인 뒤 위 615 를 남긴다. ✦ 는 일곱 장 모두 높이 약 93% 라 잘려 나가는 띠 안에 있다
@@ -416,7 +416,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 - **설치본은 손으로 만들지 않는다** — `python scripts/build_icons.py` 가 짓는다. 한 장마다 무손실 · 손실(q90)을 둘 다 인코딩해 **작은 쪽**을 쓴다(단색 실루엣은 무손실이 이긴다 — 오차 0 · 컬러 그림은 q90 이 1/4 크기에 오차가 눈에 안 띈다). 원본이 없어진 설치본은 지운다
 - **새 아이콘 · 교체** — 원본 PNG 를 `icons_source/<폴더>/<id>.png` 에 넣고 스크립트를 돌린다. `icons/` 에 PNG 를 떨어뜨려도 스크립트가 `icons_source/` 로 옮기고(같은 이름의 옛 원본을 대체) 짓는다
-- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/box · items/weapon_base/* · items/weapon_base_codex/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · explore · currency · gamble · forge · lab · arena · mail · nav · battle_buffs). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
+- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/box · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · explore · currency · gamble · forge · lab · arena · mail · nav · battle_buffs). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
 - **경로 조립** — `mock.js:ICON_EXT`(= `.webp`) 하나를 모든 아이콘 경로가 쓴다
 - **256 인 이유** — 칸은 22~44px 지만 한 장(1600×800)이 모니터에 맞춰 늘고(`fitStage`) 고해상도 배율이 겹치면 40px 칸이 기기 픽셀 100 안팎이 된다. 128 은 거기서 빠듯하다. 512 PNG 대비 7장 1.1MB → 70KB 안팎
 - 아래 폴더별 절의 트리 · 규격(512 · 투명 · 0.88)은 **원본(`icons_source/`) 기준**이다 — 설치본은 그걸 256 WebP 로 줄인 것뿐이다
@@ -518,9 +518,9 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 - **그림을 바꾸면 연출 자리도 다시 잰다** — 모루 윗면 높이 · 폭, 망치 머리의 가운데 · 아래 끝, 손잡이 끝을 % 로 재 `style.css` 의 `.fg-anvil` · `.fg-anim-item` · `.fg-hammer`(`transform-origin`) · 불꽃 자리를 맞춘다(지금 값의 근거는 그 규칙 위 주석)
 - **누끼** — 흰 배경을 가장자리에서 이어진 밝은 무채 픽셀로 잡아 지우고, 배경과 맞닿은 띠는 흰 위에 섞인 색으로 보고 알파 · 색을 되푼다(외곽선이 검정이라 어두운 바탕에서 흰 테두리가 안 남는다) · 내용 상자로 잘라 긴 변 0.88 로 앉혔다
 
-## icons/arena/ — 콜로세움 · 결투장 휘장 [신설 2026-10-18]
+## icons/arena/ — 시련의 탑 · 결투장 휘장 [신설 2026-10-18]
 
-`<tier_id>.png` 여섯(`arena_tier.csv` 의 `tier_id` — 브론즈 ~ 챔피언) + `colosseum.png` · `duel.png` · `gladiator.png` — 512 투명 · 긴 변 0.88 · 중앙. 등급 휘장은 콜로세움 사다리 · 결투장 리그가 같이 읽는다(`mock.js:arenaArt` · SCREEN_DESIGN §1 · ADR-0670) · 표에 행이 늘면 같은 이름의 그림을 더한다(없으면 칸이 이름 글씨만 든다).
+`<tier_id>.png` 여섯(`arena_tier.csv` 의 `tier_id` — 브론즈 ~ 챔피언) + `colosseum.png` · `duel.png` · `gladiator.png` — 512 투명 · 긴 변 0.88 · 중앙. 등급 휘장은 시련의 탑 사다리 · 결투장 리그가 같이 읽는다(`mock.js:arenaArt` · SCREEN_DESIGN §1 · ADR-0670) · 표에 행이 늘면 같은 이름의 그림을 더한다(없으면 칸이 이름 글씨만 든다).
 
 - **휘장은 한 벌이다** — 여섯 다 같은 방패 꼴이고 등급이 오를 때마다 하나씩 붙는다(검 하나 → 교차한 검 → 월계수 → 날개 · 보석 → 큰 날개 · 다이아 → 왕관). 등급을 더 그리면 이 순서를 잇는다
 - **원본** — Codex 이미지 생성 · 3×3 시트 · 도박장 시트(`gamble/source/sheet_01_codex.png`)를 기준 그림으로 붙여 같은 low-poly 결로 뽑았다(지시문 `source/sheet_01_prompt.txt`). 같은 지시문의 다른 판은 `source/sheet_01b_codex_unused.png`
@@ -538,7 +538,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 | 출처 | 탭 | 원본 |
 |---|---|---|
-| **Codex 발주 — 굵은 도형 실루엣** | 원정 · 편성 · 캐릭터 · 건설 · 선술집 · 상점 · 대장간 · 도서관 · 결투장 · 콜로세움 · 도감 · 실험실 | `source/codex/sheet_0N_codex.png`(2×2 시트 · 검정 실루엣 · 흰 바탕) · 붙인 참조 `sheet_0N_ref.png` · 지시문 `sheet_0N_prompt.txt`. 01 ~ 04 = 열 탭(참조 = 직접 그린 24 격자 단순판 · 04 넷째 칸 결투장 깃발판은 안 쓴다) · 05 = 결투장(셋째 칸 · 그림체 참조는 02) · 06 = 캐릭터(넷째 칸 뿔 머리띠 · 그림체 참조는 02 · 물건 참조 없음). 쓰지 않는 칸은 버린 후보다. 칸을 잘라 검정 → 불투명 백색으로 뒤집고 긴 변 0.88 로 맞췄다 |
+| **Codex 발주 — 굵은 도형 실루엣** | 원정 · 편성 · 캐릭터 · 건설 · 선술집 · 상점 · 대장간 · 도서관 · 시련의 탑 · 결투장 · 도감 · 실험실 | `source/codex/sheet_0N_codex.png`(2×2 시트 · 검정 실루엣 · 흰 바탕) · 붙인 참조 `sheet_0N_ref.png` · 지시문 `sheet_0N_prompt.txt`. 01 ~ 04 = 열 탭(참조 = 직접 그린 24 격자 단순판 · 04 넷째 칸 시련의 탑 깃발판은 안 쓴다) · 05 = 시련의 탑(셋째 칸 · 그림체 참조는 02) · 06 = 캐릭터(넷째 칸 뿔 머리띠 · 그림체 참조는 02 · 물건 참조 없음). 쓰지 않는 칸은 버린 후보다. 칸을 잘라 검정 → 불투명 백색으로 뒤집고 긴 변 0.88 로 맞췄다 |
 | **game-icons.net (CC BY 3.0)** — **출처 표기가 조건**(도움말 탭 「도움말」 폴더 「아이콘 출처」 · `help.help.credits.*`) | 탐험(Lorc) · 연구소(Lorc) · 도움말(sbed) | `source/<저작자>/<이름>.svg`(공식 저장소 game-icons/icons 의 경로 그대로 · 바꾼 열 탭의 옛 원본도 남겨 둔다) · 라이선스 원문 `source/license.txt`. 검은 바탕 사각을 걷고 흰 칠로 512 에 그린 뒤 긴 변 0.88 |
 
 **연구소만 긴 변 1.0** 이다(목 때문에 세로가 길어 0.88 이면 옆 아이콘보다 작아 보였다 · ADR-1031). game-icons 탭이 다 빠지거나 저작자가 바뀌면 도움말 출처 문구도 같이 고친다. 탭이 새로 서면 그림을 같이 정한다. SCREEN_DESIGN §1 · ADR-1028 · ADR-1029.
@@ -819,7 +819,6 @@ icons_source/items/empty/
 | `empty/<part>.webp` | **캐릭터 탭 페이퍼돌의 빈 칸** (SCREEN_DESIGN §6) | `ui/mock.js:slotArt` |
 | ~~`<group_id>.png` (무기 8)~~ **삭제 2026-09-17** | **착용 칸 · 가방 칸 · 대장간 목록·머리** (SCREEN_DESIGN §2) — `item.group` 이 곧 파일명이라 **제 그림이다**. ⚠ **본편 열 전부 베이스 그림이 서서 실칸에서는 안 쓰인다** — 아래 베이스 7장이 대신 뜬다. 무기군 그림은 **도감 「무기」 줄에만** 남았다 | `ui/mock.js:itemArt` |
 | `weapon_base/<group>/*.webp` (본편 열 무기군 베이스 — 그림이 선 것만 · R445 뒤 무기군당 10 중 일부 + 퇴역) | 같은 칸들 — **개체마다 제 베이스의 그림** [2026-09-10 · 둔기·창·활 2026-09-11 · 스태프·오브·십자가·성경·석궁 2026-09-14 · 그림 없는 새 베이스는 검은 칸 — 2026-11-12 · ADR-1051]. 개체가 든 `baseId` 의 그림이다(`weapon_base.csv` 가 드롭 때 굴린다 · **이름도 그 베이스**). `baseId` 가 없는 옛 개체만 **`uid`+무기군 해시**로 고른다 — **rng 가 아니라** 그리는 시각의 해시라 골든이 안 움직이고, uid 가 세이브에 남으므로 **한 개체는 평생 같은 무기**다. ⚠ 해시로 고른 옛 개체는 이름·툴팁이 무기군 이름이라 **그림과 이름이 어긋난다** | `ui/mock.js:itemArt` (`WEAPON_BASE_STEMS` — 무기군별 맵) |
-| `weapon_base_codex/<group>/*.webp` (무기 베이스 100 — `weapon_base.csv` 전 행 · Codex 그림 · 2026-11-12) | 같은 칸들 — 설정 「아이템 그림」이 **`Codex`** 일 때만 읽는다(기본은 `Gemini` = 위 `weapon_base/` · `item_base/`). `Codex` 묶음엔 방어구 · 장신구 그림이 없어 그 칸은 검은 칸이다 (SCREEN_DESIGN §2 · ADR-1051) | `ui/mock.js:itemArt` (`WEAPON_BASE_CODEX_STEMS`) |
 | `item_base/<base_id>.webp` (갑옷 10 · 투구 10 · 장갑 7 · 신발 7 · 반지 3 · 목걸이 3) | 같은 칸들 — **개체가 든 `baseId` 의 그림** [2026-09-17]. 드롭 때 굴린 베이스 id 를 개체가 들고(`item.js:build`) 화면은 그대로 읽어, 퀼티드와 더스크 슈라우드가 다른 그림이다. ⚠ **옛 세이브의 방어구는 `baseId` 가 없어** 이모지로 떨어진다 — 새로 먹는 것부터 그림이 붙는다 | `ui/mock.js:itemArt` (`ITEM_BASE_ART_IDS`) |
 | ~~반지 · 목걸이의 **넷째 이름**(`ring_4` · `amulet_4`)~~ **해소 2026-09-21** | 그림 없는 그 두 베이스를 `item_base.csv` 에서 **뺐다** — 「베이스 풀 = 설치된 그림」(item_design §1 · `dev/test.js` 단정이 양방향으로 지킨다). 이모지로 떨어지는 것은 이제 **옛 세이브의 개체**뿐이다 | — |
 
@@ -829,4 +828,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-11-12*
+*마지막 업데이트: 2026-11-13*

@@ -35,7 +35,6 @@ GAME_DIRS = [
     "items/potion",
     "items/box",
     "items/weapon_base/*",
-    "items/weapon_base_codex/*",   # 아이템 그림 Codex 묶음 — 무기 베이스 100 (ADR-1051)
     "mastery/sin",
     "mastery/class",
     "mastery/advance",

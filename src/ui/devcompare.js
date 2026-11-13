@@ -2,12 +2,14 @@
  * devcompare.js — 개발용 비교 버튼 (**임시** · 2026-09-21 사용자 지시 · Focus 2026-10-03 · Skin 2026-10-26)
  *
  * `⚙` 판 설정 탭 마지막 줄들 (SCREEN_DESIGN §10-2 · §10-5) — **게임 기능이 아니다.** 고른 쪽은 이 브라우저에만 남는다(localStorage).
- *   · `Focus [Off | Stop | Dim]` — 관전에서 한 유닛이 행동하면 재생을 잠깐 세워 시선을 모은다(`battle.js:focusMode`)
+ *   · `Focus [Off | Stop | Dim | Skill Stop | Skill Dim]` — 관전에서 한 유닛이 행동하면 재생을 잠깐 세워 시선을 모은다(`battle.js:focusMode`) ·
+ *     Skill Dim 은 스킬 시전에만 Dim 으로 세우고 나머지는 Off 처럼 (2026-11-13 사용자 「스킬만 dim을 그러면 하나 추가해줘봐 내가 직접봐보게」) ·
+ *     Skill Stop 은 그 Stop 판 — 어둡게 안 한다 (2026-11-13 사용자 「Skill Off도 넣어줘봐」 → 「Skill Stop인데 잘못침」)
  *   · `Skin [Now | D2 Min | 200]` — 화면을 선 대신 면으로 가르는 디아블로 2 최소화 시안 · D2 Min 그림을 재질만 바꿔 다시 그린 스킨 키트와
  *     지금 화면을 견준다(ADR-0791 · 0901 · 0970 · style.css 맨 끝 두 절)
  *   ~~`Card [Before | After]`~~ 는 2026-10-09 걷었다 — 관전 카드는 개편판으로 고정이다(ADR-0566 · 되돌림은 `battle.js:CARD_V2`)
  *
- * 어떻게 동작하나 — `<html data-focus="off|stop|dim">` 하나를 건다. 재생기가 사건을 적용할 때 `battle.js:focusMode()` 로
+ * 어떻게 동작하나 — `<html data-focus="off|stop|dim|skillstop|skill">` 하나를 건다. 재생기가 사건을 적용할 때 `battle.js:focusMode()` 로
  *   이 값을 읽고, 값이 없으면 `FOCUS_DEFAULT` 기본값을 쓴다. 다시 그리지 않는다 — 다음 행동부터 먹는다.
  *   Skin 은 `<html data-skin="d2min">` 을 걸고 떼기만 한다 — 겉모양은 CSS 가 다 들고 다시 그리지 않는다(`now` 는 속성을 뗀다).
  *   키트는 `data-skin="d2min"` 에 `data-skin-parts="<번호>"` 를 더 건다 — D2 Min 규칙이 그대로 먹고 키트 절이 내용물(메인 · 툴팁 · 창 · 플래시)의
@@ -27,7 +29,7 @@ const write = (k, v) => { try { localStorage.setItem(k, v); } catch { /* 사생�
 
 // 불러올 때 1회 — 저장된 선택을 `<html>` 에 되살린다. 설정 탭은 판을 열어야 그려지므로 거기서 하면 늦다 — 첫 행동부터 그 모양이어야 한다
 {
-    // `?focus=off|stop|dim` (개발용 URL · 헤드리스 검증) 이 저장값보다 먼저다 — 그 로드에서만 먹고 저장하지 않는다
+    // `?focus=off|stop|dim|skillstop|skill` (개발용 URL · 헤드리스 검증) 이 저장값보다 먼저다 — 그 로드에서만 먹고 저장하지 않는다
     const q = new URLSearchParams(location.search).get('focus');
     const f = FOCUS_MODES.includes(q) ? q : read(FOCUS_KEY);
     if (FOCUS_MODES.includes(f)) document.documentElement.dataset.focus = f;
@@ -61,8 +63,8 @@ const SKIN_DEFAULT = DEV_HOST ? 'now' : 'd2min';
 export function mountFocusCompare(container) {
     const row = document.createElement('div');
     row.className = 'set-row';
-    row.title = 'Dev — battle: pause everyone else while one unit acts. Dim = pause + darken the cards not in that action (temporary)';
-    row.innerHTML = `<span class="set-k">Focus</span><div class="segmented">${[['off', 'Off'], ['stop', 'Stop'], ['dim', 'Dim']]
+    row.title = 'Dev — battle: pause everyone else while one unit acts. Dim = pause + darken the cards not in that action · Skill Stop / Skill Dim = Stop / Dim only when a skill is cast, Off otherwise (temporary)';
+    row.innerHTML = `<span class="set-k">Focus</span><div class="segmented">${[['off', 'Off'], ['stop', 'Stop'], ['dim', 'Dim'], ['skillstop', 'Skill Stop'], ['skill', 'Skill Dim']]
         .map(([v, label]) => `<button class="btn sm" data-v="${v}">${label}</button>`).join('')}</div>`;
     const paint = () => row.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === focusMode()));
     row.querySelectorAll('button').forEach(b => {

@@ -610,88 +610,56 @@ export const ITEM_BASE_ART_IDS = ['armor_cloth', 'armor_robe_1', 'armor_robe_2',
  */
 export const WEAPON_BASE_DIR = './assets/art/icons/items/weapon_base/';
 /** **설치된 무기 베이스 그림** — 무기군 → 파일 stem(= `weapon_base.csv:base_id`). 키 순서는 도감의 묶음 순서다(활 다음 석궁 · ADR-0180).
- *  [2026-11-11 · R445] 무기군당 10(기본 1 + 단 3 × 계보 3)이 되며 **CSV 와 이 목록이 같은 벌이 아니게 됐다** — 여기는 그림이 있는 것만 든다:
  *  ① CSV 베이스 중 그림이 있는 것 ② **퇴역한 베이스**(`WEAPON_BASE_RETIRED` — CSV 에서 빠졌지만 옛 세이브 무기가 `baseId` 로 든다).
- *  그림이 아직 없는 CSV 베이스(R445 의 새 이름 42)는 검은 칸이다(`itemArt` → null · 2026-11-12 ADR-1051). 그림이 오면 `<group>/` 에 넣고 여기 한 줄 */
+ *  [2026-11-13] Gemini 판 100장을 설치해 CSV 전 행에 그림이 섰다. 그림이 없는 CSV 베이스가 다시 생기면 검은 칸이다(`itemArt` → null · ADR-1051).
+ *  ⚠ 줄마다 **앞 일곱은 순서를 안 바꾼다** — `baseId` 없는 옛 무기의 uid 해시가 그 일곱에서 고른다(`itemArt` · 옛 개체가 평생 같은 그림). 새 stem 은 뒤에 붙인다 */
 export const WEAPON_BASE_STEMS = {
-    sword2h: ['long_sword', 'claymore', 'highland_blade', 'bastard_sword', 'balrog_blade', 'zweihander', 'colossus_blade'],
-    axe: ['hatchet', 'axe', 'tomahawk', 'great_axe', 'berserker_axe', 'battle_axe', 'decapitator'],
+    sword2h: ['long_sword', 'claymore', 'highland_blade', 'bastard_sword', 'balrog_blade', 'zweihander', 'colossus_blade',
+        'two_handed_sword', 'great_sword', 'espandon'],
+    axe: ['hatchet', 'axe', 'tomahawk', 'great_axe', 'berserker_axe', 'battle_axe', 'decapitator',
+        'hand_axe', 'tabar', 'giant_axe', 'champion_axe'],
     // ⚠ id 는 `weapon_base.csv:base_id` 또는 `WEAPON_BASE_RETIRED` 여야 한다 — 아니면 그 그림을 아무 개체도 못 든다 (단정: dev/test.js)
-    mace: ['club', 'flanged_mace', 'reinforced_mace', 'battle_hammer', 'legendary_mallet', 'war_club', 'ogre_maul'],
-    spear: ['pike', 'thresher', 'giant_thresher', 'halberd', 'cryptic_axe', 'lance', 'war_pike'],
-    bow: ['short_bow', 'long_bow', 'great_bow', 'rune_bow', 'diamond_bow', 'gothic_bow', 'hydra_bow'],
-    crossbow: ['crossbow', 'light_crossbow', 'chu_ko_nu', 'heavy_crossbow', 'ballista', 'demon_crossbow', 'colossus_crossbow'],
-    staff: ['short_staff', 'long_staff', 'gnarled_staff', 'gothic_staff', 'elder_staff', 'rune_staff', 'archon_staff'],
-    orb: ['eagle_orb', 'heavenly_stone', 'demon_heart', 'sacred_globe', 'eldritch_orb', 'swirling_crystal', 'dimensional_shard'],
-    crucifix: ['scepter', 'divine_scepter', 'caduceus', 'rune_scepter', 'mighty_scepter', 'grand_scepter', 'seraph_rod'],
-    bible: ['psalter', 'breviary', 'missal', 'lectern_bible', 'great_bible', 'wicked_bible', 'apocrypha'],
+    mace: ['club', 'flanged_mace', 'reinforced_mace', 'battle_hammer', 'legendary_mallet', 'war_club', 'ogre_maul',
+        'mace', 'war_hammer', 'maul', 'martel_de_fer'],
+    spear: ['pike', 'thresher', 'giant_thresher', 'halberd', 'cryptic_axe', 'lance', 'war_pike',
+        'spear', 'polearm', 'scythe', 'great_polearm'],
+    bow: ['short_bow', 'long_bow', 'great_bow', 'rune_bow', 'diamond_bow', 'gothic_bow', 'hydra_bow',
+        'bow', 'hunters_bow', 'short_battle_bow', 'razor_bow', 'long_battle_bow', 'blade_bow'],
+    crossbow: ['crossbow', 'light_crossbow', 'chu_ko_nu', 'heavy_crossbow', 'ballista', 'demon_crossbow', 'colossus_crossbow',
+        'repeating_crossbow', 'arbalest', 'highland_crossbow', 'balrog_crossbow'],
+    staff: ['short_staff', 'long_staff', 'gnarled_staff', 'gothic_staff', 'elder_staff', 'rune_staff', 'archon_staff',
+        'staff', 'war_staff', 'jo_staff', 'walking_staff'],
+    orb: ['eagle_orb', 'heavenly_stone', 'demon_heart', 'sacred_globe', 'eldritch_orb', 'swirling_crystal', 'dimensional_shard',
+        'orb', 'jareds_stone', 'glowing_orb', 'crystal_globe'],
+    crucifix: ['scepter', 'divine_scepter', 'caduceus', 'rune_scepter', 'mighty_scepter', 'grand_scepter', 'seraph_rod',
+        'crucifix', 'rood', 'archangel_rod', 'crozier', 'cherub_rod', 'ferula'],
+    bible: ['psalter', 'breviary', 'missal', 'lectern_bible', 'great_bible', 'wicked_bible', 'apocrypha',
+        'bible', 'martyrology', 'devils_bible'],
 };
+/** uid 해시가 고르는 앞 몇 장 — R445(2026-11-11) 전 무기군당 일곱. 늘리면 `baseId` 없는 옛 무기의 그림이 바뀐다 */
+const WEAPON_BASE_HASH_POOL = 7;
 /** **퇴역한 무기 베이스** [2026-11-11 · R445] — `weapon_base.csv` 에서 빠졌지만 그림은 남긴다. 옛 세이브의 무기가 이 `baseId` 와 이름을 그대로 든다 */
 export const WEAPON_BASE_RETIRED = ['berserker_axe', 'war_club', 'cryptic_axe', 'great_bow', 'rune_bow', 'gothic_bow', 'demon_crossbow',
     'gnarled_staff', 'demon_heart', 'divine_scepter', 'caduceus', 'grand_scepter'];
 export const weaponBaseArt = (group, stem) => WEAPON_BASE_STEMS[group]?.includes(stem) ? `${WEAPON_BASE_DIR}${group}/${stem}${ICON_EXT}` : null;
 
 /**
- * **아이템 그림 묶음** [2026-11-12 · SCREEN_DESIGN §2 · §2-2 · ADR-1051] — 설정 `화면` 탭의 「아이템 그림」 줄이 고른다.
- *   `gemini` = 지금 설치본(위 `WEAPON_BASE_STEMS` · `ITEM_BASE_ART_IDS`) · `codex` = **무기 베이스 100장뿐**(아래 `WEAPON_BASE_CODEX_STEMS`).
- *   고른 묶음에 그 그림이 없으면 `itemArt` 가 `null` 을 내고 화면은 **검은 칸**이다(부위 이모지 · 남의 그림으로 안 떨어진다).
- * 고르는 순서는 초상(`FACE_STYLES`)과 같다: URL `?itemart=<묶음>`(그 자리에서 저장) → localStorage → 목록의 **첫 항목**.
- * 그리는 시각의 값이라 rng · 세이브에 안 닿는다(골든 불변).
- */
-export const ITEM_ART_SOURCES = ['gemini', 'codex'];
-const ITEM_ART_STORE_KEY = 'thesevensim.itemArt';
-let itemArtCur = (() => {
-    const q = new URLSearchParams(location.search).get('itemart');
-    if (ITEM_ART_SOURCES.includes(q)) {
-        try { localStorage.setItem(ITEM_ART_STORE_KEY, q); } catch { /* 저장 실패는 무해 — 이번 판만 그 묶음 */ }
-        return q;
-    }
-    try {
-        const saved = localStorage.getItem(ITEM_ART_STORE_KEY);
-        if (ITEM_ART_SOURCES.includes(saved)) return saved;
-    } catch { /* 프라이빗 모드 등 — 기본값으로 */ }
-    return ITEM_ART_SOURCES[0];
-})();
-export const itemArtSource = () => itemArtCur;
-/** 묶음 전환 — 그림 경로는 매 렌더에 다시 만들므로 호출한 쪽이 render() 하면 그대로 갈린다 */
-export function setItemArtSource(id) {
-    if (!ITEM_ART_SOURCES.includes(id)) return;
-    itemArtCur = id;
-    try { localStorage.setItem(ITEM_ART_STORE_KEY, id); } catch { /* 저장 실패는 무해 */ }
-}
-/** Codex 묶음의 무기 베이스 그림 — `icons/items/weapon_base_codex/<group>/<base_id>.webp` · 무기군 → `weapon_base.csv:base_id` 전 행(CSV 순).
- *  원본은 `icons_source/items/weapon_base_codex/`(512 PNG · `scripts/build_icons.py` 가 짓는다) · CSV 와 같은 벌인지는 단정(dev/test.js)이 본다 */
-export const WEAPON_BASE_CODEX_DIR = './assets/art/icons/items/weapon_base_codex/';
-export const WEAPON_BASE_CODEX_STEMS = {
-    sword2h: ['long_sword', 'bastard_sword', 'two_handed_sword', 'great_sword', 'espandon', 'claymore', 'zweihander', 'highland_blade', 'balrog_blade', 'colossus_blade'],
-    axe: ['axe', 'hand_axe', 'battle_axe', 'great_axe', 'hatchet', 'tabar', 'giant_axe', 'tomahawk', 'decapitator', 'champion_axe'],
-    mace: ['club', 'mace', 'war_hammer', 'maul', 'flanged_mace', 'battle_hammer', 'martel_de_fer', 'reinforced_mace', 'legendary_mallet', 'ogre_maul'],
-    spear: ['spear', 'pike', 'polearm', 'scythe', 'lance', 'halberd', 'thresher', 'war_pike', 'great_polearm', 'giant_thresher'],
-    bow: ['bow', 'short_bow', 'hunters_bow', 'long_bow', 'short_battle_bow', 'razor_bow', 'long_battle_bow', 'diamond_bow', 'blade_bow', 'hydra_bow'],
-    crossbow: ['crossbow', 'repeating_crossbow', 'light_crossbow', 'heavy_crossbow', 'chu_ko_nu', 'arbalest', 'ballista', 'highland_crossbow', 'balrog_crossbow', 'colossus_crossbow'],
-    staff: ['staff', 'short_staff', 'long_staff', 'war_staff', 'jo_staff', 'gothic_staff', 'rune_staff', 'walking_staff', 'elder_staff', 'archon_staff'],
-    orb: ['orb', 'eagle_orb', 'sacred_globe', 'jareds_stone', 'glowing_orb', 'crystal_globe', 'swirling_crystal', 'heavenly_stone', 'eldritch_orb', 'dimensional_shard'],
-    crucifix: ['crucifix', 'scepter', 'rood', 'archangel_rod', 'rune_scepter', 'crozier', 'cherub_rod', 'mighty_scepter', 'ferula', 'seraph_rod'],
-    bible: ['bible', 'psalter', 'martyrology', 'lectern_bible', 'breviary', 'wicked_bible', 'great_bible', 'missal', 'apocrypha', 'devils_bible'],
-};
-/**
- * 아이템 그림 — **고른 묶음**(`src` · 기본 = 설정이 고른 것)의 그 개체 그림 경로, 없으면 `null`(화면은 검은 칸 · ADR-1051).
+ * 아이템 그림 — 그 개체 그림 경로, 없으면 `null`(화면은 검은 칸 · ADR-1051). 그림 묶음은 하나다(Codex 묶음 · 설정 줄은 2026-11-13 삭제 · ADR-1073).
  * 무기는 개체가 든 **`baseId` 의 그림**이다(2026-09-10 · `weapon_base.csv` 로 굴린 개체 — 이름과 그림이 같은 베이스를 가리킨다).
- * **`baseId` 없는 옛 무기**는 `gemini` 에서만 **uid 해시**로 그 무기군 그림 하나를 든다(아래 · rng 0 · 개체마다 고정).
- * 그림이 아직 없는 베이스(R445 의 새 이름 중 `gemini` 에 없는 것)는 `null` 이다 — 같은 무기군 그림을 대신 들던 임시(2026-11-11)는 걷었다(2026-11-12)
+ * **`baseId` 없는 옛 무기**는 **uid 해시**로 그 무기군 그림 하나를 든다(아래 · rng 0 · 개체마다 고정).
+ * 그림이 없는 베이스는 `null` 이다 — 같은 무기군 그림을 대신 들던 임시(2026-11-11)는 걷었다(2026-11-12)
  */
-export const itemArt = (slot, group, uid, baseId, src = itemArtCur) => {
-    if (src === 'codex')   // 무기 베이스만 그렸다 — 방어구 · 장신구 · 퇴역 베이스 · `baseId` 없는 옛 무기는 null
-        return slot === 'weapon' && baseId && WEAPON_BASE_CODEX_STEMS[group]?.includes(baseId)
-            ? `${WEAPON_BASE_CODEX_DIR}${group}/${baseId}${ICON_EXT}` : null;
+export const itemArt = (slot, group, uid, baseId) => {
     if (slot === 'weapon') {
         const stems = WEAPON_BASE_STEMS[group];
         if (!stems) return null;   // 무기군 그림 8장은 2026-09-17 삭제 — 베이스 풀이 없는 무기군은 그림이 없다
         if (baseId) return stems.includes(baseId) ? `${WEAPON_BASE_DIR}${group}/${baseId}${ICON_EXT}` : null;
-        if (uid)
+        if (uid) {
             // 해시 키에 무기군을 섞는다 — uid 만 쓰면 `i1`·`i2` 같은 **짧은 키**라 7 로 나눈 나머지가 쏠린다
             //   (실측 60개: 발록 17 · 츠바이핸더 3). `<uid>:<group>` 이면 고르게 퍼지고, 무기군이 늘어도 서로 독립이다
-            return `${WEAPON_BASE_DIR}${group}/${stems[strHash(`${uid}:${group}`) % stems.length]}${ICON_EXT}`;
+            const pool = stems.slice(0, WEAPON_BASE_HASH_POOL);
+            return `${WEAPON_BASE_DIR}${group}/${pool[strHash(`${uid}:${group}`) % pool.length]}${ICON_EXT}`;
+        }
         return null;
     }
     // 방어구 · 장신구 — 개체가 든 베이스의 그림. 그림이 없는 베이스는 `null` → 검은 칸 (2026-09-17 · 이모지 폴백은 2026-11-12 삭제)

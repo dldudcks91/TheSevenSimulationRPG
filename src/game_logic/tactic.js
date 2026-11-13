@@ -12,7 +12,7 @@
  *   `tactic_option.csv` (1행 = 가족 하나 = 죄종 + 효과 + 능력치 + 기준값 · 같은 효과의 여러 행 = 변형) ·
  *   `tactic_condition.csv` (조건 사전 — 무엇을 세나 · 단계 문턱 셋) · `tactic_slot.csv` (칸마다 조건 하나 — 칸 = 상황 · §5-9).
  *   효과는 **모든 칸이 같은 풀**이다. 굴림 = 죄종(균등) → 그 죄종의 효과(균등) → 변형(균등) → 등급(가중).
- *   값 = 기준값 × (1 + 몫 × (등급 배수 × 단계 − 1)) · 단계 = 칸 조건이 넘은 문턱 수(0 이면 꺼짐) ·
+ *   값 = 기준값 × (1 + 몫 × (등급 배수 × 단계 − 1)) · 단계 = 칸 조건이 넘은 문턱 수(0 이면 꺼짐 · 3랭크는 짝 능력치 합 ÷ 상한의 연속 단계 · R466) ·
  *   적용 값 = 값 × (1 + 리더 몫 + 그 죄종 장비 몫) (§5-10 · §5-14 「장비 죄종 버프」).
  *   ~~`tactic_score.csv`(점수 × 등급 배수) · 칸 종류(`category`) · 「같은 옵션 두 칸 금지」~~ 는 2026-11-11 걷었다.
  *
@@ -36,6 +36,9 @@
  *   gearPct      — 장비 죄종 하나의 버프 몫 (balance.csv:tactic_sin_gear_pct) (§5-14 「장비 죄종 버프」)
  *   rerollCost   — {base, lockMult} (balance.csv:tactic_reroll_base_cost · tactic_reroll_lock_mult) — 전체 리롤 비용 (§5-6)
  *   leader       — {pivot, min, max, multMin, multMax} (balance.csv:attr_dmg_pivot · hero_attr_min · hero_attr_max · tactic_leader_mult_min · _max) — 리더 보너스 (§5-10)
+ *                  `max`(= hero_attr_max)는 3랭크 연속 조건의 나눔 값이기도 하다 (§5-14 · R466)
+ *   attrBySin    — {sin: attrId} ← sin_attr.csv:tactic_attr_id — 3랭크가 읽는 죄종 → 능력치 1대1 짝 (굴림 짝 attr_id 와 다른 열 · 2026-11-13 · R466)
+ *   attrIds      — 능력치 id 목록 (hero_attribute.csv) — 짝의 어휘 검증
  */
 export function createTacticSystem(data) {
     const NONE = '-';
@@ -47,14 +50,20 @@ export function createTacticSystem(data) {
     const SINS = (data.sins ?? []).slice();
     if (!SINS.length) throw new Error('tactic: 죄종 목록이 비었다 (sins)');
 
+    /** 3랭크 짝 — 죄종 → 능력치 1대1 (sin_attr.csv:tactic_attr_id · R466). 검증은 조건 사전을 읽은 뒤(연속 조건이 있을 때만) */
+    const attrBySin = data.attrBySin ?? {};
+
     /**
      * 조건 어휘(`tactic_condition.csv:test`) — 이 밖의 값은 로드 시 throw. `count` 가 파티 문맥에서 숫자를 하나 뽑고,
      * **단계 = 그 숫자가 넘은 문턱 수**다(0 ~ 3 · 0 이면 꺼짐). `none` 은 세지 않고 언제나 단계 1 이다.
+     * **`scale` 조건은 연속이다** — 문턱 없이 단계 = 센 수 ÷ 능력치 상한(`leader.max`) · 소수 · 센 수가 0 일 때만 꺼진다 [2026-11-13 · R466]
      * 전부 편성에서 확정되는 값이다 (§2-1) [2026-11-11 · R441 · §5-14 「랭크 조건」 — ~~점수 · 있으면/없으면 · 종류 다섯~~]
      */
     const TESTS = {
-        none: { count: () => null },                                                 // 조건 없음 — 1 · 3 · 4랭크
+        none: { count: () => null },                                                 // 조건 없음 — 1 · 4랭크
         slot_sin_heroes: { count: (c, o) => c.sins.filter(s => s === o.sin).length }, // 그 칸 죄종의 영웅 수 — 2랭크
+        // 그 칸 죄종의 짝 능력치 파티 합 — 3랭크 · 연속 [2026-11-13 사용자 「수치가 오를떄마다 주어지는 값이 늘어나느걸로」 · 「나눠봐이렇게」]
+        slot_sin_attr_sum: { count: (c, o) => c.attrSum[attrBySin[o.sin]] ?? 0, scale: true, attr: o => attrBySin[o.sin] ?? null },
         kills_together: { count: c => c.kills },                                     // 지금 이 셋이 함께 잡은 몬스터 수 — 5랭크 (state.killsTogether)
     };
 
@@ -69,8 +78,8 @@ export function createTacticSystem(data) {
         if (!TESTS[row.test]) bad(`test '${row.test}' — 어휘는 ${Object.keys(TESTS).join('/')}`);
         const raw = [row.step1, row.step2, row.step3].map(dash);
         let steps = [];
-        if (row.test === 'none') {
-            if (raw.some(v => v !== null)) bad('조건 없음은 문턱을 안 받는다 — step1 ~ step3 은 셋 다 -');
+        if (row.test === 'none' || TESTS[row.test].scale) {
+            if (raw.some(v => v !== null)) bad('조건 없음 · 연속 조건은 문턱을 안 받는다 — step1 ~ step3 은 셋 다 -');
         } else {
             if (raw.some(v => !(Number.isInteger(v) && v >= 1))) bad(`문턱 ${raw.join('/')} — 1 이상 정수 셋`);
             // 단계 = 넘은 문턱 수 — 문턱이 오름차순이 아니면 「위 단계가 더 쉽다」가 된다
@@ -78,6 +87,17 @@ export function createTacticSystem(data) {
             steps = raw;
         }
         condById[id] = { id, test: row.test, steps };
+    }
+    // 짝 검증 — 연속 조건이 사전에 있을 때만. 죄종 일곱이 다 있고 능력치 어휘 안이고 **1대1**(두 죄종이 한 능력치를 읽지 않는다 — 사용자 「7가지를 각각 1대1 매칭해봐」)
+    if (Object.values(condById).some(c => TESTS[c.test].scale)) {
+        const ids = data.attrIds ?? [];
+        const seen = new Set();
+        for (const s of SINS) {
+            const a = attrBySin[s];
+            if (!ids.includes(a)) throw new Error(`tactic: 죄종 ${s} 의 전술 짝 '${a}' — 능력치 어휘(${ids.join('/')}) 밖이다 (sin_attr.csv:tactic_attr_id)`);
+            if (seen.has(a)) throw new Error(`tactic: 전술 짝 '${a}' 를 두 죄종이 읽는다 — 1대1 이어야 한다 (sin_attr.csv:tactic_attr_id)`);
+            seen.add(a);
+        }
     }
 
     /* ── 칸 (tactic_slot.csv) ── */
@@ -209,36 +229,42 @@ export function createTacticSystem(data) {
 
     /**
      * 파티 문맥 — 조건 · 버프가 세는 숫자를 **한 번에** 뽑아 둔다. 칸마다 파티를 다시 훑지 않는다.
-     * members = [{sin, cls, ldr, gear}] **편성 순서대로**(첫 칸이 리더) · `gear` = 그 영웅이 낀 장비의 죄종 목록(이름의 첫째 · 둘째 둘 다 · 유니크는 없다) ·
+     * members = [{sin, cls, ldr, stats, gear}] **편성 순서대로**(첫 칸이 리더) · `stats` = 그 영웅의 능력치 `{str, agi, …}`(3랭크 짝 능력치 합 · R466) ·
+     * `gear` = 그 영웅이 낀 장비의 죄종 목록(이름의 첫째 · 둘째 둘 다 · 유니크는 없다) ·
      * `extra.kills` = 이 셋이 함께 잡은 몬스터 수(state.killsTogether). 모으는 것은 state.js, 세는 규칙은 여기.
      */
     function contextOf(members, extra = {}) {
         const gear = Object.fromEntries(SINS.map(s => [s, 0]));
-        const ctx = { size: members.length, members, sins: [], leader: members[0] ?? null, kills: extra.kills ?? 0, gear };
+        const attrSum = {};
+        const ctx = { size: members.length, members, sins: [], leader: members[0] ?? null, kills: extra.kills ?? 0, gear, attrSum };
         for (const m of members) {
             ctx.sins.push(m.sin);
             for (const s of m.gear ?? []) if (s in gear) gear[s] += 1;
+            for (const [a, v] of Object.entries(m.stats ?? {})) if (Number.isFinite(v)) attrSum[a] = (attrSum[a] ?? 0) + v;
         }
         return ctx;
     }
 
     /**
      * 칸 하나를 잰다 — 조건 카운터 · 단계 · 값 · 버프 몫 (화면이 「지금 / 다음 문턱」 · ×단계 · 버프 몫을 찍는다 — §4 「안 보이면 함정」).
-     *   단계 = 넘은 문턱 수(0 ~ 3) · 조건 없음은 1 · **0 이면 꺼짐**. `base` = 값(**꺼진 칸은 단계 1 값** — 「켜면 얼마」) ·
-     *   `value` = 적용 값 = `base × (1 + leadPart + gearPart)` [§5-10 · §5-14 「장비 죄종 버프」] — 켜짐과 무관하게 낸다
+     *   단계 = 넘은 문턱 수(0 ~ 3) · 조건 없음은 1 · **연속 조건은 센 수 ÷ 능력치 상한(소수 · R466)** · **0 이면 꺼짐**. `base` = 값(**꺼진 칸은 단계 1 값** — 「켜면 얼마」) ·
+     *   `value` = 적용 값 = `base × (1 + leadPart + gearPart)` [§5-10 · §5-14 「장비 죄종 버프」] — 켜짐과 무관하게 낸다 ·
+     *   `attr` = 연속 조건이 읽은 짝 능력치 id(화면의 「힘 합」 · 다른 조건은 null)
      */
     function measure(option, ctx) {
+        const test = TESTS[option.condKind];
         const none = option.condKind === 'none';
-        const have = TESTS[option.condKind].count(ctx, option);
+        const have = test.count(ctx, option);
         const steps = option.steps ?? [];
-        const step = none ? 1 : steps.filter(n => have >= n).length;
-        const need = none ? null : (steps[step] ?? null);
-        const base = valueAt(option, Math.max(step, 1));
+        const step = none ? 1 : test.scale ? Math.round(have / LD.max * 1e4) / 1e4 : steps.filter(n => have >= n).length;
+        const need = none || test.scale ? null : (steps[step] ?? null);
+        const active = step > 0;
+        const base = valueAt(option, active ? step : 1);
         const leadPart = (option.leaderBonus ?? 0) * (leadCurve(ctx.leader?.ldr) - 1);
         const gearPart = (ctx.gear?.[option.sin] ?? 0) * gearPct;
         const value = round(option.stat, base * (1 + leadPart + gearPart));
         return {
-            have, steps: steps.slice(), step, need, active: step >= 1, base,
+            have, steps: steps.slice(), step, need, active, attr: test.attr ? test.attr(option) : null, base,
             leadPart: Math.round(leadPart * 1e4) / 1e4, gearPart: Math.round(gearPart * 1e4) / 1e4,
             value, bonus: round(option.stat, value - base),
         };

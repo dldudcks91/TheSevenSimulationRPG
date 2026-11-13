@@ -60,7 +60,8 @@ import { bindTipNode, helpMark, headingHelp, hideTip, isTouchInput, isAltHeld, i
 import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, placeName, placeKey, placeCells, stageStory, fillStory, stageBgOf, chapterOf, codexStages, codexSlotMonsters, skillInfo, potionInfo } from './data.js';
 import { loadSave, writeSave, clearSave, loadTrack, writeTrack, onSaveWrittenElsewhere, loadNotificationDismissed, writeNotificationDismissed, loadTutorialSeen, writeTutorialSeen } from './storage.js';
 import * as CLOUD from './cloud.js';
-import { makeRng } from '../game_logic/rng.js';
+import { makeRng, deriveSeed } from '../game_logic/rng.js';
+import { labFixResist, labRelabel } from './data.js';   // 개발 장치 — 실험실 결투의 측정 스위치 · uid 접두 (§18 · ADR-1070). 걷어내려면 이 줄 · `renderLabDuel` 묶음
 // 개발용 색 피커 — 게임 기능이 아니다 (SCREEN_DESIGN §10). 걷어내려면 이 줄과 devpalette.js 를 지운다
 import { mountDevPalette } from './devpalette.js';
 import { mountFocusCompare, mountSkinCompare } from './devcompare.js';   // 임시 — 공격자 포커스 · 겉모양 비교 버튼(⚙ 설정 탭 마지막 두 줄). 걷어내려면 이 줄 · settingsBody 의 호출 · devcompare.js
@@ -68,6 +69,7 @@ import { skillFxOn, basicFxOn, hitFxOn, lungeFxOn, setFxOn, SHAKE_LEVELS, shakeL
 import { SKILL_ART, ART_STYLES } from './skill_art.js';   // Aura art preview in the codex (ADR-0520) · 이펙트 그림체 — 도감 탭 · 설정 줄 (ADR-0559 · ADR-0561)
 import { mountAdmin } from './devadmin.js';   // 개발 장치 — 관리자 모드(고르는 판 · Unlock = 건물로 막힌 것이 열린 척 · SCREEN_DESIGN §10-3). 걷어내려면 이 줄 · 아래 호출 · devadmin.js · data.js 주입
 import { saveSlotsTab } from './devsave.js';   // 개발 장치 — ⚙ 판 Save 탭 · 세이브 슬롯 셋(SCREEN_DESIGN §10-4 · ADR-0738). 걷어내려면 이 줄 · mountDevPalette 의 셋째 인자 · devsave.js · storage.js 슬롯 함수
+import { startPreload, preloadState } from './preload.js';   // 켜면 기본 화면 그림을 미리 받는다 — 메뉴가 막대를 세운다 (SCREEN_DESIGN §3 · ADR-1080)
 import { DEV_HOST } from './env.js';   // 개발 환경인가 — 아니면(배포판) 개발 장치 · 개발용 URL 이 안 선다 (SCREEN_DESIGN §10 머리 · ADR-0751)
 
 import { createRaidSession, mountRaid } from './raid.js';
@@ -333,10 +335,10 @@ const skillImg = s => {
     return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : s?.id ? '<i class="sk-noart"></i>' : '';
 };
 /* 아이템 그림 — 무기 · 방어구 둘 다 **개체가 든 `baseId` 의 그림**이다 (SCREEN_DESIGN §2 · 규칙은 `mock.itemArt` 한 곳 · 방어구 2026-09-17).
-   그림 묶음은 설정 `화면` 탭이 고른다(`Gemini` · `Codex` — `mock.itemArtSource` · ADR-1051). 개체가 `weapon_base.csv` 로 실제 그 베이스를
+   개체가 `weapon_base.csv` 로 실제 그 베이스를
    굴렸으면(`item.baseId` · 2026-09-10 · game_logic/item.js) **그 그림**이고, 이름도 같은 베이스로 이미 붙어 있다 —
-   그림과 이름이 어긋나지 않는다. `baseId` 가 없는 옛 무기(이 기능 전에 드롭된 것)만 `Gemini` 에서 `uid` 해시로 예전처럼 고른다.
-   **고른 묶음에 그림이 없으면 검은 칸**이다 — 부위 이모지 · 남의 그림으로 안 떨어진다(스킬 아이콘의 `.sk-noart` 와 같은 칸 · 2026-11-12 사용자 「없으면 검정화면」) */
+   그림과 이름이 어긋나지 않는다. `baseId` 가 없는 옛 무기(이 기능 전에 드롭된 것)만 `uid` 해시로 예전처럼 고른다.
+   **그림이 없으면 검은 칸**이다 — 부위 이모지 · 남의 그림으로 안 떨어진다(스킬 아이콘의 `.sk-noart` 와 같은 칸 · 2026-11-12 사용자 「없으면 검정화면」) */
 const itemImg = it => {
     const src = M.itemArt(it?.slot, it?.group, it?.uid, it?.baseId);
     return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : it ? '<i class="it-noart"></i>' : '';
@@ -825,7 +827,7 @@ function tutorialState() {
     const canLearn = () => {
         if (!(h?.masteryPoints > 0)) return false;
         const advance = SYS.game.advanceState(G, h.uid, now()).hero;
-        return SYS.game.masteryState(G, h.uid).nodes.some(n => n.canLearn) || advance.canLearn || advance.canLevelUp;
+        return SYS.game.masteryState(G, h.uid).nodes.some(n => n.canLearn) || advance.canLearn || advance.canRank;
     };
     if (state.modal) {
         if (state.modal === 'skill' && canLearn()) add('mastery', $('#modal .sk-cell.can[data-node]'));
@@ -1107,10 +1109,10 @@ const SET_PANES = ['game', 'screen', 'fx'];
 let setPane = SET_PANES[0];
 /**
  * `⚙` 판 설정 탭의 속 — 맨 위 하위 탭 `게임` · `화면` · `연출`(SCREEN_DESIGN §2-2 · ADR-1050)이 줄을 가른다:
- *   게임 = 초반 안내 · 닉네임 / 화면 = 아트 스타일(초상 스타일이 둘 이상일 때만) · 아이템 그림 · 로그 · Skin(개발용 임시) /
+ *   게임 = 초반 안내 · 닉네임 / 화면 = 아트 스타일(초상 스타일이 둘 이상일 때만) · 로그 · Skin(개발용 임시) /
  *   연출 = 스킬 이펙트 · 이펙트 그림체 · 이펙트 투명도 · 기본 공격 이펙트 · 피격 반응 · 피격 시 흔들림 · 공격 시 흔들림 · Focus(개발용 임시 — devcompare.js).
  * 누르면 **이 속만** 갈아 끼운다 — 연출은 사건마다 켜짐을 읽으므로 화면(도는 관전)은 그대로다. 값은 이 브라우저에만(`fx.js:setFxOn`)
- * 로그 방식은 문서 뿌리 속성 하나라 쌓인 줄까지 한꺼번에 바뀐다(`battle.js:setLogStyle`). 아트 스타일 · 아이템 그림은 전체 렌더로 그림을 갈아 끼운다.
+ * 로그 방식은 문서 뿌리 속성 하나라 쌓인 줄까지 한꺼번에 바뀐다(`battle.js:setLogStyle`). 아트 스타일은 전체 렌더로 그림을 갈아 끼운다.
  */
 function settingsBody() {
     const box = el('div', 'set-box');
@@ -1164,7 +1166,7 @@ function settingsGame(box) {
     box.appendChild(nickRow);
 }
 
-/** `화면` 하위 탭 — 아트 스타일(고를 것이 있을 때만) · 아이템 그림 · 로그 · Skin(임시) */
+/** `화면` 하위 탭 — 아트 스타일(고를 것이 있을 때만) · 로그 · Skin(임시) */
 function settingsScreen(box) {
     // 고를 것이 있을 때만 선다 — 도감 고르개(`faceStylePicker`)와 같은 규칙 (ADR-0986)
     if (M.FACE_STYLES.length > 1) {
@@ -1173,12 +1175,6 @@ function settingsScreen(box) {
         artRow.appendChild(faceStyleButtons());
         box.appendChild(artRow);
     }
-    // 아이템 그림 [Gemini] [Codex] — 고른 묶음에 없는 그림은 검은 칸(§2 · ADR-1051) · 전체 렌더로 가방 · 착용 칸 · 대장간 · 툴팁 · 도감이 같이 바뀐다
-    const itemArtRow = el('div', 'set-row');
-    itemArtRow.appendChild(el('span', 'set-k', t('set.itemArt')));
-    itemArtRow.appendChild(segmented(M.ITEM_ART_SOURCES.map(id => ({ id, label: t(`set.itemArt.${id}`) })), M.itemArtSource(),
-        id => { M.setItemArtSource(id); render(); }));
-    box.appendChild(itemArtRow);
     // 로그 [칸] [문장] — 관전 로그 한 줄을 네 칸 격자로 찍나 한 문장으로 찍나 (ADR-0459) · 이 줄의 버튼 글은 언어를 따른다
     const logSet = el('div', 'set-row');
     logSet.appendChild(el('span', 'set-k', t('set.log')));
@@ -1221,7 +1217,7 @@ function settingsFx(box) {
     box.appendChild(row);
     // 공격 시 흔들림 — 때린 카드 튀어나감 · 피격 반응과 따로 켜고 끈다(흐리지 않는다 · ADR-0468)
     onOffRow('lunge', 'set.lunge', lungeFxOn);
-    mountFocusCompare(box);   // 임시 — `연출` 마지막 줄 Focus [Off | Stop | Dim] (devcompare.js · SCREEN_DESIGN §10-2) · Card [Before | After] 는 걷었다(ADR-0566)
+    mountFocusCompare(box);   // 임시 — `연출` 마지막 줄 Focus [Off | Stop | Dim | Skill Stop | Skill Dim] (devcompare.js · SCREEN_DESIGN §10-2) · Card [Before | After] 는 걷었다(ADR-0566)
 }
 
 /* ═══════════ 새 게임 · 이어하기 ═══════════
@@ -1329,22 +1325,43 @@ function startLines(h) {
 const backIcon = '<svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true">'
     + '<path d="M13 8H3.5M7.5 4L3.5 8l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
+/* 그림 받기 막대 (§3 · ADR-1080) — 메뉴가 서 있고 잠긴 동안만 다시 그린다: 막대 값은 0.1초에 한 번 · 풀리는 순간 한 번 더.
+   메뉴 밖(게임 · 시작 파티)에서는 받기가 뒤에서 계속 돌아도 화면을 안 건드린다 */
+let preloadTimer = null, preloadGateDrawn = false;
+function preloadTick() {
+    if (state.screen !== 'menu') return;
+    if (preloadState().open) {
+        if (preloadGateDrawn) { clearTimeout(preloadTimer); preloadTimer = null; render(); }
+        return;
+    }
+    if (!preloadTimer) preloadTimer = setTimeout(() => { preloadTimer = null; if (state.screen === 'menu') render(); }, 100);
+}
+
 function renderMenu(main) {
     const saved = loadSave();
     const live = !!saved && SYS.game.canLoad(saved);
+    // 그림을 받는 동안 두 버튼을 잠근다 — 다 받거나 제한 시간이 지나면 풀린다 (§3 「그림 받기 막대」 · ADR-1080)
+    const pre = preloadState();
+    const gate = !pre.open;
+    preloadGateDrawn = gate;
     const wrap = el('div', 'mn-wrap');
     // 워드마크는 브랜드 칸의 것을 그대로 든다 — 화면이 게임 이름을 따로 안 갖는다
     wrap.appendChild(el('div', 'mn-logo', $('.brand').innerHTML));
     const nb = el('button', 'btn lg mn-btn', t('ng.h'));
+    nb.disabled = gate;
     nb.onclick = () => { state.screen = 'start'; state.confirmOverwrite = false; render(); };
     const lb = el('button', 'btn lg mn-btn', t('mn.load'));
-    lb.disabled = !live;
+    lb.disabled = gate || !live;
     lb.onclick = () => { if (continueGame()) render(); };
     wrap.append(nb, lb);
     if (saved) wrap.appendChild(el('div', `mn-save${live ? '' : ' down'}`, live
         ? `${t('ng.hasSave', { t: new Date(saved.savedAt).toLocaleString() })}<small>${t('ng.saveLine', {
             h: saved.heroes.length, c: saved.progress.cleared.length, g: saved.resources.gold.toLocaleString() })}</small>`
         : t('ng.oldSave', { v: saved.version })));
+    if (gate) {
+        const pct = pre.total ? Math.floor(pre.done / pre.total * 100) : 0;
+        wrap.appendChild(el('div', 'mn-load', `<div class="mn-bar"><i style="width:${pct}%"></i></div><small>${t('mn.loading', { p: pct })}</small>`));
+    }
     main.appendChild(wrap);
 }
 
@@ -1431,7 +1448,7 @@ function arenaGhostOf(x) {
     try { payload = JSON.parse(x.team); } catch { return null; }
     const r = SYS.arena.importTeam(payload);
     if (!r.ok || !Number.isInteger(x.rating) || x.rating < 0) return null;
-    return { id: x.id, nick: x.nick, rating: x.rating, team: r.team };
+    return { id: x.id, nick: x.nick, rating: x.rating, team: r.team, loadout: r.loadout };   // loadout = 그 사람 방어 편성의 물약 (R460 · 전술은 team 의 능력치에 들었다)
 }
 
 /** 진행 요약 — 세이브에서 칸을 **고르기만** 한다. 칸의 뜻은 INTERFACE §4 「플레이 기록」 */
@@ -1489,7 +1506,8 @@ function arenaUpload(nick) {
     if (no === null) return null;
     const heroes = SYS.game.partyOf(G, no).map(heroById).filter(Boolean);
     if (heroes.length !== SYS.arena.teamSize) return null;
-    const team = JSON.stringify(SYS.arena.exportTeam(heroes, G.items, SYS.game.formationState(G, no).byUid));
+    // 물약 칸 · 마시는 기준 · 전술 칸도 싣는다 — 바뀌면 묶음 키가 달라져 다시 올라간다 (arena_design §9 · R460)
+    const team = JSON.stringify(SYS.arena.exportTeam(heroes, G.items, SYS.game.formationState(G, no).byUid, SYS.game.arenaExport(G, no)));
     const doc = { nick, rating: SYS.game.arenaState(G).rating, team };
     const key = JSON.stringify(doc);
     return key === arenaNet.sent ? null : { doc, key };
@@ -1515,7 +1533,7 @@ function arenaTake(teams, log, quiet = false, reroll = false) {
     const first = arenaNet.pool === null;
     arenaNet.pool = teams.map(arenaGhostOf).filter(Boolean).map(g => {
         arenaNet.nicks.set(g.id, g.nick);
-        return { id: g.id, rating: g.rating, team: g.team };
+        return { id: g.id, rating: g.rating, team: g.team, loadout: g.loadout };
     });
     arenaNet.log = log.filter(x => x && x.result in ARENA_DEF_RESULT && Number.isInteger(x.rating)).map(x => ({ ...x, friendly: x.friendly === true }));
     if (reroll || (first && arenaNet.pool.length)) state.arena.fresh = true;
@@ -1910,7 +1928,9 @@ function arenaWatchPage(main, A, title, backLabel) {
         itemOf: uid => items[uid] ?? null,
         itemTipOf: (h, it) => tipCard(it, t('tip.equipped'), [], all.find(p => p.uid === h.uid)?.combat, { level: h.level }),
         resultLabel: backLabel, returnLabel: backLabel,
-        layout: 'split', now, frozenMs: FROZEN_GAP_MS, onEnd: back, onRetreat: back, teamPane: floor,
+        // 로그 · 누적 열은 닫은 채 시작 — 버튼으로 연 상태는 그 판(`match.layout`)에만 남는다 (ADR-1075)
+        layout: A.match.layout ?? 'wide', onLayout: v => { A.match.layout = v; },
+        now, frozenMs: FROZEN_GAP_MS, onEnd: back, onRetreat: back, teamPane: floor,
         teamView: state.tdmView, onTeamView: v => { state.tdmView = v; },   // 두 팀 판의 보기 — 취향 (ADR-0772)
     });
     // 세우는 도중 결과가 끝나 돌아갔다(`back` 이 안에서 다시 그렸다) — 덮어쓰지 않고 옛 재생기만 걷는다 (원정 관전과 같다 · #91)
@@ -1949,6 +1969,7 @@ function renderColosseum(main) {
     arenaShell(main, 'nav.colosseum', 'duel', colosseumRail(C, cs), arenaStage(C, {
         bg: M.duelBg(F.tier),   // 결투장 = 고른 층의 등급 그림 (ADR-0761)
         opponent: C.opp.team,
+        oppLoadout: SYS.arena.floorLoadout(F.no),   // 층 AI 팀의 물약 — 차림의 물약 × 칸 수 (arena_design §7 · R460)
         from: t(F.gate ? 'cs.fromGate' : 'cs.from', { n: F.no, tier: L(tier.name) }),
         fightLabel: t('cs.fight'),
         onFight: result => {
@@ -2017,6 +2038,7 @@ function renderArena(main) {
     arenaShell(main, 'nav.arena', 'colosseum', arenaRail(A), arenaStage(A, {
         bg: M.COLOSSEUM_BG,
         opponent: friend ? friend.team : cand?.team ?? null,
+        oppLoadout: friend ? friend.loadout ?? null : cand?.loadout ?? null,
         from: friend ? t('ar.fromFriend', { name: arenaWho(friend.nick, friend.id), rating: friend.rating })
             : cand ? t('ar.fromGhost', { name: arenaWho(arenaNet.nicks.get(cand.ghost), cand.ghost), tier: tierName(cand.tier), rating: cand.rating }) : null,
         fightLabel: t('ar.fight'),
@@ -2202,7 +2224,8 @@ function arenaStage(A, o) {
         //   전술 · 물약은 고른 편성의 것이다 — 물약은 재고에서 채우지만 결투는 재고를 안 줄인다 (ADR-0495)
         const loadout = SYS.game.arenaLoadout(G);
         const team = SYS.arena.snapshotTeam(picked, G.items, ranks, loadout);
-        const result = SYS.arena.fight(team, opponent, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]), loadout);
+        //   상대도 제 물약을 마신다 — 고스트는 받은 방어 편성의 칸(`o.oppLoadout` · arena_design §0 · R460)
+        const result = SYS.arena.fight(team, opponent, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]), loadout, o.oppLoadout ?? null);
         o.onFight(result);   // 결과는 관전 전에 적힌다 — 레이팅 · 오른 층 (arena_design §7 · §8)
         A.match = { team, opponent, result, resume: null, bg: o.bg };
         render();
@@ -3269,7 +3292,7 @@ function tacticReadBlock(emptyKey = null) {
         const row = el('div', `dw-tac-row${s.active ? ' on' : ''}`,
             `<span class="rs-eff">${optionEffect(s.option, s.value)}</span>`
             + condCounter(s));
-        row.title = `${sinName(s.option.sin)} · ${condText(s.option)} · ${t(s.active ? 'rs.on' : 'rs.off')}`;
+        row.title = `${sinName(s.option.sin)} · ${condText(s.option, s.attr)} · ${t(s.active ? 'rs.on' : 'rs.off')}`;
         tac.appendChild(row);
     }
     if (emptyKey && tac.childElementCount === 1) tac.appendChild(el('span', 'muted', t(emptyKey)));
@@ -5664,7 +5687,6 @@ const masteryIconPath = (id, owner = {}) => {
 };
 // 전직 트리 가지 칸 그림 — `icons/mastery/advance/<skill_id>_<slot>.webp` · 전직 스킬 그림과 같은 투톤(회백 실루엣 + 강조색 하나)이라 **칠하지 않는다** ·
 //   보류 칸(`advance_node.csv:hold = 1`)은 그림이 없다 (2026-10-08 · ADR-0547)
-const advanceNodeIconPath = (skillId, slot) => `./assets/art/icons/mastery/advance/${skillId}_${slot}${M.ICON_EXT}`;
 /** 칸 · 툴팁의 노드 그림 — 회색 실루엣을 **판 색 마스크**로 칠한다. 판 주인이 없는 자리(색을 못 정함)는 회색 그대로 */
 const masteryIconHtml = (id, owner, cls) => {
     const src = masteryIconPath(id, owner);
@@ -5693,20 +5715,14 @@ function masteryGateText(gate, cls, owner = {}) {
     return t(`sk.gate.${gate.slot}`, { groups });
 }
 
-/** 죄종 T3 조건 한 줄 — 문턱 · 겹 값은 balance 에서 읽는다(화면이 숫자를 안 든다) · 조건 없는 칸은 빈 문자열 (2026-10-05 · 2026-11-12 옛 T2 조건 칸이 T3 로) */
+/** 죄종 T3 조건 한 줄 — 지금 랭크(안 찍었으면 1랭크)의 문턱과 랭크당 폭은 로직이 낸다(화면이 숫자를 안 든다) · 조건 없는 칸은 빈 문자열
+ *  (2026-10-05 · 2026-11-13 R468 — 죄종마다 조건 하나 · 랭크가 조건을 넓힌다). 문턱이 끝(차이 0 · 가득)에 닿으면 짧은 문장(`_any` · `_full`) */
 function masteryCondText(cond, rank = 1) {
-    if (!cond) return '';
-    const B = D.balance;
-    const pct = v => `${Math.round((v ?? 0) * 100)}%`;
-    // 랭크가 한계를 넓히는 칸(분노 · 폭식 · 색욕 T3 ① · R343) — 지금 랭크(안 찍었으면 1랭크)의 문턱 · 상한은 로직이 낸다 · 랭크당 폭은 balance 그대로
-    const w = SYS.hero.masteryWiden(cond, Math.max(1, rank));
-    const thr = { hurt: B.mastery_wrath_t3_hurt_pct, hurt_deep: B.mastery_wrath_t3_hurt_deep_pct, fresh: B.mastery_lust_t3_fresh_pct }[cond];
-    const gap = { higher_deep: B.mastery_envy_t3_gap_deep_pct, lower_deep: B.mastery_pride_t3_gap_deep_pct }[cond];
-    const sec = { opening: B.mastery_sloth_t3_opening_sec, opening_deep: B.mastery_sloth_t3_opening_deep_sec }[cond] ?? B.mastery_gluttony_t3_gorge_sec;
-    return t(`sk.cond.${cond}`, {
-        pct: pct(w?.thr ?? thr), gap: pct(gap), sec, max: B.mastery_gluttony_t3_gorge_max, n: B.mastery_gluttony_t3_gorge_deep,
-        step: pct(cond === 'lure' ? B.mastery_lust_t3_lure_step_pct : B.mastery_wrath_t3_hp_step_pct), cap: w?.cap, per: B.mastery_gluttony_t3_stack_per_rank,
-    });
+    const w = cond ? SYS.hero.masteryWiden(cond, Math.max(1, rank)) : null;
+    if (!w) return '';
+    const pct = v => `${Math.round((v ?? 0) * 1000) / 10}%`;
+    const edge = (cond === 'higher' || cond === 'lower') && !(w.thr > 0) ? '_any' : cond === 'fresh' && w.thr >= 1 ? '_full' : '';
+    return t(`sk.cond.${cond}${edge}`, { pct: pct(w.thr), sec: w.sec, step: 'sec' in w ? w.step : pct(w.step) });
 }
 
 function masteryDisplayName(node, cls) {
@@ -5721,23 +5737,20 @@ function masteryTipCard(node, rankLabel = t('sk.tip.rank', { n: node.rank, max: 
     const name = masteryDisplayName(node, owner.cls);
     // 효과 = 「무엇이 n 증가한다」 — 축마다 통째인 문장 · 값은 부호 없이(동사가 방향을 든다 · SCREEN_DESIGN §7 · ADR-0332)
     const key = `sk.masteryEffect.${node.stat}`;
-    // 랭크가 한계를 넓히는 칸(분노 · 폭식 T3 · R343)은 값이 하나라 「(랭크당 n)」을 안 붙인다 — 랭크당 폭은 조건 줄이 든다 · 겹이면 「겹당」
+    // 조건부 칸(죄종 T3 · R343 · R468)은 값이 하나라 「(랭크당 n)」을 안 붙인다 — 랭크당 폭은 조건 줄이 든다
     const widen = SYS.hero.masteryWiden(node.cond, 1);
     const body = t(has(key) ? key : 'sk.masteryEffect', {
         stat: L(M.statLabel(node.stat, fb)),
         v: `<span class="tip-hl">${M.baseValue(node.stat, widen ? node.value : node.total, fb)}</span>`,
     });
-    // 폭식 T3 시간 겹(`gorge` · 2026-11-12)은 랭크로 곱한 값이 겹마다 붙는다 — 「겹당 … (랭크당 …)」
-    const effect = widen
-        ? ('cap' in widen ? t('sk.tip.perStack', { effect: body }) : body)
-        : t('sk.tip.effect', { effect: node.cond === 'gorge' ? t('sk.tip.perStack', { effect: body }) : body, perRank: `<span class="tip-hl">${M.baseValue(node.stat, node.value, fb)}</span>` });
+    const effect = widen ? body : t('sk.tip.effect', { effect: body, perRank: `<span class="tip-hl">${M.baseValue(node.stat, node.value, fb)}</span>` });
     const card = el('div', 'tip-card skill mastery');
     const color = masteryAccent(owner);
     if (color) card.style.borderTopColor = color;
     const gate = masteryGateText(node.gate, owner.cls, owner);
     // 「지금 장비로는 꺼짐」 꼬리는 뺐다 [2026-09-27 사용자 지시] · 꺼진 칸도 흐리지 않는다 [2026-10-06 · ADR-0516]
     const gateLine = gate ? `<div class="tip-line tip-gate">${gate}</div>` : '';
-    // 조건부 칸(죄종 T2-2 · T2-3)은 조건이 효과의 일부다 — 장비 조건과 같은 자리 · 같은 모양 한 줄 (2026-10-05)
+    // 조건부 칸(죄종 T3 · R468)은 조건이 효과의 일부다 — 장비 조건과 같은 자리 · 같은 모양 한 줄 (2026-10-05)
     const cond = masteryCondText(node.cond, node.rank);
     const condLine = cond ? `<div class="tip-line tip-gate">${cond}</div>` : '';
     card.innerHTML = `<div class="tip-name">
@@ -5785,11 +5798,16 @@ function masteryBox({ tag, title, sub, nodes, onLearn, onUnlearn, locked, previe
     if (color) box.style.setProperty('--mastery-color', color);
     const { tiers, nodes: perTier } = M.MASTERY_GRID;
     const rows = [];
+    // 줄마다 점수 합 표시 [R473] — 스킬 창(찍는 판)만 각 줄 위에 구분선 + 「쓴 / 상한」. 값은 `masteryState` 의 칸이 든다(rowUsed · rowCap)
+    const rowCap = onLearn && !preview && nodes.length ? D.balance.mastery_row_points : 0;
     for (let ti = 1; ti <= tiers; ti++) {
         const mine = nodes.filter(n => n.tier === ti);
         const cells = [];
         for (let i = 0; i < perTier; i++) cells.push(masteryCell(mine[i] ?? null, owner));
-        rows.push(`<div class="sk-row">${cells.join('')}</div>`);
+        const used = mine[0]?.rowUsed ?? 0, cap = mine[0]?.rowCap ?? rowCap;
+        rows.push(rowCap
+            ? `<div class="sk-tier"><div class="sk-row-cap${used >= cap ? ' full' : ''}"><span>${used}/${cap}</span></div><div class="sk-row">${cells.join('')}</div></div>`
+            : `<div class="sk-row">${cells.join('')}</div>`);
     }
     // 넷째 줄(T4)도 세 칸 — 칸이 없는 자리는 빈 프레임 (SCREEN_DESIGN §7 · ADR-1039)
     // 죄종 판은 죄종 아이콘 · 직업 판은 직업 아이콘을 제목 앞에 — 판 색으로 칠한 마스크다 (SCREEN_DESIGN §7 · ADR-0368 · ADR-0375)
@@ -5826,36 +5844,49 @@ function masteryBox({ tag, title, sub, nodes, onLearn, onUnlearn, locked, previe
 }
 
 /**
- * 스킬 창 전직 판 — **윗줄 = 고른 갈래의 전직 스킬 셋 · 그 아래 세 줄 = 스킬마다 제 열에 가지 셋(② · ③ · ④)이 세로로 · 칸 사이를 세로 선이 잇는다**
- *   [2026-10-06 · R216 · 개정 2026-10-08 · SCREEN_DESIGN §7 · ADR-0542 · 열 · 선 ADR-0544].
- *   **전직하면 판이 열린다** — 전직 스킬은 여기서 배운다(도서관은 갈래만 고른다 · 2026-10-08 사용자 지시 「전직스킬은 마스터리에서 배우는거야」).
- *   스킬 칸 = 그림(배운 것은 `Lv.n`) · 안 배운 칸 누르기 = 공용 스킬 포인트 1로 배우기(`game.advanceLearn` — 하나만) · 배운 칸 누르기 = +1(`game.advanceLevelUp`) ·
- *   배운 칸 우클릭(손가락은 길게 눌러 뜬 툴팁의 [되돌리기]) = 되돌리기 — 투자한 공용 스킬 포인트 전부 환급(`game.advanceForget`) · 올리면 스킬 설명창(레벨을 얹은 숫자).
- *   가지 셋 = ② 특수 · ③ 변형 · ④ 필살기 — 효과가 없어(`advance_node.csv` · 설명만) 누를 수 없다 · 올리면 칸 이름 + 설명 + 「준비 중」 · 배우기 전에도 셋 다 선다(스킬마다 무엇이 이어지나를 견준다).
- *   판정(레벨 · 포인트 · 가지)은 `game.advanceState` 가 낸다 — 화면은 그리기만 한다
+ * 스킬 창 전직 판 — **다섯 줄** [2026-11-13 · R471 · SCREEN_DESIGN §7 · ADR-1081 — ~~가지 셋 ② · ③ · ④~~(ADR-0544 · 0547)]:
+ *   맨 위 = 공통 줄(갈래 칸 셋 · 스킬 없이도 찍힌다) · 둘째 = 전직 스킬 셋 · 셋째 ~ 다섯째 = 스킬마다 제 열에 크기 · 변형 1 · 변형 2(배운 열만 눌린다).
+ *   안 배운 스킬 칸 누르기 = 배우기(전직 포인트 · 무료 · `game.advanceLearn`) · 배운 스킬 칸 누르기 = 크기 +1(`game.advanceLevelUp`) · 우클릭 = 되돌리기(`game.advanceForget`).
+ *   공통 줄 · 배운 열 칸 = 누르기 +1 · 우클릭 −1(`game.advanceRank` · 손가락은 툴팁의 [되돌리기]). 판정(포인트 · 칸 상한 · 줄 합)은 `game.advanceState` 가 낸다 — 화면은 그리기만 한다
  */
-const ADV_SLOT_MARK = { 2: '②', 3: '③', 4: '④' };
-/** 가지 칸 하나 — 스킬 창 · 도감 공용 (ADR-0557). 그 스킬의 열 · 위 칸과 세로 선으로 잇는다(`.adv-node::before`) · `on` = 배운 스킬의 열(선이 밝다) · 표에 없는 칸은 빈 프레임 */
-const advBranchCell = (n, id, slot, on = false) => {
-    if (!n) return '<div class="sk-cell empty"></div>';
-    // 그림이 선 칸은 번호가 오른쪽 아래 작은 꼬리표로 물러난다 · 보류 칸은 번호만 가운데 (ADR-0547)
-    const art = n.hold ? '' : `<img class="adv-node-art" src="${advanceNodeIconPath(id, slot)}" alt="" aria-hidden="true">`;
-    return `<div class="sk-cell icon-only locked adv-node${on ? ' on' : ''}${art ? ' has-art' : ''}" data-skill="${id}" data-slot="${slot}">${art}<span class="adv-slot" aria-hidden="true">${ADV_SLOT_MARK[slot] ?? slot}</span></div>`;
+const ADV_SLOTS = ['size', 'var1', 'var2'];
+/** 전직 칸 값의 글 — 단위(`unit`)대로 · `pct` = %(소수 한 자리까지) · `sec` = 초 · `x` = 배 · `n` = 개수 그대로 · `-` = 값 없음 */
+const advVal = (v, unit) => {
+    if (!Number.isFinite(v)) return '';
+    const r = x => (Math.round(x * 10) / 10).toString();
+    return unit === 'pct' ? `${r(v * 100)}%` : unit === 'sec' ? t('sk.adv.sec', { n: r(v) }) : unit === 'x' ? `×${r(v)}` : r(v);
 };
-/** 가지 칸 툴팁 — 그 가지의 효과만 · 보류 칸은 「보류」 · 아래 한 줄이 「준비 중」 (CLAUDE.md 규칙 7) */
-const bindAdvNodeTips = (box, nodeOf) => box.querySelectorAll('.adv-node').forEach(c => {
-    const n = nodeOf(c.dataset.skill, Number(c.dataset.slot));
-    const name = `${ADV_SLOT_MARK[n.slot] ?? n.slot} ${t(`sk.adv.slot.${n.slot}`)}`;
-    bindTipNode(c, () => el('div', 'tip-card tip-mini', `<div class="tip-name">${name}</div><div class="tip-line">${n.desc ? L(n.desc) : t('sk.adv.hold')}</div><div class="tip-line muted">${t('sk.adv.pending')}</div>`));
-    c.setAttribute('aria-label', name);
-});
+/** 칸 설명 한 줄 — `{v}` = 지금 랭크 값(0 이면 1랭크 값) · `{a}` = 고정 인자 */
+const advDesc = (desc, v, unit, a) => L(desc).replace(/\{v\}/g, `<span class="tip-hl">${advVal(v, unit)}</span>`).replace(/\{a\}/g, advVal(a, unit === 'pct' && a > 1 ? 'n' : unit === 'pct' ? 'pct' : unit));
+/** 공통 줄 칸 — 짧은 이름 + 랭크 · `on` = 누를 수 있는 판(스킬 창) */
+const advCommonCell = (c, i, on) => `<div class="sk-cell adv-txt${c.rank > 0 ? ' taken' : ''}${c.rank >= c.max ? ' full' : ''}${on ? (c.canUp ? ' can' : ' dim') : ' locked'}" data-advcommon="${i}" aria-label="${L(c.name)} ${c.rank}/${c.max}">`
+    + `<span class="adv-txt-name">${L(c.name)}</span><span class="sk-icon-rank" aria-hidden="true">${c.rank}/${c.max}</span></div>`;
+/** 스킬 줄 칸 — 그 스킬의 열 · `on` = 배운 열(눌린다 · 선이 밝다) */
+const advTailCell = (n, id, i, rank, on, can, max) => `<div class="sk-cell adv-txt adv-node${on ? ' on' : ' locked'}${rank > 0 ? ' taken' : ''}${rank >= max ? ' full' : ''}${on ? (can ? ' can' : ' dim') : ''}" data-advtail="${id}" data-slot="${i}" aria-label="${t(`sk.adv.slot.${ADV_SLOTS[i]}`)} ${rank}/${max}">`
+    + `<span class="adv-txt-name">${t(`sk.adv.slot.${ADV_SLOTS[i]}`)}</span><span class="sk-icon-rank" aria-hidden="true">${rank}/${max}</span></div>`;
+/** 공통 줄 칸 툴팁 — 이름 · 지금 값(0 이면 1랭크 값) · 5랭크 값 */
+const advCommonTip = c => el('div', 'tip-card skill mastery',
+    `<div class="tip-name"><span class="tip-title">${L(c.name)}</span><span class="tip-rank">${t('sk.tip.rank', { n: c.rank, max: c.max })}</span></div>`
+    + `<div class="tip-line">${t('sk.adv.commonNow', { v: `<span class="tip-hl">${advVal(c.rank > 0 ? c.value : c.per, c.unit)}</span>` })}</div>`
+    + `<div class="tip-line muted">${t('sk.adv.bonusAt', { max: c.max, b: t('sk.adv.commonFull', { v: advVal(c.rank5, c.unit) }) })}</div>`);
+/** 스킬 줄 칸 툴팁 — 칸 이름 · 효과(지금 랭크 · 0 이면 1랭크) · 5랭크 덤 */
+const advTailTip = (n, i, rank, max) => {
+    const isSize = i === 0;
+    const body = isSize ? L(n.desc) : advDesc(n.desc, n.per * Math.max(1, rank), n.unit, n.arg);
+    return el('div', 'tip-card skill mastery',
+        `<div class="tip-name"><span class="tip-title">${t(`sk.adv.slot.${ADV_SLOTS[i]}`)}</span><span class="tip-rank">${t('sk.tip.rank', { n: rank, max })}</span></div>`
+        + `<div class="tip-line">${body}</div>`
+        + `<div class="tip-line${rank >= max ? '' : ' muted'}">${t('sk.adv.bonusAt', { max, b: advDesc(n.bonus.desc, n.bonus.v, n.bonus.unit, 0) })}</div>`);
+};
 function advanceBoard(h, adv) {
     const learned = adv.hero.skill;
     const lv = adv.hero.lv;
+    const max = adv.hero.rowMax;
     const skills = adv.branches.find(b => b.id === adv.hero.advance)?.skills ?? [];
-    const nodeOf = (id, slot) => (adv.nodes[id] ?? []).find(x => x.slot === slot) ?? null;
-    const box = el('div', 'sk-box adv-board');
-    // 칸이 눌리나 — 배운 칸은 레벨을 올릴 포인트 · 안 배운 칸은 아직 하나도 안 배웠고 첫 포인트가 있어야 한다
+    const common = adv.hero.common.map(c => ({ ...c, max, per: adv.branches.find(b => b.id === adv.hero.advance)?.common?.[c.slot - 1]?.per ?? c.value,
+        rank5: adv.branches.find(b => b.id === adv.hero.advance)?.common?.[c.slot - 1]?.rank5 ?? c.value }));
+    const box = el('div', 'sk-box adv-board adv-tree');
+    // 칸이 눌리나 — 배운 칸은 크기 +1 · 안 배운 칸은 아직 하나도 안 배웠으면(전직 포인트)
     const cell = id => {
         const mine = id === learned;
         const can = mine ? adv.hero.canLevelUp : adv.hero.canLearn;
@@ -5863,33 +5894,29 @@ function advanceBoard(h, adv) {
         return `<div class="sk-cell icon-only${mine ? ' taken' : ''}${can ? ' can' : ' dim'}" data-advskill="${id}" aria-label="${L(skillInfo(id).name)}${mine ? ` ${lvTag}` : ''}">`
             + `<span class="adv-ico" aria-hidden="true">${skillImg({ id })}</span>${mine ? `<span class="sk-lv" aria-hidden="true">${lvTag}</span>` : ''}</div>`;
     };
-    // 가지 칸 — 배운 스킬의 열은 선이 밝다(`.on`)
-    const branch = (id, slot) => advBranchCell(nodeOf(id, slot), id, slot, id === learned);
+    const rankOf = (id, i) => (id === learned ? adv.hero.row[i]?.rank ?? 0 : 0);
+    const canOf = (id, i) => (id === learned ? !!adv.hero.row[i]?.canUp : false);
     box.innerHTML = `
         <div class="sk-box-head"><span class="sk-title">${t('sk.advTree')}</span></div>
         <div class="sk-grid">
+            <div class="sk-row adv-common-row">${common.map((c, i) => advCommonCell(c, i, true)).join('')}</div>
             <div class="sk-row">${skills.map(cell).join('')}</div>
-            ${[2, 3, 4].map(slot => `<div class="sk-row">${skills.map(id => branch(id, slot)).join('')}</div>`).join('')}
+            ${[0, 1, 2].map(i => `<div class="sk-row">${skills.map(id => (adv.nodes[id]?.[i] ? advTailCell(adv.nodes[id][i], id, i, rankOf(id, i), id === learned, canOf(id, i), max) : '<div class="sk-cell empty"></div>')).join('')}</div>`).join('')}
         </div>`;
     const cb = combatOf(h);
     const tipCtx = { period: cycleOf(h), ...rangeCtx(cb), hpMax: cb.hp_max, atkType: cb.attack_type, stats: h.stats, cdr: cb.cooldown_reduction, coolMinus: cb.option_fx?.coolMinus ?? 0, skillTags: cb.option_fx?.skillTags, atkPct: cb.atk_pct_sum, healOut: cb.option_fx?.healOut };
-    const done = r => { if (r.ok) { save(); runChangeFlash(h.uid); } else if (r.err === 'points') flash('sk.err.points'); else if (r.err === 'level') flash('sk.err.locked', { lv: r.need }); else flashErr('tr', r.err, 'advance'); render(); };
-    /** 되돌리기 — 무료 · 전부 환급이라 확인을 묻지 않는다(마스터리 우클릭과 같은 문법 · §7) */
+    const done = r => { if (r.ok) { save(); runChangeFlash(h.uid); } else if (r.err === 'points') flash('sk.err.points'); else flashErr('tr', r.err, 'advance'); render(); };
+    /** 되돌리기 — 무료 · 스킬 줄 전부 환급이라 확인을 묻지 않는다(마스터리 우클릭과 같은 문법 · §7) */
     const forget = () => done(SYS.game.advanceForget(G, h.uid));
     box.querySelectorAll('[data-advskill]').forEach(sc => {
         const id = sc.dataset.advskill;
         const mine = id === learned;
-        // 설명창 — 배운 것은 레벨을 얹은 숫자다(`up` = 배운 뒤 더 넣은 포인트 · tip.js `defOf`) · 안 배운 것은 Lv.1 · 맥락은 액티브 줄과 같다
-        bindTipNode(sc, () => {
-            const card = skillTipCard(mine ? { id, up: lv - 1, lv } : { id }, tipCtx);
-            if (mine) card.appendChild(el('div', 'tip-line muted', adv.hero.nextLevel === null
-                ? t('sk.adv.maxLevel') : t('sk.adv.nextLevel', { n: lv + 1, lv: adv.hero.nextLevel })));
-            return card;
-        },
+        // 설명창 — 배운 것은 크기를 얹은 숫자다(`up` = 크기 랭크 · tip.js `defOf`) · 안 배운 것은 Lv.1 · 맥락은 액티브 줄과 같다
+        bindTipNode(sc, () => skillTipCard(mine ? { id, up: lv - 1, lv } : { id }, tipCtx),
             { actions: () => (mine ? [{ label: t('sk.unlearn'), run: forget }] : []) });   // 손가락은 우클릭이 없다 (ADR-0374)
         sc.onclick = () => {
             if (!mine) {
-                const r = SYS.game.advanceLearn(G, h.uid, id);   // 공용 스킬 포인트 1 — 이미 배웠으면 먼저 되돌린다
+                const r = SYS.game.advanceLearn(G, h.uid, id);   // 전직 포인트 — 이미 배웠으면 먼저 되돌린다
                 if (r.ok) flash('sk.adv.leveled', { skill: L(skillInfo(id).name), n: 1 });
                 done(r);
                 return;
@@ -5900,7 +5927,22 @@ function advanceBoard(h, adv) {
         };
         sc.oncontextmenu = e => { e.preventDefault(); if (mine && !isTouchInput()) forget(); };
     });
-    bindAdvNodeTips(box, nodeOf);
+    const rank = (line, i, d) => done(SYS.game.advanceRank(G, h.uid, line, i, d));
+    box.querySelectorAll('[data-advcommon]').forEach(c => {
+        const i = Number(c.dataset.advcommon);
+        bindTipNode(c, () => advCommonTip(common[i]), { actions: () => (common[i].rank > 0 ? [{ label: t('sk.unlearn'), run: () => rank('common', i, -1) }] : []) });
+        c.onclick = () => rank('common', i, 1);
+        c.oncontextmenu = e => { e.preventDefault(); if (!isTouchInput() && common[i].rank > 0) rank('common', i, -1); };
+    });
+    box.querySelectorAll('[data-advtail]').forEach(c => {
+        const id = c.dataset.advtail, i = Number(c.dataset.slot);
+        const mine = id === learned;
+        bindTipNode(c, () => advTailTip(adv.nodes[id][i], i, rankOf(id, i), max),
+            { actions: () => (mine && rankOf(id, i) > 0 ? [{ label: t('sk.unlearn'), run: () => rank('skill', i, -1) }] : []) });
+        if (!mine) return;
+        c.onclick = () => rank('skill', i, 1);
+        c.oncontextmenu = e => { e.preventDefault(); if (!isTouchInput() && rankOf(id, i) > 0) rank('skill', i, -1); };
+    });
     return box;
 }
 
@@ -5925,6 +5967,7 @@ function skillTreeBody() {
         else if (r.err === 'locked') flash('sk.err.locked', { lv: ms.nodes.find(n => n.id === id)?.unlockLevel ?? 0 });
         else if (r.err === 'maxRank') flash('sk.err.maxRank');
         else if (r.err === 'points') flash('sk.err.points');
+        else if (r.err === 'rowFull') flash('sk.err.rowFull', { n: D.balance.mastery_row_points });   // 줄마다 점수 합 (R473)
         render();
     };
 
@@ -5984,13 +6027,19 @@ function skillTreeBody() {
    칸은 **획득물이 아니다**: 지휘 천막 랭크가 칸을 열고(R137), 칸에 든 옵션은 골드로 다시 굴린다 (tactic_card_design §5).
    판정(열림 · 조건 카운터 · 비용)은 전부 `game.tacticState` 가 실어 온다 — 렌더러는 파티를 세지 않는다. */
 
-/** 조건 문장 — 문구 키는 칸 조건의 어휘(`tactic_condition.csv:test`) · 죄종을 묻는 조건은 **그 칸의 죄종** 이름 (§15 · tactic_card_design §5-14) */
-const condText = o => t(`rs.cond.${o.condKind}`, { a: sinName(o.sin) });
+/** 조건 문장 — 문구 키는 칸 조건의 어휘(`tactic_condition.csv:test`) · 죄종을 묻는 조건은 **그 칸의 죄종** 이름 (§15 · tactic_card_design §5-14) ·
+ *  3랭크는 그 칸 죄종의 **짝 능력치** 이름(`attr` = `tacticState` 칸의 `attr` · 「힘 합」 · R466) */
+const condText = (o, attr = null) => {
+    const row = attr && D.heroAttributes.find(x => x.id === attr);
+    return t(`rs.cond.${o.condKind}`, { a: sinName(o.sin), s: row ? L(row) : (attr ?? '') });
+};
 /** 진행 — 카운터 「지금 / 다음 문턱」(다 넘었으면 마지막 문턱 · 조건 없음은 안 단다 · §4 「안 보이면 함정」) + 단계 「×n」 (§15 · ADR-1048).
+ *  3랭크(연속 조건)는 문턱이 없어 카운터가 **합 하나**이고 단계가 소수다(「34 ×1.7」 · R466).
  *  `m` = 잰 결과(`tacticState` 의 칸 · `runTactics` 의 줄) — 판정은 game_logic 이 냈다 */
 const condCounter = m => {
     const steps = m.steps ?? [];
-    const cnt = steps.length ? `<b class="rs-cnt">${(m.have ?? 0).toLocaleString()} / ${(m.need ?? steps[steps.length - 1]).toLocaleString()}</b>` : '';
+    const cnt = steps.length ? `<b class="rs-cnt">${(m.have ?? 0).toLocaleString()} / ${(m.need ?? steps[steps.length - 1]).toLocaleString()}</b>`
+        : m.attr ? `<b class="rs-cnt">${(m.have ?? 0).toLocaleString()}</b>` : '';
     return `${cnt}<span class="rs-step${m.step > 0 ? '' : ' zero'}">×${m.step ?? 0}</span>`;
 };
 /** 효과 한 줄 — 축 이름·단위는 `stat` 에서 파생한다 (마스터리 칸과 같은 규칙 · §13). **시기 둘만 대상 쪽 이름**(`rs.eff.<stat>` — 「적 방어력 감소」 · §15 · ADR-1048)
@@ -6051,7 +6100,7 @@ function tacticCell(slot, onLock) {
         <div class="rs-top"><span class="rs-state">${t(slot.active ? 'rs.on' : 'rs.off')}</span>
             <span class="rs-grade ${o.grade}">${t(`rs.grade.${o.grade}`)}</span></div>
         <div class="rs-sin" style="color:${sinColor(o.sin)}">${sinName(o.sin)}</div>
-        <div class="rs-cond">${condText(o)}</div>
+        <div class="rs-cond">${condText(o, slot.attr)}</div>
         <div class="rs-cnt-c">${condCounter(slot)}</div>
         <div class="rs-eff">${optionEffect(o, slot.value)}</div>
         ${buffCell(slot)}`;
@@ -8604,16 +8653,21 @@ function shopLockSlot() {
 }
 
 /**
- * 의뢰 목표 한 줄 — **어휘마다 틀 하나**(`cm.goal.<axis>` · 몬스터 등급은 `cm.goal.elite|boss`)에 대상 이름과 수를 채운다 (§14).
- * 대상 이름은 데이터다 — 챕터(`chapter.csv`) · 종족(`monster_type.csv` — 검증을 지난 `SYS.commission.races`) · 몬스터 · 희귀도(`M.RARITY`)
+ * 의뢰 목표 한 줄 — **종류 × 어휘마다 틀 하나**(`cm.goal.<kind>.<axis>` · 옛 몬스터 등급 카드는 `cm.goal.kill.grade.<ref>`)에 대상 이름과 수를 채운다 (§14 · ADR-1068 · R457).
+ * 대상 이름은 데이터다 — 장(`chapter.csv`) · 종족(`monster_type.csv` — 검증을 지난 `SYS.commission.races`) · 장소(`placeName` — 그 장소의 첫 칸 행) ·
+ *   몬스터 · 희귀도(`M.RARITY`) · 재료(`D.labMaterials`) · 부위 갈래(`cm.part.*`) · 강화 단계(수 그대로)
  */
 function commissionGoal(c) {
     const name = c.axis === 'chapter' ? chapterOf(c.ref)?.name
         : c.axis === 'race' ? SYS.commission.races.find(r => r.id === c.ref)?.name
+        : c.axis === 'place' ? (D.placeCells?.[c.ref]?.[0] ? placeName(D.placeCells[c.ref][0]) : null)
         : c.axis === 'monster' ? monsterName(c.ref)
-        : c.axis === 'rarity' ? M.RARITY[c.ref]
+        : c.axis === 'rarity' || c.axis === 'rarity_min' ? M.RARITY[c.ref]
+        : c.axis === 'mat' ? D.labMaterials.find(m => m.id === c.ref)
         : null;
-    return t(c.axis === 'grade' ? `cm.goal.${c.ref}` : `cm.goal.${c.axis}`, { t: name ? L(name) : '', n: c.need.toLocaleString() });
+    const label = name ? L(name) : c.axis === 'part' ? t(`cm.part.${c.ref}`) : c.axis === 'up_min' ? String(c.ref) : '';
+    const key = c.axis === 'grade' ? `cm.goal.${c.kind}.grade.${c.ref}` : `cm.goal.${c.kind}.${c.axis}`;
+    return t(key, { t: label, n: c.need.toLocaleString() });
 }
 
 /**
@@ -8628,7 +8682,10 @@ function commissionCard(c, CS) {
     const grade = SYS.commission.gradeById.get(c.grade);
     const card = el('div', `cm-card k-${c.kind}${c.taken ? ' taken' : ''}${c.done ? ' done' : ''}`);
     card.dataset.commission = c.no;
-    card.appendChild(el('div', 'cm-kind', `${L(k)} <span class="cm-grade g-${c.grade}">${grade ? L(grade.name) : ''}</span>`));
+    // 첫 줄 = 죄종 칩(관전 유닛 카드와 같은 생김새) · 미션 이름 · 등급 칩 (§14 · ADR-1068 · R457)
+    const sin = M.SINS[c.sin];
+    const sinChip = sin ? `<span class="sin-chip cm-sin" style="color:${sin.color}">${L(sin)}</span>` : '';
+    card.appendChild(el('div', 'cm-kind', `${sinChip}<span class="cm-mission">${k ? L(k) : ''}</span><span class="cm-grade g-${c.grade}">${grade ? L(grade.name) : ''}</span>`));
     const goal = commissionGoal(c);
     card.appendChild(el('div', 'cm-goal', goal));
     if (c.taken) {
@@ -8878,7 +8935,7 @@ function monsterCard(m, grade) {
 }
 
 /* 세그먼트 다섯 — 몬스터는 수집 카드, 마스터리는 인게임 판, 나머지는 자산 목록이다(§9-1) */
-const CODEX_SEGS = ['monster', 'character', 'item', 'skill', 'fx', 'mastery'];   // fx = 이펙트 (§9-1 · ADR-0559 — 0513 의 스킬 안쪽 탭에서 올라왔다)
+const CODEX_SEGS = ['monster', 'character', 'item', 'skill', 'fx', 'mastery', 'sin'];   // fx = 이펙트 (§9-1 · ADR-0559 — 0513 의 스킬 안쪽 탭에서 올라왔다) · sin = 의뢰 죄종 칸 (§9 · ADR-1069 · R457)
 /** 몬스터 카드의 초상 등급 — 라벨은 관전 카드가 쓰는 `kind.*` 를 그대로 부른다 (ADR-0167 · 문구를 새로 안 쓴다) */
 const CODEX_GRADES = ['normal', 'elite'];
 /** 아이템 안쪽 분류 — 무기와 비무기 장비(방어구 · 장신구)를 가르고, 소모품인 물약이 셋째다 (ADR-0179 · 물약 ADR-0314) */
@@ -8901,8 +8958,26 @@ function renderCodex(main) {
     main.appendChild(tabs);
     // 박스 (ADR-0097) — 도구 줄은 서 있고 목록 · 묶음이 본문으로 스크롤한다 · `cx-box` = `D2 Min` 이 도구 줄을 판 위 폴더 탭으로 올리는 손잡이(§10-5 · ADR-0904)
     const p = el('div', 'panel page cx-box');
-    ({ monster: codexMonster, character: codexCharacter, item: codexItem, skill: codexSkill, fx: codexFx, mastery: codexMastery })[state.codexSeg](p);
+    ({ monster: codexMonster, character: codexCharacter, item: codexItem, skill: codexSkill, fx: codexFx, mastery: codexMastery, sin: codexSin })[state.codexSeg](p);
     main.appendChild(p);
+}
+
+/**
+ * 죄종 세그먼트 — 의뢰의 죄종별 수령 횟수 (§9 · ADR-1069 · R457). 칸 일곱이 장 순서로 가로 한 줄 · 칸마다 죄종 이름(죄종 색)과 수령 횟수 ·
+ * 안 열린 죄종은 이름이 흐리고 횟수 자리에 자물쇠 · 보상 자리는 없다(기획 미정). 차례 · 열림 · 횟수는 `commissionState.sins` 가 낸다
+ */
+function codexSin(p) {
+    const CS = SYS.game.commissionState(G);
+    const row = el('div', 'cx-sin-row box-body');
+    for (const s of CS.sins) {
+        const sin = M.SINS[s.id];
+        const cell = el('div', `cx-sin${s.open ? '' : ' locked'}`);
+        cell.dataset.sin = s.id;
+        cell.appendChild(el('div', 'cx-sin-name', `<span style="color:${sin ? sin.color : 'inherit'}">${sin ? L(sin) : s.id}</span>`));
+        cell.appendChild(el('div', 'cx-sin-n', s.open ? t('cx.sin.n', { n: s.n.toLocaleString() }) : `<span class="lock-ico">${lockIcon(true)}</span>`));
+        row.appendChild(cell);
+    }
+    p.appendChild(row);
 }
 
 /** 얼굴 스타일 고르개 — 몬스터 · 캐릭터 세그먼트가 같이 쓴다. 전환은 **전역**이다(`?face=` · localStorage 와 같은 자리 — §9-1).
@@ -9150,9 +9225,9 @@ function codexItem(p) {
     if (state.codexItemSeg === 'weapon') {
         // 무기 베이스 — **`weapon_base.csv` 전 행**을 편다(그림 묶음과 상관없다 · §9-1 · ADR-1055 — ADR-1051 의 「고른 묶음의 재고」 대체).
         //   무기군 하나 = 묶음 하나 · 묶음 안은 CSV 행 순(기본 → 단 1 · 2 · 3 · 단 안은 빠름 → 보통 → 느림) · 이름 = CSV 행.
-        //   그림은 고른 아이템 그림 묶음에서 찾고(`itemArt` · uid 가 없으니 `baseId` 로) 없으면 검은 칸 — 퇴역 베이스는 CSV 에 없어 안 뜬다.
+        //   그림은 `itemArt` 가 찾고(uid 가 없으니 `baseId` 로) 없으면 검은 칸 — 퇴역 베이스는 CSV 에 없어 안 뜬다.
         //   묶음 순서는 `WEAPON_BASE_STEMS` 키 순(활 다음 석궁 · ADR-0180) · 거기 없는 CSV 무기군은 그 뒤에 CSV 순
-        const dir = M.itemArtSource() === 'codex' ? M.WEAPON_BASE_CODEX_DIR : M.WEAPON_BASE_DIR;
+        const dir = M.WEAPON_BASE_DIR;
         const groups = [...new Set([...Object.keys(M.WEAPON_BASE_STEMS), ...Object.keys(D.weaponBases ?? {})])]
             .filter(g => D.weaponBases?.[g]?.length);
         box.innerHTML = groups.map(g =>
@@ -9362,43 +9437,41 @@ function codexMastery(p) {
             nodes: nodesFor('class', c.id), preview: true, cls: c.id,
         }));
     } else {
-        // 전직 — **갈래 하나가 판 하나** · 직업 하나가 한 줄(갈래 셋 · `class.csv` 행 → `advance.csv:sort_order`) (§9-1 · ADR-0557)
-        const nodesBy = new Map();
-        for (const r of D.advanceNodeRows ?? []) {
-            const hold = Number(r.hold) === 1;
-            if (!nodesBy.has(r.skill_id)) nodesBy.set(r.skill_id, []);
-            nodesBy.get(r.skill_id).push({ slot: Number(r.slot), hold, desc: hold ? null : { ko: r.desc_kr, en: r.desc_en } });
-        }
-        const nodeOf = (id, slot) => (nodesBy.get(id) ?? []).find(x => x.slot === slot) ?? null;
+        // 전직 — **갈래 하나가 판 하나** · 직업 하나가 한 줄(갈래 셋 · `class.csv` 행 → `advance.csv:sort_order`) (§9-1 · ADR-0557 · 다섯 줄 ADR-1081)
         const skillsOf = a => (D.skillRows ?? []).filter(r => r.owner_kind === 'advance' && r.owner_id === a.advance_id)
             .sort((x, y) => Number(x.priority) - Number(y.priority)).map(r => r.skill_id);
         for (const c of D.classes ?? []) for (const a of (D.advanceRows ?? []).filter(a => a.class_id === c.id)
             .sort((x, y) => Number(x.sort_order) - Number(y.sort_order))) {
             const skills = skillsOf(a);
-            if (skills.length) box.appendChild(codexAdvanceBoard(a, c, skills, nodeOf));
+            if (skills.length) box.appendChild(codexAdvanceBoard(a, c, skills));
         }
     }
     p.appendChild(box);
 }
 
 /**
- * 도감 전직 판 — 스킬 창의 전직 판(`advanceBoard`)과 같은 격자를 **읽기 전용**으로 편다 (§9-1 · ADR-0557).
- * 윗줄 = 갈래의 전직 스킬 셋(툴팁 = 스킬 카드 Lv.1) · 아래 세 줄 = 스킬마다 제 열에 가지 ② · ③ · ④. 누를 수 없다
+ * 도감 전직 판 — 스킬 창의 전직 판(`advanceBoard`)과 같은 다섯 줄을 **읽기 전용 · 0 랭크**로 편다 (§9-1 · ADR-0557 · ADR-1081).
+ * 맨 위 = 공통 줄 · 둘째 = 갈래의 전직 스킬 셋(툴팁 = 스킬 카드 Lv.1) · 아래 세 줄 = 스킬마다 제 열에 크기 · 변형 1 · 변형 2. 누를 수 없다
  */
-function codexAdvanceBoard(a, c, skills, nodeOf) {
-    const box = el('div', 'sk-box adv-board');
+function codexAdvanceBoard(a, c, skills) {
+    const max = D.balance.advance_row_points;
+    const common = (SYS.skill.commons.get(a.advance_id) ?? []).map(x => ({ ...x, rank: 0, max, value: x.per }));
+    const box = el('div', 'sk-box adv-board adv-tree');
     const cell = id => `<div class="sk-cell icon-only" data-advskill="${id}" aria-label="${L(skillInfo(id).name)}"><span class="adv-ico" aria-hidden="true">${skillImg({ id })}</span></div>`;
+    const tails = id => SYS.skill.tails.get(id);
     box.innerHTML = `
         <div class="sk-box-head">
             <span class="sk-tag">${t('ix.mastery.adv')}</span><span class="sk-title">${L({ ko: a.name_kr, en: a.name_en })}</span>
             <span class="muted sk-sub">${className(c.id)}</span>
         </div>
         <div class="sk-grid">
+            <div class="sk-row adv-common-row">${common.map((x, i) => advCommonCell(x, i, false)).join('')}</div>
             <div class="sk-row">${skills.map(cell).join('')}</div>
-            ${[2, 3, 4].map(slot => `<div class="sk-row">${skills.map(id => advBranchCell(nodeOf(id, slot), id, slot)).join('')}</div>`).join('')}
+            ${[0, 1, 2].map(i => `<div class="sk-row">${skills.map(id => (tails(id) ? advTailCell(tails(id)[ADV_SLOTS[i]], id, i, 0, false, false, max) : '<div class="sk-cell empty"></div>')).join('')}</div>`).join('')}
         </div>`;
     box.querySelectorAll('[data-advskill]').forEach(sc => bindTipNode(sc, () => skillTipCard({ id: sc.dataset.advskill }, {})));
-    bindAdvNodeTips(box, nodeOf);
+    box.querySelectorAll('[data-advcommon]').forEach(x => bindTipNode(x, () => advCommonTip(common[Number(x.dataset.advcommon)])));
+    box.querySelectorAll('[data-advtail]').forEach(x => bindTipNode(x, () => advTailTip(tails(x.dataset.advtail)[ADV_SLOTS[Number(x.dataset.slot)]], Number(x.dataset.slot), 0, max)));
     return box;
 }
 
@@ -9451,7 +9524,7 @@ function helpSections() {
         'library.craft': { gold: B.book_craft_gold.toLocaleString(), dust: B.book_craft_dust, herb: B.book_craft_herb },
         'library.learn': { level: B.skillbook_learn_level },
         'library.advance': { level: B.advance_unlock_level, gold: B.advance_gold.toLocaleString() },
-        'library.points': { interval: B.advance_skill_level_interval },
+        'library.points': { row: B.advance_row_points },
         'resource.production': { hours: B.dispatch_offline_cap_hours },
         'codex.monsters': { per: D.difficultyList.map(d => `${L(d.name)} ${d.codexExp}`).join(' · ') },
         'codex.milestones': { list: D.codexLevels.map(n => n.toLocaleString()).join(' · ') },
@@ -9478,8 +9551,8 @@ function helpSections() {
    **세이브와 무관하다** — 굴린 것은 `state.lab.rolls` 에만 산다(인벤토리에 안 들어간다).
    걷어내려면 `NAV_GROUPS` 의 `lab` · 이 묶음 · `?lab=` 분기 · style.css 「실험실」 섹션 · i18n `nav.lab` · `lab.*` (§18) */
 
-/** 도구 순서 — 아이템 생성기 오른쪽에 레이드 연습을 둔다. */
-const LAB_TOOLS = ['item', 'raid'];
+/** 도구 순서 — 아이템 생성기 오른쪽에 레이드 연습 · 그 오른쪽에 결투 시험(ADR-1070)을 둔다. */
+const LAB_TOOLS = ['item', 'raid', 'duel'];
 /** 기록 칸 상한 — 넘치면 오래된 것부터 빠진다 · 화면 상수다(CSV 가 아니다 · §18) */
 const LAB_KEEP = 60;
 
@@ -9518,6 +9591,7 @@ function renderLab(main) {
     tabs.dataset.labTools = '';
     main.appendChild(tabs);
     if (selected === 'raid') { renderRaid(main); return; }
+    if (selected === 'duel') { renderLabDuel(main); return; }
     const p = el('div', 'panel page lab');
     labItem(p);
     main.appendChild(p);
@@ -9646,6 +9720,60 @@ function renderRaid(main) {
             state.tab = 'help'; state.helpFolder = 'lab'; state.helpQuery = ''; render();
             $('#help-lab-raid_overview')?.scrollIntoView({ block: 'start' });
         } });
+}
+
+/* ═══════════ 실험실 — 결투 시험 (SCREEN_DESIGN §18 「결투 시험」 · ADR-1070) ═══════════
+   콜로세움 챔피언 AI 팀 둘을 결투 관전 그대로 붙인다(위 = 팀 B · 아래 = 팀 A). 두 팀 · 판은 로직이 굴린다(`arena.rollTierOpponent` · `arena.fight`) ·
+   저항 고정 · uid 접두는 `ui/data.js` 가 낸다 · 렌더러는 씨앗만 준다. **세이브와 무관하다** —
+   걷어내려면 이 묶음 · `LAB_TOOLS` 의 `duel` · `?lab=duel` 분기 · data.js 「실험실 결투」 묶음 · i18n `lab.duel.*` · style.css `.lab-duel-*` */
+const LAB_DUEL_TIER = 'champion';
+const LAB_DUEL_RARITY = { legendary: 1 };   // 두 팀 장비 희귀도 — 레전더리만(ADR-1077 · 개발 장치라 CSV 가 아니다)
+const LAB_DUEL_HERO_TIER = 'rare';          // 두 팀 영웅 등급 — 전부 레어(ADR-1079 · R472)
+let labDuel = null;   // { owner, seed, round, res, match, shown, last } — 화면 상태(다른 게임이면 새로)
+const labSeed = () => crypto.getRandomValues(new Uint32Array(1))[0];
+function labDuelState() {
+    if (!labDuel || labDuel.owner !== G) labDuel = { owner: G, seed: labSeed(), round: 0, res: false, match: null, shown: null, last: null };
+    return labDuel;
+}
+/** 지금 조건으로 새 판 하나 — 직전 판의 결과를 `last` 로 옮기고 새 `match` 를 세운다 · 조합 = 씨앗 줄 1 · 2 · 판 = 1000 + 판 번호 */
+function labDuelFight(S) {
+    if (S.shown) S.last = S.shown.result;
+    // 짜기 = 시련의 탑 층 AI 팀과 같게(직업 겹침 · 전사 · 기사 전열 · 후열뿐이면 방어 스킬 — ADR-1074 · R469) · 장비 = 전부 레전더리(ADR-1077 · R470) · 영웅 = 전부 레어(ADR-1079 · R472)
+    const opts = { floorRules: true, rarityWeights: LAB_DUEL_RARITY, heroTier: LAB_DUEL_HERO_TIER };
+    const a = SYS.arena.rollTierOpponent(LAB_DUEL_TIER, makeRng(deriveSeed(S.seed, 1)), [], opts);
+    const b = SYS.arena.rollTierOpponent(LAB_DUEL_TIER, makeRng(deriveSeed(S.seed, 2)), a.map(p => p.hero.name), opts);
+    let team = labRelabel(a, 'lab-a-'), opponent = labRelabel(b, 'lab-b-');
+    if (S.res) { team = labFixResist(team); opponent = labFixResist(opponent); }
+    // 물약 — 두 팀 모두 챔피언 층의 물약(층 AI 팀과 같은 차림 · R460)
+    const floor = SYS.arena.floors.filter(f => f.tier === LAB_DUEL_TIER).at(-1);
+    const potions = floor ? SYS.arena.floorLoadout(floor.no) : null;
+    S.round += 1;
+    const result = SYS.arena.fight(team, opponent, makeRng(deriveSeed(S.seed, 1000 + S.round)), potions, potions);
+    S.match = { team, opponent, result, resume: null, bg: M.duelBg(LAB_DUEL_TIER) };
+    S.shown = S.match;
+}
+function renderLabDuel(main) {
+    const S = labDuelState();
+    if (!S.match) labDuelFight(S);
+    const tier = SYS.arena.tiers.find(x => x.id === LAB_DUEL_TIER);
+    const bar = el('div', 'lab-duel-bar');
+    bar.appendChild(el('span', 'lab-duel-kit', t('lab.duel.kit', { tier: L(tier.name), lv: tier.level })));
+    // 버튼 · 스위치 — 누르면 지금 판을 걷고 그 조건으로 새 판(`renderLabDuel` 이 다시 세운다)
+    const btn = (key, fn, on = null, params = {}) => {
+        const b = el('button', `btn sm${on ? ' on' : ''}`, t(key, params));
+        if (on !== null) b.setAttribute('aria-pressed', String(on));
+        b.onclick = () => { fn(); S.match = null; render(); };
+        bar.appendChild(b);
+    };
+    btn('lab.duel.reroll', () => { S.seed = labSeed(); });
+    btn('lab.duel.again', () => {});
+    btn('lab.duel.res', () => { S.res = !S.res; }, S.res, { v: Math.round(D.balance.res_cap_base * 100) });
+    // 직전 판 — 아래 = 팀 A(파티 쪽) · 위 = 팀 B
+    const last = S.last;
+    const lastKey = !last ? null : last.reason === 'timeout' ? 'lab.duel.timeout' : last.won ? 'lab.duel.win.bottom' : 'lab.duel.win.top';
+    bar.appendChild(el('span', 'lab-duel-last', lastKey ? t(lastKey, { sec: last.durationSec }) : '—'));
+    main.appendChild(bar);
+    arenaWatchPage(main, S, t('lab.tool.duel'), 'lab.duel.again');
 }
 
 function renderHelp(main) {
@@ -9890,7 +10018,10 @@ async function boot() {
     window.addEventListener('keydown', e => {
         if ((e.ctrlKey || e.metaKey) && (ZOOM_KEYS.has(e.key) || ZOOM_CODES.has(e.code))) e.preventDefault();
     });
+    // 그림 미리 받기 — CSV 와 같이 출발하고, 목록을 읽은 뒤에 첫 화면을 그린다(잠기지 않은 버튼이 한 번 비치지 않게 · §3 · ADR-1080)
+    const preloading = startPreload(preloadTick);
     await loadData();
+    await preloading;
     state.candidates = rollCandidates();
     // 켜면 메뉴가 선다 — 세이브는 [불러오기]를 눌러야 연다 (`renderMenu` · ADR-0641). 플레이 기록은 네트워크를 기다리지 않는다(`startClocks` · SCREEN_DESIGN §2-1 · ADR-0633).
     //   개발용 경로(`?dev=` · `?tab=`)만 예전처럼 세이브가 있으면 곧장 이어 하고 없으면 시작 화면이다 — 헤드리스 검증이 메뉴에서 멈추지 않게
@@ -10109,7 +10240,7 @@ async function boot() {
         if (new URLSearchParams(location.search).get('adv') === '1') {
             const h = heroById(SYS.game.partyOf(G)[0]);
             if (h) {
-                h.level = Math.max(h.level, Math.min(D.balance.hero_level_cap, D.balance.advance_unlock_level + D.balance.advance_skill_level_interval));
+                h.level = Math.max(h.level, Math.min(D.balance.hero_level_cap, D.balance.advance_unlock_level + 5));
                 const br = SYS.game.advanceState(G, h.uid, now()).branches[0];
                 if (br) { h.masteryPoints = Math.max(h.masteryPoints ?? 0, 1); h.advance = br.id; SYS.game.advanceLearn(G, h.uid, br.skills[0]); }
             }
@@ -10127,9 +10258,10 @@ async function boot() {
         if (first) SYS.game.learnMastery(G, h0.uid, first.id);
         // `&adv=1` — 전직 판이 서게 영웅 0 을 전직시키고 스킬을 배워 한 단계 올려 둔다 · 공용 포인트와 메인 레벨 조건을 확인한다 (2026-10-06 · R216 · ADR-0529)
         if (new URLSearchParams(location.search).get('adv') === '1') {
-            h0.level = Math.max(h0.level, Math.min(D.balance.hero_level_cap, D.balance.advance_unlock_level + D.balance.advance_skill_level_interval * 2));
+            h0.level = Math.max(h0.level, Math.min(D.balance.hero_level_cap, D.balance.advance_unlock_level + 10));
             const br = SYS.game.advanceState(G, h0.uid, now()).branches[0];
-            if (br) { h0.masteryPoints = Math.max(h0.masteryPoints ?? 0, 2); h0.advance = br.id; SYS.game.advanceLearn(G, h0.uid, br.skills[0]); SYS.game.advanceLevelUp(G, h0.uid); }
+            // 공통 줄 한 칸 · 크기 한 칸을 찍어 둔다 — 찍힌 칸과 안 찍힌 칸이 같이 보이게 (R471 · ADR-1081)
+            if (br) { h0.masteryPoints = Math.max(h0.masteryPoints ?? 0, 4); h0.advance = br.id; SYS.game.advanceLearn(G, h0.uid, br.skills[0]); SYS.game.advanceLevelUp(G, h0.uid); SYS.game.advanceRank(G, h0.uid, 'common', 0, 1); SYS.game.advanceRank(G, h0.uid, 'skill', 1, 1); }
         }
     }
     if (dev === 'book') {   // 책을 쥔 **도서관 탭** (§17 · §10 · ADR-0422 · ADR-0426) — 도서관 · 레벨 10 · 책이 있어야 버튼이 산다.
@@ -10163,7 +10295,7 @@ async function boot() {
         // `&adv=1` — 영웅 0 을 첫 갈래로 전직시키고 첫 전직 스킬을 배운 채 — 전직 후 갈래 셋 · 주황 테두리에 닿는 길 (ADR-0592).
         //   전직은 시간이 걸려 헤드리스가 못 닿는다 · 전직시키는 방식은 `?dev=tree&adv=1` 과 같다
         if (new URLSearchParams(location.search).get('adv') === '1') {
-            h0.level = Math.max(h0.level, Math.min(D.balance.hero_level_cap, D.balance.advance_unlock_level + D.balance.advance_skill_level_interval));
+            h0.level = Math.max(h0.level, Math.min(D.balance.hero_level_cap, D.balance.advance_unlock_level + 5));
             const br = SYS.game.advanceState(G, h0.uid, now()).branches[0];
             if (br) { h0.masteryPoints = Math.max(h0.masteryPoints ?? 0, 2); h0.advance = br.id; SYS.game.advanceLearn(G, h0.uid, br.skills[0]); }
         }
@@ -10211,7 +10343,9 @@ async function boot() {
                 const teams = [-150, 40, 120, 400].map((d, k) => {
                     const r = Math.max(0, at + d), team = SYS.arena.rollTierOpponent(SYS.arena.tierOfRating(r), rng);
                     const items = Object.fromEntries(team.flatMap(p => p.gear).map(it => [it.uid, it]));
-                    const payload = SYS.arena.exportTeam(team.map(p => p.hero), items, Object.fromEntries(team.map(p => [p.uid, p.rank])));
+                    // 물약도 든다 — 진짜 고스트처럼 수비 쪽이 마신다(앞 물약 두 칸 · R460 · ADR-1067)
+                    const payload = SYS.arena.exportTeam(team.map(p => p.hero), items, Object.fromEntries(team.map(p => [p.uid, p.rank])),
+                        { potions: D.potions.slice(0, 2).map(p => p.id) });
                     return { id: `dev-ghost-${k}`, nick: k === 1 ? '<b>Ghost</b>' : `Ghost ${k + 1}`, rating: r, team: JSON.stringify(payload) };
                 });
                 arenaTake(teams, [
@@ -10227,7 +10361,7 @@ async function boot() {
             if (q.get('friendly') === '1') {
                 const p = arenaNet.pool?.[0];
                 const own = !p && picked.length === SYS.arena.teamSize ? SYS.arena.importTeam(SYS.arena.exportTeam(picked, G.items, ranks)) : null;
-                const friend = p ? { id: p.id, nick: arenaNet.nicks.get(p.id) ?? '', rating: p.rating, team: p.team }
+                const friend = p ? { id: p.id, nick: arenaNet.nicks.get(p.id) ?? '', rating: p.rating, team: p.team, loadout: p.loadout }
                     : own?.ok ? { id: 'dev-self', nick: loadTrack().nick, rating: SYS.game.arenaState(G).rating, team: own.team } : null;
                 if (friend) Object.assign(A, { friend, pick: 'friend' });
             }
@@ -10415,6 +10549,9 @@ async function boot() {
         if (!G) startGame();
         devBuild('tavern');
         state.tab = 'tavern';
+        // `&ch=n` — 앞 장 보스를 깬 기록으로 n장까지 연 판 · 그 장들의 죄종 카드가 선다 (R457 · 장마다 그 장 죄종이 열린다)
+        const chN = Number(new URLSearchParams(location.search).get('ch'));
+        if (chN > 1) devOpenChapters(chN);
         SYS.game.commissionFill(G);
         const S = SYS.game.commissionState(G);
         // 둘째 장은 다 채운 채([수령]) — 받을 수가 하나뿐이면 둘째 장이 없으니 `&done=1` 이 첫 장을 채운다 (R162 — 선술집이 받을 수를 안 늘린다)
@@ -10474,6 +10611,13 @@ async function boot() {
     //   `&lab=<monster_idx>` 그 몬스터(챕터도 옮긴다 · 레벨은 그 장소 첫 칸) · `&labg=elite` · `&labd=<단 id>` · `&labn=n` n 번 굴린 채 · 모르는 값이면 무시
     const lq = new URLSearchParams(location.search);
     if (LAB_TOOLS.includes(lq.get('lab'))) state.lab.tool = lq.get('lab');
+    // 결투 시험 — `&res=1` 「저항 75%」 · `&seed=n` 그 조합 씨앗(스크린샷이 늘 같은 조합) (§10 · §18 · ADR-1070 · ADR-1072)
+    if (lq.get('lab') === 'duel' && G) {
+        const S = labDuelState();
+        if (lq.get('res') === '1') S.res = true;
+        const sd = Number(lq.get('seed'));
+        if (lq.get('seed') !== null && Number.isInteger(sd) && sd >= 0) S.seed = sd >>> 0;
+    }
     const labId = Number(lq.get('lab'));
     if (D.monsters[labId]) Object.assign(state.lab, { chapter: D.monsters[labId].chapter, monster: labId, level: null });
     if (lq.get('labg') === 'elite') state.lab.grade = 'elite';

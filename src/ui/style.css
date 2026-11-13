@@ -1663,6 +1663,8 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .p-slot.fire { border-style: solid; border-color: var(--color-success); background: var(--bg-tertiary); }
 /* 아레나 구석 — 흐름 밖(`.arena > *` 의 relative 를 덮는다) · 결과 띠(z 3)보다 아래. 배경 그림 위에서 빈 칸이 사라지지 않게 칸 바닥을 깐다 */
 .arena > .b-belt { position: absolute; left: 12px; bottom: 10px; z-index: 2; }
+/* 적 물약 띠 — 결투의 수비 쪽(R460 · ADR-1067) · 칸 모양은 파티 띠(`.b-belt`) 그대로 · 자리만 적 진영의 맞은편 구석(오른쪽 위 — 결투 관전엔 남은 시간 · 최대화가 없다) */
+.arena > .b-belt.e-belt { left: auto; right: 12px; bottom: auto; top: 10px; }
 .b-belt .p-slot { width: 44px; height: 44px; background: rgba(var(--veil-rgb), .6); }
 .b-belt .p-slot img { width: 34px; height: 34px; }
 .b-belt .p-slot.full { background: rgba(var(--veil-rgb), .85); }
@@ -2143,7 +2145,8 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .unit-body { display: flex; flex-direction: row; align-items: center; gap: 7px; min-width: 0; height: 101px; overflow: hidden; }
 /* 윗변 색 = **등급** (2026-09-03 사용자 지시 · SCREEN_DESIGN §5) — 죄종은 색을 갖지 않는다.
    순서가 규칙이다: 진영 기본 → 영웅 등급. 정예·보스는 아래의 **전체 테두리** 규칙(.unit.elite / .unit.boss)이 덮는다 */
-.unit.enemy { border-top-color: var(--enemy-line); }
+/* 결투 상대 영웅도 영웅 등급 색 — 렌더러가 영웅 카드에만 `--tier-line` 을 건다 · 몬스터는 변수가 없어 진영 빨강 (ADR-1078) */
+.unit.enemy { border-top-color: var(--tier-line, var(--enemy-line)); }
 /* 영웅 등급 — 색은 `data/hero_tier.csv:color_hex` 를 렌더러가 `--tier-line` 으로 건다(아이템 희귀도의 같은 계단이라 화면에서 같은 뜻으로 읽힌다).
    ⚠ 옛 `.unit.tier-rare` · `.unit.tier-unique` 는 걷었다 (2026-09-15) — 등급마다 여기 줄을 박아 둬서, 줄이 없던 `normal` · `magic` 이
    진영색(`--ally-line` 파랑)으로 떨어졌다. 진영색은 이제 변수가 없을 때의 폴백일 뿐이다 */
@@ -3332,6 +3335,13 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .sk-grid { display: flex; flex-direction: column; gap: 14px; }
 /* 세 칸의 너비를 기존의 75%로 줄이고 줄 가운데에 둔다. */
 .sk-row { display: flex; flex-direction: row; justify-content: center; gap: 14px; }
+/* 줄마다 점수 합 [R473] — 각 줄 위에 구분선 + 「쓴 / 상한」(스킬 창 죄종 · 직업 판만) · 줄 사이 간격을 줄여 판 높이를 거의 그대로 둔다 */
+.sk-grid:has(> .sk-tier) { gap: 6px; }
+.sk-tier { display: flex; flex-direction: column; gap: 3px; }
+.sk-row-cap { display: flex; align-items: center; gap: 6px; font-size: var(--fs-2xs); line-height: 1; color: var(--text-muted, #8a8a8a); }
+.sk-row-cap::before { content: ''; flex: 1; border-top: 1px solid var(--border-highlight); }
+.sk-row-cap.full { color: var(--mastery-color, var(--border-highlight)); }
+.sk-row-cap.full::before { border-top-color: var(--mastery-color, var(--border-highlight)); }
 
 /* 영어 노드명이 길다("All Resistances") — 긴 이름은 두 줄에서 접힌다.
    ⚠ **칸은 정사각형이다** [개정 2026-09-09 사용자 지시] — ~~높이 62px 고정~~(2026-08-28)을 물렸다.
@@ -3753,6 +3763,19 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .codex-mastery-grid .sk-box { min-width: 0; }
 /* 도감 전직 판 — 가지 칸은 보려고 연 화면이라 흐리지 않는다(스킬 창은 배운 열만 또렷하다) · 누를 수 없다 (ADR-0557) */
 .codex-mastery-grid .adv-node { opacity: 1; cursor: default; }
+/* 도감 죄종 세그먼트 — 칸 일곱이 장 순서로 가로 한 줄 · 칸마다 죄종 이름(죄종 색) + 수령 횟수 · 안 열린 칸은 흐리고 자물쇠 (§9 · ADR-1069 · R457) */
+.cx-sin-row {
+    display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 10px; align-content: start; padding: 2px 1px 8px;
+}
+.cx-sin {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    min-width: 0; padding: 14px 6px; border: 1px solid var(--border-dark); background: var(--bg-card);
+}
+.cx-sin-name { font-size: var(--fs-md); font-weight: bold; white-space: nowrap; }
+.cx-sin-n { font-size: var(--fs-sm); color: var(--text-secondary); min-height: 18px; }
+.cx-sin.locked .cx-sin-name { opacity: .45; }
+.cx-sin.locked .cx-sin-n { color: var(--text-muted); }
 
 /* ───────── 페이퍼돌 (부위 8종 · 위치 9개, 반지 ×2) ───────── */
 
@@ -4206,6 +4229,15 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .adv-board .adv-node-art { position: absolute; left: 12.5%; top: 12.5%; width: 75%; height: 75%; object-fit: contain; pointer-events: none; }
 .adv-board .adv-node.has-art .adv-slot { inset: auto 3px 1px auto; font-size: var(--fs-xs); }
 .adv-board .adv-node.on::before { background: var(--text-accent); }
+/* 전직 트리 글 칸 — 공통 줄 · 스킬 줄(크기 · 변형 1 · 변형 2) · 짧은 이름 두 줄 + 오른쪽 아래 랭크 `n/5` (2026-11-13 · R471 · ADR-1081) ·
+   찍힌 칸은 글이 또렷하고 5랭크 칸은 테두리가 밝다 · 안 배운 열 · 도감 판은 흐리다 */
+.adv-board .sk-cell.adv-txt { position: relative; display: flex; align-items: center; justify-content: center; padding: 4px 4px 14px; text-align: center; }
+.adv-board .adv-txt-name { font-size: var(--fs-xs); line-height: 1.25; color: var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; pointer-events: none; }
+.adv-board .adv-txt.taken .adv-txt-name { color: var(--text-primary); }
+.adv-board .adv-txt.full { border-color: var(--text-accent); }
+.adv-board .adv-txt.locked:not(.on) { opacity: .55; }
+/* 공통 줄은 맨 위 — 위 칸이 없어 세로 선을 안 단다 */
+.adv-board .adv-common-row .sk-cell::before { display: none; }
 .bk-err { flex: none; font-size: var(--fs-xs); }
 /* 지금 가진 스킬 = 캐릭터 탭 액티브 카드 셋(`.sk-cards` 그대로 · 칸 아래 출처 · 소제목 없음 ADR-0589) · 찬 칸 그림 오른쪽 아래 `Lv.n`(`.sk-lv` · ADR-0576) —
    도서관 전직 패널 이름 줄 아래(`.tr-adv-cur` · 2026-10-12 ADR-0595 — ~~배우기 머리 `.bk-head`~~ ADR-0567)
@@ -4259,6 +4291,11 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .mn-save { margin-top: 2px; text-align: center; font-size: var(--fs-xs); color: var(--text-muted); line-height: 1.5; }
 .mn-save small { display: block; font-size: var(--fs-xs); }
 .mn-save.down { color: var(--color-error); }
+/* 그림 받기 막대 (SCREEN_DESIGN §3 · ADR-1080) — 버튼 아래 · 다 받으면 걷힌다 */
+.mn-load { width: 15em; display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 6px; }
+.mn-bar { width: 100%; height: 4px; background: var(--border-dark); border-radius: 2px; overflow: hidden; }
+.mn-bar i { display: block; height: 100%; background: var(--text-accent); transition: width .1s linear; }
+.mn-load small { font-size: var(--fs-xs); color: var(--text-muted); }
 
 /* 첫 그리기 전의 셸 — 빈 브랜드 · 상단바 · 내비가 비치지 않게 숨긴다. 첫 `renderShell` 이 걷는다 (index.html · ADR-0349 · ADR-0633) */
 #app.booting > .brand,
@@ -6170,12 +6207,15 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 }
 /* 윗변은 **의뢰 등급 색**(아이템 희귀도 색 · 등급 칩과 같다) [2026-10-27 사용자 「레어같은 난이도색으로」 · ADR-0892] —
    자리는 윗변이다 — 같은 탭 영웅 후보 카드(`.ng-card`)의 등급 색 윗변과 같다 [2026-10-30 사용자 「등급바를 위로」 · ADR-0974].
-   종류(처치 · 수집)는 배지 글자가 든다 */
+   죄종 · 미션은 첫 줄 글자가 든다(ADR-1068) */
 .cm-card:has(> .cm-kind .g-normal) { border-top-color: var(--rarity-normal); }
 .cm-card:has(> .cm-kind .g-magic) { border-top-color: var(--rarity-magic); }
 .cm-card:has(> .cm-kind .g-rare) { border-top-color: var(--rarity-rare); }
-/* 카드 글씨는 토큰 한 단씩 올라 있다 — 설명 줄이 빠진 세로가 받는다 (ADR-0225) */
-.cm-kind { font-size: var(--fs-md); }
+/* 카드 글씨는 토큰 한 단씩 올라 있다 — 설명 줄이 빠진 세로가 받는다 (ADR-0225) ·
+   첫 줄 = 죄종 칩 · 미션 이름 · 등급 칩 — 줄을 나눠 갖는 카드라 좁으면 접힌다 (§14 · ADR-1068 · R457) */
+.cm-kind { font-size: var(--fs-md); display: flex; align-items: center; flex-wrap: wrap; gap: 2px 6px; }
+.cm-kind .cm-sin { flex: none; padding: 0 4px; font-size: var(--fs-xs); }
+.cm-kind .cm-grade { margin-left: 0; }
 .cm-goal { font-size: var(--fs-sm); line-height: 1.35; word-break: keep-all; }
 .cm-rew {
     display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
@@ -6281,6 +6321,10 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* ───────── 실험실 (SCREEN_DESIGN §18 · ADR-0580 · ADR-0610) ─────────
    개발 장치 — 걷어내려면 이 섹션째 지운다. 왼쪽 조건 · 오른쪽 결과가 박스 높이를 나눠 갖고 각 열이 따로 스크롤한다 */
 .lab-item { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; min-height: 0; overflow: hidden; }
+/* 결투 시험 — 탭 줄 아래 도구 줄 한 줄(차림 · 버튼 · 스위치 · 직전 결과) · 아래는 결투 관전 그대로 (§18 「결투 시험」 · ADR-1070) */
+.lab-duel-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 0 4px 8px; }
+.lab-duel-kit { font-weight: 600; margin-right: 6px; white-space: nowrap; }
+.lab-duel-last { margin-left: auto; color: var(--text-muted); font-size: var(--fs-xs); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .lab-cond, .lab-out { display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow-y: auto; }
 .lab-row { display: grid; grid-template-columns: minmax(6em, max-content) minmax(0, 1fr); align-items: center; gap: 10px; }
 .lab-row.top { align-items: start; }

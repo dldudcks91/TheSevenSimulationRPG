@@ -1,0 +1,360 @@
+{
+ "meta": {
+  "N": 800,
+  "TIERS": [
+   "gold",
+   "platinum",
+   "diamond"
+  ],
+  "pairs": 2400,
+  "secs": 0.1,
+  "k": 0.5106041393268947,
+  "kw": 0.4158730158730158,
+  "baseWin": 0.50125,
+  "durQ": {
+   "p10": 11.9,
+   "p25": 14.2,
+   "p50": 17.8,
+   "p75": 23.9,
+   "p90": 34
+  },
+  "baseDur": 22.995874999999984,
+  "refs": [
+   {
+    "x": 0.05,
+    "dS": 0.0243,
+    "se": 0.0046,
+    "dW": 2.2
+   },
+   {
+    "x": 0.1,
+    "dS": 0.0529,
+    "se": 0.006,
+    "dW": 4.3
+   },
+   {
+    "x": 0.2,
+    "dS": 0.1015,
+    "se": 0.0092,
+    "dW": 8.2
+   }
+  ]
+ },
+ "summary": [
+  {
+   "id": "ref_atk_0.05",
+   "stat": "atk_pct",
+   "cond": "-",
+   "v": null,
+   "eqW": 5.31,
+   "seW": 0.69,
+   "eqS": 4.76,
+   "dWin": 2.21,
+   "byTier": {
+    "gold": 4.7,
+    "platinum": 5.3,
+    "diamond": 6
+   }
+  },
+  {
+   "id": "ref_atk_0.1",
+   "stat": "atk_pct",
+   "cond": "-",
+   "v": null,
+   "eqW": 10.37,
+   "seW": 0.89,
+   "eqS": 10.36,
+   "dWin": 4.31,
+   "byTier": {
+    "gold": 11.1,
+    "platinum": 11.1,
+    "diamond": 8.9
+   }
+  },
+  {
+   "id": "ref_atk_0.2",
+   "stat": "atk_pct",
+   "cond": "-",
+   "v": null,
+   "eqW": 19.74,
+   "seW": 1.14,
+   "eqS": 19.88,
+   "dWin": 8.21,
+   "byTier": {
+    "gold": 21,
+    "platinum": 18.9,
+    "diamond": 19.2
+   }
+  },
+  {
+   "id": "sin_wrath_t3_dmgmax",
+   "stat": "dmg_max_flat",
+   "cond": "hurt",
+   "v": 30,
+   "eqW": 5.11,
+   "seW": 0.6,
+   "eqS": 5.88,
+   "dWin": 2.13,
+   "byTier": {
+    "gold": 9.3,
+    "platinum": 4.2,
+    "diamond": 1.8
+   }
+  },
+  {
+   "id": "sin_wrath_t3_crit",
+   "stat": "crit_rate",
+   "cond": "hurt",
+   "v": 0.15,
+   "eqW": 3.46,
+   "seW": 0.48,
+   "eqS": 2.69,
+   "dWin": 1.44,
+   "byTier": {
+    "gold": 3.3,
+    "platinum": 4.7,
+    "diamond": 2.4
+   }
+  },
+  {
+   "id": "sin_wrath_t3_critdmg",
+   "stat": "crit_damage",
+   "cond": "hurt",
+   "v": 0.075,
+   "eqW": 0.75,
+   "seW": 0.3,
+   "eqS": 1.35,
+   "dWin": 0.31,
+   "byTier": {
+    "gold": 0.9,
+    "platinum": 1.1,
+    "diamond": 0.3
+   }
+  },
+  {
+   "id": "sin_envy_t3_crit",
+   "stat": "crit_rate",
+   "cond": "higher",
+   "v": 0.15,
+   "eqW": 3.01,
+   "seW": 0.46,
+   "eqS": 2.42,
+   "dWin": 1.25,
+   "byTier": {
+    "gold": 3,
+    "platinum": 4.1,
+    "diamond": 2
+   }
+  },
+  {
+   "id": "sin_envy_t3_resall",
+   "stat": "res_all",
+   "cond": "higher",
+   "v": 0.3,
+   "eqW": 9.37,
+   "seW": 0.78,
+   "eqS": 7.23,
+   "dWin": 3.9,
+   "byTier": {
+    "gold": 8.7,
+    "platinum": 9,
+    "diamond": 10.4
+   }
+  },
+  {
+   "id": "sin_envy_t3_cdr",
+   "stat": "cooldown_reduction",
+   "cond": "higher",
+   "v": 0.15,
+   "eqW": 1,
+   "seW": 0.31,
+   "eqS": 0.53,
+   "dWin": 0.42,
+   "byTier": {
+    "gold": 1.2,
+    "platinum": 0.6,
+    "diamond": 1.2
+   }
+  },
+  {
+   "id": "sin_sloth_t3_dr",
+   "stat": "damage_reduction",
+   "cond": "opening",
+   "v": 0.075,
+   "eqW": 3.76,
+   "seW": 0.59,
+   "eqS": 4.69,
+   "dWin": 1.56,
+   "byTier": {
+    "gold": 3.8,
+    "platinum": 4.7,
+    "diamond": 2.9
+   }
+  },
+  {
+   "id": "sin_sloth_t3_regen",
+   "stat": "hp_regen",
+   "cond": "opening",
+   "v": 1.5,
+   "eqW": 0.6,
+   "seW": 0.21,
+   "eqS": -0.1,
+   "dWin": 0.25,
+   "byTier": {
+    "gold": 0.9,
+    "platinum": 0.6,
+    "diamond": 0.3
+   }
+  },
+  {
+   "id": "sin_sloth_t3_cdr",
+   "stat": "cooldown_reduction",
+   "cond": "opening",
+   "v": 0.15,
+   "eqW": 2.35,
+   "seW": 0.85,
+   "eqS": 1.75,
+   "dWin": 0.98,
+   "byTier": {
+    "gold": 2.1,
+    "platinum": 2.3,
+    "diamond": 2.7
+   }
+  },
+  {
+   "id": "sin_gluttony_t3_dr",
+   "stat": "damage_reduction",
+   "cond": "late",
+   "v": 0.075,
+   "eqW": 2.55,
+   "seW": 0.37,
+   "eqS": 0.83,
+   "dWin": 1.06,
+   "byTier": {
+    "gold": 4.2,
+    "platinum": 1.5,
+    "diamond": 2
+   }
+  },
+  {
+   "id": "sin_gluttony_t3_atk",
+   "stat": "atk_pct",
+   "cond": "late",
+   "v": 0.15,
+   "eqW": 3.21,
+   "seW": 0.48,
+   "eqS": 0.91,
+   "dWin": 1.33,
+   "byTier": {
+    "gold": 4.4,
+    "platinum": 2.1,
+    "diamond": 3.2
+   }
+  },
+  {
+   "id": "sin_gluttony_t3_drflat",
+   "stat": "dr_flat",
+   "cond": "late",
+   "v": 15,
+   "eqW": 3.86,
+   "seW": 0.49,
+   "eqS": 3.62,
+   "dWin": 1.6,
+   "byTier": {
+    "gold": 8,
+    "platinum": 2,
+    "diamond": 1.7
+   }
+  },
+  {
+   "id": "sin_lust_t3_regen",
+   "stat": "hp_regen",
+   "cond": "fresh",
+   "v": 1.5,
+   "eqW": 0.1,
+   "seW": 0.1,
+   "eqS": -0.44,
+   "dWin": 0.04,
+   "byTier": {
+    "gold": 0,
+    "platinum": 0.2,
+    "diamond": 0.2
+   }
+  },
+  {
+   "id": "sin_lust_t3_resall",
+   "stat": "res_all",
+   "cond": "fresh",
+   "v": 0.3,
+   "eqW": 9.42,
+   "seW": 0.77,
+   "eqS": 8.86,
+   "dWin": 3.92,
+   "byTier": {
+    "gold": 9.8,
+    "platinum": 8.6,
+    "diamond": 9.9
+   }
+  },
+  {
+   "id": "sin_lust_t3_crit",
+   "stat": "crit_rate",
+   "cond": "fresh",
+   "v": 0.15,
+   "eqW": 3.26,
+   "seW": 0.5,
+   "eqS": 3.91,
+   "dWin": 1.35,
+   "byTier": {
+    "gold": 5.4,
+    "platinum": 2.4,
+    "diamond": 2
+   }
+  },
+  {
+   "id": "sin_pride_t3_atk",
+   "stat": "atk_pct",
+   "cond": "lower",
+   "v": 0.15,
+   "eqW": 9.02,
+   "seW": 0.83,
+   "eqS": 7.94,
+   "dWin": 3.75,
+   "byTier": {
+    "gold": 9.9,
+    "platinum": 9,
+    "diamond": 8.1
+   }
+  },
+  {
+   "id": "sin_pride_t3_dr",
+   "stat": "damage_reduction",
+   "cond": "lower",
+   "v": 0.075,
+   "eqW": 2.66,
+   "seW": 0.45,
+   "eqS": 3.23,
+   "dWin": 1.1,
+   "byTier": {
+    "gold": 3.9,
+    "platinum": 1.2,
+    "diamond": 2.9
+   }
+  },
+  {
+   "id": "sin_pride_t3_fhr",
+   "stat": "fhr",
+   "cond": "lower",
+   "v": 0.75,
+   "eqW": 3.71,
+   "seW": 0.92,
+   "eqS": 4.44,
+   "dWin": 1.54,
+   "byTier": {
+    "gold": 3.3,
+    "platinum": 4.2,
+    "diamond": 3.6
+   }
+  }
+ ]
+}

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><title>r468 measure (임시 — 측정 뒤 지운다)</title></head>
+<body>
+<h1 id="head">running</h1>
+<pre id="out"></pre>
+<script type="module">
+// R468 죄종 T3 값 맞추기 — 결투(AI 팀 3 대 3)에서 칸 하나를 한 팀 셋 모두에게 5랭크로 붙였을 때의 변화를 같은 시드 짝으로 잰다.
+//   기준 = 상시 데미지 +x%(늘 켜진 줄)의 변화 · 지표 S = 준 피해 ÷ 상대 HP 합 − 받은 피해 ÷ 우리 HP 합 · 양쪽 자리 모두 돈다
+import { loadData, buildSystems, D } from '../ui/data.js';
+import { makeRng } from '../game_logic/rng.js';
+const q = new URLSearchParams(location.search);
+const N = Number(q.get('n') ?? 40);
+const TIERS = (q.get('tiers') ?? 'gold,platinum,diamond').split(',');
+const ONLY = q.get('only') ? q.get('only').split(',') : null;
+const OVER = q.get('over') ? JSON.parse(decodeURIComponent(q.get('over'))) : {};   // {nodeId: 새 값} — 두 번째 판에서 새 값을 잰다
+const head = document.getElementById('head'), out = document.getElementById('out');
+const tick = () => new Promise(r => setTimeout(r, 0));
+try {
+    await loadData('../data/');
+    const SYS = buildSystems(D);
+    const H = SYS.hero, A = SYS.arena, F = SYS.formula;
+    const clone = x => JSON.parse(JSON.stringify(x));
+    const cells = H.masteryNodes.filter(n => n.treeKind === 'sin' && n.tier === 3 && n.cond).filter(n => !ONLY || ONLY.includes(n.id));
+    const rowOf = (n, p) => {
+        const v0 = OVER[n.id] ?? n.value;
+        const v = n.stat === 'crit_damage' ? v0 * F.statCoef(p.stats?.luck) : v0;
+        return { cond: n.cond, stat: n.stat, v, ...H.masteryWiden(n.cond, 5) };
+    };
+    // `cfg` = 임의의 줄 목록 [{id, cond, stat, v, thr?, sec?}] — 주면 칸 대신 이것을 잰다(치명 피해 줄은 운 계수를 먹인다)
+    const CFG = q.get('cfg') ? JSON.parse(decodeURIComponent(q.get('cfg'))) : null;
+    const rowCfg = (x, p) => ({ cond: x.cond, stat: x.stat, v: x.stat === 'crit_damage' ? x.v * F.statCoef(p.stats?.luck) : x.v, ...(x.thr != null ? { thr: x.thr } : {}), ...(x.sec != null ? { sec: x.sec } : {}) });
+    const configs = [{ id: 'base', add: null },
+        ...[0.05, 0.10, 0.20].map(x => ({ id: `ref_atk_${x}`, add: () => ({ cond: 'late', stat: 'atk_pct', v: x, sec: 0 }) })),
+        ...(CFG ? CFG.map(x => ({ id: x.id, add: p => rowCfg(x, p), node: { stat: x.stat, cond: x.cond, value: x.v, id: x.id } }))
+            : cells.map(n => ({ id: n.id, add: p => rowOf(n, p), node: n })))];
+    // 팀 — 등급마다 시드 N 쌍 · 진형 · 장비 · 스킬 · 마스터리는 게임의 층 AI 팀 짜기 그대로
+    const pairs = [];
+    for (const tier of TIERS) for (let s = 1; s <= N; s++) {
+        const a = A.rollTierOpponent(tier, makeRng(1000 + s), [], { floorRules: true });
+        const b = A.rollTierOpponent(tier, makeRng(50000 + s), a.map(p => p.hero.name), { floorRules: true });
+        b.forEach((p, i) => { p.uid = `b${i}`; p.hero.uid = `b${i}`; });
+        a.forEach((p, i) => { p.uid = `a${i}`; p.hero.uid = `a${i}`; });
+        pairs.push({ tier, s, a, b });
+    }
+    const hpSum = t => t.reduce((x, p) => x + p.combat.hp_max, 0);
+    const score = (res, mine, theirs) => {
+        const dealt = res.contrib.reduce((x, c) => x + c.dealt, 0), taken = res.contrib.reduce((x, c) => x + c.taken, 0);
+        return dealt / hpSum(theirs) - taken / hpSum(mine);
+    };
+    const withCell = (team, add) => add ? team.map(p => ({ ...p, combat: { ...p.combat, mastery_cond: [...(p.combat.mastery_cond ?? []), add(p)] } })) : team;
+    const t0 = performance.now();
+    const res = {};
+    for (const c of configs) {
+        const rows = [];
+        for (const P of pairs) {
+            const a2 = withCell(P.a, c.add);
+            // 자리 1 — 칸을 단 팀이 파티(contrib 이 파티 몫이다)
+            const r1 = A.fight(clone(a2), clone(P.b), makeRng(90000 + P.s * 7 + P.tier.length));
+            // 자리 2 — 칸을 단 팀이 적 쪽 · 지표는 파티(상대) 기준이라 부호를 뒤집는다
+            const r2 = A.fight(clone(P.b), clone(a2), makeRng(170000 + P.s * 7 + P.tier.length));
+            rows.push({ tier: P.tier, s: P.s, S: (score(r1, a2, P.b) - score(r2, P.b, a2)) / 2, w: ((r1.won ? 1 : 0) + (r2.won ? 0 : 1)) / 2, d: (r1.durationSec + r2.durationSec) / 2 });
+        }
+        res[c.id] = rows;
+        head.textContent = `running ${c.id} · ${((performance.now() - t0) / 1000).toFixed(0)}s`;
+        await tick();
+    }
+    // 짝 차이 — 같은 판 짝의 S 차 · 승률 차 · 등급별
+    const base = res.base;
+    const stat = (id, tier = null) => {
+        const xs = res[id].map((r, i) => ({ r, b: base[i] })).filter(x => !tier || x.r.tier === tier);
+        // 승률 변화가 주 지표다 — S(준 피해 − 받은 피해)는 회복 · 생존이 받은 피해를 늘려 깎인다(2026-11-13 측정 2판에서 확인)
+        const msd = d => { const n = d.length, m = d.reduce((a, b) => a + b, 0) / n; return { m, se: Math.sqrt(d.reduce((a, b) => a + (b - m) ** 2, 0) / Math.max(1, n - 1)) / Math.sqrt(n), n }; };
+        const S = msd(xs.map(x => x.r.S - x.b.S)), W = msd(xs.map(x => x.r.w - x.b.w));
+        return { dS: S.m, se: S.se, dW: W.m, seW: W.se, n: W.n };
+    };
+    // 환산 — 상시 데미지 % 의 승률 기울기(원점을 지나는 최소제곱)
+    const refs = [0.05, 0.10, 0.20].map(x => ({ x, ...stat(`ref_atk_${x}`) }));
+    const kw = refs.reduce((a, r) => a + r.x * r.dW, 0) / refs.reduce((a, r) => a + r.x * r.x, 0);
+    const k = refs.reduce((a, r) => a + r.x * r.dS, 0) / refs.reduce((a, r) => a + r.x * r.x, 0);
+    const summary = configs.filter(c => c.id !== 'base').map(c => {
+        const all = stat(c.id);
+        const tiers = Object.fromEntries(TIERS.map(t => [t, +(stat(c.id, t).dW / kw * 100).toFixed(1)]));
+        return { id: c.id, stat: c.node?.stat ?? 'atk_pct', cond: c.node?.cond ?? '-', v: c.node ? (OVER[c.node.id] ?? c.node.value) : null,
+            eqW: +(all.dW / kw * 100).toFixed(2), seW: +(all.seW / kw * 100).toFixed(2), eqS: +(all.dS / k * 100).toFixed(2), dWin: +(all.dW * 100).toFixed(2), byTier: tiers };
+    });
+    const durs = base.map(r => r.d).sort((x, y) => x - y), qd = f => +durs[Math.min(durs.length - 1, Math.floor(f * durs.length))].toFixed(1);
+    const meta = { N, TIERS, pairs: pairs.length, secs: +((performance.now() - t0) / 1000).toFixed(1), k, kw, baseWin: base.reduce((a, r) => a + r.w, 0) / base.length,
+        durQ: { p10: qd(0.1), p25: qd(0.25), p50: qd(0.5), p75: qd(0.75), p90: qd(0.9) },
+        baseDur: base.reduce((a, r) => a + r.d, 0) / base.length, refs: refs.map(r => ({ x: r.x, dS: +r.dS.toFixed(4), se: +r.se.toFixed(4), dW: +(r.dW * 100).toFixed(1) })) };
+    out.textContent = JSON.stringify({ meta, summary }, null, 1);
+    head.textContent = `DONE ${meta.secs}s`;
+} catch (e) {
+    head.textContent = 'FAIL';
+    out.textContent = String(e && e.stack ? e.stack : e);
+}
+</script>
+</body>
+</html>

@@ -103,8 +103,11 @@ const SCALE_FIELD_IDS = Object.keys(SCALE_FIELDS);
  */
 const LEVEL_FIELDS = [...SCALE_FIELD_IDS, 'cool_sec', 'hit_value', 'hit_duration_sec'];
 /** 미리보기 `amount` 의 밑수 — **하는 일**로 가른다: 때린다는 공격력 · 회복은 마법 공격력 · 소환 · 자기 회복(리커버리 · 2026-10-16)은 시전자 최대 HP (battle_design §9-2 · skill_design §12-6) */
-const AMOUNT_BASIS = { hit: 'atk', heal: 'matk', mend: 'hpMax', summon: 'hpMax', fixed: 'atk' };   // fixed(자폭)의 밑수도 공격력이다 — 단 범위를 굴리지 않고 중앙값을 쓴다 (아래 previewOf · skill_effects EFFECT_TYPES.fixed · 2026-09-21)
+const AMOUNT_BASIS = { hit: 'atk', heal: 'matk', mend: 'hpMax', summon: 'hpMax', fixed: 'atk', cleanse: 'matk' };   // fixed(자폭)의 밑수도 공격력이다 — 단 범위를 굴리지 않고 중앙값을 쓴다 (아래 previewOf · skill_effects EFFECT_TYPES.fixed · 2026-09-21)
 /** 밑수의 양끝 — 공격 · 회복은 범위(`atkMin`~`atkMax` · `matkMin`~`matkMax` · R90), 벽은 한 점(`hpMax`) */
+/** 창을 거는 나가는 방식(차례 · 자동 · 쌓인 칸) · 상시로 거는 방식(오오라 · 늘 켜짐) [2026-11-13 · R471] — 걸린 효과의 시간 · 대상 검사가 이 둘로 갈린다 */
+const WINDOWED = d => d.cast === 'turn' || d.cast === 'auto' || d.cast === 'spend';
+const STANDING = d => d.cast === 'aura' || d.cast === 'passive';
 const basisEnds = (basis, ctx) => (basis === 'hpMax' ? [ctx.hpMax, ctx.hpMax] : [ctx[`${basis}Min`], ctx[`${basis}Max`]]);
 
 /**
@@ -161,11 +164,11 @@ export function createSkillSystem(data) {
     /** 그 줄에 그 항이 있는가 — 없는 항을 미는 슬롯은 조용히 무시되므로 로드에서 막는다 (§13-1).
      *  `effect_value` · `duration_sec` 은 `apply` 줄이 거는 걸린 효과의 값 · 시간이다 — 시간은 창을 거는 쪽(`turn`)만 있다(오오라는 상시) */
     const slotFits = (d, e, field) => ({
-        mult_pct: e.effect === 'hit' || e.effect === 'heal' || e.effect === 'mend' || e.effect === 'summon',
+        mult_pct: e.effect === 'hit' || e.effect === 'heal' || e.effect === 'mend' || e.effect === 'summon' || e.effect === 'cleanse',
         hits: e.effect === 'hit',
         // 걸린 효과의 값 · 시간 — `apply` 줄, 그리고 **걸린 효과를 든 `hit` 줄**(맞은 대상에게 거는 결빙 · 2026-09-28 R177)
         effect_value: e.effect === 'apply' || (e.effect === 'hit' && e.status !== null),
-        duration_sec: (e.effect === 'apply' && d.cast === 'turn') || (e.effect === 'hit' && e.status !== null),
+        duration_sec: (e.effect === 'apply' && WINDOWED(d)) || (e.effect === 'hit' && e.status !== null),
         decay_pct: usesDecayOf(lineTarget(d, e), e),
         proc_chance_pct: e.effect === 'hit' && e.procChance > 0,
         proc_mult_pct: e.effect === 'hit' && e.procChance > 0,
@@ -409,12 +412,12 @@ export function createSkillSystem(data) {
             const st = statuses[e.status];
             if (!st) bad(`status '${e.status}' 가 skill_status 에 없다`);
             // 창이냐 상시냐 — turn 은 창(양수 지속), aura 는 창이 아니다(전투 내내 켜져 있다)
-            if (d.cast === 'turn' && !(st.dur > 0)) bad(`창을 거는데 ${st.id} 의 duration_sec ${st.dur}`);
-            if (d.cast === 'aura' && st.dur !== 0) bad(`aura 인데 ${st.id} 의 duration_sec ${st.dur} — 오오라는 창이 아니다`);
+            if (WINDOWED(d) && !(st.dur > 0)) bad(`창을 거는데 ${st.id} 의 duration_sec ${st.dur}`);
+            if (STANDING(d) && st.dur !== 0) bad(`${d.cast} 인데 ${st.id} 의 duration_sec ${st.dur} — 오오라 · 늘 켜짐은 창이 아니다`);
             // 원소는 걸린 효과가 든다 — 줄에도 적으면 어느 쪽이 참인지 두 곳을 봐야 한다
             if (e.element !== null) bad(`apply 줄의 element '${e.element}' — 원소는 걸린 효과(${st.id})가 든다`);
             // 오오라의 상시 창은 라운드를 넘어야 한다 — 라운드마다 꺼지면 다시 켜는 자리가 없다 (2026-09-24 · R151)
-            if (d.cast === 'aura' && st.roundEnd !== 'keep') bad(`aura 인데 ${st.id} 의 round_end '${st.roundEnd}' — 오오라는 keep 이다`);
+            if (STANDING(d) && st.roundEnd !== 'keep') bad(`${d.cast} 인데 ${st.id} 의 round_end '${st.roundEnd}' — 오오라 · 늘 켜짐은 keep 이다`);
         } else if (e.effect === 'hit' && e.status !== null) {
             // 맞은 대상에게 거는 걸린 효과 [2026-09-28 · R177 · battle_design §2-4 결빙] — 창이라 시간이 양수이고,
             //   적의 창은 적 배열과 함께 사라지고 파티의 창은 라운드를 넘어 남아야 해서(결빙이 라운드 경계에서 풀리면 규칙이 둘이 된다) keep 이다
@@ -459,13 +462,13 @@ export function createSkillSystem(data) {
             // heal · apply — **turn 스킬의 apply 만 적에게 걸 수 있다**(디버프 = 음수 값). heal · 오오라는 아군 쪽 고르는 대상뿐이다
             //   `enemy_single` 은 공격 뜻 하나라 여기 못 온다 — 창의 「HP 최대」는 `enemy_hp_max` (2026-09-24 · R151)
             const pick = PICK_TARGETS[t];
-            const ok = pick && (e.effect === 'apply' && d.cast === 'turn' ? true : pick.side === 'ally');
+            const ok = pick && (e.effect === 'apply' && WINDOWED(d) ? true : pick.side === 'ally');
             if (!ok) bad(`${e.effect} 인데 target '${t}' 는 쓸 수 없다`);
             // 오오라는 고르는 대상 표를 안 거친다 — battle.js `applyAuras` 가 자기(`self`) 또는 **편 배열 전체**에 건다(2026-09-24).
             //   `ally_single` · `party_adjacent` 오오라는 여기를 지나면 조용히 편 전체에 걸리므로 막는다
-            if (d.cast === 'aura' && t !== 'self' && t !== 'party') bad(`aura 인데 target '${t}' — 오오라는 self · party 만`);
+            if (STANDING(d) && t !== 'self' && t !== 'party') bad(`${d.cast} 인데 target '${t}' — 오오라 · 늘 켜짐은 self · party 만`);
             if (e.hits !== 0) bad(`${e.effect} 인데 hits ${e.hits} — 타수는 hit 만 쓴다`);
-            if ((e.effect === 'heal' || e.effect === 'mend') && !(e.mult > 0)) bad(`${e.effect} 인데 mult_pct ${e.mult}`);
+            if ((e.effect === 'heal' || e.effect === 'mend' || e.effect === 'cleanse') && !(e.mult > 0)) bad(`${e.effect} 인데 mult_pct ${e.mult}`);
             if (e.effect === 'apply' && e.mult !== 0) bad(`apply 인데 mult_pct ${e.mult} — 세기는 걸린 효과의 value 다`);
         }
         // 광역·연쇄는 **대상 수가 타수를 정한다** — hits 를 따로 적으면 두 곳 관리가 된다 (§9-3).
@@ -532,12 +535,16 @@ export function createSkillSystem(data) {
     /**
      * 파생 태그 — **`hit` 줄 + 그 줄의 대상**(줄 `target` · `-` 면 스킬 것 · 2026-09-24 R151)이 곧 답이다.
      * `enemy_rotate`(순환)는 타수만큼만 닿으므로 **광역으로 세지 않는다** (§11-2 규칙 3) — 단일도 아니다.
+     * 예외 하나 — **오오라 피해 창(`pulse`)을 거는 `apply` 줄**은 간격마다 생존 적 전원을 치므로 광역이다 (2026-11-13 R462 · 인페르노 · 홀리 파이어).
      */
     function derivedTagsOf(d) {
         const out = [];
         // 피해 태그는 **`hit` 줄만** 낸다 — 적에게 거는 창(참회·속박)이 `enemy_all` 이라고 광역「피해」는 아니다
         const hit = d.effects.find(e => e.effect === 'hit');
-        if (!hit) return out;
+        if (!hit) {
+            if (d.effects.some(e => e.effect === 'apply' && statuses[e.status]?.stat === 'pulse')) out.push('aoe');
+            return out;
+        }
         const t = lineTarget(d, hit);
         if (t === 'enemy_all' || t === 'enemy_chain' || t === 'enemy_front' || t === 'enemy_back' || t === 'enemy_hp_max_splash') out.push('aoe');   // 주 대상 + 나머지 튀김(R423)도 전원에 닿는다
         if (t === 'enemy_single' || t === 'enemy_highest_def' || t === 'enemy_hp_max' || t === 'enemy_random') out.push('single');   // 6자리 무작위 한 마리(메테오 · R430)   // HP 최대 — 스나이프(2026-10-26 · R357)
@@ -584,6 +591,8 @@ export function createSkillSystem(data) {
         validate(d, rows[i], lineRows);
         // ~~레벨 줄은 스킬마다 많아야 하나~~(2026-10-06 · R216) — 2026-10-28 워 오더스가 방어 · 저항 두 줄을 같이 올린다(R367 · skill_design §2-3). 줄마다 검사는 `validate` 그대로
         d.derived = derivedTagsOf(d);
+        // 원소 태그(의사) `el:<원소>` [2026-11-13 · R471] — 타격 줄의 원소 · 거는 창의 원소. 태그 표에 없는 이름이라 화면 · 전술은 안 세고 태그 보너스(`skill_tags.skillTagBonus`)만 읽는다(냉기 스킬 쿨타임 감소)
+        d.elTags = [...new Set(d.effects.map(e => (e.effect === 'hit' ? e.element : e.status !== null ? statuses[e.status]?.element : null)).filter(x => x && ELEMENTS.includes(x)).map(x => `el:${x}`))];
         // 무기 판정의 재료 — **CSV 칸이 없다**(파생 · skill_design §2-2 · 2026-10-03 R204). 직업 = 직업 스킬은 `owner_id` · 전직 스킬은 그 갈래의 직업 · 그 밖 null.
         //   무기가 필요한가 = 무기의 힘을 끌어다 쓰는 줄(`EFFECT_TYPES[effect].weapon` — 타격 · 회복 · 소환)이 하나라도 있는가
         if (d.ownerKind === 'advance' && advClass.size && !advClass.has(d.ownerId)) throw new Error(`skill: ${d.id} — 전직 갈래 '${d.ownerId}' 가 advance.csv 에 없다`);
@@ -603,6 +612,74 @@ export function createSkillSystem(data) {
     });
     for (const id of Object.keys(statuses))
         if (!applied.has(id)) throw new Error(`skill_status: ${id} — 아무 스킬도 안 건다(skill_effect.csv 의 apply · hit 줄이 가리키지 않는다)`);
+
+    /* ── 전직 트리 [2026-11-13 · R471 · advance_tree_draft §1 · INTERFACE §2-8 「전직 트리」] ──
+       스킬 줄 = `advance_node.csv` — 전직 스킬마다 칸 셋(`size` 크기 · `var1` · `var2` 변형) · 크기는 스킬 레벨(`up`)이고 변형은 장치 이름(`fx`) × 랭크.
+       5랭크(= `[balance.csv:advance_row_points]`)를 찍은 칸은 덤(`bonus_fx`)이 켜진다. 공통 줄 = `advance_common.csv` — 갈래마다 칸 셋(능력치 · 랭크당 값 · 5랭크 값).
+       표를 안 넘긴 검증 조립은 둘 다 비어 있다(전직 칸은 크기만 탄다) */
+    const ROW_SLOTS = ['size', 'var1', 'var2'];
+    const tails = new Map();
+    const commons = new Map();
+    (() => {
+        const bad = (t, why) => { throw new Error(`${t}: ${why}`); };
+        const num = v => (typeof v === 'number' ? v : Number(v));
+        for (const r of data.advanceNodes ?? []) {
+            const d = defs[r.skill_id];
+            if (!d || d.ownerKind !== 'advance') bad('advance_node', `${r.skill_id} — 전직 스킬이 아니다`);
+            if (!ROW_SLOTS.includes(r.slot)) bad('advance_node', `${r.skill_id}#${r.slot} — slot 은 ${ROW_SLOTS.join(' · ')}`);
+            const t = tails.get(r.skill_id) ?? {};
+            if (t[r.slot]) bad('advance_node', `${r.skill_id}#${r.slot} — 칸이 두 번`);
+            const isVar = r.slot !== 'size';
+            const fx = r.fx === NONE ? null : r.fx;
+            if (isVar ? !fx : fx) bad('advance_node', `${r.skill_id}#${r.slot} — fx '${r.fx}' (변형은 장치 이름 · 크기는 -)`);
+            const per = num(r.per_rank), arg = num(r.arg), bv = num(r.bonus_v);
+            if (![per, arg, bv].every(Number.isFinite) || (isVar && !(per > 0))) bad('advance_node', `${r.skill_id}#${r.slot} — 값 '${r.per_rank}' · '${r.arg}' · '${r.bonus_v}'`);
+            if (!r.bonus_fx || r.bonus_fx === NONE) bad('advance_node', `${r.skill_id}#${r.slot} — 5랭크 덤(bonus_fx)이 없다`);
+            if (!r.desc_kr || !r.desc_en || !r.bonus_kr || !r.bonus_en) bad('advance_node', `${r.skill_id}#${r.slot} — 설명이 비었다`);
+            t[r.slot] = { slot: r.slot, fx, per, arg, unit: r.unit, desc: { ko: r.desc_kr, en: r.desc_en },
+                bonus: { fx: r.bonus_fx, v: bv, unit: r.bonus_unit, desc: { ko: r.bonus_kr, en: r.bonus_en } } };
+            tails.set(r.skill_id, t);
+        }
+        if ((data.advanceNodes ?? []).length) for (const d of list) if (d.ownerKind === 'advance') {
+            const t = tails.get(d.id);
+            if (!t || ROW_SLOTS.some(s => !t[s])) bad('advance_node', `${d.id} — 칸 셋(${ROW_SLOTS.join(' · ')})이 다 있어야 한다`);
+        }
+        for (const r of data.advanceCommon ?? []) {
+            if (advClass.size && !advClass.has(r.advance_id)) bad('advance_common', `${r.advance_id} — 모르는 갈래`);
+            const slot = num(r.slot);
+            if (![1, 2, 3].includes(slot)) bad('advance_common', `${r.advance_id}#${r.slot} — slot 1 · 2 · 3`);
+            const cells = commons.get(r.advance_id) ?? [];
+            if (cells[slot - 1]) bad('advance_common', `${r.advance_id}#${slot} — 칸이 두 번`);
+            const per = num(r.per_rank), r5 = num(r.rank5);
+            if (!(per > 0) || !(r5 > 0)) bad('advance_common', `${r.advance_id}#${slot} — 값 '${r.per_rank}' · '${r.rank5}'`);
+            const tagged = r.stat === 'skill_tag';
+            if (tagged ? (!r.tag || r.tag === NONE || !r.effect || r.effect === NONE) : (r.tag !== NONE || r.effect !== NONE))
+                bad('advance_common', `${r.advance_id}#${slot} — skill_tag 만 tag · effect 를 쓴다`);
+            if (!r.name_kr || !r.name_en) bad('advance_common', `${r.advance_id}#${slot} — 이름이 비었다`);
+            cells[slot - 1] = { slot, stat: r.stat, tag: tagged ? r.tag : null, effect: tagged ? r.effect : null, per, rank5: r5, unit: r.unit, name: { ko: r.name_kr, en: r.name_en } };
+            commons.set(r.advance_id, cells);
+        }
+        for (const [id, cells] of commons) if (cells.length !== 3 || cells.some(c => !c)) bad('advance_common', `${id} — 칸 셋이 다 있어야 한다`);
+    })();
+    /** 공통 줄 한 칸의 값 — 1 ~ 4랭크 = 랭크 × 랭크당 값 · 5랭크 = `rank5`(5랭크 덤 · 대개 두 배) · 0 이면 0 */
+    const commonValue = (cell, rank) => (!(rank > 0) ? 0 : rank >= B.advance_row_points ? cell.rank5 : cell.per * rank);
+    /**
+     * 스킬 줄이 얹는 장치 — `{fx: 값}` · `{fx: arg}` 둘. 변형 = 랭크 × 랭크당 값(0 랭크면 키가 없다) · 5랭크 칸은 덤 `bonus_fx` 가 `bonus_v` 로 선다.
+     *   크기 칸의 덤은 크기 랭크(`up`)가 5 일 때 · 표가 없으면 둘 다 빈 객체다
+     */
+    function tailFx(id, up, vr) {
+        const t = tails.get(id);
+        const tf = {}, ta = {};
+        if (!t) return { tf, ta };
+        const full = B.advance_row_points;
+        const ranks = { size: up ?? 0, var1: vr?.[0] ?? 0, var2: vr?.[1] ?? 0 };
+        for (const s of ROW_SLOTS) {
+            const c = t[s], r = ranks[s];
+            if (c.fx && r > 0) { tf[c.fx] = (tf[c.fx] ?? 0) + c.per * r; ta[c.fx] = c.arg; }
+            if (r >= full) { tf[c.bonus.fx] = (tf[c.bonus.fx] ?? 0) + c.bonus.v; }
+        }
+        return { tf, ta };
+    }
 
     /**
      * 배정 — **출처가 칸을 정한다** (§2). 상한 [balance.csv:active_slots].
@@ -644,7 +721,10 @@ export function createSkillSystem(data) {
             //   **장비의 특정 스킬 +n**(`ctx.skillPlus` — `item.skillPlusOf` · 2026-10-08 · R225)은 고유 · 배운 칸에만 더한다(기본 스킬만 · 책 업그레이드 상한을 안 본다 — 상한은 `state.learnBook` 의 규칙)
             const up = a.source === 'advance' ? (ctx.thirdSkill ? 0 : hero?.advanceUp ?? 0)
                 : (hero?.skillLv?.[a.id] ?? 0) + (ctx.skillPlus?.[a.id] ?? 0);
-            return up > 0 ? { ...a, up } : a;
+            // 스킬 줄의 변형 랭크 `vr` [2026-11-13 · R471] — 전직 칸만 · `hero.advanceVar` · 둘 다 0 이면 키를 안 단다(`resolve` 가 장치를 얹는다)
+            const vr = a.source === 'advance' && !ctx.thirdSkill && Array.isArray(hero?.advanceVar) && hero.advanceVar.some(n => n > 0) ? hero.advanceVar.slice(0, 2) : null;
+            const out = up > 0 ? { ...a, up } : a;
+            return vr ? { ...out, vr } : out;
         });
         // ~~같은 스킬이 두 출처에서 오면 앞선 출처만 남긴다~~ **폐기 2026-09-09** [사용자 지시].
         //   **칸은 출처 자리다**(§2) — 출처가 둘이면 칸도 둘이고, 그 둘에 같은 스킬이 앉는 것도 칸이다.
@@ -662,10 +742,16 @@ export function createSkillSystem(data) {
     const resolve = active => {
         const d = defs[active?.id] ?? null;
         const up = active?.up ?? 0;
-        if (!d || !(up > 0)) return d;
-        // 스킬 레벨 [2026-10-06 · R216 · skill_design §2-3] — 정의는 공유물이라 복사본에 얹는다. 같은 (id, up) 은 같은 객체다
-        const key = `${d.id}#${up}`;
-        if (!leveled.has(key)) leveled.set(key, levelDef(d, up));
+        const vr = active?.vr ?? null;
+        // 크기 · 변형이 없으면 원본 — 장치 객체(`tf` · `ta`)가 없다 · 읽는 쪽은 `def.tf?.` 로 읽는다 (2026-11-13 R471)
+        if (!d || (!(up > 0) && !vr)) return d;
+        // 스킬 레벨 [2026-10-06 · R216 · skill_design §2-3] — 정의는 공유물이라 복사본에 얹는다. 같은 (id, up, 변형) 은 같은 객체다
+        const key = `${d.id}#${up}#${vr ? vr.join('.') : ''}`;
+        if (!leveled.has(key)) {
+            const lv = up > 0 ? levelDef(d, up) : { ...d };
+            if (d.ownerKind === 'advance') Object.assign(lv, tailFx(d.id, up, vr));
+            leveled.set(key, lv);
+        }
         return leveled.get(key);
     };
     const leveled = new Map();
@@ -904,5 +990,5 @@ export function createSkillSystem(data) {
         return !!d && d.ownerKind !== 'monster' && !d.effects.some(e => e.effect === 'call');
     };
 
-    return { defs, list, statuses, activesFor, resolve, castable, pickReady, tagsOf, fitsWeapon, scaleDef, previewOf, procIntervalSec, bookable, TAGS, DERIVED_TAGS, MAX_TAGS, EPS };
+    return { tails, commons, commonValue, ROW_SLOTS, defs, list, statuses, activesFor, resolve, castable, pickReady, tagsOf, fitsWeapon, scaleDef, previewOf, procIntervalSec, bookable, TAGS, DERIVED_TAGS, MAX_TAGS, EPS };
 }

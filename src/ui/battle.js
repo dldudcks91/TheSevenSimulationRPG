@@ -46,7 +46,7 @@ import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skil
 import { t, L } from './i18n.js';
 import { DEV_HOST } from './env.js';
 import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard, withLive, refreshTip, reanchorTip, headingHelp } from './tip.js';
-import { paceAt, paceStep, paceCfg, actorOf, RISE_MS, PEAK_MS } from './pace.js';   // 박자 — 세움이 언제 · 얼마나 서나. 앱 시계와 같은 걸음이다 (ADR-0654)
+import { paceAt, paceStep, paceCfg, actorOf, isSkillAct, isSkillOnly, RISE_MS, PEAK_MS } from './pace.js';   // 박자 — 세움이 언제 · 얼마나 서나. 앱 시계와 같은 걸음이다 (ADR-0654)
 import { fxPreloadSkills, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear, fxArriveMark, fxArrive, fxRoundClear, SPEED_K, lungeFxOn } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 기본 공격 이펙트 + 피격 반응 + 공격 시 흔들림(넷 다 기본 On) — 넷 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468 · ADR-0501)
 
 /** 배속 버튼 — 배포 주소는 ×2 까지 · 개발 환경은 ×4 · ×16 도(×16 은 2026-10-05 사용자 지시) (SCREEN_DESIGN §4-2 · ADR-0755).
@@ -332,6 +332,12 @@ export function mountBattle(container, opts) {
             slots: (result.potion?.slots ?? []).map(s => (s ? { id: s.id, heal: s.heal, full: true } : null)),
             firedAt: 0, readyAt: 0,
         },
+        // 적 물약 칸 — 결투의 수비 쪽이 물약을 들고 왔을 때만(`result.enemyPotion` · 2026-11-13 · R460 · ADR-1067) · 파티 칸과 같은 모양 · 잠긴 칸이 없다(칸 수 = 든 칸)
+        enemyPotion: result.enemyPotion ? {
+            max: result.enemyPotion.max, lock: null, cap: result.enemyPotion.max,
+            slots: result.enemyPotion.slots.map(s => (s ? { id: s.id, heal: s.heal, full: true } : null)),
+            firedAt: 0, readyAt: 0,
+        } : null,
     };
 
     // 파티 유닛 — 결과의 party 정보 + 로스터의 표시 정보(이름·죄종·직업)
@@ -480,6 +486,7 @@ function buildDom(state, stage, stageId, shrine, buffs, opts = {}) {
                 <div class="divider"><span class="muted">VS</span></div>
                 <div class="side side-party"></div>
                 <div class="p-belt b-belt">${potionBeltHtml(state.potion, state.t)}</div>
+                ${state.enemyPotion ? `<div class="p-belt b-belt e-belt">${potionBeltHtml(state.enemyPotion, state.t)}</div>` : ''}
                 ${buffs ? runBuffIconsHtml(curseOf(stageId, opts.difficulty)) : ''}
                 ${stageId != null ? '<div class="stage-clock"></div>' : ''}
                 <div class="battle-result"></div>
@@ -595,14 +602,18 @@ const potionCdLeft = (p, now) => (p.readyAt > now ? clamp01((p.readyAt - now) / 
 /** 물약 쿨 판을 지금 시각으로 맞춘다 (R427 · ADR-1034) — 찬 칸 전부가 같은 높이 · 빈 칸 · 잠긴 칸 · 물약 없이 시작한 칸은 판이 없다 */
 function refreshPotionCd(state, root) {
     const left = potionCdLeft(state.potion, state.t);
-    for (const m of root.querySelectorAll('.b-belt .p-slot.full > .cd-mask')) m.style.transform = `scaleY(${left})`;
+    for (const m of root.querySelectorAll('.b-belt:not(.e-belt) .p-slot.full > .cd-mask')) m.style.transform = `scaleY(${left})`;
+    if (!state.enemyPotion) return;
+    // 적 물약 쿨 — 적 쪽 하나의 쿨이다(파티와 따로 · R460 · ADR-1067)
+    const eLeft = potionCdLeft(state.enemyPotion, state.t);
+    for (const m of root.querySelectorAll('.e-belt .p-slot.full > .cd-mask')) m.style.transform = `scaleY(${eLeft})`;
 }
 /**
  * 칸마다 **물약 카드**를 건다 (SCREEN_DESIGN §2 「물약 툴팁 규격」 · ADR-0315 · ~~`title` 한 줄~~) — 칸이 문자열로 서므로
  * 그린 **뒤에** 건다. 회복량은 **그 런이 싣고 나간 값**(`slots[i].heal`)이다 — 재생기는 CSV 를 다시 읽지 않는다
  */
 function bindPotionTips(state, root) {
-    for (const n of root.querySelectorAll('.b-belt .p-slot')) {
+    for (const n of root.querySelectorAll('.b-belt:not(.e-belt) .p-slot')) {
         const i = Number(n.dataset.i);
         // 잠긴 칸 — 그 칸을 여는 건물 랭크 한 줄(앱이 넘긴 `potionLocks.text` · 편성 탭과 같은 `tip-mini` · ADR-0716)
         if (i >= state.potion.max) {
@@ -614,12 +625,21 @@ function bindPotionTips(state, root) {
         const s = state.potion.slots[i];
         bindTipNode(n, () => potionTipCard(s?.full ? s.id : null, { heal: s?.heal }));
     }
+    // 적 물약 칸 — 잠긴 칸이 없다 · 물약 카드만 (R460 · ADR-1067)
+    if (!state.enemyPotion) return;
+    for (const n of root.querySelectorAll('.e-belt .p-slot')) {
+        const s = state.enemyPotion.slots[Number(n.dataset.i)];
+        bindTipNode(n, () => potionTipCard(s?.full ? s.id : null, { heal: s?.heal }));
+    }
 }
-/** 물약 칸을 다시 칠한다 — `fired` = 방금 마신 칸이면 한 번 번쩍인다(되감기 중에는 안 번쩍인다 · 스킬 칸의 `fire` 와 같은 520ms) */
-function paintPotion(state, root, fired = -1) {
-    const belt = root.querySelector('.b-belt');
+/** 물약 칸을 다시 칠한다 — `fired` = 방금 마신 칸이면 한 번 번쩍인다(되감기 중에는 안 번쩍인다 · 스킬 칸의 `fire` 와 같은 520ms) ·
+ *  `side` = 'enemy' 면 적 물약 띠(결투 · R460) */
+function paintPotion(state, root, fired = -1, side = 'party') {
+    const enemy = side === 'enemy';
+    if (!enemy && fired < 0 && state.enemyPotion) paintPotion(state, root, -1, 'enemy');   // 통째로 다시 칠할 때(되감기 끝 · 라운드) 적 띠도 같이
+    const belt = root.querySelector(enemy ? '.e-belt' : '.b-belt:not(.e-belt)');
     if (!belt || state.catchUp) return;      // 되감는 동안은 안 칠한다 — 끝에 한 번 (`paintCaughtUp`)
-    belt.innerHTML = potionBeltHtml(state.potion, state.t);
+    belt.innerHTML = potionBeltHtml(enemy ? state.enemyPotion : state.potion, state.t);
     bindPotionTips(state, root);
     if (fired < 0) return;
     const slot = belt.querySelector(`.p-slot[data-i="${fired}"]`);
@@ -647,6 +667,10 @@ const enemyList = state => state.enemies.map(e => L(e.name)).join(', ');
 /* 띠 왼쪽의 신원 한 조각 (2026-09-03 사용자 지시 · SCREEN_DESIGN §4-2) — 영웅은 레벨·직업, 몬스터는 정예/보스 라벨.
    일반 몬스터는 빈 채다(테두리 색이 이미 말한다). 라벨은 라운드 종류와 같은 `kind.*` 키를 재사용한다 */
 const clsName = id => { const c = D.classes.find(x => x.id === id); return c ? L(c) : (id ?? ''); };
+/* 직업 자리 — **전직한 영웅은 전직 이름**(`hero.advance` = 갈래 id → `advance.csv` 이름 · 결투 상대 영웅도) [2026-11-13 사용자 지시 · ADR-1076].
+   전직 전 · 전직하는 중(`advance` 가 아직 빈다) · 몬스터는 기본 직업 이름 */
+const advName = id => { const a = (D.advanceRows ?? []).find(r => r.advance_id === id); return a ? L({ ko: a.name_kr, en: a.name_en }) : ''; };
+const jobName = (hero, cls) => (hero?.advance && advName(hero.advance)) || clsName(cls);
 const gradeLabel = u => u.grade === 'elite' ? t('kind.elite')
     : u.grade === 'stage_boss' ? t('kind.boss')
     : u.grade === 'chapter_boss' ? t('kind.chapterBoss') : '';
@@ -693,7 +717,7 @@ const eliteTraitView = traits => (traits ?? []).map(({ slot, id } = {}) => {
 const traitsHtml = u => u.eliteTraits?.length
     ? `<div class="unit-traits">${u.eliteTraits.map(x => `<span class="trait-chip"${x.color ? ` style="color:${x.color}"` : ''}>${L(x.name)}</span>`).join('')}</div>`
     : '';
-const identOf = (u, state) => u.hero ? `${lvSpan(state, u, u.hero.level)} · ${clsName(u.cls)}` : gradeLabel(u);
+const identOf = (u, state) => u.hero ? `${lvSpan(state, u, u.hero.level)} · ${jobName(u.hero, u.cls)}` : gradeLabel(u);
 /* 몬스터의 종족 — `monster.csv:monster_type` 의 이름(의뢰가 검증한 `SYS.commission.races`) [2026-10-03 사용자 지시 · ADR-0494].
    영웅(결투장의 적 영웅 포함)은 종족이 없다 */
 const raceLabel = u => {
@@ -707,7 +731,7 @@ const raceLabel = u => {
 const identV2 = (u, state) => {
     const lv = u.side === 'party' ? (u.hero?.level ?? 1) : u.sheet?.level;
     const cls = u.hero?.cls ?? D.monsters?.[u.monsterId]?.cls;
-    return [lv != null ? lvSpan(state, u, lv) : '', cls ? clsName(cls) : '', raceLabel(u)].filter(Boolean).join(' · ');
+    return [lv != null ? lvSpan(state, u, lv) : '', cls ? jobName(u.hero, cls) : '', raceLabel(u)].filter(Boolean).join(' · ');
 };
 /* 신원의 레벨 칸 — `Lv.n` 을 제 칸(`.unit-lv`)에 든다. **영웅이 본 적 없는 레벨업이면 반짝인다**(`lv-new` — 그 영웅 카드를 누르면 걷힌다)
    [2026-09-29 · SCREEN_DESIGN §4-2 · ADR-0440 · 누르는 자리 ADR-0463]. 본 레벨은 앱의 화면 상태다(`opts.lvUnseen` — 세이브 밖 · 새로고침하면 걷힌다) */
@@ -764,11 +788,12 @@ const cardV2 = () => CARD_V2;
      ③ 내려옴 — 세움이 풀리면 제자리로 돌아오고 재생이 이어진다
    다른 카드의 행동 게이지 · 창 시간 · 다음 사건은 ①②동안 멈춰 시선이 행동한 카드에 모인다.
    「공격 시 흔들림」(fx.js:lungeFxOn)이 꺼져 있으면 ①③ 없이 ②의 세움만 한다.
-   `stop` = 세우기만 · `dim` = 세운 동안 그 행동에 안 낀 카드를 어둡게 · `off` = 세움 없는 재생 · 기본은 `dim`(ADR-0621).
-   개발용 비교 버튼(devcompare.js — ⚙ 설정 탭 · 임시)이 `<html data-focus="off|stop|dim">` 로 **이 브라우저에서만** 고른다.
+   `stop` = 세우기만 · `dim` = 세운 동안 그 행동에 안 낀 카드를 어둡게 · `off` = 세움 없는 재생 · 기본은 `off`(ADR-0713) ·
+   `skill`(Skill Dim) = 스킬 시전(`pace.js:isSkillAct`)만 `dim` 처럼 세우고 나머지 행동은 `off` 처럼 그린다 · `skillstop`(Skill Stop) = 그 `stop` 판(SCREEN_DESIGN §10-2).
+   개발용 비교 버튼(devcompare.js — ⚙ 설정 탭 · 임시)이 `<html data-focus="off|stop|dim|skillstop|skill">` 로 **이 브라우저에서만** 고른다.
    **세움은 시계의 일이다** [2026-10-17 사용자 지시 · ADR-0654] — 언제 · 얼마나 서나는 `pace.js` 의 걸음이 정하고 재생기는 그 박자를 그린다.
    앱 시계(안 보는 부대 · 숨긴 탭)도 같은 걸음을 쓰므로 세운 만큼 원정이 늦게 가는 것은 **보든 안 보든 같다** */
-export const FOCUS_MODES = ['off', 'stop', 'dim'];
+export const FOCUS_MODES = ['off', 'stop', 'dim', 'skillstop', 'skill'];
 const FOCUS_DEFAULT = 'off';   // 2026-10-22 ADR-0713 (~~dim~~ ADR-0621)
 export const focusMode = () => { const v = document.documentElement.dataset.focus; return FOCUS_MODES.includes(v) ? v : FOCUS_DEFAULT; };
 /** 지금 설정의 세움 길이 — 포커스 · 공격 시 흔들림 · 배속 배수(`SPEED_K`). 재생기와 앱 시계가 같이 읽는다 (`pace.js:paceCfg`) ·
@@ -784,10 +809,11 @@ function syncFocus(state, root, opts) {
     state.focusG = g;
     root.querySelector('.arena')?.classList.remove('focus-dim');
     for (const n of root.querySelectorAll('.unit-slot.focus-in')) n.classList.remove('focus-in');
-    for (const n of root.querySelectorAll('.unit-slot.fx-advance')) n.classList.remove('fx-advance');
+    // Off 의 나감(`.off-rise` — Skill Dim 에서 세움 밖의 행동)은 `syncOffRise` 가 걷는다 · Stop · Dim 에서는 그 표지가 없다
+    for (const n of root.querySelectorAll('.unit-slot.fx-advance:not(.off-rise)')) n.classList.remove('fx-advance');
     if (g < 0) return;
     const key = actorOf(tl[g]);
-    if (focusMode() === 'dim') {
+    if (focusMode() === 'dim' || focusMode() === 'skill') {
         const keys = new Set();   // 그 행동에 낀 유닛 — 행동한 쪽 · 맞은 쪽 · 창을 받은 쪽 · 불린 무리
         for (let j = g; j < p.g1; j++) {
             const ev = tl[j];
@@ -806,6 +832,8 @@ function syncFocus(state, root, opts) {
     const rise = p.phase === 'rise' ? Math.max(0, Math.min(RISE_MS, p.hold / k - PEAK_MS)) : RISE_MS;
     slot.style.setProperty('--rise-ms', `${Math.round(rise * k)}ms`);
     slot.classList.add('fx-advance');
+    // Skill Stop · Skill Dim — 풀린 뒤 내려오는 것은 Off 의 몫(`syncOffRise` — 때린 뒤 잠깐 섬 · 정신 집중이 열린 동안 나간 채)
+    if (isSkillOnly(focusMode())) slot.classList.add('off-rise');
 }
 /* Focus Off 의 나감 [2026-10-21 사용자 「Focus가 off일 때도 stop이나 dim일 때처럼 영웅들이 천천히 올라와서 때리고 내려가도록」 · SCREEN_DESIGN §10-2] —
    Off 는 시각을 안 세운다. 그래서 같은 세 박자를 **시각을 따라** 그린다: 행동이 `RISE_MS + PEAK_MS` 앞으로 다가오면 그 카드가 미리 올라가기 시작해
@@ -817,7 +845,8 @@ const OFF_STAY_MS = 200;   // ② 때린 뒤 나간 채 서 있는 시간(실제
 const OFF_LOOK_SEC = 1;    // 내다보는 재생 시각의 상한(초) — 걸음의 내다보기(`pace.js:LOOK_SEC`)와 같다. 높은 배속에선 올라감이 그만큼 짧아진다
 function syncOffRise(state, root, opts) {
     const want = new Map();   // 나가 있을 카드 → 그 카드의 다가오는 행동 시각(이미 때렸으면 null)
-    if (focusMode() === 'off' && lungeFxOn() && !state.catchUp && !state.ended) {
+    const fm = focusMode();
+    if ((fm === 'off' || isSkillOnly(fm)) && lungeFxOn() && !state.catchUp && !state.ended) {
         const tl = opts.result.timeline, t = state.t, sp = state.speed, k = SPEED_K[sp] ?? 1;
         // 눈금 한 칸(TICK)을 더 본다 — 눈금 사이에 다가온 행동도 올라감을 다 갖게(먼저 본 만큼 선 박자가 그 눈금 몫 길어진다)
         const ahead = Math.min(OFF_LOOK_SEC, (RISE_MS + PEAK_MS) * k / 1000 * sp + TICK), stay = OFF_STAY_MS * k / 1000 * sp;
@@ -828,7 +857,9 @@ function syncOffRise(state, root, opts) {
         }
         for (let j = state.idx; j < tl.length && tl[j].t <= t + ahead && tl[j].e !== 'round' && tl[j].e !== 'end'; j++) {
             const key = actorOf(tl[j]);
-            if (key != null && !want.has(key)) want.set(key, tl[j].t);
+            if (key == null || want.has(key)) continue;
+            // Skill Stop · Skill Dim — 세울 스킬 시전은 미리 안 올린다(박자가 거기서 서고 `syncFocus` 의 ①이 올린다) · 이미 나가 있으면 그대로 둔다
+            want.set(key, isSkillOnly(fm) && isSkillAct(tl[j]) ? null : tl[j].t);
         }
         // 정신 집중이 열린 카드는 끝날 때까지 나간 채 선다 (R318 · ADR-0720) — 방 사이(주기)가 내다보기보다 길어도 안 내려온다
         for (const [key, u] of state.units) if (u.chan && u.hp > 0 && !want.has(key)) want.set(key, null);
@@ -1785,7 +1816,8 @@ const unitSkillCtx = (u, combatOf = null) => ({
 /** 적 카드 한 장의 상태 — `round` 의 `enemies` 와 `call`(불러내기 · ADR-0161)의 `units` 가 **같은 모양**이라 한 곳에서 만든다 (INTERFACE §2-6).
  *  @param at 그 카드가 선 시각 — 행동 게이지의 기준 · 스킬 칸의 첫 준비 시각 */
 const enemyEntry = (e, at) => ({
-    key: e.key, side: 'enemy', monsterId: e.monsterId, grade: e.grade, sin: e.sin, traits: e.traits,
+    // 죄종 — 몬스터는 제 칸 · 결투 상대 영웅은 영웅의 죄종(이름 줄 칩이 아군과 같다 · ADR-1078)
+    key: e.key, side: 'enemy', monsterId: e.monsterId, grade: e.grade, sin: e.sin ?? e.hero?.sin, traits: e.traits,
     eliteTraits: TRAIT_DEMO ? demoEliteTraits(e) : eliteTraitView(e.traits),   // 카드 위 특성 칩 (ADR-0768) — 로직이 굴린 칸 · 개발용 `&traits=` 면 예시로 덮는다
 
     hero: e.hero ?? null, cls: e.hero?.cls,
@@ -2025,12 +2057,16 @@ function apply(state, root, opts, ev) {
             //   **자동이라 앞에 `skill` 이벤트가 없다** — 회복과 같은 자리 · 같은 색으로 팝업을 띄우고 로그 한 줄을 남긴다
             const u = U(ev.u);
             if (u) { u.hp = ev.dhp; popup(state, u, `+${ev.amt}`, 'heal'); refreshUnit(state, u); }
-            const slot = state.potion.slots[ev.i];
+            // 적이 마신 것(`side: 'enemy'` — 결투의 수비 쪽 · R460 · ADR-1067)은 적 물약 띠가 든다
+            const P = ev.side === 'enemy' ? state.enemyPotion : state.potion;
+            const slot = P?.slots[ev.i];
             if (slot) slot.full = false;
-            // 파티 물약 쿨 — 시뮬이 실은 다음 준비 시각(`ready`)부터 남은 찬 칸이 덮였다가 걷힌다 (R427 · ADR-1034) · 옛 타임라인(키 없음)은 판이 안 선다
-            state.potion.firedAt = ev.t;
-            state.potion.readyAt = ev.ready ?? ev.t;
-            paintPotion(state, root, ev.i);
+            // 물약 쿨 — 시뮬이 실은 다음 준비 시각(`ready`)부터 남은 찬 칸이 덮였다가 걷힌다 (R427 · ADR-1034) · 옛 타임라인(키 없음)은 판이 안 선다
+            if (P) {
+                P.firedAt = ev.t;
+                P.readyAt = ev.ready ?? ev.t;
+                paintPotion(state, root, ev.i, ev.side === 'enemy' ? 'enemy' : 'party');
+            }
             // 대상 칸은 빈다 · 남은 칸 수는 안 적는다 — 아레나의 물약 칸이 든다 (ADR-0189)
             if (u) logLine(state, root, u.side, ['potion', ev.amt], L(u.name), potionIcon(slot?.id), slot ? L(potionInfo(slot.id)?.name ?? '') : '', '', `+${ev.amt}`, 'heal-t');
             break;

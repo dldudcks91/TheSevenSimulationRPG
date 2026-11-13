@@ -6,6 +6,8 @@ Rule (docs/client/ARCHITECTURE.md §11 「배포판」):
 - In:  index.html (repo root redirect) · src/index.html · src/ui · src/game_logic · src/data/*.csv
        · installed art under src/assets/art (originals `source/` · `*_source/` stay out) · src/dev/funnel.* (admin funnel page).
 - Out: docs · output · prototypes · tmp · PLAN*.md · READMEs · the dev test pages · CSV `inherited/`.
+- Written: src/assets/art/preload.json — the images the menu fetches up front (every built image minus PRELOAD_SKIP ·
+  SCREEN_DESIGN §3 · ADR-1080). The repo has no such file, so the dev server never preloads.
 - JS · CSS lose their comments; HTML loses `<!-- -->` comments (inline <script>/<style> get the JS/CSS treatment).
   Nothing else changes — names, strings, template literals and regex literals are copied byte for byte.
   Whitespace outside literals is tidied (blank lines and trailing spaces go; a newline stays wherever one was).
@@ -21,6 +23,8 @@ Requires the standard library only.
 
 from __future__ import annotations
 
+import fnmatch
+import json
 import re
 import shutil
 import sys
@@ -329,6 +333,22 @@ def is_art_original(p: Path) -> bool:
     return any(part == "source" or part.endswith("_source") for part in p.relative_to(SRC / "assets/art").parts[:-1])
 
 
+# The menu fetches these images up front (SCREEN_DESIGN §3 · ADR-1080): every built image except the looks the default
+# screen never shows. Keep in step with the defaults — ui/mock.js:BG_STYLES[0] (illustrate) · ui/skill_art.js:ART_DEFAULT (darktoon).
+PRELOAD_SKIP = [
+    "src/assets/art/backgrounds/gpt/*",
+    "src/assets/art/backgrounds/pixel/background_stage_*",
+    "src/assets/art/fx/skills/*_foil.*",
+]
+
+
+def preload_list(files: list[tuple[Path, str]]) -> list[str]:
+    """Paths relative to src/ (what the page fetches as ./<path>)."""
+    return [rel[len("src/"):] for _, rel in files
+            if rel.startswith("src/assets/art/") and Path(rel).suffix.lower() in ART_EXT
+            and not any(fnmatch.fnmatchcase(rel, p) for p in PRELOAD_SKIP)]
+
+
 def plan(with_dev: bool) -> list[tuple[Path, str]]:
     files: list[tuple[Path, str]] = [(ROOT / "index.html", "index.html"), (SRC / "index.html", "src/index.html")]
     for d in ("ui", "game_logic"):
@@ -354,10 +374,14 @@ def main(argv: list[str]) -> int:
     if out.exists():
         shutil.rmtree(out)
     stats: dict = {}
-    for src, rel in plan("--with-dev" in argv):
+    files = plan("--with-dev" in argv)
+    for src, rel in files:
         if not src.is_file():
             raise BuildError(f"missing: {src.relative_to(ROOT).as_posix()}")
         build_file(src, out / rel, stats)
+    pre = preload_list(files)
+    put(out / "src/assets/art/preload.json", json.dumps(pre, separators=(",", ":")))
+    print(f"preload {len(pre):5d} images -> src/assets/art/preload.json")
     (out / ".nojekyll").write_text("", encoding="utf-8")
     for kind in sorted(stats):
         n, a, b = stats[kind]

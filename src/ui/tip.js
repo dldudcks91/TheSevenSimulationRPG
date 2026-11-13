@@ -369,7 +369,7 @@ const tipSlotDef = id => D.slots.find(s => s.id === id);
 const tipPosDef = pos => tipSlotDef(D.equipSlots.find(s => s.id === pos)?.part);
 const tipItemImg = it => {
     const src = M.itemArt(it?.slot, it?.group, it?.uid, it?.baseId);
-    // 고른 그림 묶음에 그림이 없으면 검은 칸 — 앱의 `itemImg` 와 같은 규칙 (SCREEN_DESIGN §2 · ADR-1051)
+    // 그림이 없으면 검은 칸 — 앱의 `itemImg` 와 같은 규칙 (SCREEN_DESIGN §2 · ADR-1051)
     return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : it ? '<i class="it-noart"></i>' : '';
 };
 
@@ -1071,8 +1071,11 @@ const sec = v => hl(num(v));
  * 범위 표기 `{min, max}` — 양끝이 다르면 `st.range`(「1,200~1,800」) · 같으면 한 수 (R90 · SCREEN_DESIGN §2 · §6 · ADR-0108).
  * 무기 피해 · 스킬 피해 · 회복량이 쓴다 — 캐릭터 시트 · 아이템 툴팁 · 대장간도 같은 함수를 부른다(app.js)
  */
-export const rangeText = r => (r.min === r.max ? r.min.toLocaleString()
-    : t('st.range', { a: r.min.toLocaleString(), b: r.max.toLocaleString() }));
+export const rangeText = r => {
+    // 양끝은 정수로 찍는다 — 데미지 % 가 곱해진 값이 `1,234.567` 처럼 나왔다(2026-11-13 사용자 지시 · SCREEN_DESIGN §2) · 계산은 소수 그대로
+    const a = Math.round(r.min), b = Math.round(r.max);
+    return a === b ? a.toLocaleString() : t('st.range', { a: a.toLocaleString(), b: b.toLocaleString() });
+};
 
 /** 숫자 자리의 단위 — 틀이 아니라 **자리 안에** 든다. 틀이 `{s}초간` 처럼 단위를 들면 Alt 의 식이 값과 단위 사이에 끼인다.
  *  `pct` 자리의 숫자(원값 · 실효값 · 계수)는 **비율**로 온다 — `slot` 이 찍기 전에 100 을 곱한다(`M.pctNum` · R111) */

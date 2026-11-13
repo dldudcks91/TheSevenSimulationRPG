@@ -40,10 +40,16 @@ export function groupEnd(tl, j) {
     return k;
 }
 
-/** 세움 길이 — `focus` = 'off' | 'stop' | 'dim' · `lunge` = 공격 시 흔들림 · `k` = 배속 배수. Off 는 행동 세움이 없고 라운드 숨만 선다 */
+/** `Skill Stop` · `Skill Dim` 이 세우는 행동 — 스킬 시전(`skill` 사건 · 장비 발동 시전 포함)뿐. 정신 집중의 뒤 방 · 모으기의 쏘는 방(`chan`) · 타격 · 반격은 안 선다 (SCREEN_DESIGN §10-2 · 개발용 임시) */
+export const isSkillAct = ev => ev.e === 'skill';
+/** 스킬 시전에만 서는 포커스 — `skillstop`(Skill Stop) · `skill`(Skill Dim). 나머지 행동은 Off 처럼 그린다 */
+export const isSkillOnly = focus => focus === 'skillstop' || focus === 'skill';
+
+/** 세움 길이 — `focus` = 'off' | 'stop' | 'dim' | 'skillstop' | 'skill' · `lunge` = 공격 시 흔들림 · `k` = 배속 배수. Off 는 행동 세움이 없고 라운드 숨만 선다 ·
+ *  `skillstop` · `skill` 은 `skillOnly` — 스킬 시전에만 선다 */
 export function paceCfg(focus, lunge, speed, k = 1) {
     const on = focus !== 'off';
-    return { speed, rise: on && lunge ? (RISE_MS + PEAK_MS) * k : 0, focus: on ? FOCUS_MS * k : 0, gap: ROUND_GAP_MS * k };
+    return { speed, rise: on && lunge ? (RISE_MS + PEAK_MS) * k : 0, focus: on ? FOCUS_MS * k : 0, gap: ROUND_GAP_MS * k, skillOnly: isSkillOnly(focus) };
 }
 
 /** 그 시각에 선 박자 — 세움 없이 `t` 까지 지난 자리(재개 · 결투 · 개발 재생처럼 런 핸들의 박자가 없을 때) */
@@ -86,7 +92,7 @@ export function paceStep(p, tl, ms, cfg, reach = null) {
             const ev = tl[j];
             if (ev.e === 'end') { hit = 'end'; break; }
             if (ev.e === 'round') { if (p.rounds > 0 && cfg.gap > 0) { hit = 'round'; break; } p.rounds++; continue; }
-            if (cfg.focus > 0 && actorOf(ev) != null) { hit = 'act'; break; }
+            if (cfg.focus > 0 && actorOf(ev) != null && (!cfg.skillOnly || isSkillAct(ev))) { hit = 'act'; break; }
         }
         if (!hit) {   // 세울 사건 없이 내다본 끝까지 간다
             left = Math.max(0, left - (s - p.t) / cfg.speed * 1000);
