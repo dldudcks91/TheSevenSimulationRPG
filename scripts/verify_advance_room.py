@@ -43,6 +43,11 @@ def read(page):
     return page.evaluate('window.__advanceReview.read()')
 
 
+def seen(page, selector):
+    page.locator(selector).scroll_into_view_if_needed()
+    return reachable(page, selector)
+
+
 def unchanged(before, after):
     return all(before[key] == after[key] for key in ('hero', 'gold', 'books', 'blueprints'))
 
@@ -74,21 +79,24 @@ with sync_playwright() as pw:
             page.locator('.lib-advance-open').wait_for(timeout=25000)
             check(key+':no-folder-tabs',page.locator('.c-lib-col > .fg-tabs').count()==0)
             check(key+':book-panels',page.locator('.lib-split > .lib-sec').count()==2)
+            check(key+':room-cell',page.locator('.lib-top > .lib-room .lib-room-art').count()==3)
             page.screenshot(path=str(OUT/f'{key}-books.png'))
             before=read(page)
             page.locator('.lib-advance-open').click()
             check(key+':low-level-disabled',page.locator('.tr-adv-go').is_disabled())
-            check(key+':all-paths-visible',page.locator('.advance-path').count()==3 and all(reachable(page,f'.advance-path:nth-child({n})') for n in (1,2,3)))
+            check(key+':all-paths-visible',page.locator('.advance-path').count()==3 and all(seen(page,f'.advance-path:nth-child({n})') for n in (1,2,3)))
             check(key+':footer-visible',reachable(page,'.tr-adv-go'))
             page.locator('.advance-path').nth(1).click()
             check(key+':preview-free',unchanged(before,read(page)))
+            check(key+':board-follows-click',page.locator('#modal .adv-board').count()==1 and page.locator('.advance-path.on').get_attribute('data-branch')==read(page)['selection']['branch'])
             page.screenshot(path=str(OUT/f'{key}-room.png'))
             page.locator('#modal .modal-x').click()
             check(key+':close-preserves-game',unchanged(before,read(page)))
             page.locator('.lib-advance-open').click()
-            check(key+':reopen-requires-choice',read(page)['selection'] is None)
+            top=read(page)['advance']['branches'][0]['id']
+            check(key+':reopen-top-path-selected',page.locator('.advance-path.on').get_attribute('data-branch')==top and page.locator('#modal .adv-board').count()==1)
             page.evaluate('__advanceReview.ready()')
-            check(key+':no-implicit-confirm',page.locator('.tr-adv-go').is_disabled())
+            check(key+':top-path-ready',not page.locator('.tr-adv-go').is_disabled())
             # Every class and branch must render its real skills and strengthening cells.
             for cls in ('warrior','knight','mage','archer','priest'):
                 page.evaluate('__advanceReview.cls',cls)
@@ -98,11 +106,12 @@ with sync_playwright() as pw:
                     page.locator('.advance-path').nth(i).click()
                     check(key+':'+branch['id']+':selected',read(page)['selection']['branch']==branch['id'])
                     for j,skill in enumerate(branch['skills']):
-                        cell=page.locator(f'.advance-room [data-advskill="{skill}"]')
+                        cell=page.locator(f'#modal .adv-board [data-advskill="{skill}"]')
                         cell.scroll_into_view_if_needed()
                         cell.click()
-                        check(key+':'+skill+':preview-cells',page.locator('.advance-room [data-advtail]').count()==3)
-                        images=page.locator('.advance-room [data-advtail] img').evaluate_all('(els)=>els.map(e=>e.getAttribute("src"))')
+                        check(key+':'+skill+':selects-its-path',read(page)['selection']['branch']==branch['id'])
+                        check(key+':'+skill+':preview-cells',page.locator('#modal .adv-board [data-advtail]').count()==3)
+                        images=page.locator('#modal .adv-board [data-advtail] img').evaluate_all('(els)=>els.map(e=>e.getAttribute("src"))')
                         check(key+':'+skill+':matching-art',all(skill+'_' in src for src in images) and len(images)==3)
                     check(key+':'+branch['id']+':no-game-mutation',unchanged(before,read(page)))
             # Keyboard selection, money gating and actual irreversible action.
@@ -120,7 +129,7 @@ with sync_playwright() as pw:
             check(key+':advance-charges-once',after['gold']==before['gold']-before['advance']['gold']['need'])
             check(key+':correct-path',after['hero']['advance']==chosen)
             check(key+':does-not-auto-learn',not after['hero']['advanceSkill'])
-            check(key+':completed-one-path',page.locator('.advance-path').count()==1 and page.locator('.tr-adv-go').count()==0)
+            check(key+':completed-path-marked',page.locator('.advance-path').count()==3 and page.locator('.advance-path.done').get_attribute('data-branch')==chosen and page.locator('.tr-adv-go').count()==0)
             check(key+':mastery-action-visible',reachable(page,'.advance-mastery-open'))
             page.screenshot(path=str(OUT/f'{key}-complete.png'))
             page.locator('.advance-mastery-open').click()
@@ -137,18 +146,19 @@ with sync_playwright() as pw:
             page.locator('#modal .modal-x').click()
             check(key+':mastery-returns-to-room',read(page)['modal']=='advance')
             page.locator('#modal .modal-x').click()
-            check(key+':completed-entry',page.locator('.lib-mastery-open').count()==1)
+            check(key+':completed-entry',page.locator('.lib-room .lib-room-art.off').count()==2)
             check(key+':no-double-charge',read(page)['gold']==after['gold'])
-            page.locator('.lib-mastery-open').click()
-            page.locator('#modal .modal-x').click()
-            check(key+':direct-mastery-returns-to-books',read(page)['modal'] is None)
+            page.locator('.lib-advance-open').click()
+            check(key+':completed-room-locks-choice',page.locator('.advance-path.done').count()==1 and page.locator('.advance-path.off').count()==2)
+            page.keyboard.press('Escape')
+            check(key+':room-closes-to-books',read(page)['modal'] is None)
             # Switching heroes must discard applicability of the previous hero's choice.
             page.evaluate('__advanceReview.hero(1)')
             page.locator('.lib-advance-open').click()
-            check(key+':hero-context',read(page)['selection'] is None and page.locator('.advance-path').count()==3)
+            check(key+':hero-context',read(page)['selection'] is None and page.locator('.advance-path').count()==3 and page.locator('.advance-path.on').get_attribute('data-branch')==read(page)['advance']['branches'][0]['id'])
             page.evaluate('__advanceReview.lock()')
             page.locator('.advance-path').first.click()
-            check(key+':building-gate-still-previews',not read(page)['advance']['open'] and page.locator('.tr-adv-go').is_disabled() and page.locator('.advance-room .adv-board').count()==1)
+            check(key+':building-gate-still-previews',not read(page)['advance']['open'] and page.locator('.tr-adv-go').is_disabled() and page.locator('#modal .adv-board').count()==1)
             page.keyboard.press('Escape')
             check(key+':escape-closes',read(page)['modal'] is None)
             print(key+': PASS',flush=True)

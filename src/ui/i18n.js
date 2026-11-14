@@ -245,7 +245,7 @@ const STRINGS = {
     'hint.gamble': { ko: '판돈을 고르고 슬롯을 돌립니다. 심볼 조합에 따른 배당은 배당표에서 확인할 수 있습니다.', en: 'Choose a stake and spin the slots. The payout table shows rewards for symbol combinations.' },
     'hint.payouts': { ko: '당첨 조합과 배당입니다. 판돈과 함께 확인하면 한 판의 보상을 비교할 수 있습니다.', en: 'Winning combinations and their payouts. Compare them with your chosen stake.' },
     'hint.forge_make': { ko: '장비 부위나 물약을 골라 제작합니다. 만들 항목의 재료와 골드 비용을 확인하세요.', en: 'Choose an equipment slot or potion to craft. Check its material and gold costs.' },
-    'hint.forge_up': { ko: '장비를 골라 강화합니다. 다음 단계의 변화와 필요한 재료를 확인한 뒤 진행하세요.', en: 'Select equipment to upgrade. Review the next step’s changes and required materials.' },
+    'hint.forge_up': { ko: '장비를 골라 강화합니다. 다음 단계의 변화와 필요한 재료를 확인한 뒤 진행하세요. 장비마다 강화 횟수가 정해져 있고, 성공해도 실패해도 한 번씩 씁니다.', en: 'Select equipment to upgrade. Review the next step’s changes and required materials. Each item has a limited number of upgrade attempts; success or failure uses one.' },
     'hint.forge_synth': { ko: '같은 종류의 아래 단계 재료를 써서 위 단계 재료를 만듭니다. 합성에 쓴 재료는 소모됩니다.', en: 'Combine lower-tier materials into a higher tier of the same material. Combining consumes the input materials.' },
     'hint.forge_craft': { ko: '크래프트는 준비 중입니다. 현재는 제작·강화·합성을 이용할 수 있습니다.', en: 'Craft is in development. Smithing, upgrading and combining are currently available.' },
     'hint.temper': { ko: '재료를 걸고 돌리면 다음 강화 한 번의 성공 확률이 오릅니다.', en: 'Stake materials and spin to raise the success chance of your next upgrade.' },
@@ -424,6 +424,10 @@ const STRINGS = {
     'exp.departBusy': { ko: '파티 내에 다른 행동을 실행중인 영웅이 있습니다. 그래도 출격할까요?', en: 'A hero in this party is busy with another task. Deploy anyway?' },
     'exp.departLevelGap': { ko: '파티 평균 Lv.{avg} · 전장 Lv.{level} — 레벨 차이 {gap}. 그래도 출격할까요?', en: 'Party average Lv.{avg}, battlefield Lv.{level}: a gap of {gap}. Deploy anyway?' },   // 출정 확인 창 (R418 · ADR-1025)
     'exp.departCut': { ko: '이 파티는 지금 원정 중입니다. 진행 중인 원정을 접고 새로 출격할까요?', en: 'This party is on an expedition. End the current run and deploy anew?' },
+    // 탐험에 나가 있는 제 편성을 보낸다 — 진행 중 = 불러들인다 · 끝났다 = 결과를 받는다 · 다 안 들면 거절 (SCREEN_DESIGN §4-1 · ADR-1182)
+    'exp.departRecall': { ko: '이 파티는 지금 탐험 중입니다. 진행 중인 탐험을 불러들이고 출격할까요? 탐험 보상은 받지 못합니다.', en: 'This party is out exploring. Call the exploration back and deploy? No exploration reward will be received.' },
+    'exp.departCollect': { ko: '이 파티의 탐험이 끝나 있습니다. 탐험 결과를 인벤토리에 받고 출격할까요?', en: "This party's exploration has finished. Collect the haul into the inventory and deploy?" },
+    'exp.departBagFull': { ko: '탐험 결과를 받을 인벤토리 칸 부족', en: 'Not enough inventory space for the exploration haul' },
     'exp.locked': { ko: '이전 스테이지 클리어', en: 'Clear the previous stage', lock: true },
     // 잠긴 장의 한 줄 — 그 장을 여는 앞 장 보스 (SCREEN_DESIGN §4-1 · §8-4 · ADR-0719 · R319). {ch} = 보스 칸의 장(`game.chapterGate`)
     'exp.chNeed': { ko: '{ch}장 보스 클리어', en: 'Clear the Ch{ch} boss', lock: true },
@@ -460,13 +464,7 @@ const STRINGS = {
         en: 'Expeditions <b>never stop on their own</b> — when a run ends the next one heads out shortly; only <b>Retreat</b> or <b>closing the game</b> stops them · they run <b>only while the game is open</b><br>'
             + 'A win moves on to the next stage · a loss (whole party downed · timed out) runs the same stage again · a loss to a chapter boss goes back to the previous stage · <b>with repeat on</b> the party loops through the area\'s stages I → II → III → I; <b>with it off</b> it moves on to the next stage in order (the same stage again if the next is locked · beating the boss that unlocks the next difficulty moves on to that difficulty\'s 1-1) · every stage is a new run, so everyone heads out recovered',
     },
-    'exp.notice.runClosed.h': { ko: '부재 중', en: 'While you were away' },
-    'exp.notice.runClosed.body': {
-        ko: '원정은 게임이 켜져 있을 때만 돕니다 — {stage} 원정이 멈췄습니다. 진행 중이던 라운드는 사라졌고, 이긴 라운드까지의 보상은 마지막 리포트에 있습니다',
-        en: 'Expeditions only run while the game is open — the {stage} expedition stopped. The round in progress was lost; rewards from the rounds you won are in the last report',
-    },
-    'exp.notice.report': { ko: '리포트 보기', en: 'View report' },
-    'exp.notice.dismiss': { ko: '확인', en: 'OK' },
+    // 재접속 알림(`exp.notice.*` — 「부재 중」)은 2026-11-15 삭제 — 다시 켜도 안 뜬다 (ADR-1178)
 
     /* ── 리포트 (실동작) ── */
     'rep.defeat': { ko: '패배', en: 'Defeat' },
@@ -642,6 +640,7 @@ const STRINGS = {
     'ch.upgradeHint': { ko: '강화는 대장간에서 합니다 — 골드로 한 단계씩 베이스 능력치를 올립니다. 목걸이 · 반지는 강화하지 않습니다',
         en: 'Upgrading happens at the Blacksmith — one step at a time for gold, raising the base stat. Amulets and rings cannot be upgraded' },
     'ch.err.maxUp': { ko: '더 이상 강화할 수 없음', en: 'Already fully upgraded' },
+    'ch.err.tries': { ko: '남은 강화 횟수가 없음', en: 'No upgrade attempts left' },   // R499
     'ch.err.noBase': { ko: '베이스 능력치가 없어 강화할 수 없음', en: 'Nothing to upgrade — this item has no base stat' },
     /* 해고 (SCREEN_DESIGN §6 · 2026-09-09) — 창 하나가 세 상태를 든다: 막힘(장비) · 막힘(마지막) · 확인.
        규칙 설명이 아니라 **상태와 확인**이라 패널이 아닌 창에 선다 (ui 원칙 4) */
@@ -693,6 +692,8 @@ const STRINGS = {
     // 칸 띠 — 어떻게 왔나(출처 · `state.js:JOIN_SRC`). 찾아오는 방식이 늘면 한 줄씩 는다
     'tv.visit.src.visit': { ko: '방문', en: 'Visitor' },
     'tv.visit.src.caravan': { ko: '마차', en: 'Caravan' },
+    // 안 열린 수색 칸의 툴팁 한 줄 — 그 칸을 여는 연구소 지점 레벨 「연구소 수색 · 대기 칸 Lv.2」 (§8-1 · §13-1 · ADR-1181)
+    'tv.join.need': { ko: '{b} {line} · {node} Lv.{n}', en: '{b} {line} · {node} Lv.{n}', lock: true },
     'tv.visit.src.tavern': { ko: '보관', en: 'Kept' },
     // 안내 칸 = 수색 줄 등록 영웅 (SCREEN_DESIGN §8-1 · ADR-1125) — 이야기 문구는 `visit_story.csv` · 전직 상태 · 빈 줄
     'tv.visit.away.advance': { ko: '도서관에서 전직하는 중...', en: 'Advancing at the library...' },
@@ -901,6 +902,7 @@ const STRINGS = {
     'set.logGrid': { ko: '칸', en: 'Grid' },
     'set.logText': { ko: '문장', en: 'Text' },
     'set.nick': { ko: '닉네임', en: 'Nickname' },   // 퍼널 페이지가 유저를 알아보는 이름 — 게임 안엔 안 찍힌다 (§2-1 · ADR-0633)
+    'set.rclickSalvage': { ko: '우클릭 분해', en: 'Right-click Salvage' },   // 켜면 보관 칸 장비 우클릭 = 바로 분해 · 메뉴는 Shift+우클릭 (2026-11-15 · §2-2 · ADR-1188)
 
     /* ── 연구소 탭(옛 자원 탭 · 키 `dp.*` 는 옛 이름 그대로) — 줄은 넷: 자원 · 수색 · 훈련 · 도박장 (SCREEN_DESIGN §8) ──
        채광 · 채집 · 벌목은 「자원」 줄의 지점이다(`dp.node.mine` · `gather` · `log` — 2026-10-25 · ADR-0788 · R356) · `dp.post.mine` · `gather` · `log` 는 미니게임 창 제목이 쓴다.
@@ -1144,7 +1146,8 @@ const STRINGS = {
     'fg.upMax': { ko: '강화 +{up} · 상한', en: 'Upgrade +{up} · max' },
     'fg.base': { ko: '베이스 능력치', en: 'Base stat' },
     // 강화 진열의 메타 — 누가 끼고 있나 · 안 끼었으면 있는 곳(`ch.bag.inv` · `ch.bag.stash`) (ADR-0604 · ~~`fg.worn` 착용 중 · `fg.bag` 가방~~)
-    'fg.stage': { ko: '강화 단계', en: 'Upgrade level' },   // 강화 작업 칸의 눈금 머리 (ADR-0604)
+    'fg.tries': { ko: '남은 횟수', en: 'Attempts left' },   // 강화 작업 판 눈금 머리 — 그 장비의 남은 강화 횟수 (ADR-1183 · R499)
+    'fg.noTries': { ko: '횟수 소진', en: 'No attempts left' },   // 남은 강화 횟수 0 — [강화] 글 (ADR-1183)
     // 강화 성공 확률 · 실패 [2026-10-14 · R253 · ADR-0626] — 확률 칩(비용 칩 앞) · 실패 플래시 · 연출의 실패 표지
     'fg.chanceLab': { ko: '성공 확률', en: 'Success chance' },   // 강화 작업 칸 비교 줄 아래 「이름 · 값」 줄 (ADR-0973 · ~~`fg.chance` 칩~~)
     'fg.upFail': { ko: '강화 실패 · +{n} 그대로 · {g}G', en: 'Upgrade failed · still +{n} · {g}G' },
@@ -1327,8 +1330,8 @@ const STRINGS = {
         en: "Closing the game",
     },
     'help.expedition.offline.body': {
-        ko: "원정 전투는 오프라인 동안 계속되지 않습니다. 게임을 닫으면 진행하던 부대와 다음 출발을 기다리던 부대가 멈춥니다. 다시 접속하면 알림과 마지막 리포트를 확인하고 원하는 스테이지에 다시 출발합니다. 탐험과 연구소의 오프라인 진행은 각 도움말에서 확인할 수 있습니다.",
-        en: "Expedition combat does not continue offline. Closing the game stops parties in combat and parties waiting for their next departure. On return, check the notice and last report, then deploy again to your chosen stage. Exploration and Laboratory offline progress are explained in their own sections.",
+        ko: "원정 전투는 오프라인 동안 계속되지 않습니다. 게임을 닫으면 진행하던 부대와 다음 출발을 기다리던 부대가 멈춥니다. 다시 접속하면 마지막 리포트를 확인하고 원하는 스테이지에 다시 출발합니다. 탐험과 연구소의 오프라인 진행은 각 도움말에서 확인할 수 있습니다.",
+        en: "Expedition combat does not continue offline. Closing the game stops parties in combat and parties waiting for their next departure. On return, check the last report, then deploy again to your chosen stage. Exploration and Laboratory offline progress are explained in their own sections.",
     },
     'help.explore.map.title': {
         ko: "지도와 지점",
@@ -1375,8 +1378,8 @@ const STRINGS = {
         en: "Preset lock and recall",
     },
     'help.explore.recall.body': {
-        ko: "탐험에 나간 편성은 명단을 바꾸거나 원정에 보낼 수 없습니다. 변경하려면 탐험을 취소해 편성 전체를 불러들입니다. [불러들이기]를 누르고 확인 버튼을 한 번 더 누르면 영웅들이 즉시 돌아오며 탐험 보상은 받지 못합니다.",
-        en: "A preset that is exploring cannot change members or join an expedition. Recall the whole preset to change it. Press [Call back] and then confirm; the heroes return immediately with no exploration reward.",
+        ko: "탐험에 나간 편성은 명단을 바꿀 수 없습니다. 변경하려면 탐험을 취소해 편성 전체를 불러들입니다. [불러들이기]를 누르고 확인 버튼을 한 번 더 누르면 영웅들이 즉시 돌아오며 탐험 보상은 받지 못합니다.<br><br>탐험 중인 편성을 원정에 보내면 확인 창이 뜹니다. 확인하면 진행 중인 탐험은 보상 없이 불러들이고, 이미 끝난 탐험은 결과를 그 부대 인벤토리에 받은 뒤 출격합니다. 결과가 인벤토리에 다 들어가지 않으면 출격할 수 없습니다.",
+        en: "A preset that is exploring cannot change members. Recall the whole preset to change it. Press [Call back] and then confirm; the heroes return immediately with no exploration reward.<br><br>Sending an exploring preset on an expedition asks for confirmation first. On confirm, an exploration in progress is called back with no reward, and a finished one is collected into that party's inventory before deploying. If the haul does not fit in the inventory, the party cannot deploy.",
     },
     'help.party.members.title': {
         ko: "파티 구성과 리더",
@@ -1855,8 +1858,8 @@ const STRINGS = {
         en: "Choosing an advancement path",
     },
     'help.library.advance.body': {
-        ko: "도서관에서 영웅을 고르고 <b>[전직의 방]</b>을 엽니다. 왼쪽의 세 갈래와 역할 설명을 비교하고, 오른쪽의 <b>실제 마스터리 미리보기</b>에서 스킬을 선택하면 그 스킬의 강화 선택지도 확인할 수 있습니다. 미리보기는 재화나 포인트를 쓰지 않습니다.<br><br>전직 기능을 열고 레벨 <b>{level}</b> 이상이 되면 갈래를 선택하고 <b>[전직]</b>합니다. 비용은 <b>{gold}G</b>이며 현재는 즉시 완료됩니다. <b>전직 갈래는 변경할 수 없습니다.</b> 원정 중에도 전직할 수 있지만 탐험 중에는 먼저 돌아와야 합니다.<br><br>완료 후 같은 방이나 도서관 입구의 <b>[마스터리 열기]</b>에서 전직 스킬을 배우고 강화합니다. 전직만으로 스킬을 자동 학습하지는 않습니다. 같은 갈래 안에서는 스킬을 바꿀 수 있습니다.",
-        en: "Select a hero in the Library and open the <b>Chamber of Advancement</b>. Compare the three paths and their roles on the left. Select a skill in the <b>actual mastery preview</b> on the right to inspect its strengthening choices. Previewing spends no resources or points.<br><br>Unlock advancement and reach level <b>{level}</b>, then select a path and press <b>Advance</b>. The cost is <b>{gold}G</b> and advancement currently completes instantly. <b>The path cannot be changed.</b> Heroes can advance during Expeditions; those exploring must return first.<br><br>After completion, use <b>Open Mastery</b> in the chamber or Library to learn and improve an advancement skill. Advancement does not automatically teach a skill. Skills can be swapped within the chosen path.",
+        ko: "도서관에서 영웅을 고르고 <b>전직의 방</b> 칸의 <b>[입장]</b>을 누릅니다. 방에는 세 갈래가 한 줄씩 서고, 줄마다 갈래의 역할과 전직 스킬 셋의 효과가 적혀 있습니다. 방을 열면 맨 위 갈래가 골라져 있고 방 오른쪽에 그 갈래의 마스터리 판이 붙어 있습니다. 다른 갈래를 누르면 고른 갈래와 판이 바뀝니다. 판 안의 전직 스킬을 누르면 그 스킬의 강화 칸이 아래 줄에 섭니다. 칸에 올리면 효과가 보입니다. 미리보기는 재화나 포인트를 쓰지 않습니다.<br><br>전직 기능을 열고 레벨 <b>{level}</b> 이상이 되면 갈래를 선택하고 <b>[전직]</b>합니다. 비용은 <b>{gold}G</b>이며 현재는 즉시 완료됩니다. <b>전직 갈래는 변경할 수 없습니다.</b> 원정 중에도 전직할 수 있지만 탐험 중에는 먼저 돌아와야 합니다.<br><br>완료 후 전직의 방 바닥의 <b>[마스터리 열기]</b>에서 전직 스킬을 배우고 강화합니다. 전직만으로 스킬을 자동 학습하지는 않습니다. 같은 갈래 안에서는 스킬을 바꿀 수 있습니다.",
+        en: "Select a hero in the Library and press <b>Enter</b> on the <b>Chamber of Advancement</b> panel. Each of the three paths has its own row with its role and the effects of its three advancement skills. The top path is selected when the chamber opens, with its mastery board attached on the right. Click another path to switch the selection and the board. Click an advancement skill on the board to show its strengthening cells in the row below. Hover a cell to see its effect. Previewing spends no resources or points.<br><br>Unlock advancement and reach level <b>{level}</b>, then select a path and press <b>Advance</b>. The cost is <b>{gold}G</b> and advancement currently completes instantly. <b>The path cannot be changed.</b> Heroes can advance during Expeditions; those exploring must return first.<br><br>After completion, use <b>Open Mastery</b> at the bottom of the chamber to learn and improve an advancement skill. Advancement does not automatically teach a skill. Skills can be swapped within the chosen path.",
     },
     'help.library.points.title': { ko: "공용 스킬 포인트와 전직 트리", en: "Shared skill points and the Advancement Tree" },
     'help.library.points.body': { ko: "영웅은 <b>레벨 1 부터 레벨마다 스킬 포인트</b>를 받습니다. 죄종·직업 마스터리와 전직 트리는 같은 포인트를 나누어 씁니다.<br><br>전직하면 갈래의 전직 스킬 셋 중 <b>하나</b>를 배웁니다 — 스킬 포인트를 쓰지 않습니다. 전직 트리에는 줄이 둘 있습니다. <b>공통 줄</b>은 갈래 전체에 닿고, <b>스킬 줄</b>(크기 · 변형 1 · 변형 2)은 배운 스킬에 닿습니다. 줄마다 칸 셋에 합 <b>{row}</b>까지 자유롭게 나눠 찍고, 한 칸에 {row}을 모두 넣으면 그 칸의 덤이 켜집니다.<br><br>칸을 우클릭하면 1랭크가, 배운 전직 스킬을 우클릭하면 스킬 줄 전체가 <b>공용 스킬 포인트로 환급</b>됩니다. 다른 전직 스킬을 누르면 바로 갈아끼웁니다 — 스킬 줄은 환급되고 공통 줄은 그대로입니다. 갈래와 전직 비용은 그대로입니다.", en: "Heroes earn <b>skill points at every level, starting at Lv1</b>. Sin mastery, Class mastery and the Advancement Tree share this pool.<br><br>After advancing, learn <b>one</b> of the path's three skills — it costs no skill points. The tree has two rows. The <b>common row</b> affects the whole path; the <b>skill row</b> (Power · Variant 1 · Variant 2) affects the learned skill. Split up to <b>{row}</b> ranks per row freely across its three cells; putting all {row} into one cell turns on its bonus.<br><br>Right-click a cell to refund one rank, or the learned skill to refund its whole skill row to the <b>shared skill-point pool</b>. Click another advancement skill to swap to it — the skill row is refunded and the common row stays. The chosen path and gold cost remain." },
@@ -2113,8 +2116,8 @@ const STRINGS = {
         en: "Viewing other screens or stepping away",
     },
     'help.help.away.body': {
-        ko: "게임 안에서 도움말·캐릭터·건설 같은 다른 탭을 보는 동안에도 원정과 탐험은 진행됩니다. 관전 중인 팀만 움직이는 방식이 아니므로 장비를 정리하면서 전투를 돌릴 수 있습니다.<br><br>게임을 완전히 닫으면 원정은 멈추며, 다시 접속한 뒤 출발합니다. 보낸 탐험은 꺼 둔 동안에도 남은 시간이 흘러 완료되므로 돌아왔을 때 탐험 탭에서 수령합니다. 연구소의 오프라인 생산·훈련·수익은 {offlineHours}시간분을 기준으로 제한해 계산하며, 수색은 대기 칸이 찰 때까지 진행됩니다.<br><br>PC가 절전 상태에 들어가거나 브라우저가 게임 탭을 오래 정지시키면 원정이 끊길 수 있습니다. 돌아왔을 때 멈춤 알림과 마지막 리포트를 확인하고 [보내기]로 다시 시작합니다. 연구소 생산과 탐험의 완료·수령은 각 탭에서 확인합니다.",
-        en: "Expeditions and Exploration continue while you view other in-game tabs such as Help, Character or Construction. Activity is not limited to the team you are spectating, so you can organize equipment while combat runs.<br><br>Closing the game stops Expeditions; deploy again after returning. An exploration already sent can finish while the game is closed; claim it in Exploration when you return. Offline Laboratory production, Training and income use a limited {offlineHours}h calculation window. Search continues until its waiting slots fill.<br><br>If the PC sleeps or the browser suspends the game tab for a long time, Expeditions can stop. On return, check the interruption notice and last report, then Deploy again. Check Laboratory output and Exploration completion or collection in their respective tabs.",
+        ko: "게임 안에서 도움말·캐릭터·건설 같은 다른 탭을 보는 동안에도 원정과 탐험은 진행됩니다. 관전 중인 팀만 움직이는 방식이 아니므로 장비를 정리하면서 전투를 돌릴 수 있습니다.<br><br>게임을 완전히 닫으면 원정은 멈추며, 다시 접속한 뒤 출발합니다. 보낸 탐험은 꺼 둔 동안에도 남은 시간이 흘러 완료되므로 돌아왔을 때 탐험 탭에서 수령합니다. 연구소의 오프라인 생산·훈련·수익은 {offlineHours}시간분을 기준으로 제한해 계산하며, 수색은 대기 칸이 찰 때까지 진행됩니다.<br><br>PC가 절전 상태에 들어가거나 브라우저가 게임 탭을 오래 정지시키면 원정이 끊길 수 있습니다. 돌아왔을 때 마지막 리포트를 확인하고 [보내기]로 다시 시작합니다. 연구소 생산과 탐험의 완료·수령은 각 탭에서 확인합니다.",
+        en: "Expeditions and Exploration continue while you view other in-game tabs such as Help, Character or Construction. Activity is not limited to the team you are spectating, so you can organize equipment while combat runs.<br><br>Closing the game stops Expeditions; deploy again after returning. An exploration already sent can finish while the game is closed; claim it in Exploration when you return. Offline Laboratory production, Training and income use a limited {offlineHours}h calculation window. Search continues until its waiting slots fill.<br><br>If the PC sleeps or the browser suspends the game tab for a long time, Expeditions can stop. On return, check the last report, then Deploy again. Check Laboratory output and Exploration completion or collection in their respective tabs.",
     },
     // 왼쪽 탭 아이콘의 출처 — CC BY 3.0 의 표기 조건 (SCREEN_DESIGN §1 · §12 · ADR-1028)
     'help.help.credits.title': {
@@ -2638,16 +2641,22 @@ const STRINGS = {
     'tr.adv.go': { ko: '전직', en: 'Advance' },   // 전직 제목 오른쪽 버튼 — 갈래를 골라야 켜진다 (ADR-0536 · ADR-0539)
     'tr.room.title': { ko: '전직의 방', en: 'Chamber of Advancement' },
     'tr.room.paths': { ko: '전직 갈래', en: 'Advancement paths' },
-    'tr.room.preview': { ko: '마스터리 미리보기 · 스킬을 선택해 비교', en: 'Mastery preview · select a skill to compare' },
     'tr.room.ready': { ko: '전직 가능', en: 'Ready to advance' },
     'tr.room.level': { ko: 'Lv.{n}부터 전직 가능', en: 'Advancement available at Lv.{n}' },
     'tr.room.done': { ko: '{name} · 전직 완료', en: '{name} · Advancement complete' },
-    'tr.room.next': { ko: '마스터리에서 전직 스킬을 선택하고 강화합니다.', en: 'Choose and improve your advancement skill in Mastery.' },
-    'tr.room.choose': { ko: '전직할 갈래를 선택하세요', en: 'Choose your advancement path' },
-    'tr.room.selected': { ko: '선택한 갈래 · {name}', en: 'Selected path · {name}' },
-    'tr.room.instant': { ko: '즉시 완료', en: 'Completes instantly' },
-    'tr.room.duration': { ko: '소요 시간 {t}', en: 'Duration: {t}' },
+    'tr.room.instant': { ko: '즉시', en: 'Instant' },   // 전직의 방 계기판 「소요 시간」 값 — 걸리는 시간이 0 일 때 (ADR-1179)
     'tr.room.irreversible': { ko: '전직 갈래는 변경할 수 없습니다.', en: 'The advancement path cannot be changed.' },
+    // 전직의 방 칸 · 창 (SCREEN_DESIGN §17 · ADR-1179) — 칸의 [입장] · 창 바닥 [<갈래> 전직] · 계기판 칸 이름(위 작은 글)
+    'tr.room.enter': { ko: '입장', en: 'Enter' },
+    'tr.room.go': { ko: '{b} 전직', en: 'Advance to {b}' },
+    'tr.room.m.hero': { ko: '영웅', en: 'Hero' },
+    'tr.room.m.skills': { ko: '스킬', en: 'Skills' },   // 그 영웅의 지금 가진 스킬 카드 셋 (ADR-1189)
+    'tr.room.m.level': { ko: '필요 레벨', en: 'Required Level' },
+    'tr.room.m.unlock': { ko: '해금', en: 'Unlock' },
+    'tr.room.m.gold': { ko: '비용', en: 'Cost' },
+    'tr.room.m.time': { ko: '소요 시간', en: 'Time' },
+    'tr.room.m.path': { ko: '전직', en: 'Advancement' },
+    'tr.room.gold': { ko: '{g} G', en: '{g} G' },
     'tr.adv.started': { ko: '{name} — {b} 전직 시작', en: '{name} — started advancing to {b}' },
     'tr.adv.left': { ko: '{t} 남음', en: '{t} left' },
     'tr.adv.learned': { ko: '배움', en: 'Learned' },
@@ -2923,6 +2932,8 @@ const STRINGS = {
     'sk.err.points': { ko: '스킬 포인트 없음', en: 'No skill points left' },
     'sk.err.rowFull': { ko: '이 줄에는 {n}점까지 찍을 수 있습니다', en: 'This row holds up to {n} points' },   // 마스터리 줄마다 점수 합 (R473)
     'sk.err.pickOne': { ko: '이 줄은 한 칸만 찍을 수 있습니다', en: 'Only one node in this row can be learned' },   // 마스터리 T4 셋 중 하나 (R437)
+    'sk.err.prevRow': { ko: '{tier}에 {n}점을 다 찍어야 합니다', en: 'Spend all {n} points in {tier} first' },   // 마스터리 윗줄을 다 채워야 아랫줄 (R502) · {tier} = sk.tier
+    'sk.err.nextRow': { ko: '{tier}의 점수를 먼저 되돌려야 합니다', en: 'Refund the points in {tier} first' },   // 아랫줄이 있으면 윗줄을 못 무른다 (R502)
     'sk.tier': { ko: 'Tier {n}', en: 'Tier {n}' },   // 스킬 창 마스터리 줄 머리 — ko 에서도 영어 · `{n}` 은 로마 숫자 (2026-11-14 사용자 지시 · ADR-1082)
     'sk.err.noRank': { ko: '아직 찍지 않은 칸', en: 'Nothing invested here yet' },
     /* ~~'sk.err.downed'~~ · ~~'tr.err.downed'~~ · ~~'bk.err.downed'~~ 은 2026-10-21 삭제 — 쓰러짐은 원정 밖 행동을 막지 않는다 (R300 · ADR-0687) */
@@ -2948,12 +2959,15 @@ const STRINGS = {
     'sk.advLock': { ko: 'Lv.{lv}이 되면 도서관에서 전직이 가능합니다', en: 'Advance at the Library at Lv.{lv}', lock: true },
     'sk.advLockReady': { ko: '도서관에서 전직이 가능합니다', en: 'Advance at the Library', lock: true },
     'sk.emptyAdvanceSkill': { ko: '배운 전직 스킬 없음', en: 'No advanced skill learned' },
-    'sk.lvTag': { ko: 'Lv.{n}', en: 'Lv.{n}' },   // 스킬 레벨 — 그림 오른쪽 아래 `.sk-lv` (설명창 · 액티브 줄 · 도서관 · 전직 판 · R216 · ADR-0576) · 그림이 없는 도서관 읽기 줄만 이름 뒤
+    'sk.lvTag': { ko: 'Lv.{n}', en: 'Lv.{n}' },   // 스킬 레벨 — 그림 오른쪽 아래 `.sk-lv` (설명창 · 액티브 줄 · 도서관 · R216 · ADR-0576 · 전직 스킬은 안 단다 ADR-1190) · 그림이 없는 도서관 읽기 줄만 이름 뒤
     'tr.err.maxLevel': { ko: '메인 최대 레벨입니다', en: 'Main skill is at its maximum level' },
     'sk.adv.leveled': { ko: '{skill} Lv.{n}', en: '{skill} Lv.{n}' },   // 전직 판 스킬 칸을 눌러 레벨이 올랐다 (R216)
     // 잠긴 액티브 칸의 툴팁 한 줄 [2026-09-30 사용자 지시 · SCREEN_DESIGN §6 · ADR-0466 — ~~`sk.lockLv` 「Level n+」~~(ADR-0428) 를 칸마다의 문장으로] · {n} = 책 `skillbook_learn_level` · 전직 `advance_unlock_level`
     'sk.lock.book': { ko: 'Lv{n}이 되면 도서관에서 스킬을 배울 수 있습니다.', en: 'At Lv{n}, skills can be learned at the Library.' },
-    'sk.lock.advance': { ko: 'Lv{n}이 되면 전직 후 스킬을 배울 수 있습니다.', en: 'At Lv{n}, skills can be learned after advancing.' },
+    'sk.lock.advance': { ko: 'Lv{n}이 되면 도서관에서 전직 후 스킬을 배울 수 있습니다.', en: 'At Lv{n}, skills can be learned after advancing at the Library.' },
+    // 자물쇠만 선 빈 칸(편성 진형 칸 스킬 열 · 잠긴 칸 아님)의 툴팁 — 배우는 곳 (§15 · ADR-1181) · 같은 칸의 `sk.lock.*` 문장 꼴
+    'sk.learnAt.book': { ko: '도서관에서 스킬을 배울 수 있습니다.', en: 'Skills can be learned at the Library.' },
+    'sk.learnAt.advance': { ko: '도서관에서 전직 스킬을 배울 수 있습니다.', en: 'Advanced skills can be learned at the Library.' },
     // ~~`sk.needWeapon`~~(꺼진 칸 툴팁 맨 위 한 줄 · ADR-0446) — 2026-10-03 걷었다: 필요 무기는 설명창 이름 줄의 칩이 무기군 이름만으로 든다(ADR-0496)
     /* 스킬북 [2026-09-29 · R179 · 도서관 탭 SCREEN_DESIGN §17 · ADR-0422] — 규칙 문장은 없다(덮어쓰기는 도움말의 몫) · 권수 `×n` 은 물약 칸처럼 기호라 키가 없다(ADR-0460) */
     'bk.hero.h': { ko: '스킬정보', en: 'Skill Info' },   // 도서관 공통 머리 맨 위 소제목 띠 — 두 탭 같은 자리
@@ -3050,6 +3064,7 @@ const STRINGS = {
     // 스킬 창 전직 판 줄 위 띠 이름 — 마스터리 판의 `Tier n` 자리 · 위에서부터 스킬 셋 · 스킬 줄 · 공통 줄 (2026-11-14 · ADR-1112)
     'sk.adv.band.skill': { ko: '전직 스킬', en: 'Advanced Skill' },
     'sk.adv.band.line': { ko: '전직 스킬 강화', en: 'Skill Upgrades' },
+    'sk.adv.lineNeed': { ko: '전직 스킬 습득', en: 'Learn an Advanced Skill', lock: true },   // 스킬 줄 자물쇠 칸의 툴팁 한 줄 (§7 · §13-1 · ADR-1181)
     'sk.adv.band.common': { ko: '공통 마스터리', en: 'Common Mastery' },
     'sk.adv.sec': { ko: '{n}초', en: '{n}s' },
     'sk.advTree.missing': { ko: "전직 후 갈래의 메인 셋 중 하나를 <b>공용 스킬 포인트 1</b>로 배웁니다. 스킬 포인트는 레벨마다 받고 죄종·직업 마스터리와 나누어 씁니다.<br>메인 단계만 영웅 Lv30·35·40·45·50에 Lv1·2·3·4·5가 열립니다. 특수·변형·필살기 꼬리는 현재 준비 중입니다.", en: "Learn one of the path's three main skills for <b>one shared skill point</b>. Points come with every level from Lv1 and are shared with Sin and Class mastery.<br>Main ranks Lv1–5 unlock at hero Lv30/35/40/45/50. Special, Variant and Ultimate branches are currently coming later." },
@@ -3415,6 +3430,13 @@ const STRINGS = {
     'bt.effect.element': { ko: '원소', en: 'elemental' },
     // 현재 창의 시간 상태 — 이름 오른쪽에 값만 선다
     'bt.effect.permanent': { ko: '상시', en: 'Permanent' },
+    // 정예 특성 칩의 효과 한 줄 — 죄종 칸은 마스터리 툴팁 문장(`sk.masteryEffect.*`)을 그대로 쓰고, 몬스터에게 뜻이 바뀌는 칸만 여기 (SCREEN_DESIGN §4-2 · ADR-1194 · R501)
+    'bt.trait.gold': { ko: '처치 골드 {v} 증가', en: 'Kill gold increases by {v}' },
+    'bt.trait.xp': { ko: '처치 경험치 {v} 증가', en: 'Kill experience increases by {v}' },
+    'bt.trait.magic': { ko: '입은 장비의 매직 확률 {v} 증가', en: 'Magic chance of its gear increases by {v}' },
+    'bt.trait.stat': { ko: '{stat} {v} 증가', en: '{stat} increases by {v}' },
+    'bt.trait.defMult': { ko: '물리 방어 {v}배', en: 'Physical Defense ×{v}' },
+    'bt.trait.resCap': { ko: '{e} 피해 {v} 감소', en: '{e} damage taken reduced by {v}' },
     // 로그 탭 — 줄의 **주체**(그 일을 한 쪽)로 거른다 (2026-09-15 · SCREEN_DESIGN §4-2)
     'bt.logf.all': { ko: '전체', en: 'All' },
     'bt.logf.party': { ko: '우리', en: 'Party' },

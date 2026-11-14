@@ -17,9 +17,11 @@ export const SKILL_ART = {
     war_bash: { hit: { file: 'war_bash', motion: 'slash', size: 92, duration: 360 } },
     war_doubleswing: { hit: { file: 'war_doubleswing', motion: 'swing', size: 90, duration: 400, beat: 130, parts: X_BLADES } },
     war_leap: { hit: { file: 'war_leap', motion: 'land', size: 94, duration: 460, quake: true } },
-    // 함성 셋 — 같은 집중선 · 색만 다르다 · 움직임도 퍼짐 하나(ADR-0546).
-    war_shout: { buff: { file: 'war_shout', motion: 'wave', size: 90, duration: 580 } },
-    war_battleorders: { buff: { file: 'war_battleorders', motion: 'wave', size: 90, duration: 580 } },
+    // 함성 — 초상 밖으로 세 겹의 충격파가 퍼진다. 두 그림체에 같은 크기 · 움직임을 쓴다.
+    war_shout: { buff: { file: 'war_shout_shockwave', motion: 'shout', size: 206, ay: .45, duration: 1100, pulses: 3, beat: 85 } },
+    war_battleorders: { buff: { file: 'war_battleorders_shockwave', motion: 'shout', size: 216, ay: .45, duration: 1100, pulses: 3, beat: 105 } },
+    war_warcry: { bad: { file: 'war_warcry_shockwave', motion: 'shout', size: 218, ay: .45, duration: 1100, pulses: 3, beat: 75 } },
+    war_battlecry: { bad: { file: 'war_battlecry_shockwave', motion: 'shout', size: 210, ay: .45, duration: 1100, pulses: 3, beat: 85 } },
     war_ironskin: { buff: { file: 'war_ironskin', motion: 'shell', size: 94, duration: 540 } },
 
     // 기사 — 인챈트는 실제 추가 피해인 화염이다. 레지스탕스 실드는 아래 추가 다크 카툰 표가 든다.
@@ -77,8 +79,8 @@ export const SKILL_ART = {
         then: { file: 'war_thorswrath_impact', motion: 'shatter', size: 132, duration: 440 },
     } },
     war_shockwave: { hit: { file: 'war_shockwave', motion: 'ground', size: 140, duration: 520, quake: true } },
-    war_command: { buff: { file: 'war_command', motion: 'orders', size: 132, duration: 620 } },
-    war_intimidate: { bad: { file: 'war_intimidate', motion: 'inward', size: 128, duration: 580 } },
+    war_command: { buff: { file: 'war_command_shockwave', motion: 'shout', size: 258, ay: .45, duration: 1100, pulses: 3, beat: 75 } },
+    war_intimidate: { bad: { file: 'war_intimidate_shockwave', motion: 'shout', size: 274, ay: .45, duration: 1100, pulses: 3, beat: 65 } },
 
     // 기사 — 가디언 · 팔라딘 · 크루세이더. 방벽(신성한 심판 · 불굴의 맹세 · 성전)도 강화 그림이다.
     kni_lastbastion: { buff: { file: 'kni_lastbastion', motion: 'shell', size: 134, duration: 620 } },
@@ -148,11 +150,9 @@ export const SKILL_ART = {
     // 몬스터 — 소환은 불려 나온 · 되살아난 카드의 초상에 오오라(마이트)와 같은 마법진이 붉게 · 별은 뒤집혀 선다 · 크기 · 움직임도 오오라와 같다(ADR-0728).
     pri_summon: { call: { file: 'pri_summon', motion: 'orbit', size: 90, duration: 620 } },
 
-    // 누락 스킬 보완 — 다크 카툰으로 새로 그린다. 금속박은 기존 코드 대체 연출을 쓴다(ADR-0754).
+    // 누락 스킬 보완 — 다크 카툰으로 새로 그린다. 함성은 위에서 두 그림체를 모두 제공한다.
     war_recovery: { heal: { file: 'war_recovery', motion: 'heal', size: 88, duration: 640, styles: ['darktoon'] } },
     war_frenzy: { buff: { file: 'war_frenzy', motion: 'orders', size: 90, duration: 560, styles: ['darktoon'] } },
-    war_warcry: { bad: { file: 'war_warcry', motion: 'inward', size: 90, duration: 580, styles: ['darktoon'] } },
-    war_battlecry: { bad: { file: 'war_battlecry', motion: 'inward', size: 90, duration: 580, styles: ['darktoon'] } },
     kni_resistshield: { buff: { file: 'kni_resistshield', motion: 'shell', size: 92, duration: 540, styles: ['darktoon'] } },
     kni_sweep: { hit: { file: 'kni_sweep', motion: 'sweep', size: 94, duration: 420, styles: ['darktoon'] } },
     kni_holyfire: { buff: { file: 'kni_holyfire', motion: 'orbit', size: 90, duration: 620, styles: ['darktoon'] } },

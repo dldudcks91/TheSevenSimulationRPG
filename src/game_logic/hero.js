@@ -285,6 +285,24 @@ export function createHeroSystem(data) {
     };
     const masteryPickOneBlocked = (hero, n) => n.tier >= 4
         && masteryNodesFor(hero).some(x => x.id !== n.id && masteryRowKey(x) === masteryRowKey(n) && (hero?.mastery?.[x.id] ?? 0) > 0);
+    /**
+     * **윗줄을 다 채워야 아랫줄이 열린다** [2026-11-15 사용자 「Tier1 5개안찍으면 Tier2 못찍도록 해줘 건너뛰지 못하게」 · skill_design §3 · R502] —
+     *   줄 몫 = `min([balance.csv:mastery_row_points], 그 줄 칸 maxRank 합)`(칸이 없는 단은 0 — 막힌 줄이 생기지 않게).
+     *   `masteryRowOpen` = 1단이거나 같은 탭 바로 윗단의 합이 그 몫에 닿았다 · `masteryRowHeld` = 이 칸에서 1랭크를 빼면 이 줄이 몫 아래로 내려가는데
+     *   같은 탭 바로 아랫단에 랭크가 있다(무르면 아랫줄이 윗줄 없이 남는다). 찍기 · 무르기 · 화면 상태 · 세이브 정리 · AI 팀 · 팀 코드 검사기가 이것을 본다
+     */
+    const rowOf = (hero, treeKind, tier) => masteryNodesFor(hero).filter(x => x.treeKind === treeKind && x.tier === tier);
+    const rowSum = (hero, row) => row.reduce((s, x) => s + (hero?.mastery?.[x.id] ?? 0), 0);
+    const rowNeed = row => Math.min(B.mastery_row_points, row.reduce((s, x) => s + x.maxRank, 0));
+    const masteryRowOpen = (hero, n) => {
+        if (n.tier <= 1) return true;
+        const above = rowOf(hero, n.treeKind, n.tier - 1);
+        return rowSum(hero, above) >= rowNeed(above);
+    };
+    const masteryRowHeld = (hero, n) => {
+        const mine = rowOf(hero, n.treeKind, n.tier);
+        return rowSum(hero, mine) - 1 < rowNeed(mine) && rowSum(hero, rowOf(hero, n.treeKind, n.tier + 1)) > 0;
+    };
     if (masteryNodes.length && !(Number.isInteger(B.mastery_row_points) && B.mastery_row_points > 0))
         throw new Error('mastery: balance.csv 의 mastery_row_points 가 없거나 양의 정수가 아니다');
 
@@ -321,9 +339,12 @@ export function createHeroSystem(data) {
     /* ── 생성 ── */
 
     const drawDistinct = (rng, pool, n) => {
-        const rest = pool.slice(), out = [];
-        for (let i = 0; i < n && rest.length; i++)
+        let rest = pool.slice();
+        const out = [];
+        for (let i = 0; i < n && pool.length; i++) {
+            if (!rest.length) rest = pool.slice();   // 직업 수를 넘는 일괄 생성은 풀을 채워 이어 뽑는다
             out.push(rest.splice(Math.floor(rng() * rest.length), 1)[0]);
+        }
         return out;
     };
 
@@ -345,6 +366,7 @@ export function createHeroSystem(data) {
             out.push(c);
             rest.splice(rest.indexOf(c), 1);
         }
+        if (n > m) out.push(...drawDistinct(rng, mainClasses, n - m));
         return out;
     }
 
@@ -521,8 +543,15 @@ export function createHeroSystem(data) {
         const sins = drawDistinct(rng, data.sins, n);
         const classes = starter ? drawStartClasses(rng, n) : drawDistinct(rng, mainClasses, n);   // 첫 파티만 앞줄 하나 보장 (2026-10-22)
         const traits = drawDistinct(rng, data.traitPool, n);
-        const party = nameRolls.map((r, i) =>
-            rollHero(rng, { name: nameOf(r, classes[i]), sin: sins[i], cls: classes[i], trait: traits[i], tier: tiers?.[i], starter }));
+        const nameRest = {};
+        const names = nameRolls.map((r, i) => {
+            const cls = classes[i];
+            if (!nameRest[cls]?.length) nameRest[cls] = namePools[cls].slice();
+            const pool = nameRest[cls];
+            return pool.splice(Math.floor(r * pool.length), 1)[0];
+        });
+        const party = names.map((name, i) =>
+            rollHero(rng, { name, sin: sins[i], cls: classes[i], trait: traits[i], tier: tiers?.[i], starter }));
         // 소비는 언제나 인원수만큼 1회씩이다 — 직업 풀이 비어도(마법사) 소비 수는 안 바뀐다
         party.forEach(h => { h.face = rollFace(rng, h.cls); });
         return party;
@@ -1033,7 +1062,7 @@ export function createHeroSystem(data) {
 
     return {
         rollAttributes, rollAttributesTrace, attrCenters, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, avoidNames, rollHeroOf, rollGoblin, xpNeeded, starXpNeeded, grantXp, computeCombat,
-        masteryNodes, masteryById, masteryNodesFor, masteryBonus, masteryWiden, masteryRowKey, masteryRowUsed, masteryPickOneBlocked, gateOn, sinGearCount, levelScaled,
+        masteryNodes, masteryById, masteryNodesFor, masteryBonus, masteryWiden, masteryRowKey, masteryRowUsed, masteryPickOneBlocked, masteryRowOpen, masteryRowHeld, gateOn, sinGearCount, levelScaled,
         weaponTrait: groupId => (weaponTraitLines[groupId] ?? []).map(l => ({ ...l })),   // 무기군 특성 줄 — 전투 합산과 같은 모양(사본 · R443)
         classIds: data.classes.map(c => c.id),   // 「직업 순」 = `class.csv` 행 순서 — 책 정렬(`game.sortBooks`)이 읽는다 (2026-10-14 · ADR-0620)
         mainClasses: mainClasses.slice(),        // 본편 직업 — 결투장 등급 상대가 직업 셋을 여기서 뽑는다 (INTERFACE §2-17 · 2026-10-17)

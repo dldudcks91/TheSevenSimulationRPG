@@ -537,9 +537,13 @@ function skillStamp(L, s, kind, x) {
         return true;
     }
     // 이어 서는 그림(`then`)은 앞 그림이 끝나는 때에 선다 — 아이스 블라스트의 떨어짐 → 깨짐 (ADR-0541)
-    for (let d = def, dl = 0; d && skillArt.has(d.file); dl += d.duration, d = d.then) stampArt(L, s, d, x.crit, dl);
-    // 강화 · 회복 그림엔 코드의 훑어 오름(그 스킬 색의 띠가 카드를 아래에서 위로)이 늘 같이 선다 — 색은 그 스킬 코드 조합의 훑음 색 · 없으면 첫 조각 색 (ADR-0551)
-    if (kind === 'buff' || kind === 'heal') {
+    for (let pulse = 0; pulse < (def.pulses ?? 1); pulse++) {
+        for (let d = def, dl = pulse * (def.beat ?? 0); d && skillArt.has(d.file); dl += d.duration, d = d.then) {
+            stampArt(L, s, d, x.crit, dl);
+        }
+    }
+    // 강화 · 회복엔 같은 색의 훑음도 선다. 함성은 세 겹의 충격파만 띄운다.
+    if ((kind === 'buff' || kind === 'heal') && def.motion !== 'shout') {
         const look = SKILL_LOOKS[s]?.[kind] ?? SKILL_LOOKS[s]?.buff ?? [];
         PIECES.sweep(L, { c: (look.find(([name]) => name === 'sweep') ?? look[0])?.[1]?.c ?? 'gold' }, x);
     }

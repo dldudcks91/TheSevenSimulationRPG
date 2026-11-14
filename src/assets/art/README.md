@@ -334,6 +334,8 @@ fx_source/stun_star_20261028/   그 원본(Codex 다크 카툰 2×2 · 왼쪽 �
 
 그림체는 `src/ui/skill_art.js:ART_STYLES`, 스킬·움직임·크기는 `SKILL_ART`, 파일 이름은 `artFile`이 기준이다. 그림체는 다크 카툰·금속박이며 누락된 스킬을 다크 카툰으로 모두 보완했다. 정의의 `styles`가 가용 그림체를 제한하므로 금속박에 없는 추가 그림은 요청하지 않고 코드 조합으로 표시한다. 최종 설치는 `python scripts/build_darktoon_completion_fx.py`, 비교표는 `--compare`, 파일 검사는 `--verify`, 브라우저 검사는 `python scripts/verify_darktoon_completion_fx.py`다. 이미지 생성은 내장 imagegen을 사용한다.
 
+**함성 여섯 교체 · 2026-11-15** — 워 오더스·배틀 오더스·워 크라이·배틀 크라이·호령·사자후는 `<skill_id>_shockwave_<style>.webp` 12장을 사용한다. 초상 밖으로 퍼지는 세 겹의 충격파이며 두 그림체의 크기·움직임이 같다. 이전 개별 함성 파일 10장은 삭제했다. 원본·프롬프트·설치·검사는 [`fx_source/shout_shockwave_20261115/`](fx_source/shout_shockwave_20261115/README.md)에 있으며, `export.py` → `install.py` → `verify_installed.py` 순으로 재현한다. 기존 누락 보완 내보내기는 새 함성을 옛 시트에서 복구하지 않는다. 다른 스킬과 함께 들어 있는 과거 원본 시트는 보존한다.
+
 새로 그렸던 수채화·스테인드글라스·네온 플라즈마·로우폴리·자수는 설치본·원본·비교 이미지·프롬프트까지 삭제했다([ADR-0754](../../../docs/client/adr/0754-새-이펙트-시안은-삭제하고-누락-스킬은-다크카툰으로-채운다.md)). 삭제 목록과 기존 금속박·다크 카툰 보존 파일의 SHA-256은 새 원본 폴더에 있다. 오래된 발주 문서·스크립트는 과거 기록이며 삭제된 그림의 재빌드 경로로 사용하지 않는다. 스테이지 띠·배경·초상·아이콘은 이 정리 범위와 무관하다.
 
 ## faces/ — 몬스터 얼굴 아이콘 · **스타일 하나 = 폴더 하나** [2026-08-30]
@@ -571,6 +573,8 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 `shrine`(제단) · `tactic`(교차한 검과 지휘 깃발) · `codex`(펼친 책)는 **기본 스킬과 어울리는 회백색에 가까운 흰 실루엣**(`#f4f4f7`)이다. 관전 아레나 왼쪽 위에 나란히 서고, 각 아이콘의 공통 설명창이 해당 출처의 효과를 읽는다(`mock.js:RUN_BUFF_ART` · SCREEN_DESIGN §4-2 · ADR-0992). 효과가 없는 출처의 흐림은 UI가 적용한다.
 
 내장 이미지 생성으로 각각 제작한다. 생성 원본·프롬프트는 `icons_source/battle_buffs/source/`, 긴 변 88%·중앙 정렬로 정규화한 설치 원본은 같은 상위 폴더의 **512 PNG**, 게임용은 `icons/battle_buffs/`의 **256 WebP**이다. 생성 알파를 보존하며 `python scripts/build_icons.py`가 설치본을 내보낸다. 신단 획득 카드·결과 띠·리포트의 `shrines/` 그림과는 별도 자산이다.
+
+**정예 특성 칩** `elite_<id>` 12장 [2026-11-15 · ADR-1194] — 능력치 칸 일곱(`str` 굽힌 팔 · `agi` 날개 장화 · `int` 빛나는 펼친 책 · `vit` 하트 · `luck` 네잎클로버 · `ldr` 뿔피리 · `cha` 장미) · 방어 칸 다섯(`physical` 리벳 탑 방패 · `fire` · `cold` · `lightning` · `poison` 문양을 뚫은 같은 외곽 방패 — 2×2 한 장에서 잘랐다). 같은 흰 실루엣(`#f4f4f7`)이고 관전 창 뱃지 줄의 특성 칩이 **색 마스크**로 칠한다(능력치 = 본문 색 · 방어 = 피해 종류 색 · `battle.js:traitIconHtml`). 원본 = Codex 이미지 생성(흰 바탕 검은 실루엣 → 밝기로 배경을 빼 문양 구멍이 투명) · 설치 원본 `icons_source/battle_buffs/elite_<id>.png`(512). ⚠ `elite_int` 은 `codex`(펼친 책 위 별)와 결이 비슷하다 — 아레나 왼쪽 위 출처 아이콘과 같은 화면에 선다
 
 ## icons/lab/ — 연구소 지점 그림 [신설 2026-10-18 · 2026-11-14 전부 다시 그림 — ADR-1114]
 

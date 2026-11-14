@@ -164,7 +164,7 @@ def choices(browser):
                 page.locator('.advance-path').nth(i).click()
                 check(f'{key}:branch{i}:selected-by-original-action',page.locator('.advance-path.on').count()==1)
                 target(page,'.tr-adv-go',f'{key}:branch{i}:advance-reachable',32)
-                check(f'{key}:branch{i}:all-three-skills-preserved',page.locator('.advance-room [data-advskill]').count()==3)
+                check(f'{key}:branch{i}:all-three-skills-preserved',page.locator('#modal .adv-board [data-advskill]').count()==3)
             page.screenshot(path=str(OUT/(key+'-advance.png')))
         except Exception as e:check(key+':scenario',False,str(e));page.screenshot(path=str(OUT/(key+'-failure.png')))
         finally:ctx.close()

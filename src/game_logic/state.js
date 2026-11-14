@@ -625,6 +625,14 @@ export function createGameSystem(deps) {
                 h.masteryPoints = (h.masteryPoints ?? 0) + sum;
                 for (const id of ids) delete h.mastery[id];
             }
+            //   윗줄을 다 채워야 아랫줄이 열린다 [2026-11-15 · R502 · 버전 무변경] — 열리지 않은 줄에 찍힌 랭크는 **그 줄을 통째로** 돌려준다 ·
+            //   단 순서로 본다(윗줄을 돌려주면 그 아랫줄도 닫히므로 이어서 돌아온다)
+            for (const n of [...own.values()].sort((a, b) => a.tier - b.tier)) {
+                const r = h.mastery?.[n.id] ?? 0;
+                if (!r || H.masteryRowOpen(h, n)) continue;
+                h.masteryPoints = (h.masteryPoints ?? 0) + r;
+                delete h.mastery[n.id];
+            }
         }
         // 도감 카드는 걷혔다 [2026-09-21 · 버전 무변경] — 레벨은 이미 있던 `codexKills` 에서 다시 계산되므로 소급할 판단이 없다 · 필드만 지운다 (INTERFACE §4)
         delete s.codexCards;
@@ -1581,10 +1589,16 @@ export function createGameSystem(deps) {
             [DUST_ID, (B.equip_upgrade_dust_base + B.equip_upgrade_dust_step * up) * bands]];
         return want.filter(([id, n]) => id && n > 0).map(([id, need]) => ({ id, need, have: mats[id] ?? 0 }));
     };
+    /** 강화 횟수 [2026-11-15 · R499 · item_design §7-2] — 장비마다 `[balance.csv:equip_upgrade_tries]` 번 · 시도마다(성공 · 실패 모두) 하나 ·
+     *  `used` = `item.tries`(없으면 `up` — 옛 세이브의 성공은 시도였다 · 버전 무변경) · `left` 끝 0 */
+    const triesOf = it => {
+        const max = B.equip_upgrade_tries, used = Number.isFinite(it?.tries) ? it.tries : (it?.up ?? 0);
+        return { used, max, left: Math.max(0, max - used) };
+    };
     function upgradeState(state, itemUid) {
         const it = state.items[itemUid];
         if (!it || it.box) return null;   // 첫 클리어 상자 칸은 강화 대상이 아니다 (R328)
-        const up = it.up ?? 0, max = limitsOf(state).upgrade, cost = I.upgradeCost(it, max);
+        const up = it.up ?? 0, max = limitsOf(state).upgrade, cost = I.upgradeCost(it, max), tries = triesOf(it);
         const open = hasFeature(state, 'upgrade_item');   // 대장간이 연다 (R137)
         const peek = cost == null ? null : { ...it, up: up + 1 };
         // `mats` = 다음 단계의 재료(부위 재료 · 가루 — R373) · 올릴 수 없으면 빈 줄
@@ -1592,16 +1606,18 @@ export function createGameSystem(deps) {
         const baseChance = I.upgradeChance(it, max);
         return {
             // `chance` = 본 확률 + 담금질로 오른 몫(끝 1) · `baseChance` = 담금질 전 · `temper` = 담금질 덩어리(올릴 수 없으면 null) [2026-11-14 · R486]
-            up, max, slots: Math.max(B.equip_upgrade_slots, max), cost, mats, chance: chanceWithTemper(it, baseChance), baseChance,
-            temper: cost == null ? null : temperOf(state, it, open), gold: state.resources.gold, open,
+            //   `tries` = 강화 횟수 `{used, max, left}` — 다 쓰면 `canUpgrade` false · 담금질 덩어리 null [2026-11-15 · R499]
+            up, max, tries, slots: Math.max(B.equip_upgrade_slots, max), cost, mats, chance: chanceWithTemper(it, baseChance), baseChance,
+            temper: cost == null || tries.left === 0 ? null : temperOf(state, it, open), gold: state.resources.gold, open,
             upgradeable: I.upgradeable(it),
-            canUpgrade: open && cost != null && state.resources.gold >= cost && mats.every(m => m.have >= m.need),
+            canUpgrade: open && cost != null && tries.left > 0 && state.resources.gold >= cost && mats.every(m => m.have >= m.need),
             next: peek && { up: peek.up, dmg: I.weaponDamageFixed(peek), imp: I.implicitFixed(peek) },
         };
     }
 
     /**
-     * 강화 1단계 — 골드 · 재료(부위 재료 · 가루 — R373)를 내고 **굴려서** 성공하면 `up` 을 올린다. 거절은 `missing` → `unbuilt`(대장간을 안 지었다 · R137) → `noBase` → `maxUp` → `gold` → `materials` 순으로 본다.
+     * 강화 1단계 — 골드 · 재료(부위 재료 · 가루 — R373)를 내고 **굴려서** 성공하면 `up` 을 올린다. 거절은 `missing` → `unbuilt`(대장간을 안 지었다 · R137) → `noBase` → `maxUp` → `tries`(남은 횟수 0 · R499) → `gold` → `materials` 순으로 본다.
+ * 통과하면 `item.tries` 를 하나 올린다 — 성공이든 실패든 [2026-11-15 · R499].
      * 거절이면 아무것도 안 바뀐다(스트림도 안 연다).
      * **가방·착용을 가리지 않는다** — 소유물에 하는 일이지 자리에 하는 일이 아니다(분해와 갈리는 지점).
      * **실패하면 비용만 나간다** [2026-10-14 사용자 · R253 · item_design §7-2] — 골드 · 재료 · `up` 그대로 · 파괴 · 하락 없음. 반환의 `up` 은 굴린 **뒤**의 단계다.
@@ -1616,12 +1632,15 @@ export function createGameSystem(deps) {
         if (!I.upgradeable(it)) return { ok: false, err: 'noBase' };
         const max = limitsOf(state).upgrade, cost = I.upgradeCost(it, max);
         if (cost == null) return { ok: false, err: 'maxUp' };
+        const tries = triesOf(it);
+        if (tries.left <= 0) return { ok: false, err: 'tries' };
         if (state.resources.gold < cost) return { ok: false, err: 'gold' };
         const mats = upgradeMatsOf(state, it);
         if (mats.some(m => m.have < m.need)) return { ok: false, err: 'materials' };
         const chance = chanceWithTemper(it, I.upgradeChance(it, max)), used = temperBonusOf(it);
         state.resources.gold -= cost;
         for (const m of mats) state.materials[m.id] -= m.need;
+        it.tries = tries.used + 1;   // 강화 횟수 — 성공이든 실패든 하나 (R499)
         commissionNote(state, 'upgrade', { to: (it.up ?? 0) + 1 });   // 의뢰 「강화」 — 시도마다 · 성패 무관 (R457)
         state.counters.upgrade = (state.counters.upgrade ?? 0) + 1;
         const success = makeRng(deriveSeed(state.seed ^ 0xF0C5, state.counters.upgrade))() < chance;
@@ -1671,7 +1690,7 @@ export function createGameSystem(deps) {
     }
     /**
      * 담금질 1회 — 판돈(고른 단계의 부위 재료)을 내고 굴려 그 아이템의 **다음 강화 한 번**의 확률을 올린다.
-     * 거절은 `missing` → `sealed` → `unbuilt` → `noBase` → `maxUp` → `tempered` → `tier` → `materials` 순 · 거절이면 아무것도 안 바뀐다(스트림도 안 연다).
+     * 거절은 `missing` → `sealed` → `unbuilt` → `noBase` → `maxUp` → `tries`(남은 강화 횟수 0 · R499) → `tempered` → `tier` → `materials` 순 · 거절이면 아무것도 안 바뀐다(스트림도 안 연다).
      * **꽝은 없다** — 결과표의 모든 줄이 0 보다 크다. 골드는 안 낸다 · 의뢰 「강화」는 안 센다.
      * rng = `deriveSeed(seed ^ 0xF0C7, counters.temper)` 선증가 · **4회**(결과 가중치 1 + 릴 그림 3) — 회차 번호가 결과를 정해 새로고침으로 되굴릴 수 없다 (INTERFACE §5-1 · §5-2)
      */
@@ -1682,6 +1701,7 @@ export function createGameSystem(deps) {
         if (!hasFeature(state, 'upgrade_item')) return { ok: false, err: 'unbuilt' };
         if (!I.upgradeable(it)) return { ok: false, err: 'noBase' };
         if (I.upgradeCost(it, limitsOf(state).upgrade) == null) return { ok: false, err: 'maxUp' };
+        if (triesOf(it).left <= 0) return { ok: false, err: 'tries' };   // 강화할 횟수가 없으면 올릴 확률도 없다
         if (temperBonusOf(it) > 0) return { ok: false, err: 'tempered' };
         const stake = temperStakes(state, it).find(x => x.tier === tier);
         if (!stake) return { ok: false, err: 'tier' };
@@ -2089,7 +2109,8 @@ export function createGameSystem(deps) {
     const presetErr = (state, p, no) => {
         if (!p) return 'missing';
         if (p.party.length === 0) return 'noParty';
-        if (p.party.some(uid => heroBusy(state, uid) === 'explore')) return 'exploring';   // 탐험 나감 (2026-10-09)
+        // 탐험 나감 (2026-10-09) — **다른 편성의 탐험**으로 나간 영웅만 막는다. 그 편성 자신의 탐험은 출발이 걷는다(`departRun` · 2026-11-15 사용자 · R500)
+        if (p.party.some(uid => { const x = exploreOf(state, uid); return x !== null && x.preset !== no; })) return 'exploring';
         if (p.party.some(uid => heroBusy(state, uid) === 'advance')) return 'advancing';   // 전직하는 중 (2026-09-28 · R16)
         if (p.party.some(uid => { const at = runOf(state, uid); return at !== null && at !== no; })) return 'busy';
         const going = runningNos(state);
@@ -2474,7 +2495,17 @@ export function createGameSystem(deps) {
         //   편성은 계획이라 든 채로 수색을 보낼 수 있고 여기서 막는다. ~~「아웃을 빼고 아무도 안 남으면」~~ 은 2026-09-08 삭제 —
         //   아웃이 런을 넘지 않으므로 언제나 전원이 나간다 (base_expedition_design §1-1)
         //   **다부대** [2026-09-23] — 다른 부대에서 싸우는 영웅이 든 편성(`busy`) · 도는 부대가 이미 상한만큼(`full`)도 여기서 막는다
-        return presetErr(state, presetAt(state, no), no);
+        const err = presetErr(state, presetAt(state, no), no);
+        if (err) return err;
+        // 그 편성의 탐험이 끝나 결과가 기다리면 출발이 받는다 — 그 부대 인벤토리에 다 안 들면 막는다(`exploreTake` 와 같은 판정 · 2026-11-15 사용자 · R500)
+        return exploreSettleErr(state, no, now);
+    }
+    /** 그 편성의 끝난 탐험을 받을 수 있나 — 진행 중 · 탐험 없음은 null(불러들이면 그만이다) · 받을 결과가 인벤토리에 다 안 들면 `bagFull` · rng 0 (R500) */
+    function exploreSettleErr(state, no, now) {
+        const x = exploreOfPreset(state, no);
+        if (!x || now < x.startedAt + exploreMs()) return null;
+        const bag = bagOf(state, no);
+        return bag && bag.length + exploreRoll(state, x).length > capOf(state, 'bag') ? 'bagFull' : null;
     }
 
     /** 출정 레벨 차이 — 판정만 · rng 0 [2026-11-02 · R418 · SCREEN_DESIGN §4-1] · 평균은 반올림해 화면이 읽는 두 수의 차이가 곧 `gap` 이다 · 파티가 비었으면 null */
@@ -3694,6 +3725,13 @@ export function createGameSystem(deps) {
             id => codexLadder(state, id), squad.potionHp ?? null, null, stageSeeds.rounds.map(r => r.seed));
         // 엔진 입력까지 검사한 뒤 한 번만 예약한다. 재출발은 자기 판을 먼저 반환한다.
         cutRun(state, 'retreat', no);
+        // **그 편성이 탐험에 나가 있으면 걷는다** [2026-11-15 사용자 · R500] — 끝났으면 결과를 그 부대 인벤토리에 받고(다 안 들면 `canDepart` 가 이미 `bagFull`) ·
+        //   진행 중이면 보상 없이 불러들인다(`exploreDrop`). 결과 굴림은 제 시드라 전투 rng 를 안 민다 · 이어 가는 런은 탐험에 나간 편성일 수 없다
+        const away = from ? null : exploreOfPreset(state, no);
+        if (away) {
+            if (now >= away.startedAt + exploreMs()) exploreTake(state, away.chapter, away.spot, now, no);
+            else exploreDrop(state, away.chapter, away.spot);
+        }
         reserveStageSeeds(state, stageSeeds);
         state.counters.battle = stageSeeds.sequence;
         // 함께 잡은 몬스터 수(`killsTogether`)는 **출발에서 안 센다** — 라운드를 정산할 때 그 라운드의 처치를 더한다(`settleRound`) · 이 런의 판정은 지금까지 센 값(위 `fixed.kills`)
@@ -5758,7 +5796,8 @@ export function createGameSystem(deps) {
                     row, rowUsed: rows[row].used, rowCap,
                     // 셋 중 하나(4단 · R437) — 다른 칸에 찍었으면 잠긴 칸(`picked` = 다른 칸이 골라졌다)
                     picked: H.masteryPickOneBlocked(h, n),
-                    canLearn: unlocked && rank < n.maxRank && points > 0 && rows[row].used < rowCap && !H.masteryPickOneBlocked(h, n),
+                    // 윗줄을 다 채워야 아랫줄이 열린다 (R502)
+                    canLearn: unlocked && H.masteryRowOpen(h, n) && rank < n.maxRank && points > 0 && rows[row].used < rowCap && !H.masteryPickOneBlocked(h, n),
                     // 낀 장비가 켜는 칸 [2026-09-22 · skill_design §3-5 · R138] — `gate` = {slot, groups} 또는 null · `on` = 지금 장비로 켜졌나.
                     //   꺼져 있어도 찍을 수 있다 — 랭크는 캐릭터에 쌓이고 장비를 바꾸면 켜진다
                     //   죄종 T2-1 은 `{slot: 'sin_gear', need}` — 그 영웅 죄종 장비 수가 켠다(2026-10-05)
@@ -5779,6 +5818,8 @@ export function createGameSystem(deps) {
         // 그 영웅의 트리에 없는 노드는 「없음」이다 — 다른 죄종·직업의 노드를 남이 찍지 못한다
         if (!n || !H.masteryNodesFor(h).some(x => x.id === nodeId)) return { ok: false, err: 'missing' };
         if (h.level < n.unlockLevel) return { ok: false, err: 'locked' };
+        // 윗줄을 다 채워야 아랫줄이 열린다 [2026-11-15 · R502] — `tier` = 채울 윗줄의 단(화면 문구가 쓴다)
+        if (!H.masteryRowOpen(h, n)) return { ok: false, err: 'prevRow', tier: n.tier - 1 };
         const rank = h.mastery?.[nodeId] ?? 0;
         if (rank >= n.maxRank) return { ok: false, err: 'maxRank' };
         if ((h.masteryPoints ?? 0) < 1) return { ok: false, err: 'points' };
@@ -5806,6 +5847,8 @@ export function createGameSystem(deps) {
         if (!n || !H.masteryNodesFor(h).some(x => x.id === nodeId)) return { ok: false, err: 'missing' };
         const rank = h.mastery?.[nodeId] ?? 0;
         if (rank < 1) return { ok: false, err: 'noRank' };
+        // 아랫줄에 랭크가 있으면 윗줄은 몫 아래로 못 내려간다 [2026-11-15 · R502] — `tier` = 먼저 무를 아랫줄의 단 · 전액 롤백(`resetMastery`)은 안 막는다
+        if (H.masteryRowHeld(h, n)) return { ok: false, err: 'nextRow', tier: n.tier + 1 };
         h.mastery = h.mastery ?? {};
         if (rank === 1) delete h.mastery[nodeId];
         else h.mastery[nodeId] = rank - 1;

@@ -30,6 +30,15 @@ export function writeScreenLayout(value) {
     try { localStorage.setItem(SCREEN_LAYOUT_KEY, value); } catch {}
 }
 
+/** 우클릭 분해 — 보관 칸 장비 우클릭이 바로 분해인가(SCREEN_DESIGN §2-2 · §6 · ADR-1188) · 기본 Off · 세이브와 무관한 조작 설정 */
+const QUICK_SALVAGE_KEY = 'thesevensim.quickSalvage';
+export function loadQuickSalvage() {
+    try { return localStorage.getItem(QUICK_SALVAGE_KEY) === 'on'; } catch { return false; }
+}
+export function writeQuickSalvage(on) {
+    try { localStorage.setItem(QUICK_SALVAGE_KEY, on ? 'on' : 'off'); } catch {}
+}
+
 export function loadSave() {
     try {
         const raw = localStorage.getItem(KEY);

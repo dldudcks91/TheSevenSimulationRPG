@@ -42,8 +42,8 @@
  */
 
 import * as M from './mock.js';
-import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo, shrineInfo, pickJosa } from './data.js';
-import { t, L } from './i18n.js';
+import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo, shrineInfo, pickJosa, skillShowsLv } from './data.js';
+import { t, L, has } from './i18n.js';
 import { DEV_HOST } from './env.js';
 import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard, withLive, refreshTip, reanchorTip, headingHelp } from './tip.js';
 import { paceAt, paceStep, paceCfg, actorOf, isSkillAct, isSkillOnly, RISE_MS, PEAK_MS } from './pace.js';   // 박자 — 세움이 언제 · 얼마나 서나. 앱 시계와 같은 걸음이다 (ADR-0654)
@@ -679,7 +679,7 @@ const gradeLabel = u => u.grade === 'elite' ? t('kind.elite')
 const gradeChip = u => u.grade === 'elite' ? `<span class="sin-chip grade-chip elite">${t('kind.elite')}</span>`
     : u.grade === 'stage_boss' || u.grade === 'chapter_boss' ? `<span class="sin-chip grade-chip boss">${t('kind.boss')}</span>` : '';
 /* 정예 특성 칩 — 카드 띠 오른쪽 · 오른쪽 맞춤 [2026-10-24 사용자 지시 · ADR-0775 · 칩 모양 ADR-0768] — 칸마다 칩 하나(이름):
-   죄종 칸 = 그 죄종의 마스터리 T1 이름(죄종 색) · 능력치 칸 = 이름(본문 색) · 방어 칸 = 이름(피해 종류 색) · 칩 모양은 죄종 칩과 같다.
+   죄종 칸 = 그 죄종의 형용사(「분노하는」 · 죄종 색 · ADR-1191) · 능력치 칸 = 이름(본문 색) · 방어 칸 = 이름(피해 종류 색) · 칩 모양은 죄종 칩과 같다.
    카드 크기는 그대로 · 띠가 모자라면 왼쪽 신원이 먼저 줄어든다(CSS) · 글씨는 카드 밖으로 안 나간다.
    로직이 굴려 실어 온 칸(`round` 적 항목의 `traits` = `[{slot, id}]` · R344 · INTERFACE §2-6)을 `eliteTraitView` 가 이름 · 색으로 바꾼다 —
    죄종 칸 id = 마스터리 T1 노드 · 능력치 칸 id = 능력치 · 방어 칸 id = 피해 종류. 칩 항목 = `{name:{ko,en}, color}`.
@@ -693,22 +693,22 @@ const longestName = list => list.reduce((a, b) => (L(b.name).length >= L(a.name)
 const demoEliteTraits = e => {
     if (!TRAIT_DEMO || e.grade !== 'elite' || !M.SINS[e.sin]) return null;
     if (TRAIT_Q === 'max') return [
-        longestName((D.masteryNodes ?? []).filter(n => n.tree_kind === 'sin' && Number(n.tier) === 1)
-            .map(n => ({ name: { ko: n.name_kr, en: n.name_en }, color: M.SINS[n.owner_id]?.color ?? null }))),
+        longestName(Object.keys(M.ELITE_TRAIT_SIN).map(sinChip)),
         longestName(M.ELITE_TRAIT_STAT.map(s => ({ name: s, color: null }))),
         longestName(M.ELITE_TRAIT_DEF.map(d => ({ name: d, color: `var(--dt-${d.dt})` }))),
     ];
     const h = keyHash(`${e.key}:${e.monsterId}`);
-    const t1 = (D.masteryNodes ?? []).filter(n => n.tree_kind === 'sin' && n.owner_id === e.sin && Number(n.tier) === 1);
-    const out = t1.length ? [{ name: { ko: t1[h % t1.length].name_kr, en: t1[h % t1.length].name_en }, color: M.SINS[e.sin].color }] : [];
+    const out = [sinChip(e.sin)];
     if (TRAIT_DEMO >= 2) out.push({ name: M.ELITE_TRAIT_STAT[(h >>> 4) % M.ELITE_TRAIT_STAT.length], color: null });
     if (TRAIT_DEMO >= 3) { const d = M.ELITE_TRAIT_DEF[(h >>> 8) % M.ELITE_TRAIT_DEF.length]; out.push({ name: d, color: `var(--dt-${d.dt})` }); }
     return out;
 };
+/* 죄종 칸 칩 = **그 죄종의 형용사**(「분노하는」) · 죄종 색 — 붙은 마스터리 칸과 상관없이 같은 글자 [2026-11-15 사용자 지시 · ADR-1191] */
+const sinChip = sin => ({ name: M.ELITE_TRAIT_SIN[sin], color: M.SINS[sin]?.color ?? null });
 const eliteTraitView = traits => (traits ?? []).map(({ slot, id } = {}) => {
     if (slot === 'sin') {
         const n = (D.masteryNodes ?? []).find(x => x.node_id === id);
-        return n ? { name: { ko: n.name_kr, en: n.name_en }, color: M.SINS[n.owner_id]?.color ?? null } : null;
+        return n && M.ELITE_TRAIT_SIN[n.owner_id] ? sinChip(n.owner_id) : null;
     }
     if (slot === 'stat') { const s = M.ELITE_TRAIT_STAT.find(x => x.attr === id); return s ? { name: s, color: null } : null; }
     if (slot === 'def') { const d = M.ELITE_TRAIT_DEF.find(x => x.dt === id); return d ? { name: d, color: `var(--dt-${d.dt})` } : null; }
@@ -1050,8 +1050,8 @@ function unitInner(u, state, v2, sprite, slots, ready = false) {
     // 칸이 드는 것은 **그림**이다 (2026-09-03 · SCREEN_DESIGN §2) — 어느 그림인지는 `mock.skillIcon` 이 id 에서 정한다.
     // 파일이 없으면 `onerror` 로 img 만 빠지고 칸이 빈 채 남는다(밑에 이모지를 안 깐다 — 영웅 초상과 같은 이유)
     const mask = ready ? '<i class="cd-mask" style="transform:scaleY(0)"></i>' : '<i class="cd-mask"></i>';
-    // 칸은 그림 오른쪽 아래에 `Lv.n` — 쿨 판 위에 선다(DOM 이 뒤라 위에 그려진다 · `slotLv` · R302 · ADR-0701 · ADR-0705) · 양 진영 같다
-    const lvTag = s => (Number.isFinite(s.lv) ? `<span class="sk-lv">${t('sk.lvTag', { n: s.lv })}</span>` : '');
+    // 칸은 그림 오른쪽 아래에 `Lv.n` — 쿨 판 위에 선다(DOM 이 뒤라 위에 그려진다 · `slotLv` · R302 · ADR-0701 · ADR-0705) · 양 진영 같다 · 전직 스킬은 레벨이 없다 (ADR-1190)
+    const lvTag = s => (skillShowsLv(s) ? `<span class="sk-lv">${t('sk.lvTag', { n: s.lv })}</span>` : '');
     const skills = `<div class="cd-list">${slots.map(s => s
         ? `<div class="cd-slot"><span class="cd-g">${skillImg(s)}</span>${mask}${lvTag(s)}</div>`
         : `<div class="cd-slot empty"></div>`).join('')}</div>`;
@@ -1298,12 +1298,13 @@ function effectSummaryText(stat, value = 0, element = null, cut = 0) {
  * 창 뱃지 툴팁 — 이름 + **실제 적용 효과** + 남은 시간. 스킬의 대상·쿨·원문 설명은 되풀이하지 않는다.
  * `until === null`인 오오라는 상시, 경직은 스킬 그림 대신 뱃지와 같은 멈춤 표시를 쓴다.
  */
-function effectTipCard({ owner, info = null, name = '', stat = null, value = 0, element = null, cut = 0, until = null, now = 0, stagger = false }) {
+function effectTipCard({ owner, info = null, name = '', stat = null, value = 0, element = null, cut = 0, until = null, now = 0, stagger = false, iconHtml = null, summaryHtml = null }) {
     const c = document.createElement('div');
     c.className = 'tip-card effect-tip';
     c.dataset.effectOwner = String(owner ?? '');
-    const icon = stagger ? '<i class="tip-effect-stagger"></i>' : skillImg(info);
-    const summary = stagger ? t('bt.effect.stagger') : effectSummaryText(stat, value, element, cut);
+    // `iconHtml` · `summaryHtml` — 스킬이 아닌 칩(정예 특성 · ADR-1194)이 그림 · 효과 줄을 직접 준다
+    const icon = iconHtml ?? (stagger ? '<i class="tip-effect-stagger"></i>' : skillImg(info));
+    const summary = summaryHtml ?? (stagger ? t('bt.effect.stagger') : effectSummaryText(stat, value, element, cut));
     c.innerHTML = `
         <div class="tip-effect-head">
             <div class="tip-name"><span class="tip-sk-ico">${icon}</span>${name}</div>
@@ -1350,6 +1351,32 @@ function refreshAilmentLook(u, live) {
     }
 }
 
+/* ── 정예 특성 칩 — 창 뱃지 줄 맨 앞 · 칸마다 하나 · 상시 [2026-11-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-1194 · R501] ──
+   효과 값은 로직이 실어 온 `traits[].stat` · `v` 다(`round` 적 항목) — 재생기는 문장으로 바꿀 뿐이다.
+   그림 = 죄종 칸은 붙은 마스터리 칸 그림(죄종 색) · 능력치 · 방어 칸은 `icons/battle_buffs/elite_<id>`(능력치 = 본문 색 · 방어 = 피해 종류 색) — 회색 · 흰 실루엣을 마스크로 칠한다 */
+const traitArt = f => f.slot === 'sin' ? `./assets/art/icons/mastery/sin/${f.id}${M.ICON_EXT}` : `./assets/art/icons/battle_buffs/elite_${f.id}${M.ICON_EXT}`;
+const traitColor = f => f.slot === 'sin' ? (M.SINS[f.sin]?.color ?? 'var(--text-secondary)') : f.slot === 'def' ? `var(--dt-${f.id})` : 'var(--text-secondary)';
+const traitIconHtml = f => `<i class="sk-icon-mask trait-ico" aria-hidden="true" style="background:${traitColor(f)};-webkit-mask-image:url('${traitArt(f)}');mask-image:url('${traitArt(f)}')"></i>`;
+/** 칩 이름 — 띠 칩과 같은 글자(죄종 = 형용사 · ADR-1191) */
+const traitName = f => f.slot === 'sin' ? M.ELITE_TRAIT_SIN[f.sin]
+    : f.slot === 'stat' ? M.ELITE_TRAIT_STAT.find(x => x.attr === f.id) : M.ELITE_TRAIT_DEF.find(x => x.dt === f.id);
+/** 건 효과 한 줄 — 죄종 칸은 마스터리 툴팁과 같은 문장(`sk.masteryEffect.*`) · 몬스터에게 뜻이 바뀌는 칸(탐욕 셋 · 능력치 · 방어)만 `bt.trait.*` */
+function traitEffectText(f) {
+    const hl = s => `<span class="tip-hl">${s}</span>`;
+    if (f.slot === 'stat') {
+        const a = (D.heroAttributes ?? []).find(x => x.id === f.stat);
+        return t('bt.trait.stat', { stat: a ? L(a) : f.stat, v: hl(f.v) });
+    }
+    if (f.slot === 'def') return f.stat === 'defense' ? t('bt.trait.defMult', { v: hl(f.v) })
+        : t('bt.trait.resCap', { e: t(`st.atkType.${f.id}`), v: hl(M.pctText(f.v)) });
+    const fb = (D.combatStats ?? []).find(s => s.id === f.stat) ?? M.MASTERY_LABELS[f.stat];
+    const v = hl(M.baseValue(f.stat, f.v, fb));
+    const greed = { gold_find: 'bt.trait.gold', xp_gain_pct: 'bt.trait.xp', magic_find: 'bt.trait.magic' }[f.stat];
+    if (greed) return t(greed, { v });
+    const key = `sk.masteryEffect.${f.stat}`;
+    return t(has(key) ? key : 'sk.masteryEffect', { stat: L(M.statLabel(f.stat, fb)), v });
+}
+
 /**
  * 창 뱃지 줄 — 걸려 있는 창 하나 = 칩 하나. 칩은 그 창을 만든 스킬의 아이콘이고 이름·실제 적용 효과·남은 시간은 전용 툴팁이 든다.
  * **이로운 창은 초록 · 해로운 창은 빨강** 테두리 — 가르는 것은 창의 값 부호다(`buff` 이벤트의 `v`).
@@ -1365,10 +1392,12 @@ function refreshBuffs(u, now) {
     u.buffTipNow = now;
     refreshEffectTipTime(now);
     const live = u.hp > 0 ? [...(u.buffs ?? new Map())] : [];
+    // 정예 특성 칩 — 줄 맨 앞 · 산 동안만(쓰러지면 다른 창처럼 걷힌다 · ADR-1194)
+    const traits = u.hp > 0 ? (u.traits ?? []).filter(f => f?.stat) : [];
     const stag = u.hp > 0 && staggered(u, now);
     const stagUntil = stag ? u.stalls?.[u.stalls.length - 1]?.to ?? now : null;
     // 끝 시각도 지문이다 — 같은 창이 갱신되면 칩 노드와 툴팁의 `until`도 새 값으로 갈아야 한다.
-    const sig = live.map(([id, b]) => `${id}:${b?.stat ?? ''}:${b?.v ?? 0}:${b?.until ?? 'always'}`).join('|')
+    const sig = `t${traits.length}|` + live.map(([id, b]) => `${id}:${b?.stat ?? ''}:${b?.v ?? 0}:${b?.until ?? 'always'}`).join('|')
         + (stag ? `|stagger:${stagUntil}` : '');
     if (row.dataset.sig === sig) return;      // 안 바뀌었으면 손대지 않는다 — 매 틱 다시 그리는 자리다
     row.dataset.sig = sig;
@@ -1377,10 +1406,18 @@ function refreshBuffs(u, now) {
     const open = document.querySelector('#tooltip .effect-tip');
     if (open?.dataset.effectOwner === String(u.key)) hideTip();
     // 상태이상 칩(`b.k` — 열쇠가 상태이상 이름)은 **늘 해롭다** · 그림은 적용 중인 것을 건 스킬(`b.s`) · 이름은 상태이상 (R178 · ADR-0405)
-    row.innerHTML = live.map(([id, b]) => {
-        const info = skillInfo(b?.s ?? id);
-        return `<span class="buff-chip ${b?.k || (b?.v ?? 0) < 0 ? 'bad' : 'good'}" data-effect="${id}">${skillImg(info)}</span>`;
-    }).join('') + (stag ? '<span class="buff-chip stagger" data-stagger="1"></span>' : '');
+    row.innerHTML = traits.map((f, i) => `<span class="buff-chip good trait" data-trait="${i}">${traitIconHtml(f)}</span>`).join('')
+        + live.map(([id, b]) => {
+            const info = skillInfo(b?.s ?? id);
+            return `<span class="buff-chip ${b?.k || (b?.v ?? 0) < 0 ? 'bad' : 'good'}" data-effect="${id}">${skillImg(info)}</span>`;
+        }).join('') + (stag ? '<span class="buff-chip stagger" data-stagger="1"></span>' : '');
+
+    row.querySelectorAll('[data-trait]').forEach(chip => {
+        const f = traits[Number(chip.dataset.trait)];
+        const name = L(traitName(f) ?? { ko: f.id, en: f.id });
+        chip.setAttribute('aria-label', name);
+        bindTipNode(chip, () => effectTipCard({ owner: u.key, name, until: null, iconHtml: traitIconHtml(f), summaryHtml: traitEffectText(f) }));
+    });
 
     const byId = new Map(live);
     row.querySelectorAll('[data-effect]').forEach(chip => {

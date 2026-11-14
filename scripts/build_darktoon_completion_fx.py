@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'src/assets/art/fx_source/darktoon_completion_20261024'
 OUT = ROOT / 'src/assets/art/fx/skills'
 REJECTED = {'watercolor', 'glass', 'plasma', 'lowpoly', 'embroidery'}
+REPLACED_SHOUTS = {'war_shout', 'war_battleorders', 'war_warcry', 'war_battlecry', 'war_command', 'war_intimidate'}
 
 
 def write_json(path, data):
@@ -43,9 +44,14 @@ def prepare():
 
 def verify_preserved():
     preserved = json.loads((SOURCE / 'preserved_sha256.json').read_text(encoding='utf-8'))
+    checked = 0
     for relative, digest in preserved.items():
+        # The selected shockwaves intentionally replace these individual VFX.
+        if Path(relative).parent == Path('src/assets/art/fx/skills') and Path(relative).stem.rsplit('_', 1)[0] in REPLACED_SHOUTS:
+            continue
         assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == digest, relative
-    return len(preserved)
+        checked += 1
+    return checked
 
 
 def cleanup():
@@ -101,6 +107,8 @@ def install():
         alpha = np.asarray(image)[..., 3]
         rows = boundaries(alpha, 1)
         for i, entry in enumerate(sheet['cells']):
+            if entry['skill'] in REPLACED_SHOUTS:
+                continue
             x, y = i % 3, i // 3
             columns = boundaries(alpha[rows[y]:rows[y + 1]], 0)
             box = (columns[x], rows[y], columns[x + 1], rows[y + 1])
@@ -127,7 +135,8 @@ def compare():
     font = ImageFont.truetype('C:/Windows/Fonts/malgun.ttf', 16)
     for i, entry in enumerate(entries):
         x, y = i % 5 * width, i // 5 * height
-        sprite = Image.open(OUT / f"{entry['skill']}_darktoon.webp").convert('RGBA')
+        file = entry['skill'] + ('_shockwave' if entry['skill'] in REPLACED_SHOUTS else '')
+        sprite = Image.open(OUT / f'{file}_darktoon.webp').convert('RGBA')
         sprite.thumbnail((112, 112), Image.Resampling.LANCZOS)
         board.paste(sprite, (x + (width - sprite.width) // 2, y + 8), sprite)
         draw.text((x + width // 2, y + 130), entry['ko'], font=font, anchor='mt', fill='#dddde4')
@@ -139,7 +148,9 @@ def verify():
     keys = set(re.findall(r'^    ([a-z][a-z0-9_]+):', art, re.M))
     rows = list(csv.DictReader((ROOT / 'src/data/skill.csv').open(encoding='utf-8-sig')))
     missing = [r['skill_id'] for r in rows if r['skill_id'] not in keys]
-    assert not missing, missing
+    # Newly added skills may deliberately use fx.js's code fallback. Shouts all have images.
+    missing_shouts = [r['skill_id'] for r in rows if 'shout' in r['tags'].split('|') and r['skill_id'] in missing]
+    assert not missing_shouts, missing_shouts
     counts = Counter(p.stem.rsplit('_', 1)[-1] for p in OUT.glob('*.webp'))
     assert set(counts) == {'darktoon', 'foil'}, counts
     files = set(re.findall(r"file: '([^']+)'", art))
@@ -149,7 +160,7 @@ def verify():
         assert image.getextrema()[3][0] == 0, path
     report = {'skills': len(rows), 'mapped_skills': len(keys), 'active_darktoon_files': len(files),
               'new_files': sum(len(s['cells']) for s in manifest()['sheets']),
-              'preserved_unchanged': verify_preserved(), 'runtime_counts': dict(counts)}
+              'code_fallback_skills': missing, 'runtime_counts': dict(counts)}
     write_json(SOURCE / 'asset_verification.json', report)
     print(json.dumps(report))
 

@@ -23,7 +23,7 @@
 
 import * as M from './mock.js';
 import { t, L, lang } from './i18n.js';
-import { D, SYS, skillTagName, monsterFace, monsterName, monsterSin, monsterStory, fillStory, potionInfo } from './data.js';
+import { D, SYS, skillTagName, monsterFace, monsterName, monsterSin, monsterStory, fillStory, potionInfo, skillShowsLv } from './data.js';
 
 const $tip = () => document.querySelector('#tooltip');
 
@@ -59,8 +59,9 @@ export function monsterSkillIcons(id, cls, cell) {
         const late = d.id !== first;
         const title = L(SYS.skill.defs[a.id]?.name ?? { ko: a.id, en: a.id }) + (late ? ` · ${L(d.name)}` : '');
         // 칸마다 바탕 레벨 `Lv.n` — 오른쪽 아래(늦은 칸 표시는 오른쪽 위) · 장비 몫은 스폰 때 굴려져 도감은 모른다 (ADR-0705)
-        // `data-sk` · `data-up` — 목록 카드가 그린 뒤 칸마다 스킬 설명창을 거는 손잡이 (`app.js:bindMonSkillTips` · ADR-0709)
-        return `<span class="${cell}" title="${title}" data-sk="${a.id}" data-up="${a.up ?? 0}">${skillImg(a)}<span class="sk-lv">${t('sk.lvTag', { n: 1 + (a.up ?? 0) })}</span></span>`;
+        // `data-sk` · `data-up` — 목록 카드가 그린 뒤 칸마다 스킬 설명창을 거는 손잡이 (`app.js:bindMonSkillTips` · ADR-0709) · 전직 스킬은 레벨이 없다 (ADR-1190)
+        const lv = { id: a.id, lv: 1 + (a.up ?? 0) };
+        return `<span class="${cell}" title="${title}" data-sk="${a.id}" data-up="${a.up ?? 0}">${skillImg(a)}${skillShowsLv(lv) ? `<span class="sk-lv">${t('sk.lvTag', { n: lv.lv })}</span>` : ''}</span>`;
     }).join('')}</span>`;
 }
 
@@ -744,8 +745,8 @@ function statsFirstCard(stats, color, combat, equipment, itemCardOf, rebuild, { 
     c.dataset.alt = '1';
     c._rebuild = rebuild;
     c.style.setProperty('--unit-line', color);
-    // 영웅 스킬은 그림 오른쪽 아래에 `Lv.n` — `activeCells` 가 `lv` 를 싣는다 (ADR-0701)
-    const lvTag = s => (Number.isFinite(s.lv) ? `<span class="sk-lv">${t('sk.lvTag', { n: s.lv })}</span>` : '');
+    // 영웅 스킬은 그림 오른쪽 아래에 `Lv.n` — `activeCells` 가 `lv` 를 싣는다 (ADR-0701) · 전직 스킬은 레벨이 없다 (ADR-1190)
+    const lvTag = s => (skillShowsLv(s) ? `<span class="sk-lv">${t('sk.lvTag', { n: s.lv })}</span>` : '');
     const icons = (skills ?? []).map((s, i) => {
         const locked = !s && lockedSkills[i];
         return `<span class="tip-skill${s ? '' : ' vacant'}${locked ? ' locked' : ''}">${s ? skillImg(s) + lvTag(s) : locked ? `<span class="sk-lock">${M.lockIcon(true)}</span>` : ''}</span>`;
@@ -1484,8 +1485,8 @@ export function skillTipCard(s, ctx = {}) {
  */
 const skillNameHtml = (s, attrs = [], need = null) => {
     const def = defOf(s);
-    // 영웅이 든 스킬이면 아이콘 오른쪽 아래에 `Lv.n` — 아이템 칸과 같은 글 (스킬 레벨 · R216 · ADR-0576) — 부르는 자리가 `s.lv` 를 줄 때만(몬스터 · 도감은 안 준다)
-    const lv = Number.isFinite(s.lv) ? `<span class="sk-lv">${t('sk.lvTag', { n: s.lv })}</span>` : '';
+    // 영웅이 든 스킬이면 아이콘 오른쪽 아래에 `Lv.n` — 아이템 칸과 같은 글 (스킬 레벨 · R216 · ADR-0576) — 부르는 자리가 `s.lv` 를 줄 때만(몬스터 · 도감은 안 준다) · 전직 스킬은 레벨이 없다 (ADR-1190)
+    const lv = skillShowsLv(s) ? `<span class="sk-lv">${t('sk.lvTag', { n: s.lv })}</span>` : '';
     return `<div class="tip-name"><span class="tip-sk-ico">${skillImg(s)}${lv}</span><span class="tip-name-text">${L(def?.name ?? s.name ?? { ko: s.id, en: s.id })}</span>`
         + `${attrs.length ? `<span class="tip-name-attr">${attrs.join('')}</span>` : ''}${need ? `<span class="tip-name-side">${need}</span>` : ''}</div>`;
 };

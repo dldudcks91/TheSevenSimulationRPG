@@ -922,6 +922,18 @@ export const ELITE_TRAIT_DEF = [
     { dt: 'lightning', ko: '절연된', en: 'Insulated' },
     { dt: 'poison', ko: '방독의', en: 'Venomproof' },
 ];
+/* 정예 특성 **죄종 칸 칩의 글자** — 그 정예 죄종의 형용사 [2026-11-15 사용자 「그냥 분노하는 << 이렇게 붙여」 · SCREEN_DESIGN §4-2 · ADR-1191].
+   붙은 마스터리 칸(셋 중 하나)과 상관없이 같은 글자다 · 영어가 원본(`SINS.adj` 와 같은 낱말) · 한글은 직역 · 색욕은 「~의」 꼴(방어 칸 「내화의」와 같은 결).
+   **표시 전용**이다 — 굴림 풀은 `mastery_node.csv` 의 죄종 T2 칸이고 이 표는 game_logic 에 안 간다 */
+export const ELITE_TRAIT_SIN = {
+    wrath: { ko: '분노하는', en: 'Wrathful' },
+    envy: { ko: '시기하는', en: 'Envious' },
+    greed: { ko: '탐욕스러운', en: 'Greedy' },
+    sloth: { ko: '나태한', en: 'Slothful' },
+    gluttony: { ko: '폭식하는', en: 'Gluttonous' },
+    lust: { ko: '색욕의', en: 'Lustful' },
+    pride: { ko: '오만한', en: 'Prideful' },
+};
 
 /**
  * 원정 = 스테이지 런 (base_expedition_design §1-2).

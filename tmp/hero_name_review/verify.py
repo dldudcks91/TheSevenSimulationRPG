@@ -53,7 +53,6 @@ def main():
                     'failures': [check['text'] for check in checks if not check['ok']], 'errors': errors,
                 }
                 (OUT / f'{args.phase}.json').write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
-                print(json.dumps({key: value for key, value in result.items() if key != 'checks'}, ensure_ascii=True), flush=True)
                 body = page.locator('#golden').text_content()
                 actual = json.loads(body)
                 (OUT / f'{args.phase}_golden.json').write_text(body, encoding='utf-8')
@@ -83,7 +82,9 @@ def main():
                                 values[i] = '|'.join(fields)
                         (ROOT / 'src/dev/golden.json').write_text(json.dumps(expected, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
                 (OUT / f'{args.phase}.json').write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
-                print(json.dumps({key: value for key, value in result.items() if key != 'checks'}, ensure_ascii=True), flush=True)
+                summary = {key: value for key, value in result.items() if key != 'checks'}
+                summary['failures'] = [failure.split(' / ')[0] for failure in result['failures']]
+                print(json.dumps(summary, ensure_ascii=True), flush=True)
                 browser.close()
         finally:
             server.terminate()

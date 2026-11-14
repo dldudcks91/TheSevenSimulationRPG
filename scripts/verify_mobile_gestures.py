@@ -202,7 +202,7 @@ def acceptance(browser):
         page.locator('.advance-path').nth(1).click()
         branch=page.locator('.advance-path.on').get_attribute('data-branch')
         original=page.evaluate('__gestureReview()')
-        swipe(page,'.advance-room-desc',-110,start=.65)
+        swipe(page,'.advance-path.on .tr-adv-bdesc',-110,start=.65)
         check('advance:swipe-keeps-explicit-choice',page.locator('.advance-path.on').get_attribute('data-branch')==branch)
         check('advance:all-paths-remain-visible',page.locator('.advance-path:visible').count()==3)
         check('advance:swipe-does-not-spend',page.evaluate('__gestureReview().gold')==original['gold'])

@@ -735,16 +735,24 @@ export function createBattleSystem(data) {
     function makeEnemy(key, monsterId, grade, lvl, gear = [], extra = {}) {
         const m = data.monsters[monsterId];
         const g = data.grades[grade];
-        const { thirdSkill = null, difficulty = null, ...rest } = extra;
+        const { thirdSkill = null, difficulty = null, traits = null, ...rest } = extra;
+        // 정예 특성의 효과 [2026-11-15 · R501 · monster_design §6 · INTERFACE §2-6] — 칸마다 `{stat, v}` 를 얹은 사본이 유닛 · `round` 이벤트로 간다 · rng 0
+        const fx = traitFx(traits);
+        const fxOf = slot => fx?.find(f => f.slot === slot) ?? null;
+        const sinFx = fxOf('sin'), statFx = fxOf('stat'), defFx = fxOf('def');
         // 몬스터 레벨 = 스테이지 레벨(인자 `lvl`) + 몬스터별 가산 [2026-09-28 · 사용자 「사탄만 13」 · monster_design §7 · INTERFACE §2-6] · 만렙에서 자른다(2026-10-24) —
         //   아래 전투 능력치 · 적중(`makeUnit` 의 `lvl`) · 처치 XP 가 더한 레벨을 읽는다. 입은 장비 ilvl 의 가운데는 `spawnRound` 가 스테이지 레벨로 굴려 안 타고 위 끝만 이 레벨이다
         const levelAdd = m.level_add;
         if (!Number.isInteger(levelAdd) || levelAdd < 0) throw new Error(`battle: 몬스터 ${monsterId} 의 level_add '${levelAdd}' — 0 이상 정수여야 한다 (monster.csv)`);
         lvl = monsterLevelOf(m, lvl);
         const stats = { str: m.str, agi: m.agi, int: m.int, vit: m.vit, luck: m.luck, ldr: m.ldr, cha: m.cha };
+        // 정예 능력치 칸 — `computeCombat` 앞에 더한다 · 스킬 계수가 읽는 `stats` 도 같은 값이다 (R501)
+        if (statFx) stats[statFx.stat] += statFx.v;
         // 영웅과 같은 경로 — `mastery` 가 없으니 마스터리 몫은 0 이고 `codex`·`party` 도 안 넘긴다
+        //   정예 죄종 칸만 예외 — 그 노드를 `elite_trait_sin_rank` 랭크로 쥔 영웅과 같은 길로 합류한다(노드 주인 죄종을 `sin` 으로 넘겨야 `masteryNodesFor` 가 통과시킨다 · R501)
         // 입력에서 다른 것은 **레벨 1 HP 바탕** 하나다 — 영웅 `hero_hp_base` 대신 `monster_hp_base` [2026-09-14 사용자 지시 · R91 · monster_design §5]
-        const c = HS.computeCombat({ stats, level: lvl, cls: m.cls, innate: m.innate_skill, hpBase: B.monster_hp_base }, gear);
+        const c = HS.computeCombat({ stats, level: lvl, cls: m.cls, innate: m.innate_skill, hpBase: B.monster_hp_base,
+            ...(sinFx ? { sin: sinFx.sin, mastery: { [sinFx.id]: B.elite_trait_sin_rank } } : {}) }, gear);
         c.defense += m.defense;                                             // ①
         for (const el of ELEMENTS) c[`res_${el}`] += m[`res_${el}`];        // ①
         c.hp_max = Math.round(c.hp_max * g.hp_mult * B.monster_hp_scale * hpMultOf(difficulty));   // ② · 그 런 단의 배수 (R301)
@@ -763,6 +771,14 @@ export function createBattleSystem(data) {
             for (const k of ['atk_physical', 'atk_magic']) if (c[k] !== undefined) c[k] = { min: c[k].min * body.dmg, max: c[k].max * body.dmg };
             c.defense *= body.def;
             for (const el of ELEMENTS) c[`res_${el}`] += body.res;
+        }
+        // 정예 방어 칸 (R501) — 물리 = 방어(양수일 때)에 배수 · 원소 = 그 원소 저항을 절대 상한까지 · 그 원소의 상한 증가를 절대 상한에 닿게 더한다(적용 = 절대 상한).
+        //   종족 · 전역 배율 뒤 · 아래 시트 복사본 앞이라 툴팁 Alt 값에 든다
+        if (defFx?.stat === 'defense') { if (c.defense > 0) c.defense *= defFx.v; }
+        else if (defFx) {
+            c[defFx.stat] = Math.max(c[defFx.stat] ?? 0, defFx.v);
+            const el = defFx.id;
+            c.res_max_el = { ...(c.res_max_el ?? {}), [el]: Math.max(c.res_max_el?.[el] ?? 0, B.res_cap_absolute - B.res_cap_base - (c.res_max_bonus ?? 0)) };
         }
         // 능력치 계수는 **영웅과 같다** [2026-09-22 사용자 — 보류 해제 · battle_design §9-2] — 평타는 `computeCombat` 이 낸
         //   `main_attr_mult`(힘 · 마법 무기는 평타가 없다 — R198) 그대로 · 스킬의 데미지 슬롯은 시전 순간 `stats` 로 `scaleDef` 가 곱한다
@@ -807,14 +823,35 @@ export function createBattleSystem(data) {
             // 처치 XP 는 몬스터 레벨이 정한다 — 레벨·등급이 같으면 몬스터가 달라도 같다. `exp_coef` 는 몬스터별 조정 칸 (monster_design §7 · R85)
             //   XP 는 레벨 표(`level_xp.csv`) · 골드는 옛 지수 곡선(`monster_gold_*`)을 따로 탄다 (2026-09-28 · PLAN_early_progression D3)
             //   골드는 등급의 `exp_mult` 를 안 탄다 — 등급은 `goldMult`(= `gold_mult`) 한 번만 곱한다 (2026-10-23 · R330 · monster_design §7)
-            expReward: MONSTER_XP.get(lvl) * g.exp_mult * m.exp_coef,
-            goldReward: B.monster_gold_base * B.monster_gold_growth ** (lvl - 1) * m.exp_coef,
+            //   정예 탐욕 칸(R501) — 처치 경험치 · 골드에 (1 + 그 칸 값)을 곱한다(몬스터에겐 전투 효과가 없는 칸이라 「이 정예가 더 준다」)
+            expReward: MONSTER_XP.get(lvl) * g.exp_mult * m.exp_coef * (sinFx?.stat === 'xp_gain_pct' ? 1 + sinFx.v : 1),
+            goldReward: B.monster_gold_base * B.monster_gold_growth ** (lvl - 1) * m.exp_coef * (sinFx?.stat === 'gold_find' ? 1 + sinFx.v : 1),
             goldMult: g.gold_mult, dropChanceMult: g.drop_chance_mult,
             // **도안 후보** = 스폰 때 든 칸 중 책이 되는 것 [2026-10-16 · R266 · 2026-10-18 · R269 「쥔 스킬이면 어느 칸이든」 · 2026-10-20 · R293 — ~~`codexSkills` 스킬 도감이 세는 스킬~~] —
             //   영웅이 배울 수 있는 것만(몬스터 전용 · 불러내기는 책이 없다 — `skill.bookable` · R258) ·
             //   오오라는 라운드 시작에 `actives` 에서 빠지므로 **여기서** 적는다 · 꺼진 칸도 든다(썼는지는 안 본다) · 칸 순서 · 같은 id 는 하나 · rng 0
             blueprintSkills: SK ? [...new Set(acts.map(a => a.id))].filter(id => SK.bookable(id)) : [],
+            ...(fx ? { traits: fx } : {}),
             ...rest,
+        });
+    }
+
+    /**
+     * 정예 특성 칸 → 건 효과 [2026-11-15 · R501 · monster_design §6 · INTERFACE §2-6] — `[{slot, id}]` 마다 `{stat, v}` 를 얹은 **사본**(죄종 칸은 `sin` = 노드 주인도) · 없으면 null · rng 0.
+     *   죄종 = 그 노드의 `stat` · 노드 값 × `elite_trait_sin_rank` · 능력치 = 그 능력치 + `elite_trait_stat_add` · 방어 = 물리 `defense` × `elite_trait_def_mult` / 원소 `res_<원소>` = `res_cap_absolute`.
+     *   모르는 노드는 throw — 풀은 생성 때 검사했다(`eliteTraits`)
+     */
+    function traitFx(traits) {
+        if (!traits?.length) return null;
+        return traits.map(t => {
+            if (t.slot === 'sin') {
+                const n = HS.masteryById?.[t.id];
+                if (!n) throw new Error(`battle: 정예 죄종 칸 '${t.id}' — mastery_node.csv 에 없다 (INTERFACE §2-6 · R501)`);
+                return { ...t, sin: n.ownerId, stat: n.stat, v: n.value * Math.min(B.elite_trait_sin_rank, n.maxRank) };
+            }
+            if (t.slot === 'stat') return { ...t, stat: t.id, v: B.elite_trait_stat_add };
+            if (t.id === 'physical') return { ...t, stat: 'defense', v: B.elite_trait_def_mult };
+            return { ...t, stat: `res_${t.id}`, v: B.res_cap_absolute };
         });
     }
 
@@ -920,7 +957,9 @@ export function createBattleSystem(data) {
             const g = data.grades[s.grade];
             // 차림 — 아이템 레벨 · 희귀도 가중치 규칙은 `wearGear` 한 곳이다(실험실이 같은 함수를 부른다 · 2026-10-10)
             // 제 줄 = (라운드 씨앗 · 용도 · 목록 자리) — 앞 몬스터나 부위의 굴림 수가 뒤 차림을 안 민다.
-            const mf = cxMagic ? magicFind + cxMagic(s.id) : magicFind;   // 도감 Lv1 매직 — 그 종족 몫(R314)
+            //   정예 탐욕 칸의 매직(R501)도 그 한 마리 차림에 더한다 — 가중치만 바뀌고 굴림 수는 그대로
+            const greed = traitFx(s.extra?.traits)?.find(f => f.stat === 'magic_find')?.v ?? 0;
+            const mf = (cxMagic ? magicFind + cxMagic(s.id) : magicFind) + greed;   // 도감 Lv1 매직 — 그 종족 몫(R314)
             const gear = wearGear(deriveSeed(seed ^ ENCOUNTER_STREAMS.gear, k), m, g, level, mf, wearChance, gearWeightsOf(g, difficulty), gearFixedOf(difficulty));
             // 보스의 한 칸 더 — 보스만(`skill_slots_add` ≥ 1 · R269 — ~~`skill_slots` ≥ 3~~ 같은 유닛이라 순서 · 횟수 불변). ⚠ **풀이 비어도 1회 소비한다**(무기 베이스·스킬 굴림과 같은 규칙).
             //   2칸(나이트메어)은 굴리지 않는다 — `nightmare_skill` 이 정한다

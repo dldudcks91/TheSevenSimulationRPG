@@ -543,6 +543,9 @@ export const skillInfo = id => {
         desc: r ? { ko: r.desc_kr, en: r.desc_en } : null,
     };
 };
+/** 스킬 그림 오른쪽 아래 `Lv.n` 을 다나 — `lv` 를 든 칸만 · **전직 스킬(`skill.csv:owner_kind=advance`)은 레벨이 없어 어느 칸에서도 안 단다**
+ *  (2026-11-15 사용자 지시 · SCREEN_DESIGN §2 「스킬 그림」 · ADR-1190). 출처가 아니라 정의로 가른다 — 관전 · 몬스터 칸은 출처를 안 든다 */
+export const skillShowsLv = s => Number.isFinite(s?.lv) && SYS?.skill?.defs?.[s.id]?.ownerKind !== 'advance';
 
 /** 신단 한 줄 — 이름 · 효과가 **전부 `shrine.csv`** 다 · 그림 = `assets/art/shrines/<id>.webp`. 없는 id 는 null (2026-09-29) */
 export const shrineInfo = id => {

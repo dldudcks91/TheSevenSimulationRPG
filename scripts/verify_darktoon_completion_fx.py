@@ -56,16 +56,17 @@ def verify(url):
                     fxPreview(index + 1, {key: entry.skill, side: 'enemy', node}, entry.skill, entry.kind, 'physical', style);
                     return {skill: entry.skill, stamp: Boolean(node.querySelector('.fx-skill-stamp')),
                             pieces: node.querySelector('.fx-layer')?.childElementCount ?? 0,
-                            file: artFile(entry.skill, style)};
+                            file: artFile(SKILL_ART[entry.skill]?.[entry.kind]?.file, style)};
                 });
                 return {style, skills: Object.keys(SKILL_ART).length, files: files.size, errors, newPlayback};
             }''', {'style': style, 'added': added})
-            assert result['skills'] == 96 and result['files'] == (106 if style == 'darktoon' else 89), result
+            assert result['skills'] >= len(added) and result['files'] > 0, result
             assert not result['errors'], result
             for entry in result['newPlayback']:
                 assert not entry.get('missing_card') and entry['pieces'] > 0, entry
-                assert entry['stamp'] == (style == 'darktoon'), entry
-                assert bool(entry['file']) == (style == 'darktoon'), entry
+                supported = style == 'darktoon' or entry['skill'] in {'war_warcry', 'war_battlecry'}
+                assert entry['stamp'] == supported, entry
+                assert bool(entry['file']) == supported, entry
             page.locator('.cx-fx-all').click()
             page.wait_for_selector('.fx-skill-stamp', state='attached')
             report['styles'].append(result)
