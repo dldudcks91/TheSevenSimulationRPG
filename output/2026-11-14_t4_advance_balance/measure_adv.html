@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><title>adv measure (임시 — 측정 뒤 지운다)</title></head>
+<body>
+<h1 id="head">running</h1>
+<pre id="out"></pre>
+<script type="module">
+// 전직 트리 값 맞추기 — 결투(AI 팀 3 대 3 · 시련의 탑 층 짜기)에서 그 직업 영웅(운반자)의 전직 판을 바꿔 같은 시드 짝으로 승률을 잰다.
+//   mode=skill  — 스킬마다 S0(배우기만) · S5(크기 5) · V1(변형 1 5) · V2(변형 2 5) · R(S5 + 상시 데미지 +15%) — 기준 = 변형 5 ≈ 크기 5
+//   mode=common — 갈래마다 C0(공통 줄 없음) · C1 · C2 · C3(그 칸 5) · R(C0 + 상시 데미지 +15%) — 기준 = 셋이 비슷 (스킬 줄은 크기 5 · 갈래의 셋을 시드마다 돌린다)
+import { loadData, buildSystems, D } from '../ui/data.js';
+import { makeRng } from '../game_logic/rng.js';
+const q = new URLSearchParams(location.search);
+const MODE = q.get('mode') ?? 'skill';
+const N = Number(q.get('n') ?? 40);
+const TIERS = (q.get('tiers') ?? 'platinum,diamond,champion').split(',');
+const ONLY = q.get('only') ? q.get('only').split(',') : null;
+const REF = 0.15;
+const head = document.getElementById('head'), out = document.getElementById('out');
+const tick = () => new Promise(r => setTimeout(r, 0));
+try {
+    await loadData('../data/');
+    const S = buildSystems(D);
+    const A = S.arena;
+    const clone = x => JSON.parse(JSON.stringify(x));
+    const advCls = Object.fromEntries((D.advanceRows ?? []).map(r => [r.advance_id, r.class_id]));
+    const skillsOf = b => S.skill.list.filter(d => d.ownerKind === 'advance' && d.ownerId === b).sort((x, y) => x.priority - y.priority).map(d => d.id);
+    const pairs = [];
+    for (const tier of TIERS) for (let s = 1; s <= N; s++) {
+        const a = A.rollTierOpponent(tier, makeRng(1000 + s), [], { floorRules: true });
+        const b = A.rollTierOpponent(tier, makeRng(50000 + s), a.map(p => p.hero.name), { floorRules: true });
+        a.forEach((p, i) => { p.uid = `a${i}`; p.hero.uid = `a${i}`; });
+        b.forEach((p, i) => { p.uid = `b${i}`; p.hero.uid = `b${i}`; });
+        pairs.push({ tier, s, a, b });
+    }
+    const seedOf = (P, k) => k + P.s * 7 + TIERS.indexOf(P.tier) * 100003;
+    const play = (P, team) => {
+        const r1 = A.fight(team, P.b, makeRng(seedOf(P, 90000)));
+        const r2 = A.fight(P.b, team, makeRng(seedOf(P, 170000)));
+        return ((r1.won ? 1 : 0) + (r2.won ? 0 : 1)) / 2;
+    };
+    const setAdv = (p, { skill, up, vr = null, common = null, ref = 0 }) => {
+        const h = clone(p.hero);
+        h.advance = S.skill.defs[skill].ownerId;
+        h.advanceSkill = skill;
+        if (up > 0) h.advanceUp = up; else delete h.advanceUp;
+        if (vr) h.advanceVar = vr; else delete h.advanceVar;
+        if (common) h.advanceCommon = common; else delete h.advanceCommon;
+        let combat = S.hero.computeCombat(h, p.gear.map(S.item.effective));
+        if (ref) combat = { ...combat, mastery_cond: [...(combat.mastery_cond ?? []), { cond: 'late', stat: 'atk_pct', v: ref, sec: 0 }] };
+        return { ...p, hero: h, combat, actives: S.skill.activesFor(h, { skillPlus: S.item.skillPlusOf(p.gear) }) };
+    };
+    const msd = d => { const n = d.length, m = d.reduce((a, b) => a + b, 0) / Math.max(1, n); return { m, se: Math.sqrt(d.reduce((a, b) => a + (b - m) ** 2, 0) / Math.max(1, n - 1)) / Math.sqrt(Math.max(1, n)), n }; };
+    const runSet = async (cls, cfgs, skillFor) => {
+        const match = p => p.hero.cls === cls;
+        const idx = pairs.map((P, i) => (P.a.some(match) ? i : -1)).filter(i => i >= 0);
+        const W = {};
+        for (const [name, cfg] of Object.entries(cfgs)) {
+            W[name] = [];
+            for (let k = 0; k < idx.length; k++) {
+                const P = pairs[idx[k]];
+                W[name].push(play(P, P.a.map(p => (match(p) ? setAdv(p, { ...cfg, skill: skillFor(P) }) : p))));
+                if (k % 100 === 99) { head.textContent = `cfg ${name} ${k + 1}/${idx.length} · ${((performance.now() - t0) / 1000).toFixed(0)}s`; await tick(); }
+            }
+        }
+        return { W, idx };
+    };
+    const t0 = performance.now();
+    const rows = [];
+    if (MODE === 'skill') {
+        const list = S.skill.list.filter(d => d.ownerKind === 'advance').map(d => d.id).filter(id => !ONLY || ONLY.includes(id));
+        for (const id of list) {
+            const cls = advCls[S.skill.defs[id].ownerId];
+            const { W, idx } = await runSet(cls, { S0: { up: 0 }, S5: { up: 5 }, V1: { up: 0, vr: [5, 0] }, V2: { up: 0, vr: [0, 5] }, R: { up: 5, ref: REF } }, () => id);
+            const dif = (a, b) => msd(W[a].map((x, i) => x - W[b][i]));
+            const kw = dif('R', 'S5').m / REF;
+            const eq = (a) => { const d = dif(a, 'S0'); return { eq: +(d.m / kw * 100).toFixed(1), se: +(d.se / Math.abs(kw) * 100).toFixed(1) }; };
+            const dS = dif('S5', 'S0').m;
+            rows.push({ id, cls, pairs: idx.length, kw: +kw.toFixed(4), S5: eq('S5'), V1: eq('V1'), V2: eq('V2'),
+                r1: +(dif('V1', 'S0').m / dS).toFixed(2), r2: +(dif('V2', 'S0').m / dS).toFixed(2), dWinS5: +(dS * 100).toFixed(2) });
+            head.textContent = `running ${id} · ${((performance.now() - t0) / 1000).toFixed(0)}s`;
+            await tick();
+        }
+    } else {
+        const branches = [...new Set(S.skill.list.filter(d => d.ownerKind === 'advance').map(d => d.ownerId))].filter(b => !ONLY || ONLY.includes(b));
+        for (const b of branches) {
+            const sk = skillsOf(b);
+            const { W, idx } = await runSet(advCls[b], { C0: { up: 5 }, C1: { up: 5, common: [5, 0, 0] }, C2: { up: 5, common: [0, 5, 0] }, C3: { up: 5, common: [0, 0, 5] }, R: { up: 5, ref: REF } }, P => sk[P.s % sk.length]);
+            const dif = (a, c) => msd(W[a].map((x, i) => x - W[c][i]));
+            const kw = dif('R', 'C0').m / REF;
+            const eq = (a) => { const d = dif(a, 'C0'); return { eq: +(d.m / kw * 100).toFixed(1), se: +(d.se / Math.abs(kw) * 100).toFixed(1) }; };
+            rows.push({ id: b, cls: advCls[b], pairs: idx.length, kw: +kw.toFixed(4), C1: eq('C1'), C2: eq('C2'), C3: eq('C3') });
+            head.textContent = `running ${b} · ${((performance.now() - t0) / 1000).toFixed(0)}s`;
+            await tick();
+        }
+    }
+    const meta = { MODE, N, TIERS, pairs: pairs.length, secs: +((performance.now() - t0) / 1000).toFixed(1) };
+    out.textContent = JSON.stringify({ meta, rows }, null, 1);
+    head.textContent = `DONE ${meta.secs}s`;
+} catch (e) {
+    head.textContent = 'FAIL';
+    out.textContent = String(e && e.stack ? e.stack : e);
+}
+</script>
+</body>
+</html>

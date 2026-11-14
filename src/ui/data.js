@@ -39,8 +39,7 @@ export const D = {
     codexLevels: [],          // codex_level.csv — 레벨순 exp_total (누적 도감 경험치 문턱 · 2026-10-10 R239)
     codexSteps: [],           // codex_level.csv — 레벨순 [{reward, value}] · 레벨 n 이 여는 사다리 단계 (2026-10-18 R286 · ~~bonus_pct~~)
     codexOptions: [],         // codex_option.csv — [{monsterId, stat, value, farm, farmValue, fight, fightValue}] · 도감 Lv4 몬스터다운 전투 옵션 + Lv1 · Lv2 칸(2026-10-22 R314) · 검증은 game_logic/state.js (2026-10-18 R286 · ~~codex_series.csv~~ 삭제)
-    monsterBaseRows: [],      // monster_base.csv 원시 행 — 부류의 기믹 값(gimmick_value · gimmick_n · R388)
-    codexRaces: {},           // monster_base.csv — {base_id: {ko, en}} · 도감 Lv1 · Lv2 의 범위인 종족 이름 (2026-10-22 R314)
+    codexRaces: {},           // monster_type.csv — {type_id: {ko, en}} · 도감 Lv1 · Lv2 의 범위인 종족 이름 (2026-10-22 R314 · 2026-11-14 R494 부류 → 종족)
     chapters: null,           // chapter.csv byId — {id, sin, name:{ko,en}}
     chapterList: [],
     heroAttributes: [],       // hero_attribute.csv — [{id, ko, en, abbr, combatStat, dispatch}]
@@ -92,9 +91,10 @@ export const D = {
     buildingRankRows: [],     // building_rank.csv — 건물 × 랭크마다 한 줄 (문턱 · 비용)
     buildingEffectRows: [],   // building_effect.csv — 여는 것 **한 줄에 하나** (켜기 · 더하기)
     levelXp: [],              // level_xp.csv — 레벨순 [{level, xpNeed, monsterXp}] · 레벨업 필요 XP · 같은 레벨 몬스터 처치 XP (2026-09-28)
-    advanceNodeRows: [],      // advance_node.csv — 전직 스킬 줄 [{skill_id, slot(size · var1 · var2), fx, per_rank, arg, unit, desc_*, bonus_*}] (2026-11-13 · R471)
+    advanceNodeRows: [],      // advance_node.csv — 전직 스킬 줄 [{skill_id, slot(size · var1 · var2), fx, per_rank, arg, unit, name_*, desc_*, bonus_*}] (2026-11-13 · R471 · 이름 2026-11-14)
     advanceCommonRows: [],    // advance_common.csv — 전직 공통 줄 [{advance_id, slot, stat, tag, effect, per_rank, rank5, unit, name_*}] (2026-11-13 · R471)
     exploreStories: [],       // explore_story.csv 원시 행 — 탐험 진행 문구(지점 × 막 × 죄종). 검증·막 순서는 game_logic/state.js (⚠ 행 순서가 굴림 순서다 · R235)
+    visitStories: [],         // visit_story.csv 원시 행 — 수색 줄 등록 영웅의 하는 일 · 한 일(죄종 × 줄기 × 단계). 검증 · 고르기는 game_logic/state.js:visitChains · visitStory (ADR-1125)
     difficultyList: [],       // difficulty_tier.csv — 순서(`order`)대로 [{id, order, name:{ko,en}, levelCol, levelAdd, codexExp, chapterGate}] · 난이도 바퀴 (base_expedition_design §1-4 · R236) · codexExp = 처치 하나의 도감 경험치(R239) · chapterGate = 장 순서 해금 1/0(R242)
     difficulties: {},         // 같은 것 byId
     chapterDebuffs: [],       // chapter_debuff.csv — [{difficultyId, chapter, sin, effect, value, intervalSec, durationSec, cap}] · 단 · 장마다 그 장 죄종의 디버프 한 줄(헬 · R366 · base_expedition_design §1-4) · 검증은 game_logic/battle.js
@@ -108,6 +108,7 @@ export const D = {
     slotLineRows: [],         // slot_line.csv — 라인(릴마다 행 번호)
     slotStakeRows: [],        // slot_stake.csv — 판돈 단계 배수
     upgradeChanceRows: [],    // upgrade_chance.csv — 강화 단계마다 성공 확률 [{step, chance}] (2026-10-14 · R253)
+    temperRolls: [],          // temper_roll.csv — 담금질 결과표 [{tier, bonus, weight}] (2026-11-14 · R486 · item_design §7-2)
     csvText: {},              // 파일명 → **원문 그대로**. 파싱 결과가 아니라 원문이라 어느 파일이 바뀌었는지 짚을 수 있다
                               //   (읽는 곳은 dev/golden.js:csvHash 하나 — 게임 로직은 이걸 안 본다)
 };
@@ -123,13 +124,13 @@ export let SYS = null;
 
 /** 로더가 읽는 CSV — **`src/data/*.csv` 전부여야 한다**(`inherited/` 제외). 읽히지 않는 SSOT 를 두지 않는다 */
 export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budget', 'spawn_grade',
-    'codex_level', 'codex_option', 'monster_base', 'weapon_group', 'skill', 'skill_effect', 'skill_status', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
+    'codex_level', 'codex_option', 'weapon_group', 'skill', 'skill_effect', 'skill_status', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
     'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
     'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'lab_material', 'hero_tier', 'monster_role', 'formation_template',
     'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'sin_word', 'accessory_sin_option',   // ~~armor_common_option~~ 2026-10-21 R303 퇴역(방어구 넷이 계열표) · ~~accessory_common_option~~ 2026-11-12 삭제(목걸이도 계열표 R453)
     'tactic_condition', 'building', 'building_rank', 'building_effect',   // ~~tactic_score~~ 2026-11-11 R441 삭제(등급 배수는 balance.csv:tactic_grade_mult_*)
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'advance_common', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff', 'commission_fame', 'ring_base_option', 'raid_boss', 'raid_pattern'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'advance_common', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff', 'commission_fame', 'ring_base_option', 'raid_boss', 'raid_pattern', 'temper_roll', 'visit_story'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -138,7 +139,7 @@ export async function loadData(base = './data/') {
     })));
     // 원문 보관 — 골든 스냅샷이 파일별 해시를 뜬다 (dev/golden.js). 파싱 전이라 컬럼 추가·행 순서도 걸린다
     FILES.forEach((f, i) => { D.csvText[f] = texts[i]; });
-    const [balance, monster, stage, roundRows, budget, grade, codexLevel, codexOptionRow, monsterBaseRow,
+    const [balance, monster, stage, roundRows, budget, grade, codexLevel, codexOptionRow,
         weaponGroup, skillRow, skillEffectRow, skillStatusRow, skillTagRow, heroAttr, combatStat, chapter, masteryNode,
         tacticSlot, tacticOption, commissionKind, commissionRow,
         itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, labMaterialRow,
@@ -146,7 +147,7 @@ export async function loadData(base = './data/') {
         heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, sinWordRow, accSinOptionRow,
         tacticConditionRow, buildingRow, buildingRankRow, buildingEffectRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, advanceCommonRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow, commissionFameRow, ringBaseRow, raidBossRow, raidPatternRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, advanceCommonRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow, commissionFameRow, ringBaseRow, raidBossRow, raidPatternRow, temperRollRow, visitStoryRow] = texts.map(parseCsv);
 
     D.ringBaseOptions = ringBaseRow;
     D.raidBosses = raidBossRow;
@@ -188,10 +189,8 @@ export async function loadData(base = './data/') {
     // 몬스터마다 — Lv4 옵션 한 줄 + Lv1 · Lv2 칸(그 종족 전체에 걸리는 몫 · 보스 · VI 자리는 `-` · 2026-10-22 R314)
     D.codexOptions = codexOptionRow.map(r => ({ monsterId: String(r.monster_idx), stat: r.stat, value: r.value,
         farm: dash(r.farm), farmValue: dash(r.farm_value), fight: dash(r.fight), fightValue: dash(r.fight_value) }));
-    // 종족 이름 — 도감 Lv1 · Lv2 의 범위(`monster.csv:monster_base`) · 2026-10-22 R314
-    D.codexRaces = Object.fromEntries(monsterBaseRow.map(r => [r.base_id, { ko: r.name_kr, en: r.name_en }]));
-    // 부류의 기믹 값 — 원시 행 그대로(전투가 읽는다 · 2026-10-29 · R388)
-    D.monsterBaseRows = monsterBaseRow;
+    // 종족 이름 — 도감 Lv1 · Lv2 의 범위(`monster.csv:monster_type` · 2026-10-22 R314 · 2026-11-14 R494 부류(monster_base.csv) 삭제)
+    D.codexRaces = Object.fromEntries(monsterTypeRow.map(r => [r.type_id, { ko: r.name_kr, en: r.name_en }]));
     D.chapterList = chapter.slice().sort((a, b) => a.chapter_id - b.chapter_id)
         .map(r => ({ id: r.chapter_id, sin: r.sin, name: { ko: r.name_kr, en: r.name_en } }));
     D.chapters = indexBy(D.chapterList, 'id');
@@ -385,6 +384,7 @@ export async function loadData(base = './data/') {
     // 탐험 진행 문구 — 원시 행 그대로 넘긴다. **막의 어휘도 순서도 CSV 가 든다**(`phase`·`phase_order`)라
     // 여기서 가공하면 구조가 두 곳에 생긴다. 무결성 검증은 state.js 가 로드 시 한다 (지점마다 막 · R235 · ~~수색 문구 · 만남 · 답~~ 2026-10-19 삭제)
     D.exploreStories = exploreStoryRow;
+    D.visitStories = visitStoryRow;
     // 유니크 영웅 후보 풀 — 원시 행 그대로. ⚠임시(hero_design §1) — 개체 테이블이 없어 아직 아무도 안 읽는다.
     // status(confirmed/proposed)로 실제 채택 여부를 가른다. 2026-09-10 논의 자료 — commission.csv 와 같은 자리채움
     D.heroUniqueCandidates = heroUniqueCandidateRow;
@@ -415,6 +415,8 @@ export async function loadData(base = './data/') {
     D.slotStakeRows = slotStakeRow;
     // 강화 성공 확률 — 단계마다 한 줄 (2026-10-14 · R253 · item_design §7-2). 원시 행 그대로 — 검증은 item.js 가 생성 때 한다
     D.upgradeChanceRows = upgradeChanceRow;
+    // 담금질 결과표 — 판돈 단계마다 오르는 몫 · 가중치 (2026-11-14 · R486 · item_design §7-2). 검증은 state.js 가 생성 때 한다
+    D.temperRolls = temperRollRow.map(r => ({ tier: r.tier, bonus: r.bonus, weight: r.weight }));
     // 탐험 지점 — 장 × 지점마다 이름 · 두 줄 이야기 (2026-10-09 · ADR-0563). 표시 문자열뿐이라 game_logic 에 안 넘긴다 — 빈 칸 · 줄 수는 단정이 잡는다
     //   이야기의 줄바꿈은 셀 안의 `\n` 두 글자다(스테이지 이야기와 같은 규약 — `storyLines`)
     D.exploreSpots = Object.fromEntries(exploreSpotRow.map(r => [`${r.chapter}:${r.spot}`, {
@@ -677,9 +679,8 @@ export function buildSystems(d, dev = {}) {
         },
         itemSystem: item, skillSystem: skill,
         monsterRoles: d.monsterRoles ?? {},        // 적의 랭크 — 진형 (battle_design §3-1)
-        // 종족의 몸 · 부류의 기믹 (2026-10-29 · R388 · monster_design §3-1) — 검증은 battle.js 가 생성 때 한다
+        // 종족의 몸 (2026-10-29 · R388 · monster_design §3-1) — 검증은 battle.js 가 생성 때 한다 · 부류 기믹은 2026-11-14 R494 삭제
         races: Object.fromEntries((d.monsterTypeRows ?? []).map(r => [r.type_id, { hp: r.hp_mult, regen: r.regen_mult, dmg: r.dmg_mult, def: r.def_mult, res: r.res_add }])),
-        families: Object.fromEntries((d.monsterBaseRows ?? []).map(r => [r.base_id, { value: r.gimmick_value, n: r.gimmick_n }])),
         // 몬스터도 영웅과 같은 경로로 전투 능력치를 얻는다 (2026-09-11 R79 · battle_design §8-1 · monster_design §5-1) —
         //   `computeCombat` 을 몬스터에도 부르므로 시스템째 넘긴다. `classSkills` 는 보스의 한 칸 더의 후보 풀(hero 와 같은 표)
         //   이고 `slots` 는 등급의 입는 부위(`spawn_grade.csv:wear_fixed` · `wear_optional`) 어휘 검증용이다 (R245)
@@ -718,6 +719,7 @@ export function buildSystems(d, dev = {}) {
         // 죄종 목록 — 탐험 이야기 표의 `sin` 컬럼 검증용 (~~수색 이야기 · 만남 · 답~~ 2026-10-19 삭제)
         sins,
         exploreStories: d.exploreStories ?? [],   // 탐험 이야기 — 지점마다 막 · 순서는 표가 정한다 (state.js:explorePhases · R235)
+        visitStories: d.visitStories ?? [],       // 수색 이야기 — 죄종 × 줄기 × 단계 (state.js:visitChains · ADR-1125)
         // 진형 — 템플릿의 정원. 첫 행이 기본값이다(`formation_template.csv` 행 순서가 곧 화면 순서)
         formationTemplates: d.formationTemplates ?? {},
         formationTplOrder: d.formationTplOrder ?? [],
@@ -726,6 +728,8 @@ export function buildSystems(d, dev = {}) {
         makeRecipes: d.makeRecipes ?? {}, labMaterials: d.labMaterials ?? [],
         // 위 단계 재료 — 하급(연구소 재료 셋)을 모아 대장간에서 합성한다 (item_design §5-2 · 2026-10-27 · R359)
         materialSynth: d.materialSynth ?? [],
+        // 담금질 결과표 — 판돈 단계(부위 재료 사다리)마다 오르는 몫 · 가중치 (item_design §7-2 · 2026-11-14 · R486)
+        temperRolls: d.temperRolls ?? [],
         // 연구소 지점 — 줄마다 레벨과 특징 · 연구 시간 (base_expedition_design §2-1 「지점」 · 2026-10-21 · R298)
         labNodes: d.labNodes ?? [],
         // 물약 — 단계 표. 칸 수 · 마시는 HP 비율 · 쿨은 balance 가 든다 (battle_design §7-1 · R103)

@@ -30,6 +30,7 @@ GAME_DIRS = [
     "skills",
     "sins",
     "classes",
+    "advances",
     "items/empty",
     "items/item_base",
     "items/potion",
@@ -51,6 +52,7 @@ GAME_DIRS = [
     "mail",
     "nav",
     "battle_buffs",
+    "party",
 ]
 
 

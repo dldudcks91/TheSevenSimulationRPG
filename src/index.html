@@ -2,16 +2,21 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#080808">
     <title>The Seven Simulation RPG — 화면 목업</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css">
     <link rel="stylesheet" href="./ui/style.css">
     <link rel="stylesheet" href="./ui/raid.css">
     <link rel="stylesheet" href="./ui/tutorial.css">
+    <link rel="stylesheet" href="./ui/mobile.css">
+    <link rel="stylesheet" href="./ui/mobile-pages.css">
+    <link rel="stylesheet" href="./ui/mobile-native.css">
+    <link rel="stylesheet" href="./ui/mobile-gestures.css">
 </head>
 <body>
-    <!-- 한 장 — 화면은 1600×800 한 장이고 창에 맞춰 통째로 줄이고 늘린다 (ADR-0087 · 크기는 style.css 의 #stage) -->
+    <!-- 데스크톱은 1600×800 한 장, 모바일은 실제 뷰포트 크기 (ADR-0087 · ADR-1089 · mobile.js/mobile.css) -->
     <div id="stage">
         <!-- booting 으로 시작한다 — 첫 render 전에 빈 브랜드 · 상단바 · 내비가 비치지 않게 (ADR-0349 · ADR-0633). 첫 app.js:renderShell 이 걷는다 -->
         <div id="app" class="booting">
@@ -33,7 +38,7 @@
         <div id="toast" class="toast-layer" role="status" aria-live="polite"></div>
     </div>
 
-    <!-- 세로 창 막 — 터치 기기에서 창이 세로로 길면 창 전체를 덮는다. 한 장 밖이라 배율을 안 탄다 (SCREEN_DESIGN §2 · ADR-0371). 채우는 것은 app.js:renderTurnGate 하나 -->
+    <!-- 고정 한 장 배치의 세로 안내막 — 모바일 반응형 배치에서는 표시하지 않는다 (ADR-1089). app.js:renderTurnGate -->
     <div id="turn" class="turn-gate" hidden></div>
 
     <!-- 부서진 글자 필터 — 이번 버전이 안 여는 장의 챕터 버튼(`.seg-crumble` · SCREEN_DESIGN §4-1 · ADR-0739).

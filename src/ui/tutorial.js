@@ -99,18 +99,20 @@ export function createTutorial({ read, describe, readSeen, writeSeen }) {
         const scale = stage?.offsetWidth ? stageRect.width / stage.offsetWidth : 1;
         const unit = Number.isFinite(scale) && scale > 0 ? scale : 1;
         const inset = 10, gap = 10 * unit;
-        card.style.width = `${Math.min(310, Math.max(120, (window.innerWidth - inset * 2) / unit))}px`;
+        const preview = document.documentElement.hasAttribute('data-mobile-preview') && stageRect;
+        const bounds = preview ? stageRect : { left: 0, top: 0, right: innerWidth, bottom: innerHeight, width: innerWidth };
+        card.style.width = `${Math.min(310, Math.max(120, (bounds.width - inset * 2) / unit))}px`;
         const size = card.getBoundingClientRect();
         const width = size.width, height = size.height;
-        const clamp = (v, max) => Math.max(inset, Math.min(v, Math.max(inset, max)));
+        const clamp = (v, min, max) => Math.max(min, Math.min(v, Math.max(min, max)));
         const candidates = [
             { side: 'right', x: rect.right + gap, y: rect.top },
             { side: 'left', x: rect.left - width - gap, y: rect.top },
             { side: 'bottom', x: rect.left, y: rect.bottom + gap },
             { side: 'top', x: rect.left, y: rect.top - height - gap },
         ].map(candidate => {
-            const x = clamp(candidate.x, window.innerWidth - width - inset);
-            const y = clamp(candidate.y, window.innerHeight - height - inset);
+            const x = clamp(candidate.x, bounds.left + inset, bounds.right - width - inset);
+            const y = clamp(candidate.y, bounds.top + inset, bounds.bottom - height - inset);
             const overlap = Math.max(0, Math.min(x + width, rect.right) - Math.max(x, rect.left))
                 * Math.max(0, Math.min(y + height, rect.bottom) - Math.max(y, rect.top));
             const shift = Math.abs(x - candidate.x) + Math.abs(y - candidate.y);

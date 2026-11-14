@@ -46,10 +46,11 @@ export const isSkillAct = ev => ev.e === 'skill';
 export const isSkillOnly = focus => focus === 'skillstop' || focus === 'skill';
 
 /** 세움 길이 — `focus` = 'off' | 'stop' | 'dim' | 'skillstop' | 'skill' · `lunge` = 공격 시 흔들림 · `k` = 배속 배수. Off 는 행동 세움이 없고 라운드 숨만 선다 ·
- *  `skillstop` · `skill` 은 `skillOnly` — 스킬 시전에만 선다 */
-export function paceCfg(focus, lunge, speed, k = 1) {
+ *  `skillstop` · `skill` 은 `skillOnly` — 스킬 시전에만 선다 ·
+ *  `chanStop(ev)` = 세우는 정신 집중의 방(`chan`) — 모으기의 쏘는 방뿐이다(부르는 쪽이 스킬 정의로 가른다 · 없으면 `chan` 은 하나도 안 선다 · ADR-1124) */
+export function paceCfg(focus, lunge, speed, k = 1, chanStop = null) {
     const on = focus !== 'off';
-    return { speed, rise: on && lunge ? (RISE_MS + PEAK_MS) * k : 0, focus: on ? FOCUS_MS * k : 0, gap: ROUND_GAP_MS * k, skillOnly: isSkillOnly(focus) };
+    return { speed, rise: on && lunge ? (RISE_MS + PEAK_MS) * k : 0, focus: on ? FOCUS_MS * k : 0, gap: ROUND_GAP_MS * k, skillOnly: isSkillOnly(focus), chanStop };
 }
 
 /** 그 시각에 선 박자 — 세움 없이 `t` 까지 지난 자리(재개 · 결투 · 개발 재생처럼 런 핸들의 박자가 없을 때) */
@@ -87,12 +88,17 @@ export function paceStep(p, tl, ms, cfg, reach = null) {
         }
         const s = p.t + Math.min(left / 1000 * cfg.speed, LOOK_SEC);
         reach?.(s);
-        let j = p.i, hit = null;
+        let j = p.i, hit = null, quiet = null;
         for (; j < tl.length && tl[j].t <= s + EPS; j++) {
             const ev = tl[j];
             if (ev.e === 'end') { hit = 'end'; break; }
             if (ev.e === 'round') { if (p.rounds > 0 && cfg.gap > 0) { hit = 'round'; break; } p.rounds++; continue; }
-            if (cfg.focus > 0 && actorOf(ev) != null && (!cfg.skillOnly || isSkillAct(ev))) { hit = 'act'; break; }
+            const who = actorOf(ev);
+            if (cfg.focus <= 0 || who == null) continue;
+            // 정신 집중의 뒤 방(끊어 치기 · 계속 닳기)은 안 선다 — 그 방의 타격 · 발동도 같이 지나간다. 카드는 여는 시전부터 닫힐 때까지 나간 채다 (battle.js:syncOffRise · ADR-1124)
+            if (ev.e === 'chan' && !cfg.chanStop?.(ev)) { quiet = { u: who, t: ev.t }; continue; }
+            if (quiet && who === quiet.u && ev.t <= quiet.t + EPS) continue;
+            if (!cfg.skillOnly || isSkillAct(ev)) { hit = 'act'; break; }
         }
         if (!hit) {   // 세울 사건 없이 내다본 끝까지 간다
             left = Math.max(0, left - (s - p.t) / cfg.speed * 1000);
@@ -106,8 +112,9 @@ export function paceStep(p, tl, ms, cfg, reach = null) {
         if (hit === 'end') { p.i = j + 1; p.done = true; break; }
         if (hit === 'round') { p.phase = 'round'; p.hold = cfg.gap; continue; }
         p.g0 = j; p.g1 = groupEnd(tl, j);
-        if (cfg.rise > 0) { p.phase = 'rise'; p.hold = cfg.rise; continue; }
-        p.i = p.g1;   // 올라감 없음(흔들림 Off) — 곧바로 적용하고 ②만 선다
+        // 모으기의 쏘는 방(`chan` 중 서는 것)은 ① 이 없다 — 여는 시전에서 나간 카드가 닫힐 때까지 나간 채 서 있다(battle.js:syncFocus · ADR-1087)
+        if (cfg.rise > 0 && tl[j].e !== 'chan') { p.phase = 'rise'; p.hold = cfg.rise; continue; }
+        p.i = p.g1;   // 올라감 없음(흔들림 Off · 모으기의 쏘는 방) — 곧바로 적용하고 ②만 선다
         if (tl.slice(p.g0, p.g1).some(ev => ev.e === 'end')) { p.done = true; break; }
         p.phase = 'focus'; p.hold = cfg.focus;
     }

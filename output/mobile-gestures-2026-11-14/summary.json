@@ -1,0 +1,340 @@
+{
+  "recorded_at": "2026-11-14T13:43:05.102990+00:00",
+  "suites": [
+    {
+      "name": "gestures-final",
+      "passed": 138,
+      "total": 138,
+      "errors": [],
+      "report": "gestures-final/results.json"
+    },
+    {
+      "name": "native-final",
+      "passed": 1509,
+      "total": 1509,
+      "errors": [],
+      "report": "native-final/results.json"
+    },
+    {
+      "name": "fixed",
+      "passed": 847,
+      "total": 847,
+      "errors": [],
+      "report": "fixed/fixed-results.json"
+    },
+    {
+      "name": "panels",
+      "passed": 94,
+      "total": 94,
+      "errors": [],
+      "report": "panels/panels-results.json"
+    },
+    {
+      "name": "touch",
+      "passed": 29,
+      "total": 29,
+      "errors": [],
+      "report": "touch/touch-results.json"
+    },
+    {
+      "name": "dialogs",
+      "passed": 25,
+      "total": 25,
+      "errors": [],
+      "report": "dialogs/dialogs-results.json"
+    },
+    {
+      "name": "preview",
+      "passed": 74,
+      "total": 74,
+      "errors": [],
+      "report": "preview/preview-results.json"
+    },
+    {
+      "name": "desktop",
+      "passed": 9,
+      "total": 9,
+      "errors": [],
+      "report": "desktop/desktop-results.json"
+    },
+    {
+      "name": "workflows",
+      "passed": 77,
+      "total": 77,
+      "errors": [],
+      "report": "workflows/workflows-results.json"
+    }
+  ],
+  "audits": [
+    {
+      "name": "landscape-final",
+      "panels": 47,
+      "clipped_controls": 0,
+      "errors": []
+    },
+    {
+      "name": "portrait-final",
+      "panels": 47,
+      "clipped_controls": 0,
+      "errors": []
+    },
+    {
+      "name": "preview-final",
+      "panels": 47,
+      "clipped_controls": 0,
+      "errors": []
+    },
+    {
+      "name": "small-final",
+      "panels": 47,
+      "clipped_controls": 0,
+      "errors": []
+    },
+    {
+      "name": "wide-final",
+      "panels": 47,
+      "clipped_controls": 0,
+      "errors": []
+    }
+  ],
+  "soak": {
+    "seconds": 1803.03,
+    "cycles": 458,
+    "reloads": 30,
+    "failed": 0,
+    "errors": [],
+    "complete": true
+  },
+  "preview_soak": {
+    "seconds": 902.55,
+    "cycles": 233,
+    "reloads": 15,
+    "failed": 0,
+    "errors": [],
+    "complete": true
+  },
+  "performance": {
+    "at": "2026-11-14T13:39:10.835704+00:00",
+    "cpu_throttling": 6,
+    "checks": [
+      {
+        "name": "slow-cpu-swipe-1",
+        "ok": true
+      },
+      {
+        "name": "slow-cpu-swipe-2",
+        "ok": true
+      },
+      {
+        "name": "slow-cpu-swipe-3",
+        "ok": true
+      },
+      {
+        "name": "slow-cpu-swipe-4",
+        "ok": true
+      },
+      {
+        "name": "slow-cpu-swipe-5",
+        "ok": true
+      },
+      {
+        "name": "slow-cpu-swipe-6",
+        "ok": true
+      },
+      {
+        "name": "slow-cpu-swipe-7",
+        "ok": true
+      },
+      {
+        "name": "slow-cpu-swipe-8",
+        "ok": true
+      },
+      {
+        "name": "slow-cpu-swipe-9",
+        "ok": true
+      },
+      {
+        "name": "slow-cpu-swipe-10",
+        "ok": true
+      },
+      {
+        "name": "slow-cpu-swipe-11",
+        "ok": true
+      },
+      {
+        "name": "slow-cpu-swipe-12",
+        "ok": true
+      }
+    ],
+    "errors": [],
+    "runs": [
+      {
+        "cycle": 1,
+        "release_to_observed_selection_ms": 142.33
+      },
+      {
+        "cycle": 2,
+        "release_to_observed_selection_ms": 132.11
+      },
+      {
+        "cycle": 3,
+        "release_to_observed_selection_ms": 133.05
+      },
+      {
+        "cycle": 4,
+        "release_to_observed_selection_ms": 95.5
+      },
+      {
+        "cycle": 5,
+        "release_to_observed_selection_ms": 56.53
+      },
+      {
+        "cycle": 6,
+        "release_to_observed_selection_ms": 36.83
+      },
+      {
+        "cycle": 7,
+        "release_to_observed_selection_ms": 89.29
+      },
+      {
+        "cycle": 8,
+        "release_to_observed_selection_ms": 99.34
+      },
+      {
+        "cycle": 9,
+        "release_to_observed_selection_ms": 93.4
+      },
+      {
+        "cycle": 10,
+        "release_to_observed_selection_ms": 69.54
+      },
+      {
+        "cycle": 11,
+        "release_to_observed_selection_ms": 115.91
+      },
+      {
+        "cycle": 12,
+        "release_to_observed_selection_ms": 165.89
+      }
+    ],
+    "long_tasks": [
+      {
+        "start": 720.2999999523163,
+        "duration": 63
+      },
+      {
+        "start": 1264.2999999523163,
+        "duration": 50
+      },
+      {
+        "start": 1918.9000000953674,
+        "duration": 62
+      },
+      {
+        "start": 2949.0999999046326,
+        "duration": 51
+      },
+      {
+        "start": 4116.799999952316,
+        "duration": 62
+      },
+      {
+        "start": 5120.299999952316,
+        "duration": 69
+      },
+      {
+        "start": 6123.299999952316,
+        "duration": 57
+      },
+      {
+        "start": 7333.700000047684,
+        "duration": 52
+      },
+      {
+        "start": 8586,
+        "duration": 69
+      },
+      {
+        "start": 9764.700000047684,
+        "duration": 70
+      }
+    ],
+    "limits": "Headless Edge CDP throttling; includes automation overhead and is not a physical-phone measurement."
+  },
+  "package": {
+    "files": [
+      "src/index.html",
+      "src/ui/mobile.js",
+      "src/ui/mobile.css",
+      "src/ui/mobile-pages.js",
+      "src/ui/mobile-pages.css",
+      "src/ui/mobile-native.js",
+      "src/ui/mobile-native.css",
+      "src/ui/mobile-gestures.js",
+      "src/ui/mobile-gestures.css",
+      "src/ui/i18n.js"
+    ],
+    "token_equivalence_and_brackets": "passed",
+    "stats": {
+      ".html": [
+        1,
+        5182,
+        3671
+      ],
+      ".js": [
+        5,
+        519474,
+        448419
+      ],
+      ".css": [
+        4,
+        136350,
+        132576
+      ]
+    }
+  },
+  "shared_style_followup": {
+    "at": "2026-11-14T13:40:28.633408+00:00",
+    "scope": "Follow-up to concurrent ADR-1141: research gauge font weight changed after broad acceptance. Final wide/preview audits also use this stylesheet.",
+    "source_sha256": "88bd2de1edf44ba2fc44df3ca062d1bbc3193fd8e7144400b75f47ad0affaf64",
+    "checks": [
+      {
+        "name": "390x844-gauge-regular-weight",
+        "ok": true
+      },
+      {
+        "name": "390x844-production-page-fits",
+        "ok": true
+      },
+      {
+        "name": "568x320-gauge-regular-weight",
+        "ok": true
+      },
+      {
+        "name": "568x320-production-page-fits",
+        "ok": true
+      }
+    ],
+    "errors": []
+  },
+  "source_sha256": {
+    "src/index.html": "98e200cf4fa05aa3846844f5db4e989b8bf9308d12f017e350283e4e26360e01",
+    "src/ui/app.js": "dc6ecb580d031b34da078c3876b9b4e15a9c36f480604122701cfe35029e6621",
+    "src/ui/style.css": "88bd2de1edf44ba2fc44df3ca062d1bbc3193fd8e7144400b75f47ad0affaf64",
+    "src/ui/i18n.js": "16632cd9d12f67fd5e3ccc8a597a05f49e0309ff309b49f957988c7209d67f10",
+    "src/ui/mobile-gestures.css": "e9c9ca4f504f735b9013db4ac4474d46b00474f1912b8ab0adac627066bd0f8a",
+    "src/ui/mobile-gestures.js": "c0bfb8923d5ac29f597c3d207456fcf1282a5972284ca95e70ae35bacf523527",
+    "src/ui/mobile-native.css": "c5686114de08e0f3eeb5083ec55565335bdff031c4b02e278abe1ea2bcc4300c",
+    "src/ui/mobile-native.js": "43962334c75e005ee642decc722e4d9588d769b08d8fe6ac3a20c8ff87c40b7d",
+    "src/ui/mobile-pages.css": "78f6b1fa017d5d9a35a26728e048ca0f4f00c175daccd10e724943e91e5b57f4",
+    "src/ui/mobile-pages.js": "07951328262a3136c57ef55cfbc3a88465f41eeed6d7bcd8ca007e39211bc9f0",
+    "src/ui/mobile.css": "0230ff0cd4b45d8abed4cd0a0d035d382f27a41de9adfbf95145f4d9539a775c",
+    "src/ui/mobile.js": "70fc71ee27eedba0e0fcaedcecc8a58e37c323aa35df137a4c9ce675abaa1830"
+  },
+  "limits": [
+    "Headless Edge with real CDP touch/pointer input; no physical phone or Safari testing.",
+    "Disposable saves; external fonts blocked for repeatable fallback rendering.",
+    "The timed soak ran during implementation and reloaded every 15 cycles. Final acceptance is recorded separately.",
+    "The first native report contains superseded selector/height failures; native-final is the acceptance result."
+  ]
+}

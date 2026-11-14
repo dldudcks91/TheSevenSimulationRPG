@@ -144,17 +144,12 @@ export function createBattleSystem(data) {
         if (!(B[k] > 0)) throw new Error(`battle: balance.csv 의 ${k} 가 없거나 0 이하다`);
     // 적의 랭크 — `monster.csv:role` → `monster_role.csv:rank` (0 전열 · 1 후열). 화면이 들고 있던 규칙을 CSV 로 올린 것이다
     const ROLES = data.monsterRoles ?? {};
-    // 종족의 몸 · 부류의 기믹 [2026-10-29 · R388 · monster_design §3-1 · INTERFACE §2-6] — 표가 없는 조립(손으로 만든 검증 시스템)은 둘 다 비어
-    //   몸 · 기믹이 없다(종전 그대로). 기믹의 **이름**(군대 · 거인 · 수호자 · 이형)은 코드의 어휘다 — 무엇을 하는지가 코드라서다(의뢰 `AXES` 와 같은 자리)
+    // 종족의 몸 [2026-10-29 · R388 · monster_design §3-1 · INTERFACE §2-6] — 표가 없는 조립(손으로 만든 검증 시스템)은 비어 몸이 없다(종전 그대로).
+    //   부류의 기믹(군대 · 거인 · 수호자 · 이형)은 2026-11-14 R494 에 걷었다 — 몬스터를 묶는 축은 종족 하나다
     const RACES = data.races ?? {};
     for (const [id, r] of Object.entries(RACES)) {
         for (const k of ['hp', 'regen', 'dmg', 'def']) if (!(typeof r[k] === 'number' && r[k] > 0)) throw new Error(`battle: 종족 ${id} 의 몸 ${k} '${r[k]}' — 양수여야 한다 (monster_type.csv)`);
         if (!(typeof r.res === 'number' && Number.isFinite(r.res))) throw new Error(`battle: 종족 ${id} 의 몸 res '${r.res}' (monster_type.csv)`);
-    }
-    const FAMILIES = data.families ?? {};
-    for (const [id, f] of Object.entries(FAMILIES)) {
-        if (!(typeof f.value === 'number' && f.value >= 0 && f.value < 1)) throw new Error(`battle: 부류 ${id} 의 gimmick_value '${f.value}' — 0 이상 1 미만 (monster_base.csv)`);
-        if (!(Number.isInteger(f.n) && f.n >= 0)) throw new Error(`battle: 부류 ${id} 의 gimmick_n '${f.n}' — 0 이상 정수 (monster_base.csv)`);
     }
     const rankOfRole = role => ROLES[role]?.rank ?? 0;
     const EPS = SK ? SK.EPS : 0;                // 준비·만료 판정 허용 오차 (skill.js — INTERFACE §5-3)
@@ -638,6 +633,8 @@ export function createBattleSystem(data) {
             coolMinus: c.option_fx?.coolMinus ?? 0,  // 표기 쿨에서 먼저 빼는 초(직업 T1-2 · 2026-11-09 R432 · `skill_runtime.cooldownSec`)
             // 전직 공통 줄의 새 능력치(`hero.computeCombat:advance_fx` · 2026-11-13 R471) — 키마다 읽는 자리가 하나다 · 없으면 빈 객체
             adv: c.advance_fx ?? {},
+            // 죄종 마스터리 T4 의 조건(그 죄종 T3 조건 · 문턱 — `hero.computeCombat:t4_cond` · 2026-11-14) · 죄종 T4 를 안 찍었으면 null
+            t4cond: c.t4_cond ?? null,
             // 조건부 쿨감의 원값 [2026-10-05 · 2026-11-12 · R468] — 틱 줄이 있으면 틱마다 `cdr = cdrBase + 켜진 몫`(advance) · 없으면 `cdr` 그대로
             cdrBase: c.cooldown_reduction ?? 0,
             // 죄종 마스터리 조건부 [2026-10-05 · INTERFACE §2-6 「마스터리 조건부」 · 2026-11-13 R468 죄종 T3] — `strikeOnce` 가 그 타격 동안만 얹는다 ·
@@ -691,7 +688,7 @@ export function createBattleSystem(data) {
         'resReductionEl', 'buffDur', 'freezeDur', 'recvBase', 'burnDur', 'poisonDur', 'stunDur', 'ddr',
         'staggerDur', 'castRefund', 'castStack', 'statusDur', 'debuffDur', 'healOut', 'potionPct',
         'bonusPct', 'crit', 'critDmg', 'ls', 'reflect', 'regen', 'regenBase', 'cdr', 'cdrBase', 'period', 'basePeriod', 'periodRaw', 'speedBase', 'periodWeapon', 'fhr',
-        'goldFind', 'itemFind', 'findParty', 'fx', 'magicFind', 'stats', 'mcond', 'mtime', 'liveAtk'];
+        'goldFind', 'itemFind', 'findParty', 'fx', 'magicFind', 'stats', 'mcond', 'mtime', 'liveAtk', 'adv', 't4cond'];
 
     /**
      * 소환 유닛 — **HP 와 대상 풀 참여만** 있는 유닛 (skill_design §12-6 프로즌월).
@@ -804,7 +801,6 @@ export function createBattleSystem(data) {
             key, monsterId, grade, gear, sheet,
             rank: rankOfRole(m.role),        // 진형 — 역할이 자리를 정한다 (battle_design §3-1)
             monsterType: m.monster_type,     // 종족(Normal/Demon/Undead) — 무기 옵션 vs 종족이 읽는다 (R78)
-            family: FAMILIES[m.monster_base] ? m.monster_base : null,   // 부류 — 기믹이 읽는다(표에 있는 것만 · 보스 · 6 · 7장은 null — R388)
             cls: m.cls,                      // 직업 — 스킬 풀과 무기군을 정한다. 자리는 role 이 정한다 (monster_design §5-1)
             stats,                           // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef · 영웅과 같다)
             actives: acts,
@@ -1089,9 +1085,13 @@ export function createBattleSystem(data) {
                 if (x.effect !== 'apply') continue;
                 const targets = x.target === 'self' ? [p] : rules?.partyScope && p.side === 'party' ? side.filter(u => u.group === p.group) : side;
                 for (const tgt of targets) {
-                    tgt.buffs[x.status] = { stat: x.stat, v: x.value, until: Infinity, element: x.element ?? null, by: p.key, s: p.aura.id, roundEnd: x.roundEnd,
-                        ...(x.tagDamage ? { tagDmg: x.tagDamage } : {}) };   // 오오라 피해(홀리 파이어)의 반지 태그 데미지 — `pulseTick` 이 읽는다 (2026-11-13 R462)
-                    applied.push({ e: 'buff', u: tgt.key, s: p.aura.id, stat: x.stat, v: x.value, until: null });
+                    // 공세 오오라 장치(2026-11-14 R471 · advance_tree_draft §5) — 받는 아군마다 값 배수 · 칸 +n · 한 발 더 · 다른 오오라는 그대로
+                    const ox = p.aura.id === 'kni_offenseaura' ? offenseOf(p, tgt, x) : null;
+                    const v = ox ? x.value * ox.m : x.value;
+                    tgt.buffs[x.status] = { stat: x.stat, v, until: Infinity, element: x.element ?? null, by: p.key, s: p.aura.id, roundEnd: x.roundEnd,
+                        ...(x.tagDamage ? { tagDmg: x.tagDamage } : {}),   // 오오라 피해(홀리 파이어)의 반지 태그 데미지 — `pulseTick` 이 읽는다 (2026-11-13 R462)
+                        ...(ox?.chargeAdd ? { chargeAdd: ox.chargeAdd } : {}), ...(ox?.dshot ? { dshot: ox.dshot } : {}) };
+                    applied.push({ e: 'buff', u: tgt.key, s: p.aura.id, stat: x.stat, v, until: null });
                 }
             }
         }
@@ -1307,7 +1307,25 @@ export function createBattleSystem(data) {
             // 전직 트리 장치 — 시전 끝(조각 · 마지막 방 · 두 번째 노바) · 원소 보호막을 건다 (2026-11-13 R471)
             advAfterCast: (u, def, eff, lead, one, echoing) => advAfterCast(u, def, eff, lead, one, echoing),
             advShield: (u, d, x, until) => advShield(u, d, x, until),
+            onHealed: (x, got) => t4ShareHeal(x, got),   // 색욕 T4 ② — 스킬 회복 (2026-11-14)
+            // 전직 트리 장치 3b ~ 3e (2026-11-14 R471 · 아래 「전직 트리 장치」 블록) — 걸리는 시간 · 지운 뒤 · 닫힌 뒤 · 평타 대상 · 평타 뒤 · 덤 · 행동 전 · 스나이프 · 벗기기 · 덫 · 일으키기
+            advStatus: (u, tgt, x, dur, at, ail) => advStatus(u, tgt, x, dur, at, ail),
+            advCleansed: (u, tgt, gone, at) => advCleansed(u, tgt, gone, at),
+            advExpired: (u, closed, hp0, at) => advExpired(u, closed, hp0, at),
+            advBasicPick: (u, foes) => advBasicPick(u, foes),
+            advChainOnhit: u => advChainOnhit(u),
+            advExtraShot: u => advExtraShot(u),
+            advOnhitAgain: u => advOnhitAgain(u),
+            advAfterBasic: (u, lead, forced, at) => advAfterBasic(u, lead, forced, at),
+            advBeforeAct: (u, at) => advBeforeAct(u, at),
+            aimBack: (u, def) => aimBack(u, def),
+            advAttack: (kind, u, def, foes) => advAttack(kind, u, def, foes),
+            castRevive: (u, x, at) => castRevive(u, x, at),
         });
+        // 리저렉션의 런당 횟수 [2026-11-14 · R471 · balance.csv:resurrection_per_run] — 일으키기 줄을 든 유닛만 · 파티는 런 내내 하나 · 적은 등장할 때(`beginRound`)
+        const reviveInit = list => { for (const x of list) if (x.reviveLeft === undefined && (x.actives ?? []).some(a => a.def.effects.some(e => e.effect === 'revive'))) x.reviveLeft = B.resurrection_per_run; };
+        reviveInit(party);
+        t4Init(party);   // 나태 T4 ① 무거운 손 (2026-11-14)
 
         // Encounter-specific orchestration. Ordinary runs keep the same events and RNG stream.
         const ruleContext = () => ({ t: r1(t), party, enemies: units.enemies, timeline,
@@ -1347,8 +1365,10 @@ export function createBattleSystem(data) {
                 const base = u.recvBase ?? 0;
                 const amt = u.potionPct ? Math.round(slot.heal * (1 + u.recv) * (1 + base + u.potionPct) / (1 + base))
                     : u.recv ? Math.round(slot.heal * (1 + u.recv)) : slot.heal;
+                const hp0 = u.hp;
                 u.hp = Math.min(u.hpMax, u.hp + amt);
                 potionReadyAt = t + B.potion_cooldown_sec;
+                t4ShareHeal(u, u.hp - hp0);   // 색욕 T4 ② — 물약도 받은 회복이다
                 // `ready` = 파티 물약이 다시 준비되는 시각 — 재생기가 물약 띠의 쿨 판을 이것으로 걷는다(쿨을 계산하지 않는다 · R427)
                 timeline.push({ t: r1(t), e: 'potion', u: u.key, s: slot.id, i, amt, dhp: u.hp, left: potionLeft, ready: r1(potionReadyAt) });
             }
@@ -1450,8 +1470,6 @@ export function createBattleSystem(data) {
                 for (const k of stacks) delete p.buffs[k];
                 refreshDerived(p);
             }
-            // 이형 겹(R388 · D8)도 라운드를 넘기지 않는다 — 조용한 창이라 이벤트가 없다 · rng 0
-            for (const p of party) if (p.buffs['fam:aberration']) { delete p.buffs['fam:aberration']; refreshDerived(p); }
             // 도감 사다리 — 그 몬스터 **종족 전체**의 닿은 몫 [2026-10-18 · R286 · 2026-10-22 · R314 · monster_design §8]. 라운드마다 한 번 읽어 둔다
             //   (스폰 전 매직 몫 · 스폰 뒤 유닛) — 라운드 사이에 오른 단계가 다음 라운드부터 먹는다 · 결투장 · 소환은 안 얹는다 · rng 0
             const cxMemo = new Map();
@@ -1475,6 +1493,9 @@ export function createBattleSystem(data) {
             // 적의 오오라 — 파티와 같은 규칙으로 **라운드 시작에** 창으로 건다 (R79 · 위 `applyAuras`). rng 0 이라 등장 지연 굴림 수열이 안 밀린다
             //   창 이벤트는 아래 `round` 이벤트 **뒤**에 낸다 — 파티 몫(`auraQueue`) 다음 (R98)
             const enemyAuras = applyAuras(units.enemies);
+            reviveInit(units.enemies);   // 리저렉션 런당 횟수 — 결투장 적 영웅 (R471)
+            t4RoundStart(units.enemies);   // 수호의 원 — 결투장 적 영웅 (R437)
+            t4Init(units.enemies); t4Marks();   // 죄종 T4 — 무거운 손 · 현상금 표식(양쪽이 다 선 뒤 · 2026-11-14)
             // 적 스킬은 **등장 라운드 시작 시각부터 쿨 한 바퀴** [개정 2026-11-02 · R427 · battle_design §6 — ~~준비 상태로 출발~~ R100]. rng 0 이라 아래 등장 지연 굴림 수열이 안 밀린다
             //   꺼진 칸(무기가 안 맞는 칸 · R187 · R204 — 몬스터 데이터는 전부 맞아 지금은 없다)은 얼린 쿨이 한 바퀴다(`restartCools`)
             for (const e of units.enemies) restartCools(e, t);
@@ -1503,17 +1524,6 @@ export function createBattleSystem(data) {
 
         const onKill = e => {
             if (encounter) return;   // 연습 결투: XP·골드·드롭·도감 처치 없음
-            // 이형 [2026-10-29 · R388 · D8] — 쓰러질 때마다 파티 전원(소환 제외)의 원소 저항 넷에 겹 +1(상한 `n` — 사용자 「5칸까지」).
-            //   조용한 창 `fam:aberration`(`res_pct` = −값 × 겹 — 저항 합의 음수 항) · 라운드를 열면 지운다(`beginRound`) · rng 0
-            if (e.family === 'Aberration') {
-                const f = FAMILIES.Aberration;
-                for (const p of f && f.n > 0 ? party : []) {
-                    if (p.summon) continue;
-                    const n = Math.min(f.n, (p.buffs['fam:aberration']?.n ?? 0) + 1);
-                    p.buffs['fam:aberration'] = { stat: 'res_pct', v: -f.value * n, n, until: Infinity, element: null, by: 'fam', quiet: true };
-                    refreshDerived(p);
-                }
-            }
             roundLog.killed.push(e.monsterId);                    // 사실의 기록 — 진 라운드에서 잡은 것도 남는다
             // 아래 보상은 전부 **라운드 몫**이다 — 이기면 결과로 옮기고 지면 버린다 (R89)
             loot.kills[e.monsterId] = (loot.kills[e.monsterId] ?? 0) + 1;
@@ -1537,6 +1547,9 @@ export function createBattleSystem(data) {
             const cxDrop = 1 + (farm?.drop ?? 0);
             const dropRng = makeRng(e.dropSeed);
             let got = dropRng() < B.drop_chance_pct * e.dropChanceMult * dropMult * cxDrop ? 1 : 0;
+            // 탐욕 T4 ② 다시 뒤지기 [2026-11-14] — 드롭이 안 난 처치에서 파티의 가장 큰 값 확률로 판정을 한 번 더(그 몬스터 수열 · 든 영웅이 없으면 굴리지 않는다)
+            const reroll = got ? 0 : Math.max(0, ...party.filter(x => x.hp > 0 && !x.summon).map(x => x.adv?.greed_reroll ?? 0));
+            if (reroll > 0 && dropRng() < reroll) got = dropRng() < B.drop_chance_pct * e.dropChanceMult * dropMult * cxDrop ? 1 : 0;
             if ((e.grade === 'stage_boss' || e.grade === 'chapter_boss') && got < B.boss_guaranteed_drop) got = B.boss_guaranteed_drop;
             /*
              * **떨어지는 것은 그 몬스터가 입고 있던 장비다** [개정 2026-09-11 · R79 · 사용자 지시 · item_design §1 2단계].
@@ -1763,6 +1776,7 @@ export function createBattleSystem(data) {
                 target.barrier.amt -= absorbed;
             }
             target.hp = Math.max(0, target.hp - (dmg - absorbed));
+            if (target.hp <= 0) advSave(target);   // 버티기 · 헌신(HP 1) — 쓰러질 피해에서 세운다 (2026-11-14 R471 · 창이 없으면 아무 일도 없다)
             return { absorbed };
         }
 
@@ -1773,6 +1787,7 @@ export function createBattleSystem(data) {
             if (d.swarm) return swarmTake(d, dmg, false).ov;
             const ov = Math.max(0, dmg - d.hp);
             d.hp = Math.max(0, d.hp - dmg);
+            if (d.hp <= 0 && advSave(d)) return 0;   // 버티기 · 헌신(HP 1) — 비직격에도 (R471)
             return ov;
         }
 
@@ -1826,10 +1841,13 @@ export function createBattleSystem(data) {
          *   도감 Lv2 [2026-10-22 · R314] — 파티가 그 종족에 거는 경직 = 경직 시간 증가에 더하고 · 그 종족이 파티에 거는 경직 = 타격 회복에 더한다(종족 몫은 몬스터가 든다)
          *   `fhrCond` = 그 타격의 마스터리 조건부 타격 회복(오만 T3 · R468) — 때리기 전 HP 로 판정한 값을 `strikeOnce` 가 넘긴다 · 0 이면 종전과 같다
          */
-        function stagger(u, a = null, fhrCond = 0) {
+        function stagger(u, a = null, fhrCond = 0, sec = null) {
             const sd = (a?.staggerDur ?? 0) + (a?.side === 'party' ? u.codex?.fight.stagger_dur_pct ?? 0 : 0);
             const fh = u.fhr + fhrCond + (u.side === 'party' ? a?.codex?.fight.fhr ?? 0 : 0);
-            const dur = B.stagger_sec * (sd ? 1 + sd : 1) * Math.max(0, 1 - fh);
+            // `sec` = 장치가 정한 경직 길이(사자후 · 덫 · 재장전 · 관통 · 소탕 · 반격 — 2026-11-14 R471) · 없으면 [balance.csv:stagger_sec] ·
+            //   받는 쪽 장치(휠윈드 · 강신 · 금강 — `advStaggerMult` · 0 = 면역)를 곱한다 · 없으면 1 이라 종전 값
+            const sm = advStaggerMult(u);
+            const dur = (sec ?? B.stagger_sec) * (sd ? 1 + sd : 1) * Math.max(0, 1 - fh) * sm;
             if (!(dur > 0)) return;
             const end = t + dur;
             // 늦게 끝나는 쪽만 [2026-10-17] — 경직 시간 증가(R206)로 걸 때마다 길이가 달라져, 짧은 경직이 긴 경직을 덮으면 `end − from` 이 음수가 되어
@@ -1919,7 +1937,8 @@ export function createBattleSystem(data) {
 
         function chargeTick(u) {
             // 정신 집중이 열린 동안은 여기 안 온다 — 행동 순회가 `chanTick` 으로 돌린다(칸이 안 찬다 · 2026-10-30 R392 — ~~끊어 치기는 `next` 가 방 사이 시계~~)
-            const max = B.cast_charge_max;
+            // 칸 상한 — 공세 오오라 덤(마법 무기 아군 칸 +n · 창의 `chargeAdd` · 2026-11-14 R471)이 더한다 · 없으면 0
+            const max = B.cast_charge_max + advChargeAdd(u);
             if (u.charges < max) {
                 u.next -= TICK;
                 if (u.next <= STEP_EPS) {
@@ -1939,7 +1958,9 @@ export function createBattleSystem(data) {
             u.charges -= 1;
             if (!rt.act(u, t)) { u.charges += 1; return; }
             if (full) u.next = u.period;
-            if (u.castRefund > 0 && rng() < u.castRefund && u.hp > 0 && u.charges < max) {
+            // 저절로 넘어가는 책장(마법사 마스터리 T4 ② · `adv.cast_refill_chance` · R437)은 무기의 시전 칸 충전과 같은 굴림에 더한다 — 둘 다 없으면 굴리지 않는다
+            const refill = (u.castRefund ?? 0) + (u.adv?.cast_refill_chance ?? 0);
+            if (refill > 0 && rng() < refill && u.hp > 0 && u.charges < max) {
                 u.charges += 1;
                 timeline.push({ t: r1(t), e: 'charge', u: u.key, ch: u.charges });
             }
@@ -2095,25 +2116,6 @@ export function createBattleSystem(data) {
          * `s`(스킬 id)·`proc`(추가 피해가 터졌다)·`bar`(배리어 잔량)는 해당될 때만 붙는다 — 기본 공격의 이벤트 모양·rng 수열은 그대로다.
          * @param sk `{statMult, procChance, procMult}` — **스킬 타격만** 넘긴다(skill_effects 공격 대상 표). 기본 공격은 안 넘긴다 — 능력치 계수는 평타 계수(`mainMult`) · 추가 피해 0
          */
-        /**
-         * 부류의 기믹 [2026-10-29 · R388 · monster_design §3-1 — D4 · D6 · D7] — 그 직격 순간 **서 있는 적**(`hp > 0`)을 센다 · 창 · 이벤트 없음 · rng 0.
-         *   `familyUp` = 때리는 쪽 데미지 몫 — 군대(서 있는 군대가 `n` 이상) · 거인(서 있는 적이 자기 하나 · ⚠ Q8 데미지만) ·
-         *   `familyGuard` = 맞는 쪽 받는 피해 감소 몫 — 수호자(자기 아닌 수호자가 서 있으면 **후열** 몬스터) · 결투장 유닛은 `family` 가 없어 0
-         */
-        const familyUp = u => {
-            const f = u.side === 'enemy' ? FAMILIES[u.family] : null;
-            if (!f) return 0;
-            const up = units.enemies.filter(e => e.hp > 0);
-            if (u.family === 'Army') return up.filter(e => e.family === 'Army').length >= f.n ? f.value : 0;
-            if (u.family === 'Giant') return up.length === 1 && up[0] === u ? f.value : 0;
-            return 0;
-        };
-        const familyGuard = target => {
-            const f = FAMILIES.Guardian;
-            if (!f || target.side !== 'enemy' || target.monsterId == null || target.rank !== 1) return 0;
-            return units.enemies.some(e => e !== target && e.hp > 0 && e.family === 'Guardian') ? f.value : 0;
-        };
-
         // 반격 중 — 반격의 기본 공격(그 안의 추가타 · 장비 발동 포함)이 도는 동안 참이다. 그 타격을 맞은 쪽은 반격을 굴리지 않는다 (아래 「반격」 · 2026-11-02 R426)
         let countering = false;
         /* ── 전직 트리 장치 [2026-11-13 · R471 · advance_tree_draft §3 ~ §8 · INTERFACE §2-6 「전직 트리 장치」] ──────────────────────────
@@ -2154,23 +2156,86 @@ export function createBattleSystem(data) {
          */
         function advBefore(u, d, s, sk, hitType) {
             const tf = tfOf(u);
-            let cond = 0, proc = false;
-            if (s === 'mag_nova' && tf.nova_ramp) cond += tf.nova_ramp * Math.min(u.advNova ?? 0, taOf(u).nova_ramp ?? 0);
-            if (s === 'mag_thundergod' && u.advCast?.s === s) {
-                const c = u.advCast;
-                c.i += 1;
-                cond += c.ramp;
-                if (tf.tg_last_crit && c.i >= c.n) proc = true;
+            let cond = 0, proc = false, mul = 1, crit = 0, critDmg = 0, ls = 0;
+            if (sk) {
+                if (s === 'mag_nova' && tf.nova_ramp) cond += tf.nova_ramp * Math.min(u.advNova ?? 0, taOf(u).nova_ramp ?? 0);
+                if (s === 'mag_thundergod' && u.advCast?.s === s) {
+                    const c = u.advCast;
+                    c.i += 1;
+                    cond += c.ramp;
+                    if (tf.tg_last_crit && c.i >= c.n) proc = true;
+                }
+                // 버서크 — 창 동안 **다른** 액티브 스킬 타격의 데미지 % · 변형 1 = 잃은 HP 비율만큼 더 (advance_tree_draft §4)
+                if (s && s !== 'war_berserk' && !sk.advOwn) { const w = stateOf(u, 'berserk')?.[1]; if (w) cond += w.v + (tf.berserk_low ?? 0) * (1 - hpRatio(u)); }
+                // 정조준 — 스나이프 데미지 % · 변형 2 · 덤 = 후열 대상 추가 (§6)
+                if (s === 'arc_snipe') {
+                    const a = sumOf(u, 'snipe_amp');
+                    if (a) { cond += a; if ((d.rank ?? 0) !== 0) cond += (tf.aim_back ?? 0) + (tf.aim_back_bonus ?? 0); }
+                }
+                if (s === 'kni_condemnation' && tf.cond_lowest) cond += tf.cond_lowest;           // 단죄 변형 2 — 체력 비율 최저를 노린 몫
+                if (s === 'arc_singlestrike') {                                                     // 일격 변형 2 — 이 라운드에 쓰러진 적 수만큼 · 덤 = 혼자 남은 적 두 배
+                    if (tf.ss_few_left) cond += tf.ss_few_left * rt.foesOf(u).filter(x => x.hp <= 0 && !x.summon).length;
+                    if (tf.ss_last_double && foesAlive(u).filter(x => !x.summon).length === 1) mul *= tf.ss_last_double;
+                }
+                // 재장전 변형 1 — 초기화된 그 스킬의 다음 한 방(덤 = 두 방)
+                if (u.advEmp?.s === s && u.advEmp.n > 0) { cond += u.advEmp.v; u.advEmp.n -= 1; }
+                if (s === 'pri_punishment') cond += punishCount(u, d, tf);                          // 천벌 — 걸린 디버프 · 상태이상 수
+                if (sk.stripN) cond += sk.stripN * B.exc_per;                                       // 파문 — 벗긴 버프 수
+            } else if (!s) {
+                // 평타 — 퀵 드로우(흩어짐 · 후열) · 오버드로우(HP 최다 · 셋째 평타) (§6)
+                if (stateOf(u, 'period_fix')) {
+                    if (winOf(u, 'arc_quickdraw')) { cond += tf.qd_scatter ?? 0; if ((d.rank ?? 0) !== 0) cond += tf.qd_back_bonus ?? 0; }
+                    if (winOf(u, 'arc_overdraw')) {
+                        if (tf.od_hp_max && u.advOdPick === d) cond += tf.od_hp_max + (tf.od_hp_max_bonus ?? 0);
+                        if (u.advOdBoost) mul *= tf.od_third;
+                    }
+                }
             }
             if (hitType === 'lightning' && d.advFull?.[u.key]) { proc = true; delete d.advFull[u.key]; }
-            return cond || proc ? { cond, proc } : null;
+            // 호령 — 창 동안 치명 확률 · 치명 피해 · 흡혈 (때리는 쪽 창 · §4)
+            crit = sumOf(u, 'crit_pct'); critDmg = sumOf(u, 'crit_dmg_pct'); ls = sumOf(u, 'lifesteal_pct');
+            // 죄종 마스터리 T4 때리는 쪽 [2026-11-14] — 분노 ① 스킬 데미지 · 나태 ① 한 방 · 탐욕 ① 표식 대상 · 오만 ① n번째 확정 치명 · 파티 몫(분노 ② 치명 · 시기 ② 방어 무시 · 폭식 ② 데미지)
+            let di = 0;
+            const A = u.adv ?? NO_ADV;
+            if (sk && A.wrath_blood && !sk.advOwn) cond += A.wrath_blood;
+            if (A.sloth_heavy) cond += A.sloth_heavy;
+            if (A.greed_mark && d.buffs?.[`m4:mark@${u.key}`]) cond += A.greed_mark;
+            if (A.pride_nth && t4On(u, d)) {
+                u.t4PrideN = (u.t4PrideN ?? 0) + 1;
+                if (u.t4PrideN >= Math.max(2, B.mastery_t4_pride_nth - A.pride_nth)) { u.t4PrideN = 0; crit += 1; }
+            }
+            if (u.side !== d.side) for (const x of rt.alliesOf(u)) {
+                const X = x.adv;
+                if (!X || x.hp <= 0) continue;
+                if (X.wrath_party_crit && t4On(x, null)) crit += X.wrath_party_crit;
+                if (X.envy_party_pierce && hitType === 'physical' && t4On(x, d)) di += X.envy_party_pierce;
+                if (X.glut_party_dmg && t4On(x, null)) cond += X.glut_party_dmg;
+            }
+            // 원소 전환 변형 2 — 파티 화염 관통(원소 전환 오오라 창을 든 아군의 화염 타격)
+            let pen = 0;
+            if (hitType === 'fire') for (const b of Object.values(u.buffs)) if (b.stat === 'phys_conv' && b.element === 'fire') { pen = tfOfKey(b.by).conv_pen ?? 0; break; }
+            // 맞는 쪽 — 꺾을 수 없는 의지 겹 · 끌려나온 후열(쇼크웨이브 변형 2) · 헌신 변형 2(버티는 동안 감소)
+            const take = advTaken(d, hitType);
+            if (take !== 1) mul *= take;
+            return cond || proc || mul !== 1 || crit || critDmg || ls || pen || di ? { cond, proc, mul, crit, critDmg, ls, pen, di } : null;
+        }
+        /** 맞는 쪽 받는 피해 배수 — 의지 겹(원천 하나) · 끌려나온 후열의 물리 · 헌신 창 동안 · 없으면 1 · rng 0 */
+        function advTaken(d, hitType) {
+            let m = 1;
+            const wl = stateOf(d, 'will')?.[1];
+            const nW = wl ? wl.n ?? 0 : d.advWillFade?.n ?? 0, vW = wl ? wl.v : d.advWillFade?.v ?? 0;
+            if (nW > 0 && vW > 0) m *= 1 - Math.min(0.9, nW * vW);
+            if (hitType === 'physical' && d.rankBase === 1) { const w = stateOf(d, 'formation_break')?.[1]; if (w?.vuln) m *= 1 + w.vuln; }
+            if (stateOf(d, 'devotion')) { const u = tfOf(d).devotion_undying; if (u) m *= 1 - Math.min(0.9, u); }
+            return m;
         }
 
         /**
          * 맞힌 직격 뒤 — 피해 · 터짐을 안 뒤의 장치(불씨 겹 · 메테오 불길 · 노바 저항 감소 · 천둥신의 분노 쿨 밀기 · 썬더 스트라이크 스턴은 제 함수) ·
          *   `total` = 그 타격의 피해(강타 몫 포함) · 장치가 없으면 아무 일도 없다
          */
-        function advAfterHit(u, d, s, sk, hitType, total, proc) {
+        function advAfterHit(u, d, s, sk, hitType, total, proc, cv = null, convProc = false, real = total) {
+            advAfterHitMore(u, d, s, sk, hitType, total, cv, convProc);
             // 불씨 [advance_tree_draft §3] — 누가 냈든 **아군의 화염 직격**이 맞으면 그 적에게 불씨 주인마다 한 겹 · 불씨 자기 피해는 다시 겹을 안 쌓는다
             if (hitType === 'fire' && s !== 'mag_ember' && d.hp > 0) for (const o of alive(rt.alliesOf(u))) {
                 const w = stateOf(o, 'ember')?.[1];
@@ -2198,6 +2263,52 @@ export function createBattleSystem(data) {
                 let pushed = 0;
                 for (const a of d.actives ?? []) if (Number.isFinite(a.readyAt)) { a.readyAt += sec; pushed = sec; }
                 if (pushed) timeline.push({ t: r1(t), e: 'cdPush', u: d.key, cd: r1(pushed), s });
+            }
+        }
+
+        /**
+         * 맞힌 직격 뒤 3b ~ 3e [2026-11-14 · R471] — 버서크 HP 지불 · 휠윈드 방어 깎기 · 단죄 잃은 체력 고정 몫(넘김) · 크루세이더 (1) 터진 번개 튐 ·
+         *   원소 전환 화상(rng 1회 — 변형이 있을 때만) · 마법 무기 아군 화염 덤 · 지원 사격 스킬 화살(rng 1회 — 변형이 있을 때만)
+         */
+        function advAfterHitMore(u, d, s, sk, hitType, total, cv, convProc) {
+            const tf = tfOf(u);
+            const bz = stateOf(u, 'berserk')?.[1];
+            if (bz && u.hp > 1 && !tf.berserk_free) {
+                const amt = Math.floor(u.hp * B.berserk_hp_cost_pct * Math.max(0, 1 - (tf.berserk_cost_cut ?? 0)));
+                if (amt > 0) { u.hp = Math.max(1, u.hp - amt); u.advPaid = (u.advPaid ?? 0) + amt; timeline.push({ t: r1(t), e: 'pay', u: u.key, s: 'war_berserk', amt, dhp: u.hp }); }
+            }
+            if (s === 'war_whirlwind' && tf.ww_shred && d.hp > 0) {
+                const cap = taOf(u).ww_shred || 1;
+                const key = `adv:ww_shred@${u.key}`, n = Math.min(cap, (d.buffs[key]?.n ?? 0) + 1);
+                advWin(d, key, 'def_pct', -Math.min(0.9, tf.ww_shred * n), tf.ww_shred_long ? Infinity : t + B.weapon_def_down_sec, { by: u.key, n });
+            }
+            if (s === 'kni_condemnation' && sk && !sk.advOwn && d.hp > 0) {
+                const amt = F.indirect((d.hpMax - d.hp) * B.condemn_missing_pct * (1 + (tf.cond_missing_more ?? 0)));
+                const ov = advLand(u, d, amt, s, FIXED_DMG, false);
+                if (ov > 0 && tf.cond_overflow) passOver(u, d, ov * Math.min(1, tf.cond_overflow), s, tf.cond_overflow_two ? 2 : 1);
+            }
+            if (convProc && tf.ret_crit_jump && cv) {
+                const lp = cv.find(c => c.el === 'lightning');
+                const nb = lp ? foesAlive(u).find(x => x !== d && sameRank(x, d)) : null;
+                if (nb) advLand(u, nb, F.indirect(total * Math.min(1, lp.share) * tf.ret_crit_jump), 'kni_retribution', 'lightning', false);
+            }
+            const fc = cv?.find(c => c.el === 'fire' && c.burn > 0);
+            if (fc && d.hp > 0 && !d.summon && rng() < Math.min(1, fc.burn)) { const x = statusX('mag_ignite_burn', 'kni_elemconvert'); if (x) rt.applyStatus(unitByKey(fc.by) ?? u, d, x, t); }
+            if (u.noBasic && sk && d.hp > 0) {
+                const w = Object.values(u.buffs).find(b => b.stat === 'phys_conv' && b.element === 'fire');
+                const v = w ? tfOfKey(w.by).conv_caster : 0;
+                if (v) { const res = F.appliedResist(d.res?.fire ?? 0, d.resMaxBonus ?? 0, d.resMaxEl?.fire ?? 0); advLand(u, d, F.indirect(total * v * (1 - res)), 'kni_elemconvert', 'fire', false); }
+            }
+            if (sk && !sk.advOwn && s && d.hp > 0) supportSkill(u, d);
+            // 직업 마스터리 T4 [2026-11-14 · R437] — 투구 파괴자(기사 ① · 맞힐 때마다 확률 · rng 1회 — 값이 있을 때만 · 스턴 [balance.csv:mastery_t4_stun_sec]) ·
+            //   드러난 죄(사제 ① · 공격 스킬이 맞힌 적에게 받는 피해 증가 창 · 다시 걸면 시간만 새로 · [balance.csv:mastery_t4_vuln_sec])
+            const A = u.adv ?? NO_ADV;
+            if (A.hit_stun_chance && d.hp > 0 && !d.summon && rng() < Math.min(1, A.hit_stun_chance)) stunX(u, d, B.mastery_t4_stun_sec, 'kni_t4_helmbreaker');
+            if (A.sin_vuln && sk && d.hp > 0 && !d.summon) advWin(d, `m4:sin@${u.key}`, 'dr_pct', -A.sin_vuln, t + B.mastery_t4_vuln_sec, { by: u.key, foe: true });
+            // 시기 T4 ① 빼앗기 — 조건(상대가 나보다 성하다)을 채운 적을 맞히면 확률로(rng 1회) 버프 하나(끝없는 창 · 상태이상 · 상대 편 창 · 조용한 창 제외 · 처음 건 것)를 지운다
+            if (A.envy_strip && d.hp > 0 && t4On(u, d) && rng() < Math.min(1, A.envy_strip)) {
+                const e = Object.entries(d.buffs).find(([, b]) => !b.ail && !b.foe && !b.quiet && b.until !== Infinity);
+                if (e) { delete d.buffs[e[0]]; timeline.push({ t: r1(t), e: 'buffEnd', u: d.key, s: e[1].s ?? e[0] }); refreshDerived(d); }
             }
         }
 
@@ -2286,6 +2397,131 @@ export function createBattleSystem(data) {
                 if (tf.nova_ramp && !u.advEcho) u.advNova = Math.min(ta.nova_ramp ?? 0, (u.advNova ?? 0) + 1);
             }
             if (def.id === 'mag_thundergod') u.advCast = null;
+            // 에코로 한 번 더 나간 시전은 안 한다 — 정신 집중의 방(`one`)은 `echoing` 을 싣고 오지만 제 시전이다
+            if (!echoing || one) advAfterCastMore(u, def, tf, ta, hit, lead, one);
+        }
+        /**
+         * 시전 뒤 3b ~ 3e [2026-11-14 · R471] — 동귀어진(덧타격 · 스턴) · 휠윈드(방마다 둘) · 쇼크웨이브(두 번 · 끌려나온 후열) · 호령 · 사자후 · 크루세이더 (1) 여는 벼락 ·
+         *   낙하 검격(줄 튐 · 스턴 · 감소) · 정조준(스나이프 준비) · 일격(따라가는 한 발) · 사냥 표식 · 속죄(전원) · 금강(나누기) · 소탕(후열 · 두 번 · 회복)
+         */
+        function advAfterCastMore(u, def, tf, ta, hit, lead, one) {
+            const s = def.id;
+            switch (s) {
+            case 'war_mutualruin': {
+                if (!hit) break;
+                const n = tf.ruin_double ? (tf.ruin_triple ? 2 : 1) : 0;
+                let x = lead;
+                for (let k = 0; k < n && u.hp > 0; k++) {
+                    if (!x || x.hp <= 0) { const left = foesAlive(u); x = left.length ? pickTarget(u, left) : null; }
+                    if (!x) break;
+                    advHit(u, x, hit.mult * tf.ruin_double, null, s, { statMult: hit.statMult });
+                }
+                if (tf.ruin_stun && lead?.hp > 0) {
+                    stunX(u, lead, tf.ruin_stun, s);
+                    if (tf.ruin_stun_row) for (const y of foesAlive(u)) if (y !== lead && sameRank(y, lead)) stunX(u, y, tf.ruin_stun, s);
+                }
+                break;
+            }
+            case 'war_whirlwind': {
+                if (!tf.ww_two || !hit || !lead) break;
+                const other = frontOf(foesAlive(u)).find(x => x !== lead);
+                if (other) advHit(u, other, hit.mult, null, s, { statMult: hit.statMult });
+                break;
+            }
+            case 'war_shockwave': {
+                for (const x of foesAlive(u)) {
+                    const w = x.buffs.war_shockwave_break;
+                    if (!w || x.rankBase !== 1) continue;
+                    if (tf.shock_pulled_vuln) w.vuln = tf.shock_pulled_vuln;
+                    if (tf.shock_pulled_stagger) stagger(x, u);
+                }
+                if (tf.shock_twice && hit) for (const x of foesAlive(u)) advHit(u, x, hit.mult * tf.shock_twice, null, s, { statMult: hit.statMult });
+                break;
+            }
+            case 'war_command': {
+                for (const x of alive(rt.alliesOf(u))) {
+                    const w = x.buffs.war_command;
+                    if (!w || w.by !== u.key) continue;
+                    const add = (k, stat, v, extra = {}) => { if (v) x.buffs[k] = { stat, v, until: w.until, element: null, by: u.key, quiet: true, ...extra }; };
+                    add('adv:cmd_haste', 'period_pct', tf.cmd_haste);
+                    add('adv:cmd_crit', 'crit_pct', tf.cmd_crit);
+                    add('adv:cmd_cd', 'crit_dmg_pct', tf.cmd_crit_dmg);
+                    add('adv:cmd_ls', 'lifesteal_pct', tf.cmd_lifesteal, tf.cmd_overheal_shield ? { lsShield: true } : {});
+                    refreshDerived(x);
+                }
+                break;
+            }
+            case 'war_intimidate': {
+                for (const x of foesAlive(u)) {
+                    const w = winOf(x, 'war_intimidate');
+                    if (!w) continue;
+                    if (tf.roar_stagger) { if (tf.roar_stun) stunX(u, x, tf.roar_stagger, s); else stagger(x, u, 0, tf.roar_stagger); }
+                    if (tf.roar_buff_cut && x.hp > 0) advWin(x, 'adv:buff_cut', 'buff_cut', Math.min(0.9, tf.roar_buff_cut * (tf.roar_buff_cut_double ?? 1)), w.until, { by: u.key, foe: true });
+                }
+                break;
+            }
+            case 'kni_retribution':
+                if (tf.ret_open_bolt) for (const x of frontOf(foesAlive(u))) advHit(u, x, tf.ret_open_bolt, 'lightning', s, { statMult: advCoef(u, 'str') });
+                break;
+            case 'kni_fallingstrike': {
+                if (!hit) break;
+                if (tf.fall_row && lead) for (const x of foesAlive(u)) {
+                    if (x === lead || !sameRank(x, lead)) continue;
+                    advHit(u, x, hit.mult * tf.fall_row, 'lightning', s, { statMult: hit.statMult, procChance: tf.fall_row_crit ? B.thunderstrike_proc_chance : 0, procMult: B.thunderstrike_proc_mult });
+                }
+                if (tf.fall_stun && lead?.hp > 0) {
+                    if (rng() < Math.min(1, tf.fall_stun + (u.advFallRamp ?? 0))) { stunX(u, lead, ta.fall_stun || 1, s); u.advFallRamp = 0; }
+                    else if (tf.fall_stun_ramp) u.advFallRamp = (u.advFallRamp ?? 0) + tf.fall_stun_ramp;
+                }
+                if (tf.fall_guard) advWin(u, 'adv:fall_guard', 'dr_pct', Math.min(0.9, tf.fall_guard), t + B.advance_after_sec);
+                break;
+            }
+            case 'arc_trueaim':
+                if (tf.aim_ready) for (const a of u.actives) if (a.def.id === 'arc_snipe' && !a.off && a.readyAt > t + EPS) { a.readyAt = t; cdEvent(u, a); }
+                break;
+            case 'arc_singlestrike': {
+                if (!tf.ss_follow || !hit || u.hp <= 0) break;
+                const left = foesAlive(u);
+                const x = tf.ss_follow_any ? pickRandom(left) : lead?.hp > 0 ? lead : left.length ? pickTarget(u, left) : null;
+                if (x) advHit(u, x, hit.mult * tf.ss_follow, hit.element, s, { statMult: hit.statMult });
+                break;
+            }
+            case 'arc_huntersmark': {
+                if (!tf.mark_all) break;
+                const main = foesAlive(u).find(x => x.buffs.arc_huntersmark?.by === u.key);
+                const dur = main ? main.buffs.arc_huntersmark.until - t : SK.statuses.arc_huntersmark?.dur ?? 0;
+                for (const x of foesAlive(u)) if (x !== main && !x.summon)
+                    rt.applyStatus(u, x, { id: s, status: 'arc_huntersmark_all', stat: 'dr_pct', value: -Math.min(0.9, tf.mark_all * (tf.mark_all_double ?? 1)), dur, element: null, roundEnd: 'keep', ailment: null }, t);
+                break;
+            }
+            case 'pri_atonement': {
+                if (!tf.aton_all) break;
+                const main = foesAlive(u).find(x => x.buffs.pri_atonement?.by === u.key);
+                const dur = main ? main.buffs.pri_atonement.until - t : SK.statuses.pri_atonement?.dur ?? 0;
+                for (const x of foesAlive(u)) if (x !== main && !x.summon)
+                    rt.applyStatus(u, x, { id: s, status: 'pri_atonement_all', stat: 'atone', value: tf.aton_all, dur, element: null, roundEnd: 'keep', ailment: null }, t);
+                break;
+            }
+            case 'pri_diamondbody': {
+                if (!tf.diamond_share) break;
+                const w = Object.values(u.buffs).find(b => b.s === s && b.stat === 'dr_pct');
+                if (w) for (const x of alive(rt.alliesOf(u))) if (x !== u && !x.summon && (tf.diamond_share_back || (x.rank ?? 0) === 0))
+                    advWin(x, 'adv:diamond_share', 'dr_pct', Math.min(0.9, w.v * tf.diamond_share), w.until, { by: u.key });
+                break;
+            }
+            case 'pri_sweep': {
+                if (!hit) break;
+                let n = frontOf(foesAlive(u)).length;
+                if (tf.sweep_back) for (const x of foesAlive(u)) if ((x.rank ?? 0) !== 0) { advHit(u, x, hit.mult * (tf.sweep_back_full ? 1 : Math.min(1, tf.sweep_back)), hit.element, s, { statMult: hit.statMult }); n++; }
+                if (tf.sweep_twice) for (const x of frontOf(foesAlive(u))) {
+                    const r = advHit(u, x, hit.mult * tf.sweep_twice, hit.element, s, { statMult: hit.statMult });
+                    if (r.hit && tf.sweep_stagger && x.hp > 0) stagger(x, u, 0, tf.sweep_stagger);
+                }
+                if (tf.sweep_heal && n > 0) advHeal(u, u, u.hpMax * tf.sweep_heal * n, s);
+                break;
+            }
+            default: break;
+            }
         }
 
         /** 원소 보호막을 건다(프로스트 아머 · `elem_shield` 창 — skill_runtime.applyStatus 가 부른다) — 흡수량 = 시전자 마법 데미지 중앙값 × 값 × 지능 계수 */
@@ -2322,6 +2558,8 @@ export function createBattleSystem(data) {
             advDotTick(u);
             if (u.hp <= 0) return;
             autoTick(u);
+            advTickMore(u);
+            if (u.hp <= 0) return;
             for (const [key, w] of Object.entries(u.buffs)) {
                 if (w.stat !== 'tick_hit' && w.stat !== 'strike_passive') continue;
                 if (u.stagUntil > t + STEP_EPS || (u.stunUntil ?? 0) > t + STEP_EPS) { if (w.s !== 'mag_hydra') continue; }   // 히드라는 시전자가 안 묶인다
@@ -2410,7 +2648,749 @@ export function createBattleSystem(data) {
                 if (!tf.nova_ramp_keep) u.advNova = 0;
                 if (!tf.blizzard_ramp_keep) u.advBliz = 0;
                 for (const a of u.actives ?? []) if (a.def.cast === 'auto' && !a.off) a.readyAt = t;
+                // 라운드마다 — 재장전 상한 · 클렌징 「처음 하나」 · 헌신 저절로 · 연쇄 평타 (2026-11-14 R471)
+                u.advReloadN = 0; u.advBlocked = false; u.advDevAuto = false; u.advChainN = 0; u.t4Prayed = false;
             }
+            t4RoundStart(list);
+        }
+        /** 수호의 원(마법사 마스터리 T4 ③ · `adv.round_barrier` · 2026-11-14 R437) — 라운드를 열 때 자기에게 최대 HP × 값의 보호막(배리어 · 라운드 끝까지) · 이벤트 `buff`(`amt`) */
+        function t4RoundStart(list) {
+            for (const u of list) {
+                if (u.hp <= 0) continue;
+                // 수호의 원 · 탐욕 T4 ③ 황금 보호막(탐욕 합 × 값 — `computeCombat` 이 곱해 온다 · 2026-11-14) — 같은 배리어 하나에 더한다
+                const v = (u.adv?.round_barrier ?? 0) + (u.adv?.greed_barrier ?? 0);
+                if (v > 0) {
+                    const amt = Math.round(u.hpMax * v);
+                    const s = u.adv?.round_barrier ? 'mag_t4_circle' : 'sin_greed_t4_ward';
+                    u.barrier = { amt, until: Infinity, s };
+                    timeline.push({ t: r1(t), e: 'buff', u: u.key, s, stat: 'barrier_pct', v, until: null, amt });
+                }
+                // 오만 T4 ② 당당한 돌격 — 라운드를 열 때 같은 편 전원 공격 · 캐스팅 속도(주기 창) [balance.csv:mastery_t4_pride_sec] 초
+                const ph = u.adv?.pride_party_haste ?? 0;
+                if (ph > 0) for (const x of alive(rt.alliesOf(u))) if (!x.summon) advWin(x, `m4:pride@${u.key}`, 'period_pct', ph, t + B.mastery_t4_pride_sec, { by: u.key });
+                u.t4Prayed = false;
+            }
+        }
+
+        /* ── 죄종 마스터리 T4 [2026-11-14 · 사용자 「T4도 기존에 정한거 확정짓고 모두 적용해볼래?」 · skill_design §3-3 「죄종 T4」 · PLAN_mastery_tiers §5] ──
+           셋 중 하나 · 5단계 · 조건 칸은 그 영웅 죄종의 T3 조건(T3 에서 가장 높게 찍은 랭크가 연 문턱 · 안 찍었으면 1랭크 — `u.t4cond`)으로 판정한다.
+           능력치는 `u.adv`(전직 공통 줄과 같은 길) · 새 굴림은 그 능력치를 든 유닛이 있을 때만 */
+        /** 그 유닛의 T4 조건이 지금 켜졌나 — `other` = 견주는 상대(없으면 상대를 보는 조건은 꺼진다) */
+        const t4On = (x, other) => !!x.t4cond && condOn(x.t4cond, x, other);
+        /** 맞는 쪽 몫 — 오만 ③(한 방이 최대 HP × 문턱을 넘으면 넘친 몫 × (1 − 값)) · 폭식 ③(원소 피해 × 값 → 회복) · 나태 ③(조건 동안 × 값을 나눠 받는다) · 아무것도 없으면 null */
+        function t4Incoming(u, d, into, hitType) {
+            const D = d.adv;
+            if (!(into > 0)) return null;
+            let x = into, absorb = 0, defer = 0;
+            if (D.pride_cap > 0) { const cap = d.hpMax * B.mastery_t4_pride_cap_pct; if (x > cap) x = Math.round(cap + (x - cap) * (1 - Math.min(0.9, D.pride_cap))); }
+            if (D.glut_absorb > 0 && hitType !== 'physical' && hitType !== FIXED_DMG) { absorb = Math.floor(x * Math.min(0.9, D.glut_absorb)); x -= absorb; }
+            if (D.sloth_defer > 0 && t4On(d, u)) { defer = Math.floor(x * Math.min(0.9, D.sloth_defer)); x -= defer; }
+            return x === into ? null : { into: x, absorb, defer };
+        }
+        /** 맞은 뒤 — 흡수한 몫 회복 · 미룬 몫은 [balance.csv:mastery_t4_sloth_defer_sec] 에 걸쳐 나눠 받는다(장치 지속 피해 · 남은 몫에 더한다 · 저항 없음) */
+        function t4IncomingAfter(u, d, tin) {
+            if (tin.absorb > 0 && d.hp > 0) advHeal(d, d, tin.absorb, 'sin_gluttony_t4_stomach');
+            if (tin.defer > 0 && d.hp > 0) {
+                const sec = B.mastery_t4_sloth_defer_sec;
+                d.advDots ??= [];
+                const old = d.advDots.find(z => z.s === 'sin_sloth_t4_defer');
+                const left = old ? old.dps * Math.max(0, old.until - t) : 0;
+                d.advDots = d.advDots.filter(z => z !== old);
+                d.advDots.push({ by: u.key, owner: u, s: 'sin_sloth_t4_defer', dps: (left + tin.defer) / sec, el: null, until: t + sec, acc: 0 });
+            }
+        }
+        /** 라운드를 열고 적이 선 뒤 — 탐욕 T4 ① 현상금 표식: 상대 편에서 HP 가 가장 많은 하나(같으면 배열 앞 · rng 0)에 표식(정예로 친다 · 그 주인의 데미지 +값) */
+        function t4Marks() {
+            for (const u of [...party, ...units.enemies]) {
+                if (!(u.adv?.greed_mark > 0) || u.hp <= 0) continue;
+                const foes = alive(rt.foesOf(u)).filter(x => !x.summon);
+                if (!foes.length) continue;
+                const x = foes.reduce((a, b) => (b.hp > a.hp ? b : a));
+                x.buffs[`m4:mark@${u.key}`] = { stat: 'greed_mark', v: u.adv.greed_mark, until: Infinity, element: null, by: u.key, quiet: true, foe: true };
+            }
+        }
+        /** 나태 T4 ① 무거운 손 — 느린 대신 센 한 방: 상시 조용한 주기 창(값 × [balance.csv:mastery_t4_sloth_slow_ratio] 만큼 느리게) · 한 번만 건다 */
+        function t4Init(list) {
+            for (const u of list) {
+                const v = u.adv?.sloth_heavy ?? 0;
+                if (!(v > 0) || u.buffs['m4:sloth']) continue;
+                u.buffs['m4:sloth'] = { stat: 'period_pct', v: -v * B.mastery_t4_sloth_slow_ratio, until: Infinity, element: null, by: u.key, quiet: true };
+                refreshDerived(u);
+            }
+        }
+        /** 색욕 T4 ② 나누는 포옹 — 받은 회복 × 값이 같은 편 HP 비율 최저(자기 빼고 · 산 유닛)에게도 간다 · 나눈 회복은 다시 나누지 않는다 */
+        let t4Sharing = false;
+        function t4ShareHeal(x, got) {
+            const v = x.adv?.lust_share_heal ?? 0;
+            if (!(v > 0) || !(got > 0) || t4Sharing) return;
+            const others = alive(rt.alliesOf(x)).filter(y => y !== x && !y.summon && y.hp < y.hpMax);
+            if (!others.length) return;
+            const low = others.reduce((a, b) => (hpRatio(b) < hpRatio(a) ? b : a));
+            t4Sharing = true;
+            try { advHeal(x, low, got * v, 'sin_lust_t4_embrace'); } finally { t4Sharing = false; }
+        }
+
+        /* ── 전직 트리 장치 3b ~ 3e [2026-11-14 · R471 · advance_tree_draft §4 ~ §7 · PLAN_advance_tree_impl 「남은 일」] ──────────────────────
+           전사 · 기사 · 궁수 · 사제 서른여섯 스킬의 변형 · 덤. 새 굴림은 그 장치를 든 유닛이 있을 때만 생긴다(확률 장치 · 무작위 대상) — 안 든 판의 rng 수열은 그대로다 */
+        const unitByKey = k => party.find(x => x.key === k) ?? units.enemies.find(x => x.key === k) ?? null;
+        const tfOfKey = k => { const x = unitByKey(k); return x ? tfOf(x) : NO_ADV; };
+        const taOfKey = k => { const x = unitByKey(k); return x ? taOf(x) : NO_ADV; };
+        /** 그 스킬이 건 창 하나(`s` 가 같은 첫 창) · 없으면 null */
+        const winOf = (u, sid) => { for (const b of Object.values(u.buffs ?? {})) if (b.s === sid) return b; return null; };
+        /** 그 유닛의 그 전직 스킬 타격 줄(민 값) — 덤이 「그 스킬 데미지의 일부」를 칠 때 */
+        const hitLineOf = (u, id) => { const def = advOf(u); return def?.id === id ? SK.scaleDef(def, u.stats ?? null, u.fx?.skillTags).effects.find(e => e.effect === 'hit') ?? null : null; };
+        /** 칸 하나의 준비 시각이 바뀌었다 — 재생기가 그 칸의 쿨을 다시 그린다(`cd` · INTERFACE §2-6) */
+        const cdEvent = (u, a) => timeline.push({ t: r1(t), e: 'cd', u: u.key, s: a.def.id, ready: r1(a.readyAt) });
+        /** 스턴 한 번 — 장치가 거는 스턴(시간 = 초) · 시전 안이면 「한 시전 한 번」 장부를 탄다 */
+        const stunX = (u, x, sec, s) => { if (sec > 0 && x.hp > 0 && !x.summon) rt.applyStatus(u, x, { id: s, status: `${s}_stun`, stat: 'stun', value: 0, dur: sec, element: null, roundEnd: 'keep', ailment: 'stun' }, t); };
+        /** 회복 하나 — 받는 회복 +% 를 곱한다 · 넘친 몫은 버린다 · `heal` 이벤트 */
+        function advHeal(by, x, amt, s) {
+            if (x.hp <= 0) return;
+            const got = Math.min(x.hpMax - x.hp, Math.round(amt * (1 + (x.recv ?? 0))));
+            if (!(got > 0)) return;
+            x.hp += got;
+            timeline.push({ t: r1(t), e: 'heal', a: by.key, d: x.key, amt: got, dhp: x.hp, s });
+            t4ShareHeal(x, got);
+        }
+        /**
+         * 장치 피해 하나 — 굴림 없는 정해진 양(넘김 · 대신 맞기 · 번짐 · 터짐 · 고정 몫). `bar` = 배리어를 거친다(대신 맞기 · 넘김) · 아니면 비직격(HP 에서 바로) ·
+         *   `dot`(`k: adv`) 이벤트 · 기여 · 쓰러짐 · 돌려주는 값 = 넘친 몫
+         */
+        function advLand(a, d, dmg, s, ty = null, bar = true) {
+            if (!(dmg > 0) || d.hp <= 0) return 0;
+            const hp0 = d.hp;
+            let ov;
+            if (bar) { const { absorbed } = applyDamage(d, dmg); ov = d.hp > 0 ? 0 : Math.max(0, dmg - absorbed - hp0); }
+            else ov = loseHp(d, dmg);
+            const ev = { t: r1(t), e: 'dot', a: a.key, d: d.key, k: 'adv', s, dmg, dhp: d.hp };
+            if (ty) ev.ty = ty;
+            if (ov) ev.ov = ov;
+            timeline.push(ev);
+            const real = dmg - ov, ca = a.side !== d.side ? credit(a) : null, cd = credit(d);
+            if (ca) ca.dealt += real;
+            if (cd) cd.taken += real;
+            noteTaken(d, a, real);
+            if (d.hp <= 0) { if (ca && d.side !== 'party' && !d.summon && !d.rewarded) ca.kills += 1; killHeal(a, d); downed(d); }
+            return ov;
+        }
+        /** 되돌린 피해 하나(신성한 심판) — 반사 규칙(비직격 · `reflect` 이벤트) · 돌려주는 값 = 실제로 깎은 양 */
+        function advReflect(src, x, dmg, s) {
+            if (!(dmg > 0) || x.hp <= 0) return 0;
+            const bov = loseHp(x, dmg);
+            const ev = { t: r1(t), e: 'reflect', a: src.key, d: x.key, dmg, ahp: x.hp, s };
+            if (bov) ev.ov = bov;
+            timeline.push(ev);
+            const cS = credit(src), cX = credit(x);
+            if (cS) cS.dealt += dmg - bov;
+            if (cX) cX.taken += dmg - bov;
+            noteTaken(x, src, dmg - bov);
+            if (x.hp <= 0) { if (cS && x.side !== 'party' && !x.summon && !x.rewarded) cS.kills += 1; killHeal(src, x); downed(x); }
+            return dmg - bov;
+        }
+
+        /**
+         * 쓰러질 피해에서 세운다 — 버티기(창 · 아군마다 n 번 · 남는 HP = 최대 × 값 · 변형 = 잠깐 받는 피해 감소 · 받는 회복 증가) · 헌신 변형 2(창 동안 HP 1) ·
+         *   피해 적용(`applyDamage` · `loseHp`)이 부른다 · 세웠으면 참 · rng 0
+         */
+        function advSave(d) {
+            if (d.summon) return false;
+            const e = stateOf(d, 'endure');
+            if (e) {
+                const [key, w] = e;
+                const tf = tfOfKey(w.by), ta = taOfKey(w.by);
+                w.n ??= tf.endure_twice ?? 1;
+                d.hp = Math.max(1, Math.round(d.hpMax * w.v));
+                w.n -= 1;
+                if (w.n <= 0) { delete d.buffs[key]; timeline.push({ t: r1(t), e: 'buffEnd', u: d.key, s: w.s ?? key }); }
+                if (tf.endure_guard) d.buffs['adv:endure_guard'] = { stat: 'dr_pct', v: Math.min(0.9, tf.endure_guard * (tf.endure_guard_double ?? 1)), until: t + (ta.endure_guard || B.advance_after_sec), element: null, by: w.by, quiet: true };
+                if (tf.endure_heal_up) d.buffs['adv:endure_heal'] = { stat: 'recv_pct', v: tf.endure_heal_up * (tf.endure_heal_double ?? 1), until: t + (ta.endure_heal_up || B.advance_after_sec), element: null, by: w.by, quiet: true };
+                refreshDerived(d);
+                return true;
+            }
+            if (stateOf(d, 'devotion') && tfOf(d).devotion_undying) { d.hp = 1; return true; }
+            return false;
+        }
+        /** 헌신 — 이 아군(`d`)이 맞는 직격을 대신 받을 가디언 · 가져오는 몫(덤 = 더 · 가장 다친 아군은 전부) · 가져온 피해 감소 · 없으면 null */
+        function devotionOf(d) {
+            if (d.summon || d.hp <= 0) return null;
+            for (const g of rt.alliesOf(d)) {
+                if (g === d || g.hp <= 0) continue;
+                const w = stateOf(g, 'devotion')?.[1];
+                if (!w) continue;
+                const tf = tfOf(g);
+                let share = Math.min(1, w.v + (tf.devotion_more ?? 0));
+                if (tf.devotion_lowest) {
+                    const low = alive(rt.alliesOf(d)).filter(x => x !== g && !x.summon).reduce((a, b) => (hpRatio(b) < hpRatio(a) ? b : a), d);
+                    if (low === d) share = 1;
+                }
+                return { g, share, dr: Math.min(0.9, sumOf(g, 'devotion_dr')) };
+            }
+            // 맹세한 방패(기사 마스터리 T4 ② · `adv.aura_guard_share` · 2026-11-14 R437) — 오오라가 켜진 기사가 다른 아군 직격의 값만큼을 대신 받는다
+            for (const g of rt.alliesOf(d)) {
+                if (g === d || g.hp <= 0 || !g.auraOn || !(g.adv?.aura_guard_share > 0)) continue;
+                return { g, share: Math.min(1, g.adv.aura_guard_share), dr: 0, s: 'kni_t4_sworn' };
+            }
+            return null;
+        }
+        /** 의지 겹 하나 — 상한 = [balance.csv:will_stack_max] + 덤 · 가득 차면 변형 2 가 파티에 나눈다(한 창에 한 번) */
+        function willStack(d, w) {
+            const tf = tfOf(d);
+            const max = B.will_stack_max + (tf.will_more_stacks ?? 0);
+            if ((w.n ?? 0) >= max) return;
+            w.n = (w.n ?? 0) + 1;
+            if (w.n < max || !tf.will_share || w.shared) return;
+            w.shared = true;
+            const v = Math.min(0.9, w.n * w.v) * Math.min(1, tf.will_share);
+            const until = tf.will_share_long ? t + (w.until - t) * tf.will_share_long : w.until;
+            for (const x of alive(rt.alliesOf(d))) if (x !== d && !x.summon) advWin(x, 'adv:will_share', 'dr_pct', v, until, { by: d.key });
+        }
+        /** 신성한 심판 — 받은 직격 × 값을 때린 적(변형 1 = 적 전원에게 나눠 · 덤 = 나누지 않고)에게 되돌린다 · 합을 쌓는다 · 덤 회복 · 일찍 터짐 */
+        function judge(g, a, dmg, w) {
+            const tf = tfOf(g);
+            const amt = dmg * w.v;
+            const list = tf.judg_split ? alive(rt.foesOf(g)).filter(x => !x.summon) : [a];
+            const each = tf.judg_split && !tf.judg_split_full ? amt * (1 + tf.judg_split) / Math.max(1, list.length) : amt;
+            let sum = 0;
+            for (const x of list) sum += advReflect(g, x, F.indirect(each), 'kni_divinejudgment');
+            g.advJudg = (g.advJudg ?? 0) + sum;
+            if (tf.judg_heal && sum > 0) advHeal(g, g, sum * tf.judg_heal, 'kni_divinejudgment');
+            if (tf.judg_early && !g.advJudgBurst && g.advJudg >= g.hpMax * tf.judg_early) judgBurst(g, tf);
+        }
+        function judgBurst(g, tf) {
+            g.advJudgBurst = true;
+            if (!(g.advJudg > 0) || g.hp <= 0) return;
+            const dmg = F.indirect(g.advJudg * tf.judg_burst);
+            for (const x of alive(rt.foesOf(g))) advLand(g, x, dmg, 'kni_divinejudgment', null, false);
+        }
+        /** 속죄 — 저주받은 적이 받은 피해 × 값만큼 시전자 편 회복(나눠서 · 덤 = 가장 다친 아군에게 몰아서) */
+        function atoneHeal(w, real) {
+            const p = unitByKey(w.by);
+            if (!p || p.hp <= 0) return;
+            const tf = tfOf(p);
+            const allies = alive(rt.alliesOf(p)).filter(x => !x.summon);
+            if (!allies.length) return;
+            const total = real * w.v;
+            if (tf.aton_focus) { advHeal(p, allies.reduce((a, b) => (hpRatio(b) < hpRatio(a) ? b : a)), total, 'pri_atonement'); return; }
+            for (const x of allies) advHeal(p, x, total / allies.length, 'pri_atonement');
+        }
+        /**
+         * 맞은 뒤 [`strikeOnce` · 맞힌 직격마다 · 상대 편끼리] — 의지 겹 · 신성한 심판 · 속죄 · 사냥 표식 번짐(덤) · 몽크 반격 · 지원 사격 반격 사격 ·
+         *   반격 · 반격 사격은 반격 중엔 안 한다(`countering`) · 장치가 없으면 아무 일도 없다
+         */
+        function advStruck(u, d, s, sk, dmg, real) {
+            if (d.hp > 0) { const w = stateOf(d, 'will')?.[1]; if (w) willStack(d, w); }
+            const jw = d.hp > 0 ? stateOf(d, 'reflect_win')?.[1] : null;
+            if (jw && u.hp > 0 && dmg > 0) judge(d, u, dmg, jw);
+            const aw = stateOf(d, 'atone')?.[1];
+            if (aw && real > 0) atoneHeal(aw, real);
+            const mk = d.buffs?.arc_huntersmark;
+            if (mk && real > 0) {
+                const o = unitByKey(mk.by), v = o ? tfOf(o).mark_share : 0;
+                if (v) for (const x of alive(rt.alliesOf(d))) if (x !== d) advLand(o, x, F.indirect(real * v), 'arc_huntersmark', null, false);
+            }
+            if (!countering && u.hp > 0) { monkCounter(u, d); supportCounter(u, d); }
+            // 색욕 T4 ③ 홀리기 — 나를 때린 적이 확률로(rng 1회) 잠깐 데미지가 깎인다(적 데미지 감소 창 [balance.csv:mastery_t4_charm_pct] · [balance.csv:mastery_t4_charm_sec])
+            if (d.adv?.lust_charm && d.hp > 0 && u.hp > 0 && rng() < Math.min(1, d.adv.lust_charm))
+                advWin(u, `m4:charm@${d.key}`, 'final_dmg_pct', -B.mastery_t4_charm_pct, t + B.mastery_t4_charm_sec, { by: d.key, foe: true });
+        }
+        /** 몽크 반격 — 맞은 몽크(변형 1 = 전열 아군이 맞아도 · 덤 = 후열도)가 때린 적(변형 2 = 그 줄 · 덤 = 적 전원)에게 창 값 배율로 물리 직격 · 덤 경직 */
+        function monkCounter(a, d) {
+            for (const m of [d, ...rt.alliesOf(d).filter(x => x !== d)]) {
+                if (m.hp <= 0 || m.summon || a.hp <= 0) continue;
+                const w = stateOf(m, 'counter_win')?.[1];
+                if (!w || m.stagUntil > t + STEP_EPS || (m.stunUntil ?? 0) > t + STEP_EPS) continue;
+                const tf = tfOf(m);
+                let ratio = 1;
+                if (m !== d) {
+                    if (!tf.counter_front || ((d.rank ?? 0) !== 0 && !tf.counter_back)) continue;
+                    ratio = Math.min(1, tf.counter_front);
+                }
+                const foes = alive(rt.foesOf(m));
+                const list = tf.counter_all ? foes : tf.counter_row ? foes.filter(x => x === a || sameRank(x, a)) : [a];
+                countering = true;
+                try {
+                    for (const x of list) {
+                        if (m.hp <= 0) break;
+                        if (x.hp <= 0) continue;
+                        const r = advHit(m, x, w.v * ratio * (x === a ? 1 : Math.min(1, tf.counter_row ?? 1)), 'physical', 'pri_counter', { statMult: advCoef(m, 'str') });
+                        if (r.hit && tf.counter_stagger && x.hp > 0) stagger(x, m, 0, tf.counter_stagger);
+                    }
+                } finally { countering = false; }
+            }
+        }
+        /** 지원 사격 변형 2 — 창 동안 아군이 맞으면 레인저가 때린 적에게 반격 사격(덤 = 두 발) */
+        function supportCounter(a, d) {
+            for (const r of alive(rt.alliesOf(d))) {
+                const w = stateOf(r, 'support_fire')?.[1];
+                if (!w) continue;
+                const tf = tfOf(r);
+                if (!tf.sf_counter) continue;
+                countering = true;
+                try { for (let k = 0; k < (tf.sf_counter_two ?? 1) && a.hp > 0 && r.hp > 0; k++) advHit(r, a, w.v * tf.sf_counter, null, 'arc_supportingfire', { statMult: advCoef(r, 'str') }); }
+                finally { countering = false; }
+            }
+        }
+        /** 지원 사격 변형 1 — 아군 스킬 타격에도 확률로(rng 1회) 화살(덤 = 두 발) */
+        function supportSkill(u, d) {
+            for (const r of alive(rt.alliesOf(u))) {
+                const w = stateOf(r, 'support_fire')?.[1];
+                if (!w) continue;
+                const tf = tfOf(r);
+                if (!tf.sf_skills || !(rng() < Math.min(1, tf.sf_skills))) continue;
+                for (let k = 0; k < (tf.sf_skill_two ?? 1) && d.hp > 0 && r.hp > 0; k++) advHit(r, d, w.v, null, 'arc_supportingfire', { statMult: advCoef(r, 'str') });
+            }
+        }
+        /** 천벌 — 대상에 걸린 디버프 · 상태이상 수(같은 상태이상은 하나) × 하나의 몫(상한) · 변형 2 = 지우고 그만큼 크게(창을 지금 닫는다 — 다음 틱 만료가 이벤트를 낸다) */
+        function punishCount(u, d, tf) {
+            const list = Object.values(d.buffs).filter(b => (b.ail || b.foe) && b.until > t + EPS);
+            const seen = new Set();
+            let n = 0;
+            for (const b of list) { const k = b.ail ? `ail:${b.ail}` : b.s; if (seen.has(k)) continue; seen.add(k); n++; }
+            if (!n) return 0;
+            if (tf.pun_consume) { for (const b of list) b.until = t; return n * (B.pun_per + tf.pun_consume) * (tf.pun_consume_double ?? 1); }
+            return Math.min(n, B.pun_cap + (tf.pun_cap ?? 0)) * (B.pun_per + (tf.pun_more ?? 0));
+        }
+        /** 창 하나를 다른 유닛에게 옮겨 건다(남은 시간 · 같은 값) — 천벌 덤 · 정화 되돌리기 · 화상 옮기기 */
+        function copyWinTo(key, b, x, caster) {
+            const dur = b.until - t;
+            if (!(dur > EPS) || !Number.isFinite(dur) || x.hp <= 0) return;
+            const status = key.split('@')[0];
+            rt.applyStatus(caster, x, { id: b.s ?? status, status, stat: b.stat, value: b.v, dur, element: b.element ?? null, roundEnd: b.roundEnd ?? 'keep', ailment: b.ail ?? null,
+                ...(b.stat === 'poison' ? { dps: b.v } : {}), ...(b.hit ? { hit: b.hit } : {}) }, t);
+        }
+        /** 넘김 — 쓰러뜨리고 남은 피해를 다음 적(전열 배열 첫)에게 · `hops` 번까지 이어진다 */
+        function passOver(u, d, amt, s, hops) {
+            const live = foesAlive(u).filter(x => !x.summon);
+            if (!live.length || !(amt > 0)) return;
+            const front = live.filter(x => (x.rank ?? 0) === 0);
+            const x = (front.length ? front : live)[0];
+            const ov = advLand(u, x, Math.round(amt), s);
+            if (ov > 0 && hops > 1) passOver(u, x, ov, s, hops - 1);
+        }
+        /** 재장전 — 스킬로 쓰러뜨리면 그 스킬(덤 = 전부)의 쿨 초기화 · 라운드당 상한 = 창 값 · 변형 1 = 다음 한 방 · 변형 2 = 적 전원 경직 */
+        function reload(u, s, rw) {
+            const cap = Math.floor(rw.v + EPS);
+            if ((u.advReloadN ?? 0) >= cap) return;
+            const tf = rw.tf ?? NO_ADV;
+            const slots = u.actives.filter(a => !a.off && Number.isFinite(a.readyAt) && a.readyAt > t + EPS && (tf.reload_all || a.def.id === s));
+            if (!slots.length) return;
+            u.advReloadN = (u.advReloadN ?? 0) + 1;
+            for (const a of slots) { a.readyAt = t; cdEvent(u, a); }
+            if (tf.reload_empower) u.advEmp = { s, n: tf.reload_empower_two ?? 1, v: tf.reload_empower };
+            if (tf.reload_stagger) for (const x of foesAlive(u)) stagger(x, u, 0, tf.reload_stagger * (tf.reload_stagger_long ?? 1));
+        }
+        /** 처치 뒤 [`strikeOnce` · 직격이 쓰러뜨렸다] — 재장전 · 넘김 · 크루세이더 (1) 창 연장 · 공속 겹 · 일격 덤 · 연쇄 평타 · 터짐 · 표식 · 저주 · 천벌 옮기기 · 화상 옮기기 */
+        function advKill(u, d, s, sk, ov, total) {
+            const tf = tfOf(u);
+            if (sk && s && !sk.advOwn) { const rw = stateOf(u, 'reload')?.[1]; if (rw) reload(u, s, rw); }
+            if (ov > 0) {
+                if ((s === 'war_mutualruin' && tf.ruin_overflow) || (s === 'war_thorswrath' && tf.thor_overflow)) passOver(u, d, ov, s, 1);
+                else if (s === 'kni_condemnation' && tf.cond_overflow) passOver(u, d, ov * Math.min(1, tf.cond_overflow), s, tf.cond_overflow_two ? 2 : 1);
+            }
+            const rw = winOf(u, 'kni_retribution');
+            if (rw) {
+                if (tf.ret_extend) retExtend(u, tf, taOf(u));
+                if (tf.ret_kill_haste) { const cur = u.buffs['adv:ret_haste']; u.buffs['adv:ret_haste'] = { stat: 'period_pct', v: (cur?.v ?? 0) + tf.ret_kill_haste, until: rw.until, element: null, by: u.key, quiet: true }; refreshDerived(u); }
+            }
+            if (s === 'arc_singlestrike' && tf.ss_refund) for (const a of u.actives) if (a.def.id === s && a.readyAt > t + EPS) { a.readyAt = t + (a.readyAt - t) * (1 - tf.ss_refund); cdEvent(u, a); }
+            if (stateOf(u, 'chain_splash')) {
+                if (!sk && tf.cd_kill_chain) u.advKillBasic = true;
+                if (tf.cd_explode && total > 0) for (const x of alive(rt.alliesOf(d))) if (sameRank(x, d)) advLand(u, x, F.indirect(total * tf.cd_explode), 'arc_chaindraw', null, false);
+            }
+            moveCurse(d, 'arc_huntersmark', 'mark_move', 'mark_move_refresh');
+            const aw = d.buffs?.pri_atonement;
+            if (aw) {
+                const p = unitByKey(aw.by), tfp = p ? tfOf(p) : NO_ADV;
+                if (tfp.aton_kill_heal && p.hp > 0) for (const x of alive(rt.alliesOf(p))) if (!x.summon) advHeal(p, x, x.hpMax * tfp.aton_kill_heal, 'pri_atonement');
+                moveCurse(d, 'pri_atonement', 'aton_move', 'aton_move_refresh');
+            }
+            if (s === 'pri_punishment' && tf.pun_spread) for (const [key, b] of Object.entries(d.buffs)) {
+                if (!(b.ail || b.foe) || !(b.until > t + EPS)) continue;
+                for (const x of alive(rt.alliesOf(d))) if (x !== d && sameRank(x, d)) copyWinTo(key, b, x, unitByKey(b.by) ?? u);
+            }
+            const bw = strongestOf(d, 'burn');
+            if (bw) {
+                const pal = alive(rt.alliesOf(u)).find(x => x.aura?.id === 'kni_elemconvert' && tfOf(x).conv_burn_spread);
+                const nb = pal ? alive(rt.alliesOf(d)).find(x => x !== d && sameRank(x, d)) : null;
+                const key = nb ? Object.keys(d.buffs).find(k => d.buffs[k] === bw) : null;
+                if (key) copyWinTo(key, bw, nb, pal);
+            }
+        }
+        /** 사냥 표식 · 속죄 — 쓰러진 적의 창(열쇠 `key`)을 다음 HP 최다 적(전열 먼저)에게 옮긴다 · 값 = 변형 몫만큼 더 · 덤 = 시간이 새로 */
+        function moveCurse(d, key, fx, refresh) {
+            const w = d.buffs?.[key];
+            if (!w) return;
+            const tf = tfOfKey(w.by);
+            if (!tf[fx]) return;
+            const next = alive(rt.alliesOf(d)).filter(x => x !== d && !x.summon);
+            const front = next.filter(x => (x.rank ?? 0) === 0);
+            const pool = front.length ? front : next;
+            if (!pool.length) return;
+            const x = pool.reduce((a, b) => (b.hp > a.hp ? b : a));
+            const until = tf[refresh] ? t + (SK.statuses[key]?.dur ?? 0) : w.until;
+            const v = w.stat === 'dr_pct' ? w.v - tf[fx] : w.v + tf[fx];
+            x.buffs[key] = { ...w, v, until };
+            refreshDerived(x);
+            timeline.push({ t: r1(t), e: 'buff', u: x.key, s: w.s ?? key, stat: w.stat, v, until: r1(until) });
+        }
+        /** 크루세이더 (1) 변형 2 — 창 동안 처치마다 그 시전의 창을 값만큼 늘린다 · 합은 인자(초)까지 */
+        function retExtend(u, tf, ta) {
+            const used = u.advRetExt ?? 0;
+            const add = Math.min(tf.ret_extend, (ta.ret_extend || 0) - used);
+            if (!(add > 0)) return;
+            u.advRetExt = used + add;
+            for (const w of Object.values(u.buffs)) {
+                if (w.s !== 'kni_retribution' || !Number.isFinite(w.until)) continue;
+                w.until += add;
+                if (!w.quiet) timeline.push({ t: r1(t), e: 'buff', u: u.key, s: w.s, stat: w.stat, v: w.v, until: r1(w.until), ext: true });
+            }
+        }
+        /** 물리 → 원소 전환 몫 — 때리는 쪽 `phys_conv` 창마다 `{el, share, amp, pen, procChance, procMult, burn, by}` · 없으면 null (formula.strike `conv`) */
+        function convOf(u, d) {
+            let list = null;
+            for (const b of Object.values(u.buffs)) {
+                if (b.stat !== 'phys_conv' || !b.element) continue;
+                const tf = tfOfKey(b.by);
+                const c = {
+                    el: b.element, by: b.by,
+                    share: b.v + (tf.conv_vs_def ? Math.max(0, d.def ?? 0) * tf.conv_vs_def : 0),
+                    amp: Object.values(u.buffs).reduce((n, x) => n + (x.stat === 'conv_amp' && x.element === b.element ? x.v : 0), 0),
+                    pen: b.element === 'fire' ? tf.conv_pen ?? 0 : 0,
+                };
+                if (b.element === 'lightning' && tf.ret_crit) { c.procChance = tf.ret_crit; c.procMult = taOfKey(b.by).ret_crit || B.thunderstrike_proc_mult; }
+                if (b.element === 'fire' && tf.conv_burn) c.burn = tf.conv_burn;
+                (list ??= []).push(c);
+            }
+            return list;
+        }
+        /** 공세 오오라 — 받는 아군마다 값 배수(덤 = 켠 기사 자신 두 배 · 변형 = 마법 무기 캐스팅 · 물리 무기 공속) · 칸 +n · 한 발 더 확률 (castAura 가 부른다 — 창을 거는 순간이라 `tf` 는 정의에서 읽는다) */
+        function offenseOf(p, tgt, x) {
+            const tf = p.aura?.def?.tf ?? NO_ADV;
+            let m = 1;
+            if (tgt === p && tf.oa_self_double) m *= tf.oa_self_double;
+            const speed = x.stat === 'period_pct';
+            if (speed && tgt.noBasic && tf.oa_caster) m += tf.oa_caster;
+            if (speed && !tgt.noBasic && tf.oa_fighter) m += tf.oa_fighter;
+            return { m, chargeAdd: speed && tgt.noBasic && tf.oa_cast_charge ? tf.oa_cast_charge : 0, dshot: speed && !tgt.noBasic && tf.oa_double_shot ? tf.oa_double_shot : 0 };
+        }
+        function advChargeAdd(u) { let n = 0; for (const b of Object.values(u.buffs)) if (b.chargeAdd) n += b.chargeAdd; return n; }
+        function advExtraShot(u) { let n = 0; for (const b of Object.values(u.buffs)) if (b.dshot) n += b.dshot; return n; }
+        /** 받는 경직의 배수 — 휠윈드 덤(휘두르는 동안) · 강신 변형 2 · 덤(면역 0) · 금강 덤(면역 0) · 없으면 1 */
+        function advStaggerMult(u) {
+            let m = 1;
+            const ww = u.chan?.def.id === 'war_whirlwind' ? u.chan.def.tf?.ww_steady : 0;
+            if (ww) m *= Math.max(0, 1 - ww);
+            if (winOf(u, 'war_divinedescent')) { const tf = tfOf(u); if (tf.descent_unstaggerable) return 0; if (tf.descent_steady) m *= Math.max(0, 1 - tf.descent_steady); }
+            if (winOf(u, 'pri_diamondbody') && tfOf(u).diamond_unstaggerable) return 0;
+            if (u.adv?.wrath_steady && t4On(u, null)) m *= Math.max(0, 1 - Math.min(0.9, u.adv.wrath_steady));   // 분노 T4 ③ (2026-11-14)
+            return m;
+        }
+        /** 클렌징 변형 2 — 상태이상이 풀린(만료 · 바로 풀림) 아군 회복 · 덤 = 파티 전원 절반 */
+        function cleanseHeal(tgt, byKey) {
+            const k = unitByKey(byKey);
+            const tf = k ? tfOf(k) : NO_ADV;
+            if (!tf.cleanse_heal || tgt.hp <= 0) return;
+            advHeal(k, tgt, tgt.hpMax * tf.cleanse_heal, 'kni_cleansing');
+            if (tf.cleanse_heal_party) for (const x of alive(rt.alliesOf(tgt))) if (x !== tgt && !x.summon) advHeal(k, x, x.hpMax * tf.cleanse_heal * tf.cleanse_heal_party, 'kni_cleansing');
+        }
+
+        /**
+         * 걸리는 시간 [`skill_runtime.applyStatus` · `ctx.advStatus`] — `u` = 거는 쪽 · `tgt` = 받는 쪽 · 돌려주는 시간이 0 이하면 안 건다.
+         *   창을 여는 순간 장부(의지 잔겹 · 되돌린 합 · 쓴 HP · 연장 · 셋째 평타)를 비운다 · 확률 장치(클렌징 변형 1 · 금강 변형 1)만 rng 1회
+         */
+        function advStatus(u, tgt, x, dur, at, ail) {
+            if (x.stat === 'will') tgt.advWillFade = null;
+            else if (x.stat === 'reflect_win') { tgt.advJudg = 0; tgt.advJudgBurst = false; }
+            else if (x.stat === 'berserk') tgt.advPaid = 0;
+            else if (x.id === 'kni_retribution' && x.stat === 'period_pct') tgt.advRetExt = 0;
+            else if (x.id === 'arc_overdraw' && x.stat === 'period_fix') { tgt.advOdN = 0; tgt.advOdBoost = false; }
+            const bad = !!ail || tgt.side !== u.side;
+            // 드러난 죄(사제 마스터리 T4 ① · R437) — 사제가 상대 편에 거는 디버프 · 상태이상에 받는 피해 증가 창을 같이 건다
+            if (bad && tgt.side !== u.side && u.adv?.sin_vuln && tgt.hp > 0 && !tgt.summon) advWin(tgt, `m4:sin@${u.key}`, 'dr_pct', -u.adv.sin_vuln, at + B.mastery_t4_vuln_sec, { by: u.key, foe: true });
+            if (!bad) {
+                const lk = stateOf(tgt, 'buff_lock')?.[1];
+                if (lk) {
+                    const p = unitByKey(lk.by), v = p ? tfOf(p).exc_lock_punish : 0;
+                    if (v && p.hp > 0 && u.hp > 0) advLand(p, u, F.indirect(matkMid(p) * v * advCoef(p, 'int')), 'pri_excommunication', FIXED_DMG, false);
+                    return 0;
+                }
+                const bc = sumOf(u, 'buff_cut');
+                return bc ? dur * Math.max(0, 1 - bc) : dur;
+            }
+            if (tgt.hp <= 0) return dur;
+            const im = stateOf(tgt, 'ail_immune')?.[1];
+            if (im) {
+                const v = tfOfKey(im.by).purify_immune_shield;
+                if (v) tgt.barrier = { amt: (tgt.barrier?.amt ?? 0) + Math.round(tgt.hpMax * v), until: at + B.advance_overheal_shield_sec, s: 'pri_purify' };
+                return 0;
+            }
+            if (winOf(tgt, 'war_ragnarok')) {
+                const tf = tfOf(tgt);
+                if (tf.rag_immune) return 0;
+                if (tf.rag_debuff_cut) dur *= Math.max(0, 1 - tf.rag_debuff_cut);
+            }
+            const cut = sumOf(tgt, 'ailment_cut');
+            if (cut) dur *= Math.max(0, 1 - Math.min(0.9, cut));
+            if (!ail) { t4Envy(u, tgt, x, dur, at); return dur; }
+            const cw = Object.values(tgt.buffs).find(b => b.stat === 'ailment_cut' && b.s === 'kni_cleansing');
+            if (cw) {
+                const tf = tfOfKey(cw.by);
+                if (tf.cleanse_block && !tgt.advBlocked) { tgt.advBlocked = true; return 0; }
+                if (tf.cleanse_chance && rng() < Math.min(1, tf.cleanse_chance)) {
+                    cleanseHeal(tgt, cw.by);
+                    if (tf.cleanse_chain) for (const y of alive(rt.alliesOf(tgt))) if (y !== tgt) for (const b of Object.values(y.buffs)) if (b.ail === x.ailment) b.until = at;
+                    return 0;
+                }
+            }
+            if (winOf(tgt, 'pri_diamondbody')) {
+                const tf = tfOf(tgt);
+                if (tf.diamond_shake && rng() < Math.min(1, tf.diamond_shake)) {
+                    if (tf.diamond_shake_heal) advHeal(tgt, tgt, tgt.hpMax * tf.diamond_shake_heal, 'pri_diamondbody');
+                    return 0;
+                }
+            }
+            if (ail.hold && tgt.chan?.def.id === 'war_whirlwind') { const v = tgt.chan.def.tf?.ww_steady; if (v) dur *= Math.max(0, 1 - v); }
+            // 분노 T4 ③ 흔들리지 않는 분노 — 조건(내 HP 가 낮다) 동안 받는 스턴 시간 감소(경직은 `advStaggerMult`)
+            if (ail.hold && tgt.adv?.wrath_steady && t4On(tgt, u)) dur *= Math.max(0, 1 - Math.min(0.9, tgt.adv.wrath_steady));
+            t4Envy(u, tgt, x, dur, at);
+            return dur;
+        }
+        /** 시기 T4 ③ 나누는 불행 — 내게 걸린 디버프 · 상태이상이 확률로(rng 1회) 건 적(조건 — 그 적이 나보다 성하다)에게도 같은 시간으로 걸린다 · 되돌린 것은 다시 안 되돌린다 */
+        let t4Envying = false;
+        function t4Envy(u, tgt, x, dur, at) {
+            const v = tgt.adv?.envy_return ?? 0;
+            if (!(v > 0) || t4Envying || u.side === tgt.side || u.hp <= 0 || u.summon || !(dur > 0) || !t4On(tgt, u) || !(rng() < Math.min(1, v))) return;
+            t4Envying = true;
+            try { rt.applyStatus(tgt, u, { ...x, dur }, at); } finally { t4Envying = false; }
+        }
+        /** 지운 뒤(정화) — 덤 = 지운 수만큼 쿨 · 변형 2 = 잠깐 면역 · 변형 1 = 확률로(rng 1회 · 창마다) 건 적에게 되돌린다(덤 = 그 줄) */
+        function advCleansed(u, tgt, gone, at) {
+            const tf = tfOf(u);
+            if (tf.purify_cool) for (const a of u.actives) if (a.def.id === 'pri_purify' && a.readyAt > at + EPS) { a.readyAt = Math.max(at, a.readyAt - tf.purify_cool * gone.length); cdEvent(u, a); }
+            if (tf.purify_immune) advWin(tgt, 'adv:ail_immune', 'ail_immune', 1, at + tf.purify_immune, { by: u.key });
+            if (tf.purify_return) for (const [key, b] of gone) {
+                const src = unitByKey(b.by);
+                if (!src || src.hp <= 0 || src.side === tgt.side || !(rng() < Math.min(1, tf.purify_return))) continue;
+                for (const x of [src, ...(tf.purify_return_row ? alive(rt.alliesOf(src)).filter(y => y !== src && sameRank(y, src)) : [])]) copyWinTo(key, b, x, u);
+            }
+        }
+        /** 닫힌 뒤 [`skill_runtime.expire` 끝] — 라그나로크 잔상 · 버서크 되돌려 받기 · 헌신 끝 회복 · 의지 하나씩 빠지기 · 심판 터짐 · 붕괴 끝 한 번 더 · 사자후 잔상 · 강신 보호막 · 퀵 드로우 마지막 한 발 · 클렌징 회복 */
+        function advExpired(u, closed, hp0, at) {
+            let tf0 = null;
+            const TF = () => (tf0 ??= tfOf(u));
+            for (const b of closed) {
+                if (b.s === 'war_ragnarok' && b.stat === 'period_pct') { if (TF().rag_afterglow && u.hp > 0) advWin(u, 'adv:rag_glow', 'period_pct', b.v / 2, at + TF().rag_afterglow); }
+                else if (b.stat === 'berserk') { if (TF().berserk_refund && u.advPaid > 0) advHeal(u, u, u.advPaid * TF().berserk_refund, 'war_berserk'); u.advPaid = 0; }
+                else if (b.stat === 'devotion') { if (TF().devotion_end_heal && u.hp === 1) advHeal(u, u, u.hpMax * TF().devotion_end_heal, 'kni_lastbastion'); }
+                else if (b.stat === 'will') { if (TF().will_decay && (b.n ?? 0) > 0) { const iv = TF().will_decay * (TF().will_decay_slow ?? 1); u.advWillFade = { n: b.n, v: b.v, iv, next: at + iv }; } }
+                else if (b.stat === 'reflect_win') { if (TF().judg_burst && !u.advJudgBurst) judgBurst(u, TF()); }
+                else if (b.stat === 'formation_break' && b.s === 'war_shockwave') {
+                    const c = unitByKey(b.by), v = c ? tfOf(c).shock_end_hit : 0;
+                    const h = v && c.hp > 0 && u.hp > 0 ? hitLineOf(c, 'war_shockwave') : null;
+                    if (h) advHit(c, u, h.mult * v, null, 'war_shockwave', { statMult: h.statMult });
+                }
+                else if (b.s === 'war_intimidate' && b.stat === 'final_dmg_pct') { const v = tfOfKey(b.by).roar_linger; if (v && u.hp > 0) advWin(u, 'adv:roar_linger', 'final_dmg_pct', b.v / 2, at + v, { by: b.by }); }
+                else if (b.s === 'war_divinedescent' && b.stat === 'hp_max_pct') { if (TF().descent_shield && hp0 > u.hp) u.barrier = { amt: (u.barrier?.amt ?? 0) + (hp0 - u.hp), until: at + B.advance_overheal_shield_sec, s: 'war_divinedescent' }; }
+                else if (b.s === 'arc_quickdraw' && b.stat === 'period_fix') {
+                    const foes = TF().qd_finale && u.hp > 0 ? foesAlive(u) : [];
+                    if (foes.length) advHit(u, pickTarget(u, foes), TF().qd_finale, null, 'arc_quickdraw', { statMult: u.mainMult });
+                }
+                if (b.ail && u.hp > 0) { const cw = Object.values(u.buffs).find(x => x.stat === 'ailment_cut' && x.s === 'kni_cleansing'); if (cw) cleanseHeal(u, cw.by); }
+            }
+        }
+        /** 평타 대상 — 퀵 드로우 변형 1(6자리 무작위 · rng 1회 — 평소 고르기와 같은 수) · 오버드로우 변형 1(HP 최다 · rng 0) · 창이 없으면 null(평소 규칙) */
+        function advBasicPick(u, foes) {
+            if (!stateOf(u, 'period_fix')) return null;
+            const tf = tfOf(u);
+            if (tf.qd_scatter && winOf(u, 'arc_quickdraw')) return pickRandom(foes);
+            if (tf.od_hp_max && winOf(u, 'arc_overdraw')) { const x = frontOf(foes).reduce((a, b) => (b.hp > a.hp ? b : a)); u.advOdPick = x; return x; }
+            return null;
+        }
+        /** 체인 드로우 변형 1 — 나머지 대상에 붙는 덤의 세기(덤 = 주 대상과 같다) · 없으면 0(안 붙는다) */
+        function advChainOnhit(u) { const tf = tfOf(u); return tf.cd_onhit_all ? (tf.cd_onhit_full ? 1 : Math.min(1, tf.cd_onhit_all)) : 0; }
+        /** 퀵 드로우 변형 2 — 창 동안 덤이 한 번 더(덤 = 두 번 더) · 세기 목록 · 없으면 null */
+        function advOnhitAgain(u) {
+            const tf = tfOf(u);
+            if (!tf.qd_onhit_again || !winOf(u, 'arc_quickdraw')) return null;
+            return Array(tf.qd_onhit_more ? 2 : 1).fill(Math.min(1, tf.qd_onhit_again));
+        }
+        /** 평타 뒤 — 라그나로크 튐 · 오버드로우 관통 · 셋째 평타 장부 · 지원 사격 · 체인 드로우 연쇄 평타 (반격의 평타는 안 한다) */
+        function advAfterBasic(u, lead) {
+            if (countering) return;
+            if (u.buffs['adv:chain_full']) delete u.buffs['adv:chain_full'];
+            // 직업 마스터리 T4 [2026-11-14 · R437] — 휩쓰는 일격(전사 ① · 평타가 같은 줄 옆 적에게 값 배율로 · 평타 광역 꼴) · 사냥꾼의 박자(궁수 ② · 평타마다 제 스킬 쿨이 값 초 돈다 · `cdPush` 음수)
+            const A = u.adv ?? NO_ADV;
+            if (A.basic_cleave && lead) for (const x of foesAlive(u)) { if (x !== lead && sameRank(x, lead) && u.hp > 0) strikeOnce(u, x, A.basic_cleave, null, undefined, null, true); }
+            if (A.basic_cd_tick && u.hp > 0) {
+                let moved = false;
+                for (const a of u.actives) if (!a.off && Number.isFinite(a.readyAt) && a.readyAt > t + EPS) { a.readyAt = Math.max(t, a.readyAt - A.basic_cd_tick); moved = true; }
+                if (moved) timeline.push({ t: r1(t), e: 'cdPush', u: u.key, cd: -A.basic_cd_tick, s: 'arc_t4_rhythm' });
+            }
+            const tf = tfOf(u);
+            if (tf.rag_cleave && lead && winOf(u, 'war_ragnarok')) for (const x of foesAlive(u)) {
+                if (x === lead || !(tf.rag_cleave_all || sameRank(x, lead))) continue;
+                advHit(u, x, tf.rag_cleave, null, 'war_ragnarok', { statMult: u.mainMult });
+            }
+            if (winOf(u, 'arc_overdraw')) {
+                if (tf.od_pierce && lead && (lead.rank ?? 0) === 0) {
+                    const back = foesAlive(u).find(x => (x.rank ?? 0) !== 0);
+                    if (back) { const r = advHit(u, back, tf.od_pierce, null, 'arc_overdraw', { statMult: u.mainMult }); if (r.hit && tf.od_pierce_stagger && back.hp > 0) stagger(back, u, 0, tf.od_pierce_stagger); }
+                }
+                if (tf.od_third) { u.advOdN = (u.advOdN ?? 0) + 1; u.advOdBoost = (u.advOdN + 1) % 3 === 0; }
+            }
+            if (lead) for (const r of alive(rt.alliesOf(u))) {
+                const w = stateOf(r, 'support_fire')?.[1];
+                if (!w) continue;
+                for (let k = 0; k < (tfOf(r).sf_two ?? 1) && lead.hp > 0 && r.hp > 0; k++) advHit(r, lead, w.v, null, 'arc_supportingfire', { statMult: advCoef(r, 'str') });
+            }
+            if (u.advKillBasic) {
+                u.advKillBasic = false;
+                const cw = stateOf(u, 'chain_splash')?.[1];
+                if (cw && (u.advChainN ?? 0) < (tf.cd_kill_chain ?? 0) && u.hp > 0) {
+                    u.advChainN = (u.advChainN ?? 0) + 1;
+                    u.next = Math.min(u.next, TICK);
+                    if (tf.cd_chain_full) u.buffs['adv:chain_full'] = { stat: 'chain_splash', v: Math.max(0, 1 - cw.v), until: t + 1, element: null, by: u.key, quiet: true };
+                }
+            } else u.advChainN = 0;
+        }
+        /** 스나이프 후열 우선 — 정조준 창 · 변형 2 */
+        const aimBack = (u, def) => def.id === 'arc_snipe' && !!winOf(u, 'arc_trueaim') && !!tfOf(u).aim_back;
+
+        /* 덫 [advance_tree_draft §6] — 적 배열의 칸(자리)에 붙는다 · 라운드를 넘긴다(새 라운드의 그 칸 적도 밟는다) · 그 자리 적이 행동하려 하면 터진다(`act` 앞 · `advBeforeAct`) */
+        const traps = [];
+        function advAttack(kind, u, def, foes) {
+            if (kind === 'trap') {
+                const tf = tfOf(u);
+                const live = foes.filter(f => f.hp > 0);
+                const front = live.filter(f => (f.rank ?? 0) === 0);
+                const pool = front.length ? front : live;
+                let list;
+                if (tf.trap_back) list = live;
+                else if (tf.trap_all_front) list = pool;
+                else { const r = rng(); list = pool.length ? [pool[Math.floor(r * pool.length)]] : []; }
+                const arr = rt.foesOf(u);
+                for (const x of list) {
+                    traps.push({ owner: u, side: x.side, idx: arr.indexOf(x), mult: def.mult * (1 + (tf.trap_all_front ?? 0)), statMult: def.statMult ?? 1, left: 1 + (tf.trap_rearm ?? 0) });
+                    timeline.push({ t: r1(t), e: 'buff', u: x.key, s: 'arc_trap', stat: 'trap', v: 0, until: null });
+                }
+                return list[0] ?? null;
+            }
+            // 파문 — 버프가 가장 많은 적(전열 먼저 · 같으면 배열 앞 · rng 0)의 버프(끝없는 창 · 상태이상 · 상대 편 창 · 조용한 창 제외)를 벗기고 벗긴 수만큼 더 친다
+            const tf = tfOf(u);
+            const buffsOf = d => Object.entries(d.buffs).filter(([, b]) => !b.ail && !b.foe && !b.quiet && b.until !== Infinity);
+            const pool = frontOf(foes.filter(f => f.hp > 0));
+            if (!pool.length) return null;
+            const tgt = pool.reduce((a, b) => (buffsOf(b).length > buffsOf(a).length ? b : a));
+            const list = tf.exc_all ? foes.filter(f => f.hp > 0) : [tgt];
+            const ratio = list.length > 1 && !tf.exc_all_full ? Math.min(1, tf.exc_all) : 1;
+            for (const d of list) {
+                const strip = buffsOf(d);
+                for (const [k, b] of strip) {
+                    delete d.buffs[k];
+                    timeline.push({ t: r1(t), e: 'buffEnd', u: d.key, s: b.s ?? k });
+                    if (tf.exc_steal && u.hp > 0) { u.buffs[k] = { ...b, by: u.key }; timeline.push({ t: r1(t), e: 'buff', u: u.key, s: b.s ?? k, stat: b.stat, v: b.v, until: r1(b.until) }); }
+                }
+                if (strip.length) { refreshDerived(d); if (tf.exc_steal) refreshDerived(u); }
+                if (tf.exc_lock) advWin(d, 'adv:buff_lock', 'buff_lock', 1, t + tf.exc_lock, { by: u.key, foe: true });
+                if (u.hp > 0 && d.hp > 0) rt.strikeOnce(u, d, def.mult * ratio, def.element, def.id,
+                    { statMult: def.statMult ?? 1, procChance: def.procChance ?? 0, procMult: def.procMult ?? 0, onHit: def.onHit ?? null, spread: false, stripN: strip.length });
+            }
+            return tgt;
+        }
+        function advBeforeAct(u) {
+            if (!traps.length) return;
+            const arr = u.side === 'party' ? party : units.enemies;
+            const idx = arr.indexOf(u);
+            for (let i = 0; i < traps.length && u.hp > 0; i++) {
+                const tp = traps[i];
+                if (tp.side !== u.side || tp.idx !== idx || tp.owner.hp <= 0) continue;
+                const tf = tfOf(tp.owner);
+                const r = advHit(tp.owner, u, tp.mult, null, 'arc_trap', { statMult: tp.statMult });
+                if (r.hit && u.hp > 0) {
+                    if (tf.trap_stun) {
+                        stunX(tp.owner, u, tf.trap_stun, 'arc_trap');
+                        const nb = tf.trap_extra ? [arr[idx + 1], arr[idx - 1]].find(x => x && x.hp > 0) : null;
+                        if (nb) traps.push({ ...tp, idx: arr.indexOf(nb), left: 1 });
+                    } else stagger(u, tp.owner);
+                }
+                tp.left -= 1;
+                if (tp.left <= 0) { traps.splice(i, 1); i--; timeline.push({ t: r1(t), e: 'buffEnd', u: u.key, s: 'arc_trap' }); }
+            }
+        }
+
+        /** 일으키기(리저렉션) — 런당 횟수(`reviveLeft`) · 첫 쓰러진 아군(변형 2 = 전원 · HP 는 낮다 · 덤 = 줄지 않는다) · 최대 HP × 배율 */
+        function castRevive(u, x) {
+            if (!(u.reviveLeft > 0)) return;
+            const down = rt.alliesOf(u).filter(a => a.hp <= 0 && !a.summon);
+            if (!down.length) return;
+            const tf = tfOf(u);
+            u.reviveLeft -= 1;
+            const ratio = Math.min(1, x.mult) * (tf.res_all && !tf.res_all_full ? Math.min(1, tf.res_all) : 1);
+            for (const d of tf.res_all ? down : [down[0]]) rise(d, u, ratio, tf);
+        }
+        /** 쓰러진 유닛을 세운다 — 창(끝없는 것 빼고) · 경직 · 스턴 · 집중 · 배리어를 걷고 오오라 · 늘 켜짐을 다시 · 쿨은 지금부터(변형 1 = 전부 준비) · 덤 보호막 · 덤 데미지 · `rise` 이벤트 */
+        function rise(d, by, ratio, tf) {
+            for (const [id, b] of Object.entries(d.buffs)) if (b.until !== Infinity) delete d.buffs[id];
+            d.barrier = null; d.eshield = null; d.advDots = null; d.stagUntil = 0; d.stunUntil = 0; d.chan = null;
+            d.dotAcc = 0; d.ailShown = null; d.regenAcc = 0;
+            d.next = d.period; d.fillAt = t; d.charges = 0;
+            if (tf.res_fresh) { for (const a of d.actives) if (!a.off) a.readyAt = t; }
+            else restartCools(d, t);
+            const i = out.downed.indexOf(d.uid);
+            if (i >= 0) out.downed.splice(i, 1);
+            const side = d.side === 'party' ? party : units.enemies;
+            const then = [];
+            if (d.aura) castAura(d, side, then);
+            for (const a of d.passives ?? []) castStanding(d, a.def, then);
+            for (const x of side) refreshDerived(x);
+            d.hp = Math.max(1, Math.min(d.hpMax, Math.round(d.hpMax * ratio)));
+            if (tf.res_shield) d.barrier = { amt: Math.round(d.hpMax * tf.res_shield), until: t + B.advance_overheal_shield_sec, s: 'pri_resurrection' };
+            if (tf.res_power) advWin(d, 'adv:res_power', 'atk_pct', tf.res_power, t + B.advance_after_sec, { by: by.key });
+            timeline.push({ t: r1(t), e: 'rise', u: d.key, a: by.key, s: 'pri_resurrection', dhp: d.hp, hpMax: d.hpMax });
+            for (const ev of then) timeline.push({ t: r1(t), ...ev });
+        }
+
+        /** 틱마다 3b ~ 3e — 버서크 덤(문턱 아래 첫 쿨 초기화) · 의지 잔겹 빠지기 · 헌신 변형 1(아군 HP 가 낮으면 저절로) · 강신 변형 1 · 덤(재생) */
+        function advTickMore(u) {
+            // 마지막 기도(사제 마스터리 T4 ③ · `adv.last_prayer` · 2026-11-14 R437) — HP 비율이 [balance.csv:mastery_t4_prayer_hp] 아래면 라운드에 한 번 최대 HP × 값 회복
+            const lp = u.adv?.last_prayer ?? 0;
+            if (lp > 0 && !u.t4Prayed && hpRatio(u) < B.mastery_t4_prayer_hp) { u.t4Prayed = true; advHeal(u, u, u.hpMax * lp, 'pri_t4_prayer'); }
+            const tf = tfOf(u);
+            if (tf === NO_ADV && !u.advWillFade) return;
+            if (tf.berserk_reset && !u.advResetDone && hpRatio(u) < tf.berserk_reset) {
+                u.advResetDone = true;
+                for (const a of u.actives) if (a.def.id !== 'war_berserk' && !a.off && Number.isFinite(a.readyAt) && a.readyAt > t + EPS) { a.readyAt = t; cdEvent(u, a); }
+            }
+            const f = u.advWillFade;
+            if (f && t + EPS >= f.next) { f.n -= 1; f.next += f.iv; if (f.n <= 0) u.advWillFade = null; }
+            if (tf.devotion_auto && !u.advDevAuto && !stateOf(u, 'devotion') && u.stagUntil <= t + STEP_EPS && (u.stunUntil ?? 0) <= t + STEP_EPS) {
+                const a = u.actives.find(x => x.def.id === 'kni_lastbastion' && !x.off);
+                if (a && alive(rt.alliesOf(u)).some(x => x !== u && !x.summon && hpRatio(x) < tf.devotion_auto)) {
+                    u.advDevAuto = true;
+                    a.readyAt = t + cooldownSec(B, u, a.def);
+                    out.casts[a.def.id] = (out.casts[a.def.id] ?? 0) + 1;
+                    timeline.push({ t: r1(t), e: 'skill', u: u.key, s: a.def.id, ready: r1(a.readyAt), auto: true });
+                    rt.cast(u, a.def, t);
+                }
+            }
+            if (tf.descent_regen_low || tf.descent_regen_front) {
+                const dw = Object.values(u.buffs).find(b => b.s === 'war_divinedescent' && b.stat === 'regen_hp_pct');
+                if (dw) {
+                    if (tf.descent_regen_low) regenAdd(u, u.hpMax * dw.v * tf.descent_regen_low * (1 - hpRatio(u)));
+                    if (tf.descent_regen_front) for (const x of alive(rt.alliesOf(u))) if (x !== u && !x.summon && (x.rank ?? 0) === 0) regenAdd(x, x.hpMax * dw.v * tf.descent_regen_front);
+                }
+            }
+        }
+        /** 초당 재생 몫 하나를 누산해 1 이상이면 회복(`regen` 이벤트) — HP 재생과 같은 규칙 */
+        function regenAdd(x, perSec) {
+            if (!(perSec > 0) || x.hp <= 0 || x.hp >= x.hpMax) return;
+            x.advRegAcc = (x.advRegAcc ?? 0) + perSec * (1 + (x.recv ?? 0)) * TICK;
+            const whole = Math.floor(x.advRegAcc);
+            if (whole < 1) return;
+            x.advRegAcc -= whole;
+            const amt = Math.min(whole, x.hpMax - x.hp);
+            x.hp += amt;
+            timeline.push({ t: r1(t), e: 'regen', u: x.key, amt, dhp: x.hp });
         }
 
         /** 마지막 직격의 결과 — 전직 장치가 읽는다(`advHit`) · 빗나감 · 피함은 `{hit: false}` */
@@ -2434,6 +3414,18 @@ export function createBattleSystem(data) {
                     timeline.push({ t: r1(t), e: 'buffEnd', u: target.key, s: w.s ?? key });
                     refreshDerived(target);
                 }
+                afterStrike?.(false);
+                return;
+            }
+            // 날랜 발(궁수 마스터리 T4 ③ · `adv.dodge_chance` · 2026-11-14 R437 · skill_design §3-5 「새 T4」) — 상대 편 직격을 확률로(**rng 1회** — 값이 있을 때만) 피한다 ·
+            //   이베이드와 같은 모양(`evade` 이벤트 · 피해 · 경직 · 창 · 훅 · 반사 · 반격 · 집계 없음)
+            const dodge = target.adv?.dodge_chance ?? 0;
+            if (dodge > 0 && u.side !== target.side && rng() < Math.min(1, dodge)) {
+                const ev = { t: r1(t), e: 'evade', a: u.key, d: target.key, n: 0 };
+                if (s) ev.s = s;
+                if (sk?.hitIndex != null) ev.i = sk.hitIndex;
+                timeline.push(ev);
+                lastStrike = { hit: false };
                 afterStrike?.(false);
                 return;
             }
@@ -2526,22 +3518,28 @@ export function createBattleSystem(data) {
             for (const b of Object.values(u.buffs ?? {})) {
                 if (b.stat === 'final_dmg_pct' || (b.stat === 'final_phys_pct' && hitType === 'physical')) dealt *= Math.max(0, 1 + b.v);
             }
-            // 부류의 기믹(R388 · 위 `familyUp` · `familyGuard`) — 군대 · 거인은 이 자리의 원천 하나 · 수호자는 맞는 쪽 원천 하나 · 0 이면 안 건드린다
             if (u.adv?.final_dmg_bonus) dealt *= 1 + u.adv.final_dmg_bonus;   // 최종 데미지(공통 줄 크루세이더 1 · R471)
-            const famUp = u.family ? familyUp(u) : 0;
-            if (famUp) dealt *= 1 + famUp;
             if (dealt !== 1) target.dr = 1 - (1 - target.dr) * dealt;
-            const famGuard = familyGuard(target);
-            if (famGuard) target.dr = 1 - (1 - target.dr) * (1 - famGuard);
             // 고정 피해 몫(공통 줄 크루세이더 3 · `adv.fixed_dmg_share` · R471) — 그 몫은 방어 · 저항 · 피해 감소를 안 받는다(`formula.strike` 의 `fixedShare`)
             // 전직 장치의 타격 직전 몫 — 노바 · 천둥신의 분노 세지기 · 반드시 터짐 (R471) · 없으면 null
-            const am = sk ? advBefore(u, target, s, sk, hitType) : (hitType === 'lightning' && target.advFull?.[u.key] ? advBefore(u, target, s, sk, hitType) : null);
+            //   (2026-11-14 — 평타 · 맞는 쪽 몫도 같은 자리: 퀵 드로우 · 오버드로우 · 호령 창 · 의지 겹 · 끌려나온 후열 — 값이 없으면 null 이라 종전 그대로)
+            const am = advBefore(u, target, s, sk, hitType);
             if (am?.cond) u.condPct += am.cond;
             if (am?.proc) { u.procChance = 1; if (!(u.procMult > 0)) u.procMult = B.thunderstrike_proc_mult; }
-            const fs0 = u.fixedShare;
+            if (am && am.mul !== 1) target.dr = 1 - (1 - target.dr) * am.mul;   // 최종 배수(혼자 남은 적 · 셋째 평타) · 맞는 쪽 배수 — 위 `dealt` 와 같은 자리 · 아래에서 되돌린다
+            if (am?.crit) u.crit = (u.crit ?? 0) + am.crit;
+            if (am?.critDmg) u.critDmg = (u.critDmg ?? 1) + am.critDmg;
+            if (am?.pen) u.resReduction = (u.resReduction ?? 0) + am.pen;   // 위 `resRed0` 로 되돌린다
+            if (am?.di) u.defIgnore = (u.defIgnore ?? 0) + am.di;            // 시기 T4 ② 방어 무시 — 위 `defIgnore0` 으로 되돌린다
+            const fs0 = u.fixedShare, conv0 = u.conv;
             if (u.adv?.fixed_dmg_share) u.fixedShare = u.adv.fixed_dmg_share;
-            const { hit, dmg: dmg0, crit, proc } = F.strike(rng, u, target);
+            if (sk && u.adv?.skill_fixed_share) u.fixedShare = Math.min(1, (u.fixedShare ?? 0) + u.adv.skill_fixed_share);   // 꿰뚫는 비전(마법사 T4 ① · 스킬 타격만 · R437)
+            // 물리 → 원소 전환(원소 전환 오오라 · 크루세이더 (1) · `phys_conv` 창 · 2026-11-14 R471) — 물리 타격만 · 없으면 null 이라 종전 그대로(formula.strike `conv`)
+            const cv = hitType === 'physical' ? convOf(u, target) : null;
+            if (cv) u.conv = cv;
+            const { hit, dmg: dmg0, crit, proc, convProc } = F.strike(rng, u, target);
             u.fixedShare = fs0;
+            u.conv = conv0;
             // 받은 피해를 쌓아 다음 공격에(공통 줄 몽크 3 · `adv.struck_dmg_store` · R471) — 맞힌 직격에 쌓인 양을 더하고 비운다
             const dmg = hit && u.advStore > 0 ? dmg0 + Math.round(u.advStore) : dmg0;
             if (hit && u.advStore > 0) u.advStore = 0;
@@ -2589,21 +3587,30 @@ export function createBattleSystem(data) {
             const hpBefore = target.hp;
             const took = sw ? swarmTake(target, total, spread) : null;
             const shTook = shieldWas && !took ? advShieldTake(u, target, total, hitType) : 0;
-            const { absorbed: abs0 } = took ?? applyDamage(target, total - shTook);
+            // 헌신 [2026-11-14 · R471 · advance_tree_draft §5] — 같은 편 가디언이 창 동안 이 직격의 몫을 대신 받는다(가져온 몫 × (1 − 가져온 피해 감소)) · 창이 없으면 0 이라 종전 그대로
+            const dv = !took && u.side !== target.side ? devotionOf(target) : null;
+            const moved = dv ? Math.floor((total - shTook) * dv.share) : 0;
+            // 죄종 마스터리 T4 맞는 쪽 [2026-11-14] — 오만 ③ 큰 한 방의 넘친 몫 감소 · 폭식 ③ 원소 피해 일부를 회복으로 · 나태 ③(조건 동안) 일부를 나눠 받기 · 없으면 그대로
+            const tin = !took && u.side !== target.side && target.adv ? t4Incoming(u, target, total - shTook - moved, hitType) : null;
+            const intoHit = tin ? tin.into : total - shTook - moved;
+            const { absorbed: abs0 } = took ?? applyDamage(target, intoHit);
             const absorbed = abs0 + shTook;
+            if (moved > 0) advLand(u, dv.g, Math.round(moved * (1 - dv.dr)), dv.s ?? 'kni_lastbastion', hitType);
+            if (tin) t4IncomingAfter(u, target, tin);
             // 넘친 몫 [2026-10-23 · R326] — 배리어 · HP 밖으로 넘친 양(쓰러뜨린 타격에만 0 초과). 처형 판정 앞에서 잰다(처형은 남은 체력을 지울 뿐 넘치지 않는다)
             //   파리 떼는 쓰러뜨린 타격(마지막 파리)에만 그 파리 밖으로 넘친 몫 · 기여는 실제로 깎은 파리 HP 합(`took`)
-            const ov = took ? (target.hp > 0 ? 0 : took.ov) : Math.max(0, total - absorbed - hpBefore);
+            //   버티기 · 헌신(HP 1)이 쓰러짐을 막았으면(`advSave` — 피해 적용 안) 넘친 몫은 없다 (R471)
+            const ov = took ? (target.hp > 0 ? 0 : took.ov) : target.hp > 0 ? 0 : Math.max(0, intoHit - abs0 - hpBefore);
             // 일반몹 처형 [2026-10-21 · R303 · 장갑 폭식 ② · item_design §1 「10-21 방어구 개정」 — 정의는 10-08 대화] — 이 직격이 맞은 뒤 **등급 「일반」 몬스터**의 체력이
             //   최대 HP × 값 이하면 그 자리에서 쓰러뜨린다 — 남은 체력이 `ev.cull` 이고 아래 처치 판정이 그대로 센다(기여 · 처치 시 회복 · 보상).
             //   영웅(결투장 상대 포함) · 정예 · 보스 · 소환은 아니다 · 도트 · 반사 · 비직격은 안 건다 · rng 0
-            const cullR = fx?.cullNormal ?? 0;
+            const cullR = (fx?.cullNormal ?? 0) + (u.adv?.glut_cull ?? 0);   // 폭식 T4 ① 먹어 치우기 — 장비 처형과 같은 판정에 더한다 (2026-11-14)
             const cull = cullR > 0 && target.hp > 0 && target.grade === 'normal' && !target.hero && !target.summon && target.side !== u.side
                 && target.hp <= target.hpMax * cullR ? target.hp : 0;
             if (cull) target.hp = 0;
             // 기여 — **실제로 깎은 값**을 센다 [2026-10-23 · R326]: 배리어가 먹은 몫 + 깎인 HP(넘친 몫 빼고) + 처형으로 지운 체력. 관전의 누적 데미지 판과 같은 값이다
             //   (이벤트의 `dmg` 는 넘친 몫까지 그대로 — 피해 숫자 · 로그 줄)
-            const real = took ? took.took : total - ov + cull;
+            const real = took ? took.took : intoHit + shTook - ov + cull;
             const cA = credit(u), cD = credit(target);
             if (cA) cA.dealt += real;
             if (cD) cD.taken += real;
@@ -2617,16 +3624,23 @@ export function createBattleSystem(data) {
             // 흡혈 — 직격의 최종 피해에만 비례 (§9-6). 배리어가 먹은 몫도 포함한다 (직격이 들어간 사실은 같다)
             //   마스터리 조건부 흡혈(색욕 T2-3 · 2026-10-05)은 그 타격의 흡혈에 더한다
             //   도감 Lv2 흡혈(그 종족을 때릴 때 · R314)도 같은 자리다
-            const ls = spell ? 0 : (u.ls ?? 0) + (ma?.sum.life_steal ?? 0) + (cxA?.life_steal ?? 0);   // 마법 무기는 안 받는다(위 강타와 같다 · R207)
+            //   호령 변형 2(`lifesteal_pct` 창 · R471)도 같은 자리 — 덤 「넘친 몫 → 보호막」(`lsShield`)은 회복이 최대 HP 를 넘긴 몫을 배리어로
+            const ls = spell ? 0 : (u.ls ?? 0) + (ma?.sum.life_steal ?? 0) + (cxA?.life_steal ?? 0) + (am?.ls ?? 0);   // 마법 무기는 안 받는다(위 강타와 같다 · R207)
             if (ls > 0 && u.hp > 0) {
-                u.hp = Math.min(u.hpMax, u.hp + F.leech(dmg, ls, u.recv));    // 체력 회복 +% 가 흡혈에도 곱한다 (2026-09-18)
+                const got = F.leech(dmg, ls, u.recv);
+                const over = am?.ls ? got - (u.hpMax - u.hp) : 0;
+                u.hp = Math.min(u.hpMax, u.hp + got);    // 체력 회복 +% 가 흡혈에도 곱한다 (2026-09-18)
                 ev.ahp = u.hp;
+                if (over > 0 && Object.values(u.buffs).some(b => b.lsShield)) u.barrier = { amt: (u.barrier?.amt ?? 0) + over, until: t + B.advance_overheal_shield_sec, s: u.barrier?.s ?? 'war_command' };
             }
             if (s) ev.s = s;
             if (sk?.hitIndex != null) ev.i = sk.hitIndex;
             if (proc) ev.proc = true;                        // 추가 피해가 **터진 타격만** 키가 선다 (INTERFACE §2-6)
             if (shield) ev.bar = shield.amt;                // 흡수 후 잔량
             timeline.push(ev);
+            // 색욕 T4 ① 드러난 심장(2026-11-14) — 조건(상대 HP 가 높다)을 채운 적에게 치명이 터지면 잠깐 받는 피해 증가
+            if (crit && u.adv?.lust_crit_vuln && target.hp > 0 && !target.summon && t4On(u, target))
+                advWin(target, `m4:lust@${u.key}`, 'dr_pct', -u.adv.lust_crit_vuln, t + B.mastery_t4_lust_sec, { by: u.key, foe: true });
             // 프렌지 겹 [2026-10-16 · R246] — 적중할 때마다 겹 +1(상한 [balance.csv:frenzy_stack_max]) · 주기는 다음 차례 예약부터 바뀐다. 창이 없으면 아무 일도 없다 · rng 0
             const fz = u.hp > 0 ? stateOf(u, 'frenzy') : null;
             if (fz && (fz[1].n ?? 0) < B.frenzy_stack_max) {
@@ -2661,7 +3675,7 @@ export function createBattleSystem(data) {
             if (sk && hitType === 'cold' && sk.onHit?.ailment !== 'freeze' && BASE_FREEZE && target.hp > 0 && !target.summon) rt.applyStatus(u, target, { ...BASE_FREEZE, id: s ?? BASE_FREEZE.status }, t);
             // 원소 보호막을 평타로 친 적은 결빙(프로스트 아머 · R471) — 그 보호막 시전자가 건다 · 기본 공격(`sk` 없음)만
             if (!sk && shieldWas && BASE_FREEZE && u.hp > 0 && !u.summon) rt.applyStatus(shieldWas.owner ?? target, u, { ...BASE_FREEZE, id: 'mag_frostarmor' }, t);
-            advAfterHit(u, target, s, sk, hitType, total, proc);
+            advAfterHit(u, target, s, sk, hitType, total, proc, cv, convProc, real);
             // 원소 부여 [2026-10-16 · R250 · 이그나이트 · 딥 프리즈 · 서지] — **스킬 타격**의 원소가 창의 원소와 같으면 창이 든 상태이상(`hit`)을 건다.
             //   창마다 삽입 순서 · 확률이 1 이면 굴리지 않는다 · 1 미만이면 **rng 1회**(INTERFACE §5-2). 결빙은 같은 열쇠라 센 쪽(나중 것)이 덮는다
             //   **`shatter`**(딥 프리즈 · 2026-10-29 · R385 · battle_design §2-4) — 같은 자리 · 같은 순서에서 **이 타격 전에 결빙돼 있던** 대상에게만 창이 든 상태이상(스턴)을 건다 ·
@@ -2710,12 +3724,16 @@ export function createBattleSystem(data) {
                 noteTaken(u, src, back - bov);
                 if (u.hp <= 0) { if (cS && u.side !== 'party' && !u.rewarded) cS.kills += 1; killHeal(src, u); downed(u); }
             }
+            // 전직 장치의 맞은 뒤 [2026-11-14 · R471] — 의지 겹 · 신성한 심판 · 속죄 회복 · 사냥 표식 번짐 · 몽크 반격 · 지원 사격 반격 사격(반격 중엔 안 한다) · 장치가 없으면 아무 일도 없다
+            if (u.side !== target.side) advStruck(u, target, s, sk, dmg, real);
             if (target.hp <= 0) {
                 // **적을 쓰러뜨린 것**만 센다 — 적의 소환 벽은 몬스터가 아니다 (R79) · 되살아난 무리의 두 번째 쓰러짐도 처치가 아니다(보상과 같은 규칙 · 2026-09-18)
                 if (cA && target.side !== 'party' && !target.summon && !target.rewarded) cA.kills += 1;
                 killHeal(u, target);
                 downed(target);
                 hooks.emit('kill', u, { t, d: target });
+                // 처치 뒤 전직 장치 — 재장전 · 넘김(동귀어진 · 토르의 분노 · 단죄) · 창 연장 · 표식 · 저주 옮기기 · 연쇄 평타 · 터짐 (R471)
+                if (u.side !== target.side) advKill(u, target, s, sk, ov, total);
             }
             /*
              * 반격 [2026-09-18 · 사용자 확정 · **개정 2026-11-02 · R426** · item_design §1 「투구 옵션」 · INTERFACE §2-6 「반격」] — 맞은 쪽이 확률로 **그 자리에서 때린 적에게 기본 공격 1회**를 덤으로 친다.
@@ -2919,6 +3937,12 @@ export function createBattleSystem(data) {
                 if (curseAt !== null && t + STEP_EPS >= curseAt) { curseCast(); curseAt += curse.intervalSec; }
                 // 조건부 쿨감 [2026-10-05 · 2026-11-12 · R468 죄종 T3 — 나태 라운드 시작 창 · 시기 HP 비교] — 행동 **앞**에서 그 틱의 조건으로 `cdr` 를 되쓴다(시전 순간 `cooldownSec` 이 읽는다). 틱 줄이 없는 유닛은 안 건드린다 · rng 0
                 for (const u of [...party, ...units.enemies]) if (u.mtime) u.cdr = u.cdrBase + timeSum(u, 'cooldown_reduction');
+                // 나태 T4 ② 한가한 시간 [2026-11-14] — 든 영웅의 조건(라운드 초반) 동안 같은 편 전원 쿨감 +값 · 든 유닛이 없으면 아무것도 안 한다 · rng 0
+                for (const side of [party, units.enemies]) {
+                    let sb = 0;
+                    for (const x of side) if (x.hp > 0 && x.adv?.sloth_party_cdr && t4On(x, null)) sb += x.adv.sloth_party_cdr;
+                    for (const x of side) if (sb || x.t4cdr) { x.cdr = (x.mtime ? x.cdrBase + timeSum(x, 'cooldown_reduction') : x.cdrBase) + sb; x.t4cdr = sb; }
+                }
                 // 중독 틱 — 창 만료 **뒤** · 재생 **앞** (2026-09-28 · R178 · INTERFACE §5-2). 앞 유닛의 틱이 쓰러뜨려도 배열은 그대로 돈다
                 for (const u of [...party, ...units.enemies]) if (u.hp > 0) poisonTick(u);
                 // 오오라 피해 틱 — 중독 틱 **뒤** · 재생 **앞** (홀리 파이어 · 2026-10-16 · R249 · INTERFACE §5-2). 창이 없으면 누산만 비운다

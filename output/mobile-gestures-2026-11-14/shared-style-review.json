@@ -1,0 +1,24 @@
+{
+  "at": "2026-11-14T13:40:28.633408+00:00",
+  "scope": "Follow-up to concurrent ADR-1141: research gauge font weight changed after broad acceptance. Final wide/preview audits also use this stylesheet.",
+  "source_sha256": "88bd2de1edf44ba2fc44df3ca062d1bbc3193fd8e7144400b75f47ad0affaf64",
+  "checks": [
+    {
+      "name": "390x844-gauge-regular-weight",
+      "ok": true
+    },
+    {
+      "name": "390x844-production-page-fits",
+      "ok": true
+    },
+    {
+      "name": "568x320-gauge-regular-weight",
+      "ok": true
+    },
+    {
+      "name": "568x320-production-page-fits",
+      "ok": true
+    }
+  ],
+  "errors": []
+}

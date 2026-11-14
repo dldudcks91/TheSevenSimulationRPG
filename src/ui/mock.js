@@ -239,6 +239,44 @@ export const MASTERY_LABELS = {
     // 직업 T1-2 초 단위 칸 (2026-11-09 · R432 · skill_design §3-4) — 값은 초 · 문장은 `sk.masteryEffect.<stat>` 이 단위를 든다
     cool_minus_sec: { ko: '쿨타임 감소', en: 'Cooldown Reduction', fmt: 'n' },
     period_minus_sec: { ko: '공격 속도', en: 'Attack Speed', fmt: 'n' },
+    // 직업 마스터리 T4 (2026-11-14 · R437) — 문장은 `sk.masteryEffect.<stat>` 이 든다 · 여기는 이름 · 단위
+    basic_cleave: { ko: '평타 튐', en: 'Basic Cleave', fmt: 'pct' },
+    skill_repeat_chance: { ko: '스킬 한 번 더', en: 'Skill Repeat', fmt: 'pct' },
+    elem_to_phys: { ko: '원소 → 물리', en: 'Elemental to Physical', fmt: 'pct' },
+    hit_stun_chance: { ko: '타격 스턴', en: 'Stun on Hit', fmt: 'pct' },
+    aura_guard_share: { ko: '대신 받기', en: 'Guard Share', fmt: 'pct' },
+    crit_taken_cut: { ko: '받는 치명 감소', en: 'Crit Damage Taken', fmt: 'pct' },
+    skill_fixed_share: { ko: '고정 피해 몫', en: 'Fixed Damage Share', fmt: 'pct' },
+    cast_refill_chance: { ko: '시전 칸 충전', en: 'Charge Refill', fmt: 'pct' },
+    round_barrier: { ko: '라운드 보호막', en: 'Round Shield', fmt: 'pct' },
+    sin_vuln: { ko: '받는 피해 증가', en: 'Damage Taken Up', fmt: 'pct' },
+    overheal_shield: { ko: '넘친 회복 보호막', en: 'Overheal Shield', fmt: 'pct' },
+    last_prayer: { ko: '마지막 기도', en: 'Last Prayer', fmt: 'pct' },
+    extra_shot_chance: { ko: '한 발 더', en: 'Extra Shot', fmt: 'pct' },
+    basic_cd_tick: { ko: '평타 쿨 감소', en: 'Cooldown per Attack', fmt: 'n' },
+    dodge_chance: { ko: '회피', en: 'Dodge', fmt: 'pct' },
+    // 죄종 마스터리 T4 (2026-11-14)
+    wrath_blood: { ko: '피의 대가', en: 'Blood Price', fmt: 'pct' },
+    wrath_party_crit: { ko: '파티 치명', en: 'Party Crit', fmt: 'pct' },
+    wrath_steady: { ko: '받는 스턴 · 경직 감소', en: 'Stun Resist', fmt: 'pct' },
+    envy_strip: { ko: '버프 지우기', en: 'Buff Removal', fmt: 'pct' },
+    envy_party_pierce: { ko: '파티 방어 무시', en: 'Party Defense Ignore', fmt: 'pct' },
+    envy_return: { ko: '디버프 되돌리기', en: 'Debuff Return', fmt: 'pct' },
+    greed_mark: { ko: '표식 대상 데미지', en: 'Mark Damage', fmt: 'pct' },
+    greed_reroll: { ko: '드롭 다시 굴리기', en: 'Drop Reroll', fmt: 'pct' },
+    greed_barrier: { ko: '황금 보호막', en: 'Golden Ward', fmt: 'pct' },
+    sloth_heavy: { ko: '무거운 한 방', en: 'Heavy Hit', fmt: 'pct' },
+    sloth_party_cdr: { ko: '파티 쿨타임 감소', en: 'Party Cooldown', fmt: 'pct' },
+    sloth_defer: { ko: '나눠 받기', en: 'Deferred Damage', fmt: 'pct' },
+    glut_cull: { ko: '처형 문턱', en: 'Execute Threshold', fmt: 'pct' },
+    glut_party_dmg: { ko: '파티 데미지', en: 'Party Damage', fmt: 'pct' },
+    glut_absorb: { ko: '원소 흡수', en: 'Elemental Absorb', fmt: 'pct' },
+    lust_crit_vuln: { ko: '받는 피해 증가', en: 'Damage Taken Up', fmt: 'pct' },
+    lust_share_heal: { ko: '회복 나누기', en: 'Heal Share', fmt: 'pct' },
+    lust_charm: { ko: '홀리기', en: 'Beguile', fmt: 'pct' },
+    pride_nth: { ko: '확정 치명 간격', en: 'Sure Crit Interval', fmt: 'n' },
+    pride_party_haste: { ko: '파티 속도', en: 'Party Speed', fmt: 'pct' },
+    pride_cap: { ko: '큰 한 방 감소', en: 'Big Hit Reduction', fmt: 'pct' },
 };
 
 /** 전투가 아직 안 읽는 옵션인가 — 툴팁의 「(미적용)」 표지 (SCREEN_DESIGN §6 · ADR-0213). 판정은 사전의 고정 표지다 — 렌더러가 계산하지 않는다 */
@@ -388,8 +426,18 @@ export const PAPERDOLL_SEAL = [0, 0];
    2026-11-12 사용자 지시로 넷 더 — knight_8 살라딘 · mage_5 하데스 · archer_3 주몽 · archer_4 아마존
    (knight 7 → 8 · mage 4 → 5 · archer 2 → 4). 늘리는 방향이다. 같은 날 archer_5 아르테미스 하나 더 (archer 4 → 5).
    ⚠ **드디어 직업 대응이다** — 영웅은 제 직업 풀에서만 굴리므로 궁수 얼굴이 전사에게 가지 않는다.
-   풀이 0장인 직업(지금은 확장 직업만)은 `face = null` 이고 화면은 **빈 칸**으로 둔다 (자리표시를 안 깐다). */
-export const HERO_FACES = { warrior: 5, knight: 8, mage: 5, archer: 5, priest: 5 };
+   풀이 0장인 직업(지금은 확장 직업만)은 `face = null` 이고 화면은 **빈 칸**으로 둔다 (자리표시를 안 깐다).
+   2026-11-14 사용자 지시로 **장수 → 번호 목록** — 「기사 캐릭터 2,3,4 전부 쓰지 말아줘 삭제는 하지 말고」.
+   knight_2 · 3 · 4 는 파일이 폴더에 남지만 목록에 없어 안 굴리고 도감에도 안 선다. 이미 박힌 영웅은 `heroFace` 가 목록 안으로 접는다
+   (knight_2 → 5 · 3 → 6 · 4 → 7 — 세이브 값은 그대로라 목록에 되돌리면 제 얼굴로 돌아온다).
+   목록이 `[1..n]` 인 직업은 옛 장수 n 과 같은 시드 = 같은 얼굴이다(`hero.js:rollFace`). */
+export const HERO_FACES = {
+    warrior: [1, 2, 3, 4, 5],
+    knight: [1, 5, 6, 7, 8],      // 2 · 3 · 4 안 씀 (2026-11-14 · 파일은 남긴다)
+    mage: [1, 2, 3, 4, 5],
+    archer: [1, 2, 3, 4, 5],
+    priest: [1, 2, 3, 4, 5],
+};
 
 /**
  * 초상 이름 — `'<직업id>_<k>'` → `{ko, en}` (2026-09-10 사용자 지시 · ADR-0081).
@@ -419,6 +467,7 @@ export const HERO_FACE_NAMES = {
     mage_3: { ko: '오딘', en: 'Odin' },                    // 붕대로 한 눈을 가린 후드 노인 (11-11)
     mage_4: { ko: '제우스', en: 'Zeus' },                  // 헝클어진 흰 장발 · 긴 수염 · 노한 얼굴 · 손가의 불티 (11-11 · 11-12 다시 그림)
     mage_5: { ko: '하데스', en: 'Hades' },                 // 창백한 대머리 · 늘어진 흰 머리 · 검은 로브 (11-12)
+    archer_1: { ko: '로빈 후드', en: 'Robin Hood' },       // 검은 후드 · 화살통 (11-14 이름 — 후보 표 `archer_1`)
     archer_2: { ko: '빌헬름 텔', en: 'William Tell' },     // 머리띠 · 모피 · 어깨에 멘 석궁 (11-11)
     archer_3: { ko: '주몽', en: 'Jumong' },                // 상투 · 늑대 가죽 머리쓰개 · 등에 멘 활 · 녹슨 갑주 (11-12)
     archer_4: { ko: '아마존', en: 'Amazon' },              // 헝클어진 장발 · 뼈 장식 · 얼굴 칠 · 모피 (11-12)
@@ -428,7 +477,7 @@ export const HERO_FACE_NAMES = {
     priest_1: { ko: '베네딕토', en: 'Benedict' },          // 반삭 · 검은 수단 · 금 십자가 (10-20 이름)
     priest_2: { ko: '멀린', en: 'Merlin' },                // 올리브 후드 · 룬 문신 노인 (10-20 이름)
     priest_5: { ko: '노스트라다무스', en: 'Nostradamus' }, // 황도 기호 로브 노인 (10-21 마법사 mage_3 → 사제)
-    // knight_2 · knight_3 · knight_4 는 이름 없이 번호로 둔다 (2026-09-10 사용자 지시 — 「나중에 안 쓸 듯」)
+    // knight_2 · knight_3 · knight_4 는 이름이 없다 — 2026-11-14 부터 `HERO_FACES` 목록에서도 빠졌다(파일만 남는다)
 };
 /** 표시용 안정 해시(FNV-1a + 마무리 섞기) — 같은 문자열이면 언제나 같은 수. **game_logic 의 rng 와 무관하다**(결정론 계약 밖).
  *
@@ -453,9 +502,10 @@ export const heroFace = hero => {
     if (/^goblin_[a-z]+$/.test(id)) return facePath(`hero/${id}.webp`);   // 고블린 다섯 종 — 직업 풀 밖 · id 가 곧 파일 (2026-10-27)
     const i = id.lastIndexOf('_');
     const cls = id.slice(0, i), k = Math.floor(+id.slice(i + 1));
-    const m = HERO_FACES[cls] ?? 0;
-    if (!(m >= 1) || !(k >= 1)) return null;
-    return facePath(`hero/${cls}_${1 + (k - 1) % m}.webp`);   // 장수를 줄여 범위를 넘은 저장값은 접는다 (기존 규칙 유지)
+    const pool = HERO_FACES[cls] ?? [];
+    if (!pool.length || !(k >= 1)) return null;
+    // 목록에 없는 저장값(줄였거나 뺀 번호)은 목록 안으로 접는다 — 목록이 [1..n] 이면 옛 `1 + (k-1) % n` 과 같다
+    return facePath(`hero/${cls}_${pool.includes(k) ? k : pool[(k - 1) % pool.length]}.webp`);
 };
 
 /**
@@ -496,16 +546,21 @@ export const SKILL_ICON_FILES = [
     'pri_penitence', 'pri_bind', 'pri_haste', 'pri_doom', 'pri_summon',
     // 전직 스킬 — 행이 섰다(2026-09-28 · R16). 그림은 **투톤**(회백 실루엣 + 효과 강조색 하나 · ADR-0401) — 다섯 직업 45 전부(궁수 9 는 2026-10-09)
     //   · `arc_quickdraw` 는 2026-10-16 궁수 기본 스킬로 내려왔다(R247) — 그림은 전직 투톤 그대로 둔다
+    //   · 새 전직 스킬 열(강신 · 클렌징 · 공세 오오라 · 원소 전환 · 낙하 검격 · 불씨 · 프로스트 아머 · 천둥신의 분노 · 버티기 · 정화)은 2026-11-14 Codex 투톤
+    //     (`icons_source/mastery/advance/source/tree_20261114/` · art/README)
     'war_ragnarok', 'war_berserk', 'war_mutualruin', 'war_whirlwind', 'war_thorswrath', 'war_shockwave',
-    'war_command', 'war_intimidate',   // 옛 사자후(`war_lionsroar`)는 2026-11-12 행이 지워져 뺐다 · 강신(`war_divinedescent`)은 그림이 아직 없다(R425)
+    'war_command', 'war_intimidate', 'war_divinedescent',   // 옛 사자후(`war_lionsroar`)는 2026-11-12 행이 지워져 뺐다
     'kni_lastbastion', 'kni_unbreakablewill', 'kni_divinejudgment', 'kni_unyieldingoath', 'kni_holywar', 'kni_vow',
     'kni_retribution', 'kni_condemnation', 'kni_showdown',
+    'kni_cleansing', 'kni_offenseaura', 'kni_elemconvert', 'kni_fallingstrike',
     'arc_trueaim', 'arc_singlestrike', 'arc_reload', 'arc_quickdraw', 'arc_fulldraw', 'arc_chaindraw',
     'arc_huntersmark', 'arc_supportingfire', 'arc_trap',
     'mag_meteor', 'mag_firewall', 'mag_hydra', 'mag_frozenorb', 'mag_blizzard', 'mag_frostburst',
     'mag_thunderstrike', 'mag_nova', 'mag_staticfield',
+    'mag_ember', 'mag_frostarmor', 'mag_thundergod',
     'pri_aegis', 'pri_benediction', 'pri_resurrection', 'pri_punishment', 'pri_atonement', 'pri_excommunication',
     'pri_diamondbody', 'pri_sweep', 'pri_counter',
+    'pri_endure', 'pri_purify',
     // 몬스터 전용 — 헬파이어(1-5 사탄 · 정신 집중 · 2026-10-22 Codex 단색 · 기본 스킬과 같은 연한 회청색 실루엣) · 자폭은 쥔 몬스터가 없어 그림도 없다
     'mon_hellfire',
     // 장 보스 고유 넷(2026-10-29 · R380 · Codex 단색 · art/README) — 레비아탄 · 맘몬 · 벨페고르(오오라라 원 배지) · 바알제붑
@@ -562,6 +617,8 @@ export const POTION_SLOT_ART = `${POTION_ART_DIR}slot${ICON_EXT}`;
 export const CLEAR_BOX_ART = `./assets/art/icons/items/box/clear_box${ICON_EXT}`;
 export const MAIL_ART = `./assets/art/icons/mail/mail${ICON_EXT}`;
 export const BELL_ART = `./assets/art/icons/mail/bell${ICON_EXT}`;
+/** 편성 탭 진형 칸의 리더 버튼 그림 — 흰 왕관 실루엣 · 화면이 색 마스크로 칠한다 (SCREEN_DESIGN §15 · ADR-1132) */
+export const LEADER_ART = `./assets/art/icons/party/leader${ICON_EXT}`;
 /** 왼쪽 탭 아이콘 — 탭 id 마다 백색 실루엣 한 장 · 화면이 이름 글자색으로 칠한다 (SCREEN_DESIGN §1 · ADR-1028) */
 export const NAV_ICON = id => `./assets/art/icons/nav/${id}${ICON_EXT}`;
 /** 관전의 파티 공통 효과 — 기본 스킬과 같은 흰색 실루엣 세 장. */
@@ -762,35 +819,32 @@ export const duelBg = tierId => BG_DIR + `illustrate/background_duel_${tierId}.w
  *
  * ⚠ 위 넷과 달리 **계승이 아니라 신규 아트**다 — 같은 폴더에 섞여 있을 뿐이고, **픽셀아트가 아니다.**
  *   `image-rendering: pixelated` 를 걸면 뭉갠다 (`.ex-map` 이 안 거는 이유 — style.css).
- * 잠긴 구간 = **미리 구운 「빛 바랜 땅」 조각**(`explore_world_locked/<챕터 id>.webp` · 그 장의 땅만 알파 · 구간 크기로 잘랐다) — 땅만 덮고 바다는 안 덮는다.
- *   `scripts/build_explore_locked.py` 가 그림 + 마스크(`explore_world_mask/<챕터 id>.png` — `build_explore_masks.py` 가 짓는다)로 굽는다 — **그림 · 마스크를 바꾸면 다시 돌린다**.
+ * 잠긴 구간 = **미리 구운 「빛 바랜 땅」 조각**(`explore_world_muted_locked/<챕터 id>.webp` · 그 장의 땅만 알파 · 구간 크기로 잘랐다) — 땅만 덮고 바다는 안 덮는다.
+ *   `scripts/build_explore_locked.py` 가 그림 + 마스크(`explore_world_muted_mask/<챕터 id>.png` — `build_explore_masks.py --muted` 가 짓는다)로 굽는다 — **그림 · 마스크를 바꾸면 다시 돌린다**.
  *   실행 중에 필터 · 마스크를 안 돌린다 [2026-10-09 — 지도 전체에 거는 필터 + 1536×714 마스크 여러 장은 탭을 열 때마다 큰 층을 다시 구워 늦게 켜졌다].
  * `EXPLORE_REGIONS` = 챕터 id → 자물쇠 자리 `at` · **지점 아이콘 자리 `spots`**(그림 속 동굴 · 폐허 · 마차) · **잠긴 조각 자리 `tile`**(`[x, y, w, h]` — 굽는 스크립트가 찍는 값) — 셋 다 그림 크기 대비 % ·
  *   **아이콘 테두리 색 `ring`**(그 땅의 바탕색 — 2026-10-09 사용자 「테두리를 각 배경에 맞는 색으로」 · ADR-0553). 목록에 있는 챕터만 구간을 갖는다.
  *   **그림을 바꾸면 `at` · `spots` · `ring` · `tile` 을 같이 다시 잡는다.**
  */
-export const EXPLORE_WORLD_MAP = BG_DIR + 'explore_world.webp';
+export const EXPLORE_WORLD_MAP = BG_DIR + 'explore_world_muted.webp';
 export const EXPLORE_WORLD_SIZE = [1536, 714];
-export const exploreLocked = ch => BG_DIR + `explore_world_locked/${ch}.webp`;
+export const exploreLocked = ch => BG_DIR + `explore_world_muted_locked/${ch}.webp`;
 export const EXPLORE_REGIONS = {
-    1: { at: [11, 62], ring: '#c4432e', tile: [0.00, 34.87, 24.41, 57.70], spots: { cave: [3.9, 44.5], ruins: [13.3, 49.7], caravan: [11.2, 57.1] } },
-    2: { at: [17, 18], ring: '#4f8a34', tile: [0.00, 2.80, 34.51, 48.60], spots: { cave: [2.9, 28.7], ruins: [21.2, 33.2], caravan: [14.5, 36.0] } },
-    3: { at: [38, 66], ring: '#e3ad3c', tile: [20.18, 35.01, 35.55, 60.50], spots: { cave: [28.6, 69.3], ruins: [47.9, 73.5], caravan: [43.3, 80.3] } },
-    4: { at: [47, 26], ring: '#9cc8e6', tile: [31.84, 2.52, 32.81, 56.02], spots: { cave: [35.8, 29.8], ruins: [57.3, 40.6], caravan: [42.3, 37.8] } },
-    5: { at: [68, 72], ring: '#5f5f6b', tile: [51.11, 49.44, 33.40, 44.68], spots: { cave: [56.6, 60.2], ruins: [78.1, 72.1], caravan: [61.5, 72.1] } },
-    6: { at: [72, 30], ring: '#7a4ca0', tile: [61.00, 2.38, 27.15, 56.72], spots: { cave: [67.7, 31.5], ruins: [80.7, 41.3], caravan: [73.9, 39.2] } },
-    7: { at: [91, 58], ring: '#dfe5ec', tile: [81.97, 1.40, 18.03, 94.12], spots: { cave: [89.5, 47.6], ruins: [91.5, 58.5], caravan: [89.8, 66.9] } },
+    1: { at: [11, 62], ring: '#c4432e', tile: [0.00, 34.87, 24.48, 57.00], spots: { cave: [4.1, 45.2], ruins: [13.5, 50.3], caravan: [11.3, 57.8] } },
+    2: { at: [17, 18], ring: '#4f8a34', tile: [0.00, 1.82, 33.92, 49.30], spots: { cave: [2.9, 30.1], ruins: [21.5, 33.8], caravan: [14.6, 36.4] } },
+    3: { at: [38, 66], ring: '#e3ad3c', tile: [20.64, 36.27, 34.38, 58.40], spots: { cave: [28.9, 71.1], ruins: [47.8, 75.2], caravan: [43.4, 80.8] } },
+    4: { at: [47, 26], ring: '#9cc8e6', tile: [29.10, 1.96, 35.42, 55.32], spots: { cave: [36.3, 31.1], ruins: [57.4, 41.5], caravan: [42.3, 38.2] } },
+    5: { at: [68, 72], ring: '#5f5f6b', tile: [51.11, 48.74, 33.53, 44.68], spots: { cave: [57.0, 62.2], ruins: [78.0, 73.1], caravan: [61.3, 72.5] } },
+    6: { at: [72, 30], ring: '#7a4ca0', tile: [61.26, 1.96, 25.85, 53.50], spots: { cave: [67.9, 32.5], ruins: [81.1, 42.0], caravan: [74.2, 38.9] } },
+    7: { at: [91, 58], ring: '#dfe5ec', tile: [81.12, 0.84, 18.88, 94.54], spots: { cave: [90.2, 48.5], ruins: [92.4, 59.7], caravan: [89.7, 67.4] } },
 };
 /** 탐험 지점 아이콘 — `src/assets/art/icons/explore/<지점>.webp` · **테두리 없는 그림 원판**(테두리는 화면이 땅 색으로 두른다 · ADR-0553) */
 export const EXPLORE_ICON_DIR = './assets/art/icons/explore/';
 export const exploreIcon = spot => EXPLORE_ICON_DIR + spot + ICON_EXT;
-/** 연구소 줄 아이콘 — `src/assets/art/icons/lab/<줄 id>.webp`(`mine` · `gather` · `log`) · 탐험 지점 아이콘과 같은 둥근 그림 원판(Codex · ADR-0669) */
+/** 연구소 지점 아이콘 — `src/assets/art/icons/lab/node/<지점 id>.webp`(`lab_node.csv:node`) · 회색 단색 실루엣(마스터리 아이콘과 같은 그림체) · 같은 지점은 줄이 달라도 같은 그림 (2026-10-21 · ADR-0684 · 전부 다시 그림 2026-11-14 ADR-1114).
+ *  줄 그림은 이 폴더가 아니라 그 줄을 여는 건물의 건설 그림이다(`app.js:LAB_LINES` 의 `art`) */
 export const LAB_ICON_DIR = './assets/art/icons/lab/';
-export const labIcon = post => LAB_ICON_DIR + post + ICON_EXT;
-/** 연구소 지점 아이콘 — `src/assets/art/icons/lab/node/<지점 id>.webp` · 회색 단색 실루엣(마스터리 아이콘과 같은 그림체) · 같은 지점은 줄이 달라도 같은 그림 (2026-10-21 · ADR-0684 · R298).
- *  ⚠ 「자원」 줄의 채광 · 채집 · 벌목 지점은 실루엣이 아직 없어 **옛 줄 그림**(`icons/lab/<지점>` — 색 원판)을 빌린다 (2026-10-25 · ADR-0788) */
-const LAB_NODE_BORROW = ['mine', 'gather', 'log'];
-export const labNodeIcon = node => (LAB_NODE_BORROW.includes(node) ? labIcon(node) : `${LAB_ICON_DIR}node/${node}${ICON_EXT}`);
+export const labNodeIcon = node => `${LAB_ICON_DIR}node/${node}${ICON_EXT}`;
 
 /**
  * 몬스터 얼굴 — `src/assets/art/faces/<스타일>/monster/<idx>.webp` · 영웅 초상은 같은 스타일 폴더의 `hero/<직업id>_<k>.webp`.
@@ -956,6 +1010,9 @@ export const BUILDING_IMAGES = ['command', 'forge', 'tavern', 'shop', 'resource'
 /** 그림 파일 이름이 건물 id 와 다른 건물 — 도서관은 옛 도감 건물 그림을 쓴다 (2026-10-24 사용자 지시 「그림은 도감그림을 쓰도록」 · ADR-0762) */
 export const BUILDING_IMG_FILE = { library: 'codex' };
 export const buildingImg = id => (BUILDING_IMAGES.includes(id) ? `${BUILDING_IMG_DIR}${BUILDING_IMG_FILE[id] ?? id}.webp` : null);
+/** 작은 자리용 건물 그림 — 미리 줄인 사본(`buildings/thumb/<그림>_<kind>.webp` · `scripts/build_building_thumbs.py`).
+ *  `sq` 88 네모(연구소 줄 카드) · `wide` 240×160(연구소 줄 머리). 큰 그림을 브라우저가 한 번에 열 배 넘게 줄이면 점이 깨진다 (2026-11-14 · ADR-1114) */
+export const buildingThumb = (id, kind) => (BUILDING_IMAGES.includes(id) ? `${BUILDING_IMG_DIR}thumb/${BUILDING_IMG_FILE[id] ?? id}_${kind}.webp` : null);
 
 /**
  * 재료 아이콘 — 연구소 「이 줄」 · 창고 재료 탭 · 비용 칸의 재료 그림 (SCREEN_DESIGN §8 · §6 · ADR-0377 · ADR-0789) · 키 = 재료 id (`lab_material.csv:material_id`).

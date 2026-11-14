@@ -92,25 +92,27 @@ mag_frostarmor,1,apply,-,0,0,0,0,0,-,mag_frostarmor,effect_value,int,0,duration_
 mag_thunderstrike,1,apply,-,0,0,0,0,0,-,mag_thunderstrike,effect_value,int,0,-,-,0,-,-,0,effect_value,0.24,늘 켜짐 — 벼락 배율 · 크기 = 데미지 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft §3,-,-
 mag_nova,1,hit,-,1,0.7,0,0.1,1.5,lightning,-,mult_pct,int,0,-,-,0,-,-,0,cool_sec,-0.7,-,-,-
 mag_thundergod,1,hit,-,1,1.4,0,0.2,2,lightning,-,mult_pct,int,0,proc_mult_pct,luck,0,-,-,0,mult_pct,0.14,벼락 한 방 · 타수는 시전 순간 쌓인 칸 수(spend) · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
-arc_trueaim,1,apply,-,0,0,0,0,0,-,arc_trueaim,effect_value,agi,0,duration_sec,vit,0,-,-,0,effect_value,0.04,-,-,-
+arc_trueaim,1,apply,-,0,0,0,0,0,-,arc_trueaim,effect_value,agi,0,duration_sec,vit,0,-,-,0,effect_value,0.04,스나이프 데미지 % · 크기 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+arc_trueaim,2,apply,-,0,0,0,0,0,-,arc_trueaim_slow,duration_sec,vit,0,-,-,0,-,-,0,-,-,공격 속도 감소 · 변형 1 이 줄인다(skill.js advShape) · 레벨 없음 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
 arc_singlestrike,1,hit,-,1,4.5,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.45,-,-,-
-arc_reload,1,apply,-,0,0,0,0,0,-,arc_reload,effect_value,agi,0,duration_sec,vit,0,-,-,0,duration_sec,0.8,-,-,-
+arc_reload,1,apply,-,0,0,0,0,0,-,arc_reload,effect_value,agi,0,-,-,0,-,-,0,effect_value,0.4,라운드당 초기화 상한(내림) · 크기 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
 arc_quickhands,1,apply,-,0,0,0,0,0,-,arc_quickhands,effect_value,agi,0,duration_sec,vit,0,-,-,0,effect_value,0.02,-,-,-
 arc_eagleeye,1,apply,-,0,0,0,0,0,-,arc_eagleeye,effect_value,str,0,duration_sec,vit,0,-,-,0,effect_value,0.02,-,-,-
-arc_quickdraw,1,apply,-,0,0,0,0,0,-,arc_quickdraw,duration_sec,vit,0,-,-,0,-,-,0,duration_sec,1,-,-,-
-arc_quickdraw,2,apply,-,0,0,0,0,0,-,arc_quickdraw_weak,duration_sec,vit,0,-,-,0,-,-,0,duration_sec,1,두 창이 함께 끝난다 — 레벨도 둘 다 시간,-,-
-arc_overdraw,1,apply,-,0,0,0,0,0,-,arc_overdraw,duration_sec,vit,0,-,-,0,-,-,0,duration_sec,1,-,-,-
-arc_overdraw,2,apply,-,0,0,0,0,0,-,arc_overdraw_power,duration_sec,vit,0,-,-,0,-,-,0,duration_sec,1,두 창이 함께 끝난다 — 레벨도 둘 다 시간,-,-
-arc_chaindraw,1,apply,-,0,0,0,0,0,-,arc_chaindraw,effect_value,agi,0,duration_sec,vit,0,-,-,0,duration_sec,1,-,-,-
-arc_huntersmark,1,apply,-,0,0,0,0,0,-,arc_huntersmark,effect_value,cha,0,duration_sec,vit,0,-,-,0,effect_value,0.02,-,-,-
-arc_supportingfire,1,apply,-,0,0,0,0,0,-,arc_supportingfire,effect_value,ldr,0,duration_sec,vit,0,-,-,0,duration_sec,1,-,-,-
+arc_quickdraw,1,apply,-,0,0,0,0,0,-,arc_quickdraw,duration_sec,vit,0,-,-,0,-,-,0,effect_value,-0.02,크기 = 고정 주기가 더 짧다(무기 주기 × 값) · 지속은 안 오른다 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+arc_quickdraw,2,apply,-,0,0,0,0,0,-,arc_quickdraw_weak,duration_sec,vit,0,-,-,0,-,-,0,-,-,평타 피해 감소 · 레벨 없음 · 2026-11-14 R471 · advance_tree_draft,-,-
+arc_overdraw,1,apply,-,0,0,0,0,0,-,arc_overdraw,duration_sec,vit,0,-,-,0,-,-,0,-,-,주기 고정 · 레벨 없음 · 2026-11-14 R471 · advance_tree_draft,-,-
+arc_overdraw,2,apply,-,0,0,0,0,0,-,arc_overdraw_power,duration_sec,vit,0,-,-,0,-,-,0,effect_value,0.07,크기 = 평타 피해 증가 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+arc_chaindraw,1,apply,-,0,0,0,0,0,-,arc_chaindraw,effect_value,agi,0,duration_sec,vit,0,-,-,0,effect_value,0.03,크기 = 주 대상 밖 비율 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+arc_huntersmark,1,apply,-,0,0,0,0,0,-,arc_huntersmark,effect_value,cha,0,duration_sec,vit,0,-,-,0,effect_value,0.02,크기 = 받는 피해 증가(음수의 크기에 더한다) · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+arc_supportingfire,1,apply,-,0,0,0,0,0,-,arc_supportingfire,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.03,크기 = 화살 배율 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
 arc_trap,1,hit,-,1,2.0,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.2,-,-,-
 pri_endure,1,apply,-,0,0,0,0,0,-,pri_endure,effect_value,cha,0,duration_sec,vit,0,-,-,0,effect_value,0.03,크기 = 버틸 때 남는 HP · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
 pri_purify,1,cleanse,-,0,1.6,0,0,0,-,-,mult_pct,cha,0,-,-,0,-,-,0,mult_pct,0.16,크기 = 지운 아군 회복 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
-pri_resurrection,1,heal,-,0,3.0,0,0,0,-,-,mult_pct,cha,0,-,-,0,-,-,0,mult_pct,0.3,⚠ 레벨 = 일어날 때의 HP — 지금 효과 줄이 회복 근사라 회복량을 민다,-,-
+pri_resurrection,1,revive,-,0,0.3,0,0,0,-,-,-,-,0,-,-,0,-,-,0,mult_pct,0.05,일어날 때 HP = 최대 HP × 값 · 크기 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
 pri_punishment,1,hit,-,1,0.56,0,0,0,fixed,-,mult_pct,int,0,-,-,0,-,-,0,mult_pct,0.056,고정 피해 · 배율 · 레벨당 ×0.4 (1.4 · 0.14 → 10-06 · R221),-,-
-pri_atonement,1,apply,-,0,0,0,0,0,-,pri_atonement,effect_value,cha,0,duration_sec,vit,0,-,-,0,duration_sec,1.2,-,-,-
+pri_atonement,1,apply,-,0,0,0,0,0,-,pri_atonement,effect_value,cha,0,duration_sec,vit,0,-,-,0,effect_value,0.01,크기 = 회복 비율 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
 pri_excommunication,1,hit,-,1,1.04,0,0,0,fixed,-,mult_pct,int,0,-,-,0,-,-,0,mult_pct,0.104,고정 피해 · 배율 · 레벨당 ×0.4 (2.6 · 0.26 → 10-06 · R221),-,-
-pri_diamondbody,1,apply,-,0,0,0,0,0,-,pri_diamondbody,effect_value,vit,0,duration_sec,vit,0,-,-,0,duration_sec,1,-,-,-
-pri_sweep,1,hit,-,1,0.52,0,0,0,fixed,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.052,고정 피해 · 배율 · 레벨당 ×0.4 (1.3 · 0.13 → 10-06 · R221),-,-
-pri_counter,1,apply,-,0,0,0,0,0,-,pri_counter,effect_value,vit,0,duration_sec,vit,0,-,-,0,effect_value,0.035,⚠ 레벨 = 반격 피해 — 지금 효과 줄이 배리어 근사라 그 값을 민다,-,-
+pri_diamondbody,1,apply,-,0,0,0,0,0,-,pri_diamondbody,effect_value,vit,0,duration_sec,vit,0,-,-,0,effect_value,0.03,크기 = 받는 피해 감소 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+pri_diamondbody,2,apply,-,0,0,0,0,0,-,pri_diamondbody_ail,duration_sec,vit,0,-,-,0,-,-,0,-,-,받는 상태이상 · 디버프 시간 감소 · 레벨 없음 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+pri_sweep,1,hit,-,1,1.3,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.13,물리 직격 — 몽크 2 = 물리(advance_tree_draft §7 · 2026-11-14) · 배율은 고정 피해로 바꾸기 전 값(1.3 · 0.13),-,-
+pri_counter,1,apply,-,0,0,0,0,0,-,pri_counter,effect_value,vit,0,duration_sec,vit,0,-,-,0,effect_value,0.06,크기 = 반격 배율 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-

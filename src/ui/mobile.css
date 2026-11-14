@@ -1,0 +1,478 @@
+/* Mobile layout. Desktop styles remain in style.css.
+   mobile.js supplies the layout mode and logical viewport breakpoint attributes. */
+.mobile-dock, .mobile-menu-head, .mobile-menu-utilities, .mobile-menu-backdrop { display: none; }
+
+:root[data-mobile] {
+    --fs-2xs: 10px; --fs-xs: 12px; --fs-sm: 13px; --fs-md: 15px; --fs-lg: 18px;
+    --mobile-fs-micro: 8px; --mobile-fs-small: 9px; --mobile-fs-caption: 11px;
+    --mobile-fs-copy: 14px; --mobile-fs-lead: 16px; --mobile-fs-title: 17px;
+    --mobile-fs-stage: 23px; --mobile-fs-close: 28px;
+    --mobile-edge: 10px;
+    --mobile-dock: 64px;
+    --mobile-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --fm-slot: 80px;
+    -webkit-text-size-adjust: 100%;
+}
+:root[data-mobile] body { overscroll-behavior: none; }
+:root[data-mobile] #stage {
+    box-sizing: border-box; max-width: 100%;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px);
+}
+:root[data-mobile-preview] #stage { max-width: none; box-shadow: 0 0 0 1px var(--border-secondary); }
+:root[data-mobile-preview] .set-preview-note { margin: 0; padding: 0 10px 10px; color: var(--text-muted); font-size: var(--fs-xs); }
+:root[data-mobile] #app, :root[data-mobile] #app.bt-max {
+    grid-template-columns: 104px minmax(0, 1fr);
+    grid-template-rows: 48px 48px minmax(0, 1fr) calc(var(--mobile-dock) + var(--mobile-safe-bottom));
+    grid-template-areas: 'brand resources' 'status status' 'main main' 'dock dock';
+    min-width: 0; min-height: 0;
+}
+:root[data-mobile] #app > .brand {
+    display: flex; padding: 0 8px; min-width: 0; border-right: 0;
+    background: var(--bg-primary); border-image: none;
+}
+:root[data-mobile] .brand img { width: 92px; height: auto; max-height: 38px; object-fit: contain; }
+:root[data-mobile] .topbar { display: contents; }
+:root[data-mobile] .topbar .crumb { display: none; }
+:root[data-mobile] .topbar > .resources {
+    grid-area: resources; margin: 0; padding: 0 6px 0 0; gap: 4px;
+    display: flex; align-items: center; justify-content: flex-end; min-width: 0;
+    background: var(--bg-primary); border-bottom: 1px solid var(--border-primary);
+}
+:root[data-mobile] .resources > span:first-child:not([class]) { display: flex; gap: 4px; font-size: var(--mobile-fs-caption); white-space: nowrap; }
+:root[data-mobile] .resources [data-res='gold'] { max-width: 92px; overflow: hidden; text-overflow: ellipsis; margin: 0; font-size: var(--fs-sm); }
+:root[data-mobile] .resources .mail-btn { width: 40px; height: 44px; padding: 8px; }
+:root[data-mobile] .resources .dp-btn { width: 40px; min-width: 40px; padding: 0; }
+:root[data-mobile] .topbar .tab-seg {
+    grid-area: status; margin: 0; padding: 0 7px 4px; min-width: 0;
+    border-bottom: 1px solid var(--border-primary); background: var(--bg-primary);
+}
+:root[data-mobile] .tab-seg > * { width: 100%; min-width: 0; }
+:root[data-mobile] .tab-seg button { min-width: 0; flex: 1 1 0; min-height: 44px; padding: 4px 6px; font-size: var(--mobile-fs-caption); }
+:root[data-mobile] .tab-seg .exp-nav { display: flex; gap: 4px; }
+:root[data-mobile] #app > .main, :root[data-mobile] #app.bt-max > .main {
+    zoom: 1; min-width: 0; min-height: 0; padding: var(--mobile-edge);
+    display: block; overflow: auto; overscroll-behavior: contain;
+    scroll-padding: 12px; scrollbar-width: thin;
+}
+:root[data-mobile] .main > .page { flex: none; min-height: 100%; height: auto; }
+:root[data-mobile] .main > *, :root[data-mobile] .panel { min-width: 0; max-width: 100%; }
+:root[data-mobile] .panel { padding: 12px 10px; }
+:root[data-mobile] .panel > h2, :root[data-mobile] .sub-h { flex-wrap: wrap; row-gap: 8px; }
+:root[data-mobile] .box-body, :root[data-mobile] .page-stack > .fill { flex: none; overflow: visible; }
+:root[data-mobile] .btn { min-height: 44px; padding: 6px 10px; touch-action: manipulation; }
+:root[data-mobile] button:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
+:root[data-mobile] input:not([type='checkbox']):not([type='radio']), :root[data-mobile] select, :root[data-mobile] textarea { max-width: 100%; min-height: 44px; font-size: var(--mobile-fs-lead); }
+:root[data-mobile] .segmented { max-width: 100%; flex-wrap: wrap; }
+:root[data-mobile] .fg-tabs, :root[data-mobile] .cx-tabs, :root[data-mobile] .pt-pick {
+    display: flex; max-width: 100%; overflow-x: auto; flex-wrap: nowrap; width: auto;
+    padding: 4px 0; gap: 4px; zoom: 1; scrollbar-width: thin;
+}
+:root[data-mobile] .fg-tabs > button, :root[data-mobile] .cx-tabs > button, :root[data-mobile] .pt-pick > button { flex: none; }
+:root[data-mobile] .main > .cx-tabs { position: sticky; top: -10px; z-index: 8; background-color: var(--bg-primary); }
+
+/* One set of real navigation actions, surfaced through an always-reachable dock. */
+:root[data-mobile] .mobile-dock {
+    grid-area: dock; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+    padding: 3px 4px calc(3px + var(--mobile-safe-bottom)); gap: 2px; min-height: 0;
+    border-top: 1px solid var(--border-secondary); background: var(--bg-primary); z-index: 20;
+}
+:root[data-mobile] .mobile-nav-item {
+    position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; min-width: 0; min-height: 44px; padding: 5px 2px;
+    color: var(--text-muted); background: transparent; border: 1px solid transparent;
+    border-radius: 3px; font-size: var(--mobile-fs-caption); line-height: 1.2; touch-action: manipulation;
+}
+:root[data-mobile] .mobile-nav-item .nav-lbl { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+:root[data-mobile] .mobile-nav-item .nav-ic {
+    display: block; width: 25px; height: 25px; margin: 0; background: currentColor;
+    mask-size: contain; mask-repeat: no-repeat; mask-position: center;
+    -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; -webkit-mask-position: center;
+}
+:root[data-mobile] .mobile-nav-item svg { width: 25px; height: 25px; }
+:root[data-mobile] .mobile-nav-item.on {
+    color: var(--text-primary); border-top-color: var(--text-accent);
+    background: linear-gradient(180deg, rgba(var(--accent-rgb), .15), transparent);
+}
+:root[data-mobile] .mobile-nav-item.on .nav-ic { color: var(--text-accent); }
+:root[data-mobile] .mobile-nav-item.dim .nav-lbl { opacity: .45; }
+:root[data-mobile] .mobile-nav-item .nav-lock { position: absolute; top: 3px; right: 8px; }
+:root[data-mobile] .mobile-nav-item .nav-lock svg { width: 12px; height: 12px; }
+:root[data-mobile] .mobile-nav-item.todo::after, :root[data-mobile] .nav button.todo::after {
+    content: ''; position: absolute; top: 7px; right: 13px; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--color-success); box-shadow: 0 0 0 2px var(--bg-primary); margin: 0;
+}
+:root[data-mobile] #app > .nav, :root[data-mobile] #app.bt-max > .nav { display: none; }
+:root[data-mobile] #app.mobile-menu-open > .nav {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-content: start; gap: 8px;
+    position: absolute; inset: max(10px, env(safe-area-inset-top)) 10px calc(10px + var(--mobile-safe-bottom));
+    z-index: 48; padding: 12px; overflow-y: auto; overscroll-behavior: contain;
+    background: var(--bg-secondary); border: 1px solid var(--border-secondary);
+    border-image: none; box-shadow: 0 18px 60px rgba(var(--shadow-rgb), .8);
+}
+:root[data-mobile] .mobile-menu-head {
+    display: flex; align-items: center; justify-content: space-between; grid-column: 1 / -1;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border-secondary);
+    position: sticky; top: -12px; z-index: 2; background: var(--bg-secondary);
+}
+:root[data-mobile] .mobile-menu-head strong { font-size: var(--fs-lg); }
+:root[data-mobile] .nav .mobile-menu-close { width: 44px; height: 44px; padding: 0; text-align: center; font-size: var(--mobile-fs-close); border: 1px solid var(--border-primary); }
+:root[data-mobile] .nav .nav-grp { grid-column: 1 / -1; padding: 10px 0 0; margin: 0; font-size: var(--fs-xs); }
+:root[data-mobile] .nav button[data-tab] {
+    position: relative; min-height: 78px; padding: 8px 3px; justify-content: center;
+    border: 1px solid var(--border-primary); border-radius: 3px; text-align: center;
+}
+:root[data-mobile] .nav button[data-tab].on { border-color: var(--text-accent); }
+:root[data-mobile] .nav .nav-lbl { flex-direction: column; gap: 7px; font-size: var(--fs-xs); }
+:root[data-mobile] .nav .nav-ic { width: 29px; height: 29px; margin: 0; }
+:root[data-mobile] .nav .nav-lock { position: absolute; top: 6px; right: 6px; }
+:root[data-mobile] .nav .b-newgame { grid-column: 1 / -1; min-height: 44px; margin: 6px 0 0; padding: 8px 12px; text-align: center; border: 1px solid var(--border-primary); }
+:root[data-mobile] .mobile-menu-utilities { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; grid-column: 1 / -1; padding-top: 8px; }
+:root[data-mobile] .mobile-menu-utilities .exp-time { margin-left: auto; font-size: var(--mobile-fs-caption); }
+:root[data-mobile] .mobile-menu-utilities .exp-time b { margin-left: 6px; }
+:root[data-mobile] .mobile-menu-backdrop:not([hidden]) { display: block; position: absolute; inset: 0; z-index: 47; background: rgba(var(--veil-rgb), .72); border: 0; }
+:root[data-mobile] #stage:has(.mobile-menu-open) > .tutorial-card { visibility: hidden; }
+
+/* Battles occupy the available screen by default. Cards keep all their data. */
+:root[data-mobile] #app.mobile-combat > .main { display: flex; flex-direction: column; padding: 6px; overflow: hidden; }
+:root[data-mobile] .main > .bt-page { flex: 1 1 0; min-height: 0; height: 100%; gap: 10px; }
+:root[data-mobile] #app:not(.mobile-battle-details) .bt-page > :not(.battle-panel) { display: none; }
+:root[data-mobile] .bt-page > .battle-panel { padding: 0; border: 0; border-image: none; min-height: 0; }
+:root[data-mobile] .battle-head { padding: 3px 4px 6px; }
+:root[data-mobile] .bh-top { flex-wrap: wrap; gap: 5px; }
+:root[data-mobile] .bh-title { flex: 1 1 auto; font-size: var(--fs-xs); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root[data-mobile] .bh-title { flex-basis: 45%; min-width: 0; }
+:root[data-mobile] .round-track { gap: 3px; flex: 0 1 auto; max-width: 53%; overflow: hidden; }
+:root[data-mobile] .battle-ctrl { width: 100%; margin: 0; gap: 3px; flex-wrap: nowrap; }
+:root[data-mobile] .battle-ctrl .btn.sm { flex: 1 1 auto; min-width: 0; min-height: 38px; font-size: var(--mobile-fs-caption); padding: 4px; white-space: nowrap; }
+:root[data-mobile] .battle-ctrl .ctrl-div { margin: 0 1px; }
+:root[data-mobile] .battle-body { position: relative; min-width: 0; min-height: 0; overflow: hidden; }
+:root[data-mobile] .battle-body.split { display: flex; flex-direction: column; gap: 6px; }
+:root[data-mobile] .battle-body > .arena { flex: 1 1 0; min-height: 0; }
+:root[data-mobile] .arena {
+    padding: 52px 6px 64px; min-width: 0; min-height: 480px;
+    background-position: center; justify-content: center;
+}
+:root[data-mobile] .arena .side { flex-wrap: nowrap; gap: 5px; --form-step: 13px; }
+:root[data-mobile] .arena .unit-slot, :root[data-mobile] .arena .unit-slot.v2 { flex: 0 1 124px; width: calc((100% - 10px) / 3); min-width: 0; }
+:root[data-mobile] .arena .unit { padding: 3px; }
+:root[data-mobile] .arena .unit.v2 > .unit-top { height: 19px; margin: -3px -3px 3px; padding: 1px 3px; gap: 2px; }
+:root[data-mobile] .arena .unit.v2 > .unit-top .unit-ident { font-size: var(--mobile-fs-small); }
+:root[data-mobile] .arena .unit-top:has(.unit-traits:not(:empty)) { height: auto; min-height: 19px; flex-wrap: wrap; }
+:root[data-mobile] .arena .unit-top .unit-traits { display: flex; gap: 2px; flex-wrap: wrap; margin: 0; }
+:root[data-mobile] .arena .unit-top .unit-traits .trait-chip { font-size: var(--mobile-fs-micro); line-height: 11px; padding: 0 2px; }
+:root[data-mobile] .arena .unit-body { height: auto; flex-direction: column; gap: 3px; overflow: visible; }
+:root[data-mobile] .arena .unit .sprite { width: 100%; height: 76px; flex: none; }
+:root[data-mobile] .arena .unit-info { width: 100%; flex: auto; gap: 2px; }
+:root[data-mobile] .arena .unit.v2 .unit-id { gap: 2px; margin-bottom: 1px; }
+:root[data-mobile] .arena .unit-name { font-size: var(--mobile-fs-caption); }
+:root[data-mobile] .arena .sin-chip, :root[data-mobile] .arena .grade-chip { font-size: var(--mobile-fs-micro); padding: 0 2px; line-height: 12px; }
+:root[data-mobile] .arena .unit.v2 .hp-row .bar.hp { height: 16px; }
+:root[data-mobile] .arena .unit.v2 .hp-text { font-size: var(--fs-2xs); }
+:root[data-mobile] .arena .unit.v2 .cd-slot { flex: 1 1 0; width: auto; min-width: 0; height: 29px; }
+:root[data-mobile] .arena .unit .cd-row { gap: 2px; }
+:root[data-mobile] .arena .sk-lv { font-size: var(--mobile-fs-micro); }
+:root[data-mobile] .arena .divider { margin: 24px 0; }
+:root[data-mobile] .arena > .run-buff-icons { top: 8px; left: 8px; gap: 4px; }
+:root[data-mobile] .arena .run-buff-icon { width: 34px; height: 34px; flex-basis: 34px; }
+:root[data-mobile] .arena > .stage-clock { right: 8px; top: 8px; height: 34px; font-size: var(--fs-sm); }
+:root[data-mobile] .arena > .b-belt { left: 8px; bottom: 8px; }
+:root[data-mobile] .arena > .b-belt.e-belt { left: auto; right: 8px; top: 8px; bottom: auto; }
+:root[data-mobile] .arena > .bt-max-btn { width: 44px; height: 44px; right: 8px; bottom: 8px; }
+:root[data-mobile] .arena .b-belt .p-slot { width: 36px; height: 40px; }
+:root[data-mobile] .battle-side:not([hidden]) { position: absolute; inset: auto 0 0; z-index: 5; height: 65%; min-height: 150px; max-height: 65%; overflow: auto; padding: 10px; background: var(--bg-secondary); border: 1px solid var(--border-highlight); box-shadow: 0 -12px 30px rgba(var(--shadow-rgb), .7); }
+:root[data-mobile] .battle-side .pane { min-height: 130px; overflow: auto; }
+:root[data-mobile] .battle-side { min-width: 0; max-width: 100%; }
+:root[data-mobile] .battle-side .dmg-face { flex: 0 0 64px; width: 64px; height: 64px; }
+:root[data-mobile] .dmg-row { gap: 8px; }
+:root[data-mobile] .dmg-head { flex-wrap: wrap; gap: 3px; }
+:root[data-mobile] .battle-log-wrap { min-width: 550px; }
+:root[data-mobile] #app.mobile-battle-details > .main { overflow: auto; display: block; }
+:root[data-mobile] #app.mobile-battle-details .bt-page { height: auto; }
+:root[data-mobile] #app.mobile-battle-details .battle-panel { flex: none; height: 650px; }
+:root[data-mobile] #app.mobile-battle-details .bt-page > :not(.battle-panel) { display: grid; }
+:root[data-mobile] .stage-intro .si-name { font-size: var(--mobile-fs-stage); }
+:root[data-mobile] .stage-intro .si-sub { font-size: var(--mobile-fs-caption); }
+:root[data-mobile] .battle-result { max-width: calc(100% - 16px); }
+
+/* Management screens reflow, while spatial boards scroll within their panel. */
+:root[data-mobile] .cols, :root[data-mobile] .cols.c-char, :root[data-mobile] .cols.c-side,
+:root[data-mobile] .c-shop-band, :root[data-mobile] .c-forge-band,
+:root[data-mobile] .cn-work, :root[data-mobile] .dp-wrap, :root[data-mobile] .arena-wrap,
+:root[data-mobile] .lab-item, :root[data-mobile] .bag-row { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; gap: 12px; }
+:root[data-mobile] .cols > .panel, :root[data-mobile] .c-shop-stack > .panel { min-height: 180px; }
+:root[data-mobile] .char-stack { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; width: 100%; min-width: 0; }
+:root[data-mobile] .char-stack > * { min-width: 0; }
+:root[data-mobile] .mobile-section-links { position: sticky; top: -10px; z-index: 8; display: flex; gap: 4px; overflow-x: auto; padding: 5px 0; background: var(--bg-primary); scrollbar-width: thin; }
+:root[data-mobile] .mobile-section-links .btn { flex: none; white-space: nowrap; }
+:root[data-mobile] .bag-row { display: grid; }
+:root[data-mobile] .bag-row .items-tools { flex-wrap: wrap; gap: 5px; }
+:root[data-mobile] .bag .inv-cells.wide { grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); }
+:root[data-mobile] .bag .inv-cells { max-height: 330px; overflow-y: auto; }
+:root[data-mobile] .mat-grid > .mat-cell { grid-row: auto; grid-column: auto; }
+:root[data-mobile] .cols.c-char > .panel { min-height: auto; }
+:root[data-mobile] .cn-work > .cn-lotbox { width: 100%; }
+:root[data-mobile] .cn-work { flex: none; }
+:root[data-mobile] .cn-lotbox > .cn-lots { flex: none; overflow: visible; }
+:root[data-mobile] .cn-lots { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 116px; gap: 8px; }
+:root[data-mobile] .cn-side { border-left: 0; padding: 12px 0 0; overflow: visible; }
+:root[data-mobile] .cn-side > .cn-title { margin: 0 0 14px; padding: 0; }
+:root[data-mobile] .cn-head { gap: 12px; }
+:root[data-mobile] .cn-head-info { height: auto; min-height: 120px; }
+:root[data-mobile] .cn-cur .cn-eff-t { columns: 1; }
+:root[data-mobile] .cn-next-body { flex-direction: column; gap: 12px; }
+:root[data-mobile] .cn-next { min-height: 0; }
+:root[data-mobile] .cn-ranks { flex: none; overflow: visible; }
+:root[data-mobile] .hero-strip { overflow-x: auto; flex-wrap: nowrap; padding: 5px; max-width: 100%; }
+:root[data-mobile] .hs-card { flex: 0 0 84px; width: 84px; }
+:root[data-mobile] .pt-body { gap: 18px; }
+:root[data-mobile] .pt-mid { flex-direction: column; gap: 16px; }
+:root[data-mobile] .pt-left { min-width: 0; max-width: 100%; }
+:root[data-mobile] .pt-mid > .pt-tactics { border-left: 0; padding-left: 0; }
+:root[data-mobile] .pt-tactics .rs-grid { display: flex; flex-direction: column; }
+:root[data-mobile] .pt-tactics .rs-cell { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; }
+:root[data-mobile] .pt-tactics .rs-cell .rs-eff { flex: 1 1 100%; white-space: normal; }
+:root[data-mobile] .pt-tactics .rs-board { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+:root[data-mobile] .gb-sins { flex-wrap: wrap; min-width: 0; }
+:root[data-mobile] .pt-body .cols { display: flex; flex-direction: column; }
+:root[data-mobile] .fm-box { overflow-x: auto; max-width: 100%; }
+:root[data-mobile] .fm-main { flex-direction: column; gap: 14px; }
+:root[data-mobile] .fm-side { width: 100%; }
+:root[data-mobile] .fm-tpls { flex-direction: row; gap: 4px; }
+:root[data-mobile] .fm-tpl { min-width: 0; flex: 1 1 0; white-space: normal; text-align: center; font-size: var(--fs-xs); }
+:root[data-mobile] .fm-board { align-self: center; }
+:root[data-mobile] .foe-list { min-width: 0; max-width: 100%; overflow-x: auto; padding-bottom: 6px; }
+:root[data-mobile] .dp-tree { overflow-x: auto; }
+:root[data-mobile] .dp-tree-grid { min-width: 720px; min-height: 510px; }
+:root[data-mobile] .dp-wrap > .dp-side { padding: 12px 10px; }
+:root[data-mobile] .fg-up { grid-template-columns: minmax(0, 1fr); height: auto; }
+:root[data-mobile] .fg-up-work { padding: 16px 10px; }
+:root[data-mobile] .fg-up-tipcol { overflow: visible; border-right: 0; }
+:root[data-mobile] .fg-up-mid:empty, :root[data-mobile] .fg-up-mid:not(.fg-tp) { display: none; }
+:root[data-mobile] .fg-board-hd { display: none; }   /* 판 제목 띠 — 밀어서 보기 페이지 이름이 제목이다 (ADR-1140) */
+:root[data-mobile] .fg-board { border: 0; border-image: none; box-shadow: none; background: none; }
+:root[data-mobile] .fg-up { --fg-gap: 8px; }   /* 판 사이 틈 — 표지가 안 서니 옛 8px (ADR-1156) */
+:root[data-mobile] .fg-up-flow { display: none; }   /* 판 사이 순서 표지 — 판이 밀어서 보기 페이지로 갈려 사이가 없다 (ADR-1152 · 1156) */
+:root[data-mobile] .fg-tp { border-right: 0; border-top: 1px solid var(--border-dark); padding: 12px 10px; }   /* 담금질 — 한 줄 짜임에서 작업 칸 위에 선다 (ADR-1134) */
+:root[data-mobile] .fg-kinds { grid-template-columns: 32px minmax(0, 1fr) auto; gap: 5px; }
+:root[data-mobile] .fg-kind .fg-kname { padding-left: 0; white-space: normal; }
+:root[data-mobile] .fg-kmats { flex-wrap: wrap; }
+:root[data-mobile] .sy-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; gap: 6px; }
+:root[data-mobile] .sy-row > .mat-cell { width: 44px; }
+:root[data-mobile] .sy-act, :root[data-mobile] .sy-cost { flex-wrap: wrap; justify-content: center; white-space: normal; }
+:root[data-mobile] .td-trade-offers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+:root[data-mobile] .td-split { display: flex; flex-direction: column; gap: 16px; }
+:root[data-mobile] .td-side { min-width: 0; width: 100%; }
+:root[data-mobile] .bk-buy, :root[data-mobile] .bk-cost, :root[data-mobile] .tr-adv-cur { flex-wrap: wrap; }
+:root[data-mobile] .bk-buy > .btn { margin-left: auto; }
+:root[data-mobile] .tr-adv-branch { grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 10px; }
+:root[data-mobile] .tr-adv-bh { gap: 5px; }
+:root[data-mobile] .ex-map-wrap { flex: none; min-height: 480px; height: 480px; overflow: hidden; }
+:root[data-mobile] .ex-lock { max-width: 30%; white-space: normal; padding: 4px; font-size: var(--fs-2xs); text-align: center; }
+:root[data-mobile] .ex-pop, :root[data-mobile] .ex-pop.mid { position: absolute; inset: 8px 8px auto !important; width: auto; max-height: calc(100% - 16px); overflow: auto; transform: none; }
+:root[data-mobile] .td-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+:root[data-mobile] .td-grid.grouped { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+:root[data-mobile] .arena-rail { border-right: 0; padding-right: 0; overflow: visible; }
+:root[data-mobile] .cs-ladder { min-height: 400px; }
+:root[data-mobile] .arena-floor > .bag-row { display: none; }
+:root[data-mobile] .arena-floor .tdm { position: static; flex-direction: column; gap: 12px; }
+:root[data-mobile] .arena-floor .tdm-rows { flex: none; overflow: visible; }
+:root[data-mobile] .arena-load { grid-template-columns: minmax(0, 1fr); }
+:root[data-mobile] .arena-load > .dw-tac { grid-column: 1; }
+:root[data-mobile] .arena-prep { min-height: 540px; }
+:root[data-mobile] .panel.cx-box { margin-top: 10px; }
+:root[data-mobile] .cx-box > .sub-bar { position: static; inset: auto; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+:root[data-mobile] .cx-box > .sub-bar > .segmented, :root[data-mobile] .cx-ch-seg {
+    display: flex; flex-wrap: nowrap; width: 100%; max-width: 100%; overflow-x: auto; zoom: 1;
+    padding: 3px 0; gap: 4px;
+}
+:root[data-mobile] .cx-ch-seg > .btn { flex: none; }
+:root[data-mobile] .ix-style { max-width: 100%; flex-wrap: wrap; margin-left: 0; }
+:root[data-mobile] .cx-mon .cs-pair { flex-direction: column; }
+:root[data-mobile] .cx-mon .cs-pair > .codex-stage:first-child { width: 100%; }
+:root[data-mobile] .cx-mon .mon-strip { display: grid; grid-template-columns: minmax(0, 1fr); overflow: visible; }
+:root[data-mobile] .cx-mon .mon-card { min-width: 0; max-width: 100%; }
+:root[data-mobile] .codex-mastery-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+:root[data-mobile] .cx-sin-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+:root[data-mobile] .ng-row, :root[data-mobile] .tv-cands { grid-template-columns: minmax(0, 1fr); }
+:root[data-mobile] .ng-card { width: 100%; max-width: 100%; }
+:root[data-mobile] .c-tavern > .tv-top { flex: none; flex-direction: column; }
+:root[data-mobile] .c-tavern > .tv-top > .panel { --tv-c: calc(100cqw - 22px); --tv-face: 96px; flex: none; width: 100%; }
+:root[data-mobile] .c-tavern > .tv-top > .panel > .box-body { flex: none; }
+:root[data-mobile] .c-tavern .tv-cands { width: 100%; }
+:root[data-mobile] .tv-search-row { flex-wrap: wrap; }
+:root[data-mobile] .tv-search-cell { width: 100%; }
+:root[data-mobile] .tv-search-cell > .tv-ghost { display: none; }
+:root[data-mobile] .tv-search-cell > :not(.tv-ghost) { min-height: 100px; }
+:root[data-mobile] .tv-join { width: 100%; }
+:root[data-mobile] .tv-join-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+:root[data-mobile] .tv-low { flex-direction: column; }
+:root[data-mobile] .tv-low > .tv-gb > .gb-cell { margin-top: 0; }
+:root[data-mobile] .cm-board { flex-direction: column; gap: 10px; }
+:root[data-mobile] .diff-tabs { flex-wrap: wrap; }
+:root[data-mobile] .dt-fill { flex: 1 1 auto; min-width: 0; }
+:root[data-mobile] .dt-report { min-width: 0; }
+:root[data-mobile] .ng-wrap > .ng-row { zoom: 1; }
+:root[data-mobile] .ng-legend { position: static; grid-column: 1 / -1; grid-template-rows: auto; margin-top: 14px; padding-top: 8px; border-top: 1px solid var(--border-primary); white-space: normal; }
+:root[data-mobile] .ng-lg-h { position: static; grid-column: 1 / -1; }
+:root[data-mobile] .ng-lg-r b { text-align: left; }
+:root[data-mobile] .ng-wrap { padding: 12px 0; }
+:root[data-mobile] .ng-actions { flex-wrap: wrap; gap: 8px; }
+:root[data-mobile] .mn-logo img { max-width: calc(var(--mobile-viewport-width) * .85); height: auto; max-height: 110px; }
+:root[data-mobile] #app.pregame { grid-template-rows: 48px minmax(0, 1fr); grid-template-areas: 'brand resources' 'main main'; }
+:root[data-mobile] #app.pregame .mobile-dock, :root[data-mobile] #app.pregame .tab-seg { display: none; }
+:root[data-mobile] .mn-wrap { min-height: 100%; padding: 28px 8px; }
+:root[data-mobile] .pro-wrap { width: 100%; padding: 12px 6px; height: auto; min-height: 100%; }
+:root[data-mobile] .pro-body { overflow: visible; font-size: var(--mobile-fs-copy); }
+:root[data-mobile] .pro-h { font-size: var(--fs-xl); }
+:root[data-mobile] .pro-actions { position: sticky; bottom: 0; padding: 8px 0; background: var(--bg-primary); }
+
+/* Dialogs and touch tooltips live inside the visible viewport. */
+:root[data-mobile] .modal-layer { padding: 10px 8px calc(10px + var(--mobile-safe-bottom)); align-items: center; overflow: auto; }
+:root[data-mobile] .modal-box, :root[data-mobile] .modal-box.depart-box {
+    zoom: 1; width: 100%; min-width: 0; max-width: 720px; max-height: 100%; padding: 14px 12px;
+    overflow: auto; gap: 14px;
+}
+:root[data-mobile] .modal-head { position: sticky; top: -14px; z-index: 3; background: var(--bg-secondary); padding: 8px 0; }
+:root[data-mobile] .modal-close { min-width: 44px; min-height: 44px; }
+:root[data-mobile] .modal-x { min-width: 44px; min-height: 44px; }
+:root[data-mobile] .modal-body { min-width: 0; overflow: visible; }
+:root[data-mobile] .cols.c-skill { width: 100%; grid-template-columns: minmax(0, 1fr); }
+:root[data-mobile] .c-skill > div:first-child > .panel { flex: none; }
+:root[data-mobile] .c-skill .act-slot { min-width: 0; }
+:root[data-mobile] .gb-box { grid-template-columns: minmax(0, 1fr); --gb-cell-h: 64px; }
+:root[data-mobile] .gb-jp { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+:root[data-mobile] .gb-payline { grid-template-columns: minmax(0, 1fr) auto; }
+:root[data-mobile] .dw-body { grid-template-columns: minmax(0, 1fr); }
+:root[data-mobile] .dw-body > *, :root[data-mobile] .dw-body > .dw-c2, :root[data-mobile] .dw-body > .dw-r2 {
+    padding: 12px 0; margin: 0; border-left: 0; border-top: 1px solid var(--border-primary);
+}
+:root[data-mobile] .dw-prep, :root[data-mobile] .dw-load { flex-direction: column; gap: 12px; }
+:root[data-mobile] .dw-tac { flex: auto; }
+:root[data-mobile] .dw-story { contain: none; }
+:root[data-mobile] .dw-col > .dw-salv { width: auto; min-width: 0; }
+:root[data-mobile] .toast-layer { right: 10px; bottom: calc(var(--mobile-dock) + var(--mobile-safe-bottom) + 12px); max-width: calc(100% - 20px); }
+:root[data-mobile] .toast { max-width: 100%; white-space: normal; }
+:root[data-mobile] #tooltip.show {
+    position: absolute; left: 8px !important; right: 8px !important; top: auto !important;
+    bottom: calc(var(--mobile-dock) + var(--mobile-safe-bottom) + 8px);
+    width: auto; min-width: 0; max-width: none; max-height: calc(100% - var(--mobile-dock) - var(--mobile-safe-bottom) - 24px);
+    overflow: auto; overscroll-behavior: contain; flex-wrap: wrap; gap: 8px;
+}
+:root[data-mobile] #tooltip > .tip-card { flex: 1 1 280px; width: 100%; max-width: 100%; zoom: 1; }
+:root[data-mobile] #tooltip > .tip-compare { display: flex; flex: 1 0 100%; flex-direction: column; gap: 6px; min-width: 0; }
+:root[data-mobile] #tooltip .tip-compare > .tip-card { width: 100%; min-width: 0; }
+:root[data-mobile] #tooltip .tip-vs { width: 100%; height: 20px; flex: none; text-align: center; }
+:root[data-mobile] #tooltip .tip-vs span { position: static; transform: none; }
+:root[data-mobile] #tooltip .tip-card.unit.stats-first .tip-unit { display: flex; flex-direction: column; gap: 12px; }
+:root[data-mobile] #tooltip .tip-unit-col { min-width: 0; width: 100%; }
+:root[data-mobile] #tooltip .tip-card.unit.stats-first { min-width: 0; }
+:root[data-mobile] #tooltip .tip-ghost { display: none; }
+:root[data-mobile] #tooltip .tip-touch {
+    position: sticky; left: auto; top: auto; bottom: 0; width: 100%; flex: 1 0 100%;
+    display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--bg-secondary);
+}
+:root[data-mobile] .tutorial-card { max-width: calc(100% - 24px); max-height: calc(100% - 110px); overflow-y: auto; }
+:root[data-mobile] .notification-panel { position: fixed; left: 8px; right: 8px; top: calc(50px + env(safe-area-inset-top, 0px)); width: auto; max-width: none; max-height: calc(100% - var(--mobile-dock) - 64px - var(--mobile-safe-bottom) - env(safe-area-inset-top, 0px)); overflow: auto; }
+:root[data-mobile] #app.mobile-menu-open .notification-panel { visibility: hidden; }
+:root[data-mobile] #stage > .dp-panel { left: 8px; right: 8px; top: calc(52px + env(safe-area-inset-top, 0px)); width: auto; max-height: calc(100% - var(--mobile-dock) - 70px - var(--mobile-safe-bottom) - env(safe-area-inset-top, 0px)); overflow-y: auto; }
+:root[data-mobile] .dp-panel .dp-x { min-width: 44px; min-height: 44px; }
+:root[data-mobile] .nav .da-panel { position: fixed; left: 20px; right: 20px; top: 70px; width: auto; max-height: calc(100% - 100px); overflow: auto; }
+:root[data-mobile] .set-box { display: flex; flex-direction: column; align-items: stretch; min-width: 0; gap: 14px; }
+:root[data-mobile] .set-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+:root[data-mobile] .set-nick-cell { min-width: 0; max-width: 100%; flex-wrap: wrap; }
+:root[data-mobile] .set-nick { min-width: 0; }
+:root[data-mobile] .set-row .segmented { flex-wrap: wrap; }
+:root[data-mobile] .rep-detail { overflow-x: auto; }
+:root[data-mobile] .rep-ct { min-width: 640px; }
+:root[data-mobile] .raid-header, :root[data-mobile] .raid-controls { flex-wrap: wrap; gap: 8px; }
+:root[data-mobile] .raid-controls { margin-left: 0; }
+:root[data-mobile] .raid-trial { padding-left: 8px; }
+:root[data-mobile] .raid-field { flex: none; grid-template-rows: 250px auto auto auto; min-height: 0; gap: 14px; overflow: hidden; }
+:root[data-mobile] .raid-lanes { grid-template-columns: minmax(0, 1fr); padding: 6px 8px; }
+:root[data-mobile] .raid-boss-hud { width: calc(100% - 24px); }
+:root[data-mobile] .raid-telegraph { width: calc(100% - 16px); padding: 10px 8px; }
+:root[data-mobile] .raid-heroes { gap: 6px; }
+:root[data-mobile] .raid-hero-seat, :root[data-mobile] .raid-hero { width: 92px; }
+:root[data-mobile] .raid-footer { flex-wrap: wrap; padding: 12px; gap: 8px; }
+
+/* Landscape phones use a left icon rail and compact horizontal cards. */
+:root[data-mobile-landscape] { --mobile-dock: 0px; --mobile-edge: 8px; }
+:root[data-mobile-landscape] #stage { padding-bottom: env(safe-area-inset-bottom, 0px); }
+:root[data-mobile-landscape] #app, :root[data-mobile-landscape] #app.bt-max {
+    grid-template-columns: 64px 108px minmax(0, 1fr); grid-template-rows: 44px minmax(0, 1fr);
+    grid-template-areas: 'dock brand resources' 'dock main main';
+    padding-bottom: 0;
+}
+:root[data-mobile-landscape] .topbar { grid-area: resources; display: flex; gap: 6px; padding: 0 4px; border-image: none; }
+:root[data-mobile-landscape] .topbar > .resources { border: 0; padding: 0; flex-shrink: 0; }
+:root[data-mobile-landscape] .topbar .tab-seg { border: 0; padding: 0; flex: 1 1 0; }
+:root[data-mobile-landscape] .tab-seg button { font-size: var(--fs-2xs); min-height: 36px; }
+:root[data-mobile-landscape] .mobile-dock { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(5, minmax(44px, 1fr)); padding: 4px; border-top: 0; border-right: 1px solid var(--border-secondary); }
+:root[data-mobile-landscape] .mobile-nav-item { font-size: var(--fs-2xs); padding: 2px; gap: 2px; }
+:root[data-mobile-landscape] .mobile-nav-item .nav-lbl { gap: 2px; }
+:root[data-mobile-landscape] .mobile-nav-item .nav-ic, :root[data-mobile-landscape] .mobile-nav-item > svg { width: 22px; height: 22px; }
+:root[data-mobile-landscape] #app.mobile-menu-open > .nav { inset: 8px max(12px, env(safe-area-inset-right)) calc(8px + var(--mobile-safe-bottom)) 76px; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+:root[data-mobile-landscape] .nav button[data-tab] { min-height: 66px; }
+:root[data-mobile-landscape] .bh-top { flex-wrap: nowrap; }
+:root[data-mobile-landscape] .battle-ctrl { width: auto; flex: none; margin-left: auto; }
+:root[data-mobile-landscape] .battle-ctrl .btn.sm { min-width: 32px; min-height: 34px; }
+:root[data-mobile-landscape] .round-track { display: flex; }
+:root[data-mobile-landscape] .arena { padding: 36px 8px 42px; min-height: 240px; }
+:root[data-mobile-landscape] .arena .unit-slot, :root[data-mobile-landscape] .arena .unit-slot.v2 { flex-basis: 190px; width: 190px; }
+:root[data-mobile-landscape] .arena .unit-body { flex-direction: row; }
+:root[data-mobile-landscape] .arena .unit .sprite { width: 60px; height: 60px; }
+:root[data-mobile-landscape] .arena .unit-info { flex: 1 1 0; width: auto; }
+:root[data-mobile-landscape] .arena .unit.v2 .cd-slot { height: 25px; }
+:root[data-mobile-landscape] .arena .divider { margin: 4px 0; font-size: var(--fs-2xs); line-height: 12px; }
+:root[data-mobile-landscape] .arena > .side { flex: none; }
+:root[data-mobile-landscape] .battle-body > .arena { overflow-y: auto; }
+:root[data-mobile-landscape] .arena .side { --form-step: 7px; }
+:root[data-mobile-landscape] .arena > .run-buff-icons, :root[data-mobile-landscape] .arena > .stage-clock { top: 4px; }
+:root[data-mobile-landscape] .arena .run-buff-icon, :root[data-mobile-landscape] .arena > .stage-clock { height: 28px; }
+:root[data-mobile-landscape] .arena .run-buff-icon { width: 28px; flex-basis: 28px; }
+:root[data-mobile-landscape] .arena .run-buff-icon img { width: 23px; height: 23px; }
+:root[data-mobile-landscape] .arena .b-belt .p-slot { width: 34px; height: 34px; }
+:root[data-mobile-landscape] .arena > .bt-max-btn { width: 40px; height: 40px; bottom: 4px; }
+:root[data-mobile-landscape] .arena > .b-belt:not(.e-belt) { position: static; align-self: flex-start; flex: none; margin-top: 12px; }
+:root[data-mobile-landscape] .arena > .bt-max-btn { position: static; align-self: flex-end; flex: none; margin-top: -34px; }
+:root[data-mobile-landscape] .battle-body > .arena { padding-bottom: 8px; }
+:root[data-mobile-landscape] .battle-body.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 36%); }
+:root[data-mobile-landscape] .battle-side:not([hidden]) { position: relative; inset: auto; height: auto; max-height: none; min-height: 0; padding: 5px; }
+:root[data-mobile-landscape] #tooltip.show { left: 72px !important; }
+:root[data-mobile-landscape] .notification-panel, :root[data-mobile-landscape] #stage > .dp-panel { left: 72px; }
+:root[data-mobile-landscape] #app.mobile-battle-details .battle-panel { height: 370px; }
+:root[data-mobile-landscape] #app.pregame { grid-template-columns: 108px minmax(0, 1fr); grid-template-rows: 44px minmax(0, 1fr); grid-template-areas: 'brand resources' 'main main'; }
+:root[data-mobile-landscape] .ng-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+:root:where([data-mobile-wide])[data-mobile]:not([data-mobile-landscape]) .cols.c-char { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+:root:where([data-mobile-wide])[data-mobile] .c-shop-band { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+:root:where([data-mobile-wide])[data-mobile] .codex-mastery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+:root:where([data-mobile-wide])[data-mobile] .ng-row, :root:where([data-mobile-wide])[data-mobile] .tv-cands { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+:root:where([data-mobile-wide])[data-mobile]:not([data-mobile-landscape]) #app.mobile-menu-open > .nav { inset-inline: max(24px, calc((100% - 640px) / 2)); }
+:root:where([data-mobile-narrow])[data-mobile] #app { grid-template-columns: 88px minmax(0, 1fr); }
+:root:where([data-mobile-narrow])[data-mobile] .brand img { width: 78px; }
+:root:where([data-mobile-narrow])[data-mobile] .resources > span:first-child:not([class]) { font-size: 0; }
+:root:where([data-mobile-narrow])[data-mobile] .battle-ctrl .btn.sm { font-size: var(--fs-2xs); padding-inline: 2px; }
+:root:where([data-mobile-short][data-mobile-portrait])[data-mobile] .arena .unit .sprite { height: 50px; }
+:root:where([data-mobile-short][data-mobile-portrait])[data-mobile] .arena .divider { margin: 18px 0; }
+:root:where([data-mobile-short][data-mobile-portrait])[data-mobile] .battle-body > .arena { overflow-y: auto; justify-content: flex-start; padding-top: 48px; padding-bottom: 54px; }
+:root:where([data-mobile-short][data-mobile-portrait])[data-mobile] .arena .side { --form-step: 6px; }
+:root:where([data-mobile-short][data-mobile-portrait])[data-mobile] .arena > .side { flex: none; }
+:root:where([data-mobile-short][data-mobile-portrait])[data-mobile] .arena > .b-belt:not(.e-belt) { position: static; align-self: flex-start; flex: none; margin-top: 12px; }
+:root:where([data-mobile-short][data-mobile-portrait])[data-mobile] .arena > .bt-max-btn { position: static; align-self: flex-end; flex: none; margin-top: -40px; }
+:root:where([data-mobile-short][data-mobile-portrait])[data-mobile] .battle-body > .arena { padding-bottom: 8px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] { --mobile-dock: 56px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] #app:not(.pregame) { grid-template-rows: 40px 40px minmax(0, 1fr) calc(var(--mobile-dock) + var(--mobile-safe-bottom)); }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .tab-seg button { min-height: 36px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .mobile-nav-item { font-size: var(--fs-2xs); gap: 2px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .mobile-nav-item .nav-ic, :root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .mobile-nav-item svg { width: 22px; height: 22px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena .unit .sprite { height: 28px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena .unit.v2 > .unit-top { height: 15px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena .unit.v2 .cd-slot { height: 24px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena .divider { margin: 4px 0; font-size: var(--fs-2xs); line-height: 12px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena .run-buff-icon { width: 26px; height: 26px; flex-basis: 26px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena > .stage-clock { height: 26px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .battle-body > .arena { padding-top: 38px; }
+@media (prefers-reduced-motion: reduce) {
+    :root[data-mobile] .mobile-dock *, :root[data-mobile] .nav * { animation: none; transition: none; }
+}

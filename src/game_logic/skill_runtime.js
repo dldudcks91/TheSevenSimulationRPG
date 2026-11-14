@@ -93,13 +93,16 @@ export function createSkillRuntime(ctx) {
     function expire(u, at) {
         let changed = false;
         const wasMax = u.hpMax;     // 최대 HP 를 밀던 창이 닫히면 재생기에 새 값을 줘야 한다 (부채 #50)
+        const hp0 = u.hp;           // 닫히기 전 HP — 잘린 HP 를 아는 전직 장치(강신 덤)가 읽는다 (R471)
         const shown = [];           // 이 틱에 낸 `buffEnd` 들 — 조용한 창(`quiet`)은 안 든다
         const ails = new Set();     // 창이 닫힌 화상 · 중독 — 닫은 뒤 가장 센 창을 다시 알린다 (R178)
+        const closed = [];          // 닫힌 창 — 닫힌 뒤 할 일이 있는 전직 장치(`ctx.advExpired`)가 읽는다 (2026-11-14 R471)
         for (const id of Object.keys(u.buffs)) {
             const b = u.buffs[id];
             if (b.until <= at + EPS) {
                 // `quiet` = 무기 옵션 창(타격 시 디버프 · R78) — 열 때 이벤트를 안 냈으므로 닫을 때도 안 낸다(재생기는 `s` 로 스킬 이름을 찾는다)
                 delete u.buffs[id];
+                closed.push(b);
                 // 프렌지 겹 이어짐 [2026-10-28 · R372 · skill_design §12-3] — 쌓인 겹을 그 유닛의 **다음 차례**까지 남긴다(`act` 가 지운다 · `applyStatus` 가 잇는다)
                 if (b.stat === 'frenzy' && (b.n ?? 0) > 0) u.fzKeep = { s: id, n: b.n };
                 // `s` = 그 창을 건 스킬 — 창 열쇠는 걸린 효과 id 다 (2026-09-24 · R151). 손으로 만든 창(`s` 없음)은 열쇠를 쓴다 · 상태이상은 `k` (R178)
@@ -123,6 +126,8 @@ export function createSkillRuntime(ctx) {
         // 최대 HP 가 줄었으면 **마지막 `buffEnd`** 가 새 최대치와 잘린 현재 HP 를 싣는다 [2026-09-21 · 부채 #50 · INTERFACE §2-6 · §6].
         //   한 틱에 여러 창이 닫혀도 실린 값은 전부 닫힌 뒤의 상태라 마지막 하나면 족하다 — 재생기는 계산하지 않는다
         if (u.hpMax !== wasMax && shown.length) Object.assign(shown[shown.length - 1], { hpMax: u.hpMax, dhp: u.hp });
+        // 전직 장치의 닫힌 뒤 [2026-11-14 · R471] — 잔상 · 되돌려 받기 · 터짐 · 잘린 HP 보호막 · 마지막 한 발 · 풀린 상태이상 회복 · 장치가 없으면 아무 일도 없다
+        if (closed.length) ctx.advExpired?.(u, closed, hp0, at);
     }
 
     /**
@@ -156,8 +161,10 @@ export function createSkillRuntime(ctx) {
             // 받는 쪽의 체력 회복 +%(갑옷 나태 · 2026-09-18) — 그 대상만 늘어난다 · 이벤트의 `amt` 가 받은 양이다. 0 이면 종전과 같다(rng 0)
             const got = tgt.recv ? Math.round(amt * (1 + tgt.recv)) : amt;
             overheal(u, tgt, got, t);
+            const hp0 = tgt.hp;
             tgt.hp = Math.min(tgt.hpMax, tgt.hp + got);
             timeline.push({ t: r1(t), e: 'heal', a: u.key, d: tgt.key, amt: got, dhp: tgt.hp, s: def.id });
+            ctx.onHealed?.(tgt, tgt.hp - hp0);   // 색욕 T4 ② 받은 회복 나누기 (2026-11-14)
         }
     }
 
@@ -198,9 +205,12 @@ export function createSkillRuntime(ctx) {
             for (const ail of ails) syncAilment(tgt, ail, t);
             n += gone.length;
             refreshDerived(tgt);
+            ctx.advCleansed?.(u, tgt, gone, t);   // 정화 변형 · 덤 — 되돌리기 · 면역 · 쿨 · `gone` = 지운 [열쇠, 창] (2026-11-14 R471)
             const got = tgt.recv ? Math.round(amt * (1 + tgt.recv)) : amt;
+            const hp0 = tgt.hp;
             tgt.hp = Math.min(tgt.hpMax, tgt.hp + got);
             timeline.push({ t: r1(t), e: 'heal', a: u.key, d: tgt.key, amt: got, dhp: tgt.hp, s: def.id });
+            ctx.onHealed?.(tgt, tgt.hp - hp0);
         }
         return n;
     }
@@ -214,8 +224,10 @@ export function createSkillRuntime(ctx) {
         const amt = Math.round(u.hpMax * def.mult * (def.statMult ?? 1) * (ho ? 1 + ho : 1));
         for (const tgt of targetsOf(u, def)) {
             const got = tgt.recv ? Math.round(amt * (1 + tgt.recv)) : amt;
+            const hp0 = tgt.hp;
             tgt.hp = Math.min(tgt.hpMax, tgt.hp + got);
             timeline.push({ t: r1(t), e: 'heal', a: u.key, d: tgt.key, amt: got, dhp: tgt.hp, s: def.id });
+            ctx.onHealed?.(tgt, tgt.hp - hp0);
         }
     }
 
@@ -253,6 +265,9 @@ export function createSkillRuntime(ctx) {
         // 매력 — 받는 상태이상 · **상대 편이 건** 창의 시간 [2026-10-24 · R346 · battle_design §2-4 「털어내는 능력치」] · 장비 감소와 곱 ·
         //   아군이 건 창은 안 줄인다 · 경직은 여기를 안 지난다(타격 회복 몫) · 0 이면 곱하지 않는다 — 부동소수가 종전과 같다
         if (tgt.ddr && (ail || tgt.side !== u.side)) dur *= 1 - tgt.ddr;
+        // 전직 장치의 받는 쪽 · 거는 쪽 [2026-11-14 · R471] — 클렌징 · 금강(시간 감소 · 첫 하나 막기 · 털어내기) · 라그나로크(감소 · 면역) · 정화 면역 · 사자후(제 편 버프 시간) ·
+        //   파문(버프 못 받음) · 휠윈드 덤(스턴 시간) — 0 이하를 돌려주면 안 건다 · 장치가 없으면 그대로(rng 0)
+        if (ctx.advStatus) dur = ctx.advStatus(u, tgt, x, dur, t, ail);
         if (!(dur > 0)) return;
         let until = t + dur;
         // 스턴 — **한 번 시전에 같은 대상에게 한 번** [2026-11-13 · R471 · advance_tree_draft §2] — 다단히트 · 정신 집중(방 전부)은 시전 장부(`stunned`)가 든다 · 장부가 없으면(창 · 늘 켜진 타격) 종전 그대로
@@ -369,7 +384,11 @@ export function createSkillRuntime(ctx) {
      */
     function basicAttack(u, t, foes, forced = null, scale = 1) {
         const splash = sumOf(u, 'attack_splash');
-        const targets = splash > 0 ? foes.slice() : [forced ?? ctx.pickTarget(u, foes)];
+        // 체인 드로우(`chain_splash` · 2026-11-14 R471) — 주 대상은 1배 · 나머지 적 전원은 창 값 · 평타 광역(`attack_splash`)이 있으면 그쪽이 먼저다
+        const chain = splash > 0 ? 0 : sumOf(u, 'chain_splash');
+        // 평타 대상 — 지정(반격 · 스킬의 기준 대상)이 먼저 · 전직 장치가 고르면 그 대상(퀵 드로우 흩어짐 · 오버드로우 HP 최다 — `ctx.advBasicPick` · 창이 없으면 null) · 아니면 평소 규칙
+        const lead = splash > 0 ? null : forced ?? ctx.advBasicPick?.(u, foes) ?? ctx.pickTarget(u, foes);
+        const targets = splash > 0 ? foes.slice() : chain > 0 ? [lead, ...foes.filter(f => f !== lead)] : [lead];
         // 평타 피해 % [2026-10-16 · R247 · 퀵 드로우 · 오버드로우] — 평타 배율에 곱한다(원소 추가타 · 스킬은 안 받는다). 창이 없으면 곱하지 않는다 — 종전 값 그대로
         // 평타 데미지 % — 창(퀵 드로우 · 오버드로우) + 전직 공통 줄(광전사 · 보우마스터 2 · `adv.basic_dmg_pct` · R471) — 둘 다 없으면 0 이라 종전 그대로
         const bp = sumOf(u, 'basic_pct') + (u.adv?.basic_dmg_pct ?? 0);
@@ -377,15 +396,24 @@ export function createSkillRuntime(ctx) {
         for (const tgt of targets) {
             if (u.hp <= 0 || tgt.hp <= 0) continue;
             // `scale` — 파리 한 마리의 몫(스웜 · 2026-10-29 R380) · 1 이면 곱하지 않는다 — 종전 값 그대로 · 평타 광역은 파리 떼를 마리마다 친다(`spread`)
-            const m = bp ? Math.max(0, mult * (1 + bp)) : mult;
-            ctx.strikeOnce(u, tgt, scale === 1 ? m : m * scale, null, undefined, null, splash > 0);
+            const m0 = chain > 0 && tgt !== lead ? Math.min(1, chain) : mult;
+            const m = bp ? Math.max(0, m0 * (1 + bp)) : m0;
+            ctx.strikeOnce(u, tgt, scale === 1 ? m : m * scale, null, undefined, null, splash > 0 || chain > 0);
         }
-        onhitExtra(u, targets, t);
-        // 한 발 더(공통 줄 보우마스터 3 · `adv.extra_shot_chance` · R471) — 반격이 아닌 평타 뒤 **rng 1회** · 한 발 더는 다시 굴리지 않는다 · 값이 없으면 굴리지 않는다
-        if (!forced && scale === 1 && !extraShot && (u.adv?.extra_shot_chance ?? 0) > 0 && u.hp > 0 && rng() < u.adv.extra_shot_chance) {
+        // 덤 — 체인 드로우는 주 대상에만 붙고 나머지는 변형 1 의 세기로(`ctx.advChainOnhit` · 없으면 0 = 안 붙는다)
+        if (chain > 0) {
+            onhitExtra(u, [lead], t);
+            const k = ctx.advChainOnhit?.(u) ?? 0;
+            if (k > 0) onhitExtra(u, targets.slice(1), t, k);
+        } else onhitExtra(u, targets, t);
+        // 한 발 더(공통 줄 보우마스터 3 · `adv.extra_shot_chance` · R471 · 공세 오오라 덤 `ctx.advExtraShot`) — 반격이 아닌 평타 뒤 **rng 1회** · 한 발 더는 다시 굴리지 않는다 · 값이 없으면 굴리지 않는다
+        const xs = (u.adv?.extra_shot_chance ?? 0) + (ctx.advExtraShot?.(u) ?? 0);
+        if (!forced && scale === 1 && !extraShot && xs > 0 && u.hp > 0 && rng() < xs) {
             const left = alive(foesOf(u));
             if (left.length) { extraShot = true; try { basicAttack(u, t, left); } finally { extraShot = false; } }
         }
+        // 평타 뒤 전직 장치 — 라그나로크 튐 · 지원 사격 · 오버드로우 관통 · 셋째 평타 (2026-11-14 R471) · 반격(`forced` + 반격 중)은 battle.js 가 거른다
+        if (u.hp > 0 && scale === 1) ctx.advAfterBasic?.(u, lead ?? targets[0] ?? null, forced, t);
     }
     let extraShot = false;
 
@@ -396,17 +424,22 @@ export function createSkillRuntime(ctx) {
      *   스킬 타격 필드(`sk`)를 안 싣는다 — 능력치 계수는 평타 계수 · 추가 피해 · 원소 부여 없음. 창이 거는 상태이상(`hit` — 콜드 애로우의 결빙)은
      *   그 추가타가 **적중했고** 대상이 살아 있으면(소환 제외) 건다 · rng 0. 시전자나 그 대상이 쓰러졌으면 건너뛴다
      */
-    function onhitExtra(u, targets, t) {
+    function onhitExtra(u, targets, t, k = 1) {
         const wins = Object.entries(u.buffs).filter(([, b]) => b.stat === 'onhit_element');
         if (!wins.length) return;
         // 파티의 덤 데미지(공통 줄 레인저 2 · `adv.party_onhit_pct` · R471) — 같은 편 산 유닛의 값 합 · 덤 배율에 곱한다 · 없으면 1
         const po = alive(alliesOf(u)).reduce((n, x) => n + (x.adv?.party_onhit_pct ?? 0), 0);
+        // 덤이 한 번 더(퀵 드로우 변형 2 · 2026-11-14 R471) — 세기 목록 · 없으면 한 번뿐(종전 그대로)
+        const again = ctx.advOnhitAgain?.(u) ?? null;
         for (const tgt of targets) {
             for (const [key, win] of wins) {
-                if (u.hp <= 0 || tgt.hp <= 0) break;
-                ctx.strikeOnce(u, tgt, po ? win.v * (1 + po) : win.v, win.element, win.s ?? key, null, false, landed => {
-                    if (landed && win.hit && tgt.hp > 0 && !tgt.summon) applyStatus(u, tgt, win.hit, t);
-                });
+                for (const a of again ? [1, ...again] : [1]) {
+                    if (u.hp <= 0 || tgt.hp <= 0) break;
+                    const v = win.v * k * a;
+                    ctx.strikeOnce(u, tgt, po ? v * (1 + po) : v, win.element, win.s ?? key, null, false, landed => {
+                        if (landed && win.hit && tgt.hp > 0 && !tgt.summon) applyStatus(u, tgt, win.hit, t);
+                    });
+                }
             }
         }
     }
@@ -476,10 +509,11 @@ export function createSkillRuntime(ctx) {
             const got = type.run(rt, u, x, t, foes);
             lead ??= got ?? null;
         }
+        // 전직 트리 장치 — 시전이 끝난 뒤(조각 · 마지막 방 · 두 번째 노바 · 겹 · 덧타격) · 전직 스킬이 아니면 아무 일도 없다 (2026-11-13 R471) —
+        //   시전 장부를 닫기 **전**이라 덧타격의 스턴도 「한 시전 한 번」 장부를 탄다(2026-11-14)
+        ctx.advAfterCast?.(u, def, eff, lead, one, echoing);
         struck = outer;
         onhitExtra(u, mine.list, t);
-        // 전직 트리 장치 — 시전이 끝난 뒤(조각 · 마지막 방 · 두 번째 노바 · 겹) · 전직 스킬이 아니면 아무 일도 없다 (2026-11-13 R471)
-        ctx.advAfterCast?.(u, def, eff, lead, one, echoing);
         // 에코 [2026-10-16 · R250 · skill_design §12-6] — 공격 스킬(`hit` 줄이 있다)이 창 동안 **한 번 더** — 대상은 평소 규칙대로 다시 고르고(그 스킬의 굴림이 한 번 더)
         //   쿨 · 시전 수 · `skill` 이벤트 · `cast` 훅은 없다 · 에코로 나간 시전은 다시 에코하지 않는다. 창이 없으면 아무 일도 없다(rng · 타임라인 불변)
         if (echoing || u.hp <= 0 || !def.effects.some(e => e.effect === 'hit')) return lead;
@@ -547,8 +581,9 @@ export function createSkillRuntime(ctx) {
         // 변신 · 파리 떼 동안은 액티브를 못 고른다 [2026-10-29 · R380 · skill_design §12-9 골드 피버 · 스웜] — 차례는 기본 공격만(스웜은 파리마다 · `turn`)
         if (u.swarm || stateOf(u, 'transform')) return null;
         // 발동 선택 — rng 를 쓰지 않는다. 조건이 거짓인 것은 준비된 것으로 치지 않는다 (skill_design §9-3)
+        // `down` = 쓰러진 아군(소환 제외) — 리저렉션의 조건(`ally_down` · 2026-11-14 R471)이 읽는다
         return SK && u.actives.length
-            ? SK.pickReady(u.actives, t, a => SK.castable(a.def, { self: u, allies: alive(alliesOf(u)) }))
+            ? SK.pickReady(u.actives, t, a => SK.castable(a.def, { self: u, allies: alive(alliesOf(u)), down: a.def.cond === 'ally_down' ? alliesOf(u).filter(x => x.hp <= 0 && !x.summon) : null }))
             : null;
     }
 
@@ -572,7 +607,8 @@ export function createSkillRuntime(ctx) {
         const addN = !burst && tf.orb_faster ? tf.orb_faster : 0;
         const n = (burst ? 2 : Math.max(1, hit?.hits ?? 1)) + (burst ? 0 : extraHit) + addN;
         // 모으기 속도(공통 줄 스나이퍼 2 · `adv.charge_speed_pct` · R471) — 모으는 시간에 (1 − 값)을 곱한다
-        const iv0 = burst ? def.chargeSec * Math.max(0, 1 - (u.adv?.charge_speed_pct ?? 0)) : B[CASTS[def.cast].iv];
+        //   토르의 분노 크기 덤(`thor_quick` · 2026-11-14 R471) — 모으는 시간 × (1 − 값)
+        const iv0 = burst ? def.chargeSec * Math.max(0, 1 - (u.adv?.charge_speed_pct ?? 0)) * Math.max(0, 1 - (tf.thor_quick ?? 0)) : B[CASTS[def.cast].iv];
         const iv = addN ? iv0 * (n - addN) / n : iv0;
         // 긁는 동안 받는 피해 감소(프로즌 오브 덤 · R471) — 방이 다 끝날 때까지의 조용한 창
         if (tf.orb_guard) { u.buffs['adv:orb_guard'] = { stat: 'dr_pct', v: tf.orb_guard, until: t + n * iv + EPS, element: null, by: u.key, quiet: true }; refreshDerived(u); }
@@ -642,6 +678,9 @@ export function createSkillRuntime(ctx) {
      * @returns 무언가 했으면 참(시전 · 기본 공격) — 마법 무기의 칸을 되돌리는 판정이 읽는다 (R200)
      */
     function act(u, t) {
+        // 덫 [2026-11-14 · R471 · advance_tree_draft §6] — 그 자리 적이 행동하려 하면 먼저 터진다(battle.js) · 쓰러지면 그 차례는 없다
+        ctx.advBeforeAct?.(u, t);
+        if (u.hp <= 0) return true;
         const did = turn(u, t);
         if (u.fzKeep) delete u.fzKeep;
         return did;
@@ -682,6 +721,11 @@ export function createSkillRuntime(ctx) {
         hooks.emit('cast', u, { t, def });
         // HP 소모 [2026-10-24 · R355 · skill_design §12-4 차지] — 줄을 돌기 전에 **지금 HP 의 `hpCost`** 를 낸다(내림이라 쓰러지지 않는다 · 0 이면 사건 없음).
         //   피해가 아니다 — 배리어 · 피해 감소를 안 지나고 훅 · 경직 · 반격 · 기여를 안 부른다 · rng 0 · 에코로 한 번 더 나간 시전은 안 낸다(`cast` 밖이다)
+        // 분노 T4 ① 피의 대가(`adv.wrath_blood` · 2026-11-14) — 공격 스킬(`hit` 줄)은 지금 HP × [balance.csv:mastery_t4_wrath_hp_cost] 를 더 쓴다(내림 · 1 아래로 안 깎인다 · 조건을 스스로 켠다) · 데미지 % 는 battle `advBefore`
+        if (u.adv?.wrath_blood && def.effects.some(e => e.effect === 'hit')) {
+            const amt = Math.min(u.hp - 1, Math.floor(u.hp * B.mastery_t4_wrath_hp_cost));
+            if (amt > 0) { u.hp -= amt; timeline.push({ t: r1(t), e: 'pay', u: u.key, s: def.id, amt, dhp: u.hp }); }
+        }
         if (def.hpCost > 0) {
             const amt = Math.floor(u.hp * def.hpCost);
             if (amt > 0) {
@@ -691,6 +735,13 @@ export function createSkillRuntime(ctx) {
         }
         // 쿨(`readyAt`)은 위에서 원값으로 이미 잡았다 — `cool_sec` 은 슬롯이 못 민다 (§13-1)
         const lead = cast(u, def, t, false, false, spendN);
+        // 그치지 않는 맹공(전사 마스터리 T4 ② · `adv.skill_repeat_chance` · 2026-11-14 R437) — 공격 스킬(`hit` 줄)이 확률로(**rng 1회** — 값이 있을 때만) 한 번 더 · 에코와 같은 모양(쿨 · 시전 수 · `skill` 이벤트 없음 · `echo` 이벤트) ·
+        //   정신 집중 스킬은 위에서 `chanOpen` 으로 돌아가 여기 안 온다
+        const rep = u.adv?.skill_repeat_chance ?? 0;
+        if (rep > 0 && u.hp > 0 && def.effects.some(e => e.effect === 'hit') && alive(foesOf(u)).length && rng() < Math.min(1, rep)) {
+            timeline.push({ t: r1(t), e: 'echo', u: u.key, s: def.id });
+            cast(u, def, t, true);
+        }
         procCast(u, t);
         // 스킬 뒤 기본 공격 (R218) — 적 목록은 스킬이 끝난 뒤의 것이다. 적이 없으면 굴림도 없다 · 대상은 스킬의 기준 대상(R317)
         if (!u.noBasic) {
@@ -713,6 +764,8 @@ export function createSkillRuntime(ctx) {
         splashStunMult: B.splash_stun_mult,
         // 파리 떼 여닫기 — HP · 타임라인 · 판 크기를 아는 battle.js 가 한다(`EFFECTS.swarm` · 2026-10-29 R380)
         swarmOpen: ctx.swarmOpen, swarmClose: ctx.swarmClose,
+        // 전직 트리 장치 [2026-11-14 · R471] — 스나이프 후열 우선(`aimBack`) · 벗기기 · 덫(`advAttack`) · 일으키기(`castRevive`) — 전투 상태를 아는 battle.js 가 준다
+        aimBack: ctx.aimBack, advAttack: ctx.advAttack, castRevive: ctx.castRevive,
         alive, alliesOf, foesOf, pick, act, cast, fire, procHit, procCast, procStruck, expire, castHeal, castCleanse, castMend, castBuff, applyStatus, castSummon, castCall, basicAttack, targetsOf, chanHit, chanClose,
     };
     return rt;

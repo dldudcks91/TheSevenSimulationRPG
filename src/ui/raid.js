@@ -280,6 +280,18 @@ export function mountRaid(main, { session: s, system, game, onHelp, canPlay = ()
         motion(n, 'number', [{ opacity: 1, transform: 'translate(-50%, 0)' }, { opacity: 0, transform: 'translate(-50%, -44px)' }], 900);
     }
 
+    const sourceCardFx = key => keyToCard.get(key)?.fxUnit;
+    const holding = fx => fx.node.parentElement?.classList.contains('chan-up');
+    function chanHold(fx, on) {
+        const seat = fx.node.parentElement;
+        if (!seat) return;
+        if (!on) { seat.classList.remove('chan-up'); return; }
+        if (!lungeFxOn() || reducedMotion.matches) return;
+        motions.get(seat)?.get('lunge')?.cancel();
+        seat.style.setProperty('--fx-k', SPEED_K[s.speed] ?? 1);
+        seat.classList.add('chan-up');
+    }
+
     function applyEvents() {
         const events = s.run.result.timeline;
         const attacks = new Map(), reactions = new Map(), hits = new Map(), aids = new Map(), numbers = new Map();
@@ -289,8 +301,11 @@ export function mountRaid(main, { session: s, system, game, onHelp, canPlay = ()
             const targetCard = keyToCard.get(e.d ?? e.u), sourceCard = keyToCard.get(e.a);
             const targetFx = e.d === 'e0' || e.u === 'e0' ? bossFxUnit : targetCard?.fxUnit;
             const sourceFx = e.a === 'e0' ? bossFxUnit : sourceCard?.fxUnit;
+            // Channeling (Rapid Shot etc.) holds the seat up from the opening cast to `chanEnd` — no per-shot lunge (ADR-1124).
+            if (e.e === 'skill' && e.chan && sourceCardFx(e.u)?.side === 'party') chanHold(sourceCardFx(e.u), true);
+            if ((e.e === 'chanEnd' || e.e === 'down') && sourceCardFx(e.u)) chanHold(sourceCardFx(e.u), false);
             if (e.e === 'hit') {
-                if (sourceFx?.side === 'party') attacks.set(sourceFx.key, sourceFx.node.parentElement);
+                if (sourceFx?.side === 'party' && !holding(sourceFx)) attacks.set(sourceFx.key, sourceFx.node.parentElement);
                 if (targetFx) reactions.set(targetFx.key, { unit: targetFx, crit: e.crit || reactions.get(targetFx.key)?.crit });
                 if (targetFx && (e.s ? skillFxOn() : basicFxOn())) {
                     const previous = hits.get(targetFx.key)?.e;
@@ -317,7 +332,7 @@ export function mountRaid(main, { session: s, system, game, onHelp, canPlay = ()
             if (e.e === 'buff' && e.s && e.until !== null && targetFx && !aids.has(targetFx.key))
                 aids.set(targetFx.key, { unit: targetFx, kind: e.k || (e.v ?? 0) < 0 ? 'debuff' : 'buff' });
             if (e.e === 'dodge' || e.e === 'evade') {
-                if (sourceFx?.side === 'party') attacks.set(sourceFx.key, sourceFx.node.parentElement);
+                if (sourceFx?.side === 'party' && !holding(sourceFx)) attacks.set(sourceFx.key, sourceFx.node.parentElement);
                 if (targetFx && hitFxOn()) motion(targetFx.node, 'reaction', [{ translate: '0 0' }, { translate: '12px 0', offset: .35 }, { translate: '0 0' }], 260);
             }
             if (e.e === 'skill') {

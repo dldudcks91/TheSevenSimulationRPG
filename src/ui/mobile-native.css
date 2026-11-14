@@ -1,0 +1,496 @@
+/* Purpose-built mobile decision screens. Layout is measured in the logical stage. */
+:root[data-mobile] .mobile-select-field { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; }
+:root[data-mobile] .mobile-select-label { flex: none; color: var(--text-muted); font-size: var(--fs-xs); }
+:root[data-mobile] .mobile-select { flex: 1; min-width: 0; width: 100%; min-height: 40px; padding: 4px 8px; border: 1px solid var(--border-secondary); background: var(--bg-secondary); color: var(--text-primary); }
+:root[data-mobile] [data-mobile-select][hidden] { display: none !important; }
+:root[data-mobile] .mobile-group-hidden { display: none !important; }
+:root[data-mobile] .mobile-group-selector { flex: none; }
+:root[data-mobile] .c-forge-col > .fg-tabs { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); grid-auto-flow: row; width: 100%; min-width: 0; padding: 0; gap: 4px; overflow: hidden; }
+:root[data-mobile] .c-forge-col > .fg-tabs > .fg-gap { display: none; }
+:root[data-mobile] .c-forge-col > .fg-tabs > .fg-tab { width: 100%; min-width: 0; min-height: 40px; padding: 5px 3px; font-size: var(--fs-xs); }
+:root[data-mobile] .c-lib-col > .fg-tabs { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); grid-auto-flow: row; width: 100%; min-width: 0; padding: 0; gap: 4px; overflow: hidden; }
+:root[data-mobile] .c-lib-col > .fg-tabs > .fg-gap { display: none; }
+:root[data-mobile] .c-lib-col > .fg-tabs > .fg-tab { width: 100%; min-width: 0; min-height: 40px; padding: 5px 3px; font-size: var(--fs-xs); }
+:root[data-mobile] .toast-layer { top: calc(env(safe-area-inset-top,0px) + 48px); bottom: auto; left: 8px; right: 8px; max-width: none; padding: 4px; align-items: center; gap: 4px; }
+:root[data-mobile] .toast { width: max-content; min-width: 0; max-width: 100%; padding: 6px 10px; font-size: var(--fs-xs); }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .toast-layer { top: calc(env(safe-area-inset-top,0px) + 40px); }
+:root[data-mobile-landscape] .toast-layer { left: calc(var(--mobile-dock) + env(safe-area-inset-left,0px) + 8px); top: calc(env(safe-area-inset-top,0px) + 44px); }
+:root[data-mobile] .main .hs-card.mobile-roster-capacity { flex: 0 0 40px; min-width: 40px; width: 40px; font-size: var(--fs-2xs); text-align: center; padding: 3px; line-height: 1.4; }
+:root:where([data-mobile-compact])[data-mobile] .main .hs-card { flex-basis: 52px; min-width: 52px; width: 52px; }
+:root[data-mobile] .mobile-explore-spots { grid-template-columns: minmax(0,1fr); grid-auto-rows: minmax(0,1fr); align-content: stretch; overflow: hidden; }
+:root[data-mobile] .mobile-explore-spots .ex-spot { min-height: 0; }
+:root[data-mobile] .main > .page:has(> .hs-panel > .hero-strip.view-only) { display: flex; }
+:root[data-mobile] .main > .page > .hs-panel:has(> .hero-strip.view-only) { display: none; }
+:root[data-mobile] .dp-tree > .dp-tree-grid { overflow: hidden; }
+:root[data-mobile] .mobile-research-line:not(.mobile-group-hidden) { flex: 1; min-height: 0; align-content: center; gap: 20px 0; }
+:root[data-mobile] #app > .main.mobile-regions { gap: 6px; }
+:root[data-mobile] .mobile-region-controls { display: flex; flex-direction: column; flex: none; gap: 6px; min-width: 0; }
+:root[data-mobile] .mobile-region-controls .diff-tabs { display: flex; flex-wrap: nowrap; align-items: stretch; gap: 3px; min-width: 0; margin: 0; padding: 0; }
+:root[data-mobile] .mobile-region-controls .dt-gap { display: none; }
+:root[data-mobile] .mobile-region-controls .diff-tab { flex: 1 1 0; min-width: 0; min-height: 38px; padding: 5px 3px; font-size: var(--fs-xs); white-space: nowrap; }
+:root[data-mobile] .mobile-region-controls .diff-tab::before, :root[data-mobile] .mobile-region-controls .diff-tab::after { display: none; }
+:root[data-mobile] .mobile-region-controls .dt-fill { flex: 0 0 auto; padding: 0; border: 0; }
+:root[data-mobile] .mobile-region-controls .dt-fill > .zone-lock { display: none; }
+:root[data-mobile] .mobile-region-controls .mobile-region-note { font-size: var(--fs-2xs); line-height: 14px; }
+:root[data-mobile] .mobile-region-controls .dt-report { min-height: 38px; padding: 5px 7px; margin: 0; font-size: var(--fs-xs); }
+:root[data-mobile] .mobile-region-controls .sub-bar { position: static; margin: 0; padding: 0; border: 0; box-shadow: none; }
+:root[data-mobile] .mobile-regions > .panel.diff-panel { display: flex; flex: 1 1 0; min-height: 0; margin: 0; padding: 5px; overflow: hidden; }
+:root[data-mobile] .mobile-zone-list { display: grid; grid-template-rows: repeat(var(--mobile-zone-count), minmax(0, 1fr)); gap: 5px; flex: 1; min-height: 0; min-width: 0; }
+:root[data-mobile] .diff-panel .mobile-zone-list > .zone { min-height: 0; margin: 0; padding: 6px 9px; gap: 6px; overflow: hidden; }
+:root[data-mobile] .mobile-zone-list .zone > div { min-width: 0; }
+:root[data-mobile] .mobile-zone-list .title { gap: 6px; font-size: var(--fs-sm); line-height: 18px; }
+:root[data-mobile] .mobile-zone-list .title > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root[data-mobile] .mobile-zone-list .sin-chip { flex: none; font-size: var(--fs-2xs); }
+:root[data-mobile] .mobile-zone-list .meta { font-size: var(--fs-xs); line-height: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+:root[data-mobile] .mobile-zone-list .zone.locked { grid-template-columns: minmax(0,1fr); gap: 2px; align-content: center; }
+:root[data-mobile] .mobile-zone-list .zone.locked .meta { display: none; }
+:root[data-mobile] .mobile-zone-list .zone-lock { font-size: var(--fs-2xs); line-height: 14px; }
+:root[data-mobile] .mobile-zone-list .zone-go { gap: 3px; }
+:root[data-mobile] .mobile-zone-list .zone-go button { min-height: 40px; min-width: 34px; padding: 4px; font-size: var(--fs-xs); }
+:root[data-mobile] .mobile-zone-list .zone:focus-visible { outline: 2px solid var(--text-accent); outline-offset: -2px; }
+:root[data-mobile-landscape] #app > .main.mobile-regions { flex-direction: row; }
+:root[data-mobile-landscape] .mobile-region-controls { flex: 0 0 132px; gap: 8px; }
+:root[data-mobile-landscape] .mobile-region-controls .diff-tabs { flex-direction: column; order: 1; gap: 5px; }
+:root[data-mobile-landscape] .mobile-region-controls .dt-fill { display: flex; }
+:root[data-mobile-landscape] .mobile-region-controls .dt-report { width: 100%; }
+:root[data-mobile-landscape] .mobile-region-controls .mobile-select-field { flex-direction: column; align-items: stretch; gap: 3px; }
+:root[data-mobile-landscape] .mobile-zone-list .meta { -webkit-line-clamp: 1; font-size: var(--fs-2xs); line-height: 13px; }
+:root[data-mobile-landscape] .diff-panel .mobile-zone-list > .zone { padding: 3px 7px; }
+:root:where([data-mobile-compact])[data-mobile] .mobile-zone-list .meta { -webkit-line-clamp: 1; font-size: var(--fs-2xs); line-height: 13px; }
+
+/* A short, explicit choice row replaces stacked full-height cards. */
+:root[data-mobile] .mobile-choice { display: flex; flex-direction: column; min-height: 0; gap: 8px; }
+:root[data-mobile] .mobile-choice-bar { display: grid; grid-template-columns: repeat(var(--choice-count),minmax(0,1fr)); flex: none; gap: 5px; }
+:root[data-mobile] .mobile-choice-button { display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; min-height: 44px; padding: 5px; font-size: var(--fs-xs); }
+:root[data-mobile] .mobile-choice-button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root[data-mobile] .mobile-choice-button img { width: 28px; height: 34px; object-fit: cover; }
+:root[data-mobile] .mobile-choice-button.on { border-color: var(--text-accent); color: var(--text-primary); }
+:root[data-mobile] .mobile-choice-card:not(.mobile-choice-on) { display: none !important; }
+
+/* Hiring is one candidate at a time, with every stat and both actions on screen. */
+:root[data-mobile] :is(.tv-hire,.mobile-visitor-detail).mobile-pane { overflow: hidden; }
+:root[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .tv-row { overflow: hidden; }
+:root[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .tv-cands.mobile-choice { display: flex; height: 100%; min-height: 0; width: 100%; }
+:root[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .mobile-choice-card { display: flex; flex-direction: column; flex: 1 1 0; min-height: 0; width: 100%; padding: 9px; overflow: hidden; }
+:root[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-head { gap: 10px; }
+:root[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-head .hero-face { width: 76px; height: 88px; }
+:root[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-head .hero-face img { width: 100%; height: 100%; object-fit: cover; }
+:root[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-name { font-size: var(--fs-md); }
+:root[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-role, :root[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-skill { font-size: var(--fs-xs); }
+:root[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .attr-list { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; justify-content: space-evenly; margin: 6px 0; }
+:root[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .attr-list > * { min-height: 0; }
+:root[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .attr-row { display: grid; grid-template-columns: minmax(95px,auto) minmax(30px,1fr) 24px; align-items: center; gap: 7px; }
+:root[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-line { margin: 0; padding-block: 4px; }
+:root[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .tv-res-btns { flex: none; margin-top: 6px; }
+:root[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .tv-res-btns .btn { min-height: 42px; }
+:root[data-mobile] .tv-hire .tv-roll .btn { min-height: 40px; }
+:root[data-mobile] .tv-cm.mobile-pane-on, :root[data-mobile] .tv-cm .cm-body { overflow: hidden; }
+:root[data-mobile] .tv-cm .cm-body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+:root[data-mobile] .tv-cm .cm-board.mobile-choice { flex: 1; min-height: 0; overflow: hidden; }
+:root[data-mobile] .tv-cm .cm-card.mobile-choice-on { display: flex; flex: 1; min-height: 0; flex-direction: column; padding: 10px; gap: 10px; }
+:root[data-mobile] .tv-cm .cm-go { margin-top: auto; min-height: 44px; min-width: 72px; }
+:root[data-mobile-landscape] .tv-cm > h2 { padding: 0; margin: 0; font-size: var(--fs-xs); line-height: 20px; }
+:root[data-mobile-landscape] .tv-cm .cm-card.mobile-choice-on { display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-rows: auto minmax(0,1fr) auto; gap: 3px 8px; padding: 5px; }
+:root[data-mobile-landscape] .tv-cm .cm-kind { grid-column: 1; grid-row: 1; }
+:root[data-mobile-landscape] .tv-cm .cm-goal { grid-column: 1; grid-row: 2; }
+:root[data-mobile-landscape] .tv-cm .cm-prog { grid-column: 1; grid-row: 3; }
+:root[data-mobile-landscape] .tv-cm .cm-rew { grid-column: 2; grid-row: 1; }
+:root[data-mobile-landscape] .tv-cm .cm-go { grid-column: 2; grid-row: 2 / 4; min-height: 36px; padding: 5px; }
+:root[data-mobile-landscape] .tv-cm .mobile-choice-button { min-height: 32px; padding: 3px; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-head .hero-face { width: 56px; height: 60px; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-head { gap: 6px; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-skill { gap: 4px; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-skill .ico { width: 24px; height: 24px; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .attr-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 2px 10px; margin: 4px 0; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-line { padding-block: 2px; font-size: var(--fs-xs); }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .mobile-choice-card { display: grid; grid-template-columns: minmax(150px,1fr) minmax(0,1.3fr); grid-template-rows: minmax(0,1fr) auto auto; gap: 2px 10px; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .ng-head { grid-column: 1; grid-row: 1; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .attr-list { grid-column: 2; grid-row: 1 / 3; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .ng-line { grid-column: 1; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .tv-res-btns { grid-column: 1 / -1; grid-row: 4; margin: 0; }
+
+/* Tactics keeps five slots visible; a separate panel explains the shared bonuses. */
+:root[data-mobile] .page:has(.pt-tactics.mobile-pane-on) > .hs-panel,
+:root[data-mobile] .page:has(.pt-potion.mobile-pane-on) > .hs-panel { display: none; }
+:root[data-mobile] .pt-tactics.mobile-pane-on { overflow: hidden; }
+:root[data-mobile] .pt-tactics > .sub-h { order: -3; }
+:root[data-mobile] .pt-tactics > .rs-head { order: -2; display: flex; flex-wrap: wrap; gap: 6px 12px; padding: 7px; margin: 0; }
+:root[data-mobile] .pt-tactics .rs-roll { min-height: 40px; margin-left: auto; }
+:root[data-mobile] .pt-tactics .rs-grid.mobile-pane-on { overflow: hidden; }
+:root[data-mobile] .pt-tactics .rs-grid .mobile-choice-card { flex: 1; min-height: 0; align-content: center; padding: 12px; gap: 12px; }
+:root[data-mobile] .pt-tactics .rs-cell .rs-pin { min-height: 44px; min-width: 44px; }
+:root[data-mobile] .pt-tactics .rs-board.mobile-pane-on { overflow: auto; }
+:root[data-mobile] .pt-tactics .mobile-choice-button { flex-direction: column; font-size: var(--fs-2xs); }
+
+/* Construction separates the current decision from the full rank reference. */
+:root[data-mobile] .cn-side.mobile-pane-on { overflow: hidden; }
+:root[data-mobile] .cn-side > .cn-title { order: -2; }
+:root[data-mobile] .mobile-building-overview.mobile-pane-on { overflow: hidden; gap: 12px; }
+:root[data-mobile] .mobile-building-overview .cn-head { flex: 0 1 35%; min-height: 80px; overflow: hidden; }
+:root[data-mobile] .mobile-building-overview .cn-thumb-col { flex: 0 0 40%; min-width: 0; height: 100%; }
+:root[data-mobile] .mobile-building-overview .cn-thumb { flex: 1; width: 100%; height: auto; max-height: 130px; min-height: 0; }
+:root[data-mobile] .mobile-building-overview .cn-head-info { min-width: 0; min-height: 0; height: 100%; overflow: auto; }
+:root[data-mobile] .mobile-building-overview .cn-next { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+:root[data-mobile] .mobile-building-overview .cn-next > .sub-h { width: auto; max-width: 100%; margin: 0 0 6px; padding: 6px 0; }
+:root[data-mobile] .mobile-building-overview .cn-next-body { flex: 1; min-height: 0; align-items: stretch; }
+:root[data-mobile] .mobile-building-overview .cn-next-main { flex: 1; min-height: 0; overflow: auto; }
+:root[data-mobile] .mobile-building-overview .cn-act { flex: none; display: flex; flex-direction: row; align-items: center; justify-content: space-between; width: 100%; }
+:root[data-mobile] .mobile-building-overview .cn-go { min-height: 44px; min-width: 100px; }
+:root[data-mobile] .mobile-building-history.mobile-pane-on { overflow: hidden; }
+:root[data-mobile] .mobile-building-history > .cn-sub { width: auto; max-width: 100%; margin: 0 0 6px; padding: 6px 0; }
+:root[data-mobile] .mobile-building-history .cn-ranks { flex: 1; min-height: 0; overflow: auto; }
+
+/* Advancement shows one branch and its three skills; the action stays in the section heading. */
+:root[data-mobile] .tr-adv-body { overflow: hidden !important; gap: 6px; }
+:root[data-mobile] .tr-adv-main { flex: 1 1 0; min-height: 0; overflow: hidden; }
+:root[data-mobile] .tr-adv-row.mobile-choice { height: 100%; min-height: 0; }
+:root[data-mobile] .tr-adv-branch.mobile-choice-on { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; overflow: auto; padding: 7px; }
+:root[data-mobile] .tr-adv-bh { flex: none; }
+:root[data-mobile] .tr-adv-sks { flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; gap: 5px; }
+:root[data-mobile] .tr-adv-sk { gap: 7px; }
+:root[data-mobile] .tr-adv-ico { width: 38px; height: 38px; flex: 0 0 38px; }
+:root[data-mobile] .tr-adv-desc { font-size: var(--fs-xs); line-height: 1.35; }
+:root[data-mobile] .tr-adv-bdesc { font-size: var(--fs-xs); }
+:root[data-mobile] .tr-adv-heading-actions { gap: 6px; }
+:root[data-mobile] .tr-adv-heading-cost { font-size: var(--fs-xs); }
+:root[data-mobile] .tr-adv-heading-actions .btn { min-height: 32px; padding: 3px 8px; }
+:root[data-mobile] .tr-adv-cur { flex-wrap: nowrap; gap: 6px; margin: 0; align-items: center; }
+:root[data-mobile] .tr-adv-cur > .sk-cards { flex: 1; gap: 5px; }
+
+/* Short portraits reserve their height for the current task. Party shortcuts
+   remain on Expedition, which is always one tap away in the dock. */
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] #app:not([data-tab='expedition']):not(.pregame) {
+    grid-template-rows: 40px 0 minmax(0,1fr) calc(var(--mobile-dock) + var(--mobile-safe-bottom));
+}
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] #app:not([data-tab='expedition']):not(.pregame) .topbar > .tab-seg { display: none; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .mobile-choice-card { padding: 6px; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .attr-row { grid-template-columns: minmax(0,1fr) 20px; gap: 4px; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .attr-bar { display: none; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .attr-n { font-size: var(--fs-xs); gap: 2px; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .attr-list { padding-top: 4px; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .tv-res-btns .btn { min-height: 36px; padding: 4px; }
+:root[data-mobile] .pt-tactics.mobile-pane { padding: 5px; }
+:root[data-mobile] .pt-tactics > .sub-h { padding: 5px; margin: 0; }
+:root:where([data-mobile-compact])[data-mobile] .pt-tactics > .rs-head { padding: 4px; gap: 3px 8px; font-size: var(--fs-xs); }
+:root:where([data-mobile-compact])[data-mobile] .pt-tactics .rs-grid .mobile-choice-card { padding: 6px; gap: 3px; align-content: center; }
+:root:where([data-mobile-compact])[data-mobile] .pt-tactics .mobile-choice-button { min-height: 36px; padding: 3px; }
+:root:where([data-mobile-compact])[data-mobile] .tr-adv-cur .sk-card { width: 36px; height: 36px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .mobile-choice-card { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); grid-template-rows: auto minmax(0,1fr) auto auto; gap: 2px 8px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-head,
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .attr-list,
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .tv-res-btns { grid-column: 1 / -1; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-head { margin-bottom: 2px; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-id { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 2px 6px; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-chips { grid-column: 1 / -1; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-name { margin: 0 !important; padding: 0 !important; font-size: var(--fs-sm); }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-role { font-size: var(--fs-2xs); align-self: center; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-skill { grid-column: 1 / -1; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .attr-row { line-height: 18px; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .attr-list { margin: 2px 0; gap: 0 10px; }
+:root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-line { font-size: var(--fs-2xs); line-height: 16px; border: 0; gap: 5px; }
+:root:where([data-mobile-compact])[data-mobile] .pt-tactics > .rs-head { display: grid; grid-template-columns: 1fr 1fr auto; align-items: center; font-size: var(--fs-2xs); }
+:root:where([data-mobile-compact])[data-mobile] .pt-tactics > .rs-head .rs-roll { grid-column: 3; grid-row: 1 / 3; min-height: 40px; padding: 3px 5px; font-size: var(--fs-2xs); }
+
+/* A short landscape is a two-column control surface, not a shorter portrait. */
+:root[data-mobile-landscape] .c-tavern.mobile-deck { display: grid; grid-template-columns: 94px minmax(0,1fr); grid-template-rows: minmax(0,1fr); }
+:root[data-mobile-landscape] .c-tavern > .mobile-pages { display: flex; flex-direction: column; grid-column: 1; grid-row: 1; }
+:root[data-mobile-landscape] .c-tavern > .mobile-pages .btn { flex: 1; }
+:root[data-mobile-landscape] .c-tavern .mobile-pane { grid-column: 2; grid-row: 1; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail).mobile-pane { padding: 5px; gap: 4px; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail).mobile-pane > h2 { padding: 2px; margin: 0; line-height: 20px; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .box-body { gap: 4px; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .mobile-choice { gap: 4px; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .mobile-choice-button { min-height: 32px; height: 32px; padding: 2px 5px; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .mobile-choice-button img { width: 22px; height: 26px; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .mobile-choice-card { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); grid-template-rows: minmax(0,1fr) 20px 34px; padding: 5px; gap: 3px 8px; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .ng-head { grid-column: 1; grid-row: 1; align-self: start; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .ng-head .hero-face { width: 40px; height: 54px; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .ng-id { display: flex; gap: 1px; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .ng-chips { flex-wrap: wrap; gap: 2px; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .ng-chips .chip { font-size: var(--mobile-fs-small); padding: 0 2px; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .ng-name { font-size: var(--fs-xs); }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .ng-role { font-size: var(--mobile-fs-small); }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .ng-skill { font-size: var(--fs-2xs); }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .ng-skill .ico { width: 18px; height: 18px; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .attr-list { grid-column: 2; grid-row: 1; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1px 8px; margin: 0; padding: 0; align-content: space-evenly; border: 0; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .attr-n, :root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .attr-v { font-size: var(--fs-2xs); }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .attr-n .cs-a { display: none; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .ng-line { grid-column: auto; grid-row: 2; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .tv-res-btns { grid-column: 1 / -1; grid-row: 3; margin: 0; }
+:root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .tv-res-btns .btn, :root[data-mobile-landscape] .tv-hire .tv-roll .btn { min-height: 32px; padding: 3px; }
+:root[data-mobile-landscape] .main > .page:has(.pt-tactics.mobile-pane-on),
+:root[data-mobile-landscape] .main > .page:has(.pt-potion.mobile-pane-on) { display: flex; }
+:root[data-mobile-landscape] .pt-body { display: grid; grid-template-columns: 100px minmax(0,1fr); grid-template-rows: auto minmax(0,1fr); padding: 0; }
+:root[data-mobile-landscape] .pt-body > .pt-pick { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; }
+:root[data-mobile-landscape] .pt-body > .mobile-pages { grid-column: 1; grid-row: 2; display: flex; flex-direction: column; }
+:root[data-mobile-landscape] .pt-body > .mobile-pane, :root[data-mobile-landscape] .pt-body .pt-left > .mobile-pane { grid-column: 2; grid-row: 1 / -1; }
+:root[data-mobile-landscape] .pt-body .pt-tactics { grid-column: 2; grid-row: 1 / -1; }
+:root[data-mobile-landscape] .pt-body > .pt-pick .btn { min-height: 32px; }
+:root[data-mobile-landscape] .pt-tactics > .sub-h { padding: 0; line-height: 18px; font-size: var(--fs-xs); margin: 0; }
+:root[data-mobile-landscape] .pt-tactics > .rs-head { padding: 0; }
+:root[data-mobile-landscape] .pt-tactics > .rs-head .rs-roll { min-height: 32px; }
+:root[data-mobile-landscape] .pt-tactics .mobile-pages .btn { min-height: 28px; padding: 2px; }
+:root[data-mobile-landscape] .pt-tactics .mobile-choice-button { min-height: 30px; padding: 2px; }
+:root[data-mobile-landscape] .pt-tactics .rs-grid .mobile-choice-card { padding: 5px; gap: 2px; align-content: center; font-size: var(--mobile-fs-caption); line-height: 15px; }
+:root[data-mobile-landscape] .pt-tactics .rs-cell .rs-top { min-height: 28px; }
+:root[data-mobile-landscape] .pt-tactics .rs-cell .rs-pin { min-height: 30px; min-width: 36px; padding: 3px; }
+/* Library sheet: the shared hero head stays in a narrow left column for both folder tabs (ADR-1165). */
+:root[data-mobile-landscape] .lib-panel { display: grid !important; grid-template-columns: 100px minmax(0,1fr); grid-template-rows: auto minmax(0,1fr); gap: 6px; }
+:root[data-mobile-landscape] .lib-head { display: contents; }
+:root[data-mobile-landscape] .lib-hero-h { grid-column: 1; grid-row: 1; display: block; margin: 0; padding: 0; border: 0; background: none; box-shadow: none; font-weight: normal; }   /* The narrow left column shows the Skill Info title. */
+:root[data-mobile-landscape] .tr-adv-pts { display: block; margin: 4px 0 0; font-size: var(--fs-xs); }
+:root[data-mobile-landscape] .lib-panel > :is(.lib-split, .lib-sec) { grid-column: 2; grid-row: 1 / -1; }
+:root[data-mobile-landscape] .tr-adv-cur { grid-column: 1; grid-row: 2; flex-direction: column; align-items: stretch; }
+:root[data-mobile-landscape] .tr-adv-cur > .sk-cards { flex: none; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 3px; }
+:root[data-mobile-landscape] .tr-adv-cur .sk-card { width: 28px; height: 28px; }
+:root[data-mobile-landscape] .tr-adv-main { height: 100%; }
+:root[data-mobile-landscape] .tr-adv-row .mobile-choice-button { min-height: 34px; padding: 3px; }
+
+/* Advancement stays a single comparison screen, with all three paths visible. */
+:root[data-mobile] .lib-entry { gap: 6px; flex-wrap: wrap; }
+:root[data-mobile] .lib-entry-info { gap: 3px 10px; font-size: var(--fs-xs); }
+:root[data-mobile] .lib-entry-actions { gap: 6px; }
+:root[data-mobile] .lib-entry-actions .btn { min-height: 36px; font-size: var(--fs-xs); }
+:root[data-mobile] .advance-room-modal { height: 100%; gap: 8px; }
+:root[data-mobile] .advance-room-modal > .advance-room { flex: 1 1 0; overflow: hidden; gap: 8px; }
+:root[data-mobile] .advance-room-content { display: flex; flex-direction: column; gap: 10px; }
+:root[data-mobile] .advance-room-paths { flex: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; position: sticky; top: 0; z-index: 1; background: var(--bg-secondary); }
+:root[data-mobile] .advance-path { padding: 9px 5px; min-height: 44px; justify-content: center; text-align: center; font-size: var(--fs-xs); }
+:root[data-mobile] .advance-path > span { display: none; }
+:root[data-mobile] .advance-room-paths:has(> :only-child) { grid-template-columns: minmax(0, 1fr); }
+:root[data-mobile] .advance-room-desc { display: block; margin: 0 0 8px; font-size: var(--fs-xs); line-height: 1.5; color: var(--text-secondary); }
+:root[data-mobile] .advance-room-preview { flex: none; }
+:root[data-mobile] .advance-room .sk-box-head { min-height: 28px; }
+:root[data-mobile] .advance-room .sk-cell { max-width: 64px; }
+:root[data-mobile] .advance-room-footer { padding: 8px 0 0; gap: 5px; font-size: var(--fs-xs); }
+:root[data-mobile] .advance-room-requirements { gap: 5px 12px; }
+:root[data-mobile] .advance-room-footer > .btn { position: static; width: 100%; min-height: 40px; }
+:root[data-mobile-landscape] .advance-room-content { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 12px; }
+:root[data-mobile-landscape] .advance-room-paths { display: flex; position: sticky; align-self: start; }
+:root[data-mobile-landscape] .advance-room-footer { padding-right: 150px; }
+:root[data-mobile-landscape] .advance-room-footer > .btn { position: absolute; width: 140px; min-width: 0; }
+
+/* Match preparation keeps the start action fixed while inspecting either team or loadout. */
+:root[data-mobile] .arena-main.mobile-pane-on { overflow: hidden; gap: 6px; }
+:root[data-mobile] .arena-main > .arena-selection { order: -2; flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin: 0; }
+:root[data-mobile] .arena-selection > .segmented { flex: 1 0 100%; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 4px; }
+:root[data-mobile] .arena-selection > .sub-h { margin: 0; font-size: var(--fs-xs); }
+:root[data-mobile] .arena-selection > .btn { margin-left: auto; min-height: 36px; padding: 4px 8px; }
+:root[data-mobile] .arena-selection .arena-from { flex: 1 0 100%; font-size: var(--fs-2xs); }
+:root[data-mobile] .arena-main > .arena-actions { flex: none; margin: 0; padding: 5px 0 0; display: flex; align-items: center; gap: 6px; }
+:root[data-mobile] .arena-actions .arena-fight { flex: 1; min-height: 44px; }
+:root[data-mobile] .arena-actions .arena-last { flex: 1; font-size: var(--fs-2xs); }
+:root[data-mobile] .arena-main > .arena-prep.mobile-pane-on { display: grid !important; height: auto; grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(0,1fr) 18px minmax(0,1fr); gap: 3px; padding: 5px; overflow: hidden; }
+:root[data-mobile] .arena-prep > .side { align-self: center; min-height: 0; width: 100%; --form-step: 6px; }
+:root[data-mobile] .arena-prep .divider { margin: 0; font-size: var(--fs-2xs); line-height: 18px; }
+:root[data-mobile] .arena-prep .unit .sprite { height: clamp(24px,4cqh,40px); }
+:root[data-mobile] .arena-prep .unit.v2 .cd-slot { height: 24px; }
+:root[data-mobile] .arena-prep .unit.v2 > .unit-top { min-height: 16px; }
+:root[data-mobile] .arena-prep .unit .hp-row .bar.hp { height: 15px; }
+:root[data-mobile] .arena-main > .arena-load.mobile-pane-on { overflow: auto; }
+:root:where([data-mobile-compact])[data-mobile] .arena-selection > .segmented .btn { min-height: 34px; }
+:root:where([data-mobile-compact])[data-mobile] .arena-main > .arena-selection { gap: 3px; }
+:root:where([data-mobile-compact])[data-mobile] .arena-prep .unit .sprite { height: 24px; }
+:root[data-mobile-landscape] .arena-main > .arena-prep.mobile-pane-on { display: flex !important; flex-direction: row; align-items: center; justify-content: space-around; }
+:root[data-mobile-landscape] .arena-prep > .side { flex: 1; min-width: 0; }
+:root[data-mobile-landscape] .arena-prep .divider { flex: none; }
+:root[data-mobile-landscape] .arena-selection > .segmented { flex-basis: auto; width: auto; }
+:root[data-mobile-landscape] .arena-selection .arena-from { flex: 0 1 auto; margin-left: auto; }
+:root[data-mobile] .depart-box .form-actions .btn { min-width: 0; width: auto; flex: 1 1 0; }
+:root[data-mobile-landscape] .main .ex-map-wrap.fill { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); grid-template-rows: 44px minmax(0,1fr); gap: 6px; padding: 5px; }
+:root[data-mobile-landscape] .ex-map-wrap > .ex-map { grid-column: 1; grid-row: 1 / -1; width: 100%; min-width: 0; align-self: center; }
+:root[data-mobile-landscape] .ex-map-wrap > .mobile-group-selector { grid-column: 2; grid-row: 1; }
+:root[data-mobile-landscape] .ex-map-wrap > .mobile-explore-spots { grid-column: 2; grid-row: 2; width: 100%; min-width: 0; }
+:root[data-mobile-landscape] .ex-map-wrap > .ex-pop { display: flex; }
+:root[data-mobile-landscape] .mobile-research-line:not(.mobile-group-hidden) { gap: 5px 0; padding: 5px; }
+:root[data-mobile-landscape] .dp-tree.mobile-pane { padding: 5px; gap: 5px; }
+:root[data-mobile-landscape] .dp-tree.mobile-pane > h2 { margin: 0; padding: 3px; }
+:root[data-mobile-landscape] .mobile-research-line .dp-reg-face { width: 40px; height: 40px; }
+:root[data-mobile-landscape] .mobile-research-line .dp-card { padding: 4px; }
+:root[data-mobile-landscape] .mobile-research-line > .dp-tree-cell { height: 44px; --dp-orb: 36px; }
+:root[data-mobile-landscape] .pt-tactics .rs-grid { gap: 4px; }
+:root[data-mobile-landscape] .pt-tactics .rs-cell .rs-sin { grid-column: 1; grid-row: 2; }
+:root[data-mobile-landscape] .pt-tactics .rs-cell .rs-cond { grid-column: 2; grid-row: 2; text-align: right; }
+:root[data-mobile-landscape] .pt-tactics .rs-cell .rs-cnt-c { grid-column: 2; grid-row: 3; }
+:root[data-mobile-landscape] .pt-tactics .rs-cell .rs-eff { grid-column: 1; grid-row: 3; }
+:root[data-mobile-landscape] .pt-tactics .rs-cell .rs-lead { grid-column: 1 / -1; grid-row: 4; }
+:root[data-mobile-landscape] .mobile-building-overview.mobile-pane-on { display: grid !important; grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); gap: 8px; }
+:root[data-mobile-landscape] .mobile-building-overview .cn-head { flex-direction: row; height: 100%; min-height: 0; }
+:root[data-mobile-landscape] .mobile-building-overview .cn-thumb-col { flex: 0 0 45%; }
+:root[data-mobile-landscape] .mobile-building-overview .cn-thumb { flex: none; height: 70px; }
+:root[data-mobile-landscape] .mobile-building-overview .cn-next { height: 100%; }
+:root[data-mobile-landscape] .mobile-building-overview .cn-next > .sub-h { padding: 2px; margin: 0; font-size: var(--fs-xs); }
+:root[data-mobile-landscape] .mobile-building-overview .cn-next-body { gap: 4px; }
+:root[data-mobile-landscape] .mobile-building-overview .cn-next-main { font-size: var(--mobile-fs-caption); }
+:root[data-mobile-landscape] .tr-adv-cur { gap: 3px; }
+:root[data-mobile-landscape] .cn-side.mobile-pane { padding: 4px; gap: 4px; }
+:root[data-mobile-landscape] .cn-side > .cn-title { padding: 2px; margin: 0; line-height: 20px; }
+:root[data-mobile-landscape] .cn-side .mobile-pages { padding: 1px; }
+:root[data-mobile-landscape] .cn-side .mobile-pages .btn { min-height: 30px; padding: 3px; }
+
+/* Formation seats include portrait, HP and the three skill icons. Their full
+   width, rather than the portrait alone, determines the mobile board size. */
+:root[data-mobile] .fm-box.mobile-pane { container-type: inline-size; overflow: hidden; --fm-slot: clamp(48px,21cqw,80px); --fm-step: calc(var(--fm-slot) * .35); --fm-seat-gap: 7px; --fm-sk-gap: 2px; }
+:root[data-mobile] .fm-box .fm-main { flex-direction: column; align-items: center; width: 100%; gap: 8px; }
+:root[data-mobile] .fm-box .fm-tpls { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); width: 100%; gap: 5px; }
+:root[data-mobile] .fm-box .fm-tpl { display: flex; justify-content: center; align-items: center; min-height: 36px; padding: 4px; }
+:root[data-mobile] .fm-box .fm-board { height: var(--fm-board-h); }
+:root[data-mobile] .fm-box .fm-line { width: var(--fm-axis); }
+:root[data-mobile-landscape] .arena-page.mobile-deck { display: grid; grid-template-columns: 100px minmax(0,1fr); grid-template-rows: auto minmax(0,1fr); gap: 5px; padding: 5px; }
+:root[data-mobile-landscape] .arena-page > h2 { grid-column: 1; grid-row: 1; font-size: var(--fs-xs); padding: 3px; }
+:root[data-mobile-landscape] .arena-page > .mobile-pages { grid-column: 1; grid-row: 2; display: flex; flex-direction: column; }
+:root[data-mobile-landscape] .arena-page .arena-main, :root[data-mobile-landscape] .arena-page .arena-rail { grid-column: 2; grid-row: 1 / -1; }
+:root[data-mobile-landscape] .arena-main > .mobile-pages { padding: 1px; }
+:root[data-mobile-landscape] .arena-main > .mobile-pages .btn { min-height: 30px; padding: 3px; }
+:root[data-mobile-landscape] .arena-actions .arena-fight { min-height: 36px; }
+:root[data-mobile-landscape] .arena-main.mobile-pane-on { display: grid !important; grid-template-columns: 90px minmax(0,1fr); grid-template-rows: auto minmax(0,1fr) 41px; gap: 5px; }
+:root[data-mobile-landscape] .arena-main > .arena-selection { grid-column: 1; grid-row: 1; flex-direction: column; align-items: stretch; }
+:root[data-mobile-landscape] .arena-selection > .mobile-select-field { flex-direction: column; align-items: stretch; gap: 2px; }
+:root[data-mobile-landscape] .arena-selection .mobile-select { min-height: 32px; font-size: var(--fs-xs); padding: 2px; }
+:root[data-mobile-landscape] .arena-selection > .sub-h { font-size: var(--fs-2xs); line-height: 13px; }
+:root[data-mobile-landscape] .arena-selection > .btn { min-height: 30px; margin: 0; font-size: var(--mobile-fs-caption); }
+:root[data-mobile-landscape] .arena-selection .arena-from { margin: 0; font-size: var(--mobile-fs-small); line-height: 12px; }
+:root[data-mobile-landscape] .arena-main > .mobile-pages { grid-column: 1; grid-row: 2; display: flex; flex-direction: column; }
+:root[data-mobile-landscape] .arena-main > .mobile-pages .btn { min-height: 28px; }
+:root[data-mobile-landscape] .arena-main > .arena-prep.mobile-pane-on { grid-column: 2; grid-row: 1 / 3; display: grid !important; grid-template-rows: minmax(0,1fr) 14px minmax(0,1fr); padding: 3px; gap: 2px; }
+:root[data-mobile-landscape] .arena-main > .arena-load.mobile-pane-on { grid-column: 2; grid-row: 1 / 3; }
+:root[data-mobile-landscape] .arena-main > .arena-actions { grid-column: 1 / -1; grid-row: 3; }
+:root[data-mobile-landscape] .arena-prep .unit-body { flex-direction: column; }
+:root[data-mobile-landscape] .arena-prep .unit .sprite { height: 20px; width: 100%; }
+:root[data-mobile-landscape] .arena-prep .unit.v2 .cd-slot { height: 20px; }
+:root[data-mobile-landscape] .arena-prep .divider { line-height: 14px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena-page { padding: 6px; gap: 5px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena-page > h2 { padding: 3px; font-size: var(--fs-sm); line-height: 22px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena-page > h2 .ar-ico { width: 24px; height: 24px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena-main > .arena-selection { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 3px 6px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena-selection > .mobile-select-field { grid-column: 1; grid-row: 1; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena-selection > .sub-h { grid-column: 1; grid-row: 2; font-size: var(--fs-2xs); line-height: 14px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena-selection > .btn { grid-column: 2; grid-row: 1 / 3; min-height: 40px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena-selection > .arena-from { grid-column: 1 / -1; grid-row: 3; line-height: 13px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena-main > .mobile-pages .btn { min-height: 30px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena-main { gap: 3px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena-selection > .sub-h { padding: 0; border: 0; box-shadow: none; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena-main > .arena-actions { padding-top: 0; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena-main > .arena-prep.mobile-pane-on { grid-template-rows: minmax(0,1fr) 14px minmax(0,1fr); gap: 2px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .arena-prep > .side { --form-step: 3px; }
+:root:where([data-mobile-compact])[data-mobile] .arena-prep .unit.v2 > .unit-top { height: 14px; min-height: 14px; margin-bottom: 0; padding-block: 0; }
+:root:where([data-mobile-compact])[data-mobile] .arena-prep .unit-body { position: relative; height: 64px; padding: 0; gap: 0; }
+:root:where([data-mobile-compact])[data-mobile] .arena-prep .unit .sprite { position: absolute; inset: 0; height: 100%; width: 100%; }
+:root:where([data-mobile-compact])[data-mobile] .arena-prep .unit-info { position: relative; justify-content: flex-end; height: 100%; gap: 1px; background: linear-gradient(180deg,transparent,rgba(var(--shadow-rgb),.85) 45%); }
+:root:where([data-mobile-compact])[data-mobile] .arena-prep .unit.v2 .cd-slot { height: 20px; }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .mobile-region-controls { gap: 4px; }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .mobile-region-controls .diff-tabs { gap: 3px; }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .mobile-region-controls .diff-tab,
+:root:where([data-mobile-tiny])[data-mobile-landscape] .mobile-region-controls .dt-report { min-height: 34px; padding-block: 3px; }
+
+/* Research separates the current operation from reference levels and production
+   from registration. Start/cancel stay in the decision pane at every height. */
+:root[data-mobile] .dp-side.mobile-deck { overflow: hidden; gap: 6px; }
+:root[data-mobile] .dp-side.mobile-deck > h2 { order: -2; margin: 0; padding: 4px; }
+:root[data-mobile] .mobile-research-decision.mobile-pane-on { overflow: hidden; gap: 10px; }
+:root[data-mobile] .mobile-research-decision .dp-side-h { flex: 0 0 auto; gap: 10px; }
+:root[data-mobile] .mobile-research-decision .dp-side-orb { width: 70px; height: 70px; flex: none; }
+:root[data-mobile] .mobile-research-decision .dp-side-orb img { width: 100%; height: 100%; object-fit: contain; }
+:root[data-mobile] .mobile-research-decision .dp-side-next { flex: 1; min-height: 0; gap: 8px; }
+:root[data-mobile] .dp-side.mobile-deck .dp-side-sub { max-width: 100%; margin: 0; padding: 5px 0; }
+:root[data-mobile] .mobile-research-decision .dp-side-act { margin-top: auto; gap: 8px; align-items: flex-end; }
+:root[data-mobile] .mobile-research-decision .cn-mats { flex: 1; min-width: 0; gap: 5px; }
+:root[data-mobile] .mobile-research-decision .dp-side-go { min-width: 85px; min-height: 44px; padding: 6px; }
+:root[data-mobile] .mobile-research-decision .dp-side-res { margin-top: auto; flex-wrap: wrap; gap: 6px; }
+:root[data-mobile] .mobile-research-decision .dp-side-res .dp-side-go { flex: 1 0 100%; }
+:root[data-mobile] .dp-side > .dp-lvl.mobile-pane-on { overflow: hidden; gap: 6px; }
+:root[data-mobile] .dp-side > .dp-lvl .dp-lvs { flex: 1; min-height: 0; overflow: auto; }
+:root[data-mobile] .mobile-research-production.mobile-pane-on { gap: 10px; overflow: auto; }
+:root[data-mobile] .dp-side > .dp-side-fx.mobile-pane-on { gap: 8px; overflow: auto; }
+:root[data-mobile] .dp-side-fx .hero-strip { flex: none; }
+:root:where([data-mobile-compact])[data-mobile] .dp-side.mobile-deck { padding: 6px; }
+:root:where([data-mobile-compact])[data-mobile] .mobile-research-decision { gap: 6px; }
+:root:where([data-mobile-compact])[data-mobile] .mobile-research-decision .dp-side-orb { width: 50px; height: 50px; }
+:root:where([data-mobile-compact])[data-mobile] .mobile-research-decision .dp-side-n { font-size: var(--fs-sm); }
+:root:where([data-mobile-compact])[data-mobile] .mobile-research-decision .dp-side-lv { flex-wrap: wrap; gap: 3px; margin: 0; }
+:root[data-mobile-landscape] .dp-side.mobile-deck > h2 { padding: 0; font-size: var(--fs-xs); line-height: 18px; }
+:root[data-mobile-landscape] .dp-side.mobile-deck > .mobile-pages { padding: 0; }
+:root[data-mobile-landscape] .dp-side.mobile-deck > .mobile-pages .btn { min-height: 30px; padding: 3px; }
+:root[data-mobile-landscape] .mobile-research-decision.mobile-pane-on { display: grid !important; grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); gap: 10px; }
+:root[data-mobile-landscape] .mobile-research-decision .dp-side-h { flex-direction: column; align-items: flex-start; gap: 3px; }
+:root[data-mobile-landscape] .mobile-research-decision .dp-side-y { display: none; }
+:root[data-mobile-landscape] .mobile-research-decision .dp-side-next { gap: 3px; }
+:root[data-mobile-landscape] .mobile-research-decision .dp-side-sub { padding: 0; font-size: var(--fs-xs); line-height: 18px; }
+:root[data-mobile-landscape] .mobile-research-decision .dp-side-rate { gap: 4px; font-size: var(--fs-xs); }
+:root[data-mobile-landscape] .mobile-research-decision .dp-side-time { font-size: var(--fs-2xs); }
+:root[data-mobile-landscape] .mobile-research-decision .dp-side-go { min-height: 36px; min-width: 70px; }
+:root[data-mobile-landscape] .mobile-research-decision .dp-side-res { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 3px; }
+:root[data-mobile-landscape] .mobile-research-decision .dp-side-res .muted { font-size: var(--fs-2xs); line-height: 16px; }
+:root[data-mobile-landscape] .mobile-research-decision .dp-side-res .dp-side-go { grid-column: 1 / -1; }
+:root[data-mobile-landscape] .mobile-research-decision .cn-mats { flex-direction: column; align-items: stretch; gap: 3px; }
+:root[data-mobile-landscape] .mobile-research-decision .cn-matw { flex-direction: row; gap: 3px; min-width: 0; }
+:root[data-mobile-landscape] .mobile-research-decision .cn-mat { display: flex; align-items: center; gap: 3px; width: auto; height: 22px; border: 0; background: none; padding: 0; }
+:root[data-mobile-landscape] .mobile-research-decision .cn-mat img { width: 18px; height: 18px; margin: 0; }
+:root[data-mobile-landscape] .mobile-research-decision .cn-mat-n { position: static; font-size: var(--fs-2xs); }
+:root[data-mobile-landscape] .mobile-research-decision .cn-mat-name { font-size: var(--fs-2xs); }
+
+/* Arriving heroes use the same complete candidate card as hiring. The arrival
+   slots stay in one fixed row, so choosing a hero never pushes actions below it. */
+:root[data-mobile] .tv-search.mobile-pane-on, :root[data-mobile] .tv-search > .box-body { overflow: hidden; }
+:root[data-mobile] .tv-search-row { display: flex; flex-direction: column; flex-wrap: nowrap; height: 100%; min-height: 0; gap: 8px; align-items: stretch; }
+:root[data-mobile] .tv-search-cell { display: flex; flex: 1; width: 100%; min-height: 0; }
+:root[data-mobile] .tv-search-cell > .tv-join-card { min-height: 0; }
+:root[data-mobile] .tv-search-cell > .tv-visit { width: 100%; min-height: 0; padding: 10px; }
+:root[data-mobile] .tv-search .tv-join { order: -1; flex: none; width: 100%; }
+:root[data-mobile] .tv-search .tv-join-grid { grid-template-columns: repeat(6,minmax(0,1fr)); gap: 4px; }
+:root[data-mobile] .tv-search .tv-join-slot { min-width: 0; width: 100%; height: 52px; }
+:root[data-mobile] .tv-search .tv-join-left { font-size: var(--mobile-fs-small); }
+:root[data-mobile-landscape] .tv-search > h2 { margin: 0; padding: 0; font-size: var(--fs-xs); line-height: 20px; }
+:root[data-mobile-landscape] .tv-search-row { gap: 4px; }
+:root[data-mobile-landscape] .tv-search .tv-join-slot { height: 40px; }
+:root[data-mobile-landscape] .tv-search-cell > .tv-visit { display: grid; grid-template-columns: 110px minmax(0,1fr); grid-template-rows: repeat(4,auto); gap: 3px 8px; align-content: center; padding: 5px; }
+:root[data-mobile-landscape] .tv-visit > :not(.tv-visit-log) { grid-column: 1; font-size: var(--fs-2xs); line-height: 14px; }
+:root[data-mobile-landscape] .tv-visit > .tv-visit-log { grid-column: 2; grid-row: 1 / -1; margin: 0; padding: 0; border: 0; gap: 3px; }
+:root[data-mobile-landscape] .tv-visit-foot { margin: 0; padding: 0; border: 0; gap: 2px; }
+:root[data-mobile-landscape] .tv-visit-foot > * { font-size: var(--fs-2xs); line-height: 14px; }
+:root[data-mobile-landscape] .tv-visit-hero { gap: 0; --tv-face: 16px; }
+:root[data-mobile-landscape] .tv-visit-hero-n { font-size: var(--fs-xs); line-height: 14px; }
+:root[data-mobile-landscape] .tv-visit-do { font-size: var(--fs-2xs); line-height: 13px; }
+:root[data-mobile-landscape] .tv-visit-hero.empty { padding: 2px 6px; }
+
+/* The upgrade decision and the complete item reference each have their own
+   viewport. All three costs and the upgrade action stay with the decision. */
+:root[data-mobile] .fg-panel:has(.fg-up), :root[data-mobile] .fg-split:has(.fg-up) { overflow: hidden; }
+:root[data-mobile] .fg-up.mobile-deck { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 5px; padding: 5px; overflow: hidden; }
+:root[data-mobile] .fg-up > .mobile-pages { flex: none; padding: 0; }
+:root[data-mobile] .fg-up > .mobile-pages .btn { min-height: 32px; padding: 3px; }
+:root[data-mobile] .fg-up-work.mobile-pane-on { --fs-2xs: inherit; --fs-xs: inherit; --fs-sm: inherit; --fs-md: inherit; --fs-lg: inherit; padding: 4px; gap: 7px; overflow: hidden; justify-content: flex-start; }
+:root[data-mobile] .fg-up-tipcol.mobile-pane-on { overflow: auto; }
+:root[data-mobile] .fg-up-work .fg-up-th { margin-bottom: 4px; }
+:root[data-mobile] .fg-up-work .fg-up-rows { padding: 2px 0; }
+:root[data-mobile] .fg-up-work .fg-up-cmp { gap: 5px; padding: 2px 0; }
+:root[data-mobile] .fg-up-work .fg-up-act { margin-top: auto; display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+:root[data-mobile] .fg-up-act > .btn { width: 100%; min-height: 40px; margin: 0; }
+:root[data-mobile] .fg-up-act .cn-mats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 4px; }
+:root[data-mobile] .fg-up-act .cn-matw { min-width: 0; max-width: none; }
+:root[data-mobile] .fg-up-act .cn-mat-name { font-size: var(--fs-2xs); }
+:root:where([data-mobile-short])[data-mobile] .fg-up-act .cn-mats { grid-template-columns: minmax(0,1fr); gap: 3px; }
+:root:where([data-mobile-short])[data-mobile] .fg-up-act .cn-matw { flex-direction: row; align-items: center; gap: 5px; }
+:root:where([data-mobile-short])[data-mobile] .fg-up-act .cn-mat { display: flex; align-items: center; gap: 3px; width: auto; height: 22px; border: 0; background: none; padding: 0; }
+:root:where([data-mobile-short])[data-mobile] .fg-up-act .cn-mat img { width: 18px; height: 18px; margin: 0; }
+:root:where([data-mobile-short])[data-mobile] .fg-up-act .cn-mat-n { position: static; font-size: var(--fs-2xs); }
+:root:where([data-mobile-short])[data-mobile] .fg-up-act .cn-mat-name { text-align: left; }
+:root[data-mobile-landscape] .fg-up-work.mobile-pane-on { display: grid !important; grid-template-columns: minmax(0,1fr) minmax(0,1fr); grid-template-rows: auto minmax(0,1fr); gap: 5px 10px; }
+:root[data-mobile-landscape] .fg-up-work .fg-up-track { grid-column: 1; grid-row: 1; }
+:root[data-mobile-landscape] .fg-up-work .fg-up-rows { grid-column: 1; grid-row: 2; }
+:root[data-mobile-landscape] .fg-up-work .fg-up-act { grid-column: 2; grid-row: 1 / 3; margin: 0; }
+:root[data-mobile-landscape] .fg-up-act > .btn { min-height: 32px; }
+:root[data-mobile] .page.c-forge:has(.c-forge-col.mobile-pane-on .fg-up) > .hs-panel { display: none; }
+:root[data-mobile] .page.c-forge:has(.c-forge-col.mobile-pane-on .fg-up) { display: flex; }
+:root[data-mobile] .fg-up-work .fg-up-act { flex-wrap: nowrap; }
+:root[data-mobile] .fg-up-tipcol .tip-card.fg-up-card { zoom: 1; width: 100%; max-width: 100%; min-width: 0; }
+:root[data-mobile] .fg-up-card .tip-name { white-space: normal; overflow-wrap: anywhere; }
+:root[data-mobile-landscape] .page.c-forge:has(.c-forge-col.mobile-pane-on .fg-up) { display: grid; grid-template-columns: 94px minmax(0,1fr); grid-template-rows: minmax(0,1fr); gap: 5px; }
+:root[data-mobile-landscape] .page.c-forge:has(.c-forge-col.mobile-pane-on .fg-up) > .mobile-pages { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; }
+:root[data-mobile-landscape] .page.c-forge:has(.c-forge-col.mobile-pane-on .fg-up) .c-forge-col { grid-column: 2; grid-row: 1; }
+:root[data-mobile-landscape] .fg-panel:has(.fg-up) > h2 { padding: 0; margin: 0; font-size: var(--fs-xs); line-height: 20px; }
+:root[data-mobile-landscape] .fg-up-work .fg-up-th { font-size: var(--fs-xs); line-height: 16px; margin-bottom: 3px; }
+:root[data-mobile-landscape] .fg-up-work .fg-up-pips i { height: 10px; }
+:root[data-mobile-landscape] .fg-up-work .fg-up-cmp { display: grid; grid-template-columns: 1fr auto auto; gap: 1px 5px; padding: 1px 0; line-height: 14px; }
+:root[data-mobile-landscape] .fg-up-work .fg-up-cmp .lab { grid-column: 1 / -1; font-size: var(--mobile-fs-caption); }
+:root[data-mobile-landscape] .fg-up-work .fg-up-cmp b, :root[data-mobile-landscape] .fg-up-work .fg-up-cmp i { font-size: var(--fs-xs); white-space: nowrap; }

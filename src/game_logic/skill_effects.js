@@ -201,7 +201,9 @@ export const ATTACK_TARGETS = {
      *   동률이면 배열 순 앞이라 **rng 0** · 모집단은 **전열**이다(밝히지 않은 스킬은 전열부터 · 2026-10-03 — 고르는 대상 표의 같은 이름 · 결투 지목과 같은 규칙) · 기준 = 그 대상
      */
     enemy_hp_max: (rt, u, def, foes) => {
-        const tgt = frontOf(foes).reduce((a, b) => (b.hp > a.hp ? b : a));
+        // 정조준 변형 2(`aim_back` · 2026-11-14 R471) — 창 동안 스나이프는 **후열**에서 먼저 고른다(후열이 비면 전열 규칙 그대로) · rng 0
+        const back = rt.aimBack?.(u, def) ? foes.filter(f => (f.rank ?? 0) !== 0) : [];
+        const tgt = (back.length ? back : frontOf(foes)).reduce((a, b) => (b.hp > a.hp ? b : a));
         const sk = skillHit(def);
         for (let k = 0; k < def.hits; k++) {
             if (u.hp <= 0 || tgt.hp <= 0) break;
@@ -217,7 +219,8 @@ export const ATTACK_TARGETS = {
     enemy_hp_max_splash: (rt, u, def, foes) => {
         const main = frontOf(foes).reduce((a, b) => (b.hp > a.hp ? b : a));
         const sk = skillHit(def);
-        const side = sk.onHit ? { ...sk, onHit: { ...sk.onHit, dur: sk.onHit.dur * (rt.splashStunMult ?? 1) } } : sk;
+        // 덤 「나머지 적도 주 대상과 같은 시간 스턴」(`stunFull` · 토르의 분노 · 2026-11-14 R471 — skill.js `advShape`) 이면 배수를 안 건다
+        const side = sk.onHit && !def.stunFull ? { ...sk, onHit: { ...sk.onHit, dur: sk.onHit.dur * (rt.splashStunMult ?? 1) } } : sk;
         const rest = foes.filter(f => f !== main);
         for (let k = 0; k < def.hits; k++) {
             if (u.hp <= 0) break;
@@ -285,12 +288,36 @@ export const ATTACK_TARGETS = {
      * 열 전원 둘 [2026-10-16 · R249 · R247 · skill_design §12-4 스윕 · §12-5 애로우 레인] — **전열** 전원 · **후열** 전원을 배열 순으로 1회씩.
      *   고르지 않으므로 **rng 0회**다. 후열은 `frontOf` 의 거울 — 후열 생존자가 없으면 받은 목록(생존 전원) 그대로다 · 기준 = 그 목록의 첫 번째
      */
+    /**
+     * 체력 **비율**이 가장 낮은 적 [2026-11-14 · R471 · advance_tree_draft §5 크루세이더 (2) 변형 2] — 전열 안에서(`_all` 은 후열까지 · 덤) ·
+     *   동률이면 배열 순 앞 · rng 0 · `hits` 회 그 대상 · 기준 = 그 대상
+     */
+    enemy_hp_low: (rt, u, def, foes) => strikeLowest(rt, u, def, frontOf(foes)),
+    enemy_hp_low_all: (rt, u, def, foes) => strikeLowest(rt, u, def, foes),
+    /**
+     * 버프가 가장 많은 적(파문) · 덫 깔기 [2026-11-14 · R471 · advance_tree_draft §6 · §7] — 벗기기 · 자리에 붙는 덫은 전투 상태를 아는 battle.js 가 한다(`rt.advAttack`) ·
+     *   그 함수가 없으면(손으로 만든 런타임) 전열 단일 한 번으로 친다
+     */
+    enemy_buff_max: (rt, u, def, foes) => rt.advAttack ? rt.advAttack('buff_max', u, def, foes) : strikeLowest(rt, u, def, frontOf(foes)),
+    enemy_trap: (rt, u, def, foes) => rt.advAttack ? rt.advAttack('trap', u, def, foes) : null,
     enemy_front: (rt, u, def, foes) => strikeEach(rt, u, def, frontOf(foes)),
     enemy_back: (rt, u, def, foes) => {
         const back = foes.filter(f => (f.rank ?? 0) !== 0);
         return strikeEach(rt, u, def, back.length ? back : foes);
     },
 };
+
+/** 체력 비율 최저 하나에게 `hits` 회 — 쓰러지면 남은 타수는 버린다 · rng 0 · 기준 = 그 대상 */
+function strikeLowest(rt, u, def, pool) {
+    if (!pool.length) return null;
+    const tgt = pool.reduce((a, b) => (b.hp / b.hpMax < a.hp / a.hpMax ? b : a));
+    const sk = skillHit(def);
+    for (let k = 0; k < def.hits; k++) {
+        if (u.hp <= 0 || tgt.hp <= 0) break;
+        rt.strikeOnce(u, tgt, def.mult, def.element, def.id, sk);
+    }
+    return tgt;
+}
 
 /** 목록 전원에게 1회씩 — 열 전원 둘이 쓴다. 시전자가 쓰러지면 멈추고 쓰러진 대상은 건너뛴다(광역과 같은 가드) · 기준 대상 = 목록의 첫 번째 */
 function strikeEach(rt, u, def, list) {
@@ -342,6 +369,8 @@ export const PICK_TARGETS = {
             return [list[i - 1], list[i + 1]].filter(x => x && x.hp > 0);
         },
     },
+    // 쓰러진 아군(소환 제외 · 배열 순) — 리저렉션이 일으킨다(2026-11-14 R471 · 하는 일 `revive` 가 몇을 일으킬지 정한다)
+    ally_down: { side: 'ally', pick: (rt, u) => rt.alliesOf(u).filter(a => a.hp <= 0 && !a.summon) },
     enemy_all: { side: 'enemy', pick: (rt, u) => rt.alive(rt.foesOf(u)) },
     enemy_hp_max: {
         side: 'enemy',
@@ -381,6 +410,8 @@ export const EFFECT_TYPES = {
     apply: { casts: ['turn', 'aura', 'passive', 'auto'], run: (rt, u, x, t) => rt.castBuff(u, x, t) },
     summon: { casts: ['turn'], weapon: true, run: (rt, u, x, t) => rt.castSummon(u, x, t) },
     call: { casts: ['turn'], run: (rt, u, x, t) => rt.castCall(u, x, t) },
+    // 일으키기 [2026-11-14 · R471 · advance_tree_draft §7 리저렉션] — 쓰러진 아군을 최대 HP × 배율(`mult_pct`)로 세운다 · 런당 횟수 · 몇을 일으키나 · 덤은 battle.js(`rt.castRevive`)
+    revive: { casts: ['turn'], weapon: true, run: (rt, u, x, t) => rt.castRevive?.(u, x, t) },
     fixed: {
         casts: ['event'],
         foes: true,
@@ -530,8 +561,27 @@ export const EFFECTS = {
     //   strike_passive 늘 켜진 벼락(썬더 스트라이크) — 값 = 벼락 배율 · 간격 · 확률은 balance(`thunderstrike_*`)
     tick_hit: { state: true },
     strike_passive: { state: true },
-    // ⚠ 3b · 3c 표식(2026-11-13 R471) — 표만 섰고 읽는 엔진은 아직 없다(PLAN_advance_tree_impl.md 「남은 일」)
+    // 3b ~ 3e 표식 [2026-11-14 · R471 · advance_tree_draft §4 ~ §7 · INTERFACE §2-6 「전직 트리 장치」] — 전부 읽는 쪽이 battle.js 다:
+    //   berserk      버서크 — 값 = 다른 액티브 스킬 타격의 데미지 % · 직격마다 HP 를 쓴다
+    //   devotion · devotion_dr  헌신 — 다른 아군 직격의 값만큼 대신 받는다 · 가져온 피해 감소
+    //   will         꺾을 수 없는 의지 — 맞을 때마다 겹 · 겹 × 값 = 받는 피해 감소 원천 하나
+    //   reflect_win  신성한 심판 — 받은 직격 × 값을 공격자에게(비직격)
+    //   phys_conv    물리 → 원소 전환(원소 전환 오오라 · 크루세이더 (1)) — 창의 `element` 로 값만큼 나눠 따로 깎는다(formula.strike `conv`)
+    //   snipe_amp    정조준 — 스나이프(arc_snipe) 타격의 데미지 %
+    //   reload       재장전(늘 켜짐) — 값 = 라운드당 초기화 상한
+    //   chain_splash 체인 드로우 — 평타가 적 전원 · 주 대상 밖은 값
+    //   support_fire 지원 사격 — 아군 평타마다 레인저 화살(값 = 배율)
+    //   counter_win  반격(몽크) — 맞으면 때린 적에게 값 배율로 되받아친다
+    //   atone        속죄 — 그 적이 받은 직격 × 값만큼 시전자 편 회복
+    //   crit_pct · crit_dmg_pct · lifesteal_pct  호령 — 아군 창 동안 치명 확률 · 치명 피해 · 흡혈
+    //   buff_cut     사자후 — 그 적이 제 편에 거는 창 시간 × (1 − 값)
+    //   buff_lock    파문 — 창 동안 버프를 못 받는다
+    //   ail_immune   정화 — 창 동안 상태이상 · 상대 편 창을 안 받는다
+    //   recv_pct     버티기 — 받는 회복 +값(능력치 표 `recv`)
     berserk: { state: true }, devotion: { state: true }, devotion_dr: { state: true }, will: { state: true }, reflect_win: { state: true }, phys_conv: { state: true },
+    snipe_amp: { state: true }, reload: { state: true }, chain_splash: { state: true }, support_fire: { state: true }, counter_win: { state: true }, atone: { state: true },
+    crit_pct: { state: true }, crit_dmg_pct: { state: true }, lifesteal_pct: { state: true }, buff_cut: { state: true }, buff_lock: { state: true }, ail_immune: { state: true },
+    recv_pct: {},
     elem_shield: { state: true },
     ailment_cut: { state: true },
     phys_to_fire: { state: true },
@@ -680,7 +730,10 @@ const ATTRS = [
         if (u.recvBase === undefined) return;
         const burn = strongestOf(u, 'burn');
         const cut = u.curseCut ?? 0;
-        u.recv = burn || cut ? (1 + u.recvBase) * (1 - (burn?.cut ?? 0)) * (1 - cut) - 1 : u.recvBase;
+        // 받는 회복 +% 창(버티기 변형 2 · `recv_pct` · 2026-11-14 R471)은 밑값에 더한다 — 창이 없으면 종전 식 그대로
+        const up = sumOf(u, 'recv_pct');
+        const base = up ? u.recvBase + up : u.recvBase;
+        u.recv = burn || cut ? (1 + base) * (1 - (burn?.cut ?? 0)) * (1 - cut) - 1 : base;
     },
 ];
 
@@ -699,6 +752,8 @@ export const CONDITIONS = {
     band_missing: (def, ctx) => (ctx.self.band ?? []).some(m => !m.called || m.hp <= 0),
     // 상태이상 · 상대 편이 건 창을 든 아군이 있다 — 정화(지우기 · 2026-11-13 R471)의 조건 · 지울 것이 없으면 안 나간다
     ally_ailed: (def, ctx) => (ctx.allies ?? []).some(a => a.hp > 0 && Object.values(a.buffs ?? {}).some(b => b.ail || (b.by && b.foe))),
+    // 쓰러진 아군이 있고 이 런에 일으킬 횟수가 남았다 — 리저렉션(2026-11-14 R471) · `ctx.down` = 쓰러진 아군(부르는 쪽이 싣는다) · `reviveLeft` = battle.js 가 런 시작에 세운다
+    ally_down: (def, ctx) => (ctx.self.reviveLeft ?? 0) > 0 && (ctx.down ?? []).length > 0,
 };
 
 export const CONDITION_IDS = Object.keys(CONDITIONS);

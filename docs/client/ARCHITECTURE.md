@@ -192,7 +192,7 @@ render()
 
 - **담는 것은 게임이 읽는 파일뿐이다** — 루트 `index.html` · `src/index.html` · `src/ui` · `src/game_logic` · `src/data/*.csv` · 설치된 아트(`source/` · `*_source/` 원본 제외) · `src/dev/funnel.*`(관리자 퍼널). 문서 · 계획 · 테스트 페이지 · 아트 원본은 안 올린다
 - **JS · CSS · HTML 의 주석을 뗀다** — 이름 · 문자열 · 템플릿 · 정규식은 바이트 그대로이고 줄 밖 공백만 정리한다. CSV 는 그대로다(CLAUDE.md 규칙 4). 파일마다 「주석을 뺀 토큰 열이 원본과 같다 · 괄호 짝이 맞는다」를 스스로 검사하고 어긋나면 빌드가 멈춘다
-- **그림 미리 받기 목록을 쓴다** — 사본에 `src/assets/art/preload.json`(사본의 그림 중 기본이 아닌 묶음 `PRELOAD_SKIP` 을 뺀 것)을 더한다. 메뉴가 켤 때 이 목록을 받아 두고(`ui/preload.js` · SCREEN_DESIGN §3 · ADR-1080), 저장소엔 이 파일이 없어 개발 서버는 받지 않는다(`?preload` 로 지은 사본을 띄울 때만)
+- **그림 미리 받기 목록을 쓴다** — 사본에 `src/assets/art/preload.json`(사본의 그림 중 기본이 아닌 묶음 `PRELOAD_SKIP` 을 뺀 것 · `{first, rest}` — 1차는 첫 화면 그림 `PRELOAD_FIRST`)을 더한다. 메뉴가 켤 때 1차를 받고 버튼을 푼 뒤 나머지를 뒤에서 받는다(`ui/preload.js` · SCREEN_DESIGN §3 · ADR-1080 · ADR-1097). 저장소엔 이 파일이 없어 개발 서버는 받지 않는다(`?preload` 로 지은 사본을 띄울 때만)
 - **사본을 검증하는 법** — `--with-dev` 로 테스트 페이지까지 지어 그 사본에서 `dev/test.html` 을 돌린다. 결과가 원본과 같아야 한다(명령은 스크립트 머리)
 - ⚠ 이 길은 저장소 Settings → Pages → Source 가 「GitHub Actions」일 때 선다. 「Deploy from a branch」인 동안은 저장소를 통째로 내보내는 옛 배포가 돈다
 

@@ -1,0 +1,733 @@
+{
+  "started": "2026-11-14T12:53:09.547189+00:00",
+  "elapsed_seconds": 52.0,
+  "source_start": {
+    "mobile-gestures.css": "10243ca098c1a8b03bc718558a1cfa8a9a5f22bf532bcf13d06d54e6c2d3061e",
+    "mobile-gestures.js": "ed7ea727c1d1bffda3475ee9ced0771dbfdd0ae432c4cc447aaab0b36ee6e0e4",
+    "mobile-native.css": "8d44b9e66d39301475cdc10106317c5ff09e8c570ba357ff8ad467fe7a37311d",
+    "mobile-native.js": "43962334c75e005ee642decc722e4d9588d769b08d8fe6ac3a20c8ff87c40b7d",
+    "mobile-pages.css": "6b490c1a0b3387d4c2cb47eab6ac5d6974fea2fba776d41b85a00ff2d32cf50a",
+    "mobile-pages.js": "54164bc6ac0d1152c0fc57860848d428178c918ed9c00a1d15076882601f2b54",
+    "mobile.css": "f4fbcc505a21b528ba9df6cfb2166bad594d80742ffbbb87ca2cc18bcb3834ed",
+    "mobile.js": "70fc71ee27eedba0e0fcaedcecc8a58e37c323aa35df137a4c9ce675abaa1830"
+  },
+  "source_end": {
+    "mobile-gestures.css": "10243ca098c1a8b03bc718558a1cfa8a9a5f22bf532bcf13d06d54e6c2d3061e",
+    "mobile-gestures.js": "0bd864700c59b843953a22acd095e9fb584a834552e751bd2e5a28f8533d33fd",
+    "mobile-native.css": "e5704753353cbe81cfe8e7ed6abbd43d8abe46f6a8a11f6de20feb6d2a66a3a9",
+    "mobile-native.js": "43962334c75e005ee642decc722e4d9588d769b08d8fe6ac3a20c8ff87c40b7d",
+    "mobile-pages.css": "78f6b1fa017d5d9a35a26728e048ca0f4f00c175daccd10e724943e91e5b57f4",
+    "mobile-pages.js": "d433a09d723ea4737967c974691d22cf7d0d56a4bd5e4ae2ea77350dcbdd64fc",
+    "mobile.css": "f4fbcc505a21b528ba9df6cfb2166bad594d80742ffbbb87ca2cc18bcb3834ed",
+    "mobile.js": "70fc71ee27eedba0e0fcaedcecc8a58e37c323aa35df137a4c9ce675abaa1830"
+  },
+  "checks": [
+    {
+      "name": "390x844-touch:stats-first",
+      "ok": true,
+      "detail": "mobile-tab-character-1"
+    },
+    {
+      "name": "390x844-touch:right-opens-details",
+      "ok": true,
+      "detail": "mobile-tab-character-2"
+    },
+    {
+      "name": "390x844-touch:right-opens-second-details",
+      "ok": true,
+      "detail": "mobile-tab-character-3"
+    },
+    {
+      "name": "390x844-touch:edge-stays-on-page",
+      "ok": true,
+      "detail": "mobile-tab-character-3"
+    },
+    {
+      "name": "390x844-touch:reverse-returns",
+      "ok": true,
+      "detail": "mobile-tab-character-2"
+    },
+    {
+      "name": "390x844-touch:short-drag-cancels",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "390x844-touch:pointercancel-stays",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "390x844-touch:vertical-does-not-page",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "390x844-touch:gesture-cleanup",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "390x844-touch:no-main-scroll",
+      "ok": true,
+      "detail": {
+        "h": 684,
+        "sh": 684,
+        "w": 390,
+        "sw": 390
+      }
+    },
+    {
+      "name": "390x844-touch:keyboard-follows-spatial-order",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "390x844-touch:keyboard-focus",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "390x844-touch:candidate-swipes",
+      "ok": true,
+      "detail": {
+        "before": "mobile-choice-hire-0",
+        "after": "mobile-choice-hire-1"
+      }
+    },
+    {
+      "name": "390x844-touch:nested-card-keeps-parent",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "390x844-touch:card-edge-does-not-escape",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "390x844-touch:hire-no-main-scroll",
+      "ok": true,
+      "detail": {
+        "h": 684,
+        "sh": 684,
+        "w": 390,
+        "sw": 390
+      }
+    },
+    {
+      "name": "390x844-touch:drag-on-action-does-not-hire",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "390x844-touch:drag-on-action-does-not-spend",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "390x844-touch:outer-header-swipes",
+      "ok": true,
+      "detail": "mobile-tab-tavern-1"
+    },
+    {
+      "name": "390x844-touch:five-regions",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "390x844-touch:regions-no-main-scroll",
+      "ok": true,
+      "detail": {
+        "h": 684,
+        "sh": 684,
+        "w": 390,
+        "sw": 390
+      }
+    },
+    {
+      "name": "390x844-touch:page-persists-after-navigation",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x568-touch:stats-first",
+      "ok": true,
+      "detail": "mobile-tab-character-1"
+    },
+    {
+      "name": "320x568-touch:right-opens-details",
+      "ok": true,
+      "detail": "mobile-tab-character-2"
+    },
+    {
+      "name": "320x568-touch:right-opens-second-details",
+      "ok": true,
+      "detail": "mobile-tab-character-3"
+    },
+    {
+      "name": "320x568-touch:edge-stays-on-page",
+      "ok": true,
+      "detail": "mobile-tab-character-3"
+    },
+    {
+      "name": "320x568-touch:reverse-returns",
+      "ok": true,
+      "detail": "mobile-tab-character-2"
+    },
+    {
+      "name": "320x568-touch:short-drag-cancels",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x568-touch:pointercancel-stays",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x568-touch:vertical-does-not-page",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x568-touch:gesture-cleanup",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x568-touch:no-main-scroll",
+      "ok": true,
+      "detail": {
+        "h": 472,
+        "sh": 472,
+        "w": 320,
+        "sw": 320
+      }
+    },
+    {
+      "name": "320x568-touch:keyboard-follows-spatial-order",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x568-touch:keyboard-focus",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x568-touch:candidate-swipes",
+      "ok": true,
+      "detail": {
+        "before": "mobile-choice-hire-0",
+        "after": "mobile-choice-hire-1"
+      }
+    },
+    {
+      "name": "320x568-touch:nested-card-keeps-parent",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x568-touch:card-edge-does-not-escape",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x568-touch:hire-no-main-scroll",
+      "ok": true,
+      "detail": {
+        "h": 472,
+        "sh": 472,
+        "w": 320,
+        "sw": 320
+      }
+    },
+    {
+      "name": "320x568-touch:drag-on-action-does-not-hire",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x568-touch:drag-on-action-does-not-spend",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x568-touch:outer-header-swipes",
+      "ok": true,
+      "detail": "mobile-tab-tavern-1"
+    },
+    {
+      "name": "320x568-touch:five-regions",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x568-touch:regions-no-main-scroll",
+      "ok": true,
+      "detail": {
+        "h": 432,
+        "sh": 432,
+        "w": 320,
+        "sw": 320
+      }
+    },
+    {
+      "name": "320x568-touch:page-persists-after-navigation",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "844x390-touch:stats-first",
+      "ok": true,
+      "detail": "mobile-tab-character-1"
+    },
+    {
+      "name": "844x390-touch:right-opens-details",
+      "ok": true,
+      "detail": "mobile-tab-character-2"
+    },
+    {
+      "name": "844x390-touch:right-opens-second-details",
+      "ok": true,
+      "detail": "mobile-tab-character-3"
+    },
+    {
+      "name": "844x390-touch:edge-stays-on-page",
+      "ok": true,
+      "detail": "mobile-tab-character-3"
+    },
+    {
+      "name": "844x390-touch:reverse-returns",
+      "ok": true,
+      "detail": "mobile-tab-character-2"
+    },
+    {
+      "name": "844x390-touch:short-drag-cancels",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "844x390-touch:pointercancel-stays",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "844x390-touch:vertical-does-not-page",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "844x390-touch:gesture-cleanup",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "844x390-touch:no-main-scroll",
+      "ok": true,
+      "detail": {
+        "h": 346,
+        "sh": 346,
+        "w": 780,
+        "sw": 780
+      }
+    },
+    {
+      "name": "844x390-touch:keyboard-follows-spatial-order",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "844x390-touch:keyboard-focus",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "844x390-touch:candidate-swipes",
+      "ok": true,
+      "detail": {
+        "before": "mobile-choice-hire-0",
+        "after": "mobile-choice-hire-1"
+      }
+    },
+    {
+      "name": "844x390-touch:nested-card-keeps-parent",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "844x390-touch:card-edge-does-not-escape",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "844x390-touch:hire-no-main-scroll",
+      "ok": true,
+      "detail": {
+        "h": 346,
+        "sh": 346,
+        "w": 780,
+        "sw": 780
+      }
+    },
+    {
+      "name": "844x390-touch:drag-on-action-does-not-hire",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "844x390-touch:drag-on-action-does-not-spend",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "844x390-touch:outer-header-swipes",
+      "ok": true,
+      "detail": "mobile-tab-tavern-1"
+    },
+    {
+      "name": "844x390-touch:five-regions",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "844x390-touch:regions-no-main-scroll",
+      "ok": true,
+      "detail": {
+        "h": 346,
+        "sh": 346,
+        "w": 780,
+        "sw": 780
+      }
+    },
+    {
+      "name": "844x390-touch:page-persists-after-navigation",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "1440x900-mouse:stats-first",
+      "ok": true,
+      "detail": "mobile-tab-character-1"
+    },
+    {
+      "name": "1440x900-mouse:right-opens-details",
+      "ok": true,
+      "detail": "mobile-tab-character-2"
+    },
+    {
+      "name": "1440x900-mouse:right-opens-second-details",
+      "ok": true,
+      "detail": "mobile-tab-character-3"
+    },
+    {
+      "name": "1440x900-mouse:edge-stays-on-page",
+      "ok": true,
+      "detail": "mobile-tab-character-3"
+    },
+    {
+      "name": "1440x900-mouse:reverse-returns",
+      "ok": true,
+      "detail": "mobile-tab-character-2"
+    },
+    {
+      "name": "1440x900-mouse:short-drag-cancels",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "1440x900-mouse:vertical-does-not-page",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "1440x900-mouse:gesture-cleanup",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "1440x900-mouse:no-main-scroll",
+      "ok": true,
+      "detail": {
+        "h": 684,
+        "sh": 684,
+        "w": 390,
+        "sw": 390
+      }
+    },
+    {
+      "name": "1440x900-mouse:keyboard-follows-spatial-order",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "1440x900-mouse:keyboard-focus",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "1440x900-mouse:candidate-swipes",
+      "ok": true,
+      "detail": {
+        "before": "mobile-choice-hire-0",
+        "after": "mobile-choice-hire-1"
+      }
+    },
+    {
+      "name": "1440x900-mouse:nested-card-keeps-parent",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "1440x900-mouse:card-edge-does-not-escape",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "1440x900-mouse:hire-no-main-scroll",
+      "ok": true,
+      "detail": {
+        "h": 684,
+        "sh": 684,
+        "w": 390,
+        "sw": 390
+      }
+    },
+    {
+      "name": "1440x900-mouse:drag-on-action-does-not-hire",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "1440x900-mouse:drag-on-action-does-not-spend",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "1440x900-mouse:outer-header-swipes",
+      "ok": true,
+      "detail": "mobile-tab-tavern-1"
+    },
+    {
+      "name": "1440x900-mouse:five-regions",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "1440x900-mouse:regions-no-main-scroll",
+      "ok": true,
+      "detail": {
+        "h": 684,
+        "sh": 684,
+        "w": 390,
+        "sw": 390
+      }
+    },
+    {
+      "name": "1440x900-mouse:page-persists-after-navigation",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x480-mouse:stats-first",
+      "ok": true,
+      "detail": "mobile-tab-character-1"
+    },
+    {
+      "name": "320x480-mouse:right-opens-details",
+      "ok": true,
+      "detail": "mobile-tab-character-2"
+    },
+    {
+      "name": "320x480-mouse:right-opens-second-details",
+      "ok": true,
+      "detail": "mobile-tab-character-3"
+    },
+    {
+      "name": "320x480-mouse:edge-stays-on-page",
+      "ok": true,
+      "detail": "mobile-tab-character-3"
+    },
+    {
+      "name": "320x480-mouse:reverse-returns",
+      "ok": true,
+      "detail": "mobile-tab-character-2"
+    },
+    {
+      "name": "320x480-mouse:short-drag-cancels",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x480-mouse:vertical-does-not-page",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x480-mouse:gesture-cleanup",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x480-mouse:no-main-scroll",
+      "ok": true,
+      "detail": {
+        "h": 684,
+        "sh": 684,
+        "w": 390,
+        "sw": 390
+      }
+    },
+    {
+      "name": "320x480-mouse:keyboard-follows-spatial-order",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x480-mouse:keyboard-focus",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x480-mouse:candidate-swipes",
+      "ok": true,
+      "detail": {
+        "before": "mobile-choice-hire-0",
+        "after": "mobile-choice-hire-1"
+      }
+    },
+    {
+      "name": "320x480-mouse:nested-card-keeps-parent",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x480-mouse:card-edge-does-not-escape",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x480-mouse:hire-no-main-scroll",
+      "ok": true,
+      "detail": {
+        "h": 684,
+        "sh": 684,
+        "w": 390,
+        "sw": 390
+      }
+    },
+    {
+      "name": "320x480-mouse:drag-on-action-does-not-hire",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x480-mouse:drag-on-action-does-not-spend",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x480-mouse:outer-header-swipes",
+      "ok": true,
+      "detail": "mobile-tab-tavern-1"
+    },
+    {
+      "name": "320x480-mouse:five-regions",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "320x480-mouse:regions-no-main-scroll",
+      "ok": true,
+      "detail": {
+        "h": 684,
+        "sh": 684,
+        "w": 390,
+        "sw": 390
+      }
+    },
+    {
+      "name": "320x480-mouse:page-persists-after-navigation",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "reduced-motion:swipe-works",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "english:no-missing-string",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "long-press:stat-tooltip-kept",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "long-press:next-swipe-clears-tooltip",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "multi-touch:does-not-page",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "multi-touch:cleanup",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "advance:swipe-selects-next-branch",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "advance:selection-retains-original-handler",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "advance:swipe-does-not-spend",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "advance:swipe-does-not-confirm",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "advance:swipe-survives-render",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "commissions:swipe-compares",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "commissions:swipe-has-no-action",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "building:swipe-opens-history",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "building:inner-swipe-keeps-building",
+      "ok": true,
+      "detail": null
+    }
+  ],
+  "errors": [],
+  "cycles": []
+}

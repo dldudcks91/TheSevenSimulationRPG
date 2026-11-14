@@ -33,18 +33,20 @@ war_divinedescent,hp_max_pct,0.5,10,-,keep,-,-,강신 — 열 때 늘어난 만�
 war_divinedescent_regen,regen_hp_pct,0.02,10,-,keep,-,-,강신 둘째 창 — 초당 자기 최대 HP × value(프레이어 장치 · 자기만) · ⚠값 임시 2026-11-12 R425
 war_command,atk_pct,0.3,10,-,keep,-,-,-
 war_intimidate,final_dmg_pct,-0.25,10,-,keep,-,-,페니턴스와 같은 장치 · ~~atk_pct 음수~~ 2026-10-28 R368
-arc_trueaim,atk_pct,0.4,10,-,keep,-,-,-
-arc_reload,period_pct,0.3,8,-,keep,-,-,-
+arc_trueaim,snipe_amp,0.4,10,-,keep,-,-,정조준 ① 스나이프 데미지 % · ⚠값 제안 2026-11-14 R471 · advance_tree_draft
+arc_trueaim_slow,period_pct,-0.3,10,-,keep,-,-,정조준 ② 공격 속도 감소 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft
+arc_reload,reload,1,0,-,keep,-,-,재장전(늘 켜짐) — 값 = 라운드당 초기화 상한 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft
 arc_quickdraw,period_fix,0.5,10,-,keep,-,-,퀵 드로우 첫 줄 — 주기 = 무기 주기 × 값 고정(다른 공속 · 둔화 · 민첩 무시 · 2026-10-29 R383) · ⚠값 임시
 arc_quickdraw_weak,basic_pct,-0.4,10,-,keep,-,-,퀵 드로우 둘째 줄 — 평타 피해 % · 시간은 첫 줄과 같게 둔다 · ⚠값 임시 2026-10-16
 arc_overdraw,period_fix,1.4,10,-,keep,-,-,오버드로우 첫 줄 — 주기 = 무기 주기 × 값 고정(2026-10-29 R383) · ⚠값 임시
 arc_overdraw_power,basic_pct,0.7,10,-,keep,-,-,오버드로우 둘째 줄 — 평타 피해 % · ⚠값 임시 2026-10-16
-arc_chaindraw,attack_splash,0.75,10,-,keep,-,-,-
-arc_huntersmark,final_dmg_pct,-0.2,10,-,keep,-,-,페니턴스와 같은 장치 · ~~atk_pct 음수~~ 2026-10-28 R368
-arc_supportingfire,atk_pct,0.2,10,-,keep,-,-,-
-pri_atonement,final_dmg_pct,-0.15,12,-,keep,-,-,페니턴스와 같은 장치 · ~~atk_pct 음수~~ 2026-10-28 R368
+arc_chaindraw,chain_splash,0.3,10,-,keep,-,-,체인 드로우 — 평타가 적 전원 · 주 대상 밖은 값 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft
+arc_huntersmark,dr_pct,-0.15,10,-,keep,-,-,사냥 표식 — 받는 피해 증가 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft
+arc_supportingfire,support_fire,0.3,10,-,keep,-,-,지원 사격 — 값 = 화살 배율 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft
+pri_atonement,atone,0.1,12,-,keep,-,-,속죄 — 그 적이 받은 직격 × 값만큼 파티 회복 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft
 pri_diamondbody,dr_pct,0.3,10,-,keep,-,-,-
-pri_counter,barrier_pct,0.35,10,-,keep,-,-,-
+pri_diamondbody_ail,ailment_cut,0.3,10,-,keep,-,-,금강 ② 받는 상태이상 · 디버프 시간 감소 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft
+pri_counter,counter_win,0.6,10,-,keep,-,-,몽크 반격 — 맞으면 때린 적에게 값 배율 물리 직격 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft
 freeze,period_pct,-0.25,3,-,keep,freeze,-,결빙 — 공속 감소(battle_design §2-4) · 아이스 블라스트 · 프로스트 노바의 타격 줄이 맞은 대상에게 건다 · id 가 곧 상태이상 이름(skill_effects.js:AILMENTS) — 어느 스킬이 걸어도 창 하나 · ⚠값 임시 2026-09-28 R177
 mag_inferno,pulse,0.4,8,fire,keep,-,-,인페르노의 깔린 불 — 간격 [balance.csv:aura_pulse_sec] 마다 시전자 데미지 범위 중앙값 × value 의 화염 비직격 · 시간 있는 창(홀리 파이어는 0 = 오오라) · ⚠값 임시 2026-11-13 R462
 mag_ignite,imbue,1,10,fire,keep,-,mag_ignite_burn,창 동안 화염 스킬 타격 → 화상 · value = 거는 확률 · ⚠값 임시 2026-10-16

@@ -99,6 +99,9 @@
 .raid-lane.targeted .raid-lane-target { color: var(--color-warning); font-weight: 700; }
 .raid-heroes { display: flex; align-items: flex-start; justify-content: center; gap: 10px; }
 .raid-hero-seat { width: 104px; flex: none; position: relative; }
+/* Channeling holds the seat up until it closes — the drop waits a beat so the last shot lands up (ADR-1124) */
+.raid-hero-seat { transition: translate calc(200ms * var(--fx-k, 1)) ease-out calc(200ms * var(--fx-k, 1)); }
+.raid-hero-seat.chan-up { translate: 0 -9px; transition-delay: 0s; }
 
 /* Hero card — portrait (rank · skills · state overlays) over name · HP · action */
 .raid-hero { position: relative; width: 104px; border: 1px solid var(--border-secondary); background: var(--surface-2); flex: none; }

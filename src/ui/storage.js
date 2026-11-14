@@ -14,6 +14,21 @@ const KEY = 'thesevensim.save';
 const TRACK_KEY = 'thesevensim.track';
 const NOTIFICATION_DISMISSED_KEY = 'thesevensim.notificationDismissed';
 const TUTORIAL_SEEN_KEY = 'thesevensim.tutorialSeen';
+const SCREEN_LAYOUT_KEY = 'thesevensim.screenLayout';
+export const SCREEN_LAYOUTS = ['auto', 'desktop', 'mobile'];
+
+/** Browser display preference, independent of game saves. */
+export function loadScreenLayout() {
+    try {
+        const value = localStorage.getItem(SCREEN_LAYOUT_KEY);
+        return SCREEN_LAYOUTS.includes(value) ? value : 'auto';
+    } catch { return 'auto'; }
+}
+
+export function writeScreenLayout(value) {
+    if (!SCREEN_LAYOUTS.includes(value)) return;
+    try { localStorage.setItem(SCREEN_LAYOUT_KEY, value); } catch {}
+}
 
 export function loadSave() {
     try {

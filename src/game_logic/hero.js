@@ -74,7 +74,14 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
 /** 전직 공통 줄의 새 능력치 [2026-11-13 · R471] — `computeCombat` 이 `advance_fx` 로 내고 battle.js 가 읽는다(`u.adv`). 여기 없는 키는 공통 줄에 못 쓴다 */
 export const ADV_KEYS = ['vs_burn_dmg', 'freeze_power', 'lightning_proc_chance', 'basic_dmg_pct', 'skill_dmg_pct', 'skill_dmg_per_target', 'alone_front_dr',
     'final_dmg_bonus', 'fixed_dmg_share', 'charge_speed_pct', 'vs_full_hp_dmg', 'extra_shot_chance', 'party_onhit_pct', 'kill_party_haste', 'overheal_shield',
-    'vs_buff_count_dmg', 'phys_dmg_pct', 'struck_dmg_store'];
+    'vs_buff_count_dmg', 'phys_dmg_pct', 'struck_dmg_store',
+    // 직업 마스터리 T4 — 셋 중 하나 [2026-11-14 · R437 · skill_design §3-5 「새 T4」] — 같은 길(`advance_fx` → `u.adv`)로 전투가 읽는다 · 두 번째 화살(`extra_shot_chance`) · 넘치는 잔(`overheal_shield`)은 위 키를 같이 쓴다
+    'basic_cleave', 'skill_repeat_chance', 'elem_to_phys', 'hit_stun_chance', 'aura_guard_share', 'crit_taken_cut', 'skill_fixed_share', 'cast_refill_chance',
+    'round_barrier', 'sin_vuln', 'last_prayer', 'basic_cd_tick', 'dodge_chance',
+    // 죄종 마스터리 T4 — 셋 중 하나 [2026-11-14 · skill_design §3-3 「죄종 T4」] — 조건 칸은 그 죄종 T3 조건(`computeCombat:t4_cond`)으로 켜진다
+    'wrath_blood', 'wrath_party_crit', 'wrath_steady', 'envy_strip', 'envy_party_pierce', 'envy_return', 'greed_mark', 'greed_reroll', 'greed_barrier',
+    'sloth_heavy', 'sloth_party_cdr', 'sloth_defer', 'glut_cull', 'glut_party_dmg', 'glut_absorb', 'lust_crit_vuln', 'lust_share_heal', 'lust_charm',
+    'pride_nth', 'pride_party_haste', 'pride_cap'];
 /** 전직 공통 줄이 쓸 수 있는 능력치 — 위 새 키 + 이미 읽히는 장비 어휘 몇 + 반지 태그 꼴(`skill_tag`) · 로드 검사 */
 const COMMON_STATS = new Set([...ADV_KEYS, 'skill_tag', 'cast_speed_pct', 'aspd_pct', 'fire_dmg_pct', 'res_reduction_lightning', 'life_steal', 'cooldown_reduction',
     'damage_reduction', 'hp_pct', 'def_flat', 'res_max_bonus', 'heal_out_pct', 'atk_pct']);
@@ -91,7 +98,7 @@ export function createHeroSystem(data) {
     const mainClasses = data.classes.filter(c => c.stage === 'main').map(c => c.id);
     const skillPool = data.skillPool ?? {};      // {classId: [skillId...]} — 직업 풀 (skill_design §12)
     const starterPool = data.starterPool ?? {};  // {classId: [skillId...]} — 직업 풀의 1티어 · 첫 파티 고유만 (2026-10-16 · R271)
-    const faceCounts = data.heroFaces ?? {};       // {classId: 장수} — 없는 직업은 0장 = 초상 없음
+    const facePools = data.heroFaces ?? {};        // {classId: [k…]} — 굴릴 초상 번호 목록 · 없거나 빈 직업 = 초상 없음 (2026-11-14 · 옛 장수 n)
     // 무기 베이스 id → 행 — 든 무기의 계보 공속 배율을 찾는다(`formula.weaponLine` · 2026-11-11 · R445). 행이 없는 베이스(옛 세이브의 퇴역 id)는 배율 1
     const weaponBaseById = Object.fromEntries(Object.values(data.weaponBases ?? {}).flat().map(b => [b.id, b]));
     // 무기군 특성 [2026-11-11 · R443 · weapon_group_draft §1 · INTERFACE §2-4] — 무기군마다 접사 모양의 줄 목록 `{stat, v}` · `{stat:'skill_tag', tag, effect:'value', v}`.
@@ -250,6 +257,21 @@ export function createHeroSystem(data) {
         const key = masteryRowKey(n);
         return masteryNodesFor(hero).reduce((s, x) => s + (masteryRowKey(x) === key ? (hero?.mastery?.[x.id] ?? 0) : 0), 0);
     };
+    /**
+     * **셋 중 하나** [2026-11-10 사용자 「3개중에 1개만 찍을 수 있게」 · skill_design §3-5 「새 T4」 · R437] — 4단(T4) 줄은 한 칸에만 찍는다.
+     *   그 줄의 **다른 칸**에 랭크가 있으면 참(이 칸은 잠겼다) · 4단이 아니면 늘 거짓 — 찍기 · 화면 상태 · 세이브 정리 · AI 팀 · 팀 코드 검사기가 이것 하나를 본다
+     */
+    /** 죄종 T4 의 조건 — `{cond, thr|sec}` · 죄종 T4 랭크가 없거나 그 죄종 T3 에 조건이 없으면(탐욕) null (2026-11-14) */
+    const t4CondOf = hero => {
+        const own = masteryNodesFor(hero).filter(n => n.treeKind === 'sin');
+        if (!own.some(n => n.tier >= 4 && (hero?.mastery?.[n.id] ?? 0) > 0)) return null;
+        const t3 = own.filter(n => n.tier === 3 && n.cond && RANK_WIDENS[n.cond]);
+        if (!t3.length) return null;
+        const r = Math.max(1, ...t3.map(n => Math.min(hero?.mastery?.[n.id] ?? 0, n.maxRank)));
+        return { cond: t3[0].cond, ...RANK_WIDENS[t3[0].cond](r) };
+    };
+    const masteryPickOneBlocked = (hero, n) => n.tier >= 4
+        && masteryNodesFor(hero).some(x => x.id !== n.id && masteryRowKey(x) === masteryRowKey(n) && (hero?.mastery?.[x.id] ?? 0) > 0);
     if (masteryNodes.length && !(Number.isInteger(B.mastery_row_points) && B.mastery_row_points > 0))
         throw new Error('mastery: balance.csv 의 mastery_row_points 가 없거나 양의 정수가 아니다');
 
@@ -319,9 +341,9 @@ export function createHeroSystem(data) {
      * 결과는 `'<classId>_<k>'` 문자열(k ≥ 1)이고, 그 직업의 그림이 하나도 없으면 `null` = 초상 없음(2026-09-07).
      */
     const rollFace = (rng, cls) => {
-        const m = faceCounts[cls] ?? 0;
+        const pool = facePools[cls] ?? [];
         const r = rng();               // 풀 0장이어도 1회 소비 — 직업이 소비 수를 바꾸면 같은 시드가 다른 파티가 된다
-        return m ? `${cls}_${1 + Math.floor(r * m)}` : null;
+        return pool.length ? `${cls}_${pool[Math.floor(r * pool.length)]}` : null;   // 목록이 [1..n] 이면 옛 장수 n 과 같은 결과
     };
 
     /* ── 등급 (hero_design §1 — 3층 확정 2026-09-07 · SSOT: `hero_tier.csv`) ── */
@@ -375,17 +397,26 @@ export function createHeroSystem(data) {
     }
 
     /**
-     * 칸마다의 중심 — 대역 가운데 × 그 칸 비율 ÷ 비율 합. 비율은 1 에서 시작해 직업 주력 · 보조 · 죄종 칸에 손잡이를 곱한다
-     * (`hero_attr_key_weight` · `_sub_weight` · `_sin_weight`) — 죄종 칸이 직업 주력·보조와 겹치면 죄종 가중치는 생략한다(R389).
-     * 직업 · 죄종은 「어느 칸이 크게」만 정하고 「얼마나」는 등급의 대역이 정한다 — 비율 표 하나로 세 등급을 다 쓴다
+     * 칸마다의 비율(`statIds` 순) — 1 에서 시작해 직업 주력 · 보조 · 죄종 칸에 손잡이를 곱한다. 능력치 굴림의 중심(`centersOf`)과
+     *   성장 고블린이 레벨마다 자랄 칸의 확률(`growLevels` · 2026-11-14 R495)이 **같은 표**를 쓴다
      */
-    function centersOf(cls, sin, band) {
+    function attrWeights(cls, sin) {
         const c = classOf(cls);
         const w = statIds.map(() => 1);
         const bump = (id, k) => { const i = statIds.indexOf(id); if (i >= 0) w[i] *= k; };
         bump(c?.keyAttr, B.hero_attr_key_weight);
         bump(c?.subAttr, B.hero_attr_sub_weight);
         if (sinAttrs[sin] !== c?.keyAttr && sinAttrs[sin] !== c?.subAttr) bump(sinAttrs[sin], B.hero_attr_sin_weight);
+        return w;
+    }
+
+    /**
+     * 칸마다의 중심 — 대역 가운데 × 그 칸 비율 ÷ 비율 합. 비율은 1 에서 시작해 직업 주력 · 보조 · 죄종 칸에 손잡이를 곱한다
+     * (`hero_attr_key_weight` · `_sub_weight` · `_sin_weight`) — 죄종 칸이 직업 주력·보조와 겹치면 죄종 가중치는 생략한다(R389).
+     * 직업 · 죄종은 「어느 칸이 크게」만 정하고 「얼마나」는 등급의 대역이 정한다 — 비율 표 하나로 세 등급을 다 쓴다
+     */
+    function centersOf(cls, sin, band) {
+        const w = attrWeights(cls, sin);
         const sum = w.reduce((a, b) => a + b, 0), mid = (band.min + band.max) / 2;
         return w.map(x => mid * x / sum);
     }
@@ -585,6 +616,8 @@ export function createHeroSystem(data) {
      * **예외 — 등급 「성장」(고블린)** [2026-10-29 · R365 · hero_design §1] — 오른 레벨마다 상한 미만 칸 중 하나가
      *   [balance.csv:growth_attr_per_level] 자란다. 굴림은 영웅의 `growthSeed` 에서 레벨마다 따로 연다(§5-1 「고블린 성장」) —
      *   인자 rng 와 무관해 원정 · 연구소 · 관리자 어느 길로 올라도 같은 칸이다. 일반 영웅의 `gains` 는 `{}`.
+     *   칸은 **직업 · 죄종 비율로** 고른다(`attrWeights` — 능력치 굴림과 같은 표 · 2026-11-14 사용자 · R495): 열린 칸의 비율을
+     *   앞 칸부터 쌓은 줄 위에 레벨마다 한 번 던진다(굴림 수는 그대로 1회).
      */
     const GROWTH_TIER = 'growth';   // hero_tier.csv 의 성장 행 id (생성기가 안 뽑는다 · state.newGame 의 고블린만)
     if (!(B.growth_attr_per_level > 0)) throw new Error(`hero: balance.csv 의 growth_attr_per_level 이 없거나 0 이하다`);
@@ -592,10 +625,13 @@ export function createHeroSystem(data) {
         const gains = {};
         if (hero.tier !== GROWTH_TIER) return gains;
         if (!Number.isInteger(hero.growthSeed)) throw new Error(`hero: 성장 영웅 ${hero.uid} 에 growthSeed 가 없다`);
+        const w = attrWeights(hero.cls, hero.sin);
         for (let lv = from + 1; lv <= to; lv++) {
-            const open = statIds.filter(id => (hero.stats[id] ?? 0) < attrRollMax);
+            const open = statIds.map((id, i) => ({ id, w: w[i] })).filter(o => (hero.stats[o.id] ?? 0) < attrRollMax);
             if (!open.length) break;   // 일곱 칸이 다 찼다
-            const id = open[Math.floor(makeRng(deriveSeed(hero.growthSeed, lv))() * open.length)];
+            let r = makeRng(deriveSeed(hero.growthSeed, lv))() * open.reduce((a, o) => a + o.w, 0);
+            let id = open.at(-1).id;   // 부동소수 끝자락 — 마지막 칸
+            for (const o of open) { if (r < o.w) { id = o.id; break; } r -= o.w; }
             const add = Math.min(B.growth_attr_per_level, attrRollMax - (hero.stats[id] ?? 0));
             hero.stats[id] = (hero.stats[id] ?? 0) + add;
             gains[id] = (gains[id] ?? 0) + add;
@@ -766,6 +802,8 @@ export function createHeroSystem(data) {
         const greed = Math.min(own.gold + own.item + own.magic, B.mastery_greed_t3_input_cap);
         for (const [from, to] of [['atk_pct_per_greed', 'atk_pct'], ['hp_pct_per_greed', 'hp_pct'], ['cdr_per_greed', 'cooldown_reduction']])
             if (f(from)) flat[to] = f(to) + f(from) * greed;
+        // 탐욕 T4 ③ 황금 보호막 [2026-11-14] — 라운드 시작 보호막 = 최대 HP × 랭크 값 × 탐욕 합(T3 와 같은 합 · 같은 상한) · 전투가 `adv.greed_barrier` 로 읽는다
+        if (f('greed_barrier')) flat.greed_barrier = f('greed_barrier') * greed;
 
         const weapon = items.find(it => it.slot === 'weapon');
         // 장비 발동은 부위와 무관하게 착용 · 접사 순서대로 보존한다. 능력치 합산 · 액티브 칸과 별개다.
@@ -974,12 +1012,14 @@ export function createHeroSystem(data) {
             // 전직 공통 줄의 새 능력치 [2026-11-13 · R471 · INTERFACE §2-6 「전직 트리 장치」] — **`combat_stat.csv` 행이 아니다**(시트에 안 선다) · 0 인 키는 빠진다 · 다 0 이면 null ·
             //   전투가 `u.adv` 로 든다(battle.makeUnit) — 읽는 자리는 키마다 하나(battle.js)
             advance_fx: (() => { const o = Object.fromEntries(ADV_KEYS.map(k => [k, f(k)]).filter(([, v]) => v)); return Object.keys(o).length ? o : null; })(),
+            // 죄종 T4 의 조건 [2026-11-14 · skill_design §3-3 「죄종 T4」] — 그 죄종 T3 조건 · 문턱은 T3 칸 중 가장 높은 랭크(없으면 1랭크)가 연 값 · 죄종 T4 를 안 찍었으면 null
+            t4_cond: t4CondOf(hero),
         };
     }
 
     return {
         rollAttributes, rollAttributesTrace, attrCenters, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, avoidNames, rollHeroOf, rollGoblin, xpNeeded, starXpNeeded, grantXp, computeCombat,
-        masteryNodes, masteryById, masteryNodesFor, masteryBonus, masteryWiden, masteryRowKey, masteryRowUsed, gateOn, sinGearCount, levelScaled,
+        masteryNodes, masteryById, masteryNodesFor, masteryBonus, masteryWiden, masteryRowKey, masteryRowUsed, masteryPickOneBlocked, gateOn, sinGearCount, levelScaled,
         weaponTrait: groupId => (weaponTraitLines[groupId] ?? []).map(l => ({ ...l })),   // 무기군 특성 줄 — 전투 합산과 같은 모양(사본 · R443)
         classIds: data.classes.map(c => c.id),   // 「직업 순」 = `class.csv` 행 순서 — 책 정렬(`game.sortBooks`)이 읽는다 (2026-10-14 · ADR-0620)
         mainClasses: mainClasses.slice(),        // 본편 직업 — 결투장 등급 상대가 직업 셋을 여기서 뽑는다 (INTERFACE §2-17 · 2026-10-17)

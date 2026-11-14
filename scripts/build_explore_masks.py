@@ -18,7 +18,7 @@ Requires numpy · scipy · Pillow. On this machine scipy needs anaconda's DLLs o
 
 from __future__ import annotations
 
-import sys
+import argparse
 from pathlib import Path
 
 import numpy as np
@@ -54,7 +54,7 @@ def poly_mask(pts, w, h, value=1):
     return np.asarray(img)
 
 
-def build(overlay: Path | None = None):
+def build(overlay: Path | None = None, muted: bool = False):
     im = Image.open(SRC).convert("RGB").crop(CROP)
     w, h = im.size
     a = np.asarray(im).astype(float)
@@ -68,12 +68,17 @@ def build(overlay: Path | None = None):
 
     # sea — the sea-coloured mass touching the edge
     near = np.linalg.norm(a - SEA, axis=2) < SEA_T
+    if muted:
+        # Slate-teal water in the subdued redraw; exclude warm charcoal land and pale snow.
+        near = (b_ - r_ > 7) & (g_ - r_ > 5) & (sat > 0.18) & (val < 0.52) & (hue > 0.47) & (hue < 0.63)
     lab, _ = ndi.label(near)
     edge_ids = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
     sea = ndi.binary_opening(np.isin(lab, list(edge_ids)), iterations=1)
 
     # water joined to the sea — rivers · shore rims
     waterish = (sat > 0.62) & (val > 0.38) & (hue > 0.52) & (hue < 0.62)
+    if muted:
+        waterish = near & (sat > 0.24)
     lab, _ = ndi.label(waterish | sea)
     water = np.isin(lab, list(set(np.unique(lab[sea])) - {0})) & ~sea
 
@@ -96,8 +101,15 @@ def build(overlay: Path | None = None):
 
     # land — tidy and fill holes BEFORE taking the water out (else a bridged river piece is filled as a "hole")
     land = ndi.binary_fill_holes(ndi.binary_opening(~sea, iterations=2)) & ~water
+    if muted:
+        # Painterly sea strokes can resemble tiny islands; retain the seven large lands.
+        components, count = ndi.label(land)
+        sizes = np.bincount(components.ravel(), minlength=count + 1)
+        land &= sizes[components] >= 256
     sea = sea | water
     cliff = (sat > 0.35) & (sat < 0.64) & (val > 0.28) & (val < 0.62) & (hue > 0.54) & (hue < 0.63) & land
+    if muted:
+        cliff = (sat > 0.06) & (sat < 0.28) & (val > 0.25) & (val < 0.65) & (hue > 0.50) & (hue < 0.63) & land
 
     # gradient of the blurred picture
     bl = np.stack([ndi.gaussian_filter(a[..., c], 1.2) for c in range(3)], axis=2)
@@ -110,7 +122,7 @@ def build(overlay: Path | None = None):
         inside = poly_mask(pts, w, h).astype(bool)
         markers[(ndi.distance_transform_edt(inside) > SEED_IN) & land] = ch
         if ch == CLIFF_OWNER:
-            markers[cliff & (ndi.distance_transform_edt(~inside) < 70) & (markers == 0)] = ch
+            markers[cliff & (ndi.distance_transform_edt(~inside) < (25 if muted else 70)) & (markers == 0)] = ch
     markers[ndi.binary_erosion(sea, iterations=3)] = 8
 
     labels = ndi.watershed_ift(grad, markers)
@@ -152,5 +164,12 @@ def build(overlay: Path | None = None):
 
 
 if __name__ == "__main__":
-    args = sys.argv[1:]
-    build(Path(args[args.index("--overlay") + 1]) if "--overlay" in args else None)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--source', type=Path, default=SRC)
+    parser.add_argument('--output-dir', type=Path, default=OUT)
+    parser.add_argument('--crop', nargs=4, type=int, default=CROP, metavar=('LEFT', 'TOP', 'RIGHT', 'BOTTOM'))
+    parser.add_argument('--overlay', type=Path)
+    parser.add_argument('--muted', action='store_true', help='Detect the slate-teal water of the subdued map.')
+    args = parser.parse_args()
+    SRC, OUT, CROP = args.source, args.output_dir, tuple(args.crop)
+    build(args.overlay, muted=args.muted)

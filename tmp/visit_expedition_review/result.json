@@ -1,0 +1,86 @@
+{
+  "checks": [
+    {
+      "busy": "run",
+      "actual": [
+        "부두 주점에서 주먹다짐을 벌였다.",
+        "뱃사람과 한참을 엎치락뒤치락했다.",
+        "뱃사람과 부서진 탁자값을 나눠 내는 중..."
+      ],
+      "expected": [
+        "부두 주점에서 주먹다짐을 벌였다.",
+        "뱃사람과 한참을 엎치락뒤치락했다.",
+        "뱃사람과 부서진 탁자값을 나눠 내는 중..."
+      ],
+      "awayRows": 0,
+      "nextActual": [
+        "뱃사람과 한참을 엎치락뒤치락했다.",
+        "뱃사람이 해병 출신이라고 들었다.",
+        "해병에게 뭍에서 일할 생각을 묻는 중..."
+      ],
+      "nextExpected": [
+        "뱃사람과 한참을 엎치락뒤치락했다.",
+        "뱃사람이 해병 출신이라고 들었다.",
+        "해병에게 뭍에서 일할 생각을 묻는 중..."
+      ],
+      "clockContinues": true,
+      "arrived": 1,
+      "heroClockAdvanced": true,
+      "stillOnExpedition": true,
+      "lang": "ko",
+      "skin": "d2min",
+      "away": 1
+    },
+    {
+      "busy": "run",
+      "actual": [
+        "Picking a fight at the dock tavern..."
+      ],
+      "expected": [
+        "Picking a fight at the dock tavern..."
+      ],
+      "awayRows": 0,
+      "nextActual": [
+        "Got into a brawl at the dock tavern.",
+        "Trading blows with a sailor who joined in..."
+      ],
+      "nextExpected": [
+        "Got into a brawl at the dock tavern.",
+        "Trading blows with a sailor who joined in..."
+      ],
+      "clockContinues": true,
+      "arrived": 1,
+      "heroClockAdvanced": true,
+      "stillOnExpedition": true,
+      "lang": "en",
+      "skin": "now",
+      "away": 1
+    },
+    {
+      "busy": null,
+      "actual": [
+        "부두 주점에서 시비를 거는 중..."
+      ],
+      "expected": [
+        "부두 주점에서 시비를 거는 중..."
+      ],
+      "awayRows": 0,
+      "nextActual": [
+        "부두 주점에서 주먹다짐을 벌였다.",
+        "주먹다짐에 끼어든 뱃사람과 겨루는 중..."
+      ],
+      "nextExpected": [
+        "부두 주점에서 주먹다짐을 벌였다.",
+        "주먹다짐에 끼어든 뱃사람과 겨루는 중..."
+      ],
+      "clockContinues": true,
+      "arrived": 1,
+      "heroClockAdvanced": true,
+      "stillOnExpedition": false,
+      "lang": "ko",
+      "skin": "now",
+      "away": 0
+    }
+  ],
+  "errors": []
+}

@@ -164,7 +164,7 @@ export function createSkillSystem(data) {
     /** 그 줄에 그 항이 있는가 — 없는 항을 미는 슬롯은 조용히 무시되므로 로드에서 막는다 (§13-1).
      *  `effect_value` · `duration_sec` 은 `apply` 줄이 거는 걸린 효과의 값 · 시간이다 — 시간은 창을 거는 쪽(`turn`)만 있다(오오라는 상시) */
     const slotFits = (d, e, field) => ({
-        mult_pct: e.effect === 'hit' || e.effect === 'heal' || e.effect === 'mend' || e.effect === 'summon' || e.effect === 'cleanse',
+        mult_pct: e.effect === 'hit' || e.effect === 'heal' || e.effect === 'mend' || e.effect === 'summon' || e.effect === 'cleanse' || e.effect === 'revive',   // 일으키기 = 일어날 때 HP 비율 (2026-11-14 R471)
         hits: e.effect === 'hit',
         // 걸린 효과의 값 · 시간 — `apply` 줄, 그리고 **걸린 효과를 든 `hit` 줄**(맞은 대상에게 거는 결빙 · 2026-09-28 R177)
         effect_value: e.effect === 'apply' || (e.effect === 'hit' && e.status !== null),
@@ -388,6 +388,7 @@ export function createSkillSystem(data) {
             i: d.cast === 'channel_tick',                              // 계속 닳기의 방 사이 간격 [balance.csv:channel_tick_sec] (2026-10-22 · 끊어 치기 · 모으기는 같은 초 시계라도 아니다 — R358 · R392)
             p: d.hpCost > 0,                                           // HP 소모 비율 (2026-10-24 · R355)
             f: st0?.stat === 'swarm',                                  // 파리 수 [balance.csv:swarm_fly_count] (스웜 · 2026-10-29 R380)
+            r: e0.effect === 'revive',                                 // 일어날 때 HP 비율 (리저렉션 · 2026-11-14 R471)
         };
         for (const k of ko) if (!slotHas[k]) bad(`desc 자리 {${k}} — ${k in slotHas ? '이 스킬엔 그 수가 없다' : `모르는 자리(${Object.keys(slotHas).join('·')})`}`);
         for (const k of ['n', 'd']) if (slotHas[k] && !ko.includes(k)) bad(`desc 에 {${k}} 가 없다 — ${k === 'n' ? '쿨' : '수량'}은 문장이 말한다`);
@@ -636,7 +637,8 @@ export function createSkillSystem(data) {
             if (![per, arg, bv].every(Number.isFinite) || (isVar && !(per > 0))) bad('advance_node', `${r.skill_id}#${r.slot} — 값 '${r.per_rank}' · '${r.arg}' · '${r.bonus_v}'`);
             if (!r.bonus_fx || r.bonus_fx === NONE) bad('advance_node', `${r.skill_id}#${r.slot} — 5랭크 덤(bonus_fx)이 없다`);
             if (!r.desc_kr || !r.desc_en || !r.bonus_kr || !r.bonus_en) bad('advance_node', `${r.skill_id}#${r.slot} — 설명이 비었다`);
-            t[r.slot] = { slot: r.slot, fx, per, arg, unit: r.unit, desc: { ko: r.desc_kr, en: r.desc_en },
+            if (!r.name_kr || !r.name_en || r.name_kr === NONE || r.name_en === NONE) bad('advance_node', `${r.skill_id}#${r.slot} — 칸 이름이 비었다`);
+            t[r.slot] = { slot: r.slot, name: { ko: r.name_kr, en: r.name_en }, fx, per, arg, unit: r.unit, desc: { ko: r.desc_kr, en: r.desc_en },
                 bonus: { fx: r.bonus_fx, v: bv, unit: r.bonus_unit, desc: { ko: r.bonus_kr, en: r.bonus_en } } };
             tails.set(r.skill_id, t);
         }
@@ -679,6 +681,31 @@ export function createSkillSystem(data) {
             if (r >= full) { tf[c.bonus.fx] = (tf[c.bonus.fx] ?? 0) + c.bonus.v; }
         }
         return { tf, ta };
+    }
+    /**
+     * 정의 모양을 바꾸는 장치 [2026-11-14 · R471 · advance_tree_draft §4 ~ §6] — 타수(휠윈드) · 나머지 비율 · 스턴 시간 · 같은 시간(토르의 분노) ·
+     *   진형 붕괴 시간(쇼크웨이브) · 대상(단죄 — 체력 비율 최저) · 느려짐(정조준)을 줄에 얹는다. 나머지 장치는 전투가 `tf` 로 읽는다 · 장치가 없으면 그대로
+     */
+    function advShape(lv) {
+        const tf = lv.tf;
+        if (!tf || !Object.keys(tf).length) return;
+        lv.effects = lv.effects.map(e => {
+            let x = e;
+            const add = (field, v) => { x = { ...x, lvAdd: { ...x.lvAdd, [field]: (x.lvAdd?.[field] ?? 0) + v } }; };
+            if (e.effect === 'hit') {
+                if (tf.hits_add) x = { ...x, hits: x.hits + tf.hits_add };
+                if (tf.thor_splash) x = { ...x, decay: Math.max(0, x.decay - tf.thor_splash) };
+                if (tf.thor_stun_long && x.status) add('duration_sec', tf.thor_stun_long);
+                if (tf.thor_stun_equal) x = { ...x, stunFull: true };
+                if (tf.cond_lowest) x = { ...x, target: tf.cond_back_too ? 'enemy_hp_low_all' : 'enemy_hp_low' };
+            } else if (e.effect === 'apply') {
+                if (tf.shock_break_long && e.status === 'war_shockwave_break') add('duration_sec', tf.shock_break_long);
+                // 정조준 느려짐 — 변형 1 이 크기를 줄인다(음수 값의 크기에서 뺀다) · 덤은 줄째 없앤다
+                if (tf.aim_less_slow && e.status === 'arc_trueaim_slow') add('effect_value', -Math.min(1, tf.aim_less_slow) * Math.abs(statuses[e.status]?.value ?? 0));
+            }
+            return x;
+        });
+        if (tf.aim_no_slow) lv.effects = lv.effects.filter(e => e.status !== 'arc_trueaim_slow');
     }
 
     /**
@@ -749,7 +776,7 @@ export function createSkillSystem(data) {
         const key = `${d.id}#${up}#${vr ? vr.join('.') : ''}`;
         if (!leveled.has(key)) {
             const lv = up > 0 ? levelDef(d, up) : { ...d };
-            if (d.ownerKind === 'advance') Object.assign(lv, tailFx(d.id, up, vr));
+            if (d.ownerKind === 'advance') { Object.assign(lv, tailFx(d.id, up, vr)); advShape(lv); }
             leveled.set(key, lv);
         }
         return leveled.get(key);

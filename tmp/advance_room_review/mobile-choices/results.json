@@ -1,0 +1,2609 @@
+{
+  "started_at": "2026-11-14T16:28:43.656456+00:00",
+  "at": "2026-11-14T16:29:04.265052+00:00",
+  "source_start": {
+    "src/ui/app.js": "b5aabc2276fca6758f8c66f75ab57173bb993ac3ec669dfe6a79a14ce2156af0",
+    "src/ui/style.css": "99881fcd2defb55ab4f6a4b50f5262784f58138835df94eee6a8f48a9a131eb1",
+    "src/ui/mobile.js": "70fc71ee27eedba0e0fcaedcecc8a58e37c323aa35df137a4c9ce675abaa1830",
+    "src/ui/mobile.css": "5b9e1a75fe5f01ab428f84a3b67938e76cda30104c701272490c871987c1a7ba",
+    "src/ui/mobile-pages.js": "525faeed1b593f4e2596c99eeec5912959ca9b42a1d6fad0f89cd80716b0d5e5",
+    "src/ui/mobile-pages.css": "0abb135eb0e8941f201157b2373b060ce16800bc4ec46507510aec8b1e333668",
+    "src/ui/mobile-native.js": "43962334c75e005ee642decc722e4d9588d769b08d8fe6ac3a20c8ff87c40b7d",
+    "src/ui/mobile-native.css": "5fdf6c1ca20076622f8bba6684ad9a76b305f625eeaf5479ae5a98f46a9ce526",
+    "src/ui/mobile-gestures.js": "c0bfb8923d5ac29f597c3d207456fcf1282a5972284ca95e70ae35bacf523527",
+    "src/ui/mobile-gestures.css": "e9c9ca4f504f735b9013db4ac4474d46b00474f1912b8ab0adac627066bd0f8a",
+    "src/ui/i18n.js": "f86af18aa0c0a99012111aaed498d510bd25ab15add6cc327070cd8d195628cc"
+  },
+  "source_end": {
+    "src/ui/app.js": "b5aabc2276fca6758f8c66f75ab57173bb993ac3ec669dfe6a79a14ce2156af0",
+    "src/ui/style.css": "99881fcd2defb55ab4f6a4b50f5262784f58138835df94eee6a8f48a9a131eb1",
+    "src/ui/mobile.js": "70fc71ee27eedba0e0fcaedcecc8a58e37c323aa35df137a4c9ce675abaa1830",
+    "src/ui/mobile.css": "5b9e1a75fe5f01ab428f84a3b67938e76cda30104c701272490c871987c1a7ba",
+    "src/ui/mobile-pages.js": "525faeed1b593f4e2596c99eeec5912959ca9b42a1d6fad0f89cd80716b0d5e5",
+    "src/ui/mobile-pages.css": "0abb135eb0e8941f201157b2373b060ce16800bc4ec46507510aec8b1e333668",
+    "src/ui/mobile-native.js": "43962334c75e005ee642decc722e4d9588d769b08d8fe6ac3a20c8ff87c40b7d",
+    "src/ui/mobile-native.css": "5fdf6c1ca20076622f8bba6684ad9a76b305f625eeaf5479ae5a98f46a9ce526",
+    "src/ui/mobile-gestures.js": "c0bfb8923d5ac29f597c3d207456fcf1282a5972284ca95e70ae35bacf523527",
+    "src/ui/mobile-gestures.css": "e9c9ca4f504f735b9013db4ac4474d46b00474f1912b8ab0adac627066bd0f8a",
+    "src/ui/i18n.js": "f86af18aa0c0a99012111aaed498d510bd25ab15add6cc327070cd8d195628cc"
+  },
+  "checks": [
+    {
+      "name": "choices-320x568-ko-d2min:candidate0:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 280,
+        "sw": 280,
+        "h": 265,
+        "sh": 265,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate0:hire-reachable",
+      "ok": true,
+      "detail": {
+        "width": 131,
+        "height": 36,
+        "clipped": [],
+        "hit": true,
+        "text": "고용 (600 골드)"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate0:keep-reachable",
+      "ok": true,
+      "detail": {
+        "width": 131,
+        "height": 36,
+        "clipped": [],
+        "hit": true,
+        "text": "보관"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate0:stat0-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "8"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate0:stat1-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "8"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate0:stat2-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate0:stat3-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "8"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate0:stat4-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate0:stat5-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "5"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate0:stat6-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate1:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 280,
+        "sw": 280,
+        "h": 265,
+        "sh": 265,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate1:hire-reachable",
+      "ok": true,
+      "detail": {
+        "width": 131,
+        "height": 36,
+        "clipped": [],
+        "hit": true,
+        "text": "고용 (600 골드)"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate1:keep-reachable",
+      "ok": true,
+      "detail": {
+        "width": 131,
+        "height": 36,
+        "clipped": [],
+        "hit": true,
+        "text": "보관"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate1:stat0-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "12"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate1:stat1-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "13"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate1:stat2-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "6"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate1:stat3-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "6"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate1:stat4-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "12"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate1:stat5-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "3"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:candidate1:stat6-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "10"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:hire-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic0:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 281,
+        "sw": 281,
+        "h": 181,
+        "sh": 181,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic0:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 279,
+        "sw": 279,
+        "h": 138,
+        "sh": 139,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic0:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 44,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic0:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic1:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 281,
+        "sw": 281,
+        "h": 181,
+        "sh": 181,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic1:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 279,
+        "sw": 279,
+        "h": 138,
+        "sh": 139,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic1:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 44,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic1:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic2:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 281,
+        "sw": 281,
+        "h": 181,
+        "sh": 181,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic2:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 279,
+        "sw": 279,
+        "h": 138,
+        "sh": 139,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic2:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 44,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic2:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic3:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 281,
+        "sw": 281,
+        "h": 181,
+        "sh": 181,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic3:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 279,
+        "sw": 279,
+        "h": 138,
+        "sh": 139,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic3:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 44,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic3:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic4:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 281,
+        "sw": 281,
+        "h": 181,
+        "sh": 181,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic4:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 279,
+        "sw": 279,
+        "h": 138,
+        "sh": 139,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic4:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 44,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:tactic4:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-320x568-ko-d2min:bonus-panel-reachable",
+      "ok": true
+    },
+    {
+      "name": "choices-320x568-ko-d2min:construction-action-reachable",
+      "ok": true,
+      "detail": {
+        "width": 100,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": "건설"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:rank-history-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-320x568-ko-d2min:current-building-effects-visible",
+      "ok": true,
+      "detail": {
+        "width": 157,
+        "height": 105.0625,
+        "clipped": [],
+        "hit": true,
+        "text": "아직 지은 랭크 없음"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:branch0:selected-by-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-320x568-ko-d2min:branch0:advance-reachable",
+      "ok": true,
+      "detail": {
+        "width": 278,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "전직"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:branch0:all-three-skills-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-320x568-ko-d2min:branch1:selected-by-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-320x568-ko-d2min:branch1:advance-reachable",
+      "ok": true,
+      "detail": {
+        "width": 278,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "전직"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:branch1:all-three-skills-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-320x568-ko-d2min:branch2:selected-by-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-320x568-ko-d2min:branch2:advance-reachable",
+      "ok": true,
+      "detail": {
+        "width": 278,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "전직"
+      }
+    },
+    {
+      "name": "choices-320x568-ko-d2min:branch2:all-three-skills-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate0:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 350,
+        "sw": 350,
+        "h": 466,
+        "sh": 466,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate0:hire-reachable",
+      "ok": true,
+      "detail": {
+        "width": 163,
+        "height": 42,
+        "clipped": [],
+        "hit": true,
+        "text": "고용 (600 골드)"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate0:keep-reachable",
+      "ok": true,
+      "detail": {
+        "width": 163,
+        "height": 42,
+        "clipped": [],
+        "hit": true,
+        "text": "보관"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate0:stat0-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "12"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate0:stat1-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "7"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate0:stat2-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate0:stat3-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate0:stat4-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "13"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate0:stat5-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "8"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate0:stat6-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "6"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate1:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 350,
+        "sw": 350,
+        "h": 466,
+        "sh": 466,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate1:hire-reachable",
+      "ok": true,
+      "detail": {
+        "width": 163,
+        "height": 42,
+        "clipped": [],
+        "hit": true,
+        "text": "고용 (600 골드)"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate1:keep-reachable",
+      "ok": true,
+      "detail": {
+        "width": 163,
+        "height": 42,
+        "clipped": [],
+        "hit": true,
+        "text": "보관"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate1:stat0-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate1:stat1-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "10"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate1:stat2-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "10"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate1:stat3-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "7"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate1:stat4-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "4"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate1:stat5-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "12"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:candidate1:stat6-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:hire-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic0:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 351,
+        "sw": 351,
+        "h": 340,
+        "sh": 340,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic0:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 349,
+        "sw": 349,
+        "h": 289,
+        "sh": 289,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic0:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 44,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic0:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic1:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 351,
+        "sw": 351,
+        "h": 340,
+        "sh": 340,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic1:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 349,
+        "sw": 349,
+        "h": 289,
+        "sh": 289,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic1:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 44,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic1:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic2:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 351,
+        "sw": 351,
+        "h": 340,
+        "sh": 340,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic2:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 349,
+        "sw": 349,
+        "h": 289,
+        "sh": 289,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic2:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 44,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic2:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic3:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 351,
+        "sw": 351,
+        "h": 340,
+        "sh": 340,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic3:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 349,
+        "sw": 349,
+        "h": 289,
+        "sh": 289,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic3:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 44,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic3:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic4:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 351,
+        "sw": 351,
+        "h": 340,
+        "sh": 340,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic4:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 349,
+        "sw": 349,
+        "h": 289,
+        "sh": 289,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic4:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 44,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:tactic4:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-ko-d2min:bonus-panel-reachable",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-ko-d2min:construction-action-reachable",
+      "ok": true,
+      "detail": {
+        "width": 100,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": "건설"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:rank-history-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-ko-d2min:current-building-effects-visible",
+      "ok": true,
+      "detail": {
+        "width": 199,
+        "height": 174.640625,
+        "clipped": [],
+        "hit": true,
+        "text": "아직 지은 랭크 없음"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:branch0:selected-by-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-ko-d2min:branch0:advance-reachable",
+      "ok": true,
+      "detail": {
+        "width": 348,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "전직"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:branch0:all-three-skills-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-ko-d2min:branch1:selected-by-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-ko-d2min:branch1:advance-reachable",
+      "ok": true,
+      "detail": {
+        "width": 348,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "전직"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:branch1:all-three-skills-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-ko-d2min:branch2:selected-by-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-ko-d2min:branch2:advance-reachable",
+      "ok": true,
+      "detail": {
+        "width": 348,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "전직"
+      }
+    },
+    {
+      "name": "choices-390x844-ko-d2min:branch2:all-three-skills-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-en-now:candidate0:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 350,
+        "sw": 350,
+        "h": 470,
+        "sh": 470,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate0:hire-reachable",
+      "ok": true,
+      "detail": {
+        "width": 163,
+        "height": 42,
+        "clipped": [],
+        "hit": true,
+        "text": "Hire (600 gold)"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate0:keep-reachable",
+      "ok": true,
+      "detail": {
+        "width": 163,
+        "height": 42,
+        "clipped": [],
+        "hit": true,
+        "text": "Keep"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate0:stat0-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "14"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate0:stat1-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "10"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate0:stat2-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "5"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate0:stat3-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "7"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate0:stat4-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "7"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate0:stat5-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "11"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate0:stat6-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "10"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate1:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 350,
+        "sw": 350,
+        "h": 470,
+        "sh": 470,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate1:hire-reachable",
+      "ok": true,
+      "detail": {
+        "width": 163,
+        "height": 42,
+        "clipped": [],
+        "hit": true,
+        "text": "Hire (600 gold)"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate1:keep-reachable",
+      "ok": true,
+      "detail": {
+        "width": 163,
+        "height": 42,
+        "clipped": [],
+        "hit": true,
+        "text": "Keep"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate1:stat0-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "11"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate1:stat1-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "5"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate1:stat2-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "15"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate1:stat3-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "10"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate1:stat4-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate1:stat5-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:candidate1:stat6-visible",
+      "ok": true,
+      "detail": {
+        "width": 24,
+        "height": 20.796875,
+        "clipped": [],
+        "hit": true,
+        "text": "16"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:hire-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-en-now:tactic0:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 350,
+        "sw": 350,
+        "h": 340,
+        "sh": 340,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:tactic0:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 348,
+        "sw": 348,
+        "h": 289,
+        "sh": 289,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:tactic0:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 44,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:tactic0:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-en-now:tactic1:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 350,
+        "sw": 350,
+        "h": 340,
+        "sh": 340,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:tactic1:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 348,
+        "sw": 348,
+        "h": 289,
+        "sh": 289,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:tactic1:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 44,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:tactic1:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-en-now:tactic2:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 350,
+        "sw": 350,
+        "h": 340,
+        "sh": 340,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:tactic2:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 348,
+        "sw": 348,
+        "h": 289,
+        "sh": 289,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:tactic2:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 44,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:tactic2:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-en-now:tactic3:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 350,
+        "sw": 350,
+        "h": 340,
+        "sh": 340,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:tactic3:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 348,
+        "sw": 348,
+        "h": 289,
+        "sh": 289,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:tactic3:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 44,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:tactic3:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-en-now:tactic4:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 350,
+        "sw": 350,
+        "h": 340,
+        "sh": 340,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:tactic4:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 348,
+        "sw": 348,
+        "h": 289,
+        "sh": 289,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:tactic4:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 44,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:tactic4:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-en-now:bonus-panel-reachable",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-en-now:construction-action-reachable",
+      "ok": true,
+      "detail": {
+        "width": 100,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": "Build"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:rank-history-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-en-now:current-building-effects-visible",
+      "ok": true,
+      "detail": {
+        "width": 197.8125,
+        "height": 171.140625,
+        "clipped": [],
+        "hit": true,
+        "text": "Nothing built yet"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:branch0:selected-by-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-en-now:branch0:advance-reachable",
+      "ok": true,
+      "detail": {
+        "width": 348,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "Advance"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:branch0:all-three-skills-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-en-now:branch1:selected-by-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-en-now:branch1:advance-reachable",
+      "ok": true,
+      "detail": {
+        "width": 348,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "Advance"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:branch1:all-three-skills-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-en-now:branch2:selected-by-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-390x844-en-now:branch2:advance-reachable",
+      "ok": true,
+      "detail": {
+        "width": 348,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "Advance"
+      }
+    },
+    {
+      "name": "choices-390x844-en-now:branch2:all-three-skills-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate0:card-fits",
+      "ok": false,
+      "detail": {
+        "w": 474,
+        "sw": 474,
+        "h": 17,
+        "sh": 75,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate0:hire-reachable",
+      "ok": false,
+      "detail": {
+        "width": 229,
+        "height": 33,
+        "clipped": [
+          "ng-card mobile-choice-card mobile-choice-on mobile-swipe-surface vertical",
+          "tv-row vertical",
+          "box-body vertical",
+          "panel tv-hire mobile-pane mobile-pane-on mobile-swipe-surface vertical",
+          "page page-stack c-tavern mobile-deck mobile-swipe vertical",
+          "main vertical",
+          " vertical",
+          " vertical"
+        ],
+        "hit": false,
+        "text": "Hire (600 gold)"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate0:keep-reachable",
+      "ok": false,
+      "detail": {
+        "width": 229,
+        "height": 33,
+        "clipped": [
+          "ng-card mobile-choice-card mobile-choice-on mobile-swipe-surface vertical",
+          "tv-row vertical",
+          "box-body vertical",
+          "panel tv-hire mobile-pane mobile-pane-on mobile-swipe-surface vertical",
+          "page page-stack c-tavern mobile-deck mobile-swipe vertical",
+          "main vertical",
+          " vertical",
+          " vertical"
+        ],
+        "hit": false,
+        "text": "Keep"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate0:stat0-visible",
+      "ok": false,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": false,
+        "text": "8"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate0:stat1-visible",
+      "ok": false,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": false,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate0:stat2-visible",
+      "ok": false,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": false,
+        "text": "12"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate0:stat3-visible",
+      "ok": false,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": false,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate0:stat4-visible",
+      "ok": false,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": false,
+        "text": "4"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate0:stat5-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "10"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate0:stat6-visible",
+      "ok": false,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": false,
+        "text": "10"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate1:card-fits",
+      "ok": false,
+      "detail": {
+        "w": 474,
+        "sw": 474,
+        "h": 17,
+        "sh": 75,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate1:hire-reachable",
+      "ok": false,
+      "detail": {
+        "width": 229,
+        "height": 33,
+        "clipped": [
+          "ng-card mobile-choice-card mobile-swipe-surface mobile-choice-on vertical",
+          "tv-row vertical",
+          "box-body vertical",
+          "panel tv-hire mobile-pane mobile-pane-on mobile-swipe-surface vertical",
+          "page page-stack c-tavern mobile-deck mobile-swipe vertical",
+          "main vertical",
+          " vertical",
+          " vertical"
+        ],
+        "hit": false,
+        "text": "Hire (600 gold)"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate1:keep-reachable",
+      "ok": false,
+      "detail": {
+        "width": 229,
+        "height": 33,
+        "clipped": [
+          "ng-card mobile-choice-card mobile-swipe-surface mobile-choice-on vertical",
+          "tv-row vertical",
+          "box-body vertical",
+          "panel tv-hire mobile-pane mobile-pane-on mobile-swipe-surface vertical",
+          "page page-stack c-tavern mobile-deck mobile-swipe vertical",
+          "main vertical",
+          " vertical",
+          " vertical"
+        ],
+        "hit": false,
+        "text": "Keep"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate1:stat0-visible",
+      "ok": false,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": false,
+        "text": "18"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate1:stat1-visible",
+      "ok": false,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": false,
+        "text": "13"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate1:stat2-visible",
+      "ok": false,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": false,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate1:stat3-visible",
+      "ok": false,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": false,
+        "text": "10"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate1:stat4-visible",
+      "ok": false,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": false,
+        "text": "6"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate1:stat5-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "12"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:candidate1:stat6-visible",
+      "ok": false,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": false,
+        "text": "6"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:hire-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic0:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 372,
+        "sw": 372,
+        "h": 122,
+        "sh": 122,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic0:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 370,
+        "sw": 370,
+        "h": 83,
+        "sh": 83,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic0:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 36,
+        "height": 30,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic0:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic1:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 372,
+        "sw": 372,
+        "h": 122,
+        "sh": 122,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic1:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 370,
+        "sw": 370,
+        "h": 83,
+        "sh": 83,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic1:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 36,
+        "height": 30,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic1:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic2:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 372,
+        "sw": 372,
+        "h": 122,
+        "sh": 122,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic2:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 370,
+        "sw": 370,
+        "h": 83,
+        "sh": 83,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic2:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 36,
+        "height": 30,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic2:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic3:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 372,
+        "sw": 372,
+        "h": 122,
+        "sh": 122,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic3:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 370,
+        "sw": 370,
+        "h": 83,
+        "sh": 83,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic3:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 36,
+        "height": 30,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic3:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic4:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 372,
+        "sw": 372,
+        "h": 122,
+        "sh": 122,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic4:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 370,
+        "sw": 370,
+        "h": 83,
+        "sh": 83,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic4:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 36,
+        "height": 30,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:tactic4:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-568x320-en-d2min:bonus-panel-reachable",
+      "ok": true
+    },
+    {
+      "name": "choices-568x320-en-d2min:construction-action-reachable",
+      "ok": true,
+      "detail": {
+        "width": 100,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": "Build"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:rank-history-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-568x320-en-d2min:current-building-effects-visible",
+      "ok": true,
+      "detail": {
+        "width": 92.984375,
+        "height": 130,
+        "clipped": [],
+        "hit": true,
+        "text": "Nothing built yet"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:branch0:selected-by-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-568x320-en-d2min:branch0:advance-reachable",
+      "ok": true,
+      "detail": {
+        "width": 140,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "Advance"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:branch0:all-three-skills-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-568x320-en-d2min:branch1:selected-by-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-568x320-en-d2min:branch1:advance-reachable",
+      "ok": true,
+      "detail": {
+        "width": 140,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "Advance"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:branch1:all-three-skills-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-568x320-en-d2min:branch2:selected-by-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-568x320-en-d2min:branch2:advance-reachable",
+      "ok": true,
+      "detail": {
+        "width": 140,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "Advance"
+      }
+    },
+    {
+      "name": "choices-568x320-en-d2min:branch2:all-three-skills-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate0:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 750,
+        "sw": 750,
+        "h": 87,
+        "sh": 87,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate0:hire-reachable",
+      "ok": true,
+      "detail": {
+        "width": 367,
+        "height": 33,
+        "clipped": [],
+        "hit": true,
+        "text": "고용 (600 골드)"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate0:keep-reachable",
+      "ok": true,
+      "detail": {
+        "width": 367,
+        "height": 33,
+        "clipped": [],
+        "hit": true,
+        "text": "보관"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate0:stat0-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate0:stat1-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "7"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate0:stat2-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "8"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate0:stat3-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate0:stat4-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "10"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate0:stat5-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "10"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate0:stat6-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "7"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate1:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 750,
+        "sw": 750,
+        "h": 87,
+        "sh": 87,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate1:hire-reachable",
+      "ok": true,
+      "detail": {
+        "width": 367,
+        "height": 33,
+        "clipped": [],
+        "hit": true,
+        "text": "고용 (600 골드)"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate1:keep-reachable",
+      "ok": true,
+      "detail": {
+        "width": 367,
+        "height": 33,
+        "clipped": [],
+        "hit": true,
+        "text": "보관"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate1:stat0-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "8"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate1:stat1-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "10"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate1:stat2-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "13"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate1:stat3-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate1:stat4-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate1:stat5-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:candidate1:stat6-visible",
+      "ok": true,
+      "detail": {
+        "width": 20,
+        "height": 18,
+        "clipped": [],
+        "hit": true,
+        "text": "9"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:hire-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic0:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 647,
+        "sw": 647,
+        "h": 192,
+        "sh": 192,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic0:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 645,
+        "sw": 645,
+        "h": 153,
+        "sh": 153,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic0:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 36,
+        "height": 30,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic0:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic1:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 647,
+        "sw": 647,
+        "h": 192,
+        "sh": 192,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic1:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 645,
+        "sw": 645,
+        "h": 153,
+        "sh": 153,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic1:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 36,
+        "height": 30,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic1:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic2:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 647,
+        "sw": 647,
+        "h": 192,
+        "sh": 192,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic2:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 645,
+        "sw": 645,
+        "h": 153,
+        "sh": 153,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic2:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 36,
+        "height": 30,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic2:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic3:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 647,
+        "sw": 647,
+        "h": 192,
+        "sh": 192,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic3:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 645,
+        "sw": 645,
+        "h": 153,
+        "sh": 153,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic3:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 36,
+        "height": 30,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic3:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic4:grid-fits",
+      "ok": true,
+      "detail": {
+        "w": 647,
+        "sw": 647,
+        "h": 192,
+        "sh": 192,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic4:card-fits",
+      "ok": true,
+      "detail": {
+        "w": 645,
+        "sw": 645,
+        "h": 153,
+        "sh": 153,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic4:lock-reachable",
+      "ok": true,
+      "detail": {
+        "width": 36,
+        "height": 30,
+        "clipped": [],
+        "hit": true,
+        "text": ""
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:tactic4:lock-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-844x390-ko-now:bonus-panel-reachable",
+      "ok": true
+    },
+    {
+      "name": "choices-844x390-ko-now:construction-action-reachable",
+      "ok": true,
+      "detail": {
+        "width": 100,
+        "height": 44,
+        "clipped": [],
+        "hit": true,
+        "text": "건설"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:rank-history-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-844x390-ko-now:current-building-effects-visible",
+      "ok": true,
+      "detail": {
+        "width": 153.265625,
+        "height": 190,
+        "clipped": [],
+        "hit": true,
+        "text": "아직 지은 랭크 없음"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:branch0:selected-by-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-844x390-ko-now:branch0:advance-reachable",
+      "ok": true,
+      "detail": {
+        "width": 140,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "전직"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:branch0:all-three-skills-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-844x390-ko-now:branch1:selected-by-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-844x390-ko-now:branch1:advance-reachable",
+      "ok": true,
+      "detail": {
+        "width": 140,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "전직"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:branch1:all-three-skills-preserved",
+      "ok": true
+    },
+    {
+      "name": "choices-844x390-ko-now:branch2:selected-by-original-action",
+      "ok": true
+    },
+    {
+      "name": "choices-844x390-ko-now:branch2:advance-reachable",
+      "ok": true,
+      "detail": {
+        "width": 140,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "전직"
+      }
+    },
+    {
+      "name": "choices-844x390-ko-now:branch2:all-three-skills-preserved",
+      "ok": true
+    }
+  ],
+  "errors": []
+}

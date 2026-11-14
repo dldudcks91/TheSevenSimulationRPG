@@ -1,0 +1,183 @@
+{
+  "started_at": "2026-11-14T16:28:54.276489+00:00",
+  "at": "2026-11-14T16:29:03.290077+00:00",
+  "source_start": {
+    "src/ui/app.js": "b5aabc2276fca6758f8c66f75ab57173bb993ac3ec669dfe6a79a14ce2156af0",
+    "src/ui/style.css": "99881fcd2defb55ab4f6a4b50f5262784f58138835df94eee6a8f48a9a131eb1",
+    "src/ui/mobile.js": "70fc71ee27eedba0e0fcaedcecc8a58e37c323aa35df137a4c9ce675abaa1830",
+    "src/ui/mobile.css": "5b9e1a75fe5f01ab428f84a3b67938e76cda30104c701272490c871987c1a7ba",
+    "src/ui/mobile-pages.js": "525faeed1b593f4e2596c99eeec5912959ca9b42a1d6fad0f89cd80716b0d5e5",
+    "src/ui/mobile-pages.css": "0abb135eb0e8941f201157b2373b060ce16800bc4ec46507510aec8b1e333668",
+    "src/ui/mobile-native.js": "43962334c75e005ee642decc722e4d9588d769b08d8fe6ac3a20c8ff87c40b7d",
+    "src/ui/mobile-native.css": "5fdf6c1ca20076622f8bba6684ad9a76b305f625eeaf5479ae5a98f46a9ce526",
+    "src/ui/mobile-gestures.js": "c0bfb8923d5ac29f597c3d207456fcf1282a5972284ca95e70ae35bacf523527",
+    "src/ui/mobile-gestures.css": "e9c9ca4f504f735b9013db4ac4474d46b00474f1912b8ab0adac627066bd0f8a",
+    "src/ui/i18n.js": "f86af18aa0c0a99012111aaed498d510bd25ab15add6cc327070cd8d195628cc"
+  },
+  "source_end": {
+    "src/ui/app.js": "b5aabc2276fca6758f8c66f75ab57173bb993ac3ec669dfe6a79a14ce2156af0",
+    "src/ui/style.css": "99881fcd2defb55ab4f6a4b50f5262784f58138835df94eee6a8f48a9a131eb1",
+    "src/ui/mobile.js": "70fc71ee27eedba0e0fcaedcecc8a58e37c323aa35df137a4c9ce675abaa1830",
+    "src/ui/mobile.css": "5b9e1a75fe5f01ab428f84a3b67938e76cda30104c701272490c871987c1a7ba",
+    "src/ui/mobile-pages.js": "525faeed1b593f4e2596c99eeec5912959ca9b42a1d6fad0f89cd80716b0d5e5",
+    "src/ui/mobile-pages.css": "0abb135eb0e8941f201157b2373b060ce16800bc4ec46507510aec8b1e333668",
+    "src/ui/mobile-native.js": "43962334c75e005ee642decc722e4d9588d769b08d8fe6ac3a20c8ff87c40b7d",
+    "src/ui/mobile-native.css": "5fdf6c1ca20076622f8bba6684ad9a76b305f625eeaf5479ae5a98f46a9ce526",
+    "src/ui/mobile-gestures.js": "c0bfb8923d5ac29f597c3d207456fcf1282a5972284ca95e70ae35bacf523527",
+    "src/ui/mobile-gestures.css": "e9c9ca4f504f735b9013db4ac4474d46b00474f1912b8ab0adac627066bd0f8a",
+    "src/ui/i18n.js": "f86af18aa0c0a99012111aaed498d510bd25ab15add6cc327070cd8d195628cc"
+  },
+  "checks": [
+    {
+      "name": "keyboard-390x844:chapter-keyboard-selection",
+      "ok": true
+    },
+    {
+      "name": "keyboard-390x844:chapter-focus-after-render",
+      "ok": true
+    },
+    {
+      "name": "keyboard-390x844:region-keyboard-opens-departure",
+      "ok": true
+    },
+    {
+      "name": "keyboard-390x844:escape-closes-departure",
+      "ok": true
+    },
+    {
+      "name": "keyboard-390x844:branch-keyboard-original-selection",
+      "ok": true
+    },
+    {
+      "name": "keyboard-390x844:branch-focus-after-render",
+      "ok": true
+    },
+    {
+      "name": "keyboard-390x844:candidate-keyboard-wrap",
+      "ok": true
+    },
+    {
+      "name": "keyboard-390x844:hidden-cards-inert",
+      "ok": true
+    },
+    {
+      "name": "keyboard-390x844:feedback-does-not-cover-action",
+      "ok": true,
+      "detail": [
+        {
+          "visible": true,
+          "inside": true,
+          "aboveAction": true,
+          "passThrough": true
+        },
+        {
+          "visible": true,
+          "inside": true,
+          "aboveAction": true,
+          "passThrough": true
+        }
+      ]
+    },
+    {
+      "name": "keyboard-1440x900:chapter-keyboard-selection",
+      "ok": true
+    },
+    {
+      "name": "keyboard-1440x900:chapter-focus-after-render",
+      "ok": true
+    },
+    {
+      "name": "keyboard-1440x900:region-keyboard-opens-departure",
+      "ok": true
+    },
+    {
+      "name": "keyboard-1440x900:escape-closes-departure",
+      "ok": true
+    },
+    {
+      "name": "keyboard-1440x900:branch-keyboard-original-selection",
+      "ok": true
+    },
+    {
+      "name": "keyboard-1440x900:branch-focus-after-render",
+      "ok": true
+    },
+    {
+      "name": "keyboard-1440x900:candidate-keyboard-wrap",
+      "ok": true
+    },
+    {
+      "name": "keyboard-1440x900:hidden-cards-inert",
+      "ok": true
+    },
+    {
+      "name": "keyboard-1440x900:feedback-does-not-cover-action",
+      "ok": true,
+      "detail": [
+        {
+          "visible": true,
+          "inside": true,
+          "aboveAction": true,
+          "passThrough": true
+        },
+        {
+          "visible": true,
+          "inside": true,
+          "aboveAction": true,
+          "passThrough": true
+        }
+      ]
+    },
+    {
+      "name": "keyboard-320x480:chapter-keyboard-selection",
+      "ok": true
+    },
+    {
+      "name": "keyboard-320x480:chapter-focus-after-render",
+      "ok": true
+    },
+    {
+      "name": "keyboard-320x480:region-keyboard-opens-departure",
+      "ok": true
+    },
+    {
+      "name": "keyboard-320x480:escape-closes-departure",
+      "ok": true
+    },
+    {
+      "name": "keyboard-320x480:branch-keyboard-original-selection",
+      "ok": true
+    },
+    {
+      "name": "keyboard-320x480:branch-focus-after-render",
+      "ok": true
+    },
+    {
+      "name": "keyboard-320x480:candidate-keyboard-wrap",
+      "ok": true
+    },
+    {
+      "name": "keyboard-320x480:hidden-cards-inert",
+      "ok": true
+    },
+    {
+      "name": "keyboard-320x480:feedback-does-not-cover-action",
+      "ok": true,
+      "detail": [
+        {
+          "visible": true,
+          "inside": true,
+          "aboveAction": true,
+          "passThrough": true
+        },
+        {
+          "visible": true,
+          "inside": true,
+          "aboveAction": true,
+          "passThrough": true
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

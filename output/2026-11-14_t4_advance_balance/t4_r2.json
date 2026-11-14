@@ -1,0 +1,643 @@
+{
+ "meta": {
+  "N": 2500,
+  "TIERS": [
+   "platinum",
+   "diamond",
+   "champion"
+  ],
+  "RANK": 5,
+  "pairs": 7500,
+  "secs": 1395.7,
+  "baseWin": 0.5022,
+  "baseDur": 18.331439999999947
+ },
+ "refs": {
+  "sin:wrath": {
+   "pairs": 2880,
+   "carriers": 1.18,
+   "kw": 0.1095,
+   "refs": [
+    {
+     "x": 0.05,
+     "dW": 0.52,
+     "se": 0.16
+    },
+    {
+     "x": 0.1,
+     "dW": 1.08,
+     "se": 0.2
+    },
+    {
+     "x": 0.2,
+     "dW": 2.2,
+     "se": 0.27
+    }
+   ]
+  },
+  "sin:envy": {
+   "pairs": 2772,
+   "carriers": 1.15,
+   "kw": 0.1402,
+   "refs": [
+    {
+     "x": 0.05,
+     "dW": 0.79,
+     "se": 0.16
+    },
+    {
+     "x": 0.1,
+     "dW": 1.62,
+     "se": 0.21
+    },
+    {
+     "x": 0.2,
+     "dW": 2.67,
+     "se": 0.27
+    }
+   ]
+  },
+  "sin:greed": {
+   "pairs": 2811,
+   "carriers": 1.13,
+   "kw": 0.1382,
+   "refs": [
+    {
+     "x": 0.05,
+     "dW": 0.89,
+     "se": 0.16
+    },
+    {
+     "x": 0.1,
+     "dW": 1.51,
+     "se": 0.21
+    },
+    {
+     "x": 0.2,
+     "dW": 2.65,
+     "se": 0.28
+    }
+   ]
+  },
+  "sin:sloth": {
+   "pairs": 2682,
+   "carriers": 1.16,
+   "kw": 0.1534,
+   "refs": [
+    {
+     "x": 0.05,
+     "dW": 0.93,
+     "se": 0.17
+    },
+    {
+     "x": 0.1,
+     "dW": 1.44,
+     "se": 0.22
+    },
+    {
+     "x": 0.2,
+     "dW": 3.08,
+     "se": 0.29
+    }
+   ]
+  },
+  "sin:gluttony": {
+   "pairs": 2802,
+   "carriers": 1.16,
+   "kw": 0.1219,
+   "refs": [
+    {
+     "x": 0.05,
+     "dW": 0.77,
+     "se": 0.14
+    },
+    {
+     "x": 0.1,
+     "dW": 1.23,
+     "se": 0.2
+    },
+    {
+     "x": 0.2,
+     "dW": 2.39,
+     "se": 0.26
+    }
+   ]
+  },
+  "sin:lust": {
+   "pairs": 2688,
+   "carriers": 1.19,
+   "kw": 0.1238,
+   "refs": [
+    {
+     "x": 0.05,
+     "dW": 0.73,
+     "se": 0.15
+    },
+    {
+     "x": 0.1,
+     "dW": 1.3,
+     "se": 0.2
+    },
+    {
+     "x": 0.2,
+     "dW": 2.42,
+     "se": 0.26
+    }
+   ]
+  },
+  "sin:pride": {
+   "pairs": 2718,
+   "carriers": 1.17,
+   "kw": 0.1402,
+   "refs": [
+    {
+     "x": 0.05,
+     "dW": 0.99,
+     "se": 0.15
+    },
+    {
+     "x": 0.1,
+     "dW": 1.64,
+     "se": 0.2
+    },
+    {
+     "x": 0.2,
+     "dW": 2.61,
+     "se": 0.27
+    }
+   ]
+  },
+  "cls:warrior": {
+   "pairs": 3615,
+   "carriers": 1.22,
+   "kw": 0.1282,
+   "refs": [
+    {
+     "x": 0.05,
+     "dW": 0.68,
+     "se": 0.13
+    },
+    {
+     "x": 0.1,
+     "dW": 1.33,
+     "se": 0.18
+    },
+    {
+     "x": 0.2,
+     "dW": 2.53,
+     "se": 0.24
+    }
+   ]
+  },
+  "cls:knight": {
+   "pairs": 3633,
+   "carriers": 1.22,
+   "kw": 0.1325,
+   "refs": [
+    {
+     "x": 0.05,
+     "dW": 0.73,
+     "se": 0.13
+    },
+    {
+     "x": 0.1,
+     "dW": 1.33,
+     "se": 0.17
+    },
+    {
+     "x": 0.2,
+     "dW": 2.63,
+     "se": 0.24
+    }
+   ]
+  },
+  "cls:mage": {
+   "pairs": 3828,
+   "carriers": 1.23,
+   "kw": 0.1812,
+   "refs": [
+    {
+     "x": 0.05,
+     "dW": 1.08,
+     "se": 0.15
+    },
+    {
+     "x": 0.1,
+     "dW": 2.02,
+     "se": 0.2
+    },
+    {
+     "x": 0.2,
+     "dW": 3.47,
+     "se": 0.25
+    }
+   ]
+  },
+  "cls:priest": {
+   "pairs": 3528,
+   "carriers": 1.23,
+   "kw": 0.0489,
+   "refs": [
+    {
+     "x": 0.05,
+     "dW": 0.28,
+     "se": 0.07
+    },
+    {
+     "x": 0.1,
+     "dW": 0.44,
+     "se": 0.09
+    },
+    {
+     "x": 0.2,
+     "dW": 0.99,
+     "se": 0.13
+    }
+   ]
+  },
+  "cls:archer": {
+   "pairs": 3753,
+   "carriers": 1.23,
+   "kw": 0.2125,
+   "refs": [
+    {
+     "x": 0.05,
+     "dW": 1.19,
+     "se": 0.18
+    },
+    {
+     "x": 0.1,
+     "dW": 2.17,
+     "se": 0.23
+    },
+    {
+     "x": 0.2,
+     "dW": 4.2,
+     "se": 0.29
+    }
+   ]
+  }
+ },
+ "summary": [
+  {
+   "id": "sin_wrath_t4_rally",
+   "cell": "sin_wrath_t4_rally",
+   "stat": "wrath_party_crit",
+   "group": "sin:wrath",
+   "over": null,
+   "eq": 11.1,
+   "se": 1.65,
+   "dWin": 1.22,
+   "byTier": {
+    "platinum": 10.9,
+    "diamond": 11.9,
+    "champion": 10.5
+   }
+  },
+  {
+   "id": "sin_wrath_t4_steady",
+   "cell": "sin_wrath_t4_steady",
+   "stat": "wrath_steady",
+   "group": "sin:wrath",
+   "over": null,
+   "eq": 5.87,
+   "se": 2.18,
+   "dWin": 0.64,
+   "byTier": {
+    "platinum": 8.1,
+    "diamond": 0,
+    "champion": 9.5
+   }
+  },
+  {
+   "id": "sin_envy_t4_grudge",
+   "cell": "sin_envy_t4_grudge",
+   "stat": "envy_party_pierce",
+   "group": "sin:envy",
+   "over": null,
+   "eq": 7.85,
+   "se": 1.22,
+   "dWin": 1.1,
+   "byTier": {
+    "platinum": 9.7,
+    "diamond": 4.6,
+    "champion": 9.3
+   }
+  },
+  {
+   "id": "sin_greed_t4_ward",
+   "cell": "sin_greed_t4_ward",
+   "stat": "greed_barrier",
+   "group": "sin:greed",
+   "over": null,
+   "eq": 8.62,
+   "se": 1.7,
+   "dWin": 1.19,
+   "byTier": {
+    "platinum": 8.5,
+    "diamond": 6.6,
+    "champion": 10.8
+   }
+  },
+  {
+   "id": "sin_sloth_t4_heavy",
+   "cell": "sin_sloth_t4_heavy",
+   "stat": "sloth_heavy",
+   "group": "sin:sloth",
+   "over": null,
+   "eq": 6.08,
+   "se": 2.39,
+   "dWin": 0.93,
+   "byTier": {
+    "platinum": 7.3,
+    "diamond": 5.5,
+    "champion": 5.5
+   }
+  },
+  {
+   "id": "sin_sloth_t4_idle",
+   "cell": "sin_sloth_t4_idle",
+   "stat": "sloth_party_cdr",
+   "group": "sin:sloth",
+   "over": null,
+   "eq": 5.23,
+   "se": 1.64,
+   "dWin": 0.8,
+   "byTier": {
+    "platinum": 3.6,
+    "diamond": 5.5,
+    "champion": 6.6
+   }
+  },
+  {
+   "id": "sin_sloth_t4_defer",
+   "cell": "sin_sloth_t4_defer",
+   "stat": "sloth_defer",
+   "group": "sin:sloth",
+   "over": null,
+   "eq": 8.14,
+   "se": 1.9,
+   "dWin": 1.25,
+   "byTier": {
+    "platinum": 8.4,
+    "diamond": 8,
+    "champion": 8
+   }
+  },
+  {
+   "id": "sin_gluttony_t4_feast",
+   "cell": "sin_gluttony_t4_feast",
+   "stat": "glut_party_dmg",
+   "group": "sin:gluttony",
+   "over": null,
+   "eq": 6.59,
+   "se": 1.08,
+   "dWin": 0.8,
+   "byTier": {
+    "platinum": 8.8,
+    "diamond": 6.2,
+    "champion": 4.8
+   }
+  },
+  {
+   "id": "sin_gluttony_t4_stomach",
+   "cell": "sin_gluttony_t4_stomach",
+   "stat": "glut_absorb",
+   "group": "sin:gluttony",
+   "over": null,
+   "eq": 8.64,
+   "se": 1.34,
+   "dWin": 1.05,
+   "byTier": {
+    "platinum": 10.5,
+    "diamond": 5.3,
+    "champion": 10.1
+   }
+  },
+  {
+   "id": "sin_lust_t4_beguile",
+   "cell": "sin_lust_t4_beguile",
+   "stat": "lust_charm",
+   "group": "sin:lust",
+   "over": null,
+   "eq": 8.86,
+   "se": 3.81,
+   "dWin": 1.1,
+   "byTier": {
+    "platinum": 6.3,
+    "diamond": 5,
+    "champion": 15.3
+   }
+  },
+  {
+   "id": "sin_pride_t4_charge",
+   "cell": "sin_pride_t4_charge",
+   "stat": "pride_party_haste",
+   "group": "sin:pride",
+   "over": null,
+   "eq": 11.55,
+   "se": 3.16,
+   "dWin": 1.62,
+   "byTier": {
+    "platinum": 12.6,
+    "diamond": 11.8,
+    "champion": 10.2
+   }
+  },
+  {
+   "id": "sin_pride_t4_unbowed",
+   "cell": "sin_pride_t4_unbowed",
+   "stat": "pride_cap",
+   "group": "sin:pride",
+   "over": null,
+   "eq": 6.83,
+   "se": 1.17,
+   "dWin": 0.96,
+   "byTier": {
+    "platinum": 2.8,
+    "diamond": 7.1,
+    "champion": 10.6
+   }
+  },
+  {
+   "id": "cls_warrior_t4_sweep",
+   "cell": "cls_warrior_t4_sweep",
+   "stat": "basic_cleave",
+   "group": "cls:warrior",
+   "over": null,
+   "eq": 8.63,
+   "se": 2.75,
+   "dWin": 1.11,
+   "byTier": {
+    "platinum": 6.8,
+    "diamond": 6.8,
+    "champion": 12.3
+   }
+  },
+  {
+   "id": "cls_warrior_t4_onslaught",
+   "cell": "cls_warrior_t4_onslaught",
+   "stat": "skill_repeat_chance",
+   "group": "cls:warrior",
+   "over": null,
+   "eq": 4.75,
+   "se": 0.94,
+   "dWin": 0.61,
+   "byTier": {
+    "platinum": 6.5,
+    "diamond": 1.3,
+    "champion": 6.5
+   }
+  },
+  {
+   "id": "cls_warrior_t4_hide",
+   "cell": "cls_warrior_t4_hide",
+   "stat": "elem_to_phys",
+   "group": "cls:warrior",
+   "over": null,
+   "eq": 12.19,
+   "se": 1.37,
+   "dWin": 1.56,
+   "byTier": {
+    "platinum": 11,
+    "diamond": 10.4,
+    "champion": 15.2
+   }
+  },
+  {
+   "id": "cls_knight_t4_turned",
+   "cell": "cls_knight_t4_turned",
+   "stat": "crit_taken_cut",
+   "group": "cls:knight",
+   "over": null,
+   "eq": 8.52,
+   "se": 1.26,
+   "dWin": 1.13,
+   "byTier": {
+    "platinum": 9.3,
+    "diamond": 7.2,
+    "champion": 9
+   }
+  },
+  {
+   "id": "cls_mage_t4_arcana",
+   "cell": "cls_mage_t4_arcana",
+   "stat": "skill_fixed_share",
+   "group": "cls:mage",
+   "over": null,
+   "eq": 5.91,
+   "se": 0.76,
+   "dWin": 1.07,
+   "byTier": {
+    "platinum": 4.5,
+    "diamond": 5.6,
+    "champion": 7.6
+   }
+  },
+  {
+   "id": "cls_mage_t4_pages",
+   "cell": "cls_mage_t4_pages",
+   "stat": "cast_refill_chance",
+   "group": "cls:mage",
+   "over": null,
+   "eq": 5.62,
+   "se": 2.01,
+   "dWin": 1.02,
+   "byTier": {
+    "platinum": 5.6,
+    "diamond": 2.8,
+    "champion": 8.4
+   }
+  },
+  {
+   "id": "cls_mage_t4_circle",
+   "cell": "cls_mage_t4_circle",
+   "stat": "round_barrier",
+   "group": "cls:mage",
+   "over": null,
+   "eq": 5.69,
+   "se": 0.81,
+   "dWin": 1.03,
+   "byTier": {
+    "platinum": 5,
+    "diamond": 6.5,
+    "champion": 5.6
+   }
+  },
+  {
+   "id": "cls_priest_t4_sin",
+   "cell": "cls_priest_t4_sin",
+   "stat": "sin_vuln",
+   "group": "cls:priest",
+   "over": null,
+   "eq": 17.98,
+   "se": 3,
+   "dWin": 0.88,
+   "byTier": {
+    "platinum": 25.2,
+    "diamond": 17.4,
+    "champion": 11.3
+   }
+  },
+  {
+   "id": "cls_priest_t4_cup",
+   "cell": "cls_priest_t4_cup",
+   "stat": "overheal_shield",
+   "group": "cls:priest",
+   "over": null,
+   "eq": 31.04,
+   "se": 3.67,
+   "dWin": 1.52,
+   "byTier": {
+    "platinum": 26.1,
+    "diamond": 31.3,
+    "champion": 35.7
+   }
+  },
+  {
+   "id": "cls_priest_t4_prayer",
+   "cell": "cls_priest_t4_prayer",
+   "stat": "last_prayer",
+   "group": "cls:priest",
+   "over": null,
+   "eq": 25.52,
+   "se": 3.38,
+   "dWin": 1.25,
+   "byTier": {
+    "platinum": 27.8,
+    "diamond": 21.8,
+    "champion": 27
+   }
+  },
+  {
+   "id": "cls_archer_t4_second",
+   "cell": "cls_archer_t4_second",
+   "stat": "extra_shot_chance",
+   "group": "cls:archer",
+   "over": null,
+   "eq": 8.53,
+   "se": 2.2,
+   "dWin": 1.81,
+   "byTier": {
+    "platinum": 11.5,
+    "diamond": 9.2,
+    "champion": 4.9
+   }
+  },
+  {
+   "id": "cls_archer_t4_fleet",
+   "cell": "cls_archer_t4_fleet",
+   "stat": "dodge_chance",
+   "group": "cls:archer",
+   "over": null,
+   "eq": 6.71,
+   "se": 1.74,
+   "dWin": 1.43,
+   "byTier": {
+    "platinum": 4.9,
+    "diamond": 7.5,
+    "champion": 7.7
+   }
+  }
+ ]
+}

@@ -798,7 +798,9 @@ const FOCUS_DEFAULT = 'off';   // 2026-10-22 ADR-0713 (~~dim~~ ADR-0621)
 export const focusMode = () => { const v = document.documentElement.dataset.focus; return FOCUS_MODES.includes(v) ? v : FOCUS_DEFAULT; };
 /** 지금 설정의 세움 길이 — 포커스 · 공격 시 흔들림 · 배속 배수(`SPEED_K`). 재생기와 앱 시계가 같이 읽는다 (`pace.js:paceCfg`) ·
  *  라운드 사이 숨(ADR-0500)은 포커스와 상관없이 선다 */
-export const paceOf = speed => paceCfg(focusMode(), lungeFxOn(), speed, SPEED_K[speed] ?? 1);
+export const paceOf = speed => paceCfg(focusMode(), lungeFxOn(), speed, SPEED_K[speed] ?? 1, isChargeShot);
+/** 세우는 정신 집중의 방 — 모으기(`cast = channel_charge` · 스나이프)의 쏘는 방뿐. 끊어 치기 · 계속 닳기의 뒤 방은 안 선다 (ADR-1124) */
+const isChargeShot = ev => SYS.skill?.defs?.[ev.s]?.cast === 'channel_charge';
 /** 박자가 세운 행동을 그린다 — 세움이 바뀐 걸음에만. ① 동안은 행동한 카드가 나가 있고(그 행동은 아직 안 적용) ② 동안은 적용한 채 나가 있다 ·
  *  Dim 이면 그 행동에 안 낀 카드를 어둡게 · 세움이 풀리면 ③ 돌아온다(전환은 CSS). 라운드 숨은 그림이 없다 */
 function syncFocus(state, root, opts) {
@@ -809,8 +811,13 @@ function syncFocus(state, root, opts) {
     state.focusG = g;
     root.querySelector('.arena')?.classList.remove('focus-dim');
     for (const n of root.querySelectorAll('.unit-slot.focus-in')) n.classList.remove('focus-in');
-    // Off 의 나감(`.off-rise` — Skill Dim 에서 세움 밖의 행동)은 `syncOffRise` 가 걷는다 · Stop · Dim 에서는 그 표지가 없다
-    for (const n of root.querySelectorAll('.unit-slot.fx-advance:not(.off-rise)')) n.classList.remove('fx-advance');
+    // Off 의 나감(`.off-rise` — Skill Dim 에서 세움 밖의 행동)은 `syncOffRise` 가 걷는다.
+    // 정신 집중이 열린 카드는 내리지 않고 그 표지로 넘긴다 — 방 사이에도 나간 채 서고 닫히면 `syncOffRise` 가 내린다 (Stop · Dim · ADR-1087)
+    const hold = new Set();
+    for (const u of state.units.values()) if (u.chan && u.hp > 0) hold.add(u.node?.parentElement);
+    for (const n of root.querySelectorAll('.unit-slot.fx-advance:not(.off-rise)')) {
+        if (hold.has(n)) n.classList.add('off-rise'); else n.classList.remove('fx-advance');
+    }
     if (g < 0) return;
     const key = actorOf(tl[g]);
     if (focusMode() === 'dim' || focusMode() === 'skill') {
@@ -845,9 +852,9 @@ const OFF_STAY_MS = 200;   // ② 때린 뒤 나간 채 서 있는 시간(실제
 const OFF_LOOK_SEC = 1;    // 내다보는 재생 시각의 상한(초) — 걸음의 내다보기(`pace.js:LOOK_SEC`)와 같다. 높은 배속에선 올라감이 그만큼 짧아진다
 function syncOffRise(state, root, opts) {
     const want = new Map();   // 나가 있을 카드 → 그 카드의 다가오는 행동 시각(이미 때렸으면 null)
-    const fm = focusMode();
+    const fm = focusMode(), tl = opts.result.timeline;
     if ((fm === 'off' || isSkillOnly(fm)) && lungeFxOn() && !state.catchUp && !state.ended) {
-        const tl = opts.result.timeline, t = state.t, sp = state.speed, k = SPEED_K[sp] ?? 1;
+        const t = state.t, sp = state.speed, k = SPEED_K[sp] ?? 1;
         // 눈금 한 칸(TICK)을 더 본다 — 눈금 사이에 다가온 행동도 올라감을 다 갖게(먼저 본 만큼 선 박자가 그 눈금 몫 길어진다)
         const ahead = Math.min(OFF_LOOK_SEC, (RISE_MS + PEAK_MS) * k / 1000 * sp + TICK), stay = OFF_STAY_MS * k / 1000 * sp;
         opts.onTime?.(t + ahead, sp);
@@ -861,8 +868,20 @@ function syncOffRise(state, root, opts) {
             // Skill Stop · Skill Dim — 세울 스킬 시전은 미리 안 올린다(박자가 거기서 서고 `syncFocus` 의 ①이 올린다) · 이미 나가 있으면 그대로 둔다
             want.set(key, isSkillOnly(fm) && isSkillAct(tl[j]) ? null : tl[j].t);
         }
-        // 정신 집중이 열린 카드는 끝날 때까지 나간 채 선다 (R318 · ADR-0720) — 방 사이(주기)가 내다보기보다 길어도 안 내려온다
+    }
+    if (lungeFxOn() && !state.catchUp && !state.ended) {
+        // 정신 집중이 열린 카드는 끝날 때까지 나간 채 선다 (R318 · ADR-0720) — 방 사이(주기)가 내다보기보다 길어도 안 내려온다 ·
+        // Stop · Dim 도 방마다 오르내리지 않고 뒤 방에 서지도 않는다(pace.js · ADR-1087 · ADR-1124)
         for (const [key, u] of state.units) if (u.chan && u.hp > 0 && !want.has(key)) want.set(key, null);
+        // Stop · Dim — 세움 없이 지나간 마지막 방 뒤에도 Off 처럼 `OFF_STAY_MS` 섰다가 내려온다(때리면서 내려오지 않게)
+        if (!(fm === 'off' || isSkillOnly(fm))) {
+            const stay = OFF_STAY_MS * (SPEED_K[state.speed] ?? 1) / 1000 * state.speed;
+            for (let j = state.idx - 1; j >= 0 && tl[j].t >= state.t - stay && tl[j].e !== 'round'; j--)
+                if (tl[j].e === 'chan' && !want.has(tl[j].u)) want.set(tl[j].u, null);
+        }
+        // 지금 세운 행동의 카드는 ② 동안 그대로 — 마지막 방이 같은 순간에 닫아도(`chanEnd`) 내려오는 것은 세움이 풀린 뒤다
+        const key = state.focusG >= 0 ? actorOf(tl[state.focusG]) : null;
+        if (key != null && !want.has(key)) want.set(key, null);
     }
     const k = SPEED_K[state.speed] ?? 1;
     for (const [key, u] of state.units) {
@@ -1242,6 +1261,32 @@ function effectSummaryText(stat, value = 0, element = null, cut = 0) {
             case 'transform': return 'bt.effect.transform';
             case 'delegate': return 'bt.effect.delegate';
             case 'swarm': return 'bt.effect.swarm';
+            // 전직 트리 창 (2026-11-14 · R471) — 「효과 적용 중」 대신 그 창이 하는 일 한 줄
+            case 'vs_burn_pct': return 'bt.effect.vsBurn';
+            case 'snipe_amp': return 'bt.effect.snipe';
+            case 'reload': return 'bt.effect.reload';
+            case 'chain_splash': return 'bt.effect.splash';
+            case 'support_fire': return 'bt.effect.supportFire';
+            case 'atone': return 'bt.effect.atone';
+            case 'ailment_cut': return 'bt.effect.ailCut';
+            case 'counter_win': return 'bt.effect.counter';
+            case 'ember': return 'bt.effect.ember';
+            case 'elem_shield': return 'bt.effect.elemShield';
+            case 'phys_conv': return 'bt.effect.conv';
+            case 'conv_amp': return 'bt.effect.convAmp';
+            case 'endure': return 'bt.effect.endure';
+            case 'berserk': return 'bt.effect.berserk';
+            case 'devotion': return 'bt.effect.devotion';
+            case 'devotion_dr': return 'bt.effect.devotionDr';
+            case 'will': return 'bt.effect.will';
+            case 'reflect_win': return 'bt.effect.reflect';
+            case 'trap': return 'bt.effect.trap';
+            case 'tick_hit': return 'bt.effect.tickHit';
+            case 'strike_passive': return 'bt.effect.strike';
+            case 'period_fix': return 'bt.effect.periodFix';
+            case 'def_ignore': return 'bt.effect.defIgnore';
+            case 'shatter': return 'bt.effect.shatter';
+            case 'formation_break': return 'bt.effect.formation';
             default: return 'bt.effect.active';
         }
     })();
@@ -2044,6 +2089,27 @@ function apply(state, root, opts, ev) {
             logLine(state, root, enemy ? 'party' : 'enemy', enemy ? 'slain' : 'downed', L(u.name), '', '', '', t(enemy ? 'log.v.slain' : 'log.v.downed'));
             if (!enemy) popup(state, u, t('pop.downed'), 'dead-tag');   // 적이 쓰러질 땐 글자가 없다 — 카드가 보인다 · 로그 줄은 그대로 (ADR-0726)
             fxDown(state, u);   // 피격 반응 (ADR-0410)
+            break;
+        }
+        case 'rise': {   // 일으키기(리저렉션 · 2026-11-14 R471) — 쓰러진 카드가 다시 산다(HP · 최대 HP 를 싣고 온다) · 팝업 · 로그 한 줄 · 창은 뒤따르는 buff 가 다시 단다
+            const a = U(ev.a), u = U(ev.u);
+            if (!u) break;
+            u.hp = ev.dhp;
+            if (ev.hpMax) u.hpMax = ev.hpMax;
+            refreshUnit(state, u);
+            popup(state, u, t('pop.rise'), 'heal');
+            if (a) logLine(state, root, a.side, 'rise', L(a.name), dmgIcon(ev.s), strikeLabel(ev.s), L(u.name), '', 'heal-t');
+            break;
+        }
+        case 'cd': {   // 칸 하나의 준비 시각이 바뀌었다(재장전 초기화 · 일격 환급 · 정화 쿨 · 버서크 덤 · 2026-11-14 R471) — 그 스킬 칸의 쿨 덮개를 새 시각으로 · 로그 · 팝업 없음
+            const u = U(ev.u);
+            const s = u?.skills?.find(x => x.id === ev.s);
+            if (s) s.readyAt = ev.ready;
+            break;
+        }
+        case 'cdPush': {   // 적의 스킬 쿨이 밀렸다(천둥신의 분노 변형 2 · 2026-11-13 R471) — 아직 안 준비된 칸만 그만큼 늦춘다 · 로그 · 팝업 없음
+            const u = U(ev.u);
+            for (const s of u?.skills ?? []) if (Number.isFinite(s.readyAt) && s.readyAt > ev.t) s.readyAt += ev.cd;
             break;
         }
         case 'heal': {   // 회복 — 시전자(a)가 대상(d)의 HP 를 올린다. 부호가 반대일 뿐 타격과 같은 자리에 뜬다

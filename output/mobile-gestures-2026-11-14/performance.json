@@ -1,0 +1,148 @@
+{
+  "at": "2026-11-14T13:39:10.835704+00:00",
+  "cpu_throttling": 6,
+  "checks": [
+    {
+      "name": "slow-cpu-swipe-1",
+      "ok": true
+    },
+    {
+      "name": "slow-cpu-swipe-2",
+      "ok": true
+    },
+    {
+      "name": "slow-cpu-swipe-3",
+      "ok": true
+    },
+    {
+      "name": "slow-cpu-swipe-4",
+      "ok": true
+    },
+    {
+      "name": "slow-cpu-swipe-5",
+      "ok": true
+    },
+    {
+      "name": "slow-cpu-swipe-6",
+      "ok": true
+    },
+    {
+      "name": "slow-cpu-swipe-7",
+      "ok": true
+    },
+    {
+      "name": "slow-cpu-swipe-8",
+      "ok": true
+    },
+    {
+      "name": "slow-cpu-swipe-9",
+      "ok": true
+    },
+    {
+      "name": "slow-cpu-swipe-10",
+      "ok": true
+    },
+    {
+      "name": "slow-cpu-swipe-11",
+      "ok": true
+    },
+    {
+      "name": "slow-cpu-swipe-12",
+      "ok": true
+    }
+  ],
+  "errors": [],
+  "runs": [
+    {
+      "cycle": 1,
+      "release_to_observed_selection_ms": 142.33
+    },
+    {
+      "cycle": 2,
+      "release_to_observed_selection_ms": 132.11
+    },
+    {
+      "cycle": 3,
+      "release_to_observed_selection_ms": 133.05
+    },
+    {
+      "cycle": 4,
+      "release_to_observed_selection_ms": 95.5
+    },
+    {
+      "cycle": 5,
+      "release_to_observed_selection_ms": 56.53
+    },
+    {
+      "cycle": 6,
+      "release_to_observed_selection_ms": 36.83
+    },
+    {
+      "cycle": 7,
+      "release_to_observed_selection_ms": 89.29
+    },
+    {
+      "cycle": 8,
+      "release_to_observed_selection_ms": 99.34
+    },
+    {
+      "cycle": 9,
+      "release_to_observed_selection_ms": 93.4
+    },
+    {
+      "cycle": 10,
+      "release_to_observed_selection_ms": 69.54
+    },
+    {
+      "cycle": 11,
+      "release_to_observed_selection_ms": 115.91
+    },
+    {
+      "cycle": 12,
+      "release_to_observed_selection_ms": 165.89
+    }
+  ],
+  "long_tasks": [
+    {
+      "start": 720.2999999523163,
+      "duration": 63
+    },
+    {
+      "start": 1264.2999999523163,
+      "duration": 50
+    },
+    {
+      "start": 1918.9000000953674,
+      "duration": 62
+    },
+    {
+      "start": 2949.0999999046326,
+      "duration": 51
+    },
+    {
+      "start": 4116.799999952316,
+      "duration": 62
+    },
+    {
+      "start": 5120.299999952316,
+      "duration": 69
+    },
+    {
+      "start": 6123.299999952316,
+      "duration": 57
+    },
+    {
+      "start": 7333.700000047684,
+      "duration": 52
+    },
+    {
+      "start": 8586,
+      "duration": 69
+    },
+    {
+      "start": 9764.700000047684,
+      "duration": 70
+    }
+  ],
+  "limits": "Headless Edge CDP throttling; includes automation overhead and is not a physical-phone measurement."
+}

@@ -13,9 +13,9 @@
 | `illustrate/` | **스테이지 배경 설치본 — 일러스트 스타일** 25장(Ch1~Ch5 전부). **`BG_STYLES` 첫 항목 = 정식** [2026-09-16 · ADR-0152] · `background_stage_101.webp` 은 **로그인 첫 화면 배경도 겸한다** — 로그인은 스타일 설정 이전이라 CSS 가 이 폴더를 직접 박는다(거점 `pixel/town.webp` 와 같은 예외 · 2026-09-18 사용자 지시) |
 | `pixel/` | **스테이지 배경 설치본 — 도트 스타일** 15장(Ch1~Ch3) + `town.webp`(앱 전역 배경 · 한 장 뒤 하나뿐 — 탭 패널은 안 깐다 · ADR-0110). **비교용으로 남긴다**(`?bg=pixel`) · 거점 배경은 스타일을 안 타고 늘 여기서 읽는다 |
 | `illustrate/background_colosseum.webp` · `illustrate/background_duel_<tier_id>.webp` | **결투 배경** [2026-10-24 사용자 지시 · ADR-0749 · ADR-0760 · ADR-0761 · 이름 ADR-1071] — 결투장(온라인 ELO · 탭 id `arena`) = 로마 콜로세움 한 장 · 시련의 탑(층 사다리 · 탭 id `colosseum`) = **고른 층의 등급마다 한 장**(`arena_tier.csv:tier_id` 여섯 — 브론즈 뒷골목 → 챔피언 정상). 판과 결투 관전이 깐다. ⚠ 스테이지 배경이 아니라 **스타일을 안 탄다** — 화면은 `mock.js:COLOSSEUM_BG` · `duelBg` 로 이 경로를 박는다(아래 「결투 배경」) |
-| `explore_world.webp` | **탐험 탭 — 세계지도 한 장 · 일곱 챕터가 구간** [2026-10-08 사용자 지시 · ADR-0537] ⚠ 스테이지 배경이 아니라 스타일 축을 안 탄다 (아래) |
-| `explore_world_mask/<챕터 id>.png` | **탐험 지도 — 잠긴 챕터 구간의 막 모양** [2026-10-08 · ADR-0543] — 그림과 같은 크기의 알파 그림(땅만 · 물은 안 든다). `python scripts/build_explore_masks.py` 가 짓는다 (아래 「구간 마스크」) · **게임은 안 읽는다** — 아래 조각의 재료다 |
-| `explore_world_locked/<챕터 id>.webp` | **탐험 지도 — 잠긴 구간에 얹는 「빛 바랜 땅」 조각** [2026-10-09] — 그림을 회색 · 어둡게 칠해(CSS `grayscale(.85)` · `brightness(.48)` 과 같은 값) 그 장의 마스크로 잘라 **구간 크기로** 굽는다(장당 약 400×400 · 20KB 안팎). `python scripts/build_explore_locked.py` 가 짓고 조각 자리(`tile` %)를 찍는다 → `mock.js:EXPLORE_REGIONS` 에 옮긴다. 실행 중 필터 · 마스크를 안 돌리려고 굽는다(탭이 늦게 켜졌다) — **그림 · 마스크를 바꾸면 다시 돌린다** |
+| `explore_world_muted.webp` | **탐험 탭 — 세계지도 한 장 · 일곱 챕터가 구간**. 게임 배경에 맞춰 채도·밝기를 낮춘 흙빛·잿빛 일러스트 [2026-11-15 사용자 지시]. 스테이지 배경이 아니라 스타일 축을 안 탄다 (아래) |
+| `explore_world_muted_mask/<챕터 id>.png` | **탐험 지도 — 잠긴 챕터 구간의 막 모양** [ADR-0543] — 그림과 같은 크기의 알파 그림(땅만 · 물은 안 든다). `scripts/build_explore_masks.py --muted`에 현재 지도와 출력 경로를 넘겨 짓는다(아래 명령). **게임은 안 읽는다** — 아래 조각의 재료다 |
+| `explore_world_muted_locked/<챕터 id>.webp` | **탐험 지도 — 잠긴 구간에 얹는 「빛 바랜 땅」 조각** — 그림을 회색 · 어둡게 칠해(CSS `grayscale(.85)` · `brightness(.48)` 과 같은 값) 그 장의 마스크로 잘라 **구간 크기로** 굽는다. `scripts/build_explore_locked.py`에 현재 그림·마스크·출력 경로를 넘긴다(아래 명령). 조각 자리(`tile` %)는 `mock.js:EXPLORE_REGIONS`에 옮긴다. **그림 · 마스크를 바꾸면 다시 돌린다** |
 | `explore_chapter_1.webp` | **지금은 아무도 안 읽는다** [2026-10-08] — 09-04 의 챕터 1 지도. 세계지도가 대체했고 파일은 남겨 둔다 (아래 「옛 챕터 1 지도」) |
 | `login.webp` | **지금은 아무도 안 읽는다** [2026-09-18 사용자 지시] — 로그인 화면이 스테이지 1-1 그림(`illustrate/background_stage_101.webp`)을 그대로 깔게 바뀌었다. 원본은 `source/illustrate/Gemini_Generated_Image_v1efev1efev1efev.png`(성벽에 일곱 깃발)이고, 크롭 없이 RGB WebP q92 로 설치해 둔 사본이 남아 있다 |
 | `source/pixel/` · `source/illustrate/` · `source/gpt/` | **생성 원본** — 게임이 안 읽는다. 설치본은 여기서 게임용 비율로 잘라 만든다. 기존 Gemini 원본은 워터마크 띠도 제외한다 (아래) |
@@ -39,14 +39,25 @@
 
 ### ⚠ 탐험 지도는 스테이지 배경이 아니다 [2026-09-04 사용자 지시 · 자리 개정 2026-09-16 · 세계지도 2026-10-08]
 
-`explore_world.webp` 는 스타일 폴더 옆 **루트에 혼자 선다** — 스테이지 배경과 성격이 다르다:
+`explore_world_muted.webp` 는 스타일 폴더 옆 **루트에 선다** — 스테이지 배경과 성격이 다르다:
 
 - **스타일 축이 없다** — 세계지도는 한 장이고 도트/일러스트로 갈릴 것이 아니다. 그래서 `backgrounds/` 루트다
 - **픽셀아트가 아니다** — 굵은 외곽선의 카툰 지도라 화면에서 `image-rendering` 을 **아예 안 건다**
   (`.ex-map` — `src/ui/style.css`). 스테이지 배경은 반대로 `--bg-render` 로 늘 건다
-- **챕터 구간이 그림에 묶여 있다** — 막 모양은 `explore_world_mask/<챕터 id>.png`(아래 「구간 마스크」) · 자물쇠 자리는 `src/ui/mock.js:EXPLORE_REGIONS` 의 `at` · 크기는 `EXPLORE_WORLD_SIZE`. **그림을 바꾸면 셋을 같이 다시 잡는다**
+- **챕터 구간이 그림에 묶여 있다** — 막 모양은 `explore_world_muted_mask/<챕터 id>.png` · 자물쇠 자리는 `src/ui/mock.js:EXPLORE_REGIONS` 의 `at` · 크기는 `EXPLORE_WORLD_SIZE`. **그림을 바꾸면 셋을 같이 다시 잡는다**
 
-#### 세계지도 — 내용과 규격 [2026-10-08 사용자 지시]
+#### 현재 탐험 지도 [2026-11-15 사용자 지시]
+
+설치본은 `explore_world_muted.webp`(1536×714 RGB WebP q90)다. 기존 지도와 정식 `illustrate/background_stage_101.webp`를 참고해 **내장 이미지 생성 도구**로 다시 그렸다. 지역·길의 구도를 유지하면서 숲은 올리브색, 사막은 황토색, 설원은 청회색으로 정리했고 화염과 마법의 발광을 줄였다. 원본(1839×855)과 최종 프롬프트는 [`source/explore_muted_20261115/`](backgrounds/source/explore_muted_20261115/)에 보관한다. 원본 전체를 1536×714로 축소하며 색 보정·크롭은 하지 않는다.
+
+마스크는 `explore_world_muted_mask/`, 잠금 조각은 `explore_world_muted_locked/`다. 아래 명령으로 재생성하고 출력된 `tile`을 `mock.js:EXPLORE_REGIONS`에 옮긴다. `--muted`는 낮은 채도의 청록색 물을 감지한다. 지점 21개의 좌표도 새 표지물에 맞춘다. 기존 `explore_world.webp`·원본·마스크·잠금 조각은 보관한다.
+
+```powershell
+python scripts/build_explore_masks.py --source src/assets/art/backgrounds/explore_world_muted.webp --crop 0 0 1536 714 --output-dir src/assets/art/backgrounds/explore_world_muted_mask --muted
+python scripts/build_explore_locked.py --source src/assets/art/backgrounds/explore_world_muted.webp --masks src/assets/art/backgrounds/explore_world_muted_mask --output-dir src/assets/art/backgrounds/explore_world_muted_locked
+```
+
+#### 기존 세계지도 — 내용과 규격 [2026-10-08 사용자 지시]
 
 **Codex(ChatGPT 로그인)로 세 장씩 뽑아 골랐다** — 옛 챕터 1 지도(아래)를 화풍 앵커로 넘겼다. 첫 판(3:2 · 잔 묘사가 촘촘)은 같은 날 사용자 지시(「화면이 가로로 더 길어서 가득 차야」 · 「그림이 지금 너무 디테일해」 · ADR-0540)로 갈았다. 둘째 판 지시문의 요점 — **앵커보다 더 단순하게**(큰 덩어리 · 바탕색 하나 · 그림자 한 톤 · 잔돌 · 잔나무 금지) · **땅은 가운데 70% 띠에만**(위아래 15% 는 빈 바다 — 잘라 낼 자리) · 대륙이 좌우 끝까지 · 땅마다 동굴 · 폐허 · 마차 정확히 하나씩 · 글자 없음. 셋 중 땅 덩어리가 가장 크고 강줄기 경계가 가장 또렷한 것을 골랐다.
 
@@ -282,6 +293,8 @@ im.crop((0, 0, im.width, 615 * im.height // 768)).save(dst, 'WEBP', quality=92, 
 buildings/
 ├── <building_id>.webp   ← 게임이 읽는다 — 파일명 = building.csv:building_id · 목록은 ui/mock.js:BUILDING_IMAGES
 │     expedition · command · forge · tavern · training · shop · resource · explore · codex · storage · library
+├── thumb/<그림>_sq.webp · <그림>_wide.webp  ← 작은 자리용 미리 줄인 사본(88 네모 · 240×160 — Lanczos) · 연구소 줄 카드 · 줄 머리가 읽는다(`mock.js:buildingThumb`) ·
+│     큰 그림을 브라우저가 한 번에 열 배 넘게 줄이면 점이 깨진다 — 그림을 바꾸면 `python scripts/build_building_thumbs.py`
 ├── source/
 │   ├── sheet_01_buildings.png   ← 원본 시트 2752×1536 · 4×3 = 12칸 · 칸 사이 검은 홈 — 게임이 안 읽는다
 │   ├── library.png              ← 도서관 원본 1448×1086(4:3 한 장) — 게임이 안 읽는다
@@ -336,7 +349,7 @@ faces/
 `source/` 가 스타일 폴더가 아닌 이유는 **파일명 규칙이 다르기 때문**이다 — `skeleton_archer.png` 처럼 내용으로 이름이 붙어 있고
 id 가 아니다. 스타일로 쓰려면 id 로 이름을 바꿔 새 폴더의 `monster/` · `hero/` 에 넣고 `FACE_STYLES` 에 등록한다.
 
-**파일명 규칙은 스타일이 달라도 같다** — `monster/<idx>.png`(숫자는 `src/data/monster.csv` 의 `monster_idx`) · `hero/<직업id>_<k>.png`(장수는 `mock.js:HERO_FACES`).
+**파일명 규칙은 스타일이 달라도 같다** — `monster/<idx>.png`(숫자는 `src/data/monster.csv` 의 `monster_idx`) · `hero/<직업id>_<k>.png`(굴릴 번호는 `mock.js:HERO_FACES`).
 **정예 전용 초상은 `monster/<idx>_elite.png`** [2026-09-17] — 있는 몬스터만 `monster.csv:face_elite = 1` 이다. 파일 존재를 찔러보지 않고 **그 컬럼이 결정한다** — 0 이면 정예도 기본 `<idx>.png` 를 그대로 쓴다.
 그래서 폴더만 갈아 끼우면 얼굴이 통째로 바뀐다.
 
@@ -416,18 +429,20 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 - **설치본은 손으로 만들지 않는다** — `python scripts/build_icons.py` 가 짓는다. 한 장마다 무손실 · 손실(q90)을 둘 다 인코딩해 **작은 쪽**을 쓴다(단색 실루엣은 무손실이 이긴다 — 오차 0 · 컬러 그림은 q90 이 1/4 크기에 오차가 눈에 안 띈다). 원본이 없어진 설치본은 지운다
 - **새 아이콘 · 교체** — 원본 PNG 를 `icons_source/<폴더>/<id>.png` 에 넣고 스크립트를 돌린다. `icons/` 에 PNG 를 떨어뜨려도 스크립트가 `icons_source/` 로 옮기고(같은 이름의 옛 원본을 대체) 짓는다
-- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · items/empty · items/item_base · items/potion · items/box · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · explore · currency · gamble · forge · lab · arena · mail · nav · battle_buffs). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
+- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · advances · items/empty · items/item_base · items/potion · items/box · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · explore · currency · gamble · forge · lab · arena · mail · nav · battle_buffs · party). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
 - **경로 조립** — `mock.js:ICON_EXT`(= `.webp`) 하나를 모든 아이콘 경로가 쓴다
 - **256 인 이유** — 칸은 22~44px 지만 한 장(1600×800)이 모니터에 맞춰 늘고(`fitStage`) 고해상도 배율이 겹치면 40px 칸이 기기 픽셀 100 안팎이 된다. 128 은 거기서 빠듯하다. 512 PNG 대비 7장 1.1MB → 70KB 안팎
 - 아래 폴더별 절의 트리 · 규격(512 · 투명 · 0.88)은 **원본(`icons_source/`) 기준**이다 — 설치본은 그걸 256 WebP 로 줄인 것뿐이다
 
 ## icons/mastery/ — 마스터리 아이콘
 
-**게임이 읽는 것은 `sin/<node_id>.webp`(죄종 판 63 — 일곱 죄종 × T1 · T2 · T3 세 칸 · T2 는 같은 능력치의 T1 그림 · T3 ② ③ 은 옛 T2 조건 칸 그림을 옮겼다 · 2026-11-12 R458) · `class/<node_id>.webp`(직업 판 25 — T2-2 무기 노드는 10-09 R230 부터 직업별) · `class/<node_id>_<class_id>.webp`(직업 공통 무기 노드 T2-1 × 5직업)** [2026-10-09] — 고리 없는 굵은 실루엣 하나(전직 가지 칸과 같은 그림체 · **단색** · **정적** — 정면 · 똑바로)의 회색 `#d8d8e6`(512 투명 · 긴 변 0.88 에서 **크기 보정** — 가는 그림(분노 단검)과 꽉 찬 그림(폭식 냄비)이 같은 긴 변이면 꽉 찬 쪽이 커 보여, `mastery/source/optical.py` 가 분노 판 평균에 맞춰 큰 그림만 줄였다 · 다시 돌려도 그대로 · 2026-10-24). 화면이 판 색 마스크로 칠한다(`app.js:masteryIconHtml` · `masteryIconPath` · SCREEN_DESIGN §7 · ADR-0555). 죄종 칸은 노드 이름을 그 죄종 소재로, 직업 칸은 능력치 기호에 직업 물건을 붙였다. 원본은 `mastery/source/` — Codex 이미지 생성 시트 10장(`sheet_NN_codex.png` · 01~08 = 72칸 · 09 = 40px 에서 약했던 9칸 재발주 · 10 = 효과가 바뀐 직업 칸 다섯(R230 — 마법사 · 사제 캐스팅 속도 · 마법사 데미지 증가 · 로브 체력 · 6~9 칸은 1~4 의 두 번째 판 · 설치한 칸은 `plan.py:PICK`) · 11 = 탐욕 T3 셋(칼 · 하트 주머니 · 동전 모래시계 — 세 줄이 같은 문장의 세 판 · 1행을 설치) · 12 = 11 의 칼이 40px 에서 가늘어 다시(셋째 열 「동전 더미에 꽂힌 넓은 칼」 1행을 설치) · 13 = 분노 · 폭식 T3(피 흘리는 주먹 · 엇갈린 포크와 칼 — 1행 왼쪽 두 칸을 설치) · 14 ~ 16 = 새 죄종 T1 여덟 · T3 넷(2026-11-12 · 지시문에 「FLAT FILL ONLY」 줄 · 15 는 위험한 칸의 두 번째 구도 · 16 은 40px 에서 약했던 칸 다시 · 설치한 칸은 `plan.py:NEW_PICK` · T2 g3 · g6 · g9 는 같은 T1 그림 복사본) · 앵커 = `advance/source/sheet_01_codex.png`(11 ~ 16 은 `mastery/source/sheet_01_codex.png`)) · 지시문 `sheet_NN_prompt.txt` · 칸 문장 표 `plan.py`(노드 키 → 그림 문장 · 시트 배치 · `plan.json` 이 칸 → 파일 대응) · 단색 칠 `mono.py`(검정 → 회색 · 흰 틈 → 투명). ⚠ 안 읽히는 옛 고리 그림이 남았다 — `class/cls_t2_weapon_damage`(직업 없는 경로의 대비책) · `sin/sin_t1_{atkspeed,damage,hp}`(폐지된 옛 공통 T1)
+**게임이 읽는 것은 `sin/<node_id>.webp`(죄종 판 — T1 은 일곱 죄종 공통 셋 `sin_t1_*` · 죄종마다 T2 · T3 · T4 세 칸씩 · T3 ② ③ 은 옛 T2 조건 칸 그림을 옮겼다 · 2026-11-12 R458) · `class/<node_id>.webp`(직업 판 — 직업마다 T1 · T2 · T3 · T4 세 칸씩) · `class/<node_id>_<class_id>.webp`(직업 공통 무기 노드 T3-1 × 5직업)** [2026-10-09] — 고리 없는 굵은 실루엣 하나(전직 가지 칸과 같은 그림체 · **단색** · **정적** — 정면 · 똑바로)의 회색 `#d8d8e6`(512 투명 · 긴 변 0.88 에서 **크기 보정** — 가는 그림(분노 단검)과 꽉 찬 그림(폭식 냄비)이 같은 긴 변이면 꽉 찬 쪽이 커 보여, `mastery/source/optical.py` 가 분노 판 평균에 맞춰 큰 그림만 줄였다 · 다시 돌려도 그대로 · 2026-10-24). 화면이 판 색 마스크로 칠한다(`app.js:masteryIconHtml` · `masteryIconPath` · SCREEN_DESIGN §7 · ADR-0555). 죄종 칸은 노드 이름을 그 죄종 소재로, 직업 칸은 능력치 기호에 직업 물건을 붙였다. 원본은 `mastery/source/` — Codex 이미지 생성 시트 10장(`sheet_NN_codex.png` · 01~08 = 72칸 · 09 = 40px 에서 약했던 9칸 재발주 · 10 = 효과가 바뀐 직업 칸 다섯(R230 — 마법사 · 사제 캐스팅 속도 · 마법사 데미지 증가 · 로브 체력 · 6~9 칸은 1~4 의 두 번째 판 · 설치한 칸은 `plan.py:PICK`) · 11 = 탐욕 T3 셋(칼 · 하트 주머니 · 동전 모래시계 — 세 줄이 같은 문장의 세 판 · 1행을 설치) · 12 = 11 의 칼이 40px 에서 가늘어 다시(셋째 열 「동전 더미에 꽂힌 넓은 칼」 1행을 설치) · 13 = 분노 · 폭식 T3(피 흘리는 주먹 · 엇갈린 포크와 칼 — 1행 왼쪽 두 칸을 설치) · 14 ~ 16 = 새 죄종 T1 여덟 · T3 넷(2026-11-12 · 지시문에 「FLAT FILL ONLY」 줄 · 15 는 위험한 칸의 두 번째 구도 · 16 은 40px 에서 약했던 칸 다시 · 설치한 칸은 `plan.py:NEW_PICK` · 지금 죄종 T2 칸 일부는 그 죄종의 옛 T1 그림이다) · 앵커 = `advance/source/sheet_01_codex.png`(11 ~ 16 은 `mastery/source/sheet_01_codex.png`)) · 지시문 `sheet_NN_prompt.txt` · 칸 문장 표 `plan.py`(노드 키 → 그림 문장 · 시트 배치 · `plan.json` 이 칸 → 파일 대응) · 단색 칠 `mono.py`(검정 → 회색 · 흰 틈 → 투명). ⚠ 안 읽히는 옛 고리 그림이 남았다 — `class/cls_t2_weapon_damage`(직업 없는 경로의 대비책) · `sin/sin_t1_{atkspeed,damage,hp}`(폐지된 옛 공통 T1)
+
+**2026-11-14 묶음 — 마스터리 66칸 · 전직 아이콘 15**(아래 `icons/advances/`) — 그림이 없거나 · 임시 복사거나 · 남의 그림을 빌린 칸을 전부 제 그림으로 바꿨다. **T4 36**(직업 15 · 죄종 21) · **직업 판 19**(그림이 없던 마법사 · 사제 · 궁수 T1 체력 · 기사 T2 평정 · 굳건함 / 한 직업 그림을 다섯 직업이 나눠 쓰던 T1 쿨타임 감소 · 공격 · 캐스팅 속도 10 / 같은 판 T1 과 같은 그림이던 전사 T2 체력 증폭 / 오만 왕좌를 빌린 전사 T2 타격 회복 / 하트(체력)인데 효과는 모든 저항인 마법사 · 사제 로브) · **죄종 T2 11**(다른 죄종 · 직업 그림을 빌렸거나 같은 판 T1 그림과 같던 칸 · 경험치인데 아이템 자루였던 탐욕 T2 ②). 칸 문법은 그대로 — 직업 칸 = 능력치 기호(모래시계 = 쿨타임 · 날개 = 속도 · 하트 = 체력) + 그 직업 물건 · 죄종 칸 = 그 죄종 소재 · **한 판에 같은 그림 둘이 없다**. 원본 `mastery/source/` — Codex 시트 11장(19 ~ 22 = T4 · 칸 → 노드 `sheet_19_22_t4_tiles.txt` · 23 ~ 26 = 직업 · 죄종 칸(26 의 4 ~ 9 칸은 두 번째 판) · 27 ~ 29 = 40 · 80px 판 검토에서 약했던 칸 다시) · 앵커 `sheet_01_codex.png` · 지시문 `sheet_NN_prompt.txt` · 칸 문장 표 `plan_20261114.py`(노드 → 문장 · 시트 배치 · 고른 칸 `PICK` — 없으면 첫 판) · `run_codex.py`(병렬 발주) · `install_20261114.py`(cut.py → `mono.py` → `class|sin/<node_id>.png` · `advances/<advance_id>.png`) → `optical.py --write`(새 그림 61장이 줄었다) → build_icons.py. 실측 장변 88 · 중앙 50/50
 
 아래 옛 봉인 문양(`nodes/` · `nodes/variants/` · `*_seal.png` · `generate.ps1` · `IconRenderer.cs` · `icon_plan.csv` · `ART_DIRECTION.md`)은 **이제 어디서도 안 읽힌다** — 비교용으로 남겨 두었다.
 
-**`advance/<skill_id>_<slot>.webp` — 전직 트리 가지 칸 121** [2026-10-08] — 파일명 = `advance_node.csv` 의 `skill_id` + `slot`(2 · 3 · 4) · 보류 칸(`hold = 1` · 14)은 그림이 없다. 위 둘과 문법이 다르다 — **고리 + 기호가 아니라 전직 스킬 그림과 같은 투톤**(회백 `#d8d9e6` 실루엣 + 효과 도형 하나만 강조색 · 512 투명 · 긴 변 0.88)이고 화면이 칠하지 않는다(`app.js:advanceNodeIconPath` · SCREEN_DESIGN §7 · ADR-0547). 그린 것 111 + 효과가 같아 그림을 같이 쓰는 10(기절 · 경직 · 화상 · 빙결 · 적 공격 속도 감소 · 추가 피해 확률 — 같은 파일 복사본). 원본은 `advance/source/` — Codex 이미지 생성 시트 13장(`sheet_NN_codex.png` · 앵커 = `skills/source/war_advanced_skills_sheet.png`) · 지시문 `sheet_NN_prompt.txt` · 칸 문장 표 `plan.py`(노드 키 → 그림 문장 · 같은 효과 표) · 투톤 칠 `tone.py`(검정 → 회백 · 흰 틈 → 투명 · 강조색은 채도가 아니라 **색 차(max − min)** 로 가른다 — 채도로 가르면 검정의 미세한 색 잡티가 강조색으로 남아 실루엣이 얼룩진다). 지시문에 「grim · old · brutal」 같은 분위기 말을 넣으면 실루엣에 금 · 이음매가 들어차 40px 에서 얼룩으로 보였다(첫 시트 폐기 — 지금 시트 01 은 그 말을 뺀 재발주)
+**`advance/` — 전직 판 칸 그림 180** [2026-11-14] — 스킬 줄 135 = `<skill_id>_<slot>.webp`(`advance_node.csv` 의 `skill_id` + `slot` — `size` · `var1` · `var2`) · 공통 줄 45 = `<advance_id>_<slot>.webp`(`advance_common.csv` 의 `advance_id` + `slot` — 1 · 2 · 3). 스킬 창 전직 판 · 도감 전직 탭의 칸이 읽는다(`app.js:advCellArt` · SCREEN_DESIGN §7 · ADR-1092). 위 둘과 문법이 다르다 — **고리 + 기호가 아니라 전직 스킬 그림과 같은 투톤**(회백 `#d8d9e6` 실루엣 + 효과 도형 하나만 강조색 · 512 투명 · 긴 변 0.88)이고 화면은 칠하지 않는다. **강조색 = 그 전직의 색**(`plan.py:COLOR` — 전사 = 광전사 빨강 · 바바리안 주황 · 선봉장 노랑 / 기사 = 가디언 파랑 · 팔라딘 하늘 · 크루세이더 남색 / 마법사 = 원소 색 / 궁수 = 스나이퍼 연두 · 보우마스터 초록 · 레인저 청록 / 사제 = 비숍 연분홍 · 검은사제 보라 · 몽크 진분홍 · 2026-11-14 사용자 지시 「색깔이 전직을 따라가는 느낌」 · 사제 = 분홍 · 보라 계열) — 설치할 때 `recolor.py` 가 강조색만 그 색으로 다시 칠한다(형태 · 명암은 그대로). **한 그림은 한 칸에만** [2026-11-14 사용자 지시] — 효과가 같아도 칸마다 다른 그림이다(`plan.py` 가 원본이 겹치면 멈춘다). 크기 칸은 「그 스킬의 주체 + 위로 쌓인 화살표 셋」이다. 180 칸 중 109 칸이 새 그림 · 71 칸은 뜻이 같은 옛 그림 하나씩(옛 가지 칸 그림 · 옛 비숍 그림 — 대응은 `plan.py:REUSE`). 원본은 `advance/source/tree_20261114/` — Codex 이미지 생성 시트 13장(`sheet_NN_codex.png` · 01 = 전직 스킬 · 앵커 `skills/source/kni_advanced_skills_sheet.png` · 02 ~ 11 = 칸 · 앵커 `advance/source/sheet_01_codex.png` · 12 · 13 = 검토에서 약했던 넷의 두 구도씩(2×2 · 고른 판은 `plan.py:DRAW` · 안 쓴 첫 판은 `RETIRED`) · 14 ~ 16 = 같은 그림을 나눠 쓰던 21 칸의 제 그림) · 지시문 `sheet_NN_prompt.txt` · 칸 표 `plan.py`(칸 → 재사용 원본 또는 그림 문장 · 판의 칸을 전부 덮는지 단정) · `run_codex.py`(병렬 발주) · `cut_tone.py`(`cut.py` → `../tone.py` → `drawn/<그림 id>.png`) · `recolor.py`(강조색 → 전직 색) · `install.py`(전직 색으로 칠해 id 파일명으로 · 남의 파일은 `--force` 없이 안 덮는다) · `skill_orig/`(옛 전직 스킬 35 의 칠하기 전 원본 — git 에서 꺼냈다) · `review_board.py`(전직마다 판 모양 검토 판 `review_board.png`) · `reuse/`(옛 커밋에서 꺼낸 `arc_fulldraw_2` · `3`). 실측 색 수 59 ~ 141 · 경계밀도 1 ~ 9% — 옛 가지 칸 그림 범위(48 ~ 158 · 1 ~ 11%) 안. 투톤 칠 `advance/source/tone.py` 는 검정 → 회백 · 흰 틈 → 투명 · 강조색은 채도가 아니라 **색 차(max − min)** 로 가른다 — 채도로 가르면 검정의 미세한 색 잡티가 강조색으로 남아 실루엣이 얼룩진다. 지시문에 「grim · old · brutal」 같은 분위기 말을 넣으면 실루엣에 금 · 이음매가 들어차 40px 에서 얼룩으로 보인다. ⚠ 옛 가지 칸 그림 `<skill_id>_{2,3,4}`(116 · 원본 `advance/source/` 시트 13장 · `plan.py`)은 **어디서도 안 읽힌다**(ADR-1081 이 가지 칸을 걷었다) — 재사용 원본으로 남겨 두었다
 
 ## shrines/ — 신단 그림 [신설 2026-09-29]
 
@@ -476,6 +491,10 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 ## icons/classes/ — 직업 아이콘 [신설 2026-09-27]
 
 `<class_id>.png` 7장(`warrior` · `knight` · `mage` · `archer` · `priest` · `assassin` · `necromancer`) — 스킬 아이콘과 같은 규격(512 투명 · 회색 `#d8d8e6` 단색 실루엣 · 긴 변 0.88 · 중앙). Gemini 시트 `source/sheet_01_classes.png`(3×3)를 `cut.py` 로 잘랐고, 여분 두 칸(낫 · 두건)은 `unused/`. 화면은 알파를 마스크로 써 판 색으로 칠한다(`mock.js:classIcon` · SCREEN_DESIGN §7 · ADR-0375). ⚠ 두건 칸(`unused/hood.png`) 원본에 Gemini 워터마크가 있었다 — 쓰려면 확인한다
+
+## icons/advances/ — 전직 아이콘 [신설 2026-11-14]
+
+`<advance_id>.png` 15장(`advance.csv:icon` = 파일명 · `build_icons.py:GAME_DIRS` 의 `advances`) — 직업 아이콘과 같은 규격(512 투명 · 회색 `#d8d8e6` 단색 실루엣 · 긴 변 0.88 · 중앙 · 정적 문장형). 스킬 창 · 도감 전직 판 머리가 전직 색 마스크로 칠한다(`app.js:advHead` · SCREEN_DESIGN §7 · ADR-1107) · `icon` 칸이 비면 직업 아이콘. 그림 — 광전사 으르렁대는 곰 머리 · 바바리안 뿔 투구 · 선봉장 군기 · 가디언 성벽 · 팔라딘 해를 등진 검 · 크루세이더 십자 투구 · 파이어 메이지 불꽃 · 프로스트 메이지 눈송이 · 썬더 메이지 번개 · 스나이퍼 독수리 머리 · 보우마스터 화살 통 · 레인저 사슴 머리 · 비숍 주교관 · 검은사제 사슬로 묶은 책 · 몽크 염주 찬 주먹. 원본 `advances/source/` — Codex 이미지 생성 시트 둘(`sheet_01_codex.png` · `sheet_02_codex.png` — 02 의 7 ~ 9 칸은 광전사 · 선봉장 · 검은사제의 두 번째 판 · 선봉장만 두 번째 판(02-8 — 깃대가 아래로 이어져 군기로 읽힌다)을 설치) · 앵커 `classes/source/sheet_01_classes.png` · 지시문 `sheet_0N_prompt.txt` · 문장 표 · 발주 · 설치는 마스터리 묶음과 같은 스크립트(`mastery/source/plan_20261114.py` · `run_codex.py` · `install_20261114.py`)
 
 ## icons/materials/ — 재료 아이콘 [신설 2026-09-27]
 
@@ -532,6 +551,10 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 `mail/mail.png`(상단바 우편함 · `mock.js:MAIL_ART`)와 `mail/bell.png`(바로 옆 알림 · `mock.js:BELL_ART`)는 **투명 바탕의 단순한 백색 실루엣**이다. 스킬 아이콘과 어울리고 상단바의 작은 크기에서 읽히도록 질감·색 장식을 덜었다. 원본은 `icons_source/mail/`의 PNG, 설치본은 `icons/mail/`의 256 WebP이며 같은 아이콘 빌드 규칙을 따른다. 봉투는 우편함의 빈 카드 표식에도 쓴다. 내장 이미지 생성으로 각각 제작하며 봉투는 기존 경로의 그림을 교체한다. SCREEN_DESIGN §2 · ADR-0969.
 
+## icons/party/ — 편성 탭 진형 칸의 리더 버튼 [신설 2026-11-14]
+
+`party/leader.png`(`mock.js:LEADER_ART`)는 **투명 바탕의 백색 왕관 실루엣**(512 · 긴 변 0.88 · 가운데)이고 화면이 색 마스크로 칠한다(리더 = 금색 · 아니면 흐린 회색). Codex 내장 이미지 생성으로 흰 바탕 검정 글리프를 뽑아 밝기를 알파로 뒤집었다 — 원본은 `icons_source/party/source/leader_codex.png`. 왼쪽 탭 아이콘(`nav/`)과 같은 납작한 글리프 그림체다. SCREEN_DESIGN §15 · ADR-1132.
+
 ## icons/nav/ — 왼쪽 탭 아이콘 [신설 2026-11-02]
 
 `nav/<탭 id>.png`(`mock.js:NAV_ICON` · `app.js:NAV_GROUPS` 의 탭 id 하나에 한 장)는 **투명 바탕의 백색 실루엣**(512 · 긴 변 0.88 · 중앙)이고 화면이 이름 글자색 마스크로 칠한다. 출처가 탭마다 둘로 갈린다.
@@ -549,15 +572,13 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 내장 이미지 생성으로 각각 제작한다. 생성 원본·프롬프트는 `icons_source/battle_buffs/source/`, 긴 변 88%·중앙 정렬로 정규화한 설치 원본은 같은 상위 폴더의 **512 PNG**, 게임용은 `icons/battle_buffs/`의 **256 WebP**이다. 생성 알파를 보존하며 `python scripts/build_icons.py`가 설치본을 내보낸다. 신단 획득 카드·결과 띠·리포트의 `shrines/` 그림과는 별도 자산이다.
 
-## icons/lab/ — 연구소 줄 아이콘 [신설 2026-10-18]
+## icons/lab/ — 연구소 지점 그림 [신설 2026-10-18 · 2026-11-14 전부 다시 그림 — ADR-1114]
 
-`<줄 id>.png` 셋(`mine` 채광 · `gather` 채집 · `log` 벌목 — 파일명 = `app.js:POSTS` 의 `id`) — 512 투명 · 긴 변 0.88 · **둥근 그림 원판**(양피지색 바탕 + 도구 · 가장자리는 검은 선 — 탐험 지점 아이콘과 같은 그림체). 연구소 탭 왼쪽 줄 목록이 읽는다(`mock.js:labIcon` · SCREEN_DESIGN §8 · ADR-0669). **새 줄이 서면 같은 이름의 그림을 더한다**
+`node/<지점 id>.webp` 10장 — 파일명 = `lab_node.csv:node`: `mine` 채광(곡괭이와 광석) · `gather` 채집(낫과 묶은 약초) · `log` 벌목(그루터기에 박힌 도끼) · `burst` 대박(네잎클로버 — 줄 셋 공용) · `interval` 간격(날개 달린 모래시계) · `quality` 품질(별을 인 투구) · `waiting` 대기 칸(벤치와 잔 둘) · `speed` 훈련 속도(허수아비와 모래시계) · `range` 범위(계단과 깃발) · `income` 수익(돈주머니와 동전). **회색 단색 실루엣**(`#d8d8e6` · 512 투명 · 긴 변 0.88 · 중앙) — 마스터리 앵커 시트와 같은 결(끝이 가늘어지는 곡선 · 형태를 말하는 흰 칼선). 연구소 트리 노드 · 고른 지점 머리가 읽는다(`mock.js:labNodeIcon`) · `build_icons.py:GAME_DIRS` 에 `lab/node`. **새 지점이 서면 같은 이름의 그림을 더한다**
 
-- **원본** — Codex 이미지 생성 · 2×2 시트 · 탐험 지점 시트(`explore/source/codex_explore_icons_sheet.png`)를 기준 그림으로 붙이고 「청동 테두리 없이 원판만」을 시켰다(지시문 `source/sheet_prompt.txt` · 시트 `source/sheet_01_codex.png`). 넷째 칸(교차한 곡괭이 — 채광 둘째 판)은 `unused/mine_crossed.png`
-- **자르기** — `cut.py --grid 2x2`(흰 시트 · 원판이 칸 안에 떨어져 있어 손볼 것이 없었다)
-- **줄 그림은 채광 · 채집 · 벌목 셋뿐이다** — 수색 · 훈련 · 도박장 줄(GAME_DESIGN §9 10-21)은 아직 그림이 없다
-- **지점 아이콘 — `icons/lab/node/<지점 id>.webp` 12장** [신설 2026-10-21 — 사용자 「codex활용해서 각 연구별 아이콘 · 무채색」 · ADR-0684] — 회색 단색 실루엣(`#d8d8e6` · 512 투명 · 긴 변 0.88 · 중앙 — 마스터리 아이콘과 같은 그림체). 파일명 = `lab_node.csv:node` — `kind` 종류 · `yield` 획득량 · `burst` 대박(재료 줄 · 도박장 공용) · `depth` 깊이 · `seats` 등록 칸 · `interval` 간격 · `quality` 품질 · `waiting` 대기 칸 · `speed` 훈련 속도 · `range` 범위 · `income` 수익 + **`unique` 유니크 확률**(지점은 유니크 영웅 굴림이 서면 — 그림만 먼저 있다). 연구소 트리 노드 · 고른 지점 머리가 읽는다(`mock.js:labNodeIcon`) · `build_icons.py:GAME_DIRS` 에 `lab/node`. `trainees`(훈련 「인원」 — 같은 날 「등록 칸」과 같아 지점이 빠졌다)는 `unused/`
-- **지점 원본** — Codex 이미지 생성 · 마스터리 시트(`mastery/source/sheet_01_codex.png`)를 기준 그림으로 붙인 검정 실루엣 3×3 · 2×2(`source/sheet_node_01_codex.png` · `sheet_node_02_codex.png` · 지시문 `*_prompt.txt`) → `cut.py` → `mastery/source/mono.py` 로 회색. 40px 몽타주에서 13장이 다 갈렸다
+- **줄 그림은 이 폴더에 없다** — 줄 카드 · 고른 줄 머리는 그 줄을 여는 건물의 건설 그림(`buildings/` · `app.js:LAB_LINES` 의 `art`)이다
+- **원본** — Codex 이미지 생성 · 앵커 `mastery/source/sheet_01_codex.png` · `source/sheet_lab_04_codex.png`(3×3 — 채광 · 채집 · 벌목 · 풍요의 뿔 · 날개 모래시계 · 별 투구 · 벤치 · 허수아비 · 계단) · `sheet_lab_05_codex.png`(2×2 — 돈주머니 · 네잎클로버 · 해시계 · 월계관) · 지시문 `*_prompt.txt` → `cut.py` → `mastery/source/mono.py` 로 회색
+- **`unused/`** — 고르지 않은 칸: `burst_horn`(풍요의 뿔) · `interval_sundial`(해시계) · `quality_laurel`(월계관)
 
 ## icons/explore/ — 탐험 지점 아이콘 [신설 2026-10-09]
 
@@ -599,7 +620,7 @@ icons_source/skills/
 - **헬파이어**(`mon_hellfire` — 몬스터 전용 · 1-5 사탄의 정신 집중) [2026-10-22 · Codex 단색] — 「굵은 뿔 한 쌍 사이로 쏟아지는 지옥불이 해골 하나에 떨어진다」. 첫 시트(`source/sheet_15_codex_hellfire.png`)는 길쭉해서 40px 에서 가늘어 버렸고 두 번째 시트(`sheet_16_codex_hellfire.png` 오른쪽 위 칸)를 설치했다 · 프롬프트는 각 시트 옆 `_prompt.txt`. 설치본 실측 장변 88 · 중앙 50/50 · 단색 `#d8d9e6` · 256 WebP 한 장만 기존 인코더로 내보냈다
 - **장 보스 고유 넷**(몬스터 전용 · skill_design §12-9) [2026-10-29 · Codex 단색] — `mon_ironmaiden` 「양쪽 문이 열린 가시 고문함」(`sheet_17` 왼쪽 위) · `mon_goldfever` 「왕관 쓴 채 포효하는 뿔 머리 · 위로 튀는 동전 셋」(`sheet_18` 왼쪽 위) · `mon_delegate` 「원 배지 안 빈 왕좌 · 자리를 떠나는 화살」(오오라라 원 배지 · `sheet_19` 오른쪽 위) · `mon_swarm` 「금이 가며 갈라지는 파리」(`sheet_20` 왼쪽 아래). 실측 장변 88 · 중앙 50/50 · 단색 `#d8d9e6`. **화면에는 아직 안 나온다** — `skill.csv` 행이 없어(DEV_PLAN R380) `mock.js:SKILL_ICON_FILES` 에 넣지 않았다 · 고른 칸 밖의 구도는 시트에만 있다
 - 지운 스킬(`war_taunt` · `kni_duel` · `mag_focus` · `mag_frozenwall`)은 2026-10-16 행이 걷혀 목록에서 빠졌다 — 그림 파일만 폴더에 남는다
-- **전직 45** — 투톤(회백 실루엣 + 효과 강조색 하나 · 원본 `source/<직업>_*_sheet.png` 다섯 · 2026-09-28 · 궁수 9 는 2026-10-09) · `mastery/advance/source/tone.py` 로 칠했다 — 강조색 픽셀은 그대로 두고 검정만 회백으로 칠한다
+- **전직 45** — 투톤(회백 실루엣 + 효과 강조색 하나 · 원본 `source/<직업>_*_sheet.png` 다섯 · 2026-09-28 · 궁수 9 는 2026-10-09) · `mastery/advance/source/tone.py` 로 칠했다 — 검정만 회백으로 칠한다. **강조색 = 그 전직의 색** [2026-11-14] — 전직 판 칸 그림과 같은 표(`mastery/advance/source/tree_20261114/plan.py:COLOR` · 위 `icons/mastery/` 절)로 `recolor.py` 가 다시 칠했다(칠하기 전 원본 = 같은 폴더 `skill_orig/`). 새 전직 스킬 열 [2026-11-14] — `war_divinedescent` · `kni_cleansing` · `kni_offenseaura` · `kni_elemconvert` · `kni_fallingstrike` · `mag_frostarmor` · `mag_thundergod` · `pri_endure` 는 Codex 시트 `mastery/advance/source/tree_20261114/sheet_01_codex.png` · `mag_ember`(불씨가 붙어 터지는 투구) · `pri_purify`(사슬을 끊는 손)는 같은 폴더 `sheet_12_codex.png`
 
 **오오라 셋은 「원 배지」로 갈렸다** [2026-09-09] — D2 팔라딘 오오라 아이콘 **14개 중 12개**가 「원형 테 + 그 안에 갇힌 작은 심볼」이고,
 일반 전투 스킬(Zeal·Smite)은 원 없이 오브젝트가 칸을 꽉 채운다. **오오라임을 말하는 것은 심볼이 아니라 「가둔다」는 구조**라 그것만 가져왔다.
@@ -828,4 +849,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-11-13*
+*마지막 업데이트: 2026-11-15*

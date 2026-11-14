@@ -265,6 +265,17 @@ export function moveTip(ev) {
     // 카드 옆이면 재기 전에 한 장 왼쪽 끝으로 보낸다 — 옛 자리의 남은 폭에 눌려 넓어진 카드(Alt)가 좁게 재이지 않게. 같은 틱이라 안 깜빡인다
     tip.style.right = '';
     if (anchored) tip.style.left = '0px';
+    // 스킬 도감 제목 구분선은 왼쪽 이름 구분선에 맞춘다. Lv.1은 제목 바로 아래에 둔다.
+    // 이름·태그 줄바꿈, Alt 재구성, 화면 배율을 반영한 실제 배치를 읽는다.
+    const skillName = tip.querySelector('.cx-sk-description > .tip-name');
+    const heading = tip.querySelector('.cx-sk-tip > .cx-tip-h');
+    if (skillName && heading && heading.offsetWidth) {
+        const scale = heading.getBoundingClientRect().width / heading.offsetWidth;
+        if (scale > 0) {
+            const height = (skillName.getBoundingClientRect().bottom - heading.getBoundingClientRect().top) / scale;
+            if (height > 0 && Math.abs(height - (parseFloat(heading.style.height) || 0)) > .5) heading.style.height = `${height}px`;
+        }
+    }
     // 손가락 툴팁의 버튼 줄은 툴팁 **아래 바깥**에 매달린다(`.tip-touch` · ADR-0374) — 아래 넘침 보정에 그 높이도 든다
     const bar = tip.querySelector(':scope > .tip-touch');
     // 아이템 비교 툴팁의 숨은 사본(Alt 때 모양의 「이 아이템」 카드 · `.tip-ghost`)이 더 길면 그 키로 잰다 — Alt 로 델타가 서도 위로 안 뛴다 (ADR-0658).
@@ -770,8 +781,8 @@ const clsChipHtml = id => {
     const c = D.classes.find(x => x.id === id);
     return c ? chipHtml('cls-chip', c.color, L(c)) : '';
 };
-/** 영웅 = `등급 → 죄종 → 직업` (`app.js:candidateCard` 와 같은 셋) */
-const heroChipsHtml = h => chipHtml('tier-chip', tierOf(h).color, L(tierOf(h))) + sinChipHtml(h.sin) + clsChipHtml(h.cls);
+/** 영웅 = `죄종 → 직업` (`app.js:candidateCard` 와 같은 줄) — 등급 칩은 없다(막대 색 · ADR-1143) */
+const heroChipsHtml = h => sinChipHtml(h.sin) + clsChipHtml(h.cls);
 /** 몬스터 = `종족 → 죄종 → 직업` (`codexCandCard` 와 같은 셋) — 종족 칩 색 = 등급 색(윗변 · 막대와 같다) ·
  *  죄종 = 정예가 그 판에서 굴린 죄종(`round` 이벤트 적 항목의 `sin`), 없으면 장 죄종(도감과 같다) */
 const monsterChipsHtml = (u, color) => {
@@ -907,7 +918,7 @@ export function codexMonsterTipCard(m, grade) {
     return [cand, card];
 }
 
-/** 레벨 줄의 칸 이름 키 — `level_field` 하나에 하나(`cx.lv.*`). 피해 배율은 하는 일이, 감쇠는 대상이 가른다(가이디드 = 방어 깎기) · 모르는 칸은 「효과」 */
+/** 레벨 줄의 칸 이름 키 — 피해 배율은 하는 일, 감쇠는 대상, 효과 수치는 걸린 효과가 가른다. */
 const LV_LABEL = {
     mult_pct: (d, e) => (e.effect === 'hit' ? 'cx.lv.mult' : 'cx.lv.heal'),
     hits: () => 'cx.lv.hits',
@@ -917,34 +928,63 @@ const LV_LABEL = {
     cool_sec: () => 'cx.lv.cool',
     // 창이 거는 상태이상의 값 · 시간 — 이그나이트 화상 세기 · 딥 프리즈 스턴 시간 (2026-10-29 · R385)
     hit_value: () => 'cx.lv.value',
-    hit_duration_sec: () => 'cx.lv.dur',
+    hit_duration_sec: () => 'cx.lv.ailmentDuration',
 };
-/** 레벨 줄이 둘인 스킬의 `effect_value` 줄 — 걸린 효과의 수치(`skill_status.csv:stat`) → 칸 이름 (2026-10-28 R367 · 워 오더스) */
-const LV_STAT = { def_pct: 'cx.lv.def', res_pct: 'cx.lv.resAll' };
-/** 레벨 줄의 값 — `level_step` **그대로**(레벨마다 더하는 양 · 부호를 단다). 시간 칸은 초 · 타수는 회 · 나머지는 비율(%) */
-function lvStepText(field, step) {
-    const sign = step < 0 ? '−' : '+';
-    const v = Math.abs(step);
-    if (field === 'duration_sec' || field === 'cool_sec' || field === 'hit_duration_sec') return sign + t('time.s', { s: num(v) });
-    if (field === 'hits') return sign + t('sk.u.times', { v: num(v) });
-    return `${sign}${M.pctNum(v)}%`;
+/** 일반 스킬의 효과 수치 — 줄 수와 무관하게 실제 stat·부호로 이름을 정한다. 스킬 id 별 예외는 두지 않는다. */
+const LV_STAT = {
+    def_pct: s => s.value < 0 ? 'cx.lv.defDown' : 'cx.lv.def',
+    res_pct: s => s.value < 0 ? 'cx.lv.resAllDown' : 'cx.lv.resAll',
+    hp_max_pct: s => s.value < 0 ? 'cx.lv.hpDown' : 'cx.lv.hp',
+    atk_pct: s => s.value < 0 ? 'cx.lv.dmgDown' : 'cx.lv.dmg',
+    final_dmg_pct: s => s.value < 0 ? 'cx.lv.dmgDown' : 'cx.lv.dmg',
+    phys_pct: s => s.value < 0 ? 'cx.lv.physDown' : 'cx.lv.phys',
+    final_phys_pct: s => s.value < 0 ? 'cx.lv.physDown' : 'cx.lv.phys',
+    period_pct: s => s.value < 0 ? 'cx.lv.speedDown' : 'cx.lv.speed',
+    dr_pct: s => s.value < 0 ? 'cx.lv.takenUp' : 'cx.lv.takenDown',
+    barrier_pct: () => 'cx.lv.barrier',
+    onhit_element: () => 'cx.lv.elementDamage',
+    pulse: () => 'cx.lv.elementMult',
+    def_ignore: () => 'cx.lv.defIgnore',
+    vs_burn_pct: () => 'cx.lv.vsBurn',
+    imbue: () => 'cx.lv.ailmentChance',
+    regen_hp_pct: () => 'cx.lv.regen',
+};
+// 상승 보정만 +를 붙인다. 배율·확률·HP 비율은 크기, 감소는 이름이 방향을 말한다.
+const LV_BONUS = new Set(['def_pct', 'res_pct', 'hp_max_pct', 'atk_pct', 'final_dmg_pct', 'phys_pct', 'final_phys_pct', 'period_pct', 'vs_burn_pct']);
+function codexLevelLabel(def, e, field) {
+    const status = e.onHit ?? e;
+    const s = field === 'hit_value' || field === 'hit_duration_sec' ? status.hit : status;
+    const ailment = s?.hit?.ailment ?? s?.ailment;
+    const key = ((field === 'effect_value' || field === 'hit_value') && LV_STAT[s?.stat]?.(s))
+        || (LV_LABEL[field]?.(def, e) ?? 'cx.lv.value');
+    return t(key, {
+        e: s?.element ? t(`st.atkType.${s.element}`) : '',
+        a: ailment ? t(`bt.ail.${ailment}`) : '',
+    });
 }
-/** 타수 레벨 칸 — 단계가 정수가 아니면 「+0.34회」 대신 **한 타가 느는 레벨**을 적는다(러시 Lv4 · 7 · 10 · 2026-10-28 R374). 정수 단계면 종전 그대로 */
-function hitsStepText(hits, step) {
-    if (Number.isInteger(step)) return lvStepText('hits', step);
-    const at = [];
-    for (let up = 1; up <= D.balance.skillbook_upgrade_max; up++) if (Math.floor(hits + up * step) > Math.floor(hits + (up - 1) * step)) at.push(up + 1);
-    return at.length ? t('cx.lv.hitsAt', { l: at.join(' · ') }) : '—';
+/** 레벨 옵션은 전투와 같은 resolve → scaleDef 결과를 읽는다. */
+function codexLevelValue(def, e, field) {
+    const status = e.onHit ?? e;
+    if (field === 'cool_sec') return t('time.s', { s: num(def.cool) });
+    if (field === 'hits') return t('sk.u.times', { v: e.hits });
+    if (field === 'duration_sec') return t('time.s', { s: num(status.dur) });
+    if (field === 'hit_duration_sec') return t('time.s', { s: num(status.hit.dur) });
+    if (field === 'effect_value' || field === 'hit_value') {
+        const s = field === 'hit_value' ? status.hit : status;
+        if (LV_STAT[s.stat] && !(LV_BONUS.has(s.stat) && s.value >= 0)) return M.pctText(Math.abs(s.value));
+        return M.statValue(s.stat, s.value, { fmt: 'pct' });
+    }
+    const key = { mult_pct: 'mult', decay_pct: 'decay', proc_chance_pct: 'procChance', proc_mult_pct: 'procMult' }[field];
+    return key ? `${M.pctNum(e[key])}%` : '—';
 }
 
 /**
- * 도감 스킬 툴팁 — **두 장**: 왼쪽 스킬 카드 그대로(설명) · 오른쪽 획득처 · 레벨이 오르면 (SCREEN_DESIGN §9-1 · ADR-0680 — ~~단계~~ ADR-0650).
- * 오른쪽 장은 몬스터 툴팁의 오른쪽 장과 같은 모양이다 — 「획득처」 머리글 + 작은 초상 · 아래 「레벨이 오르면」 머리글 + 한 줄(바닥에 붙는다).
+ * 도감 스킬 툴팁 — 왼쪽 스킬 설명 아래 획득처 · 오른쪽 Lv1~9의 레벨별 옵션(2026-11-15 사용자 지시).
  * 몬스터 툴팁의 능력치 자리에 스킬은 「어디서 얻나」가 선다. 스킬 도감은 레벨이 없는 목록이라(monster_design §8-1 · R293) 영웅 · 세이브를 안 읽는다.
- * 획득처는 `battle.skillCarriers` 가 답한다(칸 규칙은 로직의 것) — 고정 칸 몬스터가 먼저, 셋째 칸 굴림 보스는 작은 머리 아래 따로 ·
- *   상단이 그 도안을 팔면(`game.shopBlueprintPool`) 맨 아래 「상단」 머리 + 건물 그림
+ * 획득처는 `battle.skillCarriers` 의 고정 칸 몬스터만 표시한다. 보스의 무작위 스킬 후보는 제외한다(2026-11-15).
+ *   맨 아래 건물 줄은 상단(도안 판매 대상만) · 도서관 순서다.
  * @param id  스킬 id — 책이 되는 스킬만 부른다(`skill.bookable`)
- * @returns `[스킬 카드, 획득처 · 레벨이 오르면 장]` — 툴팁 창이 가로로 나란히 세운다
+ * @returns `[스킬 설명 · 획득처, 레벨별 옵션]` — 툴팁 창이 가로로 나란히 세운다
  */
 export function codexSkillTipCard(id) {
     const src = SYS.battle.skillCarriers(id);
@@ -957,46 +997,49 @@ export function codexSkillTipCard(id) {
             : `<span class="face none${s.boss ? ' boss' : ''}" style="background:${c}22;border-color:${c}66"></span>`;
         return `<div class="cx-src-cell">${pic}<span class="cx-src-at muted">${t('cx.tip.at', { c: s.chapter, s: s.stageNum })}</span></div>`;
     };
-    // 셋째 칸 굴림 보스(`roll`)는 한 단 작게 — 직업이 같은 보스가 전부 서서 고정 칸 몬스터보다 많다(주인공은 고정 칸이다)
-    const grid = (list, cls = '') => `<div class="cx-src${cls}">${list.map(face).join('')}</div>`;
+    const grid = list => `<div class="cx-src">${list.map(face).join('')}</div>`;
     // 고정 칸은 **그 칸이 처음 열리는 단**으로 묶는다 — 첫 단(고유)이 머리 없이 먼저 · 나머지 단(나이트메어 2칸)은 단 이름 작은 머리 아래 따로 (ADR-0664).
     //   단은 로직이 준다(`skillCarriers` 의 `difficulty`) · 머리글은 단 이름 데이터 그대로
     const firstDiff = D.difficultyList[0]?.id ?? null;
     const later = D.difficultyList.slice(1).map(d => [d, src.fixed.filter(s => s.difficulty === d.id)]).filter(([, list]) => list.length);
     const body = (src.fixed.some(s => s.difficulty === firstDiff || s.difficulty == null) ? grid(src.fixed.filter(s => s.difficulty === firstDiff || s.difficulty == null)) : '')
         + later.map(([d, list]) => `<div class="cx-src-h muted">${L(d.name)}</div>${grid(list)}`).join('')
-        + (src.roll.length ? `<div class="cx-src-h muted">${t('cx.tip.roll')}</div>${grid(src.roll, ' roll')}` : '')
-        + (SYS.game.shopBlueprintPool().includes(id) ? shopSource() : '');
-    // 레벨이 오르면 — 그 스킬의 레벨 줄마다 한 줄(워 오더스는 둘 · 2026-10-28 R367) · 칸 이름 | `level_step` 그대로. 없으면 `—`
+        + skillBuildingSources(id);
+    // 각 레벨에서 실제로 적용되는 옵션을 나열한다. 여러 효과 · 둘째 레벨 칸도 모두 표시한다.
     const def = SYS.skill.defs[id];
     //   한 줄이 레벨 칸을 둘 들 수 있다(러시 — 타수 + 한 타 배율 · 2026-10-28 R374) — 칸마다 한 줄
-    const lvRows = (def?.effects ?? []).flatMap(e => [[e, e.levelField, e.levelStep], [e, e.levelField2 ?? null, e.levelStep2 ?? null]]).filter(([, f]) => f !== null);
-    //   줄이 둘이면 「효과」가 안 갈린다 — 걸린 효과의 수치 이름으로 (없는 수치는 「효과」 그대로)
-    const lvKey = (e, f) => (lvRows.length > 1 && f === 'effect_value' && LV_STAT[SYS.skill.statuses[e.status]?.stat])
-        || (LV_LABEL[f]?.(def, e) ?? 'cx.lv.value');
-    const lvUp = lvRows.length
-        ? lvRows.map(([e, f, s]) => `<div class="cx-lvup"><span>${t(lvKey(e, f))}</span><b>${f === 'hits' ? hitsStepText(e.hits, s) : lvStepText(f, s)}</b></div>`).join('')
-        : '<span class="muted">—</span>';
+    const lvRows = (def?.effects ?? []).flatMap((e, i) => [[e, e.levelField, i], [e, e.levelField2 ?? null, i]]).filter(([, f]) => f != null);
+    const levels = Array.from({ length: 9 }, (_, i) => {
+        const scaled = SYS.skill.scaleDef(SYS.skill.resolve({ id, up: i }), null);
+        const options = lvRows.map(([, f, index]) => `<div class="cx-lv-option"><span>${codexLevelLabel(scaled, scaled.effects[index], f)}</span><b>${codexLevelValue(scaled, scaled.effects[index], f)}</b></div>`).join('');
+        return `<div class="cx-sk-level"><span class="cx-sk-level-label">${t('cx.tip.lv', { lv: i + 1 })}</span><div>${options || '<span class="muted">—</span>'}</div></div>`;
+    }).join('');
+    const description = skillTipCard({ id });
+    description.classList.add('cx-sk-description');
+    description.insertAdjacentHTML('beforeend', `<div class="cx-tip-h">${t('cx.tip.source')}</div><div class="cx-src-box">${body || '<span class="muted">—</span>'}</div>`);
+    // Alt 재구성에도 설명 아래 획득처가 남아야 한다.
+    description._rebuild = () => codexSkillTipCard(id)[0];
     const card = el('div', 'tip-card cx-tip cx-sk-tip', `
-        <div class="cx-tip-h">${t('cx.tip.source')}</div>
-        <div class="cx-src-box">${body || '<span class="muted">—</span>'}</div>
-        <div class="cx-tip-h">${t('cx.tip.lvUp')}</div>
-        ${lvUp}`);
-    return [skillTipCard({ id }), card];
+        <div class="cx-tip-h">${t('cx.tip.levelOptions')}</div>
+        <div class="cx-sk-levels">${levels}</div>`);
+    return [description, card];
 }
 
-/** 획득처의 상단 — 작은 머리 = 건물 이름(`building.csv`) · 그림 = 상단 건물 그림(몬스터 초상과 같은 크기 · 네모) · 상단을 지었는지와 상관없이 선다 (ADR-0680) */
-function shopSource() {
-    const b = SYS.construction.list.find(x => x.id === 'shop');
-    const name = b ? L(b.name) : 'shop';
-    const img = M.buildingImg('shop');
-    return `<div class="cx-src-h muted">${name}</div><div class="cx-src"><div class="cx-src-cell">` +
-        `<span class="face bld">${img ? `<img src="${img}" alt="${name}" loading="lazy" onerror="this.remove()">` : ''}</span></div></div>`;
+/** 획득처 건물 — 상단 오른쪽에 스킬북 제작처인 도서관. 이름과 그림은 건물 데이터를 읽고 건설 여부와 무관하게 표시한다. */
+function skillBuildingSources(id) {
+    const ids = [...(SYS.game.shopBlueprintPool().includes(id) ? ['shop'] : []), 'library'];
+    return `<div class="cx-src-buildings">${ids.map(building => {
+        const b = SYS.construction.list.find(x => x.id === building);
+        const name = b ? L(b.name) : building;
+        const img = M.buildingImg(building);
+        return `<div class="cx-src-building" data-building="${building}"><div class="cx-src-h muted">${name}</div><div class="cx-src"><div class="cx-src-cell">` +
+            `<span class="face bld">${img ? `<img src="${img}" alt="${name}" loading="lazy" onerror="this.remove()">` : ''}</span></div></div></div>`;
+    }).join('')}</div>`;
 }
 
 /**
  * 도감 툴팁 왼쪽 장 = **선술집 후보 카드 그대로** (ADR-0233 · SCREEN_DESIGN §3 후보 카드 · §8) — `app.js:candidateCard` 와 같은 `.ng-card` 칸 · 같은 줄 순서다:
- * 초상 옆에 칩 줄(종족 + 부류 + 직업 · ADR-0724 · ADR-0922) · 이름 · 역할 · 무기군 · 고유 스킬, 아래에 능력치 7 막대 · 능력치 합.
+ * 초상 옆에 칩 줄(종족 + 직업 · ADR-0724 · ADR-1151) · 이름 · 역할 · 무기군 · 고유 스킬, 아래에 능력치 7 막대 · 능력치 합.
  * 값은 `monster.csv` 의 기본 능력치 7 — 레벨과 무관하고 `battle.makeEnemy` 가 읽는 것과 같다. 막대 줄은 **같은 함수**다(`attrRowsHtml` · ADR-0114).
  * 후보 카드의 `Lv.1` · 최대 HP 줄은 없다 — 몬스터의 레벨 · HP 는 스테이지 레벨 · 등급이 정해 한 값이 없다
  */
@@ -1004,9 +1047,8 @@ function codexCandCard(m, grade) {
     const row = D.monsters?.[m.id];
     // 영웅의 티어 칩 자리 = **종족**(`monster.csv:monster_type` 의 이름 — 관전 신원과 같은 `SYS.commission.races` · ADR-0724).
     //   윗변 · 막대 · 칩 색 = 관전 몬스터 툴팁의 등급 색(보스는 보스, 아니면 일반 / 정예 고르개). 어두운 색은 막대만 밝힌다(`bar-lift` · monsterTipCard 와 같다)
-    //   둘째 칩 = **부류**(`monster.csv:monster_base` 의 이름 · 무채색) — 죄종 칩이 섰던 자리 (ADR-0922)
+    //   부류 칩은 없다 — 부류 삭제(ADR-1151 · 2026-11-14)
     const race = SYS.commission?.races?.find(x => x.id === row?.monster_type);
-    const base = D.codexRaces?.[row?.monster_base];
     const line = GRADE_LINE[m.boss ? 'stage_boss' : grade] ?? GRADE_LINE.normal;
     const stats = row ? Object.fromEntries(D.heroAttributes.map(s => [s.id, row[s.id]])) : null;
     const total = stats ? D.heroAttributes.reduce((a, s) => a + (stats[s.id] ?? 0), 0) : '—';
@@ -1027,7 +1069,7 @@ function codexCandCard(m, grade) {
         <div class="ng-head">
             ${face}
             <div class="ng-id">
-                <div class="ng-chips">${race ? `<span class="tier-chip" style="color:${line}">${L(race.name)}</span>` : ''}${base ? `<span class="base-chip">${L(base)}</span>` : ''}${cls ? `<span class="cls-chip"${cls.color ? ` style="color:${cls.color}"` : ''}>${L(cls)}</span>` : ''}</div>
+                <div class="ng-chips">${race ? `<span class="tier-chip" style="color:${line}">${L(race.name)}</span>` : ''}${cls ? `<span class="cls-chip"${cls.color ? ` style="color:${cls.color}"` : ''}>${L(cls)}</span>` : ''}</div>
                 <div class="ng-name"><b>${L(monsterName(m.id))}</b></div>
                 <div class="ng-role muted">${role}</div>
                 ${skills}
@@ -1200,6 +1242,8 @@ function descSlots(def, pv, atkType, R) {
         c: () => at(e.procChance, 'procChance', UNIT.pct),
         x: () => at(e.procMult, 'procMult', UNIT.pct),
         p: () => slot({ raw: def.hpCost, unit: UNIT.pct }, R),
+        // 일으킬 때의 HP — 최대 HP 의 비율(리저렉션 · 하는 일 `revive` · 2026-11-14 R471)
+        r: () => (e.effect === 'revive' ? slot({ raw: Math.min(1, e.mult), unit: UNIT.pct }, R) : null),
     };
 }
 

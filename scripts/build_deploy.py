@@ -7,7 +7,8 @@ Rule (docs/client/ARCHITECTURE.md §11 「배포판」):
        · installed art under src/assets/art (originals `source/` · `*_source/` stay out) · src/dev/funnel.* (admin funnel page).
 - Out: docs · output · prototypes · tmp · PLAN*.md · READMEs · the dev test pages · CSV `inherited/`.
 - Written: src/assets/art/preload.json — the images the menu fetches up front (every built image minus PRELOAD_SKIP ·
-  SCREEN_DESIGN §3 · ADR-1080). The repo has no such file, so the dev server never preloads.
+  SCREEN_DESIGN §3 · ADR-1080 · ADR-1097), as {"first": [...], "rest": [...]} — the menu waits for `first` only
+  (PRELOAD_FIRST) and fetches `rest` in the background. The repo has no such file, so the dev server never preloads.
 - JS · CSS lose their comments; HTML loses `<!-- -->` comments (inline <script>/<style> get the JS/CSS treatment).
   Nothing else changes — names, strings, template literals and regex literals are copied byte for byte.
   Whitespace outside literals is tidied (blank lines and trailing spaces go; a newline stays wherever one was).
@@ -341,12 +342,25 @@ PRELOAD_SKIP = [
     "src/assets/art/fx/skills/*_foil.*",
 ]
 
+# The first batch — what the first screen draws (SCREEN_DESIGN §3 · ADR-1097). The menu buttons wait for these only;
+# the rest is fetched in the background after them. Start-party cards = hero portraits (any hero can roll) + skill icons;
+# nav icons cover the tab bar of the game a save opens into. Keep the portrait path in step with ui/mock.js:FACE_STYLES[0] (gemini).
+PRELOAD_FIRST = [
+    "src/assets/art/faces/gemini/hero/*",
+    "src/assets/art/icons/skills/*",
+    "src/assets/art/icons/nav/*",
+]
 
-def preload_list(files: list[tuple[Path, str]]) -> list[str]:
-    """Paths relative to src/ (what the page fetches as ./<path>)."""
-    return [rel[len("src/"):] for _, rel in files
-            if rel.startswith("src/assets/art/") and Path(rel).suffix.lower() in ART_EXT
-            and not any(fnmatch.fnmatchcase(rel, p) for p in PRELOAD_SKIP)]
+
+def preload_list(files: list[tuple[Path, str]]) -> dict[str, list[str]]:
+    """{"first": [...], "rest": [...]} — paths relative to src/ (what the page fetches as ./<path>)."""
+    out: dict[str, list[str]] = {"first": [], "rest": []}
+    for _, rel in files:
+        if rel.startswith("src/assets/art/") and Path(rel).suffix.lower() in ART_EXT \
+                and not any(fnmatch.fnmatchcase(rel, p) for p in PRELOAD_SKIP):
+            first = any(fnmatch.fnmatchcase(rel, p) for p in PRELOAD_FIRST)
+            out["first" if first else "rest"].append(rel[len("src/"):])
+    return out
 
 
 def plan(with_dev: bool) -> list[tuple[Path, str]]:
@@ -381,7 +395,7 @@ def main(argv: list[str]) -> int:
         build_file(src, out / rel, stats)
     pre = preload_list(files)
     put(out / "src/assets/art/preload.json", json.dumps(pre, separators=(",", ":")))
-    print(f"preload {len(pre):5d} images -> src/assets/art/preload.json")
+    print(f"preload {len(pre['first']):5d} first + {len(pre['rest'])} rest images -> src/assets/art/preload.json")
     (out / ".nojekyll").write_text("", encoding="utf-8")
     for kind in sorted(stats):
         n, a, b = stats[kind]

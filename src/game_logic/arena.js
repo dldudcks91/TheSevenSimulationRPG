@@ -200,7 +200,7 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
         h.mastery = {};
         while ((h.masteryPoints ?? 0) > 0) {
             const open = nodes.filter(n => n.unlockLevel <= h.level && (h.mastery[n.id] ?? 0) < n.maxRank
-                && hero.masteryRowUsed(h, n) < B.mastery_row_points && hero.gateOn(n, gear, h));
+                && hero.masteryRowUsed(h, n) < B.mastery_row_points && !hero.masteryPickOneBlocked(h, n) && hero.gateOn(n, gear, h));
             if (!open.length) break;
             const n = open[pickIndex(rng, open.map(x => (x.treeKind === main ? B.arena_ai_main_tree_weight : 1)
                 * ((h.mastery[x.id] ?? 0) > 0 ? B.arena_ai_continue_weight : 1)))];
@@ -436,6 +436,8 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
                 else { spent += r; const k = hero.masteryRowKey(n); rowSum[k] = (rowSum[k] ?? 0) + r; }
             }
             for (const [k, s] of Object.entries(rowSum)) if (s > B.mastery_row_points) bad('mastery', i, { detail: `${k} ${s}/${B.mastery_row_points}` });
+            // 셋 중 하나(4단 · R437) — 4단 줄에 두 칸 이상 찍힌 팀은 받지 않는다
+            for (const [id, r] of Object.entries(h.mastery ?? {})) { const n = nodes.get(id); if (n && r > 0 && hero.masteryPickOneBlocked(h, n)) bad('mastery', i, { detail: `${id} pickOne` }); }
             if (spent > masteryBudget(h.level)) bad('masteryPoints', i, { detail: `${spent}/${masteryBudget(h.level)}` });
             // 스킬 — 고유는 그 직업 풀 · 책은 책이 되는 스킬이고 책 레벨 이상 · 업그레이드는 고유 · 배운 칸만
             if (!(classSkills[h.cls] ?? []).includes(h.innate)) bad('innate', i);

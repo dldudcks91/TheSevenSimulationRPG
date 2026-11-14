@@ -71,6 +71,63 @@ export function t(key, params) {
 /* ═══════════════════ 사전 ═══════════════════ */
 
 const STRINGS = {
+    'mobile.menu': { ko: '전체 메뉴', en: 'All menus' },
+    'mobile.more': { ko: '메뉴', en: 'Menu' },
+    'mobile.close': { ko: '메뉴 닫기', en: 'Close menu' },
+    'mobile.navigation': { ko: '빠른 이동', en: 'Quick navigation' },
+    'mobile.inventory': { ko: '가방 함께 보기', en: 'Show inventory' },
+    'mobile.battleDetails': { ko: '두 팀 전투 통계 보기', en: 'Show both teams’ statistics' },
+    'mobile.battleTools': { ko: '전투 도구와 통계', en: 'Battle tools and statistics' },
+    'mobile.battle': { ko: '전장 크게 보기', en: 'Expand battlefield' },
+    'mobile.sections': { ko: '화면 기능', en: 'Screen sections' },
+    'mobile.swipe.position': { ko: '밀어서 보기 · {n}/{total}', en: 'Swipe · {n}/{total}' },
+    'mobile.swipe.help': { ko: '본문을 좌우로 밀어 넘기거나 위의 항목을 누르세요.', en: 'Swipe the content left or right, or select a section above.' },
+    'mobile.swipe.edge': { ko: '마지막 화면', en: 'End of pages' },
+    'mobile.swipe.first': { ko: '처음 화면', en: 'First page' },
+    'mobile.page.gear': { ko: '장비', en: 'Gear' },
+    'mobile.page.basic': { ko: '능력치', en: 'Stats' },
+    'mobile.page.detail1': { ko: '상세 1', en: 'Detail 1' },
+    'mobile.page.detail2': { ko: '상세 2', en: 'Detail 2' },
+    'mobile.page.stash': { ko: '창고', en: 'Stash' },
+    'mobile.page.bag': { ko: '가방', en: 'Bag' },
+    'mobile.page.formation': { ko: '진형', en: 'Formation' },
+    'mobile.page.potions': { ko: '물약', en: 'Potions' },
+    'mobile.page.tactics': { ko: '전술', en: 'Tactics' },
+    'mobile.page.town': { ko: '부지', en: 'Town' },
+    'mobile.page.building': { ko: '건물 상세', en: 'Building' },
+    'mobile.page.hire': { ko: '고용', en: 'Hire' },
+    'mobile.page.search': { ko: '수색', en: 'Search' },
+    'mobile.page.quests': { ko: '의뢰', en: 'Quests' },
+    'mobile.page.gamble': { ko: '도박장', en: 'Casino' },
+    'mobile.page.buy': { ko: '구매', en: 'Buy' },
+    'mobile.page.sell': { ko: '판매', en: 'Sell' },
+    'mobile.page.trade': { ko: '교역', en: 'Trade' },
+    'mobile.page.merchant': { ko: '상단', en: 'Merchant' },
+    'mobile.page.work': { ko: '작업', en: 'Workshop' },
+    'mobile.page.advance': { ko: '전직', en: 'Advance' },
+    'mobile.page.upgrade': { ko: '업그레이드', en: 'Upgrade' },
+    'mobile.page.temper': { ko: '담금질', en: 'Temper' },
+    'mobile.page.books': { ko: '책 제작', en: 'Books' },
+    'mobile.page.research': { ko: '연구판', en: 'Research' },
+    'mobile.page.researchDetail': { ko: '연구 상세', en: 'Details' },
+    'mobile.page.opponent': { ko: '상대 선택', en: 'Opponent' },
+    'mobile.page.prepare': { ko: '출전 준비', en: 'Prepare' },
+    'mobile.page.generate': { ko: '조건', en: 'Generate' },
+    'mobile.page.result': { ko: '결과', en: 'Result' },
+    'mobile.page.battle': { ko: '전장으로', en: 'Back to battle' },
+    'mobile.page.hero1': { ko: '영웅 I', en: 'Hero I' },
+    'mobile.page.hero2': { ko: '영웅 II', en: 'Hero II' },
+    'mobile.page.hero3': { ko: '영웅 III', en: 'Hero III' },
+    'mobile.page.guide': { ko: '안내', en: 'Guide' },
+    'mobile.page.skills': { ko: '스킬', en: 'Skills' },
+    'mobile.page.field': { ko: '전장', en: 'Battle' },
+    'mobile.page.setup': { ko: '설정', en: 'Setup' },
+    'mobile.page.log': { ko: '기록', en: 'Log' },
+    'mobile.page.reports': { ko: '원정 기록', en: 'Runs' },
+    'mobile.page.reportDetail': { ko: '전투 결과', en: 'Results' },
+    'mobile.page.party1': { ko: '부대 I', en: 'Party I' },
+    'mobile.page.party2': { ko: '부대 II', en: 'Party II' },
+    'mobile.page.party3': { ko: '부대 III', en: 'Party III' },
     'nav.raid': { ko: '레이드', en: 'Raid' },
     'raid.eyebrow': { ko: 'RAID · 분노의 전장', en: 'RAID · FIELD OF WRATH' },
     'raid.trial': { ko: '전투 연습 · 보상 없음', en: 'Combat trial · No rewards' },
@@ -168,7 +225,6 @@ const STRINGS = {
     'hint.inventory': { ko: '보유한 아이템을 확인하고 장착하거나 정리합니다. 아이템에 마우스를 올리면 자세히 볼 수 있습니다.', en: 'Inspect, equip and manage owned items. Hover an item for details.' },
     'hint.stash': { ko: '따로 보관할 아이템을 두는 곳입니다. 아이템을 가방과 보관함 사이로 옮길 수 있습니다.', en: 'A place to set items aside. Move items between the bag and stash.' },
     'hint.skill_slots': { ko: '스킬을 얻은 경로별 사용 칸입니다. 빈 칸에는 스킬을 여는 조건이 표시됩니다.', en: 'Skill slots grouped by how the skills are learned. Empty slots show their unlock requirements.' },
-    'hint.skill_tree': { ko: '선택한 영웅의 스킬을 배우고 강화합니다. 각 칸에서 효과와 필요한 포인트를 확인하세요.', en: 'Learn and improve the selected hero’s skills. Inspect each node’s effects and required points.' },
     'hint.skill_points': { ko: '스킬을 배우고 강화하는 데 쓰는 포인트입니다. 배분할 트리와 남은 포인트를 확인하세요.', en: 'Points used to learn and improve skills. Check the available trees and remaining points.' },
     'hint.construction': { ko: '건물을 골라 랭크를 올리면 새 기능과 상한이 열립니다. 상세에서 비용과 조건을 확인하세요.', en: 'Select buildings and raise their ranks to unlock features and limits. Check costs and requirements in the details.' },
     'hint.building': { ko: '이 건물이 연 기능과 다음 랭크 정보를 확인합니다. 건설하려면 표시된 조건과 재료가 필요합니다.', en: 'Review this building’s unlocked features and next rank. Construction requires the listed conditions and materials.' },
@@ -192,11 +248,11 @@ const STRINGS = {
     'hint.forge_up': { ko: '장비를 골라 강화합니다. 다음 단계의 변화와 필요한 재료를 확인한 뒤 진행하세요.', en: 'Select equipment to upgrade. Review the next step’s changes and required materials.' },
     'hint.forge_synth': { ko: '같은 종류의 아래 단계 재료를 써서 위 단계 재료를 만듭니다. 합성에 쓴 재료는 소모됩니다.', en: 'Combine lower-tier materials into a higher tier of the same material. Combining consumes the input materials.' },
     'hint.forge_craft': { ko: '크래프트는 준비 중입니다. 현재는 제작·강화·합성을 이용할 수 있습니다.', en: 'Craft is in development. Smithing, upgrading and combining are currently available.' },
+    'hint.temper': { ko: '재료를 걸고 돌리면 다음 강화 한 번의 성공 확률이 오릅니다.', en: 'Stake materials and spin to raise the success chance of your next upgrade.' },
     'hint.potion_stock': { ko: '현재 가진 물약의 종류와 개수입니다. 편성 탭에서 Party의 물약 칸에 넣을 수 있습니다.', en: 'Potion types and quantities currently in stock. Configure each Party’s potion belt in Party.' },
     'hint.trade': { ko: '받을 최하급 재료를 선택한 뒤 다른 재료 또는 골드로 구매합니다. 지불 수단별 가격과 보유량을 확인할 수 있습니다.', en: 'Choose a lowest-grade material to receive, then buy it with another material or gold. Each payment option shows its cost and available stock.' },
     'hint.special': { ko: '특수 상단 기능은 준비 중입니다.', en: 'The special trader is in development.' },
     'hint.help': { ko: '폴더를 고르거나 궁금한 말을 검색해 조작법과 게임 규칙을 찾아봅니다.', en: 'Choose a folder or search a term to find controls and game rules.' },
-    'hint.codex': { ko: '몬스터·아이템·스킬 자료를 살펴봅니다. 각 항목에 마우스를 올리면 자세한 정보를 볼 수 있습니다.', en: 'Browse monster, item and skill references. Hover entries for more information.' },
     'hint.settings': { ko: '그림체와 전투 연출 등 화면 설정을 조절합니다.', en: 'Adjust display preferences such as art style and battle effects.' },
     'hint.mail': { ko: '도착한 보상을 수령합니다. 받은 첨부물은 표시된 Party의 보유 아이템에 추가됩니다.', en: 'Claim delivered rewards. Attachments are added to the items of the indicated Party.' },
     'hint.dismiss': { ko: '선택한 영웅을 로스터에서 해고합니다. 확인 전에 대상 영웅을 다시 살펴보세요.', en: 'Dismiss the selected hero from the roster. Review the chosen hero before confirming.' },
@@ -485,8 +541,8 @@ const STRINGS = {
     'tutorial.laboratory.title': { ko: '연구소 둘러보기', en: 'Your laboratory' },
     'tutorial.laboratory.detail': { ko: '연구소에서는 시간에 따라 재료·골드·경험치·도안을 얻거나 영웅을 수색합니다. 줄 이름을 누르면 생산과 등록 효과를, 오른쪽 지점 그림을 누르면 연구를 봅니다. 잠긴 줄은 표시된 건물을 건설하거나 랭크를 올려 여세요.', en: 'Laboratory lines produce materials, gold, XP or blueprints, or search for heroes over time. Click a line name for its output and hero effects, or a node to research it. Build or upgrade the building shown on a locked line to open it.' },
     'tutorial.labRegistration.title': { ko: '연구소 영웅 등록', en: 'Assign laboratory heroes' },
-    'tutorial.labRegistration.detail': { ko: '강조된 [+]나 영웅 얼굴을 눌러 등록 창을 여세요. 등록한 영웅의 능력치가 이 줄의 생산·연구 효과를 더합니다. 원정과 겸직할 수 있고, 한 영웅은 한 줄에만 등록됩니다.', en: 'Click the highlighted [+] or hero portrait to assign heroes. Their stats improve that line’s production and research. Heroes can still go on expeditions; each hero can be assigned to one laboratory line at a time.' },
-    'tutorial.labRegistrationPick.detail': { ko: '영웅을 누르면 이 줄에 등록해 능력치에 따른 효과를 더합니다. 다른 줄의 영웅은 이곳으로 옮겨지고, 이 줄의 영웅을 다시 누르면 등록을 해제합니다. 등록해도 원정에 함께 참여할 수 있습니다.', en: 'Click a hero to assign them and add their stat effects to this line. Heroes assigned elsewhere move here; click a hero already on this line to unassign them. Assigned heroes can still join expeditions.' },
+    'tutorial.labRegistration.detail': { ko: '강조된 [+]나 영웅 얼굴을 눌러 등록 창을 여세요. 등록한 영웅 수와 능력치가 이 줄의 생산·연구 효과를 더합니다. 원정과 겸직할 수 있고, 한 영웅은 한 줄에만 등록됩니다.', en: 'Click the highlighted [+] or hero portrait to assign heroes. The number of assigned heroes and their stats improve that line’s production and research. Heroes can still go on expeditions; each hero can be assigned to one laboratory line at a time.' },
+    'tutorial.labRegistrationPick.detail': { ko: '이 줄에 둘 영웅을 고르고 [적용]을 누르세요. 다시 누르면 고르기가 풀리고, 다른 줄의 영웅을 고르면 이곳으로 옮겨집니다. 등록해도 원정에 함께 참여할 수 있습니다.', en: 'Select the heroes for this line, then press [Apply]. Click again to deselect; heroes from other lines move here. Assigned heroes can still join expeditions.' },
     'tutorial.labResearch.title': { ko: '지점 연구하기', en: 'Research a node' },
     'tutorial.labResearch.detail': { ko: '다음 레벨의 효과·비용·시간을 확인하고 [연구]를 누르세요. 연구소 전체에서 한 번에 하나만 진행하며, 시간이 지나면 자동으로 완료됩니다. [그만두기]를 누르면 낸 비용을 전부 돌려받습니다.', en: 'Check the next level’s effect, cost and duration, then press [Research]. The laboratory runs one research project at a time and completes it automatically. [Cancel] refunds the full cost.' },
     'nt.next': { ko: '다음 할 일', en: 'Next step' },
@@ -500,7 +556,6 @@ const STRINGS = {
     'nt.kind.mastery': { ko: '스킬 포인트 사용 가능', en: 'Skill points available' },
     'nt.mastery.detail': { ko: '{hero} · Lv.{level} · 사용 가능 {n}포인트', en: { one: '{hero} · Lv.{level} · {n} point available', other: '{hero} · Lv.{level} · {n} points available' } },
     'nt.guide.firstExpedition': { ko: '첫 원정 출발', en: 'Start your first expedition' },
-    'nt.guide.buildShop': { ko: '상단을 건설하세요', en: 'Build the Trading House' },
     'nt.guide.buildTavern': { ko: '선술집 건설 · 의뢰 게시판 개방', en: 'Build the Tavern · Unlock commissions' },
     'nt.guide.earnGold': { ko: '원정으로 건설 자금 마련', en: 'Earn building funds on an expedition' },
     'nt.guide.acceptCommission': { ko: '첫 의뢰 수락', en: 'Accept your first commission' },
@@ -630,18 +685,18 @@ const STRINGS = {
     'tv.hired': { ko: '{name} 고용', en: 'Hired {name}' },
     /* 수색 [2026-10-19 · SCREEN_DESIGN §8-1 · ADR-0671 — ~~수색 · 영웅 보내기 · 가입 희망~~ 대체] — 명단 셋째 칸(안내 · 고른 얼굴의 카드) · 오른쪽 열 2×2 */
     'tv.visit.h': { ko: '수색', en: 'Search' },
-    'tv.visit.spec': { ko: '{h}시간마다 한 명 · {n}칸', en: 'One every {h}h · {n} slots' },
-    'tv.visit.odds': { ko: '레어 {r}%', en: 'Rare {r}%' },
-    'tv.visit.next': { ko: '다음 도착까지 {t}', en: 'Next arrival in {t}' },
+    'tv.visit.lounge': { ko: '대기소', en: 'Waiting Room' },
     'tv.visit.full': { ko: '칸이 다 참 — 돌려보내야 새로 옴', en: 'Slots full — send someone away' },
-    'tv.visit.closed': { ko: '연구소에서 열림', en: 'Opened at the Laboratory' },
     'tv.visit.drop': { ko: '돌려보내기', en: 'Send away' },
     'tv.visit.dropped': { ko: '{name} 을(를) 돌려보냄', en: 'Sent {name} away' },
     'tv.visit.gone': { ko: '이미 칸에 없음', en: 'No longer here' },
     // 칸 띠 — 어떻게 왔나(출처 · `state.js:JOIN_SRC`). 찾아오는 방식이 늘면 한 줄씩 는다
-    'tv.visit.src.visit': { ko: '찾아옴', en: 'Visitor' },
+    'tv.visit.src.visit': { ko: '방문', en: 'Visitor' },
     'tv.visit.src.caravan': { ko: '마차', en: 'Caravan' },
     'tv.visit.src.tavern': { ko: '보관', en: 'Kept' },
+    // 안내 칸 = 수색 줄 등록 영웅 (SCREEN_DESIGN §8-1 · ADR-1125) — 이야기 문구는 `visit_story.csv` · 전직 상태 · 빈 줄
+    'tv.visit.away.advance': { ko: '도서관에서 전직하는 중...', en: 'Advancing at the library...' },
+    'tv.visit.reg.add': { ko: '연구소에서 등록', en: 'Assign in the Laboratory' },
     /* ── 시간 표기 ── */
     'time.hm': { ko: '{h}시간 {m}분', en: '{h}h {m}m' },
     'time.m': { ko: '{m}분', en: '{m}m' },
@@ -815,6 +870,22 @@ const STRINGS = {
     // 설정 탭의 하위 탭 셋 (2026-11-12 · SCREEN_DESIGN §2-2 · ADR-1050)
     'set.pane.game': { ko: '게임', en: 'Game' },
     'set.pane.screen': { ko: '화면', en: 'Display' },
+    'set.layout': { ko: '화면 배치', en: 'Screen layout' },
+    'set.layout.auto': { ko: '자동', en: 'Auto' },
+    'set.layout.desktop': { ko: 'PC', en: 'PC' },
+    'set.layout.mobile': { ko: '모바일', en: 'Mobile' },
+    'set.layout.preview': { ko: '모바일 미리보기 · 390 × 844 · 세로 고정', en: 'Mobile preview · 390 × 844 · Fixed portrait' },
+    'mobile.chapter': { ko: '챕터', en: 'Chapter' },
+    'mobile.party': { ko: '부대', en: 'Party' },
+    'mobile.selection': { ko: '선택', en: 'Selection' },
+    'mobile.freeSlots': { ko: '빈자리 {n}', en: '{n} free' },
+    'mobile.page.cards': { ko: '전술 카드', en: 'Cards' },
+    'mobile.page.bonuses': { ko: '추가 효과', en: 'Bonuses' },
+    'mobile.page.ranks': { ko: '랭크 목록', en: 'Ranks' },
+    'mobile.page.levels': { ko: '레벨 목록', en: 'Levels' },
+    'mobile.page.researchAction': { ko: '연구', en: 'Research' },
+    'mobile.page.production': { ko: '생산 현황', en: 'Production' },
+    'mobile.page.registration': { ko: '영웅 등록', en: 'Heroes' },
     'set.pane.fx': { ko: '연출', en: 'Effects' },
     'set.skillFx': { ko: '스킬 이펙트', en: 'Skill Effects' },
     'set.fxArt': { ko: '이펙트 그림체', en: 'Effect Style' },   // 관전 스킬 이펙트의 그림체 — 버튼 글은 ix.fxs.* (2026-10-09 · ADR-0561)
@@ -887,8 +958,7 @@ const STRINGS = {
     'dp.out.h.train': { ko: '훈련 상한', en: 'Training Cap' },
     'dp.out.h.gamble': { ko: '시간당 생산', en: 'Per Hour' },
     'dp.out.h.lib': { ko: '영웅별 시간당 도안', en: 'Blueprints per Hero per Hour' },
-    'dp.out.interval': { ko: '도착 간격', en: 'Interval' },
-    'dp.out.hours': { ko: '{h}시간', en: '{h}h' },
+    'dp.out.hero': { ko: '영웅', en: 'Heroes' },
     'dp.out.rare': { ko: '레어 확률', en: 'Rare chance' },
     'dp.out.waiting': { ko: '대기 칸', en: 'Waiting slots' },
     'dp.out.cap': { ko: '상한 레벨', en: 'Level cap' },
@@ -904,15 +974,18 @@ const STRINGS = {
     'dp.fx.quality': { ko: '레어 확률', en: 'Rare chance' },
     'dp.fx.research': { ko: '연구 속도', en: 'Research speed' },
     'dp.fx.cost': { ko: '연구 비용', en: 'Research cost' },
+    // 인원 줄 — 자원 · 도박장만 · 가운데 칸 = 등록한 수 (ADR-1132)
+    'dp.fx.heads': { ko: '인원', en: 'Heroes' },
+    'dp.fx.headsN': { ko: '{n}명', en: '{n} registered' },
     // 도움말 연구소 섹션 (SCREEN_DESIGN §12 · 2026-10-21 R298 — ~~벤치(파견 대기)~~ 문장 대체) — 탐험 `ex.help` · 시련의 탑 `cs.help` 와 같은 도움말 전용 문장
     'dp.help': {
         ko: '줄은 <b>영웅이 없어도</b> 시간마다 생산합니다 — 게임을 꺼 둔 동안에도(최대 {h}시간 · 수색은 칸이 찰 때까지)<br>'
             + '지점을 골라 <b>연구</b>하면 레벨이 오릅니다 — 시간이 걸리고 연구소 전체에 <b>한 번에 하나</b> · 그만두면 비용을 전부 돌려받습니다 · 연구소 랭크가 새 지점을 엽니다<br>'
-            + '영웅을 줄에 <b>등록</b>하면 능력치가 그 줄에 효과를 줍니다 — 힘 속도 · 운 대박 · 지능 연구 시간 · 매력 품질 · 건강 숙련(오래 등록할수록) · 통솔 같은 줄 동료 · 민첩 연구 비용. 등록은 원정 · 탐험과 겸합니다<br>'
+            + '영웅을 줄에 <b>등록</b>하면 자원 · 도박장은 <b>한 명마다 기본 한 몫</b>이 더해지고(1명 2배 · 2명 3배 · 3명 4배) 수색은 <b>영웅마다 시계가 하나씩</b> 더 돌며, 능력치가 덤을 줍니다 — 힘 속도 · 운 대박 · 지능 연구 시간 · 매력 품질 · 건강 숙련(오래 등록할수록) · 통솔 같은 줄 동료 · 민첩 연구 비용. 등록은 원정 · 탐험과 겸합니다<br>'
             + '<b>훈련</b> 줄은 등록한 영웅이 경험치를 받습니다(로스터 최고 레벨까지) · <b>도박장</b> 줄은 선술집의 도박장이 열리면 같이 열립니다',
         en: 'Lines produce over time <b>without heroes</b> — even while the game is closed (up to {h}h · Search until the slots fill)<br>'
             + 'Pick a node and <b>Research</b> it to raise its level — it takes time and the Laboratory runs <b>one at a time</b> · cancelling refunds the full cost · Laboratory rank opens new nodes<br>'
-            + 'Heroes <b>assigned</b> to a line lend it their stats — Strength speed · Luck jackpot · Intelligence research time · Charisma quality · Vitality mastery (the longer assigned) · Leadership peers on the line · Agility research cost. Assignment does not stop expeditions or exploring<br>'
+            + 'Each hero <b>assigned</b> to Resources or the Gambling Den adds <b>one more share of the base</b> (1 hero ×2 · 2 ×3 · 3 ×4), each hero on Search runs <b>a clock of their own</b>, and stats add a bonus on top — Strength speed · Luck jackpot · Intelligence research time · Charisma quality · Vitality mastery (the longer assigned) · Leadership peers on the line · Agility research cost. Assignment does not stop expeditions or exploring<br>'
             + 'The <b>Training</b> line gives XP to its assigned heroes (up to the roster\'s top level) · the <b>Gambling Den</b> line opens along with the Tavern\'s Gambling Den',
     },
     'dp.solo': { ko: '1인', en: 'Solo' },
@@ -954,7 +1027,7 @@ const STRINGS = {
     'td.reroll.help': { ko: '교체하면 고른 영웅 레벨에 맞춰 다시 들어옵니다. 교체는 무료이며 {h}시간마다 가능합니다.', en: 'A refresh restocks at the selected hero\'s level. Refreshing is free and available every {h} hours.' },
     'td.special': { ko: '특수상단', en: 'Visiting trader' },
     'td.trade': { ko: '교역소', en: 'Trading Post' },
-    'td.trade.cost': { ko: '필요 {cost} · 보유 {have}', en: 'Cost {cost} · Owned {have}' },
+    'td.trade.cost': { ko: '보유 {have} · 필요 {cost}', en: 'Owned {have} · Cost {cost}' },
     'td.trade.buy': { ko: '{pay}(으)로 {name} 구매', en: 'Buy {name} with {pay}' },
     'td.trade.bought': { ko: '{name} ×{n} 구매 (−{pay} ×{cost})', en: 'Bought {name} ×{n} (−{pay} ×{cost})' },
     'td.trade.boughtGold': { ko: '{name} ×{n} 구매 (−{cost} G)', en: 'Bought {name} ×{n} (−{cost} G)' },
@@ -996,25 +1069,26 @@ const STRINGS = {
     'cm.slots': { ko: '받음 {n} / {max}', en: 'Taken {n} / {max}' },
     'cm.fameLv': { ko: '명성 Lv {lv}', en: 'Fame Lv {lv}' },
     'cm.fameMax': { ko: '최고', en: 'Max' },
-    'cm.goal.kill.any': { ko: '몬스터 {n}마리', en: { one: '{n} monster', other: '{n} monsters' } },
-    'cm.goal.kill.chapter': { ko: '{t}의 몬스터 {n}마리', en: { one: '{n} monster in the {t}', other: '{n} monsters in the {t}' } },
-    'cm.goal.kill.race': { ko: '{t} 종족 {n}마리', en: { one: '{n} {t} foe', other: '{n} {t} foes' } },
-    'cm.goal.kill.place': { ko: '{t}의 몬스터 {n}마리', en: { one: '{n} monster at {t}', other: '{n} monsters at {t}' } },
-    'cm.goal.kill.monster': { ko: '{t} {n}마리', en: '{t} ×{n}' },
-    'cm.goal.kill.grade.elite': { ko: '정예 {n}마리', en: { one: '{n} elite', other: '{n} elites' } },
-    'cm.goal.kill.grade.boss': { ko: '보스 {n}마리', en: { one: '{n} boss', other: '{n} bosses' } },
-    'cm.goal.elite.any': { ko: '정예 {n}마리', en: { one: '{n} elite', other: '{n} elites' } },
-    'cm.goal.elite.chapter': { ko: '{t}의 정예 {n}마리', en: { one: '{n} elite in the {t}', other: '{n} elites in the {t}' } },
-    'cm.goal.elite.place': { ko: '{t}의 정예 {n}마리', en: { one: '{n} elite at {t}', other: '{n} elites at {t}' } },
+    // 목표 문장 = 퀘스트 목표 — 미션이 동사로 든다(처치 · 분해 · 획득 · 강화 · 제작) · 카드 첫 줄에 미션 이름이 없다 [2026-11-14 사용자 「미션이름을 빼라고 … 아래설명에쓰고」 · 「rpg처럼」 · ADR-1083]
+    'cm.goal.kill.any': { ko: '몬스터 {n}마리 처치', en: { one: 'Slay {n} monster', other: 'Slay {n} monsters' } },
+    'cm.goal.kill.chapter': { ko: '{t}에서 몬스터 {n}마리 처치', en: { one: 'Slay {n} monster in the {t}', other: 'Slay {n} monsters in the {t}' } },
+    'cm.goal.kill.race': { ko: '{t} 종족 {n}마리 처치', en: { one: 'Slay {n} {t} foe', other: 'Slay {n} {t} foes' } },
+    'cm.goal.kill.place': { ko: '{t}에서 몬스터 {n}마리 처치', en: { one: 'Slay {n} monster at {t}', other: 'Slay {n} monsters at {t}' } },
+    'cm.goal.kill.monster': { ko: '{t} {n}마리 처치', en: 'Slay {t} ×{n}' },
+    'cm.goal.kill.grade.elite': { ko: '정예 몬스터 {n}마리 처치', en: { one: 'Slay {n} elite monster', other: 'Slay {n} elite monsters' } },
+    'cm.goal.kill.grade.boss': { ko: '보스 {n}마리 처치', en: { one: 'Slay {n} boss', other: 'Slay {n} bosses' } },
+    'cm.goal.elite.any': { ko: '정예 몬스터 {n}마리 처치', en: { one: 'Slay {n} elite monster', other: 'Slay {n} elite monsters' } },
+    'cm.goal.elite.chapter': { ko: '{t}에서 정예 몬스터 {n}마리 처치', en: { one: 'Slay {n} elite monster in the {t}', other: 'Slay {n} elite monsters in the {t}' } },
+    'cm.goal.elite.place': { ko: '{t}에서 정예 몬스터 {n}마리 처치', en: { one: 'Slay {n} elite monster at {t}', other: 'Slay {n} elite monsters at {t}' } },
     'cm.goal.salvage.any': { ko: '장비 {n}개 분해', en: { one: 'Salvage {n} item', other: 'Salvage {n} items' } },
     'cm.goal.salvage.part': { ko: '{t} {n}개 분해', en: 'Salvage {t} ×{n}' },
     'cm.goal.salvage.rarity_min': { ko: '{t} 이상 장비 {n}개 분해', en: { one: 'Salvage {n} {t}+ item', other: 'Salvage {n} {t}+ items' } },
-    'cm.goal.material.any': { ko: '재료 {n}개', en: { one: '{n} material', other: '{n} materials' } },
-    'cm.goal.material.mat': { ko: '{t} {n}개', en: '{t} ×{n}' },
-    'cm.goal.upgrade.any': { ko: '강화 {n}번', en: { one: 'Enhance {n} time', other: 'Enhance {n} times' } },
-    'cm.goal.upgrade.up_min': { ko: '+{t} 이상으로 강화 {n}번', en: { one: 'Enhance to +{t} or higher {n} time', other: 'Enhance to +{t} or higher {n} times' } },
-    'cm.goal.craft.any': { ko: '장비 제작 {n}개', en: { one: 'Craft {n} item', other: 'Craft {n} items' } },
-    'cm.goal.collect.rarity': { ko: '{t} 장비 {n}개', en: { one: '{n} {t} item', other: '{n} {t} items' } },
+    'cm.goal.material.any': { ko: '재료 {n}개 획득', en: { one: 'Gather {n} material', other: 'Gather {n} materials' } },
+    'cm.goal.material.mat': { ko: '{t} {n}개 획득', en: 'Gather {t} ×{n}' },
+    'cm.goal.upgrade.any': { ko: '장비 강화 {n}회', en: { one: 'Enhance gear {n} time', other: 'Enhance gear {n} times' } },
+    'cm.goal.upgrade.up_min': { ko: '+{t} 이상 강화 {n}회', en: { one: 'Enhance to +{t} or higher {n} time', other: 'Enhance to +{t} or higher {n} times' } },
+    'cm.goal.craft.any': { ko: '장비 {n}개 제작', en: { one: 'Craft {n} item', other: 'Craft {n} items' } },
+    'cm.goal.collect.rarity': { ko: '{t} 장비 {n}개 획득', en: { one: 'Collect {n} {t} item', other: 'Collect {n} {t} items' } },
     'cm.part.weapon': { ko: '무기', en: 'Weapon' },
     'cm.part.armor': { ko: '방어구', en: 'Armor' },
     'cm.part.accessory': { ko: '장신구', en: 'Accessory' },
@@ -1039,6 +1113,8 @@ const STRINGS = {
     'gb.hold': { ko: '홀드 앤 스핀', en: 'Hold & Spin' },
     'gb.respins': { ko: '리스핀 {n}', en: 'Respins {n}' },
     'gb.jpN': { ko: '{name} ×{n}', en: '{name} ×{n}' },   // 받은 잭팟이 둘 이상 — 계기판 표지 (ADR-0609)
+    'gb.spinOf': { ko: '{k} / {n}판', en: 'Spin {k} / {n}' },   // n판 돌리기를 재생하는 동안 계기판 표지 맨 앞 (ADR-1147)
+    'gb.skip': { ko: '건너뛰기', en: 'Skip' },                 // n판 돌리기 재생 중 [n판 돌리기] 자리 — 합계로 간다 (ADR-1147)
     'gb.pay.h': { ko: '배당표', en: 'Paytable' },
     'gb.pay.hold': { ko: '코인 {n}개 이상 → 홀드 앤 스핀', en: '{n}+ coins → Hold & Spin' },
     'gb.pay.fill': { ko: '판이 다 차면', en: 'Full board' },
@@ -1072,6 +1148,15 @@ const STRINGS = {
     // 강화 성공 확률 · 실패 [2026-10-14 · R253 · ADR-0626] — 확률 칩(비용 칩 앞) · 실패 플래시 · 연출의 실패 표지
     'fg.chanceLab': { ko: '성공 확률', en: 'Success chance' },   // 강화 작업 칸 비교 줄 아래 「이름 · 값」 줄 (ADR-0973 · ~~`fg.chance` 칩~~)
     'fg.upFail': { ko: '강화 실패 · +{n} 그대로 · {g}G', en: 'Upgrade failed · still +{n} · {g}G' },
+    // 담금질 — 강화 칸 가운데 슬롯 (SCREEN_DESIGN §8-2 · ADR-1134 · R486)
+    'fg.temper': { ko: '담금질', en: 'Tempering' },
+    'fg.board.gear': { ko: '장비', en: 'Equipment' },   // 강화 칸 왼쪽 판 제목 띠 (ADR-1140)
+    'fg.board.up': { ko: '강화', en: 'Upgrade' },   // 강화 칸 오른쪽 판 제목 띠 (ADR-1140)
+    'fg.temper.go': { ko: '담금질', en: 'Temper' },
+    'fg.temper.done': { ko: '담금질됨', en: 'Tempered' },
+    'fg.tempered': { ko: '담금질 · 다음 강화 확률 +{n}%', en: 'Tempered · next upgrade chance +{n}%' },
+    'fg.err.tempered': { ko: '이미 담금질했다 · 강화하면 다시 할 수 있다', en: 'Already tempered · upgrade first' },
+    'fg.err.tier': { ko: '없는 판돈 단계', en: 'Unknown stake tier' },
     'fg.failMark': { ko: '실패', en: 'Failed' },
     'fg.pick': { ko: '장비 선택', en: 'Pick an item' },   // 장비칸 · 아이템창 어디서든 고른다 (ADR-0364)
     'fg.noBase': { ko: '강화 없음', en: 'No upgrade' },
@@ -1354,8 +1439,8 @@ const STRINGS = {
         en: "Changing a preset during an expedition",
     },
     'help.party.changes.body': {
-        ko: "원정 중 편성 인원·진형·물약·전술을 바꿔도 진행 중인 부대에는 출발 당시 구성이 유지됩니다. 승리 후 자동 출정도 그 구성을 이어 쓰므로, 새 구성을 쓰려면 철수한 뒤 다시 보냅니다.<br><br>패배 후 자동 재도전은 변경한 편성으로 출발할 수 있을 때 현재 편성을 반영합니다. 단, 원정 중 장비를 바꾸면 출발 때 켜진 전술의 장비 죄종 몫은 그 순간부터 달라집니다. 탐험 중인 편성의 명단은 귀환까지 바꿀 수 없습니다.",
-        en: "Changing members, formation, potions or rolled tactics does not replace an active party's departure configuration. Automatic departures after wins keep that configuration; retreat and deploy again to use your changes.<br><br>Retries after defeats use the current preset when it can depart. However, changing equipment mid-run changes the gear Sin share of tactics active at departure from that moment. The roster of an exploring preset stays locked until it returns.",
+        ko: "원정 중인 편성은 명단이 잠겨 영웅을 넣고 빼거나 리더를 바꾸거나 다른 편성으로 옮길 수 없습니다. 철수하면 풀립니다. 진형·물약·전술은 원정 중에도 바꿀 수 있지만, 진행 중인 부대에는 출발 당시 구성이 유지됩니다. 승리 후 자동 출정도 그 구성을 이어 쓰므로, 새 구성을 쓰려면 철수한 뒤 다시 보냅니다.<br><br>패배 후 자동 재도전은 변경한 편성으로 출발할 수 있을 때 현재 편성을 반영합니다. 단, 원정 중 장비를 바꾸면 출발 때 켜진 전술의 장비 죄종 몫은 그 순간부터 달라집니다. 탐험 중인 편성의 명단도 귀환까지 바꿀 수 없습니다.",
+        en: "A preset on an expedition has a locked roster: you cannot add or remove heroes, change its leader or move its heroes to another preset until you retreat. Formation, potions and rolled tactics can still be changed, but they do not replace an active party's departure configuration. Automatic departures after wins keep that configuration; retreat and deploy again to use your changes.<br><br>Retries after defeats use the current preset when it can depart. However, changing equipment mid-run changes the gear Sin share of tactics active at departure from that moment. The roster of an exploring preset also stays locked until it returns.",
     },
     'help.character.identity.title': {
         ko: "직업·죄종·등급·고유 스킬",
@@ -1546,8 +1631,8 @@ const STRINGS = {
         en: "The first town unlocks",
     },
     'help.research.first_steps.body': {
-        ko: "초반 첫 건설은 <b>상단 → 선술집 → 대장간 → 창고 → 지휘 천막</b> 순서로 열립니다. 앞 건물을 지으면 다음 건물의 건설 조건이 갖춰집니다. 필요한 골드는 원정을 진행하고 의뢰를 수령해 마련할 수 있습니다.<br><br>선술집은 <b>의뢰 게시판을 먼저</b> 열며, 고용은 이후 랭크에서 열립니다. 창고를 지으면 연구소의 <b>자원 자동 생산</b>이 시작되고, 지휘 천막을 지으면 편성의 <b>첫 파티 전술 칸</b>이 열립니다. 인벤토리와 공용 창고 칸은 건설 전에도 사용할 수 있습니다.",
-        en: "The first buildings unlock in this order: <b>Trading House → Tavern → Blacksmith → Storage → Command Tent</b>. Each building satisfies the requirement for the next one. Expeditions and claimed commissions provide gold for construction.<br><br>The Tavern opens its <b>commission board first</b>; hiring unlocks at a later rank. Building Storage starts the Laboratory's <b>automatic material production</b>. Building the Command Tent opens the <b>first Party tactic slot</b>. Inventory and shared stash spaces can be used before Storage is built.",
+        ko: "초반 첫 건설은 <b>선술집 → 상단 → 대장간 → 창고 → 지휘 천막</b> 순서로 열립니다. 앞 건물을 지으면 다음 건물의 건설 조건이 갖춰집니다. 필요한 골드는 원정을 진행하고 의뢰를 수령해 마련할 수 있습니다.<br><br>선술집은 <b>의뢰 게시판을 먼저</b> 열며, 고용은 이후 랭크에서 열립니다. 창고를 지으면 연구소의 <b>자원 자동 생산</b>이 시작되고, 지휘 천막을 지으면 편성의 <b>첫 파티 전술 칸</b>이 열립니다. 인벤토리와 공용 창고 칸은 건설 전에도 사용할 수 있습니다.",
+        en: "The first buildings unlock in this order: <b>Tavern → Trading House → Blacksmith → Storage → Command Tent</b>. Each building satisfies the requirement for the next one. Expeditions and claimed commissions provide gold for construction.<br><br>The Tavern opens its <b>commission board first</b>; hiring unlocks at a later rank. Building Storage starts the Laboratory's <b>automatic material production</b>. Building the Command Tent opens the <b>first Party tactic slot</b>. Inventory and shared stash spaces can be used before Storage is built.",
     },
     'help.research.requirements.title': {
         ko: "건설 조건과 지불",
@@ -1594,8 +1679,8 @@ const STRINGS = {
         en: "Refreshing the recruit list",
     },
     'help.tavern.reroll.body': {
-        ko: "<b>[후보 교체 (무료)]</b>를 누르면 남아 있는 후보를 포함해 명단 전체가 바뀝니다. 시간이 지나도 후보는 저절로 바뀌지 않습니다. 교체 전에 남겨 둘 후보는 <b>[보관]</b>할 수 있습니다.<br><br>교체는 항상 무료입니다. 교체 뒤 <b>{refresh}시간</b>이 지나야 다시 교체할 수 있으며, 대기 중에는 버튼이 비활성화되고 남은 시간이 표시됩니다. 대기 시간은 오프라인에도 흐릅니다.",
-        en: "<b>New candidates (free)</b> replaces the entire recruit list, including candidates still present. Time never changes the list automatically. Use <b>Keep</b> before refreshing to save a candidate.<br><br>Refreshing is always free. After each refresh, wait <b>{refresh}h</b> before refreshing again. The button is disabled during the cooldown and shows the remaining time beside it. The cooldown continues offline.",
+        ko: "<b>[후보 교체 (무료)]</b>를 누르면 남아 있는 후보를 포함해 명단 전체가 바뀝니다. 시간이 지나도 후보는 저절로 바뀌지 않습니다. 교체 전에 남겨 둘 후보는 <b>[보관]</b>할 수 있습니다.<br><br>교체는 항상 무료입니다. 교체 뒤 <b>{refresh}분</b>이 지나야 다시 교체할 수 있으며, 대기 중에는 버튼이 비활성화되고 남은 시간이 표시됩니다. 대기 시간은 오프라인에도 흐릅니다.",
+        en: "<b>New candidates (free)</b> replaces the entire recruit list, including candidates still present. Time never changes the list automatically. Use <b>Keep</b> before refreshing to save a candidate.<br><br>Refreshing is always free. After each refresh, wait <b>{refresh} min</b> before refreshing again. The button is disabled during the cooldown and shows the remaining time beside it. The cooldown continues offline.",
     },
     'help.tavern.keep.title': {
         ko: "보관은 고용과 다릅니다",
@@ -1610,8 +1695,8 @@ const STRINGS = {
         en: "Heroes who arrive over time",
     },
     'help.tavern.visitors.body': {
-        ko: "연구소에서 <b>[수색 → 간격]</b>을 처음 연구해 완료하면 도착 시계가 시작됩니다. 영웅을 내보내지 않아도 후보가 찾아오며, 게임을 닫아도 시간이 흐릅니다. 이 수색으로는 현재 <b>매직 또는 레어</b> 영웅이 옵니다.<br><br>도착한 영웅은 고용하거나 돌려보낼 때까지 떠나지 않습니다. 수색 칸이 가득 찬 동안에는 시계가 멈추고, 자리를 비우면 남은 시간부터 다시 흐릅니다. 연구소에서 <b>간격</b>을 올리면 더 자주 오고, <b>품질</b>은 레어 확률, <b>대기 칸</b>은 보관할 수를 늘립니다.",
-        en: "Complete the first <b>Search → Interval</b> research in the Laboratory to start the arrival timer. Candidates arrive without sending a hero out, including while the game is closed. These arrivals currently produce <b>Magic or Rare</b> heroes.<br><br>Arrivals stay until hired or sent away. Full waiting slots pause the timer; freeing a slot resumes it from the remaining time. Laboratory <b>Interval</b> research makes arrivals more frequent, <b>Quality</b> raises the Rare chance, and <b>Waiting Slots</b> adds capacity.",
+        ko: "선술집에서 영웅 고용을 열면 도착 시계가 시작됩니다. 영웅을 내보내지 않아도 후보가 찾아오며, 게임을 닫아도 시간이 흐릅니다. 이 수색으로는 현재 <b>매직 또는 레어</b> 영웅이 옵니다.<br><br>도착한 영웅은 고용하거나 돌려보낼 때까지 떠나지 않습니다. 수색 칸이 가득 찬 동안에는 시계가 멈추고, 자리를 비우면 남은 시간부터 다시 흐릅니다. 연구소에서 <b>간격</b>을 올리면 더 자주 오고, <b>품질</b>은 레어 확률, <b>대기 칸</b>은 보관할 수를 늘립니다.",
+        en: "Unlocking hiring at the Tavern starts the arrival timer. Candidates arrive without sending a hero out, including while the game is closed. These arrivals currently produce <b>Magic or Rare</b> heroes.<br><br>Arrivals stay until hired or sent away. Full waiting slots pause the timer; freeing a slot resumes it from the remaining time. Laboratory <b>Interval</b> research makes arrivals more frequent, <b>Quality</b> raises the Rare chance, and <b>Waiting Slots</b> adds capacity.",
     },
     'help.tavern.commissions.title': {
         ko: "하던 원정에 의뢰를 얹기",
@@ -1770,11 +1855,11 @@ const STRINGS = {
         en: "Choosing an advancement path",
     },
     'help.library.advance.body': {
-        ko: "도서관에서 전직 기능을 열고 레벨 <b>{level}</b> 이상인 영웅을 고릅니다. 해당 직업의 세 갈래와 스킬을 비교한 뒤 하나를 선택하고 <b>[전직]</b>합니다. 현재 비용은 <b>{gold}G</b>이며 지불하면 즉시 완료됩니다.<br><br><b>전직 갈래 자체는 되돌릴 수 없습니다.</b> 같은 갈래 안에서 배운 전직 스킬을 바꾸는 것은 가능하지만 다른 갈래로 전직을 다시 하는 것은 불가능합니다. 원정 중에도 전직할 수 있고, 탐험 중에는 먼저 돌아와야 합니다.<br><br>전직을 마친 뒤에는 <b>캐릭터 → [마스터리 열기] → 전직 트리</b>에서 전직 스킬을 직접 배웁니다. 전직 버튼만 누른 상태와 전직 스킬을 배운 상태는 다릅니다.",
-        en: "Unlock advancement in the Library and select a hero of at least level <b>{level}</b>. Compare the class's three paths and their skills, choose one and press <b>Advance</b>. It currently costs <b>{gold}G</b> and completes immediately on payment.<br><br><b>The advancement path cannot be undone.</b> You can change the learned skill within that path, but cannot switch the hero to another path. Heroes can advance during Expeditions; those exploring must return first.<br><br>After advancing, go to <b>Character → Open Mastery → advancement tree</b> and learn an Advance skill. Completing advancement alone does not learn one automatically.",
+        ko: "도서관에서 영웅을 고르고 <b>[전직의 방]</b>을 엽니다. 왼쪽의 세 갈래와 역할 설명을 비교하고, 오른쪽의 <b>실제 마스터리 미리보기</b>에서 스킬을 선택하면 그 스킬의 강화 선택지도 확인할 수 있습니다. 미리보기는 재화나 포인트를 쓰지 않습니다.<br><br>전직 기능을 열고 레벨 <b>{level}</b> 이상이 되면 갈래를 선택하고 <b>[전직]</b>합니다. 비용은 <b>{gold}G</b>이며 현재는 즉시 완료됩니다. <b>전직 갈래는 변경할 수 없습니다.</b> 원정 중에도 전직할 수 있지만 탐험 중에는 먼저 돌아와야 합니다.<br><br>완료 후 같은 방이나 도서관 입구의 <b>[마스터리 열기]</b>에서 전직 스킬을 배우고 강화합니다. 전직만으로 스킬을 자동 학습하지는 않습니다. 같은 갈래 안에서는 스킬을 바꿀 수 있습니다.",
+        en: "Select a hero in the Library and open the <b>Chamber of Advancement</b>. Compare the three paths and their roles on the left. Select a skill in the <b>actual mastery preview</b> on the right to inspect its strengthening choices. Previewing spends no resources or points.<br><br>Unlock advancement and reach level <b>{level}</b>, then select a path and press <b>Advance</b>. The cost is <b>{gold}G</b> and advancement currently completes instantly. <b>The path cannot be changed.</b> Heroes can advance during Expeditions; those exploring must return first.<br><br>After completion, use <b>Open Mastery</b> in the chamber or Library to learn and improve an advancement skill. Advancement does not automatically teach a skill. Skills can be swapped within the chosen path.",
     },
     'help.library.points.title': { ko: "공용 스킬 포인트와 전직 트리", en: "Shared skill points and the Advancement Tree" },
-    'help.library.points.body': { ko: "영웅은 <b>레벨 1 부터 레벨마다 스킬 포인트</b>를 받습니다. 죄종·직업 마스터리와 전직 트리는 같은 포인트를 나누어 씁니다.<br><br>전직하면 갈래의 전직 스킬 셋 중 <b>하나</b>를 배웁니다 — 스킬 포인트를 쓰지 않습니다. 전직 트리에는 줄이 둘 있습니다. <b>공통 줄</b>은 갈래 전체에 닿고, <b>스킬 줄</b>(크기 · 변형 1 · 변형 2)은 배운 스킬에 닿습니다. 줄마다 칸 셋에 합 <b>{row}</b>까지 자유롭게 나눠 찍고, 한 칸에 {row}을 모두 넣으면 그 칸의 덤이 켜집니다.<br><br>칸을 우클릭하면 1랭크가, 배운 전직 스킬을 우클릭하면 스킬 줄 전체가 <b>공용 스킬 포인트로 환급</b>됩니다. 갈래와 전직 비용은 그대로입니다.", en: "Heroes earn <b>skill points at every level, starting at Lv1</b>. Sin mastery, Class mastery and the Advancement Tree share this pool.<br><br>After advancing, learn <b>one</b> of the path's three skills — it costs no skill points. The tree has two rows. The <b>common row</b> affects the whole path; the <b>skill row</b> (Power · Variant 1 · Variant 2) affects the learned skill. Split up to <b>{row}</b> ranks per row freely across its three cells; putting all {row} into one cell turns on its bonus.<br><br>Right-click a cell to refund one rank, or the learned skill to refund its whole skill row to the <b>shared skill-point pool</b>. The chosen path and gold cost remain." },
+    'help.library.points.body': { ko: "영웅은 <b>레벨 1 부터 레벨마다 스킬 포인트</b>를 받습니다. 죄종·직업 마스터리와 전직 트리는 같은 포인트를 나누어 씁니다.<br><br>전직하면 갈래의 전직 스킬 셋 중 <b>하나</b>를 배웁니다 — 스킬 포인트를 쓰지 않습니다. 전직 트리에는 줄이 둘 있습니다. <b>공통 줄</b>은 갈래 전체에 닿고, <b>스킬 줄</b>(크기 · 변형 1 · 변형 2)은 배운 스킬에 닿습니다. 줄마다 칸 셋에 합 <b>{row}</b>까지 자유롭게 나눠 찍고, 한 칸에 {row}을 모두 넣으면 그 칸의 덤이 켜집니다.<br><br>칸을 우클릭하면 1랭크가, 배운 전직 스킬을 우클릭하면 스킬 줄 전체가 <b>공용 스킬 포인트로 환급</b>됩니다. 다른 전직 스킬을 누르면 바로 갈아끼웁니다 — 스킬 줄은 환급되고 공통 줄은 그대로입니다. 갈래와 전직 비용은 그대로입니다.", en: "Heroes earn <b>skill points at every level, starting at Lv1</b>. Sin mastery, Class mastery and the Advancement Tree share this pool.<br><br>After advancing, learn <b>one</b> of the path's three skills — it costs no skill points. The tree has two rows. The <b>common row</b> affects the whole path; the <b>skill row</b> (Power · Variant 1 · Variant 2) affects the learned skill. Split up to <b>{row}</b> ranks per row freely across its three cells; putting all {row} into one cell turns on its bonus.<br><br>Right-click a cell to refund one rank, or the learned skill to refund its whole skill row to the <b>shared skill-point pool</b>. Click another advancement skill to swap to it — the skill row is refunded and the common row stays. The chosen path and gold cost remain." },
     'help.resource.lines.title': {
         ko: "줄 · 지점 · 랭크의 차이",
         en: "Lines, nodes and ranks",
@@ -1812,24 +1897,24 @@ const STRINGS = {
         en: "Hero assignment and the two slot types",
     },
     'help.resource.assignment.body': {
-        ko: "줄 카드의 영웅 얼굴이나 <b>+</b>를 누르면 등록 창이 열립니다. 영웅을 눌러 그 줄에 등록하고, 같은 영웅을 다시 누르면 해제합니다. 다른 줄에 등록된 영웅을 고르면 이 줄로 이동합니다. <b>한 영웅은 한 줄</b>에만 등록할 수 있습니다.<br><br>연구소 등록은 영웅을 붙잡지 않습니다. 등록한 채로 Party에 넣거나 원정·탐험·전직을 진행할 수 있습니다. 다만 훈련 경험치는 <b>훈련 줄에 등록한 영웅</b>만 받습니다.<br><br><b>등록 칸</b>은 연구소 줄에 효과를 보탤 내 영웅의 자리이며, 모든 줄의 칸 수가 같습니다. <b>대기 칸</b>은 선술집에서 고용을 기다리는 후보의 자리입니다. 새 후보를 더 보관하려면 수색 줄의 대기 칸 지점을 연구해야 합니다.",
-        en: "Select a line's hero portrait or <b>+</b> to open assignments. Click a hero to assign them and click them again to remove them. Selecting a hero assigned elsewhere moves them to this line. <b>Each hero can be assigned to only one line at a time</b>.<br><br>Assignment does not occupy the hero. They can stay assigned while joining a Party, fighting Expeditions, exploring or advancing. Training XP, however, goes only to <b>heroes assigned to Training</b>.<br><br><b>Seats</b> hold your heroes who boost a Laboratory line, and every line has the same number of seats. <b>Waiting Slots</b> hold candidate heroes awaiting hire in the Tavern. To keep more arriving candidates, research the Waiting Slots node on the Search line.",
+        ko: "줄 카드의 영웅 얼굴이나 <b>+</b>를 누르면 등록 창이 열립니다. 그 줄에 둘 영웅을 고르고 <b>[적용]</b>을 누르면 바뀝니다. 다시 누르면 고르기가 풀리고, 다른 줄에 등록된 영웅을 고르면 이 줄로 이동합니다. 옮기거나 빼면 쌓인 숙련과 수색 시계가 처음부터 다시 시작되며, 창 아래에 빨간 글씨로 표시됩니다. <b>한 영웅은 한 줄</b>에만 등록할 수 있습니다.<br><br>연구소 등록은 영웅을 붙잡지 않습니다. 등록한 채로 Party에 넣거나 원정·탐험·전직을 진행할 수 있습니다. 다만 훈련 경험치는 <b>훈련 줄에 등록한 영웅</b>만 받습니다.<br><br><b>등록 칸</b>은 연구소 줄에 효과를 보탤 내 영웅의 자리이며, 모든 줄의 칸 수가 같습니다. <b>대기 칸</b>은 선술집에서 고용을 기다리는 후보의 자리입니다. 새 후보를 더 보관하려면 수색 줄의 대기 칸 지점을 연구해야 합니다.",
+        en: "Select a line's hero portrait or <b>+</b> to open assignments. Select the heroes for this line and press <b>[Apply]</b>. Click again to deselect; selecting a hero assigned elsewhere moves them to this line. Moving or removing a hero restarts their Mastery and Search clock, shown in red at the bottom of the window. <b>Each hero can be assigned to only one line at a time</b>.<br><br>Assignment does not occupy the hero. They can stay assigned while joining a Party, fighting Expeditions, exploring or advancing. Training XP, however, goes only to <b>heroes assigned to Training</b>.<br><br><b>Seats</b> hold your heroes who boost a Laboratory line, and every line has the same number of seats. <b>Waiting Slots</b> hold candidate heroes awaiting hire in the Tavern. To keep more arriving candidates, research the Waiting Slots node on the Search line.",
     },
     'help.resource.hero_effects.title': {
         ko: "등록할 영웅을 고르는 기준",
         en: "Choosing heroes to assign",
     },
     'help.resource.hero_effects.body': {
-        ko: "<b>힘</b>은 그 줄의 생산·도착·훈련 속도를 높이고, <b>운</b>은 대박 지점이 있는 줄의 추가 지급 확률을 높입니다. <b>지능</b>은 그 줄의 연구 시간을 줄이며, <b>민첩</b>은 연구 비용을 줄입니다. <b>매력</b>은 수색의 레어 후보 확률을 높입니다.<br><br><b>건강</b>은 같은 줄에 오래 등록할수록 쌓이는 숙련 보너스를 키웁니다. <b>통솔</b>은 같은 줄의 다른 등록 영웅 효과를 높이므로 여럿을 등록할 때 의미가 있습니다. 장비·레벨 대신 영웅의 기본 능력치가 이 효과의 재료입니다.<br><br>등록 효과의 현재 수치는 줄 카드를 눌러 확인합니다. 해당 효과를 사용하지 않는 줄에는 적용되지 않습니다. 영웅을 다른 줄로 옮기거나 등록을 풀면 그 영웅의 숙련 시간은 다시 시작하므로, 비교한 뒤 자리를 정합니다.",
-        en: "<b>Strength</b> improves that line's production, arrival or training speed. <b>Luck</b> raises extra-output chance on lines with a Jackpot node. <b>Intelligence</b> shortens that line's research time; <b>Agility</b> lowers research costs. <b>Charisma</b> raises Search's Rare-candidate chance.<br><br><b>Vitality</b> strengthens the proficiency bonus that builds while a hero remains assigned to the same line. <b>Leadership</b> boosts other assigned heroes on that line, so it matters with multiple heroes. These effects use the hero's base attributes rather than equipment or level.<br><br>Select the line card to check current hero bonuses. Effects do not apply to lines that have no use for them. Moving or removing a hero resets the time accumulated on that assignment, so compare heroes before settling their positions.",
+        ko: "자원 · 도박장 줄은 등록한 <b>영웅 수</b>만큼 기본 산출이 한 몫씩 더해집니다 — 능력치보다 먼저 칸을 채웁니다. 수색은 등록한 영웅마다 시계가 하나씩 따로 돌아, 각자 한 명씩 데려옵니다. 훈련 · 도서관은 등록한 영웅 한 명 한 명이 경험치 · 도안을 받는 줄이라 인원 몫이 없습니다.<br><br><b>힘</b>은 그 줄의 생산·도착·훈련 속도를 덤으로 높이고, <b>운</b>은 대박 지점이 있는 줄의 추가 지급 확률을 높입니다. <b>지능</b>은 그 줄의 연구 시간을 줄이며, <b>민첩</b>은 연구 비용을 줄입니다. <b>매력</b>은 수색의 레어 후보 확률을 높입니다.<br><br><b>건강</b>은 같은 줄에 오래 등록할수록 쌓이는 숙련 보너스를 키웁니다. <b>통솔</b>은 같은 줄의 다른 등록 영웅 효과를 높이므로 여럿을 등록할 때 의미가 있습니다. 장비·레벨 대신 영웅의 기본 능력치가 이 효과의 재료입니다.<br><br>등록 효과의 현재 수치는 줄 카드를 눌러 확인합니다. 해당 효과를 사용하지 않는 줄에는 적용되지 않습니다. 영웅을 다른 줄로 옮기거나 등록을 풀면 그 영웅의 숙련 시간은 다시 시작하므로, 비교한 뒤 자리를 정합니다.",
+        en: "On the Resources and Gambling Den lines each assigned <b>hero</b> adds one more share of the base output — fill the seats before comparing stats. On Search each assigned hero runs a clock of their own and brings someone in on it. Training and the Library give XP or blueprints to each assigned hero, so they have no head share.<br><br><b>Strength</b> adds a bonus to that line's production, arrival or training speed. <b>Luck</b> raises extra-output chance on lines with a Jackpot node. <b>Intelligence</b> shortens that line's research time; <b>Agility</b> lowers research costs. <b>Charisma</b> raises Search's Rare-candidate chance.<br><br><b>Vitality</b> strengthens the proficiency bonus that builds while a hero remains assigned to the same line. <b>Leadership</b> boosts other assigned heroes on that line, so it matters with multiple heroes. These effects use the hero's base attributes rather than equipment or level.<br><br>Select the line card to check current hero bonuses. Effects do not apply to lines that have no use for them. Moving or removing a hero resets the time accumulated on that assignment, so compare heroes before settling their positions.",
     },
     'help.resource.jobs.title': {
         ko: "수색 · 훈련 · 자동 골드",
         en: "Search, Training and automatic gold",
     },
     'help.resource.jobs.body': {
-        ko: "<b>수색</b>은 [간격] 첫 연구를 완료해야 실제 도착을 시작합니다. 선술집의 대기 칸이 차면 멈추고, 비우면 남은 시간부터 다시 시작합니다. [품질]은 레어 후보 확률, [대기 칸]은 보관할 후보 수를 늘립니다.<br><br><b>훈련</b> 줄에 등록한 영웅은 시간이 흐르면서 경험치를 받아 로스터의 선두 레벨을 따라갑니다. 상한은 <b>로스터 최고 레벨 − [범위]에 표시된 차이</b>입니다. 범위를 연구하면 그 차이가 줄어듭니다. 상한 이상인 영웅은 훈련 경험치를 받지 않으므로, 최고 레벨을 앞서 올리는 일은 원정에서 합니다.<br><br><b>도박장 줄</b>은 선술집의 도박장을 열면 자동으로 골드를 생산합니다. 판돈을 걸거나 스핀을 누를 필요가 없습니다. [수익]은 생산량, [대박]은 한 번 더 지급받을 확률을 높입니다. 선술집 슬롯을 직접 돌리는 것과 별개입니다.",
-        en: "<b>Search</b> starts real arrivals after its first Interval research completes. Full Tavern waiting slots pause it; freeing a slot resumes the remaining wait. Quality raises Rare chance, and Waiting Slots adds candidate capacity.<br><br><b>Training</b> helps assigned heroes catch up toward the roster's leading level. Its cap is <b>the highest roster level minus the gap shown by Range</b>. Research Range to reduce that gap. Heroes at or above the cap gain no Training XP, so Expeditions must push the leading level forward.<br><br>The <b>Gambling Den line</b> automatically produces gold once the Tavern's Gambling Den is unlocked. It needs no stake or spin button. Income raises output, while Jackpot raises the chance of an extra payout. This is separate from manually playing Tavern slots.",
+        ko: "<b>수색</b>은 선술집에서 영웅 고용을 열면 바로 도착을 시작합니다. [간격]은 도착을 더 빠르게 합니다. 선술집의 대기 칸이 차면 멈추고, 비우면 남은 시간부터 다시 시작합니다. [품질]은 레어 후보 확률, [대기 칸]은 보관할 후보 수를 늘립니다.<br><br><b>훈련</b> 줄에 등록한 영웅은 시간이 흐르면서 경험치를 받아 로스터의 선두 레벨을 따라갑니다. 상한은 <b>로스터 최고 레벨 − [범위]에 표시된 차이</b>입니다. 범위를 연구하면 그 차이가 줄어듭니다. 상한 이상인 영웅은 훈련 경험치를 받지 않으므로, 최고 레벨을 앞서 올리는 일은 원정에서 합니다.<br><br><b>도박장 줄</b>은 선술집의 도박장을 열면 자동으로 골드를 생산합니다. 판돈을 걸거나 스핀을 누를 필요가 없습니다. [수익]은 생산량, [대박]은 한 번 더 지급받을 확률을 높입니다. 선술집 슬롯을 직접 돌리는 것과 별개입니다.",
+        en: "<b>Search</b> starts arrivals as soon as Tavern hiring is unlocked, and Interval makes them faster. Full Tavern waiting slots pause it; freeing a slot resumes the remaining wait. Quality raises Rare chance, and Waiting Slots adds candidate capacity.<br><br><b>Training</b> helps assigned heroes catch up toward the roster's leading level. Its cap is <b>the highest roster level minus the gap shown by Range</b>. Research Range to reduce that gap. Heroes at or above the cap gain no Training XP, so Expeditions must push the leading level forward.<br><br>The <b>Gambling Den line</b> automatically produces gold once the Tavern's Gambling Den is unlocked. It needs no stake or spin button. Income raises output, while Jackpot raises the chance of an extra payout. This is separate from manually playing Tavern slots.",
     },
     'help.colosseum.prepare.title': {
         ko: "시련의 탑에서 파티 시험하기",
@@ -1912,12 +1997,12 @@ const STRINGS = {
         en: "Choose a chapter under Monsters to inspect each area's monsters, classifications, skills and Codex progress. You can preview areas you have not yet unlocked in Expeditions. Hover a monster card for its story and milestone rewards, or a skill icon for its effect. The Normal/Elite selector changes the displayed portrait; it does not split that monster's Codex EXP into separate tracks.<br><br>Codex EXP is a separate record for each monster, apart from the XP that levels up heroes. It is awarded when kills from a won Expedition round are settled. Kills from lost rounds or rounds abandoned partway through do not count. Codex EXP per kill is {per}.",
     },
     'help.codex.classification.title': {
-        ko: "종족 · 부류 · 직업 읽기",
-        en: "Reading race, family and class",
+        ko: "종족 · 직업 읽기",
+        en: "Reading race and class",
     },
     'help.codex.classification.body': {
-        ko: "몬스터 카드의 분류는 종족·부류·직업을 나타냅니다. 종족은 일반·데몬·언데드, 부류는 군대·부족·거인·수호자·이형이며, 직업은 전사·궁수·기사·마법사·사제처럼 사용하는 스킬과 장비의 계열입니다. 예를 들어 고블린 척후병은 데몬 종족, 부족 부류, 궁수 직업입니다.<br><br>도감 Lv1·Lv2 보너스가 함께 적용되는 범위는 이 중 부류입니다. 부족 몬스터 하나의 보너스를 열면 다른 지역의 부족 몬스터를 상대할 때도 적용됩니다. 같은 데몬도 서로 다른 부류에 속할 수 있으므로 카드의 부류 이름으로 적용 범위를 확인합니다. 보스처럼 Lv1·Lv2 보너스가 없는 몬스터는 그 보너스를 주고받지 않습니다.",
-        en: "Monster cards identify race, family and class. Races are Normal, Demon and Undead. Families are Army, Tribe, Giant, Guardian and Aberration. Class describes the monster's skills and equipment, such as Warrior, Archer, Knight, Mage or Priest. For example, a Goblin Scout is a Demon of the Tribe family with the Archer class.<br><br>Codex Lv1 and Lv2 bonuses are shared within a family. Unlocking a bonus from one Tribe monster also helps against Tribe monsters in other areas. Demons can belong to different families, so check the family name on each card for the bonus group. Monsters with no Lv1 or Lv2 bonuses, such as bosses, neither grant nor receive those family bonuses.",
+        ko: "몬스터 카드의 분류는 종족·직업을 나타냅니다. 종족은 일반·데몬·언데드이며, 직업은 전사·궁수·기사·마법사·사제처럼 사용하는 스킬과 장비의 계열입니다. 예를 들어 고블린 척후병은 데몬 종족, 궁수 직업입니다.<br><br>도감 Lv1·Lv2 보너스가 함께 적용되는 범위는 종족입니다. 데몬 몬스터 하나의 보너스를 열면 다른 지역의 데몬 몬스터를 상대할 때도 적용됩니다. 보스처럼 Lv1·Lv2 보너스가 없는 몬스터는 그 보너스를 주고받지 않습니다.",
+        en: "Monster cards identify race and class. Races are Normal, Demon and Undead. Class describes the monster's skills and equipment, such as Warrior, Archer, Knight, Mage or Priest. For example, a Goblin Scout is a Demon with the Archer class.<br><br>Codex Lv1 and Lv2 bonuses are shared within a race. Unlocking a bonus from one Demon monster also helps against Demon monsters in other areas. Monsters with no Lv1 or Lv2 bonuses, such as bosses, neither grant nor receive those race bonuses.",
     },
     'help.codex.race_traits.title': {
         ko: "종족에 따른 몸의 차이",
@@ -1927,29 +2012,13 @@ const STRINGS = {
         ko: "일반 몬스터와 정예는 종족에 따라 기본 몸 특성이 달라집니다. 같은 직업이라도 최대 HP·재생·피해·방어·저항에서 차이가 날 수 있으므로 카드의 전투 수치와 사용하는 스킬을 함께 확인합니다. 이 종족 몸 보정은 보스나 두 결투 콘텐츠의 영웅 팀에는 적용되지 않습니다.<br><br>일반 종족은 물리 방어가 높고 원소 저항이 낮습니다. 물리 공격이 잘 통하지 않는다면 원소 피해를 주는 영웅과 스킬을 살펴봅니다.<br><br>데몬은 최대 HP와 HP 재생이 높지만 물리 방어가 낮습니다. 전투가 길어지며 상대 HP가 차오른다면 물리 화력과 받는 회복을 줄이는 효과를 검토합니다.<br><br>언데드는 최대 HP가 낮고 입히는 피해가 높습니다. 먼저 쓰러뜨릴 화력과 아군을 보호할 방어·피해 감소를 함께 준비합니다.",
         en: "Regular and Elite monsters have body traits determined by race. Even monsters with the same class can differ in maximum HP, regeneration, damage, defense and resistance, so inspect their combat values together with their skills. These racial body adjustments do not apply to bosses or hero teams in either duel mode.<br><br>Normal-race monsters have higher physical defense and lower elemental resistances. If physical attacks are struggling, inspect heroes and skills that deal elemental damage.<br><br>Demons have higher maximum HP and HP regeneration but lower physical defense. If their HP keeps recovering during a long fight, consider physical damage and effects that reduce healing received.<br><br>Undead have lower maximum HP and deal more damage. Prepare both the damage to defeat them quickly and protection such as defense or damage reduction for your heroes.",
     },
-    'help.codex.family_formation.title': {
-        ko: "군대 · 거인 · 수호자의 대열 효과",
-        en: "Army, Giant and Guardian formation effects",
-    },
-    'help.codex.family_formation.body': {
-        ko: "군대는 같은 라운드에 살아 있는 군대 몬스터가 {armyCount}마리 이상일 때 물리·원소 직격 피해가 증가합니다. 직격은 직접 맞히는 기본 공격과 공격 스킬이며, 고정 피해·중독·반사에는 이 증가가 붙지 않습니다. 살아 있는 군대 수를 조건 아래로 줄이면 증가가 끝납니다.<br><br>거인은 같은 라운드에서 다른 적이 모두 쓰러져 자기 혼자 남으면 물리·원소 직격 피해가 증가합니다. 거인이 몇 마리인지가 아니라 전체 적 중 혼자인지를 봅니다. 마지막 거인 한 마리를 상대할 때 더 강한 공격을 버틸 준비가 필요합니다.<br><br>수호자는 자신을 제외한 후열 동료가 받는 물리·원소 직격 피해를 줄입니다. 후열을 공격해도 피해가 잘 들어가지 않는다면 앞뒤에 살아 있는 수호자가 있는지 확인합니다. 후열을 지키는 수호자가 모두 쓰러지면 보호가 끝납니다.",
-        en: "Army monsters deal more Physical and elemental direct-hit damage while at least {armyCount} Army monsters remain alive in the round. Direct hits include basic attacks and attacking skills; this increase does not apply to Fixed damage, Poison damage over time or reflection. Bring the living Army count below the requirement to end the increase.<br><br>A Giant deals more Physical and elemental direct-hit damage when every other enemy in the round has fallen and it stands alone. The condition checks all living enemies, not just other Giants. Prepare to withstand stronger attacks when the last enemy is a Giant.<br><br>A Guardian reduces Physical and elemental direct-hit damage taken by back-row allies other than itself. If attacks on the back row deal little damage, look for living Guardians in either row. Protection ends when no Guardian remains to cover those allies.",
-    },
-    'help.codex.family_pressure.title': {
-        ko: "부족의 소환과 이형의 저항 감소",
-        en: "Tribe summoners and Aberration resistance loss",
-    },
-    'help.codex.family_pressure.body': {
-        ko: "부족을 상대할 때는 주술사의 소환 스킬을 살펴봅니다. 소환을 쓰는 주술사는 자신이 이끄는 무리에서 아직 나오지 않은 동료를 불러내거나 쓰러진 동료를 다시 일으킬 수 있습니다. 동료를 잡아도 계속 돌아온다면 소환하는 주술사를 확인하고, 그 주술사에게 닿는 공격이나 스킬을 준비합니다. 실제로 다시 부르는지는 카드의 스킬을 기준으로 확인합니다.<br><br>각 이형 몬스터를 그 라운드에서 처음 쓰러뜨릴 때 영웅 전원의 화염·냉기·전기·독 저항이 한 겹씩 낮아집니다. 같은 라운드 안에서 최대 {aberrationCap}겹까지 쌓이며 다음 라운드를 시작하면 사라집니다. 적 한 마리를 잡은 뒤 남은 적의 원소 공격이 더 아플 수 있습니다. 저항과 회복을 준비하고 원소 공격을 하는 적이 남아 있는지 함께 살펴봅니다.<br><br>종족과 부류의 효과는 몬스터의 직업·장비·스킬, 도감에서 얻는 보너스와 함께 작용합니다. 몬스터의 분류와 스킬을 읽어 대응을 고르고, 도감 보너스를 얻는 조건은 별도로 도감 경험치와 도서관 랭크에서 확인합니다.",
-        en: "When facing Tribe monsters, inspect the shaman's Summon skill. A shaman using Summon can call in members of its own band that have not yet appeared or bring its fallen band members back. If defeated companions keep returning, identify the summoner and prepare attacks or skills that can reach it. Check its actual skills to see whether it can call the band back.<br><br>The first defeat of each Aberration in a round adds one layer of reduced Fire, Cold, Lightning and Poison resistance to every hero. Layers build to a maximum of {aberrationCap} within that round and clear when the next round begins. Remaining enemies' elemental attacks can hurt more after one enemy falls. Prepare resistance and healing, and watch which elemental attackers remain.<br><br>Race and family traits work alongside a monster's class, equipment and skills, as well as the bonuses you have earned in the Codex. Read classifications and skills to plan your response. Requirements for earning Codex bonuses are tracked separately through Codex EXP and Library rank.",
-    },
     'help.codex.milestones.title': {
         ko: "도감 단계가 주는 보너스",
         en: "What Codex milestones grant",
     },
     'help.codex.milestones.body': {
-        ko: "몬스터별 누적 도감 경험치가 {list}에 도달하면 차례로 Lv1~Lv4에 해당하는 기록을 채웁니다. 이미 얻은 단계의 효과는 이후 단계에도 유지됩니다.<br><br>Lv1은 같은 부류를 잡을 때 경험치·드롭·골드 등 보상을 늘리는 파밍 옵션을, Lv2는 같은 부류를 상대할 때 적용되는 전투 옵션을 엽니다. 어떤 옵션인지는 몬스터마다 다르며, 같은 부류의 여러 몬스터에서 연 보너스는 함께 적용됩니다. 보스 등 일부 몬스터에는 Lv1·Lv2 보너스가 없습니다.<br><br>Lv3에는 추가 효과가 없습니다. Lv4는 그 몬스터의 전투 옵션 하나를 모든 파티원에게 항상 더합니다. 각 단계의 구체적인 효과와 값은 몬스터 카드에서 확인합니다. 시련의 탑과 결투장에는 도감 보너스가 적용되지 않습니다.",
-        en: "Each monster fills its Lv1–Lv4 milestones as its cumulative Codex EXP reaches {list}. Effects already unlocked remain in place at later milestones.<br><br>Lv1 unlocks a farming option that improves rewards such as XP, drops or gold from that family. Lv2 unlocks a combat option used against the same family. The option varies by monster, and bonuses unlocked from different members of one family combine. Bosses and some other monsters have no Lv1 or Lv2 bonuses.<br><br>Lv3 adds no effect. Lv4 permanently adds one combat option from that monster to every party member. Inspect its card for the exact effects and values at each milestone. Codex bonuses do not apply in Tower of Trials or Arena duels.",
+        ko: "몬스터별 누적 도감 경험치가 {list}에 도달하면 차례로 Lv1~Lv4에 해당하는 기록을 채웁니다. 이미 얻은 단계의 효과는 이후 단계에도 유지됩니다.<br><br>Lv1은 같은 종족을 잡을 때 경험치·드롭·골드 등 보상을 늘리는 파밍 옵션을, Lv2는 같은 종족을 상대할 때 적용되는 전투 옵션을 엽니다. 어떤 옵션인지는 몬스터마다 다르며, 같은 종족의 여러 몬스터에서 연 보너스는 함께 적용됩니다. 보스 등 일부 몬스터에는 Lv1·Lv2 보너스가 없습니다.<br><br>Lv3에는 추가 효과가 없습니다. Lv4는 그 몬스터의 전투 옵션 하나를 모든 파티원에게 항상 더합니다. 각 단계의 구체적인 효과와 값은 몬스터 카드에서 확인합니다. 시련의 탑과 결투장에는 도감 보너스가 적용되지 않습니다.",
+        en: "Each monster fills its Lv1–Lv4 milestones as its cumulative Codex EXP reaches {list}. Effects already unlocked remain in place at later milestones.<br><br>Lv1 unlocks a farming option that improves rewards such as XP, drops or gold from that race. Lv2 unlocks a combat option used against the same race. The option varies by monster, and bonuses unlocked from different members of one race combine. Bosses and some other monsters have no Lv1 or Lv2 bonuses.<br><br>Lv3 adds no effect. Lv4 permanently adds one combat option from that monster to every party member. Inspect its card for the exact effects and values at each milestone. Codex bonuses do not apply in Tower of Trials or Arena duels.",
     },
     'help.codex.library_unlocks.title': {
         ko: "경험치는 찼는데 단계가 잠겨 있다면",
@@ -2004,8 +2073,8 @@ const STRINGS = {
         en: "Mouse, keyboard and touch controls",
     },
     'help.help.controls.body': {
-        ko: "영웅·몬스터·장비·스킬 그림에 마우스를 올리면 그 대상의 설명 카드인 툴팁이 뜹니다. 장비를 우클릭하면 잠금·이동·분해처럼 그 칸에서 가능한 행동을 고를 수 있습니다. Alt를 누르면 카드의 세부 능력치·스킬 계산이나 장비 착용 후 변화량을, Shift를 누르면 장비 옵션이 나올 수 있는 수치 범위를 확인합니다.<br><br>터치에서는 그림을 길게 눌러 설명을 엽니다. 카드 아래 [세부]와 [범위]가 나오면 각각 Alt와 Shift 대신 사용할 수 있으며, 장착·이동 같은 행동 버튼도 그 줄에 표시됩니다. 화면을 스크롤하려면 누른 채 움직이고, 설명을 열려면 그 자리에서 길게 누릅니다.<br><br>일반 창은 ×, 창 바깥 영역 클릭, Esc로 닫습니다. 확인이 필요한 창은 그 안의 선택 버튼으로 진행합니다. 휴대기기의 세로 화면에서는 기기를 가로로 돌리면 한 화면의 내용을 더 크게 볼 수 있습니다.",
-        en: "Hover hero, monster, equipment or skill artwork to open its information card, called a tooltip. Right-click equipment to choose the available actions, such as locking, moving or salvaging it. Hold Alt for detailed stats, skill calculations or equipment stat changes, and Shift for the possible value ranges of equipment options.<br><br>On touchscreens, hold an image to open its information. Details and Range buttons, when shown below the card, provide the Alt and Shift views. Available actions such as equipping or moving appear there too. Move your finger to scroll, or keep it still while holding to open information.<br><br>Close most windows with ×, an outside click or Esc. Windows requiring a choice use their own buttons. On a phone or tablet held vertically, rotating to landscape makes the full game screen easier to read.",
+        ko: "영웅·몬스터·장비·스킬 그림에 마우스를 올리면 그 대상의 설명 카드인 툴팁이 뜹니다. 장비를 우클릭하면 잠금·이동·분해처럼 그 칸에서 가능한 행동을 고를 수 있습니다. Alt를 누르면 카드의 세부 능력치·스킬 계산이나 장비 착용 후 변화량을, Shift를 누르면 장비 옵션이 나올 수 있는 수치 범위를 확인합니다.<br><br>터치에서는 그림을 길게 눌러 설명을 엽니다. 카드 아래 [세부]와 [범위]가 나오면 각각 Alt와 Shift 대신 사용할 수 있으며, 장착·이동 같은 행동 버튼도 그 줄에 표시됩니다. 화면을 스크롤하려면 누른 채 움직이고, 설명을 열려면 그 자리에서 길게 누릅니다.<br><br>일반 창은 ×, 창 바깥 영역 클릭, Esc로 닫습니다. 확인이 필요한 창은 그 안의 선택 버튼으로 진행합니다. 모바일에서는 아래쪽 아이콘으로 메뉴를 바꾸고 [메뉴]에서 모든 탭을 엽니다. 가로 화면에서는 아이콘이 왼쪽으로 이동합니다. 위쪽 부대 상태를 누르면 전투로 돌아가며, 전장 오른쪽 아래 버튼으로 가방을 펼치거나 접습니다.",
+        en: "Hover hero, monster, equipment or skill artwork to open its information card, called a tooltip. Right-click equipment to choose the available actions, such as locking, moving or salvaging it. Hold Alt for detailed stats, skill calculations or equipment stat changes, and Shift for the possible value ranges of equipment options.<br><br>On touchscreens, hold an image to open its information. Details and Range buttons, when shown below the card, provide the Alt and Shift views. Available actions such as equipping or moving appear there too. Move your finger to scroll, or keep it still while holding to open information.<br><br>Close most windows with ×, an outside click or Esc. Windows requiring a choice use their own buttons. On mobile, use the bottom icons to switch screens and Menu to reach every tab. In landscape, the icons move to the left. Tap a party status at the top to return to combat. The button at the bottom right of the battlefield shows or hides the bags.",
     },
     'help.help.when_stuck.title': {
         ko: "막혔을 때 확인할 곳",
@@ -2020,8 +2089,8 @@ const STRINGS = {
         en: "Display settings and language",
     },
     'help.help.settings.body': {
-        ko: "상단의 EN 또는 한국어 버튼을 누르면 표시 언어가 바뀝니다.<br><br>전투 연출이 복잡하게 느껴지면 스킬 이펙트·기본 공격 이펙트·피격 반응·공격 시 흔들림을 각각 조정할 수 있습니다. 이펙트 투명도는 값이 클수록 스킬 그림을 옅게 만듭니다. 스킬 이펙트가 Off이면 그림체와 투명도 선택이 흐려지고, 피격 반응이 Off이면 피격 시 흔들림 선택이 흐려집니다. 다시 켜면 이전 선택을 사용합니다.<br><br>로그의 칸/문장은 전투 기록을 나누어 볼지 문장으로 읽을지 고르는 표시 방식입니다. 언어와 연출·로그 설정은 전투 승패나 장비 효과를 바꾸지 않으며 이 브라우저에 저장됩니다.",
-        en: "Use the language button at the top to switch between Korean and English.<br><br>If combat visuals feel busy, adjust skill effects, basic attack effects, hit reactions and attack movement separately. A higher transparency value makes skill artwork fainter. Turning Skill Effects Off dims its style and transparency controls; turning Hit Reactions Off dims Shake on Hit. Turning them back on restores the previous choices.<br><br>Grid/Text chooses whether battle log entries are divided into columns or read as sentences. Language, visual effects and log settings do not change battle outcomes or equipment effects, and are saved in this browser.",
+        ko: "상단의 EN 또는 한국어 버튼을 누르면 표시 언어가 바뀝니다. 모바일에서는 [메뉴] 안에 있습니다.<br><br>전투 연출이 복잡하게 느껴지면 스킬 이펙트·기본 공격 이펙트·피격 반응·공격 시 흔들림을 각각 조정할 수 있습니다. 이펙트 투명도는 값이 클수록 스킬 그림을 옅게 만듭니다. 스킬 이펙트가 Off이면 그림체와 투명도 선택이 흐려지고, 피격 반응이 Off이면 피격 시 흔들림 선택이 흐려집니다. 다시 켜면 이전 선택을 사용합니다.<br><br>로그의 칸/문장은 전투 기록을 나누어 볼지 문장으로 읽을지 고르는 표시 방식입니다. 언어와 연출·로그 설정은 전투 승패나 장비 효과를 바꾸지 않으며 이 브라우저에 저장됩니다.",
+        en: "Use the language button at the top to switch between Korean and English. On mobile, it is inside Menu.<br><br>If combat visuals feel busy, adjust skill effects, basic attack effects, hit reactions and attack movement separately. A higher transparency value makes skill artwork fainter. Turning Skill Effects Off dims its style and transparency controls; turning Hit Reactions Off dims Shake on Hit. Turning them back on restores the previous choices.<br><br>Grid/Text chooses whether battle log entries are divided into columns or read as sentences. Language, visual effects and log settings do not change battle outcomes or equipment effects, and are saved in this browser.",
     },
     'help.help.newgame.title': {
         ko: "새 게임과 첫 영웅",
@@ -2441,12 +2510,18 @@ const STRINGS = {
     'pt.potion.use': { ko: 'HP {n}% 미만에서 마심', en: 'Drink below {n}% HP' },
     'pt.potion.useDown': { ko: '기준 낮추기', en: 'Lower threshold' },
     'pt.potion.useUp': { ko: '기준 올리기', en: 'Raise threshold' },
+    // 진형 칸 초상 아래 체력 막대의 글 (§15 · ADR-1119) · `{n}` = 최대 HP
+    'pt.form.hp': { ko: 'HP {n}', en: 'HP {n}' },
+    // 진형 칸 체력 옆 왕관 버튼에 올리면 서는 한 줄 — 리더가 아닌 영웅 (리더는 `exp.leader`) (§15 · ADR-1132)
+    'pt.leader.set': { ko: '리더로 지정', en: 'Make leader' },
     // 소제목 옆 `?` 에 올리면 서는 설명 툴팁의 본문 — 한두 문장만 · 자세한 규칙은 도움말 탭 (§15 · ADR-0464)
     'pt.help.form': { ko: '적은 전열부터 공격합니다. 전열이 모두 쓰러져야 후열이 공격받습니다.', en: 'Enemies attack the front row first. The back row is attacked only after the whole front row has fallen.' },
     'pt.help.potion': { ko: 'HP가 {n}% 아래로 떨어진 영웅이 자동으로 물약을 마십니다.', en: 'A hero whose HP falls below {n}% drinks a potion automatically.' },
     // ~~`pt.potion.short`~~ (「모자람 — 런에서 빈 채 시작한다」) 는 2026-09-24 삭제 — 툴팁은 효과만 든다(CLAUDE.md 규칙 7). 모자란 칸은 칸이 흐린 점선으로 말한다
     'pt.err.full': { ko: '파티 가득 참', en: 'Party full' },
     'pt.err.exploring': { ko: '탐험 귀환', en: 'Return from exploring', lock: true },
+    // 원정 중인 편성 · 다른 부대에서 싸우는 영웅 — 명단이 잠긴다 · 철수가 풀어 준다 (2026-11-14 · R491 — `ch.err.running` · `ex.err.running` 과 같은 글)
+    'pt.err.running': { ko: '원정 철수', en: 'Retreat from the expedition', lock: true },
     'pt.err.missing': { ko: '없는 칸', en: 'No such slot' },
     'pt.err.slotsFull': { ko: '물약 칸 가득 참', en: 'All potion slots are full' },
     'pt.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
@@ -2560,7 +2635,19 @@ const STRINGS = {
     'tr.seg.adv': { ko: '전직', en: 'Advance' },
     // 전직 카드 (2026-09-28 · R16 · SCREEN_DESIGN §17) — 거절은 `tr.err.<코드>`(game.advanceStart · 마스터리 전직 트리의 advanceLearn · advanceForget — ADR-0542)
     'tr.adv.level': { ko: 'Lv.{have} / {need}', en: 'Lv.{have} / {need}' },
-    'tr.adv.go': { ko: '전직', en: 'Advance' },   // 패널 제목 오른쪽 버튼 — 갈래를 골라야 켜진다 (ADR-0536 · ADR-0539)
+    'tr.adv.go': { ko: '전직', en: 'Advance' },   // 전직 제목 오른쪽 버튼 — 갈래를 골라야 켜진다 (ADR-0536 · ADR-0539)
+    'tr.room.title': { ko: '전직의 방', en: 'Chamber of Advancement' },
+    'tr.room.paths': { ko: '전직 갈래', en: 'Advancement paths' },
+    'tr.room.preview': { ko: '마스터리 미리보기 · 스킬을 선택해 비교', en: 'Mastery preview · select a skill to compare' },
+    'tr.room.ready': { ko: '전직 가능', en: 'Ready to advance' },
+    'tr.room.level': { ko: 'Lv.{n}부터 전직 가능', en: 'Advancement available at Lv.{n}' },
+    'tr.room.done': { ko: '{name} · 전직 완료', en: '{name} · Advancement complete' },
+    'tr.room.next': { ko: '마스터리에서 전직 스킬을 선택하고 강화합니다.', en: 'Choose and improve your advancement skill in Mastery.' },
+    'tr.room.choose': { ko: '전직할 갈래를 선택하세요', en: 'Choose your advancement path' },
+    'tr.room.selected': { ko: '선택한 갈래 · {name}', en: 'Selected path · {name}' },
+    'tr.room.instant': { ko: '즉시 완료', en: 'Completes instantly' },
+    'tr.room.duration': { ko: '소요 시간 {t}', en: 'Duration: {t}' },
+    'tr.room.irreversible': { ko: '전직 갈래는 변경할 수 없습니다.', en: 'The advancement path cannot be changed.' },
     'tr.adv.started': { ko: '{name} — {b} 전직 시작', en: '{name} — started advancing to {b}' },
     'tr.adv.left': { ko: '{t} 남음', en: '{t} left' },
     'tr.adv.learned': { ko: '배움', en: 'Learned' },
@@ -2610,6 +2697,16 @@ const STRINGS = {
     // 줄 등록 — 연구소 띠 위칸의 「등록 안 함」 · 등록 창 머리 (SCREEN_DESIGN §8 · ADR-0677) · ~~`dp.reg.h`(고른 칸의 등록 자리 소제목)~~ 는 영웅 칸이 줄 카드로 가며 걷었다 (ADR-0681)
     'dp.reg.none': { ko: '미등록', en: 'Unassigned' },
     'dp.reg.modal': { ko: '{line} — 영웅 등록', en: '{line} — Assign Heroes' },
+    // 등록 창 — 고른 카드 위칸(지금 줄 → 이 줄) · 아래 바뀌는 것 한 줄씩 + 사라지는 것(빨강) · 고른 수 / 칸 · [적용] (SCREEN_DESIGN §8 · ADR-1154)
+    'dp.reg.change': { ko: '{from} → {to}', en: '{from} → {to}' },
+    'dp.reg.lose.in': { ko: '{name} · {to} 등록', en: '{name} · join {to}' },
+    'dp.reg.lose.move': { ko: '{name} · {from} → {to}', en: '{name} · {from} → {to}' },
+    'dp.reg.lose.out': { ko: '{name} · {from} 등록 해제', en: '{name} · leave {from}' },
+    'dp.reg.lose.skill': { ko: '숙련 {p}%', en: 'Mastery {p}%' },
+    'dp.reg.lose.visit': { ko: '수색 시계 {t}', en: 'Search clock {t}' },
+    'dp.reg.lose.reset': { ko: '{what} 처음부터', en: '{what} reset' },
+    'dp.reg.count': { ko: '{n} / {cap}', en: '{n} / {cap}' },
+    'dp.reg.apply': { ko: '적용', en: 'Apply' },
     // 얻은 재료 플래시 — 미니게임이 쓴다(옛 파견 관전 창의 떨어지는 재료 · 창은 2026-10-18 걷었다)
     'dp.watch.gain': { ko: '+{n} {item}', en: '+{n} {item}' },
     // 자원 미니게임 — 창 머리 · 시작 / 결과 판 · 판 위 머리 (2026-10-06 · SCREEN_DESIGN §8 · ADR-0532) · ~~`mg.play`(연구소의 [미니게임] 버튼)~~ 은 2026-10-21 숨김으로 걷었다 — 창은 개발용 `?dev=mg` 만 연다 (ADR-0682)
@@ -2725,6 +2822,7 @@ const STRINGS = {
     'sk.points.h': { ko: '스킬 포인트', en: 'Skill Points' },
     'sk.points.note': { ko: "레벨마다 받는 <b>스킬 포인트</b>를 죄종·직업 마스터리와 전직 메인·꼬리에 나누어 씁니다. 전직해도 별도 포인트를 지급하지 않습니다. 메인 단계만 5레벨 간격으로 열립니다.", en: "<b>Skill points</b> earned on each level-up are shared by Sin mastery, Class mastery and advancement main skills and branches. Advancing grants no separate points. Only main-skill ranks unlock at five-level intervals." },
     'sk.points.left': { ko: '남은 포인트', en: 'Points left' },
+    'sk.points.adv': { ko: '전직 포인트', en: 'Advancement Points' },   // 스킬 창 포인트 칸 — 전직 스킬 배우기 몫 (2026-11-14 · ADR-1104)
     'sk.tip.rank': { ko: 'Rank {n}/{max}', en: 'Rank {n}/{max}' },
     'sk.tip.effect': { ko: '{effect} (랭크당 {perRank})', en: '{effect}. (Per rank {perRank})' },
     'sk.gate.weapon': { ko: '착용 무기: {groups}일 때 효과 적용', en: 'Active with weapon: {groups}' },
@@ -2753,6 +2851,44 @@ const STRINGS = {
     'sk.masteryEffect.cooldown_reduction': { ko: '쿨타임 {v} 감소', en: 'Cooldowns are reduced by {v}' },
     // 초 단위 칸 — 직업 T1-2 쿨타임 −n초 · 궁수 공격 속도 −n초 (2026-11-09 · R432 · skill_design §3-4)
     'sk.masteryEffect.cool_minus_sec': { ko: '쿨타임 {v}초 감소', en: 'Cooldowns are {v}s shorter' },
+    // 직업 마스터리 T4 — 셋 중 하나 (2026-11-14 · R437 · skill_design §3-5 「새 T4」)
+    'sk.masteryEffect.basic_cleave': { ko: '기본 공격이 같은 줄 옆 적에게 {v}로 튑니다', en: 'Basic attacks also strike enemies in the same row at {v}' },
+    'sk.masteryEffect.skill_repeat_chance': { ko: '공격 스킬이 {v} 확률로 한 번 더 나갑니다', en: 'Attack skills have a {v} chance to fire once more' },
+    'sk.masteryEffect.elem_to_phys': { ko: '받는 원소 피해의 {v}를 물리 피해로 받습니다', en: 'Takes {v} of elemental damage as physical damage' },
+    'sk.masteryEffect.hit_stun_chance': { ko: '맞힐 때 {v} 확률로 적을 스턴시킵니다', en: 'Hits have a {v} chance to stun' },
+    'sk.masteryEffect.aura_guard_share': { ko: '오오라가 켜져 있으면 팀원이 받는 피해의 {v}를 대신 받습니다', en: 'While your aura is on, takes {v} of the damage dealt to teammates' },
+    'sk.masteryEffect.crit_taken_cut': { ko: '치명타로 더 받는 피해가 {v} 줄어듭니다', en: 'Extra damage taken from critical hits is reduced by {v}' },
+    'sk.masteryEffect.skill_fixed_share': { ko: '스킬 피해의 {v}가 고정 피해로 들어갑니다', en: '{v} of skill damage is dealt as fixed damage' },
+    'sk.masteryEffect.cast_refill_chance': { ko: '스킬을 쓰면 {v} 확률로 시전 칸 하나가 찹니다', en: 'Casting a skill has a {v} chance to fill one cast charge' },
+    'sk.masteryEffect.round_barrier': { ko: '라운드 시작 때 최대 HP {v}의 보호막을 얻습니다', en: 'Gains a shield worth {v} of max HP at the start of each round' },
+    'sk.masteryEffect.sin_vuln': { ko: '디버프 · 공격 스킬이 적이 받는 피해를 {v} 늘립니다', en: 'Debuffs and attack skills make the enemy take {v} more damage' },
+    'sk.masteryEffect.overheal_shield': { ko: '넘친 회복의 {v}가 보호막으로 남습니다', en: '{v} of overhealing remains as a shield' },
+    'sk.masteryEffect.last_prayer': { ko: 'HP가 낮아지면 라운드에 한 번 최대 HP {v}를 회복합니다', en: 'Once per round at low HP, restores {v} of max HP' },
+    'sk.masteryEffect.extra_shot_chance': { ko: '기본 공격이 {v} 확률로 한 발 더 나갑니다', en: 'Basic attacks have a {v} chance to fire an extra shot' },
+    'sk.masteryEffect.basic_cd_tick': { ko: '기본 공격마다 스킬 쿨타임이 {v}초 돕니다', en: 'Each basic attack advances skill cooldowns by {v}s' },
+    'sk.masteryEffect.dodge_chance': { ko: '맞을 때 {v} 확률로 피합니다', en: 'Has a {v} chance to dodge a hit' },
+    // 죄종 마스터리 T4 — 셋 중 하나 · 조건 = 그 죄종 T3 조건 (2026-11-14 · skill_design §3-3 「죄종 T4」)
+    'sk.masteryEffect.wrath_blood': { ko: '공격 스킬이 HP를 조금 쓰고 스킬 데미지가 {v} 증가', en: 'Attack skills spend a little HP and deal {v} more damage' },
+    'sk.masteryEffect.wrath_party_crit': { ko: 'HP가 낮은 동안 같은 편 전원 치명 확률 {v} 증가', en: 'While your HP is low, all allies gain {v} Critical Chance' },
+    'sk.masteryEffect.wrath_steady': { ko: 'HP가 낮은 동안 받는 스턴 · 경직 시간 {v} 감소', en: 'While your HP is low, stuns and staggers on you are {v} shorter' },
+    'sk.masteryEffect.envy_strip': { ko: '나보다 성한 적을 맞히면 {v} 확률로 버프 하나를 지웁니다', en: 'Hitting an enemy healthier than you has a {v} chance to remove one of its buffs' },
+    'sk.masteryEffect.envy_party_pierce': { ko: '나보다 성한 적을 치는 같은 편 전원 방어력 무시 {v}', en: 'Allies ignore {v} Defense of enemies healthier than you' },
+    'sk.masteryEffect.envy_return': { ko: '내게 걸린 디버프가 {v} 확률로 건 적에게도 걸립니다', en: 'Debuffs on you have a {v} chance to also afflict their caster' },
+    'sk.masteryEffect.greed_mark': { ko: '라운드 시작 때 HP가 가장 많은 적을 정예로 표시하고 그 적에게 데미지 {v} 증가', en: 'Marks the enemy with the most HP as elite each round and deals {v} more damage to it' },
+    'sk.masteryEffect.greed_reroll': { ko: '드롭이 없던 처치에서 {v} 확률로 한 번 더 굴립니다', en: 'Kills without a drop have a {v} chance to roll again' },
+    'sk.masteryEffect.greed_barrier': { ko: '라운드 시작 때 탐욕 합에 비례한 보호막(최대 HP × {v} × 탐욕 합)', en: 'Gains a shield each round worth max HP × {v} × your Greed total' },
+    'sk.masteryEffect.sloth_heavy': { ko: '공격 · 캐스팅이 느려지는 대신 데미지 {v} 증가', en: 'Attacks and casts are slower but deal {v} more damage' },
+    'sk.masteryEffect.sloth_party_cdr': { ko: '라운드 초반 동안 같은 편 전원 쿨타임 {v} 감소', en: 'Early in each round, all allies gain {v} Cooldown Reduction' },
+    'sk.masteryEffect.sloth_defer': { ko: '라운드 초반 동안 받는 피해의 {v}를 나눠 받습니다', en: 'Early in each round, {v} of damage taken is spread over time' },
+    'sk.masteryEffect.glut_cull': { ko: 'HP가 {v} 이하인 일반 몬스터를 바로 쓰러뜨립니다', en: 'Normal monsters at or below {v} HP are slain outright' },
+    'sk.masteryEffect.glut_party_dmg': { ko: '라운드 후반 동안 같은 편 전원 데미지 {v} 증가', en: 'Late in each round, all allies deal {v} more damage' },
+    'sk.masteryEffect.glut_absorb': { ko: '받는 원소 피해의 {v}를 회복으로 바꿉니다', en: 'Converts {v} of elemental damage taken into healing' },
+    'sk.masteryEffect.lust_crit_vuln': { ko: 'HP가 높은 적에게 치명이 터지면 그 적이 받는 피해 {v} 증가', en: 'Critical hits on healthy enemies make them take {v} more damage' },
+    'sk.masteryEffect.lust_share_heal': { ko: '받은 회복의 {v}가 HP가 가장 낮은 아군에게도 갑니다', en: '{v} of healing you receive also goes to the most wounded ally' },
+    'sk.masteryEffect.lust_charm': { ko: '나를 때린 적이 {v} 확률로 홀려 데미지가 깎입니다', en: 'Attackers have a {v} chance to be beguiled, dealing less damage' },
+    'sk.masteryEffect.pride_nth': { ko: '나보다 약한 상대에게 몇 번째 공격마다 확정 치명(간격 {v} 단축)', en: 'Every few attacks on weaker foes are certain critical hits (interval −{v})' },
+    'sk.masteryEffect.pride_party_haste': { ko: '라운드 시작 때 같은 편 전원 공격 · 캐스팅 속도 {v} 증가', en: 'At the start of each round, all allies gain {v} Attack and Casting Speed' },
+    'sk.masteryEffect.pride_cap': { ko: '큰 한 방의 넘친 피해를 {v} 덜 받습니다', en: 'Takes {v} less of the excess from very large hits' },
     'sk.masteryEffect.period_minus_sec': { ko: '공격 속도 {v}초 단축', en: 'Attacks come {v}s sooner' },
     'sk.masteryEffect.crit_damage': { ko: '치명타 피해 {v} 증가', en: 'Crit Damage increases by {v}' },
     'sk.masteryEffect.crit_rate': { ko: '치명타 확률 {v} 증가', en: 'Crit Chance increases by {v}' },
@@ -2786,6 +2922,8 @@ const STRINGS = {
     'sk.err.maxRank': { ko: '이미 최대 랭크', en: 'Already at max rank' },
     'sk.err.points': { ko: '스킬 포인트 없음', en: 'No skill points left' },
     'sk.err.rowFull': { ko: '이 줄에는 {n}점까지 찍을 수 있습니다', en: 'This row holds up to {n} points' },   // 마스터리 줄마다 점수 합 (R473)
+    'sk.err.pickOne': { ko: '이 줄은 한 칸만 찍을 수 있습니다', en: 'Only one node in this row can be learned' },   // 마스터리 T4 셋 중 하나 (R437)
+    'sk.tier': { ko: 'Tier {n}', en: 'Tier {n}' },   // 스킬 창 마스터리 줄 머리 — ko 에서도 영어 · `{n}` 은 로마 숫자 (2026-11-14 사용자 지시 · ADR-1082)
     'sk.err.noRank': { ko: '아직 찍지 않은 칸', en: 'Nothing invested here yet' },
     /* ~~'sk.err.downed'~~ · ~~'tr.err.downed'~~ · ~~'bk.err.downed'~~ 은 2026-10-21 삭제 — 쓰러짐은 원정 밖 행동을 막지 않는다 (R300 · ADR-0687) */
     // 찍은 칸의 툴팁 꼬리 — 우클릭이 있다는 것 자체가 안 보이면 못 쓴다 (SCREEN_DESIGN §7)
@@ -2806,6 +2944,10 @@ const STRINGS = {
     'sk.src.advance': { ko: '전직', en: 'Advance' },
     'sk.emptyBook': { ko: '배운 스킬 없음', en: 'No skill learned' },
     'sk.emptyAdvance': { ko: '전직 전', en: 'Not advanced' },
+    // 빈 전직 칸 — 전직 전은 자물쇠 + 안내 문장(레벨 전 · 후) · 전직했는데 안 배웠으면 습득 칸과 같은 꼴 (2026-11-14 사용자 지시 · ADR-1122)
+    'sk.advLock': { ko: 'Lv.{lv}이 되면 도서관에서 전직이 가능합니다', en: 'Advance at the Library at Lv.{lv}', lock: true },
+    'sk.advLockReady': { ko: '도서관에서 전직이 가능합니다', en: 'Advance at the Library', lock: true },
+    'sk.emptyAdvanceSkill': { ko: '배운 전직 스킬 없음', en: 'No advanced skill learned' },
     'sk.lvTag': { ko: 'Lv.{n}', en: 'Lv.{n}' },   // 스킬 레벨 — 그림 오른쪽 아래 `.sk-lv` (설명창 · 액티브 줄 · 도서관 · 전직 판 · R216 · ADR-0576) · 그림이 없는 도서관 읽기 줄만 이름 뒤
     'tr.err.maxLevel': { ko: '메인 최대 레벨입니다', en: 'Main skill is at its maximum level' },
     'sk.adv.leveled': { ko: '{skill} Lv.{n}', en: '{skill} Lv.{n}' },   // 전직 판 스킬 칸을 눌러 레벨이 올랐다 (R216)
@@ -2814,7 +2956,9 @@ const STRINGS = {
     'sk.lock.advance': { ko: 'Lv{n}이 되면 전직 후 스킬을 배울 수 있습니다.', en: 'At Lv{n}, skills can be learned after advancing.' },
     // ~~`sk.needWeapon`~~(꺼진 칸 툴팁 맨 위 한 줄 · ADR-0446) — 2026-10-03 걷었다: 필요 무기는 설명창 이름 줄의 칩이 무기군 이름만으로 든다(ADR-0496)
     /* 스킬북 [2026-09-29 · R179 · 도서관 탭 SCREEN_DESIGN §17 · ADR-0422] — 규칙 문장은 없다(덮어쓰기는 도움말의 몫) · 권수 `×n` 은 물약 칸처럼 기호라 키가 없다(ADR-0460) */
-    'bk.up.h': { ko: '스킬 업그레이드', en: 'Skill Upgrade' },   // 도서관 오른쪽 위 카드 제목 (2026-10-12 사용자 지시 · ADR-0597 — ~~`bk.own.h` 「가진 책」~~)
+    'bk.hero.h': { ko: '스킬정보', en: 'Skill Info' },   // 도서관 공통 머리 맨 위 소제목 띠 — 두 탭 같은 자리
+    'bk.tab': { ko: '스킬북', en: 'Skill Books' },   // 도서관 폴더 탭 첫째 — 스킬 업그레이드 · 스킬 북 제작 (2026-11-14 사용자 지시 · ADR-1165 · 둘째 탭은 `tr.seg.adv`)
+    'bk.up.h': { ko: '스킬 업그레이드', en: 'Skill Upgrade' },   // 도서관 스킬북 탭 왼쪽 구역 소제목 (2026-10-12 사용자 지시 · ADR-0597 — ~~`bk.own.h` 「가진 책」~~ · 자리 ADR-1165)
     'bk.up.help': { ko: '보유한 스킬북을 통해 스킬 레벨을 업그레이드 할 수 있습니다.', en: 'Use the skill books you own to upgrade skill levels.' },   // 제목 옆 `?` 툴팁 · 도움말 도서관 섹션도 이 키 (2026-10-12 사용자 지시 · ADR-0603)
     'bk.none': { ko: '가진 책 없음', en: 'No books' },
     'bk.learn': { ko: '배우기', en: 'Learn' },
@@ -2895,7 +3039,7 @@ const STRINGS = {
             + '<b>Equipped gear activates the three nodes below.</b> Fast weapons activate Damage %, slow weapons activate Attack Speed, and the class armor type activates Armor Mastery. You can invest ranks without matching gear, but the effect stays inactive.<br>'
             + 'The reactive bottom row is still being designed.',
     },
-    'sk.advTree': { ko: '전직 트리', en: 'Advancement Tree' },
+    'sk.advTree': { ko: '전직 마스터리', en: 'Advancement Mastery' },   // 전직 전(잠긴 판)의 머리 — 전직하면 「<전직 이름> 마스터리」(`sk.mastery` · ADR-1107)
     'sk.advNeed': { ko: '전직', en: 'Advance', lock: true },   // 전직 판의 잠김 베일 (§7 · §13-1)
     'sk.adv.slot.size': { ko: '크기', en: 'Power' },   // 전직 스킬 줄 칸 이름 — 크기 · 변형 1 · 변형 2 (2026-11-13 · R471 · ADR-1081)
     'sk.adv.slot.var1': { ko: '변형 1', en: 'Variant 1' },
@@ -2903,6 +3047,10 @@ const STRINGS = {
     'sk.adv.bonusAt': { ko: '{max}랭크: {b}', en: 'Rank {max}: {b}' },   // 칸 툴팁 끝줄 — 5랭크 덤
     'sk.adv.commonNow': { ko: '효과 {v}', en: 'Effect {v}' },   // 공통 줄 칸 툴팁 — 지금 값(0 랭크면 1랭크 값)
     'sk.adv.commonFull': { ko: '{v}', en: '{v}' },   // 공통 줄 5랭크 값
+    // 스킬 창 전직 판 줄 위 띠 이름 — 마스터리 판의 `Tier n` 자리 · 위에서부터 스킬 셋 · 스킬 줄 · 공통 줄 (2026-11-14 · ADR-1112)
+    'sk.adv.band.skill': { ko: '전직 스킬', en: 'Advanced Skill' },
+    'sk.adv.band.line': { ko: '전직 스킬 강화', en: 'Skill Upgrades' },
+    'sk.adv.band.common': { ko: '공통 마스터리', en: 'Common Mastery' },
     'sk.adv.sec': { ko: '{n}초', en: '{n}s' },
     'sk.advTree.missing': { ko: "전직 후 갈래의 메인 셋 중 하나를 <b>공용 스킬 포인트 1</b>로 배웁니다. 스킬 포인트는 레벨마다 받고 죄종·직업 마스터리와 나누어 씁니다.<br>메인 단계만 영웅 Lv30·35·40·45·50에 Lv1·2·3·4·5가 열립니다. 특수·변형·필살기 꼬리는 현재 준비 중입니다.", en: "Learn one of the path's three main skills for <b>one shared skill point</b>. Points come with every level from Lv1 and are shared with Sin and Class mastery.<br>Main ranks Lv1–5 unlock at hero Lv30/35/40/45/50. Special, Variant and Ultimate branches are currently coming later." },
     'sk.lockedSuffix': { ko: ' (잠김)', en: ' (locked)' },
@@ -2965,7 +3113,7 @@ const STRINGS = {
     'cx.seg.sin': { ko: '죄종', en: 'Sins' },   // 의뢰 죄종별 수령 횟수 (§9 · ADR-1069 · R457)
     'cx.sin.n': { ko: '수령 {n}회', en: 'Claimed {n}' },
     'cx.h': { ko: '몬스터 도감', en: 'Monster Codex' },
-    'cx.sub': { ko: '도감 경험치 {list}에서 레벨이 오릅니다 — 처치 하나에 {per} · Lv1 · Lv2 의 보너스 효과는 그 몬스터와 같은 부류 전체에 붙습니다', en: 'Levels up at {list} codex EXP — each kill gives {per} · Lv1 and Lv2 bonus effects apply to every monster of the same family' },   // 부류 = monster_base(군대 · 부족 · 거인 · 수호자 · 이형 — 2026-10-24)
+    'cx.sub': { ko: '도감 경험치 {list}에서 레벨이 오릅니다 — 처치 하나에 {per} · Lv1 · Lv2 의 보너스 효과는 그 몬스터와 같은 종족 전체에 붙습니다', en: 'Levels up at {list} codex EXP — each kill gives {per} · Lv1 and Lv2 bonus effects apply to every monster of the same race' },   // 종족 = monster_type(데몬 · 일반 · 언데드 — 2026-11-14 R494 · ADR-1151)
     /* 잠금 문구 셋(cx.chLocked · cx.chLockedTail · cx.locked)은 2026-09-06 삭제 — 도감이 해금을 안 본다 (SCREEN_DESIGN §9) */
     'cx.sinLabel': { ko: '죄종', en: 'Sin' },
     'cx.exp': { ko: '경험치 {n}', en: '{n} EXP' },   // 그 몬스터의 누적 도감 경험치 — 카드 진행 줄 · 핍 툴팁 (ADR-0587 · ~~cx.kills 처치 {n}~~)
@@ -2974,7 +3122,7 @@ const STRINGS = {
     'cx.tip.lv': { ko: 'Lv.{lv}', en: 'Lv.{lv}' },
     'cx.tip.story': { ko: '스토리', en: 'Story' },
     'cx.tip.effects': { ko: '보너스 효과', en: 'Bonus Effects' },
-    // 단계표의 Lv1 · Lv2 — **그 몬스터 한 마리의 몫** 앞에 부류 이름(`{race}` — monster_base.csv · 군대 · 부족 · 거인 · 수호자 · 이형 — 2026-10-24)을 단다 · Lv2 는 「상대」 · `{line}` = 줄 한 줄(파밍 = 아래 다섯 ·
+    // 단계표의 Lv1 · Lv2 — **그 몬스터 한 마리의 몫** 앞에 종족 이름(`{race}` — monster_type.csv · 데몬 · 일반 · 언데드 — 2026-11-14 ADR-1151)을 단다 · Lv2 는 「상대」 · `{line}` = 줄 한 줄(파밍 = 아래 다섯 ·
     //   전투 = 장비 옵션 줄 표기) · `{v}` = 부호 붙은 값 (SCREEN_DESIGN §9 · ADR-0715 · monster_design §8 — ~~그 몬스터에게만 · cx.rw.vs_dmg~~ ADR-0667)
     'cx.rw.farm': { ko: '{race} {line}', en: '{line} from {race}' },
     'cx.rw.fight': { ko: '{race} 상대 {line}', en: '{line} vs {race}' },
@@ -2985,20 +3133,39 @@ const STRINGS = {
     'cx.rw.material': { ko: '재료 획득 {v}', en: '{v} Material Find' },
     // 스킬 도감 툴팁의 둘째 장 — 획득처 작은 초상 · 레벨이 오르면 (SCREEN_DESIGN §9-1 · ADR-0680 — ~~단계~~ ADR-0650) · 「상단」 머리는 건물 이름 데이터(building.csv)
     'cx.tip.source': { ko: '획득처', en: 'Found On' },
-    'cx.tip.roll': { ko: '보스 · 무작위 칸', en: 'Bosses · random slot' },   // 셋째 칸(직업 풀 굴림)에서 나올 수 있는 보스 — 고정 칸 몬스터와 따로 묶는다
+    'cx.tip.levelOptions': { ko: '레벨별 옵션', en: 'Options by Level' },
     'cx.tip.at': { ko: '{c}-{s}', en: '{c}-{s}' },   // 초상 아래 장-장소
     'cx.tip.lvUp': { ko: '레벨이 오르면', en: 'Per Level' },   // 아랫칸 머리글 — 그 스킬의 레벨 줄 하나 (skill_effect.csv:level_field · level_step)
-    // 레벨 줄의 칸 이름 — `level_field` 하나에 하나 · 값(`level_step`)은 오른쪽 칸이 든다. 피해 배율 · 감쇠는 하는 일 · 대상이 가른다
+    // 레벨 줄의 칸 이름 — 하는 일·대상·걸린 효과의 stat과 부호로 정한다. 값은 해당 레벨의 실효값이다.
     'cx.lv.mult': { ko: '피해 배율', en: 'Damage multiplier' },   // mult_pct — 때린다
     'cx.lv.heal': { ko: '회복 배율', en: 'Healing multiplier' },   // mult_pct — 회복 · 자기 회복
     'cx.lv.hits': { ko: '타수', en: 'Hits' },   // hits
     'cx.lv.decay': { ko: '감쇠', en: 'Falloff' },   // decay_pct — 뒤 대상일수록 줄어드는 비율
     'cx.lv.strip': { ko: '방어 깎기', en: 'Defense strip' },   // decay_pct — 가이디드(방어가 가장 두꺼운 적)는 그 적의 방어를 깎는 비율이다
     'cx.lv.dur': { ko: '지속 시간', en: 'Duration' },   // duration_sec
-    'cx.lv.value': { ko: '효과', en: 'Effect' },   // effect_value — 걸린 효과의 값(왼쪽 장의 문장이 그 효과를 말한다 · ADR-0680)
-    // 레벨 줄이 둘인 스킬(워 오더스 · 2026-10-28 R367)은 「효과」 두 줄이 안 갈려 걸린 효과의 수치 이름을 든다
-    'cx.lv.def': { ko: '방어력', en: 'Defense' },   // effect_value · def_pct
-    'cx.lv.resAll': { ko: '모든 저항', en: 'All Resistances' },   // effect_value · res_pct
+    'cx.lv.value': { ko: '효과', en: 'Effect' },   // 아직 이름을 정의하지 않은 효과의 대비값
+    'cx.lv.def': { ko: '방어력 상승', en: 'Defense increase' },
+    'cx.lv.defDown': { ko: '방어력 감소', en: 'Defense reduction' },
+    'cx.lv.resAll': { ko: '모든 저항 상승', en: 'All resistances increase' },
+    'cx.lv.resAllDown': { ko: '모든 저항 감소', en: 'All resistances reduction' },
+    'cx.lv.hp': { ko: '최대 HP 상승', en: 'Max HP increase' },
+    'cx.lv.hpDown': { ko: '최대 HP 감소', en: 'Max HP reduction' },
+    'cx.lv.dmg': { ko: '데미지 상승', en: 'Damage increase' },
+    'cx.lv.dmgDown': { ko: '데미지 감소', en: 'Damage reduction' },
+    'cx.lv.phys': { ko: '물리 데미지 상승', en: 'Physical damage increase' },
+    'cx.lv.physDown': { ko: '물리 데미지 감소', en: 'Physical damage reduction' },
+    'cx.lv.speed': { ko: '공격 속도 상승', en: 'Attack speed increase' },
+    'cx.lv.speedDown': { ko: '공격 속도 감소', en: 'Attack speed reduction' },
+    'cx.lv.takenUp': { ko: '받는 피해 증가', en: 'Damage taken increase' },
+    'cx.lv.takenDown': { ko: '받는 피해 감소', en: 'Damage taken reduction' },
+    'cx.lv.barrier': { ko: '보호막 (최대 HP 비율)', en: 'Shield / max HP' },
+    'cx.lv.elementDamage': { ko: '{e} 추가 피해', en: '{e} bonus damage' },
+    'cx.lv.elementMult': { ko: '{e} 피해 배율', en: '{e} damage multiplier' },
+    'cx.lv.defIgnore': { ko: '방어력 무시', en: 'Defense ignored' },
+    'cx.lv.vsBurn': { ko: '화상 대상 데미지 상승', en: 'Damage vs burning foes' },
+    'cx.lv.ailmentChance': { ko: '{a} 확률', en: '{a} chance' },
+    'cx.lv.ailmentDuration': { ko: '{a} 지속 시간', en: '{a} duration' },
+    'cx.lv.regen': { ko: '초당 회복 (최대 HP 비율)', en: 'HP / sec (% max HP)' },
     'cx.lv.cool': { ko: '쿨타임', en: 'Cooldown' },   // cool_sec
     'cx.lv.hitsAt': { ko: 'Lv {l} 에 +1번', en: '+1 at Lv {l}' },   // hits — 단계가 정수가 아니면 한 타가 느는 레벨(러시 · 2026-10-28 R374)
     'cx.note': {
@@ -3017,7 +3184,6 @@ const STRINGS = {
        접두를 `cx.` 로 갈면 몬스터 카드 문구와 한 이름 공간에 섞여 오히려 어느 세그먼트의 것인지가 안 읽힌다.
        09-08 삭제 — `ix.h`(탭 제목 · `nav.codex` 가 받는다) · `ix.seg.*`(세그먼트 · `cx.seg.*` 가 받는다) ·
        `ix.g.monster`(몬스터 초상 묶음 · 몬스터 세그먼트의 카드가 그 일을 한다 — §9). */
-    'ix.g.heroCls': { ko: '{cls} 초상', en: '{cls} Portraits' },   // 직업 하나가 묶음 하나 (ADR-0066) — ~~ix.g.hero~~ 대체
     // 아이템 세그먼트의 안쪽 분류 (ADR-0179) — 장신구도 비무기 장비이므로 방어구 쪽 부위 묶음에 든다
     // 물약은 셋째 탭이다 [2026-09-23 · ADR-0314] — 장비가 아니라 소모품이라 방어구 쪽에 못 든다
     'ix.seg.weapon': { ko: '무기', en: 'Weapons' },
@@ -3031,7 +3197,6 @@ const STRINGS = {
     /* 무기 베이스 — 도감 타일 이름 (2026-09-10 · 둔기 · 창 · 활 2026-09-11 · 스태프 · 오브 · 십자가 · 성경 · 석궁 2026-09-14). ⚠ **`weapon_base.csv` 와 같은 이름이 두 벌이다** —
        본편 열 무기군 전부 CSV 행이 섰으므로 도감이 `L(row)` 로 읽게 되면 이 줄들은 걷는다. 그때까지 CSV 와 **글자까지 같게** 둔다.
        **영어가 원본이고 한글은 직역**이다 (CLAUDE.md 규칙 6). */
-    'ix.g.weaponBase': { ko: '{group} 베이스', en: '{group} Bases' },
     'ix.b.long_sword': { ko: '롱 소드', en: 'Long Sword' },
     'ix.b.claymore': { ko: '클레이모어', en: 'Claymore' },
     'ix.b.highland_blade': { ko: '하이랜드 블레이드', en: 'Highland Blade' },
@@ -3219,9 +3384,34 @@ const STRINGS = {
     'bt.ail.burn': { ko: '화상', en: 'Burn' },
     'bt.ail.poison': { ko: '중독', en: 'Poison' },
     'bt.ail.stun': { ko: '스턴', en: 'Stun' },
-    'bt.effect.burn': { ko: '받는 피해 {v}% 증가 · 받는 회복 {c}% 감소', en: 'Damage taken +{v}% · Healing received −{c}%' },
+    'bt.effect.burn': { ko: '받는 회복 {c}% 감소', en: 'Healing received −{c}%' },
     'bt.effect.poison': { ko: '초당 독 피해 {n}', en: '{n} poison damage per second' },
     'bt.effect.stun': { ko: '행동 · 쿨타임 정지', en: 'Actions and cooldowns stopped' },
+    // 전직 트리 창 (2026-11-14 · R471 · SCREEN_DESIGN §4-2 「창 뱃지 툴팁」 — 둘째 줄 = 실제 적용 효과) — 값은 `buff` 이벤트의 실효값
+    'bt.effect.vsBurn': { ko: '화상 걸린 적에게 데미지 {v}% 증가', en: 'Damage to burning enemies +{v}%' },
+    'bt.effect.snipe': { ko: '스나이프 데미지 {v}% 증가', en: 'Snipe damage +{v}%' },
+    'bt.effect.reload': { ko: '스킬로 처치하면 그 스킬 쿨타임 초기화 · 라운드에 {n}번', en: { one: "Skill kills reset that skill's cooldown · {n} per round", other: "Skill kills reset that skill's cooldown · {n} per round" } },
+    'bt.effect.supportFire': { ko: '아군 기본 공격마다 {v}% 지원 화살', en: '{v}% support arrow with each ally basic attack' },
+    'bt.effect.atone': { ko: '받는 직격 피해의 {v}%만큼 상대 파티 회복', en: '{v}% of direct damage taken heals the other party' },
+    'bt.effect.ailCut': { ko: '받는 상태이상 · 디버프 시간 {v}% 감소', en: 'Ailment and debuff duration −{v}%' },
+    'bt.effect.counter': { ko: '맞으면 {v}% 위력으로 반격', en: 'Strikes back at attackers ({v}%)' },
+    'bt.effect.ember': { ko: '불씨가 쌓이면 터져 {v}% 화염 피해', en: 'Embers burst for {v}% fire damage' },
+    'bt.effect.elemShield': { ko: '원소 직격 피해를 흡수하는 보호막', en: 'Shield that absorbs elemental hits' },
+    'bt.effect.conv': { ko: '물리 직격의 {v}%를 {e} 피해로', en: '{v}% of physical hits dealt as {e} damage' },
+    'bt.effect.convAmp': { ko: '바뀐 {e} 피해 {v}% 증가', en: 'Converted {e} damage +{v}%' },
+    'bt.effect.endure': { ko: '쓰러질 피해에 최대 HP {v}%로 버팀', en: 'Survives a lethal hit at {v}% max HP' },
+    'bt.effect.berserk': { ko: '스킬 데미지 {v}% 증가 · 때릴 때 HP 소모', en: 'Skill damage +{v}% · Costs HP per hit' },
+    'bt.effect.devotion': { ko: '아군이 받는 직격의 {v}%를 대신 받음', en: "Takes {v}% of allies' direct damage" },
+    'bt.effect.devotionDr': { ko: '대신 받는 피해 {v}% 감소', en: 'Redirected damage −{v}%' },
+    'bt.effect.will': { ko: '맞을 때마다 받는 피해 {v}%씩 감소', en: 'Damage taken −{v}% per hit taken' },
+    'bt.effect.reflect': { ko: '받은 직격 피해의 {v}% 반사', en: 'Reflects {v}% of direct damage taken' },
+    'bt.effect.trap': { ko: '덫 — 행동하면 터짐', en: 'Trapped — triggers when it acts' },
+    'bt.effect.tickHit': { ko: '일정 간격으로 {e} 피해 {v}%', en: '{e} damage ({v}%) at intervals' },
+    'bt.effect.strike': { ko: '일정 간격으로 {e} 벼락 {v}%', en: '{e} bolts ({v}%) at intervals' },
+    'bt.effect.periodFix': { ko: '공격 주기 = 무기 주기의 {v}%', en: 'Attack interval = {v}% of weapon speed' },
+    'bt.effect.defIgnore': { ko: '방어력 {v}% 무시', en: 'Ignores {v}% Defense' },
+    'bt.effect.shatter': { ko: '결빙된 적을 다시 얼리면 스턴', en: 'Refreezing a frozen enemy stuns it' },
+    'bt.effect.formation': { ko: '전열 · 후열이 뒤바뀜', en: 'Front and back rows swapped' },
     'bt.effect.element': { ko: '원소', en: 'elemental' },
     // 현재 창의 시간 상태 — 이름 오른쪽에 값만 선다
     'bt.effect.permanent': { ko: '상시', en: 'Permanent' },
@@ -3281,6 +3471,7 @@ const STRINGS = {
     'log.say.ailEnd': { ko: '{a}의 {ico} {k} 해제', en: '{ico} {k} on {a} ended' },
     'log.say.slain': { ko: '{a} 처치', en: '{a} slain' },
     'log.say.downed': { ko: '{a} 전투 불능', en: '{a} downed' },
+    'log.say.rise': { ko: '{a|이/가} {ico|으로/로} {d}{d|을/를} 일으킴', en: '{a} raised {d} with {ico}' },   // 리저렉션 (2026-11-14 R471)
     'log.say.call': { ko: '{a|이/가} {ico|으로/로} {d} 소환', en: '{a} summoned {d} with {ico}' },
     // 장 보스 고유 넷 (2026-10-29 · R380) — 아이언 메이든이 되돌린 피해 · 델리게이트 · 스웜이 다시 뭉쳤다
     'log.say.maiden': { ko: '{d|이/가} {ico|으로/로} {v} 피해를 되받음', en: '{d} took {v} back from {ico}' },
@@ -3293,6 +3484,7 @@ const STRINGS = {
     'pop.evade': { ko: '회피', en: 'EVADE' },   // 이베이드 (2026-10-16)
     'pop.echo': { ko: '에코', en: 'ECHO' },     // 에코 (2026-10-16)   // 반격한 카드에 뜬다 (ADR-0158)
     'pop.downed': { ko: '전투 불능', en: 'Downed' },
+    'pop.rise': { ko: '부활', en: 'Raised' },   // 리저렉션 (2026-11-14 R471)
     // 레벨업 (2026-09-29 · ADR-0435) — 오른 카드의 금색 글자 · 아래 적중 변화 줄(`pop.lvupHit`)은 2026-10-22 삭제 (ADR-0718)
     'pop.lvup': { ko: '레벨 업', en: 'LEVEL UP' },
 };

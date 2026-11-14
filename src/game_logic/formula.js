@@ -252,7 +252,9 @@ export function createFormula(balance) {
         v *= 1 + (a.bonusPct ?? 0);                                // 피해량(도감) — 데미지 % 괄호와 합치지 않고 따로 곱한다 (2026-09-18)
         // 치명 확률에 상한이 없다 [2026-09-25 사용자 — ~~`crit_cap_pct`~~ 삭제] — 1 이상이면 전타 치명. 굴림은 그대로 1회(rng ③)
         const crit = rng() < (a.crit ?? 0);
-        if (crit) v *= a.critDmg ?? 1;
+        // 비껴 난 칼날(기사 마스터리 T4 ③ · 맞는 쪽 `d.adv.crit_taken_cut` · 2026-11-14 R437) — 치명으로 **더** 들어오는 몫만 × (1 − 값) · 없으면 종전 그대로
+        const cc = d.adv?.crit_taken_cut ?? 0;
+        if (crit) v *= cc > 0 ? 1 + ((a.critDmg ?? 1) - 1) * (1 - Math.min(1, cc)) : a.critDmg ?? 1;
         // 확률로 터지는 추가 피해 — 치명과 **따로 굴려 겹친다**(§9-2). 확률이 있는 타격만 굴린다:
         //   기본 공격은 확률이 0 이라 굴림을 안 태우므로 수열이 종전과 같다 (INTERFACE §5-2)
         let proc = false;
@@ -267,18 +269,41 @@ export function createFormula(balance) {
         // 고정 피해 몫(`a.fixedShare` · 전직 공통 줄 크루세이더 3 · 2026-11-13 R471) — 그 몫은 아래 방어 · 저항 · 피해 감소를 안 받고 끝에 더한다 · 없으면 0 이라 종전 그대로
         const fixedPart = a.fixedShare > 0 ? v * Math.min(1, a.fixedShare) : 0;
         if (fixedPart) v -= fixedPart;
+        // 물리 → 원소 전환(`a.conv` — 원소 전환 오오라 · 크루세이더 (1) · 2026-11-14 R471 · advance_tree_draft §5 「한 타격을 물리 · 원소로 나눠 따로 깎기」) —
+        //   물리 타격의 몫마다 그 원소 저항(관통 `pen` 포함)으로 따로 깎는다 · 방어는 안 받는다 · 몫의 합은 1 에서 자른다 · 몫마다 증폭(`amp`) ·
+        //   몫마다 터짐(`procChance` > 0 이면 **rng 1회** · `procMult`) · 피해 감소 · 절대값 감소는 아래에서 합에 한 번 · 없으면 종전 그대로
+        let convPart = 0, convProc = false;
+        if (a.conv && a.atkType === 'physical') {
+            let left = 1;
+            const base = v;
+            for (const c of a.conv) {
+                const share = Math.min(left, Math.max(0, c.share));
+                if (!(share > 0)) continue;
+                left -= share;
+                let p = base * share * (1 + (c.amp ?? 0));
+                if ((c.procChance ?? 0) > 0 && rng() < Math.min(1, c.procChance)) { p *= c.procMult ?? 1; convProc = true; }
+                const cut = (a.resReduction ?? 0) + (a.resReductionEl?.[c.el] ?? 0) + (c.pen ?? 0);
+                convPart += p * (1 - appliedResist((d.res?.[c.el] ?? 0) - cut, d.resMaxBonus ?? 0, d.resMaxEl?.[c.el] ?? 0));
+            }
+            v = base * left;
+        }
         if (a.atkType === 'physical') {
             v *= 1 - mitigation(physicalDefense(d.def ?? 0, a.defIgnore ?? 0));
+            if (convPart) v += convPart;
         } else {
             // 저항 감소는 관통이라는 별도 규칙이 아니라 저항값에 음수를 더하는 것이다 (§9-5)
             //   `resReductionEl` = 원소별 저항 무시(반지 시기 칸 · 2026-09-21) — **그 타격 원소의 값만** 더한다 · 없으면 0 이라 종전과 같다
             const cut = (a.resReduction ?? 0) + (a.resReductionEl?.[a.atkType] ?? 0);
-            v *= 1 - appliedResist((d.res?.[a.atkType] ?? 0) - cut, d.resMaxBonus ?? 0, d.resMaxEl?.[a.atkType] ?? 0);
+            // 마법사 사냥꾼의 가죽(전사 마스터리 T4 ③ · 맞는 쪽 `d.adv.elem_to_phys` · 2026-11-14 R437) — 원소 피해의 값만큼을 물리로 바꿔 받는다(그 몫은 물리 방어로 막는다) · 없으면 종전 그대로
+            const ep = d.adv?.elem_to_phys > 0 ? Math.min(1, d.adv.elem_to_phys) : 0;
+            if (ep) v = v * (1 - ep) * (1 - appliedResist((d.res?.[a.atkType] ?? 0) - cut, d.resMaxBonus ?? 0, d.resMaxEl?.[a.atkType] ?? 0))
+                + v * ep * (1 - mitigation(physicalDefense(d.def ?? 0, a.defIgnore ?? 0)));
+            else v *= 1 - appliedResist((d.res?.[a.atkType] ?? 0) - cut, d.resMaxBonus ?? 0, d.resMaxEl?.[a.atkType] ?? 0);
         }
         v *= 1 - (d.dr ?? 0);
         v -= d.drFlat ?? 0;                                        // 절대값 피해 감소 — 모든 감소 뒤 · 하한은 아래 dmg_min (2026-09-18)
         if (fixedPart) v = Math.max(0, v) + fixedPart;
-        return { hit: true, dmg: Math.max(B.dmg_min, Math.round(v)), crit, proc };
+        return convProc ? { hit: true, dmg: Math.max(B.dmg_min, Math.round(v)), crit, proc, convProc } : { hit: true, dmg: Math.max(B.dmg_min, Math.round(v)), crit, proc };
     }
 
     /**

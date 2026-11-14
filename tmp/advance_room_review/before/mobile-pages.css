@@ -1,0 +1,469 @@
+/* Fixed mobile screens. Loaded after the responsive shell and component styles. */
+:root[data-mobile] #app > .main,
+:root[data-mobile] #app.bt-max > .main,
+:root[data-mobile] #app.mobile-battle-details > .main {
+    display: flex; flex-direction: column; overflow: hidden; gap: 8px;
+    padding: 8px; min-height: 0;
+}
+:root[data-mobile] .main > .page,
+:root[data-mobile] .main > .char-stack,
+:root[data-mobile] .main > .page-stack {
+    display: flex; flex-direction: column; flex: 1 1 0; height: 100%; min-height: 0; gap: 8px; overflow: hidden;
+}
+:root[data-mobile] .main > .page > .fill { flex: 1 1 0; min-height: 0; overflow: hidden; }
+:root[data-mobile] .main .mobile-unbox { display: contents !important; }
+:root[data-mobile] .mobile-deck {
+    display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow: hidden; flex: 1 1 0;
+}
+:root[data-mobile] .mobile-pages {
+    display: grid; grid-template-columns: repeat(var(--mobile-tabs), minmax(0, 1fr));
+    flex: none; gap: 3px; padding: 3px; border: 1px solid var(--border-primary);
+    background: var(--bg-secondary); order: -1; min-width: 0;
+}
+:root[data-mobile] .mobile-page-tab {
+    min-width: 0; min-height: 40px; padding: 5px 3px; font-size: var(--fs-xs); line-height: 1.25;
+    border-color: transparent; background: transparent; color: var(--text-muted);
+}
+:root[data-mobile] .mobile-page-tab.on {
+    color: var(--text-primary); border-color: var(--border-highlight);
+    background: linear-gradient(180deg, rgba(var(--accent-rgb), .15), transparent);
+    box-shadow: inset 0 -2px var(--text-accent);
+}
+:root[data-mobile] .mobile-pane { display: none !important; }
+:root[data-mobile] .mobile-pane.mobile-pane-on {
+    display: flex !important; flex-direction: column; flex-wrap: nowrap; flex: 1 1 0 !important; min-height: 0 !important;
+    height: auto; width: 100%; max-width: 100%; overflow: auto; overscroll-behavior: contain;
+    scrollbar-width: thin; margin: 0; gap: 8px;
+}
+:root[data-mobile] .mobile-pane > * { flex-shrink: 0; }
+:root[data-mobile] .mobile-pane > h2 { margin: 0 0 6px; }
+:root[data-mobile] .mobile-pane > .box-body,
+:root[data-mobile] .mobile-pane > .cs-scroll,
+:root[data-mobile] .mobile-pane > .inv-cells {
+    flex: 1 1 0; min-height: 0; max-height: none; overflow: auto; overscroll-behavior: contain;
+}
+:root[data-mobile] .mobile-pane.bag { overflow: hidden; }
+:root[data-mobile] .mobile-pane.bag .items-tools { flex: none; gap: 4px; }
+:root[data-mobile] .mobile-pane.bag .items-tools .btn { min-height: 36px; padding: 4px 6px; font-size: var(--mobile-fs-caption); }
+:root[data-mobile] .mobile-pane.bag .inv-cells { align-content: start; padding-bottom: 5px; }
+
+/* Battle reports keep every statistic, with one hero card per row on phones. */
+:root[data-mobile] .rep-runs.mobile-pane { overflow: hidden; }
+:root[data-mobile] .rep-list { flex: 1 1 0; min-height: 0; }
+:root[data-mobile] .rep-detail.mobile-pane { overflow-x: hidden; }
+:root[data-mobile] .report-head { flex-wrap: wrap; gap: 5px 10px; padding-bottom: 8px; margin-bottom: 4px; }
+:root[data-mobile] .rep-detail .gain-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; white-space: normal; }
+:root[data-mobile] .rep-detail .gain-row > div { display: flex; flex-direction: column; gap: 3px; }
+:root[data-mobile] .rep-ct { min-width: 0; }
+:root[data-mobile] .rep-ct .ct-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 8px; padding: 8px 0; }
+:root[data-mobile] .rep-ct .ct-row.head, :root[data-mobile] .rep-ct .ct-row.pad { display: none; }
+:root[data-mobile] .rep-ct .n { grid-column: 1 / -1; }
+:root[data-mobile] .rep-ct .d { flex-wrap: wrap; gap: 3px 6px; }
+:root[data-mobile] .rep-ct .d::before { flex: 0 0 100%; }
+:root[data-mobile] .rep-ct [data-mobile-label]::before { content: attr(data-mobile-label); display: block; color: var(--text-muted); font-size: var(--fs-2xs); margin-bottom: 3px; position: relative; }
+:root[data-mobile] .rep-ct .v, :root[data-mobile] .rep-ct .f { text-align: left; white-space: normal; overflow-wrap: anywhere; }
+:root[data-mobile] .rep-ct .ct-row.total > :last-child { display: none; }
+:root[data-mobile] .rep-foes { flex-wrap: wrap; }
+
+/* The hero strip is a compact, fixed selection bar. */
+:root[data-mobile] .main .hs-panel { flex: none; padding: 3px; order: -2; height: 86px; overflow: hidden; }
+:root[data-mobile] .main .hero-strip { height: 100%; padding: 4px; gap: 7px; overflow-y: hidden; }
+:root[data-mobile] .main .hs-card { flex: 0 0 66px; width: 66px; min-width: 66px; height: 70px; }
+:root[data-mobile] .main .hs-card .hero-face { height: 100%; width: 100%; }
+:root[data-mobile] .main .hs-name { font-size: var(--fs-2xs); line-height: 16px; padding-inline: 2px; }
+:root[data-mobile] .main .hs-band { font-size: var(--mobile-fs-micro); padding: 1px 2px; }
+:root[data-mobile] .main .hs-dismiss { min-height: 24px; height: 24px; padding: 1px 3px; font-size: var(--mobile-fs-small); bottom: 16px; }
+:root[data-mobile] .main .hs-lv { font-size: var(--mobile-fs-small); }
+:root[data-mobile] .main .hs-doing { font-size: var(--mobile-fs-micro); }
+
+/* Each screen keeps its selectors and actions outside the changing content area. */
+:root[data-mobile] .pt-body { padding: 6px; gap: 5px; }
+:root[data-mobile] .pt-body > .pt-pick { flex: none; order: -2; margin: 0; }
+:root[data-mobile] .pt-pick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+:root[data-mobile] .pt-pick > button { min-width: 0; white-space: normal; padding: 5px 3px; font-size: var(--mobile-fs-caption); }
+:root[data-mobile] .pt-tactics .rs-grid { justify-content: flex-start; gap: 8px; }
+:root[data-mobile] .pt-tactics .rs-colh { display: none; }
+:root[data-mobile] .pt-tactics .rs-cell { display: grid; flex: none; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; width: 100%; }
+:root[data-mobile] .pt-tactics .rs-cell .rs-top { grid-column: 1; grid-row: 1; justify-content: flex-start; }
+:root[data-mobile] .pt-tactics .rs-cell .rs-pin { grid-column: 2; grid-row: 1; min-height: 36px; }
+:root[data-mobile] .pt-tactics .rs-cell .rs-sin { grid-column: 1; grid-row: 2; }
+:root[data-mobile] .pt-tactics .rs-cell .rs-cnt-c { grid-column: 2; grid-row: 2; }
+:root[data-mobile] .pt-tactics .rs-cell .rs-cond,
+:root[data-mobile] .pt-tactics .rs-cell .rs-eff,
+:root[data-mobile] .pt-tactics .rs-cell .rs-lead { grid-column: 1 / -1; white-space: normal; min-width: 0; }
+:root[data-mobile] .pt-tactics .rs-lead[data-mobile-label]::before { content: attr(data-mobile-label); color: var(--text-muted); font-size: var(--fs-2xs); margin-right: 8px; }
+:root[data-mobile] .fm-main { flex: none; gap: 8px; }
+:root[data-mobile] .fm-side { flex: none; }
+:root[data-mobile] .fm-board { flex: none; }
+:root[data-mobile] .fm-tpl { min-height: 36px; padding: 3px; font-size: var(--fs-2xs); }
+:root[data-mobile] .pt-potion { padding: 8px; }
+:root[data-mobile] .cn-box { padding: 6px; }
+:root[data-mobile] .cn-lotbox > .cn-lots { flex: 1 1 0; min-height: 0; overflow: auto; align-content: start; }
+:root[data-mobile] .cn-lots { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 112px; gap: 6px; }
+:root[data-mobile] .cn-lot.empty { display: none; }
+:root[data-mobile] .cn-side { padding: 8px; }
+:root[data-mobile] .cn-side .cn-head { gap: 8px; }
+:root[data-mobile] .cn-side > .cn-title { margin: 0; }
+:root[data-mobile] .cn-next-body { gap: 8px; }
+:root[data-mobile] .dp-tree > .dp-tree-grid {
+    display: flex; flex-direction: column; min-width: 0; min-height: 0; flex: 1 1 0; overflow: auto;
+    gap: 10px; padding: 4px; width: 100%;
+}
+:root[data-mobile] .dp-tree.mobile-pane { overflow: hidden; }
+:root[data-mobile] .mobile-research-line {
+    display: grid; grid-template-columns: repeat(var(--dp-tiers), minmax(0, 1fr));
+    gap: 7px 0; padding: 8px; border: 1px solid var(--border-primary); background: var(--bg-secondary); flex: none;
+}
+:root[data-mobile] .mobile-research-line > .dp-tree-line { grid-column: 1 / -1 !important; grid-row: auto !important; padding: 0; }
+:root[data-mobile] .mobile-research-line > .dp-tree-cell { grid-column: auto !important; grid-row: 2 !important; height: 52px; --dp-orb: 44px; }
+:root[data-mobile] .mobile-research-line .dp-card-h { flex-wrap: wrap; gap: 6px; }
+:root[data-mobile] .mobile-research-line .dp-card-lv { font-size: var(--mobile-fs-caption); }
+:root[data-mobile] .mobile-research-line .dp-card-ico { width: 28px; height: 28px; }
+:root[data-mobile] .mobile-research-line .dp-reg { margin-left: auto; }
+:root[data-mobile] .ex-map-wrap.fill { position: relative; display: flex; flex-direction: column; gap: 8px; flex: 1 1 0; height: auto; min-height: 0; margin: 0; }
+:root[data-mobile] .ex-map { flex: none; width: min(100cqw, calc(38cqh * var(--ex-ar))); height: auto; min-height: 0; }
+:root[data-mobile] .mobile-explore-spots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-content: start; flex: 1 1 0; min-height: 0; overflow: auto; padding: 4px; }
+:root[data-mobile] .mobile-explore-spots .ex-spot {
+    position: relative; inset: auto !important; transform: none; width: 100%; min-height: 62px; aspect-ratio: auto;
+    display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 4px; border: 1px solid var(--ring); background: var(--bg-secondary);
+    text-align: left; color: var(--text-primary); box-shadow: none;
+}
+:root[data-mobile] .mobile-explore-spots .ex-spot img { flex: none; width: 42px; height: 42px; border: 2px solid var(--ring); }
+:root[data-mobile] .mobile-explore-spots .ex-spot span { font-size: var(--mobile-fs-caption); line-height: 1.4; overflow-wrap: anywhere; }
+:root[data-mobile] .mobile-explore-spots .ex-spot.on { outline: 2px solid var(--text-accent); outline-offset: -2px; }
+:root[data-mobile] .mobile-explore-spots .ex-spot.out img { background: conic-gradient(var(--ring) calc(var(--p, 0) * 1turn), transparent 0); padding: 2px; }
+:root[data-mobile] .ex-map-wrap > .ex-pop { display: flex; flex-direction: column; inset: 4px !important; width: auto; min-width: 0; max-width: none; max-height: none; transform: none; overflow: hidden; z-index: 5; }
+:root[data-mobile] .ex-pop > .ex-head, :root[data-mobile] .ex-pop > .ex-story { flex: none; }
+:root[data-mobile] .ex-pop > .ex-body { flex: 1 1 0; min-height: 0; overflow: auto; }
+:root[data-mobile] .ex-head-name { min-width: 0; white-space: normal; }
+:root[data-mobile] .ex-pop .ex-foot { flex-wrap: wrap; }
+:root[data-mobile] .ex-pop .ex-body > * { flex-shrink: 0; }
+:root[data-mobile-landscape] .ex-map-wrap.fill { flex-direction: row; align-items: center; }
+:root[data-mobile-landscape] .ex-map { width: 38%; }
+:root[data-mobile-landscape] .mobile-explore-spots { height: 100%; }
+:root[data-mobile] .tv-top > .panel.mobile-pane { --tv-c: calc(100cqw - 20px); --tv-face: 80px; }
+:root[data-mobile] .tv-hire .box-body { display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+:root[data-mobile] .c-tavern > .tv-top > .panel > .box-body { flex: 1 1 0; min-height: 0; }
+:root[data-mobile] .tv-hire .tv-row { flex: 1 1 0; min-height: 0; overflow: auto; }
+:root[data-mobile] .tv-cands { gap: 8px; }
+:root[data-mobile] .tv-low .tv-cm .cm-body { flex: 1 1 0; overflow: auto; min-height: 0; }
+:root[data-mobile] .c-forge-col.mobile-pane { overflow: hidden; }
+:root[data-mobile] .c-forge-col > .fg-tabs { flex: none; margin: 0; }
+:root[data-mobile] .c-forge-col > .fg-panel { flex: 1 1 0; min-height: 0; overflow: auto; }
+:root[data-mobile] .fg-panel .fg-split { flex: 1 1 0; min-height: 0; overflow: auto; }
+/* Library: folder tabs over one sheet — the sheet takes the rest and each section body scrolls (ADR-1165). */
+:root[data-mobile] .c-lib-col { flex: 1 1 0; min-height: 0; overflow: hidden; }
+:root[data-mobile] .c-lib-col > .fg-tabs { flex: none; margin: 0; }
+:root[data-mobile] .c-lib-col > .fg-panel { flex: 1 1 0; min-height: 0; overflow: hidden; }
+:root[data-mobile] .lib-panel > :is(.lib-split, .lib-sec) { flex: 1 1 0; min-height: 0; }
+:root[data-mobile] .lib-sec > .box-body { flex: 1 1 0; min-height: 0; overflow: auto; }
+:root[data-mobile] .fg-up { min-height: 0; }
+:root[data-mobile] .fg-up-work { padding: 8px; }
+:root[data-mobile] .td-sale-total { position: sticky; bottom: 0; background: var(--bg-secondary); padding: 8px 0; }
+:root[data-mobile] .arena-page { padding: 8px; }
+:root[data-mobile] .arena-page > h2 { flex: none; margin: 0; order: -2; }
+:root[data-mobile] .arena-main > .arena-prep { flex: none; min-height: 280px; height: 280px; }
+:root[data-mobile] .arena-actions { position: sticky; bottom: 0; z-index: 4; background: var(--bg-secondary); padding: 6px; }
+:root[data-mobile] .arena-rail .cs-ladder { min-height: 300px; }
+:root[data-mobile] .ar-reg { min-height: 0; overflow: auto; }
+
+/* Lists: fixed filters and titles, one scrollable list below. */
+:root[data-mobile] .main > .diff-tabs,
+:root[data-mobile] .main > .cx-tabs { position: static; flex: none; margin: 0; }
+:root[data-mobile] .main > .diff-panel { flex: 1 1 0; min-height: 0; overflow: auto; padding: 8px; }
+:root[data-mobile] .main > .panel.diff-panel { margin: 0; }
+:root[data-mobile] .main > .diff-tabs { padding: 0; }
+:root[data-mobile] .diff-panel > .sub-bar { position: sticky; top: -8px; z-index: 2; background: var(--bg-secondary); }
+:root[data-mobile] .diff-panel .sub-bar > .segmented { display: flex; flex-wrap: nowrap; overflow-x: auto; }
+:root[data-mobile] .diff-panel .sub-bar .btn { flex: none; }
+:root[data-mobile] .main > .cx-box { flex: 1 1 0; min-height: 0; overflow: auto; margin: 0; padding: 8px; }
+:root[data-mobile] .cx-box > .sub-bar { position: sticky; top: -8px; z-index: 4; background: var(--bg-secondary); padding: 4px 0; }
+:root[data-mobile] .help-tabs { flex: none; }
+:root[data-mobile] .help-panel { display: flex; flex-direction: column; min-height: 0; overflow: hidden; padding: 8px; }
+:root[data-mobile] .help-panel > h2, :root[data-mobile] .help-search { flex: none; }
+:root[data-mobile] .help-content { display: flex; flex-direction: column; flex: 1 1 0; min-height: 0; overflow: hidden; }
+:root[data-mobile] .help-body { flex: 1 1 0; height: 100%; min-height: 0; overflow: auto; }
+:root[data-mobile] .lab-item { flex: 1 1 0; min-height: 0; }
+:root[data-mobile] .lab-row, :root[data-mobile] .lab-place { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+:root[data-mobile] .lab-row > .segmented { justify-content: flex-start; }
+:root[data-mobile] .lab-place { padding: 6px 0; }
+:root[data-mobile] .lab-place-name { white-space: normal; }
+:root[data-mobile] .lab-chips { min-width: 0; }
+
+/* Inventory / duel statistics replace the battlefield and keep a return action. */
+:root[data-mobile] #app.mobile-battle-details .bt-page { height: 100%; min-height: 0; display: flex; }
+:root[data-mobile] #app.mobile-battle-details .bt-page > .battle-panel { display: none; }
+:root[data-mobile] .mobile-battle-back { display: flex; flex: none; order: -2; }
+:root[data-mobile] .mobile-battle-back .bt-max-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px; position: static;
+    width: 100%; height: 44px; margin: 0; padding: 6px; background: var(--bg-secondary);
+}
+:root[data-mobile] .mobile-battle-back .bt-max-btn svg { width: 20px; height: 20px; }
+:root[data-mobile] .mobile-battle-back strong { font-size: var(--fs-sm); }
+:root[data-mobile] .mobile-detail-scroll { display: flex !important; flex-direction: column; flex: 1 1 0; min-height: 0; overflow: auto; gap: 8px; }
+:root[data-mobile] .mobile-detail-scroll > * { flex-shrink: 0; }
+:root[data-mobile] .mobile-detail-scroll > [data-lab-tools] { position: sticky; top: 0; z-index: 4; background: var(--bg-secondary); }
+:root[data-mobile] .mobile-detail-scroll .lab-duel-bar { flex-wrap: wrap; gap: 8px; padding: 8px; }
+:root[data-mobile] .mobile-detail-scroll .lab-duel-kit { flex-basis: 100%; }
+:root[data-mobile] .arena-floor .tdm-view { position: static; grid-column: 1 / -1; justify-content: flex-end; margin-top: 6px; }
+:root[data-mobile] .arena-floor .tdm-cols { display: flex; flex-direction: column; flex: none; gap: 10px; }
+:root[data-mobile] .arena-floor .tdm-hero { flex: none; }
+:root[data-mobile] .arena-floor .tdm-hero + .tdm-hero { padding: 10px 0 0; border-left: 0; border-top: 1px solid var(--border-primary); }
+:root[data-mobile] .arena-floor .tdm-sks { flex: none; overflow: visible; }
+:root[data-mobile] #app.mobile-battle-details .bt-page > .mobile-battle-back { display: flex; }
+:root[data-mobile] .battle-body > .arena {
+    overflow: hidden; justify-content: center; min-height: 0; padding: 42px 6px 50px;
+}
+:root[data-mobile] .battle-head { margin-bottom: 4px; padding-bottom: 4px; }
+:root[data-mobile] .arena > .side { flex: none; }
+:root[data-mobile] .arena > .b-belt:not(.e-belt) { position: absolute; left: 6px; bottom: 5px; margin: 0; }
+:root[data-mobile] .arena > .bt-max-btn { position: absolute; right: 6px; bottom: 5px; margin: 0; }
+:root[data-mobile] .arena .divider { margin: 16px 0; }
+
+/* Start and story screens share the fixed viewport contract. */
+:root[data-mobile] .main > .ng-wrap { width: 100%; height: 100%; padding: 0; min-height: 0; margin: 0; }
+:root[data-mobile] .ng-wrap .ng-card { flex: 1 1 0; overflow: auto; padding: 10px; }
+:root[data-mobile] .ng-wrap .ng-legend { padding: 8px; }
+:root[data-mobile] .ng-wrap .ng-actions { flex: none; padding: 0; margin: 0; }
+:root[data-mobile] .ng-wrap .ng-actions .btn { flex: 1 1 auto; }
+:root[data-mobile] .main > .pro-wrap { display: flex; flex-direction: column; height: 100%; min-height: 0; padding: 8px; }
+:root[data-mobile] .pro-body { flex: 1 1 0; min-height: 0; overflow: auto; }
+:root[data-mobile] .pro-actions { position: static; flex: none; }
+:root[data-mobile] .main > .mn-wrap { flex: 1 1 0; min-height: 0; overflow: auto; padding: 12px 6px; }
+
+/* Popup title and close controls remain available; tabs divide large game panels. */
+:root[data-mobile] .modal-box { display: flex; flex-direction: column; overflow: hidden; gap: 8px; }
+:root[data-mobile] .modal-box > :not(.modal-head) { min-height: 0; flex-shrink: 1; overflow: auto; }
+:root[data-mobile] .modal-box > .mobile-deck { overflow: hidden; }
+:root[data-mobile] .modal-box > .mobile-dialog-actions { flex: none; margin: 0; overflow: visible; padding: 8px 0 0; border-top: 1px solid var(--border-primary); }
+:root[data-mobile] .mobile-dialog-actions .btn { flex: 1; }
+:root[data-mobile] .modal-box > .mobile-dialog-actions { display: flex; flex-direction: row; gap: 8px; }
+:root[data-mobile] .modal-head { position: static; flex: none; padding: 0 0 8px; }
+:root[data-mobile] .modal-body { flex: 1 1 auto; min-height: 0; overflow: auto; }
+:root[data-mobile] .modal-box:has(.mobile-deck) { height: 100%; }
+:root[data-mobile] .modal-body:has(.mobile-deck) { display: flex; flex-direction: column; overflow: hidden; }
+:root[data-mobile] .modal-body > .mobile-deck { flex: 1 1 0; min-height: 0; }
+:root[data-mobile] .modal-body > .form-actions { flex: none; }
+:root[data-mobile] .modal-box .mobile-unbox { display: contents !important; }
+:root[data-mobile] .dw-body > .mobile-pane { padding: 8px; border: 0; }
+:root[data-mobile] .dw-body > .mobile-pages { border: 1px solid var(--border-primary); padding: 3px; }
+:root[data-mobile] .c-skill .mobile-pane { overflow: auto; }
+:root[data-mobile] .modal-box.depart-box { gap: 8px; }
+:root[data-mobile] .modal-box.depart-box > .modal-head { margin: 0; padding: 4px 0 8px; }
+:root[data-mobile] .depart-box .dw-title { font-size: var(--mobile-fs-title); line-height: 1.25; gap: 5px 8px; }
+:root[data-mobile] .depart-box .dw-title small { font-size: var(--mobile-fs-caption); }
+:root[data-mobile] .depart-box .sub-h { margin-bottom: 8px; }
+:root[data-mobile] .dw-prep > *, :root[data-mobile] .dw-load > * { flex-shrink: 0; }
+:root[data-mobile-landscape] .modal-box.depart-box { padding: 8px 10px; gap: 5px; }
+:root[data-mobile-landscape] .depart-box .dw-title { font-size: var(--fs-md); }
+:root[data-mobile-landscape] .depart-box .dw-prep { flex-direction: row; align-items: flex-start; }
+:root[data-mobile-landscape] .depart-box .dw-load { flex: 1 1 0; }
+:root[data-mobile-landscape] .depart-box .dw-prep .fp-side { flex: 0 0 180px; min-width: 0; }
+:root[data-mobile-landscape] .modal-box > .mobile-dialog-actions { padding-top: 4px; }
+
+/* Resource mini-games use the available playfield instead of a 540px canvas. */
+:root[data-mobile] .modal-box.mg-modal { height: 100%; padding: 8px; gap: 6px; }
+:root[data-mobile] .mg-modal > .modal-body { display: flex; flex-direction: column; overflow: hidden; }
+:root[data-mobile] .mg-modal .modal-head { padding-bottom: 4px; }
+:root[data-mobile] .mg-field { flex: 1 1 0; min-height: 0; height: auto; }
+:root[data-mobile] .mg-hud { top: 6px; left: 6px; right: 6px; padding: 6px; gap: 6px; }
+:root[data-mobile] .mg-hud-title { min-width: 0; flex: 1; gap: 2px; }
+:root[data-mobile] .mg-clock { min-width: 32px; padding-left: 5px; font-size: var(--fs-md); }
+:root[data-mobile] .mg-items img { width: 20px; height: 20px; }
+:root[data-mobile] .mg-items b, :root[data-mobile] .mg-combo b { font-size: var(--fs-md); }
+:root[data-mobile] .mg-hud small { font-size: var(--fs-2xs); }
+:root[data-mobile] .mg-instruction { padding: 6px; font-size: var(--fs-2xs); }
+:root[data-mobile] .mg-wall { top: 70px; bottom: 42px; left: 6px; right: 6px; gap: 6px; }
+:root[data-mobile] .mg-vein { width: 100%; max-width: 88px; }
+:root[data-mobile] .mg-pluck-stage { inset: 70px 8px 42px; gap: 6px; }
+:root[data-mobile] .mg-pluck-action { flex: 1 1 0; min-height: 44px; max-height: 170px; height: auto; width: 140px; }
+:root[data-mobile] .mg-pull-panel { flex: none; width: min(340px, 100%); padding: 8px; }
+:root[data-mobile] .mg-plant-halo { width: 160px; height: 160px; }
+:root[data-mobile] .mg-plant-label { padding: 3px 8px; }
+:root[data-mobile] .mg-chop-area { inset: 70px 0 88px; }
+:root[data-mobile] .mg-tree { width: 70px; }
+:root[data-mobile] .mg-branch { width: 85px; height: 36px; }
+:root[data-mobile] .mg-jack { width: 76px; height: 76px; }
+:root[data-mobile] .mg-jack.L { right: calc(50% + 28px); }
+:root[data-mobile] .mg-jack.R { left: calc(50% + 28px); }
+:root[data-mobile] .mg-chop-control { min-height: 44px; min-width: 70px; bottom: 36px; padding: 6px; }
+:root[data-mobile] .mg-card { inset: 10px 8px 30px; gap: 8px; overflow: auto; }
+:root[data-mobile] .mg-cover-art { flex: none; width: 80px; height: 80px; }
+:root[data-mobile] .mg-card h3 { font-size: var(--fs-xl); }
+:root[data-mobile] .mg-card .mg-go { min-height: 44px; padding: 8px 14px; margin-top: 0; }
+:root[data-mobile] .mg-reward-line { bottom: 8px; left: 8px; right: 8px; }
+:root[data-mobile-landscape] .mg-wall { top: 58px; bottom: 30px; }
+:root[data-mobile-landscape] .mg-pluck-stage { inset: 58px 12px 30px; display: grid; grid-template-columns: minmax(80px, 1fr) minmax(160px, 1.5fr); grid-template-rows: auto minmax(0, 1fr); }
+:root[data-mobile-landscape] .mg-pluck-action { grid-column: 1; grid-row: 1 / -1; width: 100px; height: 100%; max-height: 120px; margin: auto; }
+:root[data-mobile-landscape] .mg-plant-label, :root[data-mobile-landscape] .mg-pull-panel { grid-column: 2; }
+:root[data-mobile-landscape] .mg-plant-halo { width: 100px; height: 100px; }
+:root[data-mobile-landscape] .mg-chop-area { top: 58px; bottom: 78px; }
+:root[data-mobile-landscape] .mg-branch { height: 24px; }
+:root[data-mobile-landscape] .mg-jack { width: 60px; height: 60px; }
+:root[data-mobile-landscape] .mg-card { gap: 4px; }
+:root[data-mobile-landscape] .mg-cover-art { display: none; }
+:root[data-mobile-landscape] .mg-rule-badges { margin: 0; }
+:root[data-mobile-landscape] .mg-sub { line-height: 1.4; }
+
+/* Raid practice has its own mobile battle / setup / log screens. */
+:root[data-mobile] .raid-field.mobile-pane { overflow: hidden; gap: 5px; }
+:root[data-mobile] .raid-field .raid-front { flex: 1 1 0; min-height: 75px; height: auto; }
+:root[data-mobile] .raid-field .raid-telegraph { flex: none; height: 48px; margin: 0; padding: 4px 8px; }
+:root[data-mobile] .raid-field .raid-lanes { flex: 0 0 190px; min-height: 0; padding: 0 6px; gap: 4px; }
+:root[data-mobile] .raid-lanes .mobile-pages { padding: 1px; gap: 2px; }
+:root[data-mobile] .raid-lanes .mobile-page-tab { min-height: 30px; }
+:root[data-mobile] .raid-lanes .raid-lane { padding: 4px 8px; gap: 3px; overflow: auto; }
+:root[data-mobile] .raid-lane .raid-heroes { flex: none; min-height: 0; justify-content: center; gap: 10px; }
+:root[data-mobile] .raid-hero-seat { width: auto; flex: 1 1 0; min-width: 0; max-width: 104px; }
+:root[data-mobile] .raid-hero { width: 100%; box-sizing: border-box; }
+:root[data-mobile] .raid-heroes > .raid-hero.empty { width: auto; flex: 1 1 0; min-width: 0; max-width: 104px; height: 92px; }
+:root[data-mobile] .raid-hero-shot { height: 54px; }
+:root[data-mobile] .raid-hero-info { padding: 2px; }
+:root[data-mobile] .raid-hero-name { font-size: var(--fs-2xs); line-height: 12px; }
+:root[data-mobile] .raid-hero-hp-text { font-size: var(--mobile-fs-small); line-height: 10px; min-height: 10px; margin-top: 2px; white-space: normal; overflow-wrap: anywhere; }
+:root[data-mobile] .raid-hero-hp { margin-top: 2px; }
+:root[data-mobile] .raid-lane-head { margin-bottom: 2px; }
+:root[data-mobile] .raid-contribution { font-size: var(--fs-2xs); margin-top: 2px; }
+:root[data-mobile] .raid-footer { display: grid; grid-template-columns: minmax(0, 1fr) auto; flex: none; padding: 3px 8px; min-height: 40px; gap: 6px; }
+:root[data-mobile] .raid-footer .raid-encounter-note { display: none; }
+:root[data-mobile] .raid-footer .raid-start { min-height: 36px; min-width: 110px; margin-left: auto; font-size: var(--mobile-fs-caption); }
+:root[data-mobile] .raid-footer .raid-start:disabled { display: none; }
+:root[data-mobile] .mobile-raid-live { gap: 3px; padding: 0; border: 0; }
+:root[data-mobile] .mobile-raid-live:has([data-raid-pause]:disabled) { display: none; }
+:root[data-mobile] .mobile-raid-live .btn { min-height: 36px; padding: 4px; font-size: var(--mobile-fs-caption); }
+:root[data-mobile] .raid-readiness { font-size: var(--fs-2xs); }
+:root[data-mobile] .raid-header.mobile-pane { align-items: stretch; justify-content: flex-start; padding: 10px; }
+:root[data-mobile] .raid-header .raid-controls { flex-direction: column; align-items: stretch; gap: 12px; white-space: normal; }
+:root[data-mobile] .raid-header .raid-group { flex-wrap: wrap; padding: 0; border: 0; }
+:root[data-mobile] .raid-header .raid-group .btn { min-height: 40px; }
+:root[data-mobile] .raid-header > [data-lab-tools] { order: -1; flex: none; }
+:root[data-mobile] .raid-feed.mobile-pane { max-height: none; padding: 10px; }
+:root[data-mobile] .raid-result { overflow: auto; max-height: 100%; }
+:root[data-mobile] #app.raid-expanded > .brand,
+:root[data-mobile] #app.raid-expanded.mobile-menu-open > .nav { visibility: visible; }
+:root:where([data-mobile-compact])[data-mobile] .raid-field .raid-lanes { flex-basis: 170px; }
+:root:where([data-mobile-compact])[data-mobile] .raid-hero-shot { height: 48px; }
+:root:where([data-mobile-compact])[data-mobile] .raid-field .raid-front { min-height: 48px; }
+:root:where([data-mobile-compact])[data-mobile] .raid-hero-skills { flex-direction: row; top: auto; bottom: 0; right: 0; gap: 1px; }
+:root:where([data-mobile-compact])[data-mobile] .raid-hero-skills img { width: 14px; height: 14px; }
+:root[data-mobile-landscape] .raid-field.mobile-pane-on {
+    display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    grid-template-rows: minmax(0, 1fr) 45px 40px;
+}
+:root[data-mobile-landscape] .raid-field .raid-front { grid-column: 1; grid-row: 1; min-height: 0; overflow: hidden; }
+:root[data-mobile-landscape] .raid-boss { width: 100%; }
+:root[data-mobile-landscape] .raid-field .raid-telegraph { grid-column: 1; grid-row: 2; height: 45px; }
+:root[data-mobile-landscape] .raid-field .raid-lanes { grid-column: 2; grid-row: 1 / 3; }
+:root[data-mobile-landscape] .raid-field .raid-footer { grid-column: 1 / -1; grid-row: 3; }
+:root[data-mobile-landscape] .raid-warning-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 4px; line-height: 12px; }
+:root[data-mobile-landscape] .raid-warning-top b, :root[data-mobile-landscape] .raid-warning-top span { grid-column: 1; font-size: var(--fs-2xs); }
+:root[data-mobile-landscape] .raid-warning-top strong { grid-column: 2; grid-row: 1 / 3; align-self: center; font-size: var(--mobile-fs-copy); min-width: 34px; }
+:root[data-mobile-landscape] .raid-boss-meta { gap: 4px; font-size: var(--mobile-fs-small); white-space: nowrap; }
+
+:root:where([data-mobile-short][data-mobile-portrait])[data-mobile] .arena .divider { margin: 6px 0; }
+:root:where([data-mobile-short][data-mobile-portrait])[data-mobile] .battle-body > .arena { padding-top: 36px; padding-bottom: 46px; }
+:root:where([data-mobile-short][data-mobile-portrait])[data-mobile] .arena .unit .sprite { height: 40px; }
+:root:where([data-mobile-short][data-mobile-portrait])[data-mobile] .arena .unit.v2 .cd-slot { height: 24px; }
+:root:where([data-mobile-short])[data-mobile] #app.mobile-menu-open > .nav { padding: 8px; gap: 5px; }
+:root:where([data-mobile-short])[data-mobile] .nav .nav-grp { display: none; }
+:root:where([data-mobile-short])[data-mobile] .mobile-menu-head { padding: 0 0 4px; top: -8px; }
+:root:where([data-mobile-short])[data-mobile] .mobile-menu-head strong { font-size: var(--mobile-fs-lead); }
+:root:where([data-mobile-short])[data-mobile] .nav button[data-tab] { min-height: 58px; padding: 5px 2px; }
+:root:where([data-mobile-short])[data-mobile] .nav .nav-lbl { gap: 4px; font-size: var(--mobile-fs-caption); }
+:root:where([data-mobile-short])[data-mobile] .nav .nav-ic { width: 24px; height: 24px; }
+:root:where([data-mobile-short])[data-mobile] .nav .b-newgame { min-height: 40px; margin: 0; grid-column: 1 / 3; }
+:root:where([data-mobile-short])[data-mobile] .mobile-menu-utilities { grid-column: 3 / -1; padding: 0; gap: 4px; }
+:root:where([data-mobile-short])[data-mobile] .mobile-menu-utilities .exp-time { font-size: var(--mobile-fs-small); margin: 0; }
+:root:where([data-mobile-short])[data-mobile] .mobile-menu-utilities .exp-time b { margin-left: 3px; }
+:root:where([data-mobile-short])[data-mobile] .mobile-menu-utilities .lang-btn { padding: 4px 8px; min-height: 36px; }
+:root:where([data-mobile-compact])[data-mobile] .main .hs-panel { height: 64px; }
+:root:where([data-mobile-compact])[data-mobile] .main .hs-card { height: 50px; flex-basis: 60px; min-width: 60px; }
+:root:where([data-mobile-compact])[data-mobile] .mobile-page-tab { min-height: 34px; font-size: var(--mobile-fs-caption); }
+:root:where([data-mobile-compact])[data-mobile] .mobile-pages { gap: 2px; padding: 2px; }
+:root:where([data-mobile-compact])[data-mobile] .main .mobile-deck { gap: 5px; }
+:root:where([data-mobile-compact])[data-mobile] .arena .unit .sprite { height: 24px; }
+:root:where([data-mobile-compact])[data-mobile] .arena .divider { margin: 3px 0; font-size: var(--fs-2xs); line-height: 12px; }
+:root:where([data-mobile-compact])[data-mobile] .arena .unit.v2 > .unit-top { min-height: 14px; }
+:root:where([data-mobile-compact])[data-mobile] .arena .unit.v2 .cd-slot { height: 22px; }
+:root:where([data-mobile-compact])[data-mobile] .arena .unit.v2 .hp-row .bar.hp { height: 14px; }
+:root:where([data-mobile-compact])[data-mobile] .mobile-pane > h2, :root:where([data-mobile-compact])[data-mobile] .mobile-pane > .sub-h { padding-block: 5px; margin-block: 0 5px; font-size: var(--fs-sm); }
+:root:where([data-mobile-compact])[data-mobile] .mobile-pane > .paperdoll { grid-template-columns: repeat(3, 48px); gap: 4px; }
+:root:where([data-mobile-compact])[data-mobile] .mobile-pane .pd-cell { width: 48px; height: 48px; }
+:root:where([data-mobile-compact])[data-mobile] .mobile-pane > .sins-h { margin-top: 8px; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .battle-body .unit-body { position: relative; height: 90px; padding: 0; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .battle-body .unit .sprite { position: absolute; inset: 0; width: 100%; height: 100%; }
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .battle-body .unit-info {
+    position: relative; z-index: 1; justify-content: flex-end; height: 100%;
+    background: linear-gradient(180deg, transparent 15%, rgba(var(--shadow-rgb), .8) 65%);
+}
+:root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .battle-body .unit.v2 .cd-slot { height: 24px; }
+:root[data-mobile-landscape] .main .mobile-pages { grid-template-columns: repeat(var(--mobile-tab-count), minmax(0, 1fr)); }
+:root[data-mobile-landscape] .main .hs-panel { height: 58px; }
+:root[data-mobile-landscape] .main .hs-card { height: 44px; }
+:root[data-mobile-landscape] .main > .page:has(> .hs-panel) {
+    display: grid; grid-template-columns: 76px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr);
+}
+:root[data-mobile-landscape] .main > .page:has(> .hs-panel):not(.mobile-deck) { grid-template-rows: minmax(0, 1fr); }
+:root[data-mobile-landscape] .main > .page:has(> .hs-panel) > .hs-panel {
+    grid-column: 1; grid-row: 1 / -1; height: 100%; width: 76px; padding: 2px;
+}
+:root[data-mobile-landscape] .main > .page:has(> .hs-panel) > :not(.hs-panel) { grid-column: 2; }
+:root[data-mobile-landscape] .main > .page:has(> .hs-panel) .mobile-pane { grid-column: 2; }
+:root[data-mobile-landscape] .main > .page > .hs-panel .hero-strip { flex-direction: column; overflow-x: hidden; overflow-y: auto; }
+:root[data-mobile-landscape] .main > .page > .hs-panel .hs-card { flex: 0 0 64px; height: 64px; min-width: 60px; width: 60px; }
+:root[data-mobile-landscape] .pt-left { --fm-slot: 60px; --fm-step: 16px; --fm-head-gap: 8px; --pt-left-gap: 8px; }
+:root[data-mobile-landscape] .pt-left .fm-board { height: var(--fm-board-h); }   /* 보드 높이 · 축은 `.fm-box` 가 물려받은 칸 크기로 짓는다 — 체력 줄 · 스킬 열이 든다 (ADR-1119) */
+:root[data-mobile-landscape] .pt-left .fm-line { width: var(--fm-axis); }
+:root[data-mobile-landscape] .pt-body .fm-box > .sub-h { margin-bottom: 5px; }
+:root[data-mobile-landscape] .fm-tpls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+:root[data-mobile-landscape] .fm-side { margin-top: 0; }
+:root[data-mobile-landscape] .battle-body > .arena { padding: 24px 42px 6px; }
+:root[data-mobile-landscape] .arena .unit .sprite { width: 50px; height: 50px; }
+:root[data-mobile-landscape] .arena .unit-body { flex-direction: row; }
+:root[data-mobile-landscape] .arena .divider { margin: 3px 0; }
+:root[data-mobile-landscape] .arena > .run-buff-icons { left: 3px; top: 3px; flex-direction: column; gap: 2px; }
+:root[data-mobile-landscape] .arena > .stage-clock { top: 0; right: 46px; height: 22px; font-size: var(--mobile-fs-caption); }
+:root[data-mobile-landscape] .arena > .b-belt:not(.e-belt) { left: auto; right: 3px; top: 3px; bottom: auto; flex-direction: column; gap: 2px; }
+:root[data-mobile-landscape] .arena > .b-belt.e-belt { left: 3px; right: auto; top: auto; bottom: 3px; flex-direction: column; gap: 2px; }
+:root[data-mobile-landscape] .arena > .bt-max-btn { width: 36px; height: 36px; right: 2px; bottom: 2px; }
+:root[data-mobile-landscape] .arena .buff-row {
+    top: 22px; left: 3px; right: auto; width: 24px; height: auto; max-height: calc(100% - 26px);
+    flex-direction: column; margin: 0; gap: 2px; overflow-y: auto; scrollbar-width: none; z-index: 4;
+}
+:root[data-mobile-landscape] .arena .buff-chip { width: 18px; height: 18px; }
+:root[data-mobile] .arena .buff-row:empty { display: none; }
+:root[data-mobile-landscape] .battle-body.split { display: flex; }
+:root[data-mobile-landscape] .battle-side:not([hidden]) {
+    position: absolute; inset: 0 0 0 auto; width: min(70%, 460px); height: 100%; max-height: 100%; z-index: 5;
+}
+:root[data-mobile-landscape] .mobile-pane .paperdoll { grid-template-columns: repeat(3, 48px); gap: 4px; }
+:root[data-mobile-landscape] .mobile-pane .pd-cell { width: 48px; height: 48px; }
+:root[data-mobile-landscape] .mobile-pane-on:has(> .paperdoll) { display: grid !important; grid-template-columns: minmax(180px, 1fr) minmax(0, 1fr); align-content: start; }
+:root[data-mobile-landscape] .mobile-pane:has(> .paperdoll) > h2 { grid-column: 1 / -1; }
+:root[data-mobile-landscape] .mobile-pane:has(> .paperdoll) > .paperdoll { grid-row: span 2; }
+:root[data-mobile-landscape] .mobile-pane:has(> .paperdoll) > .sins-h { margin: 0; }
+:root[data-mobile-landscape] .cn-lots { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-rows: 100px; }
+:root[data-mobile-landscape] .fm-main { flex-direction: row; justify-content: space-around; }
+:root[data-mobile-landscape] .fm-side { width: auto; flex: 0 1 210px; }
+:root[data-mobile-landscape] .fm-tpls { flex-direction: column; }
+:root[data-mobile-landscape] .tv-cands { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* Very short landscape phones use the arena edges for consumables. */
+:root:where([data-mobile-tiny])[data-mobile-landscape] .battle-body > .arena { padding: 24px 38px 12px; }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .arena .side { --form-step: 3px; gap: 3px; }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .arena .unit { padding: 2px; }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .arena .unit.v2 > .unit-top { height: 14px; min-height: 14px; margin: -2px -2px 0; }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .arena .unit.v2 > .unit-top .unit-ident { font-size: var(--mobile-fs-micro); }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .arena .unit-body { gap: 2px; }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .arena .unit .sprite { width: 30px; height: 46px; }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .arena .unit-info { gap: 0; }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .arena .unit.v2 .unit-id { margin-bottom: 0; }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .arena .unit-name { font-size: var(--mobile-fs-small); }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .arena .unit.v2 .cd-slot { height: 20px; }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .arena > .run-buff-icons { left: 3px; top: 3px; flex-direction: column; gap: 2px; }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .arena .run-buff-icon { width: 26px; height: 26px; flex-basis: 26px; }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .arena > .stage-clock { top: 0; right: 42px; height: 22px; font-size: var(--mobile-fs-caption); }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .arena > .b-belt:not(.e-belt) { left: auto; right: 3px; top: 3px; bottom: auto; flex-direction: column; gap: 2px; }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .arena > .b-belt.e-belt { left: 3px; right: auto; top: auto; bottom: 3px; flex-direction: column; gap: 2px; }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .arena .b-belt .p-slot { width: 28px; height: 28px; }
+:root:where([data-mobile-tiny])[data-mobile-landscape] .arena > .bt-max-btn { width: 32px; height: 32px; right: 2px; bottom: 2px; }

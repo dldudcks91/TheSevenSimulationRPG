@@ -71,6 +71,8 @@ export function checkRaid(SYS, D) {
     check('auras stay within their party', () => {
         const p = clone(teams);
         p[0][0].actives = [{ id: 'kni_defiance', source: 'innate' }];
+        // 다른 파티가 같은 오오라를 들면 제 파티에 건다 — 이 단정은 첫 파티의 것만 센다(연습 팀 굴림이 바뀌어도 · 2026-11-14)
+        for (const party of p.slice(1)) for (const h of party) h.actives = (h.actives ?? []).filter(a => a.id !== 'kni_defiance');
         const r = run(1, p); r.advance(0);
         const aura = r.result.timeline.filter(e => e.e === 'buff' && e.s === 'kni_defiance');
         return aura.length === 3 && aura.every(e => groupOf(e.u) === 1);

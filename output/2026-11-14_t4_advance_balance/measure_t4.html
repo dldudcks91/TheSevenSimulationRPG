@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><title>t4 measure (임시 — 측정 뒤 지운다)</title></head>
+<body>
+<h1 id="head">running</h1>
+<pre id="out"></pre>
+<script type="module">
+// 마스터리 T4 값 맞추기 — 결투(AI 팀 3 대 3 · 시련의 탑 층 짜기)에서 칸 하나를 그 직업 · 죄종 영웅(운반자)에게 붙였을 때의 승률 변화를 같은 시드 짝으로 잰다.
+//   양쪽 팀의 T4 는 먼저 지운다(셋 중 하나라 다른 칸과 섞이지 않게) · 기준 = 같은 운반자에게 상시 데미지 +x% · 묶음(직업 · 죄종)마다 따로 기울기
+import { loadData, buildSystems, D } from '../ui/data.js';
+import { makeRng } from '../game_logic/rng.js';
+const q = new URLSearchParams(location.search);
+const N = Number(q.get('n') ?? 40);
+const TIERS = (q.get('tiers') ?? 'platinum,diamond,champion').split(',');
+const ONLY = q.get('only') ? q.get('only').split(',') : null;
+const RANK = Number(q.get('rank') ?? 5);
+// `cfg` = [{id, cell, over?: {balance 키: 값}}] — 주면 칸마다 기본 하나 대신 이것들을 잰다(같은 칸 값 후보 여럿)
+const CFG = q.get('cfg') ? JSON.parse(decodeURIComponent(q.get('cfg'))) : null;
+const SKIP = new Set(['greed_reroll', 'glut_cull']);   // 결투장 0(몬스터 드롭 · 일반 몬스터 처형)
+const head = document.getElementById('head'), out = document.getElementById('out');
+const tick = () => new Promise(r => setTimeout(r, 0));
+try {
+    await loadData('../data/');
+    const SYS = buildSystems(D);
+    const H = SYS.hero, A = SYS.arena;
+    const clone = x => JSON.parse(JSON.stringify(x));
+    const t4 = H.masteryNodes.filter(n => n.tier === 4);
+    const t4ids = new Set(t4.map(n => n.id));
+    const recompute = (S, p, mastery) => {
+        const h = clone(p.hero);
+        h.mastery = mastery(h.mastery ?? {});
+        return { ...p, hero: h, combat: S.hero.computeCombat(h, p.gear.map(S.item.effective)) };
+    };
+    const strip = (S, p) => recompute(S, p, m => Object.fromEntries(Object.entries(m).filter(([id]) => !t4ids.has(id))));
+    const pairs = [];
+    for (const tier of TIERS) for (let s = 1; s <= N; s++) {
+        const a0 = A.rollTierOpponent(tier, makeRng(1000 + s), [], { floorRules: true });
+        const b0 = A.rollTierOpponent(tier, makeRng(50000 + s), a0.map(p => p.hero.name), { floorRules: true });
+        const a = a0.map((p, i) => { const x = strip(SYS, p); x.uid = `a${i}`; x.hero.uid = `a${i}`; return x; });
+        const b = b0.map((p, i) => { const x = strip(SYS, p); x.uid = `b${i}`; x.hero.uid = `b${i}`; return x; });
+        pairs.push({ tier, s, a, b });
+    }
+    const seedOf = (P, k) => k + P.s * 7 + TIERS.indexOf(P.tier) * 100003;
+    const play = (S, P, team) => {
+        const r1 = S.arena.fight(team, P.b, makeRng(seedOf(P, 90000)));
+        const r2 = S.arena.fight(P.b, team, makeRng(seedOf(P, 170000)));
+        return { w: ((r1.won ? 1 : 0) + (r2.won ? 0 : 1)) / 2, d: (r1.durationSec + r2.durationSec) / 2 };
+    };
+    const t0 = performance.now();
+    // 오래 붙잡지 않게 — 묶음마다 한 번 쉰다(헤드리스 폴링이 막히지 않게)
+    const mapAsync = async (xs, f) => { const r = []; for (let i = 0; i < xs.length; i++) { r.push(f(xs[i], i)); if (i % 300 === 299) await tick(); } return r; };
+    const base = await mapAsync(pairs, P => play(SYS, P, P.a));
+    head.textContent = `base ${((performance.now() - t0) / 1000).toFixed(1)}s`;
+    await tick();
+    const groupOf = n => (n.treeKind === 'class' ? `cls:${n.ownerId}` : `sin:${n.ownerId}`);
+    const matchOf = g => { const [k, id] = g.split(':'); return p => (k === 'cls' ? p.hero.cls === id : p.hero.sin === id); };
+    const cellList = CFG ? CFG.map(c => ({ ...c, node: H.masteryById[c.cell] }))
+        : t4.filter(n => !SKIP.has(n.stat)).filter(n => !ONLY || ONLY.includes(n.id)).map(n => ({ id: n.id, cell: n.id, node: n }));
+    const groups = [...new Set(cellList.map(c => groupOf(c.node)))];
+    const msd = d => { const n = d.length, m = d.reduce((a, b) => a + b, 0) / Math.max(1, n); return { m, se: Math.sqrt(d.reduce((a, b) => a + (b - m) ** 2, 0) / Math.max(1, n - 1)) / Math.sqrt(Math.max(1, n)), n }; };
+    const summary = [], refsOut = {};
+    for (const g of groups) {
+        const match = matchOf(g);
+        const idx = pairs.map((P, i) => (P.a.some(match) ? i : -1)).filter(i => i >= 0);
+        const carriers = idx.reduce((n, i) => n + pairs[i].a.filter(match).length, 0) / Math.max(1, idx.length);
+        const on = (P, f) => P.a.map(p => (match(p) ? f(p) : p));
+        // 기준 — 운반자에게 상시 데미지 +x%
+        const refs = [];
+        for (const x of [0.05, 0.10, 0.20]) {
+            const dw = await mapAsync(idx, i => play(SYS, pairs[i], on(pairs[i], p => ({ ...p, combat: { ...p.combat, mastery_cond: [...(p.combat.mastery_cond ?? []), { cond: 'late', stat: 'atk_pct', v: x, sec: 0 }] } }))).w - base[i].w);
+            refs.push({ x, ...msd(dw) });
+        }
+        const kw = refs.reduce((a, r) => a + r.x * r.m, 0) / refs.reduce((a, r) => a + r.x * r.x, 0);
+        refsOut[g] = { pairs: idx.length, carriers: +carriers.toFixed(2), kw: +kw.toFixed(4), refs: refs.map(r => ({ x: r.x, dW: +(r.m * 100).toFixed(2), se: +(r.se * 100).toFixed(2) })) };
+        for (const c of cellList.filter(c => groupOf(c.node) === g)) {
+            const S = c.over ? buildSystems({ ...D, balance: { ...D.balance, ...c.over } }) : SYS;
+            const rows = await mapAsync(idx, i => ({ i, tier: pairs[i].tier, r: play(S, pairs[i], on(pairs[i], p => recompute(S, p, m => ({ ...m, [c.cell]: RANK })))) }));
+            const all = msd(rows.map(x => x.r.w - base[x.i].w));
+            const byTier = Object.fromEntries(TIERS.map(t => [t, +(msd(rows.filter(x => x.tier === t).map(x => x.r.w - base[x.i].w)).m / kw * 100).toFixed(1)]));
+            summary.push({ id: c.id, cell: c.cell, stat: c.node.stat, group: g, over: c.over ?? null, eq: +(all.m / kw * 100).toFixed(2), se: +(all.se / kw * 100).toFixed(2), dWin: +(all.m * 100).toFixed(2), byTier });
+            head.textContent = `running ${c.id} · ${((performance.now() - t0) / 1000).toFixed(0)}s`;
+            await tick();
+        }
+    }
+    const meta = { N, TIERS, RANK, pairs: pairs.length, secs: +((performance.now() - t0) / 1000).toFixed(1), baseWin: base.reduce((a, r) => a + r.w, 0) / base.length, baseDur: base.reduce((a, r) => a + r.d, 0) / base.length };
+    out.textContent = JSON.stringify({ meta, refs: refsOut, summary }, null, 1);
+    head.textContent = `DONE ${meta.secs}s`;
+} catch (e) {
+    head.textContent = 'FAIL';
+    out.textContent = String(e && e.stack ? e.stack : e);
+}
+</script>
+</body>
+</html>

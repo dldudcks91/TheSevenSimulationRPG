@@ -1,0 +1,1249 @@
+{
+  "started_at": "2026-11-14T13:17:21.019833+00:00",
+  "at": "2026-11-14T13:17:34.426912+00:00",
+  "source_start": {
+    "src/ui/app.js": "b681e305cbf28f1b5d9daf81ce440fe9a026543d84be883216679fc78ad98ef5",
+    "src/ui/style.css": "f367b3ebdb8262c70dfea65a084f55d48197395f6846b82aa75e9c76acf9485a",
+    "src/ui/mobile.js": "70fc71ee27eedba0e0fcaedcecc8a58e37c323aa35df137a4c9ce675abaa1830",
+    "src/ui/mobile.css": "478ea67e3b4f3a2c28188d73c1bb9172d4521c18602df3bb103c9f1be98875b9",
+    "src/ui/mobile-pages.js": "07951328262a3136c57ef55cfbc3a88465f41eeed6d7bcd8ca007e39211bc9f0",
+    "src/ui/mobile-pages.css": "78f6b1fa017d5d9a35a26728e048ca0f4f00c175daccd10e724943e91e5b57f4",
+    "src/ui/mobile-native.js": "43962334c75e005ee642decc722e4d9588d769b08d8fe6ac3a20c8ff87c40b7d",
+    "src/ui/mobile-native.css": "c5686114de08e0f3eeb5083ec55565335bdff031c4b02e278abe1ea2bcc4300c",
+    "src/ui/mobile-gestures.js": "c0bfb8923d5ac29f597c3d207456fcf1282a5972284ca95e70ae35bacf523527",
+    "src/ui/mobile-gestures.css": "31ca7149b70adde69e8862b2a6917d932e0daabc19baafeedbe614ca533ed921",
+    "src/ui/i18n.js": "22448820c68fe8113fd172c0ae4b3deb707f5e943d1a3678523f1ddedb69de21"
+  },
+  "source_end": {
+    "src/ui/app.js": "b681e305cbf28f1b5d9daf81ce440fe9a026543d84be883216679fc78ad98ef5",
+    "src/ui/style.css": "f367b3ebdb8262c70dfea65a084f55d48197395f6846b82aa75e9c76acf9485a",
+    "src/ui/mobile.js": "70fc71ee27eedba0e0fcaedcecc8a58e37c323aa35df137a4c9ce675abaa1830",
+    "src/ui/mobile.css": "478ea67e3b4f3a2c28188d73c1bb9172d4521c18602df3bb103c9f1be98875b9",
+    "src/ui/mobile-pages.js": "07951328262a3136c57ef55cfbc3a88465f41eeed6d7bcd8ca007e39211bc9f0",
+    "src/ui/mobile-pages.css": "78f6b1fa017d5d9a35a26728e048ca0f4f00c175daccd10e724943e91e5b57f4",
+    "src/ui/mobile-native.js": "43962334c75e005ee642decc722e4d9588d769b08d8fe6ac3a20c8ff87c40b7d",
+    "src/ui/mobile-native.css": "c5686114de08e0f3eeb5083ec55565335bdff031c4b02e278abe1ea2bcc4300c",
+    "src/ui/mobile-gestures.js": "c0bfb8923d5ac29f597c3d207456fcf1282a5972284ca95e70ae35bacf523527",
+    "src/ui/mobile-gestures.css": "31ca7149b70adde69e8862b2a6917d932e0daabc19baafeedbe614ca533ed921",
+    "src/ui/i18n.js": "22448820c68fe8113fd172c0ae4b3deb707f5e943d1a3678523f1ddedb69de21"
+  },
+  "checks": [
+    {
+      "name": "forge-320x568-en-d2min:tab0-fits",
+      "ok": true,
+      "detail": {
+        "width": 73,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "Upgrade"
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:tab0-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 304,
+        "sw": 304,
+        "h": 40,
+        "sh": 40,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:tab1-fits",
+      "ok": true,
+      "detail": {
+        "width": 73,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "Smith"
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:tab1-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 304,
+        "sw": 304,
+        "h": 40,
+        "sh": 40,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:tab2-fits",
+      "ok": true,
+      "detail": {
+        "width": 73,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "Combine"
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:tab2-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 304,
+        "sw": 304,
+        "h": 40,
+        "sh": 40,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:tab3-fits",
+      "ok": true,
+      "detail": {
+        "width": 73,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "Craft"
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:tab3-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 304,
+        "sw": 304,
+        "h": 40,
+        "sh": 40,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:item-opens-upgrade",
+      "ok": true
+    },
+    {
+      "name": "forge-320x568-en-d2min:upgrade-decision-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 270,
+        "sw": 270,
+        "h": 248,
+        "sh": 248,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:upgrade-action-visible",
+      "ok": true,
+      "detail": {
+        "width": 262,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "Upgrade"
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:effect-and-chance0-visible",
+      "ok": true,
+      "detail": {
+        "width": 262,
+        "height": 28,
+        "clipped": [],
+        "hit": true,
+        "text": "Physical Damage9–11›9–13"
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:effect-and-chance1-visible",
+      "ok": true,
+      "detail": {
+        "width": 262,
+        "height": 28,
+        "clipped": [],
+        "hit": true,
+        "text": "Success chance100%"
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:cost0-visible",
+      "ok": true,
+      "detail": {
+        "width": 262,
+        "height": 22,
+        "clipped": [],
+        "hit": true,
+        "text": "600Gold"
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:cost1-visible",
+      "ok": true,
+      "detail": {
+        "width": 262,
+        "height": 22,
+        "clipped": [],
+        "hit": true,
+        "text": "I40/1Lowest-Grade Iron Ore"
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:cost2-visible",
+      "ok": true,
+      "detail": {
+        "width": 262,
+        "height": 22,
+        "clipped": [],
+        "hit": true,
+        "text": "I96/1Lowest-Grade Dust"
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:right-swipe-opens-temper",
+      "ok": true
+    },
+    {
+      "name": "forge-320x568-en-d2min:temper-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 270,
+        "sw": 270,
+        "h": 248,
+        "sh": 248,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:five-material-tiers",
+      "ok": true
+    },
+    {
+      "name": "forge-320x568-en-d2min:stake0-visible",
+      "ok": true,
+      "detail": {
+        "width": 50.796875,
+        "height": 77,
+        "clipped": [],
+        "hit": true,
+        "text": "I40/1Lowest-Grade Iron Ore"
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:stake1-visible",
+      "ok": true,
+      "detail": {
+        "width": 50.796875,
+        "height": 77,
+        "clipped": [],
+        "hit": true,
+        "text": "II0/1Low-Grade Iron Ore"
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:stake2-visible",
+      "ok": true,
+      "detail": {
+        "width": 50.796875,
+        "height": 77,
+        "clipped": [],
+        "hit": true,
+        "text": "III0/1Mid-Grade Iron Ore"
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:stake3-visible",
+      "ok": true,
+      "detail": {
+        "width": 50.796875,
+        "height": 77,
+        "clipped": [],
+        "hit": true,
+        "text": "IV0/1High-Grade Iron Ore"
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:stake4-visible",
+      "ok": true,
+      "detail": {
+        "width": 50.796875,
+        "height": 77,
+        "clipped": [],
+        "hit": true,
+        "text": "V0/1Top-Grade Iron Ore"
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:temper-action-visible",
+      "ok": true,
+      "detail": {
+        "width": 266,
+        "height": 34,
+        "clipped": [],
+        "hit": true,
+        "text": "Temper"
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:temper-original-action",
+      "ok": true
+    },
+    {
+      "name": "forge-320x568-en-d2min:temper-consumes-selected-stake",
+      "ok": true
+    },
+    {
+      "name": "forge-320x568-en-d2min:temper-only-once",
+      "ok": true
+    },
+    {
+      "name": "forge-320x568-en-d2min:tempered-result-fits",
+      "ok": true,
+      "detail": {
+        "w": 270,
+        "sw": 270,
+        "h": 248,
+        "sh": 248,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-320x568-en-d2min:upgrade-original-action",
+      "ok": true
+    },
+    {
+      "name": "forge-320x568-en-d2min:upgrade-consumes-temper",
+      "ok": true
+    },
+    {
+      "name": "forge-320x568-en-d2min:full-item-reference-visible",
+      "ok": true
+    },
+    {
+      "name": "forge-320x568-en-d2min:item-reference-no-horizontal-scroll",
+      "ok": true,
+      "detail": {
+        "width": 270,
+        "scroll": 270
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:tab0-fits",
+      "ok": true,
+      "detail": {
+        "width": 90.5,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "강화"
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:tab0-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 374,
+        "sw": 374,
+        "h": 40,
+        "sh": 40,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:tab1-fits",
+      "ok": true,
+      "detail": {
+        "width": 90.5,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "제작"
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:tab1-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 374,
+        "sw": 374,
+        "h": 40,
+        "sh": 40,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:tab2-fits",
+      "ok": true,
+      "detail": {
+        "width": 90.5,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "합성"
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:tab2-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 374,
+        "sw": 374,
+        "h": 40,
+        "sh": 40,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:tab3-fits",
+      "ok": true,
+      "detail": {
+        "width": 90.5,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "크래프트"
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:tab3-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 374,
+        "sw": 374,
+        "h": 40,
+        "sh": 40,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:item-opens-upgrade",
+      "ok": true
+    },
+    {
+      "name": "forge-390x844-ko-d2min:upgrade-decision-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 340,
+        "sw": 340,
+        "h": 449,
+        "sh": 449,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:upgrade-action-visible",
+      "ok": true,
+      "detail": {
+        "width": 332,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "강화"
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:effect-and-chance0-visible",
+      "ok": true,
+      "detail": {
+        "width": 332,
+        "height": 28,
+        "clipped": [],
+        "hit": true,
+        "text": "물리 데미지15~18›15~20"
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:effect-and-chance1-visible",
+      "ok": true,
+      "detail": {
+        "width": 332,
+        "height": 28,
+        "clipped": [],
+        "hit": true,
+        "text": "성공 확률100%"
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:cost0-visible",
+      "ok": true,
+      "detail": {
+        "width": 108,
+        "height": 66,
+        "clipped": [],
+        "hit": true,
+        "text": "600골드"
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:cost1-visible",
+      "ok": true,
+      "detail": {
+        "width": 108,
+        "height": 66,
+        "clipped": [],
+        "hit": true,
+        "text": "I40/1최하급 철광석"
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:cost2-visible",
+      "ok": true,
+      "detail": {
+        "width": 108,
+        "height": 66,
+        "clipped": [],
+        "hit": true,
+        "text": "I96/1최하급 가루"
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:right-swipe-opens-temper",
+      "ok": true
+    },
+    {
+      "name": "forge-390x844-ko-d2min:temper-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 340,
+        "sw": 340,
+        "h": 449,
+        "sh": 449,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:five-material-tiers",
+      "ok": true
+    },
+    {
+      "name": "forge-390x844-ko-d2min:stake0-visible",
+      "ok": true,
+      "detail": {
+        "width": 63.1875,
+        "height": 55,
+        "clipped": [],
+        "hit": true,
+        "text": "I40/1최하급 철광석"
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:stake1-visible",
+      "ok": true,
+      "detail": {
+        "width": 63.203125,
+        "height": 55,
+        "clipped": [],
+        "hit": true,
+        "text": "II0/1하급 철광석"
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:stake2-visible",
+      "ok": true,
+      "detail": {
+        "width": 63.203125,
+        "height": 55,
+        "clipped": [],
+        "hit": true,
+        "text": "III0/1중급 철광석"
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:stake3-visible",
+      "ok": true,
+      "detail": {
+        "width": 63.203125,
+        "height": 55,
+        "clipped": [],
+        "hit": true,
+        "text": "IV0/1상급 철광석"
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:stake4-visible",
+      "ok": true,
+      "detail": {
+        "width": 63.203125,
+        "height": 55,
+        "clipped": [],
+        "hit": true,
+        "text": "V0/1최상급 철광석"
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:temper-action-visible",
+      "ok": true,
+      "detail": {
+        "width": 328,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "담금질"
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:temper-original-action",
+      "ok": true
+    },
+    {
+      "name": "forge-390x844-ko-d2min:temper-consumes-selected-stake",
+      "ok": true
+    },
+    {
+      "name": "forge-390x844-ko-d2min:temper-only-once",
+      "ok": true
+    },
+    {
+      "name": "forge-390x844-ko-d2min:tempered-result-fits",
+      "ok": true,
+      "detail": {
+        "w": 340,
+        "sw": 340,
+        "h": 449,
+        "sh": 449,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-390x844-ko-d2min:upgrade-original-action",
+      "ok": true
+    },
+    {
+      "name": "forge-390x844-ko-d2min:upgrade-consumes-temper",
+      "ok": true
+    },
+    {
+      "name": "forge-390x844-ko-d2min:full-item-reference-visible",
+      "ok": true
+    },
+    {
+      "name": "forge-390x844-ko-d2min:item-reference-no-horizontal-scroll",
+      "ok": true,
+      "detail": {
+        "width": 340,
+        "scroll": 340
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:tab0-fits",
+      "ok": true,
+      "detail": {
+        "width": 98.75,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "Upgrade"
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:tab0-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 407,
+        "sw": 407,
+        "h": 40,
+        "sh": 40,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:tab1-fits",
+      "ok": true,
+      "detail": {
+        "width": 98.75,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "Smith"
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:tab1-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 407,
+        "sw": 407,
+        "h": 40,
+        "sh": 40,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:tab2-fits",
+      "ok": true,
+      "detail": {
+        "width": 98.75,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "Combine"
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:tab2-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 407,
+        "sw": 407,
+        "h": 40,
+        "sh": 40,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:tab3-fits",
+      "ok": true,
+      "detail": {
+        "width": 98.75,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "Craft"
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:tab3-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 407,
+        "sw": 407,
+        "h": 40,
+        "sh": 40,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:item-opens-upgrade",
+      "ok": true
+    },
+    {
+      "name": "forge-568x320-en-d2min:upgrade-decision-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 355,
+        "sw": 355,
+        "h": 115,
+        "sh": 116,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:upgrade-action-visible",
+      "ok": true,
+      "detail": {
+        "width": 168.5,
+        "height": 34,
+        "clipped": [],
+        "hit": true,
+        "text": "Upgrade"
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:effect-and-chance0-visible",
+      "ok": true,
+      "detail": {
+        "width": 168.5,
+        "height": 31,
+        "clipped": [],
+        "hit": true,
+        "text": "Physical Damage10–12›10–14"
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:effect-and-chance1-visible",
+      "ok": true,
+      "detail": {
+        "width": 168.5,
+        "height": 31,
+        "clipped": [],
+        "hit": true,
+        "text": "Success chance100%"
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:cost0-visible",
+      "ok": true,
+      "detail": {
+        "width": 168.5,
+        "height": 22,
+        "clipped": [],
+        "hit": true,
+        "text": "600Gold"
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:cost1-visible",
+      "ok": true,
+      "detail": {
+        "width": 168.5,
+        "height": 22,
+        "clipped": [],
+        "hit": true,
+        "text": "I40/1Lowest-Grade Iron Ore"
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:cost2-visible",
+      "ok": true,
+      "detail": {
+        "width": 168.5,
+        "height": 22,
+        "clipped": [],
+        "hit": true,
+        "text": "I96/1Lowest-Grade Dust"
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:right-swipe-opens-temper",
+      "ok": true
+    },
+    {
+      "name": "forge-568x320-en-d2min:temper-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 355,
+        "sw": 355,
+        "h": 115,
+        "sh": 115,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:five-material-tiers",
+      "ok": true
+    },
+    {
+      "name": "forge-568x320-en-d2min:stake0-visible",
+      "ok": true,
+      "detail": {
+        "width": 41.5,
+        "height": 51,
+        "clipped": [],
+        "hit": true,
+        "text": "I40/1Lowest-Grade Iron Ore"
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:stake1-visible",
+      "ok": true,
+      "detail": {
+        "width": 41.5,
+        "height": 51,
+        "clipped": [],
+        "hit": true,
+        "text": "II0/1Low-Grade Iron Ore"
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:stake2-visible",
+      "ok": true,
+      "detail": {
+        "width": 41.515625,
+        "height": 51,
+        "clipped": [],
+        "hit": true,
+        "text": "III0/1Mid-Grade Iron Ore"
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:stake3-visible",
+      "ok": true,
+      "detail": {
+        "width": 41.5,
+        "height": 51,
+        "clipped": [],
+        "hit": true,
+        "text": "IV0/1High-Grade Iron Ore"
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:stake4-visible",
+      "ok": true,
+      "detail": {
+        "width": 41.5,
+        "height": 51,
+        "clipped": [],
+        "hit": true,
+        "text": "V0/1Top-Grade Iron Ore"
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:temper-action-visible",
+      "ok": true,
+      "detail": {
+        "width": 123.46875,
+        "height": 32,
+        "clipped": [],
+        "hit": true,
+        "text": "Temper"
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:temper-original-action",
+      "ok": true
+    },
+    {
+      "name": "forge-568x320-en-d2min:temper-consumes-selected-stake",
+      "ok": true
+    },
+    {
+      "name": "forge-568x320-en-d2min:temper-only-once",
+      "ok": true
+    },
+    {
+      "name": "forge-568x320-en-d2min:tempered-result-fits",
+      "ok": true,
+      "detail": {
+        "w": 355,
+        "sw": 355,
+        "h": 115,
+        "sh": 115,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-568x320-en-d2min:upgrade-original-action",
+      "ok": true
+    },
+    {
+      "name": "forge-568x320-en-d2min:upgrade-consumes-temper",
+      "ok": true
+    },
+    {
+      "name": "forge-568x320-en-d2min:full-item-reference-visible",
+      "ok": true
+    },
+    {
+      "name": "forge-568x320-en-d2min:item-reference-no-horizontal-scroll",
+      "ok": true,
+      "detail": {
+        "width": 355,
+        "scroll": 355
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:tab0-fits",
+      "ok": true,
+      "detail": {
+        "width": 167.75,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "강화"
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:tab0-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 683,
+        "sw": 683,
+        "h": 40,
+        "sh": 40,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:tab1-fits",
+      "ok": true,
+      "detail": {
+        "width": 167.75,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "제작"
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:tab1-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 683,
+        "sw": 683,
+        "h": 40,
+        "sh": 40,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:tab2-fits",
+      "ok": true,
+      "detail": {
+        "width": 167.75,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "합성"
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:tab2-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 683,
+        "sw": 683,
+        "h": 40,
+        "sh": 40,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:tab3-fits",
+      "ok": true,
+      "detail": {
+        "width": 167.75,
+        "height": 40,
+        "clipped": [],
+        "hit": true,
+        "text": "크래프트"
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:tab3-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 683,
+        "sw": 683,
+        "h": 40,
+        "sh": 40,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:item-opens-upgrade",
+      "ok": true
+    },
+    {
+      "name": "forge-844x390-ko-now:upgrade-decision-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 631,
+        "sw": 631,
+        "h": 186,
+        "sh": 186,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:upgrade-action-visible",
+      "ok": true,
+      "detail": {
+        "width": 306.5,
+        "height": 34,
+        "clipped": [],
+        "hit": true,
+        "text": "강화"
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:effect-and-chance0-visible",
+      "ok": true,
+      "detail": {
+        "width": 306.5,
+        "height": 31,
+        "clipped": [],
+        "hit": true,
+        "text": "물리 데미지7~8›7~9"
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:effect-and-chance1-visible",
+      "ok": true,
+      "detail": {
+        "width": 306.5,
+        "height": 31,
+        "clipped": [],
+        "hit": true,
+        "text": "성공 확률100%"
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:cost0-visible",
+      "ok": true,
+      "detail": {
+        "width": 306.5,
+        "height": 22,
+        "clipped": [],
+        "hit": true,
+        "text": "600골드"
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:cost1-visible",
+      "ok": true,
+      "detail": {
+        "width": 306.5,
+        "height": 22,
+        "clipped": [],
+        "hit": true,
+        "text": "I40/1최하급 철광석"
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:cost2-visible",
+      "ok": true,
+      "detail": {
+        "width": 306.5,
+        "height": 22,
+        "clipped": [],
+        "hit": true,
+        "text": "I96/1최하급 가루"
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:right-swipe-opens-temper",
+      "ok": true
+    },
+    {
+      "name": "forge-844x390-ko-now:temper-no-scroll",
+      "ok": true,
+      "detail": {
+        "w": 631,
+        "sw": 631,
+        "h": 186,
+        "sh": 186,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:five-material-tiers",
+      "ok": true
+    },
+    {
+      "name": "forge-844x390-ko-now:stake0-visible",
+      "ok": true,
+      "detail": {
+        "width": 76.828125,
+        "height": 51,
+        "clipped": [],
+        "hit": true,
+        "text": "I40/1최하급 철광석"
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:stake1-visible",
+      "ok": true,
+      "detail": {
+        "width": 76.828125,
+        "height": 51,
+        "clipped": [],
+        "hit": true,
+        "text": "II0/1하급 철광석"
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:stake2-visible",
+      "ok": true,
+      "detail": {
+        "width": 76.84375,
+        "height": 51,
+        "clipped": [],
+        "hit": true,
+        "text": "III0/1중급 철광석"
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:stake3-visible",
+      "ok": true,
+      "detail": {
+        "width": 76.828125,
+        "height": 51,
+        "clipped": [],
+        "hit": true,
+        "text": "IV0/1상급 철광석"
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:stake4-visible",
+      "ok": true,
+      "detail": {
+        "width": 76.828125,
+        "height": 51,
+        "clipped": [],
+        "hit": true,
+        "text": "V0/1최상급 철광석"
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:temper-action-visible",
+      "ok": true,
+      "detail": {
+        "width": 222.828125,
+        "height": 32,
+        "clipped": [],
+        "hit": true,
+        "text": "담금질"
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:temper-original-action",
+      "ok": true
+    },
+    {
+      "name": "forge-844x390-ko-now:temper-consumes-selected-stake",
+      "ok": true
+    },
+    {
+      "name": "forge-844x390-ko-now:temper-only-once",
+      "ok": true
+    },
+    {
+      "name": "forge-844x390-ko-now:tempered-result-fits",
+      "ok": true,
+      "detail": {
+        "w": 631,
+        "sw": 631,
+        "h": 186,
+        "sh": 186,
+        "top": 0,
+        "left": 0
+      }
+    },
+    {
+      "name": "forge-844x390-ko-now:upgrade-original-action",
+      "ok": true
+    },
+    {
+      "name": "forge-844x390-ko-now:upgrade-consumes-temper",
+      "ok": true
+    },
+    {
+      "name": "forge-844x390-ko-now:full-item-reference-visible",
+      "ok": true
+    },
+    {
+      "name": "forge-844x390-ko-now:item-reference-no-horizontal-scroll",
+      "ok": true,
+      "detail": {
+        "width": 631,
+        "scroll": 631
+      }
+    }
+  ],
+  "errors": []
+}

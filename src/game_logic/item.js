@@ -914,6 +914,28 @@ export function createItemSystem(data) {
     }
 
     /**
+     * 무기 밖 베이스 하나(방어구 넷 · 반지 · 목걸이)가 **처음 나오는 레벨**의 미리보기 [신설 2026-11-14 · R498 · SCREEN_DESIGN §9-1 도감 방어구 툴팁 · ADR-1166 · INTERFACE §2-5] —
+     * `ilvl` = 그 행의 해금 레벨(`tierMin`) · `def` = 그 레벨 · 강화 0 의 고유 방어력 `{stat, v}`(`implicitFor` — 드롭이 박는 `implicit` 그대로 · 베이스 옵션은 안 먹인다 · 장신구 null) ·
+     * `base` = 베이스 옵션 「방어력 +%」의 굴림 양끝(`optionLine` 의 베이스 줄과 같다 · 장신구 null) ·
+     * `trait` = 갈래 특성의 후보 stat 마다 그 레벨의 굴림 양끝(`optionLine` 의 특성 줄과 같은 `valueOf` · `rollOf` — 후보 둘이면 드롭은 하나 · 없으면 []).
+     * 반지 · 목걸이 베이스 옵션(태그 · 발동 스킬)은 개체가 굴려 베이스마다 같아 안 든다. 그 부위에 그 베이스가 없거나 무기면 null · 순수 · rng 0
+     */
+    function armorBasePreview(slot, baseId) {
+        if (slot === 'weapon') return null;
+        const row = (data.itemBases?.[slot] ?? []).find(b => b.id === baseId);
+        if (!row) return null;
+        const ilvl = row.tierMin ?? 1, group = row.group ?? null;
+        const imp = implicitFor(slot, ilvl, group);
+        const tr = groupDef(slot, group)?.trait ?? null;
+        return {
+            slot, baseId, group, ilvl,
+            def: imp,
+            base: imp ? { stat: 'armor_def_pct', min: F.pctOption(B.armor_fixed_def_pct_min), max: F.pctOption(B.armor_fixed_def_pct_max) } : null,
+            trait: tr ? tr.stats.map(stat => ({ stat, min: valueOf(tr, rollOf(tr, 0, ilvl), ilvl), max: valueOf(tr, rollOf(tr, 1, ilvl), ilvl) })) : [],
+        };
+    }
+
+    /**
      * 방어구 고유값에 **베이스 옵션 「방어력 +%」**(`armor_def_pct`)를 먹인 값 `{stat, v}` [2026-09-23 사용자 지시] — 툴팁 메인 옵션 · 대장간이 부른다.
      * 강화 배율까지 든다(`effective`). 곱한 뒤 정수 — `hero.computeCombat` 이 아이템마다 하는 곱과 **같은 판정 · 같은 반올림**이다
      * (그 아이템의 `armor_def_pct` 를 출처와 무관하게 더한다 — 이 stat 은 베이스 줄에만 선다). 고유값이 없으면(무기 · 목걸이 · 반지) null
@@ -1073,5 +1095,5 @@ export function createItemSystem(data) {
         return { ...item, implicit: { ...item.implicit, v: Math.round(item.implicit.v * F.upgradeMult(item.up)) } };
     }
 
-    return { rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBasesAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, weaponBasePreview, implicitFixed, optionSources, optionRange, optionTableRange, skillPlusOf, procSkillLevel };
+    return { rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBasesAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, weaponBasePreview, armorBasePreview, implicitFixed, optionSources, optionRange, optionTableRange, skillPlusOf, procSkillLevel };
 }

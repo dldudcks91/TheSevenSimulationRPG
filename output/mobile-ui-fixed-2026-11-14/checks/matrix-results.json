@@ -1,0 +1,3216 @@
+{
+  "rules_source": "working tree",
+  "started_at": "2026-11-13T17:56:28.608175+00:00",
+  "finished_at": "2026-11-13T17:57:34.681940+00:00",
+  "source_fingerprints_start": {
+    "src/ui/mobile.js": "75bd2e33182aa811d1266eb589d9e96a313555422fdb8ef4fdd2c6628a42c8ef",
+    "src/ui/mobile.css": "829ac65a932c9efa3d6807c07da443d2d75d1e73c86323412e5e7f99b2381ab4",
+    "src/ui/mobile-pages.js": "5d11dd9ebcc710d9cb1d0e78b5536c8e1cb74451799742a6e02c53332b3cbfaf",
+    "src/ui/mobile-pages.css": "0e7070b4318bebac39beab04e541055861e089600d99ba673d19e04805423d36",
+    "src/ui/app.js": "c8a3787ce03ed90788be15521bc7678d68b535d1f058bb29cc6a886c0e0ea257",
+    "src/ui/mock.js": "2ac5d99606eb447ad1fe5f4395b9730b5bfda169f2a23ec050c411397b608f28",
+    "src/game_logic/arena.js": "3a8ea1cf3684807b5638375998435c459e59209fbc45187a487121edbb7cb58a",
+    "src/game_logic/battle.js": "2fe784b96c2f50e7bed6ea6a53c57a0264bd58d00ce77f2aa57f77fc0021f7cb",
+    "src/game_logic/commission.js": "44629de1a55f6409e179bcdd36e91caad7cf1d41682bc6ba0813abd95b439680",
+    "src/game_logic/construction.js": "a51351e3f08591e8ec10d5c8b3af0fa7d2165501cf65d02224f9973f94b4d0e4",
+    "src/game_logic/csv.js": "5dec916bc8cbcc6de6e96da666a9d290fa9ff37869ce01a0fff7c84a57cbd10a",
+    "src/game_logic/formula.js": "0936fb4edbff3866bf59fb1b7adf12c744b1442a3249082db8c5bd0983e17df0",
+    "src/game_logic/gamble.js": "3ede2cc384ff8257a1a3ab263dd9d374d1f6afa57536bd1d0eb3b243a5ee863b",
+    "src/game_logic/hero.js": "fb7e98ad5c3cbf7880ec4a58143f0a65dde645ae8ec99d6b39fb874197d3fc40",
+    "src/game_logic/item.js": "cd425d9b6c6444b7bc8476507cc8ea34742b41557c4175096e3528fc3c31f94c",
+    "src/game_logic/naming.js": "d594dd5055fef9be1cc06c2673840746574395b2226efbf3c98a63d32288f982",
+    "src/game_logic/raid.js": "51b1f1b7e1d580fde7a0b6d8445dc570839c8a3bf0ebc87184d5730342ee0843",
+    "src/game_logic/rng.js": "6a9af2810710cbd2f37b4d57e19f7bb22fe9d74d83768ff7a3bb117f94a4f197",
+    "src/game_logic/skill.js": "8fea5a4d3f2f4005bbe403f6437223b56dc48383b4f60db589d3ecb73aea3f37",
+    "src/game_logic/skill_effects.js": "32ab4f845f5bce1f7e185acfc271d494792514307dca70380942e80addf5f7fd",
+    "src/game_logic/skill_runtime.js": "af8a40c35c073e41052c2fe96d206e11f2de4e50440e1af596fbc1e616b128fd",
+    "src/game_logic/skill_tags.js": "ca6d3bd7825d1f91fd97e7d72343bf8d45303c7045cd0eeeb3eec705dd8cdf42",
+    "src/game_logic/spawn_rule.js": "8233fea4f4a6aaff54b923a9e46254aae36ede6441e31f34f2030ac828444cf1",
+    "src/game_logic/stage_seed.js": "c729cd6b1277405e7ae45e6883e0d3c8231447d5f1e4c6a8acad2ad759f80e4b",
+    "src/game_logic/state.js": "746f154612c3ad346065269714c703f1ef9c910acde745feee43c2fcf41c10b8",
+    "src/game_logic/tactic.js": "1027f73bb442e405a607caf4526c7cc4d25355cb444370a2110094da721418c5",
+    "src/data/accessory_sin_option.csv": "e9073064128b7f4b7ca19ca2fc1b573f131125b5feca569b96bcfbe19c5530ee",
+    "src/data/advance.csv": "ee8ea9de09c1b3b26a9aa9f1af504759d133314848aaabd0eb05e8c723cfc6ce",
+    "src/data/advance_common.csv": "5e2f87863f1ec99dac9494aa7ce95223e85491e6fded28d92d8a5b1a64c6d533",
+    "src/data/advance_node.csv": "131242382f096d4c71a60ac2aa59c5ca0b169d13b36e14c133d284375a8c2d52",
+    "src/data/arena_tier.csv": "b4d16e2d931e1eb000a9ab072ff2ba97213db34e515b2999b7dd7c3a846e0eb9",
+    "src/data/armor_group.csv": "2b562112c4a8926527508f814791face02c9f8c2f0851b6a3155d20bcddf728f",
+    "src/data/armor_sin_option.csv": "c563cd85000657f856709c6177cc72d47c0214f95ad29a2333805b7856ab3dbf",
+    "src/data/balance.csv": "b7ebeade789a91157b9a61e4ea09aa2ce66a09927074b462f49c9a6e04aabfae",
+    "src/data/building.csv": "e3efe1a025851ad46c4ffe85490ff47e4578725988c5275c2be1dff4b03ec641",
+    "src/data/building_effect.csv": "48be5606ba2113457eee75952c5bf1b7e6b3711f00af93f72b790389827c3a4b",
+    "src/data/building_rank.csv": "d79ac8ca66cfcc67aff12b88a322736e1179256b380e038b1bebc12e3289abc7",
+    "src/data/chapter.csv": "f7a6762083e0798f261141134b9e8f70188bbe805e45c6e36cf9ebdad5a3073d",
+    "src/data/chapter_debuff.csv": "6d05e7bc1f5c4ff32fe61d12ce35fb6446cff2ea3c0e0186f4ccc751b4424183",
+    "src/data/class.csv": "655ca86a3d368cad5aad94f9d019bae139d6a844858706a6c8cc3166830bcdbd",
+    "src/data/codex_level.csv": "e2f51ad676c3cfdd3f41e098d2179c6f52d0bbdbb3f602a97c642cdd3219d30d",
+    "src/data/codex_option.csv": "b4dbcb95e12b72299e74c848bc496723e11b011c5639f3523ee6ae543c278378",
+    "src/data/combat_stat.csv": "fd3830c7cb40647701a15acac75f6d5e43aefcfebb0bb02310146295b605e422",
+    "src/data/commission.csv": "bb0497a1d56b330069cd7f078edc16cc2566b1a362c72d8b75da828d558fa92f",
+    "src/data/commission_fame.csv": "dcb5434f39126140e084834dd1c5ab6eb80b0afa0772d9b5d3637f7e169e4b6e",
+    "src/data/commission_grade.csv": "c1d8adbb4e3af2e07b74c9579d2b5d83f48efa6527cb2173b9a3d873bf559719",
+    "src/data/commission_kind.csv": "6d27e7ccafe47a9c3b9a42655e8e7acbe13f7d92f22f675e275ee39aef6afa2e",
+    "src/data/difficulty_tier.csv": "744094ab0312e6c5273c87baf3ae831c1c77f94600faf35bbd5da9cfb40d8605",
+    "src/data/equip_slot.csv": "f6b4aee22868707176cd265f74191f06f2cc876a50c9e192c73eb33b885afc05",
+    "src/data/explore_spot.csv": "870165829e8ed2bcb259be72ebedda8e04ff0391419255df07a0508039b83540",
+    "src/data/explore_story.csv": "f554566d5ffa376b64ffcca6fdde603e5bc8e3a90ee3e5ac57058ba0d7d0253c",
+    "src/data/formation_template.csv": "0540f40a1dfc69333fed88f8c399c63d78cfb733afe55c3e50a230de91182567",
+    "src/data/gear_rarity.csv": "e7c3df5c5f43c2939a57b66011b1013c049bc5a7fb0638cfe13cd59637a5c00f",
+    "src/data/hero_attribute.csv": "dbabefacf4781996ab6cd9ef7be09205e74111ba95f57963e4e77f1c3b6d3ca1",
+    "src/data/hero_name.csv": "b1d61049a27e0b48b9bc86cfadd20e758a829d5b859bd2ff6211fb4c71744525",
+    "src/data/hero_tier.csv": "bdf0fe34ad5f32c72eb7ae34a25226f0578750c195b32a7f80c76c86656ddd19",
+    "src/data/hero_trait.csv": "985ee61d581637d4a42ca5093b5836e025faf364600537162e9d70b22f14404e",
+    "src/data/hero_unique_candidates.csv": "559d46bff632634de070224ea3e7c019b9410c19845aa55dced32c4abe97eceb",
+    "src/data/item_base.csv": "5f6f8bbb269d2e9ee430fefad4993e18099f4dff037d3d434c98d8e0402dd2cd",
+    "src/data/lab_material.csv": "52256518c54f71650b49501b2c8c4c8e9a4339e90d4eb2cf5f88964a2d3a83cc",
+    "src/data/lab_node.csv": "7e52c1a34800a607481873dd2b5c9ac8bb69efd860ac9bf5f7de961fc1e0e52e",
+    "src/data/level_xp.csv": "bab5471de5186cd9cfc760bf3d6068bc530177ffe618d51c8c994b0a7fd2bcd6",
+    "src/data/make_recipe.csv": "51615693d5973d5fb966ff2561cb469777c386b8af76ab153d0dbd1a97e40ca8",
+    "src/data/mastery_node.csv": "49148728a0faa13ad8fe34ff8780b6c7d31ebc74e3c629632e5245ff27c4298b",
+    "src/data/material_synth.csv": "3a4e8f4f51658a69640bff40fbfe35c1e108ca6fc255c3cac757e1665d908b20",
+    "src/data/monster.csv": "01ac44142806724974904f9c543a2969447dda9f8dfd127c4c6073327e96369a",
+    "src/data/monster_base.csv": "f713877a6eea559797c6ac03ea1609d63fc32b68435f9f8b94a8b9ba11f2efe0",
+    "src/data/monster_role.csv": "d07c3f20d11eea4eb662b7afb245e2aca1f3085ad739c61fc172d1206f0af81c",
+    "src/data/monster_type.csv": "750a2f669487931f13eb6560603ebc1caa514ca75e0a29e8073636fe2514f385",
+    "src/data/potion.csv": "ef42e881aa16a88a43c85ac61c6c28244324baef4f335884cdeb06f555030801",
+    "src/data/raid_boss.csv": "a709d04c6b47b6c5bdcb9828dd20e08ef424c8707337fa48365241d8623561b3",
+    "src/data/raid_pattern.csv": "689e3b76a57d6bf19f98f637ed4e1ae043f250b519fd5485af2c83c29841ee28",
+    "src/data/ring_base_option.csv": "37604586c35d44d4eec757059a1148bc2b848aa368ca34672a790e7e66a77681",
+    "src/data/round_budget.csv": "fa7e56538b44f67cf238bc342c0a8d1b5697fe3d38806f71dabb4d1cab99ff76",
+    "src/data/shrine.csv": "3fac9dc9585de6f7b75562ad57c392d92a2a426199041a4134924540c97b4de8",
+    "src/data/sin_attr.csv": "2dc7244dfc7dc531c6332116b733b87be93fb06d2b10ca187b96d40636dbe6bf",
+    "src/data/sin_word.csv": "eb221f15ef783126480c657543c3773db210f38b3c93f995ce9cb29505012392",
+    "src/data/skill.csv": "72760336cfbf34ac863c819cc2d3a6693a212bd729b812846f54c2815e6d87e0",
+    "src/data/skill_effect.csv": "275e161ee858fc4c114885bd86335cc2d3b64dbff70f8be12b0085ab9850dc79",
+    "src/data/skill_status.csv": "ecd0fc5357324cbfb31efe828fe36f5cf5c4d6e5b4b055e51dce42b5e47ca74f",
+    "src/data/skill_tag.csv": "f67e274d50f4084de74fb62b7ee2d7d575290f35acab9b804fa15004af341ff5",
+    "src/data/slot_coin.csv": "19ea2c165d1bb8d4446cfede08809288b4b4d0607c2f16b8d75f44b62839b721",
+    "src/data/slot_line.csv": "545068b6308c2a7443dede0209a5f81622cf1d99271b7d02facb5340f041a779",
+    "src/data/slot_stake.csv": "df59ec64b2012b7e90007dab7d351da1a8382933f0e65073deea584853c881f3",
+    "src/data/slot_symbol.csv": "ada783570781b5696ad59d8e4d4a21d0b07afeb272bd276e849ae6b12251f355",
+    "src/data/spawn_grade.csv": "8780efa4dbc4eeb4c54ae4682301d8f758d1dea99e9778d5f4749b39950c0a9e",
+    "src/data/stage.csv": "8af73985d1e5964da80a193a3f8a5dd0d64188d4126e3a955361918dda45d956",
+    "src/data/stage_round.csv": "663c53334e45cc978b3e25c7d787aa6927e31cf1fc4af779669d1280506dc517",
+    "src/data/tactic_condition.csv": "de2fd7a087a0d73994d77a849e308cddc395fa7deccedbc531ccbac7915c540a",
+    "src/data/tactic_option.csv": "687dced8b37cdfc141a293c1280d468653ab83b59dd5b787b10a23860eeca73f",
+    "src/data/tactic_slot.csv": "69dec1f3bbbc1179c1e09befad1b969501074c4a384497efb5856ce8534cf5dc",
+    "src/data/upgrade_chance.csv": "4e59a563f0465bfbb2764e095941ecb8cd482e9571eaadaeed425aa4180c2a80",
+    "src/data/weapon_base.csv": "af38e3c60d3a9020c34429209e2714a1d02a2a2552083f02e5083631fff0c237",
+    "src/data/weapon_group.csv": "90efc546b986fadebf478e4c79f72a19e980d691872cdc5e702b08156f5c5536",
+    "src/data/weapon_sin_option.csv": "aa4f0bf470574f429ea15f306d19fc23b34fc167062b59fc701cb8d7570d4a06"
+  },
+  "source_fingerprints_end": {
+    "src/ui/mobile.js": "75bd2e33182aa811d1266eb589d9e96a313555422fdb8ef4fdd2c6628a42c8ef",
+    "src/ui/mobile.css": "829ac65a932c9efa3d6807c07da443d2d75d1e73c86323412e5e7f99b2381ab4",
+    "src/ui/mobile-pages.js": "5d11dd9ebcc710d9cb1d0e78b5536c8e1cb74451799742a6e02c53332b3cbfaf",
+    "src/ui/mobile-pages.css": "cc8a16f80e3911742c6893fd808671f9a419716999ea6e8de056ee897a6c86dc",
+    "src/ui/app.js": "8b2c32bda47dd232236234db8556d165cc0d071ff2df40b2fcd1495df9205045",
+    "src/ui/mock.js": "2ac5d99606eb447ad1fe5f4395b9730b5bfda169f2a23ec050c411397b608f28",
+    "src/game_logic/arena.js": "3a8ea1cf3684807b5638375998435c459e59209fbc45187a487121edbb7cb58a",
+    "src/game_logic/battle.js": "2fe784b96c2f50e7bed6ea6a53c57a0264bd58d00ce77f2aa57f77fc0021f7cb",
+    "src/game_logic/commission.js": "44629de1a55f6409e179bcdd36e91caad7cf1d41682bc6ba0813abd95b439680",
+    "src/game_logic/construction.js": "a51351e3f08591e8ec10d5c8b3af0fa7d2165501cf65d02224f9973f94b4d0e4",
+    "src/game_logic/csv.js": "5dec916bc8cbcc6de6e96da666a9d290fa9ff37869ce01a0fff7c84a57cbd10a",
+    "src/game_logic/formula.js": "0936fb4edbff3866bf59fb1b7adf12c744b1442a3249082db8c5bd0983e17df0",
+    "src/game_logic/gamble.js": "3ede2cc384ff8257a1a3ab263dd9d374d1f6afa57536bd1d0eb3b243a5ee863b",
+    "src/game_logic/hero.js": "fb7e98ad5c3cbf7880ec4a58143f0a65dde645ae8ec99d6b39fb874197d3fc40",
+    "src/game_logic/item.js": "cd425d9b6c6444b7bc8476507cc8ea34742b41557c4175096e3528fc3c31f94c",
+    "src/game_logic/naming.js": "d594dd5055fef9be1cc06c2673840746574395b2226efbf3c98a63d32288f982",
+    "src/game_logic/raid.js": "51b1f1b7e1d580fde7a0b6d8445dc570839c8a3bf0ebc87184d5730342ee0843",
+    "src/game_logic/rng.js": "6a9af2810710cbd2f37b4d57e19f7bb22fe9d74d83768ff7a3bb117f94a4f197",
+    "src/game_logic/skill.js": "41d8970fa8e63db0473a86e3bb6d836f52d7cae563b44ed2d21b61c5e8b50dc4",
+    "src/game_logic/skill_effects.js": "32ab4f845f5bce1f7e185acfc271d494792514307dca70380942e80addf5f7fd",
+    "src/game_logic/skill_runtime.js": "af8a40c35c073e41052c2fe96d206e11f2de4e50440e1af596fbc1e616b128fd",
+    "src/game_logic/skill_tags.js": "ca6d3bd7825d1f91fd97e7d72343bf8d45303c7045cd0eeeb3eec705dd8cdf42",
+    "src/game_logic/spawn_rule.js": "8233fea4f4a6aaff54b923a9e46254aae36ede6441e31f34f2030ac828444cf1",
+    "src/game_logic/stage_seed.js": "c729cd6b1277405e7ae45e6883e0d3c8231447d5f1e4c6a8acad2ad759f80e4b",
+    "src/game_logic/state.js": "746f154612c3ad346065269714c703f1ef9c910acde745feee43c2fcf41c10b8",
+    "src/game_logic/tactic.js": "1027f73bb442e405a607caf4526c7cc4d25355cb444370a2110094da721418c5",
+    "src/data/accessory_sin_option.csv": "e9073064128b7f4b7ca19ca2fc1b573f131125b5feca569b96bcfbe19c5530ee",
+    "src/data/advance.csv": "ee8ea9de09c1b3b26a9aa9f1af504759d133314848aaabd0eb05e8c723cfc6ce",
+    "src/data/advance_common.csv": "5e2f87863f1ec99dac9494aa7ce95223e85491e6fded28d92d8a5b1a64c6d533",
+    "src/data/advance_node.csv": "3c9cb77368df6499b316b1ad8e996b8d0f3bcbf8ea67fbafd1ab7b173387e4da",
+    "src/data/arena_tier.csv": "b4d16e2d931e1eb000a9ab072ff2ba97213db34e515b2999b7dd7c3a846e0eb9",
+    "src/data/armor_group.csv": "2b562112c4a8926527508f814791face02c9f8c2f0851b6a3155d20bcddf728f",
+    "src/data/armor_sin_option.csv": "c563cd85000657f856709c6177cc72d47c0214f95ad29a2333805b7856ab3dbf",
+    "src/data/balance.csv": "b7ebeade789a91157b9a61e4ea09aa2ce66a09927074b462f49c9a6e04aabfae",
+    "src/data/building.csv": "e3efe1a025851ad46c4ffe85490ff47e4578725988c5275c2be1dff4b03ec641",
+    "src/data/building_effect.csv": "48be5606ba2113457eee75952c5bf1b7e6b3711f00af93f72b790389827c3a4b",
+    "src/data/building_rank.csv": "d79ac8ca66cfcc67aff12b88a322736e1179256b380e038b1bebc12e3289abc7",
+    "src/data/chapter.csv": "f7a6762083e0798f261141134b9e8f70188bbe805e45c6e36cf9ebdad5a3073d",
+    "src/data/chapter_debuff.csv": "6d05e7bc1f5c4ff32fe61d12ce35fb6446cff2ea3c0e0186f4ccc751b4424183",
+    "src/data/class.csv": "655ca86a3d368cad5aad94f9d019bae139d6a844858706a6c8cc3166830bcdbd",
+    "src/data/codex_level.csv": "e2f51ad676c3cfdd3f41e098d2179c6f52d0bbdbb3f602a97c642cdd3219d30d",
+    "src/data/codex_option.csv": "b4dbcb95e12b72299e74c848bc496723e11b011c5639f3523ee6ae543c278378",
+    "src/data/combat_stat.csv": "fd3830c7cb40647701a15acac75f6d5e43aefcfebb0bb02310146295b605e422",
+    "src/data/commission.csv": "bb0497a1d56b330069cd7f078edc16cc2566b1a362c72d8b75da828d558fa92f",
+    "src/data/commission_fame.csv": "dcb5434f39126140e084834dd1c5ab6eb80b0afa0772d9b5d3637f7e169e4b6e",
+    "src/data/commission_grade.csv": "c1d8adbb4e3af2e07b74c9579d2b5d83f48efa6527cb2173b9a3d873bf559719",
+    "src/data/commission_kind.csv": "6d27e7ccafe47a9c3b9a42655e8e7acbe13f7d92f22f675e275ee39aef6afa2e",
+    "src/data/difficulty_tier.csv": "744094ab0312e6c5273c87baf3ae831c1c77f94600faf35bbd5da9cfb40d8605",
+    "src/data/equip_slot.csv": "f6b4aee22868707176cd265f74191f06f2cc876a50c9e192c73eb33b885afc05",
+    "src/data/explore_spot.csv": "870165829e8ed2bcb259be72ebedda8e04ff0391419255df07a0508039b83540",
+    "src/data/explore_story.csv": "f554566d5ffa376b64ffcca6fdde603e5bc8e3a90ee3e5ac57058ba0d7d0253c",
+    "src/data/formation_template.csv": "0540f40a1dfc69333fed88f8c399c63d78cfb733afe55c3e50a230de91182567",
+    "src/data/gear_rarity.csv": "e7c3df5c5f43c2939a57b66011b1013c049bc5a7fb0638cfe13cd59637a5c00f",
+    "src/data/hero_attribute.csv": "dbabefacf4781996ab6cd9ef7be09205e74111ba95f57963e4e77f1c3b6d3ca1",
+    "src/data/hero_name.csv": "b1d61049a27e0b48b9bc86cfadd20e758a829d5b859bd2ff6211fb4c71744525",
+    "src/data/hero_tier.csv": "bdf0fe34ad5f32c72eb7ae34a25226f0578750c195b32a7f80c76c86656ddd19",
+    "src/data/hero_trait.csv": "985ee61d581637d4a42ca5093b5836e025faf364600537162e9d70b22f14404e",
+    "src/data/hero_unique_candidates.csv": "559d46bff632634de070224ea3e7c019b9410c19845aa55dced32c4abe97eceb",
+    "src/data/item_base.csv": "5f6f8bbb269d2e9ee430fefad4993e18099f4dff037d3d434c98d8e0402dd2cd",
+    "src/data/lab_material.csv": "52256518c54f71650b49501b2c8c4c8e9a4339e90d4eb2cf5f88964a2d3a83cc",
+    "src/data/lab_node.csv": "7e52c1a34800a607481873dd2b5c9ac8bb69efd860ac9bf5f7de961fc1e0e52e",
+    "src/data/level_xp.csv": "bab5471de5186cd9cfc760bf3d6068bc530177ffe618d51c8c994b0a7fd2bcd6",
+    "src/data/make_recipe.csv": "51615693d5973d5fb966ff2561cb469777c386b8af76ab153d0dbd1a97e40ca8",
+    "src/data/mastery_node.csv": "49148728a0faa13ad8fe34ff8780b6c7d31ebc74e3c629632e5245ff27c4298b",
+    "src/data/material_synth.csv": "3a4e8f4f51658a69640bff40fbfe35c1e108ca6fc255c3cac757e1665d908b20",
+    "src/data/monster.csv": "01ac44142806724974904f9c543a2969447dda9f8dfd127c4c6073327e96369a",
+    "src/data/monster_base.csv": "f713877a6eea559797c6ac03ea1609d63fc32b68435f9f8b94a8b9ba11f2efe0",
+    "src/data/monster_role.csv": "d07c3f20d11eea4eb662b7afb245e2aca1f3085ad739c61fc172d1206f0af81c",
+    "src/data/monster_type.csv": "750a2f669487931f13eb6560603ebc1caa514ca75e0a29e8073636fe2514f385",
+    "src/data/potion.csv": "ef42e881aa16a88a43c85ac61c6c28244324baef4f335884cdeb06f555030801",
+    "src/data/raid_boss.csv": "a709d04c6b47b6c5bdcb9828dd20e08ef424c8707337fa48365241d8623561b3",
+    "src/data/raid_pattern.csv": "689e3b76a57d6bf19f98f637ed4e1ae043f250b519fd5485af2c83c29841ee28",
+    "src/data/ring_base_option.csv": "37604586c35d44d4eec757059a1148bc2b848aa368ca34672a790e7e66a77681",
+    "src/data/round_budget.csv": "fa7e56538b44f67cf238bc342c0a8d1b5697fe3d38806f71dabb4d1cab99ff76",
+    "src/data/shrine.csv": "3fac9dc9585de6f7b75562ad57c392d92a2a426199041a4134924540c97b4de8",
+    "src/data/sin_attr.csv": "2dc7244dfc7dc531c6332116b733b87be93fb06d2b10ca187b96d40636dbe6bf",
+    "src/data/sin_word.csv": "eb221f15ef783126480c657543c3773db210f38b3c93f995ce9cb29505012392",
+    "src/data/skill.csv": "72760336cfbf34ac863c819cc2d3a6693a212bd729b812846f54c2815e6d87e0",
+    "src/data/skill_effect.csv": "275e161ee858fc4c114885bd86335cc2d3b64dbff70f8be12b0085ab9850dc79",
+    "src/data/skill_status.csv": "ecd0fc5357324cbfb31efe828fe36f5cf5c4d6e5b4b055e51dce42b5e47ca74f",
+    "src/data/skill_tag.csv": "f67e274d50f4084de74fb62b7ee2d7d575290f35acab9b804fa15004af341ff5",
+    "src/data/slot_coin.csv": "19ea2c165d1bb8d4446cfede08809288b4b4d0607c2f16b8d75f44b62839b721",
+    "src/data/slot_line.csv": "545068b6308c2a7443dede0209a5f81622cf1d99271b7d02facb5340f041a779",
+    "src/data/slot_stake.csv": "df59ec64b2012b7e90007dab7d351da1a8382933f0e65073deea584853c881f3",
+    "src/data/slot_symbol.csv": "ada783570781b5696ad59d8e4d4a21d0b07afeb272bd276e849ae6b12251f355",
+    "src/data/spawn_grade.csv": "8780efa4dbc4eeb4c54ae4682301d8f758d1dea99e9778d5f4749b39950c0a9e",
+    "src/data/stage.csv": "8af73985d1e5964da80a193a3f8a5dd0d64188d4126e3a955361918dda45d956",
+    "src/data/stage_round.csv": "663c53334e45cc978b3e25c7d787aa6927e31cf1fc4af779669d1280506dc517",
+    "src/data/tactic_condition.csv": "de2fd7a087a0d73994d77a849e308cddc395fa7deccedbc531ccbac7915c540a",
+    "src/data/tactic_option.csv": "687dced8b37cdfc141a293c1280d468653ab83b59dd5b787b10a23860eeca73f",
+    "src/data/tactic_slot.csv": "69dec1f3bbbc1179c1e09befad1b969501074c4a384497efb5856ce8534cf5dc",
+    "src/data/upgrade_chance.csv": "4e59a563f0465bfbb2764e095941ecb8cd482e9571eaadaeed425aa4180c2a80",
+    "src/data/weapon_base.csv": "af38e3c60d3a9020c34429209e2714a1d02a2a2552083f02e5083631fff0c237",
+    "src/data/weapon_group.csv": "90efc546b986fadebf478e4c79f72a19e980d691872cdc5e702b08156f5c5536",
+    "src/data/weapon_sin_option.csv": "aa4f0bf470574f429ea15f306d19fc23b34fc167062b59fc701cb8d7570d4a06"
+  },
+  "checks": [
+    {
+      "name": "320x568-en-d2min:native-stage",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:rotation-gate-absent",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:battle",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:log",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:log-width",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:dmg",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:dmg-width",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:battle-bag-open",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:battle-bag-close",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:expedition-navigation",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:expedition",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:party-navigation",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:party",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:character-navigation",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:character",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:research-navigation",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:research",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:tavern-navigation",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:tavern",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:shop-navigation",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:shop",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:forge-navigation",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:forge",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:library-navigation",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:library",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:resource-navigation",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:resource",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:explore-navigation",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:explore",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:colosseum-navigation",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:colosseum",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:arena-navigation",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:arena",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:codex-navigation",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:codex",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:help-navigation",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:help",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:lab-navigation",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:lab",
+      "ok": true,
+      "detail": {
+        "width": 320,
+        "scroll": 320,
+        "height": 432,
+        "scrollHeight": 432,
+        "left": 0,
+        "right": 320,
+        "top": 80,
+        "bottom": 512
+      }
+    },
+    {
+      "name": "320x568-en-d2min:navigation-preserves-heroes",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:menu-modal",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:background-inert",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:focus-trap",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:focus-return",
+      "ok": true
+    },
+    {
+      "name": "320x568-en-d2min:rotation",
+      "ok": true,
+      "detail": {
+        "width": 504,
+        "scroll": 504,
+        "height": 276,
+        "scrollHeight": 276,
+        "left": 64,
+        "right": 568,
+        "top": 44,
+        "bottom": 320
+      }
+    },
+    {
+      "name": "320x568-en-d2min:rotation-preserves-heroes",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:native-stage",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:rotation-gate-absent",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:battle",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:log",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:log-width",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:dmg",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:dmg-width",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:battle-bag-open",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:battle-bag-close",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:expedition-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:expedition",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:party-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:party",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:character-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:character",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:research-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:research",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:tavern-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:tavern",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:shop-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:shop",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:forge-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:forge",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:library-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:library",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:resource-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:resource",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:explore-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:explore",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:colosseum-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:colosseum",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:arena-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:arena",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:codex-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:codex",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:help-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:help",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:lab-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:lab",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:navigation-preserves-heroes",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:menu-modal",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:background-inert",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:focus-trap",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:focus-return",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:rotation",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "390x844-ko-d2min:rotation-preserves-heroes",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:desktop-return",
+      "ok": true
+    },
+    {
+      "name": "390x844-ko-d2min:desktop-nav",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:native-stage",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:rotation-gate-absent",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:battle",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:log",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:log-width",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:dmg",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:dmg-width",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:battle-bag-open",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:battle-bag-close",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:expedition-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:expedition",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:party-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:party",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:character-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:character",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:research-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:research",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:tavern-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:tavern",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:shop-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:shop",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:forge-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:forge",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:library-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:library",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:resource-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:resource",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:explore-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:explore",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:colosseum-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:colosseum",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:arena-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:arena",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:codex-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:codex",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:help-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:help",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:lab-navigation",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:lab",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "390x844-en-now:navigation-preserves-heroes",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:menu-modal",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:background-inert",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:focus-trap",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:focus-return",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:rotation",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "390x844-en-now:rotation-preserves-heroes",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:desktop-return",
+      "ok": true
+    },
+    {
+      "name": "390x844-en-now:desktop-nav",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:native-stage",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:rotation-gate-absent",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:battle",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:log",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:log-width",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:dmg",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:dmg-width",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:battle-bag-open",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:battle-bag-close",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:expedition-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:expedition",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:party-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:party",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:character-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:character",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:research-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:research",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:tavern-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:tavern",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:shop-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:shop",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:forge-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:forge",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:library-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:library",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:resource-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:resource",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:explore-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:explore",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:colosseum-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:colosseum",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:arena-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:arena",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:codex-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:codex",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:help-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:help",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:lab-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:lab",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:navigation-preserves-heroes",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:menu-modal",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:background-inert",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:focus-trap",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:focus-return",
+      "ok": true
+    },
+    {
+      "name": "844x390-ko-d2min:rotation",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "844x390-ko-d2min:rotation-preserves-heroes",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:native-stage",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:rotation-gate-absent",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:battle",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:log",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:log-width",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:dmg",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:dmg-width",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:battle-bag-open",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:battle-bag-close",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:expedition-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:expedition",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:party-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:party",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:character-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:character",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:research-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:research",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:tavern-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:tavern",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:shop-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:shop",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:forge-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:forge",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:library-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:library",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:resource-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:resource",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:explore-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:explore",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:colosseum-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:colosseum",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:arena-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:arena",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:codex-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:codex",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:help-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:help",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:lab-navigation",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:lab",
+      "ok": true,
+      "detail": {
+        "width": 780,
+        "scroll": 780,
+        "height": 346,
+        "scrollHeight": 346,
+        "left": 64,
+        "right": 844,
+        "top": 44,
+        "bottom": 390
+      }
+    },
+    {
+      "name": "844x390-en-now:navigation-preserves-heroes",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:menu-modal",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:background-inert",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:focus-trap",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:focus-return",
+      "ok": true
+    },
+    {
+      "name": "844x390-en-now:rotation",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scroll": 390,
+        "height": 684,
+        "scrollHeight": 684,
+        "left": 0,
+        "right": 390,
+        "top": 96,
+        "bottom": 780
+      }
+    },
+    {
+      "name": "844x390-en-now:rotation-preserves-heroes",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:native-stage",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:rotation-gate-absent",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:battle",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:log",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:log-width",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:dmg",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:dmg-width",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:battle-bag-open",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:battle-bag-close",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:expedition-navigation",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:expedition",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:party-navigation",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:party",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:character-navigation",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:character",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:research-navigation",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:research",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:tavern-navigation",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:tavern",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:shop-navigation",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:shop",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:forge-navigation",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:forge",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:library-navigation",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:library",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:resource-navigation",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:resource",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:explore-navigation",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:explore",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:colosseum-navigation",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:colosseum",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:arena-navigation",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:arena",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:codex-navigation",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:codex",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:help-navigation",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:help",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:lab-navigation",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:lab",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:navigation-preserves-heroes",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:menu-modal",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:background-inert",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:focus-trap",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:focus-return",
+      "ok": true
+    },
+    {
+      "name": "768x1024-ko-d2min:rotation",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "768x1024-ko-d2min:rotation-preserves-heroes",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:native-stage",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:rotation-gate-absent",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:battle",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:log",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:log-width",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:dmg",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:dmg-width",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:battle-bag-open",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:battle-bag-close",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:expedition-navigation",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:expedition",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:party-navigation",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:party",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:character-navigation",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:character",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:research-navigation",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:research",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:tavern-navigation",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:tavern",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:shop-navigation",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:shop",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:forge-navigation",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:forge",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:library-navigation",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:library",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:resource-navigation",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:resource",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:explore-navigation",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:explore",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:colosseum-navigation",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:colosseum",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:arena-navigation",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:arena",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:codex-navigation",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:codex",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:help-navigation",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:help",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:lab-navigation",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:lab",
+      "ok": true,
+      "detail": {
+        "width": 1024,
+        "scroll": 1024,
+        "height": 608,
+        "scrollHeight": 608,
+        "left": 0,
+        "right": 1024,
+        "top": 96,
+        "bottom": 704
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:navigation-preserves-heroes",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:menu-modal",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:background-inert",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:focus-trap",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:focus-return",
+      "ok": true
+    },
+    {
+      "name": "1024x768-en-d2min:rotation",
+      "ok": true,
+      "detail": {
+        "width": 768,
+        "scroll": 768,
+        "height": 864,
+        "scrollHeight": 864,
+        "left": 0,
+        "right": 768,
+        "top": 96,
+        "bottom": 960
+      }
+    },
+    {
+      "name": "1024x768-en-d2min:rotation-preserves-heroes",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:native-stage",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:rotation-gate-absent",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:battle",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:log",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:log-width",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:dmg",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:dmg-width",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:battle-bag-open",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:battle-bag-close",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:expedition-navigation",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:expedition",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:party-navigation",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:party",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:character-navigation",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:character",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:research-navigation",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:research",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:tavern-navigation",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:tavern",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:shop-navigation",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:shop",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:forge-navigation",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:forge",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:library-navigation",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:library",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:resource-navigation",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:resource",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:explore-navigation",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:explore",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:colosseum-navigation",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:colosseum",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:arena-navigation",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:arena",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:codex-navigation",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:codex",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:help-navigation",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:help",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:lab-navigation",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:lab",
+      "ok": true,
+      "detail": {
+        "width": 1302,
+        "scroll": 1302,
+        "height": 556,
+        "scrollHeight": 556,
+        "left": 64,
+        "right": 1366,
+        "top": 44,
+        "bottom": 600
+      }
+    },
+    {
+      "name": "1366x600-ko-now:navigation-preserves-heroes",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:menu-modal",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:background-inert",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:focus-trap",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:focus-return",
+      "ok": true
+    },
+    {
+      "name": "1366x600-ko-now:rotation",
+      "ok": true,
+      "detail": {
+        "width": 600,
+        "scroll": 600,
+        "height": 1206,
+        "scrollHeight": 1206,
+        "left": 0,
+        "right": 600,
+        "top": 96,
+        "bottom": 1302
+      }
+    },
+    {
+      "name": "1366x600-ko-now:rotation-preserves-heroes",
+      "ok": true
+    },
+    {
+      "name": "browser-exceptions",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "passed": 373,
+  "total": 373
+}

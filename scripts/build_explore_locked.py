@@ -12,6 +12,7 @@
 **그림이나 마스크를 바꾸면 다시 돌린다**: `python scripts/build_explore_locked.py`  (Pillow 만 쓴다)
 """
 
+import argparse
 from pathlib import Path
 
 from PIL import Image
@@ -56,4 +57,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--source', type=Path, default=SRC)
+    parser.add_argument('--masks', type=Path, default=MASKS)
+    parser.add_argument('--output-dir', type=Path, default=OUT)
+    args = parser.parse_args()
+    SRC, MASKS, OUT = args.source, args.masks, args.output_dir
     main()
