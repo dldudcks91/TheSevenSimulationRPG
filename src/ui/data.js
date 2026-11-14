@@ -81,7 +81,7 @@ export const D = {
     accessorySinOptions: [],  // accessory_sin_option.csv — [{slot, sin, option, stat, scale, min, max, perIlvl?}] · 반지 죄종 계열표(R382) · 목걸이 죄종 칸 후보 · CSV 행 순서 (2026-09-21 · R127)
     weaponSinOptions: [],     // weapon_sin_option.csv — [{sin, option, appliesTo, stat, scale, min, max}] · 무기 죄종 계열표 · CSV 행 순서 (2026-09-11 R78 · 계열표 2026-10-05 R206)
     // ~~weaponCommonOptions~~ — weapon_common_option.csv 퇴역 (2026-10-05 R206 — 무기 옵션은 전부 죄종 계열 중 하나다)
-    heroNamePool: [],         // hero_name.csv — [{ko,en}] · CSV 행 순서
+    heroNamePool: [],         // hero_name.csv — [{cls,ko,en}] · 직업 안의 CSV 행 순서
     heroTraitPool: [],        // hero_trait.csv — [{ko,en}] · CSV 행 순서
     // ~~searchStories · searchMeetings · searchAnswers~~ — search_story · search_meeting · search_answer.csv 삭제 (2026-10-19 · 수색 → 찾아온 영웅)
     heroUniqueCandidates: [], // hero_unique_candidates.csv 원시 행 — 유니크 영웅 후보 풀(hero_design §1). ⚠임시 —
@@ -379,7 +379,7 @@ export async function loadData(base = './data/') {
     for (const r of itemBaseRow) (D.itemBases[r.slot] ??= []).push({
         id: r.base_id, ko: r.name_kr, en: r.name_en, group: r.group || null, tierMin: Number(r.tier_min_ilvl) || 1,
     });
-    D.heroNamePool = heroNameRow.map(r => ({ ko: r.name_kr, en: r.name_en }));
+    D.heroNamePool = heroNameRow.map(r => ({ cls: r.class_id, ko: r.name_kr, en: r.name_en }));
     D.heroTraitPool = heroTraitRow.map(r => ({ ko: r.name_kr, en: r.name_en }));
     // 탐험 진행 문구 — 원시 행 그대로 넘긴다. **막의 어휘도 순서도 CSV 가 든다**(`phase`·`phase_order`)라
     // 여기서 가공하면 구조가 두 곳에 생긴다. 무결성 검증은 state.js 가 로드 시 한다 (지점마다 막 · R235 · ~~수색 문구 · 만남 · 답~~ 2026-10-19 삭제)

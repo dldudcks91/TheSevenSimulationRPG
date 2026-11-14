@@ -690,14 +690,25 @@ check('csv: skill_tag 15행 — 파생 4(aoe·single·multihit·channel) · 대�
 // 08-31 mock→CSV 이관분 6종. **행 수가 곧 결정론 계약이다** — 풀이 늘거나 줄면 pick(rng, arr) 이 다른 것을 고른다
 // affix 19 → 18 [2026-09-11 · R78] — `atk_flat` 퇴역: 무기가 affix.csv 를 안 쓴다(무기 옵션 표 둘)
 // ~~affix 13~~ [2026-09-21 · R127] — 목걸이 · 반지가 세 층 표로 옮겨 **affix.csv 를 지웠다**. 자리에 장신구 표 셋의 행 수가 선다
-check('csv: 이관 5종 + 장신구 표 셋 — class 7 / equip_slot 8 / item_base 40 / hero_name 24 / hero_trait 12 / 장신구 죄종 표 32 · 발동 3 (공통옵션 표는 2026-11-12 삭제)', () => {
+check('csv: 이관 5종 + 장신구 표 셋 — class 7 / equip_slot 8 / item_base 40 / hero_name 100 / hero_trait 12 / 장신구 죄종 표 32 · 발동 3 (공통옵션 표는 2026-11-12 삭제)', () => {
     const got = [D.classes.length, D.equipSlots.length, Object.values(D.itemBases).flat().length,
         D.heroNamePool.length, D.heroTraitPool.length,
         D.accessorySinOptions.length, D.ringBaseOptions.length];   // ~~공통 10~~ 2026-11-12 accessory_common_option.csv 삭제
-    const want = [7, 8, 40, 24, 12, 41, 17];   // 장신구 죄종 표 32 → 41 [2026-11-11 · R453] 목걸이 10 → 계열표 19   // 30 → 36 [2026-09-17] 투구 4 → 10 · 36 → 42 [2026-09-18] 장갑 · 신발 각 4 → 7 (갈래 2 × 티어 3 + 시작) · 42 → 40 [2026-09-21] 목걸이 · 반지 각 4 → 3 (그림 없는 넷째를 뺐다 — 풀이 곧 설치된 그림이다)
+    const want = [7, 8, 40, 100, 12, 41, 17];   // 장신구 죄종 표 32 → 41 [2026-11-11 · R453] 목걸이 10 → 계열표 19   // 30 → 36 [2026-09-17] 투구 4 → 10 · 36 → 42 [2026-09-18] 장갑 · 신발 각 4 → 7 (갈래 2 × 티어 3 + 시작) · 42 → 40 [2026-09-21] 목걸이 · 반지 각 4 → 3 (그림 없는 넷째를 뺐다 — 풀이 곧 설치된 그림이다)
     //   장신구 죄종 표 41 = 반지 계열표 22(분노 · 나태 · 색욕 · 탐욕 셋씩 · 폭식 둘(③ 빈 칸 — 2026-10-30 R393) · 시기 ① 다섯 + ② 하나 · 오만 둘 — 2026-10-29 R382) + 목걸이 계열표 19(죄종 여섯 × 셋 + 오만 하나 — 2026-11-11 R453) ·
     //   공통 10 = 원소 4 · 절대값 1 · 상태이상 4 · 버프 1(경험치는 2026-10-30 탐욕 칸에만 — R393) · 발동 3 = 목걸이 베이스 셋 (2026-09-21 · R127)
     return got.every((n, i) => n === want[i]) || fail(`${got.join('/')} ≠ ${want.join('/')}`);
+});
+check('csv: 영웅 이름 — 본편 5직업마다 20개 · 한영 이름이 모두 있고 서로 겹치지 않는다', () => {
+    for (const cls of SYS.hero.mainClasses) {
+        const pool = D.heroNamePool.filter(n => n.cls === cls);
+        if (pool.length !== 20) fail(`${cls} 이름 ${pool.length}개`);
+    }
+    for (const lang of ['ko', 'en']) {
+        const names = D.heroNamePool.map(n => n[lang]);
+        if (names.some(n => !n?.trim()) || new Set(names).size !== names.length) fail(`${lang} 이름 누락 또는 중복`);
+    }
+    return D.heroNamePool.every(n => SYS.hero.mainClasses.includes(n.cls));
 });
 /**
  * 무기 베이스 — **무기군당 10 = 기본 1 + 단 3 × 계보 3** [2026-11-11 · R445 · item_design §1 「무기 베이스」]. 모양 검증 자체는 `item.js` 가 생성 때 한다(아래 단정이 깨 본다) —
@@ -2329,6 +2340,55 @@ check('영웅 등급: rng 소비 수가 등급에 의존하지 않는다 — 지
     return `지정 ${forced.map(h => h.tier).join('·')} vs 굴림 ${free.map(h => h.tier).join('·')} — 소비 동일`;
 });
 check('시작 파티: 같은 시드 = 같은 3명', () => eq(SYS.hero.rollStartParty(makeRng(1), 3), cands));
+check('영웅 이름: 시작 · 선술집 · 직업 지정 생성은 자기 직업 이름만 쓴다 · rng 소비와 저장 모양 유지', () => {
+    const verify = h => {
+        if (!D.heroNamePool.some(n => n.cls === h.cls && n.ko === h.name.ko && n.en === h.name.en))
+            fail(`${h.cls}: ${h.name.ko}/${h.name.en} 은 제 직업 이름이 아니다`);
+        if (!eq(Object.keys(h.name).sort(), ['en', 'ko'])) fail('영웅 이름 저장 모양이 달라졌다');
+    };
+    for (let seed = 1; seed <= 100; seed++) {
+        for (const roll of [SYS.hero.rollStartParty, SYS.hero.rollCandidates]) {
+            const rng = makeRng(seed);
+            let calls = 0;
+            const heroes = roll(() => { calls++; return rng(); }, 3);
+            if (calls !== 24) fail(`시드 ${seed}: 파티 rng ${calls}회`);
+            if (new Set(heroes.map(h => h.name.ko)).size !== 3) fail('파티 이름 중복');
+            heroes.forEach(verify);
+        }
+        for (const cls of SYS.hero.mainClasses) {
+            const rng = makeRng(seed);
+            let calls = 0;
+            const h = SYS.hero.rollHeroOf(() => { calls++; return rng(); }, cls);
+            if (calls !== 7) fail(`${cls}: 지정 생성 rng ${calls}회`);
+            verify(h);
+            if (!eq(h, SYS.hero.rollHeroOf(makeRng(seed), cls))) fail(`${cls}: 같은 시드의 결과가 다르다`);
+        }
+    }
+    return '100시드 · 생성 영웅 1,100명 · 파티 24회 / 지정 생성 7회';
+});
+check('영웅 이름: 겹침 회피도 자기 직업 안에서 · 명단 이름과 null 칸 보존 · 옛 이름 · 풀 소진', () => {
+    for (const cls of SYS.hero.mainClasses) {
+        const pool = D.heroNamePool.filter(n => n.cls === cls).map(({ ko, en }) => ({ ko, en }));
+        const h = { cls, name: pool[0] }, other = { cls, name: pool[3] };
+        const list = [h, null, other];
+        if (SYS.hero.avoidNames(list, pool.slice(0, 3)) !== list || !eq(h.name, pool[4])
+            || list[1] !== null || !eq(other.name, pool[3])) fail(`${cls}: 빈 이름 찾기 실패`);
+        const old = { cls, name: { ko: '옛 이름', en: 'Legacy Name' } };
+        SYS.hero.avoidNames([old], [old.name]);
+        if (!eq(old.name, pool[0])) fail(`${cls}: 풀 밖 옛 이름 처리 실패`);
+        const full = { cls, name: pool[0] };
+        SYS.hero.avoidNames([full], pool);
+        if (!eq(full.name, pool[0])) fail(`${cls}: 풀이 찼는데 다른 직업 이름을 썼다`);
+    }
+    return true;
+});
+check('영웅 이름: 새 직업 이름 풀 밖의 기존 보유 이름도 저장 · 로드하면 유지한다', () => {
+    const g = SYS.game.newGame(1901, SYS.hero.rollStartParty(makeRng(1901), 3), NOW);
+    const oldName = { ko: '옛 영웅', en: 'Legacy Hero' };
+    g.heroes[0].name = oldName;
+    const loaded = SYS.game.deserialize(SYS.game.serialize(g, NOW));
+    return eq(loaded.heroes[0].name, oldName);
+});
 check('시작 파티: 앞줄 직업(class.csv:start_row ≠ back)이 하나는 든다 · 앞줄이 든 시드는 선술집 굴림과 직업이 같다 · 바뀐 시드는 마지막 자리만 앞줄로 · 소비 수 같다 (2026-10-22 사용자 지시 · hero_design §1 · INTERFACE §5-2)', () => {
     const front = c => SYS.hero.startRankOf(c) === 0;
     let moved = 0, two = 0;

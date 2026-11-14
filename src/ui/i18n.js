@@ -1027,7 +1027,7 @@ const STRINGS = {
     'td.reroll.help': { ko: '교체하면 고른 영웅 레벨에 맞춰 다시 들어옵니다. 교체는 무료이며 {h}시간마다 가능합니다.', en: 'A refresh restocks at the selected hero\'s level. Refreshing is free and available every {h} hours.' },
     'td.special': { ko: '특수상단', en: 'Visiting trader' },
     'td.trade': { ko: '교역소', en: 'Trading Post' },
-    'td.trade.cost': { ko: '보유 {have} · 필요 {cost}', en: 'Owned {have} · Cost {cost}' },
+    'td.trade.cost': { ko: '필요 {cost} · 보유 {have}', en: 'Cost {cost} · Owned {have}' },
     'td.trade.buy': { ko: '{pay}(으)로 {name} 구매', en: 'Buy {name} with {pay}' },
     'td.trade.bought': { ko: '{name} ×{n} 구매 (−{pay} ×{cost})', en: 'Bought {name} ×{n} (−{pay} ×{cost})' },
     'td.trade.boughtGold': { ko: '{name} ×{n} 구매 (−{cost} G)', en: 'Bought {name} ×{n} (−{cost} G)' },

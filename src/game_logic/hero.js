@@ -54,7 +54,7 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  *   ringBaseOptions — ring_base_option.csv 행 — `skill_tag_value` 특성이 닿는 태그(효과가 `value` 인 행의 태그 · 강화 · 축복 · 함성 · 오오라 · 저주)
  *   weaponBases  — {groupId: [{id, periodMult, …}]} ← weapon_base.csv — 든 무기(`item.baseId`)의 **계보 공속 배율**을 무기군에 먹인다
  *                  (`formula.weaponLine` — 주기와 한 방에 같은 배율 · 2026-11-11 · R445). 없거나 행이 없는 베이스는 배율 1
- *   namePool     — 레어 영웅 이름 풀 [{ko,en}...]
+ *   namePool     — 생성 영웅의 직업별 이름 풀 [{cls,ko,en}...] · hero.name 은 {ko,en}만 저장한다
  *   traitPool    — 시작 특성 풀 [{ko,en}...] (효과 미작성 — 이름표만 굴린다)
  *   skillPool    — **직업별** 고유 스킬 후보 `{classId: [skillId...]}` ← skill.csv **행 순서**(순서가 굴림 결과를 정한다).
  *                  hero.js 는 skill 시스템을 모른다 — id 목록만 받는다. **1스킬 = 1직업**(skill_design §12-1
@@ -96,6 +96,19 @@ export function createHeroSystem(data) {
     const F = createFormula(B);        // 성장 곡선(growthMult)을 시뮬과 같은 함수에서 읽는다
     const statIds = data.stats.map(s => s.id);
     const mainClasses = data.classes.filter(c => c.stage === 'main').map(c => c.id);
+    const namePools = Object.fromEntries(mainClasses.map(cls => [cls, []]));
+    for (const row of data.namePool ?? []) {
+        const pool = namePools[row.cls];
+        if (!pool || !row.ko?.trim() || !row.en?.trim())
+            throw new Error(`hero: hero_name.csv 의 직업 또는 이름이 잘못됐다 (${row.cls}: ${row.ko}/${row.en})`);
+        pool.push({ ko: row.ko, en: row.en });
+    }
+    for (const cls of mainClasses) if (!namePools[cls].length)
+        throw new Error(`hero: hero_name.csv 에 ${cls} 직업의 이름 풀이 없다`);
+    const nameOf = (r, cls) => {
+        const pool = namePools[cls];
+        return pool[Math.floor(r * pool.length)];
+    };
     const skillPool = data.skillPool ?? {};      // {classId: [skillId...]} — 직업 풀 (skill_design §12)
     const starterPool = data.starterPool ?? {};  // {classId: [skillId...]} — 직업 풀의 1티어 · 첫 파티 고유만 (2026-10-16 · R271)
     const facePools = data.heroFaces ?? {};        // {classId: [k…]} — 굴릴 초상 번호 목록 · 없거나 빈 직업 = 초상 없음 (2026-11-14 · 옛 장수 n)
@@ -503,12 +516,13 @@ export function createHeroSystem(data) {
      *   영웅 안에서 굴리면 1번 영웅의 얼굴이 2번 영웅의 능력치를 밀어 **같은 시드가 다른 파티**를 낸다 (INTERFACE §5-2).
      */
     function rollParty(rng, n, tiers, starter = false) {
-        const names = drawDistinct(rng, data.namePool, n);
+        // 이름 난수는 종전처럼 맨 앞에서 n회 소비한다. 직업이 정해진 뒤 제 풀에 적용해야 뒤 수열이 안 밀린다.
+        const nameRolls = Array.from({ length: n }, () => rng());
         const sins = drawDistinct(rng, data.sins, n);
         const classes = starter ? drawStartClasses(rng, n) : drawDistinct(rng, mainClasses, n);   // 첫 파티만 앞줄 하나 보장 (2026-10-22)
         const traits = drawDistinct(rng, data.traitPool, n);
-        const party = names.map((name, i) =>
-            rollHero(rng, { name, sin: sins[i], cls: classes[i], trait: traits[i], tier: tiers?.[i], starter }));
+        const party = nameRolls.map((r, i) =>
+            rollHero(rng, { name: nameOf(r, classes[i]), sin: sins[i], cls: classes[i], trait: traits[i], tier: tiers?.[i], starter }));
         // 소비는 언제나 인원수만큼 1회씩이다 — 직업 풀이 비어도(마법사) 소비 수는 안 바뀐다
         party.forEach(h => { h.face = rollFace(rng, h.cls); });
         return party;
@@ -533,7 +547,7 @@ export function createHeroSystem(data) {
 
     /**
      * 이름 겹침 피하기 [2026-10-15 사용자 · PLAN_user_review 2-5 「노엘 → 노엘」 · hero_design §1] — 굴린 뒤 **이미 있는 이름(`taken`)과 겹치는 후보만** 이름을 바꾼다.
-     *   **rng 를 안 쓴다** — 소비 순서 계약(INTERFACE §5-2)과 골든이 그대로다. 새 이름 = 이름 풀에서 **원래 이름 다음 자리부터** 돌며 처음 비는 이름.
+     *   **rng 를 안 쓴다** — 소비 순서 계약(INTERFACE §5-2)이 그대로다. 새 이름 = **후보 직업의 이름 풀**에서 원래 이름 다음 자리부터 돌며 처음 비는 이름.
      *   피하는 이름 = `taken` ∪ 이 목록의 이름 — 명단에서 한 명을 고용해도(그 이름이 후보 → 로스터로 옮겨 갈 뿐) 남은 후보의 이름이 안 흔들린다.
      *   `null` 칸(고용한 명단 칸)은 건너뛴다 · 풀이 다 차면 그대로 둔다. 목록의 영웅을 **고쳐 쓰고** 그 목록을 돌려준다
      */
@@ -542,9 +556,9 @@ export function createHeroSystem(data) {
         const hit = new Set((taken ?? []).map(key));
         if (!hit.size) return list;
         const used = new Set([...hit, ...list.filter(Boolean).map(h => key(h.name))]);
-        const pool = data.namePool;
         for (const h of list) {
             if (!h || !hit.has(key(h.name))) continue;
+            const pool = namePools[h.cls];
             const at = pool.findIndex(n => key(n) === key(h.name));
             for (let k = 1; k <= pool.length; k++) {
                 const n = pool[(at + k) % pool.length];
@@ -562,7 +576,7 @@ export function createHeroSystem(data) {
      */
     function rollHeroOf(rng, cls, tier = null) {
         if (!mainClasses.includes(cls)) return null;
-        const [name] = drawDistinct(rng, data.namePool, 1);
+        const name = nameOf(rng(), cls);
         const [sin] = drawDistinct(rng, data.sins, 1);
         const [trait] = drawDistinct(rng, data.traitPool, 1);
         const h = rollHero(rng, { name, sin, cls, trait, tier });

@@ -367,7 +367,7 @@ export const PAPERDOLL_SEAL = [0, 0];
 
 /* ═══════════ 영웅 생성 풀 ═══════════
    굴리는 규칙은 game_logic/hero.js 에 있고, 풀(데이터)은 **CSV 로 나갔다** (2026-08-31):
-   `hero_name.csv` 24행(레어 영웅은 무한 생성이라 이름도 풀에서 뽑는다 — 유니크 15명은 고정 명단이라 들어오지 않는다) ·
+   `hero_name.csv` 100행(일반 · 매직 · 레어가 제 직업의 이름 풀에서 뽑는다 — 본편 5직업마다 20개 · 유니크 이름은 별도) ·
    `hero_trait.csv` 12행(시작 특성 — ⚠ 효과 미작성, 지금은 이름표만 굴린다. hero_design §3).
    읽는 곳은 `ui/data.js`(`D.heroNamePool` · `D.heroTraitPool`). */
 

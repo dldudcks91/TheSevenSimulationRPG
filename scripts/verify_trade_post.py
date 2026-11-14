@@ -94,8 +94,8 @@ def main():
                       and page.locator('[data-trade-pay="gold"] button').is_disabled()
                       and page.locator('[data-trade-pay="timber"] button').is_enabled()
                       and page.locator('[data-trade-pay="dust"] button').is_enabled())
-                check(prefix + ': price shows owned amount before required amount',
-                      page.locator('[data-trade-pay="timber"] .td-price').inner_text() == '6 / 3')
+                check(prefix + ': price shows required amount before owned amount',
+                      page.locator('[data-trade-pay="timber"] .td-price').inner_text() == '3 / 6')
                 page.locator('[data-trade-pay="timber"] button').click()
                 after = page.evaluate('() => __tradeReview.snapshot()')
                 check(prefix + ': buying spends three payment materials and receives one selected material',

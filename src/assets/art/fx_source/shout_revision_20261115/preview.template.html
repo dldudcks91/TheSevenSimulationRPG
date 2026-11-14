@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>함성 이펙트 6종 · 새 시안</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#171a20;color:#e3e0d8;font:15px/1.5 system-ui,sans-serif}main{max-width:1280px;margin:auto;padding:30px}h1{margin:0;font-size:25px}p{margin:6px 0 18px;color:#b7b6ba}nav{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:22px}button,select{font:inherit;background:#292d36;border:1px solid #575254;color:inherit;padding:8px 13px;border-radius:5px}button{cursor:pointer}label{display:flex;align-items:center;gap:8px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}article{background:#22262e;border:1px solid #41424a;border-radius:8px;padding:16px}h2{font-size:18px;margin:0 0 3px}small{color:#c1b59b}.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.label{text-align:center;color:#aaaeb7;font-size:12px}.stage{height:154px;position:relative;display:grid;place-items:center;overflow:hidden;border-radius:5px;background:#11141a}.large{width:140px;height:140px;object-fit:contain}.actual{height:143px;margin-top:8px;position:relative;display:grid;place-items:center}.portrait{height:90px;width:90px;object-fit:cover;background:#34302b;border:1px solid #6c6354;border-radius:5px}.overlay{position:absolute;inset:0;margin:auto;object-fit:contain;pointer-events:none}.missing{color:#8e929b;font-size:12px;padding:10px;text-align:center}.playing .overlay{animation:var(--motion) 580ms ease-out infinite;animation-delay:var(--delay)}.no-portrait .portrait{visibility:hidden}.light .stage,.light .actual{background:#ddd7ca}.old{opacity:.86}.meta{font-size:12px;color:#a5a9b1;text-align:center}footer{margin-top:20px;color:#969ba5;font-size:12px}@keyframes wave{0%{transform:scale(.6);opacity:0}25%{opacity:1}70%{transform:scale(1);opacity:1}100%{transform:scale(1.04);opacity:0}}@keyframes inward{0%{transform:scale(1.08);opacity:0}25%{opacity:1}75%{transform:scale(.75);opacity:1}100%{transform:scale(.6);opacity:0}}@keyframes orders{0%{transform:translateY(8px) scale(.82);opacity:0}25%{opacity:1}70%{transform:translateY(-2px) scale(1);opacity:1}100%{transform:translateY(-5px);opacity:0}}@media(max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){main{padding:16px}.grid{grid-template-columns:1fr}}
+</style>
+<main>
+<h1>함성 이펙트 · 6종 새 시안</h1>
+<p>양옆으로 퍼지는 음파를 공통으로 사용했습니다. 위는 확대, 아래는 90px 초상 위의 기존 표시 크기입니다.</p>
+<nav>
+<select id="style" aria-label="그림체"><option value="darktoon">다크 카툰</option><option value="foil">금속박</option></select>
+<button id="play">움직임 재생</button>
+<label><input id="portrait" type="checkbox" checked>초상 표시</label>
+<label><input id="light" type="checkbox">밝은 배경</label>
+</nav>
+<div class="grid" id="grid"></div>
+<footer>2026-11-15 · Codex 내장 image_gen 생성 · 검토용 시안 12장 · 원본과 최종 프롬프트: manifest.json</footer>
+</main>
+<script>
+const sprites=/*__SPRITES__*/[];
+const motion={war_shout:'wave',war_battleorders:'wave',war_warcry:'inward',war_battlecry:'inward',war_command:'orders',war_intimidate:'inward'};
+const size={war_command:132,war_intimidate:128};
+const grid=document.getElementById('grid');
+function render(){
+ const style=document.getElementById('style').value;
+ grid.innerHTML=sprites.filter(s=>s.style===style).map((s,i)=>{
+  const old='../../fx/skills/'+s.id+'_'+style+'.webp';
+  const missing=style==='foil'&&['war_warcry','war_battlecry'].includes(s.id);
+  const cell=(src,before)=>`<div><div class="label">${before?'기존':'새 시안'}</div><div class="stage">${before&&missing?'<span class="missing">기존에는 코드 이펙트 사용</span>':`<img class="large" src="${src}" alt="${s.name} ${before?'기존':'새 시안'}">`}</div><div class="actual"><img class="portrait" src="../../faces/source/hero/warrior_samson.png" alt="기존 전사 초상">${before&&missing?'':`<img class="overlay" src="${src}" alt="" style="width:${size[s.id]||90}px;height:${size[s.id]||90}px;--motion:${motion[s.id]};--delay:${i*35}ms">`}</div><div class="meta">${size[s.id]||90}px</div></div>`;
+  return `<article data-skill="${s.id}"><h2>${s.name}</h2><small>${s.en}</small><div class="pair">${cell(old,true)}${cell(s.output,false)}</div></article>`;
+ }).join('');
+}
+document.getElementById('style').onchange=render;
+document.getElementById('play').onclick=e=>{const playing=document.body.classList.toggle('playing');e.target.textContent=playing?'정지':'움직임 재생'};
+document.getElementById('portrait').onchange=e=>document.body.classList.toggle('no-portrait',!e.target.checked);
+document.getElementById('light').onchange=e=>document.body.classList.toggle('light',e.target.checked);
+render();
+</script>
+</html>

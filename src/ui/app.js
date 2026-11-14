@@ -6476,12 +6476,12 @@ function rankCell(b, r) {
 const rankReqTipCard = r => el('div', 'tip-card cn-req-tip',
     r.require.map(x => `<span class="cn-req ${x.ok ? 'ok' : 'no'}">${x.ok ? '✓' : '✗'} ${reqText(x)}</span>`).join(''));
 
-/** 재료 칸 — 재화 그림 칸 · 오른쪽 아래 **골드는 필요 수량 · 다른 재료는 「보유/필요」** · 칸 아래 이름 · 모자라면 칸 테 · 수량이 붉다
+/** 재료 칸 — 재화 그림 칸 · 오른쪽 아래 **골드는 필요 수량 · 다른 재료는 「필요/보유」** · 칸 아래 이름 · 모자라면 칸 테 · 수량이 붉다
  *  (ADR-0323 · 보유 줄은 ADR-0397 이 구석으로 당겼다 — 골드 보유는 상단바가 든다).
  *  그림은 제작 재료면 그 단계의 재료 아이콘(`mock.js:materialIcon` — 재료 탭과 같은 그림) · 재화는 `mock.js:RES_ART` */
 const matTile = c => {
     const no = c.have < c.need;
-    const n = c.res === 'gold' ? c.need.toLocaleString() : `${c.have.toLocaleString()}/${c.need.toLocaleString()}`;
+    const n = c.res === 'gold' ? c.need.toLocaleString() : `${c.need.toLocaleString()}/${c.have.toLocaleString()}`;
     const icon = M.materialIcon(c.res);
     return `<span class="cn-matw${no ? ' no' : ''}"><span class="cn-mat res-${resKind(c.res)}">${icon ? `<img src="${icon}" alt="" draggable="false">` : M.RES_ART[resKind(c.res)] ?? ''}${matTier(c.res)}<b class="cn-mat-n">${n}</b></span>`
         + `<span class="cn-mat-name">${resName(c.res)}</span></span>`;
@@ -8655,11 +8655,11 @@ function forgeMake(p) {
         const pickLn = ls.includes(ln) ? ln : ls[0];
         return kinds.filter(k => k.line === pickLn);
     };
-    // 필요 재료 칸 셋 — 그림 자리에 **재료 이름 글자**(재료 아트가 없다 · 상점 재료 칸과 같은 규칙) · 칸 아래 `보유/필요`.
+    // 필요 재료 칸 셋 — 그림 자리에 **재료 이름 글자**(재료 아트가 없다 · 상점 재료 칸과 같은 규칙) · 칸 아래 `필요/보유`.
     //   필요량은 부위마다 한 줄이라 모든 줄이 같은 칸을 든다 (ADR-0263)
     const mats = ms.cost.map(c => {
         const name = c.kind === 'gold' ? t('res.gold') : matName(c.kind, c.id);   // 골드 · 부위 재료 · 가루(재료 사다리) — R373
-        return `<span class="fg-kmat${c.have < c.need ? ' no' : ''}" title="${name} ${c.have} / ${c.need}"><span class="fg-kmat-ic">${name}</span><b>${c.have}/${c.need}</b></span>`;
+        return `<span class="fg-kmat${c.have < c.need ? ' no' : ''}" title="${name} ${c.need} / ${c.have}"><span class="fg-kmat-ic">${name}</span><b>${c.need}/${c.have}</b></span>`;
     }).join('');
     const list = el('div', 'fg-kinds');
     // 줄 높이 — 목록이 패널 맨 아래에 닿게 가르는 줄 수 = 이 레벨에서 줄이 가장 많은 부위의 줄 수 (부위를 바꿔도 줄 높이가 같다 · style.css `.fg-kinds`)
@@ -8802,7 +8802,7 @@ function forgeTemper(it, us) {
     });
     mid.appendChild(reels);
     // ② 판돈 단계 — 단계 표지 칸(I ~ V · 재료 칸의 단계 표지와 같은 숫자) · 고른 칸은 강조 테두리 · 판돈이 모자란 단계는 붉다
-    //   그 아래 고른 단계의 재료 한 줄 — 그림 · 이름 · 보유/필요(모자라면 붉다). 칸 다섯이 가운데 칸 폭에 한 줄로 서게 이름은 고른 것만 적는다
+    //   그 아래 고른 단계의 재료 한 줄 — 그림 · 이름 · 필요/보유(모자라면 붉다). 칸 다섯이 가운데 칸 폭에 한 줄로 서게 이름은 고른 것만 적는다
     const pick = tp.stakes.find(x => x.tier === state.temperTier) ?? tp.stakes[0];
     const stakes = el('div', 'fg-tp-stakes');
     for (const x of tp.stakes) {
@@ -8814,7 +8814,7 @@ function forgeTemper(it, us) {
     mid.appendChild(stakes);
     const icon = M.materialIcon(pick.id);
     mid.appendChild(el('div', `fg-tp-mat${pick.have < pick.need ? ' no' : ''}`,
-        `${icon ? `<img src="${icon}" alt="" draggable="false">` : ''}<span>${resName(pick.id)}</span><b>${pick.have.toLocaleString()}/${pick.need.toLocaleString()}</b>`));
+        `${icon ? `<img src="${icon}" alt="" draggable="false">` : ''}<span>${resName(pick.id)}</span><b>${pick.need.toLocaleString()}/${pick.have.toLocaleString()}</b>`));
     // ③ [담금질] — 대장간을 안 지었으면 흐리고 누르면 지을 랭크를 말한다 · 오른 몫이 있으면 「담금질됨」으로 잠긴다
     //   자리 = 판 제목 줄 오른쪽 끝(ADR-1163) · 모바일은 제목 줄이 안 서니 판 맨 아래 같은 버튼(`.fg-go-foot` — 데스크톱은 숨는다)
     const mkGo = cls => {
@@ -8910,7 +8910,7 @@ function forgeUpgrade(p) {
             ? `<span class="lab">${t('fg.chanceLab')}</span><b>${pct(us.baseChance)}</b><i>+</i><b class="nx${gain ? '' : ' same'}">${gain}%</b>`
             : `<span class="lab">${t('fg.chanceLab')}</span><b>${pct(us.chance)}</b>`));
         work.appendChild(rows);
-        // ④ 비용 = 건설 · 연구소와 같은 재료 칸(`matTile` — 골드는 필요 수 · 재료는 보유/필요 · 모자라면 붉다) · 줄 오른쪽 끝 [강화] (ADR-0973)
+        // ④ 비용 = 건설 · 연구소와 같은 재료 칸(`matTile` — 골드는 필요 수 · 재료는 필요/보유 · 모자라면 붉다) · 줄 오른쪽 끝 [강화] (ADR-0973)
         //   상한이면 칸이 빠지고 버튼이 상한 문구로 잠긴다
         const act = el('div', 'fg-up-act');
         if (us.cost != null) act.appendChild(el('div', 'cn-mats', [{ res: 'gold', need: us.cost, have: us.gold },
@@ -9142,7 +9142,7 @@ function shopTradeGoods() {
                 img.src = icon; img.alt = '';
                 row.appendChild(img);
             }
-            const price = el('span', `td-price${o.canBuy ? '' : ' no'}`, gold ? `${o.cost.toLocaleString()} G` : `${o.have.toLocaleString()} / ${o.cost.toLocaleString()}`);
+            const price = el('span', `td-price${o.canBuy ? '' : ' no'}`, gold ? `${o.cost.toLocaleString()} G` : `${o.cost.toLocaleString()} / ${o.have.toLocaleString()}`);
             price.title = t('td.trade.cost', { cost: o.cost.toLocaleString(), have: o.have.toLocaleString() });
             row.appendChild(price);
             const buy = el('button', 'btn sm primary', t('td.buy'));

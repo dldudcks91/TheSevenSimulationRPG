@@ -149,7 +149,7 @@ strike(rng, a, d):
 | `ringBaseOptions` | ring_base_option.csv 행 — 무기군 특성 `skill_tag_value` 가 닿는 태그(효과 `value` 행 · 2026-11-11 · R443) | ring_base_option.csv |
 | `weaponBases` | `{groupId: [{id, periodMult, …}]}` — **든 무기의 베이스 행**(`item.baseId`)을 찾아 계보 배율을 무기군에 먹인다(`formula.weaponLine` · 2026-11-11 · R445). 행이 없는 베이스(옛 세이브의 퇴역 id · 몬스터 · 맨손)는 배율 1 | weapon_base.csv |
 | `armorGroups` | `{slot: {groupId: {id, slot, defMult, trait, classes, …}}}` — **부위 → 갈래** 두 단 [개정 2026-09-18 — ~~`{id: …}` 갑옷군 3갈래~~ · 네 부위가 갈래를 갖고 갈래 id 가 부위마다 겹친다(`leather`) · `trait` 2026-10-21 R303 — ~~`hpPct` · `castSpeedPct`~~(R299 같은 날 퇴역)]. **갈래 고정값(공속 · 쿨감) 칸은 없다**(2026-11-12 사용자 — `armor_group.csv:aspd_pct` · `cdr_pct` 삭제 · 2026-11-11 R446 에 경갑 공속 · 로브 쿨감이 특성 줄로 옮겨 값이 전부 0 이었다). **네 부위 갈래 특성(`trait` — 중갑만 없다)은 드롭이 아이템의 `[베이스]` 줄로 박는다**(§2-5 · 갑옷 2026-11-11 R446) · 그 전에 굴린 경갑 · 로브는 줄이 없다(소급 안 함 — R303 의 옛 투구 · 장갑 · 신발과 같다) — 갈래 조회가 아니라 접사 합산이 읽는다 | armor_group.csv — `slot` 칸이 부위다 |
-| `namePool` | `[{ko,en}]` | hero_name.csv — **행 순서가 결정론에 걸린다**(`drawDistinct` 가 인덱스를 굴린다) |
+| `namePool` | `[{cls,ko,en}]` — 직업별 이름 행. `cls` = CSV `class_id`; 영웅의 `name`에는 `{ko,en}`만 저장한다. 본편 직업의 풀이 없거나 직업·이름이 잘못된 행은 생성 때 던진다 | hero_name.csv — **직업 안의 행 순서가 결정론에 걸린다** |
 | `traitPool` | `[{ko,en}]` | hero_trait.csv — 행 순서 동일 |
 | `masteryNodes` | `[mastery_node.csv 행]` — 노드별 `name_kr/name_en` 은 표시 이름, `stat` 은 효과 채널이다. 랭크당 값·상한·해금 레벨은 **키 이름만** 들고 `balance` 에서 읽는다 · `requires`(켜는 장비 — `sin_gear:<balance 키>` 포함 · 2026-11-12) · `cond`(조건부 — 2026-10-05) | mastery_node.csv |
 | `skillPool` | `[skillId]` — **고유 스킬 풀**. `skill.csv` **행 순서**(`rollInnate` 가 인덱스를 굴린다 — 결정론). 없으면 `[]` | `buildSystems` 가 `skill.list.map(d => d.id)` 로 넘긴다 — **시스템이 아니라 id 목록**이다(hero.js 는 skill.js 를 모른다). 풀 소속은 **`skill.csv:innate_pool`**(0/1)이 정한다 — 지금 14행 전부 1 (skill_design §9-0 · 2026-09-01) |
@@ -168,7 +168,7 @@ strike(rng, a, d):
 | `rollStartParty(rng, n)` | `→ hero[]` | 이름·죄종·직업·특성이 n명 사이에서 겹치지 않는다. **등급은 `['rare','magic','normal']` 고정** — 첫 파티 = 레어 1 + 매직 1 + 일반 1 (hero_design §1 개정 2026-09-14 · ~~레어 1 + 매직 2~~ 09-07). n 이 3 을 넘으면 나머지는 굴린다. 직업은 `stage === 'main'` 만. **앞줄 직업(`startRankOf` = 0 — `class.csv:start_row` 가 `back` 이 아닌 직업)이 하나는 든다** [2026-10-22 사용자 지시 · hero_design §1] — 마지막 자리까지 앞줄이 없으면 그 자리만 앞줄 직업으로 옮긴다(굴림 순서는 §5-2 · 앞줄 0명이던 판만 1명으로 · 2명 비율은 그대로 · 소비 수 불변 · 앞줄 직업이 하나도 없는 데이터면 보장 없이 굴린다). **얼굴은 영웅을 다 만든 뒤 맨 마지막에 n회** — **각자 제 직업 풀에서 1회씩**(풀이 비어도 소비 1회 · 소비 수는 언제나 n). 파티 안 직업이 서로 달라(`drawDistinct`) **얼굴 겹침은 자동으로 회피된다** [개정 2026-09-07] |
 | `rollFace(rng, cls)` | `→ '<cls>_<k>' \| null` | 그 직업 풀에서 **균등 1회**. 풀이 0장이면 `null` — 그래도 **rng 소비는 1회**다(직업이 소비 수를 바꾸면 같은 시드가 다른 파티를 낸다). `rollStartParty` 가 부른다 [개정 2026-09-07] |
 | `rollCandidates(rng, n, tiers?)` | `→ hero[]` | 선술집 후보 — `rollStartParty` 와 같은 굴림이되 **등급도 굴린다**. 시작 파티만 등급이 지정(레어 1 + 매직 1 + 일반 1)이고 그 차이가 rng 소비를 바꾸지 않는다 [개정 2026-09-08]. `tiers` 를 주면 그 등급으로 굳는다 [신설 2026-09-09] — **수색이 줄 레벨로 등급을 미는 자리**다(`state.visitRoll` · ~~수색 `searchRoll`~~ 2026-10-19). `rollTier` 가 지정이어도 굴림을 태우므로 **소비 수는 지정 여부와 무관하다** · 이름은 굴린 그대로다 — 로스터와의 겹침은 부르는 쪽이 `avoidNames` 로 푼다(2026-10-15) |
-| `avoidNames(list, taken)` | `→ list`(고쳐 쓴다) | **이미 있는 이름과 겹치는 후보만 이름을 바꾼다** [신설 2026-10-15 · PLAN_user_review 2-5] — **rng 0** · 새 이름 = 이름 풀에서 원래 이름 다음 자리부터 돌며 `taken` ∪ 목록 이름에 없는 첫 이름 · `null` 칸은 건너뛴다(그래서 명단에서 한 명을 고용해도 남은 후보 이름이 안 흔들린다) · 풀이 다 차면 그대로 · 부르는 곳 — `tavernCandidates` · `visitRoll`(로스터 · 수색 칸) · `arena.rollOpponent`(우리 팀) |
+| `avoidNames(list, taken)` | `→ list`(고쳐 쓴다) | **이미 있는 이름과 겹치는 후보만 이름을 바꾼다** — **rng 0** · 새 이름 = **후보 직업의 이름 풀**에서 원래 이름 다음 자리부터 돌며 `taken` ∪ 목록 이름에 없는 첫 이름. 옛 이름이 해당 풀에 없으면 첫 자리부터 찾는다 · `null` 칸은 건너뛴다 · 해당 직업 풀이 다 차면 그대로 · 부르는 곳 — `tavernCandidates` · `visitRoll`(로스터 · 수색 칸) · `arena.rollOpponent`(우리 팀) |
 | **`rollHeroOf(rng, cls, tier?)`** | `→ hero \| null` | **직업을 정한 영웅 1명** [신설 2026-10-08 · 개발 장치 — `state.adminHero` 가 부른다] — 이름 · 죄종 · 특성 · 등급은 굴리고(선술집 후보와 같다 · 고유는 직업 풀) 얼굴은 맨 마지막. 소비 = 이름 1 → 죄종 1 → 특성 1 → `rollHero` 3 → 얼굴 1 = **언제나 7회**(§5-2 · 2026-10-22 R308 — ~~14회~~). **메인 직업(`stage === 'main'`)이 아니면 `null`**(소비 0) · **`tier`** [2026-11-13 · R472 · 실험실 결투] — 주면 그 영웅 등급(`hero_tier.csv:tier_id`)으로 고정한다 · 등급 굴림 1회는 그대로 태운다(`rollTier` 의 계약 — 소비 수가 안 바뀐다) · 없으면 굴린 등급 |
 | **`rollGoblin(rng, kinds)`** | `→ {kind, sin, trait, innate}` | **새 게임의 고블린 1마리** [신설 2026-10-27 · hero_design §1 「성장 영웅」 · `state.newGame` 이 부른다] — `kinds`(직업마다 한 종 · 순서가 인덱스)에서 하나 → 죄종 → 특성 → 고유(**직업 풀 전체** — 선술집과 같다 · 첫 파티의 1티어 규칙 밖). 소비 = 종류 1 → 죄종 1 → 특성 1 → 고유 1 = **언제나 4회**. 등급 · 능력치 · 얼굴은 굴리지 않는다(종류가 정한다 — `state` 가 박는다) |
 | `xpNeeded(level)` | `→ int` | **표 조회** — `level_xp.csv:xp_need` 의 그 레벨 행 [개정 2026-09-28 · 디아블로2 필요량 모양 · ~~`round(hero_xp_base × level ^ hero_xp_exp)`~~]. 주입 `levelXp: [{level, xpNeed, monsterXp}]`(레벨순) · 1 ~ `hero_level_cap − 1` 중 빈 레벨이 있으면 **생성 때 던진다** |
@@ -1475,6 +1475,8 @@ strike(rng, a, d):
 
 ### 5-2. rng 소비 순서 (바꾸면 같은 시드가 다른 게임이 된다)
 
+**직업별 영웅 이름** — `rollStartParty`·`rollCandidates`는 맨 앞의 이름 난수 n개를 보관하고, 죄종·직업을 뽑은 뒤 각 영웅의 직업 풀에서 `floor(r × 풀 길이)`로 이름을 정한다(추가 소비 없음). `rollHeroOf`는 첫 난수 1개로 지정 직업의 이름을 뽑는다. 이름은 `{ko,en}`으로 저장하며 기존 세이브의 이름은 다시 배정하지 않는다. 직업별 이름 변경은 뒤의 죄종·직업·특성·능력치·고유·얼굴·전투 난수를 밀지 않는다.
+
 | 위치 | 순서 |
 |---|---|
 | `formula.strike` | 적중 → (적중 시) **피해** → 치명 → **(적중했고 추가 피해 확률이 있는 타격만) 추가 피해**. 빗나감 1회 · 확률 0 인 적중 3회 · 확률 > 0 인 적중 4회 [추가 피해 2026-09-10 · R72 · **피해 굴림 2026-09-14 · R90** — 적중한 직격마다 1회 늘었다 · 양끝이 같아도 소비 · ~~편차 굴림은 없다(무기 개체에 박혀 있다)~~]. **기본 공격은 확률이 언제나 0** 이라 수열이 종전과 같다 — 추가 피해를 가진 스킬(지금 차지 · 라이트닝 · 체인 라이트닝)의 타격만 한 번씩 더 굴린다 · **[개정 2026-10-06 · R219] 마법 무기를 든 공격자(`sureHit`)는 적중을 안 굴린다** — 그 직격은 2회 · 3회이고 같은 시드의 전투가 갈린다(battle_design §9-4 — 마법 무기는 항상 맞는다) |
@@ -1798,4 +1800,4 @@ strike(rng, a, d):
 
 `battle.createRun`의 마지막 선택 인자 `rules`는 `kind`, `partyScope`, `onStart(ctx)`, `beforeTick(ctx)`, `afterTick(ctx)`, `skipActor(unit)`, `timeoutSec`를 받습니다. `ctx`는 `{t, party, enemies, timeline, attack, pickTarget, downed}`입니다. `onStart`는 적 생성·오오라 적용 뒤, 첫 `round` 표시 사건을 만들기 전에 호출하여 종족·보스 등급 등 메타데이터를 확정합니다. 반환 핸들의 `abort()`는 현재 시각에 채널을 닫고 `reason: 'retreat'`로 종료하며 중복 호출은 무효입니다. `rules`가 없으면 종전 순서·난수 소비·결과를 유지합니다. 입력 유닛의 `group`은 내부 유닛과 소환물에 계승됩니다. 편성 범위가 켜지면 스킬과 오오라는 같은 group만 아군으로 봅니다. 레이드는 기존 `hit/heal/buff/down/end` 사건과 `raid*` 사건을 함께 내며, 별도 렌더러는 `view()`와 새 사건만 읽습니다.
 
-*마지막 업데이트: 2026-11-14*
+*마지막 업데이트: 2026-11-15*
