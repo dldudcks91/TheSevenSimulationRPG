@@ -16,15 +16,17 @@ let previousTab = null;
 let installed = false;
 let savedFocus = null;
 let scrollTop = 0;
-let screenLayout = loadScreenLayout();
+// 모바일 배치 잠금 — 켜 둔 동안은 저장된 선택 · 창 크기와 무관하게 모두 PC 배치다 · 저장된 선택은 지우지 않는다 (ADR-1195)
+export const MOBILE_LOCKED = true;
+let screenLayout = MOBILE_LOCKED ? 'auto' : loadScreenLayout();
 
 export const getScreenLayout = () => screenLayout;
 export function setScreenLayout(value) {
-    if (!SCREEN_LAYOUTS.includes(value)) return;
+    if (MOBILE_LOCKED || !SCREEN_LAYOUTS.includes(value)) return;
     screenLayout = value;
     writeScreenLayout(value);
 }
-export const isMobileLayout = () => screenLayout === 'mobile' || (screenLayout === 'auto' && query.matches);
+export const isMobileLayout = () => !MOBILE_LOCKED && (screenLayout === 'mobile' || (screenLayout === 'auto' && query.matches));
 export const isMobilePreview = () => screenLayout === 'mobile' && desktopPointer.matches;
 export function mobileViewport() {
     if (isMobilePreview()) return MOBILE_PREVIEW;

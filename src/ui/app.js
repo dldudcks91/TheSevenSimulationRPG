@@ -50,7 +50,7 @@
  */
 
 import * as M from './mock.js';
-import { isMobileLayout, isMobilePreview, mobileViewport, fitMobileViewport, mountMobileShell, mountMobileContent, mountMobileModal, captureMobileFocus, refreshMobileBadges, SCREEN_LAYOUTS, getScreenLayout, setScreenLayout } from './mobile.js';
+import { isMobileLayout, isMobilePreview, mobileViewport, fitMobileViewport, mountMobileShell, mountMobileContent, mountMobileModal, captureMobileFocus, refreshMobileBadges, SCREEN_LAYOUTS, getScreenLayout, setScreenLayout, MOBILE_LOCKED } from './mobile.js';
 import { createNotifications } from './notifications.js';
 import { createTutorial } from './tutorial.js';
 import { MG_SCENES, MG_SPRITES } from './minigame_art.js';
@@ -1228,8 +1228,8 @@ function settingsGame(box) {
     box.appendChild(qsRow);
 }
 
-/** `화면` 하위 탭 — 화면 배치 · 아트 스타일(고를 것이 있을 때만) · 로그 · Skin(임시) */
-function settingsScreen(box) {
+/** 화면 배치 [자동] [PC] [모바일] (ADR-1090) */
+function settingsLayoutRow(box) {
     const layoutRow = el('div', 'set-row set-layout');
     layoutRow.appendChild(el('span', 'set-k', t('set.layout')));
     const layouts = segmented(SCREEN_LAYOUTS.map(id => ({ id, label: t(`set.layout.${id}`) })), getScreenLayout(), id => {
@@ -1247,6 +1247,11 @@ function settingsScreen(box) {
     layoutRow.appendChild(layouts);
     box.appendChild(layoutRow);
     if (isMobilePreview()) box.appendChild(el('p', 'set-preview-note', t('set.layout.preview')));
+}
+
+/** `화면` 하위 탭 — 화면 배치 · 아트 스타일(고를 것이 있을 때만) · 로그 · Skin(임시) */
+function settingsScreen(box) {
+    if (!MOBILE_LOCKED) settingsLayoutRow(box);   // 모바일 잠금 동안은 줄을 걷는다 (ADR-1195)
     // 고를 것이 있을 때만 선다 — 도감 고르개(`faceStylePicker`)와 같은 규칙 (ADR-0986)
     if (M.FACE_STYLES.length > 1) {
         const artRow = el('div', 'set-row');
