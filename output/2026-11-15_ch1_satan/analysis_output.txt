@@ -1,0 +1,56 @@
+## 사탄(1-5 보스) 첫 클리어 — 분 (4시간에서 자름)
+basic all n=80 cleared=74 <=30m:6 <=45m:36 <=60m:49 <=90m:57 <=120m:64 <=180m:72 <=240m:74 median(all,censored)=51m cleared q25/50/75=37/48/77m
+basic 1-40 n=40 cleared=37 <=30m:4 <=45m:20 <=60m:28 <=90m:32 <=120m:32 <=180m:36 <=240m:37 median(all,censored)=45m cleared q25/50/75=36/44/57m
+basic 41-80 n=40 cleared=37 <=30m:2 <=45m:16 <=60m:21 <=90m:25 <=120m:32 <=180m:36 <=240m:37 median(all,censored)=58m cleared q25/50/75=38/55/98m
+adaptive all n=80 cleared=76 <=30m:7 <=45m:21 <=60m:32 <=90m:57 <=120m:64 <=180m:72 <=240m:76 median(all,censored)=71m cleared q25/50/75=41/70/89m
+adaptive 1-40 n=40 cleared=37 <=30m:4 <=45m:11 <=60m:19 <=90m:31 <=120m:33 <=180m:36 <=240m:37 median(all,censored)=65m cleared q25/50/75=40/59/74m
+adaptive 41-80 n=40 cleared=39 <=30m:3 <=45m:10 <=60m:13 <=90m:26 <=120m:31 <=180m:36 <=240m:39 median(all,censored)=79m cleared q25/50/75=46/78/113m
+passive all n=10 cleared=0 <=30m:0 <=45m:0 <=60m:0 <=90m:0 <=120m:0 <=180m:0 <=240m:0
+
+## 칸별 — 첫 시도 승률 · 깰 때까지 판당 승률 · 첫 클리어 중앙(분) · 4시간 안 깬 계정
+[basic]
+1-1 I      reached=80 first=100% perTry=100% (80/80) cleared=80 medClear=  2.2m
+1-1 II     reached=80 first=100% perTry=100% (80/80) cleared=80 medClear=  4.7m
+1-1 III    reached=80 first=100% perTry=100% (80/80) cleared=80 medClear=  7.1m
+1-2 I      reached=80 first= 96% perTry= 96% (80/83) cleared=80 medClear=  9.9m
+1-2 II     reached=80 first= 86% perTry= 78% (80/103) cleared=80 medClear= 12.4m
+1-2 III    reached=80 first= 70% perTry= 45% (80/179) cleared=80 medClear= 16.6m
+1-3 I      reached=80 first= 82% perTry= 81% (80/99) cleared=80 medClear= 18.5m
+1-3 II     reached=80 first= 86% perTry= 79% (80/101) cleared=80 medClear= 21.0m
+1-3 III    reached=80 first= 80% perTry= 59% (80/136) cleared=80 medClear= 22.9m
+1-4 I      reached=80 first= 98% perTry= 98% (80/82) cleared=80 medClear= 26.1m
+1-4 II     reached=80 first= 99% perTry= 81% (79/98) cleared=79 medClear= 28.3m
+1-4 III    reached=79 first= 92% perTry= 68% (78/115) cleared=78 medClear= 31.0m
+1-5 boss   reached=78 first= 10% perTry=  9% (74/834) cleared=74 medClear= 48.0m
+[adaptive]
+1-1 I      reached=80 first=100% perTry=100% (80/80) cleared=80 medClear=  2.2m
+1-1 II     reached=80 first=100% perTry=100% (80/80) cleared=80 medClear=  4.6m
+1-1 III    reached=80 first= 99% perTry= 99% (80/81) cleared=80 medClear=  7.1m
+1-2 I      reached=80 first= 98% perTry= 93% (80/86) cleared=80 medClear=  9.4m
+1-2 II     reached=80 first= 95% perTry= 95% (80/84) cleared=80 medClear= 12.1m
+1-2 III    reached=80 first= 78% perTry= 62% (80/130) cleared=80 medClear= 15.8m
+1-3 I      reached=80 first= 82% perTry= 82% (80/98) cleared=80 medClear= 18.1m
+1-3 II     reached=80 first= 94% perTry= 88% (80/91) cleared=80 medClear= 20.0m
+1-3 III    reached=80 first= 89% perTry= 78% (80/103) cleared=80 medClear= 21.9m
+1-4 I      reached=80 first= 99% perTry= 99% (80/81) cleared=80 medClear= 24.8m
+1-4 II     reached=80 first= 99% perTry= 90% (79/88) cleared=79 medClear= 26.9m
+1-4 III    reached=79 first= 94% perTry= 81% (79/97) cleared=79 medClear= 29.8m
+1-5 boss   reached=79 first= 11% perTry= 16% (76/471) cleared=76 medClear= 70.3m
+
+## 사탄 — 보스 판(재도전) 수 · 계정별 판당 승률
+basic tries-to-first-win med 6.0 q75 14.75 max 57 | never won in 4h 4
+adaptive tries-to-first-win med 6.0 q75 7.0 max 17 | never won in 4h 3
+
+## 직업 있음/없음 — 사탄 4시간 안 클리어 · 60분 안 클리어 (기본 · 대응 합쳐 160)
+priest   있음 n= 96 4h= 90% 60m= 42% med(cleared)=66m
+priest   없음 n= 64 4h=100% 60m= 64% med(cleared)=52m
+archer   있음 n= 90 4h=100% 60m= 69% med(cleared)=51m
+archer   없음 n= 70 4h= 86% 60m= 27% med(cleared)=77m
+knight   있음 n= 94 4h= 96% 60m= 51% med(cleared)=56m
+knight   없음 n= 66 4h= 91% 60m= 50% med(cleared)=53m
+warrior  있음 n= 98 4h= 92% 60m= 47% med(cleared)=56m
+warrior  없음 n= 62 4h= 97% 60m= 56% med(cleared)=54m
+mage     있음 n=102 4h= 92% 60m= 46% med(cleared)=60m
+mage     없음 n= 58 4h= 97% 60m= 59% med(cleared)=52m
+
+## 사탄 판 — 진 판 중 보스 HP 를 못 깎은 판(roundsCleared 0 · 사망 3) 비율은 판 기록에 보스 HP 가 없어 생략

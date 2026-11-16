@@ -1,0 +1,137 @@
+accounts probed: 57  (basic 22 / adaptive 35)
+skips: {('adaptive', 'cleared'): 32, ('adaptive', 'before'): 13, ('basic', 'cleared'): 49, ('basic', 'before'): 9}
+
+== all probed (n=57)
+variant     median   mean  >=50%  >=25%  <=10%   =0 up_vs_base  down errs
+base         0.025  0.162      4     17     35   23          0     0    0
+mastery      0.025  0.165      4     17     35   26          9     6    0
+potion         0.2   0.35     22     27     26   17         37     0    0
+shop         0.025  0.171      5     18     35   24          2     1    0
+upgrade       0.05  0.182      6     19     34   22         20     0    0
+tactic       0.025  0.162      4     17     35   23          5     4    0
+formation     0.05  0.211      7     24     31   22         23     6    0
+all          0.175  0.381     24     26     23   15         42     2    0
+all_gold30    0.45  0.453     27     32     21   12         44     1    0
+lv6          0.275  0.403     22     29     23   12         45     0    0
+
+== seeds 1-40 (n=25)
+variant     median   mean  >=50%  >=25%  <=10%   =0 up_vs_base  down errs
+base          0.25  0.252      3     13     10    8          0     0    0
+mastery       0.25  0.257      3     13     10    9          6     3    0
+potion         0.6  0.482     15     16      9    7         17     0    0
+shop         0.275  0.271      4     14     10    8          1     0    0
+upgrade       0.25   0.28      5     14     10    8         12     0    0
+tactic       0.275  0.259      3     14     10    8          5     1    0
+formation    0.275  0.311      5     16      9    7         11     2    0
+all          0.675  0.522     15     16      9    7         18     1    0
+all_gold30     0.7  0.544     15     16      9    5         19     0    0
+lv6           0.75  0.544     14     16      9    7         18     0    0
+
+== seeds 41-80 (n=32)
+variant     median   mean  >=50%  >=25%  <=10%   =0 up_vs_base  down errs
+base         0.025  0.091      1      4     25   15          0     0    0
+mastery        0.0  0.093      1      4     25   17          3     3    0
+potion       0.062  0.246      7     11     17   10         20     0    0
+shop         0.013  0.094      1      4     25   16          1     1    0
+upgrade      0.025  0.105      1      5     24   14          8     0    0
+tactic       0.025  0.087      1      3     25   15          0     3    0
+formation    0.025  0.132      2      8     22   15         12     4    0
+all          0.138  0.271      9     10     14    8         24     1    0
+all_gold30   0.238  0.382     12     16     12    7         25     1    0
+lv6          0.175  0.292      8     13     14    5         27     0    0
+
+== policy basic (n=22)
+variant     median   mean  >=50%  >=25%  <=10%   =0 up_vs_base  down errs
+base           0.0  0.041      0      2     20   14          0     0    0
+mastery        0.0  0.041      0      2     20   17          3     4    0
+potion       0.013  0.113      2      4     16   11          8     0    0
+shop           0.0  0.041      0      2     20   14          0     0    0
+upgrade        0.0  0.043      0      2     20   13          2     0    0
+tactic         0.0  0.043      0      2     20   14          1     0    0
+formation      0.0  0.078      1      4     18   12          8     1    0
+all          0.025  0.145      3      3     14   10         12     2    0
+all_gold30   0.038  0.194      4      6     12    8         13     1    0
+lv6          0.025  0.166      2      5     15    8         14     0    0
+
+== policy adaptive (n=35)
+variant     median   mean  >=50%  >=25%  <=10%   =0 up_vs_base  down errs
+base         0.175  0.238      4     15     15    9          0     0    0
+mastery        0.2  0.243      4     15     15    9          6     2    0
+potion         0.6  0.499     20     23     10    6         29     0    0
+shop           0.2  0.254      5     16     15   10          2     1    0
+upgrade        0.2  0.269      6     17     14    9         18     0    0
+tactic        0.15  0.237      4     15     15    9          4     4    0
+formation     0.25  0.294      6     20     13   10         15     5    0
+all          0.675  0.529     21     23      9    5         30     0    0
+all_gold30   0.775  0.616     23     26      9    4         31     0    0
+lv6          0.675  0.551     20     24      8    4         31     0    0
+
+== composition (sorted classes) -> mean rate per variant
+combo                      n      base   mastery    potion      shop   upgrade    tactic formation       all all_gold3       lv6
+knight+priest+warrior      7       0.0       0.0     0.004       0.0       0.0       0.0       0.0     0.029     0.107     0.032
+knight+mage+priest         5     0.065     0.075     0.205      0.06      0.07     0.075      0.16     0.285     0.465     0.235
+mage+priest+warrior       13     0.177     0.163     0.271     0.177     0.187     0.177     0.225     0.296     0.392     0.444
+archer+knight+priest       9     0.228     0.244     0.328     0.239     0.244     0.225     0.311     0.358     0.403       0.4
+knight+mage+warrior        8     0.088     0.094     0.344     0.147     0.109     0.094     0.163     0.456     0.453     0.347
+archer+knight+mage         5      0.16     0.185      0.56      0.16     0.215     0.135     0.155     0.515      0.61      0.49
+archer+mage+warrior        6     0.296     0.292     0.612     0.296     0.325     0.304     0.292     0.579     0.608     0.588
+archer+knight+warrior      2     0.338     0.338     0.838     0.338     0.425      0.35     0.287     0.812     0.912     0.875
+archer+priest+warrior      2       0.3       0.3      0.75       0.3     0.325       0.3     0.537      0.85     0.938     0.838
+
+== class presence -> mean rate (base / all / all_gold30)
+warrior  with n=38 0.159 / 0.382 / 0.443   without n=19 0.167 / 0.38 / 0.474
+knight   with n=36 0.126 / 0.353 / 0.422   without n=21 0.223 / 0.43 / 0.506
+mage     with n=37 0.159 / 0.405 / 0.48   without n=20 0.166 / 0.338 / 0.404
+archer   with n=24 0.246 / 0.525 / 0.584   without n=33 0.101 / 0.277 / 0.358
+priest   with n=36 0.147 / 0.289 / 0.38   without n=21 0.188 / 0.539 / 0.579
+
+== still <=10% under all_gold30
+adaptive s10  warrior+priest+mage    lv[12, 12, 12] gold 1105 hourGold 9315 wIlvl [10, 7, 8] base 0 all 0 g30 0 lv6 0 left(g30) 0.977
+adaptive s32  warrior+priest+knight  lv[11, 11, 11] gold 1292 hourGold 7930 wIlvl [5, 7, 8] base 0 all 0 g30 0 lv6 0 left(g30) 1
+adaptive s44  warrior+priest+knight  lv[10, 10, 11] gold 1182 hourGold 7870 wIlvl [5, 9, 10] base 0 all 0 g30 0 lv6 0.175 left(g30) 0.796
+adaptive s79  priest+archer+knight   lv[12, 12, 11] gold 1461 hourGold 9495 wIlvl [10, 5, 6] base 0 all 0 g30 0 lv6 0 left(g30) 0.919
+basic    s10  warrior+priest+mage    lv[12, 12, 12] gold 850 hourGold 9406 wIlvl [3, 7, 8] base 0 all 0 g30 0 lv6 0 left(g30) 0.982
+basic    s32  warrior+priest+knight  lv[11, 11, 11] gold 1470 hourGold 7654 wIlvl [5, 7, 8] base 0 all 0 g30 0 lv6 0 left(g30) 1
+basic    s36  warrior+mage+knight    lv[11, 12, 11] gold 951 hourGold 9767 wIlvl [2, 8, 1] base 0 all 0 g30 0 lv6 0 left(g30) 0.707
+basic    s52  mage+priest+warrior    lv[10, 10, 10] gold 780 hourGold 5759 wIlvl [5, 1, 1] base 0 all 0 g30 0 lv6 0 left(g30) 0.99
+basic    s64  priest+mage+warrior    lv[13, 13, 13] gold 1369 hourGold 11769 wIlvl [10, 6, 6] base 0.025 all 0 g30 0 lv6 0.05 left(g30) 0.889
+basic    s70  warrior+mage+archer    lv[12, 12, 12] gold 1509 hourGold 10577 wIlvl [8, 11, 11] base 0 all 0 g30 0 lv6 0.05 left(g30) 0.957
+basic    s77  knight+priest+archer   lv[12, 12, 12] gold 1449 hourGold 9469 wIlvl [11, 9, 9] base 0 all 0 g30 0 lv6 0.025 left(g30) 0.852
+basic    s79  priest+archer+knight   lv[11, 11, 10] gold 1008 hourGold 8114 wIlvl [5, 5, 6] base 0 all 0 g30 0 lv6 0 left(g30) 1
+adaptive s12  knight+warrior+priest  lv[12, 12, 12] gold 1312 hourGold 9191 wIlvl [5, 7, 8] base 0 all 0 g30 0.025 lv6 0 left(g30) 0.664
+basic    s22  archer+priest+knight   lv[13, 13, 13] gold 1233 hourGold 11846 wIlvl [7, 8, 3] base 0.025 all 0 g30 0.025 lv6 0.075 left(g30) 0.589
+basic    s69  priest+mage+knight     lv[13, 13, 12] gold 1270 hourGold 11466 wIlvl [3, 8, 8] base 0 all 0.05 g30 0.025 lv6 0 left(g30) 0.859
+basic    s76  warrior+mage+knight    lv[12, 12, 12] gold 1669 hourGold 9490 wIlvl [5, 9, 5] base 0 all 0 g30 0.025 lv6 0.125 left(g30) 0.661
+adaptive s64  priest+mage+warrior    lv[13, 13, 13] gold 1455 hourGold 10675 wIlvl [10, 6, 6] base 0 all 0.05 g30 0.05 lv6 0.025 left(g30) 0.941
+adaptive s69  priest+mage+knight     lv[13, 14, 13] gold 1799 hourGold 12852 wIlvl [3, 8, 8] base 0.025 all 0.175 g30 0.05 lv6 0.075 left(g30) 0.692
+basic    s12  knight+warrior+priest  lv[12, 12, 12] gold 789 hourGold 9173 wIlvl [5, 7, 8] base 0 all 0.025 g30 0.05 lv6 0 left(g30) 0.627
+adaptive s22  archer+priest+knight   lv[14, 14, 13] gold 2029 hourGold 13213 wIlvl [8, 8, 3] base 0 all 0.025 g30 0.075 lv6 0.025 left(g30) 0.515
+adaptive s76  warrior+mage+knight    lv[12, 12, 12] gold 1654 hourGold 9667 wIlvl [5, 8, 5] base 0 all 0.05 g30 0.075 lv6 0.175 left(g30) 0.489
+
+== resources at D60 (median)
+gold 1455  hourGold 11126  level 12.333  weapon ilvl 7.333
+  iron_ore 30
+  timber 31
+  dust 41
+  herb 10
+
+== lever logs
+shop: shop bought>=1 6/57  offered weapon gold median 1500
+all: shop bought>=1 3/57  offered weapon gold median 1500
+all_gold30: shop bought>=1 17/57  offered weapon gold median 1500
+upgrade: upgrade tries median 1 success median 1 gold median 956 stop Counter({'gold': 57})
+all: upgrade tries median 1 success median 1 gold median 851 stop Counter({'gold': 57})
+all_gold30: upgrade tries median 5 success median 5 gold median 5779 stop Counter({'gold': 44, 'max': 13})
+potion: potion tier Counter({3: 56, 2: 1}) slots Counter({2: 57})
+all: potion tier Counter({3: 56, 2: 1}) slots Counter({2: 57})
+all_gold30: potion tier Counter({3: 57}) slots Counter({2: 57})
+tactic: tactic rerolls median 2 open Counter({1: 57}) mightGain median 1
+all: tactic rerolls median 0 open Counter({1: 57}) mightGain median 1
+all_gold30: tactic rerolls median 0 open Counter({1: 57}) mightGain median 1
+formation: formation changed 51/57 chosen Counter({'3': 40, '2-1': 11, '1-2': 6}) start Counter({'1-2': 40, '2-1': 17})
+all: formation changed 42/57 chosen Counter({'3': 27, '2-1': 15, '1-2': 15}) start Counter({'1-2': 40, '2-1': 17})
+all_gold30: formation changed 48/57 chosen Counter({'3': 25, '2-1': 19, '1-2': 13}) start Counter({'1-2': 40, '2-1': 17})
+all_gold30 gold added median 5563
+
+== single lever: accounts where it is the best single lever
+Counter({'potion': 34, 'formation': 3, 'shop': 2, 'mastery': 1})

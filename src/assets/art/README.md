@@ -500,7 +500,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 ## icons/materials/ — 재료 아이콘 [신설 2026-09-27]
 
-`ores/<ore_id>.png` 7장(`ore_t1` 구리 ~ `ore_t7` 오리하르콘 — 파일명 = `mine_node.csv:ore_id`) — 512 투명 · 어두운 모암 + 광물 강조색 한 점 · 단계마다 다른 실루엣 · 긴 변 0.88 · 중앙(정규화 — 원본은 크기 77~89% · 중심이 제각각이었다). 원본은 `ores/source/v3/`(t1~t5 지금 판) · `v2/`(t6 · t7 지금 판 · t1~t5 는 폐기) · `v1/`(원색 돌덩이 판 — 폐기) · 발주 첨부용 앵커 `source/anchor_items.png`(설치된 아이템 6장) — 셋 다 게임이 안 읽는다. ⚠ `ore_t2`(철)는 어두운 회색 덩이라 어두운 상자 바탕에서 가장 약하게 읽힌다 · 경계밀도 5% 로 합격선 하단 밖. 화면은 자원 탭 단계 상자의 산출물 칸(`mock.js:MATERIAL_ICONS` · SCREEN_DESIGN §8 · ADR-0377). 약초(`herbs/<id>` · `gather_node`) · 목재(`timbers/<id>` · `log_node`) 7장씩도 섰다(`MATERIAL_ICONS`) · 건설 「다음 랭크」 의 재료 칸도 이 그림을 읽는다(`app.js:matTile` · SCREEN_DESIGN §13-1)
+`ores/ore_t2.png`(철광석 `iron_ore`) · `herbs/herb_t1.png`(약초 `herb`) · `timbers/timber_t1.png`(목재 `timber`) 3장 — 재료 id → 파일은 `mock.js:MATERIAL_ICONS`(위 단계 `_2`~`_5` 도 이 그림을 빌리고 칸이 단계 점을 얹는다). 512 투명 · 긴 변 0.88 · 중앙 · 매끈한 로우폴리 면 + 근검정 외곽선. 그림 — 철광석 갈색 모암에 회색 철 결정 셋 · 약초 톱니 잎 가지 하나 · 목재 누운 통나무(나이테 · 수액 방울). ⚠ 철광석은 어두운 회색 덩이라 어두운 칸에서 가장 약하게 읽힌다 · 셋 다 장비 아이콘의 다크 카툰 결(매끈한 셀 음영)과 다르다 — 재발주 중. 버린 후보 `<종류>/source/gold_style_20261116/`(금화 결 · 잔결이 장비 그림과 안 맞아 거름 · 2026-11-16). 다른 단계 그림(옛 t1~t7)은 `<종류>/retired/` · 옛 광석 판은 `ores/source/v1~v3/` — 게임이 안 읽는다. 화면은 자원 탭 단계 상자의 산출물 칸(SCREEN_DESIGN §8 · ADR-0377) · 건설 「다음 랭크」 의 재료 칸(`app.js:matTile` · SCREEN_DESIGN §13-1)
 
 ## icons/currency/ — 재화 그림 [신설 2026-10-12]
 
@@ -530,7 +530,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 원본 시트 01 · 02 는 Codex 이미지 생성 · 3×3 · 미니게임 · 금화 시트를 첨부해 같은 그림체로 뽑았다(지시문 `source/sheet_0N_prompt.txt`). 시트 03 은 2×2 · 시트 01 과 옛 왕관을 첨부한 「7 로 읽히는 오만」 후보 넷이다(78px 판 시안 `source/sheet_03_board_preview.png` · 경계밀도 26% 로 위 범위를 조금 넘지만 판 시안에서 갈렸다). 대안 열넷은 `unused/`(`seven_crown`(옛 오만 왕관) · `seven7_slab` · `seven7_stone` · `seven7_scepter` · `seven_mirror` · `wild_sack` · `wild_key` · `gold_flask` · `ore_fist` · `ore_skull` · `timber_snake` · `dust_candle` · `dust_snail` · `coin_bitten`). 실측 색 수 107~268 · 경계밀도 13~25% · 외곽선 ≤6 — 금화 · 미니게임 그림과 같은 계열이고 옛 장비 아이콘 합격선보다 거칠다 · 64 · 42 · 24px 몽타주에서 여덟 장이 다 갈렸다
 
-## icons/forge/ — 강화 연출의 모루 · 망치 [신설 2026-10-14]
+## icons/forge/ — 강화 연출의 모루 · 망치 · 손질 카드 [신설 2026-10-14 · 손질 2026-11-16]
 
 `anvil.png` · `hammer.png` — 512 투명 · 긴 변 0.88 · 중앙. 대장간 강화 칸의 연출([강화]를 누르면 진열 칸에서 망치가 모루를 세 번 내려친다)이 읽는다(`mock.js:FORGE_ART` · SCREEN_DESIGN §8-2 · ADR-0626). **연출이 그림의 생김새에 기댄다** — 모루는 옆에서 본 모습 · 뿔이 왼쪽 · 윗면이 수평(그 위에 아이템 그림이 앉는다) · 통나무 받침, 망치는 수평으로 누운 옆모습 · 머리가 왼쪽 · 때리는 면이 아래 · 손잡이가 오른쪽(화면이 손잡이 끝을 축으로 돌린다 — 축 자리는 `style.css` 의 `.fg-hammer`). 다른 그림으로 바꾸면 이 방향을 지켜야 연출이 맞는다.
 
@@ -538,6 +538,11 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 - **원본** — Codex 이미지 생성 · 2×2 시트(칸마다 받침 있는 모루 · 대장 망치 · 받침 없는 모루 · 메). **설치는 `source/sheet_04_codex.png` 의 통나무 받침 모루(왼쪽 위) + 대장 망치(오른쪽 위)** — 외곽선이 가장 굵고 덩어리가 커서 건물 그림과 결이 가장 가깝다. 05 · 06 은 같은 지시문 `source/sheet_simple_prompt.txt` 의 다른 판(대안 누끼 `unused/anvil_v2b` · `v2c` · `hammer_v2b` · `v2c`). 첫 판 시트 01 ~ 03(지시문 `source/sheet_prompt.txt`)과 그 설치본은 `unused/anvil_v1` · `hammer_v1` 로 남겼다
 - **그림을 바꾸면 연출 자리도 다시 잰다** — 모루 윗면 높이 · 폭, 망치 머리의 가운데 · 아래 끝, 손잡이 끝을 % 로 재 `style.css` 의 `.fg-anvil` · `.fg-anim-item` · `.fg-hammer`(`transform-origin`) · 불꽃 자리를 맞춘다(지금 값의 근거는 그 규칙 위 주석)
 - **누끼** — 흰 배경을 가장자리에서 이어진 밝은 무채 픽셀로 잡아 지우고, 배경과 맞닿은 띠는 흰 위에 섞인 색으로 보고 알파 · 색을 되푼다(외곽선이 검정이라 어두운 바탕에서 흰 테두리가 안 남는다) · 내용 상자로 잘라 긴 변 0.88 로 앉혔다
+
+**손질 카드 그림** [2026-11-16] — `heat.png`(달구기 — 쇠막대를 문 집게 + 날카로운 불길) · `reinforce.png`(덧대기 — 망치가 리벳 넷 박은 판을 내려친다 + 충격 파편) · `quench.png`(담금질 — 각진 물결에 선 쇠막대 + 김 세 갈래 + 약초 잎). 파일명 = `temper_action.csv:action`. 강화 칸 가운데 손질 판의 카드가 읽는다(`mock.js:forgeArt` · SCREEN_DESIGN §8-2 · ADR-1200). **그림체 = 스킬 아이콘**(회색 `#d8d8e6` 단색 · 512 투명 · 긴 변 0.88 · 중앙) — 물건 하나 + 효과 하나 · 굵은 덩어리 · 뾰족한 끝 · 각진 칼선. 같은 날 걷은 판 셋 — 모루 · 망치 결 컬러 카툰(「너무 유아틱」) · 연구소 지점 결 둥근 실루엣(「앙증맞다」) · 장비 아이콘 결 장면 그림(「아이콘으로 · 복잡하다」)
+
+- **원본** — `source/prep_icon_20261116/` — Codex 이미지 생성 3×3 시트 둘(같은 지시문 `sheet_01_prompt.txt` · 앵커 `skills/source/sheet_07_codex_warrior.png` · 줄마다 손질 하나의 구도 셋) → `cut.py --grid 3x3` → `mastery/source/mono.py`. 설치 = `sheet_01b` 1행 1열 · 2행 1열 · 3행 3열 · 어두운 바탕 비교판 `board_dark.png`(두 시트 18칸 · 112 · 40px)
+- **쇠막대 하나로 잇는다** — 셋 다 같은 네모난 쇠막대를 다룬다(달구고 · 덧대고 · 담근다). 칼날은 Codex 가 폭력 문구로 막아 안 쓴다
 
 ## icons/arena/ — 시련의 탑 · 결투장 휘장 [신설 2026-10-18]
 
@@ -853,4 +858,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-11-15*
+*마지막 업데이트: 2026-11-16*

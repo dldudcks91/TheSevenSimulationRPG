@@ -1,0 +1,32 @@
+accounts 117 fights 2340
+
+## 직업별 (영웅 한 명 · 사탄전 한 판 평균)
+cls      n     dmg  share  dps(alive)  alive_s  alive>15s  survived  basic%  toBoss%  heal  hp
+archer    1580    390   57%    11.5     34.1   100%    20%    58%    18%      0  170
+mage      1380    268   37%     8.0     33.5   100%    22%     0%    23%      0  167
+warrior   1360    190   29%     6.8     22.8    89%    12%    86%     9%     23  248
+knight    1360    207   30%     8.4     18.6    89%    14%    80%     9%      0  236
+priest    1160     23    5%     0.7     36.0   100%    15%     0%     5%    337  180
+
+## 직업별 피해 출처 (한 판 평균)
+archer (basic) 217 · arc_multishot 62 · arc_guided 45 · arc_snipe 43 · arc_rapid 22
+mage mag_iceblast 98 · mag_chain 72 · mag_lightning 61 · mag_frostnova 22 · mag_fireball 15 · (basic) 0
+warrior (basic) 155 · war_doubleswing 25 · war_bash 11 · kni_enchant 0
+knight (basic) 153 · kni_rush 36 · kni_charge 17
+priest pri_judgment 23 · (basic) 0
+
+## 파티 — 궁수 있음 / 없음 (사탄전 판 단위)
+있음 fights 1580 win 21% escorts cleared 60% cleared-at med 24.6s <=13s 1%
+   seeds 1-40 win 19%
+   seeds 41-80 win 23%
+없음 fights 700 win 23% escorts cleared 44% cleared-at med 29.0s <=13s 0%
+   seeds 1-40 win 16%
+   seeds 41-80 win 33%
+
+## 호위를 언제 넘겼나 → 그 판 승률
+0-10s 3 win 100%
+10-13s 15 win 93%
+13-16s 75 win 91%
+16-25s 526 win 50%
+25-999s 642 win 22%
+never 1019 win 0%

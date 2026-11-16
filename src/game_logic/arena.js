@@ -470,6 +470,8 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
                 if (item.canEquip(h, it)) bad('reqLevel', i, { pos: p.id });
                 const up = it.up ?? 0;
                 if (!within(up, 0, upgradeCeiling) || (up > 0 && !item.upgradeable(it))) bad('up', i, { pos: p.id });
+                const great = it.great ?? 0;   // 대성공 횟수 — 0 이상 · 단계 이하의 정수(2026-11-15 · R505 · 코드로 몫을 부풀리지 못하게)
+                if (!Number.isInteger(great) || !within(great, 0, up)) bad('up', i, { pos: p.id, detail: 'great' });
                 (it.affixes ?? []).forEach((a, k) => {
                     const r = item.optionRange(it, k);
                     if (!r) return;   // ⚠ 범위를 못 찾는 줄은 막지 않는다 (INTERFACE §2-17)

@@ -8,9 +8,6 @@
 :root[data-mobile] .c-forge-col > .fg-tabs { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); grid-auto-flow: row; width: 100%; min-width: 0; padding: 0; gap: 4px; overflow: hidden; }
 :root[data-mobile] .c-forge-col > .fg-tabs > .fg-gap { display: none; }
 :root[data-mobile] .c-forge-col > .fg-tabs > .fg-tab { width: 100%; min-width: 0; min-height: 40px; padding: 5px 3px; font-size: var(--fs-xs); }
-:root[data-mobile] .c-lib-col > .fg-tabs { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); grid-auto-flow: row; width: 100%; min-width: 0; padding: 0; gap: 4px; overflow: hidden; }
-:root[data-mobile] .c-lib-col > .fg-tabs > .fg-gap { display: none; }
-:root[data-mobile] .c-lib-col > .fg-tabs > .fg-tab { width: 100%; min-width: 0; min-height: 40px; padding: 5px 3px; font-size: var(--fs-xs); }
 :root[data-mobile] .toast-layer { top: calc(env(safe-area-inset-top,0px) + 48px); bottom: auto; left: 8px; right: 8px; max-width: none; padding: 4px; align-items: center; gap: 4px; }
 :root[data-mobile] .toast { width: max-content; min-width: 0; max-width: 100%; padding: 6px 10px; font-size: var(--fs-xs); }
 :root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] .toast-layer { top: calc(env(safe-area-inset-top,0px) + 40px); }
@@ -234,36 +231,9 @@
 :root[data-mobile-landscape] .pt-tactics .rs-grid .mobile-choice-card { padding: 5px; gap: 2px; align-content: center; font-size: var(--mobile-fs-caption); line-height: 15px; }
 :root[data-mobile-landscape] .pt-tactics .rs-cell .rs-top { min-height: 28px; }
 :root[data-mobile-landscape] .pt-tactics .rs-cell .rs-pin { min-height: 30px; min-width: 36px; padding: 3px; }
-/* Library (ADR-1179): the top row (skill info | advancement room cell) stays compact; the book sheet below takes the rest. */
-:root[data-mobile] .lib-top { gap: 6px; }
-:root[data-mobile] .lib-top > .lib-info { flex: 3 1 0; }
-:root[data-mobile] .lib-top > .lib-room { flex: 2 1 0; }
-:root[data-mobile] .c-lib-col > .lib-top + .lib-panel { margin-top: 6px; }
-:root[data-mobile] .lib-room .btn.lib-advance-open { min-height: 36px; font-size: var(--fs-xs); }
-:root[data-mobile-landscape] .lib-top > .panel { padding-top: 4px; padding-bottom: 5px; }
-:root[data-mobile-landscape] .lib-top > .panel > h2 { margin-bottom: 4px; }
-:root[data-mobile-landscape] .lib-info .tr-adv-cur .sk-card { width: 28px; height: 28px; }
+/* Library (ADR-1197): advancement panel | skill upgrade card — each is one mobile page (`mobile-pages.js`). */
 :root[data-mobile-landscape] .tr-adv-main { height: 100%; }
 :root[data-mobile-landscape] .tr-adv-row .mobile-choice-button { min-height: 34px; padding: 3px; }
-
-/* Advancement room (ADR-1187): the path cards and, once a path is clicked, its mastery board (instead of the desktop side card)
-   share one scrolling body; the meter and the action button stay at the bottom. */
-:root[data-mobile] .advance-room-modal { height: 100%; }
-:root[data-mobile] .advance-room-modal > .advance-room { flex: 1 1 0; overflow: hidden; gap: 8px; }
-:root[data-mobile] .adv-room-main { flex: 1 1 0; gap: 10px; }
-:root[data-mobile] .adv-room-paths { grid-auto-rows: auto; }
-:root[data-mobile] .adv-room-paths > .tr-adv-branch { padding: 8px 10px; }
-:root[data-mobile] .codex-mastery-grid.adv-room-board { flex: none; align-self: center; width: min(100%, 280px); }
-:root[data-mobile] .adv-room-board .sk-box-head { min-height: 28px; }
-:root[data-mobile] .adv-room-foot { flex-wrap: wrap; gap: 8px; padding-top: 8px; }
-:root[data-mobile] .adv-room-m { padding: 0 8px; }
-:root[data-mobile] .adv-room-m-v { font-size: var(--fs-sm); }
-:root[data-mobile] .adv-room-m.skills .sk-cards { grid-template-columns: repeat(3, 32px); gap: 4px; }
-:root[data-mobile] .adv-room-m.skills .sk-card { width: 32px; height: 32px; padding: 2px; }
-:root[data-mobile] .adv-room-act { width: 100%; flex-direction: column; align-items: stretch; gap: 6px; }
-:root[data-mobile] .adv-room-act > .btn { width: 100%; min-height: 40px; }
-:root[data-mobile-landscape] .adv-room-act { width: auto; flex-direction: row; align-items: center; }
-:root[data-mobile-landscape] .adv-room-act > .btn { width: auto; }
 
 /* Match preparation keeps the start action fixed while inspecting either team or loadout. */
 :root[data-mobile] .arena-main.mobile-pane-on { overflow: hidden; gap: 6px; }
@@ -422,7 +392,6 @@
 :root[data-mobile-landscape] .mobile-research-decision .cn-mat { display: flex; align-items: center; gap: 3px; width: auto; height: 22px; border: 0; background: none; padding: 0; }
 :root[data-mobile-landscape] .mobile-research-decision .cn-mat img { width: 18px; height: 18px; margin: 0; }
 :root[data-mobile-landscape] .mobile-research-decision .cn-mat-n { position: static; font-size: var(--fs-2xs); }
-:root[data-mobile-landscape] .mobile-research-decision .cn-mat-name { font-size: var(--fs-2xs); }
 
 /* Arriving heroes use the same complete candidate card as hiring. The arrival
    slots stay in one fixed row, so choosing a hero never pushes actions below it. */
@@ -463,13 +432,11 @@
 :root[data-mobile] .fg-up-act > .btn { width: 100%; min-height: 40px; margin: 0; }
 :root[data-mobile] .fg-up-act .cn-mats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 4px; }
 :root[data-mobile] .fg-up-act .cn-matw { min-width: 0; max-width: none; }
-:root[data-mobile] .fg-up-act .cn-mat-name { font-size: var(--fs-2xs); }
 :root:where([data-mobile-short])[data-mobile] .fg-up-act .cn-mats { grid-template-columns: minmax(0,1fr); gap: 3px; }
 :root:where([data-mobile-short])[data-mobile] .fg-up-act .cn-matw { flex-direction: row; align-items: center; gap: 5px; }
 :root:where([data-mobile-short])[data-mobile] .fg-up-act .cn-mat { display: flex; align-items: center; gap: 3px; width: auto; height: 22px; border: 0; background: none; padding: 0; }
 :root:where([data-mobile-short])[data-mobile] .fg-up-act .cn-mat img { width: 18px; height: 18px; margin: 0; }
 :root:where([data-mobile-short])[data-mobile] .fg-up-act .cn-mat-n { position: static; font-size: var(--fs-2xs); }
-:root:where([data-mobile-short])[data-mobile] .fg-up-act .cn-mat-name { text-align: left; }
 :root[data-mobile-landscape] .fg-up-work.mobile-pane-on { display: grid !important; grid-template-columns: minmax(0,1fr) minmax(0,1fr); grid-template-rows: auto minmax(0,1fr); gap: 5px 10px; }
 :root[data-mobile-landscape] .fg-up-work .fg-up-track { grid-column: 1; grid-row: 1; }
 :root[data-mobile-landscape] .fg-up-work .fg-up-rows { grid-column: 1; grid-row: 2; }

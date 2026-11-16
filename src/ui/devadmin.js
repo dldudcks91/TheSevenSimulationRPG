@@ -2,7 +2,7 @@
  * devadmin.js — 관리자 모드 `Admin` (**개발 장치** · 2026-09-24 사용자 지시 · SCREEN_DESIGN §10-3)
  *
  * 상단바 언어 버튼 오른쪽의 `Admin` — **누르면 바로 아래에 판이 열린다 · 누르기만으로는 아무것도 안 넣는다** [2026-10-23 사용자 「어떤 것들을 추가할지」 · R332].
- *   판의 줄 = Unlock(켜기 · 끄기) · Gold · Materials · Blueprints · Hero 둘(`admin_hero_level` · 만렙 `hero_level_cap` — [Add]). **게임 기능이 아니다.**
+ *   판의 줄 = Unlock(켜기 · 끄기) · Gold · Materials · Books · Hero 둘(`admin_hero_level` · 만렙 `hero_level_cap` — [Add]). **게임 기능이 아니다.**
  *   판은 창 레이어가 아니다 — `Admin` 이나 × 로만 여닫고, 화면을 다시 그려도 열린 채다(페이지를 연 동안 · 상단바가 그려질 때마다 새로 붙는다).
  *
  * **Unlock** — 켜 두면 건물 때문에 막힌 것(탭 · 기능 · 상한)과 **스테이지가 열린 척한다**(이번 버전의 장까지 — 6 · 7장은 켜도 잠긴다 · ADR-0552).
@@ -12,7 +12,7 @@
  *   **건물은 안 짓고 클리어 기록도 안 쓴다** — 세이브는 그대로라 끄면 원래 진행으로 돌아간다. 누르면 앱이 전체를 다시 그린다
  *   (새로고침이 아니다 — 새로고침은 도는 원정을 끊는다). 켠 상태는 이 브라우저에만 남는다(localStorage).
  *
- * **[Add] 줄** — 무엇을 넣는지는 앱이 `acts` 로 넘긴다(`app.js` 가 세이브를 만진다 · 값 `balance.csv:admin_gold` · `admin_materials` · `admin_blueprints` · `admin_hero_level`).
+ * **[Add] 줄** — 무엇을 넣는지는 앱이 `acts` 로 넘긴다(`app.js` 가 세이브를 만진다 · 값 `balance.csv:admin_gold` · `admin_materials` · `admin_books` · `admin_hero_level`).
  *   넣은 것은 세이브에 남는다. Hero 는 누를 때마다 1명(메인 직업 랜덤 · `state.adminHero` · Unlock 과 무관 — 로스터 자리만 본다).
  *
  * ⚠ 걷어내려면 이 파일과 `app.js` 의 import · 호출(`mountAdmin`) 두 줄, `data.js` 의 import · 주입 두 줄을 지운다(`state.adminHero` 는 부르는 곳이 없어질 뿐이다).
@@ -37,7 +37,7 @@ let open = false;
 const ROWS = [
     { id: 'gold',       label: 'Gold',       value: n => n.toLocaleString('en-US') },
     { id: 'materials',  label: 'Materials',  value: n => `${n} each` },
-    { id: 'blueprints', label: 'Blueprints', value: n => `${n} each` },
+    { id: 'books',      label: 'Books',      value: n => `${n} each` },   // 스킬북 — 책이 되는 스킬 전부 (2026-11-15 · ADR-1198 — 옛 스킬 도안 줄을 갈음)
     { id: 'hero',       label: 'Hero',       value: n => `Random Lv${n}` },
     { id: 'heroCap',    label: 'Hero',       value: n => `Random Lv${n}` },   // 만렙 영웅 — 별 시험용 (2026-11-11 · SCREEN_DESIGN §10-3)
 ];

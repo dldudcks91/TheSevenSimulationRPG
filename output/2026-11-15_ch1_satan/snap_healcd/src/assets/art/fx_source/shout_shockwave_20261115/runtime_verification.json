@@ -1,0 +1,214 @@
+{
+  "page_errors": [],
+  "asset_errors": [],
+  "styles": [
+    {
+      "style": "darktoon",
+      "cards": [
+        {
+          "id": "war_shout",
+          "images": 3,
+          "width": 206,
+          "delays": [
+            0,
+            85,
+            170
+          ],
+          "file": "war_shout_shockwave_darktoon.webp"
+        },
+        {
+          "id": "war_battleorders",
+          "images": 3,
+          "width": 216,
+          "delays": [
+            0,
+            105,
+            210
+          ],
+          "file": "war_battleorders_shockwave_darktoon.webp"
+        },
+        {
+          "id": "war_warcry",
+          "images": 3,
+          "width": 218,
+          "delays": [
+            0,
+            75,
+            150
+          ],
+          "file": "war_warcry_shockwave_darktoon.webp"
+        },
+        {
+          "id": "war_battlecry",
+          "images": 3,
+          "width": 210,
+          "delays": [
+            0,
+            85,
+            170
+          ],
+          "file": "war_battlecry_shockwave_darktoon.webp"
+        },
+        {
+          "id": "war_command",
+          "images": 3,
+          "width": 258,
+          "delays": [
+            0,
+            75,
+            150
+          ],
+          "file": "war_command_shockwave_darktoon.webp"
+        },
+        {
+          "id": "war_intimidate",
+          "images": 3,
+          "width": 274,
+          "delays": [
+            0,
+            65,
+            130
+          ],
+          "file": "war_intimidate_shockwave_darktoon.webp"
+        }
+      ]
+    },
+    {
+      "style": "foil",
+      "cards": [
+        {
+          "id": "war_shout",
+          "images": 3,
+          "width": 206,
+          "delays": [
+            0,
+            85,
+            170
+          ],
+          "file": "war_shout_shockwave_foil.webp"
+        },
+        {
+          "id": "war_battleorders",
+          "images": 3,
+          "width": 216,
+          "delays": [
+            0,
+            105,
+            210
+          ],
+          "file": "war_battleorders_shockwave_foil.webp"
+        },
+        {
+          "id": "war_warcry",
+          "images": 3,
+          "width": 218,
+          "delays": [
+            0,
+            75,
+            150
+          ],
+          "file": "war_warcry_shockwave_foil.webp"
+        },
+        {
+          "id": "war_battlecry",
+          "images": 3,
+          "width": 210,
+          "delays": [
+            0,
+            85,
+            170
+          ],
+          "file": "war_battlecry_shockwave_foil.webp"
+        },
+        {
+          "id": "war_command",
+          "images": 3,
+          "width": 258,
+          "delays": [
+            0,
+            75,
+            150
+          ],
+          "file": "war_command_shockwave_foil.webp"
+        },
+        {
+          "id": "war_intimidate",
+          "images": 3,
+          "width": 274,
+          "delays": [
+            0,
+            65,
+            130
+          ],
+          "file": "war_intimidate_shockwave_foil.webp"
+        }
+      ]
+    }
+  ],
+  "runtime_checks": {
+    "skill_toggle_suppresses_battle": true,
+    "codex_preview_ignores_toggle": true,
+    "catchup_suppresses_shout": true,
+    "all_pulses_respect_transparency": true,
+    "speed_scales_duration": true,
+    "speed_scales_pulse_gap": true,
+    "animation_cleans_all_pulses": true,
+    "ordinary_strike_unchanged": true,
+    "multi_hit_parts_unchanged": true,
+    "two_stage_spell_unchanged": true,
+    "ordinary_buff_sweep_preserved": true,
+    "unavailable_style_keeps_code_fallback": true
+  },
+  "codex_darktoon": [
+    {
+      "id": "war_shout",
+      "images": 3
+    },
+    {
+      "id": "war_battleorders",
+      "images": 3
+    },
+    {
+      "id": "war_warcry",
+      "images": 3
+    },
+    {
+      "id": "war_battlecry",
+      "images": 3
+    },
+    {
+      "id": "war_command",
+      "images": 3
+    },
+    {
+      "id": "war_intimidate",
+      "images": 3
+    }
+  ],
+  "codex_foil": [
+    {
+      "id": "war_shout",
+      "images": 3
+    },
+    {
+      "id": "war_battleorders",
+      "images": 3
+    },
+    {
+      "id": "war_warcry",
+      "images": 3
+    },
+    {
+      "id": "war_battlecry",
+      "images": 3
+    },
+    {
+      "id": "war_command",
+      "images": 3
+    },
+    {
+      "id": "war_intimidate",
+      "images": 3
+    }
+  ]
+}

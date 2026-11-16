@@ -1,19 +1,21 @@
 /**
- * 의뢰 — **게시판 카드 한 장을 굴리고, 사건 하나(처치 · 분해 · 재료 · 강화 · 제작)가 그 카드를 채우는지 답한다.** 세이브를 모른다
- *   [신설 2026-09-24 · R153 · **개정 2026-11-13 · R457** — 카드마다 죄종 · 장마다 그 장 죄종이 열린다 · 새 미션 · 카드 등급 = 대상의 좁기 ·
+ * 의뢰 — **게시판 카드 한 장을 굴리고, 사건 하나(처치 · 분해 · 재료 · 강화 · 제작 · 스킬북 · 고용 · 드롭)가 그 카드를 채우는지 답한다.** 세이브를 모른다
+ *   [신설 2026-09-24 · R153 · **개정 2026-11-13 · R457** — 카드마다 죄종 · 새 미션 · 카드 등급 = 대상의 좁기 ·
+ *    **개정 2026-11-16 · R513** — 죄종은 장이 아니라 틀의 문턱(`requires`)이 연다 · 분노 = 처치 · 시기 = 스킬북 · 고용 · 탐욕 = 분해 · 획득 ·
  *    base_expedition_design §1-3 「게시판 · 굴림 · 수령」 · 「죄종 = 미션」 · 「카드 등급」 · INTERFACE §2-16].
  *
  * 순수 모듈 — DOM · 저장소 · 시계 · Math.random 접근 없음. **상태도 없다** — 난수는 `rng` 인자로만 받는다.
  * 받기 · 세기 · 수령 · 빈 자리 채우기는 `state.js`(`commissionState` · `commissionTake` …)가 한다 — 여기는 「어떤 카드가 서나 · 무엇이 그것을 채우나」까지다.
  *
  * **무엇이 서는가는 표가 정한다** — 틀(`commission.csv` — 죄종 × 등급 × 종류 · 대상 어휘 · 기본 수 · 기본 골드 · 가중치) ·
- *   종류(`commission_kind.csv` — 토벌 · 현상금 · 분해 · 재료 획득 · 강화 · 제작 · 그 종류가 어느 사건을 세나) · 카드 등급(`commission_grade.csv` — 일반 · 매직 · 레어 · 드물기 · 골드 배수) ·
- *   종족(`monster_type.csv`) · 명성 레벨(`commission_fame.csv` — 2026-10-29 · R375) · 장(`chapter.csv:sin` — 장마다 그 장 죄종이 열린다 · R457).
- *   **코드가 아는 것은 대상 어휘(`AXES`)뿐이다** — 무엇을 세는지는 코드라서다(construction 의 `TARGETS` 와 같은 자리).
+ *   종류(`commission_kind.csv` — 토벌 · 현상금 · 보스 토벌 · 스킬 수련 · 영입 · 분해 · 수집 · 재료 획득 · 강화 · 제작 · 그 종류가 어느 사건을 세나) · 카드 등급(`commission_grade.csv` — 일반 · 매직 · 레어 · 드물기 · 골드 배수) ·
+ *   종족(`monster_type.csv`) · 명성 레벨(`commission_fame.csv` — 2026-10-29 · R375) · 장(`chapter.csv:sin` — 죄종의 차례만 · R457 · R513).
+ *   **코드가 아는 것은 대상 어휘(`AXES`)와 코드 문턱 토큰(`CODE_REQUIRES`)뿐이다** — 무엇을 세는지 · 무엇이 열렸나는 코드라서다(construction 의 `TARGETS` 와 같은 자리).
  *
  * 확정 규칙:
  *   · 의뢰는 받아 두는 목표다 — 전장을 안 연다 · 파티가 없다 (base_expedition_design §1-3 · 09-07)
- *   · 한 장 = **죄종 · 등급 · 틀 · 대상**을 굴린다 [R457] · 죄종은 **열린 죄종**(들어갈 수 있는 장의 죄종 — 2026-11-13 사용자 「노말에서 챕터별로 1개씩 열리고 오만이랑 색욕은 잠궈놓는거」) 중에서 ·
+ *   · 한 장 = **죄종 · 등급 · 틀 · 대상**을 굴린다 [R457] · **틀은 문턱(`requires`)이 열렸을 때만 굴리고 죄종은 굴릴 틀이 하나라도 있으면 섞인다**
+ *     [2026-11-16 · R513 · 사용자 「그냥 아무떄나 열릴수 있도록」 · 「색욕과 오만은 일단 제외」 — 틀이 없어 안 선다] ·
  *     대상은 **지금 들어갈 수 있는 곳에서만**(부르는 쪽이 `ctx` 로 모은다)
  *   · **카드 등급 = 대상을 얼마나 좁히나** [2026-11-13 사용자 「난이도에 따라 일반/매직/레어를 내부적으로 구분해서 돈을 더많이주던지」 · 「1배2배3배로가자」] —
  *     등급은 골드 배수와 드물기만 든다 · 목표 수는 틀이 든다(확률로 좁히는 틀은 좁힌 몫만큼 작다) ·
@@ -24,10 +26,12 @@
  * @param {object} data
  *   templates / kinds / grades / races / fame — 표 다섯의 파싱 행
  *   monsters — byId(monster.csv) · 고정 대상 검증 · 개체 카드의 보상 챕터 · 종족 표가 모든 `monster_type` 을 덮는지 검증
- *   chapters — byId(chapter.csv `{id, sin}`) · 장마다 열리는 죄종 · 죄종 순서 (R457)
+ *   chapters — byId(chapter.csv `{id, sin}`) · 죄종 순서 = 장 순서 (R457 · 죄종을 여는 것은 틀의 문턱 — R513)
  *   labMaterials / materialSynth — `[{id}]` · `[{id, from}]` · 재료 갈래(위 단계를 뿌리로 묶는다 · R457)
  *   balance — `commission_gold_chapter_mult`
  */
+
+import { TARGETS as CN_TARGETS } from './construction.js';
 
 /* ── 어휘 — 무엇을 세는지가 코드라 여기 있다 (INTERFACE §5-3) ── */
 const KILL_GRADES = { elite: ['elite'], boss: ['stage_boss', 'chapter_boss'] };   // 옛 카드의 `grade` 어휘
@@ -36,22 +40,27 @@ const RARITIES = ['magic', 'rare'];                                             
 const PARTS = { weapon: ['weapon'], armor: ['helmet', 'armor', 'gloves', 'boots'], accessory: ['ring', 'amulet'] };
 /** 「이상」의 차례 — 일반 아래는 없다 (R457) */
 const RARITY_ORDER = ['normal', 'magic', 'rare', 'craft', 'epic', 'legendary', 'unique', 'set'];
-/** 종류가 거는 처치 등급 — 현상금은 정예만 센다 (R457) */
-const KIND_GRADE = { elite: ['elite'] };
-/** 종류가 얹히는 사건 — `yield` 는 옛 수집 카드만 */
-const RIDES = ['battle', 'salvage', 'material', 'upgrade', 'craft', 'yield'];
+/** 종류가 거는 처치 등급 — 현상금은 정예만 (R457) · 보스 토벌은 스테이지 · 챕터 보스만 (R513) */
+const KIND_GRADE = { elite: ['elite'], boss: KILL_GRADES.boss };
+/** 종류가 얹히는 사건 — `book` = 스킬북 읽기 · `hire` = 고용 (R513) · `yield` = 이긴 라운드에 들어온 드롭(수집) */
+const RIDES = ['battle', 'salvage', 'material', 'upgrade', 'craft', 'book', 'hire', 'yield'];
+/**
+ * 건물 켜기가 아닌 문턱 토큰 — 값은 부르는 쪽(`state.commissionCtx`)이 낸다 (R513 · INTERFACE §5-3).
+ *   `learn` = 도서관(`skillbook`)이 열렸고 `[balance.csv:skillbook_learn_level]` 에 닿은 영웅이 있다. 나머지 토큰은 건물 켜기(`construction.js:TARGETS` 의 `unlock`)
+ */
+export const CODE_REQUIRES = ['learn'];
 
 /**
  * 대상 어휘 — `on` = 이 어휘를 받는 사건 · `pool(ctx)` = `ref: '-'` 일 때 굴릴 후보(**순서가 계약이다** — INTERFACE §5-2 · 없으면 고정 대상만) ·
  *   `narrow` = 좁히는 어휘 — 풀이 하나뿐이면 넓은 대상과 같아 안 굴린다(R457) · `legacy` = 옛 카드만(틀은 안 쓴다) · `hit(ref, ev)` = 그 사건이 채우나
  */
 export const AXES = {
-    any: { on: ['battle', 'salvage', 'material', 'upgrade', 'craft'], pool: null, hit: () => true },
+    any: { on: ['battle', 'salvage', 'material', 'upgrade', 'craft', 'book', 'hire'], pool: null, hit: () => true },
     chapter: { on: ['battle'], pool: ctx => ctx.chapters, narrow: true, hit: (ref, ev) => ev.chapter === ref },
     race: { on: ['battle'], pool: ctx => ctx.races, narrow: true, hit: (ref, ev) => ev.race === ref },
     place: { on: ['battle'], pool: ctx => ctx.places, narrow: true, hit: (ref, ev) => ev.place === ref },
     part: { on: ['salvage'], pool: null, hit: (ref, it) => (PARTS[ref] ?? []).includes(it.slot) },
-    rarity_min: { on: ['salvage'], pool: null, hit: (ref, it) => { const i = RARITY_ORDER.indexOf(it.rarity); return i >= 0 && i >= RARITY_ORDER.indexOf(ref); } },
+    rarity_min: { on: ['salvage', 'yield'], pool: null, hit: (ref, it) => { const i = RARITY_ORDER.indexOf(it.rarity); return i >= 0 && i >= RARITY_ORDER.indexOf(ref); } },
     mat: { on: ['material'], pool: null, hit: (ref, ev) => ev.family === ref },
     up_min: { on: ['upgrade'], pool: null, hit: (ref, ev) => ev.to >= ref },
     // 옛 카드만 — R457 이전에 받은 카드가 진행도째 이어 센다
@@ -70,21 +79,16 @@ export function createCommission(data) {
     const chapterMult = B.commission_gold_chapter_mult;
     if (!(typeof chapterMult === 'number' && chapterMult > 0)) bad(`commission_gold_chapter_mult ${chapterMult}`);
 
-    /* ── 장 → 죄종 — 장 순서가 죄종 순서다(굴림의 죄종 차례 · R457) ── */
+    /* ── 장 → 죄종 — 장 순서가 죄종 순서다(굴림의 죄종 차례 · R457) · 죄종을 여는 것은 장이 아니라 틀의 문턱이다(R513) ── */
     const chapterRows = Object.values(data.chapters ?? {}).slice().sort((a, b) => a.id - b.id);
-    const chapterSin = new Map();
     const sins = [];
     for (const c of chapterRows) {
         if (!c.sin) bad(`장 ${c.id} — 죄종이 비었다`);
-        chapterSin.set(c.id, c.sin);
         if (!sins.some(s => s.id === c.sin)) sins.push({ id: c.sin, chapter: c.id });
     }
     const sinSeen = new Set(sins.map(s => s.id));
-    /** 들어갈 수 있는 장들의 죄종 — 장 순서 · 중복 없음 · rng 0 (R457) */
-    const openSins = chapters => {
-        const open = new Set((chapters ?? []).map(n => chapterSin.get(n)).filter(Boolean));
-        return sins.map(s => s.id).filter(id => open.has(id));
-    };
+    /** 문턱 토큰인가 — 코드 토큰(`learn`) 또는 건물 켜기 (R513) */
+    const tokenOk = tok => CODE_REQUIRES.includes(tok) || CN_TARGETS[tok]?.kind === 'unlock';
 
     /* ── 재료 갈래 — 위 단계는 `from` 을 따라 뿌리로 · 연구소 재료가 아닌 뿌리(가루)는 null (R457) ── */
     const labIds = new Set((data.labMaterials ?? []).map(m => m.id));
@@ -162,9 +166,15 @@ export function createCommission(data) {
         if (!(typeof r.need === 'number' && r.need > 0)) bad(`${id} — need ${r.need}`);
         if (!posInt(r.reward_gold)) bad(`${id} — reward_gold ${r.reward_gold}`);
         if (!weightOk(r.weight)) bad(`${id} — weight ${r.weight}`);
-        return { id, sin: r.sin, grade: r.grade_id, kind: r.kind_id, axis: r.axis, ref, need: r.need, gold: r.reward_gold, weight: r.weight };
+        // 문턱 — `-` = 없음 · 아니면 토큰 하나 (R513)
+        if (typeof r.requires !== 'string' || !r.requires) bad(`${id} — requires 가 비었다('-' 또는 문턱 토큰)`);
+        const requires = r.requires === '-' ? null : r.requires;
+        if (requires !== null && !tokenOk(requires)) bad(`${id} — 모르는 문턱 '${r.requires}'(건물 켜기 또는 ${CODE_REQUIRES.join('/')})`);
+        return { id, sin: r.sin, grade: r.grade_id, kind: r.kind_id, axis: r.axis, ref, need: r.need, gold: r.reward_gold, weight: r.weight, requires };
     });
     if (!(templates.reduce((a, t) => a + t.weight, 0) > 0)) bad('틀 가중치 합이 0 이다');
+    /** 틀 표가 쓰는 문턱 토큰 — 행 순서 · 중복 없음 · 부르는 쪽이 이것만 열렸나 본다 (R513) */
+    const requiresList = [...new Set(templates.map(t => t.requires).filter(Boolean))];
 
     /* ── 명성 레벨 — 행 순서 = 레벨 순서 · 레벨 1 = 틀의 값 (R375) ── */
     const fame = (data.fame ?? []).map((r, i) => {
@@ -212,24 +222,37 @@ export function createCommission(data) {
         : ctx.chapter);
 
     /**
-     * 카드 한 장 — **언제나 4회**: 죄종 1 → 등급 1 → 틀 1 → 대상 1(고정이어도 소비하고 버린다) · 굴릴 틀이 없으면 0회 `null` (R457).
-     * `ctx = {chapters, races, places, monsters, chapter, fame}` — 지금 들어갈 수 있는 것만 · 순서가 계약이다(INTERFACE §2-16) ·
-     *   `fame` = 명성 경험치 — 레벨의 배수가 목표 · 골드에 곱해진다(굴림 수는 안 바뀐다 · R375)
+     * 지금 굴릴 수 있는 틀 — 행 순서 그대로 · rng 0 (R457 · R513).
+     *   문턱(`requires` 가 없거나 `ctx.features` 에 들었다) · 가중치 · 목표가 1 이상 · 풀(굴리면 비지 않았나 · 좁히면 둘 이상 · 고정이면 그 값이 드나)
      */
-    function roll(rng, ctx) {
+    function liveOf(ctx) {
         const f = fameOf(ctx.fame);
-        const open = new Set(openSins(ctx.chapters));
-        /** 그 틀이 지금 굴릴 수 있나 — 열린 죄종 · 가중치 · 목표가 1 이상 · 풀(굴리면 비지 않았나 · 좁히면 둘 이상 · 고정이면 그 값이 드나) */
-        const usable = t => {
-            if (!open.has(t.sin) || !(t.weight > 0) || !(gradeById.get(t.grade).weight > 0)) return false;
+        const feats = new Set(ctx.features ?? []);
+        return templates.filter(t => {
+            if (t.requires !== null && !feats.has(t.requires)) return false;
+            if (!(t.weight > 0) || !(gradeById.get(t.grade).weight > 0)) return false;
             if (t.need * f.needMult < 1) return false;
             const ax = AXES[t.axis];
             if (!ax.pool) return true;
             const pool = ax.pool(ctx) ?? [];
             if (t.ref !== null) return pool.includes(t.ref);
             return ax.narrow ? pool.length > 1 : pool.length > 0;
-        };
-        const live = templates.filter(usable);
+        });
+    }
+    /** 열린 죄종 — **굴릴 수 있는 틀이 하나라도 있는 죄종** · 장 순서 · 중복 없음 · rng 0 (R513 — 장이 아니라 문턱이 연다) */
+    const openSins = ctx => {
+        const live = liveOf(ctx ?? {});
+        return sins.map(s => s.id).filter(id => live.some(t => t.sin === id));
+    };
+
+    /**
+     * 카드 한 장 — **언제나 4회**: 죄종 1 → 등급 1 → 틀 1 → 대상 1(고정이어도 소비하고 버린다) · 굴릴 틀이 없으면 0회 `null` (R457).
+     * `ctx = {chapters, races, places, monsters, chapter, fame, features}` — 지금 들어갈 수 있는 것만 · 순서가 계약이다(INTERFACE §2-16) ·
+     *   `fame` = 명성 경험치 — 레벨의 배수가 목표 · 골드에 곱해진다(굴림 수는 안 바뀐다 · R375) · `features` = 열린 문턱 토큰(R513)
+     */
+    function roll(rng, ctx) {
+        const f = fameOf(ctx.fame);
+        const live = liveOf(ctx);
         if (!live.length) return null;
         const sinList = sins.map(s => s.id).filter(id => live.some(t => t.sin === id));
         const sin = sinList[Math.floor(rng() * sinList.length)];
@@ -250,7 +273,8 @@ export function createCommission(data) {
 
     /**
      * 사건 하나가 이 카드를 채우나 — 카드 종류가 `on` 사건에 얹히고 · 종류가 거는 처치 등급을 지나고 · 어휘가 받는가 · rng 0 (R457).
-     *   `on` = `battle`(`ev = {chapter, place, monster, race, grade}`) · `salvage`(아이템) · `material`(`{family}`) · `upgrade`(`{to}`) · `craft`(아이템) · `yield`(옛 수집 — 아이템)
+     *   `on` = `battle`(`ev = {chapter, place, monster, race, grade}`) · `salvage`(아이템) · `material`(`{family}`) · `upgrade`(`{to}`) · `craft`(아이템) ·
+     *   `book` · `hire`(`{}` — R513) · `yield`(수집 — 들어온 드롭 아이템)
      */
     function match(card, on, ev) {
         const ax = AXES[card.axis];
@@ -260,5 +284,5 @@ export function createCommission(data) {
         return ax.hit(card.ref, ev);
     }
 
-    return { templates, grades, races, fame, sins, gradeById, fameOf, openSins, familyOf, roll, match };
+    return { templates, grades, races, fame, sins, requires: requiresList, gradeById, fameOf, openSins, familyOf, roll, match };
 }

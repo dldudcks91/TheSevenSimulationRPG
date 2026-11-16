@@ -1,0 +1,28 @@
+{
+ "kind": "wt",
+ "title": "FAIL 876/894",
+ "passed": 876,
+ "failed": 18,
+ "failures": [
+  "lab: 연구 완료를 끼고 복귀해도 수색은 생산 공백 상한과 무관하게 실제 도착 시각까지 센다수색에 생산 상한을 적용했거나 도착 시각을 바꿨다",
+  "visit: 이야기 — 등록한 순간 「하는 중」 한 줄 · 구간마다 한 줄씩 쌓여 최근 visit_do_lines 줄 · 지난 줄은 done · 첫 줄기는 uid 숫자 · 등록 안 했으면 없다 (ADR-1125)fixture: 수색 줄이 안 열렸다",
+  "visit: 연구소 · 선술집 영웅 고용 전엔 잠기고 · 줄이 열리면 「간격」 연구 없이 첫 정산부터 시계가 선다 · 「간격」은 속도만 민다 (base_expedition §2-4 · INTERFACE §2-7 · 2026-11-14 ADR-1115)잠긴 줄이 무언가를 썼다",
+  "visit: 시간마다 한 명이 저절로 온다 — 도착 시각은 시계가 정한 시각 · 출처 visit · 칸 수가 상한(꺼져 있던 시간도 센다)fixture: 수색 줄이 안 열렸다",
+  "visit: 시계가 영웅마다 하나 — 기본 시계 + 수색 줄에 등록한 영웅마다 따로 · 영웅 시계는 등록 시각부터 · 풀면 사라진다 · 인원 배수 없음 (GAME_DESIGN §9 11-14 · R492)fixture: 수색 줄이 안 열렸다",
+  "lab: 떠나면 잃는 것(labRegLoss) — 숙련 찬 비율 · 수색 시계가 흐른 시간 · 등록 안 했으면 null · 상태 불변 (SCREEN_DESIGN §8 · ADR-1146 · R493)fixture: 수색 줄이 안 열렸다",
+  "lab: 이 명단이라면(labEffectsFor) — 지금 명단이면 labState 효과와 같다 · 남는 영웅은 제 숙련 · 새로 오는 영웅은 숙련 0 · 적용하면 그 값 · 상태 불변 (SCREEN_DESIGN §8 · ADR-1162 · R497)fixture: 수색 줄이 안 열렸다",
+  "visit: 다 차도 시계는 돈다 — 시간이 다 된 시계는 데려온 영웅을 들고 대기 · 비우면 그 순간 들어오고 그때부터 다시 수색 · 돌려보내기 · 고용 둘 다 (2026-11-15 사용자)fixture: 수색 줄이 안 열렸다",
+  "visit: 대기하는 시계가 여럿이면 먼저 돌아온 시계부터 든다 — 한 칸 비우면 하나만 · 나머지는 대기 그대로 (2026-11-15 · R492)fixture: 수색 줄이 안 열렸다",
+  "visit: 마차 영웅도 같은 칸을 나눠 쓴다 — joinAdd 는 먼저 정산하고 · 칸을 채워도 시계는 돈다 · 비우면 대기하던 영웅이 든다fixture: 수색 줄이 안 열렸다",
+  "visit: 수색 칸 = 처음 tavern_join_slots + 「대기 칸」 · 안 열린 칸은 locked 에 그 칸을 여는 지점 레벨로 선다 (ADR-0976 · 2026-10-30)fixture: 수색 줄이 안 열렸다",
+  "visit: 지점 — 레어 확률 = 기준 + 「품질」 · 「대기 칸」이 칸을 늘린다 · 「간격」이 간격을 줄인다 · 더 연구해도 시계를 다시 세우지 않는다 (R298 · base_expedition §2-1)fixture: 수색 줄이 안 열렸다",
+  "visit: 등급 분포가 레어 확률을 따른다 — 매직 / 레어 둘뿐 · 「품질」이 오르면 레어가 는다fixture: 수색 줄이 안 열렸다",
+  "visit: 결정론 — 같은 시드 같은 순서면 같은 영웅 · 세이브를 거쳐도 다음 도착이 같다 (스트림 0x5EA7)fixture: 수색 줄이 안 열렸다",
+  "visit: 줄을 안 열었으면 아무도 안 온다 · visitState · joinState · labState · navTodo 는 세이브를 안 바꾼다(정산하지 않는다)fixture: 수색 줄이 안 열렸다",
+  "tavern · visit: 선술집에서 온 영웅은 시작 장비 한 벌을 입고 온다 — 명단 · 수색 둘 다 · 일반 무기(제 직업 · 스킬 없음 — R179) + 일반 갑옷 · 같은 세이브는 같은 한 벌 · 온 사람은 안 바뀐다 (2026-09-25 사용자 지시 · INTERFACE §5-1)fixture: 수색 줄이 안 열렸다",
+  "save: 수색은 세이브 버전을 안 올렸다 — 옛 수색 필드(search · searchKept · counters.search)는 지운다 · 시계가 없던 세이브는 null · counters.visit 0 · 줄이 안 열렸으면 시계는 null · 열렸는데 시계가 없거나 틀리면 savedAt + 간격 (INTERFACE §4 · 2026-10-19)없던 세이브 48 · undefined · 0",
+  "golden: 시드 10 × 스테이지 6 = 60런 지문이 golden.json 과 일치한다60/60 런 불일치 / 입력 변화 — CSV 22종이 달라졌다: balance: cfd80078 → 0fcda1cf · monster: 2ef14c3c → 0f647da5 · codex_option: 5ee18820 → 2f264d0a · monster_base: 506c8cc5 → 없음 · skill: 6422a448 → a2e4b444 · skill_effect: 1f54f0f0 → 60d81570 · skill_status: 0449d4e4 → fb82f84c · mastery_node: 8b682dd6 → 09cb3d29 (+14) · balance 163키가 달라졌다: hero_hp_band1_unit: 8 → 12 · hero_hp_band2_unit: 14 → 21 · hero_hp_band3_unit: 26 → 39 · hero_hp_band4_unit: 48 → 72 · hero_hp_band5_unit: 86 → 129 · tavern_refresh_hours: 1 → 0.5 · mastery_wrath_t3_hurt_pct: 0.8 → 없음 · mastery_wrath_t3_hurt_deep_pct: 0.5 → 없음 (+155) → 의도한 변경이면 **다시 찍는다** (test.html?golden=write) / [seed 1 stage 1011] tl: f6960545 → 21954278 / [seed 2 stage 1011] sec: 135.7 → 146.8 · events: 470 → 498 (+3) / [seed 3 stage 1011] sec: 208.5 → 192.5 · events: 629 → 612 (+3) / [seed 4 stage 1011] gold: 390 → 399 · events: 450 → 452 (+1) / [seed 5 stage 1011] tl: bb912e21 → 3dfcd49a / [seed 6 stage 1011] sec: 115.5 → 122.4 · xp: 900 → 909 (+5)"
+ ],
+ "elapsed_sec": 67.5,
+ "page_errors": []
+}

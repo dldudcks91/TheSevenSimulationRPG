@@ -871,7 +871,7 @@ export function createItemSystem(data) {
      * 무기군을 모르면 전역 폭(`dmg_variance_pct`)으로 낸다 — 전투 쪽과 같은 규칙
      */
     //   계보 배율(그 무기의 베이스 행 — `formula.weaponLine` · 2026-11-11 · R445)을 전투(`hero.computeCombat`)와 같은 함수로 먹인다
-    const weaponDamage = item => (item?.slot === 'weapon' ? F.weaponDamage(item.ilvl, F.weaponLine(WG[item.group] ?? null, WB_BY_ID[item.baseId] ?? null), item.up) : null);
+    const weaponDamage = item => (item?.slot === 'weapon' ? F.weaponDamage(item.ilvl, F.weaponLine(WG[item.group] ?? null, WB_BY_ID[item.baseId] ?? null), F.upgradeSteps(item)) : null);
 
     /**
      * 무기 피해 범위에 **베이스 옵션 「무기 데미지 +%」**(`src: 'fixed'` 의 `atk_pct` — 화면 이름 2026-10-15)를 먹인 값 [2026-09-23 사용자 지시] — 아이템 툴팁 메인 옵션이 부른다.
@@ -1043,12 +1043,26 @@ export function createItemSystem(data) {
 
     /** 베이스 옵션을 굴리는 부위인가 — 무기 · 방어구 넷 [2026-10-22 · R316 · INTERFACE §2-5] · 반지 · 목걸이는 베이스 옵션이 서면 바뀐다 */
     const hasBase = part => !!part && !baseless(part);
-    /** 일반이 떨어지는 부위인가 — 반지 · 목걸이는 매직부터다(`rollGear` 가 일반을 매직으로 올린다 · R285) · 자동 분해 격자의 일반 칸이 이 부위에만 선다 */
+    /** 일반이 떨어지는 부위인가 — 반지 · 목걸이는 매직부터다(`rollGear` 가 일반을 매직으로 올린다 · R285) */
     const hasNormal = part => !!part && !baseless(part);
     /** 베이스 옵션의 굴린 값(비율) — 무기 「무기 데미지 +%」 · 방어구 「방어력 +%」(`src: 'fixed'`) · 줄이 없으면 null · 강화 무관 (R316 — 자동 분해 [베이스] 칸) */
     const baseRoll = item => (item?.affixes ?? []).find(a => a.src === 'fixed' && (a.stat === 'atk_pct' || a.stat === 'armor_def_pct'))?.v ?? null;
     /** 그 부위 베이스 옵션의 위끝(비율) — 자동 분해 문턱의 상한 · 베이스가 없는 부위면 null (R316) */
     const baseMax = part => (!hasBase(part) ? null : part === 'weapon' ? B.weapon_fixed_atk_pct_max : B.armor_fixed_def_pct_max);
+    /**
+     * 메인 줄 단어의 자리 — **위부터 센 번호**(1 = 위 · 2 = 가운데 · 3 = 아래) [2026-11-16 · R509 · item_design §6-5 「단어」 · INTERFACE §2-5].
+     * 후보 = 그 아이템 레벨에서 드롭이 메인 줄 단어를 고르는 단(`mainTiers` — `pickSin` 과 같은 함수) · 번호 = 1 + 후보 중 그 단보다 높은 단의 수
+     * (후보 위의 단 = 1 · 후보 아래 = 후보 수 + 1). 단어 번호가 없거나 사다리 밖이면 번호 0(원래 죄종 이름 = 맨 위 · `wordBand` 와 같은 규칙) ·
+     * 죄종이 없으면(일반 · 유니크) 빈 배열 · `item.sins` 와 같은 길이 · rng 0
+     */
+    const wordRanks = item => {
+        const tiers = mainTiers(item?.ilvl ?? 1);
+        return (item?.sins ?? []).map((sin, k) => {
+            const l = N.wordLadder(sin);
+            const t = (l.find(w => w.i === item.words?.[k]) ?? l.find(w => w.i === 0) ?? l[0]).tier;
+            return 1 + tiers.filter(x => x > t).length;
+        });
+    };
 
     /** 다음 한 단계의 골드. 상한이거나 강화 대상이 아니면 null — 비용은 단계마다 · 아이템 레벨마다 기하로 붙는다 [2026-11-02 · R419].
      *  `max` = 그 세이브의 강화 상한 — 게임은 `state.limitsOf(state).upgrade` 를 넘긴다 · 안 주면 CSV 기본값 [balance.csv:equip_upgrade_max] (2026-09-22) */
@@ -1071,7 +1085,9 @@ export function createItemSystem(data) {
         if (upgradeCost(item, max) == null) return null;
         const step = (item.up ?? 0) + 1;
         if (UP_CHANCE[step - 1] == null) throw new Error(`upgrade_chance: 단계 ${step} 줄이 없다`);
-        return UP_CHANCE[step - 1];
+        // 등급 배수 — 좋은 장비일수록 낮다 `[balance.csv:equip_upgrade_chance_mult_<rarity>]` · 키가 없는 등급은 1 · 끝 1 [2026-11-15 · R505 · item_design §7-2]
+        const m = B[`equip_upgrade_chance_mult_${item.rarity}`];
+        return Math.min(1, UP_CHANCE[step - 1] * (Number.isFinite(m) && m > 0 ? m : 1));
     }
 
     /**
@@ -1079,8 +1095,9 @@ export function createItemSystem(data) {
      * **rng 를 안 쓰고 접사를 건드리지 않는다** — 베이스는 `up` 에서 파생하므로 올릴 것이 `up` 하나뿐이다.
      * ~~3강마다 접사 하나의 값을 올린다~~ 는 2026-09-15 퇴역 (R95 — 옵션 쪽 성장은 크래프트 · item_design §7-3)
      */
-    function upgrade(item) {
+    function upgrade(item, great = false) {
         item.up = (item.up ?? 0) + 1;
+        if (great) item.great = (item.great ?? 0) + 1;   // 대성공 — 단계는 하나 · 베이스 몫이 크다(`formula.upgradeSteps` · 2026-11-15 · R505)
         return { up: item.up };
     }
 
@@ -1092,8 +1109,8 @@ export function createItemSystem(data) {
      */
     function effective(item) {
         if (!item || !(item.up > 0) || !item.implicit) return item;
-        return { ...item, implicit: { ...item.implicit, v: Math.round(item.implicit.v * F.upgradeMult(item.up)) } };
+        return { ...item, implicit: { ...item.implicit, v: Math.round(item.implicit.v * F.upgradeMult(F.upgradeSteps(item))) } };
     }
 
-    return { rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBasesAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, weaponBasePreview, armorBasePreview, implicitFixed, optionSources, optionRange, optionTableRange, skillPlusOf, procSkillLevel };
+    return { rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBasesAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, wordRanks, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, weaponBasePreview, armorBasePreview, implicitFixed, optionSources, optionRange, optionTableRange, skillPlusOf, procSkillLevel };
 }

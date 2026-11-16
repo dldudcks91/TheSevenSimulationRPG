@@ -412,6 +412,10 @@ export function createHeroSystem(data) {
     const attrRollMax = B.hero_attr_roll_max;
     if (!Number.isInteger(attrRollMax) || !(B.hero_attr_min <= attrRollMax && attrRollMax <= B.hero_attr_max))
         throw new Error('hero: balance.csv 의 hero_attr_roll_max 는 hero_attr_min 이상 hero_attr_max 이하의 정수여야 한다');
+    // 생성 바닥도 최종 최소값과 분리한다 — 생성 범위 = `hero_attr_roll_min` ~ `hero_attr_roll_max` (2026-11-16 사용자 「3~18로」)
+    const attrRollMin = B.hero_attr_roll_min;
+    if (!Number.isInteger(attrRollMin) || !(B.hero_attr_min <= attrRollMin && attrRollMin <= attrRollMax))
+        throw new Error('hero: balance.csv 의 hero_attr_roll_min 은 hero_attr_min 이상 hero_attr_roll_max 이하의 정수여야 한다');
     // 로드 검증 — 직업 · 죄종이 미는 칸이 능력치 어휘 밖이면 그 칸의 비율이 조용히 1 로 떨어진다 → 생성 때 던진다
     for (const c of data.classes) for (const k of ['keyAttr', 'subAttr'])
         if (c[k] != null && !statIds.includes(c[k])) throw new Error(`hero: class.csv ${c.id} 의 ${k} '${c[k]}' 가 hero_attribute.csv 에 없다`);
@@ -427,7 +431,7 @@ export function createHeroSystem(data) {
         const t = usableTier(t0) ? t0 : defaultTier();
         if (!usableTier(t)) throw new Error('hero: 능력치를 굴릴 등급(대역 · 폭)이 없다 — hero_tier.csv');
         const n = statIds.length;
-        const min = Math.max(B.hero_attr_min * n, Math.min(t.totalMin, attrRollMax * n));
+        const min = Math.max(attrRollMin * n, Math.min(t.totalMin, attrRollMax * n));
         return { min, max: Math.max(min, Math.min(t.totalMax, attrRollMax * n)), sd: t.attrSd };
     }
 
@@ -474,7 +478,7 @@ export function createHeroSystem(data) {
         const sub = makeRng(Math.floor(rng() * 2 ** 32));
         const band = bandOf(tier);
         const c = centersOf(cls, sin, band);
-        const lo = B.hero_attr_min, hi = attrRollMax;
+        const lo = attrRollMin, hi = attrRollMax;   // 생성 범위 (2026-11-16 — ~~최종 최소값 hero_attr_min 부터~~)
         let v = null, tries = 0;
         while (tries < Math.max(1, B.hero_attr_reroll_max)) {
             tries++;
@@ -867,7 +871,7 @@ export function createHeroSystem(data) {
         const magic = group?.damageKind === 'magic';
         // 밑수 = **무기 피해 범위**(양끝 · 무기군 × ilvl × 강화에서 파생 · R90) + 무기 슬롯 접사의 고정 공격력(양끝에 같이). 맨손이면 양끝 모두 unarmed_atk
         //   ⚠ 2026-09-11 R78 부터 새 무기에는 `atk_flat` 이 안 붙는다(최소/최대 피해 보류) — 옛 무기만 든다
-        const range = weapon ? F.weaponDamage(weapon.ilvl, group, weapon.up) : { min: B.unarmed_atk, max: B.unarmed_atk };
+        const range = weapon ? F.weaponDamage(weapon.ilvl, group, F.upgradeSteps(weapon)) : { min: B.unarmed_atk, max: B.unarmed_atk };   // 대성공 몫 포함(2026-11-15)
         const atkFlat = (weapon?.affixes ?? []).reduce((s, a) => s + (a.stat === 'atk_flat' ? a.v : 0), 0);
         // 무기 % = **무기 슬롯 접사의 데미지 %**(베이스 옵션 「무기 데미지 +%」 — 화면 이름 2026-10-15 · ADR-0628) — 무기 양끝에만 곱하고 양끝마다 한 번 반올림한다
         //   [2026-10-03 · 사용자 확정 · battle_design §9-1 — D2 의 무기 ED]. `item.weaponDamageFixed` 와 같은 값이다(툴팁 표기 = 계산)

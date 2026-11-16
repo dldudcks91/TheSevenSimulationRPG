@@ -125,6 +125,8 @@ export function createFormula(balance) {
      * item.js 에 있던 식을 여기로 옮겼다 [2026-09-14 · R90] — 무기 피해 범위를 hero.computeCombat 도 파생해야 해서 한 곳에 둔다
      */
     const upgradeMult = up => 1 + (up ?? 0) * B.equip_upgrade_base_pct;
+    /** 강화 배율에 넣는 단계 수 = `up + great × (great_mult − 1)` — 대성공 한 번은 일반 성공 `[balance.csv:equip_upgrade_great_mult]` 번 몫이다 [2026-11-15 · R505 · item_design §7-2] */
+    const upgradeSteps = item => (item?.up ?? 0) + (item?.great ?? 0) * (B.equip_upgrade_great_mult - 1);
 
     /**
      * 무기 피해 범위 [2026-09-14 · R90 · battle_design §9-1] — **굴림이 아니라 파생**이다. 같은 무기군 · 같은 ilvl · 같은 강화면 같은 범위.
@@ -323,7 +325,7 @@ export function createFormula(balance) {
     const effectiveCd = (cd, period) => Math.ceil(cd / period) * period;
 
     return {
-        roundPct, pctOption, growthMult, upgradeMult, weaponDamage, weaponLine, weaponMid, armorDefense, mitigation, physicalDefense, resCap, appliedResist, reductionMult,
+        roundPct, pctOption, growthMult, upgradeMult, upgradeSteps, weaponDamage, weaponLine, weaponMid, armorDefense, mitigation, physicalDefense, resCap, appliedResist, reductionMult,
         hitChance, hitLevelMult, statCoef, strike, indirect, leech, effectiveCd, statBetter,
     };
 }

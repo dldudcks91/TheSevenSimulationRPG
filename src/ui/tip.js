@@ -983,7 +983,7 @@ function codexLevelValue(def, e, field) {
  * 도감 스킬 툴팁 — 왼쪽 스킬 설명 아래 획득처 · 오른쪽 Lv1~9의 레벨별 옵션(2026-11-15 사용자 지시).
  * 몬스터 툴팁의 능력치 자리에 스킬은 「어디서 얻나」가 선다. 스킬 도감은 레벨이 없는 목록이라(monster_design §8-1 · R293) 영웅 · 세이브를 안 읽는다.
  * 획득처는 `battle.skillCarriers` 의 고정 칸 몬스터만 표시한다. 보스의 무작위 스킬 후보는 제외한다(2026-11-15).
- *   맨 아래 건물 줄은 상단(도안 판매 대상만) · 도서관 순서다.
+ *   맨 아래 건물 줄은 그 책을 내는 상단 · 탐험(`shopBookPool` 에 든 스킬만) 순서다 (ADR-1198).
  * @param id  스킬 id — 책이 되는 스킬만 부른다(`skill.bookable`)
  * @returns `[스킬 설명 · 획득처, 레벨별 옵션]` — 툴팁 창이 가로로 나란히 세운다
  */
@@ -1026,9 +1026,11 @@ export function codexSkillTipCard(id) {
     return [description, card];
 }
 
-/** 획득처 건물 — 상단 오른쪽에 스킬북 제작처인 도서관. 이름과 그림은 건물 데이터를 읽고 건설 여부와 무관하게 표시한다. */
+/** 획득처 건물 — 그 책을 내는 상단 · 탐험(동굴 보상) — 둘의 후보가 같다(`shopBookPool` · 1티어 직업 스킬). 이름과 그림은 건물 데이터를 읽고 건설 여부와 무관하게 표시한다.
+ *  연구소 도서관 줄은 안 선다 — 등록한 영웅이 가진 스킬을 내 스킬마다 정해지지 않는다 (SCREEN_DESIGN §9-1 · ADR-1198 — ~~스킬북 제작처 도서관~~) */
 function skillBuildingSources(id) {
-    const ids = [...(SYS.game.shopBlueprintPool().includes(id) ? ['shop'] : []), 'library'];
+    const ids = SYS.game.shopBookPool().includes(id) ? ['shop', 'explore'] : [];
+    if (!ids.length) return '';
     return `<div class="cx-src-buildings">${ids.map(building => {
         const b = SYS.construction.list.find(x => x.id === building);
         const name = b ? L(b.name) : building;

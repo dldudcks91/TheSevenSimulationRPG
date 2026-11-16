@@ -252,8 +252,8 @@
 :root[data-mobile] .fg-board { border: 0; border-image: none; box-shadow: none; background: none; }
 :root[data-mobile] .fg-up { --fg-gap: 8px; }   /* 판 사이 틈 — 표지가 안 서니 옛 8px (ADR-1156) */
 :root[data-mobile] .fg-up-flow { display: none; }   /* 판 사이 순서 표지 — 판이 밀어서 보기 페이지로 갈려 사이가 없다 (ADR-1152 · 1156) */
-:root[data-mobile] .fg-tp-cost { display: none; }   /* 담금질 판 바닥 재료 칸 — 데스크톱만(모바일은 표지 다섯 + 재료 한 줄) (ADR-1177 · 1180) */
-:root[data-mobile] .fg-tp { border-right: 0; border-top: 1px solid var(--border-dark); padding: 12px 10px; }   /* 담금질 — 한 줄 짜임에서 작업 칸 위에 선다 (ADR-1134) */
+:root[data-mobile] .fg-tp-cost { display: none; }   /* 손질 판 바닥 재료 칸 — 데스크톱만(모바일은 재료 한 줄) (ADR-1177 · 1180 · 1209) */
+:root[data-mobile] .fg-tp { border-right: 0; border-top: 1px solid var(--border-dark); padding: 12px 10px; }   /* 손질 — 한 줄 짜임에서 작업 칸 위에 선다 (ADR-1134 · ADR-1200) */
 :root[data-mobile] .fg-kinds { grid-template-columns: 32px minmax(0, 1fr) auto; gap: 5px; }
 :root[data-mobile] .fg-kind .fg-kname { padding-left: 0; white-space: normal; }
 :root[data-mobile] .fg-kmats { flex-wrap: wrap; }

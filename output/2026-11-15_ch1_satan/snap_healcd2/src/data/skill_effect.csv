@@ -1,0 +1,120 @@
+skill_id,seq,effect,target,hits,mult_pct,decay_pct,proc_chance_pct,proc_mult_pct,element,status,scale1_field,scale1_attr,scale1_coef,scale2_field,scale2_attr,scale2_coef,scale3_field,scale3_attr,scale3_coef,level_field,level_step,note,level_field2,level_step2
+war_bash,1,hit,-,1,3,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.3,-,-,-
+war_doubleswing,1,hit,-,2,1.1,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.11,-,-,-
+war_recovery,1,mend,-,0,0.25,0,0,0,-,-,mult_pct,vit,0,-,-,0,-,-,0,mult_pct,0.025,-,-,-
+war_leap,1,hit,-,1,1.5,0,0,0,-,war_leap,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.15,레벨 칸 ⚠임시 — 레벨이 무엇을 올리나는 미정(skill_design §12-8) · 맞은 적마다 스턴 2026-10-28 R371,-,-
+war_shout,1,apply,-,0,0,0,0,0,-,war_shout,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.04,-,-,-
+war_shout,2,apply,-,0,0,0,0,0,-,war_shout_res,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.02,-,-,-
+war_battleorders,1,apply,-,0,0,0,0,0,-,war_battleorders,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.01,-,-,-
+war_ironskin,1,apply,-,0,0,0,0,0,-,war_ironskin,effect_value,vit,0,duration_sec,vit,0,-,-,0,effect_value,0.1,-,-,-
+war_frenzy,1,apply,-,0,0,0,0,0,-,war_frenzy,effect_value,agi,0,duration_sec,vit,0,-,-,0,cool_sec,-0.5,-,-,-
+war_warcry,1,apply,-,0,0,0,0,0,-,war_warcry,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.01,-,-,-
+war_battlecry,1,apply,-,0,0,0,0,0,-,war_battlecry,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.02,-,-,-
+kni_resistshield,1,apply,-,0,0,0,0,0,-,kni_resistshield,effect_value,vit,0,duration_sec,vit,0,-,-,0,duration_sec,0.5,레벨 = 지속(2026-10-29 R384 — 저항 상한에 막혀 값 레벨이 헛돈다),-,-
+kni_holyshield,1,apply,-,0,0,0,0,0,-,kni_holyshield,effect_value,vit,0,duration_sec,vit,0,-,-,0,effect_value,0.025,-,-,-
+kni_charge,1,hit,-,1,2.5,0,0.1,2,-,-,mult_pct,str,0,proc_chance_pct,luck,0,-,-,0,mult_pct,0.25,-,-,-
+kni_rush,1,hit,-,4,0.6,0,0,0,-,-,mult_pct,str,0,hits,agi,0,-,-,0,hits,0.34,-,mult_pct,0.01
+kni_enchant,1,apply,-,0,0,0,0,0,-,kni_enchant,effect_value,int,0,duration_sec,vit,0,-,-,0,effect_value,0.06,-,-,-
+kni_might,1,apply,-,0,0,0,0,0,-,kni_might,effect_value,ldr,0,-,-,0,-,-,0,effect_value,0.01,-,-,-
+kni_fanaticism,1,apply,-,0,0,0,0,0,-,kni_fanaticism,effect_value,ldr,0,-,-,0,-,-,0,effect_value,0.01,-,-,-
+kni_defiance,1,apply,-,0,0,0,0,0,-,kni_defiance,effect_value,ldr,0,-,-,0,-,-,0,effect_value,0.01,-,-,-
+kni_sweep,1,hit,-,1,2,0,0,0,-,kni_sweep_def,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.2,맞은 전열에 방어 감소 창(2026-10-29 R384),-,-
+kni_holyfire,1,apply,-,0,0,0,0,0,-,kni_holyfire,effect_value,int,0,-,-,0,-,-,0,effect_value,0.015,-,-,-
+arc_snipe,1,hit,-,1,5.5,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.55,-,-,-
+arc_rapid,1,hit,-,3,0.55,0,0,0,-,-,mult_pct,str,0,hits,agi,0,-,-,0,hits,0.34,레벨 칸 둘 — 타수 Lv4 · 7 · 10 에 +1 · 한 발 배율 +1%p(2026-10-29 R383 · 러시와 같은 모양),mult_pct,0.01
+arc_multishot,1,hit,-,1,1,0.5,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.1,decay = 전열이 살아 있는 동안 후열 약화(2026-10-29 R383 · HIT_DECAY enemy_all = back),-,-
+arc_guided,1,hit,-,1,1.85,0.15,0,0,-,-,mult_pct,str,0,decay_pct,agi,0,-,-,0,decay_pct,0.015,방어 깎기 겹 상한 [balance.csv:weapon_def_down_stack_max](2026-10-29 R383),-,-
+arc_pierce,1,apply,-,0,0,0,0,0,-,arc_pierce,effect_value,agi,0,duration_sec,vit,0,-,-,0,effect_value,0.05,-,-,-
+arc_poison,1,apply,-,0,0,0,0,0,-,arc_poison,effect_value,int,0,duration_sec,vit,0,-,-,0,effect_value,0.05,-,-,-
+arc_coldarrow,1,apply,-,0,0,0,0,0,-,arc_coldarrow,effect_value,int,0,duration_sec,vit,0,-,-,0,effect_value,0.04,-,-,-
+arc_evade,1,apply,-,0,0,0,0,0,-,arc_evade,effect_value,agi,0,duration_sec,vit,0,-,-,0,cool_sec,-0.5,레벨 = 쿨(2026-10-29 R383 — 횟수를 다 쓰면 창이 닫혀 지속이 헛돈다),-,-
+mag_fireball,1,hit,-,1,3.2,0,0,0,fire,-,mult_pct,int,0,-,-,0,-,-,0,mult_pct,0.32,-,-,-
+mag_inferno,1,apply,-,0,0,0,0,0,-,mag_inferno,effect_value,int,0,-,-,0,-,-,0,effect_value,0.04,설치형 — 자기 창 pulse · 레벨 = 틱 세기(옛 hit 1.6 · 레벨 0.16 — 2026-11-13 R462),-,-
+mag_iceblast,1,hit,-,1,1.1,0,0,0,cold,freeze,mult_pct,int,0,duration_sec,cha,0,-,-,0,mult_pct,0.11,-,-,-
+mag_frostnova,1,hit,-,1,0.7,0,0,0,cold,freeze,mult_pct,int,0,duration_sec,cha,0,-,-,0,mult_pct,0.07,-,-,-
+mag_lightning,1,hit,-,1,2.5,0,0.1,2,lightning,-,mult_pct,int,0,proc_mult_pct,luck,0,-,-,0,mult_pct,0.25,-,-,-
+mag_chain,1,hit,-,1,1.3,0.3,0.1,2,lightning,-,mult_pct,int,0,decay_pct,agi,0,proc_mult_pct,luck,0,decay_pct,-0.03,-,-,-
+mag_ignite,1,apply,-,0,0,0,0,0,-,mag_ignite,duration_sec,vit,0,-,-,0,-,-,0,-,-,창 동안 화염 스킬 타격 → 화상(받는 회복 감소) · 레벨은 둘째 줄(화상 걸린 적 데미지) · 2026-11-13 R471 · advance_tree_draft §2,-,-
+mag_ignite,2,apply,-,0,0,0,0,0,-,mag_ignite_amp,-,-,0,-,-,0,-,-,0,effect_value,0.01,화상 걸린 적에게 주는 데미지 — 사용자 「10%에서부터 +1%씩」 · 2026-11-13 R471 · advance_tree_draft §2,-,-
+mag_deepfreeze,1,apply,-,0,0,0,0,0,-,mag_deepfreeze,duration_sec,vit,0,-,-,0,-,-,0,-,-,① 긴 결빙(imbue),-,-
+mag_deepfreeze,2,apply,-,0,0,0,0,0,-,mag_deepfreeze_shatter,duration_sec,vit,0,-,-,0,-,-,0,hit_duration_sec,0.1,② 얼어 있던 적에게 스턴(shatter) · 레벨 = 스턴 시간(2026-10-29 R385),-,-
+mag_surge,1,apply,-,0,0,0,0,0,-,mag_surge,effect_value,luck,0,duration_sec,vit,0,-,-,0,effect_value,0.02,-,-,-
+mag_echo,1,apply,-,0,0,0,0,0,-,mag_echo,duration_sec,vit,0,-,-,0,-,-,0,duration_sec,0.5,-,-,-
+pri_judgment,1,hit,-,1,0.7,0,0,0,fixed,-,mult_pct,int,0,-,-,0,-,-,0,mult_pct,0.07,고정 피해 — 방어 · 저항 · 피해 감소를 안 받는다 · 배율 · 레벨당 ×0.4 (2.2 · 0.22 → 10-06 사용자 「데미지를 낮춰서」 · R221) · 0.88 → 0.7 (2026-10-30 R396 결투 측정 — 상대 방어가 오를수록 혼자 세진다),-,-
+pri_heal,1,heal,-,0,1.6,0,0,0,-,-,mult_pct,cha,0,-,-,0,-,-,0,mult_pct,0.16,-,-,-
+mon_pri_heal,1,heal,-,0,1.6,0,0,0,-,-,mult_pct,cha,0,-,-,0,-,-,0,mult_pct,0.16,-,-,-
+pri_grace,1,apply,-,0,0,0,0,0,-,pri_grace,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.025,-,-,-
+pri_haste,1,apply,-,0,0,0,0,0,-,pri_haste,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.05,-,-,-
+pri_cure,1,heal,-,0,3,0,0,0,-,-,mult_pct,cha,0,-,-,0,-,-,0,mult_pct,0.3,-,-,-
+mon_pri_cure,1,heal,-,0,3,0,0,0,-,-,mult_pct,cha,0,-,-,0,-,-,0,mult_pct,0.3,-,-,-
+pri_regen,1,apply,-,0,0,0,0,0,-,pri_regen,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.002,-,-,-
+pri_penitence,1,apply,-,0,0,0,0,0,-,pri_penitence,effect_value,cha,0,-,-,0,-,-,0,effect_value,0.025,-,-,-
+pri_bind,1,apply,-,0,0,0,0,0,-,pri_bind,effect_value,cha,0,-,-,0,-,-,0,effect_value,0.04,-,-,-
+pri_doom,1,apply,-,0,0,0,0,0,-,pri_doom,effect_value,cha,0,-,-,0,-,-,0,effect_value,0.02,-,-,-
+pri_summon,1,call,-,0,0,0,0,0,-,-,-,-,0,-,-,0,-,-,0,-,-,-,-,-
+mon_selfdestruct,1,fixed,-,1,0.3,0,0,0,-,-,-,-,0,-,-,0,-,-,0,-,-,-,-,-
+mon_hellfire,1,hit,-,10,0.4,0,0,0,fire,-,mult_pct,int,0,-,-,0,-,-,0,-,-,사탄 헬파이어 — 정신 집중 계속 닳기 · 타수 10 = 틱 수(× balance.csv:channel_tick_sec = 지속) · 배율 = 한 틱 몫 · 몬스터 전용이라 레벨 줄이 없다(R216) · ⚠값 임시,-,-
+mon_ironmaiden,1,apply,-,0,0,0,0,0,-,mon_ironmaiden,-,-,0,-,-,0,-,-,0,-,-,레비아탄 아이언 메이든 — 적 전원에게 maiden 창 · 몬스터 전용이라 레벨 줄이 없다 · ⚠값 임시,-,-
+mon_goldfever,1,apply,-,0,0,0,0,0,-,mon_goldfever,-,-,0,-,-,0,-,-,0,-,-,맘몬 골드 피버 첫 줄 — 변신 창(봉인 · 맞히면 늘어남) · ⚠값 임시,-,-
+mon_goldfever,2,apply,-,0,0,0,0,0,-,mon_goldfever_atk,-,-,0,-,-,0,-,-,0,-,-,둘째 줄 — 데미지 창(같은 시전이라 변신 창과 함께 늘어난다) · ⚠값 임시,-,-
+mon_delegate,1,apply,-,0,0,0,0,0,-,mon_delegate,-,-,0,-,-,0,-,-,0,-,-,벨페고르 델리게이트 — 오오라 · 값은 안 읽는다,-,-
+mon_swarm,1,apply,-,0,0,0,0,0,-,mon_swarm,-,-,0,-,-,0,-,-,0,-,-,바알제붑 스웜 — 파리 떼 창 · ⚠값 임시,-,-
+war_ragnarok,1,apply,-,0,0,0,0,0,-,war_ragnarok,effect_value,str,0,duration_sec,vit,0,-,-,0,effect_value,0.035,데미지 · 크기 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+war_ragnarok,2,apply,-,0,0,0,0,0,-,war_ragnarok_speed,effect_value,str,0,duration_sec,vit,0,-,-,0,effect_value,0.035,공격 속도 · 크기 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+war_ragnarok,3,apply,-,0,0,0,0,0,-,war_ragnarok_seal,effect_value,str,0,duration_sec,vit,0,-,-,0,-,-,다른 액티브 봉인(값 0) · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+war_berserk,1,apply,-,0,0,0,0,0,-,war_berserk,effect_value,str,0,duration_sec,vit,0,-,-,0,effect_value,0.05,다른 액티브 데미지 % · 크기 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+war_mutualruin,1,hit,-,1,4.2,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.42,-,-,-
+war_whirlwind,1,hit,-,5,0.5,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.05,-,-,-
+war_thorswrath,1,hit,-,1,4.2,0.7,0,0,-,war_thorswrath,mult_pct,str,0,-,-,0,-,-,0,cool_sec,-2.2,주 대상 = 전열 HP 최대 · 나머지 전원 × (1 − decay 0.7) = 30%(사용자 11-02 「주상대 100% · 다른상대 30%」) · 맞은 적마다 스턴(나머지는 시간 × splash_stun_mult) · 2026-11-02 R423,-,-
+war_shockwave,1,hit,-,1,1.5,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.15,-,-,-
+war_shockwave,2,apply,enemy_all,0,0,0,0,0,-,war_shockwave_break,-,-,0,-,-,0,-,-,0,-,-,진형 붕괴 — 맞은 편 전열 ↔ 후열(2026-11-02 R424 · 노드 넷은 다시 맞춘 뒤),-,-
+war_divinedescent,1,apply,-,0,0,0,0,0,-,war_divinedescent,effect_value,vit,0,duration_sec,vit,0,-,-,0,effect_value,0.05,⚠값 임시 2026-11-12 R425,-,-
+war_divinedescent,2,apply,-,0,0,0,0,0,-,war_divinedescent_regen,-,-,0,-,-,0,-,-,0,-,-,둘째 창 — 재생(첫 줄과 같은 시간 · 레벨은 첫 줄 최대 HP 만 · 2026-11-12 R425),-,-
+war_command,1,apply,-,0,0,0,0,0,-,war_command,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.02,아군 데미지 · 크기 = 증가량(지속은 안 오른다 — advance_tree_draft §1) · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+war_intimidate,1,apply,-,0,0,0,0,0,-,war_intimidate,effect_value,cha,0,duration_sec,vit,0,-,-,0,effect_value,0.02,적 데미지 감소 · 크기 = 감소량 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+kni_lastbastion,1,apply,-,0,0,0,0,0,-,kni_lastbastion,effect_value,vit,0,duration_sec,vit,0,-,-,0,-,-,가져오는 몫(사용자 「50%」) · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+kni_lastbastion,2,apply,-,0,0,0,0,0,-,kni_lastbastion_dr,effect_value,vit,0,duration_sec,vit,0,-,-,0,effect_value,0.04,가져온 피해 감소 · 크기 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+kni_unbreakablewill,1,apply,-,0,0,0,0,0,-,kni_unbreakablewill,effect_value,vit,0,duration_sec,vit,0,-,-,0,effect_value,0.01,겹 하나의 피해 감소 · 크기 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+kni_divinejudgment,1,apply,-,0,0,0,0,0,-,kni_divinejudgment,effect_value,vit,0,duration_sec,vit,0,-,-,0,effect_value,0.04,반사 % · 크기 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+kni_cleansing,1,apply,-,0,0,0,0,0,-,kni_cleansing,effect_value,vit,0,-,-,0,-,-,0,effect_value,0.03,⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+kni_offenseaura,1,apply,-,0,0,0,0,0,-,kni_offenseaura,effect_value,ldr,0,-,-,0,-,-,0,effect_value,0.01,데미지 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+kni_offenseaura,2,apply,-,0,0,0,0,0,-,kni_offenseaura_speed,effect_value,ldr,0,-,-,0,-,-,0,effect_value,0.01,공격 · 캐스팅 속도 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+kni_elemconvert,1,apply,-,0,0,0,0,0,-,kni_elemconvert,-,-,0,-,-,0,-,-,0,-,-,바꾸는 몫(사용자 「50%」) — 레벨은 안 민다 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+kni_elemconvert,2,apply,-,0,0,0,0,0,-,kni_elemconvert_amp,effect_value,int,0,-,-,0,-,-,0,effect_value,0.05,크기 = 바뀐 화염 피해 증가 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+kni_retribution,1,apply,-,0,0,0,0,0,-,kni_retribution,effect_value,str,0,duration_sec,vit,0,-,-,0,effect_value,0.05,공격 속도 · 크기 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+kni_retribution,2,apply,-,0,0,0,0,0,-,kni_retribution_conv,effect_value,str,0,duration_sec,vit,0,-,-,0,-,-,물리 → 번개 몫 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+kni_condemnation,1,hit,-,1,2.2,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.22,기본 피해 · 크기 · 잃은 체력 몫은 battle.js(고정) · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+kni_fallingstrike,1,hit,-,1,3.6,0,0,0,lightning,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.36,⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+mag_meteor,1,hit,-,1,4.2,0,0,0,fire,-,mult_pct,int,0,-,-,0,-,-,0,mult_pct,0.42,-,-,-
+mag_ember,1,apply,-,0,0,0,0,0,-,mag_ember,effect_value,int,0,-,-,0,-,-,0,effect_value,0.12,불씨 — 크기 = 터지는 배율 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+mag_hydra,1,apply,-,0,0,0,0,0,-,mag_hydra,effect_value,int,0,-,-,0,-,-,0,duration_sec,0.8,창 — 크기 = 지속(사용자 「히드라 크기 = 지속 그대로」) · ⚠값 제안 2026-11-13 R471 · advance_tree_draft §3,-,-
+mag_frozenorb,1,hit,-,6,0.55,0,0,0,cold,-,mult_pct,int,0,-,-,0,-,-,0,mult_pct,0.055,한 방 몫 · 타수 = 방 수 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft §3,-,-
+mag_blizzard,1,apply,-,0,0,0,0,0,-,mag_blizzard,effect_value,int,0,-,-,0,-,-,0,effect_value,0.05,창 — 매초 한 번의 배율 · 크기 = 데미지 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft §3,-,-
+mag_frostarmor,1,apply,-,0,0,0,0,0,-,mag_frostarmor,effect_value,int,0,duration_sec,vit,0,-,-,0,effect_value,0.3,크기 = 보호막 수치(지속은 안 오른다) · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+mag_thunderstrike,1,apply,-,0,0,0,0,0,-,mag_thunderstrike,effect_value,int,0,-,-,0,-,-,0,effect_value,0.24,늘 켜짐 — 벼락 배율 · 크기 = 데미지 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft §3,-,-
+mag_nova,1,hit,-,1,0.7,0,0.1,1.5,lightning,-,mult_pct,int,0,-,-,0,-,-,0,cool_sec,-0.7,-,-,-
+mag_thundergod,1,hit,-,1,1.4,0,0.2,2,lightning,-,mult_pct,int,0,proc_mult_pct,luck,0,-,-,0,mult_pct,0.14,벼락 한 방 · 타수는 시전 순간 쌓인 칸 수(spend) · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+arc_trueaim,1,apply,-,0,0,0,0,0,-,arc_trueaim,effect_value,agi,0,duration_sec,vit,0,-,-,0,effect_value,0.04,스나이프 데미지 % · 크기 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+arc_trueaim,2,apply,-,0,0,0,0,0,-,arc_trueaim_slow,duration_sec,vit,0,-,-,0,-,-,0,-,-,공격 속도 감소 · 변형 1 이 줄인다(skill.js advShape) · 레벨 없음 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+arc_singlestrike,1,hit,-,1,4.5,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.45,-,-,-
+arc_reload,1,apply,-,0,0,0,0,0,-,arc_reload,effect_value,agi,0,-,-,0,-,-,0,effect_value,0.4,라운드당 초기화 상한(내림) · 크기 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+arc_quickhands,1,apply,-,0,0,0,0,0,-,arc_quickhands,effect_value,agi,0,duration_sec,vit,0,-,-,0,effect_value,0.02,-,-,-
+arc_eagleeye,1,apply,-,0,0,0,0,0,-,arc_eagleeye,effect_value,str,0,duration_sec,vit,0,-,-,0,effect_value,0.02,-,-,-
+arc_quickdraw,1,apply,-,0,0,0,0,0,-,arc_quickdraw,duration_sec,vit,0,-,-,0,-,-,0,effect_value,-0.02,크기 = 고정 주기가 더 짧다(무기 주기 × 값) · 지속은 안 오른다 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+arc_quickdraw,2,apply,-,0,0,0,0,0,-,arc_quickdraw_weak,duration_sec,vit,0,-,-,0,-,-,0,-,-,평타 피해 감소 · 레벨 없음 · 2026-11-14 R471 · advance_tree_draft,-,-
+arc_overdraw,1,apply,-,0,0,0,0,0,-,arc_overdraw,duration_sec,vit,0,-,-,0,-,-,0,-,-,주기 고정 · 레벨 없음 · 2026-11-14 R471 · advance_tree_draft,-,-
+arc_overdraw,2,apply,-,0,0,0,0,0,-,arc_overdraw_power,duration_sec,vit,0,-,-,0,-,-,0,effect_value,0.07,크기 = 평타 피해 증가 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+arc_chaindraw,1,apply,-,0,0,0,0,0,-,arc_chaindraw,effect_value,agi,0,duration_sec,vit,0,-,-,0,effect_value,0.03,크기 = 주 대상 밖 비율 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+arc_huntersmark,1,apply,-,0,0,0,0,0,-,arc_huntersmark,effect_value,cha,0,duration_sec,vit,0,-,-,0,effect_value,0.02,크기 = 받는 피해 증가(음수의 크기에 더한다) · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+arc_supportingfire,1,apply,-,0,0,0,0,0,-,arc_supportingfire,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.03,크기 = 화살 배율 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+arc_trap,1,hit,-,1,2.0,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.2,-,-,-
+pri_endure,1,apply,-,0,0,0,0,0,-,pri_endure,effect_value,cha,0,duration_sec,vit,0,-,-,0,effect_value,0.03,크기 = 버틸 때 남는 HP · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+pri_purify,1,cleanse,-,0,1.6,0,0,0,-,-,mult_pct,cha,0,-,-,0,-,-,0,mult_pct,0.16,크기 = 지운 아군 회복 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft,-,-
+pri_resurrection,1,revive,-,0,0.3,0,0,0,-,-,-,-,0,-,-,0,-,-,0,mult_pct,0.05,일어날 때 HP = 최대 HP × 값 · 크기 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+pri_punishment,1,hit,-,1,0.56,0,0,0,fixed,-,mult_pct,int,0,-,-,0,-,-,0,mult_pct,0.056,고정 피해 · 배율 · 레벨당 ×0.4 (1.4 · 0.14 → 10-06 · R221),-,-
+pri_atonement,1,apply,-,0,0,0,0,0,-,pri_atonement,effect_value,cha,0,duration_sec,vit,0,-,-,0,effect_value,0.01,크기 = 회복 비율 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+pri_excommunication,1,hit,-,1,1.04,0,0,0,fixed,-,mult_pct,int,0,-,-,0,-,-,0,mult_pct,0.104,고정 피해 · 배율 · 레벨당 ×0.4 (2.6 · 0.26 → 10-06 · R221),-,-
+pri_diamondbody,1,apply,-,0,0,0,0,0,-,pri_diamondbody,effect_value,vit,0,duration_sec,vit,0,-,-,0,effect_value,0.03,크기 = 받는 피해 감소 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+pri_diamondbody,2,apply,-,0,0,0,0,0,-,pri_diamondbody_ail,duration_sec,vit,0,-,-,0,-,-,0,-,-,받는 상태이상 · 디버프 시간 감소 · 레벨 없음 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-
+pri_sweep,1,hit,-,1,1.3,0,0,0,-,-,mult_pct,str,0,-,-,0,-,-,0,mult_pct,0.13,물리 직격 — 몽크 2 = 물리(advance_tree_draft §7 · 2026-11-14) · 배율은 고정 피해로 바꾸기 전 값(1.3 · 0.13),-,-
+pri_counter,1,apply,-,0,0,0,0,0,-,pri_counter,effect_value,vit,0,duration_sec,vit,0,-,-,0,effect_value,0.06,크기 = 반격 배율 · ⚠값 제안 2026-11-14 R471 · advance_tree_draft,-,-

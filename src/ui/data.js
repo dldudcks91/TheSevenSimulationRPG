@@ -108,7 +108,7 @@ export const D = {
     slotLineRows: [],         // slot_line.csv — 라인(릴마다 행 번호)
     slotStakeRows: [],        // slot_stake.csv — 판돈 단계 배수
     upgradeChanceRows: [],    // upgrade_chance.csv — 강화 단계마다 성공 확률 [{step, chance}] (2026-10-14 · R253)
-    temperRolls: [],          // temper_roll.csv — 담금질 결과표 [{tier, bonus, weight}] (2026-11-14 · R486 · item_design §7-2)
+    temperActions: [],        // temper_action.csv — 손질 셋 × 재료 단계 [{action, effect, mat, tier, value}] (2026-11-15 · R505 · item_design §7-2 · ~~temper_roll~~ 갈음)
     csvText: {},              // 파일명 → **원문 그대로**. 파싱 결과가 아니라 원문이라 어느 파일이 바뀌었는지 짚을 수 있다
                               //   (읽는 곳은 dev/golden.js:csvHash 하나 — 게임 로직은 이걸 안 본다)
 };
@@ -130,7 +130,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'sin_word', 'accessory_sin_option',   // ~~armor_common_option~~ 2026-10-21 R303 퇴역(방어구 넷이 계열표) · ~~accessory_common_option~~ 2026-11-12 삭제(목걸이도 계열표 R453)
     'tactic_condition', 'building', 'building_rank', 'building_effect',   // ~~tactic_score~~ 2026-11-11 R441 삭제(등급 배수는 balance.csv:tactic_grade_mult_*)
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'advance_common', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff', 'commission_fame', 'ring_base_option', 'raid_boss', 'raid_pattern', 'temper_roll', 'visit_story'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'advance_common', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff', 'commission_fame', 'ring_base_option', 'raid_boss', 'raid_pattern', 'temper_action', 'visit_story'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -147,7 +147,7 @@ export async function loadData(base = './data/') {
         heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, sinWordRow, accSinOptionRow,
         tacticConditionRow, buildingRow, buildingRankRow, buildingEffectRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, advanceCommonRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow, commissionFameRow, ringBaseRow, raidBossRow, raidPatternRow, temperRollRow, visitStoryRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, advanceCommonRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow, commissionFameRow, ringBaseRow, raidBossRow, raidPatternRow, temperActionRow, visitStoryRow] = texts.map(parseCsv);
 
     D.ringBaseOptions = ringBaseRow;
     D.raidBosses = raidBossRow;
@@ -415,8 +415,8 @@ export async function loadData(base = './data/') {
     D.slotStakeRows = slotStakeRow;
     // 강화 성공 확률 — 단계마다 한 줄 (2026-10-14 · R253 · item_design §7-2). 원시 행 그대로 — 검증은 item.js 가 생성 때 한다
     D.upgradeChanceRows = upgradeChanceRow;
-    // 담금질 결과표 — 판돈 단계마다 오르는 몫 · 가중치 (2026-11-14 · R486 · item_design §7-2). 검증은 state.js 가 생성 때 한다
-    D.temperRolls = temperRollRow.map(r => ({ tier: r.tier, bonus: r.bonus, weight: r.weight }));
+    // 손질 — 셋(달구기 · 덧대기 · 담금질) × 재료 단계의 몫 (2026-11-15 · R505 · item_design §7-2). 검증은 state.js 가 생성 때 한다
+    D.temperActions = temperActionRow.map(r => ({ action: r.action, effect: r.effect, mat: r.mat, tier: r.tier, value: r.value }));
     // 탐험 지점 — 장 × 지점마다 이름 · 두 줄 이야기 (2026-10-09 · ADR-0563). 표시 문자열뿐이라 game_logic 에 안 넘긴다 — 빈 칸 · 줄 수는 단정이 잡는다
     //   이야기의 줄바꿈은 셀 안의 `\n` 두 글자다(스테이지 이야기와 같은 규약 — `storyLines`)
     D.exploreSpots = Object.fromEntries(exploreSpotRow.map(r => [`${r.chapter}:${r.spot}`, {
@@ -731,8 +731,8 @@ export function buildSystems(d, dev = {}) {
         makeRecipes: d.makeRecipes ?? {}, labMaterials: d.labMaterials ?? [],
         // 위 단계 재료 — 하급(연구소 재료 셋)을 모아 대장간에서 합성한다 (item_design §5-2 · 2026-10-27 · R359)
         materialSynth: d.materialSynth ?? [],
-        // 담금질 결과표 — 판돈 단계(부위 재료 사다리)마다 오르는 몫 · 가중치 (item_design §7-2 · 2026-11-14 · R486)
-        temperRolls: d.temperRolls ?? [],
+        // 손질 셋 × 재료 단계의 몫 (item_design §7-2 · 2026-11-15 · R505)
+        temperActions: d.temperActions ?? [],
         // 연구소 지점 — 줄마다 레벨과 특징 · 연구 시간 (base_expedition_design §2-1 「지점」 · 2026-10-21 · R298)
         labNodes: d.labNodes ?? [],
         // 물약 — 단계 표. 칸 수 · 마시는 HP 비율 · 쿨은 balance 가 든다 (battle_design §7-1 · R103)

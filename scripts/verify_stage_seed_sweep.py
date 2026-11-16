@@ -29,7 +29,7 @@ SETUP = r'''async () => {
     }));
     const loot = result => ({
         drops:result.drops.map(it => JSON.stringify(it)).sort(),
-        blueprints:[...result.blueprints].sort(),
+        books:[...result.books].sort(),
     });
     const candidates = SYS.hero.rollCandidates(random.makeRng(6601), D.balance.party_size_max);
     const now = 1700000000000;
@@ -124,11 +124,11 @@ FULL_RUN_SWEEP = r'''({difficulties,seeds}) => {
             require(eq(enemies(a),enemies(b)) && eq(enemies(a),enemies(c)),
                 'combat seed or attack changed encounters');
             require(eq(loot(a),loot(b)) && eq(loot(a),loot(c)),
-                'combat seed or attack changed equipment/blueprints');
+                'combat seed or attack changed equipment/books');
             item.rounds = rounds.length;
             item.grades = [...new Set(enemies(a).flatMap(r=>r.enemies.map(e=>e.grade)))];
             item.drops = a.drops.length;
-            item.blueprints = a.blueprints.length;
+            item.books = a.books.length;
             item.events = [a.timeline.length,b.timeline.length,c.timeline.length];
             item.ok = true;
         } catch(error) {item.error = String(error.stack || error);}

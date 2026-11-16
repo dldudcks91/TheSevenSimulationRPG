@@ -106,8 +106,7 @@ const STRINGS = {
     'mobile.page.work': { ko: '작업', en: 'Workshop' },
     'mobile.page.advance': { ko: '전직', en: 'Advance' },
     'mobile.page.upgrade': { ko: '업그레이드', en: 'Upgrade' },
-    'mobile.page.temper': { ko: '담금질', en: 'Temper' },
-    'mobile.page.books': { ko: '책 제작', en: 'Books' },
+    'mobile.page.temper': { ko: '손질', en: 'Prep' },
     'mobile.page.research': { ko: '연구판', en: 'Research' },
     'mobile.page.researchDetail': { ko: '연구 상세', en: 'Details' },
     'mobile.page.opponent': { ko: '상대 선택', en: 'Opponent' },
@@ -220,7 +219,7 @@ const STRINGS = {
     'hint.sins': { ko: '착용 장비의 죄종 구성입니다. 영웅의 죄종과 장비의 죄종은 별개입니다.', en: 'The Sins of the equipped items. A hero’s Sin and equipment Sins are separate.' },
     'hint.skills': { ko: '이 영웅이 사용하는 스킬입니다. 스킬 그림에 마우스를 올리면 효과를 확인할 수 있습니다.', en: 'Skills used by this hero. Hover a skill icon to inspect its effects.' },
     'hint.combat_stats': { ko: '장비와 스킬 효과가 반영된 전투 수치입니다. 수치 이름에 마우스를 올리면 설명을 볼 수 있습니다.', en: 'Combat values including equipment and skill effects. Hover a stat name for its explanation.' },
-    'hint.auto_salvage': { ko: '이 Party의 원정에서 자동 분해할 장비를 정합니다. 남길 부위와 희귀도를 확인하세요.', en: 'Choose which drops this Party automatically salvages. Check the slots and rarities you want to keep.' },
+    'hint.auto_salvage': { ko: '이 Party의 원정에서 자동 분해할 장비를 정합니다. 남길 희귀도와 단어를 확인하세요.', en: 'Choose which drops this Party automatically salvages. Check the rarities and words you want to keep.' },
     'hint.salvage': { ko: '고른 장비를 분해합니다. 남길 장비가 포함되지 않았는지 확인하세요.', en: 'Salvage the selected equipment. Check that no items you want to keep are included.' },
     'hint.inventory': { ko: '보유한 아이템을 확인하고 장착하거나 정리합니다. 아이템에 마우스를 올리면 자세히 볼 수 있습니다.', en: 'Inspect, equip and manage owned items. Hover an item for details.' },
     'hint.stash': { ko: '따로 보관할 아이템을 두는 곳입니다. 아이템을 가방과 보관함 사이로 옮길 수 있습니다.', en: 'A place to set items aside. Move items between the bag and stash.' },
@@ -245,10 +244,10 @@ const STRINGS = {
     'hint.gamble': { ko: '판돈을 고르고 슬롯을 돌립니다. 심볼 조합에 따른 배당은 배당표에서 확인할 수 있습니다.', en: 'Choose a stake and spin the slots. The payout table shows rewards for symbol combinations.' },
     'hint.payouts': { ko: '당첨 조합과 배당입니다. 판돈과 함께 확인하면 한 판의 보상을 비교할 수 있습니다.', en: 'Winning combinations and their payouts. Compare them with your chosen stake.' },
     'hint.forge_make': { ko: '장비 부위나 물약을 골라 제작합니다. 만들 항목의 재료와 골드 비용을 확인하세요.', en: 'Choose an equipment slot or potion to craft. Check its material and gold costs.' },
-    'hint.forge_up': { ko: '장비를 골라 강화합니다. 다음 단계의 변화와 필요한 재료를 확인한 뒤 진행하세요. 장비마다 강화 횟수가 정해져 있고, 성공해도 실패해도 한 번씩 씁니다.', en: 'Select equipment to upgrade. Review the next step’s changes and required materials. Each item has a limited number of upgrade attempts; success or failure uses one.' },
+    'hint.forge_up': { ko: '장비를 골라 강화합니다. 다음 단계의 변화와 필요한 재료를 확인한 뒤 진행하세요. 장비마다 강화 횟수가 정해져 있고, 성공해도 실패해도 한 번씩 씁니다. 등급이 높을수록 성공 확률이 낮고, 성공의 일부는 대성공으로 더 크게 오릅니다.', en: 'Select equipment to upgrade. Review the next step’s changes and required materials. Each item has a limited number of upgrade attempts; success or failure uses one.' },
     'hint.forge_synth': { ko: '같은 종류의 아래 단계 재료를 써서 위 단계 재료를 만듭니다. 합성에 쓴 재료는 소모됩니다.', en: 'Combine lower-tier materials into a higher tier of the same material. Combining consumes the input materials.' },
     'hint.forge_craft': { ko: '크래프트는 준비 중입니다. 현재는 제작·강화·합성을 이용할 수 있습니다.', en: 'Craft is in development. Smithing, upgrading and combining are currently available.' },
-    'hint.temper': { ko: '재료를 걸고 돌리면 다음 강화 한 번의 성공 확률이 오릅니다.', en: 'Stake materials and spin to raise the success chance of your next upgrade.' },
+    'hint.temper': { ko: '셋 중 하나를 골라 재료를 내면 다음 강화 한 번에 효과가 붙습니다. 달구기는 성공 확률, 덧대기는 대성공 비율, 담금질은 실패해도 강화 횟수를 지킬 확률을 올립니다. 재료 단계는 장비 레벨과 등급이 정하며, 높을수록 효과가 큽니다.', en: 'Pick one of three and spend its material to boost your next upgrade. Heat raises the success chance, Reinforce raises the great-success share, and Quench gives a chance to keep the attempt on failure. The material tier is set by the item level and grade; higher tiers give bigger effects.' },
     'hint.potion_stock': { ko: '현재 가진 물약의 종류와 개수입니다. 편성 탭에서 Party의 물약 칸에 넣을 수 있습니다.', en: 'Potion types and quantities currently in stock. Configure each Party’s potion belt in Party.' },
     'hint.trade': { ko: '받을 최하급 재료를 선택한 뒤 다른 재료 또는 골드로 구매합니다. 지불 수단별 가격과 보유량을 확인할 수 있습니다.', en: 'Choose a lowest-grade material to receive, then buy it with another material or gold. Each payment option shows its cost and available stock.' },
     'hint.special': { ko: '특수 상단 기능은 준비 중입니다.', en: 'The special trader is in development.' },
@@ -537,7 +536,7 @@ const STRINGS = {
     'tutorial.construction.title': { ko: '건설과 해금', en: 'Build to unlock features' },
     'tutorial.construction.detail': { ko: '건물의 조건과 비용을 확인해 건설하세요. 다음 랭크에서 열리는 기능과 효과도 이곳에서 확인할 수 있습니다.', en: 'Check a building’s requirements and cost before building. This panel also shows the features and effects its next rank unlocks.' },
     'tutorial.laboratory.title': { ko: '연구소 둘러보기', en: 'Your laboratory' },
-    'tutorial.laboratory.detail': { ko: '연구소에서는 시간에 따라 재료·골드·경험치·도안을 얻거나 영웅을 수색합니다. 줄 이름을 누르면 생산과 등록 효과를, 오른쪽 지점 그림을 누르면 연구를 봅니다. 잠긴 줄은 표시된 건물을 건설하거나 랭크를 올려 여세요.', en: 'Laboratory lines produce materials, gold, XP or blueprints, or search for heroes over time. Click a line name for its output and hero effects, or a node to research it. Build or upgrade the building shown on a locked line to open it.' },
+    'tutorial.laboratory.detail': { ko: '연구소에서는 시간에 따라 재료·골드·경험치·스킬북을 얻거나 영웅을 수색합니다. 줄 이름을 누르면 생산과 등록 효과를, 오른쪽 지점 그림을 누르면 연구를 봅니다. 잠긴 줄은 표시된 건물을 건설하거나 랭크를 올려 여세요.', en: 'Laboratory lines produce materials, gold, XP or skill books, or search for heroes over time. Click a line name for its output and hero effects, or a node to research it. Build or upgrade the building shown on a locked line to open it.' },
     'tutorial.labRegistration.title': { ko: '연구소 영웅 등록', en: 'Assign laboratory heroes' },
     'tutorial.labRegistration.detail': { ko: '강조된 [+]나 영웅 얼굴을 눌러 등록 창을 여세요. 등록한 영웅 수와 능력치가 이 줄의 생산·연구 효과를 더합니다. 원정과 겸직할 수 있고, 한 영웅은 한 줄에만 등록됩니다.', en: 'Click the highlighted [+] or hero portrait to assign heroes. The number of assigned heroes and their stats improve that line’s production and research. Heroes can still go on expeditions; each hero can be assigned to one laboratory line at a time.' },
     'tutorial.labRegistrationPick.detail': { ko: '이 줄에 둘 영웅을 고르고 [적용]을 누르세요. 다시 누르면 고르기가 풀리고, 다른 줄의 영웅을 고르면 이곳으로 옮겨집니다. 등록해도 원정에 함께 참여할 수 있습니다.', en: 'Select the heroes for this line, then press [Apply]. Click again to deselect; heroes from other lines move here. Assigned heroes can still join expeditions.' },
@@ -600,7 +599,7 @@ const STRINGS = {
     'exp.diff.stats': { ko: '몬스터 체력 ×{hp} · 데미지 ×{dmg}', en: 'Monster HP ×{hp} · Damage ×{dmg}' },
     'ch.sel.full': { ko: '분해함 가득 참', en: 'The Salvage Box is full' },
     'ch.sel.lockedNo': { ko: '잠긴 장비는 분해함에 올릴 수 없음', en: 'Locked gear cannot go in the Salvage Box' },
-    // 자동 분해 창 — 부대 하나의 규칙 · 프리셋 · 레벨 조건 · 등급 × 부위 격자 · 미리보기 · 최근 분해 (item_design §6-5 · SCREEN_DESIGN §6 · ADR-0717 — ~~선 둘~~ ADR-0203)
+    // 자동 분해 창 — 부대 하나의 규칙 · 프리셋 · 레벨 조건 · 등급 줄 · 문턱(베이스 · 단어) · 미리보기 · 최근 분해 (item_design §6-5 · SCREEN_DESIGN §6 · ADR-0717 · ADR-1207)
     'ch.auto.btn': { ko: '자동 분해', en: 'Auto salvage' },
     'ch.auto.h': { ko: '자동 분해', en: 'Auto Salvage' },
     'ch.auto.hNo': { ko: '자동 분해 · {p}', en: 'Auto Salvage · {p}' },
@@ -616,6 +615,12 @@ const STRINGS = {
     'ch.auto.th': { ko: '문턱', en: 'Min' },
     'ch.auto.m.keep': { ko: '보존', en: 'Keep' },
     'ch.auto.m.base': { ko: '베이스', en: 'Base' },
+    'ch.auto.m.word': { ko: '단어', en: 'Word' },
+    // 단어 문턱 고르개 — 어디까지(위 · 가운데 이상) × 몇 줄(하나라도 · 모두) (ADR-1207)
+    'ch.auto.wTop': { ko: '위', en: 'Top' },
+    'ch.auto.wMid': { ko: '가운데 이상', en: 'Middle+' },
+    'ch.auto.wAny': { ko: '하나라도', en: 'Any line' },
+    'ch.auto.wAll': { ko: '모두', en: 'All lines' },
     'ch.auto.m.salvage': { ko: '분해', en: 'Salvage' },
     'ch.auto.preview': { ko: '지금 인벤토리 기준 분해 {n}개 · 가루 +{d}', en: 'Inventory now: salvage {n} · dust +{d}' },
     'ch.auto.log': { ko: '최근 분해', en: 'Recently salvaged' },
@@ -688,6 +693,10 @@ const STRINGS = {
     'tv.visit.full': { ko: '칸이 다 참 — 돌려보내야 새로 옴', en: 'Slots full — send someone away' },
     'tv.visit.drop': { ko: '돌려보내기', en: 'Send away' },
     'tv.visit.dropped': { ko: '{name} 을(를) 돌려보냄', en: 'Sent {name} away' },
+    // 밖에서 기다리는 찾은 영웅 — 수색 영웅 몫 마지막 줄 · 카드 버튼 · 플래시 (SCREEN_DESIGN §8-1 · ADR-1201)
+    'tv.visit.found': { ko: '찾았다! {name}', en: 'Found {name}!' },
+    'tv.visit.ignore': { ko: '무시', en: 'Pass' },
+    'tv.visit.ignored': { ko: '{name} 을(를) 두고 다시 수색', en: 'Passed on {name} — searching again' },
     'tv.visit.gone': { ko: '이미 칸에 없음', en: 'No longer here' },
     // 칸 띠 — 어떻게 왔나(출처 · `state.js:JOIN_SRC`). 찾아오는 방식이 늘면 한 줄씩 는다
     'tv.visit.src.visit': { ko: '방문', en: 'Visitor' },
@@ -929,7 +938,7 @@ const STRINGS = {
     'tip.ring.duration': { ko: '[{tag}] 지속시간 +{p}', en: '[{tag}] Duration +{p}' },
     'tip.ring.value': { ko: '[{tag}] 효과 수치 +{p}', en: '[{tag}] Effect Strength +{p}' },
     'tip.ring.heal': { ko: '[{tag}] 회복량 +{p}', en: '[{tag}] Healing +{p}' },
-    'dp.lib.empty': { ko: '영웅을 등록하면 기본 스킬 도안을 생산합니다', en: 'Assign a hero to produce basic skill blueprints' },
+    'dp.lib.empty': { ko: '영웅을 등록하면 기본 스킬의 스킬북을 생산합니다', en: 'Assign a hero to produce basic skill books' },
     'dp.node.mine': { ko: '채광', en: 'Mining' },
     'dp.node.gather': { ko: '채집', en: 'Gathering' },
     'dp.node.log': { ko: '벌목', en: 'Logging' },
@@ -951,15 +960,15 @@ const STRINGS = {
     'dp.res.canceled': { ko: '연구 취소 — 비용 반환', en: 'Research canceled — cost refunded' },
     /* 고른 줄 (SCREEN_DESIGN §8 · ADR-0971 — ~~「이 줄」 `dp.line.h` · 「속도 ×{v}」~~) — 머리 아래 하는 일 한 줄 → 지금 내는 것(소제목 = 그 내용의 이름) → 등록 효과 표 */
     'dp.line.desc.res': { ko: '철광석 · 약초 · 목재를 시간마다 생산합니다', en: 'Produces ore, herbs and timber every hour' },
-    'dp.line.desc.visit': { ko: '시간마다 영웅 한 명이 선술집에 찾아옵니다', en: 'A hero comes to the tavern every few hours' },
+    'dp.line.desc.visit': { ko: '등록한 영웅이 시간마다 한 명씩 선술집에 데려옵니다', en: 'Each assigned hero brings one hero to the tavern every few hours' },
     'dp.line.desc.train': { ko: '등록한 영웅이 시간마다 경험치를 받습니다', en: 'Assigned heroes gain XP every hour' },
     'dp.line.desc.gamble': { ko: '시간마다 골드를 법니다', en: 'Earns gold every hour' },
-    'dp.line.desc.lib': { ko: '등록한 영웅의 기본 스킬 도안을 생산합니다', en: 'Produces blueprints of assigned heroes’ basic skills' },
+    'dp.line.desc.lib': { ko: '등록한 영웅의 기본 스킬 스킬북을 생산합니다', en: 'Produces skill books of assigned heroes’ basic skills' },
     'dp.out.h.res': { ko: '시간당 생산', en: 'Per Hour' },
     'dp.out.h.visit': { ko: '영웅 도착', en: 'Hero Arrivals' },
     'dp.out.h.train': { ko: '훈련 상한', en: 'Training Cap' },
     'dp.out.h.gamble': { ko: '시간당 생산', en: 'Per Hour' },
-    'dp.out.h.lib': { ko: '영웅별 시간당 도안', en: 'Blueprints per Hero per Hour' },
+    'dp.out.h.lib': { ko: '영웅별 시간당 스킬북', en: 'Books per Hero per Hour' },
     'dp.out.hero': { ko: '영웅', en: 'Heroes' },
     'dp.out.rare': { ko: '레어 확률', en: 'Rare chance' },
     'dp.out.waiting': { ko: '대기 칸', en: 'Waiting slots' },
@@ -971,7 +980,7 @@ const STRINGS = {
     'dp.fx.speed.visit': { ko: '도착 속도', en: 'Arrival speed' },
     'dp.fx.speed.train': { ko: '경험치', en: 'XP' },
     'dp.fx.speed.gamble': { ko: '골드', en: 'Gold' },
-    'dp.fx.speed.lib': { ko: '도안 생산 속도', en: 'Blueprint production speed' },
+    'dp.fx.speed.lib': { ko: '스킬북 생산 속도', en: 'Book production speed' },
     'dp.fx.burst': { ko: '대박 확률', en: 'Jackpot chance' },
     'dp.fx.quality': { ko: '레어 확률', en: 'Rare chance' },
     'dp.fx.research': { ko: '연구 속도', en: 'Research speed' },
@@ -1001,6 +1010,7 @@ const STRINGS = {
     'ex.cancelConfirm': { ko: '정말 불러들일까요? 한 번 더 누르면 불러들입니다', en: 'Really? Click again to call back' },
     'ex.sent': { ko: '{spot} 탐험 출발', en: 'Off to the {spot}' },
     'ex.taken': { ko: '장비 {n}개 수령', en: 'Collected {n} gear' },
+    'ex.takenBooks': { ko: '장비 {n}개 · 스킬북 {b}권 수령', en: 'Collected gear {n} · skill books {b}' },   // 동굴 보상에 책이 섞였을 때 (§8-4 · ADR-1198)
     'ex.canceled': { ko: '탐험 불러들임', en: 'Exploration called back' },
     'ex.err.missing': { ko: '없는 지점', en: 'No such spot' },
     'ex.err.pending': { ko: '준비 중', en: 'Coming later' },
@@ -1036,6 +1046,8 @@ const STRINGS = {
     'td.trade.err.materials': { ko: '지불할 재료 부족', en: 'Not enough payment materials' },
     'td.trade.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
     'td.trade.err.missing': { ko: '교환할 재료를 다시 선택하세요.', en: 'Select the trading materials again.' },
+    'td.trade.deal': { ko: '특가', en: 'Deal' },
+    'td.trade.next': { ko: '다음', en: 'Next' },
     'td.leave': { ko: '떠나기까지 {t}', en: 'Leaves in {t}' },
     'td.next': { ko: '다음 상인까지 {t}', en: 'Next trader in {t}' },
     'td.buy': { ko: '구매', en: 'Buy' },
@@ -1043,7 +1055,7 @@ const STRINGS = {
     'td.sell.add': { ko: '판매 목록에 추가', en: 'Add to sale' },
     'td.sell.remove': { ko: '판매 목록에서 제외', en: 'Remove from sale' },
     'td.sell.clear': { ko: '선택 해제', en: 'Clear selection' },
-    'td.sell.empty': { ko: '아래 인벤토리에서 판매할 장비를 선택하세요.', en: 'Select equipment from the inventory below to sell.' },
+    'td.sell.empty': { ko: '판매할 장비를 선택하세요.', en: 'Select equipment to sell.' },
     'td.sell.count': { ko: '선택 {n}개', en: '{n} selected' },
     'td.sell.done': { ko: '장비 {n}개 판매 (+{g} G)', en: 'Sold {n} items (+{g} G)' },
     'td.sell.err.missing': { ko: '판매할 장비를 다시 선택하세요.', en: 'Select the equipment to sell again.' },
@@ -1082,6 +1094,10 @@ const STRINGS = {
     'cm.goal.elite.any': { ko: '정예 몬스터 {n}마리 처치', en: { one: 'Slay {n} elite monster', other: 'Slay {n} elite monsters' } },
     'cm.goal.elite.chapter': { ko: '{t}에서 정예 몬스터 {n}마리 처치', en: { one: 'Slay {n} elite monster in the {t}', other: 'Slay {n} elite monsters in the {t}' } },
     'cm.goal.elite.place': { ko: '{t}에서 정예 몬스터 {n}마리 처치', en: { one: 'Slay {n} elite monster at {t}', other: 'Slay {n} elite monsters at {t}' } },
+    // 분노 레어 「보스 토벌」 · 시기 「스킬 수련」 · 「영입」 [2026-11-16 · R513 · 사용자 「분노는 처치 · 시기는 선술집에서 영웅수집하거나 스킬 배우는거」]
+    'cm.goal.boss.any': { ko: '보스 {n}마리 처치', en: { one: 'Slay {n} boss', other: 'Slay {n} bosses' } },
+    'cm.goal.book.any': { ko: '스킬북 {n}권 읽기', en: { one: 'Read {n} skill book', other: 'Read {n} skill books' } },
+    'cm.goal.hire.any': { ko: '영웅 {n}명 고용', en: { one: 'Hire {n} hero', other: 'Hire {n} heroes' } },
     'cm.goal.salvage.any': { ko: '장비 {n}개 분해', en: { one: 'Salvage {n} item', other: 'Salvage {n} items' } },
     'cm.goal.salvage.part': { ko: '{t} {n}개 분해', en: 'Salvage {t} ×{n}' },
     'cm.goal.salvage.rarity_min': { ko: '{t} 이상 장비 {n}개 분해', en: { one: 'Salvage {n} {t}+ item', other: 'Salvage {n} {t}+ items' } },
@@ -1091,6 +1107,8 @@ const STRINGS = {
     'cm.goal.upgrade.up_min': { ko: '+{t} 이상 강화 {n}회', en: { one: 'Enhance to +{t} or higher {n} time', other: 'Enhance to +{t} or higher {n} times' } },
     'cm.goal.craft.any': { ko: '장비 {n}개 제작', en: { one: 'Craft {n} item', other: 'Craft {n} items' } },
     'cm.goal.collect.rarity': { ko: '{t} 장비 {n}개 획득', en: { one: 'Collect {n} {t} item', other: 'Collect {n} {t} items' } },
+    // 탐욕 매직 「매직 이상 장비 n개 획득」 — 이긴 라운드에 들어온 드롭 (R513)
+    'cm.goal.collect.rarity_min': { ko: '{t} 이상 장비 {n}개 획득', en: { one: 'Collect {n} {t}+ item', other: 'Collect {n} {t}+ items' } },
     'cm.part.weapon': { ko: '무기', en: 'Weapon' },
     'cm.part.armor': { ko: '방어구', en: 'Armor' },
     'cm.part.accessory': { ko: '장신구', en: 'Accessory' },
@@ -1151,15 +1169,27 @@ const STRINGS = {
     // 강화 성공 확률 · 실패 [2026-10-14 · R253 · ADR-0626] — 확률 칩(비용 칩 앞) · 실패 플래시 · 연출의 실패 표지
     'fg.chanceLab': { ko: '성공 확률', en: 'Success chance' },   // 강화 작업 칸 비교 줄 아래 「이름 · 값」 줄 (ADR-0973 · ~~`fg.chance` 칩~~)
     'fg.upFail': { ko: '강화 실패 · +{n} 그대로 · {g}G', en: 'Upgrade failed · still +{n} · {g}G' },
-    // 담금질 — 강화 칸 가운데 슬롯 (SCREEN_DESIGN §8-2 · ADR-1134 · R486)
-    'fg.temper': { ko: '담금질', en: 'Tempering' },
+    // 손질 — 강화 칸 가운데 (SCREEN_DESIGN §8-2 · ADR-1134 · ADR-1200 · R486 · R505)
+    'fg.temper': { ko: '손질', en: 'Prep' },
     'fg.board.gear': { ko: '장비', en: 'Equipment' },   // 강화 칸 왼쪽 판 제목 띠 (ADR-1140)
     'fg.board.up': { ko: '강화', en: 'Upgrade' },   // 강화 칸 오른쪽 판 제목 띠 (ADR-1140)
-    'fg.temper.go': { ko: '담금질', en: 'Temper' },
-    'fg.temper.done': { ko: '담금질됨', en: 'Tempered' },
-    'fg.tempered': { ko: '담금질 · 다음 강화 확률 +{n}%', en: 'Tempered · next upgrade chance +{n}%' },
-    'fg.err.tempered': { ko: '이미 담금질했다 · 강화하면 다시 할 수 있다', en: 'Already tempered · upgrade first' },
-    'fg.err.tier': { ko: '없는 판돈 단계', en: 'Unknown stake tier' },
+    'fg.act.heat': { ko: '달구기', en: 'Heat' },   // 손질 셋 — `temper_action.csv:action` (item_design §7-2)
+    'fg.act.reinforce': { ko: '덧대기', en: 'Reinforce' },
+    'fg.act.quench': { ko: '담금질', en: 'Quench' },
+    'fg.eff.chance': { ko: '확률 +{n}%', en: 'Chance +{n}%' },   // 손질 카드 효과 줄 · 플래시 — effect 마다
+    'fg.eff.great': { ko: '대성공 +{n}%', en: 'Great +{n}%' },
+    'fg.eff.keep': { ko: '횟수 보존 {n}%', en: 'Keep attempt {n}%' },
+    'fg.applied': { ko: '적용됨', en: 'Applied' },
+    'fg.temper.done': { ko: '손질됨', en: 'Prepped' },
+    'fg.tempered': { ko: '{name} · 다음 강화 {eff}', en: '{name} · next upgrade {eff}' },
+    'fg.greatLab': { ko: '대성공', en: 'Great success' },   // 강화 작업 판 확률 줄 아래 (ADR-1200)
+    'fg.keepLab': { ko: '횟수 보존', en: 'Keep attempt' },
+    'fg.greatTip': { ko: '대성공이면 {v}', en: 'On great success: {v}' },
+    'fg.upGreat': { ko: '대성공! +{n} · {g}G', en: 'Great success! +{n} · {g}G' },
+    'fg.upKept': { ko: '강화 실패 · +{n} 그대로 · 횟수는 지켰다 · {g}G', en: 'Upgrade failed · still +{n} · attempt kept · {g}G' },
+    'fg.err.tempered': { ko: '이미 손질했다 · 강화하면 다시 할 수 있다', en: 'Already prepped · upgrade first' },
+    'fg.err.action': { ko: '없는 손질', en: 'Unknown prep' },
+    'fg.err.tier': { ko: '이 장비에 맞는 재료 단계가 없음', en: 'No material tier for this item' },
     'fg.failMark': { ko: '실패', en: 'Failed' },
     'fg.pick': { ko: '장비 선택', en: 'Pick an item' },   // 장비칸 · 아이템창 어디서든 고른다 (ADR-0364)
     'fg.noBase': { ko: '강화 없음', en: 'No upgrade' },
@@ -1208,7 +1238,7 @@ const STRINGS = {
     // 각 탭의 현재 사용법 — NAV_GROUPS와 같은 순서로 helpSections가 조회합니다 (ADR-0946).
     'help.contents': { ko: '도움말 목차', en: 'Help contents' },
     'help.search.label': { ko: '도움말 검색', en: 'Search help' },
-    'help.search.placeholder': { ko: '물약, 스킬, 도안처럼 궁금한 말을 입력하세요', en: 'Try potions, skills, blueprints…' },
+    'help.search.placeholder': { ko: '물약, 스킬, 스킬북처럼 궁금한 말을 입력하세요', en: 'Try potions, skills, books…' },
     'help.search.clear': { ko: '검색 지우기', en: 'Clear search' },
     'help.search.all': { ko: '전체 {n}개 설명', en: { one: '{n} topic', other: '{n} topics' } },
     'help.search.count': { ko: '검색 결과 {n}개', en: { one: '{n} matching topic', other: '{n} matching topics' } },
@@ -1258,8 +1288,8 @@ const STRINGS = {
         en: "When to advance or repeat",
     },
     'help.expedition.farming.body': {
-        ko: "새 스테이지를 클리어하면 다음 길과 건설 조건을 열 수 있습니다. [반복 원정]은 지금 장소를 더 돌며 장비·스킬 도안·골드·도감 경험치를 모으고 싶을 때 사용합니다. 반복을 켜는 것은 전투를 계속하는 스위치가 아니라, 다음에 갈 장소를 제한하는 선택입니다.<br><br>막힌 곳에 계속 도전할지, 이미 이길 수 있는 장소를 돌지는 필요한 보상으로 정합니다. 원하는 스킬 도안은 스킬 도감의 획득처를 보고, 장비를 바꾸거나 분해 재료가 필요하면 적의 장비와 인벤토리 여유도 확인합니다. 원정에서 모은 재료는 대장간과 도서관의 성장에 다시 쓸 수 있습니다.",
-        en: "Clearing a new stage can open the next route and meet building requirements. Use [Auto-repeat] when you want more gear, skill blueprints, gold or Codex EXP from the current area. Repeat controls where the party goes next; expeditions continue even with it turned off.<br><br>Choose between retrying a difficult stage and farming a manageable area based on what you need. Check the Skill Codex for blueprint sources. For new gear or salvage materials, inspect enemy equipment and keep inventory space available. Materials earned through expeditions can fund further growth at the Blacksmith and Library.",
+        ko: "새 스테이지를 클리어하면 다음 길과 건설 조건을 열 수 있습니다. [반복 원정]은 지금 장소를 더 돌며 장비·스킬북·골드·도감 경험치를 모으고 싶을 때 사용합니다. 반복을 켜는 것은 전투를 계속하는 스위치가 아니라, 다음에 갈 장소를 제한하는 선택입니다.<br><br>막힌 곳에 계속 도전할지, 이미 이길 수 있는 장소를 돌지는 필요한 보상으로 정합니다. 원하는 스킬북은 스킬 도감의 획득처를 보고, 장비를 바꾸거나 분해 재료가 필요하면 적의 장비와 인벤토리 여유도 확인합니다. 원정에서 모은 재료는 대장간과 도서관의 성장에 다시 쓸 수 있습니다.",
+        en: "Clearing a new stage can open the next route and meet building requirements. Use [Auto-repeat] when you want more gear, skill books, gold or Codex EXP from the current area. Repeat controls where the party goes next; expeditions continue even with it turned off.<br><br>Choose between retrying a difficult stage and farming a manageable area based on what you need. Check the Skill Codex for book sources. For new gear or salvage materials, inspect enemy equipment and keep inventory space available. Materials earned through expeditions can fund further growth at the Blacksmith and Library.",
     },
     'help.expedition.spectate.title': {
         ko: "전투 관전과 변경 적용",
@@ -1522,8 +1552,8 @@ const STRINGS = {
         en: "Salvage and locks",
     },
     'help.character.salvage.body': {
-        ko: "장비를 우클릭한 뒤 [잠금]으로 분해를 막고, [잠금 해제]로 보호를 풉니다. [분해] 창에서는 장비를 직접 고르거나 등급·레벨·베이스 필터로 선택한 뒤 [분해하기]로 가루와 부위 재료를 얻습니다. 등급·레벨·베이스의 서로 다른 열은 모두 만족해야 하며, 같은 열에서 여러 항목을 고르면 그중 하나에 맞아도 선택됩니다.<br><br>분해한 장비는 돌아오지 않으므로 중요한 장비는 먼저 잠급니다. [자동 분해]에서는 부대별로 부위·등급·레벨·베이스 조건을 정합니다. 원정에서 조건에 맞는 장비를 새로 얻을 때 적용되며, 기존 장비를 정리하려면 [지금 인벤토리에 적용]을 누릅니다. 유니크·크래프트는 자동 분해에서 보존됩니다.<br><br>설정을 프리셋에 저장해 다른 부대에서 불러올 수 있습니다.",
-        en: "Right-click equipment and choose [Lock] to protect it from salvage or choose [Unlock] to remove that protection. In [Salvage], select gear manually or with rarity, level and base-option filters, then [Salvage now] to receive dust and slot materials. Gear must match every selected filter column; multiple options within the same column match any one of those options.<br><br>Salvage permanently consumes items, so lock important gear first. [Auto salvage] sets slot, rarity, level and base-option rules per party. It checks newly received Expedition drops; use [Apply to inventory now] to process gear already owned. Unique and crafted items are kept by auto-salvage. Save rules to a preset to load them on another party.",
+        ko: "장비를 우클릭한 뒤 [잠금]으로 분해를 막고, [잠금 해제]로 보호를 풉니다. [분해] 창에서는 장비를 직접 고르거나 등급·레벨·베이스 필터로 선택한 뒤 [분해하기]로 가루와 부위 재료를 얻습니다. 등급·레벨·베이스의 서로 다른 열은 모두 만족해야 하며, 같은 열에서 여러 항목을 고르면 그중 하나에 맞아도 선택됩니다.<br><br>분해한 장비는 돌아오지 않으므로 중요한 장비는 먼저 잠급니다. [자동 분해]에서는 부대별로 등급마다 보존·분해를 정합니다. 일반은 [베이스]로 베이스 옵션이 문턱 이상인 것만 남기고, 매직부터는 [단어]로 이름의 죄종 단어가 그 아이템 레벨에서 나올 수 있는 단어 중 위쪽인 것만 남깁니다(맨 위 단어는 원래 죄종 이름). 레벨 조건도 함께 정할 수 있습니다. 원정에서 조건에 맞는 장비를 새로 얻을 때 적용되며, 기존 장비를 정리하려면 [지금 인벤토리에 적용]을 누릅니다. 유니크·크래프트는 자동 분해에서 보존됩니다.<br><br>설정을 프리셋에 저장해 다른 부대에서 불러올 수 있습니다.",
+        en: "Right-click equipment and choose [Lock] to protect it from salvage or choose [Unlock] to remove that protection. In [Salvage], select gear manually or with rarity, level and base-option filters, then [Salvage now] to receive dust and slot materials. Gear must match every selected filter column; multiple options within the same column match any one of those options.<br><br>Salvage permanently consumes items, so lock important gear first. [Auto salvage] sets keep or salvage per rarity for each party. Normal items use [Base] to keep only base options at or above the threshold; Magic and higher use [Word] to keep only items whose sin word in the name is among the higher words possible at that item level (the top word is the original sin name). A level rule can be added too. It checks newly received Expedition drops; use [Apply to inventory now] to process gear already owned. Unique and crafted items are kept by auto-salvage. Save rules to a preset to load them on another party.",
     },
     'help.character.skills.title': {
         ko: "액티브 스킬과 자동 사용 순서",
@@ -1698,16 +1728,16 @@ const STRINGS = {
         en: "Heroes who arrive over time",
     },
     'help.tavern.visitors.body': {
-        ko: "선술집에서 영웅 고용을 열면 도착 시계가 시작됩니다. 영웅을 내보내지 않아도 후보가 찾아오며, 게임을 닫아도 시간이 흐릅니다. 이 수색으로는 현재 <b>매직 또는 레어</b> 영웅이 옵니다.<br><br>도착한 영웅은 고용하거나 돌려보낼 때까지 떠나지 않습니다. 수색 칸이 가득 찬 동안에는 시계가 멈추고, 자리를 비우면 남은 시간부터 다시 흐릅니다. 연구소에서 <b>간격</b>을 올리면 더 자주 오고, <b>품질</b>은 레어 확률, <b>대기 칸</b>은 보관할 수를 늘립니다.",
-        en: "Unlocking hiring at the Tavern starts the arrival timer. Candidates arrive without sending a hero out, including while the game is closed. These arrivals currently produce <b>Magic or Rare</b> heroes.<br><br>Arrivals stay until hired or sent away. Full waiting slots pause the timer; freeing a slot resumes it from the remaining time. Laboratory <b>Interval</b> research makes arrivals more frequent, <b>Quality</b> raises the Rare chance, and <b>Waiting Slots</b> adds capacity.",
+        ko: "연구소 <b>수색</b> 줄에 등록한 영웅이 시간마다 한 명씩 데려옵니다. 아무도 등록하지 않으면 찾아오는 영웅이 없고, 영웅은 영웅 고용 후보로만 얻습니다. 등록한 영웅도 원정과 편성에 그대로 쓸 수 있고, 게임을 닫아도 시간이 흐릅니다. 이 수색으로는 현재 <b>매직 또는 레어</b> 영웅이 옵니다.<br><br>도착한 영웅은 고용하거나 돌려보낼 때까지 떠나지 않습니다. 수색 칸이 가득 차도 시계는 흐릅니다. 시간이 다 된 영웅은 자리가 날 때까지 기다렸다가, 자리를 비우면 바로 들어오고 그때부터 다음 수색을 시작합니다. 기다리는 영웅은 데려온 수색 영웅 칸에 <b>찾았다!</b>로 보이며, 눌러서 바로 고용하거나 무시할 수 있습니다. 무시하면 그 수색 영웅이 바로 다시 나갑니다. 연구소에서 <b>간격</b>을 올리면 더 자주 오고, <b>품질</b>은 레어 확률, <b>대기 칸</b>은 보관할 수를 늘립니다.",
+        en: "Each hero assigned to the Laboratory's <b>Search</b> line brings back one candidate per interval. With no one assigned, nobody arrives and heroes come only from the hiring candidates. Assigned heroes can still join expeditions and formations, and time keeps passing while the game is closed. These arrivals currently produce <b>Magic or Rare</b> heroes.<br><br>Arrivals stay until hired or sent away. The timer keeps running while the waiting slots are full. A hero whose timer finishes waits for room, enters as soon as you free a slot, and the next search starts then. A waiting hero shows as <b>Found!</b> under the searcher who brought them; click it to hire them right away or pass. Passing sends that searcher out again at once. Laboratory <b>Interval</b> research makes arrivals more frequent, <b>Quality</b> raises the Rare chance, and <b>Waiting Slots</b> adds capacity.",
     },
     'help.tavern.commissions.title': {
         ko: "하던 원정에 의뢰를 얹기",
         en: "Adding a commission to your expeditions",
     },
     'help.tavern.commissions.body': {
-        ko: "게시판에서 목표와 골드 보상을 보고 <b>[수락]</b>합니다. 동시에 진행할 수 있는 의뢰는 <b>{slots}개</b>입니다. 별도 파티나 전투를 시작하지 않으며, 수락한 뒤 모든 부대의 <b>승리 라운드</b>가 목표를 함께 채웁니다.<br><br>토벌·현상금 의뢰는 적힌 장·종족·장소를 맞춰 잡아야 하고 패배한 라운드는 세지 않습니다. 분해 의뢰는 직접 분해하거나 자동 분해 규칙으로 분해한 장비를 세며, 가방이 가득 차 넘친 장비는 세지 않습니다. 재료 의뢰는 분해와 연구소에서 얻은 철광석·약초·목재를 세며, 상점 구매·교환·합성은 세지 않습니다. 강화 의뢰는 실패한 시도도 셉니다. 수락 전에 일어난 것은 세지 않습니다.<br><br>다 채우면 <b>[수령]</b>해야 골드를 받습니다. 기한은 없습니다. <b>[포기]</b>하면 진행도는 사라지지만 벌금은 없고, 수령·포기한 자리는 새 의뢰로 바뀝니다. 현재 돌고 있는 지역이나 앞으로 잡을 적과 맞는 목표를 고르면 원정과 함께 진행할 수 있습니다.",
-        en: "Check a card's goal and gold reward, then <b>Accept</b>. Your active limit is <b>{slots}</b>. No extra Party or battle starts: <b>won rounds</b> from all your expeditions contribute after acceptance.<br><br>Hunt and Bounty goals require the stated chapter, race or place, and defeated rounds do not count. Salvage goals count gear you salvage by hand or by auto-salvage rules, but not full-bag overflow. Gathering goals count ore, herbs and timber from salvage and the Laboratory, not Shop purchases, trades or synthesis. Enhance goals count failed attempts too. Nothing from before acceptance counts.<br><br>Use <b>Claim</b> after completion to receive the gold. There is no deadline. <b>Abandon</b> loses progress without a fee. Claiming or abandoning replaces that card. A goal matching your current farming area or next enemies can progress alongside your expeditions.",
+        ko: "게시판에서 목표와 골드 보상을 보고 <b>[수락]</b>합니다. 동시에 진행할 수 있는 의뢰는 <b>{slots}개</b>입니다. 별도 파티나 전투를 시작하지 않으며, 수락한 뒤 모든 부대의 <b>승리 라운드</b>가 목표를 함께 채웁니다.<br><br>토벌·현상금 의뢰는 적힌 장·종족·장소를 맞춰 잡아야 하고 패배한 라운드는 세지 않습니다. 분해 의뢰는 직접 분해하거나 자동 분해 규칙으로 분해한 장비를 세며, 가방이 가득 차 넘친 장비는 세지 않습니다. 재료 의뢰는 분해와 연구소에서 얻은 철광석·약초·목재를 세며, 상점 구매·교환·합성은 세지 않습니다. 강화 의뢰는 실패한 시도도 셉니다. 스킬북 의뢰는 새로 배우거나 단계를 올릴 때마다, 고용 의뢰는 영웅을 고용할 때마다 셉니다. 장비 획득 의뢰는 이긴 라운드에 들어온 장비를 세며, 상점·상자·탐험에서 얻은 것은 세지 않습니다. 수락 전에 일어난 것은 세지 않습니다.<br><br>다 채우면 <b>[수령]</b>해야 골드를 받습니다. 기한은 없습니다. <b>[포기]</b>하면 진행도는 사라지지만 벌금은 없고, 수령·포기한 자리는 새 의뢰로 바뀝니다. 현재 돌고 있는 지역이나 앞으로 잡을 적과 맞는 목표를 고르면 원정과 함께 진행할 수 있습니다.",
+        en: "Check a card's goal and gold reward, then <b>Accept</b>. Your active limit is <b>{slots}</b>. No extra Party or battle starts: <b>won rounds</b> from all your expeditions contribute after acceptance.<br><br>Hunt and Bounty goals require the stated chapter, race or place, and defeated rounds do not count. Salvage goals count gear you salvage by hand or by auto-salvage rules, but not full-bag overflow. Gathering goals count ore, herbs and timber from salvage and the Laboratory, not Shop purchases, trades or synthesis. Enhance goals count failed attempts too. Skill book goals count each book you learn or level up, and hiring goals count each hero you hire. Gear collection goals count gear from won rounds, not from the Shop, chests or Explorations. Nothing from before acceptance counts.<br><br>Use <b>Claim</b> after completion to receive the gold. There is no deadline. <b>Abandon</b> loses progress without a fee. Claiming or abandoning replaces that card. A goal matching your current farming area or next enemies can progress alongside your expeditions.",
     },
     'help.tavern.fame.title': {
         ko: "카드 등급과 명성 레벨",
@@ -1730,16 +1760,16 @@ const STRINGS = {
         en: "Compare, then buy",
     },
     'help.shop.buy.body': {
-        ko: "위쪽 영웅 띠에서 비교할 영웅을 고릅니다. 장비 상품에 마우스를 올리면 그 영웅의 착용품과 비교할 수 있습니다. 장비는 레벨이나 등급뿐 아니라 필요한 옵션·스킬·파티 전술과 맞는지도 확인합니다.<br><br>장비 상품을 선택하고 아래 <b>[구매]</b>를 누르면 <b>현재 보고 있는 부대 인벤토리</b>로 들어갑니다. 자동으로 장착되지는 않습니다. 장비 구매에는 골드와 빈 인벤토리 칸이 필요합니다.<br><br><b>스킬 도안은 도안 재고에, 물약은 공동 물약 재고에</b> 쌓입니다. 장비 인벤토리 칸을 차지하지 않으므로 장비 칸이 가득 차 있어도 살 수 있습니다.<br><br>장비와 스킬 도안은 목록의 한 칸마다 한 번 살 수 있습니다. 팔린 칸은 <b>[교체]</b>까지 그대로 남습니다.<br><br>상단 화면에서 아래 인벤토리·창고의 장비를 누르면 장착 대신 <b>판매 목록</b>에 오릅니다. 다시 누르면 선택을 풀고, <b>[판매]</b>를 눌러야 장비가 사라지고 골드를 받습니다. 판매가는 <b>같은 레벨·등급 상점가의 1/3</b>이며 소수점은 버립니다. 잠근 장비와 미개봉 상자는 팔 수 없습니다. 재료가 필요하면 인벤토리의 <b>[분해]</b>를 사용합니다.<br><br>자물쇠 칸은 아직 팔지 않는 상품입니다. 처음 지은 상단은 맨 윗줄의 무기·물약만 팔고, 건설에서 상단 랭크를 올리면 방어구·장신구·스킬 도안 줄이 열립니다.",
-        en: "Choose a comparison hero in the top strip. Hover an equipment item to compare it with that hero's worn item. Alongside level and rarity, check whether its options suit the skills and Party tactics you use.<br><br>Select an equipment item, then press <b>Buy</b> below. It enters the <b>party inventory you are viewing</b> and is not equipped automatically. Buying equipment requires enough gold and a free inventory slot.<br><br><b>Skill blueprints enter blueprint stock, and potions enter shared potion stock.</b> Neither occupies equipment slots, so a full equipment inventory does not block these purchases.<br><br>Each equipment or skill-blueprint slot can be bought once per list. Sold slots remain until <b>Refresh</b>.<br><br>In the Shop, clicking equipment in the inventory or stash below adds it to the <b>sale list</b>. Click it again to deselect it. Only pressing <b>Sell</b> removes the equipment and credits gold. Sale prices are <b>one third of the shop price for the same level and rarity</b>, rounded down. Locked equipment and unopened boxes cannot be sold. Use <b>Salvage</b> in the inventory when you need materials.<br><br>Locked slots are goods not yet on sale. A newly built Trading House sells only the top row of weapons and potions; upgrade it in Construction to open the armor, jewelry and skill-blueprint rows.",
+        ko: "위쪽 영웅 띠에서 비교할 영웅을 고릅니다. 장비 상품에 마우스를 올리면 그 영웅의 착용품과 비교할 수 있습니다. 장비는 레벨이나 등급뿐 아니라 필요한 옵션·스킬·파티 전술과 맞는지도 확인합니다.<br><br>장비 상품을 선택하고 아래 <b>[구매]</b>를 누르면 <b>현재 보고 있는 부대 인벤토리</b>로 들어갑니다. 자동으로 장착되지는 않습니다. 장비 구매에는 골드와 빈 인벤토리 칸이 필요합니다.<br><br><b>스킬북은 책 재고에, 물약은 공동 물약 재고에</b> 쌓입니다. 장비 인벤토리 칸을 차지하지 않으므로 장비 칸이 가득 차 있어도 살 수 있습니다.<br><br>장비와 스킬북은 목록의 한 칸마다 한 번 살 수 있습니다. 팔린 칸은 <b>[교체]</b>까지 그대로 남습니다.<br><br>상단 화면에서 아래 인벤토리·창고의 장비를 누르면 장착 대신 <b>판매 목록</b>에 오릅니다. 다시 누르면 선택을 풀고, <b>[판매]</b>를 눌러야 장비가 사라지고 골드를 받습니다. 판매가는 <b>같은 레벨·등급 상점가의 1/3</b>이며 소수점은 버립니다. 잠근 장비와 미개봉 상자는 팔 수 없습니다. 재료가 필요하면 인벤토리의 <b>[분해]</b>를 사용합니다.<br><br>자물쇠 칸은 아직 팔지 않는 상품입니다. 처음 지은 상단은 맨 윗줄의 무기·물약만 팔고, 건설에서 상단 랭크를 올리면 방어구·장신구·스킬북 줄이 열립니다.",
+        en: "Choose a comparison hero in the top strip. Hover an equipment item to compare it with that hero's worn item. Alongside level and rarity, check whether its options suit the skills and Party tactics you use.<br><br>Select an equipment item, then press <b>Buy</b> below. It enters the <b>party inventory you are viewing</b> and is not equipped automatically. Buying equipment requires enough gold and a free inventory slot.<br><br><b>Skill books enter book stock, and potions enter shared potion stock.</b> Neither occupies equipment slots, so a full equipment inventory does not block these purchases.<br><br>Each equipment or skill-book slot can be bought once per list. Sold slots remain until <b>Refresh</b>.<br><br>In the Shop, clicking equipment in the inventory or stash below adds it to the <b>sale list</b>. Click it again to deselect it. Only pressing <b>Sell</b> removes the equipment and credits gold. Sale prices are <b>one third of the shop price for the same level and rarity</b>, rounded down. Locked equipment and unopened boxes cannot be sold. Use <b>Salvage</b> in the inventory when you need materials.<br><br>Locked slots are goods not yet on sale. A newly built Trading House sells only the top row of weapons and potions; upgrade it in Construction to open the armor, jewelry and skill-book rows.",
     },
     'help.shop.restock.title': {
         ko: "교체 전에 영웅 레벨 확인",
         en: "Check the hero level before refreshing",
     },
     'help.shop.restock.body': {
-        ko: "<b>[교체]</b>는 선택한 영웅의 <b>현재 레벨</b>을 기준으로 장비 목록을 다시 만듭니다. 영웅만 바꾸거나 레벨이 올라도 기존 상품은 바뀌지 않습니다. 상품은 기준보다 높거나 낮은 레벨로 나올 수 있으며, 고른 영웅의 직업에 맞는 무기만 나오는 것은 아닙니다.<br><br>교체는 항상 무료입니다. 교체 뒤 <b>{refresh}시간</b>이 지나야 다시 교체할 수 있으며, 대기 중에는 버튼이 비활성화되고 남은 시간이 표시됩니다. 대기 시간은 오프라인에도 흐릅니다.<br><br>교체는 장비와 스킬 도안 목록을 함께 바꾸고 팔린 칸도 새로 채웁니다. 남겨 둔 상품도 사라지므로 구매할 물건을 확인한 뒤 교체합니다. 시간 경과나 특수상인 방문이 일반 목록을 자동으로 바꾸지는 않습니다.",
-        en: "<b>Refresh</b> regenerates gear around the selected hero's <b>current level</b>. Selecting another hero or leveling up does not change existing goods. Products may roll above or below the target level, and weapons are not restricted to that hero's class.<br><br>Refreshing is always free. After each refresh, wait <b>{refresh}h</b> before refreshing again. The button is disabled during the cooldown and shows the remaining time beside it. The cooldown continues offline.<br><br>Refreshing changes both gear and skill blueprints and refills sold slots. Unsold goods also disappear, so check intended purchases first. Time and special-trader visits never refresh the ordinary list automatically.",
+        ko: "<b>[교체]</b>는 선택한 영웅의 <b>현재 레벨</b>을 기준으로 장비 목록을 다시 만듭니다. 영웅만 바꾸거나 레벨이 올라도 기존 상품은 바뀌지 않습니다. 상품은 기준보다 높거나 낮은 레벨로 나올 수 있으며, 고른 영웅의 직업에 맞는 무기만 나오는 것은 아닙니다.<br><br>교체는 항상 무료입니다. 교체 뒤 <b>{refresh}시간</b>이 지나야 다시 교체할 수 있으며, 대기 중에는 버튼이 비활성화되고 남은 시간이 표시됩니다. 대기 시간은 오프라인에도 흐릅니다.<br><br>교체는 장비와 스킬북 목록을 함께 바꾸고 팔린 칸도 새로 채웁니다. 남겨 둔 상품도 사라지므로 구매할 물건을 확인한 뒤 교체합니다. 시간 경과나 특수상인 방문이 일반 목록을 자동으로 바꾸지는 않습니다.",
+        en: "<b>Refresh</b> regenerates gear around the selected hero's <b>current level</b>. Selecting another hero or leveling up does not change existing goods. Products may roll above or below the target level, and weapons are not restricted to that hero's class.<br><br>Refreshing is always free. After each refresh, wait <b>{refresh}h</b> before refreshing again. The button is disabled during the cooldown and shows the remaining time beside it. The cooldown continues offline.<br><br>Refreshing changes both gear and skill books and refills sold slots. Unsold goods also disappear, so check intended purchases first. Time and special-trader visits never refresh the ordinary list automatically.",
     },
     'help.shop.consumables.title': {
         ko: "물약을 여러 개 사기",
@@ -1749,29 +1779,29 @@ const STRINGS = {
         ko: "물약을 고르고 수량 버튼으로 총개수와 가격을 확인한 뒤 <b>[구매]</b>합니다. 수량 버튼은 고르기만 하며 즉시 구매하지 않습니다. 고른 수량 버튼을 다시 누르면 한 개로 돌아갑니다.<br><br>물약은 매진되지 않고 공동 재고에 쌓입니다. 총가격이 모자라면 일부만 사지 않고 구매가 취소됩니다. 구입한 물약을 전투에 쓰려면 편성 탭에서 물약 칸의 종류와 순서를 정합니다. 상점 구매는 골드만 쓰고, 대장간 물약 제작은 골드와 약초를 씁니다. 가격은 각 화면에서 비교할 수 있습니다.",
         en: "Select a potion, choose a quantity to check its total price, then press <b>Buy</b>. Quantity buttons only select an amount; they do not purchase it immediately. Click the selected quantity again to return to one.<br><br>Potions never sell out and accumulate in shared stock. If you cannot afford the total, none are purchased. Configure potion types and order in Party to use them in combat. Shop purchases cost gold; brewing at the Blacksmith costs gold and herbs. Compare the prices shown in each place.",
     },
-    'help.shop.blueprints.title': {
-        ko: "스킬 도안을 샀다면",
-        en: "After buying a skill blueprint",
+    'help.shop.books.title': {
+        ko: "스킬북을 샀다면",
+        en: "After buying a skill book",
     },
-    'help.shop.blueprints.body': {
-        ko: "상점의 스킬 그림에 붙은 <b>도안</b>은 영웅에게 바로 쓰는 책이 아닙니다. 도서관에서 도안 한 장과 재료로 스킬북 한 권을 만든 뒤 영웅에게 읽힙니다. 같은 도안을 여러 장 모으면 같은 책을 더 만들 수 있습니다.<br><br>일반 상단은 현재 <b>직업 스킬 1티어 도안</b>을 팝니다. 모든 스킬 도안이 상점에 나오는 것은 아닙니다. 원하는 스킬의 다른 획득처는 도감의 스킬 항목에서 확인합니다.",
-        en: "The <b>blueprint</b> badge on a Shop skill icon marks a crafting ingredient, not a book to use directly on a hero. Turn one blueprint and materials into one skill book at the Library, then have a hero read it. More copies let you make more matching books.<br><br>The ordinary Trading House currently sells <b>Tier 1 class-skill blueprints</b>. It does not stock every skill. Check a skill's Codex entry for other sources.",
+    'help.shop.books.body': {
+        ko: "상단의 스킬 그림에 붙은 <b>스킬북</b> 배지는 바로 읽을 수 있는 책이라는 뜻입니다. 산 책은 책 재고에 쌓이고, 도서관 <b>[스킬 업그레이드]</b>에서 영웅을 골라 배우거나 업그레이드합니다. 같은 책을 여러 권 모으면 업그레이드에 씁니다.<br><br>일반 상단은 현재 <b>1티어 직업 스킬 책</b>을 팝니다. 모든 스킬을 파는 것은 아니므로, 다른 스킬은 스킬 도감의 획득처를 확인합니다.",
+        en: "The <b>Book</b> badge on a Shop skill icon marks a book you can read right away. Bought books enter book stock; select a hero under <b>Skill Upgrade</b> in the Library to learn or upgrade it. Extra copies of the same book are used for upgrades.<br><br>The ordinary Trading House currently sells <b>Tier 1 class-skill books</b>. It does not stock every skill. Check a skill's Codex entry for other sources.",
     },
     'help.shop.trade.title': {
         ko: '재료 또는 골드로 구매하기',
         en: 'Buy with materials or gold',
     },
     'help.shop.trade.body': {
-        ko: '건설에서 <b>상단 2랭크</b>를 올리면 교역소가 열립니다. <b>받을 최하급 재료</b>를 먼저 누르면 다른 재료별 필요 수·보유량과 골드 가격이 나타납니다. 지불할 재료의 <b>[구매]</b>를 눌러 그 재료 {cost}개로 선택한 재료 {receive}개를 받습니다.<br><br>철광석·약초·목재·가루의 최하급끼리 교환합니다. 선택만으로는 재료가 소모되지 않으며, 지불할 재료가 부족하면 구매할 수 없습니다. 재료로 지불할 때는 골드가 들지 않습니다. 골드 구매는 골드만 소모하며 재료별 가격이 다르고 약초가 더 비쌉니다. 시간이나 재고 제한은 없습니다. 위 단계 재료는 대장간의 합성으로 만듭니다.<br><br>상단 3랭크는 방어구·장신구·스킬 도안 판매 줄을 엽니다.',
-        en: 'Build <b>Trading House rank 2</b> to open the Trading Post. First select the <b>lowest-grade material to receive</b>. Other materials show their required and owned amounts, and a gold option shows its price. Press <b>Buy</b> on a payment row to spend {cost} of that material and receive {receive} of your selection.<br><br>Trade lowest-grade iron ore, herbs, timber and dust. Selecting a material spends nothing. Choose a material payment or gold. Only the selected currency is spent, and you must have enough of it. Gold prices vary by material, with herbs priced higher. Purchases have no timer or stock limit. Make higher grades by combining materials at the Smithy.<br><br>Trading House rank 3 opens armor, jewelry and skill-blueprint sales.',
+        ko: '건설에서 <b>상단 2랭크</b>를 올리면 교역소가 열립니다. <b>받을 최하급 재료</b>를 먼저 누르면 다른 재료별 필요 수·보유량과 골드 가격이 나타납니다. 지불할 재료의 <b>[구매]</b>를 눌러 그 재료 {cost}개로 선택한 재료 {receive}개를 받습니다.<br><br>철광석·약초·목재·가루의 최하급끼리 교환합니다. 선택만으로는 재료가 소모되지 않으며, 지불할 재료가 부족하면 구매할 수 없습니다. 재료로 지불할 때는 골드가 들지 않습니다. 골드 구매는 골드만 소모하며 재료별 가격이 다르고 약초가 더 비쌉니다. 시간이나 재고 제한은 없습니다.<br><br>특수상단 상인이 올 때마다 그 상인이 다루는 재료 하나가 <b>특가</b>가 됩니다. 특가 재료는 다른 재료 {deal}개 또는 골드 가격의 {pct}%로 삽니다. 특가는 다음 상인이 올 때까지 이어지고, 제목 줄에 지금과 다음 특가가 보입니다. 위 단계 재료는 대장간의 합성으로 만듭니다.<br><br>상단 3랭크는 방어구·장신구·스킬북 판매 줄을 엽니다.',
+        en: 'Build <b>Trading House rank 2</b> to open the Trading Post. First select the <b>lowest-grade material to receive</b>. Other materials show their required and owned amounts, and a gold option shows its price. Press <b>Buy</b> on a payment row to spend {cost} of that material and receive {receive} of your selection.<br><br>Trade lowest-grade iron ore, herbs, timber and dust. Selecting a material spends nothing. Choose a material payment or gold. Only the selected currency is spent, and you must have enough of it. Gold prices vary by material, with herbs priced higher. Purchases have no timer or stock limit.<br><br>Each time a visiting trader arrives, the material they deal in goes on <b>Deal</b>. Buy it for {deal} of another material or {pct}% of its gold price. The deal lasts until the next trader arrives, and the title bar shows the current and next deal. Make higher grades by combining materials at the Smithy.<br><br>Trading House rank 3 opens armor, jewelry and skill-book sales.',
     },
     'help.shop.special.title': {
         ko: "특수상단은 별도 방문입니다",
         en: "Special visits are separate",
     },
     'help.shop.special.body': {
-        ko: "건설에서 상단의 해당 랭크를 올리면 <b>특수상단 방문</b> 기능이 열립니다. 패널에서 도착·출발까지의 남은 시간을 볼 수 있습니다. 이 시계는 일반 상단의 <b>[교체]</b> 무료 대기와 별개입니다.<br><br>현재 특수상단 상품은 <b>준비 중</b>입니다. 물음표 칸에서는 구매할 수 없습니다. 일반 장비·물약·스킬 도안은 왼쪽 일반 상단에서 구매합니다.",
-        en: "Upgrading the Trading House to the required rank opens <b>special-trader visits</b>. Its panel shows the time until arrival or departure. This timer is separate from the ordinary Trading House's free <b>Refresh</b> wait.<br><br>Special-trader goods are currently <b>coming later</b>. Question-mark slots cannot be purchased. Buy ordinary gear, potions and skill blueprints from the regular Trading House on the left.",
+        ko: "건설에서 상단의 해당 랭크를 올리면 <b>특수상단 방문</b> 기능이 열립니다. 패널에서 도착·출발까지의 남은 시간을 볼 수 있습니다. 이 시계는 일반 상단의 <b>[교체]</b> 무료 대기와 별개입니다.<br><br>현재 특수상단 상품은 <b>준비 중</b>입니다. 물음표 칸에서는 구매할 수 없습니다. 일반 장비·물약·스킬북은 왼쪽 일반 상단에서 구매합니다.",
+        en: "Upgrading the Trading House to the required rank opens <b>special-trader visits</b>. Its panel shows the time until arrival or departure. This timer is separate from the ordinary Trading House's free <b>Refresh</b> wait.<br><br>Special-trader goods are currently <b>coming later</b>. Question-mark slots cannot be purchased. Buy ordinary gear, potions and skill books from the regular Trading House on the left.",
     },
     'help.forge.overview.title': {
         ko: "제작 · 강화 · 합성의 차이",
@@ -1822,20 +1852,20 @@ const STRINGS = {
         en: "<b>Craft</b> is currently coming later. Available operations are <b>Smith, Upgrade and Combine</b>.",
     },
     'help.library.basics.title': {
-        ko: "도안 · 스킬북 · 전직의 차이",
-        en: "Blueprints, books and advancement",
+        ko: "스킬북 · 전직의 차이",
+        en: "Books and advancement",
     },
     'help.library.basics.body': {
-        ko: "<b>스킬 도안</b>은 책을 만드는 재료이고, <b>스킬북</b>은 영웅에게 읽혀 스킬을 배우거나 강화하는 소모품입니다. 흐름은 <b>도안 획득 → 스킬북 제작 → 영웅 선택 → 배우기·업그레이드</b>입니다.<br><br><b>전직</b>은 영웅의 성장 갈래를 정하는 별도 기능입니다. 책으로 채우는 '배운 스킬' 칸과 전직으로 채우는 '전직 스킬' 칸은 서로 다릅니다. 전직한다고 기존 고유 스킬이나 책으로 배운 스킬이 사라지지는 않습니다.",
-        en: "A <b>skill blueprint</b> is an ingredient for making a book. A <b>skill book</b> is consumed by a hero to learn or improve a skill. Follow <b>get blueprint → craft book → choose hero → learn or upgrade</b>.<br><br><b>Advancement</b> is a separate choice of growth path for a hero. The learned-skill slot filled by a book and the Advance-skill slot are different. Advancing does not remove the hero's innate or book-learned skill.",
+        ko: "<b>스킬북</b>은 영웅에게 읽혀 스킬을 배우거나 강화하는 소모품입니다. 흐름은 <b>책 획득 → 영웅 선택 → 배우기·업그레이드</b>입니다.<br><br><b>전직</b>은 영웅의 성장 갈래를 정하는 별도 기능입니다. 책으로 채우는 '배운 스킬' 칸과 전직으로 채우는 '전직 스킬' 칸은 서로 다릅니다. 전직한다고 기존 고유 스킬이나 책으로 배운 스킬이 사라지지는 않습니다.",
+        en: "A <b>skill book</b> is consumed by a hero to learn or improve a skill. Follow <b>get a book → choose hero → learn or upgrade</b>.<br><br><b>Advancement</b> is a separate choice of growth path for a hero. The learned-skill slot filled by a book and the Advance-skill slot are different. Advancing does not remove the hero's innate or book-learned skill.",
     },
-    'help.library.craft.title': {
-        ko: "도안으로 스킬북 만들기",
-        en: "Turning a blueprint into a book",
+    'help.library.sources.title': {
+        ko: "스킬북 얻기와 분해",
+        en: "Getting and salvaging books",
     },
-    'help.library.craft.body': {
-        ko: "스킬 도안은 원정·상점·연구소 도서관에서 얻습니다. 도서관의 스킬북 기능을 열면 <b>[스킬 북 제작]</b>에 가진 도안이 표시됩니다. 그림을 골라 비용을 확인하고 <b>[만들기]</b>합니다.<br><br>도안 한 장과 <b>{gold}G · 최하급 가루 {dust}개 · 최하급 약초 {herb}개</b>가 같은 스킬북 한 권이 됩니다. 도안도 소모되므로 한 번 얻었다고 무제한 제작이 열리는 것은 아닙니다. 같은 도안과 책은 여러 개 모을 수 있고, 장비 인벤토리 칸을 차지하지 않습니다.",
-        en: "Obtain skill blueprints from Expeditions, the Shop or the Laboratory Library line. Once Library book features unlock, owned blueprints appear in <b>Skill Book Crafting</b>. Select an icon, check the cost and press <b>Craft</b>.<br><br>One blueprint plus <b>{gold}G, {dust} lowest-grade dust and {herb} lowest-grade herbs</b> produces one matching book. The blueprint is consumed; finding one does not unlock unlimited crafting. Blueprints and books can stack without taking equipment inventory slots.",
+    'help.library.sources.body': {
+        ko: "스킬북은 만들지 않고 얻습니다. 원정에서 몬스터를 처치하거나 탐험 동굴의 보상, 연구소 도서관 줄, 상단 구매, 영웅의 첫 책 사용 레벨 보상으로 들어옵니다. 어떤 몬스터가 어떤 책을 주는지는 스킬 도감의 획득처에서 확인합니다.<br><br>얻은 책은 바로 책 재고에 쌓이며 장비 인벤토리 칸을 차지하지 않습니다. 더 쓸 데가 없는 책은 창고의 <b>[스킬북]</b> 탭에서 골라 <b>[분해]</b>합니다. 한 번에 1권이 최하급 가루 {dust}개가 되며, 되돌릴 수 없습니다.",
+        en: "Skill books are found, not crafted. They come from defeating monsters on Expeditions, Exploration cave rewards, the Laboratory Library line, Trading House purchases and each hero's first-book level reward. Check a skill's Codex sources to see which monsters drop its book.<br><br>Books enter book stock immediately and do not take equipment inventory slots. Select a book you no longer need in the stash's <b>Skill Books</b> tab and press <b>Salvage</b>. Each press turns one book into {dust} lowest-grade dust and cannot be undone.",
     },
     'help.library.learn.title': {
         ko: "읽힐 영웅을 고르고 배우기",
@@ -1850,16 +1880,16 @@ const STRINGS = {
         en: "Using matching books to raise a skill level",
     },
     'help.library.upgrade.body': {
-        ko: "선택한 영웅의 <b>고유 스킬이나 이미 배운 스킬</b>과 같은 책을 고르면 새 스킬을 배우는 대신 그 스킬을 업그레이드합니다. 다른 액티브 칸이 추가되지는 않습니다.<br><br>버튼에 표시된 같은 책 수를 내면 레벨이 한 단계 오릅니다. 높은 단계일수록 더 많은 책이 필요하며, 책을 읽힐 때 골드·가루·약초를 다시 내지는 않습니다. 업그레이드는 <b>선택한 영웅의 해당 스킬</b>에만 적용됩니다. 전직 메인은 공용 스킬 포인트로 올리며 각 단계의 영웅 레벨 조건도 만족해야 합니다.",
-        en: "Choose a book matching the selected hero's <b>innate or already-learned skill</b> to upgrade that skill instead of learning a new one. This does not add another active slot.<br><br>Spend the matching copies shown on the button to add one skill level. Higher steps require more books, without another gold, dust or herb charge for reading them. The upgrade affects <b>that skill on the selected hero</b>. Advance main skills use shared skill points and require the corresponding hero level.",
+        ko: "선택한 영웅의 <b>고유 스킬이나 이미 배운 스킬</b>과 같은 책을 고르면 새 스킬을 배우는 대신 그 스킬을 업그레이드합니다. 다른 액티브 칸이 추가되지는 않습니다.<br><br>버튼에 표시된 같은 책 수를 내면 레벨이 한 단계 오릅니다. 높은 단계일수록 더 많은 책이 필요하며, 책 말고 다른 재화는 들지 않습니다. 업그레이드는 <b>선택한 영웅의 해당 스킬</b>에만 적용됩니다. 전직 메인은 공용 스킬 포인트로 올리며 각 단계의 영웅 레벨 조건도 만족해야 합니다.",
+        en: "Choose a book matching the selected hero's <b>innate or already-learned skill</b> to upgrade that skill instead of learning a new one. This does not add another active slot.<br><br>Spend the matching copies shown on the button to add one skill level. Higher steps require more books; reading costs nothing else. The upgrade affects <b>that skill on the selected hero</b>. Advance main skills use shared skill points and require the corresponding hero level.",
     },
     'help.library.advance.title': {
         ko: "전직 갈래는 신중히 선택",
         en: "Choosing an advancement path",
     },
     'help.library.advance.body': {
-        ko: "도서관에서 영웅을 고르고 <b>전직의 방</b> 칸의 <b>[입장]</b>을 누릅니다. 방에는 세 갈래가 한 줄씩 서고, 줄마다 갈래의 역할과 전직 스킬 셋의 효과가 적혀 있습니다. 방을 열면 맨 위 갈래가 골라져 있고 방 오른쪽에 그 갈래의 마스터리 판이 붙어 있습니다. 다른 갈래를 누르면 고른 갈래와 판이 바뀝니다. 판 안의 전직 스킬을 누르면 그 스킬의 강화 칸이 아래 줄에 섭니다. 칸에 올리면 효과가 보입니다. 미리보기는 재화나 포인트를 쓰지 않습니다.<br><br>전직 기능을 열고 레벨 <b>{level}</b> 이상이 되면 갈래를 선택하고 <b>[전직]</b>합니다. 비용은 <b>{gold}G</b>이며 현재는 즉시 완료됩니다. <b>전직 갈래는 변경할 수 없습니다.</b> 원정 중에도 전직할 수 있지만 탐험 중에는 먼저 돌아와야 합니다.<br><br>완료 후 전직의 방 바닥의 <b>[마스터리 열기]</b>에서 전직 스킬을 배우고 강화합니다. 전직만으로 스킬을 자동 학습하지는 않습니다. 같은 갈래 안에서는 스킬을 바꿀 수 있습니다.",
-        en: "Select a hero in the Library and press <b>Enter</b> on the <b>Chamber of Advancement</b> panel. Each of the three paths has its own row with its role and the effects of its three advancement skills. The top path is selected when the chamber opens, with its mastery board attached on the right. Click another path to switch the selection and the board. Click an advancement skill on the board to show its strengthening cells in the row below. Hover a cell to see its effect. Previewing spends no resources or points.<br><br>Unlock advancement and reach level <b>{level}</b>, then select a path and press <b>Advance</b>. The cost is <b>{gold}G</b> and advancement currently completes instantly. <b>The path cannot be changed.</b> Heroes can advance during Expeditions; those exploring must return first.<br><br>After completion, use <b>Open Mastery</b> at the bottom of the chamber to learn and improve an advancement skill. Advancement does not automatically teach a skill. Skills can be swapped within the chosen path.",
+        ko: "도서관 왼쪽 <b>[전직]</b> 패널은 위쪽 영웅 띠에서 고른 영웅의 세 갈래를 보여 줍니다. 갈래마다 역할 설명과 전직 스킬 셋의 효과가 한 줄씩 적혀 있고, 스킬 줄에 마우스를 올리면 자세한 설명이 나옵니다.<br><br>전직 기능을 열고 레벨 <b>{level}</b> 이상이 되면 갈래를 눌러 고르고 <b>[전직]</b>을 누릅니다. 비용은 <b>{gold}G</b>이며 현재는 즉시 완료됩니다. <b>전직 갈래는 변경할 수 없습니다.</b> 원정 중에도 전직할 수 있지만 탐험 중에는 먼저 돌아와야 합니다.<br><br>전직을 마친 뒤에는 <b>캐릭터 → [마스터리 열기] → 전직 트리</b>에서 전직 스킬을 배우고 강화합니다. 전직만으로 스킬을 자동 학습하지는 않습니다. 같은 갈래 안에서는 스킬을 바꿀 수 있습니다.",
+        en: "The <b>Advance</b> panel on the left of the Library shows the three paths of the hero selected in the top strip. Each path lists its role and the effects of its three advancement skills, one per row; hover a skill row for its full description.<br><br>Unlock advancement and reach level <b>{level}</b>, then click a path to select it and press <b>Advance</b>. The cost is <b>{gold}G</b> and advancement currently completes instantly. <b>The path cannot be changed.</b> Heroes can advance during Expeditions; those exploring must return first.<br><br>After advancing, go to <b>Character → Open Mastery → Advancement Tree</b> to learn and improve an advancement skill. Advancement does not automatically teach a skill. Skills can be swapped within the chosen path.",
     },
     'help.library.points.title': { ko: "공용 스킬 포인트와 전직 트리", en: "Shared skill points and the Advancement Tree" },
     'help.library.points.body': { ko: "영웅은 <b>레벨 1 부터 레벨마다 스킬 포인트</b>를 받습니다. 죄종·직업 마스터리와 전직 트리는 같은 포인트를 나누어 씁니다.<br><br>전직하면 갈래의 전직 스킬 셋 중 <b>하나</b>를 배웁니다 — 스킬 포인트를 쓰지 않습니다. 전직 트리에는 줄이 둘 있습니다. <b>공통 줄</b>은 갈래 전체에 닿고, <b>스킬 줄</b>(크기 · 변형 1 · 변형 2)은 배운 스킬에 닿습니다. 줄마다 칸 셋에 합 <b>{row}</b>까지 자유롭게 나눠 찍고, 한 칸에 {row}을 모두 넣으면 그 칸의 덤이 켜집니다.<br><br>칸을 우클릭하면 1랭크가, 배운 전직 스킬을 우클릭하면 스킬 줄 전체가 <b>공용 스킬 포인트로 환급</b>됩니다. 다른 전직 스킬을 누르면 바로 갈아끼웁니다 — 스킬 줄은 환급되고 공통 줄은 그대로입니다. 갈래와 전직 비용은 그대로입니다.", en: "Heroes earn <b>skill points at every level, starting at Lv1</b>. Sin mastery, Class mastery and the Advancement Tree share this pool.<br><br>After advancing, learn <b>one</b> of the path's three skills — it costs no skill points. The tree has two rows. The <b>common row</b> affects the whole path; the <b>skill row</b> (Power · Variant 1 · Variant 2) affects the learned skill. Split up to <b>{row}</b> ranks per row freely across its three cells; putting all {row} into one cell turns on its bonus.<br><br>Right-click a cell to refund one rank, or the learned skill to refund its whole skill row to the <b>shared skill-point pool</b>. Click another advancement skill to swap to it — the skill row is refunded and the common row stays. The chosen path and gold cost remain." },
@@ -1868,8 +1898,8 @@ const STRINGS = {
         en: "Lines, nodes and ranks",
     },
     'help.resource.lines.body': {
-        ko: "연구소의 <b>줄</b>은 자원·수색·훈련·도박장·도서관처럼 자동으로 얻는 것의 분야입니다. <b>지점</b>은 그 줄의 생산량·간격·품질 등을 올리는 연구 항목입니다.<br><br>왼쪽 <b>줄 카드</b>를 누르면 오른쪽에 생산량과 등록 효과가 나옵니다. 동그란 <b>지점</b>을 누르면 현재 값·다음 효과·비용·연구 시간을 볼 수 있습니다. 연구소의 위쪽 영웅 띠는 현황을 보는 자리이며, 실제 등록은 줄 카드의 얼굴이나 <b>+</b>에서 합니다.<br><br>잠긴 지점은 필요한 건물·랭크부터 갖춰야 합니다. <b>건설</b>에서 연구소 랭크를 올리면 새 지점이 열리고 지점마다 올릴 수 있는 레벨도 높아집니다. 이 화면의 <b>연구</b>로 열린 지점의 레벨을 올립니다.<br><br>도서관의 책 제작 기능을 열면 연구소 도서관 줄에 영웅을 등록할 수 있습니다. 등록한 영웅의 고유·배운 기본 스킬 중 하나의 도안을 생산합니다. 전직 스킬은 제외하며, 스킬이 업그레이드 상한에 닿아도 도안은 생산합니다.",
-        en: "A Laboratory <b>line</b> is a field of automatic output: Resources, Search, Training, Gambling Den or Library. A <b>node</b> is research that improves a line's output, interval, quality or another property.<br><br>Select a <b>line card</b> on the left to see output and hero bonuses on the right. Select a round <b>node</b> for its current value, next effect, cost and research time. The hero strip at the top shows assignments; open an actual assignment from a line's portrait or <b>+</b>.<br><br>Locked nodes need the shown building or rank first. Raising the Laboratory rank in <b>Construction</b> opens new nodes and raises how far each node can be researched. Use <b>Research</b> here to raise their levels.<br><br>Unlock book crafting in the Library to assign heroes to the Laboratory Library line. Each assigned hero produces blueprints of a randomly chosen innate or learned basic skill. Advance skills are excluded; reaching a skill upgrade cap does not stop production.",
+        ko: "연구소의 <b>줄</b>은 자원·수색·훈련·도박장·도서관처럼 자동으로 얻는 것의 분야입니다. <b>지점</b>은 그 줄의 생산량·간격·품질 등을 올리는 연구 항목입니다.<br><br>왼쪽 <b>줄 카드</b>를 누르면 오른쪽에 생산량과 등록 효과가 나옵니다. 동그란 <b>지점</b>을 누르면 현재 값·다음 효과·비용·연구 시간을 볼 수 있습니다. 연구소의 위쪽 영웅 띠는 현황을 보는 자리이며, 실제 등록은 줄 카드의 얼굴이나 <b>+</b>에서 합니다.<br><br>잠긴 지점은 필요한 건물·랭크부터 갖춰야 합니다. <b>건설</b>에서 연구소 랭크를 올리면 새 지점이 열리고 지점마다 올릴 수 있는 레벨도 높아집니다. 이 화면의 <b>연구</b>로 열린 지점의 레벨을 올립니다.<br><br>건설에서 도서관 랭크를 올려 연구소 도서관 줄을 열면 영웅을 등록할 수 있습니다. 등록한 영웅의 고유·배운 기본 스킬 중 하나의 스킬북을 생산합니다. 전직 스킬은 제외하며, 스킬이 업그레이드 상한에 닿아도 책은 생산합니다 — 남는 책은 창고에서 분해합니다.",
+        en: "A Laboratory <b>line</b> is a field of automatic output: Resources, Search, Training, Gambling Den or Library. A <b>node</b> is research that improves a line's output, interval, quality or another property.<br><br>Select a <b>line card</b> on the left to see output and hero bonuses on the right. Select a round <b>node</b> for its current value, next effect, cost and research time. The hero strip at the top shows assignments; open an actual assignment from a line's portrait or <b>+</b>.<br><br>Locked nodes need the shown building or rank first. Raising the Laboratory rank in <b>Construction</b> opens new nodes and raises how far each node can be researched. Use <b>Research</b> here to raise their levels.<br><br>Upgrade the Library in Construction to open the Laboratory Library line, then assign heroes to it. Each assigned hero produces books of a randomly chosen innate or learned basic skill. Advance skills are excluded; reaching a skill upgrade cap does not stop production — salvage spare books in the stash.",
     },
     'help.resource.production.title': {
         ko: "자동 생산과 게임을 닫은 동안",
@@ -1908,16 +1938,16 @@ const STRINGS = {
         en: "Choosing heroes to assign",
     },
     'help.resource.hero_effects.body': {
-        ko: "자원 · 도박장 줄은 등록한 <b>영웅 수</b>만큼 기본 산출이 한 몫씩 더해집니다 — 능력치보다 먼저 칸을 채웁니다. 수색은 등록한 영웅마다 시계가 하나씩 따로 돌아, 각자 한 명씩 데려옵니다. 훈련 · 도서관은 등록한 영웅 한 명 한 명이 경험치 · 도안을 받는 줄이라 인원 몫이 없습니다.<br><br><b>힘</b>은 그 줄의 생산·도착·훈련 속도를 덤으로 높이고, <b>운</b>은 대박 지점이 있는 줄의 추가 지급 확률을 높입니다. <b>지능</b>은 그 줄의 연구 시간을 줄이며, <b>민첩</b>은 연구 비용을 줄입니다. <b>매력</b>은 수색의 레어 후보 확률을 높입니다.<br><br><b>건강</b>은 같은 줄에 오래 등록할수록 쌓이는 숙련 보너스를 키웁니다. <b>통솔</b>은 같은 줄의 다른 등록 영웅 효과를 높이므로 여럿을 등록할 때 의미가 있습니다. 장비·레벨 대신 영웅의 기본 능력치가 이 효과의 재료입니다.<br><br>등록 효과의 현재 수치는 줄 카드를 눌러 확인합니다. 해당 효과를 사용하지 않는 줄에는 적용되지 않습니다. 영웅을 다른 줄로 옮기거나 등록을 풀면 그 영웅의 숙련 시간은 다시 시작하므로, 비교한 뒤 자리를 정합니다.",
-        en: "On the Resources and Gambling Den lines each assigned <b>hero</b> adds one more share of the base output — fill the seats before comparing stats. On Search each assigned hero runs a clock of their own and brings someone in on it. Training and the Library give XP or blueprints to each assigned hero, so they have no head share.<br><br><b>Strength</b> adds a bonus to that line's production, arrival or training speed. <b>Luck</b> raises extra-output chance on lines with a Jackpot node. <b>Intelligence</b> shortens that line's research time; <b>Agility</b> lowers research costs. <b>Charisma</b> raises Search's Rare-candidate chance.<br><br><b>Vitality</b> strengthens the proficiency bonus that builds while a hero remains assigned to the same line. <b>Leadership</b> boosts other assigned heroes on that line, so it matters with multiple heroes. These effects use the hero's base attributes rather than equipment or level.<br><br>Select the line card to check current hero bonuses. Effects do not apply to lines that have no use for them. Moving or removing a hero resets the time accumulated on that assignment, so compare heroes before settling their positions.",
+        ko: "자원 · 도박장 줄은 등록한 <b>영웅 수</b>만큼 기본 산출이 한 몫씩 더해집니다 — 능력치보다 먼저 칸을 채웁니다. 수색은 등록한 영웅마다 시계가 하나씩 따로 돌아, 각자 한 명씩 데려옵니다. 훈련 · 도서관은 등록한 영웅 한 명 한 명이 경험치 · 스킬북을 받는 줄이라 인원 몫이 없습니다.<br><br><b>힘</b>은 그 줄의 생산·도착·훈련 속도를 덤으로 높이고, <b>운</b>은 대박 지점이 있는 줄의 추가 지급 확률을 높입니다. <b>지능</b>은 그 줄의 연구 시간을 줄이며, <b>민첩</b>은 연구 비용을 줄입니다. <b>매력</b>은 수색의 레어 후보 확률을 높입니다.<br><br><b>건강</b>은 같은 줄에 오래 등록할수록 쌓이는 숙련 보너스를 키웁니다. <b>통솔</b>은 같은 줄의 다른 등록 영웅 효과를 높이므로 여럿을 등록할 때 의미가 있습니다. 장비·레벨 대신 영웅의 기본 능력치가 이 효과의 재료입니다.<br><br>등록 효과의 현재 수치는 줄 카드를 눌러 확인합니다. 해당 효과를 사용하지 않는 줄에는 적용되지 않습니다. 영웅을 다른 줄로 옮기거나 등록을 풀면 그 영웅의 숙련 시간은 다시 시작하므로, 비교한 뒤 자리를 정합니다.",
+        en: "On the Resources and Gambling Den lines each assigned <b>hero</b> adds one more share of the base output — fill the seats before comparing stats. On Search each assigned hero runs a clock of their own and brings someone in on it. Training and the Library give XP or books to each assigned hero, so they have no head share.<br><br><b>Strength</b> adds a bonus to that line's production, arrival or training speed. <b>Luck</b> raises extra-output chance on lines with a Jackpot node. <b>Intelligence</b> shortens that line's research time; <b>Agility</b> lowers research costs. <b>Charisma</b> raises Search's Rare-candidate chance.<br><br><b>Vitality</b> strengthens the proficiency bonus that builds while a hero remains assigned to the same line. <b>Leadership</b> boosts other assigned heroes on that line, so it matters with multiple heroes. These effects use the hero's base attributes rather than equipment or level.<br><br>Select the line card to check current hero bonuses. Effects do not apply to lines that have no use for them. Moving or removing a hero resets the time accumulated on that assignment, so compare heroes before settling their positions.",
     },
     'help.resource.jobs.title': {
         ko: "수색 · 훈련 · 자동 골드",
         en: "Search, Training and automatic gold",
     },
     'help.resource.jobs.body': {
-        ko: "<b>수색</b>은 선술집에서 영웅 고용을 열면 바로 도착을 시작합니다. [간격]은 도착을 더 빠르게 합니다. 선술집의 대기 칸이 차면 멈추고, 비우면 남은 시간부터 다시 시작합니다. [품질]은 레어 후보 확률, [대기 칸]은 보관할 후보 수를 늘립니다.<br><br><b>훈련</b> 줄에 등록한 영웅은 시간이 흐르면서 경험치를 받아 로스터의 선두 레벨을 따라갑니다. 상한은 <b>로스터 최고 레벨 − [범위]에 표시된 차이</b>입니다. 범위를 연구하면 그 차이가 줄어듭니다. 상한 이상인 영웅은 훈련 경험치를 받지 않으므로, 최고 레벨을 앞서 올리는 일은 원정에서 합니다.<br><br><b>도박장 줄</b>은 선술집의 도박장을 열면 자동으로 골드를 생산합니다. 판돈을 걸거나 스핀을 누를 필요가 없습니다. [수익]은 생산량, [대박]은 한 번 더 지급받을 확률을 높입니다. 선술집 슬롯을 직접 돌리는 것과 별개입니다.",
-        en: "<b>Search</b> starts arrivals as soon as Tavern hiring is unlocked, and Interval makes them faster. Full Tavern waiting slots pause it; freeing a slot resumes the remaining wait. Quality raises Rare chance, and Waiting Slots adds candidate capacity.<br><br><b>Training</b> helps assigned heroes catch up toward the roster's leading level. Its cap is <b>the highest roster level minus the gap shown by Range</b>. Research Range to reduce that gap. Heroes at or above the cap gain no Training XP, so Expeditions must push the leading level forward.<br><br>The <b>Gambling Den line</b> automatically produces gold once the Tavern's Gambling Den is unlocked. It needs no stake or spin button. Income raises output, while Jackpot raises the chance of an extra payout. This is separate from manually playing Tavern slots.",
+        ko: "<b>수색</b>은 이 줄에 등록한 영웅마다 시간마다 한 명씩 선술집에 데려옵니다. 아무도 등록하지 않으면 돌지 않습니다. [간격]은 도착을 더 빠르게 합니다. 선술집의 대기 칸이 차도 시계는 흐르고, 시간이 다 된 영웅은 칸을 비우는 즉시 들어옵니다. [품질]은 레어 후보 확률, [대기 칸]은 보관할 후보 수를 늘립니다.<br><br><b>훈련</b> 줄에 등록한 영웅은 시간이 흐르면서 경험치를 받아 로스터의 선두 레벨을 따라갑니다. 상한은 <b>로스터 최고 레벨 − [범위]에 표시된 차이</b>입니다. 범위를 연구하면 그 차이가 줄어듭니다. 상한 이상인 영웅은 훈련 경험치를 받지 않으므로, 최고 레벨을 앞서 올리는 일은 원정에서 합니다.<br><br><b>도박장 줄</b>은 선술집의 도박장을 열면 자동으로 골드를 생산합니다. 판돈을 걸거나 스핀을 누를 필요가 없습니다. [수익]은 생산량, [대박]은 한 번 더 지급받을 확률을 높입니다. 선술집 슬롯을 직접 돌리는 것과 별개입니다.",
+        en: "<b>Search</b> brings one candidate to the Tavern per interval for each hero assigned to this line, and does nothing with no one assigned. Interval makes arrivals faster. It keeps running while Tavern waiting slots are full; a hero whose timer finishes enters as soon as you free a slot. Quality raises Rare chance, and Waiting Slots adds candidate capacity.<br><br><b>Training</b> helps assigned heroes catch up toward the roster's leading level. Its cap is <b>the highest roster level minus the gap shown by Range</b>. Research Range to reduce that gap. Heroes at or above the cap gain no Training XP, so Expeditions must push the leading level forward.<br><br>The <b>Gambling Den line</b> automatically produces gold once the Tavern's Gambling Den is unlocked. It needs no stake or spin button. Income raises output, while Jackpot raises the chance of an extra payout. This is separate from manually playing Tavern slots.",
     },
     'help.colosseum.prepare.title': {
         ko: "시련의 탑에서 파티 시험하기",
@@ -2044,8 +2074,8 @@ const STRINGS = {
         en: "Finding skills and mastery to learn",
     },
     'help.codex.skills.body': {
-        ko: "스킬 목록은 일반 스킬과 전직 스킬을 직업·전직별로 보여줍니다. 스킬 그림에 마우스를 올려 효과와 필요한 무기를 확인합니다. 스킬북으로 만들 수 있는 일반 스킬에는 획득처와 레벨이 오를 때 좋아지는 항목도 표시됩니다. 원하는 스킬이 있다면 이 목록에서 도안의 획득처를 찾고, 얻은 도안으로 도서관에서 책을 제작할 수 있습니다.<br><br>도감에서는 스킬과 마스터리를 미리 살펴봅니다. 실제 책 제작·습득은 도서관에서, 스킬 포인트 투자는 캐릭터의 [마스터리 열기]에서 합니다. 도감의 스킬 수치는 특정 영웅을 선택한 상태가 아니므로, 실제 영웅에게 적용되는 피해·회복량은 그 영웅의 스킬 설명에서도 확인합니다. 전직의 특수·변형·필살기 가지는 현재 준비 중입니다.",
-        en: "The Skills list groups regular and advancement skills by class and advancement. Hover an icon to read its effect and weapon requirement. Regular skills that can become books also show sources and what improves per level. To pursue a skill, find its blueprint source here, then craft its book at the Library after obtaining the blueprint.<br><br>The Codex lets you preview skills and mastery. Craft and learn books at the Library, and spend skill points through Open Mastery in Character. Codex skill details have no selected hero context, so check the skill on your actual hero for their damage or healing values. The Special, Variant and Ultimate advancement branches are currently coming later.",
+        ko: "스킬 목록은 일반 스킬과 전직 스킬을 직업·전직별로 보여줍니다. 스킬 그림에 마우스를 올려 효과와 필요한 무기를 확인합니다. 스킬북이 있는 일반 스킬에는 획득처와 레벨이 오를 때 좋아지는 항목도 표시됩니다. 원하는 스킬이 있다면 이 목록에서 그 스킬북의 획득처를 찾습니다.<br><br>도감에서는 스킬과 마스터리를 미리 살펴봅니다. 실제 책 습득은 도서관에서, 스킬 포인트 투자는 캐릭터의 [마스터리 열기]에서 합니다. 도감의 스킬 수치는 특정 영웅을 선택한 상태가 아니므로, 실제 영웅에게 적용되는 피해·회복량은 그 영웅의 스킬 설명에서도 확인합니다. 전직의 특수·변형·필살기 가지는 현재 준비 중입니다.",
+        en: "The Skills list groups regular and advancement skills by class and advancement. Hover an icon to read its effect and weapon requirement. Regular skills that can become books also show sources and what improves per level. To pursue a skill, find where its book comes from here.<br><br>The Codex lets you preview skills and mastery. Learn books at the Library, and spend skill points through Open Mastery in Character. Codex skill details have no selected hero context, so check the skill on your actual hero for their damage or healing values. The Special, Variant and Ultimate advancement branches are currently coming later.",
     },
     'help.codex.effects.title': {
         ko: "이펙트 미리 보기",
@@ -2208,20 +2238,20 @@ const STRINGS = {
     'exp.commission.h': { ko: '의뢰', en: 'Commissions' },
     'exp.commission.note': {
         ko: '의뢰는 <b>받아 두는 목표</b>입니다 — 전장이 열리지 않습니다. 게시판에서 골라 받아 두면 <b>평소 활동 위에 얹혀</b> 저절로 진행됩니다<br>'
-            + '카드마다 <b>죄종 하나</b>가 미션을 정합니다 — 분노 토벌 · 시기 현상금(정예) · 탐욕 분해 · 나태 재료 획득 · 폭식 강화 · 제작. 죄종은 <b>장마다 하나씩</b> 열립니다<br>'
+            + '카드마다 <b>죄종 하나</b>가 미션을 정합니다 — 분노 처치(몬스터 · 정예 · 보스) · 시기 스킬북 읽기 · 영웅 고용 · 탐욕 분해 · 장비 획득 · 나태 재료 획득 · 폭식 강화 · 제작. <b>그 일을 할 수 있게 되면</b> 그 죄종 카드가 섞입니다<br>'
             + '<b>재료 획득은 오프라인에도 진행됩니다</b> — 연구소 생산이 채웁니다. 따로 나갈 파티도, 의뢰만의 전장도 없습니다<br>'
             + '등급은 <b>일반 · 매직 · 레어</b> — 윗 등급일수록 대상이 좁고(한 장 · 한 장소 · 한 갈래) 드물며 골드가 많습니다. 대상은 지금 갈 수 있는 곳에서만 나옵니다<br>'
             + '<b>수락하면 그 카드가 소진됩니다</b> — 받은 카드는 그 자리에서 진행 중이 되고, 받아 둘 수 있는 수는 정해져 있습니다. 그래서 「어느 의뢰를 받을까」가 결정이 됩니다<br>'
-            + '<b>받은 뒤</b>에 일어난 것만 셉니다 — 이긴 라운드의 처치 · 직접 하거나 알아서 분해로 한 분해(가방이 차서 녹은 것은 빼고) · 분해와 연구소에서 얻은 재료 · 강화 시도(실패 포함) · 제작 · 모든 부대가 같이 채웁니다 · <b>기한은 없습니다</b><br>'
+            + '<b>받은 뒤</b>에 일어난 것만 셉니다 — 이긴 라운드의 처치 · 직접 하거나 알아서 분해로 한 분해(가방이 차서 녹은 것은 빼고) · 분해와 연구소에서 얻은 재료 · 강화 시도(실패 포함) · 제작 · 스킬북 읽기 · 영웅 고용 · 이긴 라운드에 들어온 장비 · 모든 부대가 같이 채웁니다 · <b>기한은 없습니다</b><br>'
             + '[수령]할 때마다 도감의 그 <b>죄종 칸</b>에 수령 횟수가 하나씩 쌓입니다<br>'
             + '다 채우면 <b>[수령]</b>으로 골드를 받습니다 · <b>[포기]</b>는 벌이 없습니다(진행만 버림) — 비는 자리에는 새 카드가 섭니다<br>'
             + '<b>명성 레벨</b> — [수령]할 때마다 명성이 하나 쌓이고(포기는 0 · 떨어지지 않음) 문턱을 넘으면 레벨이 오릅니다. 레벨이 오르면 <b>새로 서는 카드</b>의 목표와 골드가 같이 커지고 골드가 더 크게 오릅니다 — 레벨이 오르는 순간 받지 않은 카드는 모두 새 레벨로 다시 서고, 받아 둔 의뢰는 진행도 그대로입니다',
         en: 'A commission is a <b>goal you take on</b> — no battlefield opens. Pick one from the board and it fills itself <b>on top of what you already do</b><br>'
-            + 'Each card carries <b>one Sin</b> that sets its mission — Wrath Hunt · Envy Bounty (elites) · Greed Salvage · Sloth Gathering · Gluttony Enhance · Craft. Sins open <b>one per chapter</b><br>'
+            + 'Each card carries <b>one Sin</b> that sets its mission — Wrath slaying (monsters · elites · bosses) · Envy reading skill books · hiring heroes · Greed salvaging · collecting gear · Sloth gathering · Gluttony enhancing · crafting. <b>Once you can do that activity</b>, cards of that Sin join the board<br>'
             + '<b>Gathering advances offline too</b> — Laboratory output fills it. There is no party to send and no commission-only battlefield<br>'
             + 'Grades are <b>Normal · Magic · Rare</b> — higher grades narrow the target (one chapter · one place · one group), appear less often and pay more gold. Targets only come from places you can reach now<br>'
             + '<b>Accepting spends that card</b> — it turns into an active commission in place, and you can only hold a set number. That is what makes "which one do I take" a decision<br>'
-            + 'Only what happens <b>after you accept</b> counts — kills in won rounds · salvage you do by hand or by auto-salvage (not full-bag overflow) · materials from salvage and the Laboratory · enhance attempts (failures too) · crafting · every party fills it · <b>there is no deadline</b><br>'
+            + 'Only what happens <b>after you accept</b> counts — kills in won rounds · salvage you do by hand or by auto-salvage (not full-bag overflow) · materials from salvage and the Laboratory · enhance attempts (failures too) · crafting · skill books read · heroes hired · gear that arrives from won rounds · every party fills it · <b>there is no deadline</b><br>'
             + 'Each [Claim] adds one to that <b>Sin</b> in the Codex<br>'
             + 'When it is full, <b>[Claim]</b> pays the gold · <b>[Abandon]</b> costs nothing but the progress — a new card takes the empty place<br>'
             + '<b>Fame level</b> — every [Claim] adds one fame (abandoning adds none · it never drops), and passing a threshold raises the level. A higher level makes <b>newly posted cards</b> ask for more and pay more, with gold rising faster — when the level rises, every card you have not accepted is rerolled at the new level, while accepted commissions keep their progress',
@@ -2271,7 +2301,6 @@ const STRINGS = {
     'rep.drops.sub': { ko: '{n}개', en: { one: '{n} item', other: '{n} items' } },
     'rep.drops.none': { ko: '떨어진 아이템 없음', en: 'No loot' },
     'rep.book': { ko: '스킬북', en: 'Book' },
-    'rep.blueprint': { ko: '도안', en: 'Plan' },   // 스킬 도안 칸 배지 — 리포트 획득 격자 · 상단 도안 칸
     'rep.matGot': { ko: '획득 {n}', en: 'Gained {n}' },   // 획득 격자의 처치 재료 칸 툴팁 아래 줄 (2026-10-06 · ADR-0530)
 
     /* ── 런 목록 · 기여 (리포트 개편 2026-09-09 · SCREEN_DESIGN §4-3 · ADR-0063) ── */
@@ -2576,14 +2605,14 @@ const STRINGS = {
     // 선술집의 켜기도 이름 토막 [2026-09-25 사용자 지시 「영웅고용, 영웅수색」 · 「의뢰오픈」 · 대장간과 같은 시험 중 — SCREEN_DESIGN §13-1]
     'cn.t.hire': { ko: '영웅 고용 · 수색', en: 'Hero Hiring · Search' },   // 연구소 수색 줄도 이 랭크가 연다 (2026-10-30 사용자 지시)
     'cn.t.shop': { ko: '상단에서 무기 · 물약 구매', en: 'Buy weapons and potions at the trading house' },
-    'cn.t.shop_rows': { ko: '상단에서 방어구 · 장신구 · 스킬 도안 구매', en: 'Buy armor, jewelry and skill blueprints at the trading house' },
+    'cn.t.shop_rows': { ko: '상단에서 방어구 · 장신구 · 스킬북 구매', en: 'Buy armor, jewelry and skill books at the trading house' },
     'cn.t.shop_trade': { ko: '교역소에서 재료 교환', en: 'Trade materials at the trading post' },
     'cn.t.shop_special': { ko: '특수상단 방문', en: 'The special merchant starts visiting' },
     'cn.t.craft': { ko: '매직 장비에 전용 옵션 추가', en: 'Add a special option to magic gear' },
     'cn.t.stigma_craft': { ko: '낙인으로 장비 크래프트', en: 'Craft equipment with stigmas' },
     'cn.t.skill_card': { ko: '스킬 카드 합성', en: 'Fuse skill cards' },
     'cn.t.skillbook': { ko: '스킬북으로 스킬 습득', en: 'Learn skills from skill books' },   // 도서관 r1 (R179 · 2026-10-30 R398 · construction_draft §2)
-    'cn.t.book_craft': { ko: '스킬북 제작', en: 'Craft skill books' },   // 도서관 r2 (2026-10-16 · R263 — 도안이 열린 책 · ~~기본 책~~ 10-12)
+    'cn.t.lab_library': { ko: '연구소 스킬북 생산', en: 'Laboratory skill book production' },   // 도서관 r2 — 연구소 「도서관」 줄을 연다 (2026-11-15 · R504 · ADR-1198 — 옛 「스킬북 제작」)
     'cn.t.explore': { ko: '파티를 탐험에 파견', en: 'Send a party to explore' },
     // 탐험 r2 · r3 — 지도에 그 지점 아이콘이 생긴다 [2026-10-27 사용자 「상단 오픈」 · 「폐허 오픈」 · ADR-0908]
     'cn.t.explore_caravan': { ko: '상단 오픈', en: 'Unlocks Caravan' },
@@ -2639,25 +2668,9 @@ const STRINGS = {
     // 전직 카드 (2026-09-28 · R16 · SCREEN_DESIGN §17) — 거절은 `tr.err.<코드>`(game.advanceStart · 마스터리 전직 트리의 advanceLearn · advanceForget — ADR-0542)
     'tr.adv.level': { ko: 'Lv.{have} / {need}', en: 'Lv.{have} / {need}' },
     'tr.adv.go': { ko: '전직', en: 'Advance' },   // 전직 제목 오른쪽 버튼 — 갈래를 골라야 켜진다 (ADR-0536 · ADR-0539)
-    'tr.room.title': { ko: '전직의 방', en: 'Chamber of Advancement' },
-    'tr.room.paths': { ko: '전직 갈래', en: 'Advancement paths' },
-    'tr.room.ready': { ko: '전직 가능', en: 'Ready to advance' },
-    'tr.room.level': { ko: 'Lv.{n}부터 전직 가능', en: 'Advancement available at Lv.{n}' },
-    'tr.room.done': { ko: '{name} · 전직 완료', en: '{name} · Advancement complete' },
-    'tr.room.instant': { ko: '즉시', en: 'Instant' },   // 전직의 방 계기판 「소요 시간」 값 — 걸리는 시간이 0 일 때 (ADR-1179)
-    'tr.room.irreversible': { ko: '전직 갈래는 변경할 수 없습니다.', en: 'The advancement path cannot be changed.' },
-    // 전직의 방 칸 · 창 (SCREEN_DESIGN §17 · ADR-1179) — 칸의 [입장] · 창 바닥 [<갈래> 전직] · 계기판 칸 이름(위 작은 글)
-    'tr.room.enter': { ko: '입장', en: 'Enter' },
-    'tr.room.go': { ko: '{b} 전직', en: 'Advance to {b}' },
-    'tr.room.m.hero': { ko: '영웅', en: 'Hero' },
-    'tr.room.m.skills': { ko: '스킬', en: 'Skills' },   // 그 영웅의 지금 가진 스킬 카드 셋 (ADR-1189)
-    'tr.room.m.level': { ko: '필요 레벨', en: 'Required Level' },
-    'tr.room.m.unlock': { ko: '해금', en: 'Unlock' },
-    'tr.room.m.gold': { ko: '비용', en: 'Cost' },
-    'tr.room.m.time': { ko: '소요 시간', en: 'Time' },
-    'tr.room.m.path': { ko: '전직', en: 'Advancement' },
-    'tr.room.gold': { ko: '{g} G', en: '{g} G' },
+    // 전직 패널 (SCREEN_DESIGN §17 · ADR-1197) — 시작 · 완료 플래시 · 남은 시간 · 배움 · 스킬 포인트
     'tr.adv.started': { ko: '{name} — {b} 전직 시작', en: '{name} — started advancing to {b}' },
+    'tr.adv.done': { ko: '{name} — {b} 전직 완료', en: '{name} — advanced to {b}' },   // 걸리는 시간이 0 이라 [전직] 한 번에 끝났다 (§17 · ADR-1197)
     'tr.adv.left': { ko: '{t} 남음', en: '{t} left' },
     'tr.adv.learned': { ko: '배움', en: 'Learned' },
     'tr.adv.points': { ko: "스킬 포인트 {free} / {have}", en: "Skill points {free} / {have}" },
@@ -2713,6 +2726,7 @@ const STRINGS = {
     'dp.reg.lose.out': { ko: '{name} · {from} 등록 해제', en: '{name} · leave {from}' },
     'dp.reg.lose.skill': { ko: '숙련 {p}%', en: 'Mastery {p}%' },
     'dp.reg.lose.visit': { ko: '수색 시계 {t}', en: 'Search clock {t}' },
+    'dp.reg.lose.held': { ko: '찾아 둔 {name} 잃음', en: 'Loses found {name}' },
     'dp.reg.lose.reset': { ko: '{what} 처음부터', en: '{what} reset' },
     'dp.reg.count': { ko: '{n} / {cap}', en: '{n} / {cap}' },
     'dp.reg.apply': { ko: '적용', en: 'Apply' },
@@ -2970,33 +2984,28 @@ const STRINGS = {
     'sk.learnAt.advance': { ko: '도서관에서 전직 스킬을 배울 수 있습니다.', en: 'Advanced skills can be learned at the Library.' },
     // ~~`sk.needWeapon`~~(꺼진 칸 툴팁 맨 위 한 줄 · ADR-0446) — 2026-10-03 걷었다: 필요 무기는 설명창 이름 줄의 칩이 무기군 이름만으로 든다(ADR-0496)
     /* 스킬북 [2026-09-29 · R179 · 도서관 탭 SCREEN_DESIGN §17 · ADR-0422] — 규칙 문장은 없다(덮어쓰기는 도움말의 몫) · 권수 `×n` 은 물약 칸처럼 기호라 키가 없다(ADR-0460) */
-    'bk.hero.h': { ko: '스킬정보', en: 'Skill Info' },   // 도서관 공통 머리 맨 위 소제목 띠 — 두 탭 같은 자리
-    'bk.tab': { ko: '스킬북', en: 'Skill Books' },   // 도서관 폴더 탭 첫째 — 스킬 업그레이드 · 스킬 북 제작 (2026-11-14 사용자 지시 · ADR-1165 · 둘째 탭은 `tr.seg.adv`)
     'bk.up.h': { ko: '스킬 업그레이드', en: 'Skill Upgrade' },   // 도서관 스킬북 탭 왼쪽 구역 소제목 (2026-10-12 사용자 지시 · ADR-0597 — ~~`bk.own.h` 「가진 책」~~ · 자리 ADR-1165)
     'bk.up.help': { ko: '보유한 스킬북을 통해 스킬 레벨을 업그레이드 할 수 있습니다.', en: 'Use the skill books you own to upgrade skill levels.' },   // 제목 옆 `?` 툴팁 · 도움말 도서관 섹션도 이 키 (2026-10-12 사용자 지시 · ADR-0603)
     'bk.none': { ko: '가진 책 없음', en: 'No books' },
+    'bk.cls.all': { ko: '전체', en: 'All' },   // 스킬 업그레이드 직업 줄 첫 칸 (§17 · ADR-1206)
     'bk.learn': { ko: '배우기', en: 'Learn' },
     'bk.overwrite': { ko: '덮어쓰기', en: 'Overwrite' },
     'bk.overwrite.what': { ko: '{name}: {old} Lv.{n} → {skill}', en: '{name}: {old} Lv.{n} → {skill}' },   // 덮어쓰기 확인 창 첫 줄 (ADR-1020)
     'bk.overwrite.warn': { ko: '기존 스킬과 레벨은 사라지고 책으로 돌아오지 않습니다.', en: 'The current skill and its level are lost. Books are not returned.' },   // 덮어쓰기 확인 창 둘째 줄 (ADR-1020)
-    'bk.upgrade': { ko: '업그레이드 · {n}권', en: 'Upgrade · {n}' },   // 같은 책 — 이번에 드는 책 수 (2026-10-06 · R216 · ADR-0529 — ~~`bk.same` 「배움」~~ 퇴역)
+    'bk.upgrade': { ko: '업그레이드', en: 'Upgrade' },   // 같은 책 — 버튼은 행동 이름만 · 드는 책 수는 읽기 줄 아랫줄 `bk.need` (ADR-1208 · R216)
+    'bk.lvUp': { ko: 'Lv.{a} → Lv.{b}', en: 'Lv.{a} → Lv.{b}' },   // 읽기 줄 아랫줄 — 지금 → 읽은 뒤 (§17 · ADR-1208)
+    'bk.lvMax': { ko: 'Lv.{n} · 최대 레벨', en: 'Lv.{n} · Max level' },   // 읽기 줄 아랫줄 — 상한 (ADR-1208)
+    'bk.need': { ko: '책 {n}권 필요', en: 'Books needed: {n}' },   // 읽기 줄 아랫줄 — 드는 책 · 모자라면 붉다 · 가진 권수는 왼쪽 그림 칸 `×n` (ADR-1208 · 1211)
     'bk.max': { ko: '최대', en: 'Max' },
-    'bk.craft.h': { ko: '스킬 북 제작', en: 'Skill Book Crafting' },   // 도서관 오른쪽 아래 카드 제목 (2026-10-12 사용자 지시 · ADR-0597)
-    'bk.make': { ko: '만들기', en: 'Craft' },
-    'bk.craft.all': { ko: '전체', en: 'All' },   // 제작 칸 직업 탭의 첫 칸 (ADR-1021)
-    'bk.craft.help': { ko: '스킬 도안 한 장으로 그 스킬북 한 권을 만들 수 있습니다.', en: 'Use one skill blueprint to craft one copy of that skill book.' },   // 제목 옆 `?` 툴팁 · 도움말 도서관 섹션도 이 키 (2026-10-12 사용자 지시 · ADR-0600 · 도안이 소모된다 2026-10-20 R293)
-    'bk.craft.none': { ko: '스킬 도안 없음', en: 'No skill blueprints' },   // 제작 칸이 하나도 없을 때 (ADR-0600)
     'bk.learned': { ko: '{name} — {skill} 배움', en: '{name} learned {skill}' },
-    'bk.crafted': { ko: '{skill} 스킬북 제작 완료', en: 'Crafted a {skill} book' },
     'bk.upgraded': { ko: '{name} — {skill} Lv.{n}', en: '{name} — {skill} Lv.{n}' },   // 같은 책 업그레이드 (R216)
-    // 결과 코드 — `game.learnBook` · `game.craftBook` · `game.bookState` (INTERFACE §3)
+    'bk.salvage': { ko: '분해', en: 'Salvage' },   // 창고 스킬북 탭 도구 줄 — 고른 책 1권을 가루로 (§6 · ADR-1199)
+    'bk.salvaged': { ko: '{skill} 스킬북 분해 — {dust} +{n}', en: 'Salvaged a {skill} book — {dust} +{n}' },
+    // 결과 코드 — `game.learnBook` · `game.salvageBook` · `game.bookState` (INTERFACE §3)
     'bk.err.level': { ko: 'Lv.{n} 달성', en: 'Reach Lv.{n}', lock: true },
     'bk.err.missing': { ko: '배울 수 없는 스킬', en: 'Cannot be learned' },
     'bk.err.book': { ko: '책 부족', en: 'Not enough books' },   // 없거나 업그레이드에 드는 권수보다 적다 (R216)
     'bk.err.maxUp': { ko: '이미 최대 레벨', en: 'Already at max level' },   // 업그레이드 상한 (R216 — ~~`bk.err.same`~~ 퇴역)
-    'bk.err.gold': { ko: '골드 부족', en: 'Not enough gold' },
-    'bk.err.materials': { ko: '가루 부족', en: 'Not enough dust' },
-    'bk.err.blueprint': { ko: '스킬 도안 없음', en: 'No skill blueprint' },   // craftBook — 그 스킬의 도안이 아직 없다 (R241)
     /* 스킬 툴팁 문장은 **스킬마다 제 틀**이다 — `skill.csv:desc_kr` · `desc_en` [2026-10-21 사용자 지시 · ADR-0679 — ~~`sk.line.*` 공용 틀 · `sk.eff.*` 효과 구절~~].
        여기 남는 것은 공격이 같이 쓰는 둘째 문장(추가 피해)과 숫자 자리 안에 드는 구절(수량 · 단위)이다 — 자리 이름은 `tip.js:descSlots`.
        확률로 터지는 추가 피해 [2026-09-10 · ADR-0089] — 공격 문장 **뒤에 서는 완결된 둘째 문장**이다. {c} = 확률 · {x} = 배수(%) */

@@ -1,0 +1,53 @@
+warrior war_bash          배시         t1 cool 15 attrs=str          stat=O fired=O nc25= 55.8% Δ15=+0.073 Δ25=+0.071 Δ45=+0.058 halves=ok
+warrior war_doubleswing   더블스윙       t1 cool  8 attrs=str          stat=O fired=O nc25= 15.8% Δ15=+0.044 Δ25=+0.091 Δ45=+0.083 halves=mixed
+warrior war_recovery      리커버리       t1 cool 18 attrs=vit          stat=O fired=O nc25= 70.8% Δ15=+0.044 Δ25=+0.013 Δ45=+0.005 halves=ok
+warrior war_leap          리프 어택      t2 cool 11 attrs=str          stat=O fired=O nc25= 37.5% Δ15=+0.096 Δ25=+0.072 Δ45=+0.081 halves=ok
+warrior war_shout         워 오더스      t2 cool 18 attrs=ldr,vit      stat=X fired=O nc25= 68.3% Δ15=+0.009 Δ25=-0.002 Δ45=+0.001 halves=mixed
+warrior war_battleorders  배틀 오더스     t2 cool 18 attrs=ldr,vit      stat=X fired=O nc25= 70.8% Δ15=+0.030 Δ25=+0.013 Δ45=+0.010 halves=ok
+warrior war_ironskin      아이언 스킨     t1 cool 18 attrs=vit          stat=X fired=O nc25= 70.8% Δ15=-0.000 Δ25=-0.003 Δ45=+0.002 halves=mixed
+warrior war_frenzy        프렌지        t2 cool 18 attrs=agi,vit      stat=X fired=O nc25= 65.8% Δ15=-0.020 Δ25=-0.002 Δ45=+0.000 halves=mixed
+warrior war_warcry        워 크라이      t2 cool 18 attrs=ldr,vit      stat=X fired=O nc25= 67.5% Δ15=+0.005 Δ25=-0.001 Δ45=+0.001 halves=mixed
+warrior war_battlecry     배틀 크라이     t2 cool 18 attrs=ldr,vit      stat=X fired=O nc25= 69.2% Δ15=+0.003 Δ25=+0.002 Δ45=+0.003 halves=mixed
+knight  kni_resistshield  레지스탕스 실드   t1 cool 18 attrs=vit          stat=X fired=O nc25= 57.5% Δ15=-0.001 Δ25=+0.005 Δ45=+0.003 halves=mixed
+knight  kni_holyshield    홀리 실드      t1 cool 18 attrs=vit          stat=X fired=O nc25= 56.7% Δ15=+0.024 Δ25=+0.021 Δ45=+0.010 halves=ok
+knight  kni_charge        차지         t1 cool  9 attrs=str,luck     stat=O fired=O nc25= 18.3% Δ15=+0.144 Δ25=+0.127 Δ45=+0.106 halves=ok
+knight  kni_rush          러시         t1 cool  9 attrs=str,agi      stat=O fired=O nc25= 19.2% Δ15=+0.059 Δ25=+0.061 Δ45=+0.077 halves=ok
+knight  kni_enchant       인챈트        t2 cool 16 attrs=int,vit      stat=X fired=O nc25= 42.5% Δ15=+0.028 Δ25=+0.044 Δ45=+0.050 halves=ok
+knight  kni_might         마이트        t2 cool  0 attrs=ldr          stat=X fired=O nc25=  0.0% Δ15=+0.066 Δ25=+0.081 Δ45=+0.068 halves=ok
+knight  kni_fanaticism    파나티시즘      t2 cool  0 attrs=ldr          stat=X fired=O nc25=  0.0% Δ15=+0.009 Δ25=+0.055 Δ45=+0.077 halves=mixed
+knight  kni_defiance      디파이언스      t2 cool  0 attrs=ldr          stat=X fired=O nc25=  0.0% Δ15=+0.049 Δ25=+0.087 Δ45=+0.078 halves=ok
+knight  kni_sweep         스윕         t2 cool 10 attrs=str          stat=O fired=O nc25= 21.7% Δ15=+0.143 Δ25=+0.176 Δ45=+0.156 halves=ok
+knight  kni_holyfire      홀리 파이어     t2 cool  0 attrs=int          stat=X fired=O nc25=  0.0% Δ15=+0.139 Δ25=+0.171 Δ45=+0.203 halves=ok
+archer  arc_snipe         스나이프       t1 cool 15 attrs=str          stat=O fired=O nc25= 25.8% Δ15=+0.102 Δ25=+0.046 Δ45=+0.024 halves=mixed
+archer  arc_rapid         래피드 샷      t1 cool  5 attrs=str,agi      stat=O fired=O nc25=  3.3% Δ15=+0.112 Δ25=+0.107 Δ45=+0.088 halves=mixed
+archer  arc_multishot     멀티샷        t1 cool  5 attrs=str          stat=O fired=O nc25=  3.3% Δ15=+0.263 Δ25=+0.258 Δ45=+0.089 halves=ok
+archer  arc_guided        가이디드 애로우   t1 cool  5 attrs=str,agi      stat=O fired=O nc25=  3.3% Δ15=+0.282 Δ25=+0.277 Δ45=+0.156 halves=ok
+archer  arc_pierce        피어싱 샷      t2 cool 18 attrs=agi,vit      stat=X fired=O nc25= 41.7% Δ15=+0.005 Δ25=+0.021 Δ45=+0.006 halves=mixed
+archer  arc_poison        포이즌 애로우    t2 cool 16 attrs=int,vit      stat=X fired=O nc25= 34.2% Δ15=+0.064 Δ25=+0.071 Δ45=+0.013 halves=ok
+archer  arc_coldarrow     콜드 애로우     t2 cool 16 attrs=int,vit      stat=X fired=O nc25= 34.2% Δ15=+0.048 Δ25=+0.054 Δ45=+0.006 halves=mixed
+archer  arc_evade         이베이드       t2 cool 18 attrs=agi,vit      stat=X fired=O nc25= 37.5% Δ15=+0.045 Δ25=+0.044 Δ45=+0.001 halves=mixed
+archer  arc_quickhands    퀵 핸즈       t2 cool 18 attrs=agi,vit      stat=X fired=O nc25= 41.7% Δ15=+0.018 Δ25=-0.006 Δ45=-0.001 halves=mixed
+archer  arc_eagleeye      이글 아이      t2 cool 18 attrs=str,vit      stat=X fired=O nc25= 41.7% Δ15=+0.007 Δ25=+0.021 Δ45=+0.001 halves=ok
+mage    mag_fireball      파이어볼       t1 cool 10 attrs=int          stat=O fired=O nc25=  5.0% Δ15=+0.585 Δ25=+0.512 Δ45=+0.684 halves=ok
+mage    mag_inferno       인페르노       t1 cool 12 attrs=int          stat=X fired=O nc25= 10.0% Δ15=+0.298 Δ25=+0.339 Δ45=+0.347 halves=ok
+mage    mag_iceblast      아이스 블라스트   t1 cool  5 attrs=int,cha      stat=O fired=O nc25=  0.0% Δ15=+0.499 Δ25=+0.490 Δ45=+0.667 halves=ok
+mage    mag_frostnova     프로스트 노바    t1 cool 12 attrs=int,cha      stat=O fired=O nc25= 10.0% Δ15=+0.247 Δ25=+0.267 Δ45=+0.377 halves=ok
+mage    mag_lightning     라이트닝       t1 cool  9 attrs=int,luck     stat=O fired=O nc25=  1.7% Δ15=+0.562 Δ25=+0.552 Δ45=+0.689 halves=ok
+mage    mag_chain         체인 라이트닝    t1 cool  9 attrs=int,agi,luck stat=O fired=O nc25=  1.7% Δ15=+0.468 Δ25=+0.485 Δ45=+0.614 halves=ok
+mage    mag_ignite        이그나이트      t2 cool 16 attrs=vit          stat=X fired=O nc25= 23.3% Δ15=+0.013 Δ25=+0.012 Δ45=+0.030 halves=mixed
+mage    mag_deepfreeze    딥 프리즈      t2 cool 16 attrs=vit          stat=X fired=O nc25= 23.3% Δ15=+0.013 Δ25=+0.012 Δ45=+0.030 halves=mixed
+mage    mag_surge         서지         t2 cool 16 attrs=luck,vit     stat=X fired=O nc25= 23.3% Δ15=+0.013 Δ25=+0.012 Δ45=+0.028 halves=mixed
+mage    mag_echo          에코         t2 cool 20 attrs=vit          stat=X fired=O nc25= 36.7% Δ15=+0.005 Δ25=+0.009 Δ45=-0.002 halves=mixed
+priest  pri_judgment      심판         t1 cool  9 attrs=int          stat=O fired=O nc25=  8.3% Δ15=+0.143 Δ25=+0.083 Δ45=+0.134 halves=ok
+priest  pri_heal          힐링 라이트     t1 cool 10 attrs=cha          stat=O fired=O nc25= 14.2% Δ15=+0.204 Δ25=+0.204 Δ45=+0.192 halves=ok
+priest  pri_grace         그레이스       t2 cool 18 attrs=ldr,vit      stat=X fired=O nc25= 51.7% Δ15=+0.022 Δ25=+0.014 Δ45=+0.014 halves=ok
+priest  pri_haste         헤이스트       t2 cool 18 attrs=ldr,vit      stat=X fired=O nc25= 50.8% Δ15=+0.034 Δ25=+0.012 Δ45=+0.012 halves=ok
+priest  pri_cure          힐          t1 cool  8 attrs=cha          stat=O fired=O nc25=  4.2% Δ15=+0.364 Δ25=+0.302 Δ45=+0.227 halves=ok
+priest  pri_regen         프레이어       t2 cool 18 attrs=ldr,vit      stat=X fired=O nc25= 50.8% Δ15=+0.050 Δ25=+0.014 Δ45=+0.011 halves=ok
+priest  pri_penitence     페니턴스       t2 cool 18 attrs=cha          stat=X fired=O nc25= 51.7% Δ15=+0.032 Δ25=+0.012 Δ45=+0.009 halves=ok
+priest  pri_bind          바인드        t2 cool 18 attrs=cha          stat=X fired=O nc25= 50.8% Δ15=+0.026 Δ25=+0.016 Δ45=+0.010 halves=ok
+priest  pri_doom          둠          t2 cool 18 attrs=cha          stat=X fired=O nc25= 51.7% Δ15=+0.014 Δ25=+0.009 Δ45=+0.002 halves=ok
+priest  pri_summon        소환         t1 cool 30 attrs=-            stat=X fired=X nc25=100.0% Δ15=+0.000 Δ25=+0.000 Δ45=+0.000 halves=ok
+stat live 19 dead 30 dead list ['war_shout', 'war_battleorders', 'war_ironskin', 'war_frenzy', 'war_warcry', 'war_battlecry', 'kni_resistshield', 'kni_holyshield', 'kni_enchant', 'kni_might', 'kni_fanaticism', 'kni_defiance', 'kni_holyfire', 'arc_pierce', 'arc_poison', 'arc_coldarrow', 'arc_evade', 'arc_quickhands', 'arc_eagleeye', 'mag_inferno', 'mag_ignite', 'mag_deepfreeze', 'mag_surge', 'mag_echo', 'pri_grace', 'pri_haste', 'pri_regen', 'pri_penitence', 'pri_bind', 'pri_doom']
+noCast>=50% at Lv25 17 ['war_bash', 'war_recovery', 'war_shout', 'war_battleorders', 'war_ironskin', 'war_frenzy', 'war_warcry', 'war_battlecry', 'kni_resistshield', 'kni_holyshield', 'pri_grace', 'pri_haste', 'pri_regen', 'pri_penitence', 'pri_bind', 'pri_doom', 'pri_summon']
+mean Δ25 tier1 0.196 n 22  tier2 0.037 n 28

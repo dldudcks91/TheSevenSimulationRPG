@@ -974,10 +974,17 @@ export const MASTERY_GRID = { tiers: 4, nodes: 3 };
  * 재료 목록 · 지어낸 재고(루비 · 낙인)는 2026-10-24 걷었다 — 물건은 미정이라 칸 셋에 `?` 만 선다(SCREEN_DESIGN §8-3 · ADR-0782).
  */
 export const TRADE = {
-    /** 특수상단 — 상인 이름과 물건 칸 수(사용자 「특수한 물건 3개 정도」). 와 있는지 · 남은 시간은 `game.shopVisit` 이 낸다 */
+    /** 특수상단 — 물건 칸 수(사용자 「특수한 물건 3개 정도」). 와 있는지 · 남은 시간은 `game.shopVisit` 이 낸다 */
     special: {
-        who: { ko: '떠돌이 광물상', en: 'Wandering Ore Dealer' },
         slots: 3,
+    },
+    /** 회차의 상인 — 맡은 최하급 재료(`shopVisit.deal` · 교역소 특가)마다 한 명 · 특수상단 카드와 교역소 시세 줄이 같은 이름을 쓴다 (ADR-1210 · R512).
+     *  ⚠임시 — 광물상 말고 셋은 이 세션이 붙인 이름 · 기획이 정하면 CSV 로 간다 */
+    merchants: {
+        iron_ore: { ko: '떠돌이 광물상', en: 'Wandering Ore Dealer' },
+        herb: { ko: '떠돌이 약초상', en: 'Wandering Herb Dealer' },
+        timber: { ko: '떠돌이 목재상', en: 'Wandering Timber Dealer' },
+        dust: { ko: '떠돌이 가루상', en: 'Wandering Dust Dealer' },
     },
 };
 
@@ -1085,6 +1092,8 @@ export const gambleArt = id => `<img class="gb-ico" src="${GAMBLE_ART_DIR}${id}$
  */
 const FORGE_ART_DIR = './assets/art/icons/forge/';
 export const FORGE_ART = { anvil: `${FORGE_ART_DIR}anvil${ICON_EXT}`, hammer: `${FORGE_ART_DIR}hammer${ICON_EXT}` };
+/** 강화 전 손질 카드 그림 — 파일명 = `temper_action.csv:action`(heat · reinforce · quench · Codex · 원본 `icons_source/forge/` · ADR-1200) */
+export const forgeArt = id => `${FORGE_ART_DIR}${id}${ICON_EXT}`;
 
 /**
  * 콜로세움 · 결투장 휘장 (SCREEN_DESIGN §1 · ADR-0670 · Codex · 원본 `icons_source/arena/`) — 파일명 = `arena_tier.csv` 의 `tier_id`

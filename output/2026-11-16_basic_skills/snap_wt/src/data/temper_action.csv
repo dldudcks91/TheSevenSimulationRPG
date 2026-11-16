@@ -1,0 +1,16 @@
+action,effect,mat,tier,value,description_kr
+heat,chance,timber,1,0.05,⚠제안 — 손질 셋 × 재료 단계 [신설 2026-11-15 · R505 · item_design §7-2 · temper_roll.csv 를 갈음] · action = 손질 id(화면 순서 = 첫 행이 나온 순서) · effect = chance(강화 확률 +) · great(대성공 비율 + — balance.csv:equip_upgrade_great_chance 에 더한다) · keep(실패해도 강화 횟수를 안 쓸 확률) · mat = 내는 재료 줄의 뿌리(연구소 재료) · tier = 재료 단계(1 최하급 ~) · value = 그 단계의 몫(비율 · 0 초과 1 이하 · 굴리지 않는다) · 개수는 그 강화의 부위 재료 개수와 같다 · 사용자 「1. 강화 확률 올리기 2. 대성공 확률 올리기 3. 실패 시 횟수가 차감되지 않을 확률올리기」
+heat,chance,timber,2,0.1,⚠제안
+heat,chance,timber,3,0.15,⚠제안
+heat,chance,timber,4,0.2,⚠제안
+heat,chance,timber,5,0.25,⚠제안
+reinforce,great,iron_ore,1,0.1,⚠제안 — 덧대기(철광석) · 다음 강화 한 번의 대성공 비율 +
+reinforce,great,iron_ore,2,0.2,⚠제안
+reinforce,great,iron_ore,3,0.3,⚠제안
+reinforce,great,iron_ore,4,0.4,⚠제안
+reinforce,great,iron_ore,5,0.5,⚠제안
+quench,keep,herb,1,0.3,⚠제안 — 담금질(약초) · 다음 강화가 실패해도 횟수를 안 쓸 확률 · 같은 값이면 달구기가 거의 늘 이겨(item_design 「손질의 남은 칸」 ①) 크게 잡았다
+quench,keep,herb,2,0.45,⚠제안
+quench,keep,herb,3,0.6,⚠제안
+quench,keep,herb,4,0.75,⚠제안
+quench,keep,herb,5,0.9,⚠제안

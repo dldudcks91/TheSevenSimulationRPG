@@ -353,7 +353,7 @@ export function createSkillSystem(data) {
         //   고유 · 기본 책을 막는다 · 목걸이는 바로 위 검사 · 책 · 도안은 `bookable` 이 막는다
         if (d.effects.some(e => e.effect === 'call') && (row.innate_pool !== 0 || row.starter_pool !== 0))
             bad(`불러내기인데 innate_pool ${row.innate_pool} · starter_pool ${row.starter_pool} — 영웅은 무리가 없어 안 나간다 · 둘 다 0`);
-        // 직업 기본기 [2026-09-27 · 2026-09-29 R179] — **지금 게임 로직이 읽는 곳이 없다**(이 검사뿐) · ~~상단이 안 파는 책~~(2026-10-22 R310 — 상단 후보는 1티어 · `state.js:shopBlueprintPool`) · ~~첫 파티의 고유~~(2026-10-16 R271 — 첫 파티는 직업 풀의 1티어 · `ui/data.js:starterSkills`) · ~~도서관 기본 책~~(10-12 R241 — 제작 목록은 도안) · ~~시작 무기 스킬~~ — 0/1 · 직업 스킬만
+        // 직업 기본기 [2026-09-27 · 2026-09-29 R179] — **지금 게임 로직이 읽는 곳이 없다**(이 검사뿐) · ~~상단이 안 파는 책~~(2026-10-22 R310 — 상단 후보는 1티어 · `state.js:shopBookPool`) · ~~첫 파티의 고유~~(2026-10-16 R271 — 첫 파티는 직업 풀의 1티어 · `ui/data.js:starterSkills`) · ~~도서관 기본 책~~(10-12 R241 — 책 제작은 2026-11-15 R504 퇴역) · ~~시작 무기 스킬~~ — 0/1 · 직업 스킬만
         if (row.starter_pool !== 0 && row.starter_pool !== 1) bad(`starter_pool ${row.starter_pool} — 0 또는 1`);
         if (row.starter_pool === 1 && d.ownerKind !== 'job') bad(`starter_pool 1 인데 owner_kind ${d.ownerKind} — 직업 기본기는 직업 스킬만`);
         // 갑옷 특정 스킬 +n 후보 [2026-10-08 · R225] — 0/1 · **기본 스킬(직업 스킬)만** — 풀은 직업 스킬만 읽어 다른 행의 1 은 조용히 버려진다

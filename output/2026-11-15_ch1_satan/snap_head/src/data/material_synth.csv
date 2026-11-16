@@ -1,0 +1,18 @@
+material_id,from_id,need,gold,name_kr,name_en,description_kr
+iron_ore_2,iron_ore,5,20,하급 철광석,Low-Grade Iron Ore,⚠임시 [신설 2026-10-27 · R359 · item_design §5-2 · **2026-10-29 · R373 — 단계 다섯(최하급 · 하급 · 중급 · 상급 · 최상급) · 가루도 같은 사다리**] — 표 전체가 임시값이다. 한 행 = 위 단계 재료 하나와 그 합성 — from_id(바로 아래 재료 · lab_material.csv 의 최하급 · 뿌리 행 또는 앞 행) need 개 + 골드 gold → 이 재료 하나 · 대장간 「합성」 · 즉시 · 실패 없음 · 줄 · 단계는 from_id 사슬이 정한다(뿌리 = 1 · 한 재료 위에 하나만) · **from_id 가 - 인 행 = 연구소가 안 캐는 줄의 뿌리**(가루 — 분해 · 도박장이 낸다 · need · gold 도 -) · 행 순서 = 화면 순서 · ⚠ 위 단계는 아직 먹는 곳이 없다(어느 자리가 어느 단계를 먹나 — GAME_DESIGN §10)
+iron_ore_3,iron_ore_2,5,80,중급 철광석,Mid-Grade Iron Ore,⚠임시
+iron_ore_4,iron_ore_3,5,320,상급 철광석,High-Grade Iron Ore,⚠임시
+iron_ore_5,iron_ore_4,5,1280,최상급 철광석,Top-Grade Iron Ore,⚠임시
+herb_2,herb,5,20,하급 약초,Low-Grade Herb,⚠임시
+herb_3,herb_2,5,80,중급 약초,Mid-Grade Herb,⚠임시
+herb_4,herb_3,5,320,상급 약초,High-Grade Herb,⚠임시
+herb_5,herb_4,5,1280,최상급 약초,Top-Grade Herb,⚠임시
+timber_2,timber,5,20,하급 목재,Low-Grade Timber,⚠임시
+timber_3,timber_2,5,80,중급 목재,Mid-Grade Timber,⚠임시
+timber_4,timber_3,5,320,상급 목재,High-Grade Timber,⚠임시
+timber_5,timber_4,5,1280,최상급 목재,Top-Grade Timber,⚠임시
+dust,-,-,-,최하급 가루,Lowest-Grade Dust,뿌리 — 분해 · 도박장이 내는 가루(2026-10-29 · R373 — 옛 자원 dust 가 재료 사다리로 옮겼다 · 세이브 v43)
+dust_2,dust,5,20,하급 가루,Low-Grade Dust,⚠임시
+dust_3,dust_2,5,80,중급 가루,Mid-Grade Dust,⚠임시
+dust_4,dust_3,5,320,상급 가루,High-Grade Dust,⚠임시
+dust_5,dust_4,5,1280,최상급 가루,Top-Grade Dust,⚠임시

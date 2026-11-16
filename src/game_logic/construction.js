@@ -30,7 +30,7 @@ export const TARGETS = {
     //   ~~`search`~~ — 2026-10-19 수색 삭제(찾아온 영웅은 건물이 아니라 연구소 줄이 연다 · base_expedition §2-4)
     //   ~~`storage`~~ 도 건물 밖이다 — 가방 · 창고 칸은 처음부터 열린다 (2026-10-27 사용자 지시 · R361)
     codex: U(true), hire: U(true), shop: U(true), shop_special: U(true),
-    shop_rows: U(true),   // 상단 둘째 · 셋째 줄 — 방어구 · 장신구 · 스킬 도안(상단 r2 · `shop` 은 맨 윗줄 무기 · 물약만 · 2026-10-30 사용자 · `state.shopState` 의 `locked`)
+    shop_rows: U(true),   // 상단 둘째 · 셋째 줄 — 방어구 · 장신구 · 스킬북(상단 r2 · `shop` 은 맨 윗줄 무기 · 물약만 · 2026-10-30 사용자 · `state.shopState` 의 `locked`)
     shop_trade: U(true),   // 교역소 — 재료 교환 창구(상단 r3 · 특수상단은 r4 · 2026-10-30 사용자) · 교환 비율이 미정이라 열리면 화면에 자리만 선다(`state.shopState` 의 `trade`)
     lab_res: U(true),   // 연구소 「자원」 줄 — 창고 r1 이 연다(연구소는 시작부터 r1 · 2026-10-27 사용자 지시 · R361 · `state.labLineOpen`)
     // 켜기 — 준비 중 (construction_draft §2 의 ⚠ 칸 포함)
@@ -42,9 +42,9 @@ export const TARGETS = {
     explore_caravan: U(true), explore_ruins: U(true),
     commission_board: U(true),   // 의뢰 게시판 [2026-09-24 · R153 · base_expedition_design §1-3] — 준비 중에서 풀렸다
     gamble: U(true),   // 도박장 슬롯 [2026-09-24 · R149 · base_expedition_design 「도박장」] — 준비 중에서 풀렸다
-    // 도서관 [2026-09-29 · R179 · construction_draft §2 · skill_design §2-1] — 책 배우기(`learnBook` · r1) · 책 제작(`craftBook` · r2 — 2026-10-16 · R263).
+    // 도서관 [2026-09-29 · R179 · construction_draft §2 · skill_design §2-1] — 책 배우기(`learnBook` · r1) · 연구소 「도서관」 줄(`lab_library` · r2 — 2026-11-15 · R504 · ~~`book_craft` 책 제작~~ 퇴역).
     //   ~~대장간 r5 `skill_card`~~ 줄은 걷었다(도서관이 받는다 — 스킬 카드는 정의가 없어 대상만 남는다)
-    skillbook: U(true), book_craft: U(true),
+    skillbook: U(true), lab_library: U(true),
     // 전직 — 도서관 r3 (2026-10-16 · R263 — ~~r2~~ 2026-10-09 · R231 · construction_draft §2 — ~~훈련장 r3~~ · 훈련장은 `training` · `training_slots` 와 함께 걷혔다).
     //   전직은 섰다(R16 · 2026-09-28) · 「영웅 스킬을 더 찍는다」(도서관 r4)는 준비 중이라 그 랭크는 못 짓는다
     advance: U(true), skill_depth: U(false),

@@ -183,7 +183,7 @@ function runFingerprint(SYS, B, NOW, seed, stage, order) {
         grew: grewSig(SYS, G),                                        // ⚠ resolveBattle **뒤**의 상태 (grantXp)
         tactics,
         drops: res.drops.map(dropSig),
-        blueprints: res.blueprints.join('|') || '-',                 // 떨어진 스킬 도안 — 처치당 1개를 장비와 나눠 쓴다 (2026-09-29 · R179 · 종류 굴림 1회 · 2026-10-20 R293 ~~books 스킬북~~ — 칸 이름만 바뀌었다)
+        books: res.books.join('|') || '-',                           // 떨어진 스킬북 — 처치당 1개를 장비와 나눠 쓴다 (2026-09-29 · R179 · 종류 굴림 1회 · 2026-11-15 R504 ~~blueprints 스킬 도안~~ — 칸 이름만 바뀌었다)
         // ~~mats 처치 재료~~ — 2026-10-29 R373 삭제(처치가 재료를 안 뱉는다 · INTERFACE §5-5)
         // 타임라인 전체의 지문 — 요약 필드가 못 보는 순서·값 변화를 잡는다.
         // 어디가 깨졌는지는 위 필드들이 말하고 이 값은 「달라졌다」만 말한다

@@ -1,0 +1,81 @@
+<!doctype html><meta charset="utf-8"><title>running</title><pre id="out"></pre>
+<script type="module">
+// 기본 스킬 50 결투 점검 (2026-11-16) — output/2026-10-30_priest_duel/priest_duel.html 을 다섯 직업으로 넓혔다.
+// 직업 C 가 낀 팀 A ↔ C 가 없는 팀 B(같은 등급 · arena.rollTierOpponent) · A 의 C 영웅 액티브를 「그 스킬 하나만(고유 칸)」 또는 「없음」으로 바꿔 같은 시드로 arena.fight.
+// 변형 `<id>+attr` = 같은 스킬 + 그 스킬의 계수 칸에 붙은 능력치를 모두 +10(전투 능력치는 그대로 — 스킬 계수만 본다).
+import { loadData, buildSystems, D } from '../ui/data.js';
+import { makeRng } from '../game_logic/rng.js';
+const q = new URL(location.href).searchParams;
+const N = +(q.get('n') || 120), C = q.get('cls'), BUMP = +(q.get('bump') || 10);
+const out = document.getElementById('out');
+try {
+    await loadData('../data/');
+    const SYS = buildSystems(D);
+    const skills = SYS.skill.list.filter(d => d.ownerKind === 'job' && d.ownerId === C && (d.tier === 1 || d.tier === 2)).map(d => d.id);
+    const attrsOf = id => [...new Set((SYS.skill.defs[id]?.effects ?? []).flatMap(e => (e.scales ?? []).map(s => s.attr)).filter(a => a && a !== '-'))];
+    // `partner=<id>` — 그 스킬을 고유 칸에 늘 두고 시험 스킬은 배운 칸에(마법사 자기 버프는 공격 스킬이 있어야 일한다) · `v=` 로 시험 목록
+    const PARTNER = q.get('partner');
+    const VARS = q.get('v') ? ['none', ...q.get('v').split(/[|,]/)] : ['none', ...skills, ...skills.map(s => s + '+attr')];
+    const levels = (q.get('lv') || '15,25,45').split(',').map(Number);
+    const clone = x => JSON.parse(JSON.stringify(x));
+    const res = {}, meta = { cls: C, N, bump: BUMP, skills, attrs: Object.fromEntries(skills.map(s => [s, attrsOf(s)])), levels };
+    for (const lv of levels) {
+        const tier = SYS.arena.tiers.find(t => t.level === lv);
+        const pairs = [];
+        for (let s = 1; pairs.length < N && s < N * 60; s++) {
+            const A = SYS.arena.rollTierOpponent(tier.id, makeRng(1000 + s));
+            if (!A.some(p => p.hero.cls === C)) continue;
+            const B = SYS.arena.rollTierOpponent(tier.id, makeRng(70000 + s));
+            if (B.some(p => p.hero.cls === C)) continue;
+            pairs.push({ A, B, s });
+        }
+        res[lv] = { pairs: pairs.length };
+        for (const v of VARS) {
+            const bump = v.endsWith('+attr'), id = bump ? v.slice(0, -5) : v;
+            let win = 0, margin = 0, dur = 0, casts = 0, buffs = 0, dots = 0, dotDmg = 0, heal = 0, evades = 0, heroDmg = 0, skillErr = 0, firstSum = 0, firstN = 0, noCast = 0;
+            const half = [0, 0];
+            for (const [pi, { A, B, s }] of pairs.entries()) {
+                const A2 = clone(A);
+                const me = A2.find(p => p.hero.cls === C);
+                const up = me.actives.find(a => a.source === 'innate')?.up ?? 0;
+                me.actives = PARTNER
+                    ? [{ id: PARTNER, source: 'innate', ...(up ? { up } : {}) }, ...(id === 'none' ? [] : [{ id, source: 'book' }])]
+                    : id === 'none' ? [] : [{ id, source: 'innate', ...(up ? { up } : {}) }];
+                if (bump) { me.stats = { ...me.stats }; for (const a of attrsOf(id)) me.stats[a] = (me.stats[a] ?? 0) + BUMP; }
+                let r;
+                try { r = SYS.arena.fight(A2, B, makeRng(90000 + s)); } catch (e) { skillErr++; continue; }
+                const hpMax = {}; A2.forEach((p, i) => hpMax[`p${i}`] = p.combat.hp_max); B.forEach((p, i) => hpMax[`e${i}`] = p.combat.hp_max);
+                const hp = { ...hpMax };
+                const key = `p${A2.indexOf(me)}`;
+                const mine = x => x === id || (typeof x === 'string' && x.startsWith(id + '_'));
+                // 첫 발동 — 시전(`skill`) 또는 그 스킬의 창 · 도트 · 회복 중 가장 이른 것(오오라는 시전이 없다)
+                const fe = id === 'none' ? null : r.timeline.find(e => (e.e === 'skill' && e.u === key && e.s === id) || ((e.e === 'buff' || e.e === 'dot' || e.e === 'heal') && mine(e.s)));
+                if (id !== 'none') { if (fe) { firstSum += fe.t; firstN++; } else noCast++; }
+                for (const e of r.timeline) {
+                    if (e.e === 'hit' && e.d in hp) { hp[e.d] = e.dhp; if (e.a === key) heroDmg += e.dmg; }
+                    else if (e.e === 'dot' && e.d in hp) { hp[e.d] = e.dhp; if (e.a === key) heroDmg += e.dmg; if (mine(e.s)) { dots++; dotDmg += e.dmg; } }
+                    else if (e.e === 'heal' && e.d in hp) { hp[e.d] = e.dhp; if (mine(e.s)) heal += e.amt / hpMax[e.d]; }
+                    else if (e.e === 'regen' && e.u in hp) hp[e.u] = e.dhp;
+                    else if (e.e === 'skill' && e.u === key && e.s === id) casts++;
+                    else if (e.e === 'buff' && mine(e.s) && !e.ext) buffs++;
+                    else if (e.e === 'evade' && e.d === key) evades++;
+                }
+                const frac = side => Object.keys(hp).filter(k => k[0] === side).reduce((n, k) => n + Math.max(0, hp[k]) / hpMax[k], 0) / 3;
+                if (r.won) win++;
+                const m = frac('p') - frac('e');
+                margin += m; half[pi < pairs.length / 2 ? 0 : 1] += m;
+                dur += r.durationSec;
+            }
+            const n = pairs.length;
+            res[lv][v] = { win: +(win / n * 100).toFixed(1), margin: +(margin / n).toFixed(4), m1: +(half[0] / (n / 2)).toFixed(4), m2: +(half[1] / (n / 2)).toFixed(4), dur: +(dur / n).toFixed(1),
+                casts: +(casts / n).toFixed(2), buffs: +(buffs / n).toFixed(2), dots: +(dots / n).toFixed(2), dotDmg: Math.round(dotDmg / n), heal: +(heal / n).toFixed(3), evades: +(evades / n).toFixed(2), heroDmg: Math.round(heroDmg / n), err: skillErr,
+                first: firstN ? +(firstSum / firstN).toFixed(1) : null, noCastPct: +(noCast / n * 100).toFixed(1) };
+        }
+    }
+    out.textContent = JSON.stringify({ meta, res });
+    document.title = 'DONE';
+} catch (err) {
+    out.textContent = 'ERR ' + err.stack;
+    document.title = 'FAIL';
+}
+</script>

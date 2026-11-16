@@ -2,6 +2,46 @@
 
 규칙 본문은 [base_expedition_design.md](docs/game_design/base_expedition_design.md) §1-3 · 코드 대장은 [DEV_PLAN.md](docs/client/DEV_PLAN.md) R457. 이 문서는 11-12 대화에서 정한 것과 남은 일만 적는다.
 
+## 11-16 재배분 — 실행 계획 [사용자 「분노는 처치 · 시기는 선술집에서 영웅수집하거나 스킬 배우는거 · 탐욕 장비 분해, 아이템 획득 · 나태 연구소 및 재료 · 폭식 강화, 제작」 · 「그냥 아무떄나 열릴수 있도록」 · 「색욕과 오만은 일단 제외」 · 「ㅇㅇ일단 이렇게해놓고 수정해봐」]
+
+기획서(base_expedition_design §1-3 · GAME_DESIGN §9 · §10)는 메인이 고친다. 실행자는 `docs/game_design/` 을 건드리지 않는다.
+
+**11-16 반영 끝** — 기획서(base_expedition_design §1-3 · 「남은 것」 ⑨ ~ ⑫ · 「거른 안」 · GAME_DESIGN §3 · §9 11-16 · §10) · 코드 · 화면 DEV_PLAN R513 · ADR-1212(도감 잠긴 칸 툴팁 = 닫힌 문턱 중 표 순서 앞의 하나) · 의뢰 단정 전부 통과(test.html 실패 둘은 골든 — 다른 세션 R510 · R511 몫 · 의뢰는 골든에 없다)
+
+| D | 결정 |
+|---|---|
+| D1 | **죄종은 장이 아니라 틀의 문턱으로 열린다** — `commission.csv` 에 `requires` 열(그 틀을 굴릴 수 있는 기능 토큰 하나 · `-` = 문턱 없음). 틀은 `requires` 가 열려 있을 때만 굴린다 · 죄종은 굴릴 틀이 하나라도 있으면 섞인다(지금처럼 고르게) · 죄종 차례(목록 순서)는 그대로 `chapter.csv:sin` 장 순서 · 대상 풀(장 · 종족 · 장소)은 그대로 「지금 들어갈 수 있는 곳」 · 색욕 · 오만은 틀이 없어 안 선다. 토큰 어휘 = 건물 기능 토큰(`building_effect.csv` unlock · `hasFeature`) + 코드 토큰 `learn`(= `skillbook` 이 열렸고 `[balance.csv:skillbook_learn_level]` 에 닿은 영웅이 있다). 명성은 그대로(목표 · 골드 배수만 — 틀을 가르지 않는다) |
+| D2 | **분노 = 처치** — 일반 몬스터 · 매직 정예(시기에서 옮김 · 종류 `elite` 그대로) · 레어 **보스**(새 종류 `boss` — `battle` 에 얹히고 처치 등급 `stage_boss` · `chapter_boss` 만) · 매직 장 · 종족 · 레어 장소 틀은 그대로 · 옛 시기 틀 셋(`cm_envy_any` · `_chapter` · `_place`)은 지운다 |
+| D3 | **시기 = 영웅** — 일반 「스킬북 n권 읽기」(새 종류 `book` — 새 사건 `book` · `learnBook` 성공마다 하나 · 새로 배우기 · 같은 책 단계 올리기 · 덮어쓰기 모두) · 일반 「영웅 n명 고용」(새 종류 `hire` — 새 사건 `hire` · 고용 성공마다 하나 · 명단 · 수색 모두). **고용 펌프 막기** — 명성 최고 레벨에서도 고용 한 명당 골드(`reward_gold × 최고 레벨 gold_mult ÷ (need × 최고 레벨 need_mult)`)가 `[balance.csv:tavern_hire_cost]` 보다 작다 — 단정으로 지킨다 |
+| D4 | **탐욕 = 분해 + 획득** — 분해 넷 그대로 · 매직 「매직 이상 장비 n개 획득」(종류 `collect` 를 다시 쓴다 — 「옛 카드만」 문장을 걷는다 · 어휘 `rarity_min` 이 `yield` 도 받는다) · 세는 것 = 이긴 라운드의 드롭(`commissionCount` 의 `gained` — 지금 걸이 그대로) · 상단 · 상자 · 탐험은 안 센다 |
+| D5 | **나태 · 폭식은 틀 그대로** — `requires` 만 단다(나태 = `lab_res` · 강화 둘 = `upgrade_item` · 제작 = `make`) |
+| D6 | **굴림 차례는 그대로 4회**(죄종 → 등급 → 틀 → 대상) — 틀 목록이 바뀌어 결과는 달라진다(골든이 의뢰를 담으면 재촬영) |
+| D7 | **옛 카드** — 지운 틀로 선 카드: 받은 카드는 종류 · 어휘로 이어 센다 · 안 받은 카드는 그대로 둔다 · 불러오기에서 안 깨지면 된다 |
+| D8 | **화면** — 새 종류 셋의 이름 · 목표 문장(ko/en · 「대상 + 수 + 동사」 ADR-1083) · 도움말 · 툴팁에서 「장마다 그 장 죄종이 열린다」 문장을 「그 일을 할 수 있게 되면 그 죄종 카드가 섞인다」로 · `openSins` 를 읽는 화면(도감 죄종 칸의 잠김 표시 등)이 있으면 새 뜻(굴릴 틀이 있는 죄종)으로 · SCREEN_DESIGN 먼저 |
+| D9 | **경계 문서** — INTERFACE §2-16 먼저(`ctx` 의 토큰 집합 · `requires` 열 · 사건 `book` · `hire` · 종류 `boss` 의 처치 등급) · DEV_PLAN §3-3 R 행 한 줄 |
+
+틀 값 (⚠임시 — 측정 전 · `requires` 외 열은 지금 규약 그대로)
+
+| commission_id | sin | grade | kind | axis | ref | need | reward_gold | requires |
+|---|---|---|---|---|---|---|---|---|
+| cm_wrath_any | wrath | normal | kill | any | - | 30 | 500 | - |
+| cm_wrath_chapter | wrath | magic | kill | chapter | - | 30 | 500 | - |
+| cm_wrath_race | wrath | magic | kill | race | - | 30 | 500 | - |
+| cm_wrath_elite | wrath | magic | elite | any | - | 6 | 500 | - |
+| cm_wrath_place | wrath | rare | kill | place | - | 30 | 500 | - |
+| cm_wrath_boss | wrath | rare | boss | any | - | 3 | 500 | - |
+| cm_envy_book | envy | normal | book | any | - | 2 | 900 | learn |
+| cm_envy_hire | envy | normal | hire | any | - | 1 | 150 | hire |
+| cm_greed_any · weapon · armor · accessory · magicup | 그대로 | | | | | | | - |
+| cm_greed_loot | greed | magic | collect | rarity_min | magic | 2 | 900 | - |
+| cm_sloth_any · ore · timber · herb | 그대로 | | | | | | | lab_res |
+| cm_glut_upgrade · upgrade_hi | 그대로 | | | | | | | upgrade_item |
+| cm_glut_craft | 그대로 | | | | | | | make |
+
+새 종류 이름 ⚠임시 — `boss` 보스 토벌 / Boss Hunt · `book` 스킬 수련 / Skill Study · `hire` 영입 / Recruit
+
+검증 — `src/dev/test.html` 전부 PASS · 의뢰 단정 추가(문턱 — 게시판이 열린 직후엔 분노 · 탐욕만 · 대장간 뒤 폭식 · `learn` 전엔 책 틀 없음 / 보스 · 책 · 고용 · 획득이 센다 / 고용 펌프 상한) · 개발 주소 `?dev=commission&ch=n`
+
 ## 지금 상태 (2026-11-13)
 
 | 항목 | 상태 |
@@ -43,6 +83,8 @@
 
 ## 정할 것
 
+> 11-16 재배분 뒤 논의 목록은 [PLAN_commission_discussion.md](PLAN_commission_discussion.md) — 아래는 11-13 기록이라 2(오만 보스)는 11-16에 보스가 분노로 가며 끝났다
+
 1. **색욕 · 오만을 여는 때와 색욕 미션** — 사용자가 나중에 연다(11-13). 색욕 미션 후보 둘
    - ⚠추천 **흡혈** — 흡혈 · 처치 시 회복으로 되찾은 체력을 센다 · **재생은 뺀다**(모든 영웅이 기본 재생을 가져 빌드를 안 바꿔도 찬다 — 11-13 조사) · 갑옷 · 신발의 색욕 줄(재생)은 이 의뢰에 안 보탠다 · 목표 단위는 「자기 최대 체력 몇 바퀴」(장이 바뀌어도 안 깨진다) · 회복원이 하나도 없으면 안 굴린다 · 물약 회복은 안 센다. 장비 죄종 줄은 챕터와 무관하게 랜덤이라 1장 매직 · 레어에도 색욕 줄이 붙는다 · 전투가 흡혈 회복량을 따로 안 남겨 코드 집계가 새로 든다(11-13 조사)
    - 매혹(수색) — 「수색으로 영웅 n명이 찾아오게 하라」. 매력이 실제로 미는 활동. 걸리는 점 — 선술집 r2(1장 클리어) 전엔 안 뜬다 · 시간만 지나면 차서 나태와 결이 같다
@@ -64,4 +106,4 @@
 3. 화면 — 카드 첫 줄(죄종 칩 · 미션 · 등급 칩) · 도감 죄종 세그먼트 · 도움말 문구(ADR-1068 · 1069 · SCREEN_DESIGN §14 · §9)
 
 ---
-*마지막 업데이트: 2026-11-14*
+*마지막 업데이트: 2026-11-16*

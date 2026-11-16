@@ -1,0 +1,133 @@
+{
+  "page_errors": [],
+  "fx_network_errors": [],
+  "preview": [
+    {
+      "skill": "war_bash",
+      "stamps": [
+        {
+          "src": "/assets/art/fx/skills/war_bash_darktoon.webp",
+          "mask": "none",
+          "duration": "0.36s",
+          "delay": "0s",
+          "decoded": true,
+          "size": [
+            384,
+            384
+          ]
+        }
+      ]
+    },
+    {
+      "skill": "war_doubleswing",
+      "stamps": [
+        {
+          "src": "/assets/art/fx/skills/war_doubleswing_darktoon.webp",
+          "mask": "linear-gradient(45deg, rgba(0, 0, 0, 0) 33%, rgb(0, 0, 0) 41%, rgb(0, 0, 0) 55%, rgba(0, 0, 0, 0) 63%)",
+          "duration": "0.4s",
+          "delay": "0s",
+          "decoded": true,
+          "size": [
+            384,
+            384
+          ]
+        },
+        {
+          "src": "/assets/art/fx/skills/war_doubleswing_darktoon.webp",
+          "mask": "linear-gradient(135deg, rgba(0, 0, 0, 0) 37%, rgb(0, 0, 0) 45%, rgb(0, 0, 0) 59%, rgba(0, 0, 0, 0) 67%)",
+          "duration": "0.4s",
+          "delay": "0.13s",
+          "decoded": true,
+          "size": [
+            384,
+            384
+          ]
+        }
+      ]
+    }
+  ],
+  "battle_hits": [
+    {
+      "skill": "war_bash",
+      "hit": 0,
+      "stamps": [
+        {
+          "src": "/assets/art/fx/skills/war_bash_darktoon.webp",
+          "mask": "none",
+          "duration": "0.36s",
+          "delay": "0s",
+          "decoded": true,
+          "size": [
+            384,
+            384
+          ]
+        }
+      ]
+    },
+    {
+      "skill": "war_doubleswing",
+      "hit": 0,
+      "stamps": [
+        {
+          "src": "/assets/art/fx/skills/war_doubleswing_darktoon.webp",
+          "mask": "linear-gradient(45deg, rgba(0, 0, 0, 0) 33%, rgb(0, 0, 0) 41%, rgb(0, 0, 0) 55%, rgba(0, 0, 0, 0) 63%)",
+          "duration": "0.4s",
+          "delay": "0s",
+          "decoded": true,
+          "size": [
+            384,
+            384
+          ]
+        }
+      ]
+    },
+    {
+      "skill": "war_doubleswing",
+      "hit": 1,
+      "stamps": [
+        {
+          "src": "/assets/art/fx/skills/war_doubleswing_darktoon.webp",
+          "mask": "linear-gradient(135deg, rgba(0, 0, 0, 0) 37%, rgb(0, 0, 0) 45%, rgb(0, 0, 0) 59%, rgba(0, 0, 0, 0) 67%)",
+          "duration": "0.4s",
+          "delay": "0.13s",
+          "decoded": true,
+          "size": [
+            384,
+            384
+          ]
+        }
+      ]
+    }
+  ],
+  "active_style": "darktoon",
+  "speed_durations": {
+    "1": "0.4s",
+    "2": "0.3s",
+    "4": "0.22s",
+    "16": "0.12s"
+  },
+  "foil_preview": [
+    {
+      "src": "/assets/art/fx/skills/war_doubleswing_foil.webp",
+      "mask": "linear-gradient(45deg, rgba(0, 0, 0, 0) 33%, rgb(0, 0, 0) 41%, rgb(0, 0, 0) 55%, rgba(0, 0, 0, 0) 63%)",
+      "duration": "0.4s",
+      "delay": "0s",
+      "decoded": true,
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "src": "/assets/art/fx/skills/war_doubleswing_foil.webp",
+      "mask": "linear-gradient(135deg, rgba(0, 0, 0, 0) 37%, rgb(0, 0, 0) 45%, rgb(0, 0, 0) 59%, rgba(0, 0, 0, 0) 67%)",
+      "duration": "0.4s",
+      "delay": "0.13s",
+      "decoded": true,
+      "size": [
+        256,
+        256
+      ]
+    }
+  ]
+}

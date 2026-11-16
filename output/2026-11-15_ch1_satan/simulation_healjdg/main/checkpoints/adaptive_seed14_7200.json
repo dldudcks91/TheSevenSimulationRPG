@@ -1,0 +1,916 @@
+{
+  "seconds": 7200,
+  "seed": 14,
+  "policy": "adaptive",
+  "stage": 3041,
+  "difficulty": "normal",
+  "classes": [
+    "knight",
+    "archer",
+    "mage"
+  ],
+  "levels": [
+    19,
+    19,
+    19
+  ],
+  "xp": [
+    22787,
+    35573,
+    38623
+  ],
+  "mastery": [
+    {
+      "uid": "h1",
+      "points": 0,
+      "nodes": {
+        "cls_knight_t1_hp": 5,
+        "cls_knight_t2_dr": 5,
+        "sin_t1_def": 5,
+        "sin_pride_t2_g6": 4
+      }
+    },
+    {
+      "uid": "h2",
+      "points": 0,
+      "nodes": {
+        "cls_archer_t1_speed": 5,
+        "cls_archer_t2_atkspeed": 5,
+        "sin_t1_atk": 5,
+        "sin_sloth_t2_hppct": 4
+      }
+    },
+    {
+      "uid": "h3",
+      "points": 0,
+      "nodes": {
+        "cls_mage_t1_cooldown": 5,
+        "cls_mage_t2_cdr": 5,
+        "sin_t1_atk": 5,
+        "sin_lust_t2_g9": 4
+      }
+    }
+  ],
+  "skills": [
+    {
+      "uid": "h1",
+      "ids": [
+        "kni_charge"
+      ]
+    },
+    {
+      "uid": "h2",
+      "ids": [
+        "arc_snipe"
+      ]
+    },
+    {
+      "uid": "h3",
+      "ids": [
+        "mag_chain"
+      ]
+    }
+  ],
+  "cleared": [
+    1011,
+    1012,
+    1013,
+    1021,
+    1022,
+    1023,
+    1031,
+    1032,
+    1033,
+    1041,
+    1042,
+    1043,
+    1051,
+    2011,
+    2012,
+    2013,
+    2021,
+    2022,
+    2023,
+    2031,
+    2032,
+    2033,
+    2041,
+    2042,
+    2043,
+    2051,
+    3011,
+    3012,
+    3013,
+    3021,
+    3022,
+    3023,
+    3031,
+    3032,
+    3033
+  ],
+  "clearedIn": {},
+  "gold": 2166,
+  "materials": {
+    "dust": 150,
+    "iron_ore": 56,
+    "timber": 45,
+    "herb": 24
+  },
+  "potions": {},
+  "bags": [
+    5,
+    0
+  ],
+  "bagCap": 42,
+  "mail": 0,
+  "books": {
+    "kni_rush": 1,
+    "mag_fireball": 1,
+    "arc_guided": 1
+  },
+  "blueprints": {
+    "war_bash": 1,
+    "arc_rapid": 2,
+    "war_ironskin": 3,
+    "kni_rush": 1,
+    "arc_multishot": 3,
+    "war_warcry": 2,
+    "kni_resistshield": 3,
+    "mag_inferno": 5,
+    "mag_frostnova": 4,
+    "pri_cure": 5,
+    "pri_heal": 2,
+    "mag_lightning": 4,
+    "pri_judgment": 1,
+    "war_frenzy": 1,
+    "war_doubleswing": 1,
+    "kni_charge": 1,
+    "arc_snipe": 1
+  },
+  "buildings": {
+    "library": 1,
+    "resource": 1,
+    "tavern": 2,
+    "shop": 2,
+    "forge": 1,
+    "storage": 1,
+    "command": 1,
+    "explore": 1
+  },
+  "gear": {
+    "n": 20,
+    "ilvl": 11.6,
+    "weapons": [
+      {
+        "uid": "i67",
+        "ilvl": 15,
+        "up": 2
+      },
+      {
+        "uid": "i88",
+        "ilvl": 14,
+        "up": 1
+      },
+      {
+        "uid": "i91",
+        "ilvl": 17,
+        "up": 0
+      }
+    ],
+    "upTotal": 16
+  },
+  "first": {
+    "masterySpent": {
+      "t": 0,
+      "hero": "h1",
+      "points": 1,
+      "nodes": {
+        "cls_knight_t1_hp": 1
+      }
+    },
+    "construct": {
+      "t": 0,
+      "id": "tavern",
+      "rank": 1,
+      "gold": 600
+    },
+    "commissionTake": {
+      "t": 0,
+      "no": 1,
+      "kind": "kill",
+      "axis": "any",
+      "ref": null,
+      "need": 30,
+      "gold": 500
+    },
+    "departure": {
+      "t": 0,
+      "stage": 1011,
+      "diff": "normal"
+    },
+    "xp": {
+      "t": 6.5,
+      "amount": 92
+    },
+    "gold": {
+      "t": 6.5,
+      "amount": 12
+    },
+    "levelUp": {
+      "t": 32.1,
+      "hero": "h1",
+      "from": 1,
+      "to": 2
+    },
+    "masteryAvailable": {
+      "t": 32.1,
+      "hero": "h1",
+      "points": 1
+    },
+    "potionConsumed": {
+      "t": 32.1,
+      "units": 1
+    },
+    "drop": {
+      "t": 72.1,
+      "rarity": "normal",
+      "slot": "boots",
+      "ilvl": 1
+    },
+    "drop_normal": {
+      "t": 72.1,
+      "slot": "boots",
+      "ilvl": 1
+    },
+    "usableGainDrop": {
+      "t": 72.1,
+      "hero": "h1",
+      "uid": "i7",
+      "rarity": "normal",
+      "ratio": 1.035
+    },
+    "stageClear": {
+      "t": 98.4,
+      "stage": 1011
+    },
+    "blueprint": {
+      "t": 158.5,
+      "ids": [
+        "war_bash"
+      ]
+    },
+    "equipmentGain": {
+      "t": 300,
+      "hero": "h1",
+      "ratio": 1.08
+    },
+    "autoEquipChanged": {
+      "t": 300,
+      "hero": "h1",
+      "moves": 2,
+      "before": 1227.987,
+      "after": 1325.791,
+      "gain": true,
+      "changes": [
+        {
+          "position": "helmet",
+          "item": "i8",
+          "back": []
+        },
+        {
+          "position": "boots",
+          "item": "i7",
+          "back": []
+        }
+      ]
+    },
+    "commissionClaim": {
+      "t": 300,
+      "no": 1,
+      "gold": 500
+    },
+    "potionRefill": {
+      "t": 300,
+      "id": "minor_healing",
+      "units": 2,
+      "gold": 100
+    },
+    "boxGranted": {
+      "t": 357.1,
+      "kind": "weapon",
+      "tier": "low",
+      "mail": false,
+      "stage": 1013
+    },
+    "drop_magic": {
+      "t": 393.3,
+      "slot": "armor",
+      "ilvl": 3
+    },
+    "defeat": {
+      "t": 589.15,
+      "stage": 1022,
+      "reason": "wipe"
+    },
+    "boxOpened": {
+      "t": 600,
+      "hero": "h1",
+      "kind": "weapon",
+      "items": [
+        {
+          "uid": "i12",
+          "rarity": "rare",
+          "slot": "weapon",
+          "ilvl": 6
+        }
+      ]
+    },
+    "salvageBatch": {
+      "t": 600,
+      "n": 3,
+      "rarities": {
+        "magic": 1,
+        "normal": 2
+      },
+      "materials": {
+        "dust": 6,
+        "iron_ore": 4,
+        "timber": 2
+      }
+    },
+    "resourceRegister": {
+      "t": 600,
+      "hero": "h1"
+    },
+    "drop_rare": {
+      "t": 823.05,
+      "slot": "armor",
+      "ilvl": 7
+    },
+    "upgrade": {
+      "t": 900,
+      "hero": "h1",
+      "pos": "weapon",
+      "uid": "i12",
+      "up": 1,
+      "success": true,
+      "gold": 803,
+      "mats": [
+        {
+          "id": "iron_ore",
+          "need": 1,
+          "have": 8
+        },
+        {
+          "id": "dust",
+          "need": 1,
+          "have": 17
+        }
+      ]
+    },
+    "retryGuide": {
+      "t": 2023.95,
+      "preset": 1,
+      "hero": "h1",
+      "stageId": 1051,
+      "difficulty": "normal",
+      "attempts": 5
+    },
+    "freeMasteryReset": {
+      "t": 2023.95,
+      "hero": "h1",
+      "points": 11
+    },
+    "farmResponse": {
+      "t": 2023.95,
+      "stage": 1043,
+      "target": 1051,
+      "runs": 10,
+      "guideAttempts": 5
+    },
+    "accessoryChanged": {
+      "t": 3900,
+      "hero": "h1",
+      "pos": "ring1",
+      "uid": "i59",
+      "before": 10791.566,
+      "after": 10791.566,
+      "proxy": "item_level_then_rarity"
+    },
+    "research": {
+      "t": 6300,
+      "line": "visit",
+      "node": "interval",
+      "gold": 300
+    }
+  },
+  "count": {
+    "runs": 66,
+    "wins": 50,
+    "losses": 16,
+    "timeouts": 0,
+    "downed": 56,
+    "firstClears": 35,
+    "drops": 90,
+    "rarities": {
+      "normal": 55,
+      "magic": 28,
+      "rare": 7
+    },
+    "overflow": 0,
+    "maxBag": 8,
+    "heroXp": 612953,
+    "actualXp": 612953,
+    "battleGold": 44156,
+    "blueprints": 40,
+    "failedRoundKills": 17,
+    "failedRoundRawXp": 6020,
+    "failedRoundUnmappedKills": 0,
+    "levelUps": 54,
+    "newActiveSkills": 0,
+    "boxesGranted": 13,
+    "boxesOpened": 13,
+    "autoEquipCalls": 75,
+    "equipButtonsWithChanges": 36,
+    "equipMoves": 48,
+    "mightImprovements": 34,
+    "autoEquipMightDecreases": 0,
+    "accessoryProxyChanges": 3,
+    "masterySpent": 90,
+    "salvaged": 84,
+    "buildGold": 9600,
+    "researchGold": 300,
+    "commissionGold": 3750,
+    "potionsBought": 178,
+    "potionBuyGold": 8900,
+    "potionsConsumed": 198,
+    "potionConsumedValue": 9900,
+    "upgradeAttempts": 23,
+    "upgradeSuccesses": 22,
+    "upgradeGold": 27540,
+    "meaningfulManagementSessions": 25,
+    "waitingSec": 329.99999999999983,
+    "combatWallSec": 6870,
+    "farmingRuns": 10,
+    "guideAppearances": 1,
+    "guideResponses": 1,
+    "respecs": 3,
+    "actions": {
+      "masterySpent": 48,
+      "construct": 8,
+      "commissionTake": 6,
+      "autoEquipChanged": 36,
+      "commissionClaim": 5,
+      "potionRefill": 24,
+      "boxOpened": 13,
+      "salvageBatch": 22,
+      "resourceRegister": 3,
+      "upgrade": 23,
+      "freeMasteryReset": 3,
+      "farmResponse": 1,
+      "accessoryChanged": 3,
+      "research": 1
+    }
+  },
+  "usefulDroppedItems": 31,
+  "everEquippedItems": 39,
+  "dropEquippedRatio": 0.344,
+  "gaps": {
+    "newStage": {
+      "seconds": 1794.5,
+      "from": 1412.35,
+      "to": 3206.85
+    },
+    "reward": {
+      "seconds": 159.9,
+      "from": 4889.2,
+      "to": 5049.1
+    },
+    "xp": {
+      "seconds": 159.9,
+      "from": 4889.2,
+      "to": 5049.1
+    },
+    "usefulEquipment": {
+      "seconds": 600,
+      "from": 6600,
+      "to": 7200
+    }
+  },
+  "recentHour": {
+    "runs": 30,
+    "wins": 21,
+    "losses": 9,
+    "gold": 25582,
+    "xp": 396205,
+    "drops": 50,
+    "potionUnits": 110,
+    "potionValue": 5500
+  },
+  "recentTen": {
+    "runs": 10,
+    "wins": 3,
+    "losses": 7,
+    "roundsCleared": [
+      8,
+      9,
+      7,
+      9,
+      8,
+      9,
+      5,
+      8,
+      8,
+      3
+    ],
+    "seconds": 1271.6499999999999,
+    "xp": 140273,
+    "gold": 7929
+  },
+  "unused": {
+    "affordableBuildings": [],
+    "buildingBlockers": [
+      {
+        "id": "explore",
+        "rank": 1,
+        "error": "gold",
+        "cost": [
+          {
+            "res": "gold",
+            "need": 3000,
+            "have": 2166
+          },
+          {
+            "res": "iron_ore",
+            "need": 30,
+            "have": 56
+          },
+          {
+            "res": "timber",
+            "need": 30,
+            "have": 45
+          }
+        ]
+      },
+      {
+        "id": "command",
+        "rank": 1,
+        "error": "gold",
+        "cost": [
+          {
+            "res": "gold",
+            "need": 3000,
+            "have": 2166
+          },
+          {
+            "res": "iron_ore",
+            "need": 30,
+            "have": 56
+          },
+          {
+            "res": "timber",
+            "need": 30,
+            "have": 45
+          }
+        ]
+      },
+      {
+        "id": "storage",
+        "rank": 1,
+        "error": "gold",
+        "cost": [
+          {
+            "res": "gold",
+            "need": 3000,
+            "have": 2166
+          },
+          {
+            "res": "iron_ore",
+            "need": 20,
+            "have": 56
+          },
+          {
+            "res": "timber",
+            "need": 20,
+            "have": 45
+          }
+        ]
+      },
+      {
+        "id": "tavern",
+        "rank": 2,
+        "error": "gold",
+        "cost": [
+          {
+            "res": "gold",
+            "need": 6000,
+            "have": 2166
+          },
+          {
+            "res": "iron_ore",
+            "need": 60,
+            "have": 56
+          },
+          {
+            "res": "timber",
+            "need": 60,
+            "have": 45
+          }
+        ]
+      },
+      {
+        "id": "shop",
+        "rank": 2,
+        "error": "gold",
+        "cost": [
+          {
+            "res": "gold",
+            "need": 6000,
+            "have": 2166
+          },
+          {
+            "res": "iron_ore",
+            "need": 30,
+            "have": 56
+          },
+          {
+            "res": "timber",
+            "need": 30,
+            "have": 45
+          }
+        ]
+      },
+      {
+        "id": "forge",
+        "rank": 1,
+        "error": "gold",
+        "cost": [
+          {
+            "res": "gold",
+            "need": 3000,
+            "have": 2166
+          },
+          {
+            "res": "iron_ore",
+            "need": 30,
+            "have": 56
+          },
+          {
+            "res": "timber",
+            "need": 30,
+            "have": 45
+          }
+        ]
+      },
+      {
+        "id": "library",
+        "rank": 1,
+        "error": "gold",
+        "cost": [
+          {
+            "res": "gold",
+            "need": 3000,
+            "have": 2166
+          },
+          {
+            "res": "iron_ore",
+            "need": 30,
+            "have": 56
+          },
+          {
+            "res": "timber",
+            "need": 30,
+            "have": 45
+          }
+        ]
+      },
+      {
+        "id": "resource",
+        "rank": 1,
+        "error": "gold",
+        "cost": [
+          {
+            "res": "gold",
+            "need": 3000,
+            "have": 2166
+          },
+          {
+            "res": "iron_ore",
+            "need": 30,
+            "have": 56
+          },
+          {
+            "res": "timber",
+            "need": 30,
+            "have": 45
+          }
+        ]
+      }
+    ],
+    "craftableBooks": [],
+    "bookBlueprints": {
+      "war_bash": 1,
+      "arc_rapid": 2,
+      "war_ironskin": 3,
+      "kni_rush": 1,
+      "arc_multishot": 3,
+      "war_warcry": 2,
+      "kni_resistshield": 3,
+      "mag_inferno": 5,
+      "mag_frostnova": 4,
+      "pri_cure": 5,
+      "pri_heal": 2,
+      "mag_lightning": 4,
+      "pri_judgment": 1,
+      "war_frenzy": 1,
+      "war_doubleswing": 1,
+      "kni_charge": 1,
+      "arc_snipe": 1
+    },
+    "skillbooks": {
+      "kni_rush": 1,
+      "mag_fireball": 1,
+      "arc_guided": 1
+    },
+    "bookStateOpen": true,
+    "eligibleAdvance": [
+      {
+        "hero": "h1",
+        "error": "unbuilt",
+        "open": false,
+        "need": {
+          "have": 19,
+          "need": 30
+        },
+        "gold": {
+          "have": 2166,
+          "need": 50000
+        }
+      },
+      {
+        "hero": "h2",
+        "error": "unbuilt",
+        "open": false,
+        "need": {
+          "have": 19,
+          "need": 30
+        },
+        "gold": {
+          "have": 2166,
+          "need": 50000
+        }
+      },
+      {
+        "hero": "h3",
+        "error": "unbuilt",
+        "open": false,
+        "need": {
+          "have": 19,
+          "need": 30
+        },
+        "gold": {
+          "have": 2166,
+          "need": 50000
+        }
+      }
+    ],
+    "unspentMastery": [
+      {
+        "hero": "h1",
+        "points": 0
+      },
+      {
+        "hero": "h2",
+        "points": 0
+      },
+      {
+        "hero": "h3",
+        "points": 0
+      }
+    ],
+    "waitingHeroes": 0,
+    "resourceResearch": [],
+    "commission": {
+      "open": true,
+      "slots": 1,
+      "taken": 1,
+      "fame": {
+        "level": 2,
+        "xp": 5,
+        "total": 3,
+        "next": 8,
+        "needMult": 1.2,
+        "goldMult": 1.5,
+        "max": false
+      },
+      "sins": [
+        {
+          "id": "wrath",
+          "chapter": 1,
+          "n": 5,
+          "open": true
+        },
+        {
+          "id": "envy",
+          "chapter": 2,
+          "n": 0,
+          "open": true
+        },
+        {
+          "id": "greed",
+          "chapter": 3,
+          "n": 0,
+          "open": true
+        },
+        {
+          "id": "sloth",
+          "chapter": 4,
+          "n": 0,
+          "open": false
+        },
+        {
+          "id": "gluttony",
+          "chapter": 5,
+          "n": 0,
+          "open": false
+        },
+        {
+          "id": "lust",
+          "chapter": 6,
+          "n": 0,
+          "open": false
+        },
+        {
+          "id": "pride",
+          "chapter": 7,
+          "n": 0,
+          "open": false
+        }
+      ],
+      "cards": [
+        {
+          "no": 12,
+          "sin": "wrath",
+          "grade": "magic",
+          "tpl": "cm_wrath_race",
+          "kind": "kill",
+          "axis": "race",
+          "ref": "Normal",
+          "need": 36,
+          "gold": 1500,
+          "have": 0,
+          "taken": true,
+          "done": false,
+          "canTake": false
+        },
+        {
+          "no": 7,
+          "sin": "wrath",
+          "grade": "normal",
+          "tpl": "cm_wrath_any",
+          "kind": "kill",
+          "axis": "any",
+          "ref": null,
+          "need": 36,
+          "gold": 750,
+          "taken": false,
+          "have": null,
+          "done": false,
+          "canTake": false
+        },
+        {
+          "no": 8,
+          "sin": "wrath",
+          "grade": "rare",
+          "tpl": "cm_wrath_place",
+          "kind": "kill",
+          "axis": "place",
+          "ref": "1-1",
+          "need": 36,
+          "gold": 2250,
+          "taken": false,
+          "have": null,
+          "done": false,
+          "canTake": false
+        },
+        {
+          "no": 9,
+          "sin": "wrath",
+          "grade": "normal",
+          "tpl": "cm_wrath_any",
+          "kind": "kill",
+          "axis": "any",
+          "ref": null,
+          "need": 36,
+          "gold": 750,
+          "taken": false,
+          "have": null,
+          "done": false,
+          "canTake": false
+        }
+      ]
+    },
+    "guide": null
+  },
+  "failures": []
+}

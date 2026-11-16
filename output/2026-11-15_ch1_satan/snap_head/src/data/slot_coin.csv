@@ -1,0 +1,9 @@
+coin_id,kind,value,weight,on_fill,name_kr,name_en,description_kr
+half,gold,0.5,200,0,-,-,⚠제안 — 판돈 × value 골드 · 코인이 설 때마다 가중치로 굴린다 · ⚠ 행 순서가 굴림 순서다(INTERFACE §5-2) (R149)
+one,gold,1,150,0,-,-,⚠제안
+two,gold,2,75,0,-,-,⚠제안
+three,gold,3,40,0,-,-,⚠제안
+mini,jackpot,10,25,0,미니,Mini,⚠제안 — 고정 잭팟 4단의 첫 단(판돈 × value · 쌓이지 않는다 — 1인 게임이라 적립식이 의미 없다)
+minor,jackpot,25,10,0,마이너,Minor,⚠제안
+major,jackpot,50,2,0,메이저,Major,⚠제안
+grand,jackpot,200,0,1,그랜드,Grand,⚠제안 — 굴림으로는 안 나온다(가중치 0) · 홀드 앤 스핀에서 판이 다 차면 준다(on_fill — 정확히 한 행)

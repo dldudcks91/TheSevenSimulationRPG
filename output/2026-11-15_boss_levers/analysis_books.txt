@@ -1,0 +1,121 @@
+accounts probed: 57  (basic 22 / adaptive 35)  skips {('adaptive', 'cleared'): 32, ('adaptive', 'before'): 13, ('basic', 'cleared'): 49, ('basic', 'before'): 9}
+already had a book skill at D60: 0
+book variant: lv10 book found in inventory 171 / injected 0 / skipped 0
+
+== all probed (n=57)
+variant              median   mean  >=50%  >=25%  <=10%   =0   up  down errs
+base                  0.025  0.162      4     17     35   23    0     0    0
+book                  0.675  0.546     37     39     16    9   48     1    0
+bookBest              0.725  0.646     39     46      7    4   53     0    0
+all                   0.175  0.381     24     26     23   15   42     2    0
+all_book                0.9  0.706     42     47      9    4   52     0    0
+all_gold30_book       0.925  0.765     47     50      7    2   55     0    0
+all_gold30_bookBest    0.95  0.839     52     54      3    2   55     0    0
+
+== seeds 1-40 (n=25)
+variant              median   mean  >=50%  >=25%  <=10%   =0   up  down errs
+base                   0.25  0.252      3     13     10    8    0     0    0
+book                  0.775  0.585     16     16      7    3   22     0    0
+bookBest                0.9  0.639     16     18      6    3   22     0    0
+all                   0.675  0.522     15     16      9    7   18     1    0
+all_book              0.975  0.699     18     19      5    2   22     0    0
+all_gold30_book       0.975  0.748     20     21      4    2   23     0    0
+all_gold30_bookBest   0.975  0.795     21     23      2    2   23     0    0
+
+== seeds 41-80 (n=32)
+variant              median   mean  >=50%  >=25%  <=10%   =0   up  down errs
+base                  0.025  0.091      1      4     25   15    0     0    0
+book                  0.625  0.516     21     23      9    6   26     1    0
+bookBest              0.688  0.652     23     28      1    1   31     0    0
+all                   0.138  0.271      9     10     14    8   24     1    0
+all_book              0.837  0.711     24     28      4    2   30     0    0
+all_gold30_book       0.913  0.778     27     29      3    0   32     0    0
+all_gold30_bookBest   0.938  0.873     31     31      1    0   32     0    0
+
+== composition -> mean rate per variant
+combo                      n       base       book   bookBest        all   all_book all_gold30 all_gold30
+knight+priest+warrior      7        0.0      0.311      0.386      0.029      0.525      0.564      0.607
+knight+mage+priest         5      0.065       0.79      0.765      0.285       0.91       0.91       0.94
+knight+mage+warrior        8      0.088      0.637      0.694      0.456      0.859      0.919      0.934
+archer+knight+mage         5       0.16       0.53      0.675      0.515        0.7      0.825      0.905
+mage+priest+warrior       13      0.177      0.538      0.667      0.296      0.598      0.698      0.848
+archer+knight+priest       9      0.228      0.381      0.464      0.358      0.511      0.578      0.708
+archer+mage+warrior        6      0.296      0.671      0.829      0.579      0.908      0.904      0.933
+archer+priest+warrior      2        0.3       0.65      0.863       0.85      0.912      0.988      0.963
+archer+knight+warrior      2      0.338      0.762      0.912      0.812      0.988      0.975      0.963
+
+== class presence -> mean rate (base / book / all_book / all_gold30_book)
+warrior  with n=38 0.159 / 0.556 / 0.726 / 0.782   without n=19 0.167 / 0.528 / 0.666 / 0.73
+knight   with n=36 0.126 / 0.523 / 0.699 / 0.753   without n=21 0.223 / 0.587 / 0.717 / 0.785
+mage     with n=37 0.159 / 0.614 / 0.761 / 0.825   without n=20 0.166 / 0.421 / 0.604 / 0.654
+archer   with n=24 0.246 / 0.539 / 0.723 / 0.778   without n=33 0.101 / 0.552 / 0.693 / 0.755
+priest   with n=36 0.147 / 0.496 / 0.623 / 0.688   without n=21 0.188 / 0.633 / 0.848 / 0.898
+
+== lv10 book id -> mean (book - base) gain, by class
+archer   arc_guided           n= 4 mean gain 0.606
+archer   arc_multishot        n= 2 mean gain 0.375
+archer   arc_rapid            n=15 mean gain 0.207
+archer   arc_snipe            n= 3 mean gain 0.25
+knight   kni_charge           n=11 mean gain 0.473
+knight   kni_holyshield       n= 4 mean gain 0.162
+knight   kni_resistshield     n=11 mean gain 0.375
+knight   kni_rush             n=10 mean gain 0.43
+mage     mag_chain            n= 4 mean gain 0.319
+mage     mag_fireball         n= 5 mean gain 0.66
+mage     mag_frostnova        n= 7 mean gain 0.354
+mage     mag_iceblast         n= 8 mean gain 0.553
+mage     mag_inferno          n= 2 mean gain -0.013
+mage     mag_lightning        n=11 mean gain 0.489
+priest   pri_cure             n=10 mean gain 0.527
+priest   pri_heal             n=13 mean gain 0.252
+priest   pri_judgment         n=13 mean gain 0.31
+warrior  war_bash             n= 8 mean gain 0.591
+warrior  war_doubleswing      n= 9 mean gain 0.164
+warrior  war_ironskin         n= 9 mean gain 0.306
+warrior  war_recovery         n=12 mean gain 0.51
+
+== bookBest picks (by class)
+archer   arc_guided           other 6
+archer   arc_guided           =lv10 3
+archer   arc_multishot        other 6
+archer   arc_rapid            =lv10 4
+archer   arc_snipe            other 4
+archer   arc_snipe            =lv10 1
+knight   kni_charge           other 3
+knight   kni_charge           =lv10 10
+knight   kni_holyshield       other 4
+knight   kni_holyshield       =lv10 3
+knight   kni_resistshield     other 3
+knight   kni_resistshield     =lv10 8
+knight   kni_rush             other 1
+knight   kni_rush             =lv10 4
+mage     mag_chain            other 6
+mage     mag_chain            =lv10 3
+mage     mag_fireball         other 8
+mage     mag_fireball         =lv10 2
+mage     mag_iceblast         other 3
+mage     mag_iceblast         =lv10 2
+mage     mag_lightning        other 5
+mage     mag_lightning        =lv10 8
+priest   pri_cure             other 4
+priest   pri_cure             =lv10 8
+priest   pri_heal             other 3
+priest   pri_heal             =lv10 10
+priest   pri_judgment         other 2
+priest   pri_judgment         =lv10 9
+warrior  war_bash             other 8
+warrior  war_bash             =lv10 5
+warrior  war_doubleswing      other 4
+warrior  war_doubleswing      =lv10 6
+warrior  war_ironskin         =lv10 2
+warrior  war_recovery         other 6
+warrior  war_recovery         =lv10 7
+
+== still <=10% under all_gold30_book
+adaptive s32  warrior+priest+knight  lv[11, 11, 11] innate ['war_bash', 'pri_cure', 'kni_holyshield'] lv10 ['war_doubleswing', 'pri_judgment', 'kni_resistshield'] base 0 book 0 all_book 0 g30book 0 g30best 0 left 0.999
+basic    s32  warrior+priest+knight  lv[11, 11, 11] innate ['war_bash', 'pri_cure', 'kni_holyshield'] lv10 ['war_doubleswing', 'pri_judgment', 'kni_resistshield'] base 0 book 0 all_book 0 g30book 0 g30best 0 left 1
+adaptive s64  priest+mage+warrior    lv[13, 13, 13] innate ['pri_cure', 'mag_iceblast', 'war_ironskin'] lv10 ['pri_judgment', 'mag_inferno', 'war_doubleswing'] base 0 book 0 all_book 0.025 g30book 0.025 g30best 0.675 left 0.893
+basic    s79  priest+archer+knight   lv[11, 11, 10] innate ['pri_judgment', 'arc_guided', 'kni_resistshield'] lv10 ['pri_heal', 'arc_rapid', 'kni_rush'] base 0 book 0 all_book 0 g30book 0.025 g30best 0.025 left 0.854
+adaptive s22  archer+priest+knight   lv[14, 14, 13] innate ['arc_guided', 'pri_heal', 'kni_rush'] lv10 ['arc_rapid', 'pri_cure', 'kni_holyshield'] base 0 book 0.025 all_book 0.025 g30book 0.05 g30best 0.25 left 0.796
+basic    s64  priest+mage+warrior    lv[13, 13, 13] innate ['pri_cure', 'mag_iceblast', 'war_ironskin'] lv10 ['pri_judgment', 'mag_inferno', 'war_doubleswing'] base 0.025 book 0 all_book 0.05 g30book 0.05 g30best 0.65 left 0.816
+basic    s22  archer+priest+knight   lv[13, 13, 13] innate ['arc_guided', 'pri_heal', 'kni_rush'] lv10 ['arc_rapid', 'pri_cure', 'kni_holyshield'] base 0.025 book 0.05 all_book 0.025 g30book 0.075 g30best 0.65 left 0.662
