@@ -4,7 +4,8 @@ Rule (docs/client/ARCHITECTURE.md §11 「배포판」):
 - Development runs the repo as-is — no build. Only the deployed copy goes through this script
   (.github/workflows/pages.yml runs it on every push to main).
 - In:  index.html (repo root redirect) · src/index.html · src/ui · src/game_logic · src/data/*.csv
-       · installed art under src/assets/art (originals `source/` · `*_source/` stay out) · src/dev/funnel.* (admin funnel page).
+       · installed art under src/assets/art (originals `source/` · `*_source/` stay out) · src/assets/fonts (zh font subset + OFL)
+       · src/dev/funnel.* (admin funnel page).
 - Out: docs · output · prototypes · tmp · PLAN*.md · READMEs · the dev test pages · CSV `inherited/`.
 - Written: src/assets/art/preload.json — the images the menu fetches up front (every built image minus PRELOAD_SKIP ·
   SCREEN_DESIGN §3 · ADR-1080 · ADR-1097), as {"first": [...], "rest": [...]} — the menu waits for `first` only
@@ -371,6 +372,9 @@ def plan(with_dev: bool) -> list[tuple[Path, str]]:
     for p in sorted((SRC / "assets/art").rglob("*")):
         if p.is_file() and not is_art_original(p) and (p.suffix.lower() in ART_EXT or p.suffix == ".js"):
             files.append((p, p.relative_to(ROOT).as_posix()))
+    # 간체 글꼴 서브셋 + 라이선스 (docs/client/LOCALIZATION_ZH.md D6 · scripts/build_zh_font.py) — 그대로 복사
+    files += [(p, p.relative_to(ROOT).as_posix()) for p in sorted((SRC / "assets/fonts").glob("*"))
+              if p.is_file() and p.suffix.lower() in (".woff2", ".txt")]
     for f in DEV_PAGES + (DEV_TEST_PAGES if with_dev else []):
         files.append((SRC / "dev" / f, f"src/dev/{f}"))
     return files

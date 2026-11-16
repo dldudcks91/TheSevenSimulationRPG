@@ -26,7 +26,8 @@ const RANKS = [0, 1];
 /** 마스터리 트리 종류 — `mastery_node.csv:tree_kind` 의 어휘 · AI 가 주력을 여기서 하나 굴린다 */
 const TREES = ['class', 'sin'];
 /** 팀 코드에 싣는 영웅 칸 — 전투에 드는 것만. uid · XP · 남은 포인트 · 착용 표는 안 싣는다(받는 쪽이 다시 세운다) */
-const HERO_KEYS = ['name', 'tier', 'sin', 'cls', 'trait', 'face', 'level', 'stats', 'mastery', 'innate', 'bookSkill', 'skillLv', 'advance', 'advanceSkill', 'advanceUp', 'advanceVar', 'advanceCommon'];
+//   `skillOrder` — 그 주인이 정한 시작 순서(받는 쪽도 그 순서로 싸운다 · 2026-11-16 R515 다시 싣는다 — 11-02 R427 에 뺐었다)
+const HERO_KEYS = ['name', 'tier', 'sin', 'cls', 'trait', 'face', 'level', 'stats', 'mastery', 'innate', 'bookSkill', 'skillLv', 'advance', 'advanceSkill', 'advanceUp', 'advanceVar', 'advanceCommon', 'skillOrder'];
 /** 받은 팀 코드의 문자열에 못 들어오는 글자 — 화면이 `innerHTML` 로 그리므로 태그 · 속성을 열 수 있는 것 (INTERFACE §2-17 `text`) */
 const UNSAFE_TEXT = /[<>"`]/;
 
@@ -56,7 +57,7 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
 
     // 등급 — `tier_order` 순. 표가 틀리면 생성 때 던진다 (INTERFACE §2-17)
     const TIERS = (tiers ?? []).map(r => ({
-        id: r.tier_id, order: Number(r.tier_order), name: { ko: r.name_kr, en: r.name_en }, ratingMin: r.rating_min, floors: r.floors, level: r.hero_level,
+        id: r.tier_id, order: Number(r.tier_order), name: { ko: r.name_kr, en: r.name_en, zh: r.name_zh }, ratingMin: r.rating_min, floors: r.floors, level: r.hero_level,
         rarityWeights: { normal: r.rarity_w_normal, magic: r.rarity_w_magic, rare: r.rarity_w_rare }, up: r.gear_up, skillUp: r.skill_up,
         // 층 AI 팀의 물약 · 전술 [2026-11-13 · R460 · arena_design §7] — 물약 하나 × 칸 수 · 열린 전술 칸 수 · 그 칸들의 등급
         potion: r.potion_id, potionSlots: r.potion_slots, tacticSlots: r.tactic_slots, tacticGrade: r.tactic_grade,
@@ -126,6 +127,8 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
 
     /* ── 스냅샷 · 단판 ── */
 
+    /** AI 팀의 시작 순서 = 버프 · 디버프 먼저(몬스터와 같다 · 2026-11-16 R515 · battle_design §5) — 정할 사람이 없다 · rng 0 */
+    const aiOrder = team => { team.forEach(p => { p.startOrder = 'buffFirst'; }); return team; };
     function snapshotTeam(heroes, items, ranks = {}, loadout = null) {
         if (heroes.length !== teamSize || new Set(heroes.map(h => h.uid)).size !== teamSize)
             throw new Error('arena: a team must contain three distinct heroes');
@@ -137,6 +140,8 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
                 uid: h.uid, hero: h, gear, combat, stats: h.stats,
                 actives: skill.activesFor(h, { skillPlus: item.skillPlusOf(gear) }), weaponGroup: gear.find(it => it.slot === 'weapon')?.group ?? null,
                 rank: ranks[h.uid] ?? (i === 0 ? 0 : 1),
+                // 시작 순서 — 정한 영웅은 그 칸 순서 · 안 정하면 판마다 섞는다 · AI 팀은 부른 쪽이 `buffFirst` 로 덮는다(`aiOrder`) (2026-11-16 R515 · battle_design §5)
+                startOrder: Array.isArray(h.skillOrder) && h.skillOrder.length ? 'fixed' : 'random',
             };
         });
     }
@@ -158,7 +163,7 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
                 h.equipped[it.slot] = it.uid;
             });
         });
-        return snapshotTeam(heroes, items);
+        return aiOrder(snapshotTeam(heroes, items));
     }
 
     function fight(team, opponent, rng, loadout = null, oppLoadout = null) {
@@ -286,7 +291,7 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
         const slots = floor?.tacticRng && TC && T.tacticSlots > 0
             ? TC.pickMany(floor.tacticRng, T.tacticSlots).map((x, k) => ({ no: k + 1, id: x.id, grade: T.tacticGrade })) : [];
         const tactic = slots.length ? tacticBonusOf(heroes, items, slots, 0) : null;
-        const team = snapshotTeam(heroes, items, {}, tactic ? { tactic } : null);
+        const team = aiOrder(snapshotTeam(heroes, items, {}, tactic ? { tactic } : null));
         // 진형 [2026-11-13 사용자 「배치는 아래의 3개중에 1개를 따르도록」] · rng 0 —
         //   전열 직업(전사 · 기사 — `class.csv:start_row`)이 있으면 **전열 직업은 전열 · 나머지는 후열**(후열 직업이 섞이면 앞에 전사 · 기사가 하나는 선다 · 전사 · 기사뿐이면 모두 전열) ·
         //   후열 직업뿐이면 최대 HP 가 가장 큰 영웅 하나가 전열 · 나머지 후열(같으면 앞 영웅 — 옛 규칙 그대로) · 옛 짜기(`floor` 없음)는 언제나 옛 규칙

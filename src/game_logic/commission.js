@@ -110,7 +110,7 @@ export function createCommission(data) {
         if (!id || raceSeen.has(id)) bad(`type_id '${id}'`);
         raceSeen.add(id);
         if (!r.name_kr || !r.name_en) bad(`종족 ${id} — 이름이 비었다`);
-        return { id, name: { ko: r.name_kr, en: r.name_en } };
+        return { id, name: { ko: r.name_kr, en: r.name_en, zh: r.name_zh } };
     });
     // 몬스터 표의 종족이 전부 이름을 가져야 한다 — 없으면 그 종족 카드가 이름 없이 선다
     for (const m of Object.values(monsters)) if (!raceSeen.has(m.monster_type)) bad(`monster.csv ${m.monster_idx} 의 종족 '${m.monster_type}' 가 monster_type.csv 에 없다`);
@@ -133,7 +133,7 @@ export function createCommission(data) {
         if (!weightOk(r.weight)) bad(`등급 ${id} — weight ${r.weight}`);
         if (!(typeof r.gold_mult === 'number' && r.gold_mult > 0)) bad(`등급 ${id} — gold_mult ${r.gold_mult}`);
         if (!r.name_kr || !r.name_en) bad(`등급 ${id} — 이름이 비었다`);
-        return { id, weight: r.weight, goldMult: r.gold_mult, name: { ko: r.name_kr, en: r.name_en } };
+        return { id, weight: r.weight, goldMult: r.gold_mult, name: { ko: r.name_kr, en: r.name_en, zh: r.name_zh } };
     });
     if (!(grades.reduce((a, g) => a + g.weight, 0) > 0)) bad('등급 가중치 합이 0 이다');
     const gradeById = new Map(grades.map(g => [g.id, g]));

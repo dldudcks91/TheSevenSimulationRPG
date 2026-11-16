@@ -147,7 +147,7 @@ export function createRaidSystem({ battle, arena, game, monsters = {}, chapters 
                 const single = active.length ? active[Math.floor(rng() * active.length)] : 1;
                 const groups = p.groups === 'all' ? GROUPS.slice() : p.groups === 'single' ? [single] : single === 3 ? [2, 3] : [single, single + 1];
                 const speed = phase === 3 ? d.phase3_speed : phase === 2 ? d.phase2_speed : 1;
-                pending = { id: p.pattern_id, name: { ko: p.name_kr, en: p.name_en }, groups, target: p.target, element: p.element,
+                pending = { id: p.pattern_id, name: { ko: p.name_kr, en: p.name_en, zh: p.name_zh }, groups, target: p.target, element: p.element,
                     mult: p.mult, at: ctx.t, until: round(ctx.t + p.cast_sec / speed), breakMax: Math.round(d.hp * p.break_hp_pct), breakNow: 0 };
                 turn++;
                 emit('raidWarning', clone(pending));

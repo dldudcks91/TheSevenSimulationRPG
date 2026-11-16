@@ -319,7 +319,7 @@ export function createItemSystem(data) {
      * 그 무기군에서 그 아이템 레벨에 나오는 세부 베이스 `[{id, ko, en, tier, line}]` [신설 2026-11-11 · R445 — ~~`weaponBaseAt`(제작 레벨 사다리 · 하나)~~ 대체] —
      * 그 단의 셋(첫 단 아래면 기본 하나) · CSV 순서. **드롭(`build`)과 제작(`state.makeState`)이 같은 후보를 쓴다.** rng 0 · 새 객체
      */
-    const weaponBasesAt = (groupId, ilvl) => weaponTier(groupId, ilvl).map(b => ({ id: b.id, ko: b.ko, en: b.en, tier: b.tier, line: b.line }));
+    const weaponBasesAt = (groupId, ilvl) => weaponTier(groupId, ilvl).map(b => ({ id: b.id, ko: b.ko, en: b.en, zh: b.zh, tier: b.tier, line: b.line }));
 
     /* ── 무기 옵션 표 — 죄종 계열표 (item_design §1 「무기 옵션 — 죄종 계열」 · 2026-09-11 · R78 · 계열표 2026-10-05 · R206 · R208) ── */
     const sinOpts = data.weaponSinOptions ?? [];
@@ -752,8 +752,8 @@ export function createItemSystem(data) {
      */
     function basesAt(slot, ilvl) {
         return slot === 'weapon'
-            ? dropGroups.map(g => ({ id: g.id, ko: g.ko, en: g.en }))
-            : tierBases(slot, ilvl).map(b => ({ id: b.id, ko: b.ko, en: b.en, group: b.group ?? null }));
+            ? dropGroups.map(g => ({ id: g.id, ko: g.ko, en: g.en, zh: g.zh }))
+            : tierBases(slot, ilvl).map(b => ({ id: b.id, ko: b.ko, en: b.en, zh: b.zh, group: b.group ?? null }));
     }
 
 
@@ -1019,10 +1019,32 @@ export function createItemSystem(data) {
                     : baseless(slot) ? accSinRows(slot, src) : [];
         const d = rows.find(r => r.stat === a.stat);
         if (!d) return null;
-        // 줄 종류 — 메인 죄종 줄이면 그 칸 단어의 범위 · 아니면(계열 굴림의 랜덤 줄 · 공통 줄) 랜덤 줄 범위 (R436)
+        // 줄 종류 — 메인 죄종 줄이면 그 칸 단어의 범위 · 아니면(계열 굴림의 랜덤 줄 · 공통 줄) 랜덤 줄 범위 (R436) · `main` = 메인 줄인가(`optionScore` · R514)
         const tag = optionSources(item)[i];
         const k = (item.sins ?? []).indexOf(tag);
-        return { d, band: k >= 0 ? wordBand(tag, item.words?.[k]) : randomBand(item.ilvl) };
+        return { d, band: k >= 0 ? wordBand(tag, item.words?.[k]) : randomBand(item.ilvl), main: k >= 0 };
+    }
+
+    /** 메인 줄이 그 아이템 레벨에서 나올 수 있던 범위 비율 — 메인 후보 단(`mainTiers`) 맨 아래 단의 아래끝 ~ 맨 위 단의 위끝 (R514 · 단어를 묶어 잰다) */
+    const mainBand = ilvl => ({ lo: tierBand(mainTiers(ilvl)[0]).lo, hi: tierBand(mainTiers(ilvl).at(-1)).hi });
+
+    /**
+     * 옵션 점수 — 줄마다 「그 아이템 레벨에서 그 줄이 나올 수 있던 범위」 안의 자리(아래끝 0 · 위끝 1)의 평균 · 0 ~ 1 또는 null
+     * [신설 2026-11-16 · R514 · base_expedition_design §2-6 · INTERFACE §2-5].
+     * 범위는 `optionRange` 와 같되 **메인 줄만 단어를 묶어** 그 레벨의 메인 후보 단 전체(`mainBand`)로 잰다 — 같은 레벨이면 위 단어가 붙은 줄이 높다.
+     * 범위가 없거나 폭이 0 인 줄 · 값이 수가 아닌 줄은 뺀다 · 범위 밖 값(옛 굴림)은 양끝으로 자른다 · 잴 줄이 없으면 null · 옵션은 클수록 좋다는 전제 · 순수 · rng 0.
+     * 상단 구매가(`state.shopState`)가 부른다
+     */
+    function optionScore(item) {
+        const qs = [];
+        (item?.affixes ?? []).forEach((a, i) => {
+            const line = optionLine(item, i);
+            if (!line || !Number.isFinite(a.v)) return;
+            const band = line.main ? mainBand(item.ilvl) : line.band;
+            const r = line.range ?? { min: valueOf(line.d, bandRoll(line.d, band, 0), item.ilvl), max: valueOf(line.d, bandRoll(line.d, band, 1), item.ilvl) };
+            if (r.max > r.min) qs.push(Math.min(1, Math.max(0, (a.v - r.min) / (r.max - r.min))));
+        });
+        return qs.length ? qs.reduce((s, q) => s + q, 0) / qs.length : null;
     }
 
     /**
@@ -1112,5 +1134,21 @@ export function createItemSystem(data) {
         return { ...item, implicit: { ...item.implicit, v: Math.round(item.implicit.v * F.upgradeMult(F.upgradeSteps(item))) } };
     }
 
-    return { rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBasesAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, wordRanks, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, weaponBasePreview, armorBasePreview, implicitFixed, optionSources, optionRange, optionTableRange, skillPlusOf, procSkillLevel };
+    /**
+     * 표시 이름의 간체를 채운다 [2026-11-16 · LOCALIZATION_ZH D8 · INTERFACE §2-5] — **in-place** · rng 0.
+     * `name.zh` 가 없으면 저장된 죄종 · 단어 · 베이스로 이름을 다시 조립하고, **다시 낸 ko · en 이 저장된 이름과 같을 때만** 그 zh 를 싣는다
+     * (표가 바뀐 옛 이름 · 베이스를 못 찾는 칸은 그대로 — 화면은 영어)
+     */
+    function fillZh(item) {
+        if (!item?.name || typeof item.name !== 'object' || item.name.zh) return item;
+        const base = item.slot === 'weapon' ? (item.baseId ? WB_BY_ID[item.baseId] : WG[item.group]) ?? null
+            : (data.itemBases?.[item.slot] ?? []).find(b => b.id === item.baseId) ?? null;
+        if (!base) return item;
+        const sins = item.sins ?? [];
+        const again = N.composeName(sins[0] ?? null, base, sins[1] ?? null, item.words ?? []);
+        if (again.zh && again.ko === item.name.ko && again.en === item.name.en) item.name = { ...item.name, zh: again.zh };
+        return item;
+    }
+
+    return { fillZh, rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBasesAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, wordRanks, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, weaponBasePreview, armorBasePreview, implicitFixed, optionSources, optionRange, optionTableRange, optionScore, skillPlusOf, procSkillLevel };
 }

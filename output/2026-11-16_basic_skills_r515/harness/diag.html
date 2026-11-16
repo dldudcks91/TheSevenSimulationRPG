@@ -1,0 +1,52 @@
+<!doctype html><meta charset="utf-8"><title>running</title><pre id="out"></pre>
+<script type="module">
+// 마법사 2티어 버프가 왜 손해인가 — 같은 쌍에서 「짝만」 ↔ 「짝 + 버프」의 마법사 시전 시각 · 판 길이 · 마진을 나란히
+import { loadData, buildSystems, D } from '../ui/data.js';
+import { makeRng } from '../game_logic/rng.js';
+const q = new URL(location.href).searchParams;
+const N = +(q.get('n') || 120), LV = +(q.get('lv') || 45), PARTNER = q.get('partner') || '', TEST = q.get('test') || 'mag_ignite', ORDER = q.get('order') || '';
+const out = document.getElementById('out');
+try {
+    await loadData('../data/');
+    const SYS = buildSystems(D);
+    const tier = SYS.arena.tiers.find(t => t.level === LV);
+    const pairs = [];
+    for (let s = 1; pairs.length < N && s < N * 60; s++) {
+        const A = SYS.arena.rollTierOpponent(tier.id, makeRng(1000 + s));
+        if (!A.some(p => p.hero.cls === 'mage')) continue;
+        const B = SYS.arena.rollTierOpponent(tier.id, makeRng(70000 + s));
+        if (B.some(p => p.hero.cls === 'mage')) continue;
+        pairs.push({ A, B, s });
+    }
+    const clone = x => JSON.parse(JSON.stringify(x));
+    const run = (A, B, s, acts) => {
+        const A2 = clone(A); const me = A2.find(p => p.hero.cls === 'mage');
+        const up = me.actives.find(a => a.source === 'innate')?.up ?? 0;
+        me.actives = acts.map((id, i) => ({ id, source: i === 0 ? 'innate' : 'book', ...(i === 0 && up ? { up } : {}) }));
+        if (ORDER) me.startOrder = ORDER;
+        const r = SYS.arena.fight(A2, B, makeRng(90000 + s));
+        const key = `p${A2.indexOf(me)}`;
+        const hpMax = {}; A2.forEach((p, i) => hpMax[`p${i}`] = p.combat.hp_max); B.forEach((p, i) => hpMax[`e${i}`] = p.combat.hp_max);
+        const hp = { ...hpMax }; const casts = []; let died = null, dmg = 0;
+        for (const e of r.timeline) {
+            if ((e.e === 'hit' || e.e === 'dot') && e.d in hp) { hp[e.d] = e.dhp; if (e.a === key) dmg += e.dmg; if (e.d === key && e.dhp <= 0 && died == null) died = e.t; }
+            else if (e.e === 'heal' && e.d in hp) hp[e.d] = e.dhp;
+            else if (e.e === 'regen' && e.u in hp) hp[e.u] = e.dhp;
+            else if (e.e === 'skill' && e.u === key) casts.push(`${e.s.replace('mag_', '')}@${e.t.toFixed(1)}`);
+        }
+        const frac = side => Object.keys(hp).filter(k => k[0] === side).reduce((n, k) => n + Math.max(0, hp[k]) / hpMax[k], 0) / 3;
+        return { m: frac('p') - frac('e'), dur: r.durationSec, casts, died, dmg: Math.round(dmg), won: r.won };
+    };
+    const base = PARTNER ? [PARTNER] : [];
+    let sumD = 0, sumDmg0 = 0, sumDmg1 = 0, nAtk0 = 0, nAtk1 = 0; const lines = [];
+    for (const { A, B, s } of pairs) {
+        const a = run(A, B, s, base), b = run(A, B, s, [...base, TEST]);
+        sumD += b.m - a.m; sumDmg0 += a.dmg; sumDmg1 += b.dmg;
+        nAtk0 += a.casts.filter(c => !c.startsWith(TEST.replace('mag_', ''))).length; nAtk1 += b.casts.filter(c => !c.startsWith(TEST.replace('mag_', ''))).length;
+        if (lines.length < 12) lines.push(`s${s} Δ${(b.m - a.m).toFixed(2)} | base dur ${a.dur.toFixed(1)} died ${a.died} dmg ${a.dmg} [${a.casts.join(' ')}] | +test dur ${b.dur.toFixed(1)} died ${b.died} dmg ${b.dmg} [${b.casts.join(' ')}]`);
+    }
+    const n = pairs.length;
+    out.textContent = `lv ${LV} partner ${PARTNER || '-'} test ${TEST} order ${ORDER || 'AI'} n ${n}\nmeanΔ ${(sumD / n).toFixed(3)} mage dmg ${Math.round(sumDmg0 / n)} → ${Math.round(sumDmg1 / n)} attack casts ${(nAtk0 / n).toFixed(2)} → ${(nAtk1 / n).toFixed(2)}\n` + lines.join('\n');
+    document.title = 'DONE';
+} catch (err) { out.textContent = 'ERR ' + err.stack; document.title = 'FAIL'; }
+</script>

@@ -1,0 +1,89 @@
+lv 45 partner mag_lightning test mag_ignite order AI n 120
+meanΔ -0.287 mage dmg 3770 → 2754 attack casts 2.00 → 1.60
+s2 Δ-0.35 | base dur 14.9 died null dmg 5099 [lightning@3.3 kni_holyshield@9.8 lightning@11.0] | +test dur 16.8 died 13.8 dmg 552 [ignite@3.3 lightning@7.4]
+s4 Δ-0.24 | base dur 10.4 died null dmg 1884 [lightning@2.9] | +test dur 14.6 died 8.6 dmg 1992 [ignite@2.9 lightning@5.9]
+s5 Δ-0.26 | base dur 9.1 died null dmg 1965 [lightning@3.2] | +test dur 8.8 died 7.9 dmg 0 [ignite@3.2]
+s9 Δ-0.23 | base dur 18.4 died null dmg 12232 [lightning@2.8 lightning@10.6 lightning@18.4] | +test dur 13.4 died null dmg 4408 [ignite@2.8 lightning@5.6 lightning@13.4]
+s12 Δ-0.50 | base dur 9.4 died null dmg 2620 [lightning@3.3 fireball@3.3] | +test dur 51.2 died null dmg 7056 [ignite@3.3 lightning@6.2 lightning@13.7 ignite@16.6 fireball@16.6 lightning@21.2 lightning@28.7 ignite@29.9 lightning@36.2 ignite@43.2 lightning@43.7 lightning@51.2]
+s15 Δ-0.04 | base dur 14.4 died 5.4 dmg 482 [lightning@4.7] | +test dur 13.6 died 5.4 dmg 0 [ignite@4.7]
+s22 Δ-0.24 | base dur 11.4 died 8.1 dmg 3972 [lightning@3.6] | +test dur 10.5 died 10.5 dmg 2133 [ignite@3.6 lightning@6.3]
+s23 Δ-1.42 | base dur 18.1 died null dmg 5171 [lightning@3.9 lightning@12.3] | +test dur 13.2 died 9.7 dmg 2394 [ignite@3.9 lightning@8.6]
+s24 Δ-0.13 | base dur 21.2 died 18.3 dmg 2042 [lightning@3.3 lightning@12.1] | +test dur 17.6 died 15.7 dmg 785 [ignite@3.3 lightning@6.3]
+s25 Δ-0.01 | base dur 7.0 died 7 dmg 1327 [lightning@2.7] | +test dur 9.3 died 9.3 dmg 1146 [ignite@2.7 lightning@5.0]
+s33 Δ-0.33 | base dur 20.0 died null dmg 2114 [lightning@4.2 lightning@12.1 lightning@20.0] | +test dur 20.1 died 15.4 dmg 4710 [ignite@4.2 lightning@4.3 war_ironskin@9.6 lightning@12.2]
+s39 Δ-0.21 | base dur 24.4 died 24.4 dmg 5017 [lightning@3.8 lightning@9.7 lightning@18.3 arc_coldarrow@18.3] | +test dur 26.0 died 26 dmg 6910 [ignite@3.8 lightning@3.9 arc_coldarrow@3.9 lightning@9.7 ignite@16.6 lightning@18.3]
+
+lv 45 partner mag_lightning test mag_ignite order fixed n 120
+meanΔ -0.008 mage dmg 3770 → 3713 attack casts 2.00 → 2.00
+s2 Δ0.00 | base dur 14.9 died null dmg 5099 [lightning@3.3 kni_holyshield@9.8 lightning@11.0] | +test dur 14.9 died null dmg 5099 [lightning@3.3 ignite@6.6 kni_holyshield@9.8 lightning@11.0]
+s4 Δ0.00 | base dur 10.4 died null dmg 1884 [lightning@2.9] | +test dur 10.4 died null dmg 1884 [lightning@2.9 ignite@5.6]
+s5 Δ0.00 | base dur 9.1 died null dmg 1965 [lightning@3.2] | +test dur 9.1 died null dmg 1965 [lightning@3.2 ignite@7.7]
+s9 Δ0.00 | base dur 18.4 died null dmg 12232 [lightning@2.8 lightning@10.6 lightning@18.4] | +test dur 18.4 died null dmg 12232 [lightning@2.8 ignite@5.6 lightning@10.6 lightning@18.4]
+s12 Δ-0.03 | base dur 9.4 died null dmg 2620 [lightning@3.3 fireball@3.3] | +test dur 13.9 died null dmg 4282 [lightning@3.3 fireball@3.3 ignite@6.2 lightning@10.8 fireball@10.8]
+s15 Δ0.06 | base dur 14.4 died 5.4 dmg 482 [lightning@4.7] | +test dur 14.6 died 5.4 dmg 482 [lightning@4.7 ignite@4.8]
+s22 Δ0.00 | base dur 11.4 died 8.1 dmg 3972 [lightning@3.6] | +test dur 11.4 died 8.1 dmg 3972 [lightning@3.6 ignite@6.3]
+s23 Δ0.16 | base dur 18.1 died null dmg 5171 [lightning@3.9 lightning@12.3] | +test dur 26.0 died null dmg 5193 [lightning@3.9 ignite@8.7 lightning@17.1 ignite@23.3]
+s24 Δ0.00 | base dur 21.2 died 18.3 dmg 2042 [lightning@3.3 lightning@12.1] | +test dur 14.9 died 14.9 dmg 2133 [lightning@3.3 ignite@6.3 lightning@12.4]
+s25 Δ0.00 | base dur 7.0 died 7 dmg 1327 [lightning@2.7] | +test dur 7.0 died 7 dmg 1327 [lightning@2.7 ignite@5.0]
+s33 Δ0.07 | base dur 20.0 died null dmg 2114 [lightning@4.2 lightning@12.1 lightning@20.0] | +test dur 15.3 died null dmg 3688 [lightning@4.2 ignite@7.8 lightning@12.1]
+s39 Δ-0.06 | base dur 24.4 died 24.4 dmg 5017 [lightning@3.8 lightning@9.7 lightning@18.3 arc_coldarrow@18.3] | +test dur 30.9 died 30.9 dmg 7045 [lightning@3.8 ignite@9.7 lightning@16.6 ignite@25.2 lightning@28.0]
+
+lv 25 partner mag_fireball test mag_ignite order AI n 120
+meanΔ -0.126 mage dmg 1032 → 835 attack casts 2.28 → 1.92
+s2 Δ-0.61 | base dur 11.3 died null dmg 866 [fireball@3.6 fireball@10.4] | +test dur 24.4 died 9.4 dmg 224 [ignite@3.6 fireball@8.6]
+s4 Δ-0.16 | base dur 10.7 died null dmg 712 [fireball@4.4] | +test dur 15.3 died null dmg 199 [ignite@4.4 fireball@8.5]
+s5 Δ0.03 | base dur 12.7 died null dmg 599 [fireball@4.1 fireball@12.7] | +test dur 15.3 died null dmg 199 [ignite@4.1 fireball@10.1]
+s9 Δ-1.25 | base dur 34.3 died null dmg 920 [fireball@2.3 fireball@11.6 fireball@20.9 fireball@30.2] | +test dur 41.3 died 37.2 dmg 836 [ignite@2.3 fireball@4.3 fireball@13.6 ignite@17.2 fireball@22.9 ignite@32.1 fireball@32.2]
+s12 Δ-0.14 | base dur 18.6 died null dmg 600 [fireball@4.1 fireball@13.2] | +test dur 18.6 died null dmg 339 [ignite@4.1 fireball@7.8 fireball@16.9]
+s15 Δ-0.33 | base dur 20.1 died 7.3 dmg 335 [fireball@3.8] | +test dur 20.1 died 4.7 dmg 0 [ignite@3.8]
+s22 Δ-0.77 | base dur 20.6 died null dmg 2030 [fireball@4.0 fireball@12.3 fireball@20.6] | +test dur 40.3 died 26 dmg 1741 [ignite@4.0 fireball@7.7 fireball@16.0 ignite@17.3 fireball@24.3]
+s23 Δ0.05 | base dur 27.3 died null dmg 1590 [fireball@3.9 fireball@11.7 fireball@19.5 fireball@27.3] | +test dur 23.8 died null dmg 1214 [ignite@3.9 fireball@8.2 fireball@16.0 ignite@16.4 fireball@23.8]
+s24 Δ-0.02 | base dur 13.1 died 13.1 dmg 390 [fireball@3.3] | +test dur 16.0 died 16 dmg 347 [ignite@3.3 fireball@6.3]
+s25 Δ-0.30 | base dur 18.7 died null dmg 1111 [fireball@2.5 fireball@10.6 fireball@18.7] | +test dur 20.7 died null dmg 880 [ignite@2.5 fireball@4.5 fireball@12.6 ignite@15.5 fireball@20.7 iceblast@20.7]
+s33 Δ-0.66 | base dur 12.2 died null dmg 765 [fireball@3.3 fireball@12.2] | +test dur 17.6 died 17.6 dmg 499 [ignite@3.3 fireball@6.3 fireball@14.9 ignite@17.0]
+s39 Δ-0.20 | base dur 40.0 died 38 dmg 1346 [fireball@3.7 fireball@13.2 fireball@22.7 fireball@32.2] | +test dur 42.0 died 41.6 dmg 1072 [ignite@3.7 fireball@7.7 fireball@17.2 ignite@18.9 fireball@26.7 ignite@34.1 fireball@36.2]
+
+lv 25 partner mag_fireball test mag_ignite order fixed n 120
+meanΔ 0.012 mage dmg 1032 → 1015 attack casts 2.28 → 2.20
+s2 Δ-0.16 | base dur 11.3 died null dmg 866 [fireball@3.6 fireball@10.4] | +test dur 12.6 died 11.1 dmg 428 [fireball@3.6 ignite@7.2]
+s4 Δ-0.02 | base dur 10.7 died null dmg 712 [fireball@4.4] | +test dur 11.1 died null dmg 712 [fireball@4.4 ignite@8.9]
+s5 Δ-0.03 | base dur 12.7 died null dmg 599 [fireball@4.1 fireball@12.7] | +test dur 14.3 died null dmg 384 [fireball@4.1 ignite@9.7]
+s9 Δ0.03 | base dur 34.3 died null dmg 920 [fireball@2.3 fireball@11.6 fireball@20.9 fireball@30.2] | +test dur 30.2 died null dmg 920 [fireball@2.3 ignite@4.3 fireball@11.6 ignite@19.2 fireball@20.9 fireball@30.2]
+s12 Δ0.06 | base dur 18.6 died null dmg 600 [fireball@4.1 fireball@13.2] | +test dur 13.2 died null dmg 666 [fireball@4.1 ignite@7.8 fireball@13.2]
+s15 Δ0.00 | base dur 20.1 died 7.3 dmg 335 [fireball@3.8] | +test dur 20.1 died 7.3 dmg 335 [fireball@3.8]
+s22 Δ-0.04 | base dur 20.6 died null dmg 2030 [fireball@4.0 fireball@12.3 fireball@20.6] | +test dur 20.6 died null dmg 2263 [fireball@4.0 ignite@7.7 fireball@12.3 fireball@20.6]
+s23 Δ-0.07 | base dur 27.3 died null dmg 1590 [fireball@3.9 fireball@11.7 fireball@19.5 fireball@27.3] | +test dur 28.1 died null dmg 1738 [fireball@3.9 ignite@8.2 fireball@12.3 fireball@20.3 ignite@21.0 fireball@28.1]
+s24 Δ0.00 | base dur 13.1 died 13.1 dmg 390 [fireball@3.3] | +test dur 13.1 died 13.1 dmg 390 [fireball@3.3 ignite@6.3]
+s25 Δ-0.06 | base dur 18.7 died null dmg 1111 [fireball@2.5 fireball@10.6 fireball@18.7] | +test dur 18.7 died null dmg 1338 [fireball@2.5 ignite@4.5 fireball@10.6 ignite@17.5 fireball@18.7]
+s33 Δ0.00 | base dur 12.2 died null dmg 765 [fireball@3.3 fireball@12.2] | +test dur 12.2 died null dmg 765 [fireball@3.3 ignite@6.3 fireball@12.2]
+s39 Δ0.00 | base dur 40.0 died 38 dmg 1346 [fireball@3.7 fireball@13.2 fireball@22.7 fireball@32.2] | +test dur 40.0 died 38 dmg 1346 [fireball@3.7 ignite@7.7 fireball@13.2 fireball@22.7 ignite@22.9 fireball@32.2]
+
+lv 25 partner - test mag_ignite order AI n 120
+meanΔ -0.040 mage dmg 0 → 0 attack casts 0.07 → 0.09
+s2 Δ0.00 | base dur 15.0 died 9.4 dmg 0 [] | +test dur 15.0 died 9.4 dmg 0 [ignite@3.6]
+s4 Δ-0.02 | base dur 17.4 died null dmg 0 [] | +test dur 18.3 died 15.9 dmg 0 [ignite@4.4]
+s5 Δ0.00 | base dur 21.3 died null dmg 0 [] | +test dur 21.3 died null dmg 0 [ignite@4.1 ignite@17.9]
+s9 Δ0.00 | base dur 56.4 died 56.4 dmg 0 [] | +test dur 56.4 died 56.4 dmg 0 [ignite@2.3 ignite@17.2 ignite@32.1 ignite@47.3]
+s12 Δ-0.30 | base dur 23.7 died null dmg 0 [] | +test dur 27.0 died null dmg 0 [ignite@4.1 ignite@18.7]
+s15 Δ0.00 | base dur 20.1 died 4.7 dmg 0 [] | +test dur 20.1 died 4.7 dmg 0 [ignite@3.8]
+s22 Δ0.07 | base dur 28.0 died 25.5 dmg 0 [] | +test dur 24.1 died 20.2 dmg 0 [ignite@4.0 ignite@17.6]
+s23 Δ0.00 | base dur 189.6 died 72 dmg 0 [] | +test dur 189.6 died 72 dmg 0 [ignite@3.9 ignite@16.4 ignite@28.9 ignite@41.4 ignite@54.3 ignite@66.8]
+s24 Δ0.00 | base dur 13.1 died 13.1 dmg 0 [] | +test dur 13.1 died 13.1 dmg 0 [ignite@3.3]
+s25 Δ-0.17 | base dur 32.9 died 32.9 dmg 0 [] | +test dur 21.7 died 13.8 dmg 0 [ignite@2.5]
+s33 Δ0.00 | base dur 17.1 died 9.9 dmg 0 [] | +test dur 17.1 died 9.9 dmg 0 [ignite@3.3]
+s39 Δ0.00 | base dur 28.0 died 26 dmg 0 [] | +test dur 28.0 died 26 dmg 0 [ignite@3.7 ignite@18.9]
+
+lv 25 partner - test mag_echo order AI n 120
+meanΔ -0.043 mage dmg 0 → 0 attack casts 0.07 → 0.09
+s2 Δ0.00 | base dur 15.0 died 9.4 dmg 0 [] | +test dur 15.0 died 9.4 dmg 0 [echo@3.6]
+s4 Δ-0.02 | base dur 17.4 died null dmg 0 [] | +test dur 18.3 died 15.9 dmg 0 [echo@4.4]
+s5 Δ0.00 | base dur 21.3 died null dmg 0 [] | +test dur 21.3 died null dmg 0 [echo@4.1 echo@21.3]
+s9 Δ0.00 | base dur 56.4 died 56.4 dmg 0 [] | +test dur 56.4 died 56.4 dmg 0 [echo@2.3 echo@20.9 echo@39.5]
+s12 Δ-0.32 | base dur 23.7 died null dmg 0 [] | +test dur 29.3 died 28.8 dmg 0 [echo@4.1 echo@22.3]
+s15 Δ0.00 | base dur 20.1 died 4.7 dmg 0 [] | +test dur 20.1 died 4.7 dmg 0 [echo@3.8]
+s22 Δ0.00 | base dur 28.0 died 25.5 dmg 0 [] | +test dur 25.5 died 25.5 dmg 0 [echo@4.0 echo@20.6]
+s23 Δ0.00 | base dur 189.6 died 72 dmg 0 [] | +test dur 189.6 died 72 dmg 0 [echo@3.9 echo@19.5 echo@35.1 echo@50.7 echo@66.3]
+s24 Δ0.00 | base dur 13.1 died 13.1 dmg 0 [] | +test dur 13.1 died 13.1 dmg 0 [echo@3.3]
+s25 Δ-0.17 | base dur 32.9 died 32.9 dmg 0 [] | +test dur 21.7 died 13.8 dmg 0 [echo@2.5]
+s33 Δ0.00 | base dur 17.1 died 9.9 dmg 0 [] | +test dur 17.1 died 9.9 dmg 0 [echo@3.3]
+s39 Δ0.00 | base dur 28.0 died 26 dmg 0 [] | +test dur 28.0 died 26 dmg 0 [echo@3.7 echo@22.7]

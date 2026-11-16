@@ -1,0 +1,74 @@
+<!doctype html><meta charset="utf-8"><title>running</title><pre id="out"></pre>
+<script type="module">
+// 스탯 폭 측정 (2026-11-16) — 스킬의 한 칸(데미지 배율 · 걸린 효과 값 · 지속)을 f 배로 키우면 결투 마진이 얼마나 움직이나.
+// 능력치 10 → 18 = f 배: 10% 복리 2.14 · 5% 복리 1.48 · 3% 직선 1.24. 능력치는 그대로 두고 칸만 키운다(평타 등 다른 경로가 섞이지 않게).
+// 짝 = class_duel.html 과 같은 시드(직업 C 가 낀 팀 ↔ 없는 팀 · 그 영웅 액티브 = 그 스킬 하나).
+import { loadData, D } from '../ui/data.js';
+import { buildSystems } from '../ui/data.js';
+import { makeRng } from '../game_logic/rng.js';
+const q = new URL(location.href).searchParams;
+const N = +(q.get('n') || 120), C = q.get('cls');
+const levels = (q.get('lv') || '25,45').split(',').map(Number);
+const SKILLS = q.get('s').split(',');
+const FACTORS = (q.get('f') || '1.24,1.48,2.14').split(',').map(Number);
+const out = document.getElementById('out');
+const clone = x => JSON.parse(JSON.stringify(x));
+try {
+    await loadData('../data/');
+    const effOrig = clone(D.skillEffectRows), stOrig = clone(D.skillStatusRows);
+    const sysFor = (skill, field, f) => {
+        D.skillEffectRows = clone(effOrig); D.skillStatusRows = clone(stOrig);
+        if (field !== 'base') {
+            for (const e of D.skillEffectRows.filter(e => e.skill_id === skill)) {
+                if (field === 'mult' && (e.effect === 'hit' || e.effect === 'heal' || e.effect === 'mend') && +e.mult_pct > 0) e.mult_pct = +e.mult_pct * f;
+                if ((field === 'value' || field === 'dur') && e.effect === 'apply' && e.status && e.status !== '-') {
+                    const st = D.skillStatusRows.find(r => r.status_id === e.status);
+                    if (field === 'value') st.value = +st.value * f;
+                    if (field === 'dur' && +st.duration_sec > 0) st.duration_sec = +st.duration_sec * f;
+                }
+            }
+        }
+        return buildSystems(D);
+    };
+    const SYS0 = sysFor(null, 'base', 1);
+    const res = {};
+    for (const lv of levels) {
+        const tier = SYS0.arena.tiers.find(t => t.level === lv);
+        const pairs = [];
+        for (let s = 1; pairs.length < N && s < N * 60; s++) {
+            const A = SYS0.arena.rollTierOpponent(tier.id, makeRng(1000 + s));
+            if (!A.some(p => p.hero.cls === C)) continue;
+            const B = SYS0.arena.rollTierOpponent(tier.id, makeRng(70000 + s));
+            if (B.some(p => p.hero.cls === C)) continue;
+            pairs.push({ A, B, s });
+        }
+        const run = (SYS, id) => {
+            let margin = 0, win = 0;
+            for (const { A, B, s } of pairs) {
+                const A2 = clone(A); const me = A2.find(p => p.hero.cls === C);
+                const up = me.actives.find(a => a.source === 'innate')?.up ?? 0;
+                me.actives = id ? [{ id, source: 'innate', ...(up ? { up } : {}) }] : [];
+                const r = SYS.arena.fight(A2, B, makeRng(90000 + s));
+                const hpMax = {}; A2.forEach((p, i) => hpMax[`p${i}`] = p.combat.hp_max); B.forEach((p, i) => hpMax[`e${i}`] = p.combat.hp_max);
+                const hp = { ...hpMax };
+                for (const e of r.timeline) {
+                    if ((e.e === 'hit' || e.e === 'dot') && e.d in hp) hp[e.d] = e.dhp;
+                    else if (e.e === 'heal' && e.d in hp) hp[e.d] = e.dhp;
+                    else if (e.e === 'regen' && e.u in hp) hp[e.u] = e.dhp;
+                }
+                const frac = side => Object.keys(hp).filter(k => k[0] === side).reduce((n, k) => n + Math.max(0, hp[k]) / hpMax[k], 0) / 3;
+                margin += frac('p') - frac('e'); if (r.won) win++;
+            }
+            return { margin: +(margin / pairs.length).toFixed(4), win: +(win / pairs.length * 100).toFixed(1) };
+        };
+        res[lv] = { pairs: pairs.length, none: run(SYS0, null) };
+        for (const sk of SKILLS) {
+            const [id, fields] = sk.split(':');
+            res[lv][id] = { base: run(SYS0, id) };
+            for (const field of fields.split(/[+/ ]/)) for (const f of FACTORS) res[lv][id][`${field}x${f}`] = run(sysFor(id, field, f), id);
+        }
+    }
+    out.textContent = JSON.stringify({ cls: C, N, levels, res });
+    document.title = 'DONE';
+} catch (err) { out.textContent = 'ERR ' + err.stack; document.title = 'FAIL'; }
+</script>

@@ -50,7 +50,7 @@ export function createGamble(data) {
         if (!(typeof r.weight === 'number' && r.weight >= 0)) bad(`${id} — weight ${r.weight}`);
         if (!coin && !(typeof r.pay === 'number' && r.pay > 0)) bad(`${id} — pay ${r.pay}`);
         if (!r.name_kr || !r.name_en) bad(`${id} — 이름이 비었다`);
-        return { id, kind: r.kind, yield: coin ? null : r.yield, weight: r.weight, pay: coin ? 0 : r.pay, name: { ko: r.name_kr, en: r.name_en } };
+        return { id, kind: r.kind, yield: coin ? null : r.yield, weight: r.weight, pay: coin ? 0 : r.pay, name: { ko: r.name_kr, en: r.name_en, zh: r.name_zh } };
     });
     for (const k of ['wild', 'coin']) if (symbols.filter(s => s.kind === k).length !== 1) bad(`${k} 심볼은 정확히 하나여야 한다`);
     if (!symbols.some(s => s.kind === 'line')) bad('라인 심볼이 없다');
@@ -74,7 +74,7 @@ export function createGamble(data) {
         if (r.on_fill !== 0 && r.on_fill !== 1) bad(`코인 ${id} — on_fill ${r.on_fill}`);
         const named = r.name_kr && r.name_kr !== '-';
         if (named && (!r.name_en || r.name_en === '-')) bad(`코인 ${id} — 영어 이름이 비었다`);
-        return { id, kind: r.kind, value: r.value, weight: r.weight, onFill: r.on_fill === 1, name: named ? { ko: r.name_kr, en: r.name_en } : null };
+        return { id, kind: r.kind, value: r.value, weight: r.weight, onFill: r.on_fill === 1, name: named ? { ko: r.name_kr, en: r.name_en, zh: r.name_zh } : null };
     });
     const fills = coins.filter(c => c.onFill);
     if (fills.length !== 1) bad(`on_fill 행은 정확히 하나여야 한다 (${fills.length})`);

@@ -1,0 +1,1238 @@
+[
+ {
+  "line": 55,
+  "ctx": "wrath: {",
+  "ko": "분노",
+  "en": "Wrath"
+ },
+ {
+  "line": 56,
+  "ctx": "line: {",
+  "ko": "공격 속도와 치명타 확률 증가",
+  "en": "Attacks faster and crits more often"
+ },
+ {
+  "line": 57,
+  "ctx": "envy: {",
+  "ko": "시기",
+  "en": "Envy"
+ },
+ {
+  "line": 58,
+  "ctx": "line: {",
+  "ko": "방어·저항 관통 및 받은 피해 일부 반사",
+  "en": "Pierces defenses and reflects damage"
+ },
+ {
+  "line": 59,
+  "ctx": "greed: {",
+  "ko": "탐욕",
+  "en": "Greed"
+ },
+ {
+  "line": 60,
+  "ctx": "line: {",
+  "ko": "골드와 아이템 획득량 증가",
+  "en": "Finds more gold and items"
+ },
+ {
+  "line": 61,
+  "ctx": "sloth: {",
+  "ko": "나태",
+  "en": "Sloth"
+ },
+ {
+  "line": 62,
+  "ctx": "line: {",
+  "ko": "받는 피해와 스킬 쿨타임 감소",
+  "en": "Takes less damage, shorter cooldowns"
+ },
+ {
+  "line": 63,
+  "ctx": "gluttony: {",
+  "ko": "폭식",
+  "en": "Gluttony"
+ },
+ {
+  "line": 64,
+  "ctx": "line: {",
+  "ko": "체력·저항 증가 및 적 체력 비례 피해",
+  "en": "More health and resists, % HP damage"
+ },
+ {
+  "line": 65,
+  "ctx": "lust: {",
+  "ko": "색욕",
+  "en": "Lust"
+ },
+ {
+  "line": 66,
+  "ctx": "line: {",
+  "ko": "타격 시 체력 흡수 및 버프 지속시간 증가",
+  "en": "Steals life on hit and buffs last longer"
+ },
+ {
+  "line": 67,
+  "ctx": "pride: {",
+  "ko": "오만",
+  "en": "Pride"
+ },
+ {
+  "line": 68,
+  "ctx": "line: {",
+  "ko": "받는 피해 감소 및 공격력·타격 회복 증가",
+  "en": "Tougher, hits harder, hard to stagger"
+ },
+ {
+  "line": 79,
+  "ctx": "normal: {",
+  "ko": "일반",
+  "en": "Normal"
+ },
+ {
+  "line": 80,
+  "ctx": "magic: {",
+  "ko": "매직",
+  "en": "Magic"
+ },
+ {
+  "line": 81,
+  "ctx": "rare: {",
+  "ko": "레어",
+  "en": "Rare"
+ },
+ {
+  "line": 82,
+  "ctx": "craft: {",
+  "ko": "크래프트",
+  "en": "Craft"
+ },
+ {
+  "line": 83,
+  "ctx": "epic: {",
+  "ko": "에픽",
+  "en": "Epic"
+ },
+ {
+  "line": 84,
+  "ctx": "legendary: {",
+  "ko": "레전더리",
+  "en": "Legendary"
+ },
+ {
+  "line": 85,
+  "ctx": "unique: {",
+  "ko": "유니크",
+  "en": "Unique"
+ },
+ {
+  "line": 103,
+  "ctx": "atk_flat: {",
+  "ko": "데미지",
+  "en": "Damage"
+ },
+ {
+  "line": 105,
+  "ctx": "hp_flat: {",
+  "ko": "최대 HP",
+  "en": "Max HP"
+ },
+ {
+  "line": 107,
+  "ctx": "def_flat: {",
+  "ko": "물리 방어",
+  "en": "Physical Defense"
+ },
+ {
+  "line": 108,
+  "ctx": "res_all: {",
+  "ko": "모든 원소 저항",
+  "en": "All Resistances"
+ },
+ {
+  "line": 109,
+  "ctx": "res_fire: {",
+  "ko": "화염 저항",
+  "en": "Fire Resist"
+ },
+ {
+  "line": 110,
+  "ctx": "res_cold: {",
+  "ko": "냉기 저항",
+  "en": "Cold Resist"
+ },
+ {
+  "line": 111,
+  "ctx": "res_lightning: {",
+  "ko": "전기 저항",
+  "en": "Lightning Resist"
+ },
+ {
+  "line": 112,
+  "ctx": "res_poison: {",
+  "ko": "독 저항",
+  "en": "Poison Resist"
+ },
+ {
+  "line": 113,
+  "ctx": "crit_rate: {",
+  "ko": "치명타 확률",
+  "en": "Crit Chance"
+ },
+ {
+  "line": 114,
+  "ctx": "crit_damage: {",
+  "ko": "치명타 피해",
+  "en": "Crit Damage"
+ },
+ {
+  "line": 115,
+  "ctx": "aspd_pct: {",
+  "ko": "공격 속도",
+  "en": "Attack Speed"
+ },
+ {
+  "line": 116,
+  "ctx": "cast_speed_pct: {",
+  "ko": "캐스팅 속도",
+  "en": "Casting Speed"
+ },
+ {
+  "line": 117,
+  "ctx": "life_steal: {",
+  "ko": "흡혈",
+  "en": "Life Steal"
+ },
+ {
+  "line": 118,
+  "ctx": "def_ignore: {",
+  "ko": "방어 무시",
+  "en": "Defense Ignore"
+ },
+ {
+  "line": 119,
+  "ctx": "reflect_damage: {",
+  "ko": "반사 피해",
+  "en": "Reflect Damage"
+ },
+ {
+  "line": 120,
+  "ctx": "damage_reduction: {",
+  "ko": "피해 감소",
+  "en": "Damage Reduction"
+ },
+ {
+  "line": 121,
+  "ctx": "gold_find: {",
+  "ko": "골드 획득",
+  "en": "Gold Find"
+ },
+ {
+  "line": 122,
+  "ctx": "item_find: {",
+  "ko": "드랍률",
+  "en": "Item Find"
+ },
+ {
+  "line": 125,
+  "ctx": "res_reduction: {",
+  "ko": "저항 감소",
+  "en": "Resist Reduction"
+ },
+ {
+  "line": 126,
+  "ctx": "atk_down_phys_pct: {",
+  "ko": "타격 시 대상 물리 데미지 감소",
+  "en": "Physical Damage Down on Hit"
+ },
+ {
+  "line": 127,
+  "ctx": "atk_down_mag_pct: {",
+  "ko": "타격 시 대상 마법 데미지 감소",
+  "en": "Magic Damage Down on Hit"
+ },
+ {
+  "line": 128,
+  "ctx": "dmg_per_level_pct: {",
+  "ko": "레벨당 데미지",
+  "en": "Damage per Level"
+ },
+ {
+  "line": 129,
+  "ctx": "crushing_blow_pct: {",
+  "ko": "강타",
+  "en": "Crushing Blow"
+ },
+ {
+  "line": 130,
+  "ctx": "magic_find: {",
+  "ko": "매직아이템 획득",
+  "en": "Magic Find"
+ },
+ {
+  "line": 131,
+  "ctx": "vs_normal_dmg: {",
+  "ko": "일반 대상 추가 피해",
+  "en": "Damage vs Normal"
+ },
+ {
+  "line": 132,
+  "ctx": "vs_demon_dmg: {",
+  "ko": "데몬 대상 추가 피해",
+  "en": "Damage vs Demon"
+ },
+ {
+  "line": 133,
+  "ctx": "vs_undead_dmg: {",
+  "ko": "언데드 대상 추가 피해",
+  "en": "Damage vs Undead"
+ },
+ {
+  "line": 134,
+  "ctx": "vs_elite_dmg: {",
+  "ko": "정예·보스 대상 추가 피해",
+  "en": "Damage vs Elites & Bosses"
+ },
+ {
+  "line": 135,
+  "ctx": "vs_front_dmg: {",
+  "ko": "전열 대상 추가 피해",
+  "en": "Damage vs Front Row"
+ },
+ {
+  "line": 136,
+  "ctx": "vs_back_dmg: {",
+  "ko": "후열 대상 추가 피해",
+  "en": "Damage vs Back Row"
+ },
+ {
+  "line": 137,
+  "ctx": "def_down_pct: {",
+  "ko": "타격 시 대상 방어력 감소",
+  "en": "Defense Shred on Hit"
+ },
+ {
+  "line": 138,
+  "ctx": "fire_dmg_pct: {",
+  "ko": "화염 피해",
+  "en": "Fire Damage"
+ },
+ {
+  "line": 139,
+  "ctx": "cold_dmg_pct: {",
+  "ko": "냉기 피해",
+  "en": "Cold Damage"
+ },
+ {
+  "line": 140,
+  "ctx": "lightning_dmg_pct: {",
+  "ko": "전기 피해",
+  "en": "Lightning Damage"
+ },
+ {
+  "line": 141,
+  "ctx": "poison_dmg_pct: {",
+  "ko": "독 피해",
+  "en": "Poison Damage"
+ },
+ {
+  "line": 142,
+  "ctx": "res_down_pct: {",
+  "ko": "타격 시 대상 원소 저항 감소",
+  "en": "Resist Shred on Hit"
+ },
+ {
+  "line": 146,
+  "ctx": "fhr: {",
+  "ko": "타격 회복",
+  "en": "Hit Recovery"
+ },
+ {
+  "line": 147,
+  "ctx": "cooldown_reduction: {",
+  "ko": "쿨타임 감소",
+  "en": "Cooldown Reduction"
+ },
+ {
+  "line": 148,
+  "ctx": "hp_recovery_pct: {",
+  "ko": "체력 회복",
+  "en": "HP Recovery"
+ },
+ {
+  "line": 149,
+  "ctx": "kill_heal_pct: {",
+  "ko": "처치 시 체력 회복",
+  "en": "Heal on Kill"
+ },
+ {
+  "line": 150,
+  "ctx": "start_gauge_pct: {",
+  "ko": "전투 시작 시 행동 게이지",
+  "en": "Action Gauge at Battle Start"
+ },
+ {
+  "line": 151,
+  "ctx": "cull_normal_pct: {",
+  "ko": "일반몹 처형",
+  "en": "Culling Strike vs Normal"
+ },
+ {
+  "line": 152,
+  "ctx": "res_all_per_level: {",
+  "ko": "레벨당 모든 원소 저항",
+  "en": "All Resist per Level"
+ },
+ {
+  "line": 153,
+  "ctx": "def_per_level: {",
+  "ko": "레벨당 물리 방어",
+  "en": "Physical Defense per Level"
+ },
+ {
+  "line": 154,
+  "ctx": "hp_per_level: {",
+  "ko": "레벨당 최대 HP",
+  "en": "Max HP per Level"
+ },
+ {
+  "line": 155,
+  "ctx": "aspd_per_level_pct: {",
+  "ko": "레벨당 공격 속도",
+  "en": "Attack Speed per Level"
+ },
+ {
+  "line": 156,
+  "ctx": "counter_chance: {",
+  "ko": "반격 확률",
+  "en": "Counter Chance"
+ },
+ {
+  "line": 157,
+  "ctx": "res_max_fire: {",
+  "ko": "최대 화염 저항",
+  "en": "Max Fire Resist"
+ },
+ {
+  "line": 158,
+  "ctx": "res_max_cold: {",
+  "ko": "최대 냉기 저항",
+  "en": "Max Cold Resist"
+ },
+ {
+  "line": 159,
+  "ctx": "res_max_lightning: {",
+  "ko": "최대 전기 저항",
+  "en": "Max Lightning Resist"
+ },
+ {
+  "line": 160,
+  "ctx": "res_max_poison: {",
+  "ko": "최대 독 저항",
+  "en": "Max Poison Resist"
+ },
+ {
+  "line": 162,
+  "ctx": "vs_normal_dr: {",
+  "ko": "일반 적에게 받는 피해 감소",
+  "en": "Damage Reduction vs Normal"
+ },
+ {
+  "line": 163,
+  "ctx": "vs_demon_dr: {",
+  "ko": "데몬에게 받는 피해 감소",
+  "en": "Damage Reduction vs Demon"
+ },
+ {
+  "line": 164,
+  "ctx": "vs_undead_dr: {",
+  "ko": "언데드에게 받는 피해 감소",
+  "en": "Damage Reduction vs Undead"
+ },
+ {
+  "line": 165,
+  "ctx": "vs_elite_dr: {",
+  "ko": "정예·보스에게 받는 피해 감소",
+  "en": "Damage Reduction vs Elites & Bosses"
+ },
+ {
+  "line": 166,
+  "ctx": "vs_front_dr: {",
+  "ko": "전열 적에게 받는 피해 감소",
+  "en": "Damage Reduction vs Front Row"
+ },
+ {
+  "line": 167,
+  "ctx": "vs_back_dr: {",
+  "ko": "후열 적에게 받는 피해 감소",
+  "en": "Damage Reduction vs Back Row"
+ },
+ {
+  "line": 168,
+  "ctx": "xp_gain_pct: {",
+  "ko": "경험치 획득",
+  "en": "Experience Gain"
+ },
+ {
+  "line": 170,
+  "ctx": "freeze_dur_reduction: {",
+  "ko": "빙결 시간 감소",
+  "en": "Freeze Duration Reduction"
+ },
+ {
+  "line": 171,
+  "ctx": "poison_dur_reduction: {",
+  "ko": "중독 시간 감소",
+  "en": "Poison Duration Reduction"
+ },
+ {
+  "line": 175,
+  "ctx": "res_reduction_fire: {",
+  "ko": "화염 관통",
+  "en": "Fire Penetration"
+ },
+ {
+  "line": 176,
+  "ctx": "res_reduction_cold: {",
+  "ko": "냉기 관통",
+  "en": "Cold Penetration"
+ },
+ {
+  "line": 177,
+  "ctx": "res_reduction_lightning: {",
+  "ko": "전기 관통",
+  "en": "Lightning Penetration"
+ },
+ {
+  "line": 178,
+  "ctx": "res_reduction_poison: {",
+  "ko": "독 관통",
+  "en": "Poison Penetration"
+ },
+ {
+  "line": 179,
+  "ctx": "burn_dur_reduction: {",
+  "ko": "화상 시간 감소",
+  "en": "Burn Duration Reduction"
+ },
+ {
+  "line": 180,
+  "ctx": "stun_dur_reduction: {",
+  "ko": "스턴 시간 감소",
+  "en": "Stun Duration Reduction"
+ },
+ {
+  "line": 181,
+  "ctx": "buff_dur_pct: {",
+  "ko": "버프 지속시간",
+  "en": "Buff Duration"
+ },
+ {
+  "line": 183,
+  "ctx": "potion_effect_pct: {",
+  "ko": "물약 효과",
+  "en": "Potion Effect"
+ },
+ {
+  "line": 185,
+  "ctx": "hit_bonus: {",
+  "ko": "명중률",
+  "en": "Hit Bonus"
+ },
+ {
+  "line": 187,
+  "ctx": "dmg_min_flat: {",
+  "ko": "최소 데미지",
+  "en": "Minimum Damage"
+ },
+ {
+  "line": 188,
+  "ctx": "dmg_max_flat: {",
+  "ko": "최대 데미지",
+  "en": "Maximum Damage"
+ },
+ {
+  "line": 189,
+  "ctx": "dmg_max_per_level: {",
+  "ko": "레벨당 최대 데미지",
+  "en": "Maximum Damage per Level"
+ },
+ {
+  "line": 190,
+  "ctx": "dmg_min_per_level: {",
+  "ko": "레벨당 최소 데미지",
+  "en": "Minimum Damage per Level"
+ },
+ {
+  "line": 191,
+  "ctx": "def_down_stack_pct: {",
+  "ko": "타격 시 대상 방어력 감소 (겹침)",
+  "en": "Stacking Defense Shred on Hit"
+ },
+ {
+  "line": 193,
+  "ctx": "res_down_stack_fire: {",
+  "ko": "타격 시 대상 화염 저항 감소 (겹침)",
+  "en": "Stacking Fire Resist Shred on Hit"
+ },
+ {
+  "line": 194,
+  "ctx": "res_down_stack_cold: {",
+  "ko": "타격 시 대상 냉기 저항 감소 (겹침)",
+  "en": "Stacking Cold Resist Shred on Hit"
+ },
+ {
+  "line": 195,
+  "ctx": "res_down_stack_lightning: {",
+  "ko": "타격 시 대상 전기 저항 감소 (겹침)",
+  "en": "Stacking Lightning Resist Shred on Hit"
+ },
+ {
+  "line": 196,
+  "ctx": "res_down_stack_poison: {",
+  "ko": "타격 시 대상 독 저항 감소 (겹침)",
+  "en": "Stacking Poison Resist Shred on Hit"
+ },
+ {
+  "line": 197,
+  "ctx": "res_down_stack_pct: {",
+  "ko": "타격 시 대상 원소 저항 감소 (겹침)",
+  "en": "Stacking Resist Shred on Hit"
+ },
+ {
+  "line": 198,
+  "ctx": "weapon_atk_pct: {",
+  "ko": "무기 데미지",
+  "en": "Weapon Damage"
+ },
+ {
+  "line": 199,
+  "ctx": "stagger_dur_pct: {",
+  "ko": "경직 시간 증가",
+  "en": "Stagger Duration"
+ },
+ {
+  "line": 200,
+  "ctx": "cast_refund_chance: {",
+  "ko": "시전 시 시전 칸 충전",
+  "en": "Charge Refund on Cast"
+ },
+ {
+  "line": 201,
+  "ctx": "status_dur_pct: {",
+  "ko": "상태이상 시간 증가",
+  "en": "Ailment Duration"
+ },
+ {
+  "line": 202,
+  "ctx": "cast_speed_per_level_pct: {",
+  "ko": "레벨당 캐스팅 속도",
+  "en": "Casting Speed per Level"
+ },
+ {
+  "line": 203,
+  "ctx": "cast_stack_pct: {",
+  "ko": "시전 누적 데미지",
+  "en": "Stacking Damage per Cast"
+ },
+ {
+  "line": 204,
+  "ctx": "heal_out_pct: {",
+  "ko": "회복량 증가",
+  "en": "Healing Done"
+ },
+ {
+  "line": 205,
+  "ctx": "debuff_dur_pct: {",
+  "ko": "디버프 시간 증가",
+  "en": "Debuff Duration"
+ },
+ {
+  "line": 206,
+  "ctx": "debuff_dur_reduction: {",
+  "ko": "상태이상 · 디버프 시간 감소",
+  "en": "Ailment & Debuff Duration Reduction"
+ },
+ {
+  "line": 207,
+  "ctx": "hp_regen: {",
+  "ko": "HP 재생",
+  "en": "HP Regen"
+ },
+ {
+  "line": 209,
+  "ctx": "proc_hit_attack: {",
+  "ko": "타격 시 공격 스킬 발동",
+  "en": "Attack Skill on Hit"
+ },
+ {
+  "line": 210,
+  "ctx": "proc_hit_buff: {",
+  "ko": "타격 시 버프 스킬 발동",
+  "en": "Buff Skill on Hit"
+ },
+ {
+  "line": 211,
+  "ctx": "proc_cast_attack: {",
+  "ko": "시전 시 공격 스킬 발동",
+  "en": "Attack Skill on Cast"
+ },
+ {
+  "line": 212,
+  "ctx": "proc_cast_buff: {",
+  "ko": "시전 시 버프 스킬 발동",
+  "en": "Buff Skill on Cast"
+ },
+ {
+  "line": 213,
+  "ctx": "proc_cast_debuff: {",
+  "ko": "시전 시 디버프 스킬 발동",
+  "en": "Debuff Skill on Cast"
+ },
+ {
+  "line": 214,
+  "ctx": "proc_struck_debuff: {",
+  "ko": "피격 시 디버프 스킬 발동",
+  "en": "Debuff Skill when Struck"
+ },
+ {
+  "line": 215,
+  "ctx": "proc_struck_buff: {",
+  "ko": "피격 시 버프 스킬 발동",
+  "en": "Buff Skill when Struck"
+ },
+ {
+  "line": 216,
+  "ctx": "proc_struck_defense: {",
+  "ko": "피격 시 방어 스킬 발동",
+  "en": "Defense Skill when Struck"
+ },
+ {
+  "line": 218,
+  "ctx": "skill_plus: {",
+  "ko": "스킬 레벨",
+  "en": "Skill Level"
+ },
+ {
+  "line": 219,
+  "ctx": "skill_tag: {",
+  "ko": "스킬 태그 강화",
+  "en": "Skill Tag Bonus"
+ },
+ {
+  "line": 228,
+  "ctx": "speed_pct: {",
+  "ko": "공격 · 캐스팅 속도",
+  "en": "Attack · Casting Speed"
+ },
+ {
+  "line": 236,
+  "ctx": "atk_pct_per_greed: {",
+  "ko": "탐욕 비례 데미지",
+  "en": "Damage per Greed"
+ },
+ {
+  "line": 237,
+  "ctx": "hp_pct_per_greed: {",
+  "ko": "탐욕 비례 최대 HP",
+  "en": "Max HP per Greed"
+ },
+ {
+  "line": 238,
+  "ctx": "cdr_per_greed: {",
+  "ko": "탐욕 비례 쿨타임 감소",
+  "en": "Cooldown Reduction per Greed"
+ },
+ {
+  "line": 243,
+  "ctx": "basic_cleave: {",
+  "ko": "평타 튐",
+  "en": "Basic Cleave"
+ },
+ {
+  "line": 244,
+  "ctx": "skill_repeat_chance: {",
+  "ko": "스킬 한 번 더",
+  "en": "Skill Repeat"
+ },
+ {
+  "line": 245,
+  "ctx": "elem_to_phys: {",
+  "ko": "원소 → 물리",
+  "en": "Elemental to Physical"
+ },
+ {
+  "line": 246,
+  "ctx": "hit_stun_chance: {",
+  "ko": "타격 스턴",
+  "en": "Stun on Hit"
+ },
+ {
+  "line": 247,
+  "ctx": "aura_guard_share: {",
+  "ko": "대신 받기",
+  "en": "Guard Share"
+ },
+ {
+  "line": 248,
+  "ctx": "crit_taken_cut: {",
+  "ko": "받는 치명 감소",
+  "en": "Crit Damage Taken"
+ },
+ {
+  "line": 249,
+  "ctx": "skill_fixed_share: {",
+  "ko": "고정 피해 몫",
+  "en": "Fixed Damage Share"
+ },
+ {
+  "line": 250,
+  "ctx": "cast_refill_chance: {",
+  "ko": "시전 칸 충전",
+  "en": "Charge Refill"
+ },
+ {
+  "line": 251,
+  "ctx": "round_barrier: {",
+  "ko": "라운드 보호막",
+  "en": "Round Shield"
+ },
+ {
+  "line": 252,
+  "ctx": "sin_vuln: {",
+  "ko": "받는 피해 증가",
+  "en": "Damage Taken Up"
+ },
+ {
+  "line": 253,
+  "ctx": "overheal_shield: {",
+  "ko": "넘친 회복 보호막",
+  "en": "Overheal Shield"
+ },
+ {
+  "line": 254,
+  "ctx": "last_prayer: {",
+  "ko": "마지막 기도",
+  "en": "Last Prayer"
+ },
+ {
+  "line": 255,
+  "ctx": "extra_shot_chance: {",
+  "ko": "한 발 더",
+  "en": "Extra Shot"
+ },
+ {
+  "line": 256,
+  "ctx": "basic_cd_tick: {",
+  "ko": "평타 쿨 감소",
+  "en": "Cooldown per Attack"
+ },
+ {
+  "line": 257,
+  "ctx": "dodge_chance: {",
+  "ko": "회피",
+  "en": "Dodge"
+ },
+ {
+  "line": 259,
+  "ctx": "wrath_blood: {",
+  "ko": "피의 대가",
+  "en": "Blood Price"
+ },
+ {
+  "line": 260,
+  "ctx": "wrath_party_crit: {",
+  "ko": "파티 치명",
+  "en": "Party Crit"
+ },
+ {
+  "line": 261,
+  "ctx": "wrath_steady: {",
+  "ko": "받는 스턴 · 경직 감소",
+  "en": "Stun Resist"
+ },
+ {
+  "line": 262,
+  "ctx": "envy_strip: {",
+  "ko": "버프 지우기",
+  "en": "Buff Removal"
+ },
+ {
+  "line": 263,
+  "ctx": "envy_party_pierce: {",
+  "ko": "파티 방어 무시",
+  "en": "Party Defense Ignore"
+ },
+ {
+  "line": 264,
+  "ctx": "envy_return: {",
+  "ko": "디버프 되돌리기",
+  "en": "Debuff Return"
+ },
+ {
+  "line": 265,
+  "ctx": "greed_mark: {",
+  "ko": "표식 대상 데미지",
+  "en": "Mark Damage"
+ },
+ {
+  "line": 266,
+  "ctx": "greed_reroll: {",
+  "ko": "드롭 다시 굴리기",
+  "en": "Drop Reroll"
+ },
+ {
+  "line": 267,
+  "ctx": "greed_barrier: {",
+  "ko": "황금 보호막",
+  "en": "Golden Ward"
+ },
+ {
+  "line": 268,
+  "ctx": "sloth_heavy: {",
+  "ko": "무거운 한 방",
+  "en": "Heavy Hit"
+ },
+ {
+  "line": 269,
+  "ctx": "sloth_party_cdr: {",
+  "ko": "파티 쿨타임 감소",
+  "en": "Party Cooldown"
+ },
+ {
+  "line": 270,
+  "ctx": "sloth_defer: {",
+  "ko": "나눠 받기",
+  "en": "Deferred Damage"
+ },
+ {
+  "line": 271,
+  "ctx": "glut_cull: {",
+  "ko": "처형 문턱",
+  "en": "Execute Threshold"
+ },
+ {
+  "line": 272,
+  "ctx": "glut_party_dmg: {",
+  "ko": "파티 데미지",
+  "en": "Party Damage"
+ },
+ {
+  "line": 273,
+  "ctx": "glut_absorb: {",
+  "ko": "원소 흡수",
+  "en": "Elemental Absorb"
+ },
+ {
+  "line": 275,
+  "ctx": "lust_share_heal: {",
+  "ko": "회복 나누기",
+  "en": "Heal Share"
+ },
+ {
+  "line": 276,
+  "ctx": "lust_charm: {",
+  "ko": "홀리기",
+  "en": "Beguile"
+ },
+ {
+  "line": 277,
+  "ctx": "pride_nth: {",
+  "ko": "확정 치명 간격",
+  "en": "Sure Crit Interval"
+ },
+ {
+  "line": 278,
+  "ctx": "pride_party_haste: {",
+  "ko": "파티 속도",
+  "en": "Party Speed"
+ },
+ {
+  "line": 279,
+  "ctx": "pride_cap: {",
+  "ko": "큰 한 방 감소",
+  "en": "Big Hit Reduction"
+ },
+ {
+  "line": 458,
+  "ctx": "warrior_1: {",
+  "ko": "막시무스",
+  "en": "Maximus"
+ },
+ {
+  "line": 459,
+  "ctx": "warrior_2: {",
+  "ko": "바바리안",
+  "en": "Barbarian"
+ },
+ {
+  "line": 460,
+  "ctx": "warrior_3: {",
+  "ko": "검황",
+  "en": "Sword Emperor"
+ },
+ {
+  "line": 461,
+  "ctx": "warrior_4: {",
+  "ko": "레오니다스",
+  "en": "Leonidas"
+ },
+ {
+  "line": 462,
+  "ctx": "warrior_5: {",
+  "ko": "삼손",
+  "en": "Samson"
+ },
+ {
+  "line": 463,
+  "ctx": "knight_1: {",
+  "ko": "오디세우스",
+  "en": "Odysseus"
+ },
+ {
+  "line": 464,
+  "ctx": "knight_5: {",
+  "ko": "한니발",
+  "en": "Hannibal"
+ },
+ {
+  "line": 465,
+  "ctx": "knight_6: {",
+  "ko": "리처드 1세",
+  "en": "Richard the Lionheart"
+ },
+ {
+  "line": 466,
+  "ctx": "knight_7: {",
+  "ko": "팔라딘",
+  "en": "Paladin"
+ },
+ {
+  "line": 467,
+  "ctx": "knight_8: {",
+  "ko": "살라딘",
+  "en": "Saladin"
+ },
+ {
+  "line": 468,
+  "ctx": "mage_2: {",
+  "ko": "포세이돈",
+  "en": "Poseidon"
+ },
+ {
+  "line": 469,
+  "ctx": "mage_3: {",
+  "ko": "오딘",
+  "en": "Odin"
+ },
+ {
+  "line": 470,
+  "ctx": "mage_4: {",
+  "ko": "제우스",
+  "en": "Zeus"
+ },
+ {
+  "line": 471,
+  "ctx": "mage_5: {",
+  "ko": "하데스",
+  "en": "Hades"
+ },
+ {
+  "line": 472,
+  "ctx": "archer_1: {",
+  "ko": "로빈 후드",
+  "en": "Robin Hood"
+ },
+ {
+  "line": 473,
+  "ctx": "archer_2: {",
+  "ko": "빌헬름 텔",
+  "en": "William Tell"
+ },
+ {
+  "line": 474,
+  "ctx": "archer_3: {",
+  "ko": "주몽",
+  "en": "Jumong"
+ },
+ {
+  "line": 475,
+  "ctx": "archer_4: {",
+  "ko": "아마존",
+  "en": "Amazon"
+ },
+ {
+  "line": 476,
+  "ctx": "archer_5: {",
+  "ko": "아르테미스",
+  "en": "Artemis"
+ },
+ {
+  "line": 477,
+  "ctx": "priest_3: {",
+  "ko": "잔 다르크",
+  "en": "Joan of Arc"
+ },
+ {
+  "line": 478,
+  "ctx": "priest_4: {",
+  "ko": "닥터 슈나벨",
+  "en": "Doctor Schnabel"
+ },
+ {
+  "line": 479,
+  "ctx": "priest_1: {",
+  "ko": "베네딕토",
+  "en": "Benedict"
+ },
+ {
+  "line": 480,
+  "ctx": "priest_2: {",
+  "ko": "멀린",
+  "en": "Merlin"
+ },
+ {
+  "line": 481,
+  "ctx": "priest_5: {",
+  "ko": "노스트라다무스",
+  "en": "Nostradamus"
+ },
+ {
+  "line": 911,
+  "ctx": "{ attr: 'str',",
+  "ko": "힘센",
+  "en": "Strong"
+ },
+ {
+  "line": 912,
+  "ctx": "{ attr: 'agi',",
+  "ko": "민첩한",
+  "en": "Agile"
+ },
+ {
+  "line": 913,
+  "ctx": "{ attr: 'int',",
+  "ko": "지적인",
+  "en": "Intelligent"
+ },
+ {
+  "line": 914,
+  "ctx": "{ attr: 'vit',",
+  "ko": "건강한",
+  "en": "Healthy"
+ },
+ {
+  "line": 915,
+  "ctx": "{ attr: 'luck',",
+  "ko": "운 좋은",
+  "en": "Lucky"
+ },
+ {
+  "line": 916,
+  "ctx": "{ attr: 'ldr',",
+  "ko": "이끄는",
+  "en": "Leading"
+ },
+ {
+  "line": 917,
+  "ctx": "{ attr: 'cha',",
+  "ko": "매력적인",
+  "en": "Charming"
+ },
+ {
+  "line": 921,
+  "ctx": "{ dt: 'physical',",
+  "ko": "단단한",
+  "en": "Durable"
+ },
+ {
+  "line": 922,
+  "ctx": "{ dt: 'fire',",
+  "ko": "내화의",
+  "en": "Fireproof"
+ },
+ {
+  "line": 923,
+  "ctx": "{ dt: 'cold',",
+  "ko": "방한의",
+  "en": "Frostproof"
+ },
+ {
+  "line": 924,
+  "ctx": "{ dt: 'lightning',",
+  "ko": "절연된",
+  "en": "Insulated"
+ },
+ {
+  "line": 925,
+  "ctx": "{ dt: 'poison',",
+  "ko": "방독의",
+  "en": "Venomproof"
+ },
+ {
+  "line": 931,
+  "ctx": "wrath: {",
+  "ko": "분노하는",
+  "en": "Wrathful"
+ },
+ {
+  "line": 932,
+  "ctx": "envy: {",
+  "ko": "시기하는",
+  "en": "Envious"
+ },
+ {
+  "line": 933,
+  "ctx": "greed: {",
+  "ko": "탐욕스러운",
+  "en": "Greedy"
+ },
+ {
+  "line": 934,
+  "ctx": "sloth: {",
+  "ko": "나태한",
+  "en": "Slothful"
+ },
+ {
+  "line": 935,
+  "ctx": "gluttony: {",
+  "ko": "폭식하는",
+  "en": "Gluttonous"
+ },
+ {
+  "line": 936,
+  "ctx": "lust: {",
+  "ko": "색욕의",
+  "en": "Lustful"
+ },
+ {
+  "line": 937,
+  "ctx": "pride: {",
+  "ko": "오만한",
+  "en": "Prideful"
+ },
+ {
+  "line": 986,
+  "ctx": "iron_ore: {",
+  "ko": "떠돌이 광물상",
+  "en": "Wandering Ore Dealer"
+ },
+ {
+  "line": 987,
+  "ctx": "herb: {",
+  "ko": "떠돌이 약초상",
+  "en": "Wandering Herb Dealer"
+ },
+ {
+  "line": 988,
+  "ctx": "timber: {",
+  "ko": "떠돌이 목재상",
+  "en": "Wandering Timber Dealer"
+ },
+ {
+  "line": 989,
+  "ctx": "dust: {",
+  "ko": "떠돌이 가루상",
+  "en": "Wandering Dust Dealer"
+ }
+]

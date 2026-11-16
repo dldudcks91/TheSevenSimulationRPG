@@ -1,0 +1,5395 @@
+[
+ {
+  "key": "ui|mobile.menu",
+  "ko": "전체 메뉴",
+  "en": "All menus",
+  "ctx": "mobile.menu"
+ },
+ {
+  "key": "ui|mobile.more",
+  "ko": "메뉴",
+  "en": "Menu",
+  "ctx": "mobile.more"
+ },
+ {
+  "key": "ui|mobile.close",
+  "ko": "메뉴 닫기",
+  "en": "Close menu",
+  "ctx": "mobile.close"
+ },
+ {
+  "key": "ui|mobile.navigation",
+  "ko": "빠른 이동",
+  "en": "Quick navigation",
+  "ctx": "mobile.navigation"
+ },
+ {
+  "key": "ui|mobile.inventory",
+  "ko": "가방 함께 보기",
+  "en": "Show inventory",
+  "ctx": "mobile.inventory"
+ },
+ {
+  "key": "ui|mobile.battleDetails",
+  "ko": "두 팀 전투 통계 보기",
+  "en": "Show both teams’ statistics",
+  "ctx": "mobile.battleDetails"
+ },
+ {
+  "key": "ui|mobile.battleTools",
+  "ko": "전투 도구와 통계",
+  "en": "Battle tools and statistics",
+  "ctx": "mobile.battleTools"
+ },
+ {
+  "key": "ui|mobile.battle",
+  "ko": "전장 크게 보기",
+  "en": "Expand battlefield",
+  "ctx": "mobile.battle"
+ },
+ {
+  "key": "ui|mobile.sections",
+  "ko": "화면 기능",
+  "en": "Screen sections",
+  "ctx": "mobile.sections"
+ },
+ {
+  "key": "ui|mobile.swipe.position",
+  "ko": "밀어서 보기 · {n}/{total}",
+  "en": "Swipe · {n}/{total}",
+  "ctx": "mobile.swipe.position"
+ },
+ {
+  "key": "ui|mobile.swipe.help",
+  "ko": "본문을 좌우로 밀어 넘기거나 위의 항목을 누르세요.",
+  "en": "Swipe the content left or right, or select a section above.",
+  "ctx": "mobile.swipe.help"
+ },
+ {
+  "key": "ui|mobile.swipe.edge",
+  "ko": "마지막 화면",
+  "en": "End of pages",
+  "ctx": "mobile.swipe.edge"
+ },
+ {
+  "key": "ui|mobile.swipe.first",
+  "ko": "처음 화면",
+  "en": "First page",
+  "ctx": "mobile.swipe.first"
+ },
+ {
+  "key": "ui|mobile.page.gear",
+  "ko": "장비",
+  "en": "Gear",
+  "ctx": "mobile.page.gear"
+ },
+ {
+  "key": "ui|mobile.page.basic",
+  "ko": "능력치",
+  "en": "Stats",
+  "ctx": "mobile.page.basic"
+ },
+ {
+  "key": "ui|mobile.page.detail1",
+  "ko": "상세 1",
+  "en": "Detail 1",
+  "ctx": "mobile.page.detail1"
+ },
+ {
+  "key": "ui|mobile.page.detail2",
+  "ko": "상세 2",
+  "en": "Detail 2",
+  "ctx": "mobile.page.detail2"
+ },
+ {
+  "key": "ui|mobile.page.stash",
+  "ko": "창고",
+  "en": "Stash",
+  "ctx": "mobile.page.stash"
+ },
+ {
+  "key": "ui|mobile.page.bag",
+  "ko": "가방",
+  "en": "Bag",
+  "ctx": "mobile.page.bag"
+ },
+ {
+  "key": "ui|mobile.page.formation",
+  "ko": "진형",
+  "en": "Formation",
+  "ctx": "mobile.page.formation"
+ },
+ {
+  "key": "ui|mobile.page.potions",
+  "ko": "물약",
+  "en": "Potions",
+  "ctx": "mobile.page.potions"
+ },
+ {
+  "key": "ui|mobile.page.tactics",
+  "ko": "전술",
+  "en": "Tactics",
+  "ctx": "mobile.page.tactics"
+ },
+ {
+  "key": "ui|mobile.page.town",
+  "ko": "부지",
+  "en": "Town",
+  "ctx": "mobile.page.town"
+ },
+ {
+  "key": "ui|mobile.page.building",
+  "ko": "건물 상세",
+  "en": "Building",
+  "ctx": "mobile.page.building"
+ },
+ {
+  "key": "ui|mobile.page.hire",
+  "ko": "고용",
+  "en": "Hire",
+  "ctx": "mobile.page.hire"
+ },
+ {
+  "key": "ui|mobile.page.search",
+  "ko": "수색",
+  "en": "Search",
+  "ctx": "mobile.page.search"
+ },
+ {
+  "key": "ui|mobile.page.quests",
+  "ko": "의뢰",
+  "en": "Quests",
+  "ctx": "mobile.page.quests"
+ },
+ {
+  "key": "ui|mobile.page.gamble",
+  "ko": "도박장",
+  "en": "Casino",
+  "ctx": "mobile.page.gamble"
+ },
+ {
+  "key": "ui|mobile.page.buy",
+  "ko": "구매",
+  "en": "Buy",
+  "ctx": "mobile.page.buy"
+ },
+ {
+  "key": "ui|mobile.page.sell",
+  "ko": "판매",
+  "en": "Sell",
+  "ctx": "mobile.page.sell"
+ },
+ {
+  "key": "ui|mobile.page.trade",
+  "ko": "교역",
+  "en": "Trade",
+  "ctx": "mobile.page.trade"
+ },
+ {
+  "key": "ui|mobile.page.merchant",
+  "ko": "상단",
+  "en": "Merchant",
+  "ctx": "mobile.page.merchant"
+ },
+ {
+  "key": "ui|mobile.page.work",
+  "ko": "작업",
+  "en": "Workshop",
+  "ctx": "mobile.page.work"
+ },
+ {
+  "key": "ui|mobile.page.advance",
+  "ko": "전직",
+  "en": "Advance",
+  "ctx": "mobile.page.advance"
+ },
+ {
+  "key": "ui|mobile.page.upgrade",
+  "ko": "업그레이드",
+  "en": "Upgrade",
+  "ctx": "mobile.page.upgrade"
+ },
+ {
+  "key": "ui|mobile.page.temper",
+  "ko": "손질",
+  "en": "Prep",
+  "ctx": "mobile.page.temper"
+ },
+ {
+  "key": "ui|mobile.page.research",
+  "ko": "연구판",
+  "en": "Research",
+  "ctx": "mobile.page.research"
+ },
+ {
+  "key": "ui|mobile.page.researchDetail",
+  "ko": "연구 상세",
+  "en": "Details",
+  "ctx": "mobile.page.researchDetail"
+ },
+ {
+  "key": "ui|mobile.page.opponent",
+  "ko": "상대 선택",
+  "en": "Opponent",
+  "ctx": "mobile.page.opponent"
+ },
+ {
+  "key": "ui|mobile.page.prepare",
+  "ko": "출전 준비",
+  "en": "Prepare",
+  "ctx": "mobile.page.prepare"
+ },
+ {
+  "key": "ui|mobile.page.generate",
+  "ko": "조건",
+  "en": "Generate",
+  "ctx": "mobile.page.generate"
+ },
+ {
+  "key": "ui|mobile.page.result",
+  "ko": "결과",
+  "en": "Result",
+  "ctx": "mobile.page.result"
+ },
+ {
+  "key": "ui|mobile.page.battle",
+  "ko": "전장으로",
+  "en": "Back to battle",
+  "ctx": "mobile.page.battle"
+ },
+ {
+  "key": "ui|mobile.page.hero1",
+  "ko": "영웅 I",
+  "en": "Hero I",
+  "ctx": "mobile.page.hero1"
+ },
+ {
+  "key": "ui|mobile.page.hero2",
+  "ko": "영웅 II",
+  "en": "Hero II",
+  "ctx": "mobile.page.hero2"
+ },
+ {
+  "key": "ui|mobile.page.hero3",
+  "ko": "영웅 III",
+  "en": "Hero III",
+  "ctx": "mobile.page.hero3"
+ },
+ {
+  "key": "ui|mobile.page.guide",
+  "ko": "안내",
+  "en": "Guide",
+  "ctx": "mobile.page.guide"
+ },
+ {
+  "key": "ui|mobile.page.skills",
+  "ko": "스킬",
+  "en": "Skills",
+  "ctx": "mobile.page.skills"
+ },
+ {
+  "key": "ui|mobile.page.field",
+  "ko": "전장",
+  "en": "Battle",
+  "ctx": "mobile.page.field"
+ },
+ {
+  "key": "ui|mobile.page.setup",
+  "ko": "설정",
+  "en": "Setup",
+  "ctx": "mobile.page.setup"
+ },
+ {
+  "key": "ui|mobile.page.log",
+  "ko": "기록",
+  "en": "Log",
+  "ctx": "mobile.page.log"
+ },
+ {
+  "key": "ui|mobile.page.reports",
+  "ko": "원정 기록",
+  "en": "Runs",
+  "ctx": "mobile.page.reports"
+ },
+ {
+  "key": "ui|mobile.page.reportDetail",
+  "ko": "전투 결과",
+  "en": "Results",
+  "ctx": "mobile.page.reportDetail"
+ },
+ {
+  "key": "ui|mobile.page.party1",
+  "ko": "부대 I",
+  "en": "Party I",
+  "ctx": "mobile.page.party1"
+ },
+ {
+  "key": "ui|mobile.page.party2",
+  "ko": "부대 II",
+  "en": "Party II",
+  "ctx": "mobile.page.party2"
+ },
+ {
+  "key": "ui|mobile.page.party3",
+  "ko": "부대 III",
+  "en": "Party III",
+  "ctx": "mobile.page.party3"
+ },
+ {
+  "key": "ui|nav.raid",
+  "ko": "레이드",
+  "en": "Raid",
+  "ctx": "nav.raid"
+ },
+ {
+  "key": "ui|raid.eyebrow",
+  "ko": "RAID · 분노의 전장",
+  "en": "RAID · FIELD OF WRATH",
+  "ctx": "raid.eyebrow"
+ },
+ {
+  "key": "ui|raid.trial",
+  "ko": "전투 연습 · 보상 없음",
+  "en": "Combat trial · No rewards",
+  "ctx": "raid.trial"
+ },
+ {
+  "key": "ui|raid.practice",
+  "ko": "랜덤 편성",
+  "en": "Random parties",
+  "ctx": "raid.practice"
+ },
+ {
+  "key": "ui|raid.reroll",
+  "ko": "편성 다시 뽑기",
+  "en": "Reroll parties",
+  "ctx": "raid.reroll"
+ },
+ {
+  "key": "ui|raid.own",
+  "ko": "내 편성",
+  "en": "My parties",
+  "ctx": "raid.own"
+ },
+ {
+  "key": "ui|raid.pause",
+  "ko": "일시 정지",
+  "en": "Pause",
+  "ctx": "raid.pause"
+ },
+ {
+  "key": "ui|raid.retreat",
+  "ko": "철수",
+  "en": "Retreat",
+  "ctx": "raid.retreat"
+ },
+ {
+  "key": "ui|raid.retreated",
+  "ko": "공격대 철수",
+  "en": "RAID WITHDRAWN",
+  "ctx": "raid.retreated"
+ },
+ {
+  "key": "ui|raid.resume",
+  "ko": "계속",
+  "en": "Resume",
+  "ctx": "raid.resume"
+ },
+ {
+  "key": "ui|raid.paused",
+  "ko": "일시 정지 중",
+  "en": "Paused",
+  "ctx": "raid.paused"
+ },
+ {
+  "key": "ui|raid.speed",
+  "ko": "{n}배속",
+  "en": "{n}× speed",
+  "ctx": "raid.speed"
+ },
+ {
+  "key": "ui|raid.expand",
+  "ko": "전장 확대",
+  "en": "Expand",
+  "ctx": "raid.expand"
+ },
+ {
+  "key": "ui|raid.shrink",
+  "ko": "메뉴 표시",
+  "en": "Show menu",
+  "ctx": "raid.shrink"
+ },
+ {
+  "key": "ui|raid.help",
+  "ko": "레이드 도움말",
+  "en": "Raid help",
+  "ctx": "raid.help"
+ },
+ {
+  "key": "ui|raid.lane.1",
+  "ko": "좌익 · Party I",
+  "en": "Left · Party I",
+  "ctx": "raid.lane.1"
+ },
+ {
+  "key": "ui|raid.lane.2",
+  "ko": "중앙 · Party II",
+  "en": "Center · Party II",
+  "ctx": "raid.lane.2"
+ },
+ {
+  "key": "ui|raid.lane.3",
+  "ko": "우익 · Party III",
+  "en": "Right · Party III",
+  "ctx": "raid.lane.3"
+ },
+ {
+  "key": "ui|raid.front",
+  "ko": "전열",
+  "en": "Front",
+  "ctx": "raid.front"
+ },
+ {
+  "key": "ui|raid.rear",
+  "ko": "후열",
+  "en": "Rear",
+  "ctx": "raid.rear"
+ },
+ {
+  "key": "ui|raid.bossOnly",
+  "ko": "단일 보스 · 3개 편성",
+  "en": "Single boss · Three parties",
+  "ctx": "raid.bossOnly"
+ },
+ {
+  "key": "ui|raid.practiceReady",
+  "ko": "랜덤 영웅 9명 · 세이브 소모 없음",
+  "en": "9 random heroes · No save resources used",
+  "ctx": "raid.practiceReady"
+ },
+ {
+  "key": "ui|raid.ownReady",
+  "ko": "편성 I · II · III 출전 준비",
+  "en": "Parties I · II · III ready",
+  "ctx": "raid.ownReady"
+ },
+ {
+  "key": "ui|raid.err.level",
+  "ko": "보유 영웅 최고 레벨 {need} 필요 · 현재 {have}",
+  "en": "Highest hero level {need} required · Current level {have}",
+  "ctx": "raid.err.level"
+ },
+ {
+  "key": "ui|raid.err.locked",
+  "ko": "잠김 · 헬 {chapter}장 챕터보스 처치 필요",
+  "en": "Locked · Defeat the Hell chapter {chapter} boss",
+  "ctx": "raid.err.locked"
+ },
+ {
+  "key": "ui|raid.err.party",
+  "ko": "각 편성에 영웅 3명 필요",
+  "en": "Each party needs three heroes",
+  "ctx": "raid.err.party"
+ },
+ {
+  "key": "ui|raid.err.running",
+  "ko": "원정 중인 편성",
+  "en": "Party on an expedition",
+  "ctx": "raid.err.running"
+ },
+ {
+  "key": "ui|raid.err.exploring",
+  "ko": "탐험 중인 편성",
+  "en": "Party exploring",
+  "ctx": "raid.err.exploring"
+ },
+ {
+  "key": "ui|raid.err.advancing",
+  "ko": "전직 중인 영웅",
+  "en": "Hero changing class",
+  "ctx": "raid.err.advancing"
+ },
+ {
+  "key": "ui|raid.err.missing",
+  "ko": "편성 영웅 확인 필요",
+  "en": "Party member missing",
+  "ctx": "raid.err.missing"
+ },
+ {
+  "key": "ui|raid.err.duplicate",
+  "ko": "영웅 중복 편성",
+  "en": "Duplicate party member",
+  "ctx": "raid.err.duplicate"
+ },
+ {
+  "key": "ui|raid.log",
+  "ko": "레이드 주요 전황",
+  "en": "Raid events",
+  "ctx": "raid.log"
+ },
+ {
+  "key": "ui|raid.start",
+  "ko": "레이드 시작",
+  "en": "Start raid",
+  "ctx": "raid.start"
+ },
+ {
+  "key": "ui|raid.fighting",
+  "ko": "전투 중",
+  "en": "In combat",
+  "ctx": "raid.fighting"
+ },
+ {
+  "key": "ui|raid.retry",
+  "ko": "다시 도전",
+  "en": "Try again",
+  "ctx": "raid.retry"
+ },
+ {
+  "key": "ui|raid.started",
+  "ko": "세 파티 출전 · 전투 시작",
+  "en": "Three parties deployed · Battle started",
+  "ctx": "raid.started"
+ },
+ {
+  "key": "ui|raid.phase",
+  "ko": "PHASE {n}",
+  "en": "PHASE {n}",
+  "ctx": "raid.phase"
+ },
+ {
+  "key": "ui|raid.phaseChange",
+  "ko": "PHASE {n} · 보스 격화",
+  "en": "PHASE {n} · Boss intensifies",
+  "ctx": "raid.phaseChange"
+ },
+ {
+  "key": "ui|raid.exposed",
+  "ko": "약점 노출",
+  "en": "EXPOSED",
+  "ctx": "raid.exposed"
+ },
+ {
+  "key": "ui|raid.enraged",
+  "ko": "최종 공세",
+  "en": "FINAL ASSAULT",
+  "ctx": "raid.enraged"
+ },
+ {
+  "key": "ui|raid.awaiting",
+  "ko": "출전 대기",
+  "en": "Awaiting deployment",
+  "ctx": "raid.awaiting"
+ },
+ {
+  "key": "ui|raid.nextAttack",
+  "ko": "다음 공격 준비",
+  "en": "Preparing next attack",
+  "ctx": "raid.nextAttack"
+ },
+ {
+  "key": "ui|raid.finished",
+  "ko": "전투 종료",
+  "en": "Encounter complete",
+  "ctx": "raid.finished"
+ },
+ {
+  "key": "ui|raid.threeParties",
+  "ko": "Party I + II + III",
+  "en": "Party I + II + III",
+  "ctx": "raid.threeParties"
+ },
+ {
+  "key": "ui|raid.target",
+  "ko": "공격 대상 · Party {parties}",
+  "en": "Target · Party {parties}",
+  "ctx": "raid.target"
+ },
+ {
+  "key": "ui|raid.targeted",
+  "ko": "공격 예고",
+  "en": "INCOMING",
+  "ctx": "raid.targeted"
+ },
+ {
+  "key": "ui|raid.ready",
+  "ko": "준비",
+  "en": "Ready",
+  "ctx": "raid.ready"
+ },
+ {
+  "key": "ui|raid.partySize",
+  "ko": "3인 편성",
+  "en": "Three heroes",
+  "ctx": "raid.partySize"
+ },
+ {
+  "key": "ui|raid.breakProgress",
+  "ko": "시전 파괴 {n} / {max}",
+  "en": "Cast break {n} / {max}",
+  "ctx": "raid.breakProgress"
+ },
+ {
+  "key": "ui|raid.breakSuccess",
+  "ko": "시전 파괴 · 약점 노출",
+  "en": "Cast broken · Weak point exposed",
+  "ctx": "raid.breakSuccess"
+ },
+ {
+  "key": "ui|raid.breakFail",
+  "ko": "시전 파괴 실패 · 전면 충격",
+  "en": "Cast break failed · Full impact",
+  "ctx": "raid.breakFail"
+ },
+ {
+  "key": "ui|raid.downed",
+  "ko": "전투불능",
+  "en": "DOWN",
+  "ctx": "raid.downed"
+ },
+ {
+  "key": "ui|raid.victory",
+  "ko": "레이드 승리",
+  "en": "RAID CLEARED",
+  "ctx": "raid.victory"
+ },
+ {
+  "key": "ui|raid.defeat",
+  "ko": "공격대 전멸",
+  "en": "RAID DEFEATED",
+  "ctx": "raid.defeat"
+ },
+ {
+  "key": "ui|raid.timeout",
+  "ko": "제한 시간 초과",
+  "en": "TIME LIMIT REACHED",
+  "ctx": "raid.timeout"
+ },
+ {
+  "key": "ui|raid.resultSummary",
+  "ko": "{time} · 생존 {n}/9 · 파괴 성공 {breaks}회 / 실패 {failed}회",
+  "en": "{time} · {n}/9 survivors · Cast breaks: {breaks} / Failed: {failed}",
+  "ctx": "raid.resultSummary"
+ },
+ {
+  "key": "ui|raid.damageValue",
+  "ko": "피해 {n}",
+  "en": "Damage {n}",
+  "ctx": "raid.damageValue"
+ },
+ {
+  "key": "ui|raid.healValue",
+  "ko": "회복 {n}",
+  "en": "Healing {n}",
+  "ctx": "raid.healValue"
+ },
+ {
+  "key": "ui|raid.aliveValue",
+  "ko": "생존 {n}/3",
+  "en": "Alive {n}/3",
+  "ctx": "raid.aliveValue"
+ },
+ {
+  "key": "ui|raid.reviewField",
+  "ko": "전장 확인",
+  "en": "View battlefield",
+  "ctx": "raid.reviewField"
+ },
+ {
+  "key": "ui|raid.results",
+  "ko": "레이드 결과",
+  "en": "Raid results",
+  "ctx": "raid.results"
+ },
+ {
+  "key": "ui|ui.helpFor",
+  "ko": "{name} 도움말",
+  "en": "Help for {name}",
+  "ctx": "ui.helpFor"
+ },
+ {
+  "key": "ui|hint.attributes",
+  "ko": "영웅 생성 시 각 기본 능력치는 최대 {max}까지 붙습니다. 전투 수치와 연구소 등록 효과의 바탕이 됩니다.",
+  "en": "Each base attribute can roll up to {max} when a hero is created. Attributes determine combat values and Laboratory assignment effects.",
+  "ctx": "hint.attributes"
+ },
+ {
+  "key": "ui|hint.colosseum",
+  "ko": "상대 팀을 확인하고 선택한 Party로 겨룹니다. 영웅의 장비·스킬과 편성을 함께 준비하세요.",
+  "en": "Inspect the opposing team and fight with your selected Party. Prepare its equipment, skills and formation together.",
+  "ctx": "hint.colosseum"
+ },
+ {
+  "key": "ui|hint.arena",
+  "ko": "상대를 고르고 선택한 Party로 결투합니다. 전투 전에 상대 구성과 내 물약·전술을 확인하세요.",
+  "en": "Choose an opponent and duel with the selected Party. Check both teams and your potions and tactics before starting.",
+  "ctx": "hint.arena"
+ },
+ {
+  "key": "ui|hint.opponents",
+  "ko": "후보를 누르면 상대 팀을 확인할 수 있습니다. 새 상대는 후보 목록을 다시 고릅니다.",
+  "en": "Select a candidate to inspect its team. New opponents refreshes the candidate list.",
+  "ctx": "hint.opponents"
+ },
+ {
+  "key": "ui|hint.defense",
+  "ko": "다른 플레이어가 상대로 만나는 Party입니다. 영웅 3명이 찬 편성만 올라갑니다.",
+  "en": "The Party other players face as your defense. Only a party with 3 heroes is listed.",
+  "ctx": "hint.defense"
+ },
+ {
+  "key": "ui|hint.reg_name",
+  "ko": "다른 플레이어에게 이름과 태그가 보입니다. 이름은 설정에서 바꿀 수 있습니다.",
+  "en": "Other players see your name and tag. You can change the name in Settings.",
+  "ctx": "hint.reg_name"
+ },
+ {
+  "key": "ui|hint.users",
+  "ko": "이름이나 태그로 다른 플레이어를 찾아 친선전 상대로 고릅니다. 친선전은 레이팅이 바뀌지 않습니다.",
+  "en": "Find other players by name or tag and pick one as a friendly opponent. Friendly duels do not change rating.",
+  "ctx": "hint.users"
+ },
+ {
+  "key": "ui|hint.team",
+  "ko": "선택한 Party의 영웅과 진형입니다. 편성 탭에서 인원과 자리를 바꿀 수 있습니다.",
+  "en": "The heroes and formation of the selected Party. Change members and positions in Party.",
+  "ctx": "hint.team"
+ },
+ {
+  "key": "ui|hint.depart",
+  "ko": "선택한 지역의 적과 출정 준비를 확인합니다. Party와 출정 방식을 고른 뒤 출발하세요.",
+  "en": "Review this area’s enemies and your preparations. Choose a Party and departure mode, then deploy.",
+  "ctx": "hint.depart"
+ },
+ {
+  "key": "ui|hint.cell",
+  "ko": "같은 지역 안에서 도전할 칸을 고릅니다. 칸마다 적 구성과 진행 조건을 확인하세요.",
+  "en": "Choose a stage within this area. Check its enemies and progression requirements.",
+  "ctx": "hint.cell"
+ },
+ {
+  "key": "ui|hint.departure",
+  "ko": "한 번 출정할지 반복할지 고릅니다. 출발하면 선택한 Party의 준비 상태가 적용됩니다.",
+  "en": "Choose a single or repeating expedition. Deployment uses the selected Party’s preparation.",
+  "ctx": "hint.departure"
+ },
+ {
+  "key": "ui|hint.foes",
+  "ko": "이 지역에 등장하는 적입니다. 초상과 스킬에 마우스를 올리면 자세히 볼 수 있습니다.",
+  "en": "The enemies found in this area. Hover their portraits and skills for details.",
+  "ctx": "hint.foes"
+ },
+ {
+  "key": "ui|hint.story",
+  "ko": "선택한 지역의 배경 이야기입니다.",
+  "en": "The background story of the selected area.",
+  "ctx": "hint.story"
+ },
+ {
+  "key": "ui|hint.tactics",
+  "ko": "조건을 만족한 전술 효과가 파티에 적용됩니다. 남길 칸은 잠그고 나머지는 리롤할 수 있습니다.",
+  "en": "A tactic affects the party when its condition is met. Lock slots to keep them and reroll the rest.",
+  "ctx": "hint.tactics"
+ },
+ {
+  "key": "ui|hint.potions",
+  "ko": "이 Party가 함께 쓸 물약과 순서입니다. 재고가 모자란 칸은 빈 채로 출발합니다.",
+  "en": "The potions and drinking order shared by this Party. Slots without enough stock start empty.",
+  "ctx": "hint.potions"
+ },
+ {
+  "key": "ui|hint.reports",
+  "ko": "지난 원정 결과를 골라 보상과 전투 기록을 확인합니다.",
+  "en": "Select a past expedition to review its rewards and battle record.",
+  "ctx": "hint.reports"
+ },
+ {
+  "key": "ui|hint.drops",
+  "ko": "이 원정에서 얻은 아이템입니다. 아이템에 마우스를 올리면 옵션을 확인할 수 있습니다.",
+  "en": "Items obtained in this expedition. Hover an item to inspect its options.",
+  "ctx": "hint.drops"
+ },
+ {
+  "key": "ui|hint.contribution",
+  "ko": "영웅별 전투 기여를 비교합니다. 가한·받은 피해와 처치·전투불능 기록을 함께 살펴보세요.",
+  "en": "Compare each hero’s contribution. Review damage dealt and taken, kills and fallen-hero records together.",
+  "ctx": "hint.contribution"
+ },
+ {
+  "key": "ui|hint.battle_totals",
+  "ko": "현재까지 재생된 전투의 가한·받은 피해 누계입니다. 요약과 스킬별 보기로 비교할 수 있습니다.",
+  "en": "Damage dealt and taken during the battle played so far. Switch between summary and per-skill views to compare.",
+  "ctx": "hint.battle_totals"
+ },
+ {
+  "key": "ui|hint.equipment",
+  "ko": "선택한 영웅이 착용한 장비입니다. 장비에 마우스를 올리면 옵션과 사용 가능한 조작을 확인할 수 있습니다.",
+  "en": "Equipment worn by the selected hero. Hover an item to inspect its options and available actions.",
+  "ctx": "hint.equipment"
+ },
+ {
+  "key": "ui|hint.sins",
+  "ko": "착용 장비의 죄종 구성입니다. 영웅의 죄종과 장비의 죄종은 별개입니다.",
+  "en": "The Sins of the equipped items. A hero’s Sin and equipment Sins are separate.",
+  "ctx": "hint.sins"
+ },
+ {
+  "key": "ui|hint.skills",
+  "ko": "이 영웅이 사용하는 스킬입니다. 스킬 그림에 마우스를 올리면 효과를 확인할 수 있습니다.",
+  "en": "Skills used by this hero. Hover a skill icon to inspect its effects.",
+  "ctx": "hint.skills"
+ },
+ {
+  "key": "ui|hint.combat_stats",
+  "ko": "장비와 스킬 효과가 반영된 전투 수치입니다. 수치 이름에 마우스를 올리면 설명을 볼 수 있습니다.",
+  "en": "Combat values including equipment and skill effects. Hover a stat name for its explanation.",
+  "ctx": "hint.combat_stats"
+ },
+ {
+  "key": "ui|hint.auto_salvage",
+  "ko": "이 Party의 원정에서 자동 분해할 장비를 정합니다. 남길 희귀도와 단어를 확인하세요.",
+  "en": "Choose which drops this Party automatically salvages. Check the rarities and words you want to keep.",
+  "ctx": "hint.auto_salvage"
+ },
+ {
+  "key": "ui|hint.salvage",
+  "ko": "고른 장비를 분해합니다. 남길 장비가 포함되지 않았는지 확인하세요.",
+  "en": "Salvage the selected equipment. Check that no items you want to keep are included.",
+  "ctx": "hint.salvage"
+ },
+ {
+  "key": "ui|hint.inventory",
+  "ko": "보유한 아이템을 확인하고 장착하거나 정리합니다. 아이템에 마우스를 올리면 자세히 볼 수 있습니다.",
+  "en": "Inspect, equip and manage owned items. Hover an item for details.",
+  "ctx": "hint.inventory"
+ },
+ {
+  "key": "ui|hint.stash",
+  "ko": "따로 보관할 아이템을 두는 곳입니다. 아이템을 가방과 보관함 사이로 옮길 수 있습니다.",
+  "en": "A place to set items aside. Move items between the bag and stash.",
+  "ctx": "hint.stash"
+ },
+ {
+  "key": "ui|hint.skill_slots",
+  "ko": "스킬을 얻은 경로별 사용 칸입니다. 빈 칸에는 스킬을 여는 조건이 표시됩니다.",
+  "en": "Skill slots grouped by how the skills are learned. Empty slots show their unlock requirements.",
+  "ctx": "hint.skill_slots"
+ },
+ {
+  "key": "ui|hint.skill_points",
+  "ko": "스킬을 배우고 강화하는 데 쓰는 포인트입니다. 배분할 트리와 남은 포인트를 확인하세요.",
+  "en": "Points used to learn and improve skills. Check the available trees and remaining points.",
+  "ctx": "hint.skill_points"
+ },
+ {
+  "key": "ui|hint.construction",
+  "ko": "건물을 골라 랭크를 올리면 새 기능과 상한이 열립니다. 상세에서 비용과 조건을 확인하세요.",
+  "en": "Select buildings and raise their ranks to unlock features and limits. Check costs and requirements in the details.",
+  "ctx": "hint.construction"
+ },
+ {
+  "key": "ui|hint.building",
+  "ko": "이 건물이 연 기능과 다음 랭크 정보를 확인합니다. 건설하려면 표시된 조건과 재료가 필요합니다.",
+  "en": "Review this building’s unlocked features and next rank. Construction requires the listed conditions and materials.",
+  "ctx": "hint.building"
+ },
+ {
+  "key": "ui|hint.building_ranks",
+  "ko": "각 랭크에서 열리는 기능과 조건입니다. 이미 지은 랭크와 앞으로 지을 랭크를 비교할 수 있습니다.",
+  "en": "Features and requirements for each rank. Compare completed ranks with future upgrades.",
+  "ctx": "hint.building_ranks"
+ },
+ {
+  "key": "ui|hint.next_rank",
+  "ko": "다음 랭크의 효과·조건·비용입니다. 필요한 재료를 갖추면 건설할 수 있습니다.",
+  "en": "The next rank’s effects, requirements and cost. Build it when the required materials are ready.",
+  "ctx": "hint.next_rank"
+ },
+ {
+  "key": "ui|hint.advance",
+  "ko": "조건을 갖춘 영웅의 전직 계열을 고릅니다. 확정하기 전에 계열과 사용할 스킬을 확인하세요.",
+  "en": "Choose an advancement path for an eligible hero. Review the path and its skills before confirming.",
+  "ctx": "hint.advance"
+ },
+ {
+  "key": "ui|hint.resource",
+  "ko": "각 줄의 생산과 연구를 관리합니다. 줄 카드는 현황을, 연구 칸은 다음 효과와 비용을 보여 줍니다.",
+  "en": "Manage each line’s production and research. Line cards show progress; research nodes show upcoming effects and costs.",
+  "ctx": "hint.resource"
+ },
+ {
+  "key": "ui|hint.resource_next",
+  "ko": "선택한 연구의 다음 레벨입니다. 비용과 시간을 확인한 뒤 연구를 시작합니다.",
+  "en": "The selected research node’s next level. Review its cost and duration before starting.",
+  "ctx": "hint.resource_next"
+ },
+ {
+  "key": "ui|hint.resource_levels",
+  "ko": "이 연구의 레벨별 효과입니다. 현재 효과와 다음 레벨에서 달라지는 값을 비교하세요.",
+  "en": "Effects at each research level. Compare current effects with the changes at the next level.",
+  "ctx": "hint.resource_levels"
+ },
+ {
+  "key": "ui|hint.resource_lines",
+  "ko": "선택한 줄의 생산·진행 상태입니다. 건설과 연구로 해당 줄의 기능을 넓힐 수 있습니다.",
+  "en": "Production and progress for the selected line. Buildings and research expand its capabilities.",
+  "ctx": "hint.resource_lines"
+ },
+ {
+  "key": "ui|hint.resource_effects",
+  "ko": "이 줄에 등록한 영웅들의 능력치로 더해지는 효과입니다. 배치를 바꾸면 적용 값도 달라집니다.",
+  "en": "Effects added by the attributes of heroes registered to this line. Changing assignments changes the applied values.",
+  "ctx": "hint.resource_effects"
+ },
+ {
+  "key": "ui|hint.assignment",
+  "ko": "이 줄에 효과를 더할 영웅을 등록합니다. 등록된 영웅을 다시 누르면 해제할 수 있습니다.",
+  "en": "Register a hero to add effects to this line. Select a registered hero again to remove the assignment.",
+  "ctx": "hint.assignment"
+ },
+ {
+  "key": "ui|hint.minigame",
+  "ko": "선택한 자원 줄의 미니게임입니다. 화면의 조작 안내를 확인하고 시작하세요.",
+  "en": "A minigame for the selected resource line. Review its controls before starting.",
+  "ctx": "hint.minigame"
+ },
+ {
+  "key": "ui|hint.explore",
+  "ko": "탐험할 장소와 Party를 정해 보냅니다. 완료 후 돌아온 편성의 보상을 받을 수 있습니다.",
+  "en": "Choose an exploration location and Party. Claim rewards when the exploring party returns.",
+  "ctx": "hint.explore"
+ },
+ {
+  "key": "ui|hint.recruit",
+  "ko": "후보 영웅을 확인하고 골드를 내어 고용합니다.",
+  "en": "Inspect candidate heroes and spend gold to hire them.",
+  "ctx": "hint.recruit"
+ },
+ {
+  "key": "ui|hint.visitors",
+  "ko": "수색 영웅이 찾아온 영웅입니다. 카드를 골라 고용하거나 떠나보낼 수 있습니다.",
+  "en": "Heroes your searchers brought back. Select a card to hire or dismiss a candidate.",
+  "ctx": "hint.visitors"
+ },
+ {
+  "key": "ui|hint.commissions",
+  "ko": "의뢰를 받아 목표를 채우고 보상을 받습니다. 의뢰 카드에서 조건과 진행도를 확인하세요.",
+  "en": "Accept commissions, complete their objectives and claim rewards. Check each card’s conditions and progress.",
+  "ctx": "hint.commissions"
+ },
+ {
+  "key": "ui|hint.gamble",
+  "ko": "판돈을 고르고 슬롯을 돌립니다. 심볼 조합에 따른 배당은 배당표에서 확인할 수 있습니다.",
+  "en": "Choose a stake and spin the slots. The payout table shows rewards for symbol combinations.",
+  "ctx": "hint.gamble"
+ },
+ {
+  "key": "ui|hint.payouts",
+  "ko": "당첨 조합과 배당입니다. 판돈과 함께 확인하면 한 판의 보상을 비교할 수 있습니다.",
+  "en": "Winning combinations and their payouts. Compare them with your chosen stake.",
+  "ctx": "hint.payouts"
+ },
+ {
+  "key": "ui|hint.forge_make",
+  "ko": "장비 부위나 물약을 골라 제작합니다. 만들 항목의 재료와 골드 비용을 확인하세요.",
+  "en": "Choose an equipment slot or potion to craft. Check its material and gold costs.",
+  "ctx": "hint.forge_make"
+ },
+ {
+  "key": "ui|hint.forge_up",
+  "ko": "장비를 골라 강화합니다. 다음 단계의 변화와 필요한 재료를 확인한 뒤 진행하세요. 장비마다 강화 횟수가 정해져 있고, 성공해도 실패해도 한 번씩 씁니다. 등급이 높을수록 성공 확률이 낮고, 성공의 일부는 대성공으로 더 크게 오릅니다.",
+  "en": "Select equipment to upgrade. Review the next step’s changes and required materials. Each item has a limited number of upgrade attempts; success or failure uses one.",
+  "ctx": "hint.forge_up"
+ },
+ {
+  "key": "ui|hint.forge_synth",
+  "ko": "같은 종류의 아래 단계 재료를 써서 위 단계 재료를 만듭니다. 합성에 쓴 재료는 소모됩니다.",
+  "en": "Combine lower-tier materials into a higher tier of the same material. Combining consumes the input materials.",
+  "ctx": "hint.forge_synth"
+ },
+ {
+  "key": "ui|hint.forge_craft",
+  "ko": "크래프트는 준비 중입니다. 현재는 제작·강화·합성을 이용할 수 있습니다.",
+  "en": "Craft is in development. Smithing, upgrading and combining are currently available.",
+  "ctx": "hint.forge_craft"
+ },
+ {
+  "key": "ui|hint.temper",
+  "ko": "셋 중 하나를 골라 재료를 내면 다음 강화 한 번에 효과가 붙습니다. 달구기는 성공 확률, 덧대기는 대성공 비율, 담금질은 실패해도 강화 횟수를 지킬 확률을 올립니다. 재료 단계는 장비 레벨과 등급이 정하며, 높을수록 효과가 큽니다.",
+  "en": "Pick one of three and spend its material to boost your next upgrade. Heat raises the success chance, Reinforce raises the great-success share, and Quench gives a chance to keep the attempt on failure. The material tier is set by the item level and grade; higher tiers give bigger effects.",
+  "ctx": "hint.temper"
+ },
+ {
+  "key": "ui|hint.potion_stock",
+  "ko": "현재 가진 물약의 종류와 개수입니다. 편성 탭에서 Party의 물약 칸에 넣을 수 있습니다.",
+  "en": "Potion types and quantities currently in stock. Configure each Party’s potion belt in Party.",
+  "ctx": "hint.potion_stock"
+ },
+ {
+  "key": "ui|hint.trade",
+  "ko": "받을 최하급 재료를 선택한 뒤 다른 재료 또는 골드로 구매합니다. 지불 수단별 가격과 보유량을 확인할 수 있습니다.",
+  "en": "Choose a lowest-grade material to receive, then buy it with another material or gold. Each payment option shows its cost and available stock.",
+  "ctx": "hint.trade"
+ },
+ {
+  "key": "ui|hint.special",
+  "ko": "특수 상단 기능은 준비 중입니다.",
+  "en": "The special trader is in development.",
+  "ctx": "hint.special"
+ },
+ {
+  "key": "ui|hint.help",
+  "ko": "폴더를 고르거나 궁금한 말을 검색해 조작법과 게임 규칙을 찾아봅니다.",
+  "en": "Choose a folder or search a term to find controls and game rules.",
+  "ctx": "hint.help"
+ },
+ {
+  "key": "ui|hint.settings",
+  "ko": "그림체와 전투 연출 등 화면 설정을 조절합니다.",
+  "en": "Adjust display preferences such as art style and battle effects.",
+  "ctx": "hint.settings"
+ },
+ {
+  "key": "ui|hint.mail",
+  "ko": "도착한 보상을 수령합니다. 받은 첨부물은 표시된 Party의 보유 아이템에 추가됩니다.",
+  "en": "Claim delivered rewards. Attachments are added to the items of the indicated Party.",
+  "ctx": "hint.mail"
+ },
+ {
+  "key": "ui|hint.dismiss",
+  "ko": "선택한 영웅을 로스터에서 해고합니다. 확인 전에 대상 영웅을 다시 살펴보세요.",
+  "en": "Dismiss the selected hero from the roster. Review the chosen hero before confirming.",
+  "ctx": "hint.dismiss"
+ },
+ {
+  "key": "ui|hint.frozen",
+  "ko": "다른 탭에서 저장한 진행을 보호하기 위해 이 탭의 플레이가 멈췄습니다. 안내에 따라 다시 불러오세요.",
+  "en": "Play in this tab has stopped to protect progress saved by another tab. Follow the instructions to reload.",
+  "ctx": "hint.frozen"
+ },
+ {
+  "key": "ui|app.title",
+  "ko": "The Seven Simulation RPG — 화면 목업",
+  "en": "The Seven Simulation RPG — Screen Mockup",
+  "ctx": "app.title"
+ },
+ {
+  "key": "ui|app.turn.title",
+  "ko": "기기를 가로로 돌려 주세요",
+  "en": "Rotate your device to landscape",
+  "ctx": "app.turn.title"
+ },
+ {
+  "key": "ui|app.turn.full",
+  "ko": "전체 화면 + 가로 고정",
+  "en": "Fullscreen + lock landscape",
+  "ctx": "app.turn.full"
+ },
+ {
+  "key": "ui|app.turn.skip",
+  "ko": "이대로 계속하기",
+  "en": "Continue as is",
+  "ctx": "app.turn.skip"
+ },
+ {
+  "key": "ui|tip.touch.alt",
+  "ko": "세부",
+  "en": "Details",
+  "ctx": "tip.touch.alt"
+ },
+ {
+  "key": "ui|tip.touch.range",
+  "ko": "범위",
+  "en": "Range",
+  "ctx": "tip.touch.range"
+ },
+ {
+  "key": "ui|ng.h",
+  "ko": "새 게임",
+  "en": "New Game",
+  "ctx": "ng.h"
+ },
+ {
+  "key": "ui|ng.title",
+  "ko": "첫 파티",
+  "en": "Your First Party",
+  "ctx": "ng.title"
+ },
+ {
+  "key": "ui|ng.sub",
+  "ko": "이 {n}명이 그대로 시작 영웅 로스터가 됩니다 — 마음에 들 때까지 다시 굴려도 됩니다",
+  "en": "These {n} become your starting roster — reroll as many times as you like",
+  "ctx": "ng.sub"
+ },
+ {
+  "key": "ui|ng.roll",
+  "ko": "{n}번째 굴림",
+  "en": "Roll {n}",
+  "ctx": "ng.roll"
+ },
+ {
+  "key": "ui|ng.reroll",
+  "ko": "다시 굴리기",
+  "en": "Reroll",
+  "ctx": "ng.reroll"
+ },
+ {
+  "key": "ui|ng.start",
+  "ko": "이 셋으로 시작",
+  "en": "Start with these",
+  "ctx": "ng.start"
+ },
+ {
+  "key": "ui|ng.trait",
+  "ko": "시작 특성",
+  "en": "Starting Trait",
+  "ctx": "ng.trait"
+ },
+ {
+  "key": "ui|ng.total",
+  "ko": "능력치 합",
+  "en": "Attribute Total",
+  "ctx": "ng.total"
+ },
+ {
+  "key": "ui|ng.attrHead",
+  "ko": "능력치가 하는 일",
+  "en": "What each stat does",
+  "ctx": "ng.attrHead"
+ },
+ {
+  "key": "ui|ng.attr.str",
+  "ko": "평타 · 물리 스킬 피해",
+  "en": "Physical damage",
+  "ctx": "ng.attr.str"
+ },
+ {
+  "key": "ui|ng.attr.agi",
+  "ko": "공격 · 캐스팅 속도",
+  "en": "Attack · casting speed",
+  "ctx": "ng.attr.agi"
+ },
+ {
+  "key": "ui|ng.attr.int",
+  "ko": "마법 스킬 피해",
+  "en": "Magic skill damage",
+  "ctx": "ng.attr.int"
+ },
+ {
+  "key": "ui|ng.attr.vit",
+  "ko": "레벨업 HP · 버프 지속시간",
+  "en": "Level-up HP · buff time",
+  "ctx": "ng.attr.vit"
+ },
+ {
+  "key": "ui|ng.attr.luck",
+  "ko": "치명타 피해 · 드랍률 · 골드",
+  "en": "Crit damage · loot · gold",
+  "ctx": "ng.attr.luck"
+ },
+ {
+  "key": "ui|ng.attr.ldr",
+  "ko": "아군 버프 · 리더면 파티 전술",
+  "en": "Buffs · tactics as leader",
+  "ctx": "ng.attr.ldr"
+ },
+ {
+  "key": "ui|ng.attr.cha",
+  "ko": "회복량 · 받는 디버프 시간 감소",
+  "en": "Healing · shorter debuffs",
+  "ctx": "ng.attr.cha"
+ },
+ {
+  "key": "ui|ng.note",
+  "ko": "첫 파티는 <b>레어 1 + 매직 1 + 일반 1</b>입니다 — 첫 화면부터 영웅 로스터에 <b>층</b>이 보입니다. 유니크 15명은 고정 명단이라 시작에 소모하지 않습니다<br>기본 능력치는 축마다 따로 굴리되 <b>합은 등급이 정하는 대역</b> 안입니다 (등급끼리 대역이 <b>겹칠 수 있습니다</b>) — 세 장의 차이는 양과 <b>모양</b> 둘입니다: 레어 · 일반은 고르게 나고, 매직은 <b>한 축이 크게 튈 수 있습니다</b>. 장비로도 레벨업으로도 오르지 않으니 여기서 나온 값은 <b>평생 갑니다</b><br><b>등급 차이는 끝까지 갑니다</b> — 상한은 전 영웅 공통이지만 레벨업으로 능력치가 안 올라 <b>굴린 모양이 곧 그 영웅의 끝</b>입니다<br>메인 죄종은 죄종 마스터리(탭1)와 파견 적성을 정합니다 — 장비 궁합(세트포인트)은 <b>폐기</b> — 파티 전술로 이관<br>리롤은 <b>무제한·무료</b>입니다 — 시작 선택을 도박으로 만들지 않습니다<br><b>미확정</b>: 등급 대역·분포 모양·등장 비중(전부 제안값) · 특성 효과(이름표만 굴림) · 직업이 주력 축을 밀어주는 세기 · 죄종·직업 중복 허용 여부",
+  "en": "Your first party is <b>1 Rare + 1 Magic + 1 Normal</b> — the roster shows its <b>tiers</b> from the first screen. The 15 Uniques are a fixed roster and are not spent at the start<br>Attributes roll per axis but their <b>total lands in the band its tier sets</b> (tier bands <b>may overlap</b>) — the three differ in amount and in <b>shape</b>: Rare and Normal roll evenly, Magic can <b>spike on one axis</b>. Neither gear nor level-ups raise them, so what you roll here <b>lasts forever</b><br><b>The tier gap lasts to the end</b> — the cap is shared by every hero, but level-ups never raise attributes, so <b>the shape you roll is where that hero ends</b><br>The main sin decides the sin mastery (tab 1) and dispatch aptitude — gear affinity (set points) is <b>dropped</b> — moved to party tactics<br>Rerolling is <b>unlimited and free</b> — the opening choice is not a gamble<br><b>Open</b>: the tier bands, spread shapes and appearance weights (all proposed values) · trait effects (only names are rolled) · how strongly class should bias its key attribute · whether duplicate sins/classes are allowed",
+  "ctx": "ng.note"
+ },
+ {
+  "key": "ui|mn.load",
+  "ko": "불러오기",
+  "en": "Load Game",
+  "ctx": "mn.load"
+ },
+ {
+  "key": "ui|mn.loading",
+  "ko": "그림 불러오는 중 {p}%",
+  "en": "Loading art {p}%",
+  "ctx": "mn.loading"
+ },
+ {
+  "key": "ui|ng.back",
+  "ko": "뒤로가기",
+  "en": "Back",
+  "ctx": "ng.back"
+ },
+ {
+  "key": "ui|ng.hasSave",
+  "ko": "저장된 게임 있음 — {t}",
+  "en": "A saved game exists — {t}",
+  "ctx": "ng.hasSave"
+ },
+ {
+  "key": "ui|ng.saveLine",
+  "ko": "영웅 {h}명 · 클리어 {c} · 골드 {g}",
+  "en": "{h} heroes · {c} cleared · {g} gold",
+  "ctx": "ng.saveLine"
+ },
+ {
+  "key": "ui|ng.oldSave",
+  "ko": "이전 형식(v{v})의 세이브입니다 — 이 버전에서는 이어할 수 없습니다. 새 게임으로 시작합니다",
+  "en": "This save is an older format (v{v}) and cannot continue in this version. Start a new game",
+  "ctx": "ng.oldSave"
+ },
+ {
+  "key": "ui|ng.overwrite",
+  "ko": "세이브를 지우고 이 셋으로 시작",
+  "en": "Delete save & start with these",
+  "ctx": "ng.overwrite"
+ },
+ {
+  "key": "ui|ng.overwriteConfirm",
+  "ko": "정말 지울까요? 한 번 더 누르면 지웁니다",
+  "en": "Really? Click again to delete",
+  "ctx": "ng.overwriteConfirm"
+ },
+ {
+  "key": "ui|ng.startWeapon",
+  "ko": "직업 전속 무기군의 무기 1개를 쥐고 시작",
+  "en": "Starts with one weapon from a class-exclusive weapon group",
+  "ctx": "ng.startWeapon"
+ },
+ {
+  "key": "ui|cl.frozen.h",
+  "ko": "다른 탭에서 게임 실행 중",
+  "en": "The game is open in another tab",
+  "ctx": "cl.frozen.h"
+ },
+ {
+  "key": "ui|cl.frozen.reload",
+  "ko": "이 탭에서 이어하기",
+  "en": "Continue in this tab",
+  "ctx": "cl.frozen.reload"
+ },
+ {
+  "key": "ui|pro.h",
+  "ko": "프롤로그",
+  "en": "Prologue",
+  "ctx": "pro.h"
+ },
+ {
+  "key": "ui|pro.title",
+  "ko": "Prologue. 그날 밤",
+  "en": "Prologue. That Night",
+  "ctx": "pro.title"
+ },
+ {
+  "key": "ui|pro.step",
+  "ko": "{n} / {m}",
+  "en": "{n} / {m}",
+  "ctx": "pro.step"
+ },
+ {
+  "key": "ui|pro.back",
+  "ko": "뒤로",
+  "en": "Back",
+  "ctx": "pro.back"
+ },
+ {
+  "key": "ui|pro.next",
+  "ko": "다음",
+  "en": "Next",
+  "ctx": "pro.next"
+ },
+ {
+  "key": "ui|pro.skip",
+  "ko": "건너뛰기",
+  "en": "Skip",
+  "ctx": "pro.skip"
+ },
+ {
+  "key": "ui|pro.begin",
+  "ko": "시작",
+  "en": "Begin",
+  "ctx": "pro.begin"
+ },
+ {
+  "key": "ui|pro.s1.h",
+  "ko": "왕좌",
+  "en": "The Throne",
+  "ctx": "pro.s1.h"
+ },
+ {
+  "key": "ui|pro.s1.b",
+  "ko": "지옥에는 왕이 있었다. 대악마 바알이었다.\n\n이 땅의 모든 것이 그의 것이었다. 바알은 자신의 일곱 감정을 나누어 부하들에게 깃들게 했다.\n분노, 시기, 탐욕, 나태, 폭식, 색욕, 오만.\n\n그 일곱 감정이 지옥의 균형을 붙들고 있었다.",
+  "en": "Hell had a king. His name was Baal, the archdemon.\n\nEverything in this land was his. Baal divided his seven emotions among his servants.\nWrath, Envy, Greed, Sloth, Gluttony, Lust, Pride.\n\nThose seven emotions held Hell in balance.",
+  "ctx": "pro.s1.b"
+ },
+ {
+  "key": "ui|pro.s2.h",
+  "ko": "배신의 밤",
+  "en": "Night of Betrayal",
+  "ctx": "pro.s2.h"
+ },
+ {
+  "key": "ui|pro.s2.b",
+  "ko": "그날 밤, 일곱 개의 칼이 바알의 등에 꽂혔다.\n\n돌아본 자리에는 낯익은 얼굴들뿐이었다. 그는 맞서 싸웠으나, 힘의 절반은 이미 빠져나간 뒤였다.\n\n묶여 있던 것이 풀려 있었다. 누군가 열쇠를 넘긴 것이었다.\n바알은 뒤로 밀려났다. 발밑이 무너졌다.",
+  "en": "That night, seven blades sank into Baal’s back.\n\nWhen he turned, every face was familiar. He fought back, but half his power had already drained away.\n\nWhat had been bound was undone. Someone had handed over the key.\nBaal was driven back. The ground gave way beneath him.",
+  "ctx": "pro.s2.b"
+ },
+ {
+  "key": "ui|pro.s3.h",
+  "ko": "추락",
+  "en": "The Fall",
+  "ctx": "pro.s3.h"
+ },
+ {
+  "key": "ui|pro.s3.b",
+  "ko": "바알은 추락했다.\n\n지옥의 빛이 멀어질수록 힘도 빠져나갔다. 왕좌와 부하들의 얼굴, 그 밤에 일어난 일들이 차례로 흐려졌다.\n\n누가 먼저 칼을 들었는지, 누가 등을 돌렸는지 알 수 없었다. 칼이 일곱이었는지조차 확신할 수 없었다.\n배신당했다는 사실만은 남아 있었다.\n\n그때 살을 태우는 듯한 통증이 몸을 파고들었다. 무언가가 새겨지고 있었다.\n추락이 남긴 저주, 낙인이었다.",
+  "en": "Baal fell.\n\nAs the light of Hell receded, his strength drained away. The throne, his servants’ faces, the events of that night faded one by one.\n\nHe could not tell who had raised a blade first, or who had turned against him. He could no longer be certain there had been seven blades.\nOnly one certainty remained: he had been betrayed.\n\nThen pain seared through his body, as though his flesh were burning. Something was being carved into him.\nIt was a brand, the curse his fall had left behind.",
+  "ctx": "pro.s3.b"
+ },
+ {
+  "key": "ui|pro.s4.h",
+  "ko": "마을",
+  "en": "The Village",
+  "ctx": "pro.s4.h"
+ },
+ {
+  "key": "ui|pro.s4.b",
+  "ko": "눈을 떴을 때, 늙은 인간이 그의 입에 물을 흘려 넣고 있었다.\n\n몸은 무거웠고 배는 고팠다. 숨을 쉬는 것조차 버거웠다. 바알은 이 낯설고 나약한 몸이 불쾌했다.\n\n며칠 동안 인간들은 제 몫도 부족한 음식을 나누고 그의 상처를 감싸 주었다. 이름조차 모르는 자를 살리려 애썼다.\n지옥에서는 쓰러진 자를 밟고 지나갔다. 약한 자는 버려졌다. 그런데 이들은 그 당연한 이치를 거스르고 있었다.\n\n왜 이것들은 나를 살리려 하는가. 바알은 그들을 이해할 수 없었다.\n\n자신의 이름은 기억했다. 왕이었다는 것도, 모든 것을 빼앗겼다는 것도.\n그러나 일곱 개의 칼과 낯익은 얼굴들, 무너지는 발밑은 하나의 기억으로 이어지지 않았다.",
+  "en": "When he opened his eyes, an old human was giving him water.\n\nHis body was heavy, his stomach empty. Even breathing was hard. Baal resented this strange, frail body.\n\nFor days, the humans shared what little food they had and bound his wounds. They tried to save a man whose name they did not know. In Hell, the fallen were trampled, the weak discarded. Yet these humans defied that natural order.\n\nWhy did these things try to keep him alive? Baal could not understand them.\n\nHe remembered his name, that he had been a king, that everything had been taken from him. But the seven blades, the familiar faces and the crumbling ground would not form a coherent memory.",
+  "ctx": "pro.s4.b"
+ },
+ {
+  "key": "ui|pro.s5.h",
+  "ko": "불길",
+  "en": "Flames",
+  "ctx": "pro.s5.h"
+ },
+ {
+  "key": "ui|pro.s5.b",
+  "ko": "그날 밤, 지평선이 붉게 물들었다.\n\n군세가 밀려오는 곳에서 분노의 기운이 번져 왔다. 바알은 그 기운을 잊지 않았다.\n사탄. 그가 지옥에서 추방했던 자였다. 추락한 왕의 기척을 쫓아온 것이었다.\n\n마을에 불길이 치솟고 인간들의 비명이 터져 나왔다. 바알은 몸을 일으켰다.\n직접 싸울 힘은 잃었으나, 지휘하는 법까지 잊지는 않았다.\n\n그는 선술집에서 만난 용병들을 향해 명령했다.",
+  "en": "That night, the horizon turned red.\n\nThe advancing army carried an aura of wrath. Baal had not forgotten it.\nSatan. The one he had banished from Hell. He had followed the fallen king’s presence here.\n\nFlames rose through the village, and the humans screamed. Baal rose to his feet.\nHe had lost the strength to fight, but he had not forgotten how to command.\n\nHe turned to the mercenaries he had met at the tavern and gave his order.",
+  "ctx": "pro.s5.b"
+ },
+ {
+  "key": "ui|pro.s5.q",
+  "ko": "\"저놈들을 쓸어라. 내가 뒤에서 이끈다.\"",
+  "en": "\"Sweep them away. I will lead from behind.\"",
+  "ctx": "pro.s5.q"
+ },
+ {
+  "key": "ui|pro.end",
+  "ko": "Chapter 1. 분노 / 불타는 전장",
+  "en": "Chapter 1. Wrath / Burning Battlefield",
+  "ctx": "pro.end"
+ },
+ {
+  "key": "ui|exp.noParty",
+  "ko": "영웅 편성",
+  "en": "Assign heroes",
+  "ctx": "exp.noParty"
+ },
+ {
+  "key": "ui|exp.departAdvancing",
+  "ko": "편성에 전직 중인 영웅 있음",
+  "en": "A hero in this party is advancing",
+  "ctx": "exp.departAdvancing"
+ },
+ {
+  "key": "ui|exp.departExploring",
+  "ko": "편성에 탐험 나간 영웅 있음",
+  "en": "A hero in this party is out exploring",
+  "ctx": "exp.departExploring"
+ },
+ {
+  "key": "ui|exp.departRespawn",
+  "ko": "보스가 아직 돌아오지 않음",
+  "en": "The boss has not returned yet",
+  "ctx": "exp.departRespawn"
+ },
+ {
+  "key": "ui|exp.departBusy",
+  "ko": "파티 내에 다른 행동을 실행중인 영웅이 있습니다. 그래도 출격할까요?",
+  "en": "A hero in this party is busy with another task. Deploy anyway?",
+  "ctx": "exp.departBusy"
+ },
+ {
+  "key": "ui|exp.departLevelGap",
+  "ko": "파티 평균 Lv.{avg} · 전장 Lv.{level} — 레벨 차이 {gap}. 그래도 출격할까요?",
+  "en": "Party average Lv.{avg}, battlefield Lv.{level}: a gap of {gap}. Deploy anyway?",
+  "ctx": "exp.departLevelGap"
+ },
+ {
+  "key": "ui|exp.departCut",
+  "ko": "이 파티는 지금 원정 중입니다. 진행 중인 원정을 접고 새로 출격할까요?",
+  "en": "This party is on an expedition. End the current run and deploy anew?",
+  "ctx": "exp.departCut"
+ },
+ {
+  "key": "ui|exp.departRecall",
+  "ko": "이 파티는 지금 탐험 중입니다. 진행 중인 탐험을 불러들이고 출격할까요? 탐험 보상은 받지 못합니다.",
+  "en": "This party is out exploring. Call the exploration back and deploy? No exploration reward will be received.",
+  "ctx": "exp.departRecall"
+ },
+ {
+  "key": "ui|exp.departCollect",
+  "ko": "이 파티의 탐험이 끝나 있습니다. 탐험 결과를 인벤토리에 받고 출격할까요?",
+  "en": "This party's exploration has finished. Collect the haul into the inventory and deploy?",
+  "ctx": "exp.departCollect"
+ },
+ {
+  "key": "ui|exp.departBagFull",
+  "ko": "탐험 결과를 받을 인벤토리 칸 부족",
+  "en": "Not enough inventory space for the exploration haul",
+  "ctx": "exp.departBagFull"
+ },
+ {
+  "key": "ui|exp.locked",
+  "ko": "이전 스테이지 클리어",
+  "en": "Clear the previous stage",
+  "ctx": "exp.locked"
+ },
+ {
+  "key": "ui|exp.chNeed",
+  "ko": "{ch}장 보스 클리어",
+  "en": "Clear the Ch{ch} boss",
+  "ctx": "exp.chNeed"
+ },
+ {
+  "key": "ui|exp.diff.need",
+  "ko": "{d} {ch}장 보스 클리어",
+  "en": "Clear the {d} Ch{ch} boss",
+  "ctx": "exp.diff.need"
+ },
+ {
+  "key": "ui|exp.stageMeta",
+  "ko": "레벨 {lv}",
+  "en": "Level {lv}",
+  "ctx": "exp.stageMeta"
+ },
+ {
+  "key": "ui|exp.debuffLine",
+  "ko": "{sin} — {fx}",
+  "en": "{sin} — {fx}",
+  "ctx": "exp.debuffLine"
+ },
+ {
+  "key": "ui|exp.debuff.taken_pct",
+  "ko": "받는 피해 +{v}%",
+  "en": "Damage taken +{v}%",
+  "ctx": "exp.debuff.taken_pct"
+ },
+ {
+  "key": "ui|exp.debuff.poison",
+  "ko": "{i}초마다 중독 {d}초 · 초당 최대 체력의 {v}%",
+  "en": "Poison for {d}s every {i}s · {v}% of max HP per second",
+  "ctx": "exp.debuff.poison"
+ },
+ {
+  "key": "ui|exp.debuff.heal_cut",
+  "ko": "받는 회복 −{v}%",
+  "en": "Healing received −{v}%",
+  "ctx": "exp.debuff.heal_cut"
+ },
+ {
+  "key": "ui|exp.debuff.freeze",
+  "ko": "{i}초마다 결빙 {d}초 · 행동 속도 −{v}%",
+  "en": "Freeze for {d}s every {i}s · Action speed −{v}%",
+  "ctx": "exp.debuff.freeze"
+ },
+ {
+  "key": "ui|exp.debuff.feast",
+  "ko": "몬스터 데미지 초당 +{v}% · 최대 +{c}%",
+  "en": "Monster damage +{v}% per second · up to +{c}%",
+  "ctx": "exp.debuff.feast"
+ },
+ {
+  "key": "ui|exp.placeLv",
+  "ko": "Lv{lv}",
+  "en": "Lv{lv}",
+  "ctx": "exp.placeLv"
+ },
+ {
+  "key": "ui|exp.sinBoss",
+  "ko": "{sin}의 {name}",
+  "en": "{name} of {sin}",
+  "ctx": "exp.sinBoss"
+ },
+ {
+  "key": "ui|exp.cell.h",
+  "ko": "출발 칸",
+  "en": "Starting stage",
+  "ctx": "exp.cell.h"
+ },
+ {
+  "key": "ui|exp.tactic.off",
+  "ko": "전술 꺼짐 — {eff}",
+  "en": "Tactic off — {eff}",
+  "ctx": "exp.tactic.off"
+ },
+ {
+  "key": "ui|exp.repeat",
+  "ko": "반복 원정",
+  "en": "Auto-repeat",
+  "ctx": "exp.repeat"
+ },
+ {
+  "key": "ui|exp.repeat.tip",
+  "ko": "켜면 이 장소의 칸을 돌아가며 싸웁니다 · 끄면 이길 때마다 다음 칸으로 나아갑니다",
+  "en": "On: loop through this area's stages · Off: move on to the next stage after each win",
+  "ctx": "exp.repeat.tip"
+ },
+ {
+  "key": "ui|exp.repeat.sub",
+  "ko": "원정은 <b>멈추지 않습니다</b> — 런이 끝나면 곧 다음 런이 나가고, 멈추는 길은 <b>철수</b>와 <b>게임 끄기</b> 둘뿐입니다 · <b>게임이 켜져 있는 동안만</b> 돕니다<br>이기면 다음 칸 · 지면(전원 전투불능 · 제한시간 초과) 같은 칸을 다시 돕니다 · 챕터보스에게 지면 바로 앞 칸으로 돌아갑니다 · <b>반복을 켜면</b> 그 장소의 칸 I → II → III → I 을 돌고, <b>끄면</b> 순서의 다음 칸으로 나아갑니다(다음 칸이 잠겼으면 같은 칸 · 다음 난이도를 여는 보스를 이기면 다음 난이도의 1-1) · 칸마다 새 런이라 전원 회복한 채 나갑니다",
+  "en": "Expeditions <b>never stop on their own</b> — when a run ends the next one heads out shortly; only <b>Retreat</b> or <b>closing the game</b> stops them · they run <b>only while the game is open</b><br>A win moves on to the next stage · a loss (whole party downed · timed out) runs the same stage again · a loss to a chapter boss goes back to the previous stage · <b>with repeat on</b> the party loops through the area's stages I → II → III → I; <b>with it off</b> it moves on to the next stage in order (the same stage again if the next is locked · beating the boss that unlocks the next difficulty moves on to that difficulty's 1-1) · every stage is a new run, so everyone heads out recovered",
+  "ctx": "exp.repeat.sub"
+ },
+ {
+  "key": "ui|rep.defeat",
+  "ko": "패배",
+  "en": "Defeat",
+  "ctx": "rep.defeat"
+ },
+ {
+  "key": "ui|rep.retreat",
+  "ko": "철수",
+  "en": "Retreat",
+  "ctx": "rep.retreat"
+ },
+ {
+  "key": "ui|rep.reason.wipe",
+  "ko": "전원 전투불능",
+  "en": "Whole party downed",
+  "ctx": "rep.reason.wipe"
+ },
+ {
+  "key": "ui|rep.reason.timeout",
+  "ko": "제한시간 초과",
+  "en": "Timed out",
+  "ctx": "rep.reason.timeout"
+ },
+ {
+  "key": "ui|rep.reason.retreat",
+  "ko": "철수",
+  "en": "Retreated",
+  "ctx": "rep.reason.retreat"
+ },
+ {
+  "key": "ui|rep.reason.closed",
+  "ko": "게임이 꺼져 끊김",
+  "en": "Cut off — the game was closed",
+  "ctx": "rep.reason.closed"
+ },
+ {
+  "key": "ui|rep.roundsCleared",
+  "ko": "{n} / {total}",
+  "en": "{n} / {total}",
+  "ctx": "rep.roundsCleared"
+ },
+ {
+  "key": "ui|rep.discarded",
+  "ko": "가방이 가득 차 {n}개 분해",
+  "en": "{n} salvaged — bag was full",
+  "ctx": "rep.discarded"
+ },
+ {
+  "key": "ui|rep.miss",
+  "ko": "빗나감",
+  "en": "Misses",
+  "ctx": "rep.miss"
+ },
+ {
+  "key": "ui|rep.missN",
+  "ko": "{m} / {n} ({p}%)",
+  "en": "{m} / {n} ({p}%)",
+  "ctx": "rep.missN"
+ },
+ {
+  "key": "ui|ch.equip.hint",
+  "ko": "아이템 클릭 = 착용 · 우클릭 = [착용] · [잠금] 버튼 · 착용 칸 클릭 = 해제 · Ctrl+클릭이나 끌어 놓기 = 창고 ↔ 인벤토리",
+  "en": "Click an item = equip · right-click = [Equip] · [Lock] buttons · click a worn slot = unequip · Ctrl+click or drag = move between stash and inventory",
+  "ctx": "ch.equip.hint"
+ },
+ {
+  "key": "ui|ch.menu.equip",
+  "ko": "착용",
+  "en": "Equip",
+  "ctx": "ch.menu.equip"
+ },
+ {
+  "key": "ui|ch.menu.lock",
+  "ko": "잠금",
+  "en": "Lock",
+  "ctx": "ch.menu.lock"
+ },
+ {
+  "key": "ui|ch.menu.unlock",
+  "ko": "잠금 해제",
+  "en": "Unlock",
+  "ctx": "ch.menu.unlock"
+ },
+ {
+  "key": "ui|ch.menu.open",
+  "ko": "사용",
+  "en": "Use",
+  "ctx": "ch.menu.open"
+ },
+ {
+  "key": "ui|box.weapon",
+  "ko": "무기 상자",
+  "en": "Weapon Chest",
+  "ctx": "box.weapon"
+ },
+ {
+  "key": "ui|box.armor",
+  "ko": "방어구 상자",
+  "en": "Armor Chest",
+  "ctx": "box.armor"
+ },
+ {
+  "key": "ui|box.part.weapon",
+  "ko": "무기",
+  "en": "Weapon",
+  "ctx": "box.part.weapon"
+ },
+ {
+  "key": "ui|box.part.armor",
+  "ko": "방어구",
+  "en": "Armor",
+  "ctx": "box.part.armor"
+ },
+ {
+  "key": "ui|box.named",
+  "ko": "{tier} {box}",
+  "en": "{tier} {box}",
+  "ctx": "box.named"
+ },
+ {
+  "key": "ui|box.tier.low",
+  "ko": "하급",
+  "en": "Low-Grade",
+  "ctx": "box.tier.low"
+ },
+ {
+  "key": "ui|box.tier.mid",
+  "ko": "중급",
+  "en": "Mid-Grade",
+  "ctx": "box.tier.mid"
+ },
+ {
+  "key": "ui|box.tier.high",
+  "ko": "고급",
+  "en": "High-Grade",
+  "ctx": "box.tier.high"
+ },
+ {
+  "key": "ui|box.rarity",
+  "ko": "{lo} ~ {hi}",
+  "en": "{lo} – {hi}",
+  "ctx": "box.rarity"
+ },
+ {
+  "key": "ui|box.for",
+  "ko": "{hero}에게 맞는 Lv {lv} {part}",
+  "en": "{part} for {hero} · Lv {lv}",
+  "ctx": "box.for"
+ },
+ {
+  "key": "ui|box.opened",
+  "ko": "상자 개봉 — {name}",
+  "en": "Chest opened — {name}",
+  "ctx": "box.opened"
+ },
+ {
+  "key": "ui|mail.h",
+  "ko": "우편함",
+  "en": "Mailbox",
+  "ctx": "mail.h"
+ },
+ {
+  "key": "ui|mail.from",
+  "ko": "{stage} · {diff} 첫 클리어",
+  "en": "{stage} · {diff} First Clear",
+  "ctx": "mail.from"
+ },
+ {
+  "key": "ui|mail.count",
+  "ko": "우편 {n}통",
+  "en": "Mail {n}",
+  "ctx": "mail.count"
+ },
+ {
+  "key": "ui|mail.claim",
+  "ko": "받기",
+  "en": "Claim",
+  "ctx": "mail.claim"
+ },
+ {
+  "key": "ui|mail.claimAll",
+  "ko": "모두 받기",
+  "en": "Claim All",
+  "ctx": "mail.claimAll"
+ },
+ {
+  "key": "ui|mail.claimed",
+  "ko": "우편 {n}통 수령",
+  "en": "Claimed {n} mail",
+  "ctx": "mail.claimed"
+ },
+ {
+  "key": "ui|nt.h",
+  "ko": "알림",
+  "en": "Notifications",
+  "ctx": "nt.h"
+ },
+ {
+  "key": "ui|nt.folder.notifications",
+  "ko": "알림",
+  "en": "Notifications",
+  "ctx": "nt.folder.notifications"
+ },
+ {
+  "key": "ui|nt.folder.missions",
+  "ko": "미션",
+  "en": "Missions",
+  "ctx": "nt.folder.missions"
+ },
+ {
+  "key": "ui|nt.folder.achievements",
+  "ko": "업적",
+  "en": "Achievements",
+  "ctx": "nt.folder.achievements"
+ },
+ {
+  "key": "ui|nt.achievementsLocked",
+  "ko": "업적 · 준비 중",
+  "en": "Achievements · Coming soon",
+  "ctx": "nt.achievementsLocked"
+ },
+ {
+  "key": "ui|nt.missionsEmpty",
+  "ko": "진행 중인 미션 없음",
+  "en": "No active missions",
+  "ctx": "nt.missionsEmpty"
+ },
+ {
+  "key": "ui|nt.count",
+  "ko": "알림과 미션 · {n}건",
+  "en": "Notifications and missions · {n} items",
+  "ctx": "nt.count",
+  "en_one": "Notifications and missions · {n} item"
+ },
+ {
+  "key": "ui|tutorial.progress",
+  "ko": "초반 안내",
+  "en": "Getting started",
+  "ctx": "tutorial.progress"
+ },
+ {
+  "key": "ui|tutorial.confirm",
+  "ko": "확인",
+  "en": "Got it",
+  "ctx": "tutorial.confirm"
+ },
+ {
+  "key": "ui|tutorial.settings",
+  "ko": "초반 안내",
+  "en": "Getting started",
+  "ctx": "tutorial.settings"
+ },
+ {
+  "key": "ui|tutorial.replay",
+  "ko": "다시 보기",
+  "en": "Show again",
+  "ctx": "tutorial.replay"
+ },
+ {
+  "key": "ui|tutorial.expedition.title",
+  "ko": "첫 원정",
+  "en": "Your first expedition",
+  "ctx": "tutorial.expedition.title"
+ },
+ {
+  "key": "ui|tutorial.expedition.detail",
+  "ko": "열린 장소를 눌러 원정을 보내세요. 전투와 다음 구간 진행은 게임이 켜져 있는 동안 자동으로 이어집니다.",
+  "en": "Choose an unlocked area to send your party. Combat and travel to the next stage continue automatically while the game is open.",
+  "ctx": "tutorial.expedition.detail"
+ },
+ {
+  "key": "ui|tutorial.loot.title",
+  "ko": "장비 비교",
+  "en": "Compare your gear",
+  "ctx": "tutorial.loot.title"
+ },
+ {
+  "key": "ui|tutorial.loot.detail",
+  "ko": "장비에 마우스를 올리면 선택한 영웅의 착용품과 비교합니다. 마음에 드는 장비를 클릭하면 장착합니다.",
+  "en": "Hover over gear to compare it with the selected hero’s equipment. Click an item when you want to equip it.",
+  "ctx": "tutorial.loot.detail"
+ },
+ {
+  "key": "ui|tutorial.lootTouch.detail",
+  "ko": "장비를 길게 눌러 선택한 영웅의 착용품과 비교하세요. 상세 정보의 [착용]으로 교체할 수 있습니다.",
+  "en": "Touch and hold gear to compare it with the selected hero’s equipment. Use [Equip] in its details to replace the worn item.",
+  "ctx": "tutorial.lootTouch.detail"
+ },
+ {
+  "key": "ui|tutorial.mastery.title",
+  "ko": "마스터리 배분",
+  "en": "Spend skill points",
+  "ctx": "tutorial.mastery.title"
+ },
+ {
+  "key": "ui|tutorial.mastery.detail",
+  "ko": "레벨업으로 받은 포인트로 영웅을 강화하세요. 마스터리 창에서 배분하며, 초기화는 무료입니다.",
+  "en": "Use points earned from leveling up to strengthen your hero. Open mastery to spend them; resetting is free.",
+  "ctx": "tutorial.mastery.detail"
+ },
+ {
+  "key": "ui|tutorial.masteryTree.detail",
+  "ko": "배울 수 있는 칸을 누르면 포인트를 사용해 강화합니다. 초기화하면 사용한 포인트를 무료로 돌려받습니다.",
+  "en": "Click an available node to spend a point and improve your hero. Resetting returns all spent points for free.",
+  "ctx": "tutorial.masteryTree.detail"
+ },
+ {
+  "key": "ui|tutorial.potions.title",
+  "ko": "물약과 재고",
+  "en": "Potions and stock",
+  "ctx": "tutorial.potions.title"
+ },
+ {
+  "key": "ui|tutorial.potions.detail",
+  "ko": "물약은 설정한 체력 기준에 따라 자동으로 사용하며, 마실 때마다 재고가 줄어듭니다. 편성에서 물약 칸과 사용 기준을 바꿀 수 있습니다.",
+  "en": "Potions are used automatically at the set health threshold, consuming stock with each drink. Change potion slots and the threshold in Party.",
+  "ctx": "tutorial.potions.detail"
+ },
+ {
+  "key": "ui|tutorial.potionsShop.detail",
+  "ko": "물약은 설정한 체력 기준에 따라 자동으로 사용하며, 마실 때마다 재고가 줄어듭니다. 부족한 물약은 상점에서 구매할 수 있습니다.",
+  "en": "Potions are used automatically at the set health threshold, consuming stock with each drink. Buy more at the Shop when stocks run low.",
+  "ctx": "tutorial.potionsShop.detail"
+ },
+ {
+  "key": "ui|tutorial.construction.title",
+  "ko": "건설과 해금",
+  "en": "Build to unlock features",
+  "ctx": "tutorial.construction.title"
+ },
+ {
+  "key": "ui|tutorial.construction.detail",
+  "ko": "건물의 조건과 비용을 확인해 건설하세요. 다음 랭크에서 열리는 기능과 효과도 이곳에서 확인할 수 있습니다.",
+  "en": "Check a building’s requirements and cost before building. This panel also shows the features and effects its next rank unlocks.",
+  "ctx": "tutorial.construction.detail"
+ },
+ {
+  "key": "ui|tutorial.laboratory.title",
+  "ko": "연구소 둘러보기",
+  "en": "Your laboratory",
+  "ctx": "tutorial.laboratory.title"
+ },
+ {
+  "key": "ui|tutorial.laboratory.detail",
+  "ko": "연구소에서는 시간에 따라 재료·골드·경험치·스킬북을 얻거나 영웅을 수색합니다. 줄 이름을 누르면 생산과 등록 효과를, 오른쪽 지점 그림을 누르면 연구를 봅니다. 잠긴 줄은 표시된 건물을 건설하거나 랭크를 올려 여세요.",
+  "en": "Laboratory lines produce materials, gold, XP or skill books, or search for heroes over time. Click a line name for its output and hero effects, or a node to research it. Build or upgrade the building shown on a locked line to open it.",
+  "ctx": "tutorial.laboratory.detail"
+ },
+ {
+  "key": "ui|tutorial.labRegistration.title",
+  "ko": "연구소 영웅 등록",
+  "en": "Assign laboratory heroes",
+  "ctx": "tutorial.labRegistration.title"
+ },
+ {
+  "key": "ui|tutorial.labRegistration.detail",
+  "ko": "강조된 [+]나 영웅 얼굴을 눌러 등록 창을 여세요. 등록한 영웅 수와 능력치가 이 줄의 생산·연구 효과를 더합니다. 원정과 겸직할 수 있고, 한 영웅은 한 줄에만 등록됩니다.",
+  "en": "Click the highlighted [+] or hero portrait to assign heroes. The number of assigned heroes and their stats improve that line’s production and research. Heroes can still go on expeditions; each hero can be assigned to one laboratory line at a time.",
+  "ctx": "tutorial.labRegistration.detail"
+ },
+ {
+  "key": "ui|tutorial.labRegistrationPick.detail",
+  "ko": "이 줄에 둘 영웅을 고르고 [적용]을 누르세요. 다시 누르면 고르기가 풀리고, 다른 줄의 영웅을 고르면 이곳으로 옮겨집니다. 등록해도 원정에 함께 참여할 수 있습니다.",
+  "en": "Select the heroes for this line, then press [Apply]. Click again to deselect; heroes from other lines move here. Assigned heroes can still join expeditions.",
+  "ctx": "tutorial.labRegistrationPick.detail"
+ },
+ {
+  "key": "ui|tutorial.labResearch.title",
+  "ko": "지점 연구하기",
+  "en": "Research a node",
+  "ctx": "tutorial.labResearch.title"
+ },
+ {
+  "key": "ui|tutorial.labResearch.detail",
+  "ko": "다음 레벨의 효과·비용·시간을 확인하고 [연구]를 누르세요. 연구소 전체에서 한 번에 하나만 진행하며, 시간이 지나면 자동으로 완료됩니다. [그만두기]를 누르면 낸 비용을 전부 돌려받습니다.",
+  "en": "Check the next level’s effect, cost and duration, then press [Research]. The laboratory runs one research project at a time and completes it automatically. [Cancel] refunds the full cost.",
+  "ctx": "tutorial.labResearch.detail"
+ },
+ {
+  "key": "ui|nt.next",
+  "ko": "다음 할 일",
+  "en": "Next step",
+  "ctx": "nt.next"
+ },
+ {
+  "key": "ui|nt.empty",
+  "ko": "대기 중인 알림 없음",
+  "en": "No pending tasks",
+  "ctx": "nt.empty"
+ },
+ {
+  "key": "ui|nt.shortcut",
+  "ko": "바로가기",
+  "en": "Go to",
+  "ctx": "nt.shortcut"
+ },
+ {
+  "key": "ui|nt.check",
+  "ko": "확인",
+  "en": "OK",
+  "ctx": "nt.check"
+ },
+ {
+  "key": "ui|nt.arrived",
+  "ko": "새 알림 {n}건",
+  "en": "{n} new notifications",
+  "ctx": "nt.arrived",
+  "en_one": "{n} new notification"
+ },
+ {
+  "key": "ui|nt.kind.commission",
+  "ko": "의뢰 목표 달성 · 보상 수령 가능",
+  "en": "Commission goal met · Reward ready",
+  "ctx": "nt.kind.commission"
+ },
+ {
+  "key": "ui|nt.kind.explore",
+  "ko": "탐험 완료 · 결과 수령 가능",
+  "en": "Exploration complete · Results ready",
+  "ctx": "nt.kind.explore"
+ },
+ {
+  "key": "ui|nt.kind.join",
+  "ko": "가입 희망 영웅 도착",
+  "en": "Hero awaiting recruitment",
+  "ctx": "nt.kind.join"
+ },
+ {
+  "key": "ui|nt.kind.mastery",
+  "ko": "스킬 포인트 사용 가능",
+  "en": "Skill points available",
+  "ctx": "nt.kind.mastery"
+ },
+ {
+  "key": "ui|nt.mastery.detail",
+  "ko": "{hero} · Lv.{level} · 사용 가능 {n}포인트",
+  "en": "{hero} · Lv.{level} · {n} points available",
+  "ctx": "nt.mastery.detail",
+  "en_one": "{hero} · Lv.{level} · {n} point available"
+ },
+ {
+  "key": "ui|nt.guide.firstExpedition",
+  "ko": "첫 원정 출발",
+  "en": "Start your first expedition",
+  "ctx": "nt.guide.firstExpedition"
+ },
+ {
+  "key": "ui|nt.guide.buildTavern",
+  "ko": "선술집 건설 · 의뢰 게시판 개방",
+  "en": "Build the Tavern · Unlock commissions",
+  "ctx": "nt.guide.buildTavern"
+ },
+ {
+  "key": "ui|nt.guide.earnGold",
+  "ko": "원정으로 건설 자금 마련",
+  "en": "Earn building funds on an expedition",
+  "ctx": "nt.guide.earnGold"
+ },
+ {
+  "key": "ui|nt.guide.acceptCommission",
+  "ko": "첫 의뢰 수락",
+  "en": "Accept your first commission",
+  "ctx": "nt.guide.acceptCommission"
+ },
+ {
+  "key": "ui|nt.guide.progressCommission",
+  "ko": "원정을 진행해 의뢰 목표 달성",
+  "en": "Progress your commission on an expedition",
+  "ctx": "nt.guide.progressCommission"
+ },
+ {
+  "key": "ui|nt.guide.retryPreparation",
+  "ko": "원정 준비 점검",
+  "en": "Review expedition preparation",
+  "ctx": "nt.guide.retryPreparation"
+ },
+ {
+  "key": "ui|nt.retry.detail",
+  "ko": "Party {party} · {stage} · 최근 {n}회 연속 미클리어. 장비·마스터리·물약을 점검하고, 이전 구간에서 파밍해 보세요.",
+  "en": "Party {party} · {stage} · {n} recent runs without a clear. Review gear, mastery and potions, or farm an earlier stage.",
+  "ctx": "nt.retry.detail"
+ },
+ {
+  "key": "ui|ch.salvageHint",
+  "ko": "장비를 우클릭해 [잠금]을 누르면 잠기거나 풀립니다. 잠근 장비는 분해되지 않습니다. [분해]를 누르면 분해함이 뜹니다. 장비를 눌러 함에 올리거나 등급 · 레벨 · 베이스 열에서 고르면 맞는 장비가 바로 함에 오르고, [분해하기]로 가루를 얻으면 필터가 풀립니다. 열을 여럿 고르면 모든 열에 맞는 것만 오르니, 베이스 옵션이 높은 장비는 베이스 열로 남길 수 있습니다. [자동 분해]는 부대마다 따로 정합니다. 등급 × 부위 칸마다 보존 · 베이스 · 분해를 고르고, 레벨 조건을 켜면 부대에서 가장 낮은 영웅 레벨보다 많이 낮은 장비를 분해합니다. 레벨 조건과 그 칸을 모두 만족해야 보존하고, [베이스] 칸은 베이스 옵션이 그 부위 문턱 이상인 것만 보존합니다. 유니크 · 크래프트는 언제나 보존합니다. 새로 들어오는 장비에만 걸리니 이미 가진 것은 [지금 인벤토리에 적용]을 눌러야 분해됩니다. 지금 규칙을 프리셋에 저장해 두면 다른 부대에서 불러올 수 있습니다",
+  "en": "Right-click gear and press [Lock] to lock or unlock it. Locked gear is never salvaged. Press [Salvage] to open the Salvage Box: click gear to put it in, or pick from the rarity, level and base columns and the matching gear goes in at once — [Salvage now] turns it to dust and clears the picks. With several columns picked, only gear matching every column goes in, so you can keep high base-option gear out with the base column. [Auto salvage] is set per party. For each rarity × slot cell choose Keep, Base or Salvage, and turn on the level condition to salvage gear far below the party’s lowest hero level. Gear is kept only when it meets both the level condition and its cell; a Base cell keeps only gear whose base option is at or above that slot’s threshold. Uniques and crafted gear are always kept. Only new gear is checked — press [Apply to inventory now] to salvage what you already hold. Save the rules to a preset to load them on another party",
+  "ctx": "ch.salvageHint"
+ },
+ {
+  "key": "ui|ch.bag.stash",
+  "ko": "창고",
+  "en": "Stash",
+  "ctx": "ch.bag.stash"
+ },
+ {
+  "key": "ui|ch.bag.inv",
+  "ko": "인벤토리",
+  "en": "Inventory",
+  "ctx": "ch.bag.inv"
+ },
+ {
+  "key": "ui|ch.bag.equip",
+  "ko": "장비",
+  "en": "Gear",
+  "ctx": "ch.bag.equip"
+ },
+ {
+  "key": "ui|ch.bag.mat",
+  "ko": "재료",
+  "en": "Materials",
+  "ctx": "ch.bag.mat"
+ },
+ {
+  "key": "ui|ch.bag.book",
+  "ko": "스킬북",
+  "en": "Skill Books",
+  "ctx": "ch.bag.book"
+ },
+ {
+  "key": "ui|ch.sort.start",
+  "ko": "정렬",
+  "en": "Sort",
+  "ctx": "ch.sort.start"
+ },
+ {
+  "key": "ui|ch.sort.rarity",
+  "ko": "등급순",
+  "en": "Rarity",
+  "ctx": "ch.sort.rarity"
+ },
+ {
+  "key": "ui|ch.sort.ilvl",
+  "ko": "레벨순",
+  "en": "Level",
+  "ctx": "ch.sort.ilvl"
+ },
+ {
+  "key": "ui|ch.sort.slot",
+  "ko": "부위순",
+  "en": "Slot",
+  "ctx": "ch.sort.slot"
+ },
+ {
+  "key": "ui|ch.sort.count",
+  "ko": "개수순",
+  "en": "Count",
+  "ctx": "ch.sort.count"
+ },
+ {
+  "key": "ui|ch.sort.class",
+  "ko": "직업순",
+  "en": "Class",
+  "ctx": "ch.sort.class"
+ },
+ {
+  "key": "ui|ch.sort.tier",
+  "ko": "티어순",
+  "en": "Tier",
+  "ctx": "ch.sort.tier"
+ },
+ {
+  "key": "ui|ch.sortHint",
+  "ko": "[정렬]은 누른 칸을 한 번 줄 세웁니다 — 등급순 · 레벨순 · 부위순 중 하나를 고르고, 높은 것이 앞에 섭니다. 그 뒤 들어오는 장비는 끝에 붙습니다",
+  "en": "[Sort] lines up that panel once — pick by rarity, by level or by slot, highest first. Gear that arrives afterwards goes to the end",
+  "ctx": "ch.sortHint"
+ },
+ {
+  "key": "ui|ch.sel.start",
+  "ko": "분해",
+  "en": "Salvage",
+  "ctx": "ch.sel.start"
+ },
+ {
+  "key": "ui|ch.sel.go",
+  "ko": "분해하기",
+  "en": "Salvage now",
+  "ctx": "ch.sel.go"
+ },
+ {
+  "key": "ui|ch.sel.cancel",
+  "ko": "취소",
+  "en": "Cancel",
+  "ctx": "ch.sel.cancel"
+ },
+ {
+  "key": "ui|ch.sel.byRarity",
+  "ko": "등급",
+  "en": "Rarity",
+  "ctx": "ch.sel.byRarity"
+ },
+ {
+  "key": "ui|ch.sel.byLevel",
+  "ko": "레벨",
+  "en": "Level",
+  "ctx": "ch.sel.byLevel"
+ },
+ {
+  "key": "ui|ch.sel.byFixed",
+  "ko": "베이스",
+  "en": "Base",
+  "ctx": "ch.sel.byFixed"
+ },
+ {
+  "key": "ui|ch.sel.title",
+  "ko": "분해함",
+  "en": "Salvage Box",
+  "ctx": "ch.sel.title"
+ },
+ {
+  "key": "ui|ch.sel.dust",
+  "ko": "가루 +{d}",
+  "en": "Dust +{d}",
+  "ctx": "ch.sel.dust"
+ },
+ {
+  "key": "ui|ch.sel.salvagedMats",
+  "ko": "{n}개 분해 → {mats}",
+  "en": "Salvaged {n} → {mats}",
+  "ctx": "ch.sel.salvagedMats"
+ },
+ {
+  "key": "ui|ch.auto.previewMats",
+  "ko": "지금 인벤토리 기준 분해 {n}개 · {mats}",
+  "en": "Inventory now: salvage {n} · {mats}",
+  "ctx": "ch.auto.previewMats"
+ },
+ {
+  "key": "ui|exp.diff.stats",
+  "ko": "몬스터 체력 ×{hp} · 데미지 ×{dmg}",
+  "en": "Monster HP ×{hp} · Damage ×{dmg}",
+  "ctx": "exp.diff.stats"
+ },
+ {
+  "key": "ui|ch.sel.full",
+  "ko": "분해함 가득 참",
+  "en": "The Salvage Box is full",
+  "ctx": "ch.sel.full"
+ },
+ {
+  "key": "ui|ch.sel.lockedNo",
+  "ko": "잠긴 장비는 분해함에 올릴 수 없음",
+  "en": "Locked gear cannot go in the Salvage Box",
+  "ctx": "ch.sel.lockedNo"
+ },
+ {
+  "key": "ui|ch.auto.btn",
+  "ko": "자동 분해",
+  "en": "Auto salvage",
+  "ctx": "ch.auto.btn"
+ },
+ {
+  "key": "ui|ch.auto.h",
+  "ko": "자동 분해",
+  "en": "Auto Salvage",
+  "ctx": "ch.auto.h"
+ },
+ {
+  "key": "ui|ch.auto.hNo",
+  "ko": "자동 분해 · {p}",
+  "en": "Auto Salvage · {p}",
+  "ctx": "ch.auto.hNo"
+ },
+ {
+  "key": "ui|ch.auto.preset",
+  "ko": "프리셋",
+  "en": "Preset",
+  "ctx": "ch.auto.preset"
+ },
+ {
+  "key": "ui|ch.auto.load",
+  "ko": "불러오기",
+  "en": "Load",
+  "ctx": "ch.auto.load"
+ },
+ {
+  "key": "ui|ch.auto.save",
+  "ko": "저장",
+  "en": "Save",
+  "ctx": "ch.auto.save"
+ },
+ {
+  "key": "ui|ch.auto.loaded",
+  "ko": "프리셋 {n}에서 불러왔습니다",
+  "en": "Loaded preset {n}",
+  "ctx": "ch.auto.loaded"
+ },
+ {
+  "key": "ui|ch.auto.saved",
+  "ko": "프리셋 {n}에 저장했습니다",
+  "en": "Saved to preset {n}",
+  "ctx": "ch.auto.saved"
+ },
+ {
+  "key": "ui|ch.auto.lv",
+  "ko": "레벨",
+  "en": "Level",
+  "ctx": "ch.auto.lv"
+ },
+ {
+  "key": "ui|ch.auto.lvOff",
+  "ko": "안 봄",
+  "en": "Off",
+  "ctx": "ch.auto.lvOff"
+ },
+ {
+  "key": "ui|ch.auto.lvGap",
+  "ko": "부대 최저 Lv −{g} 이상",
+  "en": "Party min Lv −{g}+",
+  "ctx": "ch.auto.lvGap"
+ },
+ {
+  "key": "ui|ch.auto.lvGap0",
+  "ko": "부대 최저 Lv 이상",
+  "en": "Party min Lv+",
+  "ctx": "ch.auto.lvGap0"
+ },
+ {
+  "key": "ui|ch.auto.th",
+  "ko": "문턱",
+  "en": "Min",
+  "ctx": "ch.auto.th"
+ },
+ {
+  "key": "ui|ch.auto.m.keep",
+  "ko": "보존",
+  "en": "Keep",
+  "ctx": "ch.auto.m.keep"
+ },
+ {
+  "key": "ui|ch.auto.m.base",
+  "ko": "베이스",
+  "en": "Base",
+  "ctx": "ch.auto.m.base"
+ },
+ {
+  "key": "ui|ch.auto.m.word",
+  "ko": "단어",
+  "en": "Word",
+  "ctx": "ch.auto.m.word"
+ },
+ {
+  "key": "ui|ch.auto.wTop",
+  "ko": "위",
+  "en": "Top",
+  "ctx": "ch.auto.wTop"
+ },
+ {
+  "key": "ui|ch.auto.wMid",
+  "ko": "가운데 이상",
+  "en": "Middle+",
+  "ctx": "ch.auto.wMid"
+ },
+ {
+  "key": "ui|ch.auto.wAny",
+  "ko": "하나라도",
+  "en": "Any line",
+  "ctx": "ch.auto.wAny"
+ },
+ {
+  "key": "ui|ch.auto.wAll",
+  "ko": "모두",
+  "en": "All lines",
+  "ctx": "ch.auto.wAll"
+ },
+ {
+  "key": "ui|ch.auto.m.salvage",
+  "ko": "분해",
+  "en": "Salvage",
+  "ctx": "ch.auto.m.salvage"
+ },
+ {
+  "key": "ui|ch.auto.preview",
+  "ko": "지금 인벤토리 기준 분해 {n}개 · 가루 +{d}",
+  "en": "Inventory now: salvage {n} · dust +{d}",
+  "ctx": "ch.auto.preview"
+ },
+ {
+  "key": "ui|ch.auto.log",
+  "ko": "최근 분해",
+  "en": "Recently salvaged",
+  "ctx": "ch.auto.log"
+ },
+ {
+  "key": "ui|ch.auto.logNone",
+  "ko": "없음",
+  "en": "None",
+  "ctx": "ch.auto.logNone"
+ },
+ {
+  "key": "ui|ch.auto.apply",
+  "ko": "지금 인벤토리에 적용",
+  "en": "Apply to inventory now",
+  "ctx": "ch.auto.apply"
+ },
+ {
+  "key": "ui|ch.auto.confirm",
+  "ko": "인벤토리의 장비 {n}개를 분해합니다",
+  "en": "{n} items in the inventory will be salvaged",
+  "ctx": "ch.auto.confirm",
+  "en_one": "{n} item in the inventory will be salvaged"
+ },
+ {
+  "key": "ui|ch.auto.ok",
+  "ko": "확인",
+  "en": "Confirm",
+  "ctx": "ch.auto.ok"
+ },
+ {
+  "key": "ui|ex.salvEdit",
+  "ko": "바꾸기",
+  "en": "Edit",
+  "ctx": "ex.salvEdit"
+ },
+ {
+  "key": "ui|ch.err.level",
+  "ko": "레벨 부족",
+  "en": "Level too low to equip",
+  "ctx": "ch.err.level"
+ },
+ {
+  "key": "ui|ch.err.bagFull",
+  "ko": "인벤토리 가득 참",
+  "en": "Inventory is full",
+  "ctx": "ch.err.bagFull"
+ },
+ {
+  "key": "ui|ch.err.stashFull",
+  "ko": "창고 가득 참",
+  "en": "Stash is full",
+  "ctx": "ch.err.stashFull"
+ },
+ {
+  "key": "ui|ch.err.missing",
+  "ko": "아이템을 찾을 수 없음",
+  "en": "Item not found",
+  "ctx": "ch.err.missing"
+ },
+ {
+  "key": "ui|ch.err.sealed",
+  "ko": "열지 않은 상자",
+  "en": "Open the chest first",
+  "ctx": "ch.err.sealed"
+ },
+ {
+  "key": "ui|ch.sel.salvaged",
+  "ko": "{n}개 분해 → 가루 +{d}",
+  "en": "Salvaged {n} → dust +{d}",
+  "ctx": "ch.sel.salvaged"
+ },
+ {
+  "key": "ui|ch.upgradeHint",
+  "ko": "강화는 대장간에서 합니다 — 골드로 한 단계씩 베이스 능력치를 올립니다. 목걸이 · 반지는 강화하지 않습니다",
+  "en": "Upgrading happens at the Blacksmith — one step at a time for gold, raising the base stat. Amulets and rings cannot be upgraded",
+  "ctx": "ch.upgradeHint"
+ },
+ {
+  "key": "ui|ch.err.maxUp",
+  "ko": "더 이상 강화할 수 없음",
+  "en": "Already fully upgraded",
+  "ctx": "ch.err.maxUp"
+ },
+ {
+  "key": "ui|ch.err.tries",
+  "ko": "남은 강화 횟수가 없음",
+  "en": "No upgrade attempts left",
+  "ctx": "ch.err.tries"
+ },
+ {
+  "key": "ui|ch.err.noBase",
+  "ko": "베이스 능력치가 없어 강화할 수 없음",
+  "en": "Nothing to upgrade — this item has no base stat",
+  "ctx": "ch.err.noBase"
+ },
+ {
+  "key": "ui|ch.dismiss",
+  "ko": "해고",
+  "en": "Dismiss",
+  "ctx": "ch.dismiss"
+ },
+ {
+  "key": "ui|ch.dismiss.blocked",
+  "ko": "영웅을 해고하려면 모든 장비를 해제해야 합니다.",
+  "en": "All equipment must be unequipped before dismissing this hero.",
+  "ctx": "ch.dismiss.blocked"
+ },
+ {
+  "key": "ui|ch.err.equipped",
+  "ko": "장비 모두 해제",
+  "en": "Unequip all gear",
+  "ctx": "ch.err.equipped"
+ },
+ {
+  "key": "ui|ch.err.advancing",
+  "ko": "전직 중인 영웅",
+  "en": "That hero is advancing",
+  "ctx": "ch.err.advancing"
+ },
+ {
+  "key": "ui|ch.err.exploring",
+  "ko": "탐험 나간 영웅",
+  "en": "That hero is out exploring",
+  "ctx": "ch.err.exploring"
+ },
+ {
+  "key": "ui|ch.err.running",
+  "ko": "원정 철수",
+  "en": "Retreat from the expedition",
+  "ctx": "ch.err.running"
+ },
+ {
+  "key": "ui|ch.err.last",
+  "ko": "마지막 영웅은 해고할 수 없음",
+  "en": "Can't dismiss your last hero",
+  "ctx": "ch.err.last"
+ },
+ {
+  "key": "ui|ch.dismiss.confirm",
+  "ko": "영웅을 해고합니다.",
+  "en": "This hero will be dismissed.",
+  "ctx": "ch.dismiss.confirm"
+ },
+ {
+  "key": "ui|ch.dismissed",
+  "ko": "{name} 해고",
+  "en": "{name} dismissed",
+  "ctx": "ch.dismissed"
+ },
+ {
+  "key": "ui|ch.err.gold",
+  "ko": "골드 부족",
+  "en": "Not enough gold",
+  "ctx": "ch.err.gold"
+ },
+ {
+  "key": "ui|ch.upgraded",
+  "ko": "강화 +{n} · {g}G",
+  "en": "Upgraded to +{n} · {g}G",
+  "ctx": "ch.upgraded"
+ },
+ {
+  "key": "ui|ch.noTrees",
+  "ko": "마스터리는 실동작 · 전직 층은 미구현",
+  "en": "Mastery is live; the advancement layer is not built yet",
+  "ctx": "ch.noTrees"
+ },
+ {
+  "key": "ui|tv.hire",
+  "ko": "고용 ({g} 골드)",
+  "en": "Hire ({g} gold)",
+  "ctx": "tv.hire"
+ },
+ {
+  "key": "ui|tv.empty.kept",
+  "ko": "보관함 — 다음 교체 때 채워짐",
+  "en": "Kept — refills on next refresh",
+  "ctx": "tv.empty.kept"
+ },
+ {
+  "key": "ui|tv.reroll.wait",
+  "ko": "교체까지 {t}",
+  "en": "Refresh in {t}",
+  "ctx": "tv.reroll.wait"
+ },
+ {
+  "key": "ui|tv.reroll.free",
+  "ko": "후보 교체 (무료)",
+  "en": "New candidates (free)",
+  "ctx": "tv.reroll.free"
+ },
+ {
+  "key": "ui|tv.err.cooldown",
+  "ko": "후보 교체 대기 중",
+  "en": "Candidate refresh is on cooldown",
+  "ctx": "tv.err.cooldown"
+ },
+ {
+  "key": "ui|tv.empty",
+  "ko": "고용함 — 다음 교체 때 채워짐",
+  "en": "Hired — refills on next refresh",
+  "ctx": "tv.empty"
+ },
+ {
+  "key": "ui|tv.err.gold",
+  "ko": "골드 부족",
+  "en": "Not enough gold",
+  "ctx": "tv.err.gold"
+ },
+ {
+  "key": "ui|tv.err.roster",
+  "ko": "영웅 로스터 가득 참 ({cap})",
+  "en": "Hero roster full ({cap})",
+  "ctx": "tv.err.roster"
+ },
+ {
+  "key": "ui|tv.hired",
+  "ko": "{name} 고용",
+  "en": "Hired {name}",
+  "ctx": "tv.hired"
+ },
+ {
+  "key": "ui|tv.visit.h",
+  "ko": "수색",
+  "en": "Search",
+  "ctx": "tv.visit.h"
+ },
+ {
+  "key": "ui|tv.visit.full",
+  "ko": "칸이 다 참 — 돌려보내야 새로 옴",
+  "en": "Slots full — send someone away",
+  "ctx": "tv.visit.full"
+ },
+ {
+  "key": "ui|tv.visit.drop",
+  "ko": "돌려보내기",
+  "en": "Send away",
+  "ctx": "tv.visit.drop"
+ },
+ {
+  "key": "ui|tv.visit.dropped",
+  "ko": "{name} 을(를) 돌려보냄",
+  "en": "Sent {name} away",
+  "ctx": "tv.visit.dropped"
+ },
+ {
+  "key": "ui|tv.visit.found",
+  "ko": "찾았다! {name}",
+  "en": "Found {name}!",
+  "ctx": "tv.visit.found"
+ },
+ {
+  "key": "ui|tv.visit.ignore",
+  "ko": "무시",
+  "en": "Pass",
+  "ctx": "tv.visit.ignore"
+ },
+ {
+  "key": "ui|tv.visit.ignored",
+  "ko": "{name} 을(를) 두고 다시 수색",
+  "en": "Passed on {name} — searching again",
+  "ctx": "tv.visit.ignored"
+ },
+ {
+  "key": "ui|tv.visit.gone",
+  "ko": "이미 칸에 없음",
+  "en": "No longer here",
+  "ctx": "tv.visit.gone"
+ },
+ {
+  "key": "ui|tv.visit.src.visit",
+  "ko": "방문",
+  "en": "Visitor",
+  "ctx": "tv.visit.src.visit"
+ },
+ {
+  "key": "ui|tv.visit.src.caravan",
+  "ko": "마차",
+  "en": "Caravan",
+  "ctx": "tv.visit.src.caravan"
+ },
+ {
+  "key": "ui|tv.join.need",
+  "ko": "{b} {line} · {node} Lv.{n}",
+  "en": "{b} {line} · {node} Lv.{n}",
+  "ctx": "tv.join.need"
+ },
+ {
+  "key": "ui|tv.visit.src.tavern",
+  "ko": "보관",
+  "en": "Kept",
+  "ctx": "tv.visit.src.tavern"
+ },
+ {
+  "key": "ui|tv.visit.away.advance",
+  "ko": "도서관에서 전직하는 중...",
+  "en": "Advancing at the library...",
+  "ctx": "tv.visit.away.advance"
+ },
+ {
+  "key": "ui|tv.visit.reg.add",
+  "ko": "연구소에서 등록",
+  "en": "Assign in the Laboratory",
+  "ctx": "tv.visit.reg.add"
+ },
+ {
+  "key": "ui|time.hm",
+  "ko": "{h}시간 {m}분",
+  "en": "{h}h {m}m",
+  "ctx": "time.hm"
+ },
+ {
+  "key": "ui|time.m",
+  "ko": "{m}분",
+  "en": "{m}m",
+  "ctx": "time.m"
+ },
+ {
+  "key": "ui|time.s",
+  "ko": "{s}초",
+  "en": "{s}s",
+  "ctx": "time.s"
+ },
+ {
+  "key": "ui|time.ms",
+  "ko": "{m}분 {s}초",
+  "en": "{m}m {s}s",
+  "ctx": "time.ms"
+ },
+ {
+  "key": "ui|bt.won",
+  "ko": "승리",
+  "en": "Victory",
+  "ctx": "bt.won"
+ },
+ {
+  "key": "ui|bt.lost",
+  "ko": "패배",
+  "en": "Defeat",
+  "ctx": "bt.lost"
+ },
+ {
+  "key": "ui|bt.toReport",
+  "ko": "리포트 보기",
+  "en": "View report",
+  "ctx": "bt.toReport"
+ },
+ {
+  "key": "ui|bt.nextCell",
+  "ko": "{s}초 뒤 다음 칸 — {name}",
+  "en": "Next stage in {s}s — {name}",
+  "ctx": "bt.nextCell"
+ },
+ {
+  "key": "ui|bt.again",
+  "ko": "{s}초 뒤 다시 — {name}",
+  "en": "Again in {s}s — {name}",
+  "ctx": "bt.again"
+ },
+ {
+  "key": "ui|bt.backCell",
+  "ko": "{s}초 뒤 앞 칸으로 — {name}",
+  "en": "Back a stage in {s}s — {name}",
+  "ctx": "bt.backCell"
+ },
+ {
+  "key": "ui|bt.respawnWait",
+  "ko": "보스 재등장까지 {s}초 — {name}",
+  "en": "Boss returns in {s}s — {name}",
+  "ctx": "bt.respawnWait"
+ },
+ {
+  "key": "ui|bt.shrineGot",
+  "ko": "신단 획득",
+  "en": "Shrine blessing",
+  "ctx": "bt.shrineGot"
+ },
+ {
+  "key": "ui|bt.shrineKeep",
+  "ko": "신단 유지",
+  "en": "Shrine kept",
+  "ctx": "bt.shrineKeep"
+ },
+ {
+  "key": "ui|bt.skipWait",
+  "ko": "건너뛰기",
+  "en": "Skip",
+  "ctx": "bt.skipWait"
+ },
+ {
+  "key": "ui|bt.skipRetry",
+  "ko": "재도전",
+  "en": "Retry",
+  "ctx": "bt.skipRetry"
+ },
+ {
+  "key": "ui|rep.shrine",
+  "ko": "신단",
+  "en": "Shrine",
+  "ctx": "rep.shrine"
+ },
+ {
+  "key": "ui|rep.clearBox",
+  "ko": "클리어 보상",
+  "en": "Clear Reward",
+  "ctx": "rep.clearBox"
+ },
+ {
+  "key": "ui|rep.clearBoxBag",
+  "ko": "{box} · 인벤토리",
+  "en": "{box} · Inventory",
+  "ctx": "rep.clearBoxBag"
+ },
+ {
+  "key": "ui|rep.clearBoxMail",
+  "ko": "{box} · 우편함",
+  "en": "{box} · Mailbox",
+  "ctx": "rep.clearBoxMail"
+ },
+ {
+  "key": "ui|shrine.fx.atk_pct",
+  "ko": "데미지 +{v}%",
+  "en": "Damage +{v}%",
+  "ctx": "shrine.fx.atk_pct"
+ },
+ {
+  "key": "ui|shrine.fx.cooldown_reduction",
+  "ko": "쿨타임 감소 {v}%",
+  "en": "Cooldown Reduction {v}%",
+  "ctx": "shrine.fx.cooldown_reduction"
+ },
+ {
+  "key": "ui|shrine.fx.life_steal",
+  "ko": "흡혈 {v}%",
+  "en": "Life Steal {v}%",
+  "ctx": "shrine.fx.life_steal"
+ },
+ {
+  "key": "ui|shrine.fx.res_all",
+  "ko": "모든 원소 저항 +{v}%",
+  "en": "All Resistances +{v}%",
+  "ctx": "shrine.fx.res_all"
+ },
+ {
+  "key": "ui|shrine.fx.hp_pct",
+  "ko": "최대 HP +{v}%",
+  "en": "Max HP +{v}%",
+  "ctx": "shrine.fx.hp_pct"
+ },
+ {
+  "key": "ui|shrine.fx.xp_gain_pct",
+  "ko": "경험치 +{v}%",
+  "en": "Experience +{v}%",
+  "ctx": "shrine.fx.xp_gain_pct"
+ },
+ {
+  "key": "ui|shrine.fx.item_find",
+  "ko": "드랍률 +{v}%",
+  "en": "Item Find +{v}%",
+  "ctx": "shrine.fx.item_find"
+ },
+ {
+  "key": "ui|shrine.fx.gold_find",
+  "ko": "골드 획득 +{v}%",
+  "en": "Gold Find +{v}%",
+  "ctx": "shrine.fx.gold_find"
+ },
+ {
+  "key": "ui|log.end.win",
+  "ko": "스테이지 클리어 — 리포트로 정리",
+  "en": "Stage clear — see the report",
+  "ctx": "log.end.win"
+ },
+ {
+  "key": "ui|log.end.lose",
+  "ko": "원정 실패 — 귀환",
+  "en": "Expedition failed — returning",
+  "ctx": "log.end.lose"
+ },
+ {
+  "key": "ui|nav.expedition",
+  "ko": "원정",
+  "en": "Expedition",
+  "ctx": "nav.expedition"
+ },
+ {
+  "key": "ui|nav.explore",
+  "ko": "탐험",
+  "en": "Exploration",
+  "ctx": "nav.explore"
+ },
+ {
+  "key": "ui|nav.colosseum",
+  "ko": "시련의 탑",
+  "en": "Tower of Trials",
+  "ctx": "nav.colosseum"
+ },
+ {
+  "key": "ui|cs.progress",
+  "ko": "{n} / {total}층",
+  "en": "Floor {n} / {total}",
+  "ctx": "cs.progress"
+ },
+ {
+  "key": "ui|cs.progressDone",
+  "ko": "{total}층 완주",
+  "en": "All {total} floors cleared",
+  "ctx": "cs.progressDone"
+ },
+ {
+  "key": "ui|cs.lv",
+  "ko": "Lv.{a}~{b}",
+  "en": "Lv.{a}–{b}",
+  "ctx": "cs.lv"
+ },
+ {
+  "key": "ui|cs.lv1",
+  "ko": "Lv.{a}",
+  "en": "Lv.{a}",
+  "ctx": "cs.lv1"
+ },
+ {
+  "key": "ui|cs.from",
+  "ko": "{n}층 · {tier} · AI 팀",
+  "en": "Floor {n} · {tier} · AI team",
+  "ctx": "cs.from"
+ },
+ {
+  "key": "ui|cs.fromGate",
+  "ko": "{n}층 · {tier} 승급전 · AI 팀",
+  "en": "Floor {n} · {tier} promotion bout · AI team",
+  "ctx": "cs.fromGate"
+ },
+ {
+  "key": "ui|cs.fight",
+  "ko": "도전",
+  "en": "Challenge",
+  "ctx": "cs.fight"
+ },
+ {
+  "key": "ui|cs.back",
+  "ko": "시련의 탑으로",
+  "en": "Back to the Tower",
+  "ctx": "cs.back"
+ },
+ {
+  "key": "ui|cs.last",
+  "ko": "지난 도전: {result} · {sec}초",
+  "en": "Last challenge: {result} · {sec}s",
+  "ctx": "cs.last"
+ },
+ {
+  "key": "ui|cs.last.open",
+  "ko": "지난 도전: {result} · {sec}초 · {n}층 열림",
+  "en": "Last challenge: {result} · {sec}s · Floor {n} unlocked",
+  "ctx": "cs.last.open"
+ },
+ {
+  "key": "ui|cs.emblem",
+  "ko": "{tier} 휘장 획득",
+  "en": "{tier} emblem earned",
+  "ctx": "cs.emblem"
+ },
+ {
+  "key": "ui|cs.help",
+  "ko": "시련의 탑은 한 층씩 올라가는 탑입니다. 처음엔 첫 층만 열려 있고, 열린 가장 높은 층을 이기면 다음 층이 열립니다. 깬 층은 다시 도전할 수 있고, 져도 잃는 것이 없습니다.<br>층마다 상대 AI 팀이 정해져 있습니다 — 같은 층은 언제 가도 같은 팀입니다. 위층일수록 상대의 레벨 · 장비 · 강화 · 스킬이 오릅니다.<br>등급의 마지막 층은 승급전입니다. 이기면 그 등급의 휘장을 얻습니다.",
+  "en": "The Tower of Trials is climbed one floor at a time. Only the first floor is open at the start; beat the highest open floor to unlock the next. You can challenge cleared floors again, and losing costs nothing.<br>Each floor has a fixed AI team — the same floor always fields the same team. Higher floors bring higher level, gear, upgrades and skills.<br>The last floor of each tier is a promotion bout. Win it to earn that tier’s emblem.",
+  "ctx": "cs.help"
+ },
+ {
+  "key": "ui|nav.arena",
+  "ko": "결투장",
+  "en": "Arena",
+  "ctx": "nav.arena"
+ },
+ {
+  "key": "ui|ar.rating",
+  "ko": "레이팅",
+  "en": "Rating",
+  "ctx": "ar.rating"
+ },
+ {
+  "key": "ui|ar.peak",
+  "ko": "최고 {n}",
+  "en": "Best {n}",
+  "ctx": "ar.peak"
+ },
+ {
+  "key": "ui|ar.record",
+  "ko": "{w}승 {d}무 {l}패",
+  "en": "{w}W {d}D {l}L",
+  "ctx": "ar.record"
+ },
+ {
+  "key": "ui|ar.toNext",
+  "ko": "{tier}까지 {n}",
+  "en": "{n} to {tier}",
+  "ctx": "ar.toNext"
+ },
+ {
+  "key": "ui|ar.topLeague",
+  "ko": "최고 리그",
+  "en": "Top league",
+  "ctx": "ar.topLeague"
+ },
+ {
+  "key": "ui|ar.cands",
+  "ko": "상대 후보",
+  "en": "Opponents",
+  "ctx": "ar.cands"
+ },
+ {
+  "key": "ui|ar.fromGhost",
+  "ko": "{name} · {tier} · {rating}",
+  "en": "{name} · {tier} · {rating}",
+  "ctx": "ar.fromGhost"
+ },
+ {
+  "key": "ui|ar.noName",
+  "ko": "이름 없음",
+  "en": "No name",
+  "ctx": "ar.noName"
+ },
+ {
+  "key": "ui|ar.def",
+  "ko": "방어 편성",
+  "en": "Defense party",
+  "ctx": "ar.def"
+ },
+ {
+  "key": "ui|ar.def.need",
+  "ko": "3명을 채워야 올라감",
+  "en": "Needs 3 heroes to be listed",
+  "ctx": "ar.def.need"
+ },
+ {
+  "key": "ui|ar.def.local",
+  "ko": "배포판에서만 올라감",
+  "en": "Listed only on the live build",
+  "ctx": "ar.def.local"
+ },
+ {
+  "key": "ui|ar.def.up",
+  "ko": "상대 목록에 올라감",
+  "en": "Listed for other players",
+  "ctx": "ar.def.up"
+ },
+ {
+  "key": "ui|ar.log",
+  "ko": "방어 기록",
+  "en": "Defense log",
+  "ctx": "ar.log"
+ },
+ {
+  "key": "ui|ar.log.none",
+  "ko": "기록 없음",
+  "en": "No records",
+  "ctx": "ar.log.none"
+ },
+ {
+  "key": "ui|ar.log.win",
+  "ko": "방어 성공",
+  "en": "Defense won",
+  "ctx": "ar.log.win"
+ },
+ {
+  "key": "ui|ar.log.loss",
+  "ko": "방어 실패",
+  "en": "Defense lost",
+  "ctx": "ar.log.loss"
+ },
+ {
+  "key": "ui|ar.log.draw",
+  "ko": "무승부",
+  "en": "Draw",
+  "ctx": "ar.log.draw"
+ },
+ {
+  "key": "ui|ar.newCands",
+  "ko": "새 상대",
+  "en": "New opponents",
+  "ctx": "ar.newCands"
+ },
+ {
+  "key": "ui|ar.friendly",
+  "ko": "친선전",
+  "en": "Friendly",
+  "ctx": "ar.friendly"
+ },
+ {
+  "key": "ui|ar.unrated",
+  "ko": "레이팅 변동 없음",
+  "en": "Unrated",
+  "ctx": "ar.unrated"
+ },
+ {
+  "key": "ui|ar.fromFriend",
+  "ko": "친선전 · {name} · {rating}",
+  "en": "Friendly · {name} · {rating}",
+  "ctx": "ar.fromFriend"
+ },
+ {
+  "key": "ui|ar.reg.name",
+  "ko": "이름",
+  "en": "Name",
+  "ctx": "ar.reg.name"
+ },
+ {
+  "key": "ui|ar.reg.namePh",
+  "ko": "이름 입력",
+  "en": "Enter a name",
+  "ctx": "ar.reg.namePh"
+ },
+ {
+  "key": "ui|ar.reg.noParty",
+  "ko": "영웅 {n}명을 채운 편성이 필요합니다",
+  "en": "You need a party with {n} heroes",
+  "ctx": "ar.reg.noParty"
+ },
+ {
+  "key": "ui|ar.reg.go",
+  "ko": "등록",
+  "en": "Register",
+  "ctx": "ar.reg.go"
+ },
+ {
+  "key": "ui|ar.users",
+  "ko": "친구와 전투",
+  "en": "Fight a friend",
+  "ctx": "ar.users"
+ },
+ {
+  "key": "ui|ar.leagues",
+  "ko": "전체 리그",
+  "en": "Leagues",
+  "ctx": "ar.leagues"
+ },
+ {
+  "key": "ui|ar.cands.none",
+  "ko": "아직 상대가 없습니다",
+  "en": "No opponents yet",
+  "ctx": "ar.cands.none"
+ },
+ {
+  "key": "ui|ar.users.ph",
+  "ko": "이름 또는 #1234",
+  "en": "Name or #1234",
+  "ctx": "ar.users.ph"
+ },
+ {
+  "key": "ui|ar.users.find",
+  "ko": "찾기",
+  "en": "Search",
+  "ctx": "ar.users.find"
+ },
+ {
+  "key": "ui|ar.users.more",
+  "ko": "더 보기",
+  "en": "More",
+  "ctx": "ar.users.more"
+ },
+ {
+  "key": "ui|ar.users.loading",
+  "ko": "불러오는 중",
+  "en": "Loading",
+  "ctx": "ar.users.loading"
+ },
+ {
+  "key": "ui|ar.users.none",
+  "ko": "찾은 사람 없음",
+  "en": "No players found",
+  "ctx": "ar.users.none"
+ },
+ {
+  "key": "ui|ar.users.local",
+  "ko": "배포판에서만",
+  "en": "Live build only",
+  "ctx": "ar.users.local"
+ },
+ {
+  "key": "ui|ar.ratingFlash",
+  "ko": "레이팅 {after} ({delta})",
+  "en": "Rating {after} ({delta})",
+  "ctx": "ar.ratingFlash"
+ },
+ {
+  "key": "ui|ar.last.rated",
+  "ko": "지난 결투: {result} · 레이팅 {after} ({delta})",
+  "en": "Last duel: {result} · Rating {after} ({delta})",
+  "ctx": "ar.last.rated"
+ },
+ {
+  "key": "ui|ar.rules",
+  "ko": "결투 규칙",
+  "en": "Duel rules",
+  "ctx": "ar.rules"
+ },
+ {
+  "key": "ui|ar.help.rating",
+  "ko": "결투장은 레이팅으로 겨룹니다. 이기면 오르고 지면 내려가며, 센 상대를 이길수록 많이 오르고 센 상대에게 질수록 적게 내려갑니다. 레이팅이 문턱을 넘으면 리그가 오릅니다.<br>상대 후보는 내 레이팅의 아래 · 비슷 · 위에 고르게 나옵니다. 카드의 + / − 가 이기고 질 때 바뀔 레이팅입니다. 결투가 끝나면 후보가 새로 섭니다.<br>레이팅은 결투를 시작하는 순간 정해집니다 — 관전을 닫아도 결과는 그대로입니다. 상대는 방어 편성을 등록한 다른 플레이어입니다.",
+  "en": "The Arena is ranked by rating. Wins raise it and losses lower it; beating stronger opponents gains more, and losing to them costs less. Cross a threshold to move up a league.<br>Opponents are spread below, near and above your rating. The + / − on each card is how much your rating changes if you win or lose. New opponents appear after each duel.<br>Your rating is settled the moment the duel starts — closing the replay does not change the result. Opponents are defense parties registered by other players.",
+  "ctx": "ar.help.rating"
+ },
+ {
+  "key": "ui|ar.select",
+  "ko": "출전 인원 {n} / 3",
+  "en": "Team members {n} / 3",
+  "ctx": "ar.select"
+ },
+ {
+  "key": "ui|ar.edit",
+  "ko": "편성 수정",
+  "en": "Edit party",
+  "ctx": "ar.edit"
+ },
+ {
+  "key": "ui|ar.needTeam",
+  "ko": "영웅 {n}명 편성",
+  "en": "Assign {n} heroes",
+  "ctx": "ar.needTeam"
+ },
+ {
+  "key": "ui|ar.empty",
+  "ko": "빈 자리",
+  "en": "Empty slot",
+  "ctx": "ar.empty"
+ },
+ {
+  "key": "ui|ar.noOpponent",
+  "ko": "상대를 고르면 팀이 나타납니다",
+  "en": "Pick an opponent to reveal their team",
+  "ctx": "ar.noOpponent"
+ },
+ {
+  "key": "ui|ar.noTactic",
+  "ko": "열린 전술 칸 없음",
+  "en": "No tactic slots open",
+  "ctx": "ar.noTactic"
+ },
+ {
+  "key": "ui|ar.fight",
+  "ko": "결투 시작",
+  "en": "Start duel",
+  "ctx": "ar.fight"
+ },
+ {
+  "key": "ui|ar.back",
+  "ko": "결투장으로",
+  "en": "Back to Arena",
+  "ctx": "ar.back"
+ },
+ {
+  "key": "ui|ar.draw",
+  "ko": "무승부",
+  "en": "Draw",
+  "ctx": "ar.draw"
+ },
+ {
+  "key": "ui|ar.last",
+  "ko": "지난 결투: {result} · {sec}초",
+  "en": "Last duel: {result} · {sec}s",
+  "ctx": "ar.last"
+ },
+ {
+  "key": "ui|ar.help",
+  "ko": "저장된 편성을 고르면 그 편성의 영웅과 전열·후열이 그대로 출전합니다. 인원과 진형은 편성 탭에서 수정합니다. 영웅 3명을 채워야 결투를 시작할 수 있습니다.<br>개인 능력치·장비·스킬에 고른 편성의 파티 전술·물약을 더해 단판 전투를 합니다. 도감 보너스는 적용하지 않고, 상대도 자기 파티 전술·물약을 씁니다. 제한시간이 지나면 무승부입니다.<br>결투는 원정과 독립되어 보상·도감 처치·자원 소모가 없습니다. 마신 물약도 재고에서 줄지 않습니다. 결투장 레이팅과 시련의 탑에서 오른 층은 저장되고, 고른 상대와 지난 결과는 재접속하면 초기화됩니다.",
+  "en": "Choose a saved party to use its heroes and front or back ranks. Edit members and formation in the Party tab. Assign three heroes to start a duel.<br>A single round uses individual stats, gear and skills plus the chosen party’s tactics and potions. Codex bonuses do not apply, and opponents use their own tactics and potions. Reaching the time limit ends in a draw.<br>Duels run independently of expeditions, with no rewards, codex kills or resource costs. Potions drunk are not taken from your stock. Your Arena rating and Tower of Trials progress are saved; the picked opponent and last result reset when you reload.",
+  "ctx": "ar.help"
+ },
+ {
+  "key": "ui|nav.party",
+  "ko": "편성",
+  "en": "Party",
+  "ctx": "nav.party"
+ },
+ {
+  "key": "ui|nav.character",
+  "ko": "캐릭터",
+  "en": "Character",
+  "ctx": "nav.character"
+ },
+ {
+  "key": "ui|nav.research",
+  "ko": "건설",
+  "en": "Construction",
+  "ctx": "nav.research"
+ },
+ {
+  "key": "ui|nav.tavern",
+  "ko": "선술집",
+  "en": "Tavern",
+  "ctx": "nav.tavern"
+ },
+ {
+  "key": "ui|nav.shop",
+  "ko": "상점",
+  "en": "Shop",
+  "ctx": "nav.shop"
+ },
+ {
+  "key": "ui|nav.forge",
+  "ko": "대장간",
+  "en": "Blacksmith",
+  "ctx": "nav.forge"
+ },
+ {
+  "key": "ui|nav.library",
+  "ko": "도서관",
+  "en": "Library",
+  "ctx": "nav.library"
+ },
+ {
+  "key": "ui|nav.resource",
+  "ko": "연구소",
+  "en": "Laboratory",
+  "ctx": "nav.resource"
+ },
+ {
+  "key": "ui|nav.codex",
+  "ko": "도감",
+  "en": "Codex",
+  "ctx": "nav.codex"
+ },
+ {
+  "key": "ui|nav.help",
+  "ko": "도움말",
+  "en": "Help",
+  "ctx": "nav.help"
+ },
+ {
+  "key": "ui|nav.lab",
+  "ko": "실험실",
+  "en": "Lab",
+  "ctx": "nav.lab"
+ },
+ {
+  "key": "ui|nav.grp.battle",
+  "ko": "전투",
+  "en": "Combat",
+  "ctx": "nav.grp.battle"
+ },
+ {
+  "key": "ui|nav.grp.town",
+  "ko": "마을",
+  "en": "Town",
+  "ctx": "nav.grp.town"
+ },
+ {
+  "key": "ui|nav.grp.etc",
+  "ko": "기타",
+  "en": "Other",
+  "ctx": "nav.grp.etc"
+ },
+ {
+  "key": "ui|nav.pending",
+  "ko": "{b} 준비 중",
+  "en": "{b}: coming later",
+  "ctx": "nav.pending"
+ },
+ {
+  "key": "ui|nav.commission",
+  "ko": "의뢰",
+  "en": "Commissions",
+  "ctx": "nav.commission"
+ },
+ {
+  "key": "ui|nav.skill",
+  "ko": "스킬",
+  "en": "Skills",
+  "ctx": "nav.skill"
+ },
+ {
+  "key": "ui|nav.base",
+  "ko": "거점",
+  "en": "Base",
+  "ctx": "nav.base"
+ },
+ {
+  "key": "ui|res.gold",
+  "ko": "골드",
+  "en": "Gold",
+  "ctx": "res.gold"
+ },
+ {
+  "key": "ui|res.dust",
+  "ko": "분해 가루",
+  "en": "Dust",
+  "ctx": "res.dust"
+ },
+ {
+  "key": "ui|res.stigma",
+  "ko": "낙인",
+  "en": "Stigma",
+  "ctx": "res.stigma"
+ },
+ {
+  "key": "ui|ui.close",
+  "ko": "닫기",
+  "en": "Close",
+  "ctx": "ui.close"
+ },
+ {
+  "key": "ui|ui.expTime",
+  "ko": "원정 플레이 시간",
+  "en": "Expedition Playtime",
+  "ctx": "ui.expTime"
+ },
+ {
+  "key": "ui|ui.ok",
+  "ko": "확인",
+  "en": "OK",
+  "ctx": "ui.ok"
+ },
+ {
+  "key": "ui|ui.cancel",
+  "ko": "취소",
+  "en": "Cancel",
+  "ctx": "ui.cancel"
+ },
+ {
+  "key": "ui|set.h",
+  "ko": "설정",
+  "en": "Settings",
+  "ctx": "set.h"
+ },
+ {
+  "key": "ui|set.artStyle",
+  "ko": "아트 스타일",
+  "en": "Art Style",
+  "ctx": "set.artStyle"
+ },
+ {
+  "key": "ui|set.pane.game",
+  "ko": "게임",
+  "en": "Game",
+  "ctx": "set.pane.game"
+ },
+ {
+  "key": "ui|set.pane.screen",
+  "ko": "화면",
+  "en": "Display",
+  "ctx": "set.pane.screen"
+ },
+ {
+  "key": "ui|set.layout",
+  "ko": "화면 배치",
+  "en": "Screen layout",
+  "ctx": "set.layout"
+ },
+ {
+  "key": "ui|set.layout.auto",
+  "ko": "자동",
+  "en": "Auto",
+  "ctx": "set.layout.auto"
+ },
+ {
+  "key": "ui|set.layout.desktop",
+  "ko": "PC",
+  "en": "PC",
+  "ctx": "set.layout.desktop"
+ },
+ {
+  "key": "ui|set.layout.mobile",
+  "ko": "모바일",
+  "en": "Mobile",
+  "ctx": "set.layout.mobile"
+ },
+ {
+  "key": "ui|set.layout.preview",
+  "ko": "모바일 미리보기 · 390 × 844 · 세로 고정",
+  "en": "Mobile preview · 390 × 844 · Fixed portrait",
+  "ctx": "set.layout.preview"
+ },
+ {
+  "key": "ui|mobile.chapter",
+  "ko": "챕터",
+  "en": "Chapter",
+  "ctx": "mobile.chapter"
+ },
+ {
+  "key": "ui|mobile.party",
+  "ko": "부대",
+  "en": "Party",
+  "ctx": "mobile.party"
+ },
+ {
+  "key": "ui|mobile.selection",
+  "ko": "선택",
+  "en": "Selection",
+  "ctx": "mobile.selection"
+ },
+ {
+  "key": "ui|mobile.freeSlots",
+  "ko": "빈자리 {n}",
+  "en": "{n} free",
+  "ctx": "mobile.freeSlots"
+ },
+ {
+  "key": "ui|mobile.page.cards",
+  "ko": "전술 카드",
+  "en": "Cards",
+  "ctx": "mobile.page.cards"
+ },
+ {
+  "key": "ui|mobile.page.bonuses",
+  "ko": "추가 효과",
+  "en": "Bonuses",
+  "ctx": "mobile.page.bonuses"
+ },
+ {
+  "key": "ui|mobile.page.ranks",
+  "ko": "랭크 목록",
+  "en": "Ranks",
+  "ctx": "mobile.page.ranks"
+ },
+ {
+  "key": "ui|mobile.page.levels",
+  "ko": "레벨 목록",
+  "en": "Levels",
+  "ctx": "mobile.page.levels"
+ },
+ {
+  "key": "ui|mobile.page.researchAction",
+  "ko": "연구",
+  "en": "Research",
+  "ctx": "mobile.page.researchAction"
+ },
+ {
+  "key": "ui|mobile.page.production",
+  "ko": "생산 현황",
+  "en": "Production",
+  "ctx": "mobile.page.production"
+ },
+ {
+  "key": "ui|mobile.page.registration",
+  "ko": "영웅 등록",
+  "en": "Heroes",
+  "ctx": "mobile.page.registration"
+ },
+ {
+  "key": "ui|set.pane.fx",
+  "ko": "연출",
+  "en": "Effects",
+  "ctx": "set.pane.fx"
+ },
+ {
+  "key": "ui|set.skillFx",
+  "ko": "스킬 이펙트",
+  "en": "Skill Effects",
+  "ctx": "set.skillFx"
+ },
+ {
+  "key": "ui|set.fxArt",
+  "ko": "이펙트 그림체",
+  "en": "Effect Style",
+  "ctx": "set.fxArt"
+ },
+ {
+  "key": "ui|set.fxAlpha",
+  "ko": "이펙트 투명도(%)",
+  "en": "Transparency (%)",
+  "ctx": "set.fxAlpha"
+ },
+ {
+  "key": "ui|set.basicFx",
+  "ko": "기본 공격 이펙트",
+  "en": "Basic Attack Effects",
+  "ctx": "set.basicFx"
+ },
+ {
+  "key": "ui|set.hitFx",
+  "ko": "피격 반응",
+  "en": "Hit Reactions",
+  "ctx": "set.hitFx"
+ },
+ {
+  "key": "ui|set.shake",
+  "ko": "피격 시 흔들림",
+  "en": "Shake on Hit",
+  "ctx": "set.shake"
+ },
+ {
+  "key": "ui|set.lunge",
+  "ko": "공격 시 흔들림",
+  "en": "Shake on Attack",
+  "ctx": "set.lunge"
+ },
+ {
+  "key": "ui|set.on",
+  "ko": "On",
+  "en": "On",
+  "ctx": "set.on"
+ },
+ {
+  "key": "ui|set.off",
+  "ko": "Off",
+  "en": "Off",
+  "ctx": "set.off"
+ },
+ {
+  "key": "ui|set.log",
+  "ko": "로그",
+  "en": "Log",
+  "ctx": "set.log"
+ },
+ {
+  "key": "ui|set.logGrid",
+  "ko": "칸",
+  "en": "Grid",
+  "ctx": "set.logGrid"
+ },
+ {
+  "key": "ui|set.logText",
+  "ko": "문장",
+  "en": "Text",
+  "ctx": "set.logText"
+ },
+ {
+  "key": "ui|set.nick",
+  "ko": "닉네임",
+  "en": "Nickname",
+  "ctx": "set.nick"
+ },
+ {
+  "key": "ui|set.rclickSalvage",
+  "ko": "우클릭 분해",
+  "en": "Right-click Salvage",
+  "ctx": "set.rclickSalvage"
+ },
+ {
+  "key": "ui|dp.post.res",
+  "ko": "자원",
+  "en": "Resources",
+  "ctx": "dp.post.res"
+ },
+ {
+  "key": "ui|dp.post.trade",
+  "ko": "상단",
+  "en": "Trading House",
+  "ctx": "dp.post.trade"
+ },
+ {
+  "key": "ui|dp.post.forge",
+  "ko": "대장간",
+  "en": "Blacksmith",
+  "ctx": "dp.post.forge"
+ },
+ {
+  "key": "ui|dp.post.mine",
+  "ko": "채광",
+  "en": "Mining",
+  "ctx": "dp.post.mine"
+ },
+ {
+  "key": "ui|dp.post.gather",
+  "ko": "채집",
+  "en": "Gathering",
+  "ctx": "dp.post.gather"
+ },
+ {
+  "key": "ui|dp.post.log",
+  "ko": "벌목",
+  "en": "Logging",
+  "ctx": "dp.post.log"
+ },
+ {
+  "key": "ui|dp.post.visit",
+  "ko": "수색",
+  "en": "Search",
+  "ctx": "dp.post.visit"
+ },
+ {
+  "key": "ui|dp.post.train",
+  "ko": "훈련",
+  "en": "Training",
+  "ctx": "dp.post.train"
+ },
+ {
+  "key": "ui|dp.post.gamble",
+  "ko": "도박장",
+  "en": "Gambling Den",
+  "ctx": "dp.post.gamble"
+ },
+ {
+  "key": "ui|dp.post.lib",
+  "ko": "도서관",
+  "en": "Library",
+  "ctx": "dp.post.lib"
+ },
+ {
+  "key": "ui|tip.ring.cooldown",
+  "ko": "[{tag}] 쿨타임 {p} 감소",
+  "en": "[{tag}] Cooldown −{p}",
+  "ctx": "tip.ring.cooldown"
+ },
+ {
+  "key": "ui|tip.ring.damage",
+  "ko": "[{tag}] 스킬 데미지 +{p}",
+  "en": "[{tag}] Skill Damage +{p}",
+  "ctx": "tip.ring.damage"
+ },
+ {
+  "key": "ui|tip.ring.extra_hit",
+  "ko": "[{tag}] {p} 확률로 한 타 추가",
+  "en": "[{tag}] {p} chance of an extra hit",
+  "ctx": "tip.ring.extra_hit"
+ },
+ {
+  "key": "ui|tip.ring.duration",
+  "ko": "[{tag}] 지속시간 +{p}",
+  "en": "[{tag}] Duration +{p}",
+  "ctx": "tip.ring.duration"
+ },
+ {
+  "key": "ui|tip.ring.value",
+  "ko": "[{tag}] 효과 수치 +{p}",
+  "en": "[{tag}] Effect Strength +{p}",
+  "ctx": "tip.ring.value"
+ },
+ {
+  "key": "ui|tip.ring.heal",
+  "ko": "[{tag}] 회복량 +{p}",
+  "en": "[{tag}] Healing +{p}",
+  "ctx": "tip.ring.heal"
+ },
+ {
+  "key": "ui|dp.lib.empty",
+  "ko": "영웅을 등록하면 기본 스킬의 스킬북을 생산합니다",
+  "en": "Assign a hero to produce basic skill books",
+  "ctx": "dp.lib.empty"
+ },
+ {
+  "key": "ui|dp.node.mine",
+  "ko": "채광",
+  "en": "Mining",
+  "ctx": "dp.node.mine"
+ },
+ {
+  "key": "ui|dp.node.gather",
+  "ko": "채집",
+  "en": "Gathering",
+  "ctx": "dp.node.gather"
+ },
+ {
+  "key": "ui|dp.node.log",
+  "ko": "벌목",
+  "en": "Logging",
+  "ctx": "dp.node.log"
+ },
+ {
+  "key": "ui|dp.node.burst",
+  "ko": "대박",
+  "en": "Jackpot",
+  "ctx": "dp.node.burst"
+ },
+ {
+  "key": "ui|dp.node.interval",
+  "ko": "간격",
+  "en": "Interval",
+  "ctx": "dp.node.interval"
+ },
+ {
+  "key": "ui|dp.node.quality",
+  "ko": "품질",
+  "en": "Quality",
+  "ctx": "dp.node.quality"
+ },
+ {
+  "key": "ui|dp.node.waiting",
+  "ko": "대기 칸",
+  "en": "Waiting Slots",
+  "ctx": "dp.node.waiting"
+ },
+ {
+  "key": "ui|dp.node.roster",
+  "ko": "로스터",
+  "en": "Roster",
+  "ctx": "dp.node.roster"
+ },
+ {
+  "key": "ui|dp.node.speed",
+  "ko": "속도",
+  "en": "Speed",
+  "ctx": "dp.node.speed"
+ },
+ {
+  "key": "ui|dp.node.range",
+  "ko": "범위",
+  "en": "Range",
+  "ctx": "dp.node.range"
+ },
+ {
+  "key": "ui|dp.node.income",
+  "ko": "수익",
+  "en": "Income",
+  "ctx": "dp.node.income"
+ },
+ {
+  "key": "ui|dp.val.slots",
+  "ko": "+{n}칸",
+  "en": "+{n}",
+  "ctx": "dp.val.slots"
+ },
+ {
+  "key": "ui|dp.val.range",
+  "ko": "최고 −{n}",
+  "en": "Top −{n}",
+  "ctx": "dp.val.range"
+ },
+ {
+  "key": "ui|dp.res.go",
+  "ko": "연구",
+  "en": "Research",
+  "ctx": "dp.res.go"
+ },
+ {
+  "key": "ui|dp.res.cancel",
+  "ko": "그만두기",
+  "en": "Cancel",
+  "ctx": "dp.res.cancel"
+ },
+ {
+  "key": "ui|dp.res.time",
+  "ko": "{t} 걸림",
+  "en": "Takes {t}",
+  "ctx": "dp.res.time"
+ },
+ {
+  "key": "ui|dp.res.left",
+  "ko": "{t} 남음",
+  "en": "{t} left",
+  "ctx": "dp.res.left"
+ },
+ {
+  "key": "ui|dp.res.busy",
+  "ko": "연구 중 {name}",
+  "en": "Researching {name}",
+  "ctx": "dp.res.busy"
+ },
+ {
+  "key": "ui|dp.res.started",
+  "ko": "{name} 연구 시작",
+  "en": "Started {name}",
+  "ctx": "dp.res.started"
+ },
+ {
+  "key": "ui|dp.res.canceled",
+  "ko": "연구 취소 — 비용 반환",
+  "en": "Research canceled — cost refunded",
+  "ctx": "dp.res.canceled"
+ },
+ {
+  "key": "ui|dp.line.desc.res",
+  "ko": "철광석 · 약초 · 목재를 시간마다 생산합니다",
+  "en": "Produces ore, herbs and timber every hour",
+  "ctx": "dp.line.desc.res"
+ },
+ {
+  "key": "ui|dp.line.desc.visit",
+  "ko": "등록한 영웅이 시간마다 한 명씩 선술집에 데려옵니다",
+  "en": "Each assigned hero brings one hero to the tavern every few hours",
+  "ctx": "dp.line.desc.visit"
+ },
+ {
+  "key": "ui|dp.line.desc.train",
+  "ko": "등록한 영웅이 시간마다 경험치를 받습니다",
+  "en": "Assigned heroes gain XP every hour",
+  "ctx": "dp.line.desc.train"
+ },
+ {
+  "key": "ui|dp.line.desc.gamble",
+  "ko": "시간마다 골드를 법니다",
+  "en": "Earns gold every hour",
+  "ctx": "dp.line.desc.gamble"
+ },
+ {
+  "key": "ui|dp.line.desc.lib",
+  "ko": "등록한 영웅의 기본 스킬 스킬북을 생산합니다",
+  "en": "Produces skill books of assigned heroes’ basic skills",
+  "ctx": "dp.line.desc.lib"
+ },
+ {
+  "key": "ui|dp.out.h.res",
+  "ko": "시간당 생산",
+  "en": "Per Hour",
+  "ctx": "dp.out.h.res"
+ },
+ {
+  "key": "ui|dp.out.h.visit",
+  "ko": "영웅 도착",
+  "en": "Hero Arrivals",
+  "ctx": "dp.out.h.visit"
+ },
+ {
+  "key": "ui|dp.out.h.train",
+  "ko": "훈련 상한",
+  "en": "Training Cap",
+  "ctx": "dp.out.h.train"
+ },
+ {
+  "key": "ui|dp.out.h.gamble",
+  "ko": "시간당 생산",
+  "en": "Per Hour",
+  "ctx": "dp.out.h.gamble"
+ },
+ {
+  "key": "ui|dp.out.h.lib",
+  "ko": "영웅별 시간당 스킬북",
+  "en": "Books per Hero per Hour",
+  "ctx": "dp.out.h.lib"
+ },
+ {
+  "key": "ui|dp.out.hero",
+  "ko": "영웅",
+  "en": "Heroes",
+  "ctx": "dp.out.hero"
+ },
+ {
+  "key": "ui|dp.out.rare",
+  "ko": "레어 확률",
+  "en": "Rare chance",
+  "ctx": "dp.out.rare"
+ },
+ {
+  "key": "ui|dp.out.waiting",
+  "ko": "대기 칸",
+  "en": "Waiting slots",
+  "ctx": "dp.out.waiting"
+ },
+ {
+  "key": "ui|dp.out.cap",
+  "ko": "상한 레벨",
+  "en": "Level cap",
+  "ctx": "dp.out.cap"
+ },
+ {
+  "key": "ui|dp.out.gold",
+  "ko": "골드",
+  "en": "Gold",
+  "ctx": "dp.out.gold"
+ },
+ {
+  "key": "ui|dp.fx.h",
+  "ko": "등록 효과",
+  "en": "Hero Effects",
+  "ctx": "dp.fx.h"
+ },
+ {
+  "key": "ui|dp.fx.speed.res",
+  "ko": "생산량",
+  "en": "Output",
+  "ctx": "dp.fx.speed.res"
+ },
+ {
+  "key": "ui|dp.fx.speed.visit",
+  "ko": "도착 속도",
+  "en": "Arrival speed",
+  "ctx": "dp.fx.speed.visit"
+ },
+ {
+  "key": "ui|dp.fx.speed.train",
+  "ko": "경험치",
+  "en": "XP",
+  "ctx": "dp.fx.speed.train"
+ },
+ {
+  "key": "ui|dp.fx.speed.gamble",
+  "ko": "골드",
+  "en": "Gold",
+  "ctx": "dp.fx.speed.gamble"
+ },
+ {
+  "key": "ui|dp.fx.speed.lib",
+  "ko": "스킬북 생산 속도",
+  "en": "Book production speed",
+  "ctx": "dp.fx.speed.lib"
+ },
+ {
+  "key": "ui|dp.fx.burst",
+  "ko": "대박 확률",
+  "en": "Jackpot chance",
+  "ctx": "dp.fx.burst"
+ },
+ {
+  "key": "ui|dp.fx.quality",
+  "ko": "레어 확률",
+  "en": "Rare chance",
+  "ctx": "dp.fx.quality"
+ },
+ {
+  "key": "ui|dp.fx.research",
+  "ko": "연구 속도",
+  "en": "Research speed",
+  "ctx": "dp.fx.research"
+ },
+ {
+  "key": "ui|dp.fx.cost",
+  "ko": "연구 비용",
+  "en": "Research cost",
+  "ctx": "dp.fx.cost"
+ },
+ {
+  "key": "ui|dp.fx.heads",
+  "ko": "인원",
+  "en": "Heroes",
+  "ctx": "dp.fx.heads"
+ },
+ {
+  "key": "ui|dp.fx.headsN",
+  "ko": "{n}명",
+  "en": "{n} registered",
+  "ctx": "dp.fx.headsN"
+ },
+ {
+  "key": "ui|dp.help",
+  "ko": "줄은 <b>영웅이 없어도</b> 시간마다 생산합니다 — 게임을 꺼 둔 동안에도(최대 {h}시간 · 수색은 칸이 찰 때까지)<br>지점을 골라 <b>연구</b>하면 레벨이 오릅니다 — 시간이 걸리고 연구소 전체에 <b>한 번에 하나</b> · 그만두면 비용을 전부 돌려받습니다 · 연구소 랭크가 새 지점을 엽니다<br>영웅을 줄에 <b>등록</b>하면 자원 · 도박장은 <b>한 명마다 기본 한 몫</b>이 더해지고(1명 2배 · 2명 3배 · 3명 4배) 수색은 <b>영웅마다 시계가 하나씩</b> 더 돌며, 능력치가 덤을 줍니다 — 힘 속도 · 운 대박 · 지능 연구 시간 · 매력 품질 · 건강 숙련(오래 등록할수록) · 통솔 같은 줄 동료 · 민첩 연구 비용. 등록은 원정 · 탐험과 겸합니다<br><b>훈련</b> 줄은 등록한 영웅이 경험치를 받습니다(로스터 최고 레벨까지) · <b>도박장</b> 줄은 선술집의 도박장이 열리면 같이 열립니다",
+  "en": "Lines produce over time <b>without heroes</b> — even while the game is closed (up to {h}h · Search until the slots fill)<br>Pick a node and <b>Research</b> it to raise its level — it takes time and the Laboratory runs <b>one at a time</b> · cancelling refunds the full cost · Laboratory rank opens new nodes<br>Each hero <b>assigned</b> to Resources or the Gambling Den adds <b>one more share of the base</b> (1 hero ×2 · 2 ×3 · 3 ×4), each hero on Search runs <b>a clock of their own</b>, and stats add a bonus on top — Strength speed · Luck jackpot · Intelligence research time · Charisma quality · Vitality mastery (the longer assigned) · Leadership peers on the line · Agility research cost. Assignment does not stop expeditions or exploring<br>The <b>Training</b> line gives XP to its assigned heroes (up to the roster's top level) · the <b>Gambling Den</b> line opens along with the Tavern's Gambling Den",
+  "ctx": "dp.help"
+ },
+ {
+  "key": "ui|dp.solo",
+  "ko": "1인",
+  "en": "Solo",
+  "ctx": "dp.solo"
+ },
+ {
+  "key": "ui|ex.go",
+  "ko": "출발",
+  "en": "Set out",
+  "ctx": "ex.go"
+ },
+ {
+  "key": "ui|ex.left",
+  "ko": "남은 시간 {t}",
+  "en": "{t} left",
+  "ctx": "ex.left"
+ },
+ {
+  "key": "ui|ex.take",
+  "ko": "수령",
+  "en": "Collect",
+  "ctx": "ex.take"
+ },
+ {
+  "key": "ui|ex.cancel",
+  "ko": "불러들이기",
+  "en": "Call back",
+  "ctx": "ex.cancel"
+ },
+ {
+  "key": "ui|ex.cancelConfirm",
+  "ko": "정말 불러들일까요? 한 번 더 누르면 불러들입니다",
+  "en": "Really? Click again to call back",
+  "ctx": "ex.cancelConfirm"
+ },
+ {
+  "key": "ui|ex.sent",
+  "ko": "{spot} 탐험 출발",
+  "en": "Off to the {spot}",
+  "ctx": "ex.sent"
+ },
+ {
+  "key": "ui|ex.taken",
+  "ko": "장비 {n}개 수령",
+  "en": "Collected {n} gear",
+  "ctx": "ex.taken"
+ },
+ {
+  "key": "ui|ex.takenBooks",
+  "ko": "장비 {n}개 · 스킬북 {b}권 수령",
+  "en": "Collected gear {n} · skill books {b}",
+  "ctx": "ex.takenBooks"
+ },
+ {
+  "key": "ui|ex.canceled",
+  "ko": "탐험 불러들임",
+  "en": "Exploration called back",
+  "ctx": "ex.canceled"
+ },
+ {
+  "key": "ui|ex.err.missing",
+  "ko": "없는 지점",
+  "en": "No such spot",
+  "ctx": "ex.err.missing"
+ },
+ {
+  "key": "ui|ex.err.pending",
+  "ko": "준비 중",
+  "en": "Coming later",
+  "ctx": "ex.err.pending"
+ },
+ {
+  "key": "ui|ex.err.busy",
+  "ko": "이미 탐험 중인 지점",
+  "en": "Someone is already out there",
+  "ctx": "ex.err.busy"
+ },
+ {
+  "key": "ui|ex.err.slots",
+  "ko": "동시 탐험은 {n}건까지",
+  "en": "Up to {n} exploration(s) at a time",
+  "ctx": "ex.err.slots"
+ },
+ {
+  "key": "ui|ex.err.noParty",
+  "ko": "빈 편성",
+  "en": "That party is empty",
+  "ctx": "ex.err.noParty"
+ },
+ {
+  "key": "ui|ex.err.running",
+  "ko": "원정 철수",
+  "en": "Retreat from the expedition",
+  "ctx": "ex.err.running"
+ },
+ {
+  "key": "ui|ex.err.exploring",
+  "ko": "이미 탐험 중",
+  "en": "Already out exploring",
+  "ctx": "ex.err.exploring"
+ },
+ {
+  "key": "ui|ex.err.advancing",
+  "ko": "전직 중인 영웅 있음",
+  "en": "Someone in it is advancing",
+  "ctx": "ex.err.advancing"
+ },
+ {
+  "key": "ui|ex.err.none",
+  "ko": "나간 탐험 없음",
+  "en": "Nobody is out there",
+  "ctx": "ex.err.none"
+ },
+ {
+  "key": "ui|ex.err.notDone",
+  "ko": "아직 안 돌아옴",
+  "en": "Not back yet",
+  "ctx": "ex.err.notDone"
+ },
+ {
+  "key": "ui|ex.err.bagFull",
+  "ko": "인벤토리 {n}칸 비우기",
+  "en": "Free {n} inventory slots",
+  "ctx": "ex.err.bagFull",
+  "en_one": "Free {n} inventory slot"
+ },
+ {
+  "key": "ui|dp.party",
+  "ko": "파티",
+  "en": "Party",
+  "ctx": "dp.party"
+ },
+ {
+  "key": "ui|td.reroll.free",
+  "ko": "교체 (무료)",
+  "en": "Refresh (free)",
+  "ctx": "td.reroll.free"
+ },
+ {
+  "key": "ui|td.err.cooldown",
+  "ko": "목록 교체 대기 중",
+  "en": "Stock refresh is on cooldown",
+  "ctx": "td.err.cooldown"
+ },
+ {
+  "key": "ui|td.reroll.who",
+  "ko": "{name} Lv {lv} 적용",
+  "en": "For {name} Lv {lv}",
+  "ctx": "td.reroll.who"
+ },
+ {
+  "key": "ui|td.reroll.help",
+  "ko": "교체하면 고른 영웅 레벨에 맞춰 다시 들어옵니다. 교체는 무료이며 {h}시간마다 가능합니다.",
+  "en": "A refresh restocks at the selected hero's level. Refreshing is free and available every {h} hours.",
+  "ctx": "td.reroll.help"
+ },
+ {
+  "key": "ui|td.special",
+  "ko": "특수상단",
+  "en": "Visiting trader",
+  "ctx": "td.special"
+ },
+ {
+  "key": "ui|td.trade",
+  "ko": "교역소",
+  "en": "Trading Post",
+  "ctx": "td.trade"
+ },
+ {
+  "key": "ui|td.trade.cost",
+  "ko": "필요 {cost} · 보유 {have}",
+  "en": "Cost {cost} · Owned {have}",
+  "ctx": "td.trade.cost"
+ },
+ {
+  "key": "ui|td.trade.buy",
+  "ko": "{pay}(으)로 {name} 구매",
+  "en": "Buy {name} with {pay}",
+  "ctx": "td.trade.buy"
+ },
+ {
+  "key": "ui|td.trade.bought",
+  "ko": "{name} ×{n} 구매 (−{pay} ×{cost})",
+  "en": "Bought {name} ×{n} (−{pay} ×{cost})",
+  "ctx": "td.trade.bought"
+ },
+ {
+  "key": "ui|td.trade.boughtGold",
+  "ko": "{name} ×{n} 구매 (−{cost} G)",
+  "en": "Bought {name} ×{n} (−{cost} G)",
+  "ctx": "td.trade.boughtGold"
+ },
+ {
+  "key": "ui|td.trade.err.materials",
+  "ko": "지불할 재료 부족",
+  "en": "Not enough payment materials",
+  "ctx": "td.trade.err.materials"
+ },
+ {
+  "key": "ui|td.trade.err.gold",
+  "ko": "골드 부족",
+  "en": "Not enough gold",
+  "ctx": "td.trade.err.gold"
+ },
+ {
+  "key": "ui|td.trade.err.missing",
+  "ko": "교환할 재료를 다시 선택하세요.",
+  "en": "Select the trading materials again.",
+  "ctx": "td.trade.err.missing"
+ },
+ {
+  "key": "ui|td.trade.deal",
+  "ko": "특가",
+  "en": "Deal",
+  "ctx": "td.trade.deal"
+ },
+ {
+  "key": "ui|td.trade.next",
+  "ko": "다음",
+  "en": "Next",
+  "ctx": "td.trade.next"
+ },
+ {
+  "key": "ui|td.leave",
+  "ko": "떠나기까지 {t}",
+  "en": "Leaves in {t}",
+  "ctx": "td.leave"
+ },
+ {
+  "key": "ui|td.next",
+  "ko": "다음 상인까지 {t}",
+  "en": "Next trader in {t}",
+  "ctx": "td.next"
+ },
+ {
+  "key": "ui|td.buy",
+  "ko": "구매",
+  "en": "Buy",
+  "ctx": "td.buy"
+ },
+ {
+  "key": "ui|td.sell",
+  "ko": "판매",
+  "en": "Sell",
+  "ctx": "td.sell"
+ },
+ {
+  "key": "ui|td.sell.add",
+  "ko": "판매 목록에 추가",
+  "en": "Add to sale",
+  "ctx": "td.sell.add"
+ },
+ {
+  "key": "ui|td.sell.remove",
+  "ko": "판매 목록에서 제외",
+  "en": "Remove from sale",
+  "ctx": "td.sell.remove"
+ },
+ {
+  "key": "ui|td.sell.clear",
+  "ko": "선택 해제",
+  "en": "Clear selection",
+  "ctx": "td.sell.clear"
+ },
+ {
+  "key": "ui|td.sell.empty",
+  "ko": "판매할 장비를 선택하세요.",
+  "en": "Select equipment to sell.",
+  "ctx": "td.sell.empty"
+ },
+ {
+  "key": "ui|td.sell.count",
+  "ko": "선택 {n}개",
+  "en": "{n} selected",
+  "ctx": "td.sell.count"
+ },
+ {
+  "key": "ui|td.sell.done",
+  "ko": "장비 {n}개 판매 (+{g} G)",
+  "en": "Sold {n} items (+{g} G)",
+  "ctx": "td.sell.done"
+ },
+ {
+  "key": "ui|td.sell.err.missing",
+  "ko": "판매할 장비를 다시 선택하세요.",
+  "en": "Select the equipment to sell again.",
+  "ctx": "td.sell.err.missing"
+ },
+ {
+  "key": "ui|td.sell.err.locked",
+  "ko": "잠긴 장비는 판매할 수 없습니다.",
+  "en": "Locked equipment cannot be sold.",
+  "ctx": "td.sell.err.locked"
+ },
+ {
+  "key": "ui|td.sell.err.sealed",
+  "ko": "미개봉 상자는 판매할 수 없습니다.",
+  "en": "Unopened boxes cannot be sold.",
+  "ctx": "td.sell.err.sealed"
+ },
+ {
+  "key": "ui|td.sell.err.rarity",
+  "ko": "판매 가격이 없는 장비입니다.",
+  "en": "This equipment has no sale price.",
+  "ctx": "td.sell.err.rarity"
+ },
+ {
+  "key": "ui|hint.shop_sell",
+  "ko": "아래 인벤토리·창고의 장비를 눌러 판매 목록에 올립니다. 판매가는 같은 레벨·등급 상점가의 1/3이며 소수점은 버립니다. [판매]를 누르기 전에는 장비가 사라지지 않습니다.",
+  "en": "Click equipment in the inventory or stash below to add it to the sale. Its sale price is one third of the shop price for its level and rarity, rounded down. Equipment stays in storage until you press Sell.",
+  "ctx": "hint.shop_sell"
+ },
+ {
+  "key": "ui|td.sold",
+  "ko": "팔림",
+  "en": "Sold",
+  "ctx": "td.sold"
+ },
+ {
+  "key": "ui|td.bought",
+  "ko": "{name} 구매 (−{g} G)",
+  "en": "Bought {name} (−{g} G)",
+  "ctx": "td.bought"
+ },
+ {
+  "key": "ui|td.boughtN",
+  "ko": "{name} ×{n} 구매 (−{g} G)",
+  "en": "Bought {name} ×{n} (−{g} G)",
+  "ctx": "td.boughtN"
+ },
+ {
+  "key": "ui|td.err.gold",
+  "ko": "골드 부족",
+  "en": "Not enough gold",
+  "ctx": "td.err.gold"
+ },
+ {
+  "key": "ui|td.err.bagFull",
+  "ko": "인벤토리 가득 참",
+  "en": "Inventory is full",
+  "ctx": "td.err.bagFull"
+ },
+ {
+  "key": "ui|td.err.sold",
+  "ko": "이미 팔린 물건",
+  "en": "Already sold",
+  "ctx": "td.err.sold"
+ },
+ {
+  "key": "ui|td.err.stale",
+  "ko": "목록이 바뀜",
+  "en": "The stock has changed",
+  "ctx": "td.err.stale"
+ },
+ {
+  "key": "ui|cm.accept",
+  "ko": "수락",
+  "en": "Accept",
+  "ctx": "cm.accept"
+ },
+ {
+  "key": "ui|cm.claim",
+  "ko": "수령",
+  "en": "Claim",
+  "ctx": "cm.claim"
+ },
+ {
+  "key": "ui|cm.drop",
+  "ko": "포기",
+  "en": "Abandon",
+  "ctx": "cm.drop"
+ },
+ {
+  "key": "ui|cm.dropConfirm",
+  "ko": "정말 포기",
+  "en": "Confirm abandon",
+  "ctx": "cm.dropConfirm"
+ },
+ {
+  "key": "ui|cm.slots",
+  "ko": "받음 {n} / {max}",
+  "en": "Taken {n} / {max}",
+  "ctx": "cm.slots"
+ },
+ {
+  "key": "ui|cm.fameLv",
+  "ko": "명성 Lv {lv}",
+  "en": "Fame Lv {lv}",
+  "ctx": "cm.fameLv"
+ },
+ {
+  "key": "ui|cm.fameMax",
+  "ko": "최고",
+  "en": "Max",
+  "ctx": "cm.fameMax"
+ },
+ {
+  "key": "ui|cm.goal.kill.any",
+  "ko": "몬스터 {n}마리 처치",
+  "en": "Slay {n} monsters",
+  "ctx": "cm.goal.kill.any",
+  "en_one": "Slay {n} monster"
+ },
+ {
+  "key": "ui|cm.goal.kill.chapter",
+  "ko": "{t}에서 몬스터 {n}마리 처치",
+  "en": "Slay {n} monsters in the {t}",
+  "ctx": "cm.goal.kill.chapter",
+  "en_one": "Slay {n} monster in the {t}"
+ },
+ {
+  "key": "ui|cm.goal.kill.race",
+  "ko": "{t} 종족 {n}마리 처치",
+  "en": "Slay {n} {t} foes",
+  "ctx": "cm.goal.kill.race",
+  "en_one": "Slay {n} {t} foe"
+ },
+ {
+  "key": "ui|cm.goal.kill.place",
+  "ko": "{t}에서 몬스터 {n}마리 처치",
+  "en": "Slay {n} monsters at {t}",
+  "ctx": "cm.goal.kill.place",
+  "en_one": "Slay {n} monster at {t}"
+ },
+ {
+  "key": "ui|cm.goal.kill.monster",
+  "ko": "{t} {n}마리 처치",
+  "en": "Slay {t} ×{n}",
+  "ctx": "cm.goal.kill.monster"
+ },
+ {
+  "key": "ui|cm.goal.kill.grade.elite",
+  "ko": "정예 몬스터 {n}마리 처치",
+  "en": "Slay {n} elite monsters",
+  "ctx": "cm.goal.kill.grade.elite",
+  "en_one": "Slay {n} elite monster"
+ },
+ {
+  "key": "ui|cm.goal.kill.grade.boss",
+  "ko": "보스 {n}마리 처치",
+  "en": "Slay {n} bosses",
+  "ctx": "cm.goal.kill.grade.boss",
+  "en_one": "Slay {n} boss"
+ },
+ {
+  "key": "ui|cm.goal.elite.any",
+  "ko": "정예 몬스터 {n}마리 처치",
+  "en": "Slay {n} elite monsters",
+  "ctx": "cm.goal.elite.any",
+  "en_one": "Slay {n} elite monster"
+ },
+ {
+  "key": "ui|cm.goal.elite.chapter",
+  "ko": "{t}에서 정예 몬스터 {n}마리 처치",
+  "en": "Slay {n} elite monsters in the {t}",
+  "ctx": "cm.goal.elite.chapter",
+  "en_one": "Slay {n} elite monster in the {t}"
+ },
+ {
+  "key": "ui|cm.goal.elite.place",
+  "ko": "{t}에서 정예 몬스터 {n}마리 처치",
+  "en": "Slay {n} elite monsters at {t}",
+  "ctx": "cm.goal.elite.place",
+  "en_one": "Slay {n} elite monster at {t}"
+ },
+ {
+  "key": "ui|cm.goal.boss.any",
+  "ko": "보스 {n}마리 처치",
+  "en": "Slay {n} bosses",
+  "ctx": "cm.goal.boss.any",
+  "en_one": "Slay {n} boss"
+ },
+ {
+  "key": "ui|cm.goal.book.any",
+  "ko": "스킬북 {n}권 읽기",
+  "en": "Read {n} skill books",
+  "ctx": "cm.goal.book.any",
+  "en_one": "Read {n} skill book"
+ },
+ {
+  "key": "ui|cm.goal.hire.any",
+  "ko": "영웅 {n}명 고용",
+  "en": "Hire {n} heroes",
+  "ctx": "cm.goal.hire.any",
+  "en_one": "Hire {n} hero"
+ },
+ {
+  "key": "ui|cm.goal.salvage.any",
+  "ko": "장비 {n}개 분해",
+  "en": "Salvage {n} items",
+  "ctx": "cm.goal.salvage.any",
+  "en_one": "Salvage {n} item"
+ },
+ {
+  "key": "ui|cm.goal.salvage.part",
+  "ko": "{t} {n}개 분해",
+  "en": "Salvage {t} ×{n}",
+  "ctx": "cm.goal.salvage.part"
+ },
+ {
+  "key": "ui|cm.goal.salvage.rarity_min",
+  "ko": "{t} 이상 장비 {n}개 분해",
+  "en": "Salvage {n} {t}+ items",
+  "ctx": "cm.goal.salvage.rarity_min",
+  "en_one": "Salvage {n} {t}+ item"
+ },
+ {
+  "key": "ui|cm.goal.material.any",
+  "ko": "재료 {n}개 획득",
+  "en": "Gather {n} materials",
+  "ctx": "cm.goal.material.any",
+  "en_one": "Gather {n} material"
+ },
+ {
+  "key": "ui|cm.goal.material.mat",
+  "ko": "{t} {n}개 획득",
+  "en": "Gather {t} ×{n}",
+  "ctx": "cm.goal.material.mat"
+ },
+ {
+  "key": "ui|cm.goal.upgrade.any",
+  "ko": "장비 강화 {n}회",
+  "en": "Enhance gear {n} times",
+  "ctx": "cm.goal.upgrade.any",
+  "en_one": "Enhance gear {n} time"
+ },
+ {
+  "key": "ui|cm.goal.upgrade.up_min",
+  "ko": "+{t} 이상 강화 {n}회",
+  "en": "Enhance to +{t} or higher {n} times",
+  "ctx": "cm.goal.upgrade.up_min",
+  "en_one": "Enhance to +{t} or higher {n} time"
+ },
+ {
+  "key": "ui|cm.goal.craft.any",
+  "ko": "장비 {n}개 제작",
+  "en": "Craft {n} items",
+  "ctx": "cm.goal.craft.any",
+  "en_one": "Craft {n} item"
+ },
+ {
+  "key": "ui|cm.goal.collect.rarity",
+  "ko": "{t} 장비 {n}개 획득",
+  "en": "Collect {n} {t} items",
+  "ctx": "cm.goal.collect.rarity",
+  "en_one": "Collect {n} {t} item"
+ },
+ {
+  "key": "ui|cm.goal.collect.rarity_min",
+  "ko": "{t} 이상 장비 {n}개 획득",
+  "en": "Collect {n} {t}+ items",
+  "ctx": "cm.goal.collect.rarity_min",
+  "en_one": "Collect {n} {t}+ item"
+ },
+ {
+  "key": "ui|cm.part.weapon",
+  "ko": "무기",
+  "en": "Weapon",
+  "ctx": "cm.part.weapon"
+ },
+ {
+  "key": "ui|cm.part.armor",
+  "ko": "방어구",
+  "en": "Armor",
+  "ctx": "cm.part.armor"
+ },
+ {
+  "key": "ui|cm.part.accessory",
+  "ko": "장신구",
+  "en": "Accessory",
+  "ctx": "cm.part.accessory"
+ },
+ {
+  "key": "ui|cm.taken",
+  "ko": "의뢰 수락 — {goal}",
+  "en": "Commission taken — {goal}",
+  "ctx": "cm.taken"
+ },
+ {
+  "key": "ui|cm.claimed",
+  "ko": "의뢰 완료 — {g} G",
+  "en": "Commission complete — {g} G",
+  "ctx": "cm.claimed"
+ },
+ {
+  "key": "ui|cm.claimedUp",
+  "ko": "의뢰 완료 — {g} G · 명성 Lv {lv}",
+  "en": "Commission complete — {g} G · Fame Lv {lv}",
+  "ctx": "cm.claimedUp"
+ },
+ {
+  "key": "ui|cm.dropped",
+  "ko": "의뢰 포기",
+  "en": "Commission abandoned",
+  "ctx": "cm.dropped"
+ },
+ {
+  "key": "ui|cm.err.full",
+  "ko": "의뢰는 {n}개까지 받아 둘 수 있음",
+  "en": "You can hold up to {n} commissions",
+  "ctx": "cm.err.full",
+  "en_one": "You can hold up to {n} commission"
+ },
+ {
+  "key": "ui|cm.err.notDone",
+  "ko": "목표 달성",
+  "en": "Meet the goal",
+  "ctx": "cm.err.notDone"
+ },
+ {
+  "key": "ui|gb.h",
+  "ko": "도박장",
+  "en": "Gambling Den",
+  "ctx": "gb.h"
+ },
+ {
+  "key": "ui|gb.enter",
+  "ko": "입장",
+  "en": "Enter",
+  "ctx": "gb.enter"
+ },
+ {
+  "key": "ui|gb.from",
+  "ko": "한 판 {g} G부터",
+  "en": "From {g} G a spin",
+  "ctx": "gb.from"
+ },
+ {
+  "key": "ui|gb.stake",
+  "ko": "판돈",
+  "en": "Stake",
+  "ctx": "gb.stake"
+ },
+ {
+  "key": "ui|gb.spin",
+  "ko": "스핀 · {g} G",
+  "en": "Spin · {g} G",
+  "ctx": "gb.spin"
+ },
+ {
+  "key": "ui|gb.spinN",
+  "ko": "{n}판 돌리기",
+  "en": "Spin ×{n}",
+  "ctx": "gb.spinN"
+ },
+ {
+  "key": "ui|gb.won",
+  "ko": "받음",
+  "en": "Won",
+  "ctx": "gb.won"
+ },
+ {
+  "key": "ui|gb.net",
+  "ko": "순손익",
+  "en": "Net",
+  "ctx": "gb.net"
+ },
+ {
+  "key": "ui|gb.spins",
+  "ko": "{n}판",
+  "en": "{n} spins",
+  "ctx": "gb.spins",
+  "en_one": "{n} spin"
+ },
+ {
+  "key": "ui|gb.line",
+  "ko": "라인 {n}",
+  "en": "Line {n}",
+  "ctx": "gb.line"
+ },
+ {
+  "key": "ui|gb.hold",
+  "ko": "홀드 앤 스핀",
+  "en": "Hold & Spin",
+  "ctx": "gb.hold"
+ },
+ {
+  "key": "ui|gb.respins",
+  "ko": "리스핀 {n}",
+  "en": "Respins {n}",
+  "ctx": "gb.respins"
+ },
+ {
+  "key": "ui|gb.jpN",
+  "ko": "{name} ×{n}",
+  "en": "{name} ×{n}",
+  "ctx": "gb.jpN"
+ },
+ {
+  "key": "ui|gb.spinOf",
+  "ko": "{k} / {n}판",
+  "en": "Spin {k} / {n}",
+  "ctx": "gb.spinOf"
+ },
+ {
+  "key": "ui|gb.skip",
+  "ko": "건너뛰기",
+  "en": "Skip",
+  "ctx": "gb.skip"
+ },
+ {
+  "key": "ui|gb.pay.h",
+  "ko": "배당표",
+  "en": "Paytable",
+  "ctx": "gb.pay.h"
+ },
+ {
+  "key": "ui|gb.pay.hold",
+  "ko": "코인 {n}개 이상 → 홀드 앤 스핀",
+  "en": "{n}+ coins → Hold & Spin",
+  "ctx": "gb.pay.hold"
+ },
+ {
+  "key": "ui|gb.pay.fill",
+  "ko": "판이 다 차면",
+  "en": "Full board",
+  "ctx": "gb.pay.fill"
+ },
+ {
+  "key": "ui|gb.err.gold",
+  "ko": "판돈 부족 ({g} G)",
+  "en": "Not enough gold for the stake ({g} G)",
+  "ctx": "gb.err.gold"
+ },
+ {
+  "key": "ui|gb.help",
+  "ko": "선술집이 엽니다. 횟수 제한은 없습니다 — 판돈만 있으면 돕니다. {n}판 돌리기는 한 번에 {n}판을 돌리고, 도중에 판돈이 떨어지면 거기서 멈춥니다<br>판돈을 걸고 돌리면 가로 · 대각 {lines}라인에서 같은 심볼 셋이 골드나 재료를 줍니다. 와일드가 다른 심볼 대신 섭니다 · 코인은 라인을 끊습니다<br>코인이 {trig}개 이상 서면 홀드 앤 스핀 — 코인은 제자리에 붙고, 새 코인이 설 때마다 리스핀이 {re}번으로 돌아갑니다. 판이 다 차면 그랜드<br>판돈은 진행 중인 챕터를 따릅니다. 윗단계 판돈은 선술집 랭크가 엽니다. 장비 · 낙인은 안 나옵니다",
+  "en": "The Tavern opens it. There is no spin limit — spin as long as you can pay the stake. Spin ×{n} plays {n} spins at once and stops early if you run out of gold<br>Stake gold and spin: three matching symbols on any of the {lines} rows or diagonals pay gold or materials. Wilds stand in for other symbols · coins break a line<br>Land {trig}+ coins for Hold & Spin — coins stick, and each new coin resets the respins to {re}. Fill the board for the Grand<br>Stakes follow your current chapter. Higher stakes unlock with Tavern ranks. No equipment or stigma comes out",
+  "ctx": "gb.help"
+ },
+ {
+  "key": "ui|fg.seg.make",
+  "ko": "제작",
+  "en": "Smith",
+  "ctx": "fg.seg.make"
+ },
+ {
+  "key": "ui|fg.seg.up",
+  "ko": "강화",
+  "en": "Upgrade",
+  "ctx": "fg.seg.up"
+ },
+ {
+  "key": "ui|fg.seg.craft",
+  "ko": "크래프트",
+  "en": "Craft",
+  "ctx": "fg.seg.craft"
+ },
+ {
+  "key": "ui|fg.seg.synth",
+  "ko": "합성",
+  "en": "Combine",
+  "ctx": "fg.seg.synth"
+ },
+ {
+  "key": "ui|fg.synth.go",
+  "ko": "합성",
+  "en": "Combine",
+  "ctx": "fg.synth.go"
+ },
+ {
+  "key": "ui|fg.synth.max",
+  "ko": "최대 ×{n}",
+  "en": "Max ×{n}",
+  "ctx": "fg.synth.max"
+ },
+ {
+  "key": "ui|fg.go",
+  "ko": "강화",
+  "en": "Upgrade",
+  "ctx": "fg.go"
+ },
+ {
+  "key": "ui|fg.upMax",
+  "ko": "강화 +{up} · 상한",
+  "en": "Upgrade +{up} · max",
+  "ctx": "fg.upMax"
+ },
+ {
+  "key": "ui|fg.base",
+  "ko": "베이스 능력치",
+  "en": "Base stat",
+  "ctx": "fg.base"
+ },
+ {
+  "key": "ui|fg.tries",
+  "ko": "남은 횟수",
+  "en": "Attempts left",
+  "ctx": "fg.tries"
+ },
+ {
+  "key": "ui|fg.noTries",
+  "ko": "횟수 소진",
+  "en": "No attempts left",
+  "ctx": "fg.noTries"
+ },
+ {
+  "key": "ui|fg.chanceLab",
+  "ko": "성공 확률",
+  "en": "Success chance",
+  "ctx": "fg.chanceLab"
+ },
+ {
+  "key": "ui|fg.upFail",
+  "ko": "강화 실패 · +{n} 그대로 · {g}G",
+  "en": "Upgrade failed · still +{n} · {g}G",
+  "ctx": "fg.upFail"
+ },
+ {
+  "key": "ui|fg.temper",
+  "ko": "손질",
+  "en": "Prep",
+  "ctx": "fg.temper"
+ },
+ {
+  "key": "ui|fg.board.gear",
+  "ko": "장비",
+  "en": "Equipment",
+  "ctx": "fg.board.gear"
+ },
+ {
+  "key": "ui|fg.board.up",
+  "ko": "강화",
+  "en": "Upgrade",
+  "ctx": "fg.board.up"
+ },
+ {
+  "key": "ui|fg.act.heat",
+  "ko": "달구기",
+  "en": "Heat",
+  "ctx": "fg.act.heat"
+ },
+ {
+  "key": "ui|fg.act.reinforce",
+  "ko": "덧대기",
+  "en": "Reinforce",
+  "ctx": "fg.act.reinforce"
+ },
+ {
+  "key": "ui|fg.act.quench",
+  "ko": "담금질",
+  "en": "Quench",
+  "ctx": "fg.act.quench"
+ },
+ {
+  "key": "ui|fg.eff.chance",
+  "ko": "확률 +{n}%",
+  "en": "Chance +{n}%",
+  "ctx": "fg.eff.chance"
+ },
+ {
+  "key": "ui|fg.eff.great",
+  "ko": "대성공 +{n}%",
+  "en": "Great +{n}%",
+  "ctx": "fg.eff.great"
+ },
+ {
+  "key": "ui|fg.eff.keep",
+  "ko": "횟수 보존 {n}%",
+  "en": "Keep attempt {n}%",
+  "ctx": "fg.eff.keep"
+ },
+ {
+  "key": "ui|fg.applied",
+  "ko": "적용됨",
+  "en": "Applied",
+  "ctx": "fg.applied"
+ },
+ {
+  "key": "ui|fg.temper.done",
+  "ko": "손질됨",
+  "en": "Prepped",
+  "ctx": "fg.temper.done"
+ },
+ {
+  "key": "ui|fg.tempered",
+  "ko": "{name} · 다음 강화 {eff}",
+  "en": "{name} · next upgrade {eff}",
+  "ctx": "fg.tempered"
+ },
+ {
+  "key": "ui|fg.greatLab",
+  "ko": "대성공",
+  "en": "Great success",
+  "ctx": "fg.greatLab"
+ },
+ {
+  "key": "ui|fg.keepLab",
+  "ko": "횟수 보존",
+  "en": "Keep attempt",
+  "ctx": "fg.keepLab"
+ },
+ {
+  "key": "ui|fg.greatTip",
+  "ko": "대성공이면 {v}",
+  "en": "On great success: {v}",
+  "ctx": "fg.greatTip"
+ },
+ {
+  "key": "ui|fg.upGreat",
+  "ko": "대성공! +{n} · {g}G",
+  "en": "Great success! +{n} · {g}G",
+  "ctx": "fg.upGreat"
+ },
+ {
+  "key": "ui|fg.upKept",
+  "ko": "강화 실패 · +{n} 그대로 · 횟수는 지켰다 · {g}G",
+  "en": "Upgrade failed · still +{n} · attempt kept · {g}G",
+  "ctx": "fg.upKept"
+ },
+ {
+  "key": "ui|fg.err.tempered",
+  "ko": "이미 손질했다 · 강화하면 다시 할 수 있다",
+  "en": "Already prepped · upgrade first",
+  "ctx": "fg.err.tempered"
+ },
+ {
+  "key": "ui|fg.err.action",
+  "ko": "없는 손질",
+  "en": "Unknown prep",
+  "ctx": "fg.err.action"
+ },
+ {
+  "key": "ui|fg.err.tier",
+  "ko": "이 장비에 맞는 재료 단계가 없음",
+  "en": "No material tier for this item",
+  "ctx": "fg.err.tier"
+ },
+ {
+  "key": "ui|fg.failMark",
+  "ko": "실패",
+  "en": "Failed",
+  "ctx": "fg.failMark"
+ },
+ {
+  "key": "ui|fg.pick",
+  "ko": "장비 선택",
+  "en": "Pick an item",
+  "ctx": "fg.pick"
+ },
+ {
+  "key": "ui|fg.noBase",
+  "ko": "강화 없음",
+  "en": "No upgrade",
+  "ctx": "fg.noBase"
+ },
+ {
+  "key": "ui|fg.make.lv",
+  "ko": "Lv{n}",
+  "en": "Lv{n}",
+  "ctx": "fg.make.lv"
+ },
+ {
+  "key": "ui|fg.make.go",
+  "ko": "만들기",
+  "en": "Make",
+  "ctx": "fg.make.go"
+ },
+ {
+  "key": "ui|fg.make.line.fast",
+  "ko": "빠름",
+  "en": "Fast",
+  "ctx": "fg.make.line.fast"
+ },
+ {
+  "key": "ui|fg.make.line.mid",
+  "ko": "보통",
+  "en": "Mid",
+  "ctx": "fg.make.line.mid"
+ },
+ {
+  "key": "ui|fg.make.line.slow",
+  "ko": "느림",
+  "en": "Slow",
+  "ctx": "fg.make.line.slow"
+ },
+ {
+  "key": "ui|fg.make.potion",
+  "ko": "물약",
+  "en": "Potions",
+  "ctx": "fg.make.potion"
+ },
+ {
+  "key": "ui|fg.made",
+  "ko": "제작 — {name}",
+  "en": "Made — {name}",
+  "ctx": "fg.made"
+ },
+ {
+  "key": "ui|fg.synthed",
+  "ko": "합성 — {name} ×{n}",
+  "en": "Combined — {name} ×{n}",
+  "ctx": "fg.synthed"
+ },
+ {
+  "key": "ui|fg.err.materials",
+  "ko": "재료 부족",
+  "en": "Not enough materials",
+  "ctx": "fg.err.materials"
+ },
+ {
+  "key": "ui|fg.err.bagFull",
+  "ko": "인벤토리 가득 참",
+  "en": "Inventory is full",
+  "ctx": "fg.err.bagFull"
+ },
+ {
+  "key": "ui|fg.err.missing",
+  "ko": "없는 부위 · 레벨 · 종류",
+  "en": "Unknown slot, level or type",
+  "ctx": "fg.err.missing"
+ },
+ {
+  "key": "ui|fg.err.gold",
+  "ko": "골드 부족",
+  "en": "Not enough gold",
+  "ctx": "fg.err.gold"
+ },
+ {
+  "key": "ui|fg.potion.stock",
+  "ko": "재고",
+  "en": "Stock",
+  "ctx": "fg.potion.stock"
+ },
+ {
+  "key": "ui|fg.potion.none",
+  "ko": "없음",
+  "en": "None",
+  "ctx": "fg.potion.none"
+ },
+ {
+  "key": "ui|fg.potion.heal",
+  "ko": "회복 {n}",
+  "en": "Heals {n}",
+  "ctx": "fg.potion.heal"
+ },
+ {
+  "key": "ui|todo.badge",
+  "ko": "미착수",
+  "en": "Not started",
+  "ctx": "todo.badge"
+ },
+ {
+  "key": "ui|todo.lead",
+  "ko": "기획은 확정됐고 화면이 아직 없습니다 — 지금 여기서 할 수 있는 일은 없습니다",
+  "en": "The design is settled; the screen is not built yet — there is nothing to do here yet",
+  "ctx": "todo.lead"
+ },
+ {
+  "key": "ui|ex.h",
+  "ko": "탐험",
+  "en": "Exploration",
+  "ctx": "ex.h"
+ },
+ {
+  "key": "ui|ex.help",
+  "ko": "지도에서 <b>열린 땅의 지점</b>(동굴 · 폐허 · 마차)을 누르고 보낼 <b>편성</b>을 고릅니다 — 한 명짜리 편성도 됩니다(최대 {n}명) · 원정 중인 편성은 철수가 먼저입니다<br><b>{h}시간</b> 뒤 돌아오고 오프라인에도 흐릅니다 · 결과는 받아 갈 때까지 남습니다 · 동시 탐험 {s}건 · 한 지점에 한 건<br><b>동굴</b>은 장비를 가져옵니다 — 보낸 영웅 1명당 {k}개 · 그 땅의 레벨대 · 폐허 · 마차는 준비 중<br>탐험 나간 편성은 받을 때까지 사람을 바꿀 수 없고 원정에 못 나갑니다 · 불러들이면 편성째 결과 없이 돌아옵니다",
+  "en": "Click a <b>spot in an open land</b> (cave · ruins · caravan) and pick which <b>party</b> goes — a one-hero party works too (up to {n}) · a party on an expedition must withdraw first<br>They return after <b>{h}h</b>, offline too · the haul waits until you collect it · {s} exploration(s) at a time · one per spot<br>The <b>cave</b> brings back gear — {k} per hero sent · at that land's level band · ruins and caravan are coming later<br>A party out exploring can't change members or join expeditions until collected · calling it back returns the whole party empty-handed",
+  "ctx": "ex.help"
+ },
+ {
+  "key": "ui|face.noArt",
+  "ko": "{name} — 원작 아트 없음",
+  "en": "{name} — no source art",
+  "ctx": "face.noArt"
+ },
+ {
+  "key": "ui|class.unassigned",
+  "ko": "역할 미배정",
+  "en": "Role unassigned",
+  "ctx": "class.unassigned"
+ },
+ {
+  "key": "ui|kind.normal",
+  "ko": "일반",
+  "en": "Normal",
+  "ctx": "kind.normal"
+ },
+ {
+  "key": "ui|kind.elite",
+  "ko": "정예",
+  "en": "Elite",
+  "ctx": "kind.elite"
+ },
+ {
+  "key": "ui|kind.boss",
+  "ko": "보스",
+  "en": "Boss",
+  "ctx": "kind.boss"
+ },
+ {
+  "key": "ui|kind.chapterBoss",
+  "ko": "챕터보스",
+  "en": "Chapter Boss",
+  "ctx": "kind.chapterBoss"
+ },
+ {
+  "key": "ui|exp.seg.battle",
+  "ko": "전투 관전",
+  "en": "Spectate",
+  "ctx": "exp.seg.battle"
+ },
+ {
+  "key": "ui|exp.seg.party",
+  "ko": "Party {n}",
+  "en": "Party {n}",
+  "ctx": "exp.seg.party"
+ },
+ {
+  "key": "ui|exp.seg.partyAt",
+  "ko": "Party {n} - {where}",
+  "en": "Party {n} - {where}",
+  "ctx": "exp.seg.partyAt"
+ },
+ {
+  "key": "ui|exp.seg.partyIdle",
+  "ko": "Party {n} - 대기 중",
+  "en": "Party {n} - Idle",
+  "ctx": "exp.seg.partyIdle"
+ },
+ {
+  "key": "ui|exp.seg.report",
+  "ko": "Report",
+  "en": "Report",
+  "ctx": "exp.seg.report"
+ },
+ {
+  "key": "ui|exp.oneParty",
+  "ko": "전투 파티는 한 팀 — 원정이 곧 전투입니다. 세 상태가 한 탭 안에서 이어집니다",
+  "en": "One battle party — the expedition is the battle. Three states flow within one tab",
+  "ctx": "exp.oneParty"
+ },
+ {
+  "key": "ui|exp.party.h",
+  "ko": "파티",
+  "en": "Party",
+  "ctx": "exp.party.h"
+ },
+ {
+  "key": "ui|exp.leader",
+  "ko": "리더",
+  "en": "Leader",
+  "ctx": "exp.leader"
+ },
+ {
+  "key": "ui|exp.form.h",
+  "ko": "진형",
+  "en": "Formation",
+  "ctx": "exp.form.h"
+ },
+ {
+  "key": "ui|exp.form.front",
+  "ko": "전열",
+  "en": "Front",
+  "ctx": "exp.form.front"
+ },
+ {
+  "key": "ui|exp.form.back",
+  "ko": "후열",
+  "en": "Back",
+  "ctx": "exp.form.back"
+ },
+ {
+  "key": "ui|exp.cantDepart",
+  "ko": "이 편성으로는 출발할 수 없음",
+  "en": "This party cannot depart",
+  "ctx": "exp.cantDepart"
+ },
+ {
+  "key": "ui|exp.party.note",
+  "ko": "런이 끝나면 깎인 HP도 <b>전투불능도 무료·즉시 회복</b> — 비용은 <b>그 런이 얇아지는 것</b>입니다<br>파티 버프는 스탯이 아니라 스킬 효과입니다 — 통솔의 전투 계수는 없습니다",
+  "en": "Lost HP <b>and downed heroes are restored free and instantly</b> when the run ends — the cost is <b>a thinner party for the rest of that run</b><br>Party buffs are skill effects, not a stat — Leadership has no combat coefficient",
+  "ctx": "exp.party.note"
+ },
+ {
+  "key": "ui|exp.bench.h",
+  "ko": "벤치",
+  "en": "Bench",
+  "ctx": "exp.bench.h"
+ },
+ {
+  "key": "ui|exp.bench.note",
+  "ko": "<b>건설은 파견이 아닙니다</b> — 영웅을 보내지 않고 진행하는 별도 시스템이라 건설 탭이 듭니다<br>보낸 영웅은 잠기지 않습니다 — 언제든 불러들이고 <b>흐른 만큼 비례해 받습니다</b>",
+  "en": "<b>Construction is not a dispatch</b> — it runs without sending heroes, so the Construction tab owns it<br>Dispatched heroes are never locked — recall any time and receive <b>pro rata for the time elapsed</b>",
+  "ctx": "exp.bench.note"
+ },
+ {
+  "key": "ui|exp.commission.h",
+  "ko": "의뢰",
+  "en": "Commissions",
+  "ctx": "exp.commission.h"
+ },
+ {
+  "key": "ui|exp.commission.note",
+  "ko": "의뢰는 <b>받아 두는 목표</b>입니다 — 전장이 열리지 않습니다. 게시판에서 골라 받아 두면 <b>평소 활동 위에 얹혀</b> 저절로 진행됩니다<br>카드마다 <b>죄종 하나</b>가 미션을 정합니다 — 분노 처치(몬스터 · 정예 · 보스) · 시기 스킬북 읽기 · 영웅 고용 · 탐욕 분해 · 장비 획득 · 나태 재료 획득 · 폭식 강화 · 제작. <b>그 일을 할 수 있게 되면</b> 그 죄종 카드가 섞입니다<br><b>재료 획득은 오프라인에도 진행됩니다</b> — 연구소 생산이 채웁니다. 따로 나갈 파티도, 의뢰만의 전장도 없습니다<br>등급은 <b>일반 · 매직 · 레어</b> — 윗 등급일수록 대상이 좁고(한 장 · 한 장소 · 한 갈래) 드물며 골드가 많습니다. 대상은 지금 갈 수 있는 곳에서만 나옵니다<br><b>수락하면 그 카드가 소진됩니다</b> — 받은 카드는 그 자리에서 진행 중이 되고, 받아 둘 수 있는 수는 정해져 있습니다. 그래서 「어느 의뢰를 받을까」가 결정이 됩니다<br><b>받은 뒤</b>에 일어난 것만 셉니다 — 이긴 라운드의 처치 · 직접 하거나 알아서 분해로 한 분해(가방이 차서 녹은 것은 빼고) · 분해와 연구소에서 얻은 재료 · 강화 시도(실패 포함) · 제작 · 스킬북 읽기 · 영웅 고용 · 이긴 라운드에 들어온 장비 · 모든 부대가 같이 채웁니다 · <b>기한은 없습니다</b><br>[수령]할 때마다 도감의 그 <b>죄종 칸</b>에 수령 횟수가 하나씩 쌓입니다<br>다 채우면 <b>[수령]</b>으로 골드를 받습니다 · <b>[포기]</b>는 벌이 없습니다(진행만 버림) — 비는 자리에는 새 카드가 섭니다<br><b>명성 레벨</b> — [수령]할 때마다 명성이 하나 쌓이고(포기는 0 · 떨어지지 않음) 문턱을 넘으면 레벨이 오릅니다. 레벨이 오르면 <b>새로 서는 카드</b>의 목표와 골드가 같이 커지고 골드가 더 크게 오릅니다 — 레벨이 오르는 순간 받지 않은 카드는 모두 새 레벨로 다시 서고, 받아 둔 의뢰는 진행도 그대로입니다",
+  "en": "A commission is a <b>goal you take on</b> — no battlefield opens. Pick one from the board and it fills itself <b>on top of what you already do</b><br>Each card carries <b>one Sin</b> that sets its mission — Wrath slaying (monsters · elites · bosses) · Envy reading skill books · hiring heroes · Greed salvaging · collecting gear · Sloth gathering · Gluttony enhancing · crafting. <b>Once you can do that activity</b>, cards of that Sin join the board<br><b>Gathering advances offline too</b> — Laboratory output fills it. There is no party to send and no commission-only battlefield<br>Grades are <b>Normal · Magic · Rare</b> — higher grades narrow the target (one chapter · one place · one group), appear less often and pay more gold. Targets only come from places you can reach now<br><b>Accepting spends that card</b> — it turns into an active commission in place, and you can only hold a set number. That is what makes \"which one do I take\" a decision<br>Only what happens <b>after you accept</b> counts — kills in won rounds · salvage you do by hand or by auto-salvage (not full-bag overflow) · materials from salvage and the Laboratory · enhance attempts (failures too) · crafting · skill books read · heroes hired · gear that arrives from won rounds · every party fills it · <b>there is no deadline</b><br>Each [Claim] adds one to that <b>Sin</b> in the Codex<br>When it is full, <b>[Claim]</b> pays the gold · <b>[Abandon]</b> costs nothing but the progress — a new card takes the empty place<br><b>Fame level</b> — every [Claim] adds one fame (abandoning adds none · it never drops), and passing a threshold raises the level. A higher level makes <b>newly posted cards</b> ask for more and pay more, with gold rising faster — when the level rises, every card you have not accepted is rerolled at the new level, while accepted commissions keep their progress",
+  "ctx": "exp.commission.note"
+ },
+ {
+  "key": "ui|exp.zones.h",
+  "ko": "원정 지역",
+  "en": "Expedition Zones",
+  "ctx": "exp.zones.h"
+ },
+ {
+  "key": "ui|exp.zones.sub",
+  "ko": "챕터 = 장소 {p}곳 · 장소마다 칸 I · II · III — 1런 = 칸 하나 · {r}라운드 (마지막 장소는 챕터보스 단독 1라운드 한 칸)",
+  "en": "A chapter = {p} areas · each area has stages I · II · III — 1 run = 1 stage · {r} rounds (the last area is a single stage: one round against the chapter boss alone)",
+  "ctx": "exp.zones.sub"
+ },
+ {
+  "key": "ui|exp.deploy",
+  "ko": "보내기",
+  "en": "Deploy",
+  "ctx": "exp.deploy"
+ },
+ {
+  "key": "ui|exp.foes",
+  "ko": "적 구성",
+  "en": "Enemies",
+  "ctx": "exp.foes"
+ },
+ {
+  "key": "ui|exp.foe.rolled",
+  "ko": "전투마다 바뀌는 직업 스킬",
+  "en": "Class skill — changes every fight",
+  "ctx": "exp.foe.rolled"
+ },
+ {
+  "key": "ui|exp.foe.grave",
+  "ko": "{name} — 재등장까지 {t}",
+  "en": "{name} — returns in {t}",
+  "ctx": "exp.foe.grave"
+ },
+ {
+  "key": "ui|exp.go.h",
+  "ko": "출정 방식",
+  "en": "Departure",
+  "ctx": "exp.go.h"
+ },
+ {
+  "key": "ui|exp.story.h",
+  "ko": "이야기",
+  "en": "Story",
+  "ctx": "exp.story.h"
+ },
+ {
+  "key": "ui|exp.story.noLeader",
+  "ko": "용병 하나",
+  "en": "A mercenary",
+  "ctx": "exp.story.noLeader"
+ },
+ {
+  "key": "ui|exp.zones.note",
+  "ko": "지역 죄종은 해당 죄종 접사의 드롭 가중치를 올립니다 — 타겟 파밍의 축<br><b>구조는 고정, 내용물은 랜덤</b> — 라운드 배치는 칸 III 이 정예 {e} / 보스 {b} · <b>칸 I · II 는 {b}라운드째도 정예</b>(보스 없음)이고, 몬스터 조합·정예 특성만 매 런 새로 굴려집니다. 몬스터 · 배경 · 원소는 장소의 칸 셋이 같고 레벨은 칸마다 오릅니다. <b>마지막 장소는 챕터보스 하나와 싸우는 1라운드</b>입니다<br>중도 귀환해도 <b>루팅은 전량 보존</b>됩니다. 비용은 <b>그 출정 동안 파티가 얇아지는 것</b> + 미클리어(다음 칸 미해금)뿐입니다",
+  "en": "A zone's sin raises the drop weight of that sin's affixes — the axis of target farming<br><b>Fixed structure, random contents</b> — stage III lays out elite {e} / boss {b}; <b>stages I · II have an elite in round {b} too</b> (no boss); only monster mixes and elite traits reroll each run. Monsters, backdrop and element are shared by an area's three stages, and the level rises stage by stage. <b>The last area is a single round against the chapter boss</b><br>Retreating early <b>keeps all loot</b>. The cost is <b>a thinner party for the rest of the run</b> plus no-clear (next stage stays locked)",
+  "ctx": "exp.zones.note"
+ },
+ {
+  "key": "ui|rep.clear",
+  "ko": "클리어",
+  "en": "Cleared",
+  "ctx": "rep.clear"
+ },
+ {
+  "key": "ui|rep.xp",
+  "ko": "경험치",
+  "en": "XP",
+  "ctx": "rep.xp"
+ },
+ {
+  "key": "ui|rep.rounds",
+  "ko": "라운드",
+  "en": "Rounds",
+  "ctx": "rep.rounds"
+ },
+ {
+  "key": "ui|rep.downed",
+  "ko": "전투 불능",
+  "en": "Downed",
+  "ctx": "rep.downed"
+ },
+ {
+  "key": "ui|rep.none",
+  "ko": "없음",
+  "en": "None",
+  "ctx": "rep.none"
+ },
+ {
+  "key": "ui|rep.downedN",
+  "ko": "{n}명",
+  "en": "{n}",
+  "ctx": "rep.downedN"
+ },
+ {
+  "key": "ui|rep.injuryNote",
+  "ko": "기다릴 것이 없습니다 — <b>런이 끝나는 순간</b> 전투불능도 깎인 HP도 전원 무료로 회복됩니다. 다음 런에는 전원이 다시 나갑니다",
+  "en": "Nothing to wait for — <b>the moment the run ends</b> both downed heroes and lost HP are restored, free. Everyone goes out again on the next run",
+  "ctx": "rep.injuryNote"
+ },
+ {
+  "key": "ui|rep.drops.h",
+  "ko": "획득 아이템",
+  "en": "Loot",
+  "ctx": "rep.drops.h"
+ },
+ {
+  "key": "ui|rep.drops.sub",
+  "ko": "{n}개",
+  "en": "{n} items",
+  "ctx": "rep.drops.sub",
+  "en_one": "{n} item"
+ },
+ {
+  "key": "ui|rep.drops.none",
+  "ko": "떨어진 아이템 없음",
+  "en": "No loot",
+  "ctx": "rep.drops.none"
+ },
+ {
+  "key": "ui|rep.book",
+  "ko": "스킬북",
+  "en": "Book",
+  "ctx": "rep.book"
+ },
+ {
+  "key": "ui|rep.matGot",
+  "ko": "획득 {n}",
+  "en": "Gained {n}",
+  "ctx": "rep.matGot"
+ },
+ {
+  "key": "ui|rep.list.h",
+  "ko": "원정 기록",
+  "en": "Runs",
+  "ctx": "rep.list.h"
+ },
+ {
+  "key": "ui|rep.list.sub",
+  "ko": "{n}판",
+  "en": "{n} runs",
+  "ctx": "rep.list.sub",
+  "en_one": "{n} run"
+ },
+ {
+  "key": "ui|rep.list.empty",
+  "ko": "기록 없음",
+  "en": "No runs",
+  "ctx": "rep.list.empty"
+ },
+ {
+  "key": "ui|rep.fall.h",
+  "ko": "쓰러짐",
+  "en": "Fell",
+  "ctx": "rep.fall.h"
+ },
+ {
+  "key": "ui|rep.fall.cell",
+  "ko": "{t} ← {who} {p}%",
+  "en": "{t} ← {who} {p}%",
+  "ctx": "rep.fall.cell"
+ },
+ {
+  "key": "ui|rep.foes",
+  "ko": "남은 적",
+  "en": "Enemies left",
+  "ctx": "rep.foes"
+ },
+ {
+  "key": "ui|rep.foes.one",
+  "ko": "{name} {p}%",
+  "en": "{name} {p}%",
+  "ctx": "rep.foes.one"
+ },
+ {
+  "key": "ui|rep.foes.many",
+  "ko": "{name} {p}% ×{n}",
+  "en": "{name} {p}% ×{n}",
+  "ctx": "rep.foes.many"
+ },
+ {
+  "key": "ui|rep.gap",
+  "ko": "레벨 차 {n} → 명중 −{p}%",
+  "en": "Level gap {n} → Hit −{p}%",
+  "ctx": "rep.gap"
+ },
+ {
+  "key": "ui|rep.ago.now",
+  "ko": "방금",
+  "en": "just now",
+  "ctx": "rep.ago.now"
+ },
+ {
+  "key": "ui|rep.ago.m",
+  "ko": "{n}분 전",
+  "en": "{n}m ago",
+  "ctx": "rep.ago.m"
+ },
+ {
+  "key": "ui|rep.ago.h",
+  "ko": "{n}시간 전",
+  "en": "{n}h ago",
+  "ctx": "rep.ago.h"
+ },
+ {
+  "key": "ui|rep.ago.d",
+  "ko": "{n}일 전",
+  "en": "{n}d ago",
+  "ctx": "rep.ago.d"
+ },
+ {
+  "key": "ui|rep.contrib.h",
+  "ko": "기여",
+  "en": "Contribution",
+  "ctx": "rep.contrib.h"
+ },
+ {
+  "key": "ui|rep.contrib.hero",
+  "ko": "영웅",
+  "en": "Hero",
+  "ctx": "rep.contrib.hero"
+ },
+ {
+  "key": "ui|rep.contrib.dealt",
+  "ko": "가한 피해",
+  "en": "Damage dealt",
+  "ctx": "rep.contrib.dealt"
+ },
+ {
+  "key": "ui|rep.contrib.taken",
+  "ko": "받은 피해",
+  "en": "Damage taken",
+  "ctx": "rep.contrib.taken"
+ },
+ {
+  "key": "ui|rep.contrib.kills",
+  "ko": "처치",
+  "en": "Kills",
+  "ctx": "rep.contrib.kills"
+ },
+ {
+  "key": "ui|rep.contrib.total",
+  "ko": "합계",
+  "en": "Total",
+  "ctx": "rep.contrib.total"
+ }
+]

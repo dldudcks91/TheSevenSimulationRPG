@@ -190,10 +190,10 @@ export function createSkillSystem(data) {
         condValue: row.cond_value,
         tags: dash(row.tags) === null ? [] : String(row.tags).split('|').map(v => v.trim()).filter(Boolean),
         priority: row.priority,
-        name: { ko: row.name_kr, en: row.name_en },
+        name: { ko: row.name_kr, en: row.name_en, zh: row.name_zh },
         // 화면이 읽는 것 — 아이콘·설명도 CSV 가 SSOT 다 (2026-09-01 `mock.js:SKILL_DISPLAY` 폐지)
         icon: String(row.icon ?? ''),
-        desc: { ko: row.desc_kr, en: row.desc_en },
+        desc: { ko: row.desc_kr, en: row.desc_en, zh: row.desc_zh },
         // 고유 스킬 후보 풀에 들어가는가 (hero.rollInnate 가 받는 목록 · §9-0). `note` 는 설계 노트라 화면에 안 나간다
         innatePool: row.innate_pool === 1,
         // 목걸이 발동 스킬 후보인가 [2026-09-21 · R127 · item_design §1 「목걸이 베이스 옵션」] — 확률로 나가도 이득만 되는 것(피해 · 회복 · 함성류)만 1
@@ -599,6 +599,9 @@ export function createSkillSystem(data) {
         if (d.ownerKind === 'advance' && advClass.size && !advClass.has(d.ownerId)) throw new Error(`skill: ${d.id} — 전직 갈래 '${d.ownerId}' 가 advance.csv 에 없다`);
         d.classId = d.ownerKind === 'job' ? d.ownerId : d.ownerKind === 'advance' ? (advClass.get(d.ownerId) ?? null) : null;
         d.needsWeapon = d.classId !== null && d.effects.some(e => EFFECT_TYPES[e.effect].weapon === true);
+        // 걸린 효과만 거는 스킬(버프 · 디버프 — 타격 · 회복 · 소환 줄이 없다)인가 — 몬스터 · 결투장 AI 팀이 시작에 먼저 쓴다(battle.js `startRanks` · 2026-11-16 R515 · battle_design §5) ·
+        //   `needsWeapon` 과 같은 줄을 보되 직업을 안 본다(몬스터 스킬도 가른다)
+        d.effectOnly = !d.effects.some(e => EFFECT_TYPES[e.effect].weapon === true);
         if (defs[d.id]) throw new Error(`skill: ${d.id} — skill_id 중복`);
         defs[d.id] = d;
         const owner = `${d.ownerKind}#${d.ownerId}`;
@@ -638,8 +641,8 @@ export function createSkillSystem(data) {
             if (!r.bonus_fx || r.bonus_fx === NONE) bad('advance_node', `${r.skill_id}#${r.slot} — 5랭크 덤(bonus_fx)이 없다`);
             if (!r.desc_kr || !r.desc_en || !r.bonus_kr || !r.bonus_en) bad('advance_node', `${r.skill_id}#${r.slot} — 설명이 비었다`);
             if (!r.name_kr || !r.name_en || r.name_kr === NONE || r.name_en === NONE) bad('advance_node', `${r.skill_id}#${r.slot} — 칸 이름이 비었다`);
-            t[r.slot] = { slot: r.slot, name: { ko: r.name_kr, en: r.name_en }, fx, per, arg, unit: r.unit, desc: { ko: r.desc_kr, en: r.desc_en },
-                bonus: { fx: r.bonus_fx, v: bv, unit: r.bonus_unit, desc: { ko: r.bonus_kr, en: r.bonus_en } } };
+            t[r.slot] = { slot: r.slot, name: { ko: r.name_kr, en: r.name_en, zh: r.name_zh }, fx, per, arg, unit: r.unit, desc: { ko: r.desc_kr, en: r.desc_en, zh: r.desc_zh },
+                bonus: { fx: r.bonus_fx, v: bv, unit: r.bonus_unit, desc: { ko: r.bonus_kr, en: r.bonus_en, zh: r.bonus_zh } } };
             tails.set(r.skill_id, t);
         }
         if ((data.advanceNodes ?? []).length) for (const d of list) if (d.ownerKind === 'advance') {
@@ -658,7 +661,7 @@ export function createSkillSystem(data) {
             if (tagged ? (!r.tag || r.tag === NONE || !r.effect || r.effect === NONE) : (r.tag !== NONE || r.effect !== NONE))
                 bad('advance_common', `${r.advance_id}#${slot} — skill_tag 만 tag · effect 를 쓴다`);
             if (!r.name_kr || !r.name_en) bad('advance_common', `${r.advance_id}#${slot} — 이름이 비었다`);
-            cells[slot - 1] = { slot, stat: r.stat, tag: tagged ? r.tag : null, effect: tagged ? r.effect : null, per, rank5: r5, unit: r.unit, name: { ko: r.name_kr, en: r.name_en } };
+            cells[slot - 1] = { slot, stat: r.stat, tag: tagged ? r.tag : null, effect: tagged ? r.effect : null, per, rank5: r5, unit: r.unit, name: { ko: r.name_kr, en: r.name_en, zh: r.name_zh } };
             commons.set(r.advance_id, cells);
         }
         for (const [id, cells] of commons) if (cells.length !== 3 || cells.some(c => !c)) bad('advance_common', `${id} — 칸 셋이 다 있어야 한다`);
@@ -714,7 +717,7 @@ export function createSkillSystem(data) {
      *   변형 노드가 붙으면 칸마다 덧씌울 것이 생긴다(정의 객체는 공유물이라 손대면 안 된다 — `resolve` 참조).
      * hero 를 통째로 받는 이유: 전직 출처가 붙어도 이 함수 안만 바뀌게 하려는 것.
      * ~~@param ctx.weaponSkill 착용 무기 개체가 든 스킬 id~~ — **2026-09-29 폐지 · R179** (skill_design §2-1) — 둘째 칸은 `hero.bookSkill`(책으로 배운 것)이다
-     * ~~@param hero.skillOrder 플레이어가 정한 칸 순서~~ — **2026-11-02 폐지 · R427** (battle_design §5 — 우선순위 창이 걷혔다) — 칸 순서는 출처 순서 하나다
+     * @param hero.skillOrder [skillId] — 플레이어가 정한 **시작 순서**(선택 필드) — 싣는 곳은 `game.setSkillOrder`(캐릭터 탭 우선순위 창 · 2026-11-16 R515 부활 · battle_design §5 — 11-02 R427 에 걷혔었다)
      * @param ctx.skillPlus {skillId: n} — 낀 장비의 특정 스킬 +n(`item.skillPlusOf` · 2026-10-08 · R225). 고유 · 배운 칸의 `up` 에 더한다 · 안 넘기면 종전과 같다
      */
     const activesFor = (hero, ctx = {}) => {
@@ -758,8 +761,16 @@ export function createSkillSystem(data) {
         //   ⚠ **딸린 규칙 — 칸이 둘이면 쿨도 둘이다.** `battle.js` 가 칸마다 `readyAt` 을 따로 들므로 겹친 스킬은 두 배로 나간다.
         //   ~~고유와 같은 스킬의 책을 배우면 실제로 일어난다~~ → **2026-10-06 같은 책은 칸을 늘리지 않고 업그레이드한다**(`state.learnBook` · R216) —
         //   이 모양은 옛 세이브에만 남는다(옮기지 않는다 — 옛 세이브는 새로 시작한다).
-        //   ~~플레이어가 고른 순서(`hero.skillOrder`)를 앞에~~ — 2026-11-02 R427 삭제(battle_design §5) · 칸 순서 = 출처 순서
-        return base.slice(0, B.active_slots);
+        // 플레이어가 고른 시작 순서(`hero.skillOrder`)를 앞에 [2026-11-16 · R515 · battle_design §5 — 11-02 R427 에 걷혔다가 되살렸다] —
+        //   목록에 없는 id · 중복은 무시하고, 안 적힌 칸은 출처 순서대로 뒤에 붙는다. 전투는 이 칸 순서를 시작 순서로 쓴다(`startOrder = 'fixed'`)
+        const order = Array.isArray(hero?.skillOrder) && hero.skillOrder.length ? hero.skillOrder : null;
+        if (!order) return base.slice(0, B.active_slots);
+        const front = [];
+        for (const id of order) {
+            const a = base.find(x => x.id === id);
+            if (a && !front.includes(a)) front.push(a);
+        }
+        return [...front, ...base.filter(a => !front.includes(a))].slice(0, B.active_slots);
     };
 
     /**
@@ -818,9 +829,10 @@ export function createSkillSystem(data) {
 
     /**
      * 발동 선택 (battle_design §3) — 순수. `actives` 를 변경하지 않고 정렬도 새 배열에서 한다.
-     * 동률은 **칸 순서**(출처 순서 — battle_design §5 · skill_design §2)다 — 플레이어가 정하는 우선순위는 없다(2026-11-02 R427)
-     *   개시 순서는 쿨 길이가 정하고 칸 순서는 쿨이 같은 칸끼리만 가른다. `skill.csv:priority` 는 **직업 행의 기본 정렬**에만 쓴다(`activesFor`).
-     * @param actives [{id, def, readyAt}] — 유닛이 들고 있는 슬롯
+     * 동률은 **시작 순서 `rank`** 다(없으면 칸 순서) [2026-11-16 · R515 · battle_design §5 — ~~칸 순서 · 우선순위 없음~~ R427] — 전투가 시작하면 모두 준비라
+     *   첫 차례들은 이 순서로 나가고(영웅이 정한 순서 · 안 정하면 판마다 랜덤 · 몬스터 · AI 팀은 버프 · 디버프 먼저 — battle.js `startRanks`), 그 뒤는 쿨이 먼저 돈 것부터다.
+     *   `skill.csv:priority` 는 **직업 행의 기본 정렬**에만 쓴다(`activesFor`).
+     * @param actives [{id, def, readyAt, rank?}] — 유닛이 들고 있는 슬롯
      * @param t 현재 시각(초)
      * @param isCastable (active) → bool — 발동 조건 판정 콜백(유닛 상태는 호출자가 안다)
      */
@@ -832,8 +844,8 @@ export function createSkillSystem(data) {
             ready.push({ a, i });
         });
         if (ready.length === 0) return null;
-        // 가장 오래 기다린 것 → 동률이면 칸 순서(앞칸이 먼저)
-        ready.sort((x, y) => (x.a.readyAt - y.a.readyAt) || (x.i - y.i));
+        // 가장 오래 기다린 것 → 동률이면 시작 순서(`rank` — 없으면 칸 순서 · R515)
+        ready.sort((x, y) => (x.a.readyAt - y.a.readyAt) || ((x.a.rank ?? x.i) - (y.a.rank ?? y.i)));
         return ready[0].a;
     }
 

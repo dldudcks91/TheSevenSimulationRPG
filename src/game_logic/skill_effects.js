@@ -436,11 +436,12 @@ export const EFFECTS = {
     atk_pct: {},
     // 주기는 다음 차례 예약부터 — 이미 잡힌 u.next 는 건드리지 않는다 (INTERFACE §2-6)
     period_pct: {},
-    // HP 밖 흡수 풀 — 창이 끝나면 남은 흡수량은 사라진다 (skill_design §9-3)
+    // HP 밖 흡수 풀 — 창이 끝나면 남은 흡수량은 사라진다 (skill_design §9-3) · 그 스킬의 조각 하나만 바꾼다 — 다른 출처의 조각은 그대로(R517)
+    //   `amt` = 이 조각의 양(로그) · `bar` = 건 뒤의 조각 합(재생기의 보호막 막대)
     barrier_pct: {
         apply: (rt, tgt, def, until, ev) => {
             const amt = Math.round(tgt.hpMax * def.value);
-            tgt.barrier = { amt, until, s: def.id };
+            ev.bar = barrierPut(tgt, def.id, amt, until);
             ev.amt = amt;
         },
     },
@@ -646,6 +647,53 @@ export function stackSum(u, stat) {
 export function stateOf(u, stat) {
     for (const e of Object.entries(u.buffs)) if (e[1].stat === stat) return e;
     return null;
+}
+
+/**
+ * 배리어(HP 밖 흡수 풀) — **출처(`s`)마다 조각 하나** [2026-11-16 · R517 · INTERFACE §2-6 `barrier`] — `u.barrier` = `[{amt, until, s}]` 또는 null(조각 없음).
+ *   조각마다 끝나는 시각이 따로라 짧은 보호막이 라운드 보호막을 같이 끝내지 않는다(옛 한 칸은 새 것이 끝나는 시각을 덮었다).
+ *   넷 다 rng 0
+ */
+/** 조각 합 — 없으면 0 */
+export function barrierSum(u) {
+    let n = 0;
+    for (const p of u.barrier ?? []) n += p.amt;
+    return n;
+}
+/**
+ * 조각 하나를 세운다 — 같은 출처가 있으면 `add` = 양을 더하고 시간을 새로(넘친 회복 · 흡혈 보호막) · 아니면 바꾼다(스킬 창 · 라운드 보호막).
+ *   `cap` 이 있으면 그 조각의 양을 거기서 자른다(흡혈 보호막) · 돌려주는 값 = 세운 뒤의 조각 합
+ */
+export function barrierPut(u, s, amt, until, add = false, cap = Infinity) {
+    const list = u.barrier ?? [];
+    const old = list.find(p => p.s === s);
+    const v = Math.min(cap, (add && old ? old.amt : 0) + amt);
+    if (old) { old.amt = v; old.until = until; }
+    else list.push({ amt: v, until, s });
+    u.barrier = list;
+    return barrierSum(u);
+}
+/** 흡수 — 먼저 끝나는 조각부터 먹는다(같으면 먼저 선 것) · 빈 조각은 걷는다 · 돌려주는 값 = 먹은 양 */
+export function barrierTake(u, dmg) {
+    if (!u.barrier) return 0;
+    let left = dmg;
+    for (const p of u.barrier.slice().sort((a, b) => (a.until > b.until) - (a.until < b.until))) {
+        if (!(left > 0)) break;
+        const k = Math.min(p.amt, left);
+        p.amt -= k;
+        left -= k;
+    }
+    const rest = u.barrier.filter(p => p.amt > 0);
+    u.barrier = rest.length ? rest : null;
+    return dmg - left;
+}
+/** 만료 — `at` 에 끝난 조각을 걷는다(창 만료와 같은 허용 오차) · 걷은 것이 있으면 true */
+export function barrierExpire(u, at, eps) {
+    if (!u.barrier) return false;
+    const rest = u.barrier.filter(p => p.until > at + eps);
+    if (rest.length === u.barrier.length) return false;
+    u.barrier = rest.length ? rest : null;
+    return true;
 }
 
 /**

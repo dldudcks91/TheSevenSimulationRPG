@@ -11,15 +11,25 @@
  * CSV 쪽 규약(예고): 데이터 CSV 는 `_kr` / `_en` 컬럼 쌍 (현재 `_kr` 만 존재 — monster.csv 등).
  * `_en` 컬럼이 붙고 로더가 생기면 mock.js 의 {ko, en} 쌍이 그대로 CSV 로 이사한다.
  *
- * 언어 전환: 우측 상단 토글 / URL `?lang=en` / localStorage 유지.
+ * 언어 전환: 우측 상단 버튼(한국어 → English → 简体中文 순환 · ADR-1220) / URL `?lang=en` / localStorage 유지.
  * (localStorage 는 UI 환경설정이라 세이브 어댑터 규칙과 무관 — 접근은 이 파일 안에서만 한다)
+ *
+ * 간체(zh) [2026-11-16 · docs/client/LOCALIZATION_ZH.md] — 키마다 셋째 칸 `zh`. **새 키는 ko/en 만 써도 된다**(D5) —
+ * zh 가 없으면 영어를 보인다(D4 · 한국어가 중국어 화면에 새지 않게). 데이터 쪽은 CSV `_zh` 열 · mock 쌍의 `zh`.
  */
 
 const STORE_KEY = 'thesevensim.lang';
-export const LANGS = ['ko', 'en'];
+export const LANGS = ['ko', 'en', 'zh'];
+/** `<html lang>` 에 다는 태그 — 간체는 `zh-CN`(글꼴 · 한자 모양을 고르는 신호 · `zh` 하나로는 약하다) */
+const LANG_TAG = { ko: 'ko', en: 'en', zh: 'zh-CN' };
+/** 바깥 링크의 언어 코드를 안의 코드로 — `zh-CN` · `zh-cn` · `zh-Hans` · `zh-SG` 는 모두 zh */
+const normLang = v => {
+    const s = String(v ?? '').toLowerCase();
+    return /^zh(-(cn|hans|sg))?$/.test(s) ? 'zh' : s;
+};
 
 let current = (() => {
-    const q = new URLSearchParams(location.search).get('lang');
+    const q = normLang(new URLSearchParams(location.search).get('lang'));
     if (LANGS.includes(q)) return q;
     try {
         const saved = localStorage.getItem(STORE_KEY);
@@ -29,6 +39,10 @@ let current = (() => {
 })();
 
 export const lang = () => current;
+/** 지금 언어의 BCP 47 태그 — `<html lang>` 과 같은 값 */
+export const langTag = () => LANG_TAG[current] ?? current;
+/** 언어 버튼이 갈 다음 언어 — `LANGS` 순서로 돈다 (ADR-1220) */
+export const nextLang = () => LANGS[(LANGS.indexOf(current) + 1) % LANGS.length];
 
 export function setLang(l) {
     if (!LANGS.includes(l)) return;
@@ -39,21 +53,29 @@ export function setLang(l) {
 
 /** <html lang> + <title> 동기화 — 모듈 로드 시 1회, 전환 시마다 호출 */
 export function applyDocumentLang() {
-    document.documentElement.lang = current;
+    document.documentElement.lang = langTag();
     document.title = t('app.title');
 }
 
+/** 칸이 찼나 — CSV 의 빈 셀은 `''` 로 온다(간체 열이 아직 비었을 때) */
+const filled = s => s != null && s !== '';
+
 /**
- * 데이터 문자열 선택 — CSV 또는 mock.js 의 {ko, en} 쌍을 현재 언어로 푼다.
+ * 데이터 문자열 선택 — CSV 또는 mock.js 의 {ko, en, zh} 를 현재 언어로 푼다.
  * 평문 문자열이 오면 그대로 돌려준다 (양 언어 공통 표기: 고유명사·숫자 등).
+ * 간체는 칸이 비었으면 영어 → 한국어 순으로 대신한다(D4) — ko · en 의 동작은 그대로다.
  */
 export const L = v =>
-    v == null ? '' : (typeof v === 'string' ? v : (v[current] ?? v.ko ?? ''));
+    v == null ? '' : (typeof v === 'string' ? v
+        : current === 'zh' ? (filled(v.zh) ? v.zh : filled(v.en) ? v.en : (v.ko ?? ''))
+            : (v[current] ?? v.ko ?? ''));
 
 /** 그 키가 사전에 있는가 — 어휘가 데이터에서 오는 자리(마스터리 효과 `app.js`)가 제 문구가 있는지 고를 때 쓴다 */
 export const has = key => Object.prototype.hasOwnProperty.call(STRINGS, key);
 /** 잠김 문구인가 — 항목에 `lock: true` 면 플래시가 글 앞에 자물쇠를 세운다 (SCREEN_DESIGN §13-1 · ADR-0699) */
 export const isLock = key => STRINGS[key]?.lock === true;
+/** 사전 항목 전부 `[key, {ko, en, zh?}]` — 검증용(`dev/test.js` 의 간체 그물 · `scripts/zh_missing.py` 와 같은 범위). 화면 코드는 `t()` 만 쓴다 */
+export const dictEntries = () => Object.entries(STRINGS);
 
 /** 미등록 키를 화면 글로 낼 때 — 문구는 `innerHTML` 로 들어가므로 키에 든 태그 글자를 글자로 바꾼다 (ADR-0751) */
 const escapeKey = key => String(key).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -61,7 +83,8 @@ const escapeKey = key => String(key).replace(/[&<>"']/g, c => ({ '&': '&amp;', '
 /** UI 문구 조회 — 미등록 키는 키 그대로 노출된다(누락이 화면에서 바로 보이게 · HTML 글자는 이스케이프) */
 export function t(key, params) {
     const e = has(key) ? STRINGS[key] : null;
-    let s = e ? (e[current] ?? e.ko) : escapeKey(key);
+    // 간체 칸이 없는 키는 영어로(D4) — 빈 문자열 `zh: ''` 은 일부러 비운 칸이라 그대로 쓴다
+    let s = e ? (current === 'zh' && !('zh' in e) ? (e.en ?? e.ko) : (e[current] ?? e.ko)) : escapeKey(key);
     // 단수 · 복수 — 값이 `{one, other}` 면 수가 1 일 때 `one` [2026-10-17 · 「1 items」] · 수는 `{n}`, 없으면 `{v}` (천 단위 쉼표를 단 문자열도 받는다)
     if (s && typeof s === 'object') s = Number(String(params?.n ?? params?.v ?? '').replaceAll(',', '')) === 1 ? s.one : s.other;
     if (params) for (const [k, v] of Object.entries(params)) s = s.replaceAll(`{${k}}`, v);
@@ -238,8 +261,8 @@ const STRINGS = {
     'hint.assignment': { ko: '이 줄에 효과를 더할 영웅을 등록합니다. 등록된 영웅을 다시 누르면 해제할 수 있습니다.', en: 'Register a hero to add effects to this line. Select a registered hero again to remove the assignment.' },
     'hint.minigame': { ko: '선택한 자원 줄의 미니게임입니다. 화면의 조작 안내를 확인하고 시작하세요.', en: 'A minigame for the selected resource line. Review its controls before starting.' },
     'hint.explore': { ko: '탐험할 장소와 Party를 정해 보냅니다. 완료 후 돌아온 편성의 보상을 받을 수 있습니다.', en: 'Choose an exploration location and Party. Claim rewards when the exploring party returns.' },
-    'hint.recruit': { ko: '후보 영웅을 확인하고 골드를 내어 고용합니다. 교체하기 전에 남길 후보는 보관할 수 있습니다.', en: 'Inspect candidate heroes and spend gold to hire them. Keep candidates you want to save before refreshing.' },
-    'hint.visitors': { ko: '시간이 지나 찾아온 영웅과 보관한 후보입니다. 카드를 골라 고용하거나 떠나보낼 수 있습니다.', en: 'Heroes who arrived over time and candidates you kept. Select a card to hire or dismiss a candidate.' },
+    'hint.recruit': { ko: '후보 영웅을 확인하고 골드를 내어 고용합니다.', en: 'Inspect candidate heroes and spend gold to hire them.' },
+    'hint.visitors': { ko: '수색 영웅이 찾아온 영웅입니다. 카드를 골라 고용하거나 떠나보낼 수 있습니다.', en: 'Heroes your searchers brought back. Select a card to hire or dismiss a candidate.' },
     'hint.commissions': { ko: '의뢰를 받아 목표를 채우고 보상을 받습니다. 의뢰 카드에서 조건과 진행도를 확인하세요.', en: 'Accept commissions, complete their objectives and claim rewards. Check each card’s conditions and progress.' },
     'hint.gamble': { ko: '판돈을 고르고 슬롯을 돌립니다. 심볼 조합에 따른 배당은 배당표에서 확인할 수 있습니다.', en: 'Choose a stake and spin the slots. The payout table shows rewards for symbol combinations.' },
     'hint.payouts': { ko: '당첨 조합과 배당입니다. 판돈과 함께 확인하면 한 판의 보상을 비교할 수 있습니다.', en: 'Winning combinations and their payouts. Compare them with your chosen stake.' },
@@ -675,11 +698,8 @@ const STRINGS = {
 
     /* ── 선술집 (실동작) ── */
     'tv.hire': { ko: '고용 ({g} 골드)', en: 'Hire ({g} gold)' },
-    // 보관 — 후보를 수색 칸에 넣는다(무료 · `game.tavernKeep` · ADR-0897)
-    'tv.keep': { ko: '보관', en: 'Keep' },
-    'tv.kept': { ko: '{name} 보관 — 수색 칸', en: 'Kept {name} in Search' },
+    // 보관한 명단 칸 — 2026-11-16 보관 삭제(R519) 뒤엔 옛 세이브의 다음 교체 전까지만 보인다
     'tv.empty.kept': { ko: '보관함 — 다음 교체 때 채워짐', en: 'Kept — refills on next refresh' },
-    'tv.err.joinFull': { ko: '수색 칸 가득 참 ({n})', en: 'Search full ({n})' },
     'tv.reroll.wait': { ko: '교체까지 {t}', en: 'Refresh in {t}' },
     'tv.reroll.free': { ko: '후보 교체 (무료)', en: 'New candidates (free)' },
     'tv.err.cooldown': { ko: '후보 교체 대기 중', en: 'Candidate refresh is on cooldown' },
@@ -689,7 +709,6 @@ const STRINGS = {
     'tv.hired': { ko: '{name} 고용', en: 'Hired {name}' },
     /* 수색 [2026-10-19 · SCREEN_DESIGN §8-1 · ADR-0671 — ~~수색 · 영웅 보내기 · 가입 희망~~ 대체] — 명단 셋째 칸(안내 · 고른 얼굴의 카드) · 오른쪽 열 2×2 */
     'tv.visit.h': { ko: '수색', en: 'Search' },
-    'tv.visit.lounge': { ko: '대기소', en: 'Waiting Room' },
     'tv.visit.full': { ko: '칸이 다 참 — 돌려보내야 새로 옴', en: 'Slots full — send someone away' },
     'tv.visit.drop': { ko: '돌려보내기', en: 'Send away' },
     'tv.visit.dropped': { ko: '{name} 을(를) 돌려보냄', en: 'Sent {name} away' },
@@ -866,7 +885,7 @@ const STRINGS = {
     'res.gold': { ko: '골드', en: 'Gold' },
     'res.dust': { ko: '분해 가루', en: 'Dust' },
     'res.stigma': { ko: '낙인', en: 'Stigma' },
-    'ui.langBtn': { ko: 'EN', en: '한국어' },   // 버튼에는 "다른 쪽" 언어를 적는다
+    'ui.langBtn': { ko: 'EN', en: '简体中文', zh: '한국어' },   // 버튼에는 누르면 바뀔 다음 언어를 적는다 — 한국어 → English → 简体中文 순환 (ADR-1220)
     'ui.close': { ko: '닫기', en: 'Close' },        // 창 레이어 — 닫는 길 셋 중 눈에 보이는 하나 (SCREEN_DESIGN §2)
     'ui.expTime': { ko: '원정 플레이 시간', en: 'Expedition Playtime' },   // 상단바 ⚙ 왼쪽 — 누적 원정 플레이 시간(배속을 탄다)의 라벨 (SCREEN_DESIGN §2 · ADR-0514)
     /* 창 안에서 답하는 버튼 둘 (2026-09-09) — 어느 창이든 같은 말을 쓴다. 「확인」은 **읽었다/한다**,
@@ -946,6 +965,7 @@ const STRINGS = {
     'dp.node.interval': { ko: '간격', en: 'Interval' },
     'dp.node.quality': { ko: '품질', en: 'Quality' },
     'dp.node.waiting': { ko: '대기 칸', en: 'Waiting Slots' },
+    'dp.node.roster': { ko: '로스터', en: 'Roster' },   // 영웅 보유 상한을 레벨마다 한 칸씩 (2026-11-16 · R516 · ADR-1216)
     'dp.node.speed': { ko: '속도', en: 'Speed' },
     'dp.node.range': { ko: '범위', en: 'Range' },
     'dp.node.income': { ko: '수익', en: 'Income' },
@@ -1560,8 +1580,8 @@ const STRINGS = {
         en: "Active skills and automatic use order",
     },
     'help.character.skills.body': {
-        ko: "액티브는 영웅 고유·스킬북으로 습득·전직의 세 출처에서 하나씩 옵니다. 레벨만 올려 여러 스킬을 자동으로 배우는 구조는 아닙니다. 스킬 그림에 마우스를 올려 효과·대상·필요 무기를 확인하고, 스킬북을 통한 습득과 업그레이드는 도서관에서 진행합니다.<br><br>차례가 오면 조건을 만족하고 사용할 수 있는 스킬 중 가장 오래 준비된 것을 자동으로 고릅니다. 동시에 준비된 스킬은 앞 칸부터 씁니다. 스킬 쿨타임은 스테이지가 시작될 때 처음부터 돌아서, 첫 스킬은 쿨타임이 짧은 것부터 나갑니다. 같은 스테이지의 다음 라운드로는 남은 쿨타임을 그대로 이어 갑니다.<br><br>물리 무기와 맨손은 보통 차례마다 기본 공격을 하며, 준비된 스킬이 있으면 먼저 씁니다. 공격 스킬이 겨눈 적이 이미 쓰러지면 뒤의 기본 공격은 생략될 수 있습니다. 마법 무기는 기본 공격 없이 충전 칸으로 스킬을 씁니다. 정신 집중 중에는 기본 공격과 다른 스킬을 사용하지 않으며, 오오라와 사건 반응 스킬도 각자의 발동 규칙을 따릅니다. 마나는 없습니다.",
-        en: "Active skills come one each from the hero's innate skill, a learned skill book and advancement. Leveling alone does not automatically teach a collection of skills. Hover an icon to check its effect, targets and weapon requirement. Learn and upgrade book skills at the Library.<br><br>On a turn, combat automatically picks the eligible skill that has been ready longest. Skills ready at the same time go in slot order. Skill cooldowns start over when a stage begins, so the shortest cooldown goes first. Remaining cooldowns carry over into the next round of the same stage.<br><br>Physical weapons and bare hands normally make a basic attack each turn, using a ready skill first. The following basic attack may be skipped if the attack skill's target has already fallen. Magic weapons have no basic attack and cast using stored charges. Channeling prevents other skills and basic attacks while active; auras and event-triggered skills also follow their own activation rules. There is no mana.",
+        ko: "액티브는 영웅 고유·스킬북으로 습득·전직의 세 출처에서 하나씩 옵니다. 레벨만 올려 여러 스킬을 자동으로 배우는 구조는 아닙니다. 스킬 그림에 마우스를 올려 효과·대상·필요 무기를 확인하고, 스킬북을 통한 습득과 업그레이드는 도서관에서 진행합니다.<br><br>전투가 시작될 때 모든 스킬은 준비된 상태입니다. 그래서 첫 차례들에는 [우선순위]에서 정한 순서대로 스킬을 씁니다. 스킬 그림을 끌어 순서를 정하고, [랜덤으로]를 누르면 정한 순서가 지워집니다. 순번이 「–」인 영웅은 아직 순서를 정하지 않은 것이라 전투마다 순서가 무작위로 정해지고, 몬스터는 버프·디버프를 먼저 겁니다. 그 뒤로는 차례가 오면 조건을 만족하고 사용할 수 있는 스킬 중 가장 오래 준비된 것을 자동으로 고르며, 동시에 준비된 스킬은 같은 순서를 따릅니다. 같은 스테이지의 다음 라운드로는 남은 쿨타임을 그대로 이어 가고, 다음 스테이지는 다시 모두 준비된 상태로 시작합니다.<br><br>물리 무기와 맨손은 보통 차례마다 기본 공격을 하며, 준비된 스킬이 있으면 먼저 씁니다. 공격 스킬이 겨눈 적이 이미 쓰러지면 뒤의 기본 공격은 생략될 수 있습니다. 마법 무기는 기본 공격 없이 충전 칸으로 스킬을 씁니다. 정신 집중 중에는 기본 공격과 다른 스킬을 사용하지 않으며, 오오라와 사건 반응 스킬도 각자의 발동 규칙을 따릅니다. 마나는 없습니다.",
+        en: "Active skills come one each from the hero's innate skill, a learned skill book and advancement. Leveling alone does not automatically teach a collection of skills. Hover an icon to check its effect, targets and weapon requirement. Learn and upgrade book skills at the Library.<br><br>Every skill is ready when a battle starts, so the first turns use skills in your [Priority] order. Drag skill icons to set it; [Random] clears it. A hero showing “–” instead of numbers has no set order and shuffles it every battle, and monsters cast buffs and debuffs first. After that, combat picks the eligible skill that has been ready longest; skills ready at the same time follow the same order. Remaining cooldowns carry over into the next round of the same stage, and the next stage starts with everything ready again.<br><br>Physical weapons and bare hands normally make a basic attack each turn, using a ready skill first. The following basic attack may be skipped if the attack skill's target has already fallen. Magic weapons have no basic attack and cast using stored charges. Channeling prevents other skills and basic attacks while active; auras and event-triggered skills also follow their own activation rules. There is no mana.",
     },
     'help.character.weapon_skills.title': {
         ko: "배울 수 있는데 왜 스킬이 꺼지나요",
@@ -1608,8 +1628,8 @@ const STRINGS = {
         en: "Critical hits, Crushing Blow, Life Steal and counters",
     },
     'help.character.critical_effects.body': {
-        ko: "치명타 확률은 치명타가 나올 빈도, 치명타 피해는 치명타가 났을 때의 배율입니다. 마법 무기의 직접 타격도 치명타가 나올 수 있습니다. 두 수치 중 하나만 보고 공격 성능 전체를 판단하지 않습니다.<br><br>강타는 타격 직전 적의 현재 HP에 비례한 피해를 더합니다. 최대 HP 기준이 아니므로 같은 적도 HP가 많이 남았을 때 추가량이 큽니다. 강타와 흡혈은 물리 무기·맨손의 직격에 적용되며, 마법 무기를 들면 적용되지 않습니다.<br><br>흡혈은 준 직격 피해에 비례해 HP를 회복합니다. 피해가 잘 나오지 않으면 회복도 작아지며, 강타로 더한 피해나 중독·반사에는 흡혈이 붙지 않습니다. 회복을 늘리려면 흡혈 수치와 실제 타격 피해를 함께 확인합니다.<br><br>반격은 맞았을 때 확률로 공격자에게 기본 공격을 한 번 돌려줍니다. 자기 행동 차례는 쓰지 않으며, 반격을 맞은 쪽은 다시 반격하지 않습니다. 받은 피해를 그대로 되돌리는 반사와 다릅니다. 마법 무기에는 기본 공격이 없어 반격하지 못하며, 경직·스턴 중에도 반격하지 못합니다.",
-        en: "Critical Chance controls how often critical hits occur; Critical Damage controls their multiplier. Direct hits with magic weapons can also critically hit. Neither stat alone describes the hero's overall damage output.<br><br>Crushing Blow adds damage based on the enemy's current HP just before the hit. It uses current rather than maximum HP, so the added amount is larger while that enemy has more HP left. Crushing Blow and Life Steal work with direct hits using Physical weapons or bare hands, but do not apply while wielding a magic weapon.<br><br>Life Steal heals in proportion to direct-hit damage dealt. Weak hits also mean little healing. Added Crushing Blow damage, Poison damage over time and reflection provide no Life Steal. Compare the Life Steal value with the damage the hero actually deals.<br><br>A counter has a chance to answer an incoming hit with a bonus basic attack against the attacker. It does not use the defender's own action turn, and a counter cannot itself be countered. This differs from reflection. Magic weapons have no basic attack and cannot counter; staggered or Stunned heroes cannot counter either.",
+        ko: "치명타 확률은 치명타가 나올 빈도, 치명타 피해는 치명타가 났을 때의 배율입니다. 마법 무기의 직접 타격도 치명타가 나올 수 있습니다. 두 수치 중 하나만 보고 공격 성능 전체를 판단하지 않습니다.<br><br>강타는 타격 직전 적의 현재 HP에 비례한 피해를 더합니다. 최대 HP 기준이 아니므로 같은 적도 HP가 많이 남았을 때 추가량이 큽니다. 강타는 물리 무기·맨손의 직격에 적용되며, 마법 무기를 들면 적용되지 않습니다.<br><br>흡혈은 준 직격 피해에 비례합니다. 물리 피해는 HP를 회복하고, 원소 피해는 잠깐 유지되는 보호막이 되며(최대 HP의 일정 비율까지), 고정 피해에는 흡혈이 붙지 않습니다. 피해가 잘 나오지 않으면 회복도 작아지며, 강타로 더한 피해나 중독·반사에는 흡혈이 붙지 않습니다. 회복을 늘리려면 흡혈 수치와 실제 타격 피해를 함께 확인합니다.<br><br>반격은 맞았을 때 확률로 공격자에게 기본 공격을 한 번 돌려줍니다. 자기 행동 차례는 쓰지 않으며, 반격을 맞은 쪽은 다시 반격하지 않습니다. 받은 피해를 그대로 되돌리는 반사와 다릅니다. 마법 무기에는 기본 공격이 없어 반격하지 못하며, 경직·스턴 중에도 반격하지 못합니다.",
+        en: "Critical Chance controls how often critical hits occur; Critical Damage controls their multiplier. Direct hits with magic weapons can also critically hit. Neither stat alone describes the hero's overall damage output.<br><br>Crushing Blow adds damage based on the enemy's current HP just before the hit. It uses current rather than maximum HP, so the added amount is larger while that enemy has more HP left. Crushing Blow works with direct hits using Physical weapons or bare hands, but does not apply while wielding a magic weapon.<br><br>Life Steal scales with direct-hit damage dealt. Physical damage restores HP, elemental damage becomes a short-lived shield (up to a share of max HP), and Fixed damage provides no Life Steal. Weak hits also mean little healing. Added Crushing Blow damage, Poison damage over time and reflection provide no Life Steal. Compare the Life Steal value with the damage the hero actually deals.<br><br>A counter has a chance to answer an incoming hit with a bonus basic attack against the attacker. It does not use the defender's own action turn, and a counter cannot itself be countered. This differs from reflection. Magic weapons have no basic attack and cannot counter; staggered or Stunned heroes cannot counter either.",
     },
     'help.character.farming_stats.title': {
         ko: "드랍률·매직아이템 획득·골드·경험치",
@@ -1712,24 +1732,16 @@ const STRINGS = {
         en: "Refreshing the recruit list",
     },
     'help.tavern.reroll.body': {
-        ko: "<b>[후보 교체 (무료)]</b>를 누르면 남아 있는 후보를 포함해 명단 전체가 바뀝니다. 시간이 지나도 후보는 저절로 바뀌지 않습니다. 교체 전에 남겨 둘 후보는 <b>[보관]</b>할 수 있습니다.<br><br>교체는 항상 무료입니다. 교체 뒤 <b>{refresh}분</b>이 지나야 다시 교체할 수 있으며, 대기 중에는 버튼이 비활성화되고 남은 시간이 표시됩니다. 대기 시간은 오프라인에도 흐릅니다.",
-        en: "<b>New candidates (free)</b> replaces the entire recruit list, including candidates still present. Time never changes the list automatically. Use <b>Keep</b> before refreshing to save a candidate.<br><br>Refreshing is always free. After each refresh, wait <b>{refresh} min</b> before refreshing again. The button is disabled during the cooldown and shows the remaining time beside it. The cooldown continues offline.",
-    },
-    'help.tavern.keep.title': {
-        ko: "보관은 고용과 다릅니다",
-        en: "Keeping is different from hiring",
-    },
-    'help.tavern.keep.body': {
-        ko: "후보의 <b>[보관]</b>을 누르면 무료로 오른쪽 수색 칸에 옮깁니다. 명단의 그 자리는 비지만 보관한 영웅은 명단을 교체해도 남습니다. 아직 내 로스터에 들어온 것은 아니므로 나중에 <b>고용비를 내고 고용</b>해야 사용할 수 있습니다.<br><br>오른쪽 초상을 눌러 카드를 열고 <b>[고용]</b>하거나 <b>[돌려보내기]</b>합니다. 수색 칸은 시간이 지나 찾아온 영웅과 함께 쓰며, 가득 차면 추가 보관과 새 영웅 도착이 멈춥니다. 보관할 후보와 새 도착을 기다릴 빈 칸을 함께 생각합니다.",
-        en: "Use a candidate's <b>Keep</b> button to move them into a waiting slot on the right for free. Their list slot becomes empty, but the saved hero remains when the recruit list is refreshed. They are not in your roster yet: <b>pay the hiring cost later</b> to use them.<br><br>Select the portrait to open the hero's card, then <b>Hire</b> or <b>Send away</b>. Kept candidates share slots with heroes arriving over time. A full waiting area blocks further keeping and pauses new arrivals, so leave space when you want more arrivals.",
+        ko: "<b>[후보 교체 (무료)]</b>를 누르면 남아 있는 후보를 포함해 명단 전체가 바뀝니다. 시간이 지나도 후보는 저절로 바뀌지 않습니다. <br><br>교체는 항상 무료입니다. 교체 뒤 <b>{refresh}분</b>이 지나야 다시 교체할 수 있으며, 대기 중에는 버튼이 비활성화되고 남은 시간이 표시됩니다. 대기 시간은 오프라인에도 흐릅니다.",
+        en: "<b>New candidates (free)</b> replaces the entire recruit list, including candidates still present. Time never changes the list automatically. <br><br>Refreshing is always free. After each refresh, wait <b>{refresh} min</b> before refreshing again. The button is disabled during the cooldown and shows the remaining time beside it. The cooldown continues offline.",
     },
     'help.tavern.visitors.title': {
         ko: "기다리면 찾아오는 영웅",
         en: "Heroes who arrive over time",
     },
     'help.tavern.visitors.body': {
-        ko: "연구소 <b>수색</b> 줄에 등록한 영웅이 시간마다 한 명씩 데려옵니다. 아무도 등록하지 않으면 찾아오는 영웅이 없고, 영웅은 영웅 고용 후보로만 얻습니다. 등록한 영웅도 원정과 편성에 그대로 쓸 수 있고, 게임을 닫아도 시간이 흐릅니다. 이 수색으로는 현재 <b>매직 또는 레어</b> 영웅이 옵니다.<br><br>도착한 영웅은 고용하거나 돌려보낼 때까지 떠나지 않습니다. 수색 칸이 가득 차도 시계는 흐릅니다. 시간이 다 된 영웅은 자리가 날 때까지 기다렸다가, 자리를 비우면 바로 들어오고 그때부터 다음 수색을 시작합니다. 기다리는 영웅은 데려온 수색 영웅 칸에 <b>찾았다!</b>로 보이며, 눌러서 바로 고용하거나 무시할 수 있습니다. 무시하면 그 수색 영웅이 바로 다시 나갑니다. 연구소에서 <b>간격</b>을 올리면 더 자주 오고, <b>품질</b>은 레어 확률, <b>대기 칸</b>은 보관할 수를 늘립니다.",
-        en: "Each hero assigned to the Laboratory's <b>Search</b> line brings back one candidate per interval. With no one assigned, nobody arrives and heroes come only from the hiring candidates. Assigned heroes can still join expeditions and formations, and time keeps passing while the game is closed. These arrivals currently produce <b>Magic or Rare</b> heroes.<br><br>Arrivals stay until hired or sent away. The timer keeps running while the waiting slots are full. A hero whose timer finishes waits for room, enters as soon as you free a slot, and the next search starts then. A waiting hero shows as <b>Found!</b> under the searcher who brought them; click it to hire them right away or pass. Passing sends that searcher out again at once. Laboratory <b>Interval</b> research makes arrivals more frequent, <b>Quality</b> raises the Rare chance, and <b>Waiting Slots</b> adds capacity.",
+        ko: "연구소 <b>수색</b> 줄에 등록한 영웅이 시간마다 한 명씩 데려옵니다. 아무도 등록하지 않으면 찾아오는 영웅이 없고, 영웅은 영웅 고용 후보로만 얻습니다. 등록한 영웅도 원정과 편성에 그대로 쓸 수 있고, 게임을 닫아도 시간이 흐릅니다. 이 수색으로는 현재 <b>매직 또는 레어</b> 영웅이 옵니다.<br><br>도착한 영웅은 고용하거나 돌려보낼 때까지 떠나지 않습니다. 찾아온 영웅은 데려온 수색 영웅 줄의 오른쪽 칸에 섭니다. 그 줄 칸이 가득 차도 시계는 흐릅니다. 시간이 다 된 영웅은 그 줄에 자리가 날 때까지 기다렸다가, 자리를 비우면 바로 들어오고 그때부터 다음 수색을 시작합니다. 기다리는 영웅은 데려온 수색 영웅 칸에 <b>찾았다!</b>로 보이며, 눌러서 바로 고용하거나 무시할 수 있습니다. 무시하면 그 수색 영웅이 바로 다시 나갑니다. 연구소에서 <b>간격</b>을 올리면 더 자주 오고, <b>품질</b>은 레어 확률을 올리고, <b>대기 칸</b>은 줄마다 둘째 칸을 엽니다.",
+        en: "Each hero assigned to the Laboratory's <b>Search</b> line brings back one candidate per interval. With no one assigned, nobody arrives and heroes come only from the hiring candidates. Assigned heroes can still join expeditions and formations, and time keeps passing while the game is closed. These arrivals currently produce <b>Magic or Rare</b> heroes.<br><br>Arrivals stay until hired or sent away, in the slots to the right of the searcher who brought them. The timer keeps running while that searcher's slots are full. A hero whose timer finishes waits for room in that row, enters as soon as you free a slot there, and the next search starts then. A waiting hero shows as <b>Found!</b> under the searcher who brought them; click it to hire them right away or pass. Passing sends that searcher out again at once. Laboratory <b>Interval</b> research makes arrivals more frequent, <b>Quality</b> raises the Rare chance, and <b>Waiting Slots</b> opens a second slot in each row.",
     },
     'help.tavern.commissions.title': {
         ko: "하던 원정에 의뢰를 얹기",
@@ -1946,8 +1958,8 @@ const STRINGS = {
         en: "Search, Training and automatic gold",
     },
     'help.resource.jobs.body': {
-        ko: "<b>수색</b>은 이 줄에 등록한 영웅마다 시간마다 한 명씩 선술집에 데려옵니다. 아무도 등록하지 않으면 돌지 않습니다. [간격]은 도착을 더 빠르게 합니다. 선술집의 대기 칸이 차도 시계는 흐르고, 시간이 다 된 영웅은 칸을 비우는 즉시 들어옵니다. [품질]은 레어 후보 확률, [대기 칸]은 보관할 후보 수를 늘립니다.<br><br><b>훈련</b> 줄에 등록한 영웅은 시간이 흐르면서 경험치를 받아 로스터의 선두 레벨을 따라갑니다. 상한은 <b>로스터 최고 레벨 − [범위]에 표시된 차이</b>입니다. 범위를 연구하면 그 차이가 줄어듭니다. 상한 이상인 영웅은 훈련 경험치를 받지 않으므로, 최고 레벨을 앞서 올리는 일은 원정에서 합니다.<br><br><b>도박장 줄</b>은 선술집의 도박장을 열면 자동으로 골드를 생산합니다. 판돈을 걸거나 스핀을 누를 필요가 없습니다. [수익]은 생산량, [대박]은 한 번 더 지급받을 확률을 높입니다. 선술집 슬롯을 직접 돌리는 것과 별개입니다.",
-        en: "<b>Search</b> brings one candidate to the Tavern per interval for each hero assigned to this line, and does nothing with no one assigned. Interval makes arrivals faster. It keeps running while Tavern waiting slots are full; a hero whose timer finishes enters as soon as you free a slot. Quality raises Rare chance, and Waiting Slots adds candidate capacity.<br><br><b>Training</b> helps assigned heroes catch up toward the roster's leading level. Its cap is <b>the highest roster level minus the gap shown by Range</b>. Research Range to reduce that gap. Heroes at or above the cap gain no Training XP, so Expeditions must push the leading level forward.<br><br>The <b>Gambling Den line</b> automatically produces gold once the Tavern's Gambling Den is unlocked. It needs no stake or spin button. Income raises output, while Jackpot raises the chance of an extra payout. This is separate from manually playing Tavern slots.",
+        ko: "<b>수색</b>은 이 줄에 등록한 영웅마다 시간마다 한 명씩 선술집에 데려옵니다. 아무도 등록하지 않으면 돌지 않습니다. [간격]은 도착을 더 빠르게 합니다. 그 영웅 줄의 선술집 칸이 차도 시계는 흐르고, 시간이 다 된 영웅은 그 줄 칸을 비우는 즉시 들어옵니다. [품질]은 레어 후보 확률, [대기 칸]은 줄마다 둘째 칸, [로스터]는 거느릴 수 있는 영웅 수를 늘립니다.<br><br><b>훈련</b> 줄에 등록한 영웅은 시간이 흐르면서 경험치를 받아 로스터의 선두 레벨을 따라갑니다. 상한은 <b>로스터 최고 레벨 − [범위]에 표시된 차이</b>입니다. 범위를 연구하면 그 차이가 줄어듭니다. 상한 이상인 영웅은 훈련 경험치를 받지 않으므로, 최고 레벨을 앞서 올리는 일은 원정에서 합니다.<br><br><b>도박장 줄</b>은 선술집의 도박장을 열면 자동으로 골드를 생산합니다. 판돈을 걸거나 스핀을 누를 필요가 없습니다. [수익]은 생산량, [대박]은 한 번 더 지급받을 확률을 높입니다. 선술집 슬롯을 직접 돌리는 것과 별개입니다.",
+        en: "<b>Search</b> brings one candidate to the Tavern per interval for each hero assigned to this line, and does nothing with no one assigned. Interval makes arrivals faster. It keeps running while that searcher's Tavern slots are full; a hero whose timer finishes enters as soon as you free one of them. Quality raises Rare chance, Waiting Slots opens a second slot per searcher, and Roster raises how many heroes you can keep.<br><br><b>Training</b> helps assigned heroes catch up toward the roster's leading level. Its cap is <b>the highest roster level minus the gap shown by Range</b>. Research Range to reduce that gap. Heroes at or above the cap gain no Training XP, so Expeditions must push the leading level forward.<br><br>The <b>Gambling Den line</b> automatically produces gold once the Tavern's Gambling Den is unlocked. It needs no stake or spin button. Income raises output, while Jackpot raises the chance of an extra payout. This is separate from manually playing Tavern slots.",
     },
     'help.colosseum.prepare.title': {
         ko: "시련의 탑에서 파티 시험하기",
@@ -2473,7 +2485,11 @@ const STRINGS = {
     'ch.seal': { ko: '죄종 인장', en: 'Sin Seal' },
     'ch.seal.lock': { ko: '죄종 인장은 레이드에서 얻을 수 있습니다.', en: 'Sin Seals can be obtained from Raids.' },
     'ch.skill.h': { ko: '액티브 스킬', en: 'Active Skills' },
-    // ~~스킬 우선순위 버튼 · 창 제목 `ch.skill.order` · `ch.skill.orderH`~~ — 2026-11-02 걷었다(SCREEN_DESIGN §6 · ADR-1035)
+    // 스킬 우선순위 — 소제목 오른쪽 끝 버튼 · 버튼 아래 판의 [랜덤으로] (2026-11-16 · SCREEN_DESIGN §6 · ADR-1213 · ADR-1215 — 창 제목 `ch.skill.orderH` 는 판이 되며 걷었다)
+    'ch.skill.order': { ko: '우선순위', en: 'Priority' },
+    'ch.skill.orderRandom': { ko: '랜덤으로', en: 'Random' },
+    // 우선순위 판 맨 위 설명 한 줄 (§6 · ADR-1221 — §12 「패널에 설명 문장 없음」의 예외 · 사용자가 쓴 문장 그대로)
+    'ch.skill.orderDesc': { ko: '첫 스킬 사용 시 우선순위를 설정합니다.', en: 'Sets the priority for first skill use.' },
     'ch.skill.go': { ko: '마스터리 열기', en: 'Open Mastery' },
     'ch.items.h': { ko: '아이템', en: 'Items' },
 
@@ -2603,7 +2619,8 @@ const STRINGS = {
     'cn.t.lab_res': { ko: '연구소 자원 생산', en: 'Laboratory resource production' },   // 창고 r1 — 연구소 「자원」 줄을 연다 (R361)
     'cn.t.codex': { ko: '만난 몬스터를 도감에 기록', en: 'Record monsters you meet in the codex' },
     // 선술집의 켜기도 이름 토막 [2026-09-25 사용자 지시 「영웅고용, 영웅수색」 · 「의뢰오픈」 · 대장간과 같은 시험 중 — SCREEN_DESIGN §13-1]
-    'cn.t.hire': { ko: '영웅 고용 · 수색', en: 'Hero Hiring · Search' },   // 연구소 수색 줄도 이 랭크가 연다 (2026-10-30 사용자 지시)
+    'cn.t.hire': { ko: '영웅 고용', en: 'Hero Hiring' },   // 선술집 r2 — 명단 (수색 줄 · 수색 칸은 r3 · 2026-11-16 · R516 · R519 · ADR-1216)
+    'cn.t.lab_visit': { ko: '연구소 영웅 수색', en: 'Laboratory hero search' },   // 선술집 r3 — 연구소 「수색」 줄을 연다 (2026-11-16 · R516 · ADR-1216)
     'cn.t.shop': { ko: '상단에서 무기 · 물약 구매', en: 'Buy weapons and potions at the trading house' },
     'cn.t.shop_rows': { ko: '상단에서 방어구 · 장신구 · 스킬북 구매', en: 'Buy armor, jewelry and skill books at the trading house' },
     'cn.t.shop_trade': { ko: '교역소에서 재료 교환', en: 'Trade materials at the trading post' },
@@ -2622,7 +2639,7 @@ const STRINGS = {
     'cn.t.gear_set': { ko: '장비 한 벌을 저장해 바로 갈아입기', en: 'Save a gear loadout and swap instantly' },
     'cn.t.monster_card': { ko: '몬스터 카드 수집', en: 'Collect monster cards' },
     'cn.t.commission_board': { ko: '의뢰 게시판', en: 'Commission Board' },   // 선술집 r2 (이름 토막 — 위 선술집 줄과 같다 · 2026-09-25)
-    'cn.t.gamble': { ko: '도박장', en: 'Gambling Hall' },   // 선술집 r3 — 2026-10-27 R363 (이름 토막 — 위 선술집 줄과 같다 · 2026-09-27 사용자 지시)
+    'cn.t.gamble': { ko: '도박장', en: 'Gambling Hall' },   // 선술집 r4 — 2026-11-16 R516 · 옛 r3 (이름 토막 — 위 선술집 줄과 같다 · 2026-09-27 사용자 지시)
     'cn.t.advance': { ko: '영웅 전직', en: "Advance a hero's class" },
     'cn.t.skill_depth': { ko: '영웅 스킬에 포인트 추가', en: 'Invest more points into hero skills' },
     // 더하기는 「대상 +n」 한 토막 — 서술형 문장으로 늘리지 않는다 (ADR-0329) · 「증가」 도 안 붙인다 — 「+」 가 이미 말한다 (ADR-0351)
@@ -3446,6 +3463,12 @@ const STRINGS = {
     'bt.trait.stat': { ko: '{stat} {v} 증가', en: '{stat} increases by {v}' },
     'bt.trait.defMult': { ko: '물리 방어 {v}배', en: 'Physical Defense ×{v}' },
     'bt.trait.resCap': { ko: '{e} 피해 {v} 감소', en: '{e} damage taken reduced by {v}' },
+    // 부류 버프 칩의 효과 한 줄 (R518 · ADR-1218) — 이름은 monster_base.csv · 값은 로직이 실어 온 것
+    'bt.fam.Army': { ko: '같은 부류가 {n} 이상 서 있으면 데미지 {v} 증가', en: 'Damage +{v} while {n} or more of its kind stand' },
+    'bt.fam.Tribe': { ko: '모든 능력치 {v} 증가', en: 'All attributes increase by {v}' },
+    'bt.fam.Giant': { ko: '혼자 남으면 데미지 {v} 증가', en: 'Damage +{v} when it stands alone' },
+    'bt.fam.Guardian': { ko: '서 있는 동안 후열 동료가 받는 피해 {v} 감소', en: 'Back-row allies take {v} less damage while it stands' },
+    'bt.fam.Aberration': { ko: '쓰러질 때마다 영웅의 모든 원소 저항 {v} 감소 · 최대 {n}번', en: 'Each time it falls, heroes lose {v} of all elemental resistances, up to {n} times' },
     // 로그 탭 — 줄의 **주체**(그 일을 한 쪽)로 거른다 (2026-09-15 · SCREEN_DESIGN §4-2)
     'bt.logf.all': { ko: '전체', en: 'All' },
     'bt.logf.party': { ko: '우리', en: 'Party' },

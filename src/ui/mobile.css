@@ -305,7 +305,7 @@
 :root[data-mobile] .tv-search-cell > .tv-ghost { display: none; }
 :root[data-mobile] .tv-search-cell > :not(.tv-ghost) { min-height: 100px; }
 :root[data-mobile] .tv-join { width: 100%; }
-:root[data-mobile] .tv-join-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+:root[data-mobile] .tv-join-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: none; padding: 0; }
 :root[data-mobile] .tv-low { flex-direction: column; }
 :root[data-mobile] .tv-low > .tv-gb > .gb-cell { margin-top: 0; }
 :root[data-mobile] .cm-board { flex-direction: column; gap: 10px; }

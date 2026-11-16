@@ -1,0 +1,30 @@
+<!doctype html><meta charset="utf-8"><title>running</title><pre id="out"></pre>
+<script type="module">
+// 영웅 생성 분포 (2026-11-16) — hero.rollHeroOf(선술집과 같은 굴림: 이름 · 죄종 · 특성 · 등급 · 능력치 · 고유 · 얼굴)로 직업마다 N 명
+// → hist[cls][attr][tier][sinBoost 0|1][값] (sinBoost = 그 영웅 죄종이 미는 칸이 이 능력치인가)
+import { loadData, buildSystems, D } from '../ui/data.js';
+import { makeRng } from '../game_logic/rng.js';
+const q = new URL(location.href).searchParams;
+const N = +(q.get('n') || 50000);
+const out = document.getElementById('out');
+try {
+    await loadData('../data/');
+    const SYS = buildSystems(D);
+    const classes = ['warrior', 'knight', 'archer', 'mage', 'priest'];
+    const hist = {}; const tiers = {};
+    for (const cls of classes) {
+        hist[cls] = {}; tiers[cls] = {};
+        for (let s = 1; s <= N; s++) {
+            const h = SYS.hero.rollHeroOf(makeRng(500000 + s), cls);
+            tiers[cls][h.tier] = (tiers[cls][h.tier] ?? 0) + 1;
+            for (const [a, v] of Object.entries(h.stats)) {
+                const b = D.sinAttrs[h.sin] === a ? 1 : 0;
+                const x = (((hist[cls][a] ??= {})[h.tier] ??= [{}, {}])[b]);
+                x[v] = (x[v] ?? 0) + 1;
+            }
+        }
+    }
+    out.textContent = JSON.stringify({ N, sinAttrs: D.sinAttrs, tiers, hist });
+    document.title = 'DONE';
+} catch (err) { out.textContent = 'ERR ' + err.stack; document.title = 'FAIL'; }
+</script>

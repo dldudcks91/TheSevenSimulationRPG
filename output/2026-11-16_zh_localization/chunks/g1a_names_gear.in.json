@@ -1,0 +1,4106 @@
+[
+ {
+  "key": "csv|arena_tier.csv|bronze|name|브론즈",
+  "ko": "브론즈",
+  "en": "Bronze",
+  "ctx": "arena_tier.csv 행 bronze · 열 name"
+ },
+ {
+  "key": "csv|arena_tier.csv|silver|name|실버",
+  "ko": "실버",
+  "en": "Silver",
+  "ctx": "arena_tier.csv 행 silver · 열 name"
+ },
+ {
+  "key": "csv|arena_tier.csv|gold|name|골드",
+  "ko": "골드",
+  "en": "Gold",
+  "ctx": "arena_tier.csv 행 gold · 열 name"
+ },
+ {
+  "key": "csv|arena_tier.csv|platinum|name|플래티넘",
+  "ko": "플래티넘",
+  "en": "Platinum",
+  "ctx": "arena_tier.csv 행 platinum · 열 name"
+ },
+ {
+  "key": "csv|arena_tier.csv|diamond|name|다이아",
+  "ko": "다이아",
+  "en": "Diamond",
+  "ctx": "arena_tier.csv 행 diamond · 열 name"
+ },
+ {
+  "key": "csv|arena_tier.csv|champion|name|챔피언",
+  "ko": "챔피언",
+  "en": "Champion",
+  "ctx": "arena_tier.csv 행 champion · 열 name"
+ },
+ {
+  "key": "csv|armor_group.csv|heavy|group|중갑",
+  "ko": "중갑",
+  "en": "Heavy Armor",
+  "ctx": "armor_group.csv 행 heavy · 열 group"
+ },
+ {
+  "key": "csv|armor_group.csv|light|group|경갑",
+  "ko": "경갑",
+  "en": "Light Armor",
+  "ctx": "armor_group.csv 행 light · 열 group"
+ },
+ {
+  "key": "csv|armor_group.csv|robe|group|로브",
+  "ko": "로브",
+  "en": "Robe",
+  "ctx": "armor_group.csv 행 robe · 열 group"
+ },
+ {
+  "key": "csv|armor_group.csv|plate|group|플레이트",
+  "ko": "플레이트",
+  "en": "Plate",
+  "ctx": "armor_group.csv 행 plate · 열 group"
+ },
+ {
+  "key": "csv|armor_group.csv|leather|group|가죽",
+  "ko": "가죽",
+  "en": "Leather",
+  "ctx": "armor_group.csv 행 leather · 열 group"
+ },
+ {
+  "key": "csv|armor_group.csv|tiara|group|티아라",
+  "ko": "티아라",
+  "en": "Tiara",
+  "ctx": "armor_group.csv 행 tiara · 열 group"
+ },
+ {
+  "key": "csv|armor_group.csv|gauntlet|group|건틀릿",
+  "ko": "건틀릿",
+  "en": "Gauntlet",
+  "ctx": "armor_group.csv 행 gauntlet · 열 group"
+ },
+ {
+  "key": "csv|armor_group.csv|greaves|group|그리브스",
+  "ko": "그리브스",
+  "en": "Greaves",
+  "ctx": "armor_group.csv 행 greaves · 열 group"
+ },
+ {
+  "key": "csv|building.csv|forge|name|대장간",
+  "ko": "대장간",
+  "en": "Blacksmith",
+  "ctx": "building.csv 행 forge · 열 name"
+ },
+ {
+  "key": "csv|building.csv|resource|name|연구소",
+  "ko": "연구소",
+  "en": "Laboratory",
+  "ctx": "building.csv 행 resource · 열 name"
+ },
+ {
+  "key": "csv|building.csv|shop|name|상단",
+  "ko": "상단",
+  "en": "Trading House",
+  "ctx": "building.csv 행 shop · 열 name"
+ },
+ {
+  "key": "csv|building.csv|explore|name|탐험",
+  "ko": "탐험",
+  "en": "Exploration",
+  "ctx": "building.csv 행 explore · 열 name"
+ },
+ {
+  "key": "csv|building.csv|storage|name|창고",
+  "ko": "창고",
+  "en": "Storage",
+  "ctx": "building.csv 행 storage · 열 name"
+ },
+ {
+  "key": "csv|building.csv|tavern|name|선술집",
+  "ko": "선술집",
+  "en": "Tavern",
+  "ctx": "building.csv 행 tavern · 열 name"
+ },
+ {
+  "key": "csv|building.csv|command|name|지휘 천막",
+  "ko": "지휘 천막",
+  "en": "Command Tent",
+  "ctx": "building.csv 행 command · 열 name"
+ },
+ {
+  "key": "csv|building.csv|library|name|도서관",
+  "ko": "도서관",
+  "en": "Library",
+  "ctx": "building.csv 행 library · 열 name"
+ },
+ {
+  "key": "csv|combat_stat.csv|atk_physical|stat|물리 데미지",
+  "ko": "물리 데미지",
+  "en": "Physical Damage",
+  "ctx": "combat_stat.csv 행 atk_physical · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|atk_magic|stat|마법 데미지",
+  "ko": "마법 데미지",
+  "en": "Magic Damage",
+  "ctx": "combat_stat.csv 행 atk_magic · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|crit_rate|stat|치명타 확률",
+  "ko": "치명타 확률",
+  "en": "Crit Chance",
+  "ctx": "combat_stat.csv 행 crit_rate · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|crit_damage|stat|치명타 피해",
+  "ko": "치명타 피해",
+  "en": "Crit Damage",
+  "ctx": "combat_stat.csv 행 crit_damage · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|def_ignore|stat|방어 무시",
+  "ko": "방어 무시",
+  "en": "Defense Ignore",
+  "ctx": "combat_stat.csv 행 def_ignore · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|res_reduction|stat|저항 감소",
+  "ko": "저항 감소",
+  "en": "Resist Reduction",
+  "ctx": "combat_stat.csv 행 res_reduction · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|vs_type_damage|stat|타입별 추가 데미지",
+  "ko": "타입별 추가 데미지",
+  "en": "Damage vs Type",
+  "ctx": "combat_stat.csv 행 vs_type_damage · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|vs_status_damage|stat|상태이상 대상 피해",
+  "ko": "상태이상 대상 피해",
+  "en": "Damage vs Ailing",
+  "ctx": "combat_stat.csv 행 vs_status_damage · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|hp_max|stat|최대 HP",
+  "ko": "최대 HP",
+  "en": "Max HP",
+  "ctx": "combat_stat.csv 행 hp_max · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|defense|stat|물리 방어",
+  "ko": "물리 방어",
+  "en": "Physical Defense",
+  "ctx": "combat_stat.csv 행 defense · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|res_fire|stat|화염 저항",
+  "ko": "화염 저항",
+  "en": "Fire Resist",
+  "ctx": "combat_stat.csv 행 res_fire · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|res_cold|stat|냉기 저항",
+  "ko": "냉기 저항",
+  "en": "Cold Resist",
+  "ctx": "combat_stat.csv 행 res_cold · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|res_lightning|stat|전기 저항",
+  "ko": "전기 저항",
+  "en": "Lightning Resist",
+  "ctx": "combat_stat.csv 행 res_lightning · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|res_poison|stat|독 저항",
+  "ko": "독 저항",
+  "en": "Poison Resist",
+  "ctx": "combat_stat.csv 행 res_poison · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|res_max_bonus|stat|최대 저항 증가",
+  "ko": "최대 저항 증가",
+  "en": "Max Resist Bonus",
+  "ctx": "combat_stat.csv 행 res_max_bonus · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|damage_reduction|stat|피해 감소",
+  "ko": "피해 감소",
+  "en": "Damage Reduction",
+  "ctx": "combat_stat.csv 행 damage_reduction · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|reflect_damage|stat|반사 피해",
+  "ko": "반사 피해",
+  "en": "Reflect Damage",
+  "ctx": "combat_stat.csv 행 reflect_damage · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|life_steal|stat|흡혈",
+  "ko": "흡혈",
+  "en": "Life Steal",
+  "ctx": "combat_stat.csv 행 life_steal · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|hp_regen|stat|HP 재생",
+  "ko": "HP 재생",
+  "en": "HP Regen",
+  "ctx": "combat_stat.csv 행 hp_regen · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|action_period|stat|공격 속도",
+  "ko": "공격 속도",
+  "en": "Attack Speed",
+  "ctx": "combat_stat.csv 행 action_period · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|fhr|stat|타격 회복",
+  "ko": "타격 회복",
+  "en": "Hit Recovery",
+  "ctx": "combat_stat.csv 행 fhr · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|debuff_dur_reduction|stat|상태이상 · 디버프 시간 감소",
+  "ko": "상태이상 · 디버프 시간 감소",
+  "en": "Ailment & Debuff Duration Reduction",
+  "ctx": "combat_stat.csv 행 debuff_dur_reduction · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|cooldown_reduction|stat|쿨타임 감소",
+  "ko": "쿨타임 감소",
+  "en": "Cooldown Reduction",
+  "ctx": "combat_stat.csv 행 cooldown_reduction · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|item_find|stat|드랍률",
+  "ko": "드랍률",
+  "en": "Item Find",
+  "ctx": "combat_stat.csv 행 item_find · 열 stat"
+ },
+ {
+  "key": "csv|combat_stat.csv|gold_find|stat|골드 획득",
+  "ko": "골드 획득",
+  "en": "Gold Find",
+  "ctx": "combat_stat.csv 행 gold_find · 열 stat"
+ },
+ {
+  "key": "csv|commission_grade.csv|normal|name|일반",
+  "ko": "일반",
+  "en": "Normal",
+  "ctx": "commission_grade.csv 행 normal · 열 name"
+ },
+ {
+  "key": "csv|commission_grade.csv|magic|name|매직",
+  "ko": "매직",
+  "en": "Magic",
+  "ctx": "commission_grade.csv 행 magic · 열 name"
+ },
+ {
+  "key": "csv|commission_grade.csv|rare|name|레어",
+  "ko": "레어",
+  "en": "Rare",
+  "ctx": "commission_grade.csv 행 rare · 열 name"
+ },
+ {
+  "key": "csv|commission_kind.csv|kill|name|토벌",
+  "ko": "토벌",
+  "en": "Hunt",
+  "ctx": "commission_kind.csv 행 kill · 열 name"
+ },
+ {
+  "key": "csv|commission_kind.csv|elite|name|현상금",
+  "ko": "현상금",
+  "en": "Bounty",
+  "ctx": "commission_kind.csv 행 elite · 열 name"
+ },
+ {
+  "key": "csv|commission_kind.csv|boss|name|보스 토벌",
+  "ko": "보스 토벌",
+  "en": "Boss Hunt",
+  "ctx": "commission_kind.csv 행 boss · 열 name"
+ },
+ {
+  "key": "csv|commission_kind.csv|book|name|스킬 수련",
+  "ko": "스킬 수련",
+  "en": "Skill Study",
+  "ctx": "commission_kind.csv 행 book · 열 name"
+ },
+ {
+  "key": "csv|commission_kind.csv|hire|name|영입",
+  "ko": "영입",
+  "en": "Recruit",
+  "ctx": "commission_kind.csv 행 hire · 열 name"
+ },
+ {
+  "key": "csv|commission_kind.csv|salvage|name|분해",
+  "ko": "분해",
+  "en": "Salvage",
+  "ctx": "commission_kind.csv 행 salvage · 열 name"
+ },
+ {
+  "key": "csv|commission_kind.csv|material|name|재료 획득",
+  "ko": "재료 획득",
+  "en": "Gathering",
+  "ctx": "commission_kind.csv 행 material · 열 name"
+ },
+ {
+  "key": "csv|commission_kind.csv|upgrade|name|강화",
+  "ko": "강화",
+  "en": "Enhance",
+  "ctx": "commission_kind.csv 행 upgrade · 열 name"
+ },
+ {
+  "key": "csv|commission_kind.csv|craft|name|제작",
+  "ko": "제작",
+  "en": "Craft",
+  "ctx": "commission_kind.csv 행 craft · 열 name"
+ },
+ {
+  "key": "csv|commission_kind.csv|collect|name|수집",
+  "ko": "수집",
+  "en": "Collect",
+  "ctx": "commission_kind.csv 행 collect · 열 name"
+ },
+ {
+  "key": "csv|difficulty_tier.csv|normal|name|노말",
+  "ko": "노말",
+  "en": "Normal",
+  "ctx": "difficulty_tier.csv 행 normal · 열 name"
+ },
+ {
+  "key": "csv|difficulty_tier.csv|nightmare|name|나이트메어",
+  "ko": "나이트메어",
+  "en": "Nightmare",
+  "ctx": "difficulty_tier.csv 행 nightmare · 열 name"
+ },
+ {
+  "key": "csv|difficulty_tier.csv|hell|name|헬",
+  "ko": "헬",
+  "en": "Hell",
+  "ctx": "difficulty_tier.csv 행 hell · 열 name"
+ },
+ {
+  "key": "csv|equip_slot.csv|weapon|name|무기",
+  "ko": "무기",
+  "en": "Weapon",
+  "ctx": "equip_slot.csv 행 weapon · 열 name"
+ },
+ {
+  "key": "csv|equip_slot.csv|helmet|name|투구",
+  "ko": "투구",
+  "en": "Helmet",
+  "ctx": "equip_slot.csv 행 helmet · 열 name"
+ },
+ {
+  "key": "csv|equip_slot.csv|armor|name|갑옷",
+  "ko": "갑옷",
+  "en": "Armor",
+  "ctx": "equip_slot.csv 행 armor · 열 name"
+ },
+ {
+  "key": "csv|equip_slot.csv|gloves|name|장갑",
+  "ko": "장갑",
+  "en": "Gloves",
+  "ctx": "equip_slot.csv 행 gloves · 열 name"
+ },
+ {
+  "key": "csv|equip_slot.csv|boots|name|신발",
+  "ko": "신발",
+  "en": "Boots",
+  "ctx": "equip_slot.csv 행 boots · 열 name"
+ },
+ {
+  "key": "csv|equip_slot.csv|amulet|name|목걸이",
+  "ko": "목걸이",
+  "en": "Amulet",
+  "ctx": "equip_slot.csv 행 amulet · 열 name"
+ },
+ {
+  "key": "csv|equip_slot.csv|ring1|name|반지",
+  "ko": "반지",
+  "en": "Ring",
+  "ctx": "equip_slot.csv 행 ring1 · 열 name"
+ },
+ {
+  "key": "csv|equip_slot.csv|ring2|name|반지",
+  "ko": "반지",
+  "en": "Ring",
+  "ctx": "equip_slot.csv 행 ring2 · 열 name"
+ },
+ {
+  "key": "csv|formation_template.csv|3|name|모두 전열",
+  "ko": "모두 전열",
+  "en": "All Front",
+  "ctx": "formation_template.csv 행 3 · 열 name"
+ },
+ {
+  "key": "csv|formation_template.csv|2-1|name|전열 2 · 후열 1",
+  "ko": "전열 2 · 후열 1",
+  "en": "Two Front",
+  "ctx": "formation_template.csv 행 2-1 · 열 name"
+ },
+ {
+  "key": "csv|formation_template.csv|1-2|name|전열 1 · 후열 2",
+  "ko": "전열 1 · 후열 2",
+  "en": "One Front",
+  "ctx": "formation_template.csv 행 1-2 · 열 name"
+ },
+ {
+  "key": "csv|formation_template.csv|0-3|name|모두 후열",
+  "ko": "모두 후열",
+  "en": "All Back",
+  "ctx": "formation_template.csv 행 0-3 · 열 name"
+ },
+ {
+  "key": "csv|hero_attribute.csv|str|attr|힘",
+  "ko": "힘",
+  "en": "Strength",
+  "ctx": "hero_attribute.csv 행 str · 열 attr"
+ },
+ {
+  "key": "csv|hero_attribute.csv|agi|attr|민첩",
+  "ko": "민첩",
+  "en": "Agility",
+  "ctx": "hero_attribute.csv 행 agi · 열 attr"
+ },
+ {
+  "key": "csv|hero_attribute.csv|int|attr|지능",
+  "ko": "지능",
+  "en": "Intelligence",
+  "ctx": "hero_attribute.csv 행 int · 열 attr"
+ },
+ {
+  "key": "csv|hero_attribute.csv|vit|attr|건강",
+  "ko": "건강",
+  "en": "Vitality",
+  "ctx": "hero_attribute.csv 행 vit · 열 attr"
+ },
+ {
+  "key": "csv|hero_attribute.csv|luck|attr|운",
+  "ko": "운",
+  "en": "Luck",
+  "ctx": "hero_attribute.csv 행 luck · 열 attr"
+ },
+ {
+  "key": "csv|hero_attribute.csv|ldr|attr|통솔",
+  "ko": "통솔",
+  "en": "Leadership",
+  "ctx": "hero_attribute.csv 행 ldr · 열 attr"
+ },
+ {
+  "key": "csv|hero_attribute.csv|cha|attr|매력",
+  "ko": "매력",
+  "en": "Charisma",
+  "ctx": "hero_attribute.csv 행 cha · 열 attr"
+ },
+ {
+  "key": "csv|hero_tier.csv|magic|name|매직",
+  "ko": "매직",
+  "en": "Magic",
+  "ctx": "hero_tier.csv 행 magic · 열 name"
+ },
+ {
+  "key": "csv|hero_tier.csv|rare|name|레어",
+  "ko": "레어",
+  "en": "Rare",
+  "ctx": "hero_tier.csv 행 rare · 열 name"
+ },
+ {
+  "key": "csv|hero_tier.csv|unique|name|유니크",
+  "ko": "유니크",
+  "en": "Unique",
+  "ctx": "hero_tier.csv 행 unique · 열 name"
+ },
+ {
+  "key": "csv|hero_tier.csv|normal|name|일반",
+  "ko": "일반",
+  "en": "Normal",
+  "ctx": "hero_tier.csv 행 normal · 열 name"
+ },
+ {
+  "key": "csv|hero_tier.csv|growth|name|성장",
+  "ko": "성장",
+  "en": "Growth",
+  "ctx": "hero_tier.csv 행 growth · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|armor_cloth|name|클로스 아머",
+  "ko": "클로스 아머",
+  "en": "Cloth Armor",
+  "ctx": "item_base.csv 행 armor_cloth · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|armor_robe_1|name|퀼티드 아머",
+  "ko": "퀼티드 아머",
+  "en": "Quilted Armor",
+  "ctx": "item_base.csv 행 armor_robe_1 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|armor_robe_2|name|고스트 아머",
+  "ko": "고스트 아머",
+  "en": "Ghost Armor",
+  "ctx": "item_base.csv 행 armor_robe_2 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|armor_robe_3|name|더스크 슈라우드",
+  "ko": "더스크 슈라우드",
+  "en": "Dusk Shroud",
+  "ctx": "item_base.csv 행 armor_robe_3 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|armor_light_1|name|라이트 플레이트",
+  "ko": "라이트 플레이트",
+  "en": "Light Plate",
+  "ctx": "item_base.csv 행 armor_light_1 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|armor_light_2|name|메이지 플레이트",
+  "ko": "메이지 플레이트",
+  "en": "Mage Plate",
+  "ctx": "item_base.csv 행 armor_light_2 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|armor_light_3|name|아콘 플레이트",
+  "ko": "아콘 플레이트",
+  "en": "Archon Plate",
+  "ctx": "item_base.csv 행 armor_light_3 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|armor_heavy_1|name|에인션트 아머",
+  "ko": "에인션트 아머",
+  "en": "Ancient Armor",
+  "ctx": "item_base.csv 행 armor_heavy_1 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|armor_heavy_2|name|오네이트 플레이트",
+  "ko": "오네이트 플레이트",
+  "en": "Ornate Plate",
+  "ctx": "item_base.csv 행 armor_heavy_2 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|armor_heavy_3|name|세이크리드 아머",
+  "ko": "세이크리드 아머",
+  "en": "Sacred Armor",
+  "ctx": "item_base.csv 행 armor_heavy_3 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|helmet_cloth|name|클로스 후드",
+  "ko": "클로스 후드",
+  "en": "Cloth Hood",
+  "ctx": "item_base.csv 행 helmet_cloth · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|helmet_tiara_1|name|서클릿",
+  "ko": "서클릿",
+  "en": "Circlet",
+  "ctx": "item_base.csv 행 helmet_tiara_1 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|helmet_tiara_2|name|티아라",
+  "ko": "티아라",
+  "en": "Tiara",
+  "ctx": "item_base.csv 행 helmet_tiara_2 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|helmet_tiara_3|name|다이아뎀",
+  "ko": "다이아뎀",
+  "en": "Diadem",
+  "ctx": "item_base.csv 행 helmet_tiara_3 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|helmet_leather_1|name|캡",
+  "ko": "캡",
+  "en": "Cap",
+  "ctx": "item_base.csv 행 helmet_leather_1 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|helmet_leather_2|name|워 햇",
+  "ko": "워 햇",
+  "en": "War Hat",
+  "ctx": "item_base.csv 행 helmet_leather_2 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|helmet_leather_3|name|샤코",
+  "ko": "샤코",
+  "en": "Shako",
+  "ctx": "item_base.csv 행 helmet_leather_3 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|helmet_plate_1|name|그레이트 헬름",
+  "ko": "그레이트 헬름",
+  "en": "Great Helm",
+  "ctx": "item_base.csv 행 helmet_plate_1 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|helmet_plate_2|name|윙드 헬름",
+  "ko": "윙드 헬름",
+  "en": "Winged Helm",
+  "ctx": "item_base.csv 행 helmet_plate_2 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|helmet_plate_3|name|스파이어드 헬름",
+  "ko": "스파이어드 헬름",
+  "en": "Spired Helm",
+  "ctx": "item_base.csv 행 helmet_plate_3 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|gloves_cloth|name|클로스 글러브",
+  "ko": "클로스 글러브",
+  "en": "Cloth Gloves",
+  "ctx": "item_base.csv 행 gloves_cloth · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|gloves_leather_1|name|헤비 글러브",
+  "ko": "헤비 글러브",
+  "en": "Heavy Gloves",
+  "ctx": "item_base.csv 행 gloves_leather_1 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|gloves_leather_2|name|샤크스킨 글러브",
+  "ko": "샤크스킨 글러브",
+  "en": "Sharkskin Gloves",
+  "ctx": "item_base.csv 행 gloves_leather_2 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|gloves_leather_3|name|뱀파이어본 글러브",
+  "ko": "뱀파이어본 글러브",
+  "en": "Vampirebone Gloves",
+  "ctx": "item_base.csv 행 gloves_leather_3 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|gloves_gauntlet_1|name|건틀릿",
+  "ko": "건틀릿",
+  "en": "Gauntlets",
+  "ctx": "item_base.csv 행 gloves_gauntlet_1 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|gloves_gauntlet_2|name|워 건틀릿",
+  "ko": "워 건틀릿",
+  "en": "War Gauntlets",
+  "ctx": "item_base.csv 행 gloves_gauntlet_2 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|gloves_gauntlet_3|name|오우거 건틀릿",
+  "ko": "오우거 건틀릿",
+  "en": "Ogre Gauntlets",
+  "ctx": "item_base.csv 행 gloves_gauntlet_3 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|boots_start|name|부츠",
+  "ko": "부츠",
+  "en": "Boots",
+  "ctx": "item_base.csv 행 boots_start · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|boots_leather_1|name|헤비 부츠",
+  "ko": "헤비 부츠",
+  "en": "Heavy Boots",
+  "ctx": "item_base.csv 행 boots_leather_1 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|boots_leather_2|name|샤크스킨 부츠",
+  "ko": "샤크스킨 부츠",
+  "en": "Sharkskin Boots",
+  "ctx": "item_base.csv 행 boots_leather_2 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|boots_leather_3|name|스캐럽셸 부츠",
+  "ko": "스캐럽셸 부츠",
+  "en": "Scarabshell Boots",
+  "ctx": "item_base.csv 행 boots_leather_3 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|boots_greaves_1|name|그리브스",
+  "ko": "그리브스",
+  "en": "Greaves",
+  "ctx": "item_base.csv 행 boots_greaves_1 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|boots_greaves_2|name|워 부츠",
+  "ko": "워 부츠",
+  "en": "War Boots",
+  "ctx": "item_base.csv 행 boots_greaves_2 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|boots_greaves_3|name|미르미돈 그리브스",
+  "ko": "미르미돈 그리브스",
+  "en": "Myrmidon Greaves",
+  "ctx": "item_base.csv 행 boots_greaves_3 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|amulet_1|name|탈리스만",
+  "ko": "탈리스만",
+  "en": "Talisman",
+  "ctx": "item_base.csv 행 amulet_1 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|amulet_2|name|골드 네클리스",
+  "ko": "골드 네클리스",
+  "en": "Gold Necklace",
+  "ctx": "item_base.csv 행 amulet_2 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|amulet_3|name|아이 펜던트",
+  "ko": "아이 펜던트",
+  "en": "Eye Pendant",
+  "ctx": "item_base.csv 행 amulet_3 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|ring_1|name|실버 링",
+  "ko": "실버 링",
+  "en": "Silver Ring",
+  "ctx": "item_base.csv 행 ring_1 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|ring_2|name|시그넷",
+  "ko": "시그넷",
+  "en": "Signet",
+  "ctx": "item_base.csv 행 ring_2 · 열 name"
+ },
+ {
+  "key": "csv|item_base.csv|ring_3|name|글러턴 링",
+  "ko": "글러턴 링",
+  "en": "Glutton Ring",
+  "ctx": "item_base.csv 행 ring_3 · 열 name"
+ },
+ {
+  "key": "csv|lab_material.csv|mine|name|최하급 철광석",
+  "ko": "최하급 철광석",
+  "en": "Lowest-Grade Iron Ore",
+  "ctx": "lab_material.csv 행 mine · 열 name"
+ },
+ {
+  "key": "csv|lab_material.csv|gather|name|최하급 약초",
+  "ko": "최하급 약초",
+  "en": "Lowest-Grade Herb",
+  "ctx": "lab_material.csv 행 gather · 열 name"
+ },
+ {
+  "key": "csv|lab_material.csv|log|name|최하급 목재",
+  "ko": "최하급 목재",
+  "en": "Lowest-Grade Timber",
+  "ctx": "lab_material.csv 행 log · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_t1_atk|name|데미지 증가",
+  "ko": "데미지 증가",
+  "en": "Damage Increase",
+  "ctx": "mastery_node.csv 행 sin_t1_atk · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_t1_def|name|물리 방어",
+  "ko": "물리 방어",
+  "en": "Physical Defense",
+  "ctx": "mastery_node.csv 행 sin_t1_def · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_t1_resall|name|모든 저항력",
+  "ko": "모든 저항력",
+  "en": "All Resistances",
+  "ctx": "mastery_node.csv 행 sin_t1_resall · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_wrath_t2_g3|name|분노의 무장 I",
+  "ko": "분노의 무장 I",
+  "en": "Wrath Arms I",
+  "ctx": "mastery_node.csv 행 sin_wrath_t2_g3 · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_wrath_t2_g6|name|분노의 무장 II",
+  "ko": "분노의 무장 II",
+  "en": "Wrath Arms II",
+  "ctx": "mastery_node.csv 행 sin_wrath_t2_g6 · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_wrath_t2_g9|name|분노의 무장 III",
+  "ko": "분노의 무장 III",
+  "en": "Wrath Arms III",
+  "ctx": "mastery_node.csv 행 sin_wrath_t2_g9 · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_envy_t2_crit|name|시기의 무장 I",
+  "ko": "시기의 무장 I",
+  "en": "Envy Arms I",
+  "ctx": "mastery_node.csv 행 sin_envy_t2_crit · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_envy_t2_resall|name|시기의 무장 II",
+  "ko": "시기의 무장 II",
+  "en": "Envy Arms II",
+  "ctx": "mastery_node.csv 행 sin_envy_t2_resall · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_envy_t2_cdr|name|시기의 무장 III",
+  "ko": "시기의 무장 III",
+  "en": "Envy Arms III",
+  "ctx": "mastery_node.csv 행 sin_envy_t2_cdr · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_greed_t2_g3|name|탐욕의 무장 I",
+  "ko": "탐욕의 무장 I",
+  "en": "Greed Arms I",
+  "ctx": "mastery_node.csv 행 sin_greed_t2_g3 · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_greed_t2_g6|name|탐욕의 무장 II",
+  "ko": "탐욕의 무장 II",
+  "en": "Greed Arms II",
+  "ctx": "mastery_node.csv 행 sin_greed_t2_g6 · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_greed_t2_g9|name|탐욕의 무장 III",
+  "ko": "탐욕의 무장 III",
+  "en": "Greed Arms III",
+  "ctx": "mastery_node.csv 행 sin_greed_t2_g9 · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_sloth_t2_hppct|name|나태의 무장 I",
+  "ko": "나태의 무장 I",
+  "en": "Sloth Arms I",
+  "ctx": "mastery_node.csv 행 sin_sloth_t2_hppct · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_sloth_t2_regen|name|나태의 무장 II",
+  "ko": "나태의 무장 II",
+  "en": "Sloth Arms II",
+  "ctx": "mastery_node.csv 행 sin_sloth_t2_regen · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_sloth_t2_g9|name|나태의 무장 III",
+  "ko": "나태의 무장 III",
+  "en": "Sloth Arms III",
+  "ctx": "mastery_node.csv 행 sin_sloth_t2_g9 · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_gluttony_t2_hppct|name|폭식의 무장 I",
+  "ko": "폭식의 무장 I",
+  "en": "Gluttony Arms I",
+  "ctx": "mastery_node.csv 행 sin_gluttony_t2_hppct · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_gluttony_t2_atk|name|폭식의 무장 II",
+  "ko": "폭식의 무장 II",
+  "en": "Gluttony Arms II",
+  "ctx": "mastery_node.csv 행 sin_gluttony_t2_atk · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_gluttony_t2_drflat|name|폭식의 무장 III",
+  "ko": "폭식의 무장 III",
+  "en": "Gluttony Arms III",
+  "ctx": "mastery_node.csv 행 sin_gluttony_t2_drflat · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_lust_t2_regen|name|색욕의 무장 I",
+  "ko": "색욕의 무장 I",
+  "en": "Lust Arms I",
+  "ctx": "mastery_node.csv 행 sin_lust_t2_regen · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_lust_t2_resall|name|색욕의 무장 II",
+  "ko": "색욕의 무장 II",
+  "en": "Lust Arms II",
+  "ctx": "mastery_node.csv 행 sin_lust_t2_resall · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_lust_t2_g9|name|색욕의 무장 III",
+  "ko": "색욕의 무장 III",
+  "en": "Lust Arms III",
+  "ctx": "mastery_node.csv 행 sin_lust_t2_g9 · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_pride_t2_g3|name|오만의 무장 I",
+  "ko": "오만의 무장 I",
+  "en": "Pride Arms I",
+  "ctx": "mastery_node.csv 행 sin_pride_t2_g3 · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_pride_t2_g6|name|오만의 무장 II",
+  "ko": "오만의 무장 II",
+  "en": "Pride Arms II",
+  "ctx": "mastery_node.csv 행 sin_pride_t2_g6 · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_pride_t2_g9|name|오만의 무장 III",
+  "ko": "오만의 무장 III",
+  "en": "Pride Arms III",
+  "ctx": "mastery_node.csv 행 sin_pride_t2_g9 · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_wrath_t3_dmgmax|name|풀려난 분노",
+  "ko": "풀려난 분노",
+  "en": "Wrath Unbound",
+  "ctx": "mastery_node.csv 행 sin_wrath_t3_dmgmax · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_wrath_t3_crit|name|최후의 저항",
+  "ko": "최후의 저항",
+  "en": "Last Stand",
+  "ctx": "mastery_node.csv 행 sin_wrath_t3_crit · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_wrath_t3_critdmg|name|죽음의 소망",
+  "ko": "죽음의 소망",
+  "en": "Death Wish",
+  "ctx": "mastery_node.csv 행 sin_wrath_t3_critdmg · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_envy_t3_crit|name|끌어내림",
+  "ko": "끌어내림",
+  "en": "Bring Down",
+  "ctx": "mastery_node.csv 행 sin_envy_t3_crit · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_envy_t3_resall|name|원망",
+  "ko": "원망",
+  "en": "Grudge",
+  "ctx": "mastery_node.csv 행 sin_envy_t3_resall · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_envy_t3_cdr|name|쓰라린 잣대",
+  "ko": "쓰라린 잣대",
+  "en": "Bitter Measure",
+  "ctx": "mastery_node.csv 행 sin_envy_t3_cdr · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_greed_t3_dmg|name|황금 칼날",
+  "ko": "황금 칼날",
+  "en": "Golden Blade",
+  "ctx": "mastery_node.csv 행 sin_greed_t3_dmg · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_greed_t3_hp|name|황금 심장",
+  "ko": "황금 심장",
+  "en": "Heart of Gold",
+  "ctx": "mastery_node.csv 행 sin_greed_t3_hp · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_greed_t3_cdr|name|시간은 돈",
+  "ko": "시간은 돈",
+  "en": "Time Is Money",
+  "ctx": "mastery_node.csv 행 sin_greed_t3_cdr · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_sloth_t3_dr|name|무거운 눈꺼풀",
+  "ko": "무거운 눈꺼풀",
+  "en": "Heavy Eyelids",
+  "ctx": "mastery_node.csv 행 sin_sloth_t3_dr · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_sloth_t3_regen|name|늦잠",
+  "ko": "늦잠",
+  "en": "Lie-In",
+  "ctx": "mastery_node.csv 행 sin_sloth_t3_regen · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_sloth_t3_cdr|name|느긋함",
+  "ko": "느긋함",
+  "en": "Unhurried",
+  "ctx": "mastery_node.csv 행 sin_sloth_t3_cdr · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_gluttony_t3_dr|name|두꺼운 가죽",
+  "ko": "두꺼운 가죽",
+  "en": "Thick Hide",
+  "ctx": "mastery_node.csv 행 sin_gluttony_t3_dr · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_gluttony_t3_atk|name|끝없는 만찬",
+  "ko": "끝없는 만찬",
+  "en": "Endless Feast",
+  "ctx": "mastery_node.csv 행 sin_gluttony_t3_atk · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_gluttony_t3_drflat|name|부른 배",
+  "ko": "부른 배",
+  "en": "Full Belly",
+  "ctx": "mastery_node.csv 행 sin_gluttony_t3_drflat · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_lust_t3_regen|name|손짓",
+  "ko": "손짓",
+  "en": "Beckoning",
+  "ctx": "mastery_node.csv 행 sin_lust_t3_regen · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_lust_t3_resall|name|세이렌의 포옹",
+  "ko": "세이렌의 포옹",
+  "en": "Siren's Embrace",
+  "ctx": "mastery_node.csv 행 sin_lust_t3_resall · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_lust_t3_crit|name|치명적 매력",
+  "ko": "치명적 매력",
+  "en": "Fatal Charm",
+  "ctx": "mastery_node.csv 행 sin_lust_t3_crit · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_pride_t3_atk|name|군림",
+  "ko": "군림",
+  "en": "Lord Over",
+  "ctx": "mastery_node.csv 행 sin_pride_t3_atk · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_pride_t3_dr|name|안중에 없음",
+  "ko": "안중에 없음",
+  "en": "Beneath Notice",
+  "ctx": "mastery_node.csv 행 sin_pride_t3_dr · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_pride_t3_fhr|name|내려다보기",
+  "ko": "내려다보기",
+  "en": "Looking Down",
+  "ctx": "mastery_node.csv 행 sin_pride_t3_fhr · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_wrath_t4_blood|name|피의 대가",
+  "ko": "피의 대가",
+  "en": "Blood Price",
+  "ctx": "mastery_node.csv 행 sin_wrath_t4_blood · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_wrath_t4_rally|name|북돋는 분노",
+  "ko": "북돋는 분노",
+  "en": "Rallying Rage",
+  "ctx": "mastery_node.csv 행 sin_wrath_t4_rally · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_wrath_t4_steady|name|흔들리지 않는 분노",
+  "ko": "흔들리지 않는 분노",
+  "en": "Unshaken Fury",
+  "ctx": "mastery_node.csv 행 sin_wrath_t4_steady · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_envy_t4_strip|name|빼앗기",
+  "ko": "빼앗기",
+  "en": "Dispossess",
+  "ctx": "mastery_node.csv 행 sin_envy_t4_strip · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_envy_t4_grudge|name|함께 품은 원한",
+  "ko": "함께 품은 원한",
+  "en": "Shared Grudge",
+  "ctx": "mastery_node.csv 행 sin_envy_t4_grudge · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_envy_t4_misery|name|나누는 불행",
+  "ko": "나누는 불행",
+  "en": "Shared Misery",
+  "ctx": "mastery_node.csv 행 sin_envy_t4_misery · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_greed_t4_bounty|name|현상금 표식",
+  "ko": "현상금 표식",
+  "en": "Bounty Mark",
+  "ctx": "mastery_node.csv 행 sin_greed_t4_bounty · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_greed_t4_search|name|다시 뒤지기",
+  "ko": "다시 뒤지기",
+  "en": "Second Search",
+  "ctx": "mastery_node.csv 행 sin_greed_t4_search · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_greed_t4_ward|name|황금 보호막",
+  "ko": "황금 보호막",
+  "en": "Golden Ward",
+  "ctx": "mastery_node.csv 행 sin_greed_t4_ward · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_sloth_t4_heavy|name|무거운 손",
+  "ko": "무거운 손",
+  "en": "Heavy Hand",
+  "ctx": "mastery_node.csv 행 sin_sloth_t4_heavy · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_sloth_t4_idle|name|한가한 시간",
+  "ko": "한가한 시간",
+  "en": "Idle Hours",
+  "ctx": "mastery_node.csv 행 sin_sloth_t4_idle · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_sloth_t4_defer|name|미뤄 둔 고통",
+  "ko": "미뤄 둔 고통",
+  "en": "Deferred Pain",
+  "ctx": "mastery_node.csv 행 sin_sloth_t4_defer · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_gluttony_t4_consume|name|먹어 치우기",
+  "ko": "먹어 치우기",
+  "en": "Consume",
+  "ctx": "mastery_node.csv 행 sin_gluttony_t4_consume · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_gluttony_t4_feast|name|잔치의 광란",
+  "ko": "잔치의 광란",
+  "en": "Feast Frenzy",
+  "ctx": "mastery_node.csv 행 sin_gluttony_t4_feast · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_gluttony_t4_stomach|name|무쇠 위장",
+  "ko": "무쇠 위장",
+  "en": "Iron Stomach",
+  "ctx": "mastery_node.csv 행 sin_gluttony_t4_stomach · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_lust_t4_exposed|name|드러난 심장",
+  "ko": "드러난 심장",
+  "en": "Exposed Heart",
+  "ctx": "mastery_node.csv 행 sin_lust_t4_exposed · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_lust_t4_embrace|name|나누는 포옹",
+  "ko": "나누는 포옹",
+  "en": "Shared Embrace",
+  "ctx": "mastery_node.csv 행 sin_lust_t4_embrace · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_lust_t4_beguile|name|홀리기",
+  "ko": "홀리기",
+  "en": "Beguile",
+  "ctx": "mastery_node.csv 행 sin_lust_t4_beguile · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_pride_t4_contempt|name|경멸",
+  "ko": "경멸",
+  "en": "Contempt",
+  "ctx": "mastery_node.csv 행 sin_pride_t4_contempt · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_pride_t4_charge|name|당당한 돌격",
+  "ko": "당당한 돌격",
+  "en": "Proud Charge",
+  "ctx": "mastery_node.csv 행 sin_pride_t4_charge · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|sin_pride_t4_unbowed|name|굽히지 않는 자",
+  "ko": "굽히지 않는 자",
+  "en": "Unbowed",
+  "ctx": "mastery_node.csv 행 sin_pride_t4_unbowed · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_warrior_t1_hp|name|체력 증가",
+  "ko": "체력 증가",
+  "en": "Health Increase",
+  "ctx": "mastery_node.csv 행 cls_warrior_t1_hp · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_warrior_t1_cooldown|name|쿨타임 감소",
+  "ko": "쿨타임 감소",
+  "en": "Cooldown Reduction",
+  "ctx": "mastery_node.csv 행 cls_warrior_t1_cooldown · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_warrior_t1_speed|name|공격 속도",
+  "ko": "공격 속도",
+  "en": "Attack Speed",
+  "ctx": "mastery_node.csv 행 cls_warrior_t1_speed · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_knight_t1_hp|name|체력 증가",
+  "ko": "체력 증가",
+  "en": "Health Increase",
+  "ctx": "mastery_node.csv 행 cls_knight_t1_hp · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_knight_t1_cooldown|name|쿨타임 감소",
+  "ko": "쿨타임 감소",
+  "en": "Cooldown Reduction",
+  "ctx": "mastery_node.csv 행 cls_knight_t1_cooldown · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_knight_t1_speed|name|공격 속도",
+  "ko": "공격 속도",
+  "en": "Attack Speed",
+  "ctx": "mastery_node.csv 행 cls_knight_t1_speed · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_mage_t1_hp|name|체력 증가",
+  "ko": "체력 증가",
+  "en": "Health Increase",
+  "ctx": "mastery_node.csv 행 cls_mage_t1_hp · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_mage_t1_cooldown|name|쿨타임 감소",
+  "ko": "쿨타임 감소",
+  "en": "Cooldown Reduction",
+  "ctx": "mastery_node.csv 행 cls_mage_t1_cooldown · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_mage_t1_speed|name|캐스팅 속도",
+  "ko": "캐스팅 속도",
+  "en": "Casting Speed",
+  "ctx": "mastery_node.csv 행 cls_mage_t1_speed · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_priest_t1_hp|name|체력 증가",
+  "ko": "체력 증가",
+  "en": "Health Increase",
+  "ctx": "mastery_node.csv 행 cls_priest_t1_hp · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_priest_t1_cooldown|name|쿨타임 감소",
+  "ko": "쿨타임 감소",
+  "en": "Cooldown Reduction",
+  "ctx": "mastery_node.csv 행 cls_priest_t1_cooldown · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_priest_t1_speed|name|캐스팅 속도",
+  "ko": "캐스팅 속도",
+  "en": "Casting Speed",
+  "ctx": "mastery_node.csv 행 cls_priest_t1_speed · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_archer_t1_hp|name|체력 증가",
+  "ko": "체력 증가",
+  "en": "Health Increase",
+  "ctx": "mastery_node.csv 행 cls_archer_t1_hp · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_archer_t1_cooldown|name|쿨타임 감소",
+  "ko": "쿨타임 감소",
+  "en": "Cooldown Reduction",
+  "ctx": "mastery_node.csv 행 cls_archer_t1_cooldown · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_archer_t1_speed|name|공격 속도",
+  "ko": "공격 속도",
+  "en": "Attack Speed",
+  "ctx": "mastery_node.csv 행 cls_archer_t1_speed · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_warrior_t2_atk|name|데미지 증가",
+  "ko": "데미지 증가",
+  "en": "Damage Increase",
+  "ctx": "mastery_node.csv 행 cls_warrior_t2_atk · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_warrior_t2_hp|name|체력 증폭",
+  "ko": "체력 증폭",
+  "en": "Health Boost",
+  "ctx": "mastery_node.csv 행 cls_warrior_t2_hp · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_warrior_t2_fhr|name|타격 회복",
+  "ko": "타격 회복",
+  "en": "Hit Recovery",
+  "ctx": "mastery_node.csv 행 cls_warrior_t2_fhr · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_knight_t2_dr|name|피해 감소",
+  "ko": "피해 감소",
+  "en": "Damage Reduction",
+  "ctx": "mastery_node.csv 행 cls_knight_t2_dr · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_knight_t2_fhr|name|평정",
+  "ko": "평정",
+  "en": "Composure",
+  "ctx": "mastery_node.csv 행 cls_knight_t2_fhr · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_knight_t2_ddr|name|굳건함",
+  "ko": "굳건함",
+  "en": "Steadfast",
+  "ctx": "mastery_node.csv 행 cls_knight_t2_ddr · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_mage_t2_castspeed|name|캐스팅 속도",
+  "ko": "캐스팅 속도",
+  "en": "Casting Speed",
+  "ctx": "mastery_node.csv 행 cls_mage_t2_castspeed · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_mage_t2_cdr|name|쿨타임 감소",
+  "ko": "쿨타임 감소",
+  "en": "Cooldown Reduction",
+  "ctx": "mastery_node.csv 행 cls_mage_t2_cdr · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_mage_t2_atk|name|데미지 증가",
+  "ko": "데미지 증가",
+  "en": "Damage Increase",
+  "ctx": "mastery_node.csv 행 cls_mage_t2_atk · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_priest_t2_castspeed|name|캐스팅 속도",
+  "ko": "캐스팅 속도",
+  "en": "Casting Speed",
+  "ctx": "mastery_node.csv 행 cls_priest_t2_castspeed · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_priest_t2_cdr|name|쿨타임 감소",
+  "ko": "쿨타임 감소",
+  "en": "Cooldown Reduction",
+  "ctx": "mastery_node.csv 행 cls_priest_t2_cdr · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_priest_t2_buffdur|name|버프 지속시간",
+  "ko": "버프 지속시간",
+  "en": "Buff Duration",
+  "ctx": "mastery_node.csv 행 cls_priest_t2_buffdur · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_archer_t2_atkspeed|name|공격 속도",
+  "ko": "공격 속도",
+  "en": "Attack Speed",
+  "ctx": "mastery_node.csv 행 cls_archer_t2_atkspeed · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_archer_t2_critchance|name|치명타 확률",
+  "ko": "치명타 확률",
+  "en": "Critical Chance",
+  "ctx": "mastery_node.csv 행 cls_archer_t2_critchance · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_archer_t2_hitbonus|name|명중률",
+  "ko": "명중률",
+  "en": "Hit Chance",
+  "ctx": "mastery_node.csv 행 cls_archer_t2_hitbonus · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_t3_weapon_damage|name|{group} 마스터리",
+  "ko": "{group} 마스터리",
+  "en": "{group} Mastery",
+  "ctx": "mastery_node.csv 행 cls_t3_weapon_damage · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_warrior_t3_axe|name|도끼 마스터리",
+  "ko": "도끼 마스터리",
+  "en": "Axe Mastery",
+  "ctx": "mastery_node.csv 행 cls_warrior_t3_axe · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_knight_t3_spear|name|창 마스터리",
+  "ko": "창 마스터리",
+  "en": "Spear Mastery",
+  "ctx": "mastery_node.csv 행 cls_knight_t3_spear · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_mage_t3_staff|name|스태프 마스터리",
+  "ko": "스태프 마스터리",
+  "en": "Staff Mastery",
+  "ctx": "mastery_node.csv 행 cls_mage_t3_staff · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_priest_t3_bible|name|성경 마스터리",
+  "ko": "성경 마스터리",
+  "en": "Bible Mastery",
+  "ctx": "mastery_node.csv 행 cls_priest_t3_bible · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_archer_t3_crossbow|name|석궁 마스터리",
+  "ko": "석궁 마스터리",
+  "en": "Crossbow Mastery",
+  "ctx": "mastery_node.csv 행 cls_archer_t3_crossbow · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_warrior_t3_heavy|name|중갑 마스터리",
+  "ko": "중갑 마스터리",
+  "en": "Heavy Armor Mastery",
+  "ctx": "mastery_node.csv 행 cls_warrior_t3_heavy · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_knight_t3_heavy|name|중갑 마스터리",
+  "ko": "중갑 마스터리",
+  "en": "Heavy Armor Mastery",
+  "ctx": "mastery_node.csv 행 cls_knight_t3_heavy · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_mage_t3_robe|name|로브 마스터리",
+  "ko": "로브 마스터리",
+  "en": "Robe Mastery",
+  "ctx": "mastery_node.csv 행 cls_mage_t3_robe · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_priest_t3_robe|name|로브 마스터리",
+  "ko": "로브 마스터리",
+  "en": "Robe Mastery",
+  "ctx": "mastery_node.csv 행 cls_priest_t3_robe · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_archer_t3_light|name|경갑 마스터리",
+  "ko": "경갑 마스터리",
+  "en": "Light Armor Mastery",
+  "ctx": "mastery_node.csv 행 cls_archer_t3_light · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_warrior_t4_sweep|name|휩쓰는 일격",
+  "ko": "휩쓰는 일격",
+  "en": "Sweeping Blow",
+  "ctx": "mastery_node.csv 행 cls_warrior_t4_sweep · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_warrior_t4_onslaught|name|그치지 않는 맹공",
+  "ko": "그치지 않는 맹공",
+  "en": "Ceaseless Onslaught",
+  "ctx": "mastery_node.csv 행 cls_warrior_t4_onslaught · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_warrior_t4_hide|name|마법사 사냥꾼의 가죽",
+  "ko": "마법사 사냥꾼의 가죽",
+  "en": "Mageslayer's Hide",
+  "ctx": "mastery_node.csv 행 cls_warrior_t4_hide · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_knight_t4_helmbreaker|name|투구 파괴자",
+  "ko": "투구 파괴자",
+  "en": "Helmbreaker",
+  "ctx": "mastery_node.csv 행 cls_knight_t4_helmbreaker · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_knight_t4_sworn|name|맹세한 방패",
+  "ko": "맹세한 방패",
+  "en": "Sworn Shield",
+  "ctx": "mastery_node.csv 행 cls_knight_t4_sworn · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_knight_t4_turned|name|비껴 난 칼날",
+  "ko": "비껴 난 칼날",
+  "en": "Turned Edge",
+  "ctx": "mastery_node.csv 행 cls_knight_t4_turned · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_mage_t4_arcana|name|꿰뚫는 비전",
+  "ko": "꿰뚫는 비전",
+  "en": "Piercing Arcana",
+  "ctx": "mastery_node.csv 행 cls_mage_t4_arcana · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_mage_t4_pages|name|저절로 넘어가는 책장",
+  "ko": "저절로 넘어가는 책장",
+  "en": "Self-Turning Pages",
+  "ctx": "mastery_node.csv 행 cls_mage_t4_pages · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_mage_t4_circle|name|수호의 원",
+  "ko": "수호의 원",
+  "en": "Warding Circle",
+  "ctx": "mastery_node.csv 행 cls_mage_t4_circle · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_priest_t4_sin|name|드러난 죄",
+  "ko": "드러난 죄",
+  "en": "Sin Laid Bare",
+  "ctx": "mastery_node.csv 행 cls_priest_t4_sin · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_priest_t4_cup|name|넘치는 잔",
+  "ko": "넘치는 잔",
+  "en": "Brimming Cup",
+  "ctx": "mastery_node.csv 행 cls_priest_t4_cup · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_priest_t4_prayer|name|마지막 기도",
+  "ko": "마지막 기도",
+  "en": "Last Prayer",
+  "ctx": "mastery_node.csv 행 cls_priest_t4_prayer · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_archer_t4_second|name|두 번째 화살",
+  "ko": "두 번째 화살",
+  "en": "Second Arrow",
+  "ctx": "mastery_node.csv 행 cls_archer_t4_second · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_archer_t4_rhythm|name|사냥꾼의 박자",
+  "ko": "사냥꾼의 박자",
+  "en": "Hunter's Rhythm",
+  "ctx": "mastery_node.csv 행 cls_archer_t4_rhythm · 열 name"
+ },
+ {
+  "key": "csv|mastery_node.csv|cls_archer_t4_fleet|name|날랜 발",
+  "ko": "날랜 발",
+  "en": "Fleet Foot",
+  "ctx": "mastery_node.csv 행 cls_archer_t4_fleet · 열 name"
+ },
+ {
+  "key": "csv|material_synth.csv|iron_ore_2|name|하급 철광석",
+  "ko": "하급 철광석",
+  "en": "Low-Grade Iron Ore",
+  "ctx": "material_synth.csv 행 iron_ore_2 · 열 name"
+ },
+ {
+  "key": "csv|material_synth.csv|iron_ore_3|name|중급 철광석",
+  "ko": "중급 철광석",
+  "en": "Mid-Grade Iron Ore",
+  "ctx": "material_synth.csv 행 iron_ore_3 · 열 name"
+ },
+ {
+  "key": "csv|material_synth.csv|iron_ore_4|name|상급 철광석",
+  "ko": "상급 철광석",
+  "en": "High-Grade Iron Ore",
+  "ctx": "material_synth.csv 행 iron_ore_4 · 열 name"
+ },
+ {
+  "key": "csv|material_synth.csv|iron_ore_5|name|최상급 철광석",
+  "ko": "최상급 철광석",
+  "en": "Top-Grade Iron Ore",
+  "ctx": "material_synth.csv 행 iron_ore_5 · 열 name"
+ },
+ {
+  "key": "csv|material_synth.csv|herb_2|name|하급 약초",
+  "ko": "하급 약초",
+  "en": "Low-Grade Herb",
+  "ctx": "material_synth.csv 행 herb_2 · 열 name"
+ },
+ {
+  "key": "csv|material_synth.csv|herb_3|name|중급 약초",
+  "ko": "중급 약초",
+  "en": "Mid-Grade Herb",
+  "ctx": "material_synth.csv 행 herb_3 · 열 name"
+ },
+ {
+  "key": "csv|material_synth.csv|herb_4|name|상급 약초",
+  "ko": "상급 약초",
+  "en": "High-Grade Herb",
+  "ctx": "material_synth.csv 행 herb_4 · 열 name"
+ },
+ {
+  "key": "csv|material_synth.csv|herb_5|name|최상급 약초",
+  "ko": "최상급 약초",
+  "en": "Top-Grade Herb",
+  "ctx": "material_synth.csv 행 herb_5 · 열 name"
+ },
+ {
+  "key": "csv|material_synth.csv|timber_2|name|하급 목재",
+  "ko": "하급 목재",
+  "en": "Low-Grade Timber",
+  "ctx": "material_synth.csv 행 timber_2 · 열 name"
+ },
+ {
+  "key": "csv|material_synth.csv|timber_3|name|중급 목재",
+  "ko": "중급 목재",
+  "en": "Mid-Grade Timber",
+  "ctx": "material_synth.csv 행 timber_3 · 열 name"
+ },
+ {
+  "key": "csv|material_synth.csv|timber_4|name|상급 목재",
+  "ko": "상급 목재",
+  "en": "High-Grade Timber",
+  "ctx": "material_synth.csv 행 timber_4 · 열 name"
+ },
+ {
+  "key": "csv|material_synth.csv|timber_5|name|최상급 목재",
+  "ko": "최상급 목재",
+  "en": "Top-Grade Timber",
+  "ctx": "material_synth.csv 행 timber_5 · 열 name"
+ },
+ {
+  "key": "csv|material_synth.csv|dust|name|최하급 가루",
+  "ko": "최하급 가루",
+  "en": "Lowest-Grade Dust",
+  "ctx": "material_synth.csv 행 dust · 열 name"
+ },
+ {
+  "key": "csv|material_synth.csv|dust_2|name|하급 가루",
+  "ko": "하급 가루",
+  "en": "Low-Grade Dust",
+  "ctx": "material_synth.csv 행 dust_2 · 열 name"
+ },
+ {
+  "key": "csv|material_synth.csv|dust_3|name|중급 가루",
+  "ko": "중급 가루",
+  "en": "Mid-Grade Dust",
+  "ctx": "material_synth.csv 행 dust_3 · 열 name"
+ },
+ {
+  "key": "csv|material_synth.csv|dust_4|name|상급 가루",
+  "ko": "상급 가루",
+  "en": "High-Grade Dust",
+  "ctx": "material_synth.csv 행 dust_4 · 열 name"
+ },
+ {
+  "key": "csv|material_synth.csv|dust_5|name|최상급 가루",
+  "ko": "최상급 가루",
+  "en": "Top-Grade Dust",
+  "ctx": "material_synth.csv 행 dust_5 · 열 name"
+ },
+ {
+  "key": "csv|monster_base.csv|Army|name|군단",
+  "ko": "군단",
+  "en": "Army",
+  "ctx": "monster_base.csv 행 Army · 열 name"
+ },
+ {
+  "key": "csv|monster_base.csv|Tribe|name|부족",
+  "ko": "부족",
+  "en": "Tribe",
+  "ctx": "monster_base.csv 행 Tribe · 열 name"
+ },
+ {
+  "key": "csv|monster_base.csv|Giant|name|거인",
+  "ko": "거인",
+  "en": "Giant",
+  "ctx": "monster_base.csv 행 Giant · 열 name"
+ },
+ {
+  "key": "csv|monster_base.csv|Guardian|name|수호자",
+  "ko": "수호자",
+  "en": "Guardian",
+  "ctx": "monster_base.csv 행 Guardian · 열 name"
+ },
+ {
+  "key": "csv|monster_base.csv|Aberration|name|이형",
+  "ko": "이형",
+  "en": "Aberration",
+  "ctx": "monster_base.csv 행 Aberration · 열 name"
+ },
+ {
+  "key": "csv|monster_role.csv|line|name|전열병",
+  "ko": "전열병",
+  "en": "Line",
+  "ctx": "monster_role.csv 행 line · 열 name"
+ },
+ {
+  "key": "csv|monster_role.csv|heavy|name|중장병",
+  "ko": "중장병",
+  "en": "Heavy",
+  "ctx": "monster_role.csv 행 heavy · 열 name"
+ },
+ {
+  "key": "csv|monster_role.csv|elite_line|name|정예 전열병",
+  "ko": "정예 전열병",
+  "en": "Elite Line",
+  "ctx": "monster_role.csv 행 elite_line · 열 name"
+ },
+ {
+  "key": "csv|monster_role.csv|boss|name|보스",
+  "ko": "보스",
+  "en": "Boss",
+  "ctx": "monster_role.csv 행 boss · 열 name"
+ },
+ {
+  "key": "csv|monster_role.csv|boss_back|name|후열 보스",
+  "ko": "후열 보스",
+  "en": "Back Boss",
+  "ctx": "monster_role.csv 행 boss_back · 열 name"
+ },
+ {
+  "key": "csv|monster_role.csv|ranged|name|사격병",
+  "ko": "사격병",
+  "en": "Ranged",
+  "ctx": "monster_role.csv 행 ranged · 열 name"
+ },
+ {
+  "key": "csv|monster_role.csv|caster|name|시전자",
+  "ko": "시전자",
+  "en": "Caster",
+  "ctx": "monster_role.csv 행 caster · 열 name"
+ },
+ {
+  "key": "csv|monster_role.csv|skirmish|name|척후병",
+  "ko": "척후병",
+  "en": "Skirmisher",
+  "ctx": "monster_role.csv 행 skirmish · 열 name"
+ },
+ {
+  "key": "csv|monster_type.csv|Normal|name|일반",
+  "ko": "일반",
+  "en": "Normal",
+  "ctx": "monster_type.csv 행 Normal · 열 name"
+ },
+ {
+  "key": "csv|monster_type.csv|Demon|name|데몬",
+  "ko": "데몬",
+  "en": "Demon",
+  "ctx": "monster_type.csv 행 Demon · 열 name"
+ },
+ {
+  "key": "csv|monster_type.csv|Undead|name|언데드",
+  "ko": "언데드",
+  "en": "Undead",
+  "ctx": "monster_type.csv 행 Undead · 열 name"
+ },
+ {
+  "key": "csv|potion.csv|minor_healing|name|마이너 힐링 포션",
+  "ko": "마이너 힐링 포션",
+  "en": "Minor Healing Potion",
+  "ctx": "potion.csv 행 minor_healing · 열 name"
+ },
+ {
+  "key": "csv|potion.csv|light_healing|name|라이트 힐링 포션",
+  "ko": "라이트 힐링 포션",
+  "en": "Light Healing Potion",
+  "ctx": "potion.csv 행 light_healing · 열 name"
+ },
+ {
+  "key": "csv|potion.csv|healing|name|힐링 포션",
+  "ko": "힐링 포션",
+  "en": "Healing Potion",
+  "ctx": "potion.csv 행 healing · 열 name"
+ },
+ {
+  "key": "csv|potion.csv|greater_healing|name|그레이터 힐링 포션",
+  "ko": "그레이터 힐링 포션",
+  "en": "Greater Healing Potion",
+  "ctx": "potion.csv 행 greater_healing · 열 name"
+ },
+ {
+  "key": "csv|potion.csv|super_healing|name|슈퍼 힐링 포션",
+  "ko": "슈퍼 힐링 포션",
+  "en": "Super Healing Potion",
+  "ctx": "potion.csv 행 super_healing · 열 name"
+ },
+ {
+  "key": "csv|raid_pattern.csv|wrath|name|분노의 철퇴",
+  "ko": "분노의 철퇴",
+  "en": "Wrath Hammer",
+  "ctx": "raid_pattern.csv 행 wrath · 열 name"
+ },
+ {
+  "key": "csv|raid_pattern.csv|wrath|name|불타는 휩쓸기",
+  "ko": "불타는 휩쓸기",
+  "en": "Burning Cleave",
+  "ctx": "raid_pattern.csv 행 wrath · 열 name"
+ },
+ {
+  "key": "csv|raid_pattern.csv|wrath|name|재의 파도",
+  "ko": "재의 파도",
+  "en": "Ashen Tide",
+  "ctx": "raid_pattern.csv 행 wrath · 열 name"
+ },
+ {
+  "key": "csv|raid_pattern.csv|wrath|name|지옥 붕괴",
+  "ko": "지옥 붕괴",
+  "en": "Hell Collapse",
+  "ctx": "raid_pattern.csv 행 wrath · 열 name"
+ },
+ {
+  "key": "csv|shrine.csv|wrath|name|분노의 신단",
+  "ko": "분노의 신단",
+  "en": "Wrathful Shrine",
+  "ctx": "shrine.csv 행 wrath · 열 name"
+ },
+ {
+  "key": "csv|shrine.csv|sloth|name|나태의 신단",
+  "ko": "나태의 신단",
+  "en": "Slothful Shrine",
+  "ctx": "shrine.csv 행 sloth · 열 name"
+ },
+ {
+  "key": "csv|shrine.csv|lust|name|색욕의 신단",
+  "ko": "색욕의 신단",
+  "en": "Lustful Shrine",
+  "ctx": "shrine.csv 행 lust · 열 name"
+ },
+ {
+  "key": "csv|shrine.csv|envy|name|시기의 신단",
+  "ko": "시기의 신단",
+  "en": "Envious Shrine",
+  "ctx": "shrine.csv 행 envy · 열 name"
+ },
+ {
+  "key": "csv|shrine.csv|pride|name|오만의 신단",
+  "ko": "오만의 신단",
+  "en": "Prideful Shrine",
+  "ctx": "shrine.csv 행 pride · 열 name"
+ },
+ {
+  "key": "csv|shrine.csv|gluttony|name|폭식의 신단",
+  "ko": "폭식의 신단",
+  "en": "Gluttonous Shrine",
+  "ctx": "shrine.csv 행 gluttony · 열 name"
+ },
+ {
+  "key": "csv|shrine.csv|greed|name|탐욕의 신단",
+  "ko": "탐욕의 신단",
+  "en": "Greedy Shrine",
+  "ctx": "shrine.csv 행 greed · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|wrath_5|name|분노",
+  "ko": "분노",
+  "en": "Wrathful",
+  "ctx": "sin_word.csv 행 wrath_5 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|wrath_2|name|격노",
+  "ko": "격노",
+  "en": "Raging",
+  "ctx": "sin_word.csv 행 wrath_2 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|wrath_3|name|광란",
+  "ko": "광란",
+  "en": "Rampaging",
+  "ctx": "sin_word.csv 행 wrath_3 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|wrath_4|name|학살",
+  "ko": "학살",
+  "en": "Slaughtering",
+  "ctx": "sin_word.csv 행 wrath_4 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|envy_5|name|시기",
+  "ko": "시기",
+  "en": "Envious",
+  "ctx": "sin_word.csv 행 envy_5 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|envy_2|name|질투",
+  "ko": "질투",
+  "en": "Jealous",
+  "ctx": "sin_word.csv 행 envy_2 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|envy_3|name|앙심",
+  "ko": "앙심",
+  "en": "Spiteful",
+  "ctx": "sin_word.csv 행 envy_3 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|envy_4|name|배신",
+  "ko": "배신",
+  "en": "Treacherous",
+  "ctx": "sin_word.csv 행 envy_4 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|greed_5|name|탐욕",
+  "ko": "탐욕",
+  "en": "Greedy",
+  "ctx": "sin_word.csv 행 greed_5 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|greed_2|name|착취",
+  "ko": "착취",
+  "en": "Exploitative",
+  "ctx": "sin_word.csv 행 greed_2 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|greed_3|name|갈취",
+  "ko": "갈취",
+  "en": "Extorting",
+  "ctx": "sin_word.csv 행 greed_3 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|greed_4|name|강탈",
+  "ko": "강탈",
+  "en": "Rapacious",
+  "ctx": "sin_word.csv 행 greed_4 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|sloth_5|name|나태",
+  "ko": "나태",
+  "en": "Slothful",
+  "ctx": "sin_word.csv 행 sloth_5 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|sloth_2|name|권태",
+  "ko": "권태",
+  "en": "Weary",
+  "ctx": "sin_word.csv 행 sloth_2 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|sloth_3|name|무기력",
+  "ko": "무기력",
+  "en": "Lethargic",
+  "ctx": "sin_word.csv 행 sloth_3 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|sloth_4|name|망각",
+  "ko": "망각",
+  "en": "Forgotten",
+  "ctx": "sin_word.csv 행 sloth_4 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|gluttony_5|name|폭식",
+  "ko": "폭식",
+  "en": "Gluttonous",
+  "ctx": "sin_word.csv 행 gluttony_5 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|gluttony_2|name|허기",
+  "ko": "허기",
+  "en": "Hungering",
+  "ctx": "sin_word.csv 행 gluttony_2 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|gluttony_3|name|포식",
+  "ko": "포식",
+  "en": "Predatory",
+  "ctx": "sin_word.csv 행 gluttony_3 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|gluttony_4|name|심연",
+  "ko": "심연",
+  "en": "Abyssal",
+  "ctx": "sin_word.csv 행 gluttony_4 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|lust_5|name|색욕",
+  "ko": "색욕",
+  "en": "Lustful",
+  "ctx": "sin_word.csv 행 lust_5 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|lust_2|name|집착",
+  "ko": "집착",
+  "en": "Obsessive",
+  "ctx": "sin_word.csv 행 lust_2 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|lust_3|name|방탕",
+  "ko": "방탕",
+  "en": "Debauched",
+  "ctx": "sin_word.csv 행 lust_3 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|lust_4|name|타락",
+  "ko": "타락",
+  "en": "Corrupted",
+  "ctx": "sin_word.csv 행 lust_4 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|pride_5|name|오만",
+  "ko": "오만",
+  "en": "Prideful",
+  "ctx": "sin_word.csv 행 pride_5 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|pride_2|name|경멸",
+  "ko": "경멸",
+  "en": "Contemptuous",
+  "ctx": "sin_word.csv 행 pride_2 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|pride_3|name|지배",
+  "ko": "지배",
+  "en": "Dominating",
+  "ctx": "sin_word.csv 행 pride_3 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|pride_4|name|찬탈",
+  "ko": "찬탈",
+  "en": "Usurping",
+  "ctx": "sin_word.csv 행 pride_4 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|wrath_1|name|분개",
+  "ko": "분개",
+  "en": "Indignant",
+  "ctx": "sin_word.csv 행 wrath_1 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|envy_1|name|시샘",
+  "ko": "시샘",
+  "en": "Begrudging",
+  "ctx": "sin_word.csv 행 envy_1 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|greed_1|name|소유욕",
+  "ko": "소유욕",
+  "en": "Acquisitive",
+  "ctx": "sin_word.csv 행 greed_1 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|sloth_1|name|게으름",
+  "ko": "게으름",
+  "en": "Lazy",
+  "ctx": "sin_word.csv 행 sloth_1 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|gluttony_1|name|과식",
+  "ko": "과식",
+  "en": "Gorging",
+  "ctx": "sin_word.csv 행 gluttony_1 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|lust_1|name|연정",
+  "ko": "연정",
+  "en": "Amorous",
+  "ctx": "sin_word.csv 행 lust_1 · 열 name"
+ },
+ {
+  "key": "csv|sin_word.csv|pride_1|name|자만",
+  "ko": "자만",
+  "en": "Conceited",
+  "ctx": "sin_word.csv 행 pride_1 · 열 name"
+ },
+ {
+  "key": "csv|skill_tag.csv|aoe|name|광역",
+  "ko": "광역",
+  "en": "Area",
+  "ctx": "skill_tag.csv 행 aoe · 열 name"
+ },
+ {
+  "key": "csv|skill_tag.csv|single|name|단일",
+  "ko": "단일",
+  "en": "Single",
+  "ctx": "skill_tag.csv 행 single · 열 name"
+ },
+ {
+  "key": "csv|skill_tag.csv|multihit|name|다단히트",
+  "ko": "다단히트",
+  "en": "Multi-hit",
+  "ctx": "skill_tag.csv 행 multihit · 열 name"
+ },
+ {
+  "key": "csv|skill_tag.csv|dot|name|도트",
+  "ko": "도트",
+  "en": "DoT",
+  "ctx": "skill_tag.csv 행 dot · 열 name"
+ },
+ {
+  "key": "csv|skill_tag.csv|channel|name|정신 집중",
+  "ko": "정신 집중",
+  "en": "Channeling",
+  "ctx": "skill_tag.csv 행 channel · 열 name"
+ },
+ {
+  "key": "csv|skill_tag.csv|shout|name|함성",
+  "ko": "함성",
+  "en": "Shout",
+  "ctx": "skill_tag.csv 행 shout · 열 name"
+ },
+ {
+  "key": "csv|skill_tag.csv|blessing|name|축복",
+  "ko": "축복",
+  "en": "Blessing",
+  "ctx": "skill_tag.csv 행 blessing · 열 name"
+ },
+ {
+  "key": "csv|skill_tag.csv|aura|name|오오라",
+  "ko": "오오라",
+  "en": "Aura",
+  "ctx": "skill_tag.csv 행 aura · 열 name"
+ },
+ {
+  "key": "csv|skill_tag.csv|boost|name|강화",
+  "ko": "강화",
+  "en": "Boost",
+  "ctx": "skill_tag.csv 행 boost · 열 name"
+ },
+ {
+  "key": "csv|skill_tag.csv|restore|name|회복",
+  "ko": "회복",
+  "en": "Restore",
+  "ctx": "skill_tag.csv 행 restore · 열 name"
+ },
+ {
+  "key": "csv|skill_tag.csv|curse|name|저주",
+  "ko": "저주",
+  "en": "Curse",
+  "ctx": "skill_tag.csv 행 curse · 열 name"
+ },
+ {
+  "key": "csv|skill_tag.csv|control|name|제어",
+  "ko": "제어",
+  "en": "Control",
+  "ctx": "skill_tag.csv 행 control · 열 name"
+ },
+ {
+  "key": "csv|skill_tag.csv|transform|name|변신",
+  "ko": "변신",
+  "en": "Transform",
+  "ctx": "skill_tag.csv 행 transform · 열 name"
+ },
+ {
+  "key": "csv|skill_tag.csv|summon|name|소환",
+  "ko": "소환",
+  "en": "Summon",
+  "ctx": "skill_tag.csv 행 summon · 열 name"
+ },
+ {
+  "key": "csv|skill_tag.csv|sacrifice|name|희생",
+  "ko": "희생",
+  "en": "Sacrifice",
+  "ctx": "skill_tag.csv 행 sacrifice · 열 name"
+ },
+ {
+  "key": "csv|slot_coin.csv|mini|name|미니",
+  "ko": "미니",
+  "en": "Mini",
+  "ctx": "slot_coin.csv 행 mini · 열 name"
+ },
+ {
+  "key": "csv|slot_coin.csv|minor|name|마이너",
+  "ko": "마이너",
+  "en": "Minor",
+  "ctx": "slot_coin.csv 행 minor · 열 name"
+ },
+ {
+  "key": "csv|slot_coin.csv|major|name|메이저",
+  "ko": "메이저",
+  "en": "Major",
+  "ctx": "slot_coin.csv 행 major · 열 name"
+ },
+ {
+  "key": "csv|slot_coin.csv|grand|name|그랜드",
+  "ko": "그랜드",
+  "en": "Grand",
+  "ctx": "slot_coin.csv 행 grand · 열 name"
+ },
+ {
+  "key": "csv|slot_symbol.csv|seven|name|오만",
+  "ko": "오만",
+  "en": "Pride",
+  "ctx": "slot_symbol.csv 행 seven · 열 name"
+ },
+ {
+  "key": "csv|slot_symbol.csv|wild|name|탐욕의 인장",
+  "ko": "탐욕의 인장",
+  "en": "Sigil of Greed",
+  "ctx": "slot_symbol.csv 행 wild · 열 name"
+ },
+ {
+  "key": "csv|slot_symbol.csv|gold|name|색욕",
+  "ko": "색욕",
+  "en": "Lust",
+  "ctx": "slot_symbol.csv 행 gold · 열 name"
+ },
+ {
+  "key": "csv|slot_symbol.csv|ore|name|분노",
+  "ko": "분노",
+  "en": "Wrath",
+  "ctx": "slot_symbol.csv 행 ore · 열 name"
+ },
+ {
+  "key": "csv|slot_symbol.csv|timber|name|시기",
+  "ko": "시기",
+  "en": "Envy",
+  "ctx": "slot_symbol.csv 행 timber · 열 name"
+ },
+ {
+  "key": "csv|slot_symbol.csv|dust|name|나태",
+  "ko": "나태",
+  "en": "Sloth",
+  "ctx": "slot_symbol.csv 행 dust · 열 name"
+ },
+ {
+  "key": "csv|slot_symbol.csv|coin|name|폭식",
+  "ko": "폭식",
+  "en": "Gluttony",
+  "ctx": "slot_symbol.csv 행 coin · 열 name"
+ },
+ {
+  "key": "csv|spawn_grade.csv|normal|grade|일반",
+  "ko": "일반",
+  "en": "Normal",
+  "ctx": "spawn_grade.csv 행 normal · 열 grade"
+ },
+ {
+  "key": "csv|spawn_grade.csv|elite|grade|정예",
+  "ko": "정예",
+  "en": "Elite",
+  "ctx": "spawn_grade.csv 행 elite · 열 grade"
+ },
+ {
+  "key": "csv|spawn_grade.csv|stage_boss|grade|스테이지보스",
+  "ko": "스테이지보스",
+  "en": "Stage Boss",
+  "ctx": "spawn_grade.csv 행 stage_boss · 열 grade"
+ },
+ {
+  "key": "csv|spawn_grade.csv|chapter_boss|grade|챕터보스",
+  "ko": "챕터보스",
+  "en": "Chapter Boss",
+  "ctx": "spawn_grade.csv 행 chapter_boss · 열 grade"
+ },
+ {
+  "key": "csv|weapon_base.csv|long_sword|name|롱 소드",
+  "ko": "롱 소드",
+  "en": "Long Sword",
+  "ctx": "weapon_base.csv 행 long_sword · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|bastard_sword|name|바스타드 소드",
+  "ko": "바스타드 소드",
+  "en": "Bastard Sword",
+  "ctx": "weapon_base.csv 행 bastard_sword · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|two_handed_sword|name|투핸디드 소드",
+  "ko": "투핸디드 소드",
+  "en": "Two-Handed Sword",
+  "ctx": "weapon_base.csv 행 two_handed_sword · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|great_sword|name|그레이트 소드",
+  "ko": "그레이트 소드",
+  "en": "Great Sword",
+  "ctx": "weapon_base.csv 행 great_sword · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|espandon|name|에스판돈",
+  "ko": "에스판돈",
+  "en": "Espandon",
+  "ctx": "weapon_base.csv 행 espandon · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|claymore|name|클레이모어",
+  "ko": "클레이모어",
+  "en": "Claymore",
+  "ctx": "weapon_base.csv 행 claymore · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|zweihander|name|츠바이핸더",
+  "ko": "츠바이핸더",
+  "en": "Zweihander",
+  "ctx": "weapon_base.csv 행 zweihander · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|highland_blade|name|하이랜드 블레이드",
+  "ko": "하이랜드 블레이드",
+  "en": "Highland Blade",
+  "ctx": "weapon_base.csv 행 highland_blade · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|balrog_blade|name|발록 블레이드",
+  "ko": "발록 블레이드",
+  "en": "Balrog Blade",
+  "ctx": "weapon_base.csv 행 balrog_blade · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|colossus_blade|name|콜로서스 블레이드",
+  "ko": "콜로서스 블레이드",
+  "en": "Colossus Blade",
+  "ctx": "weapon_base.csv 행 colossus_blade · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|axe|name|액스",
+  "ko": "액스",
+  "en": "Axe",
+  "ctx": "weapon_base.csv 행 axe · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|hand_axe|name|핸드 액스",
+  "ko": "핸드 액스",
+  "en": "Hand Axe",
+  "ctx": "weapon_base.csv 행 hand_axe · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|battle_axe|name|배틀 액스",
+  "ko": "배틀 액스",
+  "en": "Battle Axe",
+  "ctx": "weapon_base.csv 행 battle_axe · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|great_axe|name|그레이트 액스",
+  "ko": "그레이트 액스",
+  "en": "Great Axe",
+  "ctx": "weapon_base.csv 행 great_axe · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|hatchet|name|해칫",
+  "ko": "해칫",
+  "en": "Hatchet",
+  "ctx": "weapon_base.csv 행 hatchet · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|tabar|name|타바르",
+  "ko": "타바르",
+  "en": "Tabar",
+  "ctx": "weapon_base.csv 행 tabar · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|giant_axe|name|자이언트 액스",
+  "ko": "자이언트 액스",
+  "en": "Giant Axe",
+  "ctx": "weapon_base.csv 행 giant_axe · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|tomahawk|name|토마호크",
+  "ko": "토마호크",
+  "en": "Tomahawk",
+  "ctx": "weapon_base.csv 행 tomahawk · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|decapitator|name|데카피테이터",
+  "ko": "데카피테이터",
+  "en": "Decapitator",
+  "ctx": "weapon_base.csv 행 decapitator · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|champion_axe|name|챔피언 액스",
+  "ko": "챔피언 액스",
+  "en": "Champion Axe",
+  "ctx": "weapon_base.csv 행 champion_axe · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|club|name|클럽",
+  "ko": "클럽",
+  "en": "Club",
+  "ctx": "weapon_base.csv 행 club · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|mace|name|메이스",
+  "ko": "메이스",
+  "en": "Mace",
+  "ctx": "weapon_base.csv 행 mace · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|war_hammer|name|워 해머",
+  "ko": "워 해머",
+  "en": "War Hammer",
+  "ctx": "weapon_base.csv 행 war_hammer · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|maul|name|몰",
+  "ko": "몰",
+  "en": "Maul",
+  "ctx": "weapon_base.csv 행 maul · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|flanged_mace|name|플랜지드 메이스",
+  "ko": "플랜지드 메이스",
+  "en": "Flanged Mace",
+  "ctx": "weapon_base.csv 행 flanged_mace · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|battle_hammer|name|배틀 해머",
+  "ko": "배틀 해머",
+  "en": "Battle Hammer",
+  "ctx": "weapon_base.csv 행 battle_hammer · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|martel_de_fer|name|마르텔 드 페르",
+  "ko": "마르텔 드 페르",
+  "en": "Martel de Fer",
+  "ctx": "weapon_base.csv 행 martel_de_fer · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|reinforced_mace|name|리인포스드 메이스",
+  "ko": "리인포스드 메이스",
+  "en": "Reinforced Mace",
+  "ctx": "weapon_base.csv 행 reinforced_mace · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|legendary_mallet|name|레전더리 맬릿",
+  "ko": "레전더리 맬릿",
+  "en": "Legendary Mallet",
+  "ctx": "weapon_base.csv 행 legendary_mallet · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|ogre_maul|name|오우거 몰",
+  "ko": "오우거 몰",
+  "en": "Ogre Maul",
+  "ctx": "weapon_base.csv 행 ogre_maul · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|spear|name|스피어",
+  "ko": "스피어",
+  "en": "Spear",
+  "ctx": "weapon_base.csv 행 spear · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|pike|name|파이크",
+  "ko": "파이크",
+  "en": "Pike",
+  "ctx": "weapon_base.csv 행 pike · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|polearm|name|폴암",
+  "ko": "폴암",
+  "en": "Polearm",
+  "ctx": "weapon_base.csv 행 polearm · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|scythe|name|사이드",
+  "ko": "사이드",
+  "en": "Scythe",
+  "ctx": "weapon_base.csv 행 scythe · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|lance|name|랜스",
+  "ko": "랜스",
+  "en": "Lance",
+  "ctx": "weapon_base.csv 행 lance · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|halberd|name|할버드",
+  "ko": "할버드",
+  "en": "Halberd",
+  "ctx": "weapon_base.csv 행 halberd · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|thresher|name|스레셔",
+  "ko": "스레셔",
+  "en": "Thresher",
+  "ctx": "weapon_base.csv 행 thresher · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|war_pike|name|워 파이크",
+  "ko": "워 파이크",
+  "en": "War Pike",
+  "ctx": "weapon_base.csv 행 war_pike · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|great_polearm|name|그레이트 폴암",
+  "ko": "그레이트 폴암",
+  "en": "Great Polearm",
+  "ctx": "weapon_base.csv 행 great_polearm · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|giant_thresher|name|자이언트 스레셔",
+  "ko": "자이언트 스레셔",
+  "en": "Giant Thresher",
+  "ctx": "weapon_base.csv 행 giant_thresher · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|bow|name|보우",
+  "ko": "보우",
+  "en": "Bow",
+  "ctx": "weapon_base.csv 행 bow · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|short_bow|name|숏 보우",
+  "ko": "숏 보우",
+  "en": "Short Bow",
+  "ctx": "weapon_base.csv 행 short_bow · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|hunters_bow|name|헌터스 보우",
+  "ko": "헌터스 보우",
+  "en": "Hunter's Bow",
+  "ctx": "weapon_base.csv 행 hunters_bow · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|long_bow|name|롱 보우",
+  "ko": "롱 보우",
+  "en": "Long Bow",
+  "ctx": "weapon_base.csv 행 long_bow · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|short_battle_bow|name|숏 배틀 보우",
+  "ko": "숏 배틀 보우",
+  "en": "Short Battle Bow",
+  "ctx": "weapon_base.csv 행 short_battle_bow · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|razor_bow|name|레이저 보우",
+  "ko": "레이저 보우",
+  "en": "Razor Bow",
+  "ctx": "weapon_base.csv 행 razor_bow · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|long_battle_bow|name|롱 배틀 보우",
+  "ko": "롱 배틀 보우",
+  "en": "Long Battle Bow",
+  "ctx": "weapon_base.csv 행 long_battle_bow · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|diamond_bow|name|다이아몬드 보우",
+  "ko": "다이아몬드 보우",
+  "en": "Diamond Bow",
+  "ctx": "weapon_base.csv 행 diamond_bow · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|blade_bow|name|블레이드 보우",
+  "ko": "블레이드 보우",
+  "en": "Blade Bow",
+  "ctx": "weapon_base.csv 행 blade_bow · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|hydra_bow|name|하이드라 보우",
+  "ko": "하이드라 보우",
+  "en": "Hydra Bow",
+  "ctx": "weapon_base.csv 행 hydra_bow · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|staff|name|스태프",
+  "ko": "스태프",
+  "en": "Staff",
+  "ctx": "weapon_base.csv 행 staff · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|short_staff|name|숏 스태프",
+  "ko": "숏 스태프",
+  "en": "Short Staff",
+  "ctx": "weapon_base.csv 행 short_staff · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|long_staff|name|롱 스태프",
+  "ko": "롱 스태프",
+  "en": "Long Staff",
+  "ctx": "weapon_base.csv 행 long_staff · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|war_staff|name|워 스태프",
+  "ko": "워 스태프",
+  "en": "War Staff",
+  "ctx": "weapon_base.csv 행 war_staff · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|jo_staff|name|조 스태프",
+  "ko": "조 스태프",
+  "en": "Jo Staff",
+  "ctx": "weapon_base.csv 행 jo_staff · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|gothic_staff|name|고딕 스태프",
+  "ko": "고딕 스태프",
+  "en": "Gothic Staff",
+  "ctx": "weapon_base.csv 행 gothic_staff · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|rune_staff|name|룬 스태프",
+  "ko": "룬 스태프",
+  "en": "Rune Staff",
+  "ctx": "weapon_base.csv 행 rune_staff · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|walking_staff|name|워킹 스태프",
+  "ko": "워킹 스태프",
+  "en": "Walking Staff",
+  "ctx": "weapon_base.csv 행 walking_staff · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|elder_staff|name|엘더 스태프",
+  "ko": "엘더 스태프",
+  "en": "Elder Staff",
+  "ctx": "weapon_base.csv 행 elder_staff · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|archon_staff|name|아콘 스태프",
+  "ko": "아콘 스태프",
+  "en": "Archon Staff",
+  "ctx": "weapon_base.csv 행 archon_staff · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|orb|name|오브",
+  "ko": "오브",
+  "en": "Orb",
+  "ctx": "weapon_base.csv 행 orb · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|eagle_orb|name|이글 오브",
+  "ko": "이글 오브",
+  "en": "Eagle Orb",
+  "ctx": "weapon_base.csv 행 eagle_orb · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|sacred_globe|name|세이크리드 글로브",
+  "ko": "세이크리드 글로브",
+  "en": "Sacred Globe",
+  "ctx": "weapon_base.csv 행 sacred_globe · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|jareds_stone|name|재러드 스톤",
+  "ko": "재러드 스톤",
+  "en": "Jared's Stone",
+  "ctx": "weapon_base.csv 행 jareds_stone · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|glowing_orb|name|글로잉 오브",
+  "ko": "글로잉 오브",
+  "en": "Glowing Orb",
+  "ctx": "weapon_base.csv 행 glowing_orb · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|crystal_globe|name|크리스탈 글로브",
+  "ko": "크리스탈 글로브",
+  "en": "Crystal Globe",
+  "ctx": "weapon_base.csv 행 crystal_globe · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|swirling_crystal|name|스월링 크리스탈",
+  "ko": "스월링 크리스탈",
+  "en": "Swirling Crystal",
+  "ctx": "weapon_base.csv 행 swirling_crystal · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|heavenly_stone|name|헤븐리 스톤",
+  "ko": "헤븐리 스톤",
+  "en": "Heavenly Stone",
+  "ctx": "weapon_base.csv 행 heavenly_stone · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|eldritch_orb|name|엘드리치 오브",
+  "ko": "엘드리치 오브",
+  "en": "Eldritch Orb",
+  "ctx": "weapon_base.csv 행 eldritch_orb · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|dimensional_shard|name|디멘셔널 샤드",
+  "ko": "디멘셔널 샤드",
+  "en": "Dimensional Shard",
+  "ctx": "weapon_base.csv 행 dimensional_shard · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|crucifix|name|크루시픽스",
+  "ko": "크루시픽스",
+  "en": "Crucifix",
+  "ctx": "weapon_base.csv 행 crucifix · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|scepter|name|셉터",
+  "ko": "셉터",
+  "en": "Scepter",
+  "ctx": "weapon_base.csv 행 scepter · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|rood|name|루드",
+  "ko": "루드",
+  "en": "Rood",
+  "ctx": "weapon_base.csv 행 rood · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|archangel_rod|name|아크엔젤 로드",
+  "ko": "아크엔젤 로드",
+  "en": "Archangel Rod",
+  "ctx": "weapon_base.csv 행 archangel_rod · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|rune_scepter|name|룬 셉터",
+  "ko": "룬 셉터",
+  "en": "Rune Scepter",
+  "ctx": "weapon_base.csv 행 rune_scepter · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|crozier|name|크로지어",
+  "ko": "크로지어",
+  "en": "Crozier",
+  "ctx": "weapon_base.csv 행 crozier · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|cherub_rod|name|케루브 로드",
+  "ko": "케루브 로드",
+  "en": "Cherub Rod",
+  "ctx": "weapon_base.csv 행 cherub_rod · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|mighty_scepter|name|마이티 셉터",
+  "ko": "마이티 셉터",
+  "en": "Mighty Scepter",
+  "ctx": "weapon_base.csv 행 mighty_scepter · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|ferula|name|페룰라",
+  "ko": "페룰라",
+  "en": "Ferula",
+  "ctx": "weapon_base.csv 행 ferula · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|seraph_rod|name|세라프 로드",
+  "ko": "세라프 로드",
+  "en": "Seraph Rod",
+  "ctx": "weapon_base.csv 행 seraph_rod · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|bible|name|바이블",
+  "ko": "바이블",
+  "en": "Bible",
+  "ctx": "weapon_base.csv 행 bible · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|psalter|name|솔터",
+  "ko": "솔터",
+  "en": "Psalter",
+  "ctx": "weapon_base.csv 행 psalter · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|martyrology|name|마티롤로지",
+  "ko": "마티롤로지",
+  "en": "Martyrology",
+  "ctx": "weapon_base.csv 행 martyrology · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|lectern_bible|name|렉턴 바이블",
+  "ko": "렉턴 바이블",
+  "en": "Lectern Bible",
+  "ctx": "weapon_base.csv 행 lectern_bible · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|breviary|name|브리비어리",
+  "ko": "브리비어리",
+  "en": "Breviary",
+  "ctx": "weapon_base.csv 행 breviary · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|wicked_bible|name|위키드 바이블",
+  "ko": "위키드 바이블",
+  "en": "Wicked Bible",
+  "ctx": "weapon_base.csv 행 wicked_bible · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|great_bible|name|그레이트 바이블",
+  "ko": "그레이트 바이블",
+  "en": "Great Bible",
+  "ctx": "weapon_base.csv 행 great_bible · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|missal|name|미설",
+  "ko": "미설",
+  "en": "Missal",
+  "ctx": "weapon_base.csv 행 missal · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|apocrypha|name|아포크리파",
+  "ko": "아포크리파",
+  "en": "Apocrypha",
+  "ctx": "weapon_base.csv 행 apocrypha · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|devils_bible|name|데빌스 바이블",
+  "ko": "데빌스 바이블",
+  "en": "Devil's Bible",
+  "ctx": "weapon_base.csv 행 devils_bible · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|crossbow|name|크로스보우",
+  "ko": "크로스보우",
+  "en": "Crossbow",
+  "ctx": "weapon_base.csv 행 crossbow · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|repeating_crossbow|name|리피팅 크로스보우",
+  "ko": "리피팅 크로스보우",
+  "en": "Repeating Crossbow",
+  "ctx": "weapon_base.csv 행 repeating_crossbow · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|light_crossbow|name|라이트 크로스보우",
+  "ko": "라이트 크로스보우",
+  "en": "Light Crossbow",
+  "ctx": "weapon_base.csv 행 light_crossbow · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|heavy_crossbow|name|헤비 크로스보우",
+  "ko": "헤비 크로스보우",
+  "en": "Heavy Crossbow",
+  "ctx": "weapon_base.csv 행 heavy_crossbow · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|chu_ko_nu|name|추코누",
+  "ko": "추코누",
+  "en": "Chu-Ko-Nu",
+  "ctx": "weapon_base.csv 행 chu_ko_nu · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|arbalest|name|아발레스트",
+  "ko": "아발레스트",
+  "en": "Arbalest",
+  "ctx": "weapon_base.csv 행 arbalest · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|ballista|name|발리스타",
+  "ko": "발리스타",
+  "en": "Ballista",
+  "ctx": "weapon_base.csv 행 ballista · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|highland_crossbow|name|하이랜드 크로스보우",
+  "ko": "하이랜드 크로스보우",
+  "en": "Highland Crossbow",
+  "ctx": "weapon_base.csv 행 highland_crossbow · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|balrog_crossbow|name|발록 크로스보우",
+  "ko": "발록 크로스보우",
+  "en": "Balrog Crossbow",
+  "ctx": "weapon_base.csv 행 balrog_crossbow · 열 name"
+ },
+ {
+  "key": "csv|weapon_base.csv|colossus_crossbow|name|콜로서스 크로스보우",
+  "ko": "콜로서스 크로스보우",
+  "en": "Colossus Crossbow",
+  "ctx": "weapon_base.csv 행 colossus_crossbow · 열 name"
+ },
+ {
+  "key": "csv|weapon_group.csv|sword2h|group|양손검",
+  "ko": "양손검",
+  "en": "Greatsword",
+  "ctx": "weapon_group.csv 행 sword2h · 열 group"
+ },
+ {
+  "key": "csv|weapon_group.csv|axe|group|도끼",
+  "ko": "도끼",
+  "en": "Axe",
+  "ctx": "weapon_group.csv 행 axe · 열 group"
+ },
+ {
+  "key": "csv|weapon_group.csv|mace|group|둔기",
+  "ko": "둔기",
+  "en": "Mace",
+  "ctx": "weapon_group.csv 행 mace · 열 group"
+ },
+ {
+  "key": "csv|weapon_group.csv|spear|group|창",
+  "ko": "창",
+  "en": "Spear",
+  "ctx": "weapon_group.csv 행 spear · 열 group"
+ },
+ {
+  "key": "csv|weapon_group.csv|staff|group|스태프",
+  "ko": "스태프",
+  "en": "Staff",
+  "ctx": "weapon_group.csv 행 staff · 열 group"
+ },
+ {
+  "key": "csv|weapon_group.csv|orb|group|오브",
+  "ko": "오브",
+  "en": "Orb",
+  "ctx": "weapon_group.csv 행 orb · 열 group"
+ },
+ {
+  "key": "csv|weapon_group.csv|crucifix|group|십자가",
+  "ko": "십자가",
+  "en": "Crucifix",
+  "ctx": "weapon_group.csv 행 crucifix · 열 group"
+ },
+ {
+  "key": "csv|weapon_group.csv|bible|group|성경",
+  "ko": "성경",
+  "en": "Bible",
+  "ctx": "weapon_group.csv 행 bible · 열 group"
+ },
+ {
+  "key": "csv|weapon_group.csv|bow|group|활",
+  "ko": "활",
+  "en": "Bow",
+  "ctx": "weapon_group.csv 행 bow · 열 group"
+ },
+ {
+  "key": "csv|weapon_group.csv|crossbow|group|석궁",
+  "ko": "석궁",
+  "en": "Crossbow",
+  "ctx": "weapon_group.csv 행 crossbow · 열 group"
+ },
+ {
+  "key": "csv|weapon_group.csv|dagger|group|쌍단검",
+  "ko": "쌍단검",
+  "en": "Twin Daggers",
+  "ctx": "weapon_group.csv 행 dagger · 열 group"
+ },
+ {
+  "key": "csv|weapon_group.csv|scythe|group|낫",
+  "ko": "낫",
+  "en": "Scythe",
+  "ctx": "weapon_group.csv 행 scythe · 열 group"
+ },
+ {
+  "key": "mock|분노\tWrath",
+  "ko": "분노",
+  "en": "Wrath",
+  "ctx": "mock.js:55 wrath: {"
+ },
+ {
+  "key": "mock|공격 속도와 치명타 확률 증가\tAttacks faster and crits more often",
+  "ko": "공격 속도와 치명타 확률 증가",
+  "en": "Attacks faster and crits more often",
+  "ctx": "mock.js:56 line: {"
+ },
+ {
+  "key": "mock|시기\tEnvy",
+  "ko": "시기",
+  "en": "Envy",
+  "ctx": "mock.js:57 envy: {"
+ },
+ {
+  "key": "mock|방어·저항 관통 및 받은 피해 일부 반사\tPierces defenses and reflects damage",
+  "ko": "방어·저항 관통 및 받은 피해 일부 반사",
+  "en": "Pierces defenses and reflects damage",
+  "ctx": "mock.js:58 line: {"
+ },
+ {
+  "key": "mock|탐욕\tGreed",
+  "ko": "탐욕",
+  "en": "Greed",
+  "ctx": "mock.js:59 greed: {"
+ },
+ {
+  "key": "mock|골드와 아이템 획득량 증가\tFinds more gold and items",
+  "ko": "골드와 아이템 획득량 증가",
+  "en": "Finds more gold and items",
+  "ctx": "mock.js:60 line: {"
+ },
+ {
+  "key": "mock|나태\tSloth",
+  "ko": "나태",
+  "en": "Sloth",
+  "ctx": "mock.js:61 sloth: {"
+ },
+ {
+  "key": "mock|받는 피해와 스킬 쿨타임 감소\tTakes less damage, shorter cooldowns",
+  "ko": "받는 피해와 스킬 쿨타임 감소",
+  "en": "Takes less damage, shorter cooldowns",
+  "ctx": "mock.js:62 line: {"
+ },
+ {
+  "key": "mock|폭식\tGluttony",
+  "ko": "폭식",
+  "en": "Gluttony",
+  "ctx": "mock.js:63 gluttony: {"
+ },
+ {
+  "key": "mock|체력·저항 증가 및 적 체력 비례 피해\tMore health and resists, % HP damage",
+  "ko": "체력·저항 증가 및 적 체력 비례 피해",
+  "en": "More health and resists, % HP damage",
+  "ctx": "mock.js:64 line: {"
+ },
+ {
+  "key": "mock|색욕\tLust",
+  "ko": "색욕",
+  "en": "Lust",
+  "ctx": "mock.js:65 lust: {"
+ },
+ {
+  "key": "mock|타격 시 체력 흡수 및 버프 지속시간 증가\tSteals life on hit and buffs last longer",
+  "ko": "타격 시 체력 흡수 및 버프 지속시간 증가",
+  "en": "Steals life on hit and buffs last longer",
+  "ctx": "mock.js:66 line: {"
+ },
+ {
+  "key": "mock|오만\tPride",
+  "ko": "오만",
+  "en": "Pride",
+  "ctx": "mock.js:67 pride: {"
+ },
+ {
+  "key": "mock|받는 피해 감소 및 공격력·타격 회복 증가\tTougher, hits harder, hard to stagger",
+  "ko": "받는 피해 감소 및 공격력·타격 회복 증가",
+  "en": "Tougher, hits harder, hard to stagger",
+  "ctx": "mock.js:68 line: {"
+ },
+ {
+  "key": "mock|일반\tNormal",
+  "ko": "일반",
+  "en": "Normal",
+  "ctx": "mock.js:79 normal: {"
+ },
+ {
+  "key": "mock|매직\tMagic",
+  "ko": "매직",
+  "en": "Magic",
+  "ctx": "mock.js:80 magic: {"
+ },
+ {
+  "key": "mock|레어\tRare",
+  "ko": "레어",
+  "en": "Rare",
+  "ctx": "mock.js:81 rare: {"
+ },
+ {
+  "key": "mock|크래프트\tCraft",
+  "ko": "크래프트",
+  "en": "Craft",
+  "ctx": "mock.js:82 craft: {"
+ },
+ {
+  "key": "mock|에픽\tEpic",
+  "ko": "에픽",
+  "en": "Epic",
+  "ctx": "mock.js:83 epic: {"
+ },
+ {
+  "key": "mock|레전더리\tLegendary",
+  "ko": "레전더리",
+  "en": "Legendary",
+  "ctx": "mock.js:84 legendary: {"
+ },
+ {
+  "key": "mock|유니크\tUnique",
+  "ko": "유니크",
+  "en": "Unique",
+  "ctx": "mock.js:85 unique: {"
+ },
+ {
+  "key": "mock|데미지\tDamage",
+  "ko": "데미지",
+  "en": "Damage",
+  "ctx": "mock.js:103 atk_flat: {"
+ },
+ {
+  "key": "mock|최대 HP\tMax HP",
+  "ko": "최대 HP",
+  "en": "Max HP",
+  "ctx": "mock.js:105 hp_flat: {"
+ },
+ {
+  "key": "mock|물리 방어\tPhysical Defense",
+  "ko": "물리 방어",
+  "en": "Physical Defense",
+  "ctx": "mock.js:107 def_flat: {"
+ },
+ {
+  "key": "mock|모든 원소 저항\tAll Resistances",
+  "ko": "모든 원소 저항",
+  "en": "All Resistances",
+  "ctx": "mock.js:108 res_all: {"
+ },
+ {
+  "key": "mock|화염 저항\tFire Resist",
+  "ko": "화염 저항",
+  "en": "Fire Resist",
+  "ctx": "mock.js:109 res_fire: {"
+ },
+ {
+  "key": "mock|냉기 저항\tCold Resist",
+  "ko": "냉기 저항",
+  "en": "Cold Resist",
+  "ctx": "mock.js:110 res_cold: {"
+ },
+ {
+  "key": "mock|전기 저항\tLightning Resist",
+  "ko": "전기 저항",
+  "en": "Lightning Resist",
+  "ctx": "mock.js:111 res_lightning: {"
+ },
+ {
+  "key": "mock|독 저항\tPoison Resist",
+  "ko": "독 저항",
+  "en": "Poison Resist",
+  "ctx": "mock.js:112 res_poison: {"
+ },
+ {
+  "key": "mock|치명타 확률\tCrit Chance",
+  "ko": "치명타 확률",
+  "en": "Crit Chance",
+  "ctx": "mock.js:113 crit_rate: {"
+ },
+ {
+  "key": "mock|치명타 피해\tCrit Damage",
+  "ko": "치명타 피해",
+  "en": "Crit Damage",
+  "ctx": "mock.js:114 crit_damage: {"
+ },
+ {
+  "key": "mock|공격 속도\tAttack Speed",
+  "ko": "공격 속도",
+  "en": "Attack Speed",
+  "ctx": "mock.js:115 aspd_pct: {"
+ },
+ {
+  "key": "mock|캐스팅 속도\tCasting Speed",
+  "ko": "캐스팅 속도",
+  "en": "Casting Speed",
+  "ctx": "mock.js:116 cast_speed_pct: {"
+ },
+ {
+  "key": "mock|흡혈\tLife Steal",
+  "ko": "흡혈",
+  "en": "Life Steal",
+  "ctx": "mock.js:117 life_steal: {"
+ },
+ {
+  "key": "mock|방어 무시\tDefense Ignore",
+  "ko": "방어 무시",
+  "en": "Defense Ignore",
+  "ctx": "mock.js:118 def_ignore: {"
+ },
+ {
+  "key": "mock|반사 피해\tReflect Damage",
+  "ko": "반사 피해",
+  "en": "Reflect Damage",
+  "ctx": "mock.js:119 reflect_damage: {"
+ },
+ {
+  "key": "mock|피해 감소\tDamage Reduction",
+  "ko": "피해 감소",
+  "en": "Damage Reduction",
+  "ctx": "mock.js:120 damage_reduction: {"
+ },
+ {
+  "key": "mock|골드 획득\tGold Find",
+  "ko": "골드 획득",
+  "en": "Gold Find",
+  "ctx": "mock.js:121 gold_find: {"
+ },
+ {
+  "key": "mock|드랍률\tItem Find",
+  "ko": "드랍률",
+  "en": "Item Find",
+  "ctx": "mock.js:122 item_find: {"
+ },
+ {
+  "key": "mock|저항 감소\tResist Reduction",
+  "ko": "저항 감소",
+  "en": "Resist Reduction",
+  "ctx": "mock.js:125 res_reduction: {"
+ },
+ {
+  "key": "mock|타격 시 대상 물리 데미지 감소\tPhysical Damage Down on Hit",
+  "ko": "타격 시 대상 물리 데미지 감소",
+  "en": "Physical Damage Down on Hit",
+  "ctx": "mock.js:126 atk_down_phys_pct: {"
+ },
+ {
+  "key": "mock|타격 시 대상 마법 데미지 감소\tMagic Damage Down on Hit",
+  "ko": "타격 시 대상 마법 데미지 감소",
+  "en": "Magic Damage Down on Hit",
+  "ctx": "mock.js:127 atk_down_mag_pct: {"
+ },
+ {
+  "key": "mock|레벨당 데미지\tDamage per Level",
+  "ko": "레벨당 데미지",
+  "en": "Damage per Level",
+  "ctx": "mock.js:128 dmg_per_level_pct: {"
+ },
+ {
+  "key": "mock|강타\tCrushing Blow",
+  "ko": "강타",
+  "en": "Crushing Blow",
+  "ctx": "mock.js:129 crushing_blow_pct: {"
+ },
+ {
+  "key": "mock|매직아이템 획득\tMagic Find",
+  "ko": "매직아이템 획득",
+  "en": "Magic Find",
+  "ctx": "mock.js:130 magic_find: {"
+ },
+ {
+  "key": "mock|일반 대상 추가 피해\tDamage vs Normal",
+  "ko": "일반 대상 추가 피해",
+  "en": "Damage vs Normal",
+  "ctx": "mock.js:131 vs_normal_dmg: {"
+ },
+ {
+  "key": "mock|데몬 대상 추가 피해\tDamage vs Demon",
+  "ko": "데몬 대상 추가 피해",
+  "en": "Damage vs Demon",
+  "ctx": "mock.js:132 vs_demon_dmg: {"
+ },
+ {
+  "key": "mock|언데드 대상 추가 피해\tDamage vs Undead",
+  "ko": "언데드 대상 추가 피해",
+  "en": "Damage vs Undead",
+  "ctx": "mock.js:133 vs_undead_dmg: {"
+ },
+ {
+  "key": "mock|정예·보스 대상 추가 피해\tDamage vs Elites & Bosses",
+  "ko": "정예·보스 대상 추가 피해",
+  "en": "Damage vs Elites & Bosses",
+  "ctx": "mock.js:134 vs_elite_dmg: {"
+ },
+ {
+  "key": "mock|전열 대상 추가 피해\tDamage vs Front Row",
+  "ko": "전열 대상 추가 피해",
+  "en": "Damage vs Front Row",
+  "ctx": "mock.js:135 vs_front_dmg: {"
+ },
+ {
+  "key": "mock|후열 대상 추가 피해\tDamage vs Back Row",
+  "ko": "후열 대상 추가 피해",
+  "en": "Damage vs Back Row",
+  "ctx": "mock.js:136 vs_back_dmg: {"
+ },
+ {
+  "key": "mock|타격 시 대상 방어력 감소\tDefense Shred on Hit",
+  "ko": "타격 시 대상 방어력 감소",
+  "en": "Defense Shred on Hit",
+  "ctx": "mock.js:137 def_down_pct: {"
+ },
+ {
+  "key": "mock|화염 피해\tFire Damage",
+  "ko": "화염 피해",
+  "en": "Fire Damage",
+  "ctx": "mock.js:138 fire_dmg_pct: {"
+ },
+ {
+  "key": "mock|냉기 피해\tCold Damage",
+  "ko": "냉기 피해",
+  "en": "Cold Damage",
+  "ctx": "mock.js:139 cold_dmg_pct: {"
+ },
+ {
+  "key": "mock|전기 피해\tLightning Damage",
+  "ko": "전기 피해",
+  "en": "Lightning Damage",
+  "ctx": "mock.js:140 lightning_dmg_pct: {"
+ },
+ {
+  "key": "mock|독 피해\tPoison Damage",
+  "ko": "독 피해",
+  "en": "Poison Damage",
+  "ctx": "mock.js:141 poison_dmg_pct: {"
+ },
+ {
+  "key": "mock|타격 시 대상 원소 저항 감소\tResist Shred on Hit",
+  "ko": "타격 시 대상 원소 저항 감소",
+  "en": "Resist Shred on Hit",
+  "ctx": "mock.js:142 res_down_pct: {"
+ },
+ {
+  "key": "mock|타격 회복\tHit Recovery",
+  "ko": "타격 회복",
+  "en": "Hit Recovery",
+  "ctx": "mock.js:146 fhr: {"
+ },
+ {
+  "key": "mock|쿨타임 감소\tCooldown Reduction",
+  "ko": "쿨타임 감소",
+  "en": "Cooldown Reduction",
+  "ctx": "mock.js:147 cooldown_reduction: {"
+ },
+ {
+  "key": "mock|체력 회복\tHP Recovery",
+  "ko": "체력 회복",
+  "en": "HP Recovery",
+  "ctx": "mock.js:148 hp_recovery_pct: {"
+ },
+ {
+  "key": "mock|처치 시 체력 회복\tHeal on Kill",
+  "ko": "처치 시 체력 회복",
+  "en": "Heal on Kill",
+  "ctx": "mock.js:149 kill_heal_pct: {"
+ },
+ {
+  "key": "mock|전투 시작 시 행동 게이지\tAction Gauge at Battle Start",
+  "ko": "전투 시작 시 행동 게이지",
+  "en": "Action Gauge at Battle Start",
+  "ctx": "mock.js:150 start_gauge_pct: {"
+ },
+ {
+  "key": "mock|일반몹 처형\tCulling Strike vs Normal",
+  "ko": "일반몹 처형",
+  "en": "Culling Strike vs Normal",
+  "ctx": "mock.js:151 cull_normal_pct: {"
+ },
+ {
+  "key": "mock|레벨당 모든 원소 저항\tAll Resist per Level",
+  "ko": "레벨당 모든 원소 저항",
+  "en": "All Resist per Level",
+  "ctx": "mock.js:152 res_all_per_level: {"
+ },
+ {
+  "key": "mock|레벨당 물리 방어\tPhysical Defense per Level",
+  "ko": "레벨당 물리 방어",
+  "en": "Physical Defense per Level",
+  "ctx": "mock.js:153 def_per_level: {"
+ },
+ {
+  "key": "mock|레벨당 최대 HP\tMax HP per Level",
+  "ko": "레벨당 최대 HP",
+  "en": "Max HP per Level",
+  "ctx": "mock.js:154 hp_per_level: {"
+ },
+ {
+  "key": "mock|레벨당 공격 속도\tAttack Speed per Level",
+  "ko": "레벨당 공격 속도",
+  "en": "Attack Speed per Level",
+  "ctx": "mock.js:155 aspd_per_level_pct: {"
+ },
+ {
+  "key": "mock|반격 확률\tCounter Chance",
+  "ko": "반격 확률",
+  "en": "Counter Chance",
+  "ctx": "mock.js:156 counter_chance: {"
+ },
+ {
+  "key": "mock|최대 화염 저항\tMax Fire Resist",
+  "ko": "최대 화염 저항",
+  "en": "Max Fire Resist",
+  "ctx": "mock.js:157 res_max_fire: {"
+ },
+ {
+  "key": "mock|최대 냉기 저항\tMax Cold Resist",
+  "ko": "최대 냉기 저항",
+  "en": "Max Cold Resist",
+  "ctx": "mock.js:158 res_max_cold: {"
+ },
+ {
+  "key": "mock|최대 전기 저항\tMax Lightning Resist",
+  "ko": "최대 전기 저항",
+  "en": "Max Lightning Resist",
+  "ctx": "mock.js:159 res_max_lightning: {"
+ },
+ {
+  "key": "mock|최대 독 저항\tMax Poison Resist",
+  "ko": "최대 독 저항",
+  "en": "Max Poison Resist",
+  "ctx": "mock.js:160 res_max_poison: {"
+ },
+ {
+  "key": "mock|일반 적에게 받는 피해 감소\tDamage Reduction vs Normal",
+  "ko": "일반 적에게 받는 피해 감소",
+  "en": "Damage Reduction vs Normal",
+  "ctx": "mock.js:162 vs_normal_dr: {"
+ },
+ {
+  "key": "mock|데몬에게 받는 피해 감소\tDamage Reduction vs Demon",
+  "ko": "데몬에게 받는 피해 감소",
+  "en": "Damage Reduction vs Demon",
+  "ctx": "mock.js:163 vs_demon_dr: {"
+ },
+ {
+  "key": "mock|언데드에게 받는 피해 감소\tDamage Reduction vs Undead",
+  "ko": "언데드에게 받는 피해 감소",
+  "en": "Damage Reduction vs Undead",
+  "ctx": "mock.js:164 vs_undead_dr: {"
+ },
+ {
+  "key": "mock|정예·보스에게 받는 피해 감소\tDamage Reduction vs Elites & Bosses",
+  "ko": "정예·보스에게 받는 피해 감소",
+  "en": "Damage Reduction vs Elites & Bosses",
+  "ctx": "mock.js:165 vs_elite_dr: {"
+ },
+ {
+  "key": "mock|전열 적에게 받는 피해 감소\tDamage Reduction vs Front Row",
+  "ko": "전열 적에게 받는 피해 감소",
+  "en": "Damage Reduction vs Front Row",
+  "ctx": "mock.js:166 vs_front_dr: {"
+ },
+ {
+  "key": "mock|후열 적에게 받는 피해 감소\tDamage Reduction vs Back Row",
+  "ko": "후열 적에게 받는 피해 감소",
+  "en": "Damage Reduction vs Back Row",
+  "ctx": "mock.js:167 vs_back_dr: {"
+ },
+ {
+  "key": "mock|경험치 획득\tExperience Gain",
+  "ko": "경험치 획득",
+  "en": "Experience Gain",
+  "ctx": "mock.js:168 xp_gain_pct: {"
+ },
+ {
+  "key": "mock|빙결 시간 감소\tFreeze Duration Reduction",
+  "ko": "빙결 시간 감소",
+  "en": "Freeze Duration Reduction",
+  "ctx": "mock.js:170 freeze_dur_reduction: {"
+ },
+ {
+  "key": "mock|중독 시간 감소\tPoison Duration Reduction",
+  "ko": "중독 시간 감소",
+  "en": "Poison Duration Reduction",
+  "ctx": "mock.js:171 poison_dur_reduction: {"
+ },
+ {
+  "key": "mock|화염 관통\tFire Penetration",
+  "ko": "화염 관통",
+  "en": "Fire Penetration",
+  "ctx": "mock.js:175 res_reduction_fire: {"
+ },
+ {
+  "key": "mock|냉기 관통\tCold Penetration",
+  "ko": "냉기 관통",
+  "en": "Cold Penetration",
+  "ctx": "mock.js:176 res_reduction_cold: {"
+ },
+ {
+  "key": "mock|전기 관통\tLightning Penetration",
+  "ko": "전기 관통",
+  "en": "Lightning Penetration",
+  "ctx": "mock.js:177 res_reduction_lightning: {"
+ },
+ {
+  "key": "mock|독 관통\tPoison Penetration",
+  "ko": "독 관통",
+  "en": "Poison Penetration",
+  "ctx": "mock.js:178 res_reduction_poison: {"
+ },
+ {
+  "key": "mock|화상 시간 감소\tBurn Duration Reduction",
+  "ko": "화상 시간 감소",
+  "en": "Burn Duration Reduction",
+  "ctx": "mock.js:179 burn_dur_reduction: {"
+ },
+ {
+  "key": "mock|스턴 시간 감소\tStun Duration Reduction",
+  "ko": "스턴 시간 감소",
+  "en": "Stun Duration Reduction",
+  "ctx": "mock.js:180 stun_dur_reduction: {"
+ },
+ {
+  "key": "mock|버프 지속시간\tBuff Duration",
+  "ko": "버프 지속시간",
+  "en": "Buff Duration",
+  "ctx": "mock.js:181 buff_dur_pct: {"
+ },
+ {
+  "key": "mock|물약 효과\tPotion Effect",
+  "ko": "물약 효과",
+  "en": "Potion Effect",
+  "ctx": "mock.js:183 potion_effect_pct: {"
+ },
+ {
+  "key": "mock|명중률\tHit Bonus",
+  "ko": "명중률",
+  "en": "Hit Bonus",
+  "ctx": "mock.js:185 hit_bonus: {"
+ },
+ {
+  "key": "mock|최소 데미지\tMinimum Damage",
+  "ko": "최소 데미지",
+  "en": "Minimum Damage",
+  "ctx": "mock.js:187 dmg_min_flat: {"
+ },
+ {
+  "key": "mock|최대 데미지\tMaximum Damage",
+  "ko": "최대 데미지",
+  "en": "Maximum Damage",
+  "ctx": "mock.js:188 dmg_max_flat: {"
+ },
+ {
+  "key": "mock|레벨당 최대 데미지\tMaximum Damage per Level",
+  "ko": "레벨당 최대 데미지",
+  "en": "Maximum Damage per Level",
+  "ctx": "mock.js:189 dmg_max_per_level: {"
+ },
+ {
+  "key": "mock|레벨당 최소 데미지\tMinimum Damage per Level",
+  "ko": "레벨당 최소 데미지",
+  "en": "Minimum Damage per Level",
+  "ctx": "mock.js:190 dmg_min_per_level: {"
+ },
+ {
+  "key": "mock|타격 시 대상 방어력 감소 (겹침)\tStacking Defense Shred on Hit",
+  "ko": "타격 시 대상 방어력 감소 (겹침)",
+  "en": "Stacking Defense Shred on Hit",
+  "ctx": "mock.js:191 def_down_stack_pct: {"
+ },
+ {
+  "key": "mock|타격 시 대상 화염 저항 감소 (겹침)\tStacking Fire Resist Shred on Hit",
+  "ko": "타격 시 대상 화염 저항 감소 (겹침)",
+  "en": "Stacking Fire Resist Shred on Hit",
+  "ctx": "mock.js:193 res_down_stack_fire: {"
+ },
+ {
+  "key": "mock|타격 시 대상 냉기 저항 감소 (겹침)\tStacking Cold Resist Shred on Hit",
+  "ko": "타격 시 대상 냉기 저항 감소 (겹침)",
+  "en": "Stacking Cold Resist Shred on Hit",
+  "ctx": "mock.js:194 res_down_stack_cold: {"
+ },
+ {
+  "key": "mock|타격 시 대상 전기 저항 감소 (겹침)\tStacking Lightning Resist Shred on Hit",
+  "ko": "타격 시 대상 전기 저항 감소 (겹침)",
+  "en": "Stacking Lightning Resist Shred on Hit",
+  "ctx": "mock.js:195 res_down_stack_lightning: {"
+ },
+ {
+  "key": "mock|타격 시 대상 독 저항 감소 (겹침)\tStacking Poison Resist Shred on Hit",
+  "ko": "타격 시 대상 독 저항 감소 (겹침)",
+  "en": "Stacking Poison Resist Shred on Hit",
+  "ctx": "mock.js:196 res_down_stack_poison: {"
+ },
+ {
+  "key": "mock|타격 시 대상 원소 저항 감소 (겹침)\tStacking Resist Shred on Hit",
+  "ko": "타격 시 대상 원소 저항 감소 (겹침)",
+  "en": "Stacking Resist Shred on Hit",
+  "ctx": "mock.js:197 res_down_stack_pct: {"
+ },
+ {
+  "key": "mock|무기 데미지\tWeapon Damage",
+  "ko": "무기 데미지",
+  "en": "Weapon Damage",
+  "ctx": "mock.js:198 weapon_atk_pct: {"
+ },
+ {
+  "key": "mock|경직 시간 증가\tStagger Duration",
+  "ko": "경직 시간 증가",
+  "en": "Stagger Duration",
+  "ctx": "mock.js:199 stagger_dur_pct: {"
+ },
+ {
+  "key": "mock|시전 시 시전 칸 충전\tCharge Refund on Cast",
+  "ko": "시전 시 시전 칸 충전",
+  "en": "Charge Refund on Cast",
+  "ctx": "mock.js:200 cast_refund_chance: {"
+ },
+ {
+  "key": "mock|상태이상 시간 증가\tAilment Duration",
+  "ko": "상태이상 시간 증가",
+  "en": "Ailment Duration",
+  "ctx": "mock.js:201 status_dur_pct: {"
+ },
+ {
+  "key": "mock|레벨당 캐스팅 속도\tCasting Speed per Level",
+  "ko": "레벨당 캐스팅 속도",
+  "en": "Casting Speed per Level",
+  "ctx": "mock.js:202 cast_speed_per_level_pct: {"
+ },
+ {
+  "key": "mock|시전 누적 데미지\tStacking Damage per Cast",
+  "ko": "시전 누적 데미지",
+  "en": "Stacking Damage per Cast",
+  "ctx": "mock.js:203 cast_stack_pct: {"
+ },
+ {
+  "key": "mock|회복량 증가\tHealing Done",
+  "ko": "회복량 증가",
+  "en": "Healing Done",
+  "ctx": "mock.js:204 heal_out_pct: {"
+ },
+ {
+  "key": "mock|디버프 시간 증가\tDebuff Duration",
+  "ko": "디버프 시간 증가",
+  "en": "Debuff Duration",
+  "ctx": "mock.js:205 debuff_dur_pct: {"
+ },
+ {
+  "key": "mock|상태이상 · 디버프 시간 감소\tAilment & Debuff Duration Reduction",
+  "ko": "상태이상 · 디버프 시간 감소",
+  "en": "Ailment & Debuff Duration Reduction",
+  "ctx": "mock.js:206 debuff_dur_reduction: {"
+ },
+ {
+  "key": "mock|HP 재생\tHP Regen",
+  "ko": "HP 재생",
+  "en": "HP Regen",
+  "ctx": "mock.js:207 hp_regen: {"
+ },
+ {
+  "key": "mock|타격 시 공격 스킬 발동\tAttack Skill on Hit",
+  "ko": "타격 시 공격 스킬 발동",
+  "en": "Attack Skill on Hit",
+  "ctx": "mock.js:209 proc_hit_attack: {"
+ },
+ {
+  "key": "mock|타격 시 버프 스킬 발동\tBuff Skill on Hit",
+  "ko": "타격 시 버프 스킬 발동",
+  "en": "Buff Skill on Hit",
+  "ctx": "mock.js:210 proc_hit_buff: {"
+ },
+ {
+  "key": "mock|시전 시 공격 스킬 발동\tAttack Skill on Cast",
+  "ko": "시전 시 공격 스킬 발동",
+  "en": "Attack Skill on Cast",
+  "ctx": "mock.js:211 proc_cast_attack: {"
+ },
+ {
+  "key": "mock|시전 시 버프 스킬 발동\tBuff Skill on Cast",
+  "ko": "시전 시 버프 스킬 발동",
+  "en": "Buff Skill on Cast",
+  "ctx": "mock.js:212 proc_cast_buff: {"
+ },
+ {
+  "key": "mock|시전 시 디버프 스킬 발동\tDebuff Skill on Cast",
+  "ko": "시전 시 디버프 스킬 발동",
+  "en": "Debuff Skill on Cast",
+  "ctx": "mock.js:213 proc_cast_debuff: {"
+ },
+ {
+  "key": "mock|피격 시 디버프 스킬 발동\tDebuff Skill when Struck",
+  "ko": "피격 시 디버프 스킬 발동",
+  "en": "Debuff Skill when Struck",
+  "ctx": "mock.js:214 proc_struck_debuff: {"
+ },
+ {
+  "key": "mock|피격 시 버프 스킬 발동\tBuff Skill when Struck",
+  "ko": "피격 시 버프 스킬 발동",
+  "en": "Buff Skill when Struck",
+  "ctx": "mock.js:215 proc_struck_buff: {"
+ },
+ {
+  "key": "mock|피격 시 방어 스킬 발동\tDefense Skill when Struck",
+  "ko": "피격 시 방어 스킬 발동",
+  "en": "Defense Skill when Struck",
+  "ctx": "mock.js:216 proc_struck_defense: {"
+ },
+ {
+  "key": "mock|스킬 레벨\tSkill Level",
+  "ko": "스킬 레벨",
+  "en": "Skill Level",
+  "ctx": "mock.js:218 skill_plus: {"
+ },
+ {
+  "key": "mock|스킬 태그 강화\tSkill Tag Bonus",
+  "ko": "스킬 태그 강화",
+  "en": "Skill Tag Bonus",
+  "ctx": "mock.js:219 skill_tag: {"
+ },
+ {
+  "key": "mock|공격 · 캐스팅 속도\tAttack · Casting Speed",
+  "ko": "공격 · 캐스팅 속도",
+  "en": "Attack · Casting Speed",
+  "ctx": "mock.js:228 speed_pct: {"
+ },
+ {
+  "key": "mock|탐욕 비례 데미지\tDamage per Greed",
+  "ko": "탐욕 비례 데미지",
+  "en": "Damage per Greed",
+  "ctx": "mock.js:236 atk_pct_per_greed: {"
+ },
+ {
+  "key": "mock|탐욕 비례 최대 HP\tMax HP per Greed",
+  "ko": "탐욕 비례 최대 HP",
+  "en": "Max HP per Greed",
+  "ctx": "mock.js:237 hp_pct_per_greed: {"
+ },
+ {
+  "key": "mock|탐욕 비례 쿨타임 감소\tCooldown Reduction per Greed",
+  "ko": "탐욕 비례 쿨타임 감소",
+  "en": "Cooldown Reduction per Greed",
+  "ctx": "mock.js:238 cdr_per_greed: {"
+ },
+ {
+  "key": "mock|평타 튐\tBasic Cleave",
+  "ko": "평타 튐",
+  "en": "Basic Cleave",
+  "ctx": "mock.js:243 basic_cleave: {"
+ },
+ {
+  "key": "mock|스킬 한 번 더\tSkill Repeat",
+  "ko": "스킬 한 번 더",
+  "en": "Skill Repeat",
+  "ctx": "mock.js:244 skill_repeat_chance: {"
+ },
+ {
+  "key": "mock|원소 → 물리\tElemental to Physical",
+  "ko": "원소 → 물리",
+  "en": "Elemental to Physical",
+  "ctx": "mock.js:245 elem_to_phys: {"
+ },
+ {
+  "key": "mock|타격 스턴\tStun on Hit",
+  "ko": "타격 스턴",
+  "en": "Stun on Hit",
+  "ctx": "mock.js:246 hit_stun_chance: {"
+ },
+ {
+  "key": "mock|대신 받기\tGuard Share",
+  "ko": "대신 받기",
+  "en": "Guard Share",
+  "ctx": "mock.js:247 aura_guard_share: {"
+ },
+ {
+  "key": "mock|받는 치명 감소\tCrit Damage Taken",
+  "ko": "받는 치명 감소",
+  "en": "Crit Damage Taken",
+  "ctx": "mock.js:248 crit_taken_cut: {"
+ },
+ {
+  "key": "mock|고정 피해 몫\tFixed Damage Share",
+  "ko": "고정 피해 몫",
+  "en": "Fixed Damage Share",
+  "ctx": "mock.js:249 skill_fixed_share: {"
+ },
+ {
+  "key": "mock|시전 칸 충전\tCharge Refill",
+  "ko": "시전 칸 충전",
+  "en": "Charge Refill",
+  "ctx": "mock.js:250 cast_refill_chance: {"
+ },
+ {
+  "key": "mock|라운드 보호막\tRound Shield",
+  "ko": "라운드 보호막",
+  "en": "Round Shield",
+  "ctx": "mock.js:251 round_barrier: {"
+ },
+ {
+  "key": "mock|받는 피해 증가\tDamage Taken Up",
+  "ko": "받는 피해 증가",
+  "en": "Damage Taken Up",
+  "ctx": "mock.js:252 sin_vuln: {"
+ },
+ {
+  "key": "mock|넘친 회복 보호막\tOverheal Shield",
+  "ko": "넘친 회복 보호막",
+  "en": "Overheal Shield",
+  "ctx": "mock.js:253 overheal_shield: {"
+ },
+ {
+  "key": "mock|마지막 기도\tLast Prayer",
+  "ko": "마지막 기도",
+  "en": "Last Prayer",
+  "ctx": "mock.js:254 last_prayer: {"
+ },
+ {
+  "key": "mock|한 발 더\tExtra Shot",
+  "ko": "한 발 더",
+  "en": "Extra Shot",
+  "ctx": "mock.js:255 extra_shot_chance: {"
+ },
+ {
+  "key": "mock|평타 쿨 감소\tCooldown per Attack",
+  "ko": "평타 쿨 감소",
+  "en": "Cooldown per Attack",
+  "ctx": "mock.js:256 basic_cd_tick: {"
+ },
+ {
+  "key": "mock|회피\tDodge",
+  "ko": "회피",
+  "en": "Dodge",
+  "ctx": "mock.js:257 dodge_chance: {"
+ },
+ {
+  "key": "mock|피의 대가\tBlood Price",
+  "ko": "피의 대가",
+  "en": "Blood Price",
+  "ctx": "mock.js:259 wrath_blood: {"
+ },
+ {
+  "key": "mock|파티 치명\tParty Crit",
+  "ko": "파티 치명",
+  "en": "Party Crit",
+  "ctx": "mock.js:260 wrath_party_crit: {"
+ },
+ {
+  "key": "mock|받는 스턴 · 경직 감소\tStun Resist",
+  "ko": "받는 스턴 · 경직 감소",
+  "en": "Stun Resist",
+  "ctx": "mock.js:261 wrath_steady: {"
+ },
+ {
+  "key": "mock|버프 지우기\tBuff Removal",
+  "ko": "버프 지우기",
+  "en": "Buff Removal",
+  "ctx": "mock.js:262 envy_strip: {"
+ },
+ {
+  "key": "mock|파티 방어 무시\tParty Defense Ignore",
+  "ko": "파티 방어 무시",
+  "en": "Party Defense Ignore",
+  "ctx": "mock.js:263 envy_party_pierce: {"
+ },
+ {
+  "key": "mock|디버프 되돌리기\tDebuff Return",
+  "ko": "디버프 되돌리기",
+  "en": "Debuff Return",
+  "ctx": "mock.js:264 envy_return: {"
+ },
+ {
+  "key": "mock|표식 대상 데미지\tMark Damage",
+  "ko": "표식 대상 데미지",
+  "en": "Mark Damage",
+  "ctx": "mock.js:265 greed_mark: {"
+ },
+ {
+  "key": "mock|드롭 다시 굴리기\tDrop Reroll",
+  "ko": "드롭 다시 굴리기",
+  "en": "Drop Reroll",
+  "ctx": "mock.js:266 greed_reroll: {"
+ },
+ {
+  "key": "mock|황금 보호막\tGolden Ward",
+  "ko": "황금 보호막",
+  "en": "Golden Ward",
+  "ctx": "mock.js:267 greed_barrier: {"
+ },
+ {
+  "key": "mock|무거운 한 방\tHeavy Hit",
+  "ko": "무거운 한 방",
+  "en": "Heavy Hit",
+  "ctx": "mock.js:268 sloth_heavy: {"
+ },
+ {
+  "key": "mock|파티 쿨타임 감소\tParty Cooldown",
+  "ko": "파티 쿨타임 감소",
+  "en": "Party Cooldown",
+  "ctx": "mock.js:269 sloth_party_cdr: {"
+ },
+ {
+  "key": "mock|나눠 받기\tDeferred Damage",
+  "ko": "나눠 받기",
+  "en": "Deferred Damage",
+  "ctx": "mock.js:270 sloth_defer: {"
+ },
+ {
+  "key": "mock|처형 문턱\tExecute Threshold",
+  "ko": "처형 문턱",
+  "en": "Execute Threshold",
+  "ctx": "mock.js:271 glut_cull: {"
+ },
+ {
+  "key": "mock|파티 데미지\tParty Damage",
+  "ko": "파티 데미지",
+  "en": "Party Damage",
+  "ctx": "mock.js:272 glut_party_dmg: {"
+ },
+ {
+  "key": "mock|원소 흡수\tElemental Absorb",
+  "ko": "원소 흡수",
+  "en": "Elemental Absorb",
+  "ctx": "mock.js:273 glut_absorb: {"
+ },
+ {
+  "key": "mock|회복 나누기\tHeal Share",
+  "ko": "회복 나누기",
+  "en": "Heal Share",
+  "ctx": "mock.js:275 lust_share_heal: {"
+ },
+ {
+  "key": "mock|홀리기\tBeguile",
+  "ko": "홀리기",
+  "en": "Beguile",
+  "ctx": "mock.js:276 lust_charm: {"
+ },
+ {
+  "key": "mock|확정 치명 간격\tSure Crit Interval",
+  "ko": "확정 치명 간격",
+  "en": "Sure Crit Interval",
+  "ctx": "mock.js:277 pride_nth: {"
+ },
+ {
+  "key": "mock|파티 속도\tParty Speed",
+  "ko": "파티 속도",
+  "en": "Party Speed",
+  "ctx": "mock.js:278 pride_party_haste: {"
+ },
+ {
+  "key": "mock|큰 한 방 감소\tBig Hit Reduction",
+  "ko": "큰 한 방 감소",
+  "en": "Big Hit Reduction",
+  "ctx": "mock.js:279 pride_cap: {"
+ },
+ {
+  "key": "mock|막시무스\tMaximus",
+  "ko": "막시무스",
+  "en": "Maximus",
+  "ctx": "mock.js:458 warrior_1: {"
+ },
+ {
+  "key": "mock|바바리안\tBarbarian",
+  "ko": "바바리안",
+  "en": "Barbarian",
+  "ctx": "mock.js:459 warrior_2: {"
+ },
+ {
+  "key": "mock|검황\tSword Emperor",
+  "ko": "검황",
+  "en": "Sword Emperor",
+  "ctx": "mock.js:460 warrior_3: {"
+ },
+ {
+  "key": "mock|레오니다스\tLeonidas",
+  "ko": "레오니다스",
+  "en": "Leonidas",
+  "ctx": "mock.js:461 warrior_4: {"
+ },
+ {
+  "key": "mock|삼손\tSamson",
+  "ko": "삼손",
+  "en": "Samson",
+  "ctx": "mock.js:462 warrior_5: {"
+ },
+ {
+  "key": "mock|오디세우스\tOdysseus",
+  "ko": "오디세우스",
+  "en": "Odysseus",
+  "ctx": "mock.js:463 knight_1: {"
+ },
+ {
+  "key": "mock|한니발\tHannibal",
+  "ko": "한니발",
+  "en": "Hannibal",
+  "ctx": "mock.js:464 knight_5: {"
+ },
+ {
+  "key": "mock|리처드 1세\tRichard the Lionheart",
+  "ko": "리처드 1세",
+  "en": "Richard the Lionheart",
+  "ctx": "mock.js:465 knight_6: {"
+ },
+ {
+  "key": "mock|팔라딘\tPaladin",
+  "ko": "팔라딘",
+  "en": "Paladin",
+  "ctx": "mock.js:466 knight_7: {"
+ },
+ {
+  "key": "mock|살라딘\tSaladin",
+  "ko": "살라딘",
+  "en": "Saladin",
+  "ctx": "mock.js:467 knight_8: {"
+ },
+ {
+  "key": "mock|포세이돈\tPoseidon",
+  "ko": "포세이돈",
+  "en": "Poseidon",
+  "ctx": "mock.js:468 mage_2: {"
+ },
+ {
+  "key": "mock|오딘\tOdin",
+  "ko": "오딘",
+  "en": "Odin",
+  "ctx": "mock.js:469 mage_3: {"
+ },
+ {
+  "key": "mock|제우스\tZeus",
+  "ko": "제우스",
+  "en": "Zeus",
+  "ctx": "mock.js:470 mage_4: {"
+ },
+ {
+  "key": "mock|하데스\tHades",
+  "ko": "하데스",
+  "en": "Hades",
+  "ctx": "mock.js:471 mage_5: {"
+ },
+ {
+  "key": "mock|로빈 후드\tRobin Hood",
+  "ko": "로빈 후드",
+  "en": "Robin Hood",
+  "ctx": "mock.js:472 archer_1: {"
+ },
+ {
+  "key": "mock|빌헬름 텔\tWilliam Tell",
+  "ko": "빌헬름 텔",
+  "en": "William Tell",
+  "ctx": "mock.js:473 archer_2: {"
+ },
+ {
+  "key": "mock|주몽\tJumong",
+  "ko": "주몽",
+  "en": "Jumong",
+  "ctx": "mock.js:474 archer_3: {"
+ },
+ {
+  "key": "mock|아마존\tAmazon",
+  "ko": "아마존",
+  "en": "Amazon",
+  "ctx": "mock.js:475 archer_4: {"
+ },
+ {
+  "key": "mock|아르테미스\tArtemis",
+  "ko": "아르테미스",
+  "en": "Artemis",
+  "ctx": "mock.js:476 archer_5: {"
+ },
+ {
+  "key": "mock|잔 다르크\tJoan of Arc",
+  "ko": "잔 다르크",
+  "en": "Joan of Arc",
+  "ctx": "mock.js:477 priest_3: {"
+ },
+ {
+  "key": "mock|닥터 슈나벨\tDoctor Schnabel",
+  "ko": "닥터 슈나벨",
+  "en": "Doctor Schnabel",
+  "ctx": "mock.js:478 priest_4: {"
+ },
+ {
+  "key": "mock|베네딕토\tBenedict",
+  "ko": "베네딕토",
+  "en": "Benedict",
+  "ctx": "mock.js:479 priest_1: {"
+ },
+ {
+  "key": "mock|멀린\tMerlin",
+  "ko": "멀린",
+  "en": "Merlin",
+  "ctx": "mock.js:480 priest_2: {"
+ },
+ {
+  "key": "mock|노스트라다무스\tNostradamus",
+  "ko": "노스트라다무스",
+  "en": "Nostradamus",
+  "ctx": "mock.js:481 priest_5: {"
+ },
+ {
+  "key": "mock|힘센\tStrong",
+  "ko": "힘센",
+  "en": "Strong",
+  "ctx": "mock.js:911 { attr: 'str',"
+ },
+ {
+  "key": "mock|민첩한\tAgile",
+  "ko": "민첩한",
+  "en": "Agile",
+  "ctx": "mock.js:912 { attr: 'agi',"
+ },
+ {
+  "key": "mock|지적인\tIntelligent",
+  "ko": "지적인",
+  "en": "Intelligent",
+  "ctx": "mock.js:913 { attr: 'int',"
+ },
+ {
+  "key": "mock|건강한\tHealthy",
+  "ko": "건강한",
+  "en": "Healthy",
+  "ctx": "mock.js:914 { attr: 'vit',"
+ },
+ {
+  "key": "mock|운 좋은\tLucky",
+  "ko": "운 좋은",
+  "en": "Lucky",
+  "ctx": "mock.js:915 { attr: 'luck',"
+ },
+ {
+  "key": "mock|이끄는\tLeading",
+  "ko": "이끄는",
+  "en": "Leading",
+  "ctx": "mock.js:916 { attr: 'ldr',"
+ },
+ {
+  "key": "mock|매력적인\tCharming",
+  "ko": "매력적인",
+  "en": "Charming",
+  "ctx": "mock.js:917 { attr: 'cha',"
+ },
+ {
+  "key": "mock|단단한\tDurable",
+  "ko": "단단한",
+  "en": "Durable",
+  "ctx": "mock.js:921 { dt: 'physical',"
+ },
+ {
+  "key": "mock|내화의\tFireproof",
+  "ko": "내화의",
+  "en": "Fireproof",
+  "ctx": "mock.js:922 { dt: 'fire',"
+ },
+ {
+  "key": "mock|방한의\tFrostproof",
+  "ko": "방한의",
+  "en": "Frostproof",
+  "ctx": "mock.js:923 { dt: 'cold',"
+ },
+ {
+  "key": "mock|절연된\tInsulated",
+  "ko": "절연된",
+  "en": "Insulated",
+  "ctx": "mock.js:924 { dt: 'lightning',"
+ },
+ {
+  "key": "mock|방독의\tVenomproof",
+  "ko": "방독의",
+  "en": "Venomproof",
+  "ctx": "mock.js:925 { dt: 'poison',"
+ },
+ {
+  "key": "mock|분노하는\tWrathful",
+  "ko": "분노하는",
+  "en": "Wrathful",
+  "ctx": "mock.js:931 wrath: {"
+ },
+ {
+  "key": "mock|시기하는\tEnvious",
+  "ko": "시기하는",
+  "en": "Envious",
+  "ctx": "mock.js:932 envy: {"
+ },
+ {
+  "key": "mock|탐욕스러운\tGreedy",
+  "ko": "탐욕스러운",
+  "en": "Greedy",
+  "ctx": "mock.js:933 greed: {"
+ },
+ {
+  "key": "mock|나태한\tSlothful",
+  "ko": "나태한",
+  "en": "Slothful",
+  "ctx": "mock.js:934 sloth: {"
+ },
+ {
+  "key": "mock|폭식하는\tGluttonous",
+  "ko": "폭식하는",
+  "en": "Gluttonous",
+  "ctx": "mock.js:935 gluttony: {"
+ },
+ {
+  "key": "mock|색욕의\tLustful",
+  "ko": "색욕의",
+  "en": "Lustful",
+  "ctx": "mock.js:936 lust: {"
+ },
+ {
+  "key": "mock|오만한\tPrideful",
+  "ko": "오만한",
+  "en": "Prideful",
+  "ctx": "mock.js:937 pride: {"
+ },
+ {
+  "key": "mock|떠돌이 광물상\tWandering Ore Dealer",
+  "ko": "떠돌이 광물상",
+  "en": "Wandering Ore Dealer",
+  "ctx": "mock.js:986 iron_ore: {"
+ },
+ {
+  "key": "mock|떠돌이 약초상\tWandering Herb Dealer",
+  "ko": "떠돌이 약초상",
+  "en": "Wandering Herb Dealer",
+  "ctx": "mock.js:987 herb: {"
+ },
+ {
+  "key": "mock|떠돌이 목재상\tWandering Timber Dealer",
+  "ko": "떠돌이 목재상",
+  "en": "Wandering Timber Dealer",
+  "ctx": "mock.js:988 timber: {"
+ },
+ {
+  "key": "mock|떠돌이 가루상\tWandering Dust Dealer",
+  "ko": "떠돌이 가루상",
+  "en": "Wandering Dust Dealer",
+  "ctx": "mock.js:989 dust: {"
+ }
+]

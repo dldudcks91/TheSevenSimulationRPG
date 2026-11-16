@@ -8,7 +8,7 @@
  * battle_design.md / skill_design.md 확정 규칙:
  *   · 한 차례에 스킬 하나 + 기본 공격 (battle_design §3 · 2026-10-06 R218 — ~~스킬이 기본 공격을 대체~~) — 준비된 것이 없으면 기본 공격만 ·
  *     **마법 무기는 기본 공격이 없다**(R198 — 기다리기는 battle.js). 발동 선택은 rng 를 쓰지 않는다
- *   · 쿨은 실시간 초 (battle_design §6) — 시전 순간 `readyAt = t + cooldownSec`. **전투 시작에 한 바퀴부터다**(파티 = 스테이지 시작 · 라운드를 넘어 잇는다 R429 · 적 = 등장 라운드 시작 · 불러내기 — battle.js `restartCools` 가 박는다 · R427 — ~~처음엔 준비 상태~~ R100) · 원정 도중 새로 생긴 스킬도 첫 준비 시각에 같은 식을 쓴다
+ *   · 쿨은 실시간 초 (battle_design §6) — 시전 순간 `readyAt = t + cooldownSec`. **전투 시작에 준비된 채다**(파티 = 스테이지 시작 · 라운드를 넘어 잇는다 R429 · 적 = 등장 라운드 시작 · 불러내기 — battle.js `readyCools` 가 박는다 · R515 — ~~한 바퀴부터~~ R427) · 원정 도중 새로 생긴 스킬 · 일으키기로 선 유닛은 지금부터 한 바퀴(`lapCools`)
  *   · 버프 창도 실시간 초 (battle_design §7) — 중첩 없이 재시전은 `until` 갱신, 다른 효과의 같은 stat 은 덧셈
  *   · 창 만료는 행동 순회 **앞에서** 한 번에 (rng 를 안 쓰므로 수열이 밀리지 않는다)
  *   · 회복 밑수는 마법 공격력 **범위** (battle_design §9-1 · §9-2) — **시전마다 양을 한 번 굴린다**(rng 1회 · R90). 능력치 계수(`statMult`)를 곱한다(2026-09-18 — ~~능력치 항 `flat` 을 더한다~~).
@@ -31,7 +31,7 @@
 import { createFormula } from './formula.js';
 import { procSkillLevel } from './item.js';
 import { skillTagBonus } from './skill_tags.js';
-import { AILMENTS, CASTS, EFFECT_TYPES, EFFECTS, EVENT_TRIGGERS, PICK_TARGETS, refreshDerived, strongestOf, sumOf, stateOf } from './skill_effects.js';
+import { AILMENTS, CASTS, EFFECT_TYPES, EFFECTS, EVENT_TRIGGERS, PICK_TARGETS, barrierExpire, barrierPut, barrierSum, refreshDerived, strongestOf, sumOf, stateOf } from './skill_effects.js';
 
 /**
  * 사건 훅 — 유닛이 든 `reactions: [{on, fn}]` 를 **배열 순서대로** 부른다. 등록이 없으면 아무 일도 없다.
@@ -46,7 +46,7 @@ export function createHooks() {
 }
 
 /**
- * 쿨 한 바퀴의 길이(초) — 시전 뒤의 `readyAt` · **전투 시작(파티) · 적이 서는 라운드를 열 때 · 불러낼 때의 첫 준비 시각**(battle.js `restartCools` · R429) · **원정 도중 새로 생긴 스킬의 첫 준비 시각**(갈아입기)이 같은 식을 쓴다 [2026-09-14 · R89 · 개정 2026-11-02 R427 — ~~전투 시작 · 등장은 준비 상태로 출발해 안 쓴다~~ R100].
+ * 쿨 한 바퀴의 길이(초) — 시전 뒤의 `readyAt` · **원정 도중 새로 생긴 스킬의 첫 준비 시각**(갈아입기) · **일으키기로 선 유닛**(battle.js `lapCools`) · 꺼진 칸의 얼린 쿨이 같은 식을 쓴다 [2026-09-14 · R89 · 개정 2026-11-16 R515 — 전투 시작 · 등장 · 불러내기는 준비된 채라 안 쓴다(~~첫 준비 시각 = 한 바퀴~~ R427)].
  * 쿨감소는 **표기 쿨에 곱**하고(combat_stat:cooldown_reduction) [balance.csv:skill_cd_floor_mult] 배수 밑으로는 안 내려간다 —
  * 0 이면 스킬이 매 차례 나가 예산이 무너진다 (battle_design §6)
  */
@@ -120,8 +120,8 @@ export function createSkillRuntime(ctx) {
         }
         // 화상 · 중독 — 남은 창 중 가장 센 것을 다시 알린다(이벤트 값은 창에서 오므로 아래 `refreshDerived` 와 순서가 무관하다)
         for (const ail of ails) syncAilment(u, ail, at);
-        // 배리어도 같은 조건 — 창이 끝나면 남은 흡수량은 사라진다 (skill_design §9-3)
-        if (u.barrier && u.barrier.until <= at + EPS) u.barrier = null;
+        // 배리어도 같은 조건 — 창이 끝나면 남은 흡수량은 사라진다 (skill_design §9-3) · 끝난 조각만 걷는다(출처마다 조각 · R517) · 걷었으면 `bar`(남은 합)
+        if (barrierExpire(u, at, EPS)) timeline.push({ t: r1(at), e: 'bar', u: u.key, amt: barrierSum(u) });
         if (changed) refreshDerived(u);
         // 최대 HP 가 줄었으면 **마지막 `buffEnd`** 가 새 최대치와 잘린 현재 HP 를 싣는다 [2026-09-21 · 부채 #50 · INTERFACE §2-6 · §6].
         //   한 틱에 여러 창이 닫혀도 실린 값은 전부 닫힌 뒤의 상태라 마지막 하나면 족하다 — 재생기는 계산하지 않는다
@@ -170,7 +170,7 @@ export function createSkillRuntime(ctx) {
 
     /**
      * 넘친 회복 → 보호막(공통 줄 비숍 3 · `adv.overheal_shield` · R471) — 회복이 최대 HP 를 넘는 몫 × 값을 그 대상의 배리어에 더한다 ·
-     *   시간 [balance.csv:advance_overheal_shield_sec] · 배리어가 있으면 양을 더하고 시간을 새로 · 값이 없으면 아무 일도 없다 · rng 0
+     *   시간 [balance.csv:advance_overheal_shield_sec] · 이 조각(`adv:overheal`)이 있으면 양을 더하고 시간을 새로 · 다른 조각은 그대로(R517) · `bar` · 값이 없으면 아무 일도 없다 · rng 0
      */
     function overheal(u, tgt, got, t) {
         const v = u.adv?.overheal_shield ?? 0;
@@ -178,7 +178,7 @@ export function createSkillRuntime(ctx) {
         if (!(v > 0) || !(over > 0)) return;
         const amt = Math.round(over * v);
         if (!(amt > 0)) return;
-        tgt.barrier = { amt: (tgt.barrier?.amt ?? 0) + amt, until: t + B.advance_overheal_shield_sec, s: tgt.barrier?.s ?? 'adv:overheal' };
+        timeline.push({ t: r1(t), e: 'bar', u: tgt.key, amt: barrierPut(tgt, 'adv:overheal', amt, t + B.advance_overheal_shield_sec, true) });
     }
 
     /**

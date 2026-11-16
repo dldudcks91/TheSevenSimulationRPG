@@ -82,7 +82,7 @@ import { createFormula, FIXED_DMG } from './formula.js';
 // 원소 어휘만 가져온다 — 시스템 주입이 아니다 (skill.js 와 같은 취급 · INTERFACE §1)
 import { ELEMENTS } from './hero.js';
 import { cooldownSec, createHooks, createSkillRuntime } from './skill_runtime.js';
-import { refreshDerived, weaponOnHit, stateOf, strongestOf, sumOf, ATTACK_TARGETS, CONDITIONS } from './skill_effects.js';
+import { barrierPut, barrierSum, barrierTake, refreshDerived, weaponOnHit, stateOf, strongestOf, sumOf, ATTACK_TARGETS, CONDITIONS } from './skill_effects.js';
 // 스테이지 편성 예외 — 규칙이 코드라서 주입이 아니라 import 다 (skill_effects.js 와 같은 취급 · INTERFACE §2-13)
 import { STAGE_SPAWN_RULES, spawnRuleKey } from './spawn_rule.js';
 // 만남 줄 — 라운드 씨앗을 용도 · 몬스터 자리 · 장비 부위로 나눈다 (INTERFACE §5-1).
@@ -92,6 +92,7 @@ import { makeRng, deriveSeed } from './rng.js';
 export const ENCOUNTER_STREAMS = Object.freeze({
     formation: 0xF04D, gear: 0x6EA4, skill: 0x5C11, drop: 0xD40F,
     weapon: 0x6A00, wear: 0xC10F, part: 0x6E40,
+    order: 0x0DE5,   // 시작 순서 줄 — 라운드마다 `makeRng(deriveSeed(roundSeed ^ order, 0))` 하나(`startRanks` · 2026-11-16 R515 · INTERFACE §5-3)
 });
 /** 부위 번호는 선택 부위의 유무 · 순서와 무관하다. 새 부위는 뒤에 붙인다. */
 export const MONSTER_GEAR_PARTS = Object.freeze(['weapon', 'helmet', 'armor', 'gloves', 'boots', 'amulet', 'ring']);
@@ -145,12 +146,20 @@ export function createBattleSystem(data) {
     // 적의 랭크 — `monster.csv:role` → `monster_role.csv:rank` (0 전열 · 1 후열). 화면이 들고 있던 규칙을 CSV 로 올린 것이다
     const ROLES = data.monsterRoles ?? {};
     // 종족의 몸 [2026-10-29 · R388 · monster_design §3-1 · INTERFACE §2-6] — 표가 없는 조립(손으로 만든 검증 시스템)은 비어 몸이 없다(종전 그대로).
-    //   부류의 기믹(군대 · 거인 · 수호자 · 이형)은 2026-11-14 R494 에 걷었다 — 몬스터를 묶는 축은 종족 하나다
     const RACES = data.races ?? {};
     for (const [id, r] of Object.entries(RACES)) {
         for (const k of ['hp', 'regen', 'dmg', 'def']) if (!(typeof r[k] === 'number' && r[k] > 0)) throw new Error(`battle: 종족 ${id} 의 몸 ${k} '${r[k]}' — 양수여야 한다 (monster_type.csv)`);
         if (!(typeof r.res === 'number' && Number.isFinite(r.res))) throw new Error(`battle: 종족 ${id} 의 몸 res '${r.res}' (monster_type.csv)`);
     }
+    // 부류 버프 [2026-11-16 · R518 · monster_design §3-2 · INTERFACE §2-6 — 2026-10-29 R388 기믹을 11-14 R494 에 걷었다가 나이트메어부터 버프로 되살렸다] —
+    //   군단 · 거인 · 수호자 · 이형은 비율(0 이상 1 미만) · 부족은 능력치에 더하는 수(0 이상 정수) · 표가 없는 조립은 비어 버프가 없다
+    const FAMILIES = data.families ?? {};
+    for (const [id, f] of Object.entries(FAMILIES)) {
+        const ok = id === 'Tribe' ? Number.isInteger(f.value) && f.value >= 0 : typeof f.value === 'number' && f.value >= 0 && f.value < 1;
+        if (!ok) throw new Error(`battle: 부류 ${id} 의 gimmick_value '${f.value}' — ${id === 'Tribe' ? '0 이상 정수' : '0 이상 1 미만'} (monster_base.csv)`);
+        if (!(Number.isInteger(f.n) && f.n >= 0)) throw new Error(`battle: 부류 ${id} 의 gimmick_n '${f.n}' — 0 이상 정수 (monster_base.csv)`);
+    }
+    if (Object.keys(FAMILIES).length && !Number.isInteger(B.monster_family_min_order)) throw new Error(`battle: balance.csv:monster_family_min_order '${B.monster_family_min_order}' — 정수여야 한다 (부류 버프의 첫 단)`);
     const rankOfRole = role => ROLES[role]?.rank ?? 0;
     const EPS = SK ? SK.EPS : 0;                // 준비·만료 판정 허용 오차 (skill.js — INTERFACE §5-3)
     const r1 = v => Math.round(v * 10) / 10;
@@ -188,23 +197,51 @@ export function createBattleSystem(data) {
      * 칸 하나를 전투에 세운다 — 정의를 풀고 준비 시각을 얹는다. **무기가 안 맞는 칸은 꺼진 채 선다**(R187 · R204 · battle_design §6):
      *   `readyAt = Infinity` 라 `pickReady` 가 안 고르고(차례를 안 먹는다) 쿨이 멈춘다 · 남은 쿨은 `frozen`(초).
      *   **출처를 안 본다** — 고유 · 배운 · 전직(몬스터 보스 셋째 칸 포함) 칸 모두 스킬이 정한다(2026-10-03 · R204 — ~~배운 칸(`source = book`)뿐~~ R197)
-     * @param frozen 꺼질 때 멈춰 둘 쿨(초) — 갈아입기가 넘긴다 · 전투 시작 · 등장은 0 으로 세운 뒤 `restartCools` 가 한 바퀴로 고친다(R427)
+     * @param frozen 꺼질 때 멈춰 둘 쿨(초) — 갈아입기가 넘긴다 · 전투 시작 · 등장은 0 으로 세운 뒤 `readyCools` 가 한 바퀴로 고친다(R187)
      */
     const slotOf = (a, def, fits, readyAt, frozen = 0) => (fits(def)
         ? { id: a.id, def, readyAt, source: a.source }
         : { id: a.id, def, readyAt: Infinity, source: a.source, off: true, frozen });
     /**
-     * 칸 쿨을 처음부터 [2026-11-02 · R427 · battle_design §6 — ~~준비 상태로 출발~~ R100] — 전투 시작(파티 — 스테이지 · 결투장 한 판) · 라운드를 열 때(적 — 그 라운드에 새로 선다) ·
-     *   불러낼 때(새로 서는 무리 · 되살아난 무리) 부른다. 파티는 라운드를 넘어 잇는다(2026-11-03 R429)
-     *   켜진 칸 = `at` + 쿨 한 바퀴(`cooldownSec` — 그 순간의 `cdr`) · 꺼진 칸(무기가 안 맞는 칸 · R187) = 얼린 쿨이 한 바퀴 — 켜지면 그때부터 한 바퀴다 · rng 0
+     * 칸을 **준비된 채** 세운다 [2026-11-16 · R515 · battle_design §6 — ~~쿨 한 바퀴부터~~ R427] — 전투 시작(파티 — 스테이지 · 결투장 · 레이드 한 판) ·
+     *   라운드를 열 때(적 — 그 라운드에 새로 선다) · 불러낼 때(새로 서는 무리 · 되살아난 무리) 부른다. 파티는 라운드를 넘어 잇는다(2026-11-03 R429 — 다음 스테이지는 새 런이라 다시 준비)
+     *   켜진 칸 = `readyAt = at` · 꺼진 칸(무기가 안 맞는 칸 · R187) = 얼린 쿨이 한 바퀴 — 켜지면 그때부터 한 바퀴다(바꿔 낀 스킬과 같다) · rng 0
      */
-    const restartCools = (u, at) => {
+    const readyCools = (u, at) => {
+        for (const a of u.actives) {
+            if (a.off) a.frozen = cooldownSec(B, u, a.def);
+            else a.readyAt = at;
+        }
+    };
+    /**
+     * 칸 쿨을 **지금부터 한 바퀴** — 일으키기(리저렉션)로 선 유닛이 쓴다(쓰러진 동안의 쿨은 버린다 · 꼬리 `res_fresh` 는 준비 — `rise`) [R427 의 옛 `restartCools` 그대로 · R515 에서 갈렸다].
+     *   켜진 칸 = `at` + 쿨 한 바퀴(`cooldownSec` — 그 순간의 `cdr`) · 자동 시전(`auto`)은 곧바로 · 꺼진 칸 = 얼린 쿨이 한 바퀴 · rng 0
+     */
+    const lapCools = (u, at) => {
         for (const a of u.actives) {
             const lap = cooldownSec(B, u, a.def);
             if (a.off) a.frozen = lap;
-            // 자동 시전(`auto` — 가디언 셋 · 버서크 · 2026-11-13 R471)은 전투 시작 · 등장에 곧바로 준비된다 — 켜지고 그 뒤 쿨마다
             else a.readyAt = a.def.cast === 'auto' ? at : at + lap;
         }
+    };
+    /**
+     * 시작 순서 `rank` 를 칸마다 단다 [신설 2026-11-16 · R515 · battle_design §5] — 모두 준비된 채 서므로 첫 차례들에 나갈 순서다(`skill.pickReady` 의 동률 결정자).
+     *   `u.startOrder`: `fixed` = 칸 순서(영웅이 정한 순서 — `activesFor` 가 이미 그 순서로 세웠다) · `random` = 칸 전체를 섞는다(정하지 않은 영웅) ·
+     *   `buffFirst` = 걸린 효과만 거는 칸(`def.effectOnly` — 버프 · 디버프)을 섞어 앞에, 나머지를 섞어 뒤에(몬스터 · 결투장 AI 팀).
+     *   섞기 = 피셔-예이츠(뒤에서부터 `j = floor(r × (i + 1))`) · `rng` = 그 라운드의 시작 순서 줄(`ENCOUNTER_STREAMS.order` — 전투 rng 를 안 민다 · INTERFACE §5-3)
+     */
+    const shuffled = (list, rng) => {
+        const a = list.slice();
+        for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+        return a;
+    };
+    const startRanks = (u, rng) => {
+        const mode = u.startOrder ?? (u.side === 'party' ? 'random' : 'buffFirst');
+        const slots = u.actives;
+        const order = mode === 'fixed' ? slots
+            : mode === 'buffFirst' ? [...shuffled(slots.filter(a => a.def.effectOnly), rng), ...shuffled(slots.filter(a => !a.def.effectOnly), rng)]
+            : shuffled(slots, rng);
+        order.forEach((a, k) => { a.rank = k; });
     };
     // 처치 XP 기준값 — 몬스터 레벨 → `level_xp.csv:monster_xp` (2026-09-28 · ~~monster_xp_base × monster_xp_growth ^ (lvl − 1)~~).
     //   몬스터 레벨은 만렙을 안 넘으므로(`hero_level_cap`) 1 ~ 만렙을 못 덮으면 생성 때 던진다
@@ -266,6 +303,10 @@ export function createBattleSystem(data) {
      */
     const dmgMultOf = diff => diffOf(diff)?.monsterDmgMult ?? 1;
     const hpMultOf = diff => diffOf(diff)?.monsterHpMult ?? 1;
+    /** 부류 버프가 서는 단인가 — 그 단의 `order` ≥ `[balance.csv:monster_family_min_order]`(나이트메어부터 · R518) · 단을 모르는 조립은 안 선다 */
+    const familyOn = diff => (diffOf(diff)?.order ?? 0) >= B.monster_family_min_order;
+    /** 몬스터의 기본 능력치 일곱 — 부족 버프가 모두에 더한다(R518) */
+    const MONSTER_ATTRS = ['str', 'agi', 'int', 'vit', 'luck', 'ldr', 'cha'];
     const slotPlan = (m, g, diff) => ({
         innate: m.innate_skill,
         second: slotsOf(diff) >= 2 && m.nightmare_skill && m.nightmare_skill !== '-' ? m.nightmare_skill : null,
@@ -735,7 +776,9 @@ export function createBattleSystem(data) {
     function makeEnemy(key, monsterId, grade, lvl, gear = [], extra = {}) {
         const m = data.monsters[monsterId];
         const g = data.grades[grade];
-        const { thirdSkill = null, difficulty = null, traits = null, ...rest } = extra;
+        const { thirdSkill = null, difficulty = null, traits = null, tribeAdd = 0, ...rest } = extra;
+        // 다시 만들 재료 — 부족 버프가 불러내기로 다시 서는 무리를 같은 인자 + `tribeAdd` 로 다시 만든다(`retribe` · R518). `extra` 는 넘긴 그대로(부족 몫 없이)
+        const make = { lvl, extra: tribeAdd ? (({ tribeAdd: _, ...e }) => e)(extra) : extra };
         // 정예 특성의 효과 [2026-11-15 · R501 · monster_design §6 · INTERFACE §2-6] — 칸마다 `{stat, v}` 를 얹은 사본이 유닛 · `round` 이벤트로 간다 · rng 0
         const fx = traitFx(traits);
         const fxOf = slot => fx?.find(f => f.slot === slot) ?? null;
@@ -748,6 +791,8 @@ export function createBattleSystem(data) {
         const stats = { str: m.str, agi: m.agi, int: m.int, vit: m.vit, luck: m.luck, ldr: m.ldr, cha: m.cha };
         // 정예 능력치 칸 — `computeCombat` 앞에 더한다 · 스킬 계수가 읽는 `stats` 도 같은 값이다 (R501)
         if (statFx) stats[statFx.stat] += statFx.v;
+        // 부족 버프 — 불러내기로 다시 선 무리는 능력치 일곱 모두에 더한다(`retribe` · R518) · 정예 능력치 칸과 같은 자리
+        if (tribeAdd) for (const k of MONSTER_ATTRS) stats[k] += tribeAdd;
         // 영웅과 같은 경로 — `mastery` 가 없으니 마스터리 몫은 0 이고 `codex`·`party` 도 안 넘긴다
         //   정예 죄종 칸만 예외 — 그 노드를 `elite_trait_sin_rank` 랭크로 쥔 영웅과 같은 길로 합류한다(노드 주인 죄종을 `sin` 으로 넘겨야 `masteryNodesFor` 가 통과시킨다 · R501)
         // 입력에서 다른 것은 **레벨 1 HP 바탕** 하나다 — 영웅 `hero_hp_base` 대신 `monster_hp_base` [2026-09-14 사용자 지시 · R91 · monster_design §5]
@@ -817,7 +862,11 @@ export function createBattleSystem(data) {
             key, monsterId, grade, gear, sheet,
             rank: rankOfRole(m.role),        // 진형 — 역할이 자리를 정한다 (battle_design §3-1)
             monsterType: m.monster_type,     // 종족(Normal/Demon/Undead) — 무기 옵션 vs 종족이 읽는다 (R78)
-            cls: m.cls,                      // 직업 — 스킬 풀과 무기군을 정한다. 자리는 role 이 정한다 (monster_design §5-1)
+            // 부류 — 버프가 읽는다(표에 있는 것만 · 보스 · 6 · 7장은 옛 id 라 null) · **나이트메어부터**(`familyOn`) · 노말은 null (R518 · monster_design §3-2)
+            family: FAMILIES[m.monster_base] && familyOn(difficulty) ? m.monster_base : null,
+            ...(tribeAdd ? { tribeAdd } : {}),   // 부족 버프로 더한 수 — 칩이 읽는다(`enemyView` 의 `family`)
+            make,
+            cls: m.cls,                     // 직업 — 스킬 풀과 무기군을 정한다. 자리는 role 이 정한다 (monster_design §5-1)
             stats,                           // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef · 영웅과 같다)
             actives: acts,
             // 처치 XP 는 몬스터 레벨이 정한다 — 레벨·등급이 같으면 몬스터가 달라도 같다. `exp_coef` 는 몬스터별 조정 칸 (monster_design §7 · R85)
@@ -1043,6 +1092,12 @@ export function createBattleSystem(data) {
         // 장부 없는 시뮬 · 동굴은 기존처럼 런의 첫 굴림으로 만남 루트를 만든다. 외부 시드를 받은 원정은 전투 줄을 소비하지 않는다.
         const encounterRoot = suppliedSeeds ? null : Math.floor(rng() * 4294967296);
         const roundSeedOf = n => suppliedSeeds ? suppliedSeeds[n - 1] : deriveSeed(encounterRoot, n);
+        // 시작 순서 줄 [2026-11-16 · R515 · INTERFACE §5-3] — 라운드마다 하나(그 라운드 씨앗에서 판다 · 전투 rng 를 안 민다). 파티(첫 라운드) → 그 라운드에 서는 적 → 불러낸 무리가 차례로 쓴다
+        let orderRng = null, orderRound = 0;
+        const orderRngFor = n => {
+            if (orderRound !== n) { orderRng = makeRng(deriveSeed(roundSeedOf(n) ^ ENCOUNTER_STREAMS.order, 0)); orderRound = n; }
+            return orderRng;
+        };
 
         // 파티 유닛 — 몬스터와 **같은 생성자**를 지난다 (§8-1). 자리가 정하는 것만 extra 로 얹는다
         const party = partyUnits.map((p, i) => makeUnit('party', p.combat, {
@@ -1053,9 +1108,10 @@ export function createBattleSystem(data) {
             next: p.combat.action_period + i * 0.3, fillAt: i * 0.3,
             reactions: p.reactions ?? [],   // ⚠ 싣는 소비자가 아직 없다 — 마스터리 T3 자리
             // ~~`potionReadyAt` 제 물약 쿨~~ — 2026-11-02 R427 로 파티 하나가 됐다(아래 `drinkPotions` 의 런 변수)
-            // 칸 순서 = 출처 자리. 첫 준비 시각은 아래 `restartCools`(전투 시작 = 첫 라운드)가 쿨 한 바퀴로 세운다 [개정 2026-11-02 · R427 · battle_design §6 —
-            //   ~~준비 상태로 출발 · 첫 준비 시각 0~~ R100] — 여기서는 0 으로 세워 둔다. 동시 준비는 칸 순서다(`SK.pickReady`) · rng 0
+            // 칸 순서 = 출처 자리(영웅이 정한 시작 순서가 있으면 그 순서 — `activesFor`). 아래 `readyCools`(전투 시작 = 첫 라운드)가 준비된 채로 세우고
+            //   `startRanks` 가 시작 순서를 단다 [2026-11-16 · R515 · battle_design §5 · §6 — ~~쿨 한 바퀴부터 · 동시 준비는 칸 순서~~ R427]
             //   든 무기가 안 맞는 칸(무기가 필요한 스킬 · 출처 무관)은 꺼진 채 선다 — 멈춘 쿨 0 (R187 · R204 · `slotOf`)
+            startOrder: p.startOrder ?? 'random',   // 시작 순서 — `fixed`(영웅이 정했다) · `random`(판마다 섞는다) · `buffFirst`(버프 · 디버프 먼저) · 입력이 정한다(R515)
             actives: (fits => (SK ? p.actives ?? [] : []).map(a => {
                 const def = SK.resolve(a);
                 if (!def) throw new Error(`battle: 알 수 없는 스킬 ${a?.id ?? a}`);
@@ -1199,7 +1255,10 @@ export function createBattleSystem(data) {
         const enemyView = e => ({
             ...(e.hero ? { hero: e.hero, rank: e.rank } : {}),
             key: e.key, monsterId: e.monsterId, grade: e.grade, sin: e.sin ?? null,
-            traits: e.traits ?? null, hpMax: e.hpMax, period: e.period,
+            traits: e.traits ?? null,
+            // 켜진 부류 버프 — 칩이 읽는다(R518 · INTERFACE §2-6 `round`) · 부족은 불러내기로 능력치를 받은 유닛만 · 그 밖은 키가 없다
+            ...(e.family && (e.family !== 'Tribe' || e.tribeAdd) ? { family: { id: e.family, value: FAMILIES[e.family].value, n: FAMILIES[e.family].n } } : {}),
+            hpMax: e.hpMax, period: e.period,
             fillAt: r1(e.fillAt),   // 첫 게이지가 차기 시작하는 시각 — 빈 채로 출발한다 (R200 · INTERFACE §2-6)
             atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax, atkType: e.atkType, noBasic: e.noBasic,   // noBasic = 행동 게이지 색 (마법 무기 — R198 · SCREEN_DESIGN §4-2 · ADR-0476)
             stats: e.stats ? { ...e.stats } : null,
@@ -1209,9 +1268,9 @@ export function createBattleSystem(data) {
             //   `rollGear` 가 낸 그 아이템들이고(처치 드롭이 이 중 하나로 나간다 · §5-2) 얕은 복사만 한다 — `sheet` 와 같은 취급이다(표시값 · 전투는 안 읽는다 · rng 0)
             gear: (e.gear ?? []).map(it => ({ ...it })),
         });
-        // 파티 칸 쿨 — 전투 시작(0 · 스테이지를 여는 시각)부터 한 바퀴 [2026-11-02 · R427 · battle_design §6]. 오오라를 건 뒤라 창이 민 `cdr` 까지 든다 ·
-        //   결과 `party[].ready` 가 이 값을 싣는다(아래) · 둘째 라운드부터는 남은 쿨을 잇는다(R429 — ~~`beginRound` 가 다시 세운다~~) · rng 0
-        for (const p of party) restartCools(p, 0);
+        // 파티 칸 쿨 — 전투 시작(0 · 스테이지를 여는 시각)에 **준비된 채** [2026-11-16 · R515 · battle_design §6 — ~~0 부터 한 바퀴~~ R427]. 오오라를 뺀 뒤의 칸이다 ·
+        //   결과 `party[].ready` 가 이 값을 싣는다(아래) · 둘째 라운드부터는 남은 쿨을 잇는다(R429) · 시작 순서는 첫 라운드의 시작 순서 줄(전투 rng 0)
+        for (const p of party) { readyCools(p, 0); startRanks(p, orderRngFor(1)); }
         const timeline = [];
         const out = {
             won: false, reason: null, durationSec: 0,
@@ -1466,7 +1525,7 @@ export function createBattleSystem(data) {
         };
 
         const beginRound = () => {
-            advRoundStart(party);   // 노바 · 블리자드 겹 비우기(덤이 없으면) · 자동 칸 곧바로 (R471) — 적은 등장할 때 `restartCools` 가 자동 칸을 세운다
+            advRoundStart(party);   // 노바 · 블리자드 겹 비우기(덤이 없으면) · 자동 칸 곧바로 (R471) — 적은 등장할 때 `readyCools` 가 모든 칸을 준비된 채 세운다(R515)
             // 물약 칸 다시 채우기 [2026-10-22 · R315 · battle_design §7-1] — 받아 둔 목록이 있으면 이 라운드의 칸이 그것이 되고 앞 칸부터 다시 마신다 ·
             //   그 목록을 아래 `round` 이벤트의 `pots` 로 싣는다(재생기가 칸을 다시 그린다) · 첫 라운드는 `createRun` 이 이미 채웠다 · rng 0
             const pots = round > 1 && potionPending ? potionPending : null;
@@ -1509,6 +1568,12 @@ export function createBattleSystem(data) {
                 for (const k of stacks) delete p.buffs[k];
                 refreshDerived(p);
             }
+            // 이형 겹(부류 버프 · R518)도 라운드를 넘기지 않는다 — 칩이 보이는 창이라 `buffEnd` 를 낸다(이 라운드의 `round` 이벤트 앞) · rng 0
+            for (const p of party) if (p.buffs['fam:aberration']) {
+                delete p.buffs['fam:aberration'];
+                refreshDerived(p);
+                timeline.push({ t: r1(t), e: 'buffEnd', u: p.key, s: 'fam:aberration' });
+            }
             // 도감 사다리 — 그 몬스터 **종족 전체**의 닿은 몫 [2026-10-18 · R286 · 2026-10-22 · R314 · monster_design §8]. 라운드마다 한 번 읽어 둔다
             //   (스폰 전 매직 몫 · 스폰 뒤 유닛) — 라운드 사이에 오른 단계가 다음 라운드부터 먹는다 · 결투장 · 소환은 안 얹는다 · rng 0
             const cxMemo = new Map();
@@ -1523,6 +1588,8 @@ export function createBattleSystem(data) {
                 rank: p.rank ?? 0, stats: p.stats, sheet: { ...p.combat }, gear: p.gear,
                 reactions: p.reactions ?? [],
                 actives: (p.actives ?? []).map(a => slotOf(a, SK.resolve(a), fitterOf(p.weaponGroup), 0)),
+                // 시작 순서 — 결투장 팀 스냅샷이 정한다(다른 플레이어의 방어 편성 = 그 주인의 `fixed` · `random` · AI 팀 = `buffFirst` · R515) · 없으면 적의 기본(`startRanks`)
+                ...(p.startOrder ? { startOrder: p.startOrder } : {}),
             })) } : spawnRound(roundSeedOf(round), stage, pool, round, magicFind, stageLevel, wearChance, difficulty,
                 cxOf ? id => cxOf(id)?.farm.magic ?? 0 : null);
             units.enemies = sp.list;
@@ -1535,9 +1602,10 @@ export function createBattleSystem(data) {
             reviveInit(units.enemies);   // 리저렉션 런당 횟수 — 결투장 적 영웅 (R471)
             t4RoundStart(units.enemies);   // 수호의 원 — 결투장 적 영웅 (R437)
             t4Init(units.enemies); t4Marks();   // 죄종 T4 — 무거운 손 · 현상금 표식(양쪽이 다 선 뒤 · 2026-11-14)
-            // 적 스킬은 **등장 라운드 시작 시각부터 쿨 한 바퀴** [개정 2026-11-02 · R427 · battle_design §6 — ~~준비 상태로 출발~~ R100]. rng 0 이라 아래 등장 지연 굴림 수열이 안 밀린다
-            //   꺼진 칸(무기가 안 맞는 칸 · R187 · R204 — 몬스터 데이터는 전부 맞아 지금은 없다)은 얼린 쿨이 한 바퀴다(`restartCools`)
-            for (const e of units.enemies) restartCools(e, t);
+            // 적 스킬은 **등장 라운드 시작 시각에 준비된 채** [개정 2026-11-16 · R515 · battle_design §6 — ~~등장 라운드 시작 시각부터 쿨 한 바퀴~~ R427] · 시작 순서는
+            //   그 라운드의 시작 순서 줄(몬스터 · AI 팀 = 버프 · 디버프 먼저 — `startRanks`). 전투 rng 0 이라 아래 등장 지연 굴림 수열이 안 밀린다
+            //   꺼진 칸(무기가 안 맞는 칸 · R187 · R204 — 몬스터 데이터는 전부 맞아 지금은 없다)은 얼린 쿨이 한 바퀴다(`readyCools`)
+            for (const e of units.enemies) { readyCools(e, t); startRanks(e, orderRngFor(round)); }
             // 적 등장 시각 = 라운드 시작 + 짧은 지연 (전 라운드 마지막 타격과 겹치지 않게) — 게이지는 등장한 순간부터 빈 채로 찬다 (R200)
             for (const e of units.enemies) {
                 const lag = 0.4 + rng() * 0.6;
@@ -1549,7 +1617,7 @@ export function createBattleSystem(data) {
             for (const e of units.enemies) primeGauge(e);
             const pg = {};
             if (round > 1) for (const p of party) { const s = primeGauge(p); if (s) pg[p.key] = r1(s); }
-            // 파티 칸 쿨은 **라운드를 넘어 잇는다** — 스테이지(런)를 열 때만 처음부터다(`out` 위 `restartCools`) [2026-11-03 · R429 · battle_design §6 —
+            // 파티 칸 쿨은 **라운드를 넘어 잇는다** — 스테이지(런)를 열 때만 준비된 채로 다시 선다(`out` 위 `readyCools` · R515) [2026-11-03 · R429 · battle_design §6 —
             //   ~~라운드를 열 때마다 한 바퀴~~ R427]. 재생기는 앞 라운드의 칸을 그대로 이어 그린다 — `round` 에 파티 칸을 싣지 않는다 · rng 0
             roundLog = { n: round, kind: sp.type, killed: [], eliteSin: units.enemies.find(e => e.grade === 'elite')?.sin ?? null };
             out.rounds.push(roundLog);
@@ -1563,7 +1631,22 @@ export function createBattleSystem(data) {
 
         const onKill = e => {
             if (encounter) return;   // 연습 결투: XP·골드·드롭·도감 처치 없음
-            roundLog.killed.push(e.monsterId);                    // 사실의 기록 — 진 라운드에서 잡은 것도 남는다
+            // 이형 [2026-11-16 · R518 · monster_design §3-2 — R388 기믹을 버프로] — 쓰러질 때마다 파티 전원(소환 제외)의 원소 저항 넷에 겹 +1(상한 `n`).
+            //   창 `fam:aberration`(`res_pct` = −값 × 겹 — 저항 합의 음수 항 · `until: null`) · 겹이 바뀌면 `buff` 이벤트(칩) · 라운드를 열면 지운다(`beginRound`) · rng 0
+            if (e.family === 'Aberration') {
+                const f = FAMILIES.Aberration;
+                for (const p of f.n > 0 && f.value > 0 ? party : []) {
+                    if (p.summon) continue;
+                    const was = p.buffs['fam:aberration']?.n ?? 0;
+                    const n = Math.min(f.n, was + 1);
+                    if (n === was) continue;
+                    const v = -f.value * n;
+                    p.buffs['fam:aberration'] = { stat: 'res_pct', v, n, until: Infinity, element: null, by: 'fam', s: 'fam:aberration', quiet: true };
+                    refreshDerived(p);
+                    timeline.push({ t: r1(t), e: 'buff', u: p.key, s: 'fam:aberration', stat: 'res_pct', v, until: null, n });
+                }
+            }
+            roundLog.killed.push(e.monsterId);                   // 사실의 기록 — 진 라운드에서 잡은 것도 남는다
             // 아래 보상은 전부 **라운드 몫**이다 — 이기면 결과로 옮기고 지면 버린다 (R89)
             loot.kills[e.monsterId] = (loot.kills[e.monsterId] ?? 0) + 1;
             const byGrade = (loot.killGrades[e.monsterId] ??= {});
@@ -1726,6 +1809,21 @@ export function createBattleSystem(data) {
         };
 
         /**
+         * 부족 버프로 다시 만들기 [2026-11-16 · R518 · monster_design §3-2 · INTERFACE §2-6 「종족의 몸 · 부류 버프」] — 처음 만든 인자(`make`) + `tribeAdd` 로
+         *   `makeEnemy` 를 다시 불러 전투 능력치(`REFIT_FIELDS` — 영웅 갈아입기와 같은 목록) · 시트를 갈아 끼운다. 칸 · 창 · 보상 · 자리 · 무리는 그대로 ·
+         *   깎인 방어 비율(`defKeep`)은 잇는다 · 다시 설 때마다 처음 능력치에서 새로(겹치지 않는다) · HP 는 새 최대치로 가득 · rng 0
+         */
+        const retribe = (m, add) => {
+            if (!m.make) return;
+            const f = makeEnemy(m.key, m.monsterId, m.grade, m.make.lvl, m.gear, { ...m.make.extra, tribeAdd: add });
+            for (const k of REFIT_FIELDS) m[k] = f[k];
+            m.defBase = f.defBase * m.defKeep;
+            m.sheet = f.sheet;
+            m.tribeAdd = add;
+            m.hp = m.hpMax;
+        };
+
+        /**
          * 불러내기 [2026-09-18 · INTERFACE §2-13 · skill_design §12-9] — 시전자의 무리(`band`) 중 **서 있지 않은 것을 전부** 세운다.
          *   처음 서는 것(대기)은 적 배열 끝에 붙고, 쓰러진 것은 **그 자리에서 되살아난다** — HP 가득 · 창은 오오라만 남는다 · 경직 풀림.
          *   둘 다 첫 차례는 **제 행동 주기 한 바퀴 뒤**(등장 지연을 굴리지 않는다) · 스킬은 부른 시각부터 쿨 한 바퀴(라운드 시작과 같은 규칙 · R427 — ~~준비 상태~~ R100).
@@ -1736,7 +1834,11 @@ export function createBattleSystem(data) {
             const up = (caster.band ?? []).filter(m => !m.called || m.hp <= 0);
             let fresh = false;
             const revived = [];
+            // 부족 버프 [2026-11-16 · R518 · monster_design §3-2] — 시전자가 부족이면 다시 서는 **부족** 무리를 능력치 + 값으로 다시 만든다(`retribe`) ·
+            //   보스(보스 라운드에서 무리에 든다)는 부류가 없어 안 받는다 · 값 0 이면 안 건드린다
+            const tribe = caster.family === 'Tribe' ? FAMILIES.Tribe?.value ?? 0 : 0;
             for (const m of up) {
+                if (tribe > 0 && m.family === 'Tribe') retribe(m, tribe);
                 if (!m.called) {
                     m.called = true;
                     units.enemies.push(m);
@@ -1747,7 +1849,7 @@ export function createBattleSystem(data) {
                     m.barrier = null;
                     m.stagUntil = 0;
                     m.stunUntil = 0;           // 스턴 · 중독 틱 · 알린 상태이상도 풀린다 (R178)
-                    m.chan = null;             // 쓰러질 때 열려 있던 정신 집중도 걷힌다 — 칸 쿨은 아래에서 부른 시각부터 한 바퀴 (R318 · R427)
+                    m.chan = null;             // 쓰러질 때 열려 있던 정신 집중도 걷힌다 — 칸 쿨은 아래에서 부른 시각에 준비된 채 (R318 · R515)
                     m.dotAcc = 0;
                     m.ailShown = null;
                     m.regenAcc = 0;
@@ -1757,7 +1859,8 @@ export function createBattleSystem(data) {
                 m.next = m.period;
                 m.fillAt = at;                 // 빈 게이지가 이 시각부터 찬다 (R200)
                 m.charges = 0;                 // 되살아나도 칸은 0 에서 (R200)
-                restartCools(m, at);           // 부른 시각부터 쿨 한 바퀴 — 꺼진 칸은 얼린 쿨이 한 바퀴 (R427 · R187)
+                readyCools(m, at);             // 부른 시각에 준비된 채 — 꺼진 칸은 얼린 쿨이 한 바퀴 (R515 — ~~부른 시각부터 한 바퀴~~ R427 · R187)
+                startRanks(m, orderRngFor(round));   // 시작 순서 — 그 라운드의 시작 순서 줄을 잇는다(버프 · 디버프 먼저 · R515)
             }
             // 오오라 — 라운드 시작과 같은 함수다. 이미 걸린 유닛은 칸에서 오오라가 빠져 있어 다시 안 걸린다
             const then = fresh ? applyAuras(units.enemies) : [];
@@ -1807,13 +1910,9 @@ export function createBattleSystem(data) {
             return pickFrom(frontOf(foes));
         }
 
-        /** 피해 적용 — 배리어(HP 밖 흡수 풀)가 먼저 먹고 남은 몫만 HP 를 깎는다 */
+        /** 피해 적용 — 배리어(HP 밖 흡수 풀)가 먼저 먹고 남은 몫만 HP 를 깎는다 · 조각은 먼저 끝나는 것부터(R517) */
         function applyDamage(target, dmg) {
-            let absorbed = 0;
-            if (target.barrier) {
-                absorbed = Math.min(target.barrier.amt, dmg);
-                target.barrier.amt -= absorbed;
-            }
+            const absorbed = barrierTake(target, dmg);
             target.hp = Math.max(0, target.hp - (dmg - absorbed));
             if (target.hp <= 0) advSave(target);   // 버티기 · 헌신(HP 1) — 쓰러질 피해에서 세운다 (2026-11-14 R471 · 창이 없으면 아무 일도 없다)
             return { absorbed };
@@ -2155,6 +2254,25 @@ export function createBattleSystem(data) {
          * `s`(스킬 id)·`proc`(추가 피해가 터졌다)·`bar`(배리어 잔량)는 해당될 때만 붙는다 — 기본 공격의 이벤트 모양·rng 수열은 그대로다.
          * @param sk `{statMult, procChance, procMult}` — **스킬 타격만** 넘긴다(skill_effects 공격 대상 표). 기본 공격은 안 넘긴다 — 능력치 계수는 평타 계수(`mainMult`) · 추가 피해 0
          */
+        /**
+         * 부류 버프 [2026-11-16 · R518 · monster_design §3-2 — 2026-10-29 R388 기믹] — 그 직격 순간 **서 있는 적**(`hp > 0`)을 센다 · 창 · 이벤트 없음 · rng 0.
+         *   `familyUp` = 때리는 쪽 데미지 몫 — 군단(서 있는 군단이 `n` 이상) · 거인(서 있는 적이 자기 하나 · 데미지만) ·
+         *   `familyGuard` = 맞는 쪽 받는 피해 감소 몫 — 수호자(자기 아닌 수호자가 서 있으면 **후열** 몬스터) · 노말 · 결투장 유닛은 `family` 가 없어 0
+         */
+        const familyUp = u => {
+            const f = u.side === 'enemy' ? FAMILIES[u.family] : null;
+            if (!f) return 0;
+            const up = units.enemies.filter(e => e.hp > 0);
+            if (u.family === 'Army') return up.filter(e => e.family === 'Army').length >= f.n ? f.value : 0;
+            if (u.family === 'Giant') return up.length === 1 && up[0] === u ? f.value : 0;
+            return 0;
+        };
+        const familyGuard = target => {
+            const f = FAMILIES.Guardian;
+            if (!f || target.side !== 'enemy' || target.monsterId == null || target.rank !== 1) return 0;
+            return units.enemies.some(e => e !== target && e.hp > 0 && e.family === 'Guardian') ? f.value : 0;
+        };
+
         // 반격 중 — 반격의 기본 공격(그 안의 추가타 · 장비 발동 포함)이 도는 동안 참이다. 그 타격을 맞은 쪽은 반격을 굴리지 않는다 (아래 「반격」 · 2026-11-02 R426)
         let countering = false;
         /* ── 전직 트리 장치 [2026-11-13 · R471 · advance_tree_draft §3 ~ §8 · INTERFACE §2-6 「전직 트리 장치」] ──────────────────────────
@@ -2701,8 +2819,9 @@ export function createBattleSystem(data) {
                 if (v > 0) {
                     const amt = Math.round(u.hpMax * v);
                     const s = u.adv?.round_barrier ? 'mag_t4_circle' : 'sin_greed_t4_ward';
-                    u.barrier = { amt, until: Infinity, s };
-                    timeline.push({ t: r1(t), e: 'buff', u: u.key, s, stat: 'barrier_pct', v, until: null, amt });
+                    // 그 출처의 조각만 새로 — 넘친 회복 · 흡혈 보호막 같은 다른 조각은 제 시간대로 남는다(R517)
+                    const bar = barrierPut(u, s, amt, Infinity);
+                    timeline.push({ t: r1(t), e: 'buff', u: u.key, s, stat: 'barrier_pct', v, until: null, amt, bar });
                 }
                 // 오만 T4 ② 당당한 돌격 — 라운드를 열 때 같은 편 전원 공격 · 캐스팅 속도(주기 창) [balance.csv:mastery_t4_pride_sec] 초
                 const ph = u.adv?.pride_party_haste ?? 0;
@@ -2798,10 +2917,12 @@ export function createBattleSystem(data) {
         function advLand(a, d, dmg, s, ty = null, bar = true) {
             if (!(dmg > 0) || d.hp <= 0) return 0;
             const hp0 = d.hp;
+            const had = bar && !!d.barrier;   // 배리어를 거쳤으면 흡수 후 조각 합을 싣는다 — 재생기의 보호막 막대(R517)
             let ov;
             if (bar) { const { absorbed } = applyDamage(d, dmg); ov = d.hp > 0 ? 0 : Math.max(0, dmg - absorbed - hp0); }
             else ov = loseHp(d, dmg);
             const ev = { t: r1(t), e: 'dot', a: a.key, d: d.key, k: 'adv', s, dmg, dhp: d.hp };
+            if (had) ev.bar = barrierSum(d);
             if (ty) ev.ty = ty;
             if (ov) ev.ov = ov;
             timeline.push(ev);
@@ -3160,7 +3281,7 @@ export function createBattleSystem(data) {
             const im = stateOf(tgt, 'ail_immune')?.[1];
             if (im) {
                 const v = tfOfKey(im.by).purify_immune_shield;
-                if (v) tgt.barrier = { amt: (tgt.barrier?.amt ?? 0) + Math.round(tgt.hpMax * v), until: at + B.advance_overheal_shield_sec, s: 'pri_purify' };
+                if (v) timeline.push({ t: r1(at), e: 'bar', u: tgt.key, amt: barrierPut(tgt, 'pri_purify', Math.round(tgt.hpMax * v), at + B.advance_overheal_shield_sec, true) });
                 return 0;
             }
             if (winOf(tgt, 'war_ragnarok')) {
@@ -3229,7 +3350,7 @@ export function createBattleSystem(data) {
                     if (h) advHit(c, u, h.mult * v, null, 'war_shockwave', { statMult: h.statMult });
                 }
                 else if (b.s === 'war_intimidate' && b.stat === 'final_dmg_pct') { const v = tfOfKey(b.by).roar_linger; if (v && u.hp > 0) advWin(u, 'adv:roar_linger', 'final_dmg_pct', b.v / 2, at + v, { by: b.by }); }
-                else if (b.s === 'war_divinedescent' && b.stat === 'hp_max_pct') { if (TF().descent_shield && hp0 > u.hp) u.barrier = { amt: (u.barrier?.amt ?? 0) + (hp0 - u.hp), until: at + B.advance_overheal_shield_sec, s: 'war_divinedescent' }; }
+                else if (b.s === 'war_divinedescent' && b.stat === 'hp_max_pct') { if (TF().descent_shield && hp0 > u.hp) timeline.push({ t: r1(at), e: 'bar', u: u.key, amt: barrierPut(u, 'war_divinedescent', hp0 - u.hp, at + B.advance_overheal_shield_sec, true) }); }
                 else if (b.s === 'arc_quickdraw' && b.stat === 'period_fix') {
                     const foes = TF().qd_finale && u.hp > 0 ? foesAlive(u) : [];
                     if (foes.length) advHit(u, pickTarget(u, foes), TF().qd_finale, null, 'arc_quickdraw', { statMult: u.mainMult });
@@ -3374,7 +3495,7 @@ export function createBattleSystem(data) {
             d.dotAcc = 0; d.ailShown = null; d.regenAcc = 0;
             d.next = d.period; d.fillAt = t; d.charges = 0;
             if (tf.res_fresh) { for (const a of d.actives) if (!a.off) a.readyAt = t; }
-            else restartCools(d, t);
+            else lapCools(d, t);   // 일으키기는 지금부터 한 바퀴 그대로(R515 는 전투 시작 · 등장 · 불러내기만 준비로 바꿨다)
             const i = out.downed.indexOf(d.uid);
             if (i >= 0) out.downed.splice(i, 1);
             const side = d.side === 'party' ? party : units.enemies;
@@ -3383,9 +3504,10 @@ export function createBattleSystem(data) {
             for (const a of d.passives ?? []) castStanding(d, a.def, then);
             for (const x of side) refreshDerived(x);
             d.hp = Math.max(1, Math.min(d.hpMax, Math.round(d.hpMax * ratio)));
-            if (tf.res_shield) d.barrier = { amt: Math.round(d.hpMax * tf.res_shield), until: t + B.advance_overheal_shield_sec, s: 'pri_resurrection' };
+            if (tf.res_shield) barrierPut(d, 'pri_resurrection', Math.round(d.hpMax * tf.res_shield), t + B.advance_overheal_shield_sec);
             if (tf.res_power) advWin(d, 'adv:res_power', 'atk_pct', tf.res_power, t + B.advance_after_sec, { by: by.key });
             timeline.push({ t: r1(t), e: 'rise', u: d.key, a: by.key, s: 'pri_resurrection', dhp: d.hp, hpMax: d.hpMax });
+            if (d.barrier) timeline.push({ t: r1(t), e: 'bar', u: d.key, amt: barrierSum(d) });   // 덤 보호막 — 일어선 카드에 막대가 선다(R517)
             for (const ev of then) timeline.push({ t: r1(t), ...ev });
         }
 
@@ -3558,7 +3680,12 @@ export function createBattleSystem(data) {
                 if (b.stat === 'final_dmg_pct' || (b.stat === 'final_phys_pct' && hitType === 'physical')) dealt *= Math.max(0, 1 + b.v);
             }
             if (u.adv?.final_dmg_bonus) dealt *= 1 + u.adv.final_dmg_bonus;   // 최종 데미지(공통 줄 크루세이더 1 · R471)
+            // 부류 버프(R518 · 위 `familyUp` · `familyGuard`) — 군단 · 거인은 이 자리의 원천 하나 · 수호자는 맞는 쪽 원천 하나 · 0 이면 안 건드린다
+            const famUp = u.family ? familyUp(u) : 0;
+            if (famUp) dealt *= 1 + famUp;
             if (dealt !== 1) target.dr = 1 - (1 - target.dr) * dealt;
+            const famGuard = familyGuard(target);
+            if (famGuard) target.dr = 1 - (1 - target.dr) * (1 - famGuard);
             // 고정 피해 몫(공통 줄 크루세이더 3 · `adv.fixed_dmg_share` · R471) — 그 몫은 방어 · 저항 · 피해 감소를 안 받는다(`formula.strike` 의 `fixedShare`)
             // 전직 장치의 타격 직전 몫 — 노바 · 천둥신의 분노 세지기 · 반드시 터짐 (R471) · 없으면 null
             //   (2026-11-14 — 평타 · 맞는 쪽 몫도 같은 자리: 퀵 드로우 · 오버드로우 · 호령 창 · 의지 겹 · 끌려나온 후열 — 값이 없으면 null 이라 종전 그대로)
@@ -3610,13 +3737,13 @@ export function createBattleSystem(data) {
                 afterStrike?.(false);
                 return;
             }
-            const shield = target.barrier;
+            const shield = !!target.barrier;   // 배리어가 있었나 — 있었으면 흡수 후 조각 합을 `bar` 로 싣는다
             // 원소 보호막(프로스트 아머 · R471) — 원소 직격 전부 · 물리는 정한 몫만 먼저 먹는다 · 평타로 친 적은 아래에서 얼린다
             const shieldWas = target.eshield && target.eshield.until > t + EPS ? target.eshield : null;
             // 강타 — **맞기 직전 대상의 현재 체력** × % 를 그 타격에 더한다. 치명 · 방어 · 저항을 받지 않는 고정 피해 (battle_design §9 · R78). rng 0
             //   마스터리 조건부 강타(폭식 T2-2 · 2026-10-05)는 같은 비율에 더한다
-            //   **마법 무기를 든 유닛의 직격은 강타 · 흡혈을 안 받는다** [2026-10-04 사용자 · battle_design §9-6 · R207] — 출처 무관 · 영웅 · 몬스터 같다 · 치명은 받는다.
-            //   마법 무기의 표지는 `noBasic`(평타가 없다 — R198)이다
+            //   **마법 무기를 든 유닛의 직격은 강타를 안 받는다** [2026-10-04 사용자 · battle_design §9-6 · R207] — 출처 무관 · 영웅 · 몬스터 같다 · 치명은 받는다.
+            //   마법 무기의 표지는 `noBasic`(평타가 없다 — R198)이다 · 흡혈은 무기가 아니라 피해 종류가 가른다(아래 · 2026-11-16 R517)
             const spell = u.noBasic;
             const crush = spell ? 0 : (fx?.crush ?? 0) + (ma?.sum.crushing_blow_pct ?? 0);
             // 파리 떼(스웜 · 2026-10-29 R380)는 강타가 **첫 산 파리의 HP** 를 본다 — 본체 HP 는 창 동안 몸이 아니다
@@ -3664,18 +3791,27 @@ export function createBattleSystem(data) {
             //   마스터리 조건부 흡혈(색욕 T2-3 · 2026-10-05)은 그 타격의 흡혈에 더한다
             //   도감 Lv2 흡혈(그 종족을 때릴 때 · R314)도 같은 자리다
             //   호령 변형 2(`lifesteal_pct` 창 · R471)도 같은 자리 — 덤 「넘친 몫 → 보호막」(`lsShield`)은 회복이 최대 HP 를 넘긴 몫을 배리어로
-            const ls = spell ? 0 : (u.ls ?? 0) + (ma?.sum.life_steal ?? 0) + (cxA?.life_steal ?? 0) + (am?.ls ?? 0);   // 마법 무기는 안 받는다(위 강타와 같다 · R207)
+            //   **피해 종류가 가른다** [2026-11-16 사용자 · battle_design §9-6 · R517] — 물리 = 체력 회복 · 원소 = 보호막 · 고정(사제 직격) = 없다 · 무기 종류 무관
+            //   (옛 「마법 무기는 흡혈을 안 받는다」(R207)의 흡혈 몫을 대체 — 강타는 위에서 그대로 막는다)
+            const ls = hitType === 'physical' || ELEMENTS.includes(hitType) ? (u.ls ?? 0) + (ma?.sum.life_steal ?? 0) + (cxA?.life_steal ?? 0) + (am?.ls ?? 0) : 0;
             if (ls > 0 && u.hp > 0) {
-                const got = F.leech(dmg, ls, u.recv);
-                const over = am?.ls ? got - (u.hpMax - u.hp) : 0;
-                u.hp = Math.min(u.hpMax, u.hp + got);    // 체력 회복 +% 가 흡혈에도 곱한다 (2026-09-18)
-                ev.ahp = u.hp;
-                if (over > 0 && Object.values(u.buffs).some(b => b.lsShield)) u.barrier = { amt: (u.barrier?.amt ?? 0) + over, until: t + B.advance_overheal_shield_sec, s: u.barrier?.s ?? 'war_command' };
+                if (hitType === 'physical') {
+                    const got = F.leech(dmg, ls, u.recv);
+                    const over = am?.ls ? got - (u.hpMax - u.hp) : 0;
+                    u.hp = Math.min(u.hpMax, u.hp + got);    // 체력 회복 +% 가 흡혈에도 곱한다 (2026-09-18)
+                    ev.ahp = u.hp;
+                    if (over > 0 && Object.values(u.buffs).some(b => b.lsShield)) ev.abar = barrierPut(u, 'war_command', over, t + B.advance_overheal_shield_sec, true);
+                } else {
+                    // 원소 흡혈 = 보호막 조각 `leech` — 양 = 피해 × 흡혈(회복이 아니라 받는 회복 +% 를 안 곱한다) · 시간 = 넘친 회복 보호막과 같다 · 같은 조각에 더하고 시간을 새로 ·
+                    //   그 조각은 최대 HP × [balance.csv:lifesteal_shield_cap_pct] 에서 자른다 · rng 0
+                    const got = F.leech(dmg, ls);
+                    if (got > 0) ev.abar = barrierPut(u, 'leech', got, t + B.advance_overheal_shield_sec, true, Math.round(u.hpMax * B.lifesteal_shield_cap_pct));
+                }
             }
             if (s) ev.s = s;
             if (sk?.hitIndex != null) ev.i = sk.hitIndex;
             if (proc) ev.proc = true;                        // 추가 피해가 **터진 타격만** 키가 선다 (INTERFACE §2-6)
-            if (shield) ev.bar = shield.amt;                // 흡수 후 잔량
+            if (shield) ev.bar = barrierSum(target);        // 흡수 후 잔량(조각 합)
             timeline.push(ev);
             // 색욕 T4 ① 드러난 심장(2026-11-14) — 조건(상대 HP 가 높다)을 채운 적에게 치명이 터지면 잠깐 받는 피해 증가
             if (crit && u.adv?.lust_crit_vuln && target.hp > 0 && !target.summon && t4On(u, target))
@@ -3847,7 +3983,7 @@ export function createBattleSystem(data) {
         // 스킬 칸 = 출처 자리 + id — 칸이 바뀌면 갈아입는다(같은 id 가 다른 칸으로 옮겨도) · 쿨을 잇는 열쇠와 같다 (R130)
         const slotKey = a => `${a.source}|${a.id}`;
         // 무기군도 입력이다 — 칸이 켜지고 꺼지는 것을 정한다 (R187)
-        const sigOf = p => JSON.stringify([p.combat, p.stats ?? null, (SK ? p.actives ?? [] : []).map(a => [slotKey(a), a.up ?? 0]), p.weaponGroup ?? null]);
+        const sigOf = p => JSON.stringify([p.combat, p.stats ?? null, (SK ? p.actives ?? [] : []).map(a => [slotKey(a), a.up ?? 0]), p.weaponGroup ?? null, p.startOrder ?? null]);   // 시작 순서도 입력이다(R515)
         const worn = new Map(partyUnits.map(p => [p.uid, { sig: sigOf(p), combat: p.combat }]));
         /** 라운드 도중인가 — 열었고 아직 안 끝났다(끝났으면 `between` · 닫혔으면 `ended`) */
         const inRound = () => started && !between && !ended;
@@ -3898,6 +4034,13 @@ export function createBattleSystem(data) {
                     const left = !was ? lap : was.off ? was.frozen : Math.max(0, was.readyAt - t);
                     return slotOf(a, def, fits, !was ? t + lap : was.off ? t + was.frozen : was.readyAt, left);
                 });
+                // 시작 순서 [2026-11-16 · R515] — 정한 순서(`fixed` — 원정 중에 순서를 바꿨어도)면 새 칸 순서 · 아니면 남은 칸은 `rank` 를 잇고 새 칸은 그 뒤(rng 0 — 시작 순서 줄을 안 쓴다)
+                u.startOrder = p.startOrder ?? 'random';
+                if (u.startOrder === 'fixed') u.actives.forEach((a, k) => { a.rank = k; });
+                else {
+                    let after = Math.max(-1, ...[...prev.values()].map(a => a.rank ?? -1)) + 1;
+                    for (const a of u.actives) a.rank = prev.get(slotKey(a))?.rank ?? after++;
+                }
                 // 칸 표시도 새로 잰다 — 새 칸에 오오라가 있으면 아래 `applyAuras` 가 다시 남긴다 (R98)
                 u.slotIds = null;
                 u.slotUps = null;

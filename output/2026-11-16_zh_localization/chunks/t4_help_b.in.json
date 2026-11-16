@@ -1,0 +1,722 @@
+[
+ {
+  "key": "ui|help.tavern.choosing.title",
+  "ko": "후보는 무엇을 보고 고르나요?",
+  "en": "Choosing a recruit",
+  "ctx": "help.tavern.choosing.title"
+ },
+ {
+  "key": "ui|help.tavern.choosing.body",
+  "ko": "등급 색만 보지 말고 <b>필요한 역할 · 고유 스킬 · 그 스킬이 쓰는 능력치</b>를 함께 확인합니다. 일반·매직·레어는 능력치 총합의 범위와 분포가 다릅니다. 레어는 대체로 총합이 높지만, 매직도 필요한 능력치가 높게 나온 후보가 있을 수 있습니다.<br><br>기본 능력치는 생성될 때 정해지고 일반적인 레벨업으로 다시 뽑히지 않습니다. 직업은 같아도 죄종·능력치·고유 스킬이 다르면 맡길 역할이 달라집니다. 현재 명단에서는 일반·매직·레어가 나오며 유니크는 나오지 않습니다.",
+  "en": "Check the <b>role you need, the innate skill and the attributes that skill uses</b>, alongside the tier color. Normal, Magic and Rare heroes have different attribute-total ranges and spreads. Rare heroes generally have higher totals, but a Magic candidate may roll strongly in the attribute you need.<br><br>Attributes are set when a hero is created and are not rerolled by ordinary level-ups. Heroes of the same class can suit different roles because their Sins, attributes and innate skills differ. The current candidate list generates Normal, Magic and Rare heroes, but no Uniques.",
+  "ctx": "help.tavern.choosing.body"
+ },
+ {
+  "key": "ui|help.tavern.reroll.title",
+  "ko": "후보 명단 교체",
+  "en": "Refreshing the recruit list",
+  "ctx": "help.tavern.reroll.title"
+ },
+ {
+  "key": "ui|help.tavern.reroll.body",
+  "ko": "<b>[후보 교체 (무료)]</b>를 누르면 남아 있는 후보를 포함해 명단 전체가 바뀝니다. 시간이 지나도 후보는 저절로 바뀌지 않습니다. <br><br>교체는 항상 무료입니다. 교체 뒤 <b>{refresh}분</b>이 지나야 다시 교체할 수 있으며, 대기 중에는 버튼이 비활성화되고 남은 시간이 표시됩니다. 대기 시간은 오프라인에도 흐릅니다.",
+  "en": "<b>New candidates (free)</b> replaces the entire recruit list, including candidates still present. Time never changes the list automatically. <br><br>Refreshing is always free. After each refresh, wait <b>{refresh} min</b> before refreshing again. The button is disabled during the cooldown and shows the remaining time beside it. The cooldown continues offline.",
+  "ctx": "help.tavern.reroll.body"
+ },
+ {
+  "key": "ui|help.tavern.visitors.title",
+  "ko": "기다리면 찾아오는 영웅",
+  "en": "Heroes who arrive over time",
+  "ctx": "help.tavern.visitors.title"
+ },
+ {
+  "key": "ui|help.tavern.visitors.body",
+  "ko": "연구소 <b>수색</b> 줄에 등록한 영웅이 시간마다 한 명씩 데려옵니다. 아무도 등록하지 않으면 찾아오는 영웅이 없고, 영웅은 영웅 고용 후보로만 얻습니다. 등록한 영웅도 원정과 편성에 그대로 쓸 수 있고, 게임을 닫아도 시간이 흐릅니다. 이 수색으로는 현재 <b>매직 또는 레어</b> 영웅이 옵니다.<br><br>도착한 영웅은 고용하거나 돌려보낼 때까지 떠나지 않습니다. 찾아온 영웅은 데려온 수색 영웅 줄의 오른쪽 칸에 섭니다. 그 줄 칸이 가득 차도 시계는 흐릅니다. 시간이 다 된 영웅은 그 줄에 자리가 날 때까지 기다렸다가, 자리를 비우면 바로 들어오고 그때부터 다음 수색을 시작합니다. 기다리는 영웅은 데려온 수색 영웅 칸에 <b>찾았다!</b>로 보이며, 눌러서 바로 고용하거나 무시할 수 있습니다. 무시하면 그 수색 영웅이 바로 다시 나갑니다. 연구소에서 <b>간격</b>을 올리면 더 자주 오고, <b>품질</b>은 레어 확률을 올리고, <b>대기 칸</b>은 줄마다 둘째 칸을 엽니다.",
+  "en": "Each hero assigned to the Laboratory's <b>Search</b> line brings back one candidate per interval. With no one assigned, nobody arrives and heroes come only from the hiring candidates. Assigned heroes can still join expeditions and formations, and time keeps passing while the game is closed. These arrivals currently produce <b>Magic or Rare</b> heroes.<br><br>Arrivals stay until hired or sent away, in the slots to the right of the searcher who brought them. The timer keeps running while that searcher's slots are full. A hero whose timer finishes waits for room in that row, enters as soon as you free a slot there, and the next search starts then. A waiting hero shows as <b>Found!</b> under the searcher who brought them; click it to hire them right away or pass. Passing sends that searcher out again at once. Laboratory <b>Interval</b> research makes arrivals more frequent, <b>Quality</b> raises the Rare chance, and <b>Waiting Slots</b> opens a second slot in each row.",
+  "ctx": "help.tavern.visitors.body"
+ },
+ {
+  "key": "ui|help.tavern.commissions.title",
+  "ko": "하던 원정에 의뢰를 얹기",
+  "en": "Adding a commission to your expeditions",
+  "ctx": "help.tavern.commissions.title"
+ },
+ {
+  "key": "ui|help.tavern.commissions.body",
+  "ko": "게시판에서 목표와 골드 보상을 보고 <b>[수락]</b>합니다. 동시에 진행할 수 있는 의뢰는 <b>{slots}개</b>입니다. 별도 파티나 전투를 시작하지 않으며, 수락한 뒤 모든 부대의 <b>승리 라운드</b>가 목표를 함께 채웁니다.<br><br>토벌·현상금 의뢰는 적힌 장·종족·장소를 맞춰 잡아야 하고 패배한 라운드는 세지 않습니다. 분해 의뢰는 직접 분해하거나 자동 분해 규칙으로 분해한 장비를 세며, 가방이 가득 차 넘친 장비는 세지 않습니다. 재료 의뢰는 분해와 연구소에서 얻은 철광석·약초·목재를 세며, 상점 구매·교환·합성은 세지 않습니다. 강화 의뢰는 실패한 시도도 셉니다. 스킬북 의뢰는 새로 배우거나 단계를 올릴 때마다, 고용 의뢰는 영웅을 고용할 때마다 셉니다. 장비 획득 의뢰는 이긴 라운드에 들어온 장비를 세며, 상점·상자·탐험에서 얻은 것은 세지 않습니다. 수락 전에 일어난 것은 세지 않습니다.<br><br>다 채우면 <b>[수령]</b>해야 골드를 받습니다. 기한은 없습니다. <b>[포기]</b>하면 진행도는 사라지지만 벌금은 없고, 수령·포기한 자리는 새 의뢰로 바뀝니다. 현재 돌고 있는 지역이나 앞으로 잡을 적과 맞는 목표를 고르면 원정과 함께 진행할 수 있습니다.",
+  "en": "Check a card's goal and gold reward, then <b>Accept</b>. Your active limit is <b>{slots}</b>. No extra Party or battle starts: <b>won rounds</b> from all your expeditions contribute after acceptance.<br><br>Hunt and Bounty goals require the stated chapter, race or place, and defeated rounds do not count. Salvage goals count gear you salvage by hand or by auto-salvage rules, but not full-bag overflow. Gathering goals count ore, herbs and timber from salvage and the Laboratory, not Shop purchases, trades or synthesis. Enhance goals count failed attempts too. Skill book goals count each book you learn or level up, and hiring goals count each hero you hire. Gear collection goals count gear from won rounds, not from the Shop, chests or Explorations. Nothing from before acceptance counts.<br><br>Use <b>Claim</b> after completion to receive the gold. There is no deadline. <b>Abandon</b> loses progress without a fee. Claiming or abandoning replaces that card. A goal matching your current farming area or next enemies can progress alongside your expeditions.",
+  "ctx": "help.tavern.commissions.body"
+ },
+ {
+  "key": "ui|help.tavern.fame.title",
+  "ko": "카드 등급과 명성 레벨",
+  "en": "Card grade and Fame level",
+  "ctx": "help.tavern.fame.title"
+ },
+ {
+  "key": "ui|help.tavern.fame.body",
+  "ko": "의뢰의 <b>일반·매직·레어 등급</b>은 카드마다 따로 정해집니다. 높은 등급은 목표 수와 보상이 함께 커지며, 목표 수 대비 골드도 더 좋습니다.<br><br><b>명성</b>은 로스터 전체가 공유하는 의뢰 성장입니다. 완료한 의뢰를 <b>[수령]</b>할 때 경험치가 쌓이고, 명성 레벨이 오르면 새 카드의 목표 수와 골드가 함께 커지고, 게시판에서 받지 않은 카드도 모두 새 레벨로 다시 섭니다. 받아 둔 의뢰는 진행도 그대로입니다.<br><br>명성은 내려가지 않으며 포기는 경험치를 주지 않습니다. 최고 레벨에 도달한 뒤에도 그 레벨의 의뢰를 계속 받고 보상을 받을 수 있습니다.",
+  "en": "Each commission rolls its own <b>Normal, Magic or Rare grade</b>. Higher grades increase both the goal and reward, with more gold per unit of the goal.<br><br><b>Fame</b> is shared commission progress for your whole roster. <b>Claiming</b> completed commissions earns XP. Higher Fame levels increase the goals and gold on new cards, and every card on the board you have not accepted is rerolled at the new level. Accepted commissions keep their progress.<br><br>Fame never falls, and abandoning grants no XP. At the highest Fame level, you can continue accepting its commissions and earning rewards.",
+  "ctx": "help.tavern.fame.body"
+ },
+ {
+  "key": "ui|help.tavern.gambling.title",
+  "ko": "도박장 슬롯",
+  "en": "Gambling Den slots",
+  "ctx": "help.tavern.gambling.title"
+ },
+ {
+  "key": "ui|help.tavern.gambling.body",
+  "ko": "선술집의 도박장을 열고 판돈 단계를 골라 골드를 걸고 돌립니다. 횟수 제한은 없지만 매 판 판돈을 지불합니다. 판돈은 진행 챕터와 선택 단계에 따라 바뀝니다. <b>{batch}판 돌리기</b>는 판돈이 모자라면 도중에 멈춥니다.<br><br>가로·대각선 <b>{lines}줄</b>에서 같은 심볼 셋이 골드나 재료를 줍니다. 와일드는 다른 심볼을 대신하고, 코인은 일반 라인을 끊습니다. <b>코인 {trigger}개 이상</b>이면 홀드 앤 스핀이 시작됩니다. 코인은 제자리에 붙고, 새 코인이 나올 때마다 남은 횟수가 <b>{respins}회</b>로 돌아갑니다. 판을 다 채우면 그랜드 보상을 받습니다.<br><br>받는 것은 골드와 표시된 재료이며 장비·낙인은 나오지 않습니다. 도박장을 열면 제공되는 판돈 단계를 모두 고를 수 있습니다. 연구소의 <b>도박장 줄</b>은 자동으로 골드를 버는 별도 기능입니다.",
+  "en": "Open the Tavern's Gambling Den, choose a stake tier and spend gold to spin. There is no spin limit, but each spin costs a stake. Stakes follow your progress chapter and chosen tier. <b>Spin ×{batch}</b> stops early if you cannot afford the next stake.<br><br>Three matching symbols on any of <b>{lines} rows or diagonals</b> pay gold or materials. Wilds substitute for other symbols; coins break ordinary lines. At least <b>{trigger} coins</b> starts Hold & Spin. Coins stick in place, and each new coin resets remaining spins to <b>{respins}</b>. Fill the board for the Grand reward.<br><br>Prizes are gold and the shown materials, with no equipment or stigma. Every provided stake tier is available when the hall opens. The Laboratory's <b>Gambling Den line</b> is a separate source of automatic gold income.",
+  "ctx": "help.tavern.gambling.body"
+ },
+ {
+  "key": "ui|help.shop.buy.title",
+  "ko": "비교한 뒤 구매하기",
+  "en": "Compare, then buy",
+  "ctx": "help.shop.buy.title"
+ },
+ {
+  "key": "ui|help.shop.buy.body",
+  "ko": "위쪽 영웅 띠에서 비교할 영웅을 고릅니다. 장비 상품에 마우스를 올리면 그 영웅의 착용품과 비교할 수 있습니다. 장비는 레벨이나 등급뿐 아니라 필요한 옵션·스킬·파티 전술과 맞는지도 확인합니다.<br><br>장비 상품을 선택하고 아래 <b>[구매]</b>를 누르면 <b>현재 보고 있는 부대 인벤토리</b>로 들어갑니다. 자동으로 장착되지는 않습니다. 장비 구매에는 골드와 빈 인벤토리 칸이 필요합니다.<br><br><b>스킬북은 책 재고에, 물약은 공동 물약 재고에</b> 쌓입니다. 장비 인벤토리 칸을 차지하지 않으므로 장비 칸이 가득 차 있어도 살 수 있습니다.<br><br>장비와 스킬북은 목록의 한 칸마다 한 번 살 수 있습니다. 팔린 칸은 <b>[교체]</b>까지 그대로 남습니다.<br><br>상단 화면에서 아래 인벤토리·창고의 장비를 누르면 장착 대신 <b>판매 목록</b>에 오릅니다. 다시 누르면 선택을 풀고, <b>[판매]</b>를 눌러야 장비가 사라지고 골드를 받습니다. 판매가는 <b>같은 레벨·등급 상점가의 1/3</b>이며 소수점은 버립니다. 잠근 장비와 미개봉 상자는 팔 수 없습니다. 재료가 필요하면 인벤토리의 <b>[분해]</b>를 사용합니다.<br><br>자물쇠 칸은 아직 팔지 않는 상품입니다. 처음 지은 상단은 맨 윗줄의 무기·물약만 팔고, 건설에서 상단 랭크를 올리면 방어구·장신구·스킬북 줄이 열립니다.",
+  "en": "Choose a comparison hero in the top strip. Hover an equipment item to compare it with that hero's worn item. Alongside level and rarity, check whether its options suit the skills and Party tactics you use.<br><br>Select an equipment item, then press <b>Buy</b> below. It enters the <b>party inventory you are viewing</b> and is not equipped automatically. Buying equipment requires enough gold and a free inventory slot.<br><br><b>Skill books enter book stock, and potions enter shared potion stock.</b> Neither occupies equipment slots, so a full equipment inventory does not block these purchases.<br><br>Each equipment or skill-book slot can be bought once per list. Sold slots remain until <b>Refresh</b>.<br><br>In the Shop, clicking equipment in the inventory or stash below adds it to the <b>sale list</b>. Click it again to deselect it. Only pressing <b>Sell</b> removes the equipment and credits gold. Sale prices are <b>one third of the shop price for the same level and rarity</b>, rounded down. Locked equipment and unopened boxes cannot be sold. Use <b>Salvage</b> in the inventory when you need materials.<br><br>Locked slots are goods not yet on sale. A newly built Trading House sells only the top row of weapons and potions; upgrade it in Construction to open the armor, jewelry and skill-book rows.",
+  "ctx": "help.shop.buy.body"
+ },
+ {
+  "key": "ui|help.shop.restock.title",
+  "ko": "교체 전에 영웅 레벨 확인",
+  "en": "Check the hero level before refreshing",
+  "ctx": "help.shop.restock.title"
+ },
+ {
+  "key": "ui|help.shop.restock.body",
+  "ko": "<b>[교체]</b>는 선택한 영웅의 <b>현재 레벨</b>을 기준으로 장비 목록을 다시 만듭니다. 영웅만 바꾸거나 레벨이 올라도 기존 상품은 바뀌지 않습니다. 상품은 기준보다 높거나 낮은 레벨로 나올 수 있으며, 고른 영웅의 직업에 맞는 무기만 나오는 것은 아닙니다.<br><br>교체는 항상 무료입니다. 교체 뒤 <b>{refresh}시간</b>이 지나야 다시 교체할 수 있으며, 대기 중에는 버튼이 비활성화되고 남은 시간이 표시됩니다. 대기 시간은 오프라인에도 흐릅니다.<br><br>교체는 장비와 스킬북 목록을 함께 바꾸고 팔린 칸도 새로 채웁니다. 남겨 둔 상품도 사라지므로 구매할 물건을 확인한 뒤 교체합니다. 시간 경과나 특수상인 방문이 일반 목록을 자동으로 바꾸지는 않습니다.",
+  "en": "<b>Refresh</b> regenerates gear around the selected hero's <b>current level</b>. Selecting another hero or leveling up does not change existing goods. Products may roll above or below the target level, and weapons are not restricted to that hero's class.<br><br>Refreshing is always free. After each refresh, wait <b>{refresh}h</b> before refreshing again. The button is disabled during the cooldown and shows the remaining time beside it. The cooldown continues offline.<br><br>Refreshing changes both gear and skill books and refills sold slots. Unsold goods also disappear, so check intended purchases first. Time and special-trader visits never refresh the ordinary list automatically.",
+  "ctx": "help.shop.restock.body"
+ },
+ {
+  "key": "ui|help.shop.consumables.title",
+  "ko": "물약을 여러 개 사기",
+  "en": "Buying potions in batches",
+  "ctx": "help.shop.consumables.title"
+ },
+ {
+  "key": "ui|help.shop.consumables.body",
+  "ko": "물약을 고르고 수량 버튼으로 총개수와 가격을 확인한 뒤 <b>[구매]</b>합니다. 수량 버튼은 고르기만 하며 즉시 구매하지 않습니다. 고른 수량 버튼을 다시 누르면 한 개로 돌아갑니다.<br><br>물약은 매진되지 않고 공동 재고에 쌓입니다. 총가격이 모자라면 일부만 사지 않고 구매가 취소됩니다. 구입한 물약을 전투에 쓰려면 편성 탭에서 물약 칸의 종류와 순서를 정합니다. 상점 구매는 골드만 쓰고, 대장간 물약 제작은 골드와 약초를 씁니다. 가격은 각 화면에서 비교할 수 있습니다.",
+  "en": "Select a potion, choose a quantity to check its total price, then press <b>Buy</b>. Quantity buttons only select an amount; they do not purchase it immediately. Click the selected quantity again to return to one.<br><br>Potions never sell out and accumulate in shared stock. If you cannot afford the total, none are purchased. Configure potion types and order in Party to use them in combat. Shop purchases cost gold; brewing at the Blacksmith costs gold and herbs. Compare the prices shown in each place.",
+  "ctx": "help.shop.consumables.body"
+ },
+ {
+  "key": "ui|help.shop.books.title",
+  "ko": "스킬북을 샀다면",
+  "en": "After buying a skill book",
+  "ctx": "help.shop.books.title"
+ },
+ {
+  "key": "ui|help.shop.books.body",
+  "ko": "상단의 스킬 그림에 붙은 <b>스킬북</b> 배지는 바로 읽을 수 있는 책이라는 뜻입니다. 산 책은 책 재고에 쌓이고, 도서관 <b>[스킬 업그레이드]</b>에서 영웅을 골라 배우거나 업그레이드합니다. 같은 책을 여러 권 모으면 업그레이드에 씁니다.<br><br>일반 상단은 현재 <b>1티어 직업 스킬 책</b>을 팝니다. 모든 스킬을 파는 것은 아니므로, 다른 스킬은 스킬 도감의 획득처를 확인합니다.",
+  "en": "The <b>Book</b> badge on a Shop skill icon marks a book you can read right away. Bought books enter book stock; select a hero under <b>Skill Upgrade</b> in the Library to learn or upgrade it. Extra copies of the same book are used for upgrades.<br><br>The ordinary Trading House currently sells <b>Tier 1 class-skill books</b>. It does not stock every skill. Check a skill's Codex entry for other sources.",
+  "ctx": "help.shop.books.body"
+ },
+ {
+  "key": "ui|help.shop.trade.title",
+  "ko": "재료 또는 골드로 구매하기",
+  "en": "Buy with materials or gold",
+  "ctx": "help.shop.trade.title"
+ },
+ {
+  "key": "ui|help.shop.trade.body",
+  "ko": "건설에서 <b>상단 2랭크</b>를 올리면 교역소가 열립니다. <b>받을 최하급 재료</b>를 먼저 누르면 다른 재료별 필요 수·보유량과 골드 가격이 나타납니다. 지불할 재료의 <b>[구매]</b>를 눌러 그 재료 {cost}개로 선택한 재료 {receive}개를 받습니다.<br><br>철광석·약초·목재·가루의 최하급끼리 교환합니다. 선택만으로는 재료가 소모되지 않으며, 지불할 재료가 부족하면 구매할 수 없습니다. 재료로 지불할 때는 골드가 들지 않습니다. 골드 구매는 골드만 소모하며 재료별 가격이 다르고 약초가 더 비쌉니다. 시간이나 재고 제한은 없습니다.<br><br>특수상단 상인이 올 때마다 그 상인이 다루는 재료 하나가 <b>특가</b>가 됩니다. 특가 재료는 다른 재료 {deal}개 또는 골드 가격의 {pct}%로 삽니다. 특가는 다음 상인이 올 때까지 이어지고, 제목 줄에 지금과 다음 특가가 보입니다. 위 단계 재료는 대장간의 합성으로 만듭니다.<br><br>상단 3랭크는 방어구·장신구·스킬북 판매 줄을 엽니다.",
+  "en": "Build <b>Trading House rank 2</b> to open the Trading Post. First select the <b>lowest-grade material to receive</b>. Other materials show their required and owned amounts, and a gold option shows its price. Press <b>Buy</b> on a payment row to spend {cost} of that material and receive {receive} of your selection.<br><br>Trade lowest-grade iron ore, herbs, timber and dust. Selecting a material spends nothing. Choose a material payment or gold. Only the selected currency is spent, and you must have enough of it. Gold prices vary by material, with herbs priced higher. Purchases have no timer or stock limit.<br><br>Each time a visiting trader arrives, the material they deal in goes on <b>Deal</b>. Buy it for {deal} of another material or {pct}% of its gold price. The deal lasts until the next trader arrives, and the title bar shows the current and next deal. Make higher grades by combining materials at the Smithy.<br><br>Trading House rank 3 opens armor, jewelry and skill-book sales.",
+  "ctx": "help.shop.trade.body"
+ },
+ {
+  "key": "ui|help.shop.special.title",
+  "ko": "특수상단은 별도 방문입니다",
+  "en": "Special visits are separate",
+  "ctx": "help.shop.special.title"
+ },
+ {
+  "key": "ui|help.shop.special.body",
+  "ko": "건설에서 상단의 해당 랭크를 올리면 <b>특수상단 방문</b> 기능이 열립니다. 패널에서 도착·출발까지의 남은 시간을 볼 수 있습니다. 이 시계는 일반 상단의 <b>[교체]</b> 무료 대기와 별개입니다.<br><br>현재 특수상단 상품은 <b>준비 중</b>입니다. 물음표 칸에서는 구매할 수 없습니다. 일반 장비·물약·스킬북은 왼쪽 일반 상단에서 구매합니다.",
+  "en": "Upgrading the Trading House to the required rank opens <b>special-trader visits</b>. Its panel shows the time until arrival or departure. This timer is separate from the ordinary Trading House's free <b>Refresh</b> wait.<br><br>Special-trader goods are currently <b>coming later</b>. Question-mark slots cannot be purchased. Buy ordinary gear, potions and skill books from the regular Trading House on the left.",
+  "ctx": "help.shop.special.body"
+ },
+ {
+  "key": "ui|help.forge.overview.title",
+  "ko": "제작 · 강화 · 합성의 차이",
+  "en": "Smithing, upgrades and combining",
+  "ctx": "help.forge.overview.title"
+ },
+ {
+  "key": "ui|help.forge.overview.body",
+  "ko": "<b>제작</b>은 재료를 써서 <b>새 장비</b>를 만듭니다. <b>강화</b>는 이미 가진 무기·방어구의 <b>기본 성능</b>을 올립니다. <b>합성</b>은 여러 개의 재료를 모아 <b>한 단계 높은 재료</b>로 바꿉니다.<br><br>새 종류의 장비가 필요하면 제작 목록을, 지금 쓰는 장비의 성능을 높이려면 강화 화면을 확인합니다. 합성은 장비를 바꾸거나 장비 옵션을 다시 뽑는 기능이 아닙니다.",
+  "en": "<b>Smith</b> spends materials to make <b>new gear</b>. <b>Upgrade</b> improves the <b>base performance</b> of a weapon or armor you already own. <b>Combine</b> turns several materials into <b>the next material grade</b>.<br><br>Check Smith when you need a new gear type, or Upgrade to improve gear you already use. Combining does not alter equipment or reroll its options.",
+  "ctx": "help.forge.overview.body"
+ },
+ {
+  "key": "ui|help.forge.smith.title",
+  "ko": "새 장비 제작",
+  "en": "Smithing new gear",
+  "ctx": "help.forge.smith.title"
+ },
+ {
+  "key": "ui|help.forge.smith.body",
+  "ko": "<b>[제작]</b>에서 부위와 열린 제작 레벨을 고릅니다. 목록에서 만들 장비의 종류를 확인한 뒤 그 줄의 <b>[만들기]</b>를 누릅니다. 결과는 현재 보고 있는 부대 인벤토리에 들어가므로 빈 칸이 필요합니다.<br><br>고른 종류와 아이템 레벨로 장비 하나가 나오며, <b>희귀도와 옵션은 새로 정해집니다</b>. 같은 것을 여러 번 만들어도 같은 옵션을 보장하지 않습니다. 현재 제작은 골드·부위 재료·가루를 쓰며 기존 장비를 소모하지 않습니다.<br><br>무기와 장신구 제작은 철광석, 방어구 제작은 목재를 사용합니다. 더 높은 제작 레벨은 대장간 랭크가 엽니다. 필요한 재료와 수량은 제작 줄의 비용 표시에서 확인합니다.",
+  "en": "In <b>Smith</b>, choose an equipment slot and an unlocked level. Find the gear type you want, then press <b>Make</b> on that row. The result enters the party inventory you are viewing, so it needs a free slot.<br><br>Each craft produces one item of the selected type and level, with <b>newly rolled rarity and options</b>. Repeated crafts do not guarantee identical options. Current smithing consumes gold, the slot's material and dust, without consuming existing equipment.<br><br>Weapons and jewelry use iron ore; armor pieces use timber. Blacksmith ranks unlock higher smithing levels. Check the row's cost display for exact materials and amounts.",
+  "ctx": "help.forge.smith.body"
+ },
+ {
+  "key": "ui|help.forge.potions.title",
+  "ko": "물약 만들기와 재고",
+  "en": "Brewing and stocking potions",
+  "ctx": "help.forge.potions.title"
+ },
+ {
+  "key": "ui|help.forge.potions.body",
+  "ko": "<b>[제작]</b>에서 물약 그림을 누릅니다. 물약별 회복량·보유 재고·골드와 약초 비용을 확인하고 <b>[만들기]</b>하면 그 물약 재고가 하나 늘어납니다. 물약 제작에는 실패나 무작위 옵션이 없습니다.<br><br>만들 수 있는 물약 단계는 대장간 랭크가 엽니다. 재고는 여러 Party가 함께 쓰며, 편성에서 물약 칸을 채워도 그때 바로 소모되지는 않습니다. 전투에서 마신 만큼 줄어드므로 자동 원정을 계속할 때는 재고를 확인합니다. 물약 종류·순서·사용 HP 기준은 편성 탭에서 정합니다.",
+  "en": "Select the potion icon in <b>Smith</b>. Check healing, owned stock, and gold and herb costs, then use <b>Make</b> to add one potion. Brewing cannot fail and does not roll random options.<br><br>Blacksmith ranks unlock brewable tiers. All Parties share stock. Filling preset slots does not spend it immediately; drinking in combat does. Check supplies when running repeated expeditions. Set potion types, order and drinking HP threshold in Party.",
+  "ctx": "help.forge.potions.body"
+ },
+ {
+  "key": "ui|help.forge.upgrade.title",
+  "ko": "가진 장비 강화",
+  "en": "Upgrading owned gear",
+  "ctx": "help.forge.upgrade.title"
+ },
+ {
+  "key": "ui|help.forge.upgrade.body",
+  "ko": "왼쪽 착용 장비나 아래 인벤토리·창고의 장비를 눌러 강화 대상을 고릅니다. 대장간에서 장비를 누르는 것은 <b>장착이 아니라 대상 선택</b>입니다. <b>[강화]</b>에서 다음 효과·성공 확률·골드와 재료 비용을 확인합니다.<br><br>강화는 무기의 피해 범위와 방어구의 방어력 같은 <b>기본 성능</b>을 올립니다. 붙어 있던 죄종·옵션 조합을 바꾸거나 옵션 값을 다시 뽑지 않습니다. 목걸이와 반지는 강화할 수 없으며, 상한은 대장간 랭크에 따라 늘어납니다.<br><br>성공하면 강화 단계가 하나 오릅니다. <b>실패해도 골드와 재료는 소모</b>되지만 장비가 파괴되거나 단계가 내려가지는 않습니다. 착용 중인 장비와 창고 장비도 강화할 수 있습니다.",
+  "en": "Click worn gear on the left, or gear in inventory or stash below, to select a target. Clicking gear here <b>selects it rather than equipping it</b>. In <b>Upgrade</b>, check the next effect, success chance, and gold and material costs.<br><br>Upgrades raise <b>base performance</b>, such as weapon damage or armor defense. They do not change the existing Sins, option combination or rolled option values. Amulets and rings cannot be upgraded. Blacksmith ranks can raise the cap.<br><br>Success adds one upgrade level. <b>Failure still spends gold and materials</b>, but never destroys the item or lowers its level. Both worn and stashed gear can be upgraded.",
+  "ctx": "help.forge.upgrade.body"
+ },
+ {
+  "key": "ui|help.forge.combine.title",
+  "ko": "재료를 한 단계 올리는 합성",
+  "en": "Combining the next material grade",
+  "ctx": "help.forge.combine.title"
+ },
+ {
+  "key": "ui|help.forge.combine.body",
+  "ko": "<b>[합성]</b>에서는 같은 재료의 바로 아래 단계와 골드를 써서 한 단계 높은 재료를 만듭니다. 예를 들어 최하급 철광석을 모아 하급 철광석으로 바꿉니다. 철광석을 약초로 바꾸는 식의 종류 교환은 아닙니다.<br><br><b>[합성]</b>은 한 개, <b>[최대]</b>는 현재 재료와 골드로 만들 수 있는 최대 수량을 만듭니다. 즉시 완료되고 실패하지 않습니다. 사용한 재료는 소모되며 아래 단계로 되돌리는 기능은 없습니다.<br><br>현재 제작·강화·물약·스킬북·연구가 소비하는 재료는 최하급입니다. 상위 단계 재료의 사용처는 아직 준비 중이므로, 재고를 전부 합성하기 전에 지금 필요한 최하급 재료를 남겨 둡니다.",
+  "en": "<b>Combine</b> uses the immediately lower grade of the same material and gold to make the next grade. For example, combine lowest-grade iron ore into low-grade iron ore. It does not exchange one material type for another, such as ore for herbs.<br><br><b>Combine</b> makes one; <b>Max</b> makes as many as your current materials and gold allow. Combining is immediate and cannot fail. Inputs are consumed and cannot be converted back to lower grades.<br><br>Smithing, upgrades, potions, skill books and research currently consume lowest-grade materials. Uses for higher grades are still coming later. Keep the lowest-grade materials you currently need before combining your stock.",
+  "ctx": "help.forge.combine.body"
+ },
+ {
+  "key": "ui|help.forge.craft.title",
+  "ko": "크래프트의 현재 상태",
+  "en": "Current Craft availability",
+  "ctx": "help.forge.craft.title"
+ },
+ {
+  "key": "ui|help.forge.craft.body",
+  "ko": "<b>[크래프트]</b>는 현재 준비 중입니다. 사용할 수 있는 작업은 <b>[제작] · [강화] · [합성]</b>입니다.",
+  "en": "<b>Craft</b> is currently coming later. Available operations are <b>Smith, Upgrade and Combine</b>.",
+  "ctx": "help.forge.craft.body"
+ },
+ {
+  "key": "ui|help.library.basics.title",
+  "ko": "스킬북 · 전직의 차이",
+  "en": "Books and advancement",
+  "ctx": "help.library.basics.title"
+ },
+ {
+  "key": "ui|help.library.basics.body",
+  "ko": "<b>스킬북</b>은 영웅에게 읽혀 스킬을 배우거나 강화하는 소모품입니다. 흐름은 <b>책 획득 → 영웅 선택 → 배우기·업그레이드</b>입니다.<br><br><b>전직</b>은 영웅의 성장 갈래를 정하는 별도 기능입니다. 책으로 채우는 '배운 스킬' 칸과 전직으로 채우는 '전직 스킬' 칸은 서로 다릅니다. 전직한다고 기존 고유 스킬이나 책으로 배운 스킬이 사라지지는 않습니다.",
+  "en": "A <b>skill book</b> is consumed by a hero to learn or improve a skill. Follow <b>get a book → choose hero → learn or upgrade</b>.<br><br><b>Advancement</b> is a separate choice of growth path for a hero. The learned-skill slot filled by a book and the Advance-skill slot are different. Advancing does not remove the hero's innate or book-learned skill.",
+  "ctx": "help.library.basics.body"
+ },
+ {
+  "key": "ui|help.library.sources.title",
+  "ko": "스킬북 얻기와 분해",
+  "en": "Getting and salvaging books",
+  "ctx": "help.library.sources.title"
+ },
+ {
+  "key": "ui|help.library.sources.body",
+  "ko": "스킬북은 만들지 않고 얻습니다. 원정에서 몬스터를 처치하거나 탐험 동굴의 보상, 연구소 도서관 줄, 상단 구매, 영웅의 첫 책 사용 레벨 보상으로 들어옵니다. 어떤 몬스터가 어떤 책을 주는지는 스킬 도감의 획득처에서 확인합니다.<br><br>얻은 책은 바로 책 재고에 쌓이며 장비 인벤토리 칸을 차지하지 않습니다. 더 쓸 데가 없는 책은 창고의 <b>[스킬북]</b> 탭에서 골라 <b>[분해]</b>합니다. 한 번에 1권이 최하급 가루 {dust}개가 되며, 되돌릴 수 없습니다.",
+  "en": "Skill books are found, not crafted. They come from defeating monsters on Expeditions, Exploration cave rewards, the Laboratory Library line, Trading House purchases and each hero's first-book level reward. Check a skill's Codex sources to see which monsters drop its book.<br><br>Books enter book stock immediately and do not take equipment inventory slots. Select a book you no longer need in the stash's <b>Skill Books</b> tab and press <b>Salvage</b>. Each press turns one book into {dust} lowest-grade dust and cannot be undone.",
+  "ctx": "help.library.sources.body"
+ },
+ {
+  "key": "ui|help.library.learn.title",
+  "ko": "읽힐 영웅을 고르고 배우기",
+  "en": "Choose a hero, then learn",
+  "ctx": "help.library.learn.title"
+ },
+ {
+  "key": "ui|help.library.learn.body",
+  "ko": "위쪽 영웅 띠에서 책을 읽힐 영웅을 고르고, <b>[스킬 업그레이드]</b>에서 보유 책을 누릅니다. 영웅 레벨 <b>{level}</b>부터 사용할 수 있습니다. 새 스킬의 <b>[배우기]</b>는 책 한 권을 쓰고 그 영웅의 '배운 스킬' 칸을 채웁니다. 다른 영웅에게도 주려면 별도 책이 필요합니다.<br><br>이미 다른 스킬을 배웠으면 버튼이 <b>[덮어쓰기]</b>로 바뀝니다. 누르면 확인 창이 뜨고, 확인하면 이전 스킬과 그 업그레이드는 사라지고 사용했던 책도 돌아오지 않습니다. 새 책의 효과와 필요한 무기를 먼저 확인합니다.<br><br>다른 직업의 책도 읽을 수 있지만, 무기의 힘을 쓰는 타격·회복·소환 스킬은 <b>그 스킬 직업의 무기</b>를 들어야 발동합니다. 배우는 것과 현재 장비로 사용할 수 있는 것은 별개입니다.",
+  "en": "Choose the hero who will read the book in the top strip, then select an owned book in <b>Skill Upgrade</b>. Heroes can use books from level <b>{level}</b>. <b>Learn</b> spends one book to fill that hero's learned-skill slot. Teaching another hero requires another copy.<br><br>If the hero already learned a different skill, the button becomes <b>Overwrite</b> and asks for confirmation. Confirming removes the old skill and its upgrades without returning used books. Check the new skill's effect and weapon requirement first.<br><br>A hero can read another class's book, but weapon-powered attack, healing and summoning skills require <b>a weapon belonging to that skill's class</b>. Learning a skill does not guarantee that current equipment can cast it.",
+  "ctx": "help.library.learn.body"
+ },
+ {
+  "key": "ui|help.library.upgrade.title",
+  "ko": "같은 스킬북으로 레벨 올리기",
+  "en": "Using matching books to raise a skill level",
+  "ctx": "help.library.upgrade.title"
+ },
+ {
+  "key": "ui|help.library.upgrade.body",
+  "ko": "선택한 영웅의 <b>고유 스킬이나 이미 배운 스킬</b>과 같은 책을 고르면 새 스킬을 배우는 대신 그 스킬을 업그레이드합니다. 다른 액티브 칸이 추가되지는 않습니다.<br><br>버튼에 표시된 같은 책 수를 내면 레벨이 한 단계 오릅니다. 높은 단계일수록 더 많은 책이 필요하며, 책 말고 다른 재화는 들지 않습니다. 업그레이드는 <b>선택한 영웅의 해당 스킬</b>에만 적용됩니다. 전직 메인은 공용 스킬 포인트로 올리며 각 단계의 영웅 레벨 조건도 만족해야 합니다.",
+  "en": "Choose a book matching the selected hero's <b>innate or already-learned skill</b> to upgrade that skill instead of learning a new one. This does not add another active slot.<br><br>Spend the matching copies shown on the button to add one skill level. Higher steps require more books; reading costs nothing else. The upgrade affects <b>that skill on the selected hero</b>. Advance main skills use shared skill points and require the corresponding hero level.",
+  "ctx": "help.library.upgrade.body"
+ },
+ {
+  "key": "ui|help.library.advance.title",
+  "ko": "전직 갈래는 신중히 선택",
+  "en": "Choosing an advancement path",
+  "ctx": "help.library.advance.title"
+ },
+ {
+  "key": "ui|help.library.advance.body",
+  "ko": "도서관 왼쪽 <b>[전직]</b> 패널은 위쪽 영웅 띠에서 고른 영웅의 세 갈래를 보여 줍니다. 갈래마다 역할 설명과 전직 스킬 셋의 효과가 한 줄씩 적혀 있고, 스킬 줄에 마우스를 올리면 자세한 설명이 나옵니다.<br><br>전직 기능을 열고 레벨 <b>{level}</b> 이상이 되면 갈래를 눌러 고르고 <b>[전직]</b>을 누릅니다. 비용은 <b>{gold}G</b>이며 현재는 즉시 완료됩니다. <b>전직 갈래는 변경할 수 없습니다.</b> 원정 중에도 전직할 수 있지만 탐험 중에는 먼저 돌아와야 합니다.<br><br>전직을 마친 뒤에는 <b>캐릭터 → [마스터리 열기] → 전직 트리</b>에서 전직 스킬을 배우고 강화합니다. 전직만으로 스킬을 자동 학습하지는 않습니다. 같은 갈래 안에서는 스킬을 바꿀 수 있습니다.",
+  "en": "The <b>Advance</b> panel on the left of the Library shows the three paths of the hero selected in the top strip. Each path lists its role and the effects of its three advancement skills, one per row; hover a skill row for its full description.<br><br>Unlock advancement and reach level <b>{level}</b>, then click a path to select it and press <b>Advance</b>. The cost is <b>{gold}G</b> and advancement currently completes instantly. <b>The path cannot be changed.</b> Heroes can advance during Expeditions; those exploring must return first.<br><br>After advancing, go to <b>Character → Open Mastery → Advancement Tree</b> to learn and improve an advancement skill. Advancement does not automatically teach a skill. Skills can be swapped within the chosen path.",
+  "ctx": "help.library.advance.body"
+ },
+ {
+  "key": "ui|help.library.points.title",
+  "ko": "공용 스킬 포인트와 전직 트리",
+  "en": "Shared skill points and the Advancement Tree",
+  "ctx": "help.library.points.title"
+ },
+ {
+  "key": "ui|help.library.points.body",
+  "ko": "영웅은 <b>레벨 1 부터 레벨마다 스킬 포인트</b>를 받습니다. 죄종·직업 마스터리와 전직 트리는 같은 포인트를 나누어 씁니다.<br><br>전직하면 갈래의 전직 스킬 셋 중 <b>하나</b>를 배웁니다 — 스킬 포인트를 쓰지 않습니다. 전직 트리에는 줄이 둘 있습니다. <b>공통 줄</b>은 갈래 전체에 닿고, <b>스킬 줄</b>(크기 · 변형 1 · 변형 2)은 배운 스킬에 닿습니다. 줄마다 칸 셋에 합 <b>{row}</b>까지 자유롭게 나눠 찍고, 한 칸에 {row}을 모두 넣으면 그 칸의 덤이 켜집니다.<br><br>칸을 우클릭하면 1랭크가, 배운 전직 스킬을 우클릭하면 스킬 줄 전체가 <b>공용 스킬 포인트로 환급</b>됩니다. 다른 전직 스킬을 누르면 바로 갈아끼웁니다 — 스킬 줄은 환급되고 공통 줄은 그대로입니다. 갈래와 전직 비용은 그대로입니다.",
+  "en": "Heroes earn <b>skill points at every level, starting at Lv1</b>. Sin mastery, Class mastery and the Advancement Tree share this pool.<br><br>After advancing, learn <b>one</b> of the path's three skills — it costs no skill points. The tree has two rows. The <b>common row</b> affects the whole path; the <b>skill row</b> (Power · Variant 1 · Variant 2) affects the learned skill. Split up to <b>{row}</b> ranks per row freely across its three cells; putting all {row} into one cell turns on its bonus.<br><br>Right-click a cell to refund one rank, or the learned skill to refund its whole skill row to the <b>shared skill-point pool</b>. Click another advancement skill to swap to it — the skill row is refunded and the common row stays. The chosen path and gold cost remain.",
+  "ctx": "help.library.points.body"
+ },
+ {
+  "key": "ui|help.resource.lines.title",
+  "ko": "줄 · 지점 · 랭크의 차이",
+  "en": "Lines, nodes and ranks",
+  "ctx": "help.resource.lines.title"
+ },
+ {
+  "key": "ui|help.resource.lines.body",
+  "ko": "연구소의 <b>줄</b>은 자원·수색·훈련·도박장·도서관처럼 자동으로 얻는 것의 분야입니다. <b>지점</b>은 그 줄의 생산량·간격·품질 등을 올리는 연구 항목입니다.<br><br>왼쪽 <b>줄 카드</b>를 누르면 오른쪽에 생산량과 등록 효과가 나옵니다. 동그란 <b>지점</b>을 누르면 현재 값·다음 효과·비용·연구 시간을 볼 수 있습니다. 연구소의 위쪽 영웅 띠는 현황을 보는 자리이며, 실제 등록은 줄 카드의 얼굴이나 <b>+</b>에서 합니다.<br><br>잠긴 지점은 필요한 건물·랭크부터 갖춰야 합니다. <b>건설</b>에서 연구소 랭크를 올리면 새 지점이 열리고 지점마다 올릴 수 있는 레벨도 높아집니다. 이 화면의 <b>연구</b>로 열린 지점의 레벨을 올립니다.<br><br>건설에서 도서관 랭크를 올려 연구소 도서관 줄을 열면 영웅을 등록할 수 있습니다. 등록한 영웅의 고유·배운 기본 스킬 중 하나의 스킬북을 생산합니다. 전직 스킬은 제외하며, 스킬이 업그레이드 상한에 닿아도 책은 생산합니다 — 남는 책은 창고에서 분해합니다.",
+  "en": "A Laboratory <b>line</b> is a field of automatic output: Resources, Search, Training, Gambling Den or Library. A <b>node</b> is research that improves a line's output, interval, quality or another property.<br><br>Select a <b>line card</b> on the left to see output and hero bonuses on the right. Select a round <b>node</b> for its current value, next effect, cost and research time. The hero strip at the top shows assignments; open an actual assignment from a line's portrait or <b>+</b>.<br><br>Locked nodes need the shown building or rank first. Raising the Laboratory rank in <b>Construction</b> opens new nodes and raises how far each node can be researched. Use <b>Research</b> here to raise their levels.<br><br>Upgrade the Library in Construction to open the Laboratory Library line, then assign heroes to it. Each assigned hero produces books of a randomly chosen innate or learned basic skill. Advance skills are excluded; reaching a skill upgrade cap does not stop production — salvage spare books in the stash.",
+  "ctx": "help.resource.lines.body"
+ },
+ {
+  "key": "ui|help.resource.production.title",
+  "ko": "자동 생산과 게임을 닫은 동안",
+  "en": "Automatic output and time away",
+  "ctx": "help.resource.production.title"
+ },
+ {
+  "key": "ui|help.resource.production.body",
+  "ko": "창고를 지으면 연구소의 <b>자원 줄</b>이 열립니다. 영웅을 등록하지 않아도 <b>최하급 철광석·약초·목재를 모두</b> 생산합니다. 등록은 생산을 시작하는 조건이 아니라 더 빠르게 얻는 보너스입니다.<br><br>자원 줄의 <b>채광·채집·벌목</b> 연구는 각각 철광석·약초·목재 생산량을 높입니다. 무기나 건물이 필요하면 철광석, 방어구나 건물이 필요하면 목재, 물약·책·약초 비용 연구가 필요하면 약초를 확인합니다. 생산물은 재고에 자동으로 더해집니다.<br><br>게임을 켜 둔 동안에는 계속 생산합니다. 꺼 둔 동안의 재료·훈련·도박장 수익은 <b>{hours}시간분을 기준으로 제한해 계산</b>하므로, 비운 시간 전부가 무제한 쌓이지 않습니다. 수색의 도착 시계는 이 시간 상한을 받지 않고 대기 칸이 찰 때까지 흐릅니다.",
+  "en": "Building Storage opens the Laboratory's <b>Resources line</b>. It produces <b>lowest-grade iron ore, herbs and timber together</b> without assigned heroes. Assignment improves output; it is not required to start production.<br><br><b>Mining, Gathering and Logging</b> research raise ore, herb and timber output respectively. Check ore for weapons or buildings, timber for armor or buildings, and herbs for potions, books or research with an herb cost. Output enters stock automatically.<br><br>Production continues while the game is open. Offline materials, Training and Gambling Den income are <b>limited using a {hours}h calculation window</b>; time away does not accumulate without limit. The Search arrival timer has no such time cap and continues until its waiting slots fill.",
+  "ctx": "help.resource.production.body"
+ },
+ {
+  "key": "ui|help.resource.materials.title",
+  "ko": "재료는 어디서 얻고 어디에 쓰나요?",
+  "en": "Where materials come from and go",
+  "ctx": "help.resource.materials.title"
+ },
+ {
+  "key": "ui|help.resource.materials.body",
+  "ko": "<b>철광석</b>은 연구소 채광과 무기 분해로 얻습니다. 무기·장신구 제작, 무기 강화, 건설에 씁니다. <b>목재</b>는 연구소 벌목과 방어구 분해로 얻으며, 방어구 제작·강화와 건설에 씁니다.<br><br><b>약초</b>는 연구소 채집과 반지·목걸이 분해로 얻습니다. 물약·스킬북 제작과 약초가 표시된 연구에 씁니다. <b>가루</b>는 장비를 분해해 얻고, 장비 제작·강화와 스킬북 제작에 씁니다. 도박장도 표시된 재료를 지급할 수 있습니다.<br><br>원정에서는 적 처치가 재료를 직접 떨어뜨리는 대신, <b>떨어진 장비를 분해</b>해 재료를 얻습니다. 재료는 공용이며 창고의 <b>재료</b> 탭에서 수량을 확인할 수 있습니다.<br><br><b>종류</b>와 <b>단계</b>를 구분합니다. 철광석·목재·약초·가루가 종류이고, 최하급·하급·중급·상급·최상급이 단계입니다. 현재 소비처는 최하급을 쓰며, 높은 단계는 대장간 <b>[합성]</b>으로 만듭니다. 재료가 있어도 요구 단계와 다르면 비용을 채우지 못합니다.",
+  "en": "<b>Iron ore</b> comes from Laboratory Mining and weapon salvage. It funds weapon and jewelry smithing, weapon upgrades and construction. <b>Timber</b> comes from Logging and armor salvage, and funds armor smithing, upgrades and construction.<br><br><b>Herbs</b> come from Gathering and salvaging rings or amulets. They fund potions, skill books and research that lists an herb cost. <b>Dust</b> comes from salvaged gear and funds smithing, equipment upgrades and skill books. Gambling can also award the materials shown on its paytable.<br><br>Expedition enemies do not directly drop these materials. Obtain them by <b>salvaging the gear they drop</b>. Material stock is shared; view quantities in the stash's <b>Materials</b> tab.<br><br>Distinguish <b>type</b> from <b>grade</b>. Ore, timber, herbs and dust are types. Lowest, low, mid, high and top are grades. Current costs use lowest-grade stock; make higher grades with <b>Combine</b> at the Blacksmith. Owning a different grade does not satisfy a cost.",
+  "ctx": "help.resource.materials.body"
+ },
+ {
+  "key": "ui|help.resource.research.title",
+  "ko": "연구 시작 · 완료 · 그만두기",
+  "en": "Starting, finishing and canceling research",
+  "ctx": "help.resource.research.title"
+ },
+ {
+  "key": "ui|help.resource.research.body",
+  "ko": "지점을 고르고 <b>현재 → 다음 레벨의 값</b>을 비교합니다. 비용과 시간을 확인해 <b>[연구]</b>하면 골드와 표시된 재료를 먼저 지불합니다. 연구소 전체에서 <b>한 번에 하나</b>만 진행합니다.<br><br>연구는 게임을 닫아도 예정된 시각에 완료되며, 완료 뒤부터 새 효과가 적용됩니다. 다음 연구가 자동으로 예약되지는 않습니다. 진행 중인 생산은 연구 때문에 멈추지 않습니다.<br><br>완료 전 <b>[그만두기]</b>를 누르면 비용을 전부 돌려받고 그 연구의 진행도는 사라집니다. 이미 끝난 지점 레벨은 이 버튼으로 되돌리지 못합니다. 그 줄의 영웅 등록 효과를 먼저 갖추면 <b>연구 시작 시점</b>의 시간과 비용에 반영됩니다.",
+  "en": "Select a node and compare its <b>current and next-level values</b>. Check the cost and time, then press <b>Research</b> to pay gold and the listed materials up front. The entire Laboratory can run <b>one project at a time</b>.<br><br>Research finishes at its scheduled time even while the game is closed; its new effect applies after completion. No next project is queued automatically. Existing production continues during research.<br><br>Use <b>Cancel</b> before completion to recover the full cost and lose that project's progress. Completed levels cannot be refunded this way. Assigning heroes to that line first affects the cost and duration calculated <b>when research starts</b>.",
+  "ctx": "help.resource.research.body"
+ },
+ {
+  "key": "ui|help.resource.assignment.title",
+  "ko": "영웅 등록과 칸의 차이",
+  "en": "Hero assignment and the two slot types",
+  "ctx": "help.resource.assignment.title"
+ },
+ {
+  "key": "ui|help.resource.assignment.body",
+  "ko": "줄 카드의 영웅 얼굴이나 <b>+</b>를 누르면 등록 창이 열립니다. 그 줄에 둘 영웅을 고르고 <b>[적용]</b>을 누르면 바뀝니다. 다시 누르면 고르기가 풀리고, 다른 줄에 등록된 영웅을 고르면 이 줄로 이동합니다. 옮기거나 빼면 쌓인 숙련과 수색 시계가 처음부터 다시 시작되며, 창 아래에 빨간 글씨로 표시됩니다. <b>한 영웅은 한 줄</b>에만 등록할 수 있습니다.<br><br>연구소 등록은 영웅을 붙잡지 않습니다. 등록한 채로 Party에 넣거나 원정·탐험·전직을 진행할 수 있습니다. 다만 훈련 경험치는 <b>훈련 줄에 등록한 영웅</b>만 받습니다.<br><br><b>등록 칸</b>은 연구소 줄에 효과를 보탤 내 영웅의 자리이며, 모든 줄의 칸 수가 같습니다. <b>대기 칸</b>은 선술집에서 고용을 기다리는 후보의 자리입니다. 새 후보를 더 보관하려면 수색 줄의 대기 칸 지점을 연구해야 합니다.",
+  "en": "Select a line's hero portrait or <b>+</b> to open assignments. Select the heroes for this line and press <b>[Apply]</b>. Click again to deselect; selecting a hero assigned elsewhere moves them to this line. Moving or removing a hero restarts their Mastery and Search clock, shown in red at the bottom of the window. <b>Each hero can be assigned to only one line at a time</b>.<br><br>Assignment does not occupy the hero. They can stay assigned while joining a Party, fighting Expeditions, exploring or advancing. Training XP, however, goes only to <b>heroes assigned to Training</b>.<br><br><b>Seats</b> hold your heroes who boost a Laboratory line, and every line has the same number of seats. <b>Waiting Slots</b> hold candidate heroes awaiting hire in the Tavern. To keep more arriving candidates, research the Waiting Slots node on the Search line.",
+  "ctx": "help.resource.assignment.body"
+ },
+ {
+  "key": "ui|help.resource.hero_effects.title",
+  "ko": "등록할 영웅을 고르는 기준",
+  "en": "Choosing heroes to assign",
+  "ctx": "help.resource.hero_effects.title"
+ },
+ {
+  "key": "ui|help.resource.hero_effects.body",
+  "ko": "자원 · 도박장 줄은 등록한 <b>영웅 수</b>만큼 기본 산출이 한 몫씩 더해집니다 — 능력치보다 먼저 칸을 채웁니다. 수색은 등록한 영웅마다 시계가 하나씩 따로 돌아, 각자 한 명씩 데려옵니다. 훈련 · 도서관은 등록한 영웅 한 명 한 명이 경험치 · 스킬북을 받는 줄이라 인원 몫이 없습니다.<br><br><b>힘</b>은 그 줄의 생산·도착·훈련 속도를 덤으로 높이고, <b>운</b>은 대박 지점이 있는 줄의 추가 지급 확률을 높입니다. <b>지능</b>은 그 줄의 연구 시간을 줄이며, <b>민첩</b>은 연구 비용을 줄입니다. <b>매력</b>은 수색의 레어 후보 확률을 높입니다.<br><br><b>건강</b>은 같은 줄에 오래 등록할수록 쌓이는 숙련 보너스를 키웁니다. <b>통솔</b>은 같은 줄의 다른 등록 영웅 효과를 높이므로 여럿을 등록할 때 의미가 있습니다. 장비·레벨 대신 영웅의 기본 능력치가 이 효과의 재료입니다.<br><br>등록 효과의 현재 수치는 줄 카드를 눌러 확인합니다. 해당 효과를 사용하지 않는 줄에는 적용되지 않습니다. 영웅을 다른 줄로 옮기거나 등록을 풀면 그 영웅의 숙련 시간은 다시 시작하므로, 비교한 뒤 자리를 정합니다.",
+  "en": "On the Resources and Gambling Den lines each assigned <b>hero</b> adds one more share of the base output — fill the seats before comparing stats. On Search each assigned hero runs a clock of their own and brings someone in on it. Training and the Library give XP or books to each assigned hero, so they have no head share.<br><br><b>Strength</b> adds a bonus to that line's production, arrival or training speed. <b>Luck</b> raises extra-output chance on lines with a Jackpot node. <b>Intelligence</b> shortens that line's research time; <b>Agility</b> lowers research costs. <b>Charisma</b> raises Search's Rare-candidate chance.<br><br><b>Vitality</b> strengthens the proficiency bonus that builds while a hero remains assigned to the same line. <b>Leadership</b> boosts other assigned heroes on that line, so it matters with multiple heroes. These effects use the hero's base attributes rather than equipment or level.<br><br>Select the line card to check current hero bonuses. Effects do not apply to lines that have no use for them. Moving or removing a hero resets the time accumulated on that assignment, so compare heroes before settling their positions.",
+  "ctx": "help.resource.hero_effects.body"
+ },
+ {
+  "key": "ui|help.resource.jobs.title",
+  "ko": "수색 · 훈련 · 자동 골드",
+  "en": "Search, Training and automatic gold",
+  "ctx": "help.resource.jobs.title"
+ },
+ {
+  "key": "ui|help.resource.jobs.body",
+  "ko": "<b>수색</b>은 이 줄에 등록한 영웅마다 시간마다 한 명씩 선술집에 데려옵니다. 아무도 등록하지 않으면 돌지 않습니다. [간격]은 도착을 더 빠르게 합니다. 그 영웅 줄의 선술집 칸이 차도 시계는 흐르고, 시간이 다 된 영웅은 그 줄 칸을 비우는 즉시 들어옵니다. [품질]은 레어 후보 확률, [대기 칸]은 줄마다 둘째 칸, [로스터]는 거느릴 수 있는 영웅 수를 늘립니다.<br><br><b>훈련</b> 줄에 등록한 영웅은 시간이 흐르면서 경험치를 받아 로스터의 선두 레벨을 따라갑니다. 상한은 <b>로스터 최고 레벨 − [범위]에 표시된 차이</b>입니다. 범위를 연구하면 그 차이가 줄어듭니다. 상한 이상인 영웅은 훈련 경험치를 받지 않으므로, 최고 레벨을 앞서 올리는 일은 원정에서 합니다.<br><br><b>도박장 줄</b>은 선술집의 도박장을 열면 자동으로 골드를 생산합니다. 판돈을 걸거나 스핀을 누를 필요가 없습니다. [수익]은 생산량, [대박]은 한 번 더 지급받을 확률을 높입니다. 선술집 슬롯을 직접 돌리는 것과 별개입니다.",
+  "en": "<b>Search</b> brings one candidate to the Tavern per interval for each hero assigned to this line, and does nothing with no one assigned. Interval makes arrivals faster. It keeps running while that searcher's Tavern slots are full; a hero whose timer finishes enters as soon as you free one of them. Quality raises Rare chance, Waiting Slots opens a second slot per searcher, and Roster raises how many heroes you can keep.<br><br><b>Training</b> helps assigned heroes catch up toward the roster's leading level. Its cap is <b>the highest roster level minus the gap shown by Range</b>. Research Range to reduce that gap. Heroes at or above the cap gain no Training XP, so Expeditions must push the leading level forward.<br><br>The <b>Gambling Den line</b> automatically produces gold once the Tavern's Gambling Den is unlocked. It needs no stake or spin button. Income raises output, while Jackpot raises the chance of an extra payout. This is separate from manually playing Tavern slots.",
+  "ctx": "help.resource.jobs.body"
+ },
+ {
+  "key": "ui|help.colosseum.prepare.title",
+  "ko": "시련의 탑에서 파티 시험하기",
+  "en": "Testing your party in the Tower of Trials",
+  "ctx": "help.colosseum.prepare.title"
+ },
+ {
+  "key": "ui|help.colosseum.prepare.body",
+  "ko": "시련의 탑은 정해진 영웅 팀을 상대로 한 층씩 도전하는 곳입니다. 원정에서 맞춘 장비와 편성이 영웅 팀끼리의 전투에서는 어떤지 시험할 수 있습니다. 챕터 진행과 별개이므로 원정을 진행하다가 원하는 때 도전해도 됩니다.<br><br>사용할 Party를 고르고 영웅 {duelSize}명을 채운 뒤 열린 층을 선택합니다. [편성 수정]은 편성 탭으로 이동하는 버튼입니다. 거기서 인원·전열/후열·물약·파티 전술을 준비한 뒤 시련의 탑으로 돌아옵니다. 상대 카드에서 장비와 스킬을 살펴보고 [도전]을 누르면 한 판의 자동전투가 시작됩니다.",
+  "en": "The Tower of Trials lets you challenge fixed hero teams one floor at a time. It is a place to test how the equipment and formations you built during Expeditions perform against another hero team. It is separate from chapter progress, so you can challenge it whenever you choose.<br><br>Choose a Party, fill all {duelSize} hero slots and select an open floor. Edit party takes you to the Party tab. Prepare members, front/back rows, potions and tactics there, then return to the Tower. Inspect the enemy cards for gear and skills, and press Challenge to start one automatic battle.",
+  "ctx": "help.colosseum.prepare.body"
+ },
+ {
+  "key": "ui|help.colosseum.floors.title",
+  "ko": "층과 승급전",
+  "en": "Floors and promotion bouts",
+  "ctx": "help.colosseum.floors.title"
+ },
+ {
+  "key": "ui|help.colosseum.floors.body",
+  "ko": "처음에는 첫 층만 열립니다. 열린 가장 높은 층을 이기면 다음 층이 열리고, 이미 깬 층은 언제든 다시 도전할 수 있습니다. 각 층은 같은 AI 팀을 사용하며 높은 층일수록 상대의 레벨 · 장비 · 스킬이 강해집니다. 등급의 마지막 층은 <b>승급전</b>이며, 이기면 그 등급의 휘장을 받습니다.<br><br>져도 열린 층이나 휘장을 잃지 않습니다.",
+  "en": "Only the first floor is initially open. Beat the highest open floor to unlock the next; cleared floors remain available to retry. Each floor uses a fixed AI team, with higher floors bringing stronger levels, gear and skills. A tier's last floor is a <b>promotion bout</b>; winning earns its emblem. Losing does not remove unlocked floors or emblems.",
+  "ctx": "help.colosseum.floors.body"
+ },
+ {
+  "key": "ui|help.colosseum.retry.title",
+  "ko": "같은 층에서 막혔다면",
+  "en": "When a floor stops your progress",
+  "ctx": "help.colosseum.retry.title"
+ },
+ {
+  "key": "ui|help.colosseum.retry.body",
+  "ko": "같은 층에는 같은 상대 편성이 나옵니다. 관전에서 누가 먼저 쓰러지는지, 어떤 적 스킬에 큰 피해를 받는지 살펴본 뒤 장비나 진형을 바꾸어 다시 도전합니다. 한 가지씩 바꾸면 어떤 준비가 도움이 되었는지 비교하기 쉽습니다.<br><br>빈 영웅 자리 때문에 [도전]이 꺼져 있다면 선택한 Party에 {duelSize}명을 채웁니다. 전술 효과와 물약은 우리 팀 아래에 표시된 내용을 확인합니다. 레벨이나 장비가 부족하다면 원정·고용·제작으로 파티를 키운 뒤 돌아와도 이미 깬 층과 휘장은 남습니다.",
+  "en": "A floor keeps the same opposing lineup. Watch who falls first and which enemy skills deal the most damage, then change equipment or formation and try again. Changing one thing at a time makes it easier to compare what helped.<br><br>If Challenge is disabled because hero slots are empty, fill the selected Party with {duelSize} heroes. Check the tactics and potions shown below your team. You can return to Expeditions, hiring or crafting to improve the party; cleared floors and earned emblems remain when you come back.",
+  "ctx": "help.colosseum.retry.body"
+ },
+ {
+  "key": "ui|help.colosseum.rules.title",
+  "ko": "두 결투 콘텐츠의 공통 규칙",
+  "en": "Rules shared by both duel modes",
+  "ctx": "help.colosseum.rules.title"
+ },
+ {
+  "key": "ui|help.colosseum.rules.body",
+  "ko": "시련의 탑과 결투장은 내 영웅의 능력치·장비·스킬에 선택한 Party의 파티 전술과 물약을 더해 한 판을 겨룹니다. 도감 보너스는 적용되지 않아 원정에서 본 전투 수치와 달라질 수 있습니다. 상대 팀도 자기 파티 전술과 물약을 같은 규칙으로 사용합니다. 제한시간 안에 승부가 나지 않으면 무승부입니다.<br><br>물약은 보유 재고에서 채울 수 있는 만큼 가져가며, 결투 중 마셔도 실제 재고는 줄지 않습니다. 결투에는 골드·재료 비용이 없고 장비나 도감 경험치 보상도 없습니다. 시련의 탑의 층·휘장과 결투장의 레이팅·전적이 각각 진행 기록입니다.<br><br>결과는 [도전] 또는 [결투 시작]을 누를 때의 영웅과 장비·편성을 기준으로 정해집니다. 관전은 그 전투를 재생하는 화면입니다. 그 뒤 장비나 편성을 바꾸면 다음 결투부터 반영되며, 관전을 닫아도 이미 기록된 결과는 유지됩니다.",
+  "en": "Tower of Trials and Arena duels use your heroes' attributes, gear and skills plus the selected Party's tactics and potions for one battle. Codex bonuses are excluded, so combat values can differ from those seen in Expeditions. Opponents use their own party tactics and potions under the same rules. Reaching the time limit ends in a draw.<br><br>Potions are filled from the stock you own, but drinking them in a duel does not reduce that stock. Duels cost no gold or materials and grant no equipment or Codex EXP. Tower floors and emblems, and Arena rating and records, track your progress in each mode.<br><br>The result is determined using the heroes, gear and Party configuration present when you press Challenge or Start duel. Spectating replays that battle. Later equipment or formation changes apply to the next duel, and leaving the replay keeps the result already recorded.",
+  "ctx": "help.colosseum.rules.body"
+ },
+ {
+  "key": "ui|help.arena.rating.title",
+  "ko": "레이팅과 리그 이해하기",
+  "en": "Understanding rating and leagues",
+  "ctx": "help.arena.rating.title"
+ },
+ {
+  "key": "ui|help.arena.rating.body",
+  "ko": "결투장은 승패에 따라 바뀌는 대전 점수인 레이팅을 올리는 곳입니다. 시련의 탑이 층을 차례로 여는 방식이라면, 결투장에서는 내 점수 근처의 상대를 골라 겨룹니다. 상대는 다른 플레이어가 등록한 방어 편성이며, 내 점수 근처의 플레이어가 없으면 후보가 적거나 비어 있습니다.<br><br>선택한 Party의 영웅 {duelSize}명으로 겨루며, 승리하면 레이팅이 오르고 패배하면 내려갑니다. 나보다 높은 레이팅의 상대를 이길수록 더 많이 오르고, 그런 상대에게 질 때는 덜 내려갑니다. 무승부도 상대와의 점수 차이에 따라 레이팅이 바뀔 수 있습니다. 예를 들어 나보다 높은 점수의 상대와 비기면 레이팅이 오를 수 있습니다.<br><br>리그는 레이팅 구간의 이름입니다. 왼쪽 리그표에서 다음 등급의 문턱을 확인할 수 있으며, 문턱에 도달하면 표시되는 리그가 바뀝니다. 레이팅과 리그는 이 콘텐츠의 기록이며 영웅의 레벨이나 원정 장비를 직접 올리지는 않습니다.",
+  "en": "The Arena tracks rating: a duel score that changes with wins, draws and losses. The Tower of Trials opens floors in order, while the Arena lets you choose opponents near your score. Opponents are defense parties registered by other players; if few players are near your score, the list is short or empty.<br><br>Fight with the {duelSize} heroes in your chosen Party. Wins raise rating and losses lower it. Beating a higher-rated opponent gains more, while losing to one costs less. A draw can also change rating depending on the difference between your scores. For example, drawing against a higher-rated opponent can raise your rating.<br><br>A league is the name of a rating range. Check the league table on the left for the next threshold; crossing it changes your displayed league. Rating and leagues track progress in this mode and do not directly raise hero levels or Expedition equipment.",
+  "ctx": "help.arena.rating.body"
+ },
+ {
+  "key": "ui|help.arena.opponents.title",
+  "ko": "상대 후보를 고르는 순서",
+  "en": "Choosing an opponent",
+  "ctx": "help.arena.opponents.title"
+ },
+ {
+  "key": "ui|help.arena.opponents.body",
+  "ko": "왼쪽 후보는 내 레이팅보다 낮은 팀, 비슷한 팀, 높은 팀입니다. 카드의 +는 이겼을 때 오르는 점수이고 −는 졌을 때 잃는 점수입니다. 낮은 상대는 예상 승리 점수가 작고, 높은 상대는 예상 승리 점수가 큽니다. 점수뿐 아니라 상대 직업·스킬과 내 파티가 잘 맞는지도 함께 살펴봅니다.<br><br>후보를 누르면 오른쪽에 그 팀이 나옵니다. 내 Party와 아래 물약·전술을 확인한 뒤 [결투 시작]을 누릅니다. [새 상대]는 후보 목록을 새로 고르는 버튼이며 결투를 시작하지 않습니다. 레이팅 결투를 마치면 후보가 새로 나옵니다. 결과와 레이팅은 전투를 시작하는 순간 기록되므로 관전을 닫아도 바뀐 점수는 남습니다.",
+  "en": "The candidates on the left are below, near and above your rating. A card's + shows the points gained for a win, and − shows the points lost for a defeat. Lower-rated opponents offer smaller winning gains; higher-rated opponents offer larger ones. Also inspect their classes and skills to judge how your party matches up.<br><br>Select a candidate to reveal that team on the right. Check your Party and the potions and tactics below it, then press Start duel. New opponents refreshes the candidate list without starting a fight. Candidates also refresh after a rated duel. The result and rating are recorded when the fight starts, so leaving the replay keeps the changed score.",
+  "ctx": "help.arena.opponents.body"
+ },
+ {
+  "key": "ui|help.arena.defense.title",
+  "ko": "방어 편성과 방어 기록",
+  "en": "Defense party and defense log",
+  "ctx": "help.arena.defense.title"
+ },
+ {
+  "key": "ui|help.arena.defense.body",
+  "ko": "결투장에 처음 들어오면 이름과 방어 편성을 등록합니다. 영웅 {duelSize}명이 찬 Party만 고를 수 있고, [등록]을 누르면 그 편성이 바로 다른 플레이어의 상대 후보와 [친구와 전투] 목록에 올라갑니다. 이름 뒤에는 계정마다 정해진 네 자리 태그가 붙어 같은 이름을 구별합니다. 이름은 설정에서 바꿀 수 있고 비워 둘 수는 없습니다.<br><br>방어 편성은 왼쪽 [방어 편성]에서 다른 Party로 바꿀 수 있으며 등록을 풀 수는 없습니다. 장비나 진형을 바꾸면 바뀐 모습이 다시 올라가고, 레이팅도 함께 보입니다. 결투를 하러 나가는 편성은 오른쪽 판에서 고르는 Party이며, 방어 편성과 같아도 됩니다.<br><br>다른 플레이어가 내 방어 편성과 싸우면 [방어 기록]에 언제 · 누가 · 그 레이팅 · 결과가 남고, 친선전이면 「친선전」이 붙습니다. 방어 결과는 내 레이팅을 바꾸지 않습니다. 등록과 받기는 배포판에서만 동작하고, 상대 목록과 기록은 게임을 켤 때 · 결투장에 들어올 때 · [새 상대]를 누를 때 새로 받습니다. 바로 앞에 받았다면 받아 둔 목록을 씁니다. 다른 플레이어의 팀은 규칙 검사를 통과한 것만 나오고, 올린 편성의 파티 전술과 물약을 씁니다.",
+  "en": "The first time you enter the Arena, register a name and a defense party. Only a Party with {duelSize} heroes can be chosen, and pressing Register lists it right away in other players' opponents and in Fight a friend. A four-digit tag fixed to your account follows your name so players with the same name can be told apart. You can change the name in Settings, but it cannot be left empty.<br><br>Switch your defense to another Party under Defense party on the left; it cannot be unregistered. Changing its gear or formation uploads the new version, and your rating is shown with it. The party you attack with is the one chosen on the right, and it may be the same as your defense party.<br><br>When another player fights your defense party, the Defense log records when, who, their rating and the result, marked Friendly for friendly duels. Defense results do not change your rating. Registering and receiving work only on the live build; opponents and records are refreshed when the game starts, when you enter the Arena and when you press New opponents. If they were just received, the stored list is used. Other players' teams appear only if they pass the rule check, and they use the party tactics and potions of the uploaded party.",
+  "ctx": "help.arena.defense.body"
+ },
+ {
+  "key": "ui|help.arena.friendly.title",
+  "ko": "친구와 전투",
+  "en": "Fight a friend",
+  "ctx": "help.arena.friendly.title"
+ },
+ {
+  "key": "ui|help.arena.friendly.body",
+  "ko": "[친구와 전투]를 누르면 방어 편성을 등록한 플레이어가 최근에 올라온 순서로 나옵니다. 찾기 칸에 이름의 앞 글자를 넣으면 그 글자로 시작하는 이름을, #1234처럼 태그를 넣으면 그 태그를, 이름#1234를 넣으면 그 사람을 찾습니다. 이름은 대소문자를 가립니다. 한 번에 한 쪽씩 나오며 [더 보기]로 이어서 봅니다.<br><br>목록에서 한 사람을 고르면 창이 닫히고 그 팀이 친선전 상대로 표시됩니다. 그 팀을 확인한 뒤 [결투 시작]으로 겨룹니다. 상대 팀은 그 사람이 마지막으로 올린 모습이며, 그 편성의 파티 전술과 물약도 함께 씁니다.<br><br>친선전은 연습입니다. 결과가 레이팅과 레이팅 전적에 영향을 주지 않고, 상대의 방어 기록에는 「친선전」으로 남습니다.",
+  "en": "Press Fight a friend to list players who registered a defense party, most recently updated first. Type the start of a name to find names beginning with it, a tag such as #1234 to find that tag, or Name#1234 to find that player. Names are case-sensitive. Results come one page at a time; press More to continue.<br><br>Pick a player to close the window and show their team as your friendly opponent. Inspect that team, then press Start duel. The team is as that player last uploaded it, including its party tactics and potions.<br><br>Friendly duels are practice. Results do not affect rating or rated records; the other player's defense log shows them marked Friendly.",
+  "ctx": "help.arena.friendly.body"
+ },
+ {
+  "key": "ui|help.arena.results.title",
+  "ko": "전적과 원정의 관계",
+  "en": "Records and Expeditions",
+  "ctx": "help.arena.results.title"
+ },
+ {
+  "key": "ui|help.arena.results.body",
+  "ko": "전투 준비와 물약·도감 적용은 시련의 탑 묶음의 공통 규칙을 따릅니다. 결투를 해도 원정 스테이지나 도감 경험치가 진행되지는 않으며, 결투장에는 별도의 장비·골드 보상이 없습니다.<br><br>현재 레이팅, 최고 레이팅, 레이팅 결투의 승·무·패는 자동 저장됩니다. 이미 고른 상대와 지난 전투 결과의 화면 표시는 다시 접속하면 새로 시작됩니다. 전적이 남는 것과 이전 관전을 다시 여는 것은 서로 다릅니다.",
+  "en": "Battle preparation, potions and Codex bonuses follow the shared rules in the Tower of Trials section. A duel does not advance Expedition stages or Codex EXP, and the Arena has no separate equipment or gold rewards.<br><br>Current rating, best rating and rated wins, draws and losses are saved automatically. Selected opponents and the last-battle display reset when you return. A saved record does not mean the previous replay remains available.",
+  "ctx": "help.arena.results.body"
+ },
+ {
+  "key": "ui|help.codex.monsters.title",
+  "ko": "몬스터 살펴보기와 도감 경험치",
+  "en": "Inspecting monsters and Codex EXP",
+  "ctx": "help.codex.monsters.title"
+ },
+ {
+  "key": "ui|help.codex.monsters.body",
+  "ko": "몬스터에서 챕터를 고르면 지역별 몬스터의 모습·분류·스킬과 도감 진행을 살펴볼 수 있습니다. 아직 원정에서 열지 못한 지역도 여기서 미리 볼 수 있습니다. 몬스터 카드를 가리키면 이야기와 단계 보상, 스킬 그림을 가리키면 스킬 효과가 나옵니다. 일반/정예 고르개는 여기서 보는 초상만 바꾸며 같은 몬스터의 도감 경험치를 따로 나누지는 않습니다.<br><br>도감 경험치는 영웅을 레벨업시키는 경험치와 별도로, 몬스터마다 쌓이는 처치 기록입니다. 원정에서 이긴 라운드의 처치가 정산될 때 들어오며 진 라운드나 도중에 철수한 라운드의 처치는 포함되지 않습니다. 처치당 도감 경험치는 {per}입니다.",
+  "en": "Choose a chapter under Monsters to inspect each area's monsters, classifications, skills and Codex progress. You can preview areas you have not yet unlocked in Expeditions. Hover a monster card for its story and milestone rewards, or a skill icon for its effect. The Normal/Elite selector changes the displayed portrait; it does not split that monster's Codex EXP into separate tracks.<br><br>Codex EXP is a separate record for each monster, apart from the XP that levels up heroes. It is awarded when kills from a won Expedition round are settled. Kills from lost rounds or rounds abandoned partway through do not count. Codex EXP per kill is {per}.",
+  "ctx": "help.codex.monsters.body"
+ },
+ {
+  "key": "ui|help.codex.classification.title",
+  "ko": "종족 · 직업 읽기",
+  "en": "Reading race and class",
+  "ctx": "help.codex.classification.title"
+ },
+ {
+  "key": "ui|help.codex.classification.body",
+  "ko": "몬스터 카드의 분류는 종족·직업을 나타냅니다. 종족은 일반·데몬·언데드이며, 직업은 전사·궁수·기사·마법사·사제처럼 사용하는 스킬과 장비의 계열입니다. 예를 들어 고블린 척후병은 데몬 종족, 궁수 직업입니다.<br><br>도감 Lv1·Lv2 보너스가 함께 적용되는 범위는 종족입니다. 데몬 몬스터 하나의 보너스를 열면 다른 지역의 데몬 몬스터를 상대할 때도 적용됩니다. 보스처럼 Lv1·Lv2 보너스가 없는 몬스터는 그 보너스를 주고받지 않습니다.",
+  "en": "Monster cards identify race and class. Races are Normal, Demon and Undead. Class describes the monster's skills and equipment, such as Warrior, Archer, Knight, Mage or Priest. For example, a Goblin Scout is a Demon with the Archer class.<br><br>Codex Lv1 and Lv2 bonuses are shared within a race. Unlocking a bonus from one Demon monster also helps against Demon monsters in other areas. Monsters with no Lv1 or Lv2 bonuses, such as bosses, neither grant nor receive those race bonuses.",
+  "ctx": "help.codex.classification.body"
+ },
+ {
+  "key": "ui|help.codex.race_traits.title",
+  "ko": "종족에 따른 몸의 차이",
+  "en": "How race changes a monster's body",
+  "ctx": "help.codex.race_traits.title"
+ },
+ {
+  "key": "ui|help.codex.race_traits.body",
+  "ko": "일반 몬스터와 정예는 종족에 따라 기본 몸 특성이 달라집니다. 같은 직업이라도 최대 HP·재생·피해·방어·저항에서 차이가 날 수 있으므로 카드의 전투 수치와 사용하는 스킬을 함께 확인합니다. 이 종족 몸 보정은 보스나 두 결투 콘텐츠의 영웅 팀에는 적용되지 않습니다.<br><br>일반 종족은 물리 방어가 높고 원소 저항이 낮습니다. 물리 공격이 잘 통하지 않는다면 원소 피해를 주는 영웅과 스킬을 살펴봅니다.<br><br>데몬은 최대 HP와 HP 재생이 높지만 물리 방어가 낮습니다. 전투가 길어지며 상대 HP가 차오른다면 물리 화력과 받는 회복을 줄이는 효과를 검토합니다.<br><br>언데드는 최대 HP가 낮고 입히는 피해가 높습니다. 먼저 쓰러뜨릴 화력과 아군을 보호할 방어·피해 감소를 함께 준비합니다.",
+  "en": "Regular and Elite monsters have body traits determined by race. Even monsters with the same class can differ in maximum HP, regeneration, damage, defense and resistance, so inspect their combat values together with their skills. These racial body adjustments do not apply to bosses or hero teams in either duel mode.<br><br>Normal-race monsters have higher physical defense and lower elemental resistances. If physical attacks are struggling, inspect heroes and skills that deal elemental damage.<br><br>Demons have higher maximum HP and HP regeneration but lower physical defense. If their HP keeps recovering during a long fight, consider physical damage and effects that reduce healing received.<br><br>Undead have lower maximum HP and deal more damage. Prepare both the damage to defeat them quickly and protection such as defense or damage reduction for your heroes.",
+  "ctx": "help.codex.race_traits.body"
+ },
+ {
+  "key": "ui|help.codex.milestones.title",
+  "ko": "도감 단계가 주는 보너스",
+  "en": "What Codex milestones grant",
+  "ctx": "help.codex.milestones.title"
+ },
+ {
+  "key": "ui|help.codex.milestones.body",
+  "ko": "몬스터별 누적 도감 경험치가 {list}에 도달하면 차례로 Lv1~Lv4에 해당하는 기록을 채웁니다. 이미 얻은 단계의 효과는 이후 단계에도 유지됩니다.<br><br>Lv1은 같은 종족을 잡을 때 경험치·드롭·골드 등 보상을 늘리는 파밍 옵션을, Lv2는 같은 종족을 상대할 때 적용되는 전투 옵션을 엽니다. 어떤 옵션인지는 몬스터마다 다르며, 같은 종족의 여러 몬스터에서 연 보너스는 함께 적용됩니다. 보스 등 일부 몬스터에는 Lv1·Lv2 보너스가 없습니다.<br><br>Lv3에는 추가 효과가 없습니다. Lv4는 그 몬스터의 전투 옵션 하나를 모든 파티원에게 항상 더합니다. 각 단계의 구체적인 효과와 값은 몬스터 카드에서 확인합니다. 시련의 탑과 결투장에는 도감 보너스가 적용되지 않습니다.",
+  "en": "Each monster fills its Lv1–Lv4 milestones as its cumulative Codex EXP reaches {list}. Effects already unlocked remain in place at later milestones.<br><br>Lv1 unlocks a farming option that improves rewards such as XP, drops or gold from that race. Lv2 unlocks a combat option used against the same race. The option varies by monster, and bonuses unlocked from different members of one race combine. Bosses and some other monsters have no Lv1 or Lv2 bonuses.<br><br>Lv3 adds no effect. Lv4 permanently adds one combat option from that monster to every party member. Inspect its card for the exact effects and values at each milestone. Codex bonuses do not apply in Tower of Trials or Arena duels.",
+  "ctx": "help.codex.milestones.body"
+ },
+ {
+  "key": "ui|help.codex.library_unlocks.title",
+  "ko": "경험치는 찼는데 단계가 잠겨 있다면",
+  "en": "When a full milestone is still locked",
+  "ctx": "help.codex.library_unlocks.title"
+ },
+ {
+  "key": "ui|help.codex.library_unlocks.body",
+  "ko": "도감 경험치와 도감 단계 해금은 두 조건입니다. 몬스터를 잡아 필요한 경험치를 모으고, 도서관 랭크로 그 단계까지 열어야 효과가 적용됩니다. 잠긴 단계도 경험치는 계속 쌓이며 카드의 눈금은 회색으로 찰 수 있습니다.<br><br>예를 들어 다음 단계의 경험치를 이미 모았지만 그 단계에 자물쇠가 있다면, 눈금에 마우스를 올려 필요한 도서관 랭크를 확인합니다. 건설에서 그 랭크를 올리면 이미 채운 단계가 바로 적용됩니다. 같은 경험치를 다시 모을 필요는 없습니다.",
+  "en": "Codex EXP and milestone access are two requirements. You need both the monster's required EXP and the Library rank that opens that milestone before its effect applies. EXP keeps accumulating behind locked milestones, and their markers can fill in grey.<br><br>If you already have the EXP for the next milestone but it still shows a lock, hover its marker to see the required Library rank. Build that rank in Construction to apply the milestone already earned. You do not need to collect the same EXP again.",
+  "ctx": "help.codex.library_unlocks.body"
+ },
+ {
+  "key": "ui|help.codex.art.title",
+  "ko": "캐릭터 · 아이템",
+  "en": "Characters and items",
+  "ctx": "help.codex.art.title"
+ },
+ {
+  "key": "ui|help.codex.art.body",
+  "ko": "<b>캐릭터</b>는 직업별 영웅 초상, <b>아이템</b>은 무기 · 방어구 · 물약의 그림과 목록을 모아 보여줍니다. 물약을 가리키면 효과를 확인할 수 있습니다. 초상 그림체 고르개는 실제 게임의 초상과 배경에도 적용되며 설정의 그림체 선택과 함께 저장됩니다.<br><br>도감에서 그림을 보는 것만으로 영웅이나 장비를 획득하지는 않습니다.",
+  "en": "<b>Characters</b> collects hero portraits by class, and <b>Items</b> lists weapon, armor and potion artwork. Hover potions to see their effects. The portrait style selector also changes portraits and backgrounds used in the game and shares its saved choice with Settings. Viewing artwork in the Codex does not grant heroes or equipment.",
+  "ctx": "help.codex.art.body"
+ },
+ {
+  "key": "ui|help.codex.skills.title",
+  "ko": "배울 스킬과 마스터리 찾아보기",
+  "en": "Finding skills and mastery to learn",
+  "ctx": "help.codex.skills.title"
+ },
+ {
+  "key": "ui|help.codex.skills.body",
+  "ko": "스킬 목록은 일반 스킬과 전직 스킬을 직업·전직별로 보여줍니다. 스킬 그림에 마우스를 올려 효과와 필요한 무기를 확인합니다. 스킬북이 있는 일반 스킬에는 획득처와 레벨이 오를 때 좋아지는 항목도 표시됩니다. 원하는 스킬이 있다면 이 목록에서 그 스킬북의 획득처를 찾습니다.<br><br>도감에서는 스킬과 마스터리를 미리 살펴봅니다. 실제 책 습득은 도서관에서, 스킬 포인트 투자는 캐릭터의 [마스터리 열기]에서 합니다. 도감의 스킬 수치는 특정 영웅을 선택한 상태가 아니므로, 실제 영웅에게 적용되는 피해·회복량은 그 영웅의 스킬 설명에서도 확인합니다. 전직의 특수·변형·필살기 가지는 현재 준비 중입니다.",
+  "en": "The Skills list groups regular and advancement skills by class and advancement. Hover an icon to read its effect and weapon requirement. Regular skills that can become books also show sources and what improves per level. To pursue a skill, find where its book comes from here.<br><br>The Codex lets you preview skills and mastery. Learn books at the Library, and spend skill points through Open Mastery in Character. Codex skill details have no selected hero context, so check the skill on your actual hero for their damage or healing values. The Special, Variant and Ultimate advancement branches are currently coming later.",
+  "ctx": "help.codex.skills.body"
+ },
+ {
+  "key": "ui|help.codex.effects.title",
+  "ko": "이펙트 미리 보기",
+  "en": "Previewing effects",
+  "ctx": "help.codex.effects.title"
+ },
+ {
+  "key": "ui|help.codex.effects.body",
+  "ko": "<b>이펙트</b>에서 카드를 누르면 해당 스킬의 전투 연출을 재생합니다. 묶음의 ▶는 그 묶음을, <b>[전부 재생]</b>은 모든 효과를 재생합니다. 위쪽에서 그림체를 비교할 수 있으며, 도감의 미리 보기는 설정에서 스킬 이펙트를 꺼 둔 경우에도 재생됩니다.<br><br>도감에서 비교할 그림체를 고르는 것과 실제 전투 그림체를 고르는 설정은 별개입니다.",
+  "en": "Under <b>Effects</b>, select a card to play that skill's battle effect. A group's ▶ plays that group; <b>Play all</b> plays every effect. Compare art styles at the top. Codex previews play even when skill effects are disabled in Settings. Choosing a preview style here does not change the live battle style in Settings.",
+  "ctx": "help.codex.effects.body"
+ },
+ {
+  "key": "ui|help.help.browse.title",
+  "ko": "도움말에서 필요한 설명 찾기",
+  "en": "Finding the explanation you need",
+  "ctx": "help.help.browse.title"
+ },
+ {
+  "key": "ui|help.help.browse.body",
+  "ko": "도움말의 주제별 폴더는 왼쪽 메뉴와 같은 순서입니다. 폴더를 누르면 그 주제의 설명만 열리고, 본문을 스크롤해 끝까지 읽을 수 있습니다. 폴더마다 읽던 위치를 기억하며 잠긴 탭의 설명도 미리 볼 수 있습니다.<br><br>검색창에 단어를 띄어 써 넣으면 모든 폴더의 제목·소제목·본문에서 그 단어가 모두 포함된 설명을 찾습니다. 결과가 있는 폴더를 골라 읽으며, 현재 폴더에 결과가 없으면 첫 결과 폴더가 열립니다. 검색어를 지우면 모든 폴더의 설명이 복구됩니다.<br><br>처음 시작했다면 처음 플레이하는 순서와 자주 쓰는 용어부터 읽습니다. 당장 막힌 일이 있다면 막혔을 때 확인할 곳에서 해결할 탭을 찾고, 그 탭의 자세한 설명으로 이어갑니다.",
+  "en": "Help folders follow the same order as the left menu. Select a folder to open only that topic, then scroll inside its text to read further. Each folder remembers your reading position. You can also read about tabs that are still locked.<br><br>Enter words separated by spaces in Search to find explanations across all folders whose titles, subheadings and text contain every word. Choose a folder with matches to read them. If the current folder has no matches, the first matching folder opens. Clear the search to restore every folder's explanations.<br><br>If you are new, start with Your first steps and Common terms. If something has stopped your progress, use Where to look when stuck to find the relevant tab, then read its detailed explanation.",
+  "ctx": "help.help.browse.body"
+ },
+ {
+  "key": "ui|help.help.common_terms.title",
+  "ko": "자주 쓰는 용어",
+  "en": "Common terms",
+  "ctx": "help.help.common_terms.title"
+ },
+ {
+  "key": "ui|help.help.common_terms.body",
+  "ko": "로스터는 내가 보유한 영웅 전체입니다. Party는 그중 함께 출전하도록 편성한 영웅 묶음이며, Party 번호는 그 편성을 고르는 이름입니다. 한 영웅은 한 편성에만 들어갑니다. 모든 영웅을 보유한 로스터와 실제 출전하는 Party를 구분하면 고용과 편성을 읽기 쉽습니다.<br><br>파밍은 이미 갈 수 있는 곳을 여러 번 돌아 원하는 장비·재료·경험치를 모으는 일입니다. 아이템의 옵션은 공격력·저항·회복 같은 개별 효과를 말합니다. 희귀도는 장비나 영웅의 일반·매직·레어 같은 등급이고, 레벨과는 다른 항목입니다.<br><br>건물의 랭크는 기능과 상한을 여는 단계입니다. 연구소 지점의 레벨은 그 지점의 생산·효과를 올리는 단계입니다. 마스터리는 포인트를 투자해 얻는 패시브 효과이며, 스킬북으로 배우는 액티브 스킬과 별도로 준비합니다.",
+  "en": "Your roster is every hero you own. A Party is a group from that roster prepared to deploy together; the Party number selects that saved group. A hero can belong to only one Party. Keeping the full roster separate from the deployed Party makes hiring and team preparation easier to follow.<br><br>Farming means repeating accessible content to collect wanted equipment, materials or XP. An item's options are its individual effects, such as damage, resistance or healing. Rarity means grades such as Normal, Magic and Rare for gear or heroes; it is separate from level.<br><br>A building's rank unlocks features and raises limits. A Laboratory node's level improves that node's production or effect. Mastery provides passive effects by spending points and is prepared separately from active skills learned through books.",
+  "ctx": "help.help.common_terms.body"
+ },
+ {
+  "key": "ui|help.help.controls.title",
+  "ko": "마우스 · 키보드 · 터치 조작",
+  "en": "Mouse, keyboard and touch controls",
+  "ctx": "help.help.controls.title"
+ },
+ {
+  "key": "ui|help.help.controls.body",
+  "ko": "영웅·몬스터·장비·스킬 그림에 마우스를 올리면 그 대상의 설명 카드인 툴팁이 뜹니다. 장비를 우클릭하면 잠금·이동·분해처럼 그 칸에서 가능한 행동을 고를 수 있습니다. Alt를 누르면 카드의 세부 능력치·스킬 계산이나 장비 착용 후 변화량을, Shift를 누르면 장비 옵션이 나올 수 있는 수치 범위를 확인합니다.<br><br>터치에서는 그림을 길게 눌러 설명을 엽니다. 카드 아래 [세부]와 [범위]가 나오면 각각 Alt와 Shift 대신 사용할 수 있으며, 장착·이동 같은 행동 버튼도 그 줄에 표시됩니다. 화면을 스크롤하려면 누른 채 움직이고, 설명을 열려면 그 자리에서 길게 누릅니다.<br><br>일반 창은 ×, 창 바깥 영역 클릭, Esc로 닫습니다. 확인이 필요한 창은 그 안의 선택 버튼으로 진행합니다. 모바일에서는 아래쪽 아이콘으로 메뉴를 바꾸고 [메뉴]에서 모든 탭을 엽니다. 가로 화면에서는 아이콘이 왼쪽으로 이동합니다. 위쪽 부대 상태를 누르면 전투로 돌아가며, 전장 오른쪽 아래 버튼으로 가방을 펼치거나 접습니다.",
+  "en": "Hover hero, monster, equipment or skill artwork to open its information card, called a tooltip. Right-click equipment to choose the available actions, such as locking, moving or salvaging it. Hold Alt for detailed stats, skill calculations or equipment stat changes, and Shift for the possible value ranges of equipment options.<br><br>On touchscreens, hold an image to open its information. Details and Range buttons, when shown below the card, provide the Alt and Shift views. Available actions such as equipping or moving appear there too. Move your finger to scroll, or keep it still while holding to open information.<br><br>Close most windows with ×, an outside click or Esc. Windows requiring a choice use their own buttons. On mobile, use the bottom icons to switch screens and Menu to reach every tab. In landscape, the icons move to the left. Tap a party status at the top to return to combat. The button at the bottom right of the battlefield shows or hides the bags.",
+  "ctx": "help.help.controls.body"
+ },
+ {
+  "key": "ui|help.help.when_stuck.title",
+  "ko": "막혔을 때 확인할 곳",
+  "en": "Where to look when stuck",
+  "ctx": "help.help.when_stuck.title"
+ },
+ {
+  "key": "ui|help.help.when_stuck.body",
+  "ko": "출발할 수 없다면 편성에 영웅이 있는지, 그 영웅이 다른 원정이나 탐험에 나가 있는지, 고른 스테이지가 열려 있는지 확인합니다. 거절될 때 표시되는 사유가 먼저 해결할 조건입니다.<br><br>출발은 되지만 계속 진다면 원정의 Report와 관전에서 쓰러진 순서와 피해를 확인합니다. 캐릭터의 착용 장비와 남은 스킬 포인트, 편성의 진형·물약·전술 조건을 살펴봅니다. 어떤 부분이 부족한지에 따른 자세한 예시는 원정과 캐릭터 도움말에 있습니다.<br><br>버튼이나 탭이 잠겨 있으면 건설에서 해당 건물·다음 랭크 조건을 봅니다. 재료가 부족하면 연구소 생산과 장비 분해를 확인하고, 골드가 부족하면 원정을 진행하거나 완료한 의뢰를 수령합니다. 재료의 종류와 단계가 비용에 적힌 것과 같은지도 봅니다. 도감 눈금은 찼는데 잠겨 있다면 도서관 랭크를 확인합니다. 지금 필요한 기능의 조건부터 맞추면 다음 목표를 정하기 쉽습니다.",
+  "en": "If you cannot deploy, check that the Party contains heroes, that they are not away on another Expedition or Exploration, and that the selected stage is open. The displayed rejection reason tells you which requirement to solve first.<br><br>If you can deploy but keep losing, inspect Report and spectate to see who fell first and what dealt damage. Check equipped gear and unspent skill points in Character, then formation, potions and tactic conditions in Party. Expedition and Character help give more detailed examples for each problem.<br><br>For locked buttons or tabs, check the building and next-rank requirements in Construction. For materials, check Laboratory production and gear salvage. For gold, run Expeditions or claim completed commissions. Match the material type and grade to the cost shown. A filled but locked Codex milestone needs Library ranks. Start with the requirements for the feature you need now.",
+  "ctx": "help.help.when_stuck.body"
+ },
+ {
+  "key": "ui|help.help.settings.title",
+  "ko": "화면 설정과 언어",
+  "en": "Display settings and language",
+  "ctx": "help.help.settings.title"
+ },
+ {
+  "key": "ui|help.help.settings.body",
+  "ko": "상단의 EN 또는 한국어 버튼을 누르면 표시 언어가 바뀝니다. 모바일에서는 [메뉴] 안에 있습니다.<br><br>전투 연출이 복잡하게 느껴지면 스킬 이펙트·기본 공격 이펙트·피격 반응·공격 시 흔들림을 각각 조정할 수 있습니다. 이펙트 투명도는 값이 클수록 스킬 그림을 옅게 만듭니다. 스킬 이펙트가 Off이면 그림체와 투명도 선택이 흐려지고, 피격 반응이 Off이면 피격 시 흔들림 선택이 흐려집니다. 다시 켜면 이전 선택을 사용합니다.<br><br>로그의 칸/문장은 전투 기록을 나누어 볼지 문장으로 읽을지 고르는 표시 방식입니다. 언어와 연출·로그 설정은 전투 승패나 장비 효과를 바꾸지 않으며 이 브라우저에 저장됩니다.",
+  "en": "Use the language button at the top to switch between Korean and English. On mobile, it is inside Menu.<br><br>If combat visuals feel busy, adjust skill effects, basic attack effects, hit reactions and attack movement separately. A higher transparency value makes skill artwork fainter. Turning Skill Effects Off dims its style and transparency controls; turning Hit Reactions Off dims Shake on Hit. Turning them back on restores the previous choices.<br><br>Grid/Text chooses whether battle log entries are divided into columns or read as sentences. Language, visual effects and log settings do not change battle outcomes or equipment effects, and are saved in this browser.",
+  "ctx": "help.help.settings.body"
+ },
+ {
+  "key": "ui|help.help.newgame.title",
+  "ko": "새 게임과 첫 영웅",
+  "en": "New game and starting heroes",
+  "ctx": "help.help.newgame.title"
+ },
+ {
+  "key": "ui|help.help.newgame.body",
+  "ko": "메뉴의 [새 게임]을 누르면 첫 영웅 {starterCount}명의 직업 · 죄종 · 능력치를 확인할 수 있습니다. [다시 굴리기]는 후보 전원을 다시 뽑으며, 원하는 조합이 나올 때까지 제한 없이 사용할 수 있습니다. 시작을 확정하면 그 영웅들이 첫 파티가 되고 각자 직업에 맞는 무기를 들고 프롤로그를 시작합니다.<br><br>기존 세이브가 있으면 덮어쓰기 버튼을 한 번 더 눌러야 새 게임을 시작합니다. [뒤로가기]로 메뉴에 돌아가면 기존 저장을 불러올 수 있습니다.",
+  "en": "Choose New Game from the menu to inspect the classes, Sins and attributes of your {starterCount} starting heroes. Reroll replaces every candidate and can be used without limit until you find a team you like. Confirming starts the prologue with those heroes as your first party, each carrying a weapon suited to their class.<br><br>If a save already exists, press the overwrite button again to confirm a new game. Back returns to the menu, where you can load the existing save.",
+  "ctx": "help.help.newgame.body"
+ },
+ {
+  "key": "ui|help.help.saving.title",
+  "ko": "자동 저장과 이어하기",
+  "en": "Autosave and continuing",
+  "ctx": "help.help.saving.title"
+ },
+ {
+  "key": "ui|help.help.saving.body",
+  "ko": "진행 상황은 현재 브라우저에 자동 저장됩니다. 다시 게임을 열면 메뉴의 [불러오기]로 이어합니다. 저장은 브라우저와 접속 주소를 기준으로 남으므로 다른 브라우저·기기·주소에서는 같은 저장이 자동으로 이어지지 않습니다. 브라우저의 이 사이트 저장 데이터를 지우면 자동 저장도 지워집니다.<br><br>같은 브라우저에서 게임 탭을 여러 개 열면 한 탭이 저장할 때 기존 탭은 멈춤 화면을 표시합니다. 플레이할 탭을 하나 정해 사용합니다. [이 탭에서 이어하기]는 최신 저장을 읽도록 새로고침하는 버튼이며, 메뉴가 나오면 [불러오기]로 계속합니다.<br><br>새 게임 화면에서 후보를 다시 굴리거나 [뒤로가기]로 돌아오는 동안에는 기존 세이브가 유지됩니다. 새 영웅으로 시작하기를 최종 확정하면 기존 자동 저장을 새 게임으로 덮습니다. 설정과 언어 선택은 게임 진행과 별도로 이 브라우저에 남습니다.",
+  "en": "Progress is saved automatically in this browser. When you reopen the game, continue with Load Game from the menu. Saves belong to the browser and site address, so another browser, device or address does not automatically continue the same save. Clearing this site's browser storage also clears the autosave.<br><br>If multiple game tabs are open in one browser, a tab that saves causes the older tab to show a paused screen. Choose one tab to play in. Continue in this tab reloads the page to read the latest save; if the menu appears, use Load Game to continue.<br><br>Rerolling candidates in New Game or returning with Back keeps the existing save. Final confirmation to start with new heroes replaces the autosave with the new game. Display settings and language are stored in this browser separately from game progress.",
+  "ctx": "help.help.saving.body"
+ },
+ {
+  "key": "ui|help.help.away.title",
+  "ko": "다른 화면을 보거나 자리를 비울 때",
+  "en": "Viewing other screens or stepping away",
+  "ctx": "help.help.away.title"
+ },
+ {
+  "key": "ui|help.help.away.body",
+  "ko": "게임 안에서 도움말·캐릭터·건설 같은 다른 탭을 보는 동안에도 원정과 탐험은 진행됩니다. 관전 중인 팀만 움직이는 방식이 아니므로 장비를 정리하면서 전투를 돌릴 수 있습니다.<br><br>게임을 완전히 닫으면 원정은 멈추며, 다시 접속한 뒤 출발합니다. 보낸 탐험은 꺼 둔 동안에도 남은 시간이 흘러 완료되므로 돌아왔을 때 탐험 탭에서 수령합니다. 연구소의 오프라인 생산·훈련·수익은 {offlineHours}시간분을 기준으로 제한해 계산하며, 수색은 대기 칸이 찰 때까지 진행됩니다.<br><br>PC가 절전 상태에 들어가거나 브라우저가 게임 탭을 오래 정지시키면 원정이 끊길 수 있습니다. 돌아왔을 때 마지막 리포트를 확인하고 [보내기]로 다시 시작합니다. 연구소 생산과 탐험의 완료·수령은 각 탭에서 확인합니다.",
+  "en": "Expeditions and Exploration continue while you view other in-game tabs such as Help, Character or Construction. Activity is not limited to the team you are spectating, so you can organize equipment while combat runs.<br><br>Closing the game stops Expeditions; deploy again after returning. An exploration already sent can finish while the game is closed; claim it in Exploration when you return. Offline Laboratory production, Training and income use a limited {offlineHours}h calculation window. Search continues until its waiting slots fill.<br><br>If the PC sleeps or the browser suspends the game tab for a long time, Expeditions can stop. On return, check the last report, then Deploy again. Check Laboratory output and Exploration completion or collection in their respective tabs.",
+  "ctx": "help.help.away.body"
+ },
+ {
+  "key": "ui|help.help.credits.title",
+  "ko": "아이콘 출처",
+  "en": "Icon credits",
+  "ctx": "help.help.credits.title"
+ },
+ {
+  "key": "ui|help.help.credits.body",
+  "ko": "왼쪽 탭 아이콘 일부는 game-icons.net에서 Lorc · sbed가 만든 그림입니다. CC BY 3.0 라이선스(creativecommons.org/licenses/by/3.0)로 사용합니다.",
+  "en": "Some of the left tab icons are by Lorc and sbed from game-icons.net, used under the CC BY 3.0 license (creativecommons.org/licenses/by/3.0).",
+  "ctx": "help.help.credits.body"
+ },
+ {
+  "key": "ui|help.lab.generator.title",
+  "ko": "아이템 생성기",
+  "en": "Item generator",
+  "ctx": "help.lab.generator.title"
+ },
+ {
+  "key": "ui|help.lab.generator.body",
+  "ko": "실험실은 개발 환경에서만 보이는 아이템 확인 도구입니다. 챕터와 몬스터를 고른 뒤 일반/정예 등급, 난이도, 스테이지 레벨을 조정합니다. 몬스터를 바꾸면 레벨은 그 장소의 기본값으로 돌아갑니다. 보스는 자기 등급으로 고정됩니다.",
+  "en": "The Lab is an item inspection tool available only in development environments. Choose a chapter and monster, then adjust Normal/Elite grade, difficulty and stage level. Changing monsters resets the level to that area's default. Bosses keep their own fixed grade.",
+  "ctx": "help.lab.generator.body"
+ },
+ {
+  "key": "ui|help.lab.rolling.title",
+  "ko": "드롭 조건과 굴리기",
+  "en": "Drop conditions and rolls",
+  "ctx": "help.lab.rolling.title"
+ },
+ {
+  "key": "ui|help.lab.rolling.body",
+  "ko": "부위 줄에서 항상 착용하는 장비와 확률로 착용하는 장비를 구분할 수 있습니다. 아이템 레벨 범위와 희귀도 가중치는 현재 조건의 실제 드롭 규칙입니다. <b>[굴리기]</b>는 한 번, <b>[×10]</b>은 열 번 생성하며 파티의 매직 아이템 획득 보너스는 적용하지 않습니다.<br><br>가중치는 상대 비중이므로 표시값 자체가 퍼센트 확률은 아닙니다.",
+  "en": "The slot row distinguishes always-equipped items from optional slots with a wear chance. Item-level ranges and rarity weights show the actual drop rules for your chosen conditions. <b>Roll</b> generates once; <b>×10</b> generates ten times. Party Magic Find is excluded. Weights are relative shares, not direct percentage chances.",
+  "ctx": "help.lab.rolling.body"
+ },
+ {
+  "key": "ui|help.lab.results.title",
+  "ko": "결과와 저장",
+  "en": "Results and saving",
+  "ctx": "help.lab.results.title"
+ },
+ {
+  "key": "ui|help.lab.results.body",
+  "ko": "오른쪽에는 최신 장비의 상세 카드와 최근 결과 목록이 표시됩니다. 결과를 가리키면 장비의 상세 옵션을 확인하고 <b>[비우기]</b>로 기록을 지울 수 있습니다. 생성한 장비는 가방에 들어가지 않고 실제 골드 · 재료 · 세이브에도 영향을 주지 않습니다. 기록은 화면을 다시 불러오면 초기화됩니다.",
+  "en": "The right side shows the latest item's details and recent results. Hover a result to inspect it and press <b>Clear</b> to erase the list. Generated equipment is not added to inventory and does not affect real gold, materials or saves. The list resets when you reload.",
+  "ctx": "help.lab.results.body"
+ }
+]

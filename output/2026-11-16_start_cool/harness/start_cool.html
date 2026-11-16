@@ -1,0 +1,89 @@
+<!doctype html><meta charset="utf-8"><title>running</title><pre id="out"></pre>
+<script type="module">
+// 시작 쿨 규칙별 결투 길이 (2026-11-16) — 실험실 결투와 같은 차림: 챔피언(Lv50) · 장비 전부 레전더리 · 영웅 전부 레어 · 층 AI 짜기 · 두 팀 챔피언 물약.
+// 같은 팀 쌍 · 같은 시드로 규칙만 바꾼다 — __EXP.startFrac(시작에 남은 쿨 비율) · __EXP.buffFirst(같은 시각 준비면 버프 · 디버프 먼저).
+import { loadData, buildSystems, D } from '../ui/data.js';
+import { makeRng } from '../game_logic/rng.js';
+const q = new URL(location.href).searchParams;
+const N = +(q.get('n') || 400);
+const out = document.getElementById('out');
+const VARS = [
+    { key: 'now',       startFrac: 1,   buffFirst: false },
+    { key: 'ready',     startFrac: 0,   buffFirst: false },
+    { key: 'readyBuff', startFrac: 0,   buffFirst: true },
+    { key: 'half',      startFrac: 0.5, buffFirst: false },
+];
+const pct = (arr, p) => { const s = [...arr].sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.floor(p * s.length))]; };
+const mean = arr => arr.reduce((a, b) => a + b, 0) / (arr.length || 1);
+try {
+    await loadData('../data/');
+    const SYS = buildSystems(D);
+    const opts = { floorRules: true, rarityWeights: { legendary: 1 }, heroTier: 'rare' };
+    const floor = SYS.arena.floors.filter(f => f.tier === 'champion').at(-1);
+    const potions = floor ? SYS.arena.floorLoadout(floor.no) : null;
+    const pairs = [];
+    for (let s = 1; s <= N; s++) {
+        const A = SYS.arena.rollTierOpponent('champion', makeRng(1000 + s), [], opts);
+        const B = SYS.arena.rollTierOpponent('champion', makeRng(70000 + s), A.map(p => p.hero.name), opts);
+        pairs.push({ A, B, s });
+    }
+    const kindOf = id => { const d = SYS.skill.defs[id]; return !d ? 'other' : d.needsWeapon === false ? 'buff' : 'atk'; };
+    // 팀 구성 — 버프 · 디버프 스킬을 든 영웅 수
+    let buffHeroes = 0, heroes = 0;
+    for (const { A, B } of pairs) for (const p of [...A, ...B]) {
+        heroes++;
+        if ((p.actives ?? []).some(a => { const d = SYS.skill.defs[a.id]; return d && d.needsWeapon === false && d.cast !== 'aura' && d.cast !== 'auto'; })) buffHeroes++;
+    }
+    const res = { meta: { N, tier: 'champion', potions: potions ? potions.potions.length : 0, buffHeroesPct: +(buffHeroes / heroes * 100).toFixed(1) } };
+    for (const V of VARS) {
+        globalThis.__EXP = { startFrac: V.startFrac, buffFirst: V.buffFirst };
+        const dur = [], firstSkill = [], firstBuff = [], firstAtk = [], buffCasts = [], atkCasts = [], early3 = [], under10 = [];
+        let err = 0, ends = {};
+        for (const { A, B, s } of pairs) {
+            let r;
+            try { r = SYS.arena.fight(A, B, makeRng(90000 + s), potions, potions); } catch (e) { err++; if (err < 3) console.error(e); continue; }
+            dur.push(r.durationSec);
+            ends[r.reason] = (ends[r.reason] ?? 0) + 1;
+            let fs = null, fb = null, fa = null, nb = 0, na = 0, e3 = 0;
+            for (const e of r.timeline) {
+                if (e.e !== 'skill') continue;
+                const k = kindOf(e.s);
+                if (fs === null) fs = e.t;
+                if (k === 'buff') { nb++; if (fb === null) fb = e.t; }
+                else if (k === 'atk') { na++; if (fa === null) fa = e.t; }
+                if (e.t <= 3) e3++;
+            }
+            if (fs !== null) firstSkill.push(fs);
+            if (fb !== null) firstBuff.push(fb);
+            if (fa !== null) firstAtk.push(fa);
+            buffCasts.push(nb); atkCasts.push(na); early3.push(e3);
+        }
+        const f1 = x => +x.toFixed(1);
+        // 스킬별 — 든 영웅 하나당 판마다 시전 수 · 첫 시전 시각(나간 판만) · 한 번도 안 나간 판 %
+        const per = {};
+        for (const { A, B, s } of pairs) {
+            const r = SYS.arena.fight(A, B, makeRng(90000 + s), potions, potions);
+            const units = [...A.map((p, i) => [`p${i}`, p]), ...B.map((p, i) => [`e${i}`, p])];
+            for (const [key, p] of units) for (const a of p.actives ?? []) {
+                const d = SYS.skill.defs[a.id]; if (!d || d.cast === 'aura') continue;
+                const casts = r.timeline.filter(e => e.e === 'skill' && e.u === key && e.s === a.id);
+                const x = per[a.id] ??= { kind: kindOf(a.id), owner: d.ownerKind, tier: d.tier ?? null, cool: d.cool, held: 0, casts: 0, firstSum: 0, firstN: 0, none: 0 };
+                x.held++; x.casts += casts.length;
+                if (casts.length) { x.firstSum += casts[0].t; x.firstN++; } else x.none++;
+            }
+        }
+        const perOut = Object.fromEntries(Object.entries(per).map(([id, x]) => [id, { kind: x.kind, owner: x.owner, tier: x.tier, cool: x.cool, held: x.held, casts: +(x.casts / x.held).toFixed(2), first: x.firstN ? f1(x.firstSum / x.firstN) : null, nonePct: f1(x.none / x.held * 100) }]));
+        res[V.key] = { per: perOut,
+            n: dur.length, err, ends,
+            dur: { mean: f1(mean(dur)), p10: f1(pct(dur, 0.1)), p50: f1(pct(dur, 0.5)), p90: f1(pct(dur, 0.9)), under10: f1(dur.filter(d => d < 10).length / dur.length * 100) },
+            firstSkill: f1(mean(firstSkill)), firstBuff: f1(mean(firstBuff)), firstAtk: f1(mean(firstAtk)),
+            buffCasts: +mean(buffCasts).toFixed(2), atkCasts: +mean(atkCasts).toFixed(2), skills3s: +mean(early3).toFixed(2),
+        };
+    }
+    out.textContent = JSON.stringify(res, null, 1);
+    document.title = 'DONE';
+} catch (err) {
+    out.textContent = 'ERR ' + err.stack;
+    document.title = 'FAIL';
+}
+</script>

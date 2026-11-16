@@ -669,7 +669,7 @@ const enemyList = state => state.enemies.map(e => L(e.name)).join(', ');
 const clsName = id => { const c = D.classes.find(x => x.id === id); return c ? L(c) : (id ?? ''); };
 /* 직업 자리 — **전직한 영웅은 전직 이름**(`hero.advance` = 갈래 id → `advance.csv` 이름 · 결투 상대 영웅도) [2026-11-13 사용자 지시 · ADR-1076].
    전직 전 · 전직하는 중(`advance` 가 아직 빈다) · 몬스터는 기본 직업 이름 */
-const advName = id => { const a = (D.advanceRows ?? []).find(r => r.advance_id === id); return a ? L({ ko: a.name_kr, en: a.name_en }) : ''; };
+const advName = id => { const a = (D.advanceRows ?? []).find(r => r.advance_id === id); return a ? L({ ko: a.name_kr, en: a.name_en, zh: a.name_zh }) : ''; };
 const jobName = (hero, cls) => (hero?.advance && advName(hero.advance)) || clsName(cls);
 const gradeLabel = u => u.grade === 'elite' ? t('kind.elite')
     : u.grade === 'stage_boss' ? t('kind.boss')
@@ -1125,7 +1125,7 @@ export function unitPreview(u, { combatOf = null, itemOf = null, itemTipOf = nul
 }
 
 /** HP 막대 · 글자 — 방어막이 있으면 빨강 오른쪽에 파랑 · 글자는 HP + 방어막(파랑) · 합이 최대 HP 를 넘으면 막대 전체를 그 합에 맞춘다 (§4-2 · ADR-1027).
- *  표시 변환일 뿐이다 — `u.shield` 는 시뮬이 실어 온 값(`buff.amt` · `hit.bar`)이고 물약 판정은 실제 HP 를 본다 */
+ *  표시 변환일 뿐이다 — `u.shield` 는 시뮬이 실어 온 **보호막 조각 합**(`buff.bar` · `hit.bar` · `hit.abar` · `dot.bar` · `bar` 이벤트 — ADR-1217)이고 물약 판정은 실제 HP 를 본다 */
 function hpView(u) {
     const hp = Math.max(0, u.hp);
     const shield = hp > 0 ? u.shield?.amt ?? 0 : 0;
@@ -1133,6 +1133,8 @@ function hpView(u) {
     return { hp: hp / whole, shield: shield / whole, on: shield > 0, text: `${Math.round(hp + shield)} / ${u.hpMax}` };
 }
 const shieldTf = v => `translateX(${v.hp * 100}%) scaleX(${v.shield})`;
+/** 방어막 합을 받는다 — 시뮬이 실은 그 순간의 조각 합 · 0 이면 걷는다 (ADR-1217) */
+const setShield = (u, amt) => { u.shield = amt > 0 ? { amt } : null; };
 
 function refreshUnit(state, u) {
     if (!u.node || state.catchUp) return;
@@ -1377,6 +1379,26 @@ function traitEffectText(f) {
     return t(has(key) ? key : 'sk.masteryEffect', { stat: L(M.statLabel(f.stat, fb)), v });
 }
 
+/* ── 부류 버프 칩 — 정예 특성 칩 뒤 · 상시 [2026-11-16 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-1218 · R518] ──
+   몬스터 = 로직이 실어 온 `family {id, value, n}`(나이트메어부터 · 부족은 소환으로 다시 선 몬스터만) · 영웅 = 이형이 깎은 저항 창(`fam:aberration`) ·
+   그림 = `icons/battle_buffs/fam_<id>` 를 본문 색으로 칠한다 · 부족은 그림이 없어 소환 스킬 그림 · 이름 = `monster_base.csv` */
+const FAM_SUMMON = 'pri_summon';
+const famIconHtml = id => {
+    if (id === 'Tribe') return skillImg(skillInfo(FAM_SUMMON));
+    const art = `./assets/art/icons/battle_buffs/fam_${String(id).toLowerCase()}${M.ICON_EXT}`;
+    return `<i class="sk-icon-mask trait-ico" aria-hidden="true" style="background:var(--text-secondary);-webkit-mask-image:url('${art}');mask-image:url('${art}')"></i>`;
+};
+const famName = id => {
+    const r = (D.monsterBaseRows ?? []).find(x => x.base_id === id);
+    return r ? L({ ko: r.name_kr, en: r.name_en, zh: r.name_zh }) : id;
+};
+/** 효과 한 줄 — 값은 로직이 실어 온 것(비율 · 부족은 더하는 수) */
+function famEffectText(f) {
+    const hl = s => `<span class="tip-hl">${s}</span>`;
+    const v = f.id === 'Tribe' ? hl(f.value) : hl(M.pctText(f.value));
+    return t(`bt.fam.${f.id}`, { v, n: hl(f.n), name: famName(f.id) });
+}
+
 /**
  * 창 뱃지 줄 — 걸려 있는 창 하나 = 칩 하나. 칩은 그 창을 만든 스킬의 아이콘이고 이름·실제 적용 효과·남은 시간은 전용 툴팁이 든다.
  * **이로운 창은 초록 · 해로운 창은 빨강** 테두리 — 가르는 것은 창의 값 부호다(`buff` 이벤트의 `v`).
@@ -1394,10 +1416,12 @@ function refreshBuffs(u, now) {
     const live = u.hp > 0 ? [...(u.buffs ?? new Map())] : [];
     // 정예 특성 칩 — 줄 맨 앞 · 산 동안만(쓰러지면 다른 창처럼 걷힌다 · ADR-1194)
     const traits = u.hp > 0 ? (u.traits ?? []).filter(f => f?.stat) : [];
+    // 부류 버프 칩 — 특성 칩 바로 뒤 · 산 동안만 (ADR-1218)
+    const fam = u.hp > 0 && u.family?.id ? u.family : null;
     const stag = u.hp > 0 && staggered(u, now);
     const stagUntil = stag ? u.stalls?.[u.stalls.length - 1]?.to ?? now : null;
     // 끝 시각도 지문이다 — 같은 창이 갱신되면 칩 노드와 툴팁의 `until`도 새 값으로 갈아야 한다.
-    const sig = `t${traits.length}|` + live.map(([id, b]) => `${id}:${b?.stat ?? ''}:${b?.v ?? 0}:${b?.until ?? 'always'}`).join('|')
+    const sig = `t${traits.length}|f${fam?.id ?? ''}|` + live.map(([id, b]) => `${id}:${b?.stat ?? ''}:${b?.v ?? 0}:${b?.until ?? 'always'}`).join('|')
         + (stag ? `|stagger:${stagUntil}` : '');
     if (row.dataset.sig === sig) return;      // 안 바뀌었으면 손대지 않는다 — 매 틱 다시 그리는 자리다
     row.dataset.sig = sig;
@@ -1407,7 +1431,10 @@ function refreshBuffs(u, now) {
     if (open?.dataset.effectOwner === String(u.key)) hideTip();
     // 상태이상 칩(`b.k` — 열쇠가 상태이상 이름)은 **늘 해롭다** · 그림은 적용 중인 것을 건 스킬(`b.s`) · 이름은 상태이상 (R178 · ADR-0405)
     row.innerHTML = traits.map((f, i) => `<span class="buff-chip good trait" data-trait="${i}">${traitIconHtml(f)}</span>`).join('')
+        + (fam ? `<span class="buff-chip good${fam.id === 'Tribe' ? '' : ' trait'}" data-fam="1">${famIconHtml(fam.id)}</span>` : '')
         + live.map(([id, b]) => {
+            // 영웅의 이형 저항 감소 창 — 부류 그림 · 늘 해롭다 (ADR-1218)
+            if (id === 'fam:aberration') return `<span class="buff-chip bad trait" data-effect="${id}">${famIconHtml('Aberration')}</span>`;
             const info = skillInfo(b?.s ?? id);
             return `<span class="buff-chip ${b?.k || (b?.v ?? 0) < 0 ? 'bad' : 'good'}" data-effect="${id}">${skillImg(info)}</span>`;
         }).join('') + (stag ? '<span class="buff-chip stagger" data-stagger="1"></span>' : '');
@@ -1418,11 +1445,22 @@ function refreshBuffs(u, now) {
         chip.setAttribute('aria-label', name);
         bindTipNode(chip, () => effectTipCard({ owner: u.key, name, until: null, iconHtml: traitIconHtml(f), summaryHtml: traitEffectText(f) }));
     });
+    const famChip = row.querySelector('[data-fam]');
+    if (famChip) {
+        famChip.setAttribute('aria-label', famName(fam.id));
+        bindTipNode(famChip, () => effectTipCard({ owner: u.key, name: famName(fam.id), until: null, iconHtml: famIconHtml(fam.id), summaryHtml: famEffectText(fam) }));
+    }
 
     const byId = new Map(live);
     row.querySelectorAll('[data-effect]').forEach(chip => {
         const id = chip.dataset.effect;
         const b = byId.get(id);
+        if (id === 'fam:aberration') {
+            const name = famName('Aberration');
+            chip.setAttribute('aria-label', `${name} — ${effectSummaryText(b?.stat, b?.v)}`);
+            bindTipNode(chip, () => effectTipCard({ owner: u.key, name, stat: b?.stat, value: b?.v, until: null, now: u.buffTipNow, iconHtml: famIconHtml('Aberration') }));
+            return;
+        }
         const info = skillInfo(b?.s ?? id);
         const name = b?.k ? t(`bt.ail.${b.k}`) : L(info.name);
         // 창의 원소 — 그 창을 건 스킬의 **첫 줄**이 거는 걸린 효과가 든다(`skill_status.csv` · 이벤트가 창 열쇠를 안 실어 칩은 스킬 id 로 선다 · 부채 #68 —
@@ -1901,6 +1939,7 @@ const enemyEntry = (e, at) => ({
     // 죄종 — 몬스터는 제 칸 · 결투 상대 영웅은 영웅의 죄종(이름 줄 칩이 아군과 같다 · ADR-1078)
     key: e.key, side: 'enemy', monsterId: e.monsterId, grade: e.grade, sin: e.sin ?? e.hero?.sin, traits: e.traits,
     eliteTraits: TRAIT_DEMO ? demoEliteTraits(e) : eliteTraitView(e.traits),   // 카드 위 특성 칩 (ADR-0768) — 로직이 굴린 칸 · 개발용 `&traits=` 면 예시로 덮는다
+    family: e.family ?? null,   // 부류 버프 칩 — 로직이 실어 온 켜진 부류 `{id, value, n}` (R518 · ADR-1218)
 
     hero: e.hero ?? null, cls: e.hero?.cls,
     // 게이지는 등장 지연 뒤 빈 채로 찬다 — 시뮬이 실어 온 `fillAt` (R200 · ADR-0483) · 마법 무기의 칸은 0 에서
@@ -1961,6 +2000,8 @@ function apply(state, root, opts, ev) {
                 }
                 // 되살아남 — 시뮬과 같다: HP 가득 · 창은 오오라(`until: null`)만 남는다 · 경직 창 비움 · 스킬은 부른 시각부터 쿨 한 바퀴(시뮬이 실은 `ready` · R427) (INTERFACE §2-6 `call`)
                 Object.assign(old, { hp: e.hpMax, hpMax: e.hpMax, lastAct: ev.t, stalls: [] });
+                // 부족 버프로 다시 선 몬스터는 능력치 · 표시값이 바뀌어 온다(R518 · ADR-1218) — 시뮬이 실은 값을 그대로 받는다
+                Object.assign(old, { family: e.family ?? null, period: e.period, atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax, stats: e.stats ?? old.stats, sheet: e.sheet ?? old.sheet });
                 for (const [id, b] of [...old.buffs]) if (b.until !== null) old.buffs.delete(id);
                 old.skills = (e.actives ?? []).map((id, i) => ({ ...skillInfo(id), ...slotLv(e.up, i), readyAt: slotReady(e.ready?.[i], ev.t), firedAt: ev.t }));
                 refreshUnit(state, old);
@@ -2012,10 +2053,16 @@ function apply(state, root, opts, ev) {
         case 'hit': {
             const a = U(ev.a), d = U(ev.d);
             const skill = strikeLabel(ev.s);
-            if (a) { markActed(a, ev.t); if (ev.ahp !== undefined) { a.hp = ev.ahp; refreshUnit(state, a); } }
+            if (a) {
+                markActed(a, ev.t);
+                // 흡혈 — 물리는 HP(`ahp`) · 원소는 보호막 합(`abar` · R517 · ADR-1217)
+                if (ev.ahp !== undefined) a.hp = ev.ahp;
+                if (ev.abar !== undefined) setShield(a, ev.abar);
+                if (ev.ahp !== undefined || ev.abar !== undefined) refreshUnit(state, a);
+            }
             if (d) {
                 d.hp = ev.dhp;
-                if (ev.bar !== undefined && d.shield) d.shield.amt = ev.bar;   // 흡수 후 잔량 (ADR-1027)
+                if (ev.bar !== undefined) setShield(d, ev.bar);   // 흡수 후 조각 합 (ADR-1027 · ADR-1217)
                 popup(state, d, `-${ev.dmg}`, dmgPop(ev.ty, ev.crit));
                 refreshUnit(state, d);
             }
@@ -2107,7 +2154,7 @@ function apply(state, root, opts, ev) {
         case 'dot': {
             // 지속 피해 — 중독 틱 (2026-09-28 · R178 · ADR-0405). 비직격이라 행동이 아니다(`markActed` 없음) · 주체 = 그 중독을 건 쪽 · 이름 = 상태이상
             const a = U(ev.a), d = U(ev.d);
-            if (d) { d.hp = ev.dhp; popup(state, d, `-${ev.dmg}`, dmgPop(ev.ty)); refreshUnit(state, d); }
+            if (d) { d.hp = ev.dhp; if (ev.bar !== undefined) setShield(d, ev.bar); popup(state, d, `-${ev.dmg}`, dmgPop(ev.ty)); refreshUnit(state, d); }
             if (a && d) {
                 // 이름 = 상태이상 · 오오라 피해(`k = pulse` — 홀리 파이어 · 2026-10-16)는 상태이상이 아니라 그 스킬 이름이다
                 logLine(state, root, a.side, 'dot', L(a.name), ev.s ? dmgIcon(ev.s) : '', ev.k === 'pulse' ? strikeLabel(ev.s) : t(`bt.ail.${ev.k}`), L(d.name), ev.dmg, ev.ty ? `dt-${ev.ty}` : '');
@@ -2179,6 +2226,11 @@ function apply(state, root, opts, ev) {
             if (u) { u.hp = ev.dhp; refreshUnit(state, u); }
             break;
         }
+        case 'bar': {     // 보호막 합이 바뀌었다(조각이 서거나 시간이 다 됐다 · R517 · ADR-1217) — 파랑만 고친다 · 팝업 · 로그 없음
+            const u = U(ev.u);
+            if (u) { setShield(u, ev.amt); refreshUnit(state, u); }
+            break;
+        }
         case 'pay': {     // HP 소모 — 스킬을 쓰며 낸 HP(차지 · R355). 피해가 아니라 작고 흐린 숫자만 · 로그 · 피격 반응은 없다 (ADR-0781)
             const u = U(ev.u);
             if (u) { u.hp = ev.dhp; popup(state, u, `-${ev.amt}`, 'pay'); refreshUnit(state, u); }
@@ -2205,8 +2257,8 @@ function apply(state, root, opts, ev) {
             }
             // 최대 HP 를 민 창 — 시뮬이 민 값을 그대로 받는다. 재생기는 계산하지 않는다 (INTERFACE §6 · 부채 #50)
             if (ev.hpMax !== undefined) { u.hpMax = ev.hpMax; u.hp = ev.dhp; }
-            // 방어막 — 총량을 받는다 · 시뮬의 `barrier` 가 한 칸이라 새 것이 앞 것을 덮는다 (ADR-1027)
-            if (ev.stat === 'barrier_pct') u.shield = { amt: ev.amt, s: ev.s };
+            // 방어막 — 건 뒤의 조각 합(`bar`)을 받는다 · 다른 출처의 보호막은 그 합에 이미 들었다 (ADR-1027 · ADR-1217)
+            if (ev.stat === 'barrier_pct') setShield(u, ev.bar ?? ev.amt);
             refreshUnit(state, u);
             fxBuff(state, u, ev);   // 좋은 창 · 나쁜 창 · 방벽 — 스킬만 · 오오라 없음 (ADR-0409)
             // 팝업은 띄우지 않는다 — 시전은 `skill` 이벤트가 이미 알렸고, 파티 창이면 대상마다 같은 이름이 세 번 뜬다.
@@ -2254,7 +2306,7 @@ function apply(state, root, opts, ev) {
             if (!u) break;
             const aura = u.buffs?.get(ev.k ?? ev.s)?.until === null;   // 오오라 창이 닫힐 때도 로그를 안 쓴다 (R98)
             u.buffs?.delete(ev.k ?? ev.s);   // 상태이상은 `k` 로 든 칩 (R178)
-            if (u.shield?.s === ev.s) u.shield = null;   // 방어막 창이 닫혔다 — 덮인 앞 스킬의 창이 닫힐 때는 안 걷는다 (ADR-1027)
+            // 방어막은 여기서 안 걷는다 — 보호막 조각이 끝나면 시뮬이 `bar` 로 남은 합을 싣는다 (ADR-1217)
             if (ev.rank !== undefined) setRank(u, ev.rank);   // 진형 붕괴가 풀렸다 — 원래 줄로 (R424)
             // 최대 HP 를 밀던 창이 닫혔다 — 줄어든 최대치와 **잘린** 현재 HP 를 그대로 받는다 (INTERFACE §6 · 부채 #50)
             if (ev.hpMax !== undefined) { u.hpMax = ev.hpMax; u.hp = ev.dhp; }

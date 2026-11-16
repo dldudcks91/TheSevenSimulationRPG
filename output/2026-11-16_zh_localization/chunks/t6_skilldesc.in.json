@@ -1,0 +1,2450 @@
+[
+ {
+  "key": "csv|advance.csv|berserker|desc|피를 바쳐 광기를 불태운다. 체력을 소모해 스킬 피해를 높이고 강력한 일격을 날린다.",
+  "ko": "피를 바쳐 광기를 불태운다. 체력을 소모해 스킬 피해를 높이고 강력한 일격을 날린다.",
+  "en": "Blood feeds a blazing fury. Spends health to empower skills and deliver a crushing blow.",
+  "ctx": "advance.csv 행 berserker · 열 desc"
+ },
+ {
+  "key": "csv|advance.csv|barbarian|desc|폭풍처럼 휘몰아쳐 대지를 쪼갠다. 강력한 범위 스킬로 적들을 휩쓸고 진형을 무너뜨린다.",
+  "ko": "폭풍처럼 휘몰아쳐 대지를 쪼갠다. 강력한 범위 스킬로 적들을 휩쓸고 진형을 무너뜨린다.",
+  "en": "Sweeps across the field like a storm and splits the earth. Powerful area skills tear through enemies and break their formation.",
+  "ctx": "advance.csv 행 barbarian · 열 desc"
+ },
+ {
+  "key": "csv|advance.csv|vanguard|desc|전장의 맨 앞에서 깃발을 들고 포효한다. 스스로 버티며 아군의 피해를 높이고 적의 피해를 낮춘다.",
+  "ko": "전장의 맨 앞에서 깃발을 들고 포효한다. 스스로 버티며 아군의 피해를 높이고 적의 피해를 낮춘다.",
+  "en": "Raises a banner and roars at the front of the battle. Endures attacks while boosting allied damage and weakening the enemy.",
+  "ctx": "advance.csv 행 vanguard · 열 desc"
+ },
+ {
+  "key": "csv|advance.csv|guardian|desc|무너지는 전열 앞에 홀로 벽이 된다. 아군의 피해를 대신 받고 맞을수록 단단해진다.",
+  "ko": "무너지는 전열 앞에 홀로 벽이 된다. 아군의 피해를 대신 받고 맞을수록 단단해진다.",
+  "en": "Becomes a wall before the crumbling line. Takes damage for allies and grows tougher with each hit.",
+  "ctx": "advance.csv 행 guardian · 열 desc"
+ },
+ {
+  "key": "csv|advance.csv|paladin|desc|빛의 맹세가 동료의 몸과 무기를 감싼다. 오오라로 파티의 공격을 강화하고 상태이상 시간을 줄인다.",
+  "ko": "빛의 맹세가 동료의 몸과 무기를 감싼다. 오오라로 파티의 공격을 강화하고 상태이상 시간을 줄인다.",
+  "en": "An oath of light surrounds allied arms and armor. Auras strengthen the party's attacks and shorten harmful effects.",
+  "ctx": "advance.csv 행 paladin · 열 desc"
+ },
+ {
+  "key": "csv|advance.csv|crusader|desc|성전의 검이 적의 후열까지 심판을 내린다. 공격 속도를 높이고 상처 입은 적을 강하게 몰아붙인다.",
+  "ko": "성전의 검이 적의 후열까지 심판을 내린다. 공격 속도를 높이고 상처 입은 적을 강하게 몰아붙인다.",
+  "en": "The sword of the crusade carries judgment into the enemy rear. Attacks faster and strikes wounded foes harder.",
+  "ctx": "advance.csv 행 crusader · 열 desc"
+ },
+ {
+  "key": "csv|advance.csv|fire_mage|desc|하늘에서 떨어진 불꽃이 전장을 재로 덮는다. 운석과 히드라로 피해를 쌓고 불씨를 폭발시킨다.",
+  "ko": "하늘에서 떨어진 불꽃이 전장을 재로 덮는다. 운석과 히드라로 피해를 쌓고 불씨를 폭발시킨다.",
+  "en": "Fire falls from the sky and blankets the field in ash. Meteors and hydras deal damage while embers build up and burst.",
+  "ctx": "advance.csv 행 fire_mage · 열 desc"
+ },
+ {
+  "key": "csv|advance.csv|frost_mage|desc|숨결마저 얼어붙은 전장에 눈보라가 몰아친다. 적을 얼리고 아군을 원소 피해에서 지키는 보호막을 친다.",
+  "ko": "숨결마저 얼어붙은 전장에 눈보라가 몰아친다. 적을 얼리고 아군을 원소 피해에서 지키는 보호막을 친다.",
+  "en": "A blizzard sweeps a battlefield where even breath freezes. Freezes enemies and shields allies from elemental damage.",
+  "ctx": "advance.csv 행 frost_mage · 열 desc"
+ },
+ {
+  "key": "csv|advance.csv|thunder_mage|desc|벼락이 예고 없이 적의 머리 위로 내리꽂힌다. 무작위 벼락과 광역 번개로 적을 공격하고 쌓인 힘을 한곳에 쏟아낸다.",
+  "ko": "벼락이 예고 없이 적의 머리 위로 내리꽂힌다. 무작위 벼락과 광역 번개로 적을 공격하고 쌓인 힘을 한곳에 쏟아낸다.",
+  "en": "Lightning falls without warning on enemy heads. Random strikes and wide arcs hit foes before stored power crashes onto one target.",
+  "ctx": "advance.csv 행 thunder_mage · 열 desc"
+ },
+ {
+  "key": "csv|advance.csv|sniper|desc|숨을 멈춘 뒤 전장의 한 점을 겨눈다. 공격 속도를 희생해 적 하나에게 강력한 스킬 피해를 집중한다.",
+  "ko": "숨을 멈춘 뒤 전장의 한 점을 겨눈다. 공격 속도를 희생해 적 하나에게 강력한 스킬 피해를 집중한다.",
+  "en": "Holds a breath and fixes on a single point in the battle. Trades attack speed for powerful skill damage against one enemy.",
+  "ctx": "advance.csv 행 sniper · 열 desc"
+ },
+ {
+  "key": "csv|advance.csv|bowmaster|desc|시위가 쉼 없이 울리고 화살비가 쏟아진다. 기본 공격의 속도와 위력을 바꾸고 여러 적을 꿰뚫는다.",
+  "ko": "시위가 쉼 없이 울리고 화살비가 쏟아진다. 기본 공격의 속도와 위력을 바꾸고 여러 적을 꿰뚫는다.",
+  "en": "The bowstring never rests and arrows rain down. Adjusts basic attack speed and power to pierce multiple enemies.",
+  "ctx": "advance.csv 행 bowmaster · 열 desc"
+ },
+ {
+  "key": "csv|advance.csv|ranger|desc|야생의 눈이 사냥감의 발자취를 놓치지 않는다. 표식과 지원 사격으로 아군을 돕고 덫으로 적의 행동을 방해한다.",
+  "ko": "야생의 눈이 사냥감의 발자취를 놓치지 않는다. 표식과 지원 사격으로 아군을 돕고 덫으로 적의 행동을 방해한다.",
+  "en": "Eyes of the wild never lose their prey. Marks targets and fires in support of allies while traps disrupt enemies.",
+  "ctx": "advance.csv 행 ranger · 열 desc"
+ },
+ {
+  "key": "csv|advance.csv|bishop|desc|죽음의 문턱에서도 축복의 손길은 닿는다. 치명적인 피해를 버티게 하고 상태이상을 지우며 쓰러진 아군을 살린다.",
+  "ko": "죽음의 문턱에서도 축복의 손길은 닿는다. 치명적인 피해를 버티게 하고 상태이상을 지우며 쓰러진 아군을 살린다.",
+  "en": "A blessing reaches allies even at death's door. Helps them survive fatal damage and clears harmful effects before reviving the fallen.",
+  "ctx": "advance.csv 행 bishop · 열 desc"
+ },
+ {
+  "key": "csv|advance.csv|black_priest|desc|자비를 거둔 사제가 죄를 벌로 돌려준다. 적의 약화 효과만큼 피해를 키우고 버프를 벗기며 아군을 회복한다.",
+  "ko": "자비를 거둔 사제가 죄를 벌로 돌려준다. 적의 약화 효과만큼 피해를 키우고 버프를 벗기며 아군을 회복한다.",
+  "en": "A priest without mercy turns sin into punishment. Deals more damage to weakened foes and strips their buffs while healing allies.",
+  "ctx": "advance.csv 행 black_priest · 열 desc"
+ },
+ {
+  "key": "csv|advance.csv|monk|desc|기도를 마친 주먹이 적의 전열을 가른다. 피해를 버티고 전열을 휩쓸며 자신을 때린 적에게 반격한다.",
+  "ko": "기도를 마친 주먹이 적의 전열을 가른다. 피해를 버티고 전열을 휩쓸며 자신을 때린 적에게 반격한다.",
+  "en": "A fist hardened by prayer cuts through the enemy front. Endures blows and sweeps the front line before countering attackers.",
+  "ctx": "advance.csv 행 monk · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_meteor|desc|데미지 증가",
+  "ko": "데미지 증가",
+  "en": "More damage",
+  "ctx": "advance_node.csv 행 mag_meteor · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_meteor|bonus|맞은 적에게 화상",
+  "ko": "맞은 적에게 화상",
+  "en": "Burns the enemy hit",
+  "ctx": "advance_node.csv 행 mag_meteor · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_meteor|desc|작은 운석 {a}개가 무작위 적에게 떨어진다(메테오의 {v})",
+  "ko": "작은 운석 {a}개가 무작위 적에게 떨어진다(메테오의 {v})",
+  "en": "{a} small meteors fall on random enemies ({v} of Meteor)",
+  "ctx": "advance_node.csv 행 mag_meteor · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_meteor|bonus|작은 운석이 하나 더",
+  "ko": "작은 운석이 하나 더",
+  "en": "One more small meteor",
+  "ctx": "advance_node.csv 행 mag_meteor · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_meteor|desc|맞은 적이 {a}초 동안 메테오의 {v}만큼 불탄다",
+  "ko": "맞은 적이 {a}초 동안 메테오의 {v}만큼 불탄다",
+  "en": "The enemy hit burns for {v} of Meteor over {a}s",
+  "ctx": "advance_node.csv 행 mag_meteor · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_meteor|bonus|불길이 같은 줄 옆 적에게 옮는다",
+  "ko": "불길이 같은 줄 옆 적에게 옮는다",
+  "en": "The flames spread to the same row",
+  "ctx": "advance_node.csv 행 mag_meteor · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_ember|desc|터지는 데미지 증가",
+  "ko": "터지는 데미지 증가",
+  "en": "More burst damage",
+  "ctx": "advance_node.csv 행 mag_ember · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_ember|bonus|터지는 데 필요한 겹이 하나 준다",
+  "ko": "터지는 데 필요한 겹이 하나 준다",
+  "en": "Needs one fewer stack to burst",
+  "ctx": "advance_node.csv 행 mag_ember · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_ember|desc|터질 때 같은 줄 적에게 {v}로 번진다",
+  "ko": "터질 때 같은 줄 적에게 {v}로 번진다",
+  "en": "Bursts spread to the same row at {v}",
+  "ctx": "advance_node.csv 행 mag_ember · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_ember|bonus|번진 적에게 불씨 한 겹",
+  "ko": "번진 적에게 불씨 한 겹",
+  "en": "Spread leaves one Ember stack",
+  "ctx": "advance_node.csv 행 mag_ember · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_ember|desc|터진 적에게 {v} 확률로 화상",
+  "ko": "터진 적에게 {v} 확률로 화상",
+  "en": "Burst enemies are Burned ({v} chance)",
+  "ctx": "advance_node.csv 행 mag_ember · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_ember|bonus|화상 걸린 적이 받는 보호막 {v} 감소",
+  "ko": "화상 걸린 적이 받는 보호막 {v} 감소",
+  "en": "Burned enemies get {v} less from shields",
+  "ctx": "advance_node.csv 행 mag_ember · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_hydra|desc|지속 시간 증가",
+  "ko": "지속 시간 증가",
+  "en": "Longer duration",
+  "ctx": "advance_node.csv 행 mag_hydra · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_hydra|bonus|머리가 둘 — 동시에 두 곳을 문다",
+  "ko": "머리가 둘 — 동시에 두 곳을 문다",
+  "en": "Two heads — bites two at once",
+  "ctx": "advance_node.csv 행 mag_hydra · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_hydra|desc|무는 간격 {v} 단축",
+  "ko": "무는 간격 {v} 단축",
+  "en": "Bites {v} faster",
+  "ctx": "advance_node.csv 행 mag_hydra · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_hydra|bonus|같은 적을 연달아 물 때마다 {v} 세진다",
+  "ko": "같은 적을 연달아 물 때마다 {v} 세진다",
+  "en": "Each repeat bite on the same enemy hits {v} harder",
+  "ctx": "advance_node.csv 행 mag_hydra · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_hydra|desc|물 때마다 화염 저항 {v} 감소(최대 {a}겹)",
+  "ko": "물 때마다 화염 저항 {v} 감소(최대 {a}겹)",
+  "en": "Each bite lowers Fire Resistance by {v} (up to {a} stacks)",
+  "ctx": "advance_node.csv 행 mag_hydra · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_hydra|bonus|저항 감소 상한 +{v}겹",
+  "ko": "저항 감소 상한 +{v}겹",
+  "en": "Resistance shred cap +{v} stacks",
+  "ctx": "advance_node.csv 행 mag_hydra · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_frozenorb|desc|데미지 증가",
+  "ko": "데미지 증가",
+  "en": "More damage",
+  "ctx": "advance_node.csv 행 mag_frozenorb · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_frozenorb|bonus|마지막 방이 전열 전원에게 {v} 한 방",
+  "ko": "마지막 방이 전열 전원에게 {v} 한 방",
+  "en": "The last tick hits the whole front row for {v}",
+  "ctx": "advance_node.csv 행 mag_frozenorb · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_frozenorb|desc|같은 시간에 {v}방 더 긁는다",
+  "ko": "같은 시간에 {v}방 더 긁는다",
+  "en": "{v} more ticks in the same time",
+  "ctx": "advance_node.csv 행 mag_frozenorb · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_frozenorb|bonus|긁는 동안 받는 피해 {v} 감소",
+  "ko": "긁는 동안 받는 피해 {v} 감소",
+  "en": "Take {v} less damage while channeling",
+  "ctx": "advance_node.csv 행 mag_frozenorb · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_frozenorb|desc|방마다 후열 무작위 하나에게 조각({v} · 결빙)",
+  "ko": "방마다 후열 무작위 하나에게 조각({v} · 결빙)",
+  "en": "Each tick a shard hits a random back-row enemy ({v} · Freeze)",
+  "ctx": "advance_node.csv 행 mag_frozenorb · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_frozenorb|bonus|조각이 둘",
+  "ko": "조각이 둘",
+  "en": "Two shards",
+  "ctx": "advance_node.csv 행 mag_frozenorb · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_blizzard|desc|데미지 증가",
+  "ko": "데미지 증가",
+  "en": "More damage",
+  "ctx": "advance_node.csv 행 mag_blizzard · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_blizzard|bonus|마지막 틱에 우박 — 적 전원 {v}",
+  "ko": "마지막 틱에 우박 — 적 전원 {v}",
+  "en": "Hail on the last tick — {v} to every enemy",
+  "ctx": "advance_node.csv 행 mag_blizzard · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_blizzard|desc|구름 속에서 틱마다 피해 {v}씩 증가",
+  "ko": "구름 속에서 틱마다 피해 {v}씩 증가",
+  "en": "Damage grows by {v} each tick inside the storm",
+  "ctx": "advance_node.csv 행 mag_blizzard · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_blizzard|bonus|쌓인 세기가 다음 블리자드로 이어진다",
+  "ko": "쌓인 세기가 다음 블리자드로 이어진다",
+  "en": "The build-up carries into the next Blizzard",
+  "ctx": "advance_node.csv 행 mag_blizzard · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_blizzard|desc|구름 속 적이 받는 피해 {v} 증가",
+  "ko": "구름 속 적이 받는 피해 {v} 증가",
+  "en": "Enemies in the storm take {v} more damage",
+  "ctx": "advance_node.csv 행 mag_blizzard · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_blizzard|bonus|받는 피해 증가가 걷힌 뒤 {v}초 남는다",
+  "ko": "받는 피해 증가가 걷힌 뒤 {v}초 남는다",
+  "en": "The vulnerability lingers {v}s after the storm",
+  "ctx": "advance_node.csv 행 mag_blizzard · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_frostarmor|desc|보호막 증가",
+  "ko": "보호막 증가",
+  "en": "Stronger shield",
+  "ctx": "advance_node.csv 행 mag_frostarmor · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_frostarmor|bonus|깨지면 한 번 다시 찬다(처음의 {v})",
+  "ko": "깨지면 한 번 다시 찬다(처음의 {v})",
+  "en": "Refills once when broken ({v} of the first)",
+  "ctx": "advance_node.csv 행 mag_frostarmor · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_frostarmor|desc|물리 피해도 {v} 막는다",
+  "ko": "물리 피해도 {v} 막는다",
+  "en": "Also absorbs {v} of physical damage",
+  "ctx": "advance_node.csv 행 mag_frostarmor · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_frostarmor|bonus|물리를 막는 몫 두 배",
+  "ko": "물리를 막는 몫 두 배",
+  "en": "Doubles the physical share",
+  "ctx": "advance_node.csv 행 mag_frostarmor · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_frostarmor|desc|깨질 때 깬 적에게 냉기 {v}(결빙)",
+  "ko": "깨질 때 깬 적에게 냉기 {v}(결빙)",
+  "en": "When broken, deals {v} Cold to the breaker (Freeze)",
+  "ctx": "advance_node.csv 행 mag_frostarmor · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_frostarmor|bonus|터짐이 깬 적의 같은 줄 전원",
+  "ko": "터짐이 깬 적의 같은 줄 전원",
+  "en": "The burst hits the breaker's whole row",
+  "ctx": "advance_node.csv 행 mag_frostarmor · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_thunderstrike|desc|데미지 증가",
+  "ko": "데미지 증가",
+  "en": "More damage",
+  "ctx": "advance_node.csv 행 mag_thunderstrike · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_thunderstrike|bonus|벼락이 옆 적에게 {v} 튄다",
+  "ko": "벼락이 옆 적에게 {v} 튄다",
+  "en": "Bolts fork to a neighbor for {v}",
+  "ctx": "advance_node.csv 행 mag_thunderstrike · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_thunderstrike|desc|「한 번 더」 최대 +{v}",
+  "ko": "「한 번 더」 최대 +{v}",
+  "en": "\"Strike again\" cap +{v}",
+  "ctx": "advance_node.csv 행 mag_thunderstrike · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_thunderstrike|bonus|「한 번 더」가 다른 적에게 튈 수 있다",
+  "ko": "「한 번 더」가 다른 적에게 튈 수 있다",
+  "en": "\"Strike again\" may jump to another enemy",
+  "ctx": "advance_node.csv 행 mag_thunderstrike · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_thunderstrike|desc|맞은 적 {v} 확률로 {a}초 스턴",
+  "ko": "맞은 적 {v} 확률로 {a}초 스턴",
+  "en": "{v} chance to Stun the enemy hit for {a}s",
+  "ctx": "advance_node.csv 행 mag_thunderstrike · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_thunderstrike|bonus|스턴 시간 두 배",
+  "ko": "스턴 시간 두 배",
+  "en": "Double Stun duration",
+  "ctx": "advance_node.csv 행 mag_thunderstrike · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_nova|desc|쿨타임 감소",
+  "ko": "쿨타임 감소",
+  "en": "Shorter cooldown",
+  "ctx": "advance_node.csv 행 mag_nova · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_nova|bonus|두 번 퍼진다(두 번째는 {v})",
+  "ko": "두 번 퍼진다(두 번째는 {v})",
+  "en": "Pulses twice (the second at {v})",
+  "ctx": "advance_node.csv 행 mag_nova · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_nova|desc|쓸 때마다 다음 노바 {v} 세진다(최대 {a}겹 · 라운드마다 처음부터)",
+  "ko": "쓸 때마다 다음 노바 {v} 세진다(최대 {a}겹 · 라운드마다 처음부터)",
+  "en": "Each cast makes the next Nova {v} stronger (up to {a} · resets each round)",
+  "ctx": "advance_node.csv 행 mag_nova · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_nova|bonus|쌓인 세기가 라운드를 넘는다",
+  "ko": "쌓인 세기가 라운드를 넘는다",
+  "en": "The build-up carries across rounds",
+  "ctx": "advance_node.csv 행 mag_nova · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_nova|desc|맞은 적 번개 저항 {v} 감소(최대 {a}겹)",
+  "ko": "맞은 적 번개 저항 {v} 감소(최대 {a}겹)",
+  "en": "Lowers Lightning Resistance by {v} (up to {a} stacks)",
+  "ctx": "advance_node.csv 행 mag_nova · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_nova|bonus|겹이 가득 찬 적은 다음 번개 타격이 반드시 터진다",
+  "ko": "겹이 가득 찬 적은 다음 번개 타격이 반드시 터진다",
+  "en": "At full stacks the next Lightning hit always bursts",
+  "ctx": "advance_node.csv 행 mag_nova · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_thundergod|desc|벼락 데미지 증가",
+  "ko": "벼락 데미지 증가",
+  "en": "More bolt damage",
+  "ctx": "advance_node.csv 행 mag_thundergod · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_thundergod|bonus|칸이 하나뿐이어도 벼락 둘",
+  "ko": "칸이 하나뿐이어도 벼락 둘",
+  "en": "At least two bolts",
+  "ctx": "advance_node.csv 행 mag_thundergod · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_thundergod|desc|터질 때마다 남은 벼락 {v} 세진다",
+  "ko": "터질 때마다 남은 벼락 {v} 세진다",
+  "en": "Each burst makes the remaining bolts {v} stronger",
+  "ctx": "advance_node.csv 행 mag_thundergod · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_thundergod|bonus|마지막 벼락은 반드시 터진다",
+  "ko": "마지막 벼락은 반드시 터진다",
+  "en": "The last bolt always bursts",
+  "ctx": "advance_node.csv 행 mag_thundergod · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_thundergod|desc|맞은 적의 스킬 쿨 {v}초 밀림",
+  "ko": "맞은 적의 스킬 쿨 {v}초 밀림",
+  "en": "Pushes the target's skill cooldowns back {v}s",
+  "ctx": "advance_node.csv 행 mag_thundergod · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|mag_thundergod|bonus|밀리는 시간 두 배",
+  "ko": "밀리는 시간 두 배",
+  "en": "Double the push",
+  "ctx": "advance_node.csv 행 mag_thundergod · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_ragnarok|desc|데미지 · 공격 속도 증가",
+  "ko": "데미지 · 공격 속도 증가",
+  "en": "More Damage and Attack Speed",
+  "ctx": "advance_node.csv 행 war_ragnarok · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_ragnarok|bonus|창이 끝나도 공속 절반이 {v}초 남는다",
+  "ko": "창이 끝나도 공속 절반이 {v}초 남는다",
+  "en": "Half the Attack Speed lingers {v}s after the window",
+  "ctx": "advance_node.csv 행 war_ragnarok · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_ragnarok|desc|창 동안 평타가 같은 줄 적에게 {v} 튄다",
+  "ko": "창 동안 평타가 같은 줄 적에게 {v} 튄다",
+  "en": "During the window basic attacks splash the same row for {v}",
+  "ctx": "advance_node.csv 행 war_ragnarok · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_ragnarok|bonus|튀는 범위가 적 전원",
+  "ko": "튀는 범위가 적 전원",
+  "en": "Splash reaches every enemy",
+  "ctx": "advance_node.csv 행 war_ragnarok · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_ragnarok|desc|창 동안 받는 디버프 시간 {v} 감소",
+  "ko": "창 동안 받는 디버프 시간 {v} 감소",
+  "en": "Debuffs on you last {v} shorter during the window",
+  "ctx": "advance_node.csv 행 war_ragnarok · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_ragnarok|bonus|창 동안 디버프 면역",
+  "ko": "창 동안 디버프 면역",
+  "en": "Immune to debuffs during the window",
+  "ctx": "advance_node.csv 행 war_ragnarok · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_berserk|desc|다른 액티브 데미지 증가",
+  "ko": "다른 액티브 데미지 증가",
+  "en": "More damage for other actives",
+  "ctx": "advance_node.csv 행 war_berserk · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_berserk|bonus|창이 끝날 때 쓴 HP의 {v}가 돌아온다",
+  "ko": "창이 끝날 때 쓴 HP의 {v}가 돌아온다",
+  "en": "Refunds {v} of the HP spent when the window ends",
+  "ctx": "advance_node.csv 행 war_berserk · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_berserk|desc|HP가 낮을수록 피해 증가(최대 {v})",
+  "ko": "HP가 낮을수록 피해 증가(최대 {v})",
+  "en": "More damage the lower your HP (up to {v})",
+  "ctx": "advance_node.csv 행 war_berserk · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_berserk|bonus|HP가 처음 {v} 아래로 떨어지면 다른 액티브 쿨 초기화",
+  "ko": "HP가 처음 {v} 아래로 떨어지면 다른 액티브 쿨 초기화",
+  "en": "First time HP drops below {v}, other actives come off cooldown",
+  "ctx": "advance_node.csv 행 war_berserk · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_berserk|desc|쓰는 HP {v} 감소",
+  "ko": "쓰는 HP {v} 감소",
+  "en": "Costs {v} less HP",
+  "ctx": "advance_node.csv 행 war_berserk · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_berserk|bonus|HP를 쓰지 않는다",
+  "ko": "HP를 쓰지 않는다",
+  "en": "Costs no HP",
+  "ctx": "advance_node.csv 행 war_berserk · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_mutualruin|desc|데미지 증가",
+  "ko": "데미지 증가",
+  "en": "More damage",
+  "ctx": "advance_node.csv 행 war_mutualruin · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_mutualruin|bonus|쓰러뜨리면 남은 데미지가 다음 적에게",
+  "ko": "쓰러뜨리면 남은 데미지가 다음 적에게",
+  "en": "Leftover damage carries to the next enemy on a kill",
+  "ctx": "advance_node.csv 행 war_mutualruin · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_mutualruin|desc|같은 적을 한 번 더 내려친다({v})",
+  "ko": "같은 적을 한 번 더 내려친다({v})",
+  "en": "Strikes the same enemy again ({v})",
+  "ctx": "advance_node.csv 행 war_mutualruin · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_mutualruin|bonus|세 번 내려친다",
+  "ko": "세 번 내려친다",
+  "en": "Strikes three times",
+  "ctx": "advance_node.csv 행 war_mutualruin · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_mutualruin|desc|맞은 적 {v}초 스턴",
+  "ko": "맞은 적 {v}초 스턴",
+  "en": "Stuns the enemy hit for {v}s",
+  "ctx": "advance_node.csv 행 war_mutualruin · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_mutualruin|bonus|스턴이 같은 줄로 번진다",
+  "ko": "스턴이 같은 줄로 번진다",
+  "en": "The Stun spreads to the same row",
+  "ctx": "advance_node.csv 행 war_mutualruin · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_whirlwind|desc|데미지 증가",
+  "ko": "데미지 증가",
+  "en": "More damage",
+  "ctx": "advance_node.csv 행 war_whirlwind · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_whirlwind|bonus|휘두르는 동안 받는 경직 · 스턴 시간 {v} 감소",
+  "ko": "휘두르는 동안 받는 경직 · 스턴 시간 {v} 감소",
+  "en": "Stagger and Stun on you are {v} shorter while spinning",
+  "ctx": "advance_node.csv 행 war_whirlwind · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_whirlwind|desc|타수 +{v}",
+  "ko": "타수 +{v}",
+  "en": "+{v} hits",
+  "ctx": "advance_node.csv 행 war_whirlwind · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_whirlwind|bonus|방마다 대상이 둘",
+  "ko": "방마다 대상이 둘",
+  "en": "Two targets per hit",
+  "ctx": "advance_node.csv 행 war_whirlwind · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_whirlwind|desc|맞은 적 방어 {v} 깎기(최대 {a}겹)",
+  "ko": "맞은 적 방어 {v} 깎기(최대 {a}겹)",
+  "en": "Shreds {v} Defense per hit (up to {a} stacks)",
+  "ctx": "advance_node.csv 행 war_whirlwind · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_whirlwind|bonus|깎은 방어가 라운드 끝까지 남는다",
+  "ko": "깎은 방어가 라운드 끝까지 남는다",
+  "en": "Shredded Defense lasts the rest of the round",
+  "ctx": "advance_node.csv 행 war_whirlwind · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_thorswrath|desc|쿨타임 감소",
+  "ko": "쿨타임 감소",
+  "en": "Shorter cooldown",
+  "ctx": "advance_node.csv 행 war_thorswrath · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_thorswrath|bonus|모으는 시간 {v} 단축",
+  "ko": "모으는 시간 {v} 단축",
+  "en": "Charges {v} faster",
+  "ctx": "advance_node.csv 행 war_thorswrath · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_thorswrath|desc|나머지 적이 받는 비율 +{v}",
+  "ko": "나머지 적이 받는 비율 +{v}",
+  "en": "Other enemies take +{v} of the blow",
+  "ctx": "advance_node.csv 행 war_thorswrath · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_thorswrath|bonus|쓰러지면 남은 데미지가 다음 적에게",
+  "ko": "쓰러지면 남은 데미지가 다음 적에게",
+  "en": "Leftover damage carries to the next enemy on a kill",
+  "ctx": "advance_node.csv 행 war_thorswrath · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_thorswrath|desc|스턴 시간 +{v}초",
+  "ko": "스턴 시간 +{v}초",
+  "en": "Stun +{v}s",
+  "ctx": "advance_node.csv 행 war_thorswrath · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_thorswrath|bonus|나머지 적도 주 대상과 같은 시간 스턴",
+  "ko": "나머지 적도 주 대상과 같은 시간 스턴",
+  "en": "Other enemies are stunned as long as the main target",
+  "ctx": "advance_node.csv 행 war_thorswrath · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_shockwave|desc|데미지 증가",
+  "ko": "데미지 증가",
+  "en": "More damage",
+  "ctx": "advance_node.csv 행 war_shockwave · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_shockwave|bonus|두 번 흔든다(두 번째는 {v})",
+  "ko": "두 번 흔든다(두 번째는 {v})",
+  "en": "Quakes twice (the second at {v})",
+  "ctx": "advance_node.csv 행 war_shockwave · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_shockwave|desc|진형 붕괴 +{v}초",
+  "ko": "진형 붕괴 +{v}초",
+  "en": "Formation break +{v}s",
+  "ctx": "advance_node.csv 행 war_shockwave · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_shockwave|bonus|붕괴가 풀릴 때 적 전원 {v}",
+  "ko": "붕괴가 풀릴 때 적 전원 {v}",
+  "en": "When the break ends, hits every enemy for {v}",
+  "ctx": "advance_node.csv 행 war_shockwave · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_shockwave|desc|앞으로 끌려나온 후열이 받는 물리 피해 {v} 증가",
+  "ko": "앞으로 끌려나온 후열이 받는 물리 피해 {v} 증가",
+  "en": "Pulled-forward back row takes {v} more physical damage",
+  "ctx": "advance_node.csv 행 war_shockwave · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_shockwave|bonus|끌려나온 후열 경직",
+  "ko": "끌려나온 후열 경직",
+  "en": "Pulled-forward back row is Staggered",
+  "ctx": "advance_node.csv 행 war_shockwave · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_divinedescent|desc|최대 HP 증가",
+  "ko": "최대 HP 증가",
+  "en": "More max HP",
+  "ctx": "advance_node.csv 행 war_divinedescent · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_divinedescent|bonus|끝날 때 넘친 HP를 자르지 않고 보호막으로 남긴다",
+  "ko": "끝날 때 넘친 HP를 자르지 않고 보호막으로 남긴다",
+  "en": "Excess HP becomes a shield instead of being cut",
+  "ctx": "advance_node.csv 행 war_divinedescent · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_divinedescent|desc|잃은 HP가 많을수록 재생 증가(최대 {v})",
+  "ko": "잃은 HP가 많을수록 재생 증가(최대 {v})",
+  "en": "Regeneration grows with missing HP (up to {v})",
+  "ctx": "advance_node.csv 행 war_divinedescent · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_divinedescent|bonus|재생이 아군 전열에도 {v}",
+  "ko": "재생이 아군 전열에도 {v}",
+  "en": "Front-row allies also regenerate at {v}",
+  "ctx": "advance_node.csv 행 war_divinedescent · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_divinedescent|desc|창 동안 받는 경직 시간 {v} 감소",
+  "ko": "창 동안 받는 경직 시간 {v} 감소",
+  "en": "Stagger on you is {v} shorter during the window",
+  "ctx": "advance_node.csv 행 war_divinedescent · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_divinedescent|bonus|창 동안 경직 면역",
+  "ko": "창 동안 경직 면역",
+  "en": "Immune to Stagger during the window",
+  "ctx": "advance_node.csv 행 war_divinedescent · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_command|desc|데미지 증가량 증가",
+  "ko": "데미지 증가량 증가",
+  "en": "Bigger Damage boost",
+  "ctx": "advance_node.csv 행 war_command · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_command|bonus|창 동안 아군 공격 속도 {v}",
+  "ko": "창 동안 아군 공격 속도 {v}",
+  "en": "Allies also gain {v} Attack Speed",
+  "ctx": "advance_node.csv 행 war_command · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_command|desc|아군 치명 확률 {v}",
+  "ko": "아군 치명 확률 {v}",
+  "en": "Allies gain {v} Critical Chance",
+  "ctx": "advance_node.csv 행 war_command · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_command|bonus|아군 치명 피해 {v}",
+  "ko": "아군 치명 피해 {v}",
+  "en": "Allies gain {v} Critical Damage",
+  "ctx": "advance_node.csv 행 war_command · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_command|desc|아군 흡혈 {v}",
+  "ko": "아군 흡혈 {v}",
+  "en": "Allies gain {v} Life Steal",
+  "ctx": "advance_node.csv 행 war_command · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_command|bonus|흡혈로 넘친 HP가 보호막으로",
+  "ko": "흡혈로 넘친 HP가 보호막으로",
+  "en": "Overflowing Life Steal becomes a shield",
+  "ctx": "advance_node.csv 행 war_command · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_intimidate|desc|데미지 감소량 증가",
+  "ko": "데미지 감소량 증가",
+  "en": "Bigger Damage reduction",
+  "ctx": "advance_node.csv 행 war_intimidate · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_intimidate|bonus|창이 끝난 뒤 절반이 {v}초 남는다",
+  "ko": "창이 끝난 뒤 절반이 {v}초 남는다",
+  "en": "Half the reduction lingers {v}s after the window",
+  "ctx": "advance_node.csv 행 war_intimidate · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_intimidate|desc|맞은 적 {v}초 경직",
+  "ko": "맞은 적 {v}초 경직",
+  "en": "Staggers enemies for {v}s",
+  "ctx": "advance_node.csv 행 war_intimidate · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_intimidate|bonus|경직 대신 스턴",
+  "ko": "경직 대신 스턴",
+  "en": "Stuns instead of Staggering",
+  "ctx": "advance_node.csv 행 war_intimidate · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|war_intimidate|desc|맞은 적이 거는 버프 시간 {v} 감소",
+  "ko": "맞은 적이 거는 버프 시간 {v} 감소",
+  "en": "Buffs cast by enemies hit are {v} shorter",
+  "ctx": "advance_node.csv 행 war_intimidate · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|war_intimidate|bonus|버프 시간 감소 두 배",
+  "ko": "버프 시간 감소 두 배",
+  "en": "Doubles the buff duration cut",
+  "ctx": "advance_node.csv 행 war_intimidate · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_lastbastion|desc|가져온 피해 감소",
+  "ko": "가져온 피해 감소",
+  "en": "Less damage from what you take",
+  "ctx": "advance_node.csv 행 kni_lastbastion · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_lastbastion|bonus|가져오는 비율 +{v}",
+  "ko": "가져오는 비율 +{v}",
+  "en": "Takes +{v} more of allies' damage",
+  "ctx": "advance_node.csv 행 kni_lastbastion · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_lastbastion|desc|아군 HP가 {v} 아래면 저절로 켜진다",
+  "ko": "아군 HP가 {v} 아래면 저절로 켜진다",
+  "en": "Turns on by itself when an ally drops below {v} HP",
+  "ctx": "advance_node.csv 행 kni_lastbastion · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_lastbastion|bonus|HP가 가장 낮은 아군 하나는 피해를 전부 가져온다",
+  "ko": "HP가 가장 낮은 아군 하나는 피해를 전부 가져온다",
+  "en": "Takes all damage for the lowest-HP ally",
+  "ctx": "advance_node.csv 행 kni_lastbastion · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_lastbastion|desc|창 동안 쓰러지지 않는다 — 버틸 때 받는 피해 {v} 감소",
+  "ko": "창 동안 쓰러지지 않는다 — 버틸 때 받는 피해 {v} 감소",
+  "en": "Cannot fall during the window — {v} less damage while holding on",
+  "ctx": "advance_node.csv 행 kni_lastbastion · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_lastbastion|bonus|창이 끝날 때 HP 1이었으면 최대 HP {v} 회복",
+  "ko": "창이 끝날 때 HP 1이었으면 최대 HP {v} 회복",
+  "en": "If at 1 HP when the window ends, heals {v} of max HP",
+  "ctx": "advance_node.csv 행 kni_lastbastion · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_unbreakablewill|desc|겹 하나의 피해 감소 증가",
+  "ko": "겹 하나의 피해 감소 증가",
+  "en": "More reduction per stack",
+  "ctx": "advance_node.csv 행 kni_unbreakablewill · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_unbreakablewill|bonus|겹 최대 수 +{v}",
+  "ko": "겹 최대 수 +{v}",
+  "en": "Max stacks +{v}",
+  "ctx": "advance_node.csv 행 kni_unbreakablewill · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_unbreakablewill|desc|창이 끝나면 겹이 {v}초마다 하나씩 빠진다",
+  "ko": "창이 끝나면 겹이 {v}초마다 하나씩 빠진다",
+  "en": "After the window stacks fall off one every {v}s",
+  "ctx": "advance_node.csv 행 kni_unbreakablewill · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_unbreakablewill|bonus|빠지는 속도 절반",
+  "ko": "빠지는 속도 절반",
+  "en": "Stacks fall off half as fast",
+  "ctx": "advance_node.csv 행 kni_unbreakablewill · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_unbreakablewill|desc|겹이 가득 차면 파티에 겹의 {v}를 나눠 준다",
+  "ko": "겹이 가득 차면 파티에 겹의 {v}를 나눠 준다",
+  "en": "At full stacks shares {v} of them with the party",
+  "ctx": "advance_node.csv 행 kni_unbreakablewill · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_unbreakablewill|bonus|나눠 준 겹이 두 배 오래 남는다",
+  "ko": "나눠 준 겹이 두 배 오래 남는다",
+  "en": "Shared stacks last twice as long",
+  "ctx": "advance_node.csv 행 kni_unbreakablewill · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_divinejudgment|desc|반사 증가",
+  "ko": "반사 증가",
+  "en": "More reflection",
+  "ctx": "advance_node.csv 행 kni_divinejudgment · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_divinejudgment|bonus|되돌린 피해의 {v}만큼 HP 회복",
+  "ko": "되돌린 피해의 {v}만큼 HP 회복",
+  "en": "Heals {v} of the damage returned",
+  "ctx": "advance_node.csv 행 kni_divinejudgment · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_divinejudgment|desc|되돌린 피해의 {v}를 적 전원에게 나눠 준다",
+  "ko": "되돌린 피해의 {v}를 적 전원에게 나눠 준다",
+  "en": "Splits {v} of reflected damage across every enemy",
+  "ctx": "advance_node.csv 행 kni_divinejudgment · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_divinejudgment|bonus|나누지 않고 전원에게 같은 양",
+  "ko": "나누지 않고 전원에게 같은 양",
+  "en": "Every enemy takes the full amount",
+  "ctx": "advance_node.csv 행 kni_divinejudgment · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_divinejudgment|desc|창이 끝날 때 되돌린 양의 {v}가 적 전원에게 터진다",
+  "ko": "창이 끝날 때 되돌린 양의 {v}가 적 전원에게 터진다",
+  "en": "When the window ends, bursts every enemy for {v} of the total reflected",
+  "ctx": "advance_node.csv 행 kni_divinejudgment · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_divinejudgment|bonus|되돌린 양이 내 최대 HP의 {v}를 넘으면 바로 터진다",
+  "ko": "되돌린 양이 내 최대 HP의 {v}를 넘으면 바로 터진다",
+  "en": "Bursts early once reflection passes {v} of your max HP",
+  "ctx": "advance_node.csv 행 kni_divinejudgment · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_cleansing|desc|상태이상 · 디버프 시간 감소 증가",
+  "ko": "상태이상 · 디버프 시간 감소 증가",
+  "en": "Bigger duration cut",
+  "ctx": "advance_node.csv 행 kni_cleansing · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_cleansing|bonus|라운드마다 아군마다 처음 걸리는 상태이상을 막는다",
+  "ko": "라운드마다 아군마다 처음 걸리는 상태이상을 막는다",
+  "en": "Blocks each ally's first Ailment every round",
+  "ctx": "advance_node.csv 행 kni_cleansing · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_cleansing|desc|상태이상이 걸리는 순간 {v} 확률로 바로 풀린다",
+  "ko": "상태이상이 걸리는 순간 {v} 확률로 바로 풀린다",
+  "en": "{v} chance to shake off an Ailment instantly",
+  "ctx": "advance_node.csv 행 kni_cleansing · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_cleansing|bonus|한 아군이 풀리면 다른 아군의 같은 상태이상도 풀린다",
+  "ko": "한 아군이 풀리면 다른 아군의 같은 상태이상도 풀린다",
+  "en": "When one ally shakes it off, so do the others",
+  "ctx": "advance_node.csv 행 kni_cleansing · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_cleansing|desc|상태이상이 풀릴 때 그 아군 최대 HP {v} 회복",
+  "ko": "상태이상이 풀릴 때 그 아군 최대 HP {v} 회복",
+  "en": "Heals {v} of max HP when an Ailment ends",
+  "ctx": "advance_node.csv 행 kni_cleansing · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_cleansing|bonus|회복이 파티 전원에게({v})",
+  "ko": "회복이 파티 전원에게({v})",
+  "en": "The heal reaches the whole party ({v})",
+  "ctx": "advance_node.csv 행 kni_cleansing · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_offenseaura|desc|세 수치 증가",
+  "ko": "세 수치 증가",
+  "en": "Bigger bonuses",
+  "ctx": "advance_node.csv 행 kni_offenseaura · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_offenseaura|bonus|켠 기사 자신은 두 배",
+  "ko": "켠 기사 자신은 두 배",
+  "en": "Doubled on the Knight",
+  "ctx": "advance_node.csv 행 kni_offenseaura · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_offenseaura|desc|마법 무기 아군 캐스팅 속도 +{v} 더",
+  "ko": "마법 무기 아군 캐스팅 속도 +{v} 더",
+  "en": "Magic-weapon allies gain +{v} more Cast Speed",
+  "ctx": "advance_node.csv 행 kni_offenseaura · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_offenseaura|bonus|마법 무기 아군의 캐스팅 칸 +{v}",
+  "ko": "마법 무기 아군의 캐스팅 칸 +{v}",
+  "en": "Magic-weapon allies gain +{v} cast charge",
+  "ctx": "advance_node.csv 행 kni_offenseaura · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_offenseaura|desc|물리 무기 아군 공격 속도 +{v} 더",
+  "ko": "물리 무기 아군 공격 속도 +{v} 더",
+  "en": "Physical-weapon allies gain +{v} more Attack Speed",
+  "ctx": "advance_node.csv 행 kni_offenseaura · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_offenseaura|bonus|물리 무기 아군의 평타가 {v} 확률로 한 번 더",
+  "ko": "물리 무기 아군의 평타가 {v} 확률로 한 번 더",
+  "en": "Physical-weapon allies' basic attacks have {v} chance to repeat",
+  "ctx": "advance_node.csv 행 kni_offenseaura · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_elemconvert|desc|바뀐 화염 피해 증가",
+  "ko": "바뀐 화염 피해 증가",
+  "en": "More converted Fire damage",
+  "ctx": "advance_node.csv 행 kni_elemconvert · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_elemconvert|bonus|바꿀 물리가 없는 아군 타격에도 화염 {v}",
+  "ko": "바꿀 물리가 없는 아군 타격에도 화염 {v}",
+  "en": "Allies without physical damage add {v} Fire",
+  "ctx": "advance_node.csv 행 kni_elemconvert · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_elemconvert|desc|바뀐 화염이 {v} 확률로 화상",
+  "ko": "바뀐 화염이 {v} 확률로 화상",
+  "en": "Converted Fire Burns ({v} chance)",
+  "ctx": "advance_node.csv 행 kni_elemconvert · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_elemconvert|bonus|화상 걸린 적이 쓰러지면 옆 적에게 화상이 옮는다",
+  "ko": "화상 걸린 적이 쓰러지면 옆 적에게 화상이 옮는다",
+  "en": "Burn jumps to a neighbor when a Burned enemy falls",
+  "ctx": "advance_node.csv 행 kni_elemconvert · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_elemconvert|desc|파티 화염 관통 {v}",
+  "ko": "파티 화염 관통 {v}",
+  "en": "Party Fire penetration {v}",
+  "ctx": "advance_node.csv 행 kni_elemconvert · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_elemconvert|bonus|적 방어 100마다 전환 몫 +{v}",
+  "ko": "적 방어 100마다 전환 몫 +{v}",
+  "en": "Conversion share +{v} per 100 enemy Defense",
+  "ctx": "advance_node.csv 행 kni_elemconvert · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_retribution|desc|공격 속도 증가",
+  "ko": "공격 속도 증가",
+  "en": "More Attack Speed",
+  "ctx": "advance_node.csv 행 kni_retribution · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_retribution|bonus|창을 열 때 적 전열 전원에게 번개 {v}",
+  "ko": "창을 열 때 적 전열 전원에게 번개 {v}",
+  "en": "Opening the window strikes the enemy front row with lightning for {v}",
+  "ctx": "advance_node.csv 행 kni_retribution · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_retribution|desc|바뀐 번개가 {v} 확률로 터진다(×{a})",
+  "ko": "바뀐 번개가 {v} 확률로 터진다(×{a})",
+  "en": "Converted lightning bursts ({v} chance · ×{a})",
+  "ctx": "advance_node.csv 행 kni_retribution · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_retribution|bonus|터지면 옆 적에게 번개가 {v} 튄다",
+  "ko": "터지면 옆 적에게 번개가 {v} 튄다",
+  "en": "Bursts arc to a neighbor for {v}",
+  "ctx": "advance_node.csv 행 kni_retribution · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_retribution|desc|창 동안 처치마다 창 +{v}초(최대 +{a}초)",
+  "ko": "창 동안 처치마다 창 +{v}초(최대 +{a}초)",
+  "en": "Each kill in the window extends it {v}s (up to +{a}s)",
+  "ctx": "advance_node.csv 행 kni_retribution · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_retribution|bonus|창 동안 처치마다 공속 +{v} 한 겹",
+  "ko": "창 동안 처치마다 공속 +{v} 한 겹",
+  "en": "Each kill in the window adds a {v} Attack Speed stack",
+  "ctx": "advance_node.csv 행 kni_retribution · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_condemnation|desc|기본 피해 증가",
+  "ko": "기본 피해 증가",
+  "en": "More base damage",
+  "ctx": "advance_node.csv 행 kni_condemnation · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_condemnation|bonus|잃은 체력 비례 몫 +{v}",
+  "ko": "잃은 체력 비례 몫 +{v}",
+  "en": "Missing-HP share +{v}",
+  "ctx": "advance_node.csv 행 kni_condemnation · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_condemnation|desc|쓰러뜨리면 남은 피해의 {v}가 다음 적에게",
+  "ko": "쓰러뜨리면 남은 피해의 {v}가 다음 적에게",
+  "en": "On a kill {v} of the leftover carries to the next enemy",
+  "ctx": "advance_node.csv 행 kni_condemnation · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_condemnation|bonus|넘김이 두 번까지",
+  "ko": "넘김이 두 번까지",
+  "en": "Carries over up to twice",
+  "ctx": "advance_node.csv 행 kni_condemnation · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_condemnation|desc|대상 = 체력 비율이 가장 낮은 전열 적 · 피해 +{v}",
+  "ko": "대상 = 체력 비율이 가장 낮은 전열 적 · 피해 +{v}",
+  "en": "Targets the lowest-HP% front enemy · +{v} damage",
+  "ctx": "advance_node.csv 행 kni_condemnation · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_condemnation|bonus|후열까지 고른다",
+  "ko": "후열까지 고른다",
+  "en": "Can pick the back row too",
+  "ctx": "advance_node.csv 행 kni_condemnation · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_fallingstrike|desc|데미지 증가",
+  "ko": "데미지 증가",
+  "en": "More damage",
+  "ctx": "advance_node.csv 행 kni_fallingstrike · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_fallingstrike|bonus|내려꽂은 뒤 3초 동안 받는 피해 {v} 감소",
+  "ko": "내려꽂은 뒤 3초 동안 받는 피해 {v} 감소",
+  "en": "Take {v} less damage for 3s after landing",
+  "ctx": "advance_node.csv 행 kni_fallingstrike · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_fallingstrike|desc|착지할 때 같은 줄 적에게 번개 {v}",
+  "ko": "착지할 때 같은 줄 적에게 번개 {v}",
+  "en": "Landing arcs lightning to the same row for {v}",
+  "ctx": "advance_node.csv 행 kni_fallingstrike · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_fallingstrike|bonus|튄 번개도 터질 수 있다",
+  "ko": "튄 번개도 터질 수 있다",
+  "en": "The arcs can burst too",
+  "ctx": "advance_node.csv 행 kni_fallingstrike · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_fallingstrike|desc|맞은 적 {v} 확률로 {a}초 스턴",
+  "ko": "맞은 적 {v} 확률로 {a}초 스턴",
+  "en": "{v} chance to Stun for {a}s",
+  "ctx": "advance_node.csv 행 kni_fallingstrike · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|kni_fallingstrike|bonus|스턴이 안 걸리면 다음 낙하 검격의 스턴 확률 +{v}",
+  "ko": "스턴이 안 걸리면 다음 낙하 검격의 스턴 확률 +{v}",
+  "en": "A miss raises the next Stun chance by {v}",
+  "ctx": "advance_node.csv 행 kni_fallingstrike · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_trueaim|desc|스나이프 데미지 증가량 증가",
+  "ko": "스나이프 데미지 증가량 증가",
+  "en": "Bigger Snipe boost",
+  "ctx": "advance_node.csv 행 arc_trueaim · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_trueaim|bonus|창을 열 때 스나이프가 바로 준비된다",
+  "ko": "창을 열 때 스나이프가 바로 준비된다",
+  "en": "Snipe is ready the moment the window opens",
+  "ctx": "advance_node.csv 행 arc_trueaim · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_trueaim|desc|느려짐 {v} 감소",
+  "ko": "느려짐 {v} 감소",
+  "en": "Slow reduced by {v}",
+  "ctx": "advance_node.csv 행 arc_trueaim · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_trueaim|bonus|느려짐 없음",
+  "ko": "느려짐 없음",
+  "en": "No slow",
+  "ctx": "advance_node.csv 행 arc_trueaim · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_trueaim|desc|창 동안 스나이프가 후열을 먼저 노린다 · 후열 피해 +{v}",
+  "ko": "창 동안 스나이프가 후열을 먼저 노린다 · 후열 피해 +{v}",
+  "en": "Snipe targets the back row first · +{v} to the back row",
+  "ctx": "advance_node.csv 행 arc_trueaim · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_trueaim|bonus|후열 대상에게 추가 피해 {v}",
+  "ko": "후열 대상에게 추가 피해 {v}",
+  "en": "{v} bonus damage to back-row targets",
+  "ctx": "advance_node.csv 행 arc_trueaim · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_singlestrike|desc|데미지 증가",
+  "ko": "데미지 증가",
+  "en": "More damage",
+  "ctx": "advance_node.csv 행 arc_singlestrike · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_singlestrike|bonus|쓰러뜨리면 쿨 {v}가 돌아온다",
+  "ko": "쓰러뜨리면 쿨 {v}가 돌아온다",
+  "en": "A kill refunds {v} of the cooldown",
+  "ctx": "advance_node.csv 행 arc_singlestrike · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_singlestrike|desc|한 발 더 따라간다({v} · 먼저 쓰러지면 다음 적)",
+  "ko": "한 발 더 따라간다({v} · 먼저 쓰러지면 다음 적)",
+  "en": "A follow-up shot ({v} · moves on if the target falls)",
+  "ctx": "advance_node.csv 행 arc_singlestrike · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_singlestrike|bonus|따라가는 한 발이 후열까지 고를 수 있다",
+  "ko": "따라가는 한 발이 후열까지 고를 수 있다",
+  "en": "The follow-up can pick the back row",
+  "ctx": "advance_node.csv 행 arc_singlestrike · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_singlestrike|desc|남은 적이 하나 줄 때마다 피해 +{v}",
+  "ko": "남은 적이 하나 줄 때마다 피해 +{v}",
+  "en": "+{v} damage for each enemy fewer than six",
+  "ctx": "advance_node.csv 행 arc_singlestrike · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_singlestrike|bonus|혼자 남은 적이면 두 배",
+  "ko": "혼자 남은 적이면 두 배",
+  "en": "Double damage on the last enemy",
+  "ctx": "advance_node.csv 행 arc_singlestrike · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_reload|desc|라운드당 초기화 상한 증가",
+  "ko": "라운드당 초기화 상한 증가",
+  "en": "More resets per round",
+  "ctx": "advance_node.csv 행 arc_reload · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_reload|bonus|초기화될 때 모든 액티브의 쿨이 초기화된다",
+  "ko": "초기화될 때 모든 액티브의 쿨이 초기화된다",
+  "en": "Resets every active's cooldown",
+  "ctx": "advance_node.csv 행 arc_reload · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_reload|desc|초기화된 스킬의 다음 한 방 +{v}",
+  "ko": "초기화된 스킬의 다음 한 방 +{v}",
+  "en": "The reset skill's next hit +{v}",
+  "ctx": "advance_node.csv 행 arc_reload · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_reload|bonus|다음 두 방이 세진다",
+  "ko": "다음 두 방이 세진다",
+  "en": "The next two hits are empowered",
+  "ctx": "advance_node.csv 행 arc_reload · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_reload|desc|스킬로 쓰러뜨리면 적 전원 {v}초 경직",
+  "ko": "스킬로 쓰러뜨리면 적 전원 {v}초 경직",
+  "en": "Skill kills Stagger every enemy for {v}s",
+  "ctx": "advance_node.csv 행 arc_reload · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_reload|bonus|경직 시간 두 배",
+  "ko": "경직 시간 두 배",
+  "en": "Double Stagger duration",
+  "ctx": "advance_node.csv 행 arc_reload · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_quickdraw|desc|고정 주기 단축",
+  "ko": "고정 주기 단축",
+  "en": "Even shorter interval",
+  "ctx": "advance_node.csv 행 arc_quickdraw · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_quickdraw|bonus|창이 끝날 때 마지막 한 발이 {v}",
+  "ko": "창이 끝날 때 마지막 한 발이 {v}",
+  "en": "A final shot for {v} when the window ends",
+  "ctx": "advance_node.csv 행 arc_quickdraw · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_quickdraw|desc|평타가 6자리 무작위로 흩어진다 · 후열 피해 +{v}",
+  "ko": "평타가 6자리 무작위로 흩어진다 · 후열 피해 +{v}",
+  "en": "Basic attacks scatter across all six slots · +{v} to the back row",
+  "ctx": "advance_node.csv 행 arc_quickdraw · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_quickdraw|bonus|후열에 맞은 화살 +{v}",
+  "ko": "후열에 맞은 화살 +{v}",
+  "en": "Arrows hitting the back row +{v}",
+  "ctx": "advance_node.csv 행 arc_quickdraw · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_quickdraw|desc|평타의 덤이 {v} 확률로 한 번 더 붙는다",
+  "ko": "평타의 덤이 {v} 확률로 한 번 더 붙는다",
+  "en": "Basic attack on-hit effects repeat ({v} chance)",
+  "ctx": "advance_node.csv 행 arc_quickdraw · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_quickdraw|bonus|덤이 두 번 더",
+  "ko": "덤이 두 번 더",
+  "en": "On-hit effects repeat twice",
+  "ctx": "advance_node.csv 행 arc_quickdraw · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_overdraw|desc|평타 피해 증가",
+  "ko": "평타 피해 증가",
+  "en": "More basic attack damage",
+  "ctx": "advance_node.csv 행 arc_overdraw · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_overdraw|bonus|세 번째 평타마다 두 배",
+  "ko": "세 번째 평타마다 두 배",
+  "en": "Every third basic attack deals double",
+  "ctx": "advance_node.csv 행 arc_overdraw · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_overdraw|desc|평타가 HP가 가장 많은 적을 노린다 · 피해 +{v}",
+  "ko": "평타가 HP가 가장 많은 적을 노린다 · 피해 +{v}",
+  "en": "Basic attacks target the highest-HP enemy · +{v}",
+  "ctx": "advance_node.csv 행 arc_overdraw · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_overdraw|bonus|HP 최다 적에게 추가 피해 {v}",
+  "ko": "HP 최다 적에게 추가 피해 {v}",
+  "en": "{v} bonus damage to the highest-HP enemy",
+  "ctx": "advance_node.csv 행 arc_overdraw · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_overdraw|desc|평타가 관통해 같은 자리 뒤 적에게 {v}",
+  "ko": "평타가 관통해 같은 자리 뒤 적에게 {v}",
+  "en": "Basic attacks pierce to the enemy behind for {v}",
+  "ctx": "advance_node.csv 행 arc_overdraw · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_overdraw|bonus|관통한 화살이 뒤 적을 {v}초 경직",
+  "ko": "관통한 화살이 뒤 적을 {v}초 경직",
+  "en": "Pierced arrows Stagger for {v}s",
+  "ctx": "advance_node.csv 행 arc_overdraw · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_chaindraw|desc|주 대상 외 피해 비율 증가",
+  "ko": "주 대상 외 피해 비율 증가",
+  "en": "Bigger chain share",
+  "ctx": "advance_node.csv 행 arc_chaindraw · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_chaindraw|bonus|창 동안 쓰러진 적이 터져 같은 줄에 {v}",
+  "ko": "창 동안 쓰러진 적이 터져 같은 줄에 {v}",
+  "en": "Enemies killed in the window explode on their row for {v}",
+  "ctx": "advance_node.csv 행 arc_chaindraw · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_chaindraw|desc|추가 대상에도 평타의 덤이 붙는다({v})",
+  "ko": "추가 대상에도 평타의 덤이 붙는다({v})",
+  "en": "On-hit effects reach extra targets ({v})",
+  "ctx": "advance_node.csv 행 arc_chaindraw · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_chaindraw|bonus|추가 대상의 덤이 주 대상과 같은 세기",
+  "ko": "추가 대상의 덤이 주 대상과 같은 세기",
+  "en": "Full-strength on-hit effects on extra targets",
+  "ctx": "advance_node.csv 행 arc_chaindraw · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_chaindraw|desc|쓰러뜨리면 다음 평타가 곧바로 나간다(연속 최대 {v})",
+  "ko": "쓰러뜨리면 다음 평타가 곧바로 나간다(연속 최대 {v})",
+  "en": "A kill fires the next basic attack at once (up to {v} in a row)",
+  "ctx": "advance_node.csv 행 arc_chaindraw · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_chaindraw|bonus|연속 평타는 관통 비율이 줄지 않는다",
+  "ko": "연속 평타는 관통 비율이 줄지 않는다",
+  "en": "Chained shots keep the full chain share",
+  "ctx": "advance_node.csv 행 arc_chaindraw · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_huntersmark|desc|받는 피해 증가량 증가",
+  "ko": "받는 피해 증가량 증가",
+  "en": "Bigger vulnerability",
+  "ctx": "advance_node.csv 행 arc_huntersmark · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_huntersmark|bonus|표식 적이 받은 피해의 {v}가 적 전원에게 번진다",
+  "ko": "표식 적이 받은 피해의 {v}가 적 전원에게 번진다",
+  "en": "{v} of damage to the marked enemy spreads to every enemy",
+  "ctx": "advance_node.csv 행 arc_huntersmark · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_huntersmark|desc|표식 적이 쓰러지면 다음 HP 최다 적에게 옮는다 · 증가량 +{v}",
+  "ko": "표식 적이 쓰러지면 다음 HP 최다 적에게 옮는다 · 증가량 +{v}",
+  "en": "The mark moves on when its target falls · +{v}",
+  "ctx": "advance_node.csv 행 arc_huntersmark · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_huntersmark|bonus|옮을 때 창 시간이 새로 시작",
+  "ko": "옮을 때 창 시간이 새로 시작",
+  "en": "Moving refreshes the window",
+  "ctx": "advance_node.csv 행 arc_huntersmark · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_huntersmark|desc|표식이 적 전원 — 증가량 {v}",
+  "ko": "표식이 적 전원 — 증가량 {v}",
+  "en": "Marks every enemy at {v}",
+  "ctx": "advance_node.csv 행 arc_huntersmark · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_huntersmark|bonus|전원 증가량 두 배",
+  "ko": "전원 증가량 두 배",
+  "en": "Doubles the all-enemy value",
+  "ctx": "advance_node.csv 행 arc_huntersmark · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_supportingfire|desc|화살 데미지 증가",
+  "ko": "화살 데미지 증가",
+  "en": "More arrow damage",
+  "ctx": "advance_node.csv 행 arc_supportingfire · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_supportingfire|bonus|화살 두 발",
+  "ko": "화살 두 발",
+  "en": "Two arrows",
+  "ctx": "advance_node.csv 행 arc_supportingfire · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_supportingfire|desc|아군 스킬에도 따라간다 · 화살 +{v}",
+  "ko": "아군 스킬에도 따라간다 · 화살 +{v}",
+  "en": "Also follows ally skills · arrows +{v}",
+  "ctx": "advance_node.csv 행 arc_supportingfire · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_supportingfire|bonus|스킬엔 두 발",
+  "ko": "스킬엔 두 발",
+  "en": "Two arrows on skills",
+  "ctx": "advance_node.csv 행 arc_supportingfire · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_supportingfire|desc|창 동안 아군이 맞으면 때린 적에게 반격 사격({v})",
+  "ko": "창 동안 아군이 맞으면 때린 적에게 반격 사격({v})",
+  "en": "Return fire on enemies that hit allies ({v})",
+  "ctx": "advance_node.csv 행 arc_supportingfire · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_supportingfire|bonus|반격 사격 두 발",
+  "ko": "반격 사격 두 발",
+  "en": "Two return shots",
+  "ctx": "advance_node.csv 행 arc_supportingfire · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_trap|desc|덫 피해 증가",
+  "ko": "덫 피해 증가",
+  "en": "More trap damage",
+  "ctx": "advance_node.csv 행 arc_trap · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_trap|bonus|터져도 {v}번까지 다시 터진다",
+  "ko": "터져도 {v}번까지 다시 터진다",
+  "en": "Re-arms up to {v} times",
+  "ctx": "advance_node.csv 행 arc_trap · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_trap|desc|적 전열 모든 자리에 깐다 · 덫 피해 +{v}",
+  "ko": "적 전열 모든 자리에 깐다 · 덫 피해 +{v}",
+  "en": "Traps every front slot · +{v} damage",
+  "ctx": "advance_node.csv 행 arc_trap · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_trap|bonus|후열 자리까지",
+  "ko": "후열 자리까지",
+  "en": "The back row too",
+  "ctx": "advance_node.csv 행 arc_trap · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_trap|desc|경직 대신 스턴 · 시간 +{v}초",
+  "ko": "경직 대신 스턴 · 시간 +{v}초",
+  "en": "Stuns instead of Staggering · +{v}s",
+  "ctx": "advance_node.csv 행 arc_trap · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|arc_trap|bonus|스턴 걸린 적의 옆 자리에 덫이 하나 더",
+  "ko": "스턴 걸린 적의 옆 자리에 덫이 하나 더",
+  "en": "A stunned enemy's neighbor gets another trap",
+  "ctx": "advance_node.csv 행 arc_trap · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_endure|desc|버틸 때 남는 HP 증가",
+  "ko": "버틸 때 남는 HP 증가",
+  "en": "More HP when holding on",
+  "ctx": "advance_node.csv 행 pri_endure · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_endure|bonus|아군마다 두 번 버틴다",
+  "ko": "아군마다 두 번 버틴다",
+  "en": "Each ally holds on twice",
+  "ctx": "advance_node.csv 행 pri_endure · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_endure|desc|버틴 아군 {a}초 동안 받는 피해 {v} 감소",
+  "ko": "버틴 아군 {a}초 동안 받는 피해 {v} 감소",
+  "en": "An ally who holds on takes {v} less damage for {a}s",
+  "ctx": "advance_node.csv 행 pri_endure · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_endure|bonus|감소 두 배",
+  "ko": "감소 두 배",
+  "en": "Doubles the reduction",
+  "ctx": "advance_node.csv 행 pri_endure · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_endure|desc|버틴 아군 {a}초 동안 받는 회복 {v} 증가",
+  "ko": "버틴 아군 {a}초 동안 받는 회복 {v} 증가",
+  "en": "An ally who holds on receives {v} more healing for {a}s",
+  "ctx": "advance_node.csv 행 pri_endure · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_endure|bonus|회복 증가 두 배",
+  "ko": "회복 증가 두 배",
+  "en": "Doubles the healing boost",
+  "ctx": "advance_node.csv 행 pri_endure · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_purify|desc|지운 아군 HP 회복 증가",
+  "ko": "지운 아군 HP 회복 증가",
+  "en": "More healing on cleansed allies",
+  "ctx": "advance_node.csv 행 pri_purify · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_purify|bonus|지운 상태이상 하나마다 쿨 {v}초 감소",
+  "ko": "지운 상태이상 하나마다 쿨 {v}초 감소",
+  "en": "Cooldown −{v}s per Ailment removed",
+  "ctx": "advance_node.csv 행 pri_purify · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_purify|desc|지운 상태이상을 {v} 확률로 건 적에게 되돌린다",
+  "ko": "지운 상태이상을 {v} 확률로 건 적에게 되돌린다",
+  "en": "Returns removed Ailments to their caster ({v} chance)",
+  "ctx": "advance_node.csv 행 pri_purify · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_purify|bonus|되돌린 상태이상이 그 적의 같은 줄 전원에게",
+  "ko": "되돌린 상태이상이 그 적의 같은 줄 전원에게",
+  "en": "Returned Ailments hit the caster's whole row",
+  "ctx": "advance_node.csv 행 pri_purify · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_purify|desc|지운 뒤 {v}초 상태이상 면역",
+  "ko": "지운 뒤 {v}초 상태이상 면역",
+  "en": "Immune to Ailments for {v}s after cleansing",
+  "ctx": "advance_node.csv 행 pri_purify · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_purify|bonus|면역 중 막은 상태이상마다 최대 HP {v} 보호막",
+  "ko": "면역 중 막은 상태이상마다 최대 HP {v} 보호막",
+  "en": "Each Ailment blocked while immune grants a shield of {v} max HP",
+  "ctx": "advance_node.csv 행 pri_purify · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_resurrection|desc|일어날 때의 HP 증가",
+  "ko": "일어날 때의 HP 증가",
+  "en": "More HP on rising",
+  "ctx": "advance_node.csv 행 pri_resurrection · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_resurrection|bonus|일어난 아군 5초 동안 모든 피해 +{v}",
+  "ko": "일어난 아군 5초 동안 모든 피해 +{v}",
+  "en": "The raised ally deals {v} more damage for 5s",
+  "ctx": "advance_node.csv 행 pri_resurrection · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_resurrection|desc|일어난 아군은 쿨이 전부 초기화된 채 돌아온다",
+  "ko": "일어난 아군은 쿨이 전부 초기화된 채 돌아온다",
+  "en": "The raised ally returns with every cooldown ready",
+  "ctx": "advance_node.csv 행 pri_resurrection · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_resurrection|bonus|일어날 때 최대 HP {v} 보호막",
+  "ko": "일어날 때 최대 HP {v} 보호막",
+  "en": "Rises with a shield of {v} max HP",
+  "ctx": "advance_node.csv 행 pri_resurrection · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_resurrection|desc|쓰러진 아군 전원(HP {v}로)",
+  "ko": "쓰러진 아군 전원(HP {v}로)",
+  "en": "Raises every fallen ally (at {v} of the HP)",
+  "ctx": "advance_node.csv 행 pri_resurrection · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_resurrection|bonus|전원이어도 HP가 줄지 않는다",
+  "ko": "전원이어도 HP가 줄지 않는다",
+  "en": "No HP penalty for raising everyone",
+  "ctx": "advance_node.csv 행 pri_resurrection · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_punishment|desc|데미지 증가",
+  "ko": "데미지 증가",
+  "en": "More damage",
+  "ctx": "advance_node.csv 행 pri_punishment · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_punishment|bonus|천벌로 쓰러진 적의 디버프 · 상태이상이 주변 적에게 옮는다",
+  "ko": "천벌로 쓰러진 적의 디버프 · 상태이상이 주변 적에게 옮는다",
+  "en": "Debuffs on enemies it kills spread to their neighbors",
+  "ctx": "advance_node.csv 행 pri_punishment · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_punishment|desc|걸린 것 하나마다 가산 +{v}",
+  "ko": "걸린 것 하나마다 가산 +{v}",
+  "en": "+{v} per debuff or ailment",
+  "ctx": "advance_node.csv 행 pri_punishment · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_punishment|bonus|가산 상한 +{v}",
+  "ko": "가산 상한 +{v}",
+  "en": "Bonus cap +{v}",
+  "ctx": "advance_node.csv 행 pri_punishment · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_punishment|desc|가산 대신 걸린 것을 지우고 하나마다 +{v} 터뜨린다",
+  "ko": "가산 대신 걸린 것을 지우고 하나마다 +{v} 터뜨린다",
+  "en": "Consumes debuffs instead for +{v} each",
+  "ctx": "advance_node.csv 행 pri_punishment · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_punishment|bonus|지운 것 하나당 터짐 두 배",
+  "ko": "지운 것 하나당 터짐 두 배",
+  "en": "Doubles the burst per consumed debuff",
+  "ctx": "advance_node.csv 행 pri_punishment · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_atonement|desc|회복 비율 증가",
+  "ko": "회복 비율 증가",
+  "en": "Bigger heal share",
+  "ctx": "advance_node.csv 행 pri_atonement · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_atonement|bonus|저주받은 적이 쓰러지면 파티 전원 최대 HP {v} 회복",
+  "ko": "저주받은 적이 쓰러지면 파티 전원 최대 HP {v} 회복",
+  "en": "When the cursed enemy falls, heals the party for {v} of max HP",
+  "ctx": "advance_node.csv 행 pri_atonement · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_atonement|desc|저주받은 적이 쓰러지면 다음 HP 최다 적에게 옮는다 · 회복 +{v}",
+  "ko": "저주받은 적이 쓰러지면 다음 HP 최다 적에게 옮는다 · 회복 +{v}",
+  "en": "The curse moves on when its target falls · +{v} heal share",
+  "ctx": "advance_node.csv 행 pri_atonement · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_atonement|bonus|옮을 때 창 시간이 새로 시작",
+  "ko": "옮을 때 창 시간이 새로 시작",
+  "en": "Moving refreshes the window",
+  "ctx": "advance_node.csv 행 pri_atonement · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_atonement|desc|적 전원에게 저주 — 회복 비율 {v}",
+  "ko": "적 전원에게 저주 — 회복 비율 {v}",
+  "en": "Curses every enemy at {v} heal share",
+  "ctx": "advance_node.csv 행 pri_atonement · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_atonement|bonus|전원 저주의 회복이 가장 다친 아군에게 몰린다",
+  "ko": "전원 저주의 회복이 가장 다친 아군에게 몰린다",
+  "en": "All-enemy healing goes to the most wounded ally",
+  "ctx": "advance_node.csv 행 pri_atonement · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_excommunication|desc|데미지 증가",
+  "ko": "데미지 증가",
+  "en": "More damage",
+  "ctx": "advance_node.csv 행 pri_excommunication · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_excommunication|bonus|벗긴 버프를 아군에게 옮겨 온다",
+  "ko": "벗긴 버프를 아군에게 옮겨 온다",
+  "en": "Stolen buffs go to your allies",
+  "ctx": "advance_node.csv 행 pri_excommunication · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_excommunication|desc|적 전원의 버프를 벗긴다(피해는 {v}씩 나눈다)",
+  "ko": "적 전원의 버프를 벗긴다(피해는 {v}씩 나눈다)",
+  "en": "Strips every enemy's buffs (damage split at {v} each)",
+  "ctx": "advance_node.csv 행 pri_excommunication · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_excommunication|bonus|나눈 피해가 줄지 않는다",
+  "ko": "나눈 피해가 줄지 않는다",
+  "en": "No split penalty",
+  "ctx": "advance_node.csv 행 pri_excommunication · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_excommunication|desc|벗긴 적은 {v}초 동안 버프를 다시 못 건다",
+  "ko": "벗긴 적은 {v}초 동안 버프를 다시 못 건다",
+  "en": "Stripped enemies cannot gain buffs for {v}s",
+  "ctx": "advance_node.csv 행 pri_excommunication · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_excommunication|bonus|그 사이 버프를 걸려 하면 그 순간 피해 {v}",
+  "ko": "그 사이 버프를 걸려 하면 그 순간 피해 {v}",
+  "en": "Trying to buff in that time deals {v} to them",
+  "ctx": "advance_node.csv 행 pri_excommunication · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_diamondbody|desc|받는 피해 감소 증가",
+  "ko": "받는 피해 감소 증가",
+  "en": "More damage reduction",
+  "ctx": "advance_node.csv 행 pri_diamondbody · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_diamondbody|bonus|창 동안 경직 면역",
+  "ko": "창 동안 경직 면역",
+  "en": "Immune to Stagger during the window",
+  "ctx": "advance_node.csv 행 pri_diamondbody · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_diamondbody|desc|상태이상에 걸리면 {v} 확률로 곧바로 털어낸다",
+  "ko": "상태이상에 걸리면 {v} 확률로 곧바로 털어낸다",
+  "en": "Shakes off Ailments instantly ({v} chance)",
+  "ctx": "advance_node.csv 행 pri_diamondbody · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_diamondbody|bonus|털어낼 때 최대 HP {v} 회복",
+  "ko": "털어낼 때 최대 HP {v} 회복",
+  "en": "Heals {v} of max HP when shaking off",
+  "ctx": "advance_node.csv 행 pri_diamondbody · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_diamondbody|desc|받는 피해 감소의 {v}가 아군 전열에도",
+  "ko": "받는 피해 감소의 {v}가 아군 전열에도",
+  "en": "Front-row allies get {v} of the reduction",
+  "ctx": "advance_node.csv 행 pri_diamondbody · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_diamondbody|bonus|나누는 대상이 후열까지",
+  "ko": "나누는 대상이 후열까지",
+  "en": "The back row too",
+  "ctx": "advance_node.csv 행 pri_diamondbody · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_sweep|desc|데미지 증가",
+  "ko": "데미지 증가",
+  "en": "More damage",
+  "ctx": "advance_node.csv 행 pri_sweep · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_sweep|bonus|맞힌 적 하나마다 최대 HP {v} 회복",
+  "ko": "맞힌 적 하나마다 최대 HP {v} 회복",
+  "en": "Heals {v} of max HP per enemy hit",
+  "ctx": "advance_node.csv 행 pri_sweep · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_sweep|desc|후열까지(후열은 {v})",
+  "ko": "후열까지(후열은 {v})",
+  "en": "Reaches the back row (at {v})",
+  "ctx": "advance_node.csv 행 pri_sweep · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_sweep|bonus|후열도 전열과 같은 피해",
+  "ko": "후열도 전열과 같은 피해",
+  "en": "Full damage on the back row",
+  "ctx": "advance_node.csv 행 pri_sweep · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_sweep|desc|한 번 더 휘두른다({v})",
+  "ko": "한 번 더 휘두른다({v})",
+  "en": "Sweeps again ({v})",
+  "ctx": "advance_node.csv 행 pri_sweep · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_sweep|bonus|두 번째 휘두르기에 맞은 적 {v}초 경직",
+  "ko": "두 번째 휘두르기에 맞은 적 {v}초 경직",
+  "en": "The second sweep Staggers for {v}s",
+  "ctx": "advance_node.csv 행 pri_sweep · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_counter|desc|반격 피해 증가",
+  "ko": "반격 피해 증가",
+  "en": "More counter damage",
+  "ctx": "advance_node.csv 행 pri_counter · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_counter|bonus|반격이 {v}초 경직을 건다",
+  "ko": "반격이 {v}초 경직을 건다",
+  "en": "Counters Stagger for {v}s",
+  "ctx": "advance_node.csv 행 pri_counter · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_counter|desc|아군 전열 누가 맞아도 반격 · 반격 +{v}",
+  "ko": "아군 전열 누가 맞아도 반격 · 반격 +{v}",
+  "en": "Counters for any front-row ally · +{v}",
+  "ctx": "advance_node.csv 행 pri_counter · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_counter|bonus|후열 아군이 맞아도",
+  "ko": "후열 아군이 맞아도",
+  "en": "For back-row allies too",
+  "ctx": "advance_node.csv 행 pri_counter · 열 bonus"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_counter|desc|반격이 적 전열 전원에게 · 반격 +{v}",
+  "ko": "반격이 적 전열 전원에게 · 반격 +{v}",
+  "en": "Counters hit the whole enemy front row · +{v}",
+  "ctx": "advance_node.csv 행 pri_counter · 열 desc"
+ },
+ {
+  "key": "csv|advance_node.csv|pri_counter|bonus|적 전원에게",
+  "ko": "적 전원에게",
+  "en": "Every enemy",
+  "ctx": "advance_node.csv 행 pri_counter · 열 bonus"
+ },
+ {
+  "key": "csv|class.csv|warrior|role_text|도끼와 둔기를 쓰는 맷집 좋은 근접 딜러",
+  "ko": "도끼와 둔기를 쓰는 맷집 좋은 근접 딜러",
+  "en": "Tough melee DPS with axes and maces",
+  "ctx": "class.csv 행 warrior · 열 role_text"
+ },
+ {
+  "key": "csv|class.csv|knight|role_text|양손검과 창을 쓰는 탱커. 공격도 합니다",
+  "ko": "양손검과 창을 쓰는 탱커. 공격도 합니다",
+  "en": "Greatsword and spear tank. Hits too",
+  "ctx": "class.csv 행 knight · 열 role_text"
+ },
+ {
+  "key": "csv|class.csv|mage|role_text|스태프와 오브를 쓰는 마법 딜러. 몸이 약합니다",
+  "ko": "스태프와 오브를 쓰는 마법 딜러. 몸이 약합니다",
+  "en": "Frail magic DPS with staves and orbs",
+  "ctx": "class.csv 행 mage · 열 role_text"
+ },
+ {
+  "key": "csv|class.csv|archer|role_text|활과 석궁을 쓰는 원거리 물리 딜러",
+  "ko": "활과 석궁을 쓰는 원거리 물리 딜러",
+  "en": "Ranged DPS with bows and crossbows",
+  "ctx": "class.csv 행 archer · 열 role_text"
+ },
+ {
+  "key": "csv|class.csv|priest|role_text|십자가와 성경을 쓰는 힐러. 축복과 약화도 겁니다",
+  "ko": "십자가와 성경을 쓰는 힐러. 축복과 약화도 겁니다",
+  "en": "Crucifix and bible healer. Buffs, curses",
+  "ctx": "class.csv 행 priest · 열 role_text"
+ },
+ {
+  "key": "csv|class.csv|assassin|role_text|빠르게 파고들어 치명타로 끝냅니다",
+  "ko": "빠르게 파고들어 치명타로 끝냅니다",
+  "en": "Darts in and finishes with critical hits",
+  "ctx": "class.csv 행 assassin · 열 role_text"
+ },
+ {
+  "key": "csv|class.csv|necromancer|role_text|죽은 자를 불러내 대신 싸우게 합니다",
+  "ko": "죽은 자를 불러내 대신 싸우게 합니다",
+  "en": "Raises the dead to fight in its place",
+  "ctx": "class.csv 행 necromancer · 열 role_text"
+ },
+ {
+  "key": "csv|commission_kind.csv|kill|how|전투에서 저절로 셈",
+  "ko": "전투에서 저절로 셈",
+  "en": "Battles count it for you",
+  "ctx": "commission_kind.csv 행 kill · 열 how"
+ },
+ {
+  "key": "csv|commission_kind.csv|elite|how|전투에서 저절로 셈",
+  "ko": "전투에서 저절로 셈",
+  "en": "Battles count it for you",
+  "ctx": "commission_kind.csv 행 elite · 열 how"
+ },
+ {
+  "key": "csv|commission_kind.csv|boss|how|전투에서 저절로 셈",
+  "ko": "전투에서 저절로 셈",
+  "en": "Battles count it for you",
+  "ctx": "commission_kind.csv 행 boss · 열 how"
+ },
+ {
+  "key": "csv|commission_kind.csv|book|how|스킬북을 읽을 때 셈",
+  "ko": "스킬북을 읽을 때 셈",
+  "en": "Counts each skill book you read",
+  "ctx": "commission_kind.csv 행 book · 열 how"
+ },
+ {
+  "key": "csv|commission_kind.csv|hire|how|영웅을 고용할 때 셈",
+  "ko": "영웅을 고용할 때 셈",
+  "en": "Counts each hero you hire",
+  "ctx": "commission_kind.csv 행 hire · 열 how"
+ },
+ {
+  "key": "csv|commission_kind.csv|salvage|how|분해할 때 셈",
+  "ko": "분해할 때 셈",
+  "en": "Counts when you salvage",
+  "ctx": "commission_kind.csv 행 salvage · 열 how"
+ },
+ {
+  "key": "csv|commission_kind.csv|material|how|분해 · 연구소 재료로 셈",
+  "ko": "분해 · 연구소 재료로 셈",
+  "en": "Salvage and lab materials count it",
+  "ctx": "commission_kind.csv 행 material · 열 how"
+ },
+ {
+  "key": "csv|commission_kind.csv|upgrade|how|강화를 시도할 때 셈",
+  "ko": "강화를 시도할 때 셈",
+  "en": "Counts each enhance attempt",
+  "ctx": "commission_kind.csv 행 upgrade · 열 how"
+ },
+ {
+  "key": "csv|commission_kind.csv|craft|how|장비를 만들 때 셈",
+  "ko": "장비를 만들 때 셈",
+  "en": "Counts each crafted item",
+  "ctx": "commission_kind.csv 행 craft · 열 how"
+ },
+ {
+  "key": "csv|commission_kind.csv|collect|how|드롭으로 채움",
+  "ko": "드롭으로 채움",
+  "en": "Drops fill it",
+  "ctx": "commission_kind.csv 행 collect · 열 how"
+ },
+ {
+  "key": "csv|hero_tier.csv|magic|desc|총합이 낮은 대역 · 분포가 넓어 한 축이 크게 튈 수 있음",
+  "ko": "총합이 낮은 대역 · 분포가 넓어 한 축이 크게 튈 수 있음",
+  "en": "Lower stat total · a wide spread so one axis can spike",
+  "ctx": "hero_tier.csv 행 magic · 열 desc"
+ },
+ {
+  "key": "csv|hero_tier.csv|rare|desc|총합이 높은 대역 · 정규분포라 극값이 드물고 고르게 분포",
+  "ko": "총합이 높은 대역 · 정규분포라 극값이 드물고 고르게 분포",
+  "en": "Higher stat total · a normal spread so extremes are rare",
+  "ctx": "hero_tier.csv 행 rare · 열 desc"
+ },
+ {
+  "key": "csv|hero_tier.csv|unique|desc|이름·직업·죄종 고정 + 고유 스킬 1개(영웅 전용) · 영웅 로스터에 1명만",
+  "ko": "이름·직업·죄종 고정 + 고유 스킬 1개(영웅 전용) · 영웅 로스터에 1명만",
+  "en": "Fixed name class & sin + 1 signature skill (hero-exclusive) · one per roster",
+  "ctx": "hero_tier.csv 행 unique · 열 desc"
+ },
+ {
+  "key": "csv|hero_tier.csv|normal|desc|총합이 가장 낮은 대역 · 정규분포라 고르게 분포",
+  "ko": "총합이 가장 낮은 대역 · 정규분포라 고르게 분포",
+  "en": "Lowest stat total · a normal spread so stats come out even",
+  "ctx": "hero_tier.csv 행 normal · 열 desc"
+ },
+ {
+  "key": "csv|hero_tier.csv|growth|desc|고블린 전용 등급 · 모든 능력치 5에서 시작 · 레벨마다 능력치 하나 성장",
+  "ko": "고블린 전용 등급 · 모든 능력치 5에서 시작 · 레벨마다 능력치 하나 성장",
+  "en": "Goblin-only grade · every stat starts at 5 · one stat grows each level",
+  "ctx": "hero_tier.csv 행 growth · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_bash|desc|{n}초마다 무기를 높이 들어 적 하나를 내리찍어 {d}를 입힙니다",
+  "ko": "{n}초마다 무기를 높이 들어 적 하나를 내리찍어 {d}를 입힙니다",
+  "en": "Every {n}s, raises the weapon high and slams one enemy for {d}",
+  "ctx": "skill.csv 행 war_bash · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_doubleswing|desc|{n}초마다 적 하나를 연달아 {h} 베어 매번 {d}를 입힙니다. 대상이 쓰러지면 남은 타격은 다른 적에게 이어집니다",
+  "ko": "{n}초마다 적 하나를 연달아 {h} 베어 매번 {d}를 입힙니다. 대상이 쓰러지면 남은 타격은 다른 적에게 이어집니다",
+  "en": "Every {n}s, cuts one enemy {h} in a row for {d} each. If the target falls, remaining hits continue against another enemy",
+  "ctx": "skill.csv 행 war_doubleswing · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_recovery|desc|{n}초마다 숨을 고르며 상처를 추슬러 자신의 HP 를 {d} 되돌립니다",
+  "ko": "{n}초마다 숨을 고르며 상처를 추슬러 자신의 HP 를 {d} 되돌립니다",
+  "en": "Every {n}s, catches your breath and restores {d} to yourself",
+  "ctx": "skill.csv 행 war_recovery · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_leap|desc|{n}초마다 기를 모았다가 적진 한가운데로 뛰어들어 적 전원에게 {d}를 입히고 {s} 동안 스턴시킵니다",
+  "ko": "{n}초마다 기를 모았다가 적진 한가운데로 뛰어들어 적 전원에게 {d}를 입히고 {s} 동안 스턴시킵니다",
+  "en": "Every {n}s, gathers power, then leaps into the middle of the enemy line, dealing {d} to every enemy and stunning them for {s}",
+  "ctx": "skill.csv 행 war_leap · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_shout|desc|{n}초마다 전열에 명령을 내려 {s} 동안 파티 전원의 방어력을 {v} · 모든 저항을 {v2} 올립니다",
+  "ko": "{n}초마다 전열에 명령을 내려 {s} 동안 파티 전원의 방어력을 {v} · 모든 저항을 {v2} 올립니다",
+  "en": "Every {n}s, barks orders that raise the whole party's defense by {v} and all resistances by {v2} for {s}",
+  "ctx": "skill.csv 행 war_shout · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_battleorders|desc|{n}초마다 전투 명령을 외쳐 {s} 동안 파티 전원의 최대 HP 를 {v} 올립니다",
+  "ko": "{n}초마다 전투 명령을 외쳐 {s} 동안 파티 전원의 최대 HP 를 {v} 올립니다",
+  "en": "Every {n}s, shouts battle orders that raise the whole party's max HP by {v} for {s}",
+  "ctx": "skill.csv 행 war_battleorders · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_ironskin|desc|{n}초마다 {s} 동안 자신의 몸을 강화해 방어력을 {v} 상승시킵니다",
+  "ko": "{n}초마다 {s} 동안 자신의 몸을 강화해 방어력을 {v} 상승시킵니다",
+  "en": "Every {n}s, hardens your body for {s}, raising your defense by {v}",
+  "ctx": "skill.csv 행 war_ironskin · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_frenzy|desc|{n}초마다 {s} 동안 광기에 몸을 맡겨 때릴 때마다 공격 속도가 {v}씩 오릅니다 — 최대 {m}겹",
+  "ko": "{n}초마다 {s} 동안 광기에 몸을 맡겨 때릴 때마다 공격 속도가 {v}씩 오릅니다 — 최대 {m}겹",
+  "en": "Every {n}s, gives in to frenzy for {s} — each hit adds {v} Attack Speed, up to {m} stacks",
+  "ctx": "skill.csv 행 war_frenzy · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_warcry|desc|{n}초마다 우렁찬 함성으로 적의 기를 꺾어 {s} 동안 적 전원의 물리 데미지를 {v} 낮춥니다",
+  "ko": "{n}초마다 우렁찬 함성으로 적의 기를 꺾어 {s} 동안 적 전원의 물리 데미지를 {v} 낮춥니다",
+  "en": "Every {n}s, a thundering cry breaks the enemy's nerve, lowering every enemy's Physical Damage by {v} for {s}",
+  "ctx": "skill.csv 행 war_warcry · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_battlecry|desc|{n}초마다 위협적인 함성을 질러 {s} 동안 적 전원의 방어력을 {v} 깎습니다",
+  "ko": "{n}초마다 위협적인 함성을 질러 {s} 동안 적 전원의 방어력을 {v} 깎습니다",
+  "en": "Every {n}s, a menacing cry lowers every enemy's defense by {v} for {s}",
+  "ctx": "skill.csv 행 war_battlecry · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_resistshield|desc|{n}초마다 방패에 결계를 둘러 {s} 동안 자신의 모든 원소 저항을 {v} 올립니다",
+  "ko": "{n}초마다 방패에 결계를 둘러 {s} 동안 자신의 모든 원소 저항을 {v} 올립니다",
+  "en": "Every {n}s, wards your shield, raising all your elemental resistances by {v} for {s}",
+  "ctx": "skill.csv 행 kni_resistshield · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_holyshield|desc|{n}초마다 성스러운 빛으로 몸을 감싸 {s} 동안 최대 HP {v} 만큼의 보호막을 두릅니다",
+  "ko": "{n}초마다 성스러운 빛으로 몸을 감싸 {s} 동안 최대 HP {v} 만큼의 보호막을 두릅니다",
+  "en": "Every {n}s, wraps yourself in holy light — a shield worth {v} of max HP for {s}",
+  "ctx": "skill.csv 행 kni_holyshield · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_charge|desc|{n}초마다 현재 HP 의 {p}를 써서 적 하나에게 전속력으로 돌진해 {d}를 입힙니다",
+  "ko": "{n}초마다 현재 HP 의 {p}를 써서 적 하나에게 전속력으로 돌진해 {d}를 입힙니다",
+  "en": "Every {n}s, spends {p} of current HP to charge one enemy at full speed for {d}",
+  "ctx": "skill.csv 행 kni_charge · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_rush|desc|{n}초마다 멈추지 않고 적들 사이를 누비며 {h} 찔러 매번 {d}를 입힙니다",
+  "ko": "{n}초마다 멈추지 않고 적들 사이를 누비며 {h} 찔러 매번 {d}를 입힙니다",
+  "en": "Every {n}s, rides through the enemy ranks without pause, striking {h} for {d} each",
+  "ctx": "skill.csv 행 kni_rush · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_enchant|desc|{n}초마다 무기에 불길을 둘러 {s} 동안 기본 공격과 공격 스킬마다 {v} 의 화염 추가 피해를 얹습니다",
+  "ko": "{n}초마다 무기에 불길을 둘러 {s} 동안 기본 공격과 공격 스킬마다 {v} 의 화염 추가 피해를 얹습니다",
+  "en": "Every {n}s, sets your weapon ablaze — for {s}, basic attacks and attack skills add a {v} fire extra hit",
+  "ctx": "skill.csv 행 kni_enchant · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_might|desc|항상 켜져 있습니다 — 곁에 선 것만으로 파티 전원의 데미지가 {v} 오릅니다",
+  "ko": "항상 켜져 있습니다 — 곁에 선 것만으로 파티 전원의 데미지가 {v} 오릅니다",
+  "en": "Always on — just standing beside you raises the whole party's Damage by {v}",
+  "ctx": "skill.csv 행 kni_might · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_fanaticism|desc|항상 켜져 있습니다 — 광신의 열기로 파티 전원의 공격 속도가 {v} 오릅니다",
+  "ko": "항상 켜져 있습니다 — 광신의 열기로 파티 전원의 공격 속도가 {v} 오릅니다",
+  "en": "Always on — fanatic zeal raises the whole party's Attack Speed by {v}",
+  "ctx": "skill.csv 행 kni_fanaticism · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_defiance|desc|항상 켜져 있습니다 — 굽히지 않는 기세로 파티 전원이 받는 피해가 {v} 줄어듭니다",
+  "ko": "항상 켜져 있습니다 — 굽히지 않는 기세로 파티 전원이 받는 피해가 {v} 줄어듭니다",
+  "en": "Always on — unbowed defiance cuts the damage the whole party takes by {v}",
+  "ctx": "skill.csv 행 kni_defiance · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_sweep|desc|{n}초마다 무기를 크게 휘둘러 적 전열 전원에게 {d}를 입히고 {s} 동안 방어력을 {v} 깎습니다",
+  "ko": "{n}초마다 무기를 크게 휘둘러 적 전열 전원에게 {d}를 입히고 {s} 동안 방어력을 {v} 깎습니다",
+  "en": "Every {n}s, swings wide across the front row, dealing {d} to every enemy there and lowering their defense by {v} for {s}",
+  "ctx": "skill.csv 행 kni_sweep · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_holyfire|desc|항상 켜져 있습니다 — 몸에서 성화가 번져 {t}초마다 적 전원에게 공격력 {v} 의 화염 피해를 줍니다",
+  "ko": "항상 켜져 있습니다 — 몸에서 성화가 번져 {t}초마다 적 전원에게 공격력 {v} 의 화염 피해를 줍니다",
+  "en": "Always on — holy fire radiates from you, dealing {v} of attack as fire damage to every enemy every {t}s",
+  "ctx": "skill.csv 행 kni_holyfire · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_snipe|desc|{n}초마다 숨을 멈추고 기를 모았다가 체력이 가장 많은 적에게 {d}를 입힙니다",
+  "ko": "{n}초마다 숨을 멈추고 기를 모았다가 체력이 가장 많은 적에게 {d}를 입힙니다",
+  "en": "Every {n}s, holds your breath and gathers power, then shoots the enemy with the most HP for {d}",
+  "ctx": "skill.csv 행 arc_snipe · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_rapid|desc|{n}초마다 적 하나에게 화살을 {h} 연달아 쏴 매번 {d}를 입힙니다",
+  "ko": "{n}초마다 적 하나에게 화살을 {h} 연달아 쏴 매번 {d}를 입힙니다",
+  "en": "Every {n}s, looses arrows at one enemy {h} in quick succession for {d} each",
+  "ctx": "skill.csv 행 arc_rapid · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_multishot|desc|{n}초마다 화살을 부채꼴로 흩뿌려 적 전원에게 {d}를 입힙니다 — 전열이 살아 있으면 후열은 {k} 덜 받습니다",
+  "ko": "{n}초마다 화살을 부채꼴로 흩뿌려 적 전원에게 {d}를 입힙니다 — 전열이 살아 있으면 후열은 {k} 덜 받습니다",
+  "en": "Every {n}s, fans arrows out to hit every enemy for {d} — while the front row stands, the back row takes {k} less",
+  "ctx": "skill.csv 행 arc_multishot · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_guided|desc|{n}초마다 방어가 가장 두꺼운 적의 틈을 꿰뚫어 {d}를 입히고 방어력을 {k} 깎습니다",
+  "ko": "{n}초마다 방어가 가장 두꺼운 적의 틈을 꿰뚫어 {d}를 입히고 방어력을 {k} 깎습니다",
+  "en": "Every {n}s, threads an arrow through the best-armored enemy's guard for {d} and strips {k} of its defense",
+  "ctx": "skill.csv 행 arc_guided · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_pierce|desc|{n}초마다 {s} 동안 화살에 관통력을 실어 물리 공격이 상대 방어를 {v} 무시합니다",
+  "ko": "{n}초마다 {s} 동안 화살에 관통력을 실어 물리 공격이 상대 방어를 {v} 무시합니다",
+  "en": "Every {n}s, for {s} your arrows pierce armor — physical attacks ignore {v} of the target's defense",
+  "ctx": "skill.csv 행 arc_pierce · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_poison|desc|{n}초마다 화살촉에 독을 발라 {s} 동안 기본 공격과 공격 스킬마다 {v} 의 독 추가 피해를 얹습니다",
+  "ko": "{n}초마다 화살촉에 독을 발라 {s} 동안 기본 공격과 공격 스킬마다 {v} 의 독 추가 피해를 얹습니다",
+  "en": "Every {n}s, poisons your arrowheads — for {s}, basic attacks and attack skills add a {v} poison extra hit",
+  "ctx": "skill.csv 행 arc_poison · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_coldarrow|desc|{n}초마다 화살촉에 서리를 씌워 {s} 동안 기본 공격과 공격 스킬마다 {v} 의 냉기 추가 피해를 얹고 맞은 적을 얼립니다",
+  "ko": "{n}초마다 화살촉에 서리를 씌워 {s} 동안 기본 공격과 공격 스킬마다 {v} 의 냉기 추가 피해를 얹고 맞은 적을 얼립니다",
+  "en": "Every {n}s, frosts your arrowheads — for {s}, basic attacks and attack skills add a {v} cold extra hit that freezes the target",
+  "ctx": "skill.csv 행 arc_coldarrow · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_evade|desc|{n}초마다 {s} 동안 몸을 낮추고 날렵하게 움직여 받는 공격 {v}을 통째로 피합니다",
+  "ko": "{n}초마다 {s} 동안 몸을 낮추고 날렵하게 움직여 받는 공격 {v}을 통째로 피합니다",
+  "en": "Every {n}s, stays light on your feet for {s}, completely avoiding incoming attacks {v}",
+  "ctx": "skill.csv 행 arc_evade · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_quickhands|desc|{n}초마다 {s} 동안 손놀림을 빠르게 해 공격 속도가 {v} 오릅니다",
+  "ko": "{n}초마다 {s} 동안 손놀림을 빠르게 해 공격 속도가 {v} 오릅니다",
+  "en": "Every {n}s, for {s} your hands move faster — Attack Speed rises by {v}",
+  "ctx": "skill.csv 행 arc_quickhands · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_eagleeye|desc|{n}초마다 {s} 동안 매의 눈으로 겨눠 물리 데미지가 {v} 오릅니다",
+  "ko": "{n}초마다 {s} 동안 매의 눈으로 겨눠 물리 데미지가 {v} 오릅니다",
+  "en": "Every {n}s, for {s} you take aim with an eagle's eye — Physical Damage rises by {v}",
+  "ctx": "skill.csv 행 arc_eagleeye · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_fireball|desc|{n}초마다 커다란 불덩이를 던져 적 하나에게 {d}를 입힙니다",
+  "ko": "{n}초마다 커다란 불덩이를 던져 적 하나에게 {d}를 입힙니다",
+  "en": "Every {n}s, hurls a great ball of fire at one enemy for {d}",
+  "ctx": "skill.csv 행 mag_fireball · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_inferno|desc|{n}초마다 적진에 불길을 깔아 {s} 동안 {t}초마다 적 전원에게 데미지 {v} 의 화염 피해를 줍니다",
+  "ko": "{n}초마다 적진에 불길을 깔아 {s} 동안 {t}초마다 적 전원에게 데미지 {v} 의 화염 피해를 줍니다",
+  "en": "Every {n}s, sets the enemy ground ablaze — for {s}, every enemy takes {v} of damage as fire damage every {t}s",
+  "ctx": "skill.csv 행 mag_inferno · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_iceblast|desc|{n}초마다 얼음 덩이를 쏘아 적 하나에게 {d}를 입히고 {s} 동안 얼려 공격 속도를 {v} 늦춥니다",
+  "ko": "{n}초마다 얼음 덩이를 쏘아 적 하나에게 {d}를 입히고 {s} 동안 얼려 공격 속도를 {v} 늦춥니다",
+  "en": "Every {n}s, blasts one enemy with ice for {d} and freezes it for {s}, slowing its Attack Speed by {v}",
+  "ctx": "skill.csv 행 mag_iceblast · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_frostnova|desc|{n}초마다 한기를 사방으로 터뜨려 적 전원에게 {d}를 입히고 {s} 동안 얼려 공격 속도를 {v} 늦춥니다",
+  "ko": "{n}초마다 한기를 사방으로 터뜨려 적 전원에게 {d}를 입히고 {s} 동안 얼려 공격 속도를 {v} 늦춥니다",
+  "en": "Every {n}s, bursts cold in every direction — {d} to every enemy, frozen for {s} with Attack Speed slowed by {v}",
+  "ctx": "skill.csv 행 mag_frostnova · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_lightning|desc|{n}초마다 적 하나를 강력하게 공격하는 번개를 발사해 {d}를 입힙니다",
+  "ko": "{n}초마다 적 하나를 강력하게 공격하는 번개를 발사해 {d}를 입힙니다",
+  "en": "Every {n}s, fires a bolt of lightning that strikes one enemy hard for {d}",
+  "ctx": "skill.csv 행 mag_lightning · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_chain|desc|{n}초마다 적에서 적으로 튀는 번개를 날려 {d}를 입힙니다 — 한 번 튈 때마다 {k}씩 약해집니다",
+  "ko": "{n}초마다 적에서 적으로 튀는 번개를 날려 {d}를 입힙니다 — 한 번 튈 때마다 {k}씩 약해집니다",
+  "en": "Every {n}s, sends lightning leaping from enemy to enemy for {d} — weakening {k} with each jump",
+  "ctx": "skill.csv 행 mag_chain · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_ignite|desc|{n}초마다 {s} 동안 마력에 불씨를 섞어 화염 스킬이 맞힌 적에게 화상을 입힙니다",
+  "ko": "{n}초마다 {s} 동안 마력에 불씨를 섞어 화염 스킬이 맞힌 적에게 화상을 입힙니다",
+  "en": "Every {n}s, for {s} you stoke your magic — your fire skills inflict burn",
+  "ctx": "skill.csv 행 mag_ignite · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_deepfreeze|desc|{n}초마다 {s} 동안 마력을 더 차갑게 벼려 냉기 스킬의 결빙이 길어지고, 얼어 있는 적을 다시 얼리면 스턴시킵니다",
+  "ko": "{n}초마다 {s} 동안 마력을 더 차갑게 벼려 냉기 스킬의 결빙이 길어지고, 얼어 있는 적을 다시 얼리면 스턴시킵니다",
+  "en": "Every {n}s, for {s} your magic runs colder — cold skills freeze for longer, and freezing an already frozen enemy stuns it",
+  "ctx": "skill.csv 행 mag_deepfreeze · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_surge|desc|{n}초마다 {s} 동안 몸에 전류를 끌어올려 전기 스킬이 맞힌 적을 {v} 확률로 스턴시킵니다",
+  "ko": "{n}초마다 {s} 동안 몸에 전류를 끌어올려 전기 스킬이 맞힌 적을 {v} 확률로 스턴시킵니다",
+  "en": "Every {n}s, for {s} you charge yourself with current — your lightning skills have a {v} chance to stun",
+  "ctx": "skill.csv 행 mag_surge · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_echo|desc|{n}초마다 {s} 동안 주문에 메아리를 걸어 공격 스킬이 무작위 적에게 한 번 더 나갑니다",
+  "ko": "{n}초마다 {s} 동안 주문에 메아리를 걸어 공격 스킬이 무작위 적에게 한 번 더 나갑니다",
+  "en": "Every {n}s, for {s} your spells echo — attack skills fire once more at a random enemy",
+  "ctx": "skill.csv 행 mag_echo · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_judgment|desc|{n}초마다 적 하나에게 심판의 빛을 내리꽂아 {d}를 입힙니다",
+  "ko": "{n}초마다 적 하나에게 심판의 빛을 내리꽂아 {d}를 입힙니다",
+  "en": "Every {n}s, brings a beam of judgment down on one enemy for {d}",
+  "ctx": "skill.csv 행 pri_judgment · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_heal|desc|{n}초마다 따스한 빛을 퍼뜨려 파티 전원의 HP 를 {d} 되돌립니다",
+  "ko": "{n}초마다 따스한 빛을 퍼뜨려 파티 전원의 HP 를 {d} 되돌립니다",
+  "en": "Every {n}s, spreads a warm light that restores {d} to the whole party",
+  "ctx": "skill.csv 행 pri_heal · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_grace|desc|{n}초마다 은총을 내려 {s} 동안 파티 전원의 데미지를 {v} 올립니다",
+  "ko": "{n}초마다 은총을 내려 {s} 동안 파티 전원의 데미지를 {v} 올립니다",
+  "en": "Every {n}s, bestows grace that raises the whole party's Damage by {v} for {s}",
+  "ctx": "skill.csv 행 pri_grace · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_haste|desc|{n}초마다 바람의 축복을 내려 {s} 동안 파티 전원의 공격 속도를 {v} 올립니다",
+  "ko": "{n}초마다 바람의 축복을 내려 {s} 동안 파티 전원의 공격 속도를 {v} 올립니다",
+  "en": "Every {n}s, a blessing of wind raises the whole party's Attack Speed by {v} for {s}",
+  "ctx": "skill.csv 행 pri_haste · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_cure|desc|{n}초마다 가장 위태로운 아군에게 손을 얹어 HP 를 {d} 되돌립니다",
+  "ko": "{n}초마다 가장 위태로운 아군에게 손을 얹어 HP 를 {d} 되돌립니다",
+  "en": "Every {n}s, lays hands on the most wounded ally, restoring {d}",
+  "ctx": "skill.csv 행 pri_cure · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_regen|desc|{n}초마다 재생의 기도를 올려 {s} 동안 파티 전원이 매초 최대 HP 의 {v}를 회복합니다",
+  "ko": "{n}초마다 재생의 기도를 올려 {s} 동안 파티 전원이 매초 최대 HP 의 {v}를 회복합니다",
+  "en": "Every {n}s, a prayer of renewal makes the whole party recover {v} of max HP every second for {s}",
+  "ctx": "skill.csv 행 pri_regen · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_penitence|desc|{n}초마다 적들에게 참회를 강요해 {s} 동안 적 전원의 데미지를 {v} 낮춥니다",
+  "ko": "{n}초마다 적들에게 참회를 강요해 {s} 동안 적 전원의 데미지를 {v} 낮춥니다",
+  "en": "Every {n}s, forces penitence on the enemy, lowering every enemy's Damage by {v} for {s}",
+  "ctx": "skill.csv 행 pri_penitence · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_bind|desc|{n}초마다 빛의 사슬로 적을 옭아매 {s} 동안 적 전원의 공격 속도를 {v} 늦춥니다",
+  "ko": "{n}초마다 빛의 사슬로 적을 옭아매 {s} 동안 적 전원의 공격 속도를 {v} 늦춥니다",
+  "en": "Every {n}s, binds the enemy in chains of light, slowing every enemy's Attack Speed by {v} for {s}",
+  "ctx": "skill.csv 행 pri_bind · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_doom|desc|{n}초마다 파멸을 선고해 {s} 동안 적 전원이 받는 피해를 {v} 늘립니다",
+  "ko": "{n}초마다 파멸을 선고해 {s} 동안 적 전원이 받는 피해를 {v} 늘립니다",
+  "en": "Every {n}s, pronounces doom — every enemy takes {v} more damage for {s}",
+  "ctx": "skill.csv 행 pri_doom · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_summon|desc|{n}초마다 부름을 보내 아직 안 나왔거나 쓰러진 무리를 한 번에 모두 불러냅니다",
+  "ko": "{n}초마다 부름을 보내 아직 안 나왔거나 쓰러진 무리를 한 번에 모두 불러냅니다",
+  "en": "Every {n}s, sends out a call that brings in every member of its band not yet out or fallen",
+  "ctx": "skill.csv 행 pri_summon · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mon_selfdestruct|desc|쓰러질 때 몸을 터뜨려 적 전원에게 {d}를 입힙니다",
+  "ko": "쓰러질 때 몸을 터뜨려 적 전원에게 {d}를 입힙니다",
+  "en": "On death, blows itself apart, dealing {d} to every enemy",
+  "ctx": "skill.csv 행 mon_selfdestruct · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mon_hellfire|desc|{n}초마다 지옥불을 쏟아부어 적 하나를 {i}초마다 {h} 태워 매번 {d}를 입힙니다",
+  "ko": "{n}초마다 지옥불을 쏟아부어 적 하나를 {i}초마다 {h} 태워 매번 {d}를 입힙니다",
+  "en": "Every {n}s, pours hellfire on one enemy, burning it {h} at {i}s intervals for {d} each",
+  "ctx": "skill.csv 행 mon_hellfire · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mon_ironmaiden|desc|{n}초마다 저주를 걸어 {s} 동안 적 전원이 직격으로 입힌 피해의 {v}를 자신도 받습니다",
+  "ko": "{n}초마다 저주를 걸어 {s} 동안 적 전원이 직격으로 입힌 피해의 {v}를 자신도 받습니다",
+  "en": "Every {n}s, curses every enemy for {s} — each takes {v} of the direct damage it deals",
+  "ctx": "skill.csv 행 mon_ironmaiden · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mon_goldfever|desc|{n}초마다 {s} 동안 황금 광기에 빠져 데미지가 {v2} 오르고 다른 스킬을 못 씁니다 — 맞힐 때마다 {v} 늘어납니다",
+  "ko": "{n}초마다 {s} 동안 황금 광기에 빠져 데미지가 {v2} 오르고 다른 스킬을 못 씁니다 — 맞힐 때마다 {v} 늘어납니다",
+  "en": "Every {n}s, falls into a gold fever for {s} — Damage +{v2} and no other skills; each hit extends it by {v}",
+  "ctx": "skill.csv 행 mon_goldfever · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mon_delegate|desc|항상 켜져 있습니다 — 자기 차례를 공격력이 가장 높은 아군에게 넘깁니다",
+  "ko": "항상 켜져 있습니다 — 자기 차례를 공격력이 가장 높은 아군에게 넘깁니다",
+  "en": "Always on — hands every turn to the ally with the highest Damage",
+  "ctx": "skill.csv 행 mon_delegate · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mon_swarm|desc|{n}초마다 {s} 동안 파리 {f}마리로 흩어집니다 — 마리마다 HP · 공격이 {v}이고 살아남은 만큼으로 다시 뭉칩니다",
+  "ko": "{n}초마다 {s} 동안 파리 {f}마리로 흩어집니다 — 마리마다 HP · 공격이 {v}이고 살아남은 만큼으로 다시 뭉칩니다",
+  "en": "Every {n}s, bursts into {f} flies for {s} — each has {v} of your HP and attack, and the survivors regroup",
+  "ctx": "skill.csv 행 mon_swarm · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_ragnarok|desc|{n}초마다 {s} 동안 종말의 힘으로 변신해 데미지를 {v}, 공격 속도를 {v2} 올리고 다른 액티브를 봉인합니다",
+  "ko": "{n}초마다 {s} 동안 종말의 힘으로 변신해 데미지를 {v}, 공격 속도를 {v2} 올리고 다른 액티브를 봉인합니다",
+  "en": "Every {n}s, transforms with the power of the end times for {s}, raising Damage by {v} and Attack Speed by {v2} while sealing your other actives",
+  "ctx": "skill.csv 행 war_ragnarok · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_berserk|desc|자동으로 {n}초마다 {s} 동안 이성을 놓습니다 — 칠 때마다 HP 를 쓰고 다른 액티브의 데미지가 {v} 오릅니다",
+  "ko": "자동으로 {n}초마다 {s} 동안 이성을 놓습니다 — 칠 때마다 HP 를 쓰고 다른 액티브의 데미지가 {v} 오릅니다",
+  "en": "Automatically every {n}s, lets go of reason for {s} — each hit costs HP and your other actives deal {v} more damage",
+  "ctx": "skill.csv 행 war_berserk · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_mutualruin|desc|{n}초마다 지금 HP 의 30%를 쏟아 적 하나에게 {d}를 입힙니다",
+  "ko": "{n}초마다 지금 HP 의 30%를 쏟아 적 하나에게 {d}를 입힙니다",
+  "en": "Every {n}s, pours 30% of your current HP into one blow for {d}",
+  "ctx": "skill.csv 행 war_mutualruin · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_whirlwind|desc|{n}초마다 회오리처럼 돌며 적들 사이를 휩쓸어 {h} 베고 매번 {d}를 입힙니다",
+  "ko": "{n}초마다 회오리처럼 돌며 적들 사이를 휩쓸어 {h} 베고 매번 {d}를 입힙니다",
+  "en": "Every {n}s, spins like a whirlwind through the enemy, cutting {h} for {d} each",
+  "ctx": "skill.csv 행 war_whirlwind · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_thorswrath|desc|{n}초마다 기를 모았다가 체력이 가장 많은 적에게 {d}를 내리치고 나머지 적에게도 튀겨 {s} 동안 스턴시킵니다",
+  "ko": "{n}초마다 기를 모았다가 체력이 가장 많은 적에게 {d}를 내리치고 나머지 적에게도 튀겨 {s} 동안 스턴시킵니다",
+  "en": "Every {n}s, gathers power and smashes the enemy with the most HP for {d}, splashing the rest and stunning them for {s}",
+  "ctx": "skill.csv 행 war_thorswrath · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_shockwave|desc|{n}초마다 땅을 내리찍어 적 전원에게 {d}를 입히고 잠시 전열과 후열을 뒤바꿉니다",
+  "ko": "{n}초마다 땅을 내리찍어 적 전원에게 {d}를 입히고 잠시 전열과 후열을 뒤바꿉니다",
+  "en": "Every {n}s, slams the ground, dealing {d} to every enemy and briefly swapping their front and back lines",
+  "ctx": "skill.csv 행 war_shockwave · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_divinedescent|desc|{n}초마다 {s} 동안 신을 몸에 내려 자신의 최대 HP 를 {v} 올리고 매초 최대 HP 의 {v2}를 회복합니다",
+  "ko": "{n}초마다 {s} 동안 신을 몸에 내려 자신의 최대 HP 를 {v} 올리고 매초 최대 HP 의 {v2}를 회복합니다",
+  "en": "Every {n}s, a god descends into you for {s}, raising your max HP by {v} and restoring {v2} of max HP every second",
+  "ctx": "skill.csv 행 war_divinedescent · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_command|desc|{n}초마다 호령으로 사기를 끌어올려 {s} 동안 파티 전원의 데미지를 {v} 올립니다",
+  "ko": "{n}초마다 호령으로 사기를 끌어올려 {s} 동안 파티 전원의 데미지를 {v} 올립니다",
+  "en": "Every {n}s, a rallying command raises the whole party's Damage by {v} for {s}",
+  "ctx": "skill.csv 행 war_command · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|war_intimidate|desc|{n}초마다 사자처럼 포효해 {s} 동안 적 전원의 데미지를 {v} 낮춥니다",
+  "ko": "{n}초마다 사자처럼 포효해 {s} 동안 적 전원의 데미지를 {v} 낮춥니다",
+  "en": "Every {n}s, roars like a lion to cow the enemy, lowering every enemy's Damage by {v} for {s}",
+  "ctx": "skill.csv 행 war_intimidate · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_lastbastion|desc|자동으로 {n}초마다 {s} 동안 다른 아군이 입는 피해의 {v}를 대신 받습니다",
+  "ko": "자동으로 {n}초마다 {s} 동안 다른 아군이 입는 피해의 {v}를 대신 받습니다",
+  "en": "Automatically every {n}s, takes {v} of the damage other allies would suffer for {s}",
+  "ctx": "skill.csv 행 kni_lastbastion · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_unbreakablewill|desc|자동으로 {n}초마다 {s} 동안 맞을 때마다 받는 피해 감소가 {v}씩 쌓입니다",
+  "ko": "자동으로 {n}초마다 {s} 동안 맞을 때마다 받는 피해 감소가 {v}씩 쌓입니다",
+  "en": "Automatically every {n}s, for {s} each hit you take stacks {v} damage reduction",
+  "ctx": "skill.csv 행 kni_unbreakablewill · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_divinejudgment|desc|자동으로 {n}초마다 {s} 동안 받은 피해의 {v}를 공격자에게 되돌립니다",
+  "ko": "자동으로 {n}초마다 {s} 동안 받은 피해의 {v}를 공격자에게 되돌립니다",
+  "en": "Automatically every {n}s, for {s} returns {v} of damage taken to the attacker",
+  "ctx": "skill.csv 행 kni_divinejudgment · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_cleansing|desc|파티 전원이 받는 상태이상 · 디버프 시간을 {v} 줄입니다",
+  "ko": "파티 전원이 받는 상태이상 · 디버프 시간을 {v} 줄입니다",
+  "en": "Shortens Ailments and debuffs on the whole party by {v}",
+  "ctx": "skill.csv 행 kni_cleansing · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_offenseaura|desc|파티 전원의 데미지를 {v}, 공격 · 캐스팅 속도를 {v2} 올립니다",
+  "ko": "파티 전원의 데미지를 {v}, 공격 · 캐스팅 속도를 {v2} 올립니다",
+  "en": "Raises the whole party's Damage by {v} and Attack and Cast Speed by {v2}",
+  "ctx": "skill.csv 행 kni_offenseaura · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_elemconvert|desc|파티 전원이 입히는 물리 피해의 {v}를 화염으로 바꿉니다",
+  "ko": "파티 전원이 입히는 물리 피해의 {v}를 화염으로 바꿉니다",
+  "en": "Converts {v} of the party's physical damage to Fire",
+  "ctx": "skill.csv 행 kni_elemconvert · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_retribution|desc|{n}초마다 {s} 동안 공격 속도가 {v} 오르고 입히는 물리 피해의 30%가 번개로 바뀝니다",
+  "ko": "{n}초마다 {s} 동안 공격 속도가 {v} 오르고 입히는 물리 피해의 30%가 번개로 바뀝니다",
+  "en": "Every {n}s, for {s} Attack Speed rises by {v} and 30% of your physical damage becomes lightning",
+  "ctx": "skill.csv 행 kni_retribution · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_condemnation|desc|{n}초마다 적 하나에게 {d}를 입히고, 그 적이 잃은 체력에 비례한 고정 피해를 더합니다",
+  "ko": "{n}초마다 적 하나에게 {d}를 입히고, 그 적이 잃은 체력에 비례한 고정 피해를 더합니다",
+  "en": "Every {n}s, strikes one enemy for {d} plus fixed damage proportional to its missing HP",
+  "ctx": "skill.csv 행 kni_condemnation · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|kni_fallingstrike|desc|{n}초마다 뛰어올라 후열 적 하나에게 벼락처럼 내리꽂아 {d}를 입힙니다",
+  "ko": "{n}초마다 뛰어올라 후열 적 하나에게 벼락처럼 내리꽂아 {d}를 입힙니다",
+  "en": "Every {n}s, leaps and crashes down like lightning on a back-row enemy for {d}",
+  "ctx": "skill.csv 행 kni_fallingstrike · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_meteor|desc|{n}초마다 마력을 모았다가 하늘에서 운석을 떨어뜨려 무작위 적 하나에게 {d}를 입힙니다",
+  "ko": "{n}초마다 마력을 모았다가 하늘에서 운석을 떨어뜨려 무작위 적 하나에게 {d}를 입힙니다",
+  "en": "Every {n}s, gathers power and drops a meteor on a random enemy for {d}",
+  "ctx": "skill.csv 행 mag_meteor · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_ember|desc|늘 켜져 있습니다 — 화염 피해를 입은 적에게 불씨가 쌓이고, 겹이 차면 터져 데미지의 {v}를 입힙니다",
+  "ko": "늘 켜져 있습니다 — 화염 피해를 입은 적에게 불씨가 쌓이고, 겹이 차면 터져 데미지의 {v}를 입힙니다",
+  "en": "Always on — fire damage piles Embers on the enemy, and a full pile bursts for {v} of your Damage",
+  "ctx": "skill.csv 행 mag_ember · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_hydra|desc|{n}초마다 {s} 동안 히드라를 불러내 — 머리가 6자리 중 무작위 적을 계속 물어뜯습니다",
+  "ko": "{n}초마다 {s} 동안 히드라를 불러내 — 머리가 6자리 중 무작위 적을 계속 물어뜯습니다",
+  "en": "Every {n}s, summons a hydra for {s} — its head keeps biting random enemies across all six slots",
+  "ctx": "skill.csv 행 mag_hydra · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_frozenorb|desc|{n}초마다 얼음 구슬을 띄워 {h} 동안 적 전열 전원을 긁어 매번 {d}를 입힙니다",
+  "ko": "{n}초마다 얼음 구슬을 띄워 {h} 동안 적 전열 전원을 긁어 매번 {d}를 입힙니다",
+  "en": "Every {n}s, conjures an orb that grinds the enemy front row {h}, dealing {d} each time",
+  "ctx": "skill.csv 행 mag_frozenorb · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_blizzard|desc|{n}초마다 {s} 동안 눈보라를 일으켜 — 매초 적 전원을 냉기로 때려 얼립니다",
+  "ko": "{n}초마다 {s} 동안 눈보라를 일으켜 — 매초 적 전원을 냉기로 때려 얼립니다",
+  "en": "Every {n}s, raises a blizzard for {s} — every second it strikes every enemy with cold and freezes them",
+  "ctx": "skill.csv 행 mag_blizzard · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_frostarmor|desc|{n}초마다 {s} 동안 파티 전원에게 원소 피해를 막는 얼음 보호막을 씌웁니다 — 보호막을 평타로 친 적은 얼어붙습니다",
+  "ko": "{n}초마다 {s} 동안 파티 전원에게 원소 피해를 막는 얼음 보호막을 씌웁니다 — 보호막을 평타로 친 적은 얼어붙습니다",
+  "en": "Every {n}s, wraps the whole party in ice that absorbs elemental damage for {s} — enemies who strike it with basic attacks are Frozen",
+  "ctx": "skill.csv 행 mag_frostarmor · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_thunderstrike|desc|늘 켜져 있습니다 — 낮은 확률로 6자리 중 무작위 적에게 데미지의 {v} 벼락이 떨어지고, 터지면 같은 적에게 한 번 더 떨어집니다",
+  "ko": "늘 켜져 있습니다 — 낮은 확률로 6자리 중 무작위 적에게 데미지의 {v} 벼락이 떨어지고, 터지면 같은 적에게 한 번 더 떨어집니다",
+  "en": "Always on — now and then a bolt for {v} of your Damage strikes a random enemy across all six slots, and a burst calls another bolt on the same enemy",
+  "ctx": "skill.csv 행 mag_thunderstrike · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_nova|desc|{n}초마다 사방으로 번개를 뿜어 적 전원에게 {d}를 입힙니다",
+  "ko": "{n}초마다 사방으로 번개를 뿜어 적 전원에게 {d}를 입힙니다",
+  "en": "Every {n}s, sprays lightning in every direction, dealing {d} to every enemy",
+  "ctx": "skill.csv 행 mag_nova · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|mag_thundergod|desc|{n}초마다 쌓인 캐스팅 칸을 전부 써서 칸 하나에 벼락 하나 — 체력이 가장 많은 적에게 {d}씩 내리칩니다",
+  "ko": "{n}초마다 쌓인 캐스팅 칸을 전부 써서 칸 하나에 벼락 하나 — 체력이 가장 많은 적에게 {d}씩 내리칩니다",
+  "en": "Every {n}s, spends all cast charges — one bolt each at the highest-HP enemy for {d}",
+  "ctx": "skill.csv 행 mag_thundergod · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_trueaim|desc|{n}초마다 {s} 동안 공격 속도가 {v2} 느려지는 대신 스나이프 데미지가 {v} 오릅니다",
+  "ko": "{n}초마다 {s} 동안 공격 속도가 {v2} 느려지는 대신 스나이프 데미지가 {v} 오릅니다",
+  "en": "Every {n}s, for {s} your Attack Speed drops by {v2} but Snipe deals {v} more damage",
+  "ctx": "skill.csv 행 arc_trueaim · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_singlestrike|desc|{n}초마다 온 힘을 실은 한 발을 적 하나에게 꽂아 {d}를 입힙니다",
+  "ko": "{n}초마다 온 힘을 실은 한 발을 적 하나에게 꽂아 {d}를 입힙니다",
+  "en": "Every {n}s, puts everything into one shot at one enemy for {d}",
+  "ctx": "skill.csv 행 arc_singlestrike · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_reload|desc|스킬로 적을 쓰러뜨리면 그 스킬의 쿨타임이 초기화됩니다(라운드마다 {v}번)",
+  "ko": "스킬로 적을 쓰러뜨리면 그 스킬의 쿨타임이 초기화됩니다(라운드마다 {v}번)",
+  "en": "When a skill kills an enemy, that skill's cooldown resets ({v} times per round)",
+  "ctx": "skill.csv 행 arc_reload · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_quickdraw|desc|{n}초마다 {s} 동안 시위를 짧게 당겨 공격 주기가 무기 주기의 {v} 로 고정되는 대신 기본 공격 피해가 {v2} 줄어듭니다",
+  "ko": "{n}초마다 {s} 동안 시위를 짧게 당겨 공격 주기가 무기 주기의 {v} 로 고정되는 대신 기본 공격 피해가 {v2} 줄어듭니다",
+  "en": "Every {n}s, for {s} you draw short — your attack interval is fixed at {v} of your weapon's, but basic attack damage drops by {v2}",
+  "ctx": "skill.csv 행 arc_quickdraw · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_overdraw|desc|{n}초마다 {s} 동안 시위를 끝까지 당겨 공격 주기가 무기 주기의 {v} 로 고정되는 대신 기본 공격 피해가 {v2} 오릅니다",
+  "ko": "{n}초마다 {s} 동안 시위를 끝까지 당겨 공격 주기가 무기 주기의 {v} 로 고정되는 대신 기본 공격 피해가 {v2} 오릅니다",
+  "en": "Every {n}s, for {s} you draw to the full — your attack interval is fixed at {v} of your weapon's, but basic attack damage rises by {v2}",
+  "ctx": "skill.csv 행 arc_overdraw · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_chaindraw|desc|{n}초마다 {s} 동안 기본 공격이 적 전원을 꿰뚫습니다 — 첫 대상 밖은 {v}",
+  "ko": "{n}초마다 {s} 동안 기본 공격이 적 전원을 꿰뚫습니다 — 첫 대상 밖은 {v}",
+  "en": "Every {n}s, for {s} basic attacks pierce every enemy — {v} beyond the first target",
+  "ctx": "skill.csv 행 arc_chaindraw · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_huntersmark|desc|{n}초마다 전열에서 체력이 가장 많은 적에게 표식을 새겨 {s} 동안 그 적이 받는 피해를 {v} 늘립니다",
+  "ko": "{n}초마다 전열에서 체력이 가장 많은 적에게 표식을 새겨 {s} 동안 그 적이 받는 피해를 {v} 늘립니다",
+  "en": "Every {n}s, marks the front-row enemy with the most HP — it takes {v} more damage for {s}",
+  "ctx": "skill.csv 행 arc_huntersmark · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_supportingfire|desc|{n}초마다 {s} 동안 아군이 기본 공격할 때마다 같은 적에게 화살 한 발을 {v} 배율로 쏩니다",
+  "ko": "{n}초마다 {s} 동안 아군이 기본 공격할 때마다 같은 적에게 화살 한 발을 {v} 배율로 쏩니다",
+  "en": "Every {n}s, for {s} each ally basic attack is followed by an arrow at the same enemy ({v})",
+  "ctx": "skill.csv 행 arc_supportingfire · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|arc_trap|desc|{n}초마다 적 전열 한 자리에 덫을 놓습니다 — 그 자리 적이 행동하면 터져 {d}를 입히고 경직시킵니다",
+  "ko": "{n}초마다 적 전열 한 자리에 덫을 놓습니다 — 그 자리 적이 행동하면 터져 {d}를 입히고 경직시킵니다",
+  "en": "Every {n}s, sets a trap on one enemy front-row spot — when the enemy there acts it bursts for {d} and staggers it",
+  "ctx": "skill.csv 행 arc_trap · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_endure|desc|{n}초마다 {s} 동안 파티 전원을 축복해 — 쓰러질 피해를 받으면 한 번 최대 HP의 {v}로 버팁니다",
+  "ko": "{n}초마다 {s} 동안 파티 전원을 축복해 — 쓰러질 피해를 받으면 한 번 최대 HP의 {v}로 버팁니다",
+  "en": "Every {n}s, blesses the whole party for {s} — a lethal blow once leaves each ally at {v} of max HP",
+  "ctx": "skill.csv 행 pri_endure · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_purify|desc|{n}초마다 파티의 상태이상 · 디버프를 지우고 지운 아군의 HP 를 {d} 되돌립니다",
+  "ko": "{n}초마다 파티의 상태이상 · 디버프를 지우고 지운 아군의 HP 를 {d} 되돌립니다",
+  "en": "Every {n}s, cleanses the party's Ailments and debuffs and restores {d} to each cleansed ally",
+  "ctx": "skill.csv 행 pri_purify · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_resurrection|desc|{n}초마다 쓰러진 아군 하나를 최대 HP의 {r}로 일으킵니다(전투마다 한 번)",
+  "ko": "{n}초마다 쓰러진 아군 하나를 최대 HP의 {r}로 일으킵니다(전투마다 한 번)",
+  "en": "Every {n}s, raises one fallen ally at {r} of max HP (once per battle)",
+  "ctx": "skill.csv 행 pri_resurrection · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_punishment|desc|{n}초마다 적 전원에게 {d}를 입힙니다 — 걸린 디버프 · 상태이상 하나마다 피해가 오릅니다",
+  "ko": "{n}초마다 적 전원에게 {d}를 입힙니다 — 걸린 디버프 · 상태이상 하나마다 피해가 오릅니다",
+  "en": "Every {n}s, deals {d} to every enemy — more for each debuff or Ailment on it",
+  "ctx": "skill.csv 행 pri_punishment · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_atonement|desc|{n}초마다 전열에서 체력이 가장 많은 적을 저주해 {s} 동안 그 적이 받은 피해의 {v}만큼 파티를 회복합니다",
+  "ko": "{n}초마다 전열에서 체력이 가장 많은 적을 저주해 {s} 동안 그 적이 받은 피해의 {v}만큼 파티를 회복합니다",
+  "en": "Every {n}s, curses the front-row enemy with the most HP — for {s} the party heals {v} of the damage it takes",
+  "ctx": "skill.csv 행 pri_atonement · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_excommunication|desc|{n}초마다 버프가 가장 많은 적의 버프를 모두 벗기고 {d}를 입힙니다 — 벗긴 버프 하나마다 피해가 오릅니다",
+  "ko": "{n}초마다 버프가 가장 많은 적의 버프를 모두 벗기고 {d}를 입힙니다 — 벗긴 버프 하나마다 피해가 오릅니다",
+  "en": "Every {n}s, strips every buff from the enemy with the most buffs and deals {d} — more for each buff stripped",
+  "ctx": "skill.csv 행 pri_excommunication · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_diamondbody|desc|{n}초마다 {s} 동안 받는 피해가 {v} 줄고 상태이상 · 디버프 시간이 {v2} 줄어듭니다",
+  "ko": "{n}초마다 {s} 동안 받는 피해가 {v} 줄고 상태이상 · 디버프 시간이 {v2} 줄어듭니다",
+  "en": "Every {n}s, for {s} you take {v} less damage and Ailments and debuffs on you last {v2} shorter",
+  "ctx": "skill.csv 행 pri_diamondbody · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_sweep|desc|{n}초마다 봉을 휘둘러 적 전열 전원에게 {d}를 입힙니다",
+  "ko": "{n}초마다 봉을 휘둘러 적 전열 전원에게 {d}를 입힙니다",
+  "en": "Every {n}s, sweeps the staff, dealing {d} to every front-row enemy",
+  "ctx": "skill.csv 행 pri_sweep · 열 desc"
+ },
+ {
+  "key": "csv|skill.csv|pri_counter|desc|{n}초마다 {s} 동안 맞을 때마다 때린 적에게 {v} 배율로 되받아칩니다",
+  "ko": "{n}초마다 {s} 동안 맞을 때마다 때린 적에게 {v} 배율로 되받아칩니다",
+  "en": "Every {n}s, for {s} every hit you take is struck back at the attacker ({v})",
+  "ctx": "skill.csv 행 pri_counter · 열 desc"
+ }
+]

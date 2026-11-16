@@ -3,7 +3,7 @@
 > 상위: [GAME_DESIGN.md](GAME_DESIGN.md) §4 · SSOT: `hero_attribute.csv` · `combat_stat.csv` · `balance.csv`
 > **6 · 7장은 제외 — 확정이 아니다** [2026-10-22 사용자 「모든 기획에서 Chapter6,7은 확정이 아니라 제외라고 명시해줘」] — 이 문서에 남은 6 · 7장 내용은 옛 값이고 확정이 아니다. DLC 를 기획할 때 다시 정한다 ([GAME_DESIGN.md](GAME_DESIGN.md) §1)
 
-영웅은 유저의 **빌드 프로젝트**다. 로스터는 소수 정예 — 파티 `[balance.csv:party_size_max]`인 + 파견 인원, 보유 상한 `[balance.csv:roster_cap]`.
+영웅은 유저의 **빌드 프로젝트**다. 로스터는 소수 정예 — 파티 `[balance.csv:party_size_max]`인 + 파견 인원, 보유 상한 `[balance.csv:roster_cap]` + 연구소 「로스터」 지점(`[lab_node.csv:visit.roster]` — 레벨마다 한 칸 · 11-16 · [base_expedition_design.md §2-1](base_expedition_design.md)).
 
 ---
 
@@ -286,4 +286,4 @@
 
 ---
 
-*마지막 업데이트: 2026-11-15*
+*마지막 업데이트: 2026-11-16*

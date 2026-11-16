@@ -289,8 +289,10 @@ export const statInert = stat => AFFIX_LABELS[stat]?.inert === true;
  */
 export const affixText = (stat, v, fallback) => {
     const d = statLabel(stat, fallback);
-    return { ko: `${d.ko} ${statValue(stat, v, fallback)}`, en: `${statValue(stat, v, fallback)} ${d.en}` };
+    return withZh(d, { ko: `${d.ko} ${statValue(stat, v, fallback)}`, en: `${statValue(stat, v, fallback)} ${d.en}` }, statValue(stat, v, fallback));
 };
+/** 간체 옵션 줄 — 숫자가 앞(「+12% 暴击率」 · 디아4 · PoE 간체판 관례 · LOCALIZATION_ZH §2) · 이름에 zh 가 없으면 zh 를 안 싣는다(화면은 영어 줄) */
+const withZh = (d, pair, value) => (d?.zh ? { ...pair, zh: `${value} ${d.zh}` } : pair);
 
 /** 축 이름만 — {ko, en, fmt}. 이름과 값을 따로 찍는 화면(마스터리 칸)이 문자열을 되파싱하지 않게 한다 */
 export const statLabel = (stat, fallback) => AFFIX_LABELS[stat] ?? fallback ?? { ko: stat, en: stat, fmt: 'n' };
@@ -339,17 +341,17 @@ export const rangeValue = (stat, min, max, fallback) => {
  * 계산은 이미 따로다 — 무기 피해 범위에만 곱하고 데미지 % 괄호에는 안 든다(hero.js `weaponPct` · battle_design §9-1).
  * stat id(`atk_pct`)는 그대로라 세이브 · 계산이 안 바뀐다 — 이름만 여기서 갈린다
  */
-const SLOT_LABELS = { weapon: { atk_pct: { ko: '무기 데미지', en: 'Weapon Damage', fmt: 'pct' } } };
-/** 아이템 옵션 한 줄 — {ko, en}. 부위가 이름을 바꾸는 줄(`SLOT_LABELS`)만 갈리고 나머지는 `affixText` 그대로다 */
+const SLOT_LABELS = { weapon: { atk_pct: { ko: '무기 데미지', en: 'Weapon Damage', zh: '武器伤害', fmt: 'pct' } } };
+/** 아이템 옵션 한 줄 — {ko, en, zh?}. 부위가 이름을 바꾸는 줄(`SLOT_LABELS`)만 갈리고 나머지는 `affixText` 그대로다 */
 export const itemAffixText = (slot, stat, v) => {
     const d = SLOT_LABELS[slot]?.[stat];
-    return d ? { ko: `${d.ko} ${statValue(stat, v)}`, en: `${statValue(stat, v)} ${d.en}` } : affixText(stat, v);
+    return d ? withZh(d, { ko: `${d.ko} ${statValue(stat, v)}`, en: `${statValue(stat, v)} ${d.en}` }, statValue(stat, v)) : affixText(stat, v);
 };
 /** `itemAffixText` 의 범위판 — 「무기 데미지 +1~200%」(도감 무기 툴팁 · SCREEN_DESIGN §9-1 · ADR-1056). 부호는 `statValue` · 범위 · 단위는 `rangeValue` 와 같다 */
 export const itemAffixRangeText = (slot, stat, min, max) => {
     const d = SLOT_LABELS[slot]?.[stat] ?? statLabel(stat);
     const v = `${min >= 0 ? '+' : ''}${rangeValue(stat, min, max)}`;
-    return { ko: `${d.ko} ${v}`, en: `${v} ${d.en}` };
+    return withZh(d, { ko: `${d.ko} ${v}`, en: `${v} ${d.en}` }, v);
 };
 
 /** 페이퍼돌 배치 — 3열 × 3행, 신체 위치를 따른다. 칸은 착용 **위치**(equip_slot.csv:equip_slot_id) — 반지 두 칸.

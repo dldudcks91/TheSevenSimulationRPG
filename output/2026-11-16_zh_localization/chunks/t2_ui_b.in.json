@@ -1,0 +1,5373 @@
+[
+ {
+  "key": "ui|rep.contrib.levelUp",
+  "ko": "▲ Lv.{a} → {b}",
+  "en": "▲ Lv.{a} → {b}",
+  "ctx": "rep.contrib.levelUp"
+ },
+ {
+  "key": "ui|rep.contrib.xp",
+  "ko": "경험치 {n}",
+  "en": "{n} XP",
+  "ctx": "rep.contrib.xp"
+ },
+ {
+  "key": "ui|rep.log.sub",
+  "ko": "정예 {e} / 보스 {b}",
+  "en": "Elite {e} / Boss {b}",
+  "ctx": "rep.log.sub"
+ },
+ {
+  "key": "ui|rep.contract",
+  "ko": "방치형 계약 — 자리를 비워도 영웅 로스터는 파괴되지 않습니다. 사건은 리포트 안에서 완결",
+  "en": "The idle-game contract — the roster is never destroyed while you are away. Every event resolves inside the report",
+  "ctx": "rep.contract"
+ },
+ {
+  "key": "ui|hs.doing.idle",
+  "ko": "대기 중",
+  "en": "Idle",
+  "ctx": "hs.doing.idle"
+ },
+ {
+  "key": "ui|hs.doing.expedition",
+  "ko": "원정 중",
+  "en": "On expedition",
+  "ctx": "hs.doing.expedition"
+ },
+ {
+  "key": "ui|hs.doing.advance",
+  "ko": "전직 중",
+  "en": "Advancing",
+  "ctx": "hs.doing.advance"
+ },
+ {
+  "key": "ui|hs.doing.explore",
+  "ko": "탐험 중",
+  "en": "Exploring",
+  "ctx": "hs.doing.explore"
+ },
+ {
+  "key": "ui|eq.slots",
+  "ko": "장비는 8칸 — 무기 · 투구 · 갑옷 · 장갑 · 신발 · 목걸이 · 반지 2. 모든 무기는 양손이라 잠기는 칸이 없습니다",
+  "en": "8 gear slots — weapon, helm, armor, gloves, boots, amulet, 2 rings. Every weapon is two-handed, so no slot is ever locked",
+  "ctx": "eq.slots"
+ },
+ {
+  "key": "ui|st.atk",
+  "ko": "데미지",
+  "en": "Damage",
+  "ctx": "st.atk"
+ },
+ {
+  "key": "ui|st.range",
+  "ko": "{a}~{b}",
+  "en": "{a}–{b}",
+  "ctx": "st.range"
+ },
+ {
+  "key": "ui|st.atkType.physical",
+  "ko": "물리",
+  "en": "Physical",
+  "ctx": "st.atkType.physical"
+ },
+ {
+  "key": "ui|st.atkType.magic",
+  "ko": "마법",
+  "en": "Magic",
+  "ctx": "st.atkType.magic"
+ },
+ {
+  "key": "ui|st.atkType.fire",
+  "ko": "화염",
+  "en": "Fire",
+  "ctx": "st.atkType.fire"
+ },
+ {
+  "key": "ui|st.atkType.cold",
+  "ko": "냉기",
+  "en": "Cold",
+  "ctx": "st.atkType.cold"
+ },
+ {
+  "key": "ui|st.atkType.lightning",
+  "ko": "전기",
+  "en": "Lightning",
+  "ctx": "st.atkType.lightning"
+ },
+ {
+  "key": "ui|st.atkType.poison",
+  "ko": "독",
+  "en": "Poison",
+  "ctx": "st.atkType.poison"
+ },
+ {
+  "key": "ui|st.atkType.fixed",
+  "ko": "고정",
+  "en": "True",
+  "ctx": "st.atkType.fixed"
+ },
+ {
+  "key": "ui|st.mitigation",
+  "ko": "감쇠 {p}%",
+  "en": "{p}% mitigated",
+  "ctx": "st.mitigation"
+ },
+ {
+  "key": "ui|st.fx.part",
+  "ko": "{n} {v}",
+  "en": "{n} {v}",
+  "ctx": "st.fx.part"
+ },
+ {
+  "key": "ui|st.fx.vsTarget",
+  "ko": "정예 · 열별 추가 데미지",
+  "en": "Damage vs Elite & Row",
+  "ctx": "st.fx.vsTarget"
+ },
+ {
+  "key": "ui|st.fx.drType",
+  "ko": "타입별 받는 피해 감소",
+  "en": "Damage Reduction vs Type",
+  "ctx": "st.fx.drType"
+ },
+ {
+  "key": "ui|st.fx.drTarget",
+  "ko": "정예 · 열별 받는 피해 감소",
+  "en": "Damage Reduction vs Elite & Row",
+  "ctx": "st.fx.drTarget"
+ },
+ {
+  "key": "ui|st.fx.normal",
+  "ko": "일반",
+  "en": "Normal",
+  "ctx": "st.fx.normal"
+ },
+ {
+  "key": "ui|st.fx.demon",
+  "ko": "데몬",
+  "en": "Demon",
+  "ctx": "st.fx.demon"
+ },
+ {
+  "key": "ui|st.fx.undead",
+  "ko": "언데드",
+  "en": "Undead",
+  "ctx": "st.fx.undead"
+ },
+ {
+  "key": "ui|st.fx.ele",
+  "ko": "원소 피해량 증가",
+  "en": "Elemental Damage Increase",
+  "ctx": "st.fx.ele"
+ },
+ {
+  "key": "ui|st.fx.resRed",
+  "ko": "적 원소 저항 감소",
+  "en": "Enemy Resist Reduction",
+  "ctx": "st.fx.resRed"
+ },
+ {
+  "key": "ui|st.fx.fire",
+  "ko": "화염",
+  "en": "Fire",
+  "ctx": "st.fx.fire"
+ },
+ {
+  "key": "ui|st.fx.cold",
+  "ko": "냉기",
+  "en": "Cold",
+  "ctx": "st.fx.cold"
+ },
+ {
+  "key": "ui|st.fx.lightning",
+  "ko": "전기",
+  "en": "Lightning",
+  "ctx": "st.fx.lightning"
+ },
+ {
+  "key": "ui|st.fx.poison",
+  "ko": "독",
+  "en": "Poison",
+  "ctx": "st.fx.poison"
+ },
+ {
+  "key": "ui|st.resCap",
+  "ko": "/ 상한 {cap}%",
+  "en": "/ cap {cap}%",
+  "ctx": "st.resCap"
+ },
+ {
+  "key": "ui|st.maxhp",
+  "ko": "최대 HP",
+  "en": "Max HP",
+  "ctx": "st.maxhp"
+ },
+ {
+  "key": "ui|st.desc.str",
+  "ko": "평타 · 물리 스킬 피해 증가",
+  "en": "Increases basic attack and physical skill damage",
+  "ctx": "st.desc.str"
+ },
+ {
+  "key": "ui|st.desc.agi",
+  "ko": "공격 속도 · 캐스팅 속도 증가<br>일부 스킬의 타수 · 효과 증가",
+  "en": "Faster attack and casting speed<br>More hits and stronger effects for some skills",
+  "ctx": "st.desc.agi"
+ },
+ {
+  "key": "ui|st.desc.int",
+  "ko": "마법 스킬 피해 증가",
+  "en": "Increases magic skill damage",
+  "ctx": "st.desc.int"
+ },
+ {
+  "key": "ui|st.desc.vit",
+  "ko": "레벨업마다 오르는 최대 HP 증가<br>버프 지속시간 증가",
+  "en": "More Max HP per level-up<br>Longer-lasting buffs",
+  "ctx": "st.desc.vit"
+ },
+ {
+  "key": "ui|st.desc.luck",
+  "ko": "치명타 피해 · 드랍률 · 골드 획득 증가<br>일부 스킬의 추가 피해 증가",
+  "en": "Increases Crit Damage, Item Find and Gold Find<br>Boosts bonus damage of some skills",
+  "ctx": "st.desc.luck"
+ },
+ {
+  "key": "ui|st.desc.ldr",
+  "ko": "아군에게 거는 버프 강화 · 리더면 파티 전술 효과 증가",
+  "en": "Strengthens the buffs you give allies · As leader, strengthens party tactics",
+  "ctx": "st.desc.ldr"
+ },
+ {
+  "key": "ui|st.desc.cha",
+  "ko": "회복량 · 적에게 거는 효과 증가 · 받는 상태이상 · 디버프 시간 감소",
+  "en": "Increases healing and the effects you put on enemies · Shortens ailments and debuffs on you",
+  "ctx": "st.desc.cha"
+ },
+ {
+  "key": "ui|st.desc.atk_physical",
+  "ko": "평타와 물리 스킬 피해의 바탕이 되는 값",
+  "en": "The base of basic attack and physical skill damage",
+  "ctx": "st.desc.atk_physical"
+ },
+ {
+  "key": "ui|st.desc.atk_magic",
+  "ko": "마법 스킬 피해와 회복량의 바탕이 되는 값",
+  "en": "The base of magic skill damage and healing",
+  "ctx": "st.desc.atk_magic"
+ },
+ {
+  "key": "ui|st.desc.action_period",
+  "ko": "한 번 행동하는 데 걸리는 시간 — 짧을수록 자주 행동",
+  "en": "Time per action — the lower, the more often you act",
+  "ctx": "st.desc.action_period"
+ },
+ {
+  "key": "ui|st.desc.hp_max",
+  "ko": "HP 의 최대치 — 0 이 되면 쓰러짐",
+  "en": "Maximum HP — the hero falls at 0",
+  "ctx": "st.desc.hp_max"
+ },
+ {
+  "key": "ui|st.desc.crit_rate",
+  "ko": "공격이 치명타로 들어갈 확률",
+  "en": "Chance for an attack to be a critical hit",
+  "ctx": "st.desc.crit_rate"
+ },
+ {
+  "key": "ui|st.desc.crit_damage",
+  "ko": "치명타가 주는 피해 배율",
+  "en": "Damage multiplier of critical hits",
+  "ctx": "st.desc.crit_damage"
+ },
+ {
+  "key": "ui|st.desc.def_ignore",
+  "ko": "적의 물리 방어를 이 비율만큼 무시",
+  "en": "Ignores this share of the enemy's Physical Defense",
+  "ctx": "st.desc.def_ignore"
+ },
+ {
+  "key": "ui|st.desc.cooldown_reduction",
+  "ko": "스킬 쿨타임을 이 비율만큼 감소",
+  "en": "Shortens skill cooldowns by this %",
+  "ctx": "st.desc.cooldown_reduction"
+ },
+ {
+  "key": "ui|st.desc.defense",
+  "ko": "받는 물리 피해 감소 — 옆의 감쇠 % 만큼 덜 받음",
+  "en": "Reduces physical damage taken — by the mitigation % beside it",
+  "ctx": "st.desc.defense"
+ },
+ {
+  "key": "ui|st.desc.damage_reduction",
+  "ko": "받는 피해를 % 만큼 줄이고 고정값만큼 더 뺌 (고정 / %)",
+  "en": "Cuts damage taken by the %, then subtracts the flat amount (flat / %)",
+  "ctx": "st.desc.damage_reduction"
+ },
+ {
+  "key": "ui|st.desc.fhr",
+  "ko": "물리 공격에 맞아 경직되는 시간 감소",
+  "en": "Shortens the stagger from physical hits",
+  "ctx": "st.desc.fhr"
+ },
+ {
+  "key": "ui|st.desc.debuff_dur_reduction",
+  "ko": "받는 상태이상 · 디버프 시간 감소",
+  "en": "Shortens ailments and debuffs on you",
+  "ctx": "st.desc.debuff_dur_reduction"
+ },
+ {
+  "key": "ui|st.desc.res_fire",
+  "ko": "받는 화염 피해를 이 % 만큼 감소 — 옆의 상한까지",
+  "en": "Reduces Fire damage taken by this % — up to the cap beside it",
+  "ctx": "st.desc.res_fire"
+ },
+ {
+  "key": "ui|st.desc.res_cold",
+  "ko": "받는 냉기 피해를 이 % 만큼 감소 — 옆의 상한까지",
+  "en": "Reduces Cold damage taken by this % — up to the cap beside it",
+  "ctx": "st.desc.res_cold"
+ },
+ {
+  "key": "ui|st.desc.res_lightning",
+  "ko": "받는 전기 피해를 이 % 만큼 감소 — 옆의 상한까지",
+  "en": "Reduces Lightning damage taken by this % — up to the cap beside it",
+  "ctx": "st.desc.res_lightning"
+ },
+ {
+  "key": "ui|st.desc.res_poison",
+  "ko": "받는 독 피해를 이 % 만큼 감소 — 옆의 상한까지",
+  "en": "Reduces Poison damage taken by this % — up to the cap beside it",
+  "ctx": "st.desc.res_poison"
+ },
+ {
+  "key": "ui|st.desc.fx_ele",
+  "ko": "원소마다 화염 · 냉기 · 전기 · 독 피해 증가",
+  "en": "Increases Fire / Cold / Lightning / Poison damage, each on its own",
+  "ctx": "st.desc.fx_ele"
+ },
+ {
+  "key": "ui|st.desc.fx_res_red",
+  "ko": "그 원소로 때릴 때 적의 저항을 이만큼 감소",
+  "en": "Lowers the enemy's resistance when you hit with that element",
+  "ctx": "st.desc.fx_res_red"
+ },
+ {
+  "key": "ui|st.desc.fx_vs_type",
+  "ko": "일반 · 데몬 · 언데드 적에게 주는 피해 증가",
+  "en": "More damage to Normal, Demon and Undead enemies",
+  "ctx": "st.desc.fx_vs_type"
+ },
+ {
+  "key": "ui|st.desc.fx_dr_type",
+  "ko": "일반 · 데몬 · 언데드 적에게 받는 피해 감소",
+  "en": "Less damage taken from Normal, Demon and Undead enemies",
+  "ctx": "st.desc.fx_dr_type"
+ },
+ {
+  "key": "ui|st.desc.fx_vs_target",
+  "ko": "정예 · 보스와 전열 · 후열 적에게 주는 피해 증가",
+  "en": "More damage to Elites & Bosses and to front / back row enemies",
+  "ctx": "st.desc.fx_vs_target"
+ },
+ {
+  "key": "ui|st.desc.fx_dr_target",
+  "ko": "정예 · 보스와 전열 · 후열 적에게 받는 피해 감소",
+  "en": "Less damage taken from Elites & Bosses and from front / back row enemies",
+  "ctx": "st.desc.fx_dr_target"
+ },
+ {
+  "key": "ui|st.desc.fx_crush",
+  "ko": "맞힐 때 대상의 현재 HP 에 비례한 피해 추가",
+  "en": "Hits add damage based on the target's current HP",
+  "ctx": "st.desc.fx_crush"
+ },
+ {
+  "key": "ui|st.desc.fx_hit",
+  "ko": "공격이 맞을 확률 증가",
+  "en": "Raises the chance for attacks to hit",
+  "ctx": "st.desc.fx_hit"
+ },
+ {
+  "key": "ui|st.desc.fx_counter",
+  "ko": "맞으면 이 확률로 때린 적에게 기본 공격으로 반격",
+  "en": "Chance to strike back with a basic attack when hit",
+  "ctx": "st.desc.fx_counter"
+ },
+ {
+  "key": "ui|st.desc.reflect_damage",
+  "ko": "받은 피해의 이 % 를 때린 적에게 반사",
+  "en": "Returns this % of damage taken to the attacker",
+  "ctx": "st.desc.reflect_damage"
+ },
+ {
+  "key": "ui|st.desc.life_steal",
+  "ko": "준 피해의 이 % 만큼 HP 회복",
+  "en": "Heals for this % of damage dealt",
+  "ctx": "st.desc.life_steal"
+ },
+ {
+  "key": "ui|st.desc.hp_regen",
+  "ko": "초마다 HP 를 이만큼 회복",
+  "en": "Restores this much HP every second",
+  "ctx": "st.desc.hp_regen"
+ },
+ {
+  "key": "ui|st.desc.fx_recv",
+  "ko": "받는 회복량 증가",
+  "en": "Increases healing received",
+  "ctx": "st.desc.fx_recv"
+ },
+ {
+  "key": "ui|st.desc.fx_buff_dur",
+  "ko": "내가 거는 버프와 적에게 거는 효과의 지속시간 증가",
+  "en": "Your buffs and the effects you put on enemies last longer",
+  "ctx": "st.desc.fx_buff_dur"
+ },
+ {
+  "key": "ui|st.desc.item_find",
+  "ko": "적이 떨어뜨리는 아이템 증가",
+  "en": "Enemies drop more items",
+  "ctx": "st.desc.item_find"
+ },
+ {
+  "key": "ui|st.desc.fx_magic_find",
+  "ko": "더 높은 등급의 아이템이 나올 확률 증가",
+  "en": "Higher-rarity items drop more often",
+  "ctx": "st.desc.fx_magic_find"
+ },
+ {
+  "key": "ui|st.desc.gold_find",
+  "ko": "적에게서 얻는 골드 증가",
+  "en": "More gold from enemies",
+  "ctx": "st.desc.gold_find"
+ },
+ {
+  "key": "ui|st.desc.fx_xp",
+  "ko": "얻는 경험치 증가",
+  "en": "More experience gained",
+  "ctx": "st.desc.fx_xp"
+ },
+ {
+  "key": "ui|eq.sins.h",
+  "ko": "접사 죄종",
+  "en": "Affix Sins",
+  "ctx": "eq.sins.h"
+ },
+ {
+  "key": "ui|eq.sins.note",
+  "ko": "착용 장비의 죄종 — 아이템 이름에 붙은 죄종 태그(접두 · 접미)입니다. <b>파티 전술</b>이 이 수를 셉니다<br><b>죄종 세트효과는 폐기</b> — 파티 전술로 이관",
+  "en": "Sins on worn gear — the sin tags in item names (prefix and suffix). <b>Party tactics</b> count them<br><b>Sin set effects are dropped</b> — they moved to party tactics",
+  "ctx": "eq.sins.note"
+ },
+ {
+  "key": "ui|eq.sins.none",
+  "ko": "접사 없음",
+  "en": "No affixes",
+  "ctx": "eq.sins.none"
+ },
+ {
+  "key": "ui|eq.filter.all",
+  "ko": "전체",
+  "en": "All",
+  "ctx": "eq.filter.all"
+ },
+ {
+  "key": "ui|eq.inv.note",
+  "ko": "칸에 마우스를 올리면 <b>착용 중인 장비와 나란히</b> 비교됩니다. 테두리 색 = 희귀도",
+  "en": "Hover a cell to compare it <b>side by side with the equipped item</b>. Border color = rarity",
+  "ctx": "eq.inv.note"
+ },
+ {
+  "key": "ui|ch.gear.h",
+  "ko": "장비",
+  "en": "Equipment",
+  "ctx": "ch.gear.h"
+ },
+ {
+  "key": "ui|ch.autoEq",
+  "ko": "자동 장착",
+  "en": "Auto-equip",
+  "ctx": "ch.autoEq"
+ },
+ {
+  "key": "ui|ch.autoEq.done",
+  "ko": "장비 {n}개 장착",
+  "en": "Equipped {n} items",
+  "ctx": "ch.autoEq.done",
+  "en_one": "Equipped {n} item"
+ },
+ {
+  "key": "ui|ch.autoEq.none",
+  "ko": "더 나은 장비 없음",
+  "en": "No better gear",
+  "ctx": "ch.autoEq.none"
+ },
+ {
+  "key": "ui|ch.attr.h",
+  "ko": "기본 옵션",
+  "en": "Basic Stats",
+  "ctx": "ch.attr.h"
+ },
+ {
+  "key": "ui|ch.attr.sub",
+  "ko": "장비 불변",
+  "en": "Gear-immutable",
+  "ctx": "ch.attr.sub"
+ },
+ {
+  "key": "ui|ch.attr.note",
+  "ko": "기본 능력치 7종은 <b>영웅이 갖고 태어납니다</b> — 장비는 단 1도 올리지 않습니다.<br>하는 일은 둘뿐입니다: <b>전투 능력치의 계수</b>(오른쪽 칸의 괄호 표기)와 <b>파견 판정</b>.",
+  "en": "The 7 attributes are <b>innate to the hero</b> — gear never raises them by even 1.<br>They do exactly two things: <b>scale combat stats</b> (shown in parentheses on the right) and <b>decide dispatch outcomes</b>.",
+  "ctx": "ch.attr.note"
+ },
+ {
+  "key": "ui|ch.detail.h",
+  "ko": "세부 옵션",
+  "en": "Detailed Stats",
+  "ctx": "ch.detail.h"
+ },
+ {
+  "key": "ui|ch.detail.hn",
+  "ko": "세부 옵션 {n}",
+  "en": "Detailed Stats {n}",
+  "ctx": "ch.detail.hn"
+ },
+ {
+  "key": "ui|ch.detail.note",
+  "ko": "전투 능력치는 <b>장비와 스킬이 만듭니다</b>. 값이 <b>—</b> 인 축은 0이 아니라 <b>아직 아무 효과도 그 축에 적용되지 않음</b>을 뜻합니다 — 비어 있는 축이 곧 다음 장비의 자리입니다.<br>괄호 안 약어 = 이 축을 미는 기본 능력치. 표는 src/data/combat_stat.csv 를 그대로 따릅니다",
+  "en": "Combat stats are <b>built by gear and skills</b>. A <b>—</b> is not zero — it means <b>nothing has touched that axis yet</b>, and an empty axis is where the next item goes.<br>The abbreviation in parentheses is the attribute that scales it. This table mirrors src/data/combat_stat.csv",
+  "ctx": "ch.detail.note"
+ },
+ {
+  "key": "ui|ch.lv",
+  "ko": "Lv.{n}",
+  "en": "Lv.{n}",
+  "ctx": "ch.lv"
+ },
+ {
+  "key": "ui|ch.xp",
+  "ko": "경험치 {a} / {b}",
+  "en": "XP {a} / {b}",
+  "ctx": "ch.xp"
+ },
+ {
+  "key": "ui|ch.xp.max",
+  "ko": "MAX",
+  "en": "MAX",
+  "ctx": "ch.xp.max"
+ },
+ {
+  "key": "ui|ch.star.name",
+  "ko": "별",
+  "en": "Stars",
+  "ctx": "ch.star.name"
+ },
+ {
+  "key": "ui|ch.star.desc",
+  "ko": "별 하나마다 고른 능력치 +1",
+  "en": "+1 to a chosen attribute per star",
+  "ctx": "ch.star.desc"
+ },
+ {
+  "key": "ui|ch.star.add",
+  "ko": "별 하나로 {stat} +1",
+  "en": "Spend a star: +1 {stat}",
+  "ctx": "ch.star.add"
+ },
+ {
+  "key": "ui|ch.star.what",
+  "ko": "{stat} {a} → {b}",
+  "en": "{stat} {a} → {b}",
+  "ctx": "ch.star.what"
+ },
+ {
+  "key": "ui|ch.star.warn",
+  "ko": "별 하나를 씁니다. 되돌릴 수 없습니다.",
+  "en": "This uses one star and cannot be undone.",
+  "ctx": "ch.star.warn"
+ },
+ {
+  "key": "ui|ch.itemLv",
+  "ko": "Lv.{n}",
+  "en": "Lv.{n}",
+  "ctx": "ch.itemLv"
+ },
+ {
+  "key": "ui|ch.seal",
+  "ko": "죄종 인장",
+  "en": "Sin Seal",
+  "ctx": "ch.seal"
+ },
+ {
+  "key": "ui|ch.seal.lock",
+  "ko": "죄종 인장은 레이드에서 얻을 수 있습니다.",
+  "en": "Sin Seals can be obtained from Raids.",
+  "ctx": "ch.seal.lock"
+ },
+ {
+  "key": "ui|ch.skill.h",
+  "ko": "액티브 스킬",
+  "en": "Active Skills",
+  "ctx": "ch.skill.h"
+ },
+ {
+  "key": "ui|ch.skill.order",
+  "ko": "우선순위",
+  "en": "Priority",
+  "ctx": "ch.skill.order"
+ },
+ {
+  "key": "ui|ch.skill.orderRandom",
+  "ko": "랜덤으로",
+  "en": "Random",
+  "ctx": "ch.skill.orderRandom"
+ },
+ {
+  "key": "ui|ch.skill.orderDesc",
+  "ko": "첫 스킬 사용 시 우선순위를 설정합니다.",
+  "en": "Sets the priority for first skill use.",
+  "ctx": "ch.skill.orderDesc"
+ },
+ {
+  "key": "ui|ch.skill.go",
+  "ko": "마스터리 열기",
+  "en": "Open Mastery",
+  "ctx": "ch.skill.go"
+ },
+ {
+  "key": "ui|ch.items.h",
+  "ko": "아이템",
+  "en": "Items",
+  "ctx": "ch.items.h"
+ },
+ {
+  "key": "ui|tip.equipped",
+  "ko": "착용 중",
+  "en": "Equipped",
+  "ctx": "tip.equipped"
+ },
+ {
+  "key": "ui|tip.this",
+  "ko": "이 아이템",
+  "en": "This Item",
+  "ctx": "tip.this"
+ },
+ {
+  "key": "ui|tip.noneEquipped",
+  "ko": "착용 중 없음",
+  "en": "Nothing equipped",
+  "ctx": "tip.noneEquipped"
+ },
+ {
+  "key": "ui|tip.noAffix",
+  "ko": "접사 없음",
+  "en": "No affixes",
+  "ctx": "tip.noAffix"
+ },
+ {
+  "key": "ui|tip.kindPart",
+  "ko": "{group} {part}",
+  "en": "{group} {part}",
+  "ctx": "tip.kindPart"
+ },
+ {
+  "key": "ui|tip.proc.skill",
+  "ko": "Lv.{lv} {skill}",
+  "en": "Lv.{lv} {skill}",
+  "ctx": "tip.proc.skill"
+ },
+ {
+  "key": "ui|tip.proc.hit",
+  "ko": "타격 시 {p} 확률로 {skill} 발동",
+  "en": "{p} chance to cast {skill} on hit",
+  "ctx": "tip.proc.hit"
+ },
+ {
+  "key": "ui|tip.proc.struck",
+  "ko": "피격 시 {p} 확률로 {skill} 발동",
+  "en": "{p} chance to cast {skill} when struck",
+  "ctx": "tip.proc.struck"
+ },
+ {
+  "key": "ui|tip.proc.cast",
+  "ko": "시전 시 {p} 확률로 {skill} 발동",
+  "en": "{p} chance to cast {skill} on cast",
+  "ctx": "tip.proc.cast"
+ },
+ {
+  "key": "ui|tip.proc.interval",
+  "ko": "{sec}초마다 {skill} 발동",
+  "en": "Casts {skill} every {sec}s",
+  "ctx": "tip.proc.interval"
+ },
+ {
+  "key": "ui|tip.inert",
+  "ko": "(미적용)",
+  "en": "(inactive)",
+  "ctx": "tip.inert"
+ },
+ {
+  "key": "ui|tip.skillPlus",
+  "ko": "{skill} +{v}",
+  "en": "+{v} to {skill}",
+  "ctx": "tip.skillPlus"
+ },
+ {
+  "key": "ui|tip.perLevel",
+  "ko": "{total} ({per})",
+  "en": "{total} ({per})",
+  "ctx": "tip.perLevel"
+ },
+ {
+  "key": "ui|tip.src.random",
+  "ko": "랜덤",
+  "en": "Random",
+  "ctx": "tip.src.random"
+ },
+ {
+  "key": "ui|tip.src.fixed",
+  "ko": "베이스",
+  "en": "Base",
+  "ctx": "tip.src.fixed"
+ },
+ {
+  "key": "ui|tip.weaponTrait.tagValue",
+  "ko": "버프 · 디버프 효과 수치 +{p}",
+  "en": "Buff & Debuff Effect Strength +{p}",
+  "ctx": "tip.weaponTrait.tagValue"
+ },
+ {
+  "key": "ui|tip.ringSlot",
+  "ko": "반지 {n}번 칸에 착용",
+  "en": "Goes on ring slot {n}",
+  "ctx": "tip.ringSlot"
+ },
+ {
+  "key": "ui|tip.tacticOff",
+  "ko": "끼우면 전술 꺼짐 — {eff}",
+  "en": "Equipping turns a tactic off — {eff}",
+  "ctx": "tip.tacticOff"
+ },
+ {
+  "key": "ui|tip.item.altHint",
+  "ko": "Alt 변화",
+  "en": "Alt: changes",
+  "ctx": "tip.item.altHint"
+ },
+ {
+  "key": "ui|tip.item.shiftHint",
+  "ko": "Shift 범위",
+  "en": "Shift: range",
+  "ctx": "tip.item.shiftHint"
+ },
+ {
+  "key": "ui|tip.item.keysHint",
+  "ko": "Alt 변화 · Shift 범위",
+  "en": "Alt: changes · Shift: range",
+  "ctx": "tip.item.keysHint"
+ },
+ {
+  "key": "ui|tip.range",
+  "ko": "({r})",
+  "en": "({r})",
+  "ctx": "tip.range"
+ },
+ {
+  "key": "ui|tip.delta.h",
+  "ko": "{name} 착용 시",
+  "en": "If {name} equips",
+  "ctx": "tip.delta.h"
+ },
+ {
+  "key": "ui|tip.delta.none",
+  "ko": "변화 없음",
+  "en": "No change",
+  "ctx": "tip.delta.none"
+ },
+ {
+  "key": "ui|tip.delta.on",
+  "ko": "켜짐",
+  "en": "On",
+  "ctx": "tip.delta.on"
+ },
+ {
+  "key": "ui|tip.delta.off",
+  "ko": "꺼짐",
+  "en": "Off",
+  "ctx": "tip.delta.off"
+ },
+ {
+  "key": "ui|tip.unit.altHint",
+  "ko": "Alt 세부 옵션",
+  "en": "Alt: detailed stats",
+  "ctx": "tip.unit.altHint"
+ },
+ {
+  "key": "ui|tip.unit.altHintGear",
+  "ko": "Alt 장비 · 세부 옵션",
+  "en": "Alt: gear & detailed stats",
+  "ctx": "tip.unit.altHintGear"
+ },
+ {
+  "key": "ui|tip.potion.heal",
+  "ko": "HP {n} 회복",
+  "en": "Restores {n} HP",
+  "ctx": "tip.potion.heal"
+ },
+ {
+  "key": "ui|pt.preset",
+  "ko": "Party {n}",
+  "en": "Party {n}",
+  "ctx": "pt.preset"
+ },
+ {
+  "key": "ui|pt.potion.h",
+  "ko": "물약",
+  "en": "Potions",
+  "ctx": "pt.potion.h"
+ },
+ {
+  "key": "ui|pt.potion.stock",
+  "ko": "가진 물약",
+  "en": "In stock",
+  "ctx": "pt.potion.stock"
+ },
+ {
+  "key": "ui|pt.potion.empty",
+  "ko": "빈 칸",
+  "en": "Empty slot",
+  "ctx": "pt.potion.empty"
+ },
+ {
+  "key": "ui|pt.potion.use",
+  "ko": "HP {n}% 미만에서 마심",
+  "en": "Drink below {n}% HP",
+  "ctx": "pt.potion.use"
+ },
+ {
+  "key": "ui|pt.potion.useDown",
+  "ko": "기준 낮추기",
+  "en": "Lower threshold",
+  "ctx": "pt.potion.useDown"
+ },
+ {
+  "key": "ui|pt.potion.useUp",
+  "ko": "기준 올리기",
+  "en": "Raise threshold",
+  "ctx": "pt.potion.useUp"
+ },
+ {
+  "key": "ui|pt.form.hp",
+  "ko": "HP {n}",
+  "en": "HP {n}",
+  "ctx": "pt.form.hp"
+ },
+ {
+  "key": "ui|pt.leader.set",
+  "ko": "리더로 지정",
+  "en": "Make leader",
+  "ctx": "pt.leader.set"
+ },
+ {
+  "key": "ui|pt.help.form",
+  "ko": "적은 전열부터 공격합니다. 전열이 모두 쓰러져야 후열이 공격받습니다.",
+  "en": "Enemies attack the front row first. The back row is attacked only after the whole front row has fallen.",
+  "ctx": "pt.help.form"
+ },
+ {
+  "key": "ui|pt.help.potion",
+  "ko": "HP가 {n}% 아래로 떨어진 영웅이 자동으로 물약을 마십니다.",
+  "en": "A hero whose HP falls below {n}% drinks a potion automatically.",
+  "ctx": "pt.help.potion"
+ },
+ {
+  "key": "ui|pt.err.full",
+  "ko": "파티 가득 참",
+  "en": "Party full",
+  "ctx": "pt.err.full"
+ },
+ {
+  "key": "ui|pt.err.exploring",
+  "ko": "탐험 귀환",
+  "en": "Return from exploring",
+  "ctx": "pt.err.exploring"
+ },
+ {
+  "key": "ui|pt.err.running",
+  "ko": "원정 철수",
+  "en": "Retreat from the expedition",
+  "ctx": "pt.err.running"
+ },
+ {
+  "key": "ui|pt.err.missing",
+  "ko": "없는 칸",
+  "en": "No such slot",
+  "ctx": "pt.err.missing"
+ },
+ {
+  "key": "ui|pt.err.slotsFull",
+  "ko": "물약 칸 가득 참",
+  "en": "All potion slots are full",
+  "ctx": "pt.err.slotsFull"
+ },
+ {
+  "key": "ui|pt.err.gold",
+  "ko": "골드 부족",
+  "en": "Not enough gold",
+  "ctx": "pt.err.gold"
+ },
+ {
+  "key": "ui|pt.err.allLocked",
+  "ko": "굴릴 칸 없음 — 전부 잠김",
+  "en": "Nothing to reroll — every slot is locked",
+  "ctx": "pt.err.allLocked"
+ },
+ {
+  "key": "ui|rs.h",
+  "ko": "파티 전술",
+  "en": "Party Tactics",
+  "ctx": "rs.h"
+ },
+ {
+  "key": "ui|cn.rank",
+  "ko": "{n}랭크",
+  "en": "Rank {n}",
+  "ctx": "cn.rank"
+ },
+ {
+  "key": "ui|cn.rank.no",
+  "ko": "랭크 {n}",
+  "en": "Rank {n}",
+  "ctx": "cn.rank.no"
+ },
+ {
+  "key": "ui|cn.need",
+  "ko": "{b} {n}랭크",
+  "en": "{b} rank {n}",
+  "ctx": "cn.need"
+ },
+ {
+  "key": "ui|cn.needBuild",
+  "ko": "{b} 건설",
+  "en": "Build {b}",
+  "ctx": "cn.needBuild"
+ },
+ {
+  "key": "ui|cn.pending",
+  "ko": "준비 중",
+  "en": "Coming later",
+  "ctx": "cn.pending"
+ },
+ {
+  "key": "ui|cn.soon",
+  "ko": "(준비 중)",
+  "en": "(later)",
+  "ctx": "cn.soon"
+ },
+ {
+  "key": "ui|cn.free",
+  "ko": "무료",
+  "en": "Free",
+  "ctx": "cn.free"
+ },
+ {
+  "key": "ui|cn.state.none",
+  "ko": "미건설",
+  "en": "Not built",
+  "ctx": "cn.state.none"
+ },
+ {
+  "key": "ui|cn.state.max",
+  "ko": "최대 랭크",
+  "en": "Max rank",
+  "ctx": "cn.state.max"
+ },
+ {
+  "key": "ui|cn.next.h",
+  "ko": "다음 랭크",
+  "en": "Next Rank",
+  "ctx": "cn.next.h"
+ },
+ {
+  "key": "ui|cn.now.none",
+  "ko": "아직 지은 랭크 없음",
+  "en": "Nothing built yet",
+  "ctx": "cn.now.none"
+ },
+ {
+  "key": "ui|cn.ranks.h",
+  "ko": "{b} 랭크",
+  "en": "{b} Ranks",
+  "ctx": "cn.ranks.h"
+ },
+ {
+  "key": "ui|cn.owned",
+  "ko": "보유 {n}",
+  "en": "Owned {n}",
+  "ctx": "cn.owned"
+ },
+ {
+  "key": "ui|cn.built",
+  "ko": "{b} {n}랭크 건설 완료",
+  "en": "Built {b} rank {n}",
+  "ctx": "cn.built"
+ },
+ {
+  "key": "ui|cn.req.stage",
+  "ko": "스테이지 {s} 클리어",
+  "en": "Clear Stage {s}",
+  "ctx": "cn.req.stage"
+ },
+ {
+  "key": "ui|cn.req.chapter",
+  "ko": "챕터 {n} 클리어",
+  "en": "Clear Chapter {n}",
+  "ctx": "cn.req.chapter"
+ },
+ {
+  "key": "ui|cn.req.difficulty",
+  "ko": "{d} 클리어",
+  "en": "Clear {d}",
+  "ctx": "cn.req.difficulty"
+ },
+ {
+  "key": "ui|cn.req.chapterIn",
+  "ko": "{d} 챕터 {n} 클리어",
+  "en": "Clear {d} Chapter {n}",
+  "ctx": "cn.req.chapterIn"
+ },
+ {
+  "key": "ui|cn.req.total",
+  "ko": "합산 레벨 {have} / {need}",
+  "en": "Total level {have} / {need}",
+  "ctx": "cn.req.total"
+ },
+ {
+  "key": "ui|cn.req.hero",
+  "ko": "최고 영웅 Lv.{have} / {need}",
+  "en": "Top hero Lv.{have} / {need}",
+  "ctx": "cn.req.hero"
+ },
+ {
+  "key": "ui|cn.req.building",
+  "ko": "{b} {n}랭크",
+  "en": "{b} rank {n}",
+  "ctx": "cn.req.building"
+ },
+ {
+  "key": "ui|cn.req.built",
+  "ko": "{b} 건설",
+  "en": "Build {b}",
+  "ctx": "cn.req.built"
+ },
+ {
+  "key": "ui|cn.err.missing",
+  "ko": "없는 건물",
+  "en": "Unknown building",
+  "ctx": "cn.err.missing"
+ },
+ {
+  "key": "ui|cn.err.maxRank",
+  "ko": "최대 랭크",
+  "en": "Fully built",
+  "ctx": "cn.err.maxRank"
+ },
+ {
+  "key": "ui|cn.err.pending",
+  "ko": "아직 여는 기능 없음",
+  "en": "Nothing to open yet",
+  "ctx": "cn.err.pending"
+ },
+ {
+  "key": "ui|cn.err.locked",
+  "ko": "조건 미달",
+  "en": "Requirements not met",
+  "ctx": "cn.err.locked"
+ },
+ {
+  "key": "ui|cn.err.gold",
+  "ko": "골드 부족",
+  "en": "Not enough gold",
+  "ctx": "cn.err.gold"
+ },
+ {
+  "key": "ui|cn.err.materials",
+  "ko": "재료 부족",
+  "en": "Not enough materials",
+  "ctx": "cn.err.materials"
+ },
+ {
+  "key": "ui|cn.t.upgrade_item",
+  "ko": "장비 강화",
+  "en": "Equipment Upgrade",
+  "ctx": "cn.t.upgrade_item"
+ },
+ {
+  "key": "ui|cn.t.make",
+  "ko": "장비 제작",
+  "en": "Equipment Smithing",
+  "ctx": "cn.t.make"
+ },
+ {
+  "key": "ui|cn.t.synth",
+  "ko": "재료 합성",
+  "en": "Material Combining",
+  "ctx": "cn.t.synth"
+ },
+ {
+  "key": "ui|cn.t.potion",
+  "ko": "물약 제작",
+  "en": "Potion Brewing",
+  "ctx": "cn.t.potion"
+ },
+ {
+  "key": "ui|cn.t.lab_res",
+  "ko": "연구소 자원 생산",
+  "en": "Laboratory resource production",
+  "ctx": "cn.t.lab_res"
+ },
+ {
+  "key": "ui|cn.t.codex",
+  "ko": "만난 몬스터를 도감에 기록",
+  "en": "Record monsters you meet in the codex",
+  "ctx": "cn.t.codex"
+ },
+ {
+  "key": "ui|cn.t.hire",
+  "ko": "영웅 고용",
+  "en": "Hero Hiring",
+  "ctx": "cn.t.hire"
+ },
+ {
+  "key": "ui|cn.t.lab_visit",
+  "ko": "연구소 영웅 수색",
+  "en": "Laboratory hero search",
+  "ctx": "cn.t.lab_visit"
+ },
+ {
+  "key": "ui|cn.t.shop",
+  "ko": "상단에서 무기 · 물약 구매",
+  "en": "Buy weapons and potions at the trading house",
+  "ctx": "cn.t.shop"
+ },
+ {
+  "key": "ui|cn.t.shop_rows",
+  "ko": "상단에서 방어구 · 장신구 · 스킬북 구매",
+  "en": "Buy armor, jewelry and skill books at the trading house",
+  "ctx": "cn.t.shop_rows"
+ },
+ {
+  "key": "ui|cn.t.shop_trade",
+  "ko": "교역소에서 재료 교환",
+  "en": "Trade materials at the trading post",
+  "ctx": "cn.t.shop_trade"
+ },
+ {
+  "key": "ui|cn.t.shop_special",
+  "ko": "특수상단 방문",
+  "en": "The special merchant starts visiting",
+  "ctx": "cn.t.shop_special"
+ },
+ {
+  "key": "ui|cn.t.craft",
+  "ko": "매직 장비에 전용 옵션 추가",
+  "en": "Add a special option to magic gear",
+  "ctx": "cn.t.craft"
+ },
+ {
+  "key": "ui|cn.t.stigma_craft",
+  "ko": "낙인으로 장비 크래프트",
+  "en": "Craft equipment with stigmas",
+  "ctx": "cn.t.stigma_craft"
+ },
+ {
+  "key": "ui|cn.t.skill_card",
+  "ko": "스킬 카드 합성",
+  "en": "Fuse skill cards",
+  "ctx": "cn.t.skill_card"
+ },
+ {
+  "key": "ui|cn.t.skillbook",
+  "ko": "스킬북으로 스킬 습득",
+  "en": "Learn skills from skill books",
+  "ctx": "cn.t.skillbook"
+ },
+ {
+  "key": "ui|cn.t.lab_library",
+  "ko": "연구소 스킬북 생산",
+  "en": "Laboratory skill book production",
+  "ctx": "cn.t.lab_library"
+ },
+ {
+  "key": "ui|cn.t.explore",
+  "ko": "파티를 탐험에 파견",
+  "en": "Send a party to explore",
+  "ctx": "cn.t.explore"
+ },
+ {
+  "key": "ui|cn.t.explore_caravan",
+  "ko": "상단 오픈",
+  "en": "Unlocks Caravan",
+  "ctx": "cn.t.explore_caravan"
+ },
+ {
+  "key": "ui|cn.t.explore_ruins",
+  "ko": "폐허 오픈",
+  "en": "Unlocks Ruins",
+  "ctx": "cn.t.explore_ruins"
+ },
+ {
+  "key": "ui|cn.t.raid",
+  "ko": "목표를 털어 전리품 획득",
+  "en": "Raid a target for loot",
+  "ctx": "cn.t.raid"
+ },
+ {
+  "key": "ui|cn.t.escort",
+  "ko": "의뢰인의 상단 호위",
+  "en": "Escort a client's caravan",
+  "ctx": "cn.t.escort"
+ },
+ {
+  "key": "ui|cn.t.gear_set",
+  "ko": "장비 한 벌을 저장해 바로 갈아입기",
+  "en": "Save a gear loadout and swap instantly",
+  "ctx": "cn.t.gear_set"
+ },
+ {
+  "key": "ui|cn.t.monster_card",
+  "ko": "몬스터 카드 수집",
+  "en": "Collect monster cards",
+  "ctx": "cn.t.monster_card"
+ },
+ {
+  "key": "ui|cn.t.commission_board",
+  "ko": "의뢰 게시판",
+  "en": "Commission Board",
+  "ctx": "cn.t.commission_board"
+ },
+ {
+  "key": "ui|cn.t.gamble",
+  "ko": "도박장",
+  "en": "Gambling Hall",
+  "ctx": "cn.t.gamble"
+ },
+ {
+  "key": "ui|cn.t.advance",
+  "ko": "영웅 전직",
+  "en": "Advance a hero's class",
+  "ctx": "cn.t.advance"
+ },
+ {
+  "key": "ui|cn.t.skill_depth",
+  "ko": "영웅 스킬에 포인트 추가",
+  "en": "Invest more points into hero skills",
+  "ctx": "cn.t.skill_depth"
+ },
+ {
+  "key": "ui|cn.t.bag",
+  "ko": "가방 칸 +{n}",
+  "en": "Bag slots +{n}",
+  "ctx": "cn.t.bag"
+ },
+ {
+  "key": "ui|cn.t.stash",
+  "ko": "창고 칸 +{n}",
+  "en": "Stash slots +{n}",
+  "ctx": "cn.t.stash"
+ },
+ {
+  "key": "ui|cn.t.roster",
+  "ko": "영웅 로스터 +{n}",
+  "en": "Hero roster +{n}",
+  "ctx": "cn.t.roster"
+ },
+ {
+  "key": "ui|cn.t.presets",
+  "ko": "Party +{n}",
+  "en": "Party +{n}",
+  "ctx": "cn.t.presets"
+ },
+ {
+  "key": "ui|cn.t.potionSlots",
+  "ko": "원정 물약 칸 +{n}",
+  "en": "Expedition potion slots +{n}",
+  "ctx": "cn.t.potionSlots"
+ },
+ {
+  "key": "ui|cn.t.upgrade",
+  "ko": "강화 상한 +{n}",
+  "en": "Upgrade cap +{n}",
+  "ctx": "cn.t.upgrade"
+ },
+ {
+  "key": "ui|cn.t.shopPerSlot",
+  "ko": "상단 부위별 품목 +{n}",
+  "en": "Wares per slot +{n}",
+  "ctx": "cn.t.shopPerSlot"
+ },
+ {
+  "key": "ui|cn.t.shopWeapon",
+  "ko": "상단 무기 품목 +{n}",
+  "en": "Weapon wares +{n}",
+  "ctx": "cn.t.shopWeapon"
+ },
+ {
+  "key": "ui|cn.t.make_level",
+  "ko": "제작 레벨 +{n}",
+  "en": "Smithing level +{n}",
+  "ctx": "cn.t.make_level"
+ },
+ {
+  "key": "ui|cn.t.potion_tier",
+  "ko": "물약 단계 +{n}",
+  "en": "Potion tier +{n}",
+  "ctx": "cn.t.potion_tier"
+ },
+ {
+  "key": "ui|cn.t.tactic_slots",
+  "ko": "파티 전술 레벨 {total} 해금",
+  "en": "Unlocks Party Tactics Level {total}",
+  "ctx": "cn.t.tactic_slots"
+ },
+ {
+  "key": "ui|cn.t.codex_level",
+  "ko": "도감 Lv{total} 해금",
+  "en": "Unlocks Codex Level {total}",
+  "ctx": "cn.t.codex_level"
+ },
+ {
+  "key": "ui|cn.t.make_kinds",
+  "ko": "제작 종류 +{n}",
+  "en": "Craftable types +{n}",
+  "ctx": "cn.t.make_kinds"
+ },
+ {
+  "key": "ui|cn.t.resource_tier",
+  "ko": "연구소 {total}랭크 지점 해금 · 자동 생산",
+  "en": "Unlocks Laboratory Rank {total} nodes · Automatic production",
+  "ctx": "cn.t.resource_tier"
+ },
+ {
+  "key": "ui|cn.t.lab_open",
+  "ko": "연구소 개방",
+  "en": "Laboratory Opens",
+  "ctx": "cn.t.lab_open"
+ },
+ {
+  "key": "ui|cn.t.shop_layers",
+  "ko": "상단 품목 층 +{n}",
+  "en": "Ware tiers +{n}",
+  "ctx": "cn.t.shop_layers"
+ },
+ {
+  "key": "ui|cn.t.explore_regions",
+  "ko": "탐험 지역 +{n}",
+  "en": "Exploration regions +{n}",
+  "ctx": "cn.t.explore_regions"
+ },
+ {
+  "key": "ui|cn.t.explore_slots",
+  "ko": "동시 탐험 +{n}",
+  "en": "Parallel explorations +{n}",
+  "ctx": "cn.t.explore_slots"
+ },
+ {
+  "key": "ui|cn.t.gear_sets",
+  "ko": "장비 세트 +{n}",
+  "en": "Gear sets +{n}",
+  "ctx": "cn.t.gear_sets"
+ },
+ {
+  "key": "ui|cn.t.commission_slots",
+  "ko": "동시 의뢰 +{n}",
+  "en": "Parallel commissions +{n}",
+  "ctx": "cn.t.commission_slots"
+ },
+ {
+  "key": "ui|cn.t.recruit_quality",
+  "ko": "고용 · 수색 품질 +{n}",
+  "en": "Hire and search quality +{n}",
+  "ctx": "cn.t.recruit_quality"
+ },
+ {
+  "key": "ui|rs.research.h",
+  "ko": "건설",
+  "en": "Construction",
+  "ctx": "rs.research.h"
+ },
+ {
+  "key": "ui|rs.research.note",
+  "ko": "<b>건설</b>은 건물마다 <b>랭크를 하나씩 지어</b> 기능 · 칸을 엽니다. 무엇을 여는지는 랭크 칸에 적혀 있습니다<br>다음 랭크는 <b>조건</b>(스테이지 클리어 · 영웅 로스터 합산 레벨의 최고치 · 영웅 레벨 · 다른 건물의 랭크)을 채우면 <b>비용</b>을 내고 짓습니다. 지은 것은 되돌리지 않습니다<br>안 지은 건물의 탭은 흐립니다 — 눌러도 들어가지 않고 지을 건물을 알려 줍니다. 짓는 곳은 이 탭 하나입니다. <b>준비 중</b>인 랭크는 여는 기능이 아직 없어 지을 수 없습니다",
+  "en": "<b>Construction</b> opens features and slots <b>one building rank at a time</b>. Each rank lists what it opens<br>Meet the next rank's <b>requirements</b> (a stage clear · the highest total roster level reached · a hero level · another building's rank), then pay its <b>cost</b>. Built ranks are never undone<br>Tabs of unbuilt buildings are dimmed — they stay closed until built, and clicking one names the building to build. Build here, in this tab. Ranks marked <b>coming later</b> open nothing yet and cannot be built",
+  "ctx": "rs.research.note"
+ },
+ {
+  "key": "ui|rs.rs.done",
+  "ko": "완료",
+  "en": "Done",
+  "ctx": "rs.rs.done"
+ },
+ {
+  "key": "ui|rs.rs.go",
+  "ko": "건설",
+  "en": "Build",
+  "ctx": "rs.rs.go"
+ },
+ {
+  "key": "ui|tr.seg.adv",
+  "ko": "전직",
+  "en": "Advance",
+  "ctx": "tr.seg.adv"
+ },
+ {
+  "key": "ui|tr.adv.level",
+  "ko": "Lv.{have} / {need}",
+  "en": "Lv.{have} / {need}",
+  "ctx": "tr.adv.level"
+ },
+ {
+  "key": "ui|tr.adv.go",
+  "ko": "전직",
+  "en": "Advance",
+  "ctx": "tr.adv.go"
+ },
+ {
+  "key": "ui|tr.adv.started",
+  "ko": "{name} — {b} 전직 시작",
+  "en": "{name} — started advancing to {b}",
+  "ctx": "tr.adv.started"
+ },
+ {
+  "key": "ui|tr.adv.done",
+  "ko": "{name} — {b} 전직 완료",
+  "en": "{name} — advanced to {b}",
+  "ctx": "tr.adv.done"
+ },
+ {
+  "key": "ui|tr.adv.left",
+  "ko": "{t} 남음",
+  "en": "{t} left",
+  "ctx": "tr.adv.left"
+ },
+ {
+  "key": "ui|tr.adv.learned",
+  "ko": "배움",
+  "en": "Learned",
+  "ctx": "tr.adv.learned"
+ },
+ {
+  "key": "ui|tr.adv.points",
+  "ko": "스킬 포인트 {free} / {have}",
+  "en": "Skill points {free} / {have}",
+  "ctx": "tr.adv.points"
+ },
+ {
+  "key": "ui|tr.err.missing",
+  "ko": "없는 영웅",
+  "en": "No such hero",
+  "ctx": "tr.err.missing"
+ },
+ {
+  "key": "ui|tr.err.class",
+  "ko": "이 직업의 갈래가 아님",
+  "en": "Not a path of this class",
+  "ctx": "tr.err.class"
+ },
+ {
+  "key": "ui|tr.err.done",
+  "ko": "이미 전직 완료",
+  "en": "Already advanced",
+  "ctx": "tr.err.done"
+ },
+ {
+  "key": "ui|tr.err.working",
+  "ko": "전직 중",
+  "en": "Already advancing",
+  "ctx": "tr.err.working"
+ },
+ {
+  "key": "ui|tr.err.level",
+  "ko": "레벨 부족",
+  "en": "Level too low",
+  "ctx": "tr.err.level"
+ },
+ {
+  "key": "ui|tr.err.gold",
+  "ko": "골드 부족",
+  "en": "Not enough gold",
+  "ctx": "tr.err.gold"
+ },
+ {
+  "key": "ui|tr.err.exploring",
+  "ko": "탐험 나가 있음",
+  "en": "Out exploring",
+  "ctx": "tr.err.exploring"
+ },
+ {
+  "key": "ui|tr.err.none",
+  "ko": "전직",
+  "en": "Advance",
+  "ctx": "tr.err.none"
+ },
+ {
+  "key": "ui|tr.err.learned",
+  "ko": "배운 스킬 되돌리기",
+  "en": "Refund the learned skill",
+  "ctx": "tr.err.learned"
+ },
+ {
+  "key": "ui|tr.err.skill",
+  "ko": "이 갈래의 스킬이 아님",
+  "en": "Not a skill of this path",
+  "ctx": "tr.err.skill"
+ },
+ {
+  "key": "ui|tr.err.empty",
+  "ko": "배운 전직 스킬 없음",
+  "en": "No advancement skill learned",
+  "ctx": "tr.err.empty"
+ },
+ {
+  "key": "ui|tr.err.points",
+  "ko": "스킬 포인트 없음",
+  "en": "No skill points left",
+  "ctx": "tr.err.points"
+ },
+ {
+  "key": "ui|tr.err.cellMax",
+  "ko": "이 칸은 최대 랭크",
+  "en": "This cell is at max rank",
+  "ctx": "tr.err.cellMax"
+ },
+ {
+  "key": "ui|tr.err.rowMax",
+  "ko": "이 줄의 랭크 합이 가득 참",
+  "en": "This row is full",
+  "ctx": "tr.err.rowMax"
+ },
+ {
+  "key": "ui|tr.err.zero",
+  "ko": "되돌릴 랭크 없음",
+  "en": "No rank to refund",
+  "ctx": "tr.err.zero"
+ },
+ {
+  "key": "ui|tr.err.line",
+  "ko": "없는 줄",
+  "en": "No such row",
+  "ctx": "tr.err.line"
+ },
+ {
+  "key": "ui|tr.err.slot",
+  "ko": "없는 칸",
+  "en": "No such cell",
+  "ctx": "tr.err.slot"
+ },
+ {
+  "key": "ui|tr.adv.todo",
+  "ko": "<b>{b} {n}랭크</b>부터 전직할 수 있습니다. 세 갈래 중 하나를 고르며 갈래는 되돌릴 수 없습니다. 전직 후 <b>마스터리 → 전직 트리</b>에서 공용 스킬 포인트로 메인을 배웁니다. 메인 강화는 영웅 레벨 조건을 만족해야 하며, 되돌리면 투자 포인트를 공용 지갑에 돌려받습니다.",
+  "en": "Advancement opens at <b>{b} rank {n}</b>. Choose one of three paths; the path cannot be undone. Then learn a main skill in <b>Mastery → Advancement Tree</b> using shared skill points. Further main ranks require the corresponding hero level. Refunding returns invested points to the shared pool.",
+  "ctx": "tr.adv.todo"
+ },
+ {
+  "key": "ui|rs.total",
+  "ko": "합산 레벨",
+  "en": "Total Level",
+  "ctx": "rs.total"
+ },
+ {
+  "key": "ui|rs.open",
+  "ko": "열린 칸",
+  "en": "Slots Open",
+  "ctx": "rs.open"
+ },
+ {
+  "key": "ui|rs.allOpen",
+  "ko": "전부 열림",
+  "en": "All slots open",
+  "ctx": "rs.allOpen"
+ },
+ {
+  "key": "ui|dp.perHour",
+  "ko": "{n}/시간",
+  "en": "{n}/h",
+  "ctx": "dp.perHour"
+ },
+ {
+  "key": "ui|dp.lv",
+  "ko": "Lv {n}",
+  "en": "Lv {n}",
+  "ctx": "dp.lv"
+ },
+ {
+  "key": "ui|dp.lvTag",
+  "ko": "Lv.{n}",
+  "en": "Lv.{n}",
+  "ctx": "dp.lvTag"
+ },
+ {
+  "key": "ui|dp.lvOf",
+  "ko": "Lv {n} / {max}",
+  "en": "Lv {n} / {max}",
+  "ctx": "dp.lvOf"
+ },
+ {
+  "key": "ui|dp.lvTop",
+  "ko": "최대 레벨",
+  "en": "Max Level",
+  "ctx": "dp.lvTop"
+ },
+ {
+  "key": "ui|dp.next.h",
+  "ko": "다음 레벨",
+  "en": "Next Level",
+  "ctx": "dp.next.h"
+ },
+ {
+  "key": "ui|dp.lvList.h",
+  "ko": "{name} 레벨",
+  "en": "{name} Levels",
+  "ctx": "dp.lvList.h"
+ },
+ {
+  "key": "ui|dp.lvDone",
+  "ko": "{name} Lv {n}",
+  "en": "{name} Lv {n}",
+  "ctx": "dp.lvDone"
+ },
+ {
+  "key": "ui|dp.offline",
+  "ko": "오프라인 최대 {h}시간",
+  "en": "Offline up to {h}h",
+  "ctx": "dp.offline"
+ },
+ {
+  "key": "ui|dp.err.maxUp",
+  "ko": "최대 레벨",
+  "en": "Already at max level",
+  "ctx": "dp.err.maxUp"
+ },
+ {
+  "key": "ui|dp.err.rank",
+  "ko": "연구소 랭크 부족",
+  "en": "Laboratory rank too low",
+  "ctx": "dp.err.rank"
+ },
+ {
+  "key": "ui|dp.err.gold",
+  "ko": "골드 부족",
+  "en": "Not enough gold",
+  "ctx": "dp.err.gold"
+ },
+ {
+  "key": "ui|dp.err.materials",
+  "ko": "재료 부족",
+  "en": "Not enough materials",
+  "ctx": "dp.err.materials"
+ },
+ {
+  "key": "ui|dp.err.busy",
+  "ko": "다른 연구 진행 중",
+  "en": "Another research is in progress",
+  "ctx": "dp.err.busy"
+ },
+ {
+  "key": "ui|dp.err.full",
+  "ko": "등록 칸 가득 참",
+  "en": "No free seats",
+  "ctx": "dp.err.full"
+ },
+ {
+  "key": "ui|dp.err.empty",
+  "ko": "진행 중인 연구 없음",
+  "en": "No research in progress",
+  "ctx": "dp.err.empty"
+ },
+ {
+  "key": "ui|dp.err.missing",
+  "ko": "없는 영웅",
+  "en": "Hero not found",
+  "ctx": "dp.err.missing"
+ },
+ {
+  "key": "ui|dp.reg.none",
+  "ko": "미등록",
+  "en": "Unassigned",
+  "ctx": "dp.reg.none"
+ },
+ {
+  "key": "ui|dp.reg.modal",
+  "ko": "{line} — 영웅 등록",
+  "en": "{line} — Assign Heroes",
+  "ctx": "dp.reg.modal"
+ },
+ {
+  "key": "ui|dp.reg.change",
+  "ko": "{from} → {to}",
+  "en": "{from} → {to}",
+  "ctx": "dp.reg.change"
+ },
+ {
+  "key": "ui|dp.reg.lose.in",
+  "ko": "{name} · {to} 등록",
+  "en": "{name} · join {to}",
+  "ctx": "dp.reg.lose.in"
+ },
+ {
+  "key": "ui|dp.reg.lose.move",
+  "ko": "{name} · {from} → {to}",
+  "en": "{name} · {from} → {to}",
+  "ctx": "dp.reg.lose.move"
+ },
+ {
+  "key": "ui|dp.reg.lose.out",
+  "ko": "{name} · {from} 등록 해제",
+  "en": "{name} · leave {from}",
+  "ctx": "dp.reg.lose.out"
+ },
+ {
+  "key": "ui|dp.reg.lose.skill",
+  "ko": "숙련 {p}%",
+  "en": "Mastery {p}%",
+  "ctx": "dp.reg.lose.skill"
+ },
+ {
+  "key": "ui|dp.reg.lose.visit",
+  "ko": "수색 시계 {t}",
+  "en": "Search clock {t}",
+  "ctx": "dp.reg.lose.visit"
+ },
+ {
+  "key": "ui|dp.reg.lose.held",
+  "ko": "찾아 둔 {name} 잃음",
+  "en": "Loses found {name}",
+  "ctx": "dp.reg.lose.held"
+ },
+ {
+  "key": "ui|dp.reg.lose.reset",
+  "ko": "{what} 처음부터",
+  "en": "{what} reset",
+  "ctx": "dp.reg.lose.reset"
+ },
+ {
+  "key": "ui|dp.reg.count",
+  "ko": "{n} / {cap}",
+  "en": "{n} / {cap}",
+  "ctx": "dp.reg.count"
+ },
+ {
+  "key": "ui|dp.reg.apply",
+  "ko": "적용",
+  "en": "Apply",
+  "ctx": "dp.reg.apply"
+ },
+ {
+  "key": "ui|dp.watch.gain",
+  "ko": "+{n} {item}",
+  "en": "+{n} {item}",
+  "ctx": "dp.watch.gain"
+ },
+ {
+  "key": "ui|mg.title",
+  "ko": "{post} 미니게임",
+  "en": "{post} Minigame",
+  "ctx": "mg.title"
+ },
+ {
+  "key": "ui|mg.start",
+  "ko": "플레이",
+  "en": "Play",
+  "ctx": "mg.start"
+ },
+ {
+  "key": "ui|mg.again",
+  "ko": "한 판 더",
+  "en": "Play again",
+  "ctx": "mg.again"
+ },
+ {
+  "key": "ui|mg.hint.mine",
+  "ko": "잠깐 반짝이는 광맥을 한 번에. 위험한 바위와 빈 곳은 피하세요.",
+  "en": "One click for each fleeting vein. Avoid unstable rocks and empty spots.",
+  "ctx": "mg.hint.mine"
+ },
+ {
+  "key": "ui|mg.hint.gather",
+  "ko": "약초를 꾹 잡고, 초록 구간에서 놓으세요. 독초는 그대로 두세요.",
+  "en": "Hold the herb, release in the green zone. Leave poison plants alone.",
+  "ctx": "mg.hint.gather"
+ },
+ {
+  "key": "ui|mg.hint.log",
+  "ko": "왼쪽 · 오른쪽을 눌러 베기 · 내 쪽 가지 피하기",
+  "en": "Chop from the left or right · Dodge branches on your side",
+  "ctx": "mg.hint.log"
+ },
+ {
+  "key": "ui|mg.combo",
+  "ko": "콤보 {n} ×{m}",
+  "en": "Combo {n} ×{m}",
+  "ctx": "mg.combo"
+ },
+ {
+  "key": "ui|mg.best",
+  "ko": "최고 콤보 {n}",
+  "en": "Best combo {n}",
+  "ctx": "mg.best"
+ },
+ {
+  "key": "ui|mg.name.mine",
+  "ko": "찰나의 광맥",
+  "en": "Fleeting Veins",
+  "ctx": "mg.name.mine"
+ },
+ {
+  "key": "ui|mg.name.gather",
+  "ko": "약초의 숨결",
+  "en": "Herbal Rhythm",
+  "ctx": "mg.name.gather"
+ },
+ {
+  "key": "ui|mg.name.log",
+  "ko": "숲의 박자",
+  "en": "Timber Rhythm",
+  "ctx": "mg.name.log"
+ },
+ {
+  "key": "ui|mg.eyebrow",
+  "ko": "손끝으로 모으는 작은 모험",
+  "en": "A LITTLE HANDS-ON ADVENTURE",
+  "ctx": "mg.eyebrow"
+ },
+ {
+  "key": "ui|mg.finished",
+  "ko": "오늘의 수확",
+  "en": "YOUR HARVEST",
+  "ctx": "mg.finished"
+ },
+ {
+  "key": "ui|mg.result",
+  "ko": "수확을 마쳤어요",
+  "en": "Harvest complete",
+  "ctx": "mg.result"
+ },
+ {
+  "key": "ui|mg.rule.mine",
+  "ko": "30초 · 오클릭 한 번이면 종료",
+  "en": "30 seconds · One mistake ends the run",
+  "ctx": "mg.rule.mine"
+ },
+ {
+  "key": "ui|mg.rule.gather",
+  "ko": "30초 · 중앙에 놓으면 추가 수확",
+  "en": "30 seconds · Center release earns a bonus",
+  "ctx": "mg.rule.gather"
+ },
+ {
+  "key": "ui|mg.rule.log",
+  "ko": "40마디 · 가지를 피해 좌우로",
+  "en": "40 logs · Switch sides to dodge branches",
+  "ctx": "mg.rule.log"
+ },
+ {
+  "key": "ui|mg.direct",
+  "ko": "캔 만큼 바로 획득",
+  "en": "Keep everything you harvest",
+  "ctx": "mg.direct"
+ },
+ {
+  "key": "ui|mg.reward",
+  "ko": "이번 수확",
+  "en": "HARVESTING",
+  "ctx": "mg.reward"
+ },
+ {
+  "key": "ui|mg.harvest",
+  "ko": "수확",
+  "en": "harvested",
+  "ctx": "mg.harvest"
+ },
+ {
+  "key": "ui|mg.onechance",
+  "ko": "오클릭 시 종료",
+  "en": "One mistake ends the run",
+  "ctx": "mg.onechance"
+ },
+ {
+  "key": "ui|mg.comboCount",
+  "ko": "{n} 연속",
+  "en": "{n} streak",
+  "ctx": "mg.comboCount"
+ },
+ {
+  "key": "ui|mg.comboWait",
+  "ko": "콤보를 이어보세요",
+  "en": "Build your streak",
+  "ctx": "mg.comboWait"
+ },
+ {
+  "key": "ui|mg.controls.mine",
+  "ko": "광맥 = 한 번 클릭  ·  붉은 경고 바위·빈 곳 = 종료  ·  놓쳐도 계속",
+  "en": "Vein: click once  ·  Red warning rock / empty spot: run ends  ·  Missing a vein is safe",
+  "ctx": "mg.controls.mine"
+ },
+ {
+  "key": "ui|mg.controls.gather",
+  "ko": "약초를 꾹 누르기 → 초록 구간에 놓기  ·  스페이스키도 가능  ·  독초는 건너뛰기",
+  "en": "Hold herb → release in green  ·  Or hold Space  ·  Skip poison plants",
+  "ctx": "mg.controls.gather"
+ },
+ {
+  "key": "ui|mg.controls.log",
+  "ko": "왼쪽·오른쪽 클릭 또는 ← → / A D  ·  내려올 가지를 보고 반대쪽에서 베기",
+  "en": "Click left / right or use ← → / A D  ·  Chop opposite the incoming branch",
+  "ctx": "mg.controls.log"
+ },
+ {
+  "key": "ui|mg.ready",
+  "ko": "준비하세요",
+  "en": "GET READY",
+  "ctx": "mg.ready"
+ },
+ {
+  "key": "ui|mg.cell",
+  "ko": "채광 지점 {n}",
+  "en": "Mining spot {n}",
+  "ctx": "mg.cell"
+ },
+ {
+  "key": "ui|mg.target.good",
+  "ko": "광맥",
+  "en": "VEIN",
+  "ctx": "mg.target.good"
+ },
+ {
+  "key": "ui|mg.target.rare",
+  "ko": "희귀 +3",
+  "en": "RARE +3",
+  "ctx": "mg.target.rare"
+ },
+ {
+  "key": "ui|mg.target.bad",
+  "ko": "위험",
+  "en": "DANGER",
+  "ctx": "mg.target.bad"
+ },
+ {
+  "key": "ui|mg.empty",
+  "ko": "빈 곳 · 누르면 종료",
+  "en": "Empty spot · clicking ends the run",
+  "ctx": "mg.empty"
+ },
+ {
+  "key": "ui|mg.hold",
+  "ko": "꾹 누르세요",
+  "en": "HOLD",
+  "ctx": "mg.hold"
+ },
+ {
+  "key": "ui|mg.power",
+  "ko": "당기는 힘",
+  "en": "PULL STRENGTH",
+  "ctx": "mg.power"
+ },
+ {
+  "key": "ui|mg.release",
+  "ko": "지금 놓으세요!",
+  "en": "RELEASE NOW!",
+  "ctx": "mg.release"
+ },
+ {
+  "key": "ui|mg.keepHolding",
+  "ko": "초록 구간까지…",
+  "en": "Aim for green…",
+  "ctx": "mg.keepHolding"
+ },
+ {
+  "key": "ui|mg.leave",
+  "ko": "손대지 마세요",
+  "en": "DO NOT PICK",
+  "ctx": "mg.leave"
+ },
+ {
+  "key": "ui|mg.plant.good",
+  "ko": "싱싱한 약초",
+  "en": "FRESH HERB",
+  "ctx": "mg.plant.good"
+ },
+ {
+  "key": "ui|mg.plant.rare",
+  "ko": "희귀 약초 · 수확 3배",
+  "en": "RARE HERB · TRIPLE HARVEST",
+  "ctx": "mg.plant.rare"
+ },
+ {
+  "key": "ui|mg.plant.bad",
+  "ko": "독초 · 건드리지 않기",
+  "en": "POISON · LEAVE IT ALONE",
+  "ctx": "mg.plant.bad"
+ },
+ {
+  "key": "ui|mg.next",
+  "ko": "다음 약초를 찾는 중…",
+  "en": "Finding the next herb…",
+  "ctx": "mg.next"
+ },
+ {
+  "key": "ui|mg.perfect",
+  "ko": "완벽! +1",
+  "en": "PERFECT! +1",
+  "ctx": "mg.perfect"
+ },
+ {
+  "key": "ui|mg.failed",
+  "ko": "실패 −♥",
+  "en": "MISSED −♥",
+  "ctx": "mg.failed"
+ },
+ {
+  "key": "ui|mg.left",
+  "ko": "왼쪽 베기",
+  "en": "Chop left",
+  "ctx": "mg.left"
+ },
+ {
+  "key": "ui|mg.right",
+  "ko": "오른쪽 베기",
+  "en": "Chop right",
+  "ctx": "mg.right"
+ },
+ {
+  "key": "ui|mg.why.mistake",
+  "ko": "잘못된 곳을 눌렀어요 · 지금까지 캔 재료는 받았어요",
+  "en": "Wrong target · Your harvest is safe",
+  "ctx": "mg.why.mistake"
+ },
+ {
+  "key": "ui|mg.why.quit",
+  "ko": "수확을 마무리했어요",
+  "en": "Harvest collected",
+  "ctx": "mg.why.quit"
+ },
+ {
+  "key": "ui|mg.why.time",
+  "ko": "시간 끝",
+  "en": "Time's up",
+  "ctx": "mg.why.time"
+ },
+ {
+  "key": "ui|mg.why.lives",
+  "ko": "목숨 소진",
+  "en": "Out of lives",
+  "ctx": "mg.why.lives"
+ },
+ {
+  "key": "ui|mg.why.done",
+  "ko": "나무를 모두 벰",
+  "en": "Tree felled",
+  "ctx": "mg.why.done"
+ },
+ {
+  "key": "ui|mg.err.post",
+  "ko": "미니게임이 없는 곳",
+  "en": "No minigame here",
+  "ctx": "mg.err.post"
+ },
+ {
+  "key": "ui|rs.on",
+  "ko": "On",
+  "en": "On",
+  "ctx": "rs.on"
+ },
+ {
+  "key": "ui|rs.off",
+  "ko": "Off",
+  "en": "Off",
+  "ctx": "rs.off"
+ },
+ {
+  "key": "ui|rs.reroll",
+  "ko": "전체 리롤 {g}G",
+  "en": "Reroll All {g}G",
+  "ctx": "rs.reroll"
+ },
+ {
+  "key": "ui|rs.reroll.done",
+  "ko": "{n}칸 다시 굴림",
+  "en": "Rerolled {n} slot(s)",
+  "ctx": "rs.reroll.done"
+ },
+ {
+  "key": "ui|rs.lockedN",
+  "ko": "잠근 칸",
+  "en": "Locked",
+  "ctx": "rs.lockedN"
+ },
+ {
+  "key": "ui|rs.lock",
+  "ko": "잠그기",
+  "en": "Lock",
+  "ctx": "rs.lock"
+ },
+ {
+  "key": "ui|rs.unlock",
+  "ko": "풀기",
+  "en": "Unlock",
+  "ctx": "rs.unlock"
+ },
+ {
+  "key": "ui|rs.note",
+  "ko": "칸은 <b>줍는 것이 아닙니다</b> — <b>지휘 천막</b>의 랭크를 지을 때마다 하나씩 열리고(영웅 로스터 전원의 레벨 합이 그 랭크의 문턱입니다), 칸에 든 옵션은 골드로 다시 굴립니다. 리롤은 <b>안 잠근 칸을 한 번에 전부</b> 굴립니다 — 지킬 칸은 <b>잠급니다</b>. 잠그는 것은 무료지만 <b>잠근 칸이 많을수록 리롤이 비싸집니다</b>. 새로 나오는 것은 <b>지금 판에 든 것과 겹치지 않습니다</b>.",
+  "en": "Slots are <b>not looted</b> — one opens with each <b>Command Tent</b> rank you build (the summed level of your whole roster is that rank's requirement), and the options inside are rerolled with gold. A reroll rolls <b>every unlocked slot at once</b> — <b>lock</b> the ones you want to keep. Locking is free, but <b>each locked slot makes the reroll pricier</b>. A reroll never returns an option already on the board.",
+  "ctx": "rs.note"
+ },
+ {
+  "key": "ui|rs.note.cond",
+  "ko": "조건은 <b>편성에서 확정되는 것</b>만 셉니다 — 죄종 · 직업 · 장비의 죄종 · 리더 · 진형 · 이 파티로 나간 횟수. <b>어려운 조건일수록</b>(난이도) 굴려서 나올 수 있는 값이 높습니다. 전투 중에 변하는 값(현재 HP · 남은 적)은 쓰지 않습니다. 효과는 <b>파티에 든 영웅</b>에게만 붙습니다.",
+  "en": "Conditions read only what the formation fixes — sins, classes, gear sins, the leader, the formation and runs taken as this party. <b>The harder the condition</b> (Difficulty), the higher a roll can go. Nothing that changes mid-battle (current HP, enemies left). Effects apply only to heroes in the party.",
+  "ctx": "rs.note.cond"
+ },
+ {
+  "key": "ui|rs.col.state",
+  "ko": "상태",
+  "en": "State",
+  "ctx": "rs.col.state"
+ },
+ {
+  "key": "ui|rs.col.sin",
+  "ko": "죄종",
+  "en": "Sin",
+  "ctx": "rs.col.sin"
+ },
+ {
+  "key": "ui|rs.col.cond",
+  "ko": "조건",
+  "en": "Condition",
+  "ctx": "rs.col.cond"
+ },
+ {
+  "key": "ui|rs.col.prog",
+  "ko": "진행",
+  "en": "Progress",
+  "ctx": "rs.col.prog"
+ },
+ {
+  "key": "ui|rs.col.buff",
+  "ko": "버프",
+  "en": "Buff",
+  "ctx": "rs.col.buff"
+ },
+ {
+  "key": "ui|rs.col.extra",
+  "ko": "버프 몫",
+  "en": "Buff Share",
+  "ctx": "rs.col.extra"
+ },
+ {
+  "key": "ui|rs.col.lock",
+  "ko": "잠금",
+  "en": "Lock",
+  "ctx": "rs.col.lock"
+ },
+ {
+  "key": "ui|rs.board.lead",
+  "ko": "리더 통솔 {n} → 버프 효과 {p}",
+  "en": "Leader Leadership {n} → Buff Effect {p}",
+  "ctx": "rs.board.lead"
+ },
+ {
+  "key": "ui|rs.board.noLead",
+  "ko": "리더 없음",
+  "en": "No leader",
+  "ctx": "rs.board.noLead"
+ },
+ {
+  "key": "ui|rs.board.sin",
+  "ko": "{sin} {n} → {p}",
+  "en": "{sin} {n} → {p}",
+  "ctx": "rs.board.sin"
+ },
+ {
+  "key": "ui|rs.board.sin0",
+  "ko": "{sin} —",
+  "en": "{sin} —",
+  "ctx": "rs.board.sin0"
+ },
+ {
+  "key": "ui|rs.eff.def_ignore",
+  "ko": "적 방어력 감소 {v}",
+  "en": "{v} Enemy Defense Reduction",
+  "ctx": "rs.eff.def_ignore"
+ },
+ {
+  "key": "ui|rs.eff.res_reduction_fire",
+  "ko": "적 화염 저항 감소 {v}",
+  "en": "{v} Enemy Fire Resist Reduction",
+  "ctx": "rs.eff.res_reduction_fire"
+ },
+ {
+  "key": "ui|rs.eff.res_reduction_cold",
+  "ko": "적 냉기 저항 감소 {v}",
+  "en": "{v} Enemy Cold Resist Reduction",
+  "ctx": "rs.eff.res_reduction_cold"
+ },
+ {
+  "key": "ui|rs.eff.res_reduction_lightning",
+  "ko": "적 전기 저항 감소 {v}",
+  "en": "{v} Enemy Lightning Resist Reduction",
+  "ctx": "rs.eff.res_reduction_lightning"
+ },
+ {
+  "key": "ui|rs.eff.res_reduction_poison",
+  "ko": "적 독 저항 감소 {v}",
+  "en": "{v} Enemy Poison Resist Reduction",
+  "ctx": "rs.eff.res_reduction_poison"
+ },
+ {
+  "key": "ui|rs.note.lead",
+  "ko": "<b>리더</b>(편성 첫 칸)의 <b>통솔</b>이 전술 효과의 크기를 바꿉니다 — 통솔 {pivot}에서 그대로이고, {min}이면 ×{lo} · {max}이면 ×{hi}입니다. 그 사이는 고르게 변합니다.",
+  "en": "The <b>leader</b>'s (first slot) <b>Leadership</b> scales tactic effects — unchanged at {pivot}, ×{lo} at {min} and ×{hi} at {max}, evenly in between.",
+  "ctx": "rs.note.lead"
+ },
+ {
+  "key": "ui|rs.grade.common",
+  "ko": "일반",
+  "en": "Common",
+  "ctx": "rs.grade.common"
+ },
+ {
+  "key": "ui|rs.grade.magic",
+  "ko": "매직",
+  "en": "Magic",
+  "ctx": "rs.grade.magic"
+ },
+ {
+  "key": "ui|rs.grade.rare",
+  "ko": "레어",
+  "en": "Rare",
+  "ctx": "rs.grade.rare"
+ },
+ {
+  "key": "ui|rs.cond.none",
+  "ko": "조건 없음",
+  "en": "No condition",
+  "ctx": "rs.cond.none"
+ },
+ {
+  "key": "ui|rs.cond.slot_sin_heroes",
+  "ko": "{a} 영웅",
+  "en": "{a} heroes",
+  "ctx": "rs.cond.slot_sin_heroes"
+ },
+ {
+  "key": "ui|rs.cond.slot_sin_attr_sum",
+  "ko": "{s} 합",
+  "en": "Total {s}",
+  "ctx": "rs.cond.slot_sin_attr_sum"
+ },
+ {
+  "key": "ui|rs.cond.kills_together",
+  "ko": "함께 잡은 몬스터",
+  "en": "Monsters slain together",
+  "ctx": "rs.cond.kills_together"
+ },
+ {
+  "key": "ui|sk.points.h",
+  "ko": "스킬 포인트",
+  "en": "Skill Points",
+  "ctx": "sk.points.h"
+ },
+ {
+  "key": "ui|sk.points.note",
+  "ko": "레벨마다 받는 <b>스킬 포인트</b>를 죄종·직업 마스터리와 전직 메인·꼬리에 나누어 씁니다. 전직해도 별도 포인트를 지급하지 않습니다. 메인 단계만 5레벨 간격으로 열립니다.",
+  "en": "<b>Skill points</b> earned on each level-up are shared by Sin mastery, Class mastery and advancement main skills and branches. Advancing grants no separate points. Only main-skill ranks unlock at five-level intervals.",
+  "ctx": "sk.points.note"
+ },
+ {
+  "key": "ui|sk.points.left",
+  "ko": "남은 포인트",
+  "en": "Points left",
+  "ctx": "sk.points.left"
+ },
+ {
+  "key": "ui|sk.points.adv",
+  "ko": "전직 포인트",
+  "en": "Advancement Points",
+  "ctx": "sk.points.adv"
+ },
+ {
+  "key": "ui|sk.tip.rank",
+  "ko": "Rank {n}/{max}",
+  "en": "Rank {n}/{max}",
+  "ctx": "sk.tip.rank"
+ },
+ {
+  "key": "ui|sk.tip.effect",
+  "ko": "{effect} (랭크당 {perRank})",
+  "en": "{effect}. (Per rank {perRank})",
+  "ctx": "sk.tip.effect"
+ },
+ {
+  "key": "ui|sk.gate.weapon",
+  "ko": "착용 무기: {groups}일 때 효과 적용",
+  "en": "Active with weapon: {groups}",
+  "ctx": "sk.gate.weapon"
+ },
+ {
+  "key": "ui|sk.gate.armor",
+  "ko": "착용 갑옷: {groups}일 때 효과 적용",
+  "en": "Active with armor: {groups}",
+  "ctx": "sk.gate.armor"
+ },
+ {
+  "key": "ui|sk.gate.sin_gear",
+  "ko": "{sin} 장비 {need}개 이상일 때 효과 적용 ({n}/{need})",
+  "en": "Active with {need}+ {sin} items ({n}/{need})",
+  "ctx": "sk.gate.sin_gear"
+ },
+ {
+  "key": "ui|sk.cond.hurt",
+  "ko": "내 HP 가 {pct} 미만일 때 (랭크당 문턱 +{step})",
+  "en": "While below {pct} HP (threshold +{step} per rank)",
+  "ctx": "sk.cond.hurt"
+ },
+ {
+  "key": "ui|sk.cond.higher",
+  "ko": "상대의 HP 비율이 나보다 {pct} 이상 높을 때 (랭크당 문턱 −{step})",
+  "en": "When the foe's HP % is {pct} or more above yours (threshold −{step} per rank)",
+  "ctx": "sk.cond.higher"
+ },
+ {
+  "key": "ui|sk.cond.higher_any",
+  "ko": "상대의 HP 비율이 나보다 높을 때",
+  "en": "When the foe's HP % is higher than yours",
+  "ctx": "sk.cond.higher_any"
+ },
+ {
+  "key": "ui|sk.cond.lower",
+  "ko": "상대의 HP 비율이 나보다 {pct} 이상 낮을 때 (랭크당 문턱 −{step})",
+  "en": "When the foe's HP % is {pct} or more below yours (threshold −{step} per rank)",
+  "ctx": "sk.cond.lower"
+ },
+ {
+  "key": "ui|sk.cond.lower_any",
+  "ko": "상대의 HP 비율이 나보다 낮을 때",
+  "en": "When the foe's HP % is lower than yours",
+  "ctx": "sk.cond.lower_any"
+ },
+ {
+  "key": "ui|sk.cond.fresh",
+  "ko": "상대의 HP 가 {pct} 이상일 때 (랭크당 문턱 −{step})",
+  "en": "Against foes at {pct} HP or more (threshold −{step} per rank)",
+  "ctx": "sk.cond.fresh"
+ },
+ {
+  "key": "ui|sk.cond.fresh_full",
+  "ko": "상대의 HP 가 가득 찼을 때 (랭크당 문턱 −{step})",
+  "en": "Against foes at full HP (threshold −{step} per rank)",
+  "ctx": "sk.cond.fresh_full"
+ },
+ {
+  "key": "ui|sk.cond.opening",
+  "ko": "라운드 시작 후 {sec}초 동안 (랭크당 +{step}초)",
+  "en": "For the first {sec}s of a round (+{step}s per rank)",
+  "ctx": "sk.cond.opening"
+ },
+ {
+  "key": "ui|sk.cond.late",
+  "ko": "라운드 시작 후 {sec}초부터 (랭크당 −{step}초)",
+  "en": "From {sec}s into a round (−{step}s per rank)",
+  "ctx": "sk.cond.late"
+ },
+ {
+  "key": "ui|sk.masteryEffect",
+  "ko": "{stat} {v} 증가",
+  "en": "{stat} increases by {v}",
+  "ctx": "sk.masteryEffect"
+ },
+ {
+  "key": "ui|sk.masteryEffect.aspd_pct",
+  "ko": "공격 속도 {v} 증가",
+  "en": "Attack Speed increases by {v}",
+  "ctx": "sk.masteryEffect.aspd_pct"
+ },
+ {
+  "key": "ui|sk.masteryEffect.atk_pct",
+  "ko": "데미지 {v} 증가",
+  "en": "Damage increases by {v}",
+  "ctx": "sk.masteryEffect.atk_pct"
+ },
+ {
+  "key": "ui|sk.masteryEffect.buff_dur_pct",
+  "ko": "버프 지속시간 {v} 증가",
+  "en": "Buff Duration increases by {v}",
+  "ctx": "sk.masteryEffect.buff_dur_pct"
+ },
+ {
+  "key": "ui|sk.masteryEffect.cast_speed_pct",
+  "ko": "캐스팅 속도 {v} 증가",
+  "en": "Casting Speed increases by {v}",
+  "ctx": "sk.masteryEffect.cast_speed_pct"
+ },
+ {
+  "key": "ui|sk.masteryEffect.cooldown_reduction",
+  "ko": "쿨타임 {v} 감소",
+  "en": "Cooldowns are reduced by {v}",
+  "ctx": "sk.masteryEffect.cooldown_reduction"
+ },
+ {
+  "key": "ui|sk.masteryEffect.cool_minus_sec",
+  "ko": "쿨타임 {v}초 감소",
+  "en": "Cooldowns are {v}s shorter",
+  "ctx": "sk.masteryEffect.cool_minus_sec"
+ },
+ {
+  "key": "ui|sk.masteryEffect.basic_cleave",
+  "ko": "기본 공격이 같은 줄 옆 적에게 {v}로 튑니다",
+  "en": "Basic attacks also strike enemies in the same row at {v}",
+  "ctx": "sk.masteryEffect.basic_cleave"
+ },
+ {
+  "key": "ui|sk.masteryEffect.skill_repeat_chance",
+  "ko": "공격 스킬이 {v} 확률로 한 번 더 나갑니다",
+  "en": "Attack skills have a {v} chance to fire once more",
+  "ctx": "sk.masteryEffect.skill_repeat_chance"
+ },
+ {
+  "key": "ui|sk.masteryEffect.elem_to_phys",
+  "ko": "받는 원소 피해의 {v}를 물리 피해로 받습니다",
+  "en": "Takes {v} of elemental damage as physical damage",
+  "ctx": "sk.masteryEffect.elem_to_phys"
+ },
+ {
+  "key": "ui|sk.masteryEffect.hit_stun_chance",
+  "ko": "맞힐 때 {v} 확률로 적을 스턴시킵니다",
+  "en": "Hits have a {v} chance to stun",
+  "ctx": "sk.masteryEffect.hit_stun_chance"
+ },
+ {
+  "key": "ui|sk.masteryEffect.aura_guard_share",
+  "ko": "오오라가 켜져 있으면 팀원이 받는 피해의 {v}를 대신 받습니다",
+  "en": "While your aura is on, takes {v} of the damage dealt to teammates",
+  "ctx": "sk.masteryEffect.aura_guard_share"
+ },
+ {
+  "key": "ui|sk.masteryEffect.crit_taken_cut",
+  "ko": "치명타로 더 받는 피해가 {v} 줄어듭니다",
+  "en": "Extra damage taken from critical hits is reduced by {v}",
+  "ctx": "sk.masteryEffect.crit_taken_cut"
+ },
+ {
+  "key": "ui|sk.masteryEffect.skill_fixed_share",
+  "ko": "스킬 피해의 {v}가 고정 피해로 들어갑니다",
+  "en": "{v} of skill damage is dealt as fixed damage",
+  "ctx": "sk.masteryEffect.skill_fixed_share"
+ },
+ {
+  "key": "ui|sk.masteryEffect.cast_refill_chance",
+  "ko": "스킬을 쓰면 {v} 확률로 시전 칸 하나가 찹니다",
+  "en": "Casting a skill has a {v} chance to fill one cast charge",
+  "ctx": "sk.masteryEffect.cast_refill_chance"
+ },
+ {
+  "key": "ui|sk.masteryEffect.round_barrier",
+  "ko": "라운드 시작 때 최대 HP {v}의 보호막을 얻습니다",
+  "en": "Gains a shield worth {v} of max HP at the start of each round",
+  "ctx": "sk.masteryEffect.round_barrier"
+ },
+ {
+  "key": "ui|sk.masteryEffect.sin_vuln",
+  "ko": "디버프 · 공격 스킬이 적이 받는 피해를 {v} 늘립니다",
+  "en": "Debuffs and attack skills make the enemy take {v} more damage",
+  "ctx": "sk.masteryEffect.sin_vuln"
+ },
+ {
+  "key": "ui|sk.masteryEffect.overheal_shield",
+  "ko": "넘친 회복의 {v}가 보호막으로 남습니다",
+  "en": "{v} of overhealing remains as a shield",
+  "ctx": "sk.masteryEffect.overheal_shield"
+ },
+ {
+  "key": "ui|sk.masteryEffect.last_prayer",
+  "ko": "HP가 낮아지면 라운드에 한 번 최대 HP {v}를 회복합니다",
+  "en": "Once per round at low HP, restores {v} of max HP",
+  "ctx": "sk.masteryEffect.last_prayer"
+ },
+ {
+  "key": "ui|sk.masteryEffect.extra_shot_chance",
+  "ko": "기본 공격이 {v} 확률로 한 발 더 나갑니다",
+  "en": "Basic attacks have a {v} chance to fire an extra shot",
+  "ctx": "sk.masteryEffect.extra_shot_chance"
+ },
+ {
+  "key": "ui|sk.masteryEffect.basic_cd_tick",
+  "ko": "기본 공격마다 스킬 쿨타임이 {v}초 돕니다",
+  "en": "Each basic attack advances skill cooldowns by {v}s",
+  "ctx": "sk.masteryEffect.basic_cd_tick"
+ },
+ {
+  "key": "ui|sk.masteryEffect.dodge_chance",
+  "ko": "맞을 때 {v} 확률로 피합니다",
+  "en": "Has a {v} chance to dodge a hit",
+  "ctx": "sk.masteryEffect.dodge_chance"
+ },
+ {
+  "key": "ui|sk.masteryEffect.wrath_blood",
+  "ko": "공격 스킬이 HP를 조금 쓰고 스킬 데미지가 {v} 증가",
+  "en": "Attack skills spend a little HP and deal {v} more damage",
+  "ctx": "sk.masteryEffect.wrath_blood"
+ },
+ {
+  "key": "ui|sk.masteryEffect.wrath_party_crit",
+  "ko": "HP가 낮은 동안 같은 편 전원 치명 확률 {v} 증가",
+  "en": "While your HP is low, all allies gain {v} Critical Chance",
+  "ctx": "sk.masteryEffect.wrath_party_crit"
+ },
+ {
+  "key": "ui|sk.masteryEffect.wrath_steady",
+  "ko": "HP가 낮은 동안 받는 스턴 · 경직 시간 {v} 감소",
+  "en": "While your HP is low, stuns and staggers on you are {v} shorter",
+  "ctx": "sk.masteryEffect.wrath_steady"
+ },
+ {
+  "key": "ui|sk.masteryEffect.envy_strip",
+  "ko": "나보다 성한 적을 맞히면 {v} 확률로 버프 하나를 지웁니다",
+  "en": "Hitting an enemy healthier than you has a {v} chance to remove one of its buffs",
+  "ctx": "sk.masteryEffect.envy_strip"
+ },
+ {
+  "key": "ui|sk.masteryEffect.envy_party_pierce",
+  "ko": "나보다 성한 적을 치는 같은 편 전원 방어력 무시 {v}",
+  "en": "Allies ignore {v} Defense of enemies healthier than you",
+  "ctx": "sk.masteryEffect.envy_party_pierce"
+ },
+ {
+  "key": "ui|sk.masteryEffect.envy_return",
+  "ko": "내게 걸린 디버프가 {v} 확률로 건 적에게도 걸립니다",
+  "en": "Debuffs on you have a {v} chance to also afflict their caster",
+  "ctx": "sk.masteryEffect.envy_return"
+ },
+ {
+  "key": "ui|sk.masteryEffect.greed_mark",
+  "ko": "라운드 시작 때 HP가 가장 많은 적을 정예로 표시하고 그 적에게 데미지 {v} 증가",
+  "en": "Marks the enemy with the most HP as elite each round and deals {v} more damage to it",
+  "ctx": "sk.masteryEffect.greed_mark"
+ },
+ {
+  "key": "ui|sk.masteryEffect.greed_reroll",
+  "ko": "드롭이 없던 처치에서 {v} 확률로 한 번 더 굴립니다",
+  "en": "Kills without a drop have a {v} chance to roll again",
+  "ctx": "sk.masteryEffect.greed_reroll"
+ },
+ {
+  "key": "ui|sk.masteryEffect.greed_barrier",
+  "ko": "라운드 시작 때 탐욕 합에 비례한 보호막(최대 HP × {v} × 탐욕 합)",
+  "en": "Gains a shield each round worth max HP × {v} × your Greed total",
+  "ctx": "sk.masteryEffect.greed_barrier"
+ },
+ {
+  "key": "ui|sk.masteryEffect.sloth_heavy",
+  "ko": "공격 · 캐스팅이 느려지는 대신 데미지 {v} 증가",
+  "en": "Attacks and casts are slower but deal {v} more damage",
+  "ctx": "sk.masteryEffect.sloth_heavy"
+ },
+ {
+  "key": "ui|sk.masteryEffect.sloth_party_cdr",
+  "ko": "라운드 초반 동안 같은 편 전원 쿨타임 {v} 감소",
+  "en": "Early in each round, all allies gain {v} Cooldown Reduction",
+  "ctx": "sk.masteryEffect.sloth_party_cdr"
+ },
+ {
+  "key": "ui|sk.masteryEffect.sloth_defer",
+  "ko": "라운드 초반 동안 받는 피해의 {v}를 나눠 받습니다",
+  "en": "Early in each round, {v} of damage taken is spread over time",
+  "ctx": "sk.masteryEffect.sloth_defer"
+ },
+ {
+  "key": "ui|sk.masteryEffect.glut_cull",
+  "ko": "HP가 {v} 이하인 일반 몬스터를 바로 쓰러뜨립니다",
+  "en": "Normal monsters at or below {v} HP are slain outright",
+  "ctx": "sk.masteryEffect.glut_cull"
+ },
+ {
+  "key": "ui|sk.masteryEffect.glut_party_dmg",
+  "ko": "라운드 후반 동안 같은 편 전원 데미지 {v} 증가",
+  "en": "Late in each round, all allies deal {v} more damage",
+  "ctx": "sk.masteryEffect.glut_party_dmg"
+ },
+ {
+  "key": "ui|sk.masteryEffect.glut_absorb",
+  "ko": "받는 원소 피해의 {v}를 회복으로 바꿉니다",
+  "en": "Converts {v} of elemental damage taken into healing",
+  "ctx": "sk.masteryEffect.glut_absorb"
+ },
+ {
+  "key": "ui|sk.masteryEffect.lust_crit_vuln",
+  "ko": "HP가 높은 적에게 치명이 터지면 그 적이 받는 피해 {v} 증가",
+  "en": "Critical hits on healthy enemies make them take {v} more damage",
+  "ctx": "sk.masteryEffect.lust_crit_vuln"
+ },
+ {
+  "key": "ui|sk.masteryEffect.lust_share_heal",
+  "ko": "받은 회복의 {v}가 HP가 가장 낮은 아군에게도 갑니다",
+  "en": "{v} of healing you receive also goes to the most wounded ally",
+  "ctx": "sk.masteryEffect.lust_share_heal"
+ },
+ {
+  "key": "ui|sk.masteryEffect.lust_charm",
+  "ko": "나를 때린 적이 {v} 확률로 홀려 데미지가 깎입니다",
+  "en": "Attackers have a {v} chance to be beguiled, dealing less damage",
+  "ctx": "sk.masteryEffect.lust_charm"
+ },
+ {
+  "key": "ui|sk.masteryEffect.pride_nth",
+  "ko": "나보다 약한 상대에게 몇 번째 공격마다 확정 치명(간격 {v} 단축)",
+  "en": "Every few attacks on weaker foes are certain critical hits (interval −{v})",
+  "ctx": "sk.masteryEffect.pride_nth"
+ },
+ {
+  "key": "ui|sk.masteryEffect.pride_party_haste",
+  "ko": "라운드 시작 때 같은 편 전원 공격 · 캐스팅 속도 {v} 증가",
+  "en": "At the start of each round, all allies gain {v} Attack and Casting Speed",
+  "ctx": "sk.masteryEffect.pride_party_haste"
+ },
+ {
+  "key": "ui|sk.masteryEffect.pride_cap",
+  "ko": "큰 한 방의 넘친 피해를 {v} 덜 받습니다",
+  "en": "Takes {v} less of the excess from very large hits",
+  "ctx": "sk.masteryEffect.pride_cap"
+ },
+ {
+  "key": "ui|sk.masteryEffect.period_minus_sec",
+  "ko": "공격 속도 {v}초 단축",
+  "en": "Attacks come {v}s sooner",
+  "ctx": "sk.masteryEffect.period_minus_sec"
+ },
+ {
+  "key": "ui|sk.masteryEffect.crit_damage",
+  "ko": "치명타 피해 {v} 증가",
+  "en": "Crit Damage increases by {v}",
+  "ctx": "sk.masteryEffect.crit_damage"
+ },
+ {
+  "key": "ui|sk.masteryEffect.crit_rate",
+  "ko": "치명타 확률 {v} 증가",
+  "en": "Crit Chance increases by {v}",
+  "ctx": "sk.masteryEffect.crit_rate"
+ },
+ {
+  "key": "ui|sk.masteryEffect.crushing_blow_pct",
+  "ko": "강타 {v} 증가",
+  "en": "Crushing Blow increases by {v}",
+  "ctx": "sk.masteryEffect.crushing_blow_pct"
+ },
+ {
+  "key": "ui|sk.masteryEffect.damage_reduction",
+  "ko": "받는 피해 {v} 감소",
+  "en": "Damage taken is reduced by {v}",
+  "ctx": "sk.masteryEffect.damage_reduction"
+ },
+ {
+  "key": "ui|sk.masteryEffect.def_flat",
+  "ko": "물리 방어 {v} 증가",
+  "en": "Physical Defense increases by {v}",
+  "ctx": "sk.masteryEffect.def_flat"
+ },
+ {
+  "key": "ui|sk.masteryEffect.def_ignore",
+  "ko": "방어 무시 {v} 증가",
+  "en": "Defense Ignore increases by {v}",
+  "ctx": "sk.masteryEffect.def_ignore"
+ },
+ {
+  "key": "ui|sk.masteryEffect.fhr",
+  "ko": "타격 회복 {v} 증가",
+  "en": "Hit Recovery increases by {v}",
+  "ctx": "sk.masteryEffect.fhr"
+ },
+ {
+  "key": "ui|sk.masteryEffect.gold_find",
+  "ko": "골드 획득 {v} 증가",
+  "en": "Gold Find increases by {v}",
+  "ctx": "sk.masteryEffect.gold_find"
+ },
+ {
+  "key": "ui|sk.masteryEffect.hit_bonus",
+  "ko": "명중률 {v} 증가",
+  "en": "Hit Bonus increases by {v}",
+  "ctx": "sk.masteryEffect.hit_bonus"
+ },
+ {
+  "key": "ui|sk.masteryEffect.hp_pct",
+  "ko": "최대 HP {v} 증가",
+  "en": "Max HP increases by {v}",
+  "ctx": "sk.masteryEffect.hp_pct"
+ },
+ {
+  "key": "ui|sk.masteryEffect.hp_flat",
+  "ko": "최대 HP {v} 증가",
+  "en": "Max HP increases by {v}",
+  "ctx": "sk.masteryEffect.hp_flat"
+ },
+ {
+  "key": "ui|sk.masteryEffect.hp_recovery_pct",
+  "ko": "체력 회복 {v} 증가",
+  "en": "HP Recovery increases by {v}",
+  "ctx": "sk.masteryEffect.hp_recovery_pct"
+ },
+ {
+  "key": "ui|sk.masteryEffect.hp_regen",
+  "ko": "HP 재생 {v} 증가",
+  "en": "HP Regen increases by {v}",
+  "ctx": "sk.masteryEffect.hp_regen"
+ },
+ {
+  "key": "ui|sk.masteryEffect.item_find",
+  "ko": "드랍률 {v} 증가",
+  "en": "Item Find increases by {v}",
+  "ctx": "sk.masteryEffect.item_find"
+ },
+ {
+  "key": "ui|sk.masteryEffect.life_steal",
+  "ko": "흡혈 {v} 증가",
+  "en": "Life Steal increases by {v}",
+  "ctx": "sk.masteryEffect.life_steal"
+ },
+ {
+  "key": "ui|sk.masteryEffect.magic_find",
+  "ko": "매직아이템 획득 {v} 증가",
+  "en": "Magic Find increases by {v}",
+  "ctx": "sk.masteryEffect.magic_find"
+ },
+ {
+  "key": "ui|sk.masteryEffect.atk_pct_per_greed",
+  "ko": "골드 획득 · 드랍률 · 매직아이템 획득 합의 {v}만큼 데미지 증가",
+  "en": "Damage increases by {v} of your total Gold Find, Item Find and Magic Find",
+  "ctx": "sk.masteryEffect.atk_pct_per_greed"
+ },
+ {
+  "key": "ui|sk.masteryEffect.hp_pct_per_greed",
+  "ko": "골드 획득 · 드랍률 · 매직아이템 획득 합의 {v}만큼 최대 HP 증가",
+  "en": "Max HP increases by {v} of your total Gold Find, Item Find and Magic Find",
+  "ctx": "sk.masteryEffect.hp_pct_per_greed"
+ },
+ {
+  "key": "ui|sk.masteryEffect.cdr_per_greed",
+  "ko": "골드 획득 · 드랍률 · 매직아이템 획득 합의 {v}만큼 쿨타임 감소",
+  "en": "Cooldowns are reduced by {v} of your total Gold Find, Item Find and Magic Find",
+  "ctx": "sk.masteryEffect.cdr_per_greed"
+ },
+ {
+  "key": "ui|sk.masteryEffect.reflect_damage",
+  "ko": "반사 피해 {v} 증가",
+  "en": "Reflect Damage increases by {v}",
+  "ctx": "sk.masteryEffect.reflect_damage"
+ },
+ {
+  "key": "ui|sk.masteryEffect.res_all",
+  "ko": "모든 원소 저항 {v} 증가",
+  "en": "All Resistances increase by {v}",
+  "ctx": "sk.masteryEffect.res_all"
+ },
+ {
+  "key": "ui|sk.masteryEffect.res_max_bonus",
+  "ko": "최대 원소 저항 {v} 증가",
+  "en": "Max Resistances increase by {v}",
+  "ctx": "sk.masteryEffect.res_max_bonus"
+ },
+ {
+  "key": "ui|sk.masteryEffect.res_reduction",
+  "ko": "적의 원소 저항 {v} 감소",
+  "en": "Enemy resistances are reduced by {v}",
+  "ctx": "sk.masteryEffect.res_reduction"
+ },
+ {
+  "key": "ui|sk.reset",
+  "ko": "마스터리 초기화",
+  "en": "Reset Mastery",
+  "ctx": "sk.reset"
+ },
+ {
+  "key": "ui|sk.unlearn",
+  "ko": "되돌리기",
+  "en": "Refund",
+  "ctx": "sk.unlearn"
+ },
+ {
+  "key": "ui|sk.reset.done",
+  "ko": "{n} 포인트 반환",
+  "en": "Refunded {n} points",
+  "ctx": "sk.reset.done",
+  "en_one": "Refunded {n} point"
+ },
+ {
+  "key": "ui|sk.needLv",
+  "ko": "Lv.{lv}",
+  "en": "Lv.{lv}",
+  "ctx": "sk.needLv"
+ },
+ {
+  "key": "ui|sk.err.locked",
+  "ko": "Lv.{lv} 달성",
+  "en": "Reach Lv.{lv}",
+  "ctx": "sk.err.locked"
+ },
+ {
+  "key": "ui|sk.err.maxRank",
+  "ko": "이미 최대 랭크",
+  "en": "Already at max rank",
+  "ctx": "sk.err.maxRank"
+ },
+ {
+  "key": "ui|sk.err.points",
+  "ko": "스킬 포인트 없음",
+  "en": "No skill points left",
+  "ctx": "sk.err.points"
+ },
+ {
+  "key": "ui|sk.err.rowFull",
+  "ko": "이 줄에는 {n}점까지 찍을 수 있습니다",
+  "en": "This row holds up to {n} points",
+  "ctx": "sk.err.rowFull"
+ },
+ {
+  "key": "ui|sk.err.pickOne",
+  "ko": "이 줄은 한 칸만 찍을 수 있습니다",
+  "en": "Only one node in this row can be learned",
+  "ctx": "sk.err.pickOne"
+ },
+ {
+  "key": "ui|sk.err.prevRow",
+  "ko": "{tier}에 {n}점을 다 찍어야 합니다",
+  "en": "Spend all {n} points in {tier} first",
+  "ctx": "sk.err.prevRow"
+ },
+ {
+  "key": "ui|sk.err.nextRow",
+  "ko": "{tier}의 점수를 먼저 되돌려야 합니다",
+  "en": "Refund the points in {tier} first",
+  "ctx": "sk.err.nextRow"
+ },
+ {
+  "key": "ui|sk.tier",
+  "ko": "Tier {n}",
+  "en": "Tier {n}",
+  "ctx": "sk.tier"
+ },
+ {
+  "key": "ui|sk.err.noRank",
+  "ko": "아직 찍지 않은 칸",
+  "en": "Nothing invested here yet",
+  "ctx": "sk.err.noRank"
+ },
+ {
+  "key": "ui|sk.unlearnHint",
+  "ko": " · 우클릭 = 1랭크 되돌리기",
+  "en": " · Right-click to refund 1 rank",
+  "ctx": "sk.unlearnHint"
+ },
+ {
+  "key": "ui|sk.slots.h",
+  "ko": "액티브",
+  "en": "Actives",
+  "ctx": "sk.slots.h"
+ },
+ {
+  "key": "ui|sk.cycle",
+  "ko": "공격 속도",
+  "en": "Attack Speed",
+  "ctx": "sk.cycle"
+ },
+ {
+  "key": "ui|sk.castSpeed",
+  "ko": "캐스팅 속도",
+  "en": "Casting Speed",
+  "ctx": "sk.castSpeed"
+ },
+ {
+  "key": "ui|sk.cycleSec",
+  "ko": "{s}초",
+  "en": "{s}s",
+  "ctx": "sk.cycleSec"
+ },
+ {
+  "key": "ui|sk.cycle.sub",
+  "ko": "민첩 + 무기군 속도 (물리·마법 단일 축)",
+  "en": "Agility + weapon-group speed (one clock for melee & magic)",
+  "ctx": "sk.cycle.sub"
+ },
+ {
+  "key": "ui|sk.emptySlot",
+  "ko": "빈 칸",
+  "en": "Empty",
+  "ctx": "sk.emptySlot"
+ },
+ {
+  "key": "ui|sk.innate",
+  "ko": "영웅",
+  "en": "Hero",
+  "ctx": "sk.innate"
+ },
+ {
+  "key": "ui|sk.src.book",
+  "ko": "습득",
+  "en": "Learned",
+  "ctx": "sk.src.book"
+ },
+ {
+  "key": "ui|sk.src.advance",
+  "ko": "전직",
+  "en": "Advance",
+  "ctx": "sk.src.advance"
+ },
+ {
+  "key": "ui|sk.emptyBook",
+  "ko": "배운 스킬 없음",
+  "en": "No skill learned",
+  "ctx": "sk.emptyBook"
+ },
+ {
+  "key": "ui|sk.emptyAdvance",
+  "ko": "전직 전",
+  "en": "Not advanced",
+  "ctx": "sk.emptyAdvance"
+ },
+ {
+  "key": "ui|sk.advLock",
+  "ko": "Lv.{lv}이 되면 도서관에서 전직이 가능합니다",
+  "en": "Advance at the Library at Lv.{lv}",
+  "ctx": "sk.advLock"
+ },
+ {
+  "key": "ui|sk.advLockReady",
+  "ko": "도서관에서 전직이 가능합니다",
+  "en": "Advance at the Library",
+  "ctx": "sk.advLockReady"
+ },
+ {
+  "key": "ui|sk.emptyAdvanceSkill",
+  "ko": "배운 전직 스킬 없음",
+  "en": "No advanced skill learned",
+  "ctx": "sk.emptyAdvanceSkill"
+ },
+ {
+  "key": "ui|sk.lvTag",
+  "ko": "Lv.{n}",
+  "en": "Lv.{n}",
+  "ctx": "sk.lvTag"
+ },
+ {
+  "key": "ui|tr.err.maxLevel",
+  "ko": "메인 최대 레벨입니다",
+  "en": "Main skill is at its maximum level",
+  "ctx": "tr.err.maxLevel"
+ },
+ {
+  "key": "ui|sk.adv.leveled",
+  "ko": "{skill} Lv.{n}",
+  "en": "{skill} Lv.{n}",
+  "ctx": "sk.adv.leveled"
+ },
+ {
+  "key": "ui|sk.lock.book",
+  "ko": "Lv{n}이 되면 도서관에서 스킬을 배울 수 있습니다.",
+  "en": "At Lv{n}, skills can be learned at the Library.",
+  "ctx": "sk.lock.book"
+ },
+ {
+  "key": "ui|sk.lock.advance",
+  "ko": "Lv{n}이 되면 도서관에서 전직 후 스킬을 배울 수 있습니다.",
+  "en": "At Lv{n}, skills can be learned after advancing at the Library.",
+  "ctx": "sk.lock.advance"
+ },
+ {
+  "key": "ui|sk.learnAt.book",
+  "ko": "도서관에서 스킬을 배울 수 있습니다.",
+  "en": "Skills can be learned at the Library.",
+  "ctx": "sk.learnAt.book"
+ },
+ {
+  "key": "ui|sk.learnAt.advance",
+  "ko": "도서관에서 전직 스킬을 배울 수 있습니다.",
+  "en": "Advanced skills can be learned at the Library.",
+  "ctx": "sk.learnAt.advance"
+ },
+ {
+  "key": "ui|bk.up.h",
+  "ko": "스킬 업그레이드",
+  "en": "Skill Upgrade",
+  "ctx": "bk.up.h"
+ },
+ {
+  "key": "ui|bk.up.help",
+  "ko": "보유한 스킬북을 통해 스킬 레벨을 업그레이드 할 수 있습니다.",
+  "en": "Use the skill books you own to upgrade skill levels.",
+  "ctx": "bk.up.help"
+ },
+ {
+  "key": "ui|bk.none",
+  "ko": "가진 책 없음",
+  "en": "No books",
+  "ctx": "bk.none"
+ },
+ {
+  "key": "ui|bk.cls.all",
+  "ko": "전체",
+  "en": "All",
+  "ctx": "bk.cls.all"
+ },
+ {
+  "key": "ui|bk.learn",
+  "ko": "배우기",
+  "en": "Learn",
+  "ctx": "bk.learn"
+ },
+ {
+  "key": "ui|bk.overwrite",
+  "ko": "덮어쓰기",
+  "en": "Overwrite",
+  "ctx": "bk.overwrite"
+ },
+ {
+  "key": "ui|bk.overwrite.what",
+  "ko": "{name}: {old} Lv.{n} → {skill}",
+  "en": "{name}: {old} Lv.{n} → {skill}",
+  "ctx": "bk.overwrite.what"
+ },
+ {
+  "key": "ui|bk.overwrite.warn",
+  "ko": "기존 스킬과 레벨은 사라지고 책으로 돌아오지 않습니다.",
+  "en": "The current skill and its level are lost. Books are not returned.",
+  "ctx": "bk.overwrite.warn"
+ },
+ {
+  "key": "ui|bk.upgrade",
+  "ko": "업그레이드",
+  "en": "Upgrade",
+  "ctx": "bk.upgrade"
+ },
+ {
+  "key": "ui|bk.lvUp",
+  "ko": "Lv.{a} → Lv.{b}",
+  "en": "Lv.{a} → Lv.{b}",
+  "ctx": "bk.lvUp"
+ },
+ {
+  "key": "ui|bk.lvMax",
+  "ko": "Lv.{n} · 최대 레벨",
+  "en": "Lv.{n} · Max level",
+  "ctx": "bk.lvMax"
+ },
+ {
+  "key": "ui|bk.need",
+  "ko": "책 {n}권 필요",
+  "en": "Books needed: {n}",
+  "ctx": "bk.need"
+ },
+ {
+  "key": "ui|bk.max",
+  "ko": "최대",
+  "en": "Max",
+  "ctx": "bk.max"
+ },
+ {
+  "key": "ui|bk.learned",
+  "ko": "{name} — {skill} 배움",
+  "en": "{name} learned {skill}",
+  "ctx": "bk.learned"
+ },
+ {
+  "key": "ui|bk.upgraded",
+  "ko": "{name} — {skill} Lv.{n}",
+  "en": "{name} — {skill} Lv.{n}",
+  "ctx": "bk.upgraded"
+ },
+ {
+  "key": "ui|bk.salvage",
+  "ko": "분해",
+  "en": "Salvage",
+  "ctx": "bk.salvage"
+ },
+ {
+  "key": "ui|bk.salvaged",
+  "ko": "{skill} 스킬북 분해 — {dust} +{n}",
+  "en": "Salvaged a {skill} book — {dust} +{n}",
+  "ctx": "bk.salvaged"
+ },
+ {
+  "key": "ui|bk.err.level",
+  "ko": "Lv.{n} 달성",
+  "en": "Reach Lv.{n}",
+  "ctx": "bk.err.level"
+ },
+ {
+  "key": "ui|bk.err.missing",
+  "ko": "배울 수 없는 스킬",
+  "en": "Cannot be learned",
+  "ctx": "bk.err.missing"
+ },
+ {
+  "key": "ui|bk.err.book",
+  "ko": "책 부족",
+  "en": "Not enough books",
+  "ctx": "bk.err.book"
+ },
+ {
+  "key": "ui|bk.err.maxUp",
+  "ko": "이미 최대 레벨",
+  "en": "Already at max level",
+  "ctx": "bk.err.maxUp"
+ },
+ {
+  "key": "ui|sk.line.proc",
+  "ko": "타격마다 {c} 확률로 피해가 {x} 가 됨",
+  "en": "Each hit has a {c} chance to deal {x} damage",
+  "ctx": "sk.line.proc"
+ },
+ {
+  "key": "ui|sk.amt.physical",
+  "ko": "{v} 의 물리 피해",
+  "en": "{v} physical damage",
+  "ctx": "sk.amt.physical"
+ },
+ {
+  "key": "ui|sk.amt.elem",
+  "ko": "{v} 의 {e} 피해",
+  "en": "{v} {e} damage",
+  "ctx": "sk.amt.elem"
+ },
+ {
+  "key": "ui|sk.amt.physicalFx",
+  "ko": "{f} 의 물리 피해",
+  "en": "physical damage equal to {f}",
+  "ctx": "sk.amt.physicalFx"
+ },
+ {
+  "key": "ui|sk.amt.elemFx",
+  "ko": "{f} 의 {e} 피해",
+  "en": "{e} damage equal to {f}",
+  "ctx": "sk.amt.elemFx"
+ },
+ {
+  "key": "ui|sk.amt.heal",
+  "ko": "{v} 만큼",
+  "en": "{v} HP",
+  "ctx": "sk.amt.heal"
+ },
+ {
+  "key": "ui|sk.amt.healFx",
+  "ko": "{f} 만큼",
+  "en": "HP equal to {f}",
+  "ctx": "sk.amt.healFx"
+ },
+ {
+  "key": "ui|sk.u.times",
+  "ko": "{v}번",
+  "en": "{v} times",
+  "ctx": "sk.u.times",
+  "en_one": "{v} time"
+ },
+ {
+  "key": "ui|sk.cool",
+  "ko": "쿨 {s}초",
+  "en": "Cooldown {s}s",
+  "ctx": "sk.cool"
+ },
+ {
+  "key": "ui|sk.cdrShort",
+  "ko": "쿨감",
+  "en": "Cooldown Reduction",
+  "ctx": "sk.cdrShort"
+ },
+ {
+  "key": "ui|sk.slots.note",
+  "ko": "차례가 오면 <b>가장 오래 기다린 스킬</b> → 동률이면 <b>칸 순서</b> → 없으면 기본 공격. <b>마법 무기는 기본 공격이 없습니다</b> — 준비된 스킬이 없으면 게이지가 찬 채로 기다렸다가 스킬이 준비되는 순간 시전합니다<br>한 차례에 하나. 스킬은 그 차례의 공격을 <b>대체</b>하고 마나는 없습니다 — 행동 1회가 유일한 비용<br>쿨은 실시간으로 돕니다<br>기본 공격은 언제나 <b>물리</b>입니다 — 원소 피해는 스킬만 냅니다<br>스킬은 <b>직업에 귀속</b>됩니다 — 한 스킬은 한 직업에만 있고, 영웅 칸은 <b>영웅의 직업 풀</b>에서 · 습득 칸은 <b>배운 책</b>에서 옵니다. <b>타격 · 회복 · 소환</b> 스킬은 어느 칸에 있든 그 스킬 직업의 무기를 들어야 나가고, 함성 · 오오라 · 축복 같은 <b>버프 · 디버프</b>는 무기를 안 봅니다<br>⚠ 이름과 형태는 확정이지만 <b>배율 · 타수 · 쿨 · 지속은 미발행</b>입니다 — 지금 값은 임시입니다",
+  "en": "When your turn comes: <b>the longest-waiting ready skill</b> → ties go to <b>slot order</b> → none ready means a basic attack. <b>Magic weapons have no basic attack</b> — with nothing ready, the gauge waits full and casts the moment a skill is ready<br>One action per turn. A skill <b>replaces</b> that turn's attack and there is no mana — the action itself is the only cost<br>Cooldowns run in real time<br>Basic attacks are always <b>physical</b> — only skills deal elemental damage<br>Skills belong to a <b>class</b> — each skill sits in exactly one class; the hero slot draws from <b>the hero class pool</b> and the learned slot from <b>the book you read</b>. <b>Attack, heal and summon</b> skills need a weapon of that skill's class in any slot; <b>buffs and debuffs</b> such as shouts, auras and blessings work with any weapon<br>⚠ Names and shapes are settled, but <b>multipliers, hits, cooldowns and durations are not published</b> — the current numbers are placeholders",
+  "ctx": "sk.slots.note"
+ },
+ {
+  "key": "ui|sk.sinTree",
+  "ko": "{sin} 마스터리",
+  "en": "{sin} Mastery",
+  "ctx": "sk.sinTree"
+ },
+ {
+  "key": "ui|sk.sinTree.sub",
+  "ko": "모든 {sin} 영웅 공유",
+  "en": "Shared by all {sin} heroes",
+  "ctx": "sk.sinTree.sub"
+ },
+ {
+  "key": "ui|sk.sinTree.missing",
+  "ko": "<b>맨 아랫줄(반응형)은 기획이 방향만 정했습니다</b> — 「~하면 ~하는 효과」는 발동 빈도에 파워가 종속돼 값을 잴 자가 없습니다.",
+  "en": "<b>The bottom row (reactive) has direction but no numbers</b> — \"when X, then Y\" scales with trigger frequency, and there is no yardstick for that yet.",
+  "ctx": "sk.sinTree.missing"
+ },
+ {
+  "key": "ui|sk.mastery",
+  "ko": "{cls} 마스터리",
+  "en": "{cls} Mastery",
+  "ctx": "sk.mastery"
+ },
+ {
+  "key": "ui|sk.mastery.missing",
+  "ko": "죄종 마스터리와 <b>같은 구조</b>입니다. <b>맨 윗줄 3칸은 직업마다 확정</b>돼 있습니다.<br><b>그 아래 3칸은 낀 장비가 효과를 켭니다.</b> 빠른 무기는 데미지 %, 느린 무기는 공격 속도, 자기 직업의 갑옷군은 갑옷 마스터리를 켭니다. 랭크는 장비가 안 맞아도 찍어 둘 수 있지만 효과는 꺼집니다.<br>맨 아랫줄의 반응형 노드는 아직 기획 중입니다.",
+  "en": "The class mastery uses the <b>same structure</b> as sin mastery. <b>Each class has three confirmed nodes in the top row.</b><br><b>Equipped gear activates the three nodes below.</b> Fast weapons activate Damage %, slow weapons activate Attack Speed, and the class armor type activates Armor Mastery. You can invest ranks without matching gear, but the effect stays inactive.<br>The reactive bottom row is still being designed.",
+  "ctx": "sk.mastery.missing"
+ },
+ {
+  "key": "ui|sk.advTree",
+  "ko": "전직 마스터리",
+  "en": "Advancement Mastery",
+  "ctx": "sk.advTree"
+ },
+ {
+  "key": "ui|sk.advNeed",
+  "ko": "전직",
+  "en": "Advance",
+  "ctx": "sk.advNeed"
+ },
+ {
+  "key": "ui|sk.adv.slot.size",
+  "ko": "크기",
+  "en": "Power",
+  "ctx": "sk.adv.slot.size"
+ },
+ {
+  "key": "ui|sk.adv.slot.var1",
+  "ko": "변형 1",
+  "en": "Variant 1",
+  "ctx": "sk.adv.slot.var1"
+ },
+ {
+  "key": "ui|sk.adv.slot.var2",
+  "ko": "변형 2",
+  "en": "Variant 2",
+  "ctx": "sk.adv.slot.var2"
+ },
+ {
+  "key": "ui|sk.adv.bonusAt",
+  "ko": "{max}랭크: {b}",
+  "en": "Rank {max}: {b}",
+  "ctx": "sk.adv.bonusAt"
+ },
+ {
+  "key": "ui|sk.adv.commonNow",
+  "ko": "효과 {v}",
+  "en": "Effect {v}",
+  "ctx": "sk.adv.commonNow"
+ },
+ {
+  "key": "ui|sk.adv.commonFull",
+  "ko": "{v}",
+  "en": "{v}",
+  "ctx": "sk.adv.commonFull"
+ },
+ {
+  "key": "ui|sk.adv.band.skill",
+  "ko": "전직 스킬",
+  "en": "Advanced Skill",
+  "ctx": "sk.adv.band.skill"
+ },
+ {
+  "key": "ui|sk.adv.band.line",
+  "ko": "전직 스킬 강화",
+  "en": "Skill Upgrades",
+  "ctx": "sk.adv.band.line"
+ },
+ {
+  "key": "ui|sk.adv.lineNeed",
+  "ko": "전직 스킬 습득",
+  "en": "Learn an Advanced Skill",
+  "ctx": "sk.adv.lineNeed"
+ },
+ {
+  "key": "ui|sk.adv.band.common",
+  "ko": "공통 마스터리",
+  "en": "Common Mastery",
+  "ctx": "sk.adv.band.common"
+ },
+ {
+  "key": "ui|sk.adv.sec",
+  "ko": "{n}초",
+  "en": "{n}s",
+  "ctx": "sk.adv.sec"
+ },
+ {
+  "key": "ui|sk.advTree.missing",
+  "ko": "전직 후 갈래의 메인 셋 중 하나를 <b>공용 스킬 포인트 1</b>로 배웁니다. 스킬 포인트는 레벨마다 받고 죄종·직업 마스터리와 나누어 씁니다.<br>메인 단계만 영웅 Lv30·35·40·45·50에 Lv1·2·3·4·5가 열립니다. 특수·변형·필살기 꼬리는 현재 준비 중입니다.",
+  "en": "Learn one of the path's three main skills for <b>one shared skill point</b>. Points come with every level from Lv1 and are shared with Sin and Class mastery.<br>Main ranks Lv1–5 unlock at hero Lv30/35/40/45/50. Special, Variant and Ultimate branches are currently coming later.",
+  "ctx": "sk.advTree.missing"
+ },
+ {
+  "key": "ui|sk.lockedSuffix",
+  "ko": " (잠김)",
+  "en": " (locked)",
+  "ctx": "sk.lockedSuffix"
+ },
+ {
+  "key": "ui|sk.grid.note",
+  "ko": "마스터리는 가지가 갈리는 트리가 아니라 <b>위에서 아래로 쌓는</b> 구조입니다 — <b>윗줄이 먼저 열리고 아랫줄일수록 늦게</b> 열립니다<br>칸을 누르면 1랭크 오릅니다. 아직 못 여는 칸에는 <b>필요한 레벨</b>이 적힙니다. <b>빈 칸은 기획 미작성 자리</b>이고, 점선 프레임을 남겨 두는 것은 어디까지 갈 수 있는지를 보여주기 위해서입니다",
+  "en": "Mastery is not a branching tree but <b>stacks from top to bottom</b> — <b>the top row opens first, lower rows later</b><br>Click a cell to add a rank. Cells you cannot open yet show <b>the level they need</b>. <b>Empty cells are unwritten design</b>; the dashed frame stays so you can see how far this can go",
+  "ctx": "sk.grid.note"
+ },
+ {
+  "key": "ui|tv.h",
+  "ko": "영웅 고용",
+  "en": "Hire Heroes",
+  "ctx": "tv.h"
+ },
+ {
+  "key": "ui|tv.sub",
+  "ko": "레어 층 — 직업 × 죄종 × 시작특성을 등장 시 굴림",
+  "en": "Rare tier — class × sin × trait rolled on arrival",
+  "ctx": "tv.sub"
+ },
+ {
+  "key": "ui|tv.reroll.note",
+  "ko": "선술집 리롤 = <b>아이템 파밍의 영웅판</b> — 굴림 루프는 <b>레어 층</b>에 있습니다. 죄종 × 직업 35칸을 전부 여기서 공급합니다",
+  "en": "Tavern rerolls are <b>item farming for heroes</b> — the rolling loop lives in the <b>rare tier</b>, which supplies all 35 sin × class combinations",
+  "ctx": "tv.reroll.note"
+ },
+ {
+  "key": "ui|tv.tiers.note",
+  "ko": "<b>유니크</b> — 이름·직업·죄종 고정 + 고유 스킬 1개(영웅 전용), 영웅 로스터에 1명만. 본편 15명(직업별 3)이 상한<br><b>레어</b> — 전부 굴림, 고유 스킬은 공용 풀에서 배정. 죄종 × 직업 35칸 커버리지를 전담합니다",
+  "en": "<b>Unique</b> — fixed name, class, and sin + 1 signature skill (hero-exclusive); one copy per roster. Capped at 15 in the base game (3 per class)<br><b>Rare</b> — everything rolled; signature skill assigned from the shared pool. Covers all 35 sin × class cells",
+  "ctx": "tv.tiers.note"
+ },
+ {
+  "key": "ui|lab.tool.item",
+  "ko": "아이템 생성기",
+  "en": "Item Generator",
+  "ctx": "lab.tool.item"
+ },
+ {
+  "key": "ui|lab.tool.raid",
+  "ko": "레이드",
+  "en": "Raid",
+  "ctx": "lab.tool.raid"
+ },
+ {
+  "key": "ui|lab.tool.duel",
+  "ko": "결투",
+  "en": "Duel",
+  "ctx": "lab.tool.duel"
+ },
+ {
+  "key": "ui|lab.duel.kit",
+  "ko": "{tier} · Lv{lv}",
+  "en": "{tier} · Lv{lv}",
+  "ctx": "lab.duel.kit"
+ },
+ {
+  "key": "ui|lab.duel.reroll",
+  "ko": "조합 돌리기",
+  "en": "Reroll Teams",
+  "ctx": "lab.duel.reroll"
+ },
+ {
+  "key": "ui|lab.duel.again",
+  "ko": "다시 싸우기",
+  "en": "Fight Again",
+  "ctx": "lab.duel.again"
+ },
+ {
+  "key": "ui|lab.duel.res",
+  "ko": "저항 {v}%",
+  "en": "Resist {v}%",
+  "ctx": "lab.duel.res"
+ },
+ {
+  "key": "ui|lab.duel.win.top",
+  "ko": "위 승 · {sec}초",
+  "en": "Top wins · {sec}s",
+  "ctx": "lab.duel.win.top"
+ },
+ {
+  "key": "ui|lab.duel.win.bottom",
+  "ko": "아래 승 · {sec}초",
+  "en": "Bottom wins · {sec}s",
+  "ctx": "lab.duel.win.bottom"
+ },
+ {
+  "key": "ui|lab.duel.timeout",
+  "ko": "시간 초과 · {sec}초",
+  "en": "Timeout · {sec}s",
+  "ctx": "lab.duel.timeout"
+ },
+ {
+  "key": "ui|lab.h.chapter",
+  "ko": "챕터",
+  "en": "Chapter",
+  "ctx": "lab.h.chapter"
+ },
+ {
+  "key": "ui|lab.h.monster",
+  "ko": "몬스터",
+  "en": "Monster",
+  "ctx": "lab.h.monster"
+ },
+ {
+  "key": "ui|lab.h.grade",
+  "ko": "등급",
+  "en": "Grade",
+  "ctx": "lab.h.grade"
+ },
+ {
+  "key": "ui|lab.h.diff",
+  "ko": "난이도",
+  "en": "Difficulty",
+  "ctx": "lab.h.diff"
+ },
+ {
+  "key": "ui|lab.h.level",
+  "ko": "스테이지 레벨",
+  "en": "Stage Level",
+  "ctx": "lab.h.level"
+ },
+ {
+  "key": "ui|lab.h.slots",
+  "ko": "부위",
+  "en": "Slots",
+  "ctx": "lab.h.slots"
+ },
+ {
+  "key": "ui|lab.h.ilvl",
+  "ko": "아이템 레벨",
+  "en": "Item Level",
+  "ctx": "lab.h.ilvl"
+ },
+ {
+  "key": "ui|lab.h.weights",
+  "ko": "희귀도 가중치",
+  "en": "Rarity Weights",
+  "ctx": "lab.h.weights"
+ },
+ {
+  "key": "ui|lab.roll",
+  "ko": "굴리기",
+  "en": "Roll",
+  "ctx": "lab.roll"
+ },
+ {
+  "key": "ui|lab.roll10",
+  "ko": "×10",
+  "en": "×10",
+  "ctx": "lab.roll10"
+ },
+ {
+  "key": "ui|lab.clear",
+  "ko": "비우기",
+  "en": "Clear",
+  "ctx": "lab.clear"
+ },
+ {
+  "key": "ui|lab.count",
+  "ko": "{n}개",
+  "en": "{n} items",
+  "ctx": "lab.count",
+  "en_one": "{n} item"
+ },
+ {
+  "key": "ui|cx.seg.monster",
+  "ko": "몬스터",
+  "en": "Monsters",
+  "ctx": "cx.seg.monster"
+ },
+ {
+  "key": "ui|cx.seg.character",
+  "ko": "캐릭터",
+  "en": "Characters",
+  "ctx": "cx.seg.character"
+ },
+ {
+  "key": "ui|cx.seg.item",
+  "ko": "아이템",
+  "en": "Items",
+  "ctx": "cx.seg.item"
+ },
+ {
+  "key": "ui|cx.seg.skill",
+  "ko": "스킬",
+  "en": "Skills",
+  "ctx": "cx.seg.skill"
+ },
+ {
+  "key": "ui|cx.seg.fx",
+  "ko": "이펙트",
+  "en": "Effects",
+  "ctx": "cx.seg.fx"
+ },
+ {
+  "key": "ui|cx.seg.mastery",
+  "ko": "마스터리",
+  "en": "Masteries",
+  "ctx": "cx.seg.mastery"
+ },
+ {
+  "key": "ui|cx.seg.sin",
+  "ko": "죄종",
+  "en": "Sins",
+  "ctx": "cx.seg.sin"
+ },
+ {
+  "key": "ui|cx.sin.n",
+  "ko": "수령 {n}회",
+  "en": "Claimed {n}",
+  "ctx": "cx.sin.n"
+ },
+ {
+  "key": "ui|cx.h",
+  "ko": "몬스터 도감",
+  "en": "Monster Codex",
+  "ctx": "cx.h"
+ },
+ {
+  "key": "ui|cx.sub",
+  "ko": "도감 경험치 {list}에서 레벨이 오릅니다 — 처치 하나에 {per} · Lv1 · Lv2 의 보너스 효과는 그 몬스터와 같은 종족 전체에 붙습니다",
+  "en": "Levels up at {list} codex EXP — each kill gives {per} · Lv1 and Lv2 bonus effects apply to every monster of the same race",
+  "ctx": "cx.sub"
+ },
+ {
+  "key": "ui|cx.sinLabel",
+  "ko": "죄종",
+  "en": "Sin",
+  "ctx": "cx.sinLabel"
+ },
+ {
+  "key": "ui|cx.exp",
+  "ko": "경험치 {n}",
+  "en": "{n} EXP",
+  "ctx": "cx.exp"
+ },
+ {
+  "key": "ui|cx.lvTitle",
+  "ko": "도감 Lv.{lv}",
+  "en": "Codex Lv.{lv}",
+  "ctx": "cx.lvTitle"
+ },
+ {
+  "key": "ui|cx.tip.lv",
+  "ko": "Lv.{lv}",
+  "en": "Lv.{lv}",
+  "ctx": "cx.tip.lv"
+ },
+ {
+  "key": "ui|cx.tip.story",
+  "ko": "스토리",
+  "en": "Story",
+  "ctx": "cx.tip.story"
+ },
+ {
+  "key": "ui|cx.tip.effects",
+  "ko": "보너스 효과",
+  "en": "Bonus Effects",
+  "ctx": "cx.tip.effects"
+ },
+ {
+  "key": "ui|cx.rw.farm",
+  "ko": "{race} {line}",
+  "en": "{line} from {race}",
+  "ctx": "cx.rw.farm"
+ },
+ {
+  "key": "ui|cx.rw.fight",
+  "ko": "{race} 상대 {line}",
+  "en": "{line} vs {race}",
+  "ctx": "cx.rw.fight"
+ },
+ {
+  "key": "ui|cx.rw.xp",
+  "ko": "처치 경험치 {v}",
+  "en": "{v} Kill EXP",
+  "ctx": "cx.rw.xp"
+ },
+ {
+  "key": "ui|cx.rw.drop",
+  "ko": "드롭 확률 {v}",
+  "en": "{v} Drop Chance",
+  "ctx": "cx.rw.drop"
+ },
+ {
+  "key": "ui|cx.rw.magic",
+  "ko": "매직 아이템 획득 {v}",
+  "en": "{v} Magic Find",
+  "ctx": "cx.rw.magic"
+ },
+ {
+  "key": "ui|cx.rw.gold",
+  "ko": "골드 획득 {v}",
+  "en": "{v} Gold Find",
+  "ctx": "cx.rw.gold"
+ },
+ {
+  "key": "ui|cx.rw.material",
+  "ko": "재료 획득 {v}",
+  "en": "{v} Material Find",
+  "ctx": "cx.rw.material"
+ },
+ {
+  "key": "ui|cx.tip.source",
+  "ko": "획득처",
+  "en": "Found On",
+  "ctx": "cx.tip.source"
+ },
+ {
+  "key": "ui|cx.tip.levelOptions",
+  "ko": "레벨별 옵션",
+  "en": "Options by Level",
+  "ctx": "cx.tip.levelOptions"
+ },
+ {
+  "key": "ui|cx.tip.at",
+  "ko": "{c}-{s}",
+  "en": "{c}-{s}",
+  "ctx": "cx.tip.at"
+ },
+ {
+  "key": "ui|cx.tip.lvUp",
+  "ko": "레벨이 오르면",
+  "en": "Per Level",
+  "ctx": "cx.tip.lvUp"
+ },
+ {
+  "key": "ui|cx.lv.mult",
+  "ko": "피해 배율",
+  "en": "Damage multiplier",
+  "ctx": "cx.lv.mult"
+ },
+ {
+  "key": "ui|cx.lv.heal",
+  "ko": "회복 배율",
+  "en": "Healing multiplier",
+  "ctx": "cx.lv.heal"
+ },
+ {
+  "key": "ui|cx.lv.hits",
+  "ko": "타수",
+  "en": "Hits",
+  "ctx": "cx.lv.hits"
+ },
+ {
+  "key": "ui|cx.lv.decay",
+  "ko": "감쇠",
+  "en": "Falloff",
+  "ctx": "cx.lv.decay"
+ },
+ {
+  "key": "ui|cx.lv.strip",
+  "ko": "방어 깎기",
+  "en": "Defense strip",
+  "ctx": "cx.lv.strip"
+ },
+ {
+  "key": "ui|cx.lv.dur",
+  "ko": "지속 시간",
+  "en": "Duration",
+  "ctx": "cx.lv.dur"
+ },
+ {
+  "key": "ui|cx.lv.value",
+  "ko": "효과",
+  "en": "Effect",
+  "ctx": "cx.lv.value"
+ },
+ {
+  "key": "ui|cx.lv.def",
+  "ko": "방어력 상승",
+  "en": "Defense increase",
+  "ctx": "cx.lv.def"
+ },
+ {
+  "key": "ui|cx.lv.defDown",
+  "ko": "방어력 감소",
+  "en": "Defense reduction",
+  "ctx": "cx.lv.defDown"
+ },
+ {
+  "key": "ui|cx.lv.resAll",
+  "ko": "모든 저항 상승",
+  "en": "All resistances increase",
+  "ctx": "cx.lv.resAll"
+ },
+ {
+  "key": "ui|cx.lv.resAllDown",
+  "ko": "모든 저항 감소",
+  "en": "All resistances reduction",
+  "ctx": "cx.lv.resAllDown"
+ },
+ {
+  "key": "ui|cx.lv.hp",
+  "ko": "최대 HP 상승",
+  "en": "Max HP increase",
+  "ctx": "cx.lv.hp"
+ },
+ {
+  "key": "ui|cx.lv.hpDown",
+  "ko": "최대 HP 감소",
+  "en": "Max HP reduction",
+  "ctx": "cx.lv.hpDown"
+ },
+ {
+  "key": "ui|cx.lv.dmg",
+  "ko": "데미지 상승",
+  "en": "Damage increase",
+  "ctx": "cx.lv.dmg"
+ },
+ {
+  "key": "ui|cx.lv.dmgDown",
+  "ko": "데미지 감소",
+  "en": "Damage reduction",
+  "ctx": "cx.lv.dmgDown"
+ },
+ {
+  "key": "ui|cx.lv.phys",
+  "ko": "물리 데미지 상승",
+  "en": "Physical damage increase",
+  "ctx": "cx.lv.phys"
+ },
+ {
+  "key": "ui|cx.lv.physDown",
+  "ko": "물리 데미지 감소",
+  "en": "Physical damage reduction",
+  "ctx": "cx.lv.physDown"
+ },
+ {
+  "key": "ui|cx.lv.speed",
+  "ko": "공격 속도 상승",
+  "en": "Attack speed increase",
+  "ctx": "cx.lv.speed"
+ },
+ {
+  "key": "ui|cx.lv.speedDown",
+  "ko": "공격 속도 감소",
+  "en": "Attack speed reduction",
+  "ctx": "cx.lv.speedDown"
+ },
+ {
+  "key": "ui|cx.lv.takenUp",
+  "ko": "받는 피해 증가",
+  "en": "Damage taken increase",
+  "ctx": "cx.lv.takenUp"
+ },
+ {
+  "key": "ui|cx.lv.takenDown",
+  "ko": "받는 피해 감소",
+  "en": "Damage taken reduction",
+  "ctx": "cx.lv.takenDown"
+ },
+ {
+  "key": "ui|cx.lv.barrier",
+  "ko": "보호막 (최대 HP 비율)",
+  "en": "Shield / max HP",
+  "ctx": "cx.lv.barrier"
+ },
+ {
+  "key": "ui|cx.lv.elementDamage",
+  "ko": "{e} 추가 피해",
+  "en": "{e} bonus damage",
+  "ctx": "cx.lv.elementDamage"
+ },
+ {
+  "key": "ui|cx.lv.elementMult",
+  "ko": "{e} 피해 배율",
+  "en": "{e} damage multiplier",
+  "ctx": "cx.lv.elementMult"
+ },
+ {
+  "key": "ui|cx.lv.defIgnore",
+  "ko": "방어력 무시",
+  "en": "Defense ignored",
+  "ctx": "cx.lv.defIgnore"
+ },
+ {
+  "key": "ui|cx.lv.vsBurn",
+  "ko": "화상 대상 데미지 상승",
+  "en": "Damage vs burning foes",
+  "ctx": "cx.lv.vsBurn"
+ },
+ {
+  "key": "ui|cx.lv.ailmentChance",
+  "ko": "{a} 확률",
+  "en": "{a} chance",
+  "ctx": "cx.lv.ailmentChance"
+ },
+ {
+  "key": "ui|cx.lv.ailmentDuration",
+  "ko": "{a} 지속 시간",
+  "en": "{a} duration",
+  "ctx": "cx.lv.ailmentDuration"
+ },
+ {
+  "key": "ui|cx.lv.regen",
+  "ko": "초당 회복 (최대 HP 비율)",
+  "en": "HP / sec (% max HP)",
+  "ctx": "cx.lv.regen"
+ },
+ {
+  "key": "ui|cx.lv.cool",
+  "ko": "쿨타임",
+  "en": "Cooldown",
+  "ctx": "cx.lv.cool"
+ },
+ {
+  "key": "ui|cx.lv.hitsAt",
+  "ko": "Lv {l} 에 +1번",
+  "en": "+1 at Lv {l}",
+  "ctx": "cx.lv.hitsAt"
+ },
+ {
+  "key": "ui|cx.note",
+  "ko": "그 몬스터에게서 모은 도감 경험치가 누적 문턱을 넘을 때마다 <b>그 몬스터의 도감 레벨</b>이 오르고 보너스 효과가 하나씩 열립니다 — 앞 단계(처치 경험치 · 상대 피해 · 드롭 확률)는 <b>그 몬스터에게만</b> · 마지막 단계는 <b>그 몬스터의 전투 옵션 하나가 파티 전원에게</b> 늘 붙습니다 — <b>파밍이 도감을 밉니다</b><br>처치 하나의 도감 경험치는 그 원정의 난이도가 정합니다 — 높은 난이도일수록 빨리 찹니다 · 이긴 라운드의 처치만 셉니다 · 보스 등급별 차등은 후속<br>카드에 마우스를 올리면 그 몬스터의 이야기와 레벨 단계가 뜹니다",
+  "en": "Each time the codex EXP gathered from a monster passes a cumulative threshold, <b>its codex level</b> rises and opens one more bonus effect — the early ones (kill EXP · damage to it · drop chance) apply <b>to that monster only</b> · the last one adds <b>that monster's combat option to your whole party</b> for good — <b>farming pushes the codex</b><br>Each kill's codex EXP is set by the expedition's difficulty — higher difficulties fill it faster · only kills from rounds you win count · boss-grade scaling comes later<br>Hover a card to see the monster's story and level milestones",
+  "ctx": "cx.note"
+ },
+ {
+  "key": "ui|ix.seg.weapon",
+  "ko": "무기",
+  "en": "Weapons",
+  "ctx": "ix.seg.weapon"
+ },
+ {
+  "key": "ui|ix.seg.armor",
+  "ko": "방어구",
+  "en": "Armor",
+  "ctx": "ix.seg.armor"
+ },
+ {
+  "key": "ui|ix.seg.potion",
+  "ko": "물약",
+  "en": "Potions",
+  "ctx": "ix.seg.potion"
+ },
+ {
+  "key": "ui|ix.g.potion",
+  "ko": "{kind} 포션",
+  "en": "{kind} Potions",
+  "ctx": "ix.g.potion"
+ },
+ {
+  "key": "ui|ix.pk.heal",
+  "ko": "회복",
+  "en": "Healing",
+  "ctx": "ix.pk.heal"
+ },
+ {
+  "key": "ui|ix.b.long_sword",
+  "ko": "롱 소드",
+  "en": "Long Sword",
+  "ctx": "ix.b.long_sword"
+ },
+ {
+  "key": "ui|ix.b.claymore",
+  "ko": "클레이모어",
+  "en": "Claymore",
+  "ctx": "ix.b.claymore"
+ },
+ {
+  "key": "ui|ix.b.highland_blade",
+  "ko": "하이랜드 블레이드",
+  "en": "Highland Blade",
+  "ctx": "ix.b.highland_blade"
+ },
+ {
+  "key": "ui|ix.b.bastard_sword",
+  "ko": "바스타드 소드",
+  "en": "Bastard Sword",
+  "ctx": "ix.b.bastard_sword"
+ },
+ {
+  "key": "ui|ix.b.balrog_blade",
+  "ko": "발록 블레이드",
+  "en": "Balrog Blade",
+  "ctx": "ix.b.balrog_blade"
+ },
+ {
+  "key": "ui|ix.b.zweihander",
+  "ko": "츠바이핸더",
+  "en": "Zweihander",
+  "ctx": "ix.b.zweihander"
+ },
+ {
+  "key": "ui|ix.b.colossus_blade",
+  "ko": "콜로서스 블레이드",
+  "en": "Colossus Blade",
+  "ctx": "ix.b.colossus_blade"
+ },
+ {
+  "key": "ui|ix.b.hatchet",
+  "ko": "해칫",
+  "en": "Hatchet",
+  "ctx": "ix.b.hatchet"
+ },
+ {
+  "key": "ui|ix.b.axe",
+  "ko": "액스",
+  "en": "Axe",
+  "ctx": "ix.b.axe"
+ },
+ {
+  "key": "ui|ix.b.tomahawk",
+  "ko": "토마호크",
+  "en": "Tomahawk",
+  "ctx": "ix.b.tomahawk"
+ },
+ {
+  "key": "ui|ix.b.great_axe",
+  "ko": "그레이트 액스",
+  "en": "Great Axe",
+  "ctx": "ix.b.great_axe"
+ },
+ {
+  "key": "ui|ix.b.berserker_axe",
+  "ko": "버서커 액스",
+  "en": "Berserker Axe",
+  "ctx": "ix.b.berserker_axe"
+ },
+ {
+  "key": "ui|ix.b.battle_axe",
+  "ko": "배틀 액스",
+  "en": "Battle Axe",
+  "ctx": "ix.b.battle_axe"
+ },
+ {
+  "key": "ui|ix.b.decapitator",
+  "ko": "데카피테이터",
+  "en": "Decapitator",
+  "ctx": "ix.b.decapitator"
+ },
+ {
+  "key": "ui|ix.b.club",
+  "ko": "클럽",
+  "en": "Club",
+  "ctx": "ix.b.club"
+ },
+ {
+  "key": "ui|ix.b.flanged_mace",
+  "ko": "플랜지드 메이스",
+  "en": "Flanged Mace",
+  "ctx": "ix.b.flanged_mace"
+ },
+ {
+  "key": "ui|ix.b.reinforced_mace",
+  "ko": "리인포스드 메이스",
+  "en": "Reinforced Mace",
+  "ctx": "ix.b.reinforced_mace"
+ },
+ {
+  "key": "ui|ix.b.battle_hammer",
+  "ko": "배틀 해머",
+  "en": "Battle Hammer",
+  "ctx": "ix.b.battle_hammer"
+ },
+ {
+  "key": "ui|ix.b.legendary_mallet",
+  "ko": "레전더리 맬릿",
+  "en": "Legendary Mallet",
+  "ctx": "ix.b.legendary_mallet"
+ },
+ {
+  "key": "ui|ix.b.war_club",
+  "ko": "워 클럽",
+  "en": "War Club",
+  "ctx": "ix.b.war_club"
+ },
+ {
+  "key": "ui|ix.b.ogre_maul",
+  "ko": "오우거 몰",
+  "en": "Ogre Maul",
+  "ctx": "ix.b.ogre_maul"
+ },
+ {
+  "key": "ui|ix.b.pike",
+  "ko": "파이크",
+  "en": "Pike",
+  "ctx": "ix.b.pike"
+ },
+ {
+  "key": "ui|ix.b.thresher",
+  "ko": "스레셔",
+  "en": "Thresher",
+  "ctx": "ix.b.thresher"
+ },
+ {
+  "key": "ui|ix.b.giant_thresher",
+  "ko": "자이언트 스레셔",
+  "en": "Giant Thresher",
+  "ctx": "ix.b.giant_thresher"
+ },
+ {
+  "key": "ui|ix.b.halberd",
+  "ko": "할버드",
+  "en": "Halberd",
+  "ctx": "ix.b.halberd"
+ },
+ {
+  "key": "ui|ix.b.cryptic_axe",
+  "ko": "크립틱 액스",
+  "en": "Cryptic Axe",
+  "ctx": "ix.b.cryptic_axe"
+ },
+ {
+  "key": "ui|ix.b.lance",
+  "ko": "랜스",
+  "en": "Lance",
+  "ctx": "ix.b.lance"
+ },
+ {
+  "key": "ui|ix.b.war_pike",
+  "ko": "워 파이크",
+  "en": "War Pike",
+  "ctx": "ix.b.war_pike"
+ },
+ {
+  "key": "ui|ix.b.short_bow",
+  "ko": "숏 보우",
+  "en": "Short Bow",
+  "ctx": "ix.b.short_bow"
+ },
+ {
+  "key": "ui|ix.b.long_bow",
+  "ko": "롱 보우",
+  "en": "Long Bow",
+  "ctx": "ix.b.long_bow"
+ },
+ {
+  "key": "ui|ix.b.great_bow",
+  "ko": "그레이트 보우",
+  "en": "Great Bow",
+  "ctx": "ix.b.great_bow"
+ },
+ {
+  "key": "ui|ix.b.rune_bow",
+  "ko": "룬 보우",
+  "en": "Rune Bow",
+  "ctx": "ix.b.rune_bow"
+ },
+ {
+  "key": "ui|ix.b.diamond_bow",
+  "ko": "다이아몬드 보우",
+  "en": "Diamond Bow",
+  "ctx": "ix.b.diamond_bow"
+ },
+ {
+  "key": "ui|ix.b.gothic_bow",
+  "ko": "고딕 보우",
+  "en": "Gothic Bow",
+  "ctx": "ix.b.gothic_bow"
+ },
+ {
+  "key": "ui|ix.b.hydra_bow",
+  "ko": "하이드라 보우",
+  "en": "Hydra Bow",
+  "ctx": "ix.b.hydra_bow"
+ },
+ {
+  "key": "ui|ix.b.short_staff",
+  "ko": "숏 스태프",
+  "en": "Short Staff",
+  "ctx": "ix.b.short_staff"
+ },
+ {
+  "key": "ui|ix.b.long_staff",
+  "ko": "롱 스태프",
+  "en": "Long Staff",
+  "ctx": "ix.b.long_staff"
+ },
+ {
+  "key": "ui|ix.b.gnarled_staff",
+  "ko": "날드 스태프",
+  "en": "Gnarled Staff",
+  "ctx": "ix.b.gnarled_staff"
+ },
+ {
+  "key": "ui|ix.b.gothic_staff",
+  "ko": "고딕 스태프",
+  "en": "Gothic Staff",
+  "ctx": "ix.b.gothic_staff"
+ },
+ {
+  "key": "ui|ix.b.elder_staff",
+  "ko": "엘더 스태프",
+  "en": "Elder Staff",
+  "ctx": "ix.b.elder_staff"
+ },
+ {
+  "key": "ui|ix.b.rune_staff",
+  "ko": "룬 스태프",
+  "en": "Rune Staff",
+  "ctx": "ix.b.rune_staff"
+ },
+ {
+  "key": "ui|ix.b.archon_staff",
+  "ko": "아콘 스태프",
+  "en": "Archon Staff",
+  "ctx": "ix.b.archon_staff"
+ },
+ {
+  "key": "ui|ix.b.eagle_orb",
+  "ko": "이글 오브",
+  "en": "Eagle Orb",
+  "ctx": "ix.b.eagle_orb"
+ },
+ {
+  "key": "ui|ix.b.heavenly_stone",
+  "ko": "헤븐리 스톤",
+  "en": "Heavenly Stone",
+  "ctx": "ix.b.heavenly_stone"
+ },
+ {
+  "key": "ui|ix.b.demon_heart",
+  "ko": "데몬 하트",
+  "en": "Demon Heart",
+  "ctx": "ix.b.demon_heart"
+ },
+ {
+  "key": "ui|ix.b.sacred_globe",
+  "ko": "세이크리드 글로브",
+  "en": "Sacred Globe",
+  "ctx": "ix.b.sacred_globe"
+ },
+ {
+  "key": "ui|ix.b.eldritch_orb",
+  "ko": "엘드리치 오브",
+  "en": "Eldritch Orb",
+  "ctx": "ix.b.eldritch_orb"
+ },
+ {
+  "key": "ui|ix.b.swirling_crystal",
+  "ko": "스월링 크리스탈",
+  "en": "Swirling Crystal",
+  "ctx": "ix.b.swirling_crystal"
+ },
+ {
+  "key": "ui|ix.b.dimensional_shard",
+  "ko": "디멘셔널 샤드",
+  "en": "Dimensional Shard",
+  "ctx": "ix.b.dimensional_shard"
+ },
+ {
+  "key": "ui|ix.b.scepter",
+  "ko": "셉터",
+  "en": "Scepter",
+  "ctx": "ix.b.scepter"
+ },
+ {
+  "key": "ui|ix.b.divine_scepter",
+  "ko": "디바인 셉터",
+  "en": "Divine Scepter",
+  "ctx": "ix.b.divine_scepter"
+ },
+ {
+  "key": "ui|ix.b.caduceus",
+  "ko": "카두케우스",
+  "en": "Caduceus",
+  "ctx": "ix.b.caduceus"
+ },
+ {
+  "key": "ui|ix.b.rune_scepter",
+  "ko": "룬 셉터",
+  "en": "Rune Scepter",
+  "ctx": "ix.b.rune_scepter"
+ },
+ {
+  "key": "ui|ix.b.mighty_scepter",
+  "ko": "마이티 셉터",
+  "en": "Mighty Scepter",
+  "ctx": "ix.b.mighty_scepter"
+ },
+ {
+  "key": "ui|ix.b.grand_scepter",
+  "ko": "그랜드 셉터",
+  "en": "Grand Scepter",
+  "ctx": "ix.b.grand_scepter"
+ },
+ {
+  "key": "ui|ix.b.seraph_rod",
+  "ko": "세라프 로드",
+  "en": "Seraph Rod",
+  "ctx": "ix.b.seraph_rod"
+ },
+ {
+  "key": "ui|ix.b.psalter",
+  "ko": "솔터",
+  "en": "Psalter",
+  "ctx": "ix.b.psalter"
+ },
+ {
+  "key": "ui|ix.b.breviary",
+  "ko": "브리비어리",
+  "en": "Breviary",
+  "ctx": "ix.b.breviary"
+ },
+ {
+  "key": "ui|ix.b.missal",
+  "ko": "미설",
+  "en": "Missal",
+  "ctx": "ix.b.missal"
+ },
+ {
+  "key": "ui|ix.b.lectern_bible",
+  "ko": "렉턴 바이블",
+  "en": "Lectern Bible",
+  "ctx": "ix.b.lectern_bible"
+ },
+ {
+  "key": "ui|ix.b.great_bible",
+  "ko": "그레이트 바이블",
+  "en": "Great Bible",
+  "ctx": "ix.b.great_bible"
+ },
+ {
+  "key": "ui|ix.b.wicked_bible",
+  "ko": "위키드 바이블",
+  "en": "Wicked Bible",
+  "ctx": "ix.b.wicked_bible"
+ },
+ {
+  "key": "ui|ix.b.apocrypha",
+  "ko": "아포크리파",
+  "en": "Apocrypha",
+  "ctx": "ix.b.apocrypha"
+ },
+ {
+  "key": "ui|ix.b.crossbow",
+  "ko": "크로스보우",
+  "en": "Crossbow",
+  "ctx": "ix.b.crossbow"
+ },
+ {
+  "key": "ui|ix.b.light_crossbow",
+  "ko": "라이트 크로스보우",
+  "en": "Light Crossbow",
+  "ctx": "ix.b.light_crossbow"
+ },
+ {
+  "key": "ui|ix.b.chu_ko_nu",
+  "ko": "추코누",
+  "en": "Chu-Ko-Nu",
+  "ctx": "ix.b.chu_ko_nu"
+ },
+ {
+  "key": "ui|ix.b.heavy_crossbow",
+  "ko": "헤비 크로스보우",
+  "en": "Heavy Crossbow",
+  "ctx": "ix.b.heavy_crossbow"
+ },
+ {
+  "key": "ui|ix.b.ballista",
+  "ko": "발리스타",
+  "en": "Ballista",
+  "ctx": "ix.b.ballista"
+ },
+ {
+  "key": "ui|ix.b.demon_crossbow",
+  "ko": "데몬 크로스보우",
+  "en": "Demon Crossbow",
+  "ctx": "ix.b.demon_crossbow"
+ },
+ {
+  "key": "ui|ix.b.colossus_crossbow",
+  "ko": "콜로서스 크로스보우",
+  "en": "Colossus Crossbow",
+  "ctx": "ix.b.colossus_crossbow"
+ },
+ {
+  "key": "ui|ix.g.skillCls",
+  "ko": "{cls} 스킬",
+  "en": "{cls} Skills",
+  "ctx": "ix.g.skillCls"
+ },
+ {
+  "key": "ui|ix.mastery.sin",
+  "ko": "죄종",
+  "en": "Sin",
+  "ctx": "ix.mastery.sin"
+ },
+ {
+  "key": "ui|ix.mastery.class",
+  "ko": "직업",
+  "en": "Class",
+  "ctx": "ix.mastery.class"
+ },
+ {
+  "key": "ui|ix.mastery.adv",
+  "ko": "전직",
+  "en": "Advancement",
+  "ctx": "ix.mastery.adv"
+ },
+ {
+  "key": "ui|ix.mastery.previewRank",
+  "ko": "1/{max}랭크 예시",
+  "en": "Rank 1/{max} preview",
+  "ctx": "ix.mastery.previewRank"
+ },
+ {
+  "key": "ui|ix.seg.basic",
+  "ko": "일반 스킬",
+  "en": "Basic Skills",
+  "ctx": "ix.seg.basic"
+ },
+ {
+  "key": "ui|ix.seg.adv",
+  "ko": "전직 스킬",
+  "en": "Advanced Skills",
+  "ctx": "ix.seg.adv"
+ },
+ {
+  "key": "ui|ix.fx.playAll",
+  "ko": "▶ 전부 재생",
+  "en": "▶ Play All",
+  "ctx": "ix.fx.playAll"
+ },
+ {
+  "key": "ui|ix.fxs.darktoon",
+  "ko": "다크 카툰",
+  "en": "Dark Cartoon",
+  "ctx": "ix.fxs.darktoon"
+ },
+ {
+  "key": "ui|ix.fxs.foil",
+  "ko": "금속박",
+  "en": "Metal Foil",
+  "ctx": "ix.fxs.foil"
+ },
+ {
+  "key": "ui|ix.fxs.live",
+  "ko": "{name} · 실전",
+  "en": "{name} · In Battle",
+  "ctx": "ix.fxs.live"
+ },
+ {
+  "key": "ui|ix.tier",
+  "ko": "{n}티어",
+  "en": "Tier {n}",
+  "ctx": "ix.tier"
+ },
+ {
+  "key": "ui|ix.count",
+  "ko": "{n}장",
+  "en": "{n} images",
+  "ctx": "ix.count",
+  "en_one": "{n} image"
+ },
+ {
+  "key": "ui|ix.style",
+  "ko": "얼굴 스타일",
+  "en": "Face style",
+  "ctx": "ix.style"
+ },
+ {
+  "key": "ui|ix.hero",
+  "ko": "영웅 {n}",
+  "en": "Hero {n}",
+  "ctx": "ix.hero"
+ },
+ {
+  "key": "ui|bt.speed",
+  "ko": "×{n}",
+  "en": "×{n}",
+  "ctx": "bt.speed"
+ },
+ {
+  "key": "ui|bt.pause",
+  "ko": "일시정지",
+  "en": "Pause",
+  "ctx": "bt.pause"
+ },
+ {
+  "key": "ui|bt.resume",
+  "ko": "재개",
+  "en": "Resume",
+  "ctx": "bt.resume"
+ },
+ {
+  "key": "ui|bt.retreat",
+  "ko": "철수",
+  "en": "Retreat",
+  "ctx": "bt.retreat"
+ },
+ {
+  "key": "ui|bt.max",
+  "ko": "최대화",
+  "en": "Maximize",
+  "ctx": "bt.max"
+ },
+ {
+  "key": "ui|bt.unmax",
+  "ko": "원래 크기",
+  "en": "Restore",
+  "ctx": "bt.unmax"
+ },
+ {
+  "key": "ui|bt.log.h",
+  "ko": "전투 로그",
+  "en": "Combat Log",
+  "ctx": "bt.log.h"
+ },
+ {
+  "key": "ui|bt.buff",
+  "ko": "버프",
+  "en": "Buffs",
+  "ctx": "bt.buff"
+ },
+ {
+  "key": "ui|bt.buff.shrine",
+  "ko": "신단",
+  "en": "Shrine",
+  "ctx": "bt.buff.shrine"
+ },
+ {
+  "key": "ui|bt.buff.tactic",
+  "ko": "전술",
+  "en": "Tactics",
+  "ctx": "bt.buff.tactic"
+ },
+ {
+  "key": "ui|bt.buff.codex",
+  "ko": "도감",
+  "en": "Codex",
+  "ctx": "bt.buff.codex"
+ },
+ {
+  "key": "ui|bt.buff.none",
+  "ko": "없음",
+  "en": "None",
+  "ctx": "bt.buff.none"
+ },
+ {
+  "key": "ui|bt.buff.curse",
+  "ko": "{sin}의 저주",
+  "en": "Curse of {sin}",
+  "ctx": "bt.buff.curse"
+ },
+ {
+  "key": "ui|bt.curse.lore.taken_pct",
+  "ko": "불타는 전장의 열기가 갑옷을 달군다.",
+  "en": "The heat of the burning field sears through their armor.",
+  "ctx": "bt.curse.lore.taken_pct"
+ },
+ {
+  "key": "ui|bt.curse.lore.poison",
+  "ko": "뒤틀린 숲의 가시마다 독이 맺혀 있다.",
+  "en": "Poison beads on every thorn of the twisted wood.",
+  "ctx": "bt.curse.lore.poison"
+ },
+ {
+  "key": "ui|bt.curse.lore.heal_cut",
+  "ko": "황금빛 모래가 상처의 약을 빨아들인다.",
+  "en": "The golden sand drinks the salve from every wound.",
+  "ctx": "bt.curse.lore.heal_cut"
+ },
+ {
+  "key": "ui|bt.curse.lore.freeze",
+  "ko": "동토의 냉기가 손발을 느리게 묶는다.",
+  "en": "The frozen cold binds their hands and feet to a crawl.",
+  "ctx": "bt.curse.lore.freeze"
+ },
+ {
+  "key": "ui|bt.curse.lore.feast",
+  "ko": "심연의 짐승들은 싸울수록 배를 불린다.",
+  "en": "The beasts of the abyss grow fatter with every blow.",
+  "ctx": "bt.curse.lore.feast"
+ },
+ {
+  "key": "ui|bt.note",
+  "ko": "관전은 가능하되 <b>의무가 아닙니다</b> — 배속은 진행 속도만 바꿉니다. 원정 중에 바꾼 장비 · 스킬 트리는 보스전에서도 <b>그 순간</b> 적용됩니다 · <b>라운드를 이긴 순간 그 보상이 들어옵니다</b>(가방 · 골드 · 경험치 · 도감).<br><b>철수</b>하면 원정이 멈춥니다 — 진행 중이던 라운드는 사라지고 이긴 라운드까지의 보상은 남습니다 · 런이 끝나 다음 런을 세는 동안 누르면 다음 런이 안 나갑니다. 게임을 끄면 원정도 그 자리에서 끊깁니다.",
+  "en": "Watching is allowed but <b>never required</b> — speed only changes the pace. Gear and skill-tree changes during a run apply <b>at once</b>, including during boss fights · each round <b>pays out the moment you win it</b> (bag · gold · XP · codex).<br><b>Retreat</b> stops the expedition — it drops the round in progress and keeps what the won rounds gave · pressed while the next run is counting down, the next run does not head out. Closing the game cuts the expedition off on the spot.",
+  "ctx": "bt.note"
+ },
+ {
+  "key": "ui|bt.rTitle",
+  "ko": "R{n} {kind}",
+  "en": "R{n} {kind}",
+  "ctx": "bt.rTitle"
+ },
+ {
+  "key": "ui|bt.actTitle",
+  "ko": "공격 속도 {s}초 — 다 차면 이 유닛 행동",
+  "en": "Attack Speed {s}s — acts when the gauge fills",
+  "ctx": "bt.actTitle"
+ },
+ {
+  "key": "ui|bt.castTitle",
+  "ko": "캐스팅 속도 {s}초 — 다 차면 칸 하나 충전",
+  "en": "Casting Speed {s}s — stores a charge when the gauge fills",
+  "ctx": "bt.castTitle"
+ },
+ {
+  "key": "ui|bt.tab.dmg",
+  "ko": "누적 데미지",
+  "en": "Damage",
+  "ctx": "bt.tab.dmg"
+ },
+ {
+  "key": "ui|bt.basicAttack",
+  "ko": "기본 공격",
+  "en": "Basic attack",
+  "ctx": "bt.basicAttack"
+ },
+ {
+  "key": "ui|bt.reflectLabel",
+  "ko": "반사",
+  "en": "Reflect",
+  "ctx": "bt.reflectLabel"
+ },
+ {
+  "key": "ui|bt.stagger",
+  "ko": "경직",
+  "en": "Stagger",
+  "ctx": "bt.stagger"
+ },
+ {
+  "key": "ui|bt.effect.active",
+  "ko": "효과 적용 중",
+  "en": "Effect active",
+  "ctx": "bt.effect.active"
+ },
+ {
+  "key": "ui|bt.effect.atk.up",
+  "ko": "공격력 {v}% 증가",
+  "en": "Attack +{v}%",
+  "ctx": "bt.effect.atk.up"
+ },
+ {
+  "key": "ui|bt.effect.atk.down",
+  "ko": "공격력 {v}% 감소",
+  "en": "Attack −{v}%",
+  "ctx": "bt.effect.atk.down"
+ },
+ {
+  "key": "ui|bt.effect.period.up",
+  "ko": "공격 속도 {v}% 감소",
+  "en": "Attack Speed −{v}%",
+  "ctx": "bt.effect.period.up"
+ },
+ {
+  "key": "ui|bt.effect.period.down",
+  "ko": "공격 속도 {v}% 증가",
+  "en": "Attack Speed +{v}%",
+  "ctx": "bt.effect.period.down"
+ },
+ {
+  "key": "ui|bt.effect.barrier",
+  "ko": "최대 HP의 {v}% 보호막",
+  "en": "Shield equal to {v}% max HP",
+  "ctx": "bt.effect.barrier"
+ },
+ {
+  "key": "ui|bt.effect.guard.up",
+  "ko": "방어력·모든 저항 {v}% 증가",
+  "en": "Defense and all resistances +{v}%",
+  "ctx": "bt.effect.guard.up"
+ },
+ {
+  "key": "ui|bt.effect.guard.down",
+  "ko": "방어력·모든 저항 {v}% 감소",
+  "en": "Defense and all resistances −{v}%",
+  "ctx": "bt.effect.guard.down"
+ },
+ {
+  "key": "ui|bt.effect.def.up",
+  "ko": "방어력 {v}% 증가",
+  "en": "Defense +{v}%",
+  "ctx": "bt.effect.def.up"
+ },
+ {
+  "key": "ui|bt.effect.def.down",
+  "ko": "방어력 {v}% 감소",
+  "en": "Defense −{v}%",
+  "ctx": "bt.effect.def.down"
+ },
+ {
+  "key": "ui|bt.effect.res.up",
+  "ko": "{e} 저항 {v}% 증가",
+  "en": "{e} resistance +{v}%",
+  "ctx": "bt.effect.res.up"
+ },
+ {
+  "key": "ui|bt.effect.res.down",
+  "ko": "{e} 저항 {v}% 감소",
+  "en": "{e} resistance −{v}%",
+  "ctx": "bt.effect.res.down"
+ },
+ {
+  "key": "ui|bt.effect.resAll.up",
+  "ko": "모든 원소 저항 {v}% 증가",
+  "en": "All resistances +{v}%",
+  "ctx": "bt.effect.resAll.up"
+ },
+ {
+  "key": "ui|bt.effect.resAll.down",
+  "ko": "모든 원소 저항 {v}% 감소",
+  "en": "All resistances −{v}%",
+  "ctx": "bt.effect.resAll.down"
+ },
+ {
+  "key": "ui|bt.effect.hp.up",
+  "ko": "최대 HP {v}% 증가",
+  "en": "Max HP +{v}%",
+  "ctx": "bt.effect.hp.up"
+ },
+ {
+  "key": "ui|bt.effect.hp.down",
+  "ko": "최대 HP {v}% 감소",
+  "en": "Max HP −{v}%",
+  "ctx": "bt.effect.hp.down"
+ },
+ {
+  "key": "ui|bt.effect.regen.up",
+  "ko": "HP 재생 {v}% 증가",
+  "en": "HP regeneration +{v}%",
+  "ctx": "bt.effect.regen.up"
+ },
+ {
+  "key": "ui|bt.effect.regen.down",
+  "ko": "HP 재생 {v}% 감소",
+  "en": "HP regeneration −{v}%",
+  "ctx": "bt.effect.regen.down"
+ },
+ {
+  "key": "ui|bt.effect.taken.up",
+  "ko": "받는 피해 {v}% 증가",
+  "en": "Damage taken +{v}%",
+  "ctx": "bt.effect.taken.up"
+ },
+ {
+  "key": "ui|bt.effect.taken.down",
+  "ko": "받는 피해 {v}% 감소",
+  "en": "Damage taken −{v}%",
+  "ctx": "bt.effect.taken.down"
+ },
+ {
+  "key": "ui|bt.effect.onhit",
+  "ko": "기본 공격 시 {e} 추가 피해 {v}%",
+  "en": "+{v}% {e} damage on basic attacks",
+  "ctx": "bt.effect.onhit"
+ },
+ {
+  "key": "ui|bt.effect.splash",
+  "ko": "기본 공격이 적 전원에게 {v}% 피해",
+  "en": "Basic attacks deal {v}% damage to all enemies",
+  "ctx": "bt.effect.splash"
+ },
+ {
+  "key": "ui|bt.effect.duel",
+  "ko": "시전자만 공격",
+  "en": "Can only attack the caster",
+  "ctx": "bt.effect.duel"
+ },
+ {
+  "key": "ui|bt.effect.taunt",
+  "ko": "적의 공격 대상을 자신으로 고정",
+  "en": "Forces enemies to target this unit",
+  "ctx": "bt.effect.taunt"
+ },
+ {
+  "key": "ui|bt.effect.phys.up",
+  "ko": "물리 데미지 {v}% 증가",
+  "en": "Physical damage +{v}%",
+  "ctx": "bt.effect.phys.up"
+ },
+ {
+  "key": "ui|bt.effect.phys.down",
+  "ko": "물리 데미지 {v}% 감소",
+  "en": "Physical damage −{v}%",
+  "ctx": "bt.effect.phys.down"
+ },
+ {
+  "key": "ui|bt.effect.dmg.up",
+  "ko": "데미지 {v}% 증가",
+  "en": "Damage +{v}%",
+  "ctx": "bt.effect.dmg.up"
+ },
+ {
+  "key": "ui|bt.effect.dmg.down",
+  "ko": "데미지 {v}% 감소",
+  "en": "Damage −{v}%",
+  "ctx": "bt.effect.dmg.down"
+ },
+ {
+  "key": "ui|bt.effect.basic.up",
+  "ko": "기본 공격 피해 {v}% 증가",
+  "en": "Basic attack damage +{v}%",
+  "ctx": "bt.effect.basic.up"
+ },
+ {
+  "key": "ui|bt.effect.basic.down",
+  "ko": "기본 공격 피해 {v}% 감소",
+  "en": "Basic attack damage −{v}%",
+  "ctx": "bt.effect.basic.down"
+ },
+ {
+  "key": "ui|bt.effect.frenzy",
+  "ko": "때릴 때마다 공격 속도 {v}% 씩 증가",
+  "en": "Attack Speed +{v}% per hit",
+  "ctx": "bt.effect.frenzy"
+ },
+ {
+  "key": "ui|bt.effect.evade",
+  "ko": "받는 공격 {n}번 회피",
+  "en": "Avoids the next {n} attacks",
+  "ctx": "bt.effect.evade",
+  "en_one": "Avoids the next {n} attack"
+ },
+ {
+  "key": "ui|bt.effect.imbue",
+  "ko": "{e} 스킬에 상태이상 추가",
+  "en": "{e} skills inflict an ailment",
+  "ctx": "bt.effect.imbue"
+ },
+ {
+  "key": "ui|bt.effect.pulse",
+  "ko": "일정 간격으로 적 전원에게 {e} 피해",
+  "en": "{e} damage to every enemy at intervals",
+  "ctx": "bt.effect.pulse"
+ },
+ {
+  "key": "ui|bt.effect.echo",
+  "ko": "공격 스킬이 한 번 더",
+  "en": "Attack skills fire twice",
+  "ctx": "bt.effect.echo"
+ },
+ {
+  "key": "ui|bt.effect.maiden",
+  "ko": "준 직격 피해의 {v} 되받음",
+  "en": "Takes back {v} of its direct damage",
+  "ctx": "bt.effect.maiden"
+ },
+ {
+  "key": "ui|bt.effect.transform",
+  "ko": "변신 — 다른 스킬 봉인",
+  "en": "Transformed — other skills sealed",
+  "ctx": "bt.effect.transform"
+ },
+ {
+  "key": "ui|bt.effect.delegate",
+  "ko": "차례를 가장 센 아군에게 넘김",
+  "en": "Hands its turns to the strongest ally",
+  "ctx": "bt.effect.delegate"
+ },
+ {
+  "key": "ui|bt.effect.swarm",
+  "ko": "파리 떼로 흩어짐",
+  "en": "Scattered into a swarm",
+  "ctx": "bt.effect.swarm"
+ },
+ {
+  "key": "ui|bt.effect.stagger",
+  "ko": "행동 게이지 정지",
+  "en": "Action gauge stopped",
+  "ctx": "bt.effect.stagger"
+ },
+ {
+  "key": "ui|bt.ail.freeze",
+  "ko": "결빙",
+  "en": "Freeze",
+  "ctx": "bt.ail.freeze"
+ },
+ {
+  "key": "ui|bt.ail.burn",
+  "ko": "화상",
+  "en": "Burn",
+  "ctx": "bt.ail.burn"
+ },
+ {
+  "key": "ui|bt.ail.poison",
+  "ko": "중독",
+  "en": "Poison",
+  "ctx": "bt.ail.poison"
+ },
+ {
+  "key": "ui|bt.ail.stun",
+  "ko": "스턴",
+  "en": "Stun",
+  "ctx": "bt.ail.stun"
+ },
+ {
+  "key": "ui|bt.effect.burn",
+  "ko": "받는 회복 {c}% 감소",
+  "en": "Healing received −{c}%",
+  "ctx": "bt.effect.burn"
+ },
+ {
+  "key": "ui|bt.effect.poison",
+  "ko": "초당 독 피해 {n}",
+  "en": "{n} poison damage per second",
+  "ctx": "bt.effect.poison"
+ },
+ {
+  "key": "ui|bt.effect.stun",
+  "ko": "행동 · 쿨타임 정지",
+  "en": "Actions and cooldowns stopped",
+  "ctx": "bt.effect.stun"
+ },
+ {
+  "key": "ui|bt.effect.vsBurn",
+  "ko": "화상 걸린 적에게 데미지 {v}% 증가",
+  "en": "Damage to burning enemies +{v}%",
+  "ctx": "bt.effect.vsBurn"
+ },
+ {
+  "key": "ui|bt.effect.snipe",
+  "ko": "스나이프 데미지 {v}% 증가",
+  "en": "Snipe damage +{v}%",
+  "ctx": "bt.effect.snipe"
+ },
+ {
+  "key": "ui|bt.effect.reload",
+  "ko": "스킬로 처치하면 그 스킬 쿨타임 초기화 · 라운드에 {n}번",
+  "en": "Skill kills reset that skill's cooldown · {n} per round",
+  "ctx": "bt.effect.reload",
+  "en_one": "Skill kills reset that skill's cooldown · {n} per round"
+ },
+ {
+  "key": "ui|bt.effect.supportFire",
+  "ko": "아군 기본 공격마다 {v}% 지원 화살",
+  "en": "{v}% support arrow with each ally basic attack",
+  "ctx": "bt.effect.supportFire"
+ },
+ {
+  "key": "ui|bt.effect.atone",
+  "ko": "받는 직격 피해의 {v}%만큼 상대 파티 회복",
+  "en": "{v}% of direct damage taken heals the other party",
+  "ctx": "bt.effect.atone"
+ },
+ {
+  "key": "ui|bt.effect.ailCut",
+  "ko": "받는 상태이상 · 디버프 시간 {v}% 감소",
+  "en": "Ailment and debuff duration −{v}%",
+  "ctx": "bt.effect.ailCut"
+ },
+ {
+  "key": "ui|bt.effect.counter",
+  "ko": "맞으면 {v}% 위력으로 반격",
+  "en": "Strikes back at attackers ({v}%)",
+  "ctx": "bt.effect.counter"
+ },
+ {
+  "key": "ui|bt.effect.ember",
+  "ko": "불씨가 쌓이면 터져 {v}% 화염 피해",
+  "en": "Embers burst for {v}% fire damage",
+  "ctx": "bt.effect.ember"
+ },
+ {
+  "key": "ui|bt.effect.elemShield",
+  "ko": "원소 직격 피해를 흡수하는 보호막",
+  "en": "Shield that absorbs elemental hits",
+  "ctx": "bt.effect.elemShield"
+ },
+ {
+  "key": "ui|bt.effect.conv",
+  "ko": "물리 직격의 {v}%를 {e} 피해로",
+  "en": "{v}% of physical hits dealt as {e} damage",
+  "ctx": "bt.effect.conv"
+ },
+ {
+  "key": "ui|bt.effect.convAmp",
+  "ko": "바뀐 {e} 피해 {v}% 증가",
+  "en": "Converted {e} damage +{v}%",
+  "ctx": "bt.effect.convAmp"
+ },
+ {
+  "key": "ui|bt.effect.endure",
+  "ko": "쓰러질 피해에 최대 HP {v}%로 버팀",
+  "en": "Survives a lethal hit at {v}% max HP",
+  "ctx": "bt.effect.endure"
+ },
+ {
+  "key": "ui|bt.effect.berserk",
+  "ko": "스킬 데미지 {v}% 증가 · 때릴 때 HP 소모",
+  "en": "Skill damage +{v}% · Costs HP per hit",
+  "ctx": "bt.effect.berserk"
+ },
+ {
+  "key": "ui|bt.effect.devotion",
+  "ko": "아군이 받는 직격의 {v}%를 대신 받음",
+  "en": "Takes {v}% of allies' direct damage",
+  "ctx": "bt.effect.devotion"
+ },
+ {
+  "key": "ui|bt.effect.devotionDr",
+  "ko": "대신 받는 피해 {v}% 감소",
+  "en": "Redirected damage −{v}%",
+  "ctx": "bt.effect.devotionDr"
+ },
+ {
+  "key": "ui|bt.effect.will",
+  "ko": "맞을 때마다 받는 피해 {v}%씩 감소",
+  "en": "Damage taken −{v}% per hit taken",
+  "ctx": "bt.effect.will"
+ },
+ {
+  "key": "ui|bt.effect.reflect",
+  "ko": "받은 직격 피해의 {v}% 반사",
+  "en": "Reflects {v}% of direct damage taken",
+  "ctx": "bt.effect.reflect"
+ },
+ {
+  "key": "ui|bt.effect.trap",
+  "ko": "덫 — 행동하면 터짐",
+  "en": "Trapped — triggers when it acts",
+  "ctx": "bt.effect.trap"
+ },
+ {
+  "key": "ui|bt.effect.tickHit",
+  "ko": "일정 간격으로 {e} 피해 {v}%",
+  "en": "{e} damage ({v}%) at intervals",
+  "ctx": "bt.effect.tickHit"
+ },
+ {
+  "key": "ui|bt.effect.strike",
+  "ko": "일정 간격으로 {e} 벼락 {v}%",
+  "en": "{e} bolts ({v}%) at intervals",
+  "ctx": "bt.effect.strike"
+ },
+ {
+  "key": "ui|bt.effect.periodFix",
+  "ko": "공격 주기 = 무기 주기의 {v}%",
+  "en": "Attack interval = {v}% of weapon speed",
+  "ctx": "bt.effect.periodFix"
+ },
+ {
+  "key": "ui|bt.effect.defIgnore",
+  "ko": "방어력 {v}% 무시",
+  "en": "Ignores {v}% Defense",
+  "ctx": "bt.effect.defIgnore"
+ },
+ {
+  "key": "ui|bt.effect.shatter",
+  "ko": "결빙된 적을 다시 얼리면 스턴",
+  "en": "Refreezing a frozen enemy stuns it",
+  "ctx": "bt.effect.shatter"
+ },
+ {
+  "key": "ui|bt.effect.formation",
+  "ko": "전열 · 후열이 뒤바뀜",
+  "en": "Front and back rows swapped",
+  "ctx": "bt.effect.formation"
+ },
+ {
+  "key": "ui|bt.effect.element",
+  "ko": "원소",
+  "en": "elemental",
+  "ctx": "bt.effect.element"
+ },
+ {
+  "key": "ui|bt.effect.permanent",
+  "ko": "상시",
+  "en": "Permanent",
+  "ctx": "bt.effect.permanent"
+ },
+ {
+  "key": "ui|bt.trait.gold",
+  "ko": "처치 골드 {v} 증가",
+  "en": "Kill gold increases by {v}",
+  "ctx": "bt.trait.gold"
+ },
+ {
+  "key": "ui|bt.trait.xp",
+  "ko": "처치 경험치 {v} 증가",
+  "en": "Kill experience increases by {v}",
+  "ctx": "bt.trait.xp"
+ },
+ {
+  "key": "ui|bt.trait.magic",
+  "ko": "입은 장비의 매직 확률 {v} 증가",
+  "en": "Magic chance of its gear increases by {v}",
+  "ctx": "bt.trait.magic"
+ },
+ {
+  "key": "ui|bt.trait.stat",
+  "ko": "{stat} {v} 증가",
+  "en": "{stat} increases by {v}",
+  "ctx": "bt.trait.stat"
+ },
+ {
+  "key": "ui|bt.trait.defMult",
+  "ko": "물리 방어 {v}배",
+  "en": "Physical Defense ×{v}",
+  "ctx": "bt.trait.defMult"
+ },
+ {
+  "key": "ui|bt.trait.resCap",
+  "ko": "{e} 피해 {v} 감소",
+  "en": "{e} damage taken reduced by {v}",
+  "ctx": "bt.trait.resCap"
+ },
+ {
+  "key": "ui|bt.fam.Army",
+  "ko": "같은 부류가 {n} 이상 서 있으면 데미지 {v} 증가",
+  "en": "Damage +{v} while {n} or more of its kind stand",
+  "ctx": "bt.fam.Army"
+ },
+ {
+  "key": "ui|bt.fam.Tribe",
+  "ko": "모든 능력치 {v} 증가",
+  "en": "All attributes increase by {v}",
+  "ctx": "bt.fam.Tribe"
+ },
+ {
+  "key": "ui|bt.fam.Giant",
+  "ko": "혼자 남으면 데미지 {v} 증가",
+  "en": "Damage +{v} when it stands alone",
+  "ctx": "bt.fam.Giant"
+ },
+ {
+  "key": "ui|bt.fam.Guardian",
+  "ko": "서 있는 동안 후열 동료가 받는 피해 {v} 감소",
+  "en": "Back-row allies take {v} less damage while it stands",
+  "ctx": "bt.fam.Guardian"
+ },
+ {
+  "key": "ui|bt.fam.Aberration",
+  "ko": "쓰러질 때마다 영웅의 모든 원소 저항 {v} 감소 · 최대 {n}번",
+  "en": "Each time it falls, heroes lose {v} of all elemental resistances, up to {n} times",
+  "ctx": "bt.fam.Aberration"
+ },
+ {
+  "key": "ui|bt.logf.all",
+  "ko": "전체",
+  "en": "All",
+  "ctx": "bt.logf.all"
+ },
+ {
+  "key": "ui|bt.logf.party",
+  "ko": "우리",
+  "en": "Party",
+  "ctx": "bt.logf.party"
+ },
+ {
+  "key": "ui|bt.logf.enemy",
+  "ko": "적",
+  "en": "Enemies",
+  "ctx": "bt.logf.enemy"
+ },
+ {
+  "key": "ui|bt.dmgf.dealt",
+  "ko": "가한 피해",
+  "en": "Dealt",
+  "ctx": "bt.dmgf.dealt"
+ },
+ {
+  "key": "ui|bt.dmgf.taken",
+  "ko": "받은 피해",
+  "en": "Taken",
+  "ctx": "bt.dmgf.taken"
+ },
+ {
+  "key": "ui|bt.team.party",
+  "ko": "우리 팀",
+  "en": "Our team",
+  "ctx": "bt.team.party"
+ },
+ {
+  "key": "ui|bt.team.enemy",
+  "ko": "상대 팀",
+  "en": "Opponents",
+  "ctx": "bt.team.enemy"
+ },
+ {
+  "key": "ui|bt.tdmView.rows",
+  "ko": "요약",
+  "en": "Summary",
+  "ctx": "bt.tdmView.rows"
+ },
+ {
+  "key": "ui|bt.tdmView.cols",
+  "ko": "스킬별",
+  "en": "By skill",
+  "ctx": "bt.tdmView.cols"
+ },
+ {
+  "key": "ui|bt.dmgk.phys",
+  "ko": "물리 {n}",
+  "en": "Physical {n}",
+  "ctx": "bt.dmgk.phys"
+ },
+ {
+  "key": "ui|bt.dmgk.magic",
+  "ko": "마법 {n}",
+  "en": "Magic {n}",
+  "ctx": "bt.dmgk.magic"
+ },
+ {
+  "key": "ui|bt.dmgk.etc",
+  "ko": "기타 {n}",
+  "en": "Other {n}",
+  "ctx": "bt.dmgk.etc"
+ },
+ {
+  "key": "ui|bt.logh.name",
+  "ko": "이름",
+  "en": "Name",
+  "ctx": "bt.logh.name"
+ },
+ {
+  "key": "ui|bt.logh.skill",
+  "ko": "스킬",
+  "en": "Skill",
+  "ctx": "bt.logh.skill"
+ },
+ {
+  "key": "ui|bt.logh.target",
+  "ko": "대상",
+  "en": "Target",
+  "ctx": "bt.logh.target"
+ },
+ {
+  "key": "ui|bt.logh.val",
+  "ko": "데미지",
+  "en": "Damage",
+  "ctx": "bt.logh.val"
+ },
+ {
+  "key": "ui|log.roundStart",
+  "ko": "<b>라운드 {n}</b> — {list}",
+  "en": "<b>Round {n}</b> — {list}",
+  "ctx": "log.roundStart"
+ },
+ {
+  "key": "ui|log.v.miss",
+  "ko": "빗나감",
+  "en": "miss",
+  "ctx": "log.v.miss"
+ },
+ {
+  "key": "ui|log.v.counter",
+  "ko": "반격",
+  "en": "counter",
+  "ctx": "log.v.counter"
+ },
+ {
+  "key": "ui|log.v.delegate",
+  "ko": "넘김",
+  "en": "pass",
+  "ctx": "log.v.delegate"
+ },
+ {
+  "key": "ui|log.v.evade",
+  "ko": "회피",
+  "en": "evaded",
+  "ctx": "log.v.evade"
+ },
+ {
+  "key": "ui|log.v.echo",
+  "ko": "한 번 더",
+  "en": "again",
+  "ctx": "log.v.echo"
+ },
+ {
+  "key": "ui|log.v.slain",
+  "ko": "처치",
+  "en": "slain",
+  "ctx": "log.v.slain"
+ },
+ {
+  "key": "ui|log.v.downed",
+  "ko": "전투 불능",
+  "en": "downed",
+  "ctx": "log.v.downed"
+ },
+ {
+  "key": "ui|log.v.up",
+  "ko": "발동",
+  "en": "up",
+  "ctx": "log.v.up"
+ },
+ {
+  "key": "ui|log.v.barrier",
+  "ko": "방벽 {amt}",
+  "en": "barrier {amt}",
+  "ctx": "log.v.barrier"
+ },
+ {
+  "key": "ui|log.v.ended",
+  "ko": "종료",
+  "en": "ended",
+  "ctx": "log.v.ended"
+ },
+ {
+  "key": "ui|log.v.lvup",
+  "ko": "▲ Lv.{n}",
+  "en": "▲ Lv.{n}",
+  "ctx": "log.v.lvup"
+ },
+ {
+  "key": "ui|log.say.hit",
+  "ko": "{a|이/가} {d}에게 {ico|으로/로} {v} 피해",
+  "en": "{a} hit {d} with {ico} for {v}",
+  "ctx": "log.say.hit"
+ },
+ {
+  "key": "ui|log.say.miss",
+  "ko": "{a|이/가} {d}에게 {ico} 빗나감",
+  "en": "{a} missed {d} with {ico}",
+  "ctx": "log.say.miss"
+ },
+ {
+  "key": "ui|log.say.reflect",
+  "ko": "{a|이/가} {d}에게 {v} 반사",
+  "en": "{a} reflected {v} to {d}",
+  "ctx": "log.say.reflect"
+ },
+ {
+  "key": "ui|log.say.counter",
+  "ko": "{a|이/가} {d}에게 반격",
+  "en": "{a} countered {d}",
+  "ctx": "log.say.counter"
+ },
+ {
+  "key": "ui|log.say.dot",
+  "ko": "{d|이/가} {ico} {k|으로/로} {v} 피해",
+  "en": "{d} took {v} from {ico} {k}",
+  "ctx": "log.say.dot"
+ },
+ {
+  "key": "ui|log.say.heal",
+  "ko": "{a|이/가} {ico|으로/로} {d} HP {v} 회복",
+  "en": "{a} healed {d} for {v} with {ico}",
+  "ctx": "log.say.heal"
+ },
+ {
+  "key": "ui|log.say.healSelf",
+  "ko": "{a|이/가} {ico|으로/로} HP {v} 회복",
+  "en": "{a} healed {v} with {ico}",
+  "ctx": "log.say.healSelf"
+ },
+ {
+  "key": "ui|log.say.potion",
+  "ko": "{a|이/가} {ico|으로/로} HP {v} 회복",
+  "en": "{a} drank {ico} for {v} HP",
+  "ctx": "log.say.potion"
+ },
+ {
+  "key": "ui|log.say.buff",
+  "ko": "{a}에게 {ico} 발동",
+  "en": "{ico} on {a}",
+  "ctx": "log.say.buff"
+ },
+ {
+  "key": "ui|log.say.ail",
+  "ko": "{a|이/가} {ico} {k}에 걸림",
+  "en": "{a} afflicted with {ico} {k}",
+  "ctx": "log.say.ail"
+ },
+ {
+  "key": "ui|log.say.barrier",
+  "ko": "{a|이/가} {ico|으로/로} 방벽 {v}",
+  "en": "{a} gained {v} barrier from {ico}",
+  "ctx": "log.say.barrier"
+ },
+ {
+  "key": "ui|log.say.buffEnd",
+  "ko": "{a}의 {ico} 종료",
+  "en": "{ico} on {a} ended",
+  "ctx": "log.say.buffEnd"
+ },
+ {
+  "key": "ui|log.say.ailEnd",
+  "ko": "{a}의 {ico} {k} 해제",
+  "en": "{ico} {k} on {a} ended",
+  "ctx": "log.say.ailEnd"
+ },
+ {
+  "key": "ui|log.say.slain",
+  "ko": "{a} 처치",
+  "en": "{a} slain",
+  "ctx": "log.say.slain"
+ },
+ {
+  "key": "ui|log.say.downed",
+  "ko": "{a} 전투 불능",
+  "en": "{a} downed",
+  "ctx": "log.say.downed"
+ },
+ {
+  "key": "ui|log.say.rise",
+  "ko": "{a|이/가} {ico|으로/로} {d}{d|을/를} 일으킴",
+  "en": "{a} raised {d} with {ico}",
+  "ctx": "log.say.rise"
+ },
+ {
+  "key": "ui|log.say.call",
+  "ko": "{a|이/가} {ico|으로/로} {d} 소환",
+  "en": "{a} summoned {d} with {ico}",
+  "ctx": "log.say.call"
+ },
+ {
+  "key": "ui|log.say.maiden",
+  "ko": "{d|이/가} {ico|으로/로} {v} 피해를 되받음",
+  "en": "{d} took {v} back from {ico}",
+  "ctx": "log.say.maiden"
+ },
+ {
+  "key": "ui|log.say.delegate",
+  "ko": "{a|이/가} {d}에게 차례를 넘김",
+  "en": "{a} passed the turn to {d}",
+  "ctx": "log.say.delegate"
+ },
+ {
+  "key": "ui|log.say.regroup",
+  "ko": "{a|이/가} {ico}에서 다시 뭉침 — HP {v}",
+  "en": "{a} regrouped from {ico} — HP {v}",
+  "ctx": "log.say.regroup"
+ },
+ {
+  "key": "ui|log.say.lvup",
+  "ko": "{a} 레벨 {v} 달성",
+  "en": "{a} reached Lv.{v}",
+  "ctx": "log.say.lvup"
+ },
+ {
+  "key": "ui|pop.dodge",
+  "ko": "빗나감",
+  "en": "MISS",
+  "ctx": "pop.dodge"
+ },
+ {
+  "key": "ui|pop.counter",
+  "ko": "반격",
+  "en": "COUNTER",
+  "ctx": "pop.counter"
+ },
+ {
+  "key": "ui|pop.delegate",
+  "ko": "넘김",
+  "en": "PASS",
+  "ctx": "pop.delegate"
+ },
+ {
+  "key": "ui|pop.evade",
+  "ko": "회피",
+  "en": "EVADE",
+  "ctx": "pop.evade"
+ },
+ {
+  "key": "ui|pop.echo",
+  "ko": "에코",
+  "en": "ECHO",
+  "ctx": "pop.echo"
+ },
+ {
+  "key": "ui|pop.downed",
+  "ko": "전투 불능",
+  "en": "Downed",
+  "ctx": "pop.downed"
+ },
+ {
+  "key": "ui|pop.rise",
+  "ko": "부활",
+  "en": "Raised",
+  "ctx": "pop.rise"
+ },
+ {
+  "key": "ui|pop.lvup",
+  "ko": "레벨 업",
+  "en": "LEVEL UP",
+  "ctx": "pop.lvup"
+ }
+]

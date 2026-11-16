@@ -101,7 +101,7 @@ export function createHeroSystem(data) {
         const pool = namePools[row.cls];
         if (!pool || !row.ko?.trim() || !row.en?.trim())
             throw new Error(`hero: hero_name.csv 의 직업 또는 이름이 잘못됐다 (${row.cls}: ${row.ko}/${row.en})`);
-        pool.push({ ko: row.ko, en: row.en });
+        pool.push(row.zh ? { ko: row.ko, en: row.en, zh: row.zh } : { ko: row.ko, en: row.en });   // 간체가 없는 행은 키도 없다 (INTERFACE §8-19)
     }
     for (const cls of mainClasses) if (!namePools[cls].length)
         throw new Error(`hero: hero_name.csv 에 ${cls} 직업의 이름 풀이 없다`);
@@ -213,7 +213,7 @@ export function createHeroSystem(data) {
         }
         return {
             id: row.node_id, treeKind: row.tree_kind, ownerId: row.owner_id, tier: row.tier,
-            stat: row.stat, name: { ko: row.name_kr, en: row.name_en },
+            stat: row.stat, name: { ko: row.name_kr, en: row.name_en, zh: row.name_zh },
             value: num(row.value_key), maxRank: num(row.max_rank_key),
             // 해금 없음(`-`)은 레벨 1 — 「T1 은 1레벨부터」(§1-4)를 숫자 하나로 표현한 것
             unlockLevel: row.unlock_key === '-' ? 1 : num(row.unlock_key),
@@ -1064,7 +1064,29 @@ export function createHeroSystem(data) {
         };
     }
 
+    /**
+     * 표시 이름의 간체를 채운다 [2026-11-16 · LOCALIZATION_ZH D8 · INTERFACE §2-4] — **in-place** · rng 0.
+     * `name` · `trait` 에 zh 가 없으면 풀(이름 = 직업 무관 · 특성)에서 ko 와 en 이 둘 다 같은 행의 zh 를 싣는다. 못 찾으면 그대로(화면은 영어)
+     */
+    const zhOf = (pools, v) => {
+        if (!v || typeof v !== 'object' || v.zh) return null;
+        for (const pool of pools) {
+            const row = pool.find(x => x.ko === v.ko && x.en === v.en);
+            if (row?.zh) return row.zh;
+        }
+        return null;
+    };
+    function fillZh(hero) {
+        if (!hero || typeof hero !== 'object') return hero;
+        const nz = zhOf(Object.values(namePools), hero.name);
+        if (nz) hero.name = { ...hero.name, zh: nz };
+        const tz = zhOf([data.traitPool ?? []], hero.trait);
+        if (tz) hero.trait = { ...hero.trait, zh: tz };
+        return hero;
+    }
+
     return {
+        fillZh,
         rollAttributes, rollAttributesTrace, attrCenters, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, avoidNames, rollHeroOf, rollGoblin, xpNeeded, starXpNeeded, grantXp, computeCombat,
         masteryNodes, masteryById, masteryNodesFor, masteryBonus, masteryWiden, masteryRowKey, masteryRowUsed, masteryPickOneBlocked, masteryRowOpen, masteryRowHeld, gateOn, sinGearCount, levelScaled,
         weaponTrait: groupId => (weaponTraitLines[groupId] ?? []).map(l => ({ ...l })),   // 무기군 특성 줄 — 전투 합산과 같은 모양(사본 · R443)

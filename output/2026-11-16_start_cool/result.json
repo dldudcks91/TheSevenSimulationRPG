@@ -1,0 +1,3581 @@
+{
+ "meta": {
+  "N": 600,
+  "tier": "champion",
+  "potions": 4,
+  "buffHeroesPct": 86.7
+ },
+ "now": {
+  "per": {
+   "war_ironskin": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 18,
+    "held": 146,
+    "casts": 0.25,
+    "first": 16.8,
+    "nonePct": 82.9
+   },
+   "war_leap": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 2,
+    "cool": 11,
+    "held": 143,
+    "casts": 0.71,
+    "first": 10.9,
+    "nonePct": 39.9
+   },
+   "war_mutualruin": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 78,
+    "casts": 0.33,
+    "first": 15.5,
+    "nonePct": 69.2
+   },
+   "kni_enchant": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 156,
+    "casts": 0.4,
+    "first": 14.6,
+    "nonePct": 66
+   },
+   "war_recovery": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 18,
+    "held": 159,
+    "casts": 0.19,
+    "first": 18.4,
+    "nonePct": 83.6
+   },
+   "war_battlecry": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 141,
+    "casts": 0.24,
+    "first": 16.6,
+    "nonePct": 79.4
+   },
+   "war_intimidate": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 19,
+    "held": 81,
+    "casts": 0.12,
+    "first": 19.2,
+    "nonePct": 88.9
+   },
+   "mag_chain": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 185,
+    "casts": 1.23,
+    "first": 7.8,
+    "nonePct": 14.1
+   },
+   "mag_frostnova": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 12,
+    "held": 201,
+    "casts": 0.99,
+    "first": 10,
+    "nonePct": 25.9
+   },
+   "mag_frozenorb": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 12,
+    "held": 82,
+    "casts": 0.74,
+    "first": 10.5,
+    "nonePct": 29.3
+   },
+   "mag_lightning": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 191,
+    "casts": 1.22,
+    "first": 7.8,
+    "nonePct": 15.2
+   },
+   "mag_fireball": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 10,
+    "held": 189,
+    "casts": 1.16,
+    "first": 8.4,
+    "nonePct": 14.8
+   },
+   "mag_hydra": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 14,
+    "held": 79,
+    "casts": 0.63,
+    "first": 11.9,
+    "nonePct": 40.5
+   },
+   "kni_charge": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 141,
+    "casts": 0.96,
+    "first": 9.3,
+    "nonePct": 34.8
+   },
+   "kni_divinejudgment": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 22,
+    "held": 68,
+    "casts": 1.34,
+    "first": 0.1,
+    "nonePct": 0
+   },
+   "mag_thunderstrike": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 0,
+    "held": 77,
+    "casts": 0,
+    "first": null,
+    "nonePct": 100
+   },
+   "mag_inferno": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 12,
+    "held": 197,
+    "casts": 0.92,
+    "first": 10.1,
+    "nonePct": 24.9
+   },
+   "arc_evade": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 243,
+    "casts": 0.57,
+    "first": 14.2,
+    "nonePct": 56.8
+   },
+   "arc_coldarrow": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 144,
+    "casts": 0.57,
+    "first": 14.9,
+    "nonePct": 54.9
+   },
+   "arc_huntersmark": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 91,
+    "casts": 0.35,
+    "first": 19,
+    "nonePct": 81.3
+   },
+   "arc_guided": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 5,
+    "held": 128,
+    "casts": 2.55,
+    "first": 5.5,
+    "nonePct": 5.5
+   },
+   "arc_multishot": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 5,
+    "held": 143,
+    "casts": 2.4,
+    "first": 5.7,
+    "nonePct": 4.2
+   },
+   "arc_chaindraw": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 89,
+    "casts": 0.34,
+    "first": 18.6,
+    "nonePct": 73
+   },
+   "kni_rush": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 150,
+    "casts": 1.02,
+    "first": 9.2,
+    "nonePct": 29.3
+   },
+   "kni_resistshield": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 18,
+    "held": 140,
+    "casts": 0.34,
+    "first": 17.3,
+    "nonePct": 72.9
+   },
+   "pri_regen": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 169,
+    "casts": 1.06,
+    "first": 15.4,
+    "nonePct": 49.7
+   },
+   "pri_heal": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 10,
+    "held": 141,
+    "casts": 2.31,
+    "first": 8.2,
+    "nonePct": 11.3
+   },
+   "pri_counter": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 78,
+    "casts": 0.63,
+    "first": 16.8,
+    "nonePct": 59
+   },
+   "pri_doom": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 159,
+    "casts": 1.16,
+    "first": 15.2,
+    "nonePct": 40.9
+   },
+   "pri_cure": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 8,
+    "held": 173,
+    "casts": 3.35,
+    "first": 6.7,
+    "nonePct": 4
+   },
+   "pri_diamondbody": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 98,
+    "casts": 0.65,
+    "first": 16.6,
+    "nonePct": 65.3
+   },
+   "arc_quickhands": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 136,
+    "casts": 0.65,
+    "first": 17,
+    "nonePct": 60.3
+   },
+   "pri_grace": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 144,
+    "casts": 0.78,
+    "first": 14.8,
+    "nonePct": 48.6
+   },
+   "war_frenzy": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 143,
+    "casts": 0.32,
+    "first": 15.1,
+    "nonePct": 74.8
+   },
+   "war_whirlwind": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 11,
+    "held": 74,
+    "casts": 0.54,
+    "first": 11.5,
+    "nonePct": 62.2
+   },
+   "mag_surge": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 75,
+    "casts": 0.39,
+    "first": 13.1,
+    "nonePct": 65.3
+   },
+   "pri_judgment": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 163,
+    "casts": 2.21,
+    "first": 7.5,
+    "nonePct": 6.7
+   },
+   "pri_bind": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 185,
+    "casts": 1.06,
+    "first": 14.4,
+    "nonePct": 44.3
+   },
+   "pri_punishment": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 86,
+    "casts": 1.51,
+    "first": 13.1,
+    "nonePct": 32.6
+   },
+   "mag_iceblast": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 5,
+    "held": 175,
+    "casts": 2.31,
+    "first": 4.5,
+    "nonePct": 3.4
+   },
+   "arc_eagleeye": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 139,
+    "casts": 0.37,
+    "first": 16.7,
+    "nonePct": 64.7
+   },
+   "arc_trap": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 12,
+    "held": 100,
+    "casts": 0.8,
+    "first": 11.3,
+    "nonePct": 32
+   },
+   "mag_ignite": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 94,
+    "casts": 0.5,
+    "first": 13.9,
+    "nonePct": 62.8
+   },
+   "mag_nova": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 7,
+    "held": 82,
+    "casts": 2.35,
+    "first": 3.5,
+    "nonePct": 3.7
+   },
+   "war_bash": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 15,
+    "held": 144,
+    "casts": 0.55,
+    "first": 13.6,
+    "nonePct": 59
+   },
+   "war_battleorders": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 141,
+    "casts": 0.26,
+    "first": 17.3,
+    "nonePct": 80.9
+   },
+   "war_shout": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 140,
+    "casts": 0.24,
+    "first": 18.7,
+    "nonePct": 82.9
+   },
+   "kni_holyshield": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 18,
+    "held": 119,
+    "casts": 0.29,
+    "first": 16.5,
+    "nonePct": 76.5
+   },
+   "kni_condemnation": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 80,
+    "casts": 0.29,
+    "first": 15.4,
+    "nonePct": 72.5
+   },
+   "kni_sweep": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 2,
+    "cool": 10,
+    "held": 134,
+    "casts": 0.73,
+    "first": 10.5,
+    "nonePct": 47
+   },
+   "kni_retribution": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 62,
+    "casts": 0.44,
+    "first": 18.4,
+    "nonePct": 79
+   },
+   "war_warcry": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 148,
+    "casts": 0.28,
+    "first": 16.1,
+    "nonePct": 81.1
+   },
+   "mag_frostarmor": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 76,
+    "casts": 0.57,
+    "first": 15.6,
+    "nonePct": 55.3
+   },
+   "arc_pierce": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 143,
+    "casts": 0.43,
+    "first": 16.7,
+    "nonePct": 63.6
+   },
+   "arc_rapid": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 5,
+    "held": 126,
+    "casts": 2.02,
+    "first": 5.7,
+    "nonePct": 4
+   },
+   "arc_supportingfire": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 84,
+    "casts": 0.21,
+    "first": 19.2,
+    "nonePct": 81
+   },
+   "arc_reload": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 0,
+    "held": 75,
+    "casts": 0,
+    "first": null,
+    "nonePct": 100
+   },
+   "mag_meteor": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 93,
+    "casts": 0.61,
+    "first": 14.8,
+    "nonePct": 45.2
+   },
+   "kni_fallingstrike": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 73,
+    "casts": 0.29,
+    "first": 14.7,
+    "nonePct": 72.6
+   },
+   "mag_ember": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 0,
+    "held": 81,
+    "casts": 0,
+    "first": null,
+    "nonePct": 100
+   },
+   "arc_snipe": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 15,
+    "held": 134,
+    "casts": 0.75,
+    "first": 13.1,
+    "nonePct": 40.3
+   },
+   "arc_overdraw": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 73,
+    "casts": 0.48,
+    "first": 18.7,
+    "nonePct": 65.8
+   },
+   "pri_penitence": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 205,
+    "casts": 1.06,
+    "first": 14.6,
+    "nonePct": 52.2
+   },
+   "pri_purify": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 77,
+    "casts": 1.7,
+    "first": 14.3,
+    "nonePct": 48.1
+   },
+   "mag_blizzard": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 15,
+    "held": 73,
+    "casts": 0.53,
+    "first": 12.6,
+    "nonePct": 47.9
+   },
+   "pri_sweep": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 15,
+    "held": 79,
+    "casts": 1.2,
+    "first": 12,
+    "nonePct": 31.6
+   },
+   "war_berserk": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 75,
+    "casts": 1.35,
+    "first": 0.1,
+    "nonePct": 0
+   },
+   "pri_haste": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 141,
+    "casts": 0.89,
+    "first": 15,
+    "nonePct": 50.4
+   },
+   "pri_endure": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 24,
+    "held": 76,
+    "casts": 0.49,
+    "first": 20.1,
+    "nonePct": 69.7
+   },
+   "mag_deepfreeze": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 72,
+    "casts": 0.56,
+    "first": 13.5,
+    "nonePct": 52.8
+   },
+   "mag_thundergod": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 12,
+    "held": 90,
+    "casts": 0.82,
+    "first": 10.6,
+    "nonePct": 25.6
+   },
+   "pri_resurrection": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 30,
+    "held": 101,
+    "casts": 0.17,
+    "first": 29.6,
+    "nonePct": 83.2
+   },
+   "war_doubleswing": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 8,
+    "held": 125,
+    "casts": 1.1,
+    "first": 8.3,
+    "nonePct": 24.8
+   },
+   "pri_atonement": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 67,
+    "casts": 0.67,
+    "first": 16.7,
+    "nonePct": 50.7
+   },
+   "pri_excommunication": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 78,
+    "casts": 0.67,
+    "first": 15.2,
+    "nonePct": 51.3
+   },
+   "war_divinedescent": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 25,
+    "held": 88,
+    "casts": 0.32,
+    "first": 23.2,
+    "nonePct": 79.5
+   },
+   "war_thorswrath": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 22,
+    "held": 74,
+    "casts": 0.57,
+    "first": 12.6,
+    "nonePct": 48.6
+   },
+   "war_shockwave": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 15,
+    "held": 87,
+    "casts": 0.37,
+    "first": 14.4,
+    "nonePct": 69
+   },
+   "arc_poison": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 128,
+    "casts": 0.6,
+    "first": 15,
+    "nonePct": 50
+   },
+   "arc_trueaim": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 84,
+    "casts": 0.24,
+    "first": 18.9,
+    "nonePct": 77.4
+   },
+   "arc_quickdraw": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 69,
+    "casts": 0.41,
+    "first": 20.5,
+    "nonePct": 69.6
+   },
+   "war_command": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 85,
+    "casts": 0.11,
+    "first": 20.9,
+    "nonePct": 91.8
+   },
+   "war_ragnarok": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 25,
+    "held": 73,
+    "casts": 0.07,
+    "first": 25.3,
+    "nonePct": 93.2
+   },
+   "kni_lastbastion": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 75,
+    "casts": 1.6,
+    "first": 0.1,
+    "nonePct": 0
+   },
+   "kni_unbreakablewill": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 69,
+    "casts": 1.54,
+    "first": 0.1,
+    "nonePct": 0
+   },
+   "mag_echo": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 20,
+    "held": 87,
+    "casts": 0.21,
+    "first": 16.6,
+    "nonePct": 80.5
+   },
+   "arc_singlestrike": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 67,
+    "casts": 0.51,
+    "first": 18.8,
+    "nonePct": 64.2
+   }
+  },
+  "n": 600,
+  "err": 0,
+  "ends": {
+   "wipe": 276,
+   "clear": 323,
+   "timeout": 1
+  },
+  "dur": {
+   "mean": 19.7,
+   "p10": 9.3,
+   "p50": 15.7,
+   "p90": 29.8,
+   "under10": 12.2
+  },
+  "firstSkill": 2.9,
+  "firstBuff": 4.5,
+  "firstAtk": 5.3,
+  "buffCasts": 6.86,
+  "atkCasts": 9.55,
+  "skills3s": 0.63
+ },
+ "ready": {
+  "per": {
+   "war_ironskin": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 18,
+    "held": 146,
+    "casts": 0.97,
+    "first": 4.5,
+    "nonePct": 24
+   },
+   "war_leap": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 2,
+    "cool": 11,
+    "held": 143,
+    "casts": 1.03,
+    "first": 4.8,
+    "nonePct": 18.2
+   },
+   "war_mutualruin": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 78,
+    "casts": 0.64,
+    "first": 9.7,
+    "nonePct": 46.2
+   },
+   "kni_enchant": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 156,
+    "casts": 1.01,
+    "first": 4.2,
+    "nonePct": 17.3
+   },
+   "war_recovery": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 18,
+    "held": 159,
+    "casts": 0.96,
+    "first": 5,
+    "nonePct": 24.5
+   },
+   "war_battlecry": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 141,
+    "casts": 0.92,
+    "first": 4.9,
+    "nonePct": 19.1
+   },
+   "war_intimidate": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 19,
+    "held": 81,
+    "casts": 0.56,
+    "first": 9.6,
+    "nonePct": 50.6
+   },
+   "mag_chain": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 185,
+    "casts": 1.28,
+    "first": 4.3,
+    "nonePct": 9.7
+   },
+   "mag_frostnova": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 12,
+    "held": 201,
+    "casts": 1.32,
+    "first": 4.4,
+    "nonePct": 8
+   },
+   "mag_frozenorb": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 12,
+    "held": 82,
+    "casts": 0.74,
+    "first": 9.2,
+    "nonePct": 32.9
+   },
+   "mag_lightning": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 191,
+    "casts": 1.31,
+    "first": 4.2,
+    "nonePct": 13.6
+   },
+   "mag_fireball": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 10,
+    "held": 189,
+    "casts": 1.22,
+    "first": 4.3,
+    "nonePct": 9
+   },
+   "mag_hydra": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 14,
+    "held": 79,
+    "casts": 0.67,
+    "first": 8.4,
+    "nonePct": 32.9
+   },
+   "kni_charge": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 141,
+    "casts": 1.24,
+    "first": 3.9,
+    "nonePct": 17.7
+   },
+   "kni_divinejudgment": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 22,
+    "held": 68,
+    "casts": 1.32,
+    "first": 0.1,
+    "nonePct": 0
+   },
+   "mag_thunderstrike": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 0,
+    "held": 77,
+    "casts": 0,
+    "first": null,
+    "nonePct": 100
+   },
+   "mag_inferno": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 12,
+    "held": 197,
+    "casts": 1.27,
+    "first": 4.1,
+    "nonePct": 6.6
+   },
+   "arc_evade": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 243,
+    "casts": 1.25,
+    "first": 3.4,
+    "nonePct": 6.6
+   },
+   "arc_coldarrow": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 144,
+    "casts": 1.18,
+    "first": 4.6,
+    "nonePct": 10.4
+   },
+   "arc_huntersmark": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 91,
+    "casts": 0.91,
+    "first": 8.2,
+    "nonePct": 31.9
+   },
+   "arc_guided": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 5,
+    "held": 128,
+    "casts": 2.05,
+    "first": 4.1,
+    "nonePct": 7
+   },
+   "arc_multishot": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 5,
+    "held": 143,
+    "casts": 2.01,
+    "first": 4.4,
+    "nonePct": 7
+   },
+   "arc_chaindraw": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 89,
+    "casts": 0.82,
+    "first": 8.3,
+    "nonePct": 30.3
+   },
+   "kni_rush": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 150,
+    "casts": 1.21,
+    "first": 4.1,
+    "nonePct": 18.7
+   },
+   "kni_resistshield": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 18,
+    "held": 140,
+    "casts": 1.02,
+    "first": 4.4,
+    "nonePct": 15
+   },
+   "pri_regen": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 169,
+    "casts": 1.49,
+    "first": 5.7,
+    "nonePct": 11.8
+   },
+   "pri_heal": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 10,
+    "held": 141,
+    "casts": 2.09,
+    "first": 5.2,
+    "nonePct": 14.2
+   },
+   "pri_counter": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 78,
+    "casts": 0.88,
+    "first": 9.1,
+    "nonePct": 38.5
+   },
+   "pri_doom": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 159,
+    "casts": 1.53,
+    "first": 5.1,
+    "nonePct": 10.7
+   },
+   "pri_cure": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 8,
+    "held": 173,
+    "casts": 2.43,
+    "first": 4.8,
+    "nonePct": 9.8
+   },
+   "pri_diamondbody": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 98,
+    "casts": 1.2,
+    "first": 9.4,
+    "nonePct": 29.6
+   },
+   "arc_quickhands": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 136,
+    "casts": 1.41,
+    "first": 4.2,
+    "nonePct": 3.7
+   },
+   "pri_grace": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 144,
+    "casts": 1.31,
+    "first": 5.8,
+    "nonePct": 9
+   },
+   "war_frenzy": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 143,
+    "casts": 1.08,
+    "first": 4.8,
+    "nonePct": 11.9
+   },
+   "war_whirlwind": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 11,
+    "held": 74,
+    "casts": 0.5,
+    "first": 9.6,
+    "nonePct": 52.7
+   },
+   "mag_surge": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 75,
+    "casts": 1,
+    "first": 6,
+    "nonePct": 18.7
+   },
+   "pri_judgment": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 163,
+    "casts": 2.29,
+    "first": 4.8,
+    "nonePct": 9.2
+   },
+   "pri_bind": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 185,
+    "casts": 1.43,
+    "first": 4.3,
+    "nonePct": 13
+   },
+   "pri_punishment": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 86,
+    "casts": 1.27,
+    "first": 9.2,
+    "nonePct": 24.4
+   },
+   "mag_iceblast": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 5,
+    "held": 175,
+    "casts": 1.54,
+    "first": 4.5,
+    "nonePct": 10.9
+   },
+   "arc_eagleeye": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 139,
+    "casts": 1.14,
+    "first": 4.4,
+    "nonePct": 5
+   },
+   "arc_trap": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 12,
+    "held": 100,
+    "casts": 0.92,
+    "first": 7.9,
+    "nonePct": 28
+   },
+   "mag_ignite": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 94,
+    "casts": 1.06,
+    "first": 6.1,
+    "nonePct": 19.1
+   },
+   "mag_nova": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 7,
+    "held": 82,
+    "casts": 1.04,
+    "first": 8.5,
+    "nonePct": 46.3
+   },
+   "war_bash": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 15,
+    "held": 144,
+    "casts": 1.13,
+    "first": 4.6,
+    "nonePct": 15.3
+   },
+   "war_battleorders": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 141,
+    "casts": 0.94,
+    "first": 4.5,
+    "nonePct": 19.9
+   },
+   "war_shout": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 140,
+    "casts": 0.99,
+    "first": 4.9,
+    "nonePct": 22.1
+   },
+   "kni_holyshield": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 18,
+    "held": 119,
+    "casts": 0.87,
+    "first": 4.3,
+    "nonePct": 27.7
+   },
+   "kni_condemnation": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 80,
+    "casts": 0.78,
+    "first": 6.4,
+    "nonePct": 40
+   },
+   "kni_sweep": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 2,
+    "cool": 10,
+    "held": 134,
+    "casts": 1.18,
+    "first": 4.3,
+    "nonePct": 22.4
+   },
+   "kni_retribution": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 62,
+    "casts": 0.92,
+    "first": 7.3,
+    "nonePct": 40.3
+   },
+   "war_warcry": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 148,
+    "casts": 0.99,
+    "first": 4.6,
+    "nonePct": 23
+   },
+   "mag_frostarmor": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 76,
+    "casts": 0.84,
+    "first": 8.8,
+    "nonePct": 39.5
+   },
+   "arc_pierce": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 143,
+    "casts": 1.13,
+    "first": 4.4,
+    "nonePct": 7
+   },
+   "arc_rapid": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 5,
+    "held": 126,
+    "casts": 1.63,
+    "first": 4.2,
+    "nonePct": 9.5
+   },
+   "arc_supportingfire": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 84,
+    "casts": 0.75,
+    "first": 8.3,
+    "nonePct": 28.6
+   },
+   "arc_reload": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 0,
+    "held": 75,
+    "casts": 0,
+    "first": null,
+    "nonePct": 100
+   },
+   "mag_meteor": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 93,
+    "casts": 0.73,
+    "first": 8.8,
+    "nonePct": 37.6
+   },
+   "kni_fallingstrike": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 73,
+    "casts": 0.6,
+    "first": 6.3,
+    "nonePct": 43.8
+   },
+   "mag_ember": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 0,
+    "held": 81,
+    "casts": 0,
+    "first": null,
+    "nonePct": 100
+   },
+   "arc_snipe": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 15,
+    "held": 134,
+    "casts": 1.28,
+    "first": 4.1,
+    "nonePct": 9
+   },
+   "arc_overdraw": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 73,
+    "casts": 0.86,
+    "first": 8,
+    "nonePct": 27.4
+   },
+   "pri_penitence": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 205,
+    "casts": 1.66,
+    "first": 4.6,
+    "nonePct": 9.3
+   },
+   "pri_purify": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 77,
+    "casts": 1.05,
+    "first": 10.1,
+    "nonePct": 40.3
+   },
+   "mag_blizzard": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 15,
+    "held": 73,
+    "casts": 0.79,
+    "first": 8.2,
+    "nonePct": 30.1
+   },
+   "pri_sweep": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 15,
+    "held": 79,
+    "casts": 1.19,
+    "first": 9.2,
+    "nonePct": 32.9
+   },
+   "war_berserk": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 75,
+    "casts": 1.43,
+    "first": 0.1,
+    "nonePct": 0
+   },
+   "pri_haste": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 141,
+    "casts": 1.21,
+    "first": 5.1,
+    "nonePct": 12.8
+   },
+   "pri_endure": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 24,
+    "held": 76,
+    "casts": 0.84,
+    "first": 9.5,
+    "nonePct": 36.8
+   },
+   "mag_deepfreeze": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 72,
+    "casts": 1.04,
+    "first": 5.9,
+    "nonePct": 15.3
+   },
+   "mag_thundergod": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 12,
+    "held": 90,
+    "casts": 0.77,
+    "first": 8.7,
+    "nonePct": 36.7
+   },
+   "pri_resurrection": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 30,
+    "held": 101,
+    "casts": 0.43,
+    "first": 14.3,
+    "nonePct": 57.4
+   },
+   "war_doubleswing": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 8,
+    "held": 125,
+    "casts": 1.22,
+    "first": 4.9,
+    "nonePct": 17.6
+   },
+   "pri_atonement": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 67,
+    "casts": 0.91,
+    "first": 9.8,
+    "nonePct": 34.3
+   },
+   "pri_excommunication": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 78,
+    "casts": 0.82,
+    "first": 9.2,
+    "nonePct": 35.9
+   },
+   "war_divinedescent": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 25,
+    "held": 88,
+    "casts": 0.78,
+    "first": 9.7,
+    "nonePct": 42
+   },
+   "war_thorswrath": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 22,
+    "held": 74,
+    "casts": 0.51,
+    "first": 9.8,
+    "nonePct": 58.1
+   },
+   "war_shockwave": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 15,
+    "held": 87,
+    "casts": 0.6,
+    "first": 9.9,
+    "nonePct": 47.1
+   },
+   "arc_poison": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 128,
+    "casts": 1.13,
+    "first": 4,
+    "nonePct": 7.8
+   },
+   "arc_trueaim": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 84,
+    "casts": 0.82,
+    "first": 8.1,
+    "nonePct": 27.4
+   },
+   "arc_quickdraw": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 69,
+    "casts": 0.88,
+    "first": 8.6,
+    "nonePct": 31.9
+   },
+   "war_command": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 85,
+    "casts": 0.52,
+    "first": 9.9,
+    "nonePct": 51.8
+   },
+   "war_ragnarok": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 25,
+    "held": 73,
+    "casts": 0.49,
+    "first": 10.2,
+    "nonePct": 53.4
+   },
+   "kni_lastbastion": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 75,
+    "casts": 1.41,
+    "first": 0.1,
+    "nonePct": 0
+   },
+   "kni_unbreakablewill": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 69,
+    "casts": 1.49,
+    "first": 0.1,
+    "nonePct": 0
+   },
+   "mag_echo": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 20,
+    "held": 87,
+    "casts": 0.85,
+    "first": 5.9,
+    "nonePct": 23
+   },
+   "arc_singlestrike": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 67,
+    "casts": 1.1,
+    "first": 8.2,
+    "nonePct": 19.4
+   }
+  },
+  "n": 600,
+  "err": 0,
+  "ends": {
+   "wipe": 261,
+   "clear": 339
+  },
+  "dur": {
+   "mean": 17.1,
+   "p10": 7.6,
+   "p50": 12.9,
+   "p90": 28.7,
+   "under10": 27.3
+  },
+  "firstSkill": 1.5,
+  "firstBuff": 1.6,
+  "firstAtk": 2.9,
+  "buffCasts": 11.6,
+  "atkCasts": 9.43,
+  "skills3s": 3.09
+ },
+ "readyBuff": {
+  "per": {
+   "war_ironskin": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 18,
+    "held": 146,
+    "casts": 1.1,
+    "first": 4.1,
+    "nonePct": 13
+   },
+   "war_leap": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 2,
+    "cool": 11,
+    "held": 143,
+    "casts": 0.85,
+    "first": 7.1,
+    "nonePct": 46.9
+   },
+   "war_mutualruin": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 78,
+    "casts": 0.54,
+    "first": 9.5,
+    "nonePct": 55.1
+   },
+   "kni_enchant": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 156,
+    "casts": 1.08,
+    "first": 3.9,
+    "nonePct": 9
+   },
+   "war_recovery": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 18,
+    "held": 159,
+    "casts": 1.09,
+    "first": 4.4,
+    "nonePct": 11.9
+   },
+   "war_battlecry": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 141,
+    "casts": 1.02,
+    "first": 4.3,
+    "nonePct": 13.5
+   },
+   "war_intimidate": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 19,
+    "held": 81,
+    "casts": 0.93,
+    "first": 7,
+    "nonePct": 24.7
+   },
+   "mag_chain": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 185,
+    "casts": 1.14,
+    "first": 5.8,
+    "nonePct": 20
+   },
+   "mag_frostnova": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 12,
+    "held": 201,
+    "casts": 1.11,
+    "first": 5.9,
+    "nonePct": 22.4
+   },
+   "mag_frozenorb": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 12,
+    "held": 82,
+    "casts": 0.72,
+    "first": 8.8,
+    "nonePct": 35.4
+   },
+   "mag_lightning": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 191,
+    "casts": 1.21,
+    "first": 5.8,
+    "nonePct": 18.8
+   },
+   "mag_fireball": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 10,
+    "held": 189,
+    "casts": 1.08,
+    "first": 5.6,
+    "nonePct": 25.4
+   },
+   "mag_hydra": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 14,
+    "held": 79,
+    "casts": 0.91,
+    "first": 5.1,
+    "nonePct": 13.9
+   },
+   "kni_charge": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 141,
+    "casts": 1.17,
+    "first": 4.6,
+    "nonePct": 19.9
+   },
+   "kni_divinejudgment": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 22,
+    "held": 68,
+    "casts": 1.35,
+    "first": 0.1,
+    "nonePct": 0
+   },
+   "mag_thunderstrike": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 0,
+    "held": 77,
+    "casts": 0,
+    "first": null,
+    "nonePct": 100
+   },
+   "mag_inferno": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 12,
+    "held": 197,
+    "casts": 1.31,
+    "first": 3.4,
+    "nonePct": 3.6
+   },
+   "arc_evade": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 243,
+    "casts": 1.33,
+    "first": 3.1,
+    "nonePct": 3.3
+   },
+   "arc_coldarrow": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 144,
+    "casts": 1.29,
+    "first": 3.6,
+    "nonePct": 3.5
+   },
+   "arc_huntersmark": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 91,
+    "casts": 1.19,
+    "first": 5.6,
+    "nonePct": 15.4
+   },
+   "arc_guided": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 5,
+    "held": 128,
+    "casts": 1.88,
+    "first": 6.3,
+    "nonePct": 19.5
+   },
+   "arc_multishot": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 5,
+    "held": 143,
+    "casts": 1.75,
+    "first": 6.7,
+    "nonePct": 20.3
+   },
+   "arc_chaindraw": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 89,
+    "casts": 1.11,
+    "first": 6,
+    "nonePct": 16.9
+   },
+   "kni_rush": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 150,
+    "casts": 1.25,
+    "first": 5,
+    "nonePct": 17.3
+   },
+   "kni_resistshield": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 18,
+    "held": 140,
+    "casts": 1.11,
+    "first": 3.7,
+    "nonePct": 6.4
+   },
+   "pri_regen": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 169,
+    "casts": 1.62,
+    "first": 5,
+    "nonePct": 8.9
+   },
+   "pri_heal": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 10,
+    "held": 141,
+    "casts": 2.16,
+    "first": 7.2,
+    "nonePct": 19.1
+   },
+   "pri_counter": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 78,
+    "casts": 1.24,
+    "first": 7.1,
+    "nonePct": 26.9
+   },
+   "pri_doom": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 159,
+    "casts": 1.61,
+    "first": 4.6,
+    "nonePct": 6.9
+   },
+   "pri_cure": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 8,
+    "held": 173,
+    "casts": 2.63,
+    "first": 7,
+    "nonePct": 21.4
+   },
+   "pri_diamondbody": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 98,
+    "casts": 1.37,
+    "first": 7.1,
+    "nonePct": 23.5
+   },
+   "arc_quickhands": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 136,
+    "casts": 1.49,
+    "first": 3.4,
+    "nonePct": 3.7
+   },
+   "pri_grace": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 144,
+    "casts": 1.42,
+    "first": 4.9,
+    "nonePct": 5.6
+   },
+   "war_frenzy": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 143,
+    "casts": 1.17,
+    "first": 4,
+    "nonePct": 10.5
+   },
+   "war_whirlwind": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 11,
+    "held": 74,
+    "casts": 0.58,
+    "first": 9.5,
+    "nonePct": 54.1
+   },
+   "mag_surge": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 75,
+    "casts": 1.23,
+    "first": 4,
+    "nonePct": 2.7
+   },
+   "pri_judgment": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 163,
+    "casts": 2.15,
+    "first": 7,
+    "nonePct": 11.7
+   },
+   "pri_bind": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 185,
+    "casts": 1.58,
+    "first": 3.9,
+    "nonePct": 8.6
+   },
+   "pri_punishment": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 86,
+    "casts": 1.31,
+    "first": 9.4,
+    "nonePct": 22.1
+   },
+   "mag_iceblast": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 5,
+    "held": 175,
+    "casts": 1.49,
+    "first": 5.6,
+    "nonePct": 21.1
+   },
+   "arc_eagleeye": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 139,
+    "casts": 1.24,
+    "first": 3.8,
+    "nonePct": 2.2
+   },
+   "arc_trap": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 12,
+    "held": 100,
+    "casts": 0.9,
+    "first": 7.9,
+    "nonePct": 28
+   },
+   "mag_ignite": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 94,
+    "casts": 1.16,
+    "first": 3.9,
+    "nonePct": 7.4
+   },
+   "mag_nova": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 7,
+    "held": 82,
+    "casts": 1.12,
+    "first": 8.4,
+    "nonePct": 43.9
+   },
+   "war_bash": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 15,
+    "held": 144,
+    "casts": 0.98,
+    "first": 7.2,
+    "nonePct": 31.3
+   },
+   "war_battleorders": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 141,
+    "casts": 1.05,
+    "first": 4.2,
+    "nonePct": 12.8
+   },
+   "war_shout": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 140,
+    "casts": 1.19,
+    "first": 4.7,
+    "nonePct": 10.7
+   },
+   "kni_holyshield": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 18,
+    "held": 119,
+    "casts": 1.07,
+    "first": 3.7,
+    "nonePct": 15.1
+   },
+   "kni_condemnation": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 80,
+    "casts": 0.86,
+    "first": 6.6,
+    "nonePct": 28.7
+   },
+   "kni_sweep": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 2,
+    "cool": 10,
+    "held": 134,
+    "casts": 1.18,
+    "first": 5.2,
+    "nonePct": 18.7
+   },
+   "kni_retribution": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 62,
+    "casts": 1.26,
+    "first": 5.1,
+    "nonePct": 8.1
+   },
+   "war_warcry": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 148,
+    "casts": 1.1,
+    "first": 4.2,
+    "nonePct": 12.2
+   },
+   "mag_frostarmor": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 76,
+    "casts": 1.08,
+    "first": 5.5,
+    "nonePct": 13.2
+   },
+   "arc_pierce": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 143,
+    "casts": 1.2,
+    "first": 3.7,
+    "nonePct": 4.9
+   },
+   "arc_rapid": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 5,
+    "held": 126,
+    "casts": 1.5,
+    "first": 6.4,
+    "nonePct": 18.3
+   },
+   "arc_supportingfire": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 84,
+    "casts": 0.89,
+    "first": 6,
+    "nonePct": 20.2
+   },
+   "arc_reload": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 0,
+    "held": 75,
+    "casts": 0,
+    "first": null,
+    "nonePct": 100
+   },
+   "mag_meteor": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 93,
+    "casts": 0.69,
+    "first": 8.2,
+    "nonePct": 38.7
+   },
+   "kni_fallingstrike": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 73,
+    "casts": 0.7,
+    "first": 6.5,
+    "nonePct": 41.1
+   },
+   "mag_ember": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 0,
+    "held": 81,
+    "casts": 0,
+    "first": null,
+    "nonePct": 100
+   },
+   "arc_snipe": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 15,
+    "held": 134,
+    "casts": 1.1,
+    "first": 6.6,
+    "nonePct": 18.7
+   },
+   "arc_overdraw": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 73,
+    "casts": 1.03,
+    "first": 5.7,
+    "nonePct": 16.4
+   },
+   "pri_penitence": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 205,
+    "casts": 1.82,
+    "first": 4.1,
+    "nonePct": 6.8
+   },
+   "pri_purify": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 77,
+    "casts": 1.12,
+    "first": 9.5,
+    "nonePct": 46.8
+   },
+   "mag_blizzard": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 15,
+    "held": 73,
+    "casts": 1.05,
+    "first": 4.6,
+    "nonePct": 15.1
+   },
+   "pri_sweep": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 15,
+    "held": 79,
+    "casts": 1.19,
+    "first": 9.3,
+    "nonePct": 26.6
+   },
+   "war_berserk": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 75,
+    "casts": 1.36,
+    "first": 0.1,
+    "nonePct": 0
+   },
+   "pri_haste": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 141,
+    "casts": 1.31,
+    "first": 4.6,
+    "nonePct": 11.3
+   },
+   "pri_endure": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 24,
+    "held": 76,
+    "casts": 1.18,
+    "first": 7.6,
+    "nonePct": 14.5
+   },
+   "mag_deepfreeze": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 72,
+    "casts": 1.21,
+    "first": 3.8,
+    "nonePct": 2.8
+   },
+   "mag_thundergod": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 12,
+    "held": 90,
+    "casts": 0.8,
+    "first": 8.5,
+    "nonePct": 35.6
+   },
+   "pri_resurrection": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 30,
+    "held": 101,
+    "casts": 0.43,
+    "first": 15.4,
+    "nonePct": 57.4
+   },
+   "war_doubleswing": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 8,
+    "held": 125,
+    "casts": 0.94,
+    "first": 7.3,
+    "nonePct": 40
+   },
+   "pri_atonement": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 67,
+    "casts": 0.99,
+    "first": 7.1,
+    "nonePct": 25.4
+   },
+   "pri_excommunication": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 78,
+    "casts": 0.92,
+    "first": 9.2,
+    "nonePct": 34.6
+   },
+   "war_divinedescent": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 25,
+    "held": 88,
+    "casts": 1.07,
+    "first": 7.1,
+    "nonePct": 30.7
+   },
+   "war_thorswrath": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 22,
+    "held": 74,
+    "casts": 0.59,
+    "first": 10.1,
+    "nonePct": 56.8
+   },
+   "war_shockwave": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 15,
+    "held": 87,
+    "casts": 0.59,
+    "first": 9.7,
+    "nonePct": 50.6
+   },
+   "arc_poison": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 128,
+    "casts": 1.3,
+    "first": 3.4,
+    "nonePct": 3.9
+   },
+   "arc_trueaim": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 84,
+    "casts": 1.06,
+    "first": 5.7,
+    "nonePct": 11.9
+   },
+   "arc_quickdraw": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 69,
+    "casts": 1.2,
+    "first": 5.4,
+    "nonePct": 10.1
+   },
+   "war_command": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 85,
+    "casts": 0.62,
+    "first": 7.2,
+    "nonePct": 48.2
+   },
+   "war_ragnarok": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 25,
+    "held": 73,
+    "casts": 0.7,
+    "first": 7.5,
+    "nonePct": 32.9
+   },
+   "kni_lastbastion": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 75,
+    "casts": 1.43,
+    "first": 0.1,
+    "nonePct": 0
+   },
+   "kni_unbreakablewill": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 69,
+    "casts": 1.48,
+    "first": 0.1,
+    "nonePct": 0
+   },
+   "mag_echo": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 20,
+    "held": 87,
+    "casts": 1.01,
+    "first": 3.8,
+    "nonePct": 12.6
+   },
+   "arc_singlestrike": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 67,
+    "casts": 1.21,
+    "first": 8.1,
+    "nonePct": 20.9
+   }
+  },
+  "n": 600,
+  "err": 0,
+  "ends": {
+   "wipe": 250,
+   "clear": 350
+  },
+  "dur": {
+   "mean": 17.8,
+   "p10": 7.1,
+   "p50": 13.1,
+   "p90": 31.2,
+   "under10": 30.5
+  },
+  "firstSkill": 1.5,
+  "firstBuff": 1.5,
+  "firstAtk": 3.9,
+  "buffCasts": 13.04,
+  "atkCasts": 9.07,
+  "skills3s": 3.07
+ },
+ "half": {
+  "per": {
+   "war_ironskin": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 18,
+    "held": 146,
+    "casts": 0.4,
+    "first": 10.7,
+    "nonePct": 69.2
+   },
+   "war_leap": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 2,
+    "cool": 11,
+    "held": 143,
+    "casts": 0.85,
+    "first": 6.6,
+    "nonePct": 32.9
+   },
+   "war_mutualruin": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 78,
+    "casts": 0.54,
+    "first": 10,
+    "nonePct": 53.8
+   },
+   "kni_enchant": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 156,
+    "casts": 0.64,
+    "first": 8.6,
+    "nonePct": 44.2
+   },
+   "war_recovery": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 18,
+    "held": 159,
+    "casts": 0.38,
+    "first": 11.2,
+    "nonePct": 68.6
+   },
+   "war_battlecry": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 141,
+    "casts": 0.44,
+    "first": 11.1,
+    "nonePct": 61.7
+   },
+   "war_intimidate": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 19,
+    "held": 81,
+    "casts": 0.31,
+    "first": 13.7,
+    "nonePct": 77.8
+   },
+   "mag_chain": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 185,
+    "casts": 1.35,
+    "first": 4.7,
+    "nonePct": 8.1
+   },
+   "mag_frostnova": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 12,
+    "held": 201,
+    "casts": 1.13,
+    "first": 5.9,
+    "nonePct": 13.4
+   },
+   "mag_frozenorb": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 12,
+    "held": 82,
+    "casts": 0.88,
+    "first": 7.7,
+    "nonePct": 22
+   },
+   "mag_lightning": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 191,
+    "casts": 1.27,
+    "first": 4.5,
+    "nonePct": 10.5
+   },
+   "mag_fireball": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 10,
+    "held": 189,
+    "casts": 1.18,
+    "first": 5.3,
+    "nonePct": 10.6
+   },
+   "mag_hydra": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 14,
+    "held": 79,
+    "casts": 0.63,
+    "first": 8,
+    "nonePct": 38
+   },
+   "kni_charge": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 141,
+    "casts": 1.09,
+    "first": 5.4,
+    "nonePct": 19.1
+   },
+   "kni_divinejudgment": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 22,
+    "held": 68,
+    "casts": 1.26,
+    "first": 0.1,
+    "nonePct": 0
+   },
+   "mag_thunderstrike": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 0,
+    "held": 77,
+    "casts": 0,
+    "first": null,
+    "nonePct": 100
+   },
+   "mag_inferno": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 12,
+    "held": 197,
+    "casts": 1.09,
+    "first": 6,
+    "nonePct": 15.2
+   },
+   "arc_evade": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 243,
+    "casts": 0.91,
+    "first": 8,
+    "nonePct": 30.9
+   },
+   "arc_coldarrow": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 144,
+    "casts": 0.8,
+    "first": 8.7,
+    "nonePct": 33.3
+   },
+   "arc_huntersmark": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 91,
+    "casts": 0.59,
+    "first": 12.2,
+    "nonePct": 52.7
+   },
+   "arc_guided": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 5,
+    "held": 128,
+    "casts": 2.41,
+    "first": 3.4,
+    "nonePct": 0.8
+   },
+   "arc_multishot": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 5,
+    "held": 143,
+    "casts": 2.26,
+    "first": 3.4,
+    "nonePct": 0.7
+   },
+   "arc_chaindraw": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 89,
+    "casts": 0.58,
+    "first": 12.5,
+    "nonePct": 53.9
+   },
+   "kni_rush": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 150,
+    "casts": 1.31,
+    "first": 5.3,
+    "nonePct": 19.3
+   },
+   "kni_resistshield": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 18,
+    "held": 140,
+    "casts": 0.59,
+    "first": 9.9,
+    "nonePct": 50
+   },
+   "pri_regen": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 169,
+    "casts": 1.21,
+    "first": 8.9,
+    "nonePct": 24.9
+   },
+   "pri_heal": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 10,
+    "held": 141,
+    "casts": 2.23,
+    "first": 4.7,
+    "nonePct": 5
+   },
+   "pri_counter": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 78,
+    "casts": 0.91,
+    "first": 10.3,
+    "nonePct": 33.3
+   },
+   "pri_doom": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 159,
+    "casts": 1.22,
+    "first": 8.2,
+    "nonePct": 19.5
+   },
+   "pri_cure": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 8,
+    "held": 173,
+    "casts": 2.54,
+    "first": 3.7,
+    "nonePct": 3.5
+   },
+   "pri_diamondbody": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 98,
+    "casts": 0.89,
+    "first": 9.8,
+    "nonePct": 46.9
+   },
+   "arc_quickhands": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 136,
+    "casts": 0.91,
+    "first": 10,
+    "nonePct": 36
+   },
+   "pri_grace": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 144,
+    "casts": 1.08,
+    "first": 8.3,
+    "nonePct": 25.7
+   },
+   "war_frenzy": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 143,
+    "casts": 0.6,
+    "first": 9,
+    "nonePct": 52.4
+   },
+   "war_whirlwind": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 11,
+    "held": 74,
+    "casts": 0.76,
+    "first": 7.4,
+    "nonePct": 40.5
+   },
+   "mag_surge": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 75,
+    "casts": 0.56,
+    "first": 8.3,
+    "nonePct": 52
+   },
+   "pri_judgment": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 9,
+    "held": 163,
+    "casts": 2.15,
+    "first": 4.2,
+    "nonePct": 7.4
+   },
+   "pri_bind": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 185,
+    "casts": 1.26,
+    "first": 8.1,
+    "nonePct": 21.1
+   },
+   "pri_punishment": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 86,
+    "casts": 1.4,
+    "first": 7.2,
+    "nonePct": 10.5
+   },
+   "mag_iceblast": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 5,
+    "held": 175,
+    "casts": 1.82,
+    "first": 3.7,
+    "nonePct": 4.6
+   },
+   "arc_eagleeye": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 139,
+    "casts": 0.77,
+    "first": 10.3,
+    "nonePct": 36
+   },
+   "arc_trap": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 12,
+    "held": 100,
+    "casts": 1.09,
+    "first": 6.4,
+    "nonePct": 16
+   },
+   "mag_ignite": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 94,
+    "casts": 0.68,
+    "first": 8.1,
+    "nonePct": 48.9
+   },
+   "mag_nova": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 7,
+    "held": 82,
+    "casts": 1.7,
+    "first": 3.3,
+    "nonePct": 6.1
+   },
+   "war_bash": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 15,
+    "held": 144,
+    "casts": 0.74,
+    "first": 8.5,
+    "nonePct": 42.4
+   },
+   "war_battleorders": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 141,
+    "casts": 0.37,
+    "first": 11.1,
+    "nonePct": 67.4
+   },
+   "war_shout": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 140,
+    "casts": 0.5,
+    "first": 11.9,
+    "nonePct": 62.9
+   },
+   "kni_holyshield": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 1,
+    "cool": 18,
+    "held": 119,
+    "casts": 0.47,
+    "first": 10.2,
+    "nonePct": 60.5
+   },
+   "kni_condemnation": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 80,
+    "casts": 0.64,
+    "first": 9.6,
+    "nonePct": 46.3
+   },
+   "kni_sweep": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 2,
+    "cool": 10,
+    "held": 134,
+    "casts": 0.98,
+    "first": 6.4,
+    "nonePct": 31.3
+   },
+   "kni_retribution": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 62,
+    "casts": 0.63,
+    "first": 11.7,
+    "nonePct": 51.6
+   },
+   "war_warcry": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 148,
+    "casts": 0.41,
+    "first": 10.1,
+    "nonePct": 68.9
+   },
+   "mag_frostarmor": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 76,
+    "casts": 0.7,
+    "first": 9.6,
+    "nonePct": 39.5
+   },
+   "arc_pierce": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 143,
+    "casts": 0.76,
+    "first": 10.4,
+    "nonePct": 33.6
+   },
+   "arc_rapid": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 5,
+    "held": 126,
+    "casts": 1.75,
+    "first": 3.4,
+    "nonePct": 3.2
+   },
+   "arc_supportingfire": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 84,
+    "casts": 0.46,
+    "first": 13.7,
+    "nonePct": 57.1
+   },
+   "arc_reload": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 0,
+    "held": 75,
+    "casts": 0,
+    "first": null,
+    "nonePct": 100
+   },
+   "mag_meteor": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 93,
+    "casts": 0.73,
+    "first": 9.3,
+    "nonePct": 33.3
+   },
+   "kni_fallingstrike": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 73,
+    "casts": 0.49,
+    "first": 9.2,
+    "nonePct": 54.8
+   },
+   "mag_ember": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 0,
+    "held": 81,
+    "casts": 0,
+    "first": null,
+    "nonePct": 100
+   },
+   "arc_snipe": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 15,
+    "held": 134,
+    "casts": 1.07,
+    "first": 7.7,
+    "nonePct": 18.7
+   },
+   "arc_overdraw": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 73,
+    "casts": 0.66,
+    "first": 12.4,
+    "nonePct": 49.3
+   },
+   "pri_penitence": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 205,
+    "casts": 1.36,
+    "first": 8,
+    "nonePct": 20.5
+   },
+   "pri_purify": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 16,
+    "held": 77,
+    "casts": 1.21,
+    "first": 8.9,
+    "nonePct": 31.2
+   },
+   "mag_blizzard": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 15,
+    "held": 73,
+    "casts": 0.77,
+    "first": 7.8,
+    "nonePct": 32.9
+   },
+   "pri_sweep": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 15,
+    "held": 79,
+    "casts": 1.35,
+    "first": 6.4,
+    "nonePct": 13.9
+   },
+   "war_berserk": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 75,
+    "casts": 1.25,
+    "first": 0.1,
+    "nonePct": 0
+   },
+   "pri_haste": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 18,
+    "held": 141,
+    "casts": 1,
+    "first": 8.2,
+    "nonePct": 22.7
+   },
+   "pri_endure": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 24,
+    "held": 76,
+    "casts": 0.75,
+    "first": 11,
+    "nonePct": 40.8
+   },
+   "mag_deepfreeze": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 72,
+    "casts": 0.74,
+    "first": 8.1,
+    "nonePct": 31.9
+   },
+   "mag_thundergod": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 12,
+    "held": 90,
+    "casts": 0.93,
+    "first": 7.5,
+    "nonePct": 27.8
+   },
+   "pri_resurrection": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 30,
+    "held": 101,
+    "casts": 0.26,
+    "first": 18.7,
+    "nonePct": 74.3
+   },
+   "war_doubleswing": {
+    "kind": "atk",
+    "owner": "job",
+    "tier": 1,
+    "cool": 8,
+    "held": 125,
+    "casts": 1.23,
+    "first": 5,
+    "nonePct": 10.4
+   },
+   "pri_atonement": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 67,
+    "casts": 0.82,
+    "first": 10.5,
+    "nonePct": 35.8
+   },
+   "pri_excommunication": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 78,
+    "casts": 1,
+    "first": 9.8,
+    "nonePct": 33.3
+   },
+   "war_divinedescent": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 25,
+    "held": 88,
+    "casts": 0.5,
+    "first": 14.4,
+    "nonePct": 68.2
+   },
+   "war_thorswrath": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 22,
+    "held": 74,
+    "casts": 0.81,
+    "first": 7.3,
+    "nonePct": 41.9
+   },
+   "war_shockwave": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 15,
+    "held": 87,
+    "casts": 0.57,
+    "first": 8.5,
+    "nonePct": 48.3
+   },
+   "arc_poison": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 16,
+    "held": 128,
+    "casts": 0.86,
+    "first": 8.9,
+    "nonePct": 28.1
+   },
+   "arc_trueaim": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 84,
+    "casts": 0.46,
+    "first": 12.1,
+    "nonePct": 59.5
+   },
+   "arc_quickdraw": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 69,
+    "casts": 0.57,
+    "first": 13.1,
+    "nonePct": 59.4
+   },
+   "war_command": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 85,
+    "casts": 0.25,
+    "first": 14,
+    "nonePct": 77.6
+   },
+   "war_ragnarok": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 25,
+    "held": 73,
+    "casts": 0.34,
+    "first": 14.3,
+    "nonePct": 65.8
+   },
+   "kni_lastbastion": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 75,
+    "casts": 1.43,
+    "first": 0.1,
+    "nonePct": 0
+   },
+   "kni_unbreakablewill": {
+    "kind": "buff",
+    "owner": "advance",
+    "tier": null,
+    "cool": 20,
+    "held": 69,
+    "casts": 1.58,
+    "first": 0.1,
+    "nonePct": 0
+   },
+   "mag_echo": {
+    "kind": "buff",
+    "owner": "job",
+    "tier": 2,
+    "cool": 20,
+    "held": 87,
+    "casts": 0.52,
+    "first": 10.4,
+    "nonePct": 54
+   },
+   "arc_singlestrike": {
+    "kind": "atk",
+    "owner": "advance",
+    "tier": null,
+    "cool": 18,
+    "held": 67,
+    "casts": 0.72,
+    "first": 11.3,
+    "nonePct": 44.8
+   }
+  },
+  "n": 600,
+  "err": 0,
+  "ends": {
+   "wipe": 276,
+   "clear": 324
+  },
+  "dur": {
+   "mean": 16.6,
+   "p10": 7.5,
+   "p50": 13.1,
+   "p90": 29.5,
+   "under10": 29
+  },
+  "firstSkill": 1.9,
+  "firstBuff": 3.2,
+  "firstAtk": 3.3,
+  "buffCasts": 8.61,
+  "atkCasts": 9.59,
+  "skills3s": 1.14
+ }
+}

@@ -107,7 +107,7 @@ import { TARGETS as CN_TARGETS } from './construction.js';
 // 의뢰 어휘 — 로드가 모르는 어휘의 카드를 거르는 데만 쓴다(같은 취급 · R153)
 import { AXES as CM_AXES } from './commission.js';
 
-export const SAVE_VERSION = 48;
+export const SAVE_VERSION = 49;
 
 /**
  * @param {object} deps
@@ -265,11 +265,14 @@ export function createGameSystem(deps) {
             const key = ADD_KEY[target] ?? target;
             if (key in out) out[key] += n;      // 준비 중인 더하기(일꾼 칸 등)는 붙을 상한이 아직 없다
         }
+        // 로스터 — 연구소 수색 줄 「로스터」 지점이 레벨마다 더한다 · 건물은 안 늘린다 [2026-11-16 사용자 「로스터 커지는건 그냥 연구소로」 · R516 · INTERFACE §2-7]
+        if (state) out.roster += rosterNodeAdd(labLv(state, VISIT_KEY, 'roster'));
         // 관리자 모드 — 표가 아직 여는 랭크를 두지 않은 단계까지 연다(제작 레벨 · 물약 단계) [2026-09-28 사용자 지시 「Admin 누르면 다 되도록」 · 개발 장치]
         if (openAll()) {
             out.makeLevels = Math.max(out.makeLevels, makeLevelList.length);
             out.potionTier = Math.max(out.potionTier, ...potionRows.map(p => p.tier));
             out.chapters = Math.max(out.chapters, B.chapter_open_max);
+            out.roster = Math.max(out.roster, B.roster_cap + rosterNodeAdd(labNodeRow(VISIT_KEY, 'roster')?.max ?? 0));   // 로스터도 끝까지(옛 선술집 r7 과 같은 자리 · R516)
         }
         // 장은 이번 버전이 여는 마지막 장까지 — 관리자 모드여도 그 뒤는 안 열린다 [2026-10-09 사용자 지시 · ADR-0552 · R227]
         out.chapters = Math.min(out.chapters, B.chapter_open_max);
@@ -282,11 +285,11 @@ export function createGameSystem(deps) {
 
     /** 고블린 다섯 종 — 직업마다 하나 · 행 순서가 굴림 인덱스다 [2026-10-27 사용자 · hero_design §1 「성장 영웅」 · INTERFACE §5-2]. 초상 = `hero/<face>.webp` */
     const GOBLIN_KINDS = [
-        { cls: 'warrior', face: 'goblin_butler', name: { ko: '고블린 일꾼', en: 'Goblin Worker' } },
-        { cls: 'knight', face: 'goblin_porter', name: { ko: '고블린 짐꾼', en: 'Goblin Porter' } },
-        { cls: 'archer', face: 'goblin_beater', name: { ko: '고블린 몰이꾼', en: 'Goblin Beater' } },
-        { cls: 'mage', face: 'goblin_steward', name: { ko: '고블린 집사', en: 'Goblin Steward' } },
-        { cls: 'priest', face: 'goblin_bellringer', name: { ko: '고블린 종지기', en: 'Goblin Bellringer' } },
+        { cls: 'warrior', face: 'goblin_butler', name: { ko: '고블린 일꾼', en: 'Goblin Worker', zh: '哥布林苦工' } },
+        { cls: 'knight', face: 'goblin_porter', name: { ko: '고블린 짐꾼', en: 'Goblin Porter', zh: '哥布林挑夫' } },
+        { cls: 'archer', face: 'goblin_beater', name: { ko: '고블린 몰이꾼', en: 'Goblin Beater', zh: '哥布林驱兽人' } },
+        { cls: 'mage', face: 'goblin_steward', name: { ko: '고블린 집사', en: 'Goblin Steward', zh: '哥布林管家' } },
+        { cls: 'priest', face: 'goblin_bellringer', name: { ko: '고블린 종지기', en: 'Goblin Bellringer', zh: '哥布林敲钟人' } },
     ];
 
     function newGame(seed, candidates, now) {
@@ -556,7 +559,28 @@ export function createGameSystem(deps) {
         return s;
     }
 
-    /** **v38 ~ v48 을 연다** — 옛 버전은 한 단계씩 올린다. 그 전은 끊었다(2026-09-23 · 다부대 · 파일 머리 참조) */
+    /**
+     * v48 → v49 [2026-11-16 · R516 · INTERFACE §4] — 로스터 칸은 연구소 수색 줄 「로스터」 지점이 연다 · 선술집은 r4 에서 끝난다(r3 수색 줄 · r4 도박장).
+     *   옛 선술집 표 = r2 고용 · 수색 줄 · r3 도박장 · r4 ~ r7 로스터 +1 — **그 버전의 사실이라 여기 적는다**(`OLD`).
+     *   열려 있던 것을 안 잃게 옛 r2 → 수색 줄을 여는 랭크 · 옛 r3 이상 → 도박장을 여는 랭크(새 표 — `CN.reach`) ·
+     *   옛 r4 ~ r7 을 지은 수만큼 「로스터」 지점 레벨(지점 최대에서 자른다 · 이미 더 높으면 그대로) · 영웅은 줄이지 않는다 · rng 0
+     */
+    function upgradeV48(s) {
+        const OLD = { visit: 2, gamble: 3, rosterFrom: 4 };
+        const t = Number.isInteger(s.buildings?.tavern) ? s.buildings.tavern : 0;
+        const to = t >= OLD.gamble ? CN.reach('gamble')?.rank : t >= OLD.visit ? CN.reach('lab_visit')?.rank : null;
+        if (to != null) s.buildings.tavern = to;
+        const r = labNodeRow(VISIT_KEY, 'roster'), add = Math.max(0, t - OLD.rosterFrom + 1);
+        if (r && add > 0) {
+            if (!s.labNodes || typeof s.labNodes !== 'object') s.labNodes = {};
+            const k = labNodeKey(VISIT_KEY, 'roster'), cur = Number.isInteger(s.labNodes[k]) ? s.labNodes[k] : 0;
+            s.labNodes[k] = Math.max(cur, Math.min(r.max, add));
+        }
+        s.version = 49;
+        return s;
+    }
+
+    /** **v38 ~ v49 를 연다** — 옛 버전은 한 단계씩 올린다. 그 전은 끊었다(2026-09-23 · 다부대 · 파일 머리 참조) */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
         const separateAdvancePoints = obj.version <= 44;
@@ -572,13 +596,23 @@ export function createGameSystem(deps) {
         if (src.version === 45) src = upgradeV45(src === obj ? clone(obj) : src);
         if (src.version === 46) src = upgradeV46(src === obj ? clone(obj) : src);
         if (src.version === 47) src = upgradeV47(src === obj ? clone(obj) : src);
+        if (src.version === 48) src = upgradeV48(src === obj ? clone(obj) : src);
         if (src.version !== SAVE_VERSION)
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         const s = clone(src);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         // 고정 지급 캐릭터의 옛 이름을 이미 저장된 세이브에서도 갱신한다.
         for (const h of s.heroes) if (h.face === 'goblin_butler' && h.name?.ko === '집사 고블린')
-            h.name = { ko: '고블린 일꾼', en: 'Goblin Worker' };
+            h.name = { ...GOBLIN_KINDS.find(k => k.face === 'goblin_butler').name };
+        // 표시 이름의 간체 [2026-11-16 · LOCALIZATION_ZH D8 · 버전 무변경 — INTERFACE §4] — zh 가 없는 이름을 지금 표로 채운다(못 찾으면 그대로 · 화면은 영어).
+        //   영웅 = 이름 · 특성 풀(고블린은 위 표) · 아이템 = 저장된 죄종 · 단어 · 베이스로 다시 조립해 ko · en 이 같을 때만. rng 0
+        for (const h of [...s.heroes, ...(Array.isArray(s.joins) ? s.joins.map(j => j?.hero) : [])]) {
+            if (!h || typeof h !== 'object') continue;
+            const gob = h.name && !h.name.zh ? GOBLIN_KINDS.find(k => k.face === h.face && k.name.ko === h.name.ko) : null;
+            if (gob) h.name = { ...h.name, zh: gob.name.zh };
+            H.fillZh(h);
+        }
+        for (const it of Object.values(s.items ?? {})) if (it) I.fillZh(it);
         // 성장 영웅의 씨앗 [2026-10-29 · R365 · 버전 무변경] — 없으면 새 게임과 같은 식으로 채운다.
         //   **지난 레벨은 소급하지 않는다**(사용자 결정) — 채운 뒤 오르는 레벨부터 자란다
         for (const h of s.heroes) if (h.tier === 'growth' && !Number.isInteger(h.growthSeed)) h.growthSeed = growthSeedOf(s, h);
@@ -594,8 +628,10 @@ export function createGameSystem(deps) {
         }
         // 지운 기본 스킬 → 대체 스킬 [2026-10-16 · R246 · R249 · R250 · 사용자 「대체 스킬로 옮김」 · 버전 무변경 — INTERFACE §4] — 아래 정리(정의 밖 id 지우기)보다 **먼저** 옮긴다
         retireSkills(s);
-        // 스킬 우선순위 칸 [2026-11-02 · R427 · 버전 무변경 — INTERFACE §4] — 창이 걷혀 아무도 안 읽는다 · 명단 · 가입 희망 둘 다 지운다
-        for (const h of [...s.heroes, ...(Array.isArray(s.joins) ? s.joins.map(j => j?.hero) : [])]) if (h && typeof h === 'object') delete h.skillOrder;
+        // 스킬 시작 순서 칸 [2026-11-16 · R515 · 버전 무변경 — INTERFACE §4 — 11-02 R427 에 지웠다가 되살렸다] — 문자열 id 배열이 아니거나 비면 지운다(판마다 랜덤) ·
+        //   목록에 없는 id 는 `activesFor` 가 무시한다 · 명단 · 가입 희망 둘 다
+        const okOrder = v => Array.isArray(v) && v.length > 0 && v.every(x => typeof x === 'string');
+        for (const h of [...s.heroes, ...(Array.isArray(s.joins) ? s.joins.map(j => j?.hero) : [])]) if (h && typeof h === 'object' && 'skillOrder' in h && !okOrder(h.skillOrder)) delete h.skillOrder;
         // 마스터리 — **표에 맞춘다** [2026-09-22 · R138 · 버전 무변경] — 그 영웅의 트리에 없는 노드(표에서 걷힌 칸)와 상한을 넘은 랭크는
         //   포인트로 돌려준다. 롤백이 무료라(skill_design §5) 돌려주는 것이 곧 이관이고, 남겨 두면 못 빼는 포인트가 된다
         for (const h of s.heroes) {
@@ -677,8 +713,10 @@ export function createGameSystem(deps) {
             const heldHero = c => c.held === true && c.hero && typeof c.hero === 'object' && c.hero.name;
             //   이번 수색을 나선 시각 · 몇 번째 수색(`from` · `trip` — 이야기만 쓴다 · 2026-11-16 R508) — 셀 수 없으면 빼 둔다(이야기가 등록 시각부터 센다)
             const trip = c => ({ ...(Number.isFinite(c.from) ? { from: c.from } : {}), ...(Number.isInteger(c.trip) && c.trip >= 0 ? { trip: c.trip } : {}) });
+            //   수색 자리(`seat` — 2026-11-16 R519) — 셀 수 없으면 빼 둔다(다음 정산이 비어 있는 가장 위 자리를 준다)
+            const seatOf = c => (Number.isInteger(c.seat) && c.seat >= 0 ? { seat: c.seat } : {});
             const clock = c => (!c || typeof c !== 'object' ? null
-                : Number.isFinite(c.nextAt) ? (heldHero(c) ? { nextAt: c.nextAt, held: true, ...trip(c), hero: c.hero } : { nextAt: c.nextAt, held: false, ...trip(c) })
+                : Number.isFinite(c.nextAt) ? (heldHero(c) ? { nextAt: c.nextAt, held: true, ...trip(c), ...seatOf(c), hero: c.hero } : { nextAt: c.nextAt, held: false, ...trip(c), ...seatOf(c) })
                 : Number.isFinite(c.left) && Number.isFinite(s.savedAt) ? { nextAt: s.savedAt + Math.max(0, c.left), held: false } : null);
             const vh = s.visitHeroes && typeof s.visitHeroes === 'object' ? s.visitHeroes : {};
             s.visitHeroes = Object.fromEntries(Object.entries(vh).map(([u, c]) => [u, clock(c)]).filter(([, c]) => c));
@@ -878,6 +916,13 @@ export function createGameSystem(deps) {
         });
         // 수색 줄이 닫혀 있으면 시계를 지운다 · 열려 있으면 등록한 영웅의 시계는 다음 정산이 등록과 맞춘다(`visitSyncClocks`)
         if (!visitLabOpen(s)) s.visitHeroes = {};
+        // 수색 칸의 줄 (2026-11-16 · R519 · 버전 무변경) — 줄이 없거나 줄 밖이면 도착 순으로 열린 칸이 남은 가장 위 줄에 세운다 ·
+        //   열린 칸이 모자라면(넘친 칸) 맨 윗줄 — **지우지 않는다** · 옛 보관(`src: 'tavern'`) 영웅도 같다
+        {
+            const R = joinRows(s);
+            for (const j of s.joins) if (!(Number.isInteger(j.seat) && j.seat >= 0 && j.seat < R)) delete j.seat;
+            for (const j of s.joins) if (!('seat' in j)) { const f = seatFree(s); j.seat = f < 0 ? 0 : f; }
+        }
         // 연구소 줄 등록 (2026-10-21 · 버전 무변경) — 없으면 {} · 없는 영웅 · 모르는 줄을 지운다(열림은 다시 안 본다 — 랭크는 안 내려간다) ·
         //   같은 날 R298 — 줄마다 「등록 칸」을 넘는 몫을 뒤에서부터 푼다 · 등록 시각이 없으면 `savedAt`
         const regIn = s.labReg && typeof s.labReg === 'object' ? s.labReg : {};
@@ -953,6 +998,7 @@ export function createGameSystem(deps) {
             if (h.advanceSkill && RETIRED_ADVANCE[h.advanceSkill]) h.advanceSkill = RETIRED_ADVANCE[h.advanceSkill];
             if (h.innate) h.innate = to(h.innate);
             if (h.bookSkill) h.bookSkill = to(h.bookSkill);
+            if (Array.isArray(h.skillOrder)) h.skillOrder = [...new Set(h.skillOrder.map(id => RETIRED_ADVANCE[id] ?? to(id)))];   // 시작 순서(R515)도 같은 id 로 옮긴다
             if (h.skillLv && typeof h.skillLv === 'object' && !Array.isArray(h.skillLv)) {
                 const lv = {};
                 for (const [id, n] of Object.entries(h.skillLv)) lv[to(id)] = Math.max(lv[to(id)] ?? 0, n);
@@ -1818,8 +1864,8 @@ export function createGameSystem(deps) {
         const kinds = I.basesAt(part, level).flatMap(k => {
             if (part !== 'weapon') return [{ ...k, baseId: k.id }];
             const bs = I.weaponBasesAt(k.id, level);
-            if (!bs.length) return [{ id: k.id, ko: k.ko, en: k.en, group: k.id, baseId: null, line: null }];
-            return bs.map(b => ({ id: b.id, ko: b.ko, en: b.en, group: k.id, baseId: b.id, line: b.line }));
+            if (!bs.length) return [{ id: k.id, ko: k.ko, en: k.en, zh: k.zh, group: k.id, baseId: null, line: null }];
+            return bs.map(b => ({ id: b.id, ko: b.ko, en: b.en, zh: b.zh, group: k.id, baseId: b.id, line: b.line }));
         });
         return { part, level, kinds, cost, canMake: err === null, err };
     }
@@ -2593,6 +2639,8 @@ export function createGameSystem(deps) {
                 actives: SK.activesFor(h, { skillPlus: I.skillPlusOf(heroItems(state, h)) }),
                 weaponGroup: weaponGroupOf(state, h),     // 든 무기군 · 맨손 null — 무기가 필요한 스킬은 그 직업 무기를 들어야 나간다(battle · skill.fitsWeapon · R187 · R204 · skill_design §2-2)
                 rank: byUid[uid] ?? 0,                    // 배치가 없으면 전열 — 뒤에 숨는 유닛을 만들지 않는다
+                // 시작 순서 — 정한 영웅(`h.skillOrder`)은 그 칸 순서 · 안 정하면 판마다 섞는다 (2026-11-16 · R515 · battle_design §5)
+                startOrder: Array.isArray(h.skillOrder) && h.skillOrder.length ? 'fixed' : 'random',
             };
         });
     };
@@ -2682,8 +2730,8 @@ export function createGameSystem(deps) {
        전직 트리 [2026-11-13 · R471 · advance_tree_draft §1] — **공통 줄**(갈래 칸 셋 · `advance_common.csv`) · **스킬 줄**(크기 · 변형 1 · 변형 2 · `advance_node.csv`) ·
        마스터리와 같은 공용 스킬 포인트 · 줄마다 합 ≤ `[balance.csv:advance_row_points]` · 칸마다도 같은 상한 · 레벨 문턱 없음(갈래가 서면 다 열린다) · 되돌리면 그 랭크만큼 돌아온다 */
     const advanceRows = (deps.advances ?? []).map(r => ({
-        id: r.advance_id, cls: r.class_id, order: Number(r.sort_order) || 0, name: { ko: r.name_kr, en: r.name_en },
-        desc: { ko: r.desc_kr ?? '', en: r.desc_en ?? '' },   // 갈래를 상징하는 한 줄 (2026-09-28 사용자 지시)
+        id: r.advance_id, cls: r.class_id, order: Number(r.sort_order) || 0, name: { ko: r.name_kr, en: r.name_en, zh: r.name_zh },
+        desc: { ko: r.desc_kr ?? '', en: r.desc_en ?? '', zh: r.desc_zh ?? '' },   // 갈래를 상징하는 한 줄 (2026-09-28 사용자 지시)
     })).sort((a, b) => a.order - b.order);
     const advanceById = Object.fromEntries(advanceRows.map(a => [a.id, a]));
     (() => {
@@ -3029,10 +3077,10 @@ export function createGameSystem(deps) {
     const MAT_SYNTH = SYNTH_ROWS.filter(r => !isMatRoot(r));
     const MAT_LADDER = (() => {
         const bad = why => { throw new Error(`state: material_synth.csv — ${why} (INTERFACE §2-7)`); };
-        const roots = [...LAB_MATERIALS.map(m => ({ id: m.id, post: m.post, tier: 1, ko: m.ko, en: m.en })),
+        const roots = [...LAB_MATERIALS.map(m => ({ id: m.id, post: m.post, tier: 1, ko: m.ko, en: m.en, zh: m.zh })),
             ...SYNTH_ROWS.filter(isMatRoot).map(r => {
                 if (r.need !== '-' || r.gold !== '-') bad(`${r.id} — 뿌리 행(from -)은 need · gold 도 - 다`);
-                return { id: r.id, post: r.id, tier: 1, ko: r.ko, en: r.en };
+                return { id: r.id, post: r.id, tier: 1, ko: r.ko, en: r.en, zh: r.zh };
             })];
         const known = new Map();
         for (const x of roots) {
@@ -3049,7 +3097,7 @@ export function createGameSystem(deps) {
             if (!(Number.isInteger(r.need) && r.need >= 1) || !(Number.isInteger(r.gold) && r.gold >= 0)) bad(`${r.id} — need 는 1 이상 · gold 는 0 이상 정수다`);
             if (!r.ko || !r.en) bad(`${r.id} — 이름이 비었다`);
             topped.add(r.from);
-            known.set(r.id, { id: r.id, post: low.post, tier: low.tier + 1, ko: r.ko, en: r.en, from: r.from, need: r.need, gold: r.gold });
+            known.set(r.id, { id: r.id, post: low.post, tier: low.tier + 1, ko: r.ko, en: r.en, zh: r.zh, from: r.from, need: r.need, gold: r.gold });
         }
         return roots.flatMap(m => [...known.values()].filter(x => x.post === m.post).sort((a, b) => a.tier - b.tier));
     })();
@@ -3092,7 +3140,7 @@ export function createGameSystem(deps) {
     /** 연구소 줄 — 순서 = 화면 · 대박 굴림 순서 (INTERFACE §5-3) */
     const LAB_LINES = [RES_KEY, VISIT_KEY, TRAIN_KEY, GAMBLE_KEY, LIB_KEY];
     /** 지점 id — 무엇을 미는가는 코드가 안다(값 · 비용 · 시간은 표 — INTERFACE §5-3) · 재료 지점 셋 = 그 재료의 생산 배수 */
-    const LAB_NODE_IDS = [...MAT_POSTS, 'burst', 'interval', 'quality', 'waiting', 'speed', 'range', 'income'];   // ~~seats~~ 2026-11-12 R454 — 등록 칸은 `B.lab_seats`
+    const LAB_NODE_IDS = [...MAT_POSTS, 'burst', 'interval', 'quality', 'waiting', 'roster', 'speed', 'range', 'income'];   // ~~seats~~ 2026-11-12 R454 — 등록 칸은 `B.lab_seats`
     const LAB_NODES = deps.labNodes ?? [];
     for (const n of LAB_NODES) {
         if (!LAB_LINES.includes(n.line) || !LAB_NODE_IDS.includes(n.node)) throw new Error(`state: lab_node.csv — 모르는 줄 · 지점 '${n.line}:${n.node}' (INTERFACE §5-3)`);
@@ -3117,11 +3165,11 @@ export function createGameSystem(deps) {
     const labLvRank = (r, lv) => r.unlockRank + Math.ceil(lv / B.lab_node_lv_per_rank) - 1;
     /** 줄이 열렸나 — 연구 · 등록을 받는다(지점이 하나라도 열렸다 · 도박장은 선술집 도박장도 — 사용자 「선술집 r4를 짓고 열리도록」 ·
      *  자원은 창고도 — 사용자 「창고가 지어져야 연구소의 자원이 열리도록」 2026-10-27 · R361 ·
-     *  수색은 선술집 영웅 고용도 — 사용자 「수색은 랭크2 영웅고용과 함께 열리는걸로」 2026-10-30) */
+     *  수색은 선술집 r3 도 — 2026-11-16 사용자 「수색을 r3로 넘길까? 도박장을 r4로 넘기고」 · R516 · 옛 영웅 고용 r2 와 함께) */
     function labLineOpen(state, line) {
         if (labRank(state) < 1) return false;
         if (line === GAMBLE_KEY && !hasFeature(state, 'gamble')) return false;
-        if (line === VISIT_KEY && !hasFeature(state, 'hire')) return false;
+        if (line === VISIT_KEY && !hasFeature(state, 'lab_visit')) return false;
         if (line === LIB_KEY && !hasFeature(state, 'lab_library')) return false;   // 도서관 r2 (2026-11-15 · R504 — ~~book_craft~~)
         if (line === RES_KEY && !hasFeature(state, 'lab_res')) return false;
         return labLineNodes(line).some(r => labNodeOpen(state, r));
@@ -4208,7 +4256,7 @@ export function createGameSystem(deps) {
      */
     function tavernCandidates(state) {
         const rng = makeRng(deriveSeed(state.seed ^ 0x5A17, state.counters.tavern));
-        // 고용한 칸 · 수색 칸에 보관한 칸(`tavernKeep` · 2026-10-27)은 빈다
+        // 고용한 칸 · 수색 칸에 보관한 칸(2026-10-27 — 2026-11-16 R519 보관 삭제 · 옛 세이브의 `kept` 는 다음 리롤까지)은 빈다
         const gone = [...(state.tavern?.hired ?? []), ...(state.tavern?.kept ?? [])];
         // 내 영웅과 같은 이름은 피한다 — rng 를 안 쓰고 빈 칸(`null`)은 건너뛴다 (`hero.avoidNames` · 2026-10-15 · PLAN_user_review 2-5)
         const list = H.rollCandidates(rng, limitsOf(state).tavernCandidates).map((c, i) => (gone.includes(i) ? null : c));
@@ -4284,10 +4332,27 @@ export function createGameSystem(deps) {
     if (!(Number.isInteger(B.shop_sell_divisor) && B.shop_sell_divisor > 0)
         || Object.values(SHOP_PRICE).some(gold => !(Number.isFinite(gold) && gold > 0)))
         throw new Error('balance: shop_sell_divisor 는 양의 정수 · shop_price_<등급> 은 양의 유한수여야 한다');
-    /** 장비 한 점의 값 — 희귀도 값 × 배율 ^ 레벨 구간(`shop_price_step_levels` 마다 한 번 · 첫 구간 = 희귀도 값 그대로) [2026-10-06 사용자 지시 「10레벨 단위로」] */
+    if (!(Number.isFinite(B.shop_price_var_pct) && B.shop_price_var_pct >= 0)
+        || !(B.shop_price_var_level_share >= 0 && B.shop_price_var_level_share <= 1)
+        || !(Number.isInteger(B.shop_price_step_levels) && B.shop_price_step_levels > 0))
+        throw new Error('balance: shop_price_var_pct 는 0 이상 · shop_price_var_level_share 는 0 ~ 1 · shop_price_step_levels 는 양의 정수여야 한다');
+    /** 장비 한 점의 기준가 — 희귀도 값 × 배율 ^ 레벨 구간(`shop_price_step_levels` 마다 한 번 · 첫 구간 = 희귀도 값 그대로) [2026-10-06 사용자 지시 「10레벨 단위로」] · 판매가는 이 값에서 낸다 */
     const shopPriceOf = item => Math.round(SHOP_PRICE[item.rarity] * B.shop_price_step_mult ** Math.floor((item.ilvl - 1) / B.shop_price_step_levels));
+    /**
+     * 장비 한 점의 구매가 — 기준가(`shopPriceOf`)가 바닥 · 섞은 점수(0 ~ 1)만큼 최대 `shop_price_var_pct` 위로 · 반올림 · rng 0
+     * [2026-11-16 사용자 「장비별 레벨 + 옵션점수를 기준으로 약간의 변동」 · 「가격이 비싸면 유저가 혹할 수 있게」 · R514 · base_expedition_design §2-6].
+     * 섞은 점수 = `shop_price_var_level_share` × 레벨 점수 + 나머지 × 옵션 점수 · 레벨 점수 = 가격 구간 안의 자리(구간 첫 레벨 0 · 끝 레벨 1 · 구간 폭 1 이면 0) ·
+     * 옵션 점수 = `item.optionScore`(잴 줄이 없으면 0 — 기준가)
+     */
+    function shopBuyPriceOf(item) {
+        const step = B.shop_price_step_levels;
+        const lv = step > 1 ? ((item.ilvl - 1) % step) / (step - 1) : 0;
+        const opt = I.optionScore(item) ?? 0;
+        const share = B.shop_price_var_level_share;
+        return Math.round(shopPriceOf(item) * (1 + B.shop_price_var_pct * (share * lv + (1 - share) * opt)));
+    }
 
-    /** 장비 판매가 — 구매와 같은 레벨·등급 기준가의 1/3(나눗수는 CSV) · 소수점 버림 · rng 0 */
+    /** 장비 판매가 — 같은 레벨·등급 기준가(`shopPriceOf` — 구매가의 레벨 · 옵션 가산 전 · R514)의 1/3(나눗수는 CSV) · 소수점 버림 · rng 0 */
     function shopSellGold(item) {
         if (!item || item.box || !PART_ORDER.includes(item.slot) || !Object.hasOwn(SHOP_PRICE, item.rarity)
             || !Number.isInteger(item.ilvl) || item.ilvl < 1) return null;
@@ -4460,7 +4525,7 @@ export function createGameSystem(deps) {
         for (const part of shopParts)
             for (let i = 0; i < shopCountOf(state, part); i++) {
                 const [item] = I.rollGear(rng, { slots: [part], ilvl: sh.level, ilvlSpread: spread });
-                equip.push({ item, gold: shopPriceOf(item), sold: sh.sold.includes(equip.length), locked: part !== 'weapon' && !rows });
+                equip.push({ item, gold: shopBuyPriceOf(item), sold: sh.sold.includes(equip.length), locked: part !== 'weapon' && !rows });
             }
         // `open` = 상단 · `trade` = 교역소 · `special` = 특수상단 방문 — 건물 랭크가 연다(R137). 교역소 구매는 shopTradeState/shopTradeBuy · 목록·시계는 닫혀 있어도 같은 값이다
         // 물약 — **정해진 셋을 늘 판다** [2026-09-28 사용자 지시 · base_expedition §2-6] — `potion.csv:shop_gold` 가 선 행만 · 회차 · 매진이 없다
@@ -4892,8 +4957,23 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
 
-    /* ~~`setSkillOrder(state, uid, order)`~~ 스킬 우선순위(2026-10-28 · ADR-0937)는 **2026-11-02 삭제** [R427 · INTERFACE §2-7 · battle_design §5] —
-       동시에 준비된 칸의 동률은 출처 칸 순서다. `hero.skillOrder` 는 로드가 지운다(`deserialize`) */
+    /**
+     * 스킬 시작 순서 — 캐릭터 탭 우선순위 창의 끌어 옮기기 [신설 2026-10-28 · 2026-11-02 삭제(R427) · **2026-11-16 부활 · R515** · INTERFACE §2-7 · SCREEN_DESIGN §6 · battle_design §5].
+     * `order` = 그 영웅의 지금 액티브 id 를 빠짐 · 겹침 · 남의 것 없이 다시 늘어놓은 것 → `hero.skillOrder` · **`null` = 지운다**(판마다 랜덤으로 되돌리기).
+     * 칸을 내는 것은 `activesFor` 이고 전투는 그 칸 순서를 시작 순서로 쓴다(`startOrder = 'fixed'` — 모두 준비된 채 시작하므로 첫 차례들의 순서 · 그 뒤는 쿨이 먼저 돈 것).
+     * 무료 · 원정 중에도 된다 — 도는 원정은 다음 걸음 첫머리의 `refit` 이 칸 순서가 바뀐 영웅을 갈아입히고 쿨은 칸마다 잇는다 · rng 0
+     */
+    function setSkillOrder(state, uid, order) {
+        const h = heroById(state, uid);
+        if (!h) return { ok: false, err: 'missing' };
+        if (order === null) { delete h.skillOrder; return { ok: true }; }
+        if (!Array.isArray(order)) return { ok: false, err: 'missing' };
+        const have = SK.activesFor(h).map(a => a.id).sort();
+        const want = [...order].sort();
+        if (want.length !== have.length || want.some((id, i) => id !== have[i])) return { ok: false, err: 'missing' };
+        h.skillOrder = [...order];
+        return { ok: true };
+    }
 
     /* ── 수색 — 수색 줄에 등록한 영웅이 시간마다 한 명씩 선술집 칸에 데려온다 [신설 2026-10-19 · base_expedition §2-4 · INTERFACE §2-7 — ~~수색~~(대기 영웅 하나를 내보낸다 · 2026-09-09 ~ 10-16) 대체] ──
        **등록한 영웅마다 시계 하나**(R492) — 연구소 줄 「수색」(연구소 + 선술집 영웅 고용)에 등록한 영웅의 시계가 등록 시각부터 돌고 간격마다 한 명이 칸(`joins`)에 선다 ·
@@ -4904,7 +4984,7 @@ export function createGameSystem(deps) {
        **꺼져 있어도 흐른다** — 연구소의 오프라인 상한을 안 받는다(칸 수가 상한이다). **떠나지 않는다** — 돌려보낼 때까지 남는다.
        온 사람은 **굴린 순간 통째로 박는다**(`joins[].hero`) — 번호(`counters.visit` 선증가)와 시드가 굴리고 다시 굴리지 않는다 */
     /** 칸의 출처 어휘 — 어떻게 왔나. **찾아오는 방식이 늘면 여기에 하나씩 는다** (INTERFACE §5-3) */
-    const JOIN_SRC = ['visit', 'caravan', 'tavern'];   // tavern = 명단에서 보관(`tavernKeep` · 2026-10-27)
+    const JOIN_SRC = ['visit', 'caravan', 'tavern'];   // tavern = 명단에서 보관(2026-10-27 — 2026-11-16 R519 보관 삭제 · 옛 세이브에만 남는다)
     /** 시계 하나의 간격(ms) — `visit_hours` ÷ (「간격」 지점 배수 × (1 + 그 영웅의 힘 덤)) · `uid` = null 이면 힘 덤 없는 줄의 간격(지점만 — 표시용) · `at` = 효과를 재는 시각
      *  (2026-10-21 · R298 · 시계가 영웅마다 하나 — 2026-11-14 사용자 「4시간으로 각자해보자」 · R492) */
     const visitStepMs = (state, uid, at) => Math.max(0, B.visit_hours ?? 0) * 3600000
@@ -4933,7 +5013,50 @@ export function createGameSystem(deps) {
         }
         return out;
     }
-    const joinFull = state => joinUsed(state) >= joinSlots(state);
+    /** 다 찼다 — 수색 영웅이 선 줄이 모두 찼다(새로 들어올 자리가 없다 · 등록한 영웅이 없으면 false — R519 · ~~칸 전체가 찼다~~) */
+    const joinFull = state => { const seats = Object.values(visitSeatMap(state)); return seats.length > 0 && seats.every(s => seatFull(state, s)); };
+    /* ── 칸 줄 = 수색 자리 [2026-11-16 사용자 「각 수색 오른쪽에 1칸씩붙게 만들고 처음에 오른쪽 3개를 자물쇠로」 · R519 · INTERFACE §2-7 joinState] ──
+       줄 수 = 수색 자리 수(`lab_seats`) · 칸 k(0 부터 · 열린 칸 → 안 열린 칸)는 줄 `k % 줄 수` 의 `⌊k ÷ 줄 수⌋` 째 칸 — 처음 칸은 줄마다 하나 ·
+       「대기 칸」 지점은 둘째 칸을 윗줄부터 연다. **그 줄 수색 영웅이 찾은 영웅만 그 줄에 선다** — 그 줄이 차면 다른 줄이 비어도 들고 기다린다 */
+    const joinRows = state => Math.max(1, labSeats(state, VISIT_KEY));
+    /** 줄 s 의 열린 칸 수 — 열린 칸을 윗줄부터 한 칸씩 돌려 나눈다 */
+    const seatCap = (state, s) => { const n = joinSlots(state), R = joinRows(state); return Math.floor(n / R) + (s < n % R ? 1 : 0); };
+    const seatFull = (state, s) => (state.joins ?? []).filter(j => j.seat === s).length >= seatCap(state, s);
+    /** 열린 칸이 남은 가장 위 줄 — 없으면 -1 (마차 영웅 · 옛 세이브 정리) */
+    const seatFree = state => { for (let s = 0; s < joinRows(state); s++) if (!seatFull(state, s)) return s; return -1; };
+    /** 줄마다 안 열린 칸의 여는 레벨 — `joinLocked`(칸 순서)를 줄에 나눈다 */
+    function seatLocked(state) {
+        const R = joinRows(state), n = joinSlots(state), out = Array.from({ length: R }, () => []);
+        joinLocked(state).forEach((lv, i) => out[(n + i) % R].push(lv));
+        return out;
+    }
+    /** 수색 자리 — 등록한 영웅마다 0 부터 · 시계에 박힌 자리를 지키고(겹치거나 줄 밖이면 버린다) 없는 영웅은 비어 있는 가장 위 자리(등록 순서대로) ·
+     *  영웅이 줄을 떠나도 그 줄 칸의 영웅은 남고 다음에 그 자리에 든 영웅이 이어 받는다 */
+    function visitSeatMap(state) {
+        const R = joinRows(state), uids = labRegList(state, VISIT_KEY), out = {}, used = new Set();
+        for (const uid of uids) {
+            const s = state.visitHeroes?.[uid]?.seat;
+            if (Number.isInteger(s) && s >= 0 && s < R && !used.has(s)) { out[uid] = s; used.add(s); }
+        }
+        for (const uid of uids) if (!(uid in out)) { let s = 0; while (used.has(s)) s++; out[uid] = s; used.add(s); }
+        return out;
+    }
+    /** 「로스터」 지점 레벨 lv 가 더하는 칸 수 (R516) */
+    function rosterNodeAdd(lv) {
+        const r = labNodeRow(VISIT_KEY, 'roster');
+        return r && lv > 0 ? Math.max(0, Math.floor(nodeValue(r, lv))) : 0;
+    }
+    /** 영웅 띠의 안 열린 칸 — 지금 상한 위로 칸마다 그 칸을 여는 「로스터」 지점 레벨(작은 것부터 · 지점 최대 레벨까지) · 다 열렸거나 지점이 없으면 []
+     *  [2026-11-16 · R516 · INTERFACE §2-7 · `joinLocked` 와 같은 모양] */
+    function rosterLocked(state) {
+        const r = labNodeRow(VISIT_KEY, 'roster');
+        if (!r) return [];
+        const out = [];
+        let have = limitsOf(state).roster;
+        for (let lv = labLv(state, VISIT_KEY, 'roster') + 1; lv <= r.max; lv++)
+            for (const n = B.roster_cap + rosterNodeAdd(lv); have < n; have++) out.push(lv);
+        return out;
+    }
     /** 줄을 연구할 수 있나 — 연구소가 지어졌다 */
     const visitLabOpen = state => labLineOpen(state, VISIT_KEY);
 
@@ -4949,24 +5072,24 @@ export function createGameSystem(deps) {
         const [hero] = H.avoidNames(H.rollCandidates(rng, 1, [tier]), taken);
         return hero;
     }
-    /** 칸에 한 줄 — in-place · 번호는 `counters.join`(출처 무관 — 고용 · 돌려보내기가 번호로 집는다) */
-    function joinPush(state, hero, at, src) {
+    /** 칸에 한 명 — in-place · 번호는 `counters.join`(출처 무관 — 고용 · 돌려보내기가 번호로 집는다) · `seat` = 선 줄 (R519) */
+    function joinPush(state, hero, at, src, seat) {
         state.counters.join = (state.counters.join ?? 0) + 1;
-        state.joins = [...(state.joins ?? []), { no: state.counters.join, hero: clone(hero), arrivedAt: at, src }];
+        state.joins = [...(state.joins ?? []), { no: state.counters.join, seat, hero: clone(hero), arrivedAt: at, src }];
         return state.counters.join;
     }
     /** 데려온 뒤 다시 나서는 시계 — `at` 에 나서 `nextAt` 에 돌아온다 · 몇 번째 수색인가가 하나 는다(이야기가 다음 줄기 첫 줄부터 · 2026-11-16 R508) */
-    const visitTrip = (c, at, nextAt) => ({ nextAt, held: false, from: at, trip: (Number.isInteger(c?.trip) ? c.trip : 0) + 1 });
+    const visitTrip = (c, at, nextAt) => ({ nextAt, held: false, from: at, trip: (Number.isInteger(c?.trip) ? c.trip : 0) + 1, ...(Number.isInteger(c?.seat) ? { seat: c.seat } : {}) });
     /** 영웅 시계를 등록에 맞춘다 — 수색 줄에 등록한 영웅마다 하나 · 등록이 풀리면 지운다(옮기면 처음부터 — 숙련과 같다) ·
      *  새 시계는 **등록 시각**(`labSince`)부터 간격 하나 뒤 · 칸이 찼어도 흐른다 (2026-11-14 · R492 · 2026-11-15) ·
      *  `from` = 이번 수색을 나선 시각 · `trip` = 등록한 뒤 몇 번째 수색(0부터) — 이야기(`visitStory`)만 쓴다 (2026-11-16 R508) */
     function visitSyncClocks(state, now) {
-        const cur = state.visitHeroes ?? {}, next = {};
+        const cur = state.visitHeroes ?? {}, next = {}, seats = visitSeatMap(state);   // 자리 — 시계에 박는다 (R519)
         for (const uid of labRegList(state, VISIT_KEY)) {
-            if (cur[uid]) { next[uid] = cur[uid]; continue; }
+            if (cur[uid]) { next[uid] = cur[uid].seat === seats[uid] ? cur[uid] : { ...cur[uid], seat: seats[uid] }; continue; }
             const since = state.labSince?.[uid];
             const from = Number.isFinite(since) ? Math.min(since, now) : now;
-            next[uid] = { nextAt: from + visitStepMs(state, uid, from), held: false, from, trip: 0 };
+            next[uid] = { nextAt: from + visitStepMs(state, uid, from), held: false, from, trip: 0, seat: seats[uid] };
         }
         state.visitHeroes = next;
     }
@@ -4985,27 +5108,27 @@ export function createGameSystem(deps) {
         const arrived = [], held = [];
         if (!Number.isFinite(now) || !visitLabOpen(state)) return { arrived, held };
         visitSyncClocks(state, now);   // 시계 — 등록에 맞춘다 (R492)
-        // 가장 이른 시계부터 한 명씩 — 동률은 등록 순서 (R492)
+        // 가장 이른 시계부터 한 명씩 — 동률은 등록 순서 (R492) · **칸은 그 시계 자리의 줄**(R519) — 들고 기다리는 시계는 그 줄이 빌 때만 집는다
         for (;;) {
             let key = null, due = Infinity;
-            for (const [u, c] of Object.entries(state.visitHeroes ?? {})) if (c.nextAt <= now && c.nextAt < due) { key = u; due = c.nextAt; }
-            if (key == null) break;
-            if (joinFull(state)) {   // 칸이 찼다 — 시간이 다 된 시계는 전부 그 순간 찾은 영웅을 굴려 들고 대기한다(돌아온 순서 · 동률 등록 순서)
-                const due = Object.entries(state.visitHeroes ?? {}).filter(([, c]) => c.nextAt <= now && !c.held).sort(([, a], [, b]) => a.nextAt - b.nextAt);
-                for (const [u, c] of due) {
-                    state.counters.visit = (state.counters.visit ?? 0) + 1;
-                    state.visitHeroes = { ...state.visitHeroes, [u]: { ...c, held: true, hero: visitRoll(state, state.counters.visit, c.nextAt) } };
-                    held.push(u);
-                }
-                break;
+            for (const [u, c] of Object.entries(state.visitHeroes ?? {})) {
+                if (!(c.nextAt <= now) || c.nextAt >= due || (c.held && seatFull(state, c.seat))) continue;
+                key = u; due = c.nextAt;
             }
+            if (key == null) break;
             const c = state.visitHeroes[key];
+            if (seatFull(state, c.seat)) {   // 그 줄이 찼다 — 그 순간 찾은 영웅을 굴려 들고 대기한다(돌아온 순서 · 동률 등록 순서 · 다른 줄이 비어도 안 든다 — R519)
+                state.counters.visit = (state.counters.visit ?? 0) + 1;
+                state.visitHeroes = { ...state.visitHeroes, [key]: { ...c, held: true, hero: visitRoll(state, state.counters.visit, c.nextAt) } };
+                held.push(key);
+                continue;
+            }
             const at = c.held ? now : due;   // 대기하던 영웅은 칸이 빈 지금 들어온다
             const step = visitStepMs(state, key, at);   // 간격은 도착마다 그때의 지점 · 그 영웅으로 잰다 (2026-10-21 · R298 · R492)
             if (!(step > 0)) break;
             let hero = c.held ? c.hero : null;   // 기다리던 영웅 = 들고 선 그 사람(다시 안 굴린다)
             if (!hero) { state.counters.visit = (state.counters.visit ?? 0) + 1; hero = visitRoll(state, state.counters.visit, at); }
-            arrived.push(joinPush(state, hero, at, 'visit'));
+            arrived.push(joinPush(state, hero, at, 'visit', c.seat));
             state.visitHeroes = { ...state.visitHeroes, [key]: visitTrip(c, at, at + step) };   // 다시 나선다 — 이야기는 첫 줄부터 (R508)
         }
         return { arrived, held };
@@ -5028,9 +5151,10 @@ export function createGameSystem(deps) {
             return { uid, hours: step / 3600000, nextAt, remainMs, held: !!c?.held, hero: c?.held ? c.hero ?? null : null,
                 frac: step > 0 && remainMs != null ? Math.min(1, Math.max(0, 1 - remainMs / step)) : 0, step };
         };
+        const seats = visitSeatMap(state);   // 자리 — 정산이 아직 안 박았으면 박을 값 (R519)
         const clocks = !open ? [] : labRegList(state, VISIT_KEY).map(uid => {
             const c = state.visitHeroes?.[uid], since = state.labSince?.[uid];
-            return clockOf(uid, c ?? (Number.isFinite(since) ? { nextAt: since + visitStepMs(state, uid, since), held: false } : null));
+            return { ...clockOf(uid, c ?? (Number.isFinite(since) ? { nextAt: since + visitStepMs(state, uid, since), held: false } : null)), seat: seats[uid] };
         });
         const soon = clocks.filter(c => c.remainMs != null).sort((a, b) => a.remainMs - b.remainMs)[0] ?? null;
         return {
@@ -5106,8 +5230,9 @@ export function createGameSystem(deps) {
     /** 화면 상태 한 덩어리 — `list` 는 도착 순 · rng 0 · 아무것도 안 바꾼다(정산도 안 한다) */
     function joinState(state, now) {
         return {
-            open: hasFeature(state, 'hire'), slots: joinSlots(state), locked: joinLocked(state), cost: B.tavern_hire_cost,
-            list: (state.joins ?? []).map(j => ({ no: j.no, hero: j.hero, arrivedAt: j.arrivedAt, src: j.src })),
+            open: hasFeature(state, 'lab_visit'), slots: joinSlots(state), locked: joinLocked(state), cost: B.tavern_hire_cost,   // 칸 = 수색 줄과 같은 문 (R519)
+            rows: joinRows(state), seatCap: Array.from({ length: joinRows(state) }, (_, s) => seatCap(state, s)), seatLocked: seatLocked(state),
+            list: (state.joins ?? []).map(j => ({ no: j.no, seat: j.seat, hero: j.hero, arrivedAt: j.arrivedAt, src: j.src })),
             err: joinErr(state),
         };
     }
@@ -5117,8 +5242,9 @@ export function createGameSystem(deps) {
      */
     function joinAdd(state, hero, now, src = 'caravan') {
         visitSettle(state, now);
-        if (joinFull(state)) return { ok: false, err: 'full' };
-        const no = joinPush(state, hero, now, JOIN_SRC.includes(src) ? src : 'caravan');
+        const seat = seatFree(state);   // 열린 칸이 남은 가장 위 줄 — 마차 영웅이 들 줄은 마차를 만들 때 정한다 (R519)
+        if (seat < 0) return { ok: false, err: 'full' };
+        const no = joinPush(state, hero, now, JOIN_SRC.includes(src) ? src : 'caravan', seat);
         return { ok: true, no };
     }
     /**
@@ -5126,7 +5252,7 @@ export function createGameSystem(deps) {
      *   거절 순서 `unbuilt` → `missing`(이미 고용했거나 돌려보냈다) → `roster` → `gold` · 명단 고용과 같은 시작 장비 한 벌(영웅 번호 스트림) · 칸이 비면 대기하던 영웅이 지금 들어온다
      */
     function joinHire(state, no, now) {
-        if (!hasFeature(state, 'hire')) return { ok: false, err: 'unbuilt' };   // 명단과 같은 문 — 선술집이 연다 (R137)
+        if (!hasFeature(state, 'lab_visit')) return { ok: false, err: 'unbuilt' };   // 수색 줄과 같은 문 — 선술집 r3 (R519)
         visitSettle(state, now);
         const j = (state.joins ?? []).find(x => x.no === no);
         if (!j) return { ok: false, err: 'missing' };
@@ -5159,7 +5285,7 @@ export function createGameSystem(deps) {
     const visitSendOut = (state, uid, now) => { state.visitHeroes = { ...state.visitHeroes, [uid]: visitTrip(state.visitHeroes?.[uid], now, now + visitStepMs(state, uid, now)) }; };
     /** 밖에서 고용 — 거절 `unbuilt` → `missing` → `roster` → `gold` · 먼저 정산 · 고용비 · 시작 장비 한 벌(칸 고용과 같다) */
     function visitHire(state, uid, now) {
-        if (!hasFeature(state, 'hire')) return { ok: false, err: 'unbuilt' };
+        if (!hasFeature(state, 'lab_visit')) return { ok: false, err: 'unbuilt' };   // 수색 줄과 같은 문 (R519)
         visitSettle(state, now);
         const c = visitHeldOf(state, uid);
         if (!c) return { ok: false, err: 'missing' };
@@ -5178,21 +5304,6 @@ export function createGameSystem(deps) {
         if (!visitHeldOf(state, uid)) return { ok: false, err: 'missing' };
         visitSendOut(state, uid, now);
         return { ok: true };
-    }
-    /**
-     * 보관 — 명단 후보를 수색 칸에 넣는다 [2026-10-27 사용자 「Hire 오른쪽에 버튼하나 더 만들어서 Visiting Heroes에 저장」 · base_expedition §2-4].
-     *   **무료** · rng 0 · 거절 순서 `unbuilt`(고용과 같은 문) → `missing`(빈 칸) → `full`(`joinAdd` 가 먼저 정산하고 낸다).
-     *   명단은 그대로 · **그 칸만 빈다**(`tavern.kept` — 고용한 칸과 같다 · 리롤이 되살린다). 꺼낼 때가 고용이다(`joinHire` — 고용비 · 시작 장비 한 벌)
-     */
-    function tavernKeep(state, index, now) {
-        if (!hasFeature(state, 'hire')) return { ok: false, err: 'unbuilt' };
-        const c = tavernCandidates(state)[index];
-        if (!c) return { ok: false, err: 'missing' };
-        const r = joinAdd(state, clone(c), now, 'tavern');
-        if (!r.ok) return r;
-        state.tavern = state.tavern ?? { rerolledAt: null, hired: [] };
-        state.tavern.kept = [...(state.tavern.kept ?? []), index];
-        return { ok: true, no: r.no };
     }
 
     /* ── 탐험 — 지점 아이콘 → 보내기 → 수령 [신설 2026-10-09 · base_expedition §3-1 · SCREEN_DESIGN §8-4 · ADR-0553 · INTERFACE §2-7] ──
@@ -5389,7 +5500,7 @@ export function createGameSystem(deps) {
                     const story = exploreStory(state, x);
                     const beats = story.map((r, i) => {
                         const at = x.startedAt + Math.round(span * i / story.length);
-                        return { id: r.story_id, at, open: now >= at, text: { ko: r.text_kr, en: r.text_en } };
+                        return { id: r.story_id, at, open: now >= at, text: { ko: r.text_kr, en: r.text_en, zh: r.text_zh } };
                     });
                     // 결과 — 끝났을 때만 · 장비(`items`)와 책(`books` — 스킬 id · R504)을 따로 낸다(`exploreTake` 가 같은 것을 준다)
                     const got = done ? exploreRoll(state, x) : null;
@@ -5541,7 +5652,7 @@ export function createGameSystem(deps) {
         if (hasFeature(state, 'explore')) for (const x of exploreList(state))
             if (chapterOpen(state, x.chapter) && spotBuilt(state, x.spot) && now >= x.startedAt + exploreMs())
                 items.push({ id: `explore:${x.no}`, kind: 'explore', tab: 'explore', target: { chapter: x.chapter, spot: x.spot } });
-        if (hasFeature(state, 'hire')) for (const j of state.joins ?? [])
+        if (hasFeature(state, 'lab_visit')) for (const j of state.joins ?? [])
             items.push({ id: `join:${j.no}`, kind: 'join', tab: 'tavern', target: { join: j.no } });
         for (const h of state.heroes) {
             if (!(h.masteryPoints > 0)) continue;
@@ -5954,11 +6065,11 @@ export function createGameSystem(deps) {
         noteRunEnd, bossRespawnAt,   // 챕터보스 재등장 (2026-10-10 · R240)
         difficultyState, selectDifficulty, stageLevel, stageCleared,
         runTactics, runTacticsIf, runBuffs, runCombat,
-        tavernCandidates, tavernState, tavernReroll, hire, adminHero, dismissState, dismiss, moveHero,
+        tavernCandidates, tavernState, tavernReroll, hire, adminHero, dismissState, dismiss, moveHero, setSkillOrder,
         shopVisit, shopState, shopBuy, shopSellGold, shopSellPreview, shopSell, shopPotionBuy, shopPotionGold, shopBookBuy, shopBookPool, shopReroll, shopTradeState, shopTradeBuy, gambleState, gambleSpin, gambleSpinBatch,
         commissionState, commissionFill, commissionTake, commissionClaim, commissionDrop,
         visitSettle, visitState, visitStory,
-        joinState, joinAdd, joinHire, joinDrop, tavernKeep, visitHire, visitDrop,
+        joinState, joinAdd, joinHire, joinDrop, visitHire, visitDrop, rosterLocked,
         exploreState, exploreErr, exploreSend, exploreTake, exploreDrop,
         dispatchSettle, dispatchProgress, labState, labSettle, labResearchStart, labResearchCancel, labRegOf, labRegList, labRegister, labUnregister, labRegLoss, labEffectsFor, materialsState,
         materialLadder, synthState, synthesize,   // 재료 단계 · 대장간 합성 (2026-10-27 · R359)

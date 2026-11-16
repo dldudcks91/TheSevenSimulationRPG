@@ -18,7 +18,7 @@ const hasBatchim = word => {
 
 /**
  * @param {object} data
- *   sins     — {sinId: {ko, en, adj}}  ko/en = 표시명 · adj = 영문 형용사(Wrathful …)
+ *   sins     — {sinId: {ko, en, adj, zh?}}  ko/en/zh = 표시명 · adj = 영문 형용사(Wrathful …)
  *   sinWords — {sinId: [{ko, en, tier, minIlvl}]} 아이템 이름의 죄종 단어 — **파일 순서**(`sin_word.csv` 의 그 죄종 행 순서 · 번호가 세이브에 박혀 tier 로 정렬하지 않는다 · 2026-11-10 R433).
  *              ko = 명사(격노) · en = 형용사(Raging) · tier = 단(1 = 맨 아래) · minIlvl = 그 단이 열리는 아이템 레벨(2026-11-11 R436).
  *              첫 줄(번호 0) = 원래 죄종 이름 = 맨 위 단. 없는 죄종은 한 단짜리 — 원래 죄종 이름(ko · adj · 단 1 · 해금 1)
@@ -26,10 +26,10 @@ const hasBatchim = word => {
 export function createNaming(data) {
     const S = data.sins;
     const W = data.sinWords ?? {};
-    /** base 는 문자열(양 언어 공통) 또는 {ko, en} — 무기군 정의도 ko/en 을 갖고 있어 그대로 들어온다 */
-    const pair = base => (typeof base === 'string' ? { ko: base, en: base } : base);
+    /** base 는 문자열(언어 공통) 또는 {ko, en, zh?} — 무기군 정의도 ko/en/zh 를 갖고 있어 그대로 들어온다 */
+    const pair = base => (typeof base === 'string' ? { ko: base, en: base, zh: base } : base);
 
-    const wordsOf = sin => (W[sin]?.length ? W[sin] : [{ ko: S[sin].ko, en: S[sin].adj }]);
+    const wordsOf = sin => (W[sin]?.length ? W[sin] : [{ ko: S[sin].ko, en: S[sin].adj, zh: S[sin].zh }]);
     /** 그 죄종의 단어 수 — 드롭이 단어 번호를 고르는 폭 (item.js · INTERFACE §2-5 `words`) */
     const wordCount = sin => wordsOf(sin).length;
     /** 칸의 단어 — 단어 번호가 없거나 범위 밖이면 첫 단어(원래 죄종 이름) */
@@ -45,35 +45,46 @@ export function createNaming(data) {
      * 이름 앞머리의 조각들 — ko 「격노와 찬탈의 」 / en 「Raging and Usurping 」 (item_design §1 「이름」 · 2026-09-19).
      * 조각은 `{t, sin?}` 이고 **죄종 단어 조각만 `sin` 을 든다** — 화면이 단어를 따로 다뤄야 할 때의 입력이다(지금 화면은 이름을 희귀도 한 색으로 찍는다 · ADR-0175).
      * 「와 / 과」는 앞 단어의 받침이 가른다 · 「의」는 그대로다. 일반(죄종 없음)은 빈 배열
+     * 간체 [2026-11-16 · LOCALIZATION_ZH §3] — 「盛怒之 」/「盛怒与篡夺之」(공백 없음). **단어에 `zh` 가 없으면 `zh` 조각을 싣지 않는다**(INTERFACE §2-10)
      */
     const sinPhrase = (preSin, sufSin, words = []) => {
-        if (!preSin) return { ko: [], en: [] };
+        if (!preSin) return { ko: [], en: [], zh: [] };
         const a = wordAt(preSin, words[0]);
-        if (!sufSin) return {
-            ko: [{ t: a.ko, sin: preSin }, { t: '의 ' }],
-            en: [{ t: a.en, sin: preSin }, { t: ' ' }],
-        };
+        if (!sufSin) {
+            const out = {
+                ko: [{ t: a.ko, sin: preSin }, { t: '의 ' }],
+                en: [{ t: a.en, sin: preSin }, { t: ' ' }],
+            };
+            if (a.zh) out.zh = [{ t: a.zh, sin: preSin }, { t: '之' }];
+            return out;
+        }
         const b = wordAt(sufSin, words[1]);
-        return {
+        const out = {
             ko: [{ t: a.ko, sin: preSin }, { t: hasBatchim(a.ko) ? '과 ' : '와 ' }, { t: b.ko, sin: sufSin }, { t: '의 ' }],
             en: [{ t: a.en, sin: preSin }, { t: ' and ' }, { t: b.en, sin: sufSin }, { t: ' ' }],
         };
+        if (a.zh && b.zh) out.zh = [{ t: a.zh, sin: preSin }, { t: '与' }, { t: b.zh, sin: sufSin }, { t: '之' }];
+        return out;
     };
 
-    /** 아이템 이름 — ko "격노와 찬탈의 <base>" / en "Raging and Usurping <base>" (2026-09-19 개정 · ~~태그 형식 `[분노][오만] <base>`~~ 09-11).
+    /** 아이템 이름 — ko "격노와 찬탈의 <base>" / en "Raging and Usurping <base>" / zh "盛怒与篡夺之<base>" (2026-09-19 개정 · ~~태그 형식 `[분노][오만] <base>`~~ 09-11 · zh 2026-11-16).
      *  매직(`sufSin` 없음)은 「격노의 <base>」 · 일반(`preSin` 도 없음 · R86)은 베이스 이름뿐이다.
-     *  `words` = 칸마다 그 죄종 단어의 단 번호(item 의 `words`) — 없으면 첫 단 */
+     *  `words` = 칸마다 그 죄종 단어의 단 번호(item 의 `words`) — 없으면 첫 단 · 조각 하나라도 `zh` 가 없으면 결과에 `zh` 가 없다 */
     const composeName = (preSin, base, sufSin, words = []) => {
         const b = pair(base);
         const p = sinPhrase(preSin, sufSin, words);
         const join = segs => segs.map(x => x.t).join('');
-        return { ko: `${join(p.ko)}${b.ko}`, en: `${join(p.en)}${b.en}` };
+        const out = { ko: `${join(p.ko)}${b.ko}`, en: `${join(p.en)}${b.en}` };
+        if (p.zh && b.zh) out.zh = `${join(p.zh)}${b.zh}`;
+        return out;
     };
 
-    /** 정예 이름 — ko "분노의 스켈레톤 기사" / en "Wrathful Skeleton Knight". base = 몬스터 이름 {ko, en} */
+    /** 정예 이름 — ko "분노의 스켈레톤 기사" / en "Wrathful Skeleton Knight" / zh "愤怒之骷髅骑士". base = 몬스터 이름 {ko, en, zh?} */
     const eliteName = (sin, base) => {
         const s = S[sin], b = pair(base);
-        return { ko: `${s.ko}의 ${b.ko}`, en: `${s.adj} ${b.en}` };
+        const out = { ko: `${s.ko}의 ${b.ko}`, en: `${s.adj} ${b.en}` };
+        if (s.zh && b.zh) out.zh = `${s.zh}之${b.zh}`;
+        return out;
     };
 
     return { composeName, sinPhrase, wordCount, wordLadder, eliteName };

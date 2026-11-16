@@ -197,7 +197,7 @@
     --fs-xl: 24px;
     /* 영웅 띠 카드 폭 상한 · 카드 사이 (`.hs-card` · `.hero-strip`) — 띠 칸에 끝을 맞추는 판(도서관 전직 패널 · ADR-0852)이 같이 읽는다 */
     --hs-card-max: 120px;
-    --hs-gap: 8px;
+    --hs-gap: 4px;   /* 2026-11-16 사용자 「영웅들 사이에 거리가 너무 멀어보이는데」 — 8 → 4 (SCREEN_DESIGN §5) */
     /* 진형 보드 (2026-09-09 · SCREEN_DESIGN §4-1) — `--fm-slot` 은 칸 한 변이고
        영웅 띠 카드 하한(.hs-card min-width)과 같은 값이다: 빈 칸이 「영웅이 들어갈 자리」로 크기만으로 읽혀야 한다.
        **보드 높이는 랭크 최대(둘) 기준으로 고정**이라 템플릿을 바꿔도 패널이 안 흔들린다
@@ -223,6 +223,24 @@
        신호는 `mock.js:applyDocumentBg` 가 단다 · ADR-0152 */
     --bg-render: auto;
 }
+/* 간체(zh) 화면 [2026-11-16 · docs/client/LOCALIZATION_ZH.md D6 · src/ui/README.md 「다국어」] — 규칙은 이 한 곳에 모은다.
+   ① 한국어 글꼴(Pretendard · Malgun Gothic)을 스택에서 통째로 뺀다 — Pretendard 가 한자 일부와 전각 부호를 맡겠다고 선언해 한 문장에 글꼴이 섞인다.
+      번들 서브셋(`assets/fonts` · scripts/build_zh_font.py)이 맨 앞이라 기기마다 같은 모양 · 서브셋에 없는 글자는 시스템 간체 글꼴로 떨어진다.
+      제목 글꼴(Cinzel)은 라틴만 그리고 한자는 뒤의 간체 고딕이 받는다.
+   ② 띄어쓰기 없는 중국어는 `word-break: keep-all` 이면 줄이 안 끊긴다 — 간체에서만 끈다(새로 `keep-all` 을 쓴 칸도 자동으로 덮인다).
+   ③ 한자는 같은 px 에서 획이 빽빽하다 — 작은 글씨 두 단만 올린다(9 → 11 · 12 → 13) */
+@font-face {
+    font-family: 'TS Noto Sans SC';
+    src: url('../assets/fonts/NotoSansSC-zh.woff2') format('woff2');
+    font-weight: 100 900; font-display: swap;
+}
+:root:lang(zh) {
+    --font-main: 'TS Noto Sans SC', 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Source Han Sans SC', 'WenQuanYi Micro Hei', sans-serif;
+    --font-display: 'Cinzel', 'TS Noto Sans SC', 'Microsoft YaHei', serif;
+    --fs-2xs: 11px;
+    --fs-xs: 13px;
+}
+:root:lang(zh) *, :root:lang(zh) *::before, :root:lang(zh) *::after { word-break: normal !important; line-break: strict; }
 /* 배경 도트 스타일 — 보간하면 도트가 뭉간다. 기본값(일러스트)은 반대로 켜 두여야 축소할 때 선이 안 끊긴다
    (512를 26px 칸에 넣으면 20픽셀 중 1픽셀만 남는다 — 초상에서 겪은 것과 같은 함정).
    ⚠ 얼굴 쪽 형제 토큰은 `--face-render` 다. `gemini` · `gpt` 모두 손그림이라 **재정의가 없다**
@@ -4298,7 +4316,38 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
     display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0;
     margin-top: 1px;
 }
-/* ~~소제목 오른쪽 끝 [우선순위] · 스킬 우선순위 창 `.sk-order-*`~~ — 2026-11-02 걷었다(SCREEN_DESIGN §6 · ADR-1035) */
+/* 소제목 오른쪽 끝 [우선순위] (2026-11-16 · SCREEN_DESIGN §6 · ADR-1213 — 10-28 ADR-0937 의 모양을 되살렸다) — 소제목 줄 높이를 안 늘린다: 버튼 위아래 여백을 걷고 글자는 한 단 아래 ·
+   ⚠ `.btn.sm.sk-order-btn` 로 건다 — 한 단이면 `.btn.sm { padding }`(클래스 둘)에 진다(`.go-tree` 와 같은 사정) */
+.sub-h.sk-head { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.btn.sm.sk-order-btn { padding: 0 8px; font-size: var(--fs-xs); font-weight: normal; line-height: 1.4; }
+/* 스킬 우선순위 판 [2026-11-16 · ADR-1215 — 화면 가운데 창(ADR-1213)을 걷었다] — [우선순위] **바로 아래에 붙어** 펼쳐진다 · 오른쪽 끝을 버튼에 맞춘다 ·
+   아래 스킬 칸 위를 덮는다([정렬] 펼침 `.sort-fold` 와 같은 수법 · ADR-0523). 폭은 내용만큼 · 소제목 글꼴을 안 물려받게 크기 · 굵기를 다시 준다.
+   맨 위 설명 한 줄 · 그 아래 칸이 **왼쪽에서 오른쪽으로**(ADR-1221 — ~~위에서 아래로 줄 · 이름~~ ADR-1215) ·
+   칸 = 위 순번(정하지 않았으면 「–」) · 아래 작은 그림 · 칸 전체가 잡는 곳이다(끌어 옮기기) · 맨 아래 [랜덤으로] */
+.sk-order-pop {
+    position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; width: max-content;
+    display: flex; flex-direction: column; gap: 6px; padding: 6px;
+    font-size: var(--fs-sm); font-weight: normal;
+    background: var(--bg-secondary); border: 1px solid var(--border-secondary);
+    box-shadow: 0 4px 14px rgba(var(--shadow-rgb), .6);
+}
+.sk-order-desc { color: var(--text-secondary); white-space: nowrap; }
+.sk-order-list { display: flex; gap: 6px; }
+.sk-order-row {
+    display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 3px 5px 5px; cursor: grab; user-select: none; touch-action: none;
+    background: var(--bg-input); border: 1px solid var(--border-dark);
+}
+.sk-order-row:hover { border-color: var(--border-highlight); }
+.sk-order-row.drag { opacity: .35; }
+.sk-order-no { flex: none; min-width: 1em; text-align: center; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.sk-order-ico { position: relative; flex: none; width: 26px; height: 26px; }   /* 그림 오른쪽 아래 `Lv.n`(`.sk-lv`)의 기준 칸 (ADR-0701) */
+.sk-order-ico img { display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: var(--face-render); }
+.sk-order-foot { display: flex; justify-content: flex-end; }
+/* 삽입선 — 영웅 띠의 `.hs-insert` 와 같은 세로 막대(같은 색) · 고스트 위 층 (ADR-1221 — 칸이 가로로 서며 가로 선 → 세로 선) */
+.sk-order-insert {
+    position: fixed; width: 3px; transform: translateX(-50%); z-index: 46; pointer-events: none;
+    background: var(--color-drop); border-radius: 2px; box-shadow: 0 0 6px var(--color-drop);
+}
 .sk-cards { display: grid; grid-template-columns: repeat(3, clamp(44px, 30%, 52px)); gap: 8px; }
 /* 칸 + 칸 아래 출처 글자 [2026-09-15 사용자 지시 · ADR-0121] — 격자 열은 이 묶음이 받는다.
    글자는 칸 **밖**이라 빈 칸의 흐림(`.sk-card.vacant`)을 안 탄다 — 빈 칸 아래에도 자리 이름은 같은 세기로 선다 */
@@ -5427,7 +5476,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 @property --tv-face { syntax: '<length>'; inherits: true; initial-value: 0px; }
 .c-tavern > .tv-top {
     --tv-k: .38;          /* 초상 = 카드 안쪽 폭의 38% — 카드 상한에서 .38 × (344 − 34) ≈ 118 = 위 영웅 띠 초상(`--hs-card-max` 120 − 테두리 2)과 같은 크기 (ADR-1196 · 시작 화면은 41%) */
-    --tv-sk: .9;          /* 수색 얼굴 칸 = 초상의 90% — 「대기소」 이름 띠 + 칸 셋 줄이 안내 칸(후보 카드 높이) 안에 선다 (ADR-1144 · ADR-1145) */
+    --tv-sk: .9;          /* 수색 얼굴 칸 = 초상의 90% — 칸 셋 줄이 안내 칸의 세 몫(후보 카드 높이를 셋으로 나눈 줄) 안에 선다 (ADR-1144 · ADR-1222) */
     --tv-card-x: 34px;    /* 카드 좌우 여백 16 × 2 + 테두리 1 × 2 (.ng-card) */
     --tv-panel-x: 34px;   /* 패널 좌우 여백 16 × 2 + 테두리 1 × 2 (.panel) */
     --tv-gap: 14px;       /* 두 판 사이 — 아래 카드 폭 식이 같이 읽는다 (D2 Min 은 8) */
@@ -5454,13 +5503,11 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 수색 칸 [2026-10-09 ADR-0574 · 2×2 2026-10-12 ADR-0593 · 2026-10-19 ADR-0671] — 두 칸씩 줄짓는다. **늘 선다**(빈 칸 포함).
    초상 칸은 정사각 · 테두리 = 등급 색(렌더러가 넣는다 — 명단 카드 윗선과 같은 색) · 아래 띠 = 출처(「방문」 · 「마차」 — 떠나지 않아 시간이 없다).
    빈 칸 · 안 열린 칸은 기존 슬롯 테두리를 쓴다 (2026-11-15 사용자 지시) */
-/* 얼굴 칸 열은 안내 칸과 같은 높이로 선다 — 위 「대기소」 이름이 남는 세로를 받고 칸 묶음은 바닥에 붙어 끝 줄 아랫변이 안내 칸 아랫변에 맞는다 ·
-   칸 사이는 위아래 · 양옆 같은 8px (ADR-1145) */
+/* 얼굴 칸 열은 안내 칸과 같은 높이로 선다 — 줄 = 수색 자리 · 안내 칸의 몫과 **같은 줄로** 나눈다: 위아래 여백 = 안내 카드의 위(여백 14 + 윗선 3) · 아래(여백 13 + 아랫선 1) ·
+   줄 사이 2px(`.tv-visit-log` 의 몫 사이) · 칸은 줄 위에 붙어 그 자리 영웅의 머리 옆에 선다 · 양옆 8px · 이름 띠 없음 (ADR-1222 — ~~「대기소」 이름 띠~~ ADR-1145) */
 .tv-join { align-self: stretch; display: flex; flex-direction: column; }
-.tv-join-h { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; margin-bottom: 8px; font-size: var(--fs-sm); color: var(--text-primary); white-space: nowrap;
-    background: var(--bg-tertiary); border: 1px solid var(--border-dark); }   /* 이름 띠 — 바탕 + 가운데 정렬 · 띠 ↔ 칸 사이도 8px */
-:where(:root[data-skin]) .tv-join-h { background: var(--sk-chrome), #1a1a1a; border-color: #050505; }   /* 스킨 — 대장간 판 제목 띠(`.fg-board-hd`)와 같은 돌 띠 */
-.tv-join-grid { flex: none; display: grid; grid-template-columns: repeat(2, var(--tv-slot)); gap: 8px; }
+.tv-join-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(2, var(--tv-slot)); grid-template-rows: repeat(var(--tv-rows, 3), minmax(0, 1fr));
+    align-items: start; column-gap: 8px; row-gap: 2px; padding: 17px 0 14px; }
 .tv-join-slot {
     position: relative; display: block; width: 100%; aspect-ratio: 1; padding: 0; overflow: hidden;
     background: var(--bg-tertiary); border: 1px solid var(--border-secondary); border-top-width: 2px; cursor: pointer;
@@ -5508,7 +5555,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     color: var(--text-muted); font-size: var(--fs-sm);
 }
 .tv-cands .b-hire { width: 100%; margin-top: 7px; }
-/* 후보 카드 바닥 줄 [고용] · [보관] — 줄(`.tv-res-btns`)이 위 여백을 들고 둘이 반씩 나눈다 (ADR-0897) */
+/* 후보 카드 바닥 줄 [고용] 하나 — 줄(`.tv-res-btns`)이 위 여백을 들고 버튼이 줄을 다 쓴다 (ADR-1222 — ~~[보관]~~ ADR-0897) */
 .tv-cands .tv-res-btns > .b-hire { margin-top: 0; }
 /* 수색 칸 — 안내 [2026-10-19 · SCREEN_DESIGN §8-1 · ADR-0671 — ~~수색 칸~~ 자리 그대로]. 후보 카드와 **같은 크기**다 —
    격자가 늘 3열이라(후보 2 + 이 칸) 폭은 저절로 같고, 높이는 같은 행의 카드가 정한다(`align-self: stretch`).
