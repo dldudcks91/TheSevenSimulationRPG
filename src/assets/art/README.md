@@ -336,6 +336,8 @@ fx_source/stun_star_20261028/   그 원본(Codex 다크 카툰 2×2 · 왼쪽 �
 
 **함성 여섯 교체 · 2026-11-15** — 워 오더스·배틀 오더스·워 크라이·배틀 크라이·호령·사자후는 `<skill_id>_shockwave_<style>.webp` 12장을 사용한다. 초상 밖으로 퍼지는 세 겹의 충격파이며 두 그림체의 크기·움직임이 같다. 이전 개별 함성 파일 10장은 삭제했다. 원본·프롬프트·설치·검사는 [`fx_source/shout_shockwave_20261115/`](fx_source/shout_shockwave_20261115/README.md)에 있으며, `export.py` → `install.py` → `verify_installed.py` 순으로 재현한다. 기존 누락 보완 내보내기는 새 함성을 옛 시트에서 복구하지 않는다. 다른 스킬과 함께 들어 있는 과거 원본 시트는 보존한다.
 
+**모으기 기운 · 2026-11-17** — `charge_gather_<style>.webp` 두 장(다크 카툰 · 금속박)은 스킬 하나가 아니라 **모으기 시전 방식(`channel_charge`)이 같이 쓰는** 그림이다 — 모으는 동안 초상 둘레에서 안으로 빨려 든다(`skill_art.js:CHARGE_ART` · [ADR-1252](../../../docs/client/adr/1252-모으기는-모으는-동안-카드가-웅크리고-기운이-빨려-들며-쏘는-방에-번쩍이며-튄다.md)). 원본 · 프롬프트는 [`fx_source/charge_gather_20261117/`](fx_source/charge_gather_20261117/README.md) · 다시 내보내기는 그 폴더의 `export.py`.
+
 새로 그렸던 수채화·스테인드글라스·네온 플라즈마·로우폴리·자수는 설치본·원본·비교 이미지·프롬프트까지 삭제했다([ADR-0754](../../../docs/client/adr/0754-새-이펙트-시안은-삭제하고-누락-스킬은-다크카툰으로-채운다.md)). 삭제 목록과 기존 금속박·다크 카툰 보존 파일의 SHA-256은 새 원본 폴더에 있다. 오래된 발주 문서·스크립트는 과거 기록이며 삭제된 그림의 재빌드 경로로 사용하지 않는다. 스테이지 띠·배경·초상·아이콘은 이 정리 범위와 무관하다.
 
 ## faces/ — 몬스터 얼굴 아이콘 · **스타일 하나 = 폴더 하나** [2026-08-30]
@@ -632,7 +634,7 @@ icons_source/skills/
 - **리커버리 · 아이언 스킨 · 레지스탕스 실드 수정** [2026-10-17 · 사용자 지시 · 내장 image_gen 편집] — 리커버리와 아이언 스킨은 같은 정면 사람 상반신을 쓴다. 리커버리는 몸 가운데 큰 십자 구멍, 아이언 스킨은 십자 대신 목 · 어깨 · 가슴 · 복부의 적은 갑옷 선으로만 구분한다. 레지스탕스 실드는 홀리 실드의 방패 외형 · 테두리 · 바깥 광선을 기준으로 안쪽 십자를 화염 · 얼음 · 번개로 바꿨다. 회백 `#d8d9e6`, 생성 알파 유지, 512 PNG · 장변 88% · 중앙 50/50, 게임용 256 WebP 세 장만 기존 인코더로 내보냈다. 원본 · 프롬프트 · 이전 설치본 · 크기 비교는 [`body_shield_revision_20261017/`](icons_source/skills/source/body_shield_revision_20261017/manifest.json)에 기록한다
 - **궁수 기본 버프 넷** [2026-10-30 · 사용자 지시 · 내장 image_gen] — 콜드 애로우(`arc_coldarrow`)는 얼음 화살과 눈송이, 퀵 핸즈(`arc_quickhands`)는 화살을 집은 손과 속도선, 이글 아이(`arc_eagleeye`)는 눈을 강조한 매의 머리, 이베이드(`arc_evade`)는 머리 위 화살을 피하는 후드 상반신이다. 기존 궁수 시트와 기본 단색 앵커를 기준으로 회백 `#d8d9e6` · 투명 배경 · 굵은 실루엣으로 맞췄다. 512 PNG · 장변 88% · 중앙 50/50, 게임용 256 WebP 네 장과 현재 ID 등록을 함께 적용했다. 원본 · 프롬프트 · 내보내기 기록 · 이전 이베이드는 [`archer_revision_20261030/`](icons_source/skills/source/archer_revision_20261030/manifest.json), 28 · 32 · 44px 비교는 [`comparison.png`](../../../output/archer_icons_20261030/comparison.png).
 - **헬파이어**(`mon_hellfire` — 몬스터 전용 · 1-5 사탄의 정신 집중) [2026-10-22 · Codex 단색] — 「굵은 뿔 한 쌍 사이로 쏟아지는 지옥불이 해골 하나에 떨어진다」. 첫 시트(`source/sheet_15_codex_hellfire.png`)는 길쭉해서 40px 에서 가늘어 버렸고 두 번째 시트(`sheet_16_codex_hellfire.png` 오른쪽 위 칸)를 설치했다 · 프롬프트는 각 시트 옆 `_prompt.txt`. 설치본 실측 장변 88 · 중앙 50/50 · 단색 `#d8d9e6` · 256 WebP 한 장만 기존 인코더로 내보냈다
-- **장 보스 고유 넷**(몬스터 전용 · skill_design §12-9) [2026-10-29 · Codex 단색] — `mon_ironmaiden` 「양쪽 문이 열린 가시 고문함」(`sheet_17` 왼쪽 위) · `mon_goldfever` 「왕관 쓴 채 포효하는 뿔 머리 · 위로 튀는 동전 셋」(`sheet_18` 왼쪽 위) · `mon_delegate` 「원 배지 안 빈 왕좌 · 자리를 떠나는 화살」(오오라라 원 배지 · `sheet_19` 오른쪽 위) · `mon_swarm` 「금이 가며 갈라지는 파리」(`sheet_20` 왼쪽 아래). 실측 장변 88 · 중앙 50/50 · 단색 `#d8d9e6`. **화면에는 아직 안 나온다** — `skill.csv` 행이 없어(DEV_PLAN R380) `mock.js:SKILL_ICON_FILES` 에 넣지 않았다 · 고른 칸 밖의 구도는 시트에만 있다
+- **장 보스 고유 넷**(몬스터 전용 · skill_design §12-9) [2026-10-29 · Codex 단색] — `mon_ironmaiden` 「양쪽 문이 열린 가시 고문함」(`sheet_17` 왼쪽 위) · `mon_goldfever` 「왕관 쓴 채 포효하는 뿔 머리 · 위로 튀는 동전 셋」(`sheet_18` 왼쪽 위) · `mon_mire` 「원 배지 안 빈 왕좌 · 자리를 떠나는 화살」(오오라라 원 배지 · `sheet_19` 오른쪽 위 · 옛 델리게이트 그림 — 2026-11-17 R533 늪으로 이름만 바꿔 임시로 잇는다 · 늪 고유 그림은 아직 없다) · `mon_swarm` 「금이 가며 갈라지는 파리」(`sheet_20` 왼쪽 아래). 실측 장변 88 · 중앙 50/50 · 단색 `#d8d9e6`. **화면에는 아직 안 나온다** — `skill.csv` 행이 없어(DEV_PLAN R380) `mock.js:SKILL_ICON_FILES` 에 넣지 않았다 · 고른 칸 밖의 구도는 시트에만 있다
 - 지운 스킬(`war_taunt` · `kni_duel` · `mag_focus` · `mag_frozenwall`)은 2026-10-16 행이 걷혀 목록에서 빠졌다 — 그림 파일만 폴더에 남는다
 - **전직 45** — 투톤(회백 실루엣 + 효과 강조색 하나 · 원본 `source/<직업>_*_sheet.png` 다섯 · 2026-09-28 · 궁수 9 는 2026-10-09) · `mastery/advance/source/tone.py` 로 칠했다 — 검정만 회백으로 칠한다. **강조색 = 그 전직의 색** [2026-11-14] — 전직 판 칸 그림과 같은 표(`mastery/advance/source/tree_20261114/plan.py:COLOR` · 위 `icons/mastery/` 절)로 `recolor.py` 가 다시 칠했다(칠하기 전 원본 = 같은 폴더 `skill_orig/`). 새 전직 스킬 열 [2026-11-14] — `war_divinedescent` · `kni_cleansing` · `kni_offenseaura` · `kni_elemconvert` · `kni_fallingstrike` · `mag_frostarmor` · `mag_thundergod` · `pri_endure` 는 Codex 시트 `mastery/advance/source/tree_20261114/sheet_01_codex.png` · `mag_ember`(불씨가 붙어 터지는 투구) · `pri_purify`(사슬을 끊는 손)는 같은 폴더 `sheet_12_codex.png`
 
@@ -863,4 +865,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-11-16*
+*마지막 업데이트: 2026-11-17*

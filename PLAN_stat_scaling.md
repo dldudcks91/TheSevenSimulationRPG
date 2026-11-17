@@ -1,6 +1,6 @@
 # PLAN — 능력치 × 스킬 · 직업별 능력치 비율
 
-> 2026-11-16 논의 정리 · **기획서 · CSV · 코드는 아직 안 고쳤다** · 확정 표기가 없는 것은 전부 논의 중
+> 2026-11-16 논의 정리 · **직업 비율 · 죄종 몫 · 끝값 다시 굴리기는 11-17 구현했다(DEV_PLAN R529 · hero_design §4-3)** — 나머지(값 칸 5% · 원소 축 · 버프 축 · §4 · §5)는 기획서 · CSV · 코드 모두 아직이다 · 확정 표기가 없는 것은 전부 논의 중
 > 측정 근거: [output/2026-11-16_basic_skills_r515/SUMMARY.md](output/2026-11-16_basic_skills_r515/SUMMARY.md)(결투 · 스탯 폭 측정 「덧」) · [stat_slots.md](output/2026-11-16_basic_skills_r515/stat_slots.md)(스킬별 능력치 칸 전부) · 영웅 생성 분포 `roll.json`(게임 함수 `rollHeroOf` 5만 명 × 5직업)
 
 ## 0. 정해진 것
@@ -88,14 +88,14 @@
 
 | 곳 | 무엇 |
 |---|---|
-| `balance.csv` | 값 칸 폭 새 키(예 `attr_buff_step_pct` 0.05) · `hero_attr_sin_weight` 1.3 → 1.2 · `hero_attr_key_weight` · `_sub_weight` 퇴역 |
-| 직업 비율 | `class.csv` 는 주력 · 보조 두 칸뿐 — 7칸 비율은 칸 추가 또는 새 표(**스키마 변경**) |
-| `hero.js` | `attrWeights` — 직업 7칸 비율 · 죄종 건너뜀(R389) 제거 · `rollAttributesTrace` — 범위 밖 칸을 끝값으로 자르지 않고 그 칸만 다시 굴린다(보조 rng 안이라 바깥 소비 1회 그대로 · 칸 다시 굴리기에도 상한을 두고 닿으면 자른다 — 데이터 실수로 멈추지 않게) |
+| `balance.csv` | 값 칸 폭 새 키(예 `attr_buff_step_pct` 0.05) — 죄종 몫 · 옛 손잡이는 ✅ R529 |
+| 직업 비율 | ✅ 11-17 R529 — `class.csv` 칸 일곱 `ratio_<능력치>` · `key_attr` · `sub_attr` 는 남겼다(굴림에선 안 읽는다 — 지울지는 §1 그대로) · `hero_attr_sin_weight` 1.2 · `hero_attr_key_weight` · `_sub_weight` 퇴역 |
+| `hero.js` | ✅ 11-17 R529 — `attrWeights` 직업 7칸 비율 · 죄종 건너뜀(R389) 제거 · `rollAttributesTrace` 칸 다시 굴리기(상한 = `hero_attr_reroll_max`) |
 | `skill.js` | `scaleLine` — 값 칸 「더하기」 → 「× 1.05^(능력치 − 10)」 · 부호 유지 · 레벨 몫까지 곱 |
 | `skill_effect.csv` · 전투 | 원소 지능 칸 삭제 · 홀리 파이어 펄스 평타 계수 · 함성 축 |
 | 툴팁 `tip.js` | 값 칸 식 「+ 통솔 × 계수」 → 「× 통솔」 — SCREEN_DESIGN §2 먼저(`/ui`) |
-| 문서 | skill_design §13-1 · §13-2 · §13-3 · battle_design §9-2 · hero_design §4-3(비율 · 끝값 다시 굴리기 · 「소폭 계수」 문장) · INTERFACE §2-8 · §5-3(보조 rng 소비) · GAME_DESIGN §9 · DEV_PLAN R 행 |
-| 검증 | `test.js` 「계수 0 이면 원값」 단정 · 키 목록 · 골든 재촬영 · 결투 재측정 |
+| 문서 | skill_design §13-1 · §13-2 · §13-3 · battle_design §9-2 · INTERFACE §2-8 — hero_design §4-3 · INTERFACE §2-4 · §5-3 · GAME_DESIGN §9 · DEV_PLAN R529 는 ✅(비율 · 죄종 몫 · 끝값) |
+| 검증 | `test.js` 「계수 0 이면 원값」 단정 · 키 목록 · 결투 재측정 — 능력치 굴림 단정은 ✅ R529 · 골든 재촬영은 아직(작업 전부터 60/60 불일치) |
 
 ---
 *마지막 업데이트: 2026-11-17*

@@ -43,8 +43,9 @@ export const ELEMENTS = ['fire', 'cold', 'lightning', 'poison'];
  *   stats        — 기본 능력치 7종 정의 [{id}...] (순서 = 표시 순서)  ← hero_attribute.csv
  *   sins         — 죄종 id 목록
  *   sinAttrs     — {sinId: statId} ← sin_attr.csv — 죄종이 잘 붙게 미는 능력치 한 칸 (2026-10-22 · R308 · 능력치 굴림 비율)
- *   classes      — 직업 정의 [{id, keyAttr, subAttr, stage, hpBase}...] — `hpBase` = 레벨 1 최대 HP(null 이면 `hero_hp_base` · 2026-10-02) ·
- *                  `keyAttr` · `subAttr` = 능력치 굴림에서 그 직업이 미는 주력 · 보조 칸(`subAttr` null = 없음 · 2026-10-22 · R308)
+ *   classes      — 직업 정의 [{id, keyAttr, subAttr, attrRatio, stage, hpBase}...] — `hpBase` = 레벨 1 최대 HP(null 이면 `hero_hp_base` · 2026-10-02) ·
+ *                  `attrRatio` = {statId: 비율} — 능력치 굴림의 **직업 7칸 비율**(모양만 · 크기는 등급 대역 · 2026-11-17 R529 · hero_design §4-3) ·
+ *                  `keyAttr` · `subAttr` = 직업 메인 · 보조 칸 기록 — 굴림에서는 안 읽는다(R529 — ~~주력 · 보조 두 칸 손잡이~~ 2026-10-22 R308 대체)
  *   weaponGroups — {id: {period, damageKind, ...}}  ← weapon_group.csv. 무기가 행동 주기·피해 종류를 정한다
  *   armorGroups  — {slot: {groupId: {defMult, trait, ...}}} ← armor_group.csv — **부위 → 갈래** (2026-09-16 갑옷군 · R107 · 2026-09-18 네 부위).
  *                  **낀 방어구마다** 제 갈래의 공속 · 쿨감을 더한다 — 값이 있는 것은 갑옷군뿐이다. 투구 · 장갑 · 신발 갈래 특성(`trait`)은 드롭이 아이템 줄로 박아
@@ -419,6 +420,13 @@ export function createHeroSystem(data) {
     // 로드 검증 — 직업 · 죄종이 미는 칸이 능력치 어휘 밖이면 그 칸의 비율이 조용히 1 로 떨어진다 → 생성 때 던진다
     for (const c of data.classes) for (const k of ['keyAttr', 'subAttr'])
         if (c[k] != null && !statIds.includes(c[k])) throw new Error(`hero: class.csv ${c.id} 의 ${k} '${c[k]}' 가 hero_attribute.csv 에 없다`);
+    // 직업 7칸 비율 (2026-11-17 R529) — 능력치마다 양의 유한수 하나 · 칸이 빠지면 그 칸의 중심이 0 으로 떨어져 조용히 굴림이 기운다 → 던진다
+    for (const c of data.classes) {
+        const r = c.attrRatio ?? {};
+        for (const id of statIds) if (!(Number.isFinite(r[id]) && r[id] > 0))
+            throw new Error(`hero: class.csv ${c.id} 의 ratio_${id} '${r[id]}' — 능력치 굴림 비율은 0 보다 큰 수여야 한다`);
+        for (const id of Object.keys(r)) if (!statIds.includes(id)) throw new Error(`hero: class.csv ${c.id} 의 ratio_${id} 가 hero_attribute.csv 에 없다`);
+    }
     if (data.sinAttrs) for (const s of data.sins ?? [])
         if (!statIds.includes(sinAttrs[s])) throw new Error(`hero: sin_attr.csv 에 죄종 '${s}' 의 칸이 없거나 어휘 밖이다 (${sinAttrs[s]})`);
     // 대역 · 폭이 다 있는 등급 — 유니크(수작업 · 기획 미정)는 칸이 `-` 라 굴리는 첫 등급의 것을 빌린다
@@ -436,22 +444,20 @@ export function createHeroSystem(data) {
     }
 
     /**
-     * 칸마다의 비율(`statIds` 순) — 1 에서 시작해 직업 주력 · 보조 · 죄종 칸에 손잡이를 곱한다. 능력치 굴림의 중심(`centersOf`)과
-     *   성장 고블린이 레벨마다 자랄 칸의 확률(`growLevels` · 2026-11-14 R495)이 **같은 표**를 쓴다
+     * 칸마다의 비율(`statIds` 순) — **직업 7칸 비율**(`attrRatio` · 직업이 없으면 모두 1)에서 시작해 죄종 칸에 `hero_attr_sin_weight` 를 곱한다
+     *   (그 칸이 직업 비율이 큰 칸이어도 곱한다 — 2026-11-17 R529 · ~~주력 · 보조 손잡이 + 겹치면 죄종 생략(R389)~~ 대체).
+     *   능력치 굴림의 중심(`centersOf`)과 성장 고블린이 레벨마다 자랄 칸의 확률(`growLevels` · 2026-11-14 R495)이 **같은 표**를 쓴다
      */
     function attrWeights(cls, sin) {
-        const c = classOf(cls);
-        const w = statIds.map(() => 1);
-        const bump = (id, k) => { const i = statIds.indexOf(id); if (i >= 0) w[i] *= k; };
-        bump(c?.keyAttr, B.hero_attr_key_weight);
-        bump(c?.subAttr, B.hero_attr_sub_weight);
-        if (sinAttrs[sin] !== c?.keyAttr && sinAttrs[sin] !== c?.subAttr) bump(sinAttrs[sin], B.hero_attr_sin_weight);
+        const r = classOf(cls)?.attrRatio;
+        const w = statIds.map(id => r ? r[id] : 1);
+        const i = statIds.indexOf(sinAttrs[sin]);
+        if (i >= 0) w[i] *= B.hero_attr_sin_weight;
         return w;
     }
 
     /**
-     * 칸마다의 중심 — 대역 가운데 × 그 칸 비율 ÷ 비율 합. 비율은 1 에서 시작해 직업 주력 · 보조 · 죄종 칸에 손잡이를 곱한다
-     * (`hero_attr_key_weight` · `_sub_weight` · `_sin_weight`) — 죄종 칸이 직업 주력·보조와 겹치면 죄종 가중치는 생략한다(R389).
+     * 칸마다의 중심 — 대역 가운데 × 그 칸 비율 ÷ 비율 합(비율 = `attrWeights`).
      * 직업 · 죄종은 「어느 칸이 크게」만 정하고 「얼마나」는 등급의 대역이 정한다 — 비율 표 하나로 세 등급을 다 쓴다
      */
     function centersOf(cls, sin, band) {
@@ -470,6 +476,8 @@ export function createHeroSystem(data) {
      *   그 몫을 주력이 가져가 버려서(2026-10-22 실측) 뺐다. **주력 최고치 보장은 없다** — 주력은 중심이 가장 높아 대개 가장 높게 나올 뿐이다.
      * `hero_attr_reroll_max` 번째도 대역 밖이면 그 굴림을 **다듬어** 끝낸다 — 넘치면 가장 큰 칸 · 모자라면 가장 작은 칸부터 1씩(동률은 앞 칸).
      *   평소엔 몇 번 안에 든다 · 상한은 대역에 들 수 없는 데이터에서 멈추지 않게 하는 안전장치다.
+     * **칸 하나가 생성 범위 밖이면 그 칸만 다시 굴린다** [2026-11-17 사용자 · R529] — ~~끝값으로 자른다~~(범위 밖 몫이 끝값에 쌓여
+     *   최솟값 · 최댓값이 바로 앞 값보다 많이 나왔다). 칸 다시 굴리기도 `hero_attr_reroll_max` 번째에 닿으면 그 값을 범위로 자른다(안전장치).
      * ⚠ **바깥 rng 소비는 언제나 1회다** — 그 값을 씨앗으로 만든 보조 rng 안에서만 다시 굴린다. 다시 굴린 횟수가 바깥 수열을 밀면
      *   중심 · 폭을 고칠 때마다 같은 시드의 고유 · 얼굴 · 다음 영웅까지 바뀐다 (INTERFACE §5-2).
      * 몇 번째에 들었나(`tries`) · 다듬었나(`trimmed`)를 함께 낸다 — 단정 · 캘리브레이션용. 영웅에는 `stats` 만 박힌다(`rollAttributes`)
@@ -479,10 +487,17 @@ export function createHeroSystem(data) {
         const band = bandOf(tier);
         const c = centersOf(cls, sin, band);
         const lo = attrRollMin, hi = attrRollMax;   // 생성 범위 (2026-11-16 — ~~최종 최소값 hero_attr_min 부터~~)
+        const cap = Math.max(1, B.hero_attr_reroll_max);
+        // 칸 하나 — 범위 안이 나올 때까지 그 칸만 다시 굴린다 · 상한에 닿으면 마지막 값을 범위로 자른다 (R529)
+        const slot = x => {
+            let r = 0;
+            for (let k = 0; k < cap; k++) { r = Math.round(x + band.sd * gauss(sub)); if (r >= lo && r <= hi) return r; }
+            return Math.max(lo, Math.min(hi, r));
+        };
         let v = null, tries = 0;
-        while (tries < Math.max(1, B.hero_attr_reroll_max)) {
+        while (tries < cap) {
             tries++;
-            v = c.map(x => Math.max(lo, Math.min(hi, Math.round(x + band.sd * gauss(sub)))));
+            v = c.map(slot);
             const s = v.reduce((a, b) => a + b, 0);
             if (s >= band.min && s <= band.max) return { stats: toStats(v), tries, trimmed: false };
         }

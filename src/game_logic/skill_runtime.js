@@ -54,7 +54,9 @@ export function cooldownSec(B, u, def) {
     const cool = def.cool ?? 0;
     // 쿨타임 −n초(`u.coolMinus` — 직업 T1-2 · 2026-11-09 R432)는 표기 쿨에서 **먼저** 빼고 쿨감 % 를 곱한다 · 바닥은 표기 쿨 × 바닥 배수(같다) — 0 이면 종전 값 그대로
     const cut = (cool - (u.coolMinus ?? 0)) * Math.max(B.skill_cd_floor_mult, 1 - (u.cdr ?? 0) - skillTagBonus(u.fx?.skillTags, def, 'cooldown'));
-    return Math.max(cool * B.skill_cd_floor_mult, cut);
+    const lap = Math.max(cool * B.skill_cd_floor_mult, cut);
+    // 늪의 느려짐(`u.coolSlow` — 상대가 든 늪이 건 창 · 2026-11-17 R533)은 다 깎은 쿨에 마지막으로 곱한다 · 0 이면 곱하지 않는다 — 부동소수가 종전과 같다
+    return u.coolSlow > 0 ? lap * (1 + u.coolSlow) : lap;
 }
 
 /**
@@ -82,6 +84,9 @@ export function cooldownSec(B, u, def) {
 export function createSkillRuntime(ctx) {
     const { SK, B, rng, timeline, out, units, r1, EPS, hooks } = ctx;
     const F = createFormula(B);      // 고정 피해의 `indirect` — 무상태 순수 함수라 battle.js 의 것과 같은 값을 낸다 (code_conventions §2)
+    // 같은 스킬 둘 — 센 쪽 하나 [2026-11-17 · R246 · skill_design §1-6] — 창 객체 → 그 창을 연 {시전자, 시전 단위} · 그 창에 딸린 약한 쪽 대기열 [{u, x, until}].
+    //   창 밖에 둔다 — 창을 복사하는 곳(빼앗기 · 훔치기)이 대기열까지 데려가지 않고, 창을 손으로 걷는 곳(라운드 끝 · 정화 · 쓰러짐)에선 창과 함께 사라진다
+    const SRC = new WeakMap(), HELD = new WeakMap();
 
     const alive = list => list.filter(u => u.hp > 0);
     const alliesOf = u => u.side === 'party'
@@ -97,16 +102,20 @@ export function createSkillRuntime(ctx) {
         const shown = [];           // 이 틱에 낸 `buffEnd` 들 — 조용한 창(`quiet`)은 안 든다
         const ails = new Set();     // 창이 닫힌 화상 · 중독 — 닫은 뒤 가장 센 창을 다시 알린다 (R178)
         const closed = [];          // 닫힌 창 — 닫힌 뒤 할 일이 있는 전직 장치(`ctx.advExpired`)가 읽는다 (2026-11-14 R471)
+        const reopen = [];          // 닫힌 창의 대기열에서 이어받을 약한 쪽 — 닫기를 다 마친 뒤 연다 (2026-11-17 R246)
         for (const id of Object.keys(u.buffs)) {
             const b = u.buffs[id];
             if (b.until <= at + EPS) {
+                // 같은 스킬의 약한 쪽이 숨어 있었으면 그 남은 시간만큼 이어받는다 (R246 · skill_design §1-6) — 같은 스킬이면 칩을 닫지 않는다(`buff` 가 값 · 시간을 고친다)
+                const next = takeHeld(b, at);
+                if (next) reopen.push([id, next]);
                 // `quiet` = 무기 옵션 창(타격 시 디버프 · R78) — 열 때 이벤트를 안 냈으므로 닫을 때도 안 낸다(재생기는 `s` 로 스킬 이름을 찾는다)
                 delete u.buffs[id];
                 closed.push(b);
                 // 프렌지 겹 이어짐 [2026-10-28 · R372 · skill_design §12-3] — 쌓인 겹을 그 유닛의 **다음 차례**까지 남긴다(`act` 가 지운다 · `applyStatus` 가 잇는다)
                 if (b.stat === 'frenzy' && (b.n ?? 0) > 0) u.fzKeep = { s: id, n: b.n };
                 // `s` = 그 창을 건 스킬 — 창 열쇠는 걸린 효과 id 다 (2026-09-24 · R151). 손으로 만든 창(`s` 없음)은 열쇠를 쓴다 · 상태이상은 `k` (R178)
-                if (!b.quiet) {
+                if (!b.quiet && !(next && next.h.x.id === (b.s ?? id))) {
                     const ev = { t: r1(at), e: 'buffEnd', u: u.key, s: b.s ?? id };
                     if (b.ail) ev.k = b.ail;
                     // 진형 붕괴가 풀리면 되돌아간 랭크를 싣는다 — 재생기가 칸을 옮긴다(2026-11-02 R424 · 아래 `end` 가 랭크를 되돌린 값)
@@ -118,6 +127,9 @@ export function createSkillRuntime(ctx) {
                 changed = true;
             }
         }
+        // 이어받기 (R246) — 닫힌 창의 대기열에서 가장 센 약한 쪽을 **제 끝 시각 그대로** 연다(시계는 숨어 있는 동안에도 흘렀다) ·
+        //   `apply` 를 다시 부른다(보호막 조각 · 최대 HP · 진형 붕괴가 그 창의 값으로 다시 선다) · 남은 대기열은 새 창에 딸린다 · rng 0
+        for (const [id, n] of reopen) openWindow(n.h.u, u, n.h.x, id, n.h.until, at, null, undefined, n.rest);
         // 화상 · 중독 — 남은 창 중 가장 센 것을 다시 알린다(이벤트 값은 창에서 오므로 아래 `refreshDerived` 와 순서가 무관하다)
         for (const ail of ails) syncAilment(u, ail, at);
         // 배리어도 같은 조건 — 창이 끝나면 남은 흡수량은 사라진다 (skill_design §9-3) · 끝난 조각만 걷는다(출처마다 조각 · R517) · 걷었으면 `bar`(남은 합)
@@ -249,7 +261,8 @@ export function createSkillRuntime(ctx) {
      *   `sk.onHit` — 결빙 · battle_design §2-4)이 같이 쓴다. `x` = 걸린 효과를 푼 모양(`id` 건 스킬 · `status` · `stat` · `value` · `dur` · `element` · `roundEnd` · `ailment`).
      * 시간 — 버프 지속시간 +%(반지 · 목걸이 공통옵션 · 2026-09-21 · R127)는 **거는 쪽** 값이다(적에게 거는 창도 같다 · 0 이면 종전과 같다).
      *   **상태이상**(`AILMENTS`)이면 **받는 쪽** 시간 감소를 한 번 더 곱하고, 0 이하가 되면 안 건다(이벤트도 없다). 감소가 0 이면 곱하지 않는다 — 부동소수가 종전과 같다.
-     * 같은 열쇠의 창을 **다른 스킬**이 걸었었으면 옛 `s` 의 `buffEnd` 를 먼저 낸다 — 재생기가 칩을 `s` 로 들어서, 안 내면 옛 칩이 남는다(조용한 창 제외). rng 0
+     * 같은 열쇠의 창을 **다른 스킬**이 걸었었으면 옛 `s` 의 `buffEnd` 를 먼저 낸다 — 재생기가 칩을 `s` 로 들어서, 안 내면 옛 칩이 남는다(조용한 창 제외).
+     * 같은 열쇠의 창을 **다른 시전자**가 걸어 두었으면 **센 쪽 하나**만 선다 — 약한 쪽은 대기열에서 제 시계로 흐르다 센 쪽이 끝나면 이어받는다(2026-11-17 R246). rng 0
      */
     function applyStatus(u, tgt, x, t) {
         // 버프 지속시간 +% — 장비 + **도감 Lv2**(그 종족이 나온 라운드 동안 파티가 거는 창 · `units.codexRound.buff` · 2026-10-22 R314) · 없으면 0 을 더해 종전 값
@@ -285,6 +298,39 @@ export function createSkillRuntime(ctx) {
         const old = tgt.buffs[key];
         // 스턴은 또 걸리면 **늦게 끝나는 쪽** — 더하지도 줄이지도 않는다 (battle_design §2-7)
         if (ail?.hold && old) until = Math.max(until, old.until);
+        // 같은 스킬 둘 — **센 쪽 하나** [2026-11-17 사용자 · R246 · skill_design §1-6] — 같은 열쇠의 창을 **다른 시전자**가 걸어 두었으면 값의 크기로 견준다
+        //   (같으면 늦게 끝나는 쪽). 약한 쪽은 창 밖 대기열(`HELD`)에서 제 시계로 흐르고 센 쪽이 끝나면 남은 시간만큼 이어받는다(`expire`).
+        //   같은 시전자의 재시전 · 상태이상 · 조용한 창 · 끝없는 창(오오라 — battle.js `castAura` 가 견준다)은 종전대로 덮는다 · rng 0
+        let held = old ? (HELD.get(old) ?? []).filter(h => h.until > t + EPS) : [];
+        if (!ail && old && !old.quiet && old.until !== Infinity && old.by !== u.key) {
+            held = held.filter(h => !(h.u === u && h.x.id === x.id));   // 같은 시전자 · 같은 스킬의 옛 대기는 이번 것이 대신한다
+            if (!stronger(x.value, until, old.v, old.until)) { held.push({ u, x, until }); HELD.set(old, held); return; }
+            const src = SRC.get(old);
+            if (src && old.until > t + EPS) held.push({ u: src.u, x: src.x, until: old.until });
+        }
+        openWindow(u, tgt, x, key, until, t, ail, old, held);
+    }
+
+    /** 세기 견주기 — 값의 크기 · 같으면 늦게 끝나는 쪽(같은 끝이면 새 것) (R246) */
+    function stronger(v, until, ov, oUntil) {
+        const m = Math.abs(Number.isFinite(v) ? v : 0), om = Math.abs(Number.isFinite(ov) ? ov : 0);
+        return m > om || (m === om && until >= oUntil);
+    }
+
+    /** 대기열에서 아직 안 끝난 가장 센 것 하나와 나머지 — 없으면 null (R246) */
+    function takeHeld(b, at) {
+        const list = (HELD.get(b) ?? []).filter(h => h.until > at + EPS);
+        if (!list.length) return null;
+        let best = list[0];
+        for (const h of list) if (h !== best && stronger(h.x.value, h.until, best.x.value, best.until)) best = h;
+        return { h: best, rest: list.filter(h => h !== best) };
+    }
+
+    /**
+     * 창 하나를 연다 — `applyStatus` 의 꼬리 · 대기열에서 이어받는 창(`expire`)이 같이 쓴다 (2026-11-17 R246 — 몸통을 뗐다 · 동작은 종전 그대로).
+     *   `old` = 그 열쇠에 있던 창(이어받기면 없다) · `held` = 이 창에 딸린 대기열(약한 쪽들) · rng 0
+     */
+    function openWindow(u, tgt, x, key, until, t, ail, old, held) {
         // 다른 스킬이 갱신하면 옛 칩을 닫는다 — 상태이상은 재생기가 `k` 로 칩을 들어 필요 없다 (R178)
         if (!ail && old && !old.quiet && (old.s ?? key) !== x.id) timeline.push({ t: r1(t), e: 'buffEnd', u: tgt.key, s: old.s ?? key });
         const wasMax = tgt.hpMax;
@@ -295,6 +341,9 @@ export function createSkillRuntime(ctx) {
             ...(x.hit ? { hit: x.hit } : {}),
             // 오오라 피해 창(인페르노 · 2026-11-13 R462)은 걸 때의 반지 태그 데미지를 든다 — `battle.pulseTick` 이 데미지 % 괄호에 더한다
             ...(x.tagDamage ? { tagDmg: x.tagDamage } : {}) };
+        // 센 쪽 하나 (R246) — 이 창이 대기열로 밀려나도 다시 열 수 있게 시전자 · 시전 단위를 창 밖에 둔다 · 딸린 약한 쪽들도 · 창 객체 모양은 그대로
+        SRC.set(tgt.buffs[key], { u, x });
+        if (held?.length) HELD.set(tgt.buffs[key], held);
         // 프렌지 — 창이 끝난 뒤 첫 차례에 다시 걸면 남긴 겹에서 시작한다 [2026-10-28 · R372] · 남긴 것이 없으면 0 부터(종전) · 파생값은 아래 `refreshDerived` 가 민다
         if (x.stat === 'frenzy' && tgt.fzKeep?.s === key) { tgt.buffs[key].n = tgt.fzKeep.n; delete tgt.fzKeep; }
         const ev = { t: r1(t), e: 'buff', u: tgt.key, s: x.id, stat: x.stat, v: x.value, until: r1(until) };

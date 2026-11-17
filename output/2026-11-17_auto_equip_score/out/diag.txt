@@ -1,0 +1,56 @@
+영웅 1080명
+
+| 칸 | 세기와 다른 비율 | 다를 때 그 한 칸의 세기 손실(평균) |
+|---|---|---|
+| weapon | 5% | 6.3% |
+| helmet | 30% | 2.4% |
+| armor | 25% | 2.7% |
+| gloves | 40% | 3.4% |
+| boots | 43% | 1.5% |
+| amulet | 36% | -0.3% |
+| ring1 | 31% | 0.7% |
+| ring2 | 34% | -1.2% |
+
+사례(손실 8% 넘는 것):
+platinum mage armor 손실 11%
+   세기: 질투와 자만의 퀼티드 아머 L28 rare +1 [베이스 0.66 · 옵션 1.6 · 점수 34.5] cooldown_reduction,res_poison,def_per_level,fhr
+   점수: 과식의 고스트 아머 L35 magic +1 [베이스 0.57 · 옵션 1.6 · 점수 41.0] cooldown_reduction,res_all,res_poison
+platinum mage gloves 손실 28%
+   세기: 자만의 샤크스킨 글러브 L31 magic +1 [베이스 1.09 · 옵션 0.1 · 점수 36.6] cast_speed_pct,aspd_per_level_pct,dmg_max_flat
+   점수: 과식의 헤비 글러브 L28 magic +2 [베이스 1.00 · 옵션 2.6 · 점수 38.1] cast_speed_pct,vs_elite_dmg,proc_hit_buff
+platinum archer helmet 손실 9%
+   세기: 방탕의 워 햇 L33 magic [베이스 0.53 · 옵션 1.0 · 점수 37.7] hit_bonus,hp_flat,dr_flat
+   점수: 소유욕의 워 햇 L34 magic +2 [베이스 1.15 · 옵션 1.4 · 점수 42.6] hit_bonus,xp_gain_pct,res_fire
+platinum priest armor 손실 9%
+   세기: 연정과 자만의 퀼티드 아머 L28 rare [베이스 0.40 · 옵션 1.1 · 점수 32.1] cooldown_reduction,hp_flat,def_per_level,vs_undead_dr
+   점수: 과식의 고스트 아머 L35 magic [베이스 0.66 · 옵션 1.3 · 점수 40.8] cooldown_reduction,vs_undead_dr,hp_regen
+platinum priest gloves 손실 9%
+   세기: 샤크스킨 글러브 L30 normal [베이스 0.80 · 옵션 1.5 · 점수 36.9] cast_speed_pct,crit_damage
+   점수: 샤크스킨 글러브 L35 normal [베이스 0.83 · 옵션 0.8 · 점수 40.9] aspd_pct,res_all
+diamond knight boots 손실 11%
+   세기: 방탕과 권태의 워 부츠 L42 rare +3 [베이스 2.47 · 옵션 1.3 · 점수 56.9] dr_flat,hp_flat,freeze_dur_reduction,def_flat
+   점수: 착취의 워 부츠 L42 magic [베이스 2.53 · 옵션 1.5 · 점수 57.6] dr_flat,gold_find,burn_dur_reduction
+champion priest boots 손실 10%
+   세기: 방탕과 포식의 샤크스킨 부츠 L46 rare [베이스 0.65 · 옵션 1.6 · 점수 52.4] start_gauge_pct,hp_flat,debuff_dur_reduction,res_lightning
+   점수: 질투와 권태의 샤크스킨 부츠 L46 rare [베이스 0.65 · 옵션 1.8 · 점수 52.9] start_gauge_pct,counter_chance,hp_pct,debuff_dur_reduction
+champion knight armor 손실 14%
+   세기: 타락의 세이크리드 아머 L50 magic [베이스 2.15 · 옵션 0.7 · 점수 62.2] hp_flat,vs_elite_dr
+   점수: 세이크리드 아머 L50 normal [베이스 2.46 · 옵션 0.7 · 점수 63.7] res_cold
+silver warrior weapon 손실 10%
+   세기: 클럽 L8 normal [베이스 1.73 · 옵션 0.0 · 점수 16.6] vs_undead_dmg
+   점수: 핸드 액스 L10 normal [베이스 1.35 · 옵션 0.0 · 점수 16.8] crit_rate
+platinum warrior gloves 손실 34%
+   세기: 소유욕과 집착의 건틀릿 L27 rare [베이스 2.11 · 옵션 2.3 · 점수 42.1] damage_reduction,gold_find,dmg_max_flat,cooldown_reduction
+   점수: 과식과 연정의 워 건틀릿 L31 rare +1 [베이스 3.18 · 옵션 1.4 · 점수 49.7] damage_reduction,cull_normal_pct,kill_heal_pct,vs_elite_dmg
+platinum priest armor 손실 8%
+   세기: 고스트 아머 L33 normal [베이스 0.70 · 옵션 0.9 · 점수 38.3] cooldown_reduction,damage_reduction
+   점수: 과식과 착취의 고스트 아머 L33 rare [베이스 0.41 · 옵션 2.1 · 점수 39.2] cooldown_reduction,vs_elite_dr,xp_gain_pct,counter_chance
+diamond knight gloves 손실 18%
+   세기: 연정과 자만의 워 건틀릿 L36 rare [베이스 2.23 · 옵션 0.4 · 점수 47.9] damage_reduction,dmg_max_flat,aspd_per_level_pct,magic_find
+   점수: 지배와 격노의 워 건틀릿 L40 rare [베이스 2.14 · 옵션 1.7 · 점수 54.2] damage_reduction,aspd_per_level_pct,weapon_atk_pct,magic_find
+diamond mage helmet 손실 11%
+   세기: 지배의 티아라 L40 magic [베이스 0.50 · 옵션 1.6 · 점수 45.7] cooldown_reduction,hp_per_level,res_fire
+   점수: 착취와 질투의 티아라 L42 rare +1 [베이스 0.44 · 옵션 0.9 · 점수 46.1] cooldown_reduction,gold_find,counter_chance,hp_flat
+diamond mage gloves 손실 56%
+   세기: 집착의 샤크스킨 글러브 L38 magic [베이스 0.57 · 옵션 1.2 · 점수 43.3] aspd_pct,dmg_max_flat,crit_damage
+   점수: 강탈과 권태의 샤크스킨 글러브 L43 rare [베이스 0.75 · 옵션 2.1 · 점수 50.9] aspd_pct,gold_find,cooldown_reduction,crit_damage

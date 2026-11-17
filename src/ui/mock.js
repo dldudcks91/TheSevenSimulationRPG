@@ -115,14 +115,14 @@ export const AFFIX_LABELS = {
     aspd_pct: { ko: '공격 속도', en: 'Attack Speed', zh: '攻击速度', fmt: 'pct' },
     cast_speed_pct: { ko: '캐스팅 속도', en: 'Casting Speed', zh: '施法速度', fmt: 'pct' },   // 마법 무기 유닛의 주기만 줄인다 — 공격 속도와 별개 옵션 (R203 · battle_design §2)
     life_steal: { ko: '흡혈', en: 'Life Steal', zh: '吸血', fmt: 'pct' },
-    def_ignore: { ko: '방어 무시', en: 'Defense Ignore', zh: '无视防御', fmt: 'pct' },
+    def_ignore: { ko: '방어력 관통', en: 'Defense Penetration', zh: '防御穿透', fmt: 'pct' },   // 이름 2026-11-17 R531 — 내 타격만 뚫는 줄 = 관통 · 대상에게 거는 디버프 = 감소
     reflect_damage: { ko: '반사 피해', en: 'Reflect Damage', zh: '伤害反射', fmt: 'pct' },
     damage_reduction: { ko: '피해 감소', en: 'Damage Reduction', zh: '伤害减免', fmt: 'pct' },
     gold_find: { ko: '골드 획득', en: 'Gold Find', zh: '金币获取', fmt: 'pct' },
     item_find: { ko: '드랍률', en: 'Item Find', zh: '掉落率', fmt: 'pct' },
     // ── 무기 옵션 (item_design §1 「무기 옵션」 · 2026-09-11 R78) — 죄종 칸 · 통합옵션 표가 쓰는 축.
     //    `res_reduction` 은 combat_stat.csv 이름과 같게 둔다 — 마스터리 칸도 이 사전을 먼저 읽는다
-    res_reduction: { ko: '저항 감소', en: 'Resist Reduction', zh: '抗性降低', fmt: 'pct' },
+    res_reduction: { ko: '원소 관통', en: 'Elemental Penetration', zh: '元素穿透', fmt: 'pct' },   // 모든 원소 관통 — 목걸이 시기 ③(2026-11-17 R531)
     atk_down_phys_pct: { ko: '타격 시 대상 물리 데미지 감소', en: 'Physical Damage Down on Hit', zh: '击中时降低目标物理伤害', fmt: 'pct' },
     atk_down_mag_pct: { ko: '타격 시 대상 마법 데미지 감소', en: 'Magic Damage Down on Hit', zh: '击中时降低目标魔法伤害', fmt: 'pct' },
     dmg_per_level_pct: { ko: '레벨당 데미지', en: 'Damage per Level', zh: '每级伤害', fmt: 'pct' },
@@ -171,7 +171,7 @@ export const AFFIX_LABELS = {
     poison_dur_reduction: { ko: '중독 시간 감소', en: 'Poison Duration Reduction', zh: '中毒时间缩短', fmt: 'pct' },   // 중독이 읽는다(2026-09-28 · R178 · battle_design §2-5)
     // ── 반지 · 목걸이 옵션 (item_design §1 「반지 · 목걸이」 · 2026-09-21 · R127) — 반지 시기 칸 · 공통옵션이 쓰는 새 축.
     //    원소별 저항 무시는 **「원소 관통」**이다 [2026-11-11 · 사용자 「관통이라는 단어가 좋을거같에」 · R442 · GAME_DESIGN §9] — 내 그 원소 타격만 대상 저항을 %p 깎는다(장갑 · 반지 시기 · 마법 무기 시기).
-    //    대상에게 거는 디버프는 「원소 저항 감소」(아래 `res_down_stack_*` · 옛 `res_down_pct`) — 방어력 무시 · 감소와 같은 짝
+    //    대상에게 거는 디버프는 「원소 저항 감소」(아래 `res_down_stack_*` · 옛 `res_down_pct`) — 방어력 관통 · 감소와 같은 짝
     res_reduction_fire: { ko: '화염 관통', en: 'Fire Penetration', zh: '火焰穿透', fmt: 'pct' },
     res_reduction_cold: { ko: '냉기 관통', en: 'Cold Penetration', zh: '冰霜穿透', fmt: 'pct' },
     res_reduction_lightning: { ko: '전기 관통', en: 'Lightning Penetration', zh: '闪电穿透', fmt: 'pct' },
@@ -260,7 +260,7 @@ export const MASTERY_LABELS = {
     wrath_party_crit: { ko: '파티 치명', en: 'Party Crit', zh: '队伍暴击', fmt: 'pct' },
     wrath_steady: { ko: '받는 스턴 · 경직 감소', en: 'Stun Resist', zh: '所受眩晕与僵直缩短', fmt: 'pct' },
     envy_strip: { ko: '버프 지우기', en: 'Buff Removal', zh: '清除增益', fmt: 'pct' },
-    envy_party_pierce: { ko: '파티 방어 무시', en: 'Party Defense Ignore', zh: '队伍无视防御', fmt: 'pct' },
+    envy_party_pierce: { ko: '파티 방어력 관통', en: 'Party Defense Penetration', zh: '队伍防御穿透', fmt: 'pct' },
     envy_return: { ko: '디버프 되돌리기', en: 'Debuff Return', zh: '减益反弹', fmt: 'pct' },
     greed_mark: { ko: '표식 대상 데미지', en: 'Mark Damage', zh: '对印记目标伤害', fmt: 'pct' },
     greed_reroll: { ko: '드롭 다시 굴리기', en: 'Drop Reroll', zh: '掉落重掷', fmt: 'pct' },
@@ -566,7 +566,7 @@ export const SKILL_ICON_FILES = [
     // 몬스터 전용 — 헬파이어(1-5 사탄 · 정신 집중 · 2026-10-22 Codex 단색 · 기본 스킬과 같은 연한 회청색 실루엣) · 자폭은 쥔 몬스터가 없어 그림도 없다
     'mon_hellfire',
     // 장 보스 고유 넷(2026-10-29 · R380 · Codex 단색 · art/README) — 레비아탄 · 맘몬 · 벨페고르(오오라라 원 배지) · 바알제붑
-    'mon_ironmaiden', 'mon_goldfever', 'mon_delegate', 'mon_swarm',
+    'mon_ironmaiden', 'mon_goldfever', 'mon_mire', 'mon_swarm',
 ];
 // ~~`SKILL_ADV_ICON_FILES`(전직 스킬 그림 표 — 행보다 그림이 먼저 왔던 09-22 의 임시 목록)~~ 는 2026-10-02 삭제 —
 //   도감 전직 탭이 `skill.csv` 의 `owner_kind=advance` 행을 직접 편다(SCREEN_DESIGN §9-1 · ADR-0472)

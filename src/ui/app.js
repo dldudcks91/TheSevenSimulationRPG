@@ -4069,8 +4069,9 @@ function expTick() {
     // 수색 [2026-10-19 · base_expedition §2-4] — 시계가 지난 사람을 칸에 세운다(꺼져 있던 시간도 · 칸이 차면 멈춘다).
     //   누가 오면 선술집 칸 · 탭 할 일 점이 바뀌므로 다시 그린다(손이 바쁘면 다음 빈 눈금) · 연구소 정산보다 먼저 — 정산 안에서 오면 이 신호를 못 받는다
     //   대기소가 다 차 찾은 영웅을 들고 서기 시작해도(`held`) 다시 그린다 — 「찾았다!」가 바로 선다 (ADR-1201 · R508)
+    //   거르기로 버리고 다시 나서도(`skipped`) 다시 그린다 — 이야기가 첫 줄부터 (R534)
     const vs = SYS.game.visitSettle(G, at);
-    if (vs.arrived.length || vs.held.length) { save(); if (handBusy()) clockRender = true; else renderClock(); }
+    if (vs.arrived.length || vs.held.length || vs.skipped?.length) { save(); if (handBusy()) clockRender = true; else renderClock(); }
     // 연구소 [2026-09-27 · base_expedition §3-3 · **2026-10-21 R298 — 연구 · 도박장 · 훈련**] — 켜 둔 동안 눈금마다 정산한다(재료 · 골드 · 경험치).
     //   껐다 켠 첫 정산만 오프라인 상한에 걸린다 · 연구가 끝나거나 레벨이 오르면 화면이 바뀌므로 다시 그린다
     const lab = SYS.game.labSettle(G, at);
@@ -7044,7 +7045,9 @@ const labPostOf = id => LAB_LINES.find(p => p.id === id);
 const labNodeLabel = (line, node) => `${t(labPostOf(line)?.label ?? 'nav.resource')} · ${labNodeName(node)}`;
 /** 지점 값을 찍는 모양 — 계산이 아니라 모양만(배수 `×` · 확률 `%` · 수 · 거리) */
 const labNum = v => String(Math.round(v * 100) / 100);
-function labValText(node, v) {
+/** `opens` = 그 레벨이 여는 기능(`labState` 지점의 `opens` · `next.opens`) — 있으면 값 대신 그 이름 (수색 대기소 = 거르기 · ADR-1257) */
+function labValText(node, v, opens = null) {
+    if (opens === 'filter') return t('tv.visit.filter');
     if (node === 'waiting' || node === 'roster') return t('dp.val.slots', { n: v });
     if (node === 'range') return t('dp.val.range', { n: v });
     if (node === 'burst' || node === 'quality') return `+${M.pctNum(v)}%`;
@@ -7154,7 +7157,7 @@ function dpSide(post, line, S) {
     if (!n.open) next.insertAdjacentHTML('beforeend', `<span class="dp-side-end"><span class="lock-ico">${lockIcon(true)}</span><span>${dpNeedFull(line, n)}</span></span>`);
     else if (R && R.line === post.id && R.node === n.node) {
         // 이 지점을 연구 중 — 막대 · 남은 시간 + [그만두기](낸 비용을 전부 돌려받아 되돌릴 수 있어 한 번 누른다 — §3)
-        if (n.next) next.appendChild(el('div', 'dp-side-rate', `<b>${labValText(n.node, n.value)}</b><span class="dp-side-arrow">→</span><b class="up">${labValText(n.node, n.next.value)}</b>`));
+        if (n.next) next.appendChild(el('div', 'dp-side-rate', `<b>${labValText(n.node, n.value)}</b><span class="dp-side-arrow">→</span><b class="up">${labValText(n.node, n.next.value, n.next.opens)}</b>`));
         const w = el('div', 'dp-side-res', `<i class="dp-gauge res"><b data-labbar="1" style="width:${(R.frac * 100).toFixed(1)}%"></b></i><span class="muted" data-lableft="1">${t('dp.res.left', { t: fmtDuration(Math.max(0, R.until - now())) })}</span>`);
         const stop = el('button', 'btn dp-side-go', t('dp.res.cancel'));
         stop.onclick = () => dpResearchDone(SYS.game.labResearchCancel(G, now()), 'dp.res.canceled', {});
@@ -7163,11 +7166,11 @@ function dpSide(post, line, S) {
     } else if (!n.next) next.appendChild(el('div', 'dp-side-end', t('dp.lvTop')));
     else if (n.lv >= n.cap) {
         // 연구소 랭크가 다음 레벨을 아직 안 열었다 — 지금 → 올린 뒤 + 잠긴 자리의 한 줄(비용 · [연구] 없음 · R455 · ADR-1054)
-        next.appendChild(el('div', 'dp-side-rate', `<b>${labValText(n.node, n.value)}</b><span class="dp-side-arrow">→</span><b class="up">${labValText(n.node, n.next.value)}</b>`));
+        next.appendChild(el('div', 'dp-side-rate', `<b>${labValText(n.node, n.value)}</b><span class="dp-side-arrow">→</span><b class="up">${labValText(n.node, n.next.value, n.next.opens)}</b>`));
         next.insertAdjacentHTML('beforeend', `<span class="dp-side-end"><span class="lock-ico">${lockIcon(true)}</span><span>${needText('resource_tier', n.levelRanks[n.lv])}</span></span>`);
     } else {
         // 걸리는 시간 — 「지금 → 올린 뒤」 줄의 오른쪽 끝(재료 칸 · 버튼 줄에 끼우면 재료 칸이 세로로 접힌다 · 따로 한 줄이면 아래 레벨 목록이 세로를 잃는다 — ADR-0694)
-        next.appendChild(el('div', 'dp-side-rate', `<b>${labValText(n.node, n.value)}</b><span class="dp-side-arrow">→</span><b class="up">${labValText(n.node, n.next.value)}</b><span class="dp-side-time muted">${t('dp.res.time', { t: fmtDuration(n.next.ms) })}</span>`));
+        next.appendChild(el('div', 'dp-side-rate', `<b>${labValText(n.node, n.value)}</b><span class="dp-side-arrow">→</span><b class="up">${labValText(n.node, n.next.value, n.next.opens)}</b><span class="dp-side-time muted">${t('dp.res.time', { t: fmtDuration(n.next.ms) })}</span>`));
         const act = el('div', 'dp-side-act');
         const mats = [{ res: 'gold', need: n.next.gold, have: G.resources.gold ?? 0 }];
         if (n.next.mat) mats.push({ res: n.next.mat.id, need: n.next.mat.n, have: G.materials?.[n.next.mat.id] ?? 0 });
@@ -7202,7 +7205,7 @@ function dpLvList(n) {
         const lv = i + 1;
         const c = el('div', `cn-rank ${lv <= n.lv ? 'on' : lv === n.lv + 1 ? 'next' : 'later'}`);   // 건설 랭크 줄 그대로 (ADR-1054)
         const mark = lv <= n.lv ? '✓' : lv > n.cap ? needText('resource_tier', n.levelRanks[i]) : '';   // 아직 안 연 레벨 = 여는 연구소 랭크 (R455)
-        c.innerHTML = `<span class="cn-rno">${t('dp.lv', { n: lv })}</span><span class="cn-eff-t">${labValText(n.node, v)}</span><span class="cn-state">${mark}</span>`;
+        c.innerHTML = `<span class="cn-rno">${t('dp.lv', { n: lv })}</span><span class="cn-eff-t">${labValText(n.node, v, n.opens?.[i])}</span><span class="cn-state">${mark}</span>`;
         list.appendChild(c);
     });
     wrap.appendChild(list);
@@ -8153,6 +8156,12 @@ function visitLog(at) {
         // 머리 = 얼굴 + 얼굴 아랫변에 맞춘 이름 + 오른쪽 가로줄 · 이야기는 얼굴 아래에서 칸 폭을 다 쓴다 (style.css `.tv-visit-hero` · ADR-1139)
         //   묶음은 누르지 않는다 — 버튼이 아니다 · hover 도 없다 (2026-11-16 사용자 · ADR-1204)
         const b = el('div', 'tv-visit-hero', `<span class="tv-visit-hero-n">${heroFace(h)}<span class="tv-visit-hero-name">${L(h.name)}</span></span>`);
+        // 그 줄이 꽉 차 선술집에서 쉬면 이야기 대신 한 줄 — 전직 중이면 전직 줄 (ADR-1256)
+        if (clocks.find(c => c.uid === uid)?.rest) {
+            b.appendChild(el('span', `tv-visit-do now${away ? ' away' : ''}`, away ?? t('tv.visit.rest')));
+            box.appendChild(b);
+            continue;
+        }
         // 찾은 영웅이 밖에서 기다리면 마지막 줄이 「찾았다! 이름」 — 전직 줄보다 앞선다 · 그 줄만 누르면 그 영웅 카드 (ADR-1201 · ADR-1204)
         const hit = found[uid];
         const foundEl = () => {
@@ -8295,8 +8304,21 @@ function renderTavern(main) {
     // 수색 — 영웅 고용 옆에 따로 선 패널 · 칸 크기 = 명단 초상(같은 식 · `.tv-top` 의 `--tv-face`) · 고용이 안 열렸으면 본문을 잠김 베일 (SCREEN_DESIGN §8-1 · ADR-0978)
     const sp = el('div', 'panel tv-search');
     const sHead = helpHeading('h2', '', t('tv.visit.h'), 'visitors');
-    // 칸이 다 찼을 때만 제목 줄 오른쪽 끝에 그 사실 — 영웅 고용 제목 줄의 후보 교체와 같은 끝 (§8-1 · ADR-1139)
-    if (V.labOpen && V.full) sHead.appendChild(el('small', 'tv-visit-full', t('tv.visit.full')));
+    // 제목 줄 오른쪽 — 거르기 세그먼트(대기소가 열었을 때 · 고른 칸 = 데려올 최저 등급 · ADR-1257) · 칸이 다 찼을 때만 그 오른쪽 끝에 그 사실(영웅 고용 제목 줄의 후보 교체와 같은 끝 · §8-1 · ADR-1139)
+    if (V.labOpen && (V.filterOpen || V.full)) {
+        const tools = el('span', 'td-roll tv-visit-tools');
+        if (V.filterOpen) {
+            const f = el('span', 'tv-visit-filter');
+            f.appendChild(el('small', 'tv-visit-filter-l', t('tv.visit.filter')));
+            f.appendChild(segmented(['normal', 'magic', 'rare'].map(id => ({ id, label: t(`tv.visit.filter.${id}`) })), V.filter, id => {
+                if (SYS.game.visitFilterSet(G, id).ok) save();
+                render();
+            }));
+            tools.appendChild(f);
+        }
+        if (V.full) tools.appendChild(el('small', 'tv-visit-full', t('tv.visit.full')));
+        sHead.appendChild(tools);
+    }
     sp.appendChild(sHead);
     const sBody = el('div', 'box-body');
     // 첫 칸 — 얼굴을 켰으면 그 영웅의 카드 · 아니면 안내(켠 줄이 고용 · 돌려보내기로 사라졌으면 안내로) · 오른쪽 = 얼굴 칸 (§8-1 · ADR-0671 · ADR-0981)
@@ -9013,18 +9035,20 @@ function forgeUpgradeGo(it) {
     const r = SYS.game.upgradeItem(G, it.uid);
     if (!r.ok) { flashErr('ch', r.err, 'upgrade_item'); render(); return; }
     save();
-    // 결과 넷 — 대성공 · 성공 · 실패 · 담금질이 횟수를 지킨 실패 (ADR-0737 · 1200 · R505)
-    flash(r.great ? 'fg.upGreat' : r.success ? 'ch.upgraded' : r.kept ? 'fg.upKept' : 'fg.upFail', { n: r.up, g: r.cost });
+    // 결과 — 대성공 · 성공 · 실패 · 강등 · 파괴(받은 분해 산출 — 분해함과 같은 꼴) · 담금질이 막은 실패 (ADR-0737 · 1200 · 1254 · R505 · R530)
+    //   파괴되면 그 장비가 없어져 판이 「장비 선택」으로 다시 그려진다
+    if (r.destroyed) flash('fg.upBroken', { loot: salvageMaterialText({ dust: r.salvage?.dust, ...(r.salvage?.mat ? { [r.salvage.mat.id]: r.salvage.mat.n } : {}) }), g: r.cost });
+    else flash(r.great ? 'fg.upGreat' : r.success ? 'ch.upgraded' : r.down ? 'fg.upDown' : r.guarded ? 'fg.upGuarded' : 'fg.upFail', { n: r.up, g: r.cost });
     render();
 }
 
-/** 손질 효과 한 줄 — 몫(비율)을 정수 % 로 · 문구는 효과마다 (`fg.eff.chance` · `great` · `keep` · ui 원칙 3) */
+/** 손질 효과 한 줄 — 몫(비율)을 정수 % 로 · 문구는 효과마다 (`fg.eff.chance` · `great` · `guard` · ui 원칙 3) */
 const temperEffText = (effect, v) => t(`fg.eff.${effect}`, { n: Math.round(v * 100) });
 
 /** [손질] — 장비가 정한 단계의 재료를 내고 손질을 붙여 저장한다. 굴림이 없어 연출 없이 바로 결과 플래시 (SCREEN_DESIGN §8-2 · ADR-1200 · 1209) */
 function forgeTemperGo(it, act) {
     const r = SYS.game.temperItem(G, it.uid, act);
-    if (!r.ok) { flashErr(['tempered', 'action', 'tier', 'materials'].includes(r.err) ? 'fg' : 'ch', r.err, 'upgrade_item'); render(); return; }
+    if (!r.ok) { flashErr(['tempered', 'action', 'noRisk', 'tier', 'materials'].includes(r.err) ? 'fg' : 'ch', r.err, 'upgrade_item'); render(); return; }
     save();
     flash('fg.tempered', { name: t(`fg.act.${r.act}`), eff: temperEffText(r.effect, r.v) });
     render();
@@ -9033,7 +9057,8 @@ function forgeTemperGo(it, act) {
 /**
  * 강화 칸 가운데 — 손질 (SCREEN_DESIGN §8-2 · ADR-1200 · 기획 item_design §7-2 · R505).
  * 위에서 아래로: 머리([손질] = 고른 손질 이름) · **손질 카드 셋**(그림 · 재료 그림 + 이름 · 장비가 정한 단계의 몫) · 바닥 줄 = 고른 손질의 재료 칸 하나.
- * **강화 확률은 이 칸에 안 적는다** — 붙은 손질이 미는 값은 오른쪽 작업 판의 줄(성공 확률 · 대성공 · 횟수 보존)이 든다(ADR-1148 · 1200).
+ * **강화 확률은 이 칸에 안 적는다** — 붙은 손질이 미는 값은 오른쪽 작업 판의 줄(성공 확률 · 대성공 · 강등 · 파괴)이 든다(ADR-1148 · 1200 · 1254).
+ * **다음 도전이 안전 구간이면 담금질 카드는 흐리고 못 고른다**(`actions[].noRisk` · 올리면 `fg.noRisk` · ADR-1254 · R530).
  *   개수 · 보유 · 잠김 · 몫은 `upgradeState.temper` 가 낸다(ui 원칙 2).
  * 고른 손질은 화면 상태(`state.temperAct`) — 다시 불러오면 첫 손질 · 붙은 손질이 있으면 그 카드가 고른 카드다 ·
  * **재료 단계는 고르지 않는다** — 장비 레벨 · 등급이 정한다(`temper.actions[].stake` · R511 · ADR-1209)
@@ -9047,21 +9072,24 @@ function forgeTemper(it, us) {
     if (!us.upgradeable || !tp || !acts.length) return mid;   // 상한 · 목걸이 · 반지 · 판돈 줄이 없다 — 빈 판
     mid.classList.add('fg-tp');
     const pend = tp.pending;
-    const act = acts.find(a => a.id === (pend?.act ?? state.temperAct)) ?? acts[0];
+    // 고른 카드 — 붙은 손질이 있으면 그것 · 아니면 고른 것(안전 구간에서 못 고르는 담금질이면 고를 수 있는 첫 카드 · ADR-1254)
+    const act = (pend ? acts.find(a => a.id === pend.act) : acts.find(a => a.id === state.temperAct && !a.noRisk)) ?? acts.find(a => !a.noRisk) ?? acts[0];
     const pick = act.stake;
     // ① 손질 카드 셋 — 그림 · 재료 그림 + 이름 · 장비가 정한 단계의 몫(초록) · 누르면 고른다 ·
     //   붙은 손질이 있으면 그 카드에 `적용됨`(몫 = 붙은 값) · 나머지는 흐리고 고르기가 잠긴다 — 강화 한 번에 손질 하나
     const cards = el('div', 'fg-tp-cards');
     for (const a of acts) {
-        const v = pend?.act === a.id ? pend.v : a.stake.v, mi = M.materialIcon(a.mat);
-        const c = el('button', `fg-tp-card${a === act ? ' on' : ''}${pend ? (pend.act === a.id ? ' done' : ' off') : ''}`,
+        const v = pend?.act === a.id ? pend.v : a.stake.v, mi = M.materialIcon(a.mat), shut = !pend && a.noRisk;   // 안전 구간의 담금질 — 막을 것이 없다 (ADR-1254)
+        const c = el('button', `fg-tp-card${a === act ? ' on' : ''}${pend ? (pend.act === a.id ? ' done' : ' off') : shut ? ' off' : ''}`,
             `<img class="fg-tp-art" src="${M.forgeArt(a.id)}" alt="" draggable="false">`
             + `<span class="fg-tp-name">${mi ? `<img src="${mi}" alt="" draggable="false">` : ''}${t(`fg.act.${a.id}`)}</span>`
             + `<span class="fg-tp-eff">${temperEffText(a.effect, v)}</span>`
             + (pend?.act === a.id ? `<span class="fg-tp-badge">${t('fg.applied')}</span>` : ''));
         c.type = 'button';
         c.disabled = !!pend;
-        c.onclick = () => { state.temperAct = a.id; render(); };
+        //   못 고르는 카드는 `disabled` 대신 누름만 막는다 — 꺼진 버튼은 올림을 안 받아 이유 한 줄(`fg.noRisk`)이 안 뜬다
+        if (shut) { c.setAttribute('aria-disabled', 'true'); lockTip(c, t('fg.noRisk')); }
+        else c.onclick = () => { state.temperAct = a.id; render(); };
         cards.appendChild(c);
     }
     mid.appendChild(cards);
@@ -9144,18 +9172,16 @@ function forgeUpgrade(p) {
     // 목걸이 · 반지 — 눈금 · 값 · 버튼 대신 한 줄 (ADR-0125)
     if (!us.upgradeable) work.appendChild(el('div', 'fg-up-none', t('fg.noBase')));
     else {
-        // ① 위 줄 = 남은 횟수(숫자만 — `upgradeState.tries` · 시도마다(성공 · 실패 모두) 하나 · ADR-1183 · 1184 · R499)
-        //   아래 = 단계 눈금 — 찬 칸 = 지금 · 다음 칸은 테두리만 밝다(누르면 찰 칸) · 칸은 `slots` 개를 언제나 그리고 지금 상한(`max`) 너머는 잠긴 칸이다 — 회색 자물쇠 (ADR-0968 · ADR-0925)
-        const tr = us.tries, can = us.cost != null && tr.left > 0;   // 올릴 수 있나 — 상한이거나 횟수가 없으면 다음 열 · 확률 · 재료가 빠진다
+        // ① 단계 눈금 — 찬 칸 = 지금 · 다음 칸은 테두리만 밝다(누르면 찰 칸) · 칸은 `slots` 개를 언제나 그리고 지금 상한(`max`) 너머는 잠긴 칸이다 — 회색 자물쇠 (ADR-0968 · ADR-0925)
+        //   눈금 위 줄은 없다 — 강화 횟수가 없다 (R530 · ADR-1254 · ~~남은 횟수 ADR-1184~~)
+        const can = us.cost != null;   // 올릴 수 있나 — 상한이면 다음 열 · 확률 · 재료가 빠진다
         const pips = Array.from({ length: us.slots }, (_, i) => i >= us.max ? `<i class="lock">${lockIcon(true)}</i>`
             : `<i class="${i < us.up ? 'on' : i === us.up && can ? 'next' : ''}"></i>`).join('');
-        const track = el('div', 'fg-up-track', `
-            <div class="fg-up-th"><span>${t('fg.tries')}</span><b>${tr.left}<small> / ${tr.max}</small></b></div>
-            <div class="fg-up-pips">${pips}</div>`);
+        const track = el('div', 'fg-up-track', `<div class="fg-up-pips">${pips}</div>`);
         // 잠긴 칸에 올리면 그 칸을 여는 건물 랭크 「대장간 5랭크」 · 여는 랭크가 없으면 「준비 중」 — 기본 상한 위로 몇째 칸인가를 묻는다 (§8-2 · ADR-1181)
         track.querySelectorAll('.fg-up-pips > i').forEach((p, i) => { if (i >= us.max) lockTip(p, needText('upgrade', i + 1 - D.balance.equip_upgrade_max)); });
         work.appendChild(track);
-        // ② 지금 › 다음 — 먹인 값(강화 · 베이스 옵션)이라 툴팁·캐릭터 시트와 같은 숫자다 (§6 · ADR-0309) · 상한 · 횟수 소진이면 다음 열이 빈다
+        // ② 지금 › 다음 — 먹인 값(강화 · 베이스 옵션)이라 툴팁·캐릭터 시트와 같은 숫자다 (§6 · ADR-0309) · 상한이면 다음 열이 빈다
         //   이름은 가운데 옵션 열의 메인 옵션 행과 같다(물리 ↔ 마법 데미지 — `combat_stat.csv` · `itemBodyHtml`)
         const n = can ? us.next : null, imp = SYS.item.implicitFixed(it), grp = SYS.item.groupOf(it);
         const atkStat = grp && statRow(grp.damageKind === 'physical' ? 'atk_physical' : 'atk_magic');
@@ -9175,8 +9201,7 @@ function forgeUpgrade(p) {
             : `<span class="lab">${lab}</span><b>${pct(base)}</b>`);
         if (can && us.chance != null) rows.appendChild(oddsRow(t('fg.chanceLab'), pend?.effect === 'chance' ? us.baseChance : us.chance,
             pend?.effect === 'chance' ? pctN(us.chance) - pctN(us.baseChance) : null));
-        // 대성공 · 횟수 보존 — 같은 「이름 · 값」 꼴 · 덧대기가 붙으면 `본 + 오른 몫` · 줄에 올리면 대성공일 때의 값 한 줄 ·
-        //   횟수 보존은 담금질이 붙었을 때만 선다 (ADR-1200 · R505 · 값은 `upgradeState.greatChance` · `keepChance`)
+        // 대성공 — 같은 「이름 · 값」 꼴 · 덧대기가 붙으면 `본 + 오른 몫` · 줄에 올리면 대성공일 때의 값 한 줄 (ADR-1200 · R505 · 값은 `upgradeState.greatChance`)
         if (can && us.greatChance != null) {
             const g0 = D.balance.equip_upgrade_great_chance;
             const gr = rows.appendChild(oddsRow(t('fg.greatLab'), pend?.effect === 'great' ? g0 : us.greatChance,
@@ -9184,7 +9209,14 @@ function forgeUpgrade(p) {
             const gv = grp ? (n?.greatDmg && rangeText(n.greatDmg)) : (n?.greatImp && M.statValue(n.greatImp.stat, n.greatImp.v));
             if (gv) lockTip(gr, t('fg.greatTip', { v: gv }));
         }
-        if (can && us.keepChance > 0) rows.appendChild(el('div', 'fg-up-cmp', `<span class="lab">${t('fg.keepLab')}</span><b class="nx">${pct(us.keepChance)}</b>`));
+        // 강등 · 파괴 — 다음 도전에 그 위험이 있을 때만 · 한 단계에 둘이 함께 서지 않는다 · 값만 경고 색 · 실패 줄은 없다(나머지다) ·
+        //   담금질이 붙으면 「본 − 막은 몫」(본 = `baseDown` · `baseDestroy` · 막은 몫 = 찍힌 두 정수 % 의 차 · 초록 · 0 이면 흐리게) (R530 · ADR-1254)
+        for (const [lab, base, net] of [[t('fg.downLab'), us.baseDown, us.downChance], [t('fg.breakLab'), us.baseDestroy, us.destroyChance]]) {
+            if (!can || !(base > 0)) continue;
+            const cut = pend?.effect === 'guard' ? pctN(base) - pctN(net) : null;
+            rows.appendChild(el('div', 'fg-up-cmp', `<span class="lab">${lab}</span><b class="risk">${pct(cut != null ? base : net)}</b>`
+                + (cut != null ? `<i>−</i><b class="nx${cut ? '' : ' same'}">${cut}%</b>` : '')));
+        }
         work.appendChild(rows);
         // ④ 비용 = 건설 · 연구소와 같은 재료 칸(`matTile` — 골드는 필요 수 · 재료는 필요/보유 · 모자라면 붉다) · 줄 오른쪽 끝 [강화] (ADR-0973)
         //   상한이면 칸이 빠지고 버튼이 상한 문구로 잠긴다
@@ -9194,7 +9226,7 @@ function forgeUpgrade(p) {
         // 대장간을 안 지었으면 흐리고(눌린다) 누르면 지을 랭크를 말한다 (§13-1 잠긴 자리 · ADR-0308)
         //   자리 = 판 제목 줄 오른쪽 끝(ADR-1163) · 모바일은 제목 줄이 안 서니 재료 칸 줄의 같은 버튼(`.fg-go-foot` — 데스크톱은 숨는다)
         const mkGo = cls => {
-            const go = el('button', `btn primary ${cls}${us.open ? '' : ' dim'}`, us.cost == null ? t('fg.upMax', { up: us.up }) : tr.left === 0 ? t('fg.noTries') : t('fg.go'));
+            const go = el('button', `btn primary ${cls}${us.open ? '' : ' dim'}`, us.cost == null ? t('fg.upMax', { up: us.up }) : t('fg.go'));
             go.disabled = us.open && !us.canUpgrade;
             go.onclick = () => {
                 if (!us.open) { flashNeed('upgrade_item'); return; }
@@ -11481,7 +11513,9 @@ async function boot() {
         if (!G) startGame();
         devBuild('tavern', 'resource');
         const vq = new URLSearchParams(location.search);
-        // 칸 수 + 1 이면 칸이 다 찬 뒤 첫 영웅이 한 명을 더 찾아 들고 밖에서 기다린다 — 「찾았다!」 (ADR-1201)
+        // `&wait=n` 연구소 「대기소」 레벨 n — 칸이 늘고 visit_filter_lv 부터 거르기 세그먼트가 선다 (ADR-1257)
+        if (vq.has('wait')) G.labNodes['visit:waiting'] = Math.max(0, Number(vq.get('wait')) || 0);
+        // 상한 = 칸 수 + 1 — 첫 영웅 줄의 칸 수보다 크면 「찾았다!」(아래 · ADR-1201)
         const n = Math.max(0, Math.min(D.balance.tavern_join_slots + 1, Number(vq.get('n') ?? 2)));
         // `&reg=n` 로스터 앞 n 명을 수색 줄에 등록(n 명이 와 있으려면 하나는 있어야 한다) · `&away=1` 첫 영웅만 편성 I 에 남겨 1-1 원정을 내보낸다 — 안내 칸의 등록 영웅 줄(ADR-1125)
         G.heroes.slice(0, Math.max(n > 0 ? 1 : 0, Number(vq.get('reg') ?? 0))).forEach(h => SYS.game.labRegister(G, h.uid, LAB_VISIT.id, now()));
@@ -11492,6 +11526,13 @@ async function boot() {
             G.visitHeroes = {};               // 다음 정산이 당긴 등록 시각부터 시계를 다시 세운다
         }
         SYS.game.visitSettle(G, now());
+        // n 이 첫 영웅 줄의 칸 수보다 크면 — 칸이 찬 뒤에도 나가 있던 것으로 돌려 찾은 영웅을 들고 밖에서 기다리게 한다(마차 영웅이 그 줄을 채운 모습 · 칸 수면 쉰다 — ADR-1256)
+        const fc = first && G.visitHeroes[first];
+        if (fc?.rest && n > SYS.game.joinState(G, now()).seatCap[fc.seat]) {
+            const { rest, ...out } = fc;
+            G.visitHeroes[first] = { ...out, nextAt: now() - 60000 };
+            SYS.game.visitSettle(G, now());
+        }
         // `&card=1` 첫 영웅이 찾은 영웅을 들고 있으면 그 카드를 연 채 (ADR-1201)
         if (vq.get('card') === '1' && first && G.visitHeroes[first]?.held) state.heldCard = first;
         // `&ago=m` 첫 영웅을 m 분 전에 등록한 것으로 · 다음 영웅마다 한 구간(`visit_do_minutes`)씩 늦게 — 이야기가 1 · 2 · 3줄로 쌓인 모습 (ADR-1125)

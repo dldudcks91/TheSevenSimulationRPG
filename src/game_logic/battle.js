@@ -119,6 +119,7 @@ const NO_ADV = Object.freeze({});   // 전직 공통 줄 능력치가 없는 유
  *   difficulties [{id, wearChance, skillSlots, monsterDmgMult, monsterHpMult, eliteTraitSlots, gearIlvlFixed}] — (eliteTraitSlots = 정예 특성 칸 수 · 2026-10-24 R344 · ~~rarityMax~~ R342 → 2026-10-24 R350 `gearRarity` 의 0) —`difficulty_tier.csv` 순서대로. 몬스터가 **선택 부위**를 입을 확률 · 첫 단이 기본 · 없으면 확률 1 (신설 2026-10-12 R245) ·
  *     몬스터 **스킬 칸 수**(난이도가 연다 — 노말 1 · 나이트메어 2 · 헬 3 · 없으면 1 · 2026-10-18 R269), 몬스터 **스킬 레벨** monsterSkillLevel(모든 칸 · 노말 1 · 나이트메어 4 · 헬 7 · 없으면 1 · 2026-11-17 R527), 몬스터 **데미지 · HP 배수**(전역 배율 위에 곱한다 · 없으면 1 · 2026-10-21 R301),
  *     몬스터 장비 **아이템 레벨 고정**(gearIlvlFixed 1 = 그 몬스터의 레벨 — 헬 · 없으면 굴림 · 2026-10-28 R366),
+ *     **영웅 원소 저항 페널티** heroResPenalty(비율 · 파티 영웅의 원소 저항 넷에서 뺀다 · 노말 0 · 나이트메어 0.3 · 헬 0.7 · 없으면 0 · 2026-11-17 R535),
  *   gearRarity {grade: {difficultyId: {normal, magic, rare, epic, legendary}}} — `gear_rarity.csv`. 몬스터 장비 희귀도 가중치 **등급 × 단 한 장**
  *     (행마다 합 100 · 에픽 · 레전더리를 안 여는 단은 0 · 2026-10-24 R350 · item_design §1 희귀도). 주면 등급 × 단 칸이 다 있어야 한다 · 없으면 드롭 가중치,
  *   chapterDebuffs [{difficultyId, chapter, sin, effect, value, intervalSec, durationSec, cap}] — `chapter_debuff.csv`. 단 · 장마다 그 장 죄종의 디버프 한 줄
@@ -319,6 +320,13 @@ export function createBattleSystem(data) {
      */
     const dmgMultOf = diff => diffOf(diff)?.monsterDmgMult ?? 1;
     const hpMultOf = diff => diffOf(diff)?.monsterHpMult ?? 1;
+    /**
+     * 영웅 원소 저항 페널티 — **난이도 단이 든다** `[difficulty_tier.csv:hero_res_penalty]` [2026-11-17 · 사용자 「-30에 -70을 넣어봐」 · R535 · base_expedition_design §1-4].
+     *   파티 영웅 유닛의 원소 저항 넷(`res` · `resBase`)에서 뺀다 — 상한은 타격 때 `formula.appliedResist` 가 거니 **상한보다 먼저** 빠진다(battle_design §9-5 「저항 감소(음수)」 항).
+     *   입력 `combat` 은 안 고친다 — 페널티를 뺀 사본을 만든다(`refit` 의 같은지 판정은 원값) · 소환물은 안 받는다(`makeSummon` 은 이 길을 안 지난다) · 표가 없는 조립 · 0 이면 원값 그대로 · rng 0
+     */
+    const resPenaltyOf = diff => diffOf(diff)?.heroResPenalty ?? 0;
+    const penalized = (combat, pen) => (pen ? { ...combat, ...Object.fromEntries(ELEMENTS.map(el => [`res_${el}`, (combat[`res_${el}`] ?? 0) - pen])) } : combat);
     /** 부류 버프가 서는 단인가 — 그 단의 `order` ≥ `[balance.csv:monster_family_min_order]`(나이트메어부터 · R518) · 단을 모르는 조립은 안 선다 */
     const familyOn = diff => (diffOf(diff)?.order ?? 0) >= B.monster_family_min_order;
     /** 몬스터의 기본 능력치 일곱 — 부족 버프가 모두에 더한다(R518) */
@@ -456,6 +464,8 @@ export function createBattleSystem(data) {
                     throw new Error(`battle: 난이도 ${d.id} 의 ${col} '${d[k]}' — 양수여야 한다 (difficulty_tier.csv · R301)`);
             if (d.gearIlvlFixed !== undefined && d.gearIlvlFixed !== 0 && d.gearIlvlFixed !== 1)
                 throw new Error(`battle: 난이도 ${d.id} 의 gear_ilvl_fixed '${d.gearIlvlFixed}' — 0 · 1 이어야 한다 (difficulty_tier.csv · R366)`);
+            if (d.heroResPenalty !== undefined && !(typeof d.heroResPenalty === 'number' && d.heroResPenalty >= 0 && d.heroResPenalty <= 1))
+                throw new Error(`battle: 난이도 ${d.id} 의 hero_res_penalty '${d.heroResPenalty}' — 0 ~ 1 이어야 한다 (difficulty_tier.csv · R535)`);
         }
         // 장 디버프 — 아는 단 · 효과 다섯 · 단 · 장마다 한 줄 · 효과마다 쓰는 칸 (2026-10-28 · R366). 어긋난 줄이 조용히 새면 그 장에 디버프가 안 걸린다
         if (DEBUFFS.length && !(typeof B.chapter_debuff_boss_mult === 'number' && B.chapter_debuff_boss_mult > 0))
@@ -1088,6 +1098,8 @@ export function createBattleSystem(data) {
      */
     function createRun(partyUnits, stageId, rng, level, potions = null, slotMax = B.potion_slot_max, encounter = null, difficulty = null, codexOf = null, potionHp = null, rules = null, encounterSeeds = null, enemyPotion = null) {
         const wearChance = wearChanceOf(difficulty);
+        // 영웅 원소 저항 페널티 (R535) — 이 런 내내 같다 · 파티 영웅을 입힐 때(아래 · `refit`) 원소 저항 넷에서 뺀다 · 결투장 · 레이드(`encounter`)는 단과 무관하게 0
+        const resPen = encounter ? 0 : resPenaltyOf(difficulty);
         // 결투장은 스테이지 스폰 대신 영웅 팀 스냅샷을 받아 같은 전투 루프를 단판으로 돈다.
         const stage = encounter ? { dlvl: level ?? 1 } : data.stages[stageId];
         let potionSlots = potions ?? [];   // 둘째 라운드부터는 `restock` 이 받아 둔 목록으로 갈아 끼운다 (R315)
@@ -1127,7 +1139,7 @@ export function createBattleSystem(data) {
         };
 
         // 파티 유닛 — 몬스터와 **같은 생성자**를 지난다 (§8-1). 자리가 정하는 것만 extra 로 얹는다
-        const party = partyUnits.map((p, i) => makeUnit('party', p.combat, {
+        const party = partyUnits.map((p, i) => makeUnit('party', penalized(p.combat, resPen), {
             key: `p${i}`, uid: p.uid, group: p.group,
             stats: p.stats ?? null,      // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef · 2026-09-10)
             rank: p.rank ?? 0,           // 진형 — 편성이 정한 자리 (state.formationState · 배치가 없으면 전열)
@@ -1210,6 +1222,10 @@ export function createBattleSystem(data) {
                     // 공세 오오라 장치(2026-11-14 R471 · advance_tree_draft §5) — 받는 아군마다 값 배수 · 칸 +n · 한 발 더 · 다른 오오라는 그대로
                     const ox = p.aura.id === 'kni_offenseaura' ? offenseOf(p, tgt, x) : null;
                     const v = ox ? x.value * ox.m : x.value;
+                    // 같은 오오라 둘 — **센 쪽 하나** [2026-11-17 사용자 · R246 · skill_design §1-6] — 다른 시전자가 켠 같은 효과의 창이 더 세면 덮지 않는다(값의 크기 ·
+                    //   같으면 종전대로 덮는다). 그 시전자가 쓰러지거나 갈아입어 창이 걷히면 `dropAuras` · 갈아입기가 남은 시전자의 오오라를 다시 걸어 다음으로 센 것이 선다 · rng 0
+                    const held = tgt.buffs[x.status];
+                    if (held && held.until === Infinity && !held.quiet && held.by !== p.key && Math.abs(held.v) > Math.abs(v)) continue;
                     tgt.buffs[x.status] = { stat: x.stat, v, until: Infinity, element: x.element ?? null, by: p.key, s: p.aura.id, roundEnd: x.roundEnd,
                         ...(x.tagDamage ? { tagDmg: x.tagDamage } : {}),   // 오오라 피해(홀리 파이어)의 반지 태그 데미지 — `pulseTick` 이 읽는다 (2026-11-13 R462)
                         ...(ox?.chargeAdd ? { chargeAdd: ox.chargeAdd } : {}), ...(ox?.dshot ? { dshot: ox.dshot } : {}) };
@@ -2074,34 +2090,6 @@ export function createBattleSystem(data) {
          *      **시전 누적**(`castStack > 0` 이면 겹 +1 · 상한 [balance.csv:cast_stack_max] · 창 `cx:cast_stack` = 데미지 % 괄호의 덧셈 · rng 0).
          *      둘 다 옵션이 없으면 아무 일도 없다 — 그 밖에 rng 0
          */
-        /**
-         * 델리게이트 [2026-10-29 · R380 · skill_design §12-9 · INTERFACE §2-6 「장 보스 고유 넷의 장치」] — `delegate` 창(오오라)을 든 유닛의 차례가 오면
-         *   **공격력(중앙값)이 가장 높은 아군** 하나가 그 차례를 받는다. 받을 수 없는 아군 — 자기 · 쓰러짐 · 소환 · 같은 창을 든 유닛 · 경직 · 스턴 중 · 정신 집중 중(셋 다 · 2026-10-30 R392 — 끊어 치기도 차례가 없다).
-         *   동률이면 배열 순 앞 · 받을 아군이 없으면 null(제가 행동한다) · rng 0
-         */
-        function delegateTo(u) {
-            let best = null, top = -Infinity;
-            for (const x of rt.alliesOf(u)) {
-                if (x === u || x.hp <= 0 || x.summon || stateOf(x, 'delegate') || x.chan
-                    || x.stagUntil > t + STEP_EPS || (x.stunUntil ?? 0) > t + STEP_EPS) continue;
-                const a = ((x.atkMin ?? 0) + (x.atkMax ?? 0)) / 2;
-                if (a > top) { best = x; top = a; }
-            }
-            return best;
-        }
-
-        /**
-         * 받은 차례 — `delegate` 이벤트 뒤 받은 아군이 **한 번 더** 행동한다(제 행동 예약 `next` 는 그대로). 마법 무기는 칸 하나가 찬다(가득이면 버린다 ·
-         *   시전은 제 칸 틱이 평소처럼 고른다). 넘긴 유닛은 그 차례에 아무것도 안 한다 · rng = 받은 아군의 그 차례 굴림 그대로
-         */
-        function handOff(u, to) {
-            timeline.push({ t: r1(t), e: 'delegate', u: u.key, d: to.key });
-            if (!to.noBasic) { rt.act(to, t); return; }
-            if (to.charges >= B.cast_charge_max) return;
-            to.charges += 1;
-            timeline.push({ t: r1(t), e: 'charge', u: to.key, ch: to.charges });
-        }
-
         function chargeTick(u) {
             // 정신 집중이 열린 동안은 여기 안 온다 — 행동 순회가 `chanTick` 으로 돌린다(칸이 안 찬다 · 2026-10-30 R392 — ~~끊어 치기는 `next` 가 방 사이 시계~~)
             // 칸 상한 — 공세 오오라 덤(마법 무기 아군 칸 +n · 창의 `chargeAdd` · 2026-11-14 R471)이 더한다 · 없으면 0
@@ -2110,13 +2098,8 @@ export function createBattleSystem(data) {
                 u.next -= TICK;
                 if (u.next <= STEP_EPS) {
                     u.next = u.period;
-                    // 델리게이트 — 마법 무기는 칸이 차는 차례를 넘긴다(제 칸은 안 찬다) (2026-10-29 · R380)
-                    const to = stateOf(u, 'delegate') ? delegateTo(u) : null;
-                    if (to) handOff(u, to);
-                    else {
-                        u.charges += 1;
-                        timeline.push({ t: r1(t), e: 'charge', u: u.key, ch: u.charges });
-                    }
+                    u.charges += 1;
+                    timeline.push({ t: r1(t), e: 'charge', u: u.key, ch: u.charges });
                 }
             }
             // 멈춤 판정은 끝 시각과 같은 여유로 — `t += TICK` 의 누적 오차가 틱 하나를 더 막지 않게 (#69 와 같은 이유)
@@ -2281,6 +2264,33 @@ export function createBattleSystem(data) {
                     delete p.buffs[FROST];
                     refreshDerived(p);
                     timeline.push({ t: r1(t), e: 'buffEnd', u: p.key, s: FROST });
+                }
+            }
+        }
+        /** 늪 [2026-11-17 · R533 · skill_design §12-9 · INTERFACE §2-6 「장 보스 고유 넷의 장치」 — 델리게이트 대체] — 편마다 `mire` 오오라(자기 창 · `foe` 아님 · 양수)를
+         *  든 산 유닛이 있으면 **상대 편 전원**(소환 제외)에게 느려짐 창 하나(`MIRE` · 음수 · 시간 없음 · 여럿이 들면 가장 큰 값 · 같으면 배열 순 앞)를 맞추고 없으면 걷는다.
+         *  창은 능력치 표가 둔화 합 · `coolSlow` 로 읽는다(skill_effects) · 값이 바뀔 때만 `buff` · `buffEnd` · 틱마다 부른다(서리 오라 뒤) · rng 0 */
+        const MIRE = 'foe:mire';
+        function mireSync() {
+            for (const [own, foes] of [[party, units.enemies], [units.enemies, party]]) {
+                let src = null, v = 0;
+                for (const x of own) {
+                    if (x.hp <= 0) continue;
+                    for (const b of Object.values(x.buffs)) if (b.stat === 'mire' && !b.foe && b.v > v) { v = b.v; src = { key: x.key, s: b.s }; }
+                }
+                for (const p of foes) {
+                    if (p.summon) continue;
+                    const cur = p.buffs[MIRE];
+                    if (src && p.hp > 0) {
+                        if (cur && cur.v === -v) continue;
+                        p.buffs[MIRE] = { stat: 'mire', v: -v, until: Infinity, element: null, by: src.key, s: src.s, foe: true, quiet: true };
+                        refreshDerived(p);
+                        timeline.push({ t: r1(t), e: 'buff', u: p.key, s: src.s, stat: 'mire', v: -v, until: null });
+                    } else if (!src && cur) {
+                        delete p.buffs[MIRE];
+                        refreshDerived(p);
+                        timeline.push({ t: r1(t), e: 'buffEnd', u: p.key, s: cur.s });
+                    }
                 }
             }
         }
@@ -4129,7 +4139,7 @@ export function createBattleSystem(data) {
                 // 레벨업한 영웅(`fill`)은 입력이 같아도 갈아입는다 — 체력을 채우는 자리가 아래 비율 복원이다 (R182)
                 if (sig === was.sig && !fill?.includes(p.uid)) continue;
                 worn.set(p.uid, { sig, combat: p.combat });
-                const fresh = makeUnit('party', p.combat, { stats: p.stats ?? null });
+                const fresh = makeUnit('party', penalized(p.combat, resPen), { stats: p.stats ?? null });   // 저항 페널티도 같이 (R535)
                 // 현재 HP 는 **비율을 지킨다** [2026-09-21 · R130 · base_expedition_design §1-5] — 갈아입기 전 비율을 새 최대치에 곱한다(아래 파생 뒤).
                 //   뺐다 끼워도 손익이 0 이라 회복 수단이 아니고, 잠깐 뺀 HP 장비가 그 런 끝까지 HP 를 깎아 두는 함정도 없다
                 u.hpRatio = u.hpMax > 0 ? u.hp / u.hpMax : 1;
@@ -4252,6 +4262,7 @@ export function createBattleSystem(data) {
                 for (const u of [...party, ...units.enemies]) if (u.hp > 0) pulseTick(u);
                 // 정예 강화(마법 갈래 · R528) — 오오라 피해 **뒤** · 전직 트리 틱 앞: 서리 오라를 맞추고(rng 0) · 주기적 번개(간격마다 **rng 1회** — 적 배열 순 · INTERFACE §5-2)
                 frostSync();
+                mireSync();   // 늪(R533) — 서리 오라 뒤 · rng 0 · 든 유닛이 없으면 아무것도 안 한다
                 for (const u of units.enemies) if (u.hp > 0 && u.enchant) enchTick(u);
                 // 전직 트리 틱 — 장치 지속 피해 · 자동 시전 · 창 동안의 주기 타격(히드라 · 블리자드 · 썬더 스트라이크) — 오오라 피해 **뒤** · 재생 **앞** (2026-11-13 R471)
                 for (const u of [...party, ...units.enemies]) if (u.hp > 0) advTick(u);
@@ -4283,10 +4294,7 @@ export function createBattleSystem(data) {
                     // 같은 여유로 판정한다 — `next -= TICK` 의 꼬리(5.0 − 0.1 × 50 > 0)가 틱 하나를 더 먹지 않게 (DEV_PLAN §4 #69)
                     if (u.next <= STEP_EPS) {
                         u.next = u.period;
-                        // 델리게이트 — 넘길 아군이 있으면 그 아군이 행동한다 · 없으면 제가 한다 (2026-10-29 · R380 · 아래 `delegateTo`)
-                        const to = stateOf(u, 'delegate') ? delegateTo(u) : null;
-                        if (to) handOff(u, to);
-                        else rt.act(u, t);
+                        rt.act(u, t);
                     }
                 }
                 rules?.afterTick?.(ruleContext());

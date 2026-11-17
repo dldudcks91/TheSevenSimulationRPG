@@ -524,7 +524,8 @@ export const EFFECTS = {
     //   maiden     아이언 메이든 — 이 창을 든 유닛(적에게 건다)이 직격을 맞히면 그 피해 × 창 합을 **자기도** 받는다(반사 규칙 · battle.strikeOnce)
     //   transform  변신 — 창 동안 액티브를 못 고른다(skill_runtime.pick) · 값(초) > 0 이면 직격을 맞힐 때마다 **그 시전이 건 창**이 값만큼 늘고
     //              끝은 연 시각(`t0`) + [balance.csv:transform_max_sec] (battle.strikeOnce)
-    //   delegate   델리게이트(오오라) — 제 차례에 행동하지 않고 공격력이 가장 높은 아군에게 넘긴다(battle.js 차례 순회)
+    //   mire       늪(오오라 · 2026-11-17 R533 — 델리게이트 대체) — 든 유닛(양수 · 자기 창)이 살아 있으면 battle.js `mireSync` 가 상대 편 전원에게 음수 창을 건다 ·
+    //              음수 창은 아래 능력치 표가 둔화 합 · `coolSlow`(쓰는 순간의 쿨 × (1 + 값) — skill_runtime.cooldownSec)로 읽는다 · 양수 창은 아무것도 안 민다
     //   swarm      스웜 — 창 동안 한 자리 안에서 파리 [balance.csv:swarm_fly_count] 마리 · 마리마다 지금 HP × 값 · 닫힐 때(`end`) 뭉친다 ·
     //              피해를 파리로 나누는 일 · 여닫기는 battle.js(`rt.swarmOpen` · `rt.swarmClose`)
     //   `end(rt, u, b, at)` — 창이 **만료로** 닫힐 때 한 번(skill_runtime.expire) · 지금 쓰는 효과는 swarm 하나
@@ -533,7 +534,7 @@ export const EFFECTS = {
         state: true,
         apply: (rt, tgt, def, until, ev) => { tgt.buffs[def.status ?? def.id].t0 = ev.t; },
     },
-    delegate: { state: true },
+    mire: { state: true },
     swarm: {
         state: true,
         apply: (rt, tgt, def, until, ev) => rt.swarmOpen(tgt, def, ev),
@@ -722,7 +723,7 @@ const ATTRS = [
     },
     // 행동 주기 [2026-10-29 · R386 · battle_design §2 — ~~`basePeriod × (1 − Σperiod_pct − 프렌지)`~~ 대체] — 공속은 「몇 % 더 치나」다:
     //   주기 = 원값(`periodRaw` = 무기 주기 ÷ 민첩 계수) × (1 + 둔화 합) ÷ (1 + 공속 합) · 바닥 `periodFloor`([balance.csv:period_floor_sec]).
-    //   공속 합 = 장비 · 마스터리(`speedBase`) + 양수 `period_pct` 창 + 프렌지 겹(`v × n`) · 둔화 합 = 음수 `period_pct` 창의 크기(결빙 · 바인드).
+    //   공속 합 = 장비 · 마스터리(`speedBase`) + 양수 `period_pct` 창 + 프렌지 겹(`v × n`) · 둔화 합 = 음수 `period_pct` 창의 크기(결빙 · 바인드) + 음수 `mire` 창의 크기(늪 · R533).
     //   **고정 창**(`period_fix` — 보우마스터 퀵 드로우 · 오버드로우)이 있으면 주기 = 무기 주기(`periodWeapon`) × 첫 창의 값 — 공속 · 둔화 · 민첩을 안 탄다.
     //   주기 창이 하나도 없으면 `basePeriod` 그대로 — 부동소수가 종전과 같다
     u => {
@@ -732,6 +733,7 @@ const ATTRS = [
         for (const b of Object.values(u.buffs)) {
             if (b.stat === 'period_pct') { if (b.ail === 'freeze') continue; any = true; if (b.v >= 0) fast += b.v; else slow -= b.v; }
             else if (b.stat === 'frenzy' && (b.n ?? 0) > 0) { any = true; fast += b.v * b.n; }
+            else if (b.stat === 'mire' && b.v < 0) { any = true; slow -= b.v; }   // 늪이 건 느려짐 — 든 유닛 자신의 양수 창은 안 민다 (2026-11-17 R533)
         }
         // 결빙은 가장 센 창 하나만 둔화에 든다 (2026-11-13 R471)
         const fz = strongestOf(u, 'freeze');
@@ -739,6 +741,12 @@ const ATTRS = [
         if (!any) { u.period = u.basePeriod; return; }
         const base = u.speedBase ?? 0;
         u.period = Math.max(u.periodFloor ?? 0, (u.periodRaw ?? u.basePeriod) * (1 + slow) / (1 + base + fast));
+    },
+    // 쿨 느려짐 [2026-11-17 · R533 · 늪] — 음수 `mire` 창의 크기 합 · `skill_runtime.cooldownSec` 이 쓰는 순간의 쿨에 `1 + coolSlow` 를 곱한다 · 창이 없으면 0(곱하지 않는다)
+    u => {
+        let s = 0;
+        for (const b of Object.values(u.buffs)) if (b.stat === 'mire' && b.v < 0) s -= b.v;
+        u.coolSlow = s;
     },
     // 방어 = 무기 옵션 방어 % + 외침(guard) — 같은 축을 미는 둘을 한 번에 모은다
     //   방어 감소(`def_pct` 음수 — 배틀 크라이 · 무기 옵션 한 창 · 겹 창)는 **창마다 곱**한다 [2026-10-28 · R370 · battle_design §9-3 — 10-12 「같은 수치를 깎는 디버프도 서로 곱한다」] ·

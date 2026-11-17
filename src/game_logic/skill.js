@@ -290,6 +290,8 @@ export function createSkillSystem(data) {
         if (st.stat === 'maiden' && !(st.value > 0)) bad(`maiden 인데 value ${st.value} — 되돌리는 몫이라 0 초과`);
         if (st.stat === 'transform' && !(st.value >= 0 && st.dur > 0)) bad(`transform 인데 value ${st.value} · duration_sec ${st.dur} — 늘어나는 초 0 이상 · 시작 길이 0 초과`);
         if (st.stat === 'swarm' && !(st.value > 0 && st.value <= 1 && st.dur > 0)) bad(`swarm 인데 value ${st.value} · duration_sec ${st.dur} — 마리 몫 0 초과 1 이하 · 창이 있어야 뭉친다`);
+        // 늪 [2026-11-17 · R533] — 값 = 상대 편이 느려지는 몫(0 초과) · 늘 켜진 오오라라 시간이 없다(음수 창은 battle.js 가 건다)
+        if (st.stat === 'mire' && !(st.value > 0 && !(st.dur > 0))) bad(`mire 인데 value ${st.value} · duration_sec ${st.dur} — 느려지는 몫 0 초과 · 오오라라 시간 없음`);
     }
 
     /**

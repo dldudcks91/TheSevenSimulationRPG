@@ -267,10 +267,10 @@ const STRINGS = {
     'hint.gamble': { ko: '판돈을 고르고 슬롯을 돌립니다. 심볼 조합에 따른 배당은 배당표에서 확인할 수 있습니다.', en: 'Choose a stake and spin the slots. The payout table shows rewards for symbol combinations.', zh: '选择赌注并转动老虎机。各符号组合的赔付可在赔率表中查看。' },
     'hint.payouts': { ko: '당첨 조합과 배당입니다. 판돈과 함께 확인하면 한 판의 보상을 비교할 수 있습니다.', en: 'Winning combinations and their payouts. Compare them with your chosen stake.', zh: '中奖组合与赔付。结合赌注查看，可比较每次的奖励。' },
     'hint.forge_make': { ko: '장비 부위나 물약을 골라 제작합니다. 만들 항목의 재료와 골드 비용을 확인하세요.', en: 'Choose an equipment slot or potion to craft. Check its material and gold costs.', zh: '选择装备部位或药水进行制作。请确认所需材料与金币费用。' },
-    'hint.forge_up': { ko: '장비를 골라 강화합니다. 다음 단계의 변화와 필요한 재료를 확인한 뒤 진행하세요. 장비마다 강화 횟수가 정해져 있고, 성공해도 실패해도 한 번씩 씁니다. 등급이 높을수록 성공 확률이 낮고, 성공의 일부는 대성공으로 더 크게 오릅니다.', en: 'Select equipment to upgrade. Review the next step’s changes and required materials. Each item has a limited number of upgrade attempts; success or failure uses one.', zh: '选择装备进行强化。请确认下一级的变化与所需材料后再进行。每件装备的强化次数有限，无论成功还是失败都会消耗一次。稀有度越高，成功几率越低；部分成功会成为大成功，提升更多。' },
+    'hint.forge_up': { ko: '장비를 골라 강화합니다. 다음 단계의 변화와 필요한 재료를 확인한 뒤 진행하세요. 낮은 단계는 실패해도 비용만 나가고, 중간 단계는 실패하면 한 단계 내려갈 수 있으며, 높은 단계는 장비가 부서질 수 있습니다. 부서진 장비는 분해한 것과 같은 재료를 남깁니다. 등급이 높을수록 성공 확률이 낮고, 성공의 일부는 대성공으로 더 크게 오릅니다.', en: 'Select equipment to upgrade. Review the next step’s changes and required materials. At low levels a failure only spends the cost; at middle levels it can drop the item one level; at high levels the item can break. A broken item leaves the same materials as salvaging it. Higher grades have lower success chances, and some successes are great successes that raise more.', zh: '选择装备进行强化。请确认下一级的变化与所需材料后再进行。低阶段失败只消耗费用；中阶段失败可能下降1级；高阶段装备可能损毁。损毁的装备会留下与分解相同的材料。稀有度越高，成功几率越低；部分成功会成为大成功，提升更多。' },
     'hint.forge_synth': { ko: '같은 종류의 아래 단계 재료를 써서 위 단계 재료를 만듭니다. 합성에 쓴 재료는 소모됩니다.', en: 'Combine lower-tier materials into a higher tier of the same material. Combining consumes the input materials.', zh: '用同类低一级别的材料合成高一级别的材料。合成所用的材料会被消耗。' },
     'hint.forge_craft': { ko: '크래프트는 준비 중입니다. 현재는 제작·강화·합성을 이용할 수 있습니다.', en: 'Craft is in development. Smithing, upgrading and combining are currently available.', zh: '打造功能尚未开放。目前可使用制作、强化与合成。' },
-    'hint.temper': { ko: '셋 중 하나를 골라 재료를 내면 다음 강화 한 번에 효과가 붙습니다. 달구기는 성공 확률, 덧대기는 대성공 비율, 담금질은 실패해도 강화 횟수를 지킬 확률을 올립니다. 재료 단계는 장비 레벨과 등급이 정하며, 높을수록 효과가 큽니다.', en: 'Pick one of three and spend its material to boost your next upgrade. Heat raises the success chance, Reinforce raises the great-success share, and Quench gives a chance to keep the attempt on failure. The material tier is set by the item level and grade; higher tiers give bigger effects.', zh: '三选一并支付材料，下一次强化即获得效果。加热提高成功几率，加固提高大成功比例，淬火提高失败时保留强化次数的几率。材料级别由装备等级与稀有度决定，级别越高效果越大。' },
+    'hint.temper': { ko: '셋 중 하나를 골라 재료를 내면 다음 강화 한 번에 효과가 붙습니다. 달구기는 성공 확률, 덧대기는 대성공 비율을 올리고, 담금질은 강등이나 파괴를 막을 확률을 줍니다. 담금질은 강등이나 파괴가 있는 단계에서만 쓸 수 있습니다. 재료 단계는 장비 레벨과 등급이 정하며, 높을수록 효과가 큽니다.', en: 'Pick one of three and spend its material to boost your next upgrade. Heat raises the success chance, Reinforce raises the great-success share, and Quench gives a chance to prevent a downgrade or break. Quench can only be used at steps where a downgrade or break is possible. The material tier is set by the item level and grade; higher tiers give bigger effects.', zh: '三选一并支付材料，下一次强化即获得效果。加热提高成功几率，加固提高大成功比例，淬火提供防止降级或损毁的几率。淬火只能在可能降级或损毁的阶段使用。材料级别由装备等级与稀有度决定，级别越高效果越大。' },
     'hint.potion_stock': { ko: '현재 가진 물약의 종류와 개수입니다. 편성 탭에서 Party의 물약 칸에 넣을 수 있습니다.', en: 'Potion types and quantities currently in stock. Configure each Party’s potion belt in Party.', zh: '当前持有的药水种类与数量。可在编队标签页中放入Party的药水格。' },
     'hint.trade': { ko: '받을 최하급 재료를 선택한 뒤 다른 재료 또는 골드로 구매합니다. 지불 수단별 가격과 보유량을 확인할 수 있습니다.', en: 'Choose a lowest-grade material to receive, then buy it with another material or gold. Each payment option shows its cost and available stock.', zh: '选择要获得的最低级材料，再用其他材料或金币购买。可查看各支付方式的价格与持有量。' },
     'hint.special': { ko: '특수 상단 기능은 준비 중입니다.', en: 'The special trader is in development.', zh: '行商功能尚未开放。' },
@@ -709,7 +709,6 @@ const STRINGS = {
         zh: '强化在铁匠铺进行——花费金币逐级提升基底属性。项链 · 戒指无法强化',
         en: 'Upgrading happens at the Blacksmith — one step at a time for gold, raising the base stat. Amulets and rings cannot be upgraded' },
     'ch.err.maxUp': { ko: '더 이상 강화할 수 없음', en: 'Already fully upgraded', zh: '已无法继续强化' },
-    'ch.err.tries': { ko: '남은 강화 횟수가 없음', en: 'No upgrade attempts left', zh: '没有剩余强化次数' },   // R499
     'ch.err.noBase': { ko: '베이스 능력치가 없어 강화할 수 없음', en: 'Nothing to upgrade — this item has no base stat', zh: '没有基底属性，无法强化' },
     /* 해고 (SCREEN_DESIGN §6 · 2026-09-09) — 창 하나가 세 상태를 든다: 막힘(장비) · 막힘(마지막) · 확인.
        규칙 설명이 아니라 **상태와 확인**이라 패널이 아닌 창에 선다 (ui 원칙 4) */
@@ -756,13 +755,20 @@ const STRINGS = {
     'tv.visit.dropped': { ko: '{name} 을(를) 돌려보냄', en: 'Sent {name} away', zh: '已送走{name}' },
     // 밖에서 기다리는 찾은 영웅 — 수색 영웅 몫 마지막 줄 · 카드 버튼 · 플래시 (SCREEN_DESIGN §8-1 · ADR-1201)
     'tv.visit.found': { ko: '찾았다! {name}', en: 'Found {name}!', zh: '找到了！{name}' },
+    // 그 줄이 꽉 차 선술집에서 쉰다 — 이야기 대신 한 줄 (ADR-1256)
+    'tv.visit.rest': { ko: '선술집에서 쉬는 중...', en: 'Resting at the tavern...', zh: '正在酒馆休息……' },
+    // 거르기 — 수색이 데려올 최저 등급 · 수색 패널 제목 줄 세그먼트 · 연구소 레벨 목록의 기능 이름 (ADR-1257)
+    'tv.visit.filter': { ko: '거르기', en: 'Filter', zh: '筛选' },
+    'tv.visit.filter.normal': { ko: '일반 이상', en: 'Normal+', zh: '普通以上' },
+    'tv.visit.filter.magic': { ko: '매직 이상', en: 'Magic+', zh: '魔法以上' },
+    'tv.visit.filter.rare': { ko: '레어만', en: 'Rare only', zh: '仅稀有' },
     'tv.visit.ignore': { ko: '무시', en: 'Pass', zh: '忽略' },
     'tv.visit.ignored': { ko: '{name} 을(를) 두고 다시 수색', en: 'Passed on {name} — searching again', zh: '放过{name}，重新搜寻' },
     'tv.visit.gone': { ko: '이미 칸에 없음', en: 'No longer here', zh: '已不在等候位' },
     // 칸 띠 — 어떻게 왔나(출처 · `state.js:JOIN_SRC`). 찾아오는 방식이 늘면 한 줄씩 는다
     'tv.visit.src.visit': { ko: '방문', en: 'Visitor', zh: '来访' },
     'tv.visit.src.caravan': { ko: '마차', en: 'Caravan', zh: '马车' },
-    // 안 열린 수색 칸의 툴팁 한 줄 — 그 칸을 여는 연구소 지점 레벨 「연구소 수색 · 대기 칸 Lv.2」 (§8-1 · §13-1 · ADR-1181)
+    // 안 열린 수색 칸의 툴팁 한 줄 — 그 칸을 여는 연구소 지점 레벨 「연구소 수색 · 대기소 Lv.2」 (§8-1 · §13-1 · ADR-1181)
     'tv.join.need': { ko: '{b} {line} · {node} Lv.{n}', en: '{b} {line} · {node} Lv.{n}', lock: true, zh: '{b} {line} · {node} Lv.{n}' },
     'tv.visit.src.tavern': { ko: '보관', en: 'Kept', zh: '保留' },
     // 안내 칸 = 수색 줄 등록 영웅 (SCREEN_DESIGN §8-1 · ADR-1125) — 이야기 문구는 `visit_story.csv` · 전직 상태 · 빈 줄
@@ -1006,7 +1012,7 @@ const STRINGS = {
     'dp.node.burst': { ko: '대박', en: 'Jackpot', zh: '大丰收' },
     'dp.node.interval': { ko: '간격', en: 'Interval', zh: '间隔' },
     'dp.node.quality': { ko: '품질', en: 'Quality', zh: '品质' },
-    'dp.node.waiting': { ko: '대기 칸', en: 'Waiting Slots', zh: '等候位' },
+    'dp.node.waiting': { ko: '대기소', en: 'Waiting Room', zh: '等候所' },
     'dp.node.roster': { ko: '로스터', en: 'Roster', zh: '名册' },   // 영웅 보유 상한을 레벨마다 한 칸씩 (2026-11-16 · R516 · ADR-1216)
     'dp.node.speed': { ko: '속도', en: 'Speed', zh: '速度' },
     'dp.node.range': { ko: '범위', en: 'Range', zh: '范围' },
@@ -1033,7 +1039,7 @@ const STRINGS = {
     'dp.out.h.lib': { ko: '영웅별 시간당 스킬북', en: 'Books per Hero per Hour', zh: '每名英雄每小时技能书' },
     'dp.out.hero': { ko: '영웅', en: 'Heroes', zh: '英雄' },
     'dp.out.rare': { ko: '레어 확률', en: 'Rare chance', zh: '稀有几率' },
-    'dp.out.waiting': { ko: '대기 칸', en: 'Waiting slots', zh: '等候位' },
+    'dp.out.waiting': { ko: '대기소', en: 'Waiting room', zh: '等候所' },
     'dp.out.cap': { ko: '상한 레벨', en: 'Level cap', zh: '等级上限' },
     'dp.out.gold': { ko: '골드', en: 'Gold', zh: '金币' },
     'dp.fx.h': { ko: '등록 효과', en: 'Hero Effects', zh: '派驻效果' },   // 고른 줄의 소제목 — 아래 영웅 카드 · 효과 표 (ADR-0700 — ~~Assigned heroes~~ 카드가 서며 영웅 목록 제목처럼 겹쳐 읽혔다)
@@ -1228,8 +1234,6 @@ const STRINGS = {
     'fg.upMax': { ko: '강화 +{up} · 상한', en: 'Upgrade +{up} · max', zh: '强化+{up} · 上限' },
     'fg.base': { ko: '베이스 능력치', en: 'Base stat', zh: '基底属性' },
     // 강화 진열의 메타 — 누가 끼고 있나 · 안 끼었으면 있는 곳(`ch.bag.inv` · `ch.bag.stash`) (ADR-0604 · ~~`fg.worn` 착용 중 · `fg.bag` 가방~~)
-    'fg.tries': { ko: '남은 횟수', en: 'Attempts left', zh: '剩余次数' },   // 강화 작업 판 눈금 머리 — 그 장비의 남은 강화 횟수 (ADR-1183 · R499)
-    'fg.noTries': { ko: '횟수 소진', en: 'No attempts left', zh: '次数耗尽' },   // 남은 강화 횟수 0 — [강화] 글 (ADR-1183)
     // 강화 성공 확률 · 실패 [2026-10-14 · R253 · ADR-0626] — 확률 칩(비용 칩 앞) · 실패 플래시 · 연출의 실패 표지
     'fg.chanceLab': { ko: '성공 확률', en: 'Success chance', zh: '成功几率' },   // 강화 작업 칸 비교 줄 아래 「이름 · 값」 줄 (ADR-0973 · ~~`fg.chance` 칩~~)
     'fg.upFail': { ko: '강화 실패 · +{n} 그대로 · {g}G', en: 'Upgrade failed · still +{n} · {g}G', zh: '强化失败 · 保持+{n} · {g}G' },
@@ -1242,15 +1246,20 @@ const STRINGS = {
     'fg.act.quench': { ko: '담금질', en: 'Quench', zh: '淬火' },
     'fg.eff.chance': { ko: '확률 +{n}%', en: 'Chance +{n}%', zh: '几率+{n}%' },   // 손질 카드 효과 줄 · 플래시 — effect 마다
     'fg.eff.great': { ko: '대성공 +{n}%', en: 'Great +{n}%', zh: '大成功+{n}%' },
-    'fg.eff.keep': { ko: '횟수 보존 {n}%', en: 'Keep attempt {n}%', zh: '保留次数{n}%' },
+    'fg.eff.guard': { ko: '강등 · 파괴 막기 {n}%', en: 'Guard {n}%', zh: '防护{n}%' },   // 담금질 — 강등 · 파괴를 막을 확률 (R530 · ADR-1254)
+    'fg.noRisk': { ko: '강등 · 파괴가 없는 단계', en: 'No downgrade or break at this step', zh: '此阶段不会降级或损毁' },   // 안전 구간 — 잠긴 담금질 카드에 올리면 (ADR-1254)
     'fg.applied': { ko: '적용됨', en: 'Applied', zh: '已应用' },
     'fg.temper.done': { ko: '손질됨', en: 'Prepped', zh: '已整备' },
     'fg.tempered': { ko: '{name} · 다음 강화 {eff}', en: '{name} · next upgrade {eff}', zh: '{name} · 下次强化{eff}' },
     'fg.greatLab': { ko: '대성공', en: 'Great success', zh: '大成功' },   // 강화 작업 판 확률 줄 아래 (ADR-1200)
-    'fg.keepLab': { ko: '횟수 보존', en: 'Keep attempt', zh: '保留次数' },
+    'fg.downLab': { ko: '강등', en: 'Downgrade', zh: '降级' },   // 강화 작업 판 확률 줄 — 다음 도전의 강등 · 파괴 (R530 · ADR-1254)
+    'fg.breakLab': { ko: '파괴', en: 'Break', zh: '损毁' },
     'fg.greatTip': { ko: '대성공이면 {v}', en: 'On great success: {v}', zh: '大成功时：{v}' },
     'fg.upGreat': { ko: '대성공! +{n} · {g}G', en: 'Great success! +{n} · {g}G', zh: '大成功！+{n} · {g}G' },
-    'fg.upKept': { ko: '강화 실패 · +{n} 그대로 · 횟수는 지켰다 · {g}G', en: 'Upgrade failed · still +{n} · attempt kept · {g}G', zh: '强化失败 · 保持+{n} · 次数已保留 · {g}G' },
+    'fg.upDown': { ko: '강등 · +{n} · {g}G', en: 'Downgraded · +{n} · {g}G', zh: '降级 · +{n} · {g}G' },   // 강화 결과 플래시 — 강등 · 파괴 · 막힘 (R530 · ADR-1254)
+    'fg.upBroken': { ko: '장비 파괴 · {loot} · {g}G', en: 'Item broken · {loot} · {g}G', zh: '装备损毁 · {loot} · {g}G' },   // {loot} = 받은 분해 산출(가루 · 부위 재료)
+    'fg.upGuarded': { ko: '강화 실패 · 담금질로 보호 · +{n} 그대로 · {g}G', en: 'Upgrade failed · Quench held · still +{n} · {g}G', zh: '强化失败 · 淬火防护 · 保持+{n} · {g}G' },
+    'fg.err.noRisk': { ko: '막을 강등 · 파괴가 없음', en: 'Nothing to guard at this step', zh: '此阶段无需防护' },
     'fg.err.tempered': { ko: '이미 손질했다 · 강화하면 다시 할 수 있다', en: 'Already prepped · upgrade first', zh: '已整备 · 强化后可再次整备' },
     'fg.err.action': { ko: '없는 손질', en: 'Unknown prep', zh: '无效的整备' },
     'fg.err.tier': { ko: '이 장비에 맞는 재료 단계가 없음', en: 'No material tier for this item', zh: '没有适合此装备的材料级别' },
@@ -1739,14 +1748,14 @@ const STRINGS = {
         zh: '物理防御减少直接受到的物理伤害，火焰、冰霜、闪电、毒素抗性减少对应元素的伤害。并没有一个能抵御所有元素的魔法防御数值。如果防御力很高却被火焰技能重创，就要单独查看火焰抗性。<br><br>抗性数值与最大抗性也不同。抗性达到上限后，即使继续堆同一种抗性，当前受到的伤害也可能不再减少。最大抗性提高是抬高这一上限的词条，只有抗性本身足够，才能利用提高后的上限。也要留意敌人削减抗性的情况。<br><br>伤害减免、屏障与治疗是不同于物理防御的另一类手段，但不要以为它们对任何伤害都一视同仁。牧师的部分攻击造成真实伤害，会无视防御、抗性与伤害减免；中毒和反射也采用与直接命中的攻击不同的规则。',
     },
     'help.character.penetration.title': {
-        ko: "방어 무시·방어 감소·저항 감소",
-        en: "Defense Ignore, defense reduction and Resist Reduction",
-        zh: '无视防御、防御降低与抗性降低',
+        ko: "방어력 관통·원소 관통·감소",
+        en: "Defense Penetration, Elemental Penetration and reductions",
+        zh: '防御穿透、元素穿透与降低',
     },
     'help.character.penetration.body': {
-        ko: "방어 무시는 내 물리 직격에서 적의 방어 일부를 계산하지 않는 능력치입니다. [타격 시 대상 방어력 감소]는 적에게 효과를 걸어 방어를 낮추므로, 같은 적을 때리는 다른 영웅의 물리 공격도 도움을 받습니다. 둘 다 명중률을 올리는 효과는 아닙니다.<br><br>저항 감소는 내 원소 직격에 적용하며, 화염·냉기처럼 원소가 정해진 옵션은 그 원소에만 적용됩니다. [타격 시 대상 저항 감소]는 적에게 걸린 동안 같은 원소로 공격하는 동료도 활용합니다. 화염 저항을 깎아도 물리·냉기 공격이 함께 강해지는 것은 아닙니다.<br><br>물리 공격이 중심인 파티라면 적의 방어와 방어 감소를, 원소 공격이 중심이라면 실제 쓰는 원소와 저항 감소를 맞춰 봅니다. 고정 피해는 원래 방어·저항을 건너뛰므로 이 옵션으로 그 고정 피해가 더 늘지는 않습니다.",
-        en: "Defense Ignore leaves part of the enemy's defense out of your own Physical direct-hit calculation. [Reduce target defense on hit] applies an effect to the enemy, also helping allies who deal Physical hits to that target. Neither effect improves hit chance.<br><br>Resist Reduction applies to your own elemental direct hits. Options naming Fire, Cold or another element apply only to that element. [Reduce target resistance on hit] affects the enemy, so allies attacking with the same element can benefit while it lasts. Reducing Fire Resistance does not also strengthen Physical or Cold attacks.<br><br>For a party focused on Physical hits, examine enemy defense and defense reduction. For elemental attacks, match the options to the elements actually used. Fixed damage already bypasses defense and resistance, so these options do not raise that Fixed damage.",
-        zh: '无视防御是在自己的物理直击中，不计算敌人部分防御的属性。[击中时降低目标防御]会对敌人施加效果、降低其防御，因此攻击同一敌人的其他英雄的物理攻击也会受益。两者都不是提高命中率的效果。<br><br>抗性降低作用于自己的元素直击；像火焰、冰霜这样指定了元素的词条，只对该元素生效。[击中时降低目标抗性]在作用于敌人期间，用同一元素攻击的队友也能利用。即使削减了火焰抗性，物理与冰霜攻击也不会一同变强。<br><br>以物理攻击为主的队伍，要关注敌人的防御与防御降低；以元素攻击为主的队伍，则要让实际使用的元素与抗性降低相匹配。真实伤害本来就会跳过防御与抗性，因此这些词条不会让真实伤害进一步增加。',
+        ko: "방어력 관통은 내 물리 직격에서 적의 방어 일부를 계산하지 않는 능력치입니다. 스킬이 거는 방어력 감소는 적의 방어를 낮추므로, 같은 적을 때리는 다른 영웅의 물리 공격도 도움을 받습니다. 둘 다 명중률을 올리는 효과는 아닙니다.<br><br>원소 관통은 내 원소 직격에 적용하며, 화염·냉기처럼 원소가 정해진 옵션은 그 원소에만 적용됩니다. 스킬이 거는 저항 감소는 적에게 걸린 동안 같은 원소로 공격하는 동료도 활용합니다. 화염 저항을 깎아도 물리·냉기 공격이 함께 강해지는 것은 아닙니다.<br><br>장비 옵션은 관통이고, 적에게 거는 감소는 스킬에서 나옵니다. 물리 공격이 중심인 파티라면 방어력 관통과 방어를 깎는 스킬을, 원소 공격이 중심이라면 실제 쓰는 원소의 관통과 저항을 깎는 스킬을 맞춰 봅니다. 고정 피해는 원래 방어·저항을 건너뛰므로 이 옵션으로 그 고정 피해가 더 늘지는 않습니다.",
+        en: "Defense Penetration leaves part of the enemy's defense out of your own Physical direct-hit calculation. Defense reduction applied by skills lowers the enemy's defense, also helping allies who deal Physical hits to that target. Neither effect improves hit chance.<br><br>Elemental Penetration applies to your own elemental direct hits. Options naming Fire, Cold or another element apply only to that element. Resistance reduction applied by skills affects the enemy, so allies attacking with the same element can benefit while it lasts. Reducing Fire Resistance does not also strengthen Physical or Cold attacks.<br><br>Gear options give penetration; reductions placed on enemies come from skills. For a party focused on Physical hits, pair Defense Penetration with skills that lower defense. For elemental attacks, match penetration and resistance-lowering skills to the elements actually used. Fixed damage already bypasses defense and resistance, so these options do not raise that Fixed damage.",
+        zh: '防御穿透是在自己的物理直击中，不计算敌人部分防御的属性。技能施加的防御降低会降低敌人的防御，因此攻击同一敌人的其他英雄的物理攻击也会受益。两者都不是提高命中率的效果。<br><br>元素穿透作用于自己的元素直击；像火焰、冰霜这样指定了元素的词条，只对该元素生效。技能施加的抗性降低在作用于敌人期间，用同一元素攻击的队友也能利用。即使削减了火焰抗性，物理与冰霜攻击也不会一同变强。<br><br>装备词条提供穿透，施加在敌人身上的降低来自技能。以物理攻击为主的队伍，要搭配防御穿透与降低防御的技能；以元素攻击为主的队伍，则要让穿透与降低抗性的技能匹配实际使用的元素。真实伤害本来就会跳过防御与抗性，因此这些词条不会让真实伤害进一步增加。',
     },
     'help.character.damage_kinds.title': {
         ko: "직격·지속 피해·반사·경직",
@@ -1904,9 +1913,9 @@ const STRINGS = {
         zh: '等待就会来访的英雄',
     },
     'help.tavern.visitors.body': {
-        ko: "연구소 <b>수색</b> 줄에 등록한 영웅이 시간마다 한 명씩 데려옵니다. 아무도 등록하지 않으면 찾아오는 영웅이 없고, 영웅은 영웅 고용 후보로만 얻습니다. 등록한 영웅도 원정과 편성에 그대로 쓸 수 있고, 게임을 닫아도 시간이 흐릅니다. 이 수색으로는 현재 <b>매직 또는 레어</b> 영웅이 옵니다. 로스터와 대기 칸에 성장 고블린이 없으면 가끔 고블린이 대신 옵니다.<br><br>도착한 영웅은 고용하거나 돌려보낼 때까지 떠나지 않습니다. 찾아온 영웅은 데려온 수색 영웅 줄의 오른쪽 칸에 섭니다. 그 줄 칸이 가득 차도 시계는 흐릅니다. 시간이 다 된 영웅은 그 줄에 자리가 날 때까지 기다렸다가, 자리를 비우면 바로 들어오고 그때부터 다음 수색을 시작합니다. 기다리는 영웅은 데려온 수색 영웅 칸에 <b>찾았다!</b>로 보이며, 눌러서 바로 고용하거나 무시할 수 있습니다. 무시하면 그 수색 영웅이 바로 다시 나갑니다. 연구소에서 <b>간격</b>을 올리면 더 자주 오고, <b>품질</b>은 레어 확률을 올리고, <b>대기 칸</b>은 줄마다 둘째 칸을 엽니다.",
-        en: "Each hero assigned to the Laboratory's <b>Search</b> line brings back one candidate per interval. With no one assigned, nobody arrives and heroes come only from the hiring candidates. Assigned heroes can still join expeditions and formations, and time keeps passing while the game is closed. These arrivals currently produce <b>Magic or Rare</b> heroes. If there is no Growth goblin in your roster or waiting slots, a goblin sometimes arrives instead.<br><br>Arrivals stay until hired or sent away, in the slots to the right of the searcher who brought them. The timer keeps running while that searcher's slots are full. A hero whose timer finishes waits for room in that row, enters as soon as you free a slot there, and the next search starts then. A waiting hero shows as <b>Found!</b> under the searcher who brought them; click it to hire them right away or pass. Passing sends that searcher out again at once. Laboratory <b>Interval</b> research makes arrivals more frequent, <b>Quality</b> raises the Rare chance, and <b>Waiting Slots</b> opens a second slot in each row.",
-        zh: '派驻在研究所<b>搜寻</b>线上的英雄，每隔一段时间会带回一名英雄。没有派驻任何人时，就不会有英雄来访，英雄只能从雇佣候选中获得。派驻的英雄照样可以参加远征和编队，关闭游戏时时间也会流逝。目前这项搜寻带来的是<b>魔法或稀有</b>英雄。若名册和等候位中都没有成长哥布林，有时会改为来一只哥布林。<br><br>到来的英雄在你雇佣或打发走之前不会离开。来访的英雄站在带回他的搜寻英雄那一行右侧的格子里。即使那一行的格子已满，计时也会继续。时间已到的英雄会等到那一行有空位，你一腾出位置就立刻进入，并从那时开始下一次搜寻。等候的英雄会在带回他的搜寻英雄格子上显示为<b>找到了！</b>，点击即可直接雇佣或忽略。忽略后，该搜寻英雄会立刻再次出发。在研究所提升<b>间隔</b>会让英雄来得更频繁，<b>品质</b>提高稀有几率，<b>等候位</b>为每一行开启第二格。',
+        ko: "연구소 <b>수색</b> 줄에 등록한 영웅이 시간마다 한 명씩 데려옵니다. 아무도 등록하지 않으면 찾아오는 영웅이 없고, 영웅은 영웅 고용 후보로만 얻습니다. 등록한 영웅도 원정과 편성에 그대로 쓸 수 있고, 게임을 닫아도 시간이 흐릅니다. 이 수색으로는 <b>일반 · 매직 · 레어</b> 영웅이 옵니다. 로스터와 대기소에 성장 고블린이 없으면 가끔 고블린이 대신 옵니다.<br><br>도착한 영웅은 고용하거나 돌려보낼 때까지 떠나지 않습니다. 찾아온 영웅은 데려온 수색 영웅 줄의 오른쪽 칸에 섭니다. 그 줄 칸이 가득 차면 수색 영웅은 수색을 나가지 않고 선술집에서 쉬다가, 칸을 비우는 즉시 다음 수색을 나갑니다. 수색 중에 그 줄이 차 버리면 찾은 영웅은 자리가 날 때까지 밖에서 기다렸다가, 자리를 비우면 바로 들어옵니다. 기다리는 영웅은 데려온 수색 영웅 칸에 <b>찾았다!</b>로 보이며, 눌러서 바로 고용하거나 무시할 수 있습니다. 연구소에서 <b>간격</b>을 올리면 더 자주 오고, <b>품질</b>은 레어 확률을 올리고, <b>대기소</b>는 줄마다 둘째 칸을 연 뒤 <b>거르기</b>를 엽니다. 거르기로 데려올 최저 등급을 고르면 그보다 낮은 영웅은 돌려보내고, 수색 영웅은 바로 다시 나갑니다.",
+        en: "Each hero assigned to the Laboratory's <b>Search</b> line brings back one candidate per interval. With no one assigned, nobody arrives and heroes come only from the hiring candidates. Assigned heroes can still join expeditions and formations, and time keeps passing while the game is closed. These arrivals can be <b>Normal, Magic or Rare</b> heroes. If there is no Growth goblin in your roster or Waiting Room, a goblin sometimes arrives instead.<br><br>Arrivals stay until hired or sent away, in the slots to the right of the searcher who brought them. While that searcher's slots are full, the searcher rests at the Tavern instead of searching and sets out again as soon as you free a slot. If the row fills up during a search, the hero found waits outside for room and enters as soon as you free a slot there. A waiting hero shows as <b>Found!</b> under the searcher who brought them; click it to hire them right away or pass. Laboratory <b>Interval</b> research makes arrivals more frequent, <b>Quality</b> raises the Rare chance, and the <b>Waiting Room</b> opens a second slot in each row and then <b>Filter</b>. Set a minimum grade with Filter and lower-grade heroes are turned away while the searcher sets out again at once.",
+        zh: '派驻在研究所<b>搜寻</b>线上的英雄，每隔一段时间会带回一名英雄。没有派驻任何人时，就不会有英雄来访，英雄只能从雇佣候选中获得。派驻的英雄照样可以参加远征和编队，关闭游戏时时间也会流逝。这项搜寻会带来<b>普通、魔法或稀有</b>英雄。若名册和等候所中都没有成长哥布林，有时会改为来一只哥布林。<br><br>到来的英雄在你雇佣或打发走之前不会离开。来访的英雄站在带回他的搜寻英雄那一行右侧的格子里。那一行的格子满了时，搜寻英雄不会出发，而是在酒馆休息，你一腾出位置就立刻出发进行下一次搜寻。若在搜寻途中那一行已满，找到的英雄会在外面等到有空位，你一腾出位置就立刻进入。等候的英雄会在带回他的搜寻英雄格子上显示为<b>找到了！</b>，点击即可直接雇佣或忽略。在研究所提升<b>间隔</b>会让英雄来得更频繁，<b>品质</b>提高稀有几率，<b>等候所</b>为每一行开启第二格，之后开启<b>筛选</b>。用筛选设定最低等级后，低于该等级的英雄会被送回，搜寻英雄立刻再次出发。',
     },
     'help.tavern.commissions.title': {
         ko: "하던 원정에 의뢰를 얹기",
@@ -2034,9 +2043,9 @@ const STRINGS = {
         zh: '强化已有装备',
     },
     'help.forge.upgrade.body': {
-        ko: "왼쪽 착용 장비나 아래 인벤토리·창고의 장비를 눌러 강화 대상을 고릅니다. 대장간에서 장비를 누르는 것은 <b>장착이 아니라 대상 선택</b>입니다. <b>[강화]</b>에서 다음 효과·성공 확률·골드와 재료 비용을 확인합니다.<br><br>강화는 무기의 피해 범위와 방어구의 방어력 같은 <b>기본 성능</b>을 올립니다. 붙어 있던 죄종·옵션 조합을 바꾸거나 옵션 값을 다시 뽑지 않습니다. 목걸이와 반지는 강화할 수 없으며, 상한은 대장간 랭크에 따라 늘어납니다.<br><br>성공하면 강화 단계가 하나 오릅니다. <b>실패해도 골드와 재료는 소모</b>되지만 장비가 파괴되거나 단계가 내려가지는 않습니다. 착용 중인 장비와 창고 장비도 강화할 수 있습니다.",
-        en: "Click worn gear on the left, or gear in inventory or stash below, to select a target. Clicking gear here <b>selects it rather than equipping it</b>. In <b>Upgrade</b>, check the next effect, success chance, and gold and material costs.<br><br>Upgrades raise <b>base performance</b>, such as weapon damage or armor defense. They do not change the existing Sins, option combination or rolled option values. Amulets and rings cannot be upgraded. Blacksmith ranks can raise the cap.<br><br>Success adds one upgrade level. <b>Failure still spends gold and materials</b>, but never destroys the item or lowers its level. Both worn and stashed gear can be upgraded.",
-        zh: '点击左侧已穿戴的装备，或下方背包、仓库中的装备，选择强化目标。在铁匠铺点击装备是<b>选择目标，而不是装备</b>。在<b>[强化]</b>中确认下一级效果、成功几率以及金币和材料费用。<br><br>强化提升武器伤害范围、防具防御力等<b>基础性能</b>。不会改变原有的罪宗与词条组合，也不会重新随机词条数值。项链和戒指无法强化，上限随铁匠铺的阶提升。<br><br>成功时强化等级提升1级。<b>失败时也会消耗金币和材料</b>，但装备不会损毁，等级也不会下降。已穿戴的装备和仓库中的装备也可以强化。',
+        ko: "왼쪽 착용 장비나 아래 인벤토리·창고의 장비를 눌러 강화 대상을 고릅니다. 대장간에서 장비를 누르는 것은 <b>장착이 아니라 대상 선택</b>입니다. <b>[강화]</b>에서 다음 효과·성공 확률·골드와 재료 비용을 확인합니다.<br><br>강화는 무기의 피해 범위와 방어구의 방어력 같은 <b>기본 성능</b>을 올립니다. 붙어 있던 죄종·옵션 조합을 바꾸거나 옵션 값을 다시 뽑지 않습니다. 목걸이와 반지는 강화할 수 없으며, 상한은 대장간 랭크에 따라 늘어납니다.<br><br>성공하면 강화 단계가 하나 오릅니다. <b>실패해도 골드와 재료는 소모</b>됩니다. 높은 단계에서는 실패할 때 단계가 하나 내려가거나 <b>장비가 부서질 수 있고</b>, 부서진 장비는 분해한 것과 같은 재료를 남깁니다. 착용 중인 장비와 창고 장비도 강화할 수 있습니다.",
+        en: "Click worn gear on the left, or gear in inventory or stash below, to select a target. Clicking gear here <b>selects it rather than equipping it</b>. In <b>Upgrade</b>, check the next effect, success chance, and gold and material costs.<br><br>Upgrades raise <b>base performance</b>, such as weapon damage or armor defense. They do not change the existing Sins, option combination or rolled option values. Amulets and rings cannot be upgraded. Blacksmith ranks can raise the cap.<br><br>Success adds one upgrade level. <b>Failure still spends gold and materials</b>. At higher levels a failure can drop the item one level or <b>break the item</b>; a broken item leaves the same materials as salvaging it. Both worn and stashed gear can be upgraded.",
+        zh: '点击左侧已穿戴的装备，或下方背包、仓库中的装备，选择强化目标。在铁匠铺点击装备是<b>选择目标，而不是装备</b>。在<b>[强化]</b>中确认下一级效果、成功几率以及金币和材料费用。<br><br>强化提升武器伤害范围、防具防御力等<b>基础性能</b>。不会改变原有的罪宗与词条组合，也不会重新随机词条数值。项链和戒指无法强化，上限随铁匠铺的阶提升。<br><br>成功时强化等级提升1级。<b>失败时也会消耗金币和材料</b>。在较高阶段失败时，等级可能下降1级，或<b>装备可能损毁</b>；损毁的装备会留下与分解相同的材料。已穿戴的装备和仓库中的装备也可以强化。',
     },
     'help.forge.combine.title': {
         ko: "재료를 한 단계 올리는 합성",
@@ -2126,9 +2135,9 @@ const STRINGS = {
         zh: '自动生产与关闭游戏期间',
     },
     'help.resource.production.body': {
-        ko: "창고를 지으면 연구소의 <b>자원 줄</b>이 열립니다. 영웅을 등록하지 않아도 <b>최하급 철광석·약초·목재를 모두</b> 생산합니다. 등록은 생산을 시작하는 조건이 아니라 더 빠르게 얻는 보너스입니다.<br><br>자원 줄의 <b>채광·채집·벌목</b> 연구는 각각 철광석·약초·목재 생산량을 높입니다. 무기나 건물이 필요하면 철광석, 방어구나 건물이 필요하면 목재, 물약·책·약초 비용 연구가 필요하면 약초를 확인합니다. 생산물은 재고에 자동으로 더해집니다.<br><br>게임을 켜 둔 동안에는 계속 생산합니다. 꺼 둔 동안의 재료·훈련·도박장 수익은 <b>{hours}시간분을 기준으로 제한해 계산</b>하므로, 비운 시간 전부가 무제한 쌓이지 않습니다. 수색의 도착 시계는 이 시간 상한을 받지 않고 대기 칸이 찰 때까지 흐릅니다.",
-        en: "Building Storage opens the Laboratory's <b>Resources line</b>. It produces <b>lowest-grade iron ore, herbs and timber together</b> without assigned heroes. Assignment improves output; it is not required to start production.<br><br><b>Mining, Gathering and Logging</b> research raise ore, herb and timber output respectively. Check ore for weapons or buildings, timber for armor or buildings, and herbs for potions, books or research with an herb cost. Output enters stock automatically.<br><br>Production continues while the game is open. Offline materials, Training and Gambling Den income are <b>limited using a {hours}h calculation window</b>; time away does not accumulate without limit. The Search arrival timer has no such time cap and continues until its waiting slots fill.",
-        zh: '建造仓库后，研究所的<b>资源线</b>开放。即使不派驻英雄，也会<b>同时生产最低级铁矿石、草药、木材</b>。派驻不是开始生产的条件，而是让获取更快的加成。<br><br>资源线的<b>采矿、采集、伐木</b>研究分别提高铁矿石、草药、木材的产量。需要武器或建筑时看铁矿石，需要防具或建筑时看木材，需要药水、书或有草药费用的研究时看草药。产出会自动加入库存。<br><br>游戏开着时会持续生产。关闭期间的材料、训练、赌坊收益<b>最多按{hours}小时计算</b>，离开的时间不会无限累积。搜寻的到达计时不受这个时间上限限制，会一直走到等候位填满为止。',
+        ko: "창고를 지으면 연구소의 <b>자원 줄</b>이 열립니다. 영웅을 등록하지 않아도 <b>최하급 철광석·약초·목재를 모두</b> 생산합니다. 등록은 생산을 시작하는 조건이 아니라 더 빠르게 얻는 보너스입니다.<br><br>자원 줄의 <b>채광·채집·벌목</b> 연구는 각각 철광석·약초·목재 생산량을 높입니다. 무기나 건물이 필요하면 철광석, 방어구나 건물이 필요하면 목재, 물약·책·약초 비용 연구가 필요하면 약초를 확인합니다. 생산물은 재고에 자동으로 더해집니다.<br><br>게임을 켜 둔 동안에는 계속 생산합니다. 꺼 둔 동안의 재료·훈련·도박장 수익은 <b>{hours}시간분을 기준으로 제한해 계산</b>하므로, 비운 시간 전부가 무제한 쌓이지 않습니다. 수색의 도착 시계는 이 시간 상한을 받지 않고 대기소가 찰 때까지 흐릅니다.",
+        en: "Building Storage opens the Laboratory's <b>Resources line</b>. It produces <b>lowest-grade iron ore, herbs and timber together</b> without assigned heroes. Assignment improves output; it is not required to start production.<br><br><b>Mining, Gathering and Logging</b> research raise ore, herb and timber output respectively. Check ore for weapons or buildings, timber for armor or buildings, and herbs for potions, books or research with an herb cost. Output enters stock automatically.<br><br>Production continues while the game is open. Offline materials, Training and Gambling Den income are <b>limited using a {hours}h calculation window</b>; time away does not accumulate without limit. The Search arrival timer has no such time cap and continues until its Waiting Room fills.",
+        zh: '建造仓库后，研究所的<b>资源线</b>开放。即使不派驻英雄，也会<b>同时生产最低级铁矿石、草药、木材</b>。派驻不是开始生产的条件，而是让获取更快的加成。<br><br>资源线的<b>采矿、采集、伐木</b>研究分别提高铁矿石、草药、木材的产量。需要武器或建筑时看铁矿石，需要防具或建筑时看木材，需要药水、书或有草药费用的研究时看草药。产出会自动加入库存。<br><br>游戏开着时会持续生产。关闭期间的材料、训练、赌坊收益<b>最多按{hours}小时计算</b>，离开的时间不会无限累积。搜寻的到达计时不受这个时间上限限制，会一直走到等候所填满为止。',
     },
     'help.resource.materials.title': {
         ko: "재료는 어디서 얻고 어디에 쓰나요?",
@@ -2156,9 +2165,9 @@ const STRINGS = {
         zh: '英雄派驻与两种位置的区别',
     },
     'help.resource.assignment.body': {
-        ko: "줄 카드의 영웅 얼굴이나 <b>+</b>를 누르면 등록 창이 열립니다. 그 줄에 둘 영웅을 고르고 <b>[적용]</b>을 누르면 바뀝니다. 다시 누르면 고르기가 풀리고, 다른 줄에 등록된 영웅을 고르면 이 줄로 이동합니다. 옮기거나 빼면 쌓인 숙련과 수색 시계가 처음부터 다시 시작되며, 창 아래에 빨간 글씨로 표시됩니다. <b>한 영웅은 한 줄</b>에만 등록할 수 있습니다.<br><br>연구소 등록은 영웅을 붙잡지 않습니다. 등록한 채로 Party에 넣거나 원정·탐험·전직을 진행할 수 있습니다. 다만 훈련 경험치는 <b>훈련 줄에 등록한 영웅</b>만 받습니다.<br><br><b>등록 칸</b>은 연구소 줄에 효과를 보탤 내 영웅의 자리이며, 모든 줄의 칸 수가 같습니다. <b>대기 칸</b>은 선술집에서 고용을 기다리는 후보의 자리입니다. 새 후보를 더 보관하려면 수색 줄의 대기 칸 지점을 연구해야 합니다.",
-        en: "Select a line's hero portrait or <b>+</b> to open assignments. Select the heroes for this line and press <b>[Apply]</b>. Click again to deselect; selecting a hero assigned elsewhere moves them to this line. Moving or removing a hero restarts their Mastery and Search clock, shown in red at the bottom of the window. <b>Each hero can be assigned to only one line at a time</b>.<br><br>Assignment does not occupy the hero. They can stay assigned while joining a Party, fighting Expeditions, exploring or advancing. Training XP, however, goes only to <b>heroes assigned to Training</b>.<br><br><b>Seats</b> hold your heroes who boost a Laboratory line, and every line has the same number of seats. <b>Waiting Slots</b> hold candidate heroes awaiting hire in the Tavern. To keep more arriving candidates, research the Waiting Slots node on the Search line.",
-        zh: '点击线卡片上的英雄头像或<b>+</b>会打开派驻窗口。选择要放在该线上的英雄，点击<b>[应用]</b>即可更改。再次点击会取消选择；选择派驻在其他线上的英雄，会把他移到这条线上。移动或撤下英雄时，累积的熟练和搜寻计时会从头开始，并在窗口下方以红字显示。<b>一名英雄只能派驻在一条线上</b>。<br><br>研究所派驻不会占用英雄。派驻状态下也可以编入Party，或进行远征、探索、转职。不过，只有<b>派驻在训练线上的英雄</b>才能获得训练经验。<br><br><b>派驻位</b>是为研究所的线提供效果的己方英雄的位置，所有线的位数相同。<b>等候位</b>是酒馆中等待雇佣的候选的位置。要保留更多新候选，需要研究搜寻线的等候位节点。',
+        ko: "줄 카드의 영웅 얼굴이나 <b>+</b>를 누르면 등록 창이 열립니다. 그 줄에 둘 영웅을 고르고 <b>[적용]</b>을 누르면 바뀝니다. 다시 누르면 고르기가 풀리고, 다른 줄에 등록된 영웅을 고르면 이 줄로 이동합니다. 옮기거나 빼면 쌓인 숙련과 수색 시계가 처음부터 다시 시작되며, 창 아래에 빨간 글씨로 표시됩니다. <b>한 영웅은 한 줄</b>에만 등록할 수 있습니다.<br><br>연구소 등록은 영웅을 붙잡지 않습니다. 등록한 채로 Party에 넣거나 원정·탐험·전직을 진행할 수 있습니다. 다만 훈련 경험치는 <b>훈련 줄에 등록한 영웅</b>만 받습니다.<br><br><b>등록 칸</b>은 연구소 줄에 효과를 보탤 내 영웅의 자리이며, 모든 줄의 칸 수가 같습니다. <b>대기소</b>는 선술집에서 고용을 기다리는 후보의 자리입니다. 새 후보를 더 보관하려면 수색 줄의 대기소 지점을 연구해야 합니다.",
+        en: "Select a line's hero portrait or <b>+</b> to open assignments. Select the heroes for this line and press <b>[Apply]</b>. Click again to deselect; selecting a hero assigned elsewhere moves them to this line. Moving or removing a hero restarts their Mastery and Search clock, shown in red at the bottom of the window. <b>Each hero can be assigned to only one line at a time</b>.<br><br>Assignment does not occupy the hero. They can stay assigned while joining a Party, fighting Expeditions, exploring or advancing. Training XP, however, goes only to <b>heroes assigned to Training</b>.<br><br><b>Seats</b> hold your heroes who boost a Laboratory line, and every line has the same number of seats. <b>Waiting Room</b> slots hold candidate heroes awaiting hire in the Tavern. To keep more arriving candidates, research the Waiting Room node on the Search line.",
+        zh: '点击线卡片上的英雄头像或<b>+</b>会打开派驻窗口。选择要放在该线上的英雄，点击<b>[应用]</b>即可更改。再次点击会取消选择；选择派驻在其他线上的英雄，会把他移到这条线上。移动或撤下英雄时，累积的熟练和搜寻计时会从头开始，并在窗口下方以红字显示。<b>一名英雄只能派驻在一条线上</b>。<br><br>研究所派驻不会占用英雄。派驻状态下也可以编入Party，或进行远征、探索、转职。不过，只有<b>派驻在训练线上的英雄</b>才能获得训练经验。<br><br><b>派驻位</b>是为研究所的线提供效果的己方英雄的位置，所有线的位数相同。<b>等候所</b>是酒馆中等待雇佣的候选的位置。要保留更多新候选，需要研究搜寻线的等候所节点。',
     },
     'help.resource.hero_effects.title': {
         ko: "등록할 영웅을 고르는 기준",
@@ -2176,9 +2185,9 @@ const STRINGS = {
         zh: '搜寻、训练与自动金币',
     },
     'help.resource.jobs.body': {
-        ko: "<b>수색</b>은 이 줄에 등록한 영웅마다 시간마다 한 명씩 선술집에 데려옵니다. 아무도 등록하지 않으면 돌지 않습니다. [간격]은 도착을 더 빠르게 합니다. 그 영웅 줄의 선술집 칸이 차도 시계는 흐르고, 시간이 다 된 영웅은 그 줄 칸을 비우는 즉시 들어옵니다. [품질]은 레어 후보 확률, [대기 칸]은 줄마다 둘째 칸, [로스터]는 거느릴 수 있는 영웅 수를 늘립니다.<br><br><b>훈련</b> 줄에 등록한 영웅은 시간이 흐르면서 경험치를 받아 로스터의 선두 레벨을 따라갑니다. 상한은 <b>로스터 최고 레벨 − [범위]에 표시된 차이</b>입니다. 범위를 연구하면 그 차이가 줄어듭니다. 상한 이상인 영웅은 훈련 경험치를 받지 않으므로, 최고 레벨을 앞서 올리는 일은 원정에서 합니다.<br><br><b>도박장 줄</b>은 선술집의 도박장을 열면 자동으로 골드를 생산합니다. 판돈을 걸거나 스핀을 누를 필요가 없습니다. [수익]은 생산량, [대박]은 한 번 더 지급받을 확률을 높입니다. 선술집 슬롯을 직접 돌리는 것과 별개입니다.",
-        en: "<b>Search</b> brings one candidate to the Tavern per interval for each hero assigned to this line, and does nothing with no one assigned. Interval makes arrivals faster. It keeps running while that searcher's Tavern slots are full; a hero whose timer finishes enters as soon as you free one of them. Quality raises Rare chance, Waiting Slots opens a second slot per searcher, and Roster raises how many heroes you can keep.<br><br><b>Training</b> helps assigned heroes catch up toward the roster's leading level. Its cap is <b>the highest roster level minus the gap shown by Range</b>. Research Range to reduce that gap. Heroes at or above the cap gain no Training XP, so Expeditions must push the leading level forward.<br><br>The <b>Gambling Den line</b> automatically produces gold once the Tavern's Gambling Den is unlocked. It needs no stake or spin button. Income raises output, while Jackpot raises the chance of an extra payout. This is separate from manually playing Tavern slots.",
-        zh: '<b>搜寻</b>线上每位派驻英雄每隔一段时间就带一名候选到酒馆。没有派驻任何人时不会运作。[间隔]让到达更快。即使该英雄那一行的酒馆格子已满，计时也会继续，时间已到的英雄会在你腾出该行格子后立刻进入。[品质]提高稀有候选几率，[等候位]为每一行开启第二格，[名册]增加可拥有的英雄数量。<br><br>派驻在<b>训练</b>线上的英雄会随时间获得经验，追赶名册中领先的等级。上限为<b>名册最高等级 − [范围]所示的差距</b>。研究范围可缩小这个差距。等级在上限以上的英雄不会获得训练经验，因此要靠远征来推高最高等级。<br><br><b>赌坊线</b>在开放酒馆的赌坊后会自动生产金币，无需下注或点击旋转。[收益]提高产量，[大丰收]提高额外再发放一次的几率。这与亲手玩酒馆老虎机是两回事。',
+        ko: "<b>수색</b>은 이 줄에 등록한 영웅마다 시간마다 한 명씩 선술집에 데려옵니다. 아무도 등록하지 않으면 돌지 않습니다. [간격]은 도착을 더 빠르게 합니다. 그 영웅 줄의 선술집 칸이 가득 차 있으면 그 영웅은 쉬다가 그 줄 칸을 비우는 즉시 다시 나갑니다. [품질]은 레어 후보 확률, [대기소]는 줄마다 둘째 칸과 거르기, [로스터]는 거느릴 수 있는 영웅 수를 늘립니다.<br><br><b>훈련</b> 줄에 등록한 영웅은 시간이 흐르면서 경험치를 받아 로스터의 선두 레벨을 따라갑니다. 상한은 <b>로스터 최고 레벨 − [범위]에 표시된 차이</b>입니다. 범위를 연구하면 그 차이가 줄어듭니다. 상한 이상인 영웅은 훈련 경험치를 받지 않으므로, 최고 레벨을 앞서 올리는 일은 원정에서 합니다.<br><br><b>도박장 줄</b>은 선술집의 도박장을 열면 자동으로 골드를 생산합니다. 판돈을 걸거나 스핀을 누를 필요가 없습니다. [수익]은 생산량, [대박]은 한 번 더 지급받을 확률을 높입니다. 선술집 슬롯을 직접 돌리는 것과 별개입니다.",
+        en: "<b>Search</b> brings one candidate to the Tavern per interval for each hero assigned to this line, and does nothing with no one assigned. Interval makes arrivals faster. While that searcher's Tavern slots are full, the searcher rests and sets out again as soon as you free one of them. Quality raises Rare chance, Waiting Room opens a second slot per searcher and then Filter, and Roster raises how many heroes you can keep.<br><br><b>Training</b> helps assigned heroes catch up toward the roster's leading level. Its cap is <b>the highest roster level minus the gap shown by Range</b>. Research Range to reduce that gap. Heroes at or above the cap gain no Training XP, so Expeditions must push the leading level forward.<br><br>The <b>Gambling Den line</b> automatically produces gold once the Tavern's Gambling Den is unlocked. It needs no stake or spin button. Income raises output, while Jackpot raises the chance of an extra payout. This is separate from manually playing Tavern slots.",
+        zh: '<b>搜寻</b>线上每位派驻英雄每隔一段时间就带一名候选到酒馆。没有派驻任何人时不会运作。[间隔]让到达更快。该英雄那一行的酒馆格子已满时，该英雄会休息，你一腾出该行格子就立刻再次出发。[品质]提高稀有候选几率，[等候所]为每一行开启第二格并开启筛选，[名册]增加可拥有的英雄数量。<br><br>派驻在<b>训练</b>线上的英雄会随时间获得经验，追赶名册中领先的等级。上限为<b>名册最高等级 − [范围]所示的差距</b>。研究范围可缩小这个差距。等级在上限以上的英雄不会获得训练经验，因此要靠远征来推高最高等级。<br><br><b>赌坊线</b>在开放酒馆的赌坊后会自动生产金币，无需下注或点击旋转。[收益]提高产量，[大丰收]提高额外再发放一次的几率。这与亲手玩酒馆老虎机是两回事。',
     },
     'help.colosseum.prepare.title': {
         ko: "시련의 탑에서 파티 시험하기",
@@ -2426,9 +2435,9 @@ const STRINGS = {
         zh: '查看其他画面或离开时',
     },
     'help.help.away.body': {
-        ko: "게임 안에서 도움말·캐릭터·건설 같은 다른 탭을 보는 동안에도 원정과 탐험은 진행됩니다. 관전 중인 팀만 움직이는 방식이 아니므로 장비를 정리하면서 전투를 돌릴 수 있습니다.<br><br>게임을 완전히 닫으면 원정은 멈추며, 다시 접속한 뒤 출발합니다. 보낸 탐험은 꺼 둔 동안에도 남은 시간이 흘러 완료되므로 돌아왔을 때 탐험 탭에서 수령합니다. 연구소의 오프라인 생산·훈련·수익은 {offlineHours}시간분을 기준으로 제한해 계산하며, 수색은 대기 칸이 찰 때까지 진행됩니다.<br><br>PC가 절전 상태에 들어가거나 브라우저가 게임 탭을 오래 정지시키면 원정이 끊길 수 있습니다. 돌아왔을 때 마지막 리포트를 확인하고 [보내기]로 다시 시작합니다. 연구소 생산과 탐험의 완료·수령은 각 탭에서 확인합니다.",
-        en: "Expeditions and Exploration continue while you view other in-game tabs such as Help, Character or Construction. Activity is not limited to the team you are spectating, so you can organize equipment while combat runs.<br><br>Closing the game stops Expeditions; deploy again after returning. An exploration already sent can finish while the game is closed; claim it in Exploration when you return. Offline Laboratory production, Training and income use a limited {offlineHours}h calculation window. Search continues until its waiting slots fill.<br><br>If the PC sleeps or the browser suspends the game tab for a long time, Expeditions can stop. On return, check the last report, then Deploy again. Check Laboratory output and Exploration completion or collection in their respective tabs.",
-        zh: '在游戏内查看帮助、角色、建设等其他页面时，远征和探索也会继续进行。并不是只有正在观战的队伍在行动，所以可以一边整理装备一边让战斗进行。<br><br>完全关闭游戏后，远征会停止，重新进入后需要再次出发。已派出的探索在关闭期间剩余时间也会流逝并完成，回来后在探索页领取。研究所的离线生产、训练、收益最多按{offlineHours}小时计算，搜寻会持续到等候位填满为止。<br><br>电脑进入睡眠状态，或浏览器长时间暂停游戏页面时，远征可能会中断。回来后查看最后一份报告，用[派遣]重新开始。研究所的生产以及探索的完成、领取请在各自的页面查看。',
+        ko: "게임 안에서 도움말·캐릭터·건설 같은 다른 탭을 보는 동안에도 원정과 탐험은 진행됩니다. 관전 중인 팀만 움직이는 방식이 아니므로 장비를 정리하면서 전투를 돌릴 수 있습니다.<br><br>게임을 완전히 닫으면 원정은 멈추며, 다시 접속한 뒤 출발합니다. 보낸 탐험은 꺼 둔 동안에도 남은 시간이 흘러 완료되므로 돌아왔을 때 탐험 탭에서 수령합니다. 연구소의 오프라인 생산·훈련·수익은 {offlineHours}시간분을 기준으로 제한해 계산하며, 수색은 대기소가 찰 때까지 진행됩니다.<br><br>PC가 절전 상태에 들어가거나 브라우저가 게임 탭을 오래 정지시키면 원정이 끊길 수 있습니다. 돌아왔을 때 마지막 리포트를 확인하고 [보내기]로 다시 시작합니다. 연구소 생산과 탐험의 완료·수령은 각 탭에서 확인합니다.",
+        en: "Expeditions and Exploration continue while you view other in-game tabs such as Help, Character or Construction. Activity is not limited to the team you are spectating, so you can organize equipment while combat runs.<br><br>Closing the game stops Expeditions; deploy again after returning. An exploration already sent can finish while the game is closed; claim it in Exploration when you return. Offline Laboratory production, Training and income use a limited {offlineHours}h calculation window. Search continues until its Waiting Room fills.<br><br>If the PC sleeps or the browser suspends the game tab for a long time, Expeditions can stop. On return, check the last report, then Deploy again. Check Laboratory output and Exploration completion or collection in their respective tabs.",
+        zh: '在游戏内查看帮助、角色、建设等其他页面时，远征和探索也会继续进行。并不是只有正在观战的队伍在行动，所以可以一边整理装备一边让战斗进行。<br><br>完全关闭游戏后，远征会停止，重新进入后需要再次出发。已派出的探索在关闭期间剩余时间也会流逝并完成，回来后在探索页领取。研究所的离线生产、训练、收益最多按{offlineHours}小时计算，搜寻会持续到等候所填满为止。<br><br>电脑进入睡眠状态，或浏览器长时间暂停游戏页面时，远征可能会中断。回来后查看最后一份报告，用[派遣]重新开始。研究所的生产以及探索的完成、领取请在各自的页面查看。',
     },
     // 왼쪽 탭 아이콘의 출처 — CC BY 3.0 의 표기 조건 (SCREEN_DESIGN §1 · §12 · ADR-1028)
     'help.help.credits.title': {
@@ -2663,7 +2672,7 @@ const STRINGS = {
     'st.fx.demon': { ko: '데몬', en: 'Demon', zh: '恶魔' },
     'st.fx.undead': { ko: '언데드', en: 'Undead', zh: '亡灵' },
     'st.fx.ele': { ko: '원소 피해량 증가', en: 'Elemental Damage Increase', zh: '元素伤害提高' },
-    'st.fx.resRed': { ko: '적 원소 저항 감소', en: 'Enemy Resist Reduction', zh: '敌人元素抗性降低' },   // 화염/냉기/전기/독 네 값 (2026-09-28 사용자 지시) · 영어는 「Elemental」을 뺐다 — 두 줄로 꺾여 칸 바닥에 닿았다(저항은 원소뿐이다)
+    'st.fx.resRed': { ko: '원소 관통', en: 'Elemental Penetration', zh: '元素穿透' },   // 화염/냉기/전기/독 네 값 (2026-09-28 사용자 지시) · 영어는 「Elemental」을 뺐다 — 두 줄로 꺾여 칸 바닥에 닿았다(저항은 원소뿐이다)
     'st.fx.fire': { ko: '화염', en: 'Fire', zh: '火焰' },
     'st.fx.cold': { ko: '냉기', en: 'Cold', zh: '冰霜' },
     'st.fx.lightning': { ko: '전기', en: 'Lightning', zh: '闪电' },
@@ -3132,7 +3141,7 @@ const STRINGS = {
     'rs.board.noLead': { ko: '리더 없음', en: 'No leader', zh: '无队长' },
     'rs.board.sin': { ko: '{sin} {n} → {p}', en: '{sin} {n} → {p}', zh: '{sin}{n} → {p}' },
     'rs.board.sin0': { ko: '{sin} —', en: '{sin} —', zh: '{sin} —' },
-    // 효과 이름 — 시기 둘만 대상 쪽 말 [2026-11-11 · tactic_card_design §5-14 · ADR-1048] · 계산은 파티 전원의 방어 무시 · 원소 저항 감소 · {v} = 부호 · 단위 붙은 값
+    // 효과 이름 — 시기 둘만 대상 쪽 말 [2026-11-11 · tactic_card_design §5-14 · ADR-1048] · 계산은 파티 전원의 방어력 관통 · 원소 관통 · {v} = 부호 · 단위 붙은 값
     'rs.eff.def_ignore': { ko: '적 방어력 감소 {v}', en: '{v} Enemy Defense Reduction', zh: '敌人防御降低{v}' },
     'rs.eff.res_reduction_fire': { ko: '적 화염 저항 감소 {v}', en: '{v} Enemy Fire Resist Reduction', zh: '敌人火焰抗性降低{v}' },
     'rs.eff.res_reduction_cold': { ko: '적 냉기 저항 감소 {v}', en: '{v} Enemy Cold Resist Reduction', zh: '敌人冰霜抗性降低{v}' },
@@ -3208,7 +3217,7 @@ const STRINGS = {
     'sk.masteryEffect.wrath_party_crit': { ko: 'HP가 낮은 동안 같은 편 전원 치명 확률 {v} 증가', en: 'While your HP is low, all allies gain {v} Critical Chance', zh: '自身生命低时，我方全员暴击率提高{v}' },
     'sk.masteryEffect.wrath_steady': { ko: 'HP가 낮은 동안 받는 스턴 · 경직 시간 {v} 감소', en: 'While your HP is low, stuns and staggers on you are {v} shorter', zh: '自身生命低时，受到的眩晕、僵直时间缩短{v}' },
     'sk.masteryEffect.envy_strip': { ko: '나보다 성한 적을 맞히면 {v} 확률로 버프 하나를 지웁니다', en: 'Hitting an enemy healthier than you has a {v} chance to remove one of its buffs', zh: '命中生命比例高于自己的敌人时，有{v}几率移除其一个增益' },
-    'sk.masteryEffect.envy_party_pierce': { ko: '나보다 성한 적을 치는 같은 편 전원 방어력 무시 {v}', en: 'Allies ignore {v} Defense of enemies healthier than you', zh: '我方全员攻击生命比例高于自己的敌人时，无视防御{v}' },
+    'sk.masteryEffect.envy_party_pierce': { ko: '나보다 성한 적을 치는 같은 편 전원 방어력 관통 {v}', en: 'Allies gain {v} Defense Penetration against enemies healthier than you', zh: '我方全员攻击生命比例高于自己的敌人时，防御穿透{v}' },
     'sk.masteryEffect.envy_return': { ko: '내게 걸린 디버프가 {v} 확률로 건 적에게도 걸립니다', en: 'Debuffs on you have a {v} chance to also afflict their caster', zh: '自身所中的减益有{v}几率同样施加给施放者' },
     'sk.masteryEffect.greed_mark': { ko: '라운드 시작 때 HP가 가장 많은 적을 정예로 표시하고 그 적에게 데미지 {v} 증가', en: 'Marks the enemy with the most HP as elite each round and deals {v} more damage to it', zh: '回合开始时将生命最多的敌人标记为精英，对其伤害提高{v}' },
     'sk.masteryEffect.greed_reroll': { ko: '드롭이 없던 처치에서 {v} 확률로 한 번 더 굴립니다', en: 'Kills without a drop have a {v} chance to roll again', zh: '未掉落物品的击杀有{v}几率再随机一次' },
@@ -3231,7 +3240,7 @@ const STRINGS = {
     'sk.masteryEffect.crushing_blow_pct': { ko: '강타 {v} 증가', en: 'Crushing Blow increases by {v}', zh: '压碎性打击提高{v}' },
     'sk.masteryEffect.damage_reduction': { ko: '받는 피해 {v} 감소', en: 'Damage taken is reduced by {v}', zh: '受到的伤害降低{v}' },
     'sk.masteryEffect.def_flat': { ko: '물리 방어 {v} 증가', en: 'Physical Defense increases by {v}', zh: '物理防御提高{v}' },
-    'sk.masteryEffect.def_ignore': { ko: '방어 무시 {v} 증가', en: 'Defense Ignore increases by {v}', zh: '无视防御提高{v}' },
+    'sk.masteryEffect.def_ignore': { ko: '방어력 관통 {v} 증가', en: 'Defense Penetration increases by {v}', zh: '防御穿透提高{v}' },
     'sk.masteryEffect.fhr': { ko: '타격 회복 {v} 증가', en: 'Hit Recovery increases by {v}', zh: '受击恢复提高{v}' },
     'sk.masteryEffect.gold_find': { ko: '골드 획득 {v} 증가', en: 'Gold Find increases by {v}', zh: '金币获取提高{v}' },
     'sk.masteryEffect.hit_bonus': { ko: '명중률 {v} 증가', en: 'Hit Bonus increases by {v}', zh: '命中率提高{v}' },
@@ -3249,7 +3258,7 @@ const STRINGS = {
     'sk.masteryEffect.reflect_damage': { ko: '반사 피해 {v} 증가', en: 'Reflect Damage increases by {v}', zh: '反射伤害提高{v}' },
     'sk.masteryEffect.res_all': { ko: '모든 원소 저항 {v} 증가', en: 'All Resistances increase by {v}', zh: '所有元素抗性提高{v}' },
     'sk.masteryEffect.res_max_bonus': { ko: '최대 원소 저항 {v} 증가', en: 'Max Resistances increase by {v}', zh: '最大元素抗性提高{v}' },
-    'sk.masteryEffect.res_reduction': { ko: '적의 원소 저항 {v} 감소', en: 'Enemy resistances are reduced by {v}', zh: '敌人元素抗性降低{v}' },
+    'sk.masteryEffect.res_reduction': { ko: '원소 관통 {v} 증가', en: 'Elemental Penetration increases by {v}', zh: '元素穿透提高{v}' },
     'sk.reset': { ko: '마스터리 초기화', en: 'Reset Mastery', zh: '重置专精' },
     'sk.unlearn': { ko: '되돌리기', en: 'Refund', zh: '撤回' },
     'sk.reset.done': { ko: '{n} 포인트 반환', en: { one: 'Refunded {n} point', other: 'Refunded {n} points' }, zh: '返还{n}点' },
@@ -3504,7 +3513,7 @@ const STRINGS = {
     'cx.lv.barrier': { ko: '보호막 (최대 HP 비율)', en: 'Shield / max HP', zh: '护盾（最大生命比例）' },
     'cx.lv.elementDamage': { ko: '{e} 추가 피해', en: '{e} bonus damage', zh: '{e}额外伤害' },
     'cx.lv.elementMult': { ko: '{e} 피해 배율', en: '{e} damage multiplier', zh: '{e}伤害倍率' },
-    'cx.lv.defIgnore': { ko: '방어력 무시', en: 'Defense ignored', zh: '无视防御' },
+    'cx.lv.defIgnore': { ko: '방어력 관통', en: 'Defense Penetration', zh: '防御穿透' },
     'cx.lv.vsBurn': { ko: '화상 대상 데미지 상승', en: 'Damage vs burning foes', zh: '对燃烧目标伤害提高' },
     'cx.lv.ailmentChance': { ko: '{a} 확률', en: '{a} chance', zh: '{a}几率' },
     'cx.lv.ailmentDuration': { ko: '{a} 지속 시간', en: '{a} duration', zh: '{a}持续时间' },
@@ -3721,7 +3730,8 @@ const STRINGS = {
     // 장 보스 고유 넷 (2026-10-29 · R380 · ADR-0944)
     'bt.effect.maiden': { ko: '준 직격 피해의 {v} 되받음', en: 'Takes back {v} of its direct damage', zh: '反受自身所造成直击伤害的{v}' },
     'bt.effect.transform': { ko: '변신 — 다른 스킬 봉인', en: 'Transformed — other skills sealed', zh: '变身——其他技能被封印' },
-    'bt.effect.delegate': { ko: '차례를 가장 센 아군에게 넘김', en: 'Hands its turns to the strongest ally', zh: '将行动机会让给最强的友方' },
+    'bt.effect.mire.aura': { ko: '적 전원 행동 · 스킬 쿨 {v}% 느려짐', en: 'All enemies act and recover skills {v}% slower', zh: '全体敌人行动与技能冷却减慢{v}%' },   // 늪 — 든 쪽 (2026-11-17 · R533 · ADR-1258)
+    'bt.effect.mire.slow': { ko: '행동 · 스킬 쿨 {v}% 느려짐', en: 'Acts and recovers skills {v}% slower', zh: '行动与技能冷却减慢{v}%' },   // 늪 — 걸린 쪽
     'bt.effect.swarm': { ko: '파리 떼로 흩어짐', en: 'Scattered into a swarm', zh: '化为蝇群四散' },
     'bt.effect.stagger': { ko: '행동 게이지 정지', en: 'Action gauge stopped', zh: '行动槽停止' },
     // 상태이상 (2026-09-28 · R178 · ADR-0405) — 칩 이름 · 로그 이름 · 툴팁 적용값
@@ -3808,7 +3818,6 @@ const STRINGS = {
     //   글자로 서는 값만 여기 든다 — 피해 · 회복량은 숫자 그대로다. 팝업(`pop.*`)은 영어가 대문자라 따로 든다
     'log.v.miss': { ko: '빗나감', en: 'miss', zh: '未命中' },
     'log.v.counter': { ko: '반격', en: 'counter', zh: '反击' },
-    'log.v.delegate': { ko: '넘김', en: 'pass', zh: '让出' },   // 델리게이트로 넘긴 차례 (2026-10-29 · R380)
     'log.v.evade': { ko: '회피', en: 'evaded', zh: '闪避' },     // 이베이드로 피한 직격 (2026-10-16)
     'log.v.echo': { ko: '한 번 더', en: 'again', zh: '再次' },   // 에코 (2026-10-16)
     'log.v.slain': { ko: '처치', en: 'slain', zh: '击杀' },
@@ -3839,14 +3848,12 @@ const STRINGS = {
     'log.say.downed': { ko: '{a} 전투 불능', en: '{a} downed', zh: '{a}倒下' },
     'log.say.rise': { ko: '{a|이/가} {ico|으로/로} {d}{d|을/를} 일으킴', en: '{a} raised {d} with {ico}', zh: '{a}用{ico}扶起{d}——{d}重新站起' },   // 리저렉션 (2026-11-14 R471)
     'log.say.call': { ko: '{a|이/가} {ico|으로/로} {d} 소환', en: '{a} summoned {d} with {ico}', zh: '{a}用{ico}召唤{d}' },
-    // 장 보스 고유 넷 (2026-10-29 · R380) — 아이언 메이든이 되돌린 피해 · 델리게이트 · 스웜이 다시 뭉쳤다
+    // 장 보스 고유 넷 (2026-10-29 · R380) — 아이언 메이든이 되돌린 피해 · 스웜이 다시 뭉쳤다 (늪은 로그가 없다 — ADR-1258)
     'log.say.maiden': { ko: '{d|이/가} {ico|으로/로} {v} 피해를 되받음', en: '{d} took {v} back from {ico}', zh: '{d}因{ico}反受{v}点伤害' },
-    'log.say.delegate': { ko: '{a|이/가} {d}에게 차례를 넘김', en: '{a} passed the turn to {d}', zh: '{a}将行动机会让给{d}' },
     'log.say.regroup': { ko: '{a|이/가} {ico}에서 다시 뭉침 — HP {v}', en: '{a} regrouped from {ico} — HP {v}', zh: '{a}从{ico}中重新聚合——生命{v}' },
     'log.say.lvup': { ko: '{a} 레벨 {v} 달성', en: '{a} reached Lv.{v}', zh: '{a}达到Lv.{v}' },
     'pop.dodge': { ko: '빗나감', en: 'MISS', zh: '未命中' },
     'pop.counter': { ko: '반격', en: 'COUNTER', zh: '反击' },
-    'pop.delegate': { ko: '넘김', en: 'PASS', zh: '让出' },   // 델리게이트 (2026-10-29 · R380)
     'pop.evade': { ko: '회피', en: 'EVADE', zh: '闪避' },   // 이베이드 (2026-10-16)
     'pop.echo': { ko: '에코', en: 'ECHO', zh: '回响' },     // 에코 (2026-10-16)   // 반격한 카드에 뜬다 (ADR-0158)
     'pop.downed': { ko: '전투 불능', en: 'Downed', zh: '倒下' },

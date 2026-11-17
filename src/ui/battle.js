@@ -47,7 +47,7 @@ import { t, L, has } from './i18n.js';
 import { DEV_HOST } from './env.js';
 import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard, withLive, refreshTip, reanchorTip, headingHelp } from './tip.js';
 import { paceAt, paceStep, paceCfg, actorOf, isSkillAct, isSkillOnly, RISE_MS, PEAK_MS } from './pace.js';   // 박자 — 세움이 언제 · 얼마나 서나. 앱 시계와 같은 걸음이다 (ADR-0654)
-import { fxPreloadSkills, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxAppear, fxArriveMark, fxArrive, fxRoundClear, SPEED_K, lungeFxOn } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 기본 공격 이펙트 + 피격 반응 + 공격 시 흔들림(넷 다 기본 On) — 넷 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468 · ADR-0501)
+import { fxPreloadSkills, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxCharge, fxChargeShot, fxAppear, fxArriveMark, fxArrive, fxRoundClear, SPEED_K, lungeFxOn } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 기본 공격 이펙트 + 피격 반응 + 공격 시 흔들림(넷 다 기본 On) — 넷 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468 · ADR-0501)
 
 /** 배속 버튼 — 배포 주소는 ×2 까지 · 개발 환경은 ×4 · ×16 도(×16 은 2026-10-05 사용자 지시) (SCREEN_DESIGN §4-2 · ADR-0755).
  *  배속은 화면 상태뿐이고 바꾸는 길은 이 버튼들뿐이라 목록이 곧 상한이다 */
@@ -100,6 +100,8 @@ const clamp01 = v => Math.max(0, Math.min(1, v));
 const stalledFor = (u, now) => (u.stalls ?? []).reduce((s, w) => s + Math.max(0, Math.min(w.to, now) - Math.max(w.from, u.lastAct)), 0);
 /** 빠른 연타는 공격 바를 가득 유지한다 — **끊어 치기 전부**(`cast = channel` — 러시 · 래피드 샷 · 더블스윙 · 휠윈드) (ADR-0994 · 2026-11-12 R421 — ~~id 목록 둘~~) */
 const isBurstChannel = id => SYS.skill?.defs?.[id]?.cast === 'channel';
+/** 모으기 — 모았다가 한 방(`cast = channel_charge` · 리프 어택 · 스나이프 …) · 스킬 id 목록이 아니라 시전 방식이 정한다 (ADR-0790 · ADR-1252) */
+const isChargeCast = id => SYS.skill?.defs?.[id]?.cast === 'channel_charge';
 /**
  * 정신 집중의 게이지 [R318 · ADR-0720 · ADR-0994] — 러시 · 래피드 샷은 **가득 유지**, 나머지는 **거꾸로 닳는다**:
  *   방(`skill` 의 `chan` · `chan`)마다 남은 방 ÷ (방 수 − 1) 로 맞추고 다음 방까지 시뮬이 실은 `iv` 로 닳린다.
@@ -113,6 +115,8 @@ const chanFill = (u, now) => {
     const stall = (u.stalls ?? []).reduce((s, w) => s + Math.max(0, Math.min(w.to, now) - Math.max(w.from, c.at)), 0);
     return clamp01((c.left - Math.min(1, Math.max(0, now - c.at - stall) / (c.iv ?? u.period))) / (c.n - 1));
 };
+/** 모은 몫 [ADR-1252] — 모으기가 쏘기 전이면 0 → 1(거꾸로 닳는 게이지의 반대 — 경직으로 선 시간도 같이 선다) · 아니면 null. 표시값이다 */
+const chargeOf = (u, now) => u.hp > 0 && u.chan?.left > 0 && isChargeCast(u.chan.s) ? 1 - chanFill(u, now) : null;
 /** 칸의 줄을 바꾼다 — 진형 붕괴(쇼크웨이브 · 2026-11-02 R424)가 실은 랭크 · 가로 차례(`order`)는 그대로 · 세로는 `data-rank` 를 CSS 가 */
 const setRank = (u, rank) => { u.rank = rank; const cell = u.buffRow?.parentElement; if (cell) cell.dataset.rank = rank; };
 /** 지금 경직 중인가 — 창 뱃지 줄의 칩이 이것을 본다 */
@@ -802,7 +806,7 @@ export const focusMode = () => { const v = document.documentElement.dataset.focu
  *  라운드 사이 숨(ADR-0500)은 포커스와 상관없이 선다 */
 export const paceOf = speed => paceCfg(focusMode(), lungeFxOn(), speed, SPEED_K[speed] ?? 1, isChargeShot);
 /** 세우는 정신 집중의 방 — 모으기(`cast = channel_charge` · 스나이프)의 쏘는 방뿐. 끊어 치기 · 계속 닳기의 뒤 방은 안 선다 (ADR-1124) */
-const isChargeShot = ev => SYS.skill?.defs?.[ev.s]?.cast === 'channel_charge';
+const isChargeShot = ev => isChargeCast(ev.s);
 /** 박자가 세운 행동을 그린다 — 세움이 바뀐 걸음에만. ① 동안은 행동한 카드가 나가 있고(그 행동은 아직 안 적용) ② 동안은 적용한 채 나가 있다 ·
  *  Dim 이면 그 행동에 안 낀 카드를 어둡게 · 세움이 풀리면 ③ 돌아온다(전환은 CSS). 라운드 숨은 그림이 없다 */
 function syncFocus(state, root, opts) {
@@ -945,7 +949,9 @@ function renderUnits(state, root) {
     if (state.catchUp) return;      // 되감는 동안은 카드를 안 짓는다 — `u.node` 가 비어 있어 `refreshUnit` 도 그냥 지나간다
     // 선 카드들의 스킬 그림만 미리 읽는다 — 첫 라운드 · 라운드마다 바뀐 적 · 불린 무리 · 갈아입기가 다 여기를 지난다.
     //   스킬 이펙트가 꺼져 있으면 안 읽는다 (ADR-0515 · ADR-0520 · DEV_PLAN §4 #86) · 종류 공통 그림은 꺼져 있다
-    fxPreloadSkills([...state.party, ...state.enemies].flatMap(u => (u.skills ?? []).map(s => s.id)));
+    //   모으기 스킬이 있으면 기운 그림도 같이 (ADR-1252)
+    const ids = [...state.party, ...state.enemies].flatMap(u => (u.skills ?? []).map(s => s.id));
+    fxPreloadSkills(ids, ids.some(isChargeCast));
     const v2 = cardV2();
     for (const [sel, list] of [['.side-enemy', state.enemies], ['.side-party', state.party]]) {
         const side = root.querySelector(sel);
@@ -1192,6 +1198,8 @@ function refreshUnit(state, u) {
         slot.classList.toggle('chan', !!u.chan && u.hp > 0 && s.id === u.chan.s && s.readyAt === Infinity);
         // 준비 강조(`ready` 파란 테두리)는 2026-09-03 사용자 지시로 삭제 — 마스크가 다 걷힌 것 자체가 준비다
     });
+    // 모으기 (ADR-1252 · ADR-1255) — 모으는 동안 기운 그림이 빨려 들며 진해진다(카드는 안 움직인다) · 쏘는 방부터(남은 방 0) · 쓰러지면 걷힌다
+    fxCharge(state, u, chargeOf(u, state.t));
     // 켜져 있는 창 — 카드 전체가 「무언가 걸려 있다」를, 카드 밖 아래 뱃지 줄이 「무엇이 걸려 있나」를 든다 (SCREEN_DESIGN §4-2)
     u.node.classList.toggle('buffed', u.hp > 0 && u.buffs?.size > 0);
     refreshBuffs(u, state.t);
@@ -1263,7 +1271,8 @@ function effectSummaryText(stat, value = 0, element = null, cut = 0) {
             // 장 보스 고유 넷 (2026-10-29 · R380 · ADR-0944)
             case 'maiden': return 'bt.effect.maiden';
             case 'transform': return 'bt.effect.transform';
-            case 'delegate': return 'bt.effect.delegate';
+            // 늪 (2026-11-17 · R533 · ADR-1258) — 든 쪽(양수) = 적 전원이 느려진다 · 걸린 쪽(음수) = 행동 · 스킬 쿨이 느려졌다
+            case 'mire': return v < 0 ? 'bt.effect.mire.slow' : 'bt.effect.mire.aura';
             case 'swarm': return 'bt.effect.swarm';
             // 전직 트리 창 (2026-11-14 · R471) — 「효과 적용 중」 대신 그 창이 하는 일 한 줄
             case 'vs_burn_pct': return 'bt.effect.vsBurn';
@@ -2043,6 +2052,8 @@ function apply(state, root, opts, ev) {
         case 'chan': {    // 정신 집중의 한 방 (R318 · ADR-0720) — 남은 방으로 게이지를 다시 맞추고 칸이 한 번 튄다(계속 닳기는 방이 잦아 칸은 안 튄다) · 타격은 뒤따르는 hit 가 그린다 · 로그 줄은 없다
             const u = U(ev.u);
             if (u?.chan) { markActed(u, ev.t); Object.assign(u.chan, { left: ev.left, at: ev.t }); if (!u.chan.iv) castSkill(state, u, ev); }
+            // 모으기의 쏘는 방 — 기운이 걷히고 번쩍이며 카드가 앞으로 튄다 (ADR-1252 · ADR-1255) · 뒤따르는 hit 가 대상의 타격을 그린다
+            if (u?.chan && !(ev.left > 0) && isChargeCast(u.chan.s)) fxChargeShot(state, u);
             break;
         }
         case 'chanEnd': { // 정신 집중이 끝났다 — 그 칸의 쿨은 이 시각부터(`ready`) · 마법 무기는 다음 칸이 이 시각부터 찬다 (R318 · ADR-0720)
@@ -2286,13 +2297,7 @@ function apply(state, root, opts, ev) {
                 ev.stat === 'barrier_pct' ? t('log.v.barrier', { amt: ev.amt }) : t('log.v.up'));
             break;
         }
-        // 장 보스 고유 넷 (R380 · ADR-0944) — 시뮬이 실어 온 값만 그린다
-        case 'delegate': {   // 델리게이트 — 넘긴 쪽 카드에 「넘김」 · 로그 한 줄(주체 = 넘긴 쪽 · 대상 = 받은 아군) · 뒤에 받은 쪽의 행동 이벤트가 잇는다
-            const u = U(ev.u), d = U(ev.d);
-            if (u) { markActed(u, ev.t); popup(state, u, t('pop.delegate'), 'counter'); }
-            if (u && d) logLine(state, root, u.side, 'delegate', L(u.name), '', '', L(d.name), t('log.v.delegate'));
-            break;
-        }
+        // 장 보스 고유 넷 (R380 · ADR-0944) — 시뮬이 실어 온 값만 그린다 · 늪은 칩뿐이라 여기 없다(`buff` · ADR-1258)
         case 'fly': {   // 파리 HP — 마리마다 · 본체 HP 막대는 창 동안 그대로다
             const u = U(ev.u);
             if (!u) break;

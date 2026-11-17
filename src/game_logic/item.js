@@ -63,8 +63,9 @@
  *   베이스(무기 피해 범위 · 방어구 implicit)는 `up` 하나로 **파생**한다 — 단계마다 반올림이 쌓이지 않고 드롭 시 굴린 개체값이 원본 그대로 남는다.
  *   ~~3강마다 접사 하나의 값을 올려 박는다~~ 는 R95 퇴역 — 강화는 접사를 **전혀** 안 건드리고 rng 를 안 쓴다.
  *   **목걸이 · 반지는 강화하지 않는다** — 베이스가 없다(`baseless`). 옛 세이브에 남은 `up` 은 그대로 두고, 파생할 것이 없어 무해하다.
- *   **단계마다 성공 확률이 있다** [2026-10-14 사용자 · R253] — `upgradeChance` 가 `upgrade_chance.csv` 에서 답한다. 굴림은 여기가 아니라
- *   `state.upgradeItem` 이 한다(제 스트림) — 실패하면 비용만 나가고 `up` 은 그대로다(파괴 · 하락 없음).
+ *   **단계마다 결과 확률이 있다** [2026-10-14 사용자 · R253 · **2026-11-17 구간 셋 · R530**] — 성공은 `upgradeChance`, 강등 · 파괴는 `upgradeRisk` 가
+ *   `upgrade_chance.csv` 에서 답한다. 굴림은 여기가 아니라 `state.upgradeItem` 이 한다(제 스트림) — 실패하면 비용만 나가고 `up` 은 그대로다 ·
+ *   강등은 `downgrade`(한 단계 · 대성공 몫은 일반 몫부터) · 파괴(그 자리 분해)는 `state` 가 한다.
  *
  * ⚠ 접사 종류·수치 범위·희귀도 가중치는 전부 프로토타입 임시값 — balance.csv ⚠제안 키와
  *   주입된 무기 · 방어구 · 장신구 옵션 표에서 온다.
@@ -107,8 +108,8 @@ import { createFormula } from './formula.js';
  *   ~~armorCommonOptions~~ — 2026-10-21 R303 퇴역(`armor_common_option.csv` 삭제 — 방어구 넷이 계열표다)
  *   naming       — game_logic/naming.js 의 조립기 — `composeName(prefixSin, base, suffixSin|null, words)` · `wordLadder(sin)`(단어 번호 → 단 · 해금 레벨 · R436 —
  *                  **죄종마다 사다리가 같아야 한다** · 아니면 생성 때 던진다)
- *   upgradeChances — [{step, chance}] ← upgrade_chance.csv — 강화 단계마다 성공 확률(비율) (2026-10-14 · R253).
- *                    단계는 1 부터 이어지고 `0 < chance ≤ 1` — 어기면 생성 때 던진다
+ *   upgradeChances — [{step, chance, down, destroy}] ← upgrade_chance.csv — 강화 단계마다 성공 · 강등 · 파괴 확률(비율) (2026-10-14 · R253 · 강등 · 파괴 2026-11-17 · R530).
+ *                    단계는 1 부터 이어지고 `0 < chance ≤ 1` · `down` · `destroy` 는 0 이상 · 셋의 합 ≤ 1 · 한 줄에 강등과 파괴가 함께 서지 않는다 — 어기면 생성 때 던진다
  */
 /** 희귀도 — **훑는 순서 = 낮은 것부터** [2026-10-24 · R342 · item_design §1 희귀도] · 크래프트 · 유니크는 굴림 밖이라 여기 없다 */
 const RARITIES = Object.freeze(['normal', 'magic', 'rare', 'epic', 'legendary']);
@@ -210,7 +211,7 @@ export function createItemSystem(data) {
      * **한 칸뿐인 계열** [2026-10-21 · 사용자 · R303 · item_design §1 「10-21 방어구 개정」 · INTERFACE §5-3] — 옵션이 1 하나다(변형은 여럿일 수 있다).
      *   오만 — 모든 부위(「오만은 1 · 2 · 3 중 하나만 남기고 모두 삭제」 · 반지는 최소 · 최대 데미지 둘) · 장갑 시기 — 다섯 변형 한 칸(「다섯 중에 1개가 나오는거야」). 구조 상수
      */
-    //   마법 무기 시기도 한 칸이다 — 원소 관통 / 원소 저항 감소(그 무기의 원소 · 드롭 때 하나 · 2026-11-11 · R442) · `kind` = 무기군 `damageKind`(무기만 · 나머지 부위는 null)
+    //   마법 무기 시기도 한 칸이다 — 원소 관통(그 무기의 원소 · 2026-11-11 · R442 · 2026-11-17 R531 원소 저항 감소 겹을 걷었다) · `kind` = 무기군 `damageKind`(무기만 · 나머지 부위는 null)
     const singleOption = (slot, sin, kind = null) => sin === 'pride' || (slot === 'gloves' && sin === 'envy') || (slot === 'weapon' && kind === 'magic' && sin === 'envy');
     /** **두 칸뿐인 계열** [2026-10-29 · 사용자 「지원은 삭제」 · R382 · item_design §1 「반지 옵션 — 죄종 계열」 · INTERFACE §5-3] — 반지 시기(① 다섯 변형 · ② 독 저항). 구조 상수 */
     const twoOptions = (slot, sin) => slot === 'ring' && sin === 'envy';
@@ -220,7 +221,14 @@ export function createItemSystem(data) {
      */
     //   갑옷 나태 ② · 투구 나태 ① · 신발 폭식 ① 은 2026-11-11 사용자가 채웠다(R444 · R447 · R451)
     //   **마법 무기 색욕 ③** [2026-11-11 · 사용자 「최소데미지/최대데미지 삭제」 · R442] — 무기는 피해 종류까지 키에 든다(`weapon/magic:…`)
-    const EMPTY_CELLS = new Set(['ring:gluttony:3', 'weapon/magic:lust:3']);
+    //   **물리 무기 시기 ②** [2026-11-17 · 사용자 「아이템에 관통, 스킬에 감소」 · R531] — 방어력 감소 겹을 걷은 자리 · 이미 가진 무기의 그 줄은 그대로 읽는다(`skill_effects.weaponOnHit`)
+    const EMPTY_CELLS = new Set(['ring:gluttony:3', 'weapon/magic:lust:3', 'weapon/physical:envy:2']);
+    /**
+     * **가죽 장갑 시기는 특성이 정한다** [2026-11-17 · 사용자 「장갑에 공속 붙으면 방어력…, 캐스팅속도 붙으면 원소…」 · R531 · item_design §1 「10-21 방어구 개정」 · INTERFACE §5-3] —
+     *   갈래 특성 stat → 시기 칸에 남기는 변형. 표에 없는 특성(건틀릿 피해 감소 · 특성 없음)은 거르지 않는다(다섯 그대로) ·
+     *   변형만 거르므로 옵션 수 · 굴림 횟수는 그대로다(rng 소비 순서 불변 — INTERFACE §5-2). 구조 상수
+     */
+    const GLOVES_ENVY_BY_TRAIT = { aspd_pct: st => st === 'def_ignore', cast_speed_pct: st => String(st).startsWith('res_reduction_') };
     const optionsOf = (slot, sin, kind = null) => (singleOption(slot, sin, kind) ? [1] : twoOptions(slot, sin) ? [1, 2] : FAMILY_OPTIONS)
         .filter(o => !EMPTY_CELLS.has(`${slot}:${sin}:${o}`) && !(kind && EMPTY_CELLS.has(`${slot}/${kind}:${sin}:${o}`)));
     /**
@@ -631,9 +639,13 @@ export function createItemSystem(data) {
         const out = [{ stat: 'armor_def_pct', v: F.pctOption(lo + lean(rng(), ilvl) * (hi - lo)), src: 'fixed' }];
         const tr = groupDef(slot, group)?.trait ?? null;
         const kr = rng(), vr = rng();
-        if (tr) out.push({ stat: tr.stats[Math.floor(kr * tr.stats.length)], v: valueOf(tr, rollOf(tr, vr, ilvl), ilvl), src: 'fixed' });
+        const ts = tr ? tr.stats[Math.floor(kr * tr.stats.length)] : null;
+        if (tr) out.push({ stat: ts, v: valueOf(tr, rollOf(tr, vr, ilvl), ilvl), src: 'fixed' });
+        // 가죽 장갑 시기 — 굴린 특성이 시기 칸의 변형을 거른다(R531 · `GLOVES_ENVY_BY_TRAIT` · 굴림 횟수 그대로)
+        const keep = slot === 'gloves' ? GLOVES_ENVY_BY_TRAIT[ts] ?? null : null;
+        const rows = armorSinOpts.filter(r => r.slot === slot && !(keep && r.sin === 'envy' && !keep(r.stat)));
         // 특정 스킬 +n 풀은 안 준다 — 2026-10-21 장비에서 뺐다(R303)
-        return out.concat(familyOptions(rng, armorSinOpts.filter(r => r.slot === slot), sins, words, randomLines(rarity), ilvl, []));
+        return out.concat(familyOptions(rng, rows, sins, words, randomLines(rarity), ilvl, []));
     }
 
     /**
@@ -1094,11 +1106,17 @@ export function createItemSystem(data) {
         return Math.round(B.equip_upgrade_gold_base * Math.pow(B.equip_upgrade_gold_growth, up) * Math.pow(B.equip_upgrade_gold_ilvl_growth, item.ilvl - 1));
     }
 
-    /** 강화 단계마다 성공 확률 — 인덱스 = 단계 − 1 (R253). 단계는 1 부터 이어지고 확률은 0 초과 1 이하 — 어기면 생성 때 던진다 */
+    /** 강화 단계마다 성공 · 강등 · 파괴 확률 `{chance, down, destroy}` — 인덱스 = 단계 − 1 (R253 · 강등 · 파괴 R530). 단계는 1 부터 이어지고 성공은 0 초과 1 이하 ·
+     *  강등 · 파괴는 0 이상(칸이 비면 0) · 셋의 합 ≤ 1 · **한 줄에 강등과 파괴가 함께 서지 않는다**(파괴 구간에는 강등이 없다 — item_design §7-2) — 어기면 생성 때 던진다 */
     const UP_CHANCE = (data.upgradeChances ?? []).map((r, i) => {
         if (r.step !== i + 1) throw new Error(`upgrade_chance: ${i + 1}번째 줄의 step 이 ${r.step} — 단계는 1 부터 이어져야 한다`);
         if (!(r.chance > 0 && r.chance <= 1)) throw new Error(`upgrade_chance: 단계 ${r.step} 의 chance ${r.chance} — 0 초과 1 이하여야 한다`);
-        return r.chance;
+        const down = r.down ?? 0, destroy = r.destroy ?? 0;
+        for (const [k, v] of [['down', down], ['destroy', destroy]])
+            if (!(Number.isFinite(v) && v >= 0)) throw new Error(`upgrade_chance: 단계 ${r.step} 의 ${k} ${v} — 0 이상이어야 한다`);
+        if (down > 0 && destroy > 0) throw new Error(`upgrade_chance: 단계 ${r.step} 에 강등(${down})과 파괴(${destroy})가 함께 섰다 — 파괴 구간에는 강등이 없다`);
+        if (down + destroy > 1 - r.chance) throw new Error(`upgrade_chance: 단계 ${r.step} 의 성공 ${r.chance} + 위험 ${down + destroy} — 1 이하여야 한다`);
+        return { chance: r.chance, down, destroy };
     });
 
     /** 다음 한 단계의 성공 확률(비율) [2026-10-14 · R253]. `upgradeCost` 가 null 이면(상한 · 강화 대상 아님) null · `max` 도 같다.
@@ -1107,9 +1125,19 @@ export function createItemSystem(data) {
         if (upgradeCost(item, max) == null) return null;
         const step = (item.up ?? 0) + 1;
         if (UP_CHANCE[step - 1] == null) throw new Error(`upgrade_chance: 단계 ${step} 줄이 없다`);
-        // 등급 배수 — 좋은 장비일수록 낮다 `[balance.csv:equip_upgrade_chance_mult_<rarity>]` · 키가 없는 등급은 1 · 끝 1 [2026-11-15 · R505 · item_design §7-2]
+        // 등급 배수 — 좋은 장비일수록 낮다 `[balance.csv:equip_upgrade_chance_mult_<rarity>]` · 키가 없는 등급은 1 · 끝 1 [2026-11-15 · R505 · 2026-11-17 등급마다 · R530 · item_design §7-2]
+        //   깎인 몫은 실패로 간다 — 강등 · 파괴는 `upgradeRisk` 가 표 그대로 낸다
         const m = B[`equip_upgrade_chance_mult_${item.rarity}`];
-        return Math.min(1, UP_CHANCE[step - 1] * (Number.isFinite(m) && m > 0 ? m : 1));
+        return Math.min(1, UP_CHANCE[step - 1].chance * (Number.isFinite(m) && m > 0 ? m : 1));
+    }
+
+    /** 다음 한 단계 도전의 강등 · 파괴 확률 `{down, destroy}`(비율 · 표 그대로) [2026-11-17 · R530 · item_design §7-2] — **등급이 안 바꾼다** · 둘 중 하나는 0 ·
+     *  `upgradeCost` 가 null 이면 null · 표에 그 단계가 없으면 던진다(`upgradeChance` 와 같다). 성공 뒤로 자르기 · 막기는 `state.upgradeState` 가 한다 · rng 0 */
+    function upgradeRisk(item, max = B.equip_upgrade_max) {
+        if (upgradeCost(item, max) == null) return null;
+        const row = UP_CHANCE[item.up ?? 0];
+        if (row == null) throw new Error(`upgrade_chance: 단계 ${(item.up ?? 0) + 1} 줄이 없다`);
+        return { down: row.down, destroy: row.destroy };
     }
 
     /**
@@ -1120,6 +1148,17 @@ export function createItemSystem(data) {
     function upgrade(item, great = false) {
         item.up = (item.up ?? 0) + 1;
         if (great) item.great = (item.great ?? 0) + 1;   // 대성공 — 단계는 하나 · 베이스 몫이 크다(`formula.upgradeSteps` · 2026-11-15 · R505)
+        return { up: item.up };
+    }
+
+    /**
+     * 강등 1단계 — **in-place** [2026-11-17 · R530 · item_design §7-2]. `up` 을 하나 내리고(0 아래로 안 간다) **대성공 몫은 일반 몫부터 빠진다** —
+     * `great` 를 `up` 이하로 자른다(대성공으로만 오른 장비면 대성공 몫이 빠진다) · 0 이 되면 키를 지운다. rng 0 · 굴림 · 거절 판정은 호출자(state.js)가 한다
+     */
+    function downgrade(item) {
+        item.up = Math.max(0, (item.up ?? 0) - 1);
+        if ((item.great ?? 0) > item.up) item.great = item.up;
+        if (item.great === 0) delete item.great;
         return { up: item.up };
     }
 
@@ -1150,5 +1189,5 @@ export function createItemSystem(data) {
         return item;
     }
 
-    return { fillZh, rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBasesAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, wordRanks, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgrade, effective, weaponDamage, weaponDamageFixed, weaponBasePreview, armorBasePreview, implicitFixed, optionSources, optionRange, optionTableRange, optionScore, skillPlusOf, procSkillLevel };
+    return { fillZh, rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBasesAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, wordRanks, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgradeRisk, upgrade, downgrade, effective, weaponDamage, weaponDamageFixed, weaponBasePreview, armorBasePreview, implicitFixed, optionSources, optionRange, optionTableRange, optionScore, skillPlusOf, procSkillLevel };
 }

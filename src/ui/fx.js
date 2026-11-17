@@ -20,7 +20,7 @@
  * **스킬마다 생김새가 다르다** — 이미지 표는 skill_art.js, 코드 조각(`PIECES`)의 표는 skill_looks.js다(ADR-0511 · ADR-0515).
  */
 import { SKILL_LOOKS } from './skill_looks.js';
-import { SKILL_ART, ART_STYLES, ART_DEFAULT, artFile } from './skill_art.js';
+import { SKILL_ART, CHARGE_ART, ART_STYLES, ART_DEFAULT, artFile } from './skill_art.js';
 
 /* ═══ 켜고 끄기 — `⚙` 판의 설정 탭이 건다 (SCREEN_DESIGN §2-2 · ADR-0413 · ADR-0414) ═══ */
 
@@ -50,7 +50,7 @@ export const lungeFxOn = () => fxOn.lunge;
 export function setFxOn(k, on) {
     if (!(k in fxOn)) return;
     fxOn[k] = !!on;
-    if (k === 'skill' && on) fxPreload(artPref, battleSkills);   // 꺼 둔 동안 안 읽은 관전 카드의 스킬 그림 — 덜 읽힌 칸은 그동안 코드 조합으로 선다
+    if (k === 'skill' && on) fxPreload(artPref, battleSkills, battleCharge);   // 꺼 둔 동안 안 읽은 관전 카드의 스킬 그림 — 덜 읽힌 칸은 그동안 코드 조합으로 선다
     try { localStorage.setItem(PREF_KEY[k], on ? 'on' : 'off'); } catch { /* 저장 실패는 무해 — 이번 창에서만 먹는다 */ }
 }
 
@@ -88,7 +88,7 @@ export const fxArtStyle = () => artPref;
 export function setFxArtStyle(s) {
     if (!ART_STYLES.includes(s)) return;
     artPref = artStyle = s;
-    if (fxOn.skill) fxPreload(s, battleSkills);
+    if (fxOn.skill) fxPreload(s, battleSkills, battleCharge);
     try { localStorage.setItem(ART_KEY, s); } catch { /* 저장 실패는 무해 */ }
 }
 
@@ -118,8 +118,8 @@ export const SPEED_K = { 1: 1, 2: 0.75, 4: 0.55, 16: 0.3 };
 /* 한 카드에 조각이 이만큼 떠 있으면 새 조각을 안 띄운다 — 광역 다단히트가 ×4 로 몰려도 화면이 조각으로 덮이지 않게 */
 const FX_CAP = 60;
 /* 되돌려 다시 거는 클래스 무리 — 같은 요소의 연출은 하나씩만 돈다 */
-const CARD = ['fx-shake', 'fx-shake-crit', 'fx-dodge', 'fx-down'];
-const FACE = ['fx-flash', 'fx-flash-crit'];
+const CARD = ['fx-shake', 'fx-shake-crit', 'fx-dodge', 'fx-down', 'fx-charge-shot'];
+const FACE = ['fx-flash', 'fx-flash-crit', 'fx-charge-flash'];
 const SLOT = ['fx-lunge', 'fx-appear', 'fp-quake'];
 
 const live = (state, u) => !state.catchUp && !!u?.node?.isConnected;
@@ -481,6 +481,8 @@ const skillArt = new Map();   // 스킬 그림 파일 → 준비된 주소 · �
 const skillLoad = new Map();   // 스킬 그림 파일 → 읽기(Promise) — 파일마다 한 번만 받는다
 /* 지금 관전 카드들의 스킬 — 카드가 설 때 알린다(`fxPreloadSkills`). 스킬 이펙트를 켜거나 그림체를 바꾸면 이것만 읽는다 */
 let battleSkills = [];
+/* 지금 관전 카드에 모으기(`channel_charge`) 스킬이 있나 — 있으면 기운 그림(`CHARGE_ART`)도 같이 읽는다 (ADR-1252) */
+let battleCharge = false;
 /* 지금 그림을 띄우는 그림체 — 관전은 설정이 고른 것(`artPref`) · 도감 이펙트 세그먼트의 미리보기(`fxPreview`)가 부르는 동안만 그 탭의 것 (ADR-0559 · ADR-0561) */
 let artStyle = artPref;
 /** 그 그림체로 바꾼 그림 정의 — 이어 서는 그림(`then`)도 같이. 코드 모양이면 파일이 없다(null) */
@@ -496,11 +498,13 @@ const loadSkillArt = file => {
     return skillLoad.get(file);
 };
 /** 스킬 그림을 읽어 둔다 — `skills` = 그 스킬들만(관전 — 그 전투에 나오는 스킬) · 안 주면 전부(도감 이펙트 세그먼트가 그림체 하나를 다 깐다). 종류 공통 그림은 ART_ON을 따른다 */
-export function fxPreload(style = artPref, skills = Object.keys(SKILL_ART)) {
+export function fxPreload(style = artPref, skills = Object.keys(SKILL_ART), charge = false) {
     const files = new Set(skills.flatMap(s => Object.values(SKILL_ART[s] ?? {}).flatMap(x => {
         const d = styled(x, style);
         return [d.file, d.then?.file];
     })).filter(Boolean));
+    if (charge) files.add(artFile(CHARGE_ART.file, style));   // 모으기의 기운 — 시전 방식이 부른다 (ADR-1252)
+    files.delete(null);
     if (!preloaded && ART_ON) {
         preloaded = true;
         for (const k of ART_KINDS) {
@@ -513,9 +517,10 @@ export function fxPreload(style = artPref, skills = Object.keys(SKILL_ART)) {
 }
 /** 관전 카드가 설 때 부른다 — 지금 선 카드들의 스킬 그림만 읽는다 · 스킬 이펙트가 꺼져 있으면 안 읽는다(켜는 순간 읽는다 · DEV_PLAN §4 #86).
  *  타임라인이 아니라 카드를 본다 — 원정의 타임라인은 걸음마다 자라 관전이 설 때는 뒤 라운드의 사건이 없다 */
-export function fxPreloadSkills(ids) {
+export function fxPreloadSkills(ids, charge = false) {
     battleSkills = [...new Set(ids)];
-    if (fxOn.skill) fxPreload(artPref, battleSkills);
+    battleCharge = charge;
+    if (fxOn.skill) fxPreload(artPref, battleSkills, battleCharge);
 }
 /** 준비된 스킬 그림을 초상 위에 띄운다 — 없으면 기존 조각을 부르는 쪽으로 돌아간다(코드 모양 그림체도 이쪽이다) */
 function skillStamp(L, s, kind, x) {
@@ -655,6 +660,49 @@ export function fxBuff(state, u, ev) {
         if (stamp(L, kind, seedOf(state, u), false)) return;   // 그림이 있으면 그림 한 장 — 초상 위 (ADR-0411)
         spawn(L, { barrier: 'fx-shell', debuff: 'fx-card fx-haze', buff: 'fx-card fx-sweep' }[kind]);
     });
+}
+/* 모으기 (ADR-1252 · ADR-1255) — 모으는 동안 카드는 나간 채 서 있고 기운 그림만 초상 둘레에서 안으로 빨려 든다 · 쏘는 방에 초상이 번쩍하며 카드가 앞으로 튄다.
+   번쩍 · 튐은 「공격 시 흔들림」, 기운 그림은 「스킬 이펙트」(투명도 · 그림체)를 따른다 · 카드는 떨지도(ADR-0723) 물러나지도 줄지도(ADR-1255) 않는다 ·
+   튐의 길이 · 방향은 style.css 가 든다 */
+const chargeGather = card => card.querySelector(':scope > .fx-layer > .fx-charge-gather');
+/** 재생기가 카드를 갱신할 때마다 부른다 — `p` = 모은 몫(0 → 1 · 쏘기 전 · 거꾸로 닳는 게이지의 반대) · 모으지 않으면 null. 되감는 동안은 재생기가 안 부른다 */
+export function fxCharge(state, u, p) {
+    const card = u?.node;
+    if (!card?.isConnected) return;
+    const on = p != null && state.motion !== false;
+    let g = chargeGather(card);
+    const file = artFile(CHARGE_ART.file, artStyle);
+    if (!on || !fxShown(state, 'skill') || !file || !skillArt.has(file)) { g?.remove(); return; }
+    if (!g) {
+        prep(state, u);
+        const L = layerOf(u);
+        asSkill(L, () => {
+            g = document.createElement('span');
+            g.className = 'fx-charge-gather';
+            g.style.setProperty('--sz', px(CHARGE_ART.size));
+            g.style.setProperty('--t', ms(CHARGE_ART.duration));
+            // 두 장이 반 박자 엇갈려 돈다(style.css) — 한 장이 줄어들어 사라질 때 다음 장이 바깥에서 들어온다
+            for (let i = 0; i < 2; i++) {
+                const im = document.createElement('img');
+                im.alt = '';
+                im.draggable = false;
+                im.src = skillArt.get(file);
+                g.appendChild(im);
+            }
+            L.appendChild(g);
+        });
+    }
+    g.style.setProperty('--gp', p.toFixed(3));   // 모일수록 진하다
+}
+/** 쏘는 방(`chan` · 남은 방 0) — 기운이 걷히고 초상이 한 번 번쩍하며 카드가 상대 쪽으로 튀었다가 나간 자리로 온다 */
+export function fxChargeShot(state, u) {
+    if (!live(state, u)) return;
+    const card = u.node;
+    chargeGather(card)?.remove();
+    if (!lungeFxOn() || state.motion === false) return;
+    prep(state, u);
+    play(card, 'fx-charge-shot', CARD);
+    play(card.querySelector('.sprite'), 'fx-charge-flash', FACE);
 }
 /** 불러낸 무리(`call`) — 떠오르며 선다 · 부른 스킬(`s`)의 생김새(`SKILL_LOOKS[s].call`)가 있으면 불린 카드에 같이 선다. 카드를 새로 지은 뒤에 부른다 */
 export function fxAppear(state, u, s = null) {

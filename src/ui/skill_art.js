@@ -168,6 +168,10 @@ export const SKILL_ART = {
     mon_hellfire: { hit: { file: 'mon_hellfire', motion: 'pillar', size: 118, duration: 420, styles: ['darktoon'] } },
 };
 
+/* 모으기의 기운 — 모으는 동안 쓰는 쪽 초상 둘레에서 안으로 빨려 든다(ADR-1252). 스킬마다가 아니라 시전 방식(`channel_charge`)이 부른다 ·
+   두 그림체 모두 있다 · `size` = 그림 한 장의 크기(px — 바깥에서 크게 시작해 줄어든다 · style.css `fx-charge-gather`) · `duration` = 한 번 빨려 드는 길이(ms · 배속을 탄다) */
+export const CHARGE_ART = { file: 'charge_gather', size: 130, duration: 900 };
+
 /* 그림체 — 관전은 설정 탭이 고른 그림체로 서고(fx.js:fxArtStyle · ADR-0561), 도감의 이펙트 세그먼트는 같은 스킬을 그림체별로 견준다(§9-1 · ADR-0559).
    버튼 · 탭 순서 = 이 배열 순서 · 기본값 = 한 번도 안 고른 사람의 관전(다크 카툰 · ADR-0621) */
 export const ART_STYLES = ['darktoon', 'foil'];

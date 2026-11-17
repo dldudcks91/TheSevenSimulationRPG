@@ -425,7 +425,6 @@
 :root[data-mobile] .fg-up > .mobile-pages .btn { min-height: 32px; padding: 3px; }
 :root[data-mobile] .fg-up-work.mobile-pane-on { --fs-2xs: inherit; --fs-xs: inherit; --fs-sm: inherit; --fs-md: inherit; --fs-lg: inherit; padding: 4px; gap: 7px; overflow: hidden; justify-content: flex-start; }
 :root[data-mobile] .fg-up-tipcol.mobile-pane-on { overflow: auto; }
-:root[data-mobile] .fg-up-work .fg-up-th { margin-bottom: 4px; }
 :root[data-mobile] .fg-up-work .fg-up-rows { padding: 2px 0; }
 :root[data-mobile] .fg-up-work .fg-up-cmp { gap: 5px; padding: 2px 0; }
 :root[data-mobile] .fg-up-work .fg-up-act { margin-top: auto; display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
@@ -451,7 +450,6 @@
 :root[data-mobile-landscape] .page.c-forge:has(.c-forge-col.mobile-pane-on .fg-up) > .mobile-pages { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; }
 :root[data-mobile-landscape] .page.c-forge:has(.c-forge-col.mobile-pane-on .fg-up) .c-forge-col { grid-column: 2; grid-row: 1; }
 :root[data-mobile-landscape] .fg-panel:has(.fg-up) > h2 { padding: 0; margin: 0; font-size: var(--fs-xs); line-height: 20px; }
-:root[data-mobile-landscape] .fg-up-work .fg-up-th { font-size: var(--fs-xs); line-height: 16px; margin-bottom: 3px; }
 :root[data-mobile-landscape] .fg-up-work .fg-up-pips i { height: 10px; }
 :root[data-mobile-landscape] .fg-up-work .fg-up-cmp { display: grid; grid-template-columns: 1fr auto auto; gap: 1px 5px; padding: 1px 0; line-height: 14px; }
 :root[data-mobile-landscape] .fg-up-work .fg-up-cmp .lab { grid-column: 1 / -1; font-size: var(--mobile-fs-caption); }

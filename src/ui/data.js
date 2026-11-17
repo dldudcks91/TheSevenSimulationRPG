@@ -75,7 +75,7 @@ export const D = {
     tacticConditions: [],     // tactic_condition.csv 원시 행 — 조건 사전 · 단계 문턱 셋 ⚠임시 (§5-14 · R441) · ~~tactic_score.csv~~ 2026-11-11 삭제
     slots: [],                // equip_slot.csv — 장비 **부위** 8 [{id, ko, en, icon}] · part_order 순
     equipSlots: [],           // equip_slot.csv — 착용 **위치** 9 [{id, part}] · slot_order 순
-    classes: [],              // class.csv — [{id, keyAttr, subAttr, ko, en, role:{ko,en}, roleText:{ko,en}, stage, color}] (stage = CSV 의 release)
+    classes: [],              // class.csv — [{id, keyAttr, subAttr, attrRatio:{statId: 비율}, ko, en, role:{ko,en}, roleText:{ko,en}, stage, color}] (stage = CSV 의 release)
     sinAttrs: null,           // sin_attr.csv — {sinId: statId} · 죄종이 능력치 굴림에서 미는 칸 한 개 ⚠제안 (hero_design §4-3 · 2026-10-22 · R308)
     sinWords: null,           // sin_word.csv — {sinId: [{ko, en, tier, minIlvl}...]} **파일 순서**(번호가 세이브에 박힌다 · R433) · 아이템 이름의 죄종 단어 · 단 · 해금 아이템 레벨 (item_design §1 「이름」 · 2026-09-19 · R436)
     itemBases: null,          // item_base.csv — {slot: [{id,ko,en,group,tierMin}...]} · 부위별 CSV 행 순서 (드롭 굴림이 인덱스를 쓴다)
@@ -109,7 +109,7 @@ export const D = {
     slotCoinRows: [],         // slot_coin.csv — 홀드 앤 스핀 코인 값 · 잭팟 4단(on_fill = 판이 다 찼을 때)
     slotLineRows: [],         // slot_line.csv — 라인(릴마다 행 번호)
     slotStakeRows: [],        // slot_stake.csv — 판돈 단계 배수
-    upgradeChanceRows: [],    // upgrade_chance.csv — 강화 단계마다 성공 확률 [{step, chance}] (2026-10-14 · R253)
+    upgradeChanceRows: [],    // upgrade_chance.csv — 강화 단계마다 성공 · 강등 · 파괴 확률 [{step, chance, down, destroy}] (2026-10-14 · R253 · 강등 · 파괴 2026-11-17 · R530)
     temperActions: [],        // temper_action.csv — 손질 셋 × 재료 단계 [{action, effect, mat, tier, value}] (2026-11-15 · R505 · item_design §7-2 · ~~temper_roll~~ 갈음)
     csvText: {},              // 파일명 → **원문 그대로**. 파싱 결과가 아니라 원문이라 어느 파일이 바뀌었는지 짚을 수 있다
                               //   (읽는 곳은 dev/golden.js:csvHash 하나 — 게임 로직은 이걸 안 본다)
@@ -205,7 +205,8 @@ export async function loadData(base = './data/') {
             monsterSkillLevel: r.monster_skill_level,   // 몬스터 스킬 레벨 — 그 단의 모든 칸 · battle.js 가 읽는다 (skill_design §2-3 · R527)
             monsterDmgMult: r.monster_dmg_mult, monsterHpMult: r.monster_hp_mult,   // 몬스터 데미지 · HP 배수 — battle.js 가 읽는다 (base_expedition_design §1-4 · R301)
             eliteTraitSlots: r.elite_trait_slots,   // 정예 특성 칸 수 — 난이도가 연다 · battle.js 가 읽는다 (monster_design §6 · R344)
-            gearIlvlFixed: r.gear_ilvl_fixed }));   // 몬스터 장비 아이템 레벨 고정(1 = 그 몬스터의 레벨 · 헬) — battle.js 가 읽는다 (R366)
+            gearIlvlFixed: r.gear_ilvl_fixed,   // 몬스터 장비 아이템 레벨 고정(1 = 그 몬스터의 레벨 · 헬) — battle.js 가 읽는다 (R366)
+            heroResPenalty: r.hero_res_penalty }));   // 영웅 원소 저항 페널티(비율) — battle.js 가 원정 판의 파티 영웅 저항에서 뺀다 (base_expedition_design §1-4 · R535)
     D.difficulties = indexBy(D.difficultyList, 'id');
     // 몬스터 장비 희귀도 — 등급 × 단 한 장 · 행마다 합 100 · 에픽 · 레전더리를 안 여는 단은 0 (2026-10-24 · R350 — ~~spawn_grade.csv:gear_rarity_w_* · difficulty_tier.csv:rarity_max~~).
     //   빈 칸 · 음수 · 합 0 검증은 game_logic/battle.js
@@ -364,8 +365,10 @@ export async function loadData(base = './data/') {
     // 직업 — CSV 컬럼은 `release`(스테이지와 충돌하지 않는 이름), game_logic 이 읽는 필드는 `stage` 그대로
     D.classes = classRow.map(r => ({
         id: r.class_id, keyAttr: r.key_attr, ko: r.name_kr, en: r.name_en, zh: r.name_zh,
-        // 보조 능력치 — 능력치 굴림에서 주력 다음으로 미는 칸 · `-` 면 null (2026-10-22 · R308 · hero_design §4-3)
+        // 보조 능력치 — `-` 면 null (2026-10-22 · R308) · 메인(`keyAttr`)과 함께 능력치 굴림에서는 안 읽는다 (2026-11-17 R529)
         subAttr: r.sub_attr && r.sub_attr !== '-' ? r.sub_attr : null,
+        // 능력치 굴림의 직업 7칸 비율 — `ratio_<능력치 id>` 칸을 모은다 · 빠지거나 0 이하면 hero.js 가 생성 때 던진다 (2026-11-17 R529 · hero_design §4-3)
+        attrRatio: Object.fromEntries(Object.keys(r).filter(k => k.startsWith('ratio_')).map(k => [k.slice('ratio_'.length), Number(r[k])])),
         role: { ko: r.role_kr, en: r.role_en, zh: r.role_zh }, stage: r.release, color: r.color_hex || null,
         // 싸움에서 하는 일 한 문장 — 새 게임 카드 연장 칸의 직업 줄 (2026-10-16 · app.js:startLines)
         roleText: { ko: r.role_text_kr, en: r.role_text_en, zh: r.role_text_zh },
@@ -699,7 +702,7 @@ export function buildSystems(d, dev = {}) {
         //   이고 `slots` 는 등급의 입는 부위(`spawn_grade.csv:wear_fixed` · `wear_optional`) 어휘 검증용이다 (R245)
         heroSystem: hero, classSkills, slots: d.slots.map(s => s.id),
         // 런의 단이 고르는 것 — 단 순서(부류 버프의 문턱 · R518) · 선택 부위 착용 확률(R245) · 몬스터 스킬 칸 수(R269) · 몬스터 데미지 · HP 배수(R301) · 정예 특성 칸 수(R344) · 장비 아이템 레벨 고정(R366)
-        difficulties: (d.difficultyList ?? []).map(x => ({ id: x.id, order: x.order, wearChance: x.wearChance, skillSlots: x.skillSlots, monsterSkillLevel: x.monsterSkillLevel, monsterDmgMult: x.monsterDmgMult, monsterHpMult: x.monsterHpMult, eliteTraitSlots: x.eliteTraitSlots, gearIlvlFixed: x.gearIlvlFixed })),
+        difficulties: (d.difficultyList ?? []).map(x => ({ id: x.id, order: x.order, wearChance: x.wearChance, skillSlots: x.skillSlots, monsterSkillLevel: x.monsterSkillLevel, monsterDmgMult: x.monsterDmgMult, monsterHpMult: x.monsterHpMult, eliteTraitSlots: x.eliteTraitSlots, gearIlvlFixed: x.gearIlvlFixed, heroResPenalty: x.heroResPenalty })),
         gearRarity: d.gearRarity,                  // 몬스터 장비 희귀도 — 등급 × 단 한 장 (gear_rarity.csv · R350 — ~~단의 rarityMax~~ R342)
         chapterDebuffs: d.chapterDebuffs ?? [],    // 장 디버프 — 단 · 장마다 한 줄 (chapter_debuff.csv · R366)
     });
