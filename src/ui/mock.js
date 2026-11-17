@@ -21,7 +21,7 @@ import { PORTRAIT_FILES } from '../assets/art/faces/portrait_files.js';
  * 로더는 `ui/data.js:D.classes`·`D.slots`/`D.equipSlots`·`D.itemBases`·`D.affixDefs`·`D.heroNamePool`·`D.heroTraitPool`).
  * `ELEMENT_IDS` 는 삭제 — SSOT 는 `game_logic/hero.js:ELEMENTS` 하나다.
  * `nm`(이름 조립)은 CSV 가 아니라 **이식 대상 코드**라 `game_logic/naming.js` 로 갔다 (`eliteName` 도 같이).
- * game_logic 이 주입받는데 아직 여기 남은 것 — `SINS` · `ELITE_TRAIT_STAT` · `ELITE_TRAIT_DEF` 셋뿐
+ * game_logic 이 주입받는데 아직 여기 남은 것 — `SINS` · `ELITE_TRAIT_ENCHANT` · `ELITE_TRAIT_DEF` 셋뿐
  * (`SINS` 는 죄종 매핑 미확정 · 정예 특성 둘은 값과 함께 CSV 로 — INTERFACE §7 · DEV_PLAN §5-B · R344).
  *
  * ── i18n 규약 (2026-08-23) ──
@@ -52,20 +52,20 @@ export const lockIcon = closed => `<svg class="rs-pin-ico" viewBox="0 0 16 16" w
    **하는 일을 그대로 담백하게** 적는다 — 비유 · 감탄 · 반전 토막 없이(2026-10-21 사용자가 시안 셋 중 담백형을 골랐다).
    직업 문장(`class.csv:role_text`)은 「무기 + 역할」 소개형이다. 둘 다 **카드 한 줄에 선다** — 가장 넓은 칩(마법사 · Gluttony) 옆에서 재서 넘치지 않게 (SCREEN_DESIGN §3) */
 export const SINS = {
-    wrath: { ko: '분노', en: 'Wrath', adj: 'Wrathful', color: '#e03030',
-        line: { ko: '공격 속도와 치명타 확률 증가', en: 'Attacks faster and crits more often' } },
-    envy: { ko: '시기', en: 'Envy', adj: 'Envious', color: '#30b050',
-        line: { ko: '방어·저항 관통 및 받은 피해 일부 반사', en: 'Pierces defenses and reflects damage' } },
-    greed: { ko: '탐욕', en: 'Greed', adj: 'Greedy', color: '#d0a020',
-        line: { ko: '골드와 아이템 획득량 증가', en: 'Finds more gold and items' } },
-    sloth: { ko: '나태', en: 'Sloth', adj: 'Slothful', color: '#7087a8',   // 파란빛이 돌게 [2026-09-30 사용자 지시 · 옛 #808898 — 밝기는 그대로]
-        line: { ko: '받는 피해와 스킬 쿨타임 감소', en: 'Takes less damage, shorter cooldowns' } },
-    gluttony: { ko: '폭식', en: 'Gluttony', adj: 'Gluttonous', color: '#e07020',
-        line: { ko: '체력·저항 증가 및 적 체력 비례 피해', en: 'More health and resists, % HP damage' } },
-    lust: { ko: '색욕', en: 'Lust', adj: 'Lustful', color: '#e03080',
-        line: { ko: '타격 시 체력 흡수 및 버프 지속시간 증가', en: 'Steals life on hit and buffs last longer' } },
-    pride: { ko: '오만', en: 'Pride', adj: 'Prideful', color: '#8040e0',
-        line: { ko: '받는 피해 감소 및 공격력·타격 회복 증가', en: 'Tougher, hits harder, hard to stagger' } },
+    wrath: { ko: '분노', en: 'Wrath', zh: '愤怒', adj: 'Wrathful', color: '#e03030',
+        line: { ko: '공격 속도와 치명타 확률 증가', en: 'Attacks faster and crits more often', zh: '攻击速度与暴击率提升' } },
+    envy: { ko: '시기', en: 'Envy', zh: '嫉妒', adj: 'Envious', color: '#30b050',
+        line: { ko: '방어·저항 관통 및 받은 피해 일부 반사', en: 'Pierces defenses and reflects damage', zh: '穿透防御与抗性，并反射部分所受伤害' } },
+    greed: { ko: '탐욕', en: 'Greed', zh: '贪婪', adj: 'Greedy', color: '#d0a020',
+        line: { ko: '골드와 아이템 획득량 증가', en: 'Finds more gold and items', zh: '金币与物品获取量提升' } },
+    sloth: { ko: '나태', en: 'Sloth', zh: '怠惰', adj: 'Slothful', color: '#7087a8',   // 파란빛이 돌게 [2026-09-30 사용자 지시 · 옛 #808898 — 밝기는 그대로]
+        line: { ko: '받는 피해와 스킬 쿨타임 감소', en: 'Takes less damage, shorter cooldowns', zh: '所受伤害与技能冷却降低' } },
+    gluttony: { ko: '폭식', en: 'Gluttony', zh: '暴食', adj: 'Gluttonous', color: '#e07020',
+        line: { ko: '체력·저항 증가 및 적 체력 비례 피해', en: 'More health and resists, % HP damage', zh: '生命与抗性提升，并按敌人生命比例造成伤害' } },
+    lust: { ko: '색욕', en: 'Lust', zh: '色欲', adj: 'Lustful', color: '#e03080',
+        line: { ko: '타격 시 체력 흡수 및 버프 지속시간 증가', en: 'Steals life on hit and buffs last longer', zh: '击中时吸取生命，增益持续时间延长' } },
+    pride: { ko: '오만', en: 'Pride', zh: '傲慢', adj: 'Prideful', color: '#8040e0',
+        line: { ko: '받는 피해 감소 및 공격력·타격 회복 증가', en: 'Tougher, hits harder, hard to stagger', zh: '所受伤害降低，伤害与受击恢复提升' } },
 };
 
 /* 스킬 태그 표시 이름(`SKILL_TAGS`)은 **삭제했다** (2026-09-01) — 어휘·대분류·이름의 SSOT 가
@@ -76,13 +76,13 @@ export const SINS = {
 // 순서 = 정렬 사다리(game_logic/state.js:RARITY_LADDER) · 필터 순서: 일반 → 매직 → 레어 → 크래프트(매직 + 고른 죄종 — 레어와 줄 수가 같다) → 에픽 → 레전더리 → 유니크(고정)
 //   **에픽 · 레전더리** [2026-10-24 · 사용자 「에픽이랑 레전더리를 추가하자, 보라색 및 빨간색으로」 · R342 · ADR-0767] — 오만 #8040e0 · 분노 #e03030 과 떨어뜨린 밝은 라벤더 · 산호빛 빨강
 export const RARITY = {
-    normal: { ko: '일반', en: 'Normal', color: '#D8D8D8' },
-    magic: { ko: '매직', en: 'Magic', color: '#4169E1' },
-    rare: { ko: '레어', en: 'Rare', color: '#FFD700' },
-    craft: { ko: '크래프트', en: 'Craft', color: '#22C55E' },
-    epic: { ko: '에픽', en: 'Epic', color: '#B266FF' },
-    legendary: { ko: '레전더리', en: 'Legendary', color: '#FF4D4D' },
-    unique: { ko: '유니크', en: 'Unique', color: '#FF8C00' },
+    normal: { ko: '일반', en: 'Normal', zh: '普通', color: '#D8D8D8' },
+    magic: { ko: '매직', en: 'Magic', zh: '魔法', color: '#4169E1' },
+    rare: { ko: '레어', en: 'Rare', zh: '稀有', color: '#FFD700' },
+    craft: { ko: '크래프트', en: 'Craft', zh: '手工', color: '#22C55E' },
+    epic: { ko: '에픽', en: 'Epic', zh: '史诗', color: '#B266FF' },
+    legendary: { ko: '레전더리', en: 'Legendary', zh: '传奇', color: '#FF4D4D' },
+    unique: { ko: '유니크', en: 'Unique', zh: '暗金', color: '#FF8C00' },
 };
 
 /* 영웅 등급 표(`HERO_TIER`)는 **`src/data/hero_tier.csv` 로 나갔다** (2026-09-08 · R48) —
@@ -100,123 +100,123 @@ export const RARITY = {
 
 /** 접사 표기 — stat id → 이름 + 단위. **화면 전용 사전**이라 CSV 로 가지 않는다 (`SKILL_DISPLAY` 와 같은 성격) */
 export const AFFIX_LABELS = {
-    atk_flat: { ko: '데미지', en: 'Damage', fmt: 'n' },
-    atk_pct: { ko: '데미지', en: 'Damage', fmt: 'pct' },
-    hp_flat: { ko: '최대 HP', en: 'Max HP', fmt: 'n' },
-    hp_pct: { ko: '최대 HP', en: 'Max HP', fmt: 'pct' },
-    def_flat: { ko: '물리 방어', en: 'Physical Defense', fmt: 'n' },
-    res_all: { ko: '모든 원소 저항', en: 'All Resistances', fmt: 'pct' },
-    res_fire: { ko: '화염 저항', en: 'Fire Resist', fmt: 'pct' },
-    res_cold: { ko: '냉기 저항', en: 'Cold Resist', fmt: 'pct' },
-    res_lightning: { ko: '전기 저항', en: 'Lightning Resist', fmt: 'pct' },
-    res_poison: { ko: '독 저항', en: 'Poison Resist', fmt: 'pct' },
-    crit_rate: { ko: '치명타 확률', en: 'Crit Chance', fmt: 'pct' },
-    crit_damage: { ko: '치명타 피해', en: 'Crit Damage', fmt: 'pct' },
-    aspd_pct: { ko: '공격 속도', en: 'Attack Speed', fmt: 'pct' },
-    cast_speed_pct: { ko: '캐스팅 속도', en: 'Casting Speed', fmt: 'pct' },   // 마법 무기 유닛의 주기만 줄인다 — 공격 속도와 별개 옵션 (R203 · battle_design §2)
-    life_steal: { ko: '흡혈', en: 'Life Steal', fmt: 'pct' },
-    def_ignore: { ko: '방어 무시', en: 'Defense Ignore', fmt: 'pct' },
-    reflect_damage: { ko: '반사 피해', en: 'Reflect Damage', fmt: 'pct' },
-    damage_reduction: { ko: '피해 감소', en: 'Damage Reduction', fmt: 'pct' },
-    gold_find: { ko: '골드 획득', en: 'Gold Find', fmt: 'pct' },
-    item_find: { ko: '드랍률', en: 'Item Find', fmt: 'pct' },
+    atk_flat: { ko: '데미지', en: 'Damage', zh: '伤害', fmt: 'n' },
+    atk_pct: { ko: '데미지', en: 'Damage', zh: '伤害', fmt: 'pct' },
+    hp_flat: { ko: '최대 HP', en: 'Max HP', zh: '最大生命', fmt: 'n' },
+    hp_pct: { ko: '최대 HP', en: 'Max HP', zh: '最大生命', fmt: 'pct' },
+    def_flat: { ko: '물리 방어', en: 'Physical Defense', zh: '物理防御', fmt: 'n' },
+    res_all: { ko: '모든 원소 저항', en: 'All Resistances', zh: '所有元素抗性', fmt: 'pct' },
+    res_fire: { ko: '화염 저항', en: 'Fire Resist', zh: '火焰抗性', fmt: 'pct' },
+    res_cold: { ko: '냉기 저항', en: 'Cold Resist', zh: '冰霜抗性', fmt: 'pct' },
+    res_lightning: { ko: '전기 저항', en: 'Lightning Resist', zh: '闪电抗性', fmt: 'pct' },
+    res_poison: { ko: '독 저항', en: 'Poison Resist', zh: '毒素抗性', fmt: 'pct' },
+    crit_rate: { ko: '치명타 확률', en: 'Crit Chance', zh: '暴击率', fmt: 'pct' },
+    crit_damage: { ko: '치명타 피해', en: 'Crit Damage', zh: '暴击伤害', fmt: 'pct' },
+    aspd_pct: { ko: '공격 속도', en: 'Attack Speed', zh: '攻击速度', fmt: 'pct' },
+    cast_speed_pct: { ko: '캐스팅 속도', en: 'Casting Speed', zh: '施法速度', fmt: 'pct' },   // 마법 무기 유닛의 주기만 줄인다 — 공격 속도와 별개 옵션 (R203 · battle_design §2)
+    life_steal: { ko: '흡혈', en: 'Life Steal', zh: '吸血', fmt: 'pct' },
+    def_ignore: { ko: '방어 무시', en: 'Defense Ignore', zh: '无视防御', fmt: 'pct' },
+    reflect_damage: { ko: '반사 피해', en: 'Reflect Damage', zh: '伤害反射', fmt: 'pct' },
+    damage_reduction: { ko: '피해 감소', en: 'Damage Reduction', zh: '伤害减免', fmt: 'pct' },
+    gold_find: { ko: '골드 획득', en: 'Gold Find', zh: '金币获取', fmt: 'pct' },
+    item_find: { ko: '드랍률', en: 'Item Find', zh: '掉落率', fmt: 'pct' },
     // ── 무기 옵션 (item_design §1 「무기 옵션」 · 2026-09-11 R78) — 죄종 칸 · 통합옵션 표가 쓰는 축.
     //    `res_reduction` 은 combat_stat.csv 이름과 같게 둔다 — 마스터리 칸도 이 사전을 먼저 읽는다
-    res_reduction: { ko: '저항 감소', en: 'Resist Reduction', fmt: 'pct' },
-    atk_down_phys_pct: { ko: '타격 시 대상 물리 데미지 감소', en: 'Physical Damage Down on Hit', fmt: 'pct' },
-    atk_down_mag_pct: { ko: '타격 시 대상 마법 데미지 감소', en: 'Magic Damage Down on Hit', fmt: 'pct' },
-    dmg_per_level_pct: { ko: '레벨당 데미지', en: 'Damage per Level', fmt: 'pct' },
-    crushing_blow_pct: { ko: '강타', en: 'Crushing Blow', fmt: 'pct' },   // 옵션 이름에 괄호를 안 단다 (§6 · ADR-0954)
-    magic_find: { ko: '매직아이템 획득', en: 'Magic Find', fmt: 'pct' },
-    vs_normal_dmg: { ko: '일반 대상 추가 피해', en: 'Damage vs Normal', fmt: 'pct' },
-    vs_demon_dmg: { ko: '데몬 대상 추가 피해', en: 'Damage vs Demon', fmt: 'pct' },
-    vs_undead_dmg: { ko: '언데드 대상 추가 피해', en: 'Damage vs Undead', fmt: 'pct' },
-    vs_elite_dmg: { ko: '정예·보스 대상 추가 피해', en: 'Damage vs Elites & Bosses', fmt: 'pct' },
-    vs_front_dmg: { ko: '전열 대상 추가 피해', en: 'Damage vs Front Row', fmt: 'pct' },
-    vs_back_dmg: { ko: '후열 대상 추가 피해', en: 'Damage vs Back Row', fmt: 'pct' },
-    def_down_pct: { ko: '타격 시 대상 방어력 감소', en: 'Defense Shred on Hit', fmt: 'pct' },
-    fire_dmg_pct: { ko: '화염 피해', en: 'Fire Damage', fmt: 'pct' },
-    cold_dmg_pct: { ko: '냉기 피해', en: 'Cold Damage', fmt: 'pct' },
-    lightning_dmg_pct: { ko: '전기 피해', en: 'Lightning Damage', fmt: 'pct' },
-    poison_dmg_pct: { ko: '독 피해', en: 'Poison Damage', fmt: 'pct' },
-    res_down_pct: { ko: '타격 시 대상 원소 저항 감소', en: 'Resist Shred on Hit', fmt: 'pct' },
+    res_reduction: { ko: '저항 감소', en: 'Resist Reduction', zh: '抗性降低', fmt: 'pct' },
+    atk_down_phys_pct: { ko: '타격 시 대상 물리 데미지 감소', en: 'Physical Damage Down on Hit', zh: '击中时降低目标物理伤害', fmt: 'pct' },
+    atk_down_mag_pct: { ko: '타격 시 대상 마법 데미지 감소', en: 'Magic Damage Down on Hit', zh: '击中时降低目标魔法伤害', fmt: 'pct' },
+    dmg_per_level_pct: { ko: '레벨당 데미지', en: 'Damage per Level', zh: '每级伤害', fmt: 'pct' },
+    crushing_blow_pct: { ko: '강타', en: 'Crushing Blow', zh: '压碎性打击', fmt: 'pct' },   // 옵션 이름에 괄호를 안 단다 (§6 · ADR-0954)
+    magic_find: { ko: '매직아이템 획득', en: 'Magic Find', zh: '魔法物品获取', fmt: 'pct' },
+    vs_normal_dmg: { ko: '자연 대상 추가 피해', en: 'Damage vs Natural', zh: '对自然额外伤害', fmt: 'pct' },
+    vs_demon_dmg: { ko: '데몬 대상 추가 피해', en: 'Damage vs Demon', zh: '对恶魔额外伤害', fmt: 'pct' },
+    vs_undead_dmg: { ko: '언데드 대상 추가 피해', en: 'Damage vs Undead', zh: '对亡灵额外伤害', fmt: 'pct' },
+    vs_elite_dmg: { ko: '정예·보스 대상 추가 피해', en: 'Damage vs Elites & Bosses', zh: '对精英与首领额外伤害', fmt: 'pct' },
+    vs_front_dmg: { ko: '전열 대상 추가 피해', en: 'Damage vs Front Row', zh: '对前排敌人额外伤害', fmt: 'pct' },
+    vs_back_dmg: { ko: '후열 대상 추가 피해', en: 'Damage vs Back Row', zh: '对后排敌人额外伤害', fmt: 'pct' },
+    def_down_pct: { ko: '타격 시 대상 방어력 감소', en: 'Defense Shred on Hit', zh: '击中时降低目标防御', fmt: 'pct' },
+    fire_dmg_pct: { ko: '화염 피해', en: 'Fire Damage', zh: '火焰伤害', fmt: 'pct' },
+    cold_dmg_pct: { ko: '냉기 피해', en: 'Cold Damage', zh: '冰霜伤害', fmt: 'pct' },
+    lightning_dmg_pct: { ko: '전기 피해', en: 'Lightning Damage', zh: '闪电伤害', fmt: 'pct' },
+    poison_dmg_pct: { ko: '독 피해', en: 'Poison Damage', zh: '毒素伤害', fmt: 'pct' },
+    res_down_pct: { ko: '타격 시 대상 원소 저항 감소', en: 'Resist Shred on Hit', zh: '击中时降低目标元素抗性', fmt: 'pct' },
     // ── 방어구 옵션 (item_design §1 「갑옷 옵션」 · 「투구 옵션」 · 신발 행 · 2026-09-18) — 베이스 옵션 · 죄종 칸 · 공통옵션 표가 쓰는 축.
     //    `fhr` · `cooldown_reduction` 은 combat_stat.csv 이름과 같게 둔다(마스터리 칸도 이 사전을 먼저 읽는다)
-    armor_def_pct: { ko: '물리 방어', en: 'Physical Defense', fmt: 'pct' },           // 베이스 옵션 — 그 장비 자신의 고유 방어력에만 곱한다
-    fhr: { ko: '타격 회복', en: 'Hit Recovery', fmt: 'pct' },
-    cooldown_reduction: { ko: '쿨타임 감소', en: 'Cooldown Reduction', fmt: 'pct' },
-    hp_recovery_pct: { ko: '체력 회복', en: 'HP Recovery', fmt: 'pct' },
-    kill_heal_pct: { ko: '처치 시 체력 회복', en: 'Heal on Kill', fmt: 'pct' },   // 처치마다 최대 HP × 값 — 투구 · 장갑 색욕 ① (2026-10-21 · R299)
-    start_gauge_pct: { ko: '전투 시작 시 행동 게이지', en: 'Action Gauge at Battle Start', fmt: 'pct' },   // 가죽 신발 특성 — 빈 게이지를 그만큼 채운 채 출발 (R303)
-    cull_normal_pct: { ko: '일반몹 처형', en: 'Culling Strike vs Normal', fmt: 'pct' },   // 장갑 폭식 ② — 직격 뒤 일반 몬스터 체력이 이 비율 이하면 쓰러뜨린다 (R303)
-    res_all_per_level: { ko: '레벨당 모든 원소 저항', en: 'All Resist per Level', fmt: 'pct' },   // 신발 오만 (R303)
-    def_per_level: { ko: '레벨당 물리 방어', en: 'Physical Defense per Level', fmt: 'n' },
-    hp_per_level: { ko: '레벨당 최대 HP', en: 'Max HP per Level', fmt: 'n' },
-    aspd_per_level_pct: { ko: '레벨당 공격 속도', en: 'Attack Speed per Level', fmt: 'pct' },
-    counter_chance: { ko: '반격 확률', en: 'Counter Chance', fmt: 'pct' },
-    res_max_fire: { ko: '최대 화염 저항', en: 'Max Fire Resist', fmt: 'pct' },
-    res_max_cold: { ko: '최대 냉기 저항', en: 'Max Cold Resist', fmt: 'pct' },
-    res_max_lightning: { ko: '최대 전기 저항', en: 'Max Lightning Resist', fmt: 'pct' },
-    res_max_poison: { ko: '최대 독 저항', en: 'Max Poison Resist', fmt: 'pct' },
-    dr_flat: { ko: '피해 감소', en: 'Damage Reduction', fmt: 'n' },   // 고정 · % 는 단위가 가른다 — `damage_reduction` 과 이름이 같다 (§6 · ADR-0954)
-    vs_normal_dr: { ko: '일반 적에게 받는 피해 감소', en: 'Damage Reduction vs Normal', fmt: 'pct' },
-    vs_demon_dr: { ko: '데몬에게 받는 피해 감소', en: 'Damage Reduction vs Demon', fmt: 'pct' },
-    vs_undead_dr: { ko: '언데드에게 받는 피해 감소', en: 'Damage Reduction vs Undead', fmt: 'pct' },
-    vs_elite_dr: { ko: '정예·보스에게 받는 피해 감소', en: 'Damage Reduction vs Elites & Bosses', fmt: 'pct' },
-    vs_front_dr: { ko: '전열 적에게 받는 피해 감소', en: 'Damage Reduction vs Front Row', fmt: 'pct' },
-    vs_back_dr: { ko: '후열 적에게 받는 피해 감소', en: 'Damage Reduction vs Back Row', fmt: 'pct' },
-    xp_gain_pct: { ko: '경험치 획득', en: 'Experience Gain', fmt: 'pct' },
+    armor_def_pct: { ko: '물리 방어', en: 'Physical Defense', zh: '物理防御', fmt: 'pct' },           // 베이스 옵션 — 그 장비 자신의 고유 방어력에만 곱한다
+    fhr: { ko: '타격 회복', en: 'Hit Recovery', zh: '受击恢复', fmt: 'pct' },
+    cooldown_reduction: { ko: '쿨타임 감소', en: 'Cooldown Reduction', zh: '冷却缩减', fmt: 'pct' },
+    hp_recovery_pct: { ko: '체력 회복', en: 'HP Recovery', zh: '生命恢复', fmt: 'pct' },
+    kill_heal_pct: { ko: '처치 시 체력 회복', en: 'Heal on Kill', zh: '击杀时恢复生命', fmt: 'pct' },   // 처치마다 최대 HP × 값 — 투구 · 장갑 색욕 ① (2026-10-21 · R299)
+    start_gauge_pct: { ko: '전투 시작 시 행동 게이지', en: 'Action Gauge at Battle Start', zh: '开战时行动值', fmt: 'pct' },   // 가죽 신발 특성 — 빈 게이지를 그만큼 채운 채 출발 (R303)
+    cull_normal_pct: { ko: '일반몹 처형', en: 'Culling Strike vs Normal', zh: '处决普通怪物', fmt: 'pct' },   // 장갑 폭식 ② — 직격 뒤 일반 몬스터 체력이 이 비율 이하면 쓰러뜨린다 (R303)
+    res_all_per_level: { ko: '레벨당 모든 원소 저항', en: 'All Resist per Level', zh: '每级所有元素抗性', fmt: 'pct' },   // 신발 오만 (R303)
+    def_per_level: { ko: '레벨당 물리 방어', en: 'Physical Defense per Level', zh: '每级物理防御', fmt: 'n' },
+    hp_per_level: { ko: '레벨당 최대 HP', en: 'Max HP per Level', zh: '每级最大生命', fmt: 'n' },
+    aspd_per_level_pct: { ko: '레벨당 공격 속도', en: 'Attack Speed per Level', zh: '每级攻击速度', fmt: 'pct' },
+    counter_chance: { ko: '반격 확률', en: 'Counter Chance', zh: '反击几率', fmt: 'pct' },
+    res_max_fire: { ko: '최대 화염 저항', en: 'Max Fire Resist', zh: '最大火焰抗性', fmt: 'pct' },
+    res_max_cold: { ko: '최대 냉기 저항', en: 'Max Cold Resist', zh: '最大冰霜抗性', fmt: 'pct' },
+    res_max_lightning: { ko: '최대 전기 저항', en: 'Max Lightning Resist', zh: '最大闪电抗性', fmt: 'pct' },
+    res_max_poison: { ko: '최대 독 저항', en: 'Max Poison Resist', zh: '最大毒素抗性', fmt: 'pct' },
+    dr_flat: { ko: '피해 감소', en: 'Damage Reduction', zh: '伤害减免', fmt: 'n' },   // 고정 · % 는 단위가 가른다 — `damage_reduction` 과 이름이 같다 (§6 · ADR-0954)
+    vs_normal_dr: { ko: '자연 적에게 받는 피해 감소', en: 'Damage Reduction vs Natural', zh: '来自自然的伤害减免', fmt: 'pct' },
+    vs_demon_dr: { ko: '데몬에게 받는 피해 감소', en: 'Damage Reduction vs Demon', zh: '来自恶魔的伤害减免', fmt: 'pct' },
+    vs_undead_dr: { ko: '언데드에게 받는 피해 감소', en: 'Damage Reduction vs Undead', zh: '来自亡灵的伤害减免', fmt: 'pct' },
+    vs_elite_dr: { ko: '정예·보스에게 받는 피해 감소', en: 'Damage Reduction vs Elites & Bosses', zh: '来自精英与首领的伤害减免', fmt: 'pct' },
+    vs_front_dr: { ko: '전열 적에게 받는 피해 감소', en: 'Damage Reduction vs Front Row', zh: '来自前排敌人的伤害减免', fmt: 'pct' },
+    vs_back_dr: { ko: '후열 적에게 받는 피해 감소', en: 'Damage Reduction vs Back Row', zh: '来自后排敌人的伤害减免', fmt: 'pct' },
+    xp_gain_pct: { ko: '경험치 획득', en: 'Experience Gain', zh: '经验获取', fmt: 'pct' },
     // `inert` = **전투가 아직 안 읽는 줄** — 툴팁이 줄 끝에 「(미적용)」을 단다(SCREEN_DESIGN §6 · ADR-0213). 상태이상 기계가 서면 그 stat 의 표지를 지운다
-    freeze_dur_reduction: { ko: '빙결 시간 감소', en: 'Freeze Duration Reduction', fmt: 'pct' },   // 결빙이 읽는다(2026-09-28 · R177 · battle_design §2-4)
-    poison_dur_reduction: { ko: '중독 시간 감소', en: 'Poison Duration Reduction', fmt: 'pct' },   // 중독이 읽는다(2026-09-28 · R178 · battle_design §2-5)
+    freeze_dur_reduction: { ko: '빙결 시간 감소', en: 'Freeze Duration Reduction', zh: '冻结时间缩短', fmt: 'pct' },   // 결빙이 읽는다(2026-09-28 · R177 · battle_design §2-4)
+    poison_dur_reduction: { ko: '중독 시간 감소', en: 'Poison Duration Reduction', zh: '中毒时间缩短', fmt: 'pct' },   // 중독이 읽는다(2026-09-28 · R178 · battle_design §2-5)
     // ── 반지 · 목걸이 옵션 (item_design §1 「반지 · 목걸이」 · 2026-09-21 · R127) — 반지 시기 칸 · 공통옵션이 쓰는 새 축.
     //    원소별 저항 무시는 **「원소 관통」**이다 [2026-11-11 · 사용자 「관통이라는 단어가 좋을거같에」 · R442 · GAME_DESIGN §9] — 내 그 원소 타격만 대상 저항을 %p 깎는다(장갑 · 반지 시기 · 마법 무기 시기).
     //    대상에게 거는 디버프는 「원소 저항 감소」(아래 `res_down_stack_*` · 옛 `res_down_pct`) — 방어력 무시 · 감소와 같은 짝
-    res_reduction_fire: { ko: '화염 관통', en: 'Fire Penetration', fmt: 'pct' },
-    res_reduction_cold: { ko: '냉기 관통', en: 'Cold Penetration', fmt: 'pct' },
-    res_reduction_lightning: { ko: '전기 관통', en: 'Lightning Penetration', fmt: 'pct' },
-    res_reduction_poison: { ko: '독 관통', en: 'Poison Penetration', fmt: 'pct' },
-    burn_dur_reduction: { ko: '화상 시간 감소', en: 'Burn Duration Reduction', fmt: 'pct' },   // 화상이 읽는다(R178)
-    stun_dur_reduction: { ko: '스턴 시간 감소', en: 'Stun Duration Reduction', fmt: 'pct' },   // 스턴이 읽는다(R178)
-    buff_dur_pct: { ko: '버프 지속시간', en: 'Buff Duration', fmt: 'pct' },
+    res_reduction_fire: { ko: '화염 관통', en: 'Fire Penetration', zh: '火焰穿透', fmt: 'pct' },
+    res_reduction_cold: { ko: '냉기 관통', en: 'Cold Penetration', zh: '冰霜穿透', fmt: 'pct' },
+    res_reduction_lightning: { ko: '전기 관통', en: 'Lightning Penetration', zh: '闪电穿透', fmt: 'pct' },
+    res_reduction_poison: { ko: '독 관통', en: 'Poison Penetration', zh: '毒素穿透', fmt: 'pct' },
+    burn_dur_reduction: { ko: '화상 시간 감소', en: 'Burn Duration Reduction', zh: '燃烧时间缩短', fmt: 'pct' },   // 화상이 읽는다(R178)
+    stun_dur_reduction: { ko: '스턴 시간 감소', en: 'Stun Duration Reduction', zh: '眩晕时间缩短', fmt: 'pct' },   // 스턴이 읽는다(R178)
+    buff_dur_pct: { ko: '버프 지속시간', en: 'Buff Duration', zh: '增益持续时间', fmt: 'pct' },
     // 물약 효과 상승 — 낀 영웅이 마시는 물약의 수치(반지 분노 ③ · 2026-10-29 · R382 · item_design §1 「반지 옵션 — 죄종 계열」)
-    potion_effect_pct: { ko: '물약 효과', en: 'Potion Effect', fmt: 'pct' },
+    potion_effect_pct: { ko: '물약 효과', en: 'Potion Effect', zh: '药水效果', fmt: 'pct' },
     // 명중률 — 지금은 궁수 마스터리 T1-3 의 축이다(적중률에 (1 + 명중률)로 곱한다 · 2026-09-22 R138 · 곱 2026-10-06 R219). 폐지된 `accuracy` 와 다른 id
-    hit_bonus: { ko: '명중률', en: 'Hit Bonus', fmt: 'pct' },
+    hit_bonus: { ko: '명중률', en: 'Hit Bonus', zh: '命中率', fmt: 'pct' },
     // ── 죄종 계열 옵션 (item_design §1 「무기 옵션 — 죄종 계열」 · 「마법사 · 사제 무기」 · 「갑옷 옵션 — 죄종 계열」 · 2026-10-05 · R206 · R208 · R209)
-    dmg_min_flat: { ko: '최소 데미지', en: 'Minimum Damage', fmt: 'n' },
-    dmg_max_flat: { ko: '최대 데미지', en: 'Maximum Damage', fmt: 'n' },
-    dmg_max_per_level: { ko: '레벨당 최대 데미지', en: 'Maximum Damage per Level', fmt: 'n' },
-    dmg_min_per_level: { ko: '레벨당 최소 데미지', en: 'Minimum Damage per Level', fmt: 'n' },   // 무기 오만 ① 의 짝(2026-11-11 · R442)
-    def_down_stack_pct: { ko: '타격 시 대상 방어력 감소 (겹침)', en: 'Stacking Defense Shred on Hit', fmt: 'pct' },
+    dmg_min_flat: { ko: '최소 데미지', en: 'Minimum Damage', zh: '最小伤害', fmt: 'n' },
+    dmg_max_flat: { ko: '최대 데미지', en: 'Maximum Damage', zh: '最大伤害', fmt: 'n' },
+    dmg_max_per_level: { ko: '레벨당 최대 데미지', en: 'Maximum Damage per Level', zh: '每级最大伤害', fmt: 'n' },
+    dmg_min_per_level: { ko: '레벨당 최소 데미지', en: 'Minimum Damage per Level', zh: '每级最小伤害', fmt: 'n' },   // 무기 오만 ① 의 짝(2026-11-11 · R442)
+    def_down_stack_pct: { ko: '타격 시 대상 방어력 감소 (겹침)', en: 'Stacking Defense Shred on Hit', zh: '击中时降低目标防御（叠加）', fmt: 'pct' },
     // 원소 저항 감소 겹 — 마법 무기 시기(그 무기의 원소 · 2026-11-11 · R442) · 방어력 감소 겹과 같은 규칙
-    res_down_stack_fire: { ko: '타격 시 대상 화염 저항 감소 (겹침)', en: 'Stacking Fire Resist Shred on Hit', fmt: 'pct' },
-    res_down_stack_cold: { ko: '타격 시 대상 냉기 저항 감소 (겹침)', en: 'Stacking Cold Resist Shred on Hit', fmt: 'pct' },
-    res_down_stack_lightning: { ko: '타격 시 대상 전기 저항 감소 (겹침)', en: 'Stacking Lightning Resist Shred on Hit', fmt: 'pct' },
-    res_down_stack_poison: { ko: '타격 시 대상 독 저항 감소 (겹침)', en: 'Stacking Poison Resist Shred on Hit', fmt: 'pct' },
-    res_down_stack_pct: { ko: '타격 시 대상 원소 저항 감소 (겹침)', en: 'Stacking Resist Shred on Hit', fmt: 'pct' },   // 그 타격의 원소 — 목걸이 시기 ③ (2026-11-11 · R453)
-    weapon_atk_pct: { ko: '무기 데미지', en: 'Weapon Damage', fmt: 'pct' },   // 무기 밖 출처 — 목걸이 오만 (2026-11-11 · R453) · 무기 베이스 옵션과 더한다
-    stagger_dur_pct: { ko: '경직 시간 증가', en: 'Stagger Duration', fmt: 'pct' },
-    cast_refund_chance: { ko: '시전 시 시전 칸 충전', en: 'Charge Refund on Cast', fmt: 'pct' },
-    status_dur_pct: { ko: '상태이상 시간 증가', en: 'Ailment Duration', fmt: 'pct' },
-    cast_speed_per_level_pct: { ko: '레벨당 캐스팅 속도', en: 'Casting Speed per Level', fmt: 'pct' },
-    cast_stack_pct: { ko: '시전 누적 데미지', en: 'Stacking Damage per Cast', fmt: 'pct' },
-    heal_out_pct: { ko: '회복량 증가', en: 'Healing Done', fmt: 'pct' },
-    debuff_dur_pct: { ko: '디버프 시간 증가', en: 'Debuff Duration', fmt: 'pct' },
-    debuff_dur_reduction: { ko: '상태이상 · 디버프 시간 감소', en: 'Ailment & Debuff Duration Reduction', fmt: 'pct' },   // 받는 쪽 · 신발 폭식 ① (2026-11-11 · R451) — combat_stat.csv 이름 그대로
-    hp_regen: { ko: 'HP 재생', en: 'HP Regen', fmt: 'n' },
+    res_down_stack_fire: { ko: '타격 시 대상 화염 저항 감소 (겹침)', en: 'Stacking Fire Resist Shred on Hit', zh: '击中时降低目标火焰抗性（叠加）', fmt: 'pct' },
+    res_down_stack_cold: { ko: '타격 시 대상 냉기 저항 감소 (겹침)', en: 'Stacking Cold Resist Shred on Hit', zh: '击中时降低目标冰霜抗性（叠加）', fmt: 'pct' },
+    res_down_stack_lightning: { ko: '타격 시 대상 전기 저항 감소 (겹침)', en: 'Stacking Lightning Resist Shred on Hit', zh: '击中时降低目标闪电抗性（叠加）', fmt: 'pct' },
+    res_down_stack_poison: { ko: '타격 시 대상 독 저항 감소 (겹침)', en: 'Stacking Poison Resist Shred on Hit', zh: '击中时降低目标毒素抗性（叠加）', fmt: 'pct' },
+    res_down_stack_pct: { ko: '타격 시 대상 원소 저항 감소 (겹침)', en: 'Stacking Resist Shred on Hit', zh: '击中时降低目标元素抗性（叠加）', fmt: 'pct' },   // 그 타격의 원소 — 목걸이 시기 ③ (2026-11-11 · R453)
+    weapon_atk_pct: { ko: '무기 데미지', en: 'Weapon Damage', zh: '武器伤害', fmt: 'pct' },   // 무기 밖 출처 — 목걸이 오만 (2026-11-11 · R453) · 무기 베이스 옵션과 더한다
+    stagger_dur_pct: { ko: '경직 시간 증가', en: 'Stagger Duration', zh: '僵直时间延长', fmt: 'pct' },
+    cast_refund_chance: { ko: '시전 시 시전 칸 충전', en: 'Charge Refund on Cast', zh: '施放时返还充能', fmt: 'pct' },
+    status_dur_pct: { ko: '상태이상 시간 증가', en: 'Ailment Duration', zh: '异常状态时间延长', fmt: 'pct' },
+    cast_speed_per_level_pct: { ko: '레벨당 캐스팅 속도', en: 'Casting Speed per Level', zh: '每级施法速度', fmt: 'pct' },
+    cast_stack_pct: { ko: '시전 누적 데미지', en: 'Stacking Damage per Cast', zh: '施放累积伤害', fmt: 'pct' },
+    heal_out_pct: { ko: '회복량 증가', en: 'Healing Done', zh: '治疗量提升', fmt: 'pct' },
+    debuff_dur_pct: { ko: '디버프 시간 증가', en: 'Debuff Duration', zh: '减益时间延长', fmt: 'pct' },
+    debuff_dur_reduction: { ko: '상태이상 · 디버프 시간 감소', en: 'Ailment & Debuff Duration Reduction', zh: '异常状态与减益时间缩短', fmt: 'pct' },   // 받는 쪽 · 신발 폭식 ① (2026-11-11 · R451) — combat_stat.csv 이름 그대로
+    hp_regen: { ko: 'HP 재생', en: 'HP Regen', zh: '生命再生', fmt: 'n' },
     // 발동 옵션 — 줄에 스킬 id(`a.skill`)를 함께 든다. `proc` = 발동 조건(툴팁 문장 `tip.proc.<조건>` · app.js `affixText`).
-    proc_hit_attack: { ko: '타격 시 공격 스킬 발동', en: 'Attack Skill on Hit', fmt: 'pct', proc: 'hit' },
-    proc_hit_buff: { ko: '타격 시 버프 스킬 발동', en: 'Buff Skill on Hit', fmt: 'pct', proc: 'hit' },
-    proc_cast_attack: { ko: '시전 시 공격 스킬 발동', en: 'Attack Skill on Cast', fmt: 'pct', proc: 'cast' },
-    proc_cast_buff: { ko: '시전 시 버프 스킬 발동', en: 'Buff Skill on Cast', fmt: 'pct', proc: 'cast' },
-    proc_cast_debuff: { ko: '시전 시 디버프 스킬 발동', en: 'Debuff Skill on Cast', fmt: 'pct', proc: 'cast' },
-    proc_struck_debuff: { ko: '피격 시 디버프 스킬 발동', en: 'Debuff Skill when Struck', fmt: 'pct', proc: 'struck' },
-    proc_struck_buff: { ko: '피격 시 버프 스킬 발동', en: 'Buff Skill when Struck', fmt: 'pct', proc: 'struck' },
-    proc_struck_defense: { ko: '피격 시 방어 스킬 발동', en: 'Defense Skill when Struck', fmt: 'pct', proc: 'struck' },   // 갑옷 나태 ② (2026-11-11 · R444)
+    proc_hit_attack: { ko: '타격 시 공격 스킬 발동', en: 'Attack Skill on Hit', zh: '击中时触发攻击技能', fmt: 'pct', proc: 'hit' },
+    proc_hit_buff: { ko: '타격 시 버프 스킬 발동', en: 'Buff Skill on Hit', zh: '击中时触发增益技能', fmt: 'pct', proc: 'hit' },
+    proc_cast_attack: { ko: '시전 시 공격 스킬 발동', en: 'Attack Skill on Cast', zh: '施放时触发攻击技能', fmt: 'pct', proc: 'cast' },
+    proc_cast_buff: { ko: '시전 시 버프 스킬 발동', en: 'Buff Skill on Cast', zh: '施放时触发增益技能', fmt: 'pct', proc: 'cast' },
+    proc_cast_debuff: { ko: '시전 시 디버프 스킬 발동', en: 'Debuff Skill on Cast', zh: '施放时触发减益技能', fmt: 'pct', proc: 'cast' },
+    proc_struck_debuff: { ko: '피격 시 디버프 스킬 발동', en: 'Debuff Skill when Struck', zh: '受击时触发减益技能', fmt: 'pct', proc: 'struck' },
+    proc_struck_buff: { ko: '피격 시 버프 스킬 발동', en: 'Buff Skill when Struck', zh: '受击时触发增益技能', fmt: 'pct', proc: 'struck' },
+    proc_struck_defense: { ko: '피격 시 방어 스킬 발동', en: 'Defense Skill when Struck', zh: '受击时触发防御技能', fmt: 'pct', proc: 'struck' },   // 갑옷 나태 ② (2026-11-11 · R444)
     // 특정 스킬 +n — 줄에 스킬 id(`a.skill`)를 든다. `skill` = 툴팁 문장 `tip.skillPlus`(「파이어볼 +1」 · app.js `affixText`) [2026-10-08 · R225 · ADR-0535]
-    skill_plus: { ko: '스킬 레벨', en: 'Skill Level', fmt: 'n', skill: true },
-    skill_tag: { ko: '스킬 태그 강화', en: 'Skill Tag Bonus', fmt: 'pct' },
+    skill_plus: { ko: '스킬 레벨', en: 'Skill Level', zh: '技能等级', fmt: 'n', skill: true },
+    skill_tag: { ko: '스킬 태그 강화', en: 'Skill Tag Bonus', zh: '技能标签加成', fmt: 'pct' },
 };
 
 /**
@@ -224,8 +224,8 @@ export const AFFIX_LABELS = {
  *   접사가 아니라서 접사 사전에 넣지 않는다 — `affixText` 의 `fallback` 으로 넘긴다
  */
 export const CODEX_FIGHT_LABELS = {
-    vs_dmg: { ko: '데미지', en: 'Damage', fmt: 'pct' },
-    speed_pct: { ko: '공격 · 캐스팅 속도', en: 'Attack · Casting Speed', fmt: 'pct' },
+    vs_dmg: { ko: '데미지', en: 'Damage', zh: '伤害', fmt: 'pct' },
+    speed_pct: { ko: '공격 · 캐스팅 속도', en: 'Attack · Casting Speed', zh: '攻击与施法速度', fmt: 'pct' },
 };
 
 /**
@@ -233,50 +233,50 @@ export const CODEX_FIGHT_LABELS = {
  *   효과 문장은 `i18n.js:sk.masteryEffect.<stat>` 이 통째로 들고, 여기는 값의 단위(%)만 정한다
  */
 export const MASTERY_LABELS = {
-    atk_pct_per_greed: { ko: '탐욕 비례 데미지', en: 'Damage per Greed', fmt: 'pct' },
-    hp_pct_per_greed: { ko: '탐욕 비례 최대 HP', en: 'Max HP per Greed', fmt: 'pct' },
-    cdr_per_greed: { ko: '탐욕 비례 쿨타임 감소', en: 'Cooldown Reduction per Greed', fmt: 'pct' },
+    atk_pct_per_greed: { ko: '탐욕 비례 데미지', en: 'Damage per Greed', zh: '贪婪比例伤害', fmt: 'pct' },
+    hp_pct_per_greed: { ko: '탐욕 비례 최대 HP', en: 'Max HP per Greed', zh: '贪婪比例最大生命', fmt: 'pct' },
+    cdr_per_greed: { ko: '탐욕 비례 쿨타임 감소', en: 'Cooldown Reduction per Greed', zh: '贪婪比例冷却缩减', fmt: 'pct' },
     // 직업 T1-2 초 단위 칸 (2026-11-09 · R432 · skill_design §3-4) — 값은 초 · 문장은 `sk.masteryEffect.<stat>` 이 단위를 든다
-    cool_minus_sec: { ko: '쿨타임 감소', en: 'Cooldown Reduction', fmt: 'n' },
-    period_minus_sec: { ko: '공격 속도', en: 'Attack Speed', fmt: 'n' },
+    cool_minus_sec: { ko: '쿨타임 감소', en: 'Cooldown Reduction', zh: '冷却缩减', fmt: 'n' },
+    period_minus_sec: { ko: '공격 속도', en: 'Attack Speed', zh: '攻击速度', fmt: 'n' },
     // 직업 마스터리 T4 (2026-11-14 · R437) — 문장은 `sk.masteryEffect.<stat>` 이 든다 · 여기는 이름 · 단위
-    basic_cleave: { ko: '평타 튐', en: 'Basic Cleave', fmt: 'pct' },
-    skill_repeat_chance: { ko: '스킬 한 번 더', en: 'Skill Repeat', fmt: 'pct' },
-    elem_to_phys: { ko: '원소 → 물리', en: 'Elemental to Physical', fmt: 'pct' },
-    hit_stun_chance: { ko: '타격 스턴', en: 'Stun on Hit', fmt: 'pct' },
-    aura_guard_share: { ko: '대신 받기', en: 'Guard Share', fmt: 'pct' },
-    crit_taken_cut: { ko: '받는 치명 감소', en: 'Crit Damage Taken', fmt: 'pct' },
-    skill_fixed_share: { ko: '고정 피해 몫', en: 'Fixed Damage Share', fmt: 'pct' },
-    cast_refill_chance: { ko: '시전 칸 충전', en: 'Charge Refill', fmt: 'pct' },
-    round_barrier: { ko: '라운드 보호막', en: 'Round Shield', fmt: 'pct' },
-    sin_vuln: { ko: '받는 피해 증가', en: 'Damage Taken Up', fmt: 'pct' },
-    overheal_shield: { ko: '넘친 회복 보호막', en: 'Overheal Shield', fmt: 'pct' },
-    last_prayer: { ko: '마지막 기도', en: 'Last Prayer', fmt: 'pct' },
-    extra_shot_chance: { ko: '한 발 더', en: 'Extra Shot', fmt: 'pct' },
-    basic_cd_tick: { ko: '평타 쿨 감소', en: 'Cooldown per Attack', fmt: 'n' },
-    dodge_chance: { ko: '회피', en: 'Dodge', fmt: 'pct' },
+    basic_cleave: { ko: '평타 튐', en: 'Basic Cleave', zh: '普攻溅射', fmt: 'pct' },
+    skill_repeat_chance: { ko: '스킬 한 번 더', en: 'Skill Repeat', zh: '技能连发', fmt: 'pct' },
+    elem_to_phys: { ko: '원소 → 물리', en: 'Elemental to Physical', zh: '元素 → 物理', fmt: 'pct' },
+    hit_stun_chance: { ko: '타격 스턴', en: 'Stun on Hit', zh: '击中眩晕', fmt: 'pct' },
+    aura_guard_share: { ko: '대신 받기', en: 'Guard Share', zh: '代为承受', fmt: 'pct' },
+    crit_taken_cut: { ko: '받는 치명 감소', en: 'Crit Damage Taken', zh: '所受暴击伤害降低', fmt: 'pct' },
+    skill_fixed_share: { ko: '고정 피해 몫', en: 'Fixed Damage Share', zh: '真实伤害占比', fmt: 'pct' },
+    cast_refill_chance: { ko: '시전 칸 충전', en: 'Charge Refill', zh: '充能补充', fmt: 'pct' },
+    round_barrier: { ko: '라운드 보호막', en: 'Round Shield', zh: '回合护盾', fmt: 'pct' },
+    sin_vuln: { ko: '받는 피해 증가', en: 'Damage Taken Up', zh: '所受伤害提高', fmt: 'pct' },
+    overheal_shield: { ko: '넘친 회복 보호막', en: 'Overheal Shield', zh: '溢出治疗护盾', fmt: 'pct' },
+    last_prayer: { ko: '마지막 기도', en: 'Last Prayer', zh: '临终祈祷', fmt: 'pct' },
+    extra_shot_chance: { ko: '한 발 더', en: 'Extra Shot', zh: '追加射击', fmt: 'pct' },
+    basic_cd_tick: { ko: '평타 쿨 감소', en: 'Cooldown per Attack', zh: '普攻缩减冷却', fmt: 'n' },
+    dodge_chance: { ko: '회피', en: 'Dodge', zh: '闪避', fmt: 'pct' },
     // 죄종 마스터리 T4 (2026-11-14)
-    wrath_blood: { ko: '피의 대가', en: 'Blood Price', fmt: 'pct' },
-    wrath_party_crit: { ko: '파티 치명', en: 'Party Crit', fmt: 'pct' },
-    wrath_steady: { ko: '받는 스턴 · 경직 감소', en: 'Stun Resist', fmt: 'pct' },
-    envy_strip: { ko: '버프 지우기', en: 'Buff Removal', fmt: 'pct' },
-    envy_party_pierce: { ko: '파티 방어 무시', en: 'Party Defense Ignore', fmt: 'pct' },
-    envy_return: { ko: '디버프 되돌리기', en: 'Debuff Return', fmt: 'pct' },
-    greed_mark: { ko: '표식 대상 데미지', en: 'Mark Damage', fmt: 'pct' },
-    greed_reroll: { ko: '드롭 다시 굴리기', en: 'Drop Reroll', fmt: 'pct' },
-    greed_barrier: { ko: '황금 보호막', en: 'Golden Ward', fmt: 'pct' },
-    sloth_heavy: { ko: '무거운 한 방', en: 'Heavy Hit', fmt: 'pct' },
-    sloth_party_cdr: { ko: '파티 쿨타임 감소', en: 'Party Cooldown', fmt: 'pct' },
-    sloth_defer: { ko: '나눠 받기', en: 'Deferred Damage', fmt: 'pct' },
-    glut_cull: { ko: '처형 문턱', en: 'Execute Threshold', fmt: 'pct' },
-    glut_party_dmg: { ko: '파티 데미지', en: 'Party Damage', fmt: 'pct' },
-    glut_absorb: { ko: '원소 흡수', en: 'Elemental Absorb', fmt: 'pct' },
-    lust_crit_vuln: { ko: '받는 피해 증가', en: 'Damage Taken Up', fmt: 'pct' },
-    lust_share_heal: { ko: '회복 나누기', en: 'Heal Share', fmt: 'pct' },
-    lust_charm: { ko: '홀리기', en: 'Beguile', fmt: 'pct' },
-    pride_nth: { ko: '확정 치명 간격', en: 'Sure Crit Interval', fmt: 'n' },
-    pride_party_haste: { ko: '파티 속도', en: 'Party Speed', fmt: 'pct' },
-    pride_cap: { ko: '큰 한 방 감소', en: 'Big Hit Reduction', fmt: 'pct' },
+    wrath_blood: { ko: '피의 대가', en: 'Blood Price', zh: '血之代价', fmt: 'pct' },
+    wrath_party_crit: { ko: '파티 치명', en: 'Party Crit', zh: '队伍暴击', fmt: 'pct' },
+    wrath_steady: { ko: '받는 스턴 · 경직 감소', en: 'Stun Resist', zh: '所受眩晕与僵直缩短', fmt: 'pct' },
+    envy_strip: { ko: '버프 지우기', en: 'Buff Removal', zh: '清除增益', fmt: 'pct' },
+    envy_party_pierce: { ko: '파티 방어 무시', en: 'Party Defense Ignore', zh: '队伍无视防御', fmt: 'pct' },
+    envy_return: { ko: '디버프 되돌리기', en: 'Debuff Return', zh: '减益反弹', fmt: 'pct' },
+    greed_mark: { ko: '표식 대상 데미지', en: 'Mark Damage', zh: '对印记目标伤害', fmt: 'pct' },
+    greed_reroll: { ko: '드롭 다시 굴리기', en: 'Drop Reroll', zh: '掉落重掷', fmt: 'pct' },
+    greed_barrier: { ko: '황금 보호막', en: 'Golden Ward', zh: '黄金护盾', fmt: 'pct' },
+    sloth_heavy: { ko: '무거운 한 방', en: 'Heavy Hit', zh: '沉重一击', fmt: 'pct' },
+    sloth_party_cdr: { ko: '파티 쿨타임 감소', en: 'Party Cooldown', zh: '队伍冷却缩减', fmt: 'pct' },
+    sloth_defer: { ko: '나눠 받기', en: 'Deferred Damage', zh: '分次承受', fmt: 'pct' },
+    glut_cull: { ko: '처형 문턱', en: 'Execute Threshold', zh: '处决阈值', fmt: 'pct' },
+    glut_party_dmg: { ko: '파티 데미지', en: 'Party Damage', zh: '队伍伤害', fmt: 'pct' },
+    glut_absorb: { ko: '원소 흡수', en: 'Elemental Absorb', zh: '元素吸收', fmt: 'pct' },
+    lust_crit_vuln: { ko: '받는 피해 증가', en: 'Damage Taken Up', zh: '所受伤害提高', fmt: 'pct' },
+    lust_share_heal: { ko: '회복 나누기', en: 'Heal Share', zh: '分享治疗', fmt: 'pct' },
+    lust_charm: { ko: '홀리기', en: 'Beguile', zh: '魅惑', fmt: 'pct' },
+    pride_nth: { ko: '확정 치명 간격', en: 'Sure Crit Interval', zh: '必定暴击间隔', fmt: 'n' },
+    pride_party_haste: { ko: '파티 속도', en: 'Party Speed', zh: '队伍速度', fmt: 'pct' },
+    pride_cap: { ko: '큰 한 방 감소', en: 'Big Hit Reduction', zh: '重创减免', fmt: 'pct' },
 };
 
 /** 전투가 아직 안 읽는 옵션인가 — 툴팁의 「(미적용)」 표지 (SCREEN_DESIGN §6 · ADR-0213). 판정은 사전의 고정 표지다 — 렌더러가 계산하지 않는다 */
@@ -455,30 +455,30 @@ export const HERO_FACES = {
  *   영어 `Sword Emperor` 가 직역)가 섞여 있다.
  */
 export const HERO_FACE_NAMES = {
-    warrior_1: { ko: '막시무스', en: 'Maximus' },          // 검투사
-    warrior_2: { ko: '바바리안', en: 'Barbarian' },        // 바바리안
-    warrior_3: { ko: '검황', en: 'Sword Emperor' },        // 백발백염
-    warrior_4: { ko: '레오니다스', en: 'Leonidas' },       // 청동 투구를 이마로 올림 · 검은 볏
-    warrior_5: { ko: '삼손', en: 'Samson' },               // 헝클어진 장발·수염
-    knight_1: { ko: '오디세우스', en: 'Odysseus' },        // 무안면 로마군 1
-    knight_5: { ko: '한니발', en: 'Hannibal' },            // 외치는 기사
-    knight_6: { ko: '리처드 1세', en: 'Richard the Lionheart' }, // 금관 · 사슬 코이프 · 붉은 십자 서코트 (11-11)
-    knight_7: { ko: '팔라딘', en: 'Paladin' },             // 회색 강철 판금 · 회색 짧은 머리 노기사 (11-11 · 11-12 어둡게 — 음영 유지)
-    knight_8: { ko: '살라딘', en: 'Saladin' },             // 흰 터번 · 머리와 목을 감싼 천 · 검은 수염 (11-12 · 같은 날 다시 그림)
-    mage_2: { ko: '포세이돈', en: 'Poseidon' },            // 청록 장발·수염 노인
-    mage_3: { ko: '오딘', en: 'Odin' },                    // 붕대로 한 눈을 가린 후드 노인 (11-11)
-    mage_4: { ko: '제우스', en: 'Zeus' },                  // 헝클어진 흰 장발 · 긴 수염 · 노한 얼굴 · 손가의 불티 (11-11 · 11-12 다시 그림)
-    mage_5: { ko: '하데스', en: 'Hades' },                 // 창백한 대머리 · 늘어진 흰 머리 · 검은 로브 (11-12)
-    archer_1: { ko: '로빈 후드', en: 'Robin Hood' },       // 검은 후드 · 화살통 (11-14 이름 — 후보 표 `archer_1`)
-    archer_2: { ko: '빌헬름 텔', en: 'William Tell' },     // 머리띠 · 모피 · 어깨에 멘 석궁 (11-11)
-    archer_3: { ko: '주몽', en: 'Jumong' },                // 상투 · 늑대 가죽 머리쓰개 · 등에 멘 활 · 녹슨 갑주 (11-12)
-    archer_4: { ko: '아마존', en: 'Amazon' },              // 헝클어진 장발 · 뼈 장식 · 얼굴 칠 · 모피 (11-12)
-    archer_5: { ko: '아르테미스', en: 'Artemis' },         // 땋은 검은 머리 · 뼈 · 깃털 장식 · 모피 깃 · 활 (11-12)
-    priest_3: { ko: '잔 다르크', en: 'Joan of Arc' },      // 흰 두건(윔플) — 사제 초상 중 유일한 여자
-    priest_4: { ko: '닥터 슈나벨', en: 'Doctor Schnabel' }, // 역병 의사 — 흰 부리 가면
-    priest_1: { ko: '베네딕토', en: 'Benedict' },          // 반삭 · 검은 수단 · 금 십자가 (10-20 이름)
-    priest_2: { ko: '멀린', en: 'Merlin' },                // 올리브 후드 · 룬 문신 노인 (10-20 이름)
-    priest_5: { ko: '노스트라다무스', en: 'Nostradamus' }, // 황도 기호 로브 노인 (10-21 마법사 mage_3 → 사제)
+    warrior_1: { ko: '막시무스', en: 'Maximus', zh: '马克西穆斯' },          // 검투사
+    warrior_2: { ko: '바바리안', en: 'Barbarian', zh: '野蛮人' },        // 바바리안
+    warrior_3: { ko: '검황', en: 'Sword Emperor', zh: '剑皇' },        // 백발백염
+    warrior_4: { ko: '레오니다스', en: 'Leonidas', zh: '列奥尼达' },       // 청동 투구를 이마로 올림 · 검은 볏
+    warrior_5: { ko: '삼손', en: 'Samson', zh: '参孙' },               // 헝클어진 장발·수염
+    knight_1: { ko: '오디세우스', en: 'Odysseus', zh: '奥德修斯' },        // 무안면 로마군 1
+    knight_5: { ko: '한니발', en: 'Hannibal', zh: '汉尼拔' },            // 외치는 기사
+    knight_6: { ko: '리처드 1세', en: 'Richard the Lionheart', zh: '狮心王理查' }, // 금관 · 사슬 코이프 · 붉은 십자 서코트 (11-11)
+    knight_7: { ko: '팔라딘', en: 'Paladin', zh: '圣骑士' },             // 회색 강철 판금 · 회색 짧은 머리 노기사 (11-11 · 11-12 어둡게 — 음영 유지)
+    knight_8: { ko: '살라딘', en: 'Saladin', zh: '萨拉丁' },             // 흰 터번 · 머리와 목을 감싼 천 · 검은 수염 (11-12 · 같은 날 다시 그림)
+    mage_2: { ko: '포세이돈', en: 'Poseidon', zh: '波塞冬' },            // 청록 장발·수염 노인
+    mage_3: { ko: '오딘', en: 'Odin', zh: '奥丁' },                    // 붕대로 한 눈을 가린 후드 노인 (11-11)
+    mage_4: { ko: '제우스', en: 'Zeus', zh: '宙斯' },                  // 헝클어진 흰 장발 · 긴 수염 · 노한 얼굴 · 손가의 불티 (11-11 · 11-12 다시 그림)
+    mage_5: { ko: '하데스', en: 'Hades', zh: '哈迪斯' },                 // 창백한 대머리 · 늘어진 흰 머리 · 검은 로브 (11-12)
+    archer_1: { ko: '로빈 후드', en: 'Robin Hood', zh: '罗宾汉' },       // 검은 후드 · 화살통 (11-14 이름 — 후보 표 `archer_1`)
+    archer_2: { ko: '빌헬름 텔', en: 'William Tell', zh: '威廉·退尔' },     // 머리띠 · 모피 · 어깨에 멘 석궁 (11-11)
+    archer_3: { ko: '주몽', en: 'Jumong', zh: '朱蒙' },                // 상투 · 늑대 가죽 머리쓰개 · 등에 멘 활 · 녹슨 갑주 (11-12)
+    archer_4: { ko: '아마존', en: 'Amazon', zh: '亚马逊' },              // 헝클어진 장발 · 뼈 장식 · 얼굴 칠 · 모피 (11-12)
+    archer_5: { ko: '아르테미스', en: 'Artemis', zh: '阿尔忒弥斯' },         // 땋은 검은 머리 · 뼈 · 깃털 장식 · 모피 깃 · 활 (11-12)
+    priest_3: { ko: '잔 다르크', en: 'Joan of Arc', zh: '圣女贞德' },      // 흰 두건(윔플) — 사제 초상 중 유일한 여자
+    priest_4: { ko: '닥터 슈나벨', en: 'Doctor Schnabel', zh: '鸟嘴医生' }, // 역병 의사 — 흰 부리 가면
+    priest_1: { ko: '베네딕토', en: 'Benedict', zh: '本笃' },          // 반삭 · 검은 수단 · 금 십자가 (10-20 이름)
+    priest_2: { ko: '멀린', en: 'Merlin', zh: '梅林' },                // 올리브 후드 · 룬 문신 노인 (10-20 이름)
+    priest_5: { ko: '노스트라다무스', en: 'Nostradamus', zh: '诺查丹玛斯' }, // 황도 기호 로브 노인 (10-21 마법사 mage_3 → 사제)
     // knight_2 · knight_3 · knight_4 는 이름이 없다 — 2026-11-14 부터 `HERO_FACES` 목록에서도 빠졌다(파일만 남는다)
 };
 /** 표시용 안정 해시(FNV-1a + 마무리 섞기) — 같은 문자열이면 언제나 같은 수. **game_logic 의 rng 와 무관하다**(결정론 계약 밖).
@@ -619,6 +619,8 @@ export const POTION_SLOT_ART = `${POTION_ART_DIR}slot${ICON_EXT}`;
 export const CLEAR_BOX_ART = `./assets/art/icons/items/box/clear_box${ICON_EXT}`;
 export const MAIL_ART = `./assets/art/icons/mail/mail${ICON_EXT}`;
 export const BELL_ART = `./assets/art/icons/mail/bell${ICON_EXT}`;
+/** 메인미션 — 상단바 골드 오른쪽 두루마리 · 우편 · 종과 같은 백색 실루엣 · ⚠ 임시 그림 (SCREEN_DESIGN §2 「메인미션」 · ADR-1232) */
+export const MISSION_ART = `./assets/art/icons/mail/mission${ICON_EXT}`;
 /** 편성 탭 진형 칸의 리더 버튼 그림 — 흰 왕관 실루엣 · 화면이 색 마스크로 칠한다 (SCREEN_DESIGN §15 · ADR-1132) */
 export const LEADER_ART = `./assets/art/icons/party/leader${ICON_EXT}`;
 /** 왼쪽 탭 아이콘 — 탭 id 마다 백색 실루엣 한 장 · 화면이 이름 글자색으로 칠한다 (SCREEN_DESIGN §1 · ADR-1028) */
@@ -901,40 +903,44 @@ export function facePath(file) {
 }
 
 /**
- * 정예 특성 칸 — 능력치 칸 · 방어 칸 (monster_design §6 · 2026-10-24 · R344). 죄종 칸은 `mastery_node.csv` 의 죄종 T1 이다.
- * **game_logic 이 주입받는 풀**이다 — `ui/data.js` 가 `attr` · `dt` 목록을 `battle.eliteTraits.stat` · `def` 로 넘긴다(이 순서가 굴림 인덱스 · INTERFACE §2-6).
- * 이름은 관전 카드 띠 오른쪽 칩이 읽는다(ADR-0775). ⚠ SSOT 미발행 — 값이 정해지면 이름과 함께 CSV 로 나간다(계승 `elite_trait.csv` 대체).
- * `dt` = 방어 칸 id 이자 피해 종류 색(`--dt-*`).
+ * 정예 특성 칸 — 강화 칸 · 방어 칸 (monster_design §6 · 2026-10-24 · R344 · 강화 2026-11-17 · R528 — 옛 능력치 칸 대체). 죄종 칸은 `mastery_node.csv` 의 죄종 T2 이다.
+ * **game_logic 이 주입받는 풀**이다 — `ui/data.js` 가 `el` · `dt` 목록을 `battle.eliteTraits.enchant` · `def` 로 넘긴다(이 순서가 굴림 인덱스 · INTERFACE §2-6).
+ * 이름은 관전 카드 띠 오른쪽 칩이 읽는다(ADR-0775). ⚠ SSOT 미발행 — 이름과 함께 CSV 로 나간다(계승 `elite_trait.csv` 대체).
+ * `el` · `dt` = 칸 id 이자 피해 종류 색(`--dt-*`). 강화는 이름이 둘이다 ⚠임시 — 칩 = 짧은 형용사(다른 칸 칩과 같은 결 · 「Fire Enchanted」 는 영어 띠를 넘쳤다) ·
+ *   `full` = 강화 이름(디아블로 2 의 Enchanted · 한글 직역) — 로그 · 누적 판 · 영웅에게 걸린 창이 읽는다(`ui/data.js:skillInfo`)
  * **이름이 길수록 띠의 신원이 줄어든다** — 이름을 바꾸거나 더할 때 `&traits=max&lang=en` 으로 다시 본다(ADR-0775)
  */
-export const ELITE_TRAIT_STAT = [
-    { attr: 'str', ko: '힘센', en: 'Strong' },
-    { attr: 'agi', ko: '민첩한', en: 'Agile' },
-    { attr: 'int', ko: '지적인', en: 'Intelligent' },
-    { attr: 'vit', ko: '건강한', en: 'Healthy' },
-    { attr: 'luck', ko: '운 좋은', en: 'Lucky' },
-    { attr: 'ldr', ko: '이끄는', en: 'Leading' },   // 「Commanding 지휘하는」은 영어 최장 조합이 카드 폭을 넘어 바꿨다(ADR-0768)
-    { attr: 'cha', ko: '매력적인', en: 'Charming' },
+export const ELITE_TRAIT_ENCHANT = [
+    { el: 'fire', ko: '타오르는', en: 'Blazing', full: { ko: '화염 강화', en: 'Fire Enchanted' } },
+    { el: 'cold', ko: '얼어붙는', en: 'Freezing', full: { ko: '냉기 강화', en: 'Cold Enchanted' } },
+    { el: 'lightning', ko: '충전된', en: 'Charged', full: { ko: '전기 강화', en: 'Lightning Enchanted' } },
+    { el: 'poison', ko: '맹독의', en: 'Venomous', full: { ko: '독 강화', en: 'Poison Enchanted' } },
 ];
+/** 강화가 낸 창 · 피해의 출처 id(`elite:<원소>` · 서리 오라 `elite:frost`)에서 원소를 꺼낸다 — 강화가 아니면 null (R528 · battle.enchSrc) */
+export const enchantOfSrc = s => {
+    if (typeof s !== 'string' || !s.startsWith('elite:')) return null;
+    const el = s.slice(6) === 'frost' ? 'cold' : s.slice(6);
+    return ELITE_TRAIT_ENCHANT.find(x => x.el === el) ?? null;
+};
 // 한글은 짧은 직역(내화 · 방한 · 방독 — 칩에 맞는 길이 · 2026-10-24 사용자 「살의, 매력적인 이런게 좋은거같에」)
 export const ELITE_TRAIT_DEF = [
-    { dt: 'physical', ko: '단단한', en: 'Durable' },
-    { dt: 'fire', ko: '내화의', en: 'Fireproof' },
-    { dt: 'cold', ko: '방한의', en: 'Frostproof' },
-    { dt: 'lightning', ko: '절연된', en: 'Insulated' },
-    { dt: 'poison', ko: '방독의', en: 'Venomproof' },
+    { dt: 'physical', ko: '단단한', en: 'Durable', zh: '坚固的' },
+    { dt: 'fire', ko: '내화의', en: 'Fireproof', zh: '耐火的' },
+    { dt: 'cold', ko: '방한의', en: 'Frostproof', zh: '御寒的' },
+    { dt: 'lightning', ko: '절연된', en: 'Insulated', zh: '绝缘的' },
+    { dt: 'poison', ko: '방독의', en: 'Venomproof', zh: '防毒的' },
 ];
 /* 정예 특성 **죄종 칸 칩의 글자** — 그 정예 죄종의 형용사 [2026-11-15 사용자 「그냥 분노하는 << 이렇게 붙여」 · SCREEN_DESIGN §4-2 · ADR-1191].
    붙은 마스터리 칸(셋 중 하나)과 상관없이 같은 글자다 · 영어가 원본(`SINS.adj` 와 같은 낱말) · 한글은 직역 · 색욕은 「~의」 꼴(방어 칸 「내화의」와 같은 결).
    **표시 전용**이다 — 굴림 풀은 `mastery_node.csv` 의 죄종 T2 칸이고 이 표는 game_logic 에 안 간다 */
 export const ELITE_TRAIT_SIN = {
-    wrath: { ko: '분노하는', en: 'Wrathful' },
-    envy: { ko: '시기하는', en: 'Envious' },
-    greed: { ko: '탐욕스러운', en: 'Greedy' },
-    sloth: { ko: '나태한', en: 'Slothful' },
-    gluttony: { ko: '폭식하는', en: 'Gluttonous' },
-    lust: { ko: '색욕의', en: 'Lustful' },
-    pride: { ko: '오만한', en: 'Prideful' },
+    wrath: { ko: '분노하는', en: 'Wrathful', zh: '愤怒的' },
+    envy: { ko: '시기하는', en: 'Envious', zh: '嫉妒的' },
+    greed: { ko: '탐욕스러운', en: 'Greedy', zh: '贪婪的' },
+    sloth: { ko: '나태한', en: 'Slothful', zh: '怠惰的' },
+    gluttony: { ko: '폭식하는', en: 'Gluttonous', zh: '暴食的' },
+    lust: { ko: '색욕의', en: 'Lustful', zh: '色欲的' },
+    pride: { ko: '오만한', en: 'Prideful', zh: '傲慢的' },
 };
 
 /**
@@ -983,10 +989,10 @@ export const TRADE = {
     /** 회차의 상인 — 맡은 최하급 재료(`shopVisit.deal` · 교역소 특가)마다 한 명 · 특수상단 카드와 교역소 시세 줄이 같은 이름을 쓴다 (ADR-1210 · R512).
      *  ⚠임시 — 광물상 말고 셋은 이 세션이 붙인 이름 · 기획이 정하면 CSV 로 간다 */
     merchants: {
-        iron_ore: { ko: '떠돌이 광물상', en: 'Wandering Ore Dealer' },
-        herb: { ko: '떠돌이 약초상', en: 'Wandering Herb Dealer' },
-        timber: { ko: '떠돌이 목재상', en: 'Wandering Timber Dealer' },
-        dust: { ko: '떠돌이 가루상', en: 'Wandering Dust Dealer' },
+        iron_ore: { ko: '떠돌이 광물상', en: 'Wandering Ore Dealer', zh: '流浪矿石商' },
+        herb: { ko: '떠돌이 약초상', en: 'Wandering Herb Dealer', zh: '流浪草药商' },
+        timber: { ko: '떠돌이 목재상', en: 'Wandering Timber Dealer', zh: '流浪木材商' },
+        dust: { ko: '떠돌이 가루상', en: 'Wandering Dust Dealer', zh: '流浪粉尘商' },
     },
 };
 

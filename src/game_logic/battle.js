@@ -109,14 +109,15 @@ const NO_ADV = Object.freeze({});   // 전직 공통 줄 능력치가 없는 유
  * @param {object} data
  *   balance, monsters(byId), stages(byId), roundSets {round_set: [{round_num, round_type}]} (세트마다 round_num 순),
  *   budgets(byKey: normal/elite/stage_boss/chapter_boss), grades(byKey), sins [...],
- *   eliteTraits {sin: {sinId: [masteryNodeId]}, stat: [attrId], def: [defId]} — 정예 특성 칸의 풀 (2026-10-24 · R344 · monster_design §6 · 생성 시 검사), itemSystem,
+ *   eliteTraits {sin: {sinId: [masteryNodeId]}, enchant: [element], def: [defId]} — 정예 특성 칸의 풀 (2026-10-24 · R344 · monster_design §6 · 생성 시 검사 ·
+ *     둘째 칸 = 강화 원소 넷 · 2026-11-17 R528 — ~~`stat` 능력치 일곱~~), itemSystem,
  *   skillSystem — skill.js (정의·발동 선택). 없으면 액티브 없이 기본 공격만 돈다,
  *   heroSystem — hero.js. **몬스터도 `computeCombat` 을 지난다** (§8-1 「계산이 한 곳」 · 신설 2026-09-11 R79),
  *   classSkills {classId: [skillId]} — 보스의 한 칸 더의 후보 풀. item·hero 에 넘기는 **같은 표**다 (신설 2026-09-11 R79 · ⚠ 보스마다 정한 고유 스킬이 서기 전의 임시 · R269),
  *   slots [partId] — 장비 부위 어휘. 등급의 입는 부위(`spawn_grade.csv:wear_fixed` · `wear_optional`) 검증에만 쓴다 (신설 2026-09-11 R79 · 개정 2026-10-12 R245),
  *   levelXp [{level, monsterXp}] — `level_xp.csv`. 몬스터 레벨 → 처치 XP 기준값 (신설 2026-09-28 · 1 ~ 만렙을 덮어야 한다),
  *   difficulties [{id, wearChance, skillSlots, monsterDmgMult, monsterHpMult, eliteTraitSlots, gearIlvlFixed}] — (eliteTraitSlots = 정예 특성 칸 수 · 2026-10-24 R344 · ~~rarityMax~~ R342 → 2026-10-24 R350 `gearRarity` 의 0) —`difficulty_tier.csv` 순서대로. 몬스터가 **선택 부위**를 입을 확률 · 첫 단이 기본 · 없으면 확률 1 (신설 2026-10-12 R245) ·
- *     몬스터 **스킬 칸 수**(난이도가 연다 — 노말 1 · 나이트메어 2 · 헬 3 · 없으면 1 · 2026-10-18 R269), 몬스터 **데미지 · HP 배수**(전역 배율 위에 곱한다 · 없으면 1 · 2026-10-21 R301),
+ *     몬스터 **스킬 칸 수**(난이도가 연다 — 노말 1 · 나이트메어 2 · 헬 3 · 없으면 1 · 2026-10-18 R269), 몬스터 **스킬 레벨** monsterSkillLevel(모든 칸 · 노말 1 · 나이트메어 4 · 헬 7 · 없으면 1 · 2026-11-17 R527), 몬스터 **데미지 · HP 배수**(전역 배율 위에 곱한다 · 없으면 1 · 2026-10-21 R301),
  *     몬스터 장비 **아이템 레벨 고정**(gearIlvlFixed 1 = 그 몬스터의 레벨 — 헬 · 없으면 굴림 · 2026-10-28 R366),
  *   gearRarity {grade: {difficultyId: {normal, magic, rare, epic, legendary}}} — `gear_rarity.csv`. 몬스터 장비 희귀도 가중치 **등급 × 단 한 장**
  *     (행마다 합 100 · 에픽 · 레전더리를 안 여는 단은 0 · 2026-10-24 R350 · item_design §1 희귀도). 주면 등급 × 단 칸이 다 있어야 한다 · 없으면 드롭 가중치,
@@ -134,12 +135,18 @@ export function createBattleSystem(data) {
     const HS = data.heroSystem ?? null;            // 몬스터도 computeCombat 을 지난다 (R79)
     const CLASS_SKILLS = data.classSkills ?? {};   // 보스의 한 칸 더의 후보 풀 (R79 · ⚠ 보스마다 정한 고유 스킬 전의 임시 · R269)
     if (!HS) throw new Error('battle: heroSystem 이 없다 — 몬스터도 computeCombat 을 지난다 (INTERFACE §2-6)');
-    // 정예 특성 칸의 풀 (R344 · monster_design §6) — 죄종마다 그 마스터리 T1 · 능력치 · 방어. 비면 그 칸 굴림이 undefined 를 싣는다
+    // 정예 특성 칸의 풀 (R344 · monster_design §6) — 죄종마다 그 마스터리 T2 · 강화(원소 넷 · R528) · 방어. 비면 그 칸 굴림이 undefined 를 싣는다
     const ET = data.eliteTraits ?? {};
     for (const s of data.sins ?? [])
         if (!ET.sin?.[s]?.length) throw new Error(`battle: eliteTraits.sin.${s} 가 비었다 — 그 죄종의 마스터리 T2 (mastery_node.csv · INTERFACE §2-6 · R459)`);
-    for (const k of ['stat', 'def'])
+    for (const k of ['enchant', 'def'])
         if (!ET[k]?.length) throw new Error(`battle: eliteTraits.${k} 가 비었다 (INTERFACE §2-6)`);
+    // 정예 강화 [2026-11-17 · R528 · monster_design §6-1] — 풀은 원소 넷 · 값 키가 다 있어야 한다(없으면 NaN 피해가 조용히 샌다)
+    for (const el of ET.enchant)
+        if (!['fire', 'cold', 'lightning', 'poison'].includes(el)) throw new Error(`battle: eliteTraits.enchant '${el}' — 원소 넷 중 하나 (INTERFACE §2-6 · R528)`);
+    for (const k of ['elite_enchant_add_pct', 'elite_enchant_chain_pct', 'elite_enchant_back_mult', 'elite_enchant_blast_mult',
+        'elite_enchant_cloud_mult', 'elite_enchant_cloud_sec', 'elite_enchant_frost_pct', 'elite_enchant_bolt_sec', 'elite_enchant_bolt_mult'])
+        if (!(B[k] > 0)) throw new Error(`battle: balance.csv 의 ${k} 가 없거나 0 이하다 (정예 강화 · R528)`);
     // 파티 골드 · 드랍 · 매직의 체감 K [2026-10-05] — 없으면 정산이 NaN 으로 조용히 샌다
     for (const k of ['party_gold_find_k', 'party_item_find_k', 'party_magic_find_k'])
         if (!(B[k] > 0)) throw new Error(`battle: balance.csv 의 ${k} 가 없거나 0 이하다`);
@@ -150,6 +157,8 @@ export function createBattleSystem(data) {
     for (const [id, r] of Object.entries(RACES)) {
         for (const k of ['hp', 'regen', 'dmg', 'def']) if (!(typeof r[k] === 'number' && r[k] > 0)) throw new Error(`battle: 종족 ${id} 의 몸 ${k} '${r[k]}' — 양수여야 한다 (monster_type.csv)`);
         if (!(typeof r.res === 'number' && Number.isFinite(r.res))) throw new Error(`battle: 종족 ${id} 의 몸 res '${r.res}' (monster_type.csv)`);
+        // 면역(R522 · R526) — 강타 · 흡혈 · 결빙 · 불리언이거나 없다(없으면 면역 없음)
+        for (const k of ['noCrush', 'noLeech', 'noFreeze']) if (r[k] !== undefined && typeof r[k] !== 'boolean') throw new Error(`battle: 종족 ${id} 의 ${k} '${r[k]}' — 불리언이어야 한다 (monster_type.csv:crush_immune · leech_immune · freeze_immune)`);
     }
     // 부류 버프 [2026-11-16 · R518 · monster_design §3-2 · INTERFACE §2-6 — 2026-10-29 R388 기믹을 11-14 R494 에 걷었다가 나이트메어부터 버프로 되살렸다] —
     //   군단 · 거인 · 수호자 · 이형은 비율(0 이상 1 미만) · 부족은 능력치에 더하는 수(0 이상 정수) · 표가 없는 조립은 비어 버프가 없다
@@ -295,6 +304,13 @@ export function createBattleSystem(data) {
      *   2칸은 영웅의 **배운 칸 자리**(`bookSkill` · source `book`)로 넘긴다 — 칸 순서 · 특정 스킬 +n 이 영웅과 같은 길을 탄다. 스폰 · 출정 창 · 획득처가 이 하나를 본다 · rng 0
      */
     const slotsOf = diff => diffOf(diff)?.skillSlots ?? 1;
+    /**
+     * 몬스터 스킬 레벨 — **난이도 단이 정한다** `[difficulty_tier.csv:monster_skill_level]` [2026-11-17 · 사용자 「나이트메어4 헬7로」 · R527 · skill_design §2-3 · monster_design §5-1].
+     *   그 단의 모든 등급 · 모든 칸(고유 · 2칸 · 보스의 한 칸 더)이 같은 레벨이고 칸의 `up` 에 레벨 − 1 을 더한다 — 낀 장비의 특정 스킬 +n(`skill.activesFor` 가 이미 더했다 · R225)은 그 위다(영웅과 같다).
+     *   레벨 줄이 없는 스킬(몬스터 전용)은 숫자가 안 바뀐다(`skill.resolve`) · 0 이면 키를 안 단다 · 표가 없는 조립은 1 · rng 0
+     */
+    const skillUpOf = diff => (diffOf(diff)?.monsterSkillLevel ?? 1) - 1;
+    const withSkillUp = (a, n) => (n > 0 ? { ...a, up: (a.up ?? 0) + n } : a);
     /** 정예 특성 칸 수 — **난이도가 연다** `[difficulty_tier.csv:elite_trait_slots]` (노말 죄종 · 나이트메어 + 능력치 · 헬 + 방어 · 2026-10-24 · R344 · monster_design §6) · 표가 없는 조립은 1 */
     const eliteSlotsOf = diff => diffOf(diff)?.eliteTraitSlots ?? 1;
     /**
@@ -432,6 +448,9 @@ export function createBattleSystem(data) {
                 throw new Error(`battle: 난이도 ${d.id} 의 wear_chance '${d.wearChance}' — 0 ~ 1 이어야 한다 (difficulty_tier.csv)`);
             if (!(Number.isInteger(d.skillSlots) && d.skillSlots >= 1))
                 throw new Error(`battle: 난이도 ${d.id} 의 skill_slots '${d.skillSlots}' — 1 이상 정수여야 한다 (difficulty_tier.csv · R269)`);
+            // 몬스터 스킬 레벨 (R527) — 영웅 책 업그레이드의 끝(`skillbook_upgrade_max` + 1)을 안 넘는다: 몬스터가 결투장의 영웅이 못 닿는 크기를 내지 않는다
+            if (d.monsterSkillLevel !== undefined && !(Number.isInteger(d.monsterSkillLevel) && d.monsterSkillLevel >= 1 && d.monsterSkillLevel <= B.skillbook_upgrade_max + 1))
+                throw new Error(`battle: 난이도 ${d.id} 의 monster_skill_level '${d.monsterSkillLevel}' — 1 ~ ${B.skillbook_upgrade_max + 1} 정수여야 한다 (difficulty_tier.csv · balance.csv:skillbook_upgrade_max · R527)`);
             for (const [k, col] of [['monsterDmgMult', 'monster_dmg_mult'], ['monsterHpMult', 'monster_hp_mult']])
                 if (d[k] !== undefined && !(typeof d[k] === 'number' && d[k] > 0))
                     throw new Error(`battle: 난이도 ${d.id} 의 ${col} '${d[k]}' — 양수여야 한다 (difficulty_tier.csv · R301)`);
@@ -533,8 +552,9 @@ export function createBattleSystem(data) {
     function monsterSkillSlots(monsterId, grade, difficulty = null) {
         const m = data.monsters[monsterId], g = data.grades[grade];
         if (!m || !g) return null;
-        const p = slotPlan(m, g, difficulty);
-        return { fixed: SK ? SK.activesFor({ innate: p.innate, bookSkill: p.second }) : [], rolled: p.rolled };
+        const p = slotPlan(m, g, difficulty), up = skillUpOf(difficulty);
+        // 칸의 레벨 = 그 단의 몬스터 스킬 레벨(R527) — 장비 몫은 스폰 때 굴려져 여기에 없다
+        return { fixed: SK ? SK.activesFor({ innate: p.innate, bookSkill: p.second }).map(a => withSkillUp(a, up)) : [], rolled: p.rolled };
     }
 
     /**
@@ -782,16 +802,14 @@ export function createBattleSystem(data) {
         // 정예 특성의 효과 [2026-11-15 · R501 · monster_design §6 · INTERFACE §2-6] — 칸마다 `{stat, v}` 를 얹은 사본이 유닛 · `round` 이벤트로 간다 · rng 0
         const fx = traitFx(traits);
         const fxOf = slot => fx?.find(f => f.slot === slot) ?? null;
-        const sinFx = fxOf('sin'), statFx = fxOf('stat'), defFx = fxOf('def');
+        const sinFx = fxOf('sin'), enchFx = fxOf('enchant'), defFx = fxOf('def');
         // 몬스터 레벨 = 스테이지 레벨(인자 `lvl`) + 몬스터별 가산 [2026-09-28 · 사용자 「사탄만 13」 · monster_design §7 · INTERFACE §2-6] · 만렙에서 자른다(2026-10-24) —
         //   아래 전투 능력치 · 적중(`makeUnit` 의 `lvl`) · 처치 XP 가 더한 레벨을 읽는다. 입은 장비 ilvl 의 가운데는 `spawnRound` 가 스테이지 레벨로 굴려 안 타고 위 끝만 이 레벨이다
         const levelAdd = m.level_add;
         if (!Number.isInteger(levelAdd) || levelAdd < 0) throw new Error(`battle: 몬스터 ${monsterId} 의 level_add '${levelAdd}' — 0 이상 정수여야 한다 (monster.csv)`);
         lvl = monsterLevelOf(m, lvl);
         const stats = { str: m.str, agi: m.agi, int: m.int, vit: m.vit, luck: m.luck, ldr: m.ldr, cha: m.cha };
-        // 정예 능력치 칸 — `computeCombat` 앞에 더한다 · 스킬 계수가 읽는 `stats` 도 같은 값이다 (R501)
-        if (statFx) stats[statFx.stat] += statFx.v;
-        // 부족 버프 — 불러내기로 다시 선 무리는 능력치 일곱 모두에 더한다(`retribe` · R518) · 정예 능력치 칸과 같은 자리
+        // 부족 버프 — 불러내기로 다시 선 무리는 능력치 일곱 모두에 더한다(`retribe` · R518)
         if (tribeAdd) for (const k of MONSTER_ATTRS) stats[k] += tribeAdd;
         // 영웅과 같은 경로 — `mastery` 가 없으니 마스터리 몫은 0 이고 `codex`·`party` 도 안 넘긴다
         //   정예 죄종 칸만 예외 — 그 노드를 `elite_trait_sin_rank` 랭크로 쥔 영웅과 같은 길로 합류한다(노드 주인 죄종을 `sin` 으로 넘겨야 `masteryNodesFor` 가 통과시킨다 · R501)
@@ -839,10 +857,13 @@ export function createBattleSystem(data) {
         //   든 무기군 = 입은 무기의 `group` — `monster.csv:weapon_group` 이 `-` 면 판마다 굴린 것이다(`wearGear` · 2026-10-23 · R324) · 맨몸이면 박힌 값
         const fits = fitterOf(gear.find(it => it.slot === 'weapon')?.group ?? m.weapon_group);
         //   낀 장비의 특정 스킬 +n 은 **영웅과 같은 규칙**으로 고유 · 2칸 레벨에 더해진다(보스의 한 칸 더는 안 받는다 · 2026-10-08 · R225)
+        //   그 아래 바탕 = **그 단의 몬스터 스킬 레벨**(`skillUpOf` — 모든 칸 · 보스의 한 칸 더도 · 2026-11-17 · R527)
+        const skillUp = skillUpOf(difficulty);
         const acts = SK ? SK.activesFor({ innate: plan.innate, bookSkill: plan.second }, {
             thirdSkill: plan.rolled ? thirdSkill : null,
             skillPlus: data.itemSystem?.skillPlusOf?.(gear) ?? {},
-        }).map(a => {
+        }).map(x => {
+            const a = withSkillUp(x, skillUp);
             const def = SK.resolve(a);
             if (!def) throw new Error(`battle: 몬스터 ${monsterId} 의 알 수 없는 스킬 ${a?.id ?? a}`);
             return slotOf(a, def, fits, 0);
@@ -862,6 +883,11 @@ export function createBattleSystem(data) {
             key, monsterId, grade, gear, sheet,
             rank: rankOfRole(m.role),        // 진형 — 역할이 자리를 정한다 (battle_design §3-1)
             monsterType: m.monster_type,     // 종족(Normal/Demon/Undead) — 무기 옵션 vs 종족이 읽는다 (R78)
+            // 종족 면역 [2026-11-17 · R522 · monster_design §3-1] — 몸과 같은 조건(일반몹 · 정예)에서 그 종족 줄이 켜면 선다 · 아래 직격의 강타 · 흡혈이 읽는다
+            ...(body?.noCrush ? { noCrush: true } : {}), ...(body?.noLeech ? { noLeech: true } : {}),
+            ...(body?.noFreeze ? { noFreeze: true } : {}),   // 결빙 면역(데몬 · R526) — `skill_runtime.applyStatus` 가 읽는다
+            // 정예 강화 [2026-11-17 · R528 · monster_design §6-1] — 원소 · 갈래(물리 무기 = `phys` · 마법 무기 = `mag` — 평타 여부 `basic_attack` 이 가른다) · 아래 장치들이 읽는다
+            ...(enchFx ? { enchant: { el: enchFx.id, kind: c.basic_attack === false ? 'mag' : 'phys' } } : {}),
             // 부류 — 버프가 읽는다(표에 있는 것만 · 보스 · 6 · 7장은 옛 id 라 null) · **나이트메어부터**(`familyOn`) · 노말은 null (R518 · monster_design §3-2)
             family: FAMILIES[m.monster_base] && familyOn(difficulty) ? m.monster_base : null,
             ...(tribeAdd ? { tribeAdd } : {}),   // 부족 버프로 더한 수 — 칩이 읽는다(`enemyView` 의 `family`)
@@ -887,33 +913,34 @@ export function createBattleSystem(data) {
 
     /**
      * 정예 특성 칸 → 건 효과 [2026-11-15 · R501 · monster_design §6 · INTERFACE §2-6] — `[{slot, id}]` 마다 `{stat, v}` 를 얹은 **사본**(죄종 칸은 `sin` = 노드 주인도) · 없으면 null · rng 0.
-     *   죄종 = 그 노드의 `stat` · 노드 값 × `elite_trait_sin_rank` · 능력치 = 그 능력치 + `elite_trait_stat_add` · 방어 = 물리 `defense` × `elite_trait_def_mult` / 원소 `res_<원소>` = `res_cap_absolute`.
-     *   모르는 노드는 throw — 풀은 생성 때 검사했다(`eliteTraits`)
+     *   죄종 = 그 노드의 `stat` · 노드 값 × `elite_trait_sin_rank` · 강화 = `stat: 'enchant'` · `v` = 물리 갈래의 몫 비율(`elite_enchant_add_pct` — 표시용 · 장치 값은 유닛 `enchant` 가 키를 읽는다 · R528) ·
+     *   방어 = 물리 `defense` × `elite_trait_def_mult` / 원소 `res_<원소>` = `res_cap_absolute`.
+     *   모르는 노드는 throw — 풀은 생성 때 검사했다(`eliteTraits`) · 옛 능력치 칸(`stat` — R528 전 리포트)은 효과 없이 건너뛴다
      */
     function traitFx(traits) {
         if (!traits?.length) return null;
-        return traits.map(t => {
+        return traits.filter(t => t.slot !== 'stat').map(t => {
             if (t.slot === 'sin') {
                 const n = HS.masteryById?.[t.id];
                 if (!n) throw new Error(`battle: 정예 죄종 칸 '${t.id}' — mastery_node.csv 에 없다 (INTERFACE §2-6 · R501)`);
                 return { ...t, sin: n.ownerId, stat: n.stat, v: n.value * Math.min(B.elite_trait_sin_rank, n.maxRank) };
             }
-            if (t.slot === 'stat') return { ...t, stat: t.id, v: B.elite_trait_stat_add };
+            if (t.slot === 'enchant') return { ...t, stat: 'enchant', v: B.elite_enchant_add_pct };
             if (t.id === 'physical') return { ...t, stat: 'defense', v: B.elite_trait_def_mult };
             return { ...t, stat: `res_${t.id}`, v: B.res_cap_absolute };
         });
     }
 
     /**
-     * 정예 특성 칸 [2026-10-24 · R344 · monster_design §6 · INTERFACE §5-2] — 죄종 칸(그 죄종 마스터리 T2 — 2026-11-13 R459) → 능력치 칸 → 방어 칸을 **각 1회**,
+     * 정예 특성 칸 [2026-10-24 · R344 · monster_design §6 · INTERFACE §5-2] — 죄종 칸(그 죄종 마스터리 T2 — 2026-11-13 R459) → 강화 칸(원소 넷 · 2026-11-17 R528 — ~~능력치 칸~~) → 방어 칸을 **각 1회**,
      *   **단과 무관하게 언제나 3회** 굴리고 그 단이 연 칸(`eliteSlotsOf` — 앞에서부터)만 싣는다. 소비 수가 단에 의존하면
-     *   같은 시드가 단마다 다른 편성을 낸다(선택 부위 「입나」와 같은 이유). 효과는 아직 없다(값 미정 — 굴림 · 표시만)
-     * @returns [{slot: 'sin'|'stat'|'def', id}]
+     *   같은 시드가 단마다 다른 편성을 낸다(선택 부위 「입나」와 같은 이유). 효과는 `traitFx` · 강화 장치(R528)
+     * @returns [{slot: 'sin'|'enchant'|'def', id}]
      */
-    const ELITE_SLOTS = ['sin', 'stat', 'def'];
+    const ELITE_SLOTS = ['sin', 'enchant', 'def'];
     const rollEliteTraits = (rng, sin, difficulty) => {
         const at = list => list[Math.floor(rng() * list.length)];
-        const all = [{ slot: 'sin', id: at(ET.sin[sin]) }, { slot: 'stat', id: at(ET.stat) }, { slot: 'def', id: at(ET.def) }];
+        const all = [{ slot: 'sin', id: at(ET.sin[sin]) }, { slot: 'enchant', id: at(ET.enchant) }, { slot: 'def', id: at(ET.def) }];
         return all.slice(0, Math.min(ELITE_SLOTS.length, eliteSlotsOf(difficulty)));
     };
 
@@ -1768,6 +1795,8 @@ export function createBattleSystem(data) {
             hooks.emit('down', u, { t });
             // 사건 `on_death` — 그 유닛의 사건 스킬(자폭)이 **죽음이 다 정산된 뒤에** 나간다. 자폭은 rng 0 이라 위 순서를 안 건드린다 (§9-6 · 2026-09-24 R151 — ~~`blast(u)`~~)
             rt.fire(u, 'on_death', t);
+            // 정예 강화(마법 갈래 · R528) — 사건 스킬(자폭) **뒤** · 오오라 끄기 앞 · 폭발 · 독구름 · 서리 오라 걷기 · rng 0
+            if (u.enchant && u.side === 'enemy' && !u.summon) enchDeath(u);
             // 오오라는 그 뒤에 꺼진다 — 자폭이 제 오오라를 입은 채 나가던 것은 그대로다 (R287)
             dropAuras(u);
         };
@@ -2182,6 +2211,90 @@ export function createBattleSystem(data) {
                 }
                 if (u.hp <= 0) break;
             }
+        }
+
+        /* ── 정예 강화 [2026-11-17 · R528 · monster_design §6-1 · INTERFACE §2-6 「정예 강화」] ──
+           유닛 `enchant {el, kind}` 를 든 적만 돈다(나이트메어부터의 정예 · 결투장 · 소환 · 영웅은 없다). 갈래는 든 무기 — `phys` 물리 무기 · `mag` 마법 무기(지원형 포함).
+             물리: 화염 · 독 = 물리 직격마다 그 원소 몫을 더한다(`strikeOnce` 의 `conv` · `add`) · 냉기 = 이 정예를 때린 유닛 결빙 + 냉기 피해 · 전기 = 맞은 유닛 뒤 자리의 다른 유닛에게 전기 피해(`enchStruck`)
+             마법: 화염 = 쓰러질 때 상대 편 전원 화염 피해 · 독 = 쓰러지면 상대 편 전원 중독(`enchDeath`) · 냉기 = 살아 있는 동안 상대 편 전원 행동 속도 −(`frostSync`) ·
+                   전기 = 간격마다 무작위 상대 하나 번개(`enchTick` — **rng 1회** · INTERFACE §5-2)
+           세기 바탕 = 그 정예의 공격력 중앙값 × 능력치 계수(`mainMult` — 물리 무기 = 힘 · 마법 무기 = 지능) — 오오라 피해의 바탕에 능력치 계수를 더했다 · 키는 `elite_enchant_*` */
+        const enchPower = u => ((u.atkMin ?? 0) + (u.atkMax ?? 0)) / 2 * (u.mainMult ?? 1);
+        /** 강화가 낸 창 · 이벤트의 `s` — 재생기가 강화 칩의 그림 · 이름으로 읽는다 */
+        const enchSrc = el => `elite:${el}`;
+        /** 원소 장치 피해 하나 — 그 원소 저항만 거쳐 HP 에서 바로(오오라 피해와 같은 비직격 · 배리어 · 방어 · 피해 감소 · 적중 · 치명 · 흡혈 · 반사 · 훅 없음 · `dot`(`k: adv`)) · rng 0 */
+        function enchLand(a, d, el, base) {
+            if (!(base > 0) || d.hp <= 0) return;
+            const resist = F.appliedResist(d.res?.[el] ?? 0, d.resMaxBonus ?? 0, d.resMaxEl?.[el] ?? 0);
+            const dmg = F.indirect(base * (1 - resist));
+            if (dmg > 0) advLand(a, d, dmg, enchSrc(el), el, false);
+        }
+        /** 튀는 번개가 갈 자리 — 맞은 유닛 편의 산 유닛(소환 제외 · 맞은 유닛 빼고) 중 **뒤 열** 첫째 · 없으면 첫째 · 없으면 null · rng 0 */
+        const chainNext = d => {
+            const side = alive(rt.alliesOf(d)).filter(x => x !== d && !x.summon);
+            return side.find(x => (x.rank ?? 0) > (d.rank ?? 0)) ?? side[0] ?? null;
+        };
+        /** 직격이 맞은 뒤(물리 갈래) — 냉기: 맞은 쪽이 냉기 정예면 때린 쪽(소환 제외)에게 기본 결빙 + 냉기 피해 · 전기: 때린 쪽이 전기 정예고 물리 직격이면 뒤 자리 하나에게 전기 피해 · rng 0 */
+        function enchStruck(u, target, hitType, mult) {
+            const tc = target.enchant;
+            if (tc?.kind === 'phys' && tc.el === 'cold' && target.hp > 0 && u.hp > 0 && !u.summon) {
+                if (BASE_FREEZE) rt.applyStatus(target, u, { ...BASE_FREEZE, id: enchSrc('cold') }, t);
+                enchLand(target, u, 'cold', enchPower(target) * B.elite_enchant_back_mult);
+            }
+            const uc = u.enchant;
+            if (uc?.kind === 'phys' && uc.el === 'lightning' && hitType === 'physical' && u.hp > 0) {
+                const next = chainNext(target);
+                if (next) enchLand(u, next, 'lightning', enchPower(u) * (mult ?? 1) * B.elite_enchant_chain_pct);
+            }
+        }
+        /** 쓰러질 때(마법 갈래 · `downed` 의 사건 뒤) — 화염 = 상대 편 전원(소환 제외) 화염 피해 · 독 = 같은 대상에게 중독(독 저항 · 중독 시간 감소 · 매력이 막는다) ·
+         *  냉기 = 서리 오라를 다시 맞춘다 · 한 마리당 한 번(되살아난 무리의 두 번째 쓰러짐은 안 터진다 — 보상 규칙과 같다) · rng 0 */
+        function enchDeath(u) {
+            const en = u.enchant;
+            if (en.kind !== 'mag') return;
+            if (en.el === 'cold') { frostSync(); return; }
+            if ((en.el !== 'fire' && en.el !== 'poison') || u.enchantSpent) return;
+            u.enchantSpent = true;
+            const foes = alive(rt.foesOf(u)).filter(x => !x.summon);
+            if (en.el === 'fire') {
+                const base = enchPower(u) * B.elite_enchant_blast_mult;
+                for (const d of foes) enchLand(u, d, 'fire', base);
+                return;
+            }
+            for (const d of foes) if (d.hp > 0) rt.applyStatus(u, d, { id: enchSrc('poison'), status: 'elite_cloud', stat: 'poison', value: B.elite_enchant_cloud_mult,
+                dps: enchPower(u) * B.elite_enchant_cloud_mult, dur: B.elite_enchant_cloud_sec, element: 'poison', roundEnd: 'keep', ailment: 'poison' }, t);
+        }
+        /** 서리 오라(마법 냉기) — 산 마법 냉기 정예가 하나라도 서 있으면 파티(소환 제외) 전원에게 행동 속도 창 하나(여럿이어도 하나 · 시간 없음 — 시간 감소 · 매력이 안 듣는다 ·
+         *  막는 길은 그 정예를 잡는 것) · 없으면 걷는다 · 바뀔 때만 `buff` · `buffEnd` · 틱마다 · 쓰러질 때 부른다 · rng 0 */
+        const FROST = 'elite:frost';
+        function frostSync() {
+            const src = units.enemies.find(e => e.hp > 0 && e.enchant?.kind === 'mag' && e.enchant.el === 'cold') ?? null;
+            for (const p of party) {
+                if (p.summon) continue;
+                const had = !!p.buffs[FROST];
+                if (src && !had && p.hp > 0) {
+                    const v = -B.elite_enchant_frost_pct;
+                    p.buffs[FROST] = { stat: 'period_pct', v, until: Infinity, element: null, by: src.key, s: FROST, foe: true, quiet: true };
+                    refreshDerived(p);
+                    timeline.push({ t: r1(t), e: 'buff', u: p.key, s: FROST, stat: 'period_pct', v, until: null });
+                } else if (!src && had) {
+                    delete p.buffs[FROST];
+                    refreshDerived(p);
+                    timeline.push({ t: r1(t), e: 'buffEnd', u: p.key, s: FROST });
+                }
+            }
+        }
+        /** 주기적 번개(마법 전기) — 간격([balance.csv:elite_enchant_bolt_sec])이 찰 때마다 산 상대(소환 제외) 중 하나를 **rng 1회**로 골라 전기 피해 · 등장한 때부터 잰다 */
+        function enchTick(u) {
+            const en = u.enchant;
+            if (en.kind !== 'mag' || en.el !== 'lightning') return;
+            u.boltAcc = (u.boltAcc ?? 0) + TICK;
+            if (u.boltAcc + EPS < B.elite_enchant_bolt_sec) return;
+            u.boltAcc -= B.elite_enchant_bolt_sec;
+            const foes = alive(rt.foesOf(u)).filter(x => !x.summon);
+            if (!foes.length) return;
+            const d = foes[Math.floor(rng() * foes.length)];
+            enchLand(u, d, 'lightning', enchPower(u) * B.elite_enchant_bolt_mult);
         }
 
         /**
@@ -3702,7 +3815,11 @@ export function createBattleSystem(data) {
             if (sk && u.adv?.skill_fixed_share) u.fixedShare = Math.min(1, (u.fixedShare ?? 0) + u.adv.skill_fixed_share);   // 꿰뚫는 비전(마법사 T4 ① · 스킬 타격만 · R437)
             // 물리 → 원소 전환(원소 전환 오오라 · 크루세이더 (1) · `phys_conv` 창 · 2026-11-14 R471) — 물리 타격만 · 없으면 null 이라 종전 그대로(formula.strike `conv`)
             const cv = hitType === 'physical' ? convOf(u, target) : null;
-            if (cv) u.conv = cv;
+            // 정예 강화(물리 갈래 · 화염 · 독 — 2026-11-17 R528 · monster_design §6-1) — 상대 편을 친 **물리 직격마다** 그 원소 몫을 **더한다**(`add` — 물리 몫은 그대로 ·
+            //   그 원소 저항이 깎는다 · formula.strike `conv`) · 전환 몫(`cv`)과 함께 실린다 · `advAfterHit` 에는 전환 몫만 넘긴다 · rng 0
+            const ea = hitType === 'physical' && u.side !== target.side && u.enchant?.kind === 'phys' && (u.enchant.el === 'fire' || u.enchant.el === 'poison')
+                ? { el: u.enchant.el, share: B.elite_enchant_add_pct, add: true } : null;
+            if (cv || ea) u.conv = ea ? [...(cv ?? []), ea] : cv;
             const { hit, dmg: dmg0, crit, proc, convProc } = F.strike(rng, u, target);
             u.fixedShare = fs0;
             u.conv = conv0;
@@ -3744,8 +3861,9 @@ export function createBattleSystem(data) {
             //   마스터리 조건부 강타(폭식 T2-2 · 2026-10-05)는 같은 비율에 더한다
             //   **마법 무기를 든 유닛의 직격은 강타를 안 받는다** [2026-10-04 사용자 · battle_design §9-6 · R207] — 출처 무관 · 영웅 · 몬스터 같다 · 치명은 받는다.
             //   마법 무기의 표지는 `noBasic`(평타가 없다 — R198)이다 · 흡혈은 무기가 아니라 피해 종류가 가른다(아래 · 2026-11-16 R517)
+            //   **강타가 안 통하는 종족**(`target.noCrush` — 언데드 · R522)을 맞힐 때도 0 이다
             const spell = u.noBasic;
-            const crush = spell ? 0 : (fx?.crush ?? 0) + (ma?.sum.crushing_blow_pct ?? 0);
+            const crush = spell || target.noCrush ? 0 : (fx?.crush ?? 0) + (ma?.sum.crushing_blow_pct ?? 0);
             // 파리 떼(스웜 · 2026-10-29 R380)는 강타가 **첫 산 파리의 HP** 를 본다 — 본체 HP 는 창 동안 몸이 아니다
             const sw = target.swarm;
             const cb = crush > 0 ? Math.round((sw ? sw.hp.find(h => h > 0) ?? 0 : target.hp) * crush) : 0;
@@ -3793,7 +3911,8 @@ export function createBattleSystem(data) {
             //   호령 변형 2(`lifesteal_pct` 창 · R471)도 같은 자리 — 덤 「넘친 몫 → 보호막」(`lsShield`)은 회복이 최대 HP 를 넘긴 몫을 배리어로
             //   **피해 종류가 가른다** [2026-11-16 사용자 · battle_design §9-6 · R517] — 물리 = 체력 회복 · 원소 = 보호막 · 고정(사제 직격) = 없다 · 무기 종류 무관
             //   (옛 「마법 무기는 흡혈을 안 받는다」(R207)의 흡혈 몫을 대체 — 강타는 위에서 그대로 막는다)
-            const ls = hitType === 'physical' || ELEMENTS.includes(hitType) ? (u.ls ?? 0) + (ma?.sum.life_steal ?? 0) + (cxA?.life_steal ?? 0) + (am?.ls ?? 0) : 0;
+            //   **흡혈이 안 통하는 종족**(`target.noLeech` — 언데드 · R522)을 맞힐 때는 출처 무관 0 — 체력 · 보호막 · 넘친 몫 모두 없다
+            const ls = !target.noLeech && (hitType === 'physical' || ELEMENTS.includes(hitType)) ? (u.ls ?? 0) + (ma?.sum.life_steal ?? 0) + (cxA?.life_steal ?? 0) + (am?.ls ?? 0) : 0;
             if (ls > 0 && u.hp > 0) {
                 if (hitType === 'physical') {
                     const got = F.leech(dmg, ls, u.recv);
@@ -3899,6 +4018,8 @@ export function createBattleSystem(data) {
                 noteTaken(u, src, back - bov);
                 if (u.hp <= 0) { if (cS && u.side !== 'party' && !u.rewarded) cS.kills += 1; killHeal(src, u); downed(u); }
             }
+            // 정예 강화(물리 갈래 · 냉기 · 전기 — 2026-11-17 R528 · monster_design §6-1) — 반사 · 메이든 **뒤** · 맞은 뒤 장치 앞 · rng 0
+            if (u.side !== target.side && (u.enchant || target.enchant)) enchStruck(u, target, hitType, mult);
             // 전직 장치의 맞은 뒤 [2026-11-14 · R471] — 의지 겹 · 신성한 심판 · 속죄 회복 · 사냥 표식 번짐 · 몽크 반격 · 지원 사격 반격 사격(반격 중엔 안 한다) · 장치가 없으면 아무 일도 없다
             if (u.side !== target.side) advStruck(u, target, s, sk, dmg, real);
             if (target.hp <= 0) {
@@ -4129,6 +4250,9 @@ export function createBattleSystem(data) {
                 for (const u of [...party, ...units.enemies]) if (u.hp > 0) poisonTick(u);
                 // 오오라 피해 틱 — 중독 틱 **뒤** · 재생 **앞** (홀리 파이어 · 2026-10-16 · R249 · INTERFACE §5-2). 창이 없으면 누산만 비운다
                 for (const u of [...party, ...units.enemies]) if (u.hp > 0) pulseTick(u);
+                // 정예 강화(마법 갈래 · R528) — 오오라 피해 **뒤** · 전직 트리 틱 앞: 서리 오라를 맞추고(rng 0) · 주기적 번개(간격마다 **rng 1회** — 적 배열 순 · INTERFACE §5-2)
+                frostSync();
+                for (const u of units.enemies) if (u.hp > 0 && u.enchant) enchTick(u);
                 // 전직 트리 틱 — 장치 지속 피해 · 자동 시전 · 창 동안의 주기 타격(히드라 · 블리자드 · 썬더 스트라이크) — 오오라 피해 **뒤** · 재생 **앞** (2026-11-13 R471)
                 for (const u of [...party, ...units.enemies]) if (u.hp > 0) advTick(u);
                 // HP 재생 — 행동 순회 **앞**. 초당 값이라 틱마다 누산하고 1 이상 쌓였을 때만 회복한다

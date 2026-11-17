@@ -90,7 +90,16 @@ const scoreOf = (c, slot) => slot === 'weapon' ? (atkOf(c).min + atkOf(c).max) /
 
 function botEquip(SYS, G) {
     let n = 0;
-    for (const uid of G.bags.flat()) if (G.items[uid]?.box) SYS.game.openBox(G, uid);   // 첫 클리어 상자 — 열어야 무기다 (R328)
+    // 메인미션 — 채운 줄의 보상을 받는다(상자는 창고로 온다 · 첫 클리어 상자는 없다 · R524) → 창고의 상자를 1번 부대 인벤토리로 옮겨
+    //   파티 영웅을 돌아가며 하나씩 깐다(그 영웅에 맞는 장비 · 그 영웅 레벨 — openBox 는 영웅을 받는다 · R333 · DEV_PLAN §4 #87)
+    SYS.game.mainMissionSync(G);
+    for (const m of SYS.game.mainMissionState(G).claimable) SYS.game.mainMissionClaim(G, m.id);
+    for (const uid of G.stash.slice()) if (G.items[uid]?.box) SYS.game.moveToBag(G, uid, 1);
+    const party = partyHeroes(SYS, G).filter(Boolean);
+    for (let k = 0; party.length && k < 200; k++) {
+        const uid = G.bags.flat().find(u => G.items[u]?.box);
+        if (!uid || !SYS.game.openBox(G, uid, party[k % party.length].uid).ok) break;
+    }
     for (const uid of G.bags.flat()) {                 // 부대마다 인벤토리 (v40) — 봇은 전부 본다
         const it = G.items[uid];
         if (!it || SYS.game.holderOf(G, uid) !== 'bag') continue;

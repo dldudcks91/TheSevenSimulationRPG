@@ -1,6 +1,6 @@
 # 간체 중국어(zh-CN) 현지화 — 방향
 
-> **상태: D1 ~ D10 확정(2026-11-16 사용자 「ㄱㄱ진행해줘」 — 모두 권장안) · 진행 중(DEV_PLAN R520).** 배관 · 문서 · 글꼴 · 단정은 들어갔고 번역은 저장소에 아직 안 붙었다 — 이어서 할 일은 [output/2026-11-16_zh_localization/README.md](../../output/2026-11-16_zh_localization/README.md).
+> **상태: D1 ~ D10 확정(2026-11-16 사용자 「ㄱㄱ진행해줘」 — 모두 권장안) · 1차 완료(DEV_PLAN R520).** 배관 · 글꼴 · 번역이 다 붙었다 — 빠진 zh 0 · 역번역 검토 표본 166(검토 보고 [REVIEW.md](../../output/2026-11-16_zh_localization/REVIEW.md)). 남은 것은 출시 전 원어민 검수(§6)와, 새 문구가 생길 때 빠진 목록(`python scripts/zh_missing.py --list`)을 몰아서 옮기는 일(D5). 작업 도구 · 덩어리는 [output/2026-11-16_zh_localization/README.md](../../output/2026-11-16_zh_localization/README.md).
 > 근거 노트(조사 2026-11-16) — [비교작 · 중국 유저 반응 · Steam](../reference/zh_localization/comparable_games.md) · [ARPG 용어집](../reference/zh_localization/arpg_glossary.md) · [웹 기술(글꼴 · 줄바꿈 · 숫자)](../reference/zh_localization/web_tech.md) · [코드 속 문구 경로(조사 시점 줄 번호)](../reference/zh_localization/codebase_text_survey_2026-11-16.md)
 
 목차 — 0 요약 · 1 다른 게임은 어떻게 넣었나 · 2 번역 원칙 · 3 용어 첫판 · 4 기술 방향 · 5 범위와 분량 · 6 진행 순서와 검토 · 7 결정 목록
@@ -142,4 +142,4 @@
 
 ---
 
-*마지막 업데이트: 2026-11-16*
+*마지막 업데이트: 2026-11-17*

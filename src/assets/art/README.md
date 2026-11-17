@@ -458,6 +458,11 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 - 설치본의 원본 = `installed/08_dagger.png`(Codex 그대로) · `installed/08_dagger_trim.png`(알파 경계로 자른 것 — 이것을 높이 240 으로 줄여 설치). 다른 시안은 판마다 지우고 새로 그린다 — `out/` · `trim/` · `compare.png` 은 지금 판만 든다
 - 작은 칸에서 거른 것 — 검은 장식은 돌 바탕에 묻힌다 · 칸 높이를 먹는 장식은 글자를 작게 만든다 · 가는 금 · 덩굴은 얼룩이 된다. 다시 뽑을 때 공통 프롬프트에 그대로 둔다
 
+`first_party.webp` — 시작 파티 고르기의 제목 그림 「FIRST PARTY」(SCREEN_DESIGN §3 · ADR-1241). 워드마크와 같은 결 · 1010×240 투명 WebP q88 · 그림 경계로 자른 것(화면이 높이만 정한다 — `style.css` `.ng-title img`).
+
+- **원본** — `source/codex_20261117_first_party/` · 같은 Codex 발주. `run_codex.py` 의 앵커 = 워드마크 원본(`codex_20261027/installed/08_dagger_trim.png`) + 시작 화면 캡처 `ref_ui_start.png` → `out/`(시안 셋)
+- 설치본의 원본 = `installed/fp_b1.png`(Codex 그대로) · `installed/fp_b1_trim.png`(알파 8 이하를 지우고 경계로 자른 것 — 이것을 높이 240 으로 줄여 설치)
+
 ## skins/ — 겉모양 비교의 질감 [신설 2026-10-26 · 임시]
 
 `d2min_*.webp` 다섯 장 — 설정 탭 `Skin` 의 `D2 Min`(SCREEN_DESIGN §10-5 · ADR-0791)이 쓰는 부품. **컨셉 17번 그림에서 잘라 낸다** — 원본 `source/concept_17_minimal.png`(캐릭터 탭 캡처를 Codex 가 「어둡고 깔끔한 디아블로 2 · 최소화」로 다시 그린 페인트오버 · 지시문 `source/concept_17_minimal_prompt.txt`) · `python src/assets/art/skins/source/cut_d2min_parts.py`

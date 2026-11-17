@@ -694,23 +694,25 @@ const demoEliteTraits = e => {
     if (!TRAIT_DEMO || e.grade !== 'elite' || !M.SINS[e.sin]) return null;
     if (TRAIT_Q === 'max') return [
         longestName(Object.keys(M.ELITE_TRAIT_SIN).map(sinChip)),
-        longestName(M.ELITE_TRAIT_STAT.map(s => ({ name: s, color: null }))),
+        longestName(M.ELITE_TRAIT_ENCHANT.map(enchantChip)),
         longestName(M.ELITE_TRAIT_DEF.map(d => ({ name: d, color: `var(--dt-${d.dt})` }))),
     ];
     const h = keyHash(`${e.key}:${e.monsterId}`);
     const out = [sinChip(e.sin)];
-    if (TRAIT_DEMO >= 2) out.push({ name: M.ELITE_TRAIT_STAT[(h >>> 4) % M.ELITE_TRAIT_STAT.length], color: null });
+    if (TRAIT_DEMO >= 2) out.push(enchantChip(M.ELITE_TRAIT_ENCHANT[(h >>> 4) % M.ELITE_TRAIT_ENCHANT.length]));
     if (TRAIT_DEMO >= 3) { const d = M.ELITE_TRAIT_DEF[(h >>> 8) % M.ELITE_TRAIT_DEF.length]; out.push({ name: d, color: `var(--dt-${d.dt})` }); }
     return out;
 };
 /* 죄종 칸 칩 = **그 죄종의 형용사**(「분노하는」) · 죄종 색 — 붙은 마스터리 칸과 상관없이 같은 글자 [2026-11-15 사용자 지시 · ADR-1191] */
 const sinChip = sin => ({ name: M.ELITE_TRAIT_SIN[sin], color: M.SINS[sin]?.color ?? null });
+/* 강화 칸 칩 = 강화 이름(「화염 강화」) · 피해 종류 색 [2026-11-17 · R528 · ADR-1246 — 옛 능력치 칸 대체] */
+const enchantChip = x => ({ name: x, color: `var(--dt-${x.el})` });
 const eliteTraitView = traits => (traits ?? []).map(({ slot, id } = {}) => {
     if (slot === 'sin') {
         const n = (D.masteryNodes ?? []).find(x => x.node_id === id);
         return n && M.ELITE_TRAIT_SIN[n.owner_id] ? sinChip(n.owner_id) : null;
     }
-    if (slot === 'stat') { const s = M.ELITE_TRAIT_STAT.find(x => x.attr === id); return s ? { name: s, color: null } : null; }
+    if (slot === 'enchant') { const x = M.ELITE_TRAIT_ENCHANT.find(e => e.el === id); return x ? enchantChip(x) : null; }
     if (slot === 'def') { const d = M.ELITE_TRAIT_DEF.find(x => x.dt === id); return d ? { name: d, color: `var(--dt-${d.dt})` } : null; }
     return null;
 }).filter(Boolean);
@@ -1355,19 +1357,27 @@ function refreshAilmentLook(u, live) {
 
 /* ── 정예 특성 칩 — 창 뱃지 줄 맨 앞 · 칸마다 하나 · 상시 [2026-11-15 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-1194 · R501] ──
    효과 값은 로직이 실어 온 `traits[].stat` · `v` 다(`round` 적 항목) — 재생기는 문장으로 바꿀 뿐이다.
-   그림 = 죄종 칸은 붙은 마스터리 칸 그림(죄종 색) · 능력치 · 방어 칸은 `icons/battle_buffs/elite_<id>`(능력치 = 본문 색 · 방어 = 피해 종류 색) — 회색 · 흰 실루엣을 마스크로 칠한다 */
+   그림 = 죄종 칸은 붙은 마스터리 칸 그림(죄종 색) · 강화 · 방어 칸은 `icons/battle_buffs/elite_<원소>`(피해 종류 색 — 강화 칩은 테두리도 그 색 · ADR-1246) — 회색 · 흰 실루엣을 마스크로 칠한다
+   ⚠ 강화 칸은 제 그림이 아직 없어 방어 칸과 같은 원소 그림을 쓴다(그림이 서면 `elite_enchant_<원소>` 로 바꾼다) */
 const traitArt = f => f.slot === 'sin' ? `./assets/art/icons/mastery/sin/${f.id}${M.ICON_EXT}` : `./assets/art/icons/battle_buffs/elite_${f.id}${M.ICON_EXT}`;
-const traitColor = f => f.slot === 'sin' ? (M.SINS[f.sin]?.color ?? 'var(--text-secondary)') : f.slot === 'def' ? `var(--dt-${f.id})` : 'var(--text-secondary)';
+const traitColor = f => f.slot === 'sin' ? (M.SINS[f.sin]?.color ?? 'var(--text-secondary)') : f.slot === 'def' || f.slot === 'enchant' ? `var(--dt-${f.id})` : 'var(--text-secondary)';
 const traitIconHtml = f => `<i class="sk-icon-mask trait-ico" aria-hidden="true" style="background:${traitColor(f)};-webkit-mask-image:url('${traitArt(f)}');mask-image:url('${traitArt(f)}')"></i>`;
 /** 칩 이름 — 띠 칩과 같은 글자(죄종 = 형용사 · ADR-1191) */
 const traitName = f => f.slot === 'sin' ? M.ELITE_TRAIT_SIN[f.sin]
-    : f.slot === 'stat' ? M.ELITE_TRAIT_STAT.find(x => x.attr === f.id) : M.ELITE_TRAIT_DEF.find(x => x.dt === f.id);
-/** 건 효과 한 줄 — 죄종 칸은 마스터리 툴팁과 같은 문장(`sk.masteryEffect.*`) · 몬스터에게 뜻이 바뀌는 칸(탐욕 셋 · 능력치 · 방어)만 `bt.trait.*` */
-function traitEffectText(f) {
+    : f.slot === 'enchant' ? M.ELITE_TRAIT_ENCHANT.find(x => x.el === f.id) : M.ELITE_TRAIT_DEF.find(x => x.dt === f.id);
+/** 강화가 낸 창 · 피해(`elite:<원소>` · `elite:frost`)의 그림 — 그 강화 칩 그림 · 강화가 아니면 null (R528) */
+const enchantSrcIcon = s => { const x = M.enchantOfSrc(s); return x ? traitIconHtml({ slot: 'enchant', id: x.el }) : null; };
+/** 건 효과 한 줄 — 죄종 칸은 마스터리 툴팁과 같은 문장(`sk.masteryEffect.*`) · 몬스터에게 뜻이 바뀌는 칸(탐욕 셋 · 강화 · 방어)만 `bt.trait.*` ·
+ *  강화는 **그 정예 갈래 한 줄만**(물리 무기 = `phys` · 마법 무기 = `mag` — 평타가 없으면 마법 · CLAUDE.md 규칙 7 · ADR-1246) · 값은 로드한 `balance.csv` 키 */
+function traitEffectText(f, u = null) {
     const hl = s => `<span class="tip-hl">${s}</span>`;
-    if (f.slot === 'stat') {
-        const a = (D.heroAttributes ?? []).find(x => x.id === f.stat);
-        return t('bt.trait.stat', { stat: a ? L(a) : f.stat, v: hl(f.v) });
+    if (f.slot === 'enchant') {
+        const kind = u?.noBasic ? 'mag' : 'phys';
+        const Bv = D.balance ?? {};
+        const v = { fire: { phys: Bv.elite_enchant_add_pct, mag: null }, poison: { phys: Bv.elite_enchant_add_pct, mag: Bv.elite_enchant_cloud_sec },
+            cold: { phys: null, mag: Bv.elite_enchant_frost_pct }, lightning: { phys: Bv.elite_enchant_chain_pct, mag: Bv.elite_enchant_bolt_sec } }[f.id]?.[kind];
+        const shown = v == null ? '' : kind === 'mag' && (f.id === 'poison' || f.id === 'lightning') ? hl(v) : hl(M.pctText(v));
+        return t(`bt.trait.enchant.${f.id}.${kind}`, { v: shown });
     }
     if (f.slot === 'def') return f.stat === 'defense' ? t('bt.trait.defMult', { v: hl(f.v) })
         : t('bt.trait.resCap', { e: t(`st.atkType.${f.id}`), v: hl(M.pctText(f.v)) });
@@ -1430,11 +1440,14 @@ function refreshBuffs(u, now) {
     const open = document.querySelector('#tooltip .effect-tip');
     if (open?.dataset.effectOwner === String(u.key)) hideTip();
     // 상태이상 칩(`b.k` — 열쇠가 상태이상 이름)은 **늘 해롭다** · 그림은 적용 중인 것을 건 스킬(`b.s`) · 이름은 상태이상 (R178 · ADR-0405)
-    row.innerHTML = traits.map((f, i) => `<span class="buff-chip good trait" data-trait="${i}">${traitIconHtml(f)}</span>`).join('')
+    row.innerHTML = traits.map((f, i) => `<span class="buff-chip good trait${f.slot === 'enchant' ? ' enchant' : ''}" data-trait="${i}"${f.slot === 'enchant' ? ` style="--chip-dt:var(--dt-${f.id})"` : ''}>${traitIconHtml(f)}</span>`).join('')
         + (fam ? `<span class="buff-chip good${fam.id === 'Tribe' ? '' : ' trait'}" data-fam="1">${famIconHtml(fam.id)}</span>` : '')
         + live.map(([id, b]) => {
             // 영웅의 이형 저항 감소 창 — 부류 그림 · 늘 해롭다 (ADR-1218)
             if (id === 'fam:aberration') return `<span class="buff-chip bad trait" data-effect="${id}">${famIconHtml('Aberration')}</span>`;
+            // 정예 강화가 건 창(서리 오라 · 피격 결빙 · 독구름 — `s: elite:*` · R528) — 그 강화 칩 그림 · 늘 해롭다 (ADR-1246)
+            const ench = enchantSrcIcon(b?.s);
+            if (ench) return `<span class="buff-chip bad trait" data-effect="${id}">${ench}</span>`;
             const info = skillInfo(b?.s ?? id);
             return `<span class="buff-chip ${b?.k || (b?.v ?? 0) < 0 ? 'bad' : 'good'}" data-effect="${id}">${skillImg(info)}</span>`;
         }).join('') + (stag ? '<span class="buff-chip stagger" data-stagger="1"></span>' : '');
@@ -1443,7 +1456,7 @@ function refreshBuffs(u, now) {
         const f = traits[Number(chip.dataset.trait)];
         const name = L(traitName(f) ?? { ko: f.id, en: f.id });
         chip.setAttribute('aria-label', name);
-        bindTipNode(chip, () => effectTipCard({ owner: u.key, name, until: null, iconHtml: traitIconHtml(f), summaryHtml: traitEffectText(f) }));
+        bindTipNode(chip, () => effectTipCard({ owner: u.key, name, until: null, iconHtml: traitIconHtml(f), summaryHtml: traitEffectText(f, u) }));
     });
     const famChip = row.querySelector('[data-fam]');
     if (famChip) {
@@ -1467,9 +1480,10 @@ function refreshBuffs(u, now) {
         //   여러 줄 스킬은 결투 하나이고 두 줄 다 원소가 없다). 무기 옵션 창(`wx:`)은 스킬이 아니라 null
         const element = b?.k ? null : SYS.skill?.statuses?.[SYS.skill.defs?.[id]?.effects[0].status]?.element ?? null;
         chip.setAttribute('aria-label', `${name} — ${effectSummaryText(b?.stat, b?.v, element, b?.cut)}`);
+        const ench = enchantSrcIcon(b?.s);   // 정예 강화가 건 창 — 칩과 같은 그림 (R528 · ADR-1246)
         bindTipNode(chip, () => effectTipCard({
             owner: u.key, info, name, stat: b?.stat, value: b?.v, element, cut: b?.cut ?? 0,
-            until: b?.until ?? null, now: u.buffTipNow,
+            until: b?.until ?? null, now: u.buffTipNow, ...(ench ? { iconHtml: ench } : {}),
         }));
     });
     const staggerChip = row.querySelector('[data-stagger]');
@@ -1627,7 +1641,7 @@ function dmgLines(e) {
     return [...e.dealt.by.entries()].sort((a, b) => rank(a[0]) - rank(b[0]));
 }
 /* 기본 공격은 스킬 그림이 없어 **무기 칸 실루엣**을 든다 · 반사는 그림이 없다 */
-const dmgIcon = id => id === 'reflect' ? '' : id === 'basic' ? `<img src="${M.slotArt('weapon')}" alt="">` : skillImg(skillInfo(id));
+const dmgIcon = id => id === 'reflect' ? '' : id === 'basic' ? `<img src="${M.slotArt('weapon')}" alt="">` : enchantSrcIcon(id) ?? skillImg(skillInfo(id));
 const dmgName = id => id === 'basic' ? t('bt.basicAttack') : id === 'reflect' ? t('bt.reflectLabel') : L(skillInfo(id).name);
 /* 받은 피해 줄의 그림 — 때린 몬스터의 초상. 없으면 빈 칸이다(초상 칸과 같다) */
 const foeIcon = (id, hero) => { const src = hero ? M.heroFace(hero) : monsterFace(id); return src ? `<img src="${src}" alt="" onerror="this.remove()">` : ''; };
@@ -2157,7 +2171,8 @@ function apply(state, root, opts, ev) {
             if (d) { d.hp = ev.dhp; if (ev.bar !== undefined) setShield(d, ev.bar); popup(state, d, `-${ev.dmg}`, dmgPop(ev.ty)); refreshUnit(state, d); }
             if (a && d) {
                 // 이름 = 상태이상 · 오오라 피해(`k = pulse` — 홀리 파이어 · 2026-10-16)는 상태이상이 아니라 그 스킬 이름이다
-                logLine(state, root, a.side, 'dot', L(a.name), ev.s ? dmgIcon(ev.s) : '', ev.k === 'pulse' ? strikeLabel(ev.s) : t(`bt.ail.${ev.k}`), L(d.name), ev.dmg, ev.ty ? `dt-${ev.ty}` : '');
+                //   정예 강화의 장치 피해(`k = adv` · `s = elite:*` — 폭발 · 튀는 번개 · 반격 냉기 · 주기 번개 · R528)도 그 강화 이름이다
+                logLine(state, root, a.side, 'dot', L(a.name), ev.s ? dmgIcon(ev.s) : '', ev.k === 'pulse' || (ev.k === 'adv' && M.enchantOfSrc(ev.s)) ? strikeLabel(ev.s) : t(`bt.ail.${ev.k}`), L(d.name), ev.dmg, ev.ty ? `dt-${ev.ty}` : '');
                 addDmg(state, a, d, ev.s ?? 'basic', dealtOf(ev), ev.ty);
             }
             break;

@@ -255,6 +255,9 @@ export function createSkillRuntime(ctx) {
         // 버프 지속시간 +% — 장비 + **도감 Lv2**(그 종족이 나온 라운드 동안 파티가 거는 창 · `units.codexRound.buff` · 2026-10-22 R314) · 없으면 0 을 더해 종전 값
         let dur = x.dur * (1 + (u.buffDur ?? 0) + (x.tagDuration ?? 0) + (u.side === 'party' ? units.codexRound?.buff ?? 0 : 0));
         const ail = x.ailment ? AILMENTS[x.ailment] : null;
+        // 결빙이 안 통하는 종족(`tgt.noFreeze` — 데몬 · 2026-11-17 R526 · monster_design §3-1) — 결빙 창을 안 받는다 · 이벤트도 없다 ·
+        //   거는 길(냉기 스킬 · 콜드 애로우 · 프로스트 아머 · 딥 프리즈)이 모두 여기를 지난다 · 확률 굴림은 부르는 쪽에서 이미 끝나 rng 순서는 그대로
+        if (x.ailment === 'freeze' && tgt.noFreeze) return;
         // 거는 쪽의 시간 증가 [2026-10-05 · R208 · item_design §1 「마법사 · 사제 무기」] — 상태이상 = `statusDur`(마법사 시기 ③) ·
         //   **다른 편에 거는** 상태이상 아닌 창 = `debuffDur`(사제 시기 ③). 0 이면 곱하지 않는다 — 부동소수가 종전과 같다
         //   도감 Lv2 [2026-10-22 · R314] — 파티가 **그 종족에** 거는 상태이상은 그 유닛이 든 종족 몫을 `statusDur` 에 더한다

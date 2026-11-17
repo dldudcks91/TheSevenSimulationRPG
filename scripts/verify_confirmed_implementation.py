@@ -73,8 +73,8 @@ def verify_ui(browser):
         page.evaluate("__confirmed.tab('library')")
         page.screenshot(path=str(OUT / f'library_costs_{lang}.png'))
         page.goto(f'http://127.0.0.1:8799/index.html?dev=form&lang={lang}')
-        page.wait_for_selector('.dw-difficulty', timeout=60000)
-        checks.append({'name': 'difficulty_' + lang, 'ok': 'undefined' not in page.locator('.dw-difficulty').inner_text()})
+        page.wait_for_selector('.dw-title', timeout=60000)   # 출정 창 머리 — 난이도 배수 줄(.dw-difficulty)은 2026-11-17 걷혔다(ADR-1231)
+        checks.append({'name': 'difficulty_' + lang, 'ok': 'undefined' not in page.locator('.dw-title').inner_text()})
         page.screenshot(path=str(OUT / f'departure_{lang}.png'))
     context.close()
     return {'checks': checks, 'errors': errors}

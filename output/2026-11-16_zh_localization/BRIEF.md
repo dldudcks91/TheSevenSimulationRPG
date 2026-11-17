@@ -3,7 +3,7 @@
 게임: 칠죄종 테마 다크 판타지 · 디아블로식 아이템 · 자동 전투 파티 RPG(PC · Steam). 원문 언어는 한국어(ko)와 영어(en)이고, 간체 중국어(zh)를 셋째 언어로 넣는다.
 
 ## 먼저 읽을 것 (읽기 전용 — 저장소 파일은 절대 고치지 않는다)
-저장소 루트 = `c:\Users\user\Desktop\python_text\git\TheSevenSimulationRPG`
+저장소 루트 = 이 BRIEF.md 가 있는 폴더의 두 단계 위(`../../`)
 1. **`docs/client/LOCALIZATION_ZH_GLOSSARY.md` — 필수.** 표에 있는 낱말은 반드시 그 글자로 쓴다. 다른 동의어를 만들지 않는다.
 2. `docs/client/LOCALIZATION_ZH.md` §2(번역 원칙) · §3(용어 첫판).
 3. 이름을 옮길 때는 `docs/reference/zh_localization/arpg_glossary.md` — 무기 · 방어구 베이스의 디아블로2 레저렉션 간체 공식명(§3) · 죄종 단어 제안(§7-2) · 시스템 낱말(§8) · 이름 문형(§9) · 문체(§10). 단 용어집 파일(1번)과 다르면 1번이 이긴다.

@@ -96,6 +96,27 @@ export function writeNotificationDismissed(gameId, ids) {
     }
 }
 
+/** 메인미션 — 판을 열어 본 다음 미션 id · 게임(seed:createdAt)별 UI 상태 (SCREEN_DESIGN §2 「메인미션」 · ADR-1245). 없으면 null(안 봤다) */
+const MISSION_SEEN_KEY = 'thesevensim.missionSeen';
+const missionSeenRecords = () => {
+    let records;
+    try { records = JSON.parse(localStorage.getItem(MISSION_SEEN_KEY) ?? '{}'); } catch {}
+    return records && typeof records === 'object' && !Array.isArray(records) ? records : {};
+};
+export function loadMissionSeen(gameId) {
+    if (typeof gameId !== 'string' || !gameId.length) return null;
+    try { const id = missionSeenRecords()[gameId]; return typeof id === 'string' && id.length ? id : null; } catch { return null; }
+}
+export function writeMissionSeen(gameId, id) {
+    if (typeof gameId !== 'string' || !gameId.length || typeof id !== 'string' || !id.length) return false;
+    try {
+        const next = Object.assign(Object.create(null), missionSeenRecords());
+        next[gameId] = id;
+        localStorage.setItem(MISSION_SEEN_KEY, JSON.stringify(next));
+        return true;
+    } catch { return false; }
+}
+
 /** 초반 안내 확인 기록 — null은 안내를 시작하지 않은 기존 게임, []는 새로 안내를 시작한 게임이다. */
 export function loadTutorialSeen(gameId) {
     if (typeof gameId !== 'string' || !gameId.length) return null;

@@ -61,7 +61,9 @@ def csv_missing():
 def mock_missing():
     text = open(os.path.join(SRC, 'ui', 'mock.js'), encoding='utf-8').read()
     pair = re.compile(r"ko:\s*(" + LIT + r")\s*,\s*en:\s*(" + LIT + r")(?!\s*,\s*zh:)")
-    return [f'mock.js:{text.count(chr(10), 0, m.start()) + 1} {m.group(1)}' for m in pair.finditer(text)]
+    # 코드가 조립하는 줄(템플릿 리터럴 `${…}` — 옵션 줄은 `withZh` 가 zh 를 붙인다)은 번역할 문구가 아니다
+    return [f'mock.js:{text.count(chr(10), 0, m.start()) + 1} {m.group(1)}' for m in pair.finditer(text)
+            if '${' not in m.group(1)]
 
 
 def main():

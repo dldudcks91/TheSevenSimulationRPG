@@ -274,14 +274,15 @@ export function createFormula(balance) {
         // 물리 → 원소 전환(`a.conv` — 원소 전환 오오라 · 크루세이더 (1) · 2026-11-14 R471 · advance_tree_draft §5 「한 타격을 물리 · 원소로 나눠 따로 깎기」) —
         //   물리 타격의 몫마다 그 원소 저항(관통 `pen` 포함)으로 따로 깎는다 · 방어는 안 받는다 · 몫의 합은 1 에서 자른다 · 몫마다 증폭(`amp`) ·
         //   몫마다 터짐(`procChance` > 0 이면 **rng 1회** · `procMult`) · 피해 감소 · 절대값 감소는 아래에서 합에 한 번 · 없으면 종전 그대로
+        //   **더하는 몫**(`c.add` — 정예 강화 · 2026-11-17 R528 · monster_design §6-1) — 물리 몫을 줄이지 않고 그 원소 몫을 **더한다** · 합 1 자르기 밖 · 나머지 규칙(그 원소 저항 · 방어 안 받음)은 같다
         let convPart = 0, convProc = false;
         if (a.conv && a.atkType === 'physical') {
             let left = 1;
             const base = v;
             for (const c of a.conv) {
-                const share = Math.min(left, Math.max(0, c.share));
+                const share = c.add ? Math.max(0, c.share) : Math.min(left, Math.max(0, c.share));
                 if (!(share > 0)) continue;
-                left -= share;
+                if (!c.add) left -= share;
                 let p = base * share * (1 + (c.amp ?? 0));
                 if ((c.procChance ?? 0) > 0 && rng() < Math.min(1, c.procChance)) { p *= c.procMult ?? 1; convProc = true; }
                 const cut = (a.resReduction ?? 0) + (a.resReductionEl?.[c.el] ?? 0) + (c.pen ?? 0);

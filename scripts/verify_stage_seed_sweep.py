@@ -148,7 +148,7 @@ def ui_smoke(browser, base):
         item = {'language': lang, 'ok': False}
         try:
             page.goto(f'{base}/index.html?dev=form&lang={lang}', wait_until='domcontentloaded')
-            page.wait_for_selector('.dw-difficulty', timeout=60000)
+            page.wait_for_selector('.dw-title', timeout=60000)   # 출정 창 머리 — 난이도 배수 줄(.dw-difficulty)은 2026-11-17 걷혔다(ADR-1231)
             form_text = page.locator('.main').inner_text()
             if 'undefined' in form_text or 'NaN' in form_text:
                 raise ValueError('invalid values in departure form')

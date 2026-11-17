@@ -66,4 +66,20 @@
 상세 → `docs/game_design/monster_design.md` 끝 「남은 것」
 
 ---
-*2026-11-16*
+
+## E. PLAN 정리 건 — 결정 대기 (2026-11-16 · PLAN_race_normal_name.md 부록에서 옮김)
+
+다 정리된 PLAN 8개는 지웠다. 남은 PLAN 5개(skill_structure · expedition_window · commission_sins · party_tactics · user_review)는 그 PLAN에만 적힌 항목이 있어서 아직 못 지운다. 아래 결정을 기다린다.
+
+| 항목 | 상태 |
+|---|---|
+| 탭 제목 「— 화면 목업」(배포판에도 뜬다) | 바꿔야 함 · 진행 여부 대기 |
+| 안 쓰는 문구 `rs.note` · `rs.note.cond` · `rs.note.lead` | 지워야 함 · 진행 여부 대기 |
+| tactic_card_design §5-8 · §5-11~13 옛 본문 | 아카이브로 옮겨야 함 · 진행 여부 대기 |
+| DEV_PLAN 현황 행 「스킬 표 셋」이 아직 🔧 | 고쳐야 함 · 진행 여부 대기 |
+| 영어 「Chapter Boss」 버튼이 두 줄로 접히나 | 실제로 열어 재 봐야 함 |
+| 나태 카드 「최하급」 | 그대로 둬도 됨(메인 의견) |
+| 버림으로 적을 것 — Admin · 실험실 · ×4 · ×16(이미 개발 주소에서만) · 카드 등급 이름(사용자 선택) · 분노 칸 먼저 쌓임(commission_discussion C ⑤) · 색욕 흡혈 세부 · 상태이상 새 부품 · 적 자리 모델 · 스킬 설명 첫 줄(`{v2}` 로 해결) | 기록 대기 |
+
+---
+*2026-11-17*

@@ -62,6 +62,7 @@ export const D = {
     commissionGradeRows: [],  // commission_grade.csv — 카드 등급 일반 · 매직 · 레어(대상의 좁기 · 드물기 · 골드 배수 — R457) ⚠제안
     commissionFameRows: [],   // commission_fame.csv — 명성 레벨(누적 수령 수 문턱 · 목표 · 골드 배수) ⚠제안 (2026-10-29 · R375)
     monsterTypeRows: [],      // monster_type.csv — 종족 표시 이름 · 행 순서가 의뢰 종족 풀의 순서
+    mainMissionRows: [],      // main_mission.csv — 메인미션 줄(원시 행) · 2026-11-17 R524
     monsterBaseRows: [],      // monster_base.csv — 부류 다섯 · 이름 · 버프 값(gimmick_value · gimmick_n · 2026-11-16 R518 — 11-14 R494 삭제를 되살림)
     labMaterials: [],         // lab_material.csv — 연구소 「자원」 줄의 재료 셋 [{post, id, ko, en, yieldPerHour}] · 행 순서(채광 · 채집 · 벌목) ⚠임시 (2026-10-25 · R356 — ~~단계 표 셋 mine_node · gather_node · log_node~~)
     materialSynth: [],        // material_synth.csv — 위 단계 재료와 그 합성 [{id, from, need, gold, ko, en}] · 행 순서 ⚠임시 (2026-10-27 · R359 · 2026-10-29 R373 — 연구소 재료 셋이 최하급 · `from` 이 `-` 인 행 = 연구소가 안 캐는 줄의 뿌리 — 가루)
@@ -131,7 +132,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'sin_word', 'accessory_sin_option',   // ~~armor_common_option~~ 2026-10-21 R303 퇴역(방어구 넷이 계열표) · ~~accessory_common_option~~ 2026-11-12 삭제(목걸이도 계열표 R453)
     'tactic_condition', 'building', 'building_rank', 'building_effect',   // ~~tactic_score~~ 2026-11-11 R441 삭제(등급 배수는 balance.csv:tactic_grade_mult_*)
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'advance_common', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff', 'commission_fame', 'ring_base_option', 'raid_boss', 'raid_pattern', 'temper_action', 'visit_story', 'monster_base'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'advance_common', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff', 'commission_fame', 'ring_base_option', 'raid_boss', 'raid_pattern', 'temper_action', 'visit_story', 'monster_base', 'main_mission'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -148,7 +149,7 @@ export async function loadData(base = './data/') {
         heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, sinWordRow, accSinOptionRow,
         tacticConditionRow, buildingRow, buildingRankRow, buildingEffectRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, advanceCommonRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow, commissionFameRow, ringBaseRow, raidBossRow, raidPatternRow, temperActionRow, visitStoryRow, monsterBaseRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, advanceCommonRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow, commissionFameRow, ringBaseRow, raidBossRow, raidPatternRow, temperActionRow, visitStoryRow, monsterBaseRow, mainMissionRow] = texts.map(parseCsv);
 
     D.ringBaseOptions = ringBaseRow;
     D.raidBosses = raidBossRow;
@@ -201,6 +202,7 @@ export async function loadData(base = './data/') {
         .map(r => ({ id: r.difficulty_id, order: r.order, name: { ko: r.name_kr, en: r.name_en, zh: r.name_zh }, levelCol: r.level_col || 'dlvl', levelAdd: r.level_add, codexExp: r.codex_exp, chapterGate: r.chapter_gate,   // levelCol = 그 단의 칸 레벨을 읽는 stage.csv 열 (R338)
             wearChance: r.wear_chance,       // 몬스터 선택 부위 착용 확률 — battle.js 가 읽는다 (monster_design §5-1 · R245)
             skillSlots: r.skill_slots,       // 몬스터 스킬 칸 수 — 난이도가 연다 · battle.js 가 읽는다 (monster_design §5-1 · R269)
+            monsterSkillLevel: r.monster_skill_level,   // 몬스터 스킬 레벨 — 그 단의 모든 칸 · battle.js 가 읽는다 (skill_design §2-3 · R527)
             monsterDmgMult: r.monster_dmg_mult, monsterHpMult: r.monster_hp_mult,   // 몬스터 데미지 · HP 배수 — battle.js 가 읽는다 (base_expedition_design §1-4 · R301)
             eliteTraitSlots: r.elite_trait_slots,   // 정예 특성 칸 수 — 난이도가 연다 · battle.js 가 읽는다 (monster_design §6 · R344)
             gearIlvlFixed: r.gear_ilvl_fixed }));   // 몬스터 장비 아이템 레벨 고정(1 = 그 몬스터의 레벨 · 헬) — battle.js 가 읽는다 (R366)
@@ -325,6 +327,7 @@ export async function loadData(base = './data/') {
     D.commissionGradeRows = commissionGradeRow;
     D.commissionFameRows = commissionFameRow;
     D.monsterTypeRows = monsterTypeRow;
+    D.mainMissionRows = mainMissionRow;   // 메인미션 — 행 순서 = 줄 순서 · 검증 · 판정은 state.js (2026-11-17 · R524 · main_mission_design.md)
     D.monsterBaseRows = monsterBaseRow;   // 부류 버프 (R518) — 검증은 battle.js 가 생성 때 · 이름은 화면의 칩이 읽는다
     // 연구소 「자원」 줄의 재료 셋 — 행 순서 그대로(= 화면 · 대박 굴림 순서). `post` = 그 재료를 내는 지점 id(`lab_node.csv` 의 res 줄) ·
     //   재료에 단계가 없다 — 뒤로 갈수록 필요 수량이 는다 (2026-10-25 · R356 · base_expedition_design §2-1 · 검증은 state.js)
@@ -539,9 +542,11 @@ export const codexSlotMonsters = (chapter, num) => Object.values(D.monsters ?? {
  */
 export const skillInfo = id => {
     const r = (D.skillRows ?? []).find(x => x.skill_id === id);
+    // 정예 강화가 낸 피해 · 창(`elite:<원소>` · R528) — 스킬이 아니다 · 이름 = 그 강화의 긴 이름(「화염 강화」 — 누적 판 · 로그 · 영웅의 창 칩이 같은 이름을 읽는다)
+    const en = r ? null : M.enchantOfSrc(id);
     return {
         id,
-        name: r ? { ko: r.name_kr, en: r.name_en, zh: r.name_zh } : { ko: id, en: id },
+        name: r ? { ko: r.name_kr, en: r.name_en, zh: r.name_zh } : en ? { ...en.full } : { ko: id, en: id },
         cd: r ? Number(r.cool_sec) : 0,
         icon: r?.icon ?? '✦',
         desc: r ? { ko: r.desc_kr, en: r.desc_en, zh: r.desc_zh } : null,
@@ -679,22 +684,22 @@ export function buildSystems(d, dev = {}) {
         budgets: d.budgets, grades: d.grades, sins,
         levelXp: d.levelXp,                        // 처치 XP 표 (level_xp.csv:monster_xp)
         // 정예 특성 칸의 풀 (monster_design §6 · R344) — 죄종 칸 = 그 죄종 마스터리 T2 노드(CSV 행 순서 · 2026-11-13 R459 — 죄종 T1 은 일곱 공통이라
-        //   그 죄종만의 칸 셋인 T2 를 본다) · 능력치 · 방어 칸 = ⚠ mock 이름표 목록
+        //   그 죄종만의 칸 셋인 T2 를 본다) · 강화(원소 넷 · 2026-11-17 R528 — 옛 능력치 칸) · 방어 칸 = ⚠ mock 이름표 목록
         eliteTraits: {
             sin: Object.fromEntries(sins.map(s => [s, d.masteryNodes.filter(n => n.tree_kind === 'sin' && n.owner_id === s && Number(n.tier) === 2).map(n => n.node_id)])),
-            stat: M.ELITE_TRAIT_STAT.map(x => x.attr), def: M.ELITE_TRAIT_DEF.map(x => x.dt),
+            enchant: M.ELITE_TRAIT_ENCHANT.map(x => x.el), def: M.ELITE_TRAIT_DEF.map(x => x.dt),
         },
         itemSystem: item, skillSystem: skill,
         monsterRoles: d.monsterRoles ?? {},        // 적의 랭크 — 진형 (battle_design §3-1)
         // 종족의 몸 (2026-10-29 · R388 · monster_design §3-1) · 부류 버프 (2026-11-16 · R518 · §3-2 — 나이트메어부터) — 검증은 battle.js 가 생성 때 한다
         families: Object.fromEntries((d.monsterBaseRows ?? []).map(r => [r.base_id, { value: r.gimmick_value, n: r.gimmick_n }])),
-        races: Object.fromEntries((d.monsterTypeRows ?? []).map(r => [r.type_id, { hp: r.hp_mult, regen: r.regen_mult, dmg: r.dmg_mult, def: r.def_mult, res: r.res_add }])),
+        races: Object.fromEntries((d.monsterTypeRows ?? []).map(r => [r.type_id, { hp: r.hp_mult, regen: r.regen_mult, dmg: r.dmg_mult, def: r.def_mult, res: r.res_add, noCrush: r.crush_immune === 1, noLeech: r.leech_immune === 1, noFreeze: r.freeze_immune === 1 }])),
         // 몬스터도 영웅과 같은 경로로 전투 능력치를 얻는다 (2026-09-11 R79 · battle_design §8-1 · monster_design §5-1) —
         //   `computeCombat` 을 몬스터에도 부르므로 시스템째 넘긴다. `classSkills` 는 보스의 한 칸 더의 후보 풀(hero 와 같은 표)
         //   이고 `slots` 는 등급의 입는 부위(`spawn_grade.csv:wear_fixed` · `wear_optional`) 어휘 검증용이다 (R245)
         heroSystem: hero, classSkills, slots: d.slots.map(s => s.id),
         // 런의 단이 고르는 것 — 단 순서(부류 버프의 문턱 · R518) · 선택 부위 착용 확률(R245) · 몬스터 스킬 칸 수(R269) · 몬스터 데미지 · HP 배수(R301) · 정예 특성 칸 수(R344) · 장비 아이템 레벨 고정(R366)
-        difficulties: (d.difficultyList ?? []).map(x => ({ id: x.id, order: x.order, wearChance: x.wearChance, skillSlots: x.skillSlots, monsterDmgMult: x.monsterDmgMult, monsterHpMult: x.monsterHpMult, eliteTraitSlots: x.eliteTraitSlots, gearIlvlFixed: x.gearIlvlFixed })),
+        difficulties: (d.difficultyList ?? []).map(x => ({ id: x.id, order: x.order, wearChance: x.wearChance, skillSlots: x.skillSlots, monsterSkillLevel: x.monsterSkillLevel, monsterDmgMult: x.monsterDmgMult, monsterHpMult: x.monsterHpMult, eliteTraitSlots: x.eliteTraitSlots, gearIlvlFixed: x.gearIlvlFixed })),
         gearRarity: d.gearRarity,                  // 몬스터 장비 희귀도 — 등급 × 단 한 장 (gear_rarity.csv · R350 — ~~단의 rarityMax~~ R342)
         chapterDebuffs: d.chapterDebuffs ?? [],    // 장 디버프 — 단 · 장마다 한 줄 (chapter_debuff.csv · R366)
     });
@@ -744,6 +749,8 @@ export function buildSystems(d, dev = {}) {
         potions: d.potions ?? [],
         // 신단 — 이긴 칸 뒤 칸 I → II · II → III 에 하나가 선다 (base_expedition_design §1-2 · 2026-09-29)
         shrines: d.shrines ?? [],
+        // 메인미션 — 노말 클리어까지의 길잡이 줄 · 행 순서 = 줄 순서 (main_mission_design.md · 2026-11-17 · R524)
+        mainMissions: d.mainMissionRows ?? [],
         // 전직 — 갈래 표. 갈래의 스킬은 `skill.csv` 의 `owner_kind=advance` 행이다 (skill_design §4 · R16)
         advances: d.advanceRows ?? [],
         openAll: dev.openAll,   // 관리자 모드 — 켜져 있으면 모든 건물을 최대 랭크로 센다(INTERFACE §2-7)

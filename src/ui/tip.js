@@ -59,9 +59,10 @@ export function monsterSkillIcons(id, cls, cell) {
         const late = d.id !== first;
         const title = L(SYS.skill.defs[a.id]?.name ?? { ko: a.id, en: a.id }) + (late ? ` · ${L(d.name)}` : '');
         // 칸마다 바탕 레벨 `Lv.n` — 오른쪽 아래(늦은 칸 표시는 오른쪽 위) · 장비 몫은 스폰 때 굴려져 도감은 모른다 (ADR-0705)
+        //   단이 얹은 몬스터 스킬 레벨(칸의 `up` · R527)은 버린다 — 도감은 단을 고르지 않는 자리라 바탕 하나로 그린다 (ADR-1236)
         // `data-sk` · `data-up` — 목록 카드가 그린 뒤 칸마다 스킬 설명창을 거는 손잡이 (`app.js:bindMonSkillTips` · ADR-0709) · 전직 스킬은 레벨이 없다 (ADR-1190)
-        const lv = { id: a.id, lv: 1 + (a.up ?? 0) };
-        return `<span class="${cell}" title="${title}" data-sk="${a.id}" data-up="${a.up ?? 0}">${skillImg(a)}${skillShowsLv(lv) ? `<span class="sk-lv">${t('sk.lvTag', { n: lv.lv })}</span>` : ''}</span>`;
+        const lv = { id: a.id, lv: 1 };
+        return `<span class="${cell}" title="${title}" data-sk="${a.id}" data-up="0">${skillImg(a)}${skillShowsLv(lv) ? `<span class="sk-lv">${t('sk.lvTag', { n: lv.lv })}</span>` : ''}</span>`;
     }).join('')}</span>`;
 }
 
@@ -782,8 +783,8 @@ const clsChipHtml = id => {
     const c = D.classes.find(x => x.id === id);
     return c ? chipHtml('cls-chip', c.color, L(c)) : '';
 };
-/** 영웅 = `죄종 → 직업` (`app.js:candidateCard` 와 같은 줄) — 등급 칩은 없다(막대 색 · ADR-1143) */
-const heroChipsHtml = h => sinChipHtml(h.sin) + clsChipHtml(h.cls);
+/** 영웅 = `죄종 → 직업` (`app.js:candidateCard` 와 같은 줄) — 등급 칩은 없다(막대 색 · ADR-1143) · 성장 등급만 맨 앞에 등급 칩(ADR-1223) */
+const heroChipsHtml = h => (h.tier === 'growth' ? chipHtml('tier-chip', tierOf(h).color, L(tierOf(h))) : '') + sinChipHtml(h.sin) + clsChipHtml(h.cls);
 /** 몬스터 = `종족 → 죄종 → 직업` (`codexCandCard` 와 같은 셋) — 종족 칩 색 = 등급 색(윗변 · 막대와 같다) ·
  *  죄종 = 정예가 그 판에서 굴린 죄종(`round` 이벤트 적 항목의 `sin`), 없으면 장 죄종(도감과 같다) */
 const monsterChipsHtml = (u, color) => {
@@ -1128,7 +1129,8 @@ const UNIT = {
     none: v => v,
     pct: v => `${v}%`,
     sec: v => t('time.s', { s: v }),
-    times: v => t('sk.u.times', { v }),
+    // 영어 단수 · 복수는 수로 고른다(`t` 는 `{n}` → `{v}`) — `v` 는 강조 태그를 두른 글이라 태그를 벗긴 수를 `n` 으로 준다(「1 times」 · 2026-11-17)
+    times: v => t('sk.u.times', { v, n: String(v).replace(/<[^>]*>/g, '') }),
 };
 
 /** 식의 밑수 이름 — 공격력은 `st.atk`(CSV 에 「공격력」 한 단어 행이 없다) · 나머지 둘은 `combat_stat.csv` 이름 그대로 */
@@ -1235,8 +1237,8 @@ function descSlots(def, pv, atkType, R) {
         h: () => at(e.hits, 'hits', UNIT.times),
         k: () => at(e.decay, 'decay', UNIT.pct),
         s: () => st ? at(st.dur, 'dur', UNIT.sec) : null,
-        // 값의 단위 — 이베이드는 횟수 · 변신은 맞힐 때마다 늘어나는 초(골드 피버 · 2026-10-29 R380) · 그 밖은 %
-        v: () => st ? at(Math.abs(st.value), 'value', st.stat === 'evade' ? UNIT.times : st.stat === 'transform' ? UNIT.sec : UNIT.pct) : null,
+        // 값의 단위 — 이베이드 · 재장전(라운드당 초기화 상한 · 2026-11-17 — %로 찍혀 「100%번」이었다)은 횟수 · 변신은 맞힐 때마다 늘어나는 초(골드 피버 · 2026-10-29 R380) · 그 밖은 %
+        v: () => st ? at(Math.abs(st.value), 'value', st.stat === 'evade' || st.stat === 'reload' ? UNIT.times : st.stat === 'transform' ? UNIT.sec : UNIT.pct) : null,
         v2: () => st2 ? slot({ raw: Math.abs(st2.value), unit: UNIT.pct }, R) : null,
         m: () => hl(num(D.balance.frenzy_stack_max)),
         f: () => hl(num(D.balance.swarm_fly_count)),   // 스웜의 파리 수 (2026-10-29 · R380)

@@ -1,0 +1,132 @@
+## 칸 × 레벨 칸 종류 (몬스터 수)
+1칸 (레벨 칸 없음) 9
+1칸 데미지 43
+1칸 연쇄 감쇠 5
+1칸 지속 시간 2
+1칸 타수 7
+1칸 회복 5
+1칸 효과값(barrier_pct) 3
+1칸 효과값(def_pct) 7
+1칸 효과값(hp_max_pct) 3
+1칸 효과값(pulse) 2
+1칸 효과값(res_pct) 2
+2칸 데미지 3
+2칸 묶기 시간 3
+2칸 지속 시간 3
+2칸 쿨 3
+2칸 효과값(atk_pct) 5
+2칸 효과값(def_ignore) 2
+2칸 효과값(def_pct) 3
+2칸 효과값(dr_pct) 5
+2칸 효과값(final_dmg_pct) 2
+2칸 효과값(final_phys_pct) 3
+2칸 효과값(hp_max_pct) 2
+2칸 효과값(imbue) 2
+2칸 효과값(onhit_element) 3
+2칸 효과값(period_pct) 10
+2칸 효과값(phys_pct) 4
+2칸 효과값(pulse) 1
+2칸 효과값(regen_hp_pct) 3
+2칸 효과값(res_pct) 2
+2칸 효과값(vs_burn_pct) 3
+
+## 스킬별
+1칸 | arc_guided | 가이디드 애로우 | 3 | 연쇄 감쇠
+1칸 | arc_multishot | 멀티샷 | 5 | 데미지
+1칸 | arc_rapid | 래피드 샷 | 4 | 타수
+1칸 | arc_snipe | 스나이프 | 4 | 데미지
+1칸 | kni_charge | 차지 | 4 | 데미지
+1칸 | kni_holyshield | 홀리 실드 | 3 | 효과값(barrier_pct)
+1칸 | kni_resistshield | 레지스탕스 실드 | 2 | 지속 시간
+1칸 | kni_rush | 러시 | 3 | 타수
+1칸 | mag_chain | 체인 라이트닝 | 2 | 연쇄 감쇠
+1칸 | mag_fireball | 파이어볼 | 2 | 데미지
+1칸 | mag_frostnova | 프로스트 노바 | 5 | 데미지
+1칸 | mag_iceblast | 아이스 블라스트 | 2 | 데미지
+1칸 | mag_inferno | 인페르노 | 2 | 효과값(pulse)
+1칸 | mag_lightning | 라이트닝 | 2 | 데미지
+1칸 | mon_delegate | 델리게이트 | 1 | (레벨 칸 없음)
+1칸 | mon_goldfever | 골드 피버 | 1 | (레벨 칸 없음)
+1칸 | mon_hellfire | 헬파이어 | 1 | (레벨 칸 없음)
+1칸 | mon_ironmaiden | 아이언 메이든 | 1 | (레벨 칸 없음)
+1칸 | mon_swarm | 스웜 | 1 | (레벨 칸 없음)
+1칸 | pri_cure | 힐 | 3 | 회복
+1칸 | pri_heal | 힐링 라이트 | 2 | 회복
+1칸 | pri_judgment | 심판 | 4 | 데미지
+1칸 | pri_summon | 소환 | 4 | (레벨 칸 없음)
+1칸 | war_bash | 배시 | 4 | 데미지
+1칸 | war_battleorders | 배틀 오더스 | 3 | 효과값(hp_max_pct)
+1칸 | war_doubleswing | 더블스윙 | 4 | 데미지
+1칸 | war_ironskin | 아이언 스킨 | 5 | 효과값(def_pct)
+1칸 | war_leap | 리프 어택 | 5 | 데미지
+1칸 | war_recovery | 리커버리 | 2 | 데미지
+1칸 | war_shout | 워 오더스 | 2 | 효과값(def_pct) · 효과값(res_pct)
+2칸 | arc_coldarrow | 콜드 애로우 | 1 | 효과값(onhit_element)
+2칸 | arc_eagleeye | 이글 아이 | 4 | 효과값(phys_pct)
+2칸 | arc_evade | 이베이드 | 1 | 쿨
+2칸 | arc_pierce | 피어싱 샷 | 2 | 효과값(def_ignore)
+2칸 | arc_poison | 포이즌 애로우 | 1 | 효과값(onhit_element)
+2칸 | arc_quickhands | 퀵 핸즈 | 3 | 효과값(period_pct)
+2칸 | kni_defiance | 디파이언스 | 3 | 효과값(dr_pct)
+2칸 | kni_enchant | 인챈트 | 1 | 효과값(onhit_element)
+2칸 | kni_fanaticism | 파나티시즘 | 3 | 효과값(period_pct)
+2칸 | kni_holyfire | 홀리 파이어 | 1 | 효과값(pulse)
+2칸 | kni_might | 마이트 | 3 | 효과값(atk_pct)
+2칸 | kni_sweep | 스윕 | 1 | 데미지
+2칸 | mag_deepfreeze | 딥 프리즈 | 3 | 묶기 시간
+2칸 | mag_echo | 에코 | 3 | 지속 시간
+2칸 | mag_ignite | 이그나이트 | 3 | 효과값(vs_burn_pct)
+2칸 | mag_surge | 서지 | 2 | 효과값(imbue)
+2칸 | pri_bind | 바인드 | 2 | 효과값(period_pct)
+2칸 | pri_doom | 둠 | 2 | 효과값(dr_pct)
+2칸 | pri_grace | 그레이스 | 2 | 효과값(atk_pct)
+2칸 | pri_haste | 헤이스트 | 2 | 효과값(period_pct)
+2칸 | pri_penitence | 페니턴스 | 2 | 효과값(final_dmg_pct)
+2칸 | pri_regen | 프레이어 | 3 | 효과값(regen_hp_pct)
+2칸 | war_battlecry | 배틀 크라이 | 1 | 효과값(def_pct)
+2칸 | war_battleorders | 배틀 오더스 | 2 | 효과값(hp_max_pct)
+2칸 | war_frenzy | 프렌지 | 2 | 쿨
+2칸 | war_leap | 리프 어택 | 2 | 데미지
+2칸 | war_shout | 워 오더스 | 2 | 효과값(def_pct) · 효과값(res_pct)
+2칸 | war_warcry | 워 크라이 | 3 | 효과값(final_phys_pct)
+
+## 묶기 스킬 Lv.1/4/7
+mag_deepfreeze 딥 프리즈 | status mag_deepfreeze imbue dur 10 val 1 | hit mag_deepfreeze_freeze period_pct 6 | level - 0 → Lv1/4/7 None | 쥔 몬스터 3
+mag_deepfreeze 딥 프리즈 | status mag_deepfreeze_shatter shatter dur 10 val 1 | hit mag_deepfreeze_stun stun 1 | level hit_duration_sec 0.1 → Lv1/4/7 [1.0, 1.3, 1.6] | 쥔 몬스터 3
+mag_frostnova 프로스트 노바 | status freeze period_pct dur 3 val -0.25 | hit - None None | level mult_pct 0.07 → Lv1/4/7 [0.7, 0.91, 1.12] | 쥔 몬스터 5
+mag_iceblast 아이스 블라스트 | status freeze period_pct dur 3 val -0.25 | hit - None None | level mult_pct 0.11 → Lv1/4/7 [1.1, 1.43, 1.76] | 쥔 몬스터 2
+mag_ignite 이그나이트 | status mag_ignite imbue dur 10 val 1 | hit mag_ignite_burn burn 4 | level - 0 → Lv1/4/7 None | 쥔 몬스터 3
+mag_surge 서지 | status mag_surge imbue dur 10 val 0.25 | hit mag_surge_stun stun 1 | level effect_value 0.02 → Lv1/4/7 [0.25, 0.31, 0.37] | 쥔 몬스터 2
+war_leap 리프 어택 | status war_leap stun dur 1 val 0 | hit - None None | level mult_pct 0.15 → Lv1/4/7 [1.5, 1.95, 2.4] | 쥔 몬스터 7
+
+## 효과값 · 시간 · 쿨 칸 Lv.1/4/7 (몬스터가 쥔 것만)
+arc_coldarrow 콜드 애로우 | effect_value onhit_element | Lv1/4/7 [0.4, 0.52, 0.64] | 2칸 1
+arc_eagleeye 이글 아이 | effect_value phys_pct | Lv1/4/7 [0.2, 0.26, 0.32] | 2칸 4
+arc_evade 이베이드 | cool_sec evade | Lv1/4/7 [18.0, 16.5, 15.0] | 2칸 1
+arc_pierce 피어싱 샷 | effect_value def_ignore | Lv1/4/7 [0.5, 0.65, 0.8] | 2칸 2
+arc_poison 포이즌 애로우 | effect_value onhit_element | Lv1/4/7 [0.5, 0.65, 0.8] | 2칸 1
+arc_quickhands 퀵 핸즈 | effect_value period_pct | Lv1/4/7 [0.2, 0.26, 0.32] | 2칸 3
+kni_defiance 디파이언스 | effect_value dr_pct | Lv1/4/7 [0.1, 0.13, 0.16] | 2칸 3
+kni_enchant 인챈트 | effect_value onhit_element | Lv1/4/7 [0.6, 0.78, 0.96] | 2칸 1
+kni_fanaticism 파나티시즘 | effect_value period_pct | Lv1/4/7 [0.1, 0.13, 0.16] | 2칸 3
+kni_holyfire 홀리 파이어 | effect_value pulse | Lv1/4/7 [0.15, 0.195, 0.24] | 2칸 1
+kni_holyshield 홀리 실드 | effect_value barrier_pct | Lv1/4/7 [0.25, 0.325, 0.4] | 1칸 3
+kni_might 마이트 | effect_value atk_pct | Lv1/4/7 [0.1, 0.13, 0.16] | 2칸 3
+kni_resistshield 레지스탕스 실드 | duration_sec res_pct | Lv1/4/7 [10.0, 11.5, 13.0] | 1칸 2
+mag_echo 에코 | duration_sec echo | Lv1/4/7 [8.0, 9.5, 11.0] | 2칸 3
+mag_ignite 이그나이트 | effect_value vs_burn_pct | Lv1/4/7 [0.1, 0.13, 0.16] | 2칸 3
+mag_inferno 인페르노 | effect_value pulse | Lv1/4/7 [0.4, 0.52, 0.64] | 1칸 2
+mag_surge 서지 | effect_value imbue | Lv1/4/7 [0.25, 0.31, 0.37] | 2칸 2
+pri_bind 바인드 | effect_value period_pct | Lv1/4/7 [-0.4, -0.52, -0.64] | 2칸 2
+pri_doom 둠 | effect_value dr_pct | Lv1/4/7 [-0.2, -0.26, -0.32] | 2칸 2
+pri_grace 그레이스 | effect_value atk_pct | Lv1/4/7 [0.25, 0.325, 0.4] | 2칸 2
+pri_haste 헤이스트 | effect_value period_pct | Lv1/4/7 [0.5, 0.65, 0.8] | 2칸 2
+pri_penitence 페니턴스 | effect_value final_dmg_pct | Lv1/4/7 [-0.25, -0.325, -0.4] | 2칸 2
+pri_regen 프레이어 | effect_value regen_hp_pct | Lv1/4/7 [0.02, 0.026, 0.032] | 2칸 3
+war_battlecry 배틀 크라이 | effect_value def_pct | Lv1/4/7 [-0.25, -0.31, -0.37] | 2칸 1
+war_battleorders 배틀 오더스 | effect_value hp_max_pct | Lv1/4/7 [0.1, 0.13, 0.16] | 2칸 5
+war_frenzy 프렌지 | cool_sec frenzy | Lv1/4/7 [18.0, 16.5, 15.0] | 2칸 2
+war_ironskin 아이언 스킨 | effect_value def_pct | Lv1/4/7 [1.0, 1.3, 1.6] | 1칸 5
+war_shout 워 오더스 | effect_value def_pct | Lv1/4/7 [0.25, 0.37, 0.49] | 2칸 4
+war_shout 워 오더스 | effect_value res_pct | Lv1/4/7 [0.15, 0.21, 0.27] | 2칸 4
+war_warcry 워 크라이 | effect_value final_phys_pct | Lv1/4/7 [-0.1, -0.13, -0.16] | 2칸 3

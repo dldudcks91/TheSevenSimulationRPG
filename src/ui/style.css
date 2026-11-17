@@ -168,6 +168,12 @@
     --toggle-bg: #14301c;
     --toggle-line: #2a6a3a;
     --toggle-fg: #a0f0b0;
+    /* 작은 버튼의 높낮이 [2026-11-17 · SCREEN_DESIGN §2 「고른 버튼」 · ADR-1228] — 솟은 버튼(겹치는 흰 그라데이션 · 윗변 안쪽 밝은 선) · 눌린 버튼(위가 검은 홈) */
+    --btn-raise-hi: rgba(255, 255, 255, .09);
+    --btn-raise-line: rgba(255, 255, 255, .10);
+    --btn-press-top: #000000;
+    --btn-press-bottom: #1e1e1e;
+    --btn-press-line: rgba(255, 255, 255, .10);
 
     /* 전직 스킬 그림 칸의 바탕 [2026-09-22 · ADR-0301 · ⚠ 시험 적용] — 스킬 그림이 전부 색 없는 흰 실루엣이라
        기본 ↔ 전직 닮은 쌍(파이어볼 ↔ 메테오)을 가른다. 어두운 바탕 색 중 비어 있던 보라 · 검정 위에서 겨우 보이는 세기 */
@@ -416,10 +422,14 @@ html, body { height: 100%; overflow: hidden; }
 /* 우편함 — 골드 바로 오른쪽 편지봉투 · 우편이 있으면 오른쪽 위 개수 배지 (SCREEN_DESIGN §2 「상단바」 · ADR-0732) */
 .mail-btn {
     position: relative; width: 30px; height: 30px; min-width: 0; padding: 4px; align-self: center;
+    display: inline-flex; align-items: center; justify-content: center;
     appearance: none; background: transparent; border: 0; box-shadow: none;
 }
 .mail-btn:focus-visible { outline: 1px solid var(--border-highlight); outline-offset: 2px; }
-.mail-btn img { width: 100%; height: 100%; object-fit: contain; image-rendering: var(--face-render); opacity: .85; }
+.mail-btn img { width: var(--mail-fit, 100%); height: var(--mail-fit, 100%); object-fit: contain; image-rendering: var(--face-render); opacity: .85; }
+/* 봉투 · 종은 그림 칸 안에서 줄여 그린다 — 그림 내용의 긴 변을 두루마리(원본 폭의 76%)에 맞춘다 · 봉투 95% · 종 84% (SCREEN_DESIGN §2 「알림」 · ADR-1239) */
+.mail-btn:not(.notification-btn) { --mail-fit: 80%; }
+.notification-btn:not(.mission-btn) { --mail-fit: 90%; }
 .mail-btn.has img, .mail-btn:hover img, .mail-btn:focus-visible img { opacity: 1; }
 .mail-btn:hover img { filter: brightness(1.08); }
 .mail-btn .mail-n {
@@ -486,9 +496,31 @@ html, body { height: 100%; overflow: hidden; }
 }
 .notification-btn.ringing img { transform-origin: 50% 15%; animation: notification-ring .65s ease-out; }
 .notification-target { animation: notification-focus 1.4s ease-out; }
+/* 메인미션 — 상단바 골드 오른쪽 두루마리 판 · 종 판과 같은 창 · 카드 · 본문 높이 (SCREEN_DESIGN §2 「메인미션」 · ADR-1232) — 폴더 탭이 없어 본문 윗선을 제가 긋는다 */
+.mission-list { border-top: 1px solid var(--border-primary); }
+/* 본문 글자는 모두 14px — 크기 토큰을 본문에서 다시 선언한다 · 머리는 다른 창과 같은 크기 (ADR-1251) */
+.mission-panel > :not(.mission-head) { --fs-xs: 14px; --fs-sm: 14px; }
+/* 안 본 다음 미션 = 빨간 점 — 숫자 배지(`.mail-n`)와 같은 중심 (ADR-1245) */
+.mission-btn .notification-dot { top: 0; right: -2px; width: 8px; height: 8px; }
+.mission-bar { display: flex; justify-content: flex-end; margin: -2px 0 8px; }
+.mission-card .notification-title { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.mission-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mission-detail { display: flex; align-items: center; gap: 8px; }
+.mission-have { flex: none; color: var(--text-secondary); }
+.mission-rewards { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.mission-rw { display: inline-flex; align-items: center; gap: 3px; color: var(--text-primary); }
+.mission-rw img, .mission-rw .res-top-ico img { width: 18px; height: 18px; object-fit: contain; }
+.mission-rw .res-top-ico { line-height: 0; }
+.mission-ready { border-left-color: var(--color-success); }
+.mission-done { justify-content: center; color: var(--text-secondary); font-size: var(--fs-sm); border-left-color: var(--border-primary); }
 @keyframes notification-ring { 0%, 100% { transform: rotate(0); } 20%, 60% { transform: rotate(15deg); } 40%, 80% { transform: rotate(-15deg); } }
 @keyframes notification-focus { 0%, 50% { outline: 2px solid var(--border-highlight); outline-offset: 3px; } 100% { outline-color: transparent; } }
 @media (prefers-reduced-motion: reduce) { .notification-btn.ringing img, .notification-target { animation: none; } }
+/* 메인미션 [바로가기]의 안내 — 눌러야 할 것에 남는 주황 사각 테두리 · 천천히 숨 쉰다(바깥으로 벌어졌다 돌아온다) ·
+   채우거나 다른 탭으로 가면 걷힌다(`app.js:applyMissionGuide` · SCREEN_DESIGN §2 「메인미션」 · ADR-1251) */
+.mission-guide { outline: 2px solid var(--color-warning); outline-offset: 3px; animation: mission-guide 1.6s ease-in-out infinite; }
+@keyframes mission-guide { 0%, 100% { outline-offset: 3px; } 50% { outline-offset: 6px; } }
+@media (prefers-reduced-motion: reduce) { .mission-guide { animation: none; } }
 /* 플래시 — 한 장 오른쪽 아래의 카드 [2026-10-21 사용자 지시 · ADR-0692 · SCREEN_DESIGN §2 「플래시」].
    한 장 오른쪽 가장자리 밖에서 튀어나와 서 있다가 다시 들어간다. **길이는 `app.js:TOAST_MS` 가 준다**(인라인 animation-duration) — 여기는 들고 나기의 **몫**만 든다.
    카드는 세로로 쌓인다 — 새 카드가 맨 아래(모서리)에 붙고 위의 카드는 밀려 오른다. 몇 장까지인지는 `app.js:TOAST_MAX`.
@@ -650,6 +682,10 @@ html, body { height: 100%; overflow: hidden; }
 /* 안 지은 건물이 잠근 자리 — 흐리지만 **눌린다**(누르면 지을 건물을 말한다 · disabled 가 아니다) · 탭 바의 흐린 탭은 이름만 흐린다(`.nav-lbl` · 위 `.nav` 규칙) (SCREEN_DESIGN §1 · §13 · R137) */
 .btn.dim { opacity: .45; }
 .btn.sm { padding: 3px 8px; font-size: var(--fs-sm); }
+/* 작은 버튼은 살짝 솟는다 [2026-11-17 · SCREEN_DESIGN §2 「고른 버튼」 · ADR-1228] — 제 바탕색 위에 **겹치는** 그라데이션이라 주 행동 · 토글 등 색 버튼도 제 색 그대로 솟는다
+   (`background` 단축으로 그림을 지우는 자리 규칙은 평평하게 남는다 — 그 자리 규격이 이긴다) · 고른 버튼은 아래 `.btn.sm.on` 이 눌러 넣는다 · 큰 버튼은 평평 ·
+   ⚠ 기본 겉모양(`data-skin` 없음)에만 건다 — 겉모양 비교(§10-5)의 돌 버튼(`D2 Min` 의 `background` 그림)을 덮지 않게. `:where` 라 우선순위는 `.btn.sm` 그대로다 */
+:where(:root:not([data-skin])) .btn.sm { background-image: linear-gradient(to bottom, var(--btn-raise-hi), transparent); box-shadow: inset 0 1px 0 var(--btn-raise-line), 0 1px 0 #000; }
 
 /* 기본은 **무채색**이다 (2026-09-03 사용자 지시) — 영웅의 죄종 칩에서 색을 걷었기 때문(SCREEN_DESIGN §5).
    챕터 줄 · 리포트의 정예 죄종은 여전히 인라인으로 죄종 색을 덮는다 — 그쪽은 「어느 죄종의 것인가」라는 다른 축이다 */
@@ -1736,7 +1772,17 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
     transform-origin: top; transition: transform .1s linear;   /* 스킬 쿨 판과 같은 걸음 */
 }
 .ctrl-div { align-self: stretch; width: 1px; margin: 0 4px; background: var(--border-primary); }
-.btn.sm.on { border-color: var(--border-highlight); background: var(--surface-6); }
+/* 고른 · 켜진 작은 버튼 — 어디서나 강조색 테두리 · 흰 글씨 [2026-11-17 사용자 지시 · SCREEN_DESIGN §2 「고른 버튼」 · ADR-1226 · ADR-1227]
+   (~~테두리 · 바탕이 한 단 밝아질 뿐~~ — 올린 모양과 거의 같아 안 보였다 · 도감 세그먼트 `.cx-tabs .btn.on`(2026-09-21)을 공용으로 올렸다).
+   바탕은 무채색 그대로 — 빨강 바탕은 주 행동 버튼(`.btn.primary`)의 몫이다(ADR-1227 — ~~옅은 강조색 바탕~~ ADR-1226) ·
+   굵기는 안 바꾼다(칸 폭이 흔들린다) · 켜기/끄기 초록(`.btn.toggle.on`)은 뒤에 선언돼 제 색을 지킨다 · 챕터 세그먼트는 인라인 죄종 색이 덮는다 ·
+   **눌려 들어간다**(ADR-1228) — 위가 검고 아래로 살짝 밝아지는 홈 · 안쪽 위 그림자 · 버튼째 1px 내려앉는다(글자만 내리는 여백 조정은 버튼마다 여백이 달라 안 맞는다 · `transform` 이라 배치는 안 흔들린다) */
+.btn.sm.on { color: var(--text-primary); border-color: var(--text-accent); background: var(--surface-6); }
+:where(:root:not([data-skin])) .btn.sm.on {
+    background: linear-gradient(to bottom, var(--btn-press-top) 0%, var(--btn-press-top) 35%, var(--btn-press-bottom) 100%);
+    box-shadow: inset 0 3px 4px #000, inset 0 -1px 0 var(--btn-press-line);
+    transform: translateY(1px);
+}
 
 /* ── 배치 둘 [2026-09-03 사용자 지시] — 컨트롤의 버튼 하나가 오간다 (SCREEN_DESIGN §4-2)
    기본(클래스 없음) = **넓게**: 아레나 판 전폭(ADR-0095) · 로그/누적은 창
@@ -2254,6 +2300,8 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 /* 이로운 창 = 초록 · 해로운 창 = 빨강. 가르는 것은 창의 값 부호다 (재생기 refreshBuffs) */
 .buff-chip.good { border-color: var(--color-success); color: var(--color-success); }
 .buff-chip.bad { border-color: var(--color-error); color: var(--color-error); }
+/* 정예 강화 칩 — 테두리 = 그 피해 종류 색(같은 원소 그림을 쓰는 방어 칸 칩과 가른다 · R528 · ADR-1246) */
+.buff-chip.trait.enchant { border-color: var(--chip-dt); }
 /* 창 뱃지 툴팁 — 첫 줄은 이름 + 남은 초, 둘째 줄은 지금 적용 중인 실효값뿐이다. */
 .tip-effect-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .tip-effect-head .tip-name { margin-bottom: 0; }
@@ -4320,34 +4368,24 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
    ⚠ `.btn.sm.sk-order-btn` 로 건다 — 한 단이면 `.btn.sm { padding }`(클래스 둘)에 진다(`.go-tree` 와 같은 사정) */
 .sub-h.sk-head { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .btn.sm.sk-order-btn { padding: 0 8px; font-size: var(--fs-xs); font-weight: normal; line-height: 1.4; }
-/* 스킬 우선순위 판 [2026-11-16 · ADR-1215 — 화면 가운데 창(ADR-1213)을 걷었다] — [우선순위] **바로 아래에 붙어** 펼쳐진다 · 오른쪽 끝을 버튼에 맞춘다 ·
-   아래 스킬 칸 위를 덮는다([정렬] 펼침 `.sort-fold` 와 같은 수법 · ADR-0523). 폭은 내용만큼 · 소제목 글꼴을 안 물려받게 크기 · 굵기를 다시 준다.
-   맨 위 설명 한 줄 · 그 아래 칸이 **왼쪽에서 오른쪽으로**(ADR-1221 — ~~위에서 아래로 줄 · 이름~~ ADR-1215) ·
-   칸 = 위 순번(정하지 않았으면 「–」) · 아래 작은 그림 · 칸 전체가 잡는 곳이다(끌어 옮기기) · 맨 아래 [랜덤으로] */
-.sk-order-pop {
-    position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; width: max-content;
-    display: flex; flex-direction: column; gap: 6px; padding: 6px;
-    font-size: var(--fs-sm); font-weight: normal;
-    background: var(--bg-secondary); border: 1px solid var(--border-secondary);
-    box-shadow: 0 4px 14px rgba(var(--shadow-rgb), .6);
-}
+/* 스킬 우선순위 판 [2026-11-16 · ADR-1213 · 2026-11-17 ADR-1225] — [우선순위]를 누르면 **소제목 아래 자리(칸 줄 · [마스터리 열기])가 이 판으로 바뀐다** —
+   떠 있는 상자가 아니라 바탕 · 테두리 · 그림자가 없다(패널 그대로 · ~~버튼 아래 절대 위치 · 검은 바탕 · 회색 테두리 · 그림자~~ ADR-1215).
+   한 장에서 그 자리(약 118px)에 판 내용(설명 한 줄 · 순번 · 52px 칸 · 출처 글자 — 약 110px)이 들어 패널 높이가 안 변한다.
+   맨 위 설명 한 줄 · 그 아래 한 줄 = **칸 셋**(`.sk-cards` 그대로 — 바깥 칸 줄과 같은 함수 · ADR-1225) + 줄 오른쪽 끝 버튼 하나([랜덤 적용] / [순위 적용] · ADR-1224) ·
+   정한 순서(`.fixed`)일 때만 찬 칸의 그림 칸(`.sk-slot.filled > .sk-card`)이 잡는 곳이다(고스트가 순번 · 출처 글자를 안 끌고 다닌다) — 놓일 칸은 편성 진형 칸(`.fm-cell.drop-on`)과 같은 회색 바깥 테두리 (ADR-1224) */
+.sk-order-pop { display: flex; flex-direction: column; gap: 6px; font-size: var(--fs-sm); font-weight: normal; }
 .sk-order-desc { color: var(--text-secondary); white-space: nowrap; }
-.sk-order-list { display: flex; gap: 6px; }
-.sk-order-row {
-    display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 3px 5px 5px; cursor: grab; user-select: none; touch-action: none;
-    background: var(--bg-input); border: 1px solid var(--border-dark);
-}
-.sk-order-row:hover { border-color: var(--border-highlight); }
-.sk-order-row.drag { opacity: .35; }
-.sk-order-no { flex: none; min-width: 1em; text-align: center; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.sk-order-ico { position: relative; flex: none; width: 26px; height: 26px; }   /* 그림 오른쪽 아래 `Lv.n`(`.sk-lv`)의 기준 칸 (ADR-0701) */
-.sk-order-ico img { display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: var(--face-render); }
-.sk-order-foot { display: flex; justify-content: flex-end; }
-/* 삽입선 — 영웅 띠의 `.hs-insert` 와 같은 세로 막대(같은 색) · 고스트 위 층 (ADR-1221 — 칸이 가로로 서며 가로 선 → 세로 선) */
-.sk-order-insert {
-    position: fixed; width: 3px; transform: translateX(-50%); z-index: 46; pointer-events: none;
-    background: var(--color-drop); border-radius: 2px; box-shadow: 0 0 6px var(--color-drop);
-}
+/* 칸 줄 + 버튼 — 칸 줄이 남는 폭을 받아 `.sk-cards` 의 열 폭(clamp)이 바깥 줄과 같은 52 에 선다 · 버튼은 세로 가운데 */
+.sk-order-line { display: flex; align-items: center; gap: 12px; }
+.sk-order-line > .sk-cards { flex: 1 1 auto; min-width: 0; }
+.sk-order-pop.fixed .sk-slot.filled > .sk-card { cursor: grab; user-select: none; touch-action: none; }
+.sk-order-pop.fixed .sk-slot.filled > .sk-card:hover { border-color: var(--border-highlight); }
+.sk-order-pop .sk-card.drag { opacity: .35; }
+.sk-order-pop .sk-slot.drop-on > .sk-card { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+/* 순번 — 찬 칸 위에만(빈 칸 · 잠긴 칸 위는 자리만) · 정한 순서는 주황(굳은 선택 `--color-chosen`) · 정하지 않았으면 회색 「–」 */
+.sk-order-no { font-size: var(--fs-md); font-weight: 700; line-height: 1; text-align: center; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.sk-order-pop.fixed .sk-order-no { color: var(--color-chosen); }
+.sk-order-act { flex: none; }
 .sk-cards { display: grid; grid-template-columns: repeat(3, clamp(44px, 30%, 52px)); gap: 8px; }
 /* 칸 + 칸 아래 출처 글자 [2026-09-15 사용자 지시 · ADR-0121] — 격자 열은 이 묶음이 받는다.
    글자는 칸 **밖**이라 빈 칸의 흐림(`.sk-card.vacant`)을 안 탄다 — 빈 칸 아래에도 자리 이름은 같은 세기로 선다 */
@@ -4474,15 +4512,25 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 
 .ng-wrap {
     max-width: 1060px; margin: 0 auto;
-    /* 위 81 = 옛 24 + 걷은 제목(「첫 파티」)이 차지하던 57 — 제목을 걷어도 카드는 제자리에 선다 (2026-10-16 사용자 지시) */
-    padding: 81px 0 24px;
+    padding: 24px 0;
 }
-.ng-title { text-align: center; margin-bottom: 19px; }
+/* 제목 그림 「FIRST PARTY」 — 판(`.ng-wrap`) 밖 위 가운데 (SCREEN_DESIGN §3 · ADR-1237 · ADR-1241). 높이 97 = 판 위 여백 —
+   옛 57(ADR-0643 이 걷은 제목 높이를 남겨 둔 자리) + 판을 내린 40. `D2 Min` 은 판의 바깥 위 여백을 이 높이가 대신한다.
+   그림 높이 64(ADR-1242) — 칸 97 안에 들어 판은 그대로다 · 아래 여백 40 으로 칸 가운데보다 20px 위에 선다 — 칸 위로 4px 넘쳐 메인 위 여백에 든다(ADR-1247) ·
+   그림이 못 뜨면 h1 글꼴로 대체 글(`ng.title`)이 선다 */
+.ng-title { height: 97px; display: flex; align-items: center; justify-content: center; }
 .ng-title h1 {
     font-size: var(--fs-xl); font-weight: normal; letter-spacing: 2px;
-    color: var(--text-primary); margin-bottom: 6px;
+    color: var(--text-primary); margin: 0;
 }
-.ng-title p { font-size: var(--fs-sm); }
+.ng-title img { display: block; height: 64px; margin-bottom: 40px; }
+/* Tip 줄 — 판 안 맨 위 한 줄 · 카드 줄과 같은 .9 배율 · 같은 폭이라 왼쪽 변이 첫 카드 왼쪽 변에 맞는다 (ADR-1237) */
+.ng-wrap > .ng-tip {
+    zoom: .9; max-width: 1060px; margin: 0 auto 12px;
+    display: flex; align-items: baseline; gap: 8px;
+    font-size: var(--fs-md); color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ng-tip b { color: var(--text-accent); }
 
 /* 세 장은 같은 무게로 놓인다 — 하나를 크게 하면 그쪽이 정답처럼 읽힌다 */
 .ng-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
@@ -5480,34 +5528,44 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     --tv-card-x: 34px;    /* 카드 좌우 여백 16 × 2 + 테두리 1 × 2 (.ng-card) */
     --tv-panel-x: 34px;   /* 패널 좌우 여백 16 × 2 + 테두리 1 × 2 (.panel) */
     --tv-gap: 14px;       /* 두 판 사이 — 아래 카드 폭 식이 같이 읽는다 (D2 Min 은 8) */
+    --tv-join-gap: 36px;  /* 수색 안내 카드와 칸 열 사이 — 순서 표지 `»`(18px) 양옆 9px (ADR-1249 · ~~24px~~ ADR-1230) */
+    --tv-join-trim: 12px; /* 안내 칸이 내주는 폭 — 틈이 24 → 36 으로 는 만큼이라 수색 패널 · 윗줄 카드 폭은 그대로다 (ADR-1249) */
     container-type: inline-size;
     flex: 0 1 auto; min-height: 0; display: flex; gap: var(--tv-gap);
 }
 /* 나란히 선 판 — 위 마진 0(`.panel + .panel` · 겉모양 규칙보다 세게 건다) · 박스가 모자라면 본문이 스크롤.
    두 값은 여기서 푼다 — 100cqw 가 윗줄(컨테이너)을 보는 자리다 */
 .c-tavern > .tv-top > .panel {
-    --tv-c: min(calc((1060px - 28px) / 3), calc((100cqw - 36px - var(--tv-gap) - 2 * var(--tv-panel-x) + 2 * var(--tv-k) * var(--tv-sk) * var(--tv-card-x)) / (3 + 2 * var(--tv-k) * var(--tv-sk))));
+    --tv-c: min(calc((1060px - 28px) / 3), calc((100cqw - 22px - var(--tv-join-gap) + var(--tv-join-trim) - var(--tv-gap) - 2 * var(--tv-panel-x) + 2 * var(--tv-k) * var(--tv-sk) * var(--tv-card-x)) / (3 + 2 * var(--tv-k) * var(--tv-sk))));
     --tv-face: clamp(96px, calc(var(--tv-k) * (var(--tv-c) - var(--tv-card-x))), 152px);
     --tv-slot: calc(var(--tv-face) * var(--tv-sk));
     display: flex; flex-direction: column; min-height: 0; margin-top: 0;
 }
 .c-tavern > .tv-top > .panel > .box-body { flex: 0 1 auto; }
-.c-tavern > .tv-top > .tv-hire { flex: 1 1 0; min-width: 0; }
-.c-tavern > .tv-top > .tv-search { flex: none; width: calc(var(--tv-c) + 14px + 2 * var(--tv-slot) + 8px + var(--tv-panel-x)); }
+/* 영웅 고용 = 후보 카드 둘 + 틈 14 + 좌우 패널 여백 — 오른쪽 여백 = 왼쪽 · 윗줄에 남는 폭은 수색 패널이 받는다 (ADR-1240) */
+.c-tavern > .tv-top > .tv-hire { flex: none; width: calc(2 * var(--tv-c) + 14px + var(--tv-panel-x)); min-width: 0; }
+.c-tavern > .tv-top > .tv-search { flex: 1 1 auto; min-width: calc(var(--tv-c) - var(--tv-join-trim) + var(--tv-join-gap) + 2 * var(--tv-slot) + 8px + var(--tv-panel-x)); }   /* 남는 폭을 받는다 (ADR-1240 · 안내 칸 −12 · 틈 36 ADR-1249) */
 .c-tavern .tv-top .ng-head .hero-face { width: var(--tv-face); height: var(--tv-face); }   /* 명단 · 수색 카드 초상 = 얼굴 칸 (같은 값) */
 /* 수색 본문 = 안내 칸 | 얼굴 칸. 안내 칸은 숨긴 후보 카드(`.tv-ghost`) 위에 겹쳐 서서 후보 카드와 같은 높이다(명단 빈 칸과 같은 수 · ADR-0981) */
-.tv-search-row { display: flex; align-items: flex-start; gap: 14px; }
-.tv-search-cell { flex: none; width: var(--tv-c); display: grid; }
+.tv-search-row { display: flex; align-items: flex-start; gap: var(--tv-join-gap, 36px); }
+.tv-search-cell { flex: 1 1 auto; min-width: calc(var(--tv-c) - var(--tv-join-trim, 12px)); display: grid; }   /* 안내 칸 = 카드 폭 − 12 이상 — 수색 패널이 받은 남는 폭을 쓴다 (ADR-1240 · ADR-1249) */
 .tv-search-cell > * { grid-area: 1 / 1; min-width: 0; }
 .tv-search-cell > .tv-ghost { visibility: hidden; }
 /* 수색 칸 [2026-10-09 ADR-0574 · 2×2 2026-10-12 ADR-0593 · 2026-10-19 ADR-0671] — 두 칸씩 줄짓는다. **늘 선다**(빈 칸 포함).
    초상 칸은 정사각 · 테두리 = 등급 색(렌더러가 넣는다 — 명단 카드 윗선과 같은 색) · 아래 띠 = 출처(「방문」 · 「마차」 — 떠나지 않아 시간이 없다).
    빈 칸 · 안 열린 칸은 기존 슬롯 테두리를 쓴다 (2026-11-15 사용자 지시) */
 /* 얼굴 칸 열은 안내 칸과 같은 높이로 선다 — 줄 = 수색 자리 · 안내 칸의 몫과 **같은 줄로** 나눈다: 위아래 여백 = 안내 카드의 위(여백 14 + 윗선 3) · 아래(여백 13 + 아랫선 1) ·
-   줄 사이 2px(`.tv-visit-log` 의 몫 사이) · 칸은 줄 위에 붙어 그 자리 영웅의 머리 옆에 선다 · 양옆 8px · 이름 띠 없음 (ADR-1222 — ~~「대기소」 이름 띠~~ ADR-1145) */
+   줄 사이 2px(`.tv-visit-log` 의 몫 사이) · **칸은 줄의 세로 가운데 = 그 자리 몫의 가운데**(ADR-1238 · ADR-1230 — ~~몫 아랫변 + 4px~~ ADR-1235 · ~~줄 위에 붙어 머리 옆~~ ADR-1222) · 양옆 8px · 이름 띠 없음 (~~「대기소」 띠~~ ADR-1249) */
 .tv-join { align-self: stretch; display: flex; flex-direction: column; }
-.tv-join-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(2, var(--tv-slot)); grid-template-rows: repeat(var(--tv-rows, 3), minmax(0, 1fr));
-    align-items: start; column-gap: 8px; row-gap: 2px; padding: 17px 0 14px; }
+.tv-join-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: calc(2 * var(--tv-slot) + 8px); grid-template-rows: repeat(var(--tv-rows, 3), minmax(0, 1fr));
+    align-items: center; row-gap: 2px; padding: 17px 0 14px; }   /* 줄 안의 칸은 몫의 세로 가운데 (ADR-1238) */
+/* 줄 하나 = 수색 자리 하나의 칸 — 칸 둘씩 · 양옆 8px (ADR-1222) · 순서 표지의 틀 (ADR-1230) · 몫의 세로 가운데(ADR-1238) */
+.tv-join-line { position: relative; display: grid; grid-template-columns: repeat(2, var(--tv-slot)); column-gap: 8px; align-items: start; }
+/* 순서 표지 `»` [2026-11-17 사용자 「대장간에서 쓰고 있는 강화 >> 이거 넣어서 연결해봐」 · ADR-1230 — ~~이음선~~ ADR-1229] — 대장간 판 사이 표지(`.fg-up-flow` · ADR-1156)와
+   같은 주황 겹갈매기 · 안내 카드와 칸 열 사이 틈(`--tv-join-gap`)의 한가운데 · 그 줄의 세로 가운데 · 빈 자리 = 회색 */
+.tv-join-flow { position: absolute; top: 50%; right: calc(100% + (var(--tv-join-gap, 36px) - 18px) / 2); width: 18px; height: 18px; transform: translateY(-50%); pointer-events: none;
+    background: var(--color-progress); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 2.5l5.5 5.5L2 13.5M8.5 2.5L14 8l-5.5 5.5' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 2.5l5.5 5.5L2 13.5M8.5 2.5L14 8l-5.5 5.5' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; }
+.tv-join-flow.empty { background: var(--border-highlight); }
 .tv-join-slot {
     position: relative; display: block; width: 100%; aspect-ratio: 1; padding: 0; overflow: hidden;
     background: var(--bg-tertiary); border: 1px solid var(--border-secondary); border-top-width: 2px; cursor: pointer;
@@ -6822,11 +6880,11 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 :where(:root[data-skin="d2min"]) .diff-tab { padding: 2px 4px; border: 0; border-image: none; background: none; box-shadow: none; font-size: 17px; color: #7d776e; }   /* 고른 단도 같은 크기 (ADR-0854 · 0863) */
 :where(:root[data-skin="d2min"]) .diff-tab:not(.on):not(:disabled):hover { color: #dedad4; }
 :where(:root[data-skin="d2min"]) .diff-tab.on { padding: 2px 4px; border: 0; background: none; font-size: 17px; color: #f2ece2; }
-/* 게임 밖 — 새 게임 후보 셋 · 프롤로그 글도 판 안에 선다. 새 게임 판은 옛 위 여백 81 을 바깥 57 + 안 24 로 나눠 카드가 제자리다.
+/* 게임 밖 — 새 게임 후보 셋 · 프롤로그 글도 판 안에 선다. 새 게임 판의 바깥 위 여백은 제목(`.ng-title` 높이)이 들고 안 24 는 판 여백이다(ADR-1237 · ADR-1241).
    후보 카드는 카드 모양(어두운 돌 + 턱 한 줄 · 윗변 희귀도 색은 그대로). 메뉴(워드마크 · 버튼 둘)는 표지라 판을 안 두른다 */
 :where(:root[data-skin="d2min"]) .ng-wrap,
 :where(:root[data-skin="d2min"]) .pro-wrap { background: var(--sk-fill), #0f0f0f; border: 1px solid var(--border-primary); border-image: var(--sk-frame) 11 / 11px / 4px round; }
-:where(:root[data-skin="d2min"]) .ng-wrap { margin-top: 57px; padding: 24px 16px; }
+:where(:root[data-skin="d2min"]) .ng-wrap { padding: 24px 16px; }
 /* 능력치 범례는 판 테두리 **밖**에 선다(뒤로가기처럼 · ADR-0943) — 판 안 카드 줄 옆 여백이 53(.9 배율 안에서 59)이라 범례가 테두리를 가로지른다 */
 :where(:root[data-skin="d2min"]) .ng-legend { right: calc(100% + 45px + 59px); }
 :where(:root[data-skin="d2min"]) .ng-card { background: var(--sk-fill), #121212; box-shadow: inset 0 0 0 1px var(--sk-lip), 0 3px 8px rgba(0, 0, 0, .7); }

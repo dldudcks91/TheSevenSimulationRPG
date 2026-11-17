@@ -55,7 +55,7 @@ monster_idx,stat,value,farm,farm_value,fight,fight_value,description_kr
 4103,cold_dmg_pct,0.03,magic,0.02,status_dur_pct,0.04,트롤 서리술사 — 아이스 블라스트
 4150,cold_dmg_pct,0.06,-,-,-,-,이미르 — 숨이 서리가 된다 · 옛 줄(유키온나) 그대로
 4201,cast_speed_pct,0.01,magic,0.02,status_dur_pct,0.04,서리 원혼 — 4장 나태 줄
-4202,freeze_dur_reduction,0.05,material,0.02,life_steal,0.005,동결 곡성귀 — 4장 냉기 줄
+4202,freeze_dur_reduction,0.05,material,0.02,hp_regen,0.1,동결 곡성귀 — 4장 냉기 줄 · Lv2 = 방어(HP 재생) — 언데드는 흡혈이 안 통해 공격 줄(흡혈)을 안 쓴다(2026-11-17 · R522)
 4203,res_max_cold,0.01,gold,0.02,buff_dur_pct,0.02,망령 백인대장 — 빙하 요새를 지킨 망령
 4250,res_cold,0.06,-,-,-,-,동장군 — 겨울은 얼지 않는다 · 옛 줄(아스타로스) 그대로
 4301,res_cold,0.03,xp,0.02,dr_flat,2,예티 — 털가죽

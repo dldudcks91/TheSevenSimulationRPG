@@ -29,7 +29,7 @@ pride,1,all,dmg_min_per_level,tenth,0.2,0.5,오만 ①(한 칸 · 드롭 때 최
 gluttony,1,physical,crushing_blow_pct,flat,0.01,0.03,폭식 ①(물리) — 강타: 맞기 직전 대상 현재 체력 × % 고정 피해 · 직격만 · 치명·방어·저항 무관 ⚠제안 수치
 gluttony,1,magic,cast_stack_pct,flat,0.01,0.02,폭식 ①(마법) — 시전 누적: 시전마다 데미지 % 한 겹 · 라운드 동안 · 최대 겹 [balance.csv:cast_stack_max] ⚠제안 수치 (R208)
 gluttony,2,all,vs_elite_dmg,flat,0.06,0.15,폭식 ② — 정예·보스 대상 추가 피해 · 데미지 % 괄호(조건이 맞을 때) ⚠제안 수치
-gluttony,3,all,vs_normal_dmg,flat,0.06,0.15,폭식 ③ — 종족 추가 데미지(셋 중 하나 — 변형) · 일반(Normal) ⚠제안 수치
+gluttony,3,all,vs_normal_dmg,flat,0.06,0.15,폭식 ③ — 종족 추가 데미지(셋 중 하나 — 변형) · 자연(Natural) ⚠제안 수치
 gluttony,3,all,vs_demon_dmg,flat,0.06,0.15,폭식 ③ — 종족 추가 데미지 · 데몬(Demon) ⚠제안 수치
 gluttony,3,all,vs_undead_dmg,flat,0.06,0.15,폭식 ③ — 종족 추가 데미지 · 언데드(Undead) ⚠제안 수치
 greed,1,all,magic_find,flat,0.05,0.15,탐욕 ① — 매직아이템 획득확률 · 레어 가중치 × (1 + 파티 값) ⚠제안 수치
