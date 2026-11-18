@@ -53,14 +53,13 @@ import * as M from './mock.js';
 import { isMobileLayout, isMobilePreview, mobileViewport, fitMobileViewport, mountMobileShell, mountMobileContent, mountMobileModal, captureMobileFocus, refreshMobileBadges, SCREEN_LAYOUTS, getScreenLayout, setScreenLayout, MOBILE_LOCKED } from './mobile.js';
 import { createNotifications } from './notifications.js';
 import { createMainMission } from './main_mission.js';
-import { createTutorial } from './tutorial.js';
 import { MG_SCENES, MG_SPRITES } from './minigame_art.js';
 import { t, L, has, isLock, lang, setLang, nextLang, applyDocumentLang } from './i18n.js';
 import { mountBattle, unitPreview, shrineChip, LOG_STYLES, logStyle, setLogStyle, gravePlaque, graveLeftText, paceOf, arenaBgImage } from './battle.js';
 import { paceAt, paceStep } from './pace.js';   // 원정 박자 — 관전 재생기와 같은 걸음으로 안 보는 부대 · 숨긴 탭을 민다(세움 포함 · ADR-0654)
 import { bindTipNode, helpMark, headingHelp, hideTip, isTouchInput, isAltHeld, isShiftHeld, heroTipCard, skillTipCard, skillLineHtml, stagePoint, stageRect, rangeText, attrRowsHtml, sheetRowsHtml, sheetDeltaRows, bindStatTips, sheetPages, codexMonsterTipCard, codexSkillTipCard, monsterSkillIcons, potionTipCard } from './tip.js';
 import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, placeName, placeKey, placeCells, stageStory, fillStory, stageBgOf, chapterOf, codexStages, codexSlotMonsters, skillInfo, potionInfo, skillShowsLv } from './data.js';
-import { loadSave, writeSave, clearSave, loadTrack, writeTrack, onSaveWrittenElsewhere, loadNotificationDismissed, writeNotificationDismissed, loadTutorialSeen, writeTutorialSeen, loadQuickSalvage, writeQuickSalvage, loadMissionSeen, writeMissionSeen } from './storage.js';
+import { loadSave, writeSave, clearSave, loadTrack, writeTrack, onSaveWrittenElsewhere, loadDevice, loadNotificationDismissed, writeNotificationDismissed, loadQuickSalvage, writeQuickSalvage, loadMissionSeen, writeMissionSeen } from './storage.js';
 import * as CLOUD from './cloud.js';
 import { makeRng, deriveSeed } from '../game_logic/rng.js';
 import { labFixResist, labRelabel } from './data.js';   // 개발 장치 — 실험실 결투의 측정 스위치 · uid 접두 (§18 · ADR-1070). 걷어내려면 이 줄 · `renderLabDuel` 묶음
@@ -503,6 +502,8 @@ const state = {
     autoArm: false,              // 자동 분해 창 — [지금 인벤토리에도 적용]을 한 번 눌러 확인 줄이 선 상태 (ADR-0203) · 창을 닫으면 풀린다
     bookCls: 'all',              // 도서관 탭 — 스킬 업그레이드 직업 줄에서 고른 칸(`all` | 직업 id · §17 · ADR-1206) · 영웅을 바꿔도 남는다 · 세이브 아님
     bookSel: null,               // 도서관 탭 — 가진 책 칸에서 고른 책 id (§17 · ADR-0573 — ~~`bookArm` 무장~~) · 영웅을 바꿔도 남는다(버튼이 그 영웅 기준으로 바뀐다) · 세이브 아님
+    bookCraftCls: 'all',         // 도서관 탭 — 스킬 북 제작 직업 줄에서 고른 칸(`all` | 직업 id · §17 · ADR-1262) · 영웅을 바꿔도 남는다 · 세이브 아님
+    bookCraftSel: null,          // 도서관 탭 — 스킬 북 제작 칸에서 고른 책 id (§17 · R540 · ADR-1262) · 만들어도 고른 채 남는다 · 영웅과 무관 · 세이브 아님
     bookStashSel: null,          // 창고 스킬북 탭에서 고른 책 id — [분해] 가 그 책 1권을 가루로 (§6 · ADR-1199) · 탭을 바꾸면 풀린다 · 세이브 아님
     repSel: null,                // 리포트에서 고른 런 — null 이면 맨 위를 따라간다 (SCREEN_DESIGN §4-3 · ADR-0063 · ADR-0123)
     repNo: null,                 // 리포트가 보는 부대 — null 이면 고른 편성 · 탭이 바꾸고 관전 · 철수에서 넘어오면 그 부대 (§4-3 · ADR-0622)
@@ -523,7 +524,8 @@ const state = {
     shopSel: null,               // 상점에서 고른 칸 {src, i, cycle} · 일반 목록 번호가 바뀌면 풀린다
     shopTrade: null,             // 교역소에서 받을 재료 id · 일반 상품·방문 회차와 무관한 UI 선택
     shopSell: new Set(),         // 상단 판매 목록 — 실제 장비는 [판매]까지 보관 칸에 남는다 · 탭을 떠나면 비운다 · 세이브 아님
-advSel: null,                // 도서관 전직 패널에서 고른 갈래 {uid, branch} — 띠에서 다른 영웅을 고르면 안 먹는다 (§17 · ADR-0536 · ADR-0567)
+advSel: null,                // 전직의 방 창에서 고른 갈래 {uid, branch} — 없으면 맨 위 갈래 · 띠에서 다른 영웅을 고르면 안 먹는다 (§17 · ADR-1189 · ADR-1262)
+    advPreview: {},              // 전직의 방 옆 마스터리 판에서 보는 갈래별 스킬 {갈래: 스킬 id} — 조회 전용 · [입장]이 비운다 · 세이브 아님 (ADR-1187)
     shopShown: null,             // 상점이 마지막으로 그린 방문 `{cycle, here}` — 앱 시계가 이것과 달라지는 순간 다시 그린다(`shopTick`)
     battle: null,           // {result, stageId} — **보는 부대**의 핸들 (아래 `battles` 의 한 칸을 가리키는 이름이다)
     /* 부대마다 한 핸들 [2026-09-24 · ADR-0316 · 다부대] — 편성 번호 → `{run, result, stageId, form, resume}`.
@@ -888,7 +890,7 @@ function mmRewards(rw) {
 /** [바로가기] — **그 미션을 하는 자리까지 연다**(원정 = 출정 창 · 건설 = 그 건물 · 등록 = 그 줄) · 눌러야 할 것에 사각 테두리(`mmGuide`)를 남긴다
  *  잠긴 탭이면 그 탭의 제 화면이 지을 건물을 말한다 (§1 회색 탭) · SCREEN_DESIGN §2 「메인미션」 · ADR-1251 */
 function mmNavigate(m) {
-    const byTarget = { count: { upgrade: 'forge', gamble: 'tavern', explore: 'explore' }, event: { hire: 'tavern', book: 'library' } };
+    const byTarget = { count: { upgrade: 'forge', gamble: 'tavern', explore: 'explore' }, event: { hire: 'tavern', book: 'library', equip: 'character' } };
     const tab = byTarget[m.cond]?.[m.target]
         ?? { battle: 'expedition', runs: 'expedition', clear: 'expedition', build: 'research', fame: 'tavern', research: 'resource', reg: 'resource', spot: 'explore' }[m.cond]
         ?? 'expedition';
@@ -896,6 +898,7 @@ function mmNavigate(m) {
     state.modal = null; state.modalBack = null; state.autoArm = false;
     if (tab === 'expedition') { state.exp = 'idle'; mmOpenDepart(m); }
     if (tab === 'forge') state.forgeTab = 'up';
+    if (tab === 'character') state.stashTab = 'equip';   // 장비 장착 — 창고도 장비 칸을 편다
     if (m.cond === 'build') state.cnPick = m.target;
     if (m.cond === 'reg') { state.post = m.target; state.labLineView = true; }
     if (m.cond === 'research') state.labLineView = false;
@@ -944,7 +947,9 @@ function mmGuideSelectors(m) {
             return [...(state.exSel?.spot === m.target ? ['.ex-go'] : []), `${spot}:not(.pending)`, spot];
         }
         case 'count': return { upgrade: ['.fg-up-work .fg-board-go', '.c-forge .pd-cell.filled', '.fg-box'], gamble: ['.gb-go'], explore: ['.ex-go', '.ex-spot:not(.pending):not(.out)'] }[m.target] ?? [];
-        case 'event': return { hire: ['.b-hire:not([disabled])', '.tv-cands'], book: ['.lib-learn .bk-buy .btn.primary', '.lib-learn .bk-sec', '.lib-learn'] }[m.target] ?? [];
+        case 'event': return { hire: ['.b-hire:not([disabled])', '.tv-cands'], book: ['.lib-learn .bk-buy .btn.primary', '.lib-learn .bk-sec', '.lib-learn'],
+            // 장비 장착 — 인벤토리 장비 → 창고 장비 → 상자(까야 장비다) (ADR-1260)
+            equip: ['.store-bag .inv-cell.filled:not(.box)', '.store-stash .inv-cell.filled:not(.box)', '.store-bag .inv-cell.filled.box', '.store-stash .inv-cell.filled.box'] }[m.target] ?? [];
     }
     return [];
 }
@@ -990,68 +995,6 @@ const mainMission = createMainMission({
     readSeen: owner => loadMissionSeen(`${owner.seed}:${owner.createdAt}`),
     writeSeen: (owner, id) => writeMissionSeen(`${owner.seed}:${owner.createdAt}`, id),
 });
-
-// 초반 안내는 화면이 제공하는 실제 행동만 설명한다. 진행·보상·난수·게임 세이브는 바꾸지 않는다.
-const tutorialOwner = () => `${G.seed}:${G.createdAt}`;
-function tutorialState() {
-    if (!G || state.screen !== 'game' || frozen || document.hidden) return null;
-    const owner = tutorialOwner();
-    // 기존 진행 세이브는 설정에서 다시 보기를 고른 경우에만 시작한다.
-    if (loadTutorialSeen(owner) === null) return null;
-    if (!$('#turn').hidden || state.itemMenu || $('.notification-panel:not([hidden])')
-        || document.querySelector('.dp-panel:not([hidden])')) return null;
-    const steps = [], add = (id, target) => { if (target) steps.push({ id, target }); };
-    const h = heroById(state.heroUid);
-    const canLearn = () => {
-        if (!(h?.masteryPoints > 0)) return false;
-        const advance = SYS.game.advanceState(G, h.uid, now()).hero;
-        return SYS.game.masteryState(G, h.uid).nodes.some(n => n.canLearn) || advance.canLearn || advance.canRank;
-    };
-    if (state.modal) {
-        if (state.modal === 'skill' && canLearn()) add('mastery', $('#modal .sk-cell.can[data-node]'));
-        if (state.modal === 'labReg') add('labRegistration', $('#modal .lr-grid .hs-card'));
-        return { owner, context: `modal:${state.modal}`, steps };
-    }
-    if (state.tab === 'expedition' && expScreen() === 'idle') {
-        const departed = (G.counters.battle ?? 0) > 0 || (G.reports ?? []).length > 0
-            || (G.progress.cleared ?? []).length > 0
-            || Object.values(G.progress.clearedIn ?? {}).some(ids => ids.length > 0);
-        if (!departed) add('expedition', $('.zone:not(.locked) .title > span:last-child'));
-    }
-    if (state.tab === 'character') {
-        if (!state.bagSelMode && bagHero() && invBag().some(uid => itemOf(uid) && !itemOf(uid).box))
-            add('loot', $('.store-bag .inv-cell.filled:not(.box)'));
-        if (canLearn()) add('mastery', $('.go-tree.has-points'));
-    }
-    if (state.tab === 'party') add('potions', $('.pt-potion'));
-    if (state.tab === 'shop' && SYS.game.hasFeature(G, 'shop')) add('potions', $('.td-potions'));
-    if (state.tab === 'research' && $('.cn-next .cn-go')) add('construction', $('.cn-next'));
-    if (state.tab === 'resource') {
-        add('laboratory', $('.dp-tree-grid'));
-        if (state.labLineView) add('labRegistration', $('.dp-side-fx .hs-card:not(.lock)'));
-        // 첫 기본 선택은 줄 설명만 한다. 지점을 직접 고른 뒤 실제 연구/취소 버튼이 있을 때 연구를 설명한다.
-        else if (state.labNode?.[state.post] && $('.dp-side-next .dp-side-go'))
-            add('labResearch', $('.dp-side-next'));
-        return { owner, context: `resource:${state.post}:${state.labLineView ? 'line' : state.labNode?.[state.post] ?? 'initial'}`, steps };
-    }
-    return { owner, context: state.tab, steps };
-}
-const tutorial = createTutorial({
-    read: tutorialState,
-    describe: id => {
-        const detailKey = id === 'mastery' && state.modal === 'skill' ? 'masteryTree'
-            : id === 'loot' && isTouchInput() ? 'lootTouch'
-            : id === 'labRegistration' && state.modal === 'labReg' ? 'labRegistrationPick'
-            : id === 'potions' ? (SYS.game.hasFeature(G, 'shop') ? 'potionsShop' : 'potions') : id;
-        return { title: t(`tutorial.${id}.title`), detail: t(`tutorial.${detailKey}.detail`),
-            closeLabel: t('tutorial.confirm'), progress: t('tutorial.progress') };
-    },
-    readSeen: loadTutorialSeen,
-    writeSeen: writeTutorialSeen,
-});
-// 종·설정 패널처럼 본문을 다시 그리지 않는 컨트롤도 열린 순간 안내를 가린다.
-document.addEventListener('click', () => tutorial.refresh());
-document.addEventListener('visibilitychange', () => tutorial.refresh());
 
 /**
  * 우편함 창 [ADR-0748] — **우편 한 통 = 카드 한 장**: 왼쪽 첨부 칸(인벤토리 칸과 같은 상자 칸 · ×1) · 가운데 상자 이름(굵게) + 「칸 · 난이도 첫 클리어」 ·
@@ -1181,7 +1124,6 @@ function render() {
     renderModal();
     mountMobileModal();
     hideTip();
-    tutorial.refresh();
     applyMissionGuide();   // 메인미션 [바로가기]의 테두리 — 새로 선 DOM 에 다시 붙인다 (ADR-1251)
     stopForgeSelection = mountForgeSelection();
 }
@@ -1193,6 +1135,8 @@ function render() {
  */
 const MODALS = {
     skill: { title: 'nav.skill', body: skillTreeBody },
+    // 전직의 방 — 도서관 전직의 방 칸의 [입장]이 연다 · `side` = 누른 갈래의 마스터리 판이 창 오른쪽에 붙는 카드 (SCREEN_DESIGN §17 · ADR-1187 · 되살림 ADR-1262)
+    advance: { title: 'tr.room.title', body: advanceRoomBody, side: advanceRoomSide, cls: 'advance-room-modal', gone: () => !G || !heroById(state.heroUid) },
     // 해고 — 되돌릴 수 없어서 두 번 누르게 한다 (SCREEN_DESIGN §3 · §6). 대상 영웅은 캐릭터 탭이 이미 골랐다
     dismiss: { title: 'ch.dismiss', body: dismissBody },
     // 스킬 덮어쓰기 확인 — 도서관 읽기 줄의 [덮어쓰기]가 연다 · 머리 줄 없이 문장 + 답 둘(출정 확인 창과 같다) · 그새 덮어쓰기가 아니게 되면 닫힌다 (SCREEN_DESIGN §17 · ADR-1020)
@@ -1213,6 +1157,11 @@ const MODALS = {
     // 멈춤 창 — 다른 탭이 세이브를 썼다 (SCREEN_DESIGN §2-1). `lock` 인 창은 닫는 길이 없다 — 이것 하나뿐인 의도된 예외다:
     //   닫을 수 있으면 멈춘 탭이 다시 저장해 다른 탭의 진행을 덮는다
     frozen: { title: 'cl.frozen.h', body: frozenBody, lock: true },
+    // 계정 멈춤 창 — 다른 브라우저 · PC 가 같은 계정으로 게임을 열었다(늦게 연 쪽이 이긴다 · SCREEN_DESIGN §2-1 「계정」 · ADR-1263) · 위 멈춤 창과 같은 손
+    frozenAcct: { title: 'cl.frozen.acctH', body: frozenBody, lock: true },
+    // 계정 만들기 · 계정으로 불러오기 — 설정 계정 줄 · 메뉴 셋째 버튼이 연다 (§2-1 「계정」 · ADR-1263)
+    acctNew: { title: 'acct.newH', body: acctNewBody, cls: 'acct-modal' },
+    acctLogin: { title: 'acct.loginH', body: acctLoginBody, cls: 'acct-modal' },
     // 자동 분해 — 인벤토리 도구 줄 [자동 분해] · 출정 창 자동 분해 칸 [바꾸기]가 연다 (SCREEN_DESIGN §6 · ADR-0717 · item_design §6-5)
     //   머리 = 「자동 분해 · Party I」(부대 하나의 규칙) · `cls` 는 머리 글씨를 줄인다(2026-09-21 사용자 지시) · 출정 창에서 열었으면 닫을 때 돌아간다(`modalBack`)
     autoSalvage: { head: autoSalvageHead, body: autoSalvageBody, cls: 'auto-modal' },
@@ -1246,7 +1195,7 @@ function renderModal() {
     if (m.vars) for (const [k, v] of Object.entries(m.vars())) box.style.setProperty(k, v);
     const head = el('div', 'modal-head');
     // `head` 를 주면 제목 줄을 통째로 갈아 끼운다 — 안 주면 i18n 키 하나가 든다(창 대부분이 이쪽이다)
-    const modalHints = { skill: 'skills', dismiss: 'dismiss', frozen: 'frozen',gamble: 'gamble', arenaUsers: 'users', mail: 'mail' };
+    const modalHints = { skill: 'skills', advance: 'advance', dismiss: 'dismiss', frozen: 'frozen', frozenAcct: 'frozen', gamble: 'gamble', arenaUsers: 'users', mail: 'mail' };
     if (!m.bare) head.appendChild(m.head ? m.head() : helpHeading('h2', '', t(m.title), modalHints[state.modal] ?? 'help'));
     // 이름 하나뿐인 머리 = 패널 제목 크기 + 머리 아래 판 전폭 선 (§2 창 레이어 · ADR-0744) — 갈아 끼우는 머리는 제 규칙을 든다
     if (!m.head) head.classList.add('plain');
@@ -1262,7 +1211,14 @@ function renderModal() {
     if (!m.bare) box.appendChild(head);   // `bare` — 머리 줄째 없는 창(출정 확인 창 · ADR-0467)
     box.appendChild(m.body());
     bindSectionHelp(box);
-    layer.appendChild(box);
+    // `side` — 창 오른쪽에 붙는 카드(없으면 null) · 창과 한 줄(`.modal-pair`)로 서고 높이가 같다 · 닫는 길은 창과 같다 (ADR-1187)
+    const side = m.side?.();
+    if (side) {
+        const pair = el('div', 'modal-pair');
+        pair.appendChild(box);
+        pair.appendChild(side);
+        layer.appendChild(pair);
+    } else layer.appendChild(box);
     /* 판 **바깥**을 눌렀을 때만 닫는다 — 판 안의 클릭이 올라와도 닫히면 랭크 한 번 찍고 창이 사라진다.
        ⚠ **누른 자리와 뗀 자리가 둘 다 바깥**이어야 한다 [2026-09-10] — 클릭 하나만 보면 **판 안에서 시작한 드래그**가
        바깥에서 끝났을 때 창이 닫힌다(진형 드래그가 빗나가면 창째 사라졌다). 시작점을 기억해 두고 둘을 맞춰 본다 */
@@ -1301,7 +1257,7 @@ const SET_PANES = ['game', 'screen', 'fx'];
 let setPane = SET_PANES[0];
 /**
  * `⚙` 판 설정 탭의 속 — 맨 위 하위 탭 `게임` · `화면` · `연출`(SCREEN_DESIGN §2-2 · ADR-1050)이 줄을 가른다:
- *   게임 = 초반 안내 · 닉네임 / 화면 = 아트 스타일(초상 스타일이 둘 이상일 때만) · 로그 · Skin(개발용 임시) /
+ *   게임 = 닉네임 · 우클릭 분해 / 화면 = 아트 스타일(초상 스타일이 둘 이상일 때만) · 로그 · Skin(개발용 임시) /
  *   연출 = 스킬 이펙트 · 이펙트 그림체 · 이펙트 투명도 · 기본 공격 이펙트 · 피격 반응 · 피격 시 흔들림 · 공격 시 흔들림 · Focus(개발용 임시 — devcompare.js).
  * 누르면 **이 속만** 갈아 끼운다 — 연출은 사건마다 켜짐을 읽으므로 화면(도는 관전)은 그대로다. 값은 이 브라우저에만(`fx.js:setFxOn`)
  * 로그 방식은 문서 뿌리 속성 하나라 쌓인 줄까지 한꺼번에 바뀐다(`battle.js:setLogStyle`). 아트 스타일은 전체 렌더로 그림을 갈아 끼운다.
@@ -1310,7 +1266,7 @@ function settingsBody() {
     const box = el('div', 'set-box');
     const panes = el('div', 'set-panes');
     panes.appendChild(segmented(SET_PANES.map(id => ({ id, label: t(`set.pane.${id}`) })), setPane,
-        id => { setPane = id; box.replaceWith(settingsBody()); }));
+        id => { setPane = id; acct.out = false; box.replaceWith(settingsBody()); }));
     box.appendChild(panes);
     if (setPane === 'game') settingsGame(box);
     else if (setPane === 'screen') settingsScreen(box);
@@ -1321,21 +1277,8 @@ function settingsBody() {
 /** 우클릭 분해 — 켜져 있으면 보관 칸 장비 우클릭이 바로 분해 · 메뉴는 `Shift`+우클릭 (§2-2 · §6 · ADR-1188) · 이 브라우저에만(`storage.js`) */
 let quickSalvage = loadQuickSalvage();
 
-/** `게임` 하위 탭 — 초반 안내(게임 화면에서만) · 닉네임 · 우클릭 분해 */
+/** `게임` 하위 탭 — 닉네임 · 계정(배포 주소만) · 우클릭 분해 */
 function settingsGame(box) {
-    if (G && state.screen === 'game') {
-        const row = el('div', 'set-row');
-        row.appendChild(el('span', 'set-k', t('tutorial.settings')));
-        const replay = el('button', 'btn sm tutorial-replay', t('tutorial.replay'));
-        replay.onclick = () => {
-            writeTutorialSeen(tutorialOwner(), []);
-            tutorial.reset();
-            $('.dp-btn')?.click();
-            tutorial.refresh();
-        };
-        row.appendChild(replay);
-        box.appendChild(row);
-    }
     // 닉네임 — 콜로세움의 이름(뒤에 태그)이자 퍼널 페이지가 유저를 알아보는 이름 · 이 브라우저에만 (§2-1 · §2-2 · ADR-0633 · ADR-1042).
     //   칸을 떠나거나 Enter 로 정한다 — 다시 그리지 않는다 · `#` 는 안 들어간다(태그 자리) · 이미 이름이 있으면 비워서 정할 수 없다(앞 이름으로 돌아간다) ·
     //   정하면 곧바로 올린다(콜로세움 방어 편성의 이름이 바뀐다)
@@ -1359,6 +1302,24 @@ function settingsGame(box) {
     if (arenaNet.me) nickCell.appendChild(el('small', 'ar-tag', tagText(arenaNet.me)));
     nickRow.appendChild(nickCell);
     box.appendChild(nickRow);
+    // 계정 — 익명이면 [계정 만들기] · 계정이면 아이디 + [로그아웃](두 번 누른다) (§2-1 「계정」 · §2-2 · ADR-1263) · 배포 주소에서만
+    if (acctOn()) {
+        const acRow = el('div', 'set-row');
+        acRow.appendChild(el('span', 'set-k', t('set.acct')));
+        const acCell = el('span', 'set-nick-cell acct-cell');
+        if (acct.id) {
+            acCell.appendChild(el('b', 'acct-id', escHtml(acct.id)));
+            const out = el('button', `btn sm${acct.out ? ' danger' : ''}`, t(acct.out ? 'set.acctOutConfirm' : 'set.acctOut'));
+            out.onclick = () => { if (acct.out) acctLogout(); else { acct.out = true; box.replaceWith(settingsBody()); } };
+            acCell.appendChild(out);
+        } else {
+            const mk = el('button', 'btn sm', t('set.acctNew'));
+            mk.onclick = () => openAcct('acctNew');
+            acCell.appendChild(mk);
+        }
+        acRow.appendChild(acCell);
+        box.appendChild(acRow);
+    }
     // 우클릭 분해 [Off] [On] — 누른 순간부터 먹는다 · 판 속만 다시 그린다(연출 줄들과 같은 틀 · ADR-1188)
     const qsRow = el('div', 'set-row');
     qsRow.appendChild(el('span', 'set-k', t('set.rclickSalvage')));
@@ -1453,9 +1414,8 @@ function settingsFx(box) {
 function startGame({ prologue = false } = {}) {
     clearSave();
     G = SYS.game.newGame(now() >>> 0, state.candidates, now());
-    writeTutorialSeen(tutorialOwner(), []);
-    tutorial.reset();
     save();
+    acctOpen();   // 계정이면 이 탭이 주인이다 — 새 판으로 사본을 덮는다 (§2-1 「계정」 · ADR-1263)
     state.screen = prologue ? 'prologue' : 'game';
     state.proScene = 0;
     state.tab = 'expedition'; state.exp = 'idle'; state.confirmOverwrite = false; state.expStage = null;
@@ -1567,14 +1527,23 @@ function renderMenu(main) {
     const nb = el('button', 'btn lg mn-btn', t('ng.h'));
     nb.disabled = gate;
     nb.onclick = () => { state.screen = 'start'; state.confirmOverwrite = false; render(); };
-    const lb = el('button', 'btn lg mn-btn', t('mn.load'));
-    lb.disabled = gate || !live;
-    lb.onclick = () => { if (continueGame()) render(); };
+    // 계정이 묶였으면 누를 때 사본을 먼저 본다 — 보는 동안 「확인 중…」으로 잠근다 (§3 · ADR-1263)
+    const lb = el('button', 'btn lg mn-btn', t(acct.busy ? 'mn.checking' : 'mn.load'));
+    lb.disabled = gate || !live || acct.busy;
+    lb.onclick = () => openSave();
     wrap.append(nb, lb);
+    // 계정 — 안 묶였으면 셋째 버튼 [계정으로 불러오기](세이브가 없어도 눌린다) · 묶였으면 요약 아래 아이디 한 줄 · 배포 주소에서만 (§3 · ADR-1263)
+    if (acctOn() && !acct.id) {
+        const ab = el('button', 'btn lg mn-btn', t('mn.acctLoad'));
+        ab.disabled = gate || acct.busy;
+        ab.onclick = () => openAcct('acctLogin');
+        wrap.appendChild(ab);
+    }
     if (saved) wrap.appendChild(el('div', `mn-save${live ? '' : ' down'}`, live
         ? `${t('ng.hasSave', { t: new Date(saved.savedAt).toLocaleString() })}<small>${t('ng.saveLine', {
             h: saved.heroes.length, c: saved.progress.cleared.length, g: saved.resources.gold.toLocaleString() })}</small>`
         : t('ng.oldSave', { v: saved.version })));
+    if (acctOn() && acct.id) wrap.appendChild(el('div', 'mn-acct', t('mn.acctOn', { id: escHtml(acct.id) })));
     if (gate) {
         const pct = pre.total ? Math.floor(pre.done / pre.total * 100) : 0;
         wrap.appendChild(el('div', 'mn-load', `<div class="mn-bar"><i style="width:${pct}%"></i></div><small>${t('mn.loading', { p: pct })}</small>`));
@@ -1704,22 +1673,26 @@ function trackSession() {
     writeTrack(rec);
 }
 
-/** 올리기 — 마지막으로 올린 뒤 세이브나 닉네임이 바뀌었을 때만 */
+/** 올리기 — 마지막으로 올린 뒤 세이브나 닉네임이 바뀌었을 때만(계정은 이 탭이 게임을 연 뒤부터 사본을 — `acct.held`).
+ *  결과를 돌려준다(로그아웃이 성공을 본다) · 안 올렸으면(환경 · 멈춤 · 올리는 중) `{ok: false, err: 'skip'}` · 바뀐 게 없으면 `{ok: true}` ·
+ *  다른 곳이 이 계정을 열었으면 멈춘다(`taken` · ADR-1263) */
 async function trackPush() {
-    if (!TRACK_ON || frozen || track.busy) return;
+    if (!TRACK_ON || frozen || track.busy) return { ok: false, err: 'skip' };
     const local = loadSave();
     const rec = loadTrack();
     if (noteReach(local, rec, local?.expMs ?? 0)) writeTrack(rec);
-    const sent = `${local?.savedAt ?? ''}|${rec.nick}`;
-    if (sent === track.sent) return;
+    const sent = `${local?.savedAt ?? ''}|${rec.nick}|${acct.held ? 1 : 0}`;
+    if (sent === track.sent) return { ok: true };
     track.busy = true;
-    const r = await CLOUD.pushTrack(trackSummary(local, rec), local);
+    const r = await CLOUD.pushTrack(trackSummary(local, rec), local, { nick: rec.nick, device: loadDevice(), held: acct.held });
+    if (r.err === 'taken') { track.busy = false; freeze('account'); return r; }
     // 콜로세움 방어 편성은 따로 쓴다 — 규칙이 이 문서를 거부해도 플레이 기록은 올라간다 (cloud.js `pushArenaTeam` · arena_design §9)
     const arena = arenaUpload(rec.nick);
     const a = arena ? await CLOUD.pushArenaTeam(arena.doc) : null;
     track.busy = false;
-    if (r.ok) track.sent = sent;
+    if (r.ok) { track.sent = sent; acctLearn(r.account); }
     if (a?.ok) Object.assign(arenaNet, { sent: arena.key, drop: arena.doc === 'drop' ? false : arenaNet.drop });
+    return r;
 }
 
 /** 콜로세움 방어 편성 묶음 — 등록했고 세 명이 찼으면 그 편성의 지금 모습 · 해제했으면 'drop' · 지난번과 같거나 올릴 것이 없으면 null (arena_design §9) */
@@ -1765,15 +1738,16 @@ function arenaTake(teams, log, quiet = false, reroll = false) {
     if (!quiet && state.tab === 'arena' && !state.modal && !arenaGateOpen(state.arena)) render();
 }
 
-/** 다른 탭이 세이브를 썼다 — 이 탭은 저장 · 원정 시계 · 올리기를 멈추고 멈춤 창만 남긴다. 먼저 쓴 쪽이 남는다 (§2-1) */
-function freeze() {
+/** 다른 탭이 세이브를 썼다 — 이 탭은 저장 · 원정 시계 · 올리기를 멈추고 멈춤 창만 남긴다. 먼저 쓴 쪽이 남는다 (§2-1).
+ *  `why === 'account'` = 다른 브라우저 · PC 가 같은 계정으로 게임을 열었다 — 같은 멈춤 · 제목만 다른 창 (§2-1 「계정」 · ADR-1263) */
+function freeze(why = 'tab') {
     if (frozen) return;
     frozen = true;
     if (stopBattle) { stopBattle(); stopBattle = null; }
     state.battle = null;
     state.battles = {};          // 부대 핸들도 전부 놓는다 — 이 탭은 더 이상 원정을 안 민다 (ADR-0316)
     if (state.exp === 'battle') state.exp = 'idle';
-    state.modal = 'frozen';
+    state.modal = why === 'account' ? 'frozenAcct' : 'frozen';
     render();
 }
 
@@ -1783,6 +1757,194 @@ function frozenBody() {
     const b = el('button', 'btn primary', t('cl.frozen.reload'));
     b.onclick = () => location.reload();
     box.appendChild(b);
+    return box;
+}
+
+/* ═══════════ 계정 (SCREEN_DESIGN §2-1 「계정」 · §2-2 · §3 · ADR-1263) ═══════════
+   처음엔 누구나 익명 계정이다. 원하는 사람만 아이디 · 비밀번호를 붙이고(설정 계정 줄) · 다른 브라우저에서 그 계정으로 불러온다(메뉴 셋째 버튼).
+   **늦게 연 쪽이 이긴다** — 계정이 묶인 탭은 게임을 연 순간 사본의 주인 표식을 제 것으로 쓰고(`acctOpen`), 그때부터만 사본을 올린다(`trackPush`).
+   올릴 때 주인이 다른 곳이면 멈춘다(`freeze('account')`). 배포 주소에서만 선다 — 개발 환경은 `?dev=account` 의 가짜(어댑터를 안 부른다) */
+
+// 아이디 글자 · 길이와 비밀번호 최소 길이(Firebase 의 기본 최소와 같다) — 게임 수치가 아니라 저장소 사정이라 CSV 가 아니다 (ADR-0102 선례)
+const ACCOUNT_ID_RE = /^[a-z0-9_]{3,16}$/;
+const ACCOUNT_PW_MIN = 6;
+// [불러오기]가 계정의 사본을 기다리는 상한 — 넘으면 이 브라우저 세이브를 연다. 같은 이유로 CSV 가 아니다
+const CLOUD_WAIT_MS = 8000;
+/* `id` = 아이디(익명 · 아직 모르면 null) · `known` = 어댑터에게 들었다(익명인 줄 알면 [불러오기]가 네트워크를 안 기다린다) ·
+   `held` = 이 탭이 게임을 열었다(계정이면 그때부터 사본을 올린다) · `busy` = [불러오기]가 사본을 보는 중 ·
+   `out` = [로그아웃] 첫 누름 · `form` = 계정 창의 칸 · 오류 · 덮어쓰기 첫 누름 · 보내는 중 · `fake` = `?dev=account`(어댑터를 안 부른다) */
+const acct = { id: null, known: false, held: false, busy: false, out: false, form: null, fake: false };
+/** 익명인 줄 안다 — 주인 표식 · 사본 받기가 필요 없다 */
+const acctAnon = () => acct.known && !acct.id;
+const acctOn = () => TRACK_ON || acct.fake;
+const acctForm = () => (acct.form ??= { id: '', pw: '', pw2: '', err: null, busy: false, arm: false });
+/** 사본에 싣는 닉네임 · 이 브라우저 표식 */
+const acctTag = () => ({ nick: loadTrack().nick, device: loadDevice() });
+/** 상한 안에서 기다린다 — 넘으면 연결 실패로 친다 */
+const withinWait = p => Promise.race([p, new Promise(res => setTimeout(() => res({ ok: false, err: 'network' }), CLOUD_WAIT_MS))]);
+
+/** 올리기 결과로 계정을 안다 — 아이디가 바뀌면 메뉴를 다시 그린다(셋째 버튼 ↔ 아이디 줄) */
+function acctLearn(id) {
+    if (id === undefined || acct.fake) return;
+    acct.known = true;
+    if (id === acct.id) return;
+    acct.id = id;
+    if (state.screen === 'menu' && !state.modal) render();
+}
+
+/** 계정 창을 연다 — 칸은 빈 채로 · 첫 칸에 커서 */
+function openAcct(id) {
+    acct.form = null;
+    openModal(id);
+    $('#modal .acct-in')?.focus();
+}
+
+/** 이 탭이 게임을 열었다 — 계정이면 주인 표식을 쓰고(묻지 않는다 · 늦게 연 쪽이 이긴다) 그 뒤부터 사본을 올린다.
+ *  표식을 쓰기 **전에** 올리면 앞 주인을 보고 멈추므로 다 쓴 뒤에 `held` 를 세운다. 익명이면 어댑터가 안 쓰고 돌려보낸다 */
+async function acctOpen() {
+    track.sent = null;
+    if (acctOn() && !acct.fake && !acctAnon()) await CLOUD.claimSave(loadSave(), acctTag());
+    acct.held = true;
+}
+
+/** 받은 사본을 이 브라우저 것으로 — 닉네임은 사본의 것(계정을 따라간다) · 이미 깬 칸은 「언제 깼는지 모름」(퍼널의 걸린 시간이 거짓이 안 되게 · `trackSession` 과 같은 규칙) */
+function acctAdopt(save, nick) {
+    writeSave(save);
+    const rec = loadTrack();
+    if (cleanNick(nick)) rec.nick = cleanNick(nick);
+    noteReach(save, rec, null);
+    writeTrack(rec);
+}
+
+/** 메뉴 [불러오기] — 계정이 묶였으면 사본을 먼저 본다: 다른 곳이 마지막 주인이었으면 사본을 연다 · 이 브라우저였거나 연결이 안 되면 이 브라우저 세이브 (§3) */
+async function openSave() {
+    if (acct.busy) return;
+    if (acctOn() && !acct.fake && !acctAnon()) {
+        acct.busy = true; render();
+        const who = await withinWait(CLOUD.accountOf());
+        if (who.ok) acctLearn(who.id);
+        if (who.ok && who.id) {
+            const r = await withinWait(CLOUD.pullSave());
+            if (r.ok && r.save && r.device && r.device !== loadDevice() && SYS.game.canLoad(r.save)) acctAdopt(r.save, r.nick);
+        }
+        await withinWait(acctOpen());
+        acct.held = true;   // 표식 쓰기가 상한을 넘어도 연 것이다 — 다음 올리기가 주인을 본다
+        acct.busy = false;
+    } else { acct.held = true; track.sent = null; }
+    continueGame();
+    render();
+}
+
+/** 계정 만들기 [만들기] — 칸을 먼저 거르고(아이디 · 길이 · 두 칸 같음) 익명 계정에 붙인다. 만든 순간 이 탭이 주인이다 */
+async function acctCreate() {
+    const F = acctForm();
+    if (F.busy) return;
+    F.id = F.id.trim().toLowerCase();
+    const err = !ACCOUNT_ID_RE.test(F.id) ? 'badId' : F.pw.length < ACCOUNT_PW_MIN ? 'weak' : F.pw !== F.pw2 ? 'mismatch' : acct.fake ? 'dev' : null;
+    if (err) { F.err = err; render(); return; }
+    F.busy = true; F.err = null; render();
+    const r = await CLOUD.createAccount(F.id, F.pw);
+    F.busy = false;
+    if (!r.ok) { F.err = r.err; render(); return; }
+    acctLearn(r.id); acct.form = null;
+    if (state.modal === 'acctNew') state.modal = null;
+    await acctOpen();
+    flash('acct.made', { id: escHtml(r.id) });
+    render();
+}
+
+/** 계정으로 불러오기 [불러오기] — 이 브라우저에 열 수 있는 세이브가 있으면 두 번 누른다(덮어쓰기). 로그인 → 사본으로 갈아 끼우고 게임을 연다 ·
+ *  사본이 없으면 이 브라우저 세이브(없으면 시작 파티 고르기)로 그 계정을 시작한다 */
+async function acctLogin() {
+    const F = acctForm();
+    if (F.busy) return;
+    F.id = F.id.trim().toLowerCase();
+    const err = !ACCOUNT_ID_RE.test(F.id) || !F.pw ? 'wrong' : acct.fake ? 'dev' : null;
+    if (err) { F.err = err; render(); return; }
+    const saved = loadSave();
+    if (saved && SYS.game.canLoad(saved) && !F.arm) { F.arm = true; F.err = null; render(); return; }
+    F.busy = true; F.err = null; render();
+    const r = await CLOUD.signInAccount(F.id, F.pw);
+    F.busy = false;
+    if (r.ok) acctLearn(r.id);
+    if (!r.ok || (r.save && !SYS.game.canLoad(r.save))) { F.err = r.ok ? 'read' : r.err; F.arm = false; render(); return; }
+    if (r.save) acctAdopt(r.save, r.nick);
+    acct.form = null;
+    if (state.modal === 'acctLogin') state.modal = null;
+    await acctOpen();
+    if (!continueGame()) { state.screen = 'start'; state.confirmOverwrite = false; }
+    render();
+}
+
+/** 로그아웃 둘째 누름 — 게임을 연 탭이면 진행을 한 번 올리고(실패하면 멈춘다) · 이 브라우저의 세이브 · 닉네임을 지우고 새로고침(새 익명 계정 · §2-1 「로그아웃」) */
+async function acctLogout() {
+    acct.out = false;
+    if (acct.fake) { flash('acct.err.dev'); render(); return; }
+    if (acct.held && !frozen && G) {
+        save();
+        track.sent = null;
+        const r = await trackPush();
+        if (!r.ok) { flash('acct.err.network'); render(); return; }
+    }
+    frozen = true;   // 더는 저장 · 원정 · 올리기를 안 한다 — 지운 세이브를 시계가 다시 쓰지 않게
+    // 로그아웃이 안 되면 아무것도 안 지운다 — 계정에 묶인 채 세이브만 비면 새 게임이 계정의 사본을 덮는다
+    const r = await CLOUD.signOutAccount();
+    if (!r.ok) { frozen = false; flash('acct.err.network'); render(); return; }
+    clearSave();
+    const rec = loadTrack();
+    rec.nick = '';
+    writeTrack(rec);
+    location.reload();
+}
+
+/** 계정 창 한 칸 — 이름 + 글 칸. 값은 화면 상태(`acct.form`)에 담는다 — 다시 그려도 안 잃는다(치는 동안은 `handBusy` 가 시계 그리기를 미룬다) */
+function acctField(F, key, label, { type = 'text', ph = null, max, auto, go }) {
+    const row = el('label', 'acct-row');
+    row.appendChild(el('span', 'acct-k', t(label)));
+    const inp = el('input', 'set-nick acct-in');
+    inp.type = type;
+    inp.spellcheck = false;
+    inp.maxLength = max;
+    inp.autocomplete = auto;
+    inp.value = F[key];
+    if (ph) inp.placeholder = t(ph);
+    inp.oninput = () => { F[key] = inp.value; };
+    inp.onkeydown = e => { if (e.key === 'Enter') go(); };
+    row.appendChild(inp);
+    return row;
+}
+
+/** 오류 한 줄 · 보내는 버튼 — 두 창이 같이 쓴다 */
+function acctFoot(box, F, label, cls, go) {
+    if (F.err) box.appendChild(el('div', 'acct-err', t(`acct.err.${F.err}`)));
+    const b = el('button', `btn ${cls} acct-go`, t(F.busy ? 'acct.busy' : label));
+    b.disabled = F.busy;
+    b.onclick = go;
+    box.appendChild(b);
+}
+
+/** 계정 만들기 창 — 아이디 · 비밀번호 · 비밀번호 확인 · 「잊으면 못 찾는다」 한 줄 (§2-1 「계정」) */
+function acctNewBody() {
+    const F = acctForm();
+    const box = el('div', 'acct-box');
+    box.appendChild(acctField(F, 'id', 'acct.id', { ph: 'acct.idPh', max: 16, auto: 'username', go: acctCreate }));
+    box.appendChild(acctField(F, 'pw', 'acct.pw', { type: 'password', max: 64, auto: 'new-password', go: acctCreate }));
+    box.appendChild(acctField(F, 'pw2', 'acct.pw2', { type: 'password', max: 64, auto: 'new-password', go: acctCreate }));
+    // 되돌릴 수 없는 선택의 경고 한 줄 — 「설명 문구는 도움말 탭 전용」(§12)의 의도된 예외
+    box.appendChild(el('div', 'acct-note', t('acct.note')));
+    acctFoot(box, F, 'acct.create', 'primary', acctCreate);
+    return box;
+}
+
+/** 계정으로 불러오기 창 — 아이디 · 비밀번호 · 이 브라우저에 열 수 있는 세이브가 있으면 덮어쓰기 버튼(두 번 누른다 — §3 새 게임과 같은 손) */
+function acctLoginBody() {
+    const F = acctForm();
+    const saved = loadSave();
+    const live = !!saved && SYS.game.canLoad(saved);
+    const box = el('div', 'acct-box');
+    box.appendChild(acctField(F, 'id', 'acct.id', { max: 16, auto: 'username', go: acctLogin }));
+    box.appendChild(acctField(F, 'pw', 'acct.pw', { type: 'password', max: 64, auto: 'current-password', go: acctLogin }));
+    acctFoot(box, F, live ? (F.arm ? 'ng.overwriteConfirm' : 'acct.loadOver') : 'acct.load', live ? 'danger' : 'primary', acctLogin);
     return box;
 }
 
@@ -3924,7 +4086,7 @@ let bagStale = false;
 let pointerHeld = false;      // 누르고 있는 중 — `startClocks` 가 창 전체에서 잰다
 // 자원 미니게임이 도는 동안도 손이 바쁘다 — 미뤄 둔 그리기가 판 도중에 창을 다시 세우지 않게 (§8 · ADR-0532)
 const handBusy = () => pointerHeld || !!$('#tooltip')?.classList.contains('show') || mgRun?.phase === 'play'
-    || !!$('.help-search-input:focus');   // 검색 중에는 시계 갱신이 한글 조합 입력을 끊지 않는다 (ADR-0947)
+    || !!$('.help-search-input:focus, .acct-in:focus');   // 검색 · 계정 창 칸을 치는 중에는 시계 갱신이 입력(한글 조합)을 끊지 않는다 (ADR-0947 · ADR-1263)
 
 /** 런이 끝나는 시각 — **마지막 라운드가 계산되기 전엔 모른다**(무한대). 계산되면 결과의 `reason` 이 서고 그 끝이 곧 런의 끝이다 (R89) */
 const runEnd = B => (B.result.reason != null ? B.result.durationSec : Infinity);
@@ -3999,6 +4161,8 @@ function onRoundsSettled() {
 function refreshGold() {
     const gold = $('.resources [data-res="gold"]');
     if (gold) gold.textContent = G.resources.gold.toLocaleString();
+    // 들어온 골드가 전직을 열 수 있다 — 칸 상태 줄 · 창의 [전직] · 비용 칸만 (ADR-1189)
+    if (state.tab === 'library' || state.modal === 'advance') refreshAdvanceAvailability();
 }
 
 /* 원정 플레이 시간 [2026-10-05 · SCREEN_DESIGN §2 · ADR-0514] — 원정이 전투를 진행한 **게임 속 시간**이다(배속을 탄다).
@@ -4023,7 +4187,6 @@ function refreshNavTodo(at) {
     const todo = SYS.game.navTodo(G, at);
     notifications.refresh();
     mainMission.refresh();
-    tutorial.refresh();
     applyMissionGuide();   // 부분 갱신(탭 눈금)이 갈아 끼운 칸에도 · 채우면 걷는다 (ADR-1251)
     for (const b of document.querySelectorAll('.nav button[data-tab]'))
         b.classList.toggle('todo', !b.classList.contains('dim') && !!todo[b.dataset.tab]);
@@ -5498,7 +5661,10 @@ function storageTools(where) {
             id => { clearBagSel(); state.stashTab = id; state.bookStashSel = null; render(); });
         seg.classList.add('bag-tabs');
         tools.appendChild(seg);
-        if (tab === 'book') tools.appendChild(bookSalvageBtn());   // 스킬북 탭 — [정렬] 바로 왼쪽 [분해] (ADR-1199)
+        if (tab === 'book') {   // 스킬북 탭 — [정렬] 바로 왼쪽 [분해] · 그 왼쪽에 가진 스킬 조각 수 (ADR-1199 · ADR-1262)
+            tools.appendChild(el('span', 'muted bk-shard-have', t('bk.shardHave', { n: SYS.game.bookState(G).shards.toLocaleString() })));
+            tools.appendChild(bookSalvageBtn());
+        }
         if (!state.bagSelMode) tools.appendChild(sortTools('stash', tab));
     } else {
         // 도구 줄 [잠금]은 없다 — 잠금은 우클릭 메뉴가 든다 [2026-09-29 사용자 지시 · ADR-0454]
@@ -5602,7 +5768,7 @@ function bookStashGrid() {
     return grid;
 }
 
-/** 창고 스킬북 탭의 [분해] — 고른 책 1권 → 최하급 가루(`game.salvageBook` · `[balance.csv:book_salvage_dust]`) · 고르고 누른다(§3 두 번 누름 · 확인 창 없음 · ADR-1199).
+/** 창고 스킬북 탭의 [분해] — 고른 책 1권 → 스킬 조각(`game.salvageBook` · `[balance.csv:book_salvage_shard]` · R540 · ADR-1262) · 고르고 누른다(§3 두 번 누름 · 확인 창 없음 · ADR-1199).
  *  그 책이 남아 있으면 고른 채 · 다 쓰면 칸이 빠져 저절로 풀린다(`bookStashGrid` 의 `find`) */
 function bookSalvageBtn() {
     const id = SYS.game.bookState(G).books.some(b => b.id === state.bookStashSel) ? state.bookStashSel : null;
@@ -5612,7 +5778,7 @@ function bookSalvageBtn() {
         const r = SYS.game.salvageBook(G, id);
         if (!r.ok) { flash(`bk.err.${r.err}`); render(); return; }
         save();
-        flash('bk.salvaged', { skill: L(skillInfo(id).name), dust: resName('dust'), n: r.dust });
+        flash('bk.salvaged', { skill: L(skillInfo(id).name), n: r.shards });
         render();
     };
     return b;
@@ -6781,7 +6947,9 @@ const effectText = (effects, whole) => effects.map(e => {
     // `{n}` = 그 줄의 값 · `{total}` = 그 랭크까지의 합(「파티 전술 레벨 n 해금」 — `constructionState` 가 싣는다)
     // 연구소 랭크 I 은 줄을 안 연다 — 「연구소 개방」(누적 1 · 2026-10-27 사용자 지시 · R361) · II 부터는 누적 번호 문장 그대로
     const key = e.target === 'resource_tier' && e.total === 1 ? 'cn.t.lab_open' : `cn.t.${e.target}`;
-    const s = t(key, { n: e.value, total: e.total ?? e.value });
+    // 도감은 표가 **연 구간 수**를 센다 — 문장은 그 구간의 끝 레벨(「도감 Lv40 해금」 · `game.codexCapOf` · ADR-1261)
+    const total = e.target === 'codex_level' ? SYS.game.codexCapOf(e.total ?? e.value) : e.total ?? e.value;
+    const s = t(key, { n: e.value, total });
     return e.live || whole ? `<div class="cn-desc">${s}</div>` : `<div class="cn-desc soon">${s} ${t('cn.soon')}</div>`;
 }).join('');
 /** 조건 한 줄 — 스테이지 「1-5 클리어」 · 장 「챕터 1 클리어」 · 단을 적은 장 「나이트메어 챕터 1 클리어」(R363) · 난이도 「노말 클리어」(ADR-0909) · 합산 「합산 레벨 12 / 15」 · 영웅 ·
@@ -6821,150 +6989,350 @@ const flashUnbuilt = (cs, tab) => { const a = unbuiltArgs(cs, tab); if (a) flash
 /** 자물쇠만 선 자리의 툴팁 — 올리면(손가락은 길게 누르면) 여는 곳 한 줄 · 물약 칸 · 영웅 띠 잠긴 칸과 같은 `tip-mini` · 꺼진 버튼도 받는다 (§13-1 · ADR-1181) */
 const lockTip = (node, text) => { if (text) bindTipNode(node, () => el('div', 'tip-card tip-mini', `<div class="tip-name">${text}</div>`)); return node; };
 
-/* ═══════════ 도서관 — 영웅 띠 · 전직 | 스킬 업그레이드 (SCREEN_DESIGN §17 · ADR-1197) ═══════════ */
+/* ═══════════ 도서관 — 스킬정보 | 전직의 방 칸 · 본판 스킬 업그레이드 | 스킬 북 제작 · 전직의 방 창 (SCREEN_DESIGN §17 · ADR-1179 · ADR-1262) ═══════════ */
 
-/**
- * 도서관 탭 — 맨 위 영웅 띠(§5 — 캐릭터 탭 · 상점 · 대장간과 같은 「고른 영웅」) · 그 아래 **두 열**.
- *   왼쪽 = 전직 패널(`advancePanel`) — 폭 = 위 영웅 띠 카드 7칸(ADR-0852) · 고른 영웅 줄 · 지금 가진 스킬 · 갈래 · 판정은 `game.advanceState` 하나
- *   오른쪽 = 스킬 업그레이드 카드 하나가 열 전체 높이 — 속은 `bookLearnInto` · 판정은 `game.bookState` 하나
- *   [2026-11-15 사용자 지시 「전직창은 예전스타일로 밖으로 빼주면」 · 「스킬 북 제작을 삭제하고 스킬 업그레이드만」 · ADR-1197 · ADR-1198 —
- *    ~~스킬정보 | 전직의 방 칸 · 전직의 방 창~~ ADR-1179 · ~~스킬 북 제작 카드~~ ADR-0597]
- */
+/** 영웅 띠 아래 위아래 둘 — 윗줄 스킬정보 | 전직의 방 칸(4 : 1 · 선술집 「의뢰 | 도박장」과 같은 짜임) · 아랫줄 본판(남는 세로를 다 받는다).
+ *  전직은 전직의 방 칸의 [입장]이 여는 창(`MODALS.advance`)에서 한다 — 도박장 칸 → 도박장 창과 같은 길.
+ *  책 판정은 game.bookState, 전직 판정은 game.advanceState가 맡는다.
+ *  [2026-11-18 사용자 지시 「전직은 전직의방만들어서 클릭하면 탭이켜지는형태로 다시 빼보자」 · R540 · ADR-1262 — ~~왼쪽 전직 패널 · 오른쪽 스킬 업그레이드 카드 하나~~ ADR-1197] */
 function renderLibrary(main) {
-    const page = el('div', 'char-stack page c-train');
-    // 고른 책(`bookSel`)은 영웅을 바꿔도 남는다 · 고른 갈래(`advSel`)는 영웅을 들고 있어 다른 영웅에겐 안 먹는다
+    const page = el('div', 'char-stack page c-lib');
+    // 고른 책(`bookSel` · `bookCraftSel`)은 영웅을 바꿔도 남는다 · 고른 갈래(`advSel`)는 영웅을 들고 있어 다른 영웅에겐 안 먹는다
     page.appendChild(heroStrip(pickHero));
     const h = heroById(state.heroUid);
-    const bs = h ? SYS.game.bookState(G, h.uid) : null;
-    const band = el('div', 'cols c-train-band');
-    band.appendChild(advancePanel());
-    // 스킬 업그레이드 — 제목은 서 있고 본문이 스크롤한다(박스 · ADR-0097) · 제목 바로 오른쪽 `?`(ADR-0603) ·
-    //   책 배우기(도서관 r1 · R398)가 안 열렸으면 몸을 잠김 베일로 덮는다 — 제목 줄 · `?` 는 베일 밖(ADR-0928 · 열렸나는 `hasFeature` 하나)
-    const p = el('div', 'panel lib-learn');
-    p.appendChild(headingHelp(el('h2', '', `<span>${t('bk.up.h')}</span>`), () => t('bk.up.help')));
-    const body = el('div', 'box-body bk-box lib-body');
-    body.dataset.keep = 'library-learn';
-    if (bs) bookLearnInto(body, h, bs);
-    if (!SYS.game.hasFeature(G, 'skillbook')) { body.classList.add('lock-host'); body.appendChild(lockVeil('skillbook')); }
-    p.appendChild(body);
-    band.appendChild(p);
-    page.appendChild(band);
+    const col = el('div', 'page-stack c-lib-col');
+    const top = el('div', 'lib-top');
+    top.appendChild(libInfoPanel(h));
+    top.appendChild(libRoomPanel(h));
+    col.appendChild(top);
+    const p = el('div', 'panel page fill lib-panel');
+    p.appendChild(bookSections(h));
+    col.appendChild(p);
+    page.appendChild(col);
     main.appendChild(page);
 }
 
-/** 전직 패널 — 제목 · 전직 카드 속 (§17 · R16 · ADR-1197 — 11-13 의 패널 그대로).
- *  건물 줄은 없다 — 전직이 안 열렸으면 갈래 자리를 잠김 베일로 덮는다(ADR-0404 · ADR-0595 · §13-1 · 열렸나는 `hasFeature` 하나) */
-function advancePanel() {
-    const p = el('div', 'panel lib-adv-panel');
-    p.appendChild(helpHeading('h2', '', t('tr.seg.adv'), 'advance'));
-    const body = el('div', 'box-body tr-adv-body');   // 세로 플렉스 — 갈래 카드 셋이 남는 세로를 나눠 채운다 (ADR-0607)
-    body.dataset.keep = 'library-advance';
-    advanceBody(body, !SYS.game.hasFeature(G, 'advance'));
-    p.appendChild(body);
+/** 전직의 방 상태 한 줄 — 칸 바닥 · 창 진행 막대 머리. 잠겨도 목표와 갈래를 볼 수 있다 */
+function advanceStatus(A) {
+    if (A.hero.advance) return t('tr.room.done', { name: L(A.branches.find(b => b.id === A.hero.advance).name) });
+    if (A.hero.working) return t('tr.err.working');
+    if (!A.open) return needText('advance');
+    if (A.err === 'level') return t('tr.room.level', { n: A.need.need });
+    return A.err ? t(`tr.err.${A.err}`) : t('tr.room.ready');
+}
+/** 칸 바닥의 상태 줄 — 건물이 안 열었으면 자물쇠 줄(§2 「잠긴 자리의 한 줄」) */
+const advanceStatusHtml = A => (!A.hero.advance && !A.hero.working && !A.open ? lockLine(advanceStatus(A)) : advanceStatus(A));
+/** 창 계기판에 안 서는 막힘(탐험 중 등) — 레벨 · 건물 · 골드는 계기판 칸이 붉어 말한다 */
+const advanceRoomBlock = A => (A.err && !['unbuilt', 'level', 'gold', 'working', 'done'].includes(A.err) ? t(`tr.err.${A.err}`) : null);
+
+/** 골드 · 레벨이 렌더 없이 바뀔 때(골드 눈금) — 칸의 상태 줄 · 창의 [전직] · 비용 칸 · 막힘 줄만 갈아 끼운다 */
+function refreshAdvanceAvailability() {
+    const h = heroById(state.heroUid);
+    if (!h) return;
+    const A = SYS.game.advanceState(G, h.uid, now());
+    const status = document.querySelector('.lib-room-st');
+    if (status) { status.innerHTML = advanceStatusHtml(A); status.classList.toggle('ready', !A.err); }
+    const go = document.querySelector('.advance-room .tr-adv-go');
+    if (!go) return;
+    go.disabled = !advanceRoomPick(h, A).selected || !!A.err;
+    document.querySelector('.adv-room-m.gold')?.classList.toggle('no', A.gold.have < A.gold.need);
+    const note = document.querySelector('.adv-room-note');
+    if (note) {
+        const block = advanceRoomBlock(A);
+        note.classList.toggle('no', !!block);
+        note.textContent = block ?? t('tr.room.irreversible');
+    }
+}
+
+/** 전직 뒤 [마스터리 열기] — 스킬 창을 열고, 닫으면 `back` 창(전직의 방)으로 돌아온다(`modalBack`) */
+function openAdvanceMastery(back = null) {
+    state.modalBack = back;
+    openModal('skill');
+}
+
+/** 스킬정보 (윗줄 왼쪽 패널 · §17) — **지금 가진 스킬** = 캐릭터 탭 「액티브 스킬」과 **같은 카드 셋**(`skillCardGrid` · 찬 칸 그림 오른쪽 아래 `Lv.n` · ADR-0578 · ADR-0589) ·
+ *  전직한 영웅이면 제목 줄 오른쪽 끝에 공용 스킬 포인트. 잠김 베일 밖이다 — 책을 읽을지 볼 때 쓰는 줄이다 (ADR-0595) */
+function libInfoPanel(h) {
+    const p = el('div', 'panel lib-info');
+    const head = el('h2', '', `<span>${t('bk.hero.h')}</span>`);   // `?` 없음
+    p.appendChild(head);
+    if (!h) return p;
+    const A = SYS.game.advanceState(G, h.uid, now());
+    if (A.hero.advance) head.appendChild(el('span', 'tr-adv-pts', t('tr.adv.points', A.hero.points)));
+    const cur = el('div', 'tr-adv-cur');
+    cur.appendChild(skillCardGrid(h, heroSkillCtx(h)));
+    p.appendChild(cur);
     return p;
 }
 
-/** 전직 카드의 속 — 띠에서 고른 영웅 하나 (§17 · R16). 판정은 전부 `game.advanceState` 가 낸다.
- *  위에서 아래로 = 고른 영웅 줄 · **지금 가진 스킬**(왼쪽) + 골드 · [전직](오른쪽 끝, 같은 높이 · ADR-1000) · 갈래 자리(`.tr-adv-main`). **잠김 베일은 갈래 자리만 덮는다** —
- *  영웅 줄 · 카드 셋은 전직이 안 열려도 읽힌다(책을 읽을지 볼 때 쓰는 줄이다 · ADR-0595) */
-function advanceBody(body, locked = false) {
-    const veil = host => { if (locked) { host.classList.add('lock-host'); host.appendChild(lockVeil('advance')); } };
-    const h = heroById(state.heroUid);
-    if (!h) { veil(body); return; }
-    const A = SYS.game.advanceState(G, h.uid, now());
-    const lvOk = A.need.have >= A.need.need;
-    // 전직했으면 줄 오른쪽에 공용 스킬 포인트 `남은 / 전체` (2026-10-06 · R216 · ADR-0529)
-    const pts = A.hero.advance ? `<span class="muted tr-adv-pts">${t('tr.adv.points', A.hero.points)}</span>` : '';
-    body.appendChild(el('div', 'tr-adv-hero', `<b>${L(h.name)}</b><span class="${lvOk ? 'muted' : 'no'}">${t('tr.adv.level', A.need)}</span>${pts}`));
-    // 지금 가진 스킬 — 캐릭터 탭 「액티브 스킬」과 **같은 카드 셋**(`skillCardGrid` — 고유 · 습득 · 전직 칸이 늘 셋 · 빈 칸 · 자물쇠 · 칸 아래 출처) ·
-    //   찬 칸 그림 오른쪽 아래 `Lv.n`(전직 칸은 안 단다 — ADR-1190) · 소제목이 없다 (ADR-0578 · ADR-0589)
-    const cur = el('div', 'tr-adv-cur');
-    cur.appendChild(skillCardGrid(h, heroSkillCtx(h)));
-    const actions = el('div', 'tr-adv-actions');
-    if (!A.hero.advance && !A.hero.working) {
-        actions.appendChild(bindMatTips(el('div', 'cn-mats', matTile({ res: 'gold', need: A.gold.need, have: A.gold.have }))));
-        cur.appendChild(actions);
+/** 전직의 방 칸 (윗줄 오른쪽 패널 · §17 · ADR-1179) — 도박장 칸(`gamblePanel`)과 같은 짜임: 가운데 고른 영웅 직업의 갈래 문장 셋 띠
+ *  (갈래 색 · 전직한 영웅은 그 갈래만 색) · 바닥 상태 한 줄 + [입장]. **잠겨도 베일을 안 덮는다** — 갈래 · 마스터리는 해금 전에도 미리 본다
+ *  (막힘은 상태 줄과 창 계기판이 말한다). [입장]은 조회만 한다 */
+function libRoomPanel(h) {
+    const A = h ? SYS.game.advanceState(G, h.uid, now()) : null;
+    const p = el('div', 'panel lib-room');
+    p.appendChild(helpHeading('h2', '', t('tr.room.title'), 'advance'));
+    const cell = el('div', 'gb-cell lib-room-cell');
+    const arts = el('div', 'lib-room-arts');
+    for (const br of A?.branches ?? []) {
+        const row = D.advanceRows.find(a => a.advance_id === br.id);
+        const art = el('i', `lib-room-art${A.hero.advance && A.hero.advance !== br.id ? ' off' : ''}`);
+        const url = advArtUrl(row, h.cls);
+        if (url) { art.style.webkitMaskImage = `url('${url}')`; art.style.maskImage = `url('${url}')`; }
+        if (row?.color_hex) art.style.setProperty('--path-color', row.color_hex);
+        art.setAttribute('aria-hidden', 'true');
+        arts.appendChild(art);
     }
-    body.appendChild(cur);
-    // 갈래 자리 — 전직 전 · 하는 중 · 후 하나. 베일은 여기에만 (ADR-0595)
-    const main = el('div', 'tr-adv-main');
-    veil(main);
-    body.appendChild(main);
-    const branchName = id => L(A.branches.find(b => b.id === id)?.name ?? { ko: id, en: id });
-    // 스킬 한 줄 — 그림 · 이름 · 문장(`skill.csv:desc_*` 틀을 채운 것 — 캐릭터 탭 액티브 줄과 같은 `skillLineHtml` · 효과만) · 올리면 스킬 설명창 (ADR-0402)
-    //   **설명은 한 줄** — 추가 피해 문장도 줄을 안 바꾸고 ` · ` 로 잇는다 (ADR-0852) · 그림에 `Lv.n` 은 안 단다 — 전직 스킬은 레벨이 없다 (ADR-1190)
+    cell.appendChild(arts);
+    cell.appendChild(el('div', `lib-room-st${A && !A.err ? ' ready' : ''}`, A ? advanceStatusHtml(A) : '—'));
+    const go = el('button', 'btn sm lib-advance-open', t('tr.room.enter'));
+    go.disabled = !h;
+    go.onclick = () => { state.advSel = null; state.advPreview = {}; state.modalBack = null; openModal('advance'); };
+    cell.appendChild(go);
+    p.appendChild(cell);
+    return p;
+}
+
+/** 본판 — 스킬 업그레이드(왼쪽 반) | 스킬 북 제작(오른쪽 반) (§17 · ADR-1165 · ADR-1262).
+ *  구역마다 소제목 + 바로 오른쪽 `?`(ADR-0600 · ADR-0603) · 본문이 스크롤한다(스크롤 자리를 따로 든다).
+ *  책 배우기(도서관 r1 · R398)가 안 열렸으면 두 구역 몸을 잠김 베일로 덮는다 — 제작도 같은 문(`skillbook` · R540) · 소제목 · `?` 는 베일 밖(ADR-0928 · 열렸나는 `hasFeature` 하나).
+ *  스킬 업그레이드 구역의 `lib-learn` 은 메인미션 손가락이 찾는 이름이다(`mmGuideSelectors`) */
+function bookSections(h) {
+    const split = el('div', 'lib-split');
+    const bs = SYS.game.bookState(G, h?.uid ?? null);   // 영웅이 없어도 — 스킬 북 제작은 영웅과 무관하다 (R540)
+    const locked = !SYS.game.hasFeature(G, 'skillbook');
+    const sec = (cls, title, keep, fill, help) => {
+        const s = el('div', `lib-sec ${cls}`);
+        s.appendChild(headingHelp(el('div', 'sub-h', t(title)), help));
+        const body = el('div', 'box-body bk-box lib-body');
+        body.dataset.keep = keep;
+        fill(body);
+        if (locked) { body.classList.add('lock-host'); body.appendChild(lockVeil('skillbook')); }
+        s.appendChild(body);
+        split.appendChild(s);
+    };
+    sec('lib-learn', 'bk.up.h', 'library-learn', body => { if (h) bookLearnInto(body, h, bs); }, () => t('bk.up.help'));
+    sec('lib-craft', 'bk.craft.h', 'library-craft', body => bookCraftInto(body, h, bs), () => t('bk.craft.help'));
+    return split;
+}
+
+/** 스킬 북 제작 = 본판 오른쪽 반 (§17 · R540 · ADR-1262) — 옛 제작 카드(ADR-0597 이름 · 0600 `?` · 1021 직업 탭)를 스킬 조각으로.
+ *  위에서 아래로 = **직업 줄**(스킬 업그레이드 직업 줄과 같은 칸 · 같은 규칙 · ADR-1206) · **만들기 줄**(읽기 줄과 같은 짜임 — 왼쪽 고른 책 그림 칸 ·
+ *  윗줄 이름 / 아랫줄 비용 `스킬 조각 가진/필요 · n G` — 고른 것이 없어도 선다(모든 책이 같은 값) · [만들기]) · **칸**(`bookState.craft` — 그림만 · 권수 배지 없음).
+ *  영웅과 무관 — 설명창 숫자만 띠에서 고른 영웅 기준. 판정(목록 · 비용 거절)은 `game.bookState` · `game.craftBook` */
+function bookCraftInto(box, h, bs) {
+    const tipCtx = h ? heroSkillCtx(h) : {};
+    const clsIds = ['all', ...bookClasses().map(c => c.id)];
+    const fil = clsIds.includes(state.bookCraftCls) ? state.bookCraftCls : 'all';
+    const clsRow = el('div', 'segmented bk-cls');
+    clsRow.style.setProperty('--n', clsIds.length);
+    for (const id of clsIds) {
+        const has = id === 'all' || bs.craft.some(c => bookClassOf(c.id) === id);
+        const b = el('button', `btn sm${fil === id ? ' on' : ''}`, id === 'all' ? t('bk.cls.all') : className(id));
+        b.type = 'button';
+        b.disabled = !has && fil !== id;
+        b.onclick = () => {
+            state.bookCraftCls = id;
+            if (state.bookCraftSel && id !== 'all' && bookClassOf(state.bookCraftSel) !== id) state.bookCraftSel = null;
+            render();
+        };
+        clsRow.appendChild(b);
+    }
+    box.appendChild(clsRow);
+    const shown = fil === 'all' ? bs.craft : bs.craft.filter(c => bookClassOf(c.id) === fil);
+    const sel = shown.find(c => c.id === state.bookCraftSel) ?? null;
+    const cost = bs.craftCost;
+    const shortShard = bs.shards < cost.shards, shortGold = G.resources.gold < cost.gold;
+    const own = el('div', 'bk-sec');
+    const ico = sel
+        ? `<span class="inv-cell filled bk-buy-ico"><span class="inv-icon">${skillImg(skillInfo(sel.id))}</span></span>`
+        : '<span class="inv-cell bk-buy-ico"></span>';
+    const costHtml = `<span class="bk-need${shortShard ? ' no' : ''}">${t('bk.shards', { have: bs.shards.toLocaleString(), need: cost.shards.toLocaleString() })}</span>`
+        + `<span class="bk-sep"> · </span><span class="bk-need${shortGold ? ' no' : ''}">${t('bk.gold', { g: cost.gold.toLocaleString() })}</span>`;
+    const bar = el('div', 'td-buy bk-buy bk-make', ico + `<span class="td-buy-n">`
+        + (sel ? `<span class="bk-buy-name">${L(skillInfo(sel.id).name)}</span>` : '<span class="bk-buy-name muted">—</span>')
+        + `<span class="bk-buy-sub">${costHtml}</span></span>`);
+    const btn = el('button', 'btn sm primary', t('bk.make'));
+    btn.disabled = !sel || !!sel.err;
+    btn.onclick = () => {
+        const r = SYS.game.craftBook(G, sel.id);
+        if (!r.ok) flashErr('bk', r.err, 'skillbook');
+        else { save(); flash('bk.crafted', { skill: L(skillInfo(sel.id).name) }); }
+        render();
+    };
+    bar.appendChild(btn);
+    own.appendChild(bar);
+    if (!shown.length) { own.appendChild(el('div', 'muted bk-empty', t('bk.craft.none'))); box.appendChild(own); return; }
+    // 칸 — 그림만(재고 `×n` 은 왼쪽 가진 책 칸이 든다) · 올리면 스킬 설명창 · 누르면 고르기(다시 누르면 풀린다) · 만들어도 고른 채 남는다
+    const grid = el('div', 'bk-grid');
+    for (const c of shown) grid.appendChild(bookCell(c.id, sel === c, () => skillTipCard({ id: c.id }, tipCtx),
+        () => { state.bookCraftSel = sel === c ? null : c.id; render(); }));
+    own.appendChild(grid);
+    box.appendChild(own);
+}
+
+/** 전직의 방 — 굳은 갈래(전직 중 · 전직 뒤) · 고른 갈래(그 영웅에게 고른 것 · **없으면 맨 위 갈래** — 창은 맨 위 갈래가 골라진 채 열린다 · ADR-1189) */
+const advanceRoomPick = (h, A) => {
+    const fixed = A.hero.advance ?? A.hero.working?.branch ?? null;
+    const mine = state.advSel?.uid === h.uid ? A.branches.find(b => b.id === state.advSel.branch) : null;
+    const selected = fixed ? null : mine ?? A.branches[0] ?? null;
+    return { fixed, selected };
+};
+
+/** 전직의 방 창 (§17 · ADR-1187) — 본문 = **갈래 카드 세 줄**(옛 도서관 전직 패널 카드 그대로 · ADR-0402 · ADR-0852):
+ *  왼쪽 칸 = 갈래 이름(갈래 색) + 역할 설명 · 오른쪽 칸 = 그 갈래의 전직 스킬 셋이 한 줄씩(그림 · 이름 · 효과 한 줄 · 올리면 스킬 설명창).
+ *  줄 누르기 = 갈래 고르기(줄 안쪽 파란 테두리 · 늘 하나가 골라져 있다 · 세이브 아님) + 창 오른쪽에 마스터리 판 카드(`advanceRoomSide`) ·
+ *  전직 중 · 전직 뒤에는 그 갈래 줄만 주황 테두리이고 나머지는 흐려 못 누른다(ADR-0592). 모바일은 옆 카드 대신 판이 본문 맨 아래에 선다.
+ *  바닥 = 계기판 + [<갈래> 전직]. 비교는 조회만 — 확정만 advanceStart 를 부른다 */
+function advanceRoomBody() {
+    const h = heroById(state.heroUid);
+    const A = SYS.game.advanceState(G, h.uid, now());
+    const { fixed, selected } = advanceRoomPick(h, A);
+    const wrap = el('div', 'advance-room');
+    const body = el('div', 'adv-room-main');
+    const rows = el('div', 'tr-adv-row adv-room-paths');
+    rows.setAttribute('role', 'radiogroup');
+    rows.setAttribute('aria-label', t('tr.room.paths'));
+    // 스킬 한 줄 — 그림 · 이름 · 효과 한 줄(`skillLineHtml` — 캐릭터 탭 액티브 줄과 같은 글) · 올리면 스킬 설명창 · 배운 스킬이면 줄 끝 「배움」(전직 스킬은 레벨이 없어 `Lv.n` 을 안 단다 · ADR-1190)
     const tipCtx = { ...heroSkillCtx(h), source: 'advance' };
-    //   배운 스킬은 그 영웅이 든 값으로 센다(`A.hero.lv` — 설명창의 숫자만 · 레벨 글자는 없다)
-    const skillRow = (id, tail = null, learned = false) => {
+    const skillRow = (id, learned) => {
         const r = el('div', 'tr-adv-sk');
         const s = { id, up: learned ? Math.max(0, (A.hero.lv ?? 1) - 1) : 0 };
         r.innerHTML = `<span class="tr-adv-ico">${skillImg({ id })}</span>`
             + `<span class="tr-adv-tx"><b class="tr-adv-nm">${L(skillInfo(id).name)}</b><span class="tr-adv-desc">${skillLineHtml(s, tipCtx, ' · ')}</span></span>`;
+        if (learned) r.appendChild(el('span', 'tr-adv-act', `<span class="tr-adv-got">${t('tr.adv.learned')}</span>`));
         bindTipNode(r, () => skillTipCard(s, tipCtx));
-        if (tail) r.appendChild(tail);
         return r;
     };
-    // 갈래 카드 — 왼쪽 칸 = 갈래 이름 + 갈래를 상징하는 설명(`advance.csv:desc_*`) · 오른쪽 = 스킬 셋이 한 줄씩 (가로로 긴 카드 · ADR-0402 · ADR-0403)
-    //   `done` = 전직한 갈래 — 주황 테두리 (ADR-0592)
-    const branchCard = (br, rows, done = false) => {
-        const box = el('div', `tr-adv-branch${done ? ' done' : ''}`);
-        box.dataset.branch = br.id;
-        box.appendChild(el('div', 'tr-adv-bh', `<b>${L(br.name)}</b><span class="tr-adv-bdesc">${L(br.desc)}</span>`));
-        const list = el('div', 'tr-adv-sks');
-        for (const r of rows) list.appendChild(r);
-        box.appendChild(list);
-        return box;
-    };
-    // 전직하는 중 — 갈래 이름 · 막대 · 남은 시간 (앱 시계가 폭 · 글자만 갈아 끼운다 — `refreshAdvanceBars`)
-    if (A.hero.working) {
-        const w = A.hero.working;
-        const box = el('div', 'tr-adv-work');
-        box.innerHTML = `<b>${branchName(w.branch)}</b><i class="tr-adv-bar"><b data-advbar="${h.uid}" style="width:${(w.frac * 100).toFixed(1)}%"></b></i>`
-            + `<span class="muted" data-advleft="${h.uid}">${t('tr.adv.left', { t: fmtDuration(Math.max(0, w.until - now())) })}</span>`;
-        main.appendChild(box);
-        return;
-    }
-    // 전직 후 — 전직 전과 같은 갈래 셋이 서고 **전직한 갈래만 주황 테두리**(나머지 둘은 평소 카드 · `can-pick` 이 없어 누를 것이 없다 · ADR-0592)
-    //   전직한 갈래의 배운 줄 끝에 「배움」(상태만). **배우기 · 되돌리기는 마스터리 창 전직 판이다** — 버튼이 없다 (ADR-0542)
-    if (A.hero.advance) {
-        const row = el('div', 'tr-adv-row');
-        for (const br of A.branches) {
-            const done = br.id === A.hero.advance;
-            const rows = br.skills.map(id => (done && A.hero.skill === id
-                ? skillRow(id, el('span', 'tr-adv-act', `<span class="tr-adv-got">${t('tr.adv.learned')}</span>`), true)
-                : skillRow(id)));
-            row.appendChild(branchCard(br, rows, done));
-        }
-        main.appendChild(row);
-        return;
-    }
-    // 전직 전 — 그 직업의 갈래 셋이 세로로 쌓인다(ADR-0402). **카드를 누르면 그 갈래가 골라지고**(안쪽 파란 테두리 · 하나만 · 다시 누르면 풀린다 · 처음엔 아무것도 안 골라져 있다)
-    //   스킬 줄 오른쪽 끝 [전직] 이 켜진다 — 고르기 + 누르기가 두 번 누름이다(§3 · 상점 「고르고 산다」와 같은 문법 · ADR-0536 · 자리 ADR-1000 · ADR-1197 — ~~맨 위 갈래가 골라진 채~~ ADR-1189)
-    const pick = state.advSel?.uid === h.uid && A.branches.some(b => b.id === state.advSel.branch) ? state.advSel.branch : null;
-    const row = el('div', 'tr-adv-row');
     for (const br of A.branches) {
-        const card = branchCard(br, br.skills.map(id => skillRow(id)));
-        card.classList.add('can-pick');
-        if (br.id === pick) card.classList.add('pick');
-        card.onclick = () => { state.advSel = br.id === pick ? null : { uid: h.uid, branch: br.id }; render(); };
-        row.appendChild(card);
+        const on = br.id === (fixed ?? selected?.id);
+        const card = el('div', `advance-path tr-adv-branch${fixed ? '' : ' can-pick'}${on ? (fixed ? ' done' : ' on pick') : ''}${fixed && !on ? ' off' : ''}`);
+        card.dataset.branch = br.id;
+        card.setAttribute('role', 'radio');
+        card.setAttribute('aria-checked', String(on));
+        if (fixed) card.setAttribute('aria-disabled', 'true');
+        else card.tabIndex = 0;
+        const color = D.advanceRows.find(a => a.advance_id === br.id)?.color_hex;
+        if (color) card.style.setProperty('--path-color', color);
+        const head = el('div', 'tr-adv-bh');
+        head.appendChild(el('b')).textContent = L(br.name);
+        head.appendChild(el('span', 'tr-adv-bdesc')).textContent = L(br.desc);
+        card.appendChild(head);
+        const list = el('div', 'tr-adv-sks');
+        for (const id of br.skills) list.appendChild(skillRow(id, br.id === A.hero.advance && A.hero.skill === id));
+        card.appendChild(list);
+        // 누르기 = 그 갈래로 바꾸기(옆 카드도) · 늘 하나가 골라져 있어 다시 눌러도 안 풀린다 (ADR-1189)
+        const choose = () => {
+            if (fixed) return;
+            state.advSel = { uid: h.uid, branch: br.id };
+            render();
+            document.querySelector(`.advance-path[data-branch="${br.id}"]`)?.focus({ preventScroll: true });
+        };
+        card.onclick = choose;
+        card.onkeydown = e => { if (e.target === card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); choose(); } };
+        rows.appendChild(card);
     }
-    main.appendChild(row);
-    // [전직] — 거절(레벨 · 골드 · 탐험)은 플래시로 말하고 고른 채 둔다 · 원정에서 싸우는 중이어도 된다(2026-10-24) · 전직이 안 열렸으면 잠김 베일이 갈래 자리를 덮으니 버튼을 안 세운다
-    //   걸리는 시간이 없으면(`advance_hours` 0) 그 자리에서 끝난다 — 플래시도 「완료」로 (ADR-1197)
-    if (!A.open) return;
-    const b = el('button', 'btn sm primary tr-adv-go', t('tr.adv.go'));
-    b.disabled = !pick;
-    b.onclick = () => {
-        const r = SYS.game.advanceStart(G, h.uid, pick, now());
-        if (!r.ok) { flashErr('tr', r.err, 'advance'); return; }
-        state.advSel = null;
-        const done = !!SYS.game.advanceState(G, h.uid, now()).hero.advance;
-        flash(done ? 'tr.adv.done' : 'tr.adv.started', { name: L(h.name), b: branchName(pick) });
-        save();
-        render();
+    body.appendChild(rows);
+    if (isMobileLayout()) { const board = advanceRoomBoard(h, A); if (board) body.appendChild(board); }   // 모바일은 옆 카드 대신 본문 맨 아래
+    wrap.appendChild(body);
+    wrap.appendChild(advanceRoomFoot(h, A, selected, fixed));
+    return wrap;
+}
+
+/** 누른 갈래의 마스터리 판 — 도감 · 스킬 창의 전직 판(`codexAdvanceBoard` · 0 랭크 미리보기 · 갈래 색 윗줄) · 안 골랐으면 null.
+ *  판 규칙(칸 · 띠 · 겉모양 스킨)은 도감 마스터리 판 것을 그대로 탄다 — 폭 · 배율 되돌림만 `.adv-room-board` 가 정한다 */
+function advanceRoomBoard(h, A) {
+    const { fixed, selected } = advanceRoomPick(h, A);
+    const br = A.branches.find(b => b.id === (fixed ?? selected?.id));
+    if (!br) return null;
+    const pick = br.skills.includes(state.advPreview[br.id]) ? state.advPreview[br.id]
+        : (br.id === A.hero.advance && br.skills.includes(A.hero.skill) ? A.hero.skill : br.skills[0]);
+    const board = codexAdvanceBoard(D.advanceRows.find(a => a.advance_id === br.id), { id: h.cls }, br.skills, {
+        pick,
+        onPick: id => {
+            state.advPreview[br.id] = id;
+            render();
+            document.querySelector(`.adv-room-board [data-advskill="${id}"]`)?.focus({ preventScroll: true });
+        },
+    });
+    board.classList.add('mastery-colored');
+    const box = el('div', 'codex-mastery-grid adv-room-board');
+    box.appendChild(board);
+    return box;
+}
+
+/** 옆 카드 (`MODALS.advance.side` · ADR-1187) — 창 오른쪽에 붙는 마스터리 판 카드 · 안 골랐거나 모바일이면 없다 */
+function advanceRoomSide() {
+    if (isMobileLayout()) return null;
+    const h = heroById(state.heroUid);
+    if (!h) return null;
+    const board = advanceRoomBoard(h, SYS.game.advanceState(G, h.uid, now()));
+    board?.classList.add('adv-room-side');
+    return board;
+}
+
+/** 창 바닥 — **계기판**(도박장 계기판과 같은 꼴 — 칸마다 위 작은 이름 · 아래 큰 값) + 오른쪽 끝 버튼 자리.
+ *  전직 전 = 영웅 · 스킬 · 필요 레벨 · (해금) · 비용 · 소요 시간 + 작은 글(되돌릴 수 없음 / 막힘) + [<갈래> 전직] ·
+ *  전직 중 = 영웅 · 스킬 · 전직(갈래) + 진행 막대 · 전직 뒤 = 영웅 · 스킬 · 전직(갈래) + [마스터리 열기] */
+function advanceRoomFoot(h, A, selected, fixed) {
+    const foot = el('div', 'adv-room-foot');
+    const meter = el('div', 'adv-room-meter');
+    const cell = (key, cls = '') => {
+        const m = el('div', `adv-room-m${cls ? ` ${cls}` : ''}`, `<span class="adv-room-m-k">${t(`tr.room.m.${key}`)}</span>`);
+        const v = el('span', 'adv-room-m-v');
+        m.appendChild(v);
+        meter.appendChild(m);
+        return v;
     };
-    actions.appendChild(b);
+    const hero = cell('hero');
+    hero.textContent = L(h.name);
+    hero.appendChild(el('small', '', `Lv.${h.level}`));
+    // 그 영웅의 지금 가진 스킬 — 캐릭터 탭 액티브 카드 셋 그대로(작게 · 출처 글자 없음 · 올리면 스킬 설명창 · 비어 있는 전직 칸이 보인다 · ADR-1189)
+    cell('skills', 'skills').appendChild(skillCardGrid(h, heroSkillCtx(h), { caption: false }));
+    const act = el('div', 'adv-room-act');
+    if (fixed) {
+        const br = A.branches.find(b => b.id === fixed);
+        const v = cell('path', 'path');
+        v.textContent = br ? L(br.name) : '—';
+        const color = D.advanceRows.find(a => a.advance_id === fixed)?.color_hex;
+        if (color) v.parentElement.style.setProperty('--path-color', color);
+        if (A.hero.advance) {
+            const go = el('button', 'btn primary advance-mastery-open', t('ch.skill.go'));
+            go.onclick = () => openAdvanceMastery('advance');
+            act.appendChild(go);
+        } else {
+            // 전직하는 중 — 상태 · 막대 · 남은 시간 (앱 시계가 폭 · 글자만 갈아 끼운다 — `refreshAdvanceBars`)
+            const w = A.hero.working;
+            const progress = el('div', 'tr-adv-work');
+            progress.innerHTML = `<b>${advanceStatus(A)}</b><i class="tr-adv-bar"><b data-advbar="${h.uid}" style="width:${(w.frac * 100).toFixed(1)}%"></b></i>`
+                + `<span data-advleft="${h.uid}">${t('tr.adv.left', { t: fmtDuration(Math.max(0, w.until - now())) })}</span>`;
+            act.appendChild(progress);
+        }
+    } else {
+        cell('level', A.need.have < A.need.need ? 'no' : '').textContent = `Lv.${A.need.need}`;
+        if (!A.open) cell('unlock', 'no').innerHTML = lockLine(needText('advance'));
+        cell('gold', `gold${A.gold.have < A.gold.need ? ' no' : ''}`).textContent = t('tr.room.gold', { g: A.gold.need.toLocaleString() });
+        cell('time').textContent = D.balance.advance_hours > 0 ? fmtDuration(D.balance.advance_hours * 3600000) : t('tr.room.instant');
+        const block = advanceRoomBlock(A);
+        act.appendChild(el('span', `adv-room-note${block ? ' no' : ''}`, block ?? t('tr.room.irreversible')));
+        // [<갈래> 전직] — **한 번 누른다**(§3 의 예외 · 창이 맨 위 갈래가 골라진 채 열리고 버튼이 갈래 이름을 든다 · ADR-1189) ·
+        //   걸리는 시간이 없으면(`advance_hours` 0) 그 자리에서 끝난다 — 플래시도 「완료」(ADR-1197 의 `tr.adv.done`)
+        const go = el('button', 'btn primary tr-adv-go', selected ? t('tr.room.go', { b: L(selected.name) }) : t('tr.adv.go'));
+        go.disabled = !selected || !!A.err;
+        go.onclick = () => {
+            const result = SYS.game.advanceStart(G, h.uid, selected.id, now());
+            if (!result.ok) { flashErr('tr', result.err, 'advance'); render(); return; }
+            state.advSel = null;
+            const completed = !!SYS.game.advanceState(G, h.uid, now()).hero.advance;
+            flash(completed ? 'tr.adv.done' : 'tr.adv.started', { name: L(h.name), b: L(selected.name) });
+            save();
+            render();
+        };
+        act.appendChild(go);
+    }
+    foot.appendChild(meter);
+    foot.appendChild(act);
+    return foot;
 }
 
 /** 전직 막대 · 남은 시간만 — 앱 시계가 도서관 탭이 보일 때 눈금마다 부른다(자원 게이지와 같은 길 · 전체 다시 그림이 아니다) */
@@ -9764,22 +10132,23 @@ function shopGoods(list, src, cycle, potions = [], books = []) {
    레벨 계산은 SYS.game(codex_level.csv). 여기는 누적 도감 경험치를 읽어 그리기만 한다 */
 
 const codexLv = exp => SYS.game.codexLevel(exp);
-/** 도서관이 안 연 도감 단계의 잠금 글 `{레벨: 「도서관 n랭크」}` — 연 단계 위만 선다 · 핍 작은 툴팁 · 몬스터 툴팁 단계 줄이 읽는다 (§9 · ADR-0762 · R339) */
+/** 도서관이 안 연 도감 구간의 잠금 글 `{구간 순번(1부터): 「도서관 n랭크」}` — 연 레벨 위의 구간만 선다 · 핍 작은 툴팁 · 몬스터 툴팁 구간 줄이 읽는다 (§9 · ADR-0762 · R339 · ADR-1261) */
 const codexLocks = () => {
     const cap = SYS.game.limitsOf(G).codexLevel;
-    return Object.fromEntries(D.codexLevels.map((_, i) => i + 1).filter(lv => lv > cap).map(lv => [lv, needText('codex_level', lv)]));
+    return Object.fromEntries(SYS.game.codexSegments().map((s, i) => [i + 1, s]).filter(([, s]) => s.to > cap).map(([no]) => [no, needText('codex_level', no)]));
 };
 /** 카드 · 툴팁이 읽는 한 마리 — 누적 도감 경험치 · **먹는 레벨**(도서관이 연 단계에서 자른다 — `game.codexLevelOf`) · 잠금 글 */
 const codexEntry = (m, locks) => ({
     ...m, exp: G.codexExp[m.id] ?? 0, lv: SYS.game.codexLevelOf(G, m.id), locks,
-    lockHtml: Object.fromEntries(Object.entries(locks).map(([lv, text]) => [lv, lockLine(text)])),   // 몬스터 툴팁의 단계 줄 — tip.js 는 자물쇠 그림을 모른다
+    lockHtml: Object.fromEntries(Object.entries(locks).map(([no, text]) => [no, lockLine(text)])),   // 몬스터 툴팁의 구간 줄 — tip.js 는 자물쇠 그림을 모른다
 });
 
 /** 카드 하나 — `grade` 는 초상만 가른다(수치는 몬스터 하나의 집계다 · ADR-0167) */
 function monsterCard(m, grade) {
     const cum = D.codexLevels;                 // 레벨별 **누적 도감 경험치 문턱** 그대로 (codex_level.csv:exp_total)
-    const lv = m.lv ?? codexLv(m.exp);         // 먹는 레벨 — 다 차고 테두리도 주황인 핍 (ADR-0762 · ADR-0931)
+    const lv = m.lv ?? codexLv(m.exp);         // 먹는 레벨 — 다 채운 구간의 핍은 테두리도 죄종 색 (ADR-0762 · ADR-0931 · ADR-1261)
     const maxLv = cum.length;
+    const segs = SYS.game.codexSegments();
     const src = monsterFace(m.id, grade);
     const name = L(monsterName(m.id));
     const c = sinColor(monsterSin(m.id));
@@ -9789,13 +10158,13 @@ function monsterCard(m, grade) {
     const faceHtml = src
         ? `<span class="face${m.boss ? ' boss' : ''}" title="${src.split('/').pop()}"><img src="${src}" alt="${name}" loading="lazy" onerror="this.remove()"></span>`
         : `<span class="face none${m.boss ? ' boss' : ''}" style="background:${c}22;border-color:${c}66" title="${t('face.noArt', { name })}"></span>`;
-    // 핍 하나 = 그 레벨 구간(앞 문턱 → 그 문턱)의 경험치가 차는 칸 — 카드 맨 아래 진행 막대는 없다 (§9 · ADR-0931)
-    // 채움 색 = 그 단계가 열렸나 — 연 단계는 그 몬스터의 죄종 색(`--sin` · ADR-0932) · 안 연 단계는 회색으로 찬다 · 그 핍의 작은 툴팁 끝에 「도서관 n랭크」 (ADR-0762 · ADR-0925)
-    const pips = Array.from({ length: maxLv }, (_, i) => {
-        const lo = i > 0 ? cum[i - 1] : 0;
-        const pct = Math.max(0, Math.min(100, (m.exp - lo) / (cum[i] - lo) * 100));
+    // 핍 하나 = **구간 하나**(앞 구간 끝 문턱 → 그 구간 끝 문턱)의 경험치가 차는 칸 — 카드 맨 아래 진행 막대는 없다 (§9 · ADR-0931 · 구간 ADR-1261)
+    // 채움 색 = 그 구간이 열렸나 — 연 구간은 그 몬스터의 죄종 색(`--sin` · ADR-0932) · 안 연 구간은 회색으로 찬다 · 그 핍의 작은 툴팁 끝에 「도서관 n랭크」 (ADR-0762 · ADR-0925)
+    const pips = segs.map((s, i) => {
+        const lo = s.from > 1 ? cum[s.from - 2] : 0, hi = cum[s.to - 1];
+        const pct = Math.max(0, Math.min(100, (m.exp - lo) / (hi - lo) * 100));
         const lock = m.locks?.[i + 1] ? ` · ${m.locks[i + 1]}` : '';
-        return `<span class="pip${i < lv ? ' on' : lock ? ' locked' : ''}" title="${t('cx.lvTitle', { lv: i + 1 })} · ${t('cx.exp', { n: cum[i].toLocaleString() })}${lock}"><i style="width:${pct}%"></i></span>`;
+        return `<span class="pip${lv >= s.to ? ' on' : lock ? ' locked' : ''}" title="${t('cx.segTitle', { a: s.from, b: s.to })} · ${t('cx.exp', { n: hi.toLocaleString() })}${lock}"><i style="width:${pct}%"></i></span>`;
     }).join('');
     // 분류 둘 `종족 · 직업` 칩 = 본문 위끝 오른쪽(`.mon-kinds`) — 윗줄 칸(`.mon-top`)은 빈 칸으로 남아 이름 · 핍 자리를 지킨다 (ADR-0932 · 0929 · 0922 · ADR-0615 · 0588 이 비워 둔 줄)
     //   이름은 표 그대로 · 종족 칩은 그 종족 색(`monster_type.csv:color_hex` · ADR-0933) · 직업 칩은 그 직업 색 · 부류 칩은 없다(ADR-1151)
@@ -9989,7 +10358,7 @@ function codexUnknownRow(chapter, num, n) {
                 <span class="mon-top"></span>
                 <div class="mon-main">
                     <span class="mon-name">???</span>
-                    <span class="pips">${'<span class="pip"></span>'.repeat(D.codexLevels.length)}</span>
+                    <span class="pips">${'<span class="pip"></span>'.repeat(SYS.game.codexSegments().length)}</span>
                 </div>
             </div>
         </div>`;
@@ -10457,7 +10826,7 @@ function helpSections() {
         tavern: ['hire', 'choosing', 'reroll', 'visitors', 'commissions', 'fame', 'gambling'],   // ~~keep~~ 2026-11-16 보관 삭제 (R519)
         shop: ['buy', 'restock', 'consumables', 'books', 'trade', 'special'],
         forge: ['overview', 'smith', 'potions', 'upgrade', 'combine', 'craft'],
-        library: ['basics', 'sources', 'learn', 'upgrade', 'advance', 'points'],
+        library: ['basics', 'sources', 'craft', 'learn', 'upgrade', 'advance', 'points'],
         resource: ['lines', 'production', 'materials', 'research', 'assignment', 'hero_effects', 'jobs'],
         colosseum: ['prepare', 'floors', 'retry', 'rules'],
         arena: ['rating', 'opponents', 'defense', 'friendly', 'results'],
@@ -10482,13 +10851,19 @@ function helpSections() {
         },
         'shop.restock': { refresh: B.shop_refresh_hours },
         'shop.trade': { cost: B.shop_trade_cost, receive: B.shop_trade_receive, deal: B.shop_trade_deal_cost, pct: Math.round(B.shop_trade_deal_gold_pct * 100) },
-        'library.sources': { dust: B.book_salvage_dust },
+        'library.sources': { shard: B.book_salvage_shard },
+        'library.craft': { shards: B.skill_craft_shards, gold: B.skill_craft_gold.toLocaleString() },
         'library.learn': { level: B.skillbook_learn_level },
         'library.advance': { level: B.advance_unlock_level, gold: B.advance_gold.toLocaleString() },
         'library.points': { row: B.advance_row_points },
         'resource.production': { hours: B.dispatch_offline_cap_hours },
-        'codex.monsters': { per: D.difficultyList.map(d => `${L(d.name)} ${d.codexExp}`).join(' · ') },
-        'codex.milestones': { list: D.codexLevels.map(n => n.toLocaleString()).join(' · ') },
+        // 처치 하나 = 단 몫 × 등급 배율 — 배율 1 인 등급(일반)은 안 적는다 (monster_design §8 · R539)
+        'codex.monsters': { per: D.difficultyList.map(d => `${L(d.name)} ${d.codexExp}`).join(' · '),
+            grade: Object.entries(D.codexGradeMult).filter(([, v]) => v !== 1)
+                .map(([g, v]) => `${L({ ko: D.grades[g]?.grade_kr, en: D.grades[g]?.grade_en, zh: D.grades[g]?.grade_zh })} ×${v}`).join(' · ') },
+        // 구간마다 「Lv.1 ~ 20 = 50,000」 — 구간 끝의 누적 문턱 (ADR-1261)
+        'codex.milestones': { list: SYS.game.codexSegments().map(s => `Lv.${s.from} ~ ${s.to} ${D.codexLevels[s.to - 1].toLocaleString()}`).join(' · '),
+            seg: SYS.game.codexSegments()[0] ? SYS.game.codexSegments()[0].to - SYS.game.codexSegments()[0].from + 1 : 0 },
     };
     return NAV_GROUPS.flatMap(([, ids]) => ids).map(id => ({
         id,
@@ -11294,10 +11669,16 @@ async function boot() {
         const other = SYS.skill.list.find(d => d.ownerKind === 'job' && d.ownerId !== h0.cls)?.id;
         for (const [id, n] of [[own[0], 2], [own[1], 2], [other, 1], [h0.innate, 1]]) if (id) G.books[id] = n;
         SYS.game.learnBook(G, h0.uid, own[0]);
-        G.resources.gold = Math.max(G.resources.gold, D.balance.advance_gold);   // 전직 비용 칸이 붉지 않게
+        G.resources.gold = Math.max(G.resources.gold, D.balance.advance_gold + D.balance.skill_craft_gold * 3);   // 전직 비용 칸 · 제작 비용이 붉지 않게
+        // 스킬 북 제작 — 쥔 책을 「본 책」으로(제작 칸에 선다 · 로드 이관과 같은 뜻 · R540) · 조각 한 권 몫 · `&shards=n` 이면 n 개(모자란 비용 줄)
+        G.bookSeen ??= {};
+        for (const id of Object.keys(G.books)) G.bookSeen[id] = 1;
+        const shq = Number(new URLSearchParams(location.search).get('shards'));
+        G.skillShards = Number.isInteger(shq) && shq >= 0 && new URLSearchParams(location.search).has('shards') ? shq : Math.max(G.skillShards ?? 0, D.balance.skill_craft_shards);
         state.heroUid = h0.uid;
-        // 가진 책 둘째 책(배운 칸이 차 있어 [덮어쓰기]가 선다)을 고른 채 — 읽기 줄이 서게 (ADR-0573)
+        // 가진 책 둘째 책(배운 칸이 차 있어 [덮어쓰기]가 선다) · 제작 첫 칸을 고른 채 — 읽기 줄 · 만들기 줄이 서게 (ADR-0573 · ADR-1262)
         state.bookSel = own[1] ?? null;
+        state.bookCraftSel = SYS.game.bookState(G).craft[0]?.id ?? null;
         // `&bkup=1` — 배운 책(남은 한 권 · 업그레이드 줄)을 고른 채 · `&bkup=max` 면 그 스킬을 상한 레벨로 둔 채(「최대 레벨」 줄 · ADR-1208)
         const bkup = new URLSearchParams(location.search).get('bkup');
         if (bkup && own[0]) { state.bookSel = own[0]; if (bkup === 'max') h0.skillLv = { ...(h0.skillLv ?? {}), [own[0]]: D.balance.skillbook_upgrade_max }; }
@@ -11450,6 +11831,8 @@ async function boot() {
     // `&fg=` — 대장간의 작업 탭을 고른 채 연다 (§10 · ADR-0142). 탭은 클릭으로만 바뀌어 헤드리스가 못 닿는다
     const fg = new URLSearchParams(location.search).get('fg');
     if (['make', 'up', 'synth', 'craft'].includes(fg)) state.forgeTab = fg;
+    // `&lib=adv` — 전직의 방 창을 연 채(창은 전직의 방 칸의 [입장]으로만 열린다 · §17 · ADR-1179 · ADR-1262)
+    if (new URLSearchParams(location.search).get('lib') === 'adv') state.modal = 'advance';
     // `&fgi=<부위>` — 고른 영웅(없으면 로스터 첫 영웅)이 낀 그 부위 장비를 강화 대상으로 고른 채 · `&tp=1` 이면 그 장비를 최하급 판돈으로 한 번 담금질한 채(릴은 멈춘 그림)
     //   (§10 · ADR-1134 — 대상 고르기 · 담금질은 클릭으로만 서서 헤드리스가 강화 칸 가운데에 못 닿는다)
     const fgq = new URLSearchParams(location.search), fgi = fgq.get('fgi');
@@ -11652,7 +12035,18 @@ async function boot() {
     if (dev === 'frozen') {
         if (!G) startGame();
         frozen = true;
-        state.modal = 'frozen';
+        state.modal = new URLSearchParams(location.search).get('why') === 'account' ? 'frozenAcct' : 'frozen';   // 계정 멈춤 창 (ADR-1263)
+    }
+    // 계정 화면의 가짜 — 배포 주소 · 네트워크 · 클릭으로만 닿는다 (SCREEN_DESIGN §2-1 「계정」 · §10 · ADR-1263). 어댑터를 안 부른다 ·
+    //   기본 = 게임 화면에 ⚙ 판 설정 `게임` · `&in=<아이디>` 묶인 채 · `&open=new|login` 창 · `&err=<코드>` 오류 줄 · `&menu=1` 메뉴
+    if (dev === 'account') {
+        const q = new URLSearchParams(location.search);
+        if (!G) startGame();
+        Object.assign(acct, { fake: true, known: true, id: q.get('in') || null });
+        if (q.get('menu') === '1') { state.screen = 'menu'; dropBattles(); }
+        const open = { new: 'acctNew', login: 'acctLogin' }[q.get('open')];
+        if (open) { state.modal = open; acctForm().err = q.get('err'); }
+        else if (state.screen !== 'menu') { setPane = 'game'; requestAnimationFrame(() => document.querySelector('.dp-btn')?.click()); }
     }
     // 자동 분해 창 — 창은 클릭으로만 열려 헤드리스가 못 닿는다 (SCREEN_DESIGN §6 「자동 분해 창」 · ADR-1207 · R509).
     //   캐릭터 탭 · 부대 1 의 창 · 예시 규칙(일반 베이스 · 매직 분해 · 레어 단어) — 모르는 값이 없다
@@ -11697,8 +12091,8 @@ async function boot() {
     const cxlv = Math.min(Number(lq.get('cxlv')) || 0, D.codexLevels.length);
     if (G && cxlv > 0) {
         for (const id of Object.keys(D.monsters)) G.codexExp[id] = D.codexLevels[cxlv - 1];
-        // 도감 단계는 도서관이 연다(ADR-0762) — `&cn=` 이 없으면 그 레벨을 여는 랭크까지 도서관을 둔다 · `&cn=library:1` 과 겹치면 막힌 단계(회색으로 찬 핍 · 자물쇠 줄)를 본다
-        const need = SYS.game.needOf('codex_level', cxlv);
+        // 도감 구간은 도서관이 연다(ADR-0762) — `&cn=` 이 없으면 그 레벨의 구간을 여는 랭크까지 도서관을 둔다 · `&cn=library:1` 과 겹치면 막힌 구간(회색으로 찬 핍 · 자물쇠 줄)을 본다 · 표는 구간 수를 센다(ADR-1261)
+        const need = SYS.game.needOf('codex_level', SYS.game.codexSegmentNo(cxlv) ?? 1);
         if (need && !lq.get('cn') && (G.buildings[need.id] ?? 0) < need.rank) G.buildings[need.id] = need.rank;
     }
     render();
@@ -11766,8 +12160,8 @@ function startClocks() {
     trackPush();
     // 콜로세움 데모 — 켤 때 한 번 받아 둔다(남의 방어 편성 · 내 방어 기록 · SCREEN_DESIGN §1 「온라인 데모」)
     arenaPull(true);
-    // 내 태그 — 받기가 규칙에 막혀도 설정 · 등록 판에 선다(계정 id 만 · ADR-1042)
-    if (TRACK_ON) CLOUD.myId().then(id => { if (id && !arenaNet.me) arenaNet.me = id; });
+    // 내 태그 — 받기가 규칙에 막혀도 설정 · 등록 판에 선다(계정 id 만 · ADR-1042) · 아이디 계정인가도 같이 듣는다(메뉴 셋째 버튼 ↔ 아이디 줄 · ADR-1263)
+    if (TRACK_ON) CLOUD.accountOf().then(r => { if (!r.ok) return; if (!arenaNet.me) arenaNet.me = r.uid; acctLearn(r.id); });
 }
 
 boot().catch(e => {

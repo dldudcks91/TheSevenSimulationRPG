@@ -187,8 +187,8 @@ export function mountMobilePages(main) {
             deck(upgrade, 'forge-up', sections, 0, temper ? [2,0,1] : null);
         }
     } else if (tab === 'library') {
-        // Advancement panel | skill upgrade card — one page each (ADR-1197).
-        deck(page, tab, items(page, '.c-train-band > .panel', ['advance','upgrade']));
+        // Books stay on the main page; advancement opens its own room window (ADR-1179 · restored ADR-1262).
+        deck(page.querySelector('.lib-split'), 'library-books', items(page, '.lib-split > .lib-sec', ['upgrade','books']));
     } else if (tab === 'resource') {
         const grid = page.querySelector('.dp-tree-grid');
         // Turn the desktop coordinate grid into a list of production lines.

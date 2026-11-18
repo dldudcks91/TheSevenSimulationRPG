@@ -130,7 +130,6 @@
 :root[data-mobile] .mobile-menu-utilities .exp-time { margin-left: auto; font-size: var(--mobile-fs-caption); }
 :root[data-mobile] .mobile-menu-utilities .exp-time b { margin-left: 6px; }
 :root[data-mobile] .mobile-menu-backdrop:not([hidden]) { display: block; position: absolute; inset: 0; z-index: 47; background: rgba(var(--veil-rgb), .72); border: 0; }
-:root[data-mobile] #stage:has(.mobile-menu-open) > .tutorial-card { visibility: hidden; }
 
 /* Battles occupy the available screen by default. Cards keep all their data. */
 :root[data-mobile] #app.mobile-combat > .main { display: flex; flex-direction: column; padding: 6px; overflow: hidden; }
@@ -372,7 +371,6 @@
     position: sticky; left: auto; top: auto; bottom: 0; width: 100%; flex: 1 0 100%;
     display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--bg-secondary);
 }
-:root[data-mobile] .tutorial-card { max-width: calc(100% - 24px); max-height: calc(100% - 110px); overflow-y: auto; }
 :root[data-mobile] .notification-panel { position: fixed; left: 8px; right: 8px; top: calc(50px + env(safe-area-inset-top, 0px)); width: auto; max-width: none; max-height: calc(100% - var(--mobile-dock) - 64px - var(--mobile-safe-bottom) - env(safe-area-inset-top, 0px)); overflow: auto; }
 :root[data-mobile] #app.mobile-menu-open .notification-panel { visibility: hidden; }
 :root[data-mobile] #stage > .dp-panel { left: 8px; right: 8px; top: calc(52px + env(safe-area-inset-top, 0px)); width: auto; max-height: calc(100% - var(--mobile-dock) - 70px - var(--mobile-safe-bottom) - env(safe-area-inset-top, 0px)); overflow-y: auto; }

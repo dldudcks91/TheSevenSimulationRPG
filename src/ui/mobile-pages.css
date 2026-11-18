@@ -151,6 +151,11 @@
 :root[data-mobile] .c-forge-col > .fg-tabs { flex: none; margin: 0; }
 :root[data-mobile] .c-forge-col > .fg-panel { flex: 1 1 0; min-height: 0; overflow: auto; }
 :root[data-mobile] .fg-panel .fg-split { flex: 1 1 0; min-height: 0; overflow: auto; }
+/* Library: the book sheet takes the rest and each section body scrolls (ADR-1165 · restored ADR-1262). */
+:root[data-mobile] .c-lib-col { flex: 1 1 0; min-height: 0; overflow: hidden; }
+:root[data-mobile] .c-lib-col > .lib-panel { flex: 1 1 0; min-height: 0; overflow: hidden; }
+:root[data-mobile] .lib-panel > :is(.lib-split, .lib-sec) { flex: 1 1 0; min-height: 0; }
+:root[data-mobile] .lib-sec > .box-body { flex: 1 1 0; min-height: 0; overflow: auto; }
 :root[data-mobile] .fg-up { min-height: 0; }
 :root[data-mobile] .fg-up-work { padding: 8px; }
 :root[data-mobile] .td-sale-total { position: sticky; bottom: 0; background: var(--bg-secondary); padding: 8px 0; }

@@ -1,11 +1,14 @@
 """모으기 기운 그림 — Codex 원본을 게임 파일(512px 투명 webp)로 내보내고 설치한다.
 
-원본은 자르거나 다시 그리지 않는다 — 가운데에 맞춰 90% 크기로 줄이고 여백만 정리한다(함성 충격파 export.py 와 같은 규칙).
-실행: python src/assets/art/fx_source/charge_gather_20261117/export.py
+원본은 다시 그리지 않는다 — 가운데에 맞춰 90% 크기로 줄이고 여백만 정리한다(함성 충격파 export.py 와 같은 규칙).
+금속박 원본만 바탕에 옅은 안개(알파 1 ~ 63 · 화면의 58%)가 깔려 초상 둘레가 뿌옇게 떠서, 알파 24 아래를 걷고 24 ~ 80 을 0 ~ 255 로 편다.
+테두리 상자는 알파 16 이상으로 잰다(원본 가장자리까지 닿는 알파 몇 점짜리 티끌은 상자에 안 넣는다).
+실행: python src/assets/art/fx_source/charge_gather_20261118/export.py
 """
 import json
 from pathlib import Path
 
+import numpy as np
 from PIL import Image
 
 BASE = Path(__file__).resolve().parent
@@ -13,6 +16,15 @@ ROOT = BASE.parents[4]
 GAME = ROOT / 'src/assets/art/fx/skills'
 SIZE = 512
 STYLES = ['darktoon', 'foil']
+HAZE = {'foil': (24, 80)}   # 그림체 → (걷는 알파, 다 차는 알파)
+BOX_ALPHA = 16
+
+
+def lift_haze(im, lo, hi):
+    arr = np.array(im)
+    a = arr[..., 3].astype(float)
+    arr[..., 3] = (np.clip((a - lo) / (hi - lo), 0, 1) * 255).round().astype(np.uint8)
+    return Image.fromarray(arr, 'RGBA')
 
 
 def main():
@@ -22,7 +34,9 @@ def main():
         original = Image.open(src).convert('RGBA')
         alpha_range = original.getextrema()[3]
         assert alpha_range[0] == 0 and alpha_range[1] >= 128, src   # 진짜 투명 배경이어야 한다
-        box = original.getchannel('A').getbbox()
+        if st in HAZE:
+            original = lift_haze(original, *HAZE[st])
+        box = original.getchannel('A').point(lambda v: 255 if v >= BOX_ALPHA else 0).getbbox()
         art = original.crop(box)
         ratio = SIZE * .90 / max(art.size)
         art = art.convert('RGBa').resize(tuple(round(v * ratio) for v in art.size), Image.Resampling.LANCZOS).convert('RGBA')
@@ -34,7 +48,7 @@ def main():
         assert min(check[:2]) >= 20 and max(check[2:]) <= SIZE - 20, check
         report.append({'style': st, 'source': src.name, 'game_file': str(dst.relative_to(ROOT)).replace('\\', '/'),
                        'dimensions': [SIZE, SIZE], 'bbox': check, 'source_alpha_range': alpha_range,
-                       'bytes': dst.stat().st_size})
+                       'haze_lift': HAZE.get(st), 'bytes': dst.stat().st_size})
     (BASE / 'export_report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(json.dumps(report, ensure_ascii=False, indent=1))
 

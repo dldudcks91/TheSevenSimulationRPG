@@ -47,6 +47,8 @@
  *     — ~~items[*].skill = 무기가 담은 액티브 id~~ — **2026-09-29 삭제**(R179 · 스킬북 skill_design §2-1) · 로드가 지운다
  *   books: {skillId: n}   — **스킬북 재고**(R179 · 버전 무변경) — `learnBook` · `salvageBook` 이 소모한다 · 처치 · 탐험 동굴 · 연구소 도서관 줄 · 상단 · 영웅별 첫 책 보상으로 얻는다
  *     ~~blueprints~~ — **스킬 도안 재고 2026-11-15 · R504 삭제** · 로드가 장수만큼 `books` 에 더하고 키를 지운다 (INTERFACE §4)
+ *   bookSeen: {skillId: 1} — 한 번이라도 재고에 들어온 책(R540 · 버전 무변경) — `addBook` 이 적는다 · `craftBook` 목록 · 없으면 로드가 책 재고 + 배운 칸으로 채운다
+ *   skillShards: n — 스킬 조각(R540 · 버전 무변경) — `salvageBook` 이 더하고 `craftBook` 이 쓴다
  *     heroes[*].bookSkill = 책으로 배운 액티브 id(선택 필드) — 액티브 둘째 칸(`skill.activesFor`) · 다른 책을 쓰면 덮어쓴다
  *     heroes[*].skillLv = {skillId: n}(선택 필드 · 2026-10-06 · R216) — 기본 스킬(고유 · 배운 칸)의 업그레이드 횟수 · 같은 책을 읽으면 +1
  *     heroes[*].advanceUp = n(선택 필드 · R216) — 전직 스킬 줄 **크기** 랭크(레벨 = 1 + n · 공용 스킬 포인트 n) · 2026-11-13 R471 — 5레벨 간격 해금 퇴역
@@ -100,8 +102,6 @@
 
 import { makeRng, deriveSeed } from './rng.js';
 import { planStageSeeds, validateStageGrant, reserveStageSeeds, consumeStageRound, releaseStageSeeds, validateStageDecks } from './stage_seed.js';
-// 물리 감쇠 곡선 — 자동 장착의 「버티는 양」이 전투와 같은 식을 읽는다(R313)
-import { createFormula } from './formula.js';
 // ~~능력치 계수(`statCoef`) — 자원 파견의 산출 속도가 담당 능력치를 탄다~~ — 2026-10-18 연구소에서 영웅 배치를 걷어 쓰는 곳이 사라졌다(R283)
 // 건설 어휘 — 창구가 모르는 이름을 거절하는 데만 쓴다(시스템 주입이 아니다 · skill_effects.js 와 같은 취급)
 import { TARGETS as CN_TARGETS } from './construction.js';
@@ -113,7 +113,7 @@ export const SAVE_VERSION = 49;
 /**
  * @param {object} deps
  *   hero, item, battle, skill, tactic — 각 시스템 / balance / equipSlots [{id, part}] (착용 위치 8개) / stages(byId) / stageOrder [id...]
- *   monsters(byId) / codex {levels:[exp_total...](codex_level.csv 레벨순 — 누적 도감 경험치 문턱), steps:[{reward, value}](같은 표 — 레벨 n 이 여는 단계 · 2026-10-18 R286), options:[{monsterId, stat, value, farm, farmValue, fight, fightValue}](codex_option.csv — Lv4 몬스터다운 전투 옵션 + Lv1 · Lv2 칸 · 2026-10-22 R314), races:{typeId: {ko, en}}(monster_type.csv — 종족 이름 · R314 · 2026-11-14 R494 부류 → 종족)}
+ *   monsters(byId) / codex {levels:[exp_total...](codex_level.csv 레벨순 — 누적 도감 경험치 문턱), steps:[{reward, value}](같은 표 — 레벨 n 이 속한 구간 · 같은 reward 가 이어진 행 = 한 구간 · 2026-10-18 R286 · 2026-11-18 R539), gradeMult:{grade: n}(spawn_grade.csv:codex_exp_mult — 처치 하나의 도감 경험치에 곱하는 등급 배율 · 없는 등급은 1 · R539), options:[{monsterId, stat, value, farm, farmValue, fight, fightValue}](codex_option.csv — Lv4 몬스터다운 전투 옵션 + Lv1 · Lv2 칸 · 2026-10-22 R314), races:{typeId: {ko, en}}(monster_type.csv — 종족 이름 · R314 · 2026-11-14 R494 부류 → 종족)}
  *   sins [죄종 id...] — 탐험 이야기의 `sin` 컬럼 검증에만 쓴다 (~~수색 이야기 · 만남 · 답~~ 표는 2026-10-19 수색과 함께 삭제)
  *   makeRecipes {part: {ore, timber, dust}} (make_recipe.csv) · labMaterials [{post, id, ko, en, yieldPerHour}] (lab_material.csv — 연구소 「자원」 줄의 재료 셋 = **하급** · 생산 · 제작 · 도박장 · 처치 재료가 같은 id 를 쓴다 · 2026-10-25 R356)
  *   materialSynth [{id, from, need, gold, ko, en}] (material_synth.csv — 위 단계 재료와 그 합성 · `from` 사슬이 줄 · 단계를 정한다 · 2026-10-27 R359)
@@ -262,7 +262,7 @@ export function createGameSystem(deps) {
             commissionSlots: B.commission_slots,   // 동시에 받아 둘 수 있는 의뢰 — 더하기 대상이지만 지금 표엔 늘리는 랭크가 없다 (R153 · R162)
             resourceTiers: 0,   // ~~열린 자원 단계 수~~ → **연구소 랭크**(랭크마다 +1 이라 랭크와 같다 · 지점이 열리는 문 · 단계는 「종류」 지점이 연다 — 2026-10-21 · R298) · 이름은 옛 뜻 그대로 산다
             exploreSlots: B.explore_slots,   // 동시 탐험 건수 — 탐험 건물의 `explore_slots` 가 더한다 (2026-10-09 · 탐험 최소 루프)
-            codexLevel: 0,   // 도감이 오를 수 있는 단계 — 도서관 r1 의 `codex` 가 1 을 심고 뒤 랭크의 `codex_level` 이 더한다 (2026-10-24 · R339 · `codexLevelOf`)
+            codexLevel: 0,   // 도감이 오를 수 있는 레벨 — 표는 **연 구간 수**를 센다(도서관 r1 의 `codex` 가 1 을 심고 뒤 랭크의 `codex_level` 이 더한다) · 아래에서 그 구간의 끝 레벨로 바꾼다 (2026-10-24 · R339 · 2026-11-18 R539 · `codexCapOf`)
         };
         for (const [target, n] of Object.entries(CN.opened(openRanks(state)).adds)) {
             const key = ADD_KEY[target] ?? target;
@@ -281,6 +281,8 @@ export function createGameSystem(deps) {
         out.chapters = Math.min(out.chapters, B.chapter_open_max);
         // 부대는 편성 하나에 하나다 — 편성보다 많은 부대를 낼 수 없다 [2026-09-23 · 다부대]
         out.expeditions = Math.min(out.expeditions, out.presets);
+        // 도감 — 연 구간 수 → 오를 수 있는 레벨(n 번째 구간의 끝 레벨) [2026-11-18 · R539 · monster_design §8]
+        out.codexLevel = codexCapOf(out.codexLevel);
         return out;
     }
     /** 더하기 대상 이름 → 상한 키 — 표의 단계 셋만 이름이 다르다(나머지는 같은 이름에 붙는다) */
@@ -326,6 +328,8 @@ export function createGameSystem(deps) {
             labClock: { gamble: null, train: null, lib: null },   // 연구소 생산 시계 — 줄이 열린 첫 정산에서 선다
             potions: startStock(),     // 물약 재고 — 새 게임은 `potion.csv:start_owned` 개수를 갖고 시작한다 (R103 · 개수 R124)
             books: {},       // 스킬북 재고 {skillId: n} — 처치 · 탐험 동굴 · 연구소 도서관 줄 · 상단 · 영웅별 첫 책 보상 (~~스킬 도안~~ 2026-11-15 · R504)
+            bookSeen: {},    // 한 번이라도 재고에 들어온 책 {skillId: 1} — `addBook` 이 적는다 · 스킬 북 제작 목록 (2026-11-18 · R540)
+            skillShards: 0,  // 스킬 조각 — 책 분해가 주고 스킬 북 제작이 쓴다 (2026-11-18 · R540)
             heroes: [], items: {}, bags: newBags(), stash: [],   // 인벤토리는 부대마다 (v40 · ADR-0521)
             mail: [],        // 우편함 [{id, kind, no, stageId, difficulty}] — 인벤토리에 새 칸이 없어 못 들어간 첫 클리어 상자 (2026-10-23 · R328 · 2026-10-24 · R333 · INTERFACE §4)
             // peakTotal = 합산 레벨 도달 최고치(v37) · ~~levelUp~~ 은 2026-09-29 위험도 폐지로 삭제 ·
@@ -860,6 +864,12 @@ export function createGameSystem(deps) {
         for (const [id, n] of Object.entries(legacyPlans)) if (bookable(id) && Number.isInteger(n) && n > 0) s.books[id] = (s.books[id] ?? 0) + n;
         delete s.blueprints;
         for (const h of s.heroes) if (h.bookSkill !== undefined && !(h.bookSkill && SK?.defs?.[h.bookSkill])) delete h.bookSkill;
+        // 본 책 · 스킬 조각 [2026-11-18 · R540 · 버전 무변경 — INTERFACE §4] — 본 책이 없으면 지금 책 재고 + 영웅 배운 칸으로 채운다(그 책은 한 번은 재고에 들어왔다) ·
+        //   책이 안 되는 id 는 지운다 · 조각은 음이 아닌 정수가 아니면 0
+        const seenRaw = s.bookSeen && typeof s.bookSeen === 'object' && !Array.isArray(s.bookSeen) ? s.bookSeen
+            : Object.fromEntries([...Object.keys(s.books), ...s.heroes.map(h => h.bookSkill).filter(Boolean)].map(id => [id, 1]));
+        s.bookSeen = Object.fromEntries(Object.keys(seenRaw).filter(bookable).map(id => [id, 1]));
+        s.skillShards = Number.isInteger(s.skillShards) && s.skillShards > 0 ? s.skillShards : 0;
         // 스킬 레벨 [2026-10-06 · R216 · 버전 무변경 — INTERFACE §4] — 없으면 「업그레이드 0」이 정확한 초기 상태다.
         //   지금 고유 · 배운 스킬이 아닌 키 · 양의 정수가 아닌 값은 지우고 상한(`skillCapMax` = `skillbook_upgrade_max` — 2026-10-20 · R293)을 넘는 값은 상한으로 (0 은 키가 없다) (INTERFACE §4)
         for (const h of s.heroes) {
@@ -1043,6 +1053,9 @@ export function createGameSystem(deps) {
             for (const [id, n] of Object.entries(s.books)) books[to(id)] = (books[to(id)] ?? 0) + n;
             s.books = books;
         }
+        // 본 책 목록도 같은 대체로 (2026-11-18 · R540 — `craftBook` 목록)
+        if (s.bookSeen && typeof s.bookSeen === 'object' && !Array.isArray(s.bookSeen))
+            s.bookSeen = Object.fromEntries(Object.keys(s.bookSeen).map(id => [to(id), 1]));
         for (const it of Object.values(s.items ?? {})) {
             if (!it || typeof it !== 'object') continue;
             for (const a of it.affixes ?? []) if (a?.skill) a.skill = to(a.skill);
@@ -1077,10 +1090,11 @@ export function createGameSystem(deps) {
     const codexLevelOf = (state, id) => Math.min(codexLevel(state.codexExp?.[id] ?? 0), limitsOf(state).codexLevel);
 
     /*
-     * 도감 사다리 — 레벨 n 이 여는 단계 [2026-10-18 · R286 · **2026-10-22 · R314 — Lv1 · Lv2 는 그 종족 전체** · monster_design §8 · §8-2].
-     *   단계의 `reward` 가 무엇을 여는지 정한다 — `farm`(파밍 한 줄) · `fight`(전투 한 줄)는 몬스터마다의 칸(codex_option.csv)이 **그 종족 전체**에 걸리고
+     * 도감 사다리 — 구간 셋 [2026-10-18 · R286 · 2026-10-22 · R314 — 파밍 · 전투는 그 종족 전체 · **2026-11-18 · R539 — 레벨 1 ~ 60 · 구간 셋** · monster_design §8 · §8-2].
+     *   codex_level.csv 의 **같은 `reward` 가 이어진 행 묶음이 한 구간**이다(지금 1 ~ 20 파밍 · 21 ~ 40 전투 · 41 ~ 60 옵션). 구간 안의 레벨 하나 = 그 줄 값의 1 / 구간 크기 —
+     *   구간을 다 채우면 codex_option.csv 의 값 그대로다(`codexShare`). `farm`(파밍 한 줄) · `fight`(전투 한 줄)는 몬스터마다의 칸이 **그 종족 전체**에 걸리고
      *   (전투가 종족 몫을 유닛에 얹는다 — `codexLadder`) · `none` 은 아무것도 안 연다 · `option` 은 그 몬스터의 전투 옵션 한 줄이 **파티 전원**에게(`codexOptions` → `heroCombat`).
-     *   레벨 순서는 표가 정한다 · 표 검증은 생성 때 던진다 (~~`xp` · `vs_dmg` · `drop` 그 몬스터에게만~~ 2026-10-22)
+     *   구간 순서는 표가 정한다 · 한 reward 는 구간 하나 · 표 검증은 생성 때 던진다 (~~레벨 하나 = 단계 하나 · Lv1 ~ Lv4~~ 2026-11-18)
      */
     const CODEX_REWARDS = ['farm', 'fight', 'none', 'option'];
     // Lv1 파밍 줄 — `codexLadder().farm` 의 칸 이름이 곧 이것이다(INTERFACE §2-6 「도감 사다리」)
@@ -1092,14 +1106,23 @@ export function createGameSystem(deps) {
         const bad = why => { throw new Error(`codex: ${why}`); };
         const steps = deps.codex.steps ?? [];
         if (steps.length !== deps.codex.levels.length) bad(`단계 ${steps.length} ≠ 레벨 ${deps.codex.levels.length} (codex_level.csv)`);
-        const at = { farm: -1, fight: -1, option: -1 };
+        // 구간 = 같은 reward 가 이어진 행 묶음 `{reward, from, to}`(레벨 · 1부터) — 표 순서 그대로 · 도서관이 여는 단위 (R539)
+        const segments = [];
         steps.forEach((s, i) => {
             if (!CODEX_REWARDS.includes(s.reward)) bad(`Lv${i + 1} reward '${s.reward}' — ${CODEX_REWARDS.join(' · ')} 중 하나여야 한다`);
             if (s.value !== null) bad(`Lv${i + 1} value '${s.value}' — 값은 몬스터마다다(codex_option.csv) · 여기는 비운다`);
-            if (s.reward === 'none') return;
-            if (at[s.reward] >= 0) bad(`${s.reward} 단계가 둘이다 — Lv${at[s.reward] + 1} · Lv${i + 1}`);
-            at[s.reward] = i;
+            const last = segments[segments.length - 1];
+            if (last && last.reward === s.reward) { last.to = i + 1; return; }
+            if (s.reward !== 'none' && segments.some(g => g.reward === s.reward)) bad(`${s.reward} 구간이 둘이다 — Lv${i + 1} 에서 다시 시작한다(한 reward 는 이어진 한 구간)`);
+            segments.push({ reward: s.reward, from: i + 1, to: i + 1 });
         });
+        const seg = Object.fromEntries(segments.filter(g => g.reward !== 'none').map(g => [g.reward, g]));
+        // 처치 하나의 등급 배율 `[spawn_grade.csv:codex_exp_mult]` — 없는 등급은 1 (R539)
+        const gradeMult = {};
+        for (const [g, v] of Object.entries(deps.codex.gradeMult ?? {})) {
+            if (!(Number.isFinite(v) && v > 0)) bad(`spawn_grade ${g} codex_exp_mult '${v}' — 양수`);
+            gradeMult[g] = v;
+        }
         const races = deps.codex.races ?? {};
         const options = {}, lines = {}, members = {};
         const pos = v => Number.isFinite(v) && v > 0;
@@ -1125,10 +1148,26 @@ export function createGameSystem(deps) {
             lines[r.monsterId] = { race, farm: { kind: farm, value: r.farmValue }, fight: { stat: fight, value: r.fightValue } };
             (members[race] ??= []).push(String(r.monsterId));
         }
-        return { steps, optionAt: at.option, farmAt: at.farm, fightAt: at.fight, options, lines, members, races };
+        return { steps, segments, seg, gradeMult, options, lines, members, races };
     })();
-    /** 레벨순 단계 `[{level, reward, value}]` — 사본 · value 는 늘 null(몬스터마다다 — `codexOptionOf` · `codexLineOf`) */
+    /** 레벨순 단계 `[{level, reward, value}]` — 레벨 하나가 속한 구간의 reward · 사본 · value 는 늘 null(몬스터마다다 — `codexOptionOf` · `codexLineOf`) */
     const codexSteps = () => CODEX.steps.map((s, i) => ({ level: i + 1, reward: s.reward, value: null }));
+    /** 구간 `[{reward, from, to}]` — 표 순서 · 레벨은 1부터 · 사본 (R539 · 화면의 핍 · 툴팁 층) */
+    const codexSegments = () => CODEX.segments.map(g => ({ ...g }));
+    /**
+     * 그 레벨이 그 구간에서 채운 몫 0 ~ 1 = (구간 안에서 닿은 레벨 수) ÷ (구간 크기) — 구간을 다 채우면 1 · 그 reward 의 구간이 없으면 0 · rng 0 (R539).
+     *   줄 값 × 이것이 그 몬스터 한 마리가 지금 내는 몫이다(`codexLadder` · `codexOptions`)
+     */
+    const codexShare = (lv, reward) => {
+        const g = CODEX.seg[reward];
+        return g ? Math.max(0, Math.min(lv, g.to) - g.from + 1) / (g.to - g.from + 1) : 0;
+    };
+    /** 연 구간 수 → 오를 수 있는 레벨 = n 번째 구간의 끝 레벨(구간보다 많이 열면 최종 레벨 · 0 이면 0) — `limitsOf` 의 `codexLevel` · 건설 줄의 「도감 Lv{total}」 (R539) */
+    const codexCapOf = n => (n <= 0 ? 0 : (CODEX.segments[Math.min(n, CODEX.segments.length) - 1]?.to ?? 0));
+    /** 그 레벨을 담은 구간의 순번(1부터) — 「도서관 n랭크」를 물을 때 `needOf('codex_level', 이것)` · 표 밖이면 null (R539) */
+    const codexSegmentNo = lv => { const i = CODEX.segments.findIndex(g => lv >= g.from && lv <= g.to); return i < 0 ? null : i + 1; };
+    /** 처치 하나가 그 몬스터에게 주는 도감 경험치 = 단 `codex_exp` × 등급 `codex_exp_mult` (R239 · R539) */
+    const codexKillExp = (diff, grade) => codexExpOf(diff) * (CODEX.gradeMult[grade] ?? 1);
     /** 그 몬스터의 Lv4 전투 옵션 `{stat, value}` — 행이 없으면 null(둘라한 · 6 · 7장) */
     const codexOptionOf = id => CODEX.options[id] ? { ...CODEX.options[id] } : null;
     /** 그 몬스터 한 마리가 내는 Lv1 · Lv2 칸 `{race, farm: {kind, value}, fight: {stat, value}}` — 칸이 없으면 null(보스 · 6 · 7장 · VI · 2026-10-22 R314) */
@@ -1138,10 +1177,10 @@ export function createGameSystem(deps) {
     };
     /**
      * 그 몬스터 **종족 전체의 닿은 몫** `{race, farm: {xp, drop, magic, gold, material}, fight: {줄: 값}}` [2026-10-22 · R314 — ~~그 몬스터의 `{xp, vs, drop}`~~].
-     *   같은 종족의 칸 있는 몬스터마다 `farm` 단계에 닿았으면 제 Lv1 칸을 · `fight` 단계에 닿았으면 제 Lv2 칸을 더한다(같은 줄은 더한다).
-     *   farm 다섯 칸은 늘 서고(안 닿으면 0) fight 는 닿은 줄만 · 그 몬스터에 칸이 없으면 null(보스 · 6 · 7장 — 주지도 받지도 않는다).
+     *   같은 종족의 칸 있는 몬스터마다 제 파밍 칸 × 파밍 구간 몫 · 제 전투 칸 × 전투 구간 몫을 더한다(같은 줄은 더한다 · 몫 = `codexShare` · 2026-11-18 R539).
+     *   farm 다섯 칸은 늘 서고(안 닿으면 0) fight 는 몫이 있는 줄만 · 그 몬스터에 칸이 없으면 null(보스 · 6 · 7장 — 주지도 받지도 않는다).
      *   전투가 그 몬스터 유닛에 얹는다(`battle.createRun` 의 `codexOf`) · rng 0
-     *   닿았나 = **먹는 레벨**(도서관이 연 단계에서 자른다 — `codexLevelOf` · 2026-10-24 · R339)
+     *   레벨 = **먹는 레벨**(도서관이 연 레벨에서 자른다 — `codexLevelOf` · 2026-10-24 · R339)
      */
     function codexLadder(state, id) {
         const own = CODEX.lines[id];
@@ -1151,21 +1190,23 @@ export function createGameSystem(deps) {
         for (const mid of CODEX.members[own.race]) {
             const lv = Math.min(codexLevel(state.codexExp?.[mid] ?? 0), cap);
             const l = CODEX.lines[mid];
-            if (CODEX.farmAt >= 0 && lv > CODEX.farmAt) out.farm[l.farm.kind] += l.farm.value;
-            if (CODEX.fightAt >= 0 && lv > CODEX.fightAt) out.fight[l.fight.stat] = (out.fight[l.fight.stat] ?? 0) + l.fight.value;
+            const farm = codexShare(lv, 'farm'), fight = codexShare(lv, 'fight');
+            if (farm > 0) out.farm[l.farm.kind] += l.farm.value * farm;
+            if (fight > 0) out.fight[l.fight.stat] = (out.fight[l.fight.stat] ?? 0) + l.fight.value * fight;
         }
         return out;
     }
-    /** 도감 Lv4 옵션의 합 `{flat: {stat: v}}` — `option` 단계에 닿은 몬스터마다 제 한 줄을 더한다(닿았나 = 먹는 레벨 — `codexLevelOf` · R339) · `computeCombat` 의 `codex` 입력 · rng 0 */
+    /** 도감 옵션 구간의 합 `{flat: {stat: v}}` — 몬스터마다 제 한 줄 × 옵션 구간 몫(`codexShare` · R539)을 더한다(레벨 = 먹는 레벨 — `codexLevelOf` · R339) · `computeCombat` 의 `codex` 입력 · rng 0 */
     function codexOptions(state) {
         const flat = {};
-        if (CODEX.optionAt < 0) return { flat };
+        if (!CODEX.seg.option) return { flat };
         const cap = limitsOf(state).codexLevel;
-        if (cap <= CODEX.optionAt) return { flat };
+        if (cap < CODEX.seg.option.from) return { flat };
         for (const [id, exp] of Object.entries(state.codexExp ?? {})) {
             const o = CODEX.options[id];
-            if (!o || codexLevel(exp) <= CODEX.optionAt) continue;
-            flat[o.stat] = (flat[o.stat] ?? 0) + o.value;
+            const share = o ? codexShare(Math.min(codexLevel(exp), cap), 'option') : 0;
+            if (share <= 0) continue;
+            flat[o.stat] = (flat[o.stat] ?? 0) + o.value * share;
         }
         return { flat };
     }
@@ -1278,6 +1319,7 @@ export function createGameSystem(deps) {
         for (const u of back) rest.push(u);
         if (from === 'bag') state.bags[no - 1] = rest; else state.stash = rest;
         h.equipped[pos] = itemUid;
+        mmNoteEvent(state, 'equip');   // 메인미션 「장비 장착」 — 자동 장착도 이 길을 지난다 (2026-11-18 · R538)
         return { ok: true, back, position: pos, from };
     }
 
@@ -1390,59 +1432,32 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
 
-    /* ── 자동 장착 [2026-10-22 · R307 · 기준 개정 R313 · item_design §6-3 · SCREEN_DESIGN §6 · ADR-0712] — 버튼이 부를 때만 · 고른 영웅 하나 · 부대 `no` 의 인벤토리만 ──
+    /* ── 자동 장착 [2026-10-22 · R307 · 기준 개정 R313 · **기준 개정 2026-11-18 · R536 — 점수 순** · item_design §6-3 · SCREEN_DESIGN §6 · ADR-0712] — 버튼이 부를 때만 · 고른 영웅 하나 · 부대 `no` 의 인벤토리만 ──
        거르기 = 요구 레벨(`canEquip`) + 직업 어울림(`item.fitsClass`) — 직업 무기군이 물리 ↔ 마법(평타)도 같이 거른다.
-       고르기 = **영웅 세기** [R313] — 무기 · 방어구 넷을 끼면(`heroCombatIf` — 강화 포함) 그 영웅의 「입히는 DPS × 버티는 양」이 가장 높은 것. 안 오르면 안 바꾸고 빈 칸이면 가장 높은 것.
-         1:1 결투에서 이기는 쪽이 이 곱이 큰 쪽이라(PvP 기준) 데미지 1% 와 맷집 1% 의 값어치가 같다. 부위마다 수치를 따로 보면 장갑(가죽 = 속도 · 건틀릿 = 피해 감소)에서 깨진다 —
-         ~~무기 = 초당 세기 · 방어구 = 방어력~~(R307)은 마법사의 캐스팅 속도 장갑을 방어력이 조금 높은 공격 속도 장갑으로 바꿨다.
-       반지 · 목걸이는 **빈 칸만** — 아이템 레벨 → 등급(`CMP`). 줄 대부분(쿨감 · 흡혈 · 저항 · 찾기 · 발동)이 세기로 못 재는 것이다. 점수(§6-2)는 안 쓴다 — 굴림의 운을 재지 세기를 재지 않는다.
-       부위 이름은 수치가 아니라 어휘라 코드에 둔다(`SALVAGE_ROWS` 와 같은 자리) */
-    const F = createFormula(B);   // 물리 감쇠 곡선 — 전투(`formula.strike`)와 같은 함수
-    const MIGHT_PARTS = new Set(['weapon', 'armor', 'helmet', 'gloves', 'boots']);
-    // 입히는 DPS — 평타 한 대 평균(범위에 데미지 % 괄호가 이미 곱해져 있다) × 능력치 계수 × (1 + 피해량) × 치명 기대 ÷ 행동 주기. `strike` 의 곱 그대로 · 맨손도 범위가 있다
-    const dealtPerSec = c => {
-        const a = c.atk_physical ?? c.atk_magic;
-        if (!a) return 0;
-        const crit = 1 + Math.min(1, c.crit_rate ?? 0) * ((c.crit_damage ?? 1) - 1);   // 치명 확률은 상한이 없다 — 1 이면 전타 치명
-        return (a.min + a.max) / 2 * (c.main_attr_mult ?? 1) * (1 + (c.dmg_bonus_pct ?? 0)) * crit / (c.action_period || 1);
-    };
-    // 버티는 양 — 최대 HP ÷ 한 대에서 남는 몫(물리 감쇠 × 피해 감소). 상대에 따라 값이 바뀌는 것(저항 · 명중 · 절대값 감소)은 안 넣는다
-    const enduredHp = c => {
-        const keep = (1 - F.mitigation(c.defense ?? 0)) * (1 - (c.damage_reduction ?? 0));
-        return keep > 0 ? (c.hp_max ?? 0) / keep : Infinity;
-    };
-    const might = c => dealtPerSec(c) * enduredHp(c);
-
+       고르기 = **점수 순** [R536] — 일곱 칸 같은 규칙: 후보 중 `item.autoEquipScore`(아이템 레벨 + 베이스 몫 + 옵션 점수 합)가 가장 높은 것을 빈 칸이거나 지금 낀 것보다 높을 때만.
+         점수는 그 장비 하나로 정해져(영웅 · 다른 칸과 무관) 한 바퀴로 끝나고 다시 누르면 그대로다 — 반지 두 칸은 같은 후보를 나눠 쓴다(앞 칸이 먼저 · 벗은 반지는 뒤 칸의 후보).
+         **그 영웅에게 안 먹는 줄은 0점**(`skill.equipFit` → `item.autoEquipScore` — 무기 종류 · 타격 종류 · 액티브가 정한다 · 전투가 그 줄을 읽는 문과 같다) —
+         무기 칸은 그 후보 무기의 종류로 · 나머지는 무기 칸이 맨 앞이라 고른 뒤의 무기 종류로 잰다 */
     function autoEquip(state, heroUid, no = 1) {
         const h = heroById(state, heroUid);
         if (!h || !bagOf(state, no)) return { ok: false, err: 'missing' };
         const before = { ...h.equipped };
         const cands = part => bagOf(state, no).map(u => state.items[u])
             .filter(it => it && !it.box && it.slot === part && !I.canEquip(h, it) && I.fitsClass(it, h.cls));   // 상자 칸은 안 본다 (R328)
-        // 반지 · 목걸이가 먼저 — 다섯 칸의 세기가 반지까지 낀 몸으로 서야 다시 눌렀을 때 그대로다
+        // 그 영웅에게 먹는 것(`skill.equipFit`) — 무기 종류마다 한 번 · 무기 칸은 그 후보 무기의 종류 · 나머지 여섯 칸은 그때 낀 무기의 종류(무기 칸이 맨 앞 · 맨손 = 물리)
+        const fits = { physical: SK.equipFit(h, 'physical'), magic: SK.equipFit(h, 'magic') };
+        const fitOf = weapon => fits[I.groupOf(weapon)?.damageKind === 'magic' ? 'magic' : 'physical'];
         for (const { id: pos, part } of deps.equipSlots) {
-            if (MIGHT_PARTS.has(part) || h.equipped[pos]) continue;
-            let best = null;
-            for (const it of cands(part)) if (!best || (CMP.ilvl(it, best) || CMP.rarity(it, best)) < 0) best = it;
+            const fitFor = it => fitOf(part === 'weapon' ? it : state.items[h.equipped.weapon]);
+            const cur = h.equipped[pos] ? state.items[h.equipped[pos]] : null;
+            let best = null, top = cur ? I.autoEquipScore(cur, fitFor(cur)) : -Infinity;
+            for (const it of cands(part)) {
+                const v = I.autoEquipScore(it, fitFor(it));
+                if (v > top) { best = it; top = v; }                   // 같으면 인벤토리 앞의 것 · 지금 낀 것과 같으면 안 바꾼다
+            }
             if (best) equip(state, h.uid, best.uid, pos);
         }
-        // 다섯 칸 — 칸마다 하나씩 바꿔 보고, 한 바퀴에 바뀐 것이 있으면 다시 돈다(뒤 칸이 앞 칸의 답을 바꾼다 — 치명 확률 장갑 → 치명 피해 무기).
-        //   바꿀 때마다 세기가 오르니 멈춘다 · 바퀴 상한(인벤토리 수 + 1)은 그물이다
-        const passMax = bagOf(state, no).length + 1;
-        for (let pass = 0, moved = true; moved && pass < passMax; pass++) {
-            moved = false;
-            for (const { id: pos, part } of deps.equipSlots) {
-                if (!MIGHT_PARTS.has(part)) continue;
-                // 「끼면」의 자리는 `equipTarget` 이 고른다 — 다섯 칸은 위치가 하나라 곧 `pos` 다
-                let best = null, top = h.equipped[pos] ? might(heroCombat(state, h)) : -Infinity;
-                for (const it of cands(part)) {
-                    const v = might(heroCombatIf(state, h, it.uid));
-                    if (v > top) { best = it; top = v; }               // 같으면 인벤토리 앞의 것 · 지금 낀 것과 같으면 안 바꾼다
-                }
-                if (best && equip(state, h.uid, best.uid, pos).ok) moved = true;
-            }
-        }
-        // 누르기 전과 달라진 칸만 — 두 바퀴째에 또 바뀐 칸도 한 줄 · `back` = 누르기 전에 그 칸에 있던 것
+        // 누르기 전과 달라진 칸만 · `back` = 누르기 전에 그 칸에 있던 것
         const changes = deps.equipSlots.filter(({ id }) => h.equipped[id] !== before[id])
             .map(({ id }) => ({ position: id, item: h.equipped[id], back: before[id] ? [before[id]] : [] }));
         return { ok: true, changes };
@@ -2976,7 +2991,8 @@ export function createGameSystem(deps) {
     /* ── 스킬북 [신설 2026-09-29 · R179 · skill_design §2-1 · construction_draft §2 도서관 · INTERFACE §2-7] ──
        둘째 액티브 칸 = **책으로 배운 스킬**(`hero.bookSkill`). 책은 **얻으면 바로 재고**다 — 처치(`settleRound`) · 탐험 동굴(`exploreTake`) · 연구소 도서관 줄(`libSettle`) ·
        상단(`shopBookBuy`) · 첫 책 보상(`grantLevelBook`) (2026-11-15 · R504 — ~~스킬 도안 + 도서관 책 제작~~ 삭제) —
-       **책은 소모품이라 쌓인다**(2026-09-30 사용자 지시 — 가진 책도 +1 · 배우면 1권을 쓴다) · 남는 책은 분해해 가루로(`salvageBook`).
+       **책은 소모품이라 쌓인다**(2026-09-30 사용자 지시 — 가진 책도 +1 · 배우면 1권을 쓴다) · 남는 책은 분해해 스킬 조각으로(`salvageBook`) ·
+       조각을 모아 **한 번 본 책**을 고른다(`craftBook` — 2026-11-18 · R540 · 조각은 책에서만 나와 들어오는 책 총량은 그대로다).
        배우면 영구 · 다른 책은 덮어쓴다(앞의 것은 책으로 안 돌아온다) · 빼는 길이 없다 · 책이 없으면 칸은 빈 채로 간다. 전부 rng 0
        **같은 책이면 업그레이드다** [2026-10-06 · R216 · skill_design §2-3 — ~~`same` 거절~~] — 이미 가진 스킬(고유 · 배운 칸)의 책은 칸을 늘리지 않고
        그 스킬의 레벨을 올린다(`hero.skillLv` · 드는 책은 피보나치 · 상한 = `skillCapMax` — 2026-10-20 · R293) · 다른 책으로 덮어쓰면 쌓은 레벨도 사라진다 */
@@ -2996,10 +3012,40 @@ export function createGameSystem(deps) {
         if (id) addBook(state, id);
         return id;
     }
-    /** 책 한 권을 재고에 쌓는다 — 가진 책이어도 +1 */
+    /** 책 한 권을 재고에 쌓는다 — 가진 책이어도 +1 · 본 책 목록에 적는다(`craftBook` 목록 · R540) */
     function addBook(state, id) {
         state.books = state.books ?? {};
         state.books[id] = (state.books[id] ?? 0) + 1;
+        (state.bookSeen ??= {})[id] = 1;
+    }
+    /**
+     * 스킬 북 제작 목록 [2026-11-18 · R540 · skill_design §2-1] — **한 번이라도 재고에 들어온 직업 스킬**(`state.bookSeen`) · 책이 되는 것(`bookable`) ·
+     *   몬스터 · 장 보스 고유 · 전직 스킬은 빠진다(`ownerKind = job` 만) · `skill.csv` 행 순서 · rng 0
+     */
+    const craftable = (state, id) => !!state.bookSeen?.[id] && bookable(id) && SK?.defs?.[id]?.ownerKind === 'job';
+    function craftableBooks(state) {
+        return (SK?.list ?? []).filter(d => craftable(state, d.id)).map(d => d.id);
+    }
+    /** 제작의 비용 거절 — `bookState.craft[].err` 와 `craftBook` 이 같은 판정을 쓴다 */
+    function craftCostErr(state) {
+        if ((state.skillShards ?? 0) < B.skill_craft_shards) return 'shards';
+        if ((state.resources?.gold ?? 0) < B.skill_craft_gold) return 'gold';
+        return null;
+    }
+    /**
+     * 스킬 조각으로 책 한 권 [2026-11-18 · R540 · skill_design §2-1 · INTERFACE §2-7] — 조각 `[balance.csv:skill_craft_shards]` + 골드 `[balance.csv:skill_craft_gold]` →
+     *   고른 책 +1(`addBook`) · 영웅과 무관 · 거절 `unbuilt` → `missing` → `unseen` → `shards` → `gold` · 거절이면 상태 불변 · rng 0
+     */
+    function craftBook(state, skillId) {
+        if (!hasFeature(state, 'skillbook')) return { ok: false, err: 'unbuilt' };
+        if (!bookable(skillId) || SK?.defs?.[skillId]?.ownerKind !== 'job') return { ok: false, err: 'missing' };
+        if (!craftable(state, skillId)) return { ok: false, err: 'unseen' };
+        const err = craftCostErr(state);
+        if (err) return { ok: false, err };
+        state.skillShards -= B.skill_craft_shards;
+        state.resources.gold -= B.skill_craft_gold;
+        addBook(state, skillId);
+        return { ok: true };
     }
     /* 책 정렬 [2026-10-14 · ADR-0620 · SCREEN_DESIGN §6] — 장비 정렬(`sortStorage`)과 같은 문법: 고른 기준 다음으로 남은 둘.
        권수는 많은 것이 앞 · 직업은 `class.csv` 행 순서(전직 스킬은 제 직업) · 티어는 1 이 앞(티어가 없는 전직 스킬은 뒤) */
@@ -3060,7 +3106,11 @@ export function createGameSystem(deps) {
             need: { have: h?.level ?? 0, need: B.skillbook_learn_level },
             books: Object.keys(state.books ?? {}).filter(id => state.books[id] > 0)
                 .map(id => ({ id, n: state.books[id], ...(h ? { plan: bookPlan(state, h, id) } : {}) })),
-            hero: uid ? { skill: h?.bookSkill ?? null, innate: h?.innate ?? null, lv: { ...(h?.skillLv ?? {}) }, err: learnGate(state, h) } : null,
+            // 스킬 조각 · 제작 목록 (2026-11-18 · R540) — 비용 거절은 책마다 같다(티어 무관)
+            shards: state.skillShards ?? 0,
+            craft: craftableBooks(state).map(id => ({ id, err: craftCostErr(state) })),
+            craftCost: { shards: B.skill_craft_shards, gold: B.skill_craft_gold },
+            hero: uid ?{ skill: h?.bookSkill ?? null, innate: h?.innate ?? null, lv: { ...(h?.skillLv ?? {}) }, err: learnGate(state, h) } : null,
         };
     }
     function learnBook(state, uid, skillId, now = null) {
@@ -3096,7 +3146,7 @@ export function createGameSystem(deps) {
         return { ok: true, replaced, upgraded: false };
     }
     /**
-     * 책 한 권 분해 [2026-11-15 · R504 · skill_design §2-1] — 최하급 가루 `[balance.csv:book_salvage_dust]` · **한 번에 1권** · 어떤 책이든 된다
+     * 책 한 권 분해 [2026-11-15 · R504 · skill_design §2-1 · **2026-11-18 · R540 — 가루 대신 스킬 조각**] — 스킬 조각 `[balance.csv:book_salvage_shard]` · **한 번에 1권** · 어떤 책이든 된다
      *   (상한을 넘은 책의 출구 — 연구소 도서관 줄이 상한 스킬도 낸다) · 건물 문 없음 · 거절 `missing` → `book` · 거절이면 상태 불변 · rng 0
      */
     function salvageBook(state, skillId) {
@@ -3104,9 +3154,9 @@ export function createGameSystem(deps) {
         if (!(state.books?.[skillId] > 0)) return { ok: false, err: 'book' };
         state.books[skillId] -= 1;
         if (state.books[skillId] <= 0) delete state.books[skillId];
-        const dust = B.book_salvage_dust;
-        addMat(state, DUST_ID, dust);
-        return { ok: true, dust };
+        const shards = B.book_salvage_shard;
+        state.skillShards = (state.skillShards ?? 0) + shards;
+        return { ok: true, shards };
     }
 
     /* ── 연구소 — 줄 × 지점 [신설 2026-09-27 · SCREEN_DESIGN §8 · INTERFACE §2-7 · 개정 2026-10-18 영웅 배치 삭제(R283) ·
@@ -4056,9 +4106,13 @@ export function createGameSystem(deps) {
             state.resources.gold += s.gold;
             R.gold += s.gold;
             // ~~처치가 뱉는 가루~~ 는 2026-09-09 삭제 — 가루의 공급원은 **분해** 하나다(`salvage` · item_design §5-3)
-            // 도감 레벨의 출처 — 이긴 라운드의 처치 × 그 런 단의 도감 경험치 (monster_design §8 · 2026-10-10 처치 수 → 도감 경험치 · R239)
-            const cxPer = codexExpOf(run.difficulty ?? BASE_DIFF);
-            for (const [id, n] of Object.entries(s.kills)) state.codexExp[id] = (state.codexExp[id] ?? 0) + n * cxPer;
+            // 도감 레벨의 출처 — 이긴 라운드의 처치 × 그 런 단의 도감 경험치 × 처치 순간 등급의 배율 (monster_design §8 · 2026-10-10 처치 수 → 도감 경험치 · R239 · 등급 배율 2026-11-18 R539)
+            //   등급별 처치(`killGrades`)가 없는 결과는 처치 수 × 단 몫(배율 1)
+            const cxDiff = run.difficulty ?? BASE_DIFF;
+            if (s.killGrades) {
+                for (const [id, byGrade] of Object.entries(s.killGrades))
+                    for (const [g, n] of Object.entries(byGrade)) state.codexExp[id] = (state.codexExp[id] ?? 0) + n * codexKillExp(cxDiff, g);
+            } else for (const [id, n] of Object.entries(s.kills)) state.codexExp[id] = (state.codexExp[id] ?? 0) + n * codexExpOf(cxDiff);
             const gained = [];   // 들어온 드롭 — 의뢰 「수집」이 센다(알아서 분해로 녹은 것은 든다 · 넘쳐 분해된 것은 안 든다 — 칸에 못 들어왔다 · R153 · 2026-10-14)
             // 드롭은 **나간 부대의 인벤토리**로 — 차면 그 부대의 몫만 분해된다 (v40 · ADR-0521 · 2026-10-14 ADR-0625)
             const bag = bagOf(state, run.preset) ?? state.bags[0];
@@ -5755,7 +5809,7 @@ export function createGameSystem(deps) {
        판정 = 기록(`mainMission.met` — 한 번 채우면 남는다) 또는 지금 조건 · 보상은 채운 줄이면 순서와 무관하게 받는다 · 상자는 여기서만 나온다. */
     const MM_CONDS = ['battle', 'build', 'clear', 'fame', 'count', 'event', 'research', 'reg', 'runs', 'spot'];   // 조건 어휘 (INTERFACE §5-3)
     const MM_COUNTERS = ['upgrade', 'gamble', 'explore'];   // `count` 가 읽는 카운터
-    const MM_EVENTS = ['hire', 'book'];                       // `event` 가 읽는 사건 — 의뢰 대조 고리(`commissionNote`)의 이름
+    const MM_EVENTS = ['hire', 'book', 'equip'];              // `event` 가 읽는 사건 — 의뢰 대조 고리(`commissionNote`)의 이름 · `equip` 은 장착이 직접 적는다(R538)
     const MM_BOOK_SALT = 0x3A11;                              // 책 보상 스트림 (INTERFACE §5-1)
     const MM_BOX = { box_weapon: 'weapon', box_armor: 'armor' };
     const MM_BOX_TIER = 'low';                                // 메인미션 상자는 하급 (base_expedition_design §1-6)
@@ -5798,7 +5852,7 @@ export function createGameSystem(deps) {
         });
     })();
     const mmOf = state => (state.mainMission ??= { met: [], got: [], ev: [] });
-    /** 사건 하나를 적는다 — 처음 한 번만 (`commissionNote` 가 부른다) · rng 0 */
+    /** 사건 하나를 적는다 — 처음 한 번만 (`commissionNote` · `equip` 이 부른다) · rng 0 */
     function mmNoteEvent(state, on) {
         const mm = mmOf(state);
         if (!mm.ev.includes(on)) mm.ev.push(on);
@@ -6276,7 +6330,7 @@ export function createGameSystem(deps) {
     return {
         newGame, serialize, deserialize, canLoad, addExpTime,
         heroById, heroItems, heroCombat, heroCombatIf, heroCombatWith, upgradeState, upgradeItem, temperItem, makeLevels, makeState, makeItem, potionState, makePotion,
-        codexLevel, codexNext, codexMaxLevel, codexLevelOf, codexSteps, codexOptionOf, codexLineOf, codexLadder, codexOptions, codexExpOf,
+        codexLevel, codexNext, codexMaxLevel, codexLevelOf, codexSteps, codexSegments, codexShare, codexCapOf, codexSegmentNo, codexOptionOf, codexLineOf, codexLadder, codexOptions, codexExpOf, codexKillExp,
         skillCapMax,   // 책 업그레이드 상한 — 끝 하나 (2026-10-20 · R293 · ~~스킬 도감~~)
         equipTarget, equip, unequip, autoEquip, salvage, salvagePreview, setItemLock, openBox, boxRarities, claimMail, claimAllMail, salvageView, setSalvageCell, setSalvageBase, setSalvageWord, setSalvageLevel, saveSalvageSlot, loadSalvageSlot, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf, bagOf,
         toggleParty, setLeader, formationState, setFormation, placeFormation, rankOf,
@@ -6295,7 +6349,7 @@ export function createGameSystem(deps) {
         materialLadder, synthState, synthesize,   // 재료 단계 · 대장간 합성 (2026-10-27 · R359)
         mgRound, mgJudge, mgClaim,
         advanceState, advanceStart, advanceSettle, advanceLearn, advanceForget, advanceLevelUp, advanceRank, spendStar,
-        bookState, learnBook, salvageBook, sortBooks,
+        bookState, learnBook, salvageBook, craftBook, sortBooks,
         masteryState, learnMastery, unlearnMastery, resetMastery,
         tacticState, tacticBonus, arenaLoadout, arenaExport, arenaState, arenaStakes, arenaRecord, colosseumState, colosseumRecord, arenaDefense, setArenaDefense, rerollTactic, toggleTacticLock, weaponGroupOf,
         constructionState, construct, hasFeature, needOf, peakTotal,

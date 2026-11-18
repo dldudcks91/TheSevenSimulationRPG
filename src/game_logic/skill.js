@@ -855,6 +855,18 @@ export function createSkillSystem(data) {
     const tagsOf = def => [...(def?.derived ?? []), ...(def?.tags ?? [])];
 
     /**
+     * **그 영웅에게 먹는 것** [신설 2026-11-18 · R536 · item_design §6-3 · INTERFACE §2-8] — `item.autoEquipScore` 의 `fit`(안 먹는 옵션 줄은 0).
+     *   `hits` = 그 무기 종류(`kind`)로 내는 타격 종류 — 물리 무기 · 맨손은 평타(언제나 물리) + 액티브의 `hit` 줄마다 원소 칸(없으면 물리 · 고정 피해 `fixed`).
+     *   오오라 피해(`pulse`)는 저항 감소 · 원소 % · 흡혈을 안 받아(battle.pulseTick) 타격으로 안 센다 · 순수 · rng 0
+     */
+    const equipFit = (hero, kind) => {
+        const acts = activesFor(hero).map(a => defs[a.id]).filter(Boolean);
+        const hits = new Set(kind === 'magic' ? [] : ['physical']);
+        for (const d of acts) for (const e of d.effects) if (e.effect === 'hit') hits.add(e.element ?? 'physical');
+        return { weapon: kind === 'magic' ? 'magic' : 'physical', hits: [...hits], tags: [...new Set(acts.flatMap(tagsOf))], skills: acts.map(d => d.id) };
+    };
+
+    /**
      * **이 스킬이 이 무기로 나가나** [신설 2026-09-29 · R187 · 개정 2026-10-03 · R204 · skill_design §2-2] — **무기의 힘을 끌어다 쓰는 스킬**(`def.needsWeapon` —
      *   타격 · 회복 · 소환 줄이 있다)은 그 스킬 직업(`def.classId` — 전직 스킬은 갈래의 직업)의 무기군을 들어야 나간다. 걸린 효과만 거는 스킬
      *   (함성 · 오오라 · 축복 · 저주 · 자기 버프)과 몬스터 전용 스킬은 무기와 상관없다. 새 CSV 칸이 없다 — 하는 일 줄과 무기군의 직업(`weapon_group.csv:classes`)에서 읽는다.
@@ -1031,5 +1043,5 @@ export function createSkillSystem(data) {
         return !!d && d.ownerKind !== 'monster' && !d.effects.some(e => e.effect === 'call');
     };
 
-    return { tails, commons, commonValue, ROW_SLOTS, defs, list, statuses, activesFor, resolve, castable, pickReady, tagsOf, fitsWeapon, scaleDef, previewOf, procIntervalSec, bookable, TAGS, DERIVED_TAGS, MAX_TAGS, EPS };
+    return { tails, commons, commonValue, ROW_SLOTS, defs, list, statuses, activesFor, resolve, castable, pickReady, tagsOf, equipFit, fitsWeapon, scaleDef, previewOf, procIntervalSec, bookable, TAGS, DERIVED_TAGS, MAX_TAGS, EPS };
 }

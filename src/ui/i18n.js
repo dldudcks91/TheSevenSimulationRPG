@@ -129,6 +129,7 @@ const STRINGS = {
     'mobile.page.work': { ko: '작업', en: 'Workshop', zh: '工作台' },
     'mobile.page.advance': { ko: '전직', en: 'Advance', zh: '转职' },
     'mobile.page.upgrade': { ko: '업그레이드', en: 'Upgrade', zh: '升级' },
+    'mobile.page.books': { ko: '책 제작', en: 'Books', zh: '制作书' },   // 도서관 본판 오른쪽 구역 — 스킬 북 제작 (ADR-1262)
     'mobile.page.temper': { ko: '손질', en: 'Prep', zh: '整备' },
     'mobile.page.research': { ko: '연구판', en: 'Research', zh: '研究面板' },
     'mobile.page.researchDetail': { ko: '연구 상세', en: 'Details', zh: '研究详情' },
@@ -353,6 +354,34 @@ const STRINGS = {
     // 멈춤 창 — 같은 브라우저의 다른 탭이 세이브를 썼다 (SCREEN_DESIGN §2-1)
     'cl.frozen.h': { ko: '다른 탭에서 게임 실행 중', en: 'The game is open in another tab', zh: '游戏正在其他标签页中运行' },
     'cl.frozen.reload': { ko: '이 탭에서 이어하기', en: 'Continue in this tab', zh: '在此标签页继续' },
+    // 아이디 계정 (SCREEN_DESIGN §2-1 「계정」 · §2-2 · §3 · ADR-1263) — 계정 멈춤 창 · 메뉴 · 계정 창 둘 · 오류는 `acct.err.<결과 코드>`
+    'cl.frozen.acctH': { ko: '다른 곳에서 이 계정으로 게임을 열었습니다', en: 'This account was opened somewhere else' },
+    'mn.checking': { ko: '확인 중…', en: 'Checking…' },
+    'mn.acctLoad': { ko: '계정으로 불러오기', en: 'Load from Account' },
+    'mn.acctOn': { ko: '계정 {id}', en: 'Account {id}' },
+    'acct.newH': { ko: '계정 만들기', en: 'Create Account' },
+    'acct.loginH': { ko: '계정으로 불러오기', en: 'Load from Account' },
+    'acct.id': { ko: '아이디', en: 'ID' },
+    'acct.pw': { ko: '비밀번호', en: 'Password' },
+    'acct.pw2': { ko: '비밀번호 확인', en: 'Confirm password' },
+    'acct.idPh': { ko: '영문 소문자 · 숫자 · _ (3~16자)', en: 'a–z · 0–9 · _ (3–16)' },
+    'acct.note': { ko: '비밀번호를 잊으면 게임 안에서는 찾을 수 없습니다', en: 'A forgotten password can\'t be recovered in-game' },
+    'acct.create': { ko: '만들기', en: 'Create' },
+    'acct.load': { ko: '불러오기', en: 'Load' },
+    'acct.loadOver': { ko: '이 브라우저 세이브를 지우고 불러오기', en: 'Delete this browser\'s save & load' },
+    'acct.busy': { ko: '확인 중…', en: 'Checking…' },
+    'acct.made': { ko: '계정 {id} 을(를) 만들었습니다', en: 'Account {id} created' },
+    'acct.err.badId': { ko: '아이디는 영문 소문자 · 숫자 · _ 3~16자입니다', en: 'ID: 3–16 lowercase letters, digits or _' },
+    'acct.err.weak': { ko: '비밀번호는 6자 이상입니다', en: 'Password must be at least 6 characters' },
+    'acct.err.mismatch': { ko: '두 비밀번호가 다릅니다', en: 'The passwords don\'t match' },
+    'acct.err.taken': { ko: '이미 쓰는 아이디입니다', en: 'That ID is already taken' },
+    'acct.err.linked': { ko: '이미 계정에 묶여 있습니다', en: 'Already linked to an account' },
+    'acct.err.wrong': { ko: '아이디나 비밀번호가 틀렸습니다', en: 'Wrong ID or password' },
+    'acct.err.busy': { ko: '시도가 너무 많습니다 — 잠시 뒤에 다시 하세요', en: 'Too many attempts — try again later' },
+    'acct.err.off': { ko: '계정 기능이 아직 꺼져 있습니다', en: 'Accounts aren\'t enabled yet' },
+    'acct.err.network': { ko: '연결하지 못했습니다', en: 'Couldn\'t connect' },
+    'acct.err.read': { ko: '세이브를 받지 못했습니다', en: 'Couldn\'t load the save' },
+    'acct.err.dev': { ko: '개발 환경에서는 계정을 쓰지 않습니다', en: 'Accounts are off in development' },
 
     /* ── 프롤로그 (2026-09-03 · SCREEN_DESIGN §3-1) ──
        원문은 docs/game_design/story/prologue.md(정본 2026-09-14) — 화면이 문장을 새로 쓰지 않는다. `en` 은 그 직역이다 (2026-10-16 · ADR-0646).
@@ -570,6 +599,7 @@ const STRINGS = {
     'mm.c.count.explore': { ko: '탐험 보내기', en: 'Send an exploration', zh: '派出探险' },
     'mm.c.event.hire': { ko: '영웅 고용하기', en: 'Hire a hero', zh: '雇佣英雄' },
     'mm.c.event.book': { ko: '스킬북 배우기', en: 'Learn from a skill book', zh: '学习技能书' },
+    'mm.c.event.equip': { ko: '장비 장착하기', en: 'Equip a piece of gear', zh: '穿戴装备' },
     'mm.c.spot.ruins': { ko: '폐허로 탐험 보내기', en: 'Send an exploration to the Ruins', zh: '向废墟派出探险' },
     'mail.fromMission': { ko: '메인미션', en: 'Main Missions', zh: '主线任务' },   // 메인미션 상자가 창고에 못 들어가 온 우편 (R524)
     'mail.claim': { ko: '받기', en: 'Claim', zh: '领取' },
@@ -583,31 +613,6 @@ const STRINGS = {
     'nt.achievementsLocked': { ko: '업적 · 준비 중', en: 'Achievements · Coming soon', zh: '成就 · 准备中' },
     'nt.missionsEmpty': { ko: '진행 중인 미션 없음', en: 'No active missions', zh: '没有进行中的任务' },
     'nt.count': { ko: '알림과 미션 · {n}건', en: { one: 'Notifications and missions · {n} item', other: 'Notifications and missions · {n} items' }, zh: '通知与任务 · {n}条' },
-    // 초반 안내 — 해당 기능 가까이에 한 번씩 표시하는 다섯 가지 설명.
-    'tutorial.progress': { ko: '초반 안내', en: 'Getting started', zh: '初期指引' },
-    'tutorial.confirm': { ko: '확인', en: 'Got it', zh: '知道了' },
-    'tutorial.settings': { ko: '초반 안내', en: 'Getting started', zh: '初期指引' },
-    'tutorial.replay': { ko: '다시 보기', en: 'Show again', zh: '再看一次' },
-    'tutorial.expedition.title': { ko: '첫 원정', en: 'Your first expedition', zh: '首次远征' },
-    'tutorial.expedition.detail': { ko: '열린 장소를 눌러 원정을 보내세요. 전투와 다음 구간 진행은 게임이 켜져 있는 동안 자동으로 이어집니다.', en: 'Choose an unlocked area to send your party. Combat and travel to the next stage continue automatically while the game is open.', zh: '点击已开放的区域派出远征。只要游戏开着，战斗与推进到下一关都会自动进行。' },
-    'tutorial.loot.title': { ko: '장비 비교', en: 'Compare your gear', zh: '装备比较' },
-    'tutorial.loot.detail': { ko: '장비에 마우스를 올리면 선택한 영웅의 착용품과 비교합니다. 마음에 드는 장비를 클릭하면 장착합니다.', en: 'Hover over gear to compare it with the selected hero’s equipment. Click an item when you want to equip it.', zh: '将鼠标移到装备上，即可与所选英雄的穿戴装备进行比较。点击中意的装备即可装备。' },
-    'tutorial.lootTouch.detail': { ko: '장비를 길게 눌러 선택한 영웅의 착용품과 비교하세요. 상세 정보의 [착용]으로 교체할 수 있습니다.', en: 'Touch and hold gear to compare it with the selected hero’s equipment. Use [Equip] in its details to replace the worn item.', zh: '长按装备，与所选英雄的穿戴装备进行比较。可通过详情中的[装备]进行替换。' },
-    'tutorial.mastery.title': { ko: '마스터리 배분', en: 'Spend skill points', zh: '专精分配' },
-    'tutorial.mastery.detail': { ko: '레벨업으로 받은 포인트로 영웅을 강화하세요. 마스터리 창에서 배분하며, 초기화는 무료입니다.', en: 'Use points earned from leveling up to strengthen your hero. Open mastery to spend them; resetting is free.', zh: '用升级获得的点数提升英雄。在专精窗口中分配，重置免费。' },
-    'tutorial.masteryTree.detail': { ko: '배울 수 있는 칸을 누르면 포인트를 사용해 강화합니다. 초기화하면 사용한 포인트를 무료로 돌려받습니다.', en: 'Click an available node to spend a point and improve your hero. Resetting returns all spent points for free.', zh: '点击可学习的格子，即可消耗点数进行提升。重置后可免费返还已用点数。' },
-    'tutorial.potions.title': { ko: '물약과 재고', en: 'Potions and stock', zh: '药水与库存' },
-    'tutorial.potions.detail': { ko: '물약은 설정한 체력 기준에 따라 자동으로 사용하며, 마실 때마다 재고가 줄어듭니다. 편성에서 물약 칸과 사용 기준을 바꿀 수 있습니다.', en: 'Potions are used automatically at the set health threshold, consuming stock with each drink. Change potion slots and the threshold in Party.', zh: '药水会按设定的生命阈值自动使用，每喝一次库存就会减少。可在编队中更改药水格与使用阈值。' },
-    'tutorial.potionsShop.detail': { ko: '물약은 설정한 체력 기준에 따라 자동으로 사용하며, 마실 때마다 재고가 줄어듭니다. 부족한 물약은 상점에서 구매할 수 있습니다.', en: 'Potions are used automatically at the set health threshold, consuming stock with each drink. Buy more at the Shop when stocks run low.', zh: '药水会按设定的生命阈值自动使用，每喝一次库存就会减少。不足的药水可在商店购买。' },
-    'tutorial.construction.title': { ko: '건설과 해금', en: 'Build to unlock features', zh: '建设与解锁' },
-    'tutorial.construction.detail': { ko: '건물의 조건과 비용을 확인해 건설하세요. 다음 랭크에서 열리는 기능과 효과도 이곳에서 확인할 수 있습니다.', en: 'Check a building’s requirements and cost before building. This panel also shows the features and effects its next rank unlocks.', zh: '确认建筑的条件与费用后进行建设。下一阶开启的功能与效果也可在此查看。' },
-    'tutorial.laboratory.title': { ko: '연구소 둘러보기', en: 'Your laboratory', zh: '浏览研究所' },
-    'tutorial.laboratory.detail': { ko: '연구소에서는 시간에 따라 재료·골드·경험치·스킬북을 얻거나 영웅을 수색합니다. 줄 이름을 누르면 생산과 등록 효과를, 오른쪽 지점 그림을 누르면 연구를 봅니다. 잠긴 줄은 표시된 건물을 건설하거나 랭크를 올려 여세요.', en: 'Laboratory lines produce materials, gold, XP or skill books, or search for heroes over time. Click a line name for its output and hero effects, or a node to research it. Build or upgrade the building shown on a locked line to open it.', zh: '在研究所中，可以随时间获得材料、金币、经验、技能书，或搜寻英雄。点击线名称可查看生产与派驻效果，点击右侧的节点图可查看研究。锁定的线需建设或升阶所示建筑后开启。' },
-    'tutorial.labRegistration.title': { ko: '연구소 영웅 등록', en: 'Assign laboratory heroes', zh: '研究所派驻英雄' },
-    'tutorial.labRegistration.detail': { ko: '강조된 [+]나 영웅 얼굴을 눌러 등록 창을 여세요. 등록한 영웅 수와 능력치가 이 줄의 생산·연구 효과를 더합니다. 원정과 겸직할 수 있고, 한 영웅은 한 줄에만 등록됩니다.', en: 'Click the highlighted [+] or hero portrait to assign heroes. The number of assigned heroes and their stats improve that line’s production and research. Heroes can still go on expeditions; each hero can be assigned to one laboratory line at a time.', zh: '点击高亮的[+]或英雄头像打开派驻窗口。派驻英雄的数量与属性会提高此线的生产与研究效果。可与远征兼任，每名英雄只能派驻在一条线上。' },
-    'tutorial.labRegistrationPick.detail': { ko: '이 줄에 둘 영웅을 고르고 [적용]을 누르세요. 다시 누르면 고르기가 풀리고, 다른 줄의 영웅을 고르면 이곳으로 옮겨집니다. 등록해도 원정에 함께 참여할 수 있습니다.', en: 'Select the heroes for this line, then press [Apply]. Click again to deselect; heroes from other lines move here. Assigned heroes can still join expeditions.', zh: '选择要放在此线的英雄后点击[应用]。再次点击可取消选择；选择其他线上的英雄会将其移到这里。派驻后仍可同时参加远征。' },
-    'tutorial.labResearch.title': { ko: '지점 연구하기', en: 'Research a node', zh: '研究节点' },
-    'tutorial.labResearch.detail': { ko: '다음 레벨의 효과·비용·시간을 확인하고 [연구]를 누르세요. 연구소 전체에서 한 번에 하나만 진행하며, 시간이 지나면 자동으로 완료됩니다. [그만두기]를 누르면 낸 비용을 전부 돌려받습니다.', en: 'Check the next level’s effect, cost and duration, then press [Research]. The laboratory runs one research project at a time and completes it automatically. [Cancel] refunds the full cost.', zh: '确认下一级的效果、费用与时间后点击[研究]。整个研究所同时只能进行一项研究，时间到后自动完成。点击[中止]可全额返还已付的费用。' },
     'nt.next': { ko: '다음 할 일', en: 'Next step', zh: '下一步' },
     'nt.empty': { ko: '대기 중인 알림 없음', en: 'No pending tasks', zh: '没有待处理的通知' },
     'nt.shortcut': { ko: '바로가기', en: 'Go to', zh: '前往' },
@@ -977,7 +982,11 @@ const STRINGS = {
     'set.log': { ko: '로그', en: 'Log', zh: '日志' },
     'set.logGrid': { ko: '칸', en: 'Grid', zh: '格' },
     'set.logText': { ko: '문장', en: 'Text', zh: '文字' },
-    'set.nick': { ko: '닉네임', en: 'Nickname', zh: '昵称' },   // 퍼널 페이지가 유저를 알아보는 이름 — 게임 안엔 안 찍힌다 (§2-1 · ADR-0633)
+    'set.nick': { ko: '닉네임', en: 'Nickname', zh: '昵称' },
+    'set.acct': { ko: '계정', en: 'Account' },   // 아이디 계정 줄 — 배포 주소에서만 (§2-2 · ADR-1263)
+    'set.acctNew': { ko: '계정 만들기', en: 'Create Account' },
+    'set.acctOut': { ko: '로그아웃', en: 'Log Out' },
+    'set.acctOutConfirm': { ko: '세이브를 지우고 로그아웃 — 한 번 더', en: 'Delete save & log out — click again' },   // 퍼널 페이지가 유저를 알아보는 이름 — 게임 안엔 안 찍힌다 (§2-1 · ADR-0633)
     'set.rclickSalvage': { ko: '우클릭 분해', en: 'Right-click Salvage', zh: '右键分解' },   // 켜면 보관 칸 장비 우클릭 = 바로 분해 · 메뉴는 Shift+우클릭 (2026-11-15 · §2-2 · ADR-1188)
 
     /* ── 연구소 탭(옛 자원 탭 · 키 `dp.*` 는 옛 이름 그대로) — 줄은 넷: 자원 · 수색 · 훈련 · 도박장 (SCREEN_DESIGN §8) ──
@@ -2083,9 +2092,19 @@ const STRINGS = {
         zh: '获得与分解技能书',
     },
     'help.library.sources.body': {
-        ko: "스킬북은 만들지 않고 얻습니다. 원정에서 몬스터를 처치하거나 탐험 동굴의 보상, 연구소 도서관 줄, 상단 구매, 영웅의 첫 책 사용 레벨 보상으로 들어옵니다. 어떤 몬스터가 어떤 책을 주는지는 스킬 도감의 획득처에서 확인합니다.<br><br>얻은 책은 바로 책 재고에 쌓이며 장비 인벤토리 칸을 차지하지 않습니다. 더 쓸 데가 없는 책은 창고의 <b>[스킬북]</b> 탭에서 골라 <b>[분해]</b>합니다. 한 번에 1권이 최하급 가루 {dust}개가 되며, 되돌릴 수 없습니다.",
-        en: "Skill books are found, not crafted. They come from defeating monsters on Expeditions, Exploration cave rewards, the Laboratory Library line, Trading House purchases and each hero's first-book level reward. Check a skill's Codex sources to see which monsters drop its book.<br><br>Books enter book stock immediately and do not take equipment inventory slots. Select a book you no longer need in the stash's <b>Skill Books</b> tab and press <b>Salvage</b>. Each press turns one book into {dust} lowest-grade dust and cannot be undone.",
-        zh: '技能书无法制作，只能获得。来源有：远征中击杀怪物、探索洞穴的奖励、研究所的图书馆线、商会购买，以及英雄达到可用书等级时的首本书奖励。哪种怪物掉落哪本书，请在技能图鉴的获取途径中查看。<br><br>获得的书会立即进入书籍库存，不占背包的装备格。用不上的书可在仓库的<b>[技能书]</b>页中选中后<b>[分解]</b>。每次将1本书变为{dust}个最低级粉尘，且无法撤销。',
+        ko: "스킬북은 원정에서 몬스터를 처치하거나 탐험 동굴의 보상, 연구소 도서관 줄, 상단 구매, 영웅의 첫 책 사용 레벨 보상으로 들어옵니다. 어떤 몬스터가 어떤 책을 주는지는 스킬 도감의 획득처에서 확인합니다.<br><br>얻은 책은 바로 책 재고에 쌓이며 장비 인벤토리 칸을 차지하지 않습니다. 더 쓸 데가 없는 책은 창고의 <b>[스킬북]</b> 탭에서 골라 <b>[분해]</b>합니다. 한 번에 1권이 <b>스킬 조각 {shard}개</b>가 되며, 되돌릴 수 없습니다. 스킬 조각은 책을 분해할 때만 나옵니다.",
+        en: "Skill books come from defeating monsters on Expeditions, Exploration cave rewards, the Laboratory Library line, Trading House purchases and each hero's first-book level reward. Check a skill's Codex sources to see which monsters drop its book.<br><br>Books enter book stock immediately and do not take equipment inventory slots. Select a book you no longer need in the stash's <b>Skill Books</b> tab and press <b>Salvage</b>. Each press turns one book into <b>{shard} skill shard(s)</b> and cannot be undone. Skill shards come only from salvaging books.",
+        zh: '技能书的来源有：远征中击杀怪物、探索洞穴的奖励、研究所的图书馆线、商会购买，以及英雄达到可用书等级时的首本书奖励。哪种怪物掉落哪本书，请在技能图鉴的获取途径中查看。<br><br>获得的书会立即进入书籍库存，不占背包的装备格。用不上的书可在仓库的<b>[技能书]</b>页中选中后<b>[分解]</b>。每次将1本书变为<b>{shard}个技能碎片</b>，且无法撤销。技能碎片只能通过分解技能书获得。',
+    },
+    'help.library.craft.title': {
+        ko: "스킬 조각으로 스킬북 만들기",
+        en: "Crafting books from skill shards",
+        zh: '用技能碎片制作技能书',
+    },
+    'help.library.craft.body': {
+        ko: "한 번이라도 얻은 적 있는 <b>직업 스킬</b>의 책은 도서관 <b>[스킬 북 제작]</b>에서 만들 수 있습니다. 칸을 골라 비용을 확인하고 <b>[만들기]</b>를 누르면 그 책 한 권이 책 재고에 쌓입니다.<br><br>한 권에 <b>스킬 조각 {shards}개</b>와 <b>{gold}G</b>가 들며 티어와 상관없이 같습니다. 몬스터 · 챕터 보스의 고유 스킬과 전직 스킬의 책은 만들 수 없습니다.",
+        en: "Any <b>class skill</b> book you have obtained at least once can be crafted in the Library's <b>Skill Book Crafting</b>. Select an icon, check the cost and press <b>Craft</b> to add one copy to your book stock.<br><br>Each book costs <b>{shards} skill shards</b> and <b>{gold}G</b>, the same for every tier. Books of monster or chapter-boss innate skills and advancement skills cannot be crafted.",
+        zh: '只要获得过一次的<b>职业技能</b>书，就可以在图书馆的<b>[技能书制作]</b>中制作。选中格子、确认费用后点击<b>[制作]</b>，该书就会有一本进入书籍库存。<br><br>每本需要<b>{shards}个技能碎片</b>和<b>{gold}G</b>，与阶级无关。怪物、章节首领的固有技能书和转职技能书无法制作。',
     },
     'help.library.learn.title': {
         ko: "읽힐 영웅을 고르고 배우기",
@@ -2113,9 +2132,9 @@ const STRINGS = {
         zh: '谨慎选择转职分支',
     },
     'help.library.advance.body': {
-        ko: "도서관 왼쪽 <b>[전직]</b> 패널은 위쪽 영웅 띠에서 고른 영웅의 세 갈래를 보여 줍니다. 갈래마다 역할 설명과 전직 스킬 셋의 효과가 한 줄씩 적혀 있고, 스킬 줄에 마우스를 올리면 자세한 설명이 나옵니다.<br><br>전직 기능을 열고 레벨 <b>{level}</b> 이상이 되면 갈래를 눌러 고르고 <b>[전직]</b>을 누릅니다. 비용은 <b>{gold}G</b>이며 현재는 즉시 완료됩니다. <b>전직 갈래는 변경할 수 없습니다.</b> 원정 중에도 전직할 수 있지만 탐험 중에는 먼저 돌아와야 합니다.<br><br>전직을 마친 뒤에는 <b>캐릭터 → [마스터리 열기] → 전직 트리</b>에서 전직 스킬을 배우고 강화합니다. 전직만으로 스킬을 자동 학습하지는 않습니다. 같은 갈래 안에서는 스킬을 바꿀 수 있습니다.",
-        en: "The <b>Advance</b> panel on the left of the Library shows the three paths of the hero selected in the top strip. Each path lists its role and the effects of its three advancement skills, one per row; hover a skill row for its full description.<br><br>Unlock advancement and reach level <b>{level}</b>, then click a path to select it and press <b>Advance</b>. The cost is <b>{gold}G</b> and advancement currently completes instantly. <b>The path cannot be changed.</b> Heroes can advance during Expeditions; those exploring must return first.<br><br>After advancing, go to <b>Character → Open Mastery → Advancement Tree</b> to learn and improve an advancement skill. Advancement does not automatically teach a skill. Skills can be swapped within the chosen path.",
-        zh: '图书馆左侧的<b>[转职]</b>面板显示上方英雄栏中所选英雄的三条分支。每条分支都写有定位说明，以及三个转职技能的效果，每项一行；把鼠标移到技能行上可查看详细说明。<br><br>开放转职功能并达到等级<b>{level}</b>以上后，点击分支选中，再点击<b>[转职]</b>。费用为<b>{gold}G</b>，目前会立即完成。<b>转职分支无法更改。</b>远征中也可以转职，但探索中的英雄需要先返回。<br><br>转职完成后，在<b>角色 → [打开专精] → 转职树</b>中学习并强化转职技能。仅转职不会自动学会技能。同一分支内可以更换技能。',
+        ko: "도서관에서 영웅을 고르고 <b>전직의 방</b> 칸의 <b>[입장]</b>을 누릅니다. 방에는 세 갈래가 한 줄씩 서고, 줄마다 갈래의 역할과 전직 스킬 셋의 효과가 적혀 있습니다. 방을 열면 맨 위 갈래가 골라져 있고 방 오른쪽에 그 갈래의 마스터리 판이 붙어 있습니다. 다른 갈래를 누르면 고른 갈래와 판이 바뀝니다. 판 안의 전직 스킬을 누르면 그 스킬의 강화 칸이 아래 줄에 섭니다. 칸에 올리면 효과가 보입니다. 미리보기는 재화나 포인트를 쓰지 않습니다.<br><br>전직 기능을 열고 레벨 <b>{level}</b> 이상이 되면 갈래를 선택하고 <b>[전직]</b>합니다. 비용은 <b>{gold}G</b>이며 현재는 즉시 완료됩니다. <b>전직 갈래는 변경할 수 없습니다.</b> 원정 중에도 전직할 수 있지만 탐험 중에는 먼저 돌아와야 합니다.<br><br>완료 후 전직의 방 바닥의 <b>[마스터리 열기]</b>에서 전직 스킬을 배우고 강화합니다. 전직만으로 스킬을 자동 학습하지는 않습니다. 같은 갈래 안에서는 스킬을 바꿀 수 있습니다.",
+        en: "Select a hero in the Library and press <b>Enter</b> on the <b>Chamber of Advancement</b> panel. Each of the three paths has its own row with its role and the effects of its three advancement skills. The top path is selected when the chamber opens, with its mastery board attached on the right. Click another path to switch the selection and the board. Click an advancement skill on the board to show its strengthening cells in the row below. Hover a cell to see its effect. Previewing spends no resources or points.<br><br>Unlock advancement and reach level <b>{level}</b>, then select a path and press <b>Advance</b>. The cost is <b>{gold}G</b> and advancement currently completes instantly. <b>The path cannot be changed.</b> Heroes can advance during Expeditions; those exploring must return first.<br><br>After completion, use <b>Open Mastery</b> at the bottom of the chamber to learn and improve an advancement skill. Advancement does not automatically teach a skill. Skills can be swapped within the chosen path.",
+        zh: '在图书馆选择英雄后，点击<b>转职之间</b>栏的<b>[进入]</b>。房间里三条分支各占一行，每行写有该分支的定位和三个转职技能的效果。打开房间时最上方的分支已被选中，房间右侧附有该分支的专精盘。点击其他分支会切换所选分支和专精盘。点击专精盘中的转职技能，下方一行会显示该技能的强化格。把鼠标移到格子上可查看效果。预览不会消耗资源或点数。<br><br>开放转职功能并达到等级<b>{level}</b>以上后，选择分支并<b>[转职]</b>。费用为<b>{gold}G</b>，目前会立即完成。<b>转职分支无法更改。</b>远征中也可以转职，但探索中的英雄需要先返回。<br><br>完成后，在转职之间底部的<b>[打开专精]</b>中学习并强化转职技能。仅转职不会自动学会技能。同一分支内可以更换技能。',
     },
     'help.library.points.title': { ko: "공용 스킬 포인트와 전직 트리", en: "Shared skill points and the Advancement Tree", zh: '共用技能点与转职树' },
     'help.library.points.body': { ko: "영웅은 <b>레벨 1 부터 레벨마다 스킬 포인트</b>를 받습니다. 죄종·직업 마스터리와 전직 트리는 같은 포인트를 나누어 씁니다.<br><br>전직하면 갈래의 전직 스킬 셋 중 <b>하나</b>를 배웁니다 — 스킬 포인트를 쓰지 않습니다. 전직 트리에는 줄이 둘 있습니다. <b>공통 줄</b>은 갈래 전체에 닿고, <b>스킬 줄</b>(크기 · 변형 1 · 변형 2)은 배운 스킬에 닿습니다. 줄마다 칸 셋에 합 <b>{row}</b>까지 자유롭게 나눠 찍고, 한 칸에 {row}을 모두 넣으면 그 칸의 덤이 켜집니다.<br><br>칸을 우클릭하면 1랭크가, 배운 전직 스킬을 우클릭하면 스킬 줄 전체가 <b>공용 스킬 포인트로 환급</b>됩니다. 다른 전직 스킬을 누르면 바로 갈아끼웁니다 — 스킬 줄은 환급되고 공통 줄은 그대로입니다. 갈래와 전직 비용은 그대로입니다.", en: "Heroes earn <b>skill points at every level, starting at Lv1</b>. Sin mastery, Class mastery and the Advancement Tree share this pool.<br><br>After advancing, learn <b>one</b> of the path's three skills — it costs no skill points. The tree has two rows. The <b>common row</b> affects the whole path; the <b>skill row</b> (Power · Variant 1 · Variant 2) affects the learned skill. Split up to <b>{row}</b> ranks per row freely across its three cells; putting all {row} into one cell turns on its bonus.<br><br>Right-click a cell to refund one rank, or the learned skill to refund its whole skill row to the <b>shared skill-point pool</b>. Click another advancement skill to swap to it — the skill row is refunded and the common row stays. The chosen path and gold cost remain.", zh: '英雄<b>从1级起每升一级都会获得技能点</b>。罪宗专精、职业专精与转职树共用同一批技能点。<br><br>转职后学会该分支三个转职技能中的<b>一个</b>——不消耗技能点。转职树有两行。<b>通用行</b>作用于整个分支，<b>技能行</b>（威力、变体1、变体2）作用于学会的技能。每行三格合计最多<b>{row}</b>，可自由分配；一格投满{row}时，该格的额外效果就会启用。<br><br>右键点击格子会把1阶返还为<b>共用技能点</b>；右键点击已学会的转职技能，则返还整条技能行。点击其他转职技能会立即替换——技能行返还，通用行保持不变。分支和转职费用保持不变。' },
@@ -2285,9 +2304,9 @@ const STRINGS = {
         zh: '查看怪物与图鉴经验',
     },
     'help.codex.monsters.body': {
-        ko: "몬스터에서 챕터를 고르면 지역별 몬스터의 모습·분류·스킬과 도감 진행을 살펴볼 수 있습니다. 아직 원정에서 열지 못한 지역도 여기서 미리 볼 수 있습니다. 몬스터 카드를 가리키면 이야기와 단계 보상, 스킬 그림을 가리키면 스킬 효과가 나옵니다. 일반/정예 고르개는 여기서 보는 초상만 바꾸며 같은 몬스터의 도감 경험치를 따로 나누지는 않습니다.<br><br>도감 경험치는 영웅을 레벨업시키는 경험치와 별도로, 몬스터마다 쌓이는 처치 기록입니다. 원정에서 이긴 라운드의 처치가 정산될 때 들어오며 진 라운드나 도중에 철수한 라운드의 처치는 포함되지 않습니다. 처치당 도감 경험치는 {per}입니다.",
-        en: "Choose a chapter under Monsters to inspect each area's monsters, classifications, skills and Codex progress. You can preview areas you have not yet unlocked in Expeditions. Hover a monster card for its story and milestone rewards, or a skill icon for its effect. The Normal/Elite selector changes the displayed portrait; it does not split that monster's Codex EXP into separate tracks.<br><br>Codex EXP is a separate record for each monster, apart from the XP that levels up heroes. It is awarded when kills from a won Expedition round are settled. Kills from lost rounds or rounds abandoned partway through do not count. Codex EXP per kill is {per}.",
-        zh: '在怪物页中选择章后，可以查看各区域怪物的外形、分类、技能以及图鉴进度。还未在远征中开放的区域也可以在这里预览。指向怪物卡片会显示故事和阶段奖励，指向技能图标会显示技能效果。普通/精英切换只改变这里显示的肖像，不会把同一怪物的图鉴经验分开计算。<br><br>图鉴经验与让英雄升级的经验不同，是每种怪物各自累积的击杀记录。在远征中获胜回合的击杀结算时获得，失败的回合或中途撤退的回合中的击杀不计入。每次击杀的图鉴经验为{per}。',
+        ko: "몬스터에서 챕터를 고르면 지역별 몬스터의 모습·분류·스킬과 도감 진행을 살펴볼 수 있습니다. 아직 원정에서 열지 못한 지역도 여기서 미리 볼 수 있습니다. 몬스터 카드를 가리키면 이야기와 구간 보상, 스킬 그림을 가리키면 스킬 효과가 나옵니다. 일반/정예 고르개는 여기서 보는 초상만 바꾸며 같은 몬스터의 도감 경험치를 따로 나누지는 않습니다.<br><br>도감 경험치는 영웅을 레벨업시키는 경험치와 별도로, 몬스터마다 쌓이는 처치 기록입니다. 원정에서 이긴 라운드의 처치가 정산될 때 들어오며 진 라운드나 도중에 철수한 라운드의 처치는 포함되지 않습니다. 처치당 도감 경험치는 {per}이고, 정예·보스는 여기에 배율을 곱합니다({grade}).",
+        en: "Choose a chapter under Monsters to inspect each area's monsters, classifications, skills and Codex progress. You can preview areas you have not yet unlocked in Expeditions. Hover a monster card for its story and tier rewards, or a skill icon for its effect. The Normal/Elite selector changes the displayed portrait; it does not split that monster's Codex EXP into separate tracks.<br><br>Codex EXP is a separate record for each monster, apart from the XP that levels up heroes. It is awarded when kills from a won Expedition round are settled. Kills from lost rounds or rounds abandoned partway through do not count. Codex EXP per kill is {per}, multiplied for Elites and bosses ({grade}).",
+        zh: '在怪物页中选择章后，可以查看各区域怪物的外形、分类、技能以及图鉴进度。还未在远征中开放的区域也可以在这里预览。指向怪物卡片会显示故事和区间奖励，指向技能图标会显示技能效果。普通/精英切换只改变这里显示的肖像，不会把同一怪物的图鉴经验分开计算。<br><br>图鉴经验与让英雄升级的经验不同，是每种怪物各自累积的击杀记录。在远征中获胜回合的击杀结算时获得，失败的回合或中途撤退的回合中的击杀不计入。每次击杀的图鉴经验为{per}，击杀精英、首领时再乘以倍率（{grade}）。',
     },
     'help.codex.classification.title': {
         ko: "종족 · 직업 읽기",
@@ -2295,9 +2314,9 @@ const STRINGS = {
         zh: '解读种族与职业',
     },
     'help.codex.classification.body': {
-        ko: "몬스터 카드의 분류는 종족·직업을 나타냅니다. 종족은 자연·데몬·언데드이며, 직업은 전사·궁수·기사·마법사·사제처럼 사용하는 스킬과 장비의 계열입니다. 예를 들어 고블린 척후병은 데몬 종족, 궁수 직업입니다.<br><br>도감 Lv1·Lv2 보너스가 함께 적용되는 범위는 종족입니다. 데몬 몬스터 하나의 보너스를 열면 다른 지역의 데몬 몬스터를 상대할 때도 적용됩니다. 보스처럼 Lv1·Lv2 보너스가 없는 몬스터는 그 보너스를 주고받지 않습니다.",
-        en: "Monster cards identify race and class. Races are Natural, Demon and Undead. Class describes the monster's skills and equipment, such as Warrior, Archer, Knight, Mage or Priest. For example, a Goblin Scout is a Demon with the Archer class.<br><br>Codex Lv1 and Lv2 bonuses are shared within a race. Unlocking a bonus from one Demon monster also helps against Demon monsters in other areas. Monsters with no Lv1 or Lv2 bonuses, such as bosses, neither grant nor receive those race bonuses.",
-        zh: '怪物卡片的分类表示种族与职业。种族有自然、恶魔、亡灵，职业则是战士、弓箭手、骑士、法师、牧师这类所用技能与装备的系别。例如，哥布林斥候是恶魔种族、弓箭手职业。<br><br>图鉴Lv1、Lv2加成共同生效的范围是种族。开启一只恶魔怪物的加成后，与其他区域的恶魔怪物交战时也会生效。首领这类没有Lv1、Lv2加成的怪物，既不提供也不接受这些加成。',
+        ko: "몬스터 카드의 분류는 종족·직업을 나타냅니다. 종족은 자연·데몬·언데드이며, 직업은 전사·궁수·기사·마법사·사제처럼 사용하는 스킬과 장비의 계열입니다. 예를 들어 고블린 척후병은 데몬 종족, 궁수 직업입니다.<br><br>도감 Lv1~40(파밍·전투 구간) 보너스가 함께 적용되는 범위는 종족입니다. 데몬 몬스터 하나의 레벨을 올리면 다른 지역의 데몬 몬스터를 상대할 때도 적용됩니다. 보스처럼 이 두 구간의 보너스가 없는 몬스터는 그 보너스를 주고받지 않습니다.",
+        en: "Monster cards identify race and class. Races are Natural, Demon and Undead. Class describes the monster's skills and equipment, such as Warrior, Archer, Knight, Mage or Priest. For example, a Goblin Scout is a Demon with the Archer class.<br><br>Codex Lv1–40 bonuses (the farming and combat tiers) are shared within a race. Leveling one Demon monster also helps against Demon monsters in other areas. Monsters with no bonuses in these two tiers, such as bosses, neither grant nor receive those race bonuses.",
+        zh: '怪物卡片的分类表示种族与职业。种族有自然、恶魔、亡灵，职业则是战士、弓箭手、骑士、法师、牧师这类所用技能与装备的系别。例如，哥布林斥候是恶魔种族、弓箭手职业。<br><br>图鉴Lv1~40（刷宝、战斗区间）加成共同生效的范围是种族。提升一只恶魔怪物的等级后，与其他区域的恶魔怪物交战时也会生效。首领这类没有这两个区间加成的怪物，既不提供也不接受这些加成。',
     },
     'help.codex.race_traits.title': {
         ko: "종족에 따른 몸의 차이",
@@ -2315,9 +2334,9 @@ const STRINGS = {
         zh: '图鉴阶段给予的加成',
     },
     'help.codex.milestones.body': {
-        ko: "몬스터별 누적 도감 경험치가 {list}에 도달하면 차례로 Lv1~Lv4에 해당하는 기록을 채웁니다. 이미 얻은 단계의 효과는 이후 단계에도 유지됩니다.<br><br>Lv1은 같은 종족을 잡을 때 경험치·드롭·골드 등 보상을 늘리는 파밍 옵션을, Lv2는 같은 종족을 상대할 때 적용되는 전투 옵션을 엽니다. 어떤 옵션인지는 몬스터마다 다르며, 같은 종족의 여러 몬스터에서 연 보너스는 함께 적용됩니다. 보스 등 일부 몬스터에는 Lv1·Lv2 보너스가 없습니다.<br><br>Lv3에는 추가 효과가 없습니다. Lv4는 그 몬스터의 전투 옵션 하나를 모든 파티원에게 항상 더합니다. 각 단계의 구체적인 효과와 값은 몬스터 카드에서 확인합니다. 시련의 탑과 결투장에는 도감 보너스가 적용되지 않습니다.",
-        en: "Each monster fills its Lv1–Lv4 milestones as its cumulative Codex EXP reaches {list}. Effects already unlocked remain in place at later milestones.<br><br>Lv1 unlocks a farming option that improves rewards such as XP, drops or gold from that race. Lv2 unlocks a combat option used against the same race. The option varies by monster, and bonuses unlocked from different members of one race combine. Bosses and some other monsters have no Lv1 or Lv2 bonuses.<br><br>Lv3 adds no effect. Lv4 permanently adds one combat option from that monster to every party member. Inspect its card for the exact effects and values at each milestone. Codex bonuses do not apply in Tower of Trials or Arena duels.",
-        zh: '每种怪物的累计图鉴经验达到{list}时，会依次填满对应Lv1~Lv4的记录。已获得阶段的效果在之后的阶段也会保留。<br><br>Lv1开启击杀同种族时提高经验、掉落、金币等奖励的刷宝词条，Lv2开启与同种族交战时生效的战斗词条。具体是什么词条因怪物而异，从同一种族的多只怪物开启的加成会一并生效。首领等部分怪物没有Lv1、Lv2加成。<br><br>Lv3没有额外效果。Lv4会把该怪物的一条战斗词条始终加给所有队员。各阶段的具体效果和数值请在怪物卡片中确认。试炼之塔和决斗场不适用图鉴加成。',
+        ko: "도감 레벨은 몬스터마다 Lv1부터 Lv60까지 오르며, 20레벨씩 세 구간으로 나뉩니다. 구간마다 끝의 누적 도감 경험치는 {list}입니다. 구간 안에서는 레벨이 하나 오를 때마다 그 구간 효과의 1/{seg}이 붙고, 구간을 다 채우면 카드에 적힌 값이 모두 적용됩니다. 이미 오른 레벨은 내려가지 않습니다.<br><br>Lv1~20은 같은 종족을 잡을 때 경험치·드롭·골드 등 보상을 늘리는 파밍 옵션, Lv21~40은 같은 종족을 상대할 때 적용되는 전투 옵션입니다. 어떤 옵션인지는 몬스터마다 다르며, 같은 종족의 여러 몬스터에서 쌓은 보너스는 함께 적용됩니다. 보스 등 일부 몬스터에는 이 두 구간의 보너스가 없습니다.<br><br>Lv41~60은 그 몬스터의 전투 옵션 하나를 모든 파티원에게 항상 더합니다. 각 구간의 효과와 지금 채운 레벨은 몬스터 카드에서 확인합니다. 시련의 탑과 결투장에는 도감 보너스가 적용되지 않습니다.",
+        en: "Each monster's Codex level rises from Lv1 to Lv60 in three tiers of 20 levels. The cumulative Codex EXP at the end of each tier is {list}. Each level within a tier adds 1/{seg} of that tier's effect, and a full tier grants the whole value shown on the card. Levels never go down.<br><br>Lv1–20 is a farming option that improves rewards such as XP, drops or gold from that race. Lv21–40 is a combat option used against the same race. The option varies by monster, and bonuses built from different members of one race combine. Bosses and some other monsters have no bonuses in these two tiers.<br><br>Lv41–60 permanently adds one combat option from that monster to every party member. Inspect the monster card for each tier's effect and how many levels you have filled. Codex bonuses do not apply in Tower of Trials or Arena duels.",
+        zh: '每种怪物的图鉴等级从Lv1升到Lv60，每20级为一个区间，共三个区间。各区间末尾的累计图鉴经验为{list}。区间内每升一级，获得该区间效果的1/{seg}；填满区间后，卡片上的数值全部生效。已升的等级不会下降。<br><br>Lv1~20是击杀同种族时提高经验、掉落、金币等奖励的刷宝词条，Lv21~40是与同种族交战时生效的战斗词条。具体是什么词条因怪物而异，从同一种族的多只怪物积累的加成会一并生效。首领等部分怪物没有这两个区间的加成。<br><br>Lv41~60会把该怪物的一条战斗词条始终加给所有队员。各区间的效果和当前已填满的等级请在怪物卡片中确认。试炼之塔和决斗场不适用图鉴加成。',
     },
     'help.codex.library_unlocks.title': {
         ko: "경험치는 찼는데 단계가 잠겨 있다면",
@@ -2956,7 +2975,7 @@ const STRINGS = {
     'cn.t.potion_tier': { ko: '물약 단계 +{n}', en: 'Potion tier +{n}', zh: '药水阶段+{n}' },
     // 전술 칸도 장처럼 누적 번호 — `{total}` = 그 랭크까지 연 칸 수 (SCREEN_DESIGN §13-1 · 2026-09-27 사용자 지시 「파티 전술 레벨1 해금」)
     'cn.t.tactic_slots': { ko: '파티 전술 레벨 {total} 해금', en: 'Unlocks Party Tactics Level {total}', zh: '解锁队伍战术等级{total}' },
-    'cn.t.codex_level': { ko: '도감 Lv{total} 해금', en: 'Unlocks Codex Level {total}', zh: '解锁图鉴Lv{total}' },   // 도서관 r4 · r5 · r6 — {total} = 그 랭크까지 연 도감 단계(r1 의 도감이 Lv1 을 심는다 · 2026-10-24 · R339)
+    'cn.t.codex_level': { ko: '도감 Lv{total} 해금', en: 'Unlocks Codex Level {total}', zh: '解锁图鉴Lv{total}' },   // 도서관 r4 · r5 — {total} = 그 랭크까지 연 구간의 끝 레벨(표는 구간 수를 센다 · r1 의 도감이 첫 구간을 심는다 · `game.codexCapOf` · 2026-10-24 · R339 · 2026-11-18 R539)
     'cn.t.make_kinds': { ko: '제작 종류 +{n}', en: 'Craftable types +{n}', zh: '制作种类+{n}' },
     // 연구소 랭크 — `{total}` = 그 랭크(랭크마다 1 · 그 랭크의 지점이 열린다 · 2026-10-25 R356 — ~~채광 · 채집 · 벌목 n단계~~ 재료에 단계가 없다)
     'cn.t.resource_tier': { ko: '연구소 {total}랭크 지점 해금 · 자동 생산', en: 'Unlocks Laboratory Rank {total} nodes · Automatic production', zh: '解锁研究所{total}阶节点 · 自动生产' },
@@ -2986,8 +3005,26 @@ const STRINGS = {
     'tr.seg.adv': { ko: '전직', en: 'Advance', zh: '转职' },
     // 전직 카드 (2026-09-28 · R16 · SCREEN_DESIGN §17) — 거절은 `tr.err.<코드>`(game.advanceStart · 마스터리 전직 트리의 advanceLearn · advanceForget — ADR-0542)
     'tr.adv.level': { ko: 'Lv.{have} / {need}', en: 'Lv.{have} / {need}', zh: 'Lv.{have} / {need}' },
-    'tr.adv.go': { ko: '전직', en: 'Advance', zh: '转职' },   // 전직 제목 오른쪽 버튼 — 갈래를 골라야 켜진다 (ADR-0536 · ADR-0539)
-    // 전직 패널 (SCREEN_DESIGN §17 · ADR-1197) — 시작 · 완료 플래시 · 남은 시간 · 배움 · 스킬 포인트
+    'tr.adv.go': { ko: '전직', en: 'Advance', zh: '转职' },   // 전직의 방 창 [전직] — 고른 갈래가 없을 때의 이름 (ADR-0536 · ADR-1189)
+    // 전직의 방 칸 · 창 (SCREEN_DESIGN §17 · ADR-1179 · 1189 — 2026-11-18 되살림 ADR-1262) — 칸의 상태 줄 · [입장] · 창 바닥 [<갈래> 전직] · 계기판 칸 이름(위 작은 글)
+    'tr.room.title': { ko: '전직의 방', en: 'Chamber of Advancement', zh: '转职之间' },
+    'tr.room.paths': { ko: '전직 갈래', en: 'Advancement paths', zh: '转职分支' },
+    'tr.room.ready': { ko: '전직 가능', en: 'Ready to advance', zh: '可以转职' },
+    'tr.room.level': { ko: 'Lv.{n}부터 전직 가능', en: 'Advancement available at Lv.{n}', zh: 'Lv.{n}起可以转职' },
+    'tr.room.done': { ko: '{name} · 전직 완료', en: '{name} · Advancement complete', zh: '{name} · 转职完成' },
+    'tr.room.instant': { ko: '즉시', en: 'Instant', zh: '立即' },   // 계기판 「소요 시간」 값 — 걸리는 시간이 0 일 때 (ADR-1179)
+    'tr.room.irreversible': { ko: '전직 갈래는 변경할 수 없습니다.', en: 'The advancement path cannot be changed.', zh: '转职分支无法更改。' },
+    'tr.room.enter': { ko: '입장', en: 'Enter', zh: '进入' },
+    'tr.room.go': { ko: '{b} 전직', en: 'Advance to {b}', zh: '转职为{b}' },
+    'tr.room.m.hero': { ko: '영웅', en: 'Hero', zh: '英雄' },
+    'tr.room.m.skills': { ko: '스킬', en: 'Skills', zh: '技能' },   // 그 영웅의 지금 가진 스킬 카드 셋 (ADR-1189)
+    'tr.room.m.level': { ko: '필요 레벨', en: 'Required Level', zh: '所需等级' },
+    'tr.room.m.unlock': { ko: '해금', en: 'Unlock', zh: '解锁' },
+    'tr.room.m.gold': { ko: '비용', en: 'Cost', zh: '费用' },
+    'tr.room.m.time': { ko: '소요 시간', en: 'Time', zh: '所需时间' },
+    'tr.room.m.path': { ko: '전직', en: 'Advancement', zh: '转职' },
+    'tr.room.gold': { ko: '{g} G', en: '{g} G', zh: '{g} G' },
+    // 전직 플래시 · 진행 — 시작 · 완료 · 남은 시간 · 배움 · 스킬 포인트
     'tr.adv.started': { ko: '{name} — {b} 전직 시작', en: '{name} — started advancing to {b}', zh: '{name}——开始转职为{b}' },
     'tr.adv.done': { ko: '{name} — {b} 전직 완료', en: '{name} — advanced to {b}', zh: '{name}——已转职为{b}' },   // 걸리는 시간이 0 이라 [전직] 한 번에 끝났다 (§17 · ADR-1197)
     'tr.adv.left': { ko: '{t} 남음', en: '{t} left', zh: '剩余{t}' },
@@ -3306,6 +3343,7 @@ const STRINGS = {
     'sk.learnAt.advance': { ko: '도서관에서 전직 스킬을 배울 수 있습니다.', en: 'Advanced skills can be learned at the Library.', zh: '可在图书馆学习转职技能。' },
     // ~~`sk.needWeapon`~~(꺼진 칸 툴팁 맨 위 한 줄 · ADR-0446) — 2026-10-03 걷었다: 필요 무기는 설명창 이름 줄의 칩이 무기군 이름만으로 든다(ADR-0496)
     /* 스킬북 [2026-09-29 · R179 · 도서관 탭 SCREEN_DESIGN §17 · ADR-0422] — 규칙 문장은 없다(덮어쓰기는 도움말의 몫) · 권수 `×n` 은 물약 칸처럼 기호라 키가 없다(ADR-0460) */
+    'bk.hero.h': { ko: '스킬정보', en: 'Skill Info', zh: '技能信息' },   // 도서관 윗줄 왼쪽 패널 제목 — 지금 가진 스킬 카드 셋 (§17 · ADR-1179 · ADR-1262)
     'bk.up.h': { ko: '스킬 업그레이드', en: 'Skill Upgrade', zh: '技能升级' },   // 도서관 스킬북 탭 왼쪽 구역 소제목 (2026-10-12 사용자 지시 · ADR-0597 — ~~`bk.own.h` 「가진 책」~~ · 자리 ADR-1165)
     'bk.up.help': { ko: '보유한 스킬북을 통해 스킬 레벨을 업그레이드 할 수 있습니다.', en: 'Use the skill books you own to upgrade skill levels.', zh: '可使用持有的技能书提升技能等级。' },   // 제목 옆 `?` 툴팁 · 도움말 도서관 섹션도 이 키 (2026-10-12 사용자 지시 · ADR-0603)
     'bk.none': { ko: '가진 책 없음', en: 'No books', zh: '没有书' },
@@ -3319,11 +3357,23 @@ const STRINGS = {
     'bk.lvMax': { ko: 'Lv.{n} · 최대 레벨', en: 'Lv.{n} · Max level', zh: 'Lv.{n} · 最高等级' },   // 읽기 줄 아랫줄 — 상한 (ADR-1208)
     'bk.need': { ko: '책 {n}권 필요', en: 'Books needed: {n}', zh: '需要{n}本书' },   // 읽기 줄 아랫줄 — 드는 책 · 모자라면 붉다 · 가진 권수는 왼쪽 그림 칸 `×n` (ADR-1208 · 1211)
     'bk.max': { ko: '최대', en: 'Max', zh: '最高' },
+    // 스킬 북 제작 — 도서관 아랫줄 오른쪽 구역 (2026-11-18 · R540 · SCREEN_DESIGN §17 · ADR-1262) · 스킬 조각 이름 ⚠임시
+    'bk.craft.h': { ko: '스킬 북 제작', en: 'Skill Book Crafting', zh: '技能书制作' },
+    'bk.craft.help': { ko: '스킬 조각과 골드로 한 번 얻은 스킬북을 만들 수 있습니다.', en: 'Craft any skill book you have obtained before with skill shards and gold.', zh: '可用技能碎片和金币制作曾经获得过的技能书。' },   // 소제목 옆 `?` 툴팁
+    'bk.craft.none': { ko: '만들 수 있는 스킬북 없음', en: 'No books to craft', zh: '没有可制作的技能书' },
+    'bk.make': { ko: '만들기', en: 'Craft', zh: '制作' },
+    'bk.shards': { ko: '스킬 조각 {have}/{need}', en: 'Skill Shards {have}/{need}', zh: '技能碎片{have}/{need}' },   // 만들기 줄 아랫줄 비용 — 가진 / 드는 (모자라면 붉다)
+    'bk.gold': { ko: '{g} G', en: '{g} G', zh: '{g} G' },   // 만들기 줄 아랫줄 비용 — 골드
+    'bk.shardHave': { ko: '스킬 조각 {n}', en: 'Skill Shards {n}', zh: '技能碎片{n}' },   // 창고 스킬북 탭 도구 줄 — [분해] 왼쪽 가진 조각 수 (§6)
     'bk.learned': { ko: '{name} — {skill} 배움', en: '{name} learned {skill}', zh: '{name}——学会了{skill}' },
     'bk.upgraded': { ko: '{name} — {skill} Lv.{n}', en: '{name} — {skill} Lv.{n}', zh: '{name}——{skill} Lv.{n}' },   // 같은 책 업그레이드 (R216)
-    'bk.salvage': { ko: '분해', en: 'Salvage', zh: '分解' },   // 창고 스킬북 탭 도구 줄 — 고른 책 1권을 가루로 (§6 · ADR-1199)
-    'bk.salvaged': { ko: '{skill} 스킬북 분해 — {dust} +{n}', en: 'Salvaged a {skill} book — {dust} +{n}', zh: '分解{skill}技能书——{dust}+{n}' },
-    // 결과 코드 — `game.learnBook` · `game.salvageBook` · `game.bookState` (INTERFACE §3)
+    'bk.crafted': { ko: '{skill} 스킬북 제작 완료', en: 'Crafted a {skill} book', zh: '{skill}技能书制作完成' },
+    'bk.salvage': { ko: '분해', en: 'Salvage', zh: '分解' },   // 창고 스킬북 탭 도구 줄 — 고른 책 1권을 스킬 조각으로 (§6 · ADR-1199 · ADR-1262)
+    'bk.salvaged': { ko: '{skill} 스킬북 분해 — 스킬 조각 +{n}', en: 'Salvaged a {skill} book — Skill Shard +{n}', zh: '分解{skill}技能书——技能碎片+{n}' },
+    // 결과 코드 — `game.learnBook` · `game.craftBook` · `game.salvageBook` · `game.bookState` (INTERFACE §3)
+    'bk.err.shards': { ko: '스킬 조각 부족', en: 'Not enough skill shards', zh: '技能碎片不足' },   // craftBook (R540)
+    'bk.err.gold': { ko: '골드 부족', en: 'Not enough gold', zh: '金币不足' },   // craftBook (R540)
+    'bk.err.unseen': { ko: '아직 얻은 적 없는 스킬북', en: 'This book has not been obtained yet', zh: '尚未获得过的技能书' },   // craftBook — 본 책 목록 밖 (R540)
     'bk.err.level': { ko: 'Lv.{n} 달성', en: 'Reach Lv.{n}', lock: true, zh: '达到Lv.{n}' },
     'bk.err.missing': { ko: '배울 수 없는 스킬', en: 'Cannot be learned', zh: '无法学习的技能' },
     'bk.err.book': { ko: '책 부족', en: 'Not enough books', zh: '书不足' },   // 없거나 업그레이드에 드는 권수보다 적다 (R216)
@@ -3470,6 +3520,9 @@ const STRINGS = {
     'cx.sinLabel': { ko: '죄종', en: 'Sin', zh: '罪宗' },
     'cx.exp': { ko: '경험치 {n}', en: '{n} EXP', zh: '经验{n}' },   // 그 몬스터의 누적 도감 경험치 — 카드 진행 줄 · 핍 툴팁 (ADR-0587 · ~~cx.kills 처치 {n}~~)
     'cx.lvTitle': { ko: '도감 Lv.{lv}', en: 'Codex Lv.{lv}', zh: '图鉴Lv.{lv}' },
+    // 구간 — 카드 핍의 작은 툴팁 · 몬스터 툴팁 구간 줄의 왼쪽 칸 (SCREEN_DESIGN §9 · ADR-1261)
+    'cx.segTitle': { ko: '도감 Lv.{a} ~ {b}', en: 'Codex Lv.{a}–{b}', zh: '图鉴Lv.{a}~{b}' },
+    'cx.tip.seg': { ko: 'Lv.{a} ~ {b}', en: 'Lv.{a}–{b}', zh: 'Lv.{a}~{b}' },
     // 몬스터 툴팁 — 초상 옆 이야기 · 아래 처치 단계 (SCREEN_DESIGN §9 · ADR-0206)
     'cx.tip.lv': { ko: 'Lv.{lv}', en: 'Lv.{lv}', zh: 'Lv.{lv}' },
     'cx.tip.story': { ko: '스토리', en: 'Story', zh: '故事' },

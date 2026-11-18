@@ -37,7 +37,8 @@ export const D = {
     budgets: null, grades: null, eliteRounds: [], bossRound: 0,   // eliteRounds · bossRound = 첫 스테이지 세트의 배치(도움말 표기)
     balanceRows: [],          // balance.csv 원시 행 — status/knob 을 든다 (무결성 단정의 입력)
     codexLevels: [],          // codex_level.csv — 레벨순 exp_total (누적 도감 경험치 문턱 · 2026-10-10 R239)
-    codexSteps: [],           // codex_level.csv — 레벨순 [{reward, value}] · 레벨 n 이 여는 사다리 단계 (2026-10-18 R286 · ~~bonus_pct~~)
+    codexSteps: [],           // codex_level.csv — 레벨순 [{reward, value}] · 레벨 n 이 속한 구간(같은 reward 가 이어진 행 = 한 구간 · 2026-10-18 R286 · 2026-11-18 R539 · ~~bonus_pct~~)
+    codexGradeMult: {},       // spawn_grade.csv — {grade: codex_exp_mult} · 처치 하나의 도감 경험치에 곱하는 등급 배율 (2026-11-18 R539)
     codexOptions: [],         // codex_option.csv — [{monsterId, stat, value, farm, farmValue, fight, fightValue}] · 도감 Lv4 몬스터다운 전투 옵션 + Lv1 · Lv2 칸(2026-10-22 R314) · 검증은 game_logic/state.js (2026-10-18 R286 · ~~codex_series.csv~~ 삭제)
     codexRaces: {},           // monster_type.csv — {type_id: {ko, en}} · 도감 Lv1 · Lv2 의 범위인 종족 이름 (2026-10-22 R314 · 2026-11-14 R494 부류 → 종족)
     chapters: null,           // chapter.csv byId — {id, sin, name:{ko,en}}
@@ -189,6 +190,8 @@ export async function loadData(base = './data/') {
     // 사다리 단계 — value 는 `-`(값은 몬스터마다라 codex_option.csv 가 든다 · 2026-10-22 R314) · 검증은 game_logic/state.js (monster_design §8 · R286)
     const dash = v => (v === '-' || v === '' || v === undefined ? null : v);
     D.codexSteps = codexByLevel.map(r => ({ reward: r.reward, value: dash(r.value) }));
+    // 처치 하나의 등급 배율 — 검증은 game_logic/state.js (monster_design §8 · R539)
+    D.codexGradeMult = Object.fromEntries(grade.map(r => [r.grade, r.codex_exp_mult]));
     // 몬스터마다 — Lv4 옵션 한 줄 + Lv1 · Lv2 칸(그 종족 전체에 걸리는 몫 · 보스 · VI 자리는 `-` · 2026-10-22 R314)
     D.codexOptions = codexOptionRow.map(r => ({ monsterId: String(r.monster_idx), stat: r.stat, value: r.value,
         farm: dash(r.farm), farmValue: dash(r.farm_value), fight: dash(r.fight), fightValue: dash(r.fight_value) }));
@@ -731,7 +734,7 @@ export function buildSystems(d, dev = {}) {
         hero, item, battle, skill, tactic, construction, gamble, commission, balance: d.balance,
         equipSlots: d.equipSlots, stages: d.stages, stageOrder: d.stageOrder, monsters: d.monsters,
         difficulties: d.difficultyList ?? [],   // 난이도 바퀴 — 순서대로 · 첫 단 = 처음부터 열림 (state.js · R236)
-        codex: { levels: d.codexLevels, steps: d.codexSteps, options: d.codexOptions, races: d.codexRaces },
+        codex: { levels: d.codexLevels, steps: d.codexSteps, options: d.codexOptions, races: d.codexRaces, gradeMult: d.codexGradeMult ?? {} },
         // 죄종 목록 — 탐험 이야기 표의 `sin` 컬럼 검증용 (~~수색 이야기 · 만남 · 답~~ 2026-10-19 삭제)
         sins,
         exploreStories: d.exploreStories ?? [],   // 탐험 이야기 — 지점마다 막 · 순서는 표가 정한다 (state.js:explorePhases · R235)

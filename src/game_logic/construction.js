@@ -54,7 +54,7 @@ export const TARGETS = {
     // 고용 후보(`tavernCandidates`)는 여기 없다 — 명단은 `tavern_candidates` 고정이고 건물이 안 늘린다 [2026-09-24 사용자 지시] · ~~`searchSlots`~~ 2026-10-19 수색 삭제
     shopPerSlot: A(true), shopWeapon: A(true),
     make_level: A(true, 'make'), potion_tier: A(true, 'potion'), tactic_slots: A(true),   // 제작 레벨의 첫 단계는 `make` · 물약 단계의 첫 단계는 `potion` 이 심는다
-    // 도감이 오를 수 있는 단계 — 도서관 r1 의 `codex` 가 Lv1 을 심고 뒤 랭크가 하나씩 더한다(`state.limitsOf` 의 `codexLevel` · 2026-10-24 도감 건물을 도서관에 합침 · R339)
+    // 도감이 연 구간 수 — 도서관 r1 의 `codex` 가 첫 구간을 심고 뒤 랭크가 하나씩 더한다 · `state.limitsOf` 가 그 구간의 끝 레벨로 바꾼다(`codexLevel` · 2026-10-24 도감 건물을 도서관에 합침 · R339 · 2026-11-18 구간 셋 R539)
     codex_level: A(true, 'codex'),
     // ~~`chapters`~~ — 장은 건물이 안 연다(앞 장 보스가 연다 · `state.chapterGate` · 2026-10-22 원정 건물 삭제 · R319)
     commission_slots: A(true),   // 동시 의뢰 — 기본값 `commission_slots` 위로 더한다(`state.limitsOf` 의 `commissionSlots` · 2026-09-24 · R153)

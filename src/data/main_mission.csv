@@ -2,6 +2,7 @@ mission_id,chapter,cond,target,need,reward,status,description_kr
 c1_depart,1,battle,-,1,minor_healing:5,proposed,⚠제안 — 메인미션 [신설 2026-11-17 · R524 · main_mission_design.md §3] · 행 순서 = 줄 순서 · cond = 판정 어휘(state.js MM_CONDS · INTERFACE §5-3) · target = 그 조건의 대상(건물 id · 칸 id · 카운터 · 사건 · 연구소 줄 · 탐험 지점 · 없으면 -) · need = 목표 수 · reward = key:n 을 | 로 이은 것(gold · 재료 id · 물약 id · box_weapon · box_armor · book) — 원정 보내기
 c1_tavern,1,build,tavern,1,gold:300,proposed,⚠제안 — 선술집 짓기(의뢰 게시판)
 c1_p1,1,clear,1013,1,box_weapon:1,proposed,⚠제안 — 1-1 장소 보스(옛 첫 클리어 상자 자리)
+c1_equip,1,event,equip,1,gold:300,proposed,⚠제안 — 장비 장착 한 번(자동 장착도) · 옛 초반 안내 「장비 비교」 카드 자리 [2026-11-18 · R538]
 c1_commission,1,fame,-,1,gold:300,proposed,⚠제안 — 의뢰 하나 채워 받기
 c1_shop,1,build,shop,1,minor_healing:10,proposed,⚠제안 — 상단 짓기
 c1_p2,1,clear,1023,1,box_weapon:1,proposed,⚠제안 — 1-2 장소 보스

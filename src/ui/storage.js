@@ -8,12 +8,13 @@
  *   **다른 탭이 세이브를 썼다**는 신호(`storage` 이벤트 — 쓴 탭이 아니라 **다른** 탭에만 온다)를 든다.
  *
  * 2026-10-23 — **세이브 슬롯 셋**(개발 장치 · SCREEN_DESIGN §10-4 · ADR-0738). 자동 저장과 같은 JSON 을 따로 든다.
+ *
+ * 2026-11-18 — **브라우저 표식**(`loadDevice` — 아이디 계정의 주인 가르기 · SCREEN_DESIGN §2-1 · ADR-1263).
  */
 
 const KEY = 'thesevensim.save';
 const TRACK_KEY = 'thesevensim.track';
 const NOTIFICATION_DISMISSED_KEY = 'thesevensim.notificationDismissed';
-const TUTORIAL_SEEN_KEY = 'thesevensim.tutorialSeen';
 const SCREEN_LAYOUT_KEY = 'thesevensim.screenLayout';
 export const SCREEN_LAYOUTS = ['auto', 'desktop', 'mobile'];
 
@@ -117,32 +118,6 @@ export function writeMissionSeen(gameId, id) {
     } catch { return false; }
 }
 
-/** 초반 안내 확인 기록 — null은 안내를 시작하지 않은 기존 게임, []는 새로 안내를 시작한 게임이다. */
-export function loadTutorialSeen(gameId) {
-    if (typeof gameId !== 'string' || !gameId.length) return null;
-    try {
-        const records = JSON.parse(localStorage.getItem(TUTORIAL_SEEN_KEY) ?? '{}');
-        return records && !Array.isArray(records) && Array.isArray(records[gameId])
-            ? notificationIds(records[gameId]) : null;
-    } catch { return null; }
-}
-
-export function writeTutorialSeen(gameId, ids) {
-    if (typeof gameId !== 'string' || !gameId.length || !Array.isArray(ids)) return false;
-    try {
-        let records;
-        try { records = JSON.parse(localStorage.getItem(TUTORIAL_SEEN_KEY) ?? '{}'); } catch {}
-        if (!records || typeof records !== 'object' || Array.isArray(records)) records = {};
-        const next = Object.assign(Object.create(null), records);
-        next[gameId] = notificationIds(ids);
-        localStorage.setItem(TUTORIAL_SEEN_KEY, JSON.stringify(next));
-        return true;
-    } catch (e) {
-        console.warn('tutorial: progress write failed', e);
-        return false;
-    }
-}
-
 /**
  * 세이브 슬롯 — `⚙` 판 Save 탭의 개발 장치 (SCREEN_DESIGN §10-4 · ADR-0738). 자동 저장(`KEY`)과 따로 산다 —
  * 새 게임 · 메뉴의 불러오기가 안 건드리고, 다른 탭의 멈춤 신호(`onSaveWrittenElsewhere`)에도 안 걸린다. `n` 은 1 부터
@@ -189,6 +164,24 @@ export function loadTrack() {
 
 export function writeTrack(rec) {
     try { localStorage.setItem(TRACK_KEY, JSON.stringify(rec)); } catch (e) { console.warn('save: track write failed', e); }
+}
+
+/**
+ * 브라우저 표식 — 아이디 계정의 「누가 열었나」(SCREEN_DESIGN §2-1 「계정」 · ADR-1263). 이 브라우저에서 처음 부를 때 하나 뽑아 둔다 —
+ * 같은 브라우저의 탭은 같은 표식이다(탭끼리는 `onSaveWrittenElsewhere` 가 가른다) · 로그아웃해도 남는다(브라우저의 이름이지 계정의 것이 아니다).
+ * 게임 난수가 아니라 이름표라 `game_logic` 의 시드와 무관하다. 저장소가 막혔으면 이 페이지 동안만 쓰는 표식
+ */
+const DEVICE_KEY = 'thesevensim.device';
+let deviceMemo = null;
+export function loadDevice() {
+    if (deviceMemo) return deviceMemo;
+    try { deviceMemo = localStorage.getItem(DEVICE_KEY); } catch {}
+    if (!deviceMemo) {
+        const b = crypto.getRandomValues(new Uint8Array(12));
+        deviceMemo = Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+        try { localStorage.setItem(DEVICE_KEY, deviceMemo); } catch {}
+    }
+    return deviceMemo;
 }
 
 /** 다른 탭이 세이브를 쓰거나 지웠다 — `key` 가 null 이면 저장소를 통째로 비운 것이다 */

@@ -1048,15 +1048,86 @@ export function createItemSystem(data) {
      * 상단 구매가(`state.shopState`)가 부른다
      */
     function optionScore(item) {
-        const qs = [];
+        const qs = lineScores(item);
+        return qs.length ? qs.reduce((s, x) => s + x.q, 0) / qs.length : null;
+    }
+
+    /** 잴 수 있는 옵션 줄마다 `{a, q}`(q = 범위 안의 자리 0 ~ 1 · 줄 순서) — `optionScore`(평균) · `autoEquipScore`(합)가 같은 범위 · 같은 규칙을 쓴다 */
+    function lineScores(item) {
+        const out = [];
         (item?.affixes ?? []).forEach((a, i) => {
             const line = optionLine(item, i);
             if (!line || !Number.isFinite(a.v)) return;
             const band = line.main ? mainBand(item.ilvl) : line.band;
             const r = line.range ?? { min: valueOf(line.d, bandRoll(line.d, band, 0), item.ilvl), max: valueOf(line.d, bandRoll(line.d, band, 1), item.ilvl) };
-            if (r.max > r.min) qs.push(Math.min(1, Math.max(0, (a.v - r.min) / (r.max - r.min))));
+            if (r.max > r.min) out.push({ a, q: Math.min(1, Math.max(0, (a.v - r.min) / (r.max - r.min))) });
         });
-        return qs.length ? qs.reduce((s, q) => s + q, 0) / qs.length : null;
+        return out;
+    }
+
+    /* ── 자동 장착 점수 [신설 2026-11-18 · R536 · item_design §6-3 · INTERFACE §2-5 · 측정 output/2026-11-17_auto_equip_score] ── */
+
+    // 베이스 몫의 기준값 — 그 부위 · 그 아이템 레벨에서 나올 수 있는 강화 0 · 베이스 옵션 없는 값의 최대. 데이터만 읽어 레벨마다 한 번 잰다
+    //   무기 = 드롭 무기군마다 그 레벨의 단 행(`weaponTier`)의 초당 무기 데미지 · 방어구 = 그 레벨의 단 행(`tierBases`)의 고유 방어력(`implicitFor`)
+    const baseRefMemo = new Map();
+    const weaponPerSec = (d, line) => (d.min + d.max) / 2 / line.period;
+    function baseRef(slot, ilvl) {
+        const key = `${slot}@${ilvl}`;
+        if (baseRefMemo.has(key)) return baseRefMemo.get(key);
+        let ref = 0;
+        if (slot === 'weapon') {
+            for (const g of dropGroups) for (const row of weaponTier(g.id, ilvl)) {
+                const line = F.weaponLine(g, row);
+                ref = Math.max(ref, weaponPerSec(F.weaponDamage(ilvl, line, 0), line));
+            }
+        } else if (isArmor(slot)) {
+            for (const b of tierBases(slot, ilvl)) ref = Math.max(ref, implicitFor(slot, ilvl, b.group ?? null)?.v ?? 0);
+        }
+        baseRefMemo.set(key, ref);
+        return ref;
+    }
+
+    // 그 영웅에게 안 먹는 줄 [2026-11-18 · 사용자 「마법사는 캐스팅점수가 점수로 들어가야지」 · 「맞는옵션만 점수에 +로 넣고」] — 전투가 그 줄을 읽는 문과 같은 어휘.
+    //   무기 종류만 여는 줄 — 물리 무기 · 맨손: 공격 속도 계열(hero.computeCombat R203) · 명중(마법 무기는 항상 맞는다 — formula.strike) · 강타(마법 무기면 0 — battle)
+    //                         마법 무기: 캐스팅 속도 계열(R203) · 시전 누적 · 시전 환급(쌓인 칸 — battle.chargeTick)
+    const WEAPON_ONLY = {
+        physical: new Set(['aspd_pct', 'aspd_per_level_pct', 'period_minus_sec', 'hit_bonus', 'crushing_blow_pct']),
+        magic: new Set(['cast_speed_pct', 'cast_speed_per_level_pct', 'cast_stack_pct', 'cast_refund_chance']),
+    };
+    //   타격이 여는 줄 — 방어 무시 = 물리 타격(formula) · 원소 저항 감소 · 원소 % = 그 원소 타격 · 저항 감소 = 원소 타격 · 흡혈 = 물리 · 원소 타격(고정 피해는 안 빤다 — battle)
+    //   스킬이 여는 줄 — 반지 태그 = 그 태그 액티브 · 특정 스킬 +n = 그 액티브. `fit` 은 `skill.equipFit` · 없으면 안 가린다
+    function lineLive(a, fit) {
+        if (!fit) return true;
+        const st = a.stat;
+        for (const [kind, set] of Object.entries(WEAPON_ONLY)) if (set.has(st)) return fit.weapon === kind;
+        const hits = fit.hits ?? [], anyEl = hits.some(h => ELEMENT_IDS.includes(h));
+        if (st === 'def_ignore') return hits.includes('physical');
+        if (st === 'res_reduction') return anyEl;
+        if (st === 'life_steal') return anyEl || hits.includes('physical');
+        const el = elementOf(st);
+        if (el && (st === `${el}_dmg_pct` || st === `res_reduction_${el}`)) return hits.includes(el);
+        if (st === 'skill_tag') return (fit.tags ?? []).includes(a.tag);
+        if (st === SKILL_PLUS) return (fit.skills ?? []).includes(a.skill);
+        return true;
+    }
+
+    /**
+     * 자동 장착 점수 = 아이템 레벨 + `auto_equip_base_weight` × 베이스 몫 + `auto_equip_option_weight` × 옵션 점수 합 — `state.autoEquip` 이 일곱 칸을 이 순으로 고른다.
+     * 베이스 몫 — 무기 = 초당 무기 데미지(`weaponDamageFixed` — 베이스 옵션 · 강화 · 색욕 최소 · 최대 포함 ÷ 계보 주기) · 방어구 넷 = 방어력(`implicitFixed`)을 `baseRef` 로 나눈 것 · 장신구 0.
+     * 옵션 점수 합 — `lineScores` 의 자리를 **더한다**(평균이 아니다 — 줄 수 = 등급이 들어간다) · 베이스 줄 둘(무기 데미지 % · 방어력 %)은 베이스 몫에 있어 뺀다.
+     * `fit`(`skill.equipFit(hero, kind)`)을 받으면 **그 영웅에게 안 먹는 줄은 0**(`lineLive`) — 안 받으면 안 가린다 · 순수 · rng 0
+     */
+    function autoEquipScore(item, fit = null) {
+        let base = 0;
+        if (item?.slot === 'weapon') {
+            const d = weaponDamageFixed(item), line = F.weaponLine(WG[item.group] ?? null, WB_BY_ID[item.baseId] ?? null), ref = baseRef('weapon', item.ilvl);
+            if (d && line?.period > 0 && ref > 0) base = weaponPerSec(d, line) / ref;     // 모르는 무기군(주기 없음)은 베이스 몫 0
+        } else if (isArmor(item?.slot)) {
+            const f = implicitFixed(item), ref = baseRef(item.slot, item.ilvl);
+            if (f && ref > 0) base = f.v / ref;
+        }
+        const opt = lineScores(item).reduce((s, { a, q }) => s + ((a.src === 'fixed' && (a.stat === 'atk_pct' || a.stat === 'armor_def_pct')) || !lineLive(a, fit) ? 0 : q), 0);
+        return (item?.ilvl ?? 0) + B.auto_equip_base_weight * base + B.auto_equip_option_weight * opt;
     }
 
     /**
@@ -1189,5 +1260,5 @@ export function createItemSystem(data) {
         return item;
     }
 
-    return { fillZh, rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBasesAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, wordRanks, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgradeRisk, upgrade, downgrade, effective, weaponDamage, weaponDamageFixed, weaponBasePreview, armorBasePreview, implicitFixed, optionSources, optionRange, optionTableRange, optionScore, skillPlusOf, procSkillLevel };
+    return { fillZh, rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBasesAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, wordRanks, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgradeRisk, upgrade, downgrade, effective, weaponDamage, weaponDamageFixed, weaponBasePreview, armorBasePreview, implicitFixed, optionSources, optionRange, optionTableRange, optionScore, autoEquipScore, skillPlusOf, procSkillLevel };
 }

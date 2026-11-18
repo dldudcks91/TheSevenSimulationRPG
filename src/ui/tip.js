@@ -871,10 +871,10 @@ const CX_PCT = { fmt: 'pct' };
 /**
  * 도감 몬스터 툴팁 — **두 장**: 왼쪽 선술집 후보 카드 · 오른쪽 이야기 · 단계 (SCREEN_DESIGN §9 · ADR-0206 · ADR-0233).
  * 오른쪽 장 = 「스토리」 머리글 + 이야기 · 아래 「보너스 효과」 머리글 + 단계(초상 · 이름 · 직업은 왼쪽 장이 든다). 도감 경험치는 **부르는 쪽이 넘긴다** — 이 파일은 `G` 를 모른다.
- * 단계 줄은 **그 단계가 여는 효과**다(ADR-0667 · ADR-0715 · monster_design §8) — 종류 · 순서는 `game.codexSteps`, Lv1 · Lv2 줄은 `game.codexLineOf`(종족 이름 + 한 마리 몫) ·
- *   옵션 단계의 줄은 `game.codexOptionOf`(장비 옵션 줄과 같은 표기 · 행이 없으면 `—`)
- * @param m `{id, exp, boss, lv?, lockHtml?}` — 도감 카드 한 장의 집계(exp = 누적 도감 경험치 · ADR-0587) · `lv` = 먹는 레벨(도서관이 연 단계에서 자른다 · 없으면 경험치 레벨) ·
- *   `lockHtml` = 도서관이 안 연 단계의 잠금 줄 `{레벨: 자물쇠 + 「도서관 n랭크」}` — 그 줄 효과 아래에 선다 (ADR-0762 · 부르는 쪽이 `lockLine` 으로 만든다)
+ * 단계 줄은 **구간 하나 = 줄 하나 · 그 구간이 여는 효과**다(ADR-0667 · ADR-0715 · ADR-1261 · monster_design §8) — 구간 · 순서는 `game.codexSegments`, 파밍 · 전투 줄은 `game.codexLineOf`(종족 이름 + 한 마리 몫) ·
+ *   옵션 구간의 줄은 `game.codexOptionOf`(장비 옵션 줄과 같은 표기 · 행이 없으면 `—`)
+ * @param m `{id, exp, boss, lv?, lockHtml?}` — 도감 카드 한 장의 집계(exp = 누적 도감 경험치 · ADR-0587) · `lv` = 먹는 레벨(도서관이 연 레벨에서 자른다 · 없으면 경험치 레벨) ·
+ *   `lockHtml` = 도서관이 안 연 구간의 잠금 줄 `{구간 순번(1부터): 자물쇠 + 「도서관 n랭크」}` — 그 줄 효과 자리에 선다 (ADR-0762 · ADR-1261 · 부르는 쪽이 `lockLine` 으로 만든다)
  * @param grade 초상 등급 — 일반 / 정예 고르개를 그대로 따른다 (ADR-0167)
  * @returns `[후보 카드 장, 이야기 · 단계 장]` — 툴팁 창이 가로로 나란히 세운다
  */
@@ -882,10 +882,11 @@ export function codexMonsterTipCard(m, grade) {
     // 이름은 자리표시자다(`{m:1900|이/가}` — 이름의 SSOT 는 monster.csv · 스테이지 이야기와 같은 규칙). 몬스터 이야기는 `{leader}` 를 안 쓴다
     const story = fillStory(L(monsterStory(m.id)), lang());
     const lv = m.lv ?? SYS.game.codexLevel(m.exp);
-    // 단계는 **늘 전부 선다** — 닿지 않은 단계도 보여야 「다음에 무엇을 받나」가 읽힌다 · 닿은 단계만 켜진다.
-    //   **레벨만 든다** — 「경험치를 얼마 모아야 열린다」는 적지 않는다(다음 문턱은 카드가 든다 · ADR-0209)
-    //   Lv1 · Lv2 = 그 몬스터 **한 마리의 몫** 앞에 종족 이름(Lv2 는 「상대」 · ADR-0715) · Lv3(none) = `—` · 옵션 단계는 그 몬스터의 전투 옵션 한 줄 (ADR-0667)
-    //   칸이 없는 몬스터(보스)는 Lv1 · Lv2 도 `—`
+    // 줄 하나 = **구간 하나**(`game.codexSegments` — 지금 Lv1 ~ 20 파밍 · 21 ~ 40 전투 · 41 ~ 60 옵션 · ADR-1261) · **늘 전부 선다** — 닿지 않은 구간도 보여야 「다음에 무엇을 받나」가 읽힌다 ·
+    //   한 레벨이라도 채운 구간이 켜진다. 효과 글 = 그 구간을 **다 채웠을 때**의 값 · 오른쪽 끝 = 채운 레벨 `3/20`.
+    //   **레벨만 든다** — 「경험치를 얼마 모아야 열린다」는 적지 않는다(문턱은 카드 핍의 작은 툴팁 · ADR-0209)
+    //   파밍 · 전투 = 그 몬스터 **한 마리의 몫** 앞에 종족 이름(전투는 「상대」 · ADR-0715) · none = `—` · 옵션 구간은 그 몬스터의 전투 옵션 한 줄 (ADR-0667)
+    //   칸이 없는 몬스터(보스)는 파밍 · 전투도 `—`
     const opt = SYS.game.codexOptionOf(m.id);
     const line = SYS.game.codexLineOf(m.id);
     const race = line ? L(D.codexRaces[line.race]) : '';
@@ -899,16 +900,24 @@ export function codexMonsterTipCard(m, grade) {
         const { stat, value } = line.fight;      // 장비 옵션 사전 · 사전에 없는 둘은 도감 전용 이름(`CODEX_FIGHT_LABELS`)
         return t('cx.rw.fight', { race, line: L(M.affixText(stat, value, M.CODEX_FIGHT_LABELS[stat])) });
     };
-    //   도서관이 안 연 단계는 **자물쇠 줄만**(자물쇠 + 「도서관 n랭크」 · 회색) — 효과 글은 안 든다 (ADR-0922 · ADR-0762)
-    const steps = SYS.game.codexSteps().map((s, i) => `
-        <div class="cx-step${i < lv ? ' on' : ''}">
-            <span class="cx-step-lv">${t('cx.tip.lv', { lv: s.level })}</span>
-            <span class="cx-step-b">${m.lockHtml?.[s.level] ? `<span class="cx-step-need">${m.lockHtml[s.level]}</span>` : stepText(s)}</span>
-        </div>`).join('');
+    //   도서관이 안 연 구간은 **자물쇠 줄만**(자물쇠 + 「도서관 n랭크」 · 회색) — 효과 글은 안 든다 · `lockHtml` 은 구간 순번(1부터)이 열쇠다 (ADR-0922 · ADR-0762 · ADR-1261)
+    const steps = SYS.game.codexSegments().map((s, i) => {
+        const size = s.to - s.from + 1;
+        const n = Math.max(0, Math.min(lv, s.to) - s.from + 1);
+        const lock = m.lockHtml?.[i + 1];
+        const text = stepText(s);
+        // 진행 칸은 효과가 있는 줄만 — 잠긴 구간 · 줄이 없는 구간(`—` · 보스의 파밍 · 전투)은 비운다
+        return `
+        <div class="cx-step${n > 0 ? ' on' : ''}">
+            <span class="cx-step-lv">${t('cx.tip.seg', { a: s.from, b: s.to })}</span>
+            <span class="cx-step-b">${lock ? `<span class="cx-step-need">${lock}</span>` : text}</span>
+            <span class="cx-step-n">${lock || text === '—' ? '' : `${n}/${size}`}</span>
+        </div>`;
+    }).join('');
     const card = el('div', 'tip-card cx-tip', `
         <div class="cx-tip-h">${t('cx.tip.story')}</div>
         <div class="cx-tip-story${story ? '' : ' muted'}"></div>
-        <div class="cx-tip-h">${t('cx.tip.effects')}</div>
+        <div class="cx-tip-h">${t('cx.tip.effects')}<span class="cx-tip-lv">${t('cx.tip.lv', { lv })}</span></div>
         <div class="cx-steps">${steps}</div>`);
     // 글은 **텍스트로** 넣는다 — 데이터 문장이 마크업으로 읽히지 않게. 셀의 줄바꿈 하나가 **문단 하나**다(문단 사이는 CSS 가 띄운다) ·
     //   길이는 원고가 지킨다 — 이야기 칸 안 · 최대 여섯 줄(ADR-0244 · 단정이 잡는다)
