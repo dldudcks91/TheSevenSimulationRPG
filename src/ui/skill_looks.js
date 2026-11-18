@@ -47,7 +47,7 @@ export const SKILL_LOOKS = {
 
     /* ── 마법사 — 원소 ── */
     mag_fireball: { hit: [['flare', { c: 'fire', s: 76 }], ['spray', { c: 'fire', n: 12, up: 8, r0: 26, r1: 52 }]] },   // 파이어볼 — 터짐 + 불똥
-    mag_inferno: { hit: [['pillar', { c: 'fire', w: 44, h: 96 }], ['rise', { c: 'fire', n: 12 }]] },     // 인페르노 — 불기둥 + 불티
+    mag_inferno: { bad: [['pillar', { c: 'fire', w: 44, h: 96 }], ['rise', { c: 'fire', n: 12 }]] },     // 인페르노 — 불기둥 + 불티 · 적진에 까는 불이라 상대 카드의 `bad`(R550)
     mag_iceblast: { hit: [['flare', { c: 'cold', s: 68 }], ['spray', { c: 'cold', n: 11, shape: 'shard', r0: 26, r1: 48 }]] },   // 아이스 블라스트 — 터짐 + 얼음 조각
     mag_frostnova: { hit: [['ring', { c: 'cold', s: 84, w: 5 }], ['ring', { c: 'cold', fy: 0.35, oy: 24, s: 84, dl: 80 }], ['spray', { c: 'cold', n: 6, shape: 'shard', r0: 20, r1: 44 }]] },   // 프로스트 노바 — 냉기 고리 둘
     mag_lightning: { hit: [['flare', { c: 'lightning', s: 64 }], ['bolt', { c: 'lightning', n: 3, h: 52 }]] },   // 라이트닝 — 번개 셋
@@ -110,7 +110,7 @@ export const SKILL_LOOKS = {
 
     /* ── 프로스트 메이지 ── */
     mag_frozenorb: { hit: [['flare', { c: 'cold', s: 60 }], ['spray', { c: 'cold', n: 16, shape: 'shard', r0: 40, r1: 86 }], ['spin', { c: 'cold', s: 70 }]] },   // 프로즌 오브 — 도는 얼음 + 조각
-    mag_blizzard: { hit: [['rain', { c: 'cold', n: 9, shape: 'shard' }]] },                               // 블리자드 — 얼음 비
+    mag_blizzard: { hit: [['rain', { c: 'cold', n: 9, shape: 'shard' }]], bad: [['rain', { c: 'cold', n: 9, shape: 'shard' }]] },   // 블리자드 — 얼음 비 · 깔리는 순간(`bad` · R550)도 같다
     mag_frostburst: { hit: [['ring', { c: 'cold', s: 90, r0: 0.2, r1: 1.4 }], ['spray', { c: 'cold', n: 9, shape: 'shard', r0: 50, r1: 80 }]] },   // 프로스트 버스트 — 냉기 고리 + 먼 조각
 
     /* ── 썬더 메이지 ── */

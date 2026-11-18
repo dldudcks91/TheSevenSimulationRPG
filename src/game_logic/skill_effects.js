@@ -594,6 +594,13 @@ export const EFFECTS = {
 export const EFFECT_STATS = Object.keys(EFFECTS);
 
 /**
+ * 적진에 까는 스킬 [2026-11-18 · R550 · 사용자 「나에게 버프가 아니라 상대에게 디버프가 들어가야지」 · INTERFACE §2-6 「적진에 까는 창」] —
+ *   이 스킬이 **시전자 자신에게** 거는 창은 계산 그대로(인페르노 `pulse` · 블리자드 `tick_hit`)지만 조용하다(`skill_runtime.openWindow` — 칩 · 이벤트 없음 · 버프로 안 센다).
+ *   칩은 상대 편 전원에게 선다(battle.js `fieldSync` — 표시 창 `field:<스킬 id>`). 같은 능력치의 히드라(불러낸 것) · 홀리 파이어(몸에서 번지는 오오라)는 넣지 않는다
+ */
+export const FIELD_SKILLS = new Set(['mag_inferno', 'mag_blizzard']);
+
+/**
  * 상태이상 [2026-09-28 · R177 · 넷 R178 · battle_design §2-4 ~ §2-7] — **이 표의 키가 `skill_status.csv:ailment` 어휘다.** 창은 버프 · 디버프와 같고
  *   다른 것은 받는 쪽 시간 감소 · 겹침 · 이벤트(`k`)다. 세기가 다른 행 여럿(약한 화상 · 강한 화상)이 같은 상태이상으로 선다.
  *   `cut`   — 받는 쪽 시간 감소가 든 **유닛 필드 이름**(비율 · battle.makeUnit ← `hero.computeCombat:option_fx`). `rt.applyStatus` 가 `× (1 − 대상[cut])` 를 곱한다

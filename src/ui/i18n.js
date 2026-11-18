@@ -129,6 +129,7 @@ const STRINGS = {
     'mobile.page.work': { ko: '작업', en: 'Workshop', zh: '工作台' },
     'mobile.page.advance': { ko: '전직', en: 'Advance', zh: '转职' },
     'mobile.page.upgrade': { ko: '업그레이드', en: 'Upgrade', zh: '升级' },
+    'mobile.page.salvage': { ko: '분해', en: 'Salvage', zh: '分解' },   // 도서관 본판 가운데 구역 — 스킬 북 분해 (ADR-1287)
     'mobile.page.books': { ko: '책 제작', en: 'Books', zh: '制作书' },   // 도서관 본판 오른쪽 구역 — 스킬 북 제작 (ADR-1262)
     'mobile.page.temper': { ko: '손질', en: 'Prep', zh: '整备' },
     'mobile.page.research': { ko: '연구판', en: 'Research', zh: '研究面板' },
@@ -1014,7 +1015,6 @@ const STRINGS = {
     'tip.ring.duration': { ko: '[{tag}] 지속시간 +{p}', en: '[{tag}] Duration +{p}', zh: '[{tag}] 持续时间+{p}' },
     'tip.ring.value': { ko: '[{tag}] 효과 수치 +{p}', en: '[{tag}] Effect Strength +{p}', zh: '[{tag}] 效果数值+{p}' },
     'tip.ring.heal': { ko: '[{tag}] 회복량 +{p}', en: '[{tag}] Healing +{p}', zh: '[{tag}] 治疗量+{p}' },
-    'dp.lib.empty': { ko: '영웅을 등록하면 기본 스킬의 스킬북을 생산합니다', en: 'Assign a hero to produce basic skill books', zh: '派驻英雄后，将生产其基础技能的技能书' },
     'dp.node.mine': { ko: '채광', en: 'Mining', zh: '采矿' },
     'dp.node.gather': { ko: '채집', en: 'Gathering', zh: '采集' },
     'dp.node.log': { ko: '벌목', en: 'Logging', zh: '伐木' },
@@ -1040,12 +1040,15 @@ const STRINGS = {
     'dp.line.desc.visit': { ko: '등록한 영웅이 시간마다 한 명씩 선술집에 데려옵니다', en: 'Each assigned hero brings one hero to the tavern every few hours', zh: '派驻的英雄每隔一段时间带一名英雄到酒馆' },
     'dp.line.desc.train': { ko: '등록한 영웅이 시간마다 경험치를 받습니다', en: 'Assigned heroes gain XP every hour', zh: '派驻的英雄每小时获得经验' },
     'dp.line.desc.gamble': { ko: '시간마다 골드를 법니다', en: 'Earns gold every hour', zh: '每小时赚取金币' },
-    'dp.line.desc.lib': { ko: '등록한 영웅의 기본 스킬 스킬북을 생산합니다', en: 'Produces skill books of assigned heroes’ basic skills', zh: '生产派驻英雄基础技能的技能书' },
+    'dp.line.desc.lib': { ko: '스킬 조각을 시간마다 생산합니다', en: 'Produces skill shards every hour', zh: '每小时生产技能碎片' },   // R546 · ADR-1273
     'dp.out.h.res': { ko: '시간당 생산', en: 'Per Hour', zh: '每小时产量' },
     'dp.out.h.visit': { ko: '영웅 도착', en: 'Hero Arrivals', zh: '英雄到达' },
     'dp.out.h.train': { ko: '훈련 상한', en: 'Training Cap', zh: '训练上限' },
     'dp.out.h.gamble': { ko: '시간당 생산', en: 'Per Hour', zh: '每小时产量' },
-    'dp.out.h.lib': { ko: '영웅별 시간당 스킬북', en: 'Books per Hero per Hour', zh: '每名英雄每小时技能书' },
+    'dp.out.h.lib': { ko: '시간당 생산', en: 'Per Hour', zh: '每小时产量' },   // R546 — 자원 · 도박장과 같은 소제목
+    'dp.out.shard': { ko: '스킬 조각', en: 'Skill Shards', zh: '技能碎片' },   // 도서관 줄 「지금 내는 것」 첫 줄 (R546 · ADR-1273)
+    'dp.out.bookChance': { ko: '스킬북 확률', en: 'Skill book chance', zh: '技能书几率' },   // 조각 하나마다 등록 영웅 스킬 책 (R546)
+    'dp.out.cand': { ko: '후보 스킬', en: 'Candidate skills', zh: '候选技能' },   // 등록 영웅의 고유 · 배운 칸 (R546)
     'dp.out.hero': { ko: '영웅', en: 'Heroes', zh: '英雄' },
     'dp.out.rare': { ko: '레어 확률', en: 'Rare chance', zh: '稀有几率' },
     'dp.out.waiting': { ko: '대기소', en: 'Waiting room', zh: '等候所' },
@@ -1057,7 +1060,7 @@ const STRINGS = {
     'dp.fx.speed.visit': { ko: '도착 속도', en: 'Arrival speed', zh: '到达速度' },
     'dp.fx.speed.train': { ko: '경험치', en: 'XP', zh: '经验' },
     'dp.fx.speed.gamble': { ko: '골드', en: 'Gold', zh: '金币' },
-    'dp.fx.speed.lib': { ko: '스킬북 생산 속도', en: 'Book production speed', zh: '技能书生产速度' },
+    'dp.fx.speed.lib': { ko: '조각 생산 속도', en: 'Shard production speed', zh: '碎片生产速度' },   // R546
     'dp.fx.burst': { ko: '대박 확률', en: 'Jackpot chance', zh: '大丰收几率' },
     'dp.fx.quality': { ko: '레어 확률', en: 'Rare chance', zh: '稀有几率' },
     'dp.fx.research': { ko: '연구 속도', en: 'Research speed', zh: '研究速度' },
@@ -2092,9 +2095,9 @@ const STRINGS = {
         zh: '获得与分解技能书',
     },
     'help.library.sources.body': {
-        ko: "스킬북은 원정에서 몬스터를 처치하거나 탐험 동굴의 보상, 연구소 도서관 줄, 상단 구매, 영웅의 첫 책 사용 레벨 보상으로 들어옵니다. 어떤 몬스터가 어떤 책을 주는지는 스킬 도감의 획득처에서 확인합니다.<br><br>얻은 책은 바로 책 재고에 쌓이며 장비 인벤토리 칸을 차지하지 않습니다. 더 쓸 데가 없는 책은 창고의 <b>[스킬북]</b> 탭에서 골라 <b>[분해]</b>합니다. 한 번에 1권이 <b>스킬 조각 {shard}개</b>가 되며, 되돌릴 수 없습니다. 스킬 조각은 책을 분해할 때만 나옵니다.",
-        en: "Skill books come from defeating monsters on Expeditions, Exploration cave rewards, the Laboratory Library line, Trading House purchases and each hero's first-book level reward. Check a skill's Codex sources to see which monsters drop its book.<br><br>Books enter book stock immediately and do not take equipment inventory slots. Select a book you no longer need in the stash's <b>Skill Books</b> tab and press <b>Salvage</b>. Each press turns one book into <b>{shard} skill shard(s)</b> and cannot be undone. Skill shards come only from salvaging books.",
-        zh: '技能书的来源有：远征中击杀怪物、探索洞穴的奖励、研究所的图书馆线、商会购买，以及英雄达到可用书等级时的首本书奖励。哪种怪物掉落哪本书，请在技能图鉴的获取途径中查看。<br><br>获得的书会立即进入书籍库存，不占背包的装备格。用不上的书可在仓库的<b>[技能书]</b>页中选中后<b>[分解]</b>。每次将1本书变为<b>{shard}个技能碎片</b>，且无法撤销。技能碎片只能通过分解技能书获得。',
+        ko: "스킬북은 원정에서 몬스터를 처치하거나 탐험 동굴의 보상, 연구소 도서관 줄, 상단 구매, 영웅의 첫 책 사용 레벨 보상으로 들어옵니다. 어떤 몬스터가 어떤 책을 주는지는 스킬 도감의 획득처에서 확인합니다.<br><br>얻은 책은 바로 책 재고에 쌓이며 장비 인벤토리 칸을 차지하지 않습니다. 더 쓸 데가 없는 책은 창고의 <b>[스킬북]</b> 탭에서 골라 <b>[분해]</b>합니다. 한 번에 1권이 <b>스킬 조각 {shard}개</b>가 되며, 되돌릴 수 없습니다.<br><br>연구소 <b>도서관</b> 줄은 영웅이 없어도 시간마다 스킬 조각을 생산합니다. 그 줄에 영웅을 등록하면 조각이 나올 때마다 <b>[대박]</b> 확률로 그 영웅이 가진 스킬의 책도 한 권 들어옵니다.",
+        en: "Skill books come from defeating monsters on Expeditions, Exploration cave rewards, the Laboratory Library line, Trading House purchases and each hero's first-book level reward. Check a skill's Codex sources to see which monsters drop its book.<br><br>Books enter book stock immediately and do not take equipment inventory slots. Select a book you no longer need in the stash's <b>Skill Books</b> tab and press <b>Salvage</b>. Each press turns one book into <b>{shard} skill shard(s)</b> and cannot be undone.<br><br>The Laboratory <b>Library</b> line produces skill shards every hour, even with no hero assigned. Assign a hero to that line and each shard has a <b>Jackpot</b> chance to also bring one book of a skill that hero has.",
+        zh: '技能书的来源有：远征中击杀怪物、探索洞穴的奖励、研究所的图书馆线、商会购买，以及英雄达到可用书等级时的首本书奖励。哪种怪物掉落哪本书，请在技能图鉴的获取途径中查看。<br><br>获得的书会立即进入书籍库存，不占背包的装备格。用不上的书可在仓库的<b>[技能书]</b>页中选中后<b>[分解]</b>。每次将1本书变为<b>{shard}个技能碎片</b>，且无法撤销。<br><br>研究所的<b>图书馆</b>线即使没有英雄也会每小时生产技能碎片。向该线派驻英雄后，每产出一个碎片，都有<b>[大丰收]</b>几率额外获得一本该英雄所持技能的技能书。',
     },
     'help.library.craft.title': {
         ko: "스킬 조각으로 스킬북 만들기",
@@ -2102,9 +2105,9 @@ const STRINGS = {
         zh: '用技能碎片制作技能书',
     },
     'help.library.craft.body': {
-        ko: "한 번이라도 얻은 적 있는 <b>직업 스킬</b>의 책은 도서관 <b>[스킬 북 제작]</b>에서 만들 수 있습니다. 칸을 골라 비용을 확인하고 <b>[만들기]</b>를 누르면 그 책 한 권이 책 재고에 쌓입니다.<br><br>한 권에 <b>스킬 조각 {shards}개</b>와 <b>{gold}G</b>가 들며 티어와 상관없이 같습니다. 몬스터 · 챕터 보스의 고유 스킬과 전직 스킬의 책은 만들 수 없습니다.",
-        en: "Any <b>class skill</b> book you have obtained at least once can be crafted in the Library's <b>Skill Book Crafting</b>. Select an icon, check the cost and press <b>Craft</b> to add one copy to your book stock.<br><br>Each book costs <b>{shards} skill shards</b> and <b>{gold}G</b>, the same for every tier. Books of monster or chapter-boss innate skills and advancement skills cannot be crafted.",
-        zh: '只要获得过一次的<b>职业技能</b>书，就可以在图书馆的<b>[技能书制作]</b>中制作。选中格子、确认费用后点击<b>[制作]</b>，该书就会有一本进入书籍库存。<br><br>每本需要<b>{shards}个技能碎片</b>和<b>{gold}G</b>，与阶级无关。怪物、章节首领的固有技能书和转职技能书无法制作。',
+        ko: "모든 <b>직업 스킬</b>의 책은 도서관 <b>[스킬 북 제작]</b>에서 만들 수 있습니다. 칸을 골라 비용을 확인하고 <b>[만들기]</b>를 누르면 그 책 한 권이 책 재고에 쌓입니다.<br><br>한 권에 1티어는 <b>스킬 조각 {shards}개</b>, 2티어는 <b>스킬 조각 {shards2}개</b>가 들고, 골드는 티어와 상관없이 <b>{gold}G</b>입니다. 몬스터 · 챕터 보스의 고유 스킬과 전직 스킬의 책은 만들 수 없습니다.",
+        en: "Books for every <b>class skill</b> can be crafted in the Library's <b>Skill Book Crafting</b>. Select an icon, check the cost and press <b>Craft</b> to add one copy to your book stock.<br><br>A Tier 1 book costs <b>{shards} skill shards</b> and a Tier 2 book <b>{shards2} skill shards</b>; every book also costs <b>{gold}G</b>. Books of monster or chapter-boss innate skills and advancement skills cannot be crafted.",
+        zh: '所有<b>职业技能</b>书都可以在图书馆的<b>[技能书制作]</b>中制作。选中格子、确认费用后点击<b>[制作]</b>，该书就会有一本进入书籍库存。<br><br>每本1阶需要<b>{shards}个技能碎片</b>，2阶需要<b>{shards2}个技能碎片</b>，金币与阶级无关，均为<b>{gold}G</b>。怪物、章节首领的固有技能书和转职技能书无法制作。',
     },
     'help.library.learn.title': {
         ko: "읽힐 영웅을 고르고 배우기",
@@ -3359,7 +3362,7 @@ const STRINGS = {
     'bk.max': { ko: '최대', en: 'Max', zh: '最高' },
     // 스킬 북 제작 — 도서관 아랫줄 오른쪽 구역 (2026-11-18 · R540 · SCREEN_DESIGN §17 · ADR-1262) · 스킬 조각 이름 ⚠임시
     'bk.craft.h': { ko: '스킬 북 제작', en: 'Skill Book Crafting', zh: '技能书制作' },
-    'bk.craft.help': { ko: '스킬 조각과 골드로 한 번 얻은 스킬북을 만들 수 있습니다.', en: 'Craft any skill book you have obtained before with skill shards and gold.', zh: '可用技能碎片和金币制作曾经获得过的技能书。' },   // 소제목 옆 `?` 툴팁
+    'bk.craft.help': { ko: '스킬 조각과 골드로 스킬북을 만들 수 있습니다.', en: 'Craft skill books with skill shards and gold.', zh: '可用技能碎片和金币制作技能书。' },   // 소제목 옆 `?` 툴팁 (R543 — 직업 스킬 전부)
     'bk.craft.none': { ko: '만들 수 있는 스킬북 없음', en: 'No books to craft', zh: '没有可制作的技能书' },
     'bk.make': { ko: '만들기', en: 'Craft', zh: '制作' },
     'bk.shards': { ko: '스킬 조각 {have}/{need}', en: 'Skill Shards {have}/{need}', zh: '技能碎片{have}/{need}' },   // 만들기 줄 아랫줄 비용 — 가진 / 드는 (모자라면 붉다)
@@ -3368,12 +3371,15 @@ const STRINGS = {
     'bk.learned': { ko: '{name} — {skill} 배움', en: '{name} learned {skill}', zh: '{name}——学会了{skill}' },
     'bk.upgraded': { ko: '{name} — {skill} Lv.{n}', en: '{name} — {skill} Lv.{n}', zh: '{name}——{skill} Lv.{n}' },   // 같은 책 업그레이드 (R216)
     'bk.crafted': { ko: '{skill} 스킬북 제작 완료', en: 'Crafted a {skill} book', zh: '{skill}技能书制作完成' },
-    'bk.salvage': { ko: '분해', en: 'Salvage', zh: '分解' },   // 창고 스킬북 탭 도구 줄 — 고른 책 1권을 스킬 조각으로 (§6 · ADR-1199 · ADR-1262)
+    'bk.salvage': { ko: '분해', en: 'Salvage', zh: '分解' },   // 창고 스킬북 탭 도구 줄 · 도서관 스킬 북 분해 구역 분해 줄 — 고른 책 1권을 스킬 조각으로 (§6 · §17 · ADR-1199 · ADR-1262 · ADR-1287)
+    // 스킬 북 분해 — 도서관 아랫줄 가운데 구역 (2026-11-18 · SCREEN_DESIGN §17 · ADR-1287)
+    'bk.salv.h': { ko: '스킬 북 분해', en: 'Skill Book Salvage', zh: '技能书分解' },
+    'bk.salv.help': { ko: '스킬북을 분해해 스킬 조각을 얻을 수 있습니다.', en: 'Salvage skill books into skill shards.', zh: '可将技能书分解为技能碎片。' },   // 소제목 옆 `?` 툴팁
+    'bk.salv.gain': { ko: '스킬 조각 +{n}', en: 'Skill Shards +{n}', zh: '技能碎片+{n}' },   // 분해 줄 아랫줄 — 고른 책 1권이 주는 조각 `[balance.csv:book_salvage_shard]`
     'bk.salvaged': { ko: '{skill} 스킬북 분해 — 스킬 조각 +{n}', en: 'Salvaged a {skill} book — Skill Shard +{n}', zh: '分解{skill}技能书——技能碎片+{n}' },
     // 결과 코드 — `game.learnBook` · `game.craftBook` · `game.salvageBook` · `game.bookState` (INTERFACE §3)
     'bk.err.shards': { ko: '스킬 조각 부족', en: 'Not enough skill shards', zh: '技能碎片不足' },   // craftBook (R540)
     'bk.err.gold': { ko: '골드 부족', en: 'Not enough gold', zh: '金币不足' },   // craftBook (R540)
-    'bk.err.unseen': { ko: '아직 얻은 적 없는 스킬북', en: 'This book has not been obtained yet', zh: '尚未获得过的技能书' },   // craftBook — 본 책 목록 밖 (R540)
     'bk.err.level': { ko: 'Lv.{n} 달성', en: 'Reach Lv.{n}', lock: true, zh: '达到Lv.{n}' },
     'bk.err.missing': { ko: '배울 수 없는 스킬', en: 'Cannot be learned', zh: '无法学习的技能' },
     'bk.err.book': { ko: '책 부족', en: 'Not enough books', zh: '书不足' },   // 없거나 업그레이드에 드는 권수보다 적다 (R216)
@@ -3531,11 +3537,17 @@ const STRINGS = {
     //   전투 = 장비 옵션 줄 표기) · `{v}` = 부호 붙은 값 (SCREEN_DESIGN §9 · ADR-0715 · monster_design §8 — ~~그 몬스터에게만 · cx.rw.vs_dmg~~ ADR-0667)
     'cx.rw.farm': { ko: '{race} {line}', en: '{line} from {race}', zh: '{race}{line}' },
     'cx.rw.fight': { ko: '{race} 상대 {line}', en: '{line} vs {race}', zh: '对{race}{line}' },
-    'cx.rw.xp': { ko: '처치 경험치 {v}', en: '{v} Kill EXP', zh: '击杀经验{v}' },
-    'cx.rw.drop': { ko: '드롭 확률 {v}', en: '{v} Drop Chance', zh: '掉落几率{v}' },
-    'cx.rw.magic': { ko: '매직 아이템 획득 {v}', en: '{v} Magic Find', zh: '魔法物品获取{v}' },
-    'cx.rw.gold': { ko: '골드 획득 {v}', en: '{v} Gold Find', zh: '金币获取{v}' },
-    'cx.rw.material': { ko: '재료 획득 {v}', en: '{v} Material Find', zh: '材料获取{v}' },
+    // 도감 몬스터 툴팁 가운데 칸 — 오르는 것의 이름만 · 값은 오른쪽 칸 (ADR-1276)
+    'cx.rw.xp': { ko: '처치 경험치', en: 'Kill EXP', zh: '击杀经验' },
+    'cx.rw.drop': { ko: '드롭 확률', en: 'Drop Chance', zh: '掉落几率' },
+    'cx.rw.magic': { ko: '매직 아이템 획득', en: 'Magic Find', zh: '魔法物品获取' },
+    'cx.rw.gold': { ko: '골드 획득', en: 'Gold Find', zh: '金币获取' },
+    'cx.rw.material': { ko: '재료 획득', en: 'Material Find', zh: '材料获取' },
+    // 전체 버프 — 도감 몬스터 챕터 줄 오른쪽 버튼 · 그 창의 제목 · 묶음 머리 셋 (SCREEN_DESIGN §9 · ADR-1279)
+    'cx.buff.btn': { ko: '전체 버프', en: 'All Buffs' },
+    'cx.buff.farm': { ko: '파밍', en: 'Farming' },
+    'cx.buff.fight': { ko: '전투', en: 'Combat' },
+    'cx.buff.option': { ko: '옵션 · 파티 전원', en: 'Options · Whole Party' },
     // 스킬 도감 툴팁의 둘째 장 — 획득처 작은 초상 · 레벨이 오르면 (SCREEN_DESIGN §9-1 · ADR-0680 — ~~단계~~ ADR-0650) · 「상단」 머리는 건물 이름 데이터(building.csv)
     'cx.tip.source': { ko: '획득처', en: 'Found On', zh: '获取地点' },
     'cx.tip.levelOptions': { ko: '레벨별 옵션', en: 'Options by Level', zh: '各等级词条' },
@@ -3595,6 +3607,10 @@ const STRINGS = {
     'ix.seg.weapon': { ko: '무기', en: 'Weapons', zh: '武器' },
     'ix.seg.armor': { ko: '방어구', en: 'Armor', zh: '防具' },
     'ix.seg.potion': { ko: '물약', en: 'Potions', zh: '药水' },
+    // 옵션은 넷째 탭이다 [2026-11-18 · ADR-1275 · 부위 고르개 ADR-1278 · R547] — 부위 하나의 옵션 표 · 표 머리(죄종 열은 `cx.sinLabel` · 값 열 머리는 비운다 — ADR-1286 · 단어는 `sin_word.csv`)
+    'ix.seg.option': { ko: '옵션', en: 'Options', zh: '词条' },
+    'ix.opt.no': { ko: '칸', en: 'No.', zh: '序号' },
+    'ix.opt.name': { ko: '옵션', en: 'Option', zh: '词条' },
     /* 물약 묶음 — **종류 하나가 묶음 하나**이고 머리가 종류 이름이다 (§9-1 · ADR-0314).
        **물약 이름은 여기 없다** — `potion.csv:name_kr`/`name_en` 을 `L()` 로 푼다(무기 베이스 `ix.b.*` 와 다르다 ·
        그쪽은 묶음이 CSV 행을 아직 안 읽어서 생긴 임시다). `kind` 만 CSV 에 라벨 컬럼이 없어 이 줄이 든다. */
@@ -3815,6 +3831,7 @@ const STRINGS = {
     'bt.effect.reflect': { ko: '받은 직격 피해의 {v}% 반사', en: 'Reflects {v}% of direct damage taken', zh: '反射受到直击伤害的{v}%' },
     'bt.effect.trap': { ko: '덫 — 행동하면 터짐', en: 'Trapped — triggers when it acts', zh: '陷阱——行动时触发' },
     'bt.effect.tickHit': { ko: '일정 간격으로 {e} 피해 {v}%', en: '{e} damage ({v}%) at intervals', zh: '每隔一段时间造成{e}伤害{v}%' },
+    'bt.effect.field': { ko: '일정 간격으로 {e} 피해', en: '{e} damage at intervals', zh: '每隔一段时间受到{e}伤害' },   // 적진에 깐 창 — 걸린 쪽 (인페르노 · 블리자드 · 2026-11-18 R550 · ADR-1281)
     'bt.effect.strike': { ko: '일정 간격으로 {e} 벼락 {v}%', en: '{e} bolts ({v}%) at intervals', zh: '每隔一段时间降下{e}雷击{v}%' },
     'bt.effect.periodFix': { ko: '공격 주기 = 무기 주기의 {v}%', en: 'Attack interval = {v}% of weapon speed', zh: '攻击间隔=武器间隔的{v}%' },
     'bt.effect.defIgnore': { ko: '방어력 {v}% 무시', en: 'Ignores {v}% Defense', zh: '无视{v}%防御' },

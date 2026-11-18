@@ -38,7 +38,8 @@ export const SKILL_ART = {
     // 마법사 — 화염 · 냉기 · 번개 · 집중 · 얼음 벽 소환.
     // 아이스 블라스트 · 라이트닝은 초상 바깥 위에서 떨어진다(ADR-0541) — `ay` = 그림에서 초상 가운데에 닿는 높이 · `then` = 이어 서는 그림.
     mag_fireball: { hit: { file: 'mag_fireball', motion: 'burst', size: 90, duration: 420 } },
-    mag_inferno: { hit: { file: 'mag_inferno', motion: 'pillar', size: 94, duration: 500 } },
+    // 인페르노 = 적진에 까는 불(R550 · ADR-1281) — 타격 사건이 없어 `hit` 이 아니라 상대 카드마다 서는 `bad` 다 · 불벽이 솟고 이어 불바닥(옛 파이어월 그림)이 깔린다
+    mag_inferno: { bad: { file: 'mag_inferno', motion: 'pillar', size: 94, duration: 500, then: { file: 'mag_firewall', motion: 'ground', size: 104, ay: .3, duration: 700 } } },
     mag_iceblast: { hit: {
         file: 'mag_iceblast', motion: 'fall', size: 110, ay: .87, duration: 260,
         then: { file: 'mag_iceblast_shatter', motion: 'shatter', size: 110, ay: .89, duration: 380 },
@@ -107,7 +108,8 @@ export const SKILL_ART = {
         file: 'mag_frozenorb', motion: 'thrust', size: 130, duration: 280,
         then: { file: 'mag_frozenorb_impact', motion: 'shatter', size: 136, duration: 420 },
     } },
-    mag_blizzard: { hit: { file: 'mag_blizzard', motion: 'rain', size: 140, ay: .62, duration: 620 } },
+    // 블리자드 = 적진에 까는 눈보라(R550 · ADR-1281) — 깔리는 순간(`bad`)도 틱(`hit`)과 같은 얼음 비
+    mag_blizzard: { hit: { file: 'mag_blizzard', motion: 'rain', size: 140, ay: .62, duration: 620 }, bad: { file: 'mag_blizzard', motion: 'rain', size: 140, ay: .62, duration: 620 } },
     mag_frostburst: { hit: {
         file: 'mag_frostburst', motion: 'inward', size: 128, duration: 320,
         then: { file: 'mag_frostburst_impact', motion: 'burst', size: 136, duration: 420 },
@@ -169,8 +171,10 @@ export const SKILL_ART = {
 };
 
 /* 모으기의 기운 — 모으는 동안 쓰는 쪽 초상 둘레에서 안으로 빨려 든다(ADR-1252). 스킬마다가 아니라 시전 방식(`channel_charge`)이 부른다 ·
-   두 그림체 모두 있다 · `size` = 그림 한 장의 크기(px — 바깥에서 크게 시작해 줄어든다 · style.css `fx-charge-gather`) · `duration` = 한 번 빨려 드는 길이(ms · 배속을 탄다) */
-export const CHARGE_ART = { file: 'charge_gather', size: 130, duration: 900 };
+   `style` = 그림체 설정과 상관없이 쓰는 그림체(금속박 한 장뿐 · ADR-1270) · `size` = 그림 한 장의 크기(px — 바깥에서 크게 시작해 줄어든다 · style.css `fx-charge-gather`) ·
+   `duration` = 한 번 빨려 드는 길이(ms · 배속을 탄다 · ADR-1270) ·
+   `size` 80 — 1.5배로 시작하면 120px 라 초상(90px) 바로 둘레에서 빨려 들기 시작한다(130 이면 195px 로 초상의 두 배가 넘어 너무 컸다 · 2026-11-18 사용자 「애초에 너무 커」) */
+export const CHARGE_ART = { file: 'charge_gather', style: 'foil', size: 80, duration: 1400 };
 
 /* 그림체 — 관전은 설정 탭이 고른 그림체로 서고(fx.js:fxArtStyle · ADR-0561), 도감의 이펙트 세그먼트는 같은 스킬을 그림체별로 견준다(§9-1 · ADR-0559).
    버튼 · 탭 순서 = 이 배열 순서 · 기본값 = 한 번도 안 고른 사람의 관전(다크 카툰 · ADR-0621) */

@@ -503,7 +503,7 @@ export function fxPreload(style = artPref, skills = Object.keys(SKILL_ART), char
         const d = styled(x, style);
         return [d.file, d.then?.file];
     })).filter(Boolean));
-    if (charge) files.add(artFile(CHARGE_ART.file, style));   // 모으기의 기운 — 시전 방식이 부른다 (ADR-1252)
+    if (charge) files.add(artFile(CHARGE_ART.file, CHARGE_ART.style ?? style));   // 모으기의 기운 — 시전 방식이 부른다 · 그림체는 CHARGE_ART 가 정한다 (ADR-1252 · ADR-1270)
     files.delete(null);
     if (!preloaded && ART_ON) {
         preloaded = true;
@@ -662,7 +662,7 @@ export function fxBuff(state, u, ev) {
     });
 }
 /* 모으기 (ADR-1252 · ADR-1255) — 모으는 동안 카드는 나간 채 서 있고 기운 그림만 초상 둘레에서 안으로 빨려 든다 · 쏘는 방에 초상이 번쩍하며 카드가 앞으로 튄다.
-   번쩍 · 튐은 「공격 시 흔들림」, 기운 그림은 「스킬 이펙트」(투명도 · 그림체)를 따른다 · 카드는 떨지도(ADR-0723) 물러나지도 줄지도(ADR-1255) 않는다 ·
+   번쩍 · 튐은 「공격 시 흔들림」, 기운 그림은 「스킬 이펙트」(투명도)를 따르고 그림체는 설정과 상관없이 `CHARGE_ART.style`(ADR-1270) · 카드는 떨지도(ADR-0723) 물러나지도 줄지도(ADR-1255) 않는다 ·
    튐의 길이 · 방향은 style.css 가 든다 */
 const chargeGather = card => card.querySelector(':scope > .fx-layer > .fx-charge-gather');
 /** 재생기가 카드를 갱신할 때마다 부른다 — `p` = 모은 몫(0 → 1 · 쏘기 전 · 거꾸로 닳는 게이지의 반대) · 모으지 않으면 null. 되감는 동안은 재생기가 안 부른다 */
@@ -671,7 +671,7 @@ export function fxCharge(state, u, p) {
     if (!card?.isConnected) return;
     const on = p != null && state.motion !== false;
     let g = chargeGather(card);
-    const file = artFile(CHARGE_ART.file, artStyle);
+    const file = artFile(CHARGE_ART.file, CHARGE_ART.style ?? artStyle);
     if (!on || !fxShown(state, 'skill') || !file || !skillArt.has(file)) { g?.remove(); return; }
     if (!g) {
         prep(state, u);
@@ -681,14 +681,13 @@ export function fxCharge(state, u, p) {
             g.className = 'fx-charge-gather';
             g.style.setProperty('--sz', px(CHARGE_ART.size));
             g.style.setProperty('--t', ms(CHARGE_ART.duration));
-            // 두 장이 반 박자 엇갈려 돈다(style.css) — 한 장이 줄어들어 사라질 때 다음 장이 바깥에서 들어온다
-            for (let i = 0; i < 2; i++) {
-                const im = document.createElement('img');
-                im.alt = '';
-                im.draggable = false;
-                im.src = skillArt.get(file);
-                g.appendChild(im);
-            }
+            // 한 장이 바깥에 나타나 가운데 한 점으로 빨려 들어가 사라지고 다시 나타난다(style.css · 돌지 않는다 — ADR-1273 · ADR-1274).
+            // 두 장을 겹치면 가운데를 향한 줄무늬가 크기만 다르게 포개져 늘 같은 무늬로 보여 줄어드는 게 안 읽혔다
+            const im = document.createElement('img');
+            im.alt = '';
+            im.draggable = false;
+            im.src = skillArt.get(file);
+            g.appendChild(im);
             L.appendChild(g);
         });
     }

@@ -53,6 +53,7 @@ GAME_DIRS = [
     "nav",
     "battle_buffs",
     "party",
+    "difficulty",
 ]
 
 

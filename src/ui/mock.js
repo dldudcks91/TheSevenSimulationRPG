@@ -287,9 +287,9 @@ export const statInert = stat => AFFIX_LABELS[stat]?.inert === true;
  * `fallback` = 접사 풀 밖의 축을 그릴 때 쓰는 `{ko, en, fmt}` — 마스터리 노드가 `combat_stat.csv` 행을 넘긴다.
  *   (접사가 아닌 것을 AFFIX_LABELS 에 밀어 넣지 않으려는 것 — 그러면 접사 사전이 접사 아닌 것을 들게 된다)
  */
-export const affixText = (stat, v, fallback) => {
+export const affixText = (stat, v, fallback, digits) => {
     const d = statLabel(stat, fallback);
-    return withZh(d, { ko: `${d.ko} ${statValue(stat, v, fallback)}`, en: `${statValue(stat, v, fallback)} ${d.en}` }, statValue(stat, v, fallback));
+    return withZh(d, { ko: `${d.ko} ${statValue(stat, v, fallback, digits)}`, en: `${statValue(stat, v, fallback, digits)} ${d.en}` }, statValue(stat, v, fallback, digits));
 };
 /** 간체 옵션 줄 — 숫자가 앞(「+12% 暴击率」 · 디아4 · PoE 간체판 관례 · LOCALIZATION_ZH §2) · 이름에 zh 가 없으면 zh 를 안 싣는다(화면은 영어 줄) */
 const withZh = (d, pair, value) => (d?.zh ? { ...pair, zh: `${value} ${d.zh}` } : pair);
@@ -301,8 +301,9 @@ export const statLabel = (stat, fallback) => AFFIX_LABELS[stat] ?? fallback ?? {
  * 퍼센트 숫자 — 값은 **비율**(0.05)로 오고 **찍을 때만** 100 을 곱한다 [2026-09-17 · R111 · src/data/README.md 단위 규약].
  * 곱한 뒤의 부동소수 꼬리(`7.000000000000001`)는 소수 둘째 자리에서 자른다 — 오만 「레벨당 데미지」(0.3%)가 가장 잘다.
  * 화면 곳곳의 `%` 표기가 이것을 쓴다 (app.js · tip.js)
+ * `digits` = 자를 소수 자리 — 안 주면 둘째 자리 · 도감 툴팁의 레벨당 값만 셋째 자리를 준다(`0.025%` · ADR-1268)
  */
-export const pctNum = v => Number((v * 100).toFixed(2));
+export const pctNum = (v, digits = 2) => Number((v * 100).toFixed(digits));
 /** 비율 하나를 부호 없는 `n%` 로 — 옵션 줄이 아닌 문장 안의 확률(목걸이 발동 줄 · 2026-09-21). 단위를 붙이는 곳은 이 파일 하나다 */
 export const pctText = v => `${pctNum(v)}%`;
 
@@ -310,10 +311,12 @@ export const pctText = v => `${pctNum(v)}%`;
 const ROMAN = [[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
 export const roman = n => ROMAN.reduce((s, [v, r]) => { while (n >= v) { s += r; n -= v; } return s; }, '');
 
-/** 값만 — 부호와 단위는 affixText 와 **같은 규칙**이다 (단위를 붙이는 곳은 이 파일 하나) */
-export const statValue = (stat, v, fallback) => {
+/** 값만 — 부호와 단위는 affixText 와 **같은 규칙**이다 (단위를 붙이는 곳은 이 파일 하나) ·
+ *  `digits` 를 주면 수치 값도 그 자리에서 부동소수 꼬리를 자른다(안 주면 그대로 — 도감 레벨당 값 · ADR-1268) */
+export const statValue = (stat, v, fallback, digits) => {
     const pct = statLabel(stat, fallback).fmt === 'pct';
-    return `${v >= 0 ? '+' : ''}${pct ? pctNum(v) : v}${pct ? '%' : ''}`;
+    const num = pct ? pctNum(v, digits) : digits === undefined ? v : Number(v.toFixed(digits));
+    return `${v >= 0 ? '+' : ''}${num}${pct ? '%' : ''}`;
 };
 
 /**
@@ -577,6 +580,11 @@ export const sinIcon = sin => SINS[sin] ? SIN_ICON_DIR + sin + ICON_EXT : null;
 export const CLASS_ICON_DIR = './assets/art/icons/classes/';
 export const CLASS_ICON_FILES = ['warrior', 'knight', 'mage', 'archer', 'priest', 'assassin', 'necromancer'];
 export const classIcon = cls => CLASS_ICON_FILES.includes(cls) ? CLASS_ICON_DIR + cls + ICON_EXT : null;
+/** 난이도 단 아이콘 — 회색 실루엣 셋(파일 이름 = `difficulty_tier.csv:difficulty_id`). 원정 난이도 탭이 마스크로 써 글자색으로 칠한다 ·
+ *  그림이 없는 단은 null — 글자만 선다 (SCREEN_DESIGN §4-1 · ADR-1264) */
+export const DIFFICULTY_ICON_DIR = './assets/art/icons/difficulty/';
+export const DIFFICULTY_ICON_FILES = ['normal', 'nightmare', 'hell'];
+export const difficultyIcon = id => DIFFICULTY_ICON_FILES.includes(id) ? DIFFICULTY_ICON_DIR + id + ICON_EXT : null;
 export const skillIcon = id => {
     if (!id) return null;
     const key = String(id);

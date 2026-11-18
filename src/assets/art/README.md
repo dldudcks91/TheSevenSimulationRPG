@@ -336,7 +336,7 @@ fx_source/stun_star_20261028/   그 원본(Codex 다크 카툰 2×2 · 왼쪽 �
 
 **함성 여섯 교체 · 2026-11-15** — 워 오더스·배틀 오더스·워 크라이·배틀 크라이·호령·사자후는 `<skill_id>_shockwave_<style>.webp` 12장을 사용한다. 초상 밖으로 퍼지는 세 겹의 충격파이며 두 그림체의 크기·움직임이 같다. 이전 개별 함성 파일 10장은 삭제했다. 원본·프롬프트·설치·검사는 [`fx_source/shout_shockwave_20261115/`](fx_source/shout_shockwave_20261115/README.md)에 있으며, `export.py` → `install.py` → `verify_installed.py` 순으로 재현한다. 기존 누락 보완 내보내기는 새 함성을 옛 시트에서 복구하지 않는다. 다른 스킬과 함께 들어 있는 과거 원본 시트는 보존한다.
 
-**모으기 기운 · 2026-11-18** — `charge_gather_<style>.webp` 두 장(다크 카툰 · 금속박)은 스킬 하나가 아니라 **모으기 시전 방식(`channel_charge`)이 같이 쓰는** 그림이다 — 사방에서 가운데로 날아드는 혜성 줄기 열둘(머리가 안 · 꼬리가 바깥)이 모으는 동안 초상 둘레에서 안으로 빨려 든다(`skill_art.js:CHARGE_ART` · [ADR-1252](../../../docs/client/adr/1252-모으기는-모으는-동안-카드가-웅크리고-기운이-빨려-들며-쏘는-방에-번쩍이며-튄다.md) · 그림 모양 [ADR-1259](../../../docs/client/adr/1259-모으기의-기운-그림은-사방에서-가운데로-날아드는-혜성-줄기다.md)). 원본 · 프롬프트는 [`fx_source/charge_gather_20261118/`](fx_source/charge_gather_20261118/README.md) · 다시 내보내기는 그 폴더의 `export.py`.
+**모으기 기운 · 2026-11-18** — `charge_gather_foil.webp` 한 장(그림체 설정과 상관없이 금속박 · `skill_art.js:CHARGE_ART.style` · [ADR-1270](../../../docs/client/adr/1270-모으기의-기운-그림은-그림체와-상관없이-금속박-한-장이고-한-번-빨려-드는-데-1.4초다.md))은 스킬 하나가 아니라 **모으기 시전 방식(`channel_charge`)이 같이 쓰는** 그림이다 — 사방에서 가운데로 곧게 빨려 드는 가는 흰 · 검은 속도선(바깥 끝이 옅고 안쪽 끝이 진하다 · 색은 흰색과 검정뿐)이 모으는 동안 초상 둘레에서 안으로 빨려 든다(`skill_art.js:CHARGE_ART` · [ADR-1252](../../../docs/client/adr/1252-모으기는-모으는-동안-카드가-웅크리고-기운이-빨려-들며-쏘는-방에-번쩍이며-튄다.md) · 그림 모양 [ADR-1269](../../../docs/client/adr/1269-모으기의-기운-그림은-사방에서-가운데로-곧게-빨려-드는-흰-검은-속도선이다.md)). 원본 · 프롬프트는 [`fx_source/charge_gather_suction_20261118/`](fx_source/charge_gather_suction_20261118/README.md) · 다시 내보내기는 그 폴더의 `export.py`.
 
 새로 그렸던 수채화·스테인드글라스·네온 플라즈마·로우폴리·자수는 설치본·원본·비교 이미지·프롬프트까지 삭제했다([ADR-0754](../../../docs/client/adr/0754-새-이펙트-시안은-삭제하고-누락-스킬은-다크카툰으로-채운다.md)). 삭제 목록과 기존 금속박·다크 카툰 보존 파일의 SHA-256은 새 원본 폴더에 있다. 오래된 발주 문서·스크립트는 과거 기록이며 삭제된 그림의 재빌드 경로로 사용하지 않는다. 스테이지 띠·배경·초상·아이콘은 이 정리 범위와 무관하다.
 
@@ -433,7 +433,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 - **설치본은 손으로 만들지 않는다** — `python scripts/build_icons.py` 가 짓는다. 한 장마다 무손실 · 손실(q90)을 둘 다 인코딩해 **작은 쪽**을 쓴다(단색 실루엣은 무손실이 이긴다 — 오차 0 · 컬러 그림은 q90 이 1/4 크기에 오차가 눈에 안 띈다). 원본이 없어진 설치본은 지운다
 - **새 아이콘 · 교체** — 원본 PNG 를 `icons_source/<폴더>/<id>.png` 에 넣고 스크립트를 돌린다. `icons/` 에 PNG 를 떨어뜨려도 스크립트가 `icons_source/` 로 옮기고(같은 이름의 옛 원본을 대체) 짓는다
-- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · advances · items/empty · items/item_base · items/potion · items/box · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · explore · currency · gamble · forge · lab · arena · mail · nav · battle_buffs · party). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
+- **어느 폴더가 설치되나** — `build_icons.py:GAME_DIRS` 가 목록이다(skills · sins · classes · advances · items/empty · items/item_base · items/potion · items/box · items/weapon_base/* · mastery/sin · mastery/class · mastery/advance · materials/ores · materials/timbers · materials/herbs · explore · currency · gamble · forge · lab · arena · mail · nav · battle_buffs · party · difficulty). 새 아이콘 폴더는 그 목록 + `mock.js` 경로 조립 두 곳에 더한다
 - **경로 조립** — `mock.js:ICON_EXT`(= `.webp`) 하나를 모든 아이콘 경로가 쓴다
 - **256 인 이유** — 칸은 22~44px 지만 한 장(1600×800)이 모니터에 맞춰 늘고(`fitStage`) 고해상도 배율이 겹치면 40px 칸이 기기 픽셀 100 안팎이 된다. 128 은 거기서 빠듯하다. 512 PNG 대비 7장 1.1MB → 70KB 안팎
 - 아래 폴더별 절의 트리 · 규격(512 · 투명 · 0.88)은 **원본(`icons_source/`) 기준**이다 — 설치본은 그걸 256 WebP 로 줄인 것뿐이다
@@ -504,6 +504,10 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 ## icons/advances/ — 전직 아이콘 [신설 2026-11-14 · 다시 그림 2026-11-16]
 
 `<advance_id>.png` 15장(`advance.csv:icon` = 파일명 · `build_icons.py:GAME_DIRS` 의 `advances`) — 몬스터 전용 스킬 · 죄종 아이콘과 같은 **다크 판타지 단색 문장(紋章)** 실루엣(512 투명 · 회색 `#d8d8e6` · 긴 변 0.88 · 중앙 50/50 · 주인공 하나 + 받침 하나). 스킬 창 · 도감 전직 판 머리가 전직 색 마스크로 칠한다(`app.js:advHead` · SCREEN_DESIGN §7 · ADR-1107) · `icon` 칸이 비면 직업 아이콘. 그림 — 광전사 흉터 난 곰 머리와 핏방울 · 바바리안 뿔 투구 뒤 양날 도끼 · 선봉장 해골을 새긴 제비꼬리 군기 · 가디언 성가퀴 테 탑 방패에 꽂힌 부러진 화살 셋 · 팔라딘 후광 고리를 지나 내리꽂힌 검과 날개 · 크루세이더 십자 바이저 투구 뒤 엇갈린 검 둘 · 파이어 메이지 불꼬리 운석 · 프로스트 메이지 얼음 결정에 갇힌 해골 · 썬더 메이지 먹구름에서 내리꽂는 벼락 · 스나이퍼 옆얼굴 독수리와 화살 · 보우마스터 화살 셋을 먹인 활 · 레인저 뿔 난 사슴 해골 · 비숍 십자 주교관과 목자 지팡이 · 검은사제 사슬 · 자물쇠로 묶은 해골 표지 책 · 몽크 염주 감은 주먹. 원본 `advances/source/` — 지금 판은 Codex 검정 2×2 시트 여덟(`sheet_03` ~ `sheet_10_codex_<W|K|R|P><1|2>.png` — 같은 지시를 두 번 · W = 전사 셋 + 가디언 · K = 팔라딘 · 크루세이더 · 파이어 · 프로스트 · R = 썬더 · 스나이퍼 · 보우마스터 · 레인저 · P = 사제 셋) · 지시문 `sheet_20261116_prompt_<W|K|R|P>.txt` · 기준 시트 `anchor_dark_mono.png` — 시트 → `cut.py --grid 2x2` → 검정 농도를 알파로 · 회색 칠. 고른 판 — 2 번 시트: 파이어 · 프로스트 · 썬더 · 레인저 · 비숍 · 검은사제 · 나머지 아홉은 1 번 시트 · 11-14 첫 판(`sheet_01` · `sheet_02` · 앵커 `classes/source/sheet_01_classes.png`)은 시트에만 남는다
+
+## icons/difficulty/ — 난이도 단 아이콘 [신설 2026-11-18]
+
+`<difficulty_id>.png` 3장(`normal` · `nightmare` · `hell` — `difficulty_tier.csv:difficulty_id` = 파일명 · `mock.js:DIFFICULTY_ICON_FILES`) — 죄종 아이콘과 같은 **다크 판타지 단색 실루엣**(512 투명 · 회색 `#d8d8e6` · 긴 변 0.88 · 중앙 50/50). 노말 = 맨 해골 · 나이트메어 = 짧은 뿔 · 피눈물 흘리는 송곳니 해골 · 헬 = 큰 뿔 해골이 불길 속에 앉은 그림. 화면은 원정 난이도 탭 이름 앞에서 알파를 마스크로 써 탭 글자색으로 칠한다(`mock.js:difficultyIcon` · SCREEN_DESIGN §4-1 · ADR-1264). 원본 `difficulty/source/` — Codex 검정 2×2 시트 `sheet_A1.png`(1 노말 · 2 나이트메어 · 3 헬 불꽃 왕관 · 4 헬 불꽃 그릇) · 지시문 `prompt_A.txt` · 작은 크기 비교 `montage_A1.png`(24px 에서 3 번은 불꽃이 뭉친다) — 시트 2×2 자르기 → 검정 농도를 알파로 · 회색 칠. 고른 판 — 헬 = 4 번 · 3 번은 `unused/hell_crown.png`
 
 ## icons/materials/ — 재료 아이콘 [신설 2026-09-27]
 

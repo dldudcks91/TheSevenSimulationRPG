@@ -80,6 +80,35 @@ export function createFormula(balance) {
     const pctOption = (v, fine = false) => Math.max(1 / (fine ? PCT_FINE_STEP : PCT_STEP), roundPct(v, fine));
 
     /**
+     * 베이스 옵션 값의 자리 [2026-11-18 · R551 · item_design §2-1 — ~~`item.lean` 아이템 레벨 치우침~~(10-20 R291) 대체] —
+     * 균등 굴림 `u` 하나 → 범위 안 자리 `t`(0 ~ 1). **잘린 정규분포** — 가운데 0.5 · 표준편차 = 범위 폭 × `[balance.csv:item_base_roll_sd]` ·
+     * 범위 밖은 잘라 안에 다시 나눈다(양끝에 안 뭉친다) · **아이템 레벨과 무관**하다.
+     * 역누적분포라 `u` 가 클수록 `t` 가 크고 0 → 0 · 1 → 1 이다(범위 양끝 계산이 `u` = 0 · 1 을 그대로 쓴다) · rng 를 더 안 쓴다(소비 = 부르는 쪽의 `u` 하나).
+     * 누적분포 Φ = erf 근사(Abramowitz–Stegun 7.1.26) · 역은 이분법 `BELL_STEPS` 번 — 둘 다 결정론 상수(INTERFACE §5-3)
+     */
+    const ERF_P = 0.3275911;                                                                  // 결정론 상수 — INTERFACE §5-3
+    const ERF_A = [0.254829592, -0.284496736, 1.421413741, -1.453152027, 1.061405429];        // 결정론 상수 — INTERFACE §5-3
+    const BELL_STEPS = 40;                                                                    // 결정론 상수 — INTERFACE §5-3
+    const erf = x => {
+        const z = Math.abs(x), k = 1 / (1 + ERF_P * z);
+        const poly = ((((ERF_A[4] * k + ERF_A[3]) * k + ERF_A[2]) * k + ERF_A[1]) * k + ERF_A[0]) * k;
+        return Math.sign(x) * (1 - poly * Math.exp(-z * z));
+    };
+    const phi = z => 0.5 * (1 + erf(z / Math.SQRT2));
+    const bellRoll = u => {
+        if (!(u > 0)) return 0;
+        if (!(u < 1)) return 1;
+        const sd = B.item_base_roll_sd;
+        const lo = phi(-0.5 / sd), want = lo + u * (phi(0.5 / sd) - lo);
+        let a = 0, b = 1;
+        for (let i = 0; i < BELL_STEPS; i++) {
+            const m = (a + b) / 2;
+            if (phi((m - 0.5) / sd) < want) a = m; else b = m;
+        }
+        return (a + b) / 2;
+    };
+
+    /**
      * 성장 축의 유일한 곡선 (§9-0) — `power_growth_per_level ^ (n − 1)`.
      * 타는 것: HP flat 접사(ilvl) · HP 재생 밑수(레벨)**뿐이다**.
      *   ~~영웅 최대 HP~~ 09-14 구간 직선으로 떠났다(R84) · ~~무기 피해 범위~~ 09-15(R105) · ~~방어구 고유값~~ 09-16(R107).
@@ -326,7 +355,7 @@ export function createFormula(balance) {
     const effectiveCd = (cd, period) => Math.ceil(cd / period) * period;
 
     return {
-        roundPct, pctOption, growthMult, upgradeMult, upgradeSteps, weaponDamage, weaponLine, weaponMid, armorDefense, mitigation, physicalDefense, resCap, appliedResist, reductionMult,
+        roundPct, pctOption, bellRoll, growthMult, upgradeMult, upgradeSteps, weaponDamage, weaponLine, weaponMid, armorDefense, mitigation, physicalDefense, resCap, appliedResist, reductionMult,
         hitChance, hitLevelMult, statCoef, strike, indirect, leech, effectiveCd, statBetter,
     };
 }

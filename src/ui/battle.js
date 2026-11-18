@@ -1295,6 +1295,8 @@ function effectSummaryText(stat, value = 0, element = null, cut = 0) {
             case 'reflect_win': return 'bt.effect.reflect';
             case 'trap': return 'bt.effect.trap';
             case 'tick_hit': return 'bt.effect.tickHit';
+            // 적진에 깐 창 — 걸린 쪽(상대 편 전원)의 칩 (인페르노 · 블리자드 · 2026-11-18 R550 · ADR-1281)
+            case 'field': return 'bt.effect.field';
             case 'strike_passive': return 'bt.effect.strike';
             case 'period_fix': return 'bt.effect.periodFix';
             case 'def_ignore': return 'bt.effect.defIgnore';

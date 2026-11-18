@@ -31,7 +31,7 @@
 import { createFormula } from './formula.js';
 import { procSkillLevel } from './item.js';
 import { skillTagBonus } from './skill_tags.js';
-import { AILMENTS, CASTS, EFFECT_TYPES, EFFECTS, EVENT_TRIGGERS, PICK_TARGETS, barrierExpire, barrierPut, barrierSum, refreshDerived, strongestOf, sumOf, stateOf } from './skill_effects.js';
+import { AILMENTS, CASTS, EFFECT_TYPES, EFFECTS, EVENT_TRIGGERS, FIELD_SKILLS, PICK_TARGETS, barrierExpire, barrierPut, barrierSum, refreshDerived, strongestOf, sumOf, stateOf } from './skill_effects.js';
 
 /**
  * 사건 훅 — 유닛이 든 `reactions: [{on, fn}]` 를 **배열 순서대로** 부른다. 등록이 없으면 아무 일도 없다.
@@ -331,6 +331,8 @@ export function createSkillRuntime(ctx) {
      *   `old` = 그 열쇠에 있던 창(이어받기면 없다) · `held` = 이 창에 딸린 대기열(약한 쪽들) · rng 0
      */
     function openWindow(u, tgt, x, key, until, t, ail, old, held) {
+        // 적진에 까는 창(`FIELD_SKILLS` · 2026-11-18 R550) — 시전자 자신에게 건 창만 · 이 창은 `buff` 를 안 내고 battle `fieldSync` 가 상대 편 칩을 맞춘다
+        const field = !ail && tgt === u && FIELD_SKILLS.has(x.id);
         // 다른 스킬이 갱신하면 옛 칩을 닫는다 — 상태이상은 재생기가 `k` 로 칩을 들어 필요 없다 (R178)
         if (!ail && old && !old.quiet && (old.s ?? key) !== x.id) timeline.push({ t: r1(t), e: 'buffEnd', u: tgt.key, s: old.s ?? key });
         const wasMax = tgt.hpMax;
@@ -340,7 +342,9 @@ export function createSkillRuntime(ctx) {
             // 원소 부여 창(이그나이트 · 딥 프리즈 · 서지 · 2026-10-16 R250)은 창 동안 거는 상태이상을 든다 — `battle.strikeOnce` 가 읽는다
             ...(x.hit ? { hit: x.hit } : {}),
             // 오오라 피해 창(인페르노 · 2026-11-13 R462)은 걸 때의 반지 태그 데미지를 든다 — `battle.pulseTick` 이 데미지 % 괄호에 더한다
-            ...(x.tagDamage ? { tagDmg: x.tagDamage } : {}) };
+            ...(x.tagDamage ? { tagDmg: x.tagDamage } : {}),
+            // 적진에 까는 창(인페르노 · 블리자드 · 2026-11-18 R550) — 시전자가 들고 셈하되 조용하다(칩 · 이벤트 없음 · 버프로 안 센다) · 칩은 battle `fieldSync` 가 상대 편에 단다
+            ...(field ? { field: true, quiet: true } : {}) };
         // 센 쪽 하나 (R246) — 이 창이 대기열로 밀려나도 다시 열 수 있게 시전자 · 시전 단위를 창 밖에 둔다 · 딸린 약한 쪽들도 · 창 객체 모양은 그대로
         SRC.set(tgt.buffs[key], { u, x });
         if (held?.length) HELD.set(tgt.buffs[key], held);
@@ -356,7 +360,9 @@ export function createSkillRuntime(ctx) {
         //   [2026-09-21 · 부채 #50 · INTERFACE §2-6 · §6]. 재생기는 계산하지 않으므로 안 실으면 옛 최대치를 든 채 현재 HP 만 갱신해 `118 / 103` 이 된다
         refreshDerived(tgt);
         if (tgt.hpMax !== wasMax) Object.assign(ev, { hpMax: tgt.hpMax, dhp: tgt.hp });
-        timeline.push(ev);
+        // 적진에 까는 창(R550) — 시전자 칩 대신 상대 편 칩을 이 자리(그 `buff` 를 냈을 자리)에서 맞춘다 · rng 0
+        if (field) ctx.fieldOpened?.();
+        else timeline.push(ev);
     }
 
     /**

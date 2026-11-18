@@ -22,8 +22,8 @@
  *   난이도가 연다(부르는 쪽이 넘기는 `rarityWeights` 의 0 — 몬스터는 등급 × 단 한 행 `gear_rarity.csv` · R350).
  *   **랜덤 줄 수는 희귀도가 정한다 — 굴리지 않는다** [2026-10-24 · R342 — ~~칸마다 붙을지 굴린다 · `item_random_slots` · `item_random_min` · `slotChance`~~(10-20 R291 · 10-21 R297)] —
  *   [balance.csv:item_random_lines_<rarity>] · 전 부위 같다(`randomLines`).
- *   **베이스 · 특성 줄의 값 굴림은 아이템 레벨 따라 치우친다 — 범위는 그대로** [2026-10-20 · R291 · item_design §2-1 — ~~매직 고점 `magic_option_max_mult`~~ 퇴역] —
- *   1레벨 = 낮은 쪽 · 만렙 = 높은 쪽(`lean` · [balance.csv:item_roll_skew]). **반지 · 목걸이는 일반이 없다**(`rollGear` 가 매직으로 올린다).
+ *   **베이스 · 특성 줄의 값은 잘린 정규분포다 — 아이템 레벨과 무관 · 범위는 그대로** [2026-11-18 · R551 · item_design §2-1 — ~~아이템 레벨 치우침 `lean`~~(10-20 R291) 대체] —
+ *   가운데 = 범위 가운데(`formula.bellRoll` · [balance.csv:item_base_roll_sd]). **반지 · 목걸이는 일반이 없다**(`rollGear` 가 매직으로 올린다).
  *   **죄종 줄 · 랜덤 줄의 값은 단어 범위다** [2026-11-11 · 사용자 확정 U2 · R436 · item_design §1 「값은 단어 범위가 정한다」 · INTERFACE §2-5] —
  *   메인 줄 = 이름 단어(열린 단어 중 위 셋에서 6 : 3 : 1 · 죄종 굴림의 소수부 · rng 소비 무변경)의 범위 · 랜덤 줄 = 맨 아래 단 ~ 메인 후보 맨 아래 단 ·
  *   범위 = 옵션 표 위끝 × 단 비율(`tierBand` · [balance.csv:sin_word_band_*]) · 그 안에서 균등(치우침 없음).
@@ -65,7 +65,8 @@
  *   **목걸이 · 반지는 강화하지 않는다** — 베이스가 없다(`baseless`). 옛 세이브에 남은 `up` 은 그대로 두고, 파생할 것이 없어 무해하다.
  *   **단계마다 결과 확률이 있다** [2026-10-14 사용자 · R253 · **2026-11-17 구간 셋 · R530**] — 성공은 `upgradeChance`, 강등 · 파괴는 `upgradeRisk` 가
  *   `upgrade_chance.csv` 에서 답한다. 굴림은 여기가 아니라 `state.upgradeItem` 이 한다(제 스트림) — 실패하면 비용만 나가고 `up` 은 그대로다 ·
- *   강등은 `downgrade`(한 단계 · 대성공 몫은 일반 몫부터) · 파괴(그 자리 분해)는 `state` 가 한다.
+ *   강등은 `downgrade`(한 단계 · 대성공 몫은 일반 몫부터) · 파괴(그 자리 분해)는 `state` 가 한다 ·
+ *   **파괴 확률은 등급 · 아이템 레벨이 키운다**(표 ÷ 등급 배수 × 레벨 몫 · 강등은 표 그대로 — 2026-11-18 · R548).
  *
  * ⚠ 접사 종류·수치 범위·희귀도 가중치는 전부 프로토타입 임시값 — balance.csv ⚠제안 키와
  *   주입된 무기 · 방어구 · 장신구 옵션 표에서 온다.
@@ -125,12 +126,12 @@ export function createItemSystem(data) {
         throw new Error(`item: balance.csv item_proc_skill_level '${B.item_proc_skill_level}' — 양의 안전한 정수여야 한다`);
     if (!(Number.isFinite(B.start_weapon_atk_pct) && B.start_weapon_atk_pct >= 0))
         throw new Error(`item: balance.csv start_weapon_atk_pct '${B.start_weapon_atk_pct}' — 0 이상 유한한 비율이어야 한다`);
-    // 랜덤 줄 수 · 굴림 치우침 키 (R342 · R291) — 줄 수는 희귀도마다 0 이상 정수 · 치우침 1 이상(1 = 균등) · 만렙 > 1(레벨 자리의 분모)
+    // 랜덤 줄 수 · 베이스 옵션 분포 키 (R342 · R551) — 줄 수는 희귀도마다 0 이상 정수 · 표준편차 비율 > 0 · 만렙 > 1
     for (const r of RARITIES) {
         const n = B[`item_random_lines_${r}`];
         if (!(Number.isInteger(n) && n >= 0)) throw new Error(`item: balance.csv item_random_lines_${r} '${n}' — 0 이상 정수`);
     }
-    if (!(B.item_roll_skew >= 1)) throw new Error(`item: balance.csv item_roll_skew '${B.item_roll_skew}' — 1 이상이어야 한다`);
+    if (!(B.item_base_roll_sd > 0)) throw new Error(`item: balance.csv item_base_roll_sd '${B.item_base_roll_sd}' — 0 보다 커야 한다`);
     if (!(B.hero_level_cap > 1)) throw new Error(`item: balance.csv hero_level_cap '${B.hero_level_cap}'`);
     const WG = data.weaponGroups;
     const AG = data.armorGroups ?? {};   // armor_group.csv — {slot: {groupId: def}} · 갑옷군 3 (2026-09-16 · R107) + 투구 · 장갑 · 신발 갈래 (2026-09-18)
@@ -177,7 +178,7 @@ export function createItemSystem(data) {
         const l = N.wordLadder(sin);
         return tierBand((l.find(w => w.i === word) ?? l.find(w => w.i === 0) ?? l[0]).tier);
     };
-    /** 범위 비율 안의 굴림 — `max × (lo + u × (hi − lo))` · 치우침(`lean`) 없이 균등 · `valueOf` 가 값으로 바꾼다 */
+    /** 범위 비율 안의 굴림 — `max × (lo + u × (hi − lo))` · 균등(베이스 옵션의 정규분포 `bell` 은 안 건다 · R551) · `valueOf` 가 값으로 바꾼다 */
     const bandRoll = (d, band, u) => d.max * (band.lo + u * (band.hi - band.lo));
 
     /**
@@ -483,26 +484,19 @@ export function createItemSystem(data) {
         return n;
     };
 
-    /** 아이템 레벨의 자리 — 1 → 0 · 만렙(`hero_level_cap`) → 1 · 그 위는 1 (굴림 치우침이 쓴다 · R291) */
-    const levelT = ilvl => Math.min(1, Math.max(0, (ilvl - 1) / (B.hero_level_cap - 1)));
-
     /**
-     * 균등 굴림 `u` → 아이템 레벨이 치우친 굴림 [2026-10-20 · 사용자 「좌로치우친분포에서 우로치우친분포」 · R291 · item_design §2-1 · INTERFACE §2-5].
-     * `s = 2t − 1` · `a = 1 + |s| × (item_roll_skew − 1)` — 1레벨 = 낮은 쪽 삼각(`1 − (1−u)^(1/a)`) · 가운데 = 균등 · 만렙 = 높은 쪽 삼각(`u^(1/a)`).
-     * 양끝은 그대로(0 → 0 · 1 → 1) · 같은 `u` 면 레벨이 높을수록 크다 · 소비는 부르는 쪽의 `u` 하나 그대로다.
-     * 거는 곳 = 베이스 옵션 · 갈래 특성 · 목걸이 · 반지 베이스 — **죄종 줄 · 랜덤 줄은 안 건다**(단어 범위 `bandRoll` · 2026-11-11 R436)
+     * 균등 굴림 `u` → 베이스 옵션 값의 자리 [2026-11-18 · 사용자 「베이스옵션 정규분포」 · 「잘라서 써」 · R551 · item_design §2-1 · INTERFACE §2-5 —
+     *   ~~아이템 레벨 치우침 `lean`(1레벨 낮은 쪽 · 만렙 높은 쪽 · `item_roll_skew`)~~(10-20 R291) 대체] — 잘린 정규분포(`formula.bellRoll`) · **아이템 레벨과 무관**.
+     * 양끝은 그대로(0 → 0 · 1 → 1) · 소비는 부르는 쪽의 `u` 하나 그대로다.
+     * 거는 곳 = 베이스 옵션 · 갈래 특성 · 목걸이 · 반지 베이스 — **죄종 줄 · 랜덤 줄은 균등**(단어 범위 `bandRoll` · 2026-11-11 R436)
      */
-    const lean = (u, ilvl) => {
-        const s = 2 * levelT(ilvl) - 1;
-        const a = 1 + Math.abs(s) * (B.item_roll_skew - 1);
-        return s >= 0 ? u ** (1 / a) : 1 - (1 - u) ** (1 / a);
-    };
+    const bell = u => F.bellRoll(u);
 
     /**
-     * 베이스 · 특성 줄의 굴림값 `min + lean(u, ilvl) × (max − min)` — 희귀도는 범위를 안 바꾼다 [2026-10-20 · R291 — ~~매직은 위끝 × `magic_option_max_mult`~~(10-18 R285) 퇴역].
+     * 베이스 · 특성 줄의 굴림값 `min + bell(u) × (max − min)` — 희귀도 · 아이템 레벨은 범위를 안 바꾼다 [2026-10-20 · R291 — ~~매직은 위끝 × `magic_option_max_mult`~~(10-18 R285) 퇴역 · 분포 R551].
      * `optionRange` 가 `u` = 0 · 1 로 양끝을 낸다 · 죄종 줄 · 랜덤 줄은 `bandRoll`(R436)
      */
-    const rollOf = (d, u, ilvl) => d.min + lean(u, ilvl) * (d.max - d.min);
+    const rollOf = (d, u) => d.min + bell(u) * (d.max - d.min);
 
     /**
      * 값 하나 — 정의의 `scale` 이 정한다 (item_design §2-1):
@@ -538,13 +532,13 @@ export function createItemSystem(data) {
 
     /**
      * 목걸이 베이스 옵션 — 특정 기본 스킬 +n(R309). 후보 1회 → 값 1회.
-     * 값은 아이템 레벨에 따라 높은 쪽으로 치우친 정수이며 0이면 접사를 만들지 않는다.
+     * 값은 잘린 정규분포(가운데 = 범위 가운데 · 아이템 레벨 무관 · R551)로 고른 정수이며 0이면 접사를 만들지 않는다.
      * `skillPlusOf`가 합산하고 고유·배운 스킬 레벨에 적용한다. 기존 장비를 재굴림하지 않는다.
      */
     function amuletBase(rng, ilvl) {
         const sr = rng(), vr = rng();
         const lo = B.amulet_skill_plus_min, hi = B.amulet_skill_plus_max;
-        const v = Math.min(hi, lo + Math.floor(lean(vr, ilvl) * (hi - lo + 1)));
+        const v = Math.min(hi, lo + Math.floor(bell(vr) * (hi - lo + 1)));
         return v > 0 && amuletSkills.length ? [{ stat: SKILL_PLUS, v, skill: amuletSkills[Math.floor(sr * amuletSkills.length)], src: 'fixed' }] : [];
     }
     function ringBase(rng, ilvl) {
@@ -552,7 +546,7 @@ export function createItemSystem(data) {
         if (!ringTags.length) return [];
         const tag = ringTags[Math.floor(tr * ringTags.length)];
         const rows = ringBaseOpts.filter(r => r.tag === tag), row = rows[Math.floor(er * rows.length)];
-        return [{ stat: 'skill_tag', tag, effect: row.effect, v: F.pctOption(row.min + lean(vr, ilvl) * (row.max - row.min)), src: 'fixed' }];
+        return [{ stat: 'skill_tag', tag, effect: row.effect, v: F.pctOption(row.min + bell(vr) * (row.max - row.min)), src: 'fixed' }];
     }
 
     // ~~accessoryOptions(목걸이 죄종 칸 → 공통옵션 · 09-21 R127)~~ — 2026-11-11 R453 퇴역: 목걸이가 반지와 같은 계열표다(`familyOptions`). 옛 목걸이 줄은 저장된 그대로 읽는다
@@ -619,8 +613,8 @@ export function createItemSystem(data) {
      */
     function weaponOptions(rng, g, sins, words, rarity, ilvl) {
         const lo = B.weapon_fixed_atk_pct_min, hi = B.weapon_fixed_atk_pct_max;
-        // 베이스 옵션 — 무기면 무조건 「공격력 +%」 하나. 붙는 것은 규칙이고 값만 굴린다 (item_design §1 베이스 옵션) · 값도 아이템 레벨이 치우친다(R291)
-        const out = [{ stat: 'atk_pct', v: F.pctOption(lo + lean(rng(), ilvl) * (hi - lo)), src: 'fixed' }];
+        // 베이스 옵션 — 무기면 무조건 「공격력 +%」 하나. 붙는 것은 규칙이고 값만 굴린다 (item_design §1 베이스 옵션) · 값은 잘린 정규분포 · 아이템 레벨 무관(R551 — ~~레벨 치우침~~ R291)
+        const out = [{ stat: 'atk_pct', v: F.pctOption(lo + bell(rng()) * (hi - lo)), src: 'fixed' }];
         // 특정 스킬 +n 풀은 안 준다 — 2026-10-21 장비에서 뺐다(R303 · 표에 서면 로드가 던진다)
         return out.concat(familyOptions(rng, sinOpts.filter(r => appliesTo(r, g)), sins, words, randomLines(rarity), ilvl, g.classes ?? [], [], true));
     }
@@ -636,7 +630,7 @@ export function createItemSystem(data) {
      */
     function armorOptions(rng, slot, group, sins, words, rarity, ilvl) {
         const lo = B.armor_fixed_def_pct_min, hi = B.armor_fixed_def_pct_max;
-        const out = [{ stat: 'armor_def_pct', v: F.pctOption(lo + lean(rng(), ilvl) * (hi - lo)), src: 'fixed' }];
+        const out = [{ stat: 'armor_def_pct', v: F.pctOption(lo + bell(rng()) * (hi - lo)), src: 'fixed' }];
         const tr = groupDef(slot, group)?.trait ?? null;
         const kr = rng(), vr = rng();
         const ts = tr ? tr.stats[Math.floor(kr * tr.stats.length)] : null;
@@ -948,6 +942,29 @@ export function createItemSystem(data) {
     }
 
     /**
+     * 죄종 하나의 옵션 전부와 단어별 값 범위 [신설 2026-11-18 · R547 · SCREEN_DESIGN §9-1 도감 아이템 「옵션」 탭 · ADR-1275 · INTERFACE §2-5] —
+     * `words` = 그 죄종의 단어 사다리(단 아래 → 위) · `slots` = 부위(`data.slots` 순서)마다 그 부위 표의 그 죄종 행(옵션 번호 순 · 변형은 표 행 순) ·
+     * `ranges[k]` = `words[k]` 단의 메인 줄 범위를 **그 단이 처음 열리는 아이템 레벨**에서 잰 양끝(`optionRange` 의 메인 줄과 같은 `valueOf(bandRoll)`).
+     * `appliesTo` = 무기 행만(물리 · 마법 · 직업) · 모르는 죄종이면 null · 순수 · rng 0
+     */
+    function sinOptionTable(sin) {
+        if (!data.sins.includes(sin)) return null;
+        const words = N.wordLadder(sin);
+        const rowsOf = slot => (slot === 'weapon' ? sinOpts : familyRows(slot)).filter(r => r.sin === sin);
+        const slots = (data.slots ?? []).map(slot => ({
+            slot,
+            rows: rowsOf(slot).map((d, k) => ({ d, k })).sort((a, b) => a.d.option - b.d.option || a.k - b.k).map(({ d }) => ({
+                option: d.option, stat: d.stat, appliesTo: slot === 'weapon' ? d.appliesTo : null,
+                ranges: words.map(w => {
+                    const band = tierBand(w.tier);
+                    return { min: valueOf(d, bandRoll(d, band, 0), w.minIlvl), max: valueOf(d, bandRoll(d, band, 1), w.minIlvl) };
+                }),
+            })),
+        })).filter(s => s.rows.length);
+        return { sin, words, slots };
+    }
+
+    /**
      * 방어구 고유값에 **베이스 옵션 「방어력 +%」**(`armor_def_pct`)를 먹인 값 `{stat, v}` [2026-09-23 사용자 지시] — 툴팁 메인 옵션 · 대장간이 부른다.
      * 강화 배율까지 든다(`effective`). 곱한 뒤 정수 — `hero.computeCombat` 이 아이템마다 하는 곱과 **같은 판정 · 같은 반올림**이다
      * (그 아이템의 `armor_def_pct` 를 출처와 무관하게 더한다 — 이 stat 은 베이스 줄에만 선다). 고유값이 없으면(무기 · 목걸이 · 반지) null
@@ -977,7 +994,7 @@ export function createItemSystem(data) {
     /**
      * 옵션 줄 하나가 **굴릴 수 있었던 범위** `{min, max}` [신설 2026-10-14 · SCREEN_DESIGN §6 「비교 툴팁 규격」 Shift 범위 · ADR-0617 · INTERFACE §2-5].
      * 그 줄의 표 행을 **굴림이 고른 것과 같은 표**에서 찾는다 — `stat` · `src`(죄종 id · `fixed` · `random`) · 부위 · 무기군(`appliesTo`) · 방어구 갈래.
-     * 양끝은 굴림과 **같은 규칙**(`valueOf` — 그 아이템 레벨 · 베이스 옵션은 `pctOption` · `rollOf` 의 `u` = 0 · 1 — 치우침 `lean` 은 양끝을 안 바꾼다 · R291)이라 표기 = 굴릴 수 있었던 값이다. 순수 · rng 0.
+     * 양끝은 굴림과 **같은 규칙**(`valueOf` — 그 아이템 레벨 · 베이스 옵션은 `pctOption` · `rollOf` 의 `u` = 0 · 1 — 분포 `bell` 은 양끝을 안 바꾼다 · R551)이라 표기 = 굴릴 수 있었던 값이다. 순수 · rng 0.
      * 행을 못 찾으면(표에서 빠진 옛 옵션 · `src` 가 없는 줄 · 옛 무기의 `random` 줄) `null`. 목걸이 `proc` 은 `affixes` 밖이라 안 든다.
      * **죄종 줄 · 랜덤 줄은 단어 범위다** [2026-11-11 · R436 · ADR-1041] — 줄 종류는 `optionSources` 가 가른다: 메인 줄 = 그 죄종 칸 단어(`words[k]` · 없으면 번호 0)의 범위 ·
      *   랜덤 줄 = 그 아이템 레벨의 랜덤 줄 범위(`bandRoll` 의 `u` = 0 · 1). 이 규칙 전에 굴린 옛 장비는 값이 범위 밖일 수 있다(`optionTableRange`)
@@ -1052,27 +1069,33 @@ export function createItemSystem(data) {
         return qs.length ? qs.reduce((s, x) => s + x.q, 0) / qs.length : null;
     }
 
-    /** 잴 수 있는 옵션 줄마다 `{a, q}`(q = 범위 안의 자리 0 ~ 1 · 줄 순서) — `optionScore`(평균) · `autoEquipScore`(합)가 같은 범위 · 같은 규칙을 쓴다 */
-    function lineScores(item) {
+    /** 잴 수 있는 옵션 줄마다 `{a, q}`(q = 범위 안의 자리 · 줄 순서) — `optionScore`(평균) · `autoEquipScore`(합)가 같은 범위 · 같은 규칙을 쓴다.
+     *  `level` = 범위를 잴 레벨(기본 그 아이템 레벨 — 자동 장착은 영웅 레벨 · R542) · `capTop` = 위끝에서 자르나(기본 자른다 — 0 ~ 1 · 자동 장착은 안 자른다) · 아래끝 밑은 언제나 0 */
+    function lineScores(item, level = item?.ilvl, capTop = true) {
         const out = [];
+        const at = level === item?.ilvl ? item : { ...item, ilvl: level };
         (item?.affixes ?? []).forEach((a, i) => {
-            const line = optionLine(item, i);
+            const line = optionLine(at, i);
             if (!line || !Number.isFinite(a.v)) return;
-            const band = line.main ? mainBand(item.ilvl) : line.band;
-            const r = line.range ?? { min: valueOf(line.d, bandRoll(line.d, band, 0), item.ilvl), max: valueOf(line.d, bandRoll(line.d, band, 1), item.ilvl) };
-            if (r.max > r.min) out.push({ a, q: Math.min(1, Math.max(0, (a.v - r.min) / (r.max - r.min))) });
+            const band = line.main ? mainBand(level) : line.band;
+            const r = line.range ?? { min: valueOf(line.d, bandRoll(line.d, band, 0), level), max: valueOf(line.d, bandRoll(line.d, band, 1), level) };
+            if (!(r.max > r.min)) return;
+            const q = Math.max(0, (a.v - r.min) / (r.max - r.min));
+            out.push({ a, q: capTop ? Math.min(1, q) : q });
         });
         return out;
     }
 
-    /* ── 자동 장착 점수 [신설 2026-11-18 · R536 · item_design §6-3 · INTERFACE §2-5 · 측정 output/2026-11-17_auto_equip_score] ── */
+    /* ── 자동 장착 점수 [신설 2026-11-18 · R536 · 개정 R542 — 아이템 레벨 항 삭제 · 영웅 레벨로 잰다 · item_design §6-3 · INTERFACE §2-5 · 측정 output/2026-11-17_auto_equip_score] ── */
 
-    // 베이스 몫의 기준값 — 그 부위 · 그 아이템 레벨에서 나올 수 있는 강화 0 · 베이스 옵션 없는 값의 최대. 데이터만 읽어 레벨마다 한 번 잰다
-    //   무기 = 드롭 무기군마다 그 레벨의 단 행(`weaponTier`)의 초당 무기 데미지 · 방어구 = 그 레벨의 단 행(`tierBases`)의 고유 방어력(`implicitFor`)
+    // 베이스 몫의 기준값 — 그 부위 · 그 레벨에서 나올 수 있는 강화 0 의 최대 × (1 + 베이스 옵션 위끝). 데이터만 읽어 레벨마다 한 번 잰다
+    //   무기 = 드롭 무기군마다 그 레벨의 단 행(`weaponTier`)의 초당 무기 데미지 × (1 + 「무기 데미지 +%」 위끝)
+    //   방어구 = 그 레벨의 단 행(`tierBases`)의 고유 방어력(`implicitFor`) × (1 + 「방어력 +%」 위끝) — 1 = 그 레벨에서 강화 0 으로 나올 수 있는 최고 (R542)
+    //     `cls` 를 주면 **그 직업이 입는 갈래**만(직업 칸이 빈 갈래 · 시작 베이스 포함 · 맞는 갈래가 없으면 전부) — 로브 · 티아라 · 가죽도 1 까지 받는다 (R542)
     const baseRefMemo = new Map();
     const weaponPerSec = (d, line) => (d.min + d.max) / 2 / line.period;
-    function baseRef(slot, ilvl) {
-        const key = `${slot}@${ilvl}`;
+    function baseRef(slot, ilvl, cls = null) {
+        const key = `${slot}@${ilvl}@${cls ?? ''}`;
         if (baseRefMemo.has(key)) return baseRefMemo.get(key);
         let ref = 0;
         if (slot === 'weapon') {
@@ -1080,8 +1103,12 @@ export function createItemSystem(data) {
                 const line = F.weaponLine(g, row);
                 ref = Math.max(ref, weaponPerSec(F.weaponDamage(ilvl, line, 0), line));
             }
+            ref *= 1 + F.pctOption(B.weapon_fixed_atk_pct_max);
         } else if (isArmor(slot)) {
-            for (const b of tierBases(slot, ilvl)) ref = Math.max(ref, implicitFor(slot, ilvl, b.group ?? null)?.v ?? 0);
+            const all = tierBases(slot, ilvl);
+            const worn = cls ? all.filter(b => { const cs = groupDef(slot, b.group ?? null)?.classes ?? []; return !cs.length || cs.includes(cls); }) : all;
+            for (const b of worn.length ? worn : all) ref = Math.max(ref, implicitFor(slot, ilvl, b.group ?? null)?.v ?? 0);
+            ref *= 1 + F.pctOption(B.armor_fixed_def_pct_max);
         }
         baseRefMemo.set(key, ref);
         return ref;
@@ -1112,22 +1139,25 @@ export function createItemSystem(data) {
     }
 
     /**
-     * 자동 장착 점수 = 아이템 레벨 + `auto_equip_base_weight` × 베이스 몫 + `auto_equip_option_weight` × 옵션 점수 합 — `state.autoEquip` 이 일곱 칸을 이 순으로 고른다.
-     * 베이스 몫 — 무기 = 초당 무기 데미지(`weaponDamageFixed` — 베이스 옵션 · 강화 · 색욕 최소 · 최대 포함 ÷ 계보 주기) · 방어구 넷 = 방어력(`implicitFixed`)을 `baseRef` 로 나눈 것 · 장신구 0.
-     * 옵션 점수 합 — `lineScores` 의 자리를 **더한다**(평균이 아니다 — 줄 수 = 등급이 들어간다) · 베이스 줄 둘(무기 데미지 % · 방어력 %)은 베이스 몫에 있어 뺀다.
+     * 자동 장착 점수 = `auto_equip_base_weight` × 베이스 몫 + `auto_equip_option_weight` × 옵션 점수 합 — `state.autoEquip` 이 일곱 칸을 이 순으로 고른다.
+     * **아이템 레벨 항은 없다** [R542 — 사용자 11-18 「아이템 레벨 개념을 없애고」] — 레벨은 베이스 몫(높은 레벨 = 높은 방어력 · 무기 데미지)으로 들어간다.
+     * `level` = 그 영웅 레벨(안 주면 그 아이템 레벨) — 베이스 몫 · 옵션 자리를 둘 다 이 레벨에서 나올 수 있는 값으로 잰다(같은 선 · 낮은 레벨 장비의 줄이 부풀지 않는다).
+     * `cls` = 그 영웅 직업(안 주면 모든 갈래) — 방어구 기준값을 그 직업이 입는 갈래에서만 잰다(캐스터 방어구도 1 까지 · R542).
+     * 베이스 몫 — 무기 = 초당 무기 데미지(`weaponDamageFixed` — 베이스 옵션 · 강화 · 색욕 최소 · 최대 포함 ÷ 계보 주기) · 방어구 넷 = 방어력(`implicitFixed`)을 `baseRef(slot, level, cls)` 로 나눈 것 · 장신구 0.
+     * 옵션 점수 합 — `lineScores(item, level, false)` 의 자리를 **더한다**(평균이 아니다 — 줄 수 = 등급이 들어간다 · 위끝을 안 자른다) · 베이스 줄 둘(무기 데미지 % · 방어력 %)은 베이스 몫에 있어 뺀다.
      * `fit`(`skill.equipFit(hero, kind)`)을 받으면 **그 영웅에게 안 먹는 줄은 0**(`lineLive`) — 안 받으면 안 가린다 · 순수 · rng 0
      */
-    function autoEquipScore(item, fit = null) {
+    function autoEquipScore(item, fit = null, level = item?.ilvl ?? 0, cls = null) {
         let base = 0;
         if (item?.slot === 'weapon') {
-            const d = weaponDamageFixed(item), line = F.weaponLine(WG[item.group] ?? null, WB_BY_ID[item.baseId] ?? null), ref = baseRef('weapon', item.ilvl);
+            const d = weaponDamageFixed(item), line = F.weaponLine(WG[item.group] ?? null, WB_BY_ID[item.baseId] ?? null), ref = baseRef('weapon', level);
             if (d && line?.period > 0 && ref > 0) base = weaponPerSec(d, line) / ref;     // 모르는 무기군(주기 없음)은 베이스 몫 0
         } else if (isArmor(item?.slot)) {
-            const f = implicitFixed(item), ref = baseRef(item.slot, item.ilvl);
+            const f = implicitFixed(item), ref = baseRef(item.slot, level, cls);
             if (f && ref > 0) base = f.v / ref;
         }
-        const opt = lineScores(item).reduce((s, { a, q }) => s + ((a.src === 'fixed' && (a.stat === 'atk_pct' || a.stat === 'armor_def_pct')) || !lineLive(a, fit) ? 0 : q), 0);
-        return (item?.ilvl ?? 0) + B.auto_equip_base_weight * base + B.auto_equip_option_weight * opt;
+        const opt = lineScores(item, level, false).reduce((s, { a, q }) => s + ((a.src === 'fixed' && (a.stat === 'atk_pct' || a.stat === 'armor_def_pct')) || !lineLive(a, fit) ? 0 : q), 0);
+        return B.auto_equip_base_weight * base + B.auto_equip_option_weight * opt;
     }
 
     /**
@@ -1197,18 +1227,26 @@ export function createItemSystem(data) {
         const step = (item.up ?? 0) + 1;
         if (UP_CHANCE[step - 1] == null) throw new Error(`upgrade_chance: 단계 ${step} 줄이 없다`);
         // 등급 배수 — 좋은 장비일수록 낮다 `[balance.csv:equip_upgrade_chance_mult_<rarity>]` · 키가 없는 등급은 1 · 끝 1 [2026-11-15 · R505 · 2026-11-17 등급마다 · R530 · item_design §7-2]
-        //   깎인 몫은 실패로 간다 — 강등 · 파괴는 `upgradeRisk` 가 표 그대로 낸다
+        //   깎인 몫은 실패로 간다 — 강등은 `upgradeRisk` 가 표 그대로 · 파괴는 같은 배수로 나눠 키운다(R548)
+        return Math.min(1, UP_CHANCE[step - 1].chance * rarityUpMult(item));
+    }
+    /** 강화 등급 배수 `[balance.csv:equip_upgrade_chance_mult_<rarity>]` — 키가 없거나 0 이하면 1 · 성공은 곱하고(`upgradeChance`) 파괴는 나눈다(`upgradeRisk` · R548) */
+    function rarityUpMult(item) {
         const m = B[`equip_upgrade_chance_mult_${item.rarity}`];
-        return Math.min(1, UP_CHANCE[step - 1].chance * (Number.isFinite(m) && m > 0 ? m : 1));
+        return Number.isFinite(m) && m > 0 ? m : 1;
     }
 
-    /** 다음 한 단계 도전의 강등 · 파괴 확률 `{down, destroy}`(비율 · 표 그대로) [2026-11-17 · R530 · item_design §7-2] — **등급이 안 바꾼다** · 둘 중 하나는 0 ·
+    /** 다음 한 단계 도전의 강등 · 파괴 확률 `{down, destroy}`(비율) [2026-11-17 · R530 · **2026-11-18 파괴 = 등급 · 아이템 레벨 · R548** · item_design §7-2] —
+     *  **강등 = 표 그대로** · **파괴 = 표 ÷ 등급 배수 × 레벨 몫**(1 + `[balance.csv:equip_upgrade_destroy_ilvl_step]` × 레벨 구간 — 구간은 강화 재료 개수와 같은
+     *  `[balance.csv:equip_upgrade_mat_ilvl_band]` · 끝 1) — 좋은 등급 · 높은 레벨일수록 잘 깨진다 · 둘 중 하나는 0 ·
      *  `upgradeCost` 가 null 이면 null · 표에 그 단계가 없으면 던진다(`upgradeChance` 와 같다). 성공 뒤로 자르기 · 막기는 `state.upgradeState` 가 한다 · rng 0 */
     function upgradeRisk(item, max = B.equip_upgrade_max) {
         if (upgradeCost(item, max) == null) return null;
         const row = UP_CHANCE[item.up ?? 0];
         if (row == null) throw new Error(`upgrade_chance: 단계 ${(item.up ?? 0) + 1} 줄이 없다`);
-        return { down: row.down, destroy: row.destroy };
+        if (!(row.destroy > 0)) return { down: row.down, destroy: row.destroy };
+        const band = Math.floor((item.ilvl - 1) / B.equip_upgrade_mat_ilvl_band);
+        return { down: row.down, destroy: Math.min(1, row.destroy / rarityUpMult(item) * (1 + B.equip_upgrade_destroy_ilvl_step * band)) };
     }
 
     /**
@@ -1260,5 +1298,5 @@ export function createItemSystem(data) {
         return item;
     }
 
-    return { fillZh, rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBasesAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, wordRanks, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgradeRisk, upgrade, downgrade, effective, weaponDamage, weaponDamageFixed, weaponBasePreview, armorBasePreview, implicitFixed, optionSources, optionRange, optionTableRange, optionScore, autoEquipScore, skillPlusOf, procSkillLevel };
+    return { fillZh, rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBasesAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, wordRanks, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgradeRisk, upgrade, downgrade, effective, weaponDamage, weaponDamageFixed, weaponBasePreview, armorBasePreview, sinOptionTable, implicitFixed, optionSources, optionRange, optionTableRange, optionScore, autoEquipScore, skillPlusOf, procSkillLevel };
 }

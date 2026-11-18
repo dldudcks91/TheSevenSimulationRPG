@@ -16,7 +16,7 @@
  *   labResearch: {line, node, lv, at, until, paid} | null — 하고 있는 연구 하나(연구소 전체에 하나) · 버전 무변경 (2026-10-21 · R298)
  *   labReg: {uid: 줄} — 연구소 줄 등록(`LAB_LINES`). 한 영웅은 한 줄 · 효과 = 능력치 일곱 · 없으면 {} · 버전 무변경 (2026-10-21)
  *   mainMission: {met: [id], got: [id], ev: [event]} — 메인미션(`main_mission.csv`) · 채운 줄 · 받은 줄 · 한 번이라도 일어난 사건 · 버전 무변경 (2026-11-17 · R524)
- *   labSince: {uid: ms} — 등록한 시각(숙련) · labClock: {gamble, train} — 도박장 · 훈련 시계 · 버전 무변경 (2026-10-21 · R298)
+ *   labSince: {uid: ms} — 등록한 시각(숙련) · labClock: {gamble, train, lib} — 도박장 · 훈련 · 도서관 시계(lib = 줄 하나 `{at, carry, rolls}` · R546) · 버전 무변경 (2026-10-21 · R298)
  *   potions: {potionId: n}    — 물약 재고(v32 · R124). 마시면 준다(`advanceRun`) · 만들면 는다 · 0 이면 키가 없다. 새 게임 = `start_owned` 개수. 칸 구성은 편성이 든다
  *   heroes: [{uid, name, tier, sin, cls, trait, face, level, xp, mastery, masteryPoints, innate, stats, equipped:{position: itemUid|null}}],
  *     — tier = 일반 | 매직 | 레어 | 유니크 | 성장(고블린 — 2026-10-27) (`hero_tier.csv`). ~~caps(개체별 히든 상한)~~ 는 **v15 에서 사라졌다** —
@@ -47,8 +47,8 @@
  *     — ~~items[*].skill = 무기가 담은 액티브 id~~ — **2026-09-29 삭제**(R179 · 스킬북 skill_design §2-1) · 로드가 지운다
  *   books: {skillId: n}   — **스킬북 재고**(R179 · 버전 무변경) — `learnBook` · `salvageBook` 이 소모한다 · 처치 · 탐험 동굴 · 연구소 도서관 줄 · 상단 · 영웅별 첫 책 보상으로 얻는다
  *     ~~blueprints~~ — **스킬 도안 재고 2026-11-15 · R504 삭제** · 로드가 장수만큼 `books` 에 더하고 키를 지운다 (INTERFACE §4)
- *   bookSeen: {skillId: 1} — 한 번이라도 재고에 들어온 책(R540 · 버전 무변경) — `addBook` 이 적는다 · `craftBook` 목록 · 없으면 로드가 책 재고 + 배운 칸으로 채운다
- *   skillShards: n — 스킬 조각(R540 · 버전 무변경) — `salvageBook` 이 더하고 `craftBook` 이 쓴다
+ *     ~~bookSeen~~ — **본 책 목록 2026-11-18 · R543 삭제**(제작 목록 = 직업 스킬 전부) · 로드가 키를 지운다 (INTERFACE §4)
+ *   skillShards: n — 스킬 조각(R540 · 버전 무변경) — `salvageBook` · 연구소 도서관 줄(`libSettle` · R546)이 더하고 `craftBook` 이 쓴다
  *     heroes[*].bookSkill = 책으로 배운 액티브 id(선택 필드) — 액티브 둘째 칸(`skill.activesFor`) · 다른 책을 쓰면 덮어쓴다
  *     heroes[*].skillLv = {skillId: n}(선택 필드 · 2026-10-06 · R216) — 기본 스킬(고유 · 배운 칸)의 업그레이드 횟수 · 같은 책을 읽으면 +1
  *     heroes[*].advanceUp = n(선택 필드 · R216) — 전직 스킬 줄 **크기** 랭크(레벨 = 1 + n · 공용 스킬 포인트 n) · 2026-11-13 R471 — 5레벨 간격 해금 퇴역
@@ -328,7 +328,6 @@ export function createGameSystem(deps) {
             labClock: { gamble: null, train: null, lib: null },   // 연구소 생산 시계 — 줄이 열린 첫 정산에서 선다
             potions: startStock(),     // 물약 재고 — 새 게임은 `potion.csv:start_owned` 개수를 갖고 시작한다 (R103 · 개수 R124)
             books: {},       // 스킬북 재고 {skillId: n} — 처치 · 탐험 동굴 · 연구소 도서관 줄 · 상단 · 영웅별 첫 책 보상 (~~스킬 도안~~ 2026-11-15 · R504)
-            bookSeen: {},    // 한 번이라도 재고에 들어온 책 {skillId: 1} — `addBook` 이 적는다 · 스킬 북 제작 목록 (2026-11-18 · R540)
             skillShards: 0,  // 스킬 조각 — 책 분해가 주고 스킬 북 제작이 쓴다 (2026-11-18 · R540)
             heroes: [], items: {}, bags: newBags(), stash: [],   // 인벤토리는 부대마다 (v40 · ADR-0521)
             mail: [],        // 우편함 [{id, kind, no, stageId, difficulty}] — 인벤토리에 새 칸이 없어 못 들어간 첫 클리어 상자 (2026-10-23 · R328 · 2026-10-24 · R333 · INTERFACE §4)
@@ -864,11 +863,9 @@ export function createGameSystem(deps) {
         for (const [id, n] of Object.entries(legacyPlans)) if (bookable(id) && Number.isInteger(n) && n > 0) s.books[id] = (s.books[id] ?? 0) + n;
         delete s.blueprints;
         for (const h of s.heroes) if (h.bookSkill !== undefined && !(h.bookSkill && SK?.defs?.[h.bookSkill])) delete h.bookSkill;
-        // 본 책 · 스킬 조각 [2026-11-18 · R540 · 버전 무변경 — INTERFACE §4] — 본 책이 없으면 지금 책 재고 + 영웅 배운 칸으로 채운다(그 책은 한 번은 재고에 들어왔다) ·
-        //   책이 안 되는 id 는 지운다 · 조각은 음이 아닌 정수가 아니면 0
-        const seenRaw = s.bookSeen && typeof s.bookSeen === 'object' && !Array.isArray(s.bookSeen) ? s.bookSeen
-            : Object.fromEntries([...Object.keys(s.books), ...s.heroes.map(h => h.bookSkill).filter(Boolean)].map(id => [id, 1]));
-        s.bookSeen = Object.fromEntries(Object.keys(seenRaw).filter(bookable).map(id => [id, 1]));
+        // 스킬 조각 [2026-11-18 · R540 · 버전 무변경 — INTERFACE §4] — 음이 아닌 정수가 아니면 0 ·
+        //   본 책 목록(`bookSeen`)은 걷혔다(R543 — 제작 목록 = 직업 스킬 전부) · 키를 지운다
+        delete s.bookSeen;
         s.skillShards = Number.isInteger(s.skillShards) && s.skillShards > 0 ? s.skillShards : 0;
         // 스킬 레벨 [2026-10-06 · R216 · 버전 무변경 — INTERFACE §4] — 없으면 「업그레이드 0」이 정확한 초기 상태다.
         //   지금 고유 · 배운 스킬이 아닌 키 · 양의 정수가 아닌 값은 지우고 상한(`skillCapMax` = `skillbook_upgrade_max` — 2026-10-20 · R293)을 넘는 값은 상한으로 (0 은 키가 없다) (INTERFACE §4)
@@ -918,16 +915,15 @@ export function createGameSystem(deps) {
             : null;
         const clkIn = s.labClock && typeof s.labClock === 'object' ? s.labClock : {};
         const gClk = clkIn.gamble, tClk = clkIn.train, lClk = clkIn.lib;
-        const heroIds = new Set(s.heroes.map(h => h.uid));
-        const libValues = (values, valid) => Object.fromEntries(Object.entries(values && typeof values === 'object' && !Array.isArray(values) ? values : {}).filter(([uid, x]) => heroIds.has(uid) && valid(x)));
         s.labClock = {
             gamble: gClk && Number.isFinite(gClk.at) ? { at: gClk.at, carry: Number.isFinite(gClk.carry) && gClk.carry >= 0 ? Math.min(gClk.carry, 1) : 0 } : null,
             train: tClk && Number.isFinite(tClk.at) ? { at: tClk.at, carry: Object.fromEntries(Object.entries(tClk.carry && typeof tClk.carry === 'object' ? tClk.carry : {})
                 .filter(([, x]) => Number.isFinite(x) && x >= 0)) } : null,
         };
+        // 도서관 = 줄 시계 하나(2026-11-18 · R546 · 버전 무변경 — INTERFACE §4) — 옛 영웅별 `{uid: …}`(R399)는 숫자가 아니라 0 으로 접는다 · `at` 은 둔다
         s.labClock.lib = lClk && Number.isFinite(lClk.at) ? { at: lClk.at,
-            carry: libValues(lClk.carry, x => Number.isFinite(x) && x >= 0 && x < 1),
-            rolls: libValues(lClk.rolls, x => Number.isSafeInteger(x) && x >= 0) } : null;
+            carry: Number.isFinite(lClk.carry) && lClk.carry >= 0 && lClk.carry < 1 ? lClk.carry : 0,
+            rolls: Number.isSafeInteger(lClk.rolls) && lClk.rolls >= 0 ? lClk.rolls : 0 } : null;
         // 재료별 생산 시계 (2026-10-16 · v42 — 단계가 없어 재료마다 하나 · R356). `resourceProduction` 이 없던 세이브는 옛 자리의 ms 진행도(`carry`)를
         //   진행도로 환산해 보존한다 — 옛 속도의 영웅 몫은 이제 없어 표 수량으로 잰다(1개 미만의 소수라 차이가 그 안에서 끝난다)
         const legacyProduction = !Array.isArray(s.resourceProduction);
@@ -1053,9 +1049,6 @@ export function createGameSystem(deps) {
             for (const [id, n] of Object.entries(s.books)) books[to(id)] = (books[to(id)] ?? 0) + n;
             s.books = books;
         }
-        // 본 책 목록도 같은 대체로 (2026-11-18 · R540 — `craftBook` 목록)
-        if (s.bookSeen && typeof s.bookSeen === 'object' && !Array.isArray(s.bookSeen))
-            s.bookSeen = Object.fromEntries(Object.keys(s.bookSeen).map(id => [to(id), 1]));
         for (const it of Object.values(s.items ?? {})) {
             if (!it || typeof it !== 'object') continue;
             for (const a of it.affixes ?? []) if (a?.skill) a.skill = to(a.skill);
@@ -1213,7 +1206,7 @@ export function createGameSystem(deps) {
 
     /* ── 책 업그레이드 상한 — 끝 하나 [2026-10-20 · R293 · skill_design §2-3 「레벨 제한을 두지말고 그냥 도안을 계속얻을 수 있게」] ──
        모든 스킬 · 모든 영웅이 같다. ~~스킬 도감 레벨이 나눠 열던 상한~~(`skill_codex_level.csv` · 2026-10-16 R266)은 표째 걷었다 —
-       같은 책 수(피보나치)가 이미 오르는 속도를 막는다 */
+       단계마다 드는 같은 책 수(`upgradeBooks` · R545)가 이미 오르는 속도를 막는다 */
     const skillCapMax = () => B.skillbook_upgrade_max;
 
     /**
@@ -1434,8 +1427,8 @@ export function createGameSystem(deps) {
 
     /* ── 자동 장착 [2026-10-22 · R307 · 기준 개정 R313 · **기준 개정 2026-11-18 · R536 — 점수 순** · item_design §6-3 · SCREEN_DESIGN §6 · ADR-0712] — 버튼이 부를 때만 · 고른 영웅 하나 · 부대 `no` 의 인벤토리만 ──
        거르기 = 요구 레벨(`canEquip`) + 직업 어울림(`item.fitsClass`) — 직업 무기군이 물리 ↔ 마법(평타)도 같이 거른다.
-       고르기 = **점수 순** [R536] — 일곱 칸 같은 규칙: 후보 중 `item.autoEquipScore`(아이템 레벨 + 베이스 몫 + 옵션 점수 합)가 가장 높은 것을 빈 칸이거나 지금 낀 것보다 높을 때만.
-         점수는 그 장비 하나로 정해져(영웅 · 다른 칸과 무관) 한 바퀴로 끝나고 다시 누르면 그대로다 — 반지 두 칸은 같은 후보를 나눠 쓴다(앞 칸이 먼저 · 벗은 반지는 뒤 칸의 후보).
+       고르기 = **점수 순** [R536] — 일곱 칸 같은 규칙: 후보 중 `item.autoEquipScore`(베이스 몫 + 옵션 점수 합 — **그 영웅 레벨 · 직업 갈래로 잰다** · 아이템 레벨 항 없음 · R542)가 가장 높은 것을 빈 칸이거나 지금 낀 것보다 높을 때만.
+         점수는 그 장비와 영웅 레벨로 정해져(다른 칸과 무관) 한 바퀴로 끝나고 다시 누르면 그대로다 — 반지 두 칸은 같은 후보를 나눠 쓴다(앞 칸이 먼저 · 벗은 반지는 뒤 칸의 후보).
          **그 영웅에게 안 먹는 줄은 0점**(`skill.equipFit` → `item.autoEquipScore` — 무기 종류 · 타격 종류 · 액티브가 정한다 · 전투가 그 줄을 읽는 문과 같다) —
          무기 칸은 그 후보 무기의 종류로 · 나머지는 무기 칸이 맨 앞이라 고른 뒤의 무기 종류로 잰다 */
     function autoEquip(state, heroUid, no = 1) {
@@ -1450,9 +1443,9 @@ export function createGameSystem(deps) {
         for (const { id: pos, part } of deps.equipSlots) {
             const fitFor = it => fitOf(part === 'weapon' ? it : state.items[h.equipped.weapon]);
             const cur = h.equipped[pos] ? state.items[h.equipped[pos]] : null;
-            let best = null, top = cur ? I.autoEquipScore(cur, fitFor(cur)) : -Infinity;
+            let best = null, top = cur ? I.autoEquipScore(cur, fitFor(cur), h.level, h.cls) : -Infinity;
             for (const it of cands(part)) {
-                const v = I.autoEquipScore(it, fitFor(it));
+                const v = I.autoEquipScore(it, fitFor(it), h.level, h.cls);
                 if (v > top) { best = it; top = v; }                   // 같으면 인벤토리 앞의 것 · 지금 낀 것과 같으면 안 바꾼다
             }
             if (best) equip(state, h.uid, best.uid, pos);
@@ -2989,13 +2982,13 @@ export function createGameSystem(deps) {
     }
 
     /* ── 스킬북 [신설 2026-09-29 · R179 · skill_design §2-1 · construction_draft §2 도서관 · INTERFACE §2-7] ──
-       둘째 액티브 칸 = **책으로 배운 스킬**(`hero.bookSkill`). 책은 **얻으면 바로 재고**다 — 처치(`settleRound`) · 탐험 동굴(`exploreTake`) · 연구소 도서관 줄(`libSettle`) ·
+       둘째 액티브 칸 = **책으로 배운 스킬**(`hero.bookSkill`). 책은 **얻으면 바로 재고**다 — 처치(`settleRound`) · 탐험 동굴(`exploreTake`) · 연구소 도서관 줄(`libSettle` — 조각마다 확률 · R546) ·
        상단(`shopBookBuy`) · 첫 책 보상(`grantLevelBook`) (2026-11-15 · R504 — ~~스킬 도안 + 도서관 책 제작~~ 삭제) —
        **책은 소모품이라 쌓인다**(2026-09-30 사용자 지시 — 가진 책도 +1 · 배우면 1권을 쓴다) · 남는 책은 분해해 스킬 조각으로(`salvageBook`) ·
-       조각을 모아 **한 번 본 책**을 고른다(`craftBook` — 2026-11-18 · R540 · 조각은 책에서만 나와 들어오는 책 총량은 그대로다).
+       조각을 모아 **직업 스킬 책**을 고른다(`craftBook` — 2026-11-18 · R540 · R543 · 조각은 책 분해와 연구소 도서관 줄(시간 · R546)에서 나온다).
        배우면 영구 · 다른 책은 덮어쓴다(앞의 것은 책으로 안 돌아온다) · 빼는 길이 없다 · 책이 없으면 칸은 빈 채로 간다. 전부 rng 0
        **같은 책이면 업그레이드다** [2026-10-06 · R216 · skill_design §2-3 — ~~`same` 거절~~] — 이미 가진 스킬(고유 · 배운 칸)의 책은 칸을 늘리지 않고
-       그 스킬의 레벨을 올린다(`hero.skillLv` · 드는 책은 피보나치 · 상한 = `skillCapMax` — 2026-10-20 · R293) · 다른 책으로 덮어쓰면 쌓은 레벨도 사라진다 */
+       그 스킬의 레벨을 올린다(`hero.skillLv` · 드는 책은 단계마다 키 하나 — R545 · 상한 = `skillCapMax` — 2026-10-20 · R293) · 다른 책으로 덮어쓰면 쌓은 레벨도 사라진다 */
     /** 첫 스킬북 후보 — 독립 수열이라 전투·훈련의 정산 간격이 보상을 바꾸지 않는다. */
     function levelBookId(state, h) {
         const pool = (SK?.list ?? []).filter(d => d.ownerKind === 'job' && d.ownerId === h.cls
@@ -3012,37 +3005,37 @@ export function createGameSystem(deps) {
         if (id) addBook(state, id);
         return id;
     }
-    /** 책 한 권을 재고에 쌓는다 — 가진 책이어도 +1 · 본 책 목록에 적는다(`craftBook` 목록 · R540) */
+    /** 책 한 권을 재고에 쌓는다 — 가진 책이어도 +1 */
     function addBook(state, id) {
         state.books = state.books ?? {};
         state.books[id] = (state.books[id] ?? 0) + 1;
-        (state.bookSeen ??= {})[id] = 1;
     }
     /**
-     * 스킬 북 제작 목록 [2026-11-18 · R540 · skill_design §2-1] — **한 번이라도 재고에 들어온 직업 스킬**(`state.bookSeen`) · 책이 되는 것(`bookable`) ·
-     *   몬스터 · 장 보스 고유 · 전직 스킬은 빠진다(`ownerKind = job` 만) · `skill.csv` 행 순서 · rng 0
+     * 스킬 북 제작 목록 [2026-11-18 · R540 · **R543 — 직업 스킬 전부**(~~본 책만~~) · skill_design §2-1] — 책이 되는 것(`bookable`) ·
+     *   몬스터 · 장 보스 고유 · 전직 스킬은 빠진다(`ownerKind = job` 만) · `skill.csv` 행 순서 · 상태와 무관 · rng 0
      */
-    const craftable = (state, id) => !!state.bookSeen?.[id] && bookable(id) && SK?.defs?.[id]?.ownerKind === 'job';
-    function craftableBooks(state) {
-        return (SK?.list ?? []).filter(d => craftable(state, d.id)).map(d => d.id);
+    const craftable = id => bookable(id) && SK?.defs?.[id]?.ownerKind === 'job';
+    function craftableBooks() {
+        return (SK?.list ?? []).filter(d => craftable(d.id)).map(d => d.id);
     }
+    /** 그 책 한 권에 드는 조각 [R543] — 2티어 `[balance.csv:skill_craft_shards_t2]` · 나머지(1티어) `[balance.csv:skill_craft_shards]` */
+    const craftShards = id => SK?.defs?.[id]?.tier === 2 ? B.skill_craft_shards_t2 : B.skill_craft_shards;
     /** 제작의 비용 거절 — `bookState.craft[].err` 와 `craftBook` 이 같은 판정을 쓴다 */
-    function craftCostErr(state) {
-        if ((state.skillShards ?? 0) < B.skill_craft_shards) return 'shards';
+    function craftCostErr(state, id) {
+        if ((state.skillShards ?? 0) < craftShards(id)) return 'shards';
         if ((state.resources?.gold ?? 0) < B.skill_craft_gold) return 'gold';
         return null;
     }
     /**
-     * 스킬 조각으로 책 한 권 [2026-11-18 · R540 · skill_design §2-1 · INTERFACE §2-7] — 조각 `[balance.csv:skill_craft_shards]` + 골드 `[balance.csv:skill_craft_gold]` →
-     *   고른 책 +1(`addBook`) · 영웅과 무관 · 거절 `unbuilt` → `missing` → `unseen` → `shards` → `gold` · 거절이면 상태 불변 · rng 0
+     * 스킬 조각으로 책 한 권 [2026-11-18 · R540 · R543 · skill_design §2-1 · INTERFACE §2-7] — 조각(티어마다 — `craftShards`) + 골드 `[balance.csv:skill_craft_gold]` →
+     *   고른 책 +1(`addBook`) · 영웅과 무관 · 거절 `unbuilt` → `missing` → `shards` → `gold` · 거절이면 상태 불변 · rng 0
      */
     function craftBook(state, skillId) {
         if (!hasFeature(state, 'skillbook')) return { ok: false, err: 'unbuilt' };
-        if (!bookable(skillId) || SK?.defs?.[skillId]?.ownerKind !== 'job') return { ok: false, err: 'missing' };
-        if (!craftable(state, skillId)) return { ok: false, err: 'unseen' };
-        const err = craftCostErr(state);
+        if (!craftable(skillId)) return { ok: false, err: 'missing' };
+        const err = craftCostErr(state, skillId);
         if (err) return { ok: false, err };
-        state.skillShards -= B.skill_craft_shards;
+        state.skillShards -= craftShards(skillId);
         state.resources.gold -= B.skill_craft_gold;
         addBook(state, skillId);
         return { ok: true };
@@ -3079,12 +3072,12 @@ export function createGameSystem(deps) {
         if (h.level < B.skillbook_learn_level) return 'level';
         return null;   // 쓰러진 영웅도 배운다 (2026-10-21 · R300 — ~~`downed`(R130)~~)
     }
-    /** 업그레이드 n 번째(1 부터)에 드는 같은 책 수 [2026-10-06 · R216 · skill_design §2-3] — 첫째 · 둘째는 키 · 셋째부터 앞 두 단계의 합(피보나치) */
-    function upgradeBooks(n) {
-        let a = B.skillbook_upgrade_books_1, b = B.skillbook_upgrade_books_2;
-        if (n <= 1) return a;
-        for (let k = 3; k <= n; k++) [a, b] = [b, a + b];
-        return b;
+    /** 업그레이드 n 번째(1 부터)에 드는 같은 책 수 [2026-10-06 · R216 · **2026-11-18 · R545 — 단계마다 키 하나**(~~피보나치~~) · skill_design §2-3] —
+     *  `[balance.csv:skillbook_upgrade_books_n]` · n = 1 ~ 상한(`skillCapMax`) — 키가 하나라도 없으면 아래 검사가 처음에 던진다 */
+    const upgradeBooks = n => B[`skillbook_upgrade_books_${n}`];
+    for (let n = 1; n <= skillCapMax(); n++) {
+        const v = upgradeBooks(n);
+        if (!(Number.isInteger(v) && v > 0)) throw new Error(`state: balance.csv 의 skillbook_upgrade_books_${n} 가 없거나 양의 정수가 아니다 (${v}) — 1 ~ skillbook_upgrade_max 단계마다 하나 (R545)`);
     }
     /**
      * 이 영웅이 이 책을 읽으면 무엇이 되나 — `bookState` 의 `plan` 과 `learnBook` 이 이 하나를 읽는다 (2026-10-06 · R216).
@@ -3106,10 +3099,10 @@ export function createGameSystem(deps) {
             need: { have: h?.level ?? 0, need: B.skillbook_learn_level },
             books: Object.keys(state.books ?? {}).filter(id => state.books[id] > 0)
                 .map(id => ({ id, n: state.books[id], ...(h ? { plan: bookPlan(state, h, id) } : {}) })),
-            // 스킬 조각 · 제작 목록 (2026-11-18 · R540) — 비용 거절은 책마다 같다(티어 무관)
+            // 스킬 조각 · 제작 목록 (2026-11-18 · R540 · R543) — 목록 = 직업 스킬 전부 · 조각은 책마다(티어) · 골드는 같다
             shards: state.skillShards ?? 0,
-            craft: craftableBooks(state).map(id => ({ id, err: craftCostErr(state) })),
-            craftCost: { shards: B.skill_craft_shards, gold: B.skill_craft_gold },
+            craft: craftableBooks().map(id => ({ id, shards: craftShards(id), err: craftCostErr(state, id) })),
+            craftCost: { gold: B.skill_craft_gold },
             hero: uid ?{ skill: h?.bookSkill ?? null, innate: h?.innate ?? null, lv: { ...(h?.skillLv ?? {}) }, err: learnGate(state, h) } : null,
         };
     }
@@ -3489,37 +3482,44 @@ export function createGameSystem(deps) {
         return { xp: ups, books };
     }
 
-    /** 도서관 — 영웅별 진행도·수열을 보존해 한 번에 정산해도 나눠 정산해도 같은 책이 나온다(R399 · 2026-11-15 R504 — ~~도안~~ → 책 · 바로 `state.books`). */
+    /* ── 도서관 줄 — 시간마다 스킬 조각 [2026-11-18 · R546 · base_expedition §2-1 — ~~등록 영웅마다 그 영웅 스킬 책~~ R399 · R504] ──
+       **영웅과 무관한 줄 시계 하나**(도박장과 같은 모양) — 시간당 `labVal(lib, interval) × 속도 효과 ÷ [balance.csv:lab_shard_hours]` 개 ·
+       속도 효과 = 등록 영웅의 힘 덤(인원 몫은 안 받는다 — `LAB_HEAD_LINES` 밖) · **조각 하나마다** 회차 하나로 「대박」(지점 + 운) 확률 1회 →
+       맞으면 후보가 있는 등록 영웅 하나 → 그 영웅 후보(고유 · 배운 칸의 직업 스킬 — 상한에 닿은 스킬도) 하나의 책 · 등록이 없거나 확률 0 이면 회차만 오른다.
+       회차는 조각 수만 따라가 한 번에 정산해도 나눠 정산해도 같은 책이 나온다(명단이 그대로면) */
     const libSkills = h => [...new Set([h.innate, h.bookSkill].filter(id => SK?.defs?.[id]?.ownerKind === 'job' && bookable(id)))];
-    function libRate(state, uid, at) {
-        const h = heroById(state, uid), skills = h ? libSkills(h) : [];
+    /** 책 후보 — 등록한 영웅 중 후보 스킬이 있는 영웅만 · 등록 순 */
+    const libPool = state => labRegList(state, LIB_KEY).map(uid => heroById(state, uid)).filter(Boolean)
+        .map(h => ({ uid: h.uid, skills: libSkills(h) })).filter(p => p.skills.length);
+    function libRate(state, at) {
         const fx = labEffects(state, LIB_KEY, at);
-        const perHour = skills.length && B.lab_book_hours > 0 ? labVal(state, LIB_KEY, 'interval', 1) * fx.speed / B.lab_book_hours : 0;
-        return { uid, skills, perHour, burst: burstPct(state, LIB_KEY, fx) };
+        const perHour = B.lab_shard_hours > 0 ? labVal(state, LIB_KEY, 'interval', 1) * fx.speed / B.lab_shard_hours : 0;
+        return { perHour, chance: burstPct(state, LIB_KEY, fx) };
     }
+    /** `now` 까지 정산 — `{shards, books: {skillId: n}}` · in-place(조각은 `state.skillShards` · 책은 `addBook`). 닫혀 있으면 시계를 지우고 · 처음 열린 정산은 시계만 세운다 */
     function libSettle(state, now, until = Infinity) {
-        const clk = labClockOf(state), gained = {};
-        if (!labLineOpen(state, LIB_KEY)) { clk.lib = null; return gained; }
-        if (!clk.lib) { clk.lib = { at: now, carry: {}, rolls: {} }; return gained; }
-        const old = clk.lib, carry = {}, rolls = { ...old.rolls };
-        for (const uid of labRegList(state, LIB_KEY)) {
-            const rate = libRate(state, uid, old.at);
-            const sum = productionAmount({ at: old.at, carry: old.carry[uid] ?? 0 }, rate, now, until);
-            const made = Math.floor(sum + 1e-9);
-            carry[uid] = Math.max(0, sum - made);
-            const hash = [...uid].reduce((v, c) => (Math.imul(v, 31) + c.charCodeAt(0)) >>> 0, 0);
-            for (let i = 0; i < made && rate.skills.length; i++) {
-                const serial = rolls[uid] ?? 0;
-                const rng = makeRng(deriveSeed(deriveSeed(state.seed ^ 0xB10E, hash), serial));
-                rolls[uid] = serial + 1;
-                const id = rate.skills[Math.floor(rng() * rate.skills.length)];
-                const n = 1 + (rate.burst > 0 && rng() < rate.burst ? 1 : 0);
-                for (let j = 0; j < n; j++) addBook(state, id);
-                gained[id] = (gained[id] ?? 0) + n;
-            }
+        const clk = labClockOf(state), out = { shards: 0, books: {} };
+        if (!labLineOpen(state, LIB_KEY)) { clk.lib = null; return out; }
+        if (!clk.lib) { clk.lib = { at: now, carry: 0, rolls: 0 }; return out; }
+        const old = clk.lib, r = libRate(state, old.at);
+        const sum = r.perHour > 0 ? productionAmount(old, r, now, until) : old.carry;
+        const made = Math.floor(sum + 1e-9);
+        const pool = made > 0 && r.chance > 0 ? libPool(state) : [];
+        let rolls = old.rolls;
+        for (let i = 0; i < made; i++) {
+            const serial = rolls++;
+            if (!pool.length) continue;
+            const rng = makeRng(deriveSeed(state.seed ^ 0xB10E, serial));
+            if (!(rng() < r.chance)) continue;
+            const p = pool[Math.floor(rng() * pool.length)];
+            const id = p.skills[Math.floor(rng() * p.skills.length)];
+            addBook(state, id);
+            out.books[id] = (out.books[id] ?? 0) + 1;
         }
-        clk.lib = { at: Math.max(old.at, now), carry, rolls };
-        return gained;
+        if (made > 0) state.skillShards = (state.skillShards ?? 0) + made;
+        out.shards = made;
+        clk.lib = { at: Math.max(old.at, now), carry: Math.max(0, sum - made), rolls };
+        return out;
     }
 
     /* ── 연구 — 지점 레벨 올리기 [신설 2026-10-21 · R298 · 사용자 「연구하면 연구 속도」 · 「하나로」] ── */
@@ -3579,24 +3579,26 @@ export function createGameSystem(deps) {
         const d = settleProduction(state, t, limits?.res);
         const gold = gambleSettle(state, t, limits?.gamble);
         const { xp, books } = trainSettle(state, t, limits?.train);
-        // 도서관 줄의 책 — 훈련의 첫 책과 한 묶음으로 낸다(둘 다 이미 `state.books` 에 쌓였다 · 2026-11-15 · R504 — ~~`blueprints` 따로~~)
-        for (const [id, n] of Object.entries(libSettle(state, t, limits?.lib))) books[id] = (books[id] ?? 0) + n;
+        // 도서관 줄 — 조각 수 · 확률 책(훈련의 첫 책과 한 묶음 — 둘 다 이미 `state.books` 에 쌓였다 · 2026-11-15 · R504 · 2026-11-18 · R546)
+        const lib = libSettle(state, t, limits?.lib);
+        for (const [id, n] of Object.entries(lib.books)) books[id] = (books[id] ?? 0) + n;
         visitSettle(state, t);
-        return { gained: d.gained, gold, xp, books };
+        return { gained: d.gained, gold, xp, books, shards: lib.shards };
     }
     /**
      * 연구소 정산 — in-place. 끝난 연구가 있으면 **끝난 시각까지 옛 값으로 정산한 뒤** 레벨을 올리고(새로 열린 시계는 그 시각에 선다) `now` 까지 정산한다.
      *   공백 상한은 정산 시작 때 각 생산 시계의 시작 + 상한으로 고정한다 — 연구 전후를 나눠도 허용 시간이 늘지 않는다.
      *   실제 시계는 `now` 까지 옮겨 초과 시간을 버린다. 수색은 이 상한을 받지 않는다.
      *   수색 시계는 등록한 영웅마다 등록 시각부터 선다(연구와 무관 · 2026-11-15)
-     * @returns `{done: {line, node, lv} | null, gained, gold, xp: [{uid, from, to}], books}` — `books` = 도서관 줄 + 훈련 첫 책 (R504)
+     * @returns `{done: {line, node, lv} | null, gained, gold, shards, xp: [{uid, from, to}], books}` — `shards` = 도서관 줄 조각(R546) · `books` = 도서관 줄 확률 책 + 훈련 첫 책 (R504 · R546)
      */
     function labSettle(state, now) {
-        const out = { done: null, gained: {}, gold: 0, xp: [], books: {} };
+        const out = { done: null, gained: {}, gold: 0, shards: 0, xp: [], books: {} };
         if (!Number.isFinite(now)) return out;
         const add = p => {
             for (const [k, n] of Object.entries(p.gained)) out.gained[k] = (out.gained[k] ?? 0) + n;
             out.gold += p.gold;
+            out.shards += p.shards;
             out.xp.push(...p.xp);
             for (const [id, n] of Object.entries(p.books)) out.books[id] = (out.books[id] ?? 0) + n;
         };
@@ -3632,12 +3634,13 @@ export function createGameSystem(deps) {
             };
             if (line === GAMBLE_KEY) out.perHour = open ? gambleRate(state, now).perHour * B.gamble_gold_unit : 0;
             if (line === TRAIN_KEY) out.cap = trainCap(state);
-            if (line === LIB_KEY) out.production = labRegList(state, line).map(uid => {
+            if (line === LIB_KEY) {   // 도서관 = 조각 시계 하나 · 책 확률 · 등록 영웅의 후보 스킬(중복 없이 · 등록 순) (R546)
                 const c = state.labClock?.lib;
-                const r = libRate(state, uid, c?.at ?? now);
-                const amount = open ? productionAmount({ at: c?.at ?? now, carry: c?.carry?.[uid] ?? 0 }, r, now) : 0;
-                return { uid, skills: r.skills, perHour: open ? r.perHour : 0, frac: Math.max(0, amount - Math.floor(amount + 1e-9)) };
-            });
+                const r = libRate(state, c?.at ?? now);
+                const amount = open && c ? productionAmount(c, r, now) : 0;
+                out.production = { perHour: open ? r.perHour : 0, frac: Math.max(0, amount - Math.floor(amount + 1e-9)), chance: r.chance,
+                    skills: [...new Set(libPool(state).flatMap(p => p.skills))] };
+            }
             return out;
         });
         return { rank: labRank(state), research, lines };

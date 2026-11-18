@@ -1445,6 +1445,8 @@ export function createBattleSystem(data) {
             // 파리 떼 여닫기 — 판 크기 · HP · 타임라인을 아는 이쪽이다 (스웜 · 2026-10-29 R380 · 아래 `swarmOpen`)
             swarmOpen: (u, x, ev) => swarmOpen(u, x, ev),
             swarmClose: (u, at) => swarmClose(u, at),
+            // 적진에 까는 창이 열렸다 — 상대 편 칩을 바로 맞춘다 (인페르노 · 블리자드 · 2026-11-18 R550 · 아래 `fieldSync`)
+            fieldOpened: () => fieldSync(),
             // 전직 트리 장치 — 시전 끝(조각 · 마지막 방 · 두 번째 노바) · 원소 보호막을 건다 (2026-11-13 R471)
             advAfterCast: (u, def, eff, lead, one, echoing) => advAfterCast(u, def, eff, lead, one, echoing),
             advShield: (u, d, x, until) => advShield(u, d, x, until),
@@ -1592,6 +1594,8 @@ export function createBattleSystem(data) {
                 for (const [id, b] of Object.entries(p.buffs)) {
                     if (b.roundEnd !== 'close') continue;
                     delete p.buffs[id];
+                    // 조용한 창(적진에 까는 창 — 인페르노 · 블리자드 · R550)은 칩이 없어 `buffEnd` 도 없다 — 상대 편 칩은 그 적들과 함께 사라진다
+                    if (b.quiet) { refreshDerived(p); continue; }
                     last = { t: r1(t), e: 'buffEnd', u: p.key, s: b.s ?? id };
                     // 진형 붕괴가 닫히면 원래 랭크로(만료와 같은 일 — `EFFECTS.formation_break.end` · 2026-11-02 R424) · 재생기는 이 `rank` 로 칸을 되돌린다
                     if (b.stat === 'formation_break' && p.rankBase !== undefined) { p.rank = p.rankBase; delete p.rankBase; last.rank = p.rank; }
@@ -2290,6 +2294,40 @@ export function createBattleSystem(data) {
                         delete p.buffs[MIRE];
                         refreshDerived(p);
                         timeline.push({ t: r1(t), e: 'buffEnd', u: p.key, s: cur.s });
+                    }
+                }
+            }
+        }
+        /** 적진에 깐 창 [2026-11-18 · R550 · INTERFACE §2-6 「적진에 까는 창」 · 사용자 「나에게 버프가 아니라 상대에게 디버프가 들어가야지」] —
+         *  `field` 창(시전자가 든 조용한 창 — 인페르노 · 블리자드 · `skill_runtime.openWindow`)을 든 **산** 유닛을 편마다 스킬별로 모아(여럿이면 늦게 끝나는 쪽 · 같으면 배열 순 앞)
+         *  **상대 편 산 유닛 전원**(소환 포함 — 틱이 치는 대상과 같다)에게 표시 창 `field:<스킬>` 하나를 맞춘다 — 창은 아무것도 안 민다(`quiet` · `foe` 아님 — 정화가 안 지운다) ·
+         *  끝(`end`)이 바뀔 때만 `buff`(`stat: field` · 음수 · `until` = 시전자 창 끝) · 깐 쪽이 다 사라지면(만료 · 라운드 경계 · 쓰러짐) `buffEnd` · 쓰러진 유닛은 안 건드린다 ·
+         *  시전 순간(`ctx.fieldOpened`)과 틱마다(늪 뒤) 부른다 · rng 0 */
+        const FIELD = 'field:';
+        function fieldSync() {
+            for (const [own, foes] of [[party, units.enemies], [units.enemies, party]]) {
+                const src = new Map();
+                for (const x of own) {
+                    if (x.hp <= 0) continue;
+                    for (const b of Object.values(x.buffs)) {
+                        if (!b.field || b.until <= t + EPS) continue;
+                        const cur = src.get(b.s);
+                        if (!cur || b.until > cur.end) src.set(b.s, { end: b.until, v: b.v, element: b.element, by: x.key });
+                    }
+                }
+                for (const p of foes) {
+                    if (p.hp <= 0) continue;
+                    for (const [s, w] of src) {
+                        const key = FIELD + s, cur = p.buffs[key];
+                        if (cur && cur.end === w.end) continue;
+                        p.buffs[key] = { stat: 'field', v: -w.v, until: Infinity, end: w.end, element: w.element, by: w.by, s, quiet: true };
+                        timeline.push({ t: r1(t), e: 'buff', u: p.key, s, stat: 'field', v: -w.v, until: r1(w.end) });
+                    }
+                    for (const key of Object.keys(p.buffs)) {
+                        if (!key.startsWith(FIELD) || src.has(p.buffs[key].s)) continue;
+                        const s = p.buffs[key].s;
+                        delete p.buffs[key];
+                        timeline.push({ t: r1(t), e: 'buffEnd', u: p.key, s });
                     }
                 }
             }
@@ -4263,6 +4301,7 @@ export function createBattleSystem(data) {
                 // 정예 강화(마법 갈래 · R528) — 오오라 피해 **뒤** · 전직 트리 틱 앞: 서리 오라를 맞추고(rng 0) · 주기적 번개(간격마다 **rng 1회** — 적 배열 순 · INTERFACE §5-2)
                 frostSync();
                 mireSync();   // 늪(R533) — 서리 오라 뒤 · rng 0 · 든 유닛이 없으면 아무것도 안 한다
+                fieldSync();  // 적진에 깐 창(R550) — 늪 뒤 · 깐 쪽이 닫히거나 쓰러졌으면 상대 편 칩을 걷는다 · rng 0
                 for (const u of units.enemies) if (u.hp > 0 && u.enchant) enchTick(u);
                 // 전직 트리 틱 — 장치 지속 피해 · 자동 시전 · 창 동안의 주기 타격(히드라 · 블리자드 · 썬더 스트라이크) — 오오라 피해 **뒤** · 재생 **앞** (2026-11-13 R471)
                 for (const u of [...party, ...units.enemies]) if (u.hp > 0) advTick(u);

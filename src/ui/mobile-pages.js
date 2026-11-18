@@ -188,7 +188,7 @@ export function mountMobilePages(main) {
         }
     } else if (tab === 'library') {
         // Books stay on the main page; advancement opens its own room window (ADR-1179 · restored ADR-1262).
-        deck(page.querySelector('.lib-split'), 'library-books', items(page, '.lib-split > .lib-sec', ['upgrade','books']));
+        deck(page.querySelector('.lib-split'), 'library-books', items(page, '.lib-split > .lib-sec', ['upgrade','salvage','books']));   // three sections — ADR-1287
     } else if (tab === 'resource') {
         const grid = page.querySelector('.dp-tree-grid');
         // Turn the desktop coordinate grid into a list of production lines.

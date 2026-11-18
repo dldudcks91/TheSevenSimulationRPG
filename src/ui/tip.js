@@ -883,35 +883,42 @@ export function codexMonsterTipCard(m, grade) {
     const story = fillStory(L(monsterStory(m.id)), lang());
     const lv = m.lv ?? SYS.game.codexLevel(m.exp);
     // 줄 하나 = **구간 하나**(`game.codexSegments` — 지금 Lv1 ~ 20 파밍 · 21 ~ 40 전투 · 41 ~ 60 옵션 · ADR-1261) · **늘 전부 선다** — 닿지 않은 구간도 보여야 「다음에 무엇을 받나」가 읽힌다 ·
-    //   한 레벨이라도 채운 구간이 켜진다. 효과 글 = 그 구간을 **다 채웠을 때**의 값 · 오른쪽 끝 = 채운 레벨 `3/20`.
+    //   한 레벨이라도 채운 구간이 켜진다. 가운데 = **오르는 것의 이름만**(값 · 「레벨당」 없음 · ADR-1276) · 오른쪽 끝 = **지금 받는 값** `+0.3%`(ADR-1271).
     //   **레벨만 든다** — 「경험치를 얼마 모아야 열린다」는 적지 않는다(문턱은 카드 핍의 작은 툴팁 · ADR-0209)
     //   파밍 · 전투 = 그 몬스터 **한 마리의 몫** 앞에 종족 이름(전투는 「상대」 · ADR-0715) · none = `—` · 옵션 구간은 그 몬스터의 전투 옵션 한 줄 (ADR-0667)
     //   칸이 없는 몬스터(보스)는 파밍 · 전투도 `—`
     const opt = SYS.game.codexOptionOf(m.id);
     const line = SYS.game.codexLineOf(m.id);
     const race = line ? L(D.codexRaces[line.race]) : '';
+    //   가운데 = 오르는 것의 **이름만** — 숫자는 오른쪽 칸 하나가 든다 [2026-11-18 사용자 「가운데 글귀에는 +n% 가 필요 없겠지」 · ADR-1276 — ADR-1268 의 레벨당 값 대체]
     const stepText = s => {
-        if (s.reward === 'option') return opt ? L(M.affixText(opt.stat, opt.value)) : '—';
+        if (s.reward === 'option') return opt ? L(M.statLabel(opt.stat)) : '—';
         if (!line || s.reward === 'none') return '—';
-        if (s.reward === 'farm') {
-            const { kind, value } = line.farm;   // 다섯 다 비율 — 부호 · 단위는 옵션 줄과 같은 규칙(`statValue`)
-            return t('cx.rw.farm', { race, line: t(`cx.rw.${kind}`, { v: M.statValue(kind, value, CX_PCT) }) });
-        }
-        const { stat, value } = line.fight;      // 장비 옵션 사전 · 사전에 없는 둘은 도감 전용 이름(`CODEX_FIGHT_LABELS`)
-        return t('cx.rw.fight', { race, line: L(M.affixText(stat, value, M.CODEX_FIGHT_LABELS[stat])) });
+        if (s.reward === 'farm') return t('cx.rw.farm', { race, line: t(`cx.rw.${line.farm.kind}`) });
+        // 장비 옵션 사전 · 사전에 없는 둘은 도감 전용 이름(`CODEX_FIGHT_LABELS`)
+        return t('cx.rw.fight', { race, line: L(M.statLabel(line.fight.stat, M.CODEX_FIGHT_LABELS[line.fight.stat])) });
+    };
+    //   오른쪽 값의 소수는 셋째 자리까지(`0.175%` — 이 툴팁만 · ADR-1268)
+    const CX_DIGITS = 3;
+    //   오른쪽 끝 = 그 몬스터가 그 구간에서 **지금 내는 값** = 줄 값 × 먹는 레벨의 몫(`game.codexShare` — 합산 `codexLadder` · `codexOptions` 와 같은 몫) ·
+    //   한 레벨도 안 채운 구간은 `—`(ADR-1274 — `+0%` 대체) · 표기는 효과 글과 같은 규칙 [2026-11-18 사용자 「0/20 을 넣지 말고 현재 적용 중인 수치를」 · ADR-1271 — ADR-1268 의 `n/20` 대체]
+    const nowText = s => {
+        const share = SYS.game.codexShare(lv, s.reward);
+        if (s.reward === 'option') return M.statValue(opt.stat, opt.value * share, undefined, CX_DIGITS);
+        if (s.reward === 'farm') return M.statValue(line.farm.kind, line.farm.value * share, CX_PCT, CX_DIGITS);
+        return M.statValue(line.fight.stat, line.fight.value * share, M.CODEX_FIGHT_LABELS[line.fight.stat], CX_DIGITS);
     };
     //   도서관이 안 연 구간은 **자물쇠 줄만**(자물쇠 + 「도서관 n랭크」 · 회색) — 효과 글은 안 든다 · `lockHtml` 은 구간 순번(1부터)이 열쇠다 (ADR-0922 · ADR-0762 · ADR-1261)
     const steps = SYS.game.codexSegments().map((s, i) => {
-        const size = s.to - s.from + 1;
         const n = Math.max(0, Math.min(lv, s.to) - s.from + 1);
         const lock = m.lockHtml?.[i + 1];
         const text = stepText(s);
-        // 진행 칸은 효과가 있는 줄만 — 잠긴 구간 · 줄이 없는 구간(`—` · 보스의 파밍 · 전투)은 비운다
+        // 값 칸은 효과가 있는 줄만 — 잠긴 구간 · 줄이 없는 구간(`—` · 보스의 파밍 · 전투)은 비운다
         return `
         <div class="cx-step${n > 0 ? ' on' : ''}">
             <span class="cx-step-lv">${t('cx.tip.seg', { a: s.from, b: s.to })}</span>
             <span class="cx-step-b">${lock ? `<span class="cx-step-need">${lock}</span>` : text}</span>
-            <span class="cx-step-n">${lock || text === '—' ? '' : `${n}/${size}`}</span>
+            <span class="cx-step-n">${lock || text === '—' ? '' : n > 0 ? nowText(s) : '—'}</span>
         </div>`;
     }).join('');
     const card = el('div', 'tip-card cx-tip', `
