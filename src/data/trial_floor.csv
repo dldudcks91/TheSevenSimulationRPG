@@ -1,0 +1,51 @@
+floor,hero_level,rarity_w_normal,rarity_w_magic,rarity_w_rare,gear_up,skill_up,potion_id,potion_slots,tactic_slots,tactic_grade,description_kr
+1,1,80,18,2,0,0,minor_healing,2,1,common,⚠임시 — 시련의 탑 층 하나 = 한 줄 [2026-11-19 사용자 「1~50레벨까지」 · 「등급없어 삭제해 휘장필요없음 그냥 층만중요해」 · arena_design §7 · INTERFACE §2-17 · R552] · floor = 층 번호(1부터 빈틈없이 오름차순 · 줄 수 = 사다리 층 수) · hero_level = 상대 영웅 레벨(= 장비 아이템 레벨 · 1 ~ balance.csv:hero_level_cap · 1 ~ 50층은 층 번호와 같다) · rarity_w_* = 상대 장비 희귀도 가중치(일반 · 매직 · 레어 — 합이 0 이면 안 된다) · gear_up = 상대 장비 강화 단계(강화 대상 부위만 · 쓸 때 건물을 다 지었을 때의 상한으로 자른다) · skill_up = 고유 · 배운 스킬의 업그레이드 단계(쓸 때 balance.csv:skillbook_upgrade_max 로 자른다) · potion_id × potion_slots = 상대가 드는 물약(칸 수는 끝값으로 자른다) · tactic_slots · tactic_grade = 열린 전술 칸 수 · 그 칸들의 등급(전술 효과는 층마다 시드로 굴린다) · 값 = 옛 등급 행(arena_tier.csv) 여섯의 차림을 레벨 따라 이은 것 · 51 ~ 100층은 아직 없다(사용자와 대화로 정한다)
+2,2,80,18,2,0,0,minor_healing,2,1,common,⚠임시
+3,3,80,18,2,0,0,minor_healing,2,1,common,⚠임시
+4,4,80,18,2,0,0,minor_healing,2,1,common,⚠임시
+5,5,80,18,2,0,0,minor_healing,2,1,common,⚠임시
+6,6,78,20,3,0,0,minor_healing,2,1,common,⚠임시
+7,7,75,22,3,0,0,minor_healing,2,1,common,⚠임시
+8,8,73,24,4,0,0,minor_healing,2,1,common,⚠임시
+9,9,70,26,4,0,0,minor_healing,2,1,common,⚠임시
+10,10,68,28,5,0,1,minor_healing,2,1,common,⚠임시 · 레벨 10 = 스킬북(balance.csv:skillbook_learn_level)
+11,11,65,30,5,0,1,minor_healing,2,1,common,⚠임시
+12,12,63,32,6,0,1,minor_healing,2,1,common,⚠임시
+13,13,60,34,6,0,1,minor_healing,2,1,common,⚠임시
+14,14,58,36,7,0,1,minor_healing,2,1,common,⚠임시
+15,15,55,38,7,0,1,light_healing,2,2,common,⚠임시 · 물약 · 전술 칸이 오른다
+16,16,53,39,8,0,1,light_healing,2,2,common,⚠임시
+17,17,51,40,9,0,1,light_healing,2,2,common,⚠임시
+18,18,49,41,10,0,1,light_healing,2,2,common,⚠임시
+19,19,47,42,11,0,1,light_healing,2,2,common,⚠임시
+20,20,45,43,12,1,2,light_healing,2,2,common,⚠임시 · 레벨 20 = 마스터리 T3(balance.csv:mastery_t3_unlock_level)
+21,21,43,44,13,1,2,light_healing,2,2,common,⚠임시
+22,22,41,45,14,1,2,light_healing,2,2,common,⚠임시
+23,23,39,46,15,1,2,light_healing,2,2,common,⚠임시
+24,24,37,47,16,1,2,light_healing,2,2,common,⚠임시
+25,25,35,48,17,1,2,healing,3,3,magic,⚠임시 · 물약 · 전술 칸이 오른다
+26,26,33,48,19,1,2,healing,3,3,magic,⚠임시
+27,27,31,48,21,1,2,healing,3,3,magic,⚠임시
+28,28,29,49,22,1,2,healing,3,3,magic,⚠임시
+29,29,27,49,24,1,2,healing,3,3,magic,⚠임시
+30,30,25,49,26,2,3,healing,3,3,magic,⚠임시 · 레벨 30 = 전직(balance.csv:advance_unlock_level)
+31,31,23,49,28,2,3,healing,3,3,magic,⚠임시
+32,32,21,49,30,2,3,healing,3,3,magic,⚠임시
+33,33,19,50,31,2,3,healing,3,3,magic,⚠임시
+34,34,17,50,33,2,3,healing,3,3,magic,⚠임시
+35,35,15,50,35,2,3,greater_healing,3,4,magic,⚠임시 · 물약 · 전술 칸이 오른다
+36,36,14,49,38,2,3,greater_healing,3,4,magic,⚠임시
+37,37,12,48,40,2,3,greater_healing,3,4,magic,⚠임시
+38,38,11,47,43,3,3,greater_healing,3,4,magic,⚠임시
+39,39,9,46,45,3,3,greater_healing,3,4,magic,⚠임시
+40,40,8,45,48,3,4,greater_healing,3,4,magic,⚠임시
+41,41,6,44,50,3,4,greater_healing,3,4,magic,⚠임시
+42,42,5,43,53,3,4,greater_healing,3,4,magic,⚠임시
+43,43,3,42,55,4,4,greater_healing,3,4,magic,⚠임시
+44,44,2,41,58,4,4,greater_healing,3,4,magic,⚠임시
+45,45,0,40,60,4,4,greater_healing,4,5,rare,⚠임시 · 물약 · 전술 칸이 오른다
+46,46,0,36,64,4,4,greater_healing,4,5,rare,⚠임시
+47,47,0,32,68,5,4,greater_healing,4,5,rare,⚠임시
+48,48,0,28,72,5,5,greater_healing,4,5,rare,⚠임시
+49,49,0,24,76,6,5,greater_healing,4,5,rare,⚠임시
+50,50,0,20,80,6,5,super_healing,4,5,rare,⚠임시 · 레벨 50 = 만렙(balance.csv:hero_level_cap) · 물약 · 전술 칸이 오른다

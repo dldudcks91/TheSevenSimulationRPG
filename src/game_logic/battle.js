@@ -507,6 +507,8 @@ export function createBattleSystem(data) {
     const stagePool = stage => stageMonsters(stage)
         .filter(m => m.spawn_grade === 'normal')
         .map(m => m.monster_idx);
+    /** 그 장 칸들의 일반몹 풀을 합친 것 — 스테이지 순 · 겹친 id 는 한 번 · 한 라운드 단판(`rules.round`)이 일반몹 풀이 없는 칸(챕터보스 칸)에서 뽑는 풀 (2026-11-19 · R554 · endless_tower_design §0) · rng 0 */
+    const chapterPool = stage => [...new Set(Object.values(data.stages).filter(s => s.chapter === stage.chapter).flatMap(stagePool))];
 
     /**
      * 스테이지 원소 — 그 스테이지 몬스터의 **고유 스킬이 든 원소** 중 첫 값 (없으면 'physical').
@@ -975,10 +977,12 @@ export function createBattleSystem(data) {
      * @param difficulty 그 런의 단 id — 스킬 칸 수를 고른다(`makeEnemy` · `slotPlan` · 2026-10-18 · R269 · rng 0)
      * @param cxMagic 몬스터 id → 그 몬스터 종족의 도감 Lv1 매직 몫(`codexOf().farm.magic`) 또는 null — 그 한 마리의 차림 굴림 `magicFind` 에 체감 밖에서 더한다
      *   [2026-10-22 · R314 · INTERFACE §2-6 「도감 사다리」] · 차림 줄은 유닛마다 제 줄이라 전투 줄을 안 민다 · 0 이면 더해도 종전 값이다
+     * @param fix 한 라운드 단판(`createRun` 의 `rules.round` · 2026-11-19 · R554) `{type, escorts}` 또는 null — 종류를 바깥이 정하고(`n` 은 그 종류의 라운드 번호라 편성 예외가 그대로 먹는다) ·
+     *   `escorts` 가 수면 보스 호위 수를 굴리지 않는다. **null 이면 종전과 한 글자도 같다**
      */
-    function spawnRound(seed, stage, pool, n, magicFind = 0, level = stage.dlvl, wearChance = 1, difficulty = null, cxMagic = null) {
+    function spawnRound(seed, stage, pool, n, magicFind = 0, level = stage.dlvl, wearChance = 1, difficulty = null, cxMagic = null, fix = null) {
         const rng = makeRng(deriveSeed(seed ^ ENCOUNTER_STREAMS.formation, 0));
-        const type = stageRounds(stage).find(r => r.round_num === n)?.round_type ?? 'normal';
+        const type = fix?.type ?? stageRounds(stage).find(r => r.round_num === n)?.round_type ?? 'normal';
         const budgetKey = type === 'boss' ? stage.boss_grade : type;
         const bd = data.budgets[budgetKey];
         // 스테이지 편성 예외 — 뽑을 목록과 범위 (INTERFACE §2-13). 예외가 없으면 목록이 `pool` 그 자체다
@@ -1009,7 +1013,8 @@ export function createBattleSystem(data) {
                     add(id, 'elite', { sin, traits: rollEliteTraits(rng, sin, difficulty) });
                 }
             } else {
-                const escorts = between(...draw.escorts);
+                // 호위 수 — 단판이 고정하면 굴리지 않는다(무한의 탑 보스 층 · `[balance.csv:endless_boss_escorts]` · R554) · 안 주면 굴림 1회(종전)
+                const escorts = fix?.escorts ?? between(...draw.escorts);
                 for (let i = 0; i < escorts; i++) add(pick(), 'normal');
             }
         } else {
@@ -1070,6 +1075,23 @@ export function createBattleSystem(data) {
     }
 
     /**
+     * 한 라운드 단판의 입력 [2026-11-19 · R554 · INTERFACE §2-6 `rules.round` · endless_tower_design §0] — `{type, escorts?}` 를 검사하고
+     *   `spawnRound` 의 `fix` 와 스폰 풀을 낸다. 라운드 번호 `n` = 그 스테이지 세트에서 그 종류의 첫 라운드(없으면 1 — 편성 예외 `roundDraw` 가 그 번호로 먹는다) ·
+     *   풀 = 그 칸의 일반몹 · 비면 그 장 일반몹 전체(`chapterPool` — 챕터보스 칸의 정예 층). 틀리면 던진다 · rng 0
+     */
+    const SOLO_TYPES = ['normal', 'elite', 'boss'];
+    function soloRound(stage, r) {
+        if (!stage) throw new Error('battle: rules.round — 스테이지가 없다 (INTERFACE §2-6)');
+        if (!SOLO_TYPES.includes(r.type)) throw new Error(`battle: rules.round.type '${r.type}' — normal · elite · boss (INTERFACE §2-6)`);
+        if (r.type === 'boss' && !stage.boss_monster_idx) throw new Error(`battle: rules.round — 스테이지 ${stage.stage_id} 에 보스가 없다 (INTERFACE §2-6)`);
+        const escorts = r.escorts ?? null;
+        if (escorts !== null && !(Number.isInteger(escorts) && escorts >= 0)) throw new Error(`battle: rules.round.escorts '${escorts}' — 0 이상 정수 (INTERFACE §2-6)`);
+        const own = stagePool(stage), pool = own.length ? own : chapterPool(stage);
+        if (!pool.length && (r.type !== 'boss' || escorts !== 0)) throw new Error(`battle: rules.round — 스테이지 ${stage.stage_id} 의 장에 일반몹이 없다 (INTERFACE §2-6)`);
+        return { type: r.type, escorts, pool, n: stageRounds(stage).find(x => x.round_type === r.type)?.round_num ?? 1 };
+    }
+
+    /**
      * 런 하나 — **라운드 단위로 진행한다** [2026-09-14 · R89 · base_expedition_design §1-1].
      *   `next()` 한 번 = 라운드 하나를 끝까지 계산한다(이기거나 · 전멸하거나 · 시간이 끝나거나). 다음 라운드는 **부를 때 연다** —
      *   그래서 라운드와 라운드 사이에 부르는 쪽(정산)이 끼어들 자리가 생긴다. 이어서 부르기만 하면 한 번에 끝까지 돈 것과
@@ -1121,8 +1143,11 @@ export function createBattleSystem(data) {
         // 몬스터 레벨 = **이번 런의 스테이지 레벨** [2026-09-14 · R87 · base_expedition_design §1-4] — 적 생성 · 장비 아이템 레벨 ·
         //   처치 XP · 적중이 전부 이 값 하나를 읽는다. 스폰의 굴림 횟수는 안 바꾸고, 전투 중 수열은 적중을 따라 갈린다 (INTERFACE §2 simulate)
         const stageLevel = level ?? stage.dlvl;
-        const pool = encounter ? [] : stagePool(stage);
-        const rounds = encounter ? 1 : stageRounds(stage).length;
+        // 한 라운드 단판 [2026-11-19 · R554 · endless_tower_design §0 — 무한의 탑 한 층] — `rules.round` 를 주면 그 스테이지의 그 종류 라운드 하나만 돈다(아래 `soloRound`) ·
+        //   풀이 빈 칸(챕터보스 칸)은 그 장 일반몹 전체 · 안 주면 아래 세 줄이 종전 그대로다 (INTERFACE §2-6 `rules.round`)
+        const solo = !encounter && rules?.round ? soloRound(stage, rules.round) : null;
+        const pool = encounter ? [] : solo ? solo.pool : stagePool(stage);
+        const rounds = encounter || solo ? 1 : stageRounds(stage).length;
         // 잘못된 외부 시드는 난수를 소비하거나 전투를 열기 전에 거절한다. 0 도 유효한 uint32 씨앗이다.
         if (encounterSeeds !== null && (encounter || !Array.isArray(encounterSeeds) || encounterSeeds.length !== rounds
             || !Array.from(encounterSeeds).every(s => Number.isInteger(s) && s >= 0 && s <= 0xFFFFFFFF)))
@@ -1637,8 +1662,8 @@ export function createBattleSystem(data) {
                 actives: (p.actives ?? []).map(a => slotOf(a, SK.resolve(a), fitterOf(p.weaponGroup), 0)),
                 // 시작 순서 — 결투장 팀 스냅샷이 정한다(다른 플레이어의 방어 편성 = 그 주인의 `fixed` · `random` · AI 팀 = `buffFirst` · R515) · 없으면 적의 기본(`startRanks`)
                 ...(p.startOrder ? { startOrder: p.startOrder } : {}),
-            })) } : spawnRound(roundSeedOf(round), stage, pool, round, magicFind, stageLevel, wearChance, difficulty,
-                cxOf ? id => cxOf(id)?.farm.magic ?? 0 : null);
+            })) } : spawnRound(roundSeedOf(round), stage, pool, solo ? solo.n : round, magicFind, stageLevel, wearChance, difficulty,
+                cxOf ? id => cxOf(id)?.farm.magic ?? 0 : null, solo);   // 단판은 그 종류의 라운드 번호로 편성한다(R554) · `round` 이벤트의 `n` 은 런의 라운드
             units.enemies = sp.list;
             // 유닛에 얹는다 — 대기 무리(`band` · 불러내기가 세운다)도 같은 라운드의 몬스터다 · 칸이 없는 몬스터(보스 · 6 · 7장)는 null
             if (cxOf) for (const e of units.enemies) for (const u of [e, ...(e.band ?? [])]) u.codex = cxOf(u.monsterId);
@@ -3792,7 +3817,7 @@ export function createBattleSystem(data) {
             }
             if (sk && hitType === 'lightning' && A.lightning_proc_chance && (sk.procChance ?? 0) > 0) u.procChance = Math.min(1, u.procChance + A.lightning_proc_chance);   // 썬더 공통 3
             // 죄종 마스터리 조건부 [2026-10-05 · 2026-11-13 R468 죄종 T3] — 둘 다 **때리기 전 HP** 로 판정한다. 때리는 쪽 몫은 치명 · 치명 피해 · 방어 무시 · 데미지 %(같은 괄호) ·
-            //   최대 데미지(범위 위끝 — 괄호 앞 고정 수치라 지금 괄호를 곱해 더한다) · 강타 · 흡혈 · 맞는 쪽 몫은 피해 감소(노드마다 원천 하나) · 모든 저항 · 고정 피해 감소 ·
+            //   최대 데미지(범위 위끝 — 괄호 앞 고정 수치라 지금 괄호를 곱해 더한다 · 무기 % 는 hero.computeCombat 이 먹여 넘긴다 R556) · 강타 · 흡혈 · 맞는 쪽 몫은 피해 감소(노드마다 원천 하나) · 모든 저항 · 고정 피해 감소 ·
             //   타격 회복(아래 경직) · 반사. 없으면 null 이라 종전과 같다 · rng 0
             const ma = u.mcond ? condSum(u, target, true) : null;
             const md = target.mcond ? condSum(target, u, false) : null;

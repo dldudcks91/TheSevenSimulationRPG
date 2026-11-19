@@ -221,7 +221,7 @@ export function mountMobilePages(main) {
             side.appendChild(production);
             deck(side, 'research-line-content', [{node:production,label:'production'}, {node:side.querySelector(':scope > .dp-side-fx'),label:'registration'}]);
         }
-    } else if (tab === 'colosseum' || tab === 'arena') {
+    } else if (tab === 'endless' || tab === 'colosseum' || tab === 'arena') {
         deck(page, tab, items(page, '.arena-rail, .arena-main', ['opponent','prepare']));
         afterPick(page, '.cs-floor:not(.locked), .ar-cand', tab, 1);
         const preparation = page.querySelector('.arena-main');

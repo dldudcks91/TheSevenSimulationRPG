@@ -223,6 +223,7 @@ const STRINGS = {
     'ui.helpFor': { ko: '{name} 도움말', en: 'Help for {name}', zh: '{name}帮助' },
     'hint.attributes': { ko: '영웅 생성 시 각 기본 능력치는 최대 {max}까지 붙습니다. 전투 수치와 연구소 등록 효과의 바탕이 됩니다.', en: 'Each base attribute can roll up to {max} when a hero is created. Attributes determine combat values and Laboratory assignment effects.', zh: '创建英雄时，每项基础属性最多为{max}。属性是战斗数值与研究所派驻效果的基础。' },
     'hint.colosseum': { ko: '상대 팀을 확인하고 선택한 Party로 겨룹니다. 영웅의 장비·스킬과 편성을 함께 준비하세요.', en: 'Inspect the opposing team and fight with your selected Party. Prepare its equipment, skills and formation together.', zh: '查看对手队伍，以所选Party进行较量。请一并准备英雄的装备、技能与编队。' },
+    'hint.endless': { ko: '그 층의 몬스터를 확인하고 선택한 Party로 도전합니다. 같은 층에는 언제나 같은 몬스터가 나옵니다.', en: 'Inspect the floor’s monsters and challenge them with your selected Party. The same floor always fields the same monsters.', zh: '查看该层的怪物，以所选Party进行挑战。同一层出现的怪物始终相同。' },
     'hint.arena': { ko: '상대를 고르고 선택한 Party로 결투합니다. 전투 전에 상대 구성과 내 물약·전술을 확인하세요.', en: 'Choose an opponent and duel with the selected Party. Check both teams and your potions and tactics before starting.', zh: '选择对手，以所选Party进行决斗。开战前请确认对手阵容以及我方的药水与战术。' },
     'hint.opponents': { ko: '후보를 누르면 상대 팀을 확인할 수 있습니다. 새 상대는 후보 목록을 다시 고릅니다.', en: 'Select a candidate to inspect its team. New opponents refreshes the candidate list.', zh: '点击候选即可查看对手队伍。“新对手”会重新挑选候选名单。' },
     'hint.defense': { ko: '다른 플레이어가 상대로 만나는 Party입니다. 영웅 3명이 찬 편성만 올라갑니다.', en: 'The Party other players face as your defense. Only a party with 3 heroes is listed.', zh: '其他玩家作为对手遇到的Party。只有满3名英雄的编队才会被列入。' },
@@ -270,6 +271,7 @@ const STRINGS = {
     'hint.payouts': { ko: '당첨 조합과 배당입니다. 판돈과 함께 확인하면 한 판의 보상을 비교할 수 있습니다.', en: 'Winning combinations and their payouts. Compare them with your chosen stake.', zh: '中奖组合与赔付。结合赌注查看，可比较每次的奖励。' },
     'hint.forge_make': { ko: '장비 부위나 물약을 골라 제작합니다. 만들 항목의 재료와 골드 비용을 확인하세요.', en: 'Choose an equipment slot or potion to craft. Check its material and gold costs.', zh: '选择装备部位或药水进行制作。请确认所需材料与金币费用。' },
     'hint.forge_up': { ko: '장비를 골라 강화합니다. 다음 단계의 변화와 필요한 재료를 확인한 뒤 진행하세요. 낮은 단계는 실패해도 비용만 나가고, 중간 단계는 실패하면 한 단계 내려갈 수 있으며, 높은 단계는 장비가 부서질 수 있습니다. 부서진 장비는 분해한 것과 같은 재료를 남깁니다. 등급이 높을수록 성공 확률이 낮고, 성공의 일부는 대성공으로 더 크게 오릅니다.', en: 'Select equipment to upgrade. Review the next step’s changes and required materials. At low levels a failure only spends the cost; at middle levels it can drop the item one level; at high levels the item can break. A broken item leaves the same materials as salvaging it. Higher grades have lower success chances, and some successes are great successes that raise more.', zh: '选择装备进行强化。请确认下一级的变化与所需材料后再进行。低阶段失败只消耗费用；中阶段失败可能下降1级；高阶段装备可能损毁。损毁的装备会留下与分解相同的材料。稀有度越高，成功几率越低；部分成功会成为大成功，提升更多。' },
+    'hint.forge_ench': { ko: '레어 이상 장비에 옵션 한 줄을 더합니다. 다시 하면 새 줄과 원래 줄 중 하나를 고릅니다.', en: 'Adds one option line to a Rare or better item. Enchanting again lets you keep either the new line or the current one.', zh: '为稀有及以上装备附加一条词条。再次附魔时可在新词条与原有词条中选择其一。' },
     'hint.forge_synth': { ko: '같은 종류의 아래 단계 재료를 써서 위 단계 재료를 만듭니다. 합성에 쓴 재료는 소모됩니다.', en: 'Combine lower-tier materials into a higher tier of the same material. Combining consumes the input materials.', zh: '用同类低一级别的材料合成高一级别的材料。合成所用的材料会被消耗。' },
     'hint.forge_craft': { ko: '크래프트는 준비 중입니다. 현재는 제작·강화·합성을 이용할 수 있습니다.', en: 'Craft is in development. Smithing, upgrading and combining are currently available.', zh: '打造功能尚未开放。目前可使用制作、强化与合成。' },
     'hint.temper': { ko: '셋 중 하나를 골라 재료를 내면 다음 강화 한 번에 효과가 붙습니다. 달구기는 성공 확률, 덧대기는 대성공 비율을 올리고, 담금질은 강등이나 파괴를 막을 확률을 줍니다. 담금질은 강등이나 파괴가 있는 단계에서만 쓸 수 있습니다. 재료 단계는 장비 레벨과 등급이 정하며, 높을수록 효과가 큽니다.', en: 'Pick one of three and spend its material to boost your next upgrade. Heat raises the success chance, Reinforce raises the great-success share, and Quench gives a chance to prevent a downgrade or break. Quench can only be used at steps where a downgrade or break is possible. The material tier is set by the item level and grade; higher tiers give bigger effects.', zh: '三选一并支付材料，下一次强化即获得效果。加热提高成功几率，加固提高大成功比例，淬火提供防止降级或损毁的几率。淬火只能在可能降级或损毁的阶段使用。材料级别由装备等级与稀有度决定，级别越高效果越大。' },
@@ -835,23 +837,25 @@ const STRINGS = {
        아래 나열 순서는 탭 바 순서와 같다 — 읽는 사람이 화면과 대조할 수 있게. */
     'nav.expedition': { ko: '원정', en: 'Expedition', zh: '远征' },
     'nav.explore': { ko: '탐험', en: 'Exploration', zh: '探索' },
+    // 무한의 탑(탭 id `endless`) [2026-11-19 사용자 확정 · SCREEN_DESIGN §1 · ADR-1294] — 시련의 탑 바로 앞 · 몬스터만 상대하는 층 사다리 · 사다리 문구는 시련의 탑 것(`cs.*`)을 같이 쓴다
+    'nav.endless': { ko: '무한의 탑', en: 'Endless Tower', zh: '无尽之塔' },
+    'et.from': { ko: '{n}층 · Lv.{lv} · {kind}', en: 'Floor {n} · Lv.{lv} · {kind}', zh: '第{n}层 · Lv.{lv} · {kind}' },   // 판 머리 — 층 · 상대 레벨 · 정예 / 보스
+    'et.fromDiff': { ko: '{n}층 · Lv.{lv} · {kind} · {diff}', en: 'Floor {n} · Lv.{lv} · {kind} · {diff}', zh: '第{n}层 · Lv.{lv} · {kind} · {diff}' },   // 노말이 아닌 규칙의 층 — 뒤에 단 이름
+    'et.back': { ko: '무한의 탑으로', en: 'Back to the Endless Tower', zh: '返回无尽之塔' },
     // 시련의 탑(탭 id `colosseum`) [2026-10-18 사용자 지시 · SCREEN_DESIGN §1 · ADR-0670 · 이름 2026-11-13 ADR-1071] — 결투장(`arena`) 바로 앞 · 오프라인 층 사다리 · 레일(사다리) | 판
     'nav.colosseum': { ko: '시련의 탑', en: 'Tower of Trials', zh: '试炼之塔' },
     'cs.progress': { ko: '{n} / {total}층', en: 'Floor {n} / {total}', zh: '{n} / {total}层' },
     'cs.progressDone': { ko: '{total}층 완주', en: 'All {total} floors cleared', zh: '{total}层全部通关' },
-    'cs.lv': { ko: 'Lv.{a}~{b}', en: 'Lv.{a}–{b}', zh: 'Lv.{a}～{b}' },
-    'cs.lv1': { ko: 'Lv.{a}', en: 'Lv.{a}', zh: 'Lv.{a}' },
-    'cs.from': { ko: '{n}층 · {tier} · AI 팀', en: 'Floor {n} · {tier} · AI team', zh: '第{n}层 · {tier} · AI队伍' },
-    'cs.fromGate': { ko: '{n}층 · {tier} 승급전 · AI 팀', en: 'Floor {n} · {tier} promotion bout · AI team', zh: '第{n}层 · {tier}晋级赛 · AI队伍' },
+    'cs.row': { ko: '{a}–{b}층', en: 'F{a}–{b}', zh: '{a}–{b}层' },   // 사다리 줄 머리 — 10층씩 한 줄 (ADR-1292)
+    'cs.from': { ko: '{n}층 · Lv.{lv} · AI 팀', en: 'Floor {n} · Lv.{lv} · AI team', zh: '第{n}层 · Lv.{lv} · AI队伍' },
     'cs.fight': { ko: '도전', en: 'Challenge', zh: '挑战' },
     'cs.back': { ko: '시련의 탑으로', en: 'Back to the Tower', zh: '返回试炼之塔' },
     'cs.last': { ko: '지난 도전: {result} · {sec}초', en: 'Last challenge: {result} · {sec}s', zh: '上次挑战：{result} · {sec}秒' },
     'cs.last.open': { ko: '지난 도전: {result} · {sec}초 · {n}층 열림', en: 'Last challenge: {result} · {sec}s · Floor {n} unlocked', zh: '上次挑战：{result} · {sec}秒 · 已开启第{n}层' },
-    'cs.emblem': { ko: '{tier} 휘장 획득', en: '{tier} emblem earned', zh: '获得{tier}徽章' },
     'cs.help': {
-        ko: '시련의 탑은 한 층씩 올라가는 탑입니다. 처음엔 첫 층만 열려 있고, 열린 가장 높은 층을 이기면 다음 층이 열립니다. 깬 층은 다시 도전할 수 있고, 져도 잃는 것이 없습니다.<br>층마다 상대 AI 팀이 정해져 있습니다 — 같은 층은 언제 가도 같은 팀입니다. 위층일수록 상대의 레벨 · 장비 · 강화 · 스킬이 오릅니다.<br>등급의 마지막 층은 승급전입니다. 이기면 그 등급의 휘장을 얻습니다.',
-        en: 'The Tower of Trials is climbed one floor at a time. Only the first floor is open at the start; beat the highest open floor to unlock the next. You can challenge cleared floors again, and losing costs nothing.<br>Each floor has a fixed AI team — the same floor always fields the same team. Higher floors bring higher level, gear, upgrades and skills.<br>The last floor of each tier is a promotion bout. Win it to earn that tier’s emblem.',
-        zh: '试炼之塔需逐层攀登。起初只开放第一层，击败已开放的最高层即可开启下一层。已通关的楼层可以再次挑战，失败也没有任何损失。<br>每层的对手AI队伍都是固定的——同一层无论何时去都是同一支队伍。越往上，对手的等级 · 装备 · 强化 · 技能越高。<br>每个段位的最后一层是晋级赛。获胜即可获得该段位的徽章。',
+        ko: '시련의 탑은 한 층씩 올라가는 탑입니다. 처음엔 첫 층만 열려 있고, 열린 가장 높은 층을 이기면 다음 층이 열립니다. 깬 층은 다시 도전할 수 있고, 져도 잃는 것이 없습니다.<br>층마다 상대 AI 팀이 정해져 있습니다 — 같은 층은 언제 가도 같은 팀입니다. 층 번호가 곧 상대 레벨이고, 위층일수록 장비 · 강화 · 스킬도 오릅니다.',
+        en: 'The Tower of Trials is climbed one floor at a time. Only the first floor is open at the start; beat the highest open floor to unlock the next. You can challenge cleared floors again, and losing costs nothing.<br>Each floor has a fixed AI team — the same floor always fields the same team. The floor number is the enemy level, and higher floors also bring better gear, upgrades and skills.',
+        zh: '试炼之塔需逐层攀登。起初只开放第一层，击败已开放的最高层即可开启下一层。已通关的楼层可以再次挑战，失败也没有任何损失。<br>每层的对手AI队伍都是固定的——同一层无论何时去都是同一支队伍。层数即对手等级，越往上，对手的装备 · 强化 · 技能也越高。',
     },
     'nav.arena': { ko: '결투장', en: 'Arena', zh: '决斗场' },
     // 결투장(탭 id `arena`) = 온라인 ELO [2026-10-18 · ADR-0670 · 이름 2026-11-13 ADR-1071 — ~~오프라인 | 온라인 갈래~~ ADR-0656] — 리그 카드 · 상대 후보 셋 · 친선전 창 · 검사 사유(INTERFACE §2-17 의 코드마다 하나)
@@ -910,9 +914,9 @@ const STRINGS = {
     'ar.draw': { ko: '무승부', en: 'Draw', zh: '平局' },
     'ar.last': { ko: '지난 결투: {result} · {sec}초', en: 'Last duel: {result} · {sec}s', zh: '上次决斗：{result} · {sec}秒' },
     'ar.help': {
-        ko: '저장된 편성을 고르면 그 편성의 영웅과 전열·후열이 그대로 출전합니다. 인원과 진형은 편성 탭에서 수정합니다. 영웅 3명을 채워야 결투를 시작할 수 있습니다.<br>개인 능력치·장비·스킬에 고른 편성의 파티 전술·물약을 더해 단판 전투를 합니다. 도감 보너스는 적용하지 않고, 상대도 자기 파티 전술·물약을 씁니다. 제한시간이 지나면 무승부입니다.<br>결투는 원정과 독립되어 보상·도감 처치·자원 소모가 없습니다. 마신 물약도 재고에서 줄지 않습니다. 결투장 레이팅과 시련의 탑에서 오른 층은 저장되고, 고른 상대와 지난 결과는 재접속하면 초기화됩니다.',
-        en: 'Choose a saved party to use its heroes and front or back ranks. Edit members and formation in the Party tab. Assign three heroes to start a duel.<br>A single round uses individual stats, gear and skills plus the chosen party’s tactics and potions. Codex bonuses do not apply, and opponents use their own tactics and potions. Reaching the time limit ends in a draw.<br>Duels run independently of expeditions, with no rewards, codex kills or resource costs. Potions drunk are not taken from your stock. Your Arena rating and Tower of Trials progress are saved; the picked opponent and last result reset when you reload.',
-        zh: '选择已保存的编队后，该编队的英雄与前排 · 后排会原样出战。人数与阵型在编队标签页中修改。需满3名英雄才能开始决斗。<br>以个人属性 · 装备 · 技能，加上所选编队的队伍战术 · 药水，进行单场战斗。不适用图鉴加成，对手也会使用自己的队伍战术 · 药水。超过时间限制即为平局。<br>决斗独立于远征，没有奖励 · 图鉴击杀 · 资源消耗。喝下的药水也不会从库存中扣除。决斗场积分与试炼之塔已登上的楼层会被保存，所选对手与上次结果会在重新进入游戏后重置。',
+        ko: '저장된 편성을 고르면 그 편성의 영웅과 전열·후열이 그대로 출전합니다. 인원과 진형은 편성 탭에서 수정합니다. 영웅 3명을 채워야 결투를 시작할 수 있습니다.<br>개인 능력치·장비·스킬에 고른 편성의 파티 전술·물약과 내 도감 보너스를 더해 단판 전투를 합니다. 상대도 자기 파티 전술·물약을 씁니다. 제한시간이 지나면 무승부입니다.<br>결투는 원정과 독립되어 보상·도감 처치·자원 소모가 없습니다. 마신 물약도 재고에서 줄지 않습니다. 결투장 레이팅과 시련의 탑에서 오른 층은 저장되고, 고른 상대와 지난 결과는 재접속하면 초기화됩니다.',
+        en: 'Choose a saved party to use its heroes and front or back ranks. Edit members and formation in the Party tab. Assign three heroes to start a duel.<br>A single round uses individual stats, gear and skills plus the chosen party’s tactics and potions and your Codex bonuses. Opponents use their own tactics and potions. Reaching the time limit ends in a draw.<br>Duels run independently of expeditions, with no rewards, codex kills or resource costs. Potions drunk are not taken from your stock. Your Arena rating and Tower of Trials progress are saved; the picked opponent and last result reset when you reload.',
+        zh: '选择已保存的编队后，该编队的英雄与前排 · 后排会原样出战。人数与阵型在编队标签页中修改。需满3名英雄才能开始决斗。<br>以个人属性 · 装备 · 技能，加上所选编队的队伍战术 · 药水与我方的图鉴加成，进行单场战斗。对手也会使用自己的队伍战术 · 药水。超过时间限制即为平局。<br>决斗独立于远征，没有奖励 · 图鉴击杀 · 资源消耗。喝下的药水也不会从库存中扣除。决斗场积分与试炼之塔已登上的楼层会被保存，所选对手与上次结果会在重新进入游戏后重置。',
     },
     'nav.party': { ko: '편성', en: 'Party', zh: '编队' },
     'nav.character': { ko: '캐릭터', en: 'Character', zh: '角色' },
@@ -1278,6 +1282,25 @@ const STRINGS = {
     'fg.failMark': { ko: '실패', en: 'Failed', zh: '失败' },
     'fg.pick': { ko: '장비 선택', en: 'Pick an item', zh: '选择装备' },   // 장비칸 · 아이템창 어디서든 고른다 (ADR-0364)
     'fg.noBase': { ko: '강화 없음', en: 'No upgrade', zh: '不可强化' },
+    // 인챈트 — 대장간 강화 옆 탭 (SCREEN_DESIGN §8-2 · ADR-1293 · item_design §8 · R553) · 오류 키는 결과 코드와 짝(`fg.err.<코드>` — game.enchantItem · enchantPick)
+    'fg.seg.ench': { ko: '인챈트', en: 'Enchant', zh: '附魔' },
+    'fg.board.ench': { ko: '인챈트', en: 'Enchant', zh: '附魔' },   // 인챈트 칸 오른쪽 판 제목 띠
+    'fg.ench.line': { ko: '인챈트 줄', en: 'Enchant line', zh: '附魔词条' },   // 인챈트 칸 가운데 판 제목 띠
+    'fg.ench.none': { ko: '없음', en: 'None', zh: '无' },
+    'fg.ench.old': { ko: '원래', en: 'Current', zh: '原有' },   // 고르기 카드 — 지금 인챈트 줄
+    'fg.ench.new': { ko: '새 줄', en: 'New line', zh: '新词条' },   // 고르기 카드 — 다시 굴린 줄
+    'fg.ench.pick': { ko: '선택', en: 'Choose', zh: '选择' },
+    'fg.ench.go': { ko: '인챈트', en: 'Enchant', zh: '附魔' },
+    'fg.ench.wait': { ko: '선택 대기', en: 'Choose first', zh: '等待选择' },   // 고르기 대기 중 [인챈트] 자리
+    'fg.ench.options': { ko: '후보 옵션', en: 'Possible options', zh: '候选词条' },
+    'fg.ench.rareOnly': { ko: '레어 이상만', en: 'Rare or better only', zh: '仅限稀有及以上' },
+    'fg.ench.added': { ko: '인챈트 · {line}', en: 'Enchanted · {line}', zh: '附魔 · {line}' },
+    'fg.ench.kept': { ko: '원래 줄 유지', en: 'Kept the current line', zh: '保留原有词条' },
+    'fg.ench.took': { ko: '새 줄로 교체', en: 'Switched to the new line', zh: '已换成新词条' },
+    'fg.err.noEnchant': { ko: '레어 이상 장비만 가능', en: 'Rare or better items only', zh: '仅限稀有及以上装备' },
+    'fg.err.undecided': { ko: '새 줄 선택 대기 중', en: 'Choose a line first', zh: '请先选择词条' },
+    'fg.err.noOption': { ko: '붙을 옵션 없음', en: 'No options left to add', zh: '没有可附加的词条' },
+    'fg.err.noPending': { ko: '선택할 줄 없음', en: 'Nothing to choose', zh: '没有可选择的词条' },
     // 제작 칸 (R96) — 오류 키는 결과 코드와 짝을 맞춘다(`fg.err.<코드>` — game.makeItem)
     'fg.make.lv': { ko: 'Lv{n}', en: 'Lv{n}', zh: 'Lv{n}' },   // 제작 레벨 버튼 — 대역이 아니라 레벨 하나다 (ADR-0263)
     'fg.make.go': { ko: '만들기', en: 'Make', zh: '制作' },
@@ -2211,6 +2234,37 @@ const STRINGS = {
         en: "<b>Search</b> brings one candidate to the Tavern per interval for each hero assigned to this line, and does nothing with no one assigned. Interval makes arrivals faster. While that searcher's Tavern slots are full, the searcher rests and sets out again as soon as you free one of them. Quality raises Rare chance, Waiting Room opens a second slot per searcher and then Filter, and Roster raises how many heroes you can keep.<br><br><b>Training</b> helps assigned heroes catch up toward the roster's leading level. Its cap is <b>the highest roster level minus the gap shown by Range</b>. Research Range to reduce that gap. Heroes at or above the cap gain no Training XP, so Expeditions must push the leading level forward.<br><br>The <b>Gambling Den line</b> automatically produces gold once the Tavern's Gambling Den is unlocked. It needs no stake or spin button. Income raises output, while Jackpot raises the chance of an extra payout. This is separate from manually playing Tavern slots.",
         zh: '<b>搜寻</b>线上每位派驻英雄每隔一段时间就带一名候选到酒馆。没有派驻任何人时不会运作。[间隔]让到达更快。该英雄那一行的酒馆格子已满时，该英雄会休息，你一腾出该行格子就立刻再次出发。[品质]提高稀有候选几率，[等候所]为每一行开启第二格并开启筛选，[名册]增加可拥有的英雄数量。<br><br>派驻在<b>训练</b>线上的英雄会随时间获得经验，追赶名册中领先的等级。上限为<b>名册最高等级 − [范围]所示的差距</b>。研究范围可缩小这个差距。等级在上限以上的英雄不会获得训练经验，因此要靠远征来推高最高等级。<br><br><b>赌坊线</b>在开放酒馆的赌坊后会自动生产金币，无需下注或点击旋转。[收益]提高产量，[大丰收]提高额外再发放一次的几率。这与亲手玩酒馆老虎机是两回事。',
     },
+    // 무한의 탑 도움말 (ADR-1294 · endless_tower_design §0) — 시련의 탑 묶음과 같은 모양 · 층 수 · 규칙 단 · 호위 수는 표 · 키에서 읽는다(`helpSections` 의 args)
+    'help.endless.prepare.title': {
+        ko: "무한의 탑에서 몬스터 상대하기",
+        en: "Facing monsters in the Endless Tower",
+        zh: '在无尽之塔中迎战怪物',
+    },
+    'help.endless.prepare.body': {
+        ko: "무한의 탑은 몬스터 무리를 상대로 한 층씩 오르는 곳입니다. 원정에서 만나는 정예 · 보스 라운드를 한 판씩 다시 겨뤄, 지금 편성이 어디까지 버티는지 볼 수 있습니다. 챕터 진행과 별개이고, 원정에 나가 있는 영웅도 원정에서 빠지지 않은 채 도전할 수 있습니다.<br><br>사용할 Party를 고르고 영웅 {duelSize}명을 채운 뒤 열린 층을 선택합니다. 판 위에 그 층의 몬스터 세 마리가 서고, 카드에 올리면 장비와 스킬을 볼 수 있습니다. [도전]을 누르면 한 판의 자동전투가 시작됩니다.",
+        en: "The Endless Tower lets you climb floor by floor against monster packs. Each floor replays an elite or boss round from the Expeditions, so you can see how far your current party holds. It is separate from chapter progress, and heroes out on an Expedition can challenge it without leaving that Expedition.<br><br>Choose a Party, fill all {duelSize} hero slots and select an open floor. The floor's three monsters stand on the board; hover a card to see its gear and skills. Press Challenge to start one automatic battle.",
+        zh: '无尽之塔是迎战怪物群、逐层攀登的地方。每一层都会把远征中遇到的精英 · 首领回合单独再打一场，可以看看当前编队能撑到哪一层。它与章节进度无关，正在远征的英雄也能在不离开远征的情况下挑战。<br><br>选择要使用的Party，填满{duelSize}名英雄后，选择已开放的层。棋盘上会站着该层的三只怪物，把鼠标移到卡片上可以查看装备与技能。点击[挑战]即开始一场自动战斗。',
+    },
+    'help.endless.floors.title': {
+        ko: "층 짜기",
+        en: "How the floors are built",
+        zh: '楼层构成',
+    },
+    'help.endless.floors.body': {
+        ko: "층은 모두 {total}층이고, 1장부터 장마다 10층씩 쌓여 있습니다. 스테이지마다 두 층입니다 — 앞 층은 정예 하나와 일반 몬스터 둘이 나오는 <b>정예 층</b>, 뒤 층은 그 스테이지의 보스와 호위 {escorts}마리가 나오는 <b>보스 층</b>입니다. 5스테이지 보스 층에는 챕터보스와 정해진 정예 호위가 나옵니다.<br><br><b>층 번호가 곧 상대 레벨</b>이고, {from}층부터는 {diff} 규칙이 적용되어 몬스터가 더 강해집니다. 같은 층에는 언제나 같은 몬스터 무리가 나옵니다. 처음에는 첫 층만 열리고, 열린 가장 높은 층을 이기면 다음 층이 열립니다. 이미 깬 층은 다시 도전할 수 있고, 져도 열린 층을 잃지 않습니다.",
+        en: "There are {total} floors, ten per chapter starting from Chapter 1. Each stage has two floors — first an <b>elite floor</b> with one elite and two normal monsters, then a <b>boss floor</b> with that stage's boss and {escorts} escorts. Stage 5 boss floors bring the chapter boss with its fixed elite guards.<br><br><b>The floor number is the enemy level</b>, and from floor {from} the {diff} rules apply, making monsters stronger. The same floor always fields the same monster pack. Only the first floor is open at the start; beat the highest open floor to unlock the next. Cleared floors can be retried, and losing never removes unlocked floors.",
+        zh: '楼层共{total}层，从第1章起每章10层。每个关卡两层——前一层是出现一只精英和两只普通怪物的<b>精英层</b>，后一层是出现该关卡首领与{escorts}只护卫的<b>首领层</b>。第5关卡的首领层会出现章节首领与固定的精英护卫。<br><br><b>层数即对手等级</b>，从第{from}层起适用{diff}规则，怪物会变得更强。同一层出现的怪物群始终相同。起初只开放第一层，打赢已开放的最高层即可开放下一层。已通关的层可以再次挑战，失败也不会失去已开放的层。',
+    },
+    'help.endless.rules.title': {
+        ko: "무한의 탑의 규칙",
+        en: "Endless Tower rules",
+        zh: '无尽之塔的规则',
+    },
+    'help.endless.rules.body': {
+        ko: "전투는 원정과 같은 규칙으로 한 라운드를 겨룹니다. 영웅의 능력치 · 장비 · 스킬에 선택한 Party의 파티 전술 · 물약 · 진형과 도감 보너스가 모두 적용되고, 몬스터 쪽도 원정에서처럼 부류 버프 등이 그대로 걸립니다. 제한시간 안에 몬스터를 모두 쓰러뜨리지 못하면 무승부이고 층이 열리지 않습니다.<br><br><b>보상은 없습니다</b> — 경험치 · 골드 · 장비 · 스킬북 · 도감 경험치가 오르지 않고 의뢰 · 메인미션도 진행되지 않습니다. 물약은 보유 재고에서 채워 가지만 마셔도 재고는 줄지 않습니다. 저장되는 것은 오른 층뿐입니다.<br><br>결과는 [도전]을 누를 때의 영웅 · 장비 · 편성으로 정해지고, 관전은 그 전투를 재생하는 화면입니다.",
+        en: "Battles follow Expedition rules for a single round. Your heroes' attributes, gear and skills plus the selected Party's tactics, potions, formation and Codex bonuses all apply, and the monsters keep their Expedition traits such as family buffs. If you cannot defeat every monster before the time limit, the result is a draw and the next floor stays locked.<br><br><b>There are no rewards</b> — no XP, gold, equipment, skill books or Codex EXP, and commissions and main missions do not progress. Potions are filled from your stock, but drinking them does not reduce it. Only the floors you have climbed are saved.<br><br>The result is decided by the heroes, gear and Party setup at the moment you press Challenge; spectating replays that battle.",
+        zh: '战斗按与远征相同的规则进行一个回合。英雄的属性 · 装备 · 技能，加上所选Party的队伍战术 · 药水 · 阵型与图鉴加成全部生效，怪物一方也会像远征一样带上各自的增益效果。若在时间限制内没能击倒所有怪物，即为平局，下一层不会开放。<br><br><b>没有奖励</b>——不会获得经验 · 金币 · 装备 · 技能书 · 图鉴经验，委托 · 主线任务也不会推进。药水从持有库存中带满，但喝掉也不会减少库存。保存的只有已登上的楼层。<br><br>结果以点击[挑战]时的英雄 · 装备 · 编队为准，观战是回放那场战斗的画面。',
+    },
     'help.colosseum.prepare.title': {
         ko: "시련의 탑에서 파티 시험하기",
         en: "Testing your party in the Tower of Trials",
@@ -2222,14 +2276,14 @@ const STRINGS = {
         zh: '试炼之塔是逐层挑战固定英雄队伍的地方。可以检验你在远征中配好的装备和编队，在英雄队伍之间的战斗中表现如何。它与章节进度无关，可以在远征途中随时挑战。<br><br>选择要使用的Party，填满{duelSize}名英雄后，选择已开放的层。[修改编队]是前往编队页的按钮。在那里准备好人员、前排/后排、药水、队伍战术后，再回到试炼之塔。在对手卡片上查看装备和技能，点击[挑战]即开始一场自动战斗。',
     },
     'help.colosseum.floors.title': {
-        ko: "층과 승급전",
-        en: "Floors and promotion bouts",
-        zh: '层与晋级战',
+        ko: "층 오르기",
+        en: "Climbing floors",
+        zh: '逐层攀登',
     },
     'help.colosseum.floors.body': {
-        ko: "처음에는 첫 층만 열립니다. 열린 가장 높은 층을 이기면 다음 층이 열리고, 이미 깬 층은 언제든 다시 도전할 수 있습니다. 각 층은 같은 AI 팀을 사용하며 높은 층일수록 상대의 레벨 · 장비 · 스킬이 강해집니다. 등급의 마지막 층은 <b>승급전</b>이며, 이기면 그 등급의 휘장을 받습니다.<br><br>져도 열린 층이나 휘장을 잃지 않습니다.",
-        en: "Only the first floor is initially open. Beat the highest open floor to unlock the next; cleared floors remain available to retry. Each floor uses a fixed AI team, with higher floors bringing stronger levels, gear and skills. A tier's last floor is a <b>promotion bout</b>; winning earns its emblem. Losing does not remove unlocked floors or emblems.",
-        zh: '起初只开放第一层。打赢已开放的最高层后会开放下一层，已通关的层随时可以再次挑战。每一层都使用固定的AI队伍，层数越高，对手的等级、装备、技能越强。每个段位的最后一层是<b>晋级战</b>，获胜即可得到该段位的徽章。<br><br>失败也不会失去已开放的层或徽章。',
+        ko: "처음에는 첫 층만 열립니다. 열린 가장 높은 층을 이기면 다음 층이 열리고, 이미 깬 층은 언제든 다시 도전할 수 있습니다. 각 층은 같은 AI 팀을 사용합니다. <b>층 번호가 곧 상대 레벨</b>이고, 높은 층일수록 장비 · 스킬도 강해집니다.<br><br>져도 열린 층을 잃지 않습니다.",
+        en: "Only the first floor is initially open. Beat the highest open floor to unlock the next; cleared floors remain available to retry. Each floor uses a fixed AI team. <b>The floor number is the enemy level</b>, and higher floors also bring stronger gear and skills.<br><br>Losing does not remove unlocked floors.",
+        zh: '起初只开放第一层。打赢已开放的最高层后会开放下一层，已通关的层随时可以再次挑战。每一层都使用固定的AI队伍。<b>层数即对手等级</b>，层数越高，对手的装备、技能也越强。<br><br>失败也不会失去已开放的层。',
     },
     'help.colosseum.retry.title': {
         ko: "같은 층에서 막혔다면",
@@ -2237,9 +2291,9 @@ const STRINGS = {
         zh: '卡在同一层时',
     },
     'help.colosseum.retry.body': {
-        ko: "같은 층에는 같은 상대 편성이 나옵니다. 관전에서 누가 먼저 쓰러지는지, 어떤 적 스킬에 큰 피해를 받는지 살펴본 뒤 장비나 진형을 바꾸어 다시 도전합니다. 한 가지씩 바꾸면 어떤 준비가 도움이 되었는지 비교하기 쉽습니다.<br><br>빈 영웅 자리 때문에 [도전]이 꺼져 있다면 선택한 Party에 {duelSize}명을 채웁니다. 전술 효과와 물약은 우리 팀 아래에 표시된 내용을 확인합니다. 레벨이나 장비가 부족하다면 원정·고용·제작으로 파티를 키운 뒤 돌아와도 이미 깬 층과 휘장은 남습니다.",
-        en: "A floor keeps the same opposing lineup. Watch who falls first and which enemy skills deal the most damage, then change equipment or formation and try again. Changing one thing at a time makes it easier to compare what helped.<br><br>If Challenge is disabled because hero slots are empty, fill the selected Party with {duelSize} heroes. Check the tactics and potions shown below your team. You can return to Expeditions, hiring or crafting to improve the party; cleared floors and earned emblems remain when you come back.",
-        zh: '同一层出现的对手编队相同。在观战中观察谁先倒下、被哪个敌方技能打出大量伤害，然后更换装备或阵型再次挑战。一次只改一处，更容易比较是哪项准备起了作用。<br><br>如果因为英雄位空缺而[挑战]不可用，请为所选Party填满{duelSize}名英雄。战术效果和药水请查看我方队伍下方显示的内容。如果等级或装备不足，可以通过远征、雇佣、制作培养队伍后再回来，已通关的层和徽章都会保留。',
+        ko: "같은 층에는 같은 상대 편성이 나옵니다. 관전에서 누가 먼저 쓰러지는지, 어떤 적 스킬에 큰 피해를 받는지 살펴본 뒤 장비나 진형을 바꾸어 다시 도전합니다. 한 가지씩 바꾸면 어떤 준비가 도움이 되었는지 비교하기 쉽습니다.<br><br>빈 영웅 자리 때문에 [도전]이 꺼져 있다면 선택한 Party에 {duelSize}명을 채웁니다. 전술 효과와 물약은 우리 팀 아래에 표시된 내용을 확인합니다. 레벨이나 장비가 부족하다면 원정·고용·제작으로 파티를 키운 뒤 돌아와도 이미 깬 층은 남습니다.",
+        en: "A floor keeps the same opposing lineup. Watch who falls first and which enemy skills deal the most damage, then change equipment or formation and try again. Changing one thing at a time makes it easier to compare what helped.<br><br>If Challenge is disabled because hero slots are empty, fill the selected Party with {duelSize} heroes. Check the tactics and potions shown below your team. You can return to Expeditions, hiring or crafting to improve the party; cleared floors remain when you come back.",
+        zh: '同一层出现的对手编队相同。在观战中观察谁先倒下、被哪个敌方技能打出大量伤害，然后更换装备或阵型再次挑战。一次只改一处，更容易比较是哪项准备起了作用。<br><br>如果因为英雄位空缺而[挑战]不可用，请为所选Party填满{duelSize}名英雄。战术效果和药水请查看我方队伍下方显示的内容。如果等级或装备不足，可以通过远征、雇佣、制作培养队伍后再回来，已通关的层都会保留。',
     },
     'help.colosseum.rules.title': {
         ko: "두 결투 콘텐츠의 공통 규칙",
@@ -2247,9 +2301,9 @@ const STRINGS = {
         zh: '两种决斗内容的通用规则',
     },
     'help.colosseum.rules.body': {
-        ko: "시련의 탑과 결투장은 내 영웅의 능력치·장비·스킬에 선택한 Party의 파티 전술과 물약을 더해 한 판을 겨룹니다. 도감 보너스는 적용되지 않아 원정에서 본 전투 수치와 달라질 수 있습니다. 상대 팀도 자기 파티 전술과 물약을 같은 규칙으로 사용합니다. 제한시간 안에 승부가 나지 않으면 무승부입니다.<br><br>물약은 보유 재고에서 채울 수 있는 만큼 가져가며, 결투 중 마셔도 실제 재고는 줄지 않습니다. 결투에는 골드·재료 비용이 없고 장비나 도감 경험치 보상도 없습니다. 시련의 탑의 층·휘장과 결투장의 레이팅·전적이 각각 진행 기록입니다.<br><br>결과는 [도전] 또는 [결투 시작]을 누를 때의 영웅과 장비·편성을 기준으로 정해집니다. 관전은 그 전투를 재생하는 화면입니다. 그 뒤 장비나 편성을 바꾸면 다음 결투부터 반영되며, 관전을 닫아도 이미 기록된 결과는 유지됩니다.",
-        en: "Tower of Trials and Arena duels use your heroes' attributes, gear and skills plus the selected Party's tactics and potions for one battle. Codex bonuses are excluded, so combat values can differ from those seen in Expeditions. Opponents use their own party tactics and potions under the same rules. Reaching the time limit ends in a draw.<br><br>Potions are filled from the stock you own, but drinking them in a duel does not reduce that stock. Duels cost no gold or materials and grant no equipment or Codex EXP. Tower floors and emblems, and Arena rating and records, track your progress in each mode.<br><br>The result is determined using the heroes, gear and Party configuration present when you press Challenge or Start duel. Spectating replays that battle. Later equipment or formation changes apply to the next duel, and leaving the replay keeps the result already recorded.",
-        zh: '试炼之塔和决斗场以你英雄的属性、装备、技能，加上所选Party的队伍战术和药水，进行一场对决。图鉴加成不生效，因此战斗数值可能与远征中看到的不同。对手队伍也按同样的规则使用自己的队伍战术和药水。在时间限制内未分胜负则为平局。<br><br>药水从持有库存中尽量带满，决斗中喝掉也不会减少实际库存。决斗没有金币、材料费用，也没有装备或图鉴经验奖励。试炼之塔的层、徽章与决斗场的积分、战绩分别是各自的进度记录。<br><br>结果以点击[挑战]或[开始决斗]时的英雄、装备、编队为准。观战是回放那场战斗的画面。之后更换装备或编队会从下一场决斗开始生效，关闭观战也会保留已记录的结果。',
+        ko: "시련의 탑과 결투장은 내 영웅의 능력치·장비·스킬에 선택한 Party의 파티 전술과 물약, 도감 보너스를 더해 한 판을 겨룹니다. 도감 보너스는 원정과 같이 붙습니다. 상대 팀도 자기 파티 전술과 물약을 같은 규칙으로 사용합니다. 제한시간 안에 승부가 나지 않으면 무승부입니다.<br><br>물약은 보유 재고에서 채울 수 있는 만큼 가져가며, 결투 중 마셔도 실제 재고는 줄지 않습니다. 결투에는 골드·재료 비용이 없고 장비나 도감 경험치 보상도 없습니다. 시련의 탑의 층과 결투장의 레이팅·전적이 각각 진행 기록입니다.<br><br>결과는 [도전] 또는 [결투 시작]을 누를 때의 영웅과 장비·편성을 기준으로 정해집니다. 관전은 그 전투를 재생하는 화면입니다. 그 뒤 장비나 편성을 바꾸면 다음 결투부터 반영되며, 관전을 닫아도 이미 기록된 결과는 유지됩니다.",
+        en: "Tower of Trials and Arena duels use your heroes' attributes, gear and skills plus the selected Party's tactics, potions and Codex bonuses for one battle. Codex bonuses apply just as in Expeditions. Opponents use their own party tactics and potions under the same rules. Reaching the time limit ends in a draw.<br><br>Potions are filled from the stock you own, but drinking them in a duel does not reduce that stock. Duels cost no gold or materials and grant no equipment or Codex EXP. Tower floors, and Arena rating and records, track your progress in each mode.<br><br>The result is determined using the heroes, gear and Party configuration present when you press Challenge or Start duel. Spectating replays that battle. Later equipment or formation changes apply to the next duel, and leaving the replay keeps the result already recorded.",
+        zh: '试炼之塔和决斗场以你英雄的属性、装备、技能，加上所选Party的队伍战术、药水和图鉴加成，进行一场对决。图鉴加成与远征一样生效。对手队伍也按同样的规则使用自己的队伍战术和药水。在时间限制内未分胜负则为平局。<br><br>药水从持有库存中尽量带满，决斗中喝掉也不会减少实际库存。决斗没有金币、材料费用，也没有装备或图鉴经验奖励。试炼之塔的层与决斗场的积分、战绩分别是各自的进度记录。<br><br>结果以点击[挑战]或[开始决斗]时的英雄、装备、编队为准。观战是回放那场战斗的画面。之后更换装备或编队会从下一场决斗开始生效，关闭观战也会保留已记录的结果。',
     },
     'help.arena.rating.title': {
         ko: "레이팅과 리그 이해하기",
@@ -2337,9 +2391,9 @@ const STRINGS = {
         zh: '图鉴阶段给予的加成',
     },
     'help.codex.milestones.body': {
-        ko: "도감 레벨은 몬스터마다 Lv1부터 Lv60까지 오르며, 20레벨씩 세 구간으로 나뉩니다. 구간마다 끝의 누적 도감 경험치는 {list}입니다. 구간 안에서는 레벨이 하나 오를 때마다 그 구간 효과의 1/{seg}이 붙고, 구간을 다 채우면 카드에 적힌 값이 모두 적용됩니다. 이미 오른 레벨은 내려가지 않습니다.<br><br>Lv1~20은 같은 종족을 잡을 때 경험치·드롭·골드 등 보상을 늘리는 파밍 옵션, Lv21~40은 같은 종족을 상대할 때 적용되는 전투 옵션입니다. 어떤 옵션인지는 몬스터마다 다르며, 같은 종족의 여러 몬스터에서 쌓은 보너스는 함께 적용됩니다. 보스 등 일부 몬스터에는 이 두 구간의 보너스가 없습니다.<br><br>Lv41~60은 그 몬스터의 전투 옵션 하나를 모든 파티원에게 항상 더합니다. 각 구간의 효과와 지금 채운 레벨은 몬스터 카드에서 확인합니다. 시련의 탑과 결투장에는 도감 보너스가 적용되지 않습니다.",
-        en: "Each monster's Codex level rises from Lv1 to Lv60 in three tiers of 20 levels. The cumulative Codex EXP at the end of each tier is {list}. Each level within a tier adds 1/{seg} of that tier's effect, and a full tier grants the whole value shown on the card. Levels never go down.<br><br>Lv1–20 is a farming option that improves rewards such as XP, drops or gold from that race. Lv21–40 is a combat option used against the same race. The option varies by monster, and bonuses built from different members of one race combine. Bosses and some other monsters have no bonuses in these two tiers.<br><br>Lv41–60 permanently adds one combat option from that monster to every party member. Inspect the monster card for each tier's effect and how many levels you have filled. Codex bonuses do not apply in Tower of Trials or Arena duels.",
-        zh: '每种怪物的图鉴等级从Lv1升到Lv60，每20级为一个区间，共三个区间。各区间末尾的累计图鉴经验为{list}。区间内每升一级，获得该区间效果的1/{seg}；填满区间后，卡片上的数值全部生效。已升的等级不会下降。<br><br>Lv1~20是击杀同种族时提高经验、掉落、金币等奖励的刷宝词条，Lv21~40是与同种族交战时生效的战斗词条。具体是什么词条因怪物而异，从同一种族的多只怪物积累的加成会一并生效。首领等部分怪物没有这两个区间的加成。<br><br>Lv41~60会把该怪物的一条战斗词条始终加给所有队员。各区间的效果和当前已填满的等级请在怪物卡片中确认。试炼之塔和决斗场不适用图鉴加成。',
+        ko: "도감 레벨은 몬스터마다 Lv1부터 Lv60까지 오르며, 20레벨씩 세 구간으로 나뉩니다. 구간마다 끝의 누적 도감 경험치는 {list}입니다. 구간 안에서는 레벨이 하나 오를 때마다 그 구간 효과의 1/{seg}이 붙고, 구간을 다 채우면 카드에 적힌 값이 모두 적용됩니다. 이미 오른 레벨은 내려가지 않습니다.<br><br>Lv1~20은 같은 종족을 잡을 때 경험치·드롭·골드 등 보상을 늘리는 파밍 옵션, Lv21~40은 같은 종족을 상대할 때 적용되는 전투 옵션입니다. 어떤 옵션인지는 몬스터마다 다르며, 같은 종족의 여러 몬스터에서 쌓은 보너스는 함께 적용됩니다. 보스 등 일부 몬스터에는 이 두 구간의 보너스가 없습니다.<br><br>Lv41~60은 그 몬스터의 전투 옵션 하나를 모든 파티원에게 항상 더합니다. 각 구간의 효과와 지금 채운 레벨은 몬스터 카드에서 확인합니다. Lv41~60 옵션은 시련의 탑과 결투장에서도 내 팀에 적용됩니다.",
+        en: "Each monster's Codex level rises from Lv1 to Lv60 in three tiers of 20 levels. The cumulative Codex EXP at the end of each tier is {list}. Each level within a tier adds 1/{seg} of that tier's effect, and a full tier grants the whole value shown on the card. Levels never go down.<br><br>Lv1–20 is a farming option that improves rewards such as XP, drops or gold from that race. Lv21–40 is a combat option used against the same race. The option varies by monster, and bonuses built from different members of one race combine. Bosses and some other monsters have no bonuses in these two tiers.<br><br>Lv41–60 permanently adds one combat option from that monster to every party member. Inspect the monster card for each tier's effect and how many levels you have filled. The Lv41–60 options also apply to your team in Tower of Trials and Arena duels.",
+        zh: '每种怪物的图鉴等级从Lv1升到Lv60，每20级为一个区间，共三个区间。各区间末尾的累计图鉴经验为{list}。区间内每升一级，获得该区间效果的1/{seg}；填满区间后，卡片上的数值全部生效。已升的等级不会下降。<br><br>Lv1~20是击杀同种族时提高经验、掉落、金币等奖励的刷宝词条，Lv21~40是与同种族交战时生效的战斗词条。具体是什么词条因怪物而异，从同一种族的多只怪物积累的加成会一并生效。首领等部分怪物没有这两个区间的加成。<br><br>Lv41~60会把该怪物的一条战斗词条始终加给所有队员。各区间的效果和当前已填满的等级请在怪物卡片中确认。Lv41~60的词条在试炼之塔和决斗场中也会加给我方队伍。',
     },
     'help.codex.library_unlocks.title': {
         ko: "경험치는 찼는데 단계가 잠겨 있다면",
@@ -2843,6 +2897,7 @@ const STRINGS = {
     // 출처가 없는 옛 접사는 랜덤으로 찍는다 (2026-09-08 신설 · 2026-09-11 셋으로 — R78)
     'tip.src.random': { ko: '랜덤', en: 'Random', zh: '随机' },
     'tip.src.fixed': { ko: '베이스', en: 'Base', zh: '基底' },
+    'tip.src.enchant': { ko: '인챈트', en: 'Enchant', zh: '附魔' },   // 인챈트 줄 — 맨 뒤 · 죄종으로 안 센다 (ADR-1293 · R553)
     // 무기군 특성 — 성경의 버프 · 디버프 수치(태그 다섯에 같은 값)를 한 줄로 (§6 · ADR-1052 · R443) · 나머지 특성은 옵션 이름 그대로(`mock.itemAffixText`)
     'tip.weaponTrait.tagValue': { ko: '버프 · 디버프 효과 수치 +{p}', en: 'Buff & Debuff Effect Strength +{p}', zh: '增益、减益效果数值+{p}' },
     'tip.ringSlot': { ko: '반지 {n}번 칸에 착용', en: 'Goes on ring slot {n}', zh: '装备于{n}号戒指位' },
@@ -3350,7 +3405,9 @@ const STRINGS = {
     'bk.up.h': { ko: '스킬 업그레이드', en: 'Skill Upgrade', zh: '技能升级' },   // 도서관 스킬북 탭 왼쪽 구역 소제목 (2026-10-12 사용자 지시 · ADR-0597 — ~~`bk.own.h` 「가진 책」~~ · 자리 ADR-1165)
     'bk.up.help': { ko: '보유한 스킬북을 통해 스킬 레벨을 업그레이드 할 수 있습니다.', en: 'Use the skill books you own to upgrade skill levels.', zh: '可使用持有的技能书提升技能等级。' },   // 제목 옆 `?` 툴팁 · 도움말 도서관 섹션도 이 키 (2026-10-12 사용자 지시 · ADR-0603)
     'bk.none': { ko: '가진 책 없음', en: 'No books', zh: '没有书' },
-    'bk.cls.all': { ko: '전체', en: 'All', zh: '全部' },   // 스킬 업그레이드 직업 줄 첫 칸 (§17 · ADR-1206)
+    'bk.cls.all': { ko: '전체', en: 'All', zh: '全部' },   // 보유 스킬북 직업 줄 첫 칸 (§17 · ADR-1206 · ADR-1291) — 스킬 북 제작 직업 줄에는 없다
+    'bk.owned.h': { ko: '보유 스킬북', en: 'Owned Skill Books', zh: '持有的技能书' },   // 도서관 아랫줄 왼쪽 아래 패널 제목 — 가진 책 칸 · `?` 없음 (§17 · ADR-1291)
+    'bk.tier': { ko: '{n}티어', en: 'Tier {n}', zh: '第{n}层' },   // 스킬 북 제작 칸 줄 머리 — 티어마다 한 줄 (§17 · ADR-1291)
     'bk.learn': { ko: '배우기', en: 'Learn', zh: '学习' },
     'bk.overwrite': { ko: '덮어쓰기', en: 'Overwrite', zh: '覆盖' },
     'bk.overwrite.what': { ko: '{name}: {old} Lv.{n} → {skill}', en: '{name}: {old} Lv.{n} → {skill}', zh: '{name}：{old} Lv.{n} → {skill}' },   // 덮어쓰기 확인 창 첫 줄 (ADR-1020)

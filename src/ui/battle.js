@@ -1106,21 +1106,26 @@ function unitInner(u, state, v2, sprite, slots, ready = false) {
  * 전투 밖에 세우는 관전 카드 한 칸 — **결투장 대기 화면**의 두 팀 [2026-10-12 사용자 지시 · ADR-0606].
  * 관전과 같은 칸(`.unit-slot`) · 같은 카드 · 같은 툴팁(영웅 카드 · 스킬 칸)이다. 재생이 없으니 HP 는 가득 · 행동 게이지는 빈 채 · 스킬 칸은 걷힌 채로 선다.
  * 진형 자리는 관전처럼 칸의 `data-rank` 가 들고(미는 폭 · 방향은 CSS `.side-*`) 가로 차례는 부르는 쪽이 넣는 순서다.
- * @param u 관전 유닛과 같은 모양 — `{side, hero, name, sin, cls, hp, hpMax, period, noBasic, skills, atkMin…, stats, sheet, rank}`
- * @param opts.combatOf · itemOf · itemTipOf — 관전 `mountBattle` 의 같은 이름 손잡이 (영웅 툴팁)
+ * **몬스터도 선다** [2026-11-19 · 무한의 탑 대기 화면 · ADR-1294] — 영웅이 없고 `monsterId` 가 있으면 관전(`renderUnits`)과 같은 몬스터 카드(등급 띠 · 초상 · 몬스터 툴팁)다.
+ * @param u 관전 유닛과 같은 모양 — `{side, hero, name, sin, cls, hp, hpMax, period, noBasic, skills, atkMin…, stats, sheet, rank}` · 몬스터는 `enemyEntry` 모양(`enemyPreviews`)
+ * @param opts.combatOf · itemOf · itemTipOf — 관전 `mountBattle` 의 같은 이름 손잡이 (영웅 툴팁) · `monsterItemTipOf` — 몬스터 장비 칸의 아이템 카드 (몬스터 툴팁)
  */
-export function unitPreview(u, { combatOf = null, itemOf = null, itemTipOf = null } = {}) {
+export function unitPreview(u, { combatOf = null, itemOf = null, itemTipOf = null, monsterItemTipOf = null } = {}) {
     const v2 = cardV2();
     const n = document.createElement('div');
-    n.className = `unit ${u.side}${v2 ? ' v2' : ''}`;
+    const mon = !u.hero && u.monsterId != null;
+    const boss = mon && (u.grade === 'stage_boss' || u.grade === 'chapter_boss');
+    n.className = `unit ${u.side}${mon && u.grade === 'elite' ? ' elite' : ''}${boss ? ' boss' : ''}${v2 ? ' v2' : ''}`;
     const tierLine = u.hero ? heroTierColor(u.hero) : null;
     if (tierLine) n.style.setProperty('--tier-line', tierLine);
-    const face = u.hero ? M.heroFace(u.hero) : null;
+    const face = u.hero ? M.heroFace(u.hero) : mon ? monsterFace(u.monsterId, u.grade) : null;
     const sprite = face ? `<div class="sprite has-face"><img src="${face}" alt="${L(u.name)}" loading="lazy" onerror="this.remove()"></div>` : '<div class="sprite"></div>';
     const slots = cdSlots(u);
     n.innerHTML = unitInner(u, null, v2, sprite, slots, true);
     if (u.hero) bindTipNode(n, () => heroTipCard(u.hero, combatOf?.(u.hero) ?? null, itemOf,
         it => itemTipOf?.(u.hero, it) ?? null), { anchor: true, holdOnAlt: true });
+    // 몬스터 — 관전과 같은 툴팁(착용 장비 첫 장 + Alt 세부 옵션 · 스킬 칸 숫자는 그 몬스터의 표시값 · ADR-0183)
+    else if (mon) bindTipNode(n, () => monsterTipCard(u, it => monsterItemTipOf?.(it, unitSkillCtx(u), u.sheet?.level) ?? null, { skills: slots }), { anchor: true, holdOnAlt: true });
     n.querySelectorAll('.cd-slot').forEach((slot, i) => {
         const s = slots[i];
         if (s) bindTipNode(slot, () => skillTipCard(s, { ...unitSkillCtx(u, combatOf), source: s.source }));
@@ -1130,6 +1135,16 @@ export function unitPreview(u, { combatOf = null, itemOf = null, itemTipOf = nul
     cell.dataset.rank = u.rank ?? 0;
     cell.appendChild(n);
     return cell;
+}
+
+/**
+ * 전투 밖에 세우는 **적 진영의 몬스터 카드** [2026-11-19 · 무한의 탑 대기 화면 · ADR-1294] — 몬스터 표시값(`round` 이벤트의 `enemies` 모양 · `game.endlessPreview`)을
+ *   관전과 같은 유닛(`enemyEntry`)으로 펴서 `unitPreview` 로 세운다 · 가로 차례는 관전과 같은 규칙(`layoutRanks`) · 반환 = 차례대로 놓은 칸 배열
+ */
+export function enemyPreviews(views, opts = {}) {
+    const list = views.map(e => enemyEntry(e, 0));
+    layoutRanks(list);
+    return list.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map(u => unitPreview(u, opts));
 }
 
 /** HP 막대 · 글자 — 방어막이 있으면 빨강 오른쪽에 파랑 · 글자는 HP + 방어막(파랑) · 합이 최대 HP 를 넘으면 막대 전체를 그 합에 맞춘다 (§4-2 · ADR-1027).
@@ -1661,7 +1676,9 @@ const heroTierColor = hero => (D.heroTiers.find(r => r.id === (hero?.tier ?? 'ra
 /* 덩어리 왼쪽 초상 — 그 영웅 카드와 같은 얼굴 그림(공통 조각 `.hero-face`). 아트가 없으면 빈 칸이다 — 밑에 아무것도 안 깐다 (ADR-0211).
    윗변 = 영웅 등급 색 — 카드와 같은 변수(`--tier-line`)를 인라인으로 건다(색은 데이터 · 어느 변을 칠하나는 CSS) */
 const dmgFace = u => {
-    const src = M.heroFace(u.hero), line = heroTierColor(u.hero);
+    // 몬스터(무한의 탑 관전의 상대 판 · ADR-1294)는 관전 카드와 같은 몬스터 초상 · 영웅 등급 색 윗변이 없다
+    const mon = !u.hero && u.monsterId != null;
+    const src = mon ? monsterFace(u.monsterId, u.grade) : M.heroFace(u.hero), line = mon ? null : heroTierColor(u.hero);
     return `<span class="hero-face dmg-face"${line ? ` style="--tier-line:${line}"` : ''}>${src ? `<img src="${src}" alt="" onerror="this.remove()">` : ''}</span>`;
 };
 /* 로그의 물약 줄 그림 — 그 물약의 그림 하나. 없으면 빈 칸이다(칸의 병 실루엣은 「여기에 물약이 들어간다」는 칸의 말이라 로그에 안 빌린다) */
@@ -2360,8 +2377,8 @@ function apply(state, root, opts, ev) {
             state.ended = true;
             clearInterval(state.timer);
             levelCheck(state, root);   // 마지막 라운드의 레벨업 — 런이 닫혀 `refit` 이 없다 (ADR-0435)
-            // 결투는 스테이지가 아니다 — 끝 줄은 결과 띠의 판정 그대로(승리 · 패배 · 무승부) [2026-10-15 · PLAN_user_review 2-5]
-            const arena = opts.result?.mode === 'arena';
+            // 결투는 스테이지가 아니다 — 끝 줄은 결과 띠의 판정 그대로(승리 · 패배 · 무승부) [2026-10-15 · PLAN_user_review 2-5] · 무한의 탑 단판도 같다(ADR-1294)
+            const arena = duelMode(opts.result);
             logWide(state, root, t(arena ? (opts.result.reason === 'timeout' ? 'ar.draw' : ev.won ? 'bt.won' : 'bt.lost')
                 : ev.won ? 'log.end.win' : 'log.end.lose'));
             showResult(state, root, opts, ev.won);
@@ -2372,6 +2389,9 @@ function apply(state, root, opts, ev) {
         }
     }
 }
+
+/** 결투 단판인가 — 결투장 · 시련의 탑(`arena`) · 무한의 탑(`endless` · ADR-1294) · 시간이 다 되면 무승부로 읽는다 */
+const duelMode = result => result?.mode === 'arena' || result?.mode === 'endless';
 
 /** 재생이 끝나면 아레나 위에 결과 띠 — 판정 · 다음 런 세기 · [리포트 보기] [2026-09-29 · SCREEN_DESIGN §4-2 · ADR-0430].
  *  원정은 멈추지 않는다 — 다음 런이 있으면(`opts.upNext`) **언제나** 세고 끝나면 앱이 보낸다. 세기는 **다음 런의 칸**을 적는다:
@@ -2399,7 +2419,7 @@ function showResult(state, root, opts, won) {
     // 챕터보스에게 졌다 — 다음 런이 앞 칸이다(`game.nextRepeat`) · 세기 글은 「앞 칸으로」 · 버튼은 [재도전]이 아니다 (ADR-0698 일부 대체)
     const back = !won && !!nx && nx.stageId !== opts.stageId;
     box.innerHTML = `
-        <span class="${won ? 'up' : 'down'} verdict">${t(opts.result.mode === 'arena' && opts.result.reason === 'timeout' ? 'ar.draw' : won ? 'bt.won' : 'bt.lost')}</span>
+        <span class="${won ? 'up' : 'down'} verdict">${t(duelMode(opts.result) && opts.result.reason === 'timeout' ? 'ar.draw' : won ? 'bt.won' : 'bt.lost')}</span>
         ${nx ? `<span class="muted b-next"></span>` : ''}
         ${nx?.shrine && !nx.shrine.fresh ? `<span class="b-shrine">${shrineChip(nx.shrine.id)}<span class="muted">${t('bt.shrineKeep')} — ${shrineFxText(nx.shrine.id)}</span></span>` : ''}
         ${nx && !waiting ? `<button class="btn sm b-go">${t(won || back ? 'bt.skipWait' : 'bt.skipRetry')}</button>` : ''}

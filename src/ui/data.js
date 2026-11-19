@@ -102,7 +102,9 @@ export const D = {
     difficulties: {},         // 같은 것 byId
     chapterDebuffs: [],       // chapter_debuff.csv — [{difficultyId, chapter, sin, effect, value, intervalSec, durationSec, cap}] · 단 · 장마다 그 장 죄종의 디버프 한 줄(헬 · R366 · base_expedition_design §1-4) · 검증은 game_logic/battle.js
     gearRarity: {},           // gear_rarity.csv — {grade: {difficultyId: {normal, magic, rare, epic, legendary}}} · 몬스터 장비 희귀도 가중치(등급 × 단 · 행마다 합 100) · 검증은 game_logic/battle.js (item_design §1 희귀도 · R350)
-    arenaTiers: [],           // arena_tier.csv 원시 행 — 콜로세움 층 · 결투장 리그의 등급 · 검증 · 정렬 · 층 펴기는 game_logic/arena.js (arena_design §7 · §8 · 2026-10-18)
+    arenaTiers: [],           // arena_tier.csv 원시 행 — 결투장 리그의 등급 · 검증 · 정렬은 game_logic/arena.js (arena_design §8 · 2026-10-18)
+    trialFloors: [],          // trial_floor.csv 원시 행 — 시련의 탑 층(한 줄 = 한 층) · 검증은 game_logic/arena.js (arena_design §7 · 2026-11-19 R552)
+    endlessFloors: [],        // endless_floor.csv 원시 행 — 무한의 탑 층(한 줄 = 한 층) · 검증은 game_logic/state.js (endless_tower_design §0 · 2026-11-19 R554)
     exploreSpots: {},         // explore_spot.csv — {'장:지점': {chapter, spot, name:{ko,en}, story:{ko,en}}} · 탐험 지점 이름 · 두 줄 이야기(줄바꿈 풀어 둠) (SCREEN_DESIGN §8-4 · ADR-0563 · 화면만 읽는다)
     advanceRows: [],          // advance.csv — 전직 갈래 [{advance_id, class_id, sort_order, name_kr, name_en}] (skill_design §4-1 · R16 · 2026-09-28)
     // 도박장 표 넷 — 원시 행 그대로 넘긴다. 검증 · 굴림은 game_logic/gamble.js (base_expedition_design 「도박장」 · 2026-09-24 · R149) · ⚠ 행 순서가 굴림 순서다
@@ -133,7 +135,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'sin_word', 'accessory_sin_option',   // ~~armor_common_option~~ 2026-10-21 R303 퇴역(방어구 넷이 계열표) · ~~accessory_common_option~~ 2026-11-12 삭제(목걸이도 계열표 R453)
     'tactic_condition', 'building', 'building_rank', 'building_effect',   // ~~tactic_score~~ 2026-11-11 R441 삭제(등급 배수는 balance.csv:tactic_grade_mult_*)
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'advance_common', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff', 'commission_fame', 'ring_base_option', 'raid_boss', 'raid_pattern', 'temper_action', 'visit_story', 'monster_base', 'main_mission'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'advance_common', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff', 'commission_fame', 'ring_base_option', 'raid_boss', 'raid_pattern', 'temper_action', 'visit_story', 'monster_base', 'main_mission', 'trial_floor', 'endless_floor'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -150,7 +152,7 @@ export async function loadData(base = './data/') {
         heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, sinWordRow, accSinOptionRow,
         tacticConditionRow, buildingRow, buildingRankRow, buildingEffectRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, advanceCommonRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow, commissionFameRow, ringBaseRow, raidBossRow, raidPatternRow, temperActionRow, visitStoryRow, monsterBaseRow, mainMissionRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, advanceCommonRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow, commissionFameRow, ringBaseRow, raidBossRow, raidPatternRow, temperActionRow, visitStoryRow, monsterBaseRow, mainMissionRow, trialFloorRow, endlessFloorRow] = texts.map(parseCsv);
 
     D.ringBaseOptions = ringBaseRow;
     D.raidBosses = raidBossRow;
@@ -219,7 +221,9 @@ export async function loadData(base = './data/') {
     // 장 디버프 — 단 · 장마다 한 줄(헬 · 2026-10-28 · R366) · 효과 어휘 · 칸 검증은 game_logic/battle.js
     D.chapterDebuffs = chapterDebuffRow.map(r => ({ difficultyId: r.difficulty_id, chapter: r.chapter, sin: r.sin, effect: r.effect, value: r.value,
         intervalSec: r.interval_sec, durationSec: r.duration_sec, cap: r.cap }));
-    D.arenaTiers = arenaTierRow;   // 콜로세움 · 결투장 등급 — 원시 행 그대로 · 정렬 · 검증은 arena.js (2026-10-17 · 층 · 레이팅 2026-10-18)
+    D.arenaTiers = arenaTierRow;   // 결투장 리그 등급 — 원시 행 그대로 · 정렬 · 검증은 arena.js (2026-10-17 · 레이팅 2026-10-18)
+    D.trialFloors = trialFloorRow;   // 시련의 탑 층 — 원시 행 그대로 · 검증은 arena.js (2026-11-19 R552)
+    D.endlessFloors = endlessFloorRow;   // 무한의 탑 층 — 원시 행 그대로 · 검증은 state.js (2026-11-19 R554)
     // 기본 능력치 7종 — hero.js 는 id 만 읽고, 화면은 ko/en/abbr 을 읽는다 (같은 한 줄이 둘을 먹인다)
     D.heroAttributes = heroAttr.map(r => ({
         id: r.attr_id, ko: r.attr_kr, en: r.attr_en, zh: r.attr_zh, abbr: r.abbr,
@@ -757,6 +761,8 @@ export function buildSystems(d, dev = {}) {
         shrines: d.shrines ?? [],
         // 메인미션 — 노말 클리어까지의 길잡이 줄 · 행 순서 = 줄 순서 (main_mission_design.md · 2026-11-17 · R524)
         mainMissions: d.mainMissionRows ?? [],
+        // 무한의 탑 — 층 표 · 한 줄 = 한 층 (endless_tower_design §0 · 2026-11-19 · R554)
+        endlessFloors: d.endlessFloors ?? [],
         // 전직 — 갈래 표. 갈래의 스킬은 `skill.csv` 의 `owner_kind=advance` 행이다 (skill_design §4 · R16)
         advances: d.advanceRows ?? [],
         openAll: dev.openAll,   // 관리자 모드 — 켜져 있으면 모든 건물을 최대 랭크로 센다(INTERFACE §2-7)
@@ -769,7 +775,7 @@ export function buildSystems(d, dev = {}) {
     const maxLimits = game.limitsOf({ buildings: Object.fromEntries(construction.list.map(b => [b.id, b.maxRank])) });
     const arena = createArenaSystem({
         hero, item, skill, battle, tactic, balance: d.balance, equipSlots: d.equipSlots, advances: d.advanceRows ?? [], classSkills,
-        tiers: d.arenaTiers ?? [], potions: d.potions ?? [],
+        tiers: d.arenaTiers ?? [], floors: d.trialFloors ?? [], potions: d.potions ?? [],
         upgradeCeiling: maxLimits.upgrade,
         skillCapMax: game.skillCapMax(),
         potionSlotCeiling: maxLimits.potionSlots, tacticSlotCeiling: maxLimits.tacticSlots,

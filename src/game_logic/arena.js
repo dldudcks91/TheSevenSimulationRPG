@@ -5,12 +5,13 @@
  *   (`exportTeam` → 운반 → `importTeam` · 받은 팀은 `validateTeam` 을 지나야 선다 — arena_design §2).
  *   운반(문자열로 싸기 · 서버)은 이 모듈 밖이다. 어느 출처든 결과는 `snapshotTeam` 모양이라 `fight` 하나가 받는다.
  *   레이팅 · 오른 층은 세이브라 여기 없다(`state.arenaRecord` · `colosseumRecord`).
- * 개인 능력치·장비·스킬에 고른 편성의 파티 전술·물약 칸을 더한다(`loadout` = `state.arenaLoadout` · 2026-10-03). 도감은 제외.
+ * 개인 능력치·장비·스킬에 고른 편성의 파티 전술·물약 칸을 더한다(`loadout` = `state.arenaLoadout` · 2026-10-03) · 내 도감 옵션도 더한다(`loadout.codex` · 2026-11-19 · R554 — 남이 올린 팀 · AI 팀은 도감 없음).
  * 물약은 칸을 채운 값만 받는다 — 재고는 부르는 쪽이 안 줄인다(결투는 재고에 영향이 없다).
  * **수비 쪽도 물약 · 전술을 쓴다** [2026-11-13 · R460 · arena_design §0] — 팀 코드(판 2)가 방어 편성의 물약 칸 · 마시는 기준 · 전술 칸 · 함께 잡은 수를 싣고,
  *   받는 쪽이 전술 값을 **다시 잰다**(`tactic` 시스템 · 올린 쪽 숫자를 안 믿는다) · 물약 회복량은 받는 쪽 표에서 읽는다 · `fight` 의 `oppLoadout` 이 상대 물약이다.
- *   층 AI 팀은 차림(등급 행)의 물약 × 칸 수(`floorLoadout`) · 전술 칸(따로 판 굴림 줄 · 등급 행의 칸 수 · 등급)을 든다.
- * ⚠ 등급 표 값(물약 · 전술 칸 포함) · AI 가중치는 임시(GAME_DESIGN §10 「결투장」 ⑦) ·
+ *   층 AI 팀은 차림(층 줄 — `trial_floor.csv`)의 물약 × 칸 수(`floorLoadout`) · 전술 칸(따로 판 굴림 줄 · 층 줄의 칸 수 · 등급)을 든다.
+ * **시련의 탑 층은 등급이 없다** [2026-11-19 · R552 · arena_design §7] — 한 층 = 층 표 한 줄 · 등급 표는 결투장 리그 · 레이팅 차림 몫이다.
+ * ⚠ 층 표 · 등급 표 값(물약 · 전술 칸 포함) · AI 가중치는 임시(GAME_DESIGN §10 「결투장」 ⑦) ·
  *   검사기는 옵션 줄 수 · 기본 능력치 대역을 아직 안 본다(⑧)
  */
 import { makeRng, deriveSeed } from './rng.js';
@@ -38,13 +39,14 @@ const UNSAFE_TEXT = /[<>"`]/;
  * @param deps.equipSlots    착용 위치 `[{id, part}]` — 위치 순서가 장비 굴림 순서다 (equip_slot.csv)
  * @param deps.advances      advance.csv 원시 행 — 전직 갈래 → 직업
  * @param deps.classSkills   직업 풀 `{classId: [skillId]}` — 고유 스킬의 후보 (hero 와 같은 표)
- * @param deps.tiers         arena_tier.csv 원시 행 — 등급(콜로세움 층 묶음 · 결투장 리그)
+ * @param deps.tiers         arena_tier.csv 원시 행 — 등급(결투장 리그 · 레이팅 차림)
+ * @param deps.floors        trial_floor.csv 원시 행 — 시련의 탑 층(한 줄 = 한 층 · 2026-11-19 R552)
  * @param deps.upgradeCeiling 건물을 다 지었을 때의 강화 상한 · `skillCapMax` 스킬 업그레이드 상한의 끝 — 검사기가 보는 끝값
  * @param deps.tactic        전술 시스템(`tactic.js`) — 받은 팀의 전술 값을 다시 잰다 · 없으면 전술 칸이 든 팀은 `tactic` 으로 거절 (R460)
  * @param deps.potions       물약 표 `[{id, heal}]` — 받은 팀의 물약 회복량은 여기서 읽는다 (R460)
  * @param deps.potionSlotCeiling · tacticSlotCeiling  건물을 다 지었을 때의 물약 칸 · 열린 전술 칸 — 검사기가 보는 끝값 (R460)
  */
-export function createArenaSystem({ hero, item, skill, battle, tactic = null, balance = {}, equipSlots = [], advances = [], classSkills = {}, tiers = [], potions = [], upgradeCeiling = 0, skillCapMax = 0, potionSlotCeiling = 0, tacticSlotCeiling = 0 }) {
+export function createArenaSystem({ hero, item, skill, battle, tactic = null, balance = {}, equipSlots = [], advances = [], classSkills = {}, tiers = [], floors = [], potions = [], upgradeCeiling = 0, skillCapMax = 0, potionSlotCeiling = 0, tacticSlotCeiling = 0 }) {
     const B = balance;
     const teamSize = 3;
     const clone = value => JSON.parse(JSON.stringify(value));
@@ -57,7 +59,7 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
 
     // 등급 — `tier_order` 순. 표가 틀리면 생성 때 던진다 (INTERFACE §2-17)
     const TIERS = (tiers ?? []).map(r => ({
-        id: r.tier_id, order: Number(r.tier_order), name: { ko: r.name_kr, en: r.name_en, zh: r.name_zh }, ratingMin: r.rating_min, floors: r.floors, level: r.hero_level,
+        id: r.tier_id, order: Number(r.tier_order), name: { ko: r.name_kr, en: r.name_en, zh: r.name_zh }, ratingMin: r.rating_min, level: r.hero_level,
         rarityWeights: { normal: r.rarity_w_normal, magic: r.rarity_w_magic, rare: r.rarity_w_rare }, up: r.gear_up, skillUp: r.skill_up,
         // 층 AI 팀의 물약 · 전술 [2026-11-13 · R460 · arena_design §7] — 물약 하나 × 칸 수 · 열린 전술 칸 수 · 그 칸들의 등급
         potion: r.potion_id, potionSlots: r.potion_slots, tacticSlots: r.tactic_slots, tacticGrade: r.tactic_grade,
@@ -77,7 +79,6 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
             if (!within(t.skillUp, 0, Infinity)) bad(`${t.id} — skill_up '${t.skillUp}' (0 이상 정수)`);
             const w = Object.values(t.rarityWeights);
             if (w.some(x => typeof x !== 'number' || x < 0) || !(w.reduce((s, x) => s + x, 0) > 0)) bad(`${t.id} — 희귀도 가중치`);
-            if (!within(t.floors, 1, Infinity)) bad(`${t.id} — floors '${t.floors}' (1 이상 정수)`);
             // 물약 · 전술 (R460) — 칸 수는 `up` · `skillUp` 처럼 **바라는 칸 수**라 쓸 때 끝값(건물을 다 지었을 때)으로 자른다 · 칸이 있으면 물약은 표에 · 등급은 전술 등급 어휘에
             if (!within(t.potionSlots, 0, Infinity)) bad(`${t.id} — potion_slots '${t.potionSlots}' (0 이상 정수)`);
             if (t.potionSlots > 0 && !potionById[t.potion]) bad(`${t.id} — potion_id '${t.potion}' (potion.csv 에 없다)`);
@@ -102,12 +103,34 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
             potion: T.potion, potionSlots: Math.min(T.potionSlots, potionSlotCeiling), tacticSlots: Math.min(T.tacticSlots, tacticCap), tacticGrade: T.tacticGrade,
         };
     }
-    // 콜로세움 사다리 — 등급 순서대로 그 등급 층 수만큼 이어 붙인다 · 등급의 마지막 층이 승급전(arena_design §7)
-    const FLOORS = [];
-    TIERS.forEach((t, i) => {
-        for (let k = 0; k < t.floors; k++)
-            FLOORS.push({ no: FLOORS.length + 1, tier: t.id, step: k + 1, steps: t.floors, gate: k === t.floors - 1, kit: kitAt(i, k / t.floors) });
-    });
+    // 시련의 탑 사다리 — `trial_floor.csv` 한 줄 = 한 층 · 줄이 그대로 그 층의 차림이다(잇지 않는다 · 등급 · 승급전 없음 — 2026-11-19 R552 · arena_design §7)
+    const FLOORS = (floors ?? []).map(r => ({
+        no: r.floor,
+        kit: {
+            level: r.hero_level, rarityWeights: { normal: r.rarity_w_normal, magic: r.rarity_w_magic, rare: r.rarity_w_rare }, up: r.gear_up, skillUp: r.skill_up,
+            potion: r.potion_id, potionSlots: r.potion_slots, tacticSlots: r.tactic_slots, tacticGrade: r.tactic_grade,
+        },
+    }));
+    (() => {
+        const bad = why => { throw new Error(`trial_floor: ${why}`); };
+        const within = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
+        if (!FLOORS.length) bad('행이 없다');
+        FLOORS.forEach((f, i) => {
+            const k = f.kit, at = `${i + 1}째 줄`;
+            if (f.no !== i + 1) bad(`${at} — floor '${f.no}' (1 부터 빈틈없이 오름차순)`);
+            if (!within(k.level, 1, B.hero_level_cap)) bad(`${f.no}층 — hero_level '${k.level}' (1 ~ hero_level_cap)`);
+            if (!within(k.up, 0, Infinity)) bad(`${f.no}층 — gear_up '${k.up}' (0 이상 정수)`);
+            if (!within(k.skillUp, 0, Infinity)) bad(`${f.no}층 — skill_up '${k.skillUp}' (0 이상 정수)`);
+            const w = Object.values(k.rarityWeights);
+            if (w.some(x => typeof x !== 'number' || x < 0) || !(w.reduce((s, x) => s + x, 0) > 0)) bad(`${f.no}층 — 희귀도 가중치`);
+            if (!within(k.potionSlots, 0, Infinity)) bad(`${f.no}층 — potion_slots '${k.potionSlots}' (0 이상 정수)`);
+            if (k.potionSlots > 0 && !potionById[k.potion]) bad(`${f.no}층 — potion_id '${k.potion}' (potion.csv 에 없다)`);
+            if (!within(k.tacticSlots, 0, Infinity)) bad(`${f.no}층 — tactic_slots '${k.tacticSlots}' (0 이상 정수)`);
+            if (k.tacticSlots > 0 && TC && !TC.GRADES.includes(k.tacticGrade)) bad(`${f.no}층 — tactic_grade '${k.tacticGrade}'`);
+        });
+    })();
+    // 칸 수는 바라는 칸 수라 끝값(건물을 다 지었을 때)으로 자른다 — 등급 차림(`kitAt`)과 같다 (R460) · 강화 · 스킬 업그레이드는 쓸 때 자른다
+    FLOORS.forEach(({ kit }) => { kit.potionSlots = Math.min(kit.potionSlots, potionSlotCeiling); kit.tacticSlots = Math.min(kit.tacticSlots, tacticCap); });
     const tierIndexOfRating = rating => TIERS.reduce((at, t, i) => (t.ratingMin <= rating ? i : at), 0);
     const tierOfRating = rating => TIERS[tierIndexOfRating(rating)].id;
     function kitOfRating(rating) {
@@ -135,7 +158,8 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
         return heroes.map((source, i) => {
             const h = clone(source);
             const gear = Object.values(h.equipped).filter(Boolean).map(uid => items[uid]).filter(Boolean).map(clone);
-            const combat = hero.computeCombat(h, gear.map(item.effective), {}, loadout?.tactic ?? null);
+            // 도감은 `loadout.codex` 가 있을 때만 — 내 팀(시련의 탑 · 결투장 · 친선전)은 화면이 `state.arenaLoadout` 의 도감 옵션을 넘긴다 · AI 팀 · 받은 고스트는 안 넘긴다 (2026-11-19 · R554 · arena_design §0)
+            const combat = hero.computeCombat(h, gear.map(item.effective), loadout?.codex ?? {}, loadout?.tactic ?? null);
             return {
                 uid: h.uid, hero: h, gear, combat, stats: h.stats,
                 actives: skill.activesFor(h, { skillPlus: item.skillPlusOf(gear) }), weaponGroup: gear.find(it => it.slot === 'weapon')?.group ?? null,

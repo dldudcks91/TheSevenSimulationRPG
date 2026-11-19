@@ -55,7 +55,7 @@ import { createNotifications } from './notifications.js';
 import { createMainMission } from './main_mission.js';
 import { MG_SCENES, MG_SPRITES } from './minigame_art.js';
 import { t, L, has, isLock, lang, setLang, nextLang, applyDocumentLang } from './i18n.js';
-import { mountBattle, unitPreview, shrineChip, LOG_STYLES, logStyle, setLogStyle, gravePlaque, graveLeftText, paceOf, arenaBgImage } from './battle.js';
+import { mountBattle, unitPreview, enemyPreviews, shrineChip, LOG_STYLES, logStyle, setLogStyle, gravePlaque, graveLeftText, paceOf, arenaBgImage } from './battle.js';
 import { paceAt, paceStep } from './pace.js';   // 원정 박자 — 관전 재생기와 같은 걸음으로 안 보는 부대 · 숨긴 탭을 민다(세움 포함 · ADR-0654)
 import { bindTipNode, helpMark, headingHelp, hideTip, isTouchInput, isAltHeld, isShiftHeld, heroTipCard, skillTipCard, skillLineHtml, stagePoint, stageRect, rangeText, attrRowsHtml, sheetRowsHtml, sheetDeltaRows, bindStatTips, sheetPages, codexMonsterTipCard, codexSkillTipCard, monsterSkillIcons, potionTipCard } from './tip.js';
 import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, placeName, placeKey, placeCells, stageStory, fillStory, stageBgOf, chapterOf, codexStages, codexSlotMonsters, skillInfo, potionInfo, skillShowsLv } from './data.js';
@@ -194,6 +194,7 @@ const sinColor = id => M.SINS[id]?.color ?? 'var(--text-muted)';
 const sinName = id => L(M.SINS[id]) || id;
 /** 옵션 줄의 출처 태그 (SCREEN_DESIGN §6 · ADR-0100) — `fixed` · 죄종 id(그 죄종 색) · 그 밖은 랜덤(출처 없는 옛 접사 포함) */
 const srcTag = src => src === 'fixed' ? `<i class="tip-src">${t('tip.src.fixed')}</i>`
+    : src === 'enchant' ? `<i class="tip-src ench">${t('tip.src.enchant')}</i>`   // 인챈트 줄 (ADR-1293 · R553)
     : M.SINS[src] ? `<i class="tip-src sin" style="color:${sinColor(src)}">${sinName(src)}</i>`
         : `<i class="tip-src">${t('tip.src.random')}</i>`;
 /** 「(미적용)」 표지 — 전투가 아직 안 읽는 옵션 줄 끝 (SCREEN_DESIGN §6 · ADR-0213) */
@@ -397,7 +398,8 @@ const NAV_GROUPS = [
     ['battle', ['expedition', 'explore', 'party', 'character']],
     ['town', ['research', 'tavern', 'shop', 'forge', 'library', 'resource']],
     // ⚠ 화면 이름은 2026-10-24 맞바꿨다 — `colosseum` 탭 = 「결투장」(층 사다리) · `arena` 탭 = 「콜로세움」(ELO) · 탭 id · 세이브 · `cs.` / `ar.` 키는 옛 이름 그대로 (ADR-0760)
-    ['etc', ['colosseum', 'arena', 'codex', 'help', ...(DEV_HOST ? ['lab'] : [])]],   // 실험실은 개발 환경에서만 (§18 · ADR-0751)
+    // **무한의 탑**(`endless`)이 시련의 탑 바로 앞에 선다 [2026-11-19 사용자 확정 · SCREEN_DESIGN §1 · ADR-1294] — 탭 15 → 16 · 몬스터만 상대하는 층 사다리
+    ['etc', ['endless', 'colosseum', 'arena', 'codex', 'help', ...(DEV_HOST ? ['lab'] : [])]],   // 실험실은 개발 환경에서만 (§18 · ADR-0751)
 ];
 const TABS = NAV_GROUPS.flatMap(([, ids]) => ids);
 
@@ -444,6 +446,8 @@ const state = {
     // 결투장(`colosseum`) — `floor` = 고른 층(null = 다음 층) · `opp` = 그 층 상대의 캐시 `{key, team}`(같은 층은 같은 팀 · 그릴 때마다 다시 굴리지 않는다) · `toast` = 돌아오면 띄울 휘장 플래시 ·
     //   화면 상태다(오른 층만 세이브 · ADR-0670)
     colosseum: { owner: null, match: null, last: null, unfold: false, floor: null, opp: null, toast: null },
+    // 무한의 탑(`endless` · ADR-1294) — `floor` = 고른 층(null = 다음 층) · 시련의 탑과 같은 모양 · 화면 상태다(오른 층만 세이브 · 칸 목록은 `endlessReset`)
+    endless: { owner: null, match: null, last: null, unfold: false, floor: null, toast: null },
     // 도박장 창 (SCREEN_DESIGN §8-1 · ADR-0331) — 고른 판돈 단계 · 마지막 결과 · 재생 위치. 세이브 아님 —
     //   결과는 이미 세이브에 들어가 있고(`gambleSpin`) 이것은 **다시 보여 줄 거리**다
     gb: { step: 1, last: null, anim: null },
@@ -502,12 +506,10 @@ const state = {
     invNo: 1,                    // 보고 있는 인벤토리의 부대 번호 — 부대 버튼이 고른다 · 해제 · 꺼내기 · 구매 · 제작이 여기로 간다 (§6 · ADR-0521) · 세이브 아님
     invWatch: 0,                 // 관전이 마지막으로 맞춘 부대 — 보는 부대가 바뀌면 `invNo` 를 그 부대로 옮긴다 (§4-2 · ADR-0521)
     autoArm: false,              // 자동 분해 창 — [지금 인벤토리에도 적용]을 한 번 눌러 확인 줄이 선 상태 (ADR-0203) · 창을 닫으면 풀린다
-    bookCls: 'all',              // 도서관 탭 — 스킬 업그레이드 직업 줄에서 고른 칸(`all` | 직업 id · §17 · ADR-1206) · 영웅을 바꿔도 남는다 · 세이브 아님
-    bookSel: null,               // 도서관 탭 — 가진 책 칸에서 고른 책 id (§17 · ADR-0573 — ~~`bookArm` 무장~~) · 영웅을 바꿔도 남는다(버튼이 그 영웅 기준으로 바뀐다) · 세이브 아님
-    bookCraftCls: 'all',         // 도서관 탭 — 스킬 북 제작 직업 줄에서 고른 칸(`all` | 직업 id · §17 · ADR-1262) · 영웅을 바꿔도 남는다 · 세이브 아님
+    bookCls: 'all',              // 도서관 탭 — 보유 스킬북 직업 줄에서 고른 칸(`all` | 직업 id · §17 · ADR-1206 · ADR-1291) · 영웅을 바꿔도 남는다 · 세이브 아님
+    bookSel: null,               // 도서관 탭 — 보유 스킬북 칸에서 고른 책 id — 스킬 업그레이드 · 스킬 북 분해가 같이 쓴다 (§17 · ADR-0573 · ADR-1291 — ~~분해 제 고르기 `bookSalvSel`~~ ADR-1287) · 영웅을 바꿔도 남는다(버튼이 그 영웅 기준으로 바뀐다) · 세이브 아님
+    bookCraftCls: null,          // 도서관 탭 — 스킬 북 제작 직업 줄에서 고른 직업 id · `null` = 안 골랐다 → 띠에서 고른 영웅의 직업(「전체」 없음 · §17 · ADR-1291) · 영웅을 바꿔도 남는다 · 세이브 아님
     bookCraftSel: null,          // 도서관 탭 — 스킬 북 제작 칸에서 고른 책 id (§17 · R540 · ADR-1262) · 만들어도 고른 채 남는다 · 영웅과 무관 · 세이브 아님
-    bookSalvCls: 'all',          // 도서관 탭 — 스킬 북 분해 직업 줄에서 고른 칸(`all` | 직업 id · §17 · ADR-1287) · 영웅을 바꿔도 남는다 · 세이브 아님
-    bookSalvSel: null,           // 도서관 탭 — 스킬 북 분해 칸에서 고른 책 id (§17 · ADR-1287) · 남아 있으면 고른 채 · 영웅과 무관 · 세이브 아님
     bookStashSel: null,          // 창고 스킬북 탭에서 고른 책 id — [분해] 가 그 책 1권을 가루로 (§6 · ADR-1199) · 탭을 바꾸면 풀린다 · 세이브 아님
     bookMore: null,              // 창고 스킬북 탭 격자 아래에 칸이 더 있나 — 지난 그림에서 잰 값(다시 그릴 때 주황 `»` 가 깜빡이지 않게 · ADR-1283) · 세이브 아님
     repSel: null,                // 리포트에서 고른 런 — null 이면 맨 위를 따라간다 (SCREEN_DESIGN §4-3 · ADR-0063 · ADR-0123)
@@ -523,7 +525,7 @@ const state = {
     makePart: null,              // 제작 칸에서 고른 부위 — 없으면 부위 목록의 첫 칸 · 'potion' 이면 물약 칸 (SCREEN_DESIGN §8-2 · ADR-0219)
     makeLevel: null,             // 제작 칸에서 고른 레벨(Lv1 · Lv10 …) — 없으면 첫 레벨 (ADR-0263)
     makeLine: null,              // 제작 무기에서 고른 계보(fast · mid · slow) — 없거나 그 레벨에 없으면 첫 계보 (ADR-1044 · R445)
-    forgeTab: 'up',              // 대장간의 작업 탭 — 'make' | 'up' | 'synth' | 'craft' (ADR-0142 · 합성 ADR-0856 · `?fg=` 로도 연다) · 탭 버튼은 언제나 강화 (ADR-0962)
+    forgeTab: 'up',              // 대장간의 작업 탭 — 'make' | 'up' | 'ench' | 'synth' | 'craft' (ADR-0142 · 합성 ADR-0856 · 인챈트 ADR-1293 · `?fg=` 로도 연다) · 탭 버튼은 언제나 강화 (ADR-0962)
     cnPick: null,                // 건설 탭에서 고른 건물 id — null 이면 지금 지을 수 있는 첫 건물 (SCREEN_DESIGN §13-1 · ADR-0304)
     shopPotionN: 1,              // 상단 물약을 한 번에 살 수 — 사기 줄 ×n 이 고른다 (§8-3 · 2026-10-23)
     shopSel: null,               // 상점에서 고른 칸 {src, i, cycle} · 일반 목록 번호가 바뀌면 풀린다
@@ -952,7 +954,7 @@ function mmGuideSelectors(m) {
             return [...(state.exSel?.spot === m.target ? ['.ex-go'] : []), `${spot}:not(.pending)`, spot];
         }
         case 'count': return { upgrade: ['.fg-up-work .fg-board-go', '.c-forge .pd-cell.filled', '.fg-box'], gamble: ['.gb-go'], explore: ['.ex-go', '.ex-spot:not(.pending):not(.out)'] }[m.target] ?? [];
-        case 'event': return { hire: ['.b-hire:not([disabled])', '.tv-cands'], book: ['.lib-learn .bk-buy .btn.primary', '.lib-learn .bk-sec', '.lib-learn'],
+        case 'event': return { hire: ['.b-hire:not([disabled])', '.tv-cands'], book: ['.lib-learn .bk-buy .btn.primary', '.lib-own .bk-grid', '.lib-learn'],   // 책 칸은 보유 스킬북 패널(ADR-1291)
             // 장비 장착 — 인벤토리 장비 → 창고 장비 → 상자(까야 장비다) (ADR-1260)
             equip: ['.store-bag .inv-cell.filled:not(.box)', '.store-stash .inv-cell.filled:not(.box)', '.store-bag .inv-cell.filled.box', '.store-stash .inv-cell.filled.box'] }[m.target] ?? [];
     }
@@ -1099,6 +1101,7 @@ function render() {
         forge: renderForge,
         library: renderLibrary,
         resource: renderResource,
+        endless: renderEndless,
         colosseum: renderColosseum,
         arena: renderArena,
         codex: renderCodex,
@@ -2128,6 +2131,8 @@ const arenaReset = A => Object.assign(A, {
 const arenaGateOpen = A => !!G && (A.forceReg || !cleanNick(loadTrack().nick) || SYS.game.arenaDefense(G) === null);
 /** 결투장(`colosseum`) 화면 상태를 그 세이브의 처음으로 — 고른 층은 다음 층부터 */
 const colosseumReset = C => Object.assign(C, { owner: G, match: null, last: null, unfold: false, floor: null, opp: null, toast: null });
+/** 무한의 탑(`endless`) 화면 상태를 그 세이브의 처음으로 — 고른 층은 다음 층부터 (ADR-1294) */
+const endlessReset = E => Object.assign(E, { owner: G, match: null, last: null, unfold: false, floor: null, toast: null });
 /** 고른 편성의 영웅 — 판 · 후보 이름 피하기가 같이 쓴다 */
 const arenaPicked = () => SYS.game.partyOf(G).map(heroById).filter(Boolean);
 /** 결과 한 단어 — 시간이 다 되면 무승부 (`arenaRecord` 의 outcome 어휘) */
@@ -2301,7 +2306,9 @@ async function arenaUsersFind(more = false, quiet = false) {
     if (state.arena.users === U && state.modal === 'arenaUsers') render();
 }
 
-/** 결투 관전 — 두 탭이 같은 재생기를 쓴다. 돌아오는 버튼 · 제목 · 배경(싸운 순간 판의 배경 — `match.bg`)만 다르다 · 재생 위치는 `arenaWatching` 이 받아 둔다 */
+/** 결투 관전 — 세 탭이 같은 재생기를 쓴다. 돌아오는 버튼 · 제목 · 배경(싸운 순간 판의 배경 — `match.bg`)만 다르다 · 재생 위치는 `arenaWatching` 이 받아 둔다.
+ *  무한의 탑(ADR-1294)은 상대가 몬스터다 — `match.opponent` 가 비고 적은 런 결과의 `round` 이벤트가 세운다 · `match.stageId` 가 있어 몬스터가 원정처럼 떠오르며 서고
+ *  남은 시간 칸이 선다 · 라운드 칸은 그 층의 종류(`match.rounds`) */
 function arenaWatchPage(main, A, title, backLabel) {
     const page = el('div', 'bt-page page arena-watch');
     main.appendChild(page);
@@ -2318,7 +2325,10 @@ function arenaWatchPage(main, A, title, backLabel) {
     const stop = mountBattle(page, {
         result: A.match.result, heroes: A.match.team.map(p => p.hero), resume: A.match.resume,
         potionLocks: potionLocksOpt(),   // 물약 칸의 잠긴 자리 — 원정 관전과 같다 (§4-2 · ADR-0716)
-        title, background: A.match.bg, roundRows: [{ round_num: 1, round_type: 'normal' }],
+        title, background: A.match.bg, roundRows: A.match.rounds ?? [{ round_num: 1, round_type: 'normal' }],
+        ...(A.match.stageId != null ? { stageId: A.match.stageId } : {}),
+        // 몬스터 툴팁의 장비 칸 — 원정 관전과 같은 「착용 중」 카드 (ADR-0183 · 무한의 탑)
+        monsterItemTipOf: (item, ctx, level) => tipCard(item, t('tip.equipped'), [], ctx, { level }),
         form: { byUid: Object.fromEntries(A.match.team.map(p => [p.uid, p.rank])) },
         combatOf: h => all.find(p => p.uid === h.uid)?.combat,
         itemOf: uid => items[uid] ?? null,
@@ -2339,11 +2349,13 @@ function arenaWatchPage(main, A, title, backLabel) {
 /** 관전에서 돌아온 첫 그리기 — 결과를 미리 흘리지 않게 미뤄 둔 플래시를 여기서 띄운다 */
 const arenaToast = A => { if (A.toast) { flash(A.toast.key, A.toast.params); A.toast = null; } };
 
+/** 머리 물음표의 안내(`hint.<id>`) — 탭 이름 키 → 안내 id · 없으면 결투장 */
+const ARENA_HINT = { 'nav.colosseum': 'colosseum', 'nav.endless': 'endless' };
 /** 박스 — 머리(탭 그림 + 탭 이름) + 왼쪽 레일 | 오른쪽 판 · `art` = `icons/arena/` 의 장식 그림 — 탭 이름을 따른다(콜로세움 = `colosseum` 건물 · 결투장 = `duel` 칼) */
 function arenaShell(main, titleKey, art, rail, stage) {
     const page = el('div', 'panel page arena-page');
     main.appendChild(page);
-    page.appendChild(helpHeading('h2', 'arena-h', `${M.arenaArt(art, 'arena-h-ico')}${t(titleKey)}`, titleKey === 'nav.colosseum' ? 'colosseum' : 'arena'));
+    page.appendChild(helpHeading('h2', 'arena-h', `${M.arenaArt(art, 'arena-h-ico')}${t(titleKey)}`, ARENA_HINT[titleKey] ?? 'arena'));
     const wrap = el('div', 'arena-wrap');
     wrap.append(rail, stage);
     page.appendChild(wrap);
@@ -2357,61 +2369,115 @@ function renderColosseum(main) {
     const floors = SYS.arena.floors, cs = SYS.game.colosseumState(G), top = floors.length;
     // 고른 층 — 깬 층 · 다음 층만 고를 수 있다 · 처음엔 다음 층(다 깼으면 마지막 층)
     if (!(C.floor >= 1 && C.floor <= Math.min(cs.next, top))) C.floor = Math.min(cs.next, top);
-    const F = floors.find(x => x.no === C.floor), tier = SYS.arena.tiers.find(x => x.id === F.tier);
+    const F = floors.find(x => x.no === C.floor);
     // 같은 층은 같은 팀이다 — 이름만 우리 팀을 피하므로 층 · 우리 이름이 같으면 굴린 팀을 다시 쓴다
     const names = arenaPicked().map(h => h.name);
     const key = `${F.no}|${JSON.stringify(names)}`;
     if (C.opp?.key !== key) C.opp = { key, team: SYS.arena.rollFloorOpponent(F.no, names) };
     const last = C.last;
-    arenaShell(main, 'nav.colosseum', 'duel', colosseumRail(C, cs), arenaStage(C, {
-        bg: M.duelBg(F.tier),   // 결투장 = 고른 층의 등급 그림 (ADR-0761)
+    arenaShell(main, 'nav.colosseum', 'duel', ladderRail(C, floors, cs), arenaStage(C, {
+        bg: M.duelBg(csRowArt(F.no)),   // 시련의 탑 = 고른 층이 든 줄의 그림 (ADR-1292)
         opponent: C.opp.team,
         oppLoadout: SYS.arena.floorLoadout(F.no),   // 층 AI 팀의 물약 — 차림의 물약 × 칸 수 (arena_design §7 · R460)
-        from: t(F.gate ? 'cs.fromGate' : 'cs.from', { n: F.no, tier: L(tier.name) }),
+        from: t('cs.from', { n: F.no, lv: F.kit.level }),
         fightLabel: t('cs.fight'),
         onFight: result => {
             const outcome = arenaOutcome(result);
             const r = SYS.game.colosseumRecord(G, F.no, outcome === 'win');
             save();
             C.last = { outcome, sec: result.durationSec, opened: r.advanced && F.no < top ? F.no + 1 : null };
-            if (r.advanced) {
-                C.floor = Math.min(F.no + 1, top);
-                if (F.gate) C.toast = { key: 'cs.emblem', params: { tier: L(tier.name) } };
-            }
+            if (r.advanced) C.floor = Math.min(F.no + 1, top);
         },
         last: last ? t(last.opened ? 'cs.last.open' : 'cs.last', { result: t(ARENA_OUTCOME_KEY[last.outcome]), sec: last.sec, n: last.opened }) : null,
     }));
 }
 
 /**
- * 결투장 레일 — 사다리. 등급마다 한 줄 · **맨 위 = 가장 높은 등급**(올라가는 모양) · 줄 = 휘장 + 이름 · 레벨 대역 + 층 칸.
- * 층 칸: 깬 층 `clear`(채움) · 다음 층 `next`(강조) · 안 열린 층 `locked`(못 누름) · 승급전 `gate`(검투사 투구) · 고른 층 `on`.
- * 휘장은 그 등급의 승급전을 이겼을 때 제 색이고, 아니면 흐린 회색이다 (arena_design §7)
+ * 무한의 탑(`endless`) [2026-11-19 사용자 확정 · SCREEN_DESIGN §1 · ADR-1294 · endless_tower_design §0] — 몬스터만 상대하는 층 사다리.
+ * 레일 = 시련의 탑 사다리 그대로(`ladderRail`) · 판 = `arenaStage` 그대로 — 상대 칸만 그 층의 몬스터 세 마리(`game.endlessPreview` — 같은 층 = 같은 무리라 판의 카드가 그대로 상대다) ·
+ * [도전] = 원정 라운드 하나의 단판(`game.endlessFight` — 보상 없음 · 세이브 불변) · 오른 층만 싸운 순간 적는다(`endlessRecord`) · 판 · 관전 배경 = 그 층 스테이지의 원정 배경
  */
-function colosseumRail(C, cs) {
-    const floors = SYS.arena.floors, top = floors.length;
+function renderEndless(main) {
+    const E = state.endless;
+    if (E.owner !== G) endlessReset(E);
+    if (E.match) { arenaWatchPage(main, E, t('nav.endless'), 'et.back'); return; }
+    arenaToast(E);
+    const floors = SYS.game.endlessFloors, es = SYS.game.endlessState(G), top = floors.length;
+    // 고른 층 — 깬 층 · 다음 층만 고를 수 있다 · 처음엔 다음 층(다 깼으면 마지막 층) — 시련의 탑과 같다
+    if (!(E.floor >= 1 && E.floor <= Math.min(es.next, top))) E.floor = Math.min(es.next, top);
+    const F = floors.find(x => x.no === E.floor);
+    const pv = SYS.game.endlessPreview(G, F.no);
+    // 노말이 아닌 규칙의 층 — 판 머리 뒤에 단 이름(「31층 · Lv.31 · 정예 · 나이트메어」)
+    const diff = F.difficulty !== D.difficultyList[0]?.id ? D.difficulties[F.difficulty] ?? null : null;
+    const bg = stageBgOf(F.stageId);   // 그 층 스테이지의 원정 배경 — 싸우는 순간 관전에 실린다 (ADR-1294)
+    const last = E.last;
+    arenaShell(main, 'nav.endless', 'endless', ladderRail(E, floors, es), arenaStage(E, {
+        bg,
+        monsters: pv?.enemies ?? [],
+        from: t(diff ? 'et.fromDiff' : 'et.from', { n: F.no, lv: F.level, kind: t(`kind.${F.type}`), diff: diff ? L(diff.name) : '' }),
+        fightLabel: t('cs.fight'),
+        // 단판 — 원정 라운드 하나라 결투(`arena.fight`)가 아니다 · 우리 팀 = 그 판의 파티 유닛(전투 시트) · 관전은 그 층 스테이지 · 라운드 종류로 선다
+        run: () => {
+            const r = SYS.game.endlessFight(G, F.no, makeRng(crypto.getRandomValues(new Uint32Array(1))[0]));
+            if (!r.ok) return null;
+            const team = r.units.map(u => {
+                const h = heroById(u.uid);
+                return { uid: u.uid, hero: structuredClone(h), gear: structuredClone(SYS.game.heroItems(G, h)), combat: u.combat, rank: u.rank };
+            });
+            return { team, opponent: [], result: r.result, stageId: F.stageId, rounds: [{ round_num: 1, round_type: F.type }] };
+        },
+        onFight: result => {
+            const outcome = arenaOutcome(result);
+            const r = SYS.game.endlessRecord(G, F.no, outcome === 'win');
+            save();
+            E.last = { outcome, sec: result.durationSec, opened: r.advanced && F.no < top ? F.no + 1 : null };
+            if (r.advanced) E.floor = Math.min(F.no + 1, top);
+        },
+        last: last ? t(last.opened ? 'cs.last.open' : 'cs.last', { result: t(ARENA_OUTCOME_KEY[last.outcome]), sec: last.sec, n: last.opened }) : null,
+    }));
+}
+
+/** 사다리 한 줄의 층 수 · 줄 안 한 단의 층 수 — 화면 묶음이라 CSV 가 아니다 (ADR-1292) */
+const CS_ROW_FLOORS = 10;
+const CS_LINE_FLOORS = CS_ROW_FLOORS / 2;
+/** 층이 든 줄의 판 배경 — 옛 등급 그림(그림 이름 = `arena_tier` id)을 줄 순서대로 · 줄이 그림보다 많으면 마지막 그림 (ADR-1292) */
+function csRowArt(no) {
+    const tiers = SYS.arena.tiers;
+    return tiers[Math.min(Math.floor((no - 1) / CS_ROW_FLOORS), tiers.length - 1)].id;
+}
+
+/**
+ * 층 사다리 레일 — 시련의 탑 · 무한의 탑이 같이 쓴다(ADR-1292 · ADR-1294). **10층씩 한 줄 · 맨 위 = 가장 높은 층의 줄**(올라가는 모양) · 줄 = 줄 머리 「41–50층」 + 층 칸 다섯씩 두 단(아랫단 = 앞 다섯 · 윗단 = 뒤 다섯).
+ * 층 칸: 깬 층 `clear`(채움) · 다음 층 `next`(강조) · 안 열린 층 `locked`(못 누름) · 고른 층 `on`. 등급 · 휘장 · 승급전은 없다 (arena_design §7)
+ * @param C 그 탭의 화면 상태(`floor` = 고른 층) · `floors` = 층 목록 `[{no}]` · `cs` = 오른 층 `{cleared, next}`
+ */
+function ladderRail(C, floors, cs) {
+    const top = floors.length;
     const rail = el('div', 'arena-rail cs-rail');
     rail.appendChild(el('div', 'cs-progress', cs.cleared >= top ? t('cs.progressDone', { total: top }) : t('cs.progress', { n: cs.cleared, total: top })));
     const ladder = el('div', 'cs-ladder');
-    for (const tier of [...SYS.arena.tiers].reverse()) {
-        const mine = floors.filter(x => x.tier === tier.id);
-        const earned = cs.cleared >= mine.at(-1).no;
-        const row = el('div', `cs-tier${earned ? ' earned' : ''}${mine.some(x => x.no === cs.next) ? ' current' : ''}`);
-        row.appendChild(el('span', 'cs-emblem', M.arenaArt(tier.id)));
-        const body = el('div', 'cs-tier-body');
-        const lo = mine[0].kit.level, hi = mine.at(-1).kit.level;
-        body.appendChild(el('div', 'cs-tier-name', `${L(tier.name)}<small>${lo === hi ? t('cs.lv1', { a: lo }) : t('cs.lv', { a: lo, b: hi })}</small>`));
+    const cell = x => {
+        const st = x.no <= cs.cleared ? 'clear' : x.no === cs.next ? 'next' : 'locked';
+        const b = el('button', `cs-floor ${st}${x.no === C.floor ? ' on' : ''}`, `<b>${x.no}</b>`);
+        b.disabled = st === 'locked';
+        b.onclick = () => { if (C.floor !== x.no) { C.floor = x.no; render(); } };
+        return b;
+    };
+    const rows = [];
+    for (let i = 0; i < top; i += CS_ROW_FLOORS) rows.push(floors.slice(i, i + CS_ROW_FLOORS));
+    for (const mine of rows.reverse()) {
+        const lo = mine[0].no, hi = mine.at(-1).no;
+        const row = el('div', `cs-band${cs.cleared >= hi ? ' done' : ''}${mine.some(x => x.no === cs.next) ? ' current' : ''}`);
+        row.appendChild(el('div', 'cs-band-name', t('cs.row', { a: lo, b: hi })));
         const steps = el('div', 'cs-floors');
-        for (const x of mine) {
-            const st = x.no <= cs.cleared ? 'clear' : x.no === cs.next ? 'next' : 'locked';
-            const b = el('button', `cs-floor ${st}${x.gate ? ' gate' : ''}${x.no === C.floor ? ' on' : ''}`,
-                `${x.gate ? M.arenaArt('gladiator') : ''}<b>${x.no}</b>`);
-            b.disabled = st === 'locked';
-            b.onclick = () => { if (C.floor !== x.no) { C.floor = x.no; render(); } };
-            steps.appendChild(b);
+        steps.style.setProperty('--cs-cols', CS_LINE_FLOORS);
+        // 윗단(뒤 다섯)을 먼저 놓는다 — 줄 안에서도 위가 높은 층이다
+        for (let j = Math.ceil(mine.length / CS_LINE_FLOORS) - 1; j >= 0; j--) {
+            const line = el('div', 'cs-line');
+            for (const x of mine.slice(j * CS_LINE_FLOORS, (j + 1) * CS_LINE_FLOORS)) line.appendChild(cell(x));
+            steps.appendChild(line);
         }
-        body.appendChild(steps);
-        row.appendChild(body);
+        row.appendChild(steps);
         ladder.appendChild(row);
     }
     rail.appendChild(ladder);
@@ -2558,9 +2624,11 @@ function arenaLeaguesBody() {
 }
 
 /**
- * 오른쪽 판 — 두 탭이 같다 (SCREEN_DESIGN §1 「판」 · ADR-0670 · ADR-0606 · 0497 · 0490).
+ * 오른쪽 판 — 세 탭이 같다 (SCREEN_DESIGN §1 「판」 · ADR-0670 · ADR-0606 · 0497 · 0490 · ADR-1294).
  * @param o.opponent 선 상대(`snapshotTeam` 모양) · null 이면 점선 카드 · `o.from` = 고르개 줄 오른쪽 끝의 출처 글 · `o.fightLabel` ·
- *        `o.onFight(result)` = 결과를 적는 쪽(세이브 · 결과 줄) · `o.last` = 결과 줄 글
+ *        `o.onFight(result)` = 결과를 적는 쪽(세이브 · 결과 줄) · `o.last` = 결과 줄 글 ·
+ *        `o.monsters` = 몬스터 상대(무한의 탑 — `round` 이벤트의 `enemies` 모양 · 관전의 몬스터 카드로 선다) · `o.run()` = 그 판의 단판을 돌려
+ *        `{team, opponent, result, …관전에 넘길 것}` 을 낸다(무한의 탑 — 결투 대신 원정 라운드 · 없으면 `arena.fight`)
  */
 function arenaStage(A, o) {
     const ps = SYS.game.presetState(G);
@@ -2585,7 +2653,7 @@ function arenaStage(A, o) {
     const opponent = o.opponent;
     /* 두 팀 = **관전 판 그대로** [2026-10-12 사용자 지시 · ADR-0606] — 위 상대 · VS · 아래 우리 팀, 카드도 관전 카드(`battle.js:unitPreview`).
        진형도 관전과 같다 — 후열만 VS 반대쪽으로 물러서고(칸의 `data-rank` · CSS `.side-*`) 가로 차례는 편성 보드와 같은 식(`formSeats`)이다.
-       카드 값은 결투가 쓰는 스냅샷이다(도감 제외 · 고른 편성의 전술 — ADR-0495). 3명이 안 차면 스냅샷을 못 찍어 그 영웅의 지금 값으로 선다 */
+       카드 값은 결투가 쓰는 스냅샷이다(내 도감 옵션 · 고른 편성의 전술 — ADR-0495 · 도감 2026-11-19 R554). 3명이 안 차면 스냅샷을 못 찍어 그 영웅의 지금 값으로 선다 */
     const snap = picked.length === SYS.arena.teamSize ? SYS.arena.snapshotTeam(picked, G.items, ranks, SYS.game.arenaLoadout(G)) : null;
     const all = [...(snap ?? []), ...(opponent ?? [])];
     const gear = Object.fromEntries((opponent ?? []).flatMap(p => p.gear.map(it => [it.uid, it])));
@@ -2593,12 +2661,16 @@ function arenaStage(A, o) {
         combatOf: h => all.find(p => p.uid === h.uid)?.combat ?? SYS.game.heroCombat(G, h),
         itemOf: uid => gear[uid] ?? itemOf(uid),
         itemTipOf: (h, it) => tipCard(it, t('tip.equipped'), [], tips.combatOf(h), { level: h.level }),
+        // 몬스터 카드의 장비 칸 — 원정 관전과 같은 「착용 중」 카드 (ADR-0183 · 무한의 탑)
+        monsterItemTipOf: (item, ctx, level) => tipCard(item, t('tip.equipped'), [], ctx, { level }),
     };
     // 배경은 관전 판과 같은 한 장이다 — 싸우는 순간 결투에 실어 관전이 그대로 깐다(이긴 뒤 고른 층이 다음 등급으로 옮아도 관전 배경은 안 바뀐다 · ADR-0761)
     const board = el('div', 'arena arena-prep has-bg');
     board.style.backgroundImage = arenaBgImage(o.bg);
     const enemySide = el('div', 'side side-enemy');
-    if (opponent) {
+    // 무한의 탑 — 그 층의 무리가 관전의 몬스터 카드로 선다 · 자리는 몬스터 역할의 줄(관전과 같은 규칙 · ADR-1294)
+    if (o.monsters) for (const cell of enemyPreviews(o.monsters, tips)) enemySide.appendChild(cell);
+    else if (opponent) {
         const byRank = [];
         for (const p of opponent) (byRank[p.rank] ??= []).push(p);
         for (const { r, i } of formSeats(Array.from(byRank, m => m?.length ?? 0))) enemySide.appendChild(unitPreview(arenaUnit(byRank[r][i], 'enemy'), tips));
@@ -2615,8 +2687,17 @@ function arenaStage(A, o) {
     A.unfold = false;
     const controls = el('div', 'arena-actions');
     const fight = el('button', 'btn primary arena-fight', o.fightLabel);
-    fight.disabled = !opponent || picked.length !== SYS.arena.teamSize;
+    fight.disabled = !(opponent || o.monsters?.length) || picked.length !== SYS.arena.teamSize;
     fight.onclick = () => {
+        // 무한의 탑 — 상대가 몬스터라 원정 라운드 하나를 돈다(`o.run` · 우리 팀 · 결과 · 관전에 넘길 것을 낸다 · ADR-1294) · 결과는 관전 전에 적힌다
+        if (o.run) {
+            const m = o.run();
+            if (!m) return;
+            o.onFight(m.result);
+            A.match = { ...m, resume: null, bg: o.bg };
+            render();
+            return;
+        }
         // 고른 뒤 장비 · 전술 · 물약을 바꿨을 수 있어 출전 순간 다시 찍는다. 상대는 확인한 그대로다.
         //   전술 · 물약은 고른 편성의 것이다 — 물약은 재고에서 채우지만 결투는 재고를 안 줄인다 (ADR-0495)
         const loadout = SYS.game.arenaLoadout(G);
@@ -5112,59 +5193,51 @@ function bookOverwriteBody() {
     return box;
 }
 
-/** 스킬 업그레이드 = 도서관 탭 오른쪽 카드(가진 책을 읽는 자리 · 열 전체 높이) — 제목(「스킬 업그레이드」 `bk.up.h`)은 카드가 든다 (§17 · ADR-0422 · ADR-0595 · ADR-0597 · ADR-1197) */
 /** 책의 직업 — `skill.defs[id].classId`(직업 스킬은 그 직업 · 전직 스킬은 갈래의 직업) · 없으면 null(「전체」에만 선다 · ADR-1206) */
 const bookClassOf = id => SYS.skill.defs[id]?.classId ?? null;
-/** 스킬 업그레이드 직업 줄에 서는 직업 — 책이 되는 직업 스킬이 있는 직업 · `class.csv` 행 순(확장 직업은 스킬이 없어 안 선다 · ADR-1206) */
+/** 책의 티어 — `skill.csv:tier`(직업 스킬은 1 · 2) · 스킬 북 제작 칸의 줄을 가른다 (ADR-1291) */
+const bookTierOf = id => SYS.skill.defs[id]?.tier ?? 1;
+/** 직업 줄에 서는 직업 — 책이 되는 직업 스킬이 있는 직업 · `class.csv` 행 순(확장 직업은 스킬이 없어 안 선다 · ADR-1206) */
 const bookClasses = () => (D.classes ?? []).filter(c => SYS.skill.list.some(d => d.ownerKind === 'job' && d.ownerId === c.id && SYS.skill.bookable(d.id)));
 
-function bookLearnInto(box, h, bs) {
-    const tipCtx = heroSkillCtx(h);
-    // 직업 줄 — 제목 바로 아래 · 「전체」 + 직업마다 한 칸 · 고른 직업의 책만 아래 칸에 선다 · 직업을 바꾸면 안 맞는 고른 책은 풀린다 (§17 · ADR-1206)
-    //   직업 칸은 늘 서고(자리가 안 움직인다) 그 직업 책이 없으면 흐려 못 누른다 — 옛 제작 칸 직업 탭(ADR-1021)과 같은 규칙
-    const clsIds = ['all', ...bookClasses().map(c => c.id)];
-    const fil = clsIds.includes(state.bookCls) ? state.bookCls : 'all';
-    const clsRow = el('div', 'segmented bk-cls');
-    clsRow.style.setProperty('--n', clsIds.length);
-    for (const id of clsIds) {
-        const has = id === 'all' || bs.books.some(b => bookClassOf(b.id) === id);
+/** 직업 줄 — 칸 폭이 같은 한 줄 · 고른 칸만 켜진다 · 직업 칸은 늘 서고(자리가 안 움직인다) 그 직업 것이 없으면 흐려 못 누른다 —
+ *  보유 스킬북(「전체」 + 직업 · ADR-1206)과 스킬 북 제작(직업만 · ADR-1291)이 같이 쓴다. `onPick` 이 상태를 바꾸고 다시 그린다 */
+function bookClassRow(ids, fil, has, onPick) {
+    const row = el('div', 'segmented bk-cls');
+    row.style.setProperty('--n', ids.length);
+    for (const id of ids) {
         const b = el('button', `btn sm${fil === id ? ' on' : ''}`, id === 'all' ? t('bk.cls.all') : className(id));
         b.type = 'button';
-        b.disabled = !has && fil !== id;
-        b.onclick = () => {
-            state.bookCls = id;
-            if (state.bookSel && id !== 'all' && bookClassOf(state.bookSel) !== id) state.bookSel = null;
-            render();
-        };
-        clsRow.appendChild(b);
+        b.disabled = !has(id) && fil !== id;
+        b.onclick = () => { onPick(id); render(); };
+        row.appendChild(b);
     }
-    box.appendChild(clsRow);
+    return row;
+}
+
+/** 스킬 업그레이드 = 아랫줄 왼쪽 위 패널 — **행동 줄만**(막힘 한 줄 · 읽기 줄 = 글 두 줄 + 버튼 · 그림 칸 없음).
+ *  고른 책은 보유 스킬북 칸에서 고른 것(`bookSel` — 스킬 북 분해와 같이 쓴다) (§17 · ADR-1208 · ADR-1291 — ~~직업 줄 · 가진 책 칸 · 그림 칸~~ ADR-1206 · 1211) */
+function bookLearnInto(box, h, bs) {
     const err = bs.hero.err;
     const errText = err && err !== 'unbuilt' ? tLock(`bk.err.${err}`, { n: bs.need.need }) : '';   // 안 열림(`unbuilt`)은 카드의 잠김 베일이 말한다 (ADR-0928)
     const cur = bs.hero.skill;   // 배운 칸 — 차 있으면 새 책은 덮어쓰기다(아래 버튼이 [덮어쓰기])
     // 막힘 — 카드 맨 위 한 줄(레벨 미달). **지금 가진 스킬 카드 셋은 전직 패널 이름 줄 아래다**(ADR-0595 · ADR-1197)
     //   [2026-10-12 사용자 지시 「가진책에있는 기본스킬을 전직쪽의 영웅 이름아래로」 · ADR-0595 — ~~배우기 카드 머리~~ ADR-0567 · ADR-0589]
     if (errText) box.appendChild(el('div', 'down bk-err', errText));
-    // **읽기 줄**(글 두 줄 + 버튼 — 윗줄 이름 · 아랫줄 레벨 변화와 드는 책 · ADR-1208) · **아이콘 칸**(그림 · 오른쪽 아래 권수 `×n` — 1권도 찍는다 · 상단 물약 칸과 같은 자리) · 소제목은 없다(카드 제목이 곧 머리 · ADR-0595)
-    //   [2026-10-09 사용자 지시 「내가 가진 책도 아이콘 형태로 해서 오른쪽아래에 xn으로」 · ADR-0573 — ~~책마다 한 줄 · 이름 뒤 권수~~(ADR-0460)]
-    const own = el('div', 'bk-sec');
-    if (!bs.books.length) { own.appendChild(el('div', 'muted bk-empty', t('bk.none'))); box.appendChild(own); return; }
+    // **읽기 줄**(글 두 줄 + 버튼 — 윗줄 이름 · 아랫줄 레벨 변화와 드는 책 · ADR-1208) · 책이 하나도 없어도 `—` 와 꺼진 버튼으로 선다(가진 책은 보유 스킬북 칸 · ADR-1291)
     const sel = bs.books.find(b => b.id === state.bookSel) ?? null;
     // 이 영웅이 이 책을 읽으면 — `learn`(새로 배운다 · 배운 칸이 차 있으면 덮어쓴다) | `upgrade`(이미 가진 스킬 — 고유 · 배운 칸) (`game.bookState` · R216 · ADR-0529)
     const p = sel?.plan;
     const up = p?.act === 'upgrade';
     const over = !!sel && !up && !!cur;   // 덮어쓰기 — 앞의 스킬과 그 레벨이 사라지고 책으로 안 돌아온다(§3) · 버튼이 위험 색으로 말하고 누르면 확인 창이 뜬다(ADR-1020)
     // 아랫줄 — 이미 가진 스킬이면 `Lv.2 → Lv.3`(지금 → 읽은 뒤 · `plan.lv` 는 오른 횟수라 +1 이 표기 레벨) · 상한이면 `Lv.n · 최대 레벨` ·
-    //   이어서 `책 n권 필요`(`plan.need` · 모자라면 붉다 · 새로 배우는 책은 1권 · 상한이면 안 선다 · 가진 권수는 그림 칸 `×n`) — 단계마다 값이 다르다(`skillbook_upgrade_books_n` · R545) (ADR-1208 · 1211)
+    //   이어서 `책 n권 필요`(`plan.need` · 모자라면 붉다 · 새로 배우는 책은 1권 · 상한이면 안 선다 · 가진 권수는 보유 스킬북 칸 `×n`) — 단계마다 값이 다르다(`skillbook_upgrade_books_n` · R545) (ADR-1208 · 1291)
     const maxed = up && p.err === 'maxUp';
     const lvPart = !up ? '' : maxed ? t('bk.lvMax', { n: p.lv + 1 }) : t('bk.lvUp', { a: p.lv + 1, b: p.lv + 2 });
-    const short = !!sel && !maxed && sel.n < p.need;   // 드는 책보다 적다 — 그림 칸 `×n` 과 「책 n권 필요」가 붉다
+    const short = !!sel && !maxed && sel.n < p.need;   // 드는 책보다 적다 — 「책 n권 필요」가 붉다
     const needPart = !sel || maxed ? '' : `<span class="bk-need${short ? ' no' : ''}">${t('bk.need', { n: p.need })}</span>`;
-    // 왼쪽 = 고른 책 그림 칸 — 가진 책 칸과 같은 그림 · 오른쪽 아래 가진 권수 `×n` · 고른 것이 없으면 빈 칸이 자리를 지킨다 (ADR-1211)
-    const ico = sel
-        ? `<span class="inv-cell filled bk-buy-ico"><span class="inv-icon">${skillImg(skillInfo(sel.id))}</span><span class="inv-lv${short ? ' no' : ''}">×${sel.n}</span></span>`
-        : '<span class="inv-cell bk-buy-ico"></span>';
-    const bar = el('div', 'td-buy bk-buy', ico + (sel
+    // 그림 칸은 없다 — 두 행동 패널이 같은 책을 보니 같은 그림이 두 번 선다 · 고른 책은 보유 스킬북 칸의 파란 테두리가 말한다 (ADR-1291 — ~~ADR-1211~~)
+    const bar = el('div', 'td-buy bk-buy', (sel
         ? `<span class="td-buy-n"><span class="bk-buy-name">${L(skillInfo(sel.id).name)}</span>`
             + `<span class="bk-buy-sub">${lvPart ? `<span class="bk-up-lv">${lvPart}</span>` : ''}${lvPart && needPart ? '<span class="bk-sep"> · </span>' : ''}${needPart}</span></span>`
         : '<span class="td-buy-n muted">—</span>'));
@@ -5179,19 +5252,32 @@ function bookLearnInto(box, h, bs) {
         render();   // 그 책이 남아 있으면 고른 채 남는다 — 다 읽어 없어지면 `find` 가 못 찾아 저절로 풀린다
     };
     bar.appendChild(btn);
-    own.appendChild(bar);
+    box.appendChild(bar);
+}
+
+/** 보유 스킬북 = 아랫줄 왼쪽 아래 패널(위 두 패널 폭) — **직업 줄**(「전체」 + 직업 · 고른 직업의 책만 · ADR-1206) · **가진 책 칸**(그림 + 오른쪽 아래 권수 `×n` —
+ *  1권도 찍는다 · 한 줄 15칸 · 순서는 창고 스킬북 탭과 같다). 칸 누르기 = 고르기(`bookSel`) — 고른 책 하나를 스킬 업그레이드 · 스킬 북 분해가 같이 쓴다.
+ *  설명창은 띠에서 고른 영웅 기준(이미 가진 스킬이면 지금 레벨의 것 · R216) (§17 · ADR-0573 · ADR-1291) */
+function bookOwnInto(box, h, bs) {
+    const tipCtx = h ? heroSkillCtx(h) : {};
+    const ids = ['all', ...bookClasses().map(c => c.id)];
+    const fil = ids.includes(state.bookCls) ? state.bookCls : 'all';
+    // 직업을 바꾸면 그 직업에 없는 고른 책은 풀린다 — 안 보이는 책이 행동 줄에 남지 않게
+    box.appendChild(bookClassRow(ids, fil, id => id === 'all' || bs.books.some(b => bookClassOf(b.id) === id), id => {
+        state.bookCls = id;
+        if (state.bookSel && id !== 'all' && bookClassOf(state.bookSel) !== id) state.bookSel = null;
+    }));
     const shown = fil === 'all' ? bs.books : bs.books.filter(b => bookClassOf(b.id) === fil);
-    if (!shown.length) { own.appendChild(el('div', 'muted bk-empty', t('bk.none'))); box.appendChild(own); return; }   // 고른 직업의 책이 없다
-    const grid = el('div', 'bk-grid');
+    if (!shown.length) { box.appendChild(el('div', 'muted bk-empty', t('bk.none'))); return; }   // 책이 없다 · 고른 직업의 책이 없다
+    const grid = el('div', 'bk-grid bk-own-grid');
     for (const b of shown) {
-        const bu = b.plan?.act === 'upgrade' ? b.plan.lv : null;   // 이미 가진 스킬이면 지금 레벨의 설명창 (R216)
-        grid.appendChild(bookCell(b.id, sel === b,
+        const bu = b.plan?.act === 'upgrade' ? b.plan.lv : null;   // 이미 가진 스킬이면 지금 레벨의 설명창 (R216) · 영웅이 없으면 `plan` 이 없다
+        grid.appendChild(bookCell(b.id, state.bookSel === b.id,
             () => skillTipCard(bu === null ? { id: b.id } : { id: b.id, up: bu, lv: bu + 1 }, tipCtx),
-            () => { state.bookSel = sel === b ? null : b.id; render(); },
+            () => { state.bookSel = state.bookSel === b.id ? null : b.id; render(); },
             `<span class="inv-lv">×${b.n}</span>`));
     }
-    own.appendChild(grid);
-    box.appendChild(own);
+    box.appendChild(grid);
 }
 
 /* 세부 옵션의 표기 규칙(감쇠율 · 저항 상한 · 단위 · 대표 3줄)과 줄 조립은 `tip.js` 에 산다 [2026-09-14] — 유닛 툴팁도 같은 행을 그리게 되어
@@ -7072,7 +7158,7 @@ function renderLibrary(main) {
     top.appendChild(libInfoPanel(h));
     top.appendChild(libRoomPanel(h));
     col.appendChild(top);
-    col.appendChild(bookSections(h));   // 아랫줄 = 따로 선 패널 셋 — 스킬 업그레이드 | 스킬 북 분해 | 스킬 북 제작 (ADR-1287 · ADR-1290)
+    col.appendChild(bookSections(h));   // 아랫줄 = 패널 넷 · 두 줄 — 스킬 업그레이드 | 스킬 북 분해 · 보유 스킬북 | 스킬 북 제작 (ADR-1290 · ADR-1291)
     page.appendChild(col);
     main.appendChild(page);
 }
@@ -7158,18 +7244,21 @@ function libRoomPanel(h) {
     return p;
 }
 
-/** 본판 — 스킬 업그레이드(왼쪽) | 스킬 북 분해(가운데) | 스킬 북 제작(오른쪽) — **따로 선 패널 셋** · 같은 폭 (§17 · ADR-1262 · ADR-1287 · ADR-1290).
+/** 아랫줄 — **패널 넷 · 두 줄**(열 셋 같은 폭 · §17 · ADR-1291 — ~~패널 셋 나란히~~ ADR-1290):
+ *  왼쪽 두 열 위 = 스킬 업그레이드 | 스킬 북 분해(행동 줄만 · 제 내용 높이) · 그 아래 두 열 폭 = 보유 스킬북(가진 책 칸 — 위 둘이 같이 고른다) ·
+ *  오른쪽 열 두 줄 높이 = 스킬 북 제작. 자리는 CSS 영역(`grid-template-areas`)이 정하고, DOM 순서(업그레이드 · 분해 · 제작 · 보유)는 모바일 덱 라벨 순서를 지킨다.
  *  줄(`lib-split`)이 옛 본판 이름 `lib-panel` 을 이어 받아 윗줄 아래 여백 규칙을 쓴다.
- *  패널마다 제목 + 바로 오른쪽 `?`(ADR-0600 · ADR-0603) · 본문이 스크롤한다(스크롤 자리를 따로 든다).
- *  책 배우기(도서관 r1 · R398)가 안 열렸으면 세 구역 몸을 잠김 베일로 덮는다 — 분해 · 제작도 같은 문(`skillbook` · R540) · 소제목 · `?` 는 베일 밖(ADR-0928 · 열렸나는 `hasFeature` 하나).
- *  스킬 업그레이드 구역의 `lib-learn` 은 메인미션 손가락이 찾는 이름이다(`mmGuideSelectors`) */
+ *  패널마다 제목 + 바로 오른쪽 `?`(ADR-0600 · ADR-0603 — 보유 스킬북은 `?` 없음) · 본문이 스크롤한다(스크롤 자리를 따로 든다).
+ *  책 배우기(도서관 r1 · R398)가 안 열렸으면 네 패널 몸을 잠김 베일로 덮는다 — 같은 문(`skillbook` · R540) · 소제목 · `?` 는 베일 밖(ADR-0928 · 열렸나는 `hasFeature` 하나).
+ *  스킬 업그레이드 패널의 `lib-learn` · 보유 스킬북 패널의 `lib-own` 은 메인미션 손가락이 찾는 이름이다(`mmGuideSelectors`) */
 function bookSections(h) {
     const split = el('div', 'lib-split lib-panel');
-    const bs = SYS.game.bookState(G, h?.uid ?? null);   // 영웅이 없어도 — 스킬 북 제작은 영웅과 무관하다 (R540)
+    const bs = SYS.game.bookState(G, h?.uid ?? null);   // 영웅이 없어도 — 보유 · 분해 · 제작은 영웅과 무관하다 (R540)
     const locked = !SYS.game.hasFeature(G, 'skillbook');
     const sec = (cls, title, keep, fill, help) => {
         const s = el('div', `panel lib-sec ${cls}`);
-        s.appendChild(headingHelp(el('div', 'sub-h', t(title)), help));
+        const head = el('div', 'sub-h', t(title));
+        s.appendChild(help ? headingHelp(head, help) : head);
         const body = el('div', 'box-body bk-box lib-body');
         body.dataset.keep = keep;
         fill(body);
@@ -7178,80 +7267,44 @@ function bookSections(h) {
         split.appendChild(s);
     };
     sec('lib-learn', 'bk.up.h', 'library-learn', body => { if (h) bookLearnInto(body, h, bs); }, () => t('bk.up.help'));
-    sec('lib-salv', 'bk.salv.h', 'library-salvage', body => bookSalvageInto(body, h, bs), () => t('bk.salv.help'));
+    sec('lib-salv', 'bk.salv.h', 'library-salvage', body => bookSalvageInto(body, bs), () => t('bk.salv.help'));
     sec('lib-craft', 'bk.craft.h', 'library-craft', body => bookCraftInto(body, h, bs), () => t('bk.craft.help'));
+    sec('lib-own', 'bk.owned.h', 'library-own', body => bookOwnInto(body, h, bs), null);
     return split;
 }
 
-/** 스킬 북 분해 = 본판 가운데 칸 (§17 · ADR-1287) — 스킬 업그레이드와 같은 짜임:
- *  **직업 줄**(같은 칸 · 같은 규칙 · 제 고르기 `bookSalvCls` · ADR-1206) · **분해 줄**(왼쪽 고른 책 그림 칸 `×n` · 윗줄 이름 / 아랫줄 얻는 것 `스킬 조각 +n` ·
- *  [분해] — 창고 스킬북 탭과 같은 버튼 `bookSalvageBtn`) · **가진 책 칸**(`bookState.books` · 그림 + `×n` · 한 줄 7칸).
- *  영웅과 무관 — 설명창 숫자만 띠에서 고른 영웅 기준. 판정(있나 · 몇 개 나오나)은 `game.salvageBook` */
-function bookSalvageInto(box, h, bs) {
-    const tipCtx = h ? heroSkillCtx(h) : {};
-    const clsIds = ['all', ...bookClasses().map(c => c.id)];
-    const fil = clsIds.includes(state.bookSalvCls) ? state.bookSalvCls : 'all';
-    const clsRow = el('div', 'segmented bk-cls');
-    clsRow.style.setProperty('--n', clsIds.length);
-    for (const id of clsIds) {
-        const has = id === 'all' || bs.books.some(b => bookClassOf(b.id) === id);
-        const b = el('button', `btn sm${fil === id ? ' on' : ''}`, id === 'all' ? t('bk.cls.all') : className(id));
-        b.type = 'button';
-        b.disabled = !has && fil !== id;
-        b.onclick = () => {
-            state.bookSalvCls = id;
-            if (state.bookSalvSel && id !== 'all' && bookClassOf(state.bookSalvSel) !== id) state.bookSalvSel = null;
-            render();
-        };
-        clsRow.appendChild(b);
-    }
-    box.appendChild(clsRow);
-    const shown = fil === 'all' ? bs.books : bs.books.filter(b => bookClassOf(b.id) === fil);
-    const sel = shown.find(b => b.id === state.bookSalvSel) ?? null;   // 다 써서 칸이 빠지면 못 찾아 저절로 풀린다
-    const own = el('div', 'bk-sec');
-    const ico = sel
-        ? `<span class="inv-cell filled bk-buy-ico"><span class="inv-icon">${skillImg(skillInfo(sel.id))}</span><span class="inv-lv">×${sel.n}</span></span>`
-        : '<span class="inv-cell bk-buy-ico"></span>';
+/** 스킬 북 분해 = 아랫줄 가운데 위 패널 — **행동 줄만**(스킬 업그레이드 읽기 줄과 같은 짜임 — 글 두 줄 + 버튼 · 그림 칸 없음):
+ *  윗줄 이름 / 아랫줄 얻는 것 `스킬 조각 +n` · [분해](창고 스킬북 탭과 같은 버튼 `bookSalvageBtn`).
+ *  고른 책은 보유 스킬북 칸에서 고른 것(`bookSel` — 스킬 업그레이드와 같이 쓴다 · ADR-1291 — ~~제 직업 줄 · 제 고르기 · 제 책 칸~~ ADR-1287).
+ *  영웅과 무관. 판정(있나 · 몇 개 나오나)은 `game.salvageBook` */
+function bookSalvageInto(box, bs) {
+    const sel = bs.books.find(b => b.id === state.bookSel) ?? null;   // 다 써서 칸이 빠지면 못 찾아 저절로 풀린다
     // 아랫줄 = 얻는 것 `스킬 조각 +n`(`[balance.csv:book_salvage_shard]`) · 고른 것이 없으면 비어 안 선다(`.bk-buy-sub:empty`)
-    const bar = el('div', 'td-buy bk-buy', ico + `<span class="td-buy-n">`
+    const bar = el('div', 'td-buy bk-buy', `<span class="td-buy-n">`
         + (sel ? `<span class="bk-buy-name">${L(skillInfo(sel.id).name)}</span>` : '<span class="bk-buy-name muted">—</span>')
         + `<span class="bk-buy-sub">${sel ? t('bk.salv.gain', { n: D.balance.book_salvage_shard }) : ''}</span></span>`);
     bar.appendChild(bookSalvageBtn(sel?.id ?? null));
-    own.appendChild(bar);
-    if (!shown.length) { own.appendChild(el('div', 'muted bk-empty', t('bk.none'))); box.appendChild(own); return; }
-    const grid = el('div', 'bk-grid');
-    for (const b of shown) grid.appendChild(bookCell(b.id, sel === b, () => skillTipCard({ id: b.id }, tipCtx),
-        () => { state.bookSalvSel = sel === b ? null : b.id; render(); }, `<span class="inv-lv">×${b.n}</span>`));
-    own.appendChild(grid);
-    box.appendChild(own);
+    box.appendChild(bar);
 }
 
-/** 스킬 북 제작 = 본판 오른쪽 칸 (§17 · R540 · ADR-1262 · 세 칸 ADR-1287) — 옛 제작 카드(ADR-0597 이름 · 0600 `?` · 1021 직업 탭)를 스킬 조각으로.
- *  위에서 아래로 = **직업 줄**(스킬 업그레이드 직업 줄과 같은 칸 · 같은 규칙 · ADR-1206) · **만들기 줄**(읽기 줄과 같은 짜임 — 왼쪽 고른 책 그림 칸 ·
+/** 스킬 북 제작 = 아랫줄 오른쪽 열(두 줄 높이) (§17 · R540 · ADR-1262 · ADR-1291) — 옛 제작 카드(ADR-0597 이름 · 0600 `?` · 1021 직업 탭)를 스킬 조각으로.
+ *  위에서 아래로 = **직업 줄**(직업만 — 「전체」 없음 · 안 골랐으면 띠에서 고른 영웅의 직업 · ADR-1291) · **만들기 줄**(왼쪽 고른 책 그림 칸 ·
  *  윗줄 이름 / 아랫줄 비용 `스킬 조각 가진/필요 · n G` — 필요 = 고른 책의 값(티어마다 · 안 골랐으면 가진 수만 · ADR-1265) · [만들기]) ·
- *  **칸**(`bookState.craft` — 직업 스킬 전부 · 그림만 · 권수 배지 없음 · 한 줄 7칸 · ADR-1287).
- *  영웅과 무관 — 설명창 숫자만 띠에서 고른 영웅 기준. 판정(목록 · 비용 거절)은 `game.bookState` · `game.craftBook` */
+ *  **칸**(`bookState.craft` — 직업 스킬 전부 · 그림만 · 권수 배지 없음 · **티어마다 한 줄** — 줄 머리 「n티어」 · ADR-1291).
+ *  영웅과 무관 — 설명창 숫자와 처음 보이는 직업만 띠에서 고른 영웅 기준. 판정(목록 · 비용 거절)은 `game.bookState` · `game.craftBook` */
 function bookCraftInto(box, h, bs) {
     const tipCtx = h ? heroSkillCtx(h) : {};
-    const clsIds = ['all', ...bookClasses().map(c => c.id)];
-    const fil = clsIds.includes(state.bookCraftCls) ? state.bookCraftCls : 'all';
-    const clsRow = el('div', 'segmented bk-cls');
-    clsRow.style.setProperty('--n', clsIds.length);
-    for (const id of clsIds) {
-        const has = id === 'all' || bs.craft.some(c => bookClassOf(c.id) === id);
-        const b = el('button', `btn sm${fil === id ? ' on' : ''}`, id === 'all' ? t('bk.cls.all') : className(id));
-        b.type = 'button';
-        b.disabled = !has && fil !== id;
-        b.onclick = () => {
-            state.bookCraftCls = id;
-            if (state.bookCraftSel && id !== 'all' && bookClassOf(state.bookCraftSel) !== id) state.bookCraftSel = null;
-            render();
-        };
-        clsRow.appendChild(b);
-    }
-    box.appendChild(clsRow);
-    const shown = fil === 'all' ? bs.craft : bs.craft.filter(c => bookClassOf(c.id) === fil);
-    const sel = shown.find(c => c.id === state.bookCraftSel) ?? null;
+    const ids = bookClasses().map(c => c.id);
+    const has = id => bs.craft.some(c => bookClassOf(c.id) === id);
+    // 안 골랐으면(`null`) 영웅 직업 — 그 직업 제작 칸이 없거나 영웅이 없으면 칸이 있는 첫 직업 · 직업 칸을 누르면 그 직업이 남는다
+    const fil = ids.includes(state.bookCraftCls) ? state.bookCraftCls
+        : h && ids.includes(h.cls) && has(h.cls) ? h.cls : ids.find(has) ?? ids[0];
+    box.appendChild(bookClassRow(ids, fil, has, id => {
+        state.bookCraftCls = id;
+        if (state.bookCraftSel && bookClassOf(state.bookCraftSel) !== id) state.bookCraftSel = null;
+    }));
+    const shown = bs.craft.filter(c => bookClassOf(c.id) === fil);
+    const sel = shown.find(c => c.id === state.bookCraftSel) ?? null;   // 영웅 직업을 따라 보이는 직업이 바뀌면 그 직업에 없는 고른 책은 안 선다
     const gold = bs.craftCost.gold;
     const shortShard = !!sel && bs.shards < sel.shards, shortGold = G.resources.gold < gold;
     const own = el('div', 'bk-sec');
@@ -7276,11 +7329,19 @@ function bookCraftInto(box, h, bs) {
     bar.appendChild(btn);
     own.appendChild(bar);
     if (!shown.length) { own.appendChild(el('div', 'muted bk-empty', t('bk.craft.none'))); box.appendChild(own); return; }
-    // 칸 — 그림만(재고 `×n` 은 왼쪽 가진 책 칸이 든다) · 올리면 스킬 설명창 · 누르면 고르기(다시 누르면 풀린다) · 만들어도 고른 채 남는다
-    const grid = el('div', 'bk-grid');
-    for (const c of shown) grid.appendChild(bookCell(c.id, sel === c, () => skillTipCard({ id: c.id }, tipCtx),
-        () => { state.bookCraftSel = sel === c ? null : c.id; render(); }));
-    own.appendChild(grid);
+    // 칸 — 티어마다 한 줄(1티어 → 2티어 · 줄 머리 「n티어」 · 그 직업에 없는 티어는 줄이 안 선다 · 줄 안은 `skill.csv` 행 순 · ADR-1291) ·
+    //   그림만(재고 `×n` 은 보유 스킬북 칸이 든다) · 올리면 스킬 설명창 · 누르면 고르기(다시 누르면 풀린다) · 만들어도 고른 채 남는다
+    const tiers = el('div', 'bk-tiers');
+    for (const tier of [...new Set(shown.map(c => bookTierOf(c.id)))].sort((a, b) => a - b)) {
+        const row = el('div', 'bk-tier');
+        row.appendChild(el('div', 'bk-tier-h', t('bk.tier', { n: tier })));
+        const grid = el('div', 'bk-grid');
+        for (const c of shown.filter(x => bookTierOf(x.id) === tier)) grid.appendChild(bookCell(c.id, sel === c, () => skillTipCard({ id: c.id }, tipCtx),
+            () => { state.bookCraftSel = sel === c ? null : c.id; render(); }));
+        row.appendChild(grid);
+        tiers.appendChild(row);
+    }
+    own.appendChild(tiers);
     box.appendChild(own);
 }
 
@@ -9221,7 +9282,7 @@ function renderForge(main) {
        세 작업을 한 화면에 나란히 두지 않는다 — 고른 하나가 박스 끝까지 편다 (ADR-0142)
        **패널 윗변에 붙은 폴더 탭 · 강화가 맨 왼쪽** [2026-10-30 사용자 「폴더에서 선택하듯이」 · §8-2 · ADR-0963] — 원정 난이도 탭과 같은 길:
        틈(`.fg-gap`) · 남은 자리 · 안 고른 탭의 아랫변이 패널 윗선을 잇고 고른 탭 자리에서만 끊긴다(패널 `.fg-panel` 은 윗변이 없다) · 고른 탭은 클릭이 없다 */
-    const TABS = [['up', 'fg.seg.up'], ['make', 'fg.seg.make'], ['synth', 'fg.seg.synth'], ['craft', 'fg.seg.craft']];   // 합성 2026-10-27 · ADR-0856
+    const TABS = [['up', 'fg.seg.up'], ['ench', 'fg.seg.ench'], ['make', 'fg.seg.make'], ['synth', 'fg.seg.synth'], ['craft', 'fg.seg.craft']];   // 합성 2026-10-27 · ADR-0856 · 인챈트 = 강화 바로 옆 2026-11-19 · ADR-1293
     const tab = TABS.some(([id]) => id === state.forgeTab) ? state.forgeTab : 'up';
     const tabs = el('div', 'fg-tabs');
     tabs.appendChild(el('span', 'fg-gap'));
@@ -9247,6 +9308,7 @@ function renderForge(main) {
     const box = el('div', 'fg-box');
     if (tab === 'make') forgeMake(box);   // 제작은 한 칸이다 — 고르개 줄(부위 · 물약) 아래에 고른 하나만 편다 (ADR-0219)
     else if (tab === 'up') forgeUpgrade(box);
+    else if (tab === 'ench') forgeEnchant(box);   // 인챈트 — 강화와 같은 판 셋 (ADR-1293 · R553)
     else if (tab === 'synth') forgeSynth(box);   // 합성 — 재료 줄마다 네 칸 사다리 (ADR-0856 · R359)
     else box.appendChild(el('div', 'note-body muted', t('todo.lead')));   // 크래프트 — 로직이 없다 (R97)
     body.appendChild(box);
@@ -9300,8 +9362,9 @@ function synthStep(r) {
     return step;
 }
 
-/** 강화 대상 고르기 — 대장간의 장비 · 아이템창이 같이 쓴다 (ADR-0364). 다른 작업 탭에서 눌렀으면 강화 탭으로 넘어간다 (ADR-0366) */
-const forgePick = it => { state.forgeItem = it.uid; state.forgeTab = 'up'; render(); };
+/** 강화 대상 고르기 — 대장간의 장비 · 아이템창이 같이 쓴다 (ADR-0364). 다른 작업 탭에서 눌렀으면 강화 탭으로 넘어간다 (ADR-0366) ·
+ *  **인챈트 탭이면 그 탭에 머문다** — 인챈트 대상도 같은 `forgeItem` 이다 (ADR-1293) */
+const forgePick = it => { state.forgeItem = it.uid; if (state.forgeTab !== 'ench') state.forgeTab = 'up'; render(); };
 
 /** 선택선을 인벤토리 위의 별도 층에 그린다 — 칸 밖의 선도 보이며 클릭은 원래 UI가 받는다. */
 function mountForgeSelection() {
@@ -9625,27 +9688,8 @@ function forgeUpgrade(p) {
         return;
     }
     const us = SYS.game.upgradeState(G, it.uid);
-    // 아이템 칸 — 옵션을 hover 툴팁과 **같은 꼴로 나열**한다(같은 함수 `tipCard` 의 내용 · 툴팁 창의 테두리 · 그림자는 안 입는다) · 툴팁과 같은 폭 ·
-    //   그림은 왼쪽 위에 작게(희귀도 색 테두리) — 머리글 · 이름이 그 오른쪽 [2026-10-30 사용자 지시 · ADR-0979].
-    //   머리글 줄은 종류 · 레벨만 — 「착용 중」 · 「이 아이템」 글은 안 단다(2026-10-30 사용자 「착용중표시를 빼버려」) · 레벨당 옵션 합계 = 낀 영웅(없으면 고른 영웅)의 레벨(ADR-0954)
-    const holder = G.heroes.find(x => Object.values(x.equipped ?? {}).includes(it.uid));
     const wrap = el('div', 'fg-up');
-    const card = tipCard(it, '', [], null, { level: (holder ?? heroById(state.heroUid))?.level ?? null });
-    card.classList.add('fg-up-card');
-    const hd = el('div', 'fg-up-hd');
-    // 그림 오른쪽 아래 = 아이템 레벨 — 가방 칸과 같은 배지(`.inv-lv`) [2026-10-30 사용자 「그림에 레벨 넣어줘」]
-    const ic = el('span', 'fg-up-ic', `${itemImg(it)}<span class="inv-lv">${t('ch.itemLv', { n: it.ilvl })}</span>`);
-    ic.style.borderColor = rarity(it.rarity).color;
-    const tx = el('div', 'fg-up-hdtx');
-    // 그림 오른쪽 = 위에 종류 · 레벨(오른쪽 위) · 아래에 이름(그림 아랫변에 맞춘다) [2026-10-30 사용자 지시]
-    tx.append(card.querySelector('.tip-head'), card.querySelector('.tip-name'));
-    hd.append(ic, tx);
-    card.prepend(hd);
-    // 판 셋 — 같은 폭 · 판마다 위에 제목 띠 (마스터리 판과 같은 돌판 · ADR-1140)
-    const col = el('div', 'fg-up-tipcol fg-board');
-    col.appendChild(el('div', 'fg-board-hd', t('fg.board.gear')));
-    col.appendChild(card);
-    wrap.appendChild(col);
+    wrap.appendChild(forgeItemBoard(it));
     // 가운데 = 담금질 [2026-11-14 사용자 지시 · ADR-1134] — 상한 · 목걸이 · 반지면 빈 칸
     wrap.appendChild(forgeTemper(it, us));
 
@@ -9729,6 +9773,124 @@ function forgeUpgrade(p) {
 /** 강화 칸 판 사이 순서 표지 — 장비 › 담금질 › 강화 · 겹갈매기 · 판 경계 위에 떠 있다(판 폭은 그대로 · 모바일은 안 선다) (ADR-1152 · 1156) */
 function fgFlows(wrap) {
     for (const c of ['c2', 'c3']) { const f = el('span', `fg-up-flow ${c}`); f.setAttribute('aria-hidden', 'true'); wrap.appendChild(f); }
+}
+
+/** 대장간 판에서 옵션 줄 글의 레벨 — 낀 영웅(없으면 고른 영웅)의 레벨 · 레벨당 옵션 합계가 이 레벨로 선다 (ADR-0954) */
+const forgeLevelOf = it => (G.heroes.find(x => Object.values(x.equipped ?? {}).includes(it.uid)) ?? heroById(state.heroUid))?.level ?? null;
+
+/**
+ * 대장간 왼쪽 장비 판 — 강화 · 인챈트가 같이 쓴다 (ADR-0979 · ADR-1140 · ADR-1293).
+ * 아이템 칸 — 옵션을 hover 툴팁과 **같은 꼴로 나열**한다(같은 함수 `tipCard` 의 내용 · 툴팁 창의 테두리 · 그림자는 안 입는다) · 툴팁과 같은 폭 ·
+ *   그림은 왼쪽 위에 작게(희귀도 색 테두리) — 머리글 · 이름이 그 오른쪽 [2026-10-30 사용자 지시 · ADR-0979].
+ *   머리글 줄은 종류 · 레벨만 — 「착용 중」 · 「이 아이템」 글은 안 단다(2026-10-30 사용자 「착용중표시를 빼버려」) · 레벨당 옵션 합계 = 낀 영웅(없으면 고른 영웅)의 레벨(ADR-0954)
+ */
+function forgeItemBoard(it) {
+    const card = tipCard(it, '', [], null, { level: forgeLevelOf(it) });
+    card.classList.add('fg-up-card');
+    const hd = el('div', 'fg-up-hd');
+    // 그림 오른쪽 아래 = 아이템 레벨 — 가방 칸과 같은 배지(`.inv-lv`) [2026-10-30 사용자 「그림에 레벨 넣어줘」]
+    const ic = el('span', 'fg-up-ic', `${itemImg(it)}<span class="inv-lv">${t('ch.itemLv', { n: it.ilvl })}</span>`);
+    ic.style.borderColor = rarity(it.rarity).color;
+    const tx = el('div', 'fg-up-hdtx');
+    // 그림 오른쪽 = 위에 종류 · 레벨(오른쪽 위) · 아래에 이름(그림 아랫변에 맞춘다) [2026-10-30 사용자 지시]
+    tx.append(card.querySelector('.tip-head'), card.querySelector('.tip-name'));
+    hd.append(ic, tx);
+    card.prepend(hd);
+    // 판 셋 — 같은 폭 · 판마다 위에 제목 띠 (마스터리 판과 같은 돌판 · ADR-1140)
+    const col = el('div', 'fg-up-tipcol fg-board');
+    col.appendChild(el('div', 'fg-board-hd', t('fg.board.gear')));
+    col.appendChild(card);
+    return col;
+}
+
+/** [인챈트] — 굴려 저장한다. 첫 인챈트는 붙은 줄을 플래시로 말하고, 다시 굴리면 가운데 판에 카드 둘이 선다(플래시 없음) (SCREEN_DESIGN §8-2 · ADR-1293) */
+function forgeEnchantGo(it) {
+    const r = SYS.game.enchantItem(G, it.uid);
+    if (!r.ok) { flashErr('fg', r.err, 'upgrade_item'); render(); return; }
+    save();
+    if (r.applied) flash('fg.ench.added', { line: affixText(r.line, it.slot, forgeLevelOf(it)) });
+    render();
+}
+/** [선택] — 원래 줄 · 새 줄 중 하나를 남긴다 · 비용 없음 */
+function forgeEnchantPick(it, takeNew) {
+    const r = SYS.game.enchantPick(G, it.uid, takeNew);
+    if (!r.ok) { flashErr('fg', r.err); render(); return; }
+    save();
+    flash(takeNew ? 'fg.ench.took' : 'fg.ench.kept');
+    render();
+}
+
+/**
+ * 인챈트 칸 — 강화 칸과 같은 판 셋 (SCREEN_DESIGN §8-2 · ADR-1293 · 기획 item_design §8 · R553).
+ * 왼쪽 장비 판(`forgeItemBoard`) | 가운데 **인챈트 줄**(지금 줄 한 줄 · 고르기 대기면 그 대신 원래 · 새 줄 카드 둘과 [선택]) |
+ * 오른쪽 **작업**(후보 옵션 수 · 재료 칸 = 골드 · 최하급 가루 · [인챈트]). 일반 · 매직이면 가운데 · 오른쪽에 「레어 이상만」.
+ * 판정 · 비용 · 후보 수는 `game.enchantState` 가 낸다 — 렌더러는 세지 않는다 (ui 원칙 2)
+ */
+function forgeEnchant(p) {
+    const it = itemOf(state.forgeItem), es = it ? SYS.game.enchantState(G, it.uid) : null;
+    const wrap = el('div', 'fg-up');
+    if (!it || !es) {
+        // 고른 장비가 없으면 판 셋이 제목만 선다 — 강화와 같다 (ADR-1168 · 1171)
+        const col = el('div', 'fg-up-tipcol fg-board');
+        col.append(el('div', 'fg-board-hd', t('fg.pick')), el('div', 'fg-up-pick', t('fg.pick')));
+        const mid = el('div', 'fg-up-mid fg-board');
+        mid.appendChild(el('div', 'fg-board-hd', t('fg.ench.line')));
+        const work = el('div', 'fg-up-work fg-board');
+        work.append(el('div', 'fg-board-hd', t('fg.board.ench')), el('div', 'fg-up-pick', t('fg.pick')));
+        wrap.append(col, mid, work);
+        fgFlows(wrap);
+        p.appendChild(wrap);
+        return;
+    }
+    wrap.appendChild(forgeItemBoard(it));
+    const lv = forgeLevelOf(it), lineText = a => affixText(a, it.slot, lv);
+    // 가운데 — 인챈트 줄
+    const mid = el('div', 'fg-up-mid fg-board fg-en');
+    mid.appendChild(el('div', 'fg-board-hd', t('fg.ench.line')));
+    if (!es.eligible) mid.appendChild(el('div', 'fg-up-none', t('fg.ench.rareOnly')));
+    else if (!es.pending) mid.appendChild(el('div', `fg-en-cur${es.line ? '' : ' none'}`, es.line ? lineText(es.line.a) : t('fg.ench.none')));
+    else {
+        // 고르기 대기 — 원래 · 새 줄 카드 둘(새 줄 = 초록 테두리) · 카드마다 [선택]
+        const cards = el('div', 'fg-en-cards');
+        for (const [key, a, take] of [['fg.ench.old', es.line?.a ?? null, false], ['fg.ench.new', es.pending, true]]) {
+            const c = el('div', `fg-en-card${take ? ' new' : ''}`, `<span class="fg-en-hd">${t(key)}</span><span class="fg-en-txt">${a ? lineText(a) : t('fg.ench.none')}</span>`);
+            const b = el('button', `btn sm${take ? ' primary' : ''}`, t('fg.ench.pick'));
+            b.onclick = () => forgeEnchantPick(it, take);
+            c.appendChild(b);
+            cards.appendChild(c);
+        }
+        mid.appendChild(cards);
+    }
+    wrap.appendChild(mid);
+    // 오른쪽 — 작업
+    const work = el('div', 'fg-up-work fg-board');
+    const whd = el('div', 'fg-board-hd', t('fg.board.ench'));
+    work.appendChild(whd);
+    if (!es.eligible) work.appendChild(el('div', 'fg-up-none', t('fg.ench.rareOnly')));
+    else {
+        const rows = el('div', 'fg-up-rows');
+        rows.appendChild(el('div', 'fg-up-cmp', `<span class="lab">${t('fg.ench.options')}</span><b>${es.options}</b>`));
+        work.appendChild(rows);
+        // 비용 = 강화와 같은 재료 칸(`matTile` — 골드는 필요 수 · 가루는 필요/보유 · 모자라면 붉다) · 줄 오른쪽 끝 [인챈트] (ADR-0973 · 1163)
+        const act = el('div', 'fg-up-act');
+        act.appendChild(bindMatTips(el('div', 'cn-mats', [{ res: 'gold', need: es.cost.gold, have: es.gold }, { res: 'dust', need: es.cost.dust, have: es.dust }].map(matTile).join(''))));
+        //   대장간을 안 지었으면 흐리고(눌린다) 누르면 지을 랭크를 말한다 · 고르기 대기면 「선택 대기」로 잠긴다
+        const mkGo = cls => {
+            const go = el('button', `btn primary ${cls}${es.open ? '' : ' dim'}`, es.pending ? t('fg.ench.wait') : t('fg.ench.go'));
+            go.disabled = es.open && !es.can;
+            go.onclick = () => {
+                if (!es.open) { flashNeed('upgrade_item'); return; }
+                forgeEnchantGo(it);
+            };
+            return go;
+        };
+        whd.appendChild(mkGo('fg-board-go'));
+        act.appendChild(mkGo('lg fg-go-foot'));
+        work.appendChild(act);
+    }
+    wrap.appendChild(work);
+    fgFlows(wrap);
+    p.appendChild(wrap);
 }
 
 /**
@@ -11053,6 +11215,7 @@ function helpSections() {
         forge: ['overview', 'smith', 'potions', 'upgrade', 'combine', 'craft'],
         library: ['basics', 'sources', 'craft', 'learn', 'upgrade', 'advance', 'points'],
         resource: ['lines', 'production', 'materials', 'research', 'assignment', 'hero_effects', 'jobs'],
+        endless: ['prepare', 'floors', 'rules'],   // 무한의 탑 (ADR-1294)
         colosseum: ['prepare', 'floors', 'retry', 'rules'],
         arena: ['rating', 'opponents', 'defense', 'friendly', 'results'],
         codex: ['monsters', 'classification', 'race_traits', 'milestones', 'library_unlocks', 'art', 'skills', 'effects'],
@@ -11082,6 +11245,11 @@ function helpSections() {
         'library.advance': { level: B.advance_unlock_level, gold: B.advance_gold.toLocaleString() },
         'library.points': { row: B.advance_row_points },
         'resource.production': { hours: B.dispatch_offline_cap_hours },
+        // 무한의 탑 층 짜기 — 층 수 · 첫 단이 아닌 규칙이 시작하는 층 · 그 단 이름 · 보스 층 호위 수(표 · 키에서 읽는다 · ADR-1294)
+        'endless.floors': (fl => {
+            const hard = fl.find(f => f.difficulty !== fl[0]?.difficulty);
+            return { total: fl.length, from: hard?.no ?? fl.length, diff: hard ? L(D.difficulties[hard.difficulty]?.name ?? { ko: hard.difficulty, en: hard.difficulty }) : '', escorts: B.endless_boss_escorts };
+        })(SYS.game.endlessFloors),
         // 처치 하나 = 단 몫 × 등급 배율 — 배율 1 인 등급(일반)은 안 적는다 (monster_design §8 · R539)
         'codex.monsters': { per: D.difficultyList.map(d => `${L(d.name)} ${d.codexExp}`).join(' · '),
             grade: Object.entries(D.codexGradeMult).filter(([, v]) => v !== 1)
@@ -11305,8 +11473,8 @@ function labDuelFight(S) {
     const b = SYS.arena.rollTierOpponent(LAB_DUEL_TIER, makeRng(deriveSeed(S.seed, 2)), a.map(p => p.hero.name), opts);
     let team = labRelabel(a, 'lab-a-'), opponent = labRelabel(b, 'lab-b-');
     if (S.res) { team = labFixResist(team); opponent = labFixResist(opponent); }
-    // 물약 — 두 팀 모두 챔피언 층의 물약(층 AI 팀과 같은 차림 · R460)
-    const floor = SYS.arena.floors.filter(f => f.tier === LAB_DUEL_TIER).at(-1);
+    // 물약 — 두 팀 모두 만렙 첫 층의 물약(층 AI 팀과 같은 차림 · R460 · 층에 등급이 없어 옛 「챔피언 층」 대신 — R552)
+    const floor = SYS.arena.floors.find(f => f.kit.level >= D.balance.hero_level_cap);
     const potions = floor ? SYS.arena.floorLoadout(floor.no) : null;
     S.round += 1;
     const result = SYS.arena.fight(team, opponent, makeRng(deriveSeed(S.seed, 1000 + S.round)), potions, potions);
@@ -11902,13 +12070,14 @@ async function boot() {
         const shq = Number(new URLSearchParams(location.search).get('shards'));
         G.skillShards = Number.isInteger(shq) && shq >= 0 && new URLSearchParams(location.search).has('shards') ? shq : Math.max(G.skillShards ?? 0, D.balance.skill_craft_shards);
         state.heroUid = h0.uid;
-        // 가진 책 둘째 책(배운 칸이 차 있어 [덮어쓰기]가 선다) · 제작 첫 칸을 고른 채 — 읽기 줄 · 만들기 줄이 서게 (ADR-0573 · ADR-1262)
+        // 가진 책 둘째 책(배운 칸이 차 있어 [덮어쓰기]가 선다) · 제작은 영웅 직업의 첫 칸을 고른 채 — 읽기 줄 · 분해 줄 · 만들기 줄이 서게
+        //   (제작 직업 줄은 안 골랐으면 영웅 직업이라 다른 직업 책을 고르면 안 보인다 · ADR-0573 · ADR-1262 · ADR-1291)
         state.bookSel = own[1] ?? null;
-        state.bookCraftSel = SYS.game.bookState(G).craft[0]?.id ?? null;
+        state.bookCraftSel = SYS.game.bookState(G).craft.find(c => bookClassOf(c.id) === h0.cls)?.id ?? null;
         // `&bkup=1` — 배운 책(남은 한 권 · 업그레이드 줄)을 고른 채 · `&bkup=max` 면 그 스킬을 상한 레벨로 둔 채(「최대 레벨」 줄 · ADR-1208)
         const bkup = new URLSearchParams(location.search).get('bkup');
         if (bkup && own[0]) { state.bookSel = own[0]; if (bkup === 'max') h0.skillLv = { ...(h0.skillLv ?? {}), [own[0]]: D.balance.skillbook_upgrade_max }; }
-        // `&bkcls=<class_id>` — 스킬 업그레이드 직업 줄의 그 직업을 고른 채(ADR-1206)
+        // `&bkcls=<class_id>` — 보유 스킬북 직업 줄의 그 직업을 고른 채(ADR-1206 · ADR-1291)
         const bkcls = new URLSearchParams(location.search).get('bkcls');
         if (bkcls) { state.bookCls = bkcls; if (bookClassOf(state.bookSel) !== bkcls) state.bookSel = null; }
         // `&overwrite=1` — 덮어쓰기 확인 창을 연 채(ADR-1020)
@@ -11923,7 +12092,7 @@ async function boot() {
         // 책은 도서관 탭에서만 보인다(ADR-0426 · ADR-0460) — 옛 `&lib=1` · `&mat=1` 은 읽지 않는다
         state.tab = 'library';
     }
-    if (dev === 'arena' || dev === 'colosseum') {   // 콜로세움(`arena`) · 결투장(`colosseum`) — 레이팅 · 오른 층을 꽂은 채 (ADR-0602 · ADR-0670)
+    if (dev === 'arena' || dev === 'colosseum' || dev === 'endless') {   // 콜로세움(`arena`) · 결투장(`colosseum`) · 무한의 탑(`endless`) — 레이팅 · 오른 층을 꽂은 채 (ADR-0602 · ADR-0670 · ADR-1294)
         if (!G) startGame();
         const q = new URLSearchParams(location.search);
         // `&tpl=<formation_template.csv:tpl_id>` — 고른 편성의 진형 (`2-1` · `1-2` · `0-3`)
@@ -11936,7 +12105,14 @@ async function boot() {
             for (let l = h.level; l < Math.min(Number(q.get('lv')), D.balance.hero_level_cap); l++) xp += SYS.hero.xpNeeded(l);
             SYS.hero.grantXp(h, xp);
         }
-        if (dev === 'colosseum') {
+        if (dev === 'endless') {
+            // `&cleared=n` 오른 층 · `&floor=n` 고른 층(깬 층 · 다음 층만 — 아니면 다음 층) · 세이브에 적는다(개발 장치 · ADR-1294) ·
+            //   `&fight=1` 그린 뒤 [도전]을 눌러 관전이 선 채 — 헤드리스로 관전을 보는 장치(누르는 길은 화면 버튼 그대로)
+            const E = endlessReset(state.endless);
+            if (q.has('cleared')) G.endless = { cleared: Math.max(0, Math.min(SYS.game.endlessFloors.length, Number(q.get('cleared')) || 0)) };
+            if (q.has('floor')) E.floor = Number(q.get('floor')) || null;
+            if (q.get('fight') === '1') setTimeout(() => $('.arena-fight')?.click());
+        } else if (dev === 'colosseum') {
             // `&cleared=n` 오른 층 · `&floor=n` 고른 층(깬 층 · 다음 층만 — 아니면 다음 층) · 세이브에 적는다(개발 장치)
             const C = colosseumReset(state.colosseum);
             if (q.has('cleared')) G.colosseum = { cleared: Math.max(0, Math.min(SYS.arena.floors.length, Number(q.get('cleared')) || 0)) };
@@ -12056,7 +12232,7 @@ async function boot() {
     }
     // `&fg=` — 대장간의 작업 탭을 고른 채 연다 (§10 · ADR-0142). 탭은 클릭으로만 바뀌어 헤드리스가 못 닿는다
     const fg = new URLSearchParams(location.search).get('fg');
-    if (['make', 'up', 'synth', 'craft'].includes(fg)) state.forgeTab = fg;
+    if (['make', 'up', 'ench', 'synth', 'craft'].includes(fg)) state.forgeTab = fg;
     // `&lib=adv` — 전직의 방 창을 연 채(창은 전직의 방 칸의 [입장]으로만 열린다 · §17 · ADR-1179 · ADR-1262)
     if (new URLSearchParams(location.search).get('lib') === 'adv') state.modal = 'advance';
     // `&fgi=<부위>` — 고른 영웅(없으면 로스터 첫 영웅)이 낀 그 부위 장비를 강화 대상으로 고른 채 · `&tp=1` 이면 그 장비를 최하급 판돈으로 한 번 담금질한 채(릴은 멈춘 그림)
@@ -12075,6 +12251,17 @@ async function boot() {
             SYS.game.temperItem(G, fgUid, ta.id);
         }
         if (fgq.get('tpa')) state.temperAct = fgq.get('tpa');
+        // `&fgr=<등급>` — 그 장비의 등급을 바꿔 연다 · `&en=n` — 인챈트를 n 번 눌러 둔 채(비용은 채워 준다 · 2 면 고르기 대기) (§8-2 · ADR-1293 —
+        //   대상 고르기 · 인챈트 · 고르기 대기는 클릭으로만 서서 헤드리스가 인챈트 칸에 못 닿는다)
+        const fgr = fgq.get('fgr'), en = Number(fgq.get('en'));
+        if (fgr && G.items[fgUid]) G.items[fgUid].rarity = fgr;
+        for (let k = 0; Number.isInteger(en) && k < en; k++) {
+            const c = SYS.item.enchantCost(G.items[fgUid]);
+            if (!c) break;
+            G.resources.gold += c.gold;
+            G.materials.dust = (G.materials.dust ?? 0) + c.dust;
+            SYS.game.enchantItem(G, fgUid);
+        }
     }
     // `&hero=n` — 로스터 n 번째 영웅(1 부터)을 고른 채 연다 (§10 · 2026-09-28). 띠의 고르기는 클릭으로만 바뀌어 헤드리스가 못 닿는다
     const heroNo = Number(new URLSearchParams(location.search).get('hero'));

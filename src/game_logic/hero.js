@@ -897,13 +897,15 @@ export function createHeroSystem(data) {
         const atkPctSum = f('atk_pct') + f('dmg_per_level_pct') * hero.level;
         // 공격력 = **순수 무기 밑수** [개정 2026-09-10 · battle_design §9-1] — ~~`attrMult(magic ? int : str) ×`~~ 는 걷었다.
         //   힘·지능은 스킬 쪽 **덧셈 항**으로 옮겨갔다(skill.js scaleDef) — 곱이면 무기가 약할 때 능력치까지 죽는다
-        //   양끝마다 무기 % 를 곱해 반올림 → 고정 공격력을 더하고 데미지 % 괄호를 곱해 반올림 — 범위 안의 굴림은 전투(formula.strike)가 한다
+        //   양끝마다 (무기 범위 + 최소 · 최대 데미지)에 무기 % 를 곱해 반올림 → 데미지 % 괄호를 곱해 반올림 — 범위 안의 굴림은 전투(formula.strike)가 한다
         //   (R90 · 괄호 하나 2026-09-18 · 무기 % 를 따로 곱한다 2026-10-03)
-        //   **색욕 최소 · 최대 데미지 · 오만 레벨당 최대 데미지**(고정 수치)는 무기 % 를 곱한 양끝 **뒤**, 괄호 **앞**에 더한다 — 고정 공격력과 같은 자리다.
-        //   최소가 최대를 넘으면 최대 = 최소 + 1 [2026-10-05 · 사용자 확정 · R206 · item_design §1 — D2 방식]. 셋이 0 이면 종전과 같은 값이다
-        //   **오만 레벨당 최소 데미지**(무기 오만 ① 의 짝 · 2026-11-11 R442)도 같은 자리 · 레벨당 최대와 같은 반올림
-        const lo = Math.round(range.min * (1 + weaponPct)) + atkFlat + f('dmg_min_flat') + Math.round(f('dmg_min_per_level') * hero.level);
-        const hi0 = Math.round(range.max * (1 + weaponPct)) + atkFlat + f('dmg_max_flat') + Math.round(f('dmg_max_per_level') * hero.level);
+        //   **최소 · 최대 데미지는 무기 % 에 같이 곱한다** [2026-11-19 · 사용자 · R556 · battle_design §9-1 — 〔옛: 무기 % 를 곱한 양끝 뒤에 더한다(10-05 R206)〕] —
+        //   색욕 최소 · 최대 데미지 · 오만 레벨당 최소 · 최대 데미지 · 옛 무기 고정 공격력이 전부 무기 범위 양끝에 **먼저** 더해지고 그 합에 무기 % 를 곱한다.
+        //   강화 배율은 무기 범위에만 든다(formula.weaponDamage) · 반올림은 양끝마다 한 번 · 최소 · 최대 데미지가 다 0 이면 종전과 같은 값이다
+        //   최소가 최대를 넘으면 최대 = 최소 + 1 [2026-10-05 · 사용자 확정 · R206 · item_design §1 — D2 방식]
+        const wMul = 1 + weaponPct;
+        const lo = Math.round((range.min + atkFlat + f('dmg_min_flat') + f('dmg_min_per_level') * hero.level) * wMul);
+        const hi0 = Math.round((range.max + atkFlat + f('dmg_max_flat') + f('dmg_max_per_level') * hero.level) * wMul);
         const hi = lo > hi0 ? lo + 1 : hi0;
         const atk = { min: Math.round(lo * (1 + atkPctSum)), max: Math.round(hi * (1 + atkPctSum)) };
 
@@ -1063,9 +1065,11 @@ export function createHeroSystem(data) {
                 return v.gold || v.item || v.magic ? v : null;
             })(),
             // 죄종 T2 조건부 줄 [2026-10-05 · skill_design §3-2 · INTERFACE §2-4] — 전투가 타격마다 판정한다. 치명 피해 줄은 **치명 보너스 몫과 같은 운 계수**를 먹여 낸다
-            //   (위 `crit_damage` 의 C안). **`combat_stat.csv` 행이 아니다**(시트에 안 선다) · 비면 null
+            //   (위 `crit_damage` 의 C안). **최대 데미지 줄은 무기 % 를 먹여 낸다** — 위 양끝과 같은 규칙(최소 · 최대 데미지는 무기 % 에 같이 곱한다 · 2026-11-19 R556) ·
+            //   전투는 데미지 % 괄호만 곱해 위끝에 더한다(battle.js 죄종 마스터리 조건부). **`combat_stat.csv` 행이 아니다**(시트에 안 선다) · 비면 null
             mastery_cond: mb.cond.length
-                ? mb.cond.map(c => c.stat === 'crit_damage' ? { ...c, v: c.v * F.statCoef(A?.luck) } : { ...c })
+                ? mb.cond.map(c => c.stat === 'crit_damage' ? { ...c, v: c.v * F.statCoef(A?.luck) }
+                    : c.stat === 'dmg_max_flat' ? { ...c, v: c.v * wMul } : { ...c })
                 : null,
             // Σ 상시 피해(비율) — 이미 atk 에 곱해져 있지만, 전투 중 버프가 **같은 괄호에 덧셈**으로 들어가려면
             // (battle_design §9-2 "괄호는 둘뿐") 그 괄호 안의 합을 따로 알아야 한다 (battle.js atkBase/atkPct)

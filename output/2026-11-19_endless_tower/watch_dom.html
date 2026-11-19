@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko" data-log-style="grid" data-face="gemini" data-bg="illustrate" style="--mobile-viewport-width: 756px;"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#080808">
+    <title>The Seven Simulation RPG — 화면 목업</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&amp;display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css">
+    <link rel="stylesheet" href="./ui/style.css">
+    <link rel="stylesheet" href="./ui/raid.css">
+    <link rel="stylesheet" href="./ui/mobile.css">
+    <link rel="stylesheet" href="./ui/mobile-pages.css">
+    <link rel="stylesheet" href="./ui/mobile-native.css">
+    <link rel="stylesheet" href="./ui/mobile-gestures.css">
+<style>
+.btn.da-b.on { border-color: #d8a23a; color: #f0c060; }
+/* 판은 Admin 바로 아래 — ⚙ 판(devpalette.js)과 같은 모양 · 상단바에 쌓임 맥락이 없어 창 레이어 위에 선다 */
+.da-wrap { position: relative; display: inline-flex; align-items: center; }
+.da-panel {
+    position: absolute; right: 0; top: calc(100% + 12px); z-index: 90; width: max-content;
+    background: #101010; border: 1px solid #444; padding: 8px 12px 10px;
+    font-size: 12px; color: #e8e8e8; box-shadow: 0 8px 28px rgba(0,0,0,.8);
+}
+.da-panel[hidden] { display: none; }
+.da-h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.da-x { background: none; border: 0; color: #aaa; font-size: 17px; line-height: 1; cursor: pointer; }
+/* 줄 다섯이 한 격자 — 이름 · 값 · 버튼 칸이 줄마다 맞는다 */
+.da-grid { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 6px 14px; }
+.da-row { display: contents; }
+.da-row > :last-child { justify-self: end; }
+.da-panel .da-k { color: #aaa; }
+.da-panel .da-v { color: #e8e8e8; font-variant-numeric: tabular-nums; }
+.da-seg { display: flex; gap: 4px; }
+.da-seg .btn.on { border-color: #d8a23a; color: #f0c060; }</style><style>
+.ds-box { padding: 4px 0 2px; }
+.ds-row { padding: 7px 0; border-bottom: 1px solid #2a2a2a; }
+.ds-row:last-child { border-bottom: 0; }
+.ds-h { font-weight: 700; }
+.ds-i { color: #9a9a9a; font-size: 11px; line-height: 1.45; margin: 2px 0 6px; }
+.ds-i.off { color: #666; }
+.ds-b { display: flex; gap: 4px; }
+.ds-b .btn.armed { border-color: #d8a23a; color: #f0c060; }</style><style>
+.dp-btn { margin-left: 4px; min-width: 30px; }
+.dp-panel {
+    /* 폭 300 — 설정 탭의 가장 긴 영어 이름(「Basic Attack Effects」 · ADR-0501)과 버튼 셋 줄(Focus)이 한 줄에 든다 (280 에서는 셋째 버튼이 접혔다) */
+    position: absolute; right: 12px; top: 56px; z-index: 90; width: 300px;
+    background: #101010; border: 1px solid #444; padding: 10px 12px;
+    font-size: 12px; color: #e8e8e8; box-shadow: 0 8px 28px rgba(0,0,0,.8);
+    /* 슬라이더가 아홉 개라 넘친다 — 판 안에서 굴린다. 높이는 한 장 기준(%)이다 — 한 장 안에서는 vh 를 안 쓴다 (ADR-0087) */
+    max-height: calc(100% - 72px); overflow-y: auto;
+}
+.dp-h { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-bottom: 8px; }
+/* 탭 둘 — 설정 · Palette (ADR-0414). 고른 탭이 밝다 */
+.dp-tabs { display: flex; gap: 4px; }
+.dp-tab { background: none; border: 1px solid #444; color: #999; font: inherit; padding: 3px 10px; cursor: pointer; }
+.dp-tab.on { color: #fff; border-color: #888; background: #1d1d1d; }
+.dp-pane[hidden] { display: none; }
+.dp-set { padding: 4px 0 2px; }
+.dp-x { background: none; border: 0; color: #aaa; font-size: 17px; line-height: 1; cursor: pointer; }
+.dp-sec { color: #888; letter-spacing: 1px; font-size: 10px; margin: 10px 0 5px; }
+.dp-hint { color: #666; font-style: normal; letter-spacing: 0; }
+.dp-row { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+.dp-k { width: 22px; color: #aaa; flex: 0 0 auto; }
+.dp-pick { margin-bottom: 7px; }
+.dp-color { width: 54px; height: 22px; padding: 0; border: 1px solid #444; background: #000; cursor: pointer; }
+.dp-hexout { font-family: ui-monospace, Consolas, monospace; font-size: 11px; color: #9a9a9a; }
+/* 판 안으로 가둔다 — 자원 탭의 단 이름도 .dp-n 이라 이 규칙이 새면 그 이름이 50px 상자로 눌린다 (2026-09-21) */
+.dp-panel .dp-n { width: 50px; flex: 0 0 auto; background: #000; color: #e8e8e8;
+        border: 1px solid #444; padding: 2px 4px; font-size: 11px; }
+
+/* 슬라이더 — 기본 두께로는 잡기가 어렵다. 트랙을 키우고 손잡이를 크게 준다 */
+.dp-row input[type=range] {
+    flex: 1 1 auto; min-width: 0; height: 18px; margin: 0;
+    -webkit-appearance: none; appearance: none; background: none; cursor: pointer;
+}
+.dp-row input[type=range]::-webkit-slider-runnable-track {
+    height: 6px; background: #2e2e2e; border: 1px solid #4a4a4a; border-radius: 3px;
+}
+.dp-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 15px; height: 15px; margin-top: -5px; border-radius: 50%;
+    background: #d8d8d8; border: 1px solid #000; cursor: grab;
+}
+.dp-row input[type=range]:active::-webkit-slider-thumb { background: #fff; cursor: grabbing; }
+
+.dp-sw { display: flex; gap: 2px; margin-top: 7px; }
+.dp-sw i { flex: 1; height: 18px; border: 1px solid #333; }
+.dp-out { width: 100%; background: #000; color: #9fdf9f; border: 1px solid #444;
+          font-family: ui-monospace, Consolas, monospace; font-size: 10px; resize: vertical; }
+.dp-foot { margin-top: 8px; text-align: right; }</style></head>
+<body>
+    <!-- 데스크톱은 1600×800 한 장, 모바일은 실제 뷰포트 크기 (ADR-0087 · ADR-1089 · mobile.js/mobile.css) -->
+    <div id="stage" class="fit" style="transform: translate(0px, 55px) scale(0.4725);">
+        <!-- booting 으로 시작한다 — 첫 render 전에 빈 브랜드 · 상단바 · 내비가 비치지 않게 (ADR-0349 · ADR-0633). 첫 app.js:renderShell 이 걷는다 -->
+        <div id="app" class="mobile-combat" data-tab="endless">
+            <!-- 워드마크 = 그림 한 장 (ADR-0883) — 메뉴의 큰 워드마크도 이 마크업을 그대로 든다 -->
+            <div class="brand"><img src="assets/art/logo/the_seven.webp" alt="THE SEVEN"></div>
+            <div class="topbar">
+                <div class="crumb"></div>
+                <div class="tab-seg"><div class="segmented"><button class="btn sm seg-party seg-idle">Party I - 대기 중</button><button class="btn sm seg-party seg-none seg-lock" disabled="" data-tip="1"><span class="lock-ico"><svg class="rs-pin-ico" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.6"></path><path fill="currentColor" fill-rule="evenodd" d="M4 7h8a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 12 15H4a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 4 7zM7.25 9.5v3h1.5v-3z"></path></svg></span>Party II</button><button class="btn sm seg-party seg-none seg-lock" disabled="" data-tip="1"><span class="lock-ico"><svg class="rs-pin-ico" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.6"></path><path fill="currentColor" fill-rule="evenodd" d="M4 7h8a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 12 15H4a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 4 7zM7.25 9.5v3h1.5v-3z"></path></svg></span>Party III</button></div></div>
+                <div class="resources">
+        <span aria-label="골드" data-tip="1"><i class="res-top-ico res-gold"><img src="./assets/art/icons/currency/gold.webp" alt="" draggable="false"></i><b data-res="gold">600</b></span><div class="notification-slot mission-slot"><button class="mail-btn notification-btn mission-btn has" data-mission-action="scroll" data-tip="1" aria-label="메인미션 · 새 미션" aria-haspopup="dialog" aria-expanded="false" aria-controls="mission-panel"><img src="./assets/art/icons/mail/mission.webp" alt="" draggable="false"><span class="notification-dot"></span></button><div class="notification-panel mission-panel" id="mission-panel" hidden="" role="dialog" aria-labelledby="mission-heading"><div class="modal-head plain notification-head mission-head"><h2 id="mission-heading">메인미션</h2><button class="btn modal-x notification-close mission-close" data-mission-action="close" title="닫기" aria-label="닫기">×</button></div><div class="notification-list mission-list" data-folder="missions"><div class="notification-card mission-card notification-guide mission-next"><div class="notification-copy"><div class="notification-title"><span class="mission-name">원정 보내기</span></div><div class="notification-detail mission-detail"><span class="mission-rewards"><span class="mission-rw" aria-label="마이너 힐링 포션 5" data-tip="1"><img src="./assets/art/icons/items/potion/minor_healing.webp" alt="" loading="lazy" onerror="this.remove()"><b>5</b></span></span></div></div><div class="notification-actions"><button class="btn sm notification-go" data-mission-action="go:c1_depart" aria-label="원정 보내기 · 바로가기">바로가기</button></div></div><div class="notification-card empty" aria-hidden="true"><img src="./assets/art/icons/mail/mission.webp" alt="" draggable="false"></div><div class="notification-card empty" aria-hidden="true"><img src="./assets/art/icons/mail/mission.webp" alt="" draggable="false"></div></div></div></div><button class="mail-btn" data-tip="1" aria-label="우편함"><img src="./assets/art/icons/mail/mail.webp" alt="" draggable="false"></button><div class="notification-slot"><button class="mail-btn notification-btn has" data-notification-action="bell" data-tip="1" aria-label="알림과 미션 · 4건" aria-haspopup="dialog" aria-expanded="false" aria-controls="notification-panel"><img src="./assets/art/icons/mail/bell.webp" alt="" draggable="false"><span class="mail-n">4</span></button><div class="notification-panel" id="notification-panel" hidden="" role="dialog" aria-labelledby="notification-heading"><div class="modal-head plain notification-head"><h2 id="notification-heading">알림</h2><button class="btn modal-x notification-close" data-notification-action="close" title="닫기" aria-label="닫기">×</button></div><div class="fg-tabs notification-folders" role="tablist" aria-label="알림"><span class="fg-gap"></span><button class="fg-tab notification-folder on" type="button" id="notification-folder-notifications" data-notification-action="folder-notifications" data-folder="notifications" role="tab" aria-selected="true" aria-controls="notification-content-notifications" tabindex="0"><span class="notification-folder-label">알림</span><span class="notification-folder-count">4</span></button><span class="fg-gap"></span><button class="fg-tab notification-folder" type="button" id="notification-folder-missions" data-notification-action="folder-missions" data-folder="missions" role="tab" aria-selected="false" aria-controls="notification-content-missions" tabindex="-1"><span class="notification-folder-label">미션</span></button><span class="fg-gap"></span><button class="fg-tab notification-folder" type="button" id="notification-folder-achievements" data-notification-action="folder-achievements" data-folder="achievements" role="tab" aria-selected="false" aria-controls="notification-content-achievements" tabindex="-1" disabled="" aria-disabled="true" aria-label="업적 · 준비 중" data-tip="1"><span class="lock-ico"><svg class="rs-pin-ico" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.6"></path><path fill="currentColor" fill-rule="evenodd" d="M4 7h8a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 12 15H4a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 4 7zM7.25 9.5v3h1.5v-3z"></path></svg></span><span class="notification-folder-label">업적</span></button><span class="fg-gap fg-fill"></span></div><div class="notification-list" id="notification-content-notifications" data-folder="notifications" role="tabpanel" aria-labelledby="notification-folder-notifications"><div class="notification-card"><div class="notification-copy"><div class="notification-title">스킬 포인트 사용 가능</div><div class="notification-detail">아스트리드 · Lv.1 · 사용 가능 1포인트</div></div><div class="notification-actions"><button class="btn sm notification-go" data-notification-action="mastery:h1:1" aria-label="스킬 포인트 사용 가능 · 바로가기">바로가기</button><button class="btn sm notification-confirm" data-notification-action="confirm:mastery:h1:1" aria-label="스킬 포인트 사용 가능 · 확인">확인</button></div></div><div class="notification-card"><div class="notification-copy"><div class="notification-title">스킬 포인트 사용 가능</div><div class="notification-detail">벨사라 · Lv.1 · 사용 가능 1포인트</div></div><div class="notification-actions"><button class="btn sm notification-go" data-notification-action="mastery:h2:1" aria-label="스킬 포인트 사용 가능 · 바로가기">바로가기</button><button class="btn sm notification-confirm" data-notification-action="confirm:mastery:h2:1" aria-label="스킬 포인트 사용 가능 · 확인">확인</button></div></div><div class="notification-card"><div class="notification-copy"><div class="notification-title">스킬 포인트 사용 가능</div><div class="notification-detail">아일라 · Lv.1 · 사용 가능 1포인트</div></div><div class="notification-actions"><button class="btn sm notification-go" data-notification-action="mastery:h3:1" aria-label="스킬 포인트 사용 가능 · 바로가기">바로가기</button><button class="btn sm notification-confirm" data-notification-action="confirm:mastery:h3:1" aria-label="스킬 포인트 사용 가능 · 확인">확인</button></div></div><div class="notification-card"><div class="notification-copy"><div class="notification-title">스킬 포인트 사용 가능</div><div class="notification-detail">고블린 집사 · Lv.1 · 사용 가능 1포인트</div></div><div class="notification-actions"><button class="btn sm notification-go" data-notification-action="mastery:h4:1" aria-label="스킬 포인트 사용 가능 · 바로가기">바로가기</button><button class="btn sm notification-confirm" data-notification-action="confirm:mastery:h4:1" aria-label="스킬 포인트 사용 가능 · 확인">확인</button></div></div></div><div id="notification-content-missions" hidden="" role="tabpanel" aria-labelledby="notification-folder-missions"></div><div id="notification-content-achievements" hidden="" role="tabpanel" aria-labelledby="notification-folder-achievements"></div></div></div><button class="btn sm lang-btn">EN</button><span class="da-wrap"><button class="btn sm da-b" title="Dev — pick what to add">Admin</button><div class="da-panel" hidden="">
+        <div class="da-h"><b>Admin</b><button class="da-x" title="close">×</button></div>
+        <div class="da-grid"><div class="da-row"><div class="da-k">Unlock</div><div class="da-v">buildings · stages</div>
+            <div class="da-seg"><button class="btn sm" data-v="1">On</button><button class="btn sm on" data-v="0">Off</button></div></div><div class="da-row"><div class="da-k">Gold</div><div class="da-v">1,000,000</div><button class="btn sm">Add</button></div><div class="da-row"><div class="da-k">Materials</div><div class="da-v">100 each</div><button class="btn sm">Add</button></div><div class="da-row"><div class="da-k">Books</div><div class="da-v">100 each</div><button class="btn sm">Add</button></div><div class="da-row"><div class="da-k">Hero</div><div class="da-v">Random Lv30</div><button class="btn sm">Add</button></div><div class="da-row"><div class="da-k">Hero</div><div class="da-v">Random Lv50</div><button class="btn sm">Add</button></div></div></div></span><span class="exp-time">원정 플레이 시간<b data-exp-time="">0:00:00</b></span><button class="btn sm dp-btn" title="설정">⚙</button></div>
+            </div>
+            <nav class="nav" id="game-menu" aria-label="전체 메뉴"><div class="nav-grp">전투</div><button data-tab="expedition" aria-label="원정" aria-disabled="false"><span class="nav-lbl"><i class="nav-ic" aria-hidden="true" style="-webkit-mask-image:url('./assets/art/icons/nav/expedition.webp');mask-image:url('./assets/art/icons/nav/expedition.webp')"></i><span class="nav-text">원정</span></span></button><button class=" dim" data-tab="explore" aria-label="탐험" aria-disabled="true" data-tip="1"><span class="nav-lbl"><i class="nav-ic" aria-hidden="true" style="-webkit-mask-image:url('./assets/art/icons/nav/explore.webp');mask-image:url('./assets/art/icons/nav/explore.webp')"></i><span class="nav-text">탐험</span></span><span class="nav-lock"><svg class="rs-pin-ico" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.6"></path><path fill="currentColor" fill-rule="evenodd" d="M4 7h8a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 12 15H4a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 4 7zM7.25 9.5v3h1.5v-3z"></path></svg></span></button><button data-tab="party" aria-label="편성" aria-disabled="false"><span class="nav-lbl"><i class="nav-ic" aria-hidden="true" style="-webkit-mask-image:url('./assets/art/icons/nav/party.webp');mask-image:url('./assets/art/icons/nav/party.webp')"></i><span class="nav-text">편성</span></span></button><button data-tab="character" aria-label="캐릭터" aria-disabled="false"><span class="nav-lbl"><i class="nav-ic" aria-hidden="true" style="-webkit-mask-image:url('./assets/art/icons/nav/character.webp');mask-image:url('./assets/art/icons/nav/character.webp')"></i><span class="nav-text">캐릭터</span></span></button><div class="nav-grp">마을</div><button class=" todo" data-tab="research" aria-label="건설" aria-disabled="false"><span class="nav-lbl"><i class="nav-ic" aria-hidden="true" style="-webkit-mask-image:url('./assets/art/icons/nav/research.webp');mask-image:url('./assets/art/icons/nav/research.webp')"></i><span class="nav-text">건설</span></span></button><button class=" dim" data-tab="tavern" aria-label="선술집" aria-disabled="true" data-tip="1"><span class="nav-lbl"><i class="nav-ic" aria-hidden="true" style="-webkit-mask-image:url('./assets/art/icons/nav/tavern.webp');mask-image:url('./assets/art/icons/nav/tavern.webp')"></i><span class="nav-text">선술집</span></span><span class="nav-lock"><svg class="rs-pin-ico" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.6"></path><path fill="currentColor" fill-rule="evenodd" d="M4 7h8a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 12 15H4a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 4 7zM7.25 9.5v3h1.5v-3z"></path></svg></span></button><button class=" dim" data-tab="shop" aria-label="상점" aria-disabled="true" data-tip="1"><span class="nav-lbl"><i class="nav-ic" aria-hidden="true" style="-webkit-mask-image:url('./assets/art/icons/nav/shop.webp');mask-image:url('./assets/art/icons/nav/shop.webp')"></i><span class="nav-text">상점</span></span><span class="nav-lock"><svg class="rs-pin-ico" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.6"></path><path fill="currentColor" fill-rule="evenodd" d="M4 7h8a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 12 15H4a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 4 7zM7.25 9.5v3h1.5v-3z"></path></svg></span></button><button class=" dim" data-tab="forge" aria-label="대장간" aria-disabled="true" data-tip="1"><span class="nav-lbl"><i class="nav-ic" aria-hidden="true" style="-webkit-mask-image:url('./assets/art/icons/nav/forge.webp');mask-image:url('./assets/art/icons/nav/forge.webp')"></i><span class="nav-text">대장간</span></span><span class="nav-lock"><svg class="rs-pin-ico" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.6"></path><path fill="currentColor" fill-rule="evenodd" d="M4 7h8a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 12 15H4a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 4 7zM7.25 9.5v3h1.5v-3z"></path></svg></span></button><button data-tab="library" aria-label="도서관" aria-disabled="false"><span class="nav-lbl"><i class="nav-ic" aria-hidden="true" style="-webkit-mask-image:url('./assets/art/icons/nav/library.webp');mask-image:url('./assets/art/icons/nav/library.webp')"></i><span class="nav-text">도서관</span></span></button><button data-tab="resource" aria-label="연구소" aria-disabled="false"><span class="nav-lbl"><i class="nav-ic" aria-hidden="true" style="-webkit-mask-image:url('./assets/art/icons/nav/resource.webp');mask-image:url('./assets/art/icons/nav/resource.webp')"></i><span class="nav-text">연구소</span></span></button><div class="nav-grp">기타</div><button class="on" data-tab="endless" aria-label="무한의 탑" aria-disabled="false" aria-current="page"><span class="nav-lbl"><i class="nav-ic" aria-hidden="true" style="-webkit-mask-image:url('./assets/art/icons/nav/endless.webp');mask-image:url('./assets/art/icons/nav/endless.webp')"></i><span class="nav-text">무한의 탑</span></span></button><button data-tab="colosseum" aria-label="시련의 탑" aria-disabled="false"><span class="nav-lbl"><i class="nav-ic" aria-hidden="true" style="-webkit-mask-image:url('./assets/art/icons/nav/colosseum.webp');mask-image:url('./assets/art/icons/nav/colosseum.webp')"></i><span class="nav-text">시련의 탑</span></span></button><button data-tab="arena" aria-label="결투장" aria-disabled="false"><span class="nav-lbl"><i class="nav-ic" aria-hidden="true" style="-webkit-mask-image:url('./assets/art/icons/nav/arena.webp');mask-image:url('./assets/art/icons/nav/arena.webp')"></i><span class="nav-text">결투장</span></span></button><button data-tab="codex" aria-label="도감" aria-disabled="false"><span class="nav-lbl"><i class="nav-ic" aria-hidden="true" style="-webkit-mask-image:url('./assets/art/icons/nav/codex.webp');mask-image:url('./assets/art/icons/nav/codex.webp')"></i><span class="nav-text">도감</span></span></button><button data-tab="help" aria-label="도움말" aria-disabled="false"><span class="nav-lbl"><i class="nav-ic" aria-hidden="true" style="-webkit-mask-image:url('./assets/art/icons/nav/help.webp');mask-image:url('./assets/art/icons/nav/help.webp')"></i><span class="nav-text">도움말</span></span></button><button data-tab="lab" aria-label="실험실" aria-disabled="false"><span class="nav-lbl"><i class="nav-ic" aria-hidden="true" style="-webkit-mask-image:url('./assets/art/icons/nav/lab.webp');mask-image:url('./assets/art/icons/nav/lab.webp')"></i><span class="nav-text">실험실</span></span></button><button class="b-newgame">새 게임</button></nav>
+            <main class="main"><div class="bt-page page arena-watch"><div class="panel battle-panel">
+        <div class="battle-head">
+            <div class="bh-top">
+                <div class="bh-title">무한의 탑</div>
+                
+                <div class="round-track"><span class="rt elite now" data-n="1" title="R1 정예">1</span></div>
+                <div class="battle-ctrl">
+                    <button class="btn sm b-speed on" data-s="1">×1</button><button class="btn sm b-speed" data-s="2">×2</button><button class="btn sm b-speed" data-s="4">×4</button><button class="btn sm b-speed" data-s="16">×16</button>
+                    <button class="btn sm b-pause">일시정지</button>
+                    <button class="btn sm b-skip">무한의 탑으로</button>
+                    <span class="ctrl-div"></span>
+                    <button class="btn sm b-pane" data-tab="log">전투 로그</button>
+                    <button class="btn sm b-pane" data-tab="dmg">누적 데미지</button>
+                </div>
+            </div>
+        </div>
+        <div class="battle-body">
+            <div class="arena has-bg" style="background-image:linear-gradient(rgba(0,0,0,.42),rgba(0,0,0,.78)),url('./assets/art/backgrounds/illustrate/background_stage_101.webp')">
+                <div class="side side-enemy" data-depth="2"><div class="unit-slot v2" data-rank="1" style="order: 0; --fx-k: 1; --rise-ms: 200ms;"><div class="unit enemy elite v2 dead fx-down" data-tip="1" data-shake="1">
+        <div class="unit-top"><span class="unit-ident"><span class="unit-lv">Lv.1</span> · 사제 · 데몬</span><div class="unit-traits"><span class="trait-chip" style="color:#8040e0">오만한</span></div></div>
+        <div class="unit-body">
+            <div class="sprite has-face fx-flash-crit"><img src="./assets/art/faces/gemini/monster/1103_elite.webp" alt="고블린 주술사" loading="lazy" onerror="this.remove()"></div>
+            <div class="unit-info">
+                <div class="unit-id"><span class="sin-chip grade-chip elite">정예</span><span class="unit-name">고블린 주술사</span></div>
+                <div class="hp-row">
+                    <div class="bar hp"><i style="transform: scaleX(0);"></i><b style="transform: translateX(0%) scaleX(0);"></b></div>
+                    <span class="hp-text">0 / 91</span>
+                </div>
+                <div class="act-row segs" title="캐스팅 속도 2.45초 — 다 차면 칸 하나 충전">
+                    <span class="act-seg"><i class="act-fill k-magic" style="transform: scaleX(0);"></i></span><span class="act-seg"><i class="act-fill k-magic" style="transform: scaleX(0);"></i></span><span class="act-seg"><i class="act-fill k-magic" style="transform: scaleX(0);"></i></span><span class="act-seg"><i class="act-fill k-magic" style="transform: scaleX(0);"></i></span>
+                </div>
+                <div class="cd-list"><div class="cd-slot" data-tip="1"><span class="cd-g"><img src="./assets/art/icons/skills/pri_summon.webp" alt="" loading="lazy" onerror="this.remove()"></span><i class="cd-mask" style="transform: scaleY(1);"></i><span class="sk-lv">Lv.1</span></div><div class="cd-slot empty"></div><div class="cd-slot empty"></div></div>
+            </div>
+        </div>
+        <div class="fx-layer" style="--cx: 56.5px; --cy: 79.5px; --sw: 101.0px; --sh: 101.0px;"><img class="fx-skill-stamp fx-skill-burst crit fx-sk" alt="" draggable="false" data-skill="mag_fireball" src="http://127.0.0.1:8862/assets/art/fx/skills/mag_fireball_darktoon.webp" style="--sz: 90.0px; --t: 420ms; --fx-skill-a: 1;"><i class="fx-bleed"></i></div><div class="pop-layer"></div></div><div class="buff-row" data-sig="t0|f|"></div></div><div class="unit-slot v2" data-rank="0" style="order: 1; --fx-k: 1;"><div class="unit enemy v2 dead" data-tip="1" data-shake="1">
+        <div class="unit-top"><span class="unit-ident"><span class="unit-lv">Lv.1</span> · 전사 · 데몬</span></div>
+        <div class="unit-body">
+            <div class="sprite has-face"><img src="./assets/art/faces/gemini/monster/1102.webp" alt="고블린 전사" loading="lazy" onerror="this.remove()"></div>
+            <div class="unit-info">
+                <div class="unit-id"><span class="unit-name">고블린 전사</span></div>
+                <div class="hp-row">
+                    <div class="bar hp"><i style="transform: scaleX(0);"></i><b style="transform: translateX(0%) scaleX(0);"></b></div>
+                    <span class="hp-text">0 / 42</span>
+                </div>
+                <div class="act-row" title="공격 속도 2.72초 — 다 차면 이 유닛 행동">
+                    <i class="act-fill k-phys" style="transform: scaleX(0);"></i>
+                </div>
+                <div class="cd-list"><div class="cd-slot" data-tip="1"><span class="cd-g"><img src="./assets/art/icons/skills/war_bash.webp" alt="" loading="lazy" onerror="this.remove()"></span><i class="cd-mask" style="transform: scaleY(1);"></i><span class="sk-lv">Lv.1</span></div><div class="cd-slot empty"></div><div class="cd-slot empty"></div></div>
+            </div>
+        </div>
+        <div class="fx-layer" style="--cx: 56.5px; --cy: 79.5px; --sw: 101.0px; --sh: 101.0px;"></div><div class="pop-layer"></div></div><div class="buff-row" data-sig="t0|f|"></div></div><div class="unit-slot v2" data-rank="1" style="order: 2; --fx-k: 1; --rise-ms: 200ms;"><div class="unit enemy v2 dead" data-tip="1" data-shake="1">
+        <div class="unit-top"><span class="unit-ident"><span class="unit-lv">Lv.1</span> · 궁수 · 데몬</span></div>
+        <div class="unit-body">
+            <div class="sprite has-face"><img src="./assets/art/faces/gemini/monster/1101.webp" alt="고블린 척후병" loading="lazy" onerror="this.remove()"></div>
+            <div class="unit-info">
+                <div class="unit-id"><span class="unit-name">고블린 척후병</span></div>
+                <div class="hp-row">
+                    <div class="bar hp"><i style="transform: scaleX(0);"></i><b style="transform: translateX(0%) scaleX(0);"></b></div>
+                    <span class="hp-text">0 / 42</span>
+                </div>
+                <div class="act-row" title="공격 속도 2.12초 — 다 차면 이 유닛 행동">
+                    <i class="act-fill k-phys" style="transform: scaleX(0);"></i>
+                </div>
+                <div class="cd-list"><div class="cd-slot" data-tip="1"><span class="cd-g"><img src="./assets/art/icons/skills/arc_rapid.webp" alt="" loading="lazy" onerror="this.remove()"></span><i class="cd-mask" style="transform: scaleY(1);"></i><span class="sk-lv">Lv.1</span></div><div class="cd-slot empty"></div><div class="cd-slot empty"></div></div>
+            </div>
+        </div>
+        <div class="fx-layer" style="--cx: 56.5px; --cy: 79.5px; --sw: 101.0px; --sh: 101.0px;"></div><div class="pop-layer"></div></div><div class="buff-row" data-sig="t0|f|"></div></div></div>
+                <div class="divider"><span class="muted">VS</span></div>
+                <div class="side side-party" data-depth="2"><div class="unit-slot v2" data-rank="0" style="order: 1; --fx-k: 1; --rise-ms: 200ms;"><div class="unit party v2 buffed" style="--tier-line: #FFD700; --fx-sx: -1;" data-tip="1">
+        <div class="unit-top"><span class="unit-ident"><span class="unit-lv">Lv.1</span> · 전사</span></div>
+        <div class="unit-body">
+            <div class="sprite has-face"><img src="./assets/art/faces/gemini/hero/warrior_5.webp" alt="아스트리드" loading="lazy" onerror="this.remove()"></div>
+            <div class="unit-info">
+                <div class="unit-id"><span class="sin-chip" style="color:#e03030">분노</span><span class="unit-name">아스트리드</span></div>
+                <div class="hp-row">
+                    <div class="bar hp"><i style="transform: scaleX(0.86);"></i><b style="transform: translateX(86%) scaleX(0);"></b></div>
+                    <span class="hp-text">86 / 100</span>
+                </div>
+                <div class="act-row" title="공격 속도 2.72초 — 다 차면 이 유닛 행동">
+                    <i class="act-fill k-phys" style="transform: scaleX(0.62477);"></i>
+                </div>
+                <div class="cd-list"><div class="cd-slot" data-tip="1"><span class="cd-g"><img src="./assets/art/icons/skills/war_bash.webp" alt="" loading="lazy" onerror="this.remove()"></span><i class="cd-mask" style="transform: scaleY(0.326667);"></i><span class="sk-lv">Lv.1</span></div><div class="cd-slot empty"></div><div class="cd-slot empty"></div></div>
+            </div>
+        </div>
+        <div class="fx-layer" style="--cx: 56.5px; --cy: 79.5px; --sw: 101.0px; --sh: 101.0px;"></div><div class="pop-layer"></div></div><div class="buff-row" data-sig="t0|f|pri_bind:period_pct:-0.4:21.2"><span class="buff-chip bad" data-effect="pri_bind" aria-label="바인드 — 공격 속도 40% 감소" data-tip="1"><img src="./assets/art/icons/skills/pri_bind.webp" alt="" loading="lazy" onerror="this.remove()"></span></div></div><div class="unit-slot v2" data-rank="1" style="order: 0; --fx-k: 1; --rise-ms: 200ms;"><div class="unit party v2 buffed" style="--tier-line: #4169E1;" data-tip="1">
+        <div class="unit-top"><span class="unit-ident"><span class="unit-lv">Lv.1</span> · 마법사</span></div>
+        <div class="unit-body">
+            <div class="sprite has-face"><img src="./assets/art/faces/gemini/hero/mage_4.webp" alt="벨사라" loading="lazy" onerror="this.remove()"></div>
+            <div class="unit-info">
+                <div class="unit-id"><span class="sin-chip" style="color:#e07020">폭식</span><span class="unit-name">벨사라</span></div>
+                <div class="hp-row">
+                    <div class="bar hp"><i style="transform:scaleX(1)"></i><b style="transform:translateX(100%) scaleX(0)"></b></div>
+                    <span class="hp-text">50 / 50</span>
+                </div>
+                <div class="act-row segs" title="캐스팅 속도 2.57초 — 다 차면 칸 하나 충전">
+                    <span class="act-seg"><i class="act-fill k-magic" style="transform: scaleX(1);"></i></span><span class="act-seg"><i class="act-fill k-magic" style="transform: scaleX(1);"></i></span><span class="act-seg"><i class="act-fill k-magic" style="transform: scaleX(0.855698); transition: none;"></i></span><span class="act-seg"><i class="act-fill k-magic" style="transform: scaleX(0); transition: none;"></i></span>
+                </div>
+                <div class="cd-list"><div class="cd-slot" data-tip="1"><span class="cd-g"><img src="./assets/art/icons/skills/mag_fireball.webp" alt="" loading="lazy" onerror="this.remove()"></span><i class="cd-mask" style="transform: scaleY(1);"></i><span class="sk-lv">Lv.1</span></div><div class="cd-slot empty"></div><div class="cd-slot empty"></div></div>
+            </div>
+        </div>
+        <div class="fx-layer" style="--cx: 56.5px; --cy: 79.5px; --sw: 101.0px; --sh: 101.0px;"></div><div class="pop-layer"></div></div><div class="buff-row" data-sig="t0|f|pri_bind:period_pct:-0.4:23"><span class="buff-chip bad" data-effect="pri_bind" aria-label="바인드 — 공격 속도 40% 감소" data-tip="1"><img src="./assets/art/icons/skills/pri_bind.webp" alt="" loading="lazy" onerror="this.remove()"></span></div></div><div class="unit-slot v2" data-rank="1" style="order: 2; --fx-k: 1; --rise-ms: 200ms;"><div class="unit party v2 buffed" style="--tier-line: #D8D8D8;" data-tip="1">
+        <div class="unit-top"><span class="unit-ident"><span class="unit-lv">Lv.1</span> · 궁수</span></div>
+        <div class="unit-body">
+            <div class="sprite has-face"><img src="./assets/art/faces/gemini/hero/archer_3.webp" alt="아일라" loading="lazy" onerror="this.remove()"></div>
+            <div class="unit-info">
+                <div class="unit-id"><span class="sin-chip" style="color:#7087a8">나태</span><span class="unit-name">아일라</span></div>
+                <div class="hp-row">
+                    <div class="bar hp"><i style="transform:scaleX(1)"></i><b style="transform:translateX(100%) scaleX(0)"></b></div>
+                    <span class="hp-text">50 / 50</span>
+                </div>
+                <div class="act-row" title="공격 속도 3.29초 — 다 차면 이 유닛 행동">
+                    <i class="act-fill k-phys" style="transform: scaleX(0.729262);"></i>
+                </div>
+                <div class="cd-list"><div class="cd-slot" data-tip="1"><span class="cd-g"><img src="./assets/art/icons/skills/arc_guided.webp" alt="" loading="lazy" onerror="this.remove()"></span><i class="cd-mask" style="transform: scaleY(0.52);"></i><span class="sk-lv">Lv.1</span></div><div class="cd-slot empty"></div><div class="cd-slot empty"></div></div>
+            </div>
+        </div>
+        <div class="fx-layer" style="--cx: 56.5px; --cy: 79.5px; --sw: 101.0px; --sh: 101.0px;"></div><div class="pop-layer"></div></div><div class="buff-row" data-sig="t0|f|pri_bind:period_pct:-0.4:21.8"><span class="buff-chip bad" data-effect="pri_bind" aria-label="바인드 — 공격 속도 40% 감소" data-tip="1"><img src="./assets/art/icons/skills/pri_bind.webp" alt="" loading="lazy" onerror="this.remove()"></span></div></div></div>
+                <div class="p-belt b-belt"><span class="p-slot full" data-i="0" data-tip="1"><img src="./assets/art/icons/items/potion/minor_healing.webp" alt="" onerror="this.remove()"><i class="cd-mask" style="transform:scaleY(0)"></i></span><span class="p-slot full" data-i="1" data-tip="1"><img src="./assets/art/icons/items/potion/minor_healing.webp" alt="" onerror="this.remove()"><i class="cd-mask" style="transform:scaleY(0)"></i></span><span class="p-slot locked" data-i="2" data-tip="1" aria-label="창고 2랭크"><svg class="rs-pin-ico" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.6"></path><path fill="currentColor" fill-rule="evenodd" d="M4 7h8a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 12 15H4a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 4 7zM7.25 9.5v3h1.5v-3z"></path></svg></span><span class="p-slot locked" data-i="3" data-tip="1" aria-label="창고 5랭크"><svg class="rs-pin-ico" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.6"></path><path fill="currentColor" fill-rule="evenodd" d="M4 7h8a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 12 15H4a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 4 7zM7.25 9.5v3h1.5v-3z"></path></svg></span></div>
+                
+                
+                <div class="stage-clock">9:48</div>
+                <div class="battle-result show">
+        <span class="up verdict">승리</span>
+        
+        
+        
+        <button class="btn primary sm b-report">무한의 탑으로</button></div>
+            </div>
+            <div class="battle-side" hidden="">
+                <div class="segmented log-filter" hidden=""><button class="btn sm b-logf on" data-f="all">전체</button><button class="btn sm b-logf" data-f="party">우리</button><button class="btn sm b-logf" data-f="enemy">적</button></div>
+                <div class="segmented dmg-filter" hidden=""><button class="btn sm b-dmgf on" data-f="dealt">가한 피해</button><button class="btn sm b-dmgf" data-f="taken">받은 피해</button></div>
+                <div class="battle-log-wrap pane" hidden=""><div class="lg-head"><span class="lg-n">이름</span><span class="lg-ico">스킬</span><span class="lg-d">대상</span><b class="lg-v">데미지</b></div><div class="lg-round" title="정예라운드 1 — 고블린 주술사, 고블린 전사, 고블린 척후병"><span class="lg-kind elite">정예</span><b>라운드 1</b> — 고블린 주술사, 고블린 전사, 고블린 척후병</div><ul class="battle-log" data-f="all"><li class="lg-row" data-side="party"><span class="lg-n" title="아스트리드">아스트리드</span><i class="lg-ico" title="배시"><img src="./assets/art/icons/skills/war_bash.webp" alt="" loading="lazy" onerror="this.remove()"></i><span class="lg-d" title="고블린 전사">고블린 전사</span><b class="lg-v dt-physical">33</b><span class="lg-say"><b>아스트리드</b>가 <b>고블린 전사</b>에게 <i class="lg-ico" title="배시"><img src="./assets/art/icons/skills/war_bash.webp" alt="" loading="lazy" onerror="this.remove()"></i>로 <b class="dt-physical">33</b> 피해</span></li><li class="lg-row" data-side="party"><span class="lg-n" title="아스트리드">아스트리드</span><i class="lg-ico" title="기본 공격"><img src="./assets/art/icons/items/empty/weapon.webp" alt=""></i><span class="lg-d" title="고블린 전사">고블린 전사</span><b class="lg-v dt-physical">16</b><span class="lg-say"><b>아스트리드</b>가 <b>고블린 전사</b>에게 <i class="lg-ico" title="기본 공격"><img src="./assets/art/icons/items/empty/weapon.webp" alt=""></i>으로 <b class="dt-physical">16</b> 피해</span></li><li class="lg-row" data-side="party"><span class="lg-n" title="고블린 전사">고블린 전사</span><i class="lg-ico"></i><span class="lg-d"></span><b class="lg-v">처치</b><span class="lg-say"><b>고블린 전사</b> 처치</span></li><li class="lg-row" data-side="enemy"><span class="lg-n" title="고블린 척후병">고블린 척후병</span><i class="lg-ico" title="래피드 샷"><img src="./assets/art/icons/skills/arc_rapid.webp" alt="" loading="lazy" onerror="this.remove()"></i><span class="lg-d" title="아스트리드">아스트리드</span><b class="lg-v dt-physical">2</b><span class="lg-say"><b>고블린 척후병</b>이 <b>아스트리드</b>에게 <i class="lg-ico" title="래피드 샷"><img src="./assets/art/icons/skills/arc_rapid.webp" alt="" loading="lazy" onerror="this.remove()"></i>으로 <b class="dt-physical">2</b> 피해</span></li><li class="lg-row" data-side="party"><span class="lg-n" title="벨사라">벨사라</span><i class="lg-ico" title="파이어볼"><img src="./assets/art/icons/skills/mag_fireball.webp" alt="" loading="lazy" onerror="this.remove()"></i><span class="lg-d" title="고블린 척후병">고블린 척후병</span><b class="lg-v dt-fire">38</b><span class="lg-say"><b>벨사라</b>가 <b>고블린 척후병</b>에게 <i class="lg-ico" title="파이어볼"><img src="./assets/art/icons/skills/mag_fireball.webp" alt="" loading="lazy" onerror="this.remove()"></i>로 <b class="dt-fire">38</b> 피해</span></li><li class="lg-row" data-side="enemy"><span class="lg-n" title="고블린 주술사">고블린 주술사</span><i class="lg-ico" title="소환"><img src="./assets/art/icons/skills/pri_summon.webp" alt="" loading="lazy" onerror="this.remove()"></i><span class="lg-d" title="고블린 전사">고블린 전사</span><b class="lg-v"></b><span class="lg-say"><b>고블린 주술사</b>가 <i class="lg-ico" title="소환"><img src="./assets/art/icons/skills/pri_summon.webp" alt="" loading="lazy" onerror="this.remove()"></i>으로 <b>고블린 전사</b> 소환</span></li><li class="lg-row" data-side="enemy"><span class="lg-n" title="고블린 척후병">고블린 척후병</span><i class="lg-ico" title="래피드 샷"><img src="./assets/art/icons/skills/arc_rapid.webp" alt="" loading="lazy" onerror="this.remove()"></i><span class="lg-d" title="아스트리드">아스트리드</span><b class="lg-v dt-physical">3</b><span class="lg-say"><b>고블린 척후병</b>이 <b>아스트리드</b>에게 <i class="lg-ico" title="래피드 샷"><img src="./assets/art/icons/skills/arc_rapid.webp" alt="" loading="lazy" onerror="this.remove()"></i>으로 <b class="dt-physical">3</b> 피해</span></li><li class="lg-row" data-side="enemy"><span class="lg-n" title="고블린 척후병">고블린 척후병</span><i class="lg-ico" title="래피드 샷"><img src="./assets/art/icons/skills/arc_rapid.webp" alt="" loading="lazy" onerror="this.remove()"></i><span class="lg-d" title="아스트리드">아스트리드</span><b class="lg-v dt-physical">3</b><span class="lg-say"><b>고블린 척후병</b>이 <b>아스트리드</b>에게 <i class="lg-ico" title="래피드 샷"><img src="./assets/art/icons/skills/arc_rapid.webp" alt="" loading="lazy" onerror="this.remove()"></i>으로 <b class="dt-physical">3</b> 피해</span></li><li class="lg-row" data-side="party"><span class="lg-n" title="아일라">아일라</span><i class="lg-ico" title="가이디드 애로우"><img src="./assets/art/icons/skills/arc_guided.webp" alt="" loading="lazy" onerror="this.remove()"></i><span class="lg-d" title="고블린 전사">고블린 전사</span><b class="lg-v dt-physical">44</b><span class="lg-say"><b>아일라</b>가 <b>고블린 전사</b>에게 <i class="lg-ico" title="가이디드 애로우"><img src="./assets/art/icons/skills/arc_guided.webp" alt="" loading="lazy" onerror="this.remove()"></i>로 <b class="dt-physical">44</b> 피해</span></li><li class="lg-row" data-side="party"><span class="lg-n" title="고블린 전사">고블린 전사</span><i class="lg-ico"></i><span class="lg-d"></span><b class="lg-v">처치</b><span class="lg-say"><b>고블린 전사</b> 처치</span></li><li class="lg-row" data-side="party"><span class="lg-n" title="아스트리드">아스트리드</span><i class="lg-ico" title="기본 공격"><img src="./assets/art/icons/items/empty/weapon.webp" alt=""></i><span class="lg-d" title="고블린 주술사">고블린 주술사</span><b class="lg-v dt-physical">13</b><span class="lg-say"><b>아스트리드</b>가 <b>고블린 주술사</b>에게 <i class="lg-ico" title="기본 공격"><img src="./assets/art/icons/items/empty/weapon.webp" alt=""></i>으로 <b class="dt-physical">13</b> 피해</span></li><li class="lg-row" data-side="enemy"><span class="lg-n" title="고블린 척후병">고블린 척후병</span><i class="lg-ico" title="기본 공격"><img src="./assets/art/icons/items/empty/weapon.webp" alt=""></i><span class="lg-d" title="아스트리드">아스트리드</span><b class="lg-v dt-physical">4</b><span class="lg-say"><b>고블린 척후병</b>이 <b>아스트리드</b>에게 <i class="lg-ico" title="기본 공격"><img src="./assets/art/icons/items/empty/weapon.webp" alt=""></i>으로 <b class="dt-physical">4</b> 피해</span></li><li class="lg-row" data-side="party"><span class="lg-n" title="아일라">아일라</span><i class="lg-ico" title="기본 공격"><img src="./assets/art/icons/items/empty/weapon.webp" alt=""></i><span class="lg-d" title="고블린 주술사">고블린 주술사</span><b class="lg-v dt-physical">18</b><span class="lg-say"><b>아일라</b>가 <b>고블린 주술사</b>에게 <i class="lg-ico" title="기본 공격"><img src="./assets/art/icons/items/empty/weapon.webp" alt=""></i>으로 <b class="dt-physical">18</b> 피해</span></li><li class="lg-row" data-side="enemy"><span class="lg-n" title="고블린 척후병">고블린 척후병</span><i class="lg-ico" title="기본 공격"><img src="./assets/art/icons/items/empty/weapon.webp" alt=""></i><span class="lg-d" title="아스트리드">아스트리드</span><b class="lg-v">빗나감</b><span class="lg-say"><b>고블린 척후병</b>이 <b>아스트리드</b>에게 <i class="lg-ico" title="기본 공격"><img src="./assets/art/icons/items/empty/weapon.webp" alt=""></i> 빗나감</span></li><li class="lg-row" data-side="party"><span class="lg-n" title="아스트리드">아스트리드</span><i class="lg-ico" title="기본 공격"><img src="./assets/art/icons/items/empty/weapon.webp" alt=""></i><span class="lg-d" title="고블린 주술사">고블린 주술사</span><b class="lg-v dt-physical">21</b><span class="lg-say"><b>아스트리드</b>가 <b>고블린 주술사</b>에게 <i class="lg-ico" title="기본 공격"><img src="./assets/art/icons/items/empty/weapon.webp" alt=""></i>으로 <b class="dt-physical">21</b> 피해</span></li><li class="lg-row" data-side="enemy"><span class="lg-n" title="고블린 척후병">고블린 척후병</span><i class="lg-ico" title="래피드 샷"><img src="./assets/art/icons/skills/arc_rapid.webp" alt="" loading="lazy" onerror="this.remove()"></i><span class="lg-d" title="아스트리드">아스트리드</span><b class="lg-v">빗나감</b><span class="lg-say"><b>고블린 척후병</b>이 <b>아스트리드</b>에게 <i class="lg-ico" title="래피드 샷"><img src="./assets/art/icons/skills/arc_rapid.webp" alt="" loading="lazy" onerror="this.remove()"></i> 빗나감</span></li><li class="lg-row" data-side="enemy"><span class="lg-n" title="고블린 척후병">고블린 척후병</span><i class="lg-ico" title="래피드 샷"><img src="./assets/art/icons/skills/arc_rapid.webp" alt="" loading="lazy" onerror="this.remove()"></i><span class="lg-d" title="아스트리드">아스트리드</span><b class="lg-v dt-physical">2</b><span class="lg-say"><b>고블린 척후병</b>이 <b>아스트리드</b>에게 <i class="lg-ico" title="래피드 샷"><img src="./assets/art/icons/skills/arc_rapid.webp" alt="" loading="lazy" onerror="this.remove()"></i>으로 <b class="dt-physical">2</b> 피해</span></li><li class="lg-row" data-side="party"><span class="lg-n" title="아일라">아일라</span><i class="lg-ico" title="가이디드 애로우"><img src="./assets/art/icons/skills/arc_guided.webp" alt="" loading="lazy" onerror="this.remove()"></i><span class="lg-d" title="고블린 척후병">고블린 척후병</span><b class="lg-v dt-physical">41</b><span class="lg-say"><b>아일라</b>가 <b>고블린 척후병</b>에게 <i class="lg-ico" title="가이디드 애로우"><img src="./assets/art/icons/skills/arc_guided.webp" alt="" loading="lazy" onerror="this.remove()"></i>로 <b class="dt-physical">41</b> 피해</span></li><li class="lg-row" data-side="party"><span class="lg-n" title="고블린 척후병">고블린 척후병</span><i class="lg-ico"></i><span class="lg-d"></span><b class="lg-v">처치</b><span class="lg-say"><b>고블린 척후병</b> 처치</span></li><li class="lg-row" data-side="party"><span class="lg-n" title="아스트리드">아스트리드</span><i class="lg-ico" title="기본 공격"><img src="./assets/art/icons/items/empty/weapon.webp" alt=""></i><span class="lg-d" title="고블린 주술사">고블린 주술사</span><b class="lg-v dt-physical">15</b><span class="lg-say"><b>아스트리드</b>가 <b>고블린 주술사</b>에게 <i class="lg-ico" title="기본 공격"><img src="./assets/art/icons/items/empty/weapon.webp" alt=""></i>으로 <b class="dt-physical">15</b> 피해</span></li><li class="lg-row" data-side="party"><span class="lg-n" title="아스트리드">아스트리드</span><i class="lg-ico" title="바인드"><img src="./assets/art/icons/skills/pri_bind.webp" alt="" loading="lazy" onerror="this.remove()"></i><span class="lg-d"></span><b class="lg-v">발동</b><span class="lg-say"><b>아스트리드</b>에게 <i class="lg-ico" title="바인드"><img src="./assets/art/icons/skills/pri_bind.webp" alt="" loading="lazy" onerror="this.remove()"></i> 발동</span></li><li class="lg-row" data-side="party"><span class="lg-n" title="벨사라">벨사라</span><i class="lg-ico" title="바인드"><img src="./assets/art/icons/skills/pri_bind.webp" alt="" loading="lazy" onerror="this.remove()"></i><span class="lg-d"></span><b class="lg-v">발동</b><span class="lg-say"><b>벨사라</b>에게 <i class="lg-ico" title="바인드"><img src="./assets/art/icons/skills/pri_bind.webp" alt="" loading="lazy" onerror="this.remove()"></i> 발동</span></li><li class="lg-row" data-side="party"><span class="lg-n" title="아일라">아일라</span><i class="lg-ico" title="바인드"><img src="./assets/art/icons/skills/pri_bind.webp" alt="" loading="lazy" onerror="this.remove()"></i><span class="lg-d"></span><b class="lg-v">발동</b><span class="lg-say"><b>아일라</b>에게 <i class="lg-ico" title="바인드"><img src="./assets/art/icons/skills/pri_bind.webp" alt="" loading="lazy" onerror="this.remove()"></i> 발동</span></li><li class="lg-row" data-side="party"><span class="lg-n" title="벨사라">벨사라</span><i class="lg-ico" title="파이어볼"><img src="./assets/art/icons/skills/mag_fireball.webp" alt="" loading="lazy" onerror="this.remove()"></i><span class="lg-d" title="고블린 주술사">고블린 주술사</span><b class="lg-v dt-fire">57</b><span class="lg-say"><b>벨사라</b>가 <b>고블린 주술사</b>에게 <i class="lg-ico" title="파이어볼"><img src="./assets/art/icons/skills/mag_fireball.webp" alt="" loading="lazy" onerror="this.remove()"></i>로 <b class="dt-fire">57</b> 피해</span></li><li class="lg-row" data-side="party"><span class="lg-n" title="고블린 주술사">고블린 주술사</span><i class="lg-ico"></i><span class="lg-d"></span><b class="lg-v">처치</b><span class="lg-say"><b>고블린 주술사</b> 처치</span></li><li class="lg-wide" title="승리" data-side="sys">승리</li></ul></div>
+                <div class="battle-dmg-wrap pane" hidden=""></div>
+            </div>
+        </div></div><div class="arena-floor"><div class="bag-row" aria-hidden="true"><div class="panel bag store-stash" style="--cols: 10;"><div class="items-tools"><span class="items-name"><span class="heading-label">창고<span class="q-btn" tabindex="0" aria-label="창고 도움말" data-tip="1">?</span></span></span><span class="tools-push"></span><div class="segmented bag-tabs"><button class="btn sm on">장비</button><button class="btn sm">재료</button><button class="btn sm">스킬북</button></div><div class="sort-tools"><button class="btn sm toggle">정렬</button></div></div><div class="inv-cells wide"><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div></div></div><div class="panel bag store-bag" style="--cols: 14;"><div class="items-tools"><span class="items-name"><span class="heading-label">인벤토리<span class="q-btn" tabindex="0" aria-label="인벤토리 도움말" data-tip="1">?</span></span></span><div class="segmented bag-party"><button class="btn sm on">Party I</button></div><span class="tools-push"></span><button class="btn sm toggle">분해</button><button class="btn sm toggle">자동 분해</button><div class="sort-tools"><button class="btn sm toggle">정렬</button></div></div><div class="inv-cells wide"><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div><div class="inv-cell"></div></div></div></div><div class="tdm"><div class="panel tdm-team party">
+            <div class="tdm-head"><span class="tdm-name">우리 팀<span class="q-btn" tabindex="0" aria-label="우리 팀 도움말" data-tip="1">?</span></span><span class="tdm-col">가한 피해</span><span class="tdm-col">받은 피해</span></div>
+            <div class="tdm-rows"><div class="tdm-row"><span class="hero-face dmg-face" style="--tier-line:#FFD700"><img src="./assets/art/faces/gemini/hero/warrior_5.webp" alt="" onerror="this.remove()"></span><span class="tdm-n">아스트리드</span><span class="tdm-v"><div class="bar dmg" title="물리 91 · 마법 0"><i class="k-phys" style="width:100%"></i></div><b>91</b></span><span class="tdm-v"><div class="bar dmg" title="물리 14 · 마법 0"><i class="k-phys" style="width:15.384615384615385%"></i></div><b>14</b></span></div><div class="tdm-row"><span class="hero-face dmg-face" style="--tier-line:#4169E1"><img src="./assets/art/faces/gemini/hero/mage_4.webp" alt="" onerror="this.remove()"></span><span class="tdm-n">벨사라</span><span class="tdm-v"><div class="bar dmg" title="물리 0 · 마법 62"><i class="k-magic" style="width:68.13186813186813%"></i></div><b>62</b></span><span class="tdm-v"><div class="bar dmg" title="물리 0 · 마법 0"></div><b>0</b></span></div><div class="tdm-row"><span class="hero-face dmg-face" style="--tier-line:#D8D8D8"><img src="./assets/art/faces/gemini/hero/archer_3.webp" alt="" onerror="this.remove()"></span><span class="tdm-n">아일라</span><span class="tdm-v"><div class="bar dmg" title="물리 64 · 마법 0"><i class="k-phys" style="width:70.32967032967034%"></i></div><b>64</b></span><span class="tdm-v"><div class="bar dmg" title="물리 0 · 마법 0"></div><b>0</b></span></div></div>
+        </div><div class="panel tdm-team enemy">
+            <div class="tdm-head"><span class="tdm-name">상대 팀<span class="q-btn" tabindex="0" aria-label="상대 팀 도움말" data-tip="1">?</span></span><span class="tdm-col">가한 피해</span><span class="tdm-col">받은 피해</span><span class="segmented tdm-view"><button class="btn sm on" data-tdm="rows">요약</button><button class="btn sm" data-tdm="cols">스킬별</button></span></div>
+            <div class="tdm-rows"><div class="tdm-row fallen"><span class="hero-face dmg-face" style="--tier-line:#FFD700"></span><span class="tdm-n">고블린 주술사</span><span class="tdm-v"><div class="bar dmg" title="물리 0 · 마법 0"></div><b>0</b></span><span class="tdm-v"><div class="bar dmg" title="물리 67 · 마법 24"><i class="k-phys" style="width:73.62637362637363%"></i><i class="k-magic" style="width:26.373626373626376%"></i></div><b>91</b></span></div><div class="tdm-row fallen"><span class="hero-face dmg-face" style="--tier-line:#FFD700"></span><span class="tdm-n">고블린 전사</span><span class="tdm-v"><div class="bar dmg" title="물리 0 · 마법 0"></div><b>0</b></span><span class="tdm-v"><div class="bar dmg" title="물리 84 · 마법 0"><i class="k-phys" style="width:92.3076923076923%"></i></div><b>84</b></span></div><div class="tdm-row fallen"><span class="hero-face dmg-face" style="--tier-line:#FFD700"></span><span class="tdm-n">고블린 척후병</span><span class="tdm-v"><div class="bar dmg" title="물리 14 · 마법 0"><i class="k-phys" style="width:15.384615384615385%"></i></div><b>14</b></span><span class="tdm-v"><div class="bar dmg" title="물리 4 · 마법 38"><i class="k-phys" style="width:4.395604395604396%"></i><i class="k-magic" style="width:41.75824175824176%"></i></div><b>42</b></span></div></div>
+        </div></div></div></div></main>
+        <nav class="mobile-dock" aria-label="빠른 이동"></nav><button type="button" class="mobile-menu-backdrop" aria-label="메뉴 닫기" id="mobile-menu-backdrop" hidden="" tabindex="-1">메뉴 닫기</button></div>
+
+        <div id="tooltip" class="tooltip"></div>
+        <!-- 창 레이어 — 탭 위에 겹쳐 뜨는 판 하나 (SCREEN_DESIGN §2). 쓰는 곳은 스킬 트리(§7) · 해고(§6) · 출정(§4-1) -->
+        <div id="modal" class="modal-layer" hidden=""></div>
+        <!-- 플래시 자리 — 한 장 오른쪽 아래에서 튀어나왔다가 제 시간에 다시 들어가는 카드 · 세 장까지 쌓인다 (SCREEN_DESIGN §2 · ADR-0692). 채우는 것은 app.js:flash 하나 -->
+        <div id="toast" class="toast-layer" role="status" aria-live="polite"></div>
+    </div>
+
+    <!-- 고정 한 장 배치의 세로 안내막 — 모바일 반응형 배치에서는 표시하지 않는다 (ADR-1089). app.js:renderTurnGate -->
+    <div id="turn" class="turn-gate" hidden=""></div>
+
+    <!-- 부서진 글자 필터 — 이번 버전이 안 여는 장의 챕터 버튼(`.seg-crumble` · SCREEN_DESIGN §4-1 · ADR-0739).
+         fx-crumble = 글자 전체: 잡음으로 가장자리를 흔들고(feDisplacementMap) 낮은 문턱의 잡음 구멍으로 잔 조각을 판다 ·
+         fx-crumble-1 ~ 3 = 끝 글자 셋: 문턱이 높아(1 이 가장 높다) 크게 조각난다 · 씨앗이 박혀 있어 늘 같은 모양이다 -->
+    <svg class="fx-defs" width="0" height="0" aria-hidden="true" focusable="false">
+        <filter id="fx-crumble" x="-10%" y="-40%" width="120%" height="180%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="2" seed="4" result="warp"></feTurbulence>
+            <feDisplacementMap in="SourceGraphic" in2="warp" scale="1.5" xChannelSelector="R" yChannelSelector="G" result="rough"></feDisplacementMap>
+            <feTurbulence type="fractalNoise" baseFrequency="0.3" numOctaves="2" seed="3" result="grain"></feTurbulence>
+            <feComponentTransfer in="grain" result="holes"><feFuncA type="discrete" tableValues="0 0 0 1 1 1 1 1 1 1"></feFuncA></feComponentTransfer>
+            <feComposite in="rough" in2="holes" operator="in"></feComposite>
+        </filter>
+        <filter id="fx-crumble-1" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="2" seed="7" result="grain"></feTurbulence>
+            <feComponentTransfer in="grain" result="holes"><feFuncA type="discrete" tableValues="0 0 0 0 0 0 1 1 1 1"></feFuncA></feComponentTransfer>
+            <feComposite in="SourceGraphic" in2="holes" operator="in"></feComposite>
+        </filter>
+        <filter id="fx-crumble-2" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="2" seed="11" result="grain"></feTurbulence>
+            <feComponentTransfer in="grain" result="holes"><feFuncA type="discrete" tableValues="0 0 0 0 0 1 1 1 1 1"></feFuncA></feComponentTransfer>
+            <feComposite in="SourceGraphic" in2="holes" operator="in"></feComposite>
+        </filter>
+        <filter id="fx-crumble-3" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="2" seed="23" result="grain"></feTurbulence>
+            <feComponentTransfer in="grain" result="holes"><feFuncA type="discrete" tableValues="0 0 0 0 1 1 1 1 1 1"></feFuncA></feComponentTransfer>
+            <feComposite in="SourceGraphic" in2="holes" operator="in"></feComposite>
+        </filter>
+    </svg>
+
+    <script type="module" src="./ui/app.js"></script>
+
+
+</body></html>

@@ -16,6 +16,7 @@
  *   labResearch: {line, node, lv, at, until, paid} | null — 하고 있는 연구 하나(연구소 전체에 하나) · 버전 무변경 (2026-10-21 · R298)
  *   labReg: {uid: 줄} — 연구소 줄 등록(`LAB_LINES`). 한 영웅은 한 줄 · 효과 = 능력치 일곱 · 없으면 {} · 버전 무변경 (2026-10-21)
  *   mainMission: {met: [id], got: [id], ev: [event]} — 메인미션(`main_mission.csv`) · 채운 줄 · 받은 줄 · 한 번이라도 일어난 사건 · 버전 무변경 (2026-11-17 · R524)
+ *   endless: {cleared} — 무한의 탑 오른 층(`colosseum` 과 같은 모양 · `endlessRecord` 만 바꾼다 · 없으면 0 · 버전 무변경 · 2026-11-19 · R554)
  *   labSince: {uid: ms} — 등록한 시각(숙련) · labClock: {gamble, train, lib} — 도박장 · 훈련 · 도서관 시계(lib = 줄 하나 `{at, carry, rolls}` · R546) · 버전 무변경 (2026-10-21 · R298)
  *   potions: {potionId: n}    — 물약 재고(v32 · R124). 마시면 준다(`advanceRun`) · 만들면 는다 · 0 이면 키가 없다. 새 게임 = `start_owned` 개수. 칸 구성은 편성이 든다
  *   heroes: [{uid, name, tier, sin, cls, trait, face, level, xp, mastery, masteryPoints, innate, stats, equipped:{position: itemUid|null}}],
@@ -121,6 +122,7 @@ export const SAVE_VERSION = 49;
  *   construction — 건설 시스템(`construction.js` · 표 넷을 든다 · INTERFACE §2-14 · R137)
  *   gamble — 도박장 슬롯(`gamble.js` · 표 넷을 든다 · 한 판을 굴린다 · INTERFACE §2-15 · R149)
  *   commission — 의뢰(`commission.js` · 표 넷을 든다 · 카드 한 장을 굴리고 처치 · 드롭을 대조한다 · INTERFACE §2-16 · R153)
+ *   endlessFloors [{floor, stage_id, round_type, monster_level, difficulty_id}] (endless_floor.csv 원시 행) — 무한의 탑 층 · 한 줄 = 한 층 · 검증은 생성 때 (2026-11-19 · R554)
  *   openAll — `() → bool` 선택 · **개발 장치**(관리자 모드) — 켜져 있으면 「무엇이 열렸나」가 모든 건물을 최대 랭크로 친다(`openRanks`) · 스테이지도 `chapter_open_max` 장까지 전부 열린다(`stageUnlocked` · INTERFACE §2-7 · 그 뒤의 장은 켜도 잠긴다 · R227)
  */
 export function createGameSystem(deps) {
@@ -348,7 +350,8 @@ export function createGameSystem(deps) {
             visitFilter: 'normal',   // 거르기 — 수색이 데려올 최저 등급(normal = 거르지 않음 · 「대기소」 레벨 visit_filter_lv 가 연다 · 2026-11-17 R534) — 수색 줄에 등록한 영웅마다 하나 · `from` · `trip` = 이번 수색을 나선 시각 · 몇 번째 수색인가(이야기만 쓴다 · 2026-11-16 R508) · 아무도 없으면 안 돈다 (2026-11-14 · R492 · ~~기본 시계 `visit`~~ 2026-11-15 삭제)
             arena: freshArena(),       // 결투장 ELO {rating, peak, win, draw, loss} — `arenaRecord` 만 바꾼다 (2026-10-18 · arena_design §8 · INTERFACE §4)
             colosseum: { cleared: 0 }, // 콜로세움 오른 층 — `colosseumRecord` 만 바꾼다 (2026-10-18 · arena_design §7)
-            arenaDefense: null,        // 콜로세움 방어 편성 번호 · null = 등록 안 함 — `setArenaDefense` 만 바꾼다 (2026-11-11 · arena_design §9)
+            endless: { cleared: 0 },   // 무한의 탑 오른 층 — `endlessRecord` 만 바꾼다 (2026-11-19 · R554 · endless_tower_design §0)
+            arenaDefense: null,       // 콜로세움 방어 편성 번호 · null = 등록 안 함 — `setArenaDefense` 만 바꾼다 (2026-11-11 · arena_design §9)
             // 의뢰 게시판 — 빈 채로 시작한다. 선술집을 짓고 화면이 그릴 때 `commissionFill` 이 채운다 (R153)
             commissions: { cards: [], fame: 0, sins: {} },
             // 편성 — **편성 1 에 시작 영웅 셋**(아래에서 채운다 · ADR-0227) · 편성 2 부터는 빈 파티다.
@@ -747,6 +750,7 @@ export function createGameSystem(deps) {
             const rating = Number.isFinite(a.rating) ? a.rating : B.arena_elo_start;
             s.arena = { rating, peak: Math.max(rating, Number.isFinite(a.peak) ? a.peak : rating), win: count(a.win), draw: count(a.draw), loss: count(a.loss) };
             s.colosseum = { cleared: count(s.colosseum?.cleared) };
+            s.endless = { cleared: count(s.endless?.cleared) };   // 무한의 탑 오른 층 — 같은 규칙 · 버전 무변경 (2026-11-19 · R554)
         }
         // 제작 재료 · 회차 — 없으면 「가진 재료가 없다 · 만든 적이 없다」가 정확한 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R96)
         s.materials = s.materials ?? {};
@@ -1839,6 +1843,84 @@ export function createGameSystem(deps) {
         state.materials[stake.id] -= stake.need;
         it.temper = { act: a.id, v: stake.v };
         return { ok: true, act: a.id, effect: a.effect, tier: stake.tier, v: stake.v };
+    }
+
+    /* ── 인챈트 (item_design §8 — 2026-11-19 · R553 · 대장간 강화 옆 · INTERFACE §2-7) ── */
+
+    /** 그 아이템의 인챈트 줄 `{i, a}` 또는 null — `ench` 가 선 첫 줄(장비 하나에 하나 · 맨 뒤) */
+    const enchantLineOf = it => {
+        const i = (it?.affixes ?? []).findIndex(a => a?.ench);
+        return i >= 0 ? { i, a: it.affixes[i] } : null;
+    };
+    /** 고르기 대기 줄(`item.enchPend`) — 접사 꼴이 아니면 null(망가진 값은 없는 것으로 읽는다 · 버전 무변경) */
+    const enchantPendOf = it => (it?.enchPend && typeof it.enchPend === 'object' && typeof it.enchPend.stat === 'string' ? it.enchPend : null);
+
+    /**
+     * 인챈트 칸 상태 한 덩어리 — **판정을 여기서 다 낸다**(`upgradeState` 와 같은 규칙) · 없는 아이템 · 상자 칸은 null.
+     * `eligible` = 레어 이상 · 계열표가 있다(`item.enchantable`) · `open` = 대장간(강화와 같은 문 `upgrade_item`) · `cost` = `{gold, dust}`(대상이 아니면 null) ·
+     * `gold` · `dust` = 가진 골드 · 최하급 가루 · `line` = 지금 인챈트 줄 `{i, a}` · `pending` = 고르기 대기 줄 · `options` = 후보 옵션 수 ·
+     * `can` = 열렸고 · 대상이고 · 대기가 없고 · 후보가 있고 · 비용이 된다
+     */
+    function enchantState(state, itemUid) {
+        const it = state.items[itemUid];
+        if (!it || it.box) return null;
+        const eligible = I.enchantable(it), cost = I.enchantCost(it), open = hasFeature(state, 'upgrade_item');
+        const gold = state.resources.gold, dust = (state.materials ?? {})[DUST_ID] ?? 0;
+        const line = enchantLineOf(it), pending = enchantPendOf(it), options = I.enchantCount(it);
+        return { eligible, open, cost, gold, dust, line, pending, options,
+            can: open && eligible && !pending && options > 0 && !!cost && gold >= cost.gold && dust >= cost.dust };
+    }
+
+    /**
+     * 인챈트 1회 — 골드 · 최하급 가루를 내고 **굴린다**(`item.enchantOption` — 랜덤 줄 한 줄과 같은 규칙).
+     * 인챈트 줄이 없으면 맨 뒤에 바로 붙고(`applied: true`) · 있으면 `item.enchPend` 에 대기로 선다(`applied: false` — `enchantPick` 이 고른다).
+     * 거절은 `missing` → `sealed` → `unbuilt` → `noEnchant` → `undecided` → `noOption` → `gold` → `materials` 순 · 거절이면 아무것도 안 바뀐다.
+     * 가방 · 착용을 가리지 않는다 · 의뢰는 안 센다.
+     * rng = `deriveSeed(seed ^ 0xE4C1, 다음 회차)` — 굴린 뒤에 회차(`counters.enchant`)를 올리고 비용을 낸다: 회차 번호가 결과를 정하고 대기가 세이브에 남아
+     *   새로고침으로 되굴릴 수 없다. 후보는 `noOption` 이 이미 셌으니 굴림은 언제나 줄 하나를 낸다(못 내면 상태를 안 바꾸고 `noOption`)
+     */
+    function enchantItem(state, itemUid) {
+        const it = state.items[itemUid];
+        if (!it) return { ok: false, err: 'missing' };
+        if (it.box) return { ok: false, err: 'sealed' };
+        if (!hasFeature(state, 'upgrade_item')) return { ok: false, err: 'unbuilt' };
+        if (!I.enchantable(it)) return { ok: false, err: 'noEnchant' };
+        if (enchantPendOf(it)) return { ok: false, err: 'undecided' };
+        if (!(I.enchantCount(it) > 0)) return { ok: false, err: 'noOption' };
+        const cost = I.enchantCost(it);
+        if (state.resources.gold < cost.gold) return { ok: false, err: 'gold' };
+        if (((state.materials ?? {})[DUST_ID] ?? 0) < cost.dust) return { ok: false, err: 'materials' };
+        const n = (state.counters.enchant ?? 0) + 1;
+        const a = I.enchantOption(makeRng(deriveSeed(state.seed ^ 0xE4C1, n)), it);
+        if (!a) return { ok: false, err: 'noOption' };
+        state.counters.enchant = n;
+        state.resources.gold -= cost.gold;
+        if (cost.dust > 0) state.materials[DUST_ID] -= cost.dust;
+        if (!enchantLineOf(it)) {
+            it.affixes = [...(it.affixes ?? []), a];
+            return { ok: true, applied: true, line: a, cost };
+        }
+        it.enchPend = a;
+        return { ok: true, applied: false, line: a, cost };
+    }
+
+    /**
+     * 고르기 — `takeNew` 가 `true` 면 대기 줄이 인챈트 줄 자리에 들어가고 · `false` 면 원래 줄이 남는다 · 어느 쪽이든 대기를 지운다 ·
+     * 비용 없음 · rng 0. 거절은 `missing` → `invalid`(`takeNew` 가 불리언이 아니다) → `noPending`
+     */
+    function enchantPick(state, itemUid, takeNew) {
+        const it = state.items[itemUid];
+        if (!it) return { ok: false, err: 'missing' };
+        if (typeof takeNew !== 'boolean') return { ok: false, err: 'invalid' };
+        const pend = enchantPendOf(it);
+        if (!pend) return { ok: false, err: 'noPending' };
+        if (takeNew) {
+            const cur = enchantLineOf(it), a = { ...pend, ench: true };
+            if (cur) it.affixes[cur.i] = a;
+            else it.affixes = [...(it.affixes ?? []), a];
+        }
+        delete it.enchPend;
+        return { ok: true, took: takeNew };
     }
 
     /* ── 제작 (item_design §7-1 확정 2026-09-15 — R96) ── */
@@ -6104,10 +6186,11 @@ export function createGameSystem(deps) {
         return TC.bonusOf(tacticState(state, party, no).slots.filter(s => s.open && s.active).map(applied));
     }
 
-    /** 결투장이 편성 `no` 에서 가져가는 것 — 전술 보너스 · 재고에서 채운 물약 칸 · 칸 수 (INTERFACE §2-17 · 2026-10-03). 상태 불변 · rng 0 */
+    /** 결투장이 편성 `no` 에서 가져가는 것 — 전술 보너스 · 재고에서 채운 물약 칸 · 칸 수 (INTERFACE §2-17 · 2026-10-03) ·
+     *  내 도감 옵션(`codex` — `heroCombat` 이 쓰는 그 값 · 모든 결투에 붙는다 · 2026-11-19 · R554 · arena_design §0). 상태 불변 · rng 0 */
     function arenaLoadout(state, no = state.preset) {
         const p = presetAt(state, no) ?? curPreset(state);
-        return { tactic: tacticBonus(state, p.party, no), potions: fillSlots(state, p), slotMax: limitsOf(state).potionSlots, potionHp: potionHpOf(p) };
+        return { tactic: tacticBonus(state, p.party, no), potions: fillSlots(state, p), slotMax: limitsOf(state).potionSlots, potionHp: potionHpOf(p), codex: codexOptions(state) };
     }
 
     /** 콜로세움 방어 편성이 올라갈 때 싣는 것 — 물약 칸(재고에서 채운 칸의 id · 자리 순 — `arenaLoadout` 과 같은 칸) · 마시는 기준 ·
@@ -6165,6 +6248,84 @@ export function createGameSystem(deps) {
         const advanced = !!won && floor === cleared + 1;
         state.colosseum = { cleared: advanced ? floor : cleared };
         return { ok: true, cleared: state.colosseum.cleared, advanced };
+    }
+
+    /* ── 무한의 탑 [2026-11-19 · R554 · endless_tower_design §0 · INTERFACE §2-7] ──
+       몬스터만 상대하는 층 사다리 — 한 층 = `endless_floor.csv` 한 줄 = 그 스테이지의 그 종류 라운드 하나를 **원정 규칙 그대로** 단판으로 돈다(`battle.createRun` 의 `rules.round`).
+       오르는 규칙은 시련의 탑과 같다 · **보상이 없다** — 결과로 바뀌는 세이브 값은 오른 층(`state.endless`) 하나다 · 영웅은 원정에서 빠지지 않는다 */
+
+    // 층 표 — 한 줄 = 한 층 · 틀리면 생성 때 던진다 (INTERFACE §2-7 `endlessFloors`)
+    const ENDLESS = (deps.endlessFloors ?? []).map(r => ({ no: r.floor, stageId: r.stage_id, type: r.round_type, level: r.monster_level, difficulty: r.difficulty_id }));
+    (() => {
+        const bad = why => { throw new Error(`endless_floor: ${why}`); };
+        if (!ENDLESS.length) bad('행이 없다');
+        // 그 장에 일반몹이 있나 — 일반몹 풀이 빈 칸(챕터보스 칸)의 정예 층은 그 장 일반몹에서 뽑는다(battle `chapterPool` 과 같은 규칙)
+        const chapterHasNormals = ch => Object.values(deps.stages).some(s => s.chapter === ch && BT.stagePool(s).length);
+        ENDLESS.forEach((f, i) => {
+            if (f.no !== i + 1) bad(`${i + 1}째 줄 — floor '${f.no}' (1 부터 빈틈없이 오름차순)`);
+            const st = deps.stages[f.stageId];
+            if (!st) bad(`${f.no}층 — stage_id '${f.stageId}' (stage.csv 에 없다)`);
+            if (f.type !== 'elite' && f.type !== 'boss') bad(`${f.no}층 — round_type '${f.type}' (elite · boss)`);
+            const has = BT.stageRounds(st).some(r => r.round_type === f.type);
+            if (f.type === 'boss' && (!has || !st.boss_monster_idx)) bad(`${f.no}층 — 스테이지 ${f.stageId} 에 보스 라운드가 없다`);
+            if (f.type === 'elite' && !has && (BT.stagePool(st).length || !chapterHasNormals(st.chapter)))
+                bad(`${f.no}층 — 스테이지 ${f.stageId} 에 정예 라운드가 없다(일반몹 풀이 빈 칸만 그 장 일반몹으로 대신한다)`);
+            if (!Number.isInteger(f.level) || f.level < 1 || f.level > B.hero_level_cap) bad(`${f.no}층 — monster_level '${f.level}' (1 ~ hero_level_cap)`);
+            if (!diffById[f.difficulty]) bad(`${f.no}층 — difficulty_id '${f.difficulty}' (difficulty_tier.csv 에 없다)`);
+        });
+    })();
+
+    const endlessState = state => {
+        const cleared = state.endless?.cleared ?? 0;
+        return { cleared, next: cleared + 1 };
+    };
+
+    /** 한 층의 도전 결과 — `colosseumRecord` 와 같은 규칙(열린 가장 높은 층을 이기면 한 층 · 깬 층 재승리 · 지기는 그대로) · `state.endless` 를 바꾼다 · in-place */
+    function endlessRecord(state, floor, won) {
+        const { cleared } = endlessState(state);
+        if (!Number.isInteger(floor) || floor < 1) return { ok: false, err: 'floor' };
+        if (floor > cleared + 1) return { ok: false, err: 'locked' };
+        const advanced = !!won && floor === cleared + 1;
+        state.endless = { cleared: advanced ? floor : cleared };
+        return { ok: true, cleared: state.endless.cleared, advanced };
+    }
+
+    /**
+     * 그 층의 런 — 파티는 **원정 출발과 같은 길**(`partyUnits` — 도감 옵션 · 전술 · 진형 · 시작 순서 · 물약 칸 = 재고에서 채운 칸 · 마시는 기준 · 칸 수)로 세운다.
+     *   만남 = 층 시드 하나(`deriveSeed([balance.csv:endless_seed], 층)` — 같은 층 = 같은 무리) · 보스 층은 호위 수 고정(`[balance.csv:endless_boss_escorts]`) ·
+     *   단 · 장 디버프 · 부류 버프 · 도감 사다리는 원정 런 그대로(`createRun` 이 스테이지 · 단으로 고른다). 세이브를 안 바꾼다
+     */
+    function endlessRun(state, F, rng, no) {
+        const p = presetAt(state, no) ?? curPreset(state);
+        const units = partyUnits(state, p.party, no);
+        const round = F.type === 'boss' ? { type: F.type, escorts: B.endless_boss_escorts } : { type: F.type };
+        const run = BT.createRun(units, F.stageId, rng, F.level, fillSlots(state, p), limitsOf(state).potionSlots, null, F.difficulty,
+            id => codexLadder(state, id), potionHpOf(p), { round }, [deriveSeed(B.endless_seed, F.no)]);
+        return { run, units };
+    }
+
+    /** 그 층의 무리 — **전투 없이** 라운드를 열기만 한다(`advance(0)`) · `enemies` = 그 `round` 이벤트의 적(관전 카드 모양) · 등장 지연은 고정 씨앗 · 모르는 층이면 null · 상태 불변 */
+    function endlessPreview(state, floor, no = state.preset) {
+        const F = ENDLESS.find(f => f.no === floor);
+        if (!F) return null;
+        const { run } = endlessRun(state, F, makeRng(0), no);
+        run.advance(0);
+        return { type: F.type, enemies: run.result.timeline.find(e => e.e === 'round')?.enemies ?? [] };
+    }
+
+    /**
+     * 한 층 단판 — 끝까지 돈 결과 + `{mode: 'endless'}` · 세운 파티 유닛. **보상을 정산하지 않는다**(경험치 · 골드 · 드롭 · 책 · 도감 처치 · 함께 잡은 수 ·
+     *   의뢰 · 메인미션 — 결과의 보상 칸은 읽지 않고 버린다) · 물약 재고도 안 준다 · 오른 층은 부르는 쪽이 `endlessRecord` 로 적는다 (endless_tower_design §0)
+     */
+    function endlessFight(state, floor, rng, no = state.preset) {
+        const F = ENDLESS.find(f => f.no === floor);
+        if (!F) return { ok: false, err: 'floor' };
+        if (floor > endlessState(state).cleared + 1) return { ok: false, err: 'locked' };
+        const p = presetAt(state, no) ?? curPreset(state);
+        if (p.party.length !== B.party_size_max) return { ok: false, err: 'noParty' };
+        const { run, units } = endlessRun(state, F, rng, no);
+        while (run.next()?.ended === false);
+        return { ok: true, result: { ...run.result, mode: 'endless' }, units };
     }
 
     /** 콜로세움 방어 편성 — 등록한 편성 번호 · null = 등록 안 함 (arena_design §9 · 2026-11-11) */
@@ -6332,7 +6493,7 @@ export function createGameSystem(deps) {
 
     return {
         newGame, serialize, deserialize, canLoad, addExpTime,
-        heroById, heroItems, heroCombat, heroCombatIf, heroCombatWith, upgradeState, upgradeItem, temperItem, makeLevels, makeState, makeItem, potionState, makePotion,
+        heroById, heroItems, heroCombat, heroCombatIf, heroCombatWith, upgradeState, upgradeItem, temperItem, enchantState, enchantItem, enchantPick, makeLevels, makeState, makeItem, potionState, makePotion,
         codexLevel, codexNext, codexMaxLevel, codexLevelOf, codexSteps, codexSegments, codexShare, codexCapOf, codexSegmentNo, codexOptionOf, codexLineOf, codexLadder, codexOptions, codexExpOf, codexKillExp,
         skillCapMax,   // 책 업그레이드 상한 — 끝 하나 (2026-10-20 · R293 · ~~스킬 도감~~)
         equipTarget, equip, unequip, autoEquip, salvage, salvagePreview, setItemLock, openBox, boxRarities, claimMail, claimAllMail, salvageView, setSalvageCell, setSalvageBase, setSalvageWord, setSalvageLevel, saveSalvageSlot, loadSalvageSlot, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf, bagOf,
@@ -6359,5 +6520,7 @@ export function createGameSystem(deps) {
         navTodo,     // 탭 할 일 점 (2026-10-16 · ADR-0637)
         notificationState,   // 상단 종 — 원정 준비 점검 · 처리 대기 (2026-10-30 · 초보 안내 걷음 2026-11-17)
         mainMissionState, mainMissionSync, mainMissionClaim,   // 메인미션 — 판정 · 기록 · 받기 (2026-11-17 · R524 · INTERFACE §2-7)
+        // 무한의 탑 — 층 표(사본) · 오른 층 · 적기 · 무리 미리보기 · 단판 (2026-11-19 · R554 · INTERFACE §2-7)
+        endlessFloors: ENDLESS.map(f => ({ ...f })), endlessState, endlessRecord, endlessPreview, endlessFight,
     };
 }

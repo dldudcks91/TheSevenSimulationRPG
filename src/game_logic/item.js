@@ -132,6 +132,11 @@ export function createItemSystem(data) {
         if (!(Number.isInteger(n) && n >= 0)) throw new Error(`item: balance.csv item_random_lines_${r} '${n}' — 0 이상 정수`);
     }
     if (!(B.item_base_roll_sd > 0)) throw new Error(`item: balance.csv item_base_roll_sd '${B.item_base_roll_sd}' — 0 보다 커야 한다`);
+    // 인챈트 비용 키 (R553) — 시작값 0 이상 · 가루는 정수 · 등급 배수(레어 · 에픽 · 레전더리)는 0 보다 크다
+    if (!(Number.isFinite(B.enchant_gold_base) && B.enchant_gold_base >= 0) || !(Number.isInteger(B.enchant_dust_base) && B.enchant_dust_base >= 0))
+        throw new Error(`item: balance.csv enchant_gold_base '${B.enchant_gold_base}' · enchant_dust_base '${B.enchant_dust_base}' — 0 이상(가루는 정수)`);
+    for (const r of ['rare', 'epic', 'legendary'])
+        if (!(B[`enchant_cost_mult_${r}`] > 0)) throw new Error(`item: balance.csv enchant_cost_mult_${r} '${B[`enchant_cost_mult_${r}`]}' — 0 보다 커야 한다`);
     if (!(B.hero_level_cap > 1)) throw new Error(`item: balance.csv hero_level_cap '${B.hero_level_cap}'`);
     const WG = data.weaponGroups;
     const AG = data.armorGroups ?? {};   // armor_group.csv — {slot: {groupId: def}} · 갑옷군 3 (2026-09-16 · R107) + 투구 · 장갑 · 신발 갈래 (2026-09-18)
@@ -567,8 +572,9 @@ export function createItemSystem(data) {
      * @param n 랜덤 줄 수(`randomLines`)
      * @param classes 발동 공격 풀의 직업(무기 = 무기군 직업 · 갑옷 = [])
      * @param plusPool 특정 스킬 +n 의 스킬 후보 — 비면 그 옵션이 안 뜬다 · **장비는 안 준다**(2026-10-21 R303 — ~~무기 `plusPoolWeapon` · 갑옷 `plusPoolArmor` · 투구 버프 풀~~ · 유니크 논의 대기)
+     * @param seed 이미 붙은 옵션 키 `used` · 잡은 원소 `element` 의 시작값 — 인챈트가 그 장비의 다른 줄을 넘긴다(R553 · `enchantSeed`) · 드롭은 안 준다(빈 시작)
      */
-    function familyOptions(rng, rows, sins, words, n, ilvl, classes, plusPool = [], oneElement = false) {
+    function familyOptions(rng, rows, sins, words, n, ilvl, classes, plusPool = [], oneElement = false, seed = null) {
         const options = [], byKey = {};
         for (const r of rows) {                                       // 첫 등장 순 = CSV 행 순서
             const key = `${r.sin}:${r.option}`;
@@ -577,8 +583,8 @@ export function createItemSystem(data) {
             if (isProc(r.stat)) byKey[key].proc = true;
             if (r.stat === SKILL_PLUS) byKey[key].plus = true;
         }
-        const out = [], used = new Set();
-        let element = null;   // 이 아이템의 원소 — 무기만(`oneElement`) · 원소 줄이 처음 붙을 때 잡는다
+        const out = [], used = new Set(seed?.used ?? []);
+        let element = seed?.element ?? null;   // 이 아이템의 원소 — 무기만(`oneElement`) · 원소 줄이 처음 붙을 때 잡는다
         const open = o => !used.has(o.key) && !(o.plus && !plusPool.length);
         // 줄 하나 — 후보가 비어도 넷은 소비한다 · `band` = 그 줄의 범위 비율(메인 = 단어 · 랜덤 = 랜덤 줄 · R436)
         const line = (cands, band) => {
@@ -604,6 +610,76 @@ export function createItemSystem(data) {
         const rb = randomBand(ilvl);
         for (let i = 0; i < n; i++) line(options.filter(o => open(o) && !MAIN_ONLY_SINS.has(o.sin)), rb);
         return out;
+    }
+
+    /* ── 인챈트 (item_design §8 · 2026-11-19 · R553 · INTERFACE §2-5) — 레어 이상에 줄 하나 · 랜덤 줄 규칙 그대로 ── */
+
+    /** 인챈트를 받는 등급 — 레어 이상(유니크 포함) · 비용 배수는 `[balance.csv:enchant_cost_mult_<rarity>]`(유니크는 레전더리 키 — 강화와 같은 규칙) */
+    const ENCHANT_RARITIES = new Set(['rare', 'epic', 'legendary', 'unique']);
+    const enchantMultOf = rarity => B[`enchant_cost_mult_${rarity === 'unique' ? 'legendary' : rarity}`];
+    /**
+     * 그 장비가 굴린 계열표 — 드롭이 `familyOptions` 에 넘긴 것과 같은 행 · `{rows, classes, oneElement}` 또는 null:
+     *   무기 = 무기군 `appliesTo` · 발동 풀은 무기군 직업 · 원소 하나 / 방어구 넷 = 그 부위(장갑은 낀 특성이 시기 변형을 거른다 — `GLOVES_ENVY_BY_TRAIT`) /
+     *   반지 · 목걸이 = 계열표 · 무기군 · 표가 없으면 null
+     */
+    function enchantTable(item) {
+        const slot = item?.slot;
+        if (slot === 'weapon') {
+            const g = WG[item.group];
+            return g ? { rows: sinOpts.filter(r => appliesTo(r, g)), classes: g.classes ?? [], oneElement: true } : null;
+        }
+        if (isArmor(slot)) {
+            const tr = groupDef(slot, item.group)?.trait ?? null;
+            const ts = tr ? (item.affixes ?? []).find(a => a.src === 'fixed' && tr.stats.includes(a.stat))?.stat ?? null : null;
+            const keep = slot === 'gloves' ? GLOVES_ENVY_BY_TRAIT[ts] ?? null : null;
+            return { rows: armorSinOpts.filter(r => r.slot === slot && !(keep && r.sin === 'envy' && !keep(r.stat))), classes: [], oneElement: false };
+        }
+        if (slot === 'ring' || slot === 'amulet') return { rows: familyRows(slot), classes: [], oneElement: false };
+        return null;
+    }
+    /** 인챈트 대상인가 — 레어 이상이고 계열표가 있다 (일반 · 매직 · 무기군 없는 옛 무기는 아니다) */
+    const enchantable = item => !!item && ENCHANT_RARITIES.has(item.rarity) && Number.isFinite(enchantMultOf(item.rarity)) && !!enchantTable(item);
+    /**
+     * 그 장비의 **다른 줄**(인챈트 줄 · 베이스 줄 · `src` 없는 옛 줄 제외)이 이미 든 옵션 키와 잡은 원소 — 인챈트 후보에서 뺀다.
+     * 지금 인챈트 줄의 옵션은 넣지 않는다 — 같은 옵션에 새 값이 다시 나올 수 있다(값 올리기 · item_design §8)
+     */
+    function enchantSeed(item, tbl) {
+        const used = new Set();
+        let element = null;
+        for (const a of item.affixes ?? []) {
+            if (a.ench || a.src === 'fixed' || !a.src) continue;
+            const r = tbl.rows.find(x => x.sin === a.src && x.stat === a.stat);
+            if (r) used.add(`${r.sin}:${r.option}`);
+            if (tbl.oneElement && !element && elementOf(a.stat)) element = elementOf(a.stat);
+        }
+        return { used, element };
+    }
+    /** 인챈트 후보 옵션 수 — 계열표의 옵션(죄종 × 번호) 중 오만 · 특정 스킬 +n · 다른 줄에 이미 붙은 옵션을 뺀 수 · rng 0 · 대상이 아니면 0 */
+    function enchantCount(item) {
+        const tbl = enchantable(item) ? enchantTable(item) : null;
+        if (!tbl) return 0;
+        const { used } = enchantSeed(item, tbl), keys = new Set();
+        for (const r of tbl.rows) if (!MAIN_ONLY_SINS.has(r.sin) && r.stat !== SKILL_PLUS) keys.add(`${r.sin}:${r.option}`);
+        return [...keys].filter(k => !used.has(k)).length;
+    }
+    /**
+     * 인챈트 줄 하나 굴림 — 랜덤 줄 한 줄과 같다(`familyOptions` · 메인 줄 0 · 랜덤 줄 1 · 시작값 = `enchantSeed`) · `{…접사, ench: true}` 또는 null ·
+     * **아이템을 안 바꾼다**. rng 소비(계약 — INTERFACE §5-2): 옵션 1 → 변형 1 → 값 1 → 스킬 1 · 대상이 아니거나 후보가 비어도 넷
+     */
+    function enchantOption(rng, item) {
+        const tbl = enchantable(item) ? enchantTable(item) : null;
+        if (!tbl) { for (let i = 0; i < 4; i++) rng(); return null; }   // 소비 수는 언제나 넷 — 줄 하나의 굴림 수(`familyOptions` 의 `line`)
+        const a = familyOptions(rng, tbl.rows, [], [], 1, item.ilvl, tbl.classes, [], tbl.oneElement, enchantSeed(item, tbl))[0];
+        return a ? { ...a, ench: true } : null;
+    }
+    /**
+     * 인챈트 한 번의 비용 `{gold, dust}` 또는 null(대상이 아니다) — 골드 = round(`enchant_gold_base` × `equip_upgrade_gold_ilvl_growth`^(ilvl − 1) × 등급 배수) ·
+     * 최하급 가루 = `enchant_dust_base` × 레벨 구간 수(`equip_upgrade_mat_ilvl_band` — 강화와 같은 구간) × 등급 배수 · **횟수 · 강화 단계와 무관**(item_design §8)
+     */
+    function enchantCost(item) {
+        if (!enchantable(item)) return null;
+        const m = enchantMultOf(item.rarity), bands = 1 + Math.floor((item.ilvl - 1) / B.equip_upgrade_mat_ilvl_band);
+        return { gold: Math.round(B.enchant_gold_base * Math.pow(B.equip_upgrade_gold_ilvl_growth, item.ilvl - 1) * m), dust: Math.round(B.enchant_dust_base * bands * m) };
     }
 
     /**
@@ -883,8 +959,9 @@ export function createItemSystem(data) {
      * 무기 피해 범위에 **베이스 옵션 「무기 데미지 +%」**(`src: 'fixed'` 의 `atk_pct` — 화면 이름 2026-10-15)를 먹인 값 [2026-09-23 사용자 지시] — 아이템 툴팁 메인 옵션이 부른다.
      * 양끝마다 곱하고 한 번 반올림한다 — `hero.computeCombat` 의 괄호 곱과 같은 규칙. 다른 % (죄종 칸 · 랜덤 · 마스터리 · 도감)는 안 든다 —
      * 그 합은 영웅이 정하는 괄호라 캐릭터 시트가 든다. 베이스 줄이 없는 옛 무기는 `weaponDamage` 그대로.
-     * **색욕 최소 · 최대 데미지**(`dmg_min_flat` · `dmg_max_flat` · 고정 수치)는 무기 % 를 곱한 양끝 **뒤에** 더하고, 최소가 최대를 넘으면 최대 = 최소 + 1 이다
-     *   [2026-10-05 · R206 · item_design §1 — D2 방식]. 레벨당 최대 데미지는 영웅 레벨이 정해 여기 안 든다(시트가 든다) — `hero.computeCombat` 과 같은 순서
+     * **최소 · 최대 데미지**(`dmg_min_flat` · `dmg_max_flat` · 고정 수치)는 무기 범위 양끝에 **먼저** 더하고 그 합에 무기 % 를 같이 곱한다
+     *   [2026-11-19 · R556 — 〔옛: 무기 % 를 곱한 양끝 뒤에 더한다(10-05 R206)〕] · 최소가 최대를 넘으면 최대 = 최소 + 1 이다 [2026-10-05 · R206 · item_design §1 — D2 방식].
+     *   레벨당 최소 · 최대 데미지는 영웅 레벨이 정해 여기 안 든다(시트가 든다) — `hero.computeCombat` 과 같은 순서
      */
     function weaponDamageFixed(item) {
         const d = weaponDamage(item);
@@ -896,8 +973,8 @@ export function createItemSystem(data) {
             else if (a.stat === 'dmg_max_flat') hi += a.v;
         }
         if (!pct && !lo && !hi) return d;
-        const min = Math.round(d.min * (1 + pct)) + lo;
-        const max = Math.round(d.max * (1 + pct)) + hi;
+        const min = Math.round((d.min + lo) * (1 + pct));
+        const max = Math.round((d.max + hi) * (1 + pct));
         return { min, max: min > max ? min + 1 : max };
     }
 
@@ -985,6 +1062,7 @@ export function createItemSystem(data) {
     function optionSources(item) {
         const main = new Set(item?.sins ?? []);
         return (item?.affixes ?? []).map(a => {
+            if (a.ench) return 'enchant';   // 인챈트 줄 — 죄종으로 안 센다 · 다른 판정보다 먼저 (R553 · item_design §8)
             if (a.src === 'fixed') return 'fixed';
             if (main.delete(a.src)) return a.src;
             return 'random';
@@ -1298,5 +1376,6 @@ export function createItemSystem(data) {
         return item;
     }
 
-    return { fillZh, rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBasesAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, wordRanks, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgradeRisk, upgrade, downgrade, effective, weaponDamage, weaponDamageFixed, weaponBasePreview, armorBasePreview, sinOptionTable, implicitFixed, optionSources, optionRange, optionTableRange, optionScore, autoEquipScore, skillPlusOf, procSkillLevel };
+    return { fillZh, rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBasesAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, wordRanks, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgradeRisk, upgrade, downgrade, effective, weaponDamage, weaponDamageFixed, weaponBasePreview, armorBasePreview, sinOptionTable, implicitFixed, optionSources, optionRange, optionTableRange, optionScore, autoEquipScore, skillPlusOf, procSkillLevel,
+        enchantable, enchantCost, enchantCount, enchantOption };
 }

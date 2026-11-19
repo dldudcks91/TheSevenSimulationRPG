@@ -557,10 +557,10 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 ## icons/arena/ — 시련의 탑 · 결투장 휘장 [신설 2026-10-18]
 
-`<tier_id>.png` 여섯(`arena_tier.csv` 의 `tier_id` — 브론즈 ~ 챔피언) + `colosseum.png` · `duel.png` · `gladiator.png` — 512 투명 · 긴 변 0.88 · 중앙. 등급 휘장은 시련의 탑 사다리 · 결투장 리그가 같이 읽는다(`mock.js:arenaArt` · SCREEN_DESIGN §1 · ADR-0670) · 표에 행이 늘면 같은 이름의 그림을 더한다(없으면 칸이 이름 글씨만 든다).
+`<tier_id>.png` 여섯(`arena_tier.csv` 의 `tier_id` — 브론즈 ~ 챔피언) + `colosseum.png` · `duel.png` · `gladiator.png` · `endless.png`(무한의 탑 박스 머리 — 뿔 달린 돌탑 · 송곳니 문) — 512 투명 · 긴 변 0.88 · 중앙. 등급 휘장은 시련의 탑 사다리 · 결투장 리그가 같이 읽는다(`mock.js:arenaArt` · SCREEN_DESIGN §1 · ADR-0670) · 표에 행이 늘면 같은 이름의 그림을 더한다(없으면 칸이 이름 글씨만 든다).
 
 - **휘장은 한 벌이다** — 여섯 다 같은 방패 꼴이고 등급이 오를 때마다 하나씩 붙는다(검 하나 → 교차한 검 → 월계수 → 날개 · 보석 → 큰 날개 · 다이아 → 왕관). 등급을 더 그리면 이 순서를 잇는다
-- **원본** — Codex 이미지 생성 · 3×3 시트 · 도박장 시트(`gamble/source/sheet_01_codex.png`)를 기준 그림으로 붙여 같은 low-poly 결로 뽑았다(지시문 `source/sheet_01_prompt.txt`). 같은 지시문의 다른 판은 `source/sheet_01b_codex_unused.png`
+- **원본** — Codex 이미지 생성 · 3×3 시트 · 도박장 시트(`gamble/source/sheet_01_codex.png`)를 기준 그림으로 붙여 같은 low-poly 결로 뽑았다(지시문 `source/sheet_01_prompt.txt`). 같은 지시문의 다른 판은 `source/sheet_01b_codex_unused.png` · **`endless.png`** 는 `source/sheet_02_codex.png`(2×2 · 첫째 칸 · 참조 = 이 폴더의 colosseum · duel · gladiator 셋 `sheet_02_ref.png` · 지시문 `sheet_02_prompt.txt` · 2026-11-19)
 - **자르기** — `cut.py` 의 칸 선 · 격자선 규칙이 이 시트에서 틀렸다(둘째 줄 날개가 시트 폭을 거의 채워 한 줄이 「격자선」으로 지워졌다). 고친 판이 `source/cut_sheet_01.py` 다 — 줄 선을 손으로 주고 · 격자선 규칙을 끄고 · 칸 선을 넘는 조각은 중심이 든 칸으로 보낸다
 
 ## icons/items/box/ · icons/mail/ — 첫 클리어 상자 · 우편함 · 알림
@@ -579,7 +579,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 | 출처 | 탭 | 원본 |
 |---|---|---|
-| **Codex 발주 — 굵은 도형 실루엣** | 원정 · 편성 · 캐릭터 · 건설 · 선술집 · 상점 · 대장간 · 도서관 · 시련의 탑 · 결투장 · 도감 · 실험실 | `source/codex/sheet_0N_codex.png`(2×2 시트 · 검정 실루엣 · 흰 바탕) · 붙인 참조 `sheet_0N_ref.png` · 지시문 `sheet_0N_prompt.txt`. 01 ~ 04 = 열 탭(참조 = 직접 그린 24 격자 단순판 · 04 넷째 칸 시련의 탑 깃발판은 안 쓴다) · 05 = 시련의 탑(셋째 칸 · 그림체 참조는 02) · 06 = 캐릭터(넷째 칸 뿔 머리띠 · 그림체 참조는 02 · 물건 참조 없음). 쓰지 않는 칸은 버린 후보다. 칸을 잘라 검정 → 불투명 백색으로 뒤집고 긴 변 0.88 로 맞췄다 |
+| **Codex 발주 — 굵은 도형 실루엣** | 원정 · 편성 · 캐릭터 · 건설 · 선술집 · 상점 · 대장간 · 도서관 · 무한의 탑 · 시련의 탑 · 결투장 · 도감 · 실험실 | `source/codex/sheet_0N_codex.png`(2×2 시트 · 검정 실루엣 · 흰 바탕) · 붙인 참조 `sheet_0N_ref.png` · 지시문 `sheet_0N_prompt.txt`. 01 ~ 04 = 열 탭(참조 = 직접 그린 24 격자 단순판 · 04 넷째 칸 시련의 탑 깃발판은 안 쓴다) · 05 = 시련의 탑(셋째 칸 · 그림체 참조는 02) · 06 = 캐릭터(넷째 칸 뿔 머리띠 · 그림체 참조는 02 · 물건 참조 없음) · 07 = 무한의 탑(넷째 칸 뿔 달린 요새 탑 · 참조 = 지금 탭 열 장을 검정으로 모은 판 · 2026-11-19). 쓰지 않는 칸은 버린 후보다. 칸을 잘라 검정 → 불투명 백색으로 뒤집고 긴 변 0.88 로 맞췄다 |
 | **game-icons.net (CC BY 3.0)** — **출처 표기가 조건**(도움말 탭 「도움말」 폴더 「아이콘 출처」 · `help.help.credits.*`) | 탐험(Lorc) · 연구소(Lorc) · 도움말(sbed) | `source/<저작자>/<이름>.svg`(공식 저장소 game-icons/icons 의 경로 그대로 · 바꾼 열 탭의 옛 원본도 남겨 둔다) · 라이선스 원문 `source/license.txt`. 검은 바탕 사각을 걷고 흰 칠로 512 에 그린 뒤 긴 변 0.88 |
 
 **연구소만 긴 변 1.0** 이다(목 때문에 세로가 길어 0.88 이면 옆 아이콘보다 작아 보였다 · ADR-1031). game-icons 탭이 다 빠지거나 저작자가 바뀌면 도움말 출처 문구도 같이 고친다. 탭이 새로 서면 그림을 같이 정한다. SCREEN_DESIGN §1 · ADR-1028 · ADR-1029.
@@ -869,4 +869,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-11-18*
+*마지막 업데이트: 2026-11-19*
