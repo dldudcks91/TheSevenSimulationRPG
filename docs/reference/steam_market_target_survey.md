@@ -1,11 +1,11 @@
 # Steam 시장 · 타겟 조사 — 세미 아이들 루팅 파티 RPG
 
 > 목적: **누가 이 게임을 왜 하나 · 타겟에 맞출까 넓힐까 · Steam 에서 살아남는 조건**을 게이머 시점과 시장 자료로 따진 조사와 의견. 발단 — 「너가 게이머의 입장에서 우리 게임을 진행한다면 왜 이게임을 진행할지, 어떤 유저가할지를 분석해보자」 → 「다시한번 천천히 분석해볼래?」 → 「문서로 저장해봐」(2026-10-17 사용자).
-> 조사 방식: 2026-10-17 · 웹 조사(Steam appreviews API 직접 조회 · steampageanalyzer · GameDiscoverCo · howtomarketagame 원문 · 기사 · Steam 리뷰 원문 약 3,600건) + 저장소 문서([PLAN_user_review.md](../../PLAN_user_review.md) · [.claude/skills/qa/metrics.md](../../.claude/skills/qa/metrics.md) · `ux_notes.md` · [DEV_PLAN.md](../client/DEV_PLAN.md) §3-3). **게임을 직접 돌리지 않았다** — 우리 게임 시점은 10-12 실플레이와 10-17 측정에서 가져왔다. Reddit 은 접근이 막혔고, 배포판 퍼널(Firestore)은 관리자 로그인이 필요해 읽지 못했다.
+> 조사 방식: 2026-10-17 · 웹 조사(Steam appreviews API 직접 조회 · steampageanalyzer · GameDiscoverCo · howtomarketagame 원문 · 기사 · Steam 리뷰 원문 약 3,600건) + 저장소 문서(10-12 실플레이 평가 · [.claude/skills/qa/metrics.md](../../.claude/skills/qa/metrics.md) · [ux_notes.md](../../.claude/skills/qa/ux_notes.md) · [DEV_PLAN.md](../client/DEV_PLAN.md) §3-3). **게임을 직접 돌리지 않았다** — 우리 게임 시점은 10-12 실플레이와 10-17 측정에서 가져왔다. Reddit 은 접근이 막혔고, 배포판 퍼널(Firestore)은 관리자 로그인이 필요해 읽지 못했다.
 > ⚠ **이 문서는 조사와 의견이지 결정이 아니다.** 확정은 [GAME_DESIGN.md §9](../game_design/GAME_DESIGN.md) 가 갖는다. §0 · §3 ~ §6 의 권고는 조사자 의견이다.
 > ⚠ 인용된 수치는 **그 게임 · 그 시장의 것**이다 — `src/data/*.csv` 로 옮기지 않는다. 판매량 · 매출은 전부 제3자 추정이다.
 > ⚠ 우리 게임의 측정값(§1)은 **10-17 스냅샷**이다 — 현재 값은 [metrics.md](../../.claude/skills/qa/metrics.md) 가 갖는다.
-> 짝 문서: [PLAN_user_review.md](../../PLAN_user_review.md)(10-12 실플레이) · [melvoridle/10_reception_business.md](melvoridle/10_reception_business.md)(Melvor 흥행 · 리뷰) · [lootun/00_overview.md](lootun/00_overview.md)(Lootun 구조) · [offline_arena_survey.md](offline_arena_survey.md)
+> 짝 문서: [ux_notes.md](../../.claude/skills/qa/ux_notes.md)(10-12 실플레이 평가) · [melvoridle/10_reception_business.md](melvoridle/10_reception_business.md)(Melvor 흥행 · 리뷰) · [lootun/00_overview.md](lootun/00_overview.md)(Lootun 구조) · [offline_arena_survey.md](offline_arena_survey.md)
 
 신뢰도 표기 — **[원문]** 1차 출처 직접 확인 · **[API]** Steam appreviews 직접 조회 · **[2차]** 보도 · 요약 인용 · **[추정]** 제3자 추정 또는 조사자 계산 · **[의견]** 조사자 판단
 
@@ -24,7 +24,7 @@
 
 ## 1. 게이머로서 해 본다
 
-측정 — [metrics.md](../../.claude/skills/qa/metrics.md) M5 · M7(10-17 · 사람 흉내 플레이와 시뮬 80시드) · [PLAN_user_review.md](../../PLAN_user_review.md)(10-12 · 35분 실플레이).
+측정 — [metrics.md](../../.claude/skills/qa/metrics.md) M5 · M7(10-17 · 사람 흉내 플레이와 시뮬 80시드) · [ux_notes.md](../../.claude/skills/qa/ux_notes.md)(10-12 · 35분 실플레이).
 
 | 시점 | 겪는 것 | 느낌 [의견] |
 |---|---|---|

@@ -21,7 +21,7 @@ TheSevenSimulationRPG의 기존 초상·배경·스킨·죄종 색·아이콘과
 - 캐릭터는 능력치로 진입한다. 상세 II–상세 I–능력치–장비–창고–가방 순서이며 능력치에서 오른쪽으로 밀면 상세 I가 들어온다. 반대 방향으로 밀면 능력치로 돌아온다. 선택은 갱신과 메뉴 이동 후 유지한다.
 - 끄는 동안 본문이 따라오며 짧은 이동은 복귀한다. 세로 스크롤·다중 터치·취소는 페이지 전환을 확정하지 않는다. 첫/마지막에서 되감지 않으며 안쪽 카드 끝에서 바깥 메뉴로 넘어가지 않는다.
 - 고용·강화·전직·출전 같은 실행 버튼은 눌러 확정한다. 실행 버튼 위에서 끄는 동작이 실행 클릭으로 바뀌지 않게 한다. 진형 드래그·영웅 순서 변경·아이템 조작·스킬 판·입력 필드는 기존 손동작을 유지한다.
-- PC 미리보기에서도 마우스 드래그가 가능하며 축소 배율을 보정한다. 동작 감소 설정은 애니메이션을 생략하고 화면 전환은 유지한다. [조사와 계획](MOBILE_GESTURE_PLAN.md), ADR-1129를 따른다.
+- PC 미리보기에서도 마우스 드래그가 가능하며 축소 배율을 보정한다. 동작 감소 설정은 애니메이션을 생략하고 화면 전환은 유지한다. 아래 「참고」의 제스처 조사와 ADR-1129를 따른다.
 
 ## 한 화면에서 결정하는 선택지
 
@@ -65,5 +65,9 @@ TheSevenSimulationRPG의 기존 초상·배경·스킨·죄종 색·아이콘과
 - [Diablo Immortal 공식 UI 설명](https://news.blizzard.com/en-us/article/23797159/making-diablo-immortal-for-pc): 플랫폼별 HUD 크기와 전장 시야의 균형. 모바일의 조작 영역을 데스크톱 전체 축소로 해결하지 않는 근거다.
 - [AFK Journey 공개 실기 화면](https://gnn.gamer.com.tw/detail.php?sn=253677): 세로 전장과 가장자리 상태·조작부 배치를 참고했다. 게임 이미지나 자산은 복사하지 않는다.
 - [Melvor Idle 모바일 전투 화면](https://github.com/MelvorIdle/melvoridle.github.io/issues/2313): 전투 정보와 관리 메뉴를 함께 다루는 화면을 검토했다. 실제 구현은 본 게임의 카드·파티 구조를 따른다.
+- [AFK Journey / FARLIGHT](https://play.google.com/store/apps/details?id=com.farlightgames.igame.gp&hl=en) · [AFK Journey 영웅 안내](https://www.levelwinner.com/into-esperia-a-beginners-guide-to-afk-journey/): 선택한 영웅을 둔 채 능력치·장비 정보를 오가고, 기본/공격/방어 상세를 나눠 펼친다. 능력치 옆 상세 두 장의 근거다.
+- [Legend of Slime / LoadComplete](https://play.google.com/store/apps/details?id=com.loadcomplete.slimeidle&hl=en) · [화면 모음](https://gamedesignernawe.tistory.com/214) · [스킬 화면](https://www.levelwinner.com/legend-of-slime-idle-rpg-beginners-guide-tips-tricks-strategies-to-get-stronger/): 상단 진행·중앙 플레이·하단 도구를 나누고, 장착 상태·보유 목록·실행 버튼을 한 카드에 둔다. 정보 탐색이 주요 행동의 자리를 밀어내지 않게 한 근거다.
+- [Idle Slayer / Pablo Leban](https://play.google.com/store/apps/details?id=com.pabloleban.IdleSlayer&hl=en): 오프라인 보상을 한 카드에 모은다. 지금 대상의 상세는 한 장에 두고 비교할 때 장을 넘기는 근거다.
+- 위 셋(제스처 조사 · 2026-11-14)은 클릭 UI의 사례이며 스와이프 동작의 증거로 쓰지 않는다. 검증 산출물은 `output/mobile-gestures-2026-11-14/`.
 
-*마지막 업데이트: 2026-11-15*
+*마지막 업데이트: 2026-11-20*

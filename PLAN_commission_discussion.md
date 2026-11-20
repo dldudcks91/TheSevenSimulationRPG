@@ -1,6 +1,6 @@
 # 의뢰 죄종 — 논의할 것 (11-16 재배분 뒤)
 
-규칙 본문은 [base_expedition_design.md](docs/game_design/base_expedition_design.md) §1-3이고, 미정 상세는 같은 문서 「남은 것」 「의뢰 죄종 · 도감 죄종 칸」 ①~⑫에 있다. 실행 기록은 [PLAN_commission_sins.md](PLAN_commission_sins.md)(R513 · ADR-1212). 아래 숫자는 명성 1 · 지금 CSV 값이며 전부 ⚠임시다.
+규칙 본문은 [base_expedition_design.md](docs/game_design/base_expedition_design.md) §1-3이고, 미정 상세는 같은 문서 「남은 것」 「의뢰 죄종 · 도감 죄종 칸」 ①~⑫에 있다. 실행 기록은 DEV_PLAN R513 · ADR-1212. 아래 숫자는 명성 1 · 지금 CSV 값이며 전부 ⚠임시다.
 
 ## 지금 모양
 
@@ -81,4 +81,4 @@
 - **폭식 제작의 도안 (⑧)**: 도안이 들어오면 「도안이 있을 때만 굴린다」.
 
 ---
-*마지막 업데이트: 2026-11-16*
+*마지막 업데이트: 2026-11-20*

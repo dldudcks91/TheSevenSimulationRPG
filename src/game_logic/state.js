@@ -5,9 +5,10 @@
  * 저장은 **엔진 중립 JSON** 이다: 상태 객체 자체가 평문 데이터라 serialize 는 버전 도장만 찍는다.
  * localStorage 접근은 ui/storage.js 어댑터 한 곳에서만 한다 (CLAUDE.md 이식성 규칙 3).
  *
- * 세이브 형식 v47 (2026-11-12 · 레벨 1 스킬 포인트 · R435)
+ * 세이브 형식 v50 (2026-11-20 · 선술집 보유 칸 구매)
  * {
  *   version, seed, createdAt, savedAt,
+ *   rosterSlots — 선술집에서 구매한 영웅 보유 칸 수. 기본 한도는 balance.csv 가 정한다.
  *   expMs    — **누적 원정 플레이 시간**(ms · 배속을 탄다). 더하는 것은 `addExpTime` 하나 · 얼마를 더할지는 화면이 정한다 · 없으면 0 · 버전 무변경 (2026-10-05 · ADR-0514 — 옛 `playMs` 는 로드가 지운다)
  *   resources: {gold, stigma},   — 가루는 v43 부터 재료 사다리(`materials.dust` · 2026-10-29 · R373)
  *   materials: {yieldId: n}   — 재료 사다리(철광석 · 약초 · 목재 · 가루 × 단계 다섯 — 최하급 = `lab_material.csv:material_id` · 가루 `dust` · 위 단계 = `material_synth.csv`). 없으면 {} (2026-09-15 · R96 · v43 가루 · R373) · 연구소 · 분해 · 도박장 · 합성이 채운다
@@ -109,7 +110,7 @@ import { TARGETS as CN_TARGETS } from './construction.js';
 // 의뢰 어휘 — 로드가 모르는 어휘의 카드를 거르는 데만 쓴다(같은 취급 · R153)
 import { AXES as CM_AXES } from './commission.js';
 
-export const SAVE_VERSION = 49;
+export const SAVE_VERSION = 50;
 
 /**
  * @param {object} deps
@@ -129,6 +130,11 @@ export function createGameSystem(deps) {
     const { hero: H, item: I, battle: BT, skill: SK, tactic: TC, construction: CN, gamble: GB, commission: CM, balance: B } = deps;
     if (!Number.isInteger(B.advance_row_points) || B.advance_row_points < 1)
         throw new Error('advance: advance_row_points must be a positive integer');
+    const rosterPrices = String(B.roster_slot_prices).split('|').map(Number);
+    if (rosterPrices.some(price => !Number.isSafeInteger(price) || price <= 0))
+        throw new Error('tavern: roster_slot_prices must contain positive integer prices');
+    const maxRoster = B.roster_cap + rosterPrices.length;
+    const rosterSlotCount = n => Number.isSafeInteger(n) ? Math.min(rosterPrices.length, Math.max(0, n)) : 0;
     const clone = v => JSON.parse(JSON.stringify(v));
 
     const positions = deps.equipSlots.map(s => s.id);
@@ -253,7 +259,7 @@ export function createGameSystem(deps) {
      */
     function limitsOf(state) {
         const out = {
-            bag: B.inventory_cap, stash: B.stash_cap, roster: B.roster_cap, party: B.party_size_max,
+            bag: B.inventory_cap, stash: B.stash_cap, roster: B.roster_cap + rosterSlotCount(state?.rosterSlots), party: B.party_size_max,
             presets: B.party_preset_count, expeditions: B.concurrent_expedition_parties,
             potionSlots: B.potion_slot_max, upgrade: B.equip_upgrade_max,
             tavernCandidates: B.tavern_candidates,
@@ -270,14 +276,12 @@ export function createGameSystem(deps) {
             const key = ADD_KEY[target] ?? target;
             if (key in out) out[key] += n;      // 준비 중인 더하기(일꾼 칸 등)는 붙을 상한이 아직 없다
         }
-        // 로스터 — 연구소 수색 줄 「로스터」 지점이 레벨마다 더한다 · 건물은 안 늘린다 [2026-11-16 사용자 「로스터 커지는건 그냥 연구소로」 · R516 · INTERFACE §2-7]
-        if (state) out.roster += rosterNodeAdd(labLv(state, VISIT_KEY, 'roster'));
         // 관리자 모드 — 표가 아직 여는 랭크를 두지 않은 단계까지 연다(제작 레벨 · 물약 단계) [2026-09-28 사용자 지시 「Admin 누르면 다 되도록」 · 개발 장치]
         if (openAll()) {
             out.makeLevels = Math.max(out.makeLevels, makeLevelList.length);
             out.potionTier = Math.max(out.potionTier, ...potionRows.map(p => p.tier));
             out.chapters = Math.max(out.chapters, B.chapter_open_max);
-            out.roster = Math.max(out.roster, B.roster_cap + rosterNodeAdd(labNodeRow(VISIT_KEY, 'roster')?.max ?? 0));   // 로스터도 끝까지(옛 선술집 r7 과 같은 자리 · R516)
+            out.roster = Math.max(out.roster, maxRoster);
         }
         // 장은 이번 버전이 여는 마지막 장까지 — 관리자 모드여도 그 뒤는 안 열린다 [2026-10-09 사용자 지시 · ADR-0552 · R227]
         out.chapters = Math.min(out.chapters, B.chapter_open_max);
@@ -343,6 +347,7 @@ export function createGameSystem(deps) {
             stageDecks: {},   // 칸 × 난이도 × 라운드의 판 장부 — 이겨야 소진한다(v44).
             runs: newRuns(), reports: [], notice: null,   // 부대마다 한 자리 — 안 나간 편성은 null (v38 · 다부대)
             tavern: { rerolledAt: null, hired: [] },
+            rosterSlots: 0,
             shop: null,      // 상단 목록 `{level, rerolledAt, sold, books}` — 교체도 구매도 한 적 없으면 null(레벨 1 · 교체 가능) (INTERFACE §4)
             explores: [],   // 나가 있는 탐험 [{chapter, spot, preset, squad, heroes, startedAt, no}] (편성 2026-10-10 · R234) — 한 지점에 한 줄 (2026-10-09 · INTERFACE §4)
             joins: [],       // 수색 칸 [{no, hero, arrivedAt, src}] — 도착 순 · 돌려보낼 때까지 남는다 (2026-10-09 · 2026-10-19 · INTERFACE §4)
@@ -583,21 +588,28 @@ export function createGameSystem(deps) {
      *   옛 r4 ~ r7 을 지은 수만큼 「로스터」 지점 레벨(지점 최대에서 자른다 · 이미 더 높으면 그대로) · 영웅은 줄이지 않는다 · rng 0
      */
     function upgradeV48(s) {
-        const OLD = { visit: 2, gamble: 3, rosterFrom: 4 };
+        const OLD = { visit: 2, gamble: 3, rosterFrom: 4, rosterThrough: 7 };
         const t = Number.isInteger(s.buildings?.tavern) ? s.buildings.tavern : 0;
         const to = t >= OLD.gamble ? CN.reach('gamble')?.rank : t >= OLD.visit ? CN.reach('lab_visit')?.rank : null;
         if (to != null) s.buildings.tavern = to;
-        const r = labNodeRow(VISIT_KEY, 'roster'), add = Math.max(0, t - OLD.rosterFrom + 1);
-        if (r && add > 0) {
+        const add = Math.max(0, Math.min(t, OLD.rosterThrough) - OLD.rosterFrom + 1);
+        if (add > 0) {
             if (!s.labNodes || typeof s.labNodes !== 'object') s.labNodes = {};
             const k = labNodeKey(VISIT_KEY, 'roster'), cur = Number.isInteger(s.labNodes[k]) ? s.labNodes[k] : 0;
-            s.labNodes[k] = Math.max(cur, Math.min(r.max, add));
+            s.labNodes[k] = Math.max(cur, add);
         }
         s.version = 49;
         return s;
     }
 
-    /** **v38 ~ v49 를 연다** — 옛 버전은 한 단계씩 올린다. 그 전은 끊었다(2026-09-23 · 다부대 · 파일 머리 참조) */
+    /** 완료된 로스터 연구를 보유 칸으로 옮긴다. 진행 중 연구의 환급은 삭제된 지점의 공통 처리가 맡는다. */
+    function upgradeV49(s) {
+        s.rosterSlots = Math.max(rosterSlotCount(s.rosterSlots), rosterSlotCount(s.labNodes?.['visit:roster']));
+        s.version = 50;
+        return s;
+    }
+
+    /** v38 이후를 연다. 옛 버전은 한 단계씩 올린다. */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
         const separateAdvancePoints = obj.version <= 44;
@@ -614,9 +626,11 @@ export function createGameSystem(deps) {
         if (src.version === 46) src = upgradeV46(src === obj ? clone(obj) : src);
         if (src.version === 47) src = upgradeV47(src === obj ? clone(obj) : src);
         if (src.version === 48) src = upgradeV48(src === obj ? clone(obj) : src);
+        if (src.version === 49) src = upgradeV49(src === obj ? clone(obj) : src);
         if (src.version !== SAVE_VERSION)
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         const s = clone(src);
+        s.rosterSlots = rosterSlotCount(s.rosterSlots);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
         // 고정 지급 캐릭터의 옛 이름을 이미 저장된 세이브에서도 갱신한다.
         for (const h of s.heroes) if (h.face === 'goblin_butler' && h.name?.ko === '집사 고블린')
@@ -652,6 +666,7 @@ export function createGameSystem(deps) {
         // 마스터리 — **표에 맞춘다** [2026-09-22 · R138 · 버전 무변경] — 그 영웅의 트리에 없는 노드(표에서 걷힌 칸)와 상한을 넘은 랭크는
         //   포인트로 돌려준다. 롤백이 무료라(skill_design §5) 돌려주는 것이 곧 이관이고, 남겨 두면 못 빼는 포인트가 된다
         for (const h of s.heroes) {
+            if (h.mastery) h.mastery = H.migrateMasteryRanks(h);
             const own = new Map(H.masteryNodesFor(h).map(n => [n.id, n]));
             for (const [id, r] of Object.entries(h.mastery ?? {})) {
                 const keep = Math.min(r, own.get(id)?.maxRank ?? 0);
@@ -899,12 +914,14 @@ export function createGameSystem(deps) {
         delete s.labLevels;
         const nodesIn = s.labNodes && typeof s.labNodes === 'object' ? s.labNodes : {};
         s.labNodes = {};
-        for (const [k, v] of Object.entries(nodesIn)) {
+        for (const [key, v] of Object.entries(nodesIn)) {
+            const k = key === 'res:burst' ? 'res:offline' : key;
             const [line, node] = k.split(':');
             const r = labNodeRow(line, node);
-            if (r && Number.isInteger(v) && v >= 1) s.labNodes[k] = Math.min(v, r.max);
+            if (r && Number.isInteger(v) && v >= 1) s.labNodes[k] = Math.max(s.labNodes[k] ?? 0, Math.min(v, r.max));
         }
         const labR = s.labResearch;
+        if (labR?.line === RES_KEY && labR.node === 'burst') labR.node = 'offline';
         const paidOk = p => p && Number.isFinite(p.gold) && p.gold >= 0 && (p.mat == null || (typeof p.mat.id === 'string' && Number.isInteger(p.mat.n) && p.mat.n >= 0));
         // 표에서 빠진 지점을 연구 중이던 세이브 — 낸 비용을 돌려준다(2026-11-12 R454 — 「등록 칸」 지점 삭제 · 모양이 틀린 것은 그대로 안 돌려준다 ·
         //   끝난 레벨은 위 정리가 지우고 안 돌려준다 — 끝난 연구는 되돌리지 않는다)
@@ -3322,10 +3339,10 @@ export function createGameSystem(deps) {
     /** 효과 → 그 효과의 첫 손질 — 옛 세이브의 숫자 몫(11-14 담금질)을 읽는 자리 하나(`pendingOf`) */
     const TEMPER_BY_EFFECT = new Map([...TEMPER.values()].reverse().map(a => [a.effect, a]));
     const RES_KEY = 'res', VISIT_KEY = 'visit', TRAIN_KEY = 'train', GAMBLE_KEY = 'gamble', LIB_KEY = 'lib';
-    /** 연구소 줄 — 순서 = 화면 · 대박 굴림 순서 (INTERFACE §5-3) */
+    /** 연구소 줄 — 화면 순서 (INTERFACE §5-3) */
     const LAB_LINES = [RES_KEY, VISIT_KEY, TRAIN_KEY, GAMBLE_KEY, LIB_KEY];
     /** 지점 id — 무엇을 미는가는 코드가 안다(값 · 비용 · 시간은 표 — INTERFACE §5-3) · 재료 지점 셋 = 그 재료의 생산 배수 */
-    const LAB_NODE_IDS = [...MAT_POSTS, 'burst', 'interval', 'quality', 'waiting', 'roster', 'speed', 'range', 'income'];   // ~~seats~~ 2026-11-12 R454 — 등록 칸은 `B.lab_seats`
+    const LAB_NODE_IDS = [...MAT_POSTS, 'offline', 'relief', 'burst', 'interval', 'quality', 'waiting', 'speed', 'range', 'income'];
     const LAB_NODES = deps.labNodes ?? [];
     for (const n of LAB_NODES) {
         if (!LAB_LINES.includes(n.line) || !LAB_NODE_IDS.includes(n.node)) throw new Error(`state: lab_node.csv — 모르는 줄 · 지점 '${n.line}:${n.node}' (INTERFACE §5-3)`);
@@ -3336,10 +3353,13 @@ export function createGameSystem(deps) {
     const labLineNodes = line => LAB_NODES.filter(n => n.line === line).sort((a, b) => a.ord - b.ord);
     const labNodeKey = (line, node) => `${line}:${node}`;
     const labLv = (state, line, node) => state.labNodes?.[labNodeKey(line, node)] ?? 0;
-    /** 지점 값 — base + 레벨 × per_lv · 범위 = 상한까지의 거리 max(0, base − 레벨 × per_lv) (lab_node.csv) ·
-     *  수색 「간격」도 같은 식이다 — 레벨 0 이 기준(2026-11-14 · 레벨 1 이 줄을 열던 때의 「레벨 − 1」을 걷었다) */
-    const nodeValue = (r, lv) => r.node === 'range' ? Math.max(0, r.base - lv * r.perLv)
-        : r.base + (r.line === VISIT_KEY && r.node === 'waiting' ? Math.min(lv, B.visit_filter_lv - 1) : lv) * r.perLv;   // 대기소 — 거르기를 여는 레벨부터 칸은 멈춘다 (R534)
+    /** 지점 값 — base + 레벨 × per_lv · 오프라인 시간의 기본값은 공통 생산 상한이다 (lab_node.csv). */
+    const nodeValue = (r, lv) => {
+        if (r.node === 'offline') return B.dispatch_offline_cap_hours + lv * r.perLv;
+        if (r.node === 'range') return Math.max(0, r.base - lv * r.perLv);
+        const level = r.line === VISIT_KEY && r.node === 'waiting' ? Math.min(lv, B.visit_filter_lv - 1) : lv;
+        return r.base + level * r.perLv;
+    };
     /** 그 레벨이 여는 기능 — 수색 「대기소」 레벨 `visit_filter_lv` = 거르기 · 아니면 null (2026-11-17 사용자 「대기칸을 기능느낌으로」 · R534) */
     const labNodeOpens = (r, lv) => (r.line === VISIT_KEY && r.node === 'waiting' && lv === B.visit_filter_lv ? 'filter' : null);
     if (!(Number.isInteger(B.visit_filter_lv) && B.visit_filter_lv >= 1)) throw new Error(`state: balance.csv 의 visit_filter_lv 는 1 이상의 정수다 (${B.visit_filter_lv})`);
@@ -3365,6 +3385,8 @@ export function createGameSystem(deps) {
     }
     /** 재료별 생산. 재료마다 소수 진행도를 저장해 정산 사이에도 보존한다. */
     const DISPATCH_HOUR_MS = 3600 * 1000;   // 단위 변환(시간 → ms) — 값이 아니다
+    const BASE_OFFLINE_MS = B.dispatch_offline_cap_hours * DISPATCH_HOUR_MS;
+    const resourceOfflineHours = state => labVal(state, RES_KEY, 'offline', B.dispatch_offline_cap_hours);
     /** 지금 생산하는 재료 — 「자원」 줄이 열렸으면 셋 다(단계 없음 · 영웅 등록과 무관 — 2026-10-21 · 2026-10-25 R356) · 미니게임도 같은 문을 쓴다 */
     function openProductionNodes(state) {
         return labLineOpen(state, RES_KEY) ? LAB_MATERIALS : [];
@@ -3425,13 +3447,9 @@ export function createGameSystem(deps) {
     /** 대박 확률 — 「대박」 지점 + 운 효과 · 0 ~ 1 */
     const burstPct = (state, line, fx) => Math.min(1, Math.max(0, labVal(state, line, 'burst', 0) + fx.burst));
     /** `at` = 효과를 재는 시각(시계가 마지막으로 정산된 시각 — 지난 구간은 그 구간 앞의 명단 · 숙련으로 센다) */
-    function dispatchRate(state, post, at) {
-        const m = MAT_BY_POST[post];
-        if (!m || !labLineOpen(state, RES_KEY) || !(m.yieldPerHour > 0)) return null;
+    function dispatchBaseRate(state, material, at) {
         const fx = labEffects(state, RES_KEY, at);
-        // 표 수량 × 그 재료 지점(채광 · 채집 · 벌목) × 힘 효과 — ~~「획득량」 × 맨 위 단계면 「깊이」~~(2026-10-25 · R356 — 재료에 단계가 없다)
-        const perHour = m.yieldPerHour * labVal(state, RES_KEY, post, 1) * fx.speed;
-        return { yieldId: m.id, perHour, intervalSec: DISPATCH_HOUR_MS / perHour / 1000, burst: burstPct(state, RES_KEY, fx) };
+        return material.yieldPerHour * labVal(state, RES_KEY, material.post, 1) * fx.speed;
     }
     /** 대박 굴림 — 완성 n 개마다 1회(확률 p) · 맞은 수. 연구소 수열(INTERFACE §5-2 — 굴릴 것이 있을 때만 회차가 오른다) */
     function labBurst(state, n, p) {
@@ -3443,11 +3461,75 @@ export function createGameSystem(deps) {
         return hit;
     }
     const productionClock = (state, post) => (state.resourceProduction ?? []).find(c => c.post === post);
-    function productionAmount(c, r, now, until = Infinity) {
+    function productionAmount(c, r, now, until = Infinity, cap = BASE_OFFLINE_MS) {
         const at = Number.isFinite(c?.at) ? c.at : now;
-        const cap = B.dispatch_offline_cap_hours * DISPATCH_HOUR_MS;
         const dt = Math.min(Math.max(0, Math.min(now, until) - at), cap);
         return (c?.carry ?? 0) + dt * r.perHour / DISPATCH_HOUR_MS;
+    }
+    function creditProduction(entry, amount) {
+        const sum = entry.carry + amount;
+        const n = Math.floor(sum + 1e-9);
+        entry.carry = Math.max(0, sum - n);
+        entry.stock += n;
+        entry.gained += n;
+    }
+    function updateResourceRates(entries, maxBonus) {
+        const stocks = entries.map(entry => entry.stock);
+        const lowest = Math.min(...stocks), highest = Math.max(...stocks);
+        const relief = lowest < highest ? (1 - lowest / highest) * maxBonus : 0;
+        for (const entry of entries) {
+            entry.relief = entry.stock === lowest ? relief : 0;
+            entry.perHour = entry.baseRate * (1 + entry.relief);
+        }
+    }
+    /** 재료가 완성되는 경계에서 세 재고를 함께 갱신한다. 정산 주기에 따라 보너스가 달라지지 않는다. */
+    function advanceResourceProduction(entries, maxBonus) {
+        const origin = Math.min(...entries.map(entry => entry.at));
+        let elapsed = 0;
+        for (const entry of entries) creditProduction(entry, 0);
+        for (;;) {
+            updateResourceRates(entries, maxBonus);
+            const active = [];
+            let step = Infinity;
+            for (const entry of entries) {
+                const from = entry.at - origin, end = entry.until - origin;
+                if (end <= from || elapsed >= end) continue;
+                if (elapsed < from) {
+                    step = Math.min(step, from - elapsed);
+                    continue;
+                }
+                active.push(entry);
+                const nextUnit = (1 - entry.carry) * DISPATCH_HOUR_MS / entry.perHour;
+                step = Math.min(step, end - elapsed, nextUnit);
+            }
+            if (!Number.isFinite(step)) return;
+            for (const entry of active) creditProduction(entry, step * entry.perHour / DISPATCH_HOUR_MS);
+            elapsed += step;
+        }
+    }
+    /** 저장 상태를 건드리지 않고 다음 생산량과 현재 시간당 수량을 구한다. */
+    function projectResourceProduction(state, now, untilByPost = null) {
+        const cap = resourceOfflineHours(state) * DISPATCH_HOUR_MS;
+        const entries = openProductionNodes(state).map(material => {
+            const { post, id } = material;
+            const c = productionClock(state, post);
+            const at = Number.isFinite(c?.at) ? c.at : now;
+            return {
+                post, id, at, until: Math.min(now, at + cap, untilByPost?.[post] ?? Infinity),
+                baseRate: dispatchBaseRate(state, material, at), carry: c?.carry ?? 0,
+                stock: state.materials?.[id] ?? 0, gained: 0,
+            };
+        }).filter(entry => Number.isFinite(entry.baseRate) && entry.baseRate > 0);
+        const maxBonus = labVal(state, RES_KEY, 'relief', 0);
+        if (maxBonus > 0) advanceResourceProduction(entries, maxBonus);
+        else {
+            for (const entry of entries) {
+                const hours = Math.max(0, entry.until - entry.at) / DISPATCH_HOUR_MS;
+                creditProduction(entry, hours * entry.baseRate);
+            }
+            updateResourceRates(entries, 0);
+        }
+        return entries;
     }
     /** 생산하는 재료 전부 정산한다. 새로 열린 재료는 이 시각에서 시작한다. */
     function dispatchSettle(state, now) {
@@ -3458,36 +3540,24 @@ export function createGameSystem(deps) {
         let total = 0;
         if (!Number.isFinite(now)) return { gained, total };
         state.materials = state.materials ?? {};
-        const nodes = openProductionNodes(state);
-        const keys = new Set(nodes.map(m => m.post));
-        state.resourceProduction = (state.resourceProduction ?? []).filter(c => keys.has(c.post));
-        for (const { post } of nodes) {
-            let c = productionClock(state, post);
-            if (!c) { c = { post, at: now, carry: 0 }; state.resourceProduction.push(c); }
-            const r = dispatchRate(state, post, c.at);
-            if (!r) continue;
-            const sum = productionAmount(c, r, now, untilByPost?.[post]);
-            const made = Math.floor(sum + 1e-9);
-            c.at = Math.max(c.at, now);
-            c.carry = Math.max(0, sum - made);
-            const n = made + labBurst(state, made, r.burst);   // 대박 — 완성 한 개마다 하나 더 (2026-10-21 · R298)
-            if (n > 0) {
-                state.materials[r.yieldId] = (state.materials[r.yieldId] ?? 0) + n;
-                gained[r.yieldId] = (gained[r.yieldId] ?? 0) + n;
-                total += n;
-                noteMaterial(state, r.yieldId, n);   // 의뢰 「재료」 — 꺼진 동안 · 대박 포함 (R457)
-            }
+        const entries = projectResourceProduction(state, now, untilByPost);
+        state.resourceProduction = entries.map(entry => ({ post: entry.post, at: Math.max(entry.at, now), carry: entry.carry }));
+        for (const { id, stock, gained: n } of entries) {
+            if (n <= 0) continue;
+            state.materials[id] = stock;
+            gained[id] = n;
+            total += n;
+            noteMaterial(state, id, n);   // 의뢰 「재료」 (R457)
         }
         return { gained, total };
     }
     /** 재료의 게이지와 생산량 — 상태 불변. 연구소가 안 섰거나 모르는 재료는 null. */
     function dispatchProgress(state, post, now) {
         if (!Number.isFinite(now)) return null;
-        const c = productionClock(state, post);
-        const r = dispatchRate(state, post, c?.at ?? now);
-        if (!r) return null;
-        const sum = productionAmount(c, r, now);
-        return { ...r, frac: Math.max(0, sum - Math.floor(sum + 1e-9)) };
+        const entry = projectResourceProduction(state, now).find(c => c.post === post);
+        if (!entry) return null;
+        const { id, perHour, relief, carry } = entry;
+        return { yieldId: id, perHour, intervalSec: DISPATCH_HOUR_MS / perHour / 1000, relief, frac: carry };
     }
 
     /* ── 도박장 줄 — 시간마다 골드 [신설 2026-10-21 사용자 「말그대로 돈버는걸로 일단」 · 「선술집 r4를 짓고 열리도록」 · R298] ──
@@ -3514,7 +3584,7 @@ export function createGameSystem(deps) {
     }
 
     /* ── 훈련 줄 — 등록한 영웅이 경험치를 받는다 [신설 2026-10-21 사용자 「훈련은 거기에 투입된 영웅들이 기본적으로 받는거임」 · R298] ──
-       한 시간에 지금 레벨의 필요 경험치 × `[balance.csv:train_level_per_hour]` × 「속도」 × 힘 효과 · **상한 = 로스터 최고 레벨 − 「범위」 거리**
+       시간당 XP = 지금 레벨의 필요 XP × `[balance.csv:train_level_per_hour]` × 힘 효과 + 「속도」의 고정 XP · **상한 = 로스터 최고 레벨 − 「범위」 거리**
        (레벨을 앞에서 끌어올리는 것은 원정이다) · 등록은 겸직이라 원정에 나간 영웅도 받는다 · 소수 경험치는 `labClock.train.carry` 에 남는다 */
     const trainCap = state => Math.max(0, ...state.heroes.map(h => h.level)) - labVal(state, TRAIN_KEY, 'range', 0);
     /** 훈련이 그 영웅에게 채울 다음 목표 — 레벨이면 그 레벨의 필요 XP(상한 `cap` 아래만) · 만렙이면 다음 별의 XP · 더 오를 게 없으면 `null` */
@@ -3527,12 +3597,13 @@ export function createGameSystem(deps) {
         if (!labLineOpen(state, TRAIN_KEY)) { clk.train = null; return { xp: [], books }; }
         if (!clk.train) { clk.train = { at: now, carry: {} }; return { xp: [], books }; }
         const at = clk.train.at;
-        const hours = Math.min(Math.max(0, Math.min(now, until) - at), B.dispatch_offline_cap_hours * DISPATCH_HOUR_MS) / DISPATCH_HOUR_MS;
+        const hours = Math.min(Math.max(0, Math.min(now, until) - at), BASE_OFFLINE_MS) / DISPATCH_HOUR_MS;
         const carry = {};
         const ups = [];
         if (hours > 0) {
             const fx = labEffects(state, TRAIN_KEY, at);
-            const mult = B.train_level_per_hour * labVal(state, TRAIN_KEY, 'speed', 1) * fx.speed;
+            const mult = B.train_level_per_hour * fx.speed;
+            const bonusXp = labVal(state, TRAIN_KEY, 'speed', 0);
             const cap = trainCap(state);
             for (const uid of labRegList(state, TRAIN_KEY)) {
                 const h = heroById(state, uid);
@@ -3540,10 +3611,10 @@ export function createGameSystem(deps) {
                 let left = hours, x = clk.train.carry[uid] ?? 0;
                 while (left > 1e-12) {
                     // 만렙 뒤 별 [2026-11-11 사용자 「연구소 훈련도 그냥 쌓으라고해」 · hero_design §5] — 만렙이면 다음 별까지 쌓는다 ·
-                    //   속도는 그대로 「지금 레벨(= 만렙 행)의 필요 경험치」 · 범위 상한(`cap`)은 레벨에만 건다 · 별이 다 차면 멈춘다
+                    //   기본 XP는 만렙 행의 필요 경험치로 계산한다. 범위 상한(`cap`)은 레벨에만 건다. 별이 다 차면 멈춘다.
                     const need = trainNeed(h, cap);
                     if (need === null) break;
-                    const rate = H.xpNeeded(h.level) * mult;
+                    const rate = H.xpNeeded(h.level) * mult + bonusXp;
                     if (!(rate > 0)) break;
                     const t = Math.max(0, need - h.xp - x) / rate;
                     if (t <= left) { H.grantXp(h, need - h.xp, null); x = 0; left -= t; continue; }
@@ -3687,10 +3758,10 @@ export function createGameSystem(deps) {
         const R = state.labResearch;
         let limits = null;
         if (R && R.until <= now) {
-            const cap = B.dispatch_offline_cap_hours * DISPATCH_HOUR_MS;
-            const until = c => Number.isFinite(c?.at) ? c.at + cap : Infinity;
+            const resourceCap = resourceOfflineHours(state) * DISPATCH_HOUR_MS;
+            const until = (c, cap = BASE_OFFLINE_MS) => Number.isFinite(c?.at) ? c.at + cap : Infinity;
             limits = {
-                res: Object.fromEntries((state.resourceProduction ?? []).map(c => [c.post, until(c)])),
+                res: Object.fromEntries((state.resourceProduction ?? []).map(c => [c.post, until(c, resourceCap)])),
                 gamble: until(state.labClock?.gamble), train: until(state.labClock?.train),
                 lib: until(state.labClock?.lib),
             };
@@ -3702,6 +3773,20 @@ export function createGameSystem(deps) {
         }
         add(labSettleTo(state, now, limits));
         return out;
+    }
+    /** 세이브를 연 첫 정산에서 보관한 생산분만 알림에 남긴다 (ADR-1296). */
+    function labResume(state, now) {
+        const materialCap = resourceOfflineHours(state) * DISPATCH_HOUR_MS;
+        const { done, gained, gold, shards, books } = labSettle(state, now);
+        const bookCount = Object.values(books).reduce((sum, n) => sum + n, 0);
+        const awayMs = now - state.savedAt;
+        if (!Number.isFinite(awayMs) || awayMs <= 0 || !(gold || shards || bookCount || Object.keys(gained).length))
+            return { done, receipt: null };
+        const productionMs = Math.min(awayMs, BASE_OFFLINE_MS);
+        const materialProductionMs = Math.min(awayMs, materialCap);
+        const receipt = { at: now, awayMs, productionMs, materialProductionMs, gained, gold, shards, books: bookCount };
+        state.offlineReceipt = receipt;
+        return { done, receipt };
     }
     /** 연구소 한 덩어리 — 상태 불변 · rng 0 · 정산하지 않는다 (INTERFACE §2-7) */
     function labState(state, now) {
@@ -3725,7 +3810,7 @@ export function createGameSystem(deps) {
             }
             return out;
         });
-        return { rank: labRank(state), research, lines };
+        return { rank: labRank(state), resourceOfflineHours: resourceOfflineHours(state), research, lines };
     }
 
     /* ── 자원 미니게임 [2026-10-06 사용자 「+효과가 아니라 아예 따로 미니게임을 해서 캐는 방식」 · 「영웅을 넣지 않는다 · 스탯 상관없음」 · PLAN_dispatch_watch D8] ──
@@ -4458,6 +4543,21 @@ export function createGameSystem(deps) {
     function tavernState(state, now) {
         const freeAt = tavernFreeAt(state);
         return { candidates: tavernCandidates(state), kept: state.tavern?.kept ?? [], freeAt, free: now >= freeAt, open: hasFeature(state, 'hire') };
+    }
+    /** 보유 인원과 다음 선술집 보유 칸의 구매 조건을 읽는다. */
+    function rosterState(state) {
+        const cap = limitsOf(state).roster;
+        const cost = cap < maxRoster ? rosterPrices[rosterSlotCount(state.rosterSlots)] : null;
+        const err = !hasFeature(state, 'hire') ? 'unbuilt' : cost === null ? 'max' : state.resources.gold < cost ? 'gold' : null;
+        return { used: state.heroes.length, cap, max: maxRoster, cost, err };
+    }
+    function buyRosterSlot(state, expectedCap) {
+        const { cap, cost, err } = rosterState(state);
+        if (err) return { ok: false, err };
+        if (cap !== expectedCap) return { ok: false, err: 'stale' };
+        state.resources.gold -= cost;
+        state.rosterSlots = rosterSlotCount(state.rosterSlots) + 1;
+        return { ok: true, cap: cap + 1 };
     }
     /**
      * 무료 교체 — 쿨다운 중에는 거절 · 통과하면 명단을 갈고 쿨다운을 다시 시작한다(2026-10-31 사용자).
@@ -5241,22 +5341,6 @@ export function createGameSystem(deps) {
         for (const uid of uids) if (!(uid in out)) { let s = 0; while (used.has(s)) s++; out[uid] = s; used.add(s); }
         return out;
     }
-    /** 「로스터」 지점 레벨 lv 가 더하는 칸 수 (R516) */
-    function rosterNodeAdd(lv) {
-        const r = labNodeRow(VISIT_KEY, 'roster');
-        return r && lv > 0 ? Math.max(0, Math.floor(nodeValue(r, lv))) : 0;
-    }
-    /** 영웅 띠의 안 열린 칸 — 지금 상한 위로 칸마다 그 칸을 여는 「로스터」 지점 레벨(작은 것부터 · 지점 최대 레벨까지) · 다 열렸거나 지점이 없으면 []
-     *  [2026-11-16 · R516 · INTERFACE §2-7 · `joinLocked` 와 같은 모양] */
-    function rosterLocked(state) {
-        const r = labNodeRow(VISIT_KEY, 'roster');
-        if (!r) return [];
-        const out = [];
-        let have = limitsOf(state).roster;
-        for (let lv = labLv(state, VISIT_KEY, 'roster') + 1; lv <= r.max; lv++)
-            for (const n = B.roster_cap + rosterNodeAdd(lv); have < n; have++) out.push(lv);
-        return out;
-    }
     /** 줄을 연구할 수 있나 — 연구소가 지어졌다 */
     const visitLabOpen = state => labLineOpen(state, VISIT_KEY);
 
@@ -6022,10 +6106,12 @@ export function createGameSystem(deps) {
      * 같은 칸 미클리어가 이어지면 원정 준비 점검을 안내한다 — 초보 안내(첫 의뢰 수령까지)는 2026-11-17 걷었다(다음 목표는 메인미션 · R524). 안내가 있으면 전체 개수에 한 건을 더한다.
      * 완료 의뢰 · 탐험 · 대기 영웅 · 사용 가능한 마스터리 포인트는 실제 처리할 때까지 남는다.
      * 정산하거나 결과를 굴리지 않는다 — 특히 exploreState 는 완료 보상을 미리 굴리므로 여기서 부르지 않는다.
-     * 저장 필드 없음 · rng 0 · 상태 불변.
+     * 최근 재접속 생산분을 먼저 보여준다 · rng 0 · 상태 불변.
      */
     function notificationState(state, now) {
         const cm = commissionState(state), items = [];
+        const receipt = state.offlineReceipt;
+        if (receipt) items.push({ id: `offline:${receipt.at}`, kind: 'offline', tab: 'resource', receipt });
         if (cm.open) for (const c of cm.cards) if (c.taken && c.done)
             items.push({ id: `commission:${c.no}`, kind: 'commission', tab: 'tavern', target: { commission: c.no } });
         if (hasFeature(state, 'explore')) for (const x of exploreList(state))
@@ -6503,13 +6589,13 @@ export function createGameSystem(deps) {
         noteRunEnd, bossRespawnAt,   // 챕터보스 재등장 (2026-10-10 · R240)
         difficultyState, selectDifficulty, stageLevel, stageCleared,
         runTactics, runTacticsIf, runBuffs, runCombat,
-        tavernCandidates, tavernState, tavernReroll, hire, adminHero, dismissState, dismiss, moveHero, setSkillOrder,
+        tavernCandidates, tavernState, tavernReroll, hire, rosterState, buyRosterSlot, adminHero, dismissState, dismiss, moveHero, setSkillOrder,
         shopVisit, shopState, shopBuy, shopSellGold, shopSellPreview, shopSell, shopPotionBuy, shopPotionGold, shopBookBuy, shopBookPool, shopReroll, shopTradeState, shopTradeBuy, gambleState, gambleSpin, gambleSpinBatch,
         commissionState, commissionFill, commissionTake, commissionClaim, commissionDrop,
         visitSettle, visitState, visitStory,
-        joinState, joinAdd, joinHire, joinDrop, visitHire, visitDrop, visitFilterSet, rosterLocked,
+        joinState, joinAdd, joinHire, joinDrop, visitHire, visitDrop, visitFilterSet,
         exploreState, exploreErr, exploreSend, exploreTake, exploreDrop,
-        dispatchSettle, dispatchProgress, labState, labSettle, labResearchStart, labResearchCancel, labRegOf, labRegList, labRegister, labUnregister, labRegLoss, labEffectsFor, materialsState,
+        dispatchSettle, dispatchProgress, labState, labSettle, labResume, labResearchStart, labResearchCancel, labRegOf, labRegList, labRegister, labUnregister, labRegLoss, labEffectsFor, materialsState,
         materialLadder, synthState, synthesize,   // 재료 단계 · 대장간 합성 (2026-10-27 · R359)
         mgRound, mgJudge, mgClaim,
         advanceState, advanceStart, advanceSettle, advanceLearn, advanceForget, advanceLevelUp, advanceRank, spendStar,

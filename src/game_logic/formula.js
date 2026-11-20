@@ -266,8 +266,9 @@ export function createFormula(balance) {
      * @param d 방어자 {def, res:{fire,cold,lightning,poison}, resMaxBonus, resMaxEl?, dr, drFlat?, lvl} — res 는 **항상 객체**(몬스터도)
      *          `resMaxEl` = 원소별 최대 저항 증가(투구 시기 칸 — 그 타격 원소의 값만 상한에 더한다) · `drFlat` = 절대값 피해 감소(투구 플레이트 — 모든 감소 뒤에 뺀다)
      *          [2026-09-18 · item_design §1 「투구 옵션」] — 둘 다 없으면 0 이라 종전과 같다. rng 소비는 안 바뀐다
+     * @param attackMulBeforeMitigation 값이 있으면 공격자 최종 배수를 적용한 감소 전 피해도 함께 돌려준다.
      */
-    function strike(rng, a, d) {
+    function strike(rng, a, d, attackMulBeforeMitigation) {
         // 적중 게이트 — 마법 무기는 항상 맞는다(굴림 없음 · 2026-10-06 R219 · §9-4). 물리는 곱 넷(`hitChance`)
         if (!a.sureHit && rng() >= hitChance(a.lvl, d.lvl, a.hitBonus, a.hitDown)) return { hit: false, dmg: 0, crit: false, proc: false };
 
@@ -304,7 +305,7 @@ export function createFormula(balance) {
         //   물리 타격의 몫마다 그 원소 저항(관통 `pen` 포함)으로 따로 깎는다 · 방어는 안 받는다 · 몫의 합은 1 에서 자른다 · 몫마다 증폭(`amp`) ·
         //   몫마다 터짐(`procChance` > 0 이면 **rng 1회** · `procMult`) · 피해 감소 · 절대값 감소는 아래에서 합에 한 번 · 없으면 종전 그대로
         //   **더하는 몫**(`c.add` — 정예 강화 · 2026-11-17 R528 · monster_design §6-1) — 물리 몫을 줄이지 않고 그 원소 몫을 **더한다** · 합 1 자르기 밖 · 나머지 규칙(그 원소 저항 · 방어 안 받음)은 같다
-        let convPart = 0, convProc = false;
+        let convPart = 0, convProc = false, unmitigatedConversion = 0;
         if (a.conv && a.atkType === 'physical') {
             let left = 1;
             const base = v;
@@ -314,11 +315,14 @@ export function createFormula(balance) {
                 if (!c.add) left -= share;
                 let p = base * share * (1 + (c.amp ?? 0));
                 if ((c.procChance ?? 0) > 0 && rng() < Math.min(1, c.procChance)) { p *= c.procMult ?? 1; convProc = true; }
+                if (attackMulBeforeMitigation !== undefined) unmitigatedConversion += p;
                 const cut = (a.resReduction ?? 0) + (a.resReductionEl?.[c.el] ?? 0) + (c.pen ?? 0);
                 convPart += p * (1 - appliedResist((d.res?.[c.el] ?? 0) - cut, d.resMaxBonus ?? 0, d.resMaxEl?.[c.el] ?? 0));
             }
             v = base * left;
         }
+        const damageBeforeMitigation = attackMulBeforeMitigation === undefined ? undefined
+            : (v + unmitigatedConversion) * attackMulBeforeMitigation + fixedPart;
         if (a.atkType === 'physical') {
             v *= 1 - mitigation(physicalDefense(d.def ?? 0, a.defIgnore ?? 0));
             if (convPart) v += convPart;
@@ -335,7 +339,10 @@ export function createFormula(balance) {
         v *= 1 - (d.dr ?? 0);
         v -= d.drFlat ?? 0;                                        // 절대값 피해 감소 — 모든 감소 뒤 · 하한은 아래 dmg_min (2026-09-18)
         if (fixedPart) v = Math.max(0, v) + fixedPart;
-        return convProc ? { hit: true, dmg: Math.max(B.dmg_min, Math.round(v)), crit, proc, convProc } : { hit: true, dmg: Math.max(B.dmg_min, Math.round(v)), crit, proc };
+        const result = { hit: true, dmg: Math.max(B.dmg_min, Math.round(v)), crit, proc };
+        if (convProc) result.convProc = true;
+        if (damageBeforeMitigation !== undefined) result.damageBeforeMitigation = damageBeforeMitigation;
+        return result;
     }
 
     /**

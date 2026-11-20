@@ -26,14 +26,9 @@
 ## 저장 및 검증
 
 ```powershell
-python scripts/apply_gpt_monsters_ch1_4.py collect
-python scripts/apply_gpt_monsters_ch1_4.py enable
-python scripts/apply_gpt_monsters_ch1_4.py compare
-python scripts/apply_gpt_monsters_ch1_4.py verify
 python .claude/skills/art-prompt/build_chapter_sheets.py
-python scripts/verify_gpt_monsters_ch1_4.py
 ```
 
-`enable`은 저장 완료된 초상에 한해 `monster.csv:face/face_elite`를 켠다. CSV의 다른 내용과 줄바꿈은 보존하며 실행 직전 사본을 `monster.before.csv`에 남긴다. 게임은 선택한 스타일의 정예 그림이 없으면 같은 스타일의 일반형을 사용한다. 다른 스타일의 초상으로 대체하지 않는다. 영웅 초상과 `HERO_FACES`는 이 작업의 변경 대상이 아니다.
+등록은 저장 완료된 초상에 한해 `monster.csv:face/face_elite`를 켠다. CSV의 다른 내용과 줄바꿈은 보존하며 실행 직전 사본을 `monster.before.csv`에 남긴다. 게임은 선택한 스타일의 정예 그림이 없으면 같은 스타일의 일반형을 사용한다. 다른 스타일의 초상으로 대체하지 않는다. 영웅 초상과 `HERO_FACES`는 이 작업의 변경 대상이 아니다.
 
-검증은 기존 몬스터 원본 보존, 새 PNG/WebP의 해시·알파·크기를 검사한다. 영웅 원본은 다른 세션에서 작업 중일 수 있어 몬스터 보존 검사에서 제외한다. 브라우저 검증 스크립트는 임시 로컬 서버를 직접 열고 종료하며 96개 경로, 스타일 선택, 정예의 일반형 대체, 비교 자료의 이미지 로딩을 확인한다.
+검증은 기존 몬스터 원본 보존, 새 PNG/WebP의 해시·알파·크기를 검사한다. 영웅 원본은 다른 세션에서 작업 중일 수 있어 몬스터 보존 검사에서 제외한다. 브라우저 검증은 임시 로컬 서버를 직접 열고 종료하며 96개 경로, 스타일 선택, 정예의 일반형 대체, 비교 자료의 이미지 로딩을 확인한다.

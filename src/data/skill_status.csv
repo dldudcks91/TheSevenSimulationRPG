@@ -58,10 +58,10 @@ mag_deepfreeze_freeze,period_pct,-0.25,6,-,keep,freeze,-,딥 프리즈의 긴 �
 mag_surge,imbue,0.25,10,lightning,keep,-,mag_surge_stun,창 동안 번개 스킬 타격 → value 확률로 스턴 · ⚠값 임시 2026-10-16
 mag_surge_stun,stun,0,1,-,keep,stun,-,서지의 스턴 · ⚠값 임시 2026-10-16
 mag_echo,echo,0,8,-,keep,-,-,표식 — 값은 안 읽는다 · ⚠값 임시 2026-10-16
-mon_ironmaiden,maiden,0.25,10,-,keep,-,-,되돌리는 몫 — 그 적이 입힌 직격 피해 × 값을 자기도 받는다 · 페니턴스(적 직격 −25%)와 같은 무게 · ⚠값 임시 2026-10-29
+mon_ironmaiden,maiden,0.5,6,-,keep,-,-,되돌리는 몫 — 방어·저항·받는 피해 감소 전 직격 피해 × 값을 공격자 HP에서 뺀다 · 2026-11-20 보스 난도 조정
 mon_goldfever,transform,1,4,-,keep,-,-,변신 — 액티브 봉인 · 값 = 직격 적중마다 늘어나는 초 · 시간 = 시작 길이 · 끝은 연 시각 + [balance.csv:transform_max_sec] · ⚠값 임시 2026-10-29
 mon_goldfever_atk,atk_pct,0.3,4,-,keep,-,-,골드 피버의 데미지 % — 변신 창과 함께 늘어난다 · ⚠값 임시 2026-10-29
-mon_mire,mire,0.2,0,-,keep,-,-,늪의 몫 — 상대 편 전원의 행동 주기와 쓰는 순간의 쿨이 (1 + 값) 배 · 2026-11-17 사용자 「임시값 20%」 · ⚠값 임시
+mon_mire,mire,0.3,0,-,keep,-,-,늪의 몫 — 상대 편 전원의 행동 주기와 쓰는 순간의 쿨이 (1 + 값) 배 · 2026-11-20 보스 난도 조정
 mon_swarm,swarm,0.5,6,-,keep,-,-,파리 한 마리의 몫(지금 HP · 기본 공격 배율) · 셋의 합이 본체보다 크게 · ⚠값 임시 2026-10-29
 mag_ember,ember,1.2,0,fire,keep,-,-,불씨 — 값 = 터질 때 시전자 데미지 × 값의 화염 직격 · 겹 [balance.csv:ember_stacks] · ⚠값 제안 2026-11-13 R471 · advance_tree_draft
 mag_frostarmor,elem_shield,3,10,cold,keep,-,-,프로스트 아머 — 흡수량 = 시전자 마법 데미지 중앙값 × 값 · 원소 직격만 · ⚠값 제안 2026-11-13 R471 · advance_tree_draft

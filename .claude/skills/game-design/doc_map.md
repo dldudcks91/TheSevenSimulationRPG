@@ -69,7 +69,7 @@ CSV 전체 목록과 각 파일이 무엇을 담는지는 [src/data/README.md](s
 | `steam_market_target_survey.md` | Steam 시장 · 타겟 — 누가 왜 하나 · 맞춤 vs 광범위 · 생존 조건. 게이머 시점(첫 10분 ~ 30시간) · 루팅 · 파티 방치 RPG 74개 리뷰 분포 · 유사작 리뷰 동기 집계 · 타겟 후보 6 비교(→ 디아블로 · PoE 경험자 ∩ 깊은 시스템 방치형) · 수치 검증표(2026-10-17 · 조사자 의견이지 결정 아님) |
 | `rune_concept_lexicon.md` | "룬 같은 개념" 사전 — 신화 · 종교 · TTRPG · 소설 · 만화 · 웹소설에서 뽑은 어휘 후보와 제약 규칙 원형. 분할본은 `rune_concepts/` |
 | `inherited_data_gaps.md` | `src/data/inherited/` 의 범위와 갭 — 테이블은 있는데 비어 있는 것 |
-| `monster_art_prompt.md` | 몬스터 일러스트 프롬프트 SSOT — `backgrounds/` 의 팔레트·픽셀 밀도에 맞추기 위한 것 |
+| `semi_idle_dungeon_survey.md` | Lootun 은 세미 아이들이다(오프라인 진행이 거의 없다) · 끝이 있는 던전을 가르는 장치 — ARPG · 방치형 · 로그라이크 세 갈래(2026-10-17 · GAME_DESIGN §10 「세미 아이들 전환」 · base_expedition_design.md §3-1) |
 
 ## 4. 문서 사이의 위계
 
@@ -79,4 +79,4 @@ CSV 전체 목록과 각 파일이 무엇을 담는지는 [src/data/README.md](s
 - 어느 문서를 먼저 고치는지의 표는 [DEV_PLAN.md](docs/client/DEV_PLAN.md) §7
 
 ---
-*마지막 업데이트: 2026-10-21*
+*마지막 업데이트: 2026-11-20*

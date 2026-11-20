@@ -379,6 +379,7 @@ export function createBattleSystem(data) {
             magicFind,
             // 희귀도 가중치는 **등급 × 단이 쥔다** — 노말 일반몹 = 일반 + 가끔 매직(레어 0) · 나이트메어 · 헬 일반몹은 레어까지 (2026-10-24 사용자 확정 · R350)
             rarityWeights: weights,
+            useDropSinWeights: true,
             weaponGroup,
         }));
     };
@@ -2558,9 +2559,11 @@ export function createBattleSystem(data) {
             let pen = 0;
             if (hitType === 'fire') for (const b of Object.values(u.buffs)) if (b.stat === 'phys_conv' && b.element === 'fire') { pen = tfOfKey(b.by).conv_pen ?? 0; break; }
             // 맞는 쪽 — 꺾을 수 없는 의지 겹 · 끌려나온 후열(쇼크웨이브 변형 2) · 헌신 변형 2(버티는 동안 감소)
+            const attackMul = mul;
             const take = advTaken(d, hitType);
             if (take !== 1) mul *= take;
-            return cond || proc || mul !== 1 || crit || critDmg || ls || pen || di ? { cond, proc, mul, crit, critDmg, ls, pen, di } : null;
+            return cond || proc || mul !== 1 || attackMul !== 1 || crit || critDmg || ls || pen || di
+                ? { cond, proc, mul, attackMul, crit, critDmg, ls, pen, di } : null;
         }
         /** 맞는 쪽 받는 피해 배수 — 의지 겹(원천 하나) · 끌려나온 후열의 물리 · 헌신 창 동안 · 없으면 1 · rng 0 */
         function advTaken(d, hitType) {
@@ -3893,7 +3896,8 @@ export function createBattleSystem(data) {
             const ea = hitType === 'physical' && u.side !== target.side && u.enchant?.kind === 'phys' && (u.enchant.el === 'fire' || u.enchant.el === 'poison')
                 ? { el: u.enchant.el, share: B.elite_enchant_add_pct, add: true } : null;
             if (cv || ea) u.conv = ea ? [...(cv ?? []), ea] : cv;
-            const { hit, dmg: dmg0, crit, proc, convProc } = F.strike(rng, u, target);
+            const attackMulBeforeMitigation = sumOf(u, 'maiden') > 0 ? dealt * (am?.attackMul ?? 1) : undefined;
+            const { hit, dmg: dmg0, crit, proc, convProc, damageBeforeMitigation } = F.strike(rng, u, target, attackMulBeforeMitigation);
             u.fixedShare = fs0;
             u.conv = conv0;
             // 받은 피해를 쌓아 다음 공격에(공통 줄 몽크 3 · `adv.struck_dmg_store` · R471) — 맞힌 직격에 쌓인 양을 더하고 비운다
@@ -4073,14 +4077,16 @@ export function createBattleSystem(data) {
                 noteTaken(u, target, back - bov);
                 if (u.hp <= 0) { if (cD && u.side !== 'party' && !u.rewarded) cD.kills += 1; killHeal(target, u); downed(u); }
             }
-            // 아이언 메이든 [2026-10-29 · R380 · skill_design §12-9] — 때린 쪽이 든 `maiden` 창 합만큼 이 직격 피해(`dmg` — 강타 몫 빼고 · 반사와 같은 밑수)를 **자기도** 받는다.
+            // 아이언 메이든 — 공격자 배수를 적용한 직격 피해를 방어 · 저항 · 받는 피해 감소 전에 잰다. 강타는 밑수에서 빠진다.
             //   반사 규칙 그대로(비직격 — 방어 · 저항 · 배리어 · 흡혈 · 반사 · 경직 · 훅 없음 · 쓰러질 수 있다) · 몫은 그 창을 건 유닛(`by`)의 것 ·
             //   이벤트는 `reflect`(`a` = 건 유닛 · `s` = 건 스킬) · 반사 **뒤** · 창이 없으면 아무 일도 없다 · rng 0
             const mv = u.hp > 0 ? sumOf(u, 'maiden') : 0;
             if (mv > 0) {
                 const w = stateOf(u, 'maiden')[1];
                 const src = party.find(x => x.key === w.by) ?? units.enemies.find(x => x.key === w.by) ?? null;
-                const back = F.indirect(dmg * mv);
+                const basis = damageBeforeMitigation === undefined ? dmg
+                    : Math.max(B.dmg_min, damageBeforeMitigation) + (dmg - dmg0);
+                const back = F.indirect(basis * mv);
                 const bov = loseHp(u, back);
                 const rev = { t: r1(t), e: 'reflect', a: w.by, d: u.key, dmg: back, ahp: u.hp, s: w.s };
                 if (bov) rev.ov = bov;

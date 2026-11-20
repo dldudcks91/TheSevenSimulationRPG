@@ -267,19 +267,20 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
      *    · `floor.tacticRng` = 전술 칸의 굴림 줄(R460) — 차림의 `tacticSlots` 만큼 칸 번호 순으로 `tactic.pickMany` · 등급은 차림의 `tacticGrade` ·
      *      영웅 · 장비 굴림(`rng`)과 다른 줄이라 그 순서를 안 건드린다
      *    · 직업 겹침 · 배치 셋 · 방어 스킬 보장 [2026-11-13 사용자] — 아래 */
-    function rollKit(T, rng, taken = [], floor = null) {
-        let classes;
-        if (!floor) classes = drawDistinct(rng, hero.mainClasses, teamSize);   // 옛 짜기 — 직업 셋이 다르다
-        else {
-            // 직업 — 한 명씩 본편 직업에서 균등 1회 · **같은 직업이 겹쳐도 된다** [2026-11-13 사용자 「같은직업도 섞일 수 있도록 뽑아 1전사 2법사가 가능함」] ·
-            //   후열 직업(`class.csv:start_row`)뿐인데 방어 스킬을 가질 직업이 없으면(마법사뿐) 셋째를 방어 스킬이 있는 후열 직업에서 다시 1회 (아래 방어 스킬 보장이 서게)
-            classes = Array.from({ length: teamSize }, () => hero.mainClasses[Math.floor(rng() * hero.mainClasses.length)]);
-            if (classes.every(c => hero.startRankOf(c) === 1) && !classes.some(c => defenseSkillsOf(c).length)) {
-                const alt = hero.mainClasses.filter(c => hero.startRankOf(c) === 1 && defenseSkillsOf(c).length);
-                if (alt.length) classes[teamSize - 1] = alt[Math.floor(rng() * alt.length)];
-            }
+    function rollKit(T, rng, taken = [], floor = null, party = null) {
+        // 층 규칙은 직업 중복을 허용한다. 직접 고른 직업도 같은 횟수만큼 굴린 뒤 덮어쓴다.
+        const picks = party?.heroes ?? [];
+        const fixedClasses = Array.from({ length: teamSize }, (_, i) => hero.mainClasses.includes(picks[i]?.cls) ? picks[i].cls : null);
+        const rolledClasses = floor ? Array.from({ length: teamSize }, () => hero.mainClasses[Math.floor(rng() * hero.mainClasses.length)])
+            : drawDistinct(rng, hero.mainClasses, teamSize);
+        const classes = rolledClasses.map((cls, i) => fixedClasses[i] ?? cls);
+        // 후열 직업뿐이고 방어 스킬을 가질 직업이 없으면 마지막 무작위 칸에서 다시 고른다.
+        if (floor && classes.every(c => hero.startRankOf(c) === 1) && !classes.some(c => defenseSkillsOf(c).length)) {
+            const i = fixedClasses.lastIndexOf(null);
+            const alt = hero.mainClasses.filter(c => hero.startRankOf(c) === 1 && defenseSkillsOf(c).length);
+            if (i >= 0 && alt.length) classes[i] = alt[Math.floor(rng() * alt.length)];
         }
-        const heroes = classes.map(cls => hero.rollHeroOf(rng, cls, T.heroTier ?? null));   // 등급 고정(실험실 · R472)이어도 굴림 수 그대로
+        const heroes = classes.map((cls, i) => hero.rollHeroOf(rng, cls, T.heroTier ?? null, picks[i]?.sin));
         // 후열 직업뿐이면 방어 스킬(`skill.csv:armor_pool` — 방어력 · 저항 · 보호막 · 받는 피해 감소 · 회피 · 적 공격 약화)을 하나는 든다
         //   [2026-11-13 사용자 「궁수, 마법사, 사제로만 배치되어있을경우 방어막또는 방어관련된 스킬들이 포함되도록」] — 이미 든 영웅이 없으면
         //   방어 스킬이 있는 첫 영웅의 고유 스킬을 그 직업의 방어 스킬 하나로(1회) · 층 AI 팀만
@@ -312,9 +313,9 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
             spendMastery(h, gear, rng);
         });
         // 전술 — 공격 쪽과 같은 계산(`tacticBonusOf`) · AI 는 함께 잡은 수가 0 이다 (R460 · arena_design §7)
-        const slots = floor?.tacticRng && TC && T.tacticSlots > 0
-            ? TC.pickMany(floor.tacticRng, T.tacticSlots).map((x, k) => ({ no: k + 1, id: x.id, grade: T.tacticGrade })) : [];
-        const tactic = slots.length ? tacticBonusOf(heroes, items, slots, 0) : null;
+        const slots = party?.tactics ?? (floor?.tacticRng && TC && T.tacticSlots > 0
+            ? TC.pickMany(floor.tacticRng, T.tacticSlots).map((x, k) => ({ no: k + 1, id: x.id, grade: T.tacticGrade })) : []);
+        const tactic = TC && slots.length ? tacticBonusOf(heroes, items, slots, party?.kills ?? 0) : null;
         const team = aiOrder(snapshotTeam(heroes, items, {}, tactic ? { tactic } : null));
         // 진형 [2026-11-13 사용자 「배치는 아래의 3개중에 1개를 따르도록」] · rng 0 —
         //   전열 직업(전사 · 기사 — `class.csv:start_row`)이 있으면 **전열 직업은 전열 · 나머지는 후열**(후열 직업이 섞이면 앞에 전사 · 기사가 하나는 선다 · 전사 · 기사뿐이면 모두 전열) ·
@@ -331,12 +332,13 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
     /** `opts.floorRules` — 짜기만 층 AI 팀(`rollFloorOpponent`)과 같게(직업 겹침 · 배치 셋 · 방어 스킬 보장 · R464) · 전술 칸은 안 굴린다 ·
      *  실험실 결투가 쓴다 [2026-11-13 · R469 · INTERFACE §2-17] — 없으면 옛 짜기 그대로(레이드 연습 팀 · 레이팅 후보) ·
      *  `opts.rarityWeights` — 주면 차림의 희귀도 가중치 대신(`item.rollGear` 와 같은 모양 · 실험실 결투 = 레전더리만 · R470) ·
-     *  `opts.heroTier` — 주면 세 영웅의 등급을 그것으로(`hero.rollHeroOf` 의 `tier` · 실험실 결투 = 레어 · R472) */
-    function rollTierOpponent(tierId, rng, taken = [], { floorRules = false, rarityWeights = null, heroTier = null } = {}) {
+     *  `opts.heroTier` — 주면 세 영웅의 등급을 그것으로(`hero.rollHeroOf` 의 `tier` · 실험실 결투 = 레어 · R472)
+     *  `opts.party` — 실험실 편성 설정. `heroes`는 자리 순서의 `{cls, sin}`, `tactics`는 `{no, id, grade}`, `kills`는 공동 처치 수. */
+    function rollTierOpponent(tierId, rng, taken = [], { floorRules = false, rarityWeights = null, heroTier = null, party = null } = {}) {
         const T = TIERS.find(t => t.id === tierId);
         if (!T) throw new Error(`arena: 모르는 등급 '${tierId}'`);
         const kit = { ...T, ...(rarityWeights ? { rarityWeights: { ...rarityWeights } } : {}), ...(heroTier ? { heroTier } : {}) };
-        return rollKit(kit, rng, taken, floorRules ? {} : null);
+        return rollKit(kit, rng, taken, floorRules ? {} : null, party);
     }
 
     /* ── 콜로세움 — 층마다 정해진 AI 팀 (arena_design §7) ── */
@@ -448,8 +450,9 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
         walk(payload.heroes);
         if (texts.some(s => UNSAFE_TEXT.test(s))) bad('text');
         payload.heroes.forEach((entry, i) => {
-            const h = entry?.hero;
-            if (!h || typeof h !== 'object' || !Array.isArray(entry.gear) || !RANKS.includes(entry.rank)) { bad('format', i); return; }
+            const source = entry?.hero;
+            if (!source || typeof source !== 'object' || !Array.isArray(entry.gear) || !RANKS.includes(entry.rank)) { bad('format', i); return; }
+            const h = { ...source, mastery: hero.migrateMasteryRanks(source) };
             // 초상 id 는 `<직업>_<번호>` 모양뿐이다(`hero.rollFace`) — 그림 경로로 들어가는 칸이다
             if (h.face != null && !(typeof h.face === 'string' && h.face.startsWith(`${h.cls}_`) && Number.isInteger(Number(h.face.slice(h.cls.length + 1))))) bad('format', i);
             if (!hero.mainClasses.includes(h.cls)) bad('class', i);
@@ -535,6 +538,7 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
         const heroes = payload.heroes.map((entry, i) => {
             // 정해진 영웅 칸만 들인다 — 코드에 덧붙은 다른 칸은 버린다
             const src = clone(entry.hero);
+            if (src.mastery) src.mastery = hero.migrateMasteryRanks(src);
             const h = { ...Object.fromEntries(HERO_KEYS.filter(k => k in src).map(k => [k, src[k]])), uid: `ghost-${i}`, xp: 0, masteryPoints: 0, equipped: {} };
             entry.gear.forEach((g, j) => {
                 const it = { ...clone(g.item), uid: `ghost-gear-${i}-${j}` };

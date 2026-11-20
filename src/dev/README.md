@@ -195,6 +195,8 @@ $h = Get-Content "$env:TEMP\dom.html" -Raw -Encoding UTF8; if ($h -match '<title
 
 ## 대량 실행 (`sim.html`) — `qa-fun`
 
+원정의 진행 속도, 직업 조합, 보스 조정 효과를 측정할 때는 [원정 파티 밸런스 검증 절차](../../docs/game_design/party_validation.md)를 참고한다.
+
 시드를 바꿔 같은 조건을 여러 번 돌리고 **분포**를 찍는다. `test.html` 의 캘리브레이션 표는 손잡이 조정용 **고정 표**라 서로 대체하지 않는다 — `test.js` 에 넣지 않은 이유는 모든 세션의 검증이 그만큼 느려져서다. 절차는 [qa-fun 스킬](../../.claude/skills/qa-fun/SKILL.md).
 
 | URL (`dev/sim.html?…`) | 하는 일 |

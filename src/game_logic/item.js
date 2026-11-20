@@ -16,12 +16,11 @@
  *
  * **접사는 출처(`src`)를 든다** [2026-09-11 · R78 · item_design §1 「무기 옵션」] — `fixed`(베이스 옵션) · 죄종 id(죄종 칸) · `random`(통합옵션).
  *   **무기 · 갑옷은 죄종 계열표로 받는다** [2026-10-05 · 사용자 확정 · R206 · R208 · R209 · R210 · item_design §1 「무기 옵션 — 죄종 계열」 — ~~세 층(고정 · 죄종 칸 · 통합)~~] —
- *   베이스 옵션 1 + **메인 줄**(이름의 죄종마다 그 계열 셋 중 하나 — 반드시 · 일반 0 · 매직 1 · 레어 이상 2) + **랜덤 줄**(계열표 21 옵션 중 아직 안 붙은 것에서 ·
+ *   베이스 옵션 1 + **메인 줄**(일반 0 · 매직 1 · 레어 이상 2 · 오만은 레어 이상에서 단독) + **랜덤 줄**(아직 안 붙은 옵션 중에서 ·
  *   같은 계열이 겹쳐도 된다). 대역은 하나 · **발동은 아이템당 하나**.
  *   **희귀도는 다섯이다** — 일반 · 매직 · 레어 · **에픽 · 레전더리** [2026-10-24 · 사용자 확정 · R342 · item_design §1 희귀도] — 위 두 등급은 몬스터 장비만 굴리고
  *   난이도가 연다(부르는 쪽이 넘기는 `rarityWeights` 의 0 — 몬스터는 등급 × 단 한 행 `gear_rarity.csv` · R350).
- *   **랜덤 줄 수는 희귀도가 정한다 — 굴리지 않는다** [2026-10-24 · R342 — ~~칸마다 붙을지 굴린다 · `item_random_slots` · `item_random_min` · `slotChance`~~(10-20 R291 · 10-21 R297)] —
- *   [balance.csv:item_random_lines_<rarity>] · 전 부위 같다(`randomLines`).
+ *   **랜덤 줄 수는 희귀도가 정한다** — [balance.csv:item_random_lines_<rarity>] · 오만 장비는 두 번째 메인 줄 자리에 랜덤 줄 하나를 받는다.
  *   **베이스 · 특성 줄의 값은 잘린 정규분포다 — 아이템 레벨과 무관 · 범위는 그대로** [2026-11-18 · R551 · item_design §2-1 — ~~아이템 레벨 치우침 `lean`~~(10-20 R291) 대체] —
  *   가운데 = 범위 가운데(`formula.bellRoll` · [balance.csv:item_base_roll_sd]). **반지 · 목걸이는 일반이 없다**(`rollGear` 가 매직으로 올린다).
  *   **죄종 줄 · 랜덤 줄의 값은 단어 범위다** [2026-11-11 · 사용자 확정 U2 · R436 · item_design §1 「값은 단어 범위가 정한다」 · INTERFACE §2-5] —
@@ -115,7 +114,7 @@ import { createFormula } from './formula.js';
 /** 희귀도 — **훑는 순서 = 낮은 것부터** [2026-10-24 · R342 · item_design §1 희귀도] · 크래프트 · 유니크는 굴림 밖이라 여기 없다 */
 const RARITIES = Object.freeze(['normal', 'magic', 'rare', 'epic', 'legendary']);
 const RARE_AT = RARITIES.indexOf('rare');                 // 이 칸부터 매직찬스 · 등급의 레어 보너스가 곱한다
-const TWO_SINS = new Set(['rare', 'epic', 'legendary']);  // 죄종 둘 — 레어 이상
+const RARE_PLUS = new Set(RARITIES.slice(RARE_AT));
 
 /** 발동 스킬의 실제 레벨 — 옛 접사 · 잘못된 값은 기본 Lv1로 읽는다. 저장 값과 책의 추가 단계(up)는 별개다. */
 export const procSkillLevel = value => Number.isSafeInteger(value) && value > 0 ? value : 1;
@@ -145,6 +144,11 @@ export function createItemSystem(data) {
     const F = createFormula(B);        // 성장 곡선(growthMult) — 시뮬·영웅과 같은 함수를 쓴다
     const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
     const N = data.naming;
+    if (![B.item_drop_sin_weight_other, B.item_drop_sin_weight_pride].every(w => Number.isFinite(w) && w > 0))
+        throw new Error('item: balance.csv item_drop_sin_weight_other · item_drop_sin_weight_pride — 0보다 큰 유한한 가중치여야 한다');
+    const DROP_SIN_WEIGHTS = Object.fromEntries(data.sins.map(sin => [sin,
+        sin === 'pride' ? B.item_drop_sin_weight_pride : B.item_drop_sin_weight_other]));
+    const magicSins = data.sins.filter(sin => sin !== 'pride');
 
     /* ── 죄종 줄 · 랜덤 줄의 값 = 단어 범위 (2026-11-11 · 사용자 확정 U2 · R436 · item_design §1 「값은 단어 범위가 정한다」 · INTERFACE §2-5) ── */
     // 단어 확률 — 메인 후보(열린 단 중 위의 이 수만큼)의 아래 → 위 [balance.csv:sin_word_weight_low · _mid · _high] (6 : 3 : 1 · 사용자 11-10)
@@ -187,14 +191,18 @@ export function createItemSystem(data) {
     const bandRoll = (d, band, u) => d.max * (band.lo + u * (band.hi - band.lo));
 
     /**
-     * 죄종 하나를 굴린다 — **그 굴림의 남은 자리(소수부)로 이름 단어의 번호도 낸다** [2026-09-19 · item_design §1 「이름」 · INTERFACE §2-5 `words`].
-     * `r` 이 균등이면 `f = frac(r × 후보 수)` 도 균등이고 고른 죄종과 독립이다 — rng 를 더 쓰지 않아 소비 순서가 그대로다(§5-2).
+     * 죄종 하나를 굴린다. 선택된 죄종의 가중치 구간 안에서 상대 위치를 이름 단어 굴림에 쓴다.
+     * 구간 안의 상대 위치는 균등하고 고른 죄종과 독립이다. 난수는 한 번만 소비한다(INTERFACE §5-2).
      * 단어 = 그 아이템 레벨의 메인 후보 단(`mainTiers`)에 단어 확률(`WORD_W` — 후보 수만큼 앞에서)을 놓고 `f × 합` 이 떨어지는 칸 [2026-11-11 · R436 — ~~그 죄종의 단어 중 균등~~]
      */
-    const pickSin = (rng, arr, ilvl) => {
-        const x = rng() * arr.length, i = Math.floor(x), sin = arr[i];
+    const pickSin = (rng, arr, ilvl, sinWeights) => {
+        const weights = arr.map(sin => sinWeights?.[sin] ?? 1);
+        let roll = rng() * weights.reduce((total, weight) => total + weight, 0);
+        let i = 0;
+        while (i < arr.length - 1 && roll >= weights[i]) roll -= weights[i++];
+        const sin = arr[i];
         const tiers = mainTiers(ilvl), w = WORD_W.slice(0, tiers.length);
-        let f = (x - i) * w.reduce((a, b) => a + b, 0), k = 0;
+        let f = (roll / weights[i]) * w.reduce((a, b) => a + b, 0), k = 0;
         while (k < tiers.length - 1 && f >= w[k]) f -= w[k++];
         return { sin, word: N.wordLadder(sin).find(e => e.tier === tiers[k]).i };
     };
@@ -687,12 +695,12 @@ export function createItemSystem(data) {
      * rng 소비(계약 — INTERFACE §5-2): 베이스 옵션 값 1 → `familyOptions`.
      * ⚠ **후보가 비어도 소비 수는 같다** — 무기군 · 표 내용이 소비 수를 바꾸면 같은 시드가 다른 드롭을 낸다(베이스 굴림과 같은 규칙)
      */
-    function weaponOptions(rng, g, sins, words, rarity, ilvl) {
+    function weaponOptions(rng, g, sins, words, nRandom, ilvl) {
         const lo = B.weapon_fixed_atk_pct_min, hi = B.weapon_fixed_atk_pct_max;
         // 베이스 옵션 — 무기면 무조건 「공격력 +%」 하나. 붙는 것은 규칙이고 값만 굴린다 (item_design §1 베이스 옵션) · 값은 잘린 정규분포 · 아이템 레벨 무관(R551 — ~~레벨 치우침~~ R291)
         const out = [{ stat: 'atk_pct', v: F.pctOption(lo + bell(rng()) * (hi - lo)), src: 'fixed' }];
         // 특정 스킬 +n 풀은 안 준다 — 2026-10-21 장비에서 뺐다(R303 · 표에 서면 로드가 던진다)
-        return out.concat(familyOptions(rng, sinOpts.filter(r => appliesTo(r, g)), sins, words, randomLines(rarity), ilvl, g.classes ?? [], [], true));
+        return out.concat(familyOptions(rng, sinOpts.filter(r => appliesTo(r, g)), sins, words, nRandom, ilvl, g.classes ?? [], [], true));
     }
 
     /**
@@ -704,7 +712,7 @@ export function createItemSystem(data) {
      *   베이스 「방어력 +%」(`armor_def_pct`)는 **그 아이템 자신의 고유 방어력에만** 곱한다 — 합산은 `hero.computeCombat` 이 아이템마다 한다.
      *   특성 줄은 다른 접사와 같은 채널이다(`src: 'fixed'` · 공속 · 쿨감 · 최대 체력 % · 명중률 · 피해 감소 · 행동 게이지 · 절대값 피해 감소)
      */
-    function armorOptions(rng, slot, group, sins, words, rarity, ilvl) {
+    function armorOptions(rng, slot, group, sins, words, nRandom, ilvl) {
         const lo = B.armor_fixed_def_pct_min, hi = B.armor_fixed_def_pct_max;
         const out = [{ stat: 'armor_def_pct', v: F.pctOption(lo + bell(rng()) * (hi - lo)), src: 'fixed' }];
         const tr = groupDef(slot, group)?.trait ?? null;
@@ -715,16 +723,7 @@ export function createItemSystem(data) {
         const keep = slot === 'gloves' ? GLOVES_ENVY_BY_TRAIT[ts] ?? null : null;
         const rows = armorSinOpts.filter(r => r.slot === slot && !(keep && r.sin === 'envy' && !keep(r.stat)));
         // 특정 스킬 +n 풀은 안 준다 — 2026-10-21 장비에서 뺐다(R303)
-        return out.concat(familyOptions(rng, rows, sins, words, randomLines(rarity), ilvl, []));
-    }
-
-    /**
-     * 반지 옵션 — **죄종 계열**만 [2026-10-29 · 사용자 확정 · R382 · item_design §1 「반지 옵션 — 죄종 계열」 — ~~죄종 칸 → 공통옵션~~(09-21 R127)].
-     *   베이스 옵션(스킬 태그 — R321)이 아직 없어 메인 줄부터다 · 랜덤 줄도 반지 계열표에서 고른다(오만 제외 · 무기 · 방어구와 같다).
-     * rng 소비(계약 — INTERFACE §5-2): `familyOptions` 그대로 — 줄마다 옵션 1 → 변형 1 → 값 1 → 스킬 1(발동 · 특정 스킬 +n 행이 없어도 소비)
-     */
-    function ringOptions(rng, sins, words, rarity, ilvl) {
-        return familyOptions(rng, familyRows('ring'), sins, words, randomLines(rarity), ilvl, []);
+        return out.concat(familyOptions(rng, rows, sins, words, nRandom, ilvl, []));
     }
 
     /**
@@ -750,22 +749,25 @@ export function createItemSystem(data) {
      * rng 소비 순서(계약 — INTERFACE §5-2): (매직 이상) 접두 죄종 → (레어 · 에픽 · 레전더리) 접미 죄종 →
      *   **(무기 · 방어구 넷) 베이스 옵션 1 + 죄종 계열**(`weaponOptions` · `armorOptions` → `familyOptions` — 줄마다 옵션 1 → 변형 1 → 값 1 → 스킬 1 · 2026-10-05 · 랜덤 줄 수는 희귀도가 정한다 · 붙나 굴림 없음 — 2026-10-24 R342 ·
      *   **방어구는 베이스 옵션 뒤에 갈래 특성 변형 1 → 값 1** — 2026-10-21 R303 · ~~(투구 · 장갑 · 신발) 옵션 세 층~~ R303 퇴역) /
-     *   **(반지) 태그 1 → 효과 1 → 값 1 → 죄종 계열** — `ringBase` → `ringOptions` → `familyOptions` /
+     *   **(반지) 태그 1 → 효과 1 → 값 1 → 죄종 계열** — `ringBase` → `familyOptions` /
      *   **(목걸이) 특정 스킬 1 → 값 1 → 죄종 계열** — `amuletBase` → `familyOptions`(2026-11-11 R453 — ~~`accessoryOptions` 죄종 칸 · 공통옵션~~) →
      *   **(무기) 베이스 1회** [신설 2026-09-10] · ~~(무기) 스킬 1회~~ **2026-09-29 삭제**(R179) · ~~(방어구) 개체 굴림 1회~~ **2026-09-18 삭제** · ~~(무기) 공격력 개체 굴림~~ **2026-09-14 삭제**(R90)
      *   ~~(마법 무기) 원소~~ 는 **2026-09-11 삭제**(R80) — 마법 무기에서 소비 1회가 빠졌다
      */
     function build(rng, slot, rarity, ilvl, base, opts = {}) {
-        // 죄종 수는 희귀도가 정한다 — 일반 0 · 매직 1 · 레어 · 에픽 · 레전더리 2 (item_design §1 확정 2026-09-11 · 계승 TheSevenRPG 규칙 채택 · 일반 2026-09-14 R86 · 위 두 등급 2026-10-24 R342).
-        //   **일반은 접두도 굴리지 않는다** — 레어가 접미를 한 번 더 굴리는 것과 같은 규칙이다(희귀도가 소비 수를 정한다 · INTERFACE §5-2).
-        //   ~~레어 접미 확률 판정(suffix_sin_chance_pct)~~ 은 08-25 초반 루프의 임시값이라 걷었다 — 판정 rng 1회가 함께 빠졌다
-        //   이름 단어의 번호는 같은 굴림의 소수부에서 낸다(`pickSin` — 그 아이템 레벨의 메인 후보 단 · 6 : 3 : 1 · R436) — 소비 수는 그대로다 (2026-09-19)
-        const pre = rarity === 'normal' ? null : pickSin(rng, data.sins, ilvl);
-        const prefix = pre?.sin ?? null;
-        const suf = TWO_SINS.has(rarity) ? pickSin(rng, data.sins.filter(s => s !== prefix), ilvl) : null;
-        const suffix = suf?.sin ?? null;
-        const sins = [prefix, suffix].filter(Boolean);
-        const words = [pre, suf].filter(Boolean).map(x => x.word);
+        // 죄종 굴림 수는 일반 0 · 매직 1 · 레어 이상 2다. 오만은 레어 이상의 두 굴림에서만 나온다.
+        const sinWeights = opts.useDropSinWeights ? DROP_SIN_WEIGHTS : null;
+        const candidates = rarity === 'magic' ? magicSins : data.sins;
+        const pre = rarity === 'normal' ? null : pickSin(rng, candidates, ilvl, sinWeights);
+        const suf = RARE_PLUS.has(rarity) ? pickSin(rng, candidates.filter(sin => sin !== pre.sin), ilvl, sinWeights) : null;
+        const rolls = [pre, suf].filter(Boolean);
+        // 어느 굴림에서 오만이 나오든 그 단어만 이름에 쓰고 나머지 메인 줄은 랜덤 줄로 바꾼다.
+        const pride = rolls.find(roll => roll.sin === 'pride');
+        const named = pride ? [pride] : rolls;
+        const sins = named.map(roll => roll.sin);
+        const [prefix = null, suffix = null] = sins;
+        const words = named.map(roll => roll.word);
+        const nRandom = randomLines(rarity) + rolls.length - named.length;
         // 목걸이 베이스 옵션(발동 스킬)은 **죄종 칸보다 앞**에서 굴린다 — 무기 · 방어구의 베이스 옵션이 죄종 칸 앞인 것과 같은 자리 (2026-09-21 · R127)
         const accBase = slot === 'amulet' ? amuletBase(rng, ilvl) : slot === 'ring' ? ringBase(rng, ilvl) : [];
         const item = {
@@ -775,10 +777,9 @@ export function createItemSystem(data) {
             name: N.composeName(prefix, base, suffix, words),
             implicit: null,
             // 무기(R78) · 방어구(2026-09-18) · 목걸이(2026-09-21 · R127) · 반지(계열표 — 2026-10-29 R382) — 모두 베이스 굴림보다 **앞**에서 굴린다 (§5-2)
-            affixes: slot === 'weapon' ? weaponOptions(rng, base, sins, words, rarity, ilvl)
-                : isArmor(slot) ? armorOptions(rng, slot, base?.group ?? null, sins, words, rarity, ilvl)
-                    : slot === 'ring' ? ringOptions(rng, sins, words, rarity, ilvl)
-                        : familyOptions(rng, familyRows('amulet'), sins, words, randomLines(rarity), ilvl, []),   // 목걸이 — 반지와 같은 계열표(R453)
+            affixes: slot === 'weapon' ? weaponOptions(rng, base, sins, words, nRandom, ilvl)
+                : isArmor(slot) ? armorOptions(rng, slot, base?.group ?? null, sins, words, nRandom, ilvl)
+                    : familyOptions(rng, familyRows(slot), sins, words, nRandom, ilvl, []),
             sins,
             words,                             // 이름의 죄종 단어 — sins 와 같은 길이 (2026-09-19)
         };
@@ -856,6 +857,7 @@ export function createItemSystem(data) {
      *   · `weaponBase` 무기 세부 베이스 고정(`weaponBases` 의 id — 제작이 고른 줄) — `build` 로 넘긴다. **소비는 그대로**(베이스 굴림 1회를 하고 값만 버린다 · 2026-09-21)
      *   · `rarityWeights` 희귀도 가중치 `{normal, magic, rare, epic?, legendary?}`(없는 칸은 0) — 제작이 넘긴다 · 몬스터는 등급 × 단 한 행(`gear_rarity.csv` — 난이도가 안 연 등급은 0 · R350)
      *     없으면 드롭 가중치 · 굴림 수 불변 (R96 · R342 · ~~`rarityMax`~~ 2026-10-24 R350 퇴역)
+     *   · `useDropSinWeights` 참이면 드롭의 메인 죄종 가중치를 쓴다. 생략하면 메인 죄종은 균등이다.
      */
     function rollGear(rng, opts) {
         const { slots } = opts;
@@ -880,7 +882,7 @@ export function createItemSystem(data) {
             // 반지 · 목걸이는 **일반이 없다** [2026-10-18 · 사용자 확정 · R285 · item_design §1 희귀도] — 일반이 나온 자리는 매직이다(굴림 1회 그대로 · 레어 확률 불변)
             const rolled = rollRarity(rng, magicFind, opts.rarityWeights);
             const rarity = rolled === 'normal' && baseless(slot) ? 'magic' : rolled;
-            out.push(build(rng, slot, rarity, ilvl, base, { weaponBase: opts.weaponBase }));
+            out.push(build(rng, slot, rarity, ilvl, base, opts));
         }
         return out;
     }
@@ -888,12 +890,11 @@ export function createItemSystem(data) {
     /**
      * 드롭 1개 — 부위 균등, 희귀도 가중치, ilvl 은 호출자가 준다.
      * `opts.magicFind` = 파티 평균 매직아이템 획득확률(비율) — 레어 가중치에 곱한다(없으면 0 · 굴림 수 불변 · 2026-09-11 R78)
-     * ⚠ **게임 경로에서는 더 안 불린다** [2026-09-11 · R79] — 처치 드롭이 「입고 있던 장비」로 바뀌어 부위를 굴리지 않는다.
-     *   검증·골든이 파이프라인 전체(부위 → 베이스 → 희귀도 → `build`)를 한 입구로 재는 자리로 남는다. **수열은 종전과 같다.**
+     * 동굴 탐험 보상과 검증에서 쓴다. 처치 드롭은 몬스터가 스폰 때 입은 장비 중 하나를 고른다.
      */
     function rollDrop(rng, ilvl, opts = {}) {
         const slot = pick(rng, data.slots);
-        return rollGear(rng, { slots: [slot], ilvl, magicFind: opts.magicFind ?? 0 })[0];
+        return rollGear(rng, { slots: [slot], ilvl, magicFind: opts.magicFind ?? 0, useDropSinWeights: true })[0];
     }
 
     /** 시작 무기 — **그 직업의 무기군**에서 ilvl 1 **일반** 1개 (무기가 밑수라 빈손이면 세기가 성립하지 않는다).
@@ -941,9 +942,9 @@ export function createItemSystem(data) {
 
     // 일반의 반환량은 **기획 보류**(2026-09-14 사용자) — 키를 발행하지 않아 매직 값을 따른다(가루는 제작 재료 — item_design §7-1 · 반환량은 §5-3 미정)
     //   에픽 · 레전더리는 레어 값 ⚠임시(2026-10-24 · R342 — item_design 「남은 것」 「희귀도 개정의 남은 칸」 ③)
-    const salvageDust = item => TWO_SINS.has(item.rarity) ? B.salvage_dust_rare : B.salvage_dust_magic;
+    const salvageDust = item => RARE_PLUS.has(item.rarity) ? B.salvage_dust_rare : B.salvage_dust_magic;
     /** 분해가 내는 부위 재료의 개수 — 가루와 같은 희귀도 문턱 [2026-10-29 · R373 · item_design §5-3] · 어느 재료인지는 부위가 정한다(state — `make_recipe.csv:salvage_mat`) */
-    const salvageMatUnits = item => TWO_SINS.has(item.rarity) ? B.salvage_mat_rare : B.salvage_mat_magic;
+    const salvageMatUnits = item => RARE_PLUS.has(item.rarity) ? B.salvage_mat_rare : B.salvage_mat_magic;
 
     /* ── 강화 (item_design §7-2 개정 2026-09-15 · R95) ── */
 

@@ -337,7 +337,7 @@ export async function loadData(base = './data/') {
     D.monsterTypeRows = monsterTypeRow;
     D.mainMissionRows = mainMissionRow;   // 메인미션 — 행 순서 = 줄 순서 · 검증 · 판정은 state.js (2026-11-17 · R524 · main_mission_design.md)
     D.monsterBaseRows = monsterBaseRow;   // 부류 버프 (R518) — 검증은 battle.js 가 생성 때 · 이름은 화면의 칩이 읽는다
-    // 연구소 「자원」 줄의 재료 셋 — 행 순서 그대로(= 화면 · 대박 굴림 순서). `post` = 그 재료를 내는 지점 id(`lab_node.csv` 의 res 줄) ·
+    // 연구소 「자원」 줄의 재료 셋 — 행 순서 그대로. `post` = 그 재료를 내는 지점 id(`lab_node.csv` 의 res 줄) ·
     //   재료에 단계가 없다 — 뒤로 갈수록 필요 수량이 는다 (2026-10-25 · R356 · base_expedition_design §2-1 · 검증은 state.js)
     D.labMaterials = labMaterialRow.map(r => ({ post: r.post, id: r.material_id, ko: r.name_kr, en: r.name_en, zh: r.name_zh, yieldPerHour: r.yield_per_hour }));
     // 위 단계 재료와 그 합성 — 행 순서 그대로(= 화면 순서). 연구소 재료 셋이 하급이고 `from` 사슬이 줄 · 단계를 정한다 — 검증은 state.js (2026-10-27 · R359 · item_design §5-2)

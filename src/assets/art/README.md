@@ -374,7 +374,7 @@ id 가 아니다. 스타일로 쓰려면 id 로 이름을 바꿔 새 폴더의 `
 
 ### pixel16 — 스타일 2 (2026-08-31 까지 기본이었다)
 
-TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 떠 보였다 — `docs/reference/monster_art_prompt.md` §0).
+TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 떠 보였다 — 옛 monster_art_prompt §0).
 프롬프트 SSOT 의 공통 스타일 블록이 `16-bit pixel art, dark fantasy` 라 폴더 이름을 거기서 땄다.
 
 | 파일 | monster_idx | 몬스터 |
@@ -869,4 +869,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-11-19*
+*마지막 업데이트: 2026-11-20*

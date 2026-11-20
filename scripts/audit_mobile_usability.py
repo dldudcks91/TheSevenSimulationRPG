@@ -58,7 +58,10 @@ with sync_playwright() as p:
             act(n)
     for tab in ['expedition','party','character','research','tavern','shop','forge','library','resource','explore','colosseum','arena','codex','help','lab']:
         act(page.locator('[data-mobile-menu]'))
-        act(page.locator(f'.nav [data-tab="{tab}"]'))
+        menu_tab = 'battlefields' if tab in ('endless', 'colosseum', 'arena') else tab
+        act(page.locator(f'.nav [data-tab="{menu_tab}"]'))
+        if menu_tab != tab:
+            act(page.locator(f'.battlefield-card[data-battlefield="{tab}"]'))
         tutorials()
         page.wait_for_timeout(150)
         page.screenshot(path=str(out/f'{tab}.png'))

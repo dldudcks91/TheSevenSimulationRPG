@@ -23,4 +23,4 @@ fhr,타격 회복,Hit Recovery,受击恢复,tempo,-,pct,1,11,물리 경직 시�
 debuff_dur_reduction,상태이상 · 디버프 시간 감소,Ailment & Debuff Duration Reduction,异常状态与减益时间缩短,tempo,cha,pct,1,19,**받는 쪽** — 결빙 · 중독 · 화상 · 스턴과 상대 편이 건 창의 시간을 이 비율만큼 줄인다(음수면 늘어난다) [2026-10-24 사용자 · battle_design §2-4 「털어내는 능력치」 · R346]. **매력이 낸다** — [balance.csv:cha_debuff_dur_step_pct] × (매력 − [balance.csv:attr_dmg_pivot]) · **출처마다 곱한다**(매력 · 장비 줄마다 · 마스터리 — 1 − Π(1 − 값) · 2026-11-13 R465 · 옛 덧셈 R451) · 장비의 원소별 시간 감소(freeze_dur_reduction 등)와 **곱** · 경직은 타격 회복(fhr) 몫이라 안 줄인다 · 몬스터도 같다
 cooldown_reduction,쿨타임 감소,Cooldown Reduction,冷却缩减,tempo,-,pct,1,8,표기 쿨 단축 — 실효 쿨 정렬 최적화의 손잡이. 시전 시 readyAt = t + 표기쿨 × (1 − 값/100). 출처는 지금 마스터리뿐 (2026-08-28 구현)
 item_find,드랍률,Item Find,掉落率,utility,luck,pct,1,20,전투 밖 산출 — 전투력 vs 파밍 효율 스왑 축. 운 계수 (2026-08-26 감각→운 재정의)
-gold_find,골드 획득,Gold Find,金币获取,utility,luck,pct,1,21,전투 밖 산출 — 운 계수 (2026-08-26)
+gold_find,파티 골드 획득,Party Gold Find,队伍金币获取,utility,luck,pct,1,21,전투 밖 산출 — 운 계수 (2026-08-26)

@@ -372,6 +372,7 @@
     display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--bg-secondary);
 }
 :root[data-mobile] .notification-panel { position: fixed; left: 8px; right: 8px; top: calc(50px + env(safe-area-inset-top, 0px)); width: auto; max-width: none; max-height: calc(100% - var(--mobile-dock) - 64px - var(--mobile-safe-bottom) - env(safe-area-inset-top, 0px)); overflow: auto; }
+:root[data-mobile] .notification-bubble.notification-offline { position: fixed; right: 8px; top: calc(50px + env(safe-area-inset-top, 0px)); }
 :root[data-mobile] #app.mobile-menu-open .notification-panel { visibility: hidden; }
 :root[data-mobile] #stage > .dp-panel { left: 8px; right: 8px; top: calc(52px + env(safe-area-inset-top, 0px)); width: auto; max-height: calc(100% - var(--mobile-dock) - 70px - var(--mobile-safe-bottom) - env(safe-area-inset-top, 0px)); overflow-y: auto; }
 :root[data-mobile] .dp-panel .dp-x { min-width: 44px; min-height: 44px; }

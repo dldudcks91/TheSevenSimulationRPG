@@ -158,7 +158,10 @@ def reveal_mobile_panel(page, locator):
 
 def tab(page, name):
     page.locator('[data-mobile-menu]').tap()
-    page.locator(f'.nav [data-tab="{name}"]').tap()
+    menu_tab = 'battlefields' if name in ('endless', 'colosseum', 'arena') else name
+    page.locator(f'.nav [data-tab="{menu_tab}"]').tap()
+    if menu_tab != name:
+        page.locator(f'.battlefield-card[data-battlefield="{name}"]').tap()
     page.wait_for_timeout(100)
 
 

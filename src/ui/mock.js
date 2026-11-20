@@ -118,7 +118,7 @@ export const AFFIX_LABELS = {
     def_ignore: { ko: '방어력 관통', en: 'Defense Penetration', zh: '防御穿透', fmt: 'pct' },   // 이름 2026-11-17 R531 — 내 타격만 뚫는 줄 = 관통 · 대상에게 거는 디버프 = 감소
     reflect_damage: { ko: '반사 피해', en: 'Reflect Damage', zh: '伤害反射', fmt: 'pct' },
     damage_reduction: { ko: '피해 감소', en: 'Damage Reduction', zh: '伤害减免', fmt: 'pct' },
-    gold_find: { ko: '골드 획득', en: 'Gold Find', zh: '金币获取', fmt: 'pct' },
+    gold_find: { ko: '파티 골드 획득', en: 'Party Gold Find', zh: '队伍金币获取', fmt: 'pct' },
     item_find: { ko: '드랍률', en: 'Item Find', zh: '掉落率', fmt: 'pct' },
     // ── 무기 옵션 (item_design §1 「무기 옵션」 · 2026-09-11 R78) — 죄종 칸 · 통합옵션 표가 쓰는 축.
     //    `res_reduction` 은 combat_stat.csv 이름과 같게 둔다 — 마스터리 칸도 이 사전을 먼저 읽는다
@@ -127,7 +127,7 @@ export const AFFIX_LABELS = {
     atk_down_mag_pct: { ko: '타격 시 대상 마법 데미지 감소', en: 'Magic Damage Down on Hit', zh: '击中时降低目标魔法伤害', fmt: 'pct' },
     dmg_per_level_pct: { ko: '레벨당 데미지', en: 'Damage per Level', zh: '每级伤害', fmt: 'pct' },
     crushing_blow_pct: { ko: '강타', en: 'Crushing Blow', zh: '压碎性打击', fmt: 'pct' },   // 옵션 이름에 괄호를 안 단다 (§6 · ADR-0954)
-    magic_find: { ko: '매직아이템 획득', en: 'Magic Find', zh: '魔法物品获取', fmt: 'pct' },
+    magic_find: { ko: '파티 매직아이템 획득확률', en: 'Party Magic Find', zh: '队伍魔法物品获取率', fmt: 'pct' },
     vs_normal_dmg: { ko: '자연 대상 추가 피해', en: 'Damage vs Natural', zh: '对自然额外伤害', fmt: 'pct' },
     vs_demon_dmg: { ko: '데몬 대상 추가 피해', en: 'Damage vs Demon', zh: '对恶魔额外伤害', fmt: 'pct' },
     vs_undead_dmg: { ko: '언데드 대상 추가 피해', en: 'Damage vs Undead', zh: '对亡灵额外伤害', fmt: 'pct' },
@@ -165,7 +165,7 @@ export const AFFIX_LABELS = {
     vs_elite_dr: { ko: '정예·보스에게 받는 피해 감소', en: 'Damage Reduction vs Elites & Bosses', zh: '来自精英与首领的伤害减免', fmt: 'pct' },
     vs_front_dr: { ko: '전열 적에게 받는 피해 감소', en: 'Damage Reduction vs Front Row', zh: '来自前排敌人的伤害减免', fmt: 'pct' },
     vs_back_dr: { ko: '후열 적에게 받는 피해 감소', en: 'Damage Reduction vs Back Row', zh: '来自后排敌人的伤害减免', fmt: 'pct' },
-    xp_gain_pct: { ko: '경험치 획득', en: 'Experience Gain', zh: '经验获取', fmt: 'pct' },
+    xp_gain_pct: { ko: '파티 경험치 획득', en: 'Party Experience Gain', zh: '队伍经验获取', fmt: 'pct' },
     // `inert` = **전투가 아직 안 읽는 줄** — 툴팁이 줄 끝에 「(미적용)」을 단다(SCREEN_DESIGN §6 · ADR-0213). 상태이상 기계가 서면 그 stat 의 표지를 지운다
     freeze_dur_reduction: { ko: '빙결 시간 감소', en: 'Freeze Duration Reduction', zh: '冻结时间缩短', fmt: 'pct' },   // 결빙이 읽는다(2026-09-28 · R177 · battle_design §2-4)
     poison_dur_reduction: { ko: '중독 시간 감소', en: 'Poison Duration Reduction', zh: '中毒时间缩短', fmt: 'pct' },   // 중독이 읽는다(2026-09-28 · R178 · battle_design §2-5)
@@ -233,6 +233,8 @@ export const CODEX_FIGHT_LABELS = {
  *   효과 문장은 `i18n.js:sk.masteryEffect.<stat>` 이 통째로 들고, 여기는 값의 단위(%)만 정한다
  */
 export const MASTERY_LABELS = {
+    skill_dmg_pct: { ko: '스킬 데미지', en: 'Skill Damage', zh: '技能伤害', fmt: 'pct' },
+    skill_tag_value: { ko: '버프 · 디버프 수치', en: 'Buff and Debuff Strength', zh: '增益与减益强度', fmt: 'pct' },
     atk_pct_per_greed: { ko: '탐욕 비례 데미지', en: 'Damage per Greed', zh: '贪婪比例伤害', fmt: 'pct' },
     hp_pct_per_greed: { ko: '탐욕 비례 최대 HP', en: 'Max HP per Greed', zh: '贪婪比例最大生命', fmt: 'pct' },
     cdr_per_greed: { ko: '탐욕 비례 쿨타임 감소', en: 'Cooldown Reduction per Greed', zh: '贪婪比例冷却缩减', fmt: 'pct' },
@@ -856,7 +858,8 @@ export const exploreIcon = spot => EXPLORE_ICON_DIR + spot + ICON_EXT;
 /** 연구소 지점 아이콘 — `src/assets/art/icons/lab/node/<지점 id>.webp`(`lab_node.csv:node`) · 회색 단색 실루엣(마스터리 아이콘과 같은 그림체) · 같은 지점은 줄이 달라도 같은 그림 (2026-10-21 · ADR-0684 · 전부 다시 그림 2026-11-14 ADR-1114).
  *  줄 그림은 이 폴더가 아니라 그 줄을 여는 건물의 건설 그림이다(`app.js:LAB_LINES` 의 `art`) */
 export const LAB_ICON_DIR = './assets/art/icons/lab/';
-export const labNodeIcon = node => `${LAB_ICON_DIR}node/${node}${ICON_EXT}`;
+const LAB_NODE_ICON = { offline: 'interval', relief: 'waiting' };
+export const labNodeIcon = node => `${LAB_ICON_DIR}node/${LAB_NODE_ICON[node] ?? node}${ICON_EXT}`;
 
 /**
  * 몬스터 얼굴 — `src/assets/art/faces/<스타일>/monster/<idx>.webp` · 영웅 초상은 같은 스타일 폴더의 `hero/<직업id>_<k>.webp`.

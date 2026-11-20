@@ -159,13 +159,18 @@ export function createHeroSystem(data) {
         higher: ['mastery_envy_t3_gap_pct', 'mastery_envy_t3_gap_step_pct', 'thr', -1],
         lower: ['mastery_pride_t3_gap_pct', 'mastery_pride_t3_gap_step_pct', 'thr', -1],
         fresh: ['mastery_lust_t3_hp_pct', 'mastery_lust_t3_hp_step_pct', 'thr', -1],
-        opening: ['mastery_sloth_t3_sec', 'mastery_sloth_t3_sec_step', 'sec', +1],
+        opening: ['mastery_sloth_t3_sec', 'mastery_sloth_t3_sec_step', 'sec', +1, 'mastery_sloth_t3_sec_rank2'],
         late: ['mastery_gluttony_t3_sec', 'mastery_gluttony_t3_sec_step', 'sec', -1],
     };
+    const T4_COND_BY_SIN = { wrath: 'hurt', envy: 'higher', sloth: 'opening', gluttony: 'late', lust: 'fresh', pride: 'lower' };
     const COND_STATS = Object.fromEntries(Object.keys(WIDEN_KEYS).map(c => [c, COND_ALL]));
-    const RANK_WIDENS = Object.fromEntries(Object.entries(WIDEN_KEYS).map(([c, [base, step, field, dir]]) =>
-        [c, r => ({ [field]: Math.max(0, B[base] + dir * B[step] * (r - 1)) })]));
-    /** 그 조건이 랭크 r 에서 여는 문턱 — `{thr, step}` · `{sec, step}`(`step` = 랭크당 폭 · 화면 툴팁이 그린다) · 모르는 조건이면 null */
+    const RANK_WIDENS = Object.fromEntries(Object.entries(WIDEN_KEYS).map(([cond, [base, step, field, dir, rank2]]) => [cond, rank => {
+        const fromRank2 = rank2 && rank >= 2;
+        const startRank = fromRank2 ? 2 : 1;
+        const startValue = B[fromRank2 ? rank2 : base];
+        return { [field]: Math.max(0, startValue + dir * B[step] * (rank - startRank)) };
+    }]));
+    /** 그 조건이 랭크 r 에서 여는 문턱 — `{thr, step}` · `{sec, step}`(`step` = 기본 랭크 간격) · 모르는 조건이면 null */
     const masteryWiden = (cond, r) => RANK_WIDENS[cond] ? { ...RANK_WIDENS[cond](r), step: B[WIDEN_KEYS[cond][1]] } : null;
 
     /** 로드 시 전수 검증 — 키가 balance 에 없으면 값이 undefined 로 조용히 새므로 즉시 던진다 */
@@ -222,10 +227,13 @@ export function createHeroSystem(data) {
         };
     });
     const masteryById = Object.fromEntries(masteryNodes.map(n => [n.id, n]));
-    // 조건부 노드가 있으면 문턱 · 간격 키도 있어야 한다 — 없으면 문턱이 NaN 으로 조용히 샌다 (R468)
-    for (const [cond, [base, step]] of Object.entries(WIDEN_KEYS))
-        if (masteryNodes.some(n => n.cond === cond) && !(B[base] >= 0 && B[step] >= 0))
-            throw new Error(`mastery: balance.csv 의 ${base} · ${step} 이 없거나 틀렸다 (cond '${cond}')`);
+    // 조건부 노드나 현행 T4가 쓰는 문턱·간격 키를 검증한다.
+    for (const [cond, [base, step, , , rank2]] of Object.entries(WIDEN_KEYS)) {
+        const keys = rank2 ? [base, step, rank2] : [base, step];
+        const used = masteryNodes.some(n => n.cond === cond || (n.treeKind === 'sin' && n.tier === 4 && T4_COND_BY_SIN[n.ownerId] === cond));
+        if (used && keys.some(key => !(B[key] >= 0)))
+            throw new Error(`mastery: balance.csv 의 ${keys.join(' · ')} 중 없거나 틀린 키가 있다 (cond '${cond}')`);
+    }
     // 탐욕 T3(`*_per_greed`)가 있으면 탐욕 합의 상한도 있어야 한다 — 없으면 `Math.min` 이 NaN 을 낸다 (R325)
     if (masteryNodes.some(n => n.stat.endsWith('_per_greed')) && !(B.mastery_greed_t3_input_cap >= 0))
         throw new Error('mastery: balance.csv 의 mastery_greed_t3_input_cap 이 없거나 틀렸다');
@@ -261,6 +269,18 @@ export function createHeroSystem(data) {
         (n.treeKind === 'sin' && (n.ownerId === ANY || n.ownerId === hero?.sin))
         || (n.treeKind === 'class' && (n.ownerId === ANY || n.ownerId === hero?.cls)));
 
+    /** 예전 공통 무기 칸의 랭크를 해당 직업의 첫 무기 칸으로 옮긴다. 세이브와 팀 코드가 함께 쓴다. */
+    function migrateMasteryRanks(hero) {
+        const ranks = hero.mastery;
+        const legacy = 'cls_t3_weapon_damage';
+        if (!ranks || !Object.hasOwn(ranks, legacy) || masteryById[legacy]) return ranks;
+        const id = `${legacy}_${hero.cls}`;
+        if (!masteryById[id] || Object.hasOwn(ranks, id)) return ranks;
+        const migrated = { ...ranks, [id]: ranks[legacy] };
+        delete migrated[legacy];
+        return migrated;
+    }
+
     /**
      * **줄마다 점수 합** [2026-11-13 사용자 「마스터리 찍는거를 가로줄 마다 5개씩 주면 딱 50개나오거든」 · skill_design §3 · R473] —
      *   한 줄 = 그 영웅 트리의 같은 탭(죄종 · 직업) · 같은 단의 칸들 · 그 칸들에 찍은 랭크 합이 `[balance.csv:mastery_row_points]` 를 못 넘는다(칸 상한은 그대로).
@@ -271,19 +291,21 @@ export function createHeroSystem(data) {
         const key = masteryRowKey(n);
         return masteryNodesFor(hero).reduce((s, x) => s + (masteryRowKey(x) === key ? (hero?.mastery?.[x.id] ?? 0) : 0), 0);
     };
+    /** 죄종 T4의 기존 전투 조건. T3 장비 수와 별개로 T3 최고 랭크에서 문턱을 계산한다. */
+    const t4CondOf = hero => {
+        const cond = T4_COND_BY_SIN[hero?.sin];
+        if (!cond) return null;
+        const own = masteryNodesFor(hero).filter(n => n.treeKind === 'sin');
+        if (!own.some(n => n.tier >= 4 && (hero?.mastery?.[n.id] ?? 0) > 0)) return null;
+        const t3 = own.filter(n => n.tier === 3);
+        if (!t3.length) return null;
+        const r = Math.max(1, ...t3.map(n => Math.min(hero?.mastery?.[n.id] ?? 0, n.maxRank)));
+        return { cond, ...RANK_WIDENS[cond](r) };
+    };
     /**
      * **셋 중 하나** [2026-11-10 사용자 「3개중에 1개만 찍을 수 있게」 · skill_design §3-5 「새 T4」 · R437] — 4단(T4) 줄은 한 칸에만 찍는다.
      *   그 줄의 **다른 칸**에 랭크가 있으면 참(이 칸은 잠겼다) · 4단이 아니면 늘 거짓 — 찍기 · 화면 상태 · 세이브 정리 · AI 팀 · 팀 코드 검사기가 이것 하나를 본다
      */
-    /** 죄종 T4 의 조건 — `{cond, thr|sec}` · 죄종 T4 랭크가 없거나 그 죄종 T3 에 조건이 없으면(탐욕) null (2026-11-14) */
-    const t4CondOf = hero => {
-        const own = masteryNodesFor(hero).filter(n => n.treeKind === 'sin');
-        if (!own.some(n => n.tier >= 4 && (hero?.mastery?.[n.id] ?? 0) > 0)) return null;
-        const t3 = own.filter(n => n.tier === 3 && n.cond && RANK_WIDENS[n.cond]);
-        if (!t3.length) return null;
-        const r = Math.max(1, ...t3.map(n => Math.min(hero?.mastery?.[n.id] ?? 0, n.maxRank)));
-        return { cond: t3[0].cond, ...RANK_WIDENS[t3[0].cond](r) };
-    };
     const masteryPickOneBlocked = (hero, n) => n.tier >= 4
         && masteryNodesFor(hero).some(x => x.id !== n.id && masteryRowKey(x) === masteryRowKey(n) && (hero?.mastery?.[x.id] ?? 0) > 0);
     /**
@@ -322,6 +344,9 @@ export function createHeroSystem(data) {
             // 조건부 칸은 값을 랭크로 곱하지 않고 랭크가 연 문턱(`thr` · `sec`)을 싣는다 (R343 · R468 — 조건 여섯 모두)
             if (n.cond) cond.push({ cond: n.cond, stat: n.stat, v: n.value, ...RANK_WIDENS[n.cond](r) });
             else if (n.stat === 'damage_reduction') dr.push(n.value * r);
+            else if (n.stat === TAG_VALUE) {
+                for (const tag of valueTags) tags.push({ stat: 'skill_tag', tag, effect: 'value', v: n.value * r });
+            }
             else flat[n.stat] = (flat[n.stat] ?? 0) + n.value * r;
         }
         // 전직 공통 줄 [2026-11-13 · R471 · advance_tree_draft §1] — 마스터리와 같은 공용 포인트 · 같은 채널이다. 칸 = 원천 하나(피해 감소는 곱) ·
@@ -620,12 +645,13 @@ export function createHeroSystem(data) {
      * 직업을 정한 영웅 1명 [2026-10-08 · 개발 장치 — 관리자 모드가 그 직업을 넣는 자리 · `state.adminHero`].
      * 이름 · 죄종 · 특성 · 등급은 선술집 후보처럼 굴리고(고유는 직업 풀) **얼굴은 맨 마지막**(`rollParty` 와 같은 이유).
      * 소비 = 이름 1 → 죄종 1 → 특성 1 → `rollHero` 3 → 얼굴 1 = 언제나 7회 · 메인 직업이 아니면 `null`(소비 0)
-     * `tier` — 주면 그 등급으로 고정(실험실 결투 = 레어 · 2026-11-13 R472) · 등급 굴림 1회는 그대로 태운다(`rollTier` 계약 — 소비 수 그대로)
+     * `tier`, `fixedSin` — 지정하면 등급과 죄종을 고정한다. 지정한 경우에도 각 굴림은 1회 소비한다.
      */
-    function rollHeroOf(rng, cls, tier = null) {
+    function rollHeroOf(rng, cls, tier = null, fixedSin = null) {
         if (!mainClasses.includes(cls)) return null;
         const name = nameOf(rng(), cls);
-        const [sin] = drawDistinct(rng, data.sins, 1);
+        const [rolledSin] = drawDistinct(rng, data.sins, 1);
+        const sin = data.sins.includes(fixedSin) ? fixedSin : rolledSin;
         const [trait] = drawDistinct(rng, data.traitPool, 1);
         const h = rollHero(rng, { name, sin, cls, trait, tier });
         h.face = rollFace(rng, cls);
@@ -1078,7 +1104,7 @@ export function createHeroSystem(data) {
             // 전직 공통 줄의 새 능력치 [2026-11-13 · R471 · INTERFACE §2-6 「전직 트리 장치」] — **`combat_stat.csv` 행이 아니다**(시트에 안 선다) · 0 인 키는 빠진다 · 다 0 이면 null ·
             //   전투가 `u.adv` 로 든다(battle.makeUnit) — 읽는 자리는 키마다 하나(battle.js)
             advance_fx: (() => { const o = Object.fromEntries(ADV_KEYS.map(k => [k, f(k)]).filter(([, v]) => v)); return Object.keys(o).length ? o : null; })(),
-            // 죄종 T4 의 조건 [2026-11-14 · skill_design §3-3 「죄종 T4」] — 그 죄종 T3 조건 · 문턱은 T3 칸 중 가장 높은 랭크(없으면 1랭크)가 연 값 · 죄종 T4 를 안 찍었으면 null
+            // 죄종 T4의 전투 문턱은 T3의 최고 랭크(없으면 1랭크)를 기준으로 한다.
             t4_cond: t4CondOf(hero),
         };
     }
@@ -1107,7 +1133,7 @@ export function createHeroSystem(data) {
     return {
         fillZh,
         rollAttributes, rollAttributesTrace, attrCenters, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, avoidNames, rollHeroOf, rollGoblin, xpNeeded, starXpNeeded, grantXp, computeCombat,
-        masteryNodes, masteryById, masteryNodesFor, masteryBonus, masteryWiden, masteryRowKey, masteryRowUsed, masteryPickOneBlocked, masteryRowOpen, masteryRowHeld, gateOn, sinGearCount, levelScaled,
+        masteryNodes, masteryById, masteryNodesFor, migrateMasteryRanks, masteryBonus, masteryWiden, masteryRowKey, masteryRowUsed, masteryPickOneBlocked, masteryRowOpen, masteryRowHeld, gateOn, sinGearCount, levelScaled,
         weaponTrait: groupId => (weaponTraitLines[groupId] ?? []).map(l => ({ ...l })),   // 무기군 특성 줄 — 전투 합산과 같은 모양(사본 · R443)
         classIds: data.classes.map(c => c.id),   // 「직업 순」 = `class.csv` 행 순서 — 책 정렬(`game.sortBooks`)이 읽는다 (2026-10-14 · ADR-0620)
         mainClasses: mainClasses.slice(),        // 본편 직업 — 결투장 등급 상대가 직업 셋을 여기서 뽑는다 (INTERFACE §2-17 · 2026-10-17)

@@ -2,7 +2,7 @@
 
 도서관은 영웅 띠 아래 위아래 둘이다 — 윗줄 스킬정보 | 전직의 방 칸(`libRoomPanel` → `MODALS.advance` = `advanceRoomBody` + 옆 카드 `advanceRoomSide`) · 아랫줄 본판 스킬 업그레이드(`bookLearnInto`) | 스킬 북 제작(`bookCraftInto` — 스킬 조각) (ADR-1262). 옆 마스터리 판은 도감의 `codexAdvanceBoard` 를 재사용하고 `advPreview` 에 조회 선택만 둔다. 전직 후 `modalBack` 으로 마스터리 창에서 방으로 돌아온다. 검증은 `scripts/verify_advance_room.py`.
 
-모바일 관련 정보는 `mobile-gestures.js`의 포인터 페이지 전환을 쓴다. `mobile-pages.js`의 기능 패널과 `mobile-native.js`의 후보 카드가 같은 제스처를 연결하며 원본 행동을 재사용한다. 마지막 스타일은 `mobile-gestures.css`다. 논리 좌표 임계·중첩 소유권·세로 스크롤·포인터 캡처 인계·다중 터치/취소·드래그 후 클릭 억제·동작 감소 설정을 처리한다. `python scripts/verify_mobile_gestures.py`는 실제 터치/마우스 입력을, `--soak-minutes 30`은 회전과 재접속을 포함한 반복 입력을 검증한다. `--soak-minutes 15 --soak-preview`는 큰 PC 창과 작은 창 사이에서 고정 미리보기의 마우스 조작을 반복한다. [계획](../../docs/client/MOBILE_GESTURE_PLAN.md)과 [검증](../../output/mobile-gestures-2026-11-14/README.md)을 참조한다.
+모바일 관련 정보는 `mobile-gestures.js`의 포인터 페이지 전환을 쓴다. `mobile-pages.js`의 기능 패널과 `mobile-native.js`의 후보 카드가 같은 제스처를 연결하며 원본 행동을 재사용한다. 마지막 스타일은 `mobile-gestures.css`다. 논리 좌표 임계·중첩 소유권·세로 스크롤·포인터 캡처 인계·다중 터치/취소·드래그 후 클릭 억제·동작 감소 설정을 처리한다. `python scripts/verify_mobile_gestures.py`는 실제 터치/마우스 입력을, `--soak-minutes 30`은 회전과 재접속을 포함한 반복 입력을 검증한다. `--soak-minutes 15 --soak-preview`는 큰 PC 창과 작은 창 사이에서 고정 미리보기의 마우스 조작을 반복한다. [규격](../../docs/client/MOBILE_UI.md)과 [검증](../../output/mobile-gestures-2026-11-14/README.md)을 참조한다.
 
 **Phase 2(엔진 이식)에서 버려질 레이어.** 계산·난수 없음 — 상태(G)를 읽고 `game_logic` 시스템(SYS)을 부르고 `save()` 한다.
 
@@ -151,4 +151,4 @@ PC에서 수동 모바일 선택은 `mobile.js:MOBILE_PREVIEW`의 390×844 고�
   - **예외 1건 — 관전 유닛 카드**(폭 고정은 카드를 감싼 칸 `.unit-slot` 이 든다 — 카드 밑에 창 뱃지 줄이 붙기 때문, 2026-08-27 사용자 지시): 몬스터·영웅·보스가 전부 같은 고정 크기다. 한 진영 최대 3장(`balance.csv:party_size_max` · `wave_monster_max`)이라 하한 폭에서 접히지 않는다. 긴 이름은 위칸에서 말줄임. **폭 200 → 226 · 초상 76 → 101** [2026-09-03] — 위칸을 초상 **위로** 올려 초상이 카드 높이를 통째로 쓴다(§5 영웅 띠와 같은 문법). 정사각이라 세로를 키우면 가로도 커지므로 오른쪽 수치 열 폭(104)을 지킬 만큼만 칸을 넓혔다. **카드 높이는 불변** ([SCREEN_DESIGN §4-2](../../docs/client/SCREEN_DESIGN.md))
 
 ---
-*마지막 업데이트: 2026-11-15*
+*마지막 업데이트: 2026-11-20*

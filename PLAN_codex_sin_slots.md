@@ -1,6 +1,6 @@
 # 도감 죄종 칸 — 출처 · 죄종별 보상 (논의 중)
 
-규칙 본문은 [base_expedition_design.md](docs/game_design/base_expedition_design.md) §1-3 「도감의 죄종 칸」 · 같은 문서 「남은 것」 「의뢰 죄종 · 도감 죄종 칸」 ① · [PLAN_commission_sins.md](PLAN_commission_sins.md) 「정할 것」 ⑤ 의 이어짐. 이 문서는 2026-11-14 대화에서 정한 것 · 제안 · 남은 일만 적는다. **기획서 반영 전**이다 [사용자 「지금 안바꿔도되니까」 · 「일단 PLAN에 적어놔」].
+규칙 본문은 [base_expedition_design.md](docs/game_design/base_expedition_design.md) §1-3 「도감의 죄종 칸」 · 같은 문서 「남은 것」 「의뢰 죄종 · 도감 죄종 칸」 ① 의 이어짐. 이 문서는 2026-11-14 대화에서 정한 것 · 제안 · 남은 일만 적는다. **기획서 반영 전**이다 [사용자 「지금 안바꿔도되니까」 · 「일단 PLAN에 적어놔」].
 
 ## 0. 지금 상태 (2026-11-14)
 
@@ -29,7 +29,7 @@
 - 영웅 하나가 주는 양은 끝이 있다 — 만렙 뒤 별 다섯(`[balance.csv:hero_star_max]`)이 차면 경험치를 더 안 받는다
 
 **D4 — 시설 · 연구 업그레이드는 몬스터 사다리 Lv3 쪽으로** [사용자 「이런거말고 다섞어도됨 몬스터 Lv3에 넣어도되니까 이런건」 — 방향 · 세부는 Lv3 논의 때]
-- ⚠ 10-22 「Lv3 효과 없음」(monster_design §8 · `codex_level.csv` Lv3 `reward=none`)을 뒤집는다 · 출발점은 [codex_ladder_draft.md](docs/game_design/codex_ladder_draft.md) §5 건물 표(직업이 건물 · 몬스터가 줄)
+- ⚠ 10-22 「Lv3 효과 없음」(monster_design §8 · `codex_level.csv` Lv3 `reward=none`)을 뒤집는다 · 출발점은 옛 도감 사다리 초안(codex_ladder_draft §5 — 2026-11-20 지웠다 · git 이력)의 건물 표(직업이 건물 · 몬스터가 줄) · 지금 자리는 [monster_design.md](docs/game_design/monster_design.md) §8 · 「남은 것」 「도감 사다리의 남은 칸」
 - Lv3 은 헬 완주 뒤(Lv1 문턱의 8배)라 **연구 시간처럼 일찍 끝나는 손잡이보다 끝까지 쓰는 것(강화 · 상단 · 제작)**이 맞다
 - 처음 요청 「강화확률」도 이쪽 — 단 ⚠ 11-14 「강화 확률을 올리는 길은 하나다 — 담금질」(base_expedition 「도박장」 경품 후보)과 부딪힌다 · 확정을 지키는 형태 = 「담금질로 오르는 확률 +」
 
@@ -160,4 +160,4 @@
 8. Claude 메모(대화에 안 올렸다) — 「그 죄종 정예 처치」도 출처로 맞는다(정예 죄종이 일곱 중 무작위라 일곱 칸 모두에 닿는 유일한 몬스터 쪽 출처) · 출처를 넷으로 닫았으니 보류
 
 ---
-*마지막 업데이트: 2026-11-14*
+*마지막 업데이트: 2026-11-20*

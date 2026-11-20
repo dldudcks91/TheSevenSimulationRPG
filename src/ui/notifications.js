@@ -4,6 +4,7 @@ import { BELL_ART } from './mock.js';
 import { bindTipNode } from './tip.js';
 
 const BUBBLE_MS = 3000;
+const OFFLINE_MS = 6000;
 const RING_MS = 650;
 // Card places always laid in a folder — matches the fixed body height (ADR-0984); empty places are faint bells like the mailbox (ADR-0988).
 const SLOTS = 3;
@@ -20,11 +21,19 @@ const node = (tag, cls, text) => {
     if (text !== undefined) out.textContent = text;
     return out;
 };
+const notificationCopy = text => {
+    const copy = node('div', 'notification-copy');
+    copy.appendChild(node('div', 'notification-title', text.title));
+    if (text.detail) copy.appendChild(node('div', 'notification-detail', text.detail));
+    if (text.meta) copy.appendChild(node('div', 'notification-meta', text.meta));
+    return copy;
+};
 
 export function createNotifications({ read, describe, navigate, hideTip, lockIcon, readDismissed, writeDismissed }) {
     let owner = null, model = null, signature = '', host = null;
     let open = false, openedOnce = false, collapsed = false, seen = new Set(), restoreFocus = null;
-    let bubble = '', bubbleUntil = 0, bubbleTimer = null, ringAt = 0;
+    let bubble = null, bubbleUntil = 0, bubbleTimer = null, ringAt = 0;
+    let receiptOwner = null;
     let folder = 'notifications', folderScroll = {};
     let dismissed = new Set();
 
@@ -46,7 +55,7 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
         const next = read();
         if (!next) {
             owner = null; model = null; signature = ''; open = false; seen.clear(); restoreFocus = null;
-            bubble = ''; clearTimeout(bubbleTimer);
+            bubble = null; receiptOwner = null; clearTimeout(bubbleTimer);
             return false;
         }
         const changedOwner = owner !== next.owner;
@@ -54,9 +63,11 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
             owner = next.owner; open = false; collapsed = false; seen = new Set();
             dismissed = new Set(readDismissed(owner));
             folderScroll = {}; folder = 'notifications'; openedOnce = false; restoreFocus = null;
-            bubble = ''; clearTimeout(bubbleTimer);
+            bubble = null; clearTimeout(bubbleTimer);
         }
         const items = next.model.items.filter(item => !dismissed.has(item.id));
+        const receipt = receiptOwner === owner ? items.find(item => item.kind === 'offline') : null;
+        receiptOwner = null;
         const guide = next.model.guide && !dismissed.has(missionKey(next.model.guide)) ? next.model.guide : null;
         const arrived = changedOwner ? [] : items.filter(item => !seen.has(item.id));
         const retry = guide?.id === 'retryPreparation' ? guide : null;
@@ -69,14 +80,16 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
         const nextSignature = JSON.stringify(model);
         const changed = signature !== nextSignature || changedOwner;
         signature = nextSignature;
-        if (arrived.length) {
-            bubble = arrived.length === 1 ? describe(arrived[0]).title : t('nt.arrived', { n: arrived.length });
+        if (receipt || (arrived.length && !bubble?.offline)) {
+            bubble = receipt ? { ...describe(receipt), offline: true }
+                : { title: arrived.length === 1 ? describe(arrived[0]).title : t('nt.arrived', { n: arrived.length }) };
+            const duration = receipt ? OFFLINE_MS : BUBBLE_MS;
             ringAt = Date.now();
-            bubbleUntil = ringAt + BUBBLE_MS;
+            bubbleUntil = ringAt + duration;
             clearTimeout(bubbleTimer);
-            bubbleTimer = setTimeout(() => { bubble = ''; paint(); }, BUBBLE_MS);
+            bubbleTimer = setTimeout(() => { bubble = null; paint(); }, duration);
         }
-        return changed || arrived.length > 0;
+        return changed || Boolean(receipt) || arrived.length > 0;
     }
 
     function close(focus = false) {
@@ -91,7 +104,7 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
         const index = model.items.findIndex(current => current.id === key);
         dismissed.add(key);
         writeDismissed(owner, [...dismissed]);
-        bubble = ''; clearTimeout(bubbleTimer);
+        bubble = null; clearTimeout(bubbleTimer);
         hideTip();
         observe();
         paint();
@@ -106,9 +119,7 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
         const text = describe(item);
         const card = node('div', `notification-card${guide ? ' notification-guide' : ''}`);
         if (item.id === 'retryPreparation') card.classList.add('notification-retry');
-        const copy = node('div', 'notification-copy');
-        copy.appendChild(node('div', 'notification-title', text.title));
-        if (text.detail) copy.appendChild(node('div', 'notification-detail', text.detail));
+        if (item.kind === 'offline') card.classList.add('notification-offline');
         const action = node('button', 'btn sm notification-go', t('nt.shortcut'));
         action.dataset.notificationAction = item.id;
         action.setAttribute('aria-label', `${text.title} · ${action.textContent}`);
@@ -121,7 +132,7 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
         confirm.setAttribute('aria-label', `${text.title} · ${confirm.textContent}`);
         confirm.onclick = () => { if (owner === rowOwner) acknowledge(key, guide); };
         actions.appendChild(confirm);
-        card.append(copy, actions);
+        card.append(notificationCopy(text), actions);
         return card;
     }
 
@@ -154,9 +165,11 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
         if (model.count) button.appendChild(node('span', 'mail-n', model.count > 99 ? '99+' : model.count));
         button.onclick = () => {
             if (!open && !openedOnce) {
-                folder = model.guide ? 'missions' : 'notifications';
+                const hasReceipt = model.items.some(item => item.kind === 'offline');
+                folder = model.guide && !hasReceipt ? 'missions' : 'notifications';
                 openedOnce = true;
             }
+            if (bubble?.offline) { bubble = null; clearTimeout(bubbleTimer); }
             open = !open;
             hideTip();
             paint();
@@ -165,7 +178,9 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
         if (button.parentNode !== host) host.appendChild(button);
 
         if (bubble && Date.now() < bubbleUntil && !open) {
-            const note = node('div', 'notification-bubble', bubble);
+            const note = bubble.offline
+                ? node('div', 'notification-bubble notification-offline') : node('div', 'notification-bubble', bubble.title);
+            if (bubble.offline) note.appendChild(notificationCopy(bubble));
             note.setAttribute('role', 'status');
             host.appendChild(note);
         }
@@ -303,6 +318,7 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
             return host;
         },
         refresh() { if (observe()) paint(); },
+        showOfflineReceipt(owner) { receiptOwner = owner; },
         paint,
         close,
         reset() { observe(); },

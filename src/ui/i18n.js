@@ -625,6 +625,11 @@ const STRINGS = {
     'nt.kind.explore': { ko: '탐험 완료 · 결과 수령 가능', en: 'Exploration complete · Results ready', zh: '探索完成 · 可领取结果' },
     'nt.kind.join': { ko: '가입 희망 영웅 도착', en: 'Hero awaiting recruitment', zh: '希望加入的英雄已到达' },
     'nt.kind.mastery': { ko: '스킬 포인트 사용 가능', en: 'Skill points available', zh: '有可用的技能点' },
+    'nt.kind.offline': { ko: '오프라인 생산분 입고', en: 'Offline Production Received', zh: '离线产出已入库' },
+    'nt.offline.gain': { ko: '{name} +{n}', en: '{name} +{n}', zh: '{name} +{n}' },
+    'nt.offline.away': { ko: '미접속 {away}', en: 'Away for {away}', zh: '离线 {away}' },
+    'nt.offline.capped': { ko: '미접속 {away} · 생산 최대 {time} 반영', en: 'Away for {away} · Up to {time} of production counted', zh: '离线 {away} · 最多计入 {time} 的产出' },
+    'nt.offline.split': { ko: '미접속 {away} · 재료 {material} · 기타 {time} 반영', en: 'Away for {away} · Materials {material} · Other rewards {time} counted', zh: '离线 {away} · 材料计入 {material} · 其他奖励计入 {time}' },
     'nt.mastery.detail': { ko: '{hero} · Lv.{level} · 사용 가능 {n}포인트', en: { one: '{hero} · Lv.{level} · {n} point available', other: '{hero} · Lv.{level} · {n} points available' }, zh: '{hero} · Lv.{level} · 可用{n}点' },
     'nt.guide.retryPreparation': { ko: '원정 준비 점검', en: 'Review expedition preparation', zh: '检查远征准备' },
     'nt.retry.detail': {
@@ -747,6 +752,10 @@ const STRINGS = {
 
     /* ── 선술집 (실동작) ── */
     'tv.hire': { ko: '고용 ({g} 골드)', en: 'Hire ({g} gold)', zh: '雇佣（{g}金币）' },
+    'tv.roster.count': { ko: '보유 영웅 {n} / {cap}', en: 'Heroes {n} / {cap}', zh: '英雄 {n} / {cap}' },
+    'tv.roster.buy': { ko: '보유 칸 +1 ({g} 골드)', en: 'Roster slot +1 ({g} gold)', zh: '名册栏位 +1（{g}金币）' },
+    'tv.roster.bought': { ko: '영웅 보유 한도 {cap}명', en: 'Roster capacity increased to {cap}', zh: '英雄名册上限已增至 {cap}' },
+    'tv.roster.lock': { ko: '선술집에서 보유 칸 구매', en: 'Buy a roster slot at the Tavern', zh: '在酒馆购买名册栏位' },
     // 보관한 명단 칸 — 2026-11-16 보관 삭제(R519) 뒤엔 옛 세이브의 다음 교체 전까지만 보인다
     'tv.empty.kept': { ko: '보관함 — 다음 교체 때 채워짐', en: 'Kept — refills on next refresh', zh: '已保留——下次刷新时补上' },
     'tv.reroll.wait': { ko: '교체까지 {t}', en: 'Refresh in {t}', zh: '{t}后刷新' },
@@ -784,6 +793,7 @@ const STRINGS = {
     'tv.visit.reg.add': { ko: '연구소에서 등록', en: 'Assign in the Laboratory', zh: '在研究所派驻' },
     /* ── 시간 표기 ── */
     'time.hm': { ko: '{h}시간 {m}분', en: '{h}h {m}m', zh: '{h}小时{m}分钟' },
+    'time.h': { ko: '{h}시간', en: '{h}h', zh: '{h}小时' },
     'time.m': { ko: '{m}분', en: '{m}m', zh: '{m}分钟' },
     'time.s': { ko: '{s}초', en: '{s}s', zh: '{s}秒' },
     'time.ms': { ko: '{m}분 {s}초', en: '{m}m {s}s', zh: '{m}分{s}秒' },
@@ -813,9 +823,9 @@ const STRINGS = {
     'shrine.fx.life_steal': { ko: '흡혈 {v}%', en: 'Life Steal {v}%', zh: '吸血{v}%' },
     'shrine.fx.res_all': { ko: '모든 원소 저항 +{v}%', en: 'All Resistances +{v}%', zh: '所有元素抗性+{v}%' },
     'shrine.fx.hp_pct': { ko: '최대 HP +{v}%', en: 'Max HP +{v}%', zh: '最大生命+{v}%' },
-    'shrine.fx.xp_gain_pct': { ko: '경험치 +{v}%', en: 'Experience +{v}%', zh: '经验+{v}%' },
+    'shrine.fx.xp_gain_pct': { ko: '파티 경험치 획득 +{v}%', en: 'Party Experience Gain +{v}%', zh: '队伍经验获取+{v}%' },
     'shrine.fx.item_find': { ko: '드랍률 +{v}%', en: 'Item Find +{v}%', zh: '掉落率+{v}%' },
-    'shrine.fx.gold_find': { ko: '골드 획득 +{v}%', en: 'Gold Find +{v}%', zh: '金币获取+{v}%' },
+    'shrine.fx.gold_find': { ko: '파티 골드 획득 +{v}%', en: 'Party Gold Find +{v}%', zh: '队伍金币获取+{v}%' },
     'log.end.win': { ko: '스테이지 클리어 — 리포트로 정리', en: 'Stage clear — see the report', zh: '关卡通关——详见报告' },
     'log.end.lose': { ko: '원정 실패 — 귀환', en: 'Expedition failed — returning', zh: '远征失败——返回' },
 
@@ -837,6 +847,7 @@ const STRINGS = {
        아래 나열 순서는 탭 바 순서와 같다 — 읽는 사람이 화면과 대조할 수 있게. */
     'nav.expedition': { ko: '원정', en: 'Expedition', zh: '远征' },
     'nav.explore': { ko: '탐험', en: 'Exploration', zh: '探索' },
+    'nav.battlefields': { ko: '특수전장', en: 'Special Battlefields', zh: '特殊战场' },
     // 무한의 탑(탭 id `endless`) [2026-11-19 사용자 확정 · SCREEN_DESIGN §1 · ADR-1294] — 시련의 탑 바로 앞 · 몬스터만 상대하는 층 사다리 · 사다리 문구는 시련의 탑 것(`cs.*`)을 같이 쓴다
     'nav.endless': { ko: '무한의 탑', en: 'Endless Tower', zh: '无尽之塔' },
     'et.from': { ko: '{n}층 · Lv.{lv} · {kind}', en: 'Floor {n} · Lv.{lv} · {kind}', zh: '第{n}层 · Lv.{lv} · {kind}' },   // 판 머리 — 층 · 상대 레벨 · 정예 / 보스
@@ -1023,11 +1034,16 @@ const STRINGS = {
     'dp.node.gather': { ko: '채집', en: 'Gathering', zh: '采集' },
     'dp.node.log': { ko: '벌목', en: 'Logging', zh: '伐木' },
     'dp.node.burst': { ko: '대박', en: 'Jackpot', zh: '大丰收' },
+    'dp.node.offline': { ko: '오프라인 생산 시간 연장', en: 'Offline Production Time', zh: '离线生产时长' },
+    'dp.node.relief': { ko: '비상 보급', en: 'Emergency Supplies', zh: '应急补给' },
+    'dp.relief.max': { ko: '최대 +{n}%', en: 'Up to +{n}%', zh: '最多 +{n}%' },
+    'dp.relief.rate': { ko: '{rate} (+{n}%)', en: '{rate} (+{n}%)', zh: '{rate} (+{n}%)' },
+    'dp.relief.desc': { ko: '보유량이 가장 적은 재료를 더 빨리 생산합니다. 가장 많은 재료와의 보유 비율 차이가 클수록 가속률이 높습니다.', en: 'Speeds up production of your least-stocked material. The bonus grows as its stock falls further below your largest stock.', zh: '加快库存最少的材料的生产速度。它与库存最多的材料之间的比例差越大，加速幅度越高。' },
     'dp.node.interval': { ko: '간격', en: 'Interval', zh: '间隔' },
     'dp.node.quality': { ko: '품질', en: 'Quality', zh: '品质' },
     'dp.node.waiting': { ko: '대기소', en: 'Waiting Room', zh: '等候所' },
-    'dp.node.roster': { ko: '로스터', en: 'Roster', zh: '名册' },   // 영웅 보유 상한을 레벨마다 한 칸씩 (2026-11-16 · R516 · ADR-1216)
     'dp.node.speed': { ko: '속도', en: 'Speed', zh: '速度' },
+    'dp.val.trainXp': { ko: '+{n} XP/시간', en: '+{n} XP/h', zh: '+{n} 经验/小时' },
     'dp.node.range': { ko: '범위', en: 'Range', zh: '范围' },
     'dp.node.income': { ko: '수익', en: 'Income', zh: '收益' },
     'dp.val.slots': { ko: '+{n}칸', en: '+{n}', zh: '+{n}格' },
@@ -1285,18 +1301,19 @@ const STRINGS = {
     // 인챈트 — 대장간 강화 옆 탭 (SCREEN_DESIGN §8-2 · ADR-1293 · item_design §8 · R553) · 오류 키는 결과 코드와 짝(`fg.err.<코드>` — game.enchantItem · enchantPick)
     'fg.seg.ench': { ko: '인챈트', en: 'Enchant', zh: '附魔' },
     'fg.board.ench': { ko: '인챈트', en: 'Enchant', zh: '附魔' },   // 인챈트 칸 오른쪽 판 제목 띠
-    'fg.ench.line': { ko: '인챈트 줄', en: 'Enchant line', zh: '附魔词条' },   // 인챈트 칸 가운데 판 제목 띠
+    'fg.board.enchOptions': { ko: '옵션', en: 'Options', zh: '词条' },
+    'fg.ench.current': { ko: '현재 옵션', en: 'Current Option', zh: '当前词条' },
     'fg.ench.none': { ko: '없음', en: 'None', zh: '无' },
-    'fg.ench.old': { ko: '원래', en: 'Current', zh: '原有' },   // 고르기 카드 — 지금 인챈트 줄
-    'fg.ench.new': { ko: '새 줄', en: 'New line', zh: '新词条' },   // 고르기 카드 — 다시 굴린 줄
+    'fg.ench.new': { ko: '새 옵션', en: 'New Option', zh: '新词条' },
+    'fg.ench.keep': { ko: '유지', en: 'Keep', zh: '保留' },
     'fg.ench.pick': { ko: '선택', en: 'Choose', zh: '选择' },
     'fg.ench.go': { ko: '인챈트', en: 'Enchant', zh: '附魔' },
     'fg.ench.wait': { ko: '선택 대기', en: 'Choose first', zh: '等待选择' },   // 고르기 대기 중 [인챈트] 자리
     'fg.ench.options': { ko: '후보 옵션', en: 'Possible options', zh: '候选词条' },
     'fg.ench.rareOnly': { ko: '레어 이상만', en: 'Rare or better only', zh: '仅限稀有及以上' },
     'fg.ench.added': { ko: '인챈트 · {line}', en: 'Enchanted · {line}', zh: '附魔 · {line}' },
-    'fg.ench.kept': { ko: '원래 줄 유지', en: 'Kept the current line', zh: '保留原有词条' },
-    'fg.ench.took': { ko: '새 줄로 교체', en: 'Switched to the new line', zh: '已换成新词条' },
+    'fg.ench.kept': { ko: '현재 옵션 유지', en: 'Kept the current option', zh: '已保留当前词条' },
+    'fg.ench.took': { ko: '새 옵션으로 교체', en: 'Switched to the new option', zh: '已换成新词条' },
     'fg.err.noEnchant': { ko: '레어 이상 장비만 가능', en: 'Rare or better items only', zh: '仅限稀有及以上装备' },
     'fg.err.undecided': { ko: '새 줄 선택 대기 중', en: 'Choose a line first', zh: '请先选择词条' },
     'fg.err.noOption': { ko: '붙을 옵션 없음', en: 'No options left to add', zh: '没有可附加的词条' },
@@ -1378,9 +1395,9 @@ const STRINGS = {
         zh: '回合与一次远征',
     },
     'help.expedition.rounds.body': {
-        ko: "한 스테이지를 시작해서 끝낼 때까지가 한 번의 원정이며, 그 안에서 적 무리와 싸우는 단위가 라운드입니다. 라운드를 이기면 그 라운드의 보상을 받고 다음 무리와 싸웁니다. 모든 라운드를 이겨야 스테이지가 클리어됩니다.<br><br>철수·패배·게임 종료 뒤에도 아직 이기지 못한 라운드의 적과 장비는 다시 만납니다. 이미 이긴 라운드는 다음 출발에 새 무리로 바뀝니다. 여러 부대가 같은 스테이지에 가면 서로 다른 무리를 맡고, 미완료 무리는 다음 부대에게 돌아갑니다. 매직찬스를 높이면 같은 적의 장비 희귀도가 좋아질 수 있습니다.<br><br>다음 라운드로 넘어가도 깎인 HP가 저절로 가득 차지는 않습니다. 쓰러진 영웅도 그 원정에서는 계속 빠져 있으므로, 앞 라운드를 이겼어도 뒤 라운드에서 파티가 무너질 수 있습니다. 회복·보호·적을 빨리 처치하는 힘을 함께 살펴보는 이유입니다.<br><br>라운드 보상으로 레벨이 오른 영웅은 다음 라운드를 최대 HP로 시작합니다. 원정 자체가 끝나면 승패와 관계없이 모두 회복하며, 다음 원정에는 다시 전원이 출발합니다.",
-        en: "A run lasts from entering a stage until that attempt ends. Each fight against a group of enemies is a round. Winning a round grants its rewards and moves on to the next group. Win every round to clear the stage.<br><br>After retreat, defeat or closing the game, unfinished rounds keep their enemies and equipment. Rounds already won bring new groups on the next departure. Multiple parties take different groups at the same stage, and unfinished groups return for the next party. Raising Magic Find can improve the same enemies' equipment rarity.<br><br>Lost HP does not automatically refill between rounds. Fallen heroes stay out for the rest of that run, so a party that wins early rounds can still fall apart later. This is why healing, protection and killing enemies quickly all matter.<br><br>A hero who levels up from a round's rewards starts the next round at full HP. When the run itself ends, everyone recovers regardless of the result and can join the next departure.",
-        zh: '从开始一个关卡到结束为止是一次远征，其中与一群敌人战斗的单位是回合。赢下一个回合即可获得该回合的奖励，并继续与下一群敌人战斗。必须赢下所有回合才算通关该关卡。<br><br>撤退、战败或关闭游戏后，尚未赢下的回合中的敌人与装备不会改变，下次还会遇到。已赢下的回合在下次出发时会换成新的敌群。多个小队前往同一关卡时会各自负责不同的敌群，未完成的敌群会留给下一个小队。提高魔法物品获取，同一批敌人的装备稀有度可能会变好。<br><br>进入下一回合时，损失的生命不会自动回满。倒下的英雄在该次远征中也会一直缺席，因此即使赢下了前面的回合，队伍也可能在后面的回合崩溃。这就是要同时关注治疗、保护与快速击杀敌人能力的原因。<br><br>因回合奖励而升级的英雄会以最大生命开始下一回合。远征本身结束后，无论胜负全员都会恢复，下次远征时全员再次出发。',
+        ko: "한 스테이지를 시작해서 끝낼 때까지가 한 번의 원정이며, 그 안에서 적 무리와 싸우는 단위가 라운드입니다. 라운드를 이기면 그 라운드의 보상을 받고 다음 무리와 싸웁니다. 모든 라운드를 이겨야 스테이지가 클리어됩니다.<br><br>철수·패배·게임 종료 뒤에도 아직 이기지 못한 라운드의 적과 장비는 다시 만납니다. 이미 이긴 라운드는 다음 출발에 새 무리로 바뀝니다. 여러 부대가 같은 스테이지에 가면 서로 다른 무리를 맡고, 미완료 무리는 다음 부대에게 돌아갑니다. 파티 매직아이템 획득확률를 높이면 같은 적의 장비 희귀도가 좋아질 수 있습니다.<br><br>다음 라운드로 넘어가도 깎인 HP가 저절로 가득 차지는 않습니다. 쓰러진 영웅도 그 원정에서는 계속 빠져 있으므로, 앞 라운드를 이겼어도 뒤 라운드에서 파티가 무너질 수 있습니다. 회복·보호·적을 빨리 처치하는 힘을 함께 살펴보는 이유입니다.<br><br>라운드 보상으로 레벨이 오른 영웅은 다음 라운드를 최대 HP로 시작합니다. 원정 자체가 끝나면 승패와 관계없이 모두 회복하며, 다음 원정에는 다시 전원이 출발합니다.",
+        en: "A run lasts from entering a stage until that attempt ends. Each fight against a group of enemies is a round. Winning a round grants its rewards and moves on to the next group. Win every round to clear the stage.<br><br>After retreat, defeat or closing the game, unfinished rounds keep their enemies and equipment. Rounds already won bring new groups on the next departure. Multiple parties take different groups at the same stage, and unfinished groups return for the next party. Raising Party Magic Find can improve the same enemies' equipment rarity.<br><br>Lost HP does not automatically refill between rounds. Fallen heroes stay out for the rest of that run, so a party that wins early rounds can still fall apart later. This is why healing, protection and killing enemies quickly all matter.<br><br>A hero who levels up from a round's rewards starts the next round at full HP. When the run itself ends, everyone recovers regardless of the result and can join the next departure.",
+        zh: '从开始一个关卡到结束为止是一次远征，其中与一群敌人战斗的单位是回合。赢下一个回合即可获得该回合的奖励，并继续与下一群敌人战斗。必须赢下所有回合才算通关该关卡。<br><br>撤退、战败或关闭游戏后，尚未赢下的回合中的敌人与装备不会改变，下次还会遇到。已赢下的回合在下次出发时会换成新的敌群。多个小队前往同一关卡时会各自负责不同的敌群，未完成的敌群会留给下一个小队。提高队伍魔法物品获取率，同一批敌人的装备稀有度可能会变好。<br><br>进入下一回合时，损失的生命不会自动回满。倒下的英雄在该次远征中也会一直缺席，因此即使赢下了前面的回合，队伍也可能在后面的回合崩溃。这就是要同时关注治疗、保护与快速击杀敌人能力的原因。<br><br>因回合奖励而升级的英雄会以最大生命开始下一回合。远征本身结束后，无论胜负全员都会恢复，下次远征时全员再次出发。',
     },
     'help.expedition.stages.title': {
         ko: "스테이지와 난이도",
@@ -1478,9 +1495,9 @@ const STRINGS = {
         zh: '以更高难度重温同一章',
     },
     'help.expedition.difficulty.body': {
-        ko: "노말을 진행한 뒤 나이트메어, 그 뒤 헬로 같은 챕터를 다시 돌아갑니다. 난이도는 이름만 바꾸는 것이 아니라 적의 레벨·체력·피해·착용 장비와 스킬 구성을 바꿉니다. 같은 초상이라도 이전 난이도에서 이겼던 방식이 그대로 통한다고 생각하지 않고 적의 현재 스킬과 장비를 확인합니다.<br><br>일반 원정 드롭에서는 에픽 장비가 나이트메어의 정예·보스부터, 레전더리 장비가 헬의 정예·보스에서 나올 수 있습니다. 일반 몬스터의 장비는 헬에서도 레어까지입니다. 매직아이템 획득 확률을 높여도 그 난이도·몬스터 등급에서 나오지 않는 희귀도가 새로 열리지는 않습니다.<br><br>헬의 몬스터 레벨과 드롭 장비 레벨은 만렙에서 고정되고, 영웅도 레벨 상한을 넘어 자라지는 않습니다. 다른 장의 첫 스테이지를 골라 파티와 보상이 맞는 곳부터 공략할 수 있습니다. 각 장의 디버프가 다르므로 레벨 외의 대응이 중요해집니다.<br><br>정예 카드에 표시되는 죄종·능력치·방어 특성 칩은 현재 표시만 구현되어 있습니다. 면역 이름의 칩이 보이더라도 그 특성으로 실제 원소 면역이 적용되는 기능은 아직 준비 중입니다. 현재 적의 장비·스킬·적용 능력치를 기준으로 판단합니다.",
-        en: "After Normal, revisit the chapters on Nightmare and then Hell. Difficulty changes enemy levels, HP, damage, equipment and skill loadouts, not just the name. An enemy with the same portrait may need a different response, so inspect its current skills and gear.<br><br>For ordinary expedition loot, Epic gear can appear from Nightmare elites and bosses, and Legendary gear from Hell elites and bosses. Normal monsters remain limited to Rare gear even in Hell. More Magic Find does not unlock a rarity unavailable to that difficulty and monster grade.<br><br>Hell fixes monster and dropped-equipment levels at the level cap; heroes do not level beyond their cap either. You can choose another chapter's first stage and tackle an area that suits your party and reward needs. Different chapter debuffs make responses beyond leveling important.<br><br>The Sin, attribute and defense trait chips shown on elite cards currently have display implementation only. A chip with an immunity name does not yet grant that trait's actual elemental immunity. Judge enemies by their current gear, skills and applied stats.",
-        zh: '通关普通难度后，依次在噩梦、地狱难度下重新挑战同样的章。难度改变的不只是名称，还有敌人的等级、生命、伤害、穿戴的装备与技能构成。即使头像相同，也不要以为之前难度中获胜的方法依然有效，要查看敌人当前的技能与装备。<br><br>在普通远征掉落中，史诗装备从噩梦难度起可能由精英、首领掉落，传奇装备可能由地狱难度的精英、首领掉落。普通怪物的装备即使在地狱难度也最多为稀有。即使提高魔法物品获取，也不会开放该难度与怪物级别本不掉落的稀有度。<br><br>地狱难度的怪物等级与掉落装备等级固定为满级，英雄也不会超过等级上限继续成长。可以选择其他章的第一个关卡，从适合队伍与所需奖励的地方开始攻略。各章的减益不同，因此等级以外的应对变得重要。<br><br>精英卡片上显示的罪宗、属性、防御特性标签目前仅实现了显示。即使看到带有免疫名称的标签，凭该特性实际获得元素免疫的功能仍在开发中。请以敌人当前的装备、技能与实际生效的属性为准进行判断。',
+        ko: "노말을 진행한 뒤 나이트메어, 그 뒤 헬로 같은 챕터를 다시 돌아갑니다. 난이도는 이름만 바꾸는 것이 아니라 적의 레벨·체력·피해·착용 장비와 스킬 구성을 바꿉니다. 같은 초상이라도 이전 난이도에서 이겼던 방식이 그대로 통한다고 생각하지 않고 적의 현재 스킬과 장비를 확인합니다.<br><br>일반 원정 드롭에서는 에픽 장비가 나이트메어의 정예·보스부터, 레전더리 장비가 헬의 정예·보스에서 나올 수 있습니다. 일반 몬스터의 장비는 헬에서도 레어까지입니다. 파티 매직아이템 획득확률을 높여도 그 난이도·몬스터 등급에서 나오지 않는 희귀도가 새로 열리지는 않습니다.<br><br>헬의 몬스터 레벨과 드롭 장비 레벨은 만렙에서 고정되고, 영웅도 레벨 상한을 넘어 자라지는 않습니다. 다른 장의 첫 스테이지를 골라 파티와 보상이 맞는 곳부터 공략할 수 있습니다. 각 장의 디버프가 다르므로 레벨 외의 대응이 중요해집니다.<br><br>정예 카드에 표시되는 죄종·능력치·방어 특성 칩은 현재 표시만 구현되어 있습니다. 면역 이름의 칩이 보이더라도 그 특성으로 실제 원소 면역이 적용되는 기능은 아직 준비 중입니다. 현재 적의 장비·스킬·적용 능력치를 기준으로 판단합니다.",
+        en: "After Normal, revisit the chapters on Nightmare and then Hell. Difficulty changes enemy levels, HP, damage, equipment and skill loadouts, not just the name. An enemy with the same portrait may need a different response, so inspect its current skills and gear.<br><br>For ordinary expedition loot, Epic gear can appear from Nightmare elites and bosses, and Legendary gear from Hell elites and bosses. Normal monsters remain limited to Rare gear even in Hell. More Party Magic Find does not unlock a rarity unavailable to that difficulty and monster grade.<br><br>Hell fixes monster and dropped-equipment levels at the level cap; heroes do not level beyond their cap either. You can choose another chapter's first stage and tackle an area that suits your party and reward needs. Different chapter debuffs make responses beyond leveling important.<br><br>The Sin, attribute and defense trait chips shown on elite cards currently have display implementation only. A chip with an immunity name does not yet grant that trait's actual elemental immunity. Judge enemies by their current gear, skills and applied stats.",
+        zh: '通关普通难度后，依次在噩梦、地狱难度下重新挑战同样的章。难度改变的不只是名称，还有敌人的等级、生命、伤害、穿戴的装备与技能构成。即使头像相同，也不要以为之前难度中获胜的方法依然有效，要查看敌人当前的技能与装备。<br><br>在普通远征掉落中，史诗装备从噩梦难度起可能由精英、首领掉落，传奇装备可能由地狱难度的精英、首领掉落。普通怪物的装备即使在地狱难度也最多为稀有。即使提高队伍魔法物品获取率，也不会开放该难度与怪物级别本不掉落的稀有度。<br><br>地狱难度的怪物等级与掉落装备等级固定为满级，英雄也不会超过等级上限继续成长。可以选择其他章的第一个关卡，从适合队伍与所需奖励的地方开始攻略。各章的减益不同，因此等级以外的应对变得重要。<br><br>精英卡片上显示的罪宗、属性、防御特性标签目前仅实现了显示。即使看到带有免疫名称的标签，凭该特性实际获得元素免疫的功能仍在开发中。请以敌人当前的装备、技能与实际生效的属性为准进行判断。',
     },
     'help.expedition.hell_debuffs.title': {
         ko: "헬에서 장마다 달라지는 위험",
@@ -1708,9 +1725,9 @@ const STRINGS = {
         zh: '稀有度颜色与物品等级不同',
     },
     'help.character.rarity.body': {
-        ko: "일반 → 매직 → 레어 → 에픽 → 레전더리는 장비의 희귀도입니다. 높은 등급일수록 붙는 옵션 줄이 늘지만, 지금 영웅에게 필요한 옵션인지도 함께 봅니다. 일반 장비에는 죄종이 없고, 매직에는 한 죄종, 레어 이상에는 서로 다른 두 죄종이 붙습니다. 같은 등급이라도 옵션 조합과 수치는 달라집니다.<br><br>원정의 에픽은 나이트메어부터, 레전더리는 헬에서 나올 수 있습니다. 모든 적이 모든 등급을 주는 것은 아니므로 더 높은 장비를 찾을 때는 난이도와 정예·보스도 살펴봅니다. 유니크·크래프트는 이름만 보고 이 계단의 다음 등급이라고 생각하지 않습니다.<br><br>아이템 레벨은 무기 피해·방어력과 옵션 수치에 영향을 주며, 영웅의 착용 가능 여부에도 관계됩니다. 아이템 레벨이 높다고 옵션 줄이 추가되는 것은 아닙니다. 높은 등급·높은 레벨만 고르기보다 스킬의 필요 무기와 실제로 바뀌는 능력치를 함께 비교합니다.",
-        en: "Normal → Magic → Rare → Epic → Legendary are equipment rarities. Higher rarity adds option lines, but the options must still suit your hero. Normal gear has no Sin; Magic has one, and Rare or higher has two different Sins. Items of the same rarity can roll different options and values.<br><br>Expedition drops can include Epic gear from Nightmare onward and Legendary gear in Hell. Not every enemy can provide every rarity, so consider difficulty and elite or boss enemies when seeking better gear. Unique and Crafted items are separate categories, not simply the next steps in that ladder.<br><br>Item level affects weapon damage, defense and option values, as well as whether a hero can equip it. A higher item level does not add option lines. Compare required weapons and actual stat changes alongside rarity and level.",
-        zh: '普通 → 魔法 → 稀有 → 史诗 → 传奇是装备的稀有度。稀有度越高，附带的词条越多，但也要看这些词条是否是当前英雄需要的。普通装备没有罪宗，魔法装备带有一种罪宗，稀有及以上带有两种不同的罪宗。即使稀有度相同，词条组合与数值也会不同。<br><br>远征中，史诗装备从噩梦难度起、传奇装备在地狱难度中才可能掉落。并非所有敌人都会掉落所有稀有度，所以寻找更好的装备时，也要考虑难度以及精英、首领。暗金与手工装备，不要只看名称就以为是这条阶梯的下一个稀有度。<br><br>物品等级会影响武器伤害、防御力与词条数值，也关系到英雄能否穿戴。物品等级高并不会增加词条数量。与其只挑高稀有度、高等级，不如一并比较技能所需的武器与实际变化的属性。',
+        ko: "일반 → 매직 → 레어 → 에픽 → 레전더리는 장비의 희귀도입니다. 높은 등급일수록 붙는 옵션 줄이 늘지만, 지금 영웅에게 필요한 옵션인지도 함께 봅니다. 일반 장비에는 메인 죄종이 없고, 매직에는 하나, 레어부터 레전더리까지는 보통 두 개가 붙습니다. 오만은 레어부터 등장하며, 오만 장비는 두 번째 메인 죄종 자리에 랜덤 옵션이 붙습니다. 같은 등급이라도 옵션 조합과 수치는 달라집니다.<br><br>원정의 에픽은 나이트메어부터, 레전더리는 헬에서 나올 수 있습니다. 모든 적이 모든 등급을 주는 것은 아니므로 더 높은 장비를 찾을 때는 난이도와 정예·보스도 살펴봅니다. 유니크·크래프트는 이름만 보고 이 계단의 다음 등급이라고 생각하지 않습니다.<br><br>아이템 레벨은 무기 피해·방어력과 옵션 수치에 영향을 주며, 영웅의 착용 가능 여부에도 관계됩니다. 아이템 레벨이 높다고 옵션 줄이 추가되는 것은 아닙니다. 높은 등급·높은 레벨만 고르기보다 스킬의 필요 무기와 실제로 바뀌는 능력치를 함께 비교합니다.",
+        en: "Normal → Magic → Rare → Epic → Legendary are equipment rarities. Higher rarity adds option lines, but the options must still suit your hero. Normal gear has no main Sin, Magic has one, and Rare through Legendary gear usually has two. Pride appears from Rare onward. Pride gear has a random option in place of its second main Sin. Items of the same rarity can roll different options and values.<br><br>Expedition drops can include Epic gear from Nightmare onward and Legendary gear in Hell. Not every enemy can provide every rarity, so consider difficulty and elite or boss enemies when seeking better gear. Unique and Crafted items are separate categories, not simply the next steps in that ladder.<br><br>Item level affects weapon damage, defense and option values, as well as whether a hero can equip it. A higher item level does not add option lines. Compare required weapons and actual stat changes alongside rarity and level.",
+        zh: '普通 → 魔法 → 稀有 → 史诗 → 传奇是装备的稀有度。稀有度越高，附带的词条越多，但也要看这些词条是否是当前英雄需要的。普通装备没有主罪宗，魔法装备有一个，稀有至传奇装备通常有两个。傲慢从稀有装备开始出现。傲慢装备的第二个主罪宗位置会改为随机词条。即使稀有度相同，词条组合与数值也会不同。<br><br>远征中，史诗装备从噩梦难度起、传奇装备在地狱难度中才可能掉落。并非所有敌人都会掉落所有稀有度，所以寻找更好的装备时，也要考虑难度以及精英、首领。暗金与手工装备，不要只看名称就以为是这条阶梯的下一个稀有度。<br><br>物品等级会影响武器伤害、防御力与词条数值，也关系到英雄能否穿戴。物品等级高并不会增加词条数量。与其只挑高稀有度、高等级，不如一并比较技能所需的武器与实际变化的属性。',
     },
     'help.character.sins.title': {
         ko: "장비 옵션과 죄종",
@@ -1813,14 +1830,14 @@ const STRINGS = {
         zh: '暴击率是暴击出现的频率，暴击伤害是暴击时的倍率。魔法武器的直接打击也可能暴击。不要只看其中一项就判断整体的攻击能力。<br><br>压碎性打击会在命中前，按敌人当前生命的比例追加伤害。它并不以最大生命为基准，所以同一个敌人剩余生命较多时，追加量较大。压碎性打击适用于物理武器与空手的直击，手持魔法武器时不生效。<br><br>吸血与造成的直击伤害成正比。物理伤害会恢复生命，元素伤害会转化为短暂存在的护盾（最多为最大生命的一定比例），真实伤害则没有吸血。伤害打不出来，治疗也会变少；压碎性打击追加的伤害以及中毒、反射都不会触发吸血。想增加治疗量，请一并确认吸血数值与实际打击伤害。<br><br>反击是在受到攻击时，有一定几率对攻击者回敬一次普通攻击。反击不占用自己的行动，被反击的一方也不会再反击。它与将受到的伤害原样返还的反射不同。魔法武器没有普通攻击，因此无法反击；处于僵直或眩晕状态时也无法反击。',
     },
     'help.character.farming_stats.title': {
-        ko: "드랍률·매직아이템 획득·골드·경험치",
-        en: "Item Find, Magic Find, Gold Find and EXP",
-        zh: '掉落率、魔法物品获取、金币与经验',
+        ko: "드랍률과 파티 획득 보너스",
+        en: "Item Find and Party Reward Bonuses",
+        zh: '掉落率与队伍奖励加成',
     },
     'help.character.farming_stats.body': {
-        ko: "드랍률은 적을 처치했을 때 장비를 떨어뜨릴 확률을 높입니다. 매직아이템 획득은 장비의 레어 이상 등급이 나올 비중을 높입니다. 이름과 달리 매직 등급만을 위한 옵션이 아니며, 아이템 레벨을 올리거나 아직 나오지 않는 난이도의 등급을 해금하지도 않습니다.<br><br>골드 획득은 적에게서 받는 골드의 양을 늘립니다. 장비의 경험치 증가는 그 장비를 낀 영웅 본인의 전투 경험치를 늘리며, 도감 경험치를 늘리는 옵션은 아닙니다. 장비가 필요한지, 자금이 필요한지, 특정 영웅을 키울지에 따라 비교할 옵션이 달라집니다.<br><br>드랍률·매직아이템 획득·골드 획득은 파티원의 몫을 모아 적용하지만 많이 모을수록 추가분의 효과가 줄어듭니다. 몬스터가 입은 장비를 얻는 구조라 매직아이템 획득은 적의 장비도 좋게 만들 수 있습니다. 파밍 수치를 높인 뒤 클리어가 느려지거나 실패가 늘었다면 실제로 모이는 보상도 함께 비교합니다.",
-        en: "Item Find raises the chance that a defeated enemy drops gear. Magic Find raises the share of gear rolls that are Rare or better. Despite its name, it does not only favor Magic rarity. It neither raises item level nor unlocks rarities unavailable at that difficulty.<br><br>Gold Find increases gold earned from enemies. EXP bonuses on gear increase combat XP for the hero wearing it, not Codex EXP. Compare different options depending on whether you need equipment, funds or levels for a particular hero.<br><br>Item Find, Magic Find and Gold Find combine the party's contributions with diminishing returns. Because drops come from gear monsters actually wear, Magic Find can improve enemy equipment too. If higher farming bonuses make clears slower or less reliable, also compare the rewards you actually earn.",
-        zh: '掉落率会提高击败敌人时掉落装备的几率。魔法物品获取会提高装备以稀有及以上稀有度出现的比重。与名称不同，它并不是只针对魔法稀有度的词条，也不会提高物品等级，或解锁该难度尚不会掉落的稀有度。<br><br>金币获取会增加从敌人处获得的金币数量。装备上的经验获取会增加穿戴该装备的英雄本人的战斗经验，并不是增加图鉴经验的词条。根据你需要的是装备、资金，还是培养特定英雄，要比较的词条也会不同。<br><br>掉落率、魔法物品获取、金币获取会汇总队员各自的数值后生效，但汇总得越多，追加部分的效果越低。由于获得的是怪物身上穿戴的装备，魔法物品获取也会让敌人的装备变好。如果提高刷宝数值后通关变慢或失败增多，也要一并比较实际获得的奖励。',
+        ko: "드랍률은 적을 처치했을 때 장비를 떨어뜨릴 확률을 높입니다. 파티 매직아이템 획득확률은 장비의 레어 이상 등급이 나올 비중을 높입니다. 이름과 달리 매직 등급만을 위한 옵션이 아니며, 아이템 레벨을 올리거나 아직 나오지 않는 난이도의 등급을 해금하지도 않습니다.<br><br>파티 골드 획득은 적에게서 받는 골드의 양을 늘립니다. 장비와 마스터리의 파티 경험치 획득은 해당 영웅의 전투 경험치를 늘리며, 도감 경험치를 늘리는 옵션은 아닙니다. 장비가 필요한지, 자금이 필요한지, 특정 영웅을 키울지에 따라 비교할 옵션이 달라집니다.<br><br>드랍률·파티 매직아이템 획득확률·파티 골드 획득은 파티원의 몫을 모아 적용하지만 많이 모을수록 추가분의 효과가 줄어듭니다. 몬스터가 입은 장비를 얻는 구조라 파티 매직아이템 획득확률은 적의 장비도 좋게 만들 수 있습니다. 파밍 수치를 높인 뒤 클리어가 느려지거나 실패가 늘었다면 실제로 모이는 보상도 함께 비교합니다.",
+        en: "Item Find raises the chance that a defeated enemy drops gear. Party Magic Find raises the share of gear rolls that are Rare or better. Despite its name, it does not only favor Magic rarity. It neither raises item level nor unlocks rarities unavailable at that difficulty.<br><br>Party Gold Find increases gold earned from enemies. Party Experience Gain from gear or mastery increases the hero’s combat XP, not Codex EXP. Compare different options depending on whether you need equipment, funds or levels for a particular hero.<br><br>Item Find, Party Magic Find and Party Gold Find combine the party's contributions with diminishing returns. Because drops come from gear monsters actually wear, Party Magic Find can improve enemy equipment too. If higher farming bonuses make clears slower or less reliable, also compare the rewards you actually earn.",
+        zh: '掉落率会提高击败敌人时掉落装备的几率。队伍魔法物品获取率会提高装备以稀有及以上稀有度出现的比重。与名称不同，它并不是只针对魔法稀有度的词条，也不会提高物品等级，或解锁该难度尚不会掉落的稀有度。<br><br>队伍金币获取会增加从敌人处获得的金币数量。装备与专精提供的队伍经验获取会增加该英雄的战斗经验，并不是增加图鉴经验的词条。根据你需要的是装备、资金，还是培养特定英雄，要比较的词条也会不同。<br><br>掉落率、队伍魔法物品获取率、队伍金币获取会汇总队员各自的数值后生效，但汇总得越多，追加部分的效果越低。由于获得的是怪物身上穿戴的装备，队伍魔法物品获取率也会让敌人的装备变好。如果提高刷宝数值后通关变慢或失败增多，也要一并比较实际获得的奖励。',
     },
     'help.character.ailments.title': {
         ko: "화상·중독·결빙·스턴",
@@ -1918,9 +1935,9 @@ const STRINGS = {
         zh: '雇佣英雄',
     },
     'help.tavern.hire.body': {
-        ko: "고용 기능이 열리면 후보 카드의 능력치와 스킬을 살펴본 뒤 <b>[고용]</b>합니다. 비용은 <b>{hire}G</b>이며 로스터에 빈 자리가 필요합니다. 영웅은 시작 무기와 갑옷을 갖고 들어옵니다.<br><br>고용한 영웅은 <b>로스터에 추가</b>됩니다. 전투에 넣으려면 편성 탭에서 Party에 넣고, 연구소 효과를 받으려면 원하는 줄에 등록합니다. 고용한 후보의 자리는 다음 명단 교체까지 비어 있습니다.",
-        en: "Once hiring is unlocked, inspect a candidate's attributes and skill, then press <b>Hire</b>. It costs <b>{hire}G</b> and needs a free roster slot. The hero arrives with a starter weapon and armor.<br><br>Hiring adds the hero to your <b>roster</b>. Add them to a Party in the Party tab to fight, or assign them to a Laboratory line for its bonuses. The hired candidate's slot stays empty until the next refresh.",
-        zh: '雇佣功能开放后，查看候选卡片上的属性与技能，再按<b>[雇佣]</b>。费用为<b>{hire}G</b>，且名册中需要有空位。英雄会携带初始武器与铠甲加入。<br><br>雇佣的英雄会<b>加入名册</b>。要让其参战，请在编队标签页中将其加入Party；要获得研究所效果，请将其派驻到想要的线上。已雇佣候选的位置会一直空着，直到下次名单刷新。',
+        ko: "고용 기능이 열리면 후보 카드의 능력치와 스킬을 살펴본 뒤 <b>[고용]</b>합니다. 비용은 <b>{hire}G</b>이며 로스터에 빈 자리가 필요합니다. <b>[보유 칸 +1]</b>을 누르면 표시된 골드로 한 칸을 즉시 엽니다. 영웅은 시작 무기와 갑옷을 갖고 들어옵니다.<br><br>고용한 영웅은 <b>로스터에 추가</b>됩니다. 전투에 넣으려면 편성 탭에서 Party에 넣고, 연구소 효과를 받으려면 원하는 줄에 등록합니다. 고용한 후보의 자리는 다음 명단 교체까지 비어 있습니다.",
+        en: "Once hiring is unlocked, inspect a candidate's attributes and skill, then press <b>Hire</b>. It costs <b>{hire}G</b> and needs a free roster slot. Use <b>Roster slot +1</b> to unlock one slot immediately for the displayed gold price. The hero arrives with a starter weapon and armor.<br><br>Hiring adds the hero to your <b>roster</b>. Add them to a Party in the Party tab to fight, or assign them to a Laboratory line for its bonuses. The hired candidate's slot stays empty until the next refresh.",
+        zh: '雇佣功能开放后，查看候选卡片上的属性与技能，再按<b>[雇佣]</b>。费用为<b>{hire}G</b>，且名册中需要有空位。可按<b>[名册栏位 +1]</b>，支付显示的金币立即解锁一格。英雄会携带初始武器与铠甲加入。<br><br>雇佣的英雄会<b>加入名册</b>。要让其参战，请在编队标签页中将其加入Party；要获得研究所效果，请将其派驻到想要的线上。已雇佣候选的位置会一直空着，直到下次名单刷新。',
     },
     'help.tavern.choosing.title': {
         ko: "후보는 무엇을 보고 고르나요?",
@@ -2180,9 +2197,9 @@ const STRINGS = {
         zh: '自动生产与关闭游戏期间',
     },
     'help.resource.production.body': {
-        ko: "창고를 지으면 연구소의 <b>자원 줄</b>이 열립니다. 영웅을 등록하지 않아도 <b>최하급 철광석·약초·목재를 모두</b> 생산합니다. 등록은 생산을 시작하는 조건이 아니라 더 빠르게 얻는 보너스입니다.<br><br>자원 줄의 <b>채광·채집·벌목</b> 연구는 각각 철광석·약초·목재 생산량을 높입니다. 무기나 건물이 필요하면 철광석, 방어구나 건물이 필요하면 목재, 물약·책·약초 비용 연구가 필요하면 약초를 확인합니다. 생산물은 재고에 자동으로 더해집니다.<br><br>게임을 켜 둔 동안에는 계속 생산합니다. 꺼 둔 동안의 재료·훈련·도박장 수익은 <b>{hours}시간분을 기준으로 제한해 계산</b>하므로, 비운 시간 전부가 무제한 쌓이지 않습니다. 수색의 도착 시계는 이 시간 상한을 받지 않고 대기소가 찰 때까지 흐릅니다.",
-        en: "Building Storage opens the Laboratory's <b>Resources line</b>. It produces <b>lowest-grade iron ore, herbs and timber together</b> without assigned heroes. Assignment improves output; it is not required to start production.<br><br><b>Mining, Gathering and Logging</b> research raise ore, herb and timber output respectively. Check ore for weapons or buildings, timber for armor or buildings, and herbs for potions, books or research with an herb cost. Output enters stock automatically.<br><br>Production continues while the game is open. Offline materials, Training and Gambling Den income are <b>limited using a {hours}h calculation window</b>; time away does not accumulate without limit. The Search arrival timer has no such time cap and continues until its Waiting Room fills.",
-        zh: '建造仓库后，研究所的<b>资源线</b>开放。即使不派驻英雄，也会<b>同时生产最低级铁矿石、草药、木材</b>。派驻不是开始生产的条件，而是让获取更快的加成。<br><br>资源线的<b>采矿、采集、伐木</b>研究分别提高铁矿石、草药、木材的产量。需要武器或建筑时看铁矿石，需要防具或建筑时看木材，需要药水、书或有草药费用的研究时看草药。产出会自动加入库存。<br><br>游戏开着时会持续生产。关闭期间的材料、训练、赌坊收益<b>最多按{hours}小时计算</b>，离开的时间不会无限累积。搜寻的到达计时不受这个时间上限限制，会一直走到等候所填满为止。',
+        ko: "창고를 지으면 연구소의 <b>자원 줄</b>이 열립니다. 영웅을 등록하지 않아도 <b>최하급 철광석·약초·목재를 모두</b> 생산합니다. 등록은 생산을 시작하는 조건이 아니라 더 빠르게 얻는 보너스입니다.<br><br>자원 줄의 <b>채광·채집·벌목</b> 연구는 각각 철광석·약초·목재 생산량을 높입니다. 무기나 건물이 필요하면 철광석, 방어구나 건물이 필요하면 목재, 물약·책·약초 비용 연구가 필요하면 약초를 확인합니다. 생산물은 재고에 자동으로 더해집니다.<br><br>게임을 켜 둔 동안에는 계속 생산합니다. 오프라인 생산은 <b>기본 {hours}시간</b>까지 쌓입니다. 자원 줄의 <b>오프라인 생산 시간 연장</b>을 연구하면 철광석·약초·목재가 더 오래 쌓입니다. 수색의 도착 시계는 이 시간 상한을 받지 않고 대기소가 찰 때까지 흐릅니다.",
+        en: "Building Storage opens the Laboratory's <b>Resources line</b>. It produces <b>lowest-grade iron ore, herbs and timber together</b> without assigned heroes. Assignment improves output; it is not required to start production.<br><br><b>Mining, Gathering and Logging</b> research raise ore, herb and timber output respectively. Check ore for weapons or buildings, timber for armor or buildings, and herbs for potions, books or research with an herb cost. Output enters stock automatically.<br><br>Production continues while the game is open. Offline output accumulates for <b>up to {hours}h by default</b>. Research <b>Offline Production Time</b> in Resources to extend the cap for ore, herbs and timber. The Search arrival timer has no such time cap and continues until its Waiting Room fills.",
+        zh: '建造仓库后，研究所的<b>资源线</b>开放。即使不派驻英雄，也会<b>同时生产最低级铁矿石、草药、木材</b>。派驻不是开始生产的条件，而是让获取更快的加成。<br><br>资源线的<b>采矿、采集、伐木</b>研究分别提高铁矿石、草药、木材的产量。需要武器或建筑时看铁矿石，需要防具或建筑时看木材，需要药水、书或有草药费用的研究时看草药。产出会自动加入库存。<br><br>游戏开着时会持续生产。离线产出<b>默认最多累计{hours}小时</b>。研究资源线的<b>离线生产时长</b>可延长铁矿石、草药和木材的累计时间。搜寻的到达计时不受这个时间上限限制，会一直走到等候所填满为止。',
     },
     'help.resource.materials.title': {
         ko: "재료는 어디서 얻고 어디에 쓰나요?",
@@ -2511,9 +2528,9 @@ const STRINGS = {
         zh: '查看其他画面或离开时',
     },
     'help.help.away.body': {
-        ko: "게임 안에서 도움말·캐릭터·건설 같은 다른 탭을 보는 동안에도 원정과 탐험은 진행됩니다. 관전 중인 팀만 움직이는 방식이 아니므로 장비를 정리하면서 전투를 돌릴 수 있습니다.<br><br>게임을 완전히 닫으면 원정은 멈추며, 다시 접속한 뒤 출발합니다. 보낸 탐험은 꺼 둔 동안에도 남은 시간이 흘러 완료되므로 돌아왔을 때 탐험 탭에서 수령합니다. 연구소의 오프라인 생산·훈련·수익은 {offlineHours}시간분을 기준으로 제한해 계산하며, 수색은 대기소가 찰 때까지 진행됩니다.<br><br>PC가 절전 상태에 들어가거나 브라우저가 게임 탭을 오래 정지시키면 원정이 끊길 수 있습니다. 돌아왔을 때 마지막 리포트를 확인하고 [보내기]로 다시 시작합니다. 연구소 생산과 탐험의 완료·수령은 각 탭에서 확인합니다.",
-        en: "Expeditions and Exploration continue while you view other in-game tabs such as Help, Character or Construction. Activity is not limited to the team you are spectating, so you can organize equipment while combat runs.<br><br>Closing the game stops Expeditions; deploy again after returning. An exploration already sent can finish while the game is closed; claim it in Exploration when you return. Offline Laboratory production, Training and income use a limited {offlineHours}h calculation window. Search continues until its Waiting Room fills.<br><br>If the PC sleeps or the browser suspends the game tab for a long time, Expeditions can stop. On return, check the last report, then Deploy again. Check Laboratory output and Exploration completion or collection in their respective tabs.",
-        zh: '在游戏内查看帮助、角色、建设等其他页面时，远征和探索也会继续进行。并不是只有正在观战的队伍在行动，所以可以一边整理装备一边让战斗进行。<br><br>完全关闭游戏后，远征会停止，重新进入后需要再次出发。已派出的探索在关闭期间剩余时间也会流逝并完成，回来后在探索页领取。研究所的离线生产、训练、收益最多按{offlineHours}小时计算，搜寻会持续到等候所填满为止。<br><br>电脑进入睡眠状态，或浏览器长时间暂停游戏页面时，远征可能会中断。回来后查看最后一份报告，用[派遣]重新开始。研究所的生产以及探索的完成、领取请在各自的页面查看。',
+        ko: "게임 안에서 도움말·캐릭터·건설 같은 다른 탭을 보는 동안에도 원정과 탐험은 진행됩니다. 관전 중인 팀만 움직이는 방식이 아니므로 장비를 정리하면서 전투를 돌릴 수 있습니다.<br><br>게임을 완전히 닫으면 원정은 멈추며, 다시 접속한 뒤 출발합니다. 보낸 탐험은 꺼 둔 동안에도 남은 시간이 흘러 완료되므로 돌아왔을 때 탐험 탭에서 수령합니다. 연구소의 기본 오프라인 생산 상한은 {offlineHours}시간입니다. 자원 연구로 재료 상한을 늘릴 수 있으며, 수색은 대기소가 찰 때까지 진행됩니다.<br><br>PC가 절전 상태에 들어가거나 브라우저가 게임 탭을 오래 정지시키면 원정이 끊길 수 있습니다. 돌아왔을 때 마지막 리포트를 확인하고 [보내기]로 다시 시작합니다. 연구소 생산과 탐험의 완료·수령은 각 탭에서 확인합니다.",
+        en: "Expeditions and Exploration continue while you view other in-game tabs such as Help, Character or Construction. Activity is not limited to the team you are spectating, so you can organize equipment while combat runs.<br><br>Closing the game stops Expeditions; deploy again after returning. An exploration already sent can finish while the game is closed; claim it in Exploration when you return. The Laboratory's default offline cap is {offlineHours}h. Resources research extends the cap for materials. Search continues until its Waiting Room fills.<br><br>If the PC sleeps or the browser suspends the game tab for a long time, Expeditions can stop. On return, check the last report, then Deploy again. Check Laboratory output and Exploration completion or collection in their respective tabs.",
+        zh: '在游戏内查看帮助、角色、建设等其他页面时，远征和探索也会继续进行。并不是只有正在观战的队伍在行动，所以可以一边整理装备一边让战斗进行。<br><br>完全关闭游戏后，远征会停止，重新进入后需要再次出发。已派出的探索在关闭期间剩余时间也会流逝并完成，回来后在探索页领取。研究所的离线产出默认最多累计{offlineHours}小时。资源研究可延长材料的累计时间，搜寻会持续到等候所填满为止。<br><br>电脑进入睡眠状态，或浏览器长时间暂停游戏页面时，远征可能会中断。回来后查看最后一份报告，用[派遣]重新开始。研究所的生产以及探索的完成、领取请在各自的页面查看。',
     },
     // 왼쪽 탭 아이콘의 출처 — CC BY 3.0 의 표기 조건 (SCREEN_DESIGN §1 · §12 · ADR-1028)
     'help.help.credits.title': {
@@ -2542,9 +2559,9 @@ const STRINGS = {
         zh: '掉落条件与随机',
     },
     'help.lab.rolling.body': {
-        ko: "부위 줄에서 항상 착용하는 장비와 확률로 착용하는 장비를 구분할 수 있습니다. 아이템 레벨 범위와 희귀도 가중치는 현재 조건의 실제 드롭 규칙입니다. <b>[굴리기]</b>는 한 번, <b>[×10]</b>은 열 번 생성하며 파티의 매직 아이템 획득 보너스는 적용하지 않습니다.<br><br>가중치는 상대 비중이므로 표시값 자체가 퍼센트 확률은 아닙니다.",
+        ko: "부위 줄에서 항상 착용하는 장비와 확률로 착용하는 장비를 구분할 수 있습니다. 아이템 레벨 범위와 희귀도 가중치는 현재 조건의 실제 드롭 규칙입니다. <b>[굴리기]</b>는 한 번, <b>[×10]</b>은 열 번 생성하며 파티 매직아이템 획득확률는 적용하지 않습니다.<br><br>가중치는 상대 비중이므로 표시값 자체가 퍼센트 확률은 아닙니다.",
         en: "The slot row distinguishes always-equipped items from optional slots with a wear chance. Item-level ranges and rarity weights show the actual drop rules for your chosen conditions. <b>Roll</b> generates once; <b>×10</b> generates ten times. Party Magic Find is excluded. Weights are relative shares, not direct percentage chances.",
-        zh: '在部位行中，可以区分必定穿戴的装备与按几率穿戴的装备。物品等级范围和稀有度权重是当前条件下的实际掉落规则。<b>[随机生成]</b>生成一次，<b>[×10]</b>生成十次，不计入队伍的魔法物品获取加成。<br><br>权重是相对比重，所示数值本身并不是百分比几率。',
+        zh: '在部位行中，可以区分必定穿戴的装备与按几率穿戴的装备。物品等级范围和稀有度权重是当前条件下的实际掉落规则。<b>[随机生成]</b>生成一次，<b>[×10]</b>生成十次，不计入队伍魔法物品获取率。<br><br>权重是相对比重，所示数值本身并不是百分比几率。',
     },
     'help.lab.results.title': {
         ko: "결과와 저장",
@@ -2762,7 +2779,7 @@ const STRINGS = {
     'st.desc.agi': { ko: '공격 속도 · 캐스팅 속도 증가<br>일부 스킬의 타수 · 효과 증가', en: 'Faster attack and casting speed<br>More hits and stronger effects for some skills', zh: '提高攻击速度、施法速度<br>增加部分技能的攻击次数与效果' },
     'st.desc.int': { ko: '마법 스킬 피해 증가', en: 'Increases magic skill damage', zh: '提高魔法技能伤害' },
     'st.desc.vit': { ko: '레벨업마다 오르는 최대 HP 증가<br>버프 지속시간 증가', en: 'More Max HP per level-up<br>Longer-lasting buffs', zh: '提高每次升级增加的最大生命<br>延长增益持续时间' },
-    'st.desc.luck': { ko: '치명타 피해 · 드랍률 · 골드 획득 증가<br>일부 스킬의 추가 피해 증가', en: 'Increases Crit Damage, Item Find and Gold Find<br>Boosts bonus damage of some skills', zh: '提高暴击伤害、掉落率、金币获取<br>提高部分技能的额外伤害' },
+    'st.desc.luck': { ko: '치명타 피해 · 드랍률 · 파티 골드 획득 증가<br>일부 스킬의 추가 피해 증가', en: 'Increases Crit Damage, Item Find and Party Gold Find<br>Boosts bonus damage of some skills', zh: '提高暴击伤害、掉落率、队伍金币获取<br>提高部分技能的额外伤害' },
     'st.desc.ldr': { ko: '아군에게 거는 버프 강화 · 리더면 파티 전술 효과 증가', en: 'Strengthens the buffs you give allies · As leader, strengthens party tactics', zh: '增强对友方施加的增益；担任队长时提高队伍战术效果' },
     'st.desc.cha': { ko: '회복량 · 적에게 거는 효과 증가 · 받는 상태이상 · 디버프 시간 감소', en: 'Increases healing and the effects you put on enemies · Shortens ailments and debuffs on you', zh: '提高治疗量与对敌人施加的效果；缩短自身受到的异常状态、减益时间' },
     'st.desc.atk_physical': { ko: '평타와 물리 스킬 피해의 바탕이 되는 값', en: 'The base of basic attack and physical skill damage', zh: '普通攻击与物理技能伤害的基础值' },
@@ -2797,9 +2814,9 @@ const STRINGS = {
     'st.desc.fx_recv': { ko: '받는 회복량 증가', en: 'Increases healing received', zh: '提高受到的治疗量' },
     'st.desc.fx_buff_dur': { ko: '내가 거는 버프와 적에게 거는 효과의 지속시간 증가', en: 'Your buffs and the effects you put on enemies last longer', zh: '延长自身施加的增益与对敌人施加效果的持续时间' },
     'st.desc.item_find': { ko: '적이 떨어뜨리는 아이템 증가', en: 'Enemies drop more items', zh: '敌人掉落更多物品' },
-    'st.desc.fx_magic_find': { ko: '더 높은 등급의 아이템이 나올 확률 증가', en: 'Higher-rarity items drop more often', zh: '提高掉落更高稀有度物品的几率' },
-    'st.desc.gold_find': { ko: '적에게서 얻는 골드 증가', en: 'More gold from enemies', zh: '提高从敌人处获得的金币' },
-    'st.desc.fx_xp': { ko: '얻는 경험치 증가', en: 'More experience gained', zh: '提高获得的经验' },
+    'st.desc.fx_magic_find': { ko: '파티가 얻는 장비 중 레어 이상이 나오는 비중 증가', en: 'A greater share of the party’s gear drops are Rare or better', zh: '提高队伍获得的装备中稀有及以上装备的比重' },
+    'st.desc.gold_find': { ko: '파티가 적에게서 얻는 골드 증가', en: 'The party earns more gold from enemies', zh: '提高队伍从敌人处获得的金币' },
+    'st.desc.fx_xp': { ko: '이 영웅이 받는 전투 경험치 증가', en: 'This hero gains more combat experience', zh: '提高该英雄获得的战斗经验' },
     'eq.sins.h': { ko: '접사 죄종', en: 'Affix Sins', zh: '词缀罪宗' },
     'eq.sins.note': {
         ko: '착용 장비의 죄종 — 아이템 이름에 붙은 죄종 태그(접두 · 접미)입니다. <b>파티 전술</b>이 이 수를 셉니다<br>'
@@ -3121,7 +3138,7 @@ const STRINGS = {
     'dp.next.h': { ko: '다음 레벨', en: 'Next Level', zh: '下一级' },   // 고른 칸의 소제목 — 건설 「다음 랭크」(`cn.next.h`)와 같은 자리 (ADR-0674)
     'dp.lvList.h': { ko: '{name} 레벨', en: '{name} Levels', zh: '{name}等级' },   // 고른 지점의 레벨 목록 소제목 — 건설 「{건물} 랭크」(`cn.ranks.h`)와 같은 자리 (ADR-0694)
     'dp.lvDone': { ko: '{name} Lv {n}', en: '{name} Lv {n}', zh: '{name} Lv {n}' },
-    'dp.offline': { ko: '오프라인 최대 {h}시간', en: 'Offline up to {h}h', zh: '离线最多{h}小时' },
+    'dp.offline': { ko: '재료 오프라인 최대 {h}시간', en: 'Offline materials up to {h}h', zh: '离线材料最多累计{h}小时' },
     'dp.err.maxUp': { ko: '최대 레벨', en: 'Already at max level', zh: '已达最高等级' },
     'dp.err.rank': { ko: '연구소 랭크 부족', en: 'Laboratory rank too low', zh: '研究所阶不足' },
     'dp.err.gold': { ko: '골드 부족', en: 'Not enough gold', zh: '金币不足' },
@@ -3278,7 +3295,8 @@ const STRINGS = {
     'sk.cond.lower_any': { ko: '상대의 HP 비율이 나보다 낮을 때', en: "When the foe's HP % is lower than yours", zh: '对手的生命比例低于自己时' },
     'sk.cond.fresh': { ko: '상대의 HP 가 {pct} 이상일 때 (랭크당 문턱 −{step})', en: 'Against foes at {pct} HP or more (threshold −{step} per rank)', zh: '对手生命在{pct}以上时（每阶门槛−{step}）' },
     'sk.cond.fresh_full': { ko: '상대의 HP 가 가득 찼을 때 (랭크당 문턱 −{step})', en: 'Against foes at full HP (threshold −{step} per rank)', zh: '对手生命全满时（每阶门槛−{step}）' },
-    'sk.cond.opening': { ko: '라운드 시작 후 {sec}초 동안 (랭크당 +{step}초)', en: 'For the first {sec}s of a round (+{step}s per rank)', zh: '回合开始后持续{sec}秒（每阶+{step}秒）' },
+    'sk.cond.opening': { ko: '라운드 시작 후 {sec}초 동안', en: 'For the first {sec}s of a round', zh: '回合开始后持续{sec}秒' },
+    'sk.cond.openingNext': { ko: '라운드 시작 후 {sec}초 동안 (다음 랭크 {next}초)', en: 'For the first {sec}s of a round ({next}s at the next rank)', zh: '回合开始后持续{sec}秒（下一阶{next}秒）' },
     'sk.cond.late': { ko: '라운드 시작 후 {sec}초부터 (랭크당 −{step}초)', en: 'From {sec}s into a round (−{step}s per rank)', zh: '回合开始{sec}秒后起（每阶−{step}秒）' },
     /* 마스터리 효과 문장 — 「무엇이 n 증가한다」 (SCREEN_DESIGN §7 · ADR-0332). 축마다 **통째로** 든다 — 조사(이/가)와
        동사(증가/감소)를 렌더러가 고르지 않는다. 이름이 「감소」인 축은 줄어드는 것이 주어다. {v} 는 부호 없는 값.
@@ -3332,24 +3350,30 @@ const STRINGS = {
     'sk.masteryEffect.period_minus_sec': { ko: '공격 속도 {v}초 단축', en: 'Attacks come {v}s sooner', zh: '攻击速度缩短{v}秒' },
     'sk.masteryEffect.crit_damage': { ko: '치명타 피해 {v} 증가', en: 'Crit Damage increases by {v}', zh: '暴击伤害提高{v}' },
     'sk.masteryEffect.crit_rate': { ko: '치명타 확률 {v} 증가', en: 'Crit Chance increases by {v}', zh: '暴击率提高{v}' },
-    'sk.masteryEffect.crushing_blow_pct': { ko: '강타 {v} 증가', en: 'Crushing Blow increases by {v}', zh: '压碎性打击提高{v}' },
+    'sk.masteryEffect.crushing_blow_pct': { ko: '강타 +{v}', en: 'Crushing Blow +{v}', zh: '压碎性打击 +{v}' },
     'sk.masteryEffect.damage_reduction': { ko: '받는 피해 {v} 감소', en: 'Damage taken is reduced by {v}', zh: '受到的伤害降低{v}' },
     'sk.masteryEffect.def_flat': { ko: '물리 방어 {v} 증가', en: 'Physical Defense increases by {v}', zh: '物理防御提高{v}' },
     'sk.masteryEffect.def_ignore': { ko: '방어력 관통 {v} 증가', en: 'Defense Penetration increases by {v}', zh: '防御穿透提高{v}' },
     'sk.masteryEffect.fhr': { ko: '타격 회복 {v} 증가', en: 'Hit Recovery increases by {v}', zh: '受击恢复提高{v}' },
-    'sk.masteryEffect.gold_find': { ko: '골드 획득 {v} 증가', en: 'Gold Find increases by {v}', zh: '金币获取提高{v}' },
+    'sk.masteryEffect.gold_find': { ko: '파티 골드 획득 {v} 증가', en: 'Party Gold Find increases by {v}', zh: '队伍金币获取提高{v}' },
     'sk.masteryEffect.hit_bonus': { ko: '명중률 {v} 증가', en: 'Hit Bonus increases by {v}', zh: '命中率提高{v}' },
     'sk.masteryEffect.hp_pct': { ko: '최대 HP {v} 증가', en: 'Max HP increases by {v}', zh: '最大生命提高{v}' },
     'sk.masteryEffect.hp_flat': { ko: '최대 HP {v} 증가', en: 'Max HP increases by {v}', zh: '最大生命提高{v}' },
-    'sk.masteryEffect.hp_recovery_pct': { ko: '체력 회복 {v} 증가', en: 'HP Recovery increases by {v}', zh: '生命恢复提高{v}' },
+    'sk.masteryEffect.hp_recovery_pct': { ko: '받는 HP 회복량 {v} 증가 (물약 포함)', en: 'HP recovery received increases by {v} (including potions)', zh: '受到的生命恢复提高{v}（包括药剂）' },
+    'sk.masteryEffect.dmg_max_per_level': { ko: '영웅 레벨당 최대 데미지 {v} 증가', en: 'Maximum Damage increases by {v} per hero level', zh: '英雄每级最大伤害提高{v}' },
+    'sk.masteryEffect.skill_dmg_pct': { ko: '스킬 데미지 {v} 증가', en: 'Skill Damage increases by {v}', zh: '技能伤害提高{v}' },
+    'sk.masteryEffect.heal_out_pct': { ko: '내가 쓰는 회복 스킬의 회복량 {v} 증가', en: 'Your healing skills restore {v} more HP', zh: '自身治疗技能造成的治疗量提高{v}' },
+    'sk.masteryEffect.skill_tag_value': { ko: '버프 · 디버프 수치 {v} 증가', en: 'Buff and debuff strength increases by {v}', zh: '增益与减益强度提高{v}' },
+    'sk.masteryEffect.debuff_dur_reduction': { ko: '받는 상태이상 · 디버프 지속시간 {v} 감소', en: 'Ailments and debuffs on you last {v} less time', zh: '自身受到的异常状态和减益持续时间缩短{v}' },
     'sk.masteryEffect.hp_regen': { ko: 'HP 재생 {v} 증가', en: 'HP Regen increases by {v}', zh: '生命再生提高{v}' },
     'sk.masteryEffect.item_find': { ko: '드랍률 {v} 증가', en: 'Item Find increases by {v}', zh: '掉落率提高{v}' },
     'sk.masteryEffect.life_steal': { ko: '흡혈 {v} 증가', en: 'Life Steal increases by {v}', zh: '吸血提高{v}' },
-    'sk.masteryEffect.magic_find': { ko: '매직아이템 획득 {v} 증가', en: 'Magic Find increases by {v}', zh: '魔法物品获取提高{v}' },
+    'sk.masteryEffect.magic_find': { ko: '파티 매직아이템 획득확률 {v} 증가', en: 'Party Magic Find increases by {v}', zh: '队伍魔法物品获取率提高{v}' },
+    'sk.masteryEffect.xp_gain_pct': { ko: '파티 경험치 획득 {v} 증가 (이 영웅의 전투 경험치에 적용)', en: 'Party Experience Gain increases by {v} for this hero’s combat experience', zh: '队伍经验获取提高{v}（适用于该英雄的战斗经验）' },
     // 탐욕 T3 — 「탐욕 합에 비례」가 효과의 일부라 한 토막에 같이 든다 (SCREEN_DESIGN §7 · R325)
-    'sk.masteryEffect.atk_pct_per_greed': { ko: '골드 획득 · 드랍률 · 매직아이템 획득 합의 {v}만큼 데미지 증가', en: 'Damage increases by {v} of your total Gold Find, Item Find and Magic Find', zh: '按金币获取、掉落率、魔法物品获取总和的{v}提高伤害' },
-    'sk.masteryEffect.hp_pct_per_greed': { ko: '골드 획득 · 드랍률 · 매직아이템 획득 합의 {v}만큼 최대 HP 증가', en: 'Max HP increases by {v} of your total Gold Find, Item Find and Magic Find', zh: '按金币获取、掉落率、魔法物品获取总和的{v}提高最大生命' },
-    'sk.masteryEffect.cdr_per_greed': { ko: '골드 획득 · 드랍률 · 매직아이템 획득 합의 {v}만큼 쿨타임 감소', en: 'Cooldowns are reduced by {v} of your total Gold Find, Item Find and Magic Find', zh: '按金币获取、掉落率、魔法物品获取总和的{v}缩短冷却' },
+    'sk.masteryEffect.atk_pct_per_greed': { ko: '이 영웅의 파티 골드 획득 · 드랍률 · 파티 매직아이템 획득확률 합의 {v}만큼 데미지 증가', en: 'Damage increases by {v} of your contributions to Party Gold Find, Item Find and Party Magic Find', zh: '按该英雄贡献的队伍金币获取、掉落率和队伍魔法物品获取率之和的{v}提高伤害' },
+    'sk.masteryEffect.hp_pct_per_greed': { ko: '이 영웅의 파티 골드 획득 · 드랍률 · 파티 매직아이템 획득확률 합의 {v}만큼 최대 HP 증가', en: 'Max HP increases by {v} of your contributions to Party Gold Find, Item Find and Party Magic Find', zh: '按该英雄贡献的队伍金币获取、掉落率和队伍魔法物品获取率之和的{v}提高最大生命' },
+    'sk.masteryEffect.cdr_per_greed': { ko: '이 영웅의 파티 골드 획득 · 드랍률 · 파티 매직아이템 획득확률 합의 {v}만큼 쿨타임 감소', en: 'Cooldowns are reduced by {v} of your contributions to Party Gold Find, Item Find and Party Magic Find', zh: '按该英雄贡献的队伍金币获取、掉落率和队伍魔法物品获取率之和的{v}缩短冷却' },
     'sk.masteryEffect.reflect_damage': { ko: '반사 피해 {v} 증가', en: 'Reflect Damage increases by {v}', zh: '反射伤害提高{v}' },
     'sk.masteryEffect.res_all': { ko: '모든 원소 저항 {v} 증가', en: 'All Resistances increase by {v}', zh: '所有元素抗性提高{v}' },
     'sk.masteryEffect.res_max_bonus': { ko: '최대 원소 저항 {v} 증가', en: 'Max Resistances increase by {v}', zh: '最大元素抗性提高{v}' },
@@ -3595,10 +3619,10 @@ const STRINGS = {
     'cx.rw.farm': { ko: '{race} {line}', en: '{line} from {race}', zh: '{race}{line}' },
     'cx.rw.fight': { ko: '{race} 상대 {line}', en: '{line} vs {race}', zh: '对{race}{line}' },
     // 도감 몬스터 툴팁 가운데 칸 — 오르는 것의 이름만 · 값은 오른쪽 칸 (ADR-1276)
-    'cx.rw.xp': { ko: '처치 경험치', en: 'Kill EXP', zh: '击杀经验' },
+    'cx.rw.xp': { ko: '파티 경험치 획득', en: 'Party Experience Gain', zh: '队伍经验获取' },
     'cx.rw.drop': { ko: '드롭 확률', en: 'Drop Chance', zh: '掉落几率' },
-    'cx.rw.magic': { ko: '매직 아이템 획득', en: 'Magic Find', zh: '魔法物品获取' },
-    'cx.rw.gold': { ko: '골드 획득', en: 'Gold Find', zh: '金币获取' },
+    'cx.rw.magic': { ko: '파티 매직아이템 획득확률', en: 'Party Magic Find', zh: '队伍魔法物品获取率' },
+    'cx.rw.gold': { ko: '파티 골드 획득', en: 'Party Gold Find', zh: '队伍金币获取' },
     'cx.rw.material': { ko: '재료 획득', en: 'Material Find', zh: '材料获取' },
     // 전체 버프 — 도감 몬스터 챕터 줄 오른쪽 버튼 · 그 창의 제목 · 묶음 머리 셋 (SCREEN_DESIGN §9 · ADR-1279)
     'cx.buff.btn': { ko: '전체 버프', en: 'All Buffs' },
@@ -3898,9 +3922,9 @@ const STRINGS = {
     // 현재 창의 시간 상태 — 이름 오른쪽에 값만 선다
     'bt.effect.permanent': { ko: '상시', en: 'Permanent', zh: '常驻' },
     // 정예 특성 칩의 효과 한 줄 — 죄종 칸은 마스터리 툴팁 문장(`sk.masteryEffect.*`)을 그대로 쓰고, 몬스터에게 뜻이 바뀌는 칸만 여기 (SCREEN_DESIGN §4-2 · ADR-1194 · R501)
-    'bt.trait.gold': { ko: '처치 골드 {v} 증가', en: 'Kill gold increases by {v}', zh: '击杀金币提高{v}' },
-    'bt.trait.xp': { ko: '처치 경험치 {v} 증가', en: 'Kill experience increases by {v}', zh: '击杀经验提高{v}' },
-    'bt.trait.magic': { ko: '입은 장비의 매직 확률 {v} 증가', en: 'Magic chance of its gear increases by {v}', zh: '所穿装备的魔法几率提高{v}' },
+    'bt.trait.gold': { ko: '이 적을 처치하면 파티 골드 획득 {v} 증가', en: 'Party Gold Find increases by {v} when defeating this enemy', zh: '击杀该敌人时队伍金币获取提高{v}' },
+    'bt.trait.xp': { ko: '이 적을 처치하면 파티 경험치 획득 {v} 증가', en: 'Party Experience Gain increases by {v} when defeating this enemy', zh: '击杀该敌人时队伍经验获取提高{v}' },
+    'bt.trait.magic': { ko: '이 적의 장비 굴림에 파티 매직아이템 획득확률 {v} 추가', en: 'Adds {v} Party Magic Find to this enemy’s gear rolls', zh: '该敌人的装备随机生成时额外获得{v}队伍魔法物品获取率' },
     // 강화 칸 — 그 정예 갈래 한 줄(물리 무기 `phys` · 마법 무기 `mag` · R528 · ADR-1246) · 값은 balance.csv `elite_enchant_*`
     'bt.trait.enchant.fire.phys': { ko: '물리 피해의 {v}만큼 화염 피해 추가', en: 'Adds Fire damage equal to {v} of physical damage' },
     'bt.trait.enchant.fire.mag': { ko: '쓰러질 때 폭발해 영웅 전원에게 화염 피해', en: 'Explodes on death, dealing Fire damage to all heroes' },

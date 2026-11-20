@@ -1,11 +1,11 @@
 # 초상 아트 스타일 조사 — 유사작 4군 + 스타일 10종 비교
 
 > 상위: **없음 — [GAME_DESIGN.md](../game_design/GAME_DESIGN.md) §9 에도 §10 에도 아트 항목이 없다** (2026-08-30 확인)
-> 짝 문서: [monster_art_prompt.md](monster_art_prompt.md) (프롬프트 SSOT) · [src/assets/art/README.md](../../src/assets/art/README.md) (스타일 폴더 규칙)
+> 짝 문서: [src/assets/art/README.md](../../src/assets/art/README.md) (스타일 폴더 규칙)
 > SSOT: **미발행** — 아트 스타일은 확정 행이 없다
 
 > ⚠ **§3~§5 · §7 은 전부 제안이다.** 확정된 것은 §1 의 실측값뿐이다. ⚠ 를 떼려면 §9 에 확정 행이 먼저 생겨야 한다
-> §1 의 px 값은 `src/ui/style.css` **실측**이다 — 밸런스 수치가 아니라 화면 규격이라 CSV 대상이 아니다 ([monster_art_prompt.md §3-2](monster_art_prompt.md) 와 같은 성격)
+> §1 의 px 값은 `src/ui/style.css` **실측**이다 — 밸런스 수치가 아니라 화면 규격이라 CSV 대상이 아니다 (monster_art_prompt.md §3-2 와 같은 성격)
 
 ---
 
@@ -36,7 +36,7 @@
 
 `example/` 과 `pixel16/` 은 **서로 다른 시각 언어**이고, 어느 쪽이 본작의 얼굴인지 정한 문서가 없다.
 
-[monster_art_prompt.md §0](monster_art_prompt.md) 은 "신규 아트는 **배경**을 기준으로 삼는다"고 적었지만,
+monster_art_prompt.md §0 은 "신규 아트는 **배경**을 기준으로 삼는다"고 적었지만,
 그 판단의 전제(배경이 화면을 지배한다)가 실제 화면과 맞는지 검증된 적이 없다 — §4-1 이 그 전제를 다시 본다.
 
 ---
@@ -58,7 +58,7 @@
 | 영웅 띠 카드 | **96~120px** | 네모 | 영웅 | `.hs-card .hero-face` |
 
 > **작동 범위가 26~120px 이다.** 상한 120px 은 취향이 아니라 세로 예산 700px 에서 역산된 값이고
-> ([monster_art_prompt.md §3-2](monster_art_prompt.md)), 하한 26px 은 목록 화면의 물리적 한계다.
+> (monster_art_prompt.md §3-2), 하한 26px 은 목록 화면의 물리적 한계다.
 > **스타일 선택은 이 범위가 정한다.**
 
 ### 1-2. `faces/pixel16/` 은 픽셀아트가 아니다 ⚠ 문서와 어긋남
@@ -74,7 +74,7 @@
 
 이 사실이 무효화하는 것:
 
-- [monster_art_prompt.md §2](monster_art_prompt.md) 공통 스타일 블록의 `chunky visible square pixels` · `no anti-aliasing` · `hard-edged dithering only`
+- monster_art_prompt.md §2 공통 스타일 블록의 `chunky visible square pixels` · `no anti-aliasing` · `hard-edged dithering only`
   → **생성기가 이 지시를 애초에 따르지 않았다.** 프롬프트 SSOT 와 산출물이 다르다
 - 같은 문서 §7 「미해결 — 픽셀 스케일 불일치」의 처방(네이티브 32/40/48 로 잡고 정수배 업스케일)
   → **맞출 격자가 없으므로 무효**다. 배경과 스프라이트의 "픽셀 밀도를 맞춘다"는 목표가 성립하지 않는다
@@ -214,7 +214,7 @@ Diablo 2 · Diablo 4 · Path of Exile · Grim Dawn · Last Epoch
    §1-4 실측에서 44px 이상 살아남은 것은 굵은 외곽선 + 큰 두상뿐이다.
    Battle Brothers 가 같은 이유로 내린 결론과 같다 (§2 B군)
 
-2. **"배경이 픽셀이니 초상도 픽셀"은 성립하지 않는다** — [monster_art_prompt.md §0](monster_art_prompt.md) 의 전제를 뒤집는다.
+2. **"배경이 픽셀이니 초상도 픽셀"은 성립하지 않는다** — monster_art_prompt.md §0 의 전제를 뒤집는다.
    - 초상은 배경 위에 뜨지 않는다. `.face` · `.hero-face` · `.sprite` 전부 **자기 배경과 테두리를 가진 박스** 안에 있다
    - 전역 배경 `town.webp` 는 **패널 뒤 62% 불투명**에 여백에서만 보인다 (`body::before`)
    - UI 본체는 Pretendard + 다크 네이비 패널로 **애초에 픽셀이 아니다**. 픽셀 폰트 Galmuri 도 워드마크 한 곳뿐이다 (2026-08-27 하이브리드 폰트 결정)
@@ -223,7 +223,7 @@ Diablo 2 · Diablo 4 · Path of Exile · Grim Dawn · Last Epoch
 
 3. **③의 유일한 약점이 톤인데, 그건 팔레트로 고쳐진다.**
    현행 앵커 시트는 회색 배경 기준이라 밝게 떴다.
-   [monster_art_prompt.md §1](monster_art_prompt.md) 이 이미 실측해 둔 램프(목탄 회색 + 그을음 갈색, **잉걸불 5% 미만**)를
+   monster_art_prompt.md §1 이 이미 실측해 둔 램프(목탄 회색 + 그을음 갈색, **잉걸불 5% 미만**)를
    카툰 골격에 그대로 얹으면 된다.
    Battle Brothers 가 증명한 대로, **암울한 게임에 큰 두상은 결함이 아니라 대비 장치**다 —
    상실을 기계가 아니라 사건으로 읽히게 한다
@@ -239,7 +239,7 @@ Diablo 2 · Diablo 4 · Path of Exile · Grim Dawn · Last Epoch
 | 구도 | 두상 ≥ 프레임의 45% · **상단 12% 비움** · 소품은 실루엣으로 과장 | 원형 클리핑(§1-5) + 44px 판독(§1-4) |
 | 시트 | **한 장에 3~6개 × 2~3줄** | 그 이상은 생성기의 스타일 일관성이 무너진다 (§6) |
 
-> 채택되면 [monster_art_prompt.md](monster_art_prompt.md) §2 공통 스타일 블록과 §7 을 **재작성**해야 한다 —
+> 채택되면 monster_art_prompt.md §2 공통 스타일 블록과 §7 을 **재작성**해야 한다 —
 > 현행 블록은 픽셀아트를 지시하고 있고, 그 지시는 §1-2 로 무효가 됐다.
 
 ### 4-3. 스타일과 별개로 지금 고칠 수 있는 것 둘
@@ -255,7 +255,7 @@ Diablo 2 · Diablo 4 · Path of Exile · Grim Dawn · Last Epoch
 
 | 과제 | 상태 |
 |---|---|
-| **초상 아트 스타일** | 확정 행이 없다. §4-1 의 ③+④ 채택 여부 · §4-2 규격 넷 · `pixel16` 폐기 여부가 한 묶음. 채택 시 [monster_art_prompt.md](monster_art_prompt.md) §2·§7 재작성이 딸려온다 |
+| **초상 아트 스타일** | 확정 행이 없다. §4-1 의 ③+④ 채택 여부 · §4-2 규격 넷 · `pixel16` 폐기 여부가 한 묶음. 채택 시 monster_art_prompt.md §2·§7 재작성이 딸려온다 |
 | **26px 칩의 정체** | 초상인가 글리프인가. §1-4 로 초상은 물리적으로 불가능함이 확인됐다. 화면 결정이라 [SCREEN_DESIGN](../client/SCREEN_DESIGN.md) 이 선행 |
 | **레어 영웅의 얼굴** | **가장 시급하다.** 레어 층이 죄종×직업 **35칸을 전담**하는데([hero_design.md §1](../game_design/hero_design.md)) 직업당 얼굴 하나면 35칸이 화면에서 5장으로 보인다. 후보는 **10종 중 6번(파츠 합성) 하나뿐** — 스타일 선택보다 이 구멍이 먼저다 |
 | **보스 28장의 예산** | [monster_design.md §3](../game_design/monster_design.md) 의 「병목은 베이스 16장」이 보스를 안 셌다(§1-6). 색조 변형이 안 통하는 고유 이름 28개를 어떻게 감당할지 미정 |
@@ -303,7 +303,7 @@ Diablo 2 · Diablo 4 · Path of Exile · Grim Dawn · Last Epoch
 
 | # | 스타일 | 참고 | 맞는 이유 | 위험 |
 |---|---|---|---|---|
-| 5 | **플랫 그래픽** | The Banner Saga · Eyvind Earle | 검정이 거의 항상 드는 단순 팔레트 + 고대비 + 각진 형태. [monster_art_prompt.md §1](monster_art_prompt.md) 배경 실측 램프와 같은 논리(목탄·그을음 위에 잉걸불만 점) | 원작 두상이 사실 비율 — **SD 로 바꿔 그려야** 44px 에서 산다 |
+| 5 | **플랫 그래픽** | The Banner Saga · Eyvind Earle | 검정이 거의 항상 드는 단순 팔레트 + 고대비 + 각진 형태. monster_art_prompt.md §1 배경 실측 램프와 같은 논리(목탄·그을음 위에 잉걸불만 점) | 원작 두상이 사실 비율 — **SD 로 바꿔 그려야** 44px 에서 산다 |
 | 6 | **스테인드글라스** | Saga of Sins (보슈 영향) | 납선 = 굵은 외곽선 · 면 = 플랫 · 교회 창 = 7죄악 직결. 그 게임이 이미 7죄악을 이렇게 그렸다 | 유리색이 밝고 채도가 높아 [SCREEN_DESIGN §5](../client/SCREEN_DESIGN.md) 「초상은 색을 갖지 않는다」와 충돌. 그을린 유리로 죽이거나 **보스 28장(§1-6) · 죄종 글리프(§4-3) 자리 한정** |
 | 7 | **비잔틴 이콘** | 금바탕 · 후광 (게임 참고: Gorogoa) | 플랫 · 정면 · 후광 원 = 도감 원형 마스크(§1-5)와 같은 형태. 성인 도상을 죄인으로 뒤집는 아이러니가 죄종 보유 영웅에 맞음 · 생성 재현 매우 안정 | 정면 응시 + 금색이 전원을 같은 얼굴로 만듦. **영웅 전용** — 몬스터엔 불가 |
 | 8 | **중세 사본·목판** | Pentiment · Obsidian | 채색사본 + 독일 목판 · 제한 프레임의 평면 인물. 죄악 분류 자체가 중세 교회 것이라 시대 정합 최고 | 양피지 팔레트가 다크 UI 와 불일치 · 의도적 「어설픈 중세풍」이 루팅 RPG 의 힘 있는 인상과 멀어짐 |
@@ -402,7 +402,7 @@ pauldrons, red surcoat, scarred face) as four variations: neutral, grim, wounded
 
 ### 7-5. 검증 절차 — 한 번이면 갈린다
 
-같은 인물(민머리 기사)로 **1·2·5 번 시트 3장**을 뽑는다 → 각 시트의 1번 타일만 잘라 → 44·76px 로 내려 → 현행 카툰(`cartoon/hero_6`) 옆에 나란히 놓는다. **44px 에서 누가 남는지**가 답이다. 통과한 것이 있으면 [monster_art_prompt.md](monster_art_prompt.md) §2 공통 스타일 블록을 그 줄로 재작성한다(§4-2 예고 그대로).
+같은 인물(민머리 기사)로 **1·2·5 번 시트 3장**을 뽑는다 → 각 시트의 1번 타일만 잘라 → 44·76px 로 내려 → 현행 카툰(`cartoon/hero_6`) 옆에 나란히 놓는다. **44px 에서 누가 남는지**가 답이다. 통과한 것이 있으면 monster_art_prompt.md §2 공통 스타일 블록을 그 줄로 재작성한다(§4-2 예고 그대로).
 
 ### 7-6. 출처
 

@@ -373,7 +373,7 @@ Top row starving ghouls with an axe, middle row ghoul hunters with a crossbow, b
 
 GPT에 없던 Gemini 초상 65장 중 **64장(영웅 19 · 몬스터 45)**을 내장 `image_gen`으로 각각 편집했다. 기존 초상이 외형·자세·장비·표정·구도의 기준, `ready/monster/1401.png` 화염 광신도와 `1402.png` 임프 제사장이 그림체 기준이다. 엔트 `2201`은 도구가 결과를 세 번 차단해 미생성이다. 기존 Gemini 65장 · GPT 10장과 기존 작업 PNG의 SHA-256 보존을 확인했다.
 
-새 512×512 투명 PNG는 `ready/gpt/<hero|monster>/`, 게임용 WebP는 `../gpt/<hero|monster>/`다. 원본 생성 출력과 프롬프트·등록 목록·비교 자료는 [gpt_restyle_20261001/README.md](gpt_restyle_20261001/README.md)에 있다. `scripts/apply_gpt_portrait_restyle.py verify`로 기존 파일 보존·알파·출력 크기를 다시 검사할 수 있다.
+새 512×512 투명 PNG는 `ready/gpt/<hero|monster>/`, 게임용 WebP는 `../gpt/<hero|monster>/`다. 원본 생성 출력과 프롬프트·등록 목록·비교 자료는 [gpt_restyle_20261001/README.md](gpt_restyle_20261001/README.md)에 있다.
 
 ## 게임 초상 내보내기 [2026-09-24]
 
@@ -490,7 +490,7 @@ Make each one an elite: a bigger, clearly different headpiece that changes the h
 
 ## 4-2 유령 대장 한 칸 적용 [2026-10-02]
 
-`sheets/source_sheet_ch4_st2_frozen_soldiers_3x3.png`(윗줄 얼어붙은 산 병사 · 가운뎃줄 유령 병사 · 아랫줄 자유 — 발주문 `docs/reference/ch4_st2_frozen_soldiers_3x3_prompt.md`)에서 **6번(2행 3열 · 부서진 볏 투구의 유령 대장)**을 기사 자리 `4203`에 적용했다(`scripts/apply_ch4_st2_ghost_captain_portrait.py`). 512×512 `ready/monster/4203.png` → 256×256 `gemini/monster/4203.webp`. 격자선은 x 668~689 · 1358~1378, y 669~689 · 1358~1379 이다. `chapters/ch4_st2.png`를 새로 찍었다. ⚠ `monster.csv` 행은 아직 고블린 빙하대장이다.
+`sheets/source_sheet_ch4_st2_frozen_soldiers_3x3.png`(윗줄 얼어붙은 산 병사 · 가운뎃줄 유령 병사 · 아랫줄 자유)에서 **6번(2행 3열 · 부서진 볏 투구의 유령 대장)**을 기사 자리 `4203`에 적용했다(`scripts/apply_ch4_st2_ghost_captain_portrait.py`). 512×512 `ready/monster/4203.png` → 256×256 `gemini/monster/4203.webp`. 격자선은 x 668~689 · 1358~1378, y 669~689 · 1358~1379 이다. `chapters/ch4_st2.png`를 새로 찍었다. ⚠ `monster.csv` 행은 아직 고블린 빙하대장이다.
 
 ## 3-4 빈 황금 갑옷 세 칸 적용 [2026-09-30]
 
@@ -504,15 +504,15 @@ Make each one an elite: a bigger, clearly different headpiece that changes the h
 
 `sheets/source_sheet_ch1_st2_human_3x3_rows_v2.png`는 매 행이 **보병 → 궁수 → 기사**인 3×3 시트다. 사용자 선택에 따라 보병 `1201`은 **2행 1열**, 궁수 `1202`는 **2행 2열**, 기사 `1203`은 **1행 3열**을 적용했다. `scripts/apply_ch1_st2_human_portraits.py`가 격자선을 빼고 초록 배경을 투명화해 512×512 `ready/monster/<idx>.png`와 256×256 `cartoon/monster/<idx>.webp`를 만들었다. 이전 PNG·WebP는 `_scratch/ch1_st2_human_before_apply/`에 보관했다.
 
-`sheets/source_sheet_ch1_st2_human_3x3_hero_style_v4.png`는 현재 저장된 **인간 영웅**의 그림결을 기준으로 새로 그린 비교 시트다. 매 행 보병 → 궁수 → 기사이고, 기존 몬스터 그림은 직업·장비 확인에만 사용했다. 이전 `sheets/source_sheet_ch1_st2_human_3x3_hero_style_v3.png`는 머리 위 여백 부족과 반복되는 얼굴 구조 때문에 재시안 기준에서 제외했다. v4는 영웅 다섯 장을 그림체 참조로 사용하고 아래 행의 여백을 다시 맞췄다. 상세 기준은 [공통 구도 문서의 1-2 인간 절](../../../../../docs/reference/character_portrait_prompt.md), 전체 생성 지시는 [v4 프롬프트](../../../../../docs/reference/ch1_st2_human_hero_style_v4_prompt.md)에 있다. **v4는 아직 선택용 시트**다.
+`sheets/source_sheet_ch1_st2_human_3x3_hero_style_v4.png`는 현재 저장된 **인간 영웅**의 그림결을 기준으로 새로 그린 비교 시트다. 매 행 보병 → 궁수 → 기사이고, 기존 몬스터 그림은 직업·장비 확인에만 사용했다. 이전 `sheets/source_sheet_ch1_st2_human_3x3_hero_style_v3.png`는 머리 위 여백 부족과 반복되는 얼굴 구조 때문에 재시안 기준에서 제외했다. v4는 영웅 다섯 장을 그림체 참조로 사용하고 아래 행의 여백을 다시 맞췄다. 상세 기준은 [공통 구도 문서의 1-2 인간 절](../../../../../docs/reference/character_portrait_prompt.md), 전체 생성 지시는 v4 프롬프트에 있다. **v4는 아직 선택용 시트**다.
 
-`sheets/source_sheet_ch1_st2_human_3x3_hero_style_v5.png`는 새로 그린 **선택용 3×3 시트**다. 매 행 보병 → 화살통이 보이는 궁수 → 중장 기사이며, 영웅 `archer_1`·`knight_2`는 선·음영·여백의 그림체 참조로만 사용했다. 기존 `ready/monster/1201~1203`은 직업과 장비를 확인하는 데만 사용했다. 아홉 명의 얼굴형과 머리·투구 실루엣을 나누고 아래 행의 머리 위 여백을 맞췄다. 제작 기준과 재현용 지시는 [v5 프롬프트](../../../../../docs/reference/ch1_st2_human_hero_style_v5_prompt.md)에 있다. **게임 초상은 아직 교체하지 않았다.**
+`sheets/source_sheet_ch1_st2_human_3x3_hero_style_v5.png`는 새로 그린 **선택용 3×3 시트**다. 매 행 보병 → 화살통이 보이는 궁수 → 중장 기사이며, 영웅 `archer_1`·`knight_2`는 선·음영·여백의 그림체 참조로만 사용했다. 기존 `ready/monster/1201~1203`은 직업과 장비를 확인하는 데만 사용했다. 아홉 명의 얼굴형과 머리·투구 실루엣을 나누고 아래 행의 머리 위 여백을 맞췄다. 제작 기준과 재현용 지시는 v5 프롬프트에 있다. **게임 초상은 아직 교체하지 않았다.**
 
-`sheets/source_sheet_ch1_st2_human_3x3_sd_v6.png`는 v5의 넓은 어깨와 화풍 차이를 고친 **새 선택용 시트**다. 현행 `ready/hero/warrior_2`·`knight_4`·`warrior_4`와 `ready/monster/1301`을 SD 비율·선·재질 참조로 사용했다. 3×3 각 행은 보병 → 궁수 → 기사다. 시트 칸의 어깨폭은 v5의 88~100%에서 v6의 78~83%로 줄었고, 머리 위 여백은 v6에서 10~16%다. 머리폭/어깨폭은 중앙 인물 실루엣 기준 약 69~78%로, 전사 `warrior_2`와 몬스터 `1301`의 약 73%에 가깝다. [v6 제작 기준](../../../../../docs/reference/ch1_st2_human_sd_v6_prompt.md)에 참조 역할과 재현용 프롬프트를 기록했다. **1201~1203 게임 초상은 교체하지 않았다.**
+`sheets/source_sheet_ch1_st2_human_3x3_sd_v6.png`는 v5의 넓은 어깨와 화풍 차이를 고친 **새 선택용 시트**다. 현행 `ready/hero/warrior_2`·`knight_4`·`warrior_4`와 `ready/monster/1301`을 SD 비율·선·재질 참조로 사용했다. 3×3 각 행은 보병 → 궁수 → 기사다. 시트 칸의 어깨폭은 v5의 88~100%에서 v6의 78~83%로 줄었고, 머리 위 여백은 v6에서 10~16%다. 머리폭/어깨폭은 중앙 인물 실루엣 기준 약 69~78%로, 전사 `warrior_2`와 몬스터 `1301`의 약 73%에 가깝다. v6 제작 기준에 참조 역할과 재현용 프롬프트를 기록했다. **1201~1203 게임 초상은 교체하지 않았다.**
 
-`sheets/source_sheet_ch1_st2_human_3x3_short_prompt_v7.png`는 같은 현행 초상 네 장을 그림체 참조로 두고 [짧은 프롬프트](../../../../../docs/reference/ch1_st2_human_short_prompt_v7.md)로 다시 그린 **선택용 시트**다. 각 행은 보병 → 궁수 → 기사다. 초록 배경·어깨폭·머리 위 여백만 짧은 후속 지시로 수정했다. **게임 초상은 교체하지 않았다.**
+`sheets/source_sheet_ch1_st2_human_3x3_short_prompt_v7.png`는 같은 현행 초상 네 장을 그림체 참조로 두고 짧은 프롬프트로 다시 그린 **선택용 시트**다. 각 행은 보병 → 궁수 → 기사다. 초록 배경·어깨폭·머리 위 여백만 짧은 후속 지시로 수정했다. **게임 초상은 교체하지 않았다.**
 
-`sheets/source_sheet_ch1_st2_human_3x3_minimal_v8.png`는 같은 참조 네 장에 [번호와 직업만 적은 프롬프트](../../../../../docs/reference/ch1_st2_human_minimal_v8_prompt.md)를 사용한 **선택용 시트**다. 각 행은 인간 전사 → 궁수 → 기사이며, 초록 배경만 후속 수정했다. **게임 초상은 교체하지 않았다.**
+`sheets/source_sheet_ch1_st2_human_3x3_minimal_v8.png`는 같은 참조 네 장에 번호와 직업만 적은 프롬프트를 사용한 **선택용 시트**다. 각 행은 인간 전사 → 궁수 → 기사이며, 초록 배경만 후속 수정했다. **게임 초상은 교체하지 않았다.**
 
 **v5~v8은 모두 미채택 시안이다.** 사용자 검토에서 현재 게임 초상과 그림체·인물 비율의 괴리가 지적됐다. v8을 다시 재니 어깨가 거의 모든 칸에서 칸 너비 끝까지 닿고 머리 위 여백은 0~2%였다. 참조로 넣은 현행 `warrior_2`·`knight_4`·`warrior_4`·`1301`의 어깨폭은 약 73~88%, 머리 위 여백은 약 6~11%다. 초상 스킬의 기준대로 머리폭/어깨폭은 균일한 확대·축소나 여백 보정으로 고칠 수 없어, 이 시트의 인물을 게임에 옮기지 않는다.
 

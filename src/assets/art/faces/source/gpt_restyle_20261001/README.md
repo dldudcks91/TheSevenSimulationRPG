@@ -12,5 +12,3 @@
 - [comparison.html](comparison.html): 전체 원본·GPT 비교. `comparisons/`에는 8장씩 나란히 배치한 비교 PNG가 있다.
 
 **미완료: 엔트 `monster/2201`.** 내장 이미지 생성 도구가 출력 단계에서 세 번 `moderation_blocked`(`other`)를 반환해 결과 파일이 없다. 요청 ID와 상태를 manifest에 기록했다. [2201_prompt.txt](2201_prompt.txt)와 [2201_retry_prompt.txt](2201_retry_prompt.txt)는 재시도 프롬프트이며, 원본은 보존했다. GPT 스타일에서는 다른 스타일로 대체하지 않고 이 초상을 표시하지 않는다.
-
-파일 검증: 저장소 루트에서 `python scripts/apply_gpt_portrait_restyle.py verify`.
