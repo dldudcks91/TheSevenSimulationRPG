@@ -17149,17 +17149,16 @@ check('shop: 교역소 — 최하급 네 재료의 모든 지불 조합 · 정�
     const g = freshG();
     g.buildings.shop = 2;
     const roots = SYS.game.materialLadder().filter(m => m.tier === 1).map(m => m.id);
-    const cost = D.balance.shop_trade_cost, receive = D.balance.shop_trade_receive;
-    if (roots.length !== 4 || cost !== 3 || receive !== 1) fail('사용자 확정: 최하급 네 종류 · 3개 → 1개');
+    const costOf = id => D.balance[`shop_trade_cost_${id}`], receive = D.balance.shop_trade_receive;
+    if (roots.length !== 4 || roots.some(id => id !== 'herb' && costOf(id) !== 3) || receive !== 1) fail('사용자 확정: 최하급 네 종류 · 3개 → 1개(약초는 따로 — 11-23)');
     const unchanged = JSON.stringify(g);
     const empty = SYS.game.shopTradeState(g, null, NOW);
     if (!empty.open || empty.id !== null || empty.offers.length || !eq(empty.items.map(x => x.id), roots)) fail('교역소 첫 조회');
     SYS.game.shopTradeState(g, roots[0], NOW);
     if (JSON.stringify(g) !== unchanged) fail('조회가 상태를 바꿨다');
-    // 시세 — NOW 회차의 특가 재료만 shop_trade_deal_cost (R512)
-    const deal = SYS.game.shopVisit(g, NOW).deal;
+    // 가격표 — 받을 재료마다 값 하나 · 어느 재료로 내든 같다 (R557)
     for (const id of roots) for (const pay of roots.filter(x => x !== id)) {
-        const c = id === deal ? D.balance.shop_trade_deal_cost : cost;
+        const c = SYS.game.shopTradeState(g, id, NOW).items.find(x => x.id === id).cost;   // 그 회차의 값 — 싼 재료면 싼 값(R557)
         g.materials = { [id]: 5, [pay]: c };
         const expected = JSON.parse(JSON.stringify(g));
         expected.materials[pay] = 0;
@@ -17177,7 +17176,7 @@ check('shop: 교역소 — 최하급 네 재료의 모든 지불 조합 · 정�
 check('shop: 교역소 거절 — 미건설·같은 재료·없는 재료·상위 단계·부족·반복 구매 · 전부 상태 불변', () => {
     const g = freshG();
     const id = 'iron_ore', pay = 'timber';
-    const cost = SYS.game.shopTradeState(g, id, NOW).offers.find(o => o.pay === pay).cost;   // 그 회차 시세의 값(R512)
+    const cost = SYS.game.shopTradeState(g, id, NOW).offers.find(o => o.pay === pay).cost;   // 가격표의 값(R557)
     const refuse = (target, payment, err) => {
         const before = JSON.stringify(g), r = SYS.game.shopTradeBuy(g, target, payment, NOW);
         if (r.ok || r.err !== err || JSON.stringify(g) !== before) fail(`${target}/${payment}: ${JSON.stringify(r)}`);
@@ -17209,10 +17208,10 @@ check('shop: 교역소 골드 구매 — 재료별 가격·골드만 차감·정
         const before = JSON.stringify(g), r = SYS.game.shopTradeBuy(g, id, 'gold', NOW);
         if (r.ok || r.err !== err || JSON.stringify(g) !== before) fail(`${id}: ${JSON.stringify(r)}`);
     };
-    const deal = SYS.game.shopVisit(g, NOW).deal, pct = D.balance.shop_trade_deal_gold_pct;
+    const deal = SYS.game.shopTradeState(g, null, NOW).deal, pct = D.balance.shop_trade_deal_pct;
     for (const id of roots) {
         const n = D.balance.shop_trade_receive, unit = D.balance[`shop_trade_gold_${id}`];
-        const cost = (id === deal ? Math.round(unit * pct) : unit) * n;   // 특가 재료는 시세 값(R512)
+        const cost = id === deal ? Math.round(unit * n * pct) : unit * n;   // 그 회차의 싼 재료는 싼 값(R557)
         if (!Number.isSafeInteger(cost) || cost <= 0) fail(`${id} 골드 가격이 없다`);
         g.resources.gold = cost;
         g.materials = { timber: 7, dust: 9 };
@@ -17238,50 +17237,65 @@ check('shop: 교역소 골드 구매 — 재료별 가격·골드만 차감·정
     refuse('missing-material', 'missing');
     g.materials = undefined;
     if (!SYS.game.shopTradeBuy(g, roots[0], 'gold', NOW).ok || !g.materials[roots[0]]) fail('재료 지갑이 없는 옛 판의 골드 구매');
-    const prices = roots.map(id => D.balance[`shop_trade_gold_${id}`]);
-    if (D.balance.shop_trade_gold_herb <= D.balance.shop_trade_gold_iron_ore || Math.max(...prices) > Math.min(...prices) * D.balance.shop_trade_cost) fail('약초 희소함 또는 싼 재료 구매 후 교환의 우회 가격');
-    // 시세의 특가도 우회를 열지 않는다 — 가장 싼 특가 셋이 가장 비싼 평소 골드 가격 이상 (R512)
-    if (Math.max(...prices) > Math.round(Math.min(...prices) * pct) * D.balance.shop_trade_cost) fail('특가 재료를 사서 교환하는 우회가 골드 가격보다 싸다');
+    if (D.balance.shop_trade_gold_herb <= D.balance.shop_trade_gold_iron_ore) fail('약초 희소함 — 약초 골드 값이 철광석보다 싸다');
+    // 우회 — 다른 재료를 골드로 사서 바꾸는 길이 받을 재료의 골드 값보다 싸면 안 된다 · 어느 재료가 싼 회차든 (R557 — 받을 재료마다 재료 값 · 싼 재료)
+    const at = (v, cheap) => cheap ? Math.min(v, Math.round(v * pct)) : v;
+    for (const d of roots) for (const id of roots) for (const pay of roots.filter(x => x !== id))
+        if (at(D.balance[`shop_trade_gold_${pay}`], pay === d) * at(D.balance[`shop_trade_cost_${id}`], id === d) < at(D.balance[`shop_trade_gold_${id}`], id === d))
+            fail(`${d} 가 싼 회차 — ${pay} 를 골드로 사 ${id} 로 바꾸는 우회가 ${id} 골드 값보다 싸다`);
     return true;
 });
-check('shop: 교역소 시세 — 방문 회차마다 최하급 넷을 사다리 순서로 특가 · 특가만 싸고 나머지는 평소 값 · 평소보다 비싼 때 없음 · 다음 특가 · 상인이 떠나도 이어짐 · 조회 불변 (base_expedition §2-6 · R512)', () => {
+check('shop: 교역소 가격표 · 싼 재료 — 칸마다 한 번 구매의 값(재료 shop_trade_cost_<id> · 골드 shop_trade_gold_<id> × 받는 수) · 회차마다 시드로 고른 하나만 × shop_trade_deal_pct · 회차 안에서는 같다 · 평소보다 안 비쌈 · 하루 중 어느 시각에도 모든 재료가 싸진다(순서 회전 아님) · 지불 줄과 같은 값 · 약초는 재료로도 비싸다 · 조회 불변 (base_expedition §2-6 · R557)', () => {
     const g = freshG();
     g.buildings.shop = 2;
-    const B = D.balance, H = 3600e3, period = B.trade_visit_hours * H;
+    const B = D.balance, H = 3600e3, period = B.trade_visit_hours * H, pct = B.shop_trade_deal_pct;
     const roots = SYS.game.materialLadder().filter(m => m.tier === 1).map(m => m.id);
-    if (B.shop_trade_deal_cost > B.shop_trade_cost || B.shop_trade_deal_gold_pct > 1) fail('특가가 평소보다 비싸다');
-    if (B.shop_trade_deal_cost === B.shop_trade_cost && B.shop_trade_deal_gold_pct === 1) fail('특가가 평소와 같다');
+    const usual = id => ({ cost: B[`shop_trade_cost_${id}`], gold: B[`shop_trade_gold_${id}`] * B.shop_trade_receive });
+    if (!(pct > 0 && pct < 1)) fail(`싼 값 배율 ${pct} — 0 과 1 사이여야 한다`);
+    for (const id of roots) {
+        const u = usual(id);
+        if (!Number.isSafeInteger(u.cost) || u.cost <= 0) fail(`${id} 재료 값이 없다`);
+        if (Math.round(u.cost * pct) >= u.cost || Math.round(u.gold * pct) >= u.gold) fail(`${id} 가 싼 회차에도 안 싸다 — 반올림이 할인을 먹었다`);
+    }
+    const others = roots.filter(id => id !== 'herb');
+    if (!roots.includes('herb') || others.some(id => usual('herb').cost <= usual(id).cost || usual('herb').gold <= usual(id).gold)) fail('약초 희소함 — 약초는 재료로도 골드로도 다른 재료보다 비싸야 한다');
     const unchanged = JSON.stringify(g);
-    const seen = [];
-    for (let c = 0; c < roots.length * 2; c++) {
+    const seen = new Map();   // 회차가 열린 시각의 하루 중 시각(시) → 싼 재료 집합
+    const CYCLES = 600;
+    for (let c = 0; c < CYCLES; c++) {
+        let deal = null;
         for (const at of [g.createdAt + c * period, g.createdAt + c * period + B.trade_stay_hours * H + 1, g.createdAt + (c + 1) * period - 1]) {
             const v = SYS.game.shopVisit(g, at);
-            if (v.cycle !== c || v.deal !== roots[c % roots.length] || v.nextDeal !== roots[(c + 1) % roots.length]) fail(`회차 ${c} @${at - g.createdAt}: ${v.deal} → ${v.nextDeal}`);
+            if ('deal' in v || 'nextDeal' in v || v.cycle !== c) fail(`회차 ${c} 방문 시계`);
             const S = SYS.game.shopTradeState(g, null, at);
-            if (S.deal !== v.deal || S.nextDeal !== v.nextDeal || S.nextAt !== v.nextAt || S.items.filter(x => x.deal).map(x => x.id).join() !== v.deal) fail(`회차 ${c} 칸의 특가 표지`);
-            for (const id of roots) {
-                const offers = SYS.game.shopTradeState(g, id, at).offers;
-                const unit = B[`shop_trade_gold_${id}`] * B.shop_trade_receive;
-                for (const o of offers) {
-                    if (o.cost > o.base) fail(`${id}/${o.pay} 평소보다 비싸다`);
-                    const want = o.pay === 'gold'
-                        ? (id === v.deal ? Math.round(B[`shop_trade_gold_${id}`] * B.shop_trade_deal_gold_pct) * B.shop_trade_receive : unit)
-                        : (id === v.deal ? B.shop_trade_deal_cost : B.shop_trade_cost);
-                    if (o.cost !== want || o.base !== (o.pay === 'gold' ? unit : B.shop_trade_cost)) fail(`회차 ${c} ${id}/${o.pay}: ${o.cost}/${o.base} ≠ ${want}`);
-                }
+            if (deal === null) deal = S.deal;
+            if (S.deal !== deal || !roots.includes(deal)) fail(`회차 ${c} 안에서 싼 재료가 바뀌었다 ${deal} → ${S.deal}`);
+            if (S.items.filter(x => x.deal).map(x => x.id).join() !== deal) fail(`회차 ${c} 싼 재료 표지`);
+            for (const x of S.items) {
+                const u = usual(x.id), want = x.deal ? { cost: Math.round(u.cost * pct), gold: Math.round(u.gold * pct) } : u;
+                if (x.cost !== want.cost || x.gold !== want.gold) fail(`회차 ${c} ${x.id} ${x.cost} · ${x.gold} ≠ ${want.cost} · ${want.gold}`);
+                if (x.cost > u.cost || x.gold > u.gold) fail(`회차 ${c} ${x.id} 평소보다 비싸다`);
             }
+            if (c < roots.length * 2) for (const x of S.items) for (const o of SYS.game.shopTradeState(g, x.id, at).offers)
+                if (o.cost !== (o.pay === 'gold' ? x.gold : x.cost) || 'base' in o) fail(`회차 ${c} ${x.id}/${o.pay}: ${o.cost}`);
         }
-        seen.push(SYS.game.shopVisit(g, g.createdAt + c * period).deal);
+        const hour = Math.floor(((c * period) % (24 * H)) / H);
+        if (!seen.has(hour)) seen.set(hour, new Set());
+        seen.get(hour).add(deal);
     }
-    if (JSON.stringify(g) !== unchanged) fail('시세 조회가 상태를 바꿨다');
-    // 특가 값으로 산다 — 회차가 바뀐 뒤엔 평소 값
-    const deal0 = SYS.game.shopVisit(g, g.createdAt).deal, pay = roots.find(x => x !== deal0);
-    g.materials = { [pay]: B.shop_trade_deal_cost };
-    const r = SYS.game.shopTradeBuy(g, deal0, pay, g.createdAt);
-    if (!r.ok || r.cost !== B.shop_trade_deal_cost || g.materials[pay] !== 0) fail(`특가 구매 ${JSON.stringify(r)}`);
-    g.materials[pay] = B.shop_trade_deal_cost;
-    if (B.shop_trade_deal_cost < B.shop_trade_cost && SYS.game.shopTradeBuy(g, deal0, pay, g.createdAt + period).err !== 'materials') fail('회차가 바뀌었는데 특가 값으로 샀다');
-    return seen.join(' → ');
+    // 하루 중 같은 시각에만 하는 사람도 모든 재료의 싼 때를 만난다 — 사다리 순서로 돌면 시각마다 재료가 묶인다(11-16 시세의 결함)
+    for (const [hour, set] of seen) if (set.size !== roots.length) fail(`하루 중 ${hour}시에 열리는 회차엔 ${[...set].join() } 만 싸진다`);
+    if (JSON.stringify(g) !== unchanged) fail('조회가 상태를 바꿨다');
+    // 싼 값으로 산다 — 회차가 바뀌어 다른 재료가 싸지면 같은 보유로는 못 산다
+    const S0 = SYS.game.shopTradeState(g, null, g.createdAt), d0 = S0.deal, pay = roots.find(x => x !== d0);
+    const dealCost = S0.items.find(x => x.id === d0).cost;
+    g.materials = { [pay]: dealCost };
+    const r = SYS.game.shopTradeBuy(g, d0, pay, g.createdAt);
+    if (!r.ok || r.cost !== dealCost || g.materials[pay] !== 0) fail(`싼 값 구매 ${JSON.stringify(r)}`);
+    const later = [...Array(CYCLES).keys()].find(c => SYS.game.shopTradeState(g, null, g.createdAt + c * period).deal !== d0);
+    g.materials[pay] = dealCost;
+    if (SYS.game.shopTradeBuy(g, d0, pay, g.createdAt + later * period).err !== 'materials') fail('회차가 바뀌었는데 싼 값으로 샀다');
+    return `${seen.size}개 시각 × 재료 ${roots.length} · 첫 회차 ${d0} ${dealCost}개`;
 });
 check('shop: 스킬북 — 목록마다 shop_book_count 권 · 후보 = shopBookPool(직업 스킬 1티어 — 기본 책 포함 · 2티어는 안 판다 — 손으로 다시 센다 · 2026-10-22 R310) · 겹치지 않음 · 결정론 · 장비 목록 불변 · 거절 unbuilt → stale → missing → sold → gold · 가진 책도 산다(쌓인다) · 사면 books +1 · 도안 칸 없음 · 왕복 · 옛 shop.blueprints 구매 기록은 books 로 옮긴다 · 교체가 sold 를 푼다 (base_expedition §2-6 · 2026-09-29 · 2026-11-15 R504 ~~스킬 도안~~)', () => {
     const g = freshG();
@@ -23846,6 +23860,53 @@ check('book: 책 분해(salvageBook) — 한 번에 1권 · 스킬 조각 book_s
     const back = SYS.game.deserialize(JSON.parse(JSON.stringify(SYS.game.serialize(g, NOW))));
     if (!eq(back.books, g.books) || back.skillShards !== g.skillShards) fail('세이브 왕복 — 분해 뒤 재고 · 조각이 바뀌었다');
     return `한 권 → 스킬 조각 ${B.book_salvage_shard} · ${id} 2권 → 0권(키 지움)`;
+});
+check('book: 여러 권 분해(salvageBooks · bookSalvagePreview) — {책: n} 를 한 번에 · 조각 n × book_salvage_shard · 다 되거나 하나도 안 된다 · 거절 empty → missing → book 은 상태 불변 · 0 이하 · 정수 아닌 칸은 안 센다 · 마지막 권이면 키를 지운다 · 미리보기는 상태 불변 (도서관 분해함 · ADR-1304)', () => {
+    const g = SYS.game.newGame(95, cands, NOW);
+    g.buildings.library = 0;   // 문 없음 — 한 권 분해와 같다
+    const jobs = SYS.skill.list.filter(d => d.ownerKind === 'job' && SYS.skill.bookable(d.id)).map(d => d.id);
+    const [a, b] = jobs;
+    const monOnly = SYS.skill.list.find(d => d.ownerKind === 'monster')?.id;
+    g.books = { [a]: 5, [b]: 2 };
+    const refuse = (picks, err) => {
+        const snap = JSON.stringify(g);
+        const pv = SYS.game.bookSalvagePreview(g, picks);
+        const r = SYS.game.salvageBooks(g, picks);
+        if (r.ok || r.err !== err || pv.err !== err) fail(`${JSON.stringify(picks)} → ${err} 기대 — ${JSON.stringify(r)} · 미리보기 ${JSON.stringify(pv)}`);
+        if (JSON.stringify(g) !== snap) fail(`${err} 거절이 상태를 바꿨다`);
+    };
+    refuse({}, 'empty');
+    refuse({ [a]: 0, [b]: -1, nope: 1.5 }, 'empty');   // 셀 칸이 없다
+    refuse({ nope: 1 }, 'missing');
+    if (monOnly) refuse({ [a]: 1, [monOnly]: 1 }, 'missing');
+    refuse({ [a]: 1, [b]: 3 }, 'book');   // b 는 2권뿐 — a 도 안 줄어든다
+    const s0 = g.skillShards ?? 0;
+    const pv = SYS.game.bookSalvagePreview(g, { [a]: 3, [b]: 2 });
+    if (pv.err !== null || pv.n !== 5 || pv.shards !== 5 * B.book_salvage_shard || g.books[a] !== 5) fail(`미리보기 ${JSON.stringify(pv)} · 책 ${JSON.stringify(g.books)}`);
+    const r = SYS.game.salvageBooks(g, { [a]: 3, [b]: 2, [jobs[2]]: 0 });
+    if (!r.ok || r.n !== 5 || r.shards !== 5 * B.book_salvage_shard) fail(`분해 ${JSON.stringify(r)}`);
+    if (g.books[a] !== 2 || b in g.books || jobs[2] in g.books || g.skillShards !== s0 + 5 * B.book_salvage_shard) fail(`재고 ${JSON.stringify(g.books)} · 조각 ${g.skillShards}`);
+    return `${a} 3 + ${b} 2 → 조각 +${r.shards} · ${b} 키 지움`;
+});
+check('book: bookState.hero.up — 고유 · 배운 칸을 그 칸의 책으로 올리면(가진 권수 0 이어도 선다 · plan 과 같은 lv · need · err) · 빈 칸은 null · learnBook 과 판정이 같다 (도서관 스킬정보 칸마다 · ADR-1308)', () => {
+    const g = SYS.game.newGame(96, cands, NOW);
+    const h = g.heroes.find(x => SYS.skill.bookable(x.innate));
+    if (!h) fail('고유가 책이 되는 영웅이 없다');
+    h.level = B.skillbook_learn_level;
+    h.bookSkill = null;
+    g.books = {};
+    const up0 = SYS.game.bookState(g, h.uid).hero.up;
+    if (up0.book !== null) fail(`빈 배운 칸인데 up.book ${JSON.stringify(up0.book)}`);
+    const u = up0.innate;
+    if (!u || u.id !== h.innate || u.have !== 0 || u.act !== 'upgrade' || u.lv !== 0 || u.need !== B.skillbook_upgrade_books_1 || u.err !== 'book') fail(`0권 ${JSON.stringify(u)}`);
+    g.books = { [h.innate]: B.skillbook_upgrade_books_1 };
+    const u1 = SYS.game.bookState(g, h.uid).hero.up.innate;
+    if (u1.have !== B.skillbook_upgrade_books_1 || u1.err !== null) fail(`권수 채움 ${JSON.stringify(u1)}`);
+    const r = SYS.game.learnBook(g, h.uid, h.innate);
+    if (!r.ok || !r.upgraded) fail(`up 이 통과라고 했는데 learnBook 거절 ${JSON.stringify(r)}`);
+    const u2 = SYS.game.bookState(g, h.uid).hero.up.innate;
+    if (u2.lv !== 1 || u2.have !== 0 || u2.need !== B.skillbook_upgrade_books_2) fail(`올린 뒤 ${JSON.stringify(u2)}`);
+    return `고유 ${h.innate} — 0권 err book → ${B.skillbook_upgrade_books_1}권 통과 → Lv.2 다음 ${u2.need}권`;
 });
 check('book: 스킬 북 제작(craftBook) — 목록 = 직업 스킬 전부(새 게임부터 · skill.csv 행 순서) · 조각은 티어마다(1티어 skill_craft_shards · 2티어 skill_craft_shards_t2) + 골드 skill_craft_gold → 책 +1 · 거절 unbuilt → missing → shards → gold 는 상태 불변 · 영웅 무관 · 옛 세이브의 본 책 목록(bookSeen)은 지운다 · 세이브 왕복 (R540 · R543 · skill_design §2-1)', () => {
     const g = SYS.game.newGame(95, cands, NOW);

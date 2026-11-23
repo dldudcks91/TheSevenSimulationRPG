@@ -159,6 +159,9 @@
 :root[data-mobile] .c-lib-col > .lib-panel { flex: 1 1 0; min-height: 0; overflow: hidden; }
 :root[data-mobile] .lib-panel > :is(.lib-split, .lib-sec) { flex: 1 1 0; min-height: 0; }
 :root[data-mobile] .lib-sec > .box-body { flex: 1 1 0; min-height: 0; overflow: auto; }
+/* Library salvage box (ADR-1304): the deck has no area above the owned page, so the box sits at the bottom of the sheet over the open page. */
+:root[data-mobile] .lib-split > .bk-cube { top: auto; bottom: 8px; max-width: calc(100% - 16px); }
+:root[data-mobile] .bk-cube-grid { grid-template-columns: repeat(5, 44px); }
 :root[data-mobile] .fg-up { min-height: 0; }
 :root[data-mobile] .fg-up-work { padding: 8px; }
 :root[data-mobile] .td-sale-total { position: sticky; bottom: 0; background: var(--bg-secondary); padding: 8px 0; }

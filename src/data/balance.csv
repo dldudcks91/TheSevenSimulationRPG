@@ -238,14 +238,16 @@ shop_price_step_mult,2.5,proposed,1,상단 장비 가격의 구간마다 배율 
 shop_price_var_pct,0.3,proposed,1,상단 장비 구매가의 가산 폭(비율 · 0.3 = 30%) — 구매가 = 기준가(shop_price_<희귀도> × shop_price_step_mult ^ 구간 반올림) × (1 + 이 값 × 섞은 점수) 반올림 · 섞은 점수 0 ~ 1 이라 기준가가 바닥 · 최대 기준가 × (1 + 이 값) · 판매가(shop_sell_divisor)는 가산 없는 기준가에서 낸다 · 0 이상 ⚠임시 [신설 2026-11-16 사용자 「장비별 레벨 + 옵션점수를 기준으로 약간의 변동」 · 「가격이 비싸면 유저가 혹할 수 있게」 → 「너의 추천대로」 · base_expedition §2-6 · R514]
 shop_price_var_level_share,0.5,proposed,1,상단 장비 구매가의 섞은 점수에서 레벨 점수의 비중(0 ~ 1) — 섞은 점수 = 이 값 × 레벨 점수 + (1 − 이 값) × 옵션 점수 · 레벨 점수 = 가격 구간(shop_price_step_levels) 안의 자리(구간 첫 레벨 0 · 끝 레벨 1) · 옵션 점수 = item.optionScore(줄마다 그 레벨에서 나올 수 있던 범위 중 자리의 평균 · 메인 줄은 단어까지) ⚠임시 [신설 2026-11-16 · R514]
 shop_refresh_hours,1,fixed,0,구매 목록 교체 쿨다운(시간) — 교체는 항상 무료 · 대기 중 교체 불가 · 매번 교체 시점부터 시작 · 오프라인에도 진행 · 자동 갱신 없음 · 첫 교체는 즉시 가능 (2026-10-31 사용자 지시)
-shop_trade_cost,3,proposed,1,교역소 한 번 구매의 지불 재료 수 — 선택과 다른 최하급 재료 한 종류 · shop_trade_receive 만큼 받는다 · 재료 지불에는 골드 소모 없음 · 임시 교환 비율 (2026-10-31)
-shop_trade_receive,1,proposed,1,교역소 한 번 구매의 지급 재료 수 — 최하급 재료만 · 비율은 shop_trade_cost와 함께 조정 · 임시값 (2026-10-31)
+shop_trade_cost_iron_ore,3,proposed,1,교역소 최하급 철광석을 받는 한 번 구매의 재료 지불 수 — 선택과 다른 최하급 재료 한 종류(어느 재료로 내든 같다) · shop_trade_receive 만큼 받는다 · 재료 지불에는 골드 소모 없음 · 받을 재료마다 값 하나 · 시간에 따라 안 바뀐다 · 임시값 (2026-11-23 · R557 — 옛 shop_trade_cost 하나를 재료마다로)
+shop_trade_cost_herb,6,proposed,1,교역소 최하급 약초를 받는 한 번 구매의 재료 지불 수 — 약초의 희소함 · 재료 값의 비를 골드 값의 비(shop_trade_gold_herb ÷ shop_trade_gold_iron_ore)에 맞춘다 · 다른 재료 하나의 골드 값 × 이 값이 약초 골드 값 아래로 내려가면 안 된다(골드로 재료를 사 약초로 바꾸는 우회) ⚠임시 (2026-11-23 · R557)
+shop_trade_cost_timber,3,proposed,1,교역소 최하급 목재를 받는 한 번 구매의 재료 지불 수 — 철광석과 같은 기준 · 임시값 (2026-11-23 · R557)
+shop_trade_cost_dust,3,proposed,1,교역소 최하급 가루를 받는 한 번 구매의 재료 지불 수 — 철광석과 같은 기준 · 임시값 (2026-11-23 · R557)
+shop_trade_receive,1,proposed,1,교역소 한 번 구매의 지급 재료 수 — 최하급 재료만 · 값은 shop_trade_cost_<id> · shop_trade_gold_<id>와 함께 조정 · 임시값 (2026-10-31)
 shop_trade_gold_iron_ore,100,proposed,1,교역소 최하급 철광석 한 개의 골드 구매가 — 초반 일반 장비 판매가의 절반 수준 · 지급 수 shop_trade_receive를 곱해 지불 · 제안 임시값 (2026-10-31)
 shop_trade_gold_timber,100,proposed,1,교역소 최하급 목재 한 개의 골드 구매가 — 철광석과 같은 기준 · 제안 임시값 (2026-10-31)
 shop_trade_gold_dust,100,proposed,1,교역소 최하급 가루 한 개의 골드 구매가 — 철광석과 같은 기준 · 제안 임시값 (2026-10-31)
 shop_trade_gold_herb,200,proposed,1,교역소 최하급 약초 한 개의 골드 구매가 — 약초의 희소함을 반영해 철광석의 두 배 수준 · 제안 임시값 (2026-10-31)
-shop_trade_deal_cost,2,proposed,1,교역소 시세 — 이번 회차 특가 재료를 받을 때의 지불 재료 수(평소 shop_trade_cost) · 특가 = 특수상단 방문 회차(trade_visit_hours)마다 최하급 넷을 사다리 순서로 돈다 · shop_trade_cost 보다 크면 안 된다(평소보다 비싸지는 때 없음) ⚠임시 [신설 2026-11-16 사용자 · base_expedition §2-6 · R512]
-shop_trade_deal_gold_pct,0.7,proposed,1,교역소 시세 — 특가 재료의 골드 가격 배율(비율 눈금 · 0.7 = 70%) · shop_trade_gold_<id> × 이 값 반올림 · 1 을 넘으면 안 된다 · 가장 싼 특가 × shop_trade_cost 가 가장 비싼 평소 골드 가격 아래로 내려가면 안 된다(특가 철광석 셋으로 약초를 사는 우회가 약초 골드보다 싸진다 — 0.5 면 150 < 200) ⚠임시 [신설 2026-11-16 사용자 · R512]
+shop_trade_deal_pct,0.7,proposed,1,교역소 싼 재료의 값 배율(비율 눈금 · 0.7 = 70%) — 특수상단 방문 회차(trade_visit_hours)마다 최하급 넷 중 하나를 시드로 골라 재료 값(shop_trade_cost_<id>) · 골드 값(shop_trade_gold_<id> × shop_trade_receive)에 이 값을 곱해 반올림 · 1 을 넘으면 안 된다(평소보다 비싸지는 때 없음) · 싼 재료를 골드로 사서 바꾸는 우회가 받을 재료의 골드 값보다 싸지면 안 된다 ⚠임시 [신설 2026-11-23 사용자 「어? 뭐가 좀 싼데 이렇게 느껴야지」 · base_expedition §2-6 · R557]
 shop_potion_bulk_1,10,proposed,0,상단 물약 수 고르기 버튼 첫째 수 — 물약을 고르면 사기 줄 [구매] 왼쪽에 ×이 값 · 누르면 그 수를 고르고 가격이 그 수의 값으로 바뀐다 · [구매]가 그 수만큼 산다(골드가 모자라면 하나도 안 산다) [신설 2026-10-23 사용자 「물약구매할때 buy 왼쪽에 x10, x50, x100 버튼」 · 「클릭하면 가격이 바뀌고 buy를 눌러야 사지도록」]
 shop_potion_bulk_2,50,proposed,0,상단 물약 수 고르기 버튼 둘째 수 — shop_potion_bulk_1 과 같은 틀 [신설 2026-10-23 사용자]
 shop_potion_bulk_3,100,proposed,0,상단 물약 수 고르기 버튼 셋째 수 — shop_potion_bulk_1 과 같은 틀 [신설 2026-10-23 사용자]

@@ -993,17 +993,11 @@ export const MASTERY_GRID = { tiers: 4, nodes: 3 };
  * 재료 목록 · 지어낸 재고(루비 · 낙인)는 2026-10-24 걷었다 — 물건은 미정이라 칸 셋에 `?` 만 선다(SCREEN_DESIGN §8-3 · ADR-0782).
  */
 export const TRADE = {
-    /** 특수상단 — 물건 칸 수(사용자 「특수한 물건 3개 정도」). 와 있는지 · 남은 시간은 `game.shopVisit` 이 낸다 */
+    /** 특수상단 — 상인 이름 한 명 · 물건 칸 수(사용자 「특수한 물건 3개 정도」). 와 있는지 · 남은 시간은 `game.shopVisit` 이 낸다.
+     *  ⚠임시 이름 — 기획이 정하면 CSV 로 간다 · 교역소 특가를 걷어 회차마다 바뀌던 재료별 상인 넷은 걷었다 (ADR-1303 · R557) */
     special: {
+        who: { ko: '떠돌이 광물상', en: 'Wandering Ore Dealer', zh: '流浪矿石商' },
         slots: 3,
-    },
-    /** 회차의 상인 — 맡은 최하급 재료(`shopVisit.deal` · 교역소 특가)마다 한 명 · 특수상단 카드와 교역소 시세 줄이 같은 이름을 쓴다 (ADR-1210 · R512).
-     *  ⚠임시 — 광물상 말고 셋은 이 세션이 붙인 이름 · 기획이 정하면 CSV 로 간다 */
-    merchants: {
-        iron_ore: { ko: '떠돌이 광물상', en: 'Wandering Ore Dealer', zh: '流浪矿石商' },
-        herb: { ko: '떠돌이 약초상', en: 'Wandering Herb Dealer', zh: '流浪草药商' },
-        timber: { ko: '떠돌이 목재상', en: 'Wandering Timber Dealer', zh: '流浪木材商' },
-        dust: { ko: '떠돌이 가루상', en: 'Wandering Dust Dealer', zh: '流浪粉尘商' },
     },
 };
 

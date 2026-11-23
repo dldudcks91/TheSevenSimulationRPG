@@ -129,7 +129,6 @@ const STRINGS = {
     'mobile.page.work': { ko: '작업', en: 'Workshop', zh: '工作台' },
     'mobile.page.advance': { ko: '전직', en: 'Advance', zh: '转职' },
     'mobile.page.upgrade': { ko: '업그레이드', en: 'Upgrade', zh: '升级' },
-    'mobile.page.salvage': { ko: '분해', en: 'Salvage', zh: '分解' },   // 도서관 본판 가운데 구역 — 스킬 북 분해 (ADR-1287)
     'mobile.page.books': { ko: '책 제작', en: 'Books', zh: '制作书' },   // 도서관 본판 오른쪽 구역 — 스킬 북 제작 (ADR-1262)
     'mobile.page.temper': { ko: '손질', en: 'Prep', zh: '整备' },
     'mobile.page.research': { ko: '연구판', en: 'Research', zh: '研究面板' },
@@ -550,11 +549,12 @@ const STRINGS = {
     'rep.missN': { ko: '{m} / {n} ({p}%)', en: '{m} / {n} ({p}%)', zh: '{m} / {n}（{p}%）' },
 
     /* ── 캐릭터 (실동작) ── */
-    'ch.equip.hint': { ko: '아이템 클릭 = 착용 · 우클릭 = [착용] · [잠금] 버튼 · 착용 칸 클릭 = 해제 · Ctrl+클릭이나 끌어 놓기 = 창고 ↔ 인벤토리',
-        zh: '点击物品 = 装备 · 右键 = [装备] · [锁定]按钮 · 点击已装备的栏位 = 卸下 · Ctrl+点击或拖放 = 仓库 ↔ 背包',
-        en: 'Click an item = equip · right-click = [Equip] · [Lock] buttons · click a worn slot = unequip · Ctrl+click or drag = move between stash and inventory' },
+    'ch.equip.hint': { ko: '클릭 = 고르기 · 우클릭 = 착용 · 착용 칸 우클릭 = 해제 · Shift+우클릭 = [착용] · [잠금] 버튼 · Ctrl+클릭이나 끌어 놓기 = 창고 ↔ 인벤토리',
+        zh: '点击 = 选择 · 右键 = 装备 · 右键已装备的栏位 = 卸下 · Shift+右键 = [装备] · [锁定]按钮 · Ctrl+点击或拖放 = 仓库 ↔ 背包',
+        en: 'Click = select · right-click = equip · right-click a worn slot = unequip · Shift+right-click = [Equip] · [Lock] buttons · Ctrl+click or drag = move between stash and inventory' },
     // 보관 칸 우클릭 메뉴 — 커서 자리에 버튼 둘 · 손가락은 길게 누른 툴팁 버튼 줄 (SCREEN_DESIGN §6 「우클릭 메뉴」 · ADR-0451)
     'ch.menu.equip': { ko: '착용', en: 'Equip', zh: '装备' },
+    'ch.menu.unequip': { ko: '해제', en: 'Unequip', zh: '卸下' },   // 착용 칸 손가락 툴팁의 버튼 — 우클릭과 같은 해제 (ADR-1306)
     'ch.menu.lock': { ko: '잠금', en: 'Lock', zh: '锁定' },
     'ch.menu.unlock': { ko: '잠금 해제', en: 'Unlock', zh: '解锁' },
     'ch.menu.open': { ko: '사용', en: 'Use', zh: '使用' },   // 상자 칸에만 서는 버튼 — 상자를 여는 유일한 길(칸 클릭은 안 연다 · ADR-0733)
@@ -1038,7 +1038,22 @@ const STRINGS = {
     'dp.node.relief': { ko: '비상 보급', en: 'Emergency Supplies', zh: '应急补给' },
     'dp.relief.max': { ko: '최대 +{n}%', en: 'Up to +{n}%', zh: '最多 +{n}%' },
     'dp.relief.rate': { ko: '{rate} (+{n}%)', en: '{rate} (+{n}%)', zh: '{rate} (+{n}%)' },
-    'dp.relief.desc': { ko: '보유량이 가장 적은 재료를 더 빨리 생산합니다. 가장 많은 재료와의 보유 비율 차이가 클수록 가속률이 높습니다.', en: 'Speeds up production of your least-stocked material. The bonus grows as its stock falls further below your largest stock.', zh: '加快库存最少的材料的生产速度。它与库存最多的材料之间的比例差越大，加速幅度越高。' },
+    /* 고른 지점 머리 아래 설명 — 그 지점이 하는 일 · 값은 안 적는다 (§8 · ADR-1305 — ~~`dp.relief.desc`~~ 비상 보급만 · ADR-1298).
+       키 = `dp.desc.<줄>.<지점>` — 같은 지점 id 가 줄마다 다른 일을 한다(수색 · 도서관 `interval` · 도박장 · 도서관 `burst`) */
+    'dp.desc.res.mine': { ko: '철광석을 더 많이 생산합니다.', en: 'Produces more Iron Ore.', zh: '生产更多铁矿石。' },
+    'dp.desc.res.gather': { ko: '약초를 더 많이 생산합니다.', en: 'Produces more Herbs.', zh: '生产更多草药。' },
+    'dp.desc.res.log': { ko: '목재를 더 많이 생산합니다.', en: 'Produces more Timber.', zh: '生产更多木材。' },
+    'dp.desc.res.offline': { ko: '게임을 끈 동안 철광석 · 약초 · 목재가 쌓이는 시간을 늘립니다.', en: 'Extends how long Iron Ore, Herbs and Timber keep piling up while the game is off.', zh: '延长关闭游戏期间铁矿石、草药、木材的累积时间。' },
+    'dp.desc.res.relief': { ko: '보유량이 가장 적은 재료를 더 빨리 생산합니다. 가장 많은 재료와의 보유 비율 차이가 클수록 가속률이 높습니다.', en: 'Speeds up production of your least-stocked material. The bonus grows as its stock falls further below your largest stock.', zh: '加快库存最少的材料的生产速度。它与库存最多的材料之间的比例差越大，加速幅度越高。' },
+    'dp.desc.visit.interval': { ko: '영웅이 선술집에 더 자주 찾아옵니다.', en: 'Heroes arrive at the Tavern more often.', zh: '英雄更频繁地来到酒馆。' },
+    'dp.desc.visit.quality': { ko: '찾아오는 영웅이 레어일 확률을 높입니다.', en: 'Raises the chance that an arriving hero is Rare.', zh: '提高来访英雄为稀有的几率。' },
+    'dp.desc.visit.waiting': { ko: '찾아온 영웅이 기다리는 선술집 칸을 늘립니다. 마지막 레벨은 데려올 최저 등급을 고르는 거르기를 엽니다.', en: 'Adds Tavern slots where arriving heroes wait. The last level unlocks Filter, which sets the lowest grade to bring in.', zh: '增加来访英雄在酒馆等候的格子。最后一级开启筛选，可选择带来的最低品级。' },
+    'dp.desc.train.speed': { ko: '훈련에 등록한 영웅이 시간마다 받는 경험치를 늘립니다.', en: 'Increases the XP each registered hero gains per hour.', zh: '增加登记训练的英雄每小时获得的经验。' },
+    'dp.desc.train.range': { ko: '훈련으로 오를 수 있는 레벨 상한을 높입니다. 상한은 로스터 최고 레벨보다 이 값만큼 낮습니다.', en: 'Raises the level cap Training can reach. The cap sits this many levels below your highest-level hero.', zh: '提高训练可达到的等级上限。上限比名册中的最高等级低该数值。' },
+    'dp.desc.gamble.income': { ko: '도박장이 시간마다 버는 골드를 늘립니다.', en: 'Increases the Gold the Gambling Den earns per hour.', zh: '增加赌坊每小时赚取的金币。' },
+    'dp.desc.gamble.burst': { ko: '골드가 들어올 때 한 번 더 들어올 확률을 높입니다.', en: 'Raises the chance that Gold comes in twice.', zh: '提高金币额外再入账一次的几率。' },
+    'dp.desc.lib.interval': { ko: '스킬 조각을 더 빨리 생산합니다.', en: 'Produces Skill Shards faster.', zh: '更快地生产技能碎片。' },
+    'dp.desc.lib.burst': { ko: '스킬 조각이 완성될 때 등록한 영웅의 스킬북을 함께 얻을 확률을 높입니다.', en: 'Raises the chance of also getting a registered hero’s skill book when a Skill Shard is completed.', zh: '提高完成技能碎片时同时获得登记英雄技能书的几率。' },
     'dp.node.interval': { ko: '간격', en: 'Interval', zh: '间隔' },
     'dp.node.quality': { ko: '품질', en: 'Quality', zh: '品质' },
     'dp.node.waiting': { ko: '대기소', en: 'Waiting Room', zh: '等候所' },
@@ -1147,8 +1162,7 @@ const STRINGS = {
     'td.trade.err.materials': { ko: '지불할 재료 부족', en: 'Not enough payment materials', zh: '用于支付的材料不足' },
     'td.trade.err.gold': { ko: '골드 부족', en: 'Not enough gold', zh: '金币不足' },
     'td.trade.err.missing': { ko: '교환할 재료를 다시 선택하세요.', en: 'Select the trading materials again.', zh: '请重新选择要交换的材料。' },
-    'td.trade.deal': { ko: '특가', en: 'Deal', zh: '特价' },
-    'td.trade.next': { ko: '다음', en: 'Next', zh: '下次' },
+    'td.trade.price': { ko: '{n}개 · {gold} G', en: '{n} mats · {gold} G', zh: '{n}个 · {gold} G' },
     'td.leave': { ko: '떠나기까지 {t}', en: 'Leaves in {t}', zh: '{t}后离开' },
     'td.next': { ko: '다음 상인까지 {t}', en: 'Next trader in {t}', zh: '{t}后下一位商人到来' },
     'td.buy': { ko: '구매', en: 'Buy', zh: '购买' },
@@ -2045,9 +2059,9 @@ const STRINGS = {
         zh: '用材料或金币购买',
     },
     'help.shop.trade.body': {
-        ko: '건설에서 <b>상단 2랭크</b>를 올리면 교역소가 열립니다. <b>받을 최하급 재료</b>를 먼저 누르면 다른 재료별 필요 수·보유량과 골드 가격이 나타납니다. 지불할 재료의 <b>[구매]</b>를 눌러 그 재료 {cost}개로 선택한 재료 {receive}개를 받습니다.<br><br>철광석·약초·목재·가루의 최하급끼리 교환합니다. 선택만으로는 재료가 소모되지 않으며, 지불할 재료가 부족하면 구매할 수 없습니다. 재료로 지불할 때는 골드가 들지 않습니다. 골드 구매는 골드만 소모하며 재료별 가격이 다르고 약초가 더 비쌉니다. 시간이나 재고 제한은 없습니다.<br><br>특수상단 상인이 올 때마다 그 상인이 다루는 재료 하나가 <b>특가</b>가 됩니다. 특가 재료는 다른 재료 {deal}개 또는 골드 가격의 {pct}%로 삽니다. 특가는 다음 상인이 올 때까지 이어지고, 제목 줄에 지금과 다음 특가가 보입니다. 위 단계 재료는 대장간의 합성으로 만듭니다.<br><br>상단 3랭크는 방어구·장신구·스킬북 판매 줄을 엽니다.',
-        en: 'Build <b>Trading House rank 2</b> to open the Trading Post. First select the <b>lowest-grade material to receive</b>. Other materials show their required and owned amounts, and a gold option shows its price. Press <b>Buy</b> on a payment row to spend {cost} of that material and receive {receive} of your selection.<br><br>Trade lowest-grade iron ore, herbs, timber and dust. Selecting a material spends nothing. Choose a material payment or gold. Only the selected currency is spent, and you must have enough of it. Gold prices vary by material, with herbs priced higher. Purchases have no timer or stock limit.<br><br>Each time a visiting trader arrives, the material they deal in goes on <b>Deal</b>. Buy it for {deal} of another material or {pct}% of its gold price. The deal lasts until the next trader arrives, and the title bar shows the current and next deal. Make higher grades by combining materials at the Smithy.<br><br>Trading House rank 3 opens armor, jewelry and skill-book sales.',
-        zh: '在建设中将<b>商会提升到2阶</b>后开放交易所。先点击<b>要获得的最低级材料</b>，就会显示其他各材料的所需数量、持有量以及金币价格。点击要支付的材料的<b>[购买]</b>，即可用{cost}个该材料换取{receive}个所选材料。<br><br>铁矿石、草药、木材、粉尘的最低级之间可以互换。仅选择不会消耗材料，支付材料不足时无法购买。用材料支付时不花金币。用金币购买只消耗金币，各材料价格不同，草药更贵。没有时间或库存限制。<br><br>每当行商到来，该行商经营的一种材料就会变为<b>特价</b>。特价材料可用{deal}个其他材料或金币价格的{pct}%购买。特价持续到下一位行商到来，标题栏会显示当前和下一个特价。更高级别的材料在铁匠铺通过合成制作。<br><br>商会3阶会开放防具、饰品、技能书的出售行。',
+        ko: '건설에서 <b>상단 2랭크</b>를 올리면 교역소가 열립니다. 재료 칸 아래에 한 번 구매의 값(다른 재료 수 · 골드)이 적혀 있습니다. <b>받을 최하급 재료</b>를 누르면 지불할 재료별 필요 수·보유량과 골드 가격이 나타나고, 지불할 재료의 <b>[구매]</b>를 눌러 선택한 재료 {receive}개를 받습니다.<br><br>철광석·약초·목재·가루의 최하급끼리 교환합니다. 어느 재료로 내든 값은 같습니다. 선택만으로는 재료가 소모되지 않으며, 지불할 재료가 부족하면 구매할 수 없습니다. 재료로 지불할 때는 골드가 들지 않습니다. 골드 구매는 골드만 소모합니다. 약초는 재료로도 골드로도 더 비쌉니다. 재고 제한은 없습니다.<br><br>특수상단 상인이 올 때마다 재료 하나가 무작위로 싸집니다. 싼 재료는 값이 초록 ▼로 표시되고, 재료와 골드 모두 평소의 {pct}%입니다. 다음 상인이 올 때까지 이어집니다. 위 단계 재료는 대장간의 합성으로 만듭니다.<br><br>상단 3랭크는 방어구·장신구·스킬북 판매 줄을 엽니다.',
+        en: 'Build <b>Trading House rank 2</b> to open the Trading Post. The price of one purchase (other materials · gold) is shown under each material. Select the <b>lowest-grade material to receive</b> to see the required and owned amounts for each payment, then press <b>Buy</b> on a payment row to receive {receive} of your selection.<br><br>Trade lowest-grade iron ore, herbs, timber and dust. The price is the same whichever material you pay with. Selecting a material spends nothing. Choose a material payment or gold. Only the selected currency is spent, and you must have enough of it. Herbs cost more in both materials and gold. There is no stock limit.<br><br>Each time a visiting trader arrives, one random material becomes cheaper. Its price is shown in green with ▼, at {pct}% of the usual material and gold price, until the next trader arrives. Make higher grades by combining materials at the Smithy.<br><br>Trading House rank 3 opens armor, jewelry and skill-book sales.',
+        zh: '在建设中将<b>商会提升到2阶</b>后开放交易所。每种材料下方标有一次购买的价格（其他材料数量 · 金币）。点击<b>要获得的最低级材料</b>，就会显示各支付材料的所需数量、持有量以及金币价格，点击要支付的材料的<b>[购买]</b>，即可获得{receive}个所选材料。<br><br>铁矿石、草药、木材、粉尘的最低级之间可以互换。无论用哪种材料支付，价格都相同。仅选择不会消耗材料，支付材料不足时无法购买。用材料支付时不花金币。用金币购买只消耗金币。草药无论用材料还是金币都更贵。没有库存限制。<br><br>每当行商到来，会随机有一种材料变便宜。便宜的材料价格以绿色▼显示，材料和金币都是平时的{pct}%，持续到下一位行商到来。更高级别的材料在铁匠铺通过合成制作。<br><br>商会3阶会开放防具、饰品、技能书的出售行。',
     },
     'help.shop.special.title': {
         ko: "특수상단은 별도 방문입니다",
@@ -3426,7 +3440,6 @@ const STRINGS = {
     // ~~`sk.needWeapon`~~(꺼진 칸 툴팁 맨 위 한 줄 · ADR-0446) — 2026-10-03 걷었다: 필요 무기는 설명창 이름 줄의 칩이 무기군 이름만으로 든다(ADR-0496)
     /* 스킬북 [2026-09-29 · R179 · 도서관 탭 SCREEN_DESIGN §17 · ADR-0422] — 규칙 문장은 없다(덮어쓰기는 도움말의 몫) · 권수 `×n` 은 물약 칸처럼 기호라 키가 없다(ADR-0460) */
     'bk.hero.h': { ko: '스킬정보', en: 'Skill Info', zh: '技能信息' },   // 도서관 윗줄 왼쪽 패널 제목 — 지금 가진 스킬 카드 셋 (§17 · ADR-1179 · ADR-1262)
-    'bk.up.h': { ko: '스킬 업그레이드', en: 'Skill Upgrade', zh: '技能升级' },   // 도서관 스킬북 탭 왼쪽 구역 소제목 (2026-10-12 사용자 지시 · ADR-0597 — ~~`bk.own.h` 「가진 책」~~ · 자리 ADR-1165)
     'bk.up.help': { ko: '보유한 스킬북을 통해 스킬 레벨을 업그레이드 할 수 있습니다.', en: 'Use the skill books you own to upgrade skill levels.', zh: '可使用持有的技能书提升技能等级。' },   // 제목 옆 `?` 툴팁 · 도움말 도서관 섹션도 이 키 (2026-10-12 사용자 지시 · ADR-0603)
     'bk.none': { ko: '가진 책 없음', en: 'No books', zh: '没有书' },
     'bk.cls.all': { ko: '전체', en: 'All', zh: '全部' },   // 보유 스킬북 직업 줄 첫 칸 (§17 · ADR-1206 · ADR-1291) — 스킬 북 제작 직업 줄에는 없다
@@ -3438,8 +3451,9 @@ const STRINGS = {
     'bk.overwrite.warn': { ko: '기존 스킬과 레벨은 사라지고 책으로 돌아오지 않습니다.', en: 'The current skill and its level are lost. Books are not returned.', zh: '原有的技能与等级将会消失，书也不会返还。' },   // 덮어쓰기 확인 창 둘째 줄 (ADR-1020)
     'bk.upgrade': { ko: '업그레이드', en: 'Upgrade', zh: '升级' },   // 같은 책 — 버튼은 행동 이름만 · 드는 책 수는 읽기 줄 아랫줄 `bk.need` (ADR-1208 · R216)
     'bk.lvUp': { ko: 'Lv.{a} → Lv.{b}', en: 'Lv.{a} → Lv.{b}', zh: 'Lv.{a} → Lv.{b}' },   // 읽기 줄 아랫줄 — 지금 → 읽은 뒤 (§17 · ADR-1208)
+    'bk.books': { ko: '책 {have}/{need}', en: 'Books {have}/{need}' },   // 도서관 스킬정보 칸 줄 아랫줄 — 가진 / 드는 같은 책 · 모자라면 붉다 (§17 · ADR-1308)
+    'bk.swap': { ko: '{a} → {b}', en: '{a} → {b}' },   // 습득 줄 윗줄 — 앞 스킬 Lv.n → 새 책(덮어쓰기) (ADR-1308)
     'bk.lvMax': { ko: 'Lv.{n} · 최대 레벨', en: 'Lv.{n} · Max level', zh: 'Lv.{n} · 最高等级' },   // 읽기 줄 아랫줄 — 상한 (ADR-1208)
-    'bk.need': { ko: '책 {n}권 필요', en: 'Books needed: {n}', zh: '需要{n}本书' },   // 읽기 줄 아랫줄 — 드는 책 · 모자라면 붉다 · 가진 권수는 왼쪽 그림 칸 `×n` (ADR-1208 · 1211)
     'bk.max': { ko: '최대', en: 'Max', zh: '最高' },
     // 스킬 북 제작 — 도서관 아랫줄 오른쪽 구역 (2026-11-18 · R540 · SCREEN_DESIGN §17 · ADR-1262) · 스킬 조각 이름 ⚠임시
     'bk.craft.h': { ko: '스킬 북 제작', en: 'Skill Book Crafting', zh: '技能书制作' },
@@ -3452,11 +3466,9 @@ const STRINGS = {
     'bk.learned': { ko: '{name} — {skill} 배움', en: '{name} learned {skill}', zh: '{name}——学会了{skill}' },
     'bk.upgraded': { ko: '{name} — {skill} Lv.{n}', en: '{name} — {skill} Lv.{n}', zh: '{name}——{skill} Lv.{n}' },   // 같은 책 업그레이드 (R216)
     'bk.crafted': { ko: '{skill} 스킬북 제작 완료', en: 'Crafted a {skill} book', zh: '{skill}技能书制作完成' },
-    'bk.salvage': { ko: '분해', en: 'Salvage', zh: '分解' },   // 창고 스킬북 탭 도구 줄 · 도서관 스킬 북 분해 구역 분해 줄 — 고른 책 1권을 스킬 조각으로 (§6 · §17 · ADR-1199 · ADR-1262 · ADR-1287)
-    // 스킬 북 분해 — 도서관 아랫줄 가운데 구역 (2026-11-18 · SCREEN_DESIGN §17 · ADR-1287)
-    'bk.salv.h': { ko: '스킬 북 분해', en: 'Skill Book Salvage', zh: '技能书分解' },
-    'bk.salv.help': { ko: '스킬북을 분해해 스킬 조각을 얻을 수 있습니다.', en: 'Salvage skill books into skill shards.', zh: '可将技能书分解为技能碎片。' },   // 소제목 옆 `?` 툴팁
-    'bk.salv.gain': { ko: '스킬 조각 +{n}', en: 'Skill Shards +{n}', zh: '技能碎片+{n}' },   // 분해 줄 아랫줄 — 고른 책 1권이 주는 조각 `[balance.csv:book_salvage_shard]`
+    'bk.salvage': { ko: '분해', en: 'Salvage', zh: '分解' },   // 창고 스킬북 탭 도구 줄(고른 책 1권) · 도서관 보유 스킬북 제목 줄(분해함을 띄운다) (§6 · §17 · ADR-1199 · ADR-1262 · ADR-1304)
+    'bk.salv.gain': { ko: '스킬 조각 +{n}', en: 'Skill Shards +{n}', zh: '技能碎片+{n}' },   // 도서관 분해함 바닥 — 함 안의 책이 주는 조각 합(`game.bookSalvagePreview` · ADR-1304)
+    'bk.cube.done': { ko: '스킬북 {n}권 분해 — 스킬 조각 +{s}', en: 'Salvaged {n} skill books — Skill Shards +{s}' },   // 도서관 분해함 [분해하기] (ADR-1304)
     'bk.salvaged': { ko: '{skill} 스킬북 분해 — 스킬 조각 +{n}', en: 'Salvaged a {skill} book — Skill Shard +{n}', zh: '分解{skill}技能书——技能碎片+{n}' },
     // 결과 코드 — `game.learnBook` · `game.craftBook` · `game.salvageBook` · `game.bookState` (INTERFACE §3)
     'bk.err.shards': { ko: '스킬 조각 부족', en: 'Not enough skill shards', zh: '技能碎片不足' },   // craftBook (R540)

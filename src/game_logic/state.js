@@ -3202,8 +3202,15 @@ export function createGameSystem(deps) {
             shards: state.skillShards ?? 0,
             craft: craftableBooks().map(id => ({ id, shards: craftShards(id), err: craftCostErr(state, id) })),
             craftCost: { gold: B.skill_craft_gold },
-            hero: uid ?{ skill: h?.bookSkill ?? null, innate: h?.innate ?? null, lv: { ...(h?.skillLv ?? {}) }, err: learnGate(state, h) } : null,
+            hero: uid ?{ skill: h?.bookSkill ?? null, innate: h?.innate ?? null, lv: { ...(h?.skillLv ?? {}) }, err: learnGate(state, h),
+                // 두 칸(고유 · 배운 칸)의 업그레이드 — 가진 권수가 0 이어도 선다(도서관 스킬정보 칸마다 · 2026-11-23 · ADR-1308)
+                up: { innate: slotUp(state, h, h?.innate), book: slotUp(state, h, h?.bookSkill) } } : null,
         };
+    }
+    /** 영웅의 한 칸을 그 칸의 책으로 올리면 — `{id, have, ...bookPlan}` · 칸이 비었거나 책이 안 되는 스킬이면 null (ADR-1308) */
+    function slotUp(state, h, id) {
+        if (!h || !id || !bookable(id)) return null;
+        return { id, have: state.books?.[id] ?? 0, ...bookPlan(state, h, id) };
     }
     function learnBook(state, uid, skillId, now = null) {
         const h = heroById(state, uid);
@@ -3249,6 +3256,36 @@ export function createGameSystem(deps) {
         const shards = B.book_salvage_shard;
         state.skillShards = (state.skillShards ?? 0) + shards;
         return { ok: true, shards };
+    }
+    /** 여러 권 분해의 셀 칸 — `{skillId: n}` 에서 n 이 양의 정수인 칸만 (ADR-1304) */
+    const bookPicks = picks => Object.entries(picks ?? {}).filter(([, n]) => Number.isInteger(n) && n > 0);
+    /**
+     * 여러 권 분해 미리보기 [2026-11-23 · SCREEN_DESIGN §17 도서관 분해함 · ADR-1304] — 상태 불변 · rng 0 · 판정은 `salvageBooks` 와 같다.
+     *   거절 순서 `empty` → `missing` → `book` · `err` = 그 코드(통과면 null) · `n` · `shards` = 센 칸의 합(거절이어도)
+     */
+    function bookSalvagePreview(state, picks) {
+        const list = bookPicks(picks);
+        const n = list.reduce((s, [, k]) => s + k, 0);
+        const shards = n * B.book_salvage_shard;
+        let err = null;
+        if (!list.length) err = 'empty';
+        else if (list.some(([id]) => !bookable(id))) err = 'missing';
+        else if (list.some(([id, k]) => !((state.books?.[id] ?? 0) >= k))) err = 'book';
+        return { n, shards, err };
+    }
+    /**
+     * 책 여러 권 분해 [2026-11-23 · ADR-1304] — **다 되거나 하나도 안 된다** · 한 권 규칙은 `salvageBook` 과 같다(어떤 책이든 · 건물 문 없음) ·
+     *   칸마다 `books` 를 n 내리고(0 이면 키를 지운다) 조각 `n × [balance.csv:book_salvage_shard]` · 거절이면 상태 불변 · rng 0
+     */
+    function salvageBooks(state, picks) {
+        const pv = bookSalvagePreview(state, picks);
+        if (pv.err) return { ok: false, err: pv.err };
+        for (const [id, k] of bookPicks(picks)) {
+            state.books[id] -= k;
+            if (state.books[id] <= 0) delete state.books[id];
+        }
+        state.skillShards = (state.skillShards ?? 0) + pv.shards;
+        return { ok: true, n: pv.n, shards: pv.shards };
     }
 
     /* ── 연구소 — 줄 × 지점 [신설 2026-09-27 · SCREEN_DESIGN §8 · INTERFACE §2-7 · 개정 2026-10-18 영웅 배치 삭제(R283) ·
@@ -4679,10 +4716,7 @@ export function createGameSystem(deps) {
         const leaveAt = arriveAt + stay;
         const nextAt = arriveAt + period;
         const here = now < leaveAt;
-        // 교역소 시세 — 회차의 상인이 맡은 재료가 특가다 · 최하급 넷을 사다리 순서로 돈다 (2026-11-16 사용자 · base_expedition §2-6 · R512)
-        const roots = MAT_LADDER.filter(m => m.tier === 1);
-        const deal = roots[cycle % roots.length]?.id ?? null, nextDeal = roots[(cycle + 1) % roots.length]?.id ?? null;
-        return { cycle, here, arriveAt, leaveAt, nextAt, remainMs: (here ? leaveAt : nextAt) - now, deal, nextDeal };
+        return { cycle, here, arriveAt, leaveAt, nextAt, remainMs: (here ? leaveAt : nextAt) - now };
     }
 
     /** 지금 진행 중인 챕터 — 열린 스테이지 중 **가장 뒤의 것**의 챕터 · **첫 단(노말)의 기록**으로 센다 — 고른 난이도와 무관 (2026-10-10 · R236) */
@@ -4706,28 +4740,32 @@ export function createGameSystem(deps) {
 
     /**
      * 교역소 — 받을 최하급 재료를 고르고 다른 재료 또는 골드로 산다. 조회는 상태·rng를 바꾸지 않는다.
-     * 시세 — `now` 회차의 특가 재료(`shopVisit.deal`)를 받을 때만 `shop_trade_deal_cost` · 골드 × `shop_trade_deal_gold_pct`(비율) · `base` = 평소 값 (R512)
+     * 가격표 — 값은 받을 재료마다 하나: 재료 `shop_trade_cost_<id>`(어느 재료로 내든 같다) · 골드 `shop_trade_gold_<id>` × 받는 수.
+     * `items[].cost` · `items[].gold` = 칸 아래 값 (2026-11-23 · base_expedition §2-6 · R557)
+     * 싼 재료 — `now` 회차(`shopVisit.cycle`)마다 최하급 넷 중 하나를 시드로 고른다(`seed ^ 0x7DE1` · 저장 안 함 · 어느 수열도 안 민다) ·
+     * 그 재료는 평소 값 × `shop_trade_deal_pct`(반올림) · 평소보다 비싸지는 때는 없다
      */
     function shopTradeState(state, id = null, now) {
-        const open = hasFeature(state, 'shop_trade');
-        const { deal, nextDeal, nextAt } = shopVisit(state, now);
-        const items = MAT_LADDER.filter(m => m.tier === 1).map(m => ({ id: m.id, have: state.materials?.[m.id] ?? 0, deal: m.id === deal }));
-        const selected = items.find(m => m.id === id)?.id ?? null;
-        const onDeal = selected !== null && selected === deal;
-        const matCost = onDeal ? B.shop_trade_deal_cost : B.shop_trade_cost;
-        const offers = selected === null ? [] : items.filter(m => m.id !== selected).map(m => ({
-            pay: m.id, cost: matCost, base: B.shop_trade_cost, have: m.have, canBuy: open && m.have >= matCost,
+        const open = hasFeature(state, 'shop_trade'), n = B.shop_trade_receive;
+        const roots = MAT_LADDER.filter(m => m.tier === 1);
+        const deal = roots.length ? roots[Math.floor(makeRng(deriveSeed(state.seed ^ 0x7DE1, shopVisit(state, now).cycle))() * roots.length)].id : null;
+        const price = (v, cheap) => cheap ? Math.min(v, Math.round(v * B.shop_trade_deal_pct)) : v;
+        const items = roots.map(m => ({
+            id: m.id, have: state.materials?.[m.id] ?? 0, deal: m.id === deal,
+            cost: price(B[`shop_trade_cost_${m.id}`], m.id === deal), gold: price(B[`shop_trade_gold_${m.id}`] * n, m.id === deal),
         }));
-        if (selected !== null) {
-            const unit = B[`shop_trade_gold_${selected}`], n = B.shop_trade_receive;
-            const cost = (onDeal ? Math.round(unit * B.shop_trade_deal_gold_pct) : unit) * n;
+        const pick = items.find(m => m.id === id) ?? null;
+        const offers = pick === null ? [] : items.filter(m => m.id !== pick.id).map(m => ({
+            pay: m.id, cost: pick.cost, have: m.have, canBuy: open && m.have >= pick.cost,
+        }));
+        if (pick !== null) {
             const have = state.resources.gold;
-            offers.push({ pay: 'gold', cost, base: unit * n, have, canBuy: open && have >= cost });
+            offers.push({ pay: 'gold', cost: pick.gold, have, canBuy: open && have >= pick.gold });
         }
-        return { open, items, id: selected, n: B.shop_trade_receive, offers, deal, nextDeal, nextAt };
+        return { open, items, id: pick?.id ?? null, n, offers, deal };
     }
 
-    /** 지불 직전 현재 보유를 재확인한다. 값은 `now` 의 시세다. 거절은 상태 불변 · 매진·별도 저장 필드 없음. */
+    /** 지불 직전 현재 보유를 재확인한다. 값은 `shopTradeState` 의 가격표다. 거절은 상태 불변 · 매진·별도 저장 필드 없음. */
     function shopTradeBuy(state, id, pay, now) {
         const S = shopTradeState(state, id, now);
         if (!S.open) return { ok: false, err: 'unbuilt' };
@@ -6599,7 +6637,7 @@ export function createGameSystem(deps) {
         materialLadder, synthState, synthesize,   // 재료 단계 · 대장간 합성 (2026-10-27 · R359)
         mgRound, mgJudge, mgClaim,
         advanceState, advanceStart, advanceSettle, advanceLearn, advanceForget, advanceLevelUp, advanceRank, spendStar,
-        bookState, learnBook, salvageBook, craftBook, sortBooks,
+        bookState, learnBook, salvageBook, salvageBooks, bookSalvagePreview, craftBook, sortBooks,
         masteryState, learnMastery, unlearnMastery, resetMastery,
         tacticState, tacticBonus, arenaLoadout, arenaExport, arenaState, arenaStakes, arenaRecord, colosseumState, colosseumRecord, arenaDefense, setArenaDefense, rerollTactic, toggleTacticLock, weaponGroupOf,
         constructionState, construct, hasFeature, needOf, peakTotal,
