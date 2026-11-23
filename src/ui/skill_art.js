@@ -38,8 +38,8 @@ export const SKILL_ART = {
     // 마법사 — 화염 · 냉기 · 번개 · 집중 · 얼음 벽 소환.
     // 아이스 블라스트 · 라이트닝은 초상 바깥 위에서 떨어진다(ADR-0541) — `ay` = 그림에서 초상 가운데에 닿는 높이 · `then` = 이어 서는 그림.
     mag_fireball: { hit: { file: 'mag_fireball', motion: 'burst', size: 90, duration: 420 } },
-    // 인페르노 = 적진에 까는 불(R550 · ADR-1281) — 타격 사건이 없어 `hit` 이 아니라 상대 카드마다 서는 `bad` 다 · 불벽이 솟고 이어 불바닥(옛 파이어월 그림)이 깔린다
-    mag_inferno: { bad: { file: 'mag_inferno', motion: 'pillar', size: 94, duration: 500, then: { file: 'mag_firewall', motion: 'ground', size: 104, ay: .3, duration: 700 } } },
+    // 인페르노 = 적진에 까는 불(R550 · ADR-1281) — 타격 사건이 없어 `hit` 이 아니라 상대 카드마다 서는 `bad` 다 · 불벽 한 장만 솟는다(이어 깔리던 불바닥은 걷었다 · ADR-1335)
+    mag_inferno: { bad: { file: 'mag_inferno', motion: 'pillar', size: 94, duration: 500 } },
     mag_iceblast: { hit: {
         file: 'mag_iceblast', motion: 'fall', size: 110, ay: .87, duration: 260,
         then: { file: 'mag_iceblast_shatter', motion: 'shatter', size: 110, ay: .89, duration: 380 },

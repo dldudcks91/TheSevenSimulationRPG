@@ -670,6 +670,7 @@ export function buildSystems(d, dev = {}) {
             rare: d.balance.tactic_grade_mult_rare,
         },
         gearPct: d.balance.tactic_sin_gear_pct,
+        heroScore: d.balance.tactic_sin_hero_score,      // 영웅 하나가 제 죄종에 더하는 점수 (§5-14 · R563)
         // 등급 가중치 — 리롤이 옵션과 등급을 같이 굴린다 (tactic_card_design §5-5). 값은 CSV
         gradeWeights: {
             common: d.balance.tactic_grade_weight_common,
@@ -772,7 +773,9 @@ export function buildSystems(d, dev = {}) {
     // 결투장 — 오프라인 등급 표 · 온라인 팀 검사기가 볼 끝값 둘을 함께 넘긴다 (INTERFACE §2-17 · 2026-10-17).
     //   강화 상한은 **건물을 다 지었을 때**다 — 남이 올린 팀이 어디까지 지었는지 모르므로 검사기는 끝을 본다 · 스킬 업그레이드는 그 상한 하나(`skillbook_upgrade_max` · R293)
     //   물약 칸 · 열린 전술 칸의 끝도 같은 이유로 다 지었을 때다 · 받은 팀의 전술 값은 전술 시스템이 다시 재고 물약 회복량은 물약 표에서 읽는다 (2026-11-13 · R460)
-    const maxLimits = game.limitsOf({ buildings: Object.fromEntries(construction.list.map(b => [b.id, b.maxRank])) });
+    //   강화 상한은 연구소 「대장간」 줄 「강화」 지점이 올리니 연구소 지점도 끝까지 올린 판이다 (2026-11-24 · R566)
+    const maxLimits = game.limitsOf({ buildings: Object.fromEntries(construction.list.map(b => [b.id, b.maxRank])),
+        labNodes: Object.fromEntries((d.labNodes ?? []).map(n => [`${n.line}:${n.node}`, n.max])) });
     const arena = createArenaSystem({
         hero, item, skill, battle, tactic, balance: d.balance, equipSlots: d.equipSlots, advances: d.advanceRows ?? [], classSkills,
         tiers: d.arenaTiers ?? [], floors: d.trialFloors ?? [], potions: d.potions ?? [],

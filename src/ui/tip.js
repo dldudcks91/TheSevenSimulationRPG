@@ -1513,6 +1513,44 @@ export function skillLineHtml(s, ctx = {}, sep = '<br>') {
 }
 
 /**
+ * 계산 줄 — 문장의 숫자가 **무엇에서 나왔나**를 줄마다 **세 칸 `이름 | 값 | 식`** 으로 낸다 (도서관 스킬정보 · SCREEN_DESIGN §17 · ADR-1364 — ~~`이름 값 = 식` 한 줄~~ ADR-1338).
+ *   칸은 줄마다 맞춰 선다(부르는 자리의 격자) · 등호는 없다 · 식의 인수는 **수 + 그 출처** — `데미지 10~16 × 300% × 1.33 [STR 13]`(능력치 칩 · ADR-1361) · 태그 몫 `× 1.13 태그`.
+ *   쿨타임 = 실제 쿨 · 식은 **실제로 깎였을 때만** `표기 쿨 − 쿨감 n%`(바닥 반영 · `coolCut`) · 걸린 효과의 태그 몫 = `지속 +n% · 효과 +n%`.
+ *   값 · 중간 값은 전부 `skill.previewOf` 가 낸다 — 여기서는 곱하지 않고 찍기만 한다(INTERFACE §2-8). 모르는 값의 줄은 안 선다.
+ *   능력치 계수가 아닌 슬롯(지속 · 값 · 타수 …)은 계수가 다 0 이라 값을 안 바꾼다 — 줄이 없다(설명창 Alt 식과 같은 거름 · `slot`)
+ * @returns {string[]} 줄 html(칸 셋 `.calc-k` · `.calc-v` · `.calc-f`) — 스킬이 없거나 낼 줄이 없으면 빈 배열
+ */
+export function skillCalcLines(s, ctx = {}) {
+    const def = defOf(s);
+    if (!def) return [];
+    const pv = SYS.skill.previewOf(def, ctx);
+    if (!pv) return [];
+    const out = [];
+    const row = (label, value, expr = '') => `<span class="calc-k">${label}</span><span class="calc-v">${value}</span><span class="calc-f">${expr}</span>`;
+    const b = v => `<b>${v}</b>`;
+    const a = pv.parts?.amount;
+    if (a?.value && a.base) {
+        const eff = def.effects[0].effect;
+        const label = t(eff === 'summon' ? 'bk.calc.hp' : eff === 'heal' || eff === 'mend' ? 'bk.calc.heal' : 'bk.calc.dmg');
+        const expr = [`${BASIS_NAME[a.basis]?.() ?? a.basis} ${b(rangeText(a.base))}`, `× ${b(`${num(M.pctNum(a.pct))}%`)}`]
+            .concat(a.tagMult !== 1 ? [`× ${b(a.tagMult.toFixed(2))}<i class="calc-src">${t('bk.calc.tag')}</i>`] : [])
+            // 능력치 항 = 계수 + 그 출처 칩(설명창의 능력치 칩 · 약어와 능력치 값 · ADR-1361)
+            .concat(a.attrs.filter(x => x.mult != null).map(x => `× ${b(x.mult.toFixed(2))}<i class="tip-chip attr">${abbrOf(x.attr)} ${x.v}</i>`))
+            .join(' ');
+        out.push(row(label, rangeText(a.value), expr));
+    }
+    // 쿨타임 — 실제 쿨 · 실제로 깎였을 때만 식(쿨감 0 이면 문장의 쿨과 같아 식이 잡음이다) · 쿨감을 모르면 값만
+    if (def.cool > 0) {
+        const cut = pv.coolCut > 0 ? `${t('time.s', { s: num(pv.baseSec) })} − ${t('sk.cdrShort')} ${b(`${M.pctNum(pv.coolCut, 1)}%`)}` : '';
+        out.push(row(t('bk.calc.cool'), t('time.s', { s: num(pv.coolSec ?? def.cool) }), cut));
+    }
+    // 걸린 효과에 곱한 태그 몫 — 문장의 시간 · 값은 이미 탔다
+    const tg = [pv.tags?.duration ? t('bk.calc.tagDur', { p: b(M.pctNum(pv.tags.duration)) }) : null, pv.tags?.value ? t('bk.calc.tagVal', { p: b(M.pctNum(pv.tags.value)) }) : null].filter(Boolean);
+    if (tg.length) out.push(row(t('bk.calc.tag'), '', tg.join(' · ')));
+    return out;
+}
+
+/**
  * 스킬 카드 — **몸통**(`skillBodyHtml`) (SCREEN_DESIGN §2 「스킬 설명창 규격」).
  * Alt 가 바뀌면 `setAlt` 가 떠 있는 카드를 **같은 인자로** 다시 만든다 — 그래서 카드가 제 인자를 쥔 `_rebuild` 를 든다(유닛 카드와 같은 장치).
  * @param s   `.id` 만 있으면 된다 — 정의는 `SYS.skill.defs` 에서 집는다(호출처마다 다른 모양을 받아 왔다)
@@ -1556,14 +1594,30 @@ export const needWeaponChip = (def, off) => {
  * 능력치 칩은 스케일링 슬롯(하는 일 줄의 `scales` — 줄 순 · 2026-09-22)이 가리키는 능력치의 약어다 — 슬롯 순서 · 같은 능력치는 한 번 · 계수 0 이어도 찍는다 (ADR-0118).
  * 고정 설명(`def.desc`)은 **안 낸다** — 문장이 같은 말을 값까지 넣어 한다(같은 ADR).
  */
+/**
+ * 스킬의 칩 셋 — **태그**(파생 포함 · `skill_tag.csv` 이름) · **종류**(피해를 내는 줄의 물리 · 원소 · 줄 순 · 같은 종류는 한 번) · **능력치**(슬롯이 가리키는 능력치 약어 · 계수 0 도).
+ * 설명창(이름 아래 칩 줄 · 이름 바로 뒤 능력치)과 도서관 스킬정보 칸 줄 제목 띠(SCREEN_DESIGN §17 · ADR-1360)가 같이 쓴다 — 두 자리가 따로 짜면 한쪽만 고쳐진다
+ */
+function skillChipParts(def, atkType) {
+    return {
+        tags: (def ? SYS.skill.tagsOf(def) : []).map(tg => `<i class="tip-chip">${L(skillTagName(tg))}</i>`),
+        types: [...new Set((def?.effects ?? []).map(e => damageTypeOf(e, atkType)).filter(Boolean))].map(ty => `<i class="tip-chip dmg">${t(`st.atkType.${ty}`)}</i>`),
+        attrs: [...new Set((def?.effects ?? []).flatMap(e => e.scales).map(x => x.attr))].map(at => `<i class="tip-chip attr">${abbrOf(at)}</i>`),
+    };
+}
+/** 도서관 스킬정보 띠의 칩 한 줄 — 태그 → 종류 (설명창과 같은 칩 · 같은 순서) · 능력치 칩은 띠가 아니라 계산 줄의 능력치 항에 선다(`skillCalcLines` · ADR-1361) */
+export function skillChipsHtml(s, ctx = {}) {
+    const c = skillChipParts(defOf(s), ctx.atkType);
+    return [...c.tags, ...c.types].join('');
+}
 function skillBodyHtml(s, ctx) {
     const def = defOf(s);
     // 이름 아래 칩 줄 — 출처 · 태그 · 종류 / 이름 바로 뒤 — 능력치 칩 / 이름 줄 맨 끝 — 필요 무기 (2026-10-03 · ADR-0496)
+    const parts = skillChipParts(def, ctx.atkType);
     const chips = [];
     if (ctx.source) chips.push(`<i class="tip-chip src">${t(ctx.source === 'innate' ? 'sk.innate' : `sk.src.${ctx.source}`)}</i>`);
-    for (const tg of (def ? SYS.skill.tagsOf(def) : [])) chips.push(`<i class="tip-chip">${L(skillTagName(tg))}</i>`);
-    for (const ty of new Set((def?.effects ?? []).map(e => damageTypeOf(e, ctx.atkType)).filter(Boolean))) chips.push(`<i class="tip-chip dmg">${t(`st.atkType.${ty}`)}</i>`);
-    const attrs = [...new Set((def?.effects ?? []).flatMap(e => e.scales).map(x => x.attr))].map(at => `<i class="tip-chip attr">${abbrOf(at)}</i>`);
+    chips.push(...parts.tags, ...parts.types);
+    const attrs = parts.attrs;
     const need = needWeaponChip(def, ctx.off);
     // 정의를 못 찾으면(행이 지워진 옛 세이브) 이름만 낸다 — 던지지 않는다
     const R = { alt: altHeld, fx: false, realCool: true };

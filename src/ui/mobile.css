@@ -230,7 +230,8 @@
 :root[data-mobile] .pt-tactics .rs-grid { display: flex; flex-direction: column; }
 :root[data-mobile] .pt-tactics .rs-cell { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; }
 :root[data-mobile] .pt-tactics .rs-cell .rs-eff { flex: 1 1 100%; white-space: normal; }
-:root[data-mobile] .pt-tactics .rs-board { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+:root[data-mobile] .pt-tactics .rs-board { grid-template-columns: max-content max-content minmax(0, 1fr) max-content; }   /* 폰은 한 열 여덟 줄 — 반 폭이면 20칸이 너무 잘다 (ADR-1339) */
+:root[data-mobile] .pt-tactics .rs-bd-row.r { grid-column: 1 / span 4; }
 :root[data-mobile] .gb-sins { flex-wrap: wrap; min-width: 0; }
 :root[data-mobile] .pt-body .cols { display: flex; flex-direction: column; }
 :root[data-mobile] .fm-box { overflow-x: auto; max-width: 100%; }

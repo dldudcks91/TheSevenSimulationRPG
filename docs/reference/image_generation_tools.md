@@ -72,6 +72,8 @@ Start-Process "C:\Program Files\Google\Chrome\Application\chrome.exe" -ArgumentL
 
 ⚠ **Gem 이 아닌 채팅은 모델을 「3.1 Pro」로 골라야 그린다** (2026-11-17) — 기본 모델 「4 Hydrogen」 · 「4 Hydrogen Thinking」은 이미지 페이지(`https://gemini.google.com/images` · 「이미지」 칩이 켜진 채 열린다)에서도 SVG 코드나 「이미지 도구가 없다」는 글로 답한다. 고른 모델은 새 채팅마다 Hydrogen Thinking 으로 돌아가므로 판마다 다시 고른다(비율 1:1 도 같은 자리). Pro 그림의 워터마크는 흰 바탕에선 안 보이고 검은 면 위에서만 오른쪽 아래 회색 반짝이로 남는다. **칸마다 긴 문장에 규칙 줄까지 붙인 3×3 지시문은 「I'm having a hard time fulfilling your request」로 거절됐다**(첨부가 있든 없든 · 세 번). 그림체 한 문단 + 칸마다 짧은 구절 아홉 줄로 줄이자 장마다 10초 안에 나왔다 — 본보기 `output/2026-11-17_basic_skill_gemini/prompts/*_c_na.txt`
 
+⚠ **Gemini 4 화면** (2026-11-24) — 몬스터(정예) Gem 의 기본 모델이 「4 Neon」(신규)이 됐고 Gem 안에서는 그대로 그림을 그린다(3×3 시트 2048² · 한 장 20 ~ 50초 · 57장 하루 안에 한도 없이). 입력창 아래에 **「가로세로 비율」**(자동 · 1:1 · 9:16 · 3:4 · 4:3 · 16:9)과 **「형식」**(이미지 · GIF) 칸이 생겼다 — 3×3 시트는 판마다 1:1 을 고른다(본보기 `select_square` · 세션 scratchpad 배치). 「+」 메뉴에 `attach_file` 항목이 둘(「파일 업로드」 글자 있는 것 · 숨은 빈 것)이라 `attach` 가 숨은 쪽을 눌러 「element is not visible」로 멈췄다 — 글자 있는 항목을 먼저 찾게 고쳤다. 일곱에 한 번꼴로 「저는 텍스트 기반 AI …」 글 답장이나 생성 · 다운로드 시간 초과가 오는데, 같은 요청을 다시 보내면 그린다
+
 **4. 결과** — 3×3 시트 한 장 약 45~65초 · 받은 파일 2048×2048 PNG(화면의 그림은 1024 미리보기라 반드시 다운로드 버튼으로 받는다)
 
 **5. 확인된 범위 (2026-10-09)** — 크롬 띄우기 · 로그인 · Gem 열기 · 프롬프트 입력 · 생성 · 원본 다운로드 · `run` 끝까지 · `attach`(입력창에 붙는 것까지)가 실제로 돌았다
@@ -79,4 +81,4 @@ Start-Process "C:\Program Files\Google\Chrome\Application\chrome.exe" -ArgumentL
 - 구글은 자동 조작을 싫어한다 — 사람 속도로 한 장씩 · 몰아서 수십 장 돌리지 않는다
 
 ---
-*마지막 업데이트: 2026-11-17*
+*마지막 업데이트: 2026-11-24*

@@ -33,7 +33,8 @@
  *   sins         — 죄종 id 목록 — **이 순서가 굴림의 죄종 순서**다
  *   gradeWeights — {common, magic, rare} 상대 가중치 (balance.csv:tactic_grade_weight_*) — 리롤의 등급 추첨
  *   gradeMult    — {common, magic, rare} 등급 배수 (balance.csv:tactic_grade_mult_*) — 값의 등급 항 (§5-14)
- *   gearPct      — 장비 죄종 하나의 버프 몫 (balance.csv:tactic_sin_gear_pct) (§5-14 「장비 죄종 버프」)
+ *   gearPct      — 죄종 점수 1점의 버프 몫 (balance.csv:tactic_sin_gear_pct) (§5-14 「죄종 점수 버프」)
+ *   heroScore    — 파티 영웅 하나가 제 죄종에 더하는 점수 (balance.csv:tactic_sin_hero_score) — 나머지 점수는 낀 장비의 죄종 수 (§5-14 · 2026-11-24 · R563)
  *   rerollCost   — {base, lockMult} (balance.csv:tactic_reroll_base_cost · tactic_reroll_lock_mult) — 전체 리롤 비용 (§5-6)
  *   leader       — {pivot, min, max, multMin, multMax} (balance.csv:attr_dmg_pivot · hero_attr_min · hero_attr_max · tactic_leader_mult_min · _max) — 리더 보너스 (§5-10)
  *                  `max`(= hero_attr_max)는 3랭크 연속 조건의 나눔 값이기도 하다 (§5-14 · R466)
@@ -147,6 +148,8 @@ export function createTacticSystem(data) {
         if (!(gradeMult[GRADES[i]] > gradeMult[GRADES[i - 1]])) throw new Error(`tactic: 등급 배수 ${GRADES[i]} ${gradeMult[GRADES[i]]} 가 ${GRADES[i - 1]} ${gradeMult[GRADES[i - 1]]} 보다 크지 않다`);
     const gearPct = data.gearPct;
     if (typeof gearPct !== 'number' || !(gearPct >= 0)) throw new Error('tactic: 장비 죄종 몫이 없다 (balance.csv:tactic_sin_gear_pct)');
+    const heroScore = data.heroScore;
+    if (typeof heroScore !== 'number' || !(heroScore >= 0)) throw new Error('tactic: 영웅 죄종 점수가 없다 (balance.csv:tactic_sin_hero_score)');
 
     /* ── 옵션 (tactic_option.csv — 1행 = 가족 하나) ── */
 
@@ -232,23 +235,27 @@ export function createTacticSystem(data) {
      * members = [{sin, cls, ldr, stats, gear}] **편성 순서대로**(첫 칸이 리더) · `stats` = 그 영웅의 능력치 `{str, agi, …}`(3랭크 짝 능력치 합 · R466) ·
      * `gear` = 그 영웅이 낀 장비의 죄종 목록(이름의 첫째 · 둘째 둘 다 · 유니크는 없다) ·
      * `extra.kills` = 이 셋이 함께 잡은 몬스터 수(state.killsTogether). 모으는 것은 state.js, 세는 규칙은 여기.
+     * `score` = **죄종 점수** — 그 죄종 영웅 하나마다 `heroScore` + 장비 죄종 수(`gear`) · 버프 몫이 읽는다 (§5-14 「죄종 점수 버프」 · 2026-11-24 · R563)
      */
     function contextOf(members, extra = {}) {
         const gear = Object.fromEntries(SINS.map(s => [s, 0]));
+        const score = Object.fromEntries(SINS.map(s => [s, 0]));
         const attrSum = {};
-        const ctx = { size: members.length, members, sins: [], leader: members[0] ?? null, kills: extra.kills ?? 0, gear, attrSum };
+        const ctx = { size: members.length, members, sins: [], leader: members[0] ?? null, kills: extra.kills ?? 0, gear, score, attrSum };
         for (const m of members) {
             ctx.sins.push(m.sin);
+            if (m.sin in score) score[m.sin] += heroScore;
             for (const s of m.gear ?? []) if (s in gear) gear[s] += 1;
             for (const [a, v] of Object.entries(m.stats ?? {})) if (Number.isFinite(v)) attrSum[a] = (attrSum[a] ?? 0) + v;
         }
+        for (const s of SINS) score[s] += gear[s];
         return ctx;
     }
 
     /**
      * 칸 하나를 잰다 — 조건 카운터 · 단계 · 값 · 버프 몫 (화면이 「지금 / 다음 문턱」 · ×단계 · 버프 몫을 찍는다 — §4 「안 보이면 함정」).
      *   단계 = 넘은 문턱 수(0 ~ 3) · 조건 없음은 1 · **연속 조건은 센 수 ÷ 능력치 상한(소수 · R466)** · **0 이면 꺼짐**. `base` = 값(**꺼진 칸은 단계 1 값** — 「켜면 얼마」) ·
-     *   `value` = 적용 값 = `base × (1 + leadPart + gearPart)` [§5-10 · §5-14 「장비 죄종 버프」] — 켜짐과 무관하게 낸다 ·
+     *   `value` = 적용 값 = `base × (1 + leadPart + gearPart)` [§5-10 · §5-14 「죄종 점수 버프」] — 켜짐과 무관하게 낸다 ·
      *   `attr` = 연속 조건이 읽은 짝 능력치 id(화면의 「힘 합」 · 다른 조건은 null)
      */
     function measure(option, ctx) {
@@ -261,7 +268,7 @@ export function createTacticSystem(data) {
         const active = step > 0;
         const base = valueAt(option, active ? step : 1);
         const leadPart = (option.leaderBonus ?? 0) * (leadCurve(ctx.leader?.ldr) - 1);
-        const gearPart = (ctx.gear?.[option.sin] ?? 0) * gearPct;
+        const gearPart = (ctx.score?.[option.sin] ?? 0) * gearPct;      // 죄종 점수 몫 — 영웅 죄종 + 장비 죄종 (R563 · 이름은 옛 「장비 몫」 그대로)
         const value = round(option.stat, base * (1 + leadPart + gearPart));
         return {
             have, steps: steps.slice(), step, need, active, attr: test.attr ? test.attr(option) : null, base,
@@ -340,7 +347,7 @@ export function createTacticSystem(data) {
     return {
         slotList, slotCount, families, familyIds, sinList: SINS.slice(),
         effectsOf: sin => (effectsBySin[sin] ?? []).map(e => ({ effect: e.effect, ids: e.ids.slice() })),
-        conditions: Object.values(condById), gradeMult, gearPct,
+        conditions: Object.values(condById), gradeMult, gearPct, heroScore,
         optionOf, valueAt, contextOf, measure, bonusOf, leadCurve,
         initialAssign, pick, pickMany, rerollCost, GRADES, COND_KINDS: Object.keys(TESTS), hasCond,
     };

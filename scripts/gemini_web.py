@@ -41,11 +41,14 @@ def icon_button(page, name):
 def attach(page, paths):
     """Attach local files to the prompt box: '+' (plus) -> 'attach_file' menu item -> file chooser."""
     # 새 채팅 직후엔 + 메뉴가 안 열릴 때가 있다(연속 run 의 둘째 판부터) — 닫고 다시 연다
+    # 2026-11-24 Gemini 4 — + 메뉴에 attach_file 항목이 둘(「파일 업로드」 글자 있는 것 · 숨은 빈 것)이라 글자 있는 쪽을 먼저 찾는다
     for _ in range(4):
         icon_button(page, 'plus').click()
         page.wait_for_timeout(1500)
-        item = page.evaluate_handle(ICON_BTN.replace("querySelectorAll('button')", "querySelectorAll('button, [role=menuitem]')"),
-                                    'attach_file').as_element()
+        labeled = page.locator('button:visible, [role=menuitem]:visible').filter(has_text='파일 업로드')
+        item = labeled.first if labeled.count() > 0 else page.evaluate_handle(
+            ICON_BTN.replace("querySelectorAll('button')", "querySelectorAll('button, [role=menuitem]')"),
+            'attach_file').as_element()
         if item is not None:
             break
         page.keyboard.press('Escape')

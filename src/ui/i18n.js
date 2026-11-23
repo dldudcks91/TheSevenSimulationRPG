@@ -242,10 +242,9 @@ const STRINGS = {
     'hint.drops': { ko: '이 원정에서 얻은 아이템입니다. 아이템에 마우스를 올리면 옵션을 확인할 수 있습니다.', en: 'Items obtained in this expedition. Hover an item to inspect its options.', zh: '此次远征获得的物品。将鼠标移到物品上可查看词条。' },
     'hint.contribution': { ko: '영웅별 전투 기여를 비교합니다. 가한·받은 피해와 처치·전투불능 기록을 함께 살펴보세요.', en: 'Compare each hero’s contribution. Review damage dealt and taken, kills and fallen-hero records together.', zh: '比较每名英雄的战斗贡献。请一并查看造成与受到的伤害，以及击杀与倒下记录。' },
     'hint.battle_totals': { ko: '현재까지 재생된 전투의 가한·받은 피해 누계입니다. 요약과 스킬별 보기로 비교할 수 있습니다.', en: 'Damage dealt and taken during the battle played so far. Switch between summary and per-skill views to compare.', zh: '截至目前已回放战斗中造成与受到的伤害累计。可切换总览与按技能查看进行比较。' },
-    'hint.equipment': { ko: '선택한 영웅이 착용한 장비입니다. 장비에 마우스를 올리면 옵션과 사용 가능한 조작을 확인할 수 있습니다.', en: 'Equipment worn by the selected hero. Hover an item to inspect its options and available actions.', zh: '所选英雄穿戴的装备。将鼠标移到装备上可查看词条与可用操作。' },
+    'hint.equipment': { ko: '선택한 영웅이 착용한 장비입니다. 장비에 마우스를 올리면 옵션을 확인할 수 있습니다.', en: 'Equipment worn by the selected hero. Hover an item to see its options.', zh: '所选英雄穿戴的装备。将鼠标移到装备上可查看词条。' },
     'hint.sins': { ko: '착용 장비의 죄종 구성입니다. 영웅의 죄종과 장비의 죄종은 별개입니다.', en: 'The Sins of the equipped items. A hero’s Sin and equipment Sins are separate.', zh: '所穿戴装备的罪宗构成。英雄的罪宗与装备的罪宗彼此独立。' },
     'hint.skills': { ko: '이 영웅이 사용하는 스킬입니다. 스킬 그림에 마우스를 올리면 효과를 확인할 수 있습니다.', en: 'Skills used by this hero. Hover a skill icon to inspect its effects.', zh: '此英雄使用的技能。将鼠标移到技能图标上可查看效果。' },
-    'hint.combat_stats': { ko: '장비와 스킬 효과가 반영된 전투 수치입니다. 수치 이름에 마우스를 올리면 설명을 볼 수 있습니다.', en: 'Combat values including equipment and skill effects. Hover a stat name for its explanation.', zh: '已计入装备与技能效果的战斗数值。将鼠标移到数值名称上可查看说明。' },
     'hint.auto_salvage': { ko: '이 Party의 원정에서 자동 분해할 장비를 정합니다. 남길 희귀도와 단어를 확인하세요.', en: 'Choose which drops this Party automatically salvages. Check the rarities and words you want to keep.', zh: '设定此Party远征时自动分解的装备。请确认要保留的稀有度与词。' },
     'hint.salvage': { ko: '고른 장비를 분해합니다. 남길 장비가 포함되지 않았는지 확인하세요.', en: 'Salvage the selected equipment. Check that no items you want to keep are included.', zh: '分解所选装备。请确认其中没有要保留的装备。' },
     'hint.inventory': { ko: '보유한 아이템을 확인하고 장착하거나 정리합니다. 아이템에 마우스를 올리면 자세히 볼 수 있습니다.', en: 'Inspect, equip and manage owned items. Hover an item for details.', zh: '查看持有的物品，进行装备或整理。将鼠标移到物品上可查看详情。' },
@@ -1026,6 +1025,7 @@ const STRINGS = {
     'dp.post.train': { ko: '훈련', en: 'Training', zh: '训练' },
     'dp.post.gamble': { ko: '도박장', en: 'Gambling Den', zh: '赌坊' },
     'dp.post.lib': { ko: '도서관', en: 'Library', zh: '图书馆' },
+    'dp.post.forge': { ko: '대장간', en: 'Blacksmith', zh: '铁匠铺' },   // 연구소 여섯째 줄 — 제작 레벨 (2026-11-24 · R565)
     'tip.ring.cooldown': { ko: '[{tag}] 쿨타임 {p} 감소', en: '[{tag}] Cooldown −{p}', zh: '[{tag}] 冷却缩减{p}' },
     'tip.ring.damage': { ko: '[{tag}] 스킬 데미지 +{p}', en: '[{tag}] Skill Damage +{p}', zh: '[{tag}] 技能伤害+{p}' },
     'tip.ring.extra_hit': { ko: '[{tag}] {p} 확률로 한 타 추가', en: '[{tag}] {p} chance of an extra hit', zh: '[{tag}] {p}几率追加一击' },
@@ -1063,8 +1063,35 @@ const STRINGS = {
     'dp.val.trainXp': { ko: '+{n} XP/시간', en: '+{n} XP/h', zh: '+{n} 经验/小时' },
     'dp.node.range': { ko: '범위', en: 'Range', zh: '范围' },
     'dp.node.income': { ko: '수익', en: 'Income', zh: '收益' },
+    'dp.node.make': { ko: '제작', en: 'Crafting', zh: '制作' },   // 대장간 줄 — 레벨 목록 소제목이 「제작 레벨」로 읽힌다 (R565)
+    'dp.val.make': { ko: '장비 Lv{n}', en: 'Gear Lv{n}', zh: '装备 Lv{n}' },
+    'dp.node.upgrade': { ko: '강화', en: 'Upgrade', zh: '强化' },   // 대장간 줄 — 강화 상한 (R566)
+    'dp.node.potion': { ko: '물약', en: 'Potion', zh: '药水' },   // 대장간 줄 — 물약 단계 (R566)
+    'dp.val.upgrade': { ko: '+{n}강', en: '+{n}', zh: '+{n}' },   // 「강화」 지점 값 = 강화 상한 (R566)
+    'dp.desc.forge.upgrade': { ko: '장비를 더 높은 단계까지 강화할 수 있습니다.', en: 'Lets gear be upgraded to higher steps.', zh: '装备可以强化到更高阶段。' },
+    'dp.desc.forge.potion': { ko: '더 높은 단계의 물약을 만들 수 있습니다.', en: 'Lets the Blacksmith brew higher-tier potions.', zh: '可以制作更高阶的药水。' },   // 「제작」 지점 값 — 그 레벨이 여는 장비 레벨(지점 레벨 `Lv n` 과 갈라 읽힌다 · R565)
+    'dp.desc.forge.make': { ko: '대장간에서 더 높은 레벨의 장비를 만들 수 있습니다.', en: 'Lets the Blacksmith craft higher-level gear.', zh: '铁匠铺可以制作更高等级的装备。' },
     'dp.val.slots': { ko: '+{n}칸', en: '+{n}', zh: '+{n}格' },
     'dp.val.range': { ko: '최고 −{n}', en: 'Top −{n}', zh: '最高−{n}' },
+    // 레벨 값이 무엇을 미는가 — 레벨 목록 줄 · 「다음 레벨」 값 변화 줄 앞에 선다(「철광석 생산 +10%」 · ADR-1362)
+    'dp.lvVal': { ko: '{what} {v}', en: '{what} {v}' },
+    'dp.col.lv': { ko: '레벨', en: 'Level' },   // 레벨 목록 열 이름 — 레벨 | {무엇} | 상태(`rs.col.state`) (편성 전술 표와 같은 열 이름 줄 · ADR-1362)
+    'dp.col.val': { ko: '값', en: 'Value' },   // 무엇(`dp.what.*`)이 없는 지점의 값 열 이름
+    'dp.what.res.mine': { ko: '철광석 생산', en: 'Iron Ore output' },
+    'dp.what.res.gather': { ko: '약초 생산', en: 'Herb output' },
+    'dp.what.res.log': { ko: '목재 생산', en: 'Timber output' },
+    'dp.what.res.offline': { ko: '오프라인 생산', en: 'Offline production' },
+    'dp.what.res.relief': { ko: '부족 재료 가속', en: 'Low-stock boost' },
+    'dp.what.visit.interval': { ko: '영웅 도착 속도', en: 'Hero arrival speed' },
+    'dp.what.visit.quality': { ko: '레어 확률', en: 'Rare chance' },
+    'dp.what.visit.waiting': { ko: '선술집 대기', en: 'Tavern waiting' },
+    'dp.what.train.speed': { ko: '훈련 경험치', en: 'Training XP' },
+    'dp.what.train.range': { ko: '훈련 상한', en: 'Training cap' },
+    'dp.what.gamble.income': { ko: '골드 수익', en: 'Gold income' },
+    'dp.what.gamble.burst': { ko: '대박 확률', en: 'Jackpot chance' },
+    'dp.what.lib.interval': { ko: '스킬 조각 생산', en: 'Skill Shard output' },
+    'dp.what.lib.burst': { ko: '스킬북 확률', en: 'Skill Book chance' },
+    'dp.what.forge.make': { ko: '제작', en: 'Crafting' },
     'dp.res.go': { ko: '연구', en: 'Research', zh: '研究' },
     'dp.res.cancel': { ko: '그만두기', en: 'Cancel', zh: '中止' },
     'dp.res.time': { ko: '{t} 걸림', en: 'Takes {t}', zh: '耗时{t}' },
@@ -1083,6 +1110,12 @@ const STRINGS = {
     'dp.out.h.train': { ko: '훈련 상한', en: 'Training Cap', zh: '训练上限' },
     'dp.out.h.gamble': { ko: '시간당 생산', en: 'Per Hour', zh: '每小时产量' },
     'dp.out.h.lib': { ko: '시간당 생산', en: 'Per Hour', zh: '每小时产量' },   // R546 — 자원 · 도박장과 같은 소제목
+    'dp.line.desc.forge': { ko: '대장간의 강화 상한 · 제작 레벨 · 물약 단계를 올립니다', en: 'Raises the Blacksmith’s upgrade cap, crafting level and potion tier', zh: '提升铁匠铺的强化上限、制作等级与药水阶段' },   // R565 · R566
+    'dp.out.h.forge': { ko: '지금 상한', en: 'Current Caps', zh: '当前上限' },   // R565 · R566 — 지점 셋이 지금 연 끝
+    'dp.out.makeTop': { ko: '제작', en: 'Crafting', zh: '制作' },
+    'dp.out.upMax': { ko: '강화', en: 'Upgrade', zh: '强化' },   // 대장간 줄 「지금 상한」 — 강화 상한 (R566)
+    'dp.out.potionTop': { ko: '물약', en: 'Potion', zh: '药水' },   // 대장간 줄 「지금 상한」 — 만들 수 있는 가장 높은 물약 (R566)   // 대장간 줄 「지금 내는 것」 — 지금 만들 수 있는 가장 높은 레벨 (R565)
+    'fg.needLab': { ko: '{b} · {node} Lv{n}', en: '{b} · {node} Lv{n}', lock: true, zh: '{b} · {node} Lv{n}' },   // 대장간 탭 잠긴 제작 레벨 — 그 레벨을 여는 연구소 지점 레벨 (R565)
     'dp.out.shard': { ko: '스킬 조각', en: 'Skill Shards', zh: '技能碎片' },   // 도서관 줄 「지금 내는 것」 첫 줄 (R546 · ADR-1273)
     'dp.out.bookChance': { ko: '스킬북 확률', en: 'Skill book chance', zh: '技能书几率' },   // 조각 하나마다 등록 영웅 스킬 책 (R546)
     'dp.out.cand': { ko: '후보 스킬', en: 'Candidate skills', zh: '候选技能' },   // 등록 영웅의 고유 · 배운 칸 (R546)
@@ -1693,7 +1726,7 @@ const STRINGS = {
         zh: '选择英雄与属性',
     },
     'help.character.stats.body': {
-        ko: "위의 영웅 카드를 누르면 그 영웅의 장비·기본 옵션·세부 옵션이 표시됩니다. 카드 사이로 끌어 명단 순서를 바꿀 수 있습니다. 기본 능력치 일곱 개는 태어날 때 정해지며 장비나 레벨업으로 직접 오르지 않습니다. 대신 피해·속도·최대 HP·스킬 효과와 리더 전술·연구소 등록 효과의 계산에 쓰입니다.<br><br>능력치 이름에 마우스를 올리면 각 수치가 하는 일을 확인할 수 있습니다. 세부 옵션은 현재 장비와 마스터리 등이 만든 전투 수치입니다.",
+        ko: "위의 영웅 카드를 누르면 그 영웅의 장비·기본 스탯·세부 스탯이 표시됩니다. 카드 사이로 끌어 명단 순서를 바꿀 수 있습니다. 기본 능력치 일곱 개는 태어날 때 정해지며 장비나 레벨업으로 직접 오르지 않습니다. 대신 피해·속도·최대 HP·스킬 효과와 리더 전술·연구소 등록 효과의 계산에 쓰입니다.<br><br>능력치 이름에 마우스를 올리면 각 수치가 하는 일을 확인할 수 있습니다. 세부 스탯은 현재 장비와 마스터리 등이 만든 전투 수치입니다.",
         en: "Click a hero card to view that hero's equipment, attributes and detailed stats. Drag between roster cards to reorder them. The seven attributes are fixed when the hero is created; equipment and level-ups do not directly raise them. They scale damage, speed, maximum HP, skill effects, leader tactics and Laboratory registration effects.<br><br>Hover a stat name to read what it does. Detailed stats show the combat values built by current gear, mastery and other effects.",
         zh: '点击上方的英雄卡，会显示该英雄的装备、基础属性与详细属性。在卡片之间拖动可以调整名单顺序。七项基础属性在英雄诞生时就已确定，不会因装备或升级而直接提升。它们会用于计算伤害、速度、最大生命、技能效果，以及队长战术与研究所派驻效果。<br><br>将鼠标悬停在属性名称上，可以查看各项数值的作用。详细属性是由当前装备、专精等形成的战斗数值。',
     },
@@ -1723,7 +1756,7 @@ const STRINGS = {
         zh: '穿戴条件与装备比较',
     },
     'help.character.equipment.body': {
-        ko: "인벤토리나 창고의 장비를 누르면 선택한 영웅이 착용하고, 착용 칸을 누르면 해제됩니다. 장착을 막는 것은 장비의 요구 레벨입니다. 직업이 달라도 다른 직업의 무기나 갑옷을 직접 착용할 수 있습니다. 다만 착용할 수 있다는 것과 그 무기로 가진 스킬을 쓸 수 있다는 것은 다릅니다.<br><br>장비에 마우스를 올리면 착용품과 나란히 비교됩니다. [Alt]는 착용 후 바뀌는 세부 옵션, [Shift]는 옵션의 수치 범위를 보여 줍니다. 공격을 맡긴 영웅은 무기 공격력·속도·실제로 쓰는 스킬을, 앞에서 버티는 영웅은 HP·물리 방어·상대 스킬의 원소 저항을 함께 살펴봅니다.<br><br>[자동 장착]은 현재 보고 있는 부대 인벤토리에서 그 영웅 직업에 맞는 장비를 고릅니다. 내가 의도한 다른 직업 무기 조합까지 찾아 주는 기능은 아닙니다. (미적용) 표시가 있는 옵션은 아직 전투에 적용되지 않습니다.",
+        ko: "인벤토리나 창고의 장비를 누르면 선택한 영웅이 착용하고, 착용 칸을 누르면 해제됩니다. 장착을 막는 것은 장비의 요구 레벨입니다. 직업이 달라도 다른 직업의 무기나 갑옷을 직접 착용할 수 있습니다. 다만 착용할 수 있다는 것과 그 무기로 가진 스킬을 쓸 수 있다는 것은 다릅니다.<br><br>장비에 마우스를 올리면 착용품과 나란히 비교됩니다. [Alt]는 착용 후 바뀌는 세부 스탯, [Shift]는 옵션의 수치 범위를 보여 줍니다. 공격을 맡긴 영웅은 무기 공격력·속도·실제로 쓰는 스킬을, 앞에서 버티는 영웅은 HP·물리 방어·상대 스킬의 원소 저항을 함께 살펴봅니다.<br><br>[자동 장착]은 현재 보고 있는 부대 인벤토리에서 그 영웅 직업에 맞는 장비를 고릅니다. 내가 의도한 다른 직업 무기 조합까지 찾아 주는 기능은 아닙니다. (미적용) 표시가 있는 옵션은 아직 전투에 적용되지 않습니다.",
         en: "Click gear in an inventory or the stash to equip it on the selected hero; click an equipped slot to remove it. The equip restriction is its required level. Any class can manually wear another class's weapon or armor. Being able to equip a weapon does not mean every owned skill works with it.<br><br>Hover gear for a side-by-side comparison. [Alt] shows detailed stat changes after equipping; [Shift] shows option roll ranges. For an attacker, compare weapon attack, speed and the skills they actually use. For a front-line hero, also consider HP, physical defense and resistance to the enemy's skill elements.<br><br>[Auto-equip] chooses class-suitable gear from the party inventory you are viewing. It does not search for every off-class weapon build you might intend. Options marked (inactive) do not yet affect combat.",
         zh: '点击背包或仓库中的装备，所选英雄就会穿戴；点击已穿戴的栏位则会卸下。限制穿戴的是装备的需求等级。即使职业不同，也可以直接穿戴其他职业的武器或铠甲。不过，能穿戴与能用该武器施放自己的技能是两回事。<br><br>将鼠标悬停在装备上，会与已穿戴的装备并排比较。[Alt]显示穿戴后详细属性的变化，[Shift]显示词条的数值范围。负责输出的英雄，要一并查看武器攻击力、速度与实际使用的技能；在前排抗伤的英雄，要一并查看生命、物理防御以及对应对手技能元素的抗性。<br><br>[自动装备]会从当前查看的小队背包中，挑选适合该英雄职业的装备，但不会替你找出你刻意搭配的其他职业武器组合。带有（未生效）标记的词条，目前还不会在战斗中生效。',
     },
@@ -1803,7 +1836,7 @@ const STRINGS = {
         zh: '攻击速度、施法速度与冷却',
     },
     'help.character.speed.body': {
-        ko: "공격 속도와 캐스팅 속도는 한 번 행동하는 간격에 영향을 줍니다. 물리 무기와 맨손은 공격 속도 옵션, 마법 무기는 캐스팅 속도 옵션을 사용합니다. 민첩은 양쪽 모두에 영향을 줍니다. 세부 옵션의 속도가 초로 표시될 때는 숫자가 작을수록 빠릅니다.<br><br>쿨타임은 같은 스킬을 쓴 뒤 다시 준비될 때까지의 시간입니다. 쿨타임 감소는 이 대기를 줄이고, 공격·캐스팅 속도는 행동 기회를 더 자주 만듭니다. 서로 대신하는 능력치가 아닙니다. 스킬이 준비됐는데 행동을 기다리는지, 행동할 준비는 됐는데 스킬 쿨이 남았는지 관전에서 살펴봅니다.<br><br>마법 무기는 행동 게이지가 찰 때 시전 칸 하나를 모으며 최대 {castCharges}칸까지 저장합니다. 준비된 스킬을 쓰면 한 칸이 줄고, 쌓인 칸과 준비된 스킬이 여럿이면 연달아 시전할 수 있습니다. 스킬 쿨 때문에 잠시 쉬는 동안 칸을 모으는 것이므로, 서 있다가 연속으로 쓰는 모습이 곧 고장은 아닙니다.",
+        ko: "공격 속도와 캐스팅 속도는 한 번 행동하는 간격에 영향을 줍니다. 물리 무기와 맨손은 공격 속도 옵션, 마법 무기는 캐스팅 속도 옵션을 사용합니다. 민첩은 양쪽 모두에 영향을 줍니다. 세부 스탯의 속도가 초로 표시될 때는 숫자가 작을수록 빠릅니다.<br><br>쿨타임은 같은 스킬을 쓴 뒤 다시 준비될 때까지의 시간입니다. 쿨타임 감소는 이 대기를 줄이고, 공격·캐스팅 속도는 행동 기회를 더 자주 만듭니다. 서로 대신하는 능력치가 아닙니다. 스킬이 준비됐는데 행동을 기다리는지, 행동할 준비는 됐는데 스킬 쿨이 남았는지 관전에서 살펴봅니다.<br><br>마법 무기는 행동 게이지가 찰 때 시전 칸 하나를 모으며 최대 {castCharges}칸까지 저장합니다. 준비된 스킬을 쓰면 한 칸이 줄고, 쌓인 칸과 준비된 스킬이 여럿이면 연달아 시전할 수 있습니다. 스킬 쿨 때문에 잠시 쉬는 동안 칸을 모으는 것이므로, 서 있다가 연속으로 쓰는 모습이 곧 고장은 아닙니다.",
         en: "Attack Speed and Casting Speed affect the interval between actions. Physical weapons and bare hands use Attack Speed options; magic weapons use Casting Speed. Agility affects both. When detailed stats show the interval in seconds, a lower number is faster.<br><br>A cooldown is the wait after using a skill before it is ready again. Cooldown Reduction shortens that wait; attack or casting speed creates action opportunities more often. They do not replace each other. Watch whether a ready skill is waiting for an action, or a hero ready to act is waiting for skill cooldowns.<br><br>Magic weapons gain one casting charge when the action gauge fills and store up to {castCharges}. Casting a ready skill spends one charge. Several stored charges and ready skills can produce casts in quick succession. Pausing while cooldowns run can build those charges, so waiting and then casting repeatedly is not necessarily a malfunction.",
         zh: '攻击速度与施法速度影响每次行动的间隔。物理武器与空手使用攻击速度词条，魔法武器使用施法速度词条。敏捷对两者都有影响。详细属性中的速度以秒显示时，数字越小越快。<br><br>冷却是使用某个技能后到它再次就绪所需的时间。冷却缩减会缩短这段等待，攻击速度与施法速度则让行动机会更频繁。它们不能互相替代。请在观战中观察：是技能已就绪却在等待行动，还是已准备好行动却还在等技能冷却。<br><br>魔法武器在行动槽充满时积攒一格施法充能，最多储存{castCharges}格。使用就绪的技能会消耗一格；积攒了多格且有多个就绪技能时，可以接连施放。这是在因技能冷却而暂停期间积攒充能，所以站着不动后连续施法并不意味着出了故障。',
     },
@@ -2774,7 +2807,7 @@ const STRINGS = {
     // 고정 피해 — 사제의 직격(skill_effect 원소 칸 `fixed` · 2026-10-06 R221 · battle_design §9). 설명창 「{v} 의 고정 피해」 · 종류 칩이 이 이름을 쓴다
     'st.atkType.fixed': { ko: '고정', en: 'True', zh: '真实' },
     'st.mitigation': { ko: '감쇠 {p}%', en: '{p}% mitigated', zh: '减免{p}%' },
-    // 세부 옵션 — 옵션이 여는 축 줄 (combat_stat 행이 아니다 · SCREEN_DESIGN §6 · ADR-0291). 한 줄짜리는 아이템 옵션 줄 이름(`M.AFFIX_LABELS`)을 그대로 쓴다
+    // 세부 스탯 — 옵션이 여는 축 줄 (combat_stat 행이 아니다 · SCREEN_DESIGN §6 · ADR-0291). 한 줄짜리는 아이템 옵션 줄 이름(`M.AFFIX_LABELS`)을 그대로 쓴다
     'st.fx.part': { ko: '{n} {v}', en: '{n} {v}', zh: '{n}{v}' },
     'st.fx.vsTarget': { ko: '정예 · 열별 추가 데미지', en: 'Damage vs Elite & Row', zh: '对精英、各排额外伤害' },   // 「별」 — 받는 피해 감소 줄과 짝 (2026-09-28 사용자 지시)
     'st.fx.drType': { ko: '타입별 받는 피해 감소', en: 'Damage Reduction vs Type', zh: '按类型伤害减免' },
@@ -2791,7 +2824,7 @@ const STRINGS = {
     'st.resCap': { ko: '/ 상한 {cap}%', en: '/ cap {cap}%', zh: '/ 上限{cap}%' },
     'st.maxhp': { ko: '최대 HP', en: 'Max HP', zh: '最大生命' },
     /* 능력치 설명 카드 — 줄에 올리면 이름 / 선 아래 **효과** (2026-10-10 사용자 지시 · SCREEN_DESIGN §2 「능력치 설명 툴팁 규격」 · ADR-0581).
-       키 = 줄 id(기본 능력치 `hero_attribute.csv:attr_id` · 세부 옵션 `tip.js:DETAIL_LAYOUT`). 효과만 · 수치 없음 (CLAUDE.md 규칙 7) · 효과가 여럿이면 `<br>` 로 한 줄에 하나 */
+       키 = 줄 id(기본 능력치 `hero_attribute.csv:attr_id` · 세부 스탯 `tip.js:DETAIL_LAYOUT`). 효과만 · 수치 없음 (CLAUDE.md 규칙 7) · 효과가 여럿이면 `<br>` 로 한 줄에 하나 */
     // 힘 · 지능 · 건강의 「채광 · 채집 · 벌목이 빨라진다」 줄은 2026-10-18 걷었다 — 연구소에 영웅이 안 앉는다 (ADR-0665)
     'st.desc.str': { ko: '평타 · 물리 스킬 피해 증가', en: 'Increases basic attack and physical skill damage', zh: '提高普通攻击、物理技能伤害' },
     'st.desc.agi': { ko: '공격 속도 · 캐스팅 속도 증가<br>일부 스킬의 타수 · 효과 증가', en: 'Faster attack and casting speed<br>More hits and stronger effects for some skills', zh: '提高攻击速度、施法速度<br>增加部分技能的攻击次数与效果' },
@@ -2857,7 +2890,7 @@ const STRINGS = {
     'ch.autoEq': { ko: '자동 장착', en: 'Auto-equip', zh: '自动装备' },
     'ch.autoEq.done': { ko: '장비 {n}개 장착', en: { one: 'Equipped {n} item', other: 'Equipped {n} items' }, zh: '已装备{n}件' },
     'ch.autoEq.none': { ko: '더 나은 장비 없음', en: 'No better gear', zh: '没有更好的装备' },
-    'ch.attr.h': { ko: '기본 옵션', en: 'Basic Stats', zh: '基础属性' },
+    'ch.attr.h': { ko: '기본 스탯', en: 'Basic Stats', zh: '基础属性' },
     'ch.attr.sub': { ko: '장비 불변', en: 'Gear-immutable', zh: '不受装备影响' },
     'ch.attr.note': {
         ko: '기본 능력치 7종은 <b>영웅이 갖고 태어납니다</b> — 장비는 단 1도 올리지 않습니다.<br>'
@@ -2867,8 +2900,8 @@ const STRINGS = {
             + 'and <b>decide dispatch outcomes</b>.',
         zh: '7种基础属性是<b>英雄与生俱来的</b>——装备连1点也不会提高。<br>它们只做两件事：<b>战斗属性的系数</b>（右栏括号内的标记）和<b>派遣判定</b>。',
     },
-    'ch.detail.h': { ko: '세부 옵션', en: 'Detailed Stats', zh: '详细属性' },
-    'ch.detail.hn': { ko: '세부 옵션 {n}', en: 'Detailed Stats {n}', zh: '详细属性{n}' },
+    'ch.detail.h': { ko: '세부 스탯', en: 'Detailed Stats', zh: '详细属性' },
+    'ch.detail.hn': { ko: '세부 스탯 {n}', en: 'Detailed Stats {n}', zh: '详细属性{n}' },
     'ch.detail.note': {
         ko: '전투 능력치는 <b>장비와 스킬이 만듭니다</b>. 값이 <b>—</b> 인 축은 0이 아니라 '
             + '<b>아직 아무 효과도 그 축에 적용되지 않음</b>을 뜻합니다 — 비어 있는 축이 곧 다음 장비의 자리입니다.<br>'
@@ -2878,9 +2911,9 @@ const STRINGS = {
             + 'The abbreviation in parentheses is the attribute that scales it. This table mirrors src/data/combat_stat.csv',
         zh: '战斗属性<b>由装备和技能构成</b>。数值为<b>—</b>的项不是0，而是表示<b>尚无任何效果作用于该项</b>——空着的项正是下一件装备的位置。<br>括号内缩写=推动该项的基础属性。此表完全依照src/data/combat_stat.csv',
     },
-    // 기본 옵션 칸 맨 위 — 레벨 · 경험치 한 줄 (2026-09-15 · SCREEN_DESIGN §6 · ADR-0129)
+    // 기본 스탯 칸 맨 위 — 레벨 · 경험치 한 줄 (2026-09-15 · SCREEN_DESIGN §6 · ADR-0129)
     'ch.lv': { ko: 'Lv.{n}', en: 'Lv.{n}', zh: 'Lv.{n}' },
-    'ch.xp': { ko: '경험치 {a} / {b}', en: 'XP {a} / {b}', zh: '经验{a} / {b}' },
+    'ch.xp': { ko: 'XP {a} / {b}', en: 'XP {a} / {b}', zh: 'XP {a} / {b}' },   // 모든 언어 `XP` 고정 — 경험치 막대 가운데 글자 (2026-11-24 사용자 지시 · ADR-1354)
     'ch.xp.max': { ko: 'MAX', en: 'MAX', zh: 'MAX' },
     // 만렙 뒤 별 — 레벨 오른쪽 별 칸 툴팁 · 능력치 줄 [+] · 확인 창 (2026-11-11 · SCREEN_DESIGN §6 · ADR-1043)
     'ch.star.name': { ko: '별', en: 'Stars', zh: '星' },   // 별 칸 설명 카드 — 능력치 줄과 같은 모양(이름 / 선 아래 효과 · SCREEN_DESIGN §2 「능력치 설명 툴팁 규격」)
@@ -2902,7 +2935,7 @@ const STRINGS = {
     'ch.skill.orderFix': { ko: '순위 적용', en: 'Set Order', zh: '设定顺序' },
     // 우선순위 판 맨 위 설명 한 줄 (§6 · ADR-1221 — §12 「패널에 설명 문장 없음」의 예외 · 사용자가 쓴 문장 그대로)
     'ch.skill.orderDesc': { ko: '첫 스킬 사용 시 우선순위를 설정합니다.', en: 'Sets the priority for first skill use.', zh: '设置首次使用技能时的优先级。' },
-    'ch.skill.go': { ko: '마스터리 열기', en: 'Open Mastery', zh: '打开专精' },
+    'ch.skill.go': { ko: '마스터리', en: 'Mastery', zh: '专精' },   // 2026-11-24 사용자 「마스터리 열기가 뭐냐 마스터리로」 — 캐릭터 탭 · 전직의 방 버튼
     'ch.items.h': { ko: '아이템', en: 'Items', zh: '物品' },
 
     /* ── 툴팁 ── */
@@ -2954,8 +2987,8 @@ const STRINGS = {
     // ⚠ 옛 `tip.up.max` 는 **안 죽었다** — 대장간이 쓰고 있어 `fg.` 접두로 옮겼다(툴팁 전용이 아니게 됐으므로)
     // 영웅 · 스킬 툴팁 (2026-08-28) — 영웅 띠와 관전 유닛 카드가 같이 쓴다 (ui/tip.js)
     // ~~tip.hero.h · tip.monster.h~~ (「영웅」 · 「몬스터」 머리글) 는 2026-09-15 삭제 — 유닛 툴팁은 머리글이 없다 (ADR-0115)
-    'tip.unit.altHint': { ko: 'Alt 세부 옵션', en: 'Alt: detailed stats', zh: 'Alt：详细属性' },   // 유닛 툴팁 각주 — 열 이름은 캐릭터 탭 키(ch.attr.h · ch.detail.h) 재사용 (ADR-0114)
-    'tip.unit.altHintGear': { ko: 'Alt 장비 · 세부 옵션', en: 'Alt: gear & detailed stats', zh: 'Alt：装备、详细属性' },   // 편성 탭 영웅 툴팁 각주 — 첫 장이 기본 옵션이라 Alt 가 장비까지 연다 (ADR-0284)
+    'tip.unit.altHint': { ko: 'Alt 세부 스탯', en: 'Alt: detailed stats', zh: 'Alt：详细属性' },   // 유닛 툴팁 각주 — 열 이름은 캐릭터 탭 키(ch.attr.h · ch.detail.h) 재사용 (ADR-0114)
+    'tip.unit.altHintGear': { ko: 'Alt 장비 · 세부 스탯', en: 'Alt: gear & detailed stats', zh: 'Alt：装备、详细属性' },   // 편성 탭 영웅 툴팁 각주 — 첫 장이 기본 스탯이라 Alt 가 장비까지 연다 (ADR-0284)
     /* 물약 카드 [신설 2026-09-24 · SCREEN_DESIGN §2 「물약 툴팁 규격」 · ADR-0315] — 창 뱃지 툴팁과 같은 모양: 그림 + 이름 / 효과 한 줄 (CLAUDE.md 규칙 7).
        이름은 `potion.csv` · 빈 칸은 `pt.potion.empty` · 효과 줄이 이 키 하나다 — 창 뱃지의 `bt.effect.*` 와 같은 말투 */
     'tip.potion.heal': { ko: 'HP {n} 회복', en: 'Restores {n} HP', zh: '恢复{n}点生命' },
@@ -2965,7 +2998,9 @@ const STRINGS = {
     /* ── 편성 탭 (SCREEN_DESIGN §15 · 2026-09-21) — 오류는 결과 코드와 짝을 맞춘다(`pt.err.<코드>` — toggleParty · setPotionSlot · swapPotionSlot · rerollTactic · toggleTacticLock) ── */
     'pt.preset': { ko: 'Party {n}', en: 'Party {n}', zh: 'Party {n}' },   // 원정 세그먼트의 부대 칸과 같은 이름 — ko 에서도 영어 · `{n}` 은 로마 숫자 [2026-09-24 사용자 지시 · §15]
     'pt.potion.h': { ko: '물약', en: 'Potions', zh: '药水' },
-    'pt.potion.stock': { ko: '가진 물약', en: 'In stock', zh: '持有药水' },
+    'pt.potion.belt': { ko: '전투 물약', en: 'Battle Potions', zh: '战斗药水' },   // 칸 줄 위 이름 — 아래 「보유 물약」과 짝 (§15 · 2026-11-24 사용자)
+    'pt.potion.stock': { ko: '보유 물약', en: 'In Stock', zh: '持有药水' },   // 2026-11-24 사용자 「가진 물약 -> 보유 물약」
+    'pt.potion.cfg': { ko: '물약 설정', en: 'Potion settings', zh: '药水设置' },   // 소제목 오른쪽 끝 톱니의 hover 제목 (§15 · ADR-1346)
     'pt.potion.empty': { ko: '빈 칸', en: 'Empty slot', zh: '空位' },
     // 기준 줄 — 칸 줄 아래 `−` · 이 글 · `+` (§15 · ADR-0942 · R378) · `{n}` = 고른 편성의 마시는 HP 비율(%)
     'pt.potion.use': { ko: 'HP {n}% 미만에서 마심', en: 'Drink below {n}% HP', zh: '生命低于{n}%时饮用' },
@@ -3043,6 +3078,9 @@ const STRINGS = {
     'cn.t.skill_card': { ko: '스킬 카드 합성', en: 'Fuse skill cards', zh: '技能卡合成' },
     'cn.t.skillbook': { ko: '스킬북으로 스킬 습득', en: 'Learn skills from skill books', zh: '通过技能书习得技能' },   // 도서관 r1 (R179 · 2026-10-30 R398 · construction_draft §2)
     'cn.t.lab_library': { ko: '연구소 스킬북 생산', en: 'Laboratory skill book production', zh: '研究所技能书生产' },   // 도서관 r2 — 연구소 「도서관」 줄을 연다 (2026-11-15 · R504 · ADR-1198 — 옛 「스킬북 제작」)
+    'cn.t.lab_forge': { ko: '연구소 대장간 연구', en: 'Laboratory blacksmith research', zh: '研究所铁匠研究' },
+    'cn.t.temper_guard': { ko: '손질 담금질', en: 'Quench treatment', zh: '淬火处理' },   // 대장간 r5 (2026-11-24 · R566)
+    'cn.t.enchant': { ko: '인챈트', en: 'Enchant', zh: '附魔' },   // 대장간 r6 (2026-11-24 · R566)   // 대장간 r3 — 연구소 「대장간」 줄을 연다 (2026-11-24 · R565)
     'cn.t.explore': { ko: '파티를 탐험에 파견', en: 'Send a party to explore', zh: '派遣队伍去探索' },
     // 탐험 r2 · r3 — 지도에 그 지점 아이콘이 생긴다 [2026-10-27 사용자 「상단 오픈」 · 「폐허 오픈」 · ADR-0908]
     'cn.t.explore_caravan': { ko: '상단 오픈', en: 'Unlocks Caravan', zh: '开放商队' },
@@ -3266,11 +3304,9 @@ const STRINGS = {
     'rs.col.buff': { ko: '버프', en: 'Buff', zh: '增益' },
     'rs.col.extra': { ko: '버프 몫', en: 'Buff Share', zh: '增益加成' },
     'rs.col.lock': { ko: '잠금', en: 'Lock', zh: '锁定' },
-    // 카드 아래 판 — 왼쪽 맨 위 리더 통솔 · 죄종 일곱의 장비 수 [2026-11-11 · ADR-1048 — ~~「추가 버프」 hover~~ 대체] · {p} = 부호 붙은 정수 %
-    'rs.board.lead': { ko: '리더 통솔 {n} → 버프 효과 {p}', en: 'Leader Leadership {n} → Buff Effect {p}', zh: '队长统率{n} → 增益效果{p}' },   // 배수가 아니라 늘고 준 양 (ADR-0938)
+    // 카드 아래 판 — 맨 위 리더 통솔 · 죄종 일곱의 장비 수 · 줄마다 이름 · 수 · 20칸 막대 · 버프 몫 % [2026-11-24 · ADR-1334 — ADR-1048 의 두 열 글 줄 대체]
+    'rs.board.leadName': { ko: '통솔', en: 'Leadership', zh: '统率' },   // 2026-11-24 사용자 「리더통솔 그냥 통솔로」
     'rs.board.noLead': { ko: '리더 없음', en: 'No leader', zh: '无队长' },
-    'rs.board.sin': { ko: '{sin} {n} → {p}', en: '{sin} {n} → {p}', zh: '{sin}{n} → {p}' },
-    'rs.board.sin0': { ko: '{sin} —', en: '{sin} —', zh: '{sin} —' },
     // 효과 이름 — 시기 둘만 대상 쪽 말 [2026-11-11 · tactic_card_design §5-14 · ADR-1048] · 계산은 파티 전원의 방어력 관통 · 원소 관통 · {v} = 부호 · 단위 붙은 값
     'rs.eff.def_ignore': { ko: '적 방어력 감소 {v}', en: '{v} Enemy Defense Reduction', zh: '敌人防御降低{v}' },
     'rs.eff.res_reduction_fire': { ko: '적 화염 저항 감소 {v}', en: '{v} Enemy Fire Resist Reduction', zh: '敌人火焰抗性降低{v}' },
@@ -3299,23 +3335,21 @@ const STRINGS = {
     'sk.points.left': { ko: '남은 포인트', en: 'Points left', zh: '剩余点数' },
     'sk.points.adv': { ko: '전직 포인트', en: 'Advancement Points', zh: '转职点数' },   // 스킬 창 포인트 칸 — 전직 스킬 배우기 몫 (2026-11-14 · ADR-1104)
     'sk.tip.rank': { ko: 'Rank {n}/{max}', en: 'Rank {n}/{max}', zh: '{n}/{max}阶' },
-    'sk.tip.effect': { ko: '{effect} (랭크당 {perRank})', en: '{effect}. (Per rank {perRank})', zh: '{effect}（每阶{perRank}）' },
     'sk.gate.weapon': { ko: '착용 무기: {groups}일 때 효과 적용', en: 'Active with weapon: {groups}', zh: '装备武器为{groups}时生效' },
     'sk.gate.armor': { ko: '착용 갑옷: {groups}일 때 효과 적용', en: 'Active with armor: {groups}', zh: '装备铠甲为{groups}时生效' },
     // 죄종 T2 — 그 죄종 장비 수가 켠다(3 · 6 · 9 단 — 2026-11-12) · {n} = 지금 낀 수 · {need} = 그 칸의 문턱
     'sk.gate.sin_gear': { ko: '{sin} 장비 {need}개 이상일 때 효과 적용 ({n}/{need})', en: 'Active with {need}+ {sin} items ({n}/{need})', zh: '{sin}装备{need}件以上时生效（{n}/{need}）' },
     // 죄종 T3 조건 [2026-11-13 R468 — 죄종마다 조건 하나 · 랭크가 조건을 넓힌다 · PLAN_mastery_tiers §0-1] — 효과 문장 위 한 줄 · 판정은 전투가 한다.
-    //   {pct} · {sec} = 지금 랭크(안 찍었으면 1랭크)의 문턱 · {step} = 랭크당 폭 · 문턱이 끝(차이 0 · 가득)이면 `_any` · `_full`
-    'sk.cond.hurt': { ko: '내 HP 가 {pct} 미만일 때 (랭크당 문턱 +{step})', en: 'While below {pct} HP (threshold +{step} per rank)', zh: '自身生命低于{pct}时（每阶门槛+{step}）' },
-    'sk.cond.higher': { ko: '상대의 HP 비율이 나보다 {pct} 이상 높을 때 (랭크당 문턱 −{step})', en: "When the foe's HP % is {pct} or more above yours (threshold −{step} per rank)", zh: '对手的生命比例比自己高{pct}以上时（每阶门槛−{step}）' },
+    //   {pct} · {sec} = 지금 랭크(안 찍었으면 1랭크)의 문턱 · 랭크당 폭 · 다음 랭크 값은 안 적는다(ADR-1337) · 문턱이 끝(차이 0 · 가득)이면 `_any` · `_full`
+    'sk.cond.hurt': { ko: '내 HP 가 {pct} 미만일 때', en: 'While below {pct} HP', zh: '自身生命低于{pct}时' },
+    'sk.cond.higher': { ko: '상대의 HP 비율이 나보다 {pct} 이상 높을 때', en: "When the foe's HP % is {pct} or more above yours", zh: '对手的生命比例比自己高{pct}以上时' },
     'sk.cond.higher_any': { ko: '상대의 HP 비율이 나보다 높을 때', en: "When the foe's HP % is higher than yours", zh: '对手的生命比例高于自己时' },
-    'sk.cond.lower': { ko: '상대의 HP 비율이 나보다 {pct} 이상 낮을 때 (랭크당 문턱 −{step})', en: "When the foe's HP % is {pct} or more below yours (threshold −{step} per rank)", zh: '对手的生命比例比自己低{pct}以上时（每阶门槛−{step}）' },
+    'sk.cond.lower': { ko: '상대의 HP 비율이 나보다 {pct} 이상 낮을 때', en: "When the foe's HP % is {pct} or more below yours", zh: '对手的生命比例比自己低{pct}以上时' },
     'sk.cond.lower_any': { ko: '상대의 HP 비율이 나보다 낮을 때', en: "When the foe's HP % is lower than yours", zh: '对手的生命比例低于自己时' },
-    'sk.cond.fresh': { ko: '상대의 HP 가 {pct} 이상일 때 (랭크당 문턱 −{step})', en: 'Against foes at {pct} HP or more (threshold −{step} per rank)', zh: '对手生命在{pct}以上时（每阶门槛−{step}）' },
-    'sk.cond.fresh_full': { ko: '상대의 HP 가 가득 찼을 때 (랭크당 문턱 −{step})', en: 'Against foes at full HP (threshold −{step} per rank)', zh: '对手生命全满时（每阶门槛−{step}）' },
+    'sk.cond.fresh': { ko: '상대의 HP 가 {pct} 이상일 때', en: 'Against foes at {pct} HP or more', zh: '对手生命在{pct}以上时' },
+    'sk.cond.fresh_full': { ko: '상대의 HP 가 가득 찼을 때', en: 'Against foes at full HP', zh: '对手生命全满时' },
     'sk.cond.opening': { ko: '라운드 시작 후 {sec}초 동안', en: 'For the first {sec}s of a round', zh: '回合开始后持续{sec}秒' },
-    'sk.cond.openingNext': { ko: '라운드 시작 후 {sec}초 동안 (다음 랭크 {next}초)', en: 'For the first {sec}s of a round ({next}s at the next rank)', zh: '回合开始后持续{sec}秒（下一阶{next}秒）' },
-    'sk.cond.late': { ko: '라운드 시작 후 {sec}초부터 (랭크당 −{step}초)', en: 'From {sec}s into a round (−{step}s per rank)', zh: '回合开始{sec}秒后起（每阶−{step}秒）' },
+    'sk.cond.late': { ko: '라운드 시작 후 {sec}초부터', en: 'From {sec}s into a round', zh: '回合开始{sec}秒后起' },
     /* 마스터리 효과 문장 — 「무엇이 n 증가한다」 (SCREEN_DESIGN §7 · ADR-0332). 축마다 **통째로** 든다 — 조사(이/가)와
        동사(증가/감소)를 렌더러가 고르지 않는다. 이름이 「감소」인 축은 줄어드는 것이 주어다. {v} 는 부호 없는 값.
        사전에 없는 축은 맨 위 틀로 떨어진다 */
@@ -3457,7 +3491,15 @@ const STRINGS = {
     'bk.lvUp': { ko: 'Lv.{a} → Lv.{b}', en: 'Lv.{a} → Lv.{b}', zh: 'Lv.{a} → Lv.{b}' },   // 읽기 줄 아랫줄 — 지금 → 읽은 뒤 (§17 · ADR-1208)
     'bk.books': { ko: '책 {have}/{need}', en: 'Books {have}/{need}' },   // 도서관 스킬정보 칸 줄 아랫줄 — 가진 / 드는 같은 책 · 모자라면 붉다 (§17 · ADR-1308)
     'bk.swap': { ko: '{a} → {b}', en: '{a} → {b}' },   // 습득 줄 윗줄 — 앞 스킬 Lv.n → 새 책(덮어쓰기) (ADR-1308) · 레벨 줄의 지금 → 다음 값 (ADR-1312 · 1317)
-    'bk.weaponAny': { ko: '자유', en: 'Any weapon' },   // 스킬정보 줄 오른쪽 위 칩 — 무기가 필요 없는 스킬 (§17 · ADR-1321)
+    'bk.weaponAny': { ko: '자유', en: 'Any weapon' },
+    // 스킬정보 계산 줄 — 설명의 숫자마다 `이름 값 = 식` (§17 · 2026-11-24) · 밑수 이름은 `st.atk` · 능력치 표 · 쿨감은 `sk.cdrShort` 를 쓴다
+    'bk.calc.dmg': { ko: '피해', en: 'Hit' },   // en 은 밑수 이름(`st.atk` = Damage)과 겹치지 않게 한 타
+    'bk.calc.heal': { ko: '회복', en: 'Heal' },
+    'bk.calc.hp': { ko: 'HP', en: 'HP' },
+    'bk.calc.cool': { ko: '쿨타임', en: 'CD' },   // en 은 짧게 — 계산 줄 이름 칸이 가장 긴 이름에 맞춰 선다 (ADR-1364)
+    'bk.calc.tag': { ko: '태그', en: 'Tag' },
+    'bk.calc.tagDur': { ko: '지속 +{p}%', en: 'Duration +{p}%' },
+    'bk.calc.tagVal': { ko: '효과 +{p}%', en: 'Effect +{p}%' },   // 스킬정보 줄 오른쪽 위 칩 — 무기가 필요 없는 스킬 (§17 · ADR-1321)
     'bk.weaponClash': { ko: '{name} 스킬과 필요 무기가 달라 함께 쓸 수 없습니다', en: 'Different weapon than {name} — can’t use both' },   // 스킬정보 습득 줄 붉은 한 줄 — 고유 칸 스킬과 맞는 무기군이 없다 (§17 · ADR-1319)
     'bk.lvMax': { ko: 'Lv.{n} · 최대 레벨', en: 'Lv.{n} · Max level', zh: 'Lv.{n} · 最高等级' },   // 읽기 줄 아랫줄 — 상한 (ADR-1208)
     'bk.max': { ko: '최대', en: 'Max', zh: '最高' },
@@ -3509,7 +3551,7 @@ const STRINGS = {
        **말까지 바꾼 이유는 값이 바뀌었기 때문**이다 — 「{s}초마다」는 빈도의 약속인데 표기 쿨은 빈도가 아니다
        (정렬 대기만큼 뒤에 나간다). 쿨이라고 적으면 참이 된다 */
     'sk.cool': { ko: '쿨 {s}초', en: 'Cooldown {s}s', zh: '冷却{s}秒' },
-    // 설명창 Alt 쿨 식 `(18 − 쿨감 10%)` 의 이름 — 문장 한가운데 끼어서 줄인다 (2026-10-21 · ADR-0706 · 세부 옵션 줄은 combat_stat.csv 이름 그대로)
+    // 설명창 Alt 쿨 식 `(18 − 쿨감 10%)` 의 이름 — 문장 한가운데 끼어서 줄인다 (2026-10-21 · ADR-0706 · 세부 스탯 줄은 combat_stat.csv 이름 그대로)
     'sk.cdrShort': { ko: '쿨감', en: 'Cooldown Reduction', zh: '冷却缩减' },
     'sk.slots.note': {
         ko: '차례가 오면 <b>가장 오래 기다린 스킬</b> → 동률이면 <b>칸 순서</b> → 없으면 기본 공격. <b>마법 무기는 기본 공격이 없습니다</b> — 준비된 스킬이 없으면 게이지가 찬 채로 기다렸다가 스킬이 준비되는 순간 시전합니다<br>'

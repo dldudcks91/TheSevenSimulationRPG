@@ -25,6 +25,8 @@ export const TARGETS = {
     //   ~~`repeat` · `stage_level`~~ 도 건물 밖이다 — 반복 원정은 처음부터 열린다 (2026-09-24 사용자 지시 · R152) · 던전 레벨 조절(위험도)은 2026-09-29 폐지됐다
     //   ~~`expedition`~~ 도 건물 밖이다 — 원정은 처음부터 열린다 (2026-09-25 사용자 지시 · R161 · 원정 건물은 2026-10-22 에 걷혔다 · R319)
     upgrade_item: U(true), make: U(true),
+    enchant: U(true),   // 인챈트 — 대장간 r6 (2026-11-24 사용자 · R566 · 옛 강화와 같은 문 `upgrade_item`)
+    temper_guard: U(true),   // 손질 담금질(막기) — 대장간 r5 · 달구기 · 덧대기는 강화(`upgrade_item`)와 함께 (2026-11-24 사용자 「담금질을 왜 없애」 · R566)
     synth: U(true),   // 재료 합성 — 하급을 모아 위 단계 하나(대장간 r1 · 2026-10-27 · R359 · item_design §5-2)
     potion: U(true),   // 물약 제작 — 물약 1단계를 심는다(`potion_tier` 의 seed) · 물약은 단계로만 잠겨 `hasFeature` 자리가 없다 (2026-09-24 사용자 지시 · 대장간 r2)
     //   ~~`search`~~ — 2026-10-19 수색 삭제(찾아온 영웅은 건물이 아니라 연구소 줄이 연다 · base_expedition §2-4)
@@ -34,6 +36,7 @@ export const TARGETS = {
     shop_trade: U(true),   // 교역소 — 재료 교환 창구(상단 r3 · 특수상단은 r4 · 2026-10-30 사용자) · 교환 비율이 미정이라 열리면 화면에 자리만 선다(`state.shopState` 의 `trade`)
     lab_res: U(true),   // 연구소 「자원」 줄 — 창고 r1 이 연다(연구소는 시작부터 r1 · 2026-10-27 사용자 지시 · R361 · `state.labLineOpen`)
     lab_visit: U(true),   // 연구소 「수색」 줄 — 선술집 r3 이 연다(2026-11-16 사용자 「수색을 r3로」 · R516 · 옛 `hire` 가 함께 열었다 · `state.labLineOpen`)
+    lab_forge: U(true),   // 연구소 「대장간」 줄 — 대장간 r3 이 연다 · 제작 레벨은 그 줄의 지점이 연다(2026-11-24 사용자 「제작레벨 연구소로 넘겨봐」 · R565 · `state.labLineOpen`)
     // 켜기 — 준비 중 (construction_draft §2 의 ⚠ 칸 포함)
     craft: U(false), stigma_craft: U(false), skill_card: U(false),
     raid: U(false), escort: U(false), gear_set: U(false), monster_card: U(false),
@@ -53,7 +56,7 @@ export const TARGETS = {
     bag: A(true), stash: A(true), roster: A(true), presets: A(true), potionSlots: A(true), upgrade: A(true),
     // 고용 후보(`tavernCandidates`)는 여기 없다 — 명단은 `tavern_candidates` 고정이고 건물이 안 늘린다 [2026-09-24 사용자 지시] · ~~`searchSlots`~~ 2026-10-19 수색 삭제
     shopPerSlot: A(true), shopWeapon: A(true),
-    make_level: A(true, 'make'), potion_tier: A(true, 'potion'), tactic_slots: A(true),   // 제작 레벨의 첫 단계는 `make` · 물약 단계의 첫 단계는 `potion` 이 심는다
+    make_level: A(true, 'make'), potion_tier: A(true, 'make'), tactic_slots: A(true),   // 제작 레벨 · 물약 단계의 첫 단계는 제작(`make`)이 심는다 — 물약 제작은 제작에 든다 (2026-11-24 사용자 · R566 · 옛 `potion` 켜기 대장간 r2)
     // 도감이 연 구간 수 — 도서관 r1 의 `codex` 가 첫 구간을 심고 뒤 랭크가 하나씩 더한다 · `state.limitsOf` 가 그 구간의 끝 레벨로 바꾼다(`codexLevel` · 2026-10-24 도감 건물을 도서관에 합침 · R339 · 2026-11-18 구간 셋 R539)
     codex_level: A(true, 'codex'),
     // ~~`chapters`~~ — 장은 건물이 안 연다(앞 장 보스가 연다 · `state.chapterGate` · 2026-10-22 원정 건물 삭제 · R319)

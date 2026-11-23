@@ -139,7 +139,8 @@ const arenaParts = team => ({
 /** 전직 트리에 쓴 공용 포인트 — 스킬 줄(크기 · 변형) + 공통 줄 · 배움은 전직 포인트라 안 센다 (2026-11-13 R471) */
 const advSpent = h => (h.advanceUp ?? 0) + (h.advanceVar ?? []).reduce((s, v) => s + v, 0) + (h.advanceCommon ?? []).reduce((s, v) => s + v, 0);
 const skillCapEnd = B.skillbook_upgrade_max;   // 책 업그레이드 상한 — 끝 하나 (2026-10-20 · R293 · ~~skill_codex_level.csv 마지막 행~~)
-const upCap = SYS.game.limitsOf({ buildings: Object.fromEntries(SYS.construction.list.map(b => [b.id, b.maxRank])) }).upgrade;   // 건물을 다 지었을 때의 강화 상한
+const upCap = SYS.game.limitsOf({ buildings: Object.fromEntries(SYS.construction.list.map(b => [b.id, b.maxRank])),
+    labNodes: Object.fromEntries(D.labNodes.filter(n => n.line === 'forge').map(n => [`forge:${n.node}`, n.max])) }).upgrade;   // 건물을 다 짓고 연구소 「대장간」 줄을 끝까지 올렸을 때의 강화 상한 (R566 — 상한은 「강화」 지점이 올린다)
 check('결투장: 등급 상대 — 레벨 · 착용 위치 전부 · 아이템 레벨 · 강화 · 마스터리 · 책 · 전직 · 스킬 업그레이드가 등급과 게임 규칙대로 (arena_design §7)', () => {
     const tiers = SYS.arena.tiers;
     if (!tiers.length) fail('등급이 없다');
@@ -1489,6 +1490,7 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         'tactic_reroll_base_cost', 'tactic_reroll_lock_mult',
         'tactic_leader_mult_min', 'tactic_leader_mult_max',   // 전술 리더 보너스 (2026-10-24 · R340)
         'tactic_grade_mult_common', 'tactic_grade_mult_magic', 'tactic_grade_mult_rare', 'tactic_sin_gear_pct',   // 전술 등급 배수 · 장비 죄종 몫 (2026-11-11 · R441)
+        'tactic_sin_hero_score',   // 영웅 죄종 점수 (2026-11-24 · R563)
         'potion_slot_max', 'potion_use_hp_pct', 'potion_use_hp_steps', 'potion_cooldown_sec', 'stagger_hp_pct', 'stagger_sec', 'burn_heal_cut', 'chapter_debuff_boss_mult', 'dot_tick_sec', 'channel_strike_sec', 'channel_tick_sec', 'repeat_restart_sec',
         'boss_respawn_sec',    // 챕터보스 재등장 (2026-10-10 · R240)
         'gamble_batch_spins', 'gamble_stake_steps', 'gamble_stake_gold', 'gamble_stake_chapter_mult',
@@ -2566,6 +2568,8 @@ check('시작 파티: 고유 스킬 — 생성 시 skill.csv 풀에서 1개 · �
 /** 모든 건물을 끝까지 지은 판 — 문턱 · 비용을 건너뛴다. 편성 수 · 물약 칸이 늘도록 세이브를 한 번 돌려 불러온다(`deserialize` 가 상한에 맞춘다) */
 const openAll = (g, S = SYS) => {
     for (const b of S.construction.list) g.buildings[b.id] = b.maxRank;
+    // 대장간의 깊이(강화 상한 · 제작 레벨 · 물약 단계)는 연구소 「대장간」 줄 지점이 올린다 — 끝까지 지은 판은 그 지점도 끝까지 (R565 · R566)
+    for (const n of D.labNodes.filter(x => x.line === 'forge')) g.labNodes = { ...(g.labNodes ?? {}), [`forge:${n.node}`]: n.max };
     return S.game.deserialize(JSON.parse(JSON.stringify(S.game.serialize(g, NOW))));
 };
 const freshG = () => openAll(SYS.game.newGame(42, cands, NOW));
@@ -3122,8 +3126,16 @@ check('인벤토리 — 부대마다 하나 · 드롭은 나간 부대의 것 ·
     const eqr = SYS.game.equip(g, a, armB);
     if (!eqr.ok || ha.equipped.armor !== armB || !g.bags[2].includes(armA) || g.bags[2].includes(armB) || g.bags[0].includes(armA)) fail(`교체품 ${JSON.stringify(eqr)} · ${JSON.stringify(g.bags)}`);
     // 창고 — 넣기는 어느 인벤토리에서든 · 꺼내기는 넘긴 번호로
+    // 놓일 칸(moveSpot · ADR-1340) — 옮기기 전에 물은 줄 · 칸이 옮긴 뒤 실제 자리와 같다 · 상태는 안 바꾼다
+    const sp1 = SYS.game.moveSpot(g, w), bagsBefore = JSON.stringify(g.bags);
+    if (!sp1.ok || sp1.to !== 'stash' || sp1.index !== g.stash.length || JSON.stringify(g.bags) !== bagsBefore) fail(`창고 놓일 칸 ${JSON.stringify(sp1)}`);
     if (!SYS.game.moveToStash(g, w).ok || g.bags[2].includes(w) || !g.stash.includes(w)) fail('창고로');
+    if (g.stash.indexOf(w) !== sp1.index) fail(`창고 자리 ${g.stash.indexOf(w)} ≠ 물은 칸 ${sp1.index}`);
+    const sp2 = SYS.game.moveSpot(g, w, 1);
+    if (!sp2.ok || sp2.to !== 'bag' || sp2.index !== g.bags[0].length) fail(`인벤토리 놓일 칸 ${JSON.stringify(sp2)}`);
+    if (SYS.game.moveSpot(g, w, 9).err !== 'missing' || SYS.game.moveSpot(g, 'nope').err !== 'missing') fail('없는 부대 · 없는 아이템의 놓일 칸');
     if (!SYS.game.moveToBag(g, w, 1).ok || !g.bags[0].includes(w)) fail('편성 1 로 꺼내기');
+    if (g.bags[0].indexOf(w) !== sp2.index) fail(`인벤토리 자리 ${g.bags[0].indexOf(w)} ≠ 물은 칸 ${sp2.index}`);
     // 정렬은 넘긴 번호의 인벤토리만
     const before1 = g.bags[0].slice(), before3 = g.bags[2].slice();
     if (!SYS.game.sortStorage(g, 'bag', 'rarity', 2).ok || !eq(g.bags[0], before1) || !eq(g.bags[2], before3)) fail('정렬이 다른 부대를 건드렸다');
@@ -4515,7 +4527,7 @@ function aimUpgrade(g, pick) {
     fail('그 결과를 내는 회차를 5000 안에서 못 찾았다');
 }
 
-check('강화 구간: 표 — 사용자 「3강까지는 올리기만」(+1 ~ +3 도전 = 강등 · 파괴 0) · 「4~6강까지 강등 가능」(강등 > 0 · 파괴 0 · 성공 > 강등) · 「7강부터 파괴가능」(파괴 > 0 · 강등 0) · 파괴 구간은 대장간 마지막 랭크가 연다 · `item.upgradeRisk` — 강등 = 표 그대로(등급 · 레벨 무관) · 파괴 = 표 ÷ 등급 배수 × (1 + `equip_upgrade_destroy_ilvl_step` × 레벨 구간) — 사용자 「파괴가 … 더 높아야지 등급이 높으면」 · 「레벨업하면바뀌고」(좋은 등급 · 높은 레벨일수록 크다) · 표가 망가지면 생성 때 던진다 (item_design §7-2 · R530 · R548)', () => {
+check('강화 구간: 표 — 사용자 「3강까지는 올리기만」(+1 ~ +3 도전 = 강등 · 파괴 0) · 「4~6강까지 강등 가능」(강등 > 0 · 파괴 0 · 성공 > 강등) · 「7강부터 파괴가능」(파괴 > 0 · 강등 0) · 강화 상한은 연구소 「대장간」 줄 「강화」 지점이 올린다 — 대장간 랭크는 안 올린다(R566) · `item.upgradeRisk` — 강등 = 표 그대로(등급 · 레벨 무관) · 파괴 = 표 ÷ 등급 배수 × (1 + `equip_upgrade_destroy_ilvl_step` × 레벨 구간) — 사용자 「파괴가 … 더 높아야지 등급이 높으면」 · 「레벨업하면바뀌고」(좋은 등급 · 높은 레벨일수록 크다) · 표가 망가지면 생성 때 던진다 (item_design §7-2 · R530 · R548)', () => {
     const rows = D.upgradeChanceRows;
     if (rows.length < upCap) fail(`표 ${rows.length}줄 < 다 지은 상한 +${upCap}`);
     for (const r of rows) {
@@ -4524,10 +4536,11 @@ check('강화 구간: 표 — 사용자 「3강까지는 올리기만」(+1 ~ +3
         if (z === '강등' && !(r.down > 0 && !r.destroy && r.chance > r.down)) fail(`+${r.step} 강등 구간 — 성공 ${r.chance} · 강등 ${r.down} · 파괴 ${r.destroy}`);
         if (z === '파괴' && !(r.destroy > 0 && !r.down)) fail(`+${r.step} 파괴 구간 — 강등 ${r.down} · 파괴 ${r.destroy}`);
     }
-    const all = Object.fromEntries(SYS.construction.list.map(b => [b.id, b.maxRank])), forgeMax = all.forge;
-    const capAt = rank => SYS.game.limitsOf({ buildings: { ...all, forge: rank } }).upgrade;
+    const all = Object.fromEntries(SYS.construction.list.map(b => [b.id, b.maxRank])), up = D.labNodes.find(n => n.line === 'forge' && n.node === 'upgrade');
+    const capAt = lv => SYS.game.limitsOf({ buildings: all, labNodes: { 'forge:upgrade': lv } }).upgrade;
     const firstDestroy = rows.find(r => r.destroy > 0).step;
-    if (!(capAt(forgeMax - 1) < firstDestroy && capAt(forgeMax) >= firstDestroy)) fail(`대장간 ${forgeMax - 1}랭크 상한 +${capAt(forgeMax - 1)} · ${forgeMax}랭크 +${capAt(forgeMax)} — 파괴 구간(+${firstDestroy})은 마지막 랭크가 연다`);
+    if (SYS.game.limitsOf({ buildings: all, labNodes: {} }).upgrade !== B.equip_upgrade_max) fail('대장간을 끝까지 지어도 상한이 기본값 위로 올랐다 — 랭크는 상한을 안 올린다 (R566)');
+    if (capAt(up.max) !== upCap || !(capAt(firstDestroy - 1 - B.equip_upgrade_max) < firstDestroy)) fail(`「강화」 지점 끝 +${capAt(up.max)} ≠ 다 지은 상한 +${upCap} · 또는 파괴 구간(+${firstDestroy}) 앞 레벨이 이미 연다`);
     const lvStep = B.equip_upgrade_destroy_ilvl_step, band = B.equip_upgrade_mat_ilvl_band, firstDown = rows.find(r => r.down > 0).step;
     if (!(lvStep >= 0)) fail(`레벨 몫 ${lvStep} — 0 이상이어야 한다`);
     const riskAt = (rarity, ilvl, up) => SYS.item.upgradeRisk({ ...mkItem('armor', [], { implicit: { stat: 'def_flat', v: 10 } }), rarity, ilvl, up }, upCap);
@@ -4554,7 +4567,7 @@ check('강화 구간: 표 — 사용자 「3강까지는 올리기만」(+1 ~ +3
     if (!bad(t => { t[firstDestroy - 1].down = 0.01; })) fail('한 줄에 강등과 파괴가 함께 선 것을 안 막는다');
     if (!bad(t => { t[3].down = 1; })) fail('성공 + 위험 > 1 을 안 막는다');
     if (!bad(t => { t[3].down = -0.1; })) fail('음수 강등을 안 막는다');
-    return rows.map(r => `+${r.step} ${Math.round(r.chance * 100)}${r.down ? `/강등 ${Math.round(r.down * 100)}` : ''}${r.destroy ? `/파괴 ${Math.round(r.destroy * 100)}` : ''}`).join(' · ') + ` · 대장간 ${forgeMax - 1}랭크 +${capAt(forgeMax - 1)} → ${forgeMax}랭크 +${capAt(forgeMax)} · ${spread}`;
+    return rows.map(r => `+${r.step} ${Math.round(r.chance * 100)}${r.down ? `/강등 ${Math.round(r.down * 100)}` : ''}${r.destroy ? `/파괴 ${Math.round(r.destroy * 100)}` : ''}`).join(' · ') + ` · 「강화」 지점 0 → ${up.max} = +${capAt(0)} → +${capAt(up.max)} · ${spread}`;
 });
 
 check('강화 파괴: 그 자리에서 분해 — 가방 · 창고 · 착용 칸 어디서든 빠지고 `items` 에서 지워진다 · 분해와 같은 산출(가루 + 부위 재료)이 지갑에 · 잠금도 깨진다 · 반환 `destroyed` · `salvage` · `up` = 깨지기 전 단계 (item_design §7-2 · R530)', () => {
@@ -10283,7 +10296,7 @@ check('정예 강화 — 물리 · 마법 갈래 여덟 장치(더하는 몫 · 
     }
     return notes.join(' · ');
 });
-check('battle: 1-1 편성 예외 — 주술사는 3라운드부터 · 정예는 주술사뿐 · 주술사가 서면 척후병 · 전사로 상한까지 채워 라운드 시작에 함께 선다(주술사 하나) · 불러내기는 되살림뿐 · 아바돈 혼자 (2026-09-18 · 2026-10-21 · INTERFACE §2-13)', () => {
+check('battle: 1-1 편성 예외 — 주술사는 3라운드부터 · 정예는 주술사뿐 · 주술사가 서면 척후병 · 전사로 상한까지 채워 라운드 시작에 함께 선다(주술사 하나) · 불러내기는 되살림뿐 · 아바돈은 일반 호위와 선다 (2026-09-18 · 2026-10-21 · 2026-11-24 R562 · INTERFACE §2-13)', () => {
     const SHAMAN = 1103, FILL = new Set([1101, 1102]);
     let rounds = 0, shamanNormal = 0, early = 0, calls = 0, bosses = 0;
     // 라운드 하나의 명단 = 시작에 선 적 + 불러낸 적. 판정은 라운드가 닫힐 때 명단 전체로 한다
@@ -10295,8 +10308,12 @@ check('battle: 1-1 편성 예외 — 주술사는 3라운드부터 · 정예는 
         const shamans = ids.filter(id => id === SHAMAN).length;
         rounds++;
         if (cur.ev.kind === 'boss') {
+            // 아바돈 + 일반 호위(round_budget.csv:stage_boss) — 척후병 · 전사 · 주술사 중 · 주술사는 하나 (2026-11-24 · R562)
             bosses++;
-            if (ids.length !== 1 || ids[0] !== D.stages[1013].boss_monster_idx) fail(`${at} 아바돈 혼자가 아니다`);
+            const { escort_min: lo, escort_max: hi } = D.budgets.stage_boss;
+            if (ids[0] !== D.stages[1013].boss_monster_idx || ids.length - 1 < lo || ids.length - 1 > hi) fail(`${at} 아바돈 + 호위 ${lo} ~ ${hi} 가 아니다`);
+            for (const e of roster.slice(1)) if (e.grade !== 'normal' || (e.monsterId !== SHAMAN && !FILL.has(e.monsterId))) fail(`${at} 호위 ${e.monsterId}:${e.grade} — 일반 척후병 · 전사 · 주술사여야`);
+            if (shamans > 1) fail(`${at} 주술사가 둘 이상이다`);
             return;
         }
         if (cur.ev.n < 3) { early++; if (shamans) fail(`${at} 주술사가 3라운드 전에 나왔다`); }
@@ -14524,6 +14541,38 @@ check('skill: previewOf — 실효 쿨 · 한 타 피해(능력치 계수 포함
     if (!wa || wa.min !== wa.max) fail(`벽 HP 는 한 점이어야 한다 ${JSON.stringify(wa)}`);
     return `실효 ${pv.everySec}s · 한 타 ${pv.amount.min}~${pv.amount.max}(계수 ×${sc.toFixed(3)}) · parts ${Object.keys(pg.parts).join('/')}(그레이스)`;
 });
+
+check('skill: previewOf — 식의 중간 값(base · tagMult · statMult · attrs) · 태그 몫(tags) — 도서관 계산 줄이 곱하지 않고 찍는다 (SCREEN_DESIGN §17 · INTERFACE §2-8 · 2026-11-24)', () => {
+    const def = SYS.skill.defs.war_bash;
+    const L0 = def.effects[0];
+    const stats = { ...G.heroes[0].stats };
+    const sc = F.statCoef(stats.str);
+    const pa = SYS.skill.previewOf(def, { atkMin: 400, atkMax: 600, stats }).parts.amount;
+    if (!eq(pa.base, { min: 400, max: 600 }) || pa.tagMult !== 1 || pa.statMult !== sc) fail(`중간 값 ${JSON.stringify(pa)}`);
+    if (!eq(pa.attrs, [{ attr: 'str', v: stats.str, mult: sc }])) fail(`attrs ${JSON.stringify(pa.attrs)}`);
+    // 식의 양끝 = round(base × tagMult × pct × statMult) — 값과 같다
+    const recon = r => ({ min: Math.round(r.base.min * r.tagMult * r.pct * r.statMult), max: Math.round(r.base.max * r.tagMult * r.pct * r.statMult) });
+    if (!eq(recon(pa), pa.value)) fail(`식 ${JSON.stringify(recon(pa))} ≠ 값 ${JSON.stringify(pa.value)}`);
+    // 능력치를 모르면 계수 · 값이 null — 화면은 그 줄을 안 세운다
+    const bare = SYS.skill.previewOf(def, { atkMin: 400, atkMax: 600 }).parts.amount;
+    if (bare.statMult !== null || bare.attrs[0].v !== null || bare.attrs[0].mult !== null) fail(`stats 없는데 ${JSON.stringify(bare)}`);
+    // 태그 피해 몫 — 데미지 % 괄호에 더해진 몫을 곱으로 · 값도 그만큼 오른다
+    const tag = [...(def.derived ?? []), ...(def.tags ?? [])][0];
+    if (!tag) fail('배시에 태그가 없다 — 다른 스킬로 잰다');
+    const tg = SYS.skill.previewOf(def, { atkMin: 400, atkMax: 600, stats, atkPct: 0.5, skillTags: { [tag]: { damage: 0.2 } } });
+    const want = (1 + 0.5 + 0.2) / (1 + 0.5);
+    if (Math.abs(tg.parts.amount.tagMult - want) > 1e-12 || !eq(recon(tg.parts.amount), tg.amount)) fail(`태그 피해 ${tg.parts.amount.tagMult} · ${JSON.stringify(tg.amount)}`);
+    if (!eq(tg.tags, { duration: 0, value: 0 })) fail(`타격 스킬의 tags ${JSON.stringify(tg.tags)}`);
+    // 걸린 효과의 태그 몫 — apply 줄만 · 시간은 parts.dur 의 값이 이미 탔다
+    const grace = SYS.skill.defs.pri_grace;
+    const gtag = [...(grace.derived ?? []), ...(grace.tags ?? [])][0];
+    if (!gtag) fail('그레이스에 태그가 없다');
+    const gp = SYS.skill.previewOf(grace, { stats, skillTags: { [gtag]: { duration: 0.5, value: 0.1 } } });
+    if (!eq(gp.tags, { duration: 0.5, value: 0.1 })) fail(`그레이스 tags ${JSON.stringify(gp.tags)}`);
+    if (Math.abs(gp.parts.dur.value - gp.parts.dur.raw * 1.5) > 1e-9) fail(`지속 ${gp.parts.dur.value} ≠ ${gp.parts.dur.raw} × 1.5`);
+    if (!eq(SYS.skill.previewOf(grace, { stats }).tags, { duration: 0, value: 0 })) fail('태그가 없는데 tags 가 0 이 아니다');
+    return `배시 ${pa.base.min}~${pa.base.max} × ${pa.pct} × ${sc.toFixed(2)} = ${pa.value.min}~${pa.value.max} · 태그 ×${tg.parts.amount.tagMult.toFixed(3)} · 그레이스 지속 ${gp.parts.dur.raw} → ${gp.parts.dur.value}`;
+});
 check('skill: previewOf 확률은 1(= 100%) 에서 자른다 — parts.procChance.value ≤ 1 · raw 는 원값 · scaleDef 는 안 자른다 (strike 와 같은 상한 · R72 후속 · R111)', () => {
     const S = loadSkills(patchSkill('kni_charge', { scale2_coef: 0.2 }));   // proc_chance_pct · luck — 1점당 20% (슬롯은 하는 일 줄 · 2026-09-22)
     const def = S.defs.kni_charge;
@@ -17755,11 +17804,11 @@ check('lab library: 배운 스킬을 바꾸기 전에 지난 조각 · 책을 �
 });
 check('lab: 지점 — 줄 · 지점이 표 그대로 · 연구소 랭크가 지점을 연다 · 훈련은 지점이 처음 열리는 랭크 · 도박장은 선술집 도박장(r3 — R363) 뒤 · 자원 줄의 지점 셋 = 재료 표 (R298 · R356)', () => {
     const lines = SYS.game.labState(newGameS(42), NOW).lines;
-    if (lines.map(l => l.line).join() !== 'res,visit,train,gamble,lib') fail(`줄 ${lines.map(l => l.line)}`);
+    if (lines.map(l => l.line).join() !== 'res,visit,train,gamble,lib,forge') fail(`줄 ${lines.map(l => l.line)}`);
     for (const l of lines) {
         const want = D.labNodes.filter(n => n.line === l.line).sort((a, b) => a.ord - b.ord).map(n => n.node);
         if (l.nodes.map(n => n.node).join() !== want.join()) fail(`${l.line} 지점 ${l.nodes.map(n => n.node)} ≠ 표 ${want}`);
-        // 등록 칸은 지점이 아니다 — 다섯 줄 모두 `lab_seats` (2026-11-12 R454)
+        // 등록 칸은 지점이 아니다 — 줄 모두 `lab_seats` (2026-11-12 R454 · 대장간 줄 R565)
         if (l.nodes.some(n => n.node === 'seats') || l.seats.cap !== B.lab_seats) fail(`${l.line} 등록 칸 — 지점이 남았거나 ${l.seats.cap} ≠ lab_seats`);
         // 레벨 목록(고른 지점) — 레벨 1 ~ 최대의 값 · 다음 레벨의 값과 같은 식
         for (const n of l.nodes) {
@@ -17874,7 +17923,7 @@ check('lab: 연구 — 연구소 전체에 하나 · 비용은 시작할 때(골
     if (clean.resources.gold !== sv.resources.gold + 7 || (clean.materials[herb.id] ?? 0) !== (sv.materials[herb.id] ?? 0) + 3) fail(`빠진 지점 연구 환불 ${clean.resources.gold - sv.resources.gold}G`);
     const bad = SYS.game.deserialize({ ...sv, labResearch: { line: 'res', node: 'seats', lv: 1, at: T, until: T + 1, paid: { gold: -5, mat: null } } });
     if (bad.labResearch !== null || bad.resources.gold !== sv.resources.gold) fail('모양이 틀린 연구를 돌려줬다');
-    if (!eq(newGameS(42).labNodes, {}) || newGameS(42).labResearch !== null) fail('새 게임 지점');
+    if (!eq(SYS.game.newGame(42, cands, NOW).labNodes, {}) || newGameS(42).labResearch !== null) fail('새 게임 지점');
     return `채광 Lv1 = ×${mult} · 비용 ${gold0}G + ${row.id} ${n0} · ${ms0 / 60000}분`;
 });
 /** 오프라인 정산 대조군 — 숙련 · 대박 없이 연구 경계와 생산 시간만 비교한다. */
@@ -17914,16 +17963,16 @@ check('lab: 비상 보급은 최저 재고에서만 비율로 가속 · 접속�
     if (receipt.gained[ore.id] <= B.dispatch_offline_cap_hours * ore.yieldPerHour) fail('부족한 재료의 생산 증가가 입고되지 않았다');
     if (SYS.game.dispatchSettle(g, end).total) fail('같은 시각에 두 번 지급했다');
 });
-check('lab: 오프라인 시간 연구는 재료만 4→24시간 · 기존 대박 이관 · 공백 중 완료는 다음 정산부터', () => {
+check('lab: 오프라인 시간 연구는 재료만 4→18시간 · 기존 대박 이관 · 공백 중 완료는 다음 정산부터', () => {
     const hour = 3600_000, at = NOW + 30 * hour;
     const g = labCapFixture();
     const node = labNode(g, 'res', 'offline');
-    if (node.value !== 4 || node.max !== 10 || !eq(node.levels, [6, 8, 10, 12, 14, 16, 18, 20, 22, 24])
-        || node.levelRanks[0] !== 1 || node.levelRanks[9] !== 5) fail('랭크별 재료 상한');
+    if (node.value !== 4 || node.max !== 7 || !eq(node.levels, [6, 8, 10, 12, 14, 16, 18])
+        || node.levelRanks[0] !== 1 || node.levelRanks[6] !== 4) fail('랭크별 재료 상한');
     g.labNodes['res:offline'] = node.max;
     const { receipt } = SYS.game.labResume(g, at);
-    if (receipt?.materialProductionMs !== 24 * hour || receipt?.productionMs !== 4 * hour
-        || D.labMaterials.some(m => receipt.gained[m.id] !== Math.floor(m.yieldPerHour * 24 + 1e-9))) fail('재료와 기타 상한 분리');
+    if (receipt?.materialProductionMs !== 18 * hour || receipt?.productionMs !== 4 * hour
+        || D.labMaterials.some(m => receipt.gained[m.id] !== Math.floor(m.yieldPerHour * 18 + 1e-9))) fail('재료와 기타 상한 분리');
 
     const old = SYS.game.serialize(labCapFixture(), NOW);
     old.labNodes['res:burst'] = 1;
@@ -18254,12 +18303,12 @@ check('lab: 훈련 속도 연구는 영웅 레벨과 등록 효과에 관계없�
     SYS.game.labSettle(g, NOW);
     const base = SYS.game.deserialize(SYS.game.serialize(g, NOW));
     const speed = labNode(g, 'train', 'speed');
-    if (!eq(speed.levels, [10, 20, 30, 40, 50, 60, 70, 80])) fail('연구 단계별 고정 경험치');
+    if (!eq(speed.levels, [10, 20, 30, 40, 50, 60, 70])) fail('연구 단계별 고정 경험치');
     g.labNodes['train:speed'] = speed.max;
     for (const state of [base, g]) SYS.game.labSettle(state, NOW + 3600_000);
     for (const h of [low, high]) {
         const expected = base.heroes.find(o => o.uid === h.uid);
-        if (h.level !== expected.level || h.xp - expected.xp !== 80) fail(`Lv${h.level} 영웅에 고정 경험치 80 가산`);
+        if (h.level !== expected.level || h.xp - expected.xp !== 70) fail(`Lv${h.level} 영웅에 고정 경험치 70 가산`);
     }
 });
 check('lab: 도박장 줄 — 시간당 골드(단위로 쌓인다) · 대박은 연구소 수열(같은 세이브 = 같은 골드) · 원정 수열 무변동 (R298 · INTERFACE §5-2)', () => {
@@ -19707,6 +19756,11 @@ check('상자 칸: 장착 · 분해 · 강화가 sealed · 강화 상태 null ·
     if (!S.game.moveToStash(g, uid).ok || !g.stash.includes(uid)) fail('상자를 창고로 옮기지 못한다');
     const more = boxPut(g, g.bags[0], 'tbs2', 'weapon', 3);
     while (g.stash.length < S.game.limitsOf(g).stash) { const u = `sf${g.stash.length}`; g.items[u] = { ...g.items[h.equipped.weapon], uid: u }; g.stash.push(u); }
+    // 놓일 칸(moveSpot · ADR-1340) — 창고가 차도 같은 상자 칸이면 그 칸 · 상자가 아니면 stashFull
+    const spBox = S.game.moveSpot(g, more);
+    if (!spBox.ok || spBox.to !== 'stash' || spBox.index !== g.stash.indexOf(uid)) fail(`상자 놓일 칸 ${JSON.stringify(spBox)} (${g.stash.indexOf(uid)} 여야)`);
+    g.items.spNb = { ...g.items[h.equipped.weapon], uid: 'spNb' }; g.bags[0].push('spNb');
+    if (S.game.moveSpot(g, 'spNb').err !== 'stashFull') fail('찬 창고의 놓일 칸이 stashFull 이 아니다');
     const mv = S.game.moveToStash(g, more);
     if (!mv.ok || g.items[more] || g.bags[0].includes(more) || g.items[uid].box.n !== 5) fail(`합치기 ${JSON.stringify(mv)} · ×${g.items[uid]?.box.n} (5 여야)`);
     // 정렬 — 상자 칸이 맨 앞
@@ -20106,9 +20160,13 @@ check('limitsOf: 상한은 한 곳이 답한다 — balance 기본값 + 지어�
     };
     // 표의 단계 셋 · 동시 의뢰 · 자원 단계 · 동시 탐험만 이름이 다르다(state.js ADD_KEY) — 나머지 더하기는 같은 이름의 상한에 붙고 · 붙을 상한이 없는 것(준비 중)은 버린다
     const KEY = { make_level: 'makeLevels', potion_tier: 'potionTier', tactic_slots: 'tacticSlots', commission_slots: 'commissionSlots', resource_tier: 'resourceTiers', explore_slots: 'exploreSlots', codex_level: 'codexLevel' };
-    const expect = ranks => {
+    const expect = (ranks, nodes = {}) => {
         const w = { ...base };
         for (const [k0, n] of Object.entries(SYS.construction.opened(ranks).adds)) { const k = KEY[k0] ?? k0; if (k in w) w[k] += n; }
+        // 연구소 「대장간」 줄 — 제작 레벨 · 물약 단계는 첫 단계(대장간 r4 제작)가 선 뒤에만 · 강화 상한은 기본값 위로 (R565 · R566)
+        if (w.makeLevels > 0) w.makeLevels += nodes['forge:make'] ?? 0;
+        if (w.potionTier > 0) w.potionTier += nodes['forge:potion'] ?? 0;
+        w.upgrade += nodes['forge:upgrade'] ?? 0;
         w.expeditions = Math.min(w.expeditions, w.presets);   // 부대는 편성 하나에 하나다 (v38 · 다부대)
         w.codexLevel = w.codexLevel <= 0 ? 0 : SYS.game.codexSegments()[Math.min(w.codexLevel, SYS.game.codexSegments().length) - 1].to;   // 구간 수 → 끝 레벨 (R539)
         return w;
@@ -20118,7 +20176,7 @@ check('limitsOf: 상한은 한 곳이 답한다 — balance 기본값 + 지어�
     if (!eq(SYS.game.limitsOf(null), expect(SYS.construction.startRanks()))) fail('새 게임(null) 상한이 시작 랭크의 것이 아니다');
     const g = newGameS(42);                          // 다 지은 판
     const L = SYS.game.limitsOf(g);
-    if (!eq(L, expect(g.buildings))) fail(`다 지은 판 limitsOf ${JSON.stringify(L)}`);
+    if (!eq(L, expect(g.buildings, g.labNodes))) fail(`다 지은 판 limitsOf ${JSON.stringify(L)}`);
     if (eq(L, SYS.game.limitsOf(raw))) fail('다 지었는데 상한이 새 게임과 같다 — 더하기가 안 붙는다');
     const ps = SYS.game.presetState(g);
     if (ps.count !== L.presets || ps.slotMax !== L.potionSlots || g.presets.length !== L.presets) fail(`편성 ${ps.count} · 칸 ${ps.slotMax} · 세이브 ${g.presets.length}`);
@@ -21014,7 +21072,7 @@ const TACTIC_LEADER = () => ({ pivot: B.attr_dmg_pivot, min: B.hero_attr_min, ma
 const TACTIC_GMULT = () => ({ common: B.tactic_grade_mult_common, magic: B.tactic_grade_mult_magic, rare: B.tactic_grade_mult_rare });
 const mkTactic = (rows, over = {}) => createTacticSystem({
     slots: D.tacticSlots, options: rows, conditions: D.tacticConditions, sins: Object.keys(M.SINS),
-    gradeWeights: TACTIC_WEIGHTS, gradeMult: TACTIC_GMULT(), gearPct: B.tactic_sin_gear_pct, rerollCost: TACTIC_COST(), leader: TACTIC_LEADER(),
+    gradeWeights: TACTIC_WEIGHTS, gradeMult: TACTIC_GMULT(), gearPct: B.tactic_sin_gear_pct, heroScore: B.tactic_sin_hero_score, rerollCost: TACTIC_COST(), leader: TACTIC_LEADER(),
     attrBySin: D.sinTacticAttrs, attrIds: D.heroAttributes.map(a => a.id), ...over,   // 3랭크 짝 (R466)
 });
 /** 3랭크 전술 짝 — 사용자가 정한 1대1 (2026-11-13 · R466) · 굴림 짝(sin_attr.csv:attr_id)과 다르다 */
@@ -21100,6 +21158,8 @@ check('tactic: 로드 검증 — 옵션 · 조건 사전 · 칸 · 등급 배수
         ['등급 배수 0', { gradeMult: { ...TACTIC_GMULT(), common: 0 } }],
         ['장비 몫 없음', { gearPct: undefined }],
         ['장비 몫 음수', { gearPct: -0.01 }],
+        ['영웅 죄종 점수 없음', { heroScore: undefined }],
+        ['영웅 죄종 점수 음수', { heroScore: -1 }],
         ['등급 가중치 없음', { gradeWeights: undefined }],
         ['죄종 목록 없음', { sins: [] }],
         // 3랭크 짝 (R466) — 죄종 일곱 · 능력치 어휘 안 · 1대1
@@ -21233,6 +21293,15 @@ check('tactic: 적용 값 = 값 × (1 + 리더 몫 + 장비 죄종 몫) — 리�
     // 판의 장비 죄종 수 — 일곱 전부 · 없으면 0
     const g = T.contextOf([tacMember('wrath', mid, ['wrath', 'envy']), tacMember('envy', mid, ['wrath'])]).gear;
     if (!eq(Object.keys(g), T.sinList) || g.wrath !== 2 || g.envy !== 1 || g.pride !== 0) fail(`장비 죄종 수 ${JSON.stringify(g)}`);
+    // 죄종 점수 — 영웅 하나마다 제 죄종에 heroScore + 장비 죄종 수 · 버프 몫은 점수를 읽는다 (§5-14 「죄종 점수 버프」 · R563)
+    {
+        const hs = B.tactic_sin_hero_score;
+        const sc = T.contextOf([tacMember('wrath', mid, ['wrath', 'envy']), tacMember('envy', mid, ['wrath']), tacMember('wrath', mid, [])]).score;
+        if (!eq(Object.keys(sc), T.sinList) || sc.wrath !== 2 * hs + 2 || sc.envy !== hs + 1 || sc.pride !== 0 || sc.greed !== 0)
+            fail(`죄종 점수 ${JSON.stringify(sc)} (영웅 하나 ${hs})`);
+        const w = T.measure(o, T.contextOf([tacMember('wrath', mid, ['wrath']), tacMember('pride', mid, [])]));   // o = 분노 옵션
+        if (!close(w.gearPart, r4((hs + 1) * pct))) fail(`분노 영웅 + 분노 장비 하나 → 죄종 몫 ${w.gearPart} ≠ ${(hs + 1) * pct}`);
+    }
     // 받는 몫 0 — 리더 곡선은 안 받고 장비 죄종 몫은 그대로 받는다 (지금 표엔 그런 옵션이 없어 임의의 행으로 찌른다)
     {
         const t0 = mkTactic(D.tacticOptions.map(r => (r.option_id === 'opt_wrath_crit_dmg' ? { ...r, leader_bonus: 0 } : r)));
@@ -21276,12 +21345,16 @@ check('tactic: 장비 죄종 세기 — 출전 파티 셋이 낀 장비의 죄�
     Object.assign(want, { wrath: 3, envy: 1, pride: 1 });
     if (!eq(st.gear, want)) fail(`장비 죄종 수 ${JSON.stringify(st.gear)} ≠ ${JSON.stringify(want)}`);
     if (st.gearPct !== B.tactic_sin_gear_pct) fail(`장비 몫 ${st.gearPct}`);
-    // 그 죄종 칸의 버프 몫 — 1번 칸(조건 없음)에 분노 · 시기 옵션을 차례로 꽂는다
+    // 죄종 점수 = 출전 영웅의 죄종 하나마다 heroScore + 장비 죄종 수 (R563) — 벤치 영웅의 죄종은 안 센다
+    const score = { ...want };
+    for (const uid of party) score[SYS.game.heroById(G2, uid).sin] += B.tactic_sin_hero_score;
+    if (!eq(st.score, score) || st.heroScore !== B.tactic_sin_hero_score) fail(`죄종 점수 ${JSON.stringify(st.score)} ≠ ${JSON.stringify(score)}`);
+    // 그 죄종 칸의 버프 몫 = 점수 × 몫 — 1번 칸(조건 없음)에 분노 · 시기 옵션을 차례로 꽂는다
     const p = G2.presets[G2.preset - 1];
     for (const [id, sin] of [['opt_wrath_crit_rate', 'wrath'], ['opt_envy_def_down', 'envy'], ['opt_greed_gold', 'greed']]) {
         p.tactics.slots[1] = { id, grade: 'common' };
         const s = SYS.game.tacticState(G2).slots[0];
-        if (Math.abs(s.gearPart - want[sin] * B.tactic_sin_gear_pct) > 1e-9) fail(`${id} 장비 몫 ${s.gearPart} ≠ ${want[sin]} × ${B.tactic_sin_gear_pct}`);
+        if (Math.abs(s.gearPart - score[sin] * B.tactic_sin_gear_pct) > 1e-9) fail(`${id} 죄종 몫 ${s.gearPart} ≠ ${score[sin]} × ${B.tactic_sin_gear_pct}`);
     }
     // 벤치로 빼면 그 영웅의 장비가 빠진다
     p.party = [party[1], party[2]];
@@ -21961,27 +22034,62 @@ check('construction: 잠긴 자리가 말할 건물 — needOf 는 켜기면 처
     if (S.game.needOf('gamble').name.ko !== '가') fail('이름이 없다');
     return Object.entries(got).map(([k, v]) => `${k} ${v ?? '-'}`).join(' · ');
 });
-check('construction: 첫 단계는 켜기가 심는다 — 대장간 r1(장비 강화 · 장비 제작 · 재료 합성 — 2026-10-27 R359)이 제작 Lv1 을 · r2(물약 제작)가 물약 1단계를 연다 · 표에 첫 단계 줄이 없고 · 잠긴 자리는 그 랭크를 말하고 · 뒤 랭크의 +1 은 그 위로 쌓인다 (TARGETS.seed · INTERFACE §2-14 · 2026-09-24 사용자 지시)', () => {
+check('construction: 대장간 랭크 하나에 기능 하나 — r1 강화 · r2 연구(lab_forge) · r3 합성 · r4 제작(제작 Lv1 · 물약 1단계를 같이 심는다) · r5 담금질 · r6 인챈트 · 대장간 랭크는 강화 상한 · 제작 레벨 · 물약 단계를 안 더한다(연구소 「대장간」 줄 — R565 · R566) (TARGETS.seed · INTERFACE §2-14)', () => {
     const fx = n => SYS.construction.rankInfo('forge', n).effects.map(e => e.target);
-    const r1 = fx(1), r2 = fx(2);
-    if (!eq(r1, ['upgrade_item', 'make', 'synth'])) fail(`대장간 r1 표 ${r1.join(' · ')} — 장비 강화 · 장비 제작 · 재료 합성 셋이어야 한다`);
-    if (!eq(r2, ['potion', 'make_level'])) fail(`대장간 r2 표 ${r2.join(' · ')} — 물약 제작 · 제작 레벨 둘이어야 한다`);
+    const want = [['upgrade_item'], ['lab_forge'], ['synth'], ['make'], ['temper_guard'], ['enchant']];
+    const got = want.map((_, i) => fx(i + 1));
+    if (!eq(got, want)) fail(`대장간 표 ${JSON.stringify(got)}`);
+    if (SYS.construction.rankInfo('forge', want.length + 1)) fail('대장간 r7 이 있다');
     const g = SYS.game.newGame(45, cands, NOW);
     if (g.buildings.forge) fail('fixture: 새 게임인데 대장간이 지어져 있다');
     const L0 = SYS.game.limitsOf(g);
     if (L0.makeLevels !== 0 || L0.potionTier !== 0) fail(`안 지었는데 첫 단계가 섰다 ${L0.makeLevels} · ${L0.potionTier}`);
     const at = (target, n) => { const w = SYS.game.needOf(target, n); return w ? `${w.id}${w.rank}` : null; };
-    const need = { lv1: at('make_level', 1), lv2: at('make_level', 2), pt1: at('potion_tier', 1), pt2: at('potion_tier', 2) };
-    if (!eq(need, { lv1: 'forge1', lv2: 'forge2', pt1: 'forge2', pt2: 'forge4' })) fail(`잠긴 자리가 말할 랭크 ${JSON.stringify(need)}`);
-    const got = n => { g.buildings.forge = n; const L = SYS.game.limitsOf(g); return [L.makeLevels, L.potionTier]; };
-    if (!eq(got(1), [1, 0])) fail(`r1 을 지었는데 ${got(1)} — 제작 1 · 물약 0`);
-    if (!eq(SYS.game.makeLevels(g).map(l => l.open).slice(0, 2), [true, false])) fail('제작 레벨이 첫 하나만 열려야 한다');
-    if (SYS.game.potionState(g).list.some(p => p.craftable)) fail('r1 인데 물약을 만들 수 있다');
-    if (!eq(got(2), [2, 1])) fail(`r2 를 지었는데 ${got(2)} — 제작 2 · 물약 1`);
-    if (!eq(SYS.game.potionState(g).list.map(p => p.craftable).slice(0, 2), [true, false])) fail('물약이 1단계만 열려야 한다');
-    const tot = SYS.game.constructionState(g).buildings.find(b => b.id === 'forge').ranks[1].effects.find(e => e.target === 'make_level')?.total;
-    if (tot !== 2) fail(`r2 줄의 누적 ${tot} — 첫 단계를 포함해 2`);
-    return `r1 ${r1.join(' · ')} · r2 ${r2.join(' · ')} · 제작/물약 r1 = ${got(1)} · r2 = ${got(2)} · 잠긴 자리 ${Object.values(need).join(' · ')}`;
+    const need = { lv1: at('make_level', 1), lv2: at('make_level', 2), pt1: at('potion_tier', 1), pt2: at('potion_tier', 2), up: at('upgrade', 1), guard: at('temper_guard'), ench: at('enchant') };
+    if (!eq(need, { lv1: 'forge4', lv2: null, pt1: 'forge4', pt2: null, up: null, guard: 'forge5', ench: 'forge6' })) fail(`잠긴 자리가 말할 랭크 ${JSON.stringify(need)}`);
+    const lim = n => { g.buildings.forge = n; const L = SYS.game.limitsOf(g); return [L.makeLevels, L.potionTier, L.upgrade]; };
+    if (!eq(lim(3), [0, 0, B.equip_upgrade_max])) fail(`r3 ${lim(3)} — 제작 · 물약 0 · 강화 기본값`);
+    if (!eq(lim(6), [1, 1, B.equip_upgrade_max])) fail(`r6 ${lim(6)} — 제작 1 · 물약 1 · 강화 기본값(연구소 지점 0)`);
+    const feat = id => [4, 5, 6].map(n => { g.buildings.forge = n; return SYS.game.hasFeature(g, id); });
+    if (!eq(feat('temper_guard'), [false, true, true]) || !eq(feat('enchant'), [false, false, true])) fail(`담금질 ${feat('temper_guard')} · 인챈트 ${feat('enchant')} — r5 · r6 에 연다`);
+    return `대장간 ${got.map((t, i) => `r${i + 1} ${t}`).join(' · ')} · 잠긴 자리 ${Object.values(need).map(v => v ?? '-').join(' · ')}`;
+});
+check('lab forge: 연구소 「대장간」 줄 — 대장간 r2(lab_forge)가 연다 · 「강화」 = 강화 상한(값 = 상한 그대로) · 「제작」 = 첫 레벨 위로 제작 레벨 · 「물약」 = 첫 단계 위로 물약 단계 · 제작 · 물약은 대장간 r4(제작) 전이면 0 · 지점 상한은 연구소 랭크 · 연구가 산다 (2026-11-24 · R565 · R566 · construction_draft §2)', () => {
+    const gate = SYS.game.needOf('lab_forge'), mk = SYS.game.needOf('make');
+    if (!gate || gate.id !== 'forge' || gate.rank !== 2) fail(`대장간 줄을 여는 랭크 ${JSON.stringify(gate)} — 대장간 r2`);
+    const rows = { up: labRow('forge', 'upgrade'), make: labRow('forge', 'make'), pot: labRow('forge', 'potion') };
+    if (Object.values(rows).some(r => !r)) fail('lab_node.csv 에 대장간 지점 셋(강화 · 제작 · 물약)이 없다');
+    if (B.equip_upgrade_max + rows.up.max !== D.upgradeChanceRows.length) fail(`「강화」 끝 +${B.equip_upgrade_max + rows.up.max} ≠ 강화 표 끝 +${D.upgradeChanceRows.length}`);
+    const g = newGameS(46), all = SYS.game.makeLevels().length;
+    g.labNodes = {};
+    g.buildings.forge = gate.rank - 1;
+    if (labLine(g, 'forge').open || SYS.game.labResearchStart(g, 'forge', 'upgrade', NOW).err !== 'locked') fail('대장간 r2 전에 줄이 열렸다');
+    g.buildings.forge = gate.rank;
+    if (!labLine(g, 'forge').open) fail('대장간 r2 · 연구소 끝 랭크인데 줄이 닫혔다');
+    g.labNodes = { 'forge:make': 2, 'forge:potion': 1, 'forge:upgrade': 2 };
+    const L = SYS.game.limitsOf(g);
+    if (L.makeLevels !== 0 || L.potionTier !== 0 || L.upgrade !== B.equip_upgrade_max + 2) fail(`대장간 r2 · 지점 2/1/2 — 제작 ${L.makeLevels} · 물약 ${L.potionTier} · 강화 +${L.upgrade}`);
+    g.buildings.forge = mk.rank;
+    for (let lv = 0; lv <= rows.make.max; lv++) {
+        g.labNodes['forge:make'] = lv;
+        const n = SYS.game.limitsOf(g).makeLevels, open = SYS.game.makeLevels(g).filter(l => l.open).length;
+        if (n !== 1 + lv || open !== Math.min(1 + lv, all)) fail(`제작 지점 ${lv} → 제작 레벨 ${n} · 열린 ${open}`);
+    }
+    for (let lv = 0; lv <= rows.pot.max; lv++) { g.labNodes['forge:potion'] = lv; if (SYS.game.limitsOf(g).potionTier !== 1 + lv) fail(`물약 지점 ${lv} → 물약 단계 ${SYS.game.limitsOf(g).potionTier}`); }
+    for (let lv = 0; lv <= rows.up.max; lv++) { g.labNodes['forge:upgrade'] = lv; if (SYS.game.limitsOf(g).upgrade !== B.equip_upgrade_max + lv) fail(`강화 지점 ${lv} → 상한 +${SYS.game.limitsOf(g).upgrade}`); }
+    const upNode = labLine(g, 'forge').nodes.find(n => n.node === 'upgrade');
+    if (upNode.value !== B.equip_upgrade_max + rows.up.max) fail(`「강화」 지점 값 ${upNode.value} — 상한 그대로여야 한다`);
+    g.labNodes = {};
+    const firstOpen = Math.min(...Object.values(rows).map(r => r.unlockRank));
+    g.buildings.resource = firstOpen - 1;
+    if (labLine(g, 'forge').open) fail(`연구소 r${firstOpen - 1} — 지점이 생기기 전인데 줄이 열렸다`);
+    g.buildings.resource = rows.up.unlockRank;
+    const cap = labLine(g, 'forge').nodes.find(n => n.node === 'upgrade').cap;
+    if (cap !== Math.min(rows.up.max, B.lab_node_lv_per_rank)) fail(`연구소 r${rows.up.unlockRank} 의 「강화」 상한 ${cap}`);
+    g.resources.gold = 1e9;
+    const st = SYS.game.labResearchStart(g, 'forge', 'upgrade', NOW);
+    if (!st.ok) fail(`연구 시작 ${st.err}`);
+    return `대장간 r${gate.rank} · 제작 r${mk.rank} · 강화 +${B.equip_upgrade_max} ~ +${B.equip_upgrade_max + rows.up.max} · 제작 레벨 1 ~ ${1 + rows.make.max} · 물약 1 ~ ${1 + rows.pot.max}`;
 });
 
 /* ── 도박장 슬롯 (base_expedition_design 「도박장」 · INTERFACE §2-7 · §2-15 · 2026-09-24 · R149) ── */
@@ -22894,6 +23002,7 @@ check('construction: 관리자 모드(openAll) — 켜면 기능 · 상한 · �
     // 제작 레벨 · 물약 단계는 표의 끝까지 — 여는 랭크가 표에 아직 없는 단계도 연다 (2026-09-28 사용자 지시 「Admin 누르면 다 되도록」) · 장은 chapter_open_max 그대로 (R227)
     // 로스터도 구매 가능한 최대 한도까지 열린다.
     const Ladmin = { ...Lmax, makeLevels: Math.max(Lmax.makeLevels, S.game.makeLevels().length), potionTier: Math.max(Lmax.potionTier, ...D.potions.map(p => p.tier)), chapters: cap,
+        upgrade: Math.max(Lmax.upgrade, B.equip_upgrade_max + labRow('forge', 'upgrade').max),   // 강화 상한도 끝까지 (R566 — 옛 대장간 끝 랭크)
         roster: Math.max(Lmax.roster, B.roster_cap + String(B.roster_slot_prices).split('|').length) };
     if (!eq(S.game.limitsOf(g), Ladmin)) fail(`켰는데 상한 ${JSON.stringify(S.game.limitsOf(g))} ≠ 다 지은 판 + 단계 끝 ${JSON.stringify(Ladmin)}`);
     const cs = S.game.constructionState(g);
@@ -23404,6 +23513,33 @@ check('book: 배우기 — 도서관 r1(R398 · 새 게임부터) · 레벨 skil
     if (S.game.bookState(g, h.uid).hero.err !== 'level') fail('관리자 모드 bookState 가 level 을 안 낸다');
     on = false;
     return `${h.cls} · ${own[0]} → ${foreign} → ${own[1]} · 문턱 Lv${B.skillbook_learn_level}`;
+});
+check('book: 고유 스킬 업그레이드는 영웅 레벨 문턱이 없다 — 레벨 1 에서도 같은 책으로 오른다 · 새로 배우기는 그대로 level · bookState.hero.upErr 는 level 을 안 낸다 · 도서관이 안 열렸으면 unbuilt (2026-11-24 · R564 · skill_design §2-3)', () => {
+    let on = false;
+    const S = buildSystems(D, { openAll: () => on });
+    const g = S.game.newGame(93, cands, NOW);
+    const h = g.heroes[0];
+    if (!S.skill.bookable(h.innate)) fail(`고유 ${h.innate} 가 책이 안 된다 — 다른 영웅으로 잰다`);
+    const other = S.skill.list.find(d => d.ownerKind === 'job' && d.ownerId === h.cls && d.id !== h.innate && S.skill.bookable(d.id)).id;
+    h.level = 1;
+    g.books = { [h.innate]: B.skillbook_upgrade_books_1, [other]: 1 };
+    const bs = S.game.bookState(g, h.uid);
+    if (bs.hero.err !== 'level' || bs.hero.upErr !== null) fail(`레벨 1 — err ${bs.hero.err} · upErr ${bs.hero.upErr}`);
+    if (S.game.learnBook(g, h.uid, other).err !== 'level') fail('레벨 1 인데 새 책을 배웠다');
+    const up = S.game.learnBook(g, h.uid, h.innate);
+    if (!up.ok || !up.upgraded || h.skillLv?.[h.innate] !== 1) fail(`레벨 1 고유 업그레이드 ${JSON.stringify(up)}`);
+    if (g.books[h.innate] !== undefined) fail(`업그레이드가 책을 덜 썼다 ${JSON.stringify(g.books)}`);
+    // 관리자 모드도 같다 — 레벨 문턱은 새로 배우기에만 걸린다
+    on = true;
+    g.books[h.innate] = B.skillbook_upgrade_books_2;
+    if (!S.game.learnBook(g, h.uid, h.innate).ok) fail('관리자 모드 레벨 1 고유 업그레이드가 막혔다');
+    if (S.game.learnBook(g, h.uid, other).err !== 'level') fail('관리자 모드에서 레벨 1 새 책이 배워졌다');
+    on = false;
+    // 도서관이 안 열렸으면 업그레이드도 막힌다(지어낸 상태)
+    g.buildings.library = 0;
+    g.books[h.innate] = 99;
+    if (S.game.bookState(g, h.uid).hero.upErr !== 'unbuilt' || S.game.learnBook(g, h.uid, h.innate).err !== 'unbuilt') fail('도서관 0 인데 업그레이드가 열렸다');
+    return `${h.cls} 레벨 1 · ${h.innate} Lv.${h.skillLv[h.innate] + 1} · 새 책 ${other} = level`;
 });
 /* ── 스킬 레벨 · 전직 포인트 [2026-10-06 · R216 · skill_design §2-3 · §4 · INTERFACE §2-7 · §2-8] ── */
 check('skill: 스킬 레벨 — 레벨 줄은 직업 50 중 소환 빼고 전부(워 오더스는 둘 · R367) · 전직은 정전장 빼고 · 몬스터 전용은 없다 · resolve 가 up × level_step 을 줄마다 그 칸에 얹는다 · 같은 (id, up) 은 같은 객체 · up 0 은 원본 (R216)', () => {
@@ -24255,6 +24391,33 @@ check('battle: 챕터보스 정예 호위 — 1 ~ 5장 장 보스 판 = 보스 +
         notes.push(`${c.id}장 ${guard ? first.split(',').slice(1).join('·') : '혼자'}`);
     }
     return notes.join(' · ');
+});
+/*
+ * **스테이지보스는 늘 일반 호위와 선다** [2026-11-24 · R562 · 사용자 「스테이지 보스들도 무조건 쫄따구를 데리고 나오도록 · 정예말고 일반으로」 · monster_design §4] —
+ *   1 ~ 5장 장소 1 ~ 4 의 보스 라운드 = 스테이지보스 + 일반 호위 `round_budget.csv:stage_boss` 수 · 호위는 그 장소 풀 · 1-1 아바돈도 같다(편성 예외에 호위 수 규칙이 없다)
+ */
+check('battle: 스테이지보스 일반 호위 — 1 ~ 5장 보스 라운드 = 스테이지보스 + 일반 호위(round_budget.csv:stage_boss) · 호위는 그 장소 풀 · 혼자 서는 스테이지보스가 없다 (R562 · monster_design §4)', () => {
+    const { escort_min: lo, escort_max: hi } = D.budgets.stage_boss;
+    if (!(lo >= 1)) fail(`round_budget.csv:stage_boss escort_min ${lo} — 스테이지보스가 혼자 설 수 있다`);
+    if (hi + 1 > B.wave_monster_max) fail(`호위 ${hi} — 보스와 합쳐 라운드 상한 ${B.wave_monster_max} 을 넘는다`);
+    const stages = D.stageList.filter(s => s.chapter <= 5 && s.boss_grade === 'stage_boss' && SYS.battle.stageRounds(s).some(r => r.round_type === 'boss'));
+    if (stages.length !== 20) fail(`스테이지보스 라운드가 있는 칸 ${stages.length} — 1 ~ 5장 장소 1 ~ 4 의 칸 III 스물이어야`);
+    const counts = {};
+    for (const st of stages) {
+        const pool = SYS.battle.stagePool(st);
+        for (let seed = 1; seed <= 4; seed++) {
+            const run = SYS.battle.createRun([], st.stage_id, makeRng(seed), st.dlvl, null, undefined, null, null, null, null, { round: { type: 'boss' } });
+            run.advance(0);
+            const ev = run.result.timeline.find(e => e.e === 'round');
+            const at = `${st.stage_id} 시드 ${seed} [${ev.enemies.map(e => `${e.monsterId}:${e.grade}`).join(' ')}]`;
+            if (ev.enemies[0].monsterId !== st.boss_monster_idx || ev.enemies[0].grade !== 'stage_boss') fail(`${at} 첫 적이 스테이지보스가 아니다`);
+            const escorts = ev.enemies.slice(1);
+            if (escorts.length < lo || escorts.length > hi) fail(`${at} 호위 ${escorts.length} — ${lo} ~ ${hi} 여야`);
+            for (const e of escorts) if (e.grade !== 'normal' || !pool.includes(e.monsterId)) fail(`${at} 호위 ${e.monsterId}:${e.grade} — 그 장소의 일반몹 · 일반 등급이어야`);
+            counts[escorts.length] = (counts[escorts.length] ?? 0) + 1;
+        }
+    }
+    return `${stages.length}칸 × 4 시드 · 호위 수 ${Object.entries(counts).map(([k, v]) => `${k}마리 ${v}판`).join(' · ')}`;
 });
 /*
  * **무기군 `-` = 그 직업 본편 무기군 중 판마다 굴린다** [2026-10-23 · R324 · 사용자 「랜덤하게 줘도될거같에」] —

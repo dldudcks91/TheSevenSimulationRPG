@@ -58,7 +58,7 @@
 import { ELEMENTS } from './hero.js';
 import { createFormula, FIXED_DMG } from './formula.js';
 import { cooldownSec } from './skill_runtime.js';
-import { enhanceSkillLine } from './skill_tags.js';
+import { enhanceSkillLine, skillTagBonus } from './skill_tags.js';
 import {
     CASTS, CAST_IDS, EVENT_IDS, EFFECT_TYPES, TARGETS, ATTACK_TARGETS, HIT_DECAY, PICK_TARGETS, EFFECT_STATS, CONDITIONS, CONDITION_IDS, AILMENTS, AILMENT_IDS,
 } from './skill_effects.js';
@@ -980,21 +980,20 @@ export function createSkillSystem(data) {
             const terms = termsOf('mult_pct');
             // 밑수는 범위다(R90) — 양끝이 다 알려져야 숫자를 낸다. 한쪽이라도 모르면 식으로 접힌다
             const ends = basisEnds(basis, ctx);
-            if (eff.tagDamage && Number.isFinite(ctx.atkPct) && 1 + ctx.atkPct > 0) {
-                const ratio = (1 + ctx.atkPct + eff.tagDamage) / (1 + ctx.atkPct);
-                ends[0] *= ratio; ends[1] *= ratio;
-            }
-            if (eff.tagHeal) {
-                const ratio = (1 + (ctx.healOut ?? 0) + eff.tagHeal) / (1 + (ctx.healOut ?? 0));
-                ends[0] *= ratio; ends[1] *= ratio;
-            }
             // 자폭은 **고정 피해**라 범위를 굴리지 않는다 [2026-09-21 · battle_design §9-6] — 전투(`skill_effects` EFFECT_TYPES.fixed)가 중앙값을 쓰므로
-            //   설명창도 한 점으로 낸다(양끝을 같게). 그래야 툴팁의 수와 실제로 들어오는 수가 같다
+            //   설명창도 한 점으로 낸다(양끝을 같게). 그래야 툴팁의 수와 실제로 들어오는 수가 같다 · 태그 몫은 곱이라 중앙값을 먼저 잡아도 같다
             if (line.effect === 'fixed' && ends.every(v => Number.isFinite(v))) { const mid = (ends[0] + ends[1]) / 2; ends[0] = mid; ends[1] = mid; }
             const known = ends.every(v => Number.isFinite(v) && v >= 0);
+            // 반지 · 전직 태그의 피해 · 회복 몫 — 데미지 % · 치유량 괄호에 더해지는 몫을 밑수에 곱으로 얹는다 (식의 `tagMult` · INTERFACE §2-8)
+            let tagMult = 1;
+            if (eff.tagDamage && Number.isFinite(ctx.atkPct) && 1 + ctx.atkPct > 0) tagMult *= (1 + ctx.atkPct + eff.tagDamage) / (1 + ctx.atkPct);
+            if (eff.tagHeal) tagMult *= (1 + (ctx.healOut ?? 0) + eff.tagHeal) / (1 + (ctx.healOut ?? 0));
             amount = !known || (terms.length > 0 && stats === null) ? null
-                : { min: Math.round(ends[0] * line.mult * eff.statMult), max: Math.round(ends[1] * line.mult * eff.statMult) };
-            parts.amount = { value: amount, basis, pct: line.mult, terms };
+                : { min: Math.round(ends[0] * tagMult * line.mult * eff.statMult), max: Math.round(ends[1] * tagMult * line.mult * eff.statMult) };
+            // 식의 중간 값 — 도서관 스킬정보 계산 줄이 그대로 찍는다(화면은 곱하지 않는다 · SCREEN_DESIGN §17) [2026-11-24]
+            const attrs = terms.map(x => ({ attr: x.attr, v: stats?.[x.attr] ?? null, mult: stats ? F.statCoef(stats[x.attr]) : null }));
+            parts.amount = { value: amount, basis, pct: line.mult, terms, base: known ? { min: ends[0], max: ends[1] } : null, tagMult,
+                statMult: terms.length > 0 && stats === null ? null : eff.statMult, attrs };
         }
         // 슬롯이 미는 나머지 항 — 그 항에 슬롯이 하나라도 있을 때만 키가 선다(coef 0 인 항도 terms 에 든다)
         for (const [field, key] of Object.entries(SCALE_FIELDS)) {
@@ -1009,6 +1008,11 @@ export function createSkillSystem(data) {
         }
         const everySec = period === null ? null : F.effectiveCd(def.cool, period);
         const coolSec = cooldownSec(B, { cdr: ctx.cdr ?? 0, coolMinus: ctx.coolMinus ?? 0, fx: { skillTags: ctx.skillTags } }, def);   // 쿨 −n초(R432)
+        // 걸린 효과의 시간 · 값에 곱한 태그 몫 — `apply` 줄만(`enhanceSkillLine` 과 같은 조건) · 문장의 값은 이미 탔다 [2026-11-24 · INTERFACE §2-8]
+        const tags = {
+            duration: eff.tagDuration ?? 0,
+            value: line.effect === 'apply' && ctx.skillTags && Number.isFinite(eff.value) ? skillTagBonus(ctx.skillTags, def, 'value') : 0,
+        };
         return {
             baseSec: def.cool,
             // 실제 쿨 — 전투가 시전 순간 잡는 것과 같은 함수다(쿨감 곱 · 바닥). 전투 중에 쌓이는 쿨감(나태 T2 겹)은 안 든다 (2026-10-21 · ADR-0703)
@@ -1022,6 +1026,7 @@ export function createSkillSystem(data) {
             // 한 타 피해(attack) · 회복량(heal) · 벽 HP(summon) — **고정 항 포함** · `{min, max}`(R90). 다단은 **한 타** 값이다 — 총합은 화면이 말하지 않는다
             amount,
             parts,
+            tags,
         };
     };
 

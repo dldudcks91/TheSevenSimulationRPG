@@ -251,7 +251,7 @@ export function createGameSystem(deps) {
      * 상한 — **이 세이브가 쓸 수 있는 칸 · 인원 · 단계의 수를 여기 한 곳이 답한다** [신설 2026-09-22 · INTERFACE §2-7 · construction_draft §9].
      *   bag 가방 · stash 창고 · roster 로스터 · party 파티 인원 · presets 편성 수 · **expeditions 동시 원정 부대 수**(v38 · 편성 수를 넘지 않는다) · potionSlots 물약 칸 · upgrade 강화 단계 ·
      *   tavernCandidates 고용 후보 · ~~searchSlots 동시 수색~~(2026-10-19 수색 삭제) · shopPerSlot · shopWeapon 상단 장비 목록(부위마다 · 무기) · commissionSlots 동시 의뢰(R153)
-     *   makeLevels 열린 제작 레벨 수 · potionTier 만들 수 있는 물약 단계 · tacticSlots 열린 전술 칸 수 — 이 셋은 기본값이 0 이다(건물만 연다) ·
+     *   makeLevels 열린 제작 레벨 수 · potionTier 만들 수 있는 물약 단계 · tacticSlots 열린 전술 칸 수 — 이 셋은 기본값이 0 이다(건물만 연다 — makeLevels 는 첫 레벨 위로 연구소 「제작」 지점 · R565) ·
      *   **chapters 들어갈 수 있는 장** — 1장 + 첫 단에서 깬 장 보스(`chaptersOpened` · 건물이 안 연다 · 2026-10-22 원정 건물 삭제 · R319)
      * **값 = balance.csv 기본값 + 지어진 건물 랭크의 더하기** [2단계 2026-09-22 · R137 · construction_draft §11-2] — 기본값은 **건설 전** 값이고
      *   더하기는 `building_effect.csv` 가 든다(이름이 같은 키에 붙는다 · 단계 셋은 `ADD_KEY`). 판정 · 불러오기 · 전투 입력 · 강화 비용 · 화면이 모두 이것을 읽는다.
@@ -276,10 +276,16 @@ export function createGameSystem(deps) {
             const key = ADD_KEY[target] ?? target;
             if (key in out) out[key] += n;      // 준비 중인 더하기(일꾼 칸 등)는 붙을 상한이 아직 없다
         }
+        // 제작 레벨 — 대장간 r1 의 `make` 가 첫 레벨을 심고 그 위는 연구소 「대장간」 줄 「제작」 지점 레벨만큼 (2026-11-24 · R565 · construction_draft §2 — 옛 대장간 랭크 더하기)
+        if (state && out.makeLevels > 0) out.makeLevels += labLv(state, FORGE_KEY, 'make');
+        // 강화 상한 · 물약 단계도 같은 줄 — 「강화」 지점은 기본값 위로 · 「물약」 지점은 제작(`make`)이 첫 단계를 심은 뒤에만 (2026-11-24 · R566 — 옛 대장간 r2 · r4 · r5 · r6 더하기)
+        if (state) out.upgrade += labLv(state, FORGE_KEY, 'upgrade');
+        if (state && out.potionTier > 0) out.potionTier += labLv(state, FORGE_KEY, 'potion');
         // 관리자 모드 — 표가 아직 여는 랭크를 두지 않은 단계까지 연다(제작 레벨 · 물약 단계) [2026-09-28 사용자 지시 「Admin 누르면 다 되도록」 · 개발 장치]
         if (openAll()) {
             out.makeLevels = Math.max(out.makeLevels, makeLevelList.length);
             out.potionTier = Math.max(out.potionTier, ...potionRows.map(p => p.tier));
+            out.upgrade = Math.max(out.upgrade, B.equip_upgrade_max + (labNodeRow(FORGE_KEY, 'upgrade')?.max ?? 0));   // 강화 상한도 끝까지 (R566 — 옛 대장간 끝 랭크)
             out.chapters = Math.max(out.chapters, B.chapter_open_max);
             out.roster = Math.max(out.roster, maxRoster);
         }
@@ -1414,6 +1420,20 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
 
+    /** 옮기면 받는 쪽 줄의 몇째 칸에 서나 [2026-11-24 · ADR-1340] — 위 두 함수와 **같은 순서로** 묻고 상태는 안 바꾼다:
+     *  인벤토리 것이면 창고 · 창고 것이면 부대 `no` 의 인벤토리 · 같은 종류 · 등급 상자 칸이 있으면 그 칸(겹친다) · 아니면 줄 끝 */
+    function moveSpot(state, itemUid, no = 1) {
+        const from = holderOf(state, itemUid);
+        const to = from === 'bag' ? 'stash' : from === 'stash' ? 'bag' : null;
+        const list = to === 'stash' ? state.stash : to === 'bag' ? bagOf(state, no) : null;
+        if (!list) return { ok: false, err: 'missing' };
+        const it = state.items[itemUid];
+        const at = it?.box ? boxIn(state, list, it.box.kind, it.box.tier) : null;
+        if (at && at !== it) return { ok: true, to, index: list.indexOf(at.uid) };
+        if (list.length >= capOf(state, to)) return { ok: false, err: to === 'stash' ? 'stashFull' : 'bagFull' };
+        return { ok: true, to, index: list.length };
+    }
+
     /* ── 정렬 (ADR-0242 · SCREEN_DESIGN §6) — 칸 하나를 **한 번** 줄 세운다. 늘 정렬된 상태가 아니다 ──
        등급 사다리 = 일반 → 매직 → 레어 → 크래프트 → 에픽 → 레전더리 → 유니크 [에픽 · 레전더리 2026-10-24 · R342 · item_design §1 희귀도 — 크래프트는 레어와 줄 수가 같아 레어 바로 위]
        수치가 아니라 어휘의 순서라 코드에 둔다. 부위 순서는 `equip_slot.csv` 가 든다(반지 둘은 부위 하나) */
@@ -1853,7 +1873,8 @@ export function createGameSystem(deps) {
     function temperOf(state, it, open) {
         const pending = pendingOf(it), safe = riskless(state, it);
         return { open, pending, canTemper: open && !pending, tier: temperTierOf(it),
-            actions: [...TEMPER.values()].map(a => ({ id: a.id, effect: a.effect, mat: a.mat, stake: temperStake(state, it, a), noRisk: a.effect === 'guard' && safe })) };
+            actions: [...TEMPER.values()].map(a => ({ id: a.id, effect: a.effect, mat: a.mat, stake: temperStake(state, it, a), noRisk: a.effect === 'guard' && safe,
+                locked: a.effect === 'guard' && !hasFeature(state, 'temper_guard') })) };   // 담금질 = 대장간 r5 (R566)
     }
     /**
      * 손질 1회 — 고른 손질 재료 줄의 **장비가 정한 단계**(`temperStake` · R511)를 내고 그 아이템의 **다음 강화 한 번**에 손질을 붙인다(`item.temper = {act, v}`).
@@ -1871,6 +1892,7 @@ export function createGameSystem(deps) {
         if (pendingOf(it)) return { ok: false, err: 'tempered' };
         const a = TEMPER.get(act);
         if (!a) return { ok: false, err: 'action' };
+        if (a.effect === 'guard' && !hasFeature(state, 'temper_guard')) return { ok: false, err: 'unbuilt' };   // 담금질 = 대장간 r5 (2026-11-24 · R566)
         if (a.effect === 'guard' && riskless(state, it)) return { ok: false, err: 'noRisk' };   // 안전 구간에는 막을 것이 없다 (R530)
         const stake = temperStake(state, it, a);
         if (!stake) return { ok: false, err: 'tier' };
@@ -1899,7 +1921,7 @@ export function createGameSystem(deps) {
     function enchantState(state, itemUid) {
         const it = state.items[itemUid];
         if (!it || it.box) return null;
-        const eligible = I.enchantable(it), cost = I.enchantCost(it), open = hasFeature(state, 'upgrade_item');
+        const eligible = I.enchantable(it), cost = I.enchantCost(it), open = hasFeature(state, 'enchant');   // 대장간 r6 (R566 · 옛 `upgrade_item`)
         const gold = state.resources.gold, dust = (state.materials ?? {})[DUST_ID] ?? 0;
         const line = enchantLineOf(it), pending = enchantPendOf(it), options = I.enchantCount(it);
         return { eligible, open, cost, gold, dust, line, pending, options,
@@ -1918,7 +1940,7 @@ export function createGameSystem(deps) {
         const it = state.items[itemUid];
         if (!it) return { ok: false, err: 'missing' };
         if (it.box) return { ok: false, err: 'sealed' };
-        if (!hasFeature(state, 'upgrade_item')) return { ok: false, err: 'unbuilt' };
+        if (!hasFeature(state, 'enchant')) return { ok: false, err: 'unbuilt' };   // 대장간 r6 (R566)
         if (!I.enchantable(it)) return { ok: false, err: 'noEnchant' };
         if (enchantPendOf(it)) return { ok: false, err: 'undecided' };
         if (!(I.enchantCount(it) > 0)) return { ok: false, err: 'noOption' };
@@ -2014,7 +2036,7 @@ export function createGameSystem(deps) {
     });
 
     /** 제작 레벨 목록 — 부위와 무관하다. 화면의 레벨 버튼이 이 순서로 선다.
-     *  `state` 를 주면 레벨마다 **`open`** — 제작이 열렸고(`make`) 앞에서부터 `limitsOf(state).makeLevels` 개 안에 드나 (대장간 랭크가 연다 · R137) */
+     *  `state` 를 주면 레벨마다 **`open`** — 제작이 열렸고(`make`) 앞에서부터 `limitsOf(state).makeLevels` 개 안에 드나 (첫 레벨은 대장간 r1 · 그 위는 연구소 「대장간」 줄 「제작」 지점 — R565 · 옛 R137) */
     const makeLevels = state => {
         const open = state ? (hasFeature(state, 'make') ? limitsOf(state).makeLevels : 0) : null;
         return makeLevelList.map((l, i) => (open == null ? { ...l } : { ...l, open: i < open }));
@@ -2025,7 +2047,7 @@ export function createGameSystem(deps) {
      * `kinds` = 고를 수 있는 종류 — 무기 외는 `item.basesAt(part, level)` 의 베이스 · 무기는 그 레벨의 세부 베이스 한 줄씩(무기군 × 단의 셋 · R445).
      * `cost` = [{kind: 'gold'|'ore'|'timber'|'herb'|'dust', id, need, have}] — 골드 · 부위 재료 · 가루 순(2026-10-29 · R373) · `id` 는 재화 id(골드 `gold` · 재료 id). 필요량은 부위마다라 **종류와 무관**하다.
      * `err` = 지금 누르면 나올 거절(`unbuilt` → `gold` → `materials` → `bagFull` 순) 또는 null. 없는 부위 · 레벨이면 null.
-     *   `unbuilt` = 그 레벨이 안 열렸다(대장간 랭크가 연다 — `makeLevels(state)` 의 `open` · R137)
+     *   `unbuilt` = 그 레벨이 안 열렸다(첫 레벨은 대장간 r1 · 그 위는 연구소 「제작」 지점 — `makeLevels(state)` 의 `open` · R565)
      * `bagFull` 은 **부대 `no` 의 인벤토리**로 잰다(기본 1 · v40 — 만든 것이 들어갈 곳) · 없는 번호면 null
      */
     function makeState(state, part, level, no = 1) {
@@ -3189,6 +3211,9 @@ export function createGameSystem(deps) {
         if (h.level < B.skillbook_learn_level) return 'level';
         return null;   // 쓰러진 영웅도 배운다 (2026-10-21 · R300 — ~~`downed`(R130)~~)
     }
+    /** 업그레이드의 책 밖 거절 — 배우기 거절에서 레벨 문턱을 뺀 것 [2026-11-24 사용자 「레벨 10 금방 달성이라 이건 그냥 시켜도 될 거 같은데」 · R564 · skill_design §2-3] —
+     *  고유 스킬은 레벨 1 부터 올린다 · 배운 칸은 그 칸이 레벨 문턱에 열리므로 저절로 그 뒤다. `learnBook` 과 `bookState.hero.upErr` 가 같은 판정을 쓴다 */
+    const upgradeGate = (state, h) => { const g = learnGate(state, h); return g === 'level' ? null : g; };
     /** 업그레이드 n 번째(1 부터)에 드는 같은 책 수 [2026-10-06 · R216 · **2026-11-18 · R545 — 단계마다 키 하나**(~~피보나치~~) · skill_design §2-3] —
      *  `[balance.csv:skillbook_upgrade_books_n]` · n = 1 ~ 상한(`skillCapMax`) — 키가 하나라도 없으면 아래 검사가 처음에 던진다 */
     const upgradeBooks = n => B[`skillbook_upgrade_books_${n}`];
@@ -3220,7 +3245,7 @@ export function createGameSystem(deps) {
             shards: state.skillShards ?? 0,
             craft: craftableBooks().map(id => ({ id, shards: craftShards(id), err: craftCostErr(state, id) })),
             craftCost: { gold: B.skill_craft_gold },
-            hero: uid ?{ skill: h?.bookSkill ?? null, innate: h?.innate ?? null, lv: { ...(h?.skillLv ?? {}) }, err: learnGate(state, h),
+            hero: uid ?{ skill: h?.bookSkill ?? null, innate: h?.innate ?? null, lv: { ...(h?.skillLv ?? {}) }, err: learnGate(state, h), upErr: upgradeGate(state, h),
                 // 두 칸(고유 · 배운 칸)의 업그레이드 — 가진 권수가 0 이어도 선다(도서관 스킬정보 칸마다 · 2026-11-23 · ADR-1308)
                 up: { innate: slotUp(state, h, h?.innate), book: slotUp(state, h, h?.bookSkill) } } : null,
         };
@@ -3235,9 +3260,11 @@ export function createGameSystem(deps) {
         const gate = learnGate(state, h);
         if (gate === 'unbuilt') return { ok: false, err: gate };
         if (!h || !bookable(skillId)) return { ok: false, err: 'missing' };
-        if (gate) return { ok: false, err: gate };
-        if (!state.books?.[skillId]) return { ok: false, err: 'book' };
         const plan = bookPlan(state, h, skillId);
+        // 레벨 문턱은 새로 배울 때만 — 업그레이드(고유 · 배운 칸의 같은 책)는 `upgradeGate` (2026-11-24 · R564)
+        const block = plan.act === 'upgrade' ? upgradeGate(state, h) : gate;
+        if (block) return { ok: false, err: block };
+        if (!state.books?.[skillId]) return { ok: false, err: 'book' };
         if (plan.err) return { ok: false, err: plan.err };
         const spend = n => {
             state.books[skillId] -= n;
@@ -3393,11 +3420,11 @@ export function createGameSystem(deps) {
     })();
     /** 효과 → 그 효과의 첫 손질 — 옛 세이브의 숫자 몫(11-14 담금질)을 읽는 자리 하나(`pendingOf`) */
     const TEMPER_BY_EFFECT = new Map([...TEMPER.values()].reverse().map(a => [a.effect, a]));
-    const RES_KEY = 'res', VISIT_KEY = 'visit', TRAIN_KEY = 'train', GAMBLE_KEY = 'gamble', LIB_KEY = 'lib';
-    /** 연구소 줄 — 화면 순서 (INTERFACE §5-3) */
-    const LAB_LINES = [RES_KEY, VISIT_KEY, TRAIN_KEY, GAMBLE_KEY, LIB_KEY];
-    /** 지점 id — 무엇을 미는가는 코드가 안다(값 · 비용 · 시간은 표 — INTERFACE §5-3) · 재료 지점 셋 = 그 재료의 생산 배수 */
-    const LAB_NODE_IDS = [...MAT_POSTS, 'offline', 'relief', 'burst', 'interval', 'quality', 'waiting', 'speed', 'range', 'income'];
+    const RES_KEY = 'res', VISIT_KEY = 'visit', TRAIN_KEY = 'train', GAMBLE_KEY = 'gamble', LIB_KEY = 'lib', FORGE_KEY = 'forge';
+    /** 연구소 줄 — 화면 순서 (INTERFACE §5-3) · 대장간 = 「제작」 지점 하나 — 쌓는 것이 없는 줄(2026-11-24 · R565) */
+    const LAB_LINES = [RES_KEY, VISIT_KEY, TRAIN_KEY, GAMBLE_KEY, LIB_KEY, FORGE_KEY];
+    /** 지점 id — 무엇을 미는가는 코드가 안다(값 · 비용 · 시간은 표 — INTERFACE §5-3) · 재료 지점 셋 = 그 재료의 생산 배수 · `make` = 제작 레벨 수(`limitsOf.makeLevels` 에 더한다) */
+    const LAB_NODE_IDS = [...MAT_POSTS, 'offline', 'relief', 'burst', 'interval', 'quality', 'waiting', 'speed', 'range', 'income', 'make', 'upgrade', 'potion'];   // 강화 = 강화 상한 · 물약 = 물약 단계 (R566)
     const LAB_NODES = deps.labNodes ?? [];
     for (const n of LAB_NODES) {
         if (!LAB_LINES.includes(n.line) || !LAB_NODE_IDS.includes(n.node)) throw new Error(`state: lab_node.csv — 모르는 줄 · 지점 '${n.line}:${n.node}' (INTERFACE §5-3)`);
@@ -3411,6 +3438,7 @@ export function createGameSystem(deps) {
     /** 지점 값 — base + 레벨 × per_lv · 오프라인 시간의 기본값은 공통 생산 상한이다 (lab_node.csv). */
     const nodeValue = (r, lv) => {
         if (r.node === 'offline') return B.dispatch_offline_cap_hours + lv * r.perLv;
+        if (r.node === 'upgrade') return B.equip_upgrade_max + lv * r.perLv;   // 강화 상한 그대로 (R566)
         if (r.node === 'range') return Math.max(0, r.base - lv * r.perLv);
         const level = r.line === VISIT_KEY && r.node === 'waiting' ? Math.min(lv, B.visit_filter_lv - 1) : lv;
         return r.base + level * r.perLv;
@@ -3435,6 +3463,7 @@ export function createGameSystem(deps) {
         if (line === GAMBLE_KEY && !hasFeature(state, 'gamble')) return false;
         if (line === VISIT_KEY && !hasFeature(state, 'lab_visit')) return false;
         if (line === LIB_KEY && !hasFeature(state, 'lab_library')) return false;   // 도서관 r2 (2026-11-15 · R504 — ~~book_craft~~)
+        if (line === FORGE_KEY && !hasFeature(state, 'lab_forge')) return false;   // 대장간 r3 (2026-11-24 · R565)
         if (line === RES_KEY && !hasFeature(state, 'lab_res')) return false;
         return labLineNodes(line).some(r => labNodeOpen(state, r));
     }
@@ -6318,14 +6347,14 @@ export function createGameSystem(deps) {
             };
         });
         // 판 데이터 [2026-11-11 · R441 · SCREEN_DESIGN §15] — 리더(그 파티의 첫 영웅 — 조건 문맥 `partyMembers` 와 같은 사람)의 통솔 → 버프 효과 ±p%(`pct` = 곡선 − 1) ·
-        //   파티 장비의 죄종 수(`gear` — 죄종 일곱 전부) × `gearPct` = 그 죄종 칸의 장비 몫
+        //   파티 장비의 죄종 수(`gear` — 죄종 일곱 전부) · 죄종 점수(`score` = 그 죄종 영웅 수 × `heroScore` + `gear` · R563) × `gearPct` = 그 죄종 칸의 죄종 몫
         const lh = party.map(uid => heroById(state, uid)).find(Boolean) ?? null;
         const curve = lh ? TC.leadCurve(lh.stats?.ldr ?? 0) : 1;
         const leader = lh ? { uid: lh.uid, ldr: lh.stats?.ldr ?? 0, curve, pct: Math.round((curve - 1) * 1e4) / 1e4 } : null;
         const lockedCount = slots.filter(s => s.locked).length;
         const rerollCost = TC.rerollCost(lockedCount);
         const canReroll = slots.some(s => s.open && !s.locked) && state.resources.gold >= rerollCost;
-        return { totalLevel: total, open, count: TC.slotCount, lockedCount, rerollCost, canReroll, slots, leader, gear: { ...ctx.gear }, gearPct: TC.gearPct };
+        return { totalLevel: total, open, count: TC.slotCount, lockedCount, rerollCost, canReroll, slots, leader, gear: { ...ctx.gear }, score: { ...ctx.score }, heroScore: TC.heroScore, gearPct: TC.gearPct };
     }
 
     /** 켜진 칸들의 효과 합 — 접사·마스터리와 **같은 채널** (§2-4). `heroCombat` 이 이걸 받는다 · 칸은 편성 `no` 의 것 (R129) */
@@ -6643,7 +6672,7 @@ export function createGameSystem(deps) {
         heroById, heroItems, heroCombat, heroCombatIf, heroCombatWith, upgradeState, upgradeItem, temperItem, enchantState, enchantItem, enchantPick, makeLevels, makeState, makeItem, potionState, makePotion,
         codexLevel, codexNext, codexMaxLevel, codexLevelOf, codexSteps, codexSegments, codexShare, codexCapOf, codexSegmentNo, codexOptionOf, codexLineOf, codexLadder, codexOptions, codexExpOf, codexKillExp,
         skillCapMax,   // 책 업그레이드 상한 — 끝 하나 (2026-10-20 · R293 · ~~스킬 도감~~)
-        equipTarget, equip, unequip, autoEquip, salvage, salvagePreview, setItemLock, openBox, boxRarities, claimMail, claimAllMail, salvageView, setSalvageCell, setSalvageBase, setSalvageWord, setSalvageLevel, saveSalvageSlot, loadSalvageSlot, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, holderOf, bagOf,
+        equipTarget, equip, unequip, autoEquip, salvage, salvagePreview, setItemLock, openBox, boxRarities, claimMail, claimAllMail, salvageView, setSalvageCell, setSalvageBase, setSalvageWord, setSalvageLevel, saveSalvageSlot, loadSalvageSlot, autoSalvagePreview, applyAutoSalvage, sortStorage, moveToStash, moveToBag, moveSpot, holderOf, bagOf,
         toggleParty, setLeader, formationState, setFormation, placeFormation, rankOf,
         presetState, selectPreset, partyOf, setPotionSlot, swapPotionSlot, stepPotionHp,
         stageUnlocked, chapterOpen, chapterGate, canDepart, departLevelGap, lastGoOf, runParty, runOf, heroBusy, limitsOf, stageSeedRequest, departRun, advanceRun, stepRun, retreatRun, resolveBattle, closeRun, nextRepeat, dismissNotice,
