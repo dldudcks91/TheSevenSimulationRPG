@@ -1446,12 +1446,17 @@ export function createGameSystem(deps) {
         return { ok: true };
     }
 
-    /* ── 자동 장착 [2026-10-22 · R307 · 기준 개정 R313 · **기준 개정 2026-11-18 · R536 — 점수 순** · item_design §6-3 · SCREEN_DESIGN §6 · ADR-0712] — 버튼이 부를 때만 · 고른 영웅 하나 · 부대 `no` 의 인벤토리만 ──
+    /* ── 자동 장착 [2026-10-22 · R307 · 기준 개정 R313 · **기준 개정 2026-11-18 · R536 — 점수 순** · **R559 — 무기 · 갑옷 칸 1순위 무게** · item_design §6-3 · SCREEN_DESIGN §6 · ADR-0712] — 버튼이 부를 때만 · 고른 영웅 하나 · 부대 `no` 의 인벤토리만 ──
        거르기 = 요구 레벨(`canEquip`) + 직업 어울림(`item.fitsClass`) — 직업 무기군이 물리 ↔ 마법(평타)도 같이 거른다.
-       고르기 = **점수 순** [R536] — 일곱 칸 같은 규칙: 후보 중 `item.autoEquipScore`(베이스 몫 + 옵션 점수 합 — **그 영웅 레벨 · 직업 갈래로 잰다** · 아이템 레벨 항 없음 · R542)가 가장 높은 것을 빈 칸이거나 지금 낀 것보다 높을 때만.
-         점수는 그 장비와 영웅 레벨로 정해져(다른 칸과 무관) 한 바퀴로 끝나고 다시 누르면 그대로다 — 반지 두 칸은 같은 후보를 나눠 쓴다(앞 칸이 먼저 · 벗은 반지는 뒤 칸의 후보).
+       고르기 = **값 순** — 칸마다 후보 중 값이 가장 높은 것을 빈 칸이거나 지금 낀 것보다 높을 때만:
+         무기 칸 = 1순위 무게 × **최종 데미지 몫**(`hero.finalDamagePerSec` — 그 무기를 꼈을 때 시트(`heroCombatIf` · 전술 제외 = 착용 델타) · 결투 상대 기준 ÷ 후보 · 지금 낀 무기 중 가장 높은 값) + 옵션 점수 합 [R559]
+         갑옷 칸 = 1순위 무게 × 방어력 몫 + 옵션 점수 합 [R559] · 나머지 다섯 칸 = `item.autoEquipScore`(베이스 몫 + 옵션 점수 합 — **그 영웅 레벨 · 직업 갈래로 잰다** · 아이템 레벨 항 없음 · R542)
          **그 영웅에게 안 먹는 줄은 0점**(`skill.equipFit` → `item.autoEquipScore` — 무기 종류 · 타격 종류 · 액티브가 정한다 · 전투가 그 줄을 읽는 문과 같다) —
-         무기 칸은 그 후보 무기의 종류로 · 나머지는 무기 칸이 맨 앞이라 고른 뒤의 무기 종류로 잰다 */
+         무기 칸은 그 후보 무기의 종류로 · 나머지는 무기 칸이 맨 앞이라 고른 뒤의 무기 종류로 잰다.
+       무기 칸 값은 다른 칸(치명 · 속도 · 데미지 %)에 따라 달라져 **바뀐 칸이 없을 때까지 일곱 칸을 다시 돈다**(상한 = 인벤토리 길이 + 1 바퀴) — 다시 누르면 그대로 ·
+       반지 두 칸은 같은 후보를 나눠 쓴다(앞 칸이 먼저 · 벗은 반지는 뒤 칸의 후보) */
+    // 결투 상대 — 결투의 적 영웅 유닛과 같다(`battle` 결투 encounter 의 `monsterType: 'Normal'` · 일반 등급) · 무기 칸 조건부 % 의 기준 [R559 · 모든 밸런스는 PvP — GAME_DESIGN §1]
+    const DUEL_FOE = { monsterType: 'Normal', grade: 'normal' };
     function autoEquip(state, heroUid, no = 1) {
         const h = heroById(state, heroUid);
         if (!h || !bagOf(state, no)) return { ok: false, err: 'missing' };
@@ -1461,15 +1466,28 @@ export function createGameSystem(deps) {
         // 그 영웅에게 먹는 것(`skill.equipFit`) — 무기 종류마다 한 번 · 무기 칸은 그 후보 무기의 종류 · 나머지 여섯 칸은 그때 낀 무기의 종류(무기 칸이 맨 앞 · 맨손 = 물리)
         const fits = { physical: SK.equipFit(h, 'physical'), magic: SK.equipFit(h, 'magic') };
         const fitOf = weapon => fits[I.groupOf(weapon)?.damageKind === 'magic' ? 'magic' : 'physical'];
-        for (const { id: pos, part } of deps.equipSlots) {
+        const W1 = B.auto_equip_primary_weight;
+        // 칸 하나의 값 — 무기 칸은 후보 · 지금 낀 무기의 최종 데미지를 먼저 다 재서 가장 높은 값으로 나눈다(가장 센 후보 = 1)
+        const valueOf = (part, cur, list) => {
             const fitFor = it => fitOf(part === 'weapon' ? it : state.items[h.equipped.weapon]);
-            const cur = h.equipped[pos] ? state.items[h.equipped[pos]] : null;
-            let best = null, top = cur ? I.autoEquipScore(cur, fitFor(cur), h.level, h.cls) : -Infinity;
-            for (const it of cands(part)) {
-                const v = I.autoEquipScore(it, fitFor(it), h.level, h.cls);
-                if (v > top) { best = it; top = v; }                   // 같으면 인벤토리 앞의 것 · 지금 낀 것과 같으면 안 바꾼다
+            if (part !== 'weapon') return it => I.autoEquipScore(it, fitFor(it), h.level, h.cls, part === 'armor' ? W1 : undefined);
+            const dps = new Map([cur, ...list].filter(Boolean).map(it => [it.uid, H.finalDamagePerSec(heroCombatIf(state, h, it.uid, []), fitFor(it).hits, DUEL_FOE)]));
+            const top = Math.max(0, ...dps.values());
+            return it => W1 * (top > 0 ? dps.get(it.uid) / top : 0) + I.autoEquipScore(it, fitFor(it), h.level, h.cls, 0);
+        };
+        const passMax = bagOf(state, no).length + 1;
+        for (let pass = 0, moved = true; moved && pass < passMax; pass++) {
+            moved = false;
+            for (const { id: pos, part } of deps.equipSlots) {
+                const cur = h.equipped[pos] ? state.items[h.equipped[pos]] : null;
+                const list = cands(part), val = valueOf(part, cur, list);
+                let best = null, top = cur ? val(cur) : -Infinity;
+                for (const it of list) {
+                    const v = val(it);
+                    if (v > top) { best = it; top = v; }                   // 같으면 인벤토리 앞의 것 · 지금 낀 것과 같으면 안 바꾼다
+                }
+                if (best && equip(state, h.uid, best.uid, pos).ok) moved = true;
             }
-            if (best) equip(state, h.uid, best.uid, pos);
         }
         // 누르기 전과 달라진 칸만 · `back` = 누르기 전에 그 칸에 있던 것
         const changes = deps.equipSlots.filter(({ id }) => h.equipped[id] !== before[id])
@@ -4782,14 +4800,19 @@ export function createGameSystem(deps) {
      * 합성 화면 상태 [2026-10-27 · R359 · item_design §5-2] — **판정을 여기서 다 낸다**(`potionState` 와 같은 규칙).
      * `list` = `material_synth.csv` 행 순서 · `have` = 바로 아래 재료 · `own` = 이 재료 · `max` = 아래 재료 · 골드 둘 다 맞는 최대 개수(닫혀 있으면 0) ·
      * `err` = 하나를 누르면 나올 거절(`unbuilt` → `materials` → `gold`) 또는 null · 상태를 안 바꾼다 · rng 0
+     * **`n` = 고른 개수**(화면의 개수 고르기 · 2026-11-23 · ADR-1318) — `needN` · `goldN` = n 개에 드는 아래 재료 · 골드 · `errN` = n 개를 누르면 나올 거절
+     *   (`synthesize(state, id, n)` 과 같은 순서 — `unbuilt` → `missing`(n 이 양의 정수가 아님 · 그때 needN · goldN 은 null) → `materials` → `gold`) 또는 null · 안 주면 1
      */
-    function synthState(state) {
+    function synthState(state, n = 1) {
         const open = hasFeature(state, 'synth'), mats = state.materials ?? {}, gold = state.resources.gold ?? 0;
+        const okN = Number.isInteger(n) && n >= 1;
         const list = MAT_SYNTH.map(r => {
             const m = MAT_SYNTH_BY_ID[r.id], have = mats[m.from] ?? 0;
             const max = open ? Math.min(Math.floor(have / m.need), m.gold > 0 ? Math.floor(gold / m.gold) : Infinity) : 0;
             const err = !open ? 'unbuilt' : have < m.need ? 'materials' : gold < m.gold ? 'gold' : null;
-            return { id: m.id, from: m.from, post: m.post, tier: m.tier, need: m.need, gold: m.gold, have, own: mats[m.id] ?? 0, max, err };
+            const needN = okN ? m.need * n : null, goldN = okN ? m.gold * n : null;
+            const errN = !open ? 'unbuilt' : !okN ? 'missing' : have < needN ? 'materials' : gold < goldN ? 'gold' : null;
+            return { id: m.id, from: m.from, post: m.post, tier: m.tier, need: m.need, gold: m.gold, have, own: mats[m.id] ?? 0, max, err, n, needN, goldN, errN };
         });
         return { open, list };
     }

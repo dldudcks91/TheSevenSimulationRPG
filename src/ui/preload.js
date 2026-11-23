@@ -8,6 +8,10 @@
  *   Pages 엔 폴더 목록이 없고, 손으로 둔 목록은 그림이 바뀔 때마다 어긋난다. 1차 · 2차를 가르는 것도 그 스크립트(`PRELOAD_FIRST`)다.
  *   개발 서버엔 그 파일이 없어 **찾지도 않는다**(`?preload` 가 있으면 찾는다 — 지은 사본을 로컬로 띄워 볼 때 · §10).
  * 화면(메뉴)은 `preloadState().open` 이 거짓인 동안 막대를 세우고 버튼을 잠근다. 계산 · 난수 · 세이브와 무관하다.
+ * **아이콘 묶음** [2026-11-23 · docs/client/ITCH_BUILD.md §6] — `build_deploy.py --pack-icons` 로 지은 사본은 큰 아이콘 묶음(스킬 · 마스터리 · 장비)을
+ *   낱장 대신 묶음 파일(아이콘 64장의 바이트를 이어 붙인 것 · 다시 인코딩하지 않는다)로 싣고, 목록의 `packs` 가 그림마다 위치 · 길이를 든다.
+ *   받은 묶음을 잘라 그림 주소(blob)를 만들고, 그림 경로를 짓는 쪽(`mock.skillIcon` · `itemArt` · 마스터리 칸)이 `packed()` 로 그 주소를 받는다.
+ *   묶음이 없는 판(개발 서버 · 옵션 없이 지은 사본)에서 `packed()` 는 받은 경로를 그대로 돌려준다.
  */
 import { DEV_HOST } from './env.js';
 
@@ -22,6 +26,29 @@ const keep = [];
 // open = 메뉴 버튼을 풀어도 되나(목록이 없거나 · 1차를 다 받았거나 · 제한 시간이 지났다) · total / done = 막대 값(1차 몫)
 const st = { total: 0, done: 0, open: false };
 export const preloadState = () => st;
+
+// ── 아이콘 묶음 ──
+/** 묶음을 아직 못 받은 그림 자리 — 투명 1px. 묶음이 오면 다시 그린다(`startPreload` 의 `onArt`) */
+const PACK_BLANK = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+const PACK_MIME = { webp: 'image/webp', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', svg: 'image/svg+xml' };
+const packUrl = new Map();    // './assets/…' → 묶음에서 자른 그림 주소
+const packWait = new Set();   // 목록엔 있고 묶음을 아직 못 받은 경로
+/** 그림 경로 → 묶음에서 자른 주소 · 받는 중이면 빈 그림 · 묶음에 없는 경로(와 null)는 그대로 */
+export const packed = p => (p ? packUrl.get(p) ?? (packWait.has(p) ? PACK_BLANK : p) : p);
+
+/** 묶음 하나를 받아 그림마다 주소를 만든다 — 못 받으면 그 그림들은 원래 경로로 돌아간다(그 파일이 없으면 img 의 `onerror`) */
+const onePack = async pk => {
+    try {
+        const r = await fetch(`./${pk.src}`);
+        if (!r.ok) throw new Error(String(r.status));
+        const buf = await r.arrayBuffer();
+        for (const [path, off, len] of pk.items) {
+            const ext = path.slice(path.lastIndexOf('.') + 1).toLowerCase();
+            packUrl.set(`./${path}`, URL.createObjectURL(new Blob([new Uint8Array(buf, off, len)], { type: PACK_MIME[ext] ?? '' })));
+        }
+    } catch { /* 못 받은 묶음 — 아래에서 기다림만 푼다 */ }
+    for (const [path] of pk.items) packWait.delete(`./${path}`);
+};
 
 const one = src => new Promise(res => {
     const im = new Image();
@@ -45,8 +72,10 @@ const fetchAll = (list, each) => {
 /**
  * 받기 시작 — **목록을 읽은 뒤** 풀린다(그 전에 메뉴를 그리면 잠기지 않은 버튼이 한 번 비친다).
  * `onTick` 은 1차를 한 장 받을 때마다 · 1차를 다 받았을 때 · 제한 시간에 부른다(화면이 다시 그릴지 정한다). 2차는 안 부른다.
+ * `onArt` 는 아이콘 묶음을 하나 다 받을 때마다 부른다 — 그 전에 그린 칸은 빈 그림이었다(`packed`).
+ *   묶음은 1차 · 2차를 그 안의 그림으로 가른다(1차 그림이 하나라도 들면 1차) · 막대는 묶음 안의 그림 수만큼 센다.
  */
-export async function startPreload(onTick) {
+export async function startPreload(onTick, onArt) {
     let list = null;
     if (!DEV_HOST || new URLSearchParams(location.search).has('preload')) {
         try {
@@ -56,12 +85,21 @@ export async function startPreload(onTick) {
     }
     const first = Array.isArray(list?.first) ? list.first : [];
     const rest = Array.isArray(list?.rest) ? list.rest : [];
-    if (!first.length) { st.open = true; fetchAll(rest); return; }
-    st.total = first.length;
+    const packs = Array.isArray(list?.packs) ? list.packs : [];
+    for (const pk of packs) for (const [path] of pk.items) packWait.add(`./${path}`);
+    const firstPacks = packs.filter(pk => pk.first), restPacks = packs.filter(pk => !pk.first);
+    const getPacks = (list, each) => Promise.all(list.map(pk => onePack(pk).then(() => { each?.(pk); onArt?.(); })));
+    const total = first.length + firstPacks.reduce((n, pk) => n + pk.items.length, 0);
+    if (!total) { st.open = true; fetchAll(rest); getPacks(restPacks); return; }
+    st.total = total;
     const giveUp = setTimeout(() => { if (!st.open) { st.open = true; onTick?.(); } }, PRELOAD_GIVE_UP_MS);
-    fetchAll(first, () => { st.done++; onTick?.(); }).then(() => {
+    Promise.all([
+        fetchAll(first, () => { st.done++; onTick?.(); }),
+        getPacks(firstPacks, pk => { st.done += pk.items.length; onTick?.(); }),
+    ]).then(() => {
         clearTimeout(giveUp);
         if (!st.open) { st.open = true; onTick?.(); }
         fetchAll(rest);
+        getPacks(restPacks);
     });
 }

@@ -1475,7 +1475,7 @@ check('balance: 시스템이 쓰는 키가 전부 있다', () => {
         // ~~tavern_search_* 아홉 · tavern_join_hours~~ — 2026-10-19 수색 삭제 · 칸이 떠나지 않는다(찾아온 영웅이 대체)
         'tavern_join_slots', 'visit_hours', 'visit_rare_base_pct', 'visit_goblin_pct', 'visit_magic_pct', 'visit_filter_lv',   // 매직 · 거르기 2026-11-17 R534   // 수색 (2026-10-19 · 고블린 2026-11-17 R525 · ~~visit_rare_per_level_pct · visit_level_gold~~ 2026-10-21 지점)
         'visit_do_minutes', 'visit_do_lines',   // 수색 이야기 — 단계 간격 · 줄 수 (2026-11-14 · ADR-1125)
-        'trade_visit_hours', 'trade_stay_hours', 'shop_equip_per_slot', 'shop_equip_weapon', 'shop_price_normal', 'shop_price_magic', 'shop_price_rare', 'shop_price_step_levels', 'shop_price_step_mult', 'shop_price_var_pct', 'shop_price_var_level_share', 'auto_equip_base_weight', 'auto_equip_option_weight', 'shop_refresh_hours', 'shop_book_count', 'shop_book_gold', 'shop_potion_bulk_1', 'shop_potion_bulk_2', 'shop_potion_bulk_3',
+        'trade_visit_hours', 'trade_stay_hours', 'shop_equip_per_slot', 'shop_equip_weapon', 'shop_price_normal', 'shop_price_magic', 'shop_price_rare', 'shop_price_step_levels', 'shop_price_step_mult', 'shop_price_var_pct', 'shop_price_var_level_share', 'auto_equip_base_weight', 'auto_equip_option_weight', 'auto_equip_primary_weight', 'shop_refresh_hours', 'shop_book_count', 'shop_book_gold', 'shop_potion_bulk_1', 'shop_potion_bulk_2', 'shop_potion_bulk_3',
         'hero_level_cap', 'concurrent_expedition_parties', 'active_slots', 'skill_cd_floor_mult', 'cast_charge_max', 'skill_decay_cap_pct',
         'mastery_point_per_level', 'mastery_point_start', 'mastery_t1_max_rank', 'mastery_t2_unlock_level', 'growth_attr_per_level', 'growth_attr_start',
         // 죄종 마스터리 T2 장비 단(쓰는 칸 없음 · R463) · T3 조건의 1랭크 문턱 · 랭크 간격 · 파티 정산 체감 (2026-10-05 · 2026-11-13 R468 — 노드 값 키는 mastery_node 단정이 따로 본다)
@@ -7910,8 +7910,8 @@ check('정렬: 등급순 · 레벨순 · 부위순이 각자의 동점 규칙으
     return Object.entries(want).map(([k, w]) => `${k} ${w}`).join(' · ');
 });
 
-/** 자동 장착 [신설 2026-10-22 · R307 · 기준 개정 R313 · **기준 개정 2026-11-18 · R536 — 점수 순** · INTERFACE §2-7 `autoEquip` · item_design §6-3] — 직업 어울림으로 거르고 일곱 칸 모두 `item.autoEquipScore` 순 · 지금 것보다 높을 때만 · rng 0 */
-check('자동 장착: 직업 무기군 · 갈래만 거른다 · 일곱 칸 = 점수가 가장 높은 것 · 반지도 높으면 바꾼다(같으면 인벤토리 앞) · 다시 누르면 그대로 · 다른 영웅 · 창고 불변 (R307 · R536)', () => {
+/** 자동 장착 [신설 2026-10-22 · R307 · 기준 개정 R313 · **기준 개정 2026-11-18 · R536 — 점수 순** · **R559 — 무기 칸 = 최종 데미지 몫** · INTERFACE §2-7 `autoEquip` · item_design §6-3] — 직업 어울림으로 거르고 일곱 칸 모두 값 순 · 지금 것보다 높을 때만 · rng 0 */
+check('자동 장착: 직업 무기군 · 갈래만 거른다 · 일곱 칸 = 값이 가장 높은 것 · 반지도 높으면 바꾼다(같으면 인벤토리 앞) · 다시 누르면 그대로 · 다른 영웅 · 창고 불변 (R307 · R536 · R559)', () => {
     // 캐스터로 잰다 — 플레이트(방어 계수가 가장 크다)가 직업에 안 맞아야 거르기가 결과를 바꾼다
     const caster = D.armorGroups.helmet?.tiara?.classes ?? [];
     let party = null;
@@ -7930,14 +7930,18 @@ check('자동 장착: 직업 무기군 · 갈래만 거른다 · 일곱 칸 = �
     };
     const own = SYS.item.groupsFor(h.cls)[0]?.id ?? fail('fixture: 직업 무기군');
     const other = D.weaponGroupList.find(w => w.release === 'main' && !w.classes.includes(h.cls))?.id ?? fail('fixture: 다른 직업 무기군');
-    // 점수 순서를 fixture 가 직접 세운다(R542 — 아이템 레벨 항이 없어 레벨만으로는 순서가 안 선다): 시작 장비 < 직업 것 < 다른 직업 것 — 다른 직업 것이 안 끼면 거르기 덕이다
+    // 값 순서를 fixture 가 직접 세운다: 시작 장비 < 직업 것 < 다른 직업 것 — 다른 직업 것이 안 끼면 거르기 덕이다.
+    //   무기 칸 값 = 1순위 무게 × 최종 데미지 몫(가장 센 후보 대비) + 옵션 점수 합(R559) — 최종 데미지도 옵션 점수도 높으면 몫과 무관하게 이긴다
     const fitW = w => SYS.skill.equipFit(h, SYS.item.groupOf(w)?.damageKind === 'magic' ? 'magic' : 'physical');
-    const SW = w => SYS.item.autoEquipScore(w, fitW(w), h.level, h.cls);
+    const FOE = { monsterType: 'Normal', grade: 'normal' };
+    const DPS = w => SYS.hero.finalDamagePerSec(SYS.game.heroCombatWith(g, h, w, []), fitW(w).hits, FOE);
+    const OPT = w => SYS.item.autoEquipScore(w, fitW(w), h.level, h.cls, 0);
+    const beats = (a, b) => DPS(a) > DPS(b) && OPT(a) >= OPT(b);
     const SH = it => SYS.item.autoEquipScore(it, fitW(g.items[h.equipped.weapon]), h.level, h.cls);   // 무기 칸이 맨 앞 — 고른 무기도 같은 직업 무기군이라 같은 종류
     const startW = h.equipped.weapon ?? fail('fixture: 시작 무기가 없다');
     const startH = h.equipped.helmet ? g.items[h.equipped.helmet] : null;
-    const wMine = roll('weapon', 10, it => SW(it) > SW(g.items[startW]), { weaponGroup: own });
-    const wOther = roll('weapon', 20, it => SW(it) > SW(wMine), { weaponGroup: other });
+    const wMine = roll('weapon', 10, it => beats(it, g.items[startW]), { weaponGroup: own });
+    const wOther = roll('weapon', 20, it => beats(it, wMine), { weaponGroup: other });
     const hTiara = roll('helmet', 10, it => it.group === 'tiara' && (!startH || SH(it) > SH(startH)));
     const hPlate = roll('helmet', 20, it => it.group === 'plate' && SH(it) > SH(hTiara));
     // 줄 없는 반지 — 점수 0(아이템 레벨 항이 없다 · R542) · 셋 다 같은 점수라 인벤토리 앞(r1 · r2)이 두 칸
@@ -8076,11 +8080,21 @@ check('자동 장착 점수: 베이스 몫 + 옵션 합 · 방어력에 비례 �
         if (new Set(pos).size !== pos.length) fail(`시드 ${s}: 한 칸이 두 줄 ${JSON.stringify(pos)}`);
         if (r.changes.some(c => h.equipped[c.position] !== c.item)) fail(`시드 ${s}: changes 의 item 이 지금 낀 것이 아니다`);
         const fitBy = w => SYS.skill.equipFit(h, SYS.item.groupOf(w)?.damageKind === 'magic' ? 'magic' : 'physical');
+        // 칸마다 값(R559) — 무기 = 1순위 무게 × 최종 데미지 몫(후보 · 낀 것 중 가장 높은 값 대비) + 옵션 점수 합 · 갑옷 = 1순위 무게로 잰 점수 · 나머지 = 점수
+        const FOE = { monsterType: 'Normal', grade: 'normal' }, W1 = B.auto_equip_primary_weight;
         for (const { id, part } of D.equipSlots) {
             const k = it => fitBy(part === 'weapon' ? it : g.items[h.equipped.weapon]);
-            const cur = h.equipped[id] ? S(g.items[h.equipped[id]], k(g.items[h.equipped[id]]), h.level, h.cls) : -Infinity;
-            const top = g.bags[0].map(u => g.items[u]).filter(it => it.slot === part && !SYS.item.canEquip(h, it) && SYS.item.fitsClass(it, h.cls)).reduce((m, it) => Math.max(m, S(it, k(it), h.level, h.cls)), -Infinity);
-            if (top > cur) fail(`시드 ${s}: ${id} 에 낀 것(${cur})보다 점수가 높은 후보(${top})가 남았다`);
+            const curIt = h.equipped[id] ? g.items[h.equipped[id]] : null;
+            const pool = g.bags[0].map(u => g.items[u]).filter(it => it.slot === part && !SYS.item.canEquip(h, it) && SYS.item.fitsClass(it, h.cls));
+            let V;
+            if (part === 'weapon') {
+                const dps = new Map([curIt, ...pool].filter(Boolean).map(it => [it.uid, SYS.hero.finalDamagePerSec(SYS.game.heroCombatIf(g, h, it.uid, []), k(it).hits, FOE)]));
+                const mx = Math.max(0, ...dps.values());
+                V = it => W1 * (mx > 0 ? dps.get(it.uid) / mx : 0) + S(it, k(it), h.level, h.cls, 0);
+            } else V = it => S(it, k(it), h.level, h.cls, part === 'armor' ? W1 : undefined);
+            const cur = curIt ? V(curIt) : -Infinity;
+            const top = pool.reduce((m, it) => Math.max(m, V(it)), -Infinity);
+            if (top > cur) fail(`시드 ${s}: ${id} 에 낀 것(${cur})보다 값이 높은 후보(${top})가 남았다`);
         }
         const snap = JSON.stringify(g);
         const again = SYS.game.autoEquip(g, h.uid, 1);
@@ -8088,6 +8102,70 @@ check('자동 장착 점수: 베이스 몫 + 옵션 합 · 방어력에 비례 �
         total += r.changes.length;
     }
     return `베이스 몫 ${a.toFixed(3)} → ${b.toFixed(3)} · ${seen.join(' · ')} · 문 ${gated.join(' · ')} · equipFit ${fitCases.length}건 · 가득 찬 인벤토리 8판 바꾼 칸 ${total} · 다시 누르면 0`;
+});
+
+/** 자동 장착 무기 · 갑옷 칸 [신설 2026-11-23 · R559 · INTERFACE §2-4 `finalDamagePerSec` · §2-7 `autoEquip` · item_design §6-3] — 무기 = 1순위 무게 × 최종 데미지 몫 + 옵션 점수 합 ·
+ *  갑옷 = 1순위 무게 × 방어력 몫 + 옵션 점수 합 · 사용자 11-23 사례(무기 데미지 +50% · 정예 +8% 오브 vs +81% · 언데드 +6% · 전기 관통 +3% 오브 → +81% 를 낀다) · rng 0 */
+check('자동 장착 무기 · 갑옷 칸: 최종 데미지 = 범위 × 조건부(결투 상대) × 치명 × 최종 데미지 ÷ 주기 · 정예 줄은 결투에서 0 · 자연 줄 · 캐스팅 속도는 든다 · 발동 줄은 0 · 11-23 오브 사례 → 데미지 높은 쪽 · 갑옷은 1순위 무게로 방어력이 옵션 줄을 이긴다 · 다시 누르면 그대로 (R559)', () => {
+    const FD = SYS.hero.finalDamagePerSec, W1 = B.auto_equip_primary_weight;
+    if (!(W1 > 1)) fail(`fixture: 1순위 무게 ${W1} — 1 보다 커야 이 단정이 뜻을 갖는다`);
+    // ① 식 — 손으로 만든 시트: 범위 평균 15 × (괄호 1.5 + 조건부) ÷ 1.5 × 치명 (1 + 0.2 × (2 − 1)) × 최종 1.1 ÷ 주기 2
+    const sheet = { atk_magic: { min: 10, max: 20 }, action_period: 2, atk_pct_sum: 0.5, crit_rate: 0.2, crit_damage: 2,
+        option_fx: { vs: { normal: 0.1, demon: 0, undead: 0.3 }, vsElite: 0.2, ele: { fire: 0.3, cold: 0, lightning: 0, poison: 0 } }, advance_fx: { final_dmg_bonus: 0.1 } };
+    const near = (a, b) => Math.abs(a - b) < 1e-9;
+    const base = 15 * 1.2 * 1.1 / 2, FOE = { monsterType: 'Normal', grade: 'normal' };
+    if (!near(FD(sheet), base)) fail(`조건부 없이 ${FD(sheet)} ≠ ${base}`);
+    if (!near(FD(sheet, ['fire', 'cold'], FOE), base * (1.5 + 0.1 + 0.15) / 1.5)) fail(`자연 + 원소 평균(화염 · 냉기) ${FD(sheet, ['fire', 'cold'], FOE)}`);
+    if (!near(FD(sheet, [], { monsterType: 'Undead', grade: 'elite' }), base * (1.5 + 0.3 + 0.2) / 1.5)) fail(`언데드 정예 ${FD(sheet, [], { monsterType: 'Undead', grade: 'elite' })}`);
+    if (!near(FD({ ...sheet, crit_rate: 3 }), 15 * 2 * 1.1 / 2)) fail(`치명 확률은 1 에서 자른다 ${FD({ ...sheet, crit_rate: 3 })}`);
+    if (FD({ action_period: 2 }) !== 0) fail('데미지 범위가 없는 시트는 0 이어야 한다');
+    // ② 11-23 사례 — 마법사 · Lv6 오브 둘(왼쪽 = 매직 · 랜덤 줄 정예 +8% / 오른쪽 = 레어 · 폭식 언데드 +6% · 시기 전기 관통 +3%)
+    let party = null;
+    for (let s = 1; s < 80 && !party; s++) { const p = SYS.hero.rollStartParty(makeRng(s), B.party_size_max); if (p.some(x => x.cls === 'mage')) party = p; }
+    if (!party) fail('fixture: 마법사가 든 첫 파티가 없다');
+    const g = SYS.game.newGame(5, party, NOW);
+    const h = g.heroes.find(x => x.cls === 'mage');
+    h.level = 15;
+    g.bags[0] = [];
+    let n = 0;
+    const put = it => { it.uid = `fd${n++}`; g.items[it.uid] = it; g.bags[0].push(it.uid); return it; };
+    const orb = (pct, lines = [], sins = [], extra = {}) => mkItem('weapon', [{ stat: 'atk_pct', v: pct, src: 'fixed' }, ...lines], { group: 'orb', baseId: 'orb', ilvl: 6, sins, words: sins.map(() => 0), ...extra });
+    const fitM = SYS.skill.equipFit(h, 'magic');
+    const DPS = w => FD(SYS.game.heroCombatWith(g, h, w, []), fitM.hits, FOE);
+    const bare = orb(0.5);
+    const left = orb(0.5, [{ stat: 'vs_elite_dmg', v: 0.08, src: 'gluttony' }]);
+    const right = orb(0.81, [{ stat: 'vs_undead_dmg', v: 0.06, src: 'gluttony' }, { stat: 'res_reduction_lightning', v: 0.03, src: 'envy' }], ['gluttony', 'envy'], { rarity: 'rare' });
+    if (!near(DPS(left), DPS(bare))) fail(`정예 줄이 결투 상대 기준 최종 데미지에 들어갔다 ${DPS(left)} ≠ ${DPS(bare)}`);
+    if (!(DPS(orb(0.5, [{ stat: 'vs_normal_dmg', v: 0.1, src: 'gluttony' }])) > DPS(bare))) fail('결투 상대는 자연 종족이다 — 자연 줄이 안 들었다');
+    if (!(DPS(orb(0.5, [{ stat: 'cast_speed_pct', v: 0.1, src: 'wrath' }])) > DPS(bare))) fail('캐스팅 속도가 최종 데미지에 안 들었다');
+    if (!near(DPS(orb(0.5, [{ stat: 'proc_cast_attack', v: 0.1, src: 'sloth', skill: 'mag_iceblast', skillLv: 1 }])), DPS(bare))) fail('발동 줄이 최종 데미지에 들어갔다');
+    put(left); put(right);
+    if (!(DPS(right) > DPS(g.items[h.equipped.weapon]))) fail('fixture: 시작 무기가 오른쪽 오브보다 세다');
+    SYS.game.autoEquip(g, h.uid, 1);
+    if (h.equipped.weapon !== right.uid) fail(`11-23 사례: ${h.equipped.weapon} — 무기 데미지 +81% 오브(${right.uid})를 기대 · 최종 데미지 ${DPS(left).toFixed(2)} vs ${DPS(right).toFixed(2)}`);
+    // ③ 갑옷 — 1순위 무게에선 방어력이 높은 줄 없는 갑옷이 이기고, 베이스 무게 1 이었다면 줄 있는 갑옷이 이겼을 짝(가장 작은 방어력 차)
+    const S = SYS.item.autoEquipScore, rng = makeRng(559);
+    let lined = null;
+    for (let i = 0; i < 800 && !lined; i++) {
+        const it = SYS.item.rollGear(rng, { slots: ['armor'], ilvl: h.level, rarityWeights: { rare: 1, epic: 1 } })[0];
+        if (it.implicit && SYS.item.fitsClass(it, h.cls) && !SYS.item.canEquip(h, it) && S(it, fitM, h.level, h.cls, 0) > 0.5) lined = it;
+    }
+    if (!lined) fail('fixture: 마법사가 입는 줄 있는 갑옷을 못 굴렸다');
+    lined.up = 0;
+    const plain = v => ({ ...lined, affixes: lined.affixes.filter(a => a.src === 'fixed' && a.stat === 'armor_def_pct'), implicit: { ...lined.implicit, v } });
+    const wins = (v, w) => S(plain(v), fitM, h.level, h.cls, w) > S(lined, fitM, h.level, h.cls, w);
+    let vA = lined.implicit.v;
+    while (!wins(vA, W1) && vA < 10 * lined.implicit.v) vA++;
+    if (!wins(vA, W1) || wins(vA, 1)) fail(`fixture: 방어력 ${vA} — 1순위 무게에선 이기고 베이스 무게 1 에선 져야 한다(줄 있는 갑옷 ${lined.implicit.v})`);
+    const hiDef = put(plain(vA));
+    put(lined);
+    h.equipped.armor = null;   // 시작 갑옷을 걷어 두 후보만 겨룬다(빈 칸이면 가장 높은 것)
+    SYS.game.autoEquip(g, h.uid, 1);
+    if (h.equipped.armor !== hiDef.uid) fail(`갑옷 ${h.equipped.armor} — 방어력 ${vA} 줄 없는 갑옷(${hiDef.uid})을 기대 · 줄 있는 갑옷 방어력 ${lined.implicit.v} · 옵션 ${S(lined, fitM, h.level, h.cls, 0).toFixed(2)}`);
+    const snap = JSON.stringify(g);
+    const again = SYS.game.autoEquip(g, h.uid, 1);
+    if (again.changes.length || JSON.stringify(g) !== snap) fail(`다시 누르면 그대로여야 한다 ${JSON.stringify(again.changes)}`);
+    return `시트 ${base.toFixed(2)} · 오브 사례 최종 데미지 ${DPS(left).toFixed(2)} → ${DPS(right).toFixed(2)} 낌 · 갑옷 방어력 ${lined.implicit.v}(옵션 ${S(lined, fitM, h.level, h.cls, 0).toFixed(2)}) vs ${vA}(줄 없음) → ${vA} · 1순위 무게 ${W1}`;
 });
 
 /** 자동 장착 점수 · 영웅 레벨 [신설 2026-11-18 · R542 · INTERFACE §2-5 `autoEquipScore` · item_design §6-3] — 아이템 레벨 항이 없다 · 베이스 몫 1 = 그 레벨 강화 0 · 베이스 옵션 위끝의 최고 ·
@@ -18369,6 +18447,11 @@ check('materials: 합성 — 바로 아래 단계 need 개 + 골드 → 하나 �
     g.materials[r.from] = r.need * 3; g.resources.gold = r.gold * 3 - 1; s = snap();
     if (SYS.game.synthesize(g, r.id, 3).err !== 'gold' || snap() !== s) fail('골드가 모자란데 바뀌었다');
     if (SYS.game.synthState(g).list.find(x => x.id === r.id).max !== 2) fail('골드가 max 를 안 막는다');
+    // 고른 개수 n — n 개 몫 · n 개를 누르면 나올 거절이 synthesize 와 같다 · 안 주면 1 (ADR-1318)
+    const stN = n => SYS.game.synthState(g, n).list.find(x => x.id === r.id);
+    if (stN(3).needN !== r.need * 3 || stN(3).goldN !== r.gold * 3 || stN(3).errN !== 'gold' || stN(2).errN !== null) fail(`synthState n — ${JSON.stringify(stN(3))}`);
+    if (stN(1.5).errN !== 'missing' || stN(1.5).needN !== null || SYS.game.synthState(g).list.find(x => x.id === r.id).needN !== r.need) fail('synthState n — 잘못된 n · 기본 1');
+    if (snap() !== s) fail('synthState n 이 상태를 바꿨다');
     g.resources.gold = r.gold * 3;
     const ok = SYS.game.synthesize(g, r.id, 3);
     if (!ok.ok || ok.n !== 3 || ok.gold !== r.gold * 3 || ok.have !== 3 || g.materials[r.from] !== 0 || g.resources.gold !== 0) fail(`합성 ×3 → ${JSON.stringify(ok)} · ${snap()}`);

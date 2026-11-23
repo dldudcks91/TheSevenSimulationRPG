@@ -1225,18 +1225,19 @@ export function createItemSystem(data) {
      * 베이스 몫 — 무기 = 초당 무기 데미지(`weaponDamageFixed` — 베이스 옵션 · 강화 · 색욕 최소 · 최대 포함 ÷ 계보 주기) · 방어구 넷 = 방어력(`implicitFixed`)을 `baseRef(slot, level, cls)` 로 나눈 것 · 장신구 0.
      * 옵션 점수 합 — `lineScores(item, level, false)` 의 자리를 **더한다**(평균이 아니다 — 줄 수 = 등급이 들어간다 · 위끝을 안 자른다) · 베이스 줄 둘(무기 데미지 % · 방어력 %)은 베이스 몫에 있어 뺀다.
      * `fit`(`skill.equipFit(hero, kind)`)을 받으면 **그 영웅에게 안 먹는 줄은 0**(`lineLive`) — 안 받으면 안 가린다 · 순수 · rng 0
+     * `wBase` = 베이스 몫의 무게를 덮는다 [2026-11-23 · R559] — 안 주면 `auto_equip_base_weight` · 자동 장착은 무기 칸 0(최종 데미지 몫이 따로 선다) · 갑옷 칸 `auto_equip_primary_weight`
      */
-    function autoEquipScore(item, fit = null, level = item?.ilvl ?? 0, cls = null) {
+    function autoEquipScore(item, fit = null, level = item?.ilvl ?? 0, cls = null, wBase = B.auto_equip_base_weight) {
         let base = 0;
-        if (item?.slot === 'weapon') {
+        if (wBase && item?.slot === 'weapon') {   // 무게 0 이면 베이스 몫을 안 잰다 — 옵션 점수 합만(자동 장착 무기 칸 · R559)
             const d = weaponDamageFixed(item), line = F.weaponLine(WG[item.group] ?? null, WB_BY_ID[item.baseId] ?? null), ref = baseRef('weapon', level);
             if (d && line?.period > 0 && ref > 0) base = weaponPerSec(d, line) / ref;     // 모르는 무기군(주기 없음)은 베이스 몫 0
-        } else if (isArmor(item?.slot)) {
+        } else if (wBase && isArmor(item?.slot)) {
             const f = implicitFixed(item), ref = baseRef(item.slot, level, cls);
             if (f && ref > 0) base = f.v / ref;
         }
         const opt = lineScores(item, level, false).reduce((s, { a, q }) => s + ((a.src === 'fixed' && (a.stat === 'atk_pct' || a.stat === 'armor_def_pct')) || !lineLive(a, fit) ? 0 : q), 0);
-        return B.auto_equip_base_weight * base + B.auto_equip_option_weight * opt;
+        return wBase * base + B.auto_equip_option_weight * opt;
     }
 
     /**

@@ -1110,6 +1110,28 @@ export function createHeroSystem(data) {
     }
 
     /**
+     * **초당 최종 데미지(기댓값)** [신설 2026-11-23 · R559 · item_design §6-3 · INTERFACE §2-4] — 자동 장착 무기 칸의 1순위 몫(`state.autoEquip`).
+     *   시트(`computeCombat` 의 결과) 하나로 직격의 순서(`formula.strike` — 데미지 범위 → 데미지 % 괄호 안의 조건부 % → 치명 · `battle` 의 최종 데미지)를 굴림 없이 기댓값으로 잰다:
+     *   (범위 양끝 평균) × (1 + 괄호 합 + 조건부 %) ÷ (1 + 괄호 합) × (1 + 치명 확률(1 에서 자름) × (치명 피해 − 1)) × (1 + 최종 데미지) ÷ 행동 주기.
+     *   조건부 % = `foe`(`{monsterType, grade}` · 없으면 0)의 종족 + 등급이 `normal` 이 아니면 정예 + 원소 % 는 `hits`(그 영웅의 타격 종류 — `skill.equipFit`) 평균(원소가 아닌 타격은 0 · 비면 0) —
+     *   `battle` 의 조건부 % 와 같은 어휘다. 열 · 능력치 계수 · 스킬 배율 · 적중 · 방어 · 저항 · 발동 · 버프 창은 안 넣는다(같은 영웅의 무기 사이에서 같은 값이거나 상대 · 전투 중에 달렸다).
+     *   데미지 범위가 없는 시트는 0 · 순수 · rng 0
+     */
+    function finalDamagePerSec(c, hits = [], foe = null) {
+        const atk = c?.atk_physical ?? c?.atk_magic;
+        if (!atk || !(c.action_period > 0)) return 0;
+        const fx = c.option_fx;
+        const els = (hits ?? []).map(h => (ELEMENTS.includes(h) ? fx?.ele?.[h] ?? 0 : 0));
+        const cond = (foe ? (fx?.vs?.[String(foe.monsterType ?? '').toLowerCase()] ?? 0) + (foe.grade && foe.grade !== 'normal' ? fx?.vsElite ?? 0 : 0) : 0)
+            + (els.length ? els.reduce((s, v) => s + v, 0) / els.length : 0);
+        const bracket = 1 + (c.atk_pct_sum ?? 0);
+        const condMul = bracket > 0 ? (bracket + cond) / bracket : 1;      // 괄호가 0 이하면 범위도 0 이라 끼울 것이 없다(`formula.strike` 와 같다)
+        const crit = 1 + Math.min(1, Math.max(0, c.crit_rate ?? 0)) * ((c.crit_damage ?? 1) - 1);
+        const fin = 1 + (c.advance_fx?.final_dmg_bonus ?? 0);
+        return (atk.min + atk.max) / 2 * condMul * crit * fin / c.action_period;
+    }
+
+    /**
      * 표시 이름의 간체를 채운다 [2026-11-16 · LOCALIZATION_ZH D8 · INTERFACE §2-4] — **in-place** · rng 0.
      * `name` · `trait` 에 zh 가 없으면 풀(이름 = 직업 무관 · 특성)에서 ko 와 en 이 둘 다 같은 행의 zh 를 싣는다. 못 찾으면 그대로(화면은 영어)
      */
@@ -1132,7 +1154,7 @@ export function createHeroSystem(data) {
 
     return {
         fillZh,
-        rollAttributes, rollAttributesTrace, attrCenters, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, avoidNames, rollHeroOf, rollGoblin, xpNeeded, starXpNeeded, grantXp, computeCombat,
+        rollAttributes, rollAttributesTrace, attrCenters, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, avoidNames, rollHeroOf, rollGoblin, xpNeeded, starXpNeeded, grantXp, computeCombat, finalDamagePerSec,
         masteryNodes, masteryById, masteryNodesFor, migrateMasteryRanks, masteryBonus, masteryWiden, masteryRowKey, masteryRowUsed, masteryPickOneBlocked, masteryRowOpen, masteryRowHeld, gateOn, sinGearCount, levelScaled,
         weaponTrait: groupId => (weaponTraitLines[groupId] ?? []).map(l => ({ ...l })),   // 무기군 특성 줄 — 전투 합산과 같은 모양(사본 · R443)
         classIds: data.classes.map(c => c.id),   // 「직업 순」 = `class.csv` 행 순서 — 책 정렬(`game.sortBooks`)이 읽는다 (2026-10-14 · ADR-0620)

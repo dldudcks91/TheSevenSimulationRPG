@@ -1,4 +1,7 @@
 import { PORTRAIT_FILES } from '../assets/art/faces/portrait_files.js';
+// 아이콘 묶음(배포판 `--pack-icons` · ITCH_BUILD.md §6)에서 자른 그림 주소 — 묶음이 없는 판에선 경로 그대로. app · battle 도 여기서 받는다
+import { packed } from './preload.js';
+export { packed };
 
 /**
  * 화면 목업 데이터 — **게임 로직이 아니다.**
@@ -590,7 +593,7 @@ export const difficultyIcon = id => DIFFICULTY_ICON_FILES.includes(id) ? DIFFICU
 export const skillIcon = id => {
     if (!id) return null;
     const key = String(id);
-    return SKILL_ICON_FILES.includes(key) ? SKILL_ICON_DIR + key + ICON_EXT : null;
+    return SKILL_ICON_FILES.includes(key) ? packed(SKILL_ICON_DIR + key + ICON_EXT) : null;
 };
 /**
  * 미장착 착용 칸의 부위 실루엣 — `src/assets/art/icons/items/empty/<part>.webp` (2026-09-03 · SCREEN_DESIGN §6).
@@ -712,7 +715,7 @@ const WEAPON_BASE_HASH_POOL = 7;
 /** **퇴역한 무기 베이스** [2026-11-11 · R445] — `weapon_base.csv` 에서 빠졌지만 그림은 남긴다. 옛 세이브의 무기가 이 `baseId` 와 이름을 그대로 든다 */
 export const WEAPON_BASE_RETIRED = ['berserker_axe', 'war_club', 'cryptic_axe', 'great_bow', 'rune_bow', 'gothic_bow', 'demon_crossbow',
     'gnarled_staff', 'demon_heart', 'divine_scepter', 'caduceus', 'grand_scepter'];
-export const weaponBaseArt = (group, stem) => WEAPON_BASE_STEMS[group]?.includes(stem) ? `${WEAPON_BASE_DIR}${group}/${stem}${ICON_EXT}` : null;
+export const weaponBaseArt = (group, stem) => WEAPON_BASE_STEMS[group]?.includes(stem) ? packed(`${WEAPON_BASE_DIR}${group}/${stem}${ICON_EXT}`) : null;
 
 /**
  * 아이템 그림 — 그 개체 그림 경로, 없으면 `null`(화면은 검은 칸 · ADR-1051). 그림 묶음은 하나다(Codex 묶음 · 설정 줄은 2026-11-13 삭제 · ADR-1073).
@@ -724,17 +727,17 @@ export const itemArt = (slot, group, uid, baseId) => {
     if (slot === 'weapon') {
         const stems = WEAPON_BASE_STEMS[group];
         if (!stems) return null;   // 무기군 그림 8장은 2026-09-17 삭제 — 베이스 풀이 없는 무기군은 그림이 없다
-        if (baseId) return stems.includes(baseId) ? `${WEAPON_BASE_DIR}${group}/${baseId}${ICON_EXT}` : null;
+        if (baseId) return stems.includes(baseId) ? packed(`${WEAPON_BASE_DIR}${group}/${baseId}${ICON_EXT}`) : null;
         if (uid) {
             // 해시 키에 무기군을 섞는다 — uid 만 쓰면 `i1`·`i2` 같은 **짧은 키**라 7 로 나눈 나머지가 쏠린다
             //   (실측 60개: 발록 17 · 츠바이핸더 3). `<uid>:<group>` 이면 고르게 퍼지고, 무기군이 늘어도 서로 독립이다
             const pool = stems.slice(0, WEAPON_BASE_HASH_POOL);
-            return `${WEAPON_BASE_DIR}${group}/${pool[strHash(`${uid}:${group}`) % pool.length]}${ICON_EXT}`;
+            return packed(`${WEAPON_BASE_DIR}${group}/${pool[strHash(`${uid}:${group}`) % pool.length]}${ICON_EXT}`);
         }
         return null;
     }
     // 방어구 · 장신구 — 개체가 든 베이스의 그림. 그림이 없는 베이스는 `null` → 검은 칸 (2026-09-17 · 이모지 폴백은 2026-11-12 삭제)
-    return baseId && ITEM_BASE_ART_IDS.includes(baseId) ? `${ITEM_BASE_ART_DIR}${baseId}${ICON_EXT}` : null;
+    return baseId && ITEM_BASE_ART_IDS.includes(baseId) ? packed(`${ITEM_BASE_ART_DIR}${baseId}${ICON_EXT}`) : null;
 };
 /* 직업 글리프 표(`CLASS_GLYPH`·`classGlyph`)는 **삭제했다** (2026-09-03 사용자 지시) — 아트가 없는 영웅의
    자리표시로 이모지(⚔ ⛨ ✦ 🏹 …)를 초상 **밑에 깔던** 방식이다. 영웅 그림이 배경 투명 PNG 이고

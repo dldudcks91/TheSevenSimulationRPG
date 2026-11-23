@@ -131,6 +131,8 @@ const STRINGS = {
     'mobile.page.upgrade': { ko: '업그레이드', en: 'Upgrade', zh: '升级' },
     'mobile.page.books': { ko: '책 제작', en: 'Books', zh: '制作书' },   // 도서관 본판 오른쪽 구역 — 스킬 북 제작 (ADR-1262)
     'mobile.page.temper': { ko: '손질', en: 'Prep', zh: '整备' },
+    'mobile.page.mats': { ko: '재료', en: 'Materials', zh: '材料' },   // 대장간 합성 — 왼쪽 재료 판 (ADR-1309)
+    'mobile.page.synth': { ko: '합성', en: 'Combine', zh: '合成' },   // 대장간 합성 — 오른쪽 합성 판 (ADR-1309)
     'mobile.page.research': { ko: '연구판', en: 'Research', zh: '研究面板' },
     'mobile.page.researchDetail': { ko: '연구 상세', en: 'Details', zh: '研究详情' },
     'mobile.page.opponent': { ko: '상대 선택', en: 'Opponent', zh: '选择对手' },
@@ -549,9 +551,9 @@ const STRINGS = {
     'rep.missN': { ko: '{m} / {n} ({p}%)', en: '{m} / {n} ({p}%)', zh: '{m} / {n}（{p}%）' },
 
     /* ── 캐릭터 (실동작) ── */
-    'ch.equip.hint': { ko: '클릭 = 고르기 · 우클릭 = 착용 · 착용 칸 우클릭 = 해제 · Shift+우클릭 = [착용] · [잠금] 버튼 · Ctrl+클릭이나 끌어 놓기 = 창고 ↔ 인벤토리',
-        zh: '点击 = 选择 · 右键 = 装备 · 右键已装备的栏位 = 卸下 · Shift+右键 = [装备] · [锁定]按钮 · Ctrl+点击或拖放 = 仓库 ↔ 背包',
-        en: 'Click = select · right-click = equip · right-click a worn slot = unequip · Shift+right-click = [Equip] · [Lock] buttons · Ctrl+click or drag = move between stash and inventory' },
+    'ch.equip.hint': { ko: '클릭 = 고르기 · 우클릭 = [착용] · [잠금] 버튼 · 착용 칸 우클릭 = 해제 · Ctrl+클릭이나 끌어 놓기 = 창고 ↔ 인벤토리',
+        zh: '点击 = 选择 · 右键 = [装备] · [锁定]按钮 · 右键已装备的栏位 = 卸下 · Ctrl+点击或拖放 = 仓库 ↔ 背包',
+        en: 'Click = select · right-click = [Equip] · [Lock] buttons · right-click a worn slot = unequip · Ctrl+click or drag = move between stash and inventory' },
     // 보관 칸 우클릭 메뉴 — 커서 자리에 버튼 둘 · 손가락은 길게 누른 툴팁 버튼 줄 (SCREEN_DESIGN §6 「우클릭 메뉴」 · ADR-0451)
     'ch.menu.equip': { ko: '착용', en: 'Equip', zh: '装备' },
     'ch.menu.unequip': { ko: '해제', en: 'Unequip', zh: '卸下' },   // 착용 칸 손가락 툴팁의 버튼 — 우클릭과 같은 해제 (ADR-1306)
@@ -1162,7 +1164,6 @@ const STRINGS = {
     'td.trade.err.materials': { ko: '지불할 재료 부족', en: 'Not enough payment materials', zh: '用于支付的材料不足' },
     'td.trade.err.gold': { ko: '골드 부족', en: 'Not enough gold', zh: '金币不足' },
     'td.trade.err.missing': { ko: '교환할 재료를 다시 선택하세요.', en: 'Select the trading materials again.', zh: '请重新选择要交换的材料。' },
-    'td.trade.price': { ko: '{n}개 · {gold} G', en: '{n} mats · {gold} G', zh: '{n}个 · {gold} G' },
     'td.leave': { ko: '떠나기까지 {t}', en: 'Leaves in {t}', zh: '{t}后离开' },
     'td.next': { ko: '다음 상인까지 {t}', en: 'Next trader in {t}', zh: '{t}后下一位商人到来' },
     'td.buy': { ko: '구매', en: 'Buy', zh: '购买' },
@@ -1274,7 +1275,9 @@ const STRINGS = {
     'fg.seg.craft': { ko: '크래프트', en: 'Craft', zh: '打造' },
     'fg.seg.synth': { ko: '합성', en: 'Combine', zh: '合成' },   // 재료 합성 — 바로 아래 단계를 모아 위 단계 하나 (2026-10-27 · ADR-0856)
     'fg.synth.go': { ko: '합성', en: 'Combine', zh: '合成' },
-    'fg.synth.max': { ko: '최대 ×{n}', en: 'Max ×{n}', zh: '最多×{n}' },
+    'fg.synth.all': { ko: '최대', en: 'Max', zh: '最多' },   // 개수 고르기 — 지금 만들 수 있는 최대로 맞춘다 (ADR-1318)
+    'fg.synth.qty': { ko: '개수', en: 'Quantity', zh: '数量' },   // 개수 칸 이름(aria · 올리면 뜬다) (ADR-1318)
+    'fg.synth.out': { ko: '{name} ×{n}', en: '{name} ×{n}', zh: '{name} ×{n}' },   // 식의 만들 재료 이름 + 고른 개수 (ADR-1318)
     'fg.go': { ko: '강화', en: 'Upgrade', zh: '强化' },
     // 옛 `tip.up.max` — 2026-09-08 에 툴팁의 강화 줄이 죽으면서 **대장간 전용**이 되어 접두를 옮겼다 (문구·인자 동일)
     'fg.upMax': { ko: '강화 +{up} · 상한', en: 'Upgrade +{up} · max', zh: '强化+{up} · 上限' },
@@ -1287,6 +1290,8 @@ const STRINGS = {
     'fg.temper': { ko: '손질', en: 'Prep', zh: '整备' },
     'fg.board.gear': { ko: '장비', en: 'Equipment', zh: '装备' },   // 강화 칸 왼쪽 판 제목 띠 (ADR-1140)
     'fg.board.up': { ko: '강화', en: 'Upgrade', zh: '强化' },   // 강화 칸 오른쪽 판 제목 띠 (ADR-1140)
+    'fg.board.mats': { ko: '재료', en: 'Materials', zh: '材料' },   // 합성 칸 왼쪽 판 제목 띠 (ADR-1309)
+    'fg.board.synth': { ko: '합성', en: 'Combine', zh: '合成' },   // 합성 칸 오른쪽 판 제목 띠 (ADR-1309)
     'fg.act.heat': { ko: '달구기', en: 'Heat', zh: '加热' },   // 손질 셋 — `temper_action.csv:action` (item_design §7-2)
     'fg.act.reinforce': { ko: '덧대기', en: 'Reinforce', zh: '加固' },
     'fg.act.quench': { ko: '담금질', en: 'Quench', zh: '淬火' },
@@ -1314,8 +1319,7 @@ const STRINGS = {
     'fg.noBase': { ko: '강화 없음', en: 'No upgrade', zh: '不可强化' },
     // 인챈트 — 대장간 강화 옆 탭 (SCREEN_DESIGN §8-2 · ADR-1293 · item_design §8 · R553) · 오류 키는 결과 코드와 짝(`fg.err.<코드>` — game.enchantItem · enchantPick)
     'fg.seg.ench': { ko: '인챈트', en: 'Enchant', zh: '附魔' },
-    'fg.board.ench': { ko: '인챈트', en: 'Enchant', zh: '附魔' },   // 인챈트 칸 오른쪽 판 제목 띠
-    'fg.board.enchOptions': { ko: '옵션', en: 'Options', zh: '词条' },
+    'fg.board.ench': { ko: '인챈트', en: 'Enchant', zh: '附魔' },   // 인챈트 칸 오른쪽 판(옵션 카드 · 작업) 제목 띠 (ADR-1314)
     'fg.ench.current': { ko: '현재 옵션', en: 'Current Option', zh: '当前词条' },
     'fg.ench.none': { ko: '없음', en: 'None', zh: '无' },
     'fg.ench.new': { ko: '새 옵션', en: 'New Option', zh: '新词条' },
@@ -2059,9 +2063,9 @@ const STRINGS = {
         zh: '用材料或金币购买',
     },
     'help.shop.trade.body': {
-        ko: '건설에서 <b>상단 2랭크</b>를 올리면 교역소가 열립니다. 재료 칸 아래에 한 번 구매의 값(다른 재료 수 · 골드)이 적혀 있습니다. <b>받을 최하급 재료</b>를 누르면 지불할 재료별 필요 수·보유량과 골드 가격이 나타나고, 지불할 재료의 <b>[구매]</b>를 눌러 선택한 재료 {receive}개를 받습니다.<br><br>철광석·약초·목재·가루의 최하급끼리 교환합니다. 어느 재료로 내든 값은 같습니다. 선택만으로는 재료가 소모되지 않으며, 지불할 재료가 부족하면 구매할 수 없습니다. 재료로 지불할 때는 골드가 들지 않습니다. 골드 구매는 골드만 소모합니다. 약초는 재료로도 골드로도 더 비쌉니다. 재고 제한은 없습니다.<br><br>특수상단 상인이 올 때마다 재료 하나가 무작위로 싸집니다. 싼 재료는 값이 초록 ▼로 표시되고, 재료와 골드 모두 평소의 {pct}%입니다. 다음 상인이 올 때까지 이어집니다. 위 단계 재료는 대장간의 합성으로 만듭니다.<br><br>상단 3랭크는 방어구·장신구·스킬북 판매 줄을 엽니다.',
-        en: 'Build <b>Trading House rank 2</b> to open the Trading Post. The price of one purchase (other materials · gold) is shown under each material. Select the <b>lowest-grade material to receive</b> to see the required and owned amounts for each payment, then press <b>Buy</b> on a payment row to receive {receive} of your selection.<br><br>Trade lowest-grade iron ore, herbs, timber and dust. The price is the same whichever material you pay with. Selecting a material spends nothing. Choose a material payment or gold. Only the selected currency is spent, and you must have enough of it. Herbs cost more in both materials and gold. There is no stock limit.<br><br>Each time a visiting trader arrives, one random material becomes cheaper. Its price is shown in green with ▼, at {pct}% of the usual material and gold price, until the next trader arrives. Make higher grades by combining materials at the Smithy.<br><br>Trading House rank 3 opens armor, jewelry and skill-book sales.',
-        zh: '在建设中将<b>商会提升到2阶</b>后开放交易所。每种材料下方标有一次购买的价格（其他材料数量 · 金币）。点击<b>要获得的最低级材料</b>，就会显示各支付材料的所需数量、持有量以及金币价格，点击要支付的材料的<b>[购买]</b>，即可获得{receive}个所选材料。<br><br>铁矿石、草药、木材、粉尘的最低级之间可以互换。无论用哪种材料支付，价格都相同。仅选择不会消耗材料，支付材料不足时无法购买。用材料支付时不花金币。用金币购买只消耗金币。草药无论用材料还是金币都更贵。没有库存限制。<br><br>每当行商到来，会随机有一种材料变便宜。便宜的材料价格以绿色▼显示，材料和金币都是平时的{pct}%，持续到下一位行商到来。更高级别的材料在铁匠铺通过合成制作。<br><br>商会3阶会开放防具、饰品、技能书的出售行。',
+        ko: '건설에서 <b>상단 2랭크</b>를 올리면 교역소가 열립니다. 재료 칸 아래에 한 번 구매의 골드 가격이 적혀 있습니다. <b>받을 최하급 재료</b>를 누르면 아래 다섯 칸에 재료별 필요 수·보유량과 골드 가격이 나타납니다. 낼 칸을 고르고 오른쪽 <b>[구매]</b>를 누르면 선택한 재료 {receive}개를 받습니다.<br><br>철광석·약초·목재·가루의 최하급끼리 교환합니다. 어느 재료로 내든 값은 같습니다. 선택만으로는 재료가 소모되지 않으며, 지불할 재료가 부족하면 구매할 수 없습니다. 재료로 지불할 때는 골드가 들지 않습니다. 골드 구매는 골드만 소모합니다. 약초는 재료로도 골드로도 더 비쌉니다. 재고 제한은 없습니다.<br><br>{hours}시간마다 재료 하나를 무작위로 골라 싸게 팝니다. 위 단계 재료는 대장간의 합성으로 만듭니다.<br><br>상단 3랭크는 방어구·장신구·스킬북 판매 줄을 엽니다.',
+        en: 'Build <b>Trading House rank 2</b> to open the Trading Post. The gold price of one purchase is shown under each material. Select the <b>lowest-grade material to receive</b> to see the required and owned amounts in the five payment slots below. Pick what to pay with, then press <b>Buy</b> on the right to receive {receive} of your selection.<br><br>Trade lowest-grade iron ore, herbs, timber and dust. The price is the same whichever material you pay with. Selecting a material spends nothing. Choose a material payment or gold. Only the selected currency is spent, and you must have enough of it. Herbs cost more in both materials and gold. There is no stock limit.<br><br>Every {hours} hours, one random material goes on sale. Make higher grades by combining materials at the Smithy.<br><br>Trading House rank 3 opens armor, jewelry and skill-book sales.',
+        zh: '在建设中将<b>商会提升到2阶</b>后开放交易所。每种材料下方标有一次购买的金币价格。点击<b>要获得的最低级材料</b>，下方五个格子会显示各支付材料的所需数量、持有量以及金币价格。选择要支付的格子后点击右侧的<b>[购买]</b>，即可获得{receive}个所选材料。<br><br>铁矿石、草药、木材、粉尘的最低级之间可以互换。无论用哪种材料支付，价格都相同。仅选择不会消耗材料，支付材料不足时无法购买。用材料支付时不花金币。用金币购买只消耗金币。草药无论用材料还是金币都更贵。没有库存限制。<br><br>每{hours}小时会随机选一种材料降价出售。更高级别的材料在铁匠铺通过合成制作。<br><br>商会3阶会开放防具、饰品、技能书的出售行。',
     },
     'help.shop.special.title': {
         ko: "특수상단은 별도 방문입니다",
@@ -3452,7 +3456,9 @@ const STRINGS = {
     'bk.upgrade': { ko: '업그레이드', en: 'Upgrade', zh: '升级' },   // 같은 책 — 버튼은 행동 이름만 · 드는 책 수는 읽기 줄 아랫줄 `bk.need` (ADR-1208 · R216)
     'bk.lvUp': { ko: 'Lv.{a} → Lv.{b}', en: 'Lv.{a} → Lv.{b}', zh: 'Lv.{a} → Lv.{b}' },   // 읽기 줄 아랫줄 — 지금 → 읽은 뒤 (§17 · ADR-1208)
     'bk.books': { ko: '책 {have}/{need}', en: 'Books {have}/{need}' },   // 도서관 스킬정보 칸 줄 아랫줄 — 가진 / 드는 같은 책 · 모자라면 붉다 (§17 · ADR-1308)
-    'bk.swap': { ko: '{a} → {b}', en: '{a} → {b}' },   // 습득 줄 윗줄 — 앞 스킬 Lv.n → 새 책(덮어쓰기) (ADR-1308)
+    'bk.swap': { ko: '{a} → {b}', en: '{a} → {b}' },   // 습득 줄 윗줄 — 앞 스킬 Lv.n → 새 책(덮어쓰기) (ADR-1308) · 레벨 줄의 지금 → 다음 값 (ADR-1312 · 1317)
+    'bk.weaponAny': { ko: '자유', en: 'Any weapon' },   // 스킬정보 줄 오른쪽 위 칩 — 무기가 필요 없는 스킬 (§17 · ADR-1321)
+    'bk.weaponClash': { ko: '{name} 스킬과 필요 무기가 달라 함께 쓸 수 없습니다', en: 'Different weapon than {name} — can’t use both' },   // 스킬정보 습득 줄 붉은 한 줄 — 고유 칸 스킬과 맞는 무기군이 없다 (§17 · ADR-1319)
     'bk.lvMax': { ko: 'Lv.{n} · 최대 레벨', en: 'Lv.{n} · Max level', zh: 'Lv.{n} · 最高等级' },   // 읽기 줄 아랫줄 — 상한 (ADR-1208)
     'bk.max': { ko: '최대', en: 'Max', zh: '最高' },
     // 스킬 북 제작 — 도서관 아랫줄 오른쪽 구역 (2026-11-18 · R540 · SCREEN_DESIGN §17 · ADR-1262) · 스킬 조각 이름 ⚠임시

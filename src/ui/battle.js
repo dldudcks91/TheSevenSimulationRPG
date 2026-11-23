@@ -1385,7 +1385,7 @@ function refreshAilmentLook(u, live) {
    효과 값은 로직이 실어 온 `traits[].stat` · `v` 다(`round` 적 항목) — 재생기는 문장으로 바꿀 뿐이다.
    그림 = 죄종 칸은 붙은 마스터리 칸 그림(죄종 색) · 강화 · 방어 칸은 `icons/battle_buffs/elite_<원소>`(피해 종류 색 — 강화 칩은 테두리도 그 색 · ADR-1246) — 회색 · 흰 실루엣을 마스크로 칠한다
    ⚠ 강화 칸은 제 그림이 아직 없어 방어 칸과 같은 원소 그림을 쓴다(그림이 서면 `elite_enchant_<원소>` 로 바꾼다) */
-const traitArt = f => f.slot === 'sin' ? `./assets/art/icons/mastery/sin/${f.id}${M.ICON_EXT}` : `./assets/art/icons/battle_buffs/elite_${f.id}${M.ICON_EXT}`;
+const traitArt = f => f.slot === 'sin' ? M.packed(`./assets/art/icons/mastery/sin/${f.id}${M.ICON_EXT}`) : `./assets/art/icons/battle_buffs/elite_${f.id}${M.ICON_EXT}`;
 const traitColor = f => f.slot === 'sin' ? (M.SINS[f.sin]?.color ?? 'var(--text-secondary)') : f.slot === 'def' || f.slot === 'enchant' ? `var(--dt-${f.id})` : 'var(--text-secondary)';
 const traitIconHtml = f => `<i class="sk-icon-mask trait-ico" aria-hidden="true" style="background:${traitColor(f)};-webkit-mask-image:url('${traitArt(f)}');mask-image:url('${traitArt(f)}')"></i>`;
 /** 칩 이름 — 띠 칩과 같은 글자(죄종 = 형용사 · ADR-1191) */

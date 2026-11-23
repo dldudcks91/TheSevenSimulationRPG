@@ -190,6 +190,8 @@ function openTip(node, ev, touch = false) {
         anchorSide = r.w - r.right >= r.left ? 'right' : 'left';
     } else anchorSide = 'right';
     touchOpen = touch;
+    // 손가락으로 연 툴팁은 키보드 각주(`.tip-foot` — Alt · Shift)를 안 단다 — 버튼 줄이 그 일을 한다 (ADR-1325)
+    $tip()?.classList.toggle('by-touch', touch);
     showTip(node._tipBuild(), ev);
     if (touch) addTouchBar(node, ev);
 }
@@ -284,8 +286,9 @@ export function moveTip(ev) {
     //   사본은 툴팁의 안쪽 위에 붙어 툴팁 테두리를 안 든다 — 테두리 몫(offset − client)을 더한다
     const ghost = tip.querySelector('.tip-ghost');
     const boxH = Math.max(tip.offsetHeight, ghost ? ghost.offsetHeight + tip.offsetHeight - tip.clientHeight : 0);
-    const tw = tip.offsetWidth, th = boxH + (bar ? bar.offsetHeight + 6 : 0);   // 배율 전 크기 = 한 장 단위
-    let x, y, w, h;
+    // 버튼 줄 판은 툴팁보다 넓을 수 있다(카드 한 장에 버튼 넷 · ADR-1325) — 가로 넘침도 그 폭으로 잰다
+    const tw = Math.max(tip.offsetWidth, bar ? bar.offsetWidth : 0), th = boxH + (bar ? bar.offsetHeight + 6 : 0);   // 배율 전 크기 = 한 장 단위
+    let x, y, w, h, atRight = false;
     if (anchored) {
         const r = stageRect(anchorNode);
         ({ w, h } = r);
@@ -304,7 +307,6 @@ export function moveTip(ev) {
         ({ w, h } = p);
         y = p.y + 16;
         // 먼저 쪽에 놓고 한 장 밖으로 넘치면 반대쪽으로 접는다 — 기본은 커서 오른쪽 · 인벤토리 칸은 커서 왼쪽(2026-10-21 · ADR-0693).
-        //   접혀도 아이템 비교 두 장의 순서는 그대로다 — 「착용 중」이 언제나 왼쪽 (2026-10-21 · SCREEN_DESIGN §6 · ADR-0690 — ~~`at-left` 로 뒤집기~~ ADR-0337)
         if (cursorSide === 'left') {
             x = p.x - tw - 16;
             if (x < 8) x = p.x + 16;
@@ -312,7 +314,11 @@ export function moveTip(ev) {
             x = p.x + 16;
             if (x + tw > w - 8) x = p.x - tw - 16;
         }
+        atRight = x > p.x;
     }
+    // 커서 오른쪽에 섰다는 표시 — 아이템 비교 두 장이 이것을 보고 「착용 중」을 바깥(오른쪽)으로 뒤집는다(style.css ·
+    //   2026-11-23 · SCREEN_DESIGN §6 · ADR-1329 — ~~「착용 중」이 언제나 왼쪽~~ ADR-0690). 카드 옆(앵커) 툴팁은 안 단다
+    tip.classList.toggle('at-right', atRight);
     if (y + th > h - 8) y = h - th - 8;
     if (x !== null) tip.style.left = Math.max(8, x) + 'px';
     tip.style.top = Math.max(8, y) + 'px';
@@ -325,7 +331,7 @@ export function hideTip() {
     if (shiftByTouch) { shiftByTouch = false; shiftHeld = false; }
     touchOpen = false;
     hideEquipmentItemTip();
-    $tip()?.classList.remove('show', 'interactive');
+    $tip()?.classList.remove('show', 'interactive', 'by-touch');
 }
 
 /** 영웅 툴팁의 장비 hover가 쓰는 **별도** 아이템 설명창 — 부모 폭을 바꾸면 칸이 움직여 hover가 끊기므로 형제로 띄운다 (ADR-0182). */
@@ -997,6 +1003,22 @@ function codexLevelValue(def, e, field) {
 }
 
 /**
+ * 스킬 레벨 한 단계의 변화 — 도서관 스킬정보 칸 줄의 「레벨이 오르면」 줄 (SCREEN_DESIGN §17 · ADR-1312).
+ * 이름 · 값은 도감 레벨별 옵션과 같은 함수(`codexLevelLabel` · `codexLevelValue`)다 — `up` 단계와 `up + 1` 단계를 전투와 같은 resolve → scaleDef 로 읽어 나란히 낸다.
+ * 한 단계에서 안 바뀌는 칸(타수 소수 단계 — 러시 · 래피드)은 뺀다.
+ * @returns {{label: string, from: string, to: string}[]} 레벨 칸이 없거나 바뀌는 칸이 없으면 빈 배열
+ */
+export function skillLevelSteps(id, up = 0) {
+    const def = SYS.skill.defs[id];
+    const rows = (def?.effects ?? []).flatMap((e, i) => [[e.levelField, i], [e.levelField2 ?? null, i]]).filter(([f]) => f != null);
+    if (!rows.length) return [];
+    const a = SYS.skill.scaleDef(SYS.skill.resolve({ id, up }), null);
+    const b = SYS.skill.scaleDef(SYS.skill.resolve({ id, up: up + 1 }), null);
+    return rows.map(([f, i]) => ({ label: codexLevelLabel(a, a.effects[i], f), from: codexLevelValue(a, a.effects[i], f), to: codexLevelValue(b, b.effects[i], f) }))
+        .filter(r => r.from !== r.to);
+}
+
+/**
  * 도감 스킬 툴팁 — 왼쪽 스킬 설명 아래 획득처 · 오른쪽 Lv1~9의 레벨별 옵션(2026-11-15 사용자 지시).
  * 몬스터 툴팁의 능력치 자리에 스킬은 「어디서 얻나」가 선다. 스킬 도감은 레벨이 없는 목록이라(monster_design §8-1 · R293) 영웅 · 세이브를 안 읽는다.
  * 획득처는 `battle.skillCarriers` 의 고정 칸 몬스터만 표시한다. 보스의 무작위 스킬 후보는 제외한다(2026-11-15).
@@ -1436,7 +1458,8 @@ window.addEventListener('click', ev => {
     ev.stopPropagation();
 }, true);
 
-/** 손가락 툴팁 아래의 버튼 줄 — [세부](= Alt) · 칸이 준 행동(= 우클릭 같은 것). 설 버튼이 없으면 줄도 안 선다 */
+/** 손가락 툴팁 아래의 버튼 줄 — 툴팁 아래 한 판 · **왼쪽 = 보기 버튼**([세부] = Alt · [범위] = Shift — 켜고 끈다) ·
+ *  **오른쪽 끝 = 칸이 준 행동**(= 우클릭 같은 것 · 첫 버튼이 주 버튼) (SCREEN_DESIGN §2 「터치 조작」 · ADR-1325). 설 버튼이 없으면 줄도 안 선다 */
 function addTouchBar(node, ev) {
     const tip = $tip();
     if (!tip) return;
@@ -1445,20 +1468,28 @@ function addTouchBar(node, ev) {
     const hasShift = !!tip.querySelector('[data-shift]');   // [범위] = Shift — 범위를 다는 줄이 있는 아이템 카드만 (ADR-0617)
     if (!hasAlt && !hasShift && !acts.length) return;
     const bar = el('div', 'tip-touch');
-    if (hasAlt) {
-        const b = el('button', `btn tip-touch-alt${altHeld ? ' on' : ''}`, t('tip.touch.alt'));
-        b.onclick = () => { const on = !altHeld; altByTouch = on; setAlt(on); };
-        bar.appendChild(b);
+    if (hasAlt || hasShift) {
+        const view = el('div', 'tip-touch-view');
+        if (hasAlt) {
+            const b = el('button', `btn tip-touch-alt${altHeld ? ' on' : ''}`, t('tip.touch.alt'));
+            b.onclick = () => { const on = !altHeld; altByTouch = on; setAlt(on); };
+            view.appendChild(b);
+        }
+        if (hasShift) {
+            const b = el('button', `btn tip-touch-range${shiftHeld ? ' on' : ''}`, t('tip.touch.range'));
+            b.onclick = () => { const on = !shiftHeld; shiftByTouch = on; setShift(on); };
+            view.appendChild(b);
+        }
+        bar.appendChild(view);
     }
-    if (hasShift) {
-        const b = el('button', `btn tip-touch-range${shiftHeld ? ' on' : ''}`, t('tip.touch.range'));
-        b.onclick = () => { const on = !shiftHeld; shiftByTouch = on; setShift(on); };
-        bar.appendChild(b);
-    }
-    for (const a of acts) {
-        const b = el('button', 'btn', a.label);
-        b.onclick = () => { hideTip(); a.run(); };
-        bar.appendChild(b);
+    if (acts.length) {
+        const row = el('div', 'tip-touch-acts');
+        acts.forEach((a, i) => {
+            const b = el('button', `btn${i === 0 ? ' primary' : ''}`, a.label);
+            b.onclick = () => { hideTip(); a.run(); };
+            row.appendChild(b);
+        });
+        bar.appendChild(row);
     }
     tip.appendChild(bar);
     // 줄이 붙어 키가 컸다 — 아래 넘침 보정을 다시 한다
@@ -1510,8 +1541,9 @@ const skillNameHtml = (s, attrs = [], need = null) => {
     return `<div class="tip-name"><span class="tip-sk-ico">${skillImg(s)}${lv}</span><span class="tip-name-text">${L(def?.name ?? s.name ?? { ko: s.id, en: s.id })}</span>`
         + `${attrs.length ? `<span class="tip-name-attr">${attrs.join('')}</span>` : ''}${need ? `<span class="tip-name-side">${need}</span>` : ''}</div>`;
 };
-/** 필요 무기 칩 — 무기가 필요한 스킬(`def.needsWeapon` · skill_design §2-2)만. 그 스킬 직업(`def.classId`)의 무기군 이름을 `weapon_group.csv` 순서로 잇는다 */
-const needWeaponChip = (def, off) => {
+/** 필요 무기 칩 — 무기가 필요한 스킬(`def.needsWeapon` · skill_design §2-2)만. 그 스킬 직업(`def.classId`)의 무기군 이름을 `weapon_group.csv` 순서로 잇는다.
+ *  도서관 스킬정보 줄의 이름 줄 오른쪽 끝도 같은 칩이다 (SCREEN_DESIGN §17 · ADR-1319) */
+export const needWeaponChip = (def, off) => {
     if (!def?.needsWeapon) return null;
     const names = (D.weaponGroupList ?? []).filter(g => g.classes.includes(def.classId)).map(g => L(g));
     return names.length ? `<i class="tip-chip need${off ? ' off' : ''}">${names.join(' · ')}</i>` : null;

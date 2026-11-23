@@ -256,10 +256,9 @@
 :root[data-mobile] .fg-kinds { grid-template-columns: 32px minmax(0, 1fr) auto; gap: 5px; }
 :root[data-mobile] .fg-kind .fg-kname { padding-left: 0; white-space: normal; }
 :root[data-mobile] .fg-kmats { flex-wrap: wrap; }
-:root[data-mobile] .sy-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; gap: 6px; }
-:root[data-mobile] .sy-row > .mat-cell { width: 44px; }
-:root[data-mobile] .sy-act, :root[data-mobile] .sy-cost { flex-wrap: wrap; justify-content: center; white-space: normal; }
-:root[data-mobile] .td-trade-offers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+:root[data-mobile] .fg-sy-row > .mat-cell { flex-basis: 44px; width: 44px; }   /* 합성 재료 판 — 밀어서 보기 한 페이지 (ADR-1309) */
+:root[data-mobile] .fg-sy-mats { padding: 16px 10px; }
+:root[data-mobile] .td-trade-offers { grid-template-columns: repeat(5, minmax(0, 1fr)); }   /* 지불 다섯 칸 한 줄 — 칸마다 [구매]가 빠져 좁다 (ADR-1310) */
 :root[data-mobile] .td-split { display: flex; flex-direction: column; gap: 16px; }
 :root[data-mobile] .td-side { min-width: 0; width: 100%; }
 :root[data-mobile] .bk-buy, :root[data-mobile] .bk-cost, :root[data-mobile] .tr-adv-cur { flex-wrap: wrap; }

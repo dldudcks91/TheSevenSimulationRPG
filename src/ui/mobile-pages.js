@@ -179,8 +179,12 @@ export function mountMobilePages(main) {
         const work = page.querySelector('.c-forge-col');
         deck(page, tab, [{node:work,label:'work'}, ...items(page, '.c-forge-band > .panel, .bag-row > .bag', ['gear','stash','bag'])]);
         afterPick(page, '.inv-cell.filled, .pd-cell.filled', tab, 0);
+        const synth = page.querySelector('.fg-sy');   // Combine: materials › combine pages; picking a material opens the combine page (ADR-1309)
         const upgrade = page.querySelector('.fg-up');
-        if (upgrade) {
+        if (synth) {
+            deck(synth, 'forge-synth', [{node:synth.querySelector('.fg-sy-mats'),label:'mats'}, {node:synth.querySelector('.fg-sy-work'),label:'synth'}]);
+            afterPick(synth, '.fg-sy-mats .mat-cell.click', 'forge-synth', 1);
+        } else if (upgrade) {
             const temper = upgrade.querySelector('.fg-tp');
             const sections = [{node:upgrade.querySelector('.fg-up-work'),label:'upgrade'}, {node:upgrade.querySelector('.fg-up-tipcol'),label:'gear'}];
             if (temper) sections.push({node:temper,label:'temper'});
@@ -188,7 +192,7 @@ export function mountMobilePages(main) {
         }
     } else if (tab === 'library') {
         // Books stay on the main page; advancement opens its own room window (ADR-1179 · restored ADR-1262).
-        deck(page.querySelector('.lib-split'), 'library-books', items(page, '.lib-split > .lib-sec', ['books']));   // books · owned (title) — upgrade lives in the skill info rows (ADR-1308) · salvage is the owned panel's box (ADR-1304)
+        // No deck: the bottom row is already folder tabs (owned · salvage · craft) with one panel, like the forge (ADR-1326).
     } else if (tab === 'resource') {
         const grid = page.querySelector('.dp-tree-grid');
         // Turn the desktop coordinate grid into a list of production lines.

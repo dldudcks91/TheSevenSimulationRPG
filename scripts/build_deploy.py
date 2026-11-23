@@ -17,9 +17,13 @@ Rule (docs/client/ARCHITECTURE.md §11 「배포판」):
 - Self-check per file: the stripped output is lexed again and its token stream (comments and whitespace aside)
   must equal the source's; brackets must balance. Any mismatch stops the build.
 
-Usage:  python scripts/build_deploy.py <out_dir> [--with-dev]
-  --with-dev  also copies the dev test pages (src/dev/test · sim · golden — stripped the same way) so dev/test.html
-              can be run against the built copy. Never use it for the real deploy.
+Usage:  python scripts/build_deploy.py <out_dir> [--with-dev] [--pack-icons]
+  --with-dev    also copies the dev test pages (src/dev/test · sim · golden — stripped the same way) so dev/test.html
+                can be run against the built copy. Never use it for the real deploy.
+  --pack-icons  ships the big icon sets (PACK_SETS) as packs of PACK_SIZE icons instead of one file each — the itch.io
+                upload takes at most 1,000 files (docs/client/ITCH_BUILD.md §6). A pack is the icons' bytes back to back
+                (no re-encode); preload.json "packs" gives each icon's offset · length and ui/preload.js cuts them back
+                into image URLs. Every icon is read back from its pack and compared byte for byte.
 Requires the standard library only.
 """
 
@@ -354,6 +358,47 @@ PRELOAD_FIRST = [
 ]
 
 
+# Icon packs (--pack-icons) — the sets whose image paths go through ui/mock.js:packed (skillIcon · itemArt · weaponBaseArt ·
+# the mastery cells in ui/app.js · ui/battle.js:traitArt). A set added here must have its path builders call `packed` too.
+PACK_SETS = {
+    "skills": ["src/assets/art/icons/skills/*"],
+    "mastery": ["src/assets/art/icons/mastery/*"],
+    "items": ["src/assets/art/icons/items/weapon_base/*", "src/assets/art/icons/items/item_base/*"],
+}
+PACK_SIZE = 64
+
+
+def pack_icons(files: list[tuple[Path, str]], out: Path, stats: dict) -> tuple[list[dict], set[str]]:
+    """Write the packs under src/assets/art/packs/ — returns (the "packs" list for preload.json, the rels now inside a pack)."""
+    packs: list[dict] = []
+    inside: set[str] = set()
+    for name, pats in PACK_SETS.items():
+        members = [(src, rel) for src, rel in files
+                   if Path(rel).suffix.lower() in ART_EXT and any(fnmatch.fnmatchcase(rel, p) for p in pats)]
+        for k in range(0, len(members), PACK_SIZE):
+            chunk = members[k:k + PACK_SIZE]
+            rel = f"src/assets/art/packs/{name}_{k // PACK_SIZE}.bin"
+            blob = bytearray()
+            items: list[list] = []
+            for src, r in chunk:
+                data = src.read_bytes()
+                items.append([r[len("src/"):], len(blob), len(data)])
+                blob += data
+            dst = out / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            dst.write_bytes(bytes(blob))
+            back = dst.read_bytes()
+            for (src, r), (_, off, n) in zip(chunk, items):
+                if back[off:off + n] != src.read_bytes():
+                    raise BuildError(f"pack {rel}: {r} does not read back")
+            inside.update(r for _, r in chunk)
+            first = any(fnmatch.fnmatchcase(r, p) for _, r in chunk for p in PRELOAD_FIRST)
+            packs.append({"src": rel[len("src/"):], "first": first, "items": items})
+            s = stats.setdefault("pack", [0, 0, 0])
+            s[0] += 1; s[1] += len(blob); s[2] += len(blob)
+    return packs, inside
+
+
 def preload_list(files: list[tuple[Path, str]]) -> dict[str, list[str]]:
     """{"first": [...], "rest": [...]} — paths relative to src/ (what the page fetches as ./<path>)."""
     out: dict[str, list[str]] = {"first": [], "rest": []}
@@ -397,10 +442,17 @@ def main(argv: list[str]) -> int:
     for src, rel in files:
         if not src.is_file():
             raise BuildError(f"missing: {src.relative_to(ROOT).as_posix()}")
+    packs, inside = pack_icons(files, out, stats) if "--pack-icons" in argv else ([], set())
+    files = [(src, rel) for src, rel in files if rel not in inside]
+    for src, rel in files:
         build_file(src, out / rel, stats)
     pre = preload_list(files)
+    if packs:
+        pre["packs"] = packs
     put(out / "src/assets/art/preload.json", json.dumps(pre, separators=(",", ":")))
     print(f"preload {len(pre['first']):5d} first + {len(pre['rest'])} rest images -> src/assets/art/preload.json")
+    if packs:
+        print(f"packs   {len(packs):5d} packs holding {len(inside)} icons ({sum(p['first'] for p in packs)} first)")
     (out / ".nojekyll").write_text("", encoding="utf-8")
     for kind in sorted(stats):
         n, a, b = stats[kind]
