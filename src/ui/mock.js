@@ -131,7 +131,7 @@ export const AFFIX_LABELS = {
     dmg_per_level_pct: { ko: '레벨당 데미지', en: 'Damage per Level', zh: '每级伤害', fmt: 'pct' },
     crushing_blow_pct: { ko: '강타', en: 'Crushing Blow', zh: '压碎性打击', fmt: 'pct' },   // 옵션 이름에 괄호를 안 단다 (§6 · ADR-0954)
     magic_find: { ko: '파티 매직아이템 획득확률', en: 'Party Magic Find', zh: '队伍魔法物品获取率', fmt: 'pct' },
-    vs_normal_dmg: { ko: '자연 대상 추가 피해', en: 'Damage vs Natural', zh: '对自然额外伤害', fmt: 'pct' },
+    vs_normal_dmg: { ko: '생물 대상 추가 피해', en: 'Damage vs Creature', zh: '对生物额外伤害', fmt: 'pct' },
     vs_demon_dmg: { ko: '데몬 대상 추가 피해', en: 'Damage vs Demon', zh: '对恶魔额外伤害', fmt: 'pct' },
     vs_undead_dmg: { ko: '언데드 대상 추가 피해', en: 'Damage vs Undead', zh: '对亡灵额外伤害', fmt: 'pct' },
     vs_elite_dmg: { ko: '정예·보스 대상 추가 피해', en: 'Damage vs Elites & Bosses', zh: '对精英与首领额外伤害', fmt: 'pct' },
@@ -162,7 +162,7 @@ export const AFFIX_LABELS = {
     res_max_lightning: { ko: '최대 전기 저항', en: 'Max Lightning Resist', zh: '最大闪电抗性', fmt: 'pct' },
     res_max_poison: { ko: '최대 독 저항', en: 'Max Poison Resist', zh: '最大毒素抗性', fmt: 'pct' },
     dr_flat: { ko: '피해 감소', en: 'Damage Reduction', zh: '伤害减免', fmt: 'n' },   // 고정 · % 는 단위가 가른다 — `damage_reduction` 과 이름이 같다 (§6 · ADR-0954)
-    vs_normal_dr: { ko: '자연 적에게 받는 피해 감소', en: 'Damage Reduction vs Natural', zh: '来自自然的伤害减免', fmt: 'pct' },
+    vs_normal_dr: { ko: '생물에게 받는 피해 감소', en: 'Damage Reduction vs Creature', zh: '来自生物的伤害减免', fmt: 'pct' },
     vs_demon_dr: { ko: '데몬에게 받는 피해 감소', en: 'Damage Reduction vs Demon', zh: '来自恶魔的伤害减免', fmt: 'pct' },
     vs_undead_dr: { ko: '언데드에게 받는 피해 감소', en: 'Damage Reduction vs Undead', zh: '来自亡灵的伤害减免', fmt: 'pct' },
     vs_elite_dr: { ko: '정예·보스에게 받는 피해 감소', en: 'Damage Reduction vs Elites & Bosses', zh: '来自精英与首领的伤害减免', fmt: 'pct' },
@@ -861,7 +861,8 @@ export const exploreIcon = spot => EXPLORE_ICON_DIR + spot + ICON_EXT;
 /** 연구소 지점 아이콘 — `src/assets/art/icons/lab/node/<지점 id>.webp`(`lab_node.csv:node`) · 회색 단색 실루엣(마스터리 아이콘과 같은 그림체) · 같은 지점은 줄이 달라도 같은 그림 (2026-10-21 · ADR-0684 · 전부 다시 그림 2026-11-14 ADR-1114).
  *  줄 그림은 이 폴더가 아니라 그 줄을 여는 건물의 건설 그림이다(`app.js:LAB_LINES` 의 `art`) */
 export const LAB_ICON_DIR = './assets/art/icons/lab/';
-const LAB_NODE_ICON = { offline: 'interval', relief: 'waiting' };
+// ⚠ 임시 — 대장간 줄 「인챈트」 · 「분해」 지점(2026-11-24 · R576)은 제 그림이 아직 없어 비슷한 뜻의 그림을 빌린다(품질 · 수익 주머니) · 그림이 서면 이 두 줄을 걷는다
+const LAB_NODE_ICON = { offline: 'interval', relief: 'waiting', enchant: 'quality', salvage: 'income' };
 export const labNodeIcon = node => `${LAB_ICON_DIR}node/${LAB_NODE_ICON[node] ?? node}${ICON_EXT}`;
 
 /**

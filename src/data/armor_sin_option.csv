@@ -13,7 +13,7 @@ armor,envy,2,reflect_damage,flat,0.02,0.05,-,갑옷 시기 ② — 반사 피해
 armor,envy,3,res_poison,flat,0.06,0.2,-,갑옷 시기 ③ — 독 저항 ⚠제안 수치
 armor,pride,1,def_per_level,band,1,2,0,갑옷 오만 — 레벨당 방어력(영웅 레벨 × 값을 더한다 · 정수 · per_ilvl 0) · 오만은 이 한 칸(~~특정 스킬 +n · 레벨당 체력~~ 2026-10-21 삭제) ⚠제안 수치 (2026-10-21 사용자 · item_design §1 「10-21 방어구 개정」 · R303)
 armor,gluttony,1,vs_elite_dr,flat,0.04,0.1,-,갑옷 폭식 ① — 정예·보스에게 받는 피해 감소 ⚠제안 수치
-armor,gluttony,2,vs_normal_dr,flat,0.04,0.1,-,갑옷 폭식 ② — 종족에게 받는 피해 감소(셋 중 하나 — 변형) · 자연(Natural) ⚠제안 수치
+armor,gluttony,2,vs_normal_dr,flat,0.04,0.1,-,갑옷 폭식 ② — 종족에게 받는 피해 감소(셋 중 하나 — 변형) · 생물(Creature) ⚠제안 수치
 armor,gluttony,2,vs_demon_dr,flat,0.04,0.1,-,갑옷 폭식 ② — 종족에게 받는 피해 감소 · 데몬(Demon) ⚠제안 수치
 armor,gluttony,2,vs_undead_dr,flat,0.04,0.1,-,갑옷 폭식 ② — 종족에게 받는 피해 감소 · 언데드(Undead) ⚠제안 수치
 armor,gluttony,3,res_all,flat,0.03,0.1,-,갑옷 폭식 ③ — 모든 원소 저항 ⚠제안 수치
@@ -49,7 +49,7 @@ gloves,sloth,1,proc_hit_buff,flat,0.05,0.12,-,장갑 나태 ① — 타격 시 �
 gloves,sloth,2,cooldown_reduction,flat,0.03,0.08,-,장갑 나태 ② — 쿨타임 감소 ⚠제안 수치
 gloves,sloth,3,buff_dur_pct,flat,0.05,0.15,-,장갑 나태 ③ — 버프 지속시간 +% ⚠제안 수치
 gloves,lust,1,kill_heal_pct,flat,0.02,0.05,-,장갑 색욕 ① — 처치 시 체력 회복(처치마다 최대 HP × 값) · 투구 색욕 ① 과 같다 ⚠제안 수치
-gloves,lust,2,hit_bonus,flat,0.1,0.2,-,장갑 색욕 ② — 명중률(적중률에 (1 + 명중률)로 곱한다) · 물리 무기 색욕 ② 와 같은 대역 ⚠제안 수치
+gloves,lust,2,hit_bonus,flat,0.02,0.05,-,장갑 색욕 ② — 명중률(적중률에 (1 + 명중률)로 곱한다) · 무기 나태 ③ 과 같은 대역 ⚠제안 수치 (2026-11-24 사용자 「ㅇㅇ내려줘」 · R568 — 옛 0.1~0.2)
 gloves,lust,3,dmg_max_flat,wdmg,0.06,0.15,-,장갑 색욕 ③ — 최대 데미지(고정 수치 · 무기 피해와 같이 자란다) · 무기 색욕 ③ 과 같은 대역 ⚠제안 수치
 gloves,envy,1,def_ignore,flat,0.03,0.08,-,장갑 시기 — 한 칸 · 드롭 때 다섯 중 하나 · 방어력 관통 · 반지 시기와 같은 다섯 ⚠제안 수치 (2026-10-21 사용자 「다섯 중에 1개가 나오는거야」) · 가죽은 특성이 정한다 — 공격 속도면 방어력 관통 · 캐스팅 속도면 원소 관통 넷 중 하나(2026-11-17 · R531 · item.js GLOVES_ENVY_BY_TRAIT)
 gloves,envy,1,res_reduction_fire,flat,0.03,0.08,-,장갑 시기 — 화염 관통(그 원소의 타격에만 · 낀 영웅의 타격만) · 다섯 중 하나 ⚠제안 수치

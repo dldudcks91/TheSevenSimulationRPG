@@ -130,7 +130,7 @@ const STRINGS = {
     'mobile.page.advance': { ko: '전직', en: 'Advance', zh: '转职' },
     'mobile.page.upgrade': { ko: '업그레이드', en: 'Upgrade', zh: '升级' },
     'mobile.page.books': { ko: '책 제작', en: 'Books', zh: '制作书' },   // 도서관 본판 오른쪽 구역 — 스킬 북 제작 (ADR-1262)
-    'mobile.page.temper': { ko: '손질', en: 'Prep', zh: '整备' },
+    'mobile.page.temper': { ko: '담금질', en: 'Quench', zh: '淬火' },
     'mobile.page.mats': { ko: '재료', en: 'Materials', zh: '材料' },   // 대장간 합성 — 왼쪽 재료 판 (ADR-1309)
     'mobile.page.synth': { ko: '합성', en: 'Combine', zh: '合成' },   // 대장간 합성 — 오른쪽 합성 판 (ADR-1309)
     'mobile.page.research': { ko: '연구판', en: 'Research', zh: '研究面板' },
@@ -269,13 +269,11 @@ const STRINGS = {
     'hint.commissions': { ko: '의뢰를 받아 목표를 채우고 보상을 받습니다. 의뢰 카드에서 조건과 진행도를 확인하세요.', en: 'Accept commissions, complete their objectives and claim rewards. Check each card’s conditions and progress.', zh: '接受委托，完成目标后领取奖励。请在委托卡片上确认条件与进度。' },
     'hint.gamble': { ko: '판돈을 고르고 슬롯을 돌립니다. 심볼 조합에 따른 배당은 배당표에서 확인할 수 있습니다.', en: 'Choose a stake and spin the slots. The payout table shows rewards for symbol combinations.', zh: '选择赌注并转动老虎机。各符号组合的赔付可在赔率表中查看。' },
     'hint.payouts': { ko: '당첨 조합과 배당입니다. 판돈과 함께 확인하면 한 판의 보상을 비교할 수 있습니다.', en: 'Winning combinations and their payouts. Compare them with your chosen stake.', zh: '中奖组合与赔付。结合赌注查看，可比较每次的奖励。' },
-    'hint.forge_make': { ko: '장비 부위나 물약을 골라 제작합니다. 만들 항목의 재료와 골드 비용을 확인하세요.', en: 'Choose an equipment slot or potion to craft. Check its material and gold costs.', zh: '选择装备部位或药水进行制作。请确认所需材料与金币费用。' },
     'hint.forge_up': { ko: '장비를 골라 강화합니다. 다음 단계의 변화와 필요한 재료를 확인한 뒤 진행하세요. 낮은 단계는 실패해도 비용만 나가고, 중간 단계는 실패하면 한 단계 내려갈 수 있으며, 높은 단계는 장비가 부서질 수 있습니다. 부서진 장비는 분해한 것과 같은 재료를 남깁니다. 등급이 높을수록 성공 확률이 낮고, 성공의 일부는 대성공으로 더 크게 오릅니다.', en: 'Select equipment to upgrade. Review the next step’s changes and required materials. At low levels a failure only spends the cost; at middle levels it can drop the item one level; at high levels the item can break. A broken item leaves the same materials as salvaging it. Higher grades have lower success chances, and some successes are great successes that raise more.', zh: '选择装备进行强化。请确认下一级的变化与所需材料后再进行。低阶段失败只消耗费用；中阶段失败可能下降1级；高阶段装备可能损毁。损毁的装备会留下与分解相同的材料。稀有度越高，成功几率越低；部分成功会成为大成功，提升更多。' },
     'hint.forge_ench': { ko: '레어 이상 장비에 옵션 한 줄을 더합니다. 다시 하면 새 줄과 원래 줄 중 하나를 고릅니다.', en: 'Adds one option line to a Rare or better item. Enchanting again lets you keep either the new line or the current one.', zh: '为稀有及以上装备附加一条词条。再次附魔时可在新词条与原有词条中选择其一。' },
     'hint.forge_synth': { ko: '같은 종류의 아래 단계 재료를 써서 위 단계 재료를 만듭니다. 합성에 쓴 재료는 소모됩니다.', en: 'Combine lower-tier materials into a higher tier of the same material. Combining consumes the input materials.', zh: '用同类低一级别的材料合成高一级别的材料。合成所用的材料会被消耗。' },
     'hint.forge_craft': { ko: '크래프트는 준비 중입니다. 현재는 제작·강화·합성을 이용할 수 있습니다.', en: 'Craft is in development. Smithing, upgrading and combining are currently available.', zh: '打造功能尚未开放。目前可使用制作、强化与合成。' },
-    'hint.temper': { ko: '셋 중 하나를 골라 재료를 내면 다음 강화 한 번에 효과가 붙습니다. 달구기는 성공 확률, 덧대기는 대성공 비율을 올리고, 담금질은 강등이나 파괴를 막을 확률을 줍니다. 담금질은 강등이나 파괴가 있는 단계에서만 쓸 수 있습니다. 재료 단계는 장비 레벨과 등급이 정하며, 높을수록 효과가 큽니다.', en: 'Pick one of three and spend its material to boost your next upgrade. Heat raises the success chance, Reinforce raises the great-success share, and Quench gives a chance to prevent a downgrade or break. Quench can only be used at steps where a downgrade or break is possible. The material tier is set by the item level and grade; higher tiers give bigger effects.', zh: '三选一并支付材料，下一次强化即获得效果。加热提高成功几率，加固提高大成功比例，淬火提供防止降级或损毁的几率。淬火只能在可能降级或损毁的阶段使用。材料级别由装备等级与稀有度决定，级别越高效果越大。' },
-    'hint.potion_stock': { ko: '현재 가진 물약의 종류와 개수입니다. 편성 탭에서 Party의 물약 칸에 넣을 수 있습니다.', en: 'Potion types and quantities currently in stock. Configure each Party’s potion belt in Party.', zh: '当前持有的药水种类与数量。可在编队标签页中放入Party的药水格。' },
+    'hint.temper': { ko: '셋 중 하나를 골라 재료를 내면 다음 강화 한 번에 효과가 붙습니다. 달구기는 성공 확률, 덧대기는 대성공 비율을 올리고, 막기는 강등이나 파괴를 막을 확률을 줍니다. 막기는 강등이나 파괴가 있는 단계에서만 쓸 수 있습니다. 재료 단계는 장비 레벨과 등급이 정하며, 높을수록 효과가 큽니다.', en: 'Pick one of three and spend its material to boost your next upgrade. Heat raises the success chance, Reinforce raises the great-success share, and Guard gives a chance to prevent a downgrade or break. Guard can only be used at steps where a downgrade or break is possible. The material tier is set by the item level and grade; higher tiers give bigger effects.', zh: '三选一并支付材料，下一次强化即获得效果。加热提高成功几率，加固提高大成功比例，防护提供防止降级或损毁的几率。防护只能在可能降级或损毁的阶段使用。材料级别由装备等级与稀有度决定，级别越高效果越大。' },
     'hint.trade': { ko: '받을 최하급 재료를 선택한 뒤 다른 재료 또는 골드로 구매합니다. 지불 수단별 가격과 보유량을 확인할 수 있습니다.', en: 'Choose a lowest-grade material to receive, then buy it with another material or gold. Each payment option shows its cost and available stock.', zh: '选择要获得的最低级材料，再用其他材料或金币购买。可查看各支付方式的价格与持有量。' },
     'hint.special': { ko: '특수 상단 기능은 준비 중입니다.', en: 'The special trader is in development.', zh: '行商功能尚未开放。' },
     'hint.help': { ko: '폴더를 고르거나 궁금한 말을 검색해 조작법과 게임 규칙을 찾아봅니다.', en: 'Choose a folder or search a term to find controls and game rules.', zh: '选择文件夹或搜索想了解的词语，查找操作方法与游戏规则。' },
@@ -1063,14 +1061,17 @@ const STRINGS = {
     'dp.val.trainXp': { ko: '+{n} XP/시간', en: '+{n} XP/h', zh: '+{n} 经验/小时' },
     'dp.node.range': { ko: '범위', en: 'Range', zh: '范围' },
     'dp.node.income': { ko: '수익', en: 'Income', zh: '收益' },
-    'dp.node.make': { ko: '제작', en: 'Crafting', zh: '制作' },   // 대장간 줄 — 레벨 목록 소제목이 「제작 레벨」로 읽힌다 (R565)
-    'dp.val.make': { ko: '장비 Lv{n}', en: 'Gear Lv{n}', zh: '装备 Lv{n}' },
+    'dp.node.make': { ko: '제작', en: 'Crafting', zh: '制作' },   // 대장간 줄 — 레어 가중치 (R576 — ~~제작 레벨~~ R565)
     'dp.node.upgrade': { ko: '강화', en: 'Upgrade', zh: '强化' },   // 대장간 줄 — 강화 상한 (R566)
     'dp.node.potion': { ko: '물약', en: 'Potion', zh: '药水' },   // 대장간 줄 — 물약 단계 (R566)
+    'dp.node.enchant': { ko: '인챈트', en: 'Enchant' },   // 대장간 줄 — 인챈트 굴림 바닥 (R576 D13)
+    'dp.node.salvage': { ko: '분해', en: 'Salvage' },   // 대장간 줄 — 분해량 (R576 D13)
     'dp.val.upgrade': { ko: '+{n}강', en: '+{n}', zh: '+{n}' },   // 「강화」 지점 값 = 강화 상한 (R566)
     'dp.desc.forge.upgrade': { ko: '장비를 더 높은 단계까지 강화할 수 있습니다.', en: 'Lets gear be upgraded to higher steps.', zh: '装备可以强化到更高阶段。' },
-    'dp.desc.forge.potion': { ko: '더 높은 단계의 물약을 만들 수 있습니다.', en: 'Lets the Blacksmith brew higher-tier potions.', zh: '可以制作更高阶的药水。' },   // 「제작」 지점 값 — 그 레벨이 여는 장비 레벨(지점 레벨 `Lv n` 과 갈라 읽힌다 · R565)
-    'dp.desc.forge.make': { ko: '대장간에서 더 높은 레벨의 장비를 만들 수 있습니다.', en: 'Lets the Blacksmith craft higher-level gear.', zh: '铁匠铺可以制作更高等级的装备。' },
+    'dp.desc.forge.potion': { ko: '더 높은 단계의 물약을 만들 수 있습니다.', en: 'Lets the Blacksmith brew higher-tier potions.', zh: '可以制作更高阶的药水。' },
+    'dp.desc.forge.make': { ko: '대장간 줄이 만드는 장비가 레어로 나올 확률이 오릅니다.', en: 'Gear made here is more likely to be Rare.' },   // R576 D5 · D13
+    'dp.desc.forge.enchant': { ko: '인챈트로 붙는 옵션 값이 더 높게 나옵니다.', en: 'Enchanted option values roll higher.' },   // 굴림 바닥이 오른다 · 위 끝 그대로 (R576 D13)
+    'dp.desc.forge.salvage': { ko: '장비를 분해할 때 가루와 재료를 더 얻습니다.', en: 'Salvaging gear yields more dust and materials.' },   // R576 D13
     'dp.val.slots': { ko: '+{n}칸', en: '+{n}', zh: '+{n}格' },
     'dp.val.range': { ko: '최고 −{n}', en: 'Top −{n}', zh: '最高−{n}' },
     // 레벨 값이 무엇을 미는가 — 레벨 목록 줄 · 「다음 레벨」 값 변화 줄 앞에 선다(「철광석 생산 +10%」 · ADR-1362)
@@ -1091,7 +1092,9 @@ const STRINGS = {
     'dp.what.gamble.burst': { ko: '대박 확률', en: 'Jackpot chance' },
     'dp.what.lib.interval': { ko: '스킬 조각 생산', en: 'Skill Shard output' },
     'dp.what.lib.burst': { ko: '스킬북 확률', en: 'Skill Book chance' },
-    'dp.what.forge.make': { ko: '제작', en: 'Crafting' },
+    'dp.what.forge.make': { ko: '레어 가중치', en: 'Rare weight' },   // R576 — ~~제작~~
+    'dp.what.forge.enchant': { ko: '인챈트 바닥', en: 'Enchant floor' },
+    'dp.what.forge.salvage': { ko: '분해량', en: 'Salvage yield' },
     'dp.res.go': { ko: '연구', en: 'Research', zh: '研究' },
     'dp.res.cancel': { ko: '그만두기', en: 'Cancel', zh: '中止' },
     'dp.res.time': { ko: '{t} 걸림', en: 'Takes {t}', zh: '耗时{t}' },
@@ -1110,11 +1113,11 @@ const STRINGS = {
     'dp.out.h.train': { ko: '훈련 상한', en: 'Training Cap', zh: '训练上限' },
     'dp.out.h.gamble': { ko: '시간당 생산', en: 'Per Hour', zh: '每小时产量' },
     'dp.out.h.lib': { ko: '시간당 생산', en: 'Per Hour', zh: '每小时产量' },   // R546 — 자원 · 도박장과 같은 소제목
-    'dp.line.desc.forge': { ko: '대장간의 강화 상한 · 제작 레벨 · 물약 단계를 올립니다', en: 'Raises the Blacksmith’s upgrade cap, crafting level and potion tier', zh: '提升铁匠铺的强化上限、制作等级与药水阶段' },   // R565 · R566
-    'dp.out.h.forge': { ko: '지금 상한', en: 'Current Caps', zh: '当前上限' },   // R565 · R566 — 지점 셋이 지금 연 끝
-    'dp.out.makeTop': { ko: '제작', en: 'Crafting', zh: '制作' },
-    'dp.out.upMax': { ko: '강화', en: 'Upgrade', zh: '强化' },   // 대장간 줄 「지금 상한」 — 강화 상한 (R566)
-    'dp.out.potionTop': { ko: '물약', en: 'Potion', zh: '药水' },   // 대장간 줄 「지금 상한」 — 만들 수 있는 가장 높은 물약 (R566)   // 대장간 줄 「지금 내는 것」 — 지금 만들 수 있는 가장 높은 레벨 (R565)
+    'dp.line.desc.forge': { ko: '등록한 영웅이 시간마다 장비 · 물약을 만듭니다', en: 'Assigned heroes make gear and potions every few hours' },   // R574
+    'dp.out.h.forge': { ko: '지금 만드는 것', en: 'In Production' },   // R574 — 장비 칸 · 영웅마다 만드는 것 · 강화 상한 (ADR-1375)
+    'dp.out.slots': { ko: '장비 칸', en: 'Gear slots' },   // 대장간 줄 공용 장비 칸 `n / 칸 수` (R574 D8)
+    'dp.out.upMax': { ko: '강화 상한', en: 'Upgrade cap' },   // 대장간 줄 「지금 만드는 것」 — 강화 상한 (R566)
+    'dp.out.needHero': { ko: '생산하려면 영웅을 등록해야 합니다', en: 'Assign a hero to start production' },   // 영웅이 있어야 도는 줄 — 등록한 영웅이 없을 때 (R574 D16 · ADR-1375)
     'fg.needLab': { ko: '{b} · {node} Lv{n}', en: '{b} · {node} Lv{n}', lock: true, zh: '{b} · {node} Lv{n}' },   // 대장간 탭 잠긴 제작 레벨 — 그 레벨을 여는 연구소 지점 레벨 (R565)
     'dp.out.shard': { ko: '스킬 조각', en: 'Skill Shards', zh: '技能碎片' },   // 도서관 줄 「지금 내는 것」 첫 줄 (R546 · ADR-1273)
     'dp.out.bookChance': { ko: '스킬북 확률', en: 'Skill book chance', zh: '技能书几率' },   // 조각 하나마다 등록 영웅 스킬 책 (R546)
@@ -1131,6 +1134,7 @@ const STRINGS = {
     'dp.fx.speed.train': { ko: '경험치', en: 'XP', zh: '经验' },
     'dp.fx.speed.gamble': { ko: '골드', en: 'Gold', zh: '金币' },
     'dp.fx.speed.lib': { ko: '조각 생산 속도', en: 'Shard production speed', zh: '碎片生产速度' },   // R546
+    'dp.fx.speed.forge': { ko: '제작 속도', en: 'Crafting speed' },   // 대장간 줄 — 힘 덤이 영웅마다 간격을 줄인다 (R574 D4)
     'dp.fx.burst': { ko: '대박 확률', en: 'Jackpot chance', zh: '大丰收几率' },
     'dp.fx.quality': { ko: '레어 확률', en: 'Rare chance', zh: '稀有几率' },
     'dp.fx.research': { ko: '연구 속도', en: 'Research speed', zh: '研究速度' },
@@ -1302,8 +1306,7 @@ const STRINGS = {
     },
 
     /* 대장간 (SCREEN_DESIGN §8-2) — 제목 줄이 없다: 탭 이름(`nav.forge`)이 crumb 에 서고 작업 탭은 상단바에 선다 (ADR-0190).
-       작업 탭 셋 = 제작 · 강화 · 크래프트 (ADR-0142) · 배치 줄은 걷었다 (ADR-0191). 강화의 결과 문구는 캐릭터 탭이 쓰던 `ch.upgraded` 를 재사용한다 — 같은 사건이라 문구를 새로 쓰지 않는다 */
-    'fg.seg.make': { ko: '제작', en: 'Smith', zh: '制作' },
+       작업 탭 = 강화 · 인챈트 · 합성 · 크래프트 (ADR-0142 · 제작 탭은 ADR-1374 가 걷었다) · 배치 줄은 걷었다 (ADR-0191). 강화의 결과 문구는 캐릭터 탭이 쓰던 `ch.upgraded` 를 재사용한다 — 같은 사건이라 문구를 새로 쓰지 않는다 */
     'fg.seg.up': { ko: '강화', en: 'Upgrade', zh: '强化' },
     'fg.seg.craft': { ko: '크래프트', en: 'Craft', zh: '打造' },
     'fg.seg.synth': { ko: '합성', en: 'Combine', zh: '合成' },   // 재료 합성 — 바로 아래 단계를 모아 위 단계 하나 (2026-10-27 · ADR-0856)
@@ -1319,21 +1322,21 @@ const STRINGS = {
     // 강화 성공 확률 · 실패 [2026-10-14 · R253 · ADR-0626] — 확률 칩(비용 칩 앞) · 실패 플래시 · 연출의 실패 표지
     'fg.chanceLab': { ko: '성공 확률', en: 'Success chance', zh: '成功几率' },   // 강화 작업 칸 비교 줄 아래 「이름 · 값」 줄 (ADR-0973 · ~~`fg.chance` 칩~~)
     'fg.upFail': { ko: '강화 실패 · +{n} 그대로 · {g}G', en: 'Upgrade failed · still +{n} · {g}G', zh: '强化失败 · 保持+{n} · {g}G' },
-    // 손질 — 강화 칸 가운데 (SCREEN_DESIGN §8-2 · ADR-1134 · ADR-1200 · R486 · R505)
-    'fg.temper': { ko: '손질', en: 'Prep', zh: '整备' },
+    // 담금질(옛 「손질」 · 2026-11-24 사용자 「그냥 담금질이라고 이름지어 전체를」 · R571 · ADR-1369) — 강화 칸 가운데 (SCREEN_DESIGN §8-2 · ADR-1134 · ADR-1200 · R486 · R505)
+    'fg.temper': { ko: '담금질', en: 'Quench', zh: '淬火' },
     'fg.board.gear': { ko: '장비', en: 'Equipment', zh: '装备' },   // 강화 칸 왼쪽 판 제목 띠 (ADR-1140)
     'fg.board.up': { ko: '강화', en: 'Upgrade', zh: '强化' },   // 강화 칸 오른쪽 판 제목 띠 (ADR-1140)
     'fg.board.mats': { ko: '재료', en: 'Materials', zh: '材料' },   // 합성 칸 왼쪽 판 제목 띠 (ADR-1309)
     'fg.board.synth': { ko: '합성', en: 'Combine', zh: '合成' },   // 합성 칸 오른쪽 판 제목 띠 (ADR-1309)
     'fg.act.heat': { ko: '달구기', en: 'Heat', zh: '加热' },   // 손질 셋 — `temper_action.csv:action` (item_design §7-2)
     'fg.act.reinforce': { ko: '덧대기', en: 'Reinforce', zh: '加固' },
-    'fg.act.quench': { ko: '담금질', en: 'Quench', zh: '淬火' },
+    'fg.act.quench': { ko: '막기', en: 'Guard', zh: '防护' },   // 묶음 이름(담금질)과 겹쳐 「막기」 (2026-11-24 · R571 · ADR-1369)
     'fg.eff.chance': { ko: '확률 +{n}%', en: 'Chance +{n}%', zh: '几率+{n}%' },   // 손질 카드 효과 줄 · 플래시 — effect 마다
     'fg.eff.great': { ko: '대성공 +{n}%', en: 'Great +{n}%', zh: '大成功+{n}%' },
     'fg.eff.guard': { ko: '강등 · 파괴 막기 {n}%', en: 'Guard {n}%', zh: '防护{n}%' },   // 담금질 — 강등 · 파괴를 막을 확률 (R530 · ADR-1254)
     'fg.noRisk': { ko: '강등 · 파괴가 없는 단계', en: 'No downgrade or break at this step', zh: '此阶段不会降级或损毁' },   // 안전 구간 — 잠긴 담금질 카드에 올리면 (ADR-1254)
     'fg.applied': { ko: '적용됨', en: 'Applied', zh: '已应用' },
-    'fg.temper.done': { ko: '손질됨', en: 'Prepped', zh: '已整备' },
+    'fg.temper.done': { ko: '담금질됨', en: 'Quenched', zh: '已淬火' },
     'fg.tempered': { ko: '{name} · 다음 강화 {eff}', en: '{name} · next upgrade {eff}', zh: '{name} · 下次强化{eff}' },
     'fg.greatLab': { ko: '대성공', en: 'Great success', zh: '大成功' },   // 강화 작업 판 확률 줄 아래 (ADR-1200)
     'fg.downLab': { ko: '강등', en: 'Downgrade', zh: '降级' },   // 강화 작업 판 확률 줄 — 다음 도전의 강등 · 파괴 (R530 · ADR-1254)
@@ -1342,10 +1345,10 @@ const STRINGS = {
     'fg.upGreat': { ko: '대성공! +{n} · {g}G', en: 'Great success! +{n} · {g}G', zh: '大成功！+{n} · {g}G' },
     'fg.upDown': { ko: '강등 · +{n} · {g}G', en: 'Downgraded · +{n} · {g}G', zh: '降级 · +{n} · {g}G' },   // 강화 결과 플래시 — 강등 · 파괴 · 막힘 (R530 · ADR-1254)
     'fg.upBroken': { ko: '장비 파괴 · {loot} · {g}G', en: 'Item broken · {loot} · {g}G', zh: '装备损毁 · {loot} · {g}G' },   // {loot} = 받은 분해 산출(가루 · 부위 재료)
-    'fg.upGuarded': { ko: '강화 실패 · 담금질로 보호 · +{n} 그대로 · {g}G', en: 'Upgrade failed · Quench held · still +{n} · {g}G', zh: '强化失败 · 淬火防护 · 保持+{n} · {g}G' },
+    'fg.upGuarded': { ko: '강화 실패 · 막기로 보호 · +{n} 그대로 · {g}G', en: 'Upgrade failed · Guard held · still +{n} · {g}G', zh: '强化失败 · 淬火防护 · 保持+{n} · {g}G' },
     'fg.err.noRisk': { ko: '막을 강등 · 파괴가 없음', en: 'Nothing to guard at this step', zh: '此阶段无需防护' },
-    'fg.err.tempered': { ko: '이미 손질했다 · 강화하면 다시 할 수 있다', en: 'Already prepped · upgrade first', zh: '已整备 · 强化后可再次整备' },
-    'fg.err.action': { ko: '없는 손질', en: 'Unknown prep', zh: '无效的整备' },
+    'fg.err.tempered': { ko: '이미 담금질했다 · 강화하면 다시 할 수 있다', en: 'Already quenched · upgrade first', zh: '已淬火 · 强化后可再次淬火' },
+    'fg.err.action': { ko: '없는 담금질', en: 'Unknown quench', zh: '无效的淬火' },
     'fg.err.tier': { ko: '이 장비에 맞는 재료 단계가 없음', en: 'No material tier for this item', zh: '没有适合此装备的材料级别' },
     'fg.failMark': { ko: '실패', en: 'Failed', zh: '失败' },
     'fg.pick': { ko: '장비 선택', en: 'Pick an item', zh: '选择装备' },   // 장비칸 · 아이템창 어디서든 고른다 (ADR-0364)
@@ -1369,25 +1372,27 @@ const STRINGS = {
     'fg.err.undecided': { ko: '새 줄 선택 대기 중', en: 'Choose a line first', zh: '请先选择词条' },
     'fg.err.noOption': { ko: '붙을 옵션 없음', en: 'No options left to add', zh: '没有可附加的词条' },
     'fg.err.noPending': { ko: '선택할 줄 없음', en: 'Nothing to choose', zh: '没有可选择的词条' },
-    // 제작 칸 (R96) — 오류 키는 결과 코드와 짝을 맞춘다(`fg.err.<코드>` — game.makeItem)
-    'fg.make.lv': { ko: 'Lv{n}', en: 'Lv{n}', zh: 'Lv{n}' },   // 제작 레벨 버튼 — 대역이 아니라 레벨 하나다 (ADR-0263)
-    'fg.make.go': { ko: '만들기', en: 'Make', zh: '制作' },
-    // 제작 무기의 계보 줄 — 레벨 줄 아래 · 고른 계보의 세부 베이스를 무기군마다 한 줄씩 편다 (ADR-1044 · R445 · item_design §1 「무기 베이스」)
-    'fg.make.line.fast': { ko: '빠름', en: 'Fast', zh: '快速' },
-    'fg.make.line.mid': { ko: '보통', en: 'Mid', zh: '中速' },   // 칸 폭 = 레벨 버튼 — 「Balanced」는 넘친다
-    'fg.make.line.slow': { ko: '느림', en: 'Slow', zh: '慢速' },
-    'fg.make.potion': { ko: '물약', en: 'Potions', zh: '药水' },   // 제작 고르개 줄 끝의 물약 칸 이름 — 올리면 뜬다 (ADR-0219)
-    'fg.made': { ko: '제작 — {name}', en: 'Made — {name}', zh: '已制作——{name}' },
+    // ~~제작 칸 `fg.make.*` · `fg.made` · `fg.err.bagFull` · 물약 `fg.potion.*`~~ — 대장간 제작 탭과 함께 걷었다(2026-11-24 · R574 · ADR-1374)
     'fg.synthed': { ko: '합성 — {name} ×{n}', en: 'Combined — {name} ×{n}', zh: '已合成——{name} ×{n}' },
+    // 합성 · 인챈트 · 담금질 거절 — 결과 코드와 짝(`fg.err.<코드>` · `flashErr`)
     'fg.err.materials': { ko: '재료 부족', en: 'Not enough materials', zh: '材料不足' },
-    'fg.err.bagFull': { ko: '인벤토리 가득 참', en: 'Inventory is full', zh: '背包已满' },
-    'fg.err.missing': { ko: '없는 부위 · 레벨 · 종류', en: 'Unknown slot, level or type', zh: '无效的部位 · 等级 · 种类' },
-    // 물약 (R103 · ADR-0142 · 개수 R124) — 이름 · 회복량은 `potion.csv` · 판정은 `game.potionState` · 칸은 편성 탭이 든다
+    'fg.err.missing': { ko: '없는 장비 · 재료', en: 'Unknown item or material' },
     'fg.err.gold': { ko: '골드 부족', en: 'Not enough gold', zh: '金币不足' },
-    'fg.potion.stock': { ko: '재고', en: 'Stock', zh: '库存' },
-    'fg.potion.none': { ko: '없음', en: 'None', zh: '无' },
-    // ~~`fg.potion.tip`~~ (대장간 · 편성 탭의 `title` 한 줄) 은 2026-09-24 삭제 — 물약은 어디서나 **물약 카드**를 띄운다 (ADR-0315)
-    'fg.potion.heal': { ko: '회복 {n}', en: 'Heals {n}', zh: '治疗{n}' },
+
+    /* ── 연구소 「대장간」 줄 등록 창 — 제작 줄 · 장비 칸 · 창고 판 (SCREEN_DESIGN §8 · ADR-1373 · R574) ── */
+    'lf.h.make': { ko: '제작', en: 'Crafting' },
+    'lf.h.slots': { ko: '장비 칸 {n} / {cap}', en: 'Gear Slots {n} / {cap}' },
+    'lf.h.stash': { ko: '창고 {n} / {cap}', en: 'Stash {n} / {cap}' },
+    'lf.take': { ko: '창고로', en: 'To Stash' },
+    'lf.takeAll': { ko: '모두 창고로', en: 'All to Stash' },
+    'lf.salvage': { ko: '분해', en: 'Salvage' },
+    'lf.rest.full': { ko: '칸 가득 참', en: 'Slots full' },
+    'lf.rest.gold': { ko: '골드 부족', en: 'Not enough gold' },
+    'lf.rest.materials': { ko: '재료 부족', en: 'Not enough materials' },
+    'lf.rest.none': { ko: '목표 없음', en: 'No target' },
+    'lf.every': { ko: '{h}시간마다', en: 'Every {h}h' },
+    'lf.gear': { ko: '장비', en: 'Gear' },   // 재접속 알림 「장비 +n」 — 대장간 줄이 칸에 넣은 수 (ADR-1296 · R574)
+    'lf.err.notRegistered': { ko: '대장간 줄에 등록 안 된 영웅', en: 'Hero is not assigned to the Blacksmith' },
 
     /* ── 도움말 탭 (2026-08-26 · 전면 정리 2026-10-29) ──
        현재 탭의 조작법과 규칙은 help.<tab>.<topic>에 한/영으로 둔다 (ADR-0946).
@@ -1956,9 +1961,9 @@ const STRINGS = {
         zh: '建设条件与支付',
     },
     'help.research.requirements.body': {
-        ko: "<b>[다음 랭크]</b>의 조건은 모두 채워야 합니다. 건물에 따라 스테이지·챕터·난이도 클리어, 영웅 레벨, 로스터 합산 레벨, 다른 건물 랭크를 요구합니다. 합산 레벨은 지금까지 달성한 최고치를 사용하므로 영웅을 해고해도 달성한 기록이 사라지지 않습니다.<br><br>비용을 내면 <b>즉시 완료</b>되며 영웅을 배치하거나 기다릴 필요가 없습니다. 지은 랭크와 지불한 비용은 되돌리지 못합니다. 비용 칸의 부족한 재료를 확인한 뒤 연구소 생산이나 장비 분해로 준비합니다.",
-        en: "Meet <b>every requirement</b> listed under Next Rank. Depending on the building, these include stage, chapter or difficulty clears, hero levels, total roster levels, and other building ranks. Total roster level uses your highest recorded total, so dismissing a hero does not erase an achieved requirement.<br><br>Construction finishes <b>immediately</b> after payment, with no assigned hero or waiting time. Built ranks and their costs cannot be refunded. Check missing materials in the cost display and obtain them through Laboratory production or salvaging gear.",
-        zh: '<b>[下一阶]</b>中的条件必须全部满足。根据建筑不同，会要求通关关卡、章或难度，英雄等级，名册总等级，以及其他建筑的阶。总等级采用迄今达到的最高值，所以即使解雇英雄，已达成的记录也不会消失。<br><br>支付费用后<b>立即完成</b>，无需安排英雄或等待。已建成的阶与支付的费用无法退还。请在费用栏中确认缺少的材料，再通过研究所生产或分解装备来准备。',
+        ko: "<b>[다음 랭크]</b>의 조건은 모두 채워야 합니다. 건물에 따라 스테이지·챕터·난이도 클리어, 영웅 레벨, 다른 건물 랭크를 요구합니다.<br><br>비용을 내면 <b>즉시 완료</b>되며 영웅을 배치하거나 기다릴 필요가 없습니다. 지은 랭크와 지불한 비용은 되돌리지 못합니다. 비용 칸의 부족한 재료를 확인한 뒤 연구소 생산이나 장비 분해로 준비합니다.",
+        en: "Meet <b>every requirement</b> listed under Next Rank. Depending on the building, these include stage, chapter or difficulty clears, hero levels and other building ranks.<br><br>Construction finishes <b>immediately</b> after payment, with no assigned hero or waiting time. Built ranks and their costs cannot be refunded. Check missing materials in the cost display and obtain them through Laboratory production or salvaging gear.",
+        zh: '<b>[下一阶]</b>中的条件必须全部满足。根据建筑不同，会要求通关关卡、章或难度，英雄等级，以及其他建筑的阶。<br><br>支付费用后<b>立即完成</b>，无需安排英雄或等待。已建成的阶与支付的费用无法退还。请在费用栏中确认缺少的材料，再通过研究所生产或分解装备来准备。',
     },
     'help.research.unlocks.title': {
         ko: "어떤 건물이 무엇을 여나요?",
@@ -1966,9 +1971,9 @@ const STRINGS = {
         zh: '哪座建筑开放什么？',
     },
     'help.research.unlocks.body': {
-        ko: "<b>상단</b>은 물건 구매, <b>선술집</b>은 의뢰·영웅 고용·도박장, <b>대장간</b>은 장비 제작·강화·재료 합성을 엽니다. <b>도서관</b>은 스킬북·전직·도감 단계를 엽니다.<br><br><b>지휘 천막</b>은 파티 전술 칸을 늘립니다. <b>탐험 건물</b>의 뒤 랭크는 Party 수를 늘리고, <b>창고</b>의 뒤 랭크는 물약 칸 등 표시된 기능을 확장합니다. 정확한 내용은 각 건물의 랭크 목록을 확인합니다.<br><br><b>연구소 랭크를 짓는 것</b>과 <b>연구소에서 지점을 연구하는 것</b>은 다릅니다. 건설은 새 지점을 열고, 열린 지점의 생산량·속도 등을 올리는 것은 연구소의 연구입니다.",
-        en: "The <b>Trading House</b> opens purchases; the <b>Tavern</b> opens commissions, hiring and gambling; the <b>Blacksmith</b> opens smithing, upgrades and material combining. The <b>Library</b> opens skill books, advancement and Codex levels.<br><br>The <b>Command Tent</b> adds tactic slots. Later <b>Exploration</b> ranks add Parties, while later <b>Storage</b> ranks expand the listed features, including potion slots. Check each building's rank list for exact unlocks.<br><br><b>Building a Laboratory rank</b> differs from <b>researching a Laboratory node</b>. Construction opens new nodes. Research in the Laboratory improves the output, speed and other effects of nodes already open.",
-        zh: '<b>商会</b>开放物品购买，<b>酒馆</b>开放委托、英雄雇佣与赌坊，<b>铁匠铺</b>开放装备制作、强化与材料合成。<b>图书馆</b>开放技能书、转职与图鉴阶段。<br><br><b>指挥营帐</b>增加队伍战术格。<b>探索建筑</b>的后续阶会增加Party数量，<b>仓库</b>的后续阶会扩展药水格等所示功能。具体内容请查看各建筑的阶列表。<br><br><b>建造研究所的阶</b>与<b>在研究所中研究节点</b>是两回事。建设会开放新节点，而提升已开放节点的产量、速度等，则是研究所的研究。',
+        ko: "<b>상단</b>은 물건 구매, <b>선술집</b>은 의뢰·영웅 고용·도박장, <b>대장간</b>은 장비 제작·강화·재료 합성을 엽니다. <b>도서관</b>은 스킬북·전직·도감 단계를 엽니다.<br><br><b>지휘 천막</b>은 파티 전술 칸을 늘립니다. <b>창고</b>의 뒤 랭크는 물약 칸 등 표시된 기능을 확장합니다. 정확한 내용은 각 건물의 랭크 목록을 확인합니다.<br><br><b>연구소 랭크를 짓는 것</b>과 <b>연구소에서 지점을 연구하는 것</b>은 다릅니다. 건설은 새 지점을 열고, 열린 지점의 생산량·속도 등을 올리는 것은 연구소의 연구입니다.",
+        en: "The <b>Trading House</b> opens purchases; the <b>Tavern</b> opens commissions, hiring and gambling; the <b>Blacksmith</b> opens smithing, upgrades and material combining. The <b>Library</b> opens skill books, advancement and Codex levels.<br><br>The <b>Command Tent</b> adds tactic slots. Later <b>Storage</b> ranks expand the listed features, including potion slots. Check each building's rank list for exact unlocks.<br><br><b>Building a Laboratory rank</b> differs from <b>researching a Laboratory node</b>. Construction opens new nodes. Research in the Laboratory improves the output, speed and other effects of nodes already open.",
+        zh: '<b>商会</b>开放物品购买，<b>酒馆</b>开放委托、英雄雇佣与赌坊，<b>铁匠铺</b>开放装备制作、强化与材料合成。<b>图书馆</b>开放技能书、转职与图鉴阶段。<br><br><b>指挥营帐</b>增加队伍战术格。<b>仓库</b>的后续阶会扩展药水格等所示功能。具体内容请查看各建筑的阶列表。<br><br><b>建造研究所的阶</b>与<b>在研究所中研究节点</b>是两回事。建设会开放新节点，而提升已开放节点的产量、速度等，则是研究所的研究。',
     },
     'help.research.locked.title': {
         ko: "잠긴 기능과 준비 중 기능",
@@ -2110,35 +2115,30 @@ const STRINGS = {
         en: "Upgrading the Trading House to the required rank opens <b>special-trader visits</b>. Its panel shows the time until arrival or departure. This timer is separate from the ordinary Trading House's free <b>Refresh</b> wait.<br><br>Special-trader goods are currently <b>coming later</b>. Question-mark slots cannot be purchased. Buy ordinary gear, potions and skill books from the regular Trading House on the left.",
         zh: '在建设中将商会提升到相应的阶后，会开放<b>行商来访</b>功能。面板上可查看距离到达或离开的剩余时间。这个计时与普通商会<b>[刷新]</b>的免费等待时间无关。<br><br>行商商品目前<b>准备中</b>。问号格无法购买。普通装备、药水、技能书请在左侧的普通商会购买。',
     },
+    // 2026-11-24 — 장비 · 물약 제작이 연구소 대장간 줄로 옮겨 세 주제의 문장을 고쳤다(R574 · ADR-1374 · zh 는 빠진 목록으로)
     'help.forge.overview.title': {
-        ko: "제작 · 강화 · 합성의 차이",
-        en: "Smithing, upgrades and combining",
-        zh: '制作、强化、合成的区别',
+        ko: "강화 · 인챈트 · 합성의 차이",
+        en: "Upgrades, enchants and combining",
     },
     'help.forge.overview.body': {
-        ko: "<b>제작</b>은 재료를 써서 <b>새 장비</b>를 만듭니다. <b>강화</b>는 이미 가진 무기·방어구의 <b>기본 성능</b>을 올립니다. <b>합성</b>은 여러 개의 재료를 모아 <b>한 단계 높은 재료</b>로 바꿉니다.<br><br>새 종류의 장비가 필요하면 제작 목록을, 지금 쓰는 장비의 성능을 높이려면 강화 화면을 확인합니다. 합성은 장비를 바꾸거나 장비 옵션을 다시 뽑는 기능이 아닙니다.",
-        en: "<b>Smith</b> spends materials to make <b>new gear</b>. <b>Upgrade</b> improves the <b>base performance</b> of a weapon or armor you already own. <b>Combine</b> turns several materials into <b>the next material grade</b>.<br><br>Check Smith when you need a new gear type, or Upgrade to improve gear you already use. Combining does not alter equipment or reroll its options.",
-        zh: '<b>制作</b>是用材料造出<b>新装备</b>。<b>强化</b>是提升已拥有的武器、防具的<b>基础性能</b>。<b>合成</b>是把多个材料合为<b>高一级的材料</b>。<br><br>需要新种类的装备时看制作列表，想提升正在使用的装备性能时看强化画面。合成不会改变装备，也不会重新随机装备词条。',
+        ko: "<b>강화</b>는 이미 가진 무기·방어구의 <b>기본 성능</b>을 올립니다. <b>인챈트</b>는 레어 이상 장비에 옵션 한 줄을 붙입니다. <b>합성</b>은 여러 개의 재료를 모아 <b>한 단계 높은 재료</b>로 바꿉니다.<br><br>새 장비와 물약은 대장간이 아니라 <b>연구소의 대장간 줄</b>이 만듭니다. 합성은 장비를 바꾸거나 장비 옵션을 다시 뽑는 기능이 아닙니다.",
+        en: "<b>Upgrade</b> improves the <b>base performance</b> of a weapon or armor you already own. <b>Enchant</b> adds one option line to Rare or better gear. <b>Combine</b> turns several materials into <b>the next material grade</b>.<br><br>New gear and potions are made by the <b>Blacksmith line in the Laboratory</b>, not here. Combining does not alter equipment or reroll its options.",
     },
     'help.forge.smith.title': {
-        ko: "새 장비 제작",
-        en: "Smithing new gear",
-        zh: '制作新装备',
+        ko: "새 장비는 연구소 대장간 줄에서",
+        en: "New gear comes from the Laboratory",
     },
     'help.forge.smith.body': {
-        ko: "<b>[제작]</b>에서 부위와 열린 제작 레벨을 고릅니다. 목록에서 만들 장비의 종류를 확인한 뒤 그 줄의 <b>[만들기]</b>를 누릅니다. 결과는 현재 보고 있는 부대 인벤토리에 들어가므로 빈 칸이 필요합니다.<br><br>고른 종류와 아이템 레벨로 장비 하나가 나오며, <b>희귀도와 옵션은 새로 정해집니다</b>. 같은 것을 여러 번 만들어도 같은 옵션을 보장하지 않습니다. 현재 제작은 골드·부위 재료·가루를 쓰며 기존 장비를 소모하지 않습니다.<br><br>무기와 장신구 제작은 철광석, 방어구 제작은 목재를 사용합니다. 더 높은 제작 레벨은 대장간 랭크가 엽니다. 필요한 재료와 수량은 제작 줄의 비용 표시에서 확인합니다.",
-        en: "In <b>Smith</b>, choose an equipment slot and an unlocked level. Find the gear type you want, then press <b>Make</b> on that row. The result enters the party inventory you are viewing, so it needs a free slot.<br><br>Each craft produces one item of the selected type and level, with <b>newly rolled rarity and options</b>. Repeated crafts do not guarantee identical options. Current smithing consumes gold, the slot's material and dust, without consuming existing equipment.<br><br>Weapons and jewelry use iron ore; armor pieces use timber. Blacksmith ranks unlock higher smithing levels. Check the row's cost display for exact materials and amounts.",
-        zh: '在<b>[制作]</b>中选择部位和已开放的制作等级。在列表中确认要制作的装备种类，然后点击该行的<b>[制作]</b>。成品会进入当前查看的小队背包，因此需要空格。<br><br>按所选种类和物品等级产出一件装备，<b>稀有度和词条重新决定</b>。同一件东西做多次，也不保证词条相同。目前制作消耗金币、部位材料、粉尘，不消耗已有装备。<br><br>武器和饰品制作使用铁矿石，防具制作使用木材。更高的制作等级由铁匠铺的阶开放。所需材料及数量请在制作行的费用显示中确认。',
+        ko: "연구소의 <b>대장간 줄</b>에 영웅을 등록하고, 등록 창에서 영웅마다 <b>무엇을 만들지</b>(장비 부위 일곱 또는 열린 물약 단계)를 고릅니다. 고르는 즉시 그 영웅의 시계가 돌고 정해진 시간마다 하나씩 만듭니다. 영웅의 힘이 높을수록 간격이 짧아집니다.<br><br>장비는 <b>그 영웅의 레벨</b>로 나오며 드롭과 같이 베이스·희귀도·옵션을 전부 새로 정합니다. 비용(골드·부위 재료·가루)은 하나가 완성되는 순간 냅니다. 모자라면 그 영웅은 쉬다가 비용이 생기면 다시 만듭니다.<br><br>만든 장비는 <b>줄 공용 장비 칸</b>에 쌓입니다. 칸이 가득 차면 장비를 만드는 시계가 모두 쉬므로, 등록 창의 장비 칸에서 <b>[창고로]</b> 옮기거나 <b>[분해]</b>합니다. 게임을 끈 동안에도 칸이 찰 때까지 만듭니다.",
+        en: "Assign heroes to the <b>Blacksmith line</b> in the Laboratory, then pick <b>what each hero makes</b> (one of seven gear slots or an unlocked potion tier) in the assignment window. The hero's clock starts at once and makes one item per interval. Higher Strength shortens the interval.<br><br>Gear comes out at <b>that hero's level</b> and rolls base, rarity and options like a drop. The cost (gold, slot material and dust) is paid when an item is finished. If you cannot pay, the hero waits and resumes once you can.<br><br>Finished gear goes into the line's <b>shared gear slots</b>. When they are full, every gear clock pauses, so use <b>To Stash</b> or <b>Salvage</b> in the assignment window. Gear keeps being made while the game is closed until the slots fill.",
     },
     'help.forge.potions.title': {
         ko: "물약 만들기와 재고",
         en: "Brewing and stocking potions",
-        zh: '制作药水与库存',
     },
     'help.forge.potions.body': {
-        ko: "<b>[제작]</b>에서 물약 그림을 누릅니다. 물약별 회복량·보유 재고·골드와 약초 비용을 확인하고 <b>[만들기]</b>하면 그 물약 재고가 하나 늘어납니다. 물약 제작에는 실패나 무작위 옵션이 없습니다.<br><br>만들 수 있는 물약 단계는 대장간 랭크가 엽니다. 재고는 여러 Party가 함께 쓰며, 편성에서 물약 칸을 채워도 그때 바로 소모되지는 않습니다. 전투에서 마신 만큼 줄어드므로 자동 원정을 계속할 때는 재고를 확인합니다. 물약 종류·순서·사용 HP 기준은 편성 탭에서 정합니다.",
-        en: "Select the potion icon in <b>Smith</b>. Check healing, owned stock, and gold and herb costs, then use <b>Make</b> to add one potion. Brewing cannot fail and does not roll random options.<br><br>Blacksmith ranks unlock brewable tiers. All Parties share stock. Filling preset slots does not spend it immediately; drinking in combat does. Check supplies when running repeated expeditions. Set potion types, order and drinking HP threshold in Party.",
-        zh: '在<b>[制作]</b>中点击药水图标。确认每种药水的治疗量、持有库存，以及金币和草药费用，点击<b>[制作]</b>后该药水库存增加1个。药水制作不会失败，也没有随机词条。<br><br>可制作的药水级别由铁匠铺的阶开放。库存由多个Party共用，在编队中填好药水栏时并不会立即消耗。战斗中喝掉多少就减少多少，因此持续自动远征时要留意库存。药水种类、顺序和饮用时的生命阈值在编队页设定。',
+        ko: "물약도 연구소 <b>대장간 줄</b>이 만듭니다. 등록 창에서 영웅의 목표로 물약을 고르면 정해진 시간마다 하나씩 재고에 들어오고, 비용은 골드와 약초입니다. 상점에서도 살 수 있습니다.<br><br>만들 수 있는 물약 단계는 대장간 랭크와 연구소 「물약」 지점이 엽니다. 재고는 여러 Party가 함께 쓰며, 편성에서 물약 칸을 채워도 그때 바로 소모되지는 않습니다. 전투에서 마신 만큼 줄어드므로 자동 원정을 계속할 때는 재고를 확인합니다. 물약 종류·순서·사용 HP 기준은 편성 탭에서 정합니다.",
+        en: "Potions are also made by the <b>Blacksmith line</b> in the Laboratory. Pick a potion as a hero's target in the assignment window and one enters your stock per interval, costing gold and herbs. Shops also sell potions.<br><br>The Blacksmith rank and the Laboratory's Potion node unlock brewable tiers. All Parties share stock. Filling preset slots does not spend it immediately; drinking in combat does. Check supplies when running repeated expeditions. Set potion types, order and drinking HP threshold in Party.",
     },
     'help.forge.upgrade.title': {
         ko: "가진 장비 강화",
@@ -2166,9 +2166,8 @@ const STRINGS = {
         zh: '打造的现状',
     },
     'help.forge.craft.body': {
-        ko: "<b>[크래프트]</b>는 현재 준비 중입니다. 사용할 수 있는 작업은 <b>[제작] · [강화] · [합성]</b>입니다.",
-        en: "<b>Craft</b> is currently coming later. Available operations are <b>Smith, Upgrade and Combine</b>.",
-        zh: '<b>[打造]</b>目前仍在准备中。可以使用的操作有<b>[制作]、[强化]、[合成]</b>。',
+        ko: "<b>[크래프트]</b>는 현재 준비 중입니다. 사용할 수 있는 작업은 <b>[강화] · [인챈트] · [합성]</b>입니다.",
+        en: "<b>Craft</b> is currently coming later. Available operations are <b>Upgrade, Enchant and Combine</b>.",
     },
     'help.library.basics.title': {
         ko: "스킬북 · 전직의 차이",
@@ -2248,9 +2247,8 @@ const STRINGS = {
         zh: '自动生产与关闭游戏期间',
     },
     'help.resource.production.body': {
-        ko: "창고를 지으면 연구소의 <b>자원 줄</b>이 열립니다. 영웅을 등록하지 않아도 <b>최하급 철광석·약초·목재를 모두</b> 생산합니다. 등록은 생산을 시작하는 조건이 아니라 더 빠르게 얻는 보너스입니다.<br><br>자원 줄의 <b>채광·채집·벌목</b> 연구는 각각 철광석·약초·목재 생산량을 높입니다. 무기나 건물이 필요하면 철광석, 방어구나 건물이 필요하면 목재, 물약·책·약초 비용 연구가 필요하면 약초를 확인합니다. 생산물은 재고에 자동으로 더해집니다.<br><br>게임을 켜 둔 동안에는 계속 생산합니다. 오프라인 생산은 <b>기본 {hours}시간</b>까지 쌓입니다. 자원 줄의 <b>오프라인 생산 시간 연장</b>을 연구하면 철광석·약초·목재가 더 오래 쌓입니다. 수색의 도착 시계는 이 시간 상한을 받지 않고 대기소가 찰 때까지 흐릅니다.",
-        en: "Building Storage opens the Laboratory's <b>Resources line</b>. It produces <b>lowest-grade iron ore, herbs and timber together</b> without assigned heroes. Assignment improves output; it is not required to start production.<br><br><b>Mining, Gathering and Logging</b> research raise ore, herb and timber output respectively. Check ore for weapons or buildings, timber for armor or buildings, and herbs for potions, books or research with an herb cost. Output enters stock automatically.<br><br>Production continues while the game is open. Offline output accumulates for <b>up to {hours}h by default</b>. Research <b>Offline Production Time</b> in Resources to extend the cap for ore, herbs and timber. The Search arrival timer has no such time cap and continues until its Waiting Room fills.",
-        zh: '建造仓库后，研究所的<b>资源线</b>开放。即使不派驻英雄，也会<b>同时生产最低级铁矿石、草药、木材</b>。派驻不是开始生产的条件，而是让获取更快的加成。<br><br>资源线的<b>采矿、采集、伐木</b>研究分别提高铁矿石、草药、木材的产量。需要武器或建筑时看铁矿石，需要防具或建筑时看木材，需要药水、书或有草药费用的研究时看草药。产出会自动加入库存。<br><br>游戏开着时会持续生产。离线产出<b>默认最多累计{hours}小时</b>。研究资源线的<b>离线生产时长</b>可延长铁矿石、草药和木材的累计时间。搜寻的到达计时不受这个时间上限限制，会一直走到等候所填满为止。',
+        ko: "창고를 지으면 연구소의 <b>자원 줄</b>이 열립니다. 영웅을 등록하면 <b>최하급 철광석·약초·목재를 모두</b> 생산합니다. 연구소의 모든 줄은 <b>등록한 영웅이 있어야</b> 돌고, 등록한 영웅이 많을수록 더 빨리 얻습니다.<br><br>자원 줄의 <b>채광·채집·벌목</b> 연구는 각각 철광석·약초·목재 생산량을 높입니다. 무기나 건물이 필요하면 철광석, 방어구나 건물이 필요하면 목재, 물약·책·약초 비용 연구가 필요하면 약초를 확인합니다. 생산물은 재고에 자동으로 더해집니다.<br><br>게임을 켜 둔 동안에는 계속 생산합니다. 오프라인 생산은 <b>기본 {hours}시간</b>까지 쌓입니다. 자원 줄의 <b>오프라인 생산 시간 연장</b>을 연구하면 철광석·약초·목재가 더 오래 쌓입니다. 수색의 도착 시계는 이 시간 상한을 받지 않고 대기소가 찰 때까지 흐르고, 대장간 줄의 장비는 장비 칸이 찰 때까지 만듭니다.",
+        en: "Building Storage opens the Laboratory's <b>Resources line</b>. With heroes assigned it produces <b>lowest-grade iron ore, herbs and timber together</b>. Every Laboratory line <b>needs at least one assigned hero</b> to run, and more heroes produce faster.<br><br><b>Mining, Gathering and Logging</b> research raise ore, herb and timber output respectively. Check ore for weapons or buildings, timber for armor or buildings, and herbs for potions, books or research with an herb cost. Output enters stock automatically.<br><br>Production continues while the game is open. Offline output accumulates for <b>up to {hours}h by default</b>. Research <b>Offline Production Time</b> in Resources to extend the cap for ore, herbs and timber. The Search arrival timer has no such time cap and continues until its Waiting Room fills, and the Blacksmith line keeps making gear until its gear slots fill.",
     },
     'help.resource.materials.title': {
         ko: "재료는 어디서 얻고 어디에 쓰나요?",
@@ -2288,9 +2286,8 @@ const STRINGS = {
         zh: '挑选派驻英雄的标准',
     },
     'help.resource.hero_effects.body': {
-        ko: "자원 · 도박장 줄은 등록한 <b>영웅 수</b>만큼 기본 산출이 한 몫씩 더해집니다 — 능력치보다 먼저 칸을 채웁니다. 수색은 등록한 영웅마다 시계가 하나씩 따로 돌아, 각자 한 명씩 데려옵니다. 훈련 · 도서관은 등록한 영웅 한 명 한 명이 경험치 · 스킬북을 받는 줄이라 인원 몫이 없습니다.<br><br><b>힘</b>은 그 줄의 생산·도착·훈련 속도를 덤으로 높이고, <b>운</b>은 대박 지점이 있는 줄의 추가 지급 확률을 높입니다. <b>지능</b>은 그 줄의 연구 시간을 줄이며, <b>민첩</b>은 연구 비용을 줄입니다. <b>매력</b>은 수색의 레어 후보 확률을 높입니다.<br><br><b>건강</b>은 같은 줄에 오래 등록할수록 쌓이는 숙련 보너스를 키웁니다. <b>통솔</b>은 같은 줄의 다른 등록 영웅 효과를 높이므로 여럿을 등록할 때 의미가 있습니다. 장비·레벨 대신 영웅의 기본 능력치가 이 효과의 재료입니다.<br><br>등록 효과의 현재 수치는 줄 카드를 눌러 확인합니다. 해당 효과를 사용하지 않는 줄에는 적용되지 않습니다. 영웅을 다른 줄로 옮기거나 등록을 풀면 그 영웅의 숙련 시간은 다시 시작하므로, 비교한 뒤 자리를 정합니다.",
-        en: "On the Resources and Gambling Den lines each assigned <b>hero</b> adds one more share of the base output — fill the seats before comparing stats. On Search each assigned hero runs a clock of their own and brings someone in on it. Training and the Library give XP or books to each assigned hero, so they have no head share.<br><br><b>Strength</b> adds a bonus to that line's production, arrival or training speed. <b>Luck</b> raises extra-output chance on lines with a Jackpot node. <b>Intelligence</b> shortens that line's research time; <b>Agility</b> lowers research costs. <b>Charisma</b> raises Search's Rare-candidate chance.<br><br><b>Vitality</b> strengthens the proficiency bonus that builds while a hero remains assigned to the same line. <b>Leadership</b> boosts other assigned heroes on that line, so it matters with multiple heroes. These effects use the hero's base attributes rather than equipment or level.<br><br>Select the line card to check current hero bonuses. Effects do not apply to lines that have no use for them. Moving or removing a hero resets the time accumulated on that assignment, so compare heroes before settling their positions.",
-        zh: '资源、赌坊线按派驻的<b>英雄人数</b>，每人多加一份基础产出——先填满位置，再看属性。搜寻线每位派驻英雄各自走一个计时，各带回一名。训练、图书馆线是让每位派驻英雄各自获得经验、技能书，所以没有人数份额。<br><br><b>力量</b>额外提高该线的生产、到达、训练速度，<b>幸运</b>提高有大丰收节点的线的额外发放几率。<b>智力</b>缩短该线的研究时间，<b>敏捷</b>降低研究费用。<b>魅力</b>提高搜寻到稀有候选的几率。<br><br><b>体力</b>强化在同一条线上派驻越久积累越多的熟练加成。<b>统率</b>提高同一条线上其他派驻英雄的效果，所以派驻多人时才有意义。这些效果的依据不是装备或等级，而是英雄的基础属性。<br><br>派驻效果的当前数值可点击线卡片查看。不使用该效果的线不会生效。把英雄移到其他线或解除派驻，该英雄的熟练时间会重新开始，所以先比较再决定位置。',
+        ko: "자원 · 도박장 줄은 등록한 <b>영웅 한 명마다</b> 산출이 한 몫씩 납니다 — 영웅이 없으면 멈추므로 능력치보다 먼저 칸을 채웁니다. 수색 · 대장간은 등록한 영웅마다 시계가 하나씩 따로 돌아, 각자 한 명씩 데려오거나 하나씩 만듭니다. 훈련 · 도서관은 등록한 영웅 한 명 한 명이 경험치 · 스킬북을 받는 줄이라 인원 몫이 없습니다.<br><br><b>힘</b>은 그 줄의 생산·도착·훈련 속도를 덤으로 높이고, <b>운</b>은 대박 지점이 있는 줄의 추가 지급 확률을 높입니다. <b>지능</b>은 그 줄의 연구 시간을 줄이며, <b>민첩</b>은 연구 비용을 줄입니다. <b>매력</b>은 수색의 레어 후보 확률을 높입니다.<br><br><b>건강</b>은 같은 줄에 오래 등록할수록 쌓이는 숙련 보너스를 키웁니다. <b>통솔</b>은 같은 줄의 다른 등록 영웅 효과를 높이므로 여럿을 등록할 때 의미가 있습니다. 장비·레벨 대신 영웅의 기본 능력치가 이 효과의 재료입니다.<br><br>등록 효과의 현재 수치는 줄 카드를 눌러 확인합니다. 해당 효과를 사용하지 않는 줄에는 적용되지 않습니다. 영웅을 다른 줄로 옮기거나 등록을 풀면 그 영웅의 숙련 시간은 다시 시작하므로, 비교한 뒤 자리를 정합니다.",
+        en: "On the Resources and Gambling Den lines each assigned <b>hero</b> produces one share of the output — the line stops without heroes, so fill the seats before comparing stats. On Search and the Blacksmith each assigned hero runs a clock of their own, bringing someone in or making one item on it. Training and the Library give XP or books to each assigned hero, so they have no head share.<br><br><b>Strength</b> adds a bonus to that line's production, arrival or training speed. <b>Luck</b> raises extra-output chance on lines with a Jackpot node. <b>Intelligence</b> shortens that line's research time; <b>Agility</b> lowers research costs. <b>Charisma</b> raises Search's Rare-candidate chance.<br><br><b>Vitality</b> strengthens the proficiency bonus that builds while a hero remains assigned to the same line. <b>Leadership</b> boosts other assigned heroes on that line, so it matters with multiple heroes. These effects use the hero's base attributes rather than equipment or level.<br><br>Select the line card to check current hero bonuses. Effects do not apply to lines that have no use for them. Moving or removing a hero resets the time accumulated on that assignment, so compare heroes before settling their positions.",
     },
     'help.resource.jobs.title': {
         ko: "수색 · 훈련 · 자동 골드",
@@ -2439,9 +2436,9 @@ const STRINGS = {
         zh: '解读种族与职业',
     },
     'help.codex.classification.body': {
-        ko: "몬스터 카드의 분류는 종족·직업을 나타냅니다. 종족은 자연·데몬·언데드이며, 직업은 전사·궁수·기사·마법사·사제처럼 사용하는 스킬과 장비의 계열입니다. 예를 들어 고블린 척후병은 데몬 종족, 궁수 직업입니다.<br><br>도감 Lv1~40(파밍·전투 구간) 보너스가 함께 적용되는 범위는 종족입니다. 데몬 몬스터 하나의 레벨을 올리면 다른 지역의 데몬 몬스터를 상대할 때도 적용됩니다. 보스처럼 이 두 구간의 보너스가 없는 몬스터는 그 보너스를 주고받지 않습니다.",
-        en: "Monster cards identify race and class. Races are Natural, Demon and Undead. Class describes the monster's skills and equipment, such as Warrior, Archer, Knight, Mage or Priest. For example, a Goblin Scout is a Demon with the Archer class.<br><br>Codex Lv1–40 bonuses (the farming and combat tiers) are shared within a race. Leveling one Demon monster also helps against Demon monsters in other areas. Monsters with no bonuses in these two tiers, such as bosses, neither grant nor receive those race bonuses.",
-        zh: '怪物卡片的分类表示种族与职业。种族有自然、恶魔、亡灵，职业则是战士、弓箭手、骑士、法师、牧师这类所用技能与装备的系别。例如，哥布林斥候是恶魔种族、弓箭手职业。<br><br>图鉴Lv1~40（刷宝、战斗区间）加成共同生效的范围是种族。提升一只恶魔怪物的等级后，与其他区域的恶魔怪物交战时也会生效。首领这类没有这两个区间加成的怪物，既不提供也不接受这些加成。',
+        ko: "몬스터 카드의 분류는 종족·직업을 나타냅니다. 종족은 생물·데몬·언데드이며, 직업은 전사·궁수·기사·마법사·사제처럼 사용하는 스킬과 장비의 계열입니다. 예를 들어 고블린 척후병은 데몬 종족, 궁수 직업입니다.<br><br>도감 Lv1~40(파밍·전투 구간) 보너스가 함께 적용되는 범위는 종족입니다. 데몬 몬스터 하나의 레벨을 올리면 다른 지역의 데몬 몬스터를 상대할 때도 적용됩니다. 보스처럼 이 두 구간의 보너스가 없는 몬스터는 그 보너스를 주고받지 않습니다.",
+        en: "Monster cards identify race and class. Races are Creature, Demon and Undead. Class describes the monster's skills and equipment, such as Warrior, Archer, Knight, Mage or Priest. For example, a Goblin Scout is a Demon with the Archer class.<br><br>Codex Lv1–40 bonuses (the farming and combat tiers) are shared within a race. Leveling one Demon monster also helps against Demon monsters in other areas. Monsters with no bonuses in these two tiers, such as bosses, neither grant nor receive those race bonuses.",
+        zh: '怪物卡片的分类表示种族与职业。种族有生物、恶魔、亡灵，职业则是战士、弓箭手、骑士、法师、牧师这类所用技能与装备的系别。例如，哥布林斥候是恶魔种族、弓箭手职业。<br><br>图鉴Lv1~40（刷宝、战斗区间）加成共同生效的范围是种族。提升一只恶魔怪物的等级后，与其他区域的恶魔怪物交战时也会生效。首领这类没有这两个区间加成的怪物，既不提供也不接受这些加成。',
     },
     'help.codex.race_traits.title': {
         ko: "종족에 따른 몸의 차이",
@@ -2449,9 +2446,9 @@ const STRINGS = {
         zh: '种族带来的身体差异',
     },
     'help.codex.race_traits.body': {
-        ko: "일반 몬스터와 정예는 종족에 따라 기본 몸 특성이 달라집니다. 같은 직업이라도 최대 HP·재생·피해·방어·저항에서 차이가 날 수 있으므로 카드의 전투 수치와 사용하는 스킬을 함께 확인합니다. 이 종족 몸 보정은 보스나 두 결투 콘텐츠의 영웅 팀에는 적용되지 않습니다.<br><br>자연 종족은 물리 방어가 높고 원소 저항이 낮습니다. 물리 공격이 잘 통하지 않는다면 원소 피해를 주는 영웅과 스킬을 살펴봅니다.<br><br>데몬은 최대 HP와 HP 재생이 높지만 물리 방어가 낮고, 결빙이 통하지 않습니다. 전투가 길어지며 상대 HP가 차오른다면 물리 화력과 받는 회복을 줄이는 효과를 검토합니다.<br><br>언데드는 최대 HP가 낮고 입히는 피해가 높으며, 강타와 흡혈이 통하지 않습니다. 먼저 쓰러뜨릴 화력과 아군을 보호할 방어·피해 감소, 흡혈 대신 회복을 함께 준비합니다.",
-        en: "Regular and Elite monsters have body traits determined by race. Even monsters with the same class can differ in maximum HP, regeneration, damage, defense and resistance, so inspect their combat values together with their skills. These racial body adjustments do not apply to bosses or hero teams in either duel mode.<br><br>Natural monsters have higher physical defense and lower elemental resistances. If physical attacks are struggling, inspect heroes and skills that deal elemental damage.<br><br>Demons have higher maximum HP and HP regeneration, lower physical defense, and are immune to Freeze. If their HP keeps recovering during a long fight, consider physical damage and effects that reduce healing received.<br><br>Undead have lower maximum HP, deal more damage, and are immune to Crushing Blow and Life Steal. Prepare the damage to defeat them quickly, protection such as defense or damage reduction, and healing in place of Life Steal.",
-        zh: '普通怪物和精英的基础身体特性因种族而异。即使职业相同，最大生命、再生、伤害、防御、抗性也可能有差异，所以要一并确认卡片上的战斗数值和所用技能。这种种族身体修正不适用于首领，也不适用于两种决斗内容中的英雄队伍。<br><br>自然种族物理防御高、元素抗性低。如果物理攻击效果不佳，可以考虑造成元素伤害的英雄和技能。<br><br>恶魔最大生命和生命再生高，但物理防御低，且免疫冻结。如果战斗拖长、对方生命不断回满，可以考虑物理火力以及降低受到治疗的效果。<br><br>亡灵最大生命低，造成的伤害高，压碎性打击和吸血对其无效。要同时准备尽快击倒它们的火力、保护己方的防御与伤害减免，并以治疗代替吸血。',
+        ko: "일반 몬스터와 정예는 종족에 따라 기본 몸 특성이 달라집니다. 같은 직업이라도 최대 HP·재생·피해·방어·저항에서 차이가 날 수 있으므로 카드의 전투 수치와 사용하는 스킬을 함께 확인합니다. 이 종족 몸 보정은 보스나 두 결투 콘텐츠의 영웅 팀에는 적용되지 않습니다.<br><br>생물 종족은 물리 방어가 높고 원소 저항이 낮습니다. 물리 공격이 잘 통하지 않는다면 원소 피해를 주는 영웅과 스킬을 살펴봅니다.<br><br>데몬은 최대 HP와 HP 재생이 높지만 물리 방어가 낮고, 결빙이 통하지 않습니다. 전투가 길어지며 상대 HP가 차오른다면 물리 화력과 받는 회복을 줄이는 효과를 검토합니다.<br><br>언데드는 최대 HP가 낮고 입히는 피해가 높으며, 강타와 흡혈이 통하지 않습니다. 먼저 쓰러뜨릴 화력과 아군을 보호할 방어·피해 감소, 흡혈 대신 회복을 함께 준비합니다.",
+        en: "Regular and Elite monsters have body traits determined by race. Even monsters with the same class can differ in maximum HP, regeneration, damage, defense and resistance, so inspect their combat values together with their skills. These racial body adjustments do not apply to bosses or hero teams in either duel mode.<br><br>Creature monsters have higher physical defense and lower elemental resistances. If physical attacks are struggling, inspect heroes and skills that deal elemental damage.<br><br>Demons have higher maximum HP and HP regeneration, lower physical defense, and are immune to Freeze. If their HP keeps recovering during a long fight, consider physical damage and effects that reduce healing received.<br><br>Undead have lower maximum HP, deal more damage, and are immune to Crushing Blow and Life Steal. Prepare the damage to defeat them quickly, protection such as defense or damage reduction, and healing in place of Life Steal.",
+        zh: '普通怪物和精英的基础身体特性因种族而异。即使职业相同，最大生命、再生、伤害、防御、抗性也可能有差异，所以要一并确认卡片上的战斗数值和所用技能。这种种族身体修正不适用于首领，也不适用于两种决斗内容中的英雄队伍。<br><br>生物种族物理防御高、元素抗性低。如果物理攻击效果不佳，可以考虑造成元素伤害的英雄和技能。<br><br>恶魔最大生命和生命再生高，但物理防御低，且免疫冻结。如果战斗拖长、对方生命不断回满，可以考虑物理火力以及降低受到治疗的效果。<br><br>亡灵最大生命低，造成的伤害高，压碎性打击和吸血对其无效。要同时准备尽快击倒它们的火力、保护己方的防御与伤害减免，并以治疗代替吸血。',
     },
     'help.codex.milestones.title': {
         ko: "도감 단계가 주는 보너스",
@@ -2812,7 +2809,7 @@ const STRINGS = {
     'st.fx.vsTarget': { ko: '정예 · 열별 추가 데미지', en: 'Damage vs Elite & Row', zh: '对精英、各排额外伤害' },   // 「별」 — 받는 피해 감소 줄과 짝 (2026-09-28 사용자 지시)
     'st.fx.drType': { ko: '타입별 받는 피해 감소', en: 'Damage Reduction vs Type', zh: '按类型伤害减免' },
     'st.fx.drTarget': { ko: '정예 · 열별 받는 피해 감소', en: 'Damage Reduction vs Elite & Row', zh: '精英、各排伤害减免' },
-    'st.fx.normal': { ko: '자연', en: 'Natural', zh: '自然' },
+    'st.fx.normal': { ko: '생물', en: 'Creature', zh: '生物' },
     'st.fx.demon': { ko: '데몬', en: 'Demon', zh: '恶魔' },
     'st.fx.undead': { ko: '언데드', en: 'Undead', zh: '亡灵' },
     'st.fx.ele': { ko: '원소 피해량 증가', en: 'Elemental Damage Increase', zh: '元素伤害提高' },
@@ -2852,8 +2849,8 @@ const STRINGS = {
     'st.desc.res_poison': { ko: '받는 독 피해를 이 % 만큼 감소 — 옆의 상한까지', en: 'Reduces Poison damage taken by this % — up to the cap beside it', zh: '受到的毒素伤害降低此%——最多到旁边的上限' },
     'st.desc.fx_ele': { ko: '원소마다 화염 · 냉기 · 전기 · 독 피해 증가', en: 'Increases Fire / Cold / Lightning / Poison damage, each on its own', zh: '分别提高火焰、冰霜、闪电、毒素伤害' },
     'st.desc.fx_res_red': { ko: '그 원소로 때릴 때 적의 저항을 이만큼 감소', en: "Lowers the enemy's resistance when you hit with that element", zh: '以该元素攻击时，使敌人的抗性降低此数值' },
-    'st.desc.fx_vs_type': { ko: '자연 · 데몬 · 언데드 적에게 주는 피해 증가', en: 'More damage to Natural, Demon and Undead enemies', zh: '提高对自然、恶魔、亡灵敌人造成的伤害' },
-    'st.desc.fx_dr_type': { ko: '자연 · 데몬 · 언데드 적에게 받는 피해 감소', en: 'Less damage taken from Natural, Demon and Undead enemies', zh: '降低受到自然、恶魔、亡灵敌人的伤害' },
+    'st.desc.fx_vs_type': { ko: '생물 · 데몬 · 언데드 적에게 주는 피해 증가', en: 'More damage to Creature, Demon and Undead enemies', zh: '提高对生物、恶魔、亡灵敌人造成的伤害' },
+    'st.desc.fx_dr_type': { ko: '생물 · 데몬 · 언데드 적에게 받는 피해 감소', en: 'Less damage taken from Creature, Demon and Undead enemies', zh: '降低受到生物、恶魔、亡灵敌人的伤害' },
     'st.desc.fx_vs_target': { ko: '정예 · 보스와 전열 · 후열 적에게 주는 피해 증가', en: 'More damage to Elites & Bosses and to front / back row enemies', zh: '提高对精英、首领以及前排、后排敌人造成的伤害' },
     'st.desc.fx_dr_target': { ko: '정예 · 보스와 전열 · 후열 적에게 받는 피해 감소', en: 'Less damage taken from Elites & Bosses and from front / back row enemies', zh: '降低受到精英、首领以及前排、后排敌人的伤害' },
     'st.desc.fx_crush': { ko: '맞힐 때 대상의 현재 HP 에 비례한 피해 추가', en: "Hits add damage based on the target's current HP", zh: '命中时追加与目标当前生命成比例的伤害' },
@@ -2976,6 +2973,7 @@ const STRINGS = {
     'tip.item.shiftHint': { ko: 'Shift 범위', en: 'Shift: range', zh: 'Shift：范围' },
     'tip.item.keysHint': { ko: 'Alt 변화 · Shift 범위', en: 'Alt: changes · Shift: range', zh: 'Alt：变化 · Shift：范围' },
     'tip.range': { ko: '({r})', en: '({r})', zh: '({r})' },
+    'tip.lvRange': { ko: 'Lv.{r}', en: 'Lv.{r}', zh: 'Lv.{r}' },   // 발동 레벨 줄의 범위 — Shift 범위 · 도감 옵션 칸 (R567 · ADR-1368)
     // 착용 델타 — 「이 아이템」 카드의 옵션 아래 (SCREEN_DESIGN §6 · ADR-0618). 조사가 받침에 따라 갈리지 않게 「착용 시」
     'tip.delta.h': { ko: '{name} 착용 시', en: 'If {name} equips', zh: '{name}装备时' },
     'tip.delta.none': { ko: '변화 없음', en: 'No change', zh: '无变化' },
@@ -3046,7 +3044,6 @@ const STRINGS = {
     'cn.req.difficulty': { ko: '{d} 클리어', en: 'Clear {d}', zh: '通关{d}' },
     // 단을 적은 장 — 선술집 r4 ~ r7 [2026-10-27 사용자 「나이트메어 챕터1~나이트메어챕터4」 · R363]
     'cn.req.chapterIn': { ko: '{d} 챕터 {n} 클리어', en: 'Clear {d} Chapter {n}', zh: '通关{d}第{n}章' },
-    'cn.req.total': { ko: '합산 레벨 {have} / {need}', en: 'Total level {have} / {need}', zh: '总等级{have} / {need}' },
     'cn.req.hero': { ko: '최고 영웅 Lv.{have} / {need}', en: 'Top hero Lv.{have} / {need}', zh: '最高英雄Lv.{have} / {need}' },
     'cn.req.building': { ko: '{b} {n}랭크', en: '{b} rank {n}', zh: '{b}{n}阶' },
     'cn.req.built': { ko: '{b} 건설', en: 'Build {b}', zh: '建设{b}' },   // 다른 건물의 첫 랭크 — 선술집 r1 「상단 건설」 (2026-10-27 사용자 「영웅고용 - 상단 건설 필요」 · R363)
@@ -3079,20 +3076,22 @@ const STRINGS = {
     'cn.t.skillbook': { ko: '스킬북으로 스킬 습득', en: 'Learn skills from skill books', zh: '通过技能书习得技能' },   // 도서관 r1 (R179 · 2026-10-30 R398 · construction_draft §2)
     'cn.t.lab_library': { ko: '연구소 스킬북 생산', en: 'Laboratory skill book production', zh: '研究所技能书生产' },   // 도서관 r2 — 연구소 「도서관」 줄을 연다 (2026-11-15 · R504 · ADR-1198 — 옛 「스킬북 제작」)
     'cn.t.lab_forge': { ko: '연구소 대장간 연구', en: 'Laboratory blacksmith research', zh: '研究所铁匠研究' },
-    'cn.t.temper_guard': { ko: '손질 담금질', en: 'Quench treatment', zh: '淬火处理' },   // 대장간 r5 (2026-11-24 · R566)
-    'cn.t.enchant': { ko: '인챈트', en: 'Enchant', zh: '附魔' },   // 대장간 r6 (2026-11-24 · R566)   // 대장간 r3 — 연구소 「대장간」 줄을 연다 (2026-11-24 · R565)
+    'cn.t.temper': { ko: '담금질 달구기 · 덧대기', en: 'Quench: Heat · Reinforce', zh: '淬火：加热 · 加固' },   // 대장간 r4 (2026-11-24 · R571)
+    'cn.t.temper_guard': { ko: '담금질 막기', en: 'Quench: Guard', zh: '淬火：防护' },   // 대장간 r4 (2026-11-24 · R571 · 옛 r5 R566)
+    'cn.t.enchant': { ko: '인챈트', en: 'Enchant', zh: '附魔' },   // 대장간 r5 (2026-11-24 · R571 · 옛 r6 R566)   // 대장간 r3 — 연구소 「대장간」 줄을 연다 (2026-11-24 · R565)
     'cn.t.explore': { ko: '파티를 탐험에 파견', en: 'Send a party to explore', zh: '派遣队伍去探索' },
     // 탐험 r2 · r3 — 지도에 그 지점 아이콘이 생긴다 [2026-10-27 사용자 「상단 오픈」 · 「폐허 오픈」 · ADR-0908]
     'cn.t.explore_caravan': { ko: '상단 오픈', en: 'Unlocks Caravan', zh: '开放商队' },
     'cn.t.explore_ruins': { ko: '폐허 오픈', en: 'Unlocks Ruins', zh: '开放废墟' },
     'cn.t.raid': { ko: '목표를 털어 전리품 획득', en: 'Raid a target for loot', zh: '洗劫目标，获取战利品' },
     'cn.t.escort': { ko: '의뢰인의 상단 호위', en: "Escort a client's caravan", zh: '护送委托人的商队' },
-    'cn.t.gear_set': { ko: '장비 한 벌을 저장해 바로 갈아입기', en: 'Save a gear loadout and swap instantly', zh: '保存一套装备，随时换装' },
+    'cn.t.auto_salvage': { ko: '자동 분해', en: 'Auto Salvage', zh: '自动分解' },   // 창고 r3 (2026-11-24 · R571 · 옛 장비 세트 저장 자리)
     'cn.t.monster_card': { ko: '몬스터 카드 수집', en: 'Collect monster cards', zh: '收集怪物卡' },
     'cn.t.commission_board': { ko: '의뢰 게시판', en: 'Commission Board', zh: '委托告示板' },   // 선술집 r2 (이름 토막 — 위 선술집 줄과 같다 · 2026-09-25)
     'cn.t.gamble': { ko: '도박장', en: 'Gambling Hall', zh: '赌坊' },   // 선술집 r4 — 2026-11-16 R516 · 옛 r3 (이름 토막 — 위 선술집 줄과 같다 · 2026-09-27 사용자 지시)
-    'cn.t.advance': { ko: '영웅 전직', en: "Advance a hero's class", zh: '英雄转职' },
-    'cn.t.skill_depth': { ko: '영웅 스킬에 포인트 추가', en: 'Invest more points into hero skills', zh: '为英雄技能追加点数' },
+    'cn.t.advance': { ko: '영웅 전직', en: "Advance a hero's class", zh: '英雄转职' },   // 도서관 r5 (2026-11-24 · R571)
+    'cn.t.skill_craft': { ko: '스킬 북 제작', en: 'Skill Book Crafting', zh: '技能书制作' },   // 도서관 r3 (2026-11-24 · R571)
+    'cn.t.book_salvage': { ko: '스킬북 분해', en: 'Skill Book Salvage', zh: '技能书分解' },   // 도서관 r4 (2026-11-24 · R571)
     // 더하기는 「대상 +n」 한 토막 — 서술형 문장으로 늘리지 않는다 (ADR-0329) · 「증가」 도 안 붙인다 — 「+」 가 이미 말한다 (ADR-0351)
     'cn.t.bag': { ko: '가방 칸 +{n}', en: 'Bag slots +{n}', zh: '背包格+{n}' },
     'cn.t.stash': { ko: '창고 칸 +{n}', en: 'Stash slots +{n}', zh: '仓库格+{n}' },
@@ -3114,19 +3113,18 @@ const STRINGS = {
     'cn.t.shop_layers': { ko: '상단 품목 층 +{n}', en: 'Ware tiers +{n}', zh: '商会商品层数+{n}' },
     'cn.t.explore_regions': { ko: '탐험 지역 +{n}', en: 'Exploration regions +{n}', zh: '探索区域+{n}' },
     'cn.t.explore_slots': { ko: '동시 탐험 +{n}', en: 'Parallel explorations +{n}', zh: '同时探索+{n}' },
-    'cn.t.gear_sets': { ko: '장비 세트 +{n}', en: 'Gear sets +{n}', zh: '装备方案+{n}' },
     'cn.t.commission_slots': { ko: '동시 의뢰 +{n}', en: 'Parallel commissions +{n}', zh: '同时委托+{n}' },
     'cn.t.recruit_quality': { ko: '고용 · 수색 품질 +{n}', en: 'Hire and search quality +{n}', zh: '雇佣、搜寻品质+{n}' },
     // 건설 [2026-09-21 ADR-0253] — 옛 「연구」. 본문은 위쪽 탭(ADR-0192 로 걷힘)을 설명하던 것을 지금 화면 기준으로 다시 썼다
     'rs.research.h': { ko: '건설', en: 'Construction', zh: '建设' },
     'rs.research.note': {
         ko: '<b>건설</b>은 건물마다 <b>랭크를 하나씩 지어</b> 기능 · 칸을 엽니다. 무엇을 여는지는 랭크 칸에 적혀 있습니다<br>'
-            + '다음 랭크는 <b>조건</b>(스테이지 클리어 · 영웅 로스터 합산 레벨의 최고치 · 영웅 레벨 · 다른 건물의 랭크)을 채우면 <b>비용</b>을 내고 짓습니다. 지은 것은 되돌리지 않습니다<br>'
+            + '다음 랭크는 <b>조건</b>(스테이지 클리어 · 영웅 레벨 · 다른 건물의 랭크)을 채우면 <b>비용</b>을 내고 짓습니다. 지은 것은 되돌리지 않습니다<br>'
             + '안 지은 건물의 탭은 흐립니다 — 눌러도 들어가지 않고 지을 건물을 알려 줍니다. 짓는 곳은 이 탭 하나입니다. <b>준비 중</b>인 랭크는 여는 기능이 아직 없어 지을 수 없습니다',
         en: '<b>Construction</b> opens features and slots <b>one building rank at a time</b>. Each rank lists what it opens<br>'
-            + 'Meet the next rank\'s <b>requirements</b> (a stage clear · the highest total roster level reached · a hero level · another building\'s rank), then pay its <b>cost</b>. Built ranks are never undone<br>'
+            + 'Meet the next rank\'s <b>requirements</b> (a stage clear · a hero level · another building\'s rank), then pay its <b>cost</b>. Built ranks are never undone<br>'
             + 'Tabs of unbuilt buildings are dimmed — they stay closed until built, and clicking one names the building to build. Build here, in this tab. Ranks marked <b>coming later</b> open nothing yet and cannot be built',
-        zh: '<b>建设</b>是在每座建筑上<b>逐阶建造</b>，以开启功能和格位。各阶开启什么，写在阶格里<br>下一阶需满足<b>条件</b>（关卡通关、英雄名册总等级的最高值、英雄等级、其他建筑的阶）后支付<b>费用</b>建造。建好的不会撤销<br>未建设建筑的标签页会变暗——点击也进不去，只会提示需要建造的建筑。建造只在这个标签页进行。<b>准备中</b>的阶尚无可开启的功能，无法建造',
+        zh: '<b>建设</b>是在每座建筑上<b>逐阶建造</b>，以开启功能和格位。各阶开启什么，写在阶格里<br>下一阶需满足<b>条件</b>（关卡通关、英雄等级、其他建筑的阶）后支付<b>费用</b>建造。建好的不会撤销<br>未建设建筑的标签页会变暗——点击也进不去，只会提示需要建造的建筑。建造只在这个标签页进行。<b>准备中</b>的阶尚无可开启的功能，无法建造',
     },
     /* 건설 버튼 · 완료 표시 — 탭 이름 키(`rs.research.h`)와 같은 옛 접두를 그대로 쓴다. 나머지 건설 문구는 `cn.*` (2026-09-22 · R137) */
     'rs.rs.done': { ko: '완료', en: 'Done', zh: '完成' },
@@ -3662,7 +3660,7 @@ const STRINGS = {
     'cx.seg.sin': { ko: '죄종', en: 'Sins', zh: '罪宗' },   // 의뢰 죄종별 수령 횟수 (§9 · ADR-1069 · R457)
     'cx.sin.n': { ko: '수령 {n}회', en: 'Claimed {n}', zh: '领取{n}次' },
     'cx.h': { ko: '몬스터 도감', en: 'Monster Codex', zh: '怪物图鉴' },
-    'cx.sub': { ko: '도감 경험치 {list}에서 레벨이 오릅니다 — 처치 하나에 {per} · Lv1 · Lv2 의 보너스 효과는 그 몬스터와 같은 종족 전체에 붙습니다', en: 'Levels up at {list} codex EXP — each kill gives {per} · Lv1 and Lv2 bonus effects apply to every monster of the same race', zh: '图鉴经验达到{list}时升级——每次击杀获得{per} · Lv1、Lv2的奖励效果作用于与该怪物同种族的所有怪物' },   // 종족 = monster_type(데몬 · 자연 · 언데드 — 2026-11-14 R494 · ADR-1151)
+    'cx.sub': { ko: '도감 경험치 {list}에서 레벨이 오릅니다 — 처치 하나에 {per} · Lv1 · Lv2 의 보너스 효과는 그 몬스터와 같은 종족 전체에 붙습니다', en: 'Levels up at {list} codex EXP — each kill gives {per} · Lv1 and Lv2 bonus effects apply to every monster of the same race', zh: '图鉴经验达到{list}时升级——每次击杀获得{per} · Lv1、Lv2的奖励效果作用于与该怪物同种族的所有怪物' },   // 종족 = monster_type(데몬 · 생물 · 언데드 — 2026-11-14 R494 · ADR-1151)
     /* 잠금 문구 셋(cx.chLocked · cx.chLockedTail · cx.locked)은 2026-09-06 삭제 — 도감이 해금을 안 본다 (SCREEN_DESIGN §9) */
     'cx.sinLabel': { ko: '죄종', en: 'Sin', zh: '罪宗' },
     'cx.exp': { ko: '경험치 {n}', en: '{n} EXP', zh: '经验{n}' },   // 그 몬스터의 누적 도감 경험치 — 카드 진행 줄 · 핍 툴팁 (ADR-0587 · ~~cx.kills 처치 {n}~~)
@@ -3674,7 +3672,7 @@ const STRINGS = {
     'cx.tip.lv': { ko: 'Lv.{lv}', en: 'Lv.{lv}', zh: 'Lv.{lv}' },
     'cx.tip.story': { ko: '스토리', en: 'Story', zh: '故事' },
     'cx.tip.effects': { ko: '보너스 효과', en: 'Bonus Effects', zh: '奖励效果' },
-    // 단계표의 Lv1 · Lv2 — **그 몬스터 한 마리의 몫** 앞에 종족 이름(`{race}` — monster_type.csv · 데몬 · 자연 · 언데드 — 2026-11-14 ADR-1151)을 단다 · Lv2 는 「상대」 · `{line}` = 줄 한 줄(파밍 = 아래 다섯 ·
+    // 단계표의 Lv1 · Lv2 — **그 몬스터 한 마리의 몫** 앞에 종족 이름(`{race}` — monster_type.csv · 데몬 · 생물 · 언데드 — 2026-11-14 ADR-1151)을 단다 · Lv2 는 「상대」 · `{line}` = 줄 한 줄(파밍 = 아래 다섯 ·
     //   전투 = 장비 옵션 줄 표기) · `{v}` = 부호 붙은 값 (SCREEN_DESIGN §9 · ADR-0715 · monster_design §8 — ~~그 몬스터에게만 · cx.rw.vs_dmg~~ ADR-0667)
     'cx.rw.farm': { ko: '{race} {line}', en: '{line} from {race}', zh: '{race}{line}' },
     'cx.rw.fight': { ko: '{race} 상대 {line}', en: '{line} vs {race}', zh: '对{race}{line}' },

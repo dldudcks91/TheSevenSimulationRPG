@@ -227,11 +227,13 @@ export function createFormula(balance) {
 
     /**
      * 적중률(비율) [개정 2026-10-06 · 사용자 확정 · R219 · §9-4 — ~~레벨 차 하나로 정한다 · 명중률은 더한다~~] — **곱 넷**이다.
-     *   적중률 = hit_base_pct × (1 + 명중률) × (1 − 명중 감소) × 레벨 계수 → hit_min_pct ~ 1 로 자른다
+     *   적중률 = hit_base_pct × (1 + 명중률 − 회피) × (1 − 명중 감소) × 레벨 계수 → hit_min_pct ~ 1 로 자른다
      *   레벨 계수 = 1 − 부족레벨 × hit_per_level_deficit_pct 이고 hit_level_mult_min 아래로 안 내려간다 — **레벨만으로는 하한에 안 닿는다.**
      *   그 아래는 명중 감소가 연다 · 최종 하한 hit_min_pct 는 명중 감소를 겹쳐도 「절대 못 맞춘다」가 안 되게 막는다.
      *   오버레벨은 계수 1 에서 멈춘다(초과 이득 없음) · 100% 는 **최종 결과에서만** 자른다 — 명중을 넘치게 쌓은 만큼 레벨 부족 · 명중 감소를 메운다.
      * `bonus` = 공격자의 **명중률**(비율 — 궁수 T1-3 · 물리 무기 옵션) · `down` = 공격자에게 걸린 **명중 감소**(비율 — 걸린 것 중 가장 센 하나를 넘긴다).
+     * `evasion` = 방어자의 **회피**(비율) [2026-11-24 · R569 · §9-4] — 명중률과 **같은 괄호에서 뺀다**(1 + 명중률 − 회피 · 1:1 로 지운다).
+     *   **채우는 출처가 아직 없다** — 늘 0 이라 결과는 종전과 같다(`x − 0` 은 x 그대로).
      *   없으면 0 이다. 마법 무기를 든 공격자는 이 함수를 안 지난다(`strike` 의 `sureHit` — 항상 맞는다)
      */
     /** 레벨 계수 — 공격자가 모자란 레벨만큼 적중을 깎는다 · 하한 `hit_level_mult_min` · 오버레벨은 1. `hitChance` 의 곱 하나이고
@@ -240,8 +242,8 @@ export function createFormula(balance) {
         const lack = Math.max(0, (defenderLevel ?? 1) - (attackerLevel ?? 1));
         return Math.max(B.hit_level_mult_min, 1 - lack * B.hit_per_level_deficit_pct);
     };
-    const hitChance = (attackerLevel, defenderLevel, bonus = 0, down = 0) =>
-        clamp(B.hit_base_pct * (1 + (bonus || 0)) * (1 - (down || 0)) * hitLevelMult(attackerLevel, defenderLevel), B.hit_min_pct, 1);
+    const hitChance = (attackerLevel, defenderLevel, bonus = 0, down = 0, evasion = 0) =>
+        clamp(B.hit_base_pct * (1 + (bonus || 0) - (evasion || 0)) * (1 - (down || 0)) * hitLevelMult(attackerLevel, defenderLevel), B.hit_min_pct, 1);
 
     /**
      * 능력치 계수 [2026-09-18 · 사용자 확정 · battle_design §9-2] — `(1 + attr_dmg_step_pct) ^ (능력치 − attr_dmg_pivot)`.
@@ -263,14 +265,16 @@ export function createFormula(balance) {
      *          `condPct` = **그 타격의** 조건부 % — 같은 괄호 안에 더한다(괄호를 `1 + dmgPct` 에서 `1 + dmgPct + condPct` 로 바꿔 끼운다 · 2026-09-18)
      *          `statMult` = 능력치 계수(`statCoef` — 평타 = 메인 스탯 · 스킬 = 슬롯의 능력치) · `bonusPct` = **피해량**(괄호와 합치지 않고 따로 곱한다)
      *          `procChance`·`procMult` 는 **스킬 타격만** 싣는다(battle.strikeOnce) — 없으면 0 이라 기본 공격은 굴림을 안 태운다
+     *          `crushBase` = 강타의 소재값(맞기 직전 대상 현재 체력 × 강타 % · battle.strikeOnce 가 그 타격 동안만 얹는다) — 없으면 0 이라 종전과 같다 (2026-11-24 R570)
      * @param d 방어자 {def, res:{fire,cold,lightning,poison}, resMaxBonus, resMaxEl?, dr, drFlat?, lvl} — res 는 **항상 객체**(몬스터도)
      *          `resMaxEl` = 원소별 최대 저항 증가(투구 시기 칸 — 그 타격 원소의 값만 상한에 더한다) · `drFlat` = 절대값 피해 감소(투구 플레이트 — 모든 감소 뒤에 뺀다)
      *          [2026-09-18 · item_design §1 「투구 옵션」] — 둘 다 없으면 0 이라 종전과 같다. rng 소비는 안 바뀐다
+     *          `evasion` = 회피(`hitChance` 다섯째 인자 · 2026-11-24 R569) — 채우는 출처가 없다(없으면 0)
      * @param attackMulBeforeMitigation 값이 있으면 공격자 최종 배수를 적용한 감소 전 피해도 함께 돌려준다.
      */
     function strike(rng, a, d, attackMulBeforeMitigation) {
         // 적중 게이트 — 마법 무기는 항상 맞는다(굴림 없음 · 2026-10-06 R219 · §9-4). 물리는 곱 넷(`hitChance`)
-        if (!a.sureHit && rng() >= hitChance(a.lvl, d.lvl, a.hitBonus, a.hitDown)) return { hit: false, dmg: 0, crit: false, proc: false };
+        if (!a.sureHit && rng() >= hitChance(a.lvl, d.lvl, a.hitBonus, a.hitDown, d.evasion)) return { hit: false, dmg: 0, crit: false, proc: false };
 
         // 피해 굴림 [2026-09-14 · R90 · battle_design §9-1] — 적중 뒤 · 치명 앞에 **한 번**, 데미지 범위 양끝 사이 연속 균등.
         //   양끝이 같아도 소비한다 — 소비 수가 무기에 의존하면 같은 시드가 다른 전투를 낸다
@@ -336,10 +340,17 @@ export function createFormula(balance) {
                 + v * ep * (1 - mitigation(physicalDefense(d.def ?? 0, a.defIgnore ?? 0)));
             else v *= 1 - appliedResist((d.res?.[a.atkType] ?? 0) - cut, d.resMaxBonus ?? 0, d.resMaxEl?.[a.atkType] ?? 0);
         }
+        // 강타는 물리 피해다 [2026-11-24 사용자 「강타는 물리피해고 물리방어력에 의해 줄어들어야해」 · R570 · battle_design §9-6 — ~~치명 · 방어 · 저항 · 피해 감소를 안 받는 고정 피해~~] —
+        //   소재값(`crushBase`)을 **타격 타입과 무관하게** 물리 방어(방어 관통 포함)로 깎아 이 타격에 더한다 · 아래 받는 피해 감소 · 절대값 감소는 합에 한 번 ·
+        //   치명 · 배율 · 데미지 % 괄호 · 추가 피해 · 전환 · 고정 몫은 안 받는다(위에서 이미 끝났다) · 없으면 0 이라 종전과 같다 · rng 0
+        const crushPart = a.crushBase > 0 ? a.crushBase * (1 - mitigation(physicalDefense(d.def ?? 0, a.defIgnore ?? 0))) : 0;
+        if (crushPart) v += crushPart;
         v *= 1 - (d.dr ?? 0);
-        v -= d.drFlat ?? 0;                                        // 절대값 피해 감소 — 모든 감소 뒤 · 하한은 아래 dmg_min (2026-09-18)
+        v -= d.drFlat ?? 0;                                        // 절대값 피해 감소 — 모든 감소 뒤 · 강타를 더한 합에서 한 번 · 하한은 아래 dmg_min (2026-09-18)
         if (fixedPart) v = Math.max(0, v) + fixedPart;
         const result = { hit: true, dmg: Math.max(B.dmg_min, Math.round(v)), crit, proc };
+        // 강타 몫 — 피해 감소까지 받은 값 · 절대값 감소는 나머지 몫이 먼저 먹는다(종전 「타격 − 절대값 + 강타」와 같은 자리) · `dmg` 를 안 넘는다
+        if (crushPart) result.cb = Math.min(result.dmg, Math.round(crushPart * (1 - (d.dr ?? 0))));
         if (convProc) result.convProc = true;
         if (damageBeforeMitigation !== undefined) result.damageBeforeMitigation = damageBeforeMitigation;
         return result;

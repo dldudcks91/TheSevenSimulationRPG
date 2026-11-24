@@ -13,21 +13,25 @@
  * 여는 것의 대상 — `kind` 는 켜기(`unlock`) · 더하기(`add`) 둘뿐이다(construction_draft §11-2).
  *   `live: false` = **준비 중** — 그 기능이 아직 없다. 표에 적어 두면 화면에 「준비 중」으로 보이고, 기능이 생기면 여기만 `true` 로 바꾼다.
  *   `build: true` = 준비 중이어도 **그 줄이 랭크를 지을 수 있게 한다** — 뒤 랭크로 가는 길을 막지 않는다(효과는 기능이 생길 때 먹는다)
- *   더하기는 **기본값에 더한다** — 이름이 `state.limitsOf` 의 키와 같은 대상은 그 상한에 붙는다(단계 셋 `make_level` · `potion_tier` · `tactic_slots` 는
- *   `makeLevels` · `potionTier` · `tacticSlots` 에 붙고 기본값이 0 이다 — `state.js:ADD_KEY`).
+ *   더하기는 **기본값에 더한다** — 이름이 `state.limitsOf` 의 키와 같은 대상은 그 상한에 붙는다(단계 둘 `potion_tier` · `tactic_slots` 는
+ *   `potionTier` · `tacticSlots` 에 붙고 기본값이 0 이다 — `state.js:ADD_KEY` · ~~`make_level` → `makeLevels`~~ 2026-11-24 · R574 — 제작 레벨이 걷혀 붙을 상한이 없다).
  *   **첫 단계는 켜기가 심는다**(`seed` = 켜기 대상 id) — 그 켜기가 처음 나오는 랭크에서 이 더하기가 **1 씩 함께 선다**(표에 +1 줄을 따로 적지 않는다 ·
  *   제작 Lv1 은 제작(`make`) · 물약 1단계는 물약 제작(`potion`)과 함께 열린다 — 2026-09-24 사용자 지시 · INTERFACE §2-14). `opened` · `reach` 가 센다
  */
 const U = live => ({ kind: 'unlock', live });
 const A = (live, seed = null) => ({ kind: 'add', live, seed });
 export const TARGETS = {
-    // 켜기 — 지금 있는 기능 (분해 · 알아서 분해는 건물 밖이라 여기 없다 — 처음부터 열려 있다 · 2026-09-23 사용자 지시 · R140)
+    // 켜기 — 지금 있는 기능 (분해 · 일괄 분해는 건물 밖이라 여기 없다 — 처음부터 열려 있다 · 2026-09-23 사용자 지시 · R140 · 알아서 분해는 창고 r3 `auto_salvage` — 2026-11-24 · R571)
     //   ~~`repeat` · `stage_level`~~ 도 건물 밖이다 — 반복 원정은 처음부터 열린다 (2026-09-24 사용자 지시 · R152) · 던전 레벨 조절(위험도)은 2026-09-29 폐지됐다
     //   ~~`expedition`~~ 도 건물 밖이다 — 원정은 처음부터 열린다 (2026-09-25 사용자 지시 · R161 · 원정 건물은 2026-10-22 에 걷혔다 · R319)
-    upgrade_item: U(true), make: U(true),
-    enchant: U(true),   // 인챈트 — 대장간 r6 (2026-11-24 사용자 · R566 · 옛 강화와 같은 문 `upgrade_item`)
-    temper_guard: U(true),   // 손질 담금질(막기) — 대장간 r5 · 달구기 · 덧대기는 강화(`upgrade_item`)와 함께 (2026-11-24 사용자 「담금질을 왜 없애」 · R566)
-    synth: U(true),   // 재료 합성 — 하급을 모아 위 단계 하나(대장간 r1 · 2026-10-27 · R359 · item_design §5-2)
+    upgrade_item: U(true),   // 강화 — 대장간 r1 (+3 까지 · 그 위는 연구소 「대장간」 줄 「강화」 지점)
+    make: U(true),   // 제작(장비 · 물약) — 대장간 r2 · 연구소 대장간 줄의 장비 · 물약 생성을 연다 · 물약 1단계를 심는다 (2026-11-24 · R571 · 옛 r4 R566 · 버튼 제작 → 줄 R574 D12)
+    enchant: U(true),   // 인챈트 — 대장간 r5 (2026-11-24 · R571 · 옛 r6 R566)
+    // 담금질(옛 「손질」 — 2026-11-24 사용자 「그냥 담금질이라고 이름지어 전체를」) — 대장간 r4 에 셋이 함께 열린다 (R571 · 옛 막기 r5 R566 · 달구기 · 덧대기는 강화와 함께였다)
+    temper: U(true),   // 달구기 · 덧대기
+    temper_guard: U(true),   // 막기
+    synth: U(true),   // 재료 합성 — 하급을 모아 위 단계 하나(대장간 r3 · 2026-10-27 · R359 · item_design §5-2)
+    auto_salvage: U(true),   // 알아서 분해 — 창고 r3 · 손 분해 · 일괄 분해는 처음부터 (2026-11-24 사용자 「r3에 자동분해를 열어주는건어때?」 · R571 — 옛 「건물이 열지 않는다」 09-23)
     potion: U(true),   // 물약 제작 — 물약 1단계를 심는다(`potion_tier` 의 seed) · 물약은 단계로만 잠겨 `hasFeature` 자리가 없다 (2026-09-24 사용자 지시 · 대장간 r2)
     //   ~~`search`~~ — 2026-10-19 수색 삭제(찾아온 영웅은 건물이 아니라 연구소 줄이 연다 · base_expedition §2-4)
     //   ~~`storage`~~ 도 건물 밖이다 — 가방 · 창고 칸은 처음부터 열린다 (2026-10-27 사용자 지시 · R361)
@@ -36,27 +40,28 @@ export const TARGETS = {
     shop_trade: U(true),   // 교역소 — 재료 교환 창구(상단 r3 · 특수상단은 r4 · 2026-10-30 사용자) · 교환 비율이 미정이라 열리면 화면에 자리만 선다(`state.shopState` 의 `trade`)
     lab_res: U(true),   // 연구소 「자원」 줄 — 창고 r1 이 연다(연구소는 시작부터 r1 · 2026-10-27 사용자 지시 · R361 · `state.labLineOpen`)
     lab_visit: U(true),   // 연구소 「수색」 줄 — 선술집 r3 이 연다(2026-11-16 사용자 「수색을 r3로」 · R516 · 옛 `hire` 가 함께 열었다 · `state.labLineOpen`)
-    lab_forge: U(true),   // 연구소 「대장간」 줄 — 대장간 r3 이 연다 · 제작 레벨은 그 줄의 지점이 연다(2026-11-24 사용자 「제작레벨 연구소로 넘겨봐」 · R565 · `state.labLineOpen`)
+    lab_forge: U(true),   // 연구소 「대장간」 줄 — 대장간 r2 가 연다 · 제작 레벨은 그 줄의 지점이 연다(2026-11-24 사용자 「제작레벨 연구소로 넘겨봐」 · R565 · R571 · `state.labLineOpen`)
     // 켜기 — 준비 중 (construction_draft §2 의 ⚠ 칸 포함)
     craft: U(false), stigma_craft: U(false), skill_card: U(false),
-    raid: U(false), escort: U(false), gear_set: U(false), monster_card: U(false),
-    // 탐험 — 탐험 r2 가 보내기를 연다(r1 은 편성 +1 · 2026-10-30 · SCREEN_DESIGN §8-4 · `state.exploreErr` 의 `unbuilt`)
+    raid: U(false), escort: U(false), monster_card: U(false),
+    //   ~~`gear_set` 장비 세트 저장 · `gear_sets`~~ — 기능째 뺐다 (2026-11-24 사용자 「지금 필요없는거잖아」 · R571)
+    // 탐험 — 탐험 r1 이 보내기를 연다(2026-11-24 · R571 — 편성은 건물이 아니라 진행이 연다 · SCREEN_DESIGN §8-4 · `state.exploreErr` 의 `unbuilt`)
     explore: U(true),
-    // 탐험 지점 — 마차(상단) · 폐허 아이콘이 이 줄부터 지도에 선다(탐험 r3 · r4 · 동굴은 r2 `explore` 가 연다 · 2026-10-30 · `state.EXPLORE_SPOT_FEATURE`)
+    // 탐험 지점 — 마차(상단) · 폐허 아이콘이 이 줄부터 지도에 선다(탐험 r2 · r3 · 동굴은 r1 `explore` 가 연다 · R571 · `state.EXPLORE_SPOT_FEATURE`)
     explore_caravan: U(true), explore_ruins: U(true),
     commission_board: U(true),   // 의뢰 게시판 [2026-09-24 · R153 · base_expedition_design §1-3] — 준비 중에서 풀렸다
     gamble: U(true),   // 도박장 슬롯 [2026-09-24 · R149 · base_expedition_design 「도박장」] — 준비 중에서 풀렸다
     // 도서관 [2026-09-29 · R179 · construction_draft §2 · skill_design §2-1] — 책 배우기(`learnBook` · r1) · 연구소 「도서관」 줄(`lab_library` · r2 — 2026-11-15 · R504 · ~~`book_craft` 책 제작~~ 퇴역).
     //   ~~대장간 r5 `skill_card`~~ 줄은 걷었다(도서관이 받는다 — 스킬 카드는 정의가 없어 대상만 남는다)
     skillbook: U(true), lab_library: U(true),
-    // 전직 — 도서관 r3 (2026-10-16 · R263 — ~~r2~~ 2026-10-09 · R231 · construction_draft §2 — ~~훈련장 r3~~ · 훈련장은 `training` · `training_slots` 와 함께 걷혔다).
-    //   전직은 섰다(R16 · 2026-09-28) · 「영웅 스킬을 더 찍는다」(도서관 r4)는 준비 중이라 그 랭크는 못 짓는다
-    advance: U(true), skill_depth: U(false),
+    // 스킬북 제작 · 책 분해 · 전직 — 도서관 r3 · r4 · r5 (2026-11-24 사용자 「r3와 r4를 바꿔」 · R571 — 옛 전직 r3 R263 · 제작은 책 배우기와 같은 문 · 분해는 문 없음)
+    //   ~~`skill_depth` 「영웅 스킬을 더 찍는다」~~ — 기능째 뺐다(R571)
+    skill_craft: U(true), book_salvage: U(true), advance: U(true),
     // 더하기 — 지금 있는 상한(`state.limitsOf` 의 키) · 단계
     bag: A(true), stash: A(true), roster: A(true), presets: A(true), potionSlots: A(true), upgrade: A(true),
     // 고용 후보(`tavernCandidates`)는 여기 없다 — 명단은 `tavern_candidates` 고정이고 건물이 안 늘린다 [2026-09-24 사용자 지시] · ~~`searchSlots`~~ 2026-10-19 수색 삭제
     shopPerSlot: A(true), shopWeapon: A(true),
-    make_level: A(true, 'make'), potion_tier: A(true, 'make'), tactic_slots: A(true),   // 제작 레벨 · 물약 단계의 첫 단계는 제작(`make`)이 심는다 — 물약 제작은 제작에 든다 (2026-11-24 사용자 · R566 · 옛 `potion` 켜기 대장간 r2)
+    make_level: A(true, 'make'), potion_tier: A(true, 'make'), tactic_slots: A(true),   // 물약 단계의 첫 단계는 제작(`make` — 대장간 r2)이 심는다 — 물약 제작은 제작에 든다 (2026-11-24 사용자 · R566 · R571) · `make_level` 은 어휘만 남았다(붙을 상한 `makeLevels` 가 2026-11-24 · R574 걷혔다 — 표에 안 쓴다)
     // 도감이 연 구간 수 — 도서관 r1 의 `codex` 가 첫 구간을 심고 뒤 랭크가 하나씩 더한다 · `state.limitsOf` 가 그 구간의 끝 레벨로 바꾼다(`codexLevel` · 2026-10-24 도감 건물을 도서관에 합침 · R339 · 2026-11-18 구간 셋 R539)
     codex_level: A(true, 'codex'),
     // ~~`chapters`~~ — 장은 건물이 안 연다(앞 장 보스가 연다 · `state.chapterGate` · 2026-10-22 원정 건물 삭제 · R319)
@@ -68,17 +73,17 @@ export const TARGETS = {
     make_kinds: A(false), shop_layers: A(false),
     // 동시 탐험 — 기본값 `explore_slots` 위로 더한다(`state.limitsOf` 의 `exploreSlots` · 2026-10-09 켰다 · 지금 표엔 늘리는 랭크가 없다 — 2026-10-27 탐험 r5 가 편성으로 · R362) · 탐험 지역은 장이 연다(ADR-0537)라 `explore_regions` 는 읽는 자리가 없다
     explore_slots: A(true),
-    explore_regions: A(false), gear_sets: A(false),
+    explore_regions: A(false),
     // 고용 명단 · 수색 결과 둘 다의 영웅 품질 [2026-09-24 사용자 지시 · 옛 `high_tier_candidates` — 명단만이었다]
     //   준비 중이어도 짓는다(2026-09-27 사용자 지시) · **지금 표에 이 줄이 없다** — 선술집에서 뺐다(2026-10-27 사용자 「나중에 연구소에 넣을게」 · R363)
     recruit_quality: { ...A(false), build: true },
 };
 
 /**
- * 문턱 조건 종류 여섯 — 칸 = `종류:값`, 여러 개는 `|` 로 잇고 **전부** 채워야 한다(construction_draft §11-3).
+ * 문턱 조건 종류 다섯 — 칸 = `종류:값`, 여러 개는 `|` 로 잇고 **전부** 채워야 한다(construction_draft §11-3).
  *   `stage:<id>` 그 스테이지 클리어 · `chapter:<장>` 그 장의 보스 칸 클리어 · `chapter:<장>:<단>` **그 단에서** 그 장의 보스 칸 클리어 ·
  *   `difficulty:<id>` **그 단에서** 다음 단을 여는 칸 클리어 ·
- *   `total:<n>` 로스터 합산 레벨 **도달 최고치** · `hero:<n>` 로스터 최고 영웅 레벨 ·
+ *   `hero:<n>` 로스터 최고 영웅 레벨 (~~`total:<n>` 로스터 합산 레벨 도달 최고치~~ — 2026-11-24 지휘 천막이 장만 남겨 쓰는 곳이 없어 걷었다 · R571) ·
  *   `building:<id>:<랭크>` 그 건물이 그 랭크 이상. 수 칸에 **balance 키 이름**을 적으면 그 값이다(같은 수를 두 곳에 두지 않는다)
  *   `have(ctx, cond, rankOf)` = 지금 값 · `ok` 는 `have >= need` 하나로 판정한다(스테이지 · 장 · 난이도는 클리어면 1)
  */
@@ -89,7 +94,6 @@ export const CONDITIONS = {
     //   단을 적은 장(`diff`)은 그 단의 기록 `ctx.clearedIn[단]` 을 읽는다(선술집 r4 ~ r7 = 나이트메어 1 ~ 4장 · 2026-10-27 · R363)
     chapter: { have: (ctx, c) => ((c.diff ? ctx.clearedIn?.[c.diff] : ctx.cleared)?.has(c.stage) ? 1 : 0) },
     difficulty: { have: (ctx, c) => (ctx.diffCleared?.has(c.ref) ? 1 : 0) },
-    total: { have: ctx => ctx.peakTotal },
     hero: { have: ctx => ctx.topLevel },
     building: { have: (ctx, c, rankOf) => rankOf(c.ref) },
 };
@@ -255,7 +259,7 @@ export function createConstruction(data) {
         return { features, adds };
     }
 
-    /** 조건마다 `{kind, ref, need, have, ok}` — `ctx = {cleared: Set, peakTotal, topLevel}` · 건물 랭크는 `ranks` 에서 읽는다 */
+    /** 조건마다 `{kind, ref, need, have, ok}` — `ctx = {cleared: Set, clearedIn, diffCleared, topLevel}` · 건물 랭크는 `ranks` 에서 읽는다 */
     const check = (require, ctx, ranks) => require.map(c => {
         const have = CONDITIONS[c.kind].have(ctx, c, id => ranks?.[id] ?? 0);
         return { ...c, have, ok: have >= c.need };
@@ -314,5 +318,7 @@ export function createConstruction(data) {
         return out;
     }
 
-    return { list, startRanks, fitRanks, rankInfo, opened, check, nextState, reach, tabs };
+    // `parseRequire(cell, where)` — 문턱 칸 하나를 조건 목록으로 · 건설 표와 **같은 문법 · 같은 검증**(어기면 throw) · 표 밖의 문턱
+    //   (편성 — `balance.csv:preset_unlock_n`)이 `check` 와 함께 쓴다 · `where` = 오류 문구의 자리 (2026-11-24 · R571)
+    return { list, startRanks, fitRanks, rankInfo, opened, check, nextState, reach, tabs, parseRequire };
 }

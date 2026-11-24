@@ -1656,8 +1656,10 @@ export function createBattleSystem(data) {
             } : null;
             // 매직찬스는 **스폰 굴림**에 걸린다 [2026-09-11 · R79] — 장비 희귀도가 여기서 정해지기 때문이다.
             //   ⚠ 딸린 것 — 파티의 매직아이템 획득확률이 **적 장비도 좋게 한다**(사용자가 알고 택한 「이스터에그」)
+            // 결투 상대 영웅은 **종족이 없다** [2026-11-24 사용자 「결투장에 있는 영웅들은 자연에 포함되지 않아」 · R572 · monster_design §3 — ~~`monsterType: 'Normal'`~~] —
+            //   무기 · 갑옷의 종족 줄(vs 종족 데미지 · 종족에게 받는 피해 감소)이 결투에서 0 이다 · 파티 쪽 영웅 유닛도 종족이 없다(대칭)
             const sp = encounter ? { type: rules?.kind ?? 'normal', list: encounter.map((p, i) => makeUnit('enemy', p.combat, {
-                key: `e${i}`, uid: p.uid, hero: p.hero, grade: 'normal', monsterType: 'Normal',
+                key: `e${i}`, uid: p.uid, hero: p.hero, grade: 'normal', monsterType: null,
                 rank: p.rank ?? 0, stats: p.stats, sheet: { ...p.combat }, gear: p.gear,
                 reactions: p.reactions ?? [],
                 actives: (p.actives ?? []).map(a => slotOf(a, SK.resolve(a), fitterOf(p.weaponGroup), 0)),
@@ -3897,7 +3899,23 @@ export function createBattleSystem(data) {
                 ? { el: u.enchant.el, share: B.elite_enchant_add_pct, add: true } : null;
             if (cv || ea) u.conv = ea ? [...(cv ?? []), ea] : cv;
             const attackMulBeforeMitigation = sumOf(u, 'maiden') > 0 ? dealt * (am?.attackMul ?? 1) : undefined;
-            const { hit, dmg: dmg0, crit, proc, convProc, damageBeforeMitigation } = F.strike(rng, u, target, attackMulBeforeMitigation);
+            // 강타 — **맞기 직전 대상의 현재 체력** × % 를 그 타격의 **물리 피해**로 싣는다 [2026-11-24 사용자 「강타는 물리피해고 물리방어력에 의해 줄어들어야해」 · R570 · battle_design §9-6 —
+            //   ~~치명 · 방어 · 저항을 받지 않는 고정 피해 · `strike` 뒤에 더한다~~(R78)] — 소재값(`crushBase`)을 그 타격 동안만 얹고 `formula.strike` 가 물리 방어(관통 포함) ·
+            //   받는 피해 감소 · 절대값 감소로 깎아 `cb` 로 돌려준다(치명은 안 받는다) · rng 0
+            //   마스터리 조건부 강타(폭식 T2-2 · 2026-10-05)는 같은 비율에 더한다
+            //   **마법 무기를 든 유닛의 직격은 강타를 안 받는다** [2026-10-04 사용자 · battle_design §9-6 · R207] — 출처 무관 · 영웅 · 몬스터 같다 · 치명은 받는다.
+            //   마법 무기의 표지는 `noBasic`(평타가 없다 — R198)이다 · 흡혈은 무기가 아니라 피해 종류가 가른다(아래 · 2026-11-16 R517)
+            //   **강타가 안 통하는 종족**(`target.noCrush` — 언데드 · R522)을 맞힐 때도 0 이다
+            //   파리 떼(스웜 · 2026-10-29 R380)는 강타가 **첫 산 파리의 HP** 를 본다 — 본체 HP 는 창 동안 몸이 아니다
+            const crush = u.noBasic || target.noCrush ? 0 : (fx?.crush ?? 0) + (ma?.sum.crushing_blow_pct ?? 0);
+            const sw = target.swarm;
+            const crushBase0 = u.crushBase;
+            u.crushBase = crush > 0 ? (sw ? sw.hp.find(h => h > 0) ?? 0 : target.hp) * crush : 0;
+            const { hit, dmg: dmgAll, crit, proc, convProc, damageBeforeMitigation, cb: cbHit } = F.strike(rng, u, target, attackMulBeforeMitigation);
+            u.crushBase = crushBase0;
+            // 강타 몫(`cb`)과 나머지(`dmg0`) — 흡혈 · 반사는 나머지만 본다(종전 그대로) · 둘의 합이 그 타격의 피해(`total`)
+            const cb = hit ? cbHit ?? 0 : 0;
+            const dmg0 = dmgAll - cb;
             u.fixedShare = fs0;
             u.conv = conv0;
             // 받은 피해를 쌓아 다음 공격에(공통 줄 몽크 3 · `adv.struck_dmg_store` · R471) — 맞힌 직격에 쌓인 양을 더하고 비운다
@@ -3934,16 +3952,7 @@ export function createBattleSystem(data) {
             const shield = !!target.barrier;   // 배리어가 있었나 — 있었으면 흡수 후 조각 합을 `bar` 로 싣는다
             // 원소 보호막(프로스트 아머 · R471) — 원소 직격 전부 · 물리는 정한 몫만 먼저 먹는다 · 평타로 친 적은 아래에서 얼린다
             const shieldWas = target.eshield && target.eshield.until > t + EPS ? target.eshield : null;
-            // 강타 — **맞기 직전 대상의 현재 체력** × % 를 그 타격에 더한다. 치명 · 방어 · 저항을 받지 않는 고정 피해 (battle_design §9 · R78). rng 0
-            //   마스터리 조건부 강타(폭식 T2-2 · 2026-10-05)는 같은 비율에 더한다
-            //   **마법 무기를 든 유닛의 직격은 강타를 안 받는다** [2026-10-04 사용자 · battle_design §9-6 · R207] — 출처 무관 · 영웅 · 몬스터 같다 · 치명은 받는다.
-            //   마법 무기의 표지는 `noBasic`(평타가 없다 — R198)이다 · 흡혈은 무기가 아니라 피해 종류가 가른다(아래 · 2026-11-16 R517)
-            //   **강타가 안 통하는 종족**(`target.noCrush` — 언데드 · R522)을 맞힐 때도 0 이다
-            const spell = u.noBasic;
-            const crush = spell || target.noCrush ? 0 : (fx?.crush ?? 0) + (ma?.sum.crushing_blow_pct ?? 0);
-            // 파리 떼(스웜 · 2026-10-29 R380)는 강타가 **첫 산 파리의 HP** 를 본다 — 본체 HP 는 창 동안 몸이 아니다
-            const sw = target.swarm;
-            const cb = crush > 0 ? Math.round((sw ? sw.hp.find(h => h > 0) ?? 0 : target.hp) * crush) : 0;
+            // 강타 몫(`cb`)은 위 `F.strike` 가 물리 피해로 깎아 돌려줬다(R570) — 합이 그 타격의 피해
             const total = dmg + cb;
             const hpBefore = target.hp;
             const took = sw ? swarmTake(target, total, spread) : null;

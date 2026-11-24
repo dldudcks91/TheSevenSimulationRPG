@@ -68,7 +68,7 @@ export const D = {
     labMaterials: [],         // lab_material.csv — 연구소 「자원」 줄의 재료 셋 [{post, id, ko, en, yieldPerHour}] · 행 순서(채광 · 채집 · 벌목) ⚠임시 (2026-10-25 · R356 — ~~단계 표 셋 mine_node · gather_node · log_node~~)
     materialSynth: [],        // material_synth.csv — 위 단계 재료와 그 합성 [{id, from, need, gold, ko, en}] · 행 순서 ⚠임시 (2026-10-27 · R359 · 2026-10-29 R373 — 연구소 재료 셋이 최하급 · `from` 이 `-` 인 행 = 연구소가 안 캐는 줄의 뿌리 — 가루)
     labNodes: [],             // lab_node.csv — 연구소 **지점** [{line, node, ord, unlockRank, max, base, perLv, costGold, costMatHours, costGrowth, researchMin, researchGrowth}] · 표 순 ⚠임시 (2026-10-21 · R298)
-    makeRecipes: {},          // make_recipe.csv — {part: {gold, mat, matUnits, dust, salvageMat}} · 제작 · 강화 · 분해의 부위 재료 ⚠임시 (item_design §7-1 · R96 · R373)
+    makeRecipes: {},          // make_recipe.csv — {part: {mat, salvageMat}} · 연구소 대장간 줄 제작 · 강화 · 분해의 부위 재료 ⚠임시 (item_design §7-1 · R96 · R373 · 골드 · 개수 열 걷음 R574)
     potions: [],              // potion.csv — [{id, kind, tier, ko, en, heal, craftGold, startOwned(시작 개수)}] · CSV 행 순서 · 물약 단계 ⚠임시값 (battle_design §7-1 · item_design §7-4 · R103) · 만들 수 있는 단계는 대장간 랭크(R137)
     shrines: [],              // shrine.csv — [{id, sin, ko, en, fx:{stat: value}}] · shrine_id 로 묶음 · 첫 줄 순서 = 뽑기 순서 ⚠임시값 (base_expedition_design §1-2 · 2026-09-29)
     tacticSlots: [],          // tactic_slot.csv 원시 행 — 칸 수 = 행 수 · 칸마다 조건 하나 (정규화·검증은 game_logic/tactic.js)
@@ -349,7 +349,8 @@ export async function loadData(base = './data/') {
         researchMin: r.research_min, researchGrowth: r.research_growth,
     }));
     // 제작 레시피 — 부위마다 골드 · 부위 재료(줄의 뿌리 id) · 가루 · 분해가 내는 재료(item_design §5-1 · §5-3 · 2026-10-29 · R373 — ~~철광 · 목재 둘 다~~). 먹고 내는 단계는 지금 최하급
-    D.makeRecipes = Object.fromEntries(makeRecipeRow.map(r => [r.part, { gold: r.gold, mat: r.mat, matUnits: r.mat_units, dust: r.dust_units, salvageMat: r.salvage_mat }]));
+    //   골드 · 개수 열은 걷었다(2026-11-24 · R574 — 제작 비용은 연구소 대장간 줄이 분해량 · 상단 기준가로 센다 · state.js)
+    D.makeRecipes = Object.fromEntries(makeRecipeRow.map(r => [r.part, { mat: r.mat, salvageMat: r.salvage_mat }]));
     // 물약 단계 — 행 순서 그대로(굴림이 없어 순서가 결정론 계약은 아니다). 검증은 state.js 가 로드 시 한다 (battle_design §7-1 · item_design §7-4 · R103)
     // 신단 [2026-09-29 · base_expedition_design §1-2] — `shrine_id` 로 묶는다(한 신단이 효과 여러 줄 · 탐욕) · 첫 줄 순서가 뽑기 순서다. 검증은 game_logic/state.js
     D.shrines = [];

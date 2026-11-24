@@ -71,6 +71,7 @@
  *   주입된 무기 · 방어구 · 장신구 옵션 표에서 온다.
  *   ⚠ 장갑의 공통옵션 풀은 옛 `affix.csv` 장갑 풀을 옮긴 임시다(기획 미정 · 2026-09-18 사용자 보류) · 장갑 갈래 고정값도 보류다.
  *   **타격 · 시전 · 피격 발동은 전투에 적용한다** [2026-10-30] — 저장한 skillLv · 현재 능력치 · 내부 쿨 없음 · 발동으로 추가 발동 금지. 새 발동 레벨은 balance.item_proc_skill_level(현재 Lv1)이고 퇴역한 옛 목걸이 `item.proc` 은 설명에만 나온다(GAME_DESIGN §10).
+ *   **무기 나태 ① 공격 발동은 확률이 고정이고 레벨을 굴린다** [2026-11-24 · R567] — 표 스케일 `level` · `v` = [balance.csv:<stat>_chance] · `skillLv` = 단어 범위 굴림(INTERFACE §2-5 「발동 레벨 줄」).
  */
 
 import { createFormula } from './formula.js';
@@ -339,18 +340,30 @@ export function createItemSystem(data) {
     }
     /**
      * 그 무기군에서 그 아이템 레벨에 나오는 세부 베이스 `[{id, ko, en, tier, line}]` [신설 2026-11-11 · R445 — ~~`weaponBaseAt`(제작 레벨 사다리 · 하나)~~ 대체] —
-     * 그 단의 셋(첫 단 아래면 기본 하나) · CSV 순서. **드롭(`build`)과 제작(`state.makeState`)이 같은 후보를 쓴다.** rng 0 · 새 객체
+     * 그 단의 셋(첫 단 아래면 기본 하나) · CSV 순서. **드롭(`build`) · 연구소 대장간 줄(같은 굴림 — R574)이 같은 후보를 쓴다.** rng 0 · 새 객체
      */
     const weaponBasesAt = (groupId, ilvl) => weaponTier(groupId, ilvl).map(b => ({ id: b.id, ko: b.ko, en: b.en, zh: b.zh, tier: b.tier, line: b.line }));
 
     /* ── 무기 옵션 표 — 죄종 계열표 (item_design §1 「무기 옵션 — 죄종 계열」 · 2026-09-11 · R78 · 계열표 2026-10-05 · R206 · R208) ── */
     const sinOpts = data.weaponSinOptions ?? [];
     // `wdmg` — 무기 피해 가운데 값에 대한 비율(정수 · 무기 피해와 같이 자란다) · `tenth` — 0.1 단위 고정값(ilvl 무관) [2026-10-05 · INTERFACE §2-5 접사 값 규칙]
-    const SCALES = ['growth', 'band', 'flat', 'fine', 'wdmg', 'tenth'];
+    // `level` — 발동 스킬 레벨(정수 · ilvl 무관) · 확률 `v` 는 고정 [balance.csv:<stat>_chance] [2026-11-24 · R567 · INTERFACE §2-5 「발동 레벨 줄」]
+    const SCALES = ['growth', 'band', 'flat', 'fine', 'wdmg', 'tenth', 'level'];
     /** 고정값(퍼센트가 아닌) 스케일 — `pctStat` 이 가른다 */
     const FIXED_SCALES = new Set(['growth', 'band', 'wdmg', 'tenth']);
     /** 그 무기군에 이 행이 붙는가 — `all` · damageKind · 직업 id 중 하나가 맞으면. 물리 / 마법 / 마법사 / 사제로 갈리는 자리다 */
     const appliesTo = (row, g) => row.appliesTo === 'all' || row.appliesTo === g.damageKind || (g.classes ?? []).includes(row.appliesTo);
+    /** 발동 레벨 행(스케일 `level`)의 고정 확률 [balance.csv:<stat>_chance] (R567) */
+    const levelChance = stat => B[`${stat}_chance`];
+    /** 발동 레벨 행의 로드 검증 — 발동 stat · 고정 확률 0 초과 1 이하 · 맨 위 단 위끝 레벨 ≤ 책 업그레이드 상한 + 1 (R567 · INTERFACE §2-5 「발동 레벨 줄」) */
+    const checkLevelRow = (r, table) => {
+        if (r.scale !== 'level') return;
+        if (!isProc(r.stat)) throw new Error(`item: ${table} ${r.sin} ${r.stat} — 스케일 level 은 발동 옵션에만 선다`);
+        const c = levelChance(r.stat);
+        if (!(Number.isFinite(c) && c > 0 && c <= 1)) throw new Error(`item: balance.csv ${r.stat}_chance '${c}' — 발동 레벨 줄 고정 확률은 0 초과 1 이하여야 한다`);
+        const top = Math.max(1, Math.round(r.max * TOP_BAND));   // `valueOf` 의 level 갈래와 같은 반올림 — valueOf 는 아래에서 선언된다
+        if (top > B.skillbook_upgrade_max + 1) throw new Error(`item: ${table} ${r.sin} ${r.stat} 맨 위 단 레벨 ${top} — 스킬 레벨 상한 ${B.skillbook_upgrade_max + 1} 을 넘는다`);
+    };
     // 로드 검증 — 어휘 밖의 값이 조용히 새면 굴림이 빈 후보를 만들고 아무도 모른다. 즉시 던진다.
     //   **드롭 무기군마다 죄종마다 옵션 1 · 2 · 3 이 다 있어야 한다**(오만은 1 하나 — `optionsOf`) — 한 칸이 비면 메인 줄이 그 계열에서 덜 고르고(소비는 그대로) 아무도 모른다
     {
@@ -366,6 +379,7 @@ export function createItemSystem(data) {
                 : r.appliesTo === 'all' ? ['physical', 'magic'] : [...new Set(Object.values(WG).filter(g => (g.classes ?? []).includes(r.appliesTo)).map(g => g.damageKind))];
             if (kinds.some(k => !optionsOf('weapon', r.sin, k).includes(r.option))) throw new Error(`item: weapon_sin_option ${r.sin} ${r.stat} option '${r.option}' (${r.appliesTo})`);
             if (isProc(r.stat) && !PROC_POOL[r.stat]) throw new Error(`item: weapon_sin_option 발동 '${r.stat}' 의 풀이 없다 (PROC_POOL)`);
+            checkLevelRow(r, 'weapon_sin_option');
             if (r.stat === SKILL_PLUS) throw new Error(`item: weapon_sin_option ${r.sin} 의 ${SKILL_PLUS} — 2026-10-21 장비에서 뺐다(R303)`);
         }
         if (sinOpts.length) for (const g of dropGroups) for (const sin of data.sins) {
@@ -389,6 +403,7 @@ export function createItemSystem(data) {
             if (!data.sins.includes(r.sin)) throw new Error(`item: armor_sin_option 죄종 '${r.sin}'`);
             if (!optionsOf(r.slot, r.sin).includes(r.option)) throw new Error(`item: armor_sin_option ${r.slot} ${r.sin} ${r.stat} option '${r.option}'`);
             if (isProc(r.stat) && !PROC_POOL[r.stat]) throw new Error(`item: armor_sin_option 발동 '${r.stat}' 의 풀이 없다 (PROC_POOL)`);
+            checkLevelRow(r, 'armor_sin_option');
             if (r.stat === SKILL_PLUS) throw new Error(`item: armor_sin_option ${r.slot} ${r.sin} 의 ${SKILL_PLUS} — 2026-10-21 장비에서 뺐다(R303)`);
             // 반격은 반격을 부른다(평타와 같은 규칙 · INTERFACE §2-6) — 한 출처가 1 이면 양쪽이 끝없이 되받아 친다.
             //   죄종 줄의 위끝은 표 위끝 × 맨 위 단의 비율이다(단어 범위 · R436) — 그 값이 1 미만이어야 한다
@@ -521,6 +536,7 @@ export function createItemSystem(data) {
      *            1% 단위로 올리면 만렙 기여가 2~5배로 뛰어 값 대역부터 다시 정해야 한다 (2026-09-16 보류 · 09-17 사용자 대기 · GAME_DESIGN §10)
      *   wdmg   — 굴림 × **무기 피해 가운데 값(ilvl)**, 정수 [2026-10-05 · R206] — 색욕 최소 · 최대 데미지가 「무기 피해와 같이 자란다」(item_design §1)
      *   tenth  — 굴림을 **0.1 단위**로 자른 고정값, ilvl 무관 [2026-10-05 · R206 · R209] — 레벨당 최대 데미지(× 영웅 레벨) · 갑옷 체력 재생(초당)
+     *   level  — 굴림을 반올림한 **정수 스킬 레벨**(하한 1), ilvl 무관 [2026-11-24 · R567] — 발동 줄의 `skillLv` 가 된다(`v` 는 고정 확률 — `familyOptions`)
      */
     const TENTH = 10;   // `tenth` 스케일의 눈금 — 1 / 0.1 (INTERFACE §2-5 접사 값 규칙)
     const valueOf = (d, roll, ilvl) =>
@@ -528,7 +544,8 @@ export function createItemSystem(data) {
             : d.scale === 'band' ? Math.max(1, Math.round(roll + ilvl * (d.perIlvl ?? 0)))
                 : d.scale === 'wdmg' ? Math.max(1, Math.round(roll * F.weaponMid(ilvl)))
                     : d.scale === 'tenth' ? Math.max(1, Math.round(roll * TENTH)) / TENTH
-                        : F.pctOption(roll, d.scale === 'fine');
+                        : d.scale === 'level' ? Math.max(1, Math.round(roll))
+                            : F.pctOption(roll, d.scale === 'fine');
 
     /**
      * 퍼센트 채널인가 [2026-09-17 · R111] — 옵션 값이 비율인가 고정값인가를 가른다.
@@ -580,7 +597,8 @@ export function createItemSystem(data) {
      * @param n 랜덤 줄 수(`randomLines`)
      * @param classes 발동 공격 풀의 직업(무기 = 무기군 직업 · 갑옷 = [])
      * @param plusPool 특정 스킬 +n 의 스킬 후보 — 비면 그 옵션이 안 뜬다 · **장비는 안 준다**(2026-10-21 R303 — ~~무기 `plusPoolWeapon` · 갑옷 `plusPoolArmor` · 투구 버프 풀~~ · 유니크 논의 대기)
-     * @param seed 이미 붙은 옵션 키 `used` · 잡은 원소 `element` 의 시작값 — 인챈트가 그 장비의 다른 줄을 넘긴다(R553 · `enchantSeed`) · 드롭은 안 준다(빈 시작)
+     * @param seed 이미 붙은 옵션 키 `used` · 잡은 원소 `element` 의 시작값 — 인챈트가 그 장비의 다른 줄을 넘긴다(R553 · `enchantSeed`) · 드롭은 안 준다(빈 시작) ·
+     *   `floor` = 값 굴림의 바닥(비율 0 ~ 1 — 인챈트가 연구소 「인챈트」 지점 값을 넘긴다 · 2026-11-24 · R576 D13) — `vr` 을 `floor + vr × (1 − floor)` 로 옮긴다 · 0 이면 그대로 · 소비 수 불변
      */
     function familyOptions(rng, rows, sins, words, n, ilvl, classes, plusPool = [], oneElement = false, seed = null) {
         const options = [], byKey = {};
@@ -593,10 +611,12 @@ export function createItemSystem(data) {
         }
         const out = [], used = new Set(seed?.used ?? []);
         let element = seed?.element ?? null;   // 이 아이템의 원소 — 무기만(`oneElement`) · 원소 줄이 처음 붙을 때 잡는다
+        const floor = Math.min(1, Math.max(0, Number.isFinite(seed?.floor) ? seed.floor : 0));   // 값 굴림의 바닥 — 인챈트 지점 (R576)
         const open = o => !used.has(o.key) && !(o.plus && !plusPool.length);
         // 줄 하나 — 후보가 비어도 넷은 소비한다 · `band` = 그 줄의 범위 비율(메인 = 단어 · 랜덤 = 랜덤 줄 · R436)
         const line = (cands, band) => {
-            const or = rng(), sr = rng(), vr = rng(), kr = rng();
+            const or = rng(), sr = rng(), vr0 = rng(), kr = rng();
+            const vr = floor > 0 ? floor + vr0 * (1 - floor) : vr0;
             if (!cands.length) return;
             const o = cands[Math.floor(or * cands.length)];
             used.add(o.key);
@@ -605,11 +625,14 @@ export function createItemSystem(data) {
             const vars = same.length ? same : o.rows;
             const d = vars[Math.floor(sr * vars.length)];
             if (oneElement && !element && elementOf(d.stat)) element = elementOf(d.stat);
-            const a = { stat: d.stat, v: valueOf(d, bandRoll(d, band, vr), ilvl), src: o.sin };
+            // 발동 레벨 줄(스케일 `level` · R567) — 확률은 고정 · 값 굴림(`vr`)이 스킬 레벨이 된다 · 소비 수 그대로
+            const lvRow = d.scale === 'level';
+            const rolled = valueOf(d, bandRoll(d, band, vr), ilvl);
+            const a = { stat: d.stat, v: lvRow ? levelChance(d.stat) : rolled, src: o.sin };
             if (isProc(d.stat)) {
                 const pool = procPool(d.stat, classes);
                 a.skill = pool.length ? pool[Math.floor(kr * pool.length)] : null;
-                if (a.skill) a.skillLv = B.item_proc_skill_level;
+                if (a.skill) a.skillLv = lvRow ? rolled : B.item_proc_skill_level;
             }
             if (d.stat === SKILL_PLUS) a.skill = plusPool[Math.floor(kr * plusPool.length)];   // 풀이 비면 `open` 이 이미 뺐다
             out.push(a);
@@ -672,12 +695,13 @@ export function createItemSystem(data) {
     }
     /**
      * 인챈트 줄 하나 굴림 — 랜덤 줄 한 줄과 같다(`familyOptions` · 메인 줄 0 · 랜덤 줄 1 · 시작값 = `enchantSeed`) · `{…접사, ench: true}` 또는 null ·
-     * **아이템을 안 바꾼다**. rng 소비(계약 — INTERFACE §5-2): 옵션 1 → 변형 1 → 값 1 → 스킬 1 · 대상이 아니거나 후보가 비어도 넷
+     * **아이템을 안 바꾼다**. rng 소비(계약 — INTERFACE §5-2): 옵션 1 → 변형 1 → 값 1 → 스킬 1 · 대상이 아니거나 후보가 비어도 넷.
+     * `floor` = 값 굴림의 바닥(비율 · 연구소 「대장간」 줄 「인챈트」 지점 값 — 2026-11-24 · R576 D13) — 범위 아래 끝만 그만큼 올린다 · 0 이면 지금과 같은 값
      */
-    function enchantOption(rng, item) {
+    function enchantOption(rng, item, floor = 0) {
         const tbl = enchantable(item) ? enchantTable(item) : null;
         if (!tbl) { for (let i = 0; i < 4; i++) rng(); return null; }   // 소비 수는 언제나 넷 — 줄 하나의 굴림 수(`familyOptions` 의 `line`)
-        const a = familyOptions(rng, tbl.rows, [], [], 1, item.ilvl, tbl.classes, [], tbl.oneElement, enchantSeed(item, tbl))[0];
+        const a = familyOptions(rng, tbl.rows, [], [], 1, item.ilvl, tbl.classes, [], tbl.oneElement, { ...enchantSeed(item, tbl), floor })[0];
         return a ? { ...a, ench: true } : null;
     }
     /**
@@ -941,10 +965,16 @@ export function createItemSystem(data) {
     }
 
     // 일반의 반환량은 **기획 보류**(2026-09-14 사용자) — 키를 발행하지 않아 매직 값을 따른다(가루는 제작 재료 — item_design §7-1 · 반환량은 §5-3 미정)
-    //   에픽 · 레전더리는 레어 값 ⚠임시(2026-10-24 · R342 — item_design 「남은 것」 「희귀도 개정의 남은 칸」 ③)
-    const salvageDust = item => RARE_PLUS.has(item.rarity) ? B.salvage_dust_rare : B.salvage_dust_magic;
-    /** 분해가 내는 부위 재료의 개수 — 가루와 같은 희귀도 문턱 [2026-10-29 · R373 · item_design §5-3] · 어느 재료인지는 부위가 정한다(state — `make_recipe.csv:salvage_mat`) */
-    const salvageMatUnits = item => RARE_PLUS.has(item.rarity) ? B.salvage_mat_rare : B.salvage_mat_magic;
+    //   에픽 · 레전더리는 레어 값 ⚠임시(2026-10-24 · R342 — item_design 「남은 것」 「희귀도 개정의 남은 칸」 ③) ·
+    //   **유니크도 레어 이상 묶음**(2026-11-24 사용자 「레어이상묶음에 합류시켜」 · R575 D15 — 굴림 밖 등급이라 `RARE_PLUS` 에 없다)
+    const SALVAGE_HIGH = new Set([...RARE_PLUS, 'unique']);
+    /** 분해량의 레벨 배수 — **아이템 레벨 구간마다 한 배** × (1 + floor((ilvl − 1) ÷ `equip_upgrade_mat_ilvl_band`)) · 강화 재료 구간과 같다 · 레벨이 없으면 1 구간
+     *  (2026-11-24 사용자 「아이템레벨도 봐야되는데」 · R575 D14 · INTERFACE §2-5) */
+    const salvageBands = item => 1 + Math.floor((Math.max(1, Number.isFinite(item?.ilvl) ? item.ilvl : 1) - 1) / B.equip_upgrade_mat_ilvl_band);
+    const salvageDust = item => (SALVAGE_HIGH.has(item.rarity) ? B.salvage_dust_rare : B.salvage_dust_magic) * salvageBands(item);
+    /** 분해가 내는 부위 재료의 개수 — 가루와 같은 희귀도 문턱 · 레벨 구간 [2026-10-29 · R373 · item_design §5-3 · R575] · 어느 재료인지는 부위가 정한다(state — `make_recipe.csv:salvage_mat`) ·
+     *  연구소 「분해」 지점 몫은 `state` 가 곱한다(세이브를 모른다) */
+    const salvageMatUnits = item => (SALVAGE_HIGH.has(item.rarity) ? B.salvage_mat_rare : B.salvage_mat_magic) * salvageBands(item);
 
     /* ── 강화 (item_design §7-2 개정 2026-09-15 · R95) ── */
 
@@ -1033,6 +1063,7 @@ export function createItemSystem(data) {
             slot,
             rows: rowsOf(slot).map((d, k) => ({ d, k })).sort((a, b) => a.d.option - b.d.option || a.k - b.k).map(({ d }) => ({
                 option: d.option, stat: d.stat, appliesTo: slot === 'weapon' ? d.appliesTo : null,
+                ...(d.scale === 'level' ? { level: true } : {}),   // 발동 레벨 행 — `ranges` 가 스킬 레벨 (R567)
                 ranges: words.map(w => {
                     const band = tierBand(w.tier);
                     return { min: valueOf(d, bandRoll(d, band, 0), w.minIlvl), max: valueOf(d, bandRoll(d, band, 1), w.minIlvl) };
@@ -1083,7 +1114,8 @@ export function createItemSystem(data) {
         if (!line) return null;
         if (line.range) return line.range;
         const { d, band } = line;
-        return { min: valueOf(d, bandRoll(d, band, 0), item.ilvl), max: valueOf(d, bandRoll(d, band, 1), item.ilvl) };
+        const r = { min: valueOf(d, bandRoll(d, band, 0), item.ilvl), max: valueOf(d, bandRoll(d, band, 1), item.ilvl) };
+        return line.level ? { ...r, level: true } : r;   // 발동 레벨 줄 — 양끝이 스킬 레벨 · 비교할 값은 `skillLv` (R567)
     }
 
     /**
@@ -1095,7 +1127,8 @@ export function createItemSystem(data) {
         const line = optionLine(item, i);
         if (!line) return null;
         if (line.range) return line.range;
-        return { min: valueOf(line.d, line.d.min, item.ilvl), max: valueOf(line.d, line.d.max, item.ilvl) };
+        const r = { min: valueOf(line.d, line.d.min, item.ilvl), max: valueOf(line.d, line.d.max, item.ilvl) };
+        return line.level ? { ...r, level: true } : r;
     }
 
     /**
@@ -1127,10 +1160,13 @@ export function createItemSystem(data) {
                     : baseless(slot) ? accSinRows(slot, src) : [];
         const d = rows.find(r => r.stat === a.stat);
         if (!d) return null;
+        // 발동 레벨 줄(R567) — 확률이 고정값과 다르면 이 개정 전에 굴린 옛 줄이다(확률 굴림 · Lv1) — 표 행을 못 찾은 줄과 같다(전투는 그대로 읽는다)
+        const level = d.scale === 'level';
+        if (level && a.v !== levelChance(d.stat)) return null;
         // 줄 종류 — 메인 죄종 줄이면 그 칸 단어의 범위 · 아니면(계열 굴림의 랜덤 줄 · 공통 줄) 랜덤 줄 범위 (R436) · `main` = 메인 줄인가(`optionScore` · R514)
         const tag = optionSources(item)[i];
         const k = (item.sins ?? []).indexOf(tag);
-        return { d, band: k >= 0 ? wordBand(tag, item.words?.[k]) : randomBand(item.ilvl), main: k >= 0 };
+        return { d, band: k >= 0 ? wordBand(tag, item.words?.[k]) : randomBand(item.ilvl), main: k >= 0, level };
     }
 
     /** 메인 줄이 그 아이템 레벨에서 나올 수 있던 범위 비율 — 메인 후보 단(`mainTiers`) 맨 아래 단의 아래끝 ~ 맨 위 단의 위끝 (R514 · 단어를 묶어 잰다) */
@@ -1159,7 +1195,8 @@ export function createItemSystem(data) {
             const band = line.main ? mainBand(level) : line.band;
             const r = line.range ?? { min: valueOf(line.d, bandRoll(line.d, band, 0), level), max: valueOf(line.d, bandRoll(line.d, band, 1), level) };
             if (!(r.max > r.min)) return;
-            const q = Math.max(0, (a.v - r.min) / (r.max - r.min));
+            const x = line.level ? procSkillLevel(a.skillLv) : a.v;   // 발동 레벨 줄은 스킬 레벨로 잰다 (R567)
+            const q = Math.max(0, (x - r.min) / (r.max - r.min));
             out.push({ a, q: capTop ? Math.min(1, q) : q });
         });
         return out;

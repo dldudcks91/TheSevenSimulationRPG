@@ -508,7 +508,9 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
                     const r = item.optionRange(it, k);
                     if (!r) return;   // ⚠ 범위를 못 찾는 줄은 막지 않는다 (INTERFACE §2-17)
                     // 옛 표 범위도 받는다 — 단어 범위(R436) 전에 굴린 옛 장비는 값이 표 양끝 사이에 있다 (2026-11-11)
-                    const inside = x => !!x && a.v >= Math.min(x.min, x.max) && a.v <= Math.max(x.min, x.max);
+                    //   발동 레벨 줄(`level: true` · R567)은 스킬 레벨을 잰다 — 전투가 읽는 값(`procSkillLevel`)과 같다 · 확률이 고정값과 다른 옛 줄은 범위가 null 이라 위에서 빠졌다
+                    const val = r.level ? item.procSkillLevel(a.skillLv) : a.v;
+                    const inside = x => !!x && val >= Math.min(x.min, x.max) && val <= Math.max(x.min, x.max);
                     if (typeof a.v !== 'number' || !(inside(r) || inside(item.optionTableRange(it, k)))) bad('option', i, { pos: p.id, detail: a.stat });
                 });
             }
