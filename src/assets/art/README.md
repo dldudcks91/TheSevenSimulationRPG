@@ -319,6 +319,8 @@ buildings/
 ```text
 fx/skills/<file>_darktoon.webp  다크 카툰 — 기존 원본·설치본 유지, 기본 그림체
 fx/skills/<file>_foil.webp      금속박 — 기존 원본·설치본 유지
+fx/skills/<file>_roughink.webp  거친 잉크 — Gemini 2차 판 · 지금 스킬 전부 + 모으기 기운 (2026-11-24 그림 · 11-25 설치)
+fx_source/roughink_20261124/    그 설치 절차(install.py · --verify) — 원본 시트·프롬프트·자르기는 output/2026-11-24_fx_gemini/
 fx_source/darktoon_completion_20261024/  누락 스킬의 다크 카툰 원본·프롬프트·대응표·검사 기록
 fx_source/material_20261017/   보존한 금속박 원본·프롬프트와 이전 작업 기록
 fx_source/world_styles_20261012/sheet_darktoon_*.png  보존한 다크 카툰 원본
@@ -332,11 +334,11 @@ fx_source/stun_star_20261028/   그 원본(Codex 다크 카툰 2×2 · 왼쪽 �
 
 **스테이지 띠**(SCREEN_DESIGN §4-2 · ADR-0663)는 그림을 **모양(mask)으로만** 쓴다 — 색은 CSS 가 챕터 죄종 색으로 칠한다. 원본을 갈면 `python scripts/build_stage_banner.py`(먹의 짙기 → 알파 · 먹 둘레로 자르기 · 폭 1600 WebP).
 
-그림체는 `src/ui/skill_art.js:ART_STYLES`, 스킬·움직임·크기는 `SKILL_ART`, 파일 이름은 `artFile`이 기준이다. 그림체는 다크 카툰·금속박이며 누락된 스킬을 다크 카툰으로 모두 보완했다. 정의의 `styles`가 가용 그림체를 제한하므로 금속박에 없는 추가 그림은 요청하지 않고 코드 조합으로 표시한다. 최종 설치는 `python scripts/build_darktoon_completion_fx.py`, 비교표는 `--compare`, 파일 검사는 `--verify`, 브라우저 검사는 `python scripts/verify_darktoon_completion_fx.py`다. 이미지 생성은 내장 imagegen을 사용한다.
+그림체는 `src/ui/skill_art.js:ART_STYLES`, 스킬·움직임·크기는 `SKILL_ART`, 파일 이름은 `artFile`이 기준이다. 그림체는 다크 카툰·금속박·거친 잉크이며 누락된 스킬을 다크 카툰으로 모두 보완했다. 거친 잉크는 지금 스킬 전부와 모으기 기운을 갖추고, 삭제된 스킬 정의(`RETIRED_STYLES`)에는 없다([ADR-1379](../../../docs/client/adr/1379-이펙트-그림체에-거친-잉크를-더한다-모으기-기운은-거친-잉크를-고르면-그-판이다.md) · 설치는 `fx_source/roughink_20261124/install.py`). 정의의 `styles`가 가용 그림체를 제한하므로 금속박에 없는 추가 그림은 요청하지 않고 코드 조합으로 표시한다. 최종 설치는 `python scripts/build_darktoon_completion_fx.py`, 비교표는 `--compare`, 파일 검사는 `--verify`, 브라우저 검사는 `python scripts/verify_darktoon_completion_fx.py`다. 이미지 생성은 내장 imagegen을 사용한다.
 
 **함성 여섯 교체 · 2026-11-15** — 워 오더스·배틀 오더스·워 크라이·배틀 크라이·호령·사자후는 `<skill_id>_shockwave_<style>.webp` 12장을 사용한다. 초상 밖으로 퍼지는 세 겹의 충격파이며 두 그림체의 크기·움직임이 같다. 이전 개별 함성 파일 10장은 삭제했다. 원본·프롬프트·설치·검사는 [`fx_source/shout_shockwave_20261115/`](fx_source/shout_shockwave_20261115/README.md)에 있으며, `export.py` → `install.py` → `verify_installed.py` 순으로 재현한다. 기존 누락 보완 내보내기는 새 함성을 옛 시트에서 복구하지 않는다. 다른 스킬과 함께 들어 있는 과거 원본 시트는 보존한다.
 
-**모으기 기운 · 2026-11-18** — `charge_gather_foil.webp` 한 장(그림체 설정과 상관없이 금속박 · `skill_art.js:CHARGE_ART.style` · [ADR-1270](../../../docs/client/adr/1270-모으기의-기운-그림은-그림체와-상관없이-금속박-한-장이고-한-번-빨려-드는-데-1.4초다.md))은 스킬 하나가 아니라 **모으기 시전 방식(`channel_charge`)이 같이 쓰는** 그림이다 — 사방에서 가운데로 곧게 빨려 드는 가는 흰 · 검은 속도선(바깥 끝이 옅고 안쪽 끝이 진하다 · 색은 흰색과 검정뿐)이 모으는 동안 초상 둘레에서 안으로 빨려 든다(`skill_art.js:CHARGE_ART` · [ADR-1252](../../../docs/client/adr/1252-모으기는-모으는-동안-카드가-웅크리고-기운이-빨려-들며-쏘는-방에-번쩍이며-튄다.md) · 그림 모양 [ADR-1269](../../../docs/client/adr/1269-모으기의-기운-그림은-사방에서-가운데로-곧게-빨려-드는-흰-검은-속도선이다.md)). 원본 · 프롬프트는 [`fx_source/charge_gather_suction_20261118/`](fx_source/charge_gather_suction_20261118/README.md) · 다시 내보내기는 그 폴더의 `export.py`.
+**모으기 기운 · 2026-11-18** — `charge_gather_foil.webp` 한 장(다크 카툰 · 금속박을 고르면 금속박 · 거친 잉크를 고르면 `charge_gather_roughink.webp` · `skill_art.js:CHARGE_ART` · [ADR-1270](../../../docs/client/adr/1270-모으기의-기운-그림은-그림체와-상관없이-금속박-한-장이고-한-번-빨려-드는-데-1.4초다.md) · [ADR-1379](../../../docs/client/adr/1379-이펙트-그림체에-거친-잉크를-더한다-모으기-기운은-거친-잉크를-고르면-그-판이다.md))은 스킬 하나가 아니라 **모으기 시전 방식(`channel_charge`)이 같이 쓰는** 그림이다 — 사방에서 가운데로 곧게 빨려 드는 가는 흰 · 검은 속도선(바깥 끝이 옅고 안쪽 끝이 진하다 · 색은 흰색과 검정뿐)이 모으는 동안 초상 둘레에서 안으로 빨려 든다(`skill_art.js:CHARGE_ART` · [ADR-1252](../../../docs/client/adr/1252-모으기는-모으는-동안-카드가-웅크리고-기운이-빨려-들며-쏘는-방에-번쩍이며-튄다.md) · 그림 모양 [ADR-1269](../../../docs/client/adr/1269-모으기의-기운-그림은-사방에서-가운데로-곧게-빨려-드는-흰-검은-속도선이다.md)). 원본 · 프롬프트는 [`fx_source/charge_gather_suction_20261118/`](fx_source/charge_gather_suction_20261118/README.md) · 다시 내보내기는 그 폴더의 `export.py`.
 
 새로 그렸던 수채화·스테인드글라스·네온 플라즈마·로우폴리·자수는 설치본·원본·비교 이미지·프롬프트까지 삭제했다([ADR-0754](../../../docs/client/adr/0754-새-이펙트-시안은-삭제하고-누락-스킬은-다크카툰으로-채운다.md)). 삭제 목록과 기존 금속박·다크 카툰 보존 파일의 SHA-256은 새 원본 폴더에 있다. 오래된 발주 문서·스크립트는 과거 기록이며 삭제된 그림의 재빌드 경로로 사용하지 않는다. 스테이지 띠·배경·초상·아이콘은 이 정리 범위와 무관하다.
 

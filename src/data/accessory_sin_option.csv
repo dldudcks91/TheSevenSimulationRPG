@@ -7,7 +7,7 @@ ring,sloth,2,res_cold,flat,0.06,0.2,-,반지 나태 ② — 냉기 저항 ⚠제
 ring,sloth,3,buff_dur_pct,flat,0.05,0.15,-,반지 나태 ③ — 버프 지속시간 +%(낀 영웅이 거는 창 · 물약에는 안 먹는다) ⚠제안 수치 (투구 나태 ② 와 같은 대역)
 ring,lust,1,life_steal,flat,0.01,0.03,-,반지 색욕 ① — 흡혈 ⚠제안 수치
 ring,lust,2,res_lightning,flat,0.06,0.2,-,반지 색욕 ② — 전기 저항 ⚠제안 수치
-ring,lust,3,hp_regen,tenth,0.2,0.6,-,반지 색욕 ③ — 체력 재생(초당 고정 · 0.1 단위) ⚠제안 수치 (갑옷 색욕 ② 와 같은 대역)
+ring,lust,3,hp_regen,growth,0.2,0.82,-,반지 색욕 ③ — 체력 재생(초당 · 정수 · 아이템 레벨을 따라 자란다) ⚠제안 수치 (갑옷 색욕 ② 와 같은 대역 — Lv50 최고 초당 20 · 2026-11-25 R584 · 옛 tenth 0.2~0.6)
 ring,envy,1,def_ignore,flat,0.03,0.08,-,반지 시기 ① — 방어력 관통 · 다섯 중 하나(균등 · 건틀릿 시기와 같다) ⚠제안 수치 (무기 시기 물리와 같은 대역)
 ring,envy,1,res_reduction_fire,flat,0.03,0.08,-,반지 시기 ① — 화염 관통(그 원소의 타격에만 · 낀 영웅의 타격만) · 다섯 중 하나 ⚠제안 수치
 ring,envy,1,res_reduction_cold,flat,0.03,0.08,-,반지 시기 ① — 냉기 관통 · 다섯 중 하나 ⚠제안 수치

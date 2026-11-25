@@ -130,6 +130,18 @@ export const SAVE_VERSION = 51;
  */
 export function createGameSystem(deps) {
     const { hero: H, item: I, battle: BT, skill: SK, tactic: TC, construction: CN, gamble: GB, commission: CM, balance: B } = deps;
+    // 굴림 시드 공급자 [2026-11-25 · R580 · INTERFACE §5-1 「시드 공급자」] — 세이브 시드에서 나오는 굴림은 모두 이 함수 하나를 지난다.
+    //   `(state, 솔트, 번호) → uint32` · 기본 = `deriveSeed(state.seed ^ 솔트, 번호)`(지금 값 그대로) · 온라인 모드 서버는 비밀값으로 만든 시드를 넘긴다(ONLINE_MODE §5)
+    const seedOf = (() => {
+        const given = deps.seedOf;
+        if (given == null) return (state, salt, no) => deriveSeed(state.seed ^ salt, no);
+        if (typeof given !== 'function') throw new Error('seedOf: 함수가 아니다 (INTERFACE §5-1)');
+        return (state, salt, no) => {
+            const s = given(state, salt, no);
+            if (!Number.isInteger(s) || s < 0 || s > 0xFFFFFFFF) throw new Error(`seedOf: 솔트 ${salt} · 번호 ${no} → '${s}' — uint32 가 아니다 (INTERFACE §5-1)`);
+            return s;
+        };
+    })();
     if (!Number.isInteger(B.advance_row_points) || B.advance_row_points < 1)
         throw new Error('advance: advance_row_points must be a positive integer');
     const rosterPrices = String(B.roster_slot_prices).split('|').map(Number);
@@ -205,8 +217,8 @@ export function createGameSystem(deps) {
         state.heroes.push(h);
         return h;
     }
-    /** 성장 영웅(고블린)의 성장 굴림 씨앗 — `seed ^ 0x60B1` · 두 번째 인자는 그 영웅의 번호(uid `h<n>`) · rng 0 (2026-10-29 · R365 · INTERFACE §5-1) */
-    const growthSeedOf = (state, h) => deriveSeed(state.seed ^ 0x60B1, Number(h.uid.slice(1)));
+    /** 성장 영웅(고블린)의 성장 굴림 씨앗 — 솔트 `0x60B1` · 번호는 그 영웅의 번호(uid `h<n>`) · 시드 공급자를 지난다 · rng 0 (2026-10-29 · R365 · INTERFACE §5-1) */
+    const growthSeedOf = (state, h) => seedOf(state, 0x60B1, Number(h.uid.slice(1)));
     function addItem(state, it) {
         state.counters.item += 1;
         it.uid = `i${state.counters.item}`;
@@ -389,7 +401,7 @@ export function createGameSystem(deps) {
             // 건설 — **시작 랭크**(`building.csv:start_rank` · 처음부터 지어진 건물) (v37 · R137 · construction_draft §4 · ~~연구~~ R195)
             buildings: CN.startRanks(),
         };
-        const rng = makeRng(deriveSeed(state.seed, 0));
+        const rng = makeRng(seedOf(state, 0, 0));
         // 영웅마다 무기 → 갑옷 — 한 스트림을 로스터 순서로 이어 쓴다(INTERFACE §5-2)
         for (const c of candidates) equipStarter(state, addHero(state, clone(c)), rng);
         // 모든 새 게임에 고블린 한 마리 — **다섯 종 중 하나** · 등급 「성장」 · 능력치 일곱 칸 [balance.csv:growth_attr_start] [2026-10-27 사용자 · hero_design §1 · 키 2026-11-17].
@@ -675,7 +687,8 @@ export function createGameSystem(deps) {
             if (gob) h.name = { ...h.name, zh: gob.name.zh };
             H.fillZh(h);
         }
-        for (const it of Object.values(s.items ?? {})) if (it) I.fillZh(it);
+        // 걷은 옵션 줄(반격 · 반사 — 2026-11-25 R585 · 버전 무변경)은 불러올 때마다 지운다 — 이름 · 죄종 · 단어 · 다른 줄은 그대로(`item.stripRetired`)
+        for (const it of Object.values(s.items ?? {})) if (it) { I.stripRetired(it); I.fillZh(it); }
         // 성장 영웅의 씨앗 [2026-10-29 · R365 · 버전 무변경] — 없으면 새 게임과 같은 식으로 채운다.
         //   **지난 레벨은 소급하지 않는다**(사용자 결정) — 채운 뒤 오르는 레벨부터 자란다
         for (const h of s.heroes) if (h.tier === 'growth' && !Number.isInteger(h.growthSeed)) h.growthSeed = growthSeedOf(s, h);
@@ -1175,13 +1188,20 @@ export function createGameSystem(deps) {
         const races = deps.codex.races ?? {};
         const options = {}, lines = {}, members = {};
         const pos = v => Number.isFinite(v) && v > 0;
+        const seenRow = new Set();
         for (const r of deps.codex.options ?? []) {
             const m = deps.monsters[r.monsterId];
             if (!m) bad(`codex_option ${r.monsterId} — monster.csv 에 없는 몬스터`);
-            if (options[r.monsterId]) bad(`codex_option ${r.monsterId} — 행이 둘이다(몬스터마다 한 줄)`);
-            if (typeof r.stat !== 'string' || !r.stat) bad(`codex_option ${r.monsterId} — stat 이 비었다`);
-            if (!pos(r.value)) bad(`codex_option ${r.monsterId} value '${r.value}' — 양수`);
-            options[r.monsterId] = { stat: r.stat, value: r.value };
+            if (seenRow.has(r.monsterId)) bad(`codex_option ${r.monsterId} — 행이 둘이다(몬스터마다 한 줄)`);
+            seenRow.add(r.monsterId);
+            // 옵션 칸이 `-` 면 옵션 줄이 없다 — 옵션 구간이 아무것도 안 연다(반격을 걷은 자리 · 2026-11-25 R585 · INTERFACE §2-1 `codex.options`)
+            if (r.stat === '-' || r.stat == null) {
+                if (!(r.value === '-' || r.value == null)) bad(`codex_option ${r.monsterId} — 옵션 칸이 비었는데 값 '${r.value}'`);
+            } else {
+                if (typeof r.stat !== 'string' || !r.stat) bad(`codex_option ${r.monsterId} — stat 이 비었다`);
+                if (!pos(r.value)) bad(`codex_option ${r.monsterId} value '${r.value}' — 양수`);
+                options[r.monsterId] = { stat: r.stat, value: r.value };
+            }
             // Lv1 · Lv2 칸 — 둘 다 있거나 둘 다 없다(보스 · VI 자리 · 2026-10-22 R314)
             const farm = r.farm ?? null, fight = r.fight ?? null;
             if ((farm === null) !== (fight === null)) bad(`codex_option ${r.monsterId} — farm · fight 중 하나만 있다`);
@@ -1576,7 +1596,7 @@ export function createGameSystem(deps) {
         const last = it.box.n <= 1;
         if (!last && list.length >= capOf(state, from)) return { ok: false, err: from === 'bag' ? 'bagFull' : 'stashFull' };
         state.counters.box = (state.counters.box ?? 0) + 1;
-        const r = makeRng(deriveSeed(state.seed ^ BOX_OPEN_SALT, state.counters.box));
+        const r = makeRng(seedOf(state, BOX_OPEN_SALT, state.counters.box));
         let fix;
         if (it.box.kind === 'weapon') {
             // 무기군 1 — 그 직업의 본편 무기군(없으면 본편 무기군 전부) · 하나여도 1회
@@ -1819,7 +1839,7 @@ export function createGameSystem(deps) {
         state.counters.upgrade = (state.counters.upgrade ?? 0) + 1;
         // 숫자 하나를 숫자 줄 [성공 | 위험 | 실패] 에 놓는다 — 대성공(`u < chance × great`) · 성공(`u < chance`) · 위험 칸(`u < chance + 위험` — 그 안의 자리 < guard 면 막힘 ·
         //   아니면 강등 또는 파괴 · 한 단계에 둘이 함께 서지 않는다) · 실패 — 소비 1회 그대로 [2026-11-15 · R505 · 2026-11-17 · R530]
-        const u = makeRng(deriveSeed(state.seed ^ 0xF0C5, state.counters.upgrade))();
+        const u = makeRng(seedOf(state, 0xF0C5, state.counters.upgrade))();
         const risk = o.baseDown + o.baseDestroy;
         const success = u < o.chance, great = u < o.chance * o.great;
         const hit = !success && u < o.chance + risk;
@@ -1992,7 +2012,7 @@ export function createGameSystem(deps) {
         const n = (state.counters.enchant ?? 0) + 1;
         // 값 굴림의 바닥 = 연구소 「대장간」 줄 「인챈트」 지점 값(범위 비율 · 1 미만 · 0 이면 지금과 같은 값 — 2026-11-24 · R576 D13)
         const floor = Math.min(0.999999, Math.max(0, labVal(state, FORGE_KEY, 'enchant', 0)));
-        const a = I.enchantOption(makeRng(deriveSeed(state.seed ^ 0xE4C1, n)), it, floor);
+        const a = I.enchantOption(makeRng(seedOf(state, 0xE4C1, n)), it, floor);
         if (!a) return { ok: false, err: 'noOption' };
         state.counters.enchant = n;
         state.resources.gold -= cost.gold;
@@ -3055,6 +3075,7 @@ export function createGameSystem(deps) {
             if (a[slot] >= ADV_P) return { ok: false, err: 'cellMax' };
             if (advSum(a) >= ADV_P) return { ok: false, err: 'rowMax' };
             h.masteryPoints -= 1;
+            mmNoteEvent(state, 'mastery');   // 메인미션 「스킬 포인트 찍기」 — 공용 지갑을 쓴 것 (R583)
         } else {
             if (a[slot] <= 0) return { ok: false, err: 'zero' };
             h.masteryPoints = (h.masteryPoints ?? 0) + 1;
@@ -3096,7 +3117,7 @@ export function createGameSystem(deps) {
             && d.tier === 1 && d.id !== h.innate && bookable(d.id));
         if (!pool.length) return null;
         const hash = [...h.uid].reduce((v, c) => (Math.imul(v, 31) + c.charCodeAt(0)) >>> 0, 0);
-        const rng = makeRng(deriveSeed(state.seed ^ 0x10B1, hash));
+        const rng = makeRng(seedOf(state, 0x10B1, hash));
         return pool[Math.floor(rng() * pool.length)].id;
     }
     /** 첫 책 사용 레벨 달성 — 영웅마다 한 번, 제작 재화 없이 바로 배울 수 있는 책 한 권. */
@@ -3507,7 +3528,7 @@ export function createGameSystem(deps) {
     function labBurst(state, n, p) {
         if (!(n > 0) || !(p > 0)) return 0;
         state.counters.lab = (state.counters.lab ?? 0) + 1;
-        const rng = makeRng(deriveSeed(state.seed ^ 0x1AB5, state.counters.lab));
+        const rng = makeRng(seedOf(state, 0x1AB5, state.counters.lab));
         let hit = 0;
         for (let i = 0; i < n; i++) if (rng() < p) hit++;
         return hit;
@@ -3721,7 +3742,7 @@ export function createGameSystem(deps) {
         for (let i = 0; i < made; i++) {
             const serial = rolls++;
             if (!pool.length) continue;
-            const rng = makeRng(deriveSeed(state.seed ^ 0xB10E, serial));
+            const rng = makeRng(seedOf(state, 0xB10E, serial));
             if (!(rng() < r.chance)) continue;
             const p = pool[Math.floor(rng() * pool.length)];
             const id = p.skills[Math.floor(rng() * p.skills.length)];
@@ -4003,7 +4024,7 @@ export function createGameSystem(deps) {
                 out.potions[tg.potion.id] = (out.potions[tg.potion.id] ?? 0) + 1;
                 continue;
             }
-            const rng = makeRng(deriveSeed(state.seed ^ 0xC4AF, ++state.counters.make));
+            const rng = makeRng(seedOf(state, 0xC4AF, ++state.counters.make));
             const [it] = I.rollGear(rng, { slots: [tg.part], ilvl: Math.max(1, h.level), rarityWeights: forgeWeights(state), useDropSinWeights: true });
             addItem(state, it);
             F.slots.push(it.uid);
@@ -4118,7 +4139,7 @@ export function createGameSystem(deps) {
     const MG_KIND = { mine: 'tap', gather: 'pluck', log: 'chop' };
     const mgLerp = (a, b, f) => a + (b - a) * Math.min(1, Math.max(0, f));
     function mgRoll(state, post, no) {
-        const rng = makeRng(deriveSeed(state.seed ^ 0x3A6E, no));
+        const rng = makeRng(seedOf(state, 0x3A6E, no));
         const kind = MG_KIND[post];
         // 채점에 드는 값은 판에 박는다 — 채점(`mgJudge`)이 판과 입력만 보고 끝난다
         const r = { no, post, kind, lives: kind === 'tap' ? 1 : B.mg_lives, score: { rare: B.mg_rare_value, step: B.mg_combo_step, add: B.mg_combo_add, max: B.mg_combo_max } };
@@ -4308,7 +4329,7 @@ export function createGameSystem(deps) {
     function stageSeedRequest(state, stageId, no = state.preset, diff = curDiff(state)) {
         if (!deps.stages[stageId] || !DIFF_IDS.includes(diff) || !Number.isInteger(no) || no < 1 || no > state.presets.length)
             throw new Error('stage seeds: invalid stage/difficulty/preset');
-        return planStageSeeds(state, stageId, diff, no, BT.stageRounds(deps.stages[stageId]).length);
+        return planStageSeeds(state, stageId, diff, no, BT.stageRounds(deps.stages[stageId]).length, seedOf);
     }
 
     function departRun(state, stageId, now, no = state.preset, from = null, diff = from ? from.difficulty ?? BASE_DIFF : curDiff(state), seedGrant = null) {
@@ -4658,7 +4679,7 @@ export function createGameSystem(deps) {
             //   **이긴 칸**만 다음 칸이 같은 장소의 다음 칸이면 새로 하나 선다. rng = 신단 스트림(전투 수열과 안 섞인다 · INTERFACE §5-1) · 진 칸은 굴리지 않는다
             if (slot) {
                 const to = res.won && shrineList.length ? shrineTarget(run.stageId) : null;
-                const r = to ? makeRng(deriveSeed(state.seed ^ 0x5B1E, run.seq ?? state.counters.battle)) : null;
+                const r = to ? makeRng(seedOf(state, 0x5B1E, run.seq ?? state.counters.battle)) : null;
                 slot.shrine = to ? { id: shrineList[Math.floor(r() * shrineList.length)].id, stageId: to } : null;
             }
             return true;
@@ -4818,7 +4839,7 @@ export function createGameSystem(deps) {
      * **고용한 칸은 `null`** — 빈 채로 남고 다음 리롤에 채워진다. 그래서 저장하는 것은 「몇 번 칸을 샀나」뿐이다
      */
     function tavernCandidates(state) {
-        const rng = makeRng(deriveSeed(state.seed ^ 0x5A17, state.counters.tavern));
+        const rng = makeRng(seedOf(state, 0x5A17, state.counters.tavern));
         // 고용한 칸 · 수색 칸에 보관한 칸(2026-10-27 — 2026-11-16 R519 보관 삭제 · 옛 세이브의 `kept` 는 다음 리롤까지)은 빈다
         const gone = [...(state.tavern?.hired ?? []), ...(state.tavern?.kept ?? [])];
         // 내 영웅과 같은 이름은 피한다 — rng 를 안 쓰고 빈 칸(`null`)은 건너뛴다 (`hero.avoidNames` · 2026-10-15 · PLAN_user_review 2-5)
@@ -4829,7 +4850,7 @@ export function createGameSystem(deps) {
      * 선술집에서 온 영웅(명단 · 수색)의 시작 장비 스트림 [2026-09-25 사용자 지시] — **그 영웅의 번호**(`addHero` 가 올린 `counters.hero`)가 정한다.
      *   명단(`^ 0x5A17`) · 수색 결과(`^ 0x5EA7`)와 갈라 두어 나올 영웅을 안 바꾼다 · 불러오기를 다시 해도 같은 한 벌이다 (INTERFACE §5-1)
      */
-    const recruitRng = state => makeRng(deriveSeed(state.seed ^ 0x6EA2, state.counters.hero));
+    const recruitRng = state => makeRng(seedOf(state, 0x6EA2, state.counters.hero));
     /** 교체가 열리는 시각 — 처음에는 가능 · 교체할 때마다 쿨다운을 시작한다(자동 갱신 없음) */
     function tavernFreeAt(state) {
         const at = state.tavern?.rerolledAt;
@@ -4888,7 +4909,7 @@ export function createGameSystem(deps) {
      */
     function adminHero(state, cls, level) {
         if (state.heroes.length >= limitsOf(state).roster) return { ok: false, err: 'roster' };
-        const rng = makeRng(deriveSeed(state.seed ^ 0xAD31, state.counters.hero + 1));
+        const rng = makeRng(seedOf(state, 0xAD31, state.counters.hero + 1));
         const rolled = H.rollHeroOf(rng, cls ?? H.mainClasses[Math.floor(rng() * H.mainClasses.length)]);
         if (!rolled) return { ok: false, err: 'class' };
         const h = addHero(state, rolled);
@@ -4962,6 +4983,7 @@ export function createGameSystem(deps) {
             delete state.items[uid];
         }
         state.resources.gold += preview.gold;
+        mmNoteEvent(state, 'sell');   // 메인미션 「장비 판매」 (R583)
         return { ok: true, n: preview.n, gold: preview.gold, uids: preview.uids };
     }
 
@@ -5007,7 +5029,7 @@ export function createGameSystem(deps) {
     function shopTradeState(state, id = null, now) {
         const open = hasFeature(state, 'shop_trade'), n = B.shop_trade_receive;
         const roots = MAT_LADDER.filter(m => m.tier === 1);
-        const deal = roots.length ? roots[Math.floor(makeRng(deriveSeed(state.seed ^ 0x7DE1, shopVisit(state, now).cycle))() * roots.length)].id : null;
+        const deal = roots.length ? roots[Math.floor(makeRng(seedOf(state, 0x7DE1, shopVisit(state, now).cycle))() * roots.length)].id : null;
         const price = (v, cheap) => cheap ? Math.min(v, Math.round(v * B.shop_trade_deal_pct)) : v;
         const items = roots.map(m => ({
             id: m.id, have: state.materials?.[m.id] ?? 0, deal: m.id === deal,
@@ -5100,7 +5122,7 @@ export function createGameSystem(deps) {
         const visit = shopVisit(state, now);
         const list = state.counters.shop ?? 0;
         const sh = state.shop ?? shopFirst();
-        const rng = makeRng(deriveSeed(state.seed ^ 0x5409, list));
+        const rng = makeRng(seedOf(state, 0x5409, list));
         const spread = BT.ilvlSpreadOf(sh.level);
         // 잠긴 칸 — 맨 윗줄(무기 · 물약)은 상단(`shop`)이 · 둘째 · 셋째 줄(나머지 부위 · 책)은 상단 r2(`shop_rows`)가 연다 [2026-10-30 사용자 · R390].
         //   잠긴 칸도 굴린다 — 목록은 랭크와 무관하다(rng 소비가 랭크에 따라 안 갈린다)
@@ -5144,7 +5166,7 @@ export function createGameSystem(deps) {
     /** 그 목록의 책 — 앞에서부터 부분 섞기(자리마다 rng 1회) · 겹치지 않는다 */
     function shopBookIds(state, list) {
         const pool = shopBookPool();
-        const rng = makeRng(deriveSeed(state.seed ^ 0x540B, list));
+        const rng = makeRng(seedOf(state, 0x540B, list));
         const n = Math.min(B.shop_book_count, pool.length);
         for (let k = 0; k < n; k++) {
             const j = k + Math.floor(rng() * (pool.length - k));
@@ -5193,6 +5215,7 @@ export function createGameSystem(deps) {
         state.resources.gold -= gold;
         state.potions = state.potions ?? {};
         state.potions[p.id] = (state.potions[p.id] ?? 0) + n;
+        mmNoteEvent(state, 'potion');   // 메인미션 「물약 구매」 (R583)
         return { ok: true, id: p.id, n, gold, have: state.potions[p.id] };
     }
 
@@ -5274,7 +5297,7 @@ export function createGameSystem(deps) {
 
         state.resources.gold -= stake;
         state.counters.gamble = (state.counters.gamble ?? 0) + 1;
-        const r = GB.spin(makeRng(deriveSeed(state.seed ^ 0x6A3B, state.counters.gamble)));
+        const r = GB.spin(makeRng(seedOf(state, 0x6A3B, state.counters.gamble)));
 
         const gold = Math.floor(r.goldMult * stake);
         state.resources.gold += gold;
@@ -5360,7 +5383,7 @@ export function createGameSystem(deps) {
     function rollCard(state) {
         state.counters.commission = (state.counters.commission ?? 0) + 1;
         const no = state.counters.commission;
-        const c = CM.roll(makeRng(deriveSeed(state.seed ^ 0xC0DA, no)), commissionCtx(state));
+        const c = CM.roll(makeRng(seedOf(state, 0xC0DA, no)), commissionCtx(state));
         return c ? { no, ...c } : null;
     }
 
@@ -5407,6 +5430,7 @@ export function createGameSystem(deps) {
         if (!c) return { ok: false, err: 'missing' };
         if (boardOf(state).filter(isTaken).length >= limitsOf(state).commissionSlots) return { ok: false, err: 'full' };
         c.have = 0;
+        mmNoteEvent(state, 'take');   // 메인미션 「의뢰 받기」 (R583)
         return { ok: true, card: { ...c } };
     }
 
@@ -5659,11 +5683,11 @@ export function createGameSystem(deps) {
     function visitRoll(state, no, at) {
         if (!(B.visit_goblin_pct >= 0)) throw new Error(`state: balance.csv 의 visit_goblin_pct 가 없거나 음수다 (${B.visit_goblin_pct})`);
         if (!growthAround(state)) {
-            const g = makeRng(deriveSeed(state.seed ^ 0x60B2, no));
+            const g = makeRng(seedOf(state, 0x60B2, no));
             if (g() < B.visit_goblin_pct) return goblinHero(g);
         }
         if (!(B.visit_magic_pct >= 0)) throw new Error(`state: balance.csv 의 visit_magic_pct 가 없거나 음수다 (${B.visit_magic_pct})`);
-        const rng = makeRng(deriveSeed(state.seed ^ 0x5EA7, no));
+        const rng = makeRng(seedOf(state, 0x5EA7, no));
         // 등급 1회 — 레어 · 매직 · 나머지 일반 (R534 — 횟수는 그대로)
         const u = rng(), P = visitTierPcts(state, at);
         const tier = u < P.rare ? 'rare' : u < P.rare + P.magic ? 'magic' : 'normal';
@@ -5972,7 +5996,7 @@ export function createGameSystem(deps) {
         const out = { items: [], books: [] };
         if (EXPLORE_YIELD[x.spot] !== 'gear') return out;
         const band = chapterBands.find(b => b.band === x.chapter) ?? chapterBands[0];
-        const rng = makeRng(deriveSeed(state.seed ^ 0xE7A1, x.no));
+        const rng = makeRng(seedOf(state, 0xE7A1, x.no));
         const n = x.heroes.length * Math.max(0, B.explore_cave_items_per_hero ?? 0);
         const pool = shopBookPool();
         for (let i = 0; i < n; i++) {
@@ -6081,7 +6105,7 @@ export function createGameSystem(deps) {
      */
     function exploreStory(state, x) {
         const sins = new Set(x.heroes.map(uid => heroById(state, uid)?.sin).filter(Boolean));
-        const rng = makeRng(deriveSeed(state.seed ^ 0xE7A2, x.no));
+        const rng = makeRng(seedOf(state, 0xE7A2, x.no));
         return (explorePhases[x.spot] ?? []).map(ph => {
             const pool = exploreStoryRows.filter(r => r.spot === x.spot && r.phase === ph && (r.sin === '-' || sins.has(r.sin)));
             return pool[Math.floor(rng() * pool.length)];        // 후보가 빌 수 없다 — 로드 검증이 막았다
@@ -6285,8 +6309,9 @@ export function createGameSystem(deps) {
        노말 클리어까지의 길잡이 — 표(`main_mission.csv`) 행 순서가 줄 순서다. **미션은 아무것도 열지 않는다**(문은 보스 · 건물 랭크 그대로).
        판정 = 기록(`mainMission.met` — 한 번 채우면 남는다) 또는 지금 조건 · 보상은 채운 줄이면 순서와 무관하게 받는다 · 상자는 여기서만 나온다. */
     const MM_CONDS = ['battle', 'build', 'clear', 'fame', 'count', 'event', 'research', 'reg', 'runs', 'spot'];   // 조건 어휘 (INTERFACE §5-3)
-    const MM_COUNTERS = ['upgrade', 'gamble', 'explore'];   // `count` 가 읽는 카운터
-    const MM_EVENTS = ['hire', 'book', 'equip'];              // `event` 가 읽는 사건 — 의뢰 대조 고리(`commissionNote`)의 이름 · `equip` 은 장착이 직접 적는다(R538)
+    const MM_COUNTERS = ['upgrade', 'gamble', 'explore', 'tactic'];   // `count` 가 읽는 카운터 · `tactic` = 전술 리롤 (R583)
+    // `event` 가 읽는 사건 — `hire` · `book` · `salvage` 는 의뢰 대조 고리(`commissionNote`)의 이름 · `equip`(R538) · `mastery` · `take` · `sell` · `potion`(R583)은 그 행동이 직접 적는다
+    const MM_EVENTS = ['hire', 'book', 'equip', 'salvage', 'mastery', 'take', 'sell', 'potion'];
     const MM_BOOK_SALT = 0x3A11;                              // 책 보상 스트림 (INTERFACE §5-1)
     const MM_BOX = { box_weapon: 'weapon', box_armor: 'armor' };
     const MM_BOX_TIER = 'low';                                // 메인미션 상자는 하급 (base_expedition_design §1-6)
@@ -6399,7 +6424,7 @@ export function createGameSystem(deps) {
         if (rw.books > 0) {
             const pool = mmBookPool(state);
             // 소비 순서 — 책 한 권마다 1회 · 제 스트림(그 줄의 순번)이라 다른 수열과 안 섞인다 · 후보가 없으면 굴리지 않는다 (INTERFACE §5-2)
-            const r = pool.length ? makeRng(deriveSeed(state.seed ^ MM_BOOK_SALT, m.index)) : null;
+            const r = pool.length ? makeRng(seedOf(state, MM_BOOK_SALT, m.index)) : null;
             for (let k = 0; r && k < rw.books; k++) {
                 const bid = pool[Math.floor(r() * pool.length)];
                 addBook(state, bid);
@@ -6526,7 +6551,7 @@ export function createGameSystem(deps) {
 
     /** 첫 배정 — 시드 하나에서 나온다. 리롤 카운터를 안 타므로 **리롤이 다른 칸의 내용을 흔들지 않는다**.
      *  편성마다 같은 첫 배정이다 — 다르게 주면 편성 수만큼 공짜 리롤이 생긴다 (ADR-0250) */
-    const initialAssign = state => TC.initialAssign(makeRng(deriveSeed(state.seed ^ 0x7AC7, 0)));
+    const initialAssign = state => TC.initialAssign(makeRng(seedOf(state, 0x7AC7, 0)));
 
     /** 그 편성의 전술 칸 세이브 — 번호가 틀리면 고른 편성 (`partyUnits` 와 같은 대체) */
     const tacticsOf = (state, no) => (presetAt(state, no) ?? curPreset(state)).tactics ?? { slots: {} };
@@ -6755,7 +6780,7 @@ export function createGameSystem(deps) {
         if (!roll.length) return { ok: false, err: 'allLocked' };
         if (state.resources.gold < st.rerollCost) return { ok: false, err: 'gold' };
         const n = (state.counters.tactic ?? 0) + 1;
-        const picks = TC.pickMany(makeRng(deriveSeed(state.seed ^ 0x7AC7, n)), roll.map(s => s.option?.id ?? null));
+        const picks = TC.pickMany(makeRng(seedOf(state, 0x7AC7, n)), roll.map(s => s.option?.id ?? null));
         state.counters.tactic = n;
         state.resources.gold -= st.rerollCost;
         const t = ownTactics(state);
@@ -6849,6 +6874,7 @@ export function createGameSystem(deps) {
         h.mastery = h.mastery ?? {};
         h.mastery[nodeId] = rank + 1;
         h.masteryPoints -= 1;
+        mmNoteEvent(state, 'mastery');   // 메인미션 「스킬 포인트 찍기」 (R583)
         return { ok: true, rank: rank + 1, points: h.masteryPoints };
     }
 

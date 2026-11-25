@@ -1,24 +1,31 @@
 mission_id,chapter,cond,target,need,reward,status,description_kr
 c1_depart,1,battle,-,1,minor_healing:5,proposed,⚠제안 — 메인미션 [신설 2026-11-17 · R524 · main_mission_design.md §3] · 행 순서 = 줄 순서 · cond = 판정 어휘(state.js MM_CONDS · INTERFACE §5-3) · target = 그 조건의 대상(건물 id · 칸 id · 카운터 · 사건 · 연구소 줄 · 탐험 지점 · 없으면 -) · need = 목표 수 · reward = key:n 을 | 로 이은 것(gold · 재료 id · 물약 id · box_weapon · box_armor · book) — 원정 보내기
-c1_tavern,1,build,tavern,1,gold:500,proposed,⚠제안 — 선술집 짓기(의뢰 게시판)
-c1_p1,1,clear,1013,1,box_weapon:1,proposed,⚠제안 — 1-1 장소 보스(옛 첫 클리어 상자 자리)
-c1_equip,1,event,equip,1,gold:500,proposed,⚠제안 — 장비 장착 한 번(자동 장착도) · 옛 초반 안내 「장비 비교」 카드 자리 [2026-11-18 · R538]
-c1_commission,1,fame,-,1,gold:500,proposed,⚠제안 — 의뢰 하나 채워 받기
-c1_shop,1,build,shop,1,minor_healing:10,proposed,⚠제안 — 상단 짓기
-c1_p2,1,clear,1023,1,box_weapon:1,proposed,⚠제안 — 1-2 장소 보스
-c1_forge,1,build,forge,1,gold:1000|iron_ore:5|timber:5|dust:10,proposed,⚠제안 — 대장간 짓기
-c1_upgrade,1,count,upgrade,1,gold:1000|herb:5,proposed,⚠제안 — 장비 처음 강화
-c1_p3,1,clear,1033,1,box_weapon:1,proposed,⚠제안 — 1-3 장소 보스
 c1_storage,1,build,storage,1,gold:1000|herb:10,proposed,⚠제안 — 창고 짓기(연구소 자원 줄) · 연구 비용 약초
+c1_reg,1,reg,res,1,herb:10,proposed,⚠제안 — 자원 줄에 영웅 등록(창고 r1 — 등록한 영웅이 없으면 생산 0 · R576) · 보상 약초 = 연구 비용 [사용자 11-25 「일단 이대로 바꿔봐」] [2026-11-25 · R583]
 c1_research,1,research,-,1,gold:1000,proposed,⚠제안 — 연구소 지점 처음 연구
-c1_p4,1,clear,1043,1,box_weapon:1,proposed,⚠제안 — 1-4 장소 보스
+c1_mastery,1,event,mastery,1,minor_healing:5,proposed,⚠제안 — 스킬 포인트 찍기(마스터리 · 전직 칸 — 공용 지갑을 처음 쓴 것) · 보상 물약 = 지금 도는 원정 [사용자 11-25 「일단 이대로 바꿔봐」] [2026-11-25 · R583]
+c1_equip,1,event,equip,1,gold:500,proposed,⚠제안 — 장비 장착 한 번(자동 장착도) · 옛 초반 안내 「장비 비교」 카드 자리 [2026-11-18 · R538]
+c1_tavern,1,build,tavern,1,gold:500,proposed,⚠제안 — 선술집 짓기(의뢰 게시판)
+c1_take,1,event,take,1,minor_healing:5,proposed,⚠제안 — 의뢰 받기(게시판에서 하나) · 보상 물약 = 의뢰를 채우는 원정 [사용자 11-25 「일단 이대로 바꿔봐」] [2026-11-25 · R583]
+c1_shop,1,build,shop,1,minor_healing:10,proposed,⚠제안 — 상단 짓기
+c1_sell,1,event,sell,1,iron_ore:3,proposed,⚠제안 — 장비 판매(상단) · 보상 철광석 = 대장간 뒤 강화 [사용자 11-25 「일단 이대로 바꿔봐」] [2026-11-25 · R583]
+c1_forge,1,build,forge,1,gold:1000|iron_ore:5|timber:5|dust:10,proposed,⚠제안 — 대장간 짓기
+c1_salvage,1,event,salvage,1,iron_ore:3,proposed,⚠제안 — 장비 분해(강화 가루) · 보상 철광석 = 바로 다음 강화 [사용자 11-25 「일단 이대로 바꿔봐」] [2026-11-25 · R583]
+c1_upgrade,1,count,upgrade,1,gold:1000|herb:5,proposed,⚠제안 — 장비 처음 강화
 c1_command,1,build,command,1,gold:1000|dust:10,proposed,⚠제안 — 지휘 천막 짓기 · 전술 리롤 가루
+c1_tactic,1,count,tactic,1,gold:600,proposed,⚠제안 — 전술 리롤 한 번(지휘 천막 r1 — 열린 칸이 비어 있다) · 보상 골드 = 리롤 한 번 더(리롤 비용을 돌려준다) [사용자 11-25 「일단 이대로 바꿔봐」] [2026-11-25 · R583]
+c1_potion,1,event,potion,1,minor_healing:10,proposed,⚠제안 — 물약 구매(상단) · 보상 물약 = 1-1 보스 [사용자 11-25 「일단 이대로 바꿔봐」] [2026-11-25 · R583]
+c1_p1,1,clear,1013,1,box_weapon:1,proposed,⚠제안 — 1-1 장소 보스(옛 첫 클리어 상자 자리)
+c1_commission,1,fame,-,1,gold:500,proposed,⚠제안 — 의뢰 하나 채워 받기
+c1_p2,1,clear,1023,1,box_weapon:1,proposed,⚠제안 — 1-2 장소 보스
+c1_p3,1,clear,1033,1,box_weapon:1,proposed,⚠제안 — 1-3 장소 보스
+c1_p4,1,clear,1043,1,box_weapon:1,proposed,⚠제안 — 1-4 장소 보스
+c1_book,1,event,book,1,book:1,proposed,⚠제안 — 스킬북 배우기(영웅 Lv10) · 2장 줄(c2_book)을 옮겼다 [2026-11-25 · R583]
 c1_boss,1,clear,1051,1,box_weapon:1|gold:3500|iron_ore:120|timber:120|dust:30,proposed,⚠제안 — 1장 보스 · 철광석 · 목재 = 보스 직후 r2 넷(대장간 · 연구소 · 선술집 · 지휘 천막) 몫 · 1장 골드 · 가루 합 = 1장을 목표 시간(1시간)에 깨며 미션 밖에서 버는 양 — 골드는 앞 기능 줄에 나눠 싣는다 [2026-11-19 사용자 「1장을 깰떄가지 얻는 모든 재화의 100%를 미션으로」 · 「15번에 한번에 몰지말고 좀 나눠봐」 · main_mission_design.md §3]
 c2_hire,2,event,hire,1,gold:500,proposed,⚠제안 — 영웅 고용(선술집 r2)
 c2_p1,2,clear,2013,1,box_armor:1,proposed,⚠제안 — 2-1 장소 보스
 c2_train,2,reg,train,1,herb:10,proposed,⚠제안 — 훈련 줄에 영웅 등록(연구소 r2)
 c2_p2,2,clear,2023,1,box_weapon:1,proposed,⚠제안 — 2-2 장소 보스
-c2_book,2,event,book,1,book:1,proposed,⚠제안 — 스킬북 배우기
 c2_forge2,2,build,forge,2,herb:10,proposed,⚠제안 — 대장간 2랭크(물약 제작)
 c2_p3,2,clear,2033,1,box_armor:1,proposed,⚠제안 — 2-3 장소 보스
 c2_shop2,2,build,shop,2,gold:500,proposed,⚠제안 — 상단 2랭크(교역소)

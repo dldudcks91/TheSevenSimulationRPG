@@ -526,6 +526,48 @@ html, body { height: 100%; overflow: hidden; }
 .mission-guide { outline: 2px solid var(--color-warning); outline-offset: 3px; animation: mission-guide 1.6s ease-in-out infinite; }
 @keyframes mission-guide { 0%, 100% { outline-offset: 3px; } 50% { outline-offset: 6px; } }
 @media (prefers-reduced-motion: reduce) { .mission-guide { animation: none; } }
+/* 첫 장 메인미션 길 안내의 어둠 — 한 장(#stage) 직속 구멍 하나가 테두리 자리(테두리가 벌어지는 몫까지)에 서고 둘레를 큰 그림자로 덮는다.
+   자리 · 크기는 `app.js:paintMissionDim` 이 테두리에 맞춘다 · 입력은 그대로 지나간다 · 창 레이어(40) 아래 —
+   테두리가 창 안이면 `.over` 로 창 위(드래그 고스트 45 · 툴팁 50 아래)에 서서 창도 같이 어둡다 (SCREEN_DESIGN §2 「메인미션」 · ADR-1378 · ADR-1380) */
+.mission-dim {
+    position: absolute; z-index: 39; pointer-events: none; box-sizing: content-box;
+    margin: -8px 0 0 -8px; padding: 8px; border-radius: 4px;
+    box-shadow: 0 0 0 4000px rgba(var(--shadow-rgb), .62);
+}
+.mission-dim.over { z-index: 41; }
+/* 1장 튜토리얼 설명 말풍선 — 밝은 자리 옆 · 한 장 직속 · 입력 통과 · 어둠(39 · 창 위 41) 위 · 드래그 고스트(45) · 툴팁(50) 아래.
+   자리는 `app.js:paintMissionCoach` 가 맞춘다 (SCREEN_DESIGN §2 「메인미션」 · ADR-1381) */
+.mission-coach {
+    position: absolute; z-index: 42; pointer-events: none;
+    width: 300px; box-sizing: border-box; padding: 10px 14px 12px;
+    background: var(--bg-secondary); border: 1px solid var(--color-warning);
+    color: var(--text-primary); font-size: var(--fs-sm); line-height: 1.55;
+    box-shadow: 0 8px 24px rgba(var(--shadow-rgb), .6);
+}
+.mission-coach > b { display: block; margin-bottom: 4px; color: var(--color-warning); }
+/* 1장 튜토리얼 팻말 — 두루마리 아래에 끈 두 가닥으로 매달린 작은 판 · 천천히 흔들린다(한 번 흔들리는 길이는 `main_mission.js:SWING_MS` 가 인라인으로 준다) ·
+   어둠(39) 아래 · 누르면 [바로가기] (SCREEN_DESIGN §2 「메인미션」 · ADR-1381) */
+.mission-tut { position: absolute; top: 100%; left: 50%; z-index: 30; transform: translateX(-50%); padding-top: 12px; }
+.mission-tut-card {
+    position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    width: max-content; max-width: 220px; padding: 6px 14px 7px;
+    background: var(--bg-secondary); border: 1px solid var(--color-warning); color: var(--text-primary);
+    font: inherit; text-align: center; cursor: pointer; transform-origin: 50% -12px;
+    box-shadow: 0 6px 18px rgba(var(--shadow-rgb), .5);
+    animation-name: mission-tut-swing; animation-timing-function: ease-in-out; animation-iteration-count: infinite;
+}
+.mission-tut-card::before, .mission-tut-card::after {
+    content: ''; position: absolute; bottom: 100%; width: 1px; height: 13px; background: var(--color-warning); opacity: .7;
+}
+.mission-tut-card::before { left: 22%; }
+.mission-tut-card::after { right: 22%; }
+.mission-tut-card:hover { filter: brightness(1.25); }
+.mission-tut-cap { font-size: var(--fs-2xs); color: var(--color-warning); }
+.mission-tut-name { font-size: var(--fs-sm); font-weight: 700; }
+@keyframes mission-tut-swing { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+@media (prefers-reduced-motion: reduce) { .mission-tut-card { animation: none; } }
+:where(:root[data-skin="d2min"]) .mission-coach,
+:where(:root[data-skin="d2min"]) .mission-tut-card { background: var(--sk-fill), #0f0f0f; }
 /* 플래시 — 한 장 오른쪽 아래의 카드 [2026-10-21 사용자 지시 · ADR-0692 · SCREEN_DESIGN §2 「플래시」].
    한 장 오른쪽 가장자리 밖에서 튀어나와 서 있다가 다시 들어간다. **길이는 `app.js:TOAST_MS` 가 준다**(인라인 animation-duration) — 여기는 들고 나기의 **몫**만 든다.
    카드는 세로로 쌓인다 — 새 카드가 맨 아래(모서리)에 붙고 위의 카드는 밀려 오른다. 몇 장까지인지는 `app.js:TOAST_MAX`.

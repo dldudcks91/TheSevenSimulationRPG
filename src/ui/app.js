@@ -59,7 +59,7 @@ import { mountBattle, unitPreview, enemyPreviews, shrineChip, LOG_STYLES, logSty
 import { paceAt, paceStep } from './pace.js';   // 원정 박자 — 관전 재생기와 같은 걸음으로 안 보는 부대 · 숨긴 탭을 민다(세움 포함 · ADR-0654)
 import { bindTipNode, helpMark, headingHelp, hideTip, isTouchInput, isAltHeld, isShiftHeld, heroTipCard, skillTipCard, skillLineHtml, skillCalcLines, skillChipsHtml, skillLevelSteps, needWeaponChip, stagePoint, stageRect, rangeText, attrRowsHtml, sheetRowsHtml, sheetDeltaRows, bindStatTips, sheetPages, codexMonsterTipCard, codexSkillTipCard, monsterSkillIcons, potionTipCard } from './tip.js';
 import { D, SYS, loadData, monsterName, monsterFace, monsterSin, stageName, placeName, placeKey, placeCells, stageStory, fillStory, stageBgOf, chapterOf, codexStages, codexSlotMonsters, skillInfo, potionInfo, skillShowsLv } from './data.js';
-import { loadSave, writeSave, clearSave, loadTrack, writeTrack, onSaveWrittenElsewhere, loadDevice, loadNotificationDismissed, writeNotificationDismissed, loadQuickSalvage, writeQuickSalvage, loadMissionSeen, writeMissionSeen } from './storage.js';
+import { loadSave, writeSave, clearSave, loadTrack, writeTrack, onSaveWrittenElsewhere, loadDevice, loadNotificationDismissed, writeNotificationDismissed, loadQuickSalvage, writeQuickSalvage, loadMissionDim, writeMissionDim, loadMissionSeen, writeMissionSeen } from './storage.js';
 import * as CLOUD from './cloud.js';
 import { makeRng, deriveSeed } from '../game_logic/rng.js';
 import { labFixResist, labRelabel } from './data.js';   // 개발 장치 — 실험실 결투의 측정 스위치 · uid 접두 (§18 · ADR-1070). 걷어내려면 이 줄 · `renderLabDuel` 묶음
@@ -93,7 +93,7 @@ let G = null;                          // 세이브의 실체. null 이면 시�
 const now = () => Date.now();          // 시계는 UI 층에서만 읽는다
 // 다른 탭이 세이브를 썼다 — 이 탭은 저장 · 원정 시계 · 기록 올리기를 멈춘다(멈춤 창 · SCREEN_DESIGN §2-1)
 let frozen = false;
-function save(at = now()) { if (G && !frozen) writeSave(SYS.game.serialize(G, at)); }
+function save(at = now()) { if (G && !frozen) { writeSave(SYS.game.serialize(G, at)); trackClears(); } }
 
 // 마지막 온라인 생산까지 반영한 시각이 다음 접속의 기준이다 (ADR-1296).
 function saveBeforeLeaving() {
@@ -614,6 +614,7 @@ function openTab(id) {
     // 원정은 스테이지, 대장간은 강화에서 연다 (ADR-0661 · ADR-0962).
     if (id === 'expedition') state.exp = 'idle';
     if (id === 'forge') { state.forgeTab = 'up'; state.forgeItem = null; }
+    mmGuideEnter(id);   // 첫 장 메인미션 길 안내의 탭 단계 — 그 탭이면 보기를 맞추고 다음 테두리로 (ADR-1378)
     render();
     // 결투장에 들어오면 남의 방어 편성을 받는다 (SCREEN_DESIGN §1 「온라인 데모」 · ADR-1042).
     if (id === 'arena') arenaPull(false, true);
@@ -948,6 +949,7 @@ function mmWatchNo(m) {
  *  잠긴 탭이면 그 탭의 제 화면이 지을 건물을 말한다 (§1 회색 탭) · SCREEN_DESIGN §2 「메인미션」 · ADR-1251
  *  장소 보스 미션의 그 장소를 도는 부대가 있으면 출정 창 대신 **그 부대의 관전** — 누를 것이 없어 테두리도 없다 (ADR-1336) */
 function mmNavigate(m) {
+    if (mmMenuFirst(m)) { mmGuideMenu(m); return; }
     const watch = mmWatchNo(m);
     if (watch) {
         clearBagSel(); state.cmArm = null; state.exArm = null; state.exSel = null;
@@ -956,10 +958,7 @@ function mmNavigate(m) {
         watchParty(watch);
         return;
     }
-    const byTarget = { count: { upgrade: 'forge', gamble: 'tavern', explore: 'explore' }, event: { hire: 'tavern', book: 'library', equip: 'character' } };
-    const tab = byTarget[m.cond]?.[m.target]
-        ?? { battle: 'expedition', runs: 'expedition', clear: 'expedition', build: 'research', fame: 'tavern', research: 'resource', reg: 'resource', spot: 'explore' }[m.cond]
-        ?? 'expedition';
+    const tab = mmTabOf(m);
     state.tab = tab; clearBagSel(); state.cmArm = null; state.exArm = null; state.exSel = null;
     state.modal = null; state.modalBack = null; state.autoArm = false;
     if (tab === 'expedition') { state.exp = 'idle'; mmOpenDepart(m); }
@@ -975,18 +974,8 @@ function mmNavigate(m) {
 /** 원정 미션의 출정 창 — 노말 단(메인미션 판정이 노말 기록만 본다) · 장소 보스면 그 장소(그 칸이 열렸으면 그 칸) ·
  *  그 장소가 잠겼거나 다른 원정 미션이면 지금 갈 수 있는 맨 앞 장소(안 깬 칸이 있는 첫 열린 장소) · 두 부대면 안 나간 편성을 고른다 */
 function mmOpenDepart(m) {
-    const base = D.difficultyList[0].id;
-    if (G.difficulty !== base && !SYS.game.selectDifficulty(G, base).ok) return;
-    if (m.cond === 'runs' && state.battles[G.preset]) {
-        const idle = Array.from({ length: SYS.game.limitsOf(G).expeditions }, (_, i) => i + 1).find(no => !state.battles[no]);
-        if (idle) SYS.game.selectPreset(G, idle);
-    }
-    const open = p => SYS.game.stageUnlocked(G, p.cells[0].stage_id);
-    let place = m.cond === 'clear' ? D.places.find(p => p.cells.some(z => z.stage_id === m.target)) : null;
-    if (!place || !open(place)) {
-        const reach = D.places.filter(open);
-        place = reach.find(p => p.cells.some(z => SYS.game.stageUnlocked(G, z.stage_id) && !SYS.game.stageCleared(G, z.stage_id))) ?? reach.at(-1);
-    }
+    if (!mmDepartBase(m)) return;
+    const place = mmPlace(m);
     if (!place) return;
     const cell = m.cond === 'clear' && place.cells.some(z => z.stage_id === m.target) && SYS.game.stageUnlocked(G, m.target) ? m.target
         : (place.cells.find(z => SYS.game.stageUnlocked(G, z.stage_id) && !SYS.game.stageCleared(G, z.stage_id)) ?? place.cells[0]).stage_id;
@@ -996,14 +985,100 @@ function mmOpenDepart(m) {
     state.modal = 'depart';
     save();   // 단 · 편성을 골랐으면 그 선택이 세이브 값이다 (`idlePartyGo` 와 같다)
 }
+/** 원정 미션의 단 · 편성 — 노말 단(메인미션 판정이 노말 기록만 본다) · 두 부대면 안 나간 편성 · 단을 못 바꾸면 false */
+function mmDepartBase(m) {
+    const base = D.difficultyList[0].id;
+    if (G.difficulty !== base && !SYS.game.selectDifficulty(G, base).ok) return false;
+    if (m.cond === 'runs' && state.battles[G.preset]) {
+        const idle = Array.from({ length: SYS.game.limitsOf(G).expeditions }, (_, i) => i + 1).find(no => !state.battles[no]);
+        if (idle) SYS.game.selectPreset(G, idle);
+    }
+    return true;
+}
+/** 원정 미션의 장소 — 장소 보스면 그 장소(열렸으면) · 아니면 지금 갈 수 있는 맨 앞 장소(안 깬 칸이 있는 첫 열린 장소 · 다 깼으면 마지막 열린 장소) · 없으면 null */
+function mmPlace(m) {
+    const open = p => SYS.game.stageUnlocked(G, p.cells[0].stage_id);
+    let place = m.cond === 'clear' ? D.places.find(p => p.cells.some(z => z.stage_id === m.target)) : null;
+    if (!place || !open(place)) {
+        const reach = D.places.filter(open);
+        place = reach.find(p => p.cells.some(z => SYS.game.stageUnlocked(G, z.stage_id) && !SYS.game.stageCleared(G, z.stage_id))) ?? reach.at(-1);
+    }
+    return place ?? null;
+}
+/** 미션을 하는 탭 — 조건(과 대상)이 정한다 */
+function mmTabOf(m) {
+    const byTarget = { count: { upgrade: 'forge', gamble: 'tavern', explore: 'explore', tactic: 'party' },
+        event: { hire: 'tavern', book: 'library', equip: 'character', mastery: 'character', take: 'tavern', sell: 'shop', potion: 'shop', salvage: 'character' } };
+    return byTarget[m.cond]?.[m.target]
+        ?? { battle: 'expedition', runs: 'expedition', clear: 'expedition', build: 'research', fame: 'tavern', research: 'resource', reg: 'resource', spot: 'explore' }[m.cond]
+        ?? 'expedition';
+}
+/* 첫 장 길 안내 [2026-11-25 · SCREEN_DESIGN §2 「메인미션」 · ADR-1378] — 줄 목록의 첫 챕터 미션은 [바로가기]가 화면을 안 옮긴다.
+   탭 내비의 그 탭에 테두리(탭 단계 — 설정이 켜져 있으면 화면이 어둡고 테두리 자리만 밝다 · 어둠은 탭 안의 단계까지 따라간다 · ADR-1380) → 그 탭을 누르면 보기만 맞추고 고르는 것은 유저가 누른다.
+   2장부터는 ADR-1251 그대로(그 자리까지 연다) */
+const mmMenuFirst = m => m.chapter === SYS.game.mainMissionState(G).list[0]?.chapter;
+/* 1장 튜토리얼 [2026-11-25 사용자 「원정, 건설, 연구소를 먼저해 나머지는 자유로」 · SCREEN_DESIGN §2 「메인미션」 · ADR-1381] — 메인미션 1장의 첫 넷(원정 · 건설 · 연구소).
+   길 안내에 어둠 · 설명 말풍선이 같이 서고, 다음 미션이면 두루마리 아래에 팻말이 걸린다(`main_mission.js`).
+   값 = 단계 — [밝은 자리가 든 판, 말풍선 문구 `mm.tut.<미션>.<단계>`] · 앞에서부터 처음 맞는 것 */
+const MM_TUTORIAL = {
+    c1_depart: [['.nav', 'tab'], ['.fp-side', 'send'], ['.zone', 'place']],
+    c1_storage: [['.nav', 'tab'], ['.cn-go', 'build'], ['.cn-lot', 'lot']],
+    c1_reg: [['.nav', 'tab'], ['.lr-head-actions', 'apply'], ['.lr-grid', 'hero'], ['.dp-card', 'line']],
+    c1_research: [['.nav', 'tab'], ['.dp-side-go', 'go'], ['.dp-tree-cell', 'node']],
+};
+function mmGuideMenu(m) {
+    const tab = mmTabOf(m);
+    state.modal = null; state.modalBack = null; state.autoArm = false;
+    state.btMax = false;   // 관전 최대화가 탭 열을 접어 두었으면 편다 — 누를 탭이 보여야 한다
+    const menu = state.tab !== tab;
+    // 어둠 · 말풍선(`coach`)은 튜토리얼 줄만 — 탭 안의 단계까지 테두리를 따라간다 (ADR-1380 · ADR-1381) · 어둠은 설정이 끌 수 있고 말풍선은 남는다
+    const coach = !!MM_TUTORIAL[m.id];
+    mmGuide = { owner: G, id: m.id, tab, first: true, menu, from: state.tab, coach, dim: coach && missionDim };
+    if (!menu) mmArrive(m);
+    render();
+    document.querySelector('.mission-guide')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+/** 첫 장 길 안내 — 그 탭에 들어설 때 **탭의 보기만** 맞춘다(원정 = 노말 단 · 그 장소의 챕터 · 대장간 = 강화 · 캐릭터 = 창고 장비 칸 · 연구소 = 줄 보기).
+ *  고르는 것(건물 · 줄 · 출정 창)은 유저가 누른다 */
+function mmArrive(m) {
+    mmGuide.menu = false;
+    const tab = mmGuide.tab;
+    if (tab === 'expedition') {
+        state.exp = 'idle';
+        if (mmDepartBase(m)) { const place = mmPlace(m); if (place) state.expChapter = place.chapter; }
+        save();   // 단 · 편성을 골랐으면 그 선택이 세이브 값이다 (`mmOpenDepart` 와 같다)
+    }
+    if (tab === 'forge') state.forgeTab = 'up';
+    if (tab === 'character') state.stashTab = 'equip';
+    if (m.cond === 'reg') state.labLineView = true;
+    if (m.cond === 'research') state.labLineView = false;
+}
+/** 탭을 눌러 옮길 때(`openTab`) — 탭 단계의 그 탭이면 들어선 것 · 다른 탭이면 안내를 걷는다 */
+function mmGuideEnter(id) {
+    if (!mmGuide?.menu || mmGuide.owner !== G) return;
+    const m = id === mmGuide.tab ? SYS.game.mainMissionState(G).list.find(x => x.id === mmGuide.id) : null;
+    if (m && !m.met) mmArrive(m); else mmGuide = null;
+}
 /* 바로가기 안내 테두리 [2026-11-17 · ADR-1251] — 화면 상태(세이브 아님). 그리기 끝 · 1초 눈금마다 다시 붙인다(그리기가 DOM 을 갈아 끼운다).
-   그 미션을 채우거나 · 다른 탭으로 가거나 · 다른 게임이 되면 걷힌다. 여러 번 눌러야 하는 미션은 앞 단계가 끝나면 다음 것을 찾는다(행동 버튼 → 고르는 칸) */
-let mmGuide = null;   // {owner, id, tab}
+   그 미션을 채우거나 · 다른 탭으로 가거나 · 다른 게임이 되면 걷힌다. 여러 번 눌러야 하는 미션은 앞 단계가 끝나면 다음 것을 찾는다(행동 버튼 → 고르는 칸)
+   첫 장 길 안내(ADR-1378)는 `first` · 탭 단계 `menu`(누른 자리 `from` 에 머무는 동안) · 어둠 `dim` 을 더 든다 */
+let mmGuide = null;   // {owner, id, tab, first?, menu?, from?, coach?(튜토리얼 말풍선), dim?, sel?(말풍선이 보던 단계의 선택자 — 바뀌면 스크롤)}
 function mmGuideSelectors(m) {
     const line = `.dp-card[data-post="${m.target}"]`;
     switch (m.cond) {
-        case 'battle': case 'runs': case 'clear': return ['.fp-side .form-actions .btn.primary'];
-        case 'build': return ['.cn-go'];
+        case 'battle': case 'runs': case 'clear': {
+            const go = '.fp-side .form-actions .btn.primary';
+            if (!mmGuide?.first) return [go];
+            // 첫 장 — 출정 창이 열렸으면 [보내기] · 아니면 그 장소 줄(그 장소를 도는 부대가 있으면 그 줄의 ▶ 부대)
+            const place = mmPlace(m), row = place ? `.zone[data-place="${place.cells[0].stage_id}"]` : null;
+            return [go, ...(row ? (mmWatchNo(m) ? [`${row} .zone-go .btn`, row] : [row]) : [])];
+        }
+        case 'build': {
+            if (!mmGuide?.first) return ['.cn-go'];
+            // 첫 장 — 그 건물 부지 → 골랐으면 [건설]
+            const lot = `.cn-lot[data-building="${m.target}"]`;
+            return document.querySelector(`${lot}.pick`) ? ['.cn-go', lot] : [lot];
+        }
         case 'fame': return ['.cm-card.done .cm-go.primary', '.cm-card:not(.taken) .cm-go:not(.dim)', '.cm-card.taken', '.cm-board'];
         case 'research': return ['.dp-side-go.primary', '.dp-tree-cell.open'];
         // 등록 창이 열리면 그 안에서 — 영웅 카드 → [적용] · 닫혀 있으면 그 줄의 빈 등록 칸
@@ -1013,27 +1088,106 @@ function mmGuideSelectors(m) {
             return [...(state.exSel?.spot === m.target ? ['.ex-go'] : []), `${spot}:not(.pending)`, spot];
         }
         // count · upgrade 의 첫 자리 [강화] = 강화 판 바닥 줄 오른쪽 끝 (ADR-1313)
-        case 'count': return { upgrade: ['.fg-up-work .fg-go-foot', '.c-forge .pd-cell.filled', '.fg-box'], gamble: ['.gb-go'], explore: ['.ex-go', '.ex-spot:not(.pending):not(.out)'] }[m.target] ?? [];
+        case 'count': return { upgrade: ['.fg-up-work .fg-go-foot', '.c-forge .pd-cell.filled', '.fg-box'], gamble: ['.gb-go'], explore: ['.ex-go', '.ex-spot:not(.pending):not(.out)'],
+            tactic: ['.rs-roll:not(:disabled)', '.rs-roll'] }[m.target] ?? [];   // 전술 [전체 리롤] (편성 탭 · R583)
         case 'event': return { hire: ['.b-hire:not([disabled])', '.tv-cands'], book: ['.lib-info .lib-slot .btn.primary:not([disabled])', '.lib-own .bk-grid', '.lib-info'],   // 칸 줄의 [배우기] · [업그레이드] → 보유 스킬북 칸 → 스킬정보 (ADR-1308)
             // 장비 장착 — 인벤토리 장비 → 창고 장비 → 상자(까야 장비다) (ADR-1260)
-            equip: ['.store-bag .inv-cell.filled:not(.box)', '.store-stash .inv-cell.filled:not(.box)', '.store-bag .inv-cell.filled.box', '.store-stash .inv-cell.filled.box'] }[m.target] ?? [];
+            equip: ['.store-bag .inv-cell.filled:not(.box)', '.store-stash .inv-cell.filled:not(.box)', '.store-bag .inv-cell.filled.box', '.store-stash .inv-cell.filled.box'],
+            // 1장 「처음 한 번」 줄 (R583) — 스킬 창이 열렸으면 찍을 수 있는 칸 · 아니면 [스킬 트리] / 의뢰 [수락] / 판매 목록이 찼으면 [판매] · 아니면 인벤토리 장비(누르면 판매 목록에 오른다) /
+            //   물약을 골랐으면 [구매] · 아니면 물약 칸 / 분해함이 떠 있으면 [분해하기] → 인벤토리 장비 · 아니면 [분해]
+            mastery: state.modal === 'skill' ? ['.sk-cell.can'] : ['.go-tree'],
+            take: ['.cm-card:not(.taken) .cm-go:not(.dim)', '.cm-board'],
+            sell: ['.td-sale-total .btn.primary:not(:disabled)', '.store-bag .inv-cell.filled:not(.box):not(.locked)', '.store-bag .inv-cell.filled:not(.box)'],
+            potion: [...(state.shopSel?.src === 'potion' ? ['.td-goods > .td-buy .btn.primary'] : []), '.td-potions .inv-cell'],
+            salvage: state.bagSelMode ? ['.salv-foot .btn.primary:not(:disabled)', '.store-bag .inv-cell.filled:not(.box)', '.store-stash .inv-cell.filled:not(.box)'] : ['.salv-start'] }[m.target] ?? [];
     }
     return [];
 }
 function applyMissionGuide() {
     let target = null;
-    if (mmGuide && (mmGuide.owner !== G || state.screen !== 'game' || state.tab !== mmGuide.tab)) mmGuide = null;
+    if (mmGuide && (mmGuide.owner !== G || state.screen !== 'game')) mmGuide = null;
+    // 탭 단계 — 누른 자리(`from`)를 떠나 그 탭에 다른 길로 들어섰으면 들어선 것(보기는 안 맞춘다) · 다른 탭이면 걷는다
+    if (mmGuide?.menu && state.tab !== mmGuide.from) {
+        if (state.tab === mmGuide.tab) mmGuide.menu = false; else mmGuide = null;
+    }
+    if (mmGuide && !mmGuide.menu && state.tab !== mmGuide.tab) mmGuide = null;
+    let hit = null;
     if (mmGuide) {
         const m = SYS.game.mainMissionState(G).list.find(x => x.id === mmGuide.id);
         if (!m || m.met) mmGuide = null;
-        else for (const sel of mmGuideSelectors(m)) {
+        else for (const sel of mmGuide.menu ? [`.nav button[data-tab="${mmGuide.tab}"]`] : mmGuideSelectors(m)) {
             target = [...document.querySelectorAll(sel)].find(n => n.getClientRects().length) ?? null;
-            if (target) break;
+            if (target) { hit = sel; break; }
         }
     }
     for (const n of document.querySelectorAll('.mission-guide')) if (n !== target) n.classList.remove('mission-guide');
     target?.classList.add('mission-guide');
+    // 튜토리얼의 어둠 · 말풍선은 테두리를 따라간다 — 누를 것이 화면에서 사라지면 끝 · 단계가 바뀌면 그 자리가 보이게 끌어온다 (ADR-1380 · ADR-1381)
+    if (mmGuide?.coach) {
+        if (!target) { mmGuide.coach = false; mmGuide.dim = false; }
+        else if (hit !== mmGuide.sel) { mmGuide.sel = hit; target.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+    }
+    paintMissionDim(mmGuide?.dim ? target : null);
+    paintMissionCoach(mmGuide?.coach ? target : null);
 }
+/* 첫 장 길 안내의 어둠 [ADR-1378 · ADR-1380] — 한 장(#stage) 직속 구멍 하나가 테두리 자리에 서고 둘레를 큰 그림자로 덮는다(style.css `.mission-dim`).
+   입력은 그대로 지나간다 · 테두리 밖을 누르거나 `Esc` 면 그 미션 안내 동안 어둠만 걷힌다(테두리는 남는다) */
+let mmDimNode = null;
+function paintMissionDim(target) {
+    const st = $('#stage');
+    if (!target || !st) { mmDimNode?.remove(); mmDimNode = null; return; }
+    mmDimNode ??= el('div', 'mission-dim');
+    mmDimNode.setAttribute('aria-hidden', 'true');
+    if (mmDimNode.parentNode !== st) st.appendChild(mmDimNode);
+    mmDimNode.classList.toggle('over', !!target.closest('#modal'));   // 창 안의 버튼이면 창 위로 — 창도 같이 어둡다 (ADR-1380)
+    const s = st.getBoundingClientRect(), r = target.getBoundingClientRect(), k = s.width / st.offsetWidth || 1;
+    Object.assign(mmDimNode.style, { left: `${(r.left - s.left) / k}px`, top: `${(r.top - s.top) / k}px`, width: `${r.width / k}px`, height: `${r.height / k}px` });
+}
+/* 1장 튜토리얼 설명 말풍선 [ADR-1381] — 한 장(#stage) 직속 · 밝은 자리 옆(아래 → 위 → 오른쪽 → 왼쪽 중 한 장 안에 드는 쪽 · 탭 내비면 오른쪽 먼저) ·
+   머리 = 그 탭 이름 · 본문 = 그 단계의 문구 · 입력은 그대로 지나간다(style.css `.mission-coach`) */
+let mmCoachNode = null;
+function paintMissionCoach(target) {
+    const st = $('#stage');
+    const step = target && mmGuide ? MM_TUTORIAL[mmGuide.id]?.find(([sel]) => target.closest(sel))?.[1] : null;
+    if (!step || !st) { mmCoachNode?.remove(); mmCoachNode = null; return; }
+    const key = `mm.tut.${mmGuide.id}.${step}`;
+    mmCoachNode ??= el('div', 'mission-coach');
+    mmCoachNode.setAttribute('role', 'status');
+    if (mmCoachNode.dataset.key !== key || mmCoachNode.dataset.lang !== lang()) {
+        mmCoachNode.dataset.key = key; mmCoachNode.dataset.lang = lang();
+        mmCoachNode.replaceChildren(el('b', '', t(`nav.${mmGuide.tab}`)), el('div', '', t(key)));
+    }
+    if (mmCoachNode.parentNode !== st) st.appendChild(mmCoachNode);
+    // 자리는 한 장 좌표(배율을 되돌린 px) — 테두리가 벌어지는 몫 + 어둠 구멍 여백만큼 띄운다
+    const s = st.getBoundingClientRect(), k = s.width / st.offsetWidth || 1, r = target.getBoundingClientRect();
+    const x = (r.left - s.left) / k, y = (r.top - s.top) / k, w = r.width / k, h = r.height / k;
+    const W = st.offsetWidth, H = st.offsetHeight, bw = mmCoachNode.offsetWidth, bh = mmCoachNode.offsetHeight, gap = 14, edge = 8;
+    const fitX = v => Math.min(Math.max(v, edge), W - bw - edge), fitY = v => Math.min(Math.max(v, edge), H - bh - edge);
+    const spots = {
+        below: [fitX(x + w / 2 - bw / 2), y + h + gap, y + h + gap + bh <= H - edge],
+        above: [fitX(x + w / 2 - bw / 2), y - gap - bh, y - gap - bh >= edge],
+        right: [x + w + gap, fitY(y + h / 2 - bh / 2), x + w + gap + bw <= W - edge],
+        left: [x - gap - bw, fitY(y + h / 2 - bh / 2), x - gap - bw >= edge],
+    };
+    const order = target.closest('.nav') ? ['right', 'below', 'above', 'left'] : ['below', 'above', 'right', 'left'];
+    const [left, top] = spots[order.find(o => spots[o][2]) ?? order[0]];
+    Object.assign(mmCoachNode.style, { left: `${left}px`, top: `${top}px` });
+}
+function dropMissionDim(e) {
+    if (!mmGuide?.coach) return;
+    if (e.type === 'keydown' ? e.key !== 'Escape' : e.target instanceof Element && e.target.closest('.mission-guide')) return;   // 테두리를 누르면 어둠 · 말풍선은 다음 자리로 (ADR-1380)
+    mmGuide.coach = false; mmGuide.dim = false;
+    paintMissionDim(null); paintMissionCoach(null);
+}
+document.addEventListener('pointerdown', dropMissionDim, true);
+document.addEventListener('keydown', dropMissionDim, true);
+// 판을 스크롤하면 밝은 자리 · 말풍선을 다시 맞춘다 — 1초 눈금까지 어긋나 있지 않게 (스크롤은 거품이 안 올라와 잡는 단계에서 듣는다)
+document.addEventListener('scroll', () => {
+    if (!mmDimNode && !mmCoachNode) return;
+    const g = document.querySelector('.mission-guide');
+    if (mmDimNode) paintMissionDim(g);
+    if (mmCoachNode) paintMissionCoach(g);
+}, true);
 /** 받기 — 받은 뒤 저장 · 상자가 창고에 못 들어가 우편함으로 갔으면 그렇게 말한다 */
 function mmClaim(ids) {
     let n = 0, mail = false, err = null;
@@ -1061,6 +1215,7 @@ const mainMission = createMainMission({
     // 판을 열어 본 다음 미션 — 빨간 점을 지운다 · 브라우저에 게임별로 (종의 확인 기록과 같은 자리 · ADR-1245)
     readSeen: owner => loadMissionSeen(`${owner.seed}:${owner.createdAt}`),
     writeSeen: (owner, id) => writeMissionSeen(`${owner.seed}:${owner.createdAt}`, id),
+    tutorial: m => !!MM_TUTORIAL[m.id],   // 1장 튜토리얼 줄이면 두루마리 아래 팻말 (ADR-1381)
 });
 
 /**
@@ -1328,7 +1483,7 @@ const SET_PANES = ['game', 'screen', 'fx'];
 let setPane = SET_PANES[0];
 /**
  * `⚙` 판 설정 탭의 속 — 맨 위 하위 탭 `게임` · `화면` · `연출`(SCREEN_DESIGN §2-2 · ADR-1050)이 줄을 가른다:
- *   게임 = 닉네임 · 우클릭 분해 / 화면 = 아트 스타일(초상 스타일이 둘 이상일 때만) · 로그 · Skin(개발용 임시) /
+ *   게임 = 닉네임 · 우클릭 분해 · 바로가기 어둡게 / 화면 = 아트 스타일(초상 스타일이 둘 이상일 때만) · 로그 · Skin(개발용 임시) /
  *   연출 = 스킬 이펙트 · 이펙트 그림체 · 이펙트 투명도 · 기본 공격 이펙트 · 피격 반응 · 피격 시 흔들림 · 공격 시 흔들림 · Focus(개발용 임시 — devcompare.js).
  * 누르면 **이 속만** 갈아 끼운다 — 연출은 사건마다 켜짐을 읽으므로 화면(도는 관전)은 그대로다. 값은 이 브라우저에만(`fx.js:setFxOn`)
  * 로그 방식은 문서 뿌리 속성 하나라 쌓인 줄까지 한꺼번에 바뀐다(`battle.js:setLogStyle`). 아트 스타일은 전체 렌더로 그림을 갈아 끼운다.
@@ -1347,8 +1502,10 @@ function settingsBody() {
 
 /** 우클릭 분해 — 켜져 있으면 보관 칸 장비 우클릭이 바로 분해 · 메뉴는 `Shift`+우클릭 (§2-2 · §6 · ADR-1188) · 이 브라우저에만(`storage.js`) */
 let quickSalvage = loadQuickSalvage();
+/** 바로가기 어둡게 — 첫 장 메인미션 [바로가기]의 탭 단계에서 화면을 어둡게 하나 (§2-2 · ADR-1378) · 기본 On · 이 브라우저에만(`storage.js`) */
+let missionDim = loadMissionDim();
 
-/** `게임` 하위 탭 — 닉네임 · 계정(배포 주소만) · 우클릭 분해 */
+/** `게임` 하위 탭 — 닉네임 · 계정(배포 주소만) · 우클릭 분해 · 바로가기 어둡게 */
 function settingsGame(box) {
     // 닉네임 — 콜로세움의 이름(뒤에 태그)이자 퍼널 페이지가 유저를 알아보는 이름 · 이 브라우저에만 (§2-1 · §2-2 · ADR-0633 · ADR-1042).
     //   칸을 떠나거나 Enter 로 정한다 — 다시 그리지 않는다 · `#` 는 안 들어간다(태그 자리) · 이미 이름이 있으면 비워서 정할 수 없다(앞 이름으로 돌아간다) ·
@@ -1397,6 +1554,12 @@ function settingsGame(box) {
     qsRow.appendChild(segmented([{ id: 'off', label: t('set.off') }, { id: 'on', label: t('set.on') }],
         quickSalvage ? 'on' : 'off', id => { quickSalvage = id === 'on'; writeQuickSalvage(quickSalvage); box.replaceWith(settingsBody()); }));
     box.appendChild(qsRow);
+    // 바로가기 어둡게 [Off] [On] — 첫 장 메인미션 [바로가기]의 탭 단계 어둠(§2 「메인미션」 · ADR-1378) · 다음 [바로가기]부터 먹는다
+    const dimRow = el('div', 'set-row');
+    dimRow.appendChild(el('span', 'set-k', t('set.mmDim')));
+    dimRow.appendChild(segmented([{ id: 'off', label: t('set.off') }, { id: 'on', label: t('set.on') }],
+        missionDim ? 'on' : 'off', id => { missionDim = id === 'on'; writeMissionDim(missionDim); box.replaceWith(settingsBody()); }));
+    box.appendChild(dimRow);
 }
 
 /** 화면 배치 [자동] [PC] [모바일] (ADR-1090) */
@@ -1686,16 +1849,19 @@ function renderStart(main) {
 /* ═══════════ 플레이 기록 (SCREEN_DESIGN §2-1 · ADR-0633) ═══════════
    로그인이 없다. 배포 주소에서 켠 게임만 익명 계정으로 **진행 요약 + 세이브 사본**을 한 방향으로 올린다 — 받는 길은 없다(세이브의 주인은 이 브라우저다).
    개발 환경 · `?dev=` 주소는 안 올린다 — 개발자의 시험 플레이 · 헤드리스 검증이 퍼널(`dev/funnel.html`)을 더럽히지 않게.
-   실패는 조용하다 — 게임은 그대로 돌고 다음 간격에 다시 올린다 */
+   **간격마다는 안 올린다** — 켤 때 · 깬 칸이 늘었을 때(`trackClears`) · 탭을 숨길 때(아래 간격) · 닫을 때 · 이름 · 방어 편성 · 로그아웃 (R579 · ADR-1377).
+   실패는 조용하다 — 게임은 그대로 돌고 다음에 올릴 때 다시 올린다 */
 
-// 올리는 간격 — 로컬은 바뀔 때마다지만 무료 한도는 **쓰기 횟수**라 모아서 올린다. 게임 수치가 아니라 저장소 사정이라 CSV 가 아니다 (ADR-0102 선례)
-const TRACK_PUSH_MS = 60 * 1000;
+// 탭을 숨길 때 올리는 최소 간격 — 마지막으로 올리기 시작한 뒤 이만큼 지났을 때만. 무료 한도는 **쓰기 횟수**라서다 (R579 · ADR-1377).
+//   닫을 때(`pagehide`)는 간격 없이 올린다. 게임 수치가 아니라 저장소 사정이라 CSV 가 아니다 (ADR-0102 선례)
+const TRACK_HIDE_MS = 10 * 60 * 1000;
 // 닉네임 글자 수 상한 — 퍼널 페이지 표의 한 칸이다. 같은 이유로 CSV 가 아니다
 const NICK_MAX = 16;
 // 개발 환경은 안 올린다 — 판정은 개발 장치와 같은 `env.js:DEV_HOST` 하나 (ADR-0751)
 const TRACK_ON = !DEV_HOST && !new URLSearchParams(location.search).has('dev');
-// 이 탭이 마지막으로 올린 것(세이브 저장 시각 + 닉네임) — 같으면 안 올린다. 화면 상태가 아니라서 `state` 밖에 둔다
-const track = { sent: null, busy: false };
+// 이 탭이 마지막으로 올린 것(세이브 저장 시각 + 닉네임) — 같으면 안 올린다 · `at` = 마지막으로 올리기 시작한 시각(숨길 때 간격) ·
+//   `cleared` = 마지막으로 대조한 깬 칸 수(`trackClears` — -1 = 아직 안 봤다). 화면 상태가 아니라서 `state` 밖에 둔다
+const track = { sent: null, busy: false, at: 0, cleared: -1 };
 // 콜로세움 데모 받기 간격 — 콜로세움 탭에 들어올 때 · [새 상대] · 결투 뒤에 받되, 마지막 시도에서 이만큼 지났을 때만(켤 때는 늘).
 //   연타 · 탭 오가기를 막는 간격이다 — 무료 한도(하루 읽기) 사정이라 CSV 가 아니다 (위와 같은 선례 · arena_design §9 · ADR-1042)
 const ARENA_PULL_MS = 60 * 1000;
@@ -1742,6 +1908,18 @@ function noteReach(local, rec, at) {
     return added;
 }
 
+/** 저장할 때마다 — 깬 칸 수만 대조하고, 늘었으면 새로 깬 칸에 지금 원정 플레이 시간을 적고 한 번 올린다(첫 클리어 · R579 · ADR-1377) */
+function trackClears() {
+    if (!TRACK_ON || !G) return;
+    const n = G.progress.cleared.length;
+    if (n === track.cleared) return;
+    track.cleared = n;
+    const rec = loadTrack();
+    if (!noteReach(G, rec, G.expMs ?? 0)) return;
+    writeTrack(rec);
+    trackPush();
+}
+
 /** 켤 때 — 켠 횟수를 하나 올린다. 이 브라우저의 첫 기록이면 이미 깬 칸은 「언제 깼는지 모름」(null)으로 둔다 —
  *  지금 시간을 적으면 퍼널의 걸린 시간이 거짓이 된다 */
 function trackSession() {
@@ -1763,6 +1941,7 @@ async function trackPush() {
     const sent = `${local?.savedAt ?? ''}|${rec.nick}|${acct.held ? 1 : 0}`;
     if (sent === track.sent) return { ok: true };
     track.busy = true;
+    track.at = now();
     const r = await CLOUD.pushTrack(trackSummary(local, rec), local, { nick: rec.nick, device: loadDevice(), held: acct.held });
     if (r.err === 'taken') { track.busy = false; freeze('account'); return r; }
     // 콜로세움 방어 편성은 따로 쓴다 — 규칙이 이 문서를 거부해도 플레이 기록은 올라간다 (cloud.js `pushArenaTeam` · arena_design §9)
@@ -3122,6 +3301,7 @@ function renderExpIdle(main) {
         // 고른 줄 = 고른 칸이 이 장소의 칸일 때 — 창을 닫아도 테두리가 남는다
         const on = place.cells.some(z => z.stage_id === state.expStage);
         const row = el('div', `zone${unlocked ? '' : ' locked'}${chapterBoss ? ' boss' : ''}${on ? ' on' : ''}`);
+        row.dataset.place = head.stage_id;   // 첫 장 메인미션 길 안내가 테두리를 세울 자리 (ADR-1378)
         row.style.borderLeftColor = unlocked ? sinColor(sin) : '';
         if (bg) {
             row.style.backgroundImage = `linear-gradient(90deg, var(--bg-tertiary) 34%, rgba(4,4,4,.55) 68%, rgba(4,4,4,.30)), url('${bg}')`;
@@ -4597,7 +4777,7 @@ function closeFrozenRun(at) {
 function onVisibility() {
     if (document.hidden) {
         if (stopBattle) { const pos = stopBattle(); if (state.battle) state.battle.resume = pos; stopBattle = null; }
-        trackPush();   // 숨길 때 올린다 — 이대로 닫힐 수도 있다 (SCREEN_DESIGN §2-1)
+        if (now() - track.at >= TRACK_HIDE_MS) trackPush();   // 숨길 때 올린다 — 이대로 닫힐 수도 있다 · 마지막으로 올린 뒤 간격이 지났을 때만 (SCREEN_DESIGN §2-1 · R579)
         return;
     }
     expTick();
@@ -6082,7 +6262,7 @@ function storageTools(where) {
             else ae.onclick = () => autoEquipHero(ah);
             tools.appendChild(ae);
         }
-        const sv = el('button', `btn sm toggle${open ? ' on' : ''}`, t('ch.sel.start'));
+        const sv = el('button', `btn sm toggle salv-start${open ? ' on' : ''}`, t('ch.sel.start'));   // `salv-start` = 메인미션 길 안내 자리 (R583)
         sv.onclick = () => { clearBagSel(); if (!open) state.bagSelMode = true; render(); };
         tools.appendChild(sv);
         if (!open) {
@@ -7261,6 +7441,7 @@ function buildingLot(b, picked) {
     const img = M.buildingImg(b.id);
     const cls = [b.rank > 0 ? 'on' : '', !b.next.err ? 'ready' : '', b.rank === 0 && b.next.err === 'pending' ? 'locked' : '', picked ? 'pick' : '', img ? 'has-img' : ''];
     const lot = el('button', `cn-lot ${cls.filter(Boolean).join(' ')}`);
+    lot.dataset.building = b.id;   // 첫 장 메인미션 길 안내가 테두리를 세울 자리 (ADR-1378)
     // 변수에 담긴 상대 url() 은 **스타일시트(ui/) 기준**으로 풀린다 — 페이지 기준 절대 경로로 넘긴다
     if (img) lot.style.setProperty('--lot-img', `url("${new URL(img, location.href).href}")`);
     else lot.appendChild(el('div', 'rs-art', M.BUILDING_ART[b.id] ?? ''));   // 그림이 없는 건물 — 단색 실루엣
@@ -13197,9 +13378,8 @@ function startClocks() {
     for (const ev of ['pointerup', 'pointercancel', 'blur']) window.addEventListener(ev, () => { pointerHeld = false; }, true);
     // 브라우저 탭을 숨기고 돌아올 때 — 숨긴 탭의 시계는 앱 시계 하나다 (ADR-0102)
     document.addEventListener('visibilitychange', onVisibility);
-    // 플레이 기록 — 켠 횟수를 세고 · 모아서 올린다 · 닫힐 때 한 번 더 (SCREEN_DESIGN §2-1 · ADR-0633)
+    // 플레이 기록 — 켠 횟수를 세고 · 켤 때 · 닫힐 때 올린다 · 간격마다는 안 올린다 (SCREEN_DESIGN §2-1 · ADR-0633 · ADR-1377)
     trackSession();
-    setInterval(trackPush, TRACK_PUSH_MS);
     window.addEventListener('pagehide', event => {
         if (!event.persisted && state.screen === 'game') saveBeforeLeaving();
         trackPush();

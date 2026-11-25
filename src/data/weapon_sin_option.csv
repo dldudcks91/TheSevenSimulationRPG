@@ -1,6 +1,6 @@
 sin,option,applies_to,stat,scale,min,max,description_kr
-wrath,1,all,crit_damage,flat,0.04,0.09,분노 ① — 치명타 피해(낮은 값 · 치명 배수를 귀하게 둔다) ⚠제안 수치 (item_design §1 「무기 옵션 — 죄종 계열」 · 2026-10-04 · R206)
-wrath,2,all,crit_rate,flat,0.02,0.05,분노 ② — 치명타 확률 ⚠제안 수치
+wrath,1,all,crit_damage,flat,0.04,0.11,분노 ① — 치명타 피해(낮은 값 · 치명 배수를 귀하게 둔다) ⚠제안 수치 (item_design §1 「무기 옵션 — 죄종 계열」 · 2026-10-04 · R206) · Lv50 최고값 15% (2026-11-25 사용자 「치명타 피해 15%로하자 그러면 최대 치명타 확률은 10%로하고」 · 「일단 그렇게 바꾸자」 · R581 — 옛 max 0.09 = 13%)
+wrath,2,all,crit_rate,flat,0.02,0.07,분노 ② — 치명타 확률 ⚠제안 수치 · Lv50 최고값 10% (2026-11-25 · R581 — 옛 max 0.05 = 7%)
 wrath,3,physical,aspd_pct,flat,0.02,0.05,분노 ③(물리) — 공격 속도 · 옛 나태 ① 과 같은 대역 ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
 wrath,3,magic,cast_speed_pct,flat,0.02,0.05,분노 ③(마법) — 캐스팅 속도 · 옛 나태 ① 과 같은 대역 ⚠제안 수치 (2026-11-11 사용자 「일단 무기옵션 다시 이걸로확정해봐」 · R442 · item_design §1)
 sloth,1,physical,proc_hit_attack,level,1,5,나태 ①(물리) — 타격 시 기본 공격 스킬 발동 · 굴리는 값 = 발동 스킬 레벨(단어 범위 · 위끝 5 = 광란 위끝 → 분노 Lv5~7) · 확률은 고정 [balance.csv:proc_hit_attack_chance] · 스킬 = 그 무기군 직업의 1티어 공격 스킬 하나(드롭 때 박힌다) (2026-11-24 사용자 「레벨을 분노기준 5~7로해봐」 · R567 · item_design §1) · min 은 안 쓴다(단어 범위)

@@ -237,7 +237,21 @@ export function createItemSystem(data) {
     //   갑옷 나태 ② · 투구 나태 ① · 신발 폭식 ① 은 2026-11-11 사용자가 채웠다(R444 · R447 · R451)
     //   **마법 무기 색욕 ③** [2026-11-11 · 사용자 「최소데미지/최대데미지 삭제」 · R442] — 무기는 피해 종류까지 키에 든다(`weapon/magic:…`)
     //   **물리 무기 시기 ②** [2026-11-17 · 사용자 「아이템에 관통, 스킬에 감소」 · R531] — 방어력 감소 겹을 걷은 자리 · 이미 가진 무기의 그 줄은 그대로 읽는다(`skill_effects.weaponOnHit`)
-    const EMPTY_CELLS = new Set(['ring:gluttony:3', 'weapon/magic:lust:3', 'weapon/physical:envy:2']);
+    //   **갑옷 시기 ① ② · 투구 시기 ② · 신발 시기 ①** [2026-11-25 · 사용자 「반격과 반사를 모든 장비에서 뺴고 유저 스탯에서도 뺴버리자」 · 「일단비워둬」 · R585] — 반격 · 반사를 걷은 자리
+    //     이미 가진 장비의 그 줄은 불러올 때 지운다(`stripRetired`)
+    const EMPTY_CELLS = new Set(['ring:gluttony:3', 'weapon/magic:lust:3', 'weapon/physical:envy:2',
+        'armor:envy:1', 'armor:envy:2', 'helmet:envy:2', 'boots:envy:1']);
+    /**
+     * **걷은 옵션 stat** [2026-11-25 · R585 · INTERFACE §2-5 · §4] — 어느 표에도 없고 전투 · 시트가 읽지 않는다. 이미 가진 장비의 그 줄은 불러올 때 지운다(`stripRetired`)
+     */
+    const RETIRED_STATS = new Set(['counter_chance', 'reflect_damage']);
+    /** 걷은 stat 의 줄을 지운다 — **아이템을 고친다**(제자리) · 지운 줄 수를 돌려준다 · 이름 · 죄종 · 단어 · 다른 줄은 그대로 · 멱등 · rng 0 */
+    function stripRetired(item) {
+        if (!item || !Array.isArray(item.affixes)) return 0;
+        const n = item.affixes.length;
+        item.affixes = item.affixes.filter(a => !RETIRED_STATS.has(a?.stat));
+        return n - item.affixes.length;
+    }
     /**
      * **가죽 장갑 시기는 특성이 정한다** [2026-11-17 · 사용자 「장갑에 공속 붙으면 방어력…, 캐스팅속도 붙으면 원소…」 · R531 · item_design §1 「10-21 방어구 개정」 · INTERFACE §5-3] —
      *   갈래 특성 stat → 시기 칸에 남기는 변형. 표에 없는 특성(건틀릿 피해 감소 · 특성 없음)은 거르지 않는다(다섯 그대로) ·
@@ -405,9 +419,7 @@ export function createItemSystem(data) {
             if (isProc(r.stat) && !PROC_POOL[r.stat]) throw new Error(`item: armor_sin_option 발동 '${r.stat}' 의 풀이 없다 (PROC_POOL)`);
             checkLevelRow(r, 'armor_sin_option');
             if (r.stat === SKILL_PLUS) throw new Error(`item: armor_sin_option ${r.slot} ${r.sin} 의 ${SKILL_PLUS} — 2026-10-21 장비에서 뺐다(R303)`);
-            // 반격은 반격을 부른다(평타와 같은 규칙 · INTERFACE §2-6) — 한 출처가 1 이면 양쪽이 끝없이 되받아 친다.
-            //   죄종 줄의 위끝은 표 위끝 × 맨 위 단의 비율이다(단어 범위 · R436) — 그 값이 1 미만이어야 한다
-            if (r.stat === 'counter_chance' && !(r.max * TOP_BAND < 1)) throw new Error(`item: armor_sin_option counter_chance max ${r.max} × 맨 위 단 ${TOP_BAND} — 1 미만이어야 한다`);
+            if (RETIRED_STATS.has(r.stat)) throw new Error(`item: armor_sin_option ${r.slot} ${r.sin} 의 ${r.stat} — 2026-11-25 장비에서 뺐다(R585)`);
         }
         for (const slot of ARMOR_SLOTS) {
             for (const sin of data.sins) {
@@ -1415,6 +1427,6 @@ export function createItemSystem(data) {
         return item;
     }
 
-    return { fillZh, rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBasesAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, wordRanks, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgradeRisk, upgrade, downgrade, effective, weaponDamage, weaponDamageFixed, weaponBasePreview, armorBasePreview, sinOptionTable, implicitFixed, optionSources, optionRange, optionTableRange, optionScore, autoEquipScore, skillPlusOf, procSkillLevel,
+    return { fillZh, stripRetired, retiredStats: [...RETIRED_STATS], rarities: RARITIES, rollDrop, rollGear, basesAt, weaponBasesAt, startingWeapon, startingArmor, pctStat, reqLevel, canEquip, groupOf, fitsClass, groupsFor, salvageDust, salvageMatUnits, hasBase, hasNormal, baseRoll, baseMax, wordRanks, upgradeMax, upgradeable, upgradeCost, upgradeChance, upgradeRisk, upgrade, downgrade, effective, weaponDamage, weaponDamageFixed, weaponBasePreview, armorBasePreview, sinOptionTable, implicitFixed, optionSources, optionRange, optionTableRange, optionScore, autoEquipScore, skillPlusOf, procSkillLevel,
         enchantable, enchantCost, enchantCount, enchantOption };
 }

@@ -7,6 +7,8 @@ import { bindTipNode } from './tip.js';
 
 const BUBBLE_MS = 3000;
 const RING_MS = 650;
+// One swing of the tutorial sign — set inline so a repaint can resume the swing where it was (ADR-1381)
+const SWING_MS = 3200;
 // Card places always laid in the list — the body height is fixed like the bell's (ADR-0984 · ADR-0988).
 const SLOTS = 3;
 const node = (tag, cls, text) => {
@@ -20,8 +22,9 @@ const node = (tag, cls, text) => {
  * read()  → `{owner, model: mainMissionState, fresh: [id]}` or null (not in a game)
  * label(m) → mission name · rewards(reward) → DOM node · claim(id) · claimAll(ids) · navigate(m) — the caller renders after each
  * readSeen(owner) → next-mission id last seen in the panel, or null · writeSeen(owner, id) — browser-only, not the game save (ADR-1245)
+ * tutorial(m) → true when the next mission is a chapter-1 tutorial line — a sign hangs under the icon and pressing it acts like Go To (ADR-1381)
  */
-export function createMainMission({ read, label, rewards, claim, claimAll, navigate, hideTip, readSeen, writeSeen }) {
+export function createMainMission({ read, label, rewards, claim, claimAll, navigate, hideTip, readSeen, writeSeen, tutorial }) {
     let owner = null, model = null, signature = '', host = null;
     let open = false, restoreFocus = null, scroll = 0, seen = null;
     let bubble = '', bubbleUntil = 0, bubbleTimer = null, ringAt = 0;
@@ -144,6 +147,18 @@ export function createMainMission({ read, label, rewards, claim, claimAll, navig
             const note = node('div', 'notification-bubble', bubble);
             note.setAttribute('role', 'status');
             host.appendChild(note);
+        } else if (!open && model.current && tutorial?.(model.current)) {
+            // Chapter-1 tutorial sign — hangs under the icon while the next mission is a tutorial line · not while the panel or the bubble is up
+            const next = model.current, sign = node('div', 'mission-tut');
+            const plate = node('button', 'mission-tut-card');
+            plate.dataset.missionAction = `tut:${next.id}`;
+            plate.append(node('span', 'mission-tut-cap', t('mm.tut')), node('span', 'mission-tut-name', label(next)));
+            plate.style.animationDuration = `${SWING_MS}ms`;
+            plate.style.animationDelay = `-${Date.now() % SWING_MS}ms`;   // a repaint keeps the swing going instead of restarting it
+            const signOwner = owner;
+            plate.onclick = () => { if (owner === signOwner) { hideTip(); navigate(next); } };
+            sign.appendChild(plate);
+            host.appendChild(sign);
         }
         const panel = node('div', 'notification-panel mission-panel');
         panel.id = 'mission-panel'; panel.hidden = !open;

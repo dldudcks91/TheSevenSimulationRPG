@@ -598,6 +598,7 @@ export const eliteName = (sin, baseId) => NAMING.eliteName(sin, monsterName(base
 /**
  * 시스템 조립 — 테스트 페이지도 같은 조립을 쓴다 (데이터만 바꿔 끼울 수 있다)
  * `dev.openAll` — 관리자 모드 스위치 `() → bool`(개발 장치 · SCREEN_DESIGN §10-3). 게임만 넘기고 테스트는 안 넘긴다(늘 꺼짐)
+ * `dev.seedOf` — 굴림 시드 공급자 `(state, salt, no) → uint32`(INTERFACE §5-1 「시드 공급자」 · R580). 온라인 모드 서버만 넘긴다 — 게임 · 테스트 조립은 안 넘긴다(세이브 시드 식)
  */
 export function buildSystems(d, dev = {}) {
     const sins = Object.keys(M.SINS);
@@ -768,6 +769,7 @@ export function buildSystems(d, dev = {}) {
         // 전직 — 갈래 표. 갈래의 스킬은 `skill.csv` 의 `owner_kind=advance` 행이다 (skill_design §4 · R16)
         advances: d.advanceRows ?? [],
         openAll: dev.openAll,   // 관리자 모드 — 켜져 있으면 모든 건물을 최대 랭크로 센다(INTERFACE §2-7)
+        seedOf: dev.seedOf,     // 굴림 시드 공급자 — 온라인 모드 서버만 넘긴다 · 없으면 세이브 시드 식(INTERFACE §5-1 「시드 공급자」 · R580)
     });
     // formula 도 함께 내보낸다 — 화면의 감쇠율 표기가 시뮬과 같은 곡선을 쓰게 (battle_design §9-8)
     // naming 도 내보낸다 — 이름 규칙(`sinPhrase` · `wordCount`)을 단정이 읽고, 화면이 단어를 따로 다룰 때도 여기서 받는다 (2026-09-19)

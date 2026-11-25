@@ -40,6 +40,15 @@ export function writeQuickSalvage(on) {
     try { localStorage.setItem(QUICK_SALVAGE_KEY, on ? 'on' : 'off'); } catch {}
 }
 
+/** 바로가기 어둡게 — 첫 장 메인미션 [바로가기]의 탭 단계에서 화면을 어둡게 하나(SCREEN_DESIGN §2-2 · ADR-1378) · 기본 On · 세이브와 무관한 보기 설정 */
+const MISSION_DIM_KEY = 'thesevensim.missionDim';
+export function loadMissionDim() {
+    try { return localStorage.getItem(MISSION_DIM_KEY) !== 'off'; } catch { return true; }
+}
+export function writeMissionDim(on) {
+    try { localStorage.setItem(MISSION_DIM_KEY, on ? 'on' : 'off'); } catch {}
+}
+
 export function loadSave() {
     try {
         const raw = localStorage.getItem(KEY);

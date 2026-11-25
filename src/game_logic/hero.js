@@ -146,10 +146,10 @@ export function createHeroSystem(data) {
     const SIN_GEAR = 'sin_gear';
     // `cond` = 전투가 판정하는 조건 [2026-10-05 · INTERFACE §2-6 「마스터리 조건부」 · **2026-11-13 R468 — 죄종마다 조건 하나 · 랭크가 조건을 넓힌다** · PLAN_mastery_tiers §0-1].
     //   견주는 상대 — 때리는 쪽 능력치(치명 · 치명 피해 · 방어 무시 · 데미지 % · 최대 데미지 · 강타 · 흡혈)는 그 타격의 대상 ·
-    //   맞는 쪽 능력치(피해 감소 · 모든 저항 · 고정 피해 감소 · 타격 회복 · 반사)는 때린 쪽 · 틱 능력치(쿨감 · HP 재생)는 마지막으로 친 적(battle.js `lastFoe`) —
-    //   여섯 조건 모두 모든 능력치를 쓴다
+    //   맞는 쪽 능력치(피해 감소 · 모든 저항 · 고정 피해 감소 · 타격 회복)는 때린 쪽 · 틱 능력치(쿨감 · HP 재생)는 마지막으로 친 적(battle.js `lastFoe`) —
+    //   여섯 조건 모두 모든 능력치를 쓴다 · ~~반사~~ 2026-11-25 R585 걷음(영웅 능력치에서 반격 · 반사를 뺐다)
     const COND_ALL = ['crit_rate', 'crit_damage', 'def_ignore', 'atk_pct', 'dmg_max_flat', 'crushing_blow_pct', 'life_steal',
-        'damage_reduction', 'res_all', 'dr_flat', 'fhr', 'reflect_damage', 'cooldown_reduction', 'hp_regen'];
+        'damage_reduction', 'res_all', 'dr_flat', 'fhr', 'cooldown_reduction', 'hp_regen'];
     // **랭크가 조건을 넓힌다 · 값은 랭크와 상관없이 하나**(`value` 그대로) [2026-11-13 사용자 「ㅇㅇ그렇게가보자」 · R468 — 옛 풀려난 분노 · 손짓(R343)의 문법을 여섯 조건 전부에].
     //   분노 `hurt` = 내 HP 비율이 문턱 **미만**(랭크마다 +) · 시기 `higher` = 상대 HP 비율이 나보다 문턱 이상 높다(랭크마다 − · 0 이면 높기만 하면) ·
     //   오만 `lower` = 상대 HP 비율이 나보다 문턱 이상 낮다(거울) · 색욕 `fresh` = 상대 HP 비율이 문턱 **이상**(1 = 가득 · 랭크마다 −) ·
@@ -985,7 +985,6 @@ export function createHeroSystem(data) {
             vsDr: { normal: f('vs_normal_dr'), demon: f('vs_demon_dr'), undead: f('vs_undead_dr') },
             vsEliteDr: f('vs_elite_dr'), vsFrontDr: f('vs_front_dr'), vsBackDr: f('vs_back_dr'),
             drFlat: f('dr_flat'),                // 절대값 피해 감소 — 모든 감소 뒤에 뺀다(formula.strike)
-            counter: f('counter_chance'),        // 반격 확률 — 맞으면 때린 적에게 덤 기본 공격 1회 · 차례는 안 쓴다 · 반격을 부르지 않는다(battle.strikeOnce · 2026-11-02 R426)
             recv: f('hp_recovery_pct'),          // 체력 회복 +% — 재생 · 회복 스킬 · 흡혈 · 물약 · 처치 시 회복에 곱한다(보호막 제외)
             killHeal: f('kill_heal_pct'),        // 처치 시 체력 회복 — 처치마다 제 최대 HP × 값(battle.killHeal · 투구 · 장갑 색욕 ① · 2026-10-21 R299)
             startGauge: f('start_gauge_pct'),    // 전투 시작 시 행동 게이지 +% — 빈 게이지를 그만큼 채운 채 세운다 · 원정은 라운드마다(battle.primeGauge · 가죽 신발 특성 · R303)
@@ -1018,7 +1017,7 @@ export function createHeroSystem(data) {
         };
         const anyFx = Object.values(procs).some(rows => rows.length) || Object.keys(skillTags).length > 0 || [...Object.values(fx.vs), ...Object.values(fx.ele), fx.vsElite, fx.vsFront, fx.vsBack,
             fx.defDown, fx.resDown, fx.atkDownPhys, fx.atkDownMag, fx.crush, fx.magicFind,
-            ...Object.values(fx.vsDr), fx.vsEliteDr, fx.vsFrontDr, fx.vsBackDr, fx.drFlat, fx.counter, fx.recv, fx.killHeal, fx.startGauge, fx.cullNormal, fx.xpGain,
+            ...Object.values(fx.vsDr), fx.vsEliteDr, fx.vsFrontDr, fx.vsBackDr, fx.drFlat, fx.recv, fx.killHeal, fx.startGauge, fx.cullNormal, fx.xpGain,
             fx.freezeDur, fx.poisonDur, fx.burnDur, fx.stunDur, fx.buffDur, fx.hitBonus,
             fx.defStack, ...Object.values(fx.resStack), fx.resStackAll, fx.staggerDur, fx.castRefund, fx.castStack, fx.statusDur, fx.debuffDur, fx.healOut, fx.potion, fx.coolMinus].some(v => v !== 0);
         return {
@@ -1043,7 +1042,7 @@ export function createHeroSystem(data) {
             // 원소별 저항 무시 [2026-09-21 · 반지 시기 칸 · R127] — **그 원소의 타격에만** `res_reduction` 위에 더한다(formula.strike). 시트 행이 아니다(`res_max_el` 과 같은 자리)
             res_reduction_el: Object.fromEntries(ELEMENTS.map(e => [e, f(`res_reduction_${e}`)])),
             def_ignore: f('def_ignore'),
-            reflect_damage: f('reflect_damage'),
+            // ~~reflect_damage~~ — 2026-11-25 R585 걷음(장비 반사 · 영웅 능력치 반사가 없다 · 스킬 반사 창은 battle.js)
             // 원천별 곱의 실효값(비율) — 옛 %(소수 3자리)와 같은 정밀도라 5자리다
             damage_reduction: Number((1 - F.reductionMult(drList)).toFixed(5)),
             crit_rate: B.base_crit_pct + f('crit_rate'),

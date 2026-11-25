@@ -493,7 +493,6 @@ const FX_ROWS = [
     { id: 'fx_dr_type', fmt: 'pct', name: () => t('st.fx.drType'), parts: x => typeParts(x?.vsDr) },
     { id: 'fx_dr_target', fmt: 'pct', name: () => t('st.fx.drTarget'),
         parts: x => [[t('kind.elite'), x?.vsEliteDr ?? 0], [t('exp.form.front'), x?.vsFrontDr ?? 0], [t('exp.form.back'), x?.vsBackDr ?? 0]] },
-    { id: 'fx_counter', fmt: 'pct', name: () => L(M.AFFIX_LABELS.counter_chance), parts: x => one(x?.counter) },
     { id: 'fx_recv', fmt: 'pct', name: () => L(M.AFFIX_LABELS.hp_recovery_pct), parts: x => one(x?.recv) },
     { id: 'fx_buff_dur', fmt: 'pct', name: () => L(M.AFFIX_LABELS.buff_dur_pct), parts: x => one(x?.buffDur) },
     { id: 'fx_magic_find', fmt: 'pct', name: () => L(M.AFFIX_LABELS.magic_find), parts: x => one(x?.magicFind) },
@@ -520,7 +519,7 @@ const DETAIL_LAYOUT = [
     [
         // ~~최대 저항 증가~~ 줄은 걷었다 — 그 값은 저항 4행의 「상한」이 든다 [2026-09-28 사용자 지시]
         ['fx_vs_type', 'fx_dr_type', 'fx_vs_target', 'fx_dr_target'],   // 대상
-        ['fx_crush', 'fx_hit', 'fx_counter', 'reflect_damage'],         // 발동 · 반응 — 강타 · 명중률을 반격 · 반사와 붙였다 [2026-09-28 사용자 지시]
+        ['fx_crush', 'fx_hit'],                                         // 발동 — 강타 · 명중률 [2026-09-28 사용자 지시 · ~~반격 · 반사~~ 2026-11-25 R585 걷음]
         ['life_steal', 'hp_regen', 'fx_recv', 'fx_buff_dur', 'debuff_dur_reduction'], // 회복 · 지속 — 상태이상 · 디버프 시간 감소는 2에 둔다 (ADR-1009)
         ['fx_magic_find', 'gold_find', 'fx_xp'],                       // 파밍 — 드랍률 줄은 걷는다 (ADR-1009)
     ],

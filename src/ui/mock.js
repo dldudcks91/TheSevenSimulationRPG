@@ -119,7 +119,7 @@ export const AFFIX_LABELS = {
     cast_speed_pct: { ko: '캐스팅 속도', en: 'Casting Speed', zh: '施法速度', fmt: 'pct' },   // 마법 무기 유닛의 주기만 줄인다 — 공격 속도와 별개 옵션 (R203 · battle_design §2)
     life_steal: { ko: '흡혈', en: 'Life Steal', zh: '吸血', fmt: 'pct' },
     def_ignore: { ko: '방어력 관통', en: 'Defense Penetration', zh: '防御穿透', fmt: 'pct' },   // 이름 2026-11-17 R531 — 내 타격만 뚫는 줄 = 관통 · 대상에게 거는 디버프 = 감소
-    reflect_damage: { ko: '반사 피해', en: 'Reflect Damage', zh: '伤害反射', fmt: 'pct' },
+    reflect_damage: { ko: '반사 피해', en: 'Reflect Damage', zh: '伤害反射', fmt: 'pct' },   // 걷은 stat(2026-11-25 R585) — 정리 전 옛 줄(남의 결투 팀 등)의 표기용
     damage_reduction: { ko: '피해 감소', en: 'Damage Reduction', zh: '伤害减免', fmt: 'pct' },
     gold_find: { ko: '파티 골드 획득', en: 'Party Gold Find', zh: '队伍金币获取', fmt: 'pct' },
     item_find: { ko: '드랍률', en: 'Item Find', zh: '掉落率', fmt: 'pct' },
@@ -156,7 +156,7 @@ export const AFFIX_LABELS = {
     def_per_level: { ko: '레벨당 물리 방어', en: 'Physical Defense per Level', zh: '每级物理防御', fmt: 'n' },
     hp_per_level: { ko: '레벨당 최대 HP', en: 'Max HP per Level', zh: '每级最大生命', fmt: 'n' },
     aspd_per_level_pct: { ko: '레벨당 공격 속도', en: 'Attack Speed per Level', zh: '每级攻击速度', fmt: 'pct' },
-    counter_chance: { ko: '반격 확률', en: 'Counter Chance', zh: '反击几率', fmt: 'pct' },
+    counter_chance: { ko: '반격 확률', en: 'Counter Chance', zh: '反击几率', fmt: 'pct' },   // 걷은 stat(2026-11-25 R585) — 정리 전 옛 줄(남의 결투 팀 등)의 표기용
     res_max_fire: { ko: '최대 화염 저항', en: 'Max Fire Resist', zh: '最大火焰抗性', fmt: 'pct' },
     res_max_cold: { ko: '최대 냉기 저항', en: 'Max Cold Resist', zh: '最大冰霜抗性', fmt: 'pct' },
     res_max_lightning: { ko: '최대 전기 저항', en: 'Max Lightning Resist', zh: '最大闪电抗性', fmt: 'pct' },

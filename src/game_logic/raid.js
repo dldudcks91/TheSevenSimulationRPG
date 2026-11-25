@@ -119,7 +119,7 @@ export function createRaidSystem({ battle, arena, game, monsters = {}, chapters 
             atk_pct_sum: 0, main_attr_mult: 1, attack_type: 'physical', basic_attack: true,
             action_period: d.gap_sec, res_fire: d.resist, res_cold: d.resist, res_lightning: d.resist, res_poison: d.resist,
             damage_reduction: 0, res_max_bonus: 0, res_max_el: null, crit_rate: 0, crit_damage: 1,
-            life_steal: 0, reflect_damage: 0, def_ignore: 0, res_reduction: 0, res_reduction_el: null,
+            life_steal: 0, def_ignore: 0, res_reduction: 0, res_reduction_el: null,
             dmg_bonus_pct: 0, cooldown_reduction: 0, option_fx: null, mastery_cond: null, find_own: null, find_party: null };
         const bossInput = { uid: 'raid-boss', combat, stats: null, actives: [], rank: 0 };
         let ctx = null, pending = null, phase = 1, turn = 0, nextAt = d.opening_sec, exposedUntil = 0, cursor = 0, hpBefore = d.hp;

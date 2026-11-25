@@ -599,6 +599,27 @@ const STRINGS = {
     'mm.c.count.upgrade': { ko: '장비 강화하기', en: 'Upgrade a piece of gear', zh: '强化装备' },
     'mm.c.count.gamble': { ko: '도박장 한 판', en: 'Play a round at the Gambling Den', zh: '在赌坊玩一局' },
     'mm.c.count.explore': { ko: '탐험 보내기', en: 'Send an exploration', zh: '派出探险' },
+    'mm.c.count.tactic': { ko: '전술 리롤', en: 'Reroll tactics' },   // 1장 「처음 한 번」 줄 (2026-11-25 · R583)
+    'mm.c.event.mastery': { ko: '스킬 포인트 찍기', en: 'Spend a skill point' },
+    'mm.c.event.take': { ko: '의뢰 받기', en: 'Take a commission' },
+    'mm.c.event.sell': { ko: '장비 판매하기', en: 'Sell a piece of gear' },
+    'mm.c.event.potion': { ko: '물약 구매하기', en: 'Buy a potion' },
+    'mm.c.event.salvage': { ko: '장비 분해하기', en: 'Salvage a piece of gear' },
+    // 1장 튜토리얼 — 두루마리 아래 팻말 머리 · 길 안내 단계마다 설명 말풍선 `mm.tut.<미션>.<단계>` (2026-11-25 · SCREEN_DESIGN §2 「메인미션」 · ADR-1381 · `app.js:MM_TUTORIAL`)
+    'mm.tut': { ko: '튜토리얼', en: 'Tutorial' },
+    'mm.tut.c1_depart.tab': { ko: '원정은 파티를 장소에 보내 싸우게 하는 곳입니다. 전투는 알아서 진행되고, 주운 장비와 재료는 인벤토리에 쌓입니다.', en: 'Expeditions send your party out to fight. Battles play out on their own, and the gear and materials they find pile up in your inventory.' },
+    'mm.tut.c1_depart.place': { ko: '싸울 장소를 고릅니다. 장소마다 칸이 이어져 있어 이기면 다음 칸으로 넘어가고, 마지막 칸에서는 그 장소의 보스가 기다립니다.', en: "Pick a place to fight. Each place is a run of cells: win and you move on to the next, with the place's boss waiting in the last one." },
+    'mm.tut.c1_depart.send': { ko: '보내면 파티가 알아서 싸웁니다. 원정은 게임이 켜져 있는 동안에만 진행됩니다. 꺼 둔 동안에는 연구소가 일합니다.', en: 'Once sent, the party fights on its own. Expeditions only run while the game is open; while it is closed, the Laboratory does the work.' },
+    'mm.tut.c1_storage.tab': { ko: '건설은 골드로 건물을 짓는 곳입니다. 건물을 지으면 잠겨 있던 기능이 하나씩 열립니다.', en: 'Construction is where you spend gold on buildings. Each new building unlocks something that was locked.' },
+    'mm.tut.c1_storage.lot': { ko: '건물을 고르면 오른쪽에 그 건물이 여는 기능이 나옵니다. 창고를 지으면 연구소의 자원 줄이 열립니다.', en: "Select a building to see what it unlocks on the right. Building the Storage opens the Laboratory's Resources line." },
+    'mm.tut.c1_storage.build': { ko: '창고를 지으면 연구소의 자원 줄이 열리고, 자원 줄은 게임을 꺼 둔 동안에도 재료를 모읍니다. 비용을 내면 바로 지어집니다.', en: "Building the Storage opens the Laboratory's Resources line, which keeps gathering materials even while the game is closed. Pay the cost and it is built at once." },
+    'mm.tut.c1_reg.tab': { ko: '연구소는 게임을 꺼 둔 동안에도 일하는 곳입니다. 줄마다 영웅을 등록해야 그 줄이 돌아갑니다.', en: 'The Laboratory keeps working while the game is closed. A line only runs once a hero is registered to it.' },
+    'mm.tut.c1_reg.line': { ko: '빈 칸을 눌러 자원 줄에서 일할 영웅을 고릅니다.', en: 'Click the empty slot to choose a hero for the Resources line.' },
+    'mm.tut.c1_reg.hero': { ko: '등록한 영웅도 원정에는 그대로 나갈 수 있습니다. 자원 줄은 영웅이 많을수록, 힘이 높을수록 빨리 모입니다.', en: 'Registered heroes can still go on expeditions. The Resources line gathers faster with more heroes and higher Strength.' },
+    'mm.tut.c1_reg.apply': { ko: '적용하면 등록이 끝나고 줄이 돌기 시작합니다. 꺼 둔 동안 모인 재료는 다시 접속하면 들어와 있습니다.', en: 'Apply to register, and the line starts running. Materials gathered while you are away will be waiting when you return.' },
+    'mm.tut.c1_research.tab': { ko: '연구소의 지점을 연구하면 줄이 더 잘 돌아갑니다.', en: "Researching the Laboratory's nodes makes its lines work better." },
+    'mm.tut.c1_research.node': { ko: '지점마다 하는 일이 다릅니다. 레벨을 올리면 재료가 더 많이 모이거나, 꺼 둔 시간을 더 길게 쳐 줍니다.', en: 'Each node does something different: higher levels gather more materials, or count more of the time you are away.' },
+    'mm.tut.c1_research.go': { ko: '연구에는 골드와 재료, 그리고 시간이 듭니다. 연구가 끝나면 지점 레벨이 오릅니다.', en: 'Research costs gold, materials and time. When it finishes, the node gains a level.' },
     'mm.c.event.hire': { ko: '영웅 고용하기', en: 'Hire a hero', zh: '雇佣英雄' },
     'mm.c.event.book': { ko: '스킬북 배우기', en: 'Learn from a skill book', zh: '学习技能书' },
     'mm.c.event.equip': { ko: '장비 장착하기', en: 'Equip a piece of gear', zh: '穿戴装备' },
@@ -1002,7 +1023,8 @@ const STRINGS = {
     'set.acctNew': { ko: '계정 만들기', en: 'Create Account' },
     'set.acctOut': { ko: '로그아웃', en: 'Log Out' },
     'set.acctOutConfirm': { ko: '세이브를 지우고 로그아웃 — 한 번 더', en: 'Delete save & log out — click again' },   // 퍼널 페이지가 유저를 알아보는 이름 — 게임 안엔 안 찍힌다 (§2-1 · ADR-0633)
-    'set.rclickSalvage': { ko: '우클릭 분해', en: 'Right-click Salvage', zh: '右键分解' },   // 켜면 보관 칸 장비 우클릭 = 바로 분해 · 메뉴는 Shift+우클릭 (2026-11-15 · §2-2 · ADR-1188)
+    'set.rclickSalvage': { ko: '우클릭 분해', en: 'Right-click Salvage', zh: '右键分解' },
+    'set.mmDim': { ko: '바로가기 어둡게', en: 'Dim on Go To' },   // 첫 장 메인미션 [바로가기]의 탭 단계에서 화면을 어둡게 (2026-11-25 · §2-2 · ADR-1378)   // 켜면 보관 칸 장비 우클릭 = 바로 분해 · 메뉴는 Shift+우클릭 (2026-11-15 · §2-2 · ADR-1188)
 
     /* ── 연구소 탭(옛 자원 탭 · 키 `dp.*` 는 옛 이름 그대로) — 줄은 넷: 자원 · 수색 · 훈련 · 도박장 (SCREEN_DESIGN §8) ──
        채광 · 채집 · 벌목은 「자원」 줄의 지점이다(`dp.node.mine` · `gather` · `log` — 2026-10-25 · ADR-0788 · R356) · `dp.post.mine` · `gather` · `log` 는 미니게임 창 제목이 쓴다.
@@ -1951,9 +1973,9 @@ const STRINGS = {
         zh: '初期扩建城镇的顺序',
     },
     'help.research.first_steps.body': {
-        ko: "초반 첫 건설은 <b>선술집 → 상단 → 대장간 → 창고 → 지휘 천막</b> 순서로 열립니다. 앞 건물을 지으면 다음 건물의 건설 조건이 갖춰집니다. 필요한 골드는 원정을 진행하고 의뢰를 수령해 마련할 수 있습니다.<br><br>선술집은 <b>의뢰 게시판을 먼저</b> 열며, 고용은 이후 랭크에서 열립니다. 창고를 지으면 연구소의 <b>자원 자동 생산</b>이 시작되고, 지휘 천막을 지으면 편성의 <b>첫 파티 전술 칸</b>이 열립니다. 인벤토리와 공용 창고 칸은 건설 전에도 사용할 수 있습니다.",
-        en: "The first buildings unlock in this order: <b>Tavern → Trading House → Blacksmith → Storage → Command Tent</b>. Each building satisfies the requirement for the next one. Expeditions and claimed commissions provide gold for construction.<br><br>The Tavern opens its <b>commission board first</b>; hiring unlocks at a later rank. Building Storage starts the Laboratory's <b>automatic material production</b>. Building the Command Tent opens the <b>first Party tactic slot</b>. Inventory and shared stash spaces can be used before Storage is built.",
-        zh: '初期的首次建设按<b>酒馆 → 商会 → 铁匠铺 → 仓库 → 指挥营帐</b>的顺序开放。建好前一座建筑，就满足下一座建筑的建设条件。所需金币可以通过推进远征和领取委托奖励来筹集。<br><br>酒馆会<b>先开放委托告示板</b>，雇佣在之后的阶开放。建好仓库后，研究所的<b>资源自动生产</b>就会开始；建好指挥营帐后，编队的<b>第一个队伍战术格</b>就会开放。背包与共用仓库的格子在建设前也可以使用。',
+        ko: "초반 첫 건설은 두 줄로 열립니다. <b>창고 → 지휘 천막</b>과 <b>선술집 → 상단 → 대장간</b>이며, 창고와 선술집은 처음부터 지을 수 있습니다. 앞 건물을 지으면 같은 줄 다음 건물의 건설 조건이 갖춰집니다. 필요한 골드는 원정을 진행하고 의뢰를 수령해 마련할 수 있습니다.<br><br>선술집은 <b>의뢰 게시판을 먼저</b> 열며, 고용은 이후 랭크에서 열립니다. 창고를 지으면 연구소의 <b>자원 자동 생산</b>이 시작되고, 지휘 천막을 지으면 편성의 <b>첫 파티 전술 칸</b>이 열립니다. 인벤토리와 공용 창고 칸은 건설 전에도 사용할 수 있습니다.",
+        en: "The first buildings unlock along two paths: <b>Storage → Command Tent</b> and <b>Tavern → Trading House → Blacksmith</b>. Storage and Tavern can be built from the start, and each building satisfies the requirement for the next one on its path. Expeditions and claimed commissions provide gold for construction.<br><br>The Tavern opens its <b>commission board first</b>; hiring unlocks at a later rank. Building Storage starts the Laboratory's <b>automatic material production</b>. Building the Command Tent opens the <b>first Party tactic slot</b>. Inventory and shared stash spaces can be used before Storage is built.",
+        zh: '初期的首次建设分两条线开放：<b>仓库 → 指挥营帐</b>与<b>酒馆 → 商会 → 铁匠铺</b>。仓库和酒馆从一开始就能建造，建好前一座建筑，就满足同一条线上下一座建筑的建设条件。所需金币可以通过推进远征和领取委托奖励来筹集。<br><br>酒馆会<b>先开放委托告示板</b>，雇佣在之后的阶开放。建好仓库后，研究所的<b>资源自动生产</b>就会开始；建好指挥营帐后，编队的<b>第一个队伍战术格</b>就会开放。背包与共用仓库的格子在建设前也可以使用。',
     },
     'help.research.requirements.title': {
         ko: "건설 조건과 지불",
@@ -2856,7 +2878,6 @@ const STRINGS = {
     'st.desc.fx_crush': { ko: '맞힐 때 대상의 현재 HP 에 비례한 피해 추가', en: "Hits add damage based on the target's current HP", zh: '命中时追加与目标当前生命成比例的伤害' },
     'st.desc.fx_hit': { ko: '공격이 맞을 확률 증가', en: 'Raises the chance for attacks to hit', zh: '提高攻击命中的几率' },
     'st.desc.fx_counter': { ko: '맞으면 이 확률로 때린 적에게 기본 공격으로 반격', en: 'Chance to strike back with a basic attack when hit', zh: '被击中时有此几率以普通攻击反击攻击者' },
-    'st.desc.reflect_damage': { ko: '받은 피해의 이 % 를 때린 적에게 반사', en: 'Returns this % of damage taken to the attacker', zh: '将受到伤害的此%反射给攻击者' },
     'st.desc.life_steal': { ko: '준 피해의 이 % 만큼 HP 회복', en: 'Heals for this % of damage dealt', zh: '按造成伤害的此%恢复生命' },
     'st.desc.hp_regen': { ko: '초마다 HP 를 이만큼 회복', en: 'Restores this much HP every second', zh: '每秒恢复此数值的生命' },
     'st.desc.fx_recv': { ko: '받는 회복량 증가', en: 'Increases healing received', zh: '提高受到的治疗量' },
@@ -3424,7 +3445,6 @@ const STRINGS = {
     'sk.masteryEffect.atk_pct_per_greed': { ko: '이 영웅의 파티 골드 획득 · 드랍률 · 파티 매직아이템 획득확률 합의 {v}만큼 데미지 증가', en: 'Damage increases by {v} of your contributions to Party Gold Find, Item Find and Party Magic Find', zh: '按该英雄贡献的队伍金币获取、掉落率和队伍魔法物品获取率之和的{v}提高伤害' },
     'sk.masteryEffect.hp_pct_per_greed': { ko: '이 영웅의 파티 골드 획득 · 드랍률 · 파티 매직아이템 획득확률 합의 {v}만큼 최대 HP 증가', en: 'Max HP increases by {v} of your contributions to Party Gold Find, Item Find and Party Magic Find', zh: '按该英雄贡献的队伍金币获取、掉落率和队伍魔法物品获取率之和的{v}提高最大生命' },
     'sk.masteryEffect.cdr_per_greed': { ko: '이 영웅의 파티 골드 획득 · 드랍률 · 파티 매직아이템 획득확률 합의 {v}만큼 쿨타임 감소', en: 'Cooldowns are reduced by {v} of your contributions to Party Gold Find, Item Find and Party Magic Find', zh: '按该英雄贡献的队伍金币获取、掉落率和队伍魔法物品获取率之和的{v}缩短冷却' },
-    'sk.masteryEffect.reflect_damage': { ko: '반사 피해 {v} 증가', en: 'Reflect Damage increases by {v}', zh: '反射伤害提高{v}' },
     'sk.masteryEffect.res_all': { ko: '모든 원소 저항 {v} 증가', en: 'All Resistances increase by {v}', zh: '所有元素抗性提高{v}' },
     'sk.masteryEffect.res_max_bonus': { ko: '최대 원소 저항 {v} 증가', en: 'Max Resistances increase by {v}', zh: '最大元素抗性提高{v}' },
     'sk.masteryEffect.res_reduction': { ko: '원소 관통 {v} 증가', en: 'Elemental Penetration increases by {v}', zh: '元素穿透提高{v}' },
@@ -3845,6 +3865,7 @@ const STRINGS = {
     // 이펙트 세그먼트의 그림체 탭 [2026-10-09 · §9-1 · ADR-0559] — 키 = skill_art.js:ART_STYLES · 실전 그림체에는 live 가 이름을 감싼다
     'ix.fxs.darktoon': { ko: '다크 카툰', en: 'Dark Cartoon', zh: '暗黑卡通' },
     'ix.fxs.foil': { ko: '금속박', en: 'Metal Foil', zh: '金属箔' },
+    'ix.fxs.roughink': { ko: '거친 잉크', en: 'Rough Ink', zh: '粗墨' },   // Gemini 2차 판 (ADR-1379)
     'ix.fxs.live': { ko: '{name} · 실전', en: '{name} · In Battle', zh: '{name} · 实战' },
     // 일반 스킬 묶음 안의 티어 칸 머리 [2026-10-02 · §9-1 · ADR-0475 · `skill.csv:tier`]
     'ix.tier': { ko: '{n}티어', en: 'Tier {n}', zh: '第{n}层' },

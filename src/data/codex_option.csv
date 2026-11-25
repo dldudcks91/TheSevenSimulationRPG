@@ -6,7 +6,7 @@ monster_idx,stat,value,farm,farm_value,fight,fight_value,description_kr
 1201,crit_damage,0.02,xp,0.02,vs_dmg,0.02,인간 보병 — 1장 분노 줄
 1202,crit_rate,0.01,drop,0.02,speed_pct,0.01,인간 궁수 — 1장 분노 줄
 1203,damage_reduction,0.01,gold,0.02,hit_bonus,0.04,인간 기사 — 1장 분노 줄
-1251,counter_chance,0.05,-,-,-,-,라멕 — 「일흔일곱 배」의 복수
+1251,-,-,-,-,-,-,라멕 — 「일흔일곱 배」의 복수 · 옵션 칸(반격)은 2026-11-25 R585 에 걷었다 — 비어 있다
 1301,fhr,0.05,xp,0.02,stagger_dur_pct,0.04,스켈레톤 전사 — 아픔을 모르는 뼈
 1302,damage_reduction,0.01,gold,0.02,hit_bonus,0.04,스켈레톤 기사 — 1장 분노 줄
 1303,fire_dmg_pct,0.03,magic,0.02,res_reduction,0.02,스켈레톤 마법사 — 파이어볼
@@ -16,7 +16,7 @@ monster_idx,stat,value,farm,farm_value,fight,fight_value,description_kr
 1403,res_fire,0.03,gold,0.02,damage_reduction,0.01,청동 수호상 — 화로를 지키는 청동
 1450,cast_speed_pct,0.02,-,-,-,-,몰록 — 꺼지지 않는 화로
 1900,crit_rate,0.02,-,-,-,-,사탄 — 분노 죄종의 줄
-2101,counter_chance,0.025,xp,0.02,dr_flat,2,오크 전사 — 2장 시기 줄
+2101,-,-,xp,0.02,dr_flat,2,오크 전사 — 2장 시기 줄 · 옵션 칸(반격)은 2026-11-25 R585 에 걷었다 — 비어 있다
 2102,stagger_dur_pct,0.05,drop,0.02,crit_rate,0.01,오크 궁수 — 2장 시기 줄
 2103,debuff_dur_pct,0.05,material,0.02,heal_out_pct,0.02,오크 주술사 — 둠
 2150,hp_flat,139,-,-,-,-,라합 — 바다를 채운 혼돈의 짐승 · 값 = 아이템 레벨 50 의 아래 끝
@@ -24,11 +24,11 @@ monster_idx,stat,value,farm,farm_value,fight,fight_value,description_kr
 2202,res_poison,0.03,material,0.02,life_steal,0.005,썩어가는 엔트 — 독무 속에서 썩어 가며 버틴다
 2203,poison_dur_reduction,0.05,magic,0.02,res_reduction,0.02,지혜로운 엔트 — 2장 독 줄
 2250,def_ignore,0.03,-,-,-,-,맨드레이크 — 남이 지키는 것을 노리는 시기
-2301,counter_chance,0.025,xp,0.02,stagger_dur_pct,0.04,우상족 사냥꾼 — 덤벼드는 사냥감을 받아친다
+2301,-,-,xp,0.02,stagger_dur_pct,0.04,우상족 사냥꾼 — 덤벼드는 사냥감을 받아친다 · 옵션 칸(반격)은 2026-11-25 R585 에 걷었다 — 비어 있다
 2302,res_reduction_poison,0.015,drop,0.02,crit_rate,0.01,우상족 추적자 — 포이즌 애로우
 2303,heal_out_pct,0.02,material,0.02,hp_regen,0.1,우상족 주술사 — 2장 시기 줄
 2350,res_reduction_cold,0.03,-,-,-,-,인비디아 — 시기 그 자체 · 프로스트 노바
-2401,counter_chance,0.025,xp,0.02,dr_flat,2,나가 전사 — 휘감는 꼬리가 되받아친다
+2401,-,-,xp,0.02,dr_flat,2,나가 전사 — 휘감는 꼬리가 되받아친다 · 옵션 칸(반격)은 2026-11-25 R585 에 걷었다 — 비어 있다
 2402,heal_out_pct,0.02,material,0.02,heal_out_pct,0.02,나가 주술사 — 2장 시기 줄
 2403,status_dur_pct,0.05,magic,0.02,status_dur_pct,0.04,나가 마법사 — 2장 시기 줄
 2450,status_dur_pct,0.1,-,-,-,-,메두사 — 눈길이 닿은 것을 오래 굳히는 자

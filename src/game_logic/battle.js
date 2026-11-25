@@ -681,11 +681,11 @@ export function createBattleSystem(data) {
             lvl: c.level,                            // 적중률의 레벨 — 몬스터는 스테이지 레벨 (§9-4 · R87)
             hitBonus: c.option_fx?.hitBonus ?? 0,     // 명중률 — 적중률에 (1 + 명중률)로 곱한다(궁수 T1-3 · 2026-09-22 R138 · 곱 2026-10-06 R219 · formula.hitChance). 없으면 0
             resMaxBonus: c.res_max_bonus, dr: c.damage_reduction, drBase: c.damage_reduction,
-            // 방어구 옵션 [2026-09-18 · item_design §1 「갑옷 옵션」 · 「투구 옵션」] — 원소별 최대 저항 · 절대값 피해 감소 · 반격 확률 · 체력 회복 +%.
-            //   `strike` 가 앞의 둘을 읽고(방어자) · 반격은 `strikeOnce` 끝 · 회복은 재생 · 회복 스킬 · 흡혈 · 물약이 읽는다. 없으면 0 — 종전과 같다
+            // 방어구 옵션 [2026-09-18 · item_design §1 「갑옷 옵션」 · 「투구 옵션」] — 원소별 최대 저항 · 절대값 피해 감소 · 체력 회복 +%.
+            //   `strike` 가 앞의 둘을 읽고(방어자) · 회복은 재생 · 회복 스킬 · 흡혈 · 물약이 읽는다. 없으면 0 — 종전과 같다 · ~~반격 확률~~ 2026-11-25 R585 걷음
             resMaxEl: c.res_max_el ?? null, drFlat: c.option_fx?.drFlat ?? 0,
             // 받는 회복 — `recvBase` = 장비의 체력 회복 +% · `recv` = 화상이 민 파생값(skill_effects `ATTRS` · 2026-09-28 R178). 창이 없으면 둘이 같다
-            counter: c.option_fx?.counter ?? 0, recv: c.option_fx?.recv ?? 0, recvBase: c.option_fx?.recv ?? 0,
+            recv: c.option_fx?.recv ?? 0, recvBase: c.option_fx?.recv ?? 0,
             // 처치 시 체력 회복(비율 · 투구 색욕 ① · 2026-10-21 R299) — `killHeal` 이 처치마다 최대 HP × 이 값을 회복한다. 없으면 0
             killHeal: c.option_fx?.killHeal ?? 0,
             // 물약 효과 상승(비율 · 반지 분노 ③ · 2026-10-29 R382) — `drinkPotions` 가 체력 회복 +% 와 한 괄호에 더한다. 없으면 0 — 종전과 같다
@@ -700,7 +700,7 @@ export function createBattleSystem(data) {
             // 매력의 받는 시간 감소 [2026-10-24 · R346 · battle_design §2-4] — 상태이상 · 상대 편이 건 창에 `rt.applyStatus` 가 곱한다(장비 감소 다음). 없으면 0
             ddr: c.debuff_dur_reduction ?? 0,
             skillMult: 1, bonusPct: c.dmg_bonus_pct, // 피해량(도감) — 따로 곱한다(2026-09-18) · strike 가 읽는 이름과 같아야 한다
-            crit: c.crit_rate, critDmg: c.crit_damage, ls: c.life_steal, reflect: c.reflect_damage,
+            crit: c.crit_rate, critDmg: c.crit_damage, ls: c.life_steal,
             // sustain 두 축 중 재생 쪽 (battle_design §8) — 초당 회복이라 틱마다 누산한다
             regen: c.hp_regen ?? 0, regenBase: c.hp_regen ?? 0, regenAcc: 0,
             cdr: c.cooldown_reduction ?? 0,          // 표기 쿨 단축(비율) — 시전 시점에 곱한다
@@ -776,7 +776,7 @@ export function createBattleSystem(data) {
             hp_max: hp, atk_physical: NO_DMG, atk_magic: NO_DMG, atk_pct_sum: 0, attack_type: 'physical',
             defense: 0, res_fire: 0, res_cold: 0, res_lightning: 0, res_poison: 0,
             level: caster.lvl, res_max_bonus: 0, damage_reduction: 0, def_ignore: 0, res_reduction: 0,
-            dmg_bonus_pct: 0, crit_rate: 0, crit_damage: 0, life_steal: 0, reflect_damage: 0,
+            dmg_bonus_pct: 0, crit_rate: 0, crit_damage: 0, life_steal: 0,
             hp_regen: 0, cooldown_reduction: 0, action_period: 0, gold_find: 0, item_find: 0,
         };
         // ⚠ **소환물은 전열에 선다** [임시 2026-09-09] — 벽의 목적이 대상 풀 희석인데 후열에 세우면
@@ -4072,20 +4072,7 @@ export function createBattleSystem(data) {
             // 사건 훅 — 등록된 반응이 없으면 아무 일도 없다. 핸들러가 rng 를 쓰면 **이 자리에서** 소비한다
             hooks.emit('hit', u, { t, d: target, dmg, crit, s, proc });
             hooks.emit('hitTaken', target, { t, a: u, dmg, crit, s, proc });
-            // 반사 — 비직격. 감쇠·치명 없이 공격자 HP 를 직접 깎고 흡혈·반사를 유발하지 않는다 (§9-6)
-            //   마스터리 조건부 반사(시기 T2-3 — 때린 적의 HP 가 나보다 높았다 · 2026-10-05)는 그 타격의 반사에 더한다 · 판정은 때리기 전 HP
-            const refl = (target.reflect ?? 0) + (md?.sum.reflect_damage ?? 0);
-            if (refl > 0 && u.hp > 0) {
-                const back = F.indirect(dmg * refl);
-                const bov = loseHp(u, back);
-                const rev = { t: r1(t), e: 'reflect', a: target.key, d: u.key, dmg: back, ahp: u.hp };
-                if (bov) rev.ov = bov;
-                timeline.push(rev);
-                if (cD) cD.dealt += back - bov;                 // 반사도 **가한 피해**다 — 때린 쪽이 아니라 되받은 쪽의 몫
-                if (cA) cA.taken += back - bov;
-                noteTaken(u, target, back - bov);
-                if (u.hp <= 0) { if (cD && u.side !== 'party' && !u.rewarded) cD.kills += 1; killHeal(target, u); downed(u); }
-            }
+            // ~~장비 · 마스터리 반사~~ — 2026-11-25 R585 걷음(사용자 「반격과 반사를 모든 장비에서 뺴고 유저 스탯에서도 뺴버리자」) · 반사는 스킬 창(신성한 심판 · 아이언 메이든)만 남는다
             // 아이언 메이든 — 공격자 배수를 적용한 직격 피해를 방어 · 저항 · 받는 피해 감소 전에 잰다. 강타는 밑수에서 빠진다.
             //   반사 규칙 그대로(비직격 — 방어 · 저항 · 배리어 · 흡혈 · 반사 · 경직 · 훅 없음 · 쓰러질 수 있다) · 몫은 그 창을 건 유닛(`by`)의 것 ·
             //   이벤트는 `reflect`(`a` = 건 유닛 · `s` = 건 스킬) · 반사 **뒤** · 창이 없으면 아무 일도 없다 · rng 0
@@ -4119,23 +4106,8 @@ export function createBattleSystem(data) {
                 // 처치 뒤 전직 장치 — 재장전 · 넘김(동귀어진 · 토르의 분노 · 단죄) · 창 연장 · 표식 · 저주 옮기기 · 연쇄 평타 · 터짐 (R471)
                 if (u.side !== target.side) advKill(u, target, s, sk, ov, total);
             }
-            /*
-             * 반격 [2026-09-18 · 사용자 확정 · **개정 2026-11-02 · R426** · item_design §1 「투구 옵션」 · INTERFACE §2-6 「반격」] — 맞은 쪽이 확률로 **그 자리에서 때린 적에게 기본 공격 1회**를 덤으로 친다.
-             *   「그냥 평타 한 대와 모든 로직이 같다」(사용자) — 기본 공격 함수(`basicAttack`)를 그대로 지나고 **내 차례는 안 쓴다** — 행동 예약(`next`)을 건드리지 않아 스킬이 밀리지 않는다
-             *   (~~`next = period` — 차례를 쓴다~~ 2026-11-02 사용자 「둘다 살리고 반격 고쳐줘」 — 몰려 맞는 탱커의 스킬 차례가 계속 뒤로 밀렸다).
-             *   ⚠ 이 타격의 사건(경직 · 창 · 훅 · 반사 · 전투불능)이 다 끝난 뒤다. 경직 · 스턴 중이면(이 타격이 건 경직 포함) 못 한다.
-             *   조건이 안 맞으면 **굴리지 않는다** — 반격 옵션이 없는 판의 rng 수열은 종전과 같다(`&&` 가 판정 앞에서 끊는다).
-             *   **반격은 반격을 부르지 않는다** [2026-11-02 · R426 · battle_design §9-6] — 반격의 기본 공격이 도는 동안(`countering`) 맞은 쪽은 굴리지 않는다
-             *     (~~반격도 직격이라 다시 반격할 수 있다~~ — 연쇄 · 그 몫 rng 0 · `counter_chance` 는 여전히 1 미만 — item.js 로드 검증)
-             *   **마법 무기는 반격하지 않는다** [2026-10-02 · 사용자 확정 · R198] — 평타가 없어서다(`noBasic`). 판정 **앞**에서 끊으므로 굴리지도 않는다
-             */
-            if (target.counter > 0 && !countering && !target.noBasic && target.hp > 0 && !target.summon && u.hp > 0 && target.stagUntil <= t && (target.stunUntil ?? 0) <= t
-                && rng() < target.counter) {
-                timeline.push({ t: r1(t), e: 'counter', u: target.key, d: u.key });
-                countering = true;
-                rt.basicAttack(target, t, alive(rt.foesOf(target)), u);
-                countering = false;
-            }
+            // ~~장비 · 도감 반격(`counter_chance` — 맞으면 확률로 덤 기본 공격 1회)~~ — 2026-11-25 R585 걷음 · INTERFACE §2-6 「반격」.
+            //   반격은 전직 스킬 창(몽크 「반격」 · 레인저 「응사」 — 위 `advStruck`)만 남는다 · 반격 중(`countering`)엔 다시 반격하지 않는다
             // 호출자가 붙인 후처리(추가타 결빙 · 대상 방어 감소)까지 끝낸 뒤 장비 발동을 판정한다.
             lastStrike = { hit: true, dmg: total, proc, crit, killed: target.hp <= 0 };
             afterStrike?.(true);

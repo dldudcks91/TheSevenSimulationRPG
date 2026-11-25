@@ -20,7 +20,7 @@
  * **스킬마다 생김새가 다르다** — 이미지 표는 skill_art.js, 코드 조각(`PIECES`)의 표는 skill_looks.js다(ADR-0511 · ADR-0515).
  */
 import { SKILL_LOOKS } from './skill_looks.js';
-import { SKILL_ART, CHARGE_ART, ART_STYLES, ART_DEFAULT, artFile } from './skill_art.js';
+import { SKILL_ART, CHARGE_ART, ART_STYLES, ART_DEFAULT, artFile, chargeStyle } from './skill_art.js';
 
 /* ═══ 켜고 끄기 — `⚙` 판의 설정 탭이 건다 (SCREEN_DESIGN §2-2 · ADR-0413 · ADR-0414) ═══ */
 
@@ -503,7 +503,7 @@ export function fxPreload(style = artPref, skills = Object.keys(SKILL_ART), char
         const d = styled(x, style);
         return [d.file, d.then?.file];
     })).filter(Boolean));
-    if (charge) files.add(artFile(CHARGE_ART.file, CHARGE_ART.style ?? style));   // 모으기의 기운 — 시전 방식이 부른다 · 그림체는 CHARGE_ART 가 정한다 (ADR-1252 · ADR-1270)
+    if (charge) files.add(artFile(CHARGE_ART.file, chargeStyle(style)));   // 모으기의 기운 — 시전 방식이 부른다 · 그림체는 CHARGE_ART 가 정한다 (ADR-1252 · ADR-1270 · ADR-1379)
     files.delete(null);
     if (!preloaded && ART_ON) {
         preloaded = true;
@@ -662,7 +662,7 @@ export function fxBuff(state, u, ev) {
     });
 }
 /* 모으기 (ADR-1252 · ADR-1255) — 모으는 동안 카드는 나간 채 서 있고 기운 그림만 초상 둘레에서 안으로 빨려 든다 · 쏘는 방에 초상이 번쩍하며 카드가 앞으로 튄다.
-   번쩍 · 튐은 「공격 시 흔들림」, 기운 그림은 「스킬 이펙트」(투명도)를 따르고 그림체는 설정과 상관없이 `CHARGE_ART.style`(ADR-1270) · 카드는 떨지도(ADR-0723) 물러나지도 줄지도(ADR-1255) 않는다 ·
+   번쩍 · 튐은 「공격 시 흔들림」, 기운 그림은 「스킬 이펙트」(투명도)를 따르고 그림체는 `chargeStyle` — 고른 그림체에 제 판이 있으면 그것 · 없으면 `CHARGE_ART.style`(ADR-1270 · ADR-1379) · 카드는 떨지도(ADR-0723) 물러나지도 줄지도(ADR-1255) 않는다 ·
    튐의 길이 · 방향은 style.css 가 든다 */
 const chargeGather = card => card.querySelector(':scope > .fx-layer > .fx-charge-gather');
 /** 재생기가 카드를 갱신할 때마다 부른다 — `p` = 모은 몫(0 → 1 · 쏘기 전 · 거꾸로 닳는 게이지의 반대) · 모으지 않으면 null. 되감는 동안은 재생기가 안 부른다 */
@@ -671,7 +671,7 @@ export function fxCharge(state, u, p) {
     if (!card?.isConnected) return;
     const on = p != null && state.motion !== false;
     let g = chargeGather(card);
-    const file = artFile(CHARGE_ART.file, CHARGE_ART.style ?? artStyle);
+    const file = artFile(CHARGE_ART.file, chargeStyle(artStyle));
     if (!on || !fxShown(state, 'skill') || !file || !skillArt.has(file)) { g?.remove(); return; }
     if (!g) {
         prep(state, u);

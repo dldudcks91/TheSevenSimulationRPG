@@ -33,6 +33,24 @@
 - 마스터리는 그 장비로 **다시 찍는다** — `arena.spendMastery` 와 같은 가중 무작위 · 주력 트리 = 죄종 트리. 원래 AI 팀은 열린 노드가 없어 10 포인트쯤 남겼는데 T3 가 열리며 다 쓴다(직업 20 · 죄종 20)
 - 기준은 죄종마다 따로 · `base_top` 없음 · 같은 편 둘 · 상대 팀은 차림 그대로(죄종 빌드 아님)
 
+## 분노 치명 빌드 (`top_crit.mjs` · 2026-11-25)
+
+사용자 「재는법을 바꿔서 너무 정확한 수치는 아니더라도 분노빌드에서 치명타확률과 피해량을 얻었을때로 해야지」. 죄종 빌드(분노) 위에 셋을 더한다.
+
+- 무기 외 부위의 분노 줄을 **치명 줄(Lv50 최고값)** 로 바꾼다 — 그 아이템이 가진 분노 줄 수만큼(레어 1 · 레전더리 2) · 장갑 · 목걸이는 치명 피해가 먼저(확률만 쌓으면 100% 를 넘는다) · 투구 · 반지는 확률 · 갑옷 · 신발은 그대로
+- 마스터리를 다시 찍을 때 치명 노드 가중 × `CRITW`(20)
+- `nocrit` = 같은 영웅에서 그 치명 줄만 뗀 판 — 「치명 몰빵 한 벌」의 값 · `crit_both` = 무기에 치명 두 줄
+- `EXP=1` — 치명 확률을 0 · 1 로 눌러 고정하고 직격 몫 · 넘친 몫을 센다. **계측 사본이 필요하다** — 스냅숏 `battle.js` 의 직격 기여 줄(`if (cA) cA.dealt += real;`) 뒤에 `globalThis.__CS` 누적 한 줄을 넣는다 · 집계 `analyze_crit_leak.cjs`
+
+## 방어구 줄 (`top_armor.mjs` · 2026-11-25)
+
+사용자 「이제 갑옷으로 가보자」. 죄종 빌드와 같은 판에서 재는 부위만 바꾼다(`SLOT` · 기본 갑옷).
+
+- 기준 = 그 부위에서 죄종 줄을 다 떼고 베이스 줄(`src: 'fixed'` — 방어력 +% · 갈래 특성)만 남긴 것 · 죄종 표지는 그 죄종(장비 수 조건이 안 섞이게)
+- 변형 = 기준 + 그 부위 죄종 줄 하나를 Lv50 최고값으로 · 발동 줄은 스킬마다
+- 무기군 10개(사제 포함 — 방어 줄이라 심판 발동이 안 섞인다) · 기록 = 가한 피해 · 받은 피해 · 살아 있던 시간(처음 쓰러진 시각 · 안 쓰러지면 판 끝) · 판 시간 · 승패
+- 집계 `analyze_armor.mjs` — **승률**(%p · 무기 줄과 같은 잣대) · 생존 시간 · 쓰러진 판 · 가한 피해 · 생존 시간은 판 끝까지 산 판이 많아(기준 쓰러진 판 37~39%) 덜 민감하다
+
 ## 돌리는 법
 
 ```
@@ -49,3 +67,7 @@ CLS=mage node harness/analyze_cls.mjs <out>
 - 차림 1 — [results_kit1.md](results_kit1.md) (저장한 하네스로 앞 측정과 같은 값 — 도끼 씨앗 1 · 2 의 48 칸 대조 일치)
 - 차림 2 — [results_kit2.md](results_kit2.md)
 - 차림 1 · 2 + 죄종 빌드 — [results_kit1b.md](results_kit1b.md) · [results_kit2b.md](results_kit2b.md)
+- 차림 1 · 2 + 분노 치명 빌드 — [results_crit_kit1.md](results_crit_kit1.md) · [results_crit_kit2.md](results_crit_kit2.md) · 치명 새는 곳 [results_crit_leak.md](results_crit_leak.md)
+- W8(R581) 무기 치명 두 줄 새 값 15% · 10% — [results_crit_w8.md](results_crit_w8.md) (죄종 빌드 · 옛 값과 같은 판)
+- 갑옷 줄 — [results_armor_kit1.md](results_armor_kit1.md) · [results_armor_kit2.md](results_armor_kit2.md) (`SLOT=armor KIT=1|2 WV_SRC=<스냅숏>/src node harness/top_armor.mjs <out>/top_<무기군>.jsonl <무기군> 1 150 4` → `node harness/analyze_armor.mjs <out>`) · 체력 후보(색욕 ① 낮추기 · 오만 레벨당 체력) [results_armor_hp.md](results_armor_hp.md) · 약한 줄 후보(체력 재생 · 받는 체력 회복 · 타격 회복) [results_armor_sustain.md](results_armor_sustain.md) · 회복 조합(재생 × 받는 회복 · `top_sustain.mjs`) [results_sustain_combo.md](results_sustain_combo.md)
+- 투구 줄 — [results_helmet_kit1.md](results_helmet_kit1.md) · [results_helmet_kit2.md](results_helmet_kit2.md) (`SLOT=helmet` · 같은 판)

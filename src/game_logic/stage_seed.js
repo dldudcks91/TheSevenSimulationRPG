@@ -18,14 +18,17 @@ const stringSeed = value => {
     for (let i = 0; i < value.length; i++) hash = Math.imul(hash ^ value.charCodeAt(i), 16777619) >>> 0;
     return hash;
 };
+/** 스테이지 뿌리(`세이브 시드 ^ STAGE_ENCOUNTER_SALT` 에서 스테이지로 파생한 값)에서 그 판의 만남 씨앗 */
+const encounterFromRoot = (root, difficulty, round, no) => deriveSeed(deriveSeed(deriveSeed(root, stringSeed(difficulty)), round), no);
 export function stageEncounterSeed(seed, stageId, difficulty, round, no) {
-    let root = deriveSeed(seed ^ STAGE_ENCOUNTER_SALT, stageId);
-    root = deriveSeed(root, stringSeed(difficulty));
-    return deriveSeed(deriveSeed(root, round), no);
+    return encounterFromRoot(deriveSeed(seed ^ STAGE_ENCOUNTER_SALT, stageId), difficulty, round, no);
 }
+/** 시드 공급자의 기본값 — `state.js` 의 기본과 같은 식 (INTERFACE §5-1 「시드 공급자」) */
+const localSeedOf = (state, salt, no) => deriveSeed(state.seed ^ salt, no);
 
-/** 읽기 전용 제안. 같은 부대의 재출발은 그 부대가 놓을 판도 후보에 넣는다. */
-export function planStageSeeds(state, stageId, difficulty, preset, roundCount) {
+/** 읽기 전용 제안. 같은 부대의 재출발은 그 부대가 놓을 판도 후보에 넣는다.
+ *  `seedOf` = 시드 공급자(state.js 가 넘긴다 · 2026-11-25 R580) — 만남 뿌리는 `seedOf(state, STAGE_ENCOUNTER_SALT, 스테이지)` · 전투 시드는 `seedOf(state, 0, 판 번호)` */
+export function planStageSeeds(state, stageId, difficulty, preset, roundCount, seedOf = localSeedOf) {
     const sequence = state.counters.battle + 1;
     if (!count(sequence) || sequence === 0 || !Number.isInteger(preset) || preset < 1) bad('invalid sequence/preset');
     const own = state.runs?.[preset - 1];
@@ -38,10 +41,10 @@ export function planStageSeeds(state, stageId, difficulty, preset, roundCount) {
         const chosen = pending && (!free || pending.no < free.no) ? pending : free;
         const no = chosen?.no ?? deck?.next ?? 0;
         if (!count(no) || no === Number.MAX_SAFE_INTEGER) bad('exhausted deck');
-        return { round, no, seed: chosen?.seed ?? stageEncounterSeed(state.seed, stageId, difficulty, round, no) };
+        return { round, no, seed: chosen?.seed ?? encounterFromRoot(seedOf(state, STAGE_ENCOUNTER_SALT, stageId), difficulty, round, no) };
     });
     return { version: STAGE_SEED_VERSION, sequence, preset, stageId, difficulty,
-        combatSeed: deriveSeed(state.seed, sequence), rounds };
+        combatSeed: seedOf(state, 0, sequence), rounds };
 }
 
 /** 외부 발급값도 같은 판 번호를 받아야 한다. 돌려준 판의 씨앗은 바꿀 수 없다. */
