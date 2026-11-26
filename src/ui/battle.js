@@ -283,6 +283,7 @@ function bindRunBuffTips(root, opts) {
  *     `respawn` 이 지금보다 뒤면 다음 칸의 챕터보스가 죽어 있다 — 세기 글이 「보스 재등장까지」 · [건너뛰기] 없음 (ADR-0590)
  *   graveAt() = 이 런의 칸 챕터보스가 돌아오는 시각(ms) 또는 null(앱이 `game.bossRespawnAt` 로 답한다) — 이겨서 끝났고 지금보다 뒤면 쓰러진 보스 카드의 초상이 무덤 명패다 (ADR-0590)
  *     ~~onRetry()[다시 도전] · onNext()[다음 스테이지] · repeat · restartAt~~ 은 2026-09-29 삭제 — 원정이 멈추지 않아 이어 가기가 두 버튼의 일을 한다
+ *   noSkip = 결과 띠가 다음 전투를 세도 [건너뛰기]를 안 세운다 — 탐험 판의 칸 사이 숨은 로직이 정한 시각이라 당기는 길이 없다 (2026-11-26 · ADR-1401)
  * @returns 정리 함수
  */
 export function mountBattle(container, opts) {
@@ -1557,8 +1558,8 @@ const strikeLabel = id => id ? L(srcInfo(id).name) : t('bt.basicAttack');
    스킬 id 가 아니라 카드다 — 이름은 카드 이름(`tc.name.<카드>`) · 그림은 그 카드의 죄종 그림(⚠임시 — SCREEN_DESIGN §15). 로그 · 창 칩 · 누적 판이 같이 쓴다 */
 /** 출처가 카드면 그 카드 id · 아니면 null */
 const tacticSrc = s => (typeof s === 'string' && s.startsWith('tactic:') ? s.slice(7) : null);
-/** 카드 그림 — 그 카드의 죄종 그림 · 모르는 카드는 빈 칸 */
-const tacticImg = card => { const src = M.sinIcon(SYS.tactic?.cardById?.(card)?.sin); return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : ''; };
+/** 카드 그림 — 그 카드의 그림(`mock.js:tacticIcon`) · 그림이 없으면 죄종 그림 · 모르는 카드는 빈 칸 (SCREEN_DESIGN §15 · ADR-1391) */
+const tacticImg = card => { const c = SYS.tactic?.cardById?.(card); const src = c ? (M.tacticIcon(c.id) ?? M.sinIcon(c.sin)) : null; return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : ''; };
 /** 출처 풀이 — 카드면 `{id, name(현재 언어 글), card}` · 아니면 스킬(`skillInfo` — 정예 강화 포함) */
 const srcInfo = id => { const c = tacticSrc(id); return c ? { id, name: t(`tc.name.${c}`), cd: 0, icon: '', desc: null, card: c } : skillInfo(id); };
 /** 출처 그림 — 카드면 그 카드 그림 · 아니면 스킬 그림 */
@@ -2469,7 +2470,7 @@ function showResult(state, root, opts, won) {
         <span class="${won ? 'up' : 'down'} verdict">${t(duelMode(opts.result) && opts.result.reason === 'timeout' ? 'ar.draw' : won ? 'bt.won' : 'bt.lost')}</span>
         ${nx ? `<span class="muted b-next"></span>` : ''}
         ${nx?.shrine && !nx.shrine.fresh ? `<span class="b-shrine">${shrineChip(nx.shrine.id)}<span class="muted">${t('bt.shrineKeep')} — ${shrineFxText(nx.shrine.id)}</span></span>` : ''}
-        ${nx && !waiting ? `<button class="btn sm b-go">${t(won || back ? 'bt.skipWait' : 'bt.skipRetry')}</button>` : ''}
+        ${nx && !waiting && !opts.noSkip ? `<button class="btn sm b-go">${t(won || back ? 'bt.skipWait' : 'bt.skipRetry')}</button>` : ''}
         <button class="btn primary sm b-report">${t(opts.resultLabel ?? 'bt.toReport')}</button>`;
     box.classList.add('show');
     // 리포트로 간다 — 세기는 **안 끊는다**(멈추는 길은 철수 · 게임 끄기뿐이다). 걷힌 세기는 앱 시계가 잇는다

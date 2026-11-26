@@ -556,13 +556,21 @@ function skillStamp(L, s, kind, x) {
     if (def.quake) PIECES.quake(L, { dl: def.then && skillArt.has(def.then.file) ? def.duration : 0 }, x);
     return true;
 }
-/** 그림 한 장 — `ay` 는 그림에서 초상 가운데에 닿는 높이(0 = 위 끝 · 1 = 아래 끝 · 없으면 가운데) · `dl` 은 늦춤(배속을 탄다) ·
- *  `part` 는 단일 다단의 조각 하나가 다는 인라인 변수(띠 · 들어오는 방향 — ADR-0778) */
+/** `anchor`는 그림 안의 접점([x, y], 0~1), `targetY`는 그 점이 닿을 초상 높이다(기본 .5).
+ *  `entry`는 접점으로 들어오기 전의 [x, y] 이동량을 초상 높이의 배수로 지정한다.
+ *  `ay`는 세로 배치만 지정하는 기존 값이다. `dl`은 늦춤, `part`는 다단 타격마다 적용하는 그림 변수다. */
 function stampArt(L, s, def, crit, dl, part = null) {
     const size = def.fit === 'portrait' ? parseFloat(L.style.getPropertyValue('--sw')) || def.size : def.size;
+    const height = parseFloat(L.style.getPropertyValue('--sh')) || 101;
+    const [ax, ay] = def.anchor ?? [.5, def.ay ?? .5];
+    const ox = (.5 - ax) * size;
+    const oy = (.5 - ay) * size + ((def.targetY ?? .5) - .5) * height;
     const im = spawn(L, `fx-skill-stamp fx-skill-${def.motion}${crit ? ' crit' : ''}`, {
         sz: px(size), t: ms(def.duration),
-        ...(def.ay != null && { oy: px((.5 - def.ay) * size) }),
+        ...(ox && { ox: px(ox) }),
+        ...(oy && { oy: px(oy) }),
+        ...(def.anchor && { 'art-origin': `${(ax * 100).toFixed(1)}% ${(ay * 100).toFixed(1)}%` }),
+        ...(def.entry && { 'entry-x': px(def.entry[0] * height), 'entry-y': px(def.entry[1] * height) }),
         ...(dl && { dl: ms(dl) }),
         ...part,
     }, 'img');

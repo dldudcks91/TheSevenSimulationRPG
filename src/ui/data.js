@@ -61,7 +61,7 @@ export const D = {
     commissionKindRows: [],   // commission_kind.csv 원시 행
     commissionRows: [],       // commission.csv — 의뢰의 **틀**(종류 × 대상 어휘 · 기본 수 · 기본 골드 · 가중치) ⚠제안 · ~~게시판 행(칸 수 = 행 수)~~ 은 R153 로 폐기 — 카드는 굴린다
     commissionGradeRows: [],  // commission_grade.csv — 카드 등급 일반 · 매직 · 레어(대상의 좁기 · 드물기 · 골드 배수 — R457) ⚠제안
-    commissionFameRows: [],   // commission_fame.csv — 명성 레벨(누적 수령 수 문턱 · 목표 · 골드 배수) ⚠제안 (2026-10-29 · R375)
+    commissionFameRows: [],   // commission_level.csv — 의뢰 레벨 0 ~ 지점 최대(그 레벨 연구의 완료 수 문턱 · 목표 · 골드 배수) ⚠임시 (2026-11-26 · R592 — 옛 commission_fame.csv 명성 레벨 · 키 이름은 그대로)
     monsterTypeRows: [],      // monster_type.csv — 종족 표시 이름 · 행 순서가 의뢰 종족 풀의 순서
     mainMissionRows: [],      // main_mission.csv — 메인미션 줄(원시 행) · 2026-11-17 R524
     monsterBaseRows: [],      // monster_base.csv — 부류 다섯 · 이름 · 버프 값(gimmick_value · gimmick_n · 2026-11-16 R518 — 11-14 R494 삭제를 되살림)
@@ -96,7 +96,8 @@ export const D = {
     levelXp: [],              // level_xp.csv — 레벨순 [{level, xpNeed, monsterXp}] · 레벨업 필요 XP · 같은 레벨 몬스터 처치 XP (2026-09-28)
     advanceNodeRows: [],      // advance_node.csv — 전직 스킬 줄 [{skill_id, slot(size · var1 · var2), fx, per_rank, arg, unit, name_*, desc_*, bonus_*}] (2026-11-13 · R471 · 이름 2026-11-14)
     advanceCommonRows: [],    // advance_common.csv — 전직 공통 줄 [{advance_id, slot, stat, tag, effect, per_rank, rank5, unit, name_*}] (2026-11-13 · R471)
-    exploreStories: [],       // explore_story.csv 원시 행 — 탐험 진행 문구(지점 × 막 × 죄종). 검증·막 순서는 game_logic/state.js (⚠ 행 순서가 굴림 순서다 · R235)
+    exploreGrades: [],        // explore_grade.csv 원시 행 — 탐험 표 등급(가중 · 길이 · 보상 배수 · 특별 배수). 검증은 game_logic/state.js (2026-11-26 · R590 · ~~explore_story.csv 이야기 줄~~ 걷음)
+    exploreRuinsEvents: [],   // explore_ruins_event.csv 원시 행 — 폐허 이벤트 종류 가중. 검증은 game_logic/state.js (2026-11-26 · R590 · ⚠ 행 순서가 굴림 순서다)
     visitStories: [],         // visit_story.csv 원시 행 — 수색 줄 등록 영웅의 하는 일 · 한 일(죄종 × 줄기 × 단계). 검증 · 고르기는 game_logic/state.js:visitChains · visitStory (ADR-1125)
     difficultyList: [],       // difficulty_tier.csv — 순서(`order`)대로 [{id, order, name:{ko,en}, levelCol, levelAdd, codexExp, chapterGate}] · 난이도 바퀴 (base_expedition_design §1-4 · R236) · codexExp = 처치 하나의 도감 경험치(R239) · chapterGate = 장 순서 해금 1/0(R242)
     difficulties: {},         // 같은 것 byId
@@ -135,7 +136,7 @@ export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budge
     'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'sin_word', 'accessory_sin_option',   // ~~armor_common_option~~ 2026-10-21 R303 퇴역(방어구 넷이 계열표) · ~~accessory_common_option~~ 2026-11-12 삭제(목걸이도 계열표 R453)
     'building', 'building_rank', 'building_effect',   // ~~tactic_score~~ 2026-11-11 R441 · ~~tactic_slot · tactic_condition~~ 2026-11-25 R586 삭제
-    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'advance_common', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff', 'commission_fame', 'ring_base_option', 'raid_boss', 'raid_pattern', 'temper_action', 'visit_story', 'monster_base', 'main_mission', 'trial_floor', 'endless_floor'];
+    'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'advance_common', 'explore_spot', 'explore_grade', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff', 'commission_level', 'ring_base_option', 'raid_boss', 'raid_pattern', 'temper_action', 'visit_story', 'monster_base', 'main_mission', 'trial_floor', 'endless_floor', 'explore_ruins_event'];
 
 export async function loadData(base = './data/') {
     const texts = await Promise.all(FILES.map(f => fetch(`${base}${f}.csv`).then(r => {
@@ -152,7 +153,7 @@ export async function loadData(base = './data/') {
         heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, sinWordRow, accSinOptionRow,
         buildingRow, buildingRankRow, buildingEffectRow,
-        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, advanceCommonRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow, commissionFameRow, ringBaseRow, raidBossRow, raidPatternRow, temperActionRow, visitStoryRow, monsterBaseRow, mainMissionRow, trialFloorRow, endlessFloorRow] = texts.map(parseCsv);
+        slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, advanceCommonRow, exploreSpotRow, exploreGradeRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow, commissionLevelRow, ringBaseRow, raidBossRow, raidPatternRow, temperActionRow, visitStoryRow, monsterBaseRow, mainMissionRow, trialFloorRow, endlessFloorRow, exploreRuinsEventRow] = texts.map(parseCsv);
 
     D.ringBaseOptions = ringBaseRow;
     D.raidBosses = raidBossRow;
@@ -331,7 +332,7 @@ export async function loadData(base = './data/') {
     D.commissionKindRows = commissionKind;
     D.commissionRows = commissionRow;
     D.commissionGradeRows = commissionGradeRow;
-    D.commissionFameRows = commissionFameRow;
+    D.commissionFameRows = commissionLevelRow;   // 의뢰 레벨 표 (R592)
     D.monsterTypeRows = monsterTypeRow;
     D.mainMissionRows = mainMissionRow;   // 메인미션 — 행 순서 = 줄 순서 · 검증 · 판정은 state.js (2026-11-17 · R524 · main_mission_design.md)
     D.monsterBaseRows = monsterBaseRow;   // 부류 버프 (R518) — 검증은 battle.js 가 생성 때 · 이름은 화면의 칩이 읽는다
@@ -395,9 +396,9 @@ export async function loadData(base = './data/') {
     });
     D.heroNamePool = heroNameRow.map(r => ({ cls: r.class_id, ko: r.name_kr, en: r.name_en, zh: r.name_zh }));
     D.heroTraitPool = heroTraitRow.map(r => ({ ko: r.name_kr, en: r.name_en, zh: r.name_zh }));
-    // 탐험 진행 문구 — 원시 행 그대로 넘긴다. **막의 어휘도 순서도 CSV 가 든다**(`phase`·`phase_order`)라
-    // 여기서 가공하면 구조가 두 곳에 생긴다. 무결성 검증은 state.js 가 로드 시 한다 (지점마다 막 · R235 · ~~수색 문구 · 만남 · 답~~ 2026-10-19 삭제)
-    D.exploreStories = exploreStoryRow;
+    // 탐험 표 등급 · 폐허 이벤트 — 원시 행 그대로 넘긴다. 무결성 검증은 state.js 가 로드 시 한다 (2026-11-26 · R590 · ~~탐험 진행 문구 explore_story~~ 걷음)
+    D.exploreGrades = exploreGradeRow;
+    D.exploreRuinsEvents = exploreRuinsEventRow;
     D.visitStories = visitStoryRow;
     // 유니크 영웅 후보 풀 — 원시 행 그대로. ⚠임시(hero_design §1) — 개체 테이블이 없어 아직 아무도 안 읽는다.
     // status(confirmed/proposed)로 실제 채택 여부를 가른다. 2026-09-10 논의 자료 — commission.csv 와 같은 자리채움
@@ -734,7 +735,9 @@ export function buildSystems(d, dev = {}) {
         codex: { levels: d.codexLevels, steps: d.codexSteps, options: d.codexOptions, races: d.codexRaces, gradeMult: d.codexGradeMult ?? {} },
         // 죄종 목록 — 탐험 이야기 표의 `sin` 컬럼 검증용 (~~수색 이야기 · 만남 · 답~~ 2026-10-19 삭제)
         sins,
-        exploreStories: d.exploreStories ?? [],   // 탐험 이야기 — 지점마다 막 · 순서는 표가 정한다 (state.js:explorePhases · R235)
+        exploreGrades: d.exploreGrades ?? [],             // 탐험 표 등급 — 가중 · 길이 · 배수 (state.js · R590)
+        exploreRuinsEvents: d.exploreRuinsEvents ?? [],   // 폐허 이벤트 종류 가중 (state.js · R590)
+        arena: () => arena,                               // 결투장 — 상단 의뢰 습격 팀(`arena.rollKit`) · 결투장은 이 시스템 뒤에 서서 늦게 읽는다 (R590)
         visitStories: d.visitStories ?? [],       // 수색 이야기 — 죄종 × 줄기 × 단계 (state.js:visitChains · ADR-1125)
         // 진형 — 템플릿의 정원. 첫 행이 기본값이다(`formation_template.csv` 행 순서가 곧 화면 순서)
         formationTemplates: d.formationTemplates ?? {},

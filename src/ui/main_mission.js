@@ -22,11 +22,12 @@ const node = (tag, cls, text) => {
  * read()  → `{owner, model: mainMissionState, fresh: [id]}` or null (not in a game)
  * label(m) → mission name · rewards(reward) → DOM node · claim(id) · claimAll(ids) · navigate(m) — the caller renders after each
  * readSeen(owner) → next-mission id last seen in the panel, or null · writeSeen(owner, id) — browser-only, not the game save (ADR-1245)
- * tutorial(m) → true when the next mission is a chapter-1 tutorial line — a sign hangs under the icon and pressing it acts like Go To (ADR-1381);
-   a filled tutorial line not yet claimed turns the sign into a completion card with [Claim] (ADR-1388)
+ * tutorial(m) → true for a chapter-1 line — filled and not yet claimed, it hangs the panel's claim card with [Claim] under the icon (ADR-1388 · ADR-1413)
+ * sign(m) → true for a sign line (the tutorial lines and the first research) — while the next mission is one, a sign hangs under the icon
+   and pressing it acts like Go To (ADR-1381 · ADR-1417)
  * toggled() → after the panel opens or closes, so a Go To outline pointing into the panel moves at once (ADR-1382)
  */
-export function createMainMission({ read, label, rewards, claim, claimAll, navigate, hideTip, readSeen, writeSeen, tutorial, toggled }) {
+export function createMainMission({ read, label, rewards, claim, claimAll, navigate, hideTip, readSeen, writeSeen, tutorial, sign, toggled }) {
     let owner = null, model = null, signature = '', host = null;
     let open = false, restoreFocus = null, scroll = 0, seen = null;
     let bubble = '', bubbleUntil = 0, bubbleTimer = null, ringAt = 0;
@@ -68,7 +69,7 @@ export function createMainMission({ read, label, rewards, claim, claimAll, navig
             const first = model.list.find(m => m.id === fresh[0]);
             ringAt = Date.now();
             clearTimeout(bubbleTimer);
-            // A filled chapter-1 tutorial line is announced by the sign's completion card, not the bubble — the bubble would hide the sign (ADR-1388)
+            // A filled chapter-1 line is announced by the sign's completion card, not the bubble — the bubble would hide the sign (ADR-1388 · ADR-1413)
             if (fresh.some(id => { const m = model.list.find(x => x.id === id); return m && tutorial?.(m); })) bubble = '';
             else {
                 bubble = fresh.length === 1 && first ? t('mm.bubble', { name: label(first) }) : t('mm.bubbleN', { n: fresh.length });
@@ -156,21 +157,19 @@ export function createMainMission({ read, label, rewards, claim, claimAll, navig
             note.setAttribute('role', 'status');
             host.appendChild(note);
         } else if (!open && model.claimable.some(m => tutorial?.(m))) {
-            // Completion card — a filled tutorial line not yet claimed: the sign stops swinging and offers [Claim] right there (ADR-1388)
-            const done = model.claimable.find(m => tutorial?.(m)), sign = node('div', 'mission-tut done');
-            const plate = node('div', 'mission-tut-card');
-            plate.append(node('span', 'mission-tut-cap', t('mm.tut.done')), node('span', 'mission-tut-name', label(done)), rewards(done.reward));
-            const take = node('button', 'btn sm primary mission-tut-claim', t('mail.claim'));
+            // Completion card — a filled chapter-1 line not yet claimed: the sign turns into the panel's own claim card, hung on the same strings (ADR-1388 · ADR-1413).
+            // Its [Claim] keeps a marker of its own (`mission-tut-claim`) so the panel's claim path (ADR-1382) never mistakes it for the panel's button.
+            const done = model.claimable.find(m => tutorial?.(m)), hang = node('div', 'mission-tut done');
+            const plate = card(done, true);
+            plate.classList.add('mission-tut-card');
+            const take = plate.querySelector('.notification-go');
+            take.className = 'btn sm primary mission-tut-claim';
             take.dataset.missionAction = `tut-claim:${done.id}`;
-            take.setAttribute('aria-label', `${label(done)} · ${take.textContent}`);
-            const doneOwner = owner;
-            take.onclick = () => { if (owner === doneOwner) { hideTip(); claim(done.id); } };
-            plate.appendChild(take);
-            sign.appendChild(plate);
-            host.appendChild(sign);
-        } else if (!open && model.current && tutorial?.(model.current)) {
-            // Chapter-1 tutorial sign — hangs under the icon while the next mission is a tutorial line · not while the panel or the bubble is up
-            const next = model.current, sign = node('div', 'mission-tut');
+            hang.appendChild(plate);
+            host.appendChild(hang);
+        } else if (!open && model.current && sign?.(model.current)) {
+            // Chapter-1 sign — hangs under the icon while the next mission is a sign line (the tutorial lines and the first research · ADR-1417) · not while the panel or the bubble is up
+            const next = model.current, hang = node('div', 'mission-tut');
             const plate = node('button', 'mission-tut-card');
             plate.dataset.missionAction = `tut:${next.id}`;
             plate.append(node('span', 'mission-tut-cap', t('mm.tut')), node('span', 'mission-tut-name', label(next)));
@@ -178,8 +177,8 @@ export function createMainMission({ read, label, rewards, claim, claimAll, navig
             plate.style.animationDelay = `-${Date.now() % SWING_MS}ms`;   // a repaint keeps the swing going instead of restarting it
             const signOwner = owner;
             plate.onclick = () => { if (owner === signOwner) { hideTip(); navigate(next); } };
-            sign.appendChild(plate);
-            host.appendChild(sign);
+            hang.appendChild(plate);
+            host.appendChild(hang);
         }
         const panel = node('div', 'notification-panel mission-panel');
         panel.id = 'mission-panel'; panel.hidden = !open;

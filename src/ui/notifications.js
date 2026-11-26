@@ -31,7 +31,7 @@ const notificationCopy = text => {
 
 export function createNotifications({ read, describe, navigate, hideTip, lockIcon, readDismissed, writeDismissed }) {
     let owner = null, model = null, signature = '', host = null;
-    let open = false, openedOnce = false, collapsed = false, seen = new Set(), restoreFocus = null;
+    let open = false, seen = new Set(), restoreFocus = null;
     let bubble = null, bubbleUntil = 0, bubbleTimer = null, ringAt = 0;
     let receiptOwner = null;
     let folder = 'notifications', folderScroll = {};
@@ -42,8 +42,9 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
         if (list?.getClientRects().length) folderScroll[list.dataset.folder] = list.scrollTop;
     }
 
+    // Folders are Notifications and the locked Achievements — the old Missions folder is gone; the retry check sits atop Notifications (ADR-1425).
     function selectFolder(id, focus = true) {
-        if (!['notifications', 'missions'].includes(id)) return;
+        if (id !== 'notifications') return;
         rememberScroll();
         folder = id;
         hideTip();
@@ -60,9 +61,9 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
         }
         const changedOwner = owner !== next.owner;
         if (changedOwner) {
-            owner = next.owner; open = false; collapsed = false; seen = new Set();
+            owner = next.owner; open = false; seen = new Set();
             dismissed = new Set(readDismissed(owner));
-            folderScroll = {}; folder = 'notifications'; openedOnce = false; restoreFocus = null;
+            folderScroll = {}; folder = 'notifications'; restoreFocus = null;
             bubble = null; clearTimeout(bubbleTimer);
         }
         const items = next.model.items.filter(item => !dismissed.has(item.id));
@@ -101,17 +102,18 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
     }
 
     function acknowledge(key, guide) {
-        const index = model.items.findIndex(current => current.id === key);
+        const index = guide ? 0 : model.items.findIndex(current => current.id === key);
         dismissed.add(key);
         writeDismissed(owner, [...dismissed]);
         bubble = null; clearTimeout(bubbleTimer);
         hideTip();
         observe();
         paint();
+        // Focus moves to the card that took the confirmed one's place — the retry check, while it stays, is the first card (ADR-1425).
         const remaining = host.querySelectorAll('.notification-confirm');
-        const target = guide ? host.querySelector('[data-folder="missions"][role="tab"]')
-            : remaining[Math.min(index, remaining.length - 1)]
-                ?? host.querySelector('[data-folder="notifications"][role="tab"]');
+        const at = index + (model.guide ? 1 : 0);
+        const target = remaining[Math.min(at, remaining.length - 1)]
+            ?? host.querySelector('[data-folder="notifications"][role="tab"]');
         target?.focus({ preventScroll: true });
     }
 
@@ -164,11 +166,6 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
         button.appendChild(art);
         if (model.count) button.appendChild(node('span', 'mail-n', model.count > 99 ? '99+' : model.count));
         button.onclick = () => {
-            if (!open && !openedOnce) {
-                const hasReceipt = model.items.some(item => item.kind === 'offline');
-                folder = model.guide && !hasReceipt ? 'missions' : 'notifications';
-                openedOnce = true;
-            }
             if (bubble?.offline) { bubble = null; clearTimeout(bubbleTimer); }
             open = !open;
             hideTip();
@@ -204,7 +201,7 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
         folders.setAttribute('aria-label', t('nt.h'));
         // Gaps and the fill draw the folder line like the forge tabs (`.fg-gap` · `.fg-fill`).
         folders.appendChild(node('span', 'fg-gap'));
-        for (const id of ['notifications', 'missions', 'achievements']) {
+        for (const id of ['notifications', 'achievements']) {
             const locked = id === 'achievements', selected = folder === id;
             if (id !== 'notifications') folders.appendChild(node('span', 'fg-gap'));
             const tab = node('button', `fg-tab notification-folder${selected ? ' on' : ''}`);
@@ -229,7 +226,7 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
                 });
             } else tab.onclick = () => selectFolder(id);
             tab.appendChild(node('span', 'notification-folder-label', t(`nt.folder.${id}`)));
-            const count = id === 'notifications' ? model.items.length : id === 'missions' && model.guide ? 1 : 0;
+            const count = id === 'notifications' ? model.items.length + (model.guide ? 1 : 0) : 0;
             if (count) tab.appendChild(node('span', 'notification-folder-count', String(count)));
             folders.appendChild(tab);
         }
@@ -237,7 +234,7 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
         folders.onkeydown = event => {
             if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
             event.preventDefault();
-            const ids = ['notifications', 'missions'];
+            const ids = ['notifications'];
             const index = ids.indexOf(folder);
             const next = event.key === 'Home' ? 0 : event.key === 'End' ? ids.length - 1
                 : (index + (event.key === 'ArrowRight' ? 1 : -1) + ids.length) % ids.length;
@@ -249,15 +246,6 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
         list.dataset.folder = folder;
         list.setAttribute('role', 'tabpanel');
         list.setAttribute('aria-labelledby', `notification-folder-${folder}`);
-        if (folder === 'missions' && model.guide) {
-            const toggle = node('button', 'notification-guide-toggle', t('nt.next'));
-            toggle.dataset.notificationAction = 'guide-toggle';
-            toggle.setAttribute('aria-expanded', String(!collapsed));
-            toggle.appendChild(node('span', '', collapsed ? '+' : '−'));
-            toggle.onclick = () => { collapsed = !collapsed; paint(); };
-            list.appendChild(toggle);
-            if (!collapsed) list.appendChild(row(model.guide, true));
-        }
         // The empty folder has no sentence on screen — the first faint place carries it for screen readers.
         const fillEmpty = n => {
             for (let i = n; i < SLOTS; i++) {
@@ -267,18 +255,20 @@ export function createNotifications({ read, describe, navigate, hideTip, lockIco
                 slot.appendChild(art);
                 if (i === 0) {
                     slot.setAttribute('role', 'img');
-                    slot.setAttribute('aria-label', t(folder === 'missions' ? 'nt.missionsEmpty' : 'nt.empty'));
+                    slot.setAttribute('aria-label', t('nt.empty'));
                 } else slot.setAttribute('aria-hidden', 'true');
                 list.appendChild(slot);
             }
         };
         if (folder === 'notifications') {
+            // The retry check is the first card — a stuck party should not sink under other notices (ADR-1425)
+            if (model.guide) list.appendChild(row(model.guide, true));
             for (const item of model.items) list.appendChild(row(item));
-            fillEmpty(model.items.length);
-        } else if (!model.guide) fillEmpty(0);
+            fillEmpty(model.items.length + (model.guide ? 1 : 0));
+        }
         panel.appendChild(list);
         // Keep inactive panel targets in the DOM for each folder's aria-controls, including the locked placeholder.
-        for (const id of ['notifications', 'missions', 'achievements']) if (id !== folder) {
+        for (const id of ['notifications', 'achievements']) if (id !== folder) {
             const empty = node('div');
             empty.id = `notification-content-${id}`; empty.hidden = true;
             empty.setAttribute('role', 'tabpanel');

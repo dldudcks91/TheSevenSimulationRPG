@@ -16,6 +16,7 @@
 | `explore_world_muted.webp` | **탐험 탭 — 세계지도 한 장 · 일곱 챕터가 구간**. 게임 배경에 맞춰 채도·밝기를 낮춘 흙빛·잿빛 일러스트 [2026-11-15 사용자 지시]. 스테이지 배경이 아니라 스타일 축을 안 탄다 (아래) |
 | `explore_world_muted_mask/<챕터 id>.png` | **탐험 지도 — 잠긴 챕터 구간의 막 모양** [ADR-0543] — 그림과 같은 크기의 알파 그림(땅만 · 물은 안 든다). `scripts/build_explore_masks.py --muted`에 현재 지도와 출력 경로를 넘겨 짓는다(아래 명령). **게임은 안 읽는다** — 아래 조각의 재료다 |
 | `explore_world_muted_locked/<챕터 id>.webp` | **탐험 지도 — 잠긴 구간에 얹는 「빛 바랜 땅」 조각** — 그림을 회색 · 어둡게 칠해(CSS `grayscale(.85)` · `brightness(.48)` 과 같은 값) 그 장의 마스크로 잘라 **구간 크기로** 굽는다. `scripts/build_explore_locked.py`에 현재 그림·마스크·출력 경로를 넘긴다(아래 명령). 조각 자리(`tile` %)는 `mock.js:EXPLORE_REGIONS`에 옮긴다. **그림 · 마스크를 바꾸면 다시 돌린다** |
+| `explore_ruins.webp` | **탐험 폐허 판의 관전 지도** [2026-11-26 · R590 · ADR-1403] — 폐허 안 한 장(입구 왼쪽 → 방 여럿 → 봉인실 오른쪽). 원본 `output/2026-11-24_ruins_map/ruins_1.png`(1838×856 · Codex · 사용자 D13 「지도 1번」)을 크롭 없이 1536×715 RGB WebP q88 로 줄였다. 안개 · 표지는 화면이 얹는다. 길 좌표 = `mock.js:EXPLORE_RUINS_ROUTE`(그림을 바꾸면 다시 딴다) |
 | `explore_chapter_1.webp` | **지금은 아무도 안 읽는다** [2026-10-08] — 09-04 의 챕터 1 지도. 세계지도가 대체했고 파일은 남겨 둔다 (아래 「옛 챕터 1 지도」) |
 | `login.webp` | **지금은 아무도 안 읽는다** [2026-09-18 사용자 지시] — 로그인 화면이 스테이지 1-1 그림(`illustrate/background_stage_101.webp`)을 그대로 깔게 바뀌었다. 원본은 `source/illustrate/Gemini_Generated_Image_v1efev1efev1efev.png`(성벽에 일곱 깃발)이고, 크롭 없이 RGB WebP q92 로 설치해 둔 사본이 남아 있다 |
 | `source/pixel/` · `source/illustrate/` · `source/gpt/` | **생성 원본** — 게임이 안 읽는다. 설치본은 여기서 게임용 비율로 잘라 만든다. 기존 Gemini 원본은 워터마크 띠도 제외한다 (아래) |
@@ -467,6 +468,14 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 - **원본** — `source/codex_20261117_first_party/` · 같은 Codex 발주. `run_codex.py` 의 앵커 = 워드마크 원본(`codex_20261027/installed/08_dagger_trim.png`) + 시작 화면 캡처 `ref_ui_start.png` → `out/`(시안 셋)
 - 설치본의 원본 = `installed/fp_b1.png`(Codex 그대로) · `installed/fp_b1_trim.png`(알파 8 이하를 지우고 경계로 자른 것 — 이것을 높이 240 으로 줄여 설치)
 
+## prologue/ — 프롤로그 장면 그림 [신설 2026-11-26]
+
+`scene_1.webp` ~ `scene_5.webp` — 프롤로그 다섯 씬의 전면 그림(SCREEN_DESIGN §3-1 · ADR-1393 · `mock.js:prologueArt`). 어둠 속 실루엣 한 벌이라 배경 스타일을 안 탄다. 1600×893 WebP q84.
+
+- **원본** — `output/2026-11-25_prologue_scenes/silhouette/`(Gemini 웹 · 4 Neon · 첨부 없이 글만 · 프롬프트 `prompts/gemini_sil_s<n>.txt`). 설치한 판 = 씬 1 `s1_gemini_v3` · 씬 2 `s2_gemini_v4` · 씬 3 `s3_gemini_v2`(2026-11-25) · 씬 4 `s4_gemini_v1` · 씬 5 `s5_gemini_v2`(2026-11-26 · 같은 프롬프트 틀 — 둘째 판은 v2 가 세부가 많아(씬 4) · v1 이 속 세부가 남아(씬 5) 걸렀다)
+- **레시피** — 원본(2752×1536) 오른쪽 아래 Gemini ✦ 표식 자리(x 2540~ · y 1330~)에 바로 왼쪽 240px 의 같은 띠를 부드러운 가장자리로 덮어 지운 뒤 폭 1600 으로 줄인다
+- 씬 4 · 5 의 바알은 낙인에 봉인된 인간의 몸이다 — 뿔 없는 깡마른 사람으로 그린다(prologue.md)
+
 ## skins/ — 겉모양 비교의 질감 [신설 2026-10-26 · 임시]
 
 `d2min_*.webp` 다섯 장 — 설정 탭 `Skin` 의 `D2 Min`(SCREEN_DESIGN §10-5 · ADR-0791)이 쓰는 부품. **컨셉 17번 그림에서 잘라 낸다** — 원본 `source/concept_17_minimal.png`(캐릭터 탭 캡처를 Codex 가 「어둡고 깔끔한 디아블로 2 · 최소화」로 다시 그린 페인트오버 · 지시문 `source/concept_17_minimal_prompt.txt`) · `python src/assets/art/skins/source/cut_d2min_parts.py`
@@ -499,6 +508,10 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 `<죄종 id>.png` 7장(`wrath` · `envy` · `greed` · `sloth` · `gluttony` · `lust` · `pride`) — 몬스터 전용 스킬(헬파이어 · 소환 · 골드 피버)과 같은 **고어한 다크 판타지 단색 실루엣**(512 투명 · 회색 `#d8d8e6` · 긴 변 0.88 · 중앙 50/50)이다. 분노 = 불길이 솟는 비명 지르는 해골 · 시기 = 못 넷이 눈꺼풀을 박은 피눈물 흘리는 눈 · 탐욕 = 송곳니 입이 벌어져 피 흘리는 돈주머니 · 나태 = 사슬 감긴 모래시계와 아래 칸의 해골 · 폭식 = 뼈를 문 송곳니 아가리와 핏방울 · 색욕 = 가시덩굴이 감고 못이 뚫은 심장 · 오만 = 왕관 가시가 이마를 뚫은 뿔 해골. 화면은 알파를 마스크로 써 판 색으로 칠한다(`mock.js:sinIcon` · SCREEN_DESIGN §7 · ADR-0368 — 마스터리 판 머리 · 헬 장 디버프 아이콘) · 신단 칸은 그림 그대로(회색). 원본 = `source/` — Codex 검정 실루엣 2×2 시트(`sheet_A*` 분노 · 시기 · 탐욕 · 나태 · `sheet_B*` 폭식 · 색욕 · 오만 · `sheet_G*` 탐욕 다시) · 지시문 `prompt_*.txt` · 기준 시트 `anchor_dark_mono.png`(설치된 몬스터 스킬 단색 아홉을 검정으로) — 시트 → `cut.py --grid 2x2` → 검정 농도를 알파로 · 회색 칠. 고른 칸 — 분노 `A2` 왼쪽 위 · 시기 `A1` 오른쪽 위 · 탐욕 `G2` 왼쪽 위 · 나태 `A1` 오른쪽 아래 · 폭식 `B2` 왼쪽 위 · 색욕 `B1` 오른쪽 위 · 오만 `B2` 왼쪽 아래(나머지는 시트에만) · 옛 벡터판(`source.html`)은 지웠다(git 이력에만)
 
+## icons/tactics/ — 작전 카드 그림 [신설 2026-11-26]
+
+`<card_id>.png` 3장(`duel` 일기토 · `shieldwall` 방패벽 · `trojan` 트로이 목마 — `tactic_card.csv:card_id` = 파일명 · `mock.js:TACTIC_ICON_FILES` · `build_icons.py:GAME_DIRS` 의 `tactics`) — **배지 장면** — 둥근 배지 안에 그 전술의 장면(512 투명 · 긴 변 0.88 · 중앙 · 근검정 외곽선 · 아이템 합격선 안). 2026-11-25 초안 비교판(`output/2026-11-25_tactic_icons/` — 방향 다섯 × Codex · Gemini)의 `codex_d_scene` 타일을 cut.py 로 누끼했다(SCREEN_DESIGN §15 · ADR-1395 — 처음 넣은 `codex_b_item` 을 갈음). **초안이다** — 방향은 사용자가 다시 고를 수 있다 · 나머지 여덟 장(`wedge` · `charge` · `guard` · `turtle` · `retreat` · `poison_arrow` · `fire_arrow` · `baggage`)은 그림이 없어 화면이 그 카드의 죄종 그림을 세운다.
+
 ## icons/classes/ — 직업 아이콘 [신설 2026-09-27]
 
 `<class_id>.png` 7장(`warrior` · `knight` · `mage` · `archer` · `priest` · `assassin` · `necromancer`) — 스킬 아이콘과 같은 규격(512 투명 · 회색 `#d8d8e6` 단색 실루엣 · 긴 변 0.88 · 중앙). Gemini 시트 `source/sheet_01_classes.png`(3×3)를 `cut.py` 로 잘랐고, 여분 두 칸(낫 · 두건)은 `unused/`. 화면은 알파를 마스크로 써 판 색으로 칠한다(`mock.js:classIcon` · SCREEN_DESIGN §7 · ADR-0375). ⚠ 두건 칸(`unused/hood.png`) 원본에 Gemini 워터마크가 있었다 — 쓰려면 확인한다
@@ -513,16 +526,16 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 ## icons/materials/ — 재료 아이콘 [신설 2026-09-27]
 
-`ores/ore_t2.png`(철광석 `iron_ore`) · `herbs/herb_t1.png`(약초 `herb`) · `timbers/timber_t1.png`(목재 `timber`) 3장 — 재료 id → 파일은 `mock.js:MATERIAL_ICONS`(위 단계 `_2`~`_5` 도 이 그림을 빌리고 칸이 단계 점을 얹는다). 512 투명 · 긴 변 0.88 · 중앙 · 매끈한 로우폴리 면 + 근검정 외곽선. 그림 — 철광석 갈색 모암에 회색 철 결정 셋 · 약초 톱니 잎 가지 하나 · 목재 누운 통나무(나이테 · 수액 방울). ⚠ 철광석은 어두운 회색 덩이라 어두운 칸에서 가장 약하게 읽힌다 · 셋 다 장비 아이콘의 다크 카툰 결(매끈한 셀 음영)과 다르다 — 재발주 중. 버린 후보 `<종류>/source/gold_style_20261116/`(금화 결 · 잔결이 장비 그림과 안 맞아 거름 · 2026-11-16). 다른 단계 그림(옛 t1~t7)은 `<종류>/retired/` · 옛 광석 판은 `ores/source/v1~v3/` — 게임이 안 읽는다. 화면은 자원 탭 단계 상자의 산출물 칸(SCREEN_DESIGN §8 · ADR-0377) · 건설 「다음 랭크」 의 재료 칸(`app.js:matTile` · SCREEN_DESIGN §13-1)
+`ores/ore_t2.png`(철광석 `iron_ore`) · `herbs/herb_t1.png`(약초 `herb`) · `timbers/timber_t1.png`(목재 `timber`) 3장 — 재료 id → 파일은 `mock.js:MATERIAL_ICONS`(위 단계 `_2`~`_5` 도 이 그림을 빌리고 칸이 단계 점을 얹는다). 512 투명 · 긴 변 0.88 · 중앙 · 장비 아이콘과 같은 다크 카툰 결을 더 단순하게(굵은 근검정 외곽선 · 평평한 색 · 잔결 없음 · 한눈에 읽히는 물건 하나). 그림 — 철광석 흙 묻은 푸른 강철빛 광석 덩이 · 약초 끈으로 묶은 톱니 잎 다발 · 목재 곁가지 그루터기가 붙은 누운 통나무(밝은 나이테 면). 원본 = Gemini 2×2 시트(깔끔한 장비 설치본 네 장 기준판 `refs/style_equipment4.png` 만 첨부 — `output/2026-11-26_material_icons_gemini/` · 철광석 = `gemini_c_simple_4` · 약초 · 목재 = `gemini_c_simple_2` · 고르지 않은 칸과 앞서 뽑은 `a_style` · `b_redraw` 판은 그 폴더에만). 버린 후보 `<종류>/source/gold_style_20261116/`(금화 결) · `item_style_20261116/` · `darkitem_20261123/`(Codex) · 옛 로우폴리 판은 git 이력에만. 다른 단계 그림(옛 t1~t7)은 `<종류>/retired/` · 옛 광석 판은 `ores/source/v1~v3/` — 게임이 안 읽는다. 화면은 자원 탭 단계 상자의 산출물 칸(SCREEN_DESIGN §8 · ADR-0377) · 건설 「다음 랭크」 의 재료 칸(`app.js:matTile` · SCREEN_DESIGN §13-1)
 
 ## icons/currency/ — 재화 그림 [신설 2026-10-12]
 
 `<재화 id>.png` 2장 — 512 투명 · 긴 변 0.88 · 중앙 · 파일명 = 자원 셋 id(`app.js:resKind`). 화면은 건설 「다음 랭크」 의 재료 칸(`mock.js:RES_ART` · SCREEN_DESIGN §13-1 · ADR-0323).
 
-| 파일 | 그림 | 원본 시트 (Codex 이미지 생성 · 2×2) | 대안 (`unused/`) | 실측 색 수 · 경계밀도 · 외곽선 |
+| 파일 | 그림 | 원본 시트 (2×2) | 대안 (`unused/`) | 실측 색 수 · 경계밀도 · 외곽선 |
 |---|---|---|---|---|
-| `gold.png` | 왕관을 찍은 금화 한 닢 | `source/sheet_01_codex.png` (미니게임 · 목재 시트 첨부) | `gold_hole` 네모 구멍 · `gold_star` 별 · `gold_skull` 해골 | 140 · 12% · 16 |
-| `dust.png` | 돌절구에 수북한 잿빛 가루(보라 기) | `source/sheet_02_codex.png` (미니게임 · 광석 앵커 · 금화 첨부) | `dust_heap` 강철 조각 섞인 더미 · `dust_pouch` 쏟아진 가죽 주머니 · `dust_sack` 찢어진 자루 | 114 · 15% · 4 |
+| `gold.png` | 왕관을 찍은 금화 한 닢 | `source/sheet_01_codex.png` (Codex · 미니게임 · 목재 시트 첨부) | `gold_hole` 네모 구멍 · `gold_star` 별 · `gold_skull` 해골 | 140 · 12% · 16 |
+| `dust.png` | 잿빛 가루 무더기 — 재료 아이콘과 한 벌(위 절) | `output/2026-11-26_material_icons_gemini/sheets/gemini_c_simple_4.png` 넷째 칸 (Gemini · 장비 기준판 첨부 · 둘레에 떠 있던 김 · 점은 떼어 냈다 — `cut/c_simple_4_r2c2_clean.png`) | 옛 로우폴리 판의 대안 — `dust_heap` 강철 조각 섞인 더미 · `dust_pouch` 쏟아진 가죽 주머니 · `dust_sack` 찢어진 자루 | 119 · 15% · 3 |
 
 지시문은 같은 폴더 `sheet_<번호>_prompt.txt`. 실측은 재료 · 미니게임 설치본 범위 안이다(장비 아이콘 합격선의 색 수 130 은 금화가 조금 넘는다). **빈 것** — 낙인(`stigma` · 죄종별 7종)은 아직 `RES_ART` 의 임시 실루엣이다
 
@@ -605,6 +618,8 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 ## icons/explore/ — 탐험 지점 아이콘 [신설 2026-10-09]
 
 `<지점>.png` 3장(`cave` · `ruins` · `caravan` — 파일명 = `state.js:EXPLORE_SPOTS`) — 512 투명 · **원형 그림 원판**(양피지색 바탕 + 그림 · 가장자리는 검은 선) · **테두리가 없다** — 화면이 땅 색 테두리를 두른다(`mock.js:EXPLORE_REGIONS[장].ring` · `exploreIcon` · SCREEN_DESIGN §8-4 · ADR-0553). 원본 `source/codex_explore_icons_sheet.png`(Codex 이미지 생성 · 2132×738 · 지도 그림을 스타일 기준으로 붙인 청동 테두리 메달 셋) — 메달마다 원을 맞춰 자르고 청동 테두리를 걷어 낸 안쪽 검은 선까지가 원판이다(테두리를 박으면 땅 색마다 7 × 3 장이 된다)
+
+**탐험 표** `ticket_<지점>.png` 3장 [2026-11-26 · ADR-1409] — 512 투명 · 찢긴 끝 · 구멍 둘 · 붉은 밀랍 봉인의 낡은 양피지 표에 그 지점 문양(위 원판과 같은 그림)을 찍었다 · 등급은 그림이 아니라 화면의 칩 테두리 색 · 화면 = 지점 창 표 칩(`mock.js:exploreTicketIcon`). 원본 `source/codex_explore_ticket_sheet.png`(Codex · 1254 2×2 · 위 지점 시트를 스타일 기준으로 붙였다 · `cut.py --grid 2x2`) · 실측 합격(색 수 101 ~ 117 · 경계밀도 11 ~ 14% · 외곽선 15 ~ 16)
 
 ## minigames/ — 자원 미니게임 [전면 교체 2026-10-16]
 
@@ -871,4 +886,4 @@ icons_source/items/empty/
 
 ---
 
-*마지막 업데이트: 2026-11-20*
+*마지막 업데이트: 2026-11-26*

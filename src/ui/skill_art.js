@@ -38,13 +38,13 @@ export const SKILL_ART = {
     kni_defiance: { buff: { file: 'kni_defiance', motion: 'orbit', size: 90, duration: 620 } },
 
     // 마법사 — 화염 · 냉기 · 번개 · 집중 · 얼음 벽 소환.
-    // 아이스 블라스트 · 라이트닝은 초상 바깥 위에서 떨어진다(ADR-0541) — `ay` = 그림에서 초상 가운데에 닿는 높이 · `then` = 이어 서는 그림.
+    // 아이스 블라스트 · 라이트닝은 초상 바깥 위에서 떨어진다(ADR-0541). 두 장짜리는 그림마다 `anchor`를 잡아 같은 `targetY`에 맞춘다.
     mag_fireball: { hit: { file: 'mag_fireball', motion: 'burst', size: 90, duration: 420 } },
     // 인페르노 = 적진에 까는 불(R550 · ADR-1281) — 타격 사건이 없어 `hit` 이 아니라 상대 카드마다 서는 `bad` 다 · 불벽 한 장만 솟는다(이어 깔리던 불바닥은 걷었다 · ADR-1335)
     mag_inferno: { bad: { file: 'mag_inferno', motion: 'pillar', size: 94, duration: 500 } },
     mag_iceblast: { hit: {
-        file: 'mag_iceblast', motion: 'fall', size: 110, ay: .87, duration: 260,
-        then: { file: 'mag_iceblast_shatter', motion: 'shatter', size: 110, ay: .89, duration: 380 },
+        file: 'mag_iceblast', motion: 'fall', size: 110, anchor: [.5, .95], targetY: .61, duration: 260,
+        then: { file: 'mag_iceblast_shatter', motion: 'shatter', size: 110, anchor: [.5, .91], targetY: .61, duration: 380 },
     } },
     mag_frostnova: { hit: { file: 'mag_frostnova', motion: 'wave', size: 94, duration: 480 } },
     mag_lightning: { hit: { file: 'mag_lightning', motion: 'bolt', size: 124, ay: .9, duration: 380 } },
@@ -78,8 +78,8 @@ export const SKILL_ART = {
     } },
     war_whirlwind: { hit: { file: 'war_whirlwind', motion: 'spin', size: 130, duration: 620 } },
     war_thorswrath: { hit: {
-        file: 'war_thorswrath', motion: 'fall', size: 128, ay: .86, duration: 260, quake: true,
-        then: { file: 'war_thorswrath_impact', motion: 'shatter', size: 132, duration: 440 },
+        file: 'war_thorswrath', motion: 'fall', size: 128, anchor: [.5, .95], targetY: .66, duration: 260, quake: true,
+        then: { file: 'war_thorswrath_impact', motion: 'shatter', size: 132, anchor: [.5, .89], targetY: .66, duration: 440 },
     } },
     war_shockwave: { hit: { file: 'war_shockwave', motion: 'ground', size: 140, duration: 520, quake: true } },
     war_command: { buff: { file: 'war_command_shockwave', motion: 'shout', size: 258, ay: .45, duration: 1100, pulses: 3, beat: 75 } },
@@ -94,21 +94,21 @@ export const SKILL_ART = {
     kni_vow: { buff: { file: 'kni_vow', motion: 'heal', size: 130, duration: 720, styles: RETIRED_STYLES } },
     kni_retribution: { buff: { file: 'kni_retribution', motion: 'orders', size: 136, duration: 620 } },
     kni_condemnation: { hit: {
-        file: 'kni_condemnation', motion: 'fall', size: 130, ay: .86, duration: 260, quake: true,
-        then: { file: 'kni_condemnation_impact', motion: 'shatter', size: 130, duration: 420 },
+        file: 'kni_condemnation', motion: 'fall', size: 130, anchor: [.49, .96], targetY: .64, duration: 260, quake: true,
+        then: { file: 'kni_condemnation_impact', motion: 'shatter', size: 130, anchor: [.49, .52], targetY: .64, duration: 420 },
     } },
     kni_showdown: { buff: { file: 'kni_showdown', motion: 'burst', size: 132, duration: 600, styles: RETIRED_STYLES } },
 
-    // 마법사 — 파이어 · 프로스트 · 썬더. 메테오는 바깥 위에서 떨어지고 썬더 스트라이크는 위에서 내리꽂힌다.
+    // 메테오는 불꼬리 방향을 따라 오른쪽 위에서 진입한다. 운석 아랫면과 폭발 밑동을 같은 자리에 맞춘다.
     mag_meteor: { hit: {
-        file: 'mag_meteor', motion: 'fall', size: 140, ay: .82, duration: 300, quake: true,
-        then: { file: 'mag_meteor_impact', motion: 'shatter', size: 140, duration: 460 },
+        file: 'mag_meteor', motion: 'flight', size: 140, anchor: [.34, .94], targetY: .66, entry: [.69, -.88], duration: 300, quake: true,
+        then: { file: 'mag_meteor_impact', motion: 'shatter', size: 140, anchor: [.49, .89], targetY: .66, duration: 460 },
     } },
     mag_firewall: { hit: { file: 'mag_firewall', motion: 'pillar', size: 140, duration: 560, styles: RETIRED_STYLES } },
     mag_hydra: { hit: { file: 'mag_hydra', motion: 'cross', size: 136, duration: 520 } },
     mag_frozenorb: { hit: {
-        file: 'mag_frozenorb', motion: 'thrust', size: 130, duration: 280,
-        then: { file: 'mag_frozenorb_impact', motion: 'shatter', size: 136, duration: 420 },
+        file: 'mag_frozenorb', motion: 'flight', size: 130, anchor: [.72, .51], entry: [-.56, 0], duration: 280,
+        then: { file: 'mag_frozenorb_impact', motion: 'shatter', size: 136, anchor: [.5, .51], duration: 420 },
     } },
     // 블리자드 = 적진에 까는 눈보라(R550 · ADR-1281) — 깔리는 순간(`bad`)도 틱(`hit`)과 같은 얼음 비
     mag_blizzard: { hit: { file: 'mag_blizzard', motion: 'rain', size: 140, ay: .62, duration: 620 }, bad: { file: 'mag_blizzard', motion: 'rain', size: 140, ay: .62, duration: 620 } },
@@ -117,8 +117,8 @@ export const SKILL_ART = {
         then: { file: 'mag_frostburst_impact', motion: 'burst', size: 136, duration: 420, styles: RETIRED_STYLES },
     } },
     mag_thunderstrike: { hit: {
-        file: 'mag_thunderstrike', motion: 'bolt', size: 140, ay: .86, duration: 300, quake: true,
-        then: { file: 'mag_thunderstrike_impact', motion: 'burst', size: 132, duration: 380 },
+        file: 'mag_thunderstrike', motion: 'bolt', size: 140, anchor: [.51, .92], targetY: .64, duration: 300, quake: true,
+        then: { file: 'mag_thunderstrike_impact', motion: 'burst', size: 132, anchor: [.5, .91], targetY: .64, duration: 380 },
     } },
     mag_nova: { hit: { file: 'mag_nova', motion: 'wave', size: 140, duration: 480 } },
     mag_staticfield: { hit: { file: 'mag_staticfield', motion: 'bolt', size: 124, duration: 460, styles: RETIRED_STYLES } },
@@ -126,8 +126,8 @@ export const SKILL_ART = {
     // 궁수 — 스나이퍼 · 보우마스터 · 레인저. 재장전은 화살 고리가 돈다(`spin`).
     arc_trueaim: { buff: { file: 'arc_trueaim', motion: 'inward', size: 130, duration: 600 } },
     arc_singlestrike: { hit: {
-        file: 'arc_singlestrike', motion: 'thrust', size: 140, duration: 280, quake: true,
-        then: { file: 'arc_singlestrike_impact', motion: 'burst', size: 132, duration: 400 },
+        file: 'arc_singlestrike', motion: 'flight', size: 140, anchor: [.96, .55], entry: [-.42, 0], duration: 280, quake: true,
+        then: { file: 'arc_singlestrike_impact', motion: 'burst', size: 132, anchor: [.53, .56], duration: 400 },
     } },
     arc_reload: { buff: { file: 'arc_reload', motion: 'spin', size: 128, duration: 620 } },
     arc_quickdraw: { buff: { file: 'arc_quickdraw', motion: 'sweep', size: 128, duration: 520 } },
@@ -142,8 +142,8 @@ export const SKILL_ART = {
     pri_benediction: { heal: { file: 'pri_benediction', motion: 'heal', size: 136, duration: 760, styles: RETIRED_STYLES } },
     pri_resurrection: { heal: { file: 'pri_resurrection', motion: 'heal', size: 140, duration: 820 } },
     pri_punishment: { hit: {
-        file: 'pri_punishment', motion: 'fall', size: 132, ay: .86, duration: 260, quake: true,
-        then: { file: 'pri_punishment_impact', motion: 'shatter', size: 134, duration: 440 },
+        file: 'pri_punishment', motion: 'fall', size: 132, anchor: [.5, .95], targetY: .66, duration: 260, quake: true,
+        then: { file: 'pri_punishment_impact', motion: 'shatter', size: 134, anchor: [.5, .91], targetY: .66, duration: 440 },
     } },
     pri_atonement: { bad: { file: 'pri_atonement', motion: 'inward', size: 132, duration: 620 } },
     pri_excommunication: { hit: { file: 'pri_excommunication', motion: 'land', size: 128, duration: 480, quake: true } },

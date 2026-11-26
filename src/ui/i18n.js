@@ -263,7 +263,7 @@ const STRINGS = {
     'hint.resource_effects': { ko: '이 줄에 등록한 영웅들의 능력치로 더해지는 효과입니다. 배치를 바꾸면 적용 값도 달라집니다.', en: 'Effects added by the attributes of heroes registered to this line. Changing assignments changes the applied values.', zh: '按派驻到此线的英雄属性追加的效果。调整派驻后，生效数值也会改变。' },
     'hint.assignment': { ko: '이 줄에 효과를 더할 영웅을 등록합니다. 등록된 영웅을 다시 누르면 해제할 수 있습니다.', en: 'Register a hero to add effects to this line. Select a registered hero again to remove the assignment.', zh: '派驻英雄为此线追加效果。再次点击已派驻的英雄可取消派驻。' },
     'hint.minigame': { ko: '선택한 자원 줄의 미니게임입니다. 화면의 조작 안내를 확인하고 시작하세요.', en: 'A minigame for the selected resource line. Review its controls before starting.', zh: '所选资源线的小游戏。请确认画面上的操作说明后开始。' },
-    'hint.explore': { ko: '탐험할 장소와 Party를 정해 보냅니다. 완료 후 돌아온 편성의 보상을 받을 수 있습니다.', en: 'Choose an exploration location and Party. Claim rewards when the exploring party returns.', zh: '选定探索地点与Party后派出。完成后可领取归来编队的奖励。' },
+    'hint.explore': { ko: '탐험 표 한 장과 편성을 골라 보냅니다. 판을 끝까지 깨면 모은 것을 받습니다.', en: 'Send a party with one exploration ticket. Clear the whole run to receive the haul.' },
     'hint.recruit': { ko: '후보 영웅을 확인하고 골드를 내어 고용합니다.', en: 'Inspect candidate heroes and spend gold to hire them.', zh: '查看候选英雄，支付金币雇佣。' },
     'hint.visitors': { ko: '수색 영웅이 찾아온 영웅입니다. 카드를 골라 고용하거나 떠나보낼 수 있습니다.', en: 'Heroes your searchers brought back. Select a card to hire or dismiss a candidate.', zh: '搜寻英雄带回的英雄。选择卡片即可雇佣或送走。' },
     'hint.commissions': { ko: '의뢰를 받아 목표를 채우고 보상을 받습니다. 의뢰 카드에서 조건과 진행도를 확인하세요.', en: 'Accept commissions, complete their objectives and claim rewards. Check each card’s conditions and progress.', zh: '接受委托，完成目标后领取奖励。请在委托卡片上确认条件与进度。' },
@@ -488,8 +488,7 @@ const STRINGS = {
     'exp.departLevelGap': { ko: '파티 평균 Lv.{avg} · 전장 Lv.{level} — 레벨 차이 {gap}. 그래도 출격할까요?', en: 'Party average Lv.{avg}, battlefield Lv.{level}: a gap of {gap}. Deploy anyway?', zh: '队伍平均Lv.{avg} · 战场Lv.{level}——等级差{gap}。仍要出击吗？' },   // 출정 확인 창 (R418 · ADR-1025)
     'exp.departCut': { ko: '이 파티는 지금 원정 중입니다. 진행 중인 원정을 접고 새로 출격할까요?', en: 'This party is on an expedition. End the current run and deploy anew?', zh: '此队伍正在远征。要中止当前远征并重新出击吗？' },
     // 탐험에 나가 있는 제 편성을 보낸다 — 진행 중 = 불러들인다 · 끝났다 = 결과를 받는다 · 다 안 들면 거절 (SCREEN_DESIGN §4-1 · ADR-1182)
-    'exp.departRecall': { ko: '이 파티는 지금 탐험 중입니다. 진행 중인 탐험을 불러들이고 출격할까요? 탐험 보상은 받지 못합니다.', en: 'This party is out exploring. Call the exploration back and deploy? No exploration reward will be received.', zh: '此队伍正在探索。要召回进行中的探索并出击吗？将无法获得探索奖励。' },
-    'exp.departCollect': { ko: '이 파티의 탐험이 끝나 있습니다. 탐험 결과를 인벤토리에 받고 출격할까요?', en: "This party's exploration has finished. Collect the haul into the inventory and deploy?", zh: '此队伍的探索已结束。要将探索结果收入背包后出击吗？' },
+    'exp.departRecall': { ko: '이 파티는 지금 탐험 중입니다. 진행 중인 탐험을 불러들이고 출격할까요? 모은 것과 탐험 표를 잃습니다.', en: 'This party is out exploring. Call the run back and deploy? The haul and the ticket will be lost.' },
     'exp.departBagFull': { ko: '탐험 결과를 받을 인벤토리 칸 부족', en: 'Not enough inventory space for the exploration haul', zh: '背包空位不足，无法收取探索结果' },
     'exp.locked': { ko: '이전 스테이지 클리어', en: 'Clear the previous stage', lock: true, zh: '需通关上一关卡' },
     // 잠긴 장의 한 줄 — 그 장을 여는 앞 장 보스 (SCREEN_DESIGN §4-1 · §8-4 · ADR-0719 · R319). {ch} = 보스 칸의 장(`game.chapterGate`)
@@ -586,26 +585,26 @@ const STRINGS = {
     'mm.err.notMet': { ko: '아직 채우지 않은 미션입니다', en: 'This mission is not complete yet', zh: '该任务尚未完成' },
     'mm.err.claimed': { ko: '이미 받은 보상입니다', en: 'Already claimed', zh: '奖励已领取' },
     'mm.err.missing': { ko: '없는 미션입니다', en: 'Unknown mission', zh: '不存在的任务' },
-    'mm.c.battle': { ko: '원정 보내기', en: 'Send an expedition', zh: '派出远征' },
-    'mm.c.build': { ko: '{building} 짓기', en: 'Build the {building}', zh: '建造{building}' },
-    'mm.c.buildRank': { ko: '{building} {n}랭크 짓기', en: 'Build {building} rank {n}', zh: '将{building}建到{n}级' },
-    'mm.c.clear': { ko: '{place} 보스 처치', en: 'Defeat the {place} boss', zh: '击败{place}的首领' },
-    'mm.c.fame': { ko: '의뢰 보상 받기', en: 'Claim a commission reward', zh: '领取委托奖励' },
-    'mm.c.research': { ko: '연구소 연구 시작', en: 'Start a lab research', zh: '开始研究所研究' },
-    'mm.c.runs': { ko: '{n}부대 동시 원정', en: 'Run {n} parties at once', zh: '同时派出{n}支队伍远征' },
-    'mm.c.reg': { ko: '{line} 줄에 영웅 등록', en: 'Register a hero to {line}', zh: '为{line}登记英雄' },
-    'mm.c.count.upgrade': { ko: '장비 강화하기', en: 'Upgrade a piece of gear', zh: '强化装备' },
-    'mm.c.count.gamble': { ko: '도박장 한 판', en: 'Play a round at the Gambling Den', zh: '在赌坊玩一局' },
-    'mm.c.count.explore': { ko: '탐험 보내기', en: 'Send an exploration', zh: '派出探险' },
-    'mm.c.count.tacticEquip': { ko: '작전 카드 장착', en: 'Equip a tactic card' },   // 1장 「처음 한 번」 줄 (R583 · 2026-11-26 R586 — 옛 「전술 리롤」)
-    'mm.c.event.mastery': { ko: '스킬 포인트 찍기', en: 'Spend a skill point' },
-    'mm.c.event.take': { ko: '의뢰 받기', en: 'Take a commission' },
-    'mm.c.event.sell': { ko: '장비 판매하기', en: 'Sell a piece of gear' },
-    'mm.c.event.potion': { ko: '물약 구매하기', en: 'Buy a potion' },
-    'mm.c.event.salvage': { ko: '장비 분해하기', en: 'Salvage a piece of gear' },
+    // 미션 이름 = 「{where}에서 {무엇을} 하기」 — {where} = 그 미션을 하는 탭의 메뉴 이름(`app.js:mmLabel` 이 `nav.<탭>` 을 넣는다 · 2026-11-26 · ADR-1420)
+    'mm.c.battle': { ko: '{where}에서 파티 보내기', en: 'Send a party out in {where}', zh: '在{where}派出队伍' },
+    'mm.c.build': { ko: '{where}에서 {building} 짓기', en: 'Build the {building} in {where}', zh: '在{where}建造{building}' },
+    'mm.c.buildRank': { ko: '{where}에서 {building} {n}랭크 짓기', en: 'Build {building} rank {n} in {where}', zh: '在{where}将{building}建到{n}级' },
+    'mm.c.clear': { ko: '{where}에서 {place} 보스 처치하기', en: 'Defeat the {place} boss in {where}', zh: '在{where}击败{place}的首领' },
+    'mm.c.fame': { ko: '{where}에서 의뢰 보상 받기', en: 'Claim a commission reward at the {where}', zh: '在{where}领取委托奖励' },
+    'mm.c.research': { ko: '{where}에서 연구 시작하기', en: 'Start a research in the {where}', zh: '在{where}开始研究' },
+    'mm.c.runs': { ko: '{where}에서 {n}부대 동시에 보내기', en: 'Run {n} parties at once in {where}', zh: '在{where}同时派出{n}支队伍' },
+    'mm.c.reg': { ko: '{where}에서 {line} 줄에 영웅 등록하기', en: 'Register a hero to {line} in the {where}', zh: '在{where}为{line}登记英雄' },
+    'mm.c.count.upgrade': { ko: '{where}에서 장비 강화하기', en: 'Upgrade a piece of gear at the {where}', zh: '在{where}强化装备' },
+    'mm.c.count.gamble': { ko: '{where}에서 도박장 한 판 하기', en: 'Play a round of gambling at the {where}', zh: '在{where}的赌坊玩一局' },
+    'mm.c.count.explore': { ko: '{where}에서 파티 보내기', en: 'Send a party out in {where}', zh: '在{where}派出队伍' },
+    'mm.c.count.tacticEquip': { ko: '{where}에서 작전 카드 장착하기', en: 'Equip a tactic card in {where}' },   // 1장 「처음 한 번」 줄 (R583 · 2026-11-26 R586 — 옛 「전술 리롤」)
+    'mm.c.event.mastery': { ko: '{where}에서 스킬 포인트 찍기', en: 'Spend a skill point in {where}' },
+    'mm.c.event.take': { ko: '{where}에서 의뢰 받기', en: 'Take a commission at the {where}' },
+    'mm.c.event.sell': { ko: '{where}에서 장비 판매하기', en: 'Sell a piece of gear at the {where}' },
+    'mm.c.event.potion': { ko: '{where}에서 물약 구매하기', en: 'Buy a potion at the {where}' },
+    'mm.c.event.salvage': { ko: '{where}에서 장비 분해하기', en: 'Salvage a piece of gear in {where}' },
     // 1장 튜토리얼 — 두루마리 아래 팻말 머리 · 길 안내 단계마다 설명 말풍선 `mm.tut.<미션>.<단계>` (2026-11-25 · SCREEN_DESIGN §2 「메인미션」 · ADR-1381 · `app.js:MM_TUTORIAL`)
     'mm.tut': { ko: '튜토리얼', en: 'Tutorial' },
-    'mm.tut.done': { ko: '튜토리얼 완료', en: 'Tutorial Complete' },   // 채운 튜토리얼 줄의 완료 판 머리 (2026-11-26 · ADR-1388)
     'mm.tut.c1_depart.tab': { ko: '원정은 파티를 장소에 보내 싸우게 하는 곳입니다. 전투는 알아서 진행되고, 주운 장비와 재료는 인벤토리에 쌓입니다.', en: 'Expeditions send your party out to fight. Battles play out on their own, and the gear and materials they find pile up in your inventory.' },
     'mm.tut.c1_depart.place': { ko: '싸울 장소를 고릅니다. 장소마다 칸이 이어져 있어 이기면 다음 칸으로 넘어가고, 마지막 칸에서는 그 장소의 보스가 기다립니다.', en: "Pick a place to fight. Each place is a run of cells: win and you move on to the next, with the place's boss waiting in the last one." },
     'mm.tut.c1_depart.send': { ko: '보내면 파티가 알아서 싸웁니다. 원정은 게임이 켜져 있는 동안에만 진행됩니다. 꺼 둔 동안에는 연구소가 일합니다.', en: 'Once sent, the party fights on its own. Expeditions only run while the game is open; while it is closed, the Laboratory does the work.' },
@@ -614,19 +613,12 @@ const STRINGS = {
     'mm.tut.c1_storage.build': { ko: '창고를 지으면 연구소의 자원 줄이 열리고, 자원 줄은 게임을 꺼 둔 동안에도 재료를 모읍니다. 비용을 내면 바로 지어집니다.', en: "Building the Storage opens the Laboratory's Resources line, which keeps gathering materials even while the game is closed. Pay the cost and it is built at once." },
     'mm.tut.c1_reg.tab': { ko: '연구소는 게임을 꺼 둔 동안에도 일하는 곳입니다. 줄마다 영웅을 등록해야 그 줄이 돌아갑니다.', en: 'The Laboratory keeps working while the game is closed. A line only runs once a hero is registered to it.' },
     'mm.tut.c1_reg.line': { ko: '빈 칸을 눌러 자원 줄에서 일할 영웅을 고릅니다.', en: 'Click the empty slot to choose a hero for the Resources line.' },
-    'mm.tut.c1_reg.hero': { ko: '등록한 영웅도 원정에는 그대로 나갈 수 있습니다. 자원 줄은 영웅이 많을수록, 힘이 높을수록 빨리 모입니다.', en: 'Registered heroes can still go on expeditions. The Resources line gathers faster with more heroes and higher Strength.' },
+    'mm.tut.c1_reg.hero': { ko: '등록한 영웅도 원정에는 그대로 나갈 수 있습니다. 자원 줄은 영웅이 많을수록 빨리 모입니다.', en: 'Registered heroes can still go on expeditions. The Resources line gathers faster with more heroes.' },
     'mm.tut.c1_reg.apply': { ko: '적용하면 등록이 끝나고 줄이 돌기 시작합니다. 꺼 둔 동안 모인 재료는 다시 접속하면 들어와 있습니다.', en: 'Apply to register, and the line starts running. Materials gathered while you are away will be waiting when you return.' },
-    'mm.tut.c1_research.tab': { ko: '연구소의 지점을 연구하면 줄이 더 잘 돌아갑니다.', en: "Researching the Laboratory's nodes makes its lines work better." },
-    'mm.tut.c1_research.node': { ko: '지점마다 하는 일이 다릅니다. 레벨을 올리면 재료가 더 많이 모이거나, 꺼 둔 시간을 더 길게 쳐 줍니다.', en: 'Each node does something different: higher levels gather more materials, or count more of the time you are away.' },
-    'mm.tut.c1_research.go': { ko: '연구에는 골드와 재료, 그리고 시간이 듭니다. 연구가 끝나면 지점 레벨이 오릅니다.', en: 'Research costs gold, materials and time. When it finishes, the node gains a level.' },
-    // 연구 비용이 모자라면 받을 보상으로 먼저 — 두루마리 · 판의 받기 (2026-11-26 · ADR-1382 · 시안 B)
-    'mm.tut.c1_research.claim': { ko: '메인미션을 채우면 보상이 두루마리에 쌓입니다. 연구 비용은 그 보상으로 냅니다.', en: 'Completed main missions leave their rewards in the scroll. Pay for the research with them.' },
-    // 받기 단계 — 완료 판 [받기] · 판의 [모두 받기] 공통 (ADR-1382 · ADR-1388)
-    'mm.tut.claim': { ko: '받기를 누르면 채운 미션의 보상이 들어옵니다.', en: 'Claim to receive the rewards of completed missions.' },
-    'mm.c.event.hire': { ko: '영웅 고용하기', en: 'Hire a hero', zh: '雇佣英雄' },
-    'mm.c.event.book': { ko: '스킬북 배우기', en: 'Learn from a skill book', zh: '学习技能书' },
-    'mm.c.event.equip': { ko: '장비 장착하기', en: 'Equip a piece of gear', zh: '穿戴装备' },
-    'mm.c.spot.ruins': { ko: '폐허로 탐험 보내기', en: 'Send an exploration to the Ruins', zh: '向废墟派出探险' },
+    'mm.c.event.hire': { ko: '{where}에서 영웅 고용하기', en: 'Hire a hero at the {where}', zh: '在{where}雇佣英雄' },
+    'mm.c.event.book': { ko: '{where}에서 스킬북 배우기', en: 'Learn from a skill book in the {where}', zh: '在{where}学习技能书' },
+    'mm.c.event.equip': { ko: '{where}에서 장비 장착하기', en: 'Equip a piece of gear in {where}', zh: '在{where}穿戴装备' },
+    'mm.c.spot.ruins': { ko: '{where}에서 폐허로 파티 보내기', en: 'Send a party to the Ruins in {where}', zh: '在{where}向废墟派出队伍' },
     'mail.fromMission': { ko: '메인미션', en: 'Main Missions', zh: '主线任务' },   // 메인미션 상자가 창고에 못 들어가 온 우편 (R524)
     'mail.claim': { ko: '받기', en: 'Claim', zh: '领取' },
     'mail.claimAll': { ko: '모두 받기', en: 'Claim All', zh: '全部领取' },
@@ -634,18 +626,15 @@ const STRINGS = {
     // 상단바 종 — 다음 할 일과 처리 대기 결과. 배지는 미확인 알림 + 미션이다(ADR-0998).
     'nt.h': { ko: '알림', en: 'Notifications', zh: '通知' },
     'nt.folder.notifications': { ko: '알림', en: 'Notifications', zh: '通知' },
-    'nt.folder.missions': { ko: '미션', en: 'Missions', zh: '任务' },
     'nt.folder.achievements': { ko: '업적', en: 'Achievements', zh: '成就' },
     'nt.achievementsLocked': { ko: '업적 · 준비 중', en: 'Achievements · Coming soon', zh: '成就 · 准备中' },
-    'nt.missionsEmpty': { ko: '진행 중인 미션 없음', en: 'No active missions', zh: '没有进行中的任务' },
-    'nt.count': { ko: '알림과 미션 · {n}건', en: { one: 'Notifications and missions · {n} item', other: 'Notifications and missions · {n} items' }, zh: '通知与任务 · {n}条' },
-    'nt.next': { ko: '다음 할 일', en: 'Next step', zh: '下一步' },
+    'nt.count': { ko: '알림 · {n}건', en: { one: 'Notifications · {n} item', other: 'Notifications · {n} items' }, zh: '通知 · {n}条' },   // 「미션」 폴더를 걷었다 — 원정 준비 점검도 알림 한 건 (ADR-1425)
     'nt.empty': { ko: '대기 중인 알림 없음', en: 'No pending tasks', zh: '没有待处理的通知' },
     'nt.shortcut': { ko: '바로가기', en: 'Go to', zh: '前往' },
     'nt.check': { ko: '확인', en: 'OK', zh: '确定' },
     'nt.arrived': { ko: '새 알림 {n}건', en: { one: '{n} new notification', other: '{n} new notifications' }, zh: '{n}条新通知' },
     'nt.kind.commission': { ko: '의뢰 목표 달성 · 보상 수령 가능', en: 'Commission goal met · Reward ready', zh: '委托目标达成 · 可领取奖励' },
-    'nt.kind.explore': { ko: '탐험 완료 · 결과 수령 가능', en: 'Exploration complete · Results ready', zh: '探索完成 · 可领取结果' },
+    'nt.kind.explore': { ko: '탐험 판 끝 · 결과 보기', en: 'Exploration run over · View result' },
     'nt.kind.join': { ko: '가입 희망 영웅 도착', en: 'Hero awaiting recruitment', zh: '希望加入的英雄已到达' },
     'nt.kind.mastery': { ko: '스킬 포인트 사용 가능', en: 'Skill points available', zh: '有可用的技能点' },
     'nt.kind.offline': { ko: '오프라인 생산분 입고', en: 'Offline Production Received', zh: '离线产出已入库' },
@@ -1072,6 +1061,7 @@ const STRINGS = {
     'dp.desc.res.relief': { ko: '보유량이 가장 적은 재료를 더 빨리 생산합니다. 가장 많은 재료와의 보유 비율 차이가 클수록 가속률이 높습니다.', en: 'Speeds up production of your least-stocked material. The bonus grows as its stock falls further below your largest stock.', zh: '加快库存最少的材料的生产速度。它与库存最多的材料之间的比例差越大，加速幅度越高。' },
     'dp.desc.visit.interval': { ko: '영웅이 선술집에 더 자주 찾아옵니다.', en: 'Heroes arrive at the Tavern more often.', zh: '英雄更频繁地来到酒馆。' },
     'dp.desc.visit.quality': { ko: '찾아오는 영웅이 레어일 확률을 높입니다.', en: 'Raises the chance that an arriving hero is Rare.', zh: '提高来访英雄为稀有的几率。' },
+    'dp.desc.visit.commission': { ko: '새로 서는 의뢰 카드의 목표와 보상이 커집니다.', en: 'New commission cards ask for more and pay more.', zh: '新出现的委托卡目标与奖励都会增加。' },   // 의뢰 레벨 (R592 · ADR-1411)
     'dp.desc.visit.waiting': { ko: '찾아온 영웅이 기다리는 선술집 칸을 늘립니다. 마지막 레벨은 데려올 최저 등급을 고르는 거르기를 엽니다.', en: 'Adds Tavern slots where arriving heroes wait. The last level unlocks Filter, which sets the lowest grade to bring in.', zh: '增加来访英雄在酒馆等候的格子。最后一级开启筛选，可选择带来的最低品级。' },
     'dp.desc.train.speed': { ko: '훈련에 등록한 영웅이 시간마다 받는 경험치를 늘립니다.', en: 'Increases the XP each registered hero gains per hour.', zh: '增加登记训练的英雄每小时获得的经验。' },
     'dp.desc.train.range': { ko: '훈련으로 오를 수 있는 레벨 상한을 높입니다. 상한은 로스터 최고 레벨보다 이 값만큼 낮습니다.', en: 'Raises the level cap Training can reach. The cap sits this many levels below your highest-level hero.', zh: '提高训练可达到的等级上限。上限比名册中的最高等级低该数值。' },
@@ -1082,6 +1072,7 @@ const STRINGS = {
     'dp.node.interval': { ko: '간격', en: 'Interval', zh: '间隔' },
     'dp.node.quality': { ko: '품질', en: 'Quality', zh: '品质' },
     'dp.node.waiting': { ko: '대기소', en: 'Waiting Room', zh: '等候所' },
+    'dp.node.commission': { ko: '의뢰', en: 'Commissions', zh: '委托' },   // 수색 줄 — 의뢰 레벨 (R592)
     'dp.node.speed': { ko: '속도', en: 'Speed', zh: '速度' },
     'dp.val.trainXp': { ko: '+{n} XP/시간', en: '+{n} XP/h', zh: '+{n} 经验/小时' },
     'dp.node.range': { ko: '범위', en: 'Range', zh: '范围' },
@@ -1110,6 +1101,9 @@ const STRINGS = {
     'dp.what.res.relief': { ko: '부족 재료 가속', en: 'Low-stock boost' },
     'dp.what.visit.interval': { ko: '영웅 도착 속도', en: 'Hero arrival speed' },
     'dp.what.visit.quality': { ko: '레어 확률', en: 'Rare chance' },
+    'dp.what.visit.commission': { ko: '의뢰 카드', en: 'Commission cards' },   // R592
+    'dp.val.cmMult': { ko: '목표 ×{n} · 골드 ×{g}', en: 'Goal ×{n} · Gold ×{g}', zh: '目标×{n} · 金币×{g}' },   // 의뢰 지점 값 = 그 레벨의 배수 (R592 · ADR-1411)
+    'dp.need.claims': { ko: '의뢰 완료 {have} / {need}', en: 'Commissions completed {have} / {need}', zh: '已完成委托 {have} / {need}' },   // 의뢰 지점 다음 레벨의 문턱 — 잠긴 자리의 한 토막(「~ 필요」 금지 · ADR-0699 · R592 · ADR-1411)
     'dp.what.visit.waiting': { ko: '선술집 대기', en: 'Tavern waiting' },
     'dp.what.train.speed': { ko: '훈련 경험치', en: 'Training XP' },
     'dp.what.train.range': { ko: '훈련 상한', en: 'Training cap' },
@@ -1169,41 +1163,78 @@ const STRINGS = {
     'dp.fx.headsN': { ko: '{n}명', en: '{n} registered', zh: '{n}名' },
     // 도움말 연구소 섹션 (SCREEN_DESIGN §12 · 2026-10-21 R298 — ~~벤치(파견 대기)~~ 문장 대체) — 탐험 `ex.help` · 시련의 탑 `cs.help` 와 같은 도움말 전용 문장
     'dp.help': {
-        ko: '줄은 <b>영웅이 없어도</b> 시간마다 생산합니다 — 게임을 꺼 둔 동안에도(최대 {h}시간 · 수색은 칸이 찰 때까지)<br>'
+        ko: '줄은 <b>등록한 영웅이 있어야</b> 시간마다 생산합니다 — 게임을 꺼 둔 동안에도(최대 {h}시간 · 수색은 칸이 찰 때까지)<br>'
             + '지점을 골라 <b>연구</b>하면 레벨이 오릅니다 — 시간이 걸리고 연구소 전체에 <b>한 번에 하나</b> · 그만두면 비용을 전부 돌려받습니다 · 연구소 랭크가 새 지점을 엽니다<br>'
-            + '영웅을 줄에 <b>등록</b>하면 자원 · 도박장은 <b>한 명마다 기본 한 몫</b>이 더해지고(1명 2배 · 2명 3배 · 3명 4배) 수색은 <b>영웅마다 시계가 하나씩</b> 더 돌며, 능력치가 덤을 줍니다 — 힘 속도 · 운 대박 · 지능 연구 시간 · 매력 품질 · 건강 숙련(오래 등록할수록) · 통솔 같은 줄 동료 · 민첩 연구 비용. 등록은 원정 · 탐험과 겸합니다<br>'
+            + '영웅을 줄에 <b>등록</b>하면 자원 · 도박장은 <b>한 명마다 한 몫</b>을 생산하고(1명 100% · 2명 200% · 3명 300%) 수색은 <b>영웅마다 시계가 하나씩</b> 돌며, 능력치가 덤을 줍니다 — 운 대박 · 지능 연구 시간 · 매력 품질 · 건강 숙련(오래 등록할수록) · 통솔 같은 줄 동료 · 민첩 연구 비용. 등록은 원정 · 탐험과 겸합니다<br>'
             + '<b>훈련</b> 줄은 등록한 영웅이 경험치를 받습니다(로스터 최고 레벨까지) · <b>도박장</b> 줄은 선술집의 도박장이 열리면 같이 열립니다',
-        en: 'Lines produce over time <b>without heroes</b> — even while the game is closed (up to {h}h · Search until the slots fill)<br>'
+        en: 'Lines produce over time <b>only with a hero assigned</b> — even while the game is closed (up to {h}h · Search until the slots fill)<br>'
             + 'Pick a node and <b>Research</b> it to raise its level — it takes time and the Laboratory runs <b>one at a time</b> · cancelling refunds the full cost · Laboratory rank opens new nodes<br>'
-            + 'Each hero <b>assigned</b> to Resources or the Gambling Den adds <b>one more share of the base</b> (1 hero ×2 · 2 ×3 · 3 ×4), each hero on Search runs <b>a clock of their own</b>, and stats add a bonus on top — Strength speed · Luck jackpot · Intelligence research time · Charisma quality · Vitality mastery (the longer assigned) · Leadership peers on the line · Agility research cost. Assignment does not stop expeditions or exploring<br>'
+            + 'Each hero <b>assigned</b> to Resources or the Gambling Den produces <b>one share</b> (1 hero 100% · 2 200% · 3 300%), each hero on Search runs <b>a clock of their own</b>, and stats add a bonus on top — Luck jackpot · Intelligence research time · Charisma quality · Vitality mastery (the longer assigned) · Leadership peers on the line · Agility research cost. Assignment does not stop expeditions or exploring<br>'
             + 'The <b>Training</b> line gives XP to its assigned heroes (up to the roster\'s top level) · the <b>Gambling Den</b> line opens along with the Tavern\'s Gambling Den',
-        zh: '线<b>即使没有英雄</b>也会随时间生产——游戏关闭期间也一样（最多{h}小时 · 搜寻则直到等候位填满）<br>选择节点进行<b>研究</b>即可提升等级——需要花费时间，整个研究所<b>同时只能进行一项</b> · 中止可全额返还费用 · 研究所升阶会开启新节点<br>将英雄<b>派驻</b>到线上后，资源 · 赌坊<b>每名英雄追加一份基础产量</b>（1名×2 · 2名×3 · 3名×4），搜寻则<b>每名英雄多跑一个计时器</b>，属性还会额外加成——力量：速度 · 幸运：大丰收 · 智力：研究时间 · 魅力：品质 · 体力：熟练（派驻越久越高）· 统率：同线同伴 · 敏捷：研究费用。派驻可与远征 · 探索兼任<br><b>训练</b>线让派驻的英雄获得经验（最高至名册中的最高等级）· <b>赌坊</b>线在酒馆的赌坊开放时一同开放',
+        zh: '线<b>需要派驻英雄</b>才会随时间生产——游戏关闭期间也一样（最多{h}小时 · 搜寻则直到等候位填满）<br>选择节点进行<b>研究</b>即可提升等级——需要花费时间，整个研究所<b>同时只能进行一项</b> · 中止可全额返还费用 · 研究所升阶会开启新节点<br>将英雄<b>派驻</b>到线上后，资源 · 赌坊<b>每名英雄产出一份</b>（1名100% · 2名200% · 3名300%），搜寻则<b>每名英雄各跑一个计时器</b>，属性还会额外加成——幸运：大丰收 · 智力：研究时间 · 魅力：品质 · 体力：熟练（派驻越久越高）· 统率：同线同伴 · 敏捷：研究费用。派驻可与远征 · 探索兼任<br><b>训练</b>线让派驻的英雄获得经验（最高至名册中的最高等级）· <b>赌坊</b>线在酒馆的赌坊开放时一同开放',
     },
     'dp.solo': { ko: '1인', en: 'Solo', zh: '单人' },
-    /* ── 탐험 탭 — 지도 위 지점 아이콘 → 아이콘 옆 지점 창 (SCREEN_DESIGN §8-4 · ADR-0553 · ADR-0558 · 2026-10-09) ──
-       거절은 `game.exploreErr` · `exploreTake` · `exploreDrop` 의 결과 코드와 짝 (`ex.err.<code>`) · 규칙 문장은 도움말(`ex.help`) · 창엔 설명 글줄이 없다(ADR-0560) */
+    /* ── 탐험 탭 — 지도 위 지점 아이콘 → 아이콘 옆 지점 창 · 판 관전 · 결과 카드 (SCREEN_DESIGN §8-4 · 2026-11-26 R590 · ADR-1400 ~ ADR-1404) ──
+       거절은 `game.exploreErr` 의 결과 코드와 짝 (`ex.err.<code>` — `unbuilt` 는 탐험 건설 한 줄 `flashNeed`) · 규칙 문장은 도움말(`help.explore.*`) · 창엔 설명 글줄이 없다(ADR-0560)
+       ~~`ex.take` · `ex.cancel*` · `ex.taken*` · `ex.canceled` · `ex.err.pending` · `busy` · `slots` · `notDone` · `bagFull`~~ 옛 시간제와 함께 걷음 */
     // 지점 이름은 장마다 다르다 — 화면 문구가 아니라 데이터라 `explore_spot.csv` 가 든다 (ADR-0563)
-    'ex.go': { ko: '출발', en: 'Set out', zh: '出发' },
+    'ex.tickets': { ko: '탐험 표', en: 'Tickets' },
+    'ex.noTicket': { ko: '표 없음', en: 'No tickets' },
+    'ex.tk': { ko: '{diff} · {grade}', en: '{diff} · {grade}' },   // 표 한 종류 — 난이도 · 등급(아이템 희귀도 이름)
+    'ex.tkN': { ko: '×{n}', en: '×{n}' },
+    'ex.repeat': { ko: '이어 돌기', en: 'Repeat' },
+    'ex.stopLoss': { ko: '지면 멈춤', en: 'Stop on loss' },
+    'ex.go': { ko: '보내기', en: 'Send', zh: '出发' },
     'ex.left': { ko: '남은 시간 {t}', en: '{t} left', zh: '剩余时间{t}' },
-    'ex.take': { ko: '수령', en: 'Collect', zh: '领取' },
-    'ex.cancel': { ko: '불러들이기', en: 'Call back', zh: '召回' },
-    'ex.cancelConfirm': { ko: '정말 불러들일까요? 한 번 더 누르면 불러들입니다', en: 'Really? Click again to call back', zh: '确定要召回吗？再按一次即召回' },
+    'ex.step': { ko: '{n} / {total}', en: '{n} / {total}' },
+    'ex.watch': { ko: '보기', en: 'Watch' },
+    'ex.recall': { ko: '부르기', en: 'Call back' },
+    'ex.recallAsk': { ko: '이 파티를 불러들일까요? 모은 것과 탐험 표를 잃습니다.', en: 'Call this party back? The haul and the ticket will be lost.' },
+    'ex.recalled': { ko: '탐험을 불러들였습니다', en: 'Exploration called back' },
     'ex.sent': { ko: '{spot} 탐험 출발', en: 'Off to the {spot}', zh: '出发探索{spot}' },
-    'ex.taken': { ko: '장비 {n}개 수령', en: 'Collected {n} gear', zh: '领取了{n}件装备' },
-    'ex.takenBooks': { ko: '장비 {n}개 · 스킬북 {b}권 수령', en: 'Collected gear {n} · skill books {b}', zh: '领取了{n}件装备 · {b}本技能书' },   // 동굴 보상에 책이 섞였을 때 (§8-4 · ADR-1198)
-    'ex.canceled': { ko: '탐험 불러들임', en: 'Exploration called back', zh: '已召回探索' },
-    'ex.err.missing': { ko: '없는 지점', en: 'No such spot', zh: '地点不存在' },
-    'ex.err.pending': { ko: '준비 중', en: 'Coming later', zh: '准备中' },
-    'ex.err.busy': { ko: '이미 탐험 중인 지점', en: 'Someone is already out there', zh: '该地点已在探索中' },
-    'ex.err.slots': { ko: '동시 탐험은 {n}건까지', en: 'Up to {n} exploration(s) at a time', zh: '最多同时进行{n}个探索' },
-    // 편성 쪽 거절 — 탐험은 편성으로 보낸다 (2026-10-10 · ADR-0582 · ~~`ex.err.full`~~ 은 편성이 인원을 못 넘어 걷었다)
+    // 판이 끝났다 — 오른쪽 아래 알림(ADR-0692 · ADR-1404) · 부름은 유저가 누른 일이라 안 띄운다
+    'ex.end.won': { ko: '{spot} 완수', en: '{spot} completed' },
+    'ex.end.lost': { ko: '{spot} 실패', en: '{spot} failed' },
+    // 결과 — 지점 창 결과 줄 · 결과 카드 (ADR-1404)
+    'ex.res.won': { ko: '완수', en: 'Completed' },
+    'ex.res.lost': { ko: '실패', en: 'Failed' },
+    'ex.res.recalled': { ko: '부름', en: 'Called back' },
+    'ex.res.open': { ko: '결과 보기', en: 'View result' },
+    'ex.res.got': { ko: '받은 것', en: 'Received' },
+    'ex.res.lostAll': { ko: '모은 것과 탐험 표를 잃었습니다', en: 'The haul and the ticket were lost' },
+    'ex.res.thanks': { ko: '감사인사', en: 'Thanks' },
+    'ex.res.join': { ko: '가입 희망', en: 'Wants to join' },
+    'ex.res.joinFull': { ko: '자리 없음', en: 'No room' },
+    // 관전 — 지도 · 정보 카드 · 전투 머리 (ADR-1401 ~ ADR-1403)
+    'ex.w.back': { ko: '탐험 지도', en: 'World map' },
+    'ex.w.toMap': { ko: '지도로', en: 'Back to map' },
+    'ex.w.raids': { ko: '습격', en: 'Raids' },
+    'ex.w.events': { ko: '이벤트', en: 'Events' },
+    'ex.w.fights': { ko: '전투', en: 'Fights' },
+    'ex.w.leftH': { ko: '남은 시간', en: 'Time left' },
+    'ex.w.bank': { ko: '모은 것', en: 'Haul' },
+    'ex.w.bankV': { ko: '골드 {g} · 장비 {i} · 책 {b} · 카드 {c}', en: 'Gold {g} · Gear {i} · Books {b} · Cards {c}' },
+    'ex.w.ambush': { ko: '습격!', en: 'Ambush!' },
+    'ex.w.raidN': { ko: '습격 {n} / {total}', en: 'Raid {n} / {total}' },
+    'ex.w.cell': { ko: '{spot} — {cell}', en: '{spot} — {cell}' },
+    'ex.w.elite': { ko: '정예', en: 'Elite' },
+    'ex.w.unknown': { ko: '???', en: '???' },
+    'ex.w.next': { ko: '다음 전투까지 {t}', en: 'Next fight in {t}' },
+    'ex.w.waitEnd': { ko: '판이 끝날 때까지 {t}', en: 'Run ends in {t}' },   // 기다림 — 다시 켰을 때 결과를 계산해 둔 판 (11-26 「끝 시각 유지」)
+    'ex.w.ev.monster': { ko: '몬스터', en: 'Monsters' },
+    'ex.w.ev.trap': { ko: '함정', en: 'Trap' },
+    'ex.w.ev.rare': { ko: '드문 만남', en: 'Rare encounter' },
+    'ex.w.ev.item': { ko: '물건', en: 'A find' },
+    'ex.w.ev.empty': { ko: '빈 방', en: 'Empty room' },
+    'ex.err.missing': { ko: '없는 표', en: 'No such ticket' },
+    'ex.err.noTicket': { ko: '표 없음', en: 'No tickets left' },
+    // 편성 쪽 거절 — 탐험은 편성으로 보낸다 (2026-10-10 · ADR-0582) · `full` = 원정 + 탐험이 편성 수만큼 나가 있다 (R590 D14)
     'ex.err.noParty': { ko: '빈 편성', en: 'That party is empty', zh: '空编队' },
     'ex.err.running': { ko: '원정 철수', en: 'Retreat from the expedition', lock: true, zh: '从远征撤退' },
     'ex.err.exploring': { ko: '이미 탐험 중', en: 'Already out exploring', zh: '已在探索中' },
     'ex.err.advancing': { ko: '전직 중인 영웅 있음', en: 'Someone in it is advancing', zh: '有英雄正在转职' },
+    'ex.err.full': { ko: '나갈 수 있는 부대가 모두 나가 있습니다', en: 'Every party slot is already out' },
     'ex.err.none': { ko: '나간 탐험 없음', en: 'Nobody is out there', zh: '没有外出的探索' },
-    'ex.err.notDone': { ko: '아직 안 돌아옴', en: 'Not back yet', zh: '尚未返回' },
-    'ex.err.bagFull': { ko: '인벤토리 {n}칸 비우기', en: { one: 'Free {n} inventory slot', other: 'Free {n} inventory slots' }, lock: true, zh: '需空出{n}格背包' },
     'dp.party': { ko: '파티', en: 'Party', zh: '队伍' },
     // 단계 트랙은 머리 줄이 없다 [2026-09-21 사용자 지시 · ADR-0228] — 개수는 상자의 순서 번호가 말한다.
     // 무엇으로 여는가(해금 조건)는 기획 백지라 문구도 만들지 않는다 (§8)
@@ -1253,14 +1284,13 @@ const STRINGS = {
     /* 의뢰 게시판 (SCREEN_DESIGN §14 · 자리는 선술집 탭 §8-1 · ADR-0352) — 제목은 `nav.commission` 재사용(옛 탭 라벨이 패널 제목으로 내려왔다).
        ⚠ **종류 · 등급 이름은 여기 없다** — `commission_kind.csv` · `commission_grade.csv` 의 `_kr`/`_en` 쌍이고 화면은 `L()` 로 푼다.
        남는 것은 화면 라벨 · **목표 틀**(종류 × 어휘마다 하나 `cm.goal.<kind>.<axis>` — `{t}` = 대상 이름 · `{n}` = 목표 수 · R457 · ADR-1068) · 부위 갈래 이름 · 플래시다.
-       `cm.goal.kill.monster` · `kill.grade.*` · `collect.rarity` = 옛 카드(R457 이전에 받은 것)만. `cm.fameLv` · `cm.fameMax` · `cm.claimedUp` = 명성 레벨(게시판 위 막대 줄 · 오른 수령 플래시 — §14 · ADR-0958 · R375) */
+       `cm.goal.kill.monster` · `kill.grade.*` · `collect.rarity` = 옛 카드(R457 이전에 받은 것)만. `cm.fameLv` = 의뢰 레벨(게시판 위 한 줄 — §14 · ADR-1411 · R592 · 키 이름은 옛 명성 그대로 · ~~`cm.fameMax` · `cm.claimedUp`~~ 명성 막대 · 오른 수령 플래시 걷음) */
     'cm.accept': { ko: '수락', en: 'Accept', zh: '接受' },
     'cm.claim': { ko: '수령', en: 'Claim', zh: '领取' },
     'cm.drop': { ko: '포기', en: 'Abandon', zh: '放弃' },
     'cm.dropConfirm': { ko: '정말 포기', en: 'Confirm abandon', zh: '确认放弃' },
     'cm.slots': { ko: '받음 {n} / {max}', en: 'Taken {n} / {max}', zh: '已接{n} / {max}' },
-    'cm.fameLv': { ko: '명성 Lv {lv}', en: 'Fame Lv {lv}', zh: '声望Lv {lv}' },
-    'cm.fameMax': { ko: '최고', en: 'Max', zh: '最高' },
+    'cm.fameLv': { ko: '의뢰 Lv {lv}', en: 'Commission Lv {lv}', zh: '委托Lv {lv}' },
     // 목표 문장 = 퀘스트 목표 — 미션이 동사로 든다(처치 · 분해 · 획득 · 강화 · 제작) · 카드 첫 줄에 미션 이름이 없다 [2026-11-14 사용자 「미션이름을 빼라고 … 아래설명에쓰고」 · 「rpg처럼」 · ADR-1083]
     'cm.goal.kill.any': { ko: '몬스터 {n}마리 처치', en: { one: 'Slay {n} monster', other: 'Slay {n} monsters' }, zh: '击杀{n}只怪物' },
     'cm.goal.kill.chapter': { ko: '{t}에서 몬스터 {n}마리 처치', en: { one: 'Slay {n} monster in the {t}', other: 'Slay {n} monsters in the {t}' }, zh: '在{t}击杀{n}只怪物' },
@@ -1292,7 +1322,6 @@ const STRINGS = {
     'cm.part.accessory': { ko: '장신구', en: 'Accessory', zh: '饰品' },
     'cm.taken': { ko: '의뢰 수락 — {goal}', en: 'Commission taken — {goal}', zh: '已接受委托——{goal}' },
     'cm.claimed': { ko: '의뢰 완료 — {g} G', en: 'Commission complete — {g} G', zh: '委托完成——{g} G' },
-    'cm.claimedUp': { ko: '의뢰 완료 — {g} G · 명성 Lv {lv}', en: 'Commission complete — {g} G · Fame Lv {lv}', zh: '委托完成——{g} G · 声望Lv {lv}' },
     'cm.dropped': { ko: '의뢰 포기', en: 'Commission abandoned', zh: '已放弃委托' },
     'cm.err.full': { ko: '의뢰는 {n}개까지 받아 둘 수 있음', en: { one: 'You can hold up to {n} commission', other: 'You can hold up to {n} commissions' }, zh: '最多可同时接取{n}个委托' },
     'cm.err.notDone': { ko: '목표 달성', en: 'Meet the goal', lock: true, zh: '需达成目标' },
@@ -1425,18 +1454,6 @@ const STRINGS = {
     'todo.badge': { ko: '미착수', en: 'Not started', zh: '未开工' },
     'todo.lead': { ko: '기획은 확정됐고 화면이 아직 없습니다 — 지금 여기서 할 수 있는 일은 없습니다', en: 'The design is settled; the screen is not built yet — there is nothing to do here yet', zh: '设计已确定，画面尚未制作——目前这里无事可做' },
     'ex.h': { ko: '탐험', en: 'Exploration', zh: '探索' },
-    // 탐험 규칙 — 도움말 탐험 절 (2026-10-09 · 옛 `ex.todo`(미착수 안내)를 대체 · 지점 패널은 규칙 문장을 안 든다 · SCREEN_DESIGN §8-4)
-    'ex.help': {
-        ko: '지도에서 <b>열린 땅의 지점</b>(동굴 · 폐허 · 마차)을 누르고 보낼 <b>편성</b>을 고릅니다 — 한 명짜리 편성도 됩니다(최대 {n}명) · 원정 중인 편성은 철수가 먼저입니다<br>'
-            + '<b>{h}시간</b> 뒤 돌아오고 오프라인에도 흐릅니다 · 결과는 받아 갈 때까지 남습니다 · 동시 탐험 {s}건 · 한 지점에 한 건<br>'
-            + '<b>동굴</b>은 장비를 가져옵니다 — 보낸 영웅 1명당 {k}개 · 그 땅의 레벨대 · 폐허 · 마차는 준비 중<br>'
-            + '탐험 나간 편성은 받을 때까지 사람을 바꿀 수 없고 원정에 못 나갑니다 · 불러들이면 편성째 결과 없이 돌아옵니다',
-        en: 'Click a <b>spot in an open land</b> (cave · ruins · caravan) and pick which <b>party</b> goes — a one-hero party works too (up to {n}) · a party on an expedition must withdraw first<br>'
-            + 'They return after <b>{h}h</b>, offline too · the haul waits until you collect it · {s} exploration(s) at a time · one per spot<br>'
-            + 'The <b>cave</b> brings back gear — {k} per hero sent · at that land\'s level band · ruins and caravan are coming later<br>'
-            + 'A party out exploring can\'t change members or join expeditions until collected · calling it back returns the whole party empty-handed',
-        zh: '在地图上点击<b>已开放土地上的地点</b>（洞穴 · 废墟 · 马车），并选择要派出的<b>编队</b>——单人编队也可以（最多{n}名）· 正在远征的编队需先撤退<br><b>{h}小时</b>后返回，离线时也会计时 · 结果会一直保留到领取为止 · 同时探索{s}个 · 每个地点一个<br><b>洞穴</b>会带回装备——每派出1名英雄带回{k}件 · 该土地的等级段 · 废墟 · 马车尚未开放<br>外出探索的编队在领取之前无法更换人员，也无法参加远征 · 召回则整个编队空手而归',
-    },
     'help.title': { ko: '도움말', en: 'Help', zh: '帮助' },
     'help.newgame': { ko: '새 게임', en: 'New Game', zh: '新游戏' },
     'help.exp.party': { ko: '전투 {n}인 — 동시 원정 {m}팀', en: '{n} fighters — {m} expedition at a time', zh: '出战{n}人——同时远征{m}队' },
@@ -1600,65 +1617,36 @@ const STRINGS = {
         en: "Expedition combat does not continue offline. Closing the game stops parties in combat and parties waiting for their next departure. On return, check the last report, then deploy again to your chosen stage. Exploration and Laboratory offline progress are explained in their own sections.",
         zh: '离线期间远征战斗不会继续。关闭游戏后，正在战斗的小队与等待下次出发的小队都会停止。重新上线后，查看最后一份报告，再向想去的关卡重新出发。探索与研究所的离线进度可在各自的帮助中查看。',
     },
-    'help.explore.map.title': {
-        ko: "지도와 지점",
-        en: "Map and spots",
-        zh: '地图与地点',
-    },
+    // 탐험 — 표 · 끝이 있는 판 · 다 깨야 받음 · 지거나 부르면 잃음 · 꺼진 동안은 시작한 판만 (SCREEN_DESIGN §12 · 2026-11-26 R590 — ~~purpose · time · claim~~ 옛 시간제 주제 걷음)
+    'help.explore.map.title': { ko: '지도와 지점', en: 'Map and spots', zh: '地图与地点' },
     'help.explore.map.body': {
-        ko: "지도의 지점 아이콘을 누르면 출발·진행·결과 창이 열립니다. 닫기 버튼이나 지도 빈 곳을 누르면 닫힙니다. 다음 챕터의 땅은 노말 난이도에서 이전 챕터보스를 클리어하면 열립니다. 동굴은 탐험 건물 첫 랭크에서 열리며, 상단과 폐허 아이콘은 이후 랭크에서 나타납니다.<br><br>현재 보상을 가져오는 탐험은 동굴이고, 상단과 폐허의 행동은 준비 중입니다.",
-        en: "Click a spot on the map to open its departure, progress or result window. Close it with its close button or an empty area of the map. Beating a chapter boss on Normal opens the next chapter's land. Caves unlock at the first Exploration building rank; caravan and ruins icons appear at later ranks.<br><br>Caves currently provide exploration rewards; caravan and ruins activities are coming later.",
-        zh: '点击地图上的地点图标，会打开出发、进行中或结果窗口。点击关闭按钮或地图空白处即可关闭。在普通难度下通关上一章的章节首领后，下一章的土地会开放。洞穴在探索建筑达到1阶时开放，商队与废墟图标在之后的阶出现。<br><br>目前能带回奖励的探索只有洞穴，商队与废墟的行动仍在开发中。',
+        ko: '지도의 지점 아이콘을 누르면 그 지점 창이 열립니다. 닫기 버튼이나 지도 빈 곳을 누르면 닫힙니다. 동굴 · 상단 의뢰 · 폐허는 탐험 건물 랭크가 하나씩 열고, 지점은 땅(챕터)마다 따로 있습니다. 다음 챕터의 땅은 노말 난이도에서 이전 챕터보스를 클리어하면 열립니다.<br><br>아이콘 오른쪽 위 숫자는 그 땅 · 그 지점의 탐험 표 수입니다. 판이 나가 있으면 테두리가 진행 막대가 되고, 아직 안 본 결과가 있으면 「!」가 섭니다.',
+        en: 'Click a spot icon on the map to open its window; close it with its close button or an empty area of the map. Exploration building ranks open the cave, caravan escort and ruins one by one, and every land (chapter) has its own spots. Beating a chapter boss on Normal opens the next chapter\'s land.<br><br>The number at an icon\'s top right is how many tickets you hold for that land\'s spot. While a run is out, the icon ring fills as a progress bar; a 「!」 marks a result you have not viewed yet.',
     },
-    'help.explore.purpose.title': {
-        ko: "원정과 무엇이 다른가",
-        en: "How exploration differs from expeditions",
-        zh: '与远征有何不同',
+    'help.explore.tickets.title': { ko: '탐험 표', en: 'Exploration tickets' },
+    'help.explore.tickets.body': {
+        ko: '탐험은 표 한 장을 내고 갑니다. 표는 원정에서 정예를 쓰러뜨리면 {elite}%, 스테이지보스를 쓰러뜨리면 {boss}% 확률로 나오고, 지점이 새로 열릴 때 그 지점 표 {first}장을 받습니다. 표의 지점은 열린 지점 중 하나이고, 챕터와 난이도는 표를 주운 원정 칸을 따릅니다. 탐험 판에서는 표가 나오지 않습니다.<br><br>표에는 등급(일반 · 매직 · 레어)이 있습니다. 등급이 높을수록 판이 길어지고(동굴 끝 정예 라운드 · 상단 의뢰 습격 · 폐허 이벤트가 늘어납니다) 보상 배수와 특별한 일이 일어날 확률이 올라갑니다. 표는 인벤토리 칸을 쓰지 않습니다.',
+        en: 'Each run spends one ticket. Tickets drop on expeditions — {elite}% per elite and {boss}% per stage boss you defeat — and a newly opened spot gives {first} ticket(s) for it. A dropped ticket is for one of your open spots, at the chapter and difficulty of the expedition stage where it dropped. Exploration runs never drop tickets.<br><br>Tickets have a grade (Normal · Magic · Rare). Higher grades make the run longer (more elite rounds at the end of the cave, more raids on the caravan escort, more events in the ruins) and raise the reward multiplier and the chance of something special. Tickets don\'t take inventory slots.',
     },
-    'help.explore.purpose.body': {
-        ko: "현재 동굴 탐험은 정해진 시간 뒤 장비를 가져오는 방식입니다. 원정처럼 라운드 전투를 관전하거나 경험치를 얻는 기능은 없습니다. 보낸 영웅 수가 장비 수를 정하므로, 당장 원정을 돌릴 편성인지 시간을 맡길 편성인지 고릅니다.<br><br>원정 중인 편성은 먼저 철수해야 하며, 탐험을 보낸 뒤에는 보상을 수령하거나 취소해 돌아올 때까지 그 편성을 원정에 쓸 수 없습니다. 게임을 닫아도 이미 보낸 탐험의 시간은 흐르지만, 자동으로 다음 탐험을 계속 보내지는 않습니다.",
-        en: "Current cave exploration returns equipment after a set time. It does not offer spectated round combat or XP like expeditions. The number of heroes sent determines the gear count, so decide whether a preset should fight now or spend time exploring.<br><br>A party on an expedition must retreat first. After sending it to explore, you cannot use that preset for expeditions until claiming its reward or recalling it. An existing trip continues while the game is closed, but new trips do not automatically start afterward.",
-        zh: '目前的洞穴探索是在规定时间后带回装备的方式。不能像远征那样观看回合战斗，也不会获得经验。派出的英雄人数决定装备数量，所以要选择：这个编队是马上去远征，还是交给时间去探索。<br><br>正在远征的编队必须先撤退。派出探索后，在领取奖励或取消召回之前，该编队无法用于远征。即使关闭游戏，已派出的探索仍会计时，但不会自动接着派出下一次探索。',
-    },
-    'help.explore.depart.title': {
-        ko: "편성으로 출발",
-        en: "Sending a preset",
-        zh: '以编队出发',
-    },
+    'help.explore.depart.title': { ko: '표와 편성으로 보내기', en: 'Sending a party with a ticket' },
     'help.explore.depart.body': {
-        ko: "지점 창에서 보낼 편성을 고르고 [출발]합니다. 한 명만 들어 있는 편성도 보낼 수 있으며 최대 {party}명까지 함께 갑니다. 원정 중인 부대는 먼저 철수해야 합니다. 이미 다른 탐험에 나간 영웅이나 전직 진행 중인 영웅이 있으면 출발할 수 없습니다.<br><br>한 지점에는 한 건만 보낼 수 있고, 현재 동시 탐험 상한은 {slots}건입니다.",
-        en: "Choose a preset in the spot window and press [Set out]. A preset with one hero can explore; up to {party} heroes can go together. A party on an expedition must retreat first. A preset cannot depart if a member is already exploring or advancing. Each spot holds one exploration, and the current simultaneous limit is {slots}.",
-        zh: '在地点窗口中选择要派出的编队，然后按[出发]。只有一名英雄的编队也可以派出，最多{party}名一同前往。正在远征的小队必须先撤退。编队中如有已在其他探索中的英雄或正在转职的英雄，则无法出发。<br><br>一个地点只能派出一支，目前同时进行的探索上限为{slots}个。',
+        ko: '지점 창에서 표 하나와 편성 하나를 고르고 [보내기]를 누릅니다. 한 명만 든 편성도 갈 수 있고 최대 {party}명까지 함께 갑니다. 편성 하나는 원정이든 탐험이든 한 판만 돌고, 원정과 탐험을 합쳐 {expeditions}개 부대까지 동시에 나갑니다.<br><br>[이어 돌기]를 켜면 판이 끝날 때 같은 종류의 표(지점 · 챕터 · 난이도 · 등급)가 남아 있는 한 바로 다음 판을 엽니다. [지면 멈춤]까지 켜면 진 판 뒤에는 멈춥니다. 둘 다 보낼 때 정하고 판 중에는 바꾸지 않습니다.',
+        en: 'In a spot window, pick a ticket and a party, then press [Send]. A one-hero party can go; up to {party} heroes go together. A party runs one thing at a time — an expedition or an exploration — and expeditions and explorations together can have {expeditions} parties out at once.<br><br>With [Repeat] on, a finished run opens the next one right away while you still hold the same kind of ticket (spot · chapter · difficulty · grade). Add [Stop on loss] to halt after a lost run. Both are set when sending and can\'t be changed mid-run.',
     },
-    'help.explore.time.title': {
-        ko: "시간과 이야기",
-        en: "Time and story",
-        zh: '时间与故事',
+    'help.explore.run.title': { ko: '판의 진행과 관전', en: 'How a run plays' },
+    'help.explore.run.body': {
+        ko: '탐험 판은 정해진 단계를 차례로 지나는 끝이 있는 전투입니다. 동굴은 원정 장소 하나의 칸 I · II · III을 원정과 같은 규칙으로 싸우고, 등급에 따라 끝에 정예 라운드가 붙습니다. 상단 의뢰는 마차가 길을 가다 적 영웅 셋에게 습격당하며, 습격 자리는 미리 보이지 않습니다. 폐허는 안개 낀 유적을 지나며 몬스터 · 함정 · 드문 만남 · 물건 · 빈 방을 만납니다. 함정은 우리 편에 헬 난이도의 챕터 디버프를 겁니다.<br><br>나간 부대는 위쪽 부대 칸에 지점 이름으로 서고, 누르면 판을 관전합니다. 장비와 스킬 트리는 판 중에도 바꿀 수 있고 다음 라운드부터 적용됩니다.',
+        en: 'An exploration run is a finite battle that goes through set steps in order. The cave fights stages I · II · III of one expedition location under expedition rules, with extra elite rounds at the end depending on the grade. On a caravan escort the wagon travels the road until three enemy heroes ambush it — where they strike stays hidden until it happens. The ruins lead through a fog-covered ruin with monsters, traps, rare encounters, finds and empty rooms; a trap puts that chapter\'s Hell debuff on your party.<br><br>A party that is out shows in the top party bar under the spot\'s name — click it to watch. You can change gear and skill trees mid-run; changes apply from the next round.',
     },
-    'help.explore.time.body': {
-        ko: "탐험은 {hours}시간이 걸리며 게임을 닫아도 시간이 흐릅니다. 진행 막대와 남은 시간으로 귀환 시점을 확인할 수 있습니다. 탐험 도중 이야기 기록이 차례로 열립니다. 완료한 보상은 직접 수령할 때까지 남고, 편성과 영웅도 그때까지 탐험 중 상태를 유지합니다.",
-        en: "Exploration lasts {hours}h, including time while the game is closed. The progress bar and remaining time show when it will finish. Story entries open as the trip progresses. Finished rewards wait until you claim them, and the preset and heroes remain busy exploring until then.",
-        zh: '探索需要{hours}小时，关闭游戏时时间也会照常流逝。可以通过进度条与剩余时间确认返回时刻。探索途中，故事记录会依次解锁。完成的奖励会一直保留到你亲自领取，在此之前，编队与英雄也保持探索中状态。',
+    'help.explore.rewards.title': { ko: '보상', en: 'Rewards' },
+    'help.explore.rewards.body': {
+        ko: '판에서 쓰러뜨린 적의 경험치 · 골드 · 장비 · 스킬북 · 작전 카드는 원정과 같은 규칙으로 판에 모였다가, <b>판을 끝까지 깨면</b> 표 등급의 보상 배수를 곱해 한꺼번에 받습니다. 판 중에는 레벨이 오르지 않습니다. 상단 의뢰의 적 영웅은 그 레벨 정예 한 마리 몫입니다.<br><br>지점마다 덤이 있습니다. 동굴 마지막 보스 자리에 가끔 「???」가 서고, 이기면 도감에 오릅니다. 상단 의뢰를 마치면 감사인사로 그 챕터 단계의 철광석과 목재를 받고, 마지막 습격의 적 한 명이 선술집에 가입 희망으로 올 수 있습니다(자리가 차 있으면 오지 않습니다). 폐허의 물건은 장비나 스킬북입니다. 판이 끝나면 오른쪽 아래 알림과 결과 카드로 확인합니다.',
+        en: 'XP, gold, gear, skill books and tactic cards from enemies you defeat pile up in the run under expedition rules, and you receive them all at once — multiplied by the ticket grade\'s reward multiplier — <b>only when you clear the whole run</b>. Heroes don\'t level up mid-run. Each enemy hero on a caravan escort counts as one elite of that level.<br><br>Each spot adds something extra. The cave\'s final boss slot is sometimes taken by 「???」, which enters the codex when beaten. Finishing a caravan escort gives ore and timber of that chapter\'s tier as thanks, and one enemy from the last raid may come to the Tavern wanting to join (not if the slots are full). Finds in the ruins are gear or skill books. When a run ends, a notice appears at the bottom right and a result card shows what happened.',
     },
-    'help.explore.claim.title': {
-        ko: "장비 보상과 수령",
-        en: "Gear rewards and claiming",
-        zh: '装备奖励与领取',
-    },
-    'help.explore.claim.body': {
-        ko: "동굴은 보낸 영웅 한 명당 장비 {perHero}개를 가져옵니다. 장비 레벨은 해당 챕터의 레벨 범위에서 정해집니다. 완료 아이콘을 눌러 결과 장비를 확인한 뒤 [수령]합니다. 보상은 현재 선택한 부대의 인벤토리로 들어갑니다. 빈 칸이 보상 전체를 담기에 부족하면 수령되지 않으므로 먼저 인벤토리를 정리합니다.",
-        en: "Caves return gear in proportion to the number of heroes sent ({perHero} per hero), at levels within that chapter's level range. Open the completed spot, inspect the gear and press [Collect]. Rewards enter the currently selected party inventory. Claiming requires enough free slots for the entire reward; make room in the inventory first if needed.",
-        zh: '洞穴会按派出的英雄每人带回{perHero}件装备。装备等级在该章的等级范围内决定。点击完成图标查看获得的装备后，按[领取]。奖励会进入当前所选小队的背包。空格不足以容纳全部奖励时无法领取，所以请先整理背包。',
-    },
-    'help.explore.recall.title': {
-        ko: "편성 잠금과 취소",
-        en: "Preset lock and recall",
-        zh: '编队锁定与召回',
-    },
+    'help.explore.recall.title': { ko: '지거나 부르면', en: 'Losing and calling back' },
     'help.explore.recall.body': {
-        ko: "탐험에 나간 편성은 명단을 바꿀 수 없습니다. 변경하려면 탐험을 취소해 편성 전체를 불러들입니다. [불러들이기]를 누르고 확인 버튼을 한 번 더 누르면 영웅들이 즉시 돌아오며 탐험 보상은 받지 못합니다.<br><br>탐험 중인 편성을 원정에 보내면 확인 창이 뜹니다. 확인하면 진행 중인 탐험은 보상 없이 불러들이고, 이미 끝난 탐험은 결과를 그 부대 인벤토리에 받은 뒤 출격합니다. 결과가 인벤토리에 다 들어가지 않으면 출격할 수 없습니다.",
-        en: "A preset that is exploring cannot change members. Recall the whole preset to change it. Press [Call back] and then confirm; the heroes return immediately with no exploration reward.<br><br>Sending an exploring preset on an expedition asks for confirmation first. On confirm, an exploration in progress is called back with no reward, and a finished one is collected into that party's inventory before deploying. If the haul does not fit in the inventory, the party cannot deploy.",
-        zh: '外出探索的编队无法更改名单。如需更改，请取消探索，召回整个编队。按[召回]后再按一次确认按钮，英雄们会立即返回，但得不到探索奖励。<br><br>将探索中的编队派去远征时，会弹出确认窗口。确认后，进行中的探索会被无奖励召回；已完成的探索则会先把结果领取到该小队的背包，然后出击。如果结果无法全部放入背包，就不能出击。',
+        ko: '판에서 우리 편이 전멸하면 그 판은 실패하고, 모은 것과 표를 모두 잃습니다. 지점 창이나 관전의 [부르기]로 판을 일찍 끝내도 같습니다 — 표는 돌려받지 못합니다. 탐험 중인 편성은 명단을 바꿀 수 없고, 원정에 보내면 확인 창을 거쳐 그 판을 불러들이고 출격합니다.<br><br>판은 게임이 켜져 있는 동안만 진행됩니다. 게임을 닫았다가 다시 켜면 하던 판만 화면 없이 끝까지 계산해 결과를 받고, [이어 돌기]는 이어지지 않습니다. 꺼져 있는 동안 새 판을 열지는 않습니다.',
+        en: 'If your whole party falls in a fight, the run fails and you lose the haul and the ticket. Calling it back early with [Call back] in the spot window or while watching is the same — the ticket is not returned. A party that is out exploring can\'t change members; sending it on an expedition asks for confirmation, then calls the run back and deploys.<br><br>Runs only progress while the game is on. When you close and reopen the game, the run in progress is calculated to the end without the screen and you get its result; [Repeat] does not continue. No new runs start while the game is off.',
     },
     'help.party.members.title': {
         ko: "파티 구성과 리더",
@@ -1716,8 +1704,8 @@ const STRINGS = {
         en: "Party tactics and tactic cards",
     },
     'help.party.tactics.body': {
-        ko: "파티 전술은 편성마다 공격 · 방어 · 유틸 세 칸이고, 칸마다 작전 카드 한 장을 장착합니다. 카드는 전투 규칙 하나와 옵션 줄 둘을 듭니다. 규칙은 전투의 흐름(누구를 노리나 · 누가 대신 맞나 · 언제 움직이나)을 바꾸고, 옵션 줄은 파티의 능력치를 올립니다. 칸은 지휘 천막 1 · 2 · 3랭크가 차례로 열고, 칸이 처음 열리면 그 칸의 첫 카드 한 장을 받습니다.<br><br>카드는 정예와 스테이지보스가 떨어뜨려 가방에 쌓입니다. 카드를 누르면 그 칸의 가방이 열립니다. 장착하면 카드 한 장이 소모되고 그때 옵션 줄 둘이 정해집니다. 칸에 있던 카드를 바꾸면 옛 카드와 옵션 줄은 사라집니다. 카드 등급은 옵션 줄 등급의 상한입니다. 가방과 카드 조각은 모든 편성이 함께 쓰고, 칸의 카드는 편성마다 따로입니다.",
-        en: "Party tactics give each preset three slots — Attack, Defense and Utility — and each slot holds one tactic card. A card carries one battle rule and two option lines. The rule changes how a battle flows (who gets targeted, who takes hits instead, when units move); the option lines raise party stats. Command Tent ranks 1, 2 and 3 open the slots in turn, and each slot gives you its first card when it opens.<br><br>Elites and stage bosses drop cards into your bag. Click a card to open that slot's bag. Equipping uses up one card and rolls its two option lines at that moment. Replacing a slotted card discards the old card and its lines. A card's grade is the highest grade its option lines can reach. All presets share the bag and card shards; each preset keeps its own slotted cards.",
+        ko: "파티 전술은 편성마다 공격 · 방어 · 유틸 세 칸이고, 칸마다 작전 카드 한 장을 장착합니다. 카드는 전투 규칙 하나와 옵션 줄 둘을 듭니다. 규칙은 전투의 흐름(누구를 노리나 · 누가 대신 맞나 · 언제 움직이나)을 바꾸고, 옵션 줄은 파티의 능력치를 올립니다. 칸은 지휘 천막 1 · 2 · 3랭크가 차례로 열고, 칸이 처음 열리면 그 칸의 첫 카드 한 장을 받습니다.<br><br>카드는 정예와 스테이지보스가 떨어뜨려 가방에 쌓입니다. 카드를 누르면 그 칸의 가방이 열립니다. 장착하면 카드 한 장이 소모되고 그때 옵션 줄 둘이 정해집니다. 칸에서 빠진 카드는 옵션 줄째 사용한 카드로 보관되고, 다시 장착하면 그 줄 그대로 듭니다. 보관 칸이 가득 차면 새 카드로 바꿀 수 없고, 원정 · 탐험 중인 편성의 칸에서는 카드를 뺄 수 없습니다. 카드 등급은 옵션 줄 등급의 상한입니다. 가방과 카드 조각은 모든 편성이 함께 쓰고, 칸의 카드는 편성마다 따로입니다.",
+        en: "Party tactics give each preset three slots — Attack, Defense and Utility — and each slot holds one tactic card. A card carries one battle rule and two option lines. The rule changes how a battle flows (who gets targeted, who takes hits instead, when units move); the option lines raise party stats. Command Tent ranks 1, 2 and 3 open the slots in turn, and each slot gives you its first card when it opens.<br><br>Elites and stage bosses drop cards into your bag. Click a card to open that slot's bag. Equipping uses up one card and rolls its two option lines at that moment. A card taken out of a slot is stored as a used card with its lines, and goes back in with the same lines. When storage is full you can't swap in a new card, and a preset that is out on an expedition or exploring can't have its cards taken out. A card's grade is the highest grade its option lines can reach. All presets share the bag and card shards; each preset keeps its own slotted cards.",
     },
     'help.party.tactic_choices.title': {
         ko: "인챈트와 카드 조각",
@@ -2058,14 +2046,14 @@ const STRINGS = {
         zh: '在告示板上查看目标和金币奖励后点击<b>[接受]</b>。可同时进行的委托为<b>{slots}个</b>。委托不会另外组建队伍或开启战斗，接受后所有小队的<b>胜利回合</b>都会共同推进目标。<br><br>讨伐、悬赏委托必须在写明的章、种族、场所击杀目标，失败的回合不计入。分解委托计入亲手分解或按自动分解规则分解的装备，因背包已满而溢出的装备不计入。材料委托计入从分解和研究所获得的铁矿石、草药、木材，商店购买、交换、合成不计入。强化委托连失败的尝试也计入。技能书委托在每次学会或升级技能书时计入，雇佣委托在每次雇佣英雄时计入。装备获取委托计入胜利回合中获得的装备，从商店、宝箱、探索获得的不计入。接受之前发生的事不计入。<br><br>全部完成后需点击<b>[领取]</b>才能获得金币。没有期限。<b>[放弃]</b>会清空进度，但没有罚金，领取或放弃后空出的位置会换成新委托。选择与当前所在区域或接下来要打的敌人相符的目标，就能与远征一同推进。',
     },
     'help.tavern.fame.title': {
-        ko: "카드 등급과 명성 레벨",
-        en: "Card grade and Fame level",
-        zh: '卡牌稀有度与声望等级',
+        ko: "카드 등급과 의뢰 레벨",
+        en: "Card grade and Commission level",
+        zh: '卡牌稀有度与委托等级',
     },
     'help.tavern.fame.body': {
-        ko: "의뢰의 <b>일반·매직·레어 등급</b>은 카드마다 따로 정해집니다. 높은 등급은 목표 수와 보상이 함께 커지며, 목표 수 대비 골드도 더 좋습니다.<br><br><b>명성</b>은 로스터 전체가 공유하는 의뢰 성장입니다. 완료한 의뢰를 <b>[수령]</b>할 때 경험치가 쌓이고, 명성 레벨이 오르면 새 카드의 목표 수와 골드가 함께 커지고, 게시판에서 받지 않은 카드도 모두 새 레벨로 다시 섭니다. 받아 둔 의뢰는 진행도 그대로입니다.<br><br>명성은 내려가지 않으며 포기는 경험치를 주지 않습니다. 최고 레벨에 도달한 뒤에도 그 레벨의 의뢰를 계속 받고 보상을 받을 수 있습니다.",
-        en: "Each commission rolls its own <b>Normal, Magic or Rare grade</b>. Higher grades increase both the goal and reward, with more gold per unit of the goal.<br><br><b>Fame</b> is shared commission progress for your whole roster. <b>Claiming</b> completed commissions earns XP. Higher Fame levels increase the goals and gold on new cards, and every card on the board you have not accepted is rerolled at the new level. Accepted commissions keep their progress.<br><br>Fame never falls, and abandoning grants no XP. At the highest Fame level, you can continue accepting its commissions and earning rewards.",
-        zh: '委托的<b>稀有度（普通、魔法、稀有）</b>每张卡单独决定。稀有度越高，目标数量和奖励一起增大，按目标数量计算的金币也更划算。<br><br><b>声望</b>是整个名册共享的委托成长。<b>[领取]</b>已完成的委托时积累经验，声望等级提升后，新卡的目标数量和金币一起增大，告示板上尚未接受的卡也会全部按新等级重新生成。已接受的委托保留原有进度。<br><br>声望不会下降，放弃不给经验。达到最高等级后，仍可继续接受该等级的委托并领取奖励。',
+        ko: "의뢰의 <b>일반·매직·레어 등급</b>은 카드마다 따로 정해집니다. 높은 등급은 목표 수와 보상이 함께 커지며, 목표 수 대비 골드도 더 좋습니다.<br><br><b>의뢰 레벨</b>은 연구소 수색 줄의 <b>의뢰</b> 지점을 연구해 올립니다. 다음 레벨을 연구하려면 의뢰를 정해진 횟수만큼 완료해야 합니다. 레벨이 오르면 새 카드의 목표 수와 골드가 함께 커지고, 게시판에서 받지 않은 카드도 모두 새 레벨로 다시 섭니다. 받아 둔 의뢰는 진행도 그대로입니다.",
+        en: "Each commission rolls its own <b>Normal, Magic or Rare grade</b>. Higher grades increase both the goal and reward, with more gold per unit of the goal.<br><br>The <b>Commission level</b> rises by researching the <b>Commissions</b> node on the Laboratory Search line. Researching the next level requires a set number of completed commissions. A higher level increases the goals and gold on new cards, and every card on the board you have not accepted is rerolled at the new level. Accepted commissions keep their progress.",
+        zh: '委托的<b>稀有度（普通、魔法、稀有）</b>每张卡单独决定。稀有度越高，目标数量和奖励一起增大，按目标数量计算的金币也更划算。<br><br><b>委托等级</b>通过研究研究所搜寻线的<b>委托</b>节点来提升。研究下一级需要完成规定次数的委托。等级提升后，新卡的目标数量和金币一起增大，告示板上尚未接受的卡也会全部按新等级重新生成。已接受的委托保留原有进度。',
     },
     'help.tavern.gambling.title': {
         ko: "도박장 슬롯",
@@ -2151,8 +2139,8 @@ const STRINGS = {
         en: "New gear comes from the Laboratory",
     },
     'help.forge.smith.body': {
-        ko: "연구소의 <b>대장간 줄</b>에 영웅을 등록하고, 등록 창에서 영웅마다 <b>무엇을 만들지</b>(장비 부위 일곱 또는 열린 물약 단계)를 고릅니다. 고르는 즉시 그 영웅의 시계가 돌고 정해진 시간마다 하나씩 만듭니다. 영웅의 힘이 높을수록 간격이 짧아집니다.<br><br>장비는 <b>그 영웅의 레벨</b>로 나오며 드롭과 같이 베이스·희귀도·옵션을 전부 새로 정합니다. 비용(골드·부위 재료·가루)은 하나가 완성되는 순간 냅니다. 모자라면 그 영웅은 쉬다가 비용이 생기면 다시 만듭니다.<br><br>만든 장비는 <b>줄 공용 장비 칸</b>에 쌓입니다. 칸이 가득 차면 장비를 만드는 시계가 모두 쉬므로, 등록 창의 장비 칸에서 <b>[창고로]</b> 옮기거나 <b>[분해]</b>합니다. 게임을 끈 동안에도 칸이 찰 때까지 만듭니다.",
-        en: "Assign heroes to the <b>Blacksmith line</b> in the Laboratory, then pick <b>what each hero makes</b> (one of seven gear slots or an unlocked potion tier) in the assignment window. The hero's clock starts at once and makes one item per interval. Higher Strength shortens the interval.<br><br>Gear comes out at <b>that hero's level</b> and rolls base, rarity and options like a drop. The cost (gold, slot material and dust) is paid when an item is finished. If you cannot pay, the hero waits and resumes once you can.<br><br>Finished gear goes into the line's <b>shared gear slots</b>. When they are full, every gear clock pauses, so use <b>To Stash</b> or <b>Salvage</b> in the assignment window. Gear keeps being made while the game is closed until the slots fill.",
+        ko: "연구소의 <b>대장간 줄</b>에 영웅을 등록하고, 등록 창에서 영웅마다 <b>무엇을 만들지</b>(장비 부위 일곱 또는 열린 물약 단계)를 고릅니다. 고르는 즉시 그 영웅의 시계가 돌고 정해진 시간마다 하나씩 만듭니다.<br><br>장비는 <b>그 영웅의 레벨</b>로 나오며 드롭과 같이 베이스·희귀도·옵션을 전부 새로 정합니다. 비용(골드·부위 재료·가루)은 하나가 완성되는 순간 냅니다. 모자라면 그 영웅은 쉬다가 비용이 생기면 다시 만듭니다.<br><br>만든 장비는 <b>줄 공용 장비 칸</b>에 쌓입니다. 칸이 가득 차면 장비를 만드는 시계가 모두 쉬므로, 등록 창의 장비 칸에서 <b>[창고로]</b> 옮기거나 <b>[분해]</b>합니다. 게임을 끈 동안에도 칸이 찰 때까지 만듭니다.",
+        en: "Assign heroes to the <b>Blacksmith line</b> in the Laboratory, then pick <b>what each hero makes</b> (one of seven gear slots or an unlocked potion tier) in the assignment window. The hero's clock starts at once and makes one item per interval.<br><br>Gear comes out at <b>that hero's level</b> and rolls base, rarity and options like a drop. The cost (gold, slot material and dust) is paid when an item is finished. If you cannot pay, the hero waits and resumes once you can.<br><br>Finished gear goes into the line's <b>shared gear slots</b>. When they are full, every gear clock pauses, so use <b>To Stash</b> or <b>Salvage</b> in the assignment window. Gear keeps being made while the game is closed until the slots fill.",
     },
     'help.forge.potions.title': {
         ko: "물약 만들기와 재고",
@@ -2207,9 +2195,9 @@ const STRINGS = {
         zh: '获得与分解技能书',
     },
     'help.library.sources.body': {
-        ko: "스킬북은 원정에서 몬스터를 처치하거나 탐험 동굴의 보상, 연구소 도서관 줄, 상단 구매, 영웅의 첫 책 사용 레벨 보상으로 들어옵니다. 어떤 몬스터가 어떤 책을 주는지는 스킬 도감의 획득처에서 확인합니다.<br><br>얻은 책은 바로 책 재고에 쌓이며 장비 인벤토리 칸을 차지하지 않습니다. 더 쓸 데가 없는 책은 창고의 <b>[스킬북]</b> 탭에서 골라 <b>[분해]</b>합니다. 한 번에 1권이 <b>스킬 조각 {shard}개</b>가 되며, 되돌릴 수 없습니다.<br><br>연구소 <b>도서관</b> 줄은 영웅이 없어도 시간마다 스킬 조각을 생산합니다. 그 줄에 영웅을 등록하면 조각이 나올 때마다 <b>[대박]</b> 확률로 그 영웅이 가진 스킬의 책도 한 권 들어옵니다.",
-        en: "Skill books come from defeating monsters on Expeditions, Exploration cave rewards, the Laboratory Library line, Trading House purchases and each hero's first-book level reward. Check a skill's Codex sources to see which monsters drop its book.<br><br>Books enter book stock immediately and do not take equipment inventory slots. Select a book you no longer need in the stash's <b>Skill Books</b> tab and press <b>Salvage</b>. Each press turns one book into <b>{shard} skill shard(s)</b> and cannot be undone.<br><br>The Laboratory <b>Library</b> line produces skill shards every hour, even with no hero assigned. Assign a hero to that line and each shard has a <b>Jackpot</b> chance to also bring one book of a skill that hero has.",
-        zh: '技能书的来源有：远征中击杀怪物、探索洞穴的奖励、研究所的图书馆线、商会购买，以及英雄达到可用书等级时的首本书奖励。哪种怪物掉落哪本书，请在技能图鉴的获取途径中查看。<br><br>获得的书会立即进入书籍库存，不占背包的装备格。用不上的书可在仓库的<b>[技能书]</b>页中选中后<b>[分解]</b>。每次将1本书变为<b>{shard}个技能碎片</b>，且无法撤销。<br><br>研究所的<b>图书馆</b>线即使没有英雄也会每小时生产技能碎片。向该线派驻英雄后，每产出一个碎片，都有<b>[大丰收]</b>几率额外获得一本该英雄所持技能的技能书。',
+        ko: "스킬북은 원정에서 몬스터를 처치하거나 탐험 동굴의 보상, 연구소 도서관 줄, 상단 구매, 영웅의 첫 책 사용 레벨 보상으로 들어옵니다. 어떤 몬스터가 어떤 책을 주는지는 스킬 도감의 획득처에서 확인합니다.<br><br>얻은 책은 바로 책 재고에 쌓이며 장비 인벤토리 칸을 차지하지 않습니다. 더 쓸 데가 없는 책은 창고의 <b>[스킬북]</b> 탭에서 골라 <b>[분해]</b>합니다. 한 번에 1권이 <b>스킬 조각 {shard}개</b>가 되며, 되돌릴 수 없습니다.<br><br>연구소 <b>도서관</b> 줄은 영웅을 등록해야 시간마다 스킬 조각을 생산합니다. 조각이 나올 때마다 <b>[대박]</b> 확률로 그 영웅이 가진 스킬의 책도 한 권 들어옵니다.",
+        en: "Skill books come from defeating monsters on Expeditions, Exploration cave rewards, the Laboratory Library line, Trading House purchases and each hero's first-book level reward. Check a skill's Codex sources to see which monsters drop its book.<br><br>Books enter book stock immediately and do not take equipment inventory slots. Select a book you no longer need in the stash's <b>Skill Books</b> tab and press <b>Salvage</b>. Each press turns one book into <b>{shard} skill shard(s)</b> and cannot be undone.<br><br>The Laboratory <b>Library</b> line produces skill shards every hour once a hero is assigned. Each shard has a <b>Jackpot</b> chance to also bring one book of a skill that hero has.",
+        zh: '技能书的来源有：远征中击杀怪物、探索洞穴的奖励、研究所的图书馆线、商会购买，以及英雄达到可用书等级时的首本书奖励。哪种怪物掉落哪本书，请在技能图鉴的获取途径中查看。<br><br>获得的书会立即进入书籍库存，不占背包的装备格。用不上的书可在仓库的<b>[技能书]</b>页中选中后<b>[分解]</b>。每次将1本书变为<b>{shard}个技能碎片</b>，且无法撤销。<br><br>研究所的<b>图书馆</b>线需要派驻英雄才会每小时生产技能碎片。每产出一个碎片，都有<b>[大丰收]</b>几率额外获得一本该英雄所持技能的技能书。',
     },
     'help.library.craft.title': {
         ko: "스킬 조각으로 스킬북 만들기",
@@ -2308,8 +2296,8 @@ const STRINGS = {
         zh: '挑选派驻英雄的标准',
     },
     'help.resource.hero_effects.body': {
-        ko: "자원 · 도박장 줄은 등록한 <b>영웅 한 명마다</b> 산출이 한 몫씩 납니다 — 영웅이 없으면 멈추므로 능력치보다 먼저 칸을 채웁니다. 수색 · 대장간은 등록한 영웅마다 시계가 하나씩 따로 돌아, 각자 한 명씩 데려오거나 하나씩 만듭니다. 훈련 · 도서관은 등록한 영웅 한 명 한 명이 경험치 · 스킬북을 받는 줄이라 인원 몫이 없습니다.<br><br><b>힘</b>은 그 줄의 생산·도착·훈련 속도를 덤으로 높이고, <b>운</b>은 대박 지점이 있는 줄의 추가 지급 확률을 높입니다. <b>지능</b>은 그 줄의 연구 시간을 줄이며, <b>민첩</b>은 연구 비용을 줄입니다. <b>매력</b>은 수색의 레어 후보 확률을 높입니다.<br><br><b>건강</b>은 같은 줄에 오래 등록할수록 쌓이는 숙련 보너스를 키웁니다. <b>통솔</b>은 같은 줄의 다른 등록 영웅 효과를 높이므로 여럿을 등록할 때 의미가 있습니다. 장비·레벨 대신 영웅의 기본 능력치가 이 효과의 재료입니다.<br><br>등록 효과의 현재 수치는 줄 카드를 눌러 확인합니다. 해당 효과를 사용하지 않는 줄에는 적용되지 않습니다. 영웅을 다른 줄로 옮기거나 등록을 풀면 그 영웅의 숙련 시간은 다시 시작하므로, 비교한 뒤 자리를 정합니다.",
-        en: "On the Resources and Gambling Den lines each assigned <b>hero</b> produces one share of the output — the line stops without heroes, so fill the seats before comparing stats. On Search and the Blacksmith each assigned hero runs a clock of their own, bringing someone in or making one item on it. Training and the Library give XP or books to each assigned hero, so they have no head share.<br><br><b>Strength</b> adds a bonus to that line's production, arrival or training speed. <b>Luck</b> raises extra-output chance on lines with a Jackpot node. <b>Intelligence</b> shortens that line's research time; <b>Agility</b> lowers research costs. <b>Charisma</b> raises Search's Rare-candidate chance.<br><br><b>Vitality</b> strengthens the proficiency bonus that builds while a hero remains assigned to the same line. <b>Leadership</b> boosts other assigned heroes on that line, so it matters with multiple heroes. These effects use the hero's base attributes rather than equipment or level.<br><br>Select the line card to check current hero bonuses. Effects do not apply to lines that have no use for them. Moving or removing a hero resets the time accumulated on that assignment, so compare heroes before settling their positions.",
+        ko: "자원 · 도박장 줄은 등록한 <b>영웅 한 명마다</b> 산출이 한 몫씩 납니다 — 영웅이 없으면 멈추므로 능력치보다 먼저 칸을 채웁니다. 수색 · 대장간은 등록한 영웅마다 시계가 하나씩 따로 돌아, 각자 한 명씩 데려오거나 하나씩 만듭니다. 훈련 · 도서관은 등록한 영웅 한 명 한 명이 경험치 · 스킬북을 받는 줄이라 인원 몫이 없습니다.<br><br><b>운</b>은 대박 지점이 있는 줄의 추가 지급 확률을 높입니다. <b>지능</b>은 그 줄의 연구 시간을 줄이며, <b>민첩</b>은 연구 비용을 줄입니다. <b>매력</b>은 수색의 레어 후보 확률을 높입니다.<br><br><b>건강</b>은 같은 줄에 오래 등록할수록 쌓이는 숙련 보너스를 키웁니다. <b>통솔</b>은 같은 줄의 다른 등록 영웅 효과를 높이므로 여럿을 등록할 때 의미가 있습니다. 장비·레벨 대신 영웅의 기본 능력치가 이 효과의 재료입니다.<br><br>등록 효과의 현재 수치는 줄 카드를 눌러 확인합니다. 해당 효과를 사용하지 않는 줄에는 적용되지 않습니다. 영웅을 다른 줄로 옮기거나 등록을 풀면 그 영웅의 숙련 시간은 다시 시작하므로, 비교한 뒤 자리를 정합니다.",
+        en: "On the Resources and Gambling Den lines each assigned <b>hero</b> produces one share of the output — the line stops without heroes, so fill the seats before comparing stats. On Search and the Blacksmith each assigned hero runs a clock of their own, bringing someone in or making one item on it. Training and the Library give XP or books to each assigned hero, so they have no head share.<br><br><b>Luck</b> raises extra-output chance on lines with a Jackpot node. <b>Intelligence</b> shortens that line's research time; <b>Agility</b> lowers research costs. <b>Charisma</b> raises Search's Rare-candidate chance.<br><br><b>Vitality</b> strengthens the proficiency bonus that builds while a hero remains assigned to the same line. <b>Leadership</b> boosts other assigned heroes on that line, so it matters with multiple heroes. These effects use the hero's base attributes rather than equipment or level.<br><br>Select the line card to check current hero bonuses. Effects do not apply to lines that have no use for them. Moving or removing a hero resets the time accumulated on that assignment, so compare heroes before settling their positions.",
     },
     'help.resource.jobs.title': {
         ko: "수색 · 훈련 · 자동 골드",
@@ -2578,9 +2566,9 @@ const STRINGS = {
         zh: '新游戏与初始英雄',
     },
     'help.help.newgame.body': {
-        ko: "메뉴의 [새 게임]을 누르면 첫 영웅 {starterCount}명의 직업 · 죄종 · 능력치를 확인할 수 있습니다. [다시 굴리기]는 후보 전원을 다시 뽑으며, 원하는 조합이 나올 때까지 제한 없이 사용할 수 있습니다. 시작을 확정하면 그 영웅들이 첫 파티가 되고 각자 직업에 맞는 무기를 들고 프롤로그를 시작합니다.<br><br>기존 세이브가 있으면 덮어쓰기 버튼을 한 번 더 눌러야 새 게임을 시작합니다. [뒤로가기]로 메뉴에 돌아가면 기존 저장을 불러올 수 있습니다.",
-        en: "Choose New Game from the menu to inspect the classes, Sins and attributes of your {starterCount} starting heroes. Reroll replaces every candidate and can be used without limit until you find a team you like. Confirming starts the prologue with those heroes as your first party, each carrying a weapon suited to their class.<br><br>If a save already exists, press the overwrite button again to confirm a new game. Back returns to the menu, where you can load the existing save.",
-        zh: '点击菜单中的[新游戏]，可查看{starterCount}名初始英雄的职业、罪宗、属性。[重掷]会重新抽取全部候选，在出现想要的组合之前可以无限次使用。确定开始后，这些英雄会成为第一支队伍，各自手持适合自己职业的武器开始序章。<br><br>如果已有存档，需要再按一次覆盖按钮才会开始新游戏。用[返回]回到菜单，可以读取原有存档。',
+        ko: "메뉴의 [새 게임]을 누르면 프롤로그가 먼저 나오고, 이어서 첫 영웅 {starterCount}명의 직업 · 죄종 · 능력치를 확인할 수 있습니다. [다시 굴리기]는 후보 전원을 다시 뽑으며, 원하는 조합이 나올 때까지 제한 없이 사용할 수 있습니다. 시작을 확정하면 그 영웅들이 첫 파티가 되고 각자 직업에 맞는 무기를 들고 Chapter 1 을 시작합니다.<br><br>기존 세이브가 있으면 덮어쓰기 버튼을 한 번 더 눌러야 새 게임을 시작합니다. [뒤로가기]로 메뉴에 돌아가면 기존 저장을 불러올 수 있습니다.",
+        en: "Choose New Game from the menu to see the prologue, then inspect the classes, Sins and attributes of your {starterCount} starting heroes. Reroll replaces every candidate and can be used without limit until you find a team you like. Confirming makes those heroes your first party, each carrying a weapon suited to their class, and Chapter 1 begins.<br><br>If a save already exists, press the overwrite button again to confirm a new game. Back returns to the menu, where you can load the existing save.",
+        zh: '点击菜单中的[新游戏]，会先播放序章，随后可查看{starterCount}名初始英雄的职业、罪宗、属性。[重掷]会重新抽取全部候选，在出现想要的组合之前可以无限次使用。确定开始后，这些英雄会成为第一支队伍，各自手持适合自己职业的武器开始第1章。<br><br>如果已有存档，需要再按一次覆盖按钮才会开始新游戏。用[返回]回到菜单，可以读取原有存档。',
     },
     'help.help.saving.title': {
         ko: "자동 저장과 이어하기",
@@ -2710,7 +2698,7 @@ const STRINGS = {
             + '<b>받은 뒤</b>에 일어난 것만 셉니다 — 이긴 라운드의 처치 · 직접 하거나 알아서 분해로 한 분해(가방이 차서 녹은 것은 빼고) · 분해와 연구소에서 얻은 재료 · 강화 시도(실패 포함) · 제작 · 스킬북 읽기 · 영웅 고용 · 이긴 라운드에 들어온 장비 · 모든 부대가 같이 채웁니다 · <b>기한은 없습니다</b><br>'
             + '[수령]할 때마다 도감의 그 <b>죄종 칸</b>에 수령 횟수가 하나씩 쌓입니다<br>'
             + '다 채우면 <b>[수령]</b>으로 골드를 받습니다 · <b>[포기]</b>는 벌이 없습니다(진행만 버림) — 비는 자리에는 새 카드가 섭니다<br>'
-            + '<b>명성 레벨</b> — [수령]할 때마다 명성이 하나 쌓이고(포기는 0 · 떨어지지 않음) 문턱을 넘으면 레벨이 오릅니다. 레벨이 오르면 <b>새로 서는 카드</b>의 목표와 골드가 같이 커지고 골드가 더 크게 오릅니다 — 레벨이 오르는 순간 받지 않은 카드는 모두 새 레벨로 다시 서고, 받아 둔 의뢰는 진행도 그대로입니다',
+            + '<b>의뢰 레벨</b> — 연구소 수색 줄의 <b>의뢰</b> 지점을 연구해 올립니다(다음 레벨은 의뢰를 정해진 횟수만큼 완료해야 연구할 수 있습니다). 레벨이 오르면 <b>새로 서는 카드</b>의 목표와 골드가 같이 커지고 골드가 더 크게 오릅니다 — 연구가 끝나는 순간 받지 않은 카드는 모두 새 레벨로 다시 서고, 받아 둔 의뢰는 진행도 그대로입니다',
         en: 'A commission is a <b>goal you take on</b> — no battlefield opens. Pick one from the board and it fills itself <b>on top of what you already do</b><br>'
             + 'Each card carries <b>one Sin</b> that sets its mission — Wrath slaying (monsters · elites · bosses) · Envy reading skill books · hiring heroes · Greed salvaging · collecting gear · Sloth gathering · Gluttony enhancing · crafting. <b>Once you can do that activity</b>, cards of that Sin join the board<br>'
             + '<b>Gathering advances offline too</b> — Laboratory output fills it. There is no party to send and no commission-only battlefield<br>'
@@ -2719,8 +2707,8 @@ const STRINGS = {
             + 'Only what happens <b>after you accept</b> counts — kills in won rounds · salvage you do by hand or by auto-salvage (not full-bag overflow) · materials from salvage and the Laboratory · enhance attempts (failures too) · crafting · skill books read · heroes hired · gear that arrives from won rounds · every party fills it · <b>there is no deadline</b><br>'
             + 'Each [Claim] adds one to that <b>Sin</b> in the Codex<br>'
             + 'When it is full, <b>[Claim]</b> pays the gold · <b>[Abandon]</b> costs nothing but the progress — a new card takes the empty place<br>'
-            + '<b>Fame level</b> — every [Claim] adds one fame (abandoning adds none · it never drops), and passing a threshold raises the level. A higher level makes <b>newly posted cards</b> ask for more and pay more, with gold rising faster — when the level rises, every card you have not accepted is rerolled at the new level, while accepted commissions keep their progress',
-        zh: '委托是<b>接下后搁着的目标</b>——不会开启战场。从委托板上挑选并接下后，它会<b>叠加在平常的活动之上</b>自动推进<br>每张卡片由<b>一种罪宗</b>决定任务——愤怒：击杀（怪物 · 精英 · 首领）· 嫉妒：阅读技能书 · 雇佣英雄 · 贪婪：分解 · 获得装备 · 怠惰：材料获取 · 暴食：强化 · 制作。<b>能够进行该活动后</b>，该罪宗的卡片就会混入<br><b>材料获取在离线时也会推进</b>——由研究所的生产填充。既没有需要另外派出的队伍，也没有委托专属的战场<br>稀有度分为<b>普通 · 魔法 · 稀有</b>——稀有度越高，目标越窄（一章 · 一个区域 · 一个类别），出现越少，金币越多。目标只会来自当前能去的地方<br><b>接受即消耗该卡片</b>——接下的卡片会在原位变为进行中，可同时接取的数量是固定的。因此“接哪个委托”就成了一个决策<br>只计算<b>接受之后</b>发生的事——胜利回合中的击杀 · 手动或自动分解进行的分解（不含背包满而熔掉的）· 从分解与研究所获得的材料 · 强化尝试（含失败）· 制作 · 阅读技能书 · 雇佣英雄 · 胜利回合中获得的装备 · 所有小队共同推进 · <b>没有期限</b><br>每次[领取]，图鉴中该<b>罪宗格</b>的领取次数就会累加一次<br>完成后用<b>[领取]</b>获得金币 · <b>[放弃]</b>没有惩罚（只舍弃进度）——空出的位置会出现新卡片<br><b>声望等级</b>——每次[领取]累积1点声望（放弃为0 · 不会下降），越过门槛即升级。等级提升后，<b>新出现的卡片</b>的目标与金币会一同增加，且金币增幅更大——升级的瞬间，所有未接受的卡片都会按新等级重新出现，已接受的委托则保留进度',
+            + '<b>Commission level</b> — raise it by researching the <b>Commissions</b> node on the Laboratory Search line (each next level needs a set number of completed commissions). A higher level makes <b>newly posted cards</b> ask for more and pay more, with gold rising faster — when the research finishes, every card you have not accepted is rerolled at the new level, while accepted commissions keep their progress',
+        zh: '委托是<b>接下后搁着的目标</b>——不会开启战场。从委托板上挑选并接下后，它会<b>叠加在平常的活动之上</b>自动推进<br>每张卡片由<b>一种罪宗</b>决定任务——愤怒：击杀（怪物 · 精英 · 首领）· 嫉妒：阅读技能书 · 雇佣英雄 · 贪婪：分解 · 获得装备 · 怠惰：材料获取 · 暴食：强化 · 制作。<b>能够进行该活动后</b>，该罪宗的卡片就会混入<br><b>材料获取在离线时也会推进</b>——由研究所的生产填充。既没有需要另外派出的队伍，也没有委托专属的战场<br>稀有度分为<b>普通 · 魔法 · 稀有</b>——稀有度越高，目标越窄（一章 · 一个区域 · 一个类别），出现越少，金币越多。目标只会来自当前能去的地方<br><b>接受即消耗该卡片</b>——接下的卡片会在原位变为进行中，可同时接取的数量是固定的。因此“接哪个委托”就成了一个决策<br>只计算<b>接受之后</b>发生的事——胜利回合中的击杀 · 手动或自动分解进行的分解（不含背包满而熔掉的）· 从分解与研究所获得的材料 · 强化尝试（含失败）· 制作 · 阅读技能书 · 雇佣英雄 · 胜利回合中获得的装备 · 所有小队共同推进 · <b>没有期限</b><br>每次[领取]，图鉴中该<b>罪宗格</b>的领取次数就会累加一次<br>完成后用<b>[领取]</b>获得金币 · <b>[放弃]</b>没有惩罚（只舍弃进度）——空出的位置会出现新卡片<br><b>委托等级</b>——通过研究研究所搜寻线的<b>委托</b>节点提升（研究下一级需要完成规定次数的委托）。等级提升后，<b>新出现的卡片</b>的目标与金币会一同增加，且金币增幅更大——研究完成的瞬间，所有未接受的卡片都会按新等级重新出现，已接受的委托则保留进度',
     },
     'exp.zones.h': { ko: '원정 지역', en: 'Expedition Zones', zh: '远征区域' },
     // 원정 지역 [개정 2026-09-29 · PLAN_stage_segments D1] — 챕터 = 장소 {p} · 장소마다 칸 I · II · III · 칸 하나가 한 런이다(도움말 · SCREEN_DESIGN §12)
@@ -3044,6 +3032,7 @@ const STRINGS = {
     'pt.err.slotClosed': { ko: '안 열린 칸', en: 'Slot not open' },
     'pt.err.noCard': { ko: '카드 없음', en: 'No such card' },
     'pt.err.wrongSlot': { ko: '다른 칸의 카드', en: 'Card belongs to another slot' },
+    'pt.err.storeFull': { ko: '보관 칸 가득 참', en: 'Storage full' },   // 사용한 카드 보관이 가득 차 새 카드로 못 바꾼다 (R589)
     'pt.err.shard': { ko: '카드 조각 부족', en: 'Not enough Card Shards' },
     'pt.err.invalid': { ko: '잘못된 장수', en: 'Invalid count' },
     'rs.h': { ko: '파티 전술', en: 'Party Tactics', zh: '队伍战术' },
@@ -3298,16 +3287,19 @@ const STRINGS = {
     'rs.slot.defense': { ko: '방어', en: 'Defense' },
     'rs.slot.utility': { ko: '유틸', en: 'Utility' },
     'rs.shards': { ko: '카드 조각 {n}', en: 'Card Shards {n}' },   // 진척 줄 오른쪽 끝 · 가방 창 머리
-    'rs.card.none': { ko: '카드 없음', en: 'No card' },
-    'rs.bag.n': { ko: '가방 {n}', en: 'Bag {n}' },               // 카드 오른쪽 아래 — 그 갈래 가방 장수 합
     'rs.enchant': { ko: '인챈트 {g}G · 조각 {s}', en: 'Enchant {g}G · Shard ×{s}' },   // 줄마다 — 비용을 버튼에 적는다
     'rs.ench.done': { ko: '인챈트 — {grade} {eff}', en: 'Enchanted — {grade} {eff}' },
     'rs.tip.sub': { ko: '{slot} · {sin} · {grade}', en: '{slot} · {sin} · {grade}' },   // 카드 툴팁 둘째 줄
     'rs.bag.h': { ko: '{slot} 카드', en: '{slot} Cards' },
-    'rs.bag.cur': { ko: '장착 중', en: 'Equipped' },
-    'rs.bag.empty': { ko: '가방에 {slot} 카드 없음', en: 'No {slot} cards in the bag' },
     'rs.bag.equip': { ko: '장착', en: 'Equip' },
-    'rs.bag.replace': { ko: '{card} 버리고 장착', en: 'Replace {card}' },   // 칸에 카드가 있을 때 첫 누름 — 두 번 누른다 (§3)
+    // 가방 창 두 덩어리 — 위 사용한 카드 · 아래 새 카드 (§15 · ADR-1390 · R589)
+    'rs.bag.inUse': { ko: '사용 중인 카드', en: 'Equipped Cards' },   // 가방 창 맨 위 덩어리 — 편성마다 이 갈래 칸에 든 카드 (ADR-1428 · ADR-1430)
+    'rs.bag.used': { ko: '사용한 카드', en: 'Used Cards' },
+    'rs.bag.new': { ko: '새 카드', en: 'New Cards' },
+    // 등급 탭 · 고른 카드 줄 (§15 · ADR-1399)
+    'rs.bag.all': { ko: '전체', en: 'All' },
+    'rs.bag.lock.running': { ko: '원정 중에는 카드를 뺄 수 없습니다', en: "Cards can't be removed during an expedition" },
+    'rs.bag.lock.exploring': { ko: '탐험 중에는 카드를 뺄 수 없습니다', en: "Cards can't be removed while exploring" },
     'rs.bag.dis': { ko: '분해 (조각 +{n})', en: { one: 'Dismantle (+{n} Shard)', other: 'Dismantle (+{n} Shards)' } },
     'rs.bag.disConfirm': { ko: '정말 분해 (조각 +{n})', en: { one: 'Confirm (+{n} Shard)', other: 'Confirm (+{n} Shards)' } },
     'rs.equip.done': { ko: '{card} 장착', en: '{card} equipped' },
@@ -3533,6 +3525,7 @@ const STRINGS = {
     'bk.calc.hp': { ko: 'HP', en: 'HP' },
     'bk.calc.cool': { ko: '쿨타임', en: 'CD' },   // en 은 짧게 — 계산 줄 이름 칸이 가장 긴 이름에 맞춰 선다 (ADR-1364)
     'bk.calc.tag': { ko: '태그', en: 'Tag' },
+    'bk.calc.weaponDmg': { ko: '무기 데미지', en: 'Weapon Damage' },   // 계산 줄의 무기 밑수(atk) 이름 — 이 줄만 · 다른 자리의 「데미지」는 `st.atk` (ADR-1432)
     'bk.calc.tagDur': { ko: '지속 +{p}%', en: 'Duration +{p}%' },
     'bk.calc.tagVal': { ko: '효과 +{p}%', en: 'Effect +{p}%' },   // 스킬정보 줄 오른쪽 위 칩 — 무기가 필요 없는 스킬 (§17 · ADR-1321)
     'bk.weaponClash': { ko: '{name} 스킬과 필요 무기가 달라 함께 쓸 수 없습니다', en: 'Different weapon than {name} — can’t use both' },   // 스킬정보 습득 줄 붉은 한 줄 — 고유 칸 스킬과 맞는 무기군이 없다 (§17 · ADR-1319)

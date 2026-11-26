@@ -1,0 +1,6 @@
+event_id,weight,description_kr
+monster,40,⚠제안 몬스터 — 그 장 무작위 장소 칸 II 의 일반 라운드 하나 [신설 2026-11-26 · R590 · PLAN_explore_rework D12] · 어휘는 코드(state.js EX_RUINS_KINDS) · 표는 가중만 든다 · 행 순서 = 굴림 순서
+trap,15,⚠제안 함정 — 몬스터와 같은 전투 + 우리 편에 그 장의 헬 장 디버프(chapter_debuff.csv · 난이도와 무관)
+item,20,⚠제안 물건 — 전투 없음 · 장비 한 점(그 장 레벨대 · 희귀도 가중 balance.csv:explore_ruins_item_rarity_shift 단계 위로) 또는 balance.csv:explore_ruins_item_book_pct 확률로 스킬북(상단 책 후보와 같은 풀)
+rare_encounter,10,⚠제안 드문 만남 — 그 장 무작위 장소의 스테이지보스 + 일반 호위 둘(round_budget.csv:stage_boss) · 가중 × 표 등급 special_mult
+empty,15,⚠제안 빈 방 — 아무것도 없다

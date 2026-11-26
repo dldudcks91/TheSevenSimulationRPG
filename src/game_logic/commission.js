@@ -9,7 +9,7 @@
  *
  * **무엇이 서는가는 표가 정한다** — 틀(`commission.csv` — 죄종 × 등급 × 종류 · 대상 어휘 · 기본 수 · 기본 골드 · 가중치) ·
  *   종류(`commission_kind.csv` — 토벌 · 현상금 · 보스 토벌 · 스킬 수련 · 영입 · 분해 · 수집 · 재료 획득 · 강화 · 제작 · 그 종류가 어느 사건을 세나) · 카드 등급(`commission_grade.csv` — 일반 · 매직 · 레어 · 드물기 · 골드 배수) ·
- *   종족(`monster_type.csv`) · 명성 레벨(`commission_fame.csv` — 2026-10-29 · R375) · 장(`chapter.csv:sin` — 죄종의 차례만 · R457 · R513).
+ *   종족(`monster_type.csv`) · 의뢰 레벨(`commission_level.csv` — 2026-11-26 · R592 · 옛 명성 레벨 R375) · 장(`chapter.csv:sin` — 죄종의 차례만 · R457 · R513).
  *   **코드가 아는 것은 대상 어휘(`AXES`)와 코드 문턱 토큰(`CODE_REQUIRES`)뿐이다** — 무엇을 세는지 · 무엇이 열렸나는 코드라서다(construction 의 `TARGETS` 와 같은 자리).
  *
  * 확정 규칙:
@@ -20,11 +20,12 @@
  *   · **카드 등급 = 대상을 얼마나 좁히나** [2026-11-13 사용자 「난이도에 따라 일반/매직/레어를 내부적으로 구분해서 돈을 더많이주던지」 · 「1배2배3배로가자」] —
  *     등급은 골드 배수와 드물기만 든다 · 목표 수는 틀이 든다(확률로 좁히는 틀은 좁힌 몫만큼 작다) ·
  *     좁힌 대상이 넓은 대상과 같으면(풀이 하나) 그 틀을 안 굴린다 · 목표가 1 아래로 떨어지는 틀도 안 굴린다 [사용자 「알맞게 수정해」]
- *   · **명성 레벨** [2026-10-29 · R375] — 명성 경험치(= 누적 수령 수)가 레벨을 정하고 레벨이 **새로 굴리는 카드**의 목표 수 · 골드에 배수를 붙인다 · 골드가 더 가파르다
+ *   · **의뢰 레벨** [2026-11-26 · R592 — 옛 명성 레벨(누적 수령 수로 오름 · R375) 대체] — 연구소 수색 줄 「의뢰」 지점 레벨(부르는 쪽이 `ctx.fame` 으로 준다)이
+ *     **새로 굴리는 카드**의 목표 수 · 골드에 배수를 붙인다 · 골드가 더 가파르다 · 표의 `claims_total` = 그 레벨 연구를 시작하는 누적 완료 수 문턱(`state.js` 가 본다)
  * ⚠ 값은 전부 제안값 — 각 CSV 의 description
  *
  * @param {object} data
- *   templates / kinds / grades / races / fame — 표 다섯의 파싱 행
+ *   templates / kinds / grades / races / fame — 표 다섯의 파싱 행(`fame` = commission_level.csv — 이름은 옛 명성 그대로 · R592)
  *   monsters — byId(monster.csv) · 고정 대상 검증 · 개체 카드의 보상 챕터 · 종족 표가 모든 `monster_type` 을 덮는지 검증
  *   chapters — byId(chapter.csv `{id, sin}`) · 죄종 순서 = 장 순서 (R457 · 죄종을 여는 것은 틀의 문턱 — R513)
  *   labMaterials / materialSynth — `[{id}]` · `[{id, from}]` · 재료 갈래(위 단계를 뿌리로 묶는다 · R457)
@@ -176,31 +177,28 @@ export function createCommission(data) {
     /** 틀 표가 쓰는 문턱 토큰 — 행 순서 · 중복 없음 · 부르는 쪽이 이것만 열렸나 본다 (R513) */
     const requiresList = [...new Set(templates.map(t => t.requires).filter(Boolean))];
 
-    /* ── 명성 레벨 — 행 순서 = 레벨 순서 · 레벨 1 = 틀의 값 (R375) ── */
-    const fame = (data.fame ?? []).map((r, i) => {
-        const lv = i + 1;
-        if (r.level !== lv) bad(`명성 ${i + 1}번째 행 — level ${r.level} (1 부터 1씩)`);
-        if (!(Number.isInteger(r.claims_total) && r.claims_total >= 0)) bad(`명성 Lv${lv} — claims_total ${r.claims_total}`);
-        if (!(typeof r.need_mult === 'number' && r.need_mult > 0)) bad(`명성 Lv${lv} — need_mult ${r.need_mult}`);
-        if (!(typeof r.gold_mult === 'number' && r.gold_mult > 0)) bad(`명성 Lv${lv} — gold_mult ${r.gold_mult}`);
+    /* ── 의뢰 레벨 — 행 순서 = 레벨 순서 · 레벨 0 = 틀의 값 (R592 · 옛 명성 Lv1 부터 R375) ── */
+    const fame = (data.fame ?? []).map((r, lv) => {
+        if (r.level !== lv) bad(`의뢰 레벨 ${lv + 1}번째 행 — level ${r.level} (0 부터 1씩)`);
+        if (!(Number.isInteger(r.claims_total) && r.claims_total >= 0)) bad(`의뢰 Lv${lv} — claims_total ${r.claims_total}`);
+        if (!(typeof r.need_mult === 'number' && r.need_mult > 0)) bad(`의뢰 Lv${lv} — need_mult ${r.need_mult}`);
+        if (!(typeof r.gold_mult === 'number' && r.gold_mult > 0)) bad(`의뢰 Lv${lv} — gold_mult ${r.gold_mult}`);
         return { level: lv, total: r.claims_total, needMult: r.need_mult, goldMult: r.gold_mult };
     });
-    if (!fame.length) bad('명성 표가 비었다');
-    if (fame[0].total !== 0 || fame[0].needMult !== 1 || fame[0].goldMult !== 1) bad('명성 Lv1 은 문턱 0 · 배수 1 이어야 한다 — 틀의 값이 레벨 1 의 값이다');
+    if (!fame.length) bad('의뢰 레벨 표가 비었다');
+    if (fame[0].total !== 0 || fame[0].needMult !== 1 || fame[0].goldMult !== 1) bad('의뢰 Lv0 은 문턱 0 · 배수 1 이어야 한다 — 틀의 값이 레벨 0 의 값이다');
     for (let i = 1; i < fame.length; i++) {
         const a = fame[i - 1], b = fame[i];
-        if (!(b.total > a.total)) bad(`명성 Lv${b.level} — 문턱 ${b.total} 이 Lv${a.level} 의 ${a.total} 보다 크지 않다`);
-        if (b.needMult < a.needMult) bad(`명성 Lv${b.level} — 목표 배수가 준다`);
-        if (!(b.goldMult / b.needMult > a.goldMult / a.needMult)) bad(`명성 Lv${b.level} — 목표당 골드가 Lv${a.level} 보다 크지 않다(골드가 목표보다 가파르다)`);
+        if (!(b.total > a.total)) bad(`의뢰 Lv${b.level} — 문턱 ${b.total} 이 Lv${a.level} 의 ${a.total} 보다 크지 않다`);
+        if (b.needMult < a.needMult) bad(`의뢰 Lv${b.level} — 목표 배수가 준다`);
+        if (!(b.goldMult / b.needMult > a.goldMult / a.needMult)) bad(`의뢰 Lv${b.level} — 목표당 골드가 Lv${a.level} 보다 크지 않다(골드가 목표보다 가파르다)`);
     }
 
-    /** 명성 경험치 → 레벨 한 벌 — 닿은 가장 높은 레벨 · 0 이상 정수가 아니면 0 으로 읽는다 · rng 0 */
-    function fameOf(xp) {
-        const x = Number.isInteger(xp) && xp > 0 ? xp : 0;
-        let f = fame[0];
-        for (const r of fame) if (x >= r.total) f = r;
-        const nx = fame[f.level] ?? null;
-        return { level: f.level, xp: x, total: f.total, next: nx ? nx.total : null, needMult: f.needMult, goldMult: f.goldMult, max: !nx };
+    /** 의뢰 레벨 → 그 레벨 한 벌 — 0 ~ 최고로 자른다 · 0 이상 정수가 아니면 0 · `total` = 그 레벨 연구의 완료 수 문턱 · `next` = 다음 레벨의 문턱(최고면 null) · rng 0 (R592) */
+    function fameOf(lv) {
+        const x = Number.isInteger(lv) && lv > 0 ? Math.min(lv, fame.length - 1) : 0;
+        const f = fame[x], nx = fame[x + 1] ?? null;
+        return { level: f.level, total: f.total, next: nx ? nx.total : null, needMult: f.needMult, goldMult: f.goldMult, max: !nx };
     }
 
     /* ── 굴림 ── */
@@ -248,7 +246,7 @@ export function createCommission(data) {
     /**
      * 카드 한 장 — **언제나 4회**: 죄종 1 → 등급 1 → 틀 1 → 대상 1(고정이어도 소비하고 버린다) · 굴릴 틀이 없으면 0회 `null` (R457).
      * `ctx = {chapters, races, places, monsters, chapter, fame, features}` — 지금 들어갈 수 있는 것만 · 순서가 계약이다(INTERFACE §2-16) ·
-     *   `fame` = 명성 경험치 — 레벨의 배수가 목표 · 골드에 곱해진다(굴림 수는 안 바뀐다 · R375) · `features` = 열린 문턱 토큰(R513)
+     *   `fame` = 의뢰 레벨(연구소 「의뢰」 지점 — R592 · 옛 명성 경험치 R375) — 레벨의 배수가 목표 · 골드에 곱해진다(굴림 수는 안 바뀐다) · `features` = 열린 문턱 토큰(R513)
      */
     function roll(rng, ctx) {
         const f = fameOf(ctx.fame);

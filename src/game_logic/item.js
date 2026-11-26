@@ -238,9 +238,10 @@ export function createItemSystem(data) {
     //   **마법 무기 색욕 ③** [2026-11-11 · 사용자 「최소데미지/최대데미지 삭제」 · R442] — 무기는 피해 종류까지 키에 든다(`weapon/magic:…`)
     //   **물리 무기 시기 ②** [2026-11-17 · 사용자 「아이템에 관통, 스킬에 감소」 · R531] — 방어력 감소 겹을 걷은 자리 · 이미 가진 무기의 그 줄은 그대로 읽는다(`skill_effects.weaponOnHit`)
     //   **갑옷 시기 ① ② · 투구 시기 ② · 신발 시기 ①** [2026-11-25 · 사용자 「반격과 반사를 모든 장비에서 뺴고 유저 스탯에서도 뺴버리자」 · 「일단비워둬」 · R585] — 반격 · 반사를 걷은 자리
-    //     이미 가진 장비의 그 줄은 불러올 때 지운다(`stripRetired`)
+    //     이미 가진 장비의 그 줄은 불러올 때 지운다(`stripRetired`) · 갑옷 시기 ① 은 2026-11-26 사용자가 채웠다(최대 원소 저항 넷 중 하나 — 투구 시기 ① 과 같은 줄)
+    //   **갑옷 분노 ②** [2026-11-26 · 사용자 「분노의 피해감소를 빼버리자 피해감소가 너무 많이 들어가면 좀 그런데」] — 피해 감소를 걷은 자리 · 이미 가진 장비의 그 줄은 그대로 읽는다(stat 은 다른 출처가 쓴다)
     const EMPTY_CELLS = new Set(['ring:gluttony:3', 'weapon/magic:lust:3', 'weapon/physical:envy:2',
-        'armor:envy:1', 'armor:envy:2', 'helmet:envy:2', 'boots:envy:1']);
+        'armor:wrath:2', 'armor:envy:2', 'helmet:envy:2', 'boots:envy:1']);
     /**
      * **걷은 옵션 stat** [2026-11-25 · R585 · INTERFACE §2-5 · §4] — 어느 표에도 없고 전투 · 시트가 읽지 않는다. 이미 가진 장비의 그 줄은 불러올 때 지운다(`stripRetired`)
      */
@@ -930,7 +931,8 @@ export function createItemSystem(data) {
      */
     function rollDrop(rng, ilvl, opts = {}) {
         const slot = pick(rng, data.slots);
-        return rollGear(rng, { slots: [slot], ilvl, magicFind: opts.magicFind ?? 0, useDropSinWeights: true })[0];
+        // `opts.rarityWeights` — 희귀도 가중치(`rollGear` 와 같은 모양) · 안 주면 드롭 가중치 · 굴림 수 불변 (탐험 폐허 물건 · 2026-11-26 · R590)
+        return rollGear(rng, { slots: [slot], ilvl, magicFind: opts.magicFind ?? 0, useDropSinWeights: true, ...(opts.rarityWeights ? { rarityWeights: opts.rarityWeights } : {}) })[0];
     }
 
     /** 시작 무기 — **그 직업의 무기군**에서 ilvl 1 **일반** 1개 (무기가 밑수라 빈손이면 세기가 성립하지 않는다).

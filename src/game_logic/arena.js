@@ -603,5 +603,7 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
         snapshotTeam, rollOpponent, fight,
         rollTierOpponent, rollFloorOpponent, floorLoadout, rollRatedCandidates, tierOfRating, kitOfRating: r => clone(kitOfRating(r)),
         exportTeam, validateTeam, importTeam,
+        // 차림 하나로 AI 팀 하나 — 탐험 상단 의뢰의 습격 팀(state 가 그 판 차림을 넘긴다 · 2026-11-26 · R590 · INTERFACE §2-17) · rng 순서는 `rollTierOpponent` 와 같은 길
+        rollKit: (T, rng, taken = []) => rollKit(T, rng, taken, null, null),
     };
 }

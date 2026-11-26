@@ -352,6 +352,7 @@ PRELOAD_SKIP = [
 # nav icons cover the tab bar of the game a save opens into. Keep the portrait path in step with ui/mock.js:FACE_STYLES[0] (gemini).
 PRELOAD_FIRST = [
     "src/assets/art/logo/*",   # 시작 파티 고르기의 제목 그림 — 메뉴 다음 화면 (SCREEN_DESIGN §3 · ADR-1241)
+    "src/assets/art/prologue/*",   # 프롤로그 장면 그림 — 새 게임이 메뉴 바로 다음에 연다 (SCREEN_DESIGN §3-1 · ADR-1393)
     "src/assets/art/faces/gemini/hero/*",
     "src/assets/art/icons/skills/*",
     "src/assets/art/icons/nav/*",

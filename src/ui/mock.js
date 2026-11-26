@@ -581,6 +581,11 @@ export const SKILL_ICON_FILES = [
 /** 죄종 아이콘 — 스킬 아이콘 규격의 회색 실루엣 7장. 화면은 마스크로 쓰고 판 색으로 칠한다 (SCREEN_DESIGN §7 · ADR-0368) */
 export const SIN_ICON_DIR = './assets/art/icons/sins/';
 export const sinIcon = sin => SINS[sin] ? SIN_ICON_DIR + sin + ICON_EXT : null;
+/** 작전 카드 그림 — 파일 이름 = `tactic_card.csv:card_id` · Codex 「배지 장면」 초안(2026-11-25 초안에서 사용자가 고름 · ADR-1395) ·
+ *  그림이 없는 카드는 null — 화면은 그 카드의 죄종 그림을 대신 세운다 (SCREEN_DESIGN §15 「카드 그림」 · ADR-1391) */
+export const TACTIC_ICON_DIR = './assets/art/icons/tactics/';
+export const TACTIC_ICON_FILES = ['duel', 'shieldwall', 'trojan'];
+export const tacticIcon = id => TACTIC_ICON_FILES.includes(id) ? TACTIC_ICON_DIR + id + ICON_EXT : null;
 /** 직업 아이콘 — 스킬 아이콘과 같은 Gemini 단색 실루엣 시트에서 잘랐다(`icons/classes/source/`). 마스터리 직업 판 머리가 판 색으로 칠한다 (SCREEN_DESIGN §7 · ADR-0375) */
 export const CLASS_ICON_DIR = './assets/art/icons/classes/';
 export const CLASS_ICON_FILES = ['warrior', 'knight', 'mage', 'archer', 'priest', 'assassin', 'necromancer'];
@@ -828,6 +833,9 @@ export const stageBg = id => bgDir() + `background_stage_${id}.webp`;
 /** 결투 배경 — 판과 관전이 같은 그림을 깐다 (SCREEN_DESIGN §1 「판」 · ADR-0749 · ADR-0752 · ADR-0761).
  *  콜로세움(탭 id `arena` · ELO)은 로마 콜로세움 한 장 · 결투장(탭 id `colosseum` · 층 사다리)은 **고른 층의 등급마다 한 장**(id = `arena_tier.csv:tier_id`).
  *  **스타일을 안 탄다** — 일러스트 한 벌뿐이라 `illustrate/` 를 박았다(`TOWN_BG` 와 같은 수법). 다른 스타일 판이 생기면 `bgDir()` 로 돌린다 */
+/** 프롤로그 장면 그림 — 씬마다 한 장(`assets/art/prologue/scene_<n>.webp` · n = 1~5) · 어둠 속 실루엣 한 벌이라 **스타일을 안 탄다**
+ *  (SCREEN_DESIGN §3-1 · ADR-1393). 손 안 댄 원본 · 레시피는 `assets/art/README.md` 「prologue/」 */
+export const prologueArt = n => `./assets/art/prologue/scene_${n}.webp`;
 export const COLOSSEUM_BG = BG_DIR + 'illustrate/background_colosseum.webp';
 export const duelBg = tierId => BG_DIR + `illustrate/background_duel_${tierId}.webp`;
 
@@ -858,12 +866,41 @@ export const EXPLORE_REGIONS = {
 /** 탐험 지점 아이콘 — `src/assets/art/icons/explore/<지점>.webp` · **테두리 없는 그림 원판**(테두리는 화면이 땅 색으로 두른다 · ADR-0553) */
 export const EXPLORE_ICON_DIR = './assets/art/icons/explore/';
 export const exploreIcon = spot => EXPLORE_ICON_DIR + spot + ICON_EXT;
+/** 탐험 표 그림 — `icons/explore/ticket_<지점>.webp` · 낡은 양피지 표에 그 지점 문양 · 등급은 그림이 아니라 칩 테두리 색이 든다 (2026-11-26 · Codex · ADR-1409) */
+export const exploreTicketIcon = spot => EXPLORE_ICON_DIR + 'ticket_' + spot + ICON_EXT;
+/**
+ * 탐험 판 관전 지도 (SCREEN_DESIGN §8-4 · 2026-11-26 R590 · ADR-1402 · ADR-1403) — **그림에 묶인 좌표**라 그림을 바꾸면 같이 다시 딴다.
+ * `EXPLORE_CARAVAN_ROUTES[장]` = 세계지도(`EXPLORE_WORLD_SIZE` 픽셀) 위 상단 의뢰의 길 — 그 장 마차 자리(`EXPLORE_REGIONS[장].spots.caravan`)에서
+ *   다음 장으로 넘어가는 다리 · 계단까지 그림의 길을 땄다. 6 · 7장은 기획 제외라 없다 — 화면이 마차 자리 → 구간 가운데(`at`) 직선으로 대신한다.
+ * `EXPLORE_RUINS_ROUTE` = 폐허 지도(`EXPLORE_RUINS_SIZE` 픽셀) 위 입구(왼쪽) → 봉인실(오른쪽) 길 — 안개가 이 길을 따라 걷힌다 (장마다 같은 한 장).
+ * `EXPLORE_MARK_ART` = 폐허 이벤트 표지 — **있는 아이콘을 빌린다**(새 그림 발주 없음 · PLAN §2-4) · 빈 방(`empty`)은 그림이 없어 화면이 도형을 그린다
+ */
+export const EXPLORE_RUINS_MAP = BG_DIR + 'explore_ruins.webp';
+export const EXPLORE_RUINS_SIZE = [1536, 715];
+export const EXPLORE_CARAVAN_ROUTES = {
+    1: [[173.6, 412.7], [160, 430], [150, 432], [137, 422], [120, 412], [108, 398], [102, 382], [100, 365], [107, 353], [120, 345], [135, 338], [138, 325], [132, 308], [120, 295], [110, 278], [103, 255], [97, 236]],
+    2: [[224.3, 259.9], [245, 270], [275, 274], [310, 276], [345, 281], [375, 290], [395, 302], [410, 316], [425, 326], [442, 338]],
+    3: [[666.6, 576.9], [700, 583], [740, 582], [775, 572], [795, 550], [798, 520], [785, 490], [765, 462], [742, 440], [718, 420], [698, 400], [684, 378], [676, 356], [682, 335]],
+    4: [[649.7, 272.7], [672, 276], [690, 288], [702, 305], [712, 328], [725, 342], [745, 355], [768, 370], [785, 385], [796, 405], [800, 430], [815, 450], [840, 460]],
+    5: [[941.6, 517.6], [975, 535], [1010, 560], [1050, 575], [1100, 570], [1150, 555], [1200, 530], [1235, 495], [1245, 455], [1238, 415], [1225, 385]],
+};
+export const EXPLORE_RUINS_ROUTE = [[60, 440], [120, 432], [175, 402], [230, 382], [290, 378], [330, 372], [362, 318], [410, 282], [462, 292], [478, 338], [484, 392], [505, 430],
+    [560, 450], [620, 432], [680, 410], [735, 412], [790, 435], [845, 422], [880, 392], [925, 368], [975, 352], [1030, 338], [1075, 322], [1090, 360], [1082, 395],
+    [1130, 410], [1200, 415], [1260, 422], [1320, 420], [1390, 395]];
+export const EXPLORE_MARK_ART = {
+    monster: `./assets/art/icons/arena/duel${ICON_EXT}`,
+    trap: `./assets/art/icons/difficulty/hell${ICON_EXT}`,
+    rare: `./assets/art/icons/arena/champion${ICON_EXT}`,
+    item: `./assets/art/icons/items/box/clear_box${ICON_EXT}`,
+};
 /** 연구소 지점 아이콘 — `src/assets/art/icons/lab/node/<지점 id>.webp`(`lab_node.csv:node`) · 회색 단색 실루엣(마스터리 아이콘과 같은 그림체) · 같은 지점은 줄이 달라도 같은 그림 (2026-10-21 · ADR-0684 · 전부 다시 그림 2026-11-14 ADR-1114).
  *  줄 그림은 이 폴더가 아니라 그 줄을 여는 건물의 건설 그림이다(`app.js:LAB_LINES` 의 `art`) */
 export const LAB_ICON_DIR = './assets/art/icons/lab/';
 // ⚠ 임시 — 대장간 줄 「인챈트」 · 「분해」 지점(2026-11-24 · R576)은 제 그림이 아직 없어 비슷한 뜻의 그림을 빌린다(품질 · 수익 주머니) · 그림이 서면 이 두 줄을 걷는다
 const LAB_NODE_ICON = { offline: 'interval', relief: 'waiting', enchant: 'quality', salvage: 'income' };
-export const labNodeIcon = node => `${LAB_ICON_DIR}node/${LAB_NODE_ICON[node] ?? node}${ICON_EXT}`;
+// ⚠ 임시 — 수색 줄 「의뢰」 지점(2026-11-26 · R592 · ADR-1411)은 제 그림이 없어 선술집 아이콘(NAV_ICON)을 쓴다 · 그림이 서면 이 줄을 걷는다
+const LAB_NODE_ART = { commission: NAV_ICON('tavern') };
+export const labNodeIcon = node => LAB_NODE_ART[node] ?? `${LAB_ICON_DIR}node/${LAB_NODE_ICON[node] ?? node}${ICON_EXT}`;
 
 /**
  * 몬스터 얼굴 — `src/assets/art/faces/<스타일>/monster/<idx>.webp` · 영웅 초상은 같은 스타일 폴더의 `hero/<직업id>_<k>.webp`.

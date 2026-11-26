@@ -96,7 +96,7 @@
     --elite-bg: #1d1710;
     --elite-bg-unit: #1f1a16;
     --elite-fg: #d09040;
-    /* 능력치 칩 — 청동 [2026-09-24 사용자 지시 · 시험 적용] 위 금색에서 채도를 뺐다 */
+    /* 청동 — 위 금색에서 채도를 뺐다 [2026-09-24] */
     --bronze-line: #7d6a48;
     --bronze-fg: #cdbb92;
     --fire-bg: #3a2c14;
@@ -459,8 +459,9 @@ html, body { height: 100%; overflow: hidden; }
 .notification-folder .lock-ico svg { width: 1em; height: 1em; }
 .notification-folder:focus-visible { outline: 1px solid var(--border-highlight); outline-offset: -3px; }
 /* 본문 = 탭 아래 윗변 없는 판 · 높이는 카드 세 장(`notifications.js:SLOTS`) · 오른쪽 스크롤바는 보인다 (ADR-0984) */
+/* 카드 높이 · 간격 — 판 목록과 메인미션 완료 판(두루마리 아래에 매달린 같은 카드 · ADR-1413)이 같이 쓴다 */
+.notification-list, .mission-tut.done { --nt-h: 66px; --nt-gap: 8px; }
 .notification-list {
-    --nt-h: 66px; --nt-gap: 8px;
     display: flex; flex-direction: column; gap: var(--nt-gap);
     height: calc(3 * var(--nt-h) + 2 * var(--nt-gap) + 18px); box-sizing: border-box; padding: 8px 4px 8px 8px;
     border: 1px solid var(--border-primary); border-top: 0;
@@ -470,8 +471,6 @@ html, body { height: 100%; overflow: hidden; }
 .notification-list::-webkit-scrollbar { display: block; width: 10px; }
 .notification-list::-webkit-scrollbar-track { background: var(--surface-1); }
 .notification-list::-webkit-scrollbar-thumb { background: var(--border-highlight); border: 2px solid var(--surface-1); border-radius: 5px; }
-.notification-guide-toggle { flex: none; display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 2px 2px 0; border: 0; background: none; color: var(--text-secondary); font: inherit; font-size: var(--fs-sm); cursor: pointer; }
-.notification-guide-toggle:hover { color: var(--text-primary); }
 /* 카드 = 우편 카드(`.mail-card`)와 같은 바탕 · 테두리 · 왼쪽 굵은 띠 */
 .notification-card {
     flex: none; display: flex; align-items: center; gap: 12px; min-height: var(--nt-h); box-sizing: border-box;
@@ -509,7 +508,9 @@ html, body { height: 100%; overflow: hidden; }
 .mission-btn .notification-dot { top: 0; right: -2px; width: 8px; height: 8px; }
 .mission-bar { display: flex; justify-content: flex-end; margin: -2px 0 8px; }
 .mission-card .notification-title { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
-.mission-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 미션 이름 = 「{어디}에서 {무엇을} 하기」라 길다 — 두 줄까지 접는다 · 한국어는 띄어쓰기에서만 꺾는다 (ADR-1420) */
+.mission-name { min-width: 0; overflow: hidden; white-space: normal; word-break: keep-all; overflow-wrap: anywhere;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .mission-detail { display: flex; align-items: center; gap: 8px; }
 .mission-have { flex: none; color: var(--text-secondary); }
 .mission-rewards { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
@@ -566,10 +567,20 @@ html, body { height: 100%; overflow: hidden; }
 .mission-tut-card:hover { filter: brightness(1.25); }
 .mission-tut-cap { font-size: var(--fs-2xs); color: var(--color-warning); }
 .mission-tut-name { font-size: var(--fs-sm); font-weight: 700; }
-/* 완료 판 — 채운 튜토리얼 줄 · 흔들리지 않는다 · 보상 칩 + [받기] (SCREEN_DESIGN §2 「메인미션」 · ADR-1388) */
-.mission-tut.done .mission-tut-card { animation: none; cursor: default; gap: 4px; }
-.mission-tut.done .mission-tut-card:hover { filter: none; }
-.mission-tut-claim { margin-top: 2px; }
+/* 완료 판 — 채운 첫 장 줄 · 두루마리 판의 받을 카드(`.notification-card.mission-ready` — 초록 띠 · 이름 · 보상 줄 · 오른쪽 [받기])가 같은 끈에 매달린다 ·
+   흔들리지 않는다 · 바탕 · 테두리 · 안쪽 여백 · 본문 14px 는 판의 카드 그대로 — 팻말(`.mission-tut-card`)의 판 모양을 여기서 되돌린다
+   (SCREEN_DESIGN §2 「메인미션」 · ADR-1388 · ADR-1413) */
+.mission-tut.done { --fs-xs: 14px; --fs-sm: 14px; }
+.mission-tut.done .mission-tut-card {
+    flex-direction: row; align-items: center; gap: 12px; min-height: var(--nt-h);
+    width: max-content; min-width: 260px; max-width: 360px; padding: 8px 10px 8px 12px;
+    background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-left: 3px solid var(--color-success);
+    text-align: left; cursor: default; animation: none;
+}
+.mission-tut.done .mission-tut-card:hover { filter: none; background: var(--surface-5); }
+/* 끈은 팻말과 같은 자리(가운데에서 같은 간격)에 — 카드가 넓어져도 두루마리 밑에서 내려온다 */
+.mission-tut.done .mission-tut-card::before { left: calc(50% - 22px); }
+.mission-tut.done .mission-tut-card::after { right: calc(50% - 22px); }
 @keyframes mission-tut-swing { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
 @media (prefers-reduced-motion: reduce) { .mission-tut-card { animation: none; } }
 :where(:root[data-skin="d2min"]) .mission-coach,
@@ -967,11 +978,11 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
     margin: 0;
     flex: 0 0 auto;
     --fm-sk-gap: 4px;
-    --fm-sk: calc((var(--fm-slot) - var(--fm-sk-gap) * 2) / 3);
+    --fm-sk: calc((var(--fm-cell-h, var(--fm-slot)) - var(--fm-sk-gap) * 2) / 3);   /* 칸 높이(`--fm-cell-h` — 편성 탭은 띠 카드 높이 · ADR-1426)를 셋이 나눈다 */
     --fm-hp-h: 20px;   /* 체력 막대 = 관전 체력 막대 높이(`.hp-row .bar.hp`) · 리더 버튼도 이 높이 (2026-11-14 사용자 지시 「리더 버튼 높이를 HP 와 똑같이」) */
     --fm-seat-gap: 12px;
     --fm-seat-w: calc(var(--fm-slot) + var(--fm-sk-gap) + var(--fm-sk));
-    --fm-board-h: calc(var(--fm-slot) + var(--fm-step) + 4px + var(--fm-hp-h));
+    --fm-board-h: calc(var(--fm-cell-h, var(--fm-slot)) + var(--fm-step) + 4px + var(--fm-hp-h));
     --fm-axis: calc(var(--fm-seat-w) * 3 + var(--fm-seat-gap) * 2);
 }
 /* 위 = 모양 아이콘 줄 · 아래 = 보드 [2026-11-14 사용자 지시 「열 누르는걸 위로」 · ADR-1119 — 왼쪽 버튼 열 ↔ 오른쪽 보드(ADR-0267)를 걷었다].
@@ -1051,7 +1062,7 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
     /* 칸 한 변은 **`--fm-slot` 자신**이다 [2026-09-21 · ADR-0234] — 줄 높이에서 뽑던 옛 식(`height: 100%` + `aspect-ratio`)은
        줄이 칸 높이였을 때의 것이라, 보드가 `칸 + 단` 높이가 된 지금은 칸이 그 단만큼 커져 축을 넘친다.
        flex 가 줄이지 못하게 0 0 auto 로 못박는다(안 그러면 칸이 납작해진다) */
-    flex: 0 0 auto; width: var(--fm-slot); height: var(--fm-slot); position: relative; overflow: hidden;
+    flex: 0 0 auto; width: var(--fm-slot); height: var(--fm-cell-h, var(--fm-slot)); position: relative; overflow: hidden;   /* 편성 탭 = 위 띠 카드의 폭 · 높이 (ADR-1426) */
     border: 1px dashed var(--border-secondary); background: var(--bg-secondary);
 }
 .fm-cell.filled {
@@ -1377,7 +1388,6 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .tip-card.skill .tip-chip.need { color: var(--text-secondary); border-color: var(--border-primary); }
 .tip-card.skill .tip-chip.need.off { color: var(--danger-fg); border-color: var(--danger-fg); }
 .tip-card.skill .tip-chip { background: none; border-color: var(--border-dark); color: var(--text-muted); }
-.tip-card.skill .tip-chip.attr { color: var(--bronze-fg); border-color: var(--bronze-line); }
 .tip-card.skill .tip-line { max-width: none; margin-top: 11px; line-height: 1.6; }
 .tip-card.skill .tip-line + .tip-line { margin-top: 7px; }
 .tip-card.mastery .tip-name { justify-content: space-between; }
@@ -2664,9 +2674,13 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
     background: rgba(var(--tint-rgb),.06); border: 1px solid var(--border-primary); color: var(--text-secondary);
 }
 .tip-chip.src { color: var(--info-fg-soft); border-color: var(--info-line); background: rgba(var(--info-line-rgb),.18); }
-/* 능력치 칩 — 스킬을 미는 능력치의 약어 (ADR-0118). 태그 칩과 섞여 읽히지 않게 금색 계열을 든다.
-   청동 선 · 바탕 없음 · 각진 모서리 · 굵은 글자 [2026-09-24 사용자 지시 「AI색」 · 시험 적용] — 같은 색 글자 + 선 + 비치는 바탕 + 둥근 모서리 조합을 걷었다 */
-.tip-chip.attr { color: var(--bronze-fg); border-color: var(--bronze-line); background: none; border-radius: 0; font-weight: 700; }
+/* 능력치 칩 — 스킬을 미는 능력치의 약어 (ADR-0118). **캐릭터 탭 기본 옵션의 약어 칸(`.cs-a` — 「힘 [STR]」)과 같은 모양** [2026-11-26 사용자 지시 · ADR-1419] —
+   흐린 글자 · 어두운 선 · 바탕 없음 · 각진 모서리는 `.cs-a` 와 같다 · 글자만 그 칸(`--fs-2xs`)보다 조금 크다 — 칩 줄 글자보다 1px 작게(사용자 「조금더 키워줘」) ·
+   설명창의 칩 일괄 흐림(`.tip-card.skill .tip-chip`)과 도서관 계산 줄 칩 여백보다 세야 해서 그 자리 선택자도 같이 든다 */
+.tip-chip.attr, .tip-card.skill .tip-chip.attr, .lib-slot-calc .tip-chip.attr {
+    font-size: calc(var(--fs-xs) - 1px); font-weight: 400; letter-spacing: 0; color: var(--text-muted);
+    border: 1px solid var(--border-dark); border-radius: 0; background: none; padding: 0 3px;
+}
 
 .pop-layer { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
 .pop {
@@ -3069,10 +3083,11 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 
 /* 스킬 투명 이미지 — 전직 스킬과 함성은 초상 밖까지 퍼진다. 배속과 정리는 기존 조각과 같다.
    이미지는 그림의 색을 그대로 쓰고, CSS는 등장·이동·사라짐만 정한다.
-   `--oy` 는 그림을 위아래로 옮긴다(SKILL_ART `ay`) · `--dl` 은 이어 서는 그림의 늦춤이다 — 둘 다 없으면 0 (ADR-0541) */
+   `--ox`, `--oy`는 그림의 접점을 초상에 맞추고, `--dl`은 다음 그림의 시작을 늦춘다. */
 .fx-skill-stamp {
-    width: var(--sz); height: var(--sz); margin: calc(var(--sz) / -2 + var(--oy, 0px)) 0 0 calc(var(--sz) / -2);
+    width: var(--sz); height: var(--sz); margin: calc(var(--sz) / -2 + var(--oy, 0px)) 0 0 calc(var(--sz) / -2 + var(--ox, 0px));
     object-fit: contain; image-rendering: auto;
+    transform-origin: var(--art-origin, center);
     animation: fx-skill-slash calc(var(--t) * var(--fx-k, 1)) ease-out both;
     animation-delay: calc(var(--dl, 0ms) * var(--fx-k, 1));
     /* 다단의 흔들림 — 타마다 각도 · 자리(`SKILL_ART` 의 `jitter` · 러시 · ADR-0780) · 움직임의 transform 과 따로 얹힌다 · 없으면 0 */
@@ -3106,7 +3121,8 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
    번개는 위에서 아래로 그어지고 한 번 깜빡인다 · 얼음은 초상 한 칸 위에서 점점 빨라지며 떨어지고 · 깨짐은 맞은 자리에서 터진다 */
 .fx-skill-bolt { animation-name: fx-skill-bolt; animation-timing-function: linear; }
 .fx-skill-fall { animation-name: fx-skill-fall; animation-timing-function: cubic-bezier(.32, 0, .67, 0); }
-.fx-skill-shatter { animation-name: fx-skill-shatter; transform-origin: 50% 89%; }
+.fx-skill-flight { animation-name: fx-skill-fall; animation-timing-function: cubic-bezier(.25, .18, .72, .65); }
+.fx-skill-shatter { animation-name: fx-skill-shatter; transform-origin: var(--art-origin, 50% 89%); }
 /* 전직 휠윈드 · 재장전 — 칼날 바퀴 · 화살 고리가 한 바퀴 가까이 돈다(ADR-0550) */
 .fx-skill-spin { animation-name: fx-skill-spin; animation-timing-function: linear; }
 @keyframes fx-skill-spin {
@@ -3271,9 +3287,9 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
     100% { clip-path: inset(0); opacity: 0; }
 }
 @keyframes fx-skill-fall {
-    0% { transform: translateY(calc(var(--sh, 101px) * -1)); opacity: 0; }
+    0% { transform: translate(var(--entry-x, 0px), var(--entry-y, calc(var(--sh, 101px) * -1))); opacity: 0; }
     15% { opacity: 1; }
-    100% { transform: translateY(0); opacity: 1; }
+    100% { transform: translate(0, 0); opacity: 1; }
 }
 @keyframes fx-skill-shatter {
     0% { transform: scale(.8); opacity: 0; }
@@ -4708,6 +4724,12 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 
 #app.pregame { grid-template-areas: "brand topbar" "main main"; }
 #app.pregame .nav { display: none; }
+/* 프롤로그는 위 줄(브랜드 · 상단바 — 언어 · Admin · 톱니)도 없다 — 장면 그림이 한 장 전체를 쓴다 (SCREEN_DESIGN §3-1 · ADR-1398).
+   메인 말고는 다 걷고 메인이 한 칸을 다 먹는다 · 모바일 셸(`mobile.css` 의 `#app.pregame` 배치 — 그 파일이 뒤에 읽혀 `.pregame.prologue` 로 한 단 세게 건다)도 같이 덮는다 */
+#app.pregame.prologue, :root[data-mobile] #app.pregame.prologue, :root[data-mobile-landscape] #app.pregame.prologue { grid-template-rows: minmax(0, 1fr); grid-template-areas: "main main"; }
+#app.pregame.prologue > :not(.main) { display: none; }
+/* 암전의 어둠 — 판이 투명해지면 이 검정이 드러난다(뒤의 거점 그림 · 비네트가 비치지 않게) */
+#app.pregame.prologue > .main { background: #000; }
 
 /* 메뉴 — 켜면 먼저 선다 · 워드마크 아래 새 게임 · 불러오기가 세로로 (SCREEN_DESIGN §3 · ADR-0641 · app.js:renderMenu) */
 .mn-wrap {
@@ -4769,6 +4791,11 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
    카드 설계 폭(343)이 안 바뀌어 초상 `44cqw` · 글자 · 막대가 **한 비율로** 준다. 자원 탭의 `.ng-row` 는 `.ng-wrap` 밖이라 안 걸리고,
    선술집 명단(`.tv-cands`)은 같은 폭 상한으로 이 크기에 맞춘다 */
 .ng-wrap > .ng-row { zoom: .9; max-width: 1060px; margin: 0 auto; }
+/* 리롤 — 새 카드가 왼쪽부터 차례로 떠오른다 (§3 · ADR-1408). 장마다 0.25초 · 장 사이 0.12초(`--i` = 장 순서) — 세 장이 약 0.5초에 다 선다 (ADR-1422).
+   투명도와 위치만 움직인다(합성만으로 돈다). 지연 동안은 `backwards` 가 첫 칸(투명)을 쥔다 */
+.ng-row > .ng-card.ng-in { animation: ng-in .25s ease-out calc(var(--i, 0) * .12s) backwards; }
+@keyframes ng-in { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .ng-row > .ng-card.ng-in { animation: none; } }
 
 .ng-card {
     background: rgba(var(--surface-0-rgb), var(--panel-alpha));
@@ -4916,8 +4943,9 @@ html[lang="en"] .ng-role { line-height: 1.2; }
    시작 화면과 같은 pregame 셸을 쓴다. 읽는 화면이라 폭을 좁히고 줄 사이를 넓힌다.
    본문의 줄바꿈은 i18n 문자열이 들고 있고 pre-line 이 편다 — 화면이 <br> 을 심지 않는다 */
 
+/* 글씨는 한 단 크다 — 본문 18 · 제목 24 · 맨 윗줄 17 · 인용 21 · 폭 860 (ADR-1405). 폭 660 이면 영어 씬 4 가 넘친다 */
 .pro-wrap {
-    max-width: 660px; height: 100%; margin: 0 auto;
+    max-width: 860px; height: 100%; margin: 0 auto;
     /* 아래 여백이 **버튼의 고정 자리**를 정한다 [2026-09-24 사용자 지시] — 키우면 글 칸이 줄고 버튼 · 쪽 번호가 올라간다 */
     padding: 16px 16px 96px;
     display: flex; flex-direction: column;
@@ -4927,7 +4955,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .pro-top {
     margin-bottom: 10px; padding-bottom: 10px; text-align: center;
     border-bottom: 1px solid var(--border-dark);
-    font-size: 16px; letter-spacing: 3px; color: var(--text-muted);
+    font-size: 17px; letter-spacing: 3px; color: var(--text-muted);
 }
 /* 쪽 번호 — 글 끝과 버튼 사이 [2026-09-24 사용자 지시]. 프롤로그 · 챕터가 제 묶음 안에서 센다 */
 .pro-step {
@@ -4935,7 +4963,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     font-size: var(--fs-md); letter-spacing: 3px; text-align: center;
 }
 .pro-h {
-    font-size: var(--fs-lg); font-weight: normal; letter-spacing: 4px;
+    font-size: 24px; font-weight: normal; letter-spacing: 4px;
     color: var(--text-accent); text-align: center;
     margin: 8px 0 16px;
 }
@@ -4945,32 +4973,58 @@ html[lang="en"] .ng-role { line-height: 1.2; }
    넘길 때마다 글이 위아래로 튀었다. 위에 붙이면 **모든 씬의 첫 줄이 같은 자리**에서 시작한다.
    칸은 남는 높이를 **다 먹는다** — 그래서 쪽 번호와 버튼이 글 길이와 상관없이 **어느 씬에서도 같은 자리**에 선다.
    그 자리를 올리는 손잡이는 `.pro-wrap` 의 아래 여백 하나다.
-   ⚠ 씬 3 · 4 · 5 는 칸을 넘어 아랫줄이 숨는다 — 간격을 좁혀 다 넣은 판을 사용자가 「너무 좁다」로 되돌린 상태다.
-   나중에 다시 손본다 (2026-10-16 · ADR-0647 · SCREEN_DESIGN §3-1) */
+   넘치면 칸 안에서 숨는다 — 간격을 좁혀 다 넣은 판을 사용자가 「너무 좁다」로 되돌렸다(ADR-0647). 한 · 영 · 중 다섯 씬이 다 드는지는
+   문장 · 글씨를 고칠 때마다 `?dev=prologue&s=n` 으로 잰다 (SCREEN_DESIGN §3-1).
+   줄은 띄어쓰기 자리에서만 꺾인다 — 글자 단위면 「애 / 썼다」처럼 낱말 가운데서 갈렸다 (ADR-1405 · 간체는 `:root:lang(zh)` 가 끈다) */
 .pro-body {
     flex: 1 1 auto; min-height: 0; overflow-y: auto;
     display: grid; align-content: start;
-    white-space: pre-line;
-    font-size: var(--fs-md); line-height: 1.85;
+    white-space: pre-line; word-break: keep-all;
+    font-size: 18px; line-height: 1.85;
     color: var(--text-secondary); text-align: center;
 }
+/* 씬 1~3 (`.pro-mid`) — 제목 + 본문 한 덩이가 맨 윗줄과 쪽 번호 사이 **가운데**에 선다 (§3-1 · ADR-1418).
+   본문 칸이 남는 높이를 먹지 않고, 제목 위 · 쪽 번호 위 여백(`auto`)이 반씩 나눠 먹는다 — 쪽 번호 · 버튼 자리는 위 정렬 씬과 같다.
+   글이 길어 칸을 넘으면 본문 칸이 줄어 그 안에서 넘긴다(위 `.pro-body` 의 `min-height: 0` · `overflow-y`) */
+.pro-wrap.pro-mid > .pro-h { margin-top: auto; }
+.pro-wrap.pro-mid > .pro-body { flex: 0 1 auto; }
+.pro-wrap.pro-mid > .pro-step { margin-top: auto; padding-top: 24px; }   /* 글이 길어도 쪽 번호와 24px 은 띈다(위 정렬 씬의 `margin-top: 24px` 자리) */
 /* 바알이 처음 입을 여는 줄 — 본문과 층이 다르다 */
 .pro-q {
-    margin-top: 16px; text-align: center;
-    font-size: var(--fs-lg); font-style: italic; color: var(--text-primary);
+    margin-top: 16px; text-align: center; word-break: keep-all;
+    font-size: 21px; font-style: italic; color: var(--text-primary);
 }
-/* 챕터가 열리는 암전 (§3-1) — 씬 4 가 어둠에 묻히고 Chapter 1 이 그 어둠에서 떠오른다.
-   **`pro-out` 의 길이는 `app.js:PRO_FADE_MS` 와 같은 값이어야 한다** — 그 타이머가 끝나야 다음 씬을 그린다.
+/* 챕터가 열리는 암전 (§3-1 · ADR-1389) — 확정한 시작 파티 고르기가 어둠에 묻히고 Chapter 1(씬 4)이 그 어둠에서 떠오른다.
+   꺼지는 쪽은 고르기 판 전부(제목 · 뒤로가기 · 카드 판 — `.main` 의 자식마다 `pro-out`)다.
+   **`pro-out` 의 길이는 `app.js:PRO_FADE_MS` 와 같은 값이어야 한다** — 그 타이머가 끝나야 게임을 만들고 다음 씬을 그린다.
    떠오르는 쪽은 더 길게 — 꺼지는 것보다 켜지는 것이 느려야 장이 열리는 것으로 읽힌다 */
-.pro-wrap.pro-out { animation: pro-out .45s ease-in forwards; }
-.pro-wrap.pro-in  { animation: pro-in .75s ease-out; }
+.main > .pro-out { animation: pro-out .45s ease-in forwards; }
+/* 떠오르는 쪽 — 새 게임의 씬 1 · 프롤로그의 모든 넘김 · 챕터가 여는 씬 4 (ADR-1393 · ADR-1396). 어둠에 잠깐 머문 뒤(지연 동안 `backwards` 가 첫 칸 = 투명을 쥔다) 그림과 글이 같이 떠오른다 */
+.main > .pro-in  { animation: pro-in .9s ease-out .3s backwards; }
 /* 어두워지는 동안은 안 눌린다 — 두 번 눌러 암전이 겹치지 않게 */
-.pro-out .pro-actions { pointer-events: none; }
-@keyframes pro-out { to   { opacity: 0; filter: brightness(0); } }
-@keyframes pro-in  { from { opacity: 0; filter: brightness(0); } }
+.main > .pro-out { pointer-events: none; }
+/* 투명도만 움직인다 — 합성만으로 돈다(옛 `filter: brightness(0)` 은 큰 화면에서 새 판을 그리는 작업이 한 프레임을 넘겼다 — 2560×1440 · 150% 에서 16.1ms).
+   어둠은 프롤로그 메인의 검은 바탕이 든다(아래 `#app.pregame.prologue > .main`) */
+@keyframes pro-out { to   { opacity: 0; } }
+@keyframes pro-in  { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
-    .pro-wrap.pro-out, .pro-wrap.pro-in { animation: none; }
+    .main > .pro-out, .main > .pro-in { animation: none; }
 }
+/* 장면 그림 (§3-1 · ADR-1393) — 메인 전면(안쪽 여백까지)에 `cover` 로 깔린다 · 글 칸(`.pro-wrap`)이 그 위에 선다.
+   그림은 거의 검은 실루엣이라 글 칸 뒤만 살짝 눌러 두고(가운데의 인물이 안 지워지게) 글은 그림자로 띄운다 */
+.main:has(> .pro-art) { position: relative; }
+.pro-art {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background: #000 center / cover no-repeat;
+}
+.pro-art::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 34% 62% at 50% 46%, rgba(0,0,0,.42) 0%, rgba(0,0,0,.28) 62%, rgba(0,0,0,.08) 100%);
+}
+.main > .pro-art ~ .pro-wrap { position: relative; z-index: 1; }
+/* 그림자는 **좁게** — 넓게 번지는 그림자(10 · 18px)는 큰 화면에서 새 판이 처음 그려지는 순간 한 프레임(16.7ms)을 넘겨 떠오름이 끊겼다
+   (2560×1440 · 150% 측정: GPU 한 작업 18.7ms → 이 그림자 7.7ms · 2026-11-26 「렉걸리는것처럼 넘어간다」) */
+.main > .pro-art ~ .pro-wrap :is(.pro-top, .pro-h, .pro-body, .pro-q, .pro-step) { text-shadow: 0 1px 2px #000, 0 0 4px #000; }
 /* 버튼 셋은 **폭이 같다** [2026-09-24 사용자 지시] — 열 셋이 `1fr` 이라 가장 긴 라벨의 폭을 셋이 나눠 갖는다.
    줄은 가운데 서고 제 내용만큼만 넓다(`align-self`) — 고정 px 이 없어 영어에서도 안 깨진다 */
 .pro-actions {
@@ -5691,9 +5745,15 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     background: var(--color-warning); color: #1b140e; font-weight: 700; font-size: calc(var(--fs-sm) + 1px);
     box-shadow: 0 0 0 2px #1b140e;
 }
-/* 산출이 없는 지점(폐허 · 마차) — **그림만** 흐린 회색 · 테두리는 땅 색 그대로(어느 땅의 지점인지는 남는다). 누르면 지점 창이 「준비 중」을 찍는다 */
-.ex-spot.pending img { filter: grayscale(1) brightness(.78); }
-.ex-spot.pending:hover img { filter: grayscale(.6) brightness(.9); }
+/* 표 수 배지 — 오른쪽 위 · 그 장 · 그 지점의 표가 있을 때(안 본 결과의 「!」가 서면 안 선다) [2026-11-26 · R590 · SCREEN_DESIGN §8-4 · ADR-1400] */
+.ex-spot .ex-n {
+    position: absolute; top: -16%; right: -22%;
+    padding: 0 .35em; border-radius: 999px;
+    background: var(--bg-secondary); color: var(--text-primary);
+    border: 1px solid var(--border-highlight); box-shadow: 0 0 0 1.5px #1b140e;
+    font-style: normal; font-weight: 700; font-size: calc(var(--fs-xs) + 1px); line-height: 1.45; white-space: nowrap;
+    pointer-events: none;
+}
 
 /* 지점 창 [2026-10-09 사용자 「맨 아래 카드를 없애고 지도를 키워」 · SCREEN_DESIGN §8-4 · ADR-0558] — 고른 아이콘 바로 옆에 지도 위로 뜬다.
    자리(`left`|`right` · `top`|`bottom` · 가운데면 `.mid`)는 렌더러가 아이콘 좌표로 넣는다 · 폭은 내용대로(라벨 칸이라 고정 px 이 아니다).
@@ -5729,7 +5789,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .ex-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .ex-sub { font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
 .ex-note { font-size: var(--fs-sm); }
-.ex-go, .ex-take { min-width: 84px; }
+.ex-go { min-width: 84px; }
 /* 편성 버튼 줄 — 대기 창 맨 위 · 출정 창 편성 칸과 같은 이름(「원정 중」 · 「탐험 중」 꼬리표 `.pt-run`) [2026-10-10 · ADR-0582] */
 .ex-squads { display: flex; flex-wrap: wrap; gap: 6px; }
 .ex-faces { display: flex; gap: 6px; }
@@ -5740,11 +5800,124 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     width: 84px; height: 84px; align-items: center; justify-content: center;
     border-style: dashed; color: var(--text-muted); font-size: var(--fs-lg);
 }
-.ex-bar { height: 8px; background: var(--bg-input); border: 1px solid var(--border-dark); }
-.ex-bar i { display: block; height: 100%; background: var(--color-progress); }
-/* 이야기 줄 — 나가 있는 동안 열린 줄만 아래로 쌓인다 · 수색 이야기(`.tv-story`)를 그대로 입고 한글은 낱말 단위로 접는다 [2026-10-10 · ADR-0583] */
-.ex-log { word-break: keep-all; line-height: 1.5; }
-.ex-loot { grid-template-columns: repeat(auto-fill, 52px); gap: 6px; }
+/* ── 탐험 판 [2026-11-26 · R590 · SCREEN_DESIGN §8-4 · ADR-1400 ~ ADR-1404] ── */
+/* 작은 얼굴 줄 — 나가 있는 판 · 정보 카드 · 결과 카드 */
+.ex-faces.sm { gap: 4px; }
+.ex-faces.sm .ex-face .hero-face { width: 40px; height: 40px; }
+/* ① 표 줄 — 라벨 + 표 칸(난이도 · 등급 · ×n) · 칸 테두리 = 등급 색 · 고른 표는 하늘색 3px 겉 테두리(고른 색 · ADR-1323) */
+.ex-tix { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ex-lbl, .ex-none { font-size: var(--fs-sm); }
+.ex-tk {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 8px; font: inherit; font-size: var(--fs-sm); color: var(--text-primary);
+    background: var(--bg-tertiary); border: 1px solid var(--tk, var(--border-secondary)); cursor: pointer;
+}
+.ex-tk:hover { background: var(--bg-card); }
+.ex-tk.on { outline: 3px solid var(--color-info); outline-offset: 1px; }
+.ex-tk-n, .ex-grade { font-weight: 700; font-variant-numeric: tabular-nums; }
+.ex-tk-img { width: 28px; height: 28px; margin: -4px 0 -4px -4px; object-fit: contain; flex: none; pointer-events: none; }   /* 표 그림 — 칩 높이를 안 늘리게 음수 여백 (ADR-1409) */
+/* ③ 이어 돌기 · 지면 멈춤 · [보내기] — 켜고 끄는 두 버튼은 왼쪽 · 보내기는 오른쪽 끝 */
+.ex-send { justify-content: flex-start; }
+.ex-send .ex-go { margin-left: auto; }
+/* ④ 나가 있는 판 · ⑤ 안 본 결과 — 한 줄 = 편성 · 얼굴 · 표 · n / 전체 · 남은 시간 · 버튼 */
+.ex-run { display: flex; align-items: center; gap: 8px; padding-top: 8px; border-top: 1px solid var(--border-secondary); }
+.ex-run-no { white-space: nowrap; font-size: var(--fs-sm); }
+.ex-run-mid { display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-right: auto; }
+.ex-res .ex-sub { margin-right: auto; }
+.exr-verdict { font-weight: 700; font-size: var(--fs-sm); white-space: nowrap; }
+.exr-verdict.won { color: var(--color-success); }
+.exr-verdict.lost { color: var(--color-error); }
+.exr-verdict.recalled { color: var(--text-muted); }
+/* 판 관전 지도 (ADR-1402 · ADR-1403) — 보는 창(`.exw-map` · 지도 칸에 제 비로 가장 크게) 안에 그림 판(`.exw-layer`)을 깔고 확대 · 자리 옮김은 판의 % 가 든다.
+   길 · 표지 · 마차는 판 위 그림 좌표(%) · 정보 카드 · 뒤로 · 번쩍임은 보는 창에 붙는다 · 표지 크기는 지도 칸 폭(`cqw`)을 따른다 */
+.exw-map { overflow: hidden; background: #0b0d10; }
+.exw-layer { position: absolute; background-size: 100% 100%; }
+.exw-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.exw-route { fill: none; stroke: rgba(255, 240, 210, .55); stroke-width: 3; stroke-dasharray: 2 7; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.exw-done { fill: none; stroke: rgba(227, 173, 60, .95); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.exw-fog { fill: rgba(8, 9, 11, .93); }
+.exw-mark, .exw-goal, .exw-token {
+    position: absolute; transform: translate(-50%, -50%);
+    display: grid; place-items: center; border-radius: 50%; z-index: 2;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .65);
+}
+.exw-mark { width: 2.6cqw; aspect-ratio: 1; background: #3a1512; border: 2px solid #b0402f; color: #f1d9c8; }
+.exw-mark > * { grid-area: 1 / 1; }
+.exw-mark img { width: 82%; height: 82%; object-fit: contain; }
+.exw-mark svg { width: 62%; height: 62%; }
+.exw-mark .exw-chk { display: none; color: #9fd38f; width: 70%; height: 70%; }
+.exw-mark.won { background: #26282c; border-color: #6b6f76; }
+.exw-mark.won > :not(.exw-chk) { opacity: .3; }
+.exw-mark.won .exw-chk { display: block; }
+/* 지금 그 자리 — 드러나는 순간의 표지는 표지(마차 · 초상) 위로 떠서 보인다 · 맥박 */
+.exw-mark.now { animation: exw-pulse 1s ease-in-out infinite; transform: translate(-50%, -140%); z-index: 4; }
+@keyframes exw-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(208, 80, 60, .7), 0 2px 6px rgba(0, 0, 0, .65); } 50% { box-shadow: 0 0 0 8px rgba(208, 80, 60, 0), 0 2px 6px rgba(0, 0, 0, .65); } }
+/* 폐허 표지 — 종류별(있는 아이콘 · 빈 방은 점선 원) · 바탕은 어두운 돌 · 테두리는 종류 색 */
+.exw-ruins .exw-mark { background: #1e1b18; border-color: #8a7d68; }
+.exw-mark.k-trap { border-color: #b0402f; }
+.exw-mark.k-rare { border-color: var(--rarity-unique, #ff8c00); }
+.exw-mark.k-item { border-color: #e3ad3c; }
+.exw-empty { width: 55%; aspect-ratio: 1; border: 2px dashed #8a7d68; border-radius: 50%; }
+.exw-goal { width: 2.4cqw; aspect-ratio: 1; background: #2c2412; border: 2px solid #e3ad3c; color: #e3ad3c; }
+.exw-goal svg { width: 62%; height: 62%; }
+/* 표지 — 상단 = 마차 아이콘 원판 + 땅 색 테두리(가는 동안 들썩 · 습격에 흔들림) · 폐허 = 리더 초상 원판 */
+.exw-token { width: 3.6cqw; aspect-ratio: 1; overflow: hidden; border: 3px solid var(--ring, #888); background: #e6d7b5; z-index: 3; transition: left .2s linear, top .2s linear; }
+.exw-token .hero-face, .exw-token .exw-f { width: 100%; height: 100%; display: block; }
+.exw-token img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.exw-token.flip .exw-f { transform: scaleX(-1); }
+.exw-token.moving img { animation: exw-bob .42s ease-in-out infinite alternate; }
+@keyframes exw-bob { from { transform: translateY(0); } to { transform: translateY(-2px); } }
+.exw-token.shake img { animation: exw-shake .11s linear infinite; }
+@keyframes exw-shake { 0%, 100% { transform: translateX(-3px); } 50% { transform: translateX(3px); } }
+/* 습격 — 가장자리 붉은 번쩍임 + 「습격!」 말풍선 (목업 그대로 · ADR-1402) */
+.exw-flash {
+    position: absolute; inset: 0; pointer-events: none; z-index: 4;
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 45%, rgba(170, 30, 20, .6) 100%);
+    animation: exw-flash .9s ease-out 1 both;
+}
+@keyframes exw-flash { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: .45; } }
+.exw-bubble {
+    position: absolute; transform: translate(-50%, -100%); margin-top: -5.4cqw; z-index: 5;
+    background: var(--color-error); color: #fff; font-weight: 700; font-size: var(--fs-md);
+    padding: 3px 10px; border-radius: 4px; box-shadow: 0 3px 8px rgba(0, 0, 0, .6); white-space: nowrap;
+}
+/* 뒤로(탐험 지도) · 정보 카드 · 동굴 대기 글 */
+.exw-back { position: absolute; left: 10px; top: 10px; z-index: 6; display: inline-flex; align-items: center; gap: 4px; }
+.exw-card {
+    position: absolute; right: 12px; top: 12px; z-index: 6; min-width: 240px; max-width: 320px;
+    display: flex; flex-direction: column; gap: 8px; padding: 10px 12px;
+    background: rgba(18, 20, 24, .93); border: 1px solid var(--border-secondary); box-shadow: 0 6px 18px rgba(var(--shadow-rgb), .6);
+    font-size: var(--fs-sm);
+}
+.exw-card-h { display: flex; align-items: center; gap: 8px; font-size: var(--fs-md); }
+.exw-row { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
+.exw-v { margin-left: auto; color: var(--text-primary); font-variant-numeric: tabular-nums; text-align: right; }
+.exw-pips { margin-left: auto; display: flex; gap: 5px; }
+.exw-pip { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: #3a1512; border: 2px solid #b0402f; color: #f1d9c8; }
+.exw-pip svg { width: 13px; height: 13px; }
+.exw-pip.done { background: #26282c; border-color: #6b6f76; }
+.exw-pip.done svg { opacity: .3; }
+.exw-recall { align-self: flex-end; }
+.exw-cave { background-size: cover; background-position: center; }
+.exw-wait { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 8px 14px; background: rgba(var(--veil-rgb), .82); border: 1px solid var(--border-dark); font-size: var(--fs-md); font-variant-numeric: tabular-nums; }
+/* 상단바 부대 칸의 탐험 판 — 지점 아이콘 원판(§4 · ADR-1401) */
+.seg-ex-ico { width: 1.25em; height: 1.25em; border-radius: 50%; vertical-align: -.25em; margin-right: .3em; }
+/* 결과 카드 (창 레이어 · ADR-1404) */
+.exr-modal { min-width: 420px; max-width: 640px; }
+.exr-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.exr-name { font-size: var(--fs-lg); }
+.exr-body { display: flex; flex-direction: column; gap: 12px; }
+.exr-lost { color: var(--text-muted); padding: 8px 0; }
+.exr-heroes { display: flex; flex-wrap: wrap; gap: 10px 16px; }
+.exr-hero, .exr-join { display: flex; align-items: center; gap: 8px; }
+.exr-hero .hero-face, .exr-join .hero-face { width: 48px; height: 48px; }
+.exr-hero .nm, .exr-join .nm { display: flex; flex-direction: column; gap: 1px; font-size: var(--fs-sm); }
+.exr-hero em, .exr-join em { font-style: normal; color: var(--text-secondary); }
+.exr-hero em.up { color: var(--color-success); }
+.exr-join em.down { color: var(--color-error); }
+.exr-join.full .ex-face { opacity: .45; filter: grayscale(.8); }
+.exr-sub { font-size: var(--fs-sm); }
+.exr-loot { grid-template-columns: repeat(auto-fill, 52px); gap: 6px; }
 .items-tools { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
 /* 보관 도구 줄 — 이름(인벤토리는 + 부대 버튼)이 왼쪽, **버튼은 오른쪽 끝**으로 민다 — 빈 칸 하나가 민다 [2026-10-06 · SCREEN_DESIGN §6 · ADR-0523 · ADR-0524] */
 .tools-push { margin-left: auto; }
@@ -6270,7 +6443,8 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 파티 전술 = 작전 카드 세 칸 [2026-11-26 · R586 · §15 · ADR-1383] — 행 = 왼쪽 카드 + 오른쪽 옵션 줄 둘(위아래).
    세로줄 다섯(카드 | 등급 | 효과 | 버프 몫 | 인챈트)은 **목록이 들고** 열 이름 줄 · 행 · 줄이 빌린다(subgrid) — 세 행의 줄 여섯이 같은 세로줄에 서야
    위에서 아래로 훑어 견준다. **효과 칸만 남는 폭을 받는다**(축 이름 길이가 줄마다 다르다). 행 · 열 이름 줄은 좌우 여백이 같아야 세로줄이 안 어긋난다 */
-.tc-list { display: grid; grid-template-columns: minmax(10.5em, max-content) max-content minmax(0, 1fr) max-content max-content; column-gap: 12px; row-gap: 8px; }
+/* 카드 열 = 원형 배지 그림(61px) 둘레에 맞춘 좁은 폭(한 장 기준 약 112px — 사용자 「100정도로」 뒤 「약간만 늘려」) — 빈 칸 · 잠긴 칸의 글자는 이 폭에서 줄바꿈한다 (ADR-1397) */
+.tc-list { display: grid; grid-template-columns: 9.1em max-content minmax(0, 1fr) max-content max-content; column-gap: 12px; row-gap: 8px; }
 .tc-colh { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: end; padding: 0 11px; font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
 .tc-colh .c-opt { grid-column: 2 / span 2; }
 .tc-row {
@@ -6283,20 +6457,22 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     min-height: 76px; padding: 5px 8px; text-align: left; font: inherit; color: var(--text-primary); cursor: pointer;
     background: var(--bg-tertiary); border: 1px solid var(--border-secondary); border-left-width: 3px; border-radius: 4px;
 }
-.tc-card:hover { border-color: var(--border-highlight); }
+.tc-card:not(:disabled):hover { border-color: var(--border-highlight); }
 .tc-card.empty { border-style: dashed; border-left-width: 1px; }
-.tc-card.locked { border-left-width: 1px; color: var(--text-muted); }
+.tc-card.locked { border-left-width: 1px; color: var(--text-muted); cursor: default; }   /* 잠긴 칸은 안 눌린다 (ADR-1415) */
 .tc-card.g-common { border-left-color: var(--rarity-normal); }
 .tc-card.g-magic { border-left-color: var(--rarity-magic); }
 .tc-card.g-rare { border-left-color: var(--rarity-rare); }
 .tc-card.g-epic { border-left-color: var(--rarity-epic); }
 .tc-card.g-legendary { border-left-color: var(--rarity-legendary); }
+/* 카드가 든 칸 = 그림 한 장만 — 그림이 카드 칸을 채운다(비율 그대로 · 가운데) · 글자 없음 (§15 · ADR-1392) */
+.tc-card.art { align-items: center; justify-content: center; padding: 2px 6px; }
+.tc-art { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; contain: size; }   /* 그림이 행 높이를 안 밀고 카드 칸 높이를 채운다 */
+.tc-art img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
 .tc-slot { font-size: var(--fs-xs); color: var(--text-muted); }
 .tc-id { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); min-width: 0; }
 .tc-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tc-none, .tc-lock { font-size: calc(var(--fs-xs) + 1px); color: var(--text-muted); }
-.tc-foot { display: flex; align-items: center; gap: 6px; margin-top: auto; }
-.tc-bag { margin-left: auto; font-size: var(--fs-xs); color: var(--color-info); white-space: nowrap; }
+.tc-lock { font-size: calc(var(--fs-xs) + 1px); color: var(--text-muted); overflow-wrap: anywhere; }
 /* 카드 그림 ⚠임시 = 그 카드의 죄종 그림 (§15) — 카드 · 가방 창 · 툴팁 · 출정 창이 같은 칸 */
 .tc-ico { width: 24px; height: 24px; flex: none; display: inline-flex; align-items: center; justify-content: center; }
 .tc-ico img { width: 100%; height: 100%; object-fit: contain; }
@@ -6311,21 +6487,48 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .tc-line > .rs-grade { justify-self: start; }
 .tc-line > .rs-eff { font-size: calc(var(--fs-xs) + 1px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .btn.sm.tc-ench { white-space: nowrap; padding: 2px 8px; }
+/* 카드 효과 한 문장 — 옵션 줄 위 · 등급 칩 세로줄부터 인챈트 끝까지 · 길면 줄바꿈 · 카드가 든 칸만 (§15 · ADR-1431).
+   글씨 = 옵션 줄 효과와 같은 크기 (ADR-1433) · 문장 칸은 제 높이만 쓰고 줄 칸의 최소가 34 → 22px(인챈트 버튼 높이) 로 준다 — 세로가 남으면 줄 칸이 늘어 지금과 같은 간격이다 ·
+   세 행 모두 두 줄 문장이어도 한 장(1600×800)에서 판이 안 밀린다 */
+.tc-row.has-desc { grid-template-rows: min-content; grid-auto-rows: minmax(22px, auto); }
+.tc-row.has-desc > .tc-card { grid-row: 1 / span 3; }
+.tc-desc { grid-column: 2 / -1; min-width: 0; font-size: calc(var(--fs-xs) + 1px); line-height: 1.25; color: var(--text-secondary); word-break: keep-all; overflow-wrap: anywhere; }
 /* 진척 줄 오른쪽 끝 · 가방 창 머리 — 카드 조각 */
 .tc-shards { margin-left: auto; font-size: var(--fs-xs); color: var(--text-secondary); white-space: nowrap; }
 .tc-shards b { color: var(--text-primary); font-size: var(--fs-md); }
-/* 가방 창 (§15 · ADR-1384) — 맨 위 지금 칸 · 그 아래 그 갈래의 카드 목록(그림 + 이름 | 등급 | ×n | [장착] | [분해]) */
-.modal-box.tcb-modal { width: clamp(420px, 42em, 680px); max-width: 100%; }
+/* 가방 창 (§15 · ADR-1399 · ADR-1428) — 위 사용 중인 카드 · 등급 탭 · 가운데 사용한 카드 · 아래 새 카드(셋 다 인벤토리 같은 그림 칸 격자) · 맨 아래 고른 카드 줄 ·
+   창 · 칸을 키웠다(창 폭 상한 680 → 880 · 칸 최소 42 → 64px) */
+.modal-box.tcb-modal { width: clamp(560px, 58em, 880px); max-width: 100%; }
 .modal-head .tc-shards { font-size: var(--fs-sm); margin-right: 10px; }
 .tcb-body { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.tcb-cur { display: flex; align-items: center; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-secondary); }
-.tcb-cur-h { font-size: var(--fs-xs); color: var(--text-muted); }
-.tcb-cur-v, .tcb-id { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
-.tcb-list { display: grid; grid-template-columns: minmax(0, 1fr) max-content max-content max-content max-content; gap: 6px 10px; align-items: center; max-height: 52vh; overflow: auto; }
-.tcb-row { display: contents; }
-.tcb-n { font-variant-numeric: tabular-nums; color: var(--text-secondary); }
-.tcb-empty { grid-column: 1 / -1; padding: 8px 0; }
-.tcb-row .btn { white-space: nowrap; }
+.tcb-body .segmented { flex-wrap: wrap; }
+.tcb-cur-v { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.tcb-lock { font-size: var(--fs-sm); }
+/* 세 덩어리 — 머리(이름) + 그림 칸 격자 · 넘치면 덩어리마다 스크롤 · 보관 수 글자 없음(ADR-1412) · 사용 중인 카드는 아래 선으로 등급 탭과 갈린다 · 그 칸은 고르지 않는다 */
+/* 덩어리 = 판 하나 — 전술 행(`.tc-row`)과 같은 테두리 · 둥근 모서리 · 카드 바탕(D2 Min 은 돌 바탕 + 턱 — 아래 스킨 줄) · 머리는 판 안 맨 위 (ADR-1430) */
+.tcb-sec { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 8px 10px 10px; border: 1px solid var(--border-secondary); border-radius: 4px; background: var(--bg-card); }
+.tcb-sec-h { display: flex; align-items: baseline; gap: 10px; }
+.tcb-sec-name { font-size: var(--fs-sm); color: var(--text-secondary); }
+/* 사용 중인 카드 — 편성마다 한 열(이름 「Party n」 + 칸) · 열 폭 = 아래 격자의 칸 폭(같은 auto-fill) · 고른 편성은 이름이 밝다 · 안 열린 편성은 흐린 자물쇠 칸 (ADR-1430) */
+.tcb-parties { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; padding: 0 3px; }
+.tcb-party { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tcb-party-name { display: flex; align-items: center; justify-content: center; gap: 3px; font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
+.tcb-party-name .lock-ico { display: inline-flex; }
+.tcb-party-name .lock-ico svg { width: 1em; height: 1em; }
+.tcb-party.on .tcb-party-name { color: var(--text-primary); }
+.tcb-party.locked { opacity: .55; }
+.tcb-cell.vacant, .tcb-cell.locked { cursor: default; color: var(--text-muted); }
+.tcb-cell.locked svg { width: 34%; height: 34%; }
+.tcb-cell.cur { cursor: default; }
+.tcb-cell .inv-icon { width: 100%; height: 100%; }   /* 그림이 칸을 따라 큰다(인벤토리 칸의 34px 고정을 안 쓴다 · 안쪽 여백은 `.tc-drop` 14%) */
+.inv-cells.tcb-cells { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; max-height: 30vh; overflow: auto; padding: 3px; }   /* 칸 = 인벤토리 `.inv-cells.wide` 를 키운 것 · 고른 칸 하늘색 3px 가 잘리지 않게 안쪽 여백 */
+/* 맨 아래 줄 = 고른 카드 — 그림 · 이름 · 등급 칩 · [장착] · [분해] */
+.tcb-pick { display: flex; align-items: center; gap: 10px; min-height: 34px; padding-top: 8px; border-top: 1px solid var(--border-secondary); }
+.tcb-pick .tcb-cur-v { margin-right: auto; }
+.tcb-pick .btn { white-space: nowrap; }
+/* 카드 툴팁 — 사용한 카드의 옵션 줄 둘 (ADR-1399) */
+.tc-tip-lines { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-secondary); }
+.tc-tip-line { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); }
 /* 카드 툴팁 — 이름 줄에 그림 (§15) */
 .tip-card.tc-tip { max-width: 320px; }
 .tc-tip .tip-name { display: flex; align-items: center; gap: 6px; }
@@ -6346,6 +6549,9 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     gap: 2px 10px; margin-top: 8px; padding: 4px 13px;
     border: 1px solid var(--border-secondary); border-radius: 4px; font-size: calc(var(--fs-xs) + 1px); line-height: 1; color: var(--text-secondary);
 }
+/* 한 장(폰 밖) — 판은 제 높이만 쓰고 줄 사이 8px(ADR-1423 · 줄 사이 값 ADR-1424) · 남는 세로는 카드 목록이 받아 세 행이 고르게 늘어난다 (ADR-1423) · 폰은 mobile*.css 가 따로 잡는다 */
+:root:not([data-mobile]) .pt-tactics > .rs-board { flex: none; grid-auto-rows: auto; row-gap: 8px; padding: 8px 13px; }
+:root:not([data-mobile]) .pt-tactics > .tc-list { flex: 1 1 auto; min-height: 0; grid-template-rows: auto; grid-auto-rows: minmax(0, 1fr); }
 .rs-bd-row { grid-column: 1 / span 4; display: grid; grid-template-columns: subgrid; align-items: center; min-height: 0; white-space: nowrap; }
 .rs-bd-row.r { grid-column: 6 / span 4; }
 .rs-bd-row.muted { opacity: .55; }
@@ -6355,12 +6561,14 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .rs-bd-val.up { color: var(--color-success); }
 .rs-bd-val.down { color: var(--color-error); }
 .rs-bd-val.muted { color: var(--text-muted); }
-/* 20칸 막대 — 줄 높이를 다 쓴다 · 칸 사이 2px · 빈 칸은 어두운 바탕 · 채운 칸 = 죄종 색(인라인) 또는 리더 줄의 부호 색 */
-.rs-bd-bar { align-self: stretch; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; padding: 2px 0; min-height: 8px; }   /* 칸 수 = 그린 칸 수(`BOARD_CELLS`) */
-.rs-bd-bar > i { border-radius: 1px; background: rgba(var(--tint-rgb), .07); box-shadow: inset 0 0 0 1px rgba(var(--tint-rgb), .05); }
-.rs-bd-lead.s-up .rs-bd-bar > i.on { background: var(--color-success); }
-.rs-bd-lead.s-down .rs-bd-bar > i.on { background: var(--color-error); }
-.rs-bd-lead.s-muted .rs-bd-bar > i.on { background: var(--text-muted); }
+/* 20칸 막대 — 높이 20px · 줄 가운데 · 칸 = SVG 사각형(틈이 배율 아래서도 고르다 · `app.js:boardBar`) ·
+   빈 칸은 어두운 바탕 · 채운 칸 = 죄종 색(인라인) 또는 리더 줄의 부호 색 (ADR-1416 · 높이 ADR-1423) */
+.rs-bd-bar { height: 20px; min-width: 0; }
+.rs-bd-bar svg { display: block; width: 100%; height: 100%; }
+.rs-bd-bar rect { fill: rgba(var(--tint-rgb), .09); }
+.rs-bd-lead.s-up .rs-bd-bar rect.on { fill: var(--color-success); }
+.rs-bd-lead.s-down .rs-bd-bar rect.on { fill: var(--color-error); }
+.rs-bd-lead.s-muted .rs-bd-bar rect.on { fill: var(--text-muted); }
 /* 자물쇠 아이콘 — 글 줄 밖의 자물쇠는 블록이다(`lockIcon` 공용 · 잠긴 칸 · 베일) · ~~전술 잠금 토글 `.rs-pin` · 잠근 행 `.held`~~ 2026-11-26 걷음(R586 · ADR-1383) */
 .rs-pin-ico { display: block; }
 /* 「원정 중」 — 도는 원정의 편성 번호에 붙는다. 영웅 띠의 「원정 중」(`.hs-doing.exp`)과 같은 색 */
@@ -6505,9 +6713,9 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .lib-slot-calc .calc-v { color: var(--text-primary); font-weight: 700; white-space: nowrap; }
 .lib-slot-calc .calc-f { min-width: 0; overflow-wrap: anywhere; }
 .lib-slot-calc .calc-f b { font-weight: normal; color: var(--text-secondary); }
+.lib-slot-calc .calc-f b.calc-mult { color: var(--color-info); }   /* 배율 % — 레벨 줄의 「피해 배율 a → b」와 같은 파랑 (ADR-1432) */
 /* 인수의 출처 — 능력치 칩(설명창과 같은 칩 · ADR-1361) · 태그 몫은 흐린 글 · 수 바로 뒤에 붙는다 */
-.lib-slot-calc .tip-chip { margin-left: 3px; padding: 0 4px; line-height: 1.2; white-space: nowrap; }
-.lib-slot-calc .calc-src { margin-left: 3px; font-style: normal; color: var(--text-muted); }
+.lib-slot-calc .tip-chip { margin-left: 3px; padding: 0 4px; line-height: 1.2; white-space: nowrap; }.lib-slot-calc .calc-src { margin-left: 3px; font-style: normal; color: var(--text-muted); }
 .lib-slot-lv { min-height: 1.45em; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; font-size: var(--fs-xs); color: var(--text-secondary); }   /* 계산 줄 두 줄 · 레벨 줄 한 줄 자리는 비어도 선다 — 영웅마다 칸 줄 높이가 같다 (ADR-1357) */
 .lib-slot-lv-h { color: var(--text-secondary); font-variant-numeric: tabular-nums; }   /* 머리 `Lv.a → Lv.b` · 상한 `Lv.n · 최대 레벨` (ADR-1317) */
 .lib-slot-step b { font-weight: normal; color: var(--color-info); font-variant-numeric: tabular-nums; }
@@ -7149,19 +7357,12 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .cm-card.done .cm-prog .bar > i { background: var(--color-success); }
 /* 패널 제목 옆 — 받은 수 / 받을 수 (값은 늘 찍는다 · §4-1) */
 .cm-slots { margin-left: 8px; font-size: var(--fs-xs); font-weight: normal; color: var(--text-muted); }
-/* 명성 막대 한 줄 — 게시판 위 · 「명성 Lv n」 · 막대(남는 폭 전부 · 경험치 막대 색) — 이번 레벨 기준 숫자는 **막대 가운데에 겹친다** (§14 · ADR-0958 · ADR-0961).
-   줄 높이는 `--cm-fame-h`(`.tv-low`) — 도박장 칸이 같은 값만큼 내려선다. 글자는 찬 쪽 · 빈 쪽 어디서나 읽히게 밝은 색 + 어두운 그림자 */
-/* 명성 줄은 **제목 바로 아래 · 게시판 위 한 줄** — 카드가 그만큼 낮다 · 도박장 칸 윗변이 같이 내려선다 (ADR-1164) */
+/* 의뢰 레벨 한 줄 — 게시판 위 · 「의뢰 Lv n」 글만 (§14 · ADR-1411 — ~~명성 막대 · 막대 가운데 숫자~~ ADR-0958 · ADR-0961).
+   줄 높이는 `--cm-fame-h`(`.tv-low`) — 도박장 칸이 같은 값만큼 내려선다 · **제목 바로 아래 · 게시판 위 한 줄** — 카드가 그만큼 낮다 (ADR-1164) */
 .cm-fame { display: flex; align-items: center; gap: 10px; height: var(--cm-fame-h); }
-.tv-cm .cm-body > .cm-fame { flex: none; margin-bottom: var(--cm-fame-gap); }   /* 제목 바로 아래 한 줄 — 제목 밑줄 ↔ 막대 ↔ 카드 틈이 같다 (ADR-1164) */
-.tv-low > .panel > h2 { margin-bottom: var(--cm-fame-gap); }   /* 의뢰 · 도박장 제목 아래 틈 — 명성 줄 위아래와 같은 값 */
+.tv-cm .cm-body > .cm-fame { flex: none; margin-bottom: var(--cm-fame-gap); }   /* 제목 바로 아래 한 줄 — 제목 밑줄 ↔ 줄 ↔ 카드 틈이 같다 (ADR-1164) */
+.tv-low > .panel > h2 { margin-bottom: var(--cm-fame-gap); }   /* 의뢰 · 도박장 제목 아래 틈 — 의뢰 레벨 줄 위아래와 같은 값 */
 .cm-fame-lv { font-size: var(--fs-sm); line-height: 1; white-space: nowrap; }
-.cm-fame .bar { position: relative; flex: 1 1 auto; min-width: 0; height: 100%; }
-.cm-fame-n {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-size: var(--fs-xs); line-height: 1; color: var(--text-primary); white-space: nowrap; font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 2px #000, 0 0 3px #000;
-}
 /* 게시판이 안 열렸을 때 — 빈 카드 틀이 자리를 잡고 그 위에 잠김 베일(.lock-veil) */
 .cm-card.ghost { min-height: 96px; }
 
@@ -7434,10 +7635,10 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 :where(:root[data-skin="d2min"]) .diff-tab { padding: 2px 4px; border: 0; border-image: none; background: none; box-shadow: none; font-size: 17px; color: #7d776e; }   /* 고른 단도 같은 크기 (ADR-0854 · 0863) */
 :where(:root[data-skin="d2min"]) .diff-tab:not(.on):not(:disabled):hover { color: #dedad4; }
 :where(:root[data-skin="d2min"]) .diff-tab.on { padding: 2px 4px; border: 0; background: none; font-size: 17px; color: #f2ece2; }
-/* 게임 밖 — 새 게임 후보 셋 · 프롤로그 글도 판 안에 선다. 새 게임 판의 바깥 위 여백은 제목(`.ng-title` 높이)이 들고 안 24 는 판 여백이다(ADR-1237 · ADR-1241).
-   후보 카드는 카드 모양(어두운 돌 + 턱 한 줄 · 윗변 희귀도 색은 그대로). 메뉴(워드마크 · 버튼 둘)는 표지라 판을 안 두른다 */
-:where(:root[data-skin="d2min"]) .ng-wrap,
-:where(:root[data-skin="d2min"]) .pro-wrap { background: var(--sk-fill), #0f0f0f; border: 1px solid var(--border-primary); border-image: var(--sk-frame) 11 / 11px / 4px round; }
+/* 게임 밖 — 새 게임 후보 셋은 판 안에 선다. 새 게임 판의 바깥 위 여백은 제목(`.ng-title` 높이)이 들고 안 24 는 판 여백이다(ADR-1237 · ADR-1241).
+   후보 카드는 카드 모양(어두운 돌 + 턱 한 줄 · 윗변 희귀도 색은 그대로). 메뉴(워드마크 · 버튼 둘)는 표지라 판을 안 두른다.
+   **프롤로그 글(`.pro-wrap`)은 판이 없다** — 장면 그림 위에 바로 선다(판이 그림을 가리는 창으로 읽혔다 · ADR-1394) */
+:where(:root[data-skin="d2min"]) .ng-wrap { background: var(--sk-fill), #0f0f0f; border: 1px solid var(--border-primary); border-image: var(--sk-frame) 11 / 11px / 4px round; }
 :where(:root[data-skin="d2min"]) .ng-wrap { padding: 24px 16px; }
 /* 능력치 범례는 판 테두리 **밖**에 선다(뒤로가기처럼 · ADR-0943) — 판 안 카드 줄 옆 여백이 53(.9 배율 안에서 59)이라 범례가 테두리를 가로지른다 */
 :where(:root[data-skin="d2min"]) .ng-legend { right: calc(100% + 45px + 59px); }
@@ -7596,11 +7797,13 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 :where(:root[data-skin="d2min"]) .hs-card,
 :where(:root[data-skin="d2min"]) .unit,
 :where(:root[data-skin="d2min"]) .rs-cell,
-:where(:root[data-skin="d2min"]) .tc-row { background: var(--sk-fill), #121212; }
+:where(:root[data-skin="d2min"]) .tc-row,
+:where(:root[data-skin="d2min"]) .tcb-sec { background: var(--sk-fill), #121212; }
 :where(:root[data-skin="d2min"]) .hs-card,
 :where(:root[data-skin="d2min"]) .unit,
 :where(:root[data-skin="d2min"]) .rs-cell,
 :where(:root[data-skin="d2min"]) .tc-row,
+:where(:root[data-skin="d2min"]) .tcb-sec,
 :where(:root[data-skin="d2min"]) .cn-lot { box-shadow: inset 0 0 0 1px var(--sk-lip), 0 3px 8px rgba(0, 0, 0, .7); }
 
 /* 편성 탭 — 박스 하나를 판 셋(진형 · 물약 | 파티 전술)으로 나눈다 · 판 사이 8px · 세로 가림선 없음 (ADR-0815).

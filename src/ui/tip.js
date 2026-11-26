@@ -1531,10 +1531,13 @@ export function skillCalcLines(s, ctx = {}) {
     if (a?.value && a.base) {
         const eff = def.effects[0].effect;
         const label = t(eff === 'summon' ? 'bk.calc.hp' : eff === 'heal' || eff === 'mend' ? 'bk.calc.heal' : 'bk.calc.dmg');
-        const expr = [`${BASIS_NAME[a.basis]?.() ?? a.basis} ${b(rangeText(a.base))}`, `× ${b(`${num(M.pctNum(a.pct))}%`)}`]
+        // 밑수 이름 — 무기 밑수(atk)는 이 줄만 「무기 데미지」 · 나머지는 설명창 Alt 식과 같은 이름 (ADR-1432)
+        const basisName = a.basis === 'atk' ? t('bk.calc.weaponDmg') : BASIS_NAME[a.basis]?.() ?? a.basis;
+        // 배율 % 는 파랑(`.calc-mult` — 레벨 줄의 「피해 배율 a → b」와 같은 색 · ADR-1432)
+        const expr = [`${basisName} ${b(rangeText(a.base))}`, `× <b class="calc-mult">${num(M.pctNum(a.pct))}%</b>`]
             .concat(a.tagMult !== 1 ? [`× ${b(a.tagMult.toFixed(2))}<i class="calc-src">${t('bk.calc.tag')}</i>`] : [])
-            // 능력치 항 = 계수 + 그 출처 칩(설명창의 능력치 칩 · 약어와 능력치 값 · ADR-1361)
-            .concat(a.attrs.filter(x => x.mult != null).map(x => `× ${b(x.mult.toFixed(2))}<i class="tip-chip attr">${abbrOf(x.attr)} ${x.v}</i>`))
+            // 능력치 항 = `× [약어]` — 능력치 값 · 계수는 칩에 올리면 한 줄 툴팁(`data-calc-tip` · 부르는 자리가 건다 — `data-tip` 은 `bindTipNode` 의 표지라 안 쓴다 · ADR-1432 · 칩은 설명창의 능력치 칩 · ADR-1361)
+            .concat(a.attrs.filter(x => x.mult != null).map(x => `× <i class="tip-chip attr" data-calc-tip="${abbrOf(x.attr)} ${x.v} · × ${x.mult.toFixed(2)}">${abbrOf(x.attr)}</i>`))
             .join(' ');
         out.push(row(label, rangeText(a.value), expr));
     }

@@ -72,8 +72,7 @@ export const TARGETS = {
     resource_tier: A(true),
     // 더하기 — 준비 중
     make_kinds: A(false), shop_layers: A(false),
-    // 동시 탐험 — 기본값 `explore_slots` 위로 더한다(`state.limitsOf` 의 `exploreSlots` · 2026-10-09 켰다 · 지금 표엔 늘리는 랭크가 없다 — 2026-10-27 탐험 r5 가 편성으로 · R362) · 탐험 지역은 장이 연다(ADR-0537)라 `explore_regions` 는 읽는 자리가 없다
-    explore_slots: A(true),
+    // ~~동시 탐험 `explore_slots`~~ — 2026-11-26 걷음(R590 D14 — 탐험은 편성마다 한 판 · 원정과 합쳐 `limitsOf.expeditions`) · 탐험 지역은 장이 연다(ADR-0537)라 `explore_regions` 는 읽는 자리가 없다
     explore_regions: A(false),
     // 고용 명단 · 수색 결과 둘 다의 영웅 품질 [2026-09-24 사용자 지시 · 옛 `high_tier_candidates` — 명단만이었다]
     //   준비 중이어도 짓는다(2026-09-27 사용자 지시) · **지금 표에 이 줄이 없다** — 선술집에서 뺐다(2026-10-27 사용자 「나중에 연구소에 넣을게」 · R363)

@@ -1,0 +1,114 @@
+{
+ "summary": {
+  "pass": 21,
+  "total": 21
+ },
+ "results": [
+  {
+   "name": "ko empty: card text = slot name only",
+   "ok": true,
+   "detail": "[\"공격\", \"방어\", \"유틸\"]"
+  },
+  {
+   "name": "ko empty: .bag class kept (mission guide)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "ko empty: no overflow",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "ko locked: no bag count",
+   "ok": true,
+   "detail": "[\"공격 / 지휘 천막 건설\", \"방어 / 지휘 천막 2랭크\", \"유틸 / 지휘 천막 3랭크\"]"
+  },
+  {
+   "name": "ko locked: no overflow",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "ko bag: in-use section = head + party names + cells only (ADR-1429)",
+   "ok": true,
+   "detail": "사용 중인 카드 | Party I | Party II | Party III"
+  },
+  {
+   "name": "ko bag: section heads only names (no store count)",
+   "ok": true,
+   "detail": "사용 중인 카드 | 사용한 카드 | 새 카드"
+  },
+  {
+   "name": "ko bag: used pick bar has no used tag",
+   "ok": true,
+   "detail": "일기토 | 일반 | 장착 | 분해 (조각 +1)"
+  },
+  {
+   "name": "ko full: no store / full text",
+   "ok": true,
+   "detail": "공격 카드? | 카드 조각 30 | × | 사용 중인 카드 | Party I | Party II | Party III | 전체 | 일반 | 매직 | 레어 | 에픽 | 레전더리 | 사용한 카드 | 새 카드 | ×2 | ×2 | ×2 | ×2"
+  },
+  {
+   "name": "ko full: new-card equip off",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "en empty: card text = slot name only",
+   "ok": true,
+   "detail": "[\"Attack\", \"Defense\", \"Utility\"]"
+  },
+  {
+   "name": "en empty: .bag class kept (mission guide)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "en empty: no overflow",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "en locked: no bag count",
+   "ok": true,
+   "detail": "[\"Attack / Build Command Tent\", \"Defense / Command Tent rank 2\", \"Utility / Command Tent rank 3\"]"
+  },
+  {
+   "name": "en locked: no overflow",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "en bag: in-use section = head + party names + cells only (ADR-1429)",
+   "ok": true,
+   "detail": "Equipped Card | Party I | Party II | Party III"
+  },
+  {
+   "name": "en bag: section heads only names (no store count)",
+   "ok": true,
+   "detail": "Equipped Card | Used Cards | New Cards"
+  },
+  {
+   "name": "en bag: used pick bar has no used tag",
+   "ok": true,
+   "detail": "Single Combat | Common | Equip | Dismantle (+1 Shard)"
+  },
+  {
+   "name": "en full: no store / full text",
+   "ok": true,
+   "detail": "Attack Cards? | Card Shards 30 | × | Equipped Card | Party I | Party II | Party III | All | Common | Magic | Rare | Epic | Legendary | Used Cards | New Cards | ×2 | ×2 | ×2 | ×2"
+  },
+  {
+   "name": "en full: new-card equip off",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "no page errors",
+   "ok": true,
+   "detail": ""
+  }
+ ],
+ "errors": []
+}

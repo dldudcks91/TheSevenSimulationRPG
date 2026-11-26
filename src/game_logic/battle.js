@@ -1048,7 +1048,8 @@ export function createBattleSystem(data) {
 
         /* ── 1단 편성 (예외가 없는 스테이지는 굴림 순서·횟수 불변) ── */
         if (type === 'boss') {
-            add(stage.boss_monster_idx, stage.boss_grade);
+            // 보스 자리 바꿔 세우기 — 탐험 동굴 ??? (`createRun` 의 `rules.bossId` · 2026-11-26 · R590) · 등급 · 호위는 그 칸 그대로 · 없으면 종전과 한 글자도 같다
+            add(fix?.bossId ?? stage.boss_monster_idx, stage.boss_grade);
             if (draw.guards) {
                 // 정예 호위 명단 [2026-10-23 · R329 · monster_design §4] — 명단 순서대로 정예로 선다 · 호위 수 · 풀은 안 굴린다 ·
                 //   정예마다 죄종 1 → 특성 3(정예 라운드의 정예와 같은 묶음 — 후보 뽑기만 없다 · R344)
@@ -1195,6 +1196,13 @@ export function createBattleSystem(data) {
         // 한 라운드 단판 [2026-11-19 · R554 · endless_tower_design §0 — 무한의 탑 한 층] — `rules.round` 를 주면 그 스테이지의 그 종류 라운드 하나만 돈다(아래 `soloRound`) ·
         //   풀이 빈 칸(챕터보스 칸)은 그 장 일반몹 전체 · 안 주면 아래 세 줄이 종전 그대로다 (INTERFACE §2-6 `rules.round`)
         const solo = !encounter && rules?.round ? soloRound(stage, rules.round) : null;
+        // 탐험 판의 손잡이 셋 [2026-11-26 · R590 · INTERFACE §2-6 `rules`] — `bossId` = 보스 라운드의 보스를 그 몬스터로(동굴 ???) ·
+        //   `curseDiff` = 장 디버프를 그 단의 줄로 읽는다(폐허 함정 = 헬 줄 · 몬스터 레벨 · 차림은 `difficulty` 그대로) · `dropMult` = 처치 드롭 판정 확률에 곱한다(표 등급 보상 배수) ·
+        //   셋 다 안 주면 종전과 한 글자도 같다(곱 1 · 같은 칸 · 같은 단) · 틀리면 rng 를 쓰기 전에 던진다
+        if (rules?.bossId != null && !data.monsters[rules.bossId]) throw new Error(`battle: rules.bossId '${rules.bossId}' — monster.csv 에 없다 (INTERFACE §2-6)`);
+        if (rules?.dropMult != null && !(Number.isFinite(rules.dropMult) && rules.dropMult >= 0)) throw new Error(`battle: rules.dropMult '${rules.dropMult}' — 0 이상 수 (INTERFACE §2-6)`);
+        const spawnFix = solo || rules?.bossId != null ? { ...(solo ?? {}), ...(rules?.bossId != null ? { bossId: rules.bossId } : {}) } : null;
+        const runDrop = rules?.dropMult ?? 1;
         const pool = encounter ? [] : solo ? solo.pool : stagePool(stage);
         const rounds = encounter || solo ? 1 : stageRounds(stage).length;
         // 잘못된 외부 시드는 난수를 소비하거나 전투를 열기 전에 거절한다. 0 도 유효한 uint32 씨앗이다.
@@ -1473,7 +1481,7 @@ export function createBattleSystem(data) {
         let roundAt = 0;
         // 장 디버프 [2026-10-28 · R366 · base_expedition_design §1-4] — 이 칸 · 이 단의 한 줄(`debuffOf` · 결투장은 없다)이 런 내내 같다 —
         //   분노 · 폭식 = 직격(`strikeOnce`) · 탐욕 = 영웅의 받는 회복(`curseCut` → `ATTRS`) · 시기 · 나태 = 간격마다 거는 창(`curseCast`) · rng 0
-        const curse = encounter ? null : debuffOf(stageId, difficulty);
+        const curse = encounter ? null : debuffOf(stageId, rules?.curseDiff ?? difficulty);
         // 다음에 걸 시각 — 라운드를 열면 그 시각부터 간격마다(`beginRound`) · 거는 효과가 아니면 null
         let curseAt = null;
         // 거는 쪽 — 시전자가 없다(기여 · 처치 몫 없음) · 영웅의 「상대 편」이라 받는 쪽 시간 감소 · 매력이 줄인다
@@ -1721,7 +1729,7 @@ export function createBattleSystem(data) {
                 // 시작 순서 — 결투장 팀 스냅샷이 정한다(다른 플레이어의 방어 편성 = 그 주인의 `fixed` · `random` · AI 팀 = `buffFirst` · R515) · 없으면 적의 기본(`startRanks`)
                 ...(p.startOrder ? { startOrder: p.startOrder } : {}),
             })) } : spawnRound(roundSeedOf(round), stage, pool, solo ? solo.n : round, magicFind, stageLevel, wearChance, difficulty,
-                cxOf ? id => cxOf(id)?.farm.magic ?? 0 : null, solo);   // 단판은 그 종류의 라운드 번호로 편성한다(R554) · `round` 이벤트의 `n` 은 런의 라운드
+                cxOf ? id => cxOf(id)?.farm.magic ?? 0 : null, spawnFix);   // 단판은 그 종류의 라운드 번호로 편성한다(R554) · `round` 이벤트의 `n` 은 런의 라운드 · 보스 바꿔 세우기(R590)
             units.enemies = sp.list;
             // 유닛에 얹는다 — 대기 무리(`band` · 불러내기가 세운다)도 같은 라운드의 몬스터다 · 칸이 없는 몬스터(보스 · 6 · 7장)는 null
             if (cxOf) for (const e of units.enemies) for (const u of [e, ...(e.band ?? [])]) u.codex = cxOf(u.monsterId);
@@ -1802,10 +1810,11 @@ export function createBattleSystem(data) {
             //   ⚠ 파밍 줄 `material`(재료 판정 확률)은 처치 재료가 걷혀(2026-10-29 · R373) 읽는 곳이 없다 — 대체를 정할 때까지 칸만 산다(DEV_PLAN §4)
             const cxDrop = 1 + (farm?.drop ?? 0);
             const dropRng = makeRng(e.dropSeed);
-            let got = dropRng() < B.drop_chance_pct * e.dropChanceMult * dropMult * cxDrop ? 1 : 0;
+            //   탐험 표 등급의 보상 배수(`rules.dropMult` · R590)는 맨 끝에 곱한다 — 안 주면 × 1 이라 종전 값과 한 비트도 안 다르다 · 1 을 넘으면 확률 1 에서 막힌다(굴림 수 그대로)
+            let got = dropRng() < B.drop_chance_pct * e.dropChanceMult * dropMult * cxDrop * runDrop ? 1 : 0;
             // 탐욕 T4 ② 다시 뒤지기 [2026-11-14] — 드롭이 안 난 처치에서 파티의 가장 큰 값 확률로 판정을 한 번 더(그 몬스터 수열 · 든 영웅이 없으면 굴리지 않는다)
             const reroll = got ? 0 : Math.max(0, ...party.filter(x => x.hp > 0 && !x.summon).map(x => x.adv?.greed_reroll ?? 0));
-            if (reroll > 0 && dropRng() < reroll) got = dropRng() < B.drop_chance_pct * e.dropChanceMult * dropMult * cxDrop ? 1 : 0;
+            if (reroll > 0 && dropRng() < reroll) got = dropRng() < B.drop_chance_pct * e.dropChanceMult * dropMult * cxDrop * runDrop ? 1 : 0;
             if ((e.grade === 'stage_boss' || e.grade === 'chapter_boss') && got < B.boss_guaranteed_drop) got = B.boss_guaranteed_drop;
             /*
              * **떨어지는 것은 그 몬스터가 입고 있던 장비다** [개정 2026-09-11 · R79 · 사용자 지시 · item_design §1 2단계].
@@ -4739,5 +4748,30 @@ export function createBattleSystem(data) {
         return { ...run.result, mode: 'arena' };
     }
 
-    return { simulate, createRun, simulateTeams, stagePool, stageElement, stageRounds, skillCarriers, monsterSkillSlots, makeEnemy, monsterGearSpec, rollMonsterDrop, ilvlSpreadOf, debuffOf };
+    /**
+     * 탐험 판이 읽는 표 둘 [2026-11-26 · R590 · INTERFACE §2-6] — 상태 불변 · rng 0.
+     *   `rarityWeightsOf(grade, diff)` = 그 등급 × 그 단의 몬스터 장비 희귀도 가중치 사본(`gear_rarity.csv` · 위 `gearWeightsOf` 와 같은 행) · 표가 없거나 행이 없으면 null
+     *   `timeTargetOf(stage, type)` = 그 칸의 그 종류 라운드 목표 시간(초 · `round_budget.csv:time_target_sec` — 보스는 그 칸의 `boss_grade` 행) · 없으면 0
+     */
+    const rarityWeightsOf = (grade, diff) => { const w = gearWeightsOf({ grade }, diff); return w ? { ...w } : null; };
+    /** 그 단이 여는 희귀도 — 그 단의 모든 등급 행을 칸마다 최댓값으로 묶은 것(0 = 그 단에서 아무 몬스터도 안 입는 희귀도) · 표가 없으면 null */
+    const rarityOpenOf = diff => {
+        if (!RARITY) return null;
+        const d = diffOf(diff)?.id, out = {};
+        for (const rows of Object.values(RARITY)) for (const [r, w] of Object.entries(rows?.[d] ?? {})) out[r] = Math.max(out[r] ?? 0, w);
+        return out;
+    };
+    const timeTargetOf = (stage, type) => data.budgets?.[type === 'boss' ? stage?.boss_grade : type]?.time_target_sec ?? 0;
+    /**
+     * 그 등급 · 그 레벨 몬스터 한 마리의 처치 몫 `{xp, gold, dropChance}` [2026-11-26 · R590 · D2 — 상단 의뢰의 적 영웅 = 그 레벨 정예 한 마리 몫] —
+     *   `makeEnemy` 의 처치 XP · 골드와 같은 식(몬스터별 `exp_coef` · 정예 탐욕 칸 · 도감 몫 · 파티 골드 찾기 없이 = 1) · `dropChance` = 판정 확률(`drop_chance_pct × drop_chance_mult`) ·
+     *   레벨은 1 ~ 만렙으로 자른다 · 모르는 등급이면 던진다 · rng 0
+     */
+    function killRewardOf(grade, level) {
+        const g = data.grades[grade];
+        if (!g) throw new Error(`battle: killRewardOf — 모르는 등급 '${grade}' (INTERFACE §2-6)`);
+        const lvl = Math.min(B.hero_level_cap, Math.max(1, Math.round(level)));
+        return { xp: MONSTER_XP.get(lvl) * g.exp_mult, gold: Math.round(B.monster_gold_base * B.monster_gold_growth ** (lvl - 1) * g.gold_mult * B.gold_rate), dropChance: B.drop_chance_pct * g.drop_chance_mult };
+    }
+    return { simulate, createRun, simulateTeams, stagePool, stageElement, stageRounds, skillCarriers, monsterSkillSlots, makeEnemy, monsterGearSpec, rollMonsterDrop, ilvlSpreadOf, debuffOf, rarityWeightsOf, rarityOpenOf, timeTargetOf, killRewardOf };
 }

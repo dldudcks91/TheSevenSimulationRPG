@@ -125,7 +125,7 @@ export function mountMobilePages(main) {
     } else if (tab === 'explore') {
         const wrap = page.querySelector('.ex-map-wrap');
         const map = wrap?.querySelector('.ex-map');
-        if (map) {
+        if (map && !wrap.classList.contains('exw-wrap')) {   // 판 관전 지도(§8-4 · ADR-1401)는 지점 목록을 안 세운다
             const list = document.createElement('div');
             list.className = 'mobile-explore-spots'; list.dataset.keep = 'mobile-explore-spots';
             for (const spot of all(map, '.ex-spot')) {
