@@ -539,7 +539,7 @@ const state = {
     exRecallNo: null,            // [부르기] 확인 창의 편성 번호
     exResultNo: null,            // 결과 카드의 편성 번호 (ADR-1404)
     cmArm: null,                 // 의뢰 [포기]를 한 번 누른 카드 번호 — 두 번째 누름이 버린다(§3 · ADR-0352) · 탭을 떠나면 풀린다 · 세이브 아님
-    tcSlot: null,                // 작전 카드 가방 창의 갈래(`attack` · `defense` · `utility`) — 편성 탭 카드를 누르면 선다 (SCREEN_DESIGN §15 · ADR-1384 · 세이브 아님)
+    tcSlot: null,                // 작전 카드 가방 창이 넣을 칸 번호(`'1'` · `'2'` · `'3'` — 갈래 없음 · 2026-11-27) — 편성 탭 카드를 누르면 선다 (SCREEN_DESIGN §15 · ADR-1384 · 세이브 아님)
     tcArm: null,                 // 가방 창의 첫 누름 — `equip|<키>`(칸을 바꾸는 장착) · `dis|<키>`(분해) · 두 번째 누름이 한다(§3) · 창을 닫으면 풀린다 · 세이브 아님
     forgeItem: null,             // 대장간에서 직접 고른 장비 uid — 진입 시 비운다
     temperAct: null,             // 손질 — 고른 손질 id(없으면 첫 손질) · 세이브 아님 (SCREEN_DESIGN §8-2 · ADR-1200)
@@ -1167,6 +1167,58 @@ function applyMissionGuide() {
     }
     paintMissionDim(mmGuide?.dim ? target : null);
     paintMissionCoach(mmGuide?.coach ? target : null);
+    paintMissionRing(target);
+}
+/* 길 안내 테두리 [ADR-1434] — 누를 것에는 표지(`.mission-guide`)만 달고 선은 한 장(#stage) 직속 맨 위 층에 따로 긋는다(style.css `.mission-ring`) —
+   부모의 넘침 자르기 · 이웃 칸 · 창 · 툴팁에 안 가린다 · 입력은 지나간다. 매 프레임 누를 것의 사각형을 읽어 바뀐 때만 옮기고 어둠 · 말풍선도 같이 맞춘다 ·
+   누를 것이 스크롤 판 밖으로 다 나가면 숨긴다(걸쳐 있으면 자르지 않고 다 그린다 — 대장간 선택선과 같은 규칙) · 문서에서 빠지면 다음 그리기가 새 자리를 잡을 때까지 숨긴다 */
+let mmRingNode = null, mmRingTarget = null, mmRingClips = [], mmRingKey = '', mmRingFrame = 0;
+function paintMissionRing(target) {
+    const st = $('#stage');
+    if (!target || !st) {
+        cancelAnimationFrame(mmRingFrame); mmRingFrame = 0;
+        mmRingNode?.remove(); mmRingNode = null; mmRingTarget = null; mmRingClips = []; mmRingKey = '';
+        return;
+    }
+    if (target !== mmRingTarget) {
+        mmRingTarget = target; mmRingKey = '';
+        // 자를 수 있는 조상(스크롤 판)만 미리 모은다 — 매 프레임 조상 전부의 계산된 스타일을 읽지 않게
+        mmRingClips = [];
+        for (let p = target.parentElement; p && p !== st; p = p.parentElement) {
+            const cs = getComputedStyle(p), x = /auto|scroll|hidden|clip/.test(cs.overflowX), y = /auto|scroll|hidden|clip/.test(cs.overflowY);
+            if (x || y) mmRingClips.push([p, x, y]);
+        }
+    }
+    mmRingNode ??= el('div', 'mission-ring');
+    mmRingNode.setAttribute('aria-hidden', 'true');
+    if (mmRingNode.parentNode !== st) st.appendChild(mmRingNode);
+    if (!mmRingFrame) syncMissionRing();
+}
+function syncMissionRing() {
+    mmRingFrame = 0;
+    const g = mmRingTarget;
+    if (!g || !mmRingNode) return;
+    if (!g.isConnected) { mmRingNode.hidden = true; mmRingKey = ''; }
+    else {
+        const b = g.getBoundingClientRect(), key = `${b.left} ${b.top} ${b.width} ${b.height}`;
+        if (key !== mmRingKey) {
+            mmRingKey = key;
+            let { left, right, top, bottom } = b;
+            for (const [p, x, y] of mmRingClips) {
+                const c = p.getBoundingClientRect();
+                if (x) { left = Math.max(left, c.left); right = Math.min(right, c.right); }
+                if (y) { top = Math.max(top, c.top); bottom = Math.min(bottom, c.bottom); }
+            }
+            mmRingNode.hidden = right <= left || bottom <= top;
+            if (!mmRingNode.hidden) {
+                const r = stageRect(g);
+                Object.assign(mmRingNode.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.right - r.left}px`, height: `${r.bottom - r.top}px` });
+            }
+            if (mmDimNode) paintMissionDim(g);
+            if (mmCoachNode) paintMissionCoach(g);
+        }
+    }
+    mmRingFrame = requestAnimationFrame(syncMissionRing);
 }
 /* 첫 장 길 안내의 어둠 [ADR-1378 · ADR-1380] — 한 장(#stage) 직속 구멍 하나가 테두리 자리에 서고 둘레를 큰 그림자로 덮는다(style.css `.mission-dim`).
    입력은 그대로 지나간다 · 테두리 밖을 누르거나 `Esc` 면 그 미션 안내 동안 어둠만 걷힌다(테두리는 남는다) */
@@ -1224,13 +1276,7 @@ function dropMissionDim(e) {
 }
 document.addEventListener('pointerdown', dropMissionDim, true);
 document.addEventListener('keydown', dropMissionDim, true);
-// 판을 스크롤하면 밝은 자리 · 말풍선을 다시 맞춘다 — 1초 눈금까지 어긋나 있지 않게 (스크롤은 거품이 안 올라와 잡는 단계에서 듣는다)
-document.addEventListener('scroll', () => {
-    if (!mmDimNode && !mmCoachNode) return;
-    const g = document.querySelector('.mission-guide');
-    if (mmDimNode) paintMissionDim(g);
-    if (mmCoachNode) paintMissionCoach(g);
-}, true);
+// 판을 스크롤하면 밝은 자리 · 말풍선을 다시 맞추는 것은 테두리의 프레임 따라가기(`syncMissionRing`)가 같이 한다 (ADR-1434)
 /** 받기 — 받은 뒤 저장 · 상자가 창고에 못 들어가 우편함으로 갔으면 그렇게 말한다 */
 function mmClaim(ids) {
     let n = 0, mail = false, err = null;
@@ -1452,7 +1498,7 @@ const MODALS = {
     //   카드는 고르기만 · [적용]을 눌러야 바뀐다 (ADR-1154)
     labReg: { head: labRegHead, body: labRegBody, cls: 'lr-modal', noCloseButton: true, gone: () => !G || !SYS.game.labState(G, now()).lines.find(l => l.line === labRegPost().id)?.open },
     labDuelParty: { title: 'lab.duel.party.title', body: labDuelPartyBody, cls: 'lab-duel-party-modal', gone: () => !G || state.tab !== 'lab' || state.lab.tool !== 'duel' },
-    // 작전 카드 가방 — 편성 탭 카드(든 칸 · 빈 칸 · 잠긴 칸)를 누르면 그 갈래로 뜬다 · 장착 · 분해 (SCREEN_DESIGN §15 · ADR-1384) · 편성 탭을 떠나면 닫힌다
+    // 작전 카드 가방 — 편성 탭 카드(든 칸 · 빈 칸)를 누르면 그 칸에 넣을 가방이 뜬다(어느 칸이든 같은 가방 · 2026-11-27) · 장착 · 분해 (SCREEN_DESIGN §15 · ADR-1384) · 편성 탭을 떠나면 닫힌다
     tacticBag: { head: tacticBagHead, body: tacticBagBody, cls: 'tcb-modal', gone: () => !G || state.tab !== 'party' || !state.tcSlot },
     // 친구와 전투 목록 — 콜로세움 레일의 [친구와 전투]가 연다 · 찾기 줄 + 목록(SCREEN_DESIGN §1 · ADR-1042) · 한 사람을 고르면 닫힌다(친선전 상대)
     arenaUsers: { title: 'ar.users', body: arenaUsersBody, cls: 'ar-users-modal' },
@@ -1902,18 +1948,19 @@ function renderStart(main) {
     // 리롤한 그리기만 새 카드가 왼쪽부터 차례로 떠오른다 — 한 번 쓰고 끈다(덮어쓰기 확인 같은 다른 다시 그리기에선 안 돈다 · §3 · ADR-1408)
     const rollAnim = state.ngRollAnim; state.ngRollAnim = false;
     state.candidates.forEach((h, i) => {
+        const slot = el('div', 'ng-slot');
         const card = candidateCard(h, startLines(h));
         if (rollAnim) { card.classList.add('ng-in'); card.style.setProperty('--i', i); }
-        row.appendChild(card);
+        slot.appendChild(card);
+        row.appendChild(slot);
     });
-    // 능력치 범례 — 첫 카드 왼쪽 빈자리에 한 번 (SCREEN_DESIGN §3 · ADR-0943). 첫 카드 능력치 목록 안에 붙어
-    //   그 높이를 일곱 등분하므로 줄마다 막대 줄과 같은 높이에 선다 — 좌표를 재지 않는다
-    const firstAttrs = row.querySelector('.attr-list');
-    if (firstAttrs) {
+    // 범례는 움직이지 않는 슬롯에서 첫 카드의 능력치 행을 공유한다 — 카드 밖이라 리롤 연출을 타지 않는다.
+    const firstSlot = row.querySelector('.ng-slot');
+    if (firstSlot) {
         const legend = el('div', 'ng-legend', `<div class="ng-lg-h">${t('ng.attrHead')}</div>` + D.heroAttributes.map(s =>
             `<div class="ng-lg-r"><b data-stat="${s.id}">${L(s)}</b><span data-stat="${s.id}">${t(`ng.attr.${s.id}`)}</span></div>`).join(''));
         headingHelp(legend.querySelector('.ng-lg-h'), () => t('hint.attributes'));
-        firstAttrs.appendChild(legend);
+        firstSlot.appendChild(legend);
         bindStatTips(legend);   // 범례 줄에 올려도 카드 줄과 같은 설명 카드 (§2 「능력치 설명 툴팁 규격」)
     }
     wrap.appendChild(row);
@@ -3923,7 +3970,7 @@ function potionCfgPane(cur, usePct, act) {
 
 /** 파티 전술 — 칸 이름 · 진척 줄 · 열 이름 줄 · 카드 행 셋 · 카드 아래 판 [2026-11-26 · R586 · §15 · ADR-1383].
  *  칸은 **고른 편성의 것**이고 적용 값 · 버프 몫 · 인챈트 가능은 그 편성의 파티로 잰다(`tacticState` 기본값 · ADR-0250) — 판정은 game_logic 이 냈다.
- *  행 = 왼쪽 카드(누르면 그 갈래의 가방 창 · ADR-1384) + 오른쪽 옵션 줄 둘(등급 · 효과 · 버프 몫 · [인챈트]) —
+ *  행 = 왼쪽 카드(누르면 가방 창 — 그 칸에 넣는다 · ADR-1384) + 오른쪽 옵션 줄 둘(등급 · 효과 · 버프 몫 · [인챈트]) —
  *  줄의 네 칸이 세 행에서 같은 세로줄에 서는 것은 목록 격자(`.tc-list` · subgrid)가 준다 */
 function tacticsBlock() {
     const ts = SYS.game.tacticState(G);
@@ -7387,8 +7434,8 @@ function skillTreeBody() {
    칸은 지휘 천막 랭크가 열고(R137) 칸에 드는 것은 **드랍으로 얻는 소모품 카드**다 — 장착할 때 옵션 줄 둘을 굴리고 줄마다 인챈트로 다시 굴린다 (tactic_card_design §3 · §5).
    판정(열림 · 적용 값 · 버프 몫 · 인챈트 가능 · 가방)은 전부 `game.tacticState` 가 실어 온다 — 렌더러는 세지 않는다. */
 
-/** 칸 이름 — 공격 · 방어 · 유틸 (`tactic.SLOTS`) */
-const tacticSlotName = slot => t(`rs.slot.${slot}`);
+/** 태그 이름 — `tc.tag.<태그>` · 태그 없는 카드는 null (한 편성에 같은 태그 한 장 · 2026-11-27 · PLAN_tactic_tags D4) */
+const tacticTagName = tag => (tag ? t(`tc.tag.${tag}`) : null);
 /** 카드 이름 — `tc.name.<카드>`(영어가 원본 · 한글은 직역 — CLAUDE.md 규칙 6) */
 const tacticCardName = id => t(`tc.name.${id}`);
 /** 카드 그림 — 그 카드의 그림(`mock.js:tacticIcon`) · 그림이 없는 카드는 ⚠임시로 죄종 그림 (§15 「카드 그림」 · ADR-1391) */
@@ -7401,32 +7448,31 @@ function tacticEffectText(card) {
     const fmt = (v, kind) => (v == null ? '' : kind === 'frac' ? `${Math.round(v * 100)}%` : `${Math.round(v * 10) / 10}`);
     return t(`tc.desc.${card.id}`, { p1: fmt(card.p1, kinds[0]), p2: fmt(card.p2, kinds[1]), p3: fmt(card.p3, kinds[2]) });
 }
-/** 카드 툴팁 — 이름(등급 색) · 「칸 · 죄종 · 등급」 · 효과 한 문장 (§15). 편성 탭 · 가방 창 · 출정 창 · 결투장 판 · 리포트가 같이 쓴다.
+/** 카드 툴팁 — 이름(등급 색) · 「태그 · 죄종 · 등급」(태그 없으면 「죄종 · 등급」) · 효과 한 문장 (§15). 편성 탭 · 가방 창 · 출정 창 · 결투장 판 · 리포트가 같이 쓴다.
  *  `lines` 를 주면(가방 창의 사용한 카드 · ADR-1399) 아래에 옵션 줄 둘 — 줄 등급 칩 + 적용 값 */
 function tacticTipCard(card, grade, lines = null) {
     const opt = lines?.length ? `<div class="tc-tip-lines">${lines.map(l => `<div class="tc-tip-line">${tacticGradeChip(l.grade)}<span class="rs-eff">${optionEffect(l.option, l.value)}</span></div>`).join('')}</div>` : '';
     return el('div', 'tip-card tc-tip', `<div class="tip-name tc-g-${grade}"><span class="tc-ico">${tacticImg(card)}</span>${tacticCardName(card.id)}</div>`
-        + `<div class="tip-sub">${t('rs.tip.sub', { slot: tacticSlotName(card.slot), sin: sinName(card.sin), grade: t(`rs.grade.${grade}`) })}</div>`
+        + `<div class="tip-sub">${t(card.tag ? 'rs.tip.sub' : 'rs.tip.subNoTag', { tag: tacticTagName(card.tag), sin: sinName(card.sin), grade: t(`rs.grade.${grade}`) })}</div>`
         + `<div class="tip-effect-summary">${tacticEffectText(card)}</div>${opt}`);
 }
-/** 카드 행 — 왼쪽 카드(누르면 그 갈래의 가방 창 · ADR-1384) + 오른쪽 옵션 줄 둘 (§15 · ADR-1383) — 카드가 든 행은 줄 위에 효과 한 문장(ADR-1431).
- *  카드가 든 칸 = **그림 한 장만**(칸 이름 · 이름 · 등급 칩 · 가방 n 없음 · 등급은 왼쪽 변 색 · 이름 · 효과는 툴팁 · ADR-1392) ·
- *  빈 칸 = 점선 카드 칸 이름만 · 잠긴 칸 = 칸 이름 + 자물쇠 + 여는 지휘 천막 랭크 — 줄 자리가 빈다 · 가방 수 글자는 없다(ADR-1412) ·
+/** 카드 행 — 왼쪽 카드(누르면 가방 창 — 어느 칸이든 같은 가방 · 그 칸에 넣는다 · ADR-1384 · 2026-11-27) + 오른쪽 옵션 줄 둘 (§15 · ADR-1383) — 카드가 든 행은 줄 위에 효과 한 문장(ADR-1431).
+ *  카드가 든 칸 = **그림 한 장만**(이름 · 등급 칩 · 가방 n 없음 · 등급은 왼쪽 변 색 · 이름 · 효과는 툴팁 · ADR-1392) ·
+ *  빈 칸 = 점선 카드만(칸 이름 없음 — 갈래가 없다 · 2026-11-27) · 잠긴 칸 = 자물쇠 + 여는 지휘 천막 랭크 — 줄 자리가 빈다 · 가방 수 글자는 없다(ADR-1412) ·
  *  **잠긴 칸은 안 눌린다**(가방 창이 안 뜬다 · ADR-1415). `no` = 칸 순번(1 부터 · `needOf` 가 받는다) */
 function tacticRow(ts, slot, no) {
     const filled = slot.open && slot.card;
     const row = el('div', `tc-row${slot.open ? '' : ' locked'}${filled ? ' has-desc' : ''}`);
     row.dataset.slot = slot.slot;
-    const inBag = slot.bag.length + slot.used.length;   // 가방에 카드가 있나 — 길 안내(`.tc-card.bag`)만 쓴다 · 글자로는 안 찍는다 (ADR-1412)
+    const inBag = slot.bag.filter(b => !b.block).length + slot.used.filter(u => !u.block).length;   // 이 칸에 넣을 수 있는 카드가 있나(다른 칸이 막는 카드는 안 센다) — 길 안내(`.tc-card.bag`)만 쓴다 · 글자로는 안 찍는다 (ADR-1412)
     const card = el('button', `tc-card${slot.card && slot.open ? ` art g-${slot.grade}` : slot.open ? ' empty' : ' locked'}${inBag ? ' bag' : ''}`);
     card.type = 'button';
-    const head = `<span class="tc-slot">${tacticSlotName(slot.slot)}</span>`;
-    if (!slot.open) card.innerHTML = `${head}<span class="tc-lock">${lockLine(needText('tactic_slots', no))}</span>`;
-    else if (!slot.card) card.innerHTML = head;   // 빈 칸 — 칸 이름만 (ADR-1410 · ADR-1412)
+    if (!slot.open) card.innerHTML = `<span class="tc-lock">${lockLine(needText('tactic_slots', no))}</span>`;
+    else if (!slot.card) card.setAttribute('aria-label', t('rs.slotNo', { n: no }));   // 빈 칸 — 점선만(글자 없음 · ADR-1410 · ADR-1412 · 2026-11-27)
     else {
         card.innerHTML = `<span class="tc-art">${tacticImg(slot.card)}</span>`;   // 그림만 (ADR-1392)
         card.setAttribute('aria-label', tacticCardName(slot.card.id));
-        bindTipNode(card, () => tacticTipCard(slot.card, slot.grade));   // 올리면 이름 · 칸 · 등급 · 효과 한 문장 (규칙 7)
+        bindTipNode(card, () => tacticTipCard(slot.card, slot.grade));   // 올리면 이름 · 태그 · 등급 · 효과 한 문장 (규칙 7)
     }
     if (slot.open) card.onclick = () => openTacticBag(slot.slot);
     else card.disabled = true;   // 잠긴 칸 — 눌러도 가방 창이 안 뜬다 (ADR-1415)
@@ -7456,20 +7502,20 @@ function enchantTacticLine(slot, i) {
     if (now) flash('rs.ench.done', { grade: t(`rs.grade.${now.grade}`), eff: optionEffect(now.option, now.value) });
     render();
 }
-/** 가방 창을 연다 — 그 갈래 · 첫 누름 · 고른 카드를 걷고 등급 탭은 「전체」로 (§15 · ADR-1384 · ADR-1399) */
+/** 가방 창을 연다 — 넣을 칸 · 첫 누름 · 고른 카드를 걷고 등급 탭은 「전체」로 (§15 · ADR-1384 · ADR-1399) */
 function openTacticBag(slot) { state.tcSlot = slot; state.tcArm = null; state.tcPick = null; state.tcGrade = 'all'; openModal('tacticBag'); }
-/** 가방 창 머리 — 「{칸} 카드」 + 카드 조각 */
+/** 가방 창 머리 — 「작전 카드」 + 카드 조각 (어느 칸을 눌러도 같은 가방 · 2026-11-27) */
 function tacticBagHead() {
     const head = document.createDocumentFragment();
-    head.appendChild(helpHeading('h2', '', t('rs.bag.h', { slot: tacticSlotName(state.tcSlot) }), 'tactics'));
+    head.appendChild(helpHeading('h2', '', t('rs.bag.h'), 'tactics'));
     head.appendChild(el('span', 'tc-shards', t('rs.shards', { n: `<b>${SYS.game.tacticState(G).shards.toLocaleString()}</b>` })));
     return head;
 }
-/** 가방 창 본문 — 위 = **사용 중인 카드**(이 칸에 든 카드 한 장 · 나가 있는 편성이면 자물쇠 한 줄) · **등급 탭**(전체 · 일반 ~ 레전더리 — 아래 두 덩어리를 같이 거른다) ·
+/** 가방 창 본문 — 위 = **사용 중인 카드**(편성마다 칸 셋 · 넣을 칸 = 하늘색 · 고른 카드를 막는 칸 = 빨간 테두리 · 나가 있는 편성이면 자물쇠 한 줄) · **등급 탭**(전체 · 일반 ~ 레전더리 — 아래 두 덩어리를 같이 거른다) ·
  *  가운데 = **사용한 카드** · 아래 = **새 카드** — 셋 다 인벤토리 같은 그림 칸 격자(테두리 = 등급 색 · 새 카드는 ×n · 올리면 툴팁 · 사용한 카드는 옵션 줄 둘도) ·
  *  칸을 누르면 고른다(`state.tcPick` · 하늘색) · 맨 아래 줄 = 고른 카드 + [장착] · [분해 (조각 +n)] (§15 · ADR-1399 · ADR-1390 · R589).
  *  장착은 한 번(칸의 카드는 사용한 카드로 간다) · 분해는 두 번(§3 — 첫 누름은 `state.tcArm` 에 그 버튼을 걸고 글만 바꾼다) · 장착하면 창이 닫힌다.
- *  꺼짐 판정은 `tacticState` 가 낸 것만 읽는다 — 칸의 `open` · `lock` · 판의 `usedFull` */
+ *  꺼짐 판정은 `tacticState` 가 낸 것만 읽는다 — 칸의 `open` · `lock` · 카드의 `block`(같은 카드 · 같은 태그가 든 다른 칸 · 2026-11-27) · 판의 `usedFull` */
 function tacticBagBody() {
     const ts = SYS.game.tacticState(G);
     const k = ts.slots.findIndex(s => s.slot === state.tcSlot);
@@ -7531,28 +7577,45 @@ function tacticBagBody() {
         g.append(...cells);
         sec.appendChild(g);
     };
-    // 위 = 사용 중인 카드 — **편성마다 한 칸**(Party I · II · III 이 이 갈래 칸에 든 카드 · 같은 그림 칸 · 올리면 툴팁 + 그 편성 파티로 잰 옵션 줄 둘) · 고르지 않는다 (ADR-1428 · ADR-1430)
+    // 위 = 사용 중인 카드 — **편성마다 칸 셋**(Party I · II · III 의 칸 1 · 2 · 3 · 같은 그림 칸 · 올리면 툴팁 + 그 편성 파티로 잰 옵션 줄 둘) · 고르지 않는다 (ADR-1428 · ADR-1430 · 2026-11-27)
+    //   고른 편성의 **넣을 칸 = 하늘색**(`target`) · 고른 카드를 **막는 칸 = 빨간 테두리**(`block` — 같은 카드 · 같은 태그 · 글자 없음 · PLAN_tactic_tags D11)
     //   이름 = 편성 고르개와 같은 「Party n」 · 가방 창이 장착하는 편성(고른 편성)은 이름이 밝다 · 빈 칸 = 빈 그림 칸 · 안 열린 편성 = 자물쇠 칸(올리면 여는 진행 문턱 — 편성 고르개와 같은 줄)
     //   고른 편성이 나가 있으면 그 아래 자물쇠 한 줄(`lock` · R589) · 등급 탭은 이 덩어리를 안 거른다(가방 밖의 카드다)
     const inUse = section(t('rs.bag.inUse'));
     inUse.classList.add('tcb-in');
     const ps = SYS.game.presetState(G);
+    const u = pick?.kind === 'used' ? slot.used.find(x => x.i === pick.id) : null;
+    const b = pick?.kind === 'new' ? slot.bag.find(x => x.key === pick.id) : null;
+    const sel = u ?? b;
+    const blockAt = sel?.block ?? null;
     const parties = el('div', 'tcb-parties');
     for (let no = 1; no <= presetFull(); no++) {
         const open = no <= ps.presets.length;
         const col = el('div', `tcb-party${no === ps.activeNo ? ' on' : ''}${open ? '' : ' locked'}`);
         col.appendChild(el('span', 'tcb-party-name', (open ? '' : `<span class="lock-ico">${lockIcon(true)}</span>`) + t('pt.preset', { n: M.roman(no) })));
         if (!open) {
-            const c = el('div', 'inv-cell tcb-cell locked', lockIcon(true));
-            bindTipNode(c, () => el('div', 'tip-card tip-mini', `<div class="tip-name">${presetLockText(no)}</div>`));
-            col.appendChild(c);
+            // 안 열린 편성 — 칸 셋 자리에 자물쇠 칸 셋(열린 편성과 같은 칸 크기 · 올리면 여는 진행 문턱)
+            const row = el('div', 'tcb-party-cells');
+            for (const _ of SYS.tactic.SLOTS) {
+                const c = el('div', 'inv-cell tcb-cell locked', lockIcon(true));
+                bindTipNode(c, () => el('div', 'tip-card tip-mini', `<div class="tip-name">${presetLockText(no)}</div>`));
+                row.appendChild(c);
+            }
+            col.appendChild(row);
         } else {
-            const s = no === ps.activeNo ? slot : SYS.game.tacticState(G, undefined, no).slots[k];
-            if (s.open && s.card) {
-                const c = cell('cur', `cur${no}`, s.card, s.grade, 0, () => tacticTipCard(s.card, s.grade, s.lines));
-                c.onclick = null;
-                col.appendChild(c);
-            } else col.appendChild(el('div', 'inv-cell tcb-cell vacant'));
+            const row = el('div', 'tcb-party-cells');
+            const on = no === ps.activeNo;
+            for (const s of on ? ts.slots : SYS.game.tacticState(G, undefined, no).slots) {
+                const mark = on && s.slot === state.tcSlot ? ' target' : on && s.slot === blockAt ? ' block' : '';
+                let c;
+                if (s.open && s.card) {
+                    c = cell('cur', `cur${no}|${s.slot}`, s.card, s.grade, 0, () => tacticTipCard(s.card, s.grade, s.lines));
+                    c.onclick = null;
+                } else c = el('div', `inv-cell tcb-cell ${s.open ? 'vacant' : 'locked'}`, s.open ? '' : lockIcon(true));
+                if (mark) c.classList.add(mark.trim());
+                row.appendChild(c);
+            }
+            col.appendChild(row);
         }
         parties.appendChild(col);
     }
@@ -7568,15 +7631,13 @@ function tacticBagBody() {
     grid(section(t('rs.bag.used')), slot.used.filter(u => pass(u.grade)).map(u => cell('used', u.i, u.card, u.grade, 0, () => tacticTipCard(u.card, u.grade, u.lines))));
     // 아래 = 새 카드
     grid(section(t('rs.bag.new')), slot.bag.filter(b => pass(b.grade)).map(b => cell('new', b.key, b.card, b.grade, b.n, () => tacticTipCard(b.card, b.grade))));
-    // 맨 아래 줄 = 고른 카드 + [장착] · [분해] — 고른 카드가 있을 때만 선다(ADR-1410) · 새 카드는 칸에 카드가 있고 보관이 가득 찼으면 [장착]이 꺼진다(빠질 카드를 둘 자리가 없다)
-    const u = pick?.kind === 'used' ? slot.used.find(x => x.i === pick.id) : null;
-    const b = pick?.kind === 'new' ? slot.bag.find(x => x.key === pick.id) : null;
-    const sel = u ?? b;
+    // 맨 아래 줄 = 고른 카드 + [장착] · [분해] — 고른 카드가 있을 때만 선다(ADR-1410) · 새 카드는 칸에 카드가 있고 보관이 가득 찼으면 [장착]이 꺼진다(빠질 카드를 둘 자리가 없다) ·
+    //   다른 칸이 막는 카드(`block` — 같은 카드 · 같은 태그)면 [장착]이 꺼진다 — 까닭은 위 사용 중인 카드의 빨간 테두리(글자 없음 · 2026-11-27)
     if (sel && pass(sel.grade)) {
         const bar = el('div', 'tcb-pick');
         const v = el('span', `tcb-cur-v tc-g-${sel.grade}`, `<span class="tc-ico">${tacticImg(sel.card)}</span><span class="tc-name">${tacticCardName(sel.card.id)}</span>${tacticGradeChip(sel.grade)}`);
         bindTipNode(v, () => tacticTipCard(sel.card, sel.grade, u?.lines));
-        const blocked = !canOut || (!u && !!slot.card && ts.usedFull);
+        const blocked = !canOut || !!sel.block || (!u && !!slot.card && ts.usedFull);
         // 분해 뒤 — 사용한 카드는 자리 번호가 밀려 고른 것을 푼다 · 새 카드는 마지막 한 장이었으면 푼다
         bar.append(v,
             equipBtn(blocked, () => (u ? SYS.game.equipUsedTactic(G, slot.slot, u.i) : SYS.game.equipTactic(G, slot.slot, b.key))),
@@ -10448,9 +10509,7 @@ function renderTavern(main) {
     cm.appendChild(cmHead);
     // 몸 = 게시판 — 안 열렸으면 잠김 베일 아래 (§14 · §13-1 · ADR-0958)
     const cmBody = el('div', `cm-body${CS.open ? '' : ' lock-host'}`);
-    // 의뢰 레벨 — **제목 바로 아래 한 줄** · 「의뢰 Lv n」 글만(막대 없음 — 레벨은 연구소 수색 줄 「의뢰」 연구가 올린다) ·
-    //   게시판이 안 열렸으면 안 선다 (§14 · ADR-1411 — ~~명성 Lv n + 경험치 막대~~ ADR-0961 · R592 · 자리 ADR-1161)
-    const fameEl = CS.open ? el('div', 'cm-fame', `<span class="cm-fame-lv">${t('cm.fameLv', { lv: CS.fame.level })}</span>`) : null;
+    // 의뢰 레벨은 여기 안 적는다 — 연구소 수색 줄 「의뢰」 지점에서만 읽는다 · 카드는 제목 바로 아래 (§14 · ADR-1435)
     const board = el('div', 'cm-board');
     for (const c of CS.cards) board.appendChild(commissionCard(c, CS));
     // 안 열렸으면 빈 카드 틀을 깔고 그 위에 잠김 베일 (§14 · §13-1)
@@ -10458,8 +10517,6 @@ function renderTavern(main) {
         for (let i = CS.cards.length; i < D.balance.commission_board_cards; i++) board.appendChild(el('div', 'cm-card ghost'));
         cmBody.appendChild(lockVeil('commission_board'));
     }
-    // 의뢰 레벨 줄 = 제목 바로 아래 · 게시판 **위** 한 줄 — 게시판이 안 열렸으면 안 선다 (§14 · ADR-1164 · ADR-1411)
-    if (fameEl) cmBody.appendChild(fameEl);
     cmBody.appendChild(board);
     cm.appendChild(cmBody);
     low.appendChild(cm);
@@ -12918,7 +12975,7 @@ function labDuelState() {
     return labDuel;
 }
 
-/** 결투 편성 초안 — 영웅 `{cls, sin}` · 작전 카드 칸마다 `{slot, card, grade, lines: [옵션 id × 줄 수]}` (`party.tactics` = `{attack, defense, utility}` 의 Slot 에서 · R586) */
+/** 결투 편성 초안 — 영웅 `{cls, sin}` · 작전 카드 칸마다 `{slot, card, grade, lines: [옵션 id × 줄 수]}` (`party.tactics` = `{'1', '2', '3'}` 의 Slot 에서 · R586 · 칸 번호 2026-11-27) */
 function labDuelPartyDraft(party) {
     const heroes = Array.from({ length: SYS.arena.teamSize }, (_, i) => ({ cls: '', sin: '', ...party?.heroes[i] }));
     const tactics = SYS.tactic.SLOTS.map(slot => {
@@ -12981,10 +13038,10 @@ function labDuelPartyBody() {
     const lineLabels = Array.from({ length: SYS.tactic.lineCount }, (_, i) => t('lab.duel.party.line', { n: i + 1 }));
     const tactics = group(t('rs.h'), [cardLabel, gradeLabel, ...lineLabels], 'tactics');
     draft.tactics.forEach(slot => {
-        const name = tacticSlotName(slot.slot);
+        const name = t('rs.slotNo', { n: slot.slot });
         const row = el('div', 'lab-duel-edit-row');
         const note = el('small', 'lab-duel-option-note');
-        const cards = [none, ...SYS.tactic.cardsOf(slot.slot).map(c => [c.id, tacticCardName(c.id)])];
+        const cards = [none, ...SYS.tactic.cards.map(c => [c.id, tacticCardName(c.id)])];   // 표 전체 — 갈래 없음 · 같은 카드 · 같은 태그는 앞 칸만 일한다(arena `liveSlots` · 2026-11-27)
         const lineFields = [];
         const sync = () => {
             const card = SYS.tactic.cardById(slot.card);
@@ -13784,12 +13841,17 @@ async function boot() {
             });
             G.tacticShards = Math.max(G.tacticShards ?? 0, 30);
             G.resources.gold = Math.max(G.resources.gold, 99999);
-            for (const s of SYS.game.tacticState(G).slots) if (s.open && s.bag[0]) SYS.game.equipTactic(G, s.slot, s.bag[0].key);
-            // `&used=<n>` — 사용한 카드 보관을 n 장까지(칸 수에서 자른다) 채운 채 · 갈래를 돌려 가며 그 갈래 카드를 한 장 넣고 바꿔 끼운다(빠진 카드가 보관으로 · R589 · ADR-1390)
+            // 칸마다 그 칸에 넣을 수 있는(다른 칸이 막지 않는) 첫 카드 — 칸을 채울 때마다 막힘이 바뀌어 칸마다 다시 읽는다 (2026-11-27)
+            for (const slot of SYS.tactic.SLOTS) {
+                const s = SYS.game.tacticState(G).slots.find(x => x.slot === slot);
+                const b = s?.open ? s.bag.find(x => !x.block) : null;
+                if (b) SYS.game.equipTactic(G, slot, b.key);
+            }
+            // `&used=<n>` — 사용한 카드 보관을 n 장까지(칸 수에서 자른다) 채운 채 · 칸을 돌려 가며 카드를 한 장 넣고 바꿔 끼운다(빠진 카드가 보관으로 · 같은 카드 · 같은 태그로 막히면 건너뛴다 · R589 · ADR-1390)
             const want = Math.min(Math.max(0, Math.floor(Number(tq.get('used')) || 0)), SYS.game.tacticState(G).usedCap);
-            for (let k = 0; SYS.game.tacticState(G).usedN < want && k < want * 3; k++) {
+            for (let k = 0; SYS.game.tacticState(G).usedN < want && k < want * 6; k++) {
                 const slot = SYS.tactic.SLOTS[k % SYS.tactic.SLOTS.length];
-                const pool = SYS.tactic.cards.filter(c => c.slot === slot);
+                const pool = SYS.tactic.cards;
                 const key = SYS.tactic.keyOf(pool[k % pool.length].id, SYS.tactic.GRADES[k % SYS.tactic.GRADES.length]);
                 G.tacticBag[key] = (G.tacticBag[key] ?? 0) + 1;
                 if (!SYS.game.equipTactic(G, slot, key).ok && --G.tacticBag[key] <= 0) delete G.tacticBag[key];

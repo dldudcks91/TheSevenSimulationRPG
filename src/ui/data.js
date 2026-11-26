@@ -608,6 +608,7 @@ export function tacticBalance(B) {
         lineWeights: byGrade('tactic_line_weight_'),     // 장착 때 줄 등급 — 카드 등급 이하만 (§5-1)
         lineRange: Object.fromEntries(Object.entries(byGrade('tactic_line_lo_')).map(([g, lo]) => [g, [lo, B[`tactic_line_hi_${g}`]]])),
         lineCount: B.tactic_line_count,
+        slotCount: B.tactic_slot_count,                  // 칸 수 — 칸 번호 1 ~ n · 갈래 없음 (2026-11-27 · PLAN_tactic_tags D1)
         // 인챈트 — 등급 걷기 몫 둘 · 비용 둘 (§5-3)
         enchant: { stay: B.tactic_enchant_stay_pct, up: B.tactic_enchant_up_pct, gold: B.tactic_enchant_gold, shard: B.tactic_enchant_shard },
         shards: byGrade('tactic_shard_'),                // 분해 조각 (§3-4)

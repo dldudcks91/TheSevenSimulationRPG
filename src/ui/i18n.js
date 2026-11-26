@@ -598,7 +598,7 @@ const STRINGS = {
     'mm.c.count.gamble': { ko: '{where}에서 도박장 한 판 하기', en: 'Play a round of gambling at the {where}', zh: '在{where}的赌坊玩一局' },
     'mm.c.count.explore': { ko: '{where}에서 파티 보내기', en: 'Send a party out in {where}', zh: '在{where}派出队伍' },
     'mm.c.count.tacticEquip': { ko: '{where}에서 작전 카드 장착하기', en: 'Equip a tactic card in {where}' },   // 1장 「처음 한 번」 줄 (R583 · 2026-11-26 R586 — 옛 「전술 리롤」)
-    'mm.c.event.mastery': { ko: '{where}에서 스킬 포인트 찍기', en: 'Spend a skill point in {where}' },
+    'mm.c.event.mastery': { ko: '{where}에서 마스터리 포인트 찍기', en: 'Spend a mastery point in {where}' },
     'mm.c.event.take': { ko: '{where}에서 의뢰 받기', en: 'Take a commission at the {where}' },
     'mm.c.event.sell': { ko: '{where}에서 장비 판매하기', en: 'Sell a piece of gear at the {where}' },
     'mm.c.event.potion': { ko: '{where}에서 물약 구매하기', en: 'Buy a potion at the {where}' },
@@ -1284,13 +1284,12 @@ const STRINGS = {
     /* 의뢰 게시판 (SCREEN_DESIGN §14 · 자리는 선술집 탭 §8-1 · ADR-0352) — 제목은 `nav.commission` 재사용(옛 탭 라벨이 패널 제목으로 내려왔다).
        ⚠ **종류 · 등급 이름은 여기 없다** — `commission_kind.csv` · `commission_grade.csv` 의 `_kr`/`_en` 쌍이고 화면은 `L()` 로 푼다.
        남는 것은 화면 라벨 · **목표 틀**(종류 × 어휘마다 하나 `cm.goal.<kind>.<axis>` — `{t}` = 대상 이름 · `{n}` = 목표 수 · R457 · ADR-1068) · 부위 갈래 이름 · 플래시다.
-       `cm.goal.kill.monster` · `kill.grade.*` · `collect.rarity` = 옛 카드(R457 이전에 받은 것)만. `cm.fameLv` = 의뢰 레벨(게시판 위 한 줄 — §14 · ADR-1411 · R592 · 키 이름은 옛 명성 그대로 · ~~`cm.fameMax` · `cm.claimedUp`~~ 명성 막대 · 오른 수령 플래시 걷음) */
+       `cm.goal.kill.monster` · `kill.grade.*` · `collect.rarity` = 옛 카드(R457 이전에 받은 것)만. 의뢰 레벨은 게시판에 안 적는다 — 연구소 수색 줄 「의뢰」 지점에서만(§14 · ADR-1435) */
     'cm.accept': { ko: '수락', en: 'Accept', zh: '接受' },
     'cm.claim': { ko: '수령', en: 'Claim', zh: '领取' },
     'cm.drop': { ko: '포기', en: 'Abandon', zh: '放弃' },
     'cm.dropConfirm': { ko: '정말 포기', en: 'Confirm abandon', zh: '确认放弃' },
     'cm.slots': { ko: '받음 {n} / {max}', en: 'Taken {n} / {max}', zh: '已接{n} / {max}' },
-    'cm.fameLv': { ko: '의뢰 Lv {lv}', en: 'Commission Lv {lv}', zh: '委托Lv {lv}' },
     // 목표 문장 = 퀘스트 목표 — 미션이 동사로 든다(처치 · 분해 · 획득 · 강화 · 제작) · 카드 첫 줄에 미션 이름이 없다 [2026-11-14 사용자 「미션이름을 빼라고 … 아래설명에쓰고」 · 「rpg처럼」 · ADR-1083]
     'cm.goal.kill.any': { ko: '몬스터 {n}마리 처치', en: { one: 'Slay {n} monster', other: 'Slay {n} monsters' }, zh: '击杀{n}只怪物' },
     'cm.goal.kill.chapter': { ko: '{t}에서 몬스터 {n}마리 처치', en: { one: 'Slay {n} monster in the {t}', other: 'Slay {n} monsters in the {t}' }, zh: '在{t}击杀{n}只怪物' },
@@ -1704,8 +1703,8 @@ const STRINGS = {
         en: "Party tactics and tactic cards",
     },
     'help.party.tactics.body': {
-        ko: "파티 전술은 편성마다 공격 · 방어 · 유틸 세 칸이고, 칸마다 작전 카드 한 장을 장착합니다. 카드는 전투 규칙 하나와 옵션 줄 둘을 듭니다. 규칙은 전투의 흐름(누구를 노리나 · 누가 대신 맞나 · 언제 움직이나)을 바꾸고, 옵션 줄은 파티의 능력치를 올립니다. 칸은 지휘 천막 1 · 2 · 3랭크가 차례로 열고, 칸이 처음 열리면 그 칸의 첫 카드 한 장을 받습니다.<br><br>카드는 정예와 스테이지보스가 떨어뜨려 가방에 쌓입니다. 카드를 누르면 그 칸의 가방이 열립니다. 장착하면 카드 한 장이 소모되고 그때 옵션 줄 둘이 정해집니다. 칸에서 빠진 카드는 옵션 줄째 사용한 카드로 보관되고, 다시 장착하면 그 줄 그대로 듭니다. 보관 칸이 가득 차면 새 카드로 바꿀 수 없고, 원정 · 탐험 중인 편성의 칸에서는 카드를 뺄 수 없습니다. 카드 등급은 옵션 줄 등급의 상한입니다. 가방과 카드 조각은 모든 편성이 함께 쓰고, 칸의 카드는 편성마다 따로입니다.",
-        en: "Party tactics give each preset three slots — Attack, Defense and Utility — and each slot holds one tactic card. A card carries one battle rule and two option lines. The rule changes how a battle flows (who gets targeted, who takes hits instead, when units move); the option lines raise party stats. Command Tent ranks 1, 2 and 3 open the slots in turn, and each slot gives you its first card when it opens.<br><br>Elites and stage bosses drop cards into your bag. Click a card to open that slot's bag. Equipping uses up one card and rolls its two option lines at that moment. A card taken out of a slot is stored as a used card with its lines, and goes back in with the same lines. When storage is full you can't swap in a new card, and a preset that is out on an expedition or exploring can't have its cards taken out. A card's grade is the highest grade its option lines can reach. All presets share the bag and card shards; each preset keeps its own slotted cards.",
+        ko: "파티 전술은 편성마다 세 칸이고, 칸마다 작전 카드 한 장을 장착합니다. 어느 카드든 어느 칸에 들어가지만, 한 편성에 같은 카드와 같은 태그의 카드는 한 장씩만 낄 수 있습니다. 카드는 전투 규칙 하나와 옵션 줄 둘을 듭니다. 규칙은 전투의 흐름(누구를 노리나 · 누가 대신 맞나 · 언제 움직이나)을 바꾸고, 옵션 줄은 파티의 능력치를 올립니다. 칸은 지휘 천막 1 · 2 · 3랭크가 차례로 열고, 칸이 처음 열리면 그 칸의 첫 카드 한 장을 받습니다.<br><br>카드는 정예와 스테이지보스가 떨어뜨려 가방에 쌓입니다. 칸을 누르면 가방이 열리고, 고른 카드가 그 칸에 들어갑니다. 다른 칸의 카드에 막힌 카드는 장착할 수 없고, 막는 카드에 빨간 테두리가 그려집니다. 장착하면 카드 한 장이 소모되고 그때 옵션 줄 둘이 정해집니다. 칸에서 빠진 카드는 옵션 줄째 사용한 카드로 보관되고, 다시 장착하면 그 줄 그대로 듭니다. 보관 칸이 가득 차면 새 카드로 바꿀 수 없고, 원정 · 탐험 중인 편성의 칸에서는 카드를 뺄 수 없습니다. 카드 등급은 옵션 줄 등급의 상한입니다. 가방과 카드 조각은 모든 편성이 함께 쓰고, 칸의 카드는 편성마다 따로입니다.",
+        en: "Party tactics give each preset three slots, and each slot holds one tactic card. Any card fits any slot, but a preset can hold only one copy of a card and only one card of each tag. A card carries one battle rule and two option lines. The rule changes how a battle flows (who gets targeted, who takes hits instead, when units move); the option lines raise party stats. Command Tent ranks 1, 2 and 3 open the slots in turn, and each slot gives you its first card when it opens.<br><br>Elites and stage bosses drop cards into your bag. Click a slot to open the bag; the card you pick goes into that slot. A card blocked by another slot's card can't be equipped, and the blocking card gets a red border. Equipping uses up one card and rolls its two option lines at that moment. A card taken out of a slot is stored as a used card with its lines, and goes back in with the same lines. When storage is full you can't swap in a new card, and a preset that is out on an expedition or exploring can't have its cards taken out. A card's grade is the highest grade its option lines can reach. All presets share the bag and card shards; each preset keeps its own slotted cards.",
     },
     'help.party.tactic_choices.title': {
         ko: "인챈트와 카드 조각",
@@ -3031,7 +3030,8 @@ const STRINGS = {
     // 작전 카드 거절 (2026-11-26 · R586 · INTERFACE §3) — equipTactic · enchantTactic · dismantleTactic
     'pt.err.slotClosed': { ko: '안 열린 칸', en: 'Slot not open' },
     'pt.err.noCard': { ko: '카드 없음', en: 'No such card' },
-    'pt.err.wrongSlot': { ko: '다른 칸의 카드', en: 'Card belongs to another slot' },
+    'pt.err.sameCard': { ko: '같은 카드가 다른 칸에 있음', en: 'Same card in another slot' },   // 한 편성에 같은 카드 한 장 (2026-11-27 · PLAN_tactic_tags D3)
+    'pt.err.sameTag': { ko: '같은 태그 카드가 다른 칸에 있음', en: 'Same tag in another slot' },   // 한 편성에 같은 태그 카드 한 장
     'pt.err.storeFull': { ko: '보관 칸 가득 참', en: 'Storage full' },   // 사용한 카드 보관이 가득 차 새 카드로 못 바꾼다 (R589)
     'pt.err.shard': { ko: '카드 조각 부족', en: 'Not enough Card Shards' },
     'pt.err.invalid': { ko: '잘못된 장수', en: 'Invalid count' },
@@ -3282,18 +3282,21 @@ const STRINGS = {
     'mg.why.lives': { ko: '목숨 소진', en: 'Out of lives', zh: '机会用尽' },
     'mg.why.done': { ko: '나무를 모두 벰', en: 'Tree felled', zh: '树已全部砍完' },
     'mg.err.post': { ko: '미니게임이 없는 곳', en: 'No minigame here', zh: '此处没有小游戏' },
-    // 작전 카드 세 칸 [2026-11-26 · R586 · SCREEN_DESIGN §15 · ADR-1383 · ADR-1384] — 행 = 카드 + 옵션 줄 둘 · 줄마다 [인챈트] · 카드를 누르면 그 갈래의 가방 창
-    'rs.slot.attack': { ko: '공격', en: 'Attack' },
-    'rs.slot.defense': { ko: '방어', en: 'Defense' },
-    'rs.slot.utility': { ko: '유틸', en: 'Utility' },
+    // 작전 카드 세 칸 [2026-11-26 · R586 · SCREEN_DESIGN §15 · ADR-1383 · ADR-1384] — 행 = 카드 + 옵션 줄 둘 · 줄마다 [인챈트] · 카드를 누르면 가방 창(어느 칸이든 같은 가방 · 2026-11-27)
+    'rs.slotNo': { ko: '칸 {n}', en: 'Slot {n}' },   // 실험실 결투 편성의 칸 이름 — 갈래가 없어 번호만 (2026-11-27 · PLAN_tactic_tags D1)
+    // 카드 태그 — 한 편성에 같은 태그 카드 한 장 ⚠임시 이름 (2026-11-27 · PLAN_tactic_tags D4 · tactic_card.csv:tag)
+    'tc.tag.aim': { ko: '노리기', en: 'Targeting' },
+    'tc.tag.cover': { ko: '대신 맞기', en: 'Cover' },
+    'tc.tag.convert': { ko: '피해 전환', en: 'Conversion' },
     'rs.shards': { ko: '카드 조각 {n}', en: 'Card Shards {n}' },   // 진척 줄 오른쪽 끝 · 가방 창 머리
     'rs.enchant': { ko: '인챈트 {g}G · 조각 {s}', en: 'Enchant {g}G · Shard ×{s}' },   // 줄마다 — 비용을 버튼에 적는다
     'rs.ench.done': { ko: '인챈트 — {grade} {eff}', en: 'Enchanted — {grade} {eff}' },
-    'rs.tip.sub': { ko: '{slot} · {sin} · {grade}', en: '{slot} · {sin} · {grade}' },   // 카드 툴팁 둘째 줄
-    'rs.bag.h': { ko: '{slot} 카드', en: '{slot} Cards' },
+    'rs.tip.sub': { ko: '{tag} · {sin} · {grade}', en: '{tag} · {sin} · {grade}' },   // 카드 툴팁 둘째 줄 — 태그 · 죄종 · 등급
+    'rs.tip.subNoTag': { ko: '{sin} · {grade}', en: '{sin} · {grade}' },   // 태그 없는 카드
+    'rs.bag.h': { ko: '작전 카드', en: 'Tactic Cards' },   // 가방 창 머리 — 어느 칸을 눌러도 같은 가방 (2026-11-27)
     'rs.bag.equip': { ko: '장착', en: 'Equip' },
     // 가방 창 두 덩어리 — 위 사용한 카드 · 아래 새 카드 (§15 · ADR-1390 · R589)
-    'rs.bag.inUse': { ko: '사용 중인 카드', en: 'Equipped Cards' },   // 가방 창 맨 위 덩어리 — 편성마다 이 갈래 칸에 든 카드 (ADR-1428 · ADR-1430)
+    'rs.bag.inUse': { ko: '사용 중인 카드', en: 'Equipped Cards' },   // 가방 창 맨 위 덩어리 — 편성마다 칸 셋에 든 카드 (ADR-1428 · ADR-1430 · 2026-11-27)
     'rs.bag.used': { ko: '사용한 카드', en: 'Used Cards' },
     'rs.bag.new': { ko: '새 카드', en: 'New Cards' },
     // 등급 탭 · 고른 카드 줄 (§15 · ADR-1399)

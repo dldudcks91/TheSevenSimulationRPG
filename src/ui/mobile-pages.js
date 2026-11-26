@@ -107,7 +107,7 @@ export function mountMobilePages(main) {
     }
     if (main.querySelector('.ng-wrap')) {
         const start = main.querySelector('.ng-wrap');
-        deck(start, 'start-heroes', [...items(start, '.ng-row > .ng-card', ['hero1', 'hero2', 'hero3']), ...items(start, '.ng-legend', ['guide'])]);
+        deck(start, 'start-heroes', [...items(start, '.ng-slot > .ng-card', ['hero1', 'hero2', 'hero3']), ...items(start, '.ng-legend', ['guide'])]);
         return;
     }
     if (!page || document.getElementById('app').classList.contains('pregame')) return;
@@ -146,7 +146,7 @@ export function mountMobilePages(main) {
         const tactics = page.querySelector('.pt-tactics');
         const list = tactics?.querySelector('.tc-list');
         if (list) {
-            chooseCards(list, all(list, ':scope > .tc-row'), 'tactics', card => card.querySelector('.tc-slot')?.textContent.trim() ?? '');
+            chooseCards(list, all(list, ':scope > .tc-row'), 'tactics', card => card.querySelector('.tc-card')?.getAttribute('aria-label') ?? '');
             deck(tactics, 'tactic-content', items(tactics, ':scope > .tc-list, :scope > .rs-board', ['cards','bonuses']));
         }
     } else if (tab === 'research') {

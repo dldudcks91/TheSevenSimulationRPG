@@ -1,12 +1,12 @@
-card_id,slot,sin,rule,p1,p2,p3,description_kr
-duel,attack,pride,duel,-,-,-,일기토 — 우리 리더의 단일 공격은 적 리더만 노린다(지목 · 도발 · 전열 문보다 먼저) · 적 리더가 쓰러지면 그 라운드는 평소 규칙. 행 한 줄 = 카드 한 종류 · slot = 칸(attack · defense · utility) · sin = 옵션 줄의 풀 죄종(tactic_option.csv) · rule = 규칙 어휘(코드 tactic.js RULES · 전투 해석 battle.js) · p1 ~ p3 = 규칙 수치(- = 없음 · 초 또는 몫) · **갈래마다 첫 행 = 첫 카드**(칸이 처음 열릴 때 일반 한 장) · 행 순서 = 드랍 · 층 AI 팀의 굴림 순서 · 이름 · 효과 문장은 i18n [2026-11-25 · R586 · tactic_card_design §4 · PLAN_tactic_cards_impl §2] ⚠제안 — 수치 전부 임시
-wedge,attack,envy,wedge,4,-,-,쐐기진 — 리더의 단일 공격이 맞힌 적에 표식(p1 초) · 표식 동안 동료의 단일 공격이 그 적부터. ⚠제안
-trojan,attack,sloth,trojan,3,-,-,트로이 목마 — 라운드 시작 p1 초 동안 우리 후열은 행동하지 않는다 · 그 뒤 후열의 단일 공격은 적 후열을 노린다(전열 문 무시 · 적 후열이 없으면 평소). ⚠제안
-charge,attack,wrath,charge,1.5,-,-,기사 돌격 — 라운드가 시작되면 우리 전열은 바로 첫 행동 · 후열의 첫 행동은 p1 초 늦는다. ⚠제안
-shieldwall,defense,gluttony,shieldwall,0.3,-,-,방패벽 — 우리 후열이 맞는 직격의 p1 을 살아 있는 전열이 똑같이 나눠 받는다. ⚠제안
-guard,defense,pride,guard,0.4,-,-,친위대 — 우리 리더가 맞는 단일 직격의 p1 을 체력이 가장 높은 동료(리더 · 소환 제외)가 대신 받는다. ⚠제안
-turtle,defense,gluttony,turtle,5,0.3,0.3,거북 진형 — 라운드 시작 p1 초 동안 우리 편 받는 피해 −p2 · 공속 −p3. ⚠제안
-retreat,defense,lust,retreat,0.3,-,-,거짓 후퇴 — 우리 전열 영웅의 체력이 그 라운드 처음으로 p1 아래가 되면 체력 비율이 가장 높은 후열과 자리를 바꾼다(라운드가 끝나면 원래 자리 · 영웅마다 라운드당 한 번). ⚠제안
-poison_arrow,utility,envy,poison_arrow,0.3,-,-,독화살 — 우리 편 물리 피해의 p1 을 독 피해로 입힌다(물리 → 원소 전환 길). ⚠제안 · 이름 임시
-fire_arrow,utility,wrath,fire_arrow,0.3,0.2,-,불화살 — 우리 편 물리 피해의 p1 을 화염 피해로 입히고 p2 확률로 화상. ⚠제안 · 이름 임시
-baggage,utility,greed,baggage,0.5,-,-,치중대 — 우리 편이 물약을 마시면 회복량의 p1 을 살아 있는 다른 동료가 똑같이 나눠 받는다(마신 영웅은 그만큼 덜). ⚠제안 · 이름 임시
+card_id,tag,starter,sin,rule,p1,p2,p3,description_kr
+duel,aim,1,pride,duel,-,-,-,일기토 — 우리 리더의 단일 공격은 적 리더만 노린다(지목 · 도발 · 전열 문보다 먼저) · 적 리더가 쓰러지면 그 라운드는 평소 규칙. 행 한 줄 = 카드 한 종류 · tag = 태그(한 편성에 같은 태그 카드 한 장 · - = 없음 · 이름은 i18n tc.tag.<tag> · 2026-11-27 PLAN_tactic_tags D2 ~ D4 ⚠제안) · starter = 그 칸이 처음 열릴 때 일반 한 장으로 주는 칸 번호(칸마다 정확히 한 장 · - = 아님 · D5) · sin = 옵션 줄의 풀 죄종(tactic_option.csv) · rule = 규칙 어휘(코드 tactic.js RULES · 전투 해석 battle.js) · p1 ~ p3 = 규칙 수치(- = 없음 · 초 또는 몫) · 행 순서 = 드랍 · 층 AI 팀의 굴림 순서 · 이름 · 효과 문장은 i18n [2026-11-25 · R586 · tactic_card_design §4 · PLAN_tactic_cards_impl §2] ⚠제안 — 수치 전부 임시
+wedge,aim,-,envy,wedge,4,-,-,쐐기진 — 리더의 단일 공격이 맞힌 적에 표식(p1 초) · 표식 동안 동료의 단일 공격이 그 적부터. ⚠제안
+trojan,aim,-,sloth,trojan,3,-,-,트로이 목마 — 라운드 시작 p1 초 동안 우리 후열은 행동하지 않는다 · 그 뒤 후열의 단일 공격은 적 후열을 노린다(전열 문 무시 · 적 후열이 없으면 평소). ⚠제안
+charge,-,-,wrath,charge,1.5,-,-,기사 돌격 — 라운드가 시작되면 우리 전열은 바로 첫 행동 · 후열의 첫 행동은 p1 초 늦는다. ⚠제안
+shieldwall,cover,2,gluttony,shieldwall,0.3,-,-,방패벽 — 우리 후열이 맞는 직격의 p1 을 살아 있는 전열이 똑같이 나눠 받는다. ⚠제안
+guard,cover,-,pride,guard,0.4,-,-,친위대 — 우리 리더가 맞는 단일 직격의 p1 을 체력이 가장 높은 동료(리더 · 소환 제외)가 대신 받는다. ⚠제안
+turtle,-,-,gluttony,turtle,5,0.3,0.3,거북 진형 — 라운드 시작 p1 초 동안 우리 편 받는 피해 −p2 · 공속 −p3. ⚠제안
+retreat,-,-,lust,retreat,0.3,-,-,거짓 후퇴 — 우리 전열 영웅의 체력이 그 라운드 처음으로 p1 아래가 되면 체력 비율이 가장 높은 후열과 자리를 바꾼다(라운드가 끝나면 원래 자리 · 영웅마다 라운드당 한 번). ⚠제안
+poison_arrow,convert,3,envy,poison_arrow,0.3,-,-,독화살 — 우리 편 물리 피해의 p1 을 독 피해로 입힌다(물리 → 원소 전환 길). ⚠제안 · 이름 임시
+fire_arrow,convert,-,wrath,fire_arrow,0.3,0.2,-,불화살 — 우리 편 물리 피해의 p1 을 화염 피해로 입히고 p2 확률로 화상. ⚠제안 · 이름 임시
+baggage,-,-,greed,baggage,0.5,-,-,치중대 — 우리 편이 물약을 마시면 회복량의 p1 을 살아 있는 다른 동료가 똑같이 나눠 받는다(마신 영웅은 그만큼 덜). ⚠제안 · 이름 임시

@@ -19,9 +19,12 @@ import { makeRng, deriveSeed } from './rng.js';
 
 /** 팀 코드 판 — 모양을 바꾸면 올린다. 받는 쪽은 `TEAM_CODE_READ` 의 판만 받고 나머지는 `format` 으로 거절한다 (세이브 판과 같은 성격 · INTERFACE §2-17).
  *  판 2 [2026-11-13 · R460] = 물약 · 전술을 싣는다 · 판 1 은 물약 · 전술 없는 팀으로 받는다(올린 사람이 다시 켜면 판 3 으로 다시 올라간다)
- *  판 3 [2026-11-25 · R586] = 작전 카드 `{slots: {attack, defense, utility}}` · **판 2 는 물약만 받고 카드 없는 팀**으로 받는다(옛 전술 칸은 읽지 않는다) */
-const TEAM_CODE_VERSION = 3;
-const TEAM_CODE_READ = [1, 2, 3];
+ *  판 3 [2026-11-25 · R586] = 작전 카드 `{slots: {attack, defense, utility}}` · **판 2 는 물약만 받고 카드 없는 팀**으로 받는다(옛 전술 칸은 읽지 않는다)
+ *  판 4 [2026-11-27 · PLAN_tactic_tags D9] = 작전 카드 칸 키가 칸 번호 `{slots: {'1', '2', '3'}}` · **판 3 은 옛 키를 `V3_SLOT` 짝으로 읽는다** */
+const TEAM_CODE_VERSION = 4;
+const TEAM_CODE_READ = [1, 2, 3, 4];
+/** 판 3 의 갈래 키 → 칸 번호 (세이브 v54 → v55 이관과 같은 짝 · INTERFACE §2-17) */
+const V3_SLOT = { attack: '1', defense: '2', utility: '3' };
 /** 층 AI 팀 작전 카드의 굴림 줄 솔트 — `deriveSeed(colosseum_seed ^ 이것, 층)` · 영웅 · 장비 굴림 줄과 갈라 그 순서를 안 건드린다 (R460 · R586 · INTERFACE §5-3) */
 const FLOOR_TACTIC_SALT = 0x7AC7;
 /** 진형 랭크 — 전열 · 후열 (battle_design §3-1) */
@@ -55,7 +58,7 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
     const POS = equipSlots.map(s => ({ id: s.id, part: s.part }));
     const potionById = Object.fromEntries((potions ?? []).map(p => [p.id, p]));
     const TC = tactic;
-    /** 작전 카드 칸 — 갈래 셋(공격 → 방어 → 유틸) 중 앞에서부터 이만큼 (R586 · ~~칸 다섯~~) */
+    /** 작전 카드 칸 — 칸 번호(`tactic.SLOTS` — 갈래 없음 · 2026-11-27) 중 앞에서부터 이만큼 (R586) */
     const SLOTS = TC ? TC.SLOTS : [];
     const tacticCap = TC ? Math.min(tacticSlotCeiling, SLOTS.length) : 0;
 
@@ -271,7 +274,7 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
 
     /** 차림 하나로 AI 팀 하나 — 등급 · 층 · 레이팅이 같은 길을 쓴다(rng 순서는 INTERFACE §5-2 `rollTierOpponent`).
      *  `floor` = 결투장 층 AI 팀의 짜기(`rollFloorOpponent` 만 · 2026-11-13) — 없으면 옛 짜기 그대로(`rollTierOpponent` — 레이드 연습 팀 · 단정이 쓴다):
-     *    · `floor.tacticRng` = 작전 카드의 굴림 줄(R460 · R586) — 차림의 `tacticSlots` 장(공격 → 방어 → 유틸)을 `rollCards` 로 · 카드 등급은 차림의 `tacticGrade` ·
+     *    · `floor.tacticRng` = 작전 카드의 굴림 줄(R460 · R586) — 차림의 `tacticSlots` 장(칸 1 → 2 → 3)을 `rollCards` 로 · 카드 등급은 차림의 `tacticGrade` ·
      *      영웅 · 장비 굴림(`rng`)과 다른 줄이라 그 순서를 안 건드린다
      *    · 직업 겹침 · 배치 셋 · 방어 스킬 보장 [2026-11-13 사용자] — 아래 */
     function rollKit(T, rng, taken = [], floor = null, party = null) {
@@ -339,8 +342,8 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
      *  실험실 결투가 쓴다 [2026-11-13 · R469 · INTERFACE §2-17] — 없으면 옛 짜기 그대로(레이드 연습 팀 · 레이팅 후보) ·
      *  `opts.rarityWeights` — 주면 차림의 희귀도 가중치 대신(`item.rollGear` 와 같은 모양 · 실험실 결투 = 레전더리만 · R470) ·
      *  `opts.heroTier` — 주면 세 영웅의 등급을 그것으로(`hero.rollHeroOf` 의 `tier` · 실험실 결투 = 레어 · R472)
-     *  `opts.party` — 실험실 편성 설정. `heroes`는 자리 순서의 `{cls, sin}` · `tactics`는 `{attack, defense, utility}`(Slot | null — INTERFACE §4 `presets[*].tactics` 모양 · R586) —
-     *    옵션 줄을 능력치에 얹는다 · 카드 규칙은 부르는 쪽이 `tactic.rulesOf` 로 */
+     *  `opts.party` — 실험실 편성 설정. `heroes`는 자리 순서의 `{cls, sin}` · `tactics`는 `{'1', '2', '3'}`(Slot | null — INTERFACE §4 `presets[*].tactics` 모양 · R586) —
+     *    옵션 줄을 능력치에 얹는다(앞 칸과 같은 카드 · 같은 태그인 칸은 안 센다 — `liveSlots`) · 카드 규칙은 부르는 쪽이 `tactic.rulesOf` 로 */
     function rollTierOpponent(tierId, rng, taken = [], { floorRules = false, rarityWeights = null, heroTier = null, party = null } = {}) {
         const T = TIERS.find(t => t.id === tierId);
         if (!T) throw new Error(`arena: 모르는 등급 '${tierId}'`);
@@ -361,7 +364,7 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
 
     /**
      * 그 층 AI 팀의 물약 · 카드 규칙 — 물약 = 차림의 물약 하나 × 칸 수(회복량은 물약 표 · 마시는 기준은 CSV 기본값) ·
-     *   `rules` = `rollFloorOpponent` 와 같은 줄로 굴린 카드의 `tactic.rulesOf`(공격 → 방어 → 유틸) · 물약 칸 0 이고 카드도 없으면 null (R460 · R586 · arena_design §7) · rng 0
+     *   `rules` = `rollFloorOpponent` 와 같은 줄로 굴린 카드의 `tactic.rulesOf`(칸 1 → 2 → 3) · 물약 칸 0 이고 카드도 없으면 null (R460 · R586 · arena_design §7) · rng 0
      */
     function floorLoadout(no) {
         const k = floorAt(no).kit;
@@ -371,22 +374,42 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
         return { potions: Array.from({ length: k.potionSlots }, () => ({ id: k.potion, heal })), slotMax: k.potionSlots, potionHp: null, rules };
     }
 
-    /* ── 작전 카드 — 칸 셋 `{attack, defense, utility}` (Slot | null · INTERFACE §4 `presets[*].tactics` 모양 · R586) ── */
+    /* ── 작전 카드 — 칸 셋 `{'1', '2', '3'}` (Slot | null · INTERFACE §4 `presets[*].tactics` 모양 · R586 · 칸 번호 2026-11-27) ── */
 
-    /** 차림의 카드 — 앞 `tacticSlots` 갈래(공격 → 방어 → 유틸)마다 ① 카드(그 갈래 행 중 균등 1회) ② `tactic.equipLines`(줄마다 3회 · 천장 = `tacticGrade`) (INTERFACE §5-2) */
+    /** 차림의 카드 — 앞 `tacticSlots` 칸(1 → 2 → 3)마다 ① 카드(표 전체에서 **앞 칸과 같은 카드 · 같은 태그를 뺀** 행 중 균등 1회 · `tactic.blockOf`)
+     *  ② `tactic.equipLines`(줄마다 3회 · 천장 = `tacticGrade`) (INTERFACE §5-2 · PLAN_tactic_tags D9) */
     function rollCards(rng, kit) {
         const out = Object.fromEntries(SLOTS.map(s => [s, null]));
         if (!TC) return out;
+        const taken = [];
         SLOTS.slice(0, Math.min(kit.tacticSlots ?? 0, tacticCap)).forEach(slot => {
-            const list = TC.cardsOf(slot);
+            const list = TC.cards.filter(c => TC.blockOf(c.id, taken) === null);
+            if (!list.length) return;
             const card = list[Math.floor(rng() * list.length)].id;
+            taken.push(card);
             out[slot] = { card, grade: kit.tacticGrade, lines: TC.equipLines(rng, card, kit.tacticGrade) };
         });
         return out;
     }
-    /** 칸 셋에 든 카드 id — 갈래 순 · 모르는 카드 · 다른 갈래 카드는 뺀다 */
-    const cardIdsOf = slots => (TC && slots && typeof slots === 'object'
-        ? SLOTS.filter(s => slots[s] && TC.cardById(slots[s].card)?.slot === s).map(s => slots[s].card) : []);
+    /** 칸 셋에서 **일하는 칸** — 칸 순 · 모르는 카드는 빼고 · 앞 칸과 같은 카드 · 같은 태그인 칸도 뺀다(앞 칸이 이긴다 · 실험실 편성처럼 장착 판정을 안 거친 칸 셋) */
+    const liveSlots = slots => {
+        if (!TC || !slots || typeof slots !== 'object') return [];
+        const kept = [];
+        return SLOTS.filter(s => {
+            const id = slots[s]?.card;
+            if (!TC.cardById(id) || TC.blockOf(id, kept) !== null) return false;
+            kept.push(id);
+            return true;
+        });
+    };
+    /** 칸 셋에 든 카드 id — 칸 순 · 일하는 칸만(`liveSlots`) */
+    const cardIdsOf = slots => liveSlots(slots).map(s => slots[s].card);
+    /** 받은 팀의 칸 셋 — 판 3 은 갈래 키를 칸 번호로(`V3_SLOT`) · 판 4 는 그대로 · 모양이 틀리면 그대로 돌려준다(검사기가 거절한다) */
+    const slotsOf = payload => {
+        const raw = payload?.tactic?.slots;
+        if (payload?.v !== 3 || !raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+        return Object.fromEntries(Object.entries(raw).map(([k, x]) => [V3_SLOT[k] ?? k, x]));
+    };
 
     /* ── 콜로세움 — 레이팅 근처 다른 플레이어 후보 (arena_design §8 · §9) ── */
 
@@ -414,7 +437,7 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
 
     /* ── 온라인 — 남이 올린 팀 그대로 (arena_design §0 · §2) ── */
 
-    /** 올릴 팀 — 영웅 순서 = 편성의 파티 순서(첫 영웅 = 전술 리더) · `extra` = `state.arenaExport` 의 물약 칸 · 마시는 기준 · 작전 카드 (판 3 · R460 · R586) */
+    /** 올릴 팀 — 영웅 순서 = 편성의 파티 순서(첫 영웅 = 전술 리더) · `extra` = `state.arenaExport` 의 물약 칸 · 마시는 기준 · 작전 카드 (판 4 · R460 · R586) */
     function exportTeam(heroes, items, ranks = {}, extra = null) {
         if (heroes.length !== teamSize || new Set(heroes.map(h => h.uid)).size !== teamSize)
             throw new Error('arena: a team must contain three distinct heroes');
@@ -431,7 +454,7 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
             })),
             potions: (extra?.potions ?? []).map(p => (p && typeof p === 'object' ? p.id : p) ?? null),
             potionHp: extra?.potionHp ?? null,
-            // 작전 카드 — 칸 셋 · 카드 · 등급 · 옵션 줄 `{id, grade, m}` 만 싣는다(값은 받는 쪽이 다시 잰다 · 판 3 · R586)
+            // 작전 카드 — 칸 셋(칸 번호 키) · 카드 · 등급 · 옵션 줄 `{id, grade, m}` 만 싣는다(값은 받는 쪽이 다시 잰다 · 판 4 · R586)
             tactic: { slots: Object.fromEntries(SLOTS.map(s => {
                 const x = extra?.tactic?.slots?.[s];
                 return [s, x ? { card: x.card, grade: x.grade, lines: (x.lines ?? []).map(l => ({ id: l.id, grade: l.grade, m: l.m })) } : null];
@@ -441,8 +464,8 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
 
     /** 받은 팀의 옵션 줄 값 — **다시 잰다**(올린 쪽 숫자를 안 믿는다) · `state.tacticBonus` 와 같은 계산 (R460 · R586). 판 1 · 2 · 카드 없음 · 시스템 없음이면 null */
     function ghostTactic(payload, heroes, items) {
-        if (!TC || payload.v < 3 || !cardIdsOf(payload.tactic?.slots).length) return null;
-        return tacticBonusOf(heroes, items, payload.tactic.slots);
+        if (!TC || payload.v < 3 || !cardIdsOf(slotsOf(payload)).length) return null;
+        return tacticBonusOf(heroes, items, slotsOf(payload));
     }
 
     /** 칸 셋 → 전투 능력치에 얹는 가산치 — **`state.tacticBonus` 와 같은 계산**: 멤버 = 영웅 순서(첫 영웅 = 리더 · 통솔 · 낀 장비의 죄종) ·
@@ -451,31 +474,35 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
         const members = heroes.map(h => ({ sin: h.sin, cls: h.cls, ldr: h.stats?.ldr ?? 0,
             gear: Object.values(h.equipped).map(uid => items[uid]).filter(Boolean).flatMap(it => it.sins ?? []) }));
         const ctx = TC.contextOf(members);
-        const on = SLOTS.filter(s => slots?.[s] && TC.cardById(slots[s].card)?.slot === s)
+        const on = liveSlots(slots)
             .flatMap(s => (slots[s].lines ?? []).map(TC.lineOf).filter(Boolean))
             .map(line => ({ ...line, value: TC.measure(line, ctx).value }));
         return TC.bonusOf(on);
     }
 
-    /** 받은 팀의 물약 · 카드 규칙 묶음 — 회복량은 이 표에서 · `rules` = 그 팀 카드의 `tactic.rulesOf`(판 3 만) · 찬 물약 칸도 카드도 없으면 null (판 1 도 null · R460 · R586) */
+    /** 받은 팀의 물약 · 카드 규칙 묶음 — 회복량은 이 표에서 · `rules` = 그 팀 카드의 `tactic.rulesOf`(판 3 · 4) · 찬 물약 칸도 카드도 없으면 null (판 1 도 null · R460 · R586) */
     function ghostLoadout(payload) {
         if (payload.v < 2) return null;
         const potions = payload.potions.map(id => (id ? { id, heal: potionById[id].heal } : null));
-        const rules = TC && payload.v >= 3 ? TC.rulesOf(cardIdsOf(payload.tactic?.slots)) : [];
+        const rules = TC && payload.v >= 3 ? TC.rulesOf(cardIdsOf(slotsOf(payload))) : [];
         return potions.some(Boolean) || rules.length ? { potions, slotMax: potions.length, potionHp: payload.potionHp ?? null, rules } : null;
     }
 
     /**
-     * 받은 작전 카드 칸 셋이 틀렸나 (판 3 · R586 · INTERFACE §2-17 `tactic`) — 모르는 갈래 키 · 끝값(`tacticCap`) 밖 갈래에 카드 · 모르는 카드 · 그 갈래 카드가 아니다 ·
-     *   모르는 등급 · 줄이 `lineCount` 개가 아니다 · 줄이 `tactic.lineFits`(그 카드 죄종 풀 · 천장 이하 · 범위 안 m)가 아니다 · 같은 옵션 줄 둘 · 시스템 없이 카드가 있다
+     * 받은 작전 카드 칸 셋이 틀렸나 (판 3 · 4 · R586 · INTERFACE §2-17 `tactic` — 판 3 은 `slotsOf` 가 칸 번호로 바꾼 뒤) — 모르는 칸 키 · 끝값(`tacticCap`) 밖 칸에 카드 · 모르는 카드 ·
+     *   **앞 칸과 같은 카드 · 같은 태그**(`tactic.blockOf` · 2026-11-27) · 모르는 등급 · 줄이 `lineCount` 개가 아니다 · 줄이 `tactic.lineFits`(그 카드 죄종 풀 · 천장 이하 · 범위 안 m)가 아니다 ·
+     *   같은 옵션 줄 둘 · 시스템 없이 카드가 있다
      */
     function tacticBad(slots) {
+        const kept = [];
+        for (const key of SLOTS.filter(s => s in slots)) if (slots[key] && TC?.cardById(slots[key].card)) kept.push(slots[key].card);   // 칸 순으로 본다(객체 키 순서를 안 믿는다)
+        if (TC && Object.keys(slots).some(key => !SLOTS.includes(key))) return true;
+        for (const [k, id] of kept.entries()) if (TC.blockOf(id, kept.slice(0, k)) !== null) return true;
         for (const [key, x] of Object.entries(slots)) {
-            if (!(TC ? SLOTS : ['attack', 'defense', 'utility']).includes(key)) return true;
             if (x === null) continue;
             if (!TC || !x || typeof x !== 'object' || SLOTS.indexOf(key) >= tacticCap) return true;
             const card = TC.cardById(x.card);
-            if (!card || card.slot !== key || !TC.GRADES.includes(x.grade)) return true;
+            if (!card || !TC.GRADES.includes(x.grade)) return true;
             if (!Array.isArray(x.lines) || x.lines.length !== TC.lineCount) return true;
             if (x.lines.some(l => !TC.lineFits(l, card.sin, x.grade))) return true;
             if (new Set(x.lines.map(l => l.id)).size !== x.lines.length) return true;
@@ -563,7 +590,7 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
                 });
             }
         });
-        // 물약 · 작전 카드 [2026-11-13 · R460 · 카드 2026-11-25 · R586] — 판 2 · 3 이 물약을 · **판 3 만** 카드를 싣는다(판 1 은 물약 · 전술 없는 팀 · 판 2 의 옛 전술 칸은 안 본다).
+        // 물약 · 작전 카드 [2026-11-13 · R460 · 카드 2026-11-25 · R586] — 판 2 ~ 4 가 물약을 · **판 3 · 4 만** 카드를 싣는다(판 1 은 물약 · 전술 없는 팀 · 판 2 의 옛 전술 칸은 안 본다 · 판 3 은 칸 키를 `slotsOf` 로 바꿔 본다).
         //   칸 수의 끝은 건물을 다 지었을 때다
         if (payload.v >= 2) {
             const pots = payload.potions, hp = payload.potionHp, tc = payload.tactic;
@@ -571,7 +598,7 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
             if (!Array.isArray(pots) || !(hp === null || typeof hp === 'number') || !slotsOk) bad('format');
             else {
                 if (pots.length > potionSlotCeiling || pots.some(id => id !== null && !potionById[id]) || !(hp === null || (hp > 0 && hp < 1))) bad('potion');
-                if (payload.v >= 3 && tacticBad(tc.slots)) bad('tactic');
+                if (payload.v >= 3 && tacticBad(slotsOf(payload))) bad('tactic');
             }
         }
         return out;

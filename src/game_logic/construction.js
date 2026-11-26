@@ -61,7 +61,7 @@ export const TARGETS = {
     bag: A(true), stash: A(true), roster: A(true), presets: A(true), potionSlots: A(true), upgrade: A(true),
     // 고용 후보(`tavernCandidates`)는 여기 없다 — 명단은 `tavern_candidates` 고정이고 건물이 안 늘린다 [2026-09-24 사용자 지시] · ~~`searchSlots`~~ 2026-10-19 수색 삭제
     shopPerSlot: A(true), shopWeapon: A(true),
-    //   `tactic_slots` = 작전 카드 칸(공격 → 방어 → 유틸 · 갈래 셋이 끝 — 지휘 천막 r1 · r2 · r3 · 열린 칸은 `state` 가 셋에서 자른다 · 2026-11-25 · R586)
+    //   `tactic_slots` = 작전 카드 칸(칸 1 → 2 → 3 · 갈래 없음 — 지휘 천막 r1 · r2 · r3 · 열린 칸은 `state` 가 `tactic_slot_count` 에서 자른다 · 2026-11-25 · R586 · 2026-11-27)
     make_level: A(true, 'make'), potion_tier: A(true, 'make'), tactic_slots: A(true),   // 물약 단계의 첫 단계는 제작(`make` — 대장간 r2)이 심는다 — 물약 제작은 제작에 든다 (2026-11-24 사용자 · R566 · R571) · `make_level` 은 어휘만 남았다(붙을 상한 `makeLevels` 가 2026-11-24 · R574 걷혔다 — 표에 안 쓴다)
     // 도감이 연 구간 수 — 도서관 r1 의 `codex` 가 첫 구간을 심고 뒤 랭크가 하나씩 더한다 · `state.limitsOf` 가 그 구간의 끝 레벨로 바꾼다(`codexLevel` · 2026-10-24 도감 건물을 도서관에 합침 · R339 · 2026-11-18 구간 셋 R539)
     codex_level: A(true, 'codex'),

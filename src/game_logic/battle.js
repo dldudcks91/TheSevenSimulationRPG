@@ -1459,6 +1459,7 @@ export function createBattleSystem(data) {
         // ~~skillKills 스킬 도감의 처치 수~~ — 2026-10-20 삭제(R293 · 세는 것뿐이라 rng 0 이었다)
         const newLoot = () => ({ xp: 0, xpByLevel: {}, gold: 0, kills: {}, killGrades: {}, drops: [], books: [] });
         let loot = newLoot();
+        let goldRaw = 0;                                 // 이긴 라운드 처치 골드의 소수 합 — 반올림은 `bank` (R599)
         let rewardCards = [];
         const bank = () => {
             for (const c of rewardCards.sort((a, b) => a.no - b.no)) {
@@ -1466,6 +1467,12 @@ export function createBattleSystem(data) {
                 else loot.books.push(c.book);
             }
             out.xpTotal += loot.xp;
+            // 처치 골드는 **판(런) 합에 한 번** 반올림한다 [2026-11-27 · R599 · PLAN_gold_curve D4] — 처치당 3 G 에서 처치마다(라운드마다도 — 적이 둘셋이다) 자르면 골드 획득 +5% 가 0 이 된다.
+            //   처치는 소수 그대로 모으고(`goldRaw` — 이긴 라운드만) 라운드 몫 = 「지금까지 판 합의 반올림 − 앞서 준 것」 · 판 전체 = round(합) · 라운드 몫은 정수 · 음수가 안 된다 ·
+            //   요약(`summary`)도 이 정수를 싣는다 · rng 0
+            const paid = Math.round(goldRaw);
+            goldRaw += loot.gold;
+            loot.gold = Math.round(goldRaw) - paid;
             out.gold += loot.gold;
             for (const [id, n] of Object.entries(loot.kills)) out.kills[id] = (out.kills[id] ?? 0) + n;
             for (const [id, byGrade] of Object.entries(loot.killGrades)) {
@@ -1798,7 +1805,7 @@ export function createBattleSystem(data) {
             const xp = e.expReward * (1 + (farm?.xp ?? 0));
             loot.xp += xp;
             loot.xpByLevel[e.lvl] = (loot.xpByLevel[e.lvl] ?? 0) + xp;
-            loot.gold += Math.round(e.goldReward * e.goldMult * B.gold_rate * goldMult * (1 + (farm?.gold ?? 0)));
+            loot.gold += e.goldReward * e.goldMult * B.gold_rate * goldMult * (1 + (farm?.gold ?? 0));   // 소수 그대로 모은다 — 반올림은 판 합으로 `bank` (R599)
             // ~~정예·보스 처치가 가루를 뱉던 두 줄~~ 은 2026-09-09 삭제 — **처치가 뱉는 재료는 없다**
             // (item_design §5-3 확정 · GAME_DESIGN §9 09-09). 처치의 산출은 **장비 · 골드**뿐이다.
             // 가루 자체는 남는다 — 공급원이 **분해** 하나로 줄었을 뿐이다(`item.salvageDust`)

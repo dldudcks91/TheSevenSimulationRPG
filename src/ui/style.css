@@ -523,10 +523,13 @@ html, body { height: 100%; overflow: hidden; }
 @keyframes notification-focus { 0%, 50% { outline: 2px solid var(--border-highlight); outline-offset: 3px; } 100% { outline-color: transparent; } }
 @media (prefers-reduced-motion: reduce) { .notification-btn.ringing img, .notification-target { animation: none; } }
 /* 메인미션 [바로가기]의 안내 — 눌러야 할 것에 남는 주황 사각 테두리 · 천천히 숨 쉰다(바깥으로 벌어졌다 돌아온다) ·
-   채우거나 다른 탭으로 가면 걷힌다(`app.js:applyMissionGuide` · SCREEN_DESIGN §2 「메인미션」 · ADR-1251) */
-.mission-guide { outline: 2px solid var(--color-warning); outline-offset: 3px; animation: mission-guide 1.6s ease-in-out infinite; }
+   채우거나 다른 탭으로 가면 걷힌다(`app.js:applyMissionGuide` · SCREEN_DESIGN §2 「메인미션」 · ADR-1251).
+   누를 것에는 표지(`.mission-guide`)만 달고 선은 한 장(#stage) 직속 **맨 위 층**에 따로 긋는다 — 부모의 넘침 자르기 · 이웃 칸 ·
+   창(40) · 어둠(39 · 41) · 말풍선(42 · 49) · 플래시(48) · 툴팁(50 · 51)에 안 가린다 · 개발 도구 판(90) 아래 · 입력은 지나간다 ·
+   자리는 `app.js:syncMissionRing` 이 매 프레임 맞춘다 (ADR-1434) */
+.mission-ring { position: absolute; z-index: 60; pointer-events: none; outline: 2px solid var(--color-warning); outline-offset: 3px; animation: mission-guide 1.6s ease-in-out infinite; }
 @keyframes mission-guide { 0%, 100% { outline-offset: 3px; } 50% { outline-offset: 6px; } }
-@media (prefers-reduced-motion: reduce) { .mission-guide { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .mission-ring { animation: none; } }
 /* 첫 장 메인미션 길 안내의 어둠 — 한 장(#stage) 직속 구멍 하나가 테두리 자리(테두리가 벌어지는 몫까지)에 서고 둘레를 큰 그림자로 덮는다.
    자리 · 크기는 `app.js:paintMissionDim` 이 테두리에 맞춘다 · 입력은 그대로 지나간다 · 창 레이어(40) 아래 —
    테두리가 창 안이면 `.over` 로 창 위(드래그 고스트 45 · 툴팁 50 아래)에 서서 창도 같이 어둡다 (SCREEN_DESIGN §2 「메인미션」 · ADR-1378 · ADR-1380) */
@@ -4785,6 +4788,12 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 
 /* 세 장은 같은 무게로 놓인다 — 하나를 크게 하면 그쪽이 정답처럼 읽힌다 */
 .ng-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+/* 카드의 머리 · 능력치 · 연장 칸 높이를 슬롯과 공유한다. 범례는 카드 밖에서 능력치 행에 맞춰 고정된다. */
+.ng-slot { display: grid; grid-template-rows: auto auto 1fr; min-width: 0; position: relative; }
+.ng-slot > .ng-card { grid-area: 1 / 1 / 4 / 2; display: grid; grid-template-rows: subgrid; container-type: normal; }
+/* 폭 컨테이너는 머리로 옮겨 행 subgrid를 유지한다. 격자에서는 인접 여백이 합쳐지지 않으므로 아래 1 + 능력치 위 9 = 기존 간격 10. */
+.ng-slot .ng-head { container-type: inline-size; margin-bottom: 1px; }
+.ng-slot > .ng-card > .ng-ext { align-self: start; }
 /* 시작 화면의 후보 카드는 **90%** 로 보인다 [2026-09-14 사용자 지시 · src/ui/README.md 크기 정책].
    `.ng-wrap` 은 게임 밖 화면이라 메인 배율(`.main { zoom: .9 }`)을 안 타서, 같은 카드가 선술집보다 한 단 크게 보였다.
    **줄 하나에만 건다** — 제목 · 이어하기 · 버튼은 그대로다. `max-width` 는 zoom 안의 설계 폭이라 보이는 폭은 954 이고,
@@ -4793,9 +4802,9 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
 .ng-wrap > .ng-row { zoom: .9; max-width: 1060px; margin: 0 auto; }
 /* 리롤 — 새 카드가 왼쪽부터 차례로 떠오른다 (§3 · ADR-1408). 장마다 0.25초 · 장 사이 0.12초(`--i` = 장 순서) — 세 장이 약 0.5초에 다 선다 (ADR-1422).
    투명도와 위치만 움직인다(합성만으로 돈다). 지연 동안은 `backwards` 가 첫 칸(투명)을 쥔다 */
-.ng-row > .ng-card.ng-in { animation: ng-in .25s ease-out calc(var(--i, 0) * .12s) backwards; }
+.ng-slot > .ng-card.ng-in { animation: ng-in .25s ease-out calc(var(--i, 0) * .12s) backwards; }
 @keyframes ng-in { from { opacity: 0; transform: translateY(8px); } }
-@media (prefers-reduced-motion: reduce) { .ng-row > .ng-card.ng-in { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .ng-slot > .ng-card.ng-in { animation: none; } }
 
 .ng-card {
     background: rgba(var(--surface-0-rgb), var(--panel-alpha));
@@ -4882,14 +4891,13 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .ng-line.sep { border-top: 1px solid var(--border-dark); margin-top: 9px; padding-top: 8px; }
 .ng-card .attr-list { margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border-dark); }
 
-/* 능력치 범례 — 시작 화면 첫 카드 왼쪽 빈자리 (SCREEN_DESIGN §3 · ADR-0943 · app.js:renderStart).
-   첫 카드의 능력치 목록 안에 절대 위치로 서서 **그 목록의 높이를 일곱 등분**한다 — 목록의 줄은 모양이 같아 높이가 같으므로
-   범례 줄이 막대 줄과 같은 높이에 선다(좌표를 재지 않는다). 위 여백 · 줄 틈은 목록의 것을 물려받는다.
-   가로는 목록 왼쪽 변에서 카드 안쪽 여백 16 + 테두리 1 + 틈 28 만큼 바깥 — 머리의 아랫선이 목록 윗선과 같은 높이다 */
-.attr-list:has(> .ng-legend) { position: relative; }
+/* 능력치 범례 — 카드 밖의 슬롯에서 능력치 행 높이를 일곱 등분한다(좌표를 재지 않는다).
+   위 10 = 능력치 목록의 바깥 여백 9 + 테두리 1, 안쪽 여백 9 · 줄 틈 3 도 목록과 같다.
+   가로는 카드 왼쪽에서 28 바깥 — 머리의 아랫선이 목록 윗선과 같은 높이다. */
 .ng-legend {
-    position: absolute; top: 0; bottom: 0; right: calc(100% + 45px);
-    padding-top: inherit; row-gap: inherit;
+    grid-area: 2 / 1 / 3 / 2;
+    position: absolute; top: 10px; bottom: 0; right: calc(100% + 28px);
+    padding-top: 9px; row-gap: 3px;
     display: grid; grid-template-columns: auto auto; grid-template-rows: repeat(7, 1fr);
     column-gap: 10px; align-items: center; white-space: nowrap;
 }
@@ -6154,25 +6162,23 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 아랫줄 = 의뢰 | 도박장 나란히 [2026-09-24 사용자 지시 · §8-1 · ADR-0322] — 남는 세로는 줄이 받고 두 패널은 stretch 로 같은 높이다.
    줄은 패널이 아니라 `.panel + .panel` 여백을 못 받는다 — 위 여백은 여기서 주고, 줄 안의 둘째 패널은 세로 여백을 끈다(`.cols` 와 같은 함정).
    폭은 4 : 1 — 도박장 칸이 의뢰 카드 한 장쯤이 된다 */
-/* 명성 줄 — 높이 · 위아래 틈(제목 밑줄 ↔ 막대 = 막대 ↔ 카드 · 2026-10-30 사용자 「명성 바 위아래 여백 똑같이」) ·
-   도박장 칸 윗변이 같은 값으로 의뢰 카드 윗변을 따른다 (§14 · ADR-0961) */
 /* 선술집 맨 위 영웅 띠(보기 전용) — 띠 아래 윗줄과 14px · 아랫줄은 남는 세로만 받는다(띠가 선 만큼 낮아진다) (§8-1 · ADR-1149) */
 .c-tavern > .hs-panel + .tv-top { margin-top: 8px; }
-.c-tavern > .tv-low { flex: 1 1 0; min-height: 0; display: flex; gap: 14px; margin-top: 8px; --cm-fame-h: 16px; --cm-fame-gap: 10px; }   /* 띠 · 윗줄 · 아랫줄 사이 8 — 명성 줄 위아래 틈(`--cm-fame-gap`) 몫을 낸다 (ADR-1161 · ADR-1164) */
+.c-tavern > .tv-low { flex: 1 1 0; min-height: 0; display: flex; gap: 14px; margin-top: 8px; }   /* 띠 · 윗줄 · 아랫줄 사이 8 */
 .tv-low > .tv-cm { flex: 4 1 0; min-width: 0; }
 .tv-low > .tv-gb { flex: 1 1 0; min-width: 0; margin-top: 0; }
-/* 카드는 패널 바닥까지 늘어난다 [2026-09-21 사용자 지시 「카드 높이를 키워서 아래에 딱 맞춰」 · §8-1] — 몸(`.cm-body` = 명성 줄 + 게시판)이 남는 세로를 받고
-   그 안에서 게시판이 명성 줄 아래 남는 세로를 받는다(명성 줄만큼 카드가 낮다 · ADR-0958). 카드는 줄의 기본 stretch 로 그 높이를 탄다.
+/* 카드는 패널 바닥까지 늘어난다 [2026-09-21 사용자 지시 「카드 높이를 키워서 아래에 딱 맞춰」 · §8-1] — 몸(`.cm-body` = 게시판)이 남는 세로를 받고
+   그 안에서 게시판이 남는 세로를 받는다(제목 바로 아래 · ADR-1435). 카드는 줄의 기본 stretch 로 그 높이를 탄다.
    늘어난 세로는 보상 줄의 `margin-top: auto` 가 받아 보상 · [수락]이 바닥에 붙는다 */
 .tv-low > .tv-cm > .cm-body { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
 .cm-body > .cm-board { flex: 1 1 auto; }
 /* 도박장 칸 — 의뢰 카드(.cm-card)와 같은 판 · 버튼이 바닥에 붙어 [수락]과 같은 바닥선에 선다. 속은 창이 든다.
-   윗변은 의뢰 카드 윗변과 같다 — 의뢰의 명성 줄(높이 + 카드와의 틈 − 올라간 양)만큼 내려선다 · 안쪽 여백 · 줄 간격도 카드와 같다 (ADR-0961) */
+   윗변은 의뢰 카드 윗변과 같다 — 두 패널 모두 제목 바로 아래에서 선다 · 안쪽 여백 · 줄 간격도 카드와 같다 (ADR-0961 · ADR-1435) */
 .gb-cell {
     flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 3px;
     padding: 6px 9px; background: var(--bg-card); border: 1px solid var(--border-dark);
 }
-.tv-low > .tv-gb > .gb-cell { margin-top: calc(var(--cm-fame-h) + var(--cm-fame-gap)); margin-bottom: 0; }   /* 윗변 · 바닥 = 의뢰 카드 — 의뢰는 위에 명성 줄이 있다 (ADR-1164) */
+.tv-low > .tv-gb > .gb-cell { margin-top: 0; margin-bottom: 0; }   /* 윗변 · 바닥 = 의뢰 카드 (ADR-1435) */
 /* 칸 가운데 = 심볼 일곱(죄종 일곱) 띠 — 남는 세로의 가운데에 선다(위아래 auto) · 바닥 = 「한 판 n G부터」 + [입장].
    그 한 줄은 위 가는 선 · 작은 글 · 골드는 금색이다 (ADR-0601 — 짝이던 의뢰 카드 보상 줄은 걷혔다 · ADR-1153) */
 .gb-sins {
@@ -6510,8 +6516,11 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .tcb-sec-h { display: flex; align-items: baseline; gap: 10px; }
 .tcb-sec-name { font-size: var(--fs-sm); color: var(--text-secondary); }
 /* 사용 중인 카드 — 편성마다 한 열(이름 「Party n」 + 칸) · 열 폭 = 아래 격자의 칸 폭(같은 auto-fill) · 고른 편성은 이름이 밝다 · 안 열린 편성은 흐린 자물쇠 칸 (ADR-1430) */
-.tcb-parties { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; padding: 0 3px; }
+.tcb-parties { display: grid; grid-template-columns: repeat(auto-fill, minmax(204px, 1fr)); gap: 6px 14px; padding: 3px; }   /* 편성마다 칸 셋(64px × 3 + 틈) — 갈래가 없어 칸 셋을 다 보인다 (2026-11-27 · PLAN_tactic_tags D11) */
 .tcb-party { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tcb-party-cells { display: grid; grid-template-columns: repeat(3, minmax(0, 64px)); gap: 6px; justify-content: center; }
+.tcb-cell.target { outline: 3px solid var(--color-info); outline-offset: -3px; }   /* 고른 편성의 넣을 칸 — 하늘색(고른 표시와 같은 색) */
+.tcb-cell.block { outline: 3px solid var(--color-error); outline-offset: -3px; }   /* 고른 카드를 막는 칸(같은 카드 · 같은 태그) — 빨간 테두리 · 글자 없음 */
 .tcb-party-name { display: flex; align-items: center; justify-content: center; gap: 3px; font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
 .tcb-party-name .lock-ico { display: inline-flex; }
 .tcb-party-name .lock-ico svg { width: 1em; height: 1em; }
@@ -7357,12 +7366,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .cm-card.done .cm-prog .bar > i { background: var(--color-success); }
 /* 패널 제목 옆 — 받은 수 / 받을 수 (값은 늘 찍는다 · §4-1) */
 .cm-slots { margin-left: 8px; font-size: var(--fs-xs); font-weight: normal; color: var(--text-muted); }
-/* 의뢰 레벨 한 줄 — 게시판 위 · 「의뢰 Lv n」 글만 (§14 · ADR-1411 — ~~명성 막대 · 막대 가운데 숫자~~ ADR-0958 · ADR-0961).
-   줄 높이는 `--cm-fame-h`(`.tv-low`) — 도박장 칸이 같은 값만큼 내려선다 · **제목 바로 아래 · 게시판 위 한 줄** — 카드가 그만큼 낮다 (ADR-1164) */
-.cm-fame { display: flex; align-items: center; gap: 10px; height: var(--cm-fame-h); }
-.tv-cm .cm-body > .cm-fame { flex: none; margin-bottom: var(--cm-fame-gap); }   /* 제목 바로 아래 한 줄 — 제목 밑줄 ↔ 줄 ↔ 카드 틈이 같다 (ADR-1164) */
-.tv-low > .panel > h2 { margin-bottom: var(--cm-fame-gap); }   /* 의뢰 · 도박장 제목 아래 틈 — 의뢰 레벨 줄 위아래와 같은 값 */
-.cm-fame-lv { font-size: var(--fs-sm); line-height: 1; white-space: nowrap; }
+.tv-low > .panel > h2 { margin-bottom: 10px; }   /* 의뢰 · 도박장 제목 아래 틈 — 두 패널이 같아 카드 윗변 = 도박장 칸 윗변 (ADR-1435) */
 /* 게시판이 안 열렸을 때 — 빈 카드 틀이 자리를 잡고 그 위에 잠김 베일(.lock-veil) */
 .cm-card.ghost { min-height: 96px; }
 
@@ -7641,7 +7645,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 :where(:root[data-skin="d2min"]) .ng-wrap { background: var(--sk-fill), #0f0f0f; border: 1px solid var(--border-primary); border-image: var(--sk-frame) 11 / 11px / 4px round; }
 :where(:root[data-skin="d2min"]) .ng-wrap { padding: 24px 16px; }
 /* 능력치 범례는 판 테두리 **밖**에 선다(뒤로가기처럼 · ADR-0943) — 판 안 카드 줄 옆 여백이 53(.9 배율 안에서 59)이라 범례가 테두리를 가로지른다 */
-:where(:root[data-skin="d2min"]) .ng-legend { right: calc(100% + 45px + 59px); }
+:where(:root[data-skin="d2min"]) .ng-legend { right: calc(100% + 28px + 59px); }
 :where(:root[data-skin="d2min"]) .ng-card { background: var(--sk-fill), #121212; box-shadow: inset 0 0 0 1px var(--sk-lip), 0 3px 8px rgba(0, 0, 0, .7); }
 /* 원정 목록 판 — 기본은 테두리가 없어(난이도 탭 줄이 윗선 · ADR-0785) 위 규칙보다 강한 `border: none` 이 돌 테두리를 걷었다.
    다른 판과 같은 테두리를 다시 두른다(위 여백은 아래 「챕터 줄은 목록 판 바깥 위」 묶음이 정한다) */

@@ -5,7 +5,7 @@
  * 저장은 **엔진 중립 JSON** 이다: 상태 객체 자체가 평문 데이터라 serialize 는 버전 도장만 찍는다.
  * localStorage 접근은 ui/storage.js 어댑터 한 곳에서만 한다 (CLAUDE.md 이식성 규칙 3).
  *
- * 세이브 형식 v53 (2026-11-26 · 사용한 작전 카드 보관 — `tacticUsed` · R589)
+ * 세이브 형식 v55 (2026-11-27 · 작전 카드 칸 키 = 칸 번호 — PLAN_tactic_tags D8)
  * {
  *   version, seed, createdAt, savedAt,
  *   rosterSlots — 선술집에서 구매한 영웅 보유 칸 수. 기본 한도는 balance.csv 가 정한다.
@@ -37,7 +37,7 @@
  *       **포인트 = 레벨** — 태어날 때 `mastery_point_start` · 레벨업마다 `mastery_point_per_level` (v47 · 2026-11-12 · R435)
  *     — position = 착용 위치 id. 부위 7종 · 위치 8개 (반지 ×2 = ring1/ring2, 나머지는 부위 id 그대로).
  *       보조(offhand)는 2026-09-01 한손 개념 폐지와 함께 사라졌다
- *   presets: [{party: [uid], formation: {tpl, ranks}, potionSlots: [potionId|null], potionHp?, tactics: {attack, defense, utility}}], preset: n, items: {uid: item}, bags: [[uid]],
+ *   presets: [{party: [uid], formation: {tpl, ranks}, potionSlots: [potionId|null], potionHp?, tactics: {'1', '2', '3'}}], preset: n, items: {uid: item}, bags: [[uid]],
  *     — bags = **부대마다 인벤토리 — v40** [2026-10-06 · SCREEN_DESIGN ADR-0521] · 길이 = presets · 자리 + 1 = 편성 번호(`runs` 와 같은 색인) · 상한은 하나마다 `limitsOf.bag`.
  *       드롭은 나간 부대의 것에 · 해제 · 꺼내기 · 구매 · 제작은 부르는 쪽이 넘긴 번호(`no`)에 들어간다 (옛 `bag` 하나 → v39 까지)
  *     — salvageRules · salvageLogs = **자동 분해 규칙 · 최근 분해 — 부대마다 · v41** [2026-10-22 · R316] · `bags` 와 같은 색인 · salvageSlots = 프리셋 칸(계정 · 사본)
@@ -88,21 +88,21 @@
  *   visit: {nextAt: ms|null, left: ms|null} | null   — **수색 시계** [2026-10-19]. null = 그 줄이 안 열렸다(연구소 · 선술집 영웅 고용 전 — 2026-11-14 「간격」 연구를 안 기다린다).
  *     흐르는 중 = `nextAt`(다음 사람이 오는 시각) · **칸이 다 차 멈춘 동안** = `left`(멈췄을 때 남은 시간) — 비면 그때부터 `left` 뒤에 온다.
  *     꺼져 있어도 흐른다(연구소의 오프라인 상한을 안 받는다 — 칸 수가 상한이다). 「간격」 지점(`labNodes['visit:interval']`)은 속도만 민다(2026-11-14)
- *   presets[*].tactics: {attack: Slot|null, defense: Slot|null, utility: Slot|null}   — **작전 카드 칸 셋 — v52** [2026-11-25 · R586 · tactic_card_design §3 · PLAN_tactic_cards_impl §4] ·
- *     `Slot = {card, grade, lines: [{id, grade, m}]}` — 카드(`tactic_card.csv:card_id` · 그 갈래 카드만) · 카드 등급(옵션 줄 등급의 천장) · 옵션 줄(장착할 때 굴린다 · m = 범위 배수 소수 넷째 자리 · 값은 m 으로 다시 잰다).
+ *   presets[*].tactics: {'1': Slot|null, '2': Slot|null, '3': Slot|null}   — **작전 카드 칸 셋 — v52 · 키 = 칸 번호 v55** [2026-11-25 · R586 · 2026-11-27 PLAN_tactic_tags D8 · tactic_card_design §3] ·
+ *     `Slot = {card, grade, lines: [{id, grade, m}]}` — 카드(`tactic_card.csv:card_id` · 어느 칸이든 · 한 편성에 같은 카드 · 같은 태그는 한 장 — 장착이 막는다) · 카드 등급(옵션 줄 등급의 천장) · 옵션 줄(장착할 때 굴린다 · m = 범위 배수 소수 넷째 자리 · 값은 m 으로 다시 잰다).
  *     편성마다 한 벌 · 열린 칸 수는 계정(지휘 천막 랭크)이라 세이브에 없다 · ~~`{slots: {칸번호: {id, grade}}, locked}` 칸 다섯 · 첫 배정 · 잠금(v34 ~ v51)~~ 은 v52 업그레이드가 버린다
  *   tacticBag: {"card|grade": n}   — **작전 카드 가방 — v52** · 옵션이 없어 같은 카드 · 등급은 개수로 쌓인다 · 1 이상 정수 · 칸 상한 없음 · 드랍 · 첫 카드가 넣고 장착 · 분해가 뺀다
  *   tacticUsed: [Slot]   — **사용한 작전 카드 — v53** [2026-11-26 · R589] · 칸에서 빠진 카드를 옵션 줄째 보관(`Slot` 과 같은 모양) · 계정 하나 · 맨 앞 = 최근에 빠진 것 ·
  *     상한 `tactic_used_cap` 은 새 카드로 바꾸기만 막는다(넘친 항목을 지우지 않는다) · 장착(`equipUsedTactic`) · 분해(`dismantleUsedTactic`)가 뺀다
  *   tacticShards: n   — **카드 조각 — v52** · 분해가 더하고 줄 인챈트가 쓴다
- *   tacticStarter: [slot]   — **첫 카드를 준 갈래 — v52** · 칸이 처음 열릴 때 한 번만 준다(갈래 순)
+ *   tacticStarter: [slot]   — **첫 카드를 준 칸 번호 — v52 · 칸 번호 v55** · 칸이 처음 열릴 때 한 번만 준다(칸 순 · 그 칸의 카드 = `tactic_card.csv:starter`)
  *   ~~killsTogether~~ — 함께 잡은 몬스터 수(R441) · 2026-11-25 걷었다(R586 — 5랭크 조건이 사라졌다 · v52 업그레이드가 지운다)
  *   buildings: {buildingId: rank}   — **건물 랭크 — v37** [2026-09-22 · R137 · construction_draft §11] · 0 은 안 적는다.
  *     **「무엇이 열렸나」는 저장하지 않는다** — `construction.js` 가 부를 때마다 표에서 센다(표를 고치면 옛 세이브도 따른다)
  *   ~~research: {researchId: level}~~ — 건설 연구 레벨(v37 ~ v43 · 항목이 없어 언제나 {}) · 2026-10-29 걷었다(R195 — 사용자 09-30 「연구 완전히 삭제」 · 로드가 지운다 · 버전 무변경)
  * }
  *
- * **버전** — `deserialize` 는 **v38 ~ v53 을 연다** — 옛 버전은 한 단계씩 올린다. 그 전 세이브(v1 ~ v37)는 던지고 시작 화면이 새 게임으로 받는다
+ * **버전** — `deserialize` 는 **v38 ~ v55 를 연다** — 옛 버전은 한 단계씩 올린다. 그 전 세이브(v1 ~ v37)는 던지고 시작 화면이 새 게임으로 받는다
  *   [2026-09-23 · 사용자 지시 「끊어」 · 다부대]. 다음 버전이 생기면 같은 자리에서 한 단계씩 올린다 (INTERFACE §4)
  */
 
@@ -114,7 +114,7 @@ import { TARGETS as CN_TARGETS } from './construction.js';
 // 의뢰 어휘 — 로드가 모르는 어휘의 카드를 거르는 데만 쓴다(같은 취급 · R153)
 import { AXES as CM_AXES } from './commission.js';
 
-export const SAVE_VERSION = 54;
+export const SAVE_VERSION = 55;
 
 /**
  * @param {object} deps
@@ -397,7 +397,7 @@ export function createGameSystem(deps) {
             // 편성 — **편성 1 에 시작 영웅 셋**(아래에서 채운다 · ADR-0227) · 편성 2 부터는 빈 파티다.
             //   물약 칸도 **편성 1 에만** 시작 물약이 한 칸씩 든다 (v32 · R122 · R124)
             presets: newPresets(), preset: 1,     // 작전 카드 칸 셋도 편성마다 든다(`presets[*].tactics` · v34 · R129 · 칸 셋 v52 · R586)
-            // 작전 카드 — 가방(계정 하나 · 편성끼리 같이 쓴다) · 사용한 카드 보관(v53 · R589) · 조각 · 첫 카드를 준 갈래 (v52 · R586 · tactic_card_design §3)
+            // 작전 카드 — 가방(계정 하나 · 편성끼리 같이 쓴다) · 사용한 카드 보관(v53 · R589) · 조각 · 첫 카드를 준 칸 번호 (v52 · R586 · v55 · tactic_card_design §3)
             tacticBag: {}, tacticUsed: [], tacticShards: 0, tacticStarter: [],
             // 자동 분해 — 부대마다 격자 하나 · 새 게임은 전부 보존(= 아무것도 안 녹음 · 옛 「꺼짐」과 같은 뜻) · 프리셋 칸은 비었다 (item_design §6-5 · v41 · R316)
             salvageRules: newSalvageRules(), salvageSlots: newSalvageSlots(), salvageLogs: newSalvageLogs(),
@@ -707,6 +707,23 @@ export function createGameSystem(deps) {
         return s;
     }
 
+    /** v54 의 작전 카드 갈래 키 → 칸 번호 (지휘 천막 1 · 2 · 3랭크가 열던 순서 그대로 · 결투장 팀 코드 판 3 → 4 와 같은 짝) */
+    const V54_SLOT = { attack: '1', defense: '2', utility: '3' };
+    /**
+     * v54 → v55 [2026-11-27 · PLAN_tactic_tags D8 · INTERFACE §4] — 작전 카드 칸에 **갈래가 없어졌다**(칸 번호 · 태그가 겹침을 막는다).
+     *   편성 · 탐험 판 부대의 칸 셋 키 `attack` → `'1'` · `defense` → `'2'` · `utility` → `'3'` · 첫 카드를 준 갈래(`tacticStarter`)도 같은 짝.
+     *   옛 칸 셋은 갈래가 서로 달라 첫 태그 표를 안 어긴다 — 태그로 거르지 않는다(규칙은 장착할 때만 막는다) · 모양이 틀린 칸 셋은 그대로 두고 `fitTactics` 가 빈 칸으로 읽는다 · rng 0
+     */
+    function upgradeV54(s) {
+        const re = t => (t && typeof t === 'object' && !Array.isArray(t)
+            ? Object.fromEntries(Object.entries(V54_SLOT).map(([from, to]) => [to, t[from] ?? null])) : t);
+        for (const p of Array.isArray(s.presets) ? s.presets : []) if (p && typeof p === 'object') p.tactics = re(p.tactics);
+        for (const x of Array.isArray(s.exploreRuns) ? s.exploreRuns : []) if (x?.squad && typeof x.squad === 'object') x.squad.tactics = re(x.squad.tactics);
+        s.tacticStarter = (Array.isArray(s.tacticStarter) ? s.tacticStarter : []).map(k => V54_SLOT[k]).filter(Boolean);
+        s.version = 55;
+        return s;
+    }
+
     /** v38 이후를 연다. 옛 버전은 한 단계씩 올린다. */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
@@ -729,6 +746,7 @@ export function createGameSystem(deps) {
         if (src.version === 51) src = upgradeV51(src === obj ? clone(obj) : src);
         if (src.version === 52) src = upgradeV52(src === obj ? clone(obj) : src);
         if (src.version === 53) src = upgradeV53(src === obj ? clone(obj) : src);
+        if (src.version === 54) src = upgradeV54(src === obj ? clone(obj) : src);
         if (src.version !== SAVE_VERSION)
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
         const s = clone(src);
@@ -935,7 +953,7 @@ export function createGameSystem(deps) {
         //   도는 채로 저장된 판은 그대로 둔다 — 화면이 `closeRun` 직전에 `exploreFinish` 로 끝까지 계산한다(D17)
         fitExplore(s);
         // 작전 카드 (v52 · R586 · INTERFACE §4) — 불러올 때마다(버전 무변경 정리) 가방의 모르는 키 · 1 미만 개수를 지우고 · 조각 · 회차는 0 이상 정수가 아니면 0 ·
-        //   첫 카드를 준 갈래는 갈래 어휘만(갈래 순) · 칸 셋의 모르는 카드 · 갈래가 다른 카드 · 모르는 줄은 `fitPresets`(위 · `fitTactics`)가 이미 지웠다. 첫 카드는 맨 끝(`grantStarters`)
+        //   첫 카드를 준 칸은 칸 번호만(칸 순) · 칸 셋의 모르는 카드 · 모르는 줄은 `fitPresets`(위 · `fitTactics`)가 이미 지웠다. 첫 카드는 맨 끝(`grantStarters`)
         s.tacticBag = Object.fromEntries(Object.entries(s.tacticBag && typeof s.tacticBag === 'object' && !Array.isArray(s.tacticBag) ? s.tacticBag : {})
             .filter(([k, n]) => TC.parseKey(k) && Number.isInteger(n) && n >= 1));
         // 사용한 카드 (v53 · R589) — 모르는 카드 · 등급의 항목은 지우고 줄은 칸과 같은 규칙으로 거른다(`fitUsed`) · 보관 칸 수를 넘어도 지우지 않는다
@@ -1117,7 +1135,7 @@ export function createGameSystem(deps) {
                 s.mainMission = { met, got, ev: [...new Set((Array.isArray(mm.ev) ? mm.ev : []).filter(x => MM_EVENTS.includes(x)))] };
             }
         }
-        // 첫 카드 [2026-11-25 · R586 · D9 · D10] — **이미 열린 칸(실제 지휘 천막 랭크)** 중 아직 안 준 갈래의 첫 카드 · v51 → v52 업그레이드도 이 길이다 · `tacticStarter` 로 한 번만 · rng 0
+        // 첫 카드 [2026-11-25 · R586 · D9 · D10] — **이미 열린 칸(실제 지휘 천막 랭크)** 중 아직 안 준 칸의 첫 카드 · v51 → v52 업그레이드도 이 길이다 · `tacticStarter` 로 한 번만 · rng 0
         grantStarters(s);
         return s;
     }
@@ -2277,20 +2295,20 @@ export function createGameSystem(deps) {
         && [1, 2].includes(B.auto_salvage_word_rank_default) && [0, 1].includes(B.auto_salvage_word_all_default)))
         throw new Error(`balance: auto_salvage_slots ${B.auto_salvage_slots} · auto_salvage_log_max ${B.auto_salvage_log_max} · auto_salvage_base_default ${B.auto_salvage_base_default} · auto_salvage_word_rank_default ${B.auto_salvage_word_rank_default} · auto_salvage_word_all_default ${B.auto_salvage_word_all_default} — 칸은 1 이상 정수 · 기록은 0 이상 정수 · 문턱은 0 이상 · 단어 자리는 1 · 2 · 몇 줄은 0 · 1 (INTERFACE §2-7 · R509)`);
     const emptyPreset = state => ({ party: [], formation: { tpl: DEFAULT_TPL, ranks: [[], []] }, potionSlots: padSlots(state, []), tactics: emptyTactics() });
-    /** 빈 작전 카드 칸 셋 — 갈래 셋(`tactic.SLOTS`)이 다 `null` (v52 · R586) */
+    /** 빈 작전 카드 칸 셋 — 칸 번호(`tactic.SLOTS`)가 다 `null` (v52 · R586 · 칸 번호 v55) */
     function emptyTactics() { return Object.fromEntries(TC.SLOTS.map(s => [s, null])); }
     /**
-     * 불러온 작전 카드 칸 셋 — **새 사본**을 낸다(v52 · R586 · INTERFACE §4). 칸마다 카드가 표에 있고 **그 갈래 카드**이고 등급이 어휘 안이면 남긴다(아니면 빈 칸) ·
+     * 불러온 작전 카드 칸 셋 — **새 사본**을 낸다(v52 · R586 · INTERFACE §4). 칸마다 카드가 표에 있고 등급이 어휘 안이면 남긴다(아니면 빈 칸 · 태그로는 거르지 않는다) ·
      *   줄은 `tactic.lineOf` 가 읽는 것만(`{id, grade, m}` — 모르는 옵션 · 등급 · m 은 지운다). 모양이 틀리면(옛 `{slots, locked}`) 빈 칸 셋 · rng 0
      */
     const fitTactics = t => Object.fromEntries(TC.SLOTS.map(slot => {
         const x = t && typeof t === 'object' ? t[slot] : null;
-        return [slot, fitCard(x, slot)];
+        return [slot, fitCard(x)];
     }));
-    /** 카드 한 장(`Slot`)의 새 사본 — 카드가 표에 있고(`slot` 을 주면 그 갈래 카드만) 등급이 어휘 안이면 · 줄은 `tactic.lineOf` 가 읽는 것만 · 아니면 null (칸 셋 · 보관이 같이 쓴다) */
-    function fitCard(x, slot = null) {
+    /** 카드 한 장(`Slot`)의 새 사본 — 카드가 표에 있고 등급이 어휘 안이면 · 줄은 `tactic.lineOf` 가 읽는 것만 · 아니면 null (칸 셋 · 보관이 같이 쓴다) */
+    function fitCard(x) {
         const card = x && typeof x === 'object' ? TC.cardById(x.card) : null;
-        if (!card || (slot !== null && card.slot !== slot) || !TC.GRADES.includes(x.grade)) return null;
+        if (!card || !TC.GRADES.includes(x.grade)) return null;
         return { card: x.card, grade: x.grade, lines: (Array.isArray(x.lines) ? x.lines : []).filter(l => TC.lineOf(l)).map(l => ({ id: l.id, grade: l.grade, m: l.m })) };
     }
     /** 불러온 사용한 카드 보관 — 읽을 수 있는 카드만 순서 그대로 · 보관 칸 수를 넘어도 자르지 않는다 (v53 · R589 · INTERFACE §4) · rng 0 */
@@ -3145,7 +3163,7 @@ export function createGameSystem(deps) {
             if (a[slot] >= ADV_P) return { ok: false, err: 'cellMax' };
             if (advSum(a) >= ADV_P) return { ok: false, err: 'rowMax' };
             h.masteryPoints -= 1;
-            mmNoteEvent(state, 'mastery');   // 메인미션 「스킬 포인트 찍기」 — 공용 지갑을 쓴 것 (R583)
+            mmNoteEvent(state, 'mastery');   // 메인미션 「마스터리 포인트 찍기」 — 공용 지갑을 쓴 것 (R583)
         } else {
             if (a[slot] <= 0) return { ok: false, err: 'zero' };
             h.masteryPoints = (h.masteryPoints ?? 0) + 1;
@@ -7225,13 +7243,14 @@ export function createGameSystem(deps) {
         .map(h => ({ sin: h.sin, cls: h.cls, ldr: h.stats?.ldr ?? 0, gear: heroItems(state, h).flatMap(it => it.sins ?? []) }));
 
     /* ── 작전 카드 [2026-11-25 · R586 · tactic_card_design §3 · §5 · PLAN_tactic_cards_impl · INTERFACE §2-7] ──
-       칸 셋(공격 · 방어 · 유틸 — `tactic.SLOTS`)이 편성마다 · 열린 칸 수는 계정(지휘 천막 1 · 2 · 3랭크) · 가방 · 조각 · 첫 카드는 계정 하나.
+       칸 셋(칸 번호 1 · 2 · 3 — `tactic.SLOTS` · 갈래 없음)이 편성마다 · 열린 칸 수는 계정(지휘 천막 1 · 2 · 3랭크) · 가방 · 조각 · 첫 카드는 계정 하나.
+       **한 편성에 같은 카드 · 같은 태그 카드는 한 장**(`tactic.blockOf` — 장착이 막는다 · 2026-11-27 · PLAN_tactic_tags D3).
        카드는 **소모품**이다 — 장착하면 가방에서 한 장 빠지고 옵션 줄은 그때 굴린다 · 칸을 다른 카드로 바꾸면 옛 카드는 **줄째 「사용한 카드」로 보관된다**
        (계정 하나 · `tactic_used_cap` · 2026-11-26 · R589 — ~~사라진다(D7)~~) · 나가 있는 편성의 칸에서는 카드를 못 뺀다 */
 
     /** 그 편성의 칸에서 카드를 뺄 수 없는 까닭 — 탐험 중 `'exploring'` · 원정 중(칸 사이 포함) `'running'` · 아니면 null (편성 명단 잠금과 같은 판정 · R491 · R589) */
     const tacticLock = (state, no) => (exploreOfPreset(state, no) ? 'exploring' : runningNos(state).includes(no) ? 'running' : null);
-    /** 사용한 카드 보관 수 — 계정 하나 · 모든 갈래 (R589) */
+    /** 사용한 카드 보관 수 — 계정 하나 · 모든 칸 (R589) */
     const usedCount = state => (Array.isArray(state.tacticUsed) ? state.tacticUsed.length : 0);
     /** 칸에서 빠진 카드를 보관 맨 앞에 — 줄째 (R589) · in-place */
     function storeUsed(state, card) {
@@ -7244,7 +7263,7 @@ export function createGameSystem(deps) {
         .filter(e => e.card && TC.GRADES.includes(e.x.grade))
         .map(e => ({ i: e.i, card: e.card, grade: e.x.grade, lines: (Array.isArray(e.x.lines) ? e.x.lines : []).map(l => TC.lineOf(l)).filter(Boolean) }));
 
-    /** 열린 칸 수 — `limitsOf(state).tacticSlots`(관리자 모드면 다 지은 값)를 갈래 수에서 자른다 · 계정이라 모든 편성이 같다 */
+    /** 열린 칸 수 — `limitsOf(state).tacticSlots`(관리자 모드면 다 지은 값)를 칸 수(`tactic_slot_count`)에서 자른다 · 계정이라 모든 편성이 같다 */
     const tacticOpen = state => Math.min(limitsOf(state).tacticSlots, TC.SLOTS.length);
     /** **실제로 지은** 지휘 천막 랭크가 연 칸 수 — 첫 카드가 센다(관리자 모드 `openAll` 은 안 센다 · INTERFACE §2-7 「첫 카드」) */
     const tacticBuilt = state => Math.min(CN.opened(state?.buildings ?? {}).adds.tactic_slots ?? 0, TC.SLOTS.length);
@@ -7254,17 +7273,19 @@ export function createGameSystem(deps) {
         return t && typeof t === 'object' && TC.SLOTS.every(s => s in t) ? t : emptyTactics();
     };
     /**
-     * 칸마다 **읽을 수 있는** 카드 · 줄 — 갈래 순 `[{slot, open, card, grade, saved, lines}]`. 카드가 표에 없거나 다른 갈래면 빈 칸 · 줄은 `tactic.lineOf` 가 읽는 것만
+     * 칸마다 **읽을 수 있는** 카드 · 줄 — 칸 순 `[{slot, open, card, grade, saved, lines}]`. 카드가 표에 없으면 빈 칸 · 줄은 `tactic.lineOf` 가 읽는 것만
      *   (`i` = 세이브의 줄 자리). 조회는 세이브를 안 바꾼다. `openOnly` 면 열린 칸만 · 카드가 든 칸만(효과는 열린 칸만 — `tacticBonus` · `tacticRules` · 출발 스냅숏)
      */
     function slotLines(state, no = state.preset, openOnly = true) {
         const t = tacticsOf(state, no), open = tacticOpen(state);
         return TC.SLOTS.map((slot, k) => {
             const x = t[slot];
-            const card = x && TC.cardById(x.card)?.slot === slot && TC.GRADES.includes(x.grade) ? TC.cardById(x.card) : null;
+            const card = x && TC.cardById(x?.card) && TC.GRADES.includes(x.grade) ? TC.cardById(x.card) : null;
             const lines = card ? (Array.isArray(x.lines) ? x.lines : []).map((l, i) => ({ i, line: TC.lineOf(l) })).filter(e => e.line) : [];
             return { slot, open: k < open, card, grade: card ? x.grade : null, saved: card ? x : null, lines: lines.map(e => e.line), at: lines.map(e => e.i) };
-        }).filter(s => !openOnly || (s.open && s.card));
+        }).filter(s => !openOnly || (s.open && s.card))
+            // 효과는 **앞 칸이 막지 않는 카드만** — 장착이 같은 카드 · 같은 태그를 막지만 세이브 · CSV 태그가 바뀐 판에서도 규칙이 두 번 서지 않게(전투는 같은 규칙 둘을 던진다 · 결투장 `liveSlots` 와 같은 규칙 · 2026-11-27)
+            .filter((s, k, all) => !openOnly || TC.blockOf(s.card.id, all.slice(0, k).map(x => x.card.id)) === null);
     }
     /** 가방 — `[{key, card, grade, n}]` · 카드 행 순 → 등급 순 · 읽을 수 없는 키는 안 낸다(세이브는 안 바꾼다) */
     const tacticBagList = state => {
@@ -7288,8 +7309,8 @@ export function createGameSystem(deps) {
     }
 
     /**
-     * 첫 카드 [D9 · D10 · INTERFACE §2-7 「첫 카드 · 카드 드랍」] — **실제로 지은** 지휘 천막 랭크가 연 칸(앞에서부터) 중 아직 안 준 갈래마다
-     *   그 갈래의 첫 카드(`tactic.starterOf` — 공격 = 일기토 · 방어 = 방패벽 · 유틸 = 독화살)를 `common` 으로 한 장 · 준 갈래는 `tacticStarter` 에 적는다(두 번 안 준다).
+     * 첫 카드 [D9 · D10 · INTERFACE §2-7 「첫 카드 · 카드 드랍」] — **실제로 지은** 지휘 천막 랭크가 연 칸(앞에서부터) 중 아직 안 준 칸마다
+     *   그 칸의 첫 카드(`tactic.starterOf` — `tactic_card.csv:starter` · 칸 1 = 일기토 · 칸 2 = 방패벽 · 칸 3 = 독화살)를 `common` 으로 한 장 · 준 칸은 `tacticStarter` 에 적는다(두 번 안 준다).
      *   짓기(`construct`) · 불러오기(`deserialize` — v51 → v52 포함) · 새 게임이 부른다 · in-place · rng 0
      */
     function grantStarters(state) {
@@ -7341,12 +7362,19 @@ export function createGameSystem(deps) {
         const used = usedList(state).map(u => ({ i: u.i, card: u.card, grade: u.grade, lines: u.lines.map((line, k) => lineOut(line, k)) }));
         const usedN = usedCount(state), usedCap = B.tactic_used_cap;
         const lock = tacticLock(state, no);
-        const slots = slotLines(state, no, false).map(s => ({
+        const cur = slotLines(state, no, false);
+        // 막는 칸 — 그 카드를 칸 `slot` 에 넣으면 같은 카드 · 같은 태그로 막는 **다른 칸**의 번호 · 없으면 null (안 열린 칸의 카드도 센다 · PLAN_tactic_tags D3 · D7)
+        const blockAt = (cardId, slot) => {
+            const others = cur.filter(x => x.slot !== slot && x.card);
+            const by = TC.blockOf(cardId, others.map(x => x.card.id));
+            return by === null ? null : others.find(x => x.card.id === by).slot;
+        };
+        const slots = cur.map(s => ({
             slot: s.slot, open: s.open, card: s.card, grade: s.grade,
             lines: s.lines.map((line, k) => lineOut(line, s.at[k])),
             canEnchant: s.open && !!s.card && s.lines.length > 0 && gold >= cost.gold && shards >= cost.shard,
-            bag: bag.filter(b => b.card.slot === s.slot),
-            used: used.filter(u => u.card.slot === s.slot),
+            bag: bag.map(b => ({ ...b, block: blockAt(b.card.id, s.slot) })),     // 가방 · 보관 **전체**(갈래 거르기 없음) · 항목마다 막는 칸 (D7)
+            used: used.map(u => ({ ...u, block: blockAt(u.card.id, s.slot) })),
             lock: s.card ? lock : null,   // 빈 칸에 넣기는 나가 있어도 된다 — 빼는 것만 막는다
         }));
         // 판 데이터 [2026-11-11 · R441 · SCREEN_DESIGN §15 — 그대로(D12)] — 리더(그 파티의 첫 영웅)의 통솔 → 버프 효과 ±p%(`pct` = 곡선 − 1) ·
@@ -7368,7 +7396,7 @@ export function createGameSystem(deps) {
         return TC.bonusOf(slotLines(state, no).flatMap(s => s.lines).map(line => ({ ...line, value: TC.measure(line, ctx).value })));
     }
 
-    /** 그 편성의 **카드 규칙** — 열린 칸에 든 카드의 `tactic.rulesOf`(칸 순 — 공격 → 방어 → 유틸 · R586 · INTERFACE §2-7) · 상태 불변 · rng 0 */
+    /** 그 편성의 **카드 규칙** — 열린 칸에 든 카드의 `tactic.rulesOf`(칸 순 — 1 → 2 → 3 · R586 · INTERFACE §2-7) · 상태 불변 · rng 0 */
     const tacticRules = (state, no = state.preset) => TC.rulesOf(slotLines(state, no).map(s => s.card.id));
     /** 전투 계약의 맨 끝 인자 — 우리 쪽 규칙이 있으면 `{party, enemy: []}` · 없으면 null(지금과 한 글자도 안 다르다 · PLAN §6) */
     const rulesArg = rules => (rules.length ? { party: rules, enemy: [] } : null);
@@ -7377,17 +7405,22 @@ export function createGameSystem(deps) {
      * **카드 장착** [D7 · INTERFACE §2-7 `equipTactic`] — 가방의 카드 한 장(`key` = `'card|grade'`)을 편성 `no`(기본 고른 편성)의 칸 `slot` 에 넣는다 —
      *   **가방 −1** · 옵션 줄을 **이 순간 굴린다**(`tactic.equipLines` · rng = `seedOf(state, 0x7AE9, ++counters.tacticEquip)`) · 칸에 있던 카드는 **줄째 보관 맨 앞으로**
      *   (`tacticUsed` · 2026-11-26 · R589 — ~~사라진다(D7)~~).
-     *   err 순서: `missing`(모르는 갈래 · 없는 편성) → `slotClosed`(안 열린 칸) → `noCard`(가방에 없다 · 모르는 키) → `wrongSlot`(그 카드의 갈래가 아니다) →
+     *   err 순서: `missing`(모르는 칸 · 없는 편성) → `slotClosed`(안 열린 칸) → `noCard`(가방에 없다 · 모르는 키) → `sameCard` · `sameTag`(같은 편성의 **다른 칸**에 같은 카드 · 같은 태그 — `tacticBlock`) →
      *   **칸에 카드가 있을 때만** `exploring` · `running`(그 편성이 나가 있다 — 빼지 못한다 · `tacticLock`) → `storeFull`(보관이 `tactic_used_cap` 만큼 찼다) — 거절이면 아무것도 안 바뀐다.
      *   메인미션 `count` 대상 `tacticEquip` 이 이 회차를 센다 · 도는 원정은 안 흔들린다(출발 때 굳힌 카드 · 줄로 싸운다) · in-place
      */
+    /** 장착을 막는 까닭 — 카드 `cardId` 를 편성 `no` 칸 `slot` 에 넣을 때 **다른 칸**(안 열린 칸 포함 · 칸 순)에 같은 카드 → `'sameCard'` · 같은 태그 → `'sameTag'` · 아니면 null
+     *  (바꿔 끼는 그 칸의 카드는 안 센다 · `tactic.blockWhy` · PLAN_tactic_tags D3 · D6) · rng 0 */
+    const tacticBlock = (state, no, slot, cardId) => TC.blockWhy(cardId, slotLines(state, no, false).filter(s => s.slot !== slot && s.card).map(s => s.card.id));
+
     function equipTactic(state, slot, key, no = state.preset) {
         const p = presetAt(state, no), k = TC.SLOTS.indexOf(slot);
         if (!p || k < 0) return { ok: false, err: 'missing' };
         if (k >= tacticOpen(state)) return { ok: false, err: 'slotClosed' };
         const ref = TC.parseKey(key);
         if (!ref || !((state.tacticBag?.[key] ?? 0) >= 1)) return { ok: false, err: 'noCard' };
-        if (TC.cardById(ref.card).slot !== slot) return { ok: false, err: 'wrongSlot' };
+        const why = tacticBlock(state, no, slot, ref.card);
+        if (why) return { ok: false, err: why };
         const old = fitTactics(p.tactics)[slot];   // 사본 — 거절이면 세이브를 안 건드린다
         if (old) {
             const lock = tacticLock(state, no);
@@ -7407,7 +7440,7 @@ export function createGameSystem(deps) {
     /**
      * **사용한 카드 장착** [신설 2026-11-26 · R589 · INTERFACE §2-7 `equipUsedTactic`] — 보관의 카드 `i`(`tacticState.used[].i`)를 편성 `no` 칸 `slot` 에 **줄 그대로** 넣는다 —
      *   굴리지 않는다(rng 0 · `counters.tacticEquip` 을 안 센다) · 칸에 있던 카드는 보관 맨 앞으로(보관 수가 그대로라 `storeFull` 이 없다).
-     *   err 순서: `missing` → `slotClosed` → `noCard`(그 자리에 보관된 카드가 없다) → `wrongSlot` → **칸에 카드가 있을 때만** `exploring` · `running` — 거절이면 아무것도 안 바뀐다 · in-place
+     *   err 순서: `missing` → `slotClosed` → `noCard`(그 자리에 보관된 카드가 없다) → `sameCard` · `sameTag` → **칸에 카드가 있을 때만** `exploring` · `running` — 거절이면 아무것도 안 바뀐다 · in-place
      */
     function equipUsedTactic(state, slot, i, no = state.preset) {
         const p = presetAt(state, no), k = TC.SLOTS.indexOf(slot);
@@ -7415,7 +7448,8 @@ export function createGameSystem(deps) {
         if (k >= tacticOpen(state)) return { ok: false, err: 'slotClosed' };
         const got = Number.isInteger(i) && i >= 0 && Array.isArray(state.tacticUsed) ? fitCard(state.tacticUsed[i]) : null;
         if (!got) return { ok: false, err: 'noCard' };
-        if (TC.cardById(got.card).slot !== slot) return { ok: false, err: 'wrongSlot' };
+        const why = tacticBlock(state, no, slot, got.card);
+        if (why) return { ok: false, err: why };
         const old = fitTactics(p.tactics)[slot];
         if (old) {
             const lock = tacticLock(state, no);
@@ -7444,7 +7478,7 @@ export function createGameSystem(deps) {
     /**
      * **줄 인챈트** [D4 · D5 · INTERFACE §2-7 `enchantTactic`] — 편성 `no` 칸 `slot` 의 줄 `i`(0 부터 · `tacticState` 의 `lines[].i`) 하나만 굴려 **바로 바꾼다**
      *   (원래 것 vs 새 것 고르기 없음) — `tactic.enchantLine`(옵션 종류 · 등급 한 단계 걷기 · 범위 값 · rng = `seedOf(state, 0x7AEC, ++counters.tacticEnchant)`).
-     *   비용 = 골드 + 카드 조각(`tactic.enchantCost`). err 순서: `missing`(모르는 갈래 · 없는 편성) → `slotClosed` → `noCard`(빈 칸) → `missing`(없는 줄 자리) → `gold` → `shard` ·
+     *   비용 = 골드 + 카드 조각(`tactic.enchantCost`). err 순서: `missing`(모르는 칸 · 없는 편성) → `slotClosed` → `noCard`(빈 칸) → `missing`(없는 줄 자리) → `gold` → `shard` ·
      *   거절이면 아무것도 안 바뀐다 · in-place
      */
     function enchantTactic(state, slot, i, no = state.preset) {
@@ -7490,7 +7524,7 @@ export function createGameSystem(deps) {
     }
 
     /** 콜로세움 방어 편성이 올라갈 때 싣는 것 — 물약 칸(재고에서 채운 칸의 id · 자리 순 — `arenaLoadout` 과 같은 칸) · 마시는 기준 ·
-     *  **열린 칸의 작전 카드** `{slots: {attack, defense, utility}}`(Slot | null — 카드 · 등급 · 줄 `{id, grade, m}` · 팀 코드 판 3 · R586 · INTERFACE §2-17 `exportTeam`). 값은 받는 쪽이 다시 잰다 · 상태 불변 · rng 0 */
+     *  **열린 칸의 작전 카드** `{slots: {'1', '2', '3'}}`(Slot | null — 카드 · 등급 · 줄 `{id, grade, m}` · 팀 코드 판 4 · R586 · INTERFACE §2-17 `exportTeam`). 값은 받는 쪽이 다시 잰다 · 상태 불변 · rng 0 */
     function arenaExport(state, no = state.preset) {
         const p = presetAt(state, no) ?? curPreset(state);
         const slots = Object.fromEntries(TC.SLOTS.map(s => [s, null]));
@@ -7705,7 +7739,7 @@ export function createGameSystem(deps) {
         h.mastery = h.mastery ?? {};
         h.mastery[nodeId] = rank + 1;
         h.masteryPoints -= 1;
-        mmNoteEvent(state, 'mastery');   // 메인미션 「스킬 포인트 찍기」 (R583)
+        mmNoteEvent(state, 'mastery');   // 메인미션 「마스터리 포인트 찍기」 (R583)
         return { ok: true, rank: rank + 1, points: h.masteryPoints };
     }
 
