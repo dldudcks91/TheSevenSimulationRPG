@@ -227,9 +227,14 @@
 :root[data-mobile] .pt-mid { flex-direction: column; gap: 16px; }
 :root[data-mobile] .pt-left { min-width: 0; max-width: 100%; }
 :root[data-mobile] .pt-mid > .pt-tactics { border-left: 0; padding-left: 0; }
-:root[data-mobile] .pt-tactics .rs-grid { display: flex; flex-direction: column; }
-:root[data-mobile] .pt-tactics .rs-cell { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; }
-:root[data-mobile] .pt-tactics .rs-cell .rs-eff { flex: 1 1 100%; white-space: normal; }
+/* 작전 카드 세 칸 (§15 · R586) — 폰은 행 하나가 한 덩어리: 카드 위 · 옵션 줄 둘이 그 아래 한 줄씩(등급 · 효과 | 버프 몫 · [인챈트]) · 열 이름 줄은 걷는다 */
+:root[data-mobile] .pt-tactics .tc-list { display: flex; flex-direction: column; gap: 8px; }
+:root[data-mobile] .pt-tactics .tc-colh { display: none; }
+:root[data-mobile] .pt-tactics .tc-row { display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 10px; }
+:root[data-mobile] .pt-tactics .tc-card { min-height: 0; }
+:root[data-mobile] .pt-tactics .tc-line { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 6px 8px; }
+:root[data-mobile] .pt-tactics .tc-line > .rs-eff { white-space: normal; }
+:root[data-mobile] .pt-tactics .tc-line > .tc-ench { grid-column: 1 / -1; justify-self: end; }
 :root[data-mobile] .pt-tactics .rs-board { grid-template-columns: max-content max-content minmax(0, 1fr) max-content; }   /* 폰은 한 열 여덟 줄 — 반 폭이면 20칸이 너무 잘다 (ADR-1339) */
 :root[data-mobile] .pt-tactics .rs-bd-row.r { grid-column: 1 / span 4; }
 :root[data-mobile] .gb-sins { flex-wrap: wrap; min-width: 0; }

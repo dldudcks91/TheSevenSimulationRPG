@@ -22,9 +22,11 @@ const node = (tag, cls, text) => {
  * read()  → `{owner, model: mainMissionState, fresh: [id]}` or null (not in a game)
  * label(m) → mission name · rewards(reward) → DOM node · claim(id) · claimAll(ids) · navigate(m) — the caller renders after each
  * readSeen(owner) → next-mission id last seen in the panel, or null · writeSeen(owner, id) — browser-only, not the game save (ADR-1245)
- * tutorial(m) → true when the next mission is a chapter-1 tutorial line — a sign hangs under the icon and pressing it acts like Go To (ADR-1381)
+ * tutorial(m) → true when the next mission is a chapter-1 tutorial line — a sign hangs under the icon and pressing it acts like Go To (ADR-1381);
+   a filled tutorial line not yet claimed turns the sign into a completion card with [Claim] (ADR-1388)
+ * toggled() → after the panel opens or closes, so a Go To outline pointing into the panel moves at once (ADR-1382)
  */
-export function createMainMission({ read, label, rewards, claim, claimAll, navigate, hideTip, readSeen, writeSeen, tutorial }) {
+export function createMainMission({ read, label, rewards, claim, claimAll, navigate, hideTip, readSeen, writeSeen, tutorial, toggled }) {
     let owner = null, model = null, signature = '', host = null;
     let open = false, restoreFocus = null, scroll = 0, seen = null;
     let bubble = '', bubbleUntil = 0, bubbleTimer = null, ringAt = 0;
@@ -64,11 +66,15 @@ export function createMainMission({ read, label, rewards, claim, claimAll, navig
         signature = nextSignature;
         if (fresh.length) {
             const first = model.list.find(m => m.id === fresh[0]);
-            bubble = fresh.length === 1 && first ? t('mm.bubble', { name: label(first) }) : t('mm.bubbleN', { n: fresh.length });
             ringAt = Date.now();
-            bubbleUntil = ringAt + BUBBLE_MS;
             clearTimeout(bubbleTimer);
-            bubbleTimer = setTimeout(() => { bubble = ''; paint(); }, BUBBLE_MS);
+            // A filled chapter-1 tutorial line is announced by the sign's completion card, not the bubble — the bubble would hide the sign (ADR-1388)
+            if (fresh.some(id => { const m = model.list.find(x => x.id === id); return m && tutorial?.(m); })) bubble = '';
+            else {
+                bubble = fresh.length === 1 && first ? t('mm.bubble', { name: label(first) }) : t('mm.bubbleN', { n: fresh.length });
+                bubbleUntil = ringAt + BUBBLE_MS;
+                bubbleTimer = setTimeout(() => { bubble = ''; paint(); }, BUBBLE_MS);
+            }
         }
         return changed || fresh.length > 0;
     }
@@ -78,6 +84,7 @@ export function createMainMission({ read, label, rewards, claim, claimAll, navig
         hideTip();
         open = false;
         paint();
+        toggled?.();
         if (focus) host?.querySelector('.mission-btn')?.focus({ preventScroll: true });
     }
 
@@ -116,7 +123,7 @@ export function createMainMission({ read, label, rewards, claim, claimAll, navig
         // Red dot = a next mission not yet seen in the panel · the number badge (rewards to claim) wins (ADR-1245)
         const unseen = !ready && !!model.current && model.current.id !== seen;
         const button = host.querySelector('.mission-btn') ?? node('button');
-        button.className = `mail-btn notification-btn mission-btn${ready || unseen ? ' has' : ''}${bubble && ringAge < RING_MS ? ' ringing' : ''}`;
+        button.className = `mail-btn notification-btn mission-btn${ready || unseen ? ' has' : ''}${ringAge < RING_MS ? ' ringing' : ''}`;
         button.replaceChildren();
         button.dataset.missionAction = 'scroll';
         bindTipNode(button, () => {
@@ -130,7 +137,7 @@ export function createMainMission({ read, label, rewards, claim, claimAll, navig
         button.setAttribute('aria-controls', 'mission-panel');
         const art = node('img');
         art.src = MISSION_ART; art.alt = ''; art.draggable = false;
-        if (bubble && ringAge < RING_MS) art.style.animationDelay = `-${ringAge}ms`;
+        if (ringAge < RING_MS) art.style.animationDelay = `-${ringAge}ms`;
         button.appendChild(art);
         if (ready) button.appendChild(node('span', 'mail-n', ready > 99 ? '99+' : ready));
         else if (unseen) button.appendChild(node('span', 'notification-dot'));
@@ -139,6 +146,7 @@ export function createMainMission({ read, label, rewards, claim, claimAll, navig
             markSeen();
             hideTip();
             paint();
+            toggled?.();
             host.querySelector(open ? '.mission-close' : '.mission-btn')?.focus({ preventScroll: true });
         };
         if (button.parentNode !== host) host.appendChild(button);
@@ -147,6 +155,19 @@ export function createMainMission({ read, label, rewards, claim, claimAll, navig
             const note = node('div', 'notification-bubble', bubble);
             note.setAttribute('role', 'status');
             host.appendChild(note);
+        } else if (!open && model.claimable.some(m => tutorial?.(m))) {
+            // Completion card — a filled tutorial line not yet claimed: the sign stops swinging and offers [Claim] right there (ADR-1388)
+            const done = model.claimable.find(m => tutorial?.(m)), sign = node('div', 'mission-tut done');
+            const plate = node('div', 'mission-tut-card');
+            plate.append(node('span', 'mission-tut-cap', t('mm.tut.done')), node('span', 'mission-tut-name', label(done)), rewards(done.reward));
+            const take = node('button', 'btn sm primary mission-tut-claim', t('mail.claim'));
+            take.dataset.missionAction = `tut-claim:${done.id}`;
+            take.setAttribute('aria-label', `${label(done)} · ${take.textContent}`);
+            const doneOwner = owner;
+            take.onclick = () => { if (owner === doneOwner) { hideTip(); claim(done.id); } };
+            plate.appendChild(take);
+            sign.appendChild(plate);
+            host.appendChild(sign);
         } else if (!open && model.current && tutorial?.(model.current)) {
             // Chapter-1 tutorial sign — hangs under the icon while the next mission is a tutorial line · not while the panel or the bubble is up
             const next = model.current, sign = node('div', 'mission-tut');

@@ -545,6 +545,8 @@ html, body { height: 100%; overflow: hidden; }
     box-shadow: 0 8px 24px rgba(var(--shadow-rgb), .6);
 }
 .mission-coach > b { display: block; margin-bottom: 4px; color: var(--color-warning); }
+/* 두루마리 · 미션 판 단계 — 판(49)과 같은 층 · 한 장 직속이라 판보다 뒤에 그려져 판 위에 선다 · 툴팁(50) 아래 (ADR-1382) */
+.mission-coach.over { z-index: 49; }
 /* 1장 튜토리얼 팻말 — 두루마리 아래에 끈 두 가닥으로 매달린 작은 판 · 천천히 흔들린다(한 번 흔들리는 길이는 `main_mission.js:SWING_MS` 가 인라인으로 준다) ·
    어둠(39) 아래 · 누르면 [바로가기] (SCREEN_DESIGN §2 「메인미션」 · ADR-1381) */
 .mission-tut { position: absolute; top: 100%; left: 50%; z-index: 30; transform: translateX(-50%); padding-top: 12px; }
@@ -564,6 +566,10 @@ html, body { height: 100%; overflow: hidden; }
 .mission-tut-card:hover { filter: brightness(1.25); }
 .mission-tut-cap { font-size: var(--fs-2xs); color: var(--color-warning); }
 .mission-tut-name { font-size: var(--fs-sm); font-weight: 700; }
+/* 완료 판 — 채운 튜토리얼 줄 · 흔들리지 않는다 · 보상 칩 + [받기] (SCREEN_DESIGN §2 「메인미션」 · ADR-1388) */
+.mission-tut.done .mission-tut-card { animation: none; cursor: default; gap: 4px; }
+.mission-tut.done .mission-tut-card:hover { filter: none; }
+.mission-tut-claim { margin-top: 2px; }
 @keyframes mission-tut-swing { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
 @media (prefers-reduced-motion: reduce) { .mission-tut-card { animation: none; } }
 :where(:root[data-skin="d2min"]) .mission-coach,
@@ -593,9 +599,8 @@ html, body { height: 100%; overflow: hidden; }
 .lock-inl svg { width: 1em; height: 1em; }
 /* 잠금 표시는 어디서나 회색 [2026-10-27 사용자 지시 「모든 잠금 표시를 회색으로」 · SCREEN_DESIGN §13-1 · ADR-0925] —
    자물쇠(`lockIcon`)는 둘레 글자색(죄종 색 탭 · 빨간 막힘 줄 · 플래시)을 안 따른다 · 잠김 한 줄(`lockLine` → `.lock-line`)은 글자까지 회색.
-   예외 = 전술 잠금 토글(`.rs-pin` — 유저가 거는 잠금 · 버튼 색) · 플래시의 글(카드 색 그대로 — 자물쇠만 회색) */
+   예외 = 플래시의 글(카드 색 그대로 — 자물쇠만 회색) · ~~전술 잠금 토글 `.rs-pin`~~ 은 2026-11-26 걷었다(R586) */
 .rs-pin-ico { color: var(--text-muted); }
-.rs-pin .rs-pin-ico { color: inherit; }
 .lock-line { color: var(--text-muted); }
 .toast .lock-line { color: inherit; }
 @keyframes toast-pop {
@@ -1144,8 +1149,10 @@ img[src*="/art/faces/"] { background: url('../assets/art/faces/backdrop.webp') c
    옛 폭(195 + 26 + 물약 넉 칸 172 + 26 + 327 = 746)이면 물약 칸이 출정 방식 밑으로 파고들었다(실측 — 2칸에서도 25px 겹쳤다).
    창 폭 1300 [ADR-0441] 에서 받는 폭은 706 이고 이 값 그대로 넉 칸 한 줄이 든다 — 180 + 26 + 172 + 26 + 287 = 691 */
 .dw-tac { flex: 0 0 clamp(150px, 12em, 180px); min-width: 0; }
-/* 효과 한 줄 — 효과 글 + 카운터. **조건을 못 채운 칸은 흐리다** — 칸 격자(편성 탭)의 켜짐/꺼짐을 진하기 하나로 줄인 것이다 */
-.dw-tac-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; opacity: .4; }
+/* 작전 카드 한 묶음 — 카드 줄(죄종 그림 + 이름 · 등급 색 · 올리면 카드 툴팁) + 옵션 줄 효과 둘 (§4-1 · §15 · R586) */
+.dw-tac-card { display: flex; align-items: center; gap: 5px; margin: 2px 0 3px; font-size: var(--fs-xs); min-width: 0; }
+.dw-tac-card .tc-ico { width: 18px; height: 18px; }
+.dw-tac-row { display: flex; align-items: baseline; gap: 8px; margin: 0 0 4px 23px; opacity: .4; }
 .dw-tac-row.on { opacity: 1; }
 /* 물약 칸 — 아레나 칸(`.b-belt .p-slot` 34)과 편성 탭 칸(44) 사이. 창 배율(.9) 아래서 편성 탭 칸과 비슷하게 보인다 */
 .dw-pot .p-slot { width: 40px; height: 40px; }
@@ -5107,6 +5114,13 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 /* 스킬북 칸 배지 「스킬북」 — 리포트 획득 격자 · 탐험 결과 · 상단 책 칸 (§4-3 · §8-4 · §8-3 · ADR-1012 · ADR-1198 — ~~「도안」~~ ADR-0680) — 체크 배지 자리 · 색은 정보색 */
 .inv-check.book-tag { color: var(--info-fg); font-size: var(--fs-2xs); }
 .book-cell .inv-icon img { image-rendering: var(--face-render); }
+/* 작전 카드 칸 — 리포트 획득 격자 (§4-3 · ADR-1386) · 배지는 책 칸과 같은 자리 · 테두리 = 카드 등급 색 · 그림 = 죄종 그림(⚠임시) */
+.inv-cell.tc-drop.tc-g-common { border-color: var(--rarity-normal); }
+.inv-cell.tc-drop.tc-g-magic { border-color: var(--rarity-magic); }
+.inv-cell.tc-drop.tc-g-rare { border-color: var(--rarity-rare); }
+.inv-cell.tc-drop.tc-g-epic { border-color: var(--rarity-epic); }
+.inv-cell.tc-drop.tc-g-legendary { border-color: var(--rarity-legendary); }
+.tc-drop .inv-icon img { padding: 14%; }
 /* 우편함 창 [ADR-0748] — 우편 한 통 = 카드 한 장(첨부 칸 · 이름 + 출처 · 받을 부대 + [받기]) · 카드 자리는 `--mail-cols` 줄 × `--mail-rows` 단이 늘 깔리고
    (`app.js:MAIL_SLOTS` · `MAIL_COLS` · ADR-0743) 넘치면 판 안에서 스크롤 · 카드 높이는 `--mail-h` 하나가 정한다 · 맨 아래 띠 = 개수 · [모두 받기]
    한 줄에 카드 한 장이라 판 폭은 카드 한 장 몫이다 (ADR-0989) */
@@ -6253,24 +6267,72 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     position: absolute; right: 2px; bottom: 0; font-weight: normal; font-size: var(--fs-xs); line-height: 1.2;
     color: var(--text-primary); font-variant-numeric: tabular-nums; text-shadow: 0 0 2px #000, 0 0 2px #000; pointer-events: none;
 }
-/* 파티 전술 칸은 **세로 목록**이다 [2026-09-21 사용자 지시 · ADR-0260] — 칸 하나가 한 행 · 행 수는 칸 수(`tactic_slot.csv` 행 수).
-   세로줄 넷(켜짐 · 등급 | 조건 + 카운터 | 효과 | 리롤 — 칸 번호는 안 적는다 · ADR-0261)은 **목록이 들고** 행은 그것을 빌린다(subgrid) — 모든 행에서 같은 자리에 서야
-   일곱 칸을 위에서 아래로 훑어 견준다. 조건 · 효과는 글이 길면 **그 행 안에서** 줄을 바꾼다(칸 폭은 안 준다 — 행이 높아진다).
-   글자는 연구 노드(`.rs-cell` 공용)보다 한 단 작다(--fs-xs). 행 높이는 위아래 여백이 준다 — 오른쪽 열 아래가 남아
-   한 단 키웠다 [2026-09-21 사용자 지시 「좀만 더 키워보자」] · 일곱 행이 오른쪽 열 안에 드는 것은 그대로 지킨다 */
-/* 세로줄 일곱 — 등급 · 켜짐 | 죄종 | 조건 | 진행(카운터 · 단계) | 효과 | 버프 몫 | 잠금 · **전부 왼쪽 정렬** [2026-10-24 사용자 「다같이 칸 맞춰서 왼쪽정렬」 · ADR-0757 ·
-   죄종 · 단계 · 버프 몫 2026-11-11 · ADR-1048]. **칸은 전부 내용 폭**(조건은 열 폭의 일부까지 — 넘치면 줄을 바꾼다)이고 **남는 폭은 칸 사이에 고르게** 나눈다 —
-   한 칸이 다 먹으면 행이 왼쪽 · 오른쪽 두 덩어리로 갈린다 [2026-10-24 사용자 「왼쪽 오른쪽 너무 극명하게 나뉘었잖아」 · ADR-0758] */
-.pt-tactics .rs-grid { grid-template-columns: max-content max-content fit-content(34%) max-content max-content max-content max-content; justify-content: space-between; gap: 8px 10px; }
-.pt-tactics .rs-cond { justify-content: flex-start; }
-.pt-tactics .rs-sin, .pt-tactics .rs-cnt-c, .pt-tactics .rs-eff, .pt-tactics .rs-lead { justify-self: start; white-space: nowrap; }
-.pt-tactics .rs-sin { font-size: calc(var(--fs-xs) + 1px); }   /* 그 칸의 죄종 — 글자색 = 죄종 색(인라인) */
-.pt-tactics .rs-cnt-c { font-size: calc(var(--fs-xs) + 1px); display: flex; align-items: baseline; gap: 6px; }
-/* 단계 「×n」 — 진행 칸의 카운터 뒤 · 0 이면 흐림(꺼진 칸) */
-.rs-step { font-size: var(--fs-xs); color: var(--text-secondary); }
-.rs-step.zero { color: var(--text-muted); }
-/* 버프 몫 칸 — 효과 오른쪽 (§15 · ADR-1048) · 리더 몫 + 그 죄종 장비 몫 % · 더하면 성공색 · 빼면 오류색 · 0 은 흐림 */
-.pt-tactics .rs-lead { font-size: calc(var(--fs-xs) + 1px); color: var(--text-secondary); }
+/* 파티 전술 = 작전 카드 세 칸 [2026-11-26 · R586 · §15 · ADR-1383] — 행 = 왼쪽 카드 + 오른쪽 옵션 줄 둘(위아래).
+   세로줄 다섯(카드 | 등급 | 효과 | 버프 몫 | 인챈트)은 **목록이 들고** 열 이름 줄 · 행 · 줄이 빌린다(subgrid) — 세 행의 줄 여섯이 같은 세로줄에 서야
+   위에서 아래로 훑어 견준다. **효과 칸만 남는 폭을 받는다**(축 이름 길이가 줄마다 다르다). 행 · 열 이름 줄은 좌우 여백이 같아야 세로줄이 안 어긋난다 */
+.tc-list { display: grid; grid-template-columns: minmax(10.5em, max-content) max-content minmax(0, 1fr) max-content max-content; column-gap: 12px; row-gap: 8px; }
+.tc-colh { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: end; padding: 0 11px; font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
+.tc-colh .c-opt { grid-column: 2 / span 2; }
+.tc-row {
+    grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; grid-auto-rows: minmax(34px, auto); align-items: center; row-gap: 4px;
+    padding: 8px 10px; border: 1px solid var(--border-secondary); border-radius: 4px; background: var(--bg-card);
+}
+/* 카드 — 행의 왼쪽 세로를 다 차지한다(줄 둘의 높이) · 왼쪽 굵은 변 = 등급 색 · 누르면 그 갈래의 가방 창 (ADR-1384) */
+.tc-card {
+    grid-column: 1; grid-row: 1 / span 2; align-self: stretch; display: flex; flex-direction: column; align-items: stretch; gap: 3px;
+    min-height: 76px; padding: 5px 8px; text-align: left; font: inherit; color: var(--text-primary); cursor: pointer;
+    background: var(--bg-tertiary); border: 1px solid var(--border-secondary); border-left-width: 3px; border-radius: 4px;
+}
+.tc-card:hover { border-color: var(--border-highlight); }
+.tc-card.empty { border-style: dashed; border-left-width: 1px; }
+.tc-card.locked { border-left-width: 1px; color: var(--text-muted); }
+.tc-card.g-common { border-left-color: var(--rarity-normal); }
+.tc-card.g-magic { border-left-color: var(--rarity-magic); }
+.tc-card.g-rare { border-left-color: var(--rarity-rare); }
+.tc-card.g-epic { border-left-color: var(--rarity-epic); }
+.tc-card.g-legendary { border-left-color: var(--rarity-legendary); }
+.tc-slot { font-size: var(--fs-xs); color: var(--text-muted); }
+.tc-id { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); min-width: 0; }
+.tc-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tc-none, .tc-lock { font-size: calc(var(--fs-xs) + 1px); color: var(--text-muted); }
+.tc-foot { display: flex; align-items: center; gap: 6px; margin-top: auto; }
+.tc-bag { margin-left: auto; font-size: var(--fs-xs); color: var(--color-info); white-space: nowrap; }
+/* 카드 그림 ⚠임시 = 그 카드의 죄종 그림 (§15) — 카드 · 가방 창 · 툴팁 · 출정 창이 같은 칸 */
+.tc-ico { width: 24px; height: 24px; flex: none; display: inline-flex; align-items: center; justify-content: center; }
+.tc-ico img { width: 100%; height: 100%; object-fit: contain; }
+/* 등급 색 — 이름 글자 (카드 · 가방 줄 · 툴팁 이름 · 출정 창) · 일반은 밝은 글자 */
+.tc-g-common .tc-name, .tip-name.tc-g-common { color: var(--text-primary); }
+.tc-g-magic .tc-name, .tip-name.tc-g-magic { color: var(--rarity-magic); }
+.tc-g-rare .tc-name, .tip-name.tc-g-rare { color: var(--rarity-rare); }
+.tc-g-epic .tc-name, .tip-name.tc-g-epic { color: var(--rarity-epic); }
+.tc-g-legendary .tc-name, .tip-name.tc-g-legendary { color: var(--rarity-legendary); }
+/* 옵션 줄 — 등급 칩 | 효과(적용 값) | 버프 몫 % | [인챈트] — 행의 세로줄을 빌린다 */
+.tc-line { grid-column: 2 / -1; display: grid; grid-template-columns: subgrid; align-items: center; min-width: 0; }
+.tc-line > .rs-grade { justify-self: start; }
+.tc-line > .rs-eff { font-size: calc(var(--fs-xs) + 1px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.btn.sm.tc-ench { white-space: nowrap; padding: 2px 8px; }
+/* 진척 줄 오른쪽 끝 · 가방 창 머리 — 카드 조각 */
+.tc-shards { margin-left: auto; font-size: var(--fs-xs); color: var(--text-secondary); white-space: nowrap; }
+.tc-shards b { color: var(--text-primary); font-size: var(--fs-md); }
+/* 가방 창 (§15 · ADR-1384) — 맨 위 지금 칸 · 그 아래 그 갈래의 카드 목록(그림 + 이름 | 등급 | ×n | [장착] | [분해]) */
+.modal-box.tcb-modal { width: clamp(420px, 42em, 680px); max-width: 100%; }
+.modal-head .tc-shards { font-size: var(--fs-sm); margin-right: 10px; }
+.tcb-body { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.tcb-cur { display: flex; align-items: center; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-secondary); }
+.tcb-cur-h { font-size: var(--fs-xs); color: var(--text-muted); }
+.tcb-cur-v, .tcb-id { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.tcb-list { display: grid; grid-template-columns: minmax(0, 1fr) max-content max-content max-content max-content; gap: 6px 10px; align-items: center; max-height: 52vh; overflow: auto; }
+.tcb-row { display: contents; }
+.tcb-n { font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+.tcb-empty { grid-column: 1 / -1; padding: 8px 0; }
+.tcb-row .btn { white-space: nowrap; }
+/* 카드 툴팁 — 이름 줄에 그림 (§15) */
+.tip-card.tc-tip { max-width: 320px; }
+.tc-tip .tip-name { display: flex; align-items: center; gap: 6px; }
+.tc-tip .tc-ico { width: 20px; height: 20px; }
+.tc-tip .tip-effect-summary { white-space: normal; word-break: keep-all; }   /* 효과 문장은 접힌다 — 한글이 낱말 가운데서 안 끊긴다 */
+/* 버프 몫 칸 — 옵션 줄 효과 오른쪽 (§15 · ADR-1048 · ADR-1383) · 리더 몫 + 그 줄 죄종 점수 몫 % · 더하면 성공색 · 빼면 오류색 · 0 은 흐림 */
+.pt-tactics .rs-lead { font-size: calc(var(--fs-xs) + 1px); color: var(--text-secondary); white-space: nowrap; }
 .pt-tactics .rs-lead.up { color: var(--color-success); }
 .pt-tactics .rs-lead.down { color: var(--color-error); }
 .pt-tactics .rs-lead.muted { color: var(--text-muted); }
@@ -6299,31 +6361,8 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .rs-bd-lead.s-up .rs-bd-bar > i.on { background: var(--color-success); }
 .rs-bd-lead.s-down .rs-bd-bar > i.on { background: var(--color-error); }
 .rs-bd-lead.s-muted .rs-bd-bar > i.on { background: var(--text-muted); }
-.pt-tactics .rs-cell { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; padding: 11px 12px; column-gap: normal; }   /* 목록의 칸 사이(gap + 고르게 나눈 폭)를 그대로 — 공용 `.rs-cell` 의 gap 5px 이 덮으면 열 이름 줄과 어긋난다 (ADR-0763) */
-.pt-tactics .rs-top { gap: 6px; }
-.pt-tactics .rs-state { margin-left: 0; min-width: 3ch; }   /* 맨 왼쪽 (2026-09-27) — On · Off 글자 폭이 달라도 등급 칩이 같은 자리에 선다 */
-.pt-tactics .rs-roll { margin-top: 0; justify-self: end; }
-.pt-tactics .rs-lock { grid-column: 1 / -1; margin-top: 0; }   /* 잠긴 행은 여는 조건 한 줄 — 첫 세로줄부터 선다 (ADR-0261) */
-/* 전체 리롤 — 진척 줄 오른쪽 끝 (§15 · ADR-0763 · ~~진척 줄 아래 리롤 줄~~) */
-.pt-tactics .rs-head .rs-roll { margin-left: auto; align-self: center; }
-/* 열 이름 줄 — 칸 목록과 같은 격자(subgrid) · 좌우 여백 = 칸 행의 여백 + 테두리 1px · 잠금만 오른쪽 끝 (ADR-0763) */
-.pt-tactics .rs-colh {
-    grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: end;
-    padding: 0 13px; font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap;
-}
-.pt-tactics .rs-colh .c-lock { justify-self: end; }
-/* 잠금 토글 — 행의 넷째 칸. 잠근 칸은 버튼이 강조되고 행 왼쪽에 경고색 선이 선다 (`.locked` = 안 열린 칸과는 다른 말이다) */
-.pt-tactics .rs-pin { justify-self: end; }
-.rs-pin.on { color: var(--text-primary); border-color: var(--border-highlight); }
-/* 자물쇠 아이콘 (2026-09-27) — 열린 자물쇠는 흐리게 · 닫힌 자물쇠는 경고색(행 왼쪽 선과 같은 색) */
-.rs-pin { display: inline-flex; align-items: center; justify-content: center; padding: 3px 6px; color: var(--text-muted); }
-.rs-pin.on { color: var(--color-warning); }
+/* 자물쇠 아이콘 — 글 줄 밖의 자물쇠는 블록이다(`lockIcon` 공용 · 잠긴 칸 · 베일) · ~~전술 잠금 토글 `.rs-pin` · 잠근 행 `.held`~~ 2026-11-26 걷음(R586 · ADR-1383) */
 .rs-pin-ico { display: block; }
-.rs-cell.held { box-shadow: inset 3px 0 0 var(--color-warning); }
-.pt-tactics .rs-cond, .pt-tactics .rs-eff, .pt-tactics .rs-lock { font-size: calc(var(--fs-xs) + 1px); }   /* 한 단 아래 +1px (2026-09-27 사용자 지시) */
-/* 잠긴 행 — 왼쪽에 닫힌 자물쇠(`lockIcon` · 회색 · ADR-0925) + 여는 조건 한 줄 */
-.pt-tactics .rs-lock { display: flex; align-items: center; gap: 6px; }
-.pt-tactics .rs-lock .rs-pin-ico { width: 1.1em; height: 1.1em; flex: none; }
 /* 「원정 중」 — 도는 원정의 편성 번호에 붙는다. 영웅 띠의 「원정 중」(`.hs-doing.exp`)과 같은 색 */
 .pt-run { margin-left: 6px; font-size: var(--fs-2xs); color: var(--color-warning); }
 /* 출정 창의 편성 고르개 (SCREEN_DESIGN §4-1 · ADR-0193) — 버튼 세로 · 초상 셋. 초상은 진형 · 적 구성 칸과 같은 한 변이라 적 구성과 마주 선다 */
@@ -6355,6 +6394,7 @@ html[lang="en"] .ng-role { line-height: 1.2; }
     padding-bottom: 9px; margin-bottom: 11px; border-bottom: 1px solid var(--border-dark);
 }
 .rs-head b { color: var(--text-primary); font-size: var(--fs-md); }
+.rs-head .tc-shards b { font-size: var(--fs-md); }   /* 진척 줄 오른쪽 끝 카드 조각 (§15 · ADR-1383) */
 
 .rs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
 
@@ -6374,13 +6414,15 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 .rs-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .rs-no { font-size: var(--fs-xs); color: var(--text-muted); }
 .rs-state { font-size: var(--fs-xs); color: var(--text-muted); margin-left: auto; }
-/* 전술 옵션 등급 — 색은 아이템 희귀도에서 빌리되 축은 별개다 (SCREEN_DESIGN §13-2 · tactic_card_design §5-5) */
+/* 작전 카드 · 옵션 줄 등급 다섯 — 색은 아이템 희귀도에서 빌리되 축은 별개다 (SCREEN_DESIGN §15 · tactic_card_design §3-3) · 일반은 흐린 무채색 */
 .rs-grade {
-    font-size: var(--fs-xs); padding: 0 5px; border-radius: 3px;
+    font-size: var(--fs-xs); padding: 0 5px; border-radius: 3px; white-space: nowrap;
     border: 1px solid currentColor; color: var(--text-muted);
 }
 .rs-grade.magic { color: var(--rarity-magic); }
 .rs-grade.rare { color: var(--rarity-rare); }
+.rs-grade.epic { color: var(--rarity-epic); }
+.rs-grade.legendary { color: var(--rarity-legendary); }
 .rs-cell.on .rs-state { color: var(--color-success); }
 .rs-cell.off .rs-state { color: var(--color-error); }   /* Off 는 빨강 (2026-09-27 사용자 지시 · §15) */
 
@@ -7550,13 +7592,15 @@ html[lang="en"] .ng-role { line-height: 1.2; }
 :where(:root[data-skin="d2min"]) .pd-cell.filled[style*="border-color"] > .pd-up { right: calc(var(--rare-line) + 3px); top: calc(var(--rare-line) + 2px); }
 :where(:root[data-skin="d2min"]) .bar { background: #050505; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .9), 0 1px 0 rgba(255, 255, 255, .04); }
 
-/* 카드 — 영웅 띠 · 관전 · 전술 칸 · 건설 부지: 어두운 돌 + 턱 한 줄 (윗변 등급 · 진영 색 · 부지 그림은 그대로) */
-:where(:root[data-skin="d2min"]) .hs-card,
-:where(:root[data-skin="d2min"]) .unit,
-:where(:root[data-skin="d2min"]) .rs-cell { background: var(--sk-fill), #121212; }
+/* 카드 — 영웅 띠 · 관전 · 전술 행 · 건설 부지: 어두운 돌 + 턱 한 줄 (윗변 등급 · 진영 색 · 부지 그림은 그대로) */
 :where(:root[data-skin="d2min"]) .hs-card,
 :where(:root[data-skin="d2min"]) .unit,
 :where(:root[data-skin="d2min"]) .rs-cell,
+:where(:root[data-skin="d2min"]) .tc-row { background: var(--sk-fill), #121212; }
+:where(:root[data-skin="d2min"]) .hs-card,
+:where(:root[data-skin="d2min"]) .unit,
+:where(:root[data-skin="d2min"]) .rs-cell,
+:where(:root[data-skin="d2min"]) .tc-row,
 :where(:root[data-skin="d2min"]) .cn-lot { box-shadow: inset 0 0 0 1px var(--sk-lip), 0 3px 8px rgba(0, 0, 0, .7); }
 
 /* 편성 탭 — 박스 하나를 판 셋(진형 · 물약 | 파티 전술)으로 나눈다 · 판 사이 8px · 세로 가림선 없음 (ADR-0815).

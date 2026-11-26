@@ -119,8 +119,10 @@ const chanFill = (u, now) => {
 const chargeOf = (u, now) => u.hp > 0 && u.chan?.left > 0 && isChargeCast(u.chan.s) ? 1 - chanFill(u, now) : null;
 /** 칸의 줄을 바꾼다 — 진형 붕괴(쇼크웨이브 · 2026-11-02 R424)가 실은 랭크 · 가로 차례(`order`)는 그대로 · 세로는 `data-rank` 를 CSS 가 */
 const setRank = (u, rank) => { u.rank = rank; const cell = u.buffRow?.parentElement; if (cell) cell.dataset.rank = rank; };
+/** 마지막 경직 창 — 작전 카드가 세운 후열 창(`hold` · 트로이 목마 · 기사 돌격 · ADR-1385)은 게이지만 세우고 칩은 안 세운다 */
+const lastStagger = u => (u.stalls ?? []).filter(w => !w.hold).at(-1);
 /** 지금 경직 중인가 — 창 뱃지 줄의 칩이 이것을 본다 */
-const staggered = (u, now) => (u.stalls?.[u.stalls.length - 1]?.to ?? -Infinity) > now;
+const staggered = (u, now) => (lastStagger(u)?.to ?? -Infinity) > now;
 /** 행동했다 — 게이지를 비우고 경직 창을 걷는다(skill · hit · dodge 가 부른다).
  *  **마법 무기는 안 비운다** [R200 · ADR-0483] — 칸 충전식이라 시전이 차던 칸을 안 건드린다. 칸은 `charge` · `skill` 의 `ch` 가 옮긴다(`chargeTo`) */
 const markActed = (u, at) => {
@@ -1455,7 +1457,7 @@ function refreshBuffs(u, now) {
     // 부류 버프 칩 — 특성 칩 바로 뒤 · 산 동안만 (ADR-1218)
     const fam = u.hp > 0 && u.family?.id ? u.family : null;
     const stag = u.hp > 0 && staggered(u, now);
-    const stagUntil = stag ? u.stalls?.[u.stalls.length - 1]?.to ?? now : null;
+    const stagUntil = stag ? lastStagger(u)?.to ?? now : null;
     // 끝 시각도 지문이다 — 같은 창이 갱신되면 칩 노드와 툴팁의 `until`도 새 값으로 갈아야 한다.
     const sig = `t${traits.length}|f${fam?.id ?? ''}|` + live.map(([id, b]) => `${id}:${b?.stat ?? ''}:${b?.v ?? 0}:${b?.until ?? 'always'}`).join('|')
         + (stag ? `|stagger:${stagUntil}` : '');
@@ -1474,8 +1476,8 @@ function refreshBuffs(u, now) {
             // 정예 강화가 건 창(서리 오라 · 피격 결빙 · 독구름 — `s: elite:*` · R528) — 그 강화 칩 그림 · 늘 해롭다 (ADR-1246)
             const ench = enchantSrcIcon(b?.s);
             if (ench) return `<span class="buff-chip bad trait" data-effect="${id}">${ench}</span>`;
-            const info = skillInfo(b?.s ?? id);
-            return `<span class="buff-chip ${b?.k || (b?.v ?? 0) < 0 ? 'bad' : 'good'}" data-effect="${id}">${skillImg(info)}</span>`;
+            const info = srcInfo(b?.s ?? id);   // 작전 카드가 건 창(불화살 화상 — `s = tactic:<카드>`)은 카드 그림 (ADR-1385)
+            return `<span class="buff-chip ${b?.k || (b?.v ?? 0) < 0 ? 'bad' : 'good'}" data-effect="${id}">${srcImg(info)}</span>`;
         }).join('') + (stag ? '<span class="buff-chip stagger" data-stagger="1"></span>' : '');
 
     row.querySelectorAll('[data-trait]').forEach(chip => {
@@ -1500,13 +1502,13 @@ function refreshBuffs(u, now) {
             bindTipNode(chip, () => effectTipCard({ owner: u.key, name, stat: b?.stat, value: b?.v, until: null, now: u.buffTipNow, iconHtml: famIconHtml('Aberration') }));
             return;
         }
-        const info = skillInfo(b?.s ?? id);
+        const info = srcInfo(b?.s ?? id);
         const name = b?.k ? t(`bt.ail.${b.k}`) : L(info.name);
         // 창의 원소 — 그 창을 건 스킬의 **첫 줄**이 거는 걸린 효과가 든다(`skill_status.csv` · 이벤트가 창 열쇠를 안 실어 칩은 스킬 id 로 선다 · 부채 #68 —
         //   여러 줄 스킬은 결투 하나이고 두 줄 다 원소가 없다). 무기 옵션 창(`wx:`)은 스킬이 아니라 null
         const element = b?.k ? null : SYS.skill?.statuses?.[SYS.skill.defs?.[id]?.effects[0].status]?.element ?? null;
         chip.setAttribute('aria-label', `${name} — ${effectSummaryText(b?.stat, b?.v, element, b?.cut)}`);
-        const ench = enchantSrcIcon(b?.s);   // 정예 강화가 건 창 — 칩과 같은 그림 (R528 · ADR-1246)
+        const ench = enchantSrcIcon(b?.s) ?? (info.card ? tacticImg(info.card) : null);   // 정예 강화 · 작전 카드가 건 창 — 칩과 같은 그림 (R528 · ADR-1246 · ADR-1385)
         bindTipNode(chip, () => effectTipCard({
             owner: u.key, info, name, stat: b?.stat, value: b?.v, element, cut: b?.cut ?? 0,
             until: b?.until ?? null, now: u.buffTipNow, ...(ench ? { iconHtml: ench } : {}),
@@ -1550,7 +1552,17 @@ function castSkill(state, u, ev) {
 /** 타격 라벨(`strikeLabel`) — 이벤트가 들고 온 스킬 id(`s`) 의 이름, 없으면 기본 공격. 로그가 쓴다 — 누적 데미지는 id 로 쌓고 그릴 때 같은 이름을 붙인다 */
 /** 칸의 첫 준비 시각 — 시뮬이 실은 값 그대로 · `null` 은 안 켜진 오오라라 **늘 덮는다**(Infinity) · 값이 없으면 `dflt` (INTERFACE §2-6 · R98) */
 const slotReady = (r, dflt) => r === null ? Infinity : (r ?? dflt);
-const strikeLabel = id => id ? L(skillInfo(id).name) : t('bt.basicAttack');
+const strikeLabel = id => id ? L(srcInfo(id).name) : t('bt.basicAttack');
+/* 작전 카드가 낸 사건의 출처 [2026-11-26 · R586 · INTERFACE §2-6 `tactic` · SCREEN_DESIGN §4-2 · ADR-1385] — `s = tactic:<카드>`(치중대 회복 · 불화살 화상 창 · 그 화상 도트).
+   스킬 id 가 아니라 카드다 — 이름은 카드 이름(`tc.name.<카드>`) · 그림은 그 카드의 죄종 그림(⚠임시 — SCREEN_DESIGN §15). 로그 · 창 칩 · 누적 판이 같이 쓴다 */
+/** 출처가 카드면 그 카드 id · 아니면 null */
+const tacticSrc = s => (typeof s === 'string' && s.startsWith('tactic:') ? s.slice(7) : null);
+/** 카드 그림 — 그 카드의 죄종 그림 · 모르는 카드는 빈 칸 */
+const tacticImg = card => { const src = M.sinIcon(SYS.tactic?.cardById?.(card)?.sin); return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : ''; };
+/** 출처 풀이 — 카드면 `{id, name(현재 언어 글), card}` · 아니면 스킬(`skillInfo` — 정예 강화 포함) */
+const srcInfo = id => { const c = tacticSrc(id); return c ? { id, name: t(`tc.name.${c}`), cd: 0, icon: '', desc: null, card: c } : skillInfo(id); };
+/** 출처 그림 — 카드면 그 카드 그림 · 아니면 스킬 그림 */
+const srcImg = info => (info?.card ? tacticImg(info.card) : skillImg(info));
 
 /* ───────── 누적 데미지 — 이벤트가 실어 온 값을 더할 뿐이다. 재생기는 계산하지 않는다 (정산은 game_logic) ───────── */
 
@@ -1667,8 +1679,8 @@ function dmgLines(e) {
     return [...e.dealt.by.entries()].sort((a, b) => rank(a[0]) - rank(b[0]));
 }
 /* 기본 공격은 스킬 그림이 없어 **무기 칸 실루엣**을 든다 · 반사는 그림이 없다 */
-const dmgIcon = id => id === 'reflect' ? '' : id === 'basic' ? `<img src="${M.slotArt('weapon')}" alt="">` : enchantSrcIcon(id) ?? skillImg(skillInfo(id));
-const dmgName = id => id === 'basic' ? t('bt.basicAttack') : id === 'reflect' ? t('bt.reflectLabel') : L(skillInfo(id).name);
+const dmgIcon = id => id === 'reflect' ? '' : id === 'basic' ? `<img src="${M.slotArt('weapon')}" alt="">` : enchantSrcIcon(id) ?? srcImg(srcInfo(id));
+const dmgName = id => id === 'basic' ? t('bt.basicAttack') : id === 'reflect' ? t('bt.reflectLabel') : L(srcInfo(id).name);
 /* 받은 피해 줄의 그림 — 때린 몬스터의 초상. 없으면 빈 칸이다(초상 칸과 같다) */
 const foeIcon = (id, hero) => { const src = hero ? M.heroFace(hero) : monsterFace(id); return src ? `<img src="${src}" alt="" onerror="this.remove()">` : ''; };
 /* 영웅 등급 색(`hero_tier.csv:color_hex`) — 아레나 카드 윗변과 누적 판 초상 윗변이 같이 읽는다. 모르는 등급 · 영웅이 없는 파티 유닛은 `rare` */
@@ -2190,7 +2202,7 @@ function apply(state, root, opts, ev) {
             // 경직 중에 또 걸리면 **끝만 새로** — 시뮬이 행동 예약을 미는 방식과 같다 (INTERFACE §2-6 「경직」)
             u.stalls = u.stalls ?? [];
             const w = u.stalls[u.stalls.length - 1];
-            if (w && ev.t < w.to) w.to = Math.max(w.to, ev.until);   // 스턴과 겹치면 늦은 끝 (R178 — 누적하지 않는다)
+            if (w && !w.hold && ev.t < w.to) w.to = Math.max(w.to, ev.until);   // 스턴과 겹치면 늦은 끝 (R178 — 누적하지 않는다) · 작전 카드의 후열 창(`hold`)과는 잇지 않는다
             else u.stalls.push({ from: ev.t, to: ev.until });
             refreshUnit(state, u);
             break;
@@ -2296,7 +2308,7 @@ function apply(state, root, opts, ev) {
             if (ev.k === 'stun') {
                 u.stalls = u.stalls ?? [];
                 const w = u.stalls[u.stalls.length - 1];
-                if (w && ev.t < w.to) w.to = Math.max(w.to, ev.until);
+                if (w && !w.hold && ev.t < w.to) w.to = Math.max(w.to, ev.until);
                 else u.stalls.push({ from: ev.t, to: ev.until });
                 if (ev.cd > 0) for (const s of u.skills ?? []) if ((s.readyAt ?? 0) > ev.t) s.readyAt += ev.cd;
             }
@@ -2351,6 +2363,41 @@ function apply(state, root, opts, ev) {
             if (ev.hpMax !== undefined) { u.hpMax = ev.hpMax; u.hp = ev.dhp; }
             refreshUnit(state, u);
             if (!aura) logLine(state, root, u.side, ev.k ? 'ailEnd' : 'buffEnd', L(u.name), ev.s ? dmgIcon(ev.s) : '', ev.k ? t(`bt.ail.${ev.k}`) : strikeLabel(ev.s), '', t('log.v.ended'));
+            break;
+        }
+        case 'tactic': {   // 작전 카드가 일했다 [2026-11-26 · R586 · INTERFACE §2-6 「작전 카드 규칙」 · SCREEN_DESIGN §4-2 · ADR-1385]
+            //   카드마다 로그 한 줄 · 나눠 받기(방패벽 · 친위대)는 받은 유닛의 HP · 팝업 · 거짓 후퇴는 칸의 자리 · 기사 돌격은 당긴 파티 전열의 게이지 ·
+            //   트로이 목마 · 기사 돌격이 세운 후열은 그 끝까지 게이지가 선다(경직 칩 없음 — `hold`) · 치중대는 뒤따르는 `heal` 이 줄을 쓴다.
+            //   값은 실려 온 그대로(계산하지 않는다) · 모르는 카드 · 빠진 필드는 조용히 지나간다
+            const rule = SYS.tactic?.cardById?.(ev.card)?.rule ?? ev.card;
+            const name = t(`tc.name.${ev.card}`), ico = tacticImg(ev.card), side = ev.side === 'enemy' ? 'enemy' : 'party';
+            const hold = keys => { for (const k of keys ?? []) { const u = U(k); if (!u) continue; (u.stalls ??= []).push({ from: ev.t, to: ev.until, hold: true }); refreshUnit(state, u); } };
+            const a = U(ev.a), d = U(ev.d);
+            if (rule === 'duel' || rule === 'wedge') {
+                if (a && d) logLine(state, root, side, rule === 'duel' ? 'tacAim' : 'tacMark', L(a.name), ico, name, L(d.name), t(rule === 'duel' ? 'log.v.tacAim' : 'log.v.tacMark'));
+            } else if (rule === 'trojan' || rule === 'charge' || rule === 'turtle') {
+                // 기사 돌격 — 당긴 몫만큼 게이지 시작을 앞당긴다 · 파티만(적은 `round` 의 `fillAt` 에 이미 들었다)
+                for (const [k, s] of Object.entries(ev.pull ?? {})) { const u = U(k); if (u?.side === 'party') { u.lastAct -= s; refreshUnit(state, u); } }
+                if (rule !== 'turtle') hold(ev.units);
+                logLine(state, root, side, 'tacRound', name, ico, name, '', t('log.v.up'));
+            } else if (rule === 'shieldwall' || rule === 'guard') {
+                // 나눠 받은 몫 — 받은 유닛 HP · 배리어 · 피해 팝업. 누적 판엔 안 더한다(맞은 유닛의 `hit` 이 나누기 전 합을 이미 실었다)
+                const from = U(ev.from);
+                if (d) {
+                    if (ev.dhp !== undefined) d.hp = ev.dhp;
+                    if (ev.bar !== undefined) setShield(d, ev.bar);
+                    popup(state, d, `-${ev.dmg}`, dmgPop(ev.ty));
+                    refreshUnit(state, d);
+                    logLine(state, root, side, 'tacShare', L(d.name), ico, name, from ? L(from.name) : '', ev.dmg, ev.ty ? `dt-${ev.ty}` : '');
+                }
+            } else if (rule === 'retreat') {
+                // 자리 바꿈 — 실린 랭크로 칸의 줄만(진형 붕괴와 같은 손) · 되돌림(`back`)은 로그 없이 자리만
+                for (const [k, r] of Object.entries(ev.rank ?? {})) { const u = U(k); if (u) { setRank(u, r); refreshUnit(state, u); } }
+                const u = U(ev.u), w = U(ev.w);
+                if (!ev.back && u && w) logLine(state, root, side, 'tacSwap', L(u.name), ico, name, L(w.name), t('log.v.tacSwap'));
+            } else if (rule === 'poison_arrow' || rule === 'fire_arrow') {
+                if (a && d && ev.el) logLine(state, root, side, 'tacConv', L(a.name), ico, name, L(d.name), t(`st.atkType.${ev.el}`), `dt-${ev.el}`);
+            }
             break;
         }
         // ~~`card`(도감 카드 팝업 · 로그)~~ 는 2026-09-14 삭제 — 카드는 라운드를 이기면 조용히 들어온다 (R89 · 사용자 지시)

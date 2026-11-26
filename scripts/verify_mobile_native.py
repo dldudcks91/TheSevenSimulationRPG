@@ -25,7 +25,7 @@ source_start = fingerprints()
 HARNESS = '''
 window.__nativeReview=()=>({modal:state.modal,stage:state.expStage,heroes:G?.heroes.map(h=>h.uid),
  gold:G?.resources.gold,kept:G?.tavern?.kept,adv:state.advSel,watch:state.watchParty,
- tactics: G ? SYS.game.tacticState(G).slots.map(s=>({no:s.no,locked:s.locked,open:s.open})) : [],
+ tactics: G ? SYS.game.tacticState(G).slots.map(s=>({slot:s.slot,open:s.open,card:s.card?s.card.id:null})) : [],
  buildings:G?.buildings,research:G ? SYS.game.labState(G,now()).research : null,
  upgrade:G && state.forgeItem ? SYS.game.upgradeState(G,state.forgeItem) : null,
  commissions:G ? SYS.game.commissionState(G).cards : []});
@@ -139,15 +139,15 @@ def choices(browser):
             page.locator('.tv-hire .mobile-choice-on .b-hire').click();tutorials(page)
             check(key+':hire-original-action',page.evaluate('__nativeReview().heroes.length')==heroes+1)
             tab(page,'party');page.locator('#mobile-tab-party-2').click()
-            for i in range(5):
-                page.locator('.rs-grid > .mobile-choice-bar button').nth(i).click()
-                no_scroll(page,'.rs-grid',f'{key}:tactic{i}:grid-fits')
-                no_scroll(page,'.rs-cell.mobile-choice-on',f'{key}:tactic{i}:card-fits')
-                target(page,'.rs-cell.mobile-choice-on .rs-pin',f'{key}:tactic{i}:lock-reachable',30)
-                before=page.evaluate('__nativeReview().tactics')
-                page.locator('.rs-cell.mobile-choice-on .rs-pin').click()
-                after=page.evaluate('__nativeReview().tactics')
-                check(f'{key}:tactic{i}:lock-original-action',before[i]['locked']!=after[i]['locked'])
+            # 작전 카드 세 칸 (R586) — 칸마다 고르개 → 카드가 보이고 눌러지면 그 갈래의 가방 창이 뜬다 (SCREEN_DESIGN §15 · ADR-1384)
+            for i in range(3):
+                page.locator('.tc-list > .mobile-choice-bar button').nth(i).click()
+                no_scroll(page,'.tc-list',f'{key}:tactic{i}:list-fits')
+                no_scroll(page,'.tc-row.mobile-choice-on',f'{key}:tactic{i}:card-fits')
+                target(page,'.tc-row.mobile-choice-on .tc-card',f'{key}:tactic{i}:card-reachable',30)
+                page.locator('.tc-row.mobile-choice-on .tc-card').click()
+                check(f'{key}:tactic{i}:bag-original-action',page.evaluate('__nativeReview().modal')=='tacticBag')
+                page.locator('#modal .modal-x').click()
             page.screenshot(path=str(OUT/(key+'-tactics.png')))
             page.locator('#mobile-tab-tactic-content-1').click()
             check(key+':bonus-panel-reachable',page.locator('.rs-board.mobile-pane-on').is_visible())

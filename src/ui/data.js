@@ -71,9 +71,9 @@ export const D = {
     makeRecipes: {},          // make_recipe.csv — {part: {mat, salvageMat}} · 연구소 대장간 줄 제작 · 강화 · 분해의 부위 재료 ⚠임시 (item_design §7-1 · R96 · R373 · 골드 · 개수 열 걷음 R574)
     potions: [],              // potion.csv — [{id, kind, tier, ko, en, heal, craftGold, startOwned(시작 개수)}] · CSV 행 순서 · 물약 단계 ⚠임시값 (battle_design §7-1 · item_design §7-4 · R103) · 만들 수 있는 단계는 대장간 랭크(R137)
     shrines: [],              // shrine.csv — [{id, sin, ko, en, fx:{stat: value}}] · shrine_id 로 묶음 · 첫 줄 순서 = 뽑기 순서 ⚠임시값 (base_expedition_design §1-2 · 2026-09-29)
-    tacticSlots: [],          // tactic_slot.csv 원시 행 — 칸 수 = 행 수 · 칸마다 조건 하나 (정규화·검증은 game_logic/tactic.js)
-    tacticOptions: [],        // tactic_option.csv 원시 행 — 1행 = 가족 하나(죄종 + 효과 + 능력치 + 기준값 + 배수 몫 · 2026-11-11 · R441 · tactic_card_design §5-14)
-    tacticConditions: [],     // tactic_condition.csv 원시 행 — 조건 사전 · 단계 문턱 셋 ⚠임시 (§5-14 · R441) · ~~tactic_score.csv~~ 2026-11-11 삭제
+    tacticCards: [],          // tactic_card.csv 원시 행 — 작전 카드 11장(칸 · 죄종 · 규칙 · 수치) · 행 순서 = 굴림 순서 (정규화·검증은 game_logic/tactic.js · 2026-11-25 · R586)
+    tacticOptions: [],        // tactic_option.csv 원시 행 — 1행 = 옵션 종류 하나(죄종 + 효과 + 능력치 + 기준값 + 배수 몫) · 작전 카드 옵션 줄의 풀 (tactic_card_design §5-2)
+                              //   ~~tactic_slot.csv · tactic_condition.csv~~ — 2026-11-25 삭제(R586 — 칸 조건이 사라졌다)
     slots: [],                // equip_slot.csv — 장비 **부위** 8 [{id, ko, en, icon}] · part_order 순
     equipSlots: [],           // equip_slot.csv — 착용 **위치** 9 [{id, part}] · slot_order 순
     classes: [],              // class.csv — [{id, keyAttr, subAttr, attrRatio:{statId: 비율}, ko, en, role:{ko,en}, roleText:{ko,en}, stage, color}] (stage = CSV 의 release)
@@ -130,11 +130,11 @@ export let SYS = null;
 /** 로더가 읽는 CSV — **`src/data/*.csv` 전부여야 한다**(`inherited/` 제외). 읽히지 않는 SSOT 를 두지 않는다 */
 export const FILES = ['balance', 'monster', 'stage', 'stage_round', 'round_budget', 'spawn_grade',
     'codex_level', 'codex_option', 'weapon_group', 'skill', 'skill_effect', 'skill_status', 'skill_tag', 'hero_attribute', 'combat_stat', 'chapter',
-    'mastery_node', 'tactic_slot', 'tactic_option', 'commission_kind', 'commission',
+    'mastery_node', 'tactic_card', 'tactic_option', 'commission_kind', 'commission',
     'item_base', 'equip_slot', 'class', 'hero_name', 'hero_trait', 'lab_material', 'hero_tier', 'monster_role', 'formation_template',
     'hero_unique_candidates', 'weapon_base', 'weapon_sin_option', 'make_recipe', 'potion', 'armor_group',
     'armor_sin_option', 'sin_word', 'accessory_sin_option',   // ~~armor_common_option~~ 2026-10-21 R303 퇴역(방어구 넷이 계열표) · ~~accessory_common_option~~ 2026-11-12 삭제(목걸이도 계열표 R453)
-    'tactic_condition', 'building', 'building_rank', 'building_effect',   // ~~tactic_score~~ 2026-11-11 R441 삭제(등급 배수는 balance.csv:tactic_grade_mult_*)
+    'building', 'building_rank', 'building_effect',   // ~~tactic_score~~ 2026-11-11 R441 · ~~tactic_slot · tactic_condition~~ 2026-11-25 R586 삭제
     'slot_symbol', 'slot_coin', 'slot_line', 'slot_stake', 'commission_grade', 'monster_type', 'advance', 'level_xp', 'shrine', 'advance_node', 'advance_common', 'explore_spot', 'explore_story', 'difficulty_tier', 'upgrade_chance', 'arena_tier', 'lab_node', 'sin_attr', 'gear_rarity', 'material_synth', 'chapter_debuff', 'commission_fame', 'ring_base_option', 'raid_boss', 'raid_pattern', 'temper_action', 'visit_story', 'monster_base', 'main_mission', 'trial_floor', 'endless_floor'];
 
 export async function loadData(base = './data/') {
@@ -146,12 +146,12 @@ export async function loadData(base = './data/') {
     FILES.forEach((f, i) => { D.csvText[f] = texts[i]; });
     const [balance, monster, stage, roundRows, budget, grade, codexLevel, codexOptionRow,
         weaponGroup, skillRow, skillEffectRow, skillStatusRow, skillTagRow, heroAttr, combatStat, chapter, masteryNode,
-        tacticSlot, tacticOption, commissionKind, commissionRow,
+        tacticCard, tacticOption, commissionKind, commissionRow,
         itemBaseRow, equipSlotRow, classRow, heroNameRow, heroTraitRow, labMaterialRow,
         heroTierRow, monsterRoleRow, formationTplRow,
         heroUniqueCandidateRow, weaponBaseRow, weaponSinOptionRow, makeRecipeRow, potionRow, armorGroupRow,
         armorSinOptionRow, sinWordRow, accSinOptionRow,
-        tacticConditionRow, buildingRow, buildingRankRow, buildingEffectRow,
+        buildingRow, buildingRankRow, buildingEffectRow,
         slotSymbolRow, slotCoinRow, slotLineRow, slotStakeRow, commissionGradeRow, monsterTypeRow, advanceRow, levelXpRow, shrineRow, advanceNodeRow, advanceCommonRow, exploreSpotRow, exploreStoryRow, difficultyTierRow, upgradeChanceRow, arenaTierRow, labNodeRow, sinAttrRow, gearRarityRow, materialSynthRow, chapterDebuffRow, commissionFameRow, ringBaseRow, raidBossRow, raidPatternRow, temperActionRow, visitStoryRow, monsterBaseRow, mainMissionRow, trialFloorRow, endlessFloorRow] = texts.map(parseCsv);
 
     D.ringBaseOptions = ringBaseRow;
@@ -305,10 +305,8 @@ export async function loadData(base = './data/') {
     D.skillStatusRows = skillStatusRow;
     D.skillTagRows = skillTagRow;
     D.masteryNodes = masteryNode;
-    D.tacticSlots = tacticSlot;
+    D.tacticCards = tacticCard;      // 작전 카드 11장 — 검증은 game_logic/tactic.js (2026-11-25 · R586)
     D.tacticOptions = tacticOption;
-    // 조건 사전 — 칸 조건의 단계 문턱 셋 · 값 = 기준값 × 등급 배수 × 단계 (tactic_card_design §5-14 · 2026-11-11 · R441). 검증은 game_logic/tactic.js
-    D.tacticConditions = tacticConditionRow;
     // 의뢰 — **유형 둘은 확정 기획**(GAME_DESIGN §9 09-07 「의뢰는 목표형」)이고, 카드는 틀(commission) · 등급(commission_grade) ·
     // 대상을 굴려 만든다(GAME_DESIGN §9 09-24 · R153 — ~~게시판 행 = CSV 행~~ 폐기). 수치는 ⚠제안.
     // ⚠ 09-07 전면 개정 — ~~4종(사냥·파견·약탈·보호)~~ 은 「전장을 여는 의뢰」를 전제한 모델이라 통째로 폐기됐다.
@@ -387,8 +385,7 @@ export async function loadData(base = './data/') {
     }));
     // 죄종 → 능력치 한 칸 — 능력치 굴림의 죄종 비율 (2026-10-22 · R308) · 빠진 죄종 · 어휘 밖 id 는 hero.js 가 생성 때 던진다
     D.sinAttrs = Object.fromEntries(sinAttrRow.map(r => [r.sin_id, r.attr_id]));
-    // 죄종 → 능력치 1대1 짝 — 파티 전술 3랭크가 읽는다(굴림 짝과 다른 열 · 2026-11-13 · R466) · 빠진 죄종 · 어휘 밖 · 겹침은 tactic.js 가 던진다
-    D.sinTacticAttrs = Object.fromEntries(sinAttrRow.map(r => [r.sin_id, r.tactic_attr_id]));
+    // ~~죄종 → 능력치 전술 짝(`tactic_attr_id`)~~ — 2026-11-25 걷었다(R586 — 파티 전술 3랭크 조건이 사라졌다)
     // 아이템 베이스 — 부위별 풀. **무기는 없다**(무기의 베이스는 무기군 자체 = weapon_group.csv)
     D.itemBases = {};
     //   갑옷은 `group`(갑옷군)과 `tierMin`(티어가 열리는 ilvl)을 같이 든다 — 나머지 부위는 group 이 null (2026-09-16 · R107)
@@ -581,7 +578,7 @@ export const potionInfo = id => {
 
 /**
  * 스킬 태그 표시 이름 — `skill_tag.csv:name_kr/name_en` 이 SSOT 다 (skill_design §11).
- * 읽는 곳 — 연구 탭의 전술 조건 (`tactic_option.csv:cond_arg`). 없는 id 는 id 를 그대로 보여 준다(빈 문장 방지).
+ * 읽는 곳 — 스킬 설명창의 태그 칩(`tip.js:skillTipCard`). 없는 id 는 id 를 그대로 보여 준다(빈 문장 방지).
  */
 export const skillTagName = id => {
     const r = (D.skillTagRows ?? []).find(x => x.tag_id === id);
@@ -594,6 +591,28 @@ export const skillTagName = id => {
  * (`D.monsters` 는 브라우저가 fetch 한 것이라 game_logic 이 볼 수 없다).
  */
 export const eliteName = (sin, baseId) => NAMING.eliteName(sin, monsterName(baseId));
+
+/**
+ * 작전 카드 시스템이 balance.csv 에서 받는 값 — 조립(`buildSystems`)과 단정(`dev/test.js` 의 임의 표 시스템)이 같이 쓴다 [2026-11-25 · R586 · INTERFACE §2-9].
+ *   등급 다섯(`tactic.GRADES` 순)마다 드랍 카드 가중치 · 장착 줄 가중치 · 줄 범위 [lo, hi] · 분해 조각 + 리더 곡선 · 죄종 점수 · 줄 수 · 인챈트 · 드랍 확률. 값 검증은 tactic.js
+ */
+export function tacticBalance(B) {
+    const byGrade = key => Object.fromEntries(['common', 'magic', 'rare', 'epic', 'legendary'].map(g => [g, B[`${key}${g}`]]));
+    return {
+        gearPct: B.tactic_sin_gear_pct,
+        heroScore: B.tactic_sin_hero_score,      // 영웅 하나가 제 죄종에 더하는 점수 (§6-3 · R563)
+        // 리더 보너스 — 리더 통솔이 옵션 줄 값에 곱하는 곡선 (tactic_card_design §6-2 · 2026-10-24 · R340)
+        leader: { pivot: B.attr_dmg_pivot, min: B.hero_attr_min, max: B.hero_attr_max, multMin: B.tactic_leader_mult_min, multMax: B.tactic_leader_mult_max },
+        cardWeights: byGrade('tactic_card_weight_'),     // 드랍 카드 등급 (§3-2)
+        lineWeights: byGrade('tactic_line_weight_'),     // 장착 때 줄 등급 — 카드 등급 이하만 (§5-1)
+        lineRange: Object.fromEntries(Object.entries(byGrade('tactic_line_lo_')).map(([g, lo]) => [g, [lo, B[`tactic_line_hi_${g}`]]])),
+        lineCount: B.tactic_line_count,
+        // 인챈트 — 등급 걷기 몫 둘 · 비용 둘 (§5-3)
+        enchant: { stay: B.tactic_enchant_stay_pct, up: B.tactic_enchant_up_pct, gold: B.tactic_enchant_gold, shard: B.tactic_enchant_shard },
+        shards: byGrade('tactic_shard_'),                // 분해 조각 (§3-4)
+        drop: { elite: B.tactic_drop_elite_pct, boss: B.tactic_drop_boss_pct },   // 정예 · 스테이지보스 한 마리의 드랍 확률 (§3-2)
+    };
+}
 
 /**
  * 시스템 조립 — 테스트 페이지도 같은 조립을 쓴다 (데이터만 바꿔 끼울 수 있다)
@@ -660,38 +679,9 @@ export function buildSystems(d, dev = {}) {
         amuletSkills: skill.list.filter(sk => sk.ownerKind === 'job').map(sk => sk.id), ringBaseOptions: d.ringBaseOptions ?? [],
         // ~~classSkills · starterSkills~~ — 무기가 스킬을 안 담는다 (2026-09-29 · R179 · skill_design §2-1)
     });
-    // 전술은 규칙만 든다(무상태) — 어느 칸에 무엇이 들었는지는 세이브가 들고 state 가 묻는다
-    // 표가 셋이다 — 칸(조건 하나) · 조건 사전(단계 문턱) · 옵션(죄종 × 효과 가족) (tactic_card_design §5-14 · 2026-11-11 · R441) · `sins` 순서 = 굴림의 죄종 순서
-    const tactic = createTacticSystem({
-        slots: d.tacticSlots ?? [], options: d.tacticOptions ?? [], sins,
-        conditions: d.tacticConditions ?? [],
-        // 등급 배수 · 장비 죄종 몫 — 값 = 기준값 × 등급 배수 × 단계 · 적용 값의 장비 죄종 몫 (tactic_card_design §5-14 · R441). 값은 CSV
-        gradeMult: {
-            common: d.balance.tactic_grade_mult_common,
-            magic: d.balance.tactic_grade_mult_magic,
-            rare: d.balance.tactic_grade_mult_rare,
-        },
-        gearPct: d.balance.tactic_sin_gear_pct,
-        heroScore: d.balance.tactic_sin_hero_score,      // 영웅 하나가 제 죄종에 더하는 점수 (§5-14 · R563)
-        // 등급 가중치 — 리롤이 옵션과 등급을 같이 굴린다 (tactic_card_design §5-5). 값은 CSV
-        gradeWeights: {
-            common: d.balance.tactic_grade_weight_common,
-            magic: d.balance.tactic_grade_weight_magic,
-            rare: d.balance.tactic_grade_weight_rare,
-        },
-        // 전체 리롤 비용 — 기본가 × 배수 ^ 잠근 칸 수 (tactic_card_design §5-6 · 2026-09-22). 값은 CSV
-        rerollCost: {
-            base: d.balance.tactic_reroll_base_cost,
-            lockMult: d.balance.tactic_reroll_lock_mult,
-        },
-        // 리더 보너스 — 리더 통솔이 전술 옵션 값에 곱하는 곡선 (tactic_card_design §5-10 · 2026-10-24 · R340). 값은 CSV
-        leader: {
-            pivot: d.balance.attr_dmg_pivot, min: d.balance.hero_attr_min, max: d.balance.hero_attr_max,
-            multMin: d.balance.tactic_leader_mult_min, multMax: d.balance.tactic_leader_mult_max,
-        },
-        // 3랭크 짝 — 그 칸 죄종의 짝 능력치 파티 합 ÷ hero_attr_max(위 `leader.max`) = 연속 단계 (tactic_card_design §5-14 · 2026-11-13 · R466)
-        attrBySin: d.sinTacticAttrs ?? {}, attrIds: (d.heroAttributes ?? []).map(a => a.id),
-    });
+    // 전술은 규칙만 든다(무상태) — 가방 · 칸에 무엇이 들었는지는 세이브가 들고 state 가 묻는다
+    // 표가 둘이다 — 작전 카드(칸 · 죄종 · 규칙 · 수치) · 옵션 풀(죄종 × 효과) · 등급 · 굴림 · 비용은 balance (tactic_card_design §3 · §5 · 2026-11-25 · R586)
+    const tactic = createTacticSystem({ cards: d.tacticCards ?? [], options: d.tacticOptions ?? [], sins, ...tacticBalance(d.balance) });
     const battle = createBattleSystem({
         balance: d.balance, monsters: d.monsters, stages: d.stages, roundSets: d.roundSets,
         budgets: d.budgets, grades: d.grades, sins,

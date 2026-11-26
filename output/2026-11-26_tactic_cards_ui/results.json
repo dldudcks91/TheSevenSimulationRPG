@@ -1,0 +1,591 @@
+{
+ "summary": {
+  "pass": 81,
+  "fail": 0,
+  "consoleErrors": 0
+ },
+ "results": [
+  {
+   "name": "party-ko-1600: 카드 행 셋",
+   "ok": true,
+   "detail": 3
+  },
+  {
+   "name": "party-ko-1600: 새 칸 = 빈 카드 셋 · 가방 = 첫 카드 셋",
+   "ok": true,
+   "detail": {
+    "empties": 3,
+    "bag": {
+     "duel|common": 1,
+     "shieldwall|common": 1,
+     "poison_arrow|common": 1
+    }
+   }
+  },
+  {
+   "name": "party-ko-1600: 카드 클릭 = 그 갈래 가방 창",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "party-ko-1600: 빈 칸 장착 한 번 → 창 닫힘 · 카드 · 줄 둘 · 가방 −1",
+   "ok": true,
+   "detail": {
+    "card": "duel",
+    "lines": [
+     [
+      "opt_pride_dr",
+      "common"
+     ],
+     [
+      "opt_pride_dmg",
+      "common"
+     ]
+    ]
+   }
+  },
+  {
+   "name": "party-ko-1600: 장착 플래시",
+   "ok": true,
+   "detail": "일기토 장착"
+  },
+  {
+   "name": "party-ko-1600: 카드 hover 툴팁 = 이름 · 칸 · 효과",
+   "ok": true,
+   "detail": "일기토\n공격 · 오만 · 일반\n우리 리더의 단일 공격은 적 리더만 노린다. 적 리더가 쓰러지면 평소대로 고른다."
+  },
+  {
+   "name": "party-ko-1600: 조각 0 → [인챈트] 꺼짐",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "party-ko-1600: 골드 · 조각 있으면 [인챈트] 켜짐 · 비용 글",
+   "ok": true,
+   "detail": "인챈트 500G · 조각 1"
+  },
+  {
+   "name": "party-ko-1600: 줄 인챈트 → 그 줄만 바뀜 · 골드 −500 · 조각 −1",
+   "ok": true,
+   "detail": {
+    "before": "{\"id\":\"opt_pride_dr\",\"grade\":\"common\",\"m\":0.6952}",
+    "after": "{\"id\":\"opt_pride_fhr\",\"grade\":\"common\",\"m\":0.7239}",
+    "textBefore": "일반 | 피해 감소 +0.8% | −6% | 인챈트 500G · 조각 1",
+    "textAfter": "일반 | 타격 회복 +3.4% | −6% | 인챈트 500G · 조각 1"
+   }
+  },
+  {
+   "name": "party-ko-1600: 인챈트 플래시",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "party-ko-1600: 조각 다 쓰면 [인챈트] 다시 꺼짐",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "party-ko-1600: 분해 두 번 → 조각 +4(레어) · 가방에서 빠짐",
+   "ok": true,
+   "detail": {
+    "first": "분해 (조각 +4)",
+    "armed": "정말 분해 (조각 +4)",
+    "shards": 4
+   }
+  },
+  {
+   "name": "party-ko-1600: 칸에 카드가 있으면 첫 누름 = 「옛 카드 버리고 장착」",
+   "ok": true,
+   "detail": "일기토 버리고 장착"
+  },
+  {
+   "name": "party-ko-1600: 두 번째 누름 → 칸 = 기사 돌격 에픽 · 옛 카드 가방에 없음",
+   "ok": true,
+   "detail": {
+    "card": "charge",
+    "grade": "epic",
+    "bag": {
+     "shieldwall|common": 1,
+     "poison_arrow|common": 1
+    }
+   }
+  },
+  {
+   "name": "party-ko-1600: 지휘 천막 1랭크 → 방어 · 유틸 잠김 · 여는 랭크",
+   "ok": true,
+   "detail": [
+    "방어\n지휘 천막 2랭크\n가방 1",
+    "유틸\n지휘 천막 3랭크\n가방 1"
+   ]
+  },
+  {
+   "name": "party-ko-1600: 잠긴 칸 가방 창 — [장착] 꺼짐",
+   "ok": true,
+   "detail": 1
+  },
+  {
+   "name": "board-ko-1600: 판 밖으로 넘치는 칸 없음",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "board-ko-1600: 가방 줄 hover — 쐐기진 효과에 p1(4초) 채움",
+   "ok": true,
+   "detail": "쐐기진\n공격 · 시기 · 매직\n리더가 단일 공격으로 맞힌 적에 4초 동안 표식. 동료의 단일 공격은 표식이 있는 적부터 노린다."
+  },
+  {
+   "name": "board-ko-1600: 거북 진형 효과에 p1 · p2 · p3 채움(5초 · 30% · 30%)",
+   "ok": true,
+   "detail": "거북 진형\n방어 · 폭식 · 매직\n라운드 시작 5초 동안 우리 편이 받는 피해 −30% · 공격 속도 −30%."
+  },
+  {
+   "name": "battle-ko: 카드 묶음 1 duel/shieldwall/fire_arrow — 사건 ['duel', 'fire_arrow', 'shieldwall'] · 그 순간 로그 끝에 카드 이름",
+   "ok": true,
+   "detail": {
+    "events": 4,
+    "missingInLog": []
+   }
+  },
+  {
+   "name": "battle-ko: 카드 묶음 2 trojan/guard/baggage — 사건 ['guard', 'trojan'] · 그 순간 로그 끝에 카드 이름",
+   "ok": true,
+   "detail": {
+    "events": 2,
+    "missingInLog": []
+   }
+  },
+  {
+   "name": "battle-ko: 카드 묶음 3 charge/retreat/poison_arrow — 사건 ['charge', 'poison_arrow'] · 그 순간 로그 끝에 카드 이름",
+   "ok": true,
+   "detail": {
+    "events": 2,
+    "missingInLog": []
+   }
+  },
+  {
+   "name": "battle-ko: 카드 묶음 4 wedge/turtle/None — 사건 ['turtle'] · 그 순간 로그 끝에 카드 이름",
+   "ok": true,
+   "detail": {
+    "events": 1,
+    "missingInLog": []
+   }
+  },
+  {
+   "name": "battle-ko: 카드 묶음 5 trojan/shieldwall/baggage — 사건 ['baggage', 'shieldwall', 'trojan'] · 그 순간 로그 끝에 카드 이름",
+   "ok": true,
+   "detail": {
+    "events": 6,
+    "missingInLog": []
+   }
+  },
+  {
+   "name": "battle-ko: 카드 묶음 6 None/shieldwall/None — 사건 ['shieldwall'] · 그 순간 로그 끝에 카드 이름",
+   "ok": true,
+   "detail": {
+    "events": 1,
+    "missingInLog": []
+   }
+  },
+  {
+   "name": "battle-ko: 네 묶음이 낸 사건 종류",
+   "ok": true,
+   "detail": [
+    "baggage",
+    "charge",
+    "duel",
+    "fire_arrow",
+    "guard",
+    "poison_arrow",
+    "shieldwall",
+    "trojan",
+    "turtle"
+   ]
+  },
+  {
+   "name": "report-ko: 리포트 획득 격자에 카드 칸 둘",
+   "ok": true,
+   "detail": 2
+  },
+  {
+   "name": "report-ko: 카드 칸 hover = 카드 툴팁",
+   "ok": true,
+   "detail": "쐐기진\n공격 · 시기 · 에픽\n리더가 단일 공격으로 맞힌 적에 4초 동안 표식. 동료의 단일 공격은 표식이 있는 적부터 노린다."
+  },
+  {
+   "name": "depart-ko: 출정 창 전술 칸 = 카드 셋 + 줄 여섯",
+   "ok": true,
+   "detail": {
+    "cards": 3,
+    "rows": 6
+   }
+  },
+  {
+   "name": "party-en-1600: 카드 행 셋",
+   "ok": true,
+   "detail": 3
+  },
+  {
+   "name": "party-en-1600: 새 칸 = 빈 카드 셋 · 가방 = 첫 카드 셋",
+   "ok": true,
+   "detail": {
+    "empties": 3,
+    "bag": {
+     "duel|common": 1,
+     "shieldwall|common": 1,
+     "poison_arrow|common": 1
+    }
+   }
+  },
+  {
+   "name": "party-en-1600: 카드 클릭 = 그 갈래 가방 창",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "party-en-1600: 빈 칸 장착 한 번 → 창 닫힘 · 카드 · 줄 둘 · 가방 −1",
+   "ok": true,
+   "detail": {
+    "card": "duel",
+    "lines": [
+     [
+      "opt_pride_dmg",
+      "common"
+     ],
+     [
+      "opt_pride_fhr",
+      "common"
+     ]
+    ]
+   }
+  },
+  {
+   "name": "party-en-1600: 장착 플래시",
+   "ok": true,
+   "detail": "Single Combat equipped"
+  },
+  {
+   "name": "party-en-1600: 카드 hover 툴팁 = 이름 · 칸 · 효과",
+   "ok": true,
+   "detail": "Single Combat\nAttack · Pride · Common\nYour leader's single-target attacks aim only at the enemy leader. Once the enemy leader falls, targeting returns to normal."
+  },
+  {
+   "name": "party-en-1600: 조각 0 → [인챈트] 꺼짐",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "party-en-1600: 골드 · 조각 있으면 [인챈트] 켜짐 · 비용 글",
+   "ok": true,
+   "detail": "Enchant 500G · Shard ×1"
+  },
+  {
+   "name": "party-en-1600: 줄 인챈트 → 그 줄만 바뀜 · 골드 −500 · 조각 −1",
+   "ok": true,
+   "detail": {
+    "before": "{\"id\":\"opt_pride_dmg\",\"grade\":\"common\",\"m\":0.5193}",
+    "after": "{\"id\":\"opt_pride_dmg\",\"grade\":\"common\",\"m\":0.7314}",
+    "textBefore": "Common | +0.7% Damage | −6% | Enchant 500G · Shard ×1",
+    "textAfter": "Common | +1% Damage | −6% | Enchant 500G · Shard ×1"
+   }
+  },
+  {
+   "name": "party-en-1600: 인챈트 플래시",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "party-en-1600: 조각 다 쓰면 [인챈트] 다시 꺼짐",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "party-en-1600: 분해 두 번 → 조각 +4(레어) · 가방에서 빠짐",
+   "ok": true,
+   "detail": {
+    "first": "Dismantle (+4 Shards)",
+    "armed": "Confirm (+4 Shards)",
+    "shards": 4
+   }
+  },
+  {
+   "name": "party-en-1600: 칸에 카드가 있으면 첫 누름 = 「옛 카드 버리고 장착」",
+   "ok": true,
+   "detail": "Replace Single Combat"
+  },
+  {
+   "name": "party-en-1600: 두 번째 누름 → 칸 = 기사 돌격 에픽 · 옛 카드 가방에 없음",
+   "ok": true,
+   "detail": {
+    "card": "charge",
+    "grade": "epic",
+    "bag": {
+     "shieldwall|common": 1,
+     "poison_arrow|common": 1
+    }
+   }
+  },
+  {
+   "name": "party-en-1600: 지휘 천막 1랭크 → 방어 · 유틸 잠김 · 여는 랭크",
+   "ok": true,
+   "detail": [
+    "Defense\nCommand Tent rank 2\nBag 1",
+    "Utility\nCommand Tent rank 3\nBag 1"
+   ]
+  },
+  {
+   "name": "party-en-1600: 잠긴 칸 가방 창 — [장착] 꺼짐",
+   "ok": true,
+   "detail": 1
+  },
+  {
+   "name": "board-en-1600: 판 밖으로 넘치는 칸 없음",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "board-en-1600: 가방 줄 hover — 쐐기진 효과에 p1(4초) 채움",
+   "ok": true,
+   "detail": "Wedge Formation\nAttack · Envy · Magic\nEnemies hit by your leader's single-target attacks are marked for 4s. Allies' single-target attacks aim at the marked enemy first."
+  },
+  {
+   "name": "board-en-1600: 거북 진형 효과에 p1 · p2 · p3 채움(5초 · 30% · 30%)",
+   "ok": true,
+   "detail": "Tortoise Formation\nDefense · Gluttony · Magic\nFor the first 5s of each round, your side takes 30% less damage and loses 30% attack speed."
+  },
+  {
+   "name": "battle-en: 카드 묶음 1 duel/shieldwall/fire_arrow — 사건 ['duel', 'fire_arrow', 'shieldwall'] · 그 순간 로그 끝에 카드 이름",
+   "ok": true,
+   "detail": {
+    "events": 15,
+    "missingInLog": []
+   }
+  },
+  {
+   "name": "battle-en: 카드 묶음 2 trojan/guard/baggage — 사건 ['baggage', 'trojan'] · 그 순간 로그 끝에 카드 이름",
+   "ok": true,
+   "detail": {
+    "events": 2,
+    "missingInLog": []
+   }
+  },
+  {
+   "name": "battle-en: 카드 묶음 3 charge/retreat/poison_arrow — 사건 ['charge', 'poison_arrow'] · 그 순간 로그 끝에 카드 이름",
+   "ok": true,
+   "detail": {
+    "events": 2,
+    "missingInLog": []
+   }
+  },
+  {
+   "name": "battle-en: 카드 묶음 4 wedge/turtle/None — 사건 ['turtle', 'wedge'] · 그 순간 로그 끝에 카드 이름",
+   "ok": true,
+   "detail": {
+    "events": 6,
+    "missingInLog": []
+   }
+  },
+  {
+   "name": "battle-en: 카드 묶음 5 trojan/shieldwall/baggage — 사건 ['baggage', 'shieldwall', 'trojan'] · 그 순간 로그 끝에 카드 이름",
+   "ok": true,
+   "detail": {
+    "events": 9,
+    "missingInLog": []
+   }
+  },
+  {
+   "name": "battle-en: 카드 묶음 6 None/shieldwall/None — 사건 ['shieldwall'] · 그 순간 로그 끝에 카드 이름",
+   "ok": true,
+   "detail": {
+    "events": 10,
+    "missingInLog": []
+   }
+  },
+  {
+   "name": "battle-en: 네 묶음이 낸 사건 종류",
+   "ok": true,
+   "detail": [
+    "baggage",
+    "charge",
+    "duel",
+    "fire_arrow",
+    "poison_arrow",
+    "shieldwall",
+    "trojan",
+    "turtle",
+    "wedge"
+   ]
+  },
+  {
+   "name": "report-en: 리포트 획득 격자에 카드 칸 둘",
+   "ok": true,
+   "detail": 2
+  },
+  {
+   "name": "report-en: 카드 칸 hover = 카드 툴팁",
+   "ok": true,
+   "detail": "Wedge Formation\nAttack · Envy · Epic\nEnemies hit by your leader's single-target attacks are marked for 4s. Allies' single-target attacks aim at the marked enemy first."
+  },
+  {
+   "name": "depart-en: 출정 창 전술 칸 = 카드 셋 + 줄 여섯",
+   "ok": true,
+   "detail": {
+    "cards": 3,
+    "rows": 6
+   }
+  },
+  {
+   "name": "party-ko-1366: 카드 행 셋",
+   "ok": true,
+   "detail": 3
+  },
+  {
+   "name": "party-ko-1366: 새 칸 = 빈 카드 셋 · 가방 = 첫 카드 셋",
+   "ok": true,
+   "detail": {
+    "empties": 3,
+    "bag": {
+     "duel|common": 1,
+     "shieldwall|common": 1,
+     "poison_arrow|common": 1
+    }
+   }
+  },
+  {
+   "name": "party-ko-1366: 카드 클릭 = 그 갈래 가방 창",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "party-ko-1366: 빈 칸 장착 한 번 → 창 닫힘 · 카드 · 줄 둘 · 가방 −1",
+   "ok": true,
+   "detail": {
+    "card": "duel",
+    "lines": [
+     [
+      "opt_pride_dmg",
+      "common"
+     ],
+     [
+      "opt_pride_fhr",
+      "common"
+     ]
+    ]
+   }
+  },
+  {
+   "name": "party-ko-1366: 장착 플래시",
+   "ok": true,
+   "detail": "일기토 장착"
+  },
+  {
+   "name": "party-ko-1366: 카드 hover 툴팁 = 이름 · 칸 · 효과",
+   "ok": true,
+   "detail": "일기토\n공격 · 오만 · 일반\n우리 리더의 단일 공격은 적 리더만 노린다. 적 리더가 쓰러지면 평소대로 고른다."
+  },
+  {
+   "name": "party-ko-1366: 조각 0 → [인챈트] 꺼짐",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "party-ko-1366: 골드 · 조각 있으면 [인챈트] 켜짐 · 비용 글",
+   "ok": true,
+   "detail": "인챈트 500G · 조각 1"
+  },
+  {
+   "name": "party-ko-1366: 줄 인챈트 → 그 줄만 바뀜 · 골드 −500 · 조각 −1",
+   "ok": true,
+   "detail": {
+    "before": "{\"id\":\"opt_pride_dmg\",\"grade\":\"common\",\"m\":0.672}",
+    "after": "{\"id\":\"opt_pride_dr\",\"grade\":\"common\",\"m\":0.56}",
+    "textBefore": "일반 | 데미지 +1% | −6% | 인챈트 500G · 조각 1",
+    "textAfter": "일반 | 피해 감소 +0.7% | −6% | 인챈트 500G · 조각 1"
+   }
+  },
+  {
+   "name": "party-ko-1366: 인챈트 플래시",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "party-ko-1366: 조각 다 쓰면 [인챈트] 다시 꺼짐",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "party-ko-1366: 분해 두 번 → 조각 +4(레어) · 가방에서 빠짐",
+   "ok": true,
+   "detail": {
+    "first": "분해 (조각 +4)",
+    "armed": "정말 분해 (조각 +4)",
+    "shards": 4
+   }
+  },
+  {
+   "name": "party-ko-1366: 칸에 카드가 있으면 첫 누름 = 「옛 카드 버리고 장착」",
+   "ok": true,
+   "detail": "일기토 버리고 장착"
+  },
+  {
+   "name": "party-ko-1366: 두 번째 누름 → 칸 = 기사 돌격 에픽 · 옛 카드 가방에 없음",
+   "ok": true,
+   "detail": {
+    "card": "charge",
+    "grade": "epic",
+    "bag": {
+     "shieldwall|common": 1,
+     "poison_arrow|common": 1
+    }
+   }
+  },
+  {
+   "name": "party-ko-1366: 지휘 천막 1랭크 → 방어 · 유틸 잠김 · 여는 랭크",
+   "ok": true,
+   "detail": [
+    "방어\n지휘 천막 2랭크\n가방 1",
+    "유틸\n지휘 천막 3랭크\n가방 1"
+   ]
+  },
+  {
+   "name": "party-ko-1366: 잠긴 칸 가방 창 — [장착] 꺼짐",
+   "ok": true,
+   "detail": 1
+  },
+  {
+   "name": "board-en-1366: 판 밖으로 넘치는 칸 없음",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "board-en-1366: 가방 줄 hover — 쐐기진 효과에 p1(4초) 채움",
+   "ok": true,
+   "detail": "Wedge Formation\nAttack · Envy · Magic\nEnemies hit by your leader's single-target attacks are marked for 4s. Allies' single-target attacks aim at the marked enemy first."
+  },
+  {
+   "name": "board-en-1366: 거북 진형 효과에 p1 · p2 · p3 채움(5초 · 30% · 30%)",
+   "ok": true,
+   "detail": "Tortoise Formation\nDefense · Gluttony · Magic\nFor the first 5s of each round, your side takes 30% less damage and loses 30% attack speed."
+  },
+  {
+   "name": "mobile-ko-844x390: 폰 폭 — 카드 행 셋(모바일 배치 잠김 = PC 한 장 · data-mobile=None)",
+   "ok": true,
+   "detail": 3
+  },
+  {
+   "name": "mobile-ko-844x390: 카드 탭 → 가방 창",
+   "ok": true,
+   "detail": null
+  },
+  {
+   "name": "mobile-en-390x844: 폰 폭 — 카드 행 셋(모바일 배치 잠김 = PC 한 장 · data-mobile=None)",
+   "ok": true,
+   "detail": 3
+  },
+  {
+   "name": "mobile-en-390x844: 카드 탭 → 가방 창",
+   "ok": true,
+   "detail": null
+  }
+ ],
+ "errors": []
+}

@@ -149,7 +149,7 @@ export const AFFIX_LABELS = {
     fhr: { ko: '타격 회복', en: 'Hit Recovery', zh: '受击恢复', fmt: 'pct' },
     cooldown_reduction: { ko: '쿨타임 감소', en: 'Cooldown Reduction', zh: '冷却缩减', fmt: 'pct' },
     hp_recovery_pct: { ko: '체력 회복', en: 'HP Recovery', zh: '生命恢复', fmt: 'pct' },
-    kill_heal_pct: { ko: '처치 시 체력 회복', en: 'Heal on Kill', zh: '击杀时恢复生命', fmt: 'pct' },   // 처치마다 최대 HP × 값 — 투구 · 장갑 색욕 ① (2026-10-21 · R299)
+    kill_heal_pct: { ko: '처치 시 체력 회복', en: 'Heal on Kill', zh: '击杀时恢复生命', fmt: 'pct' },   // 처치마다 최대 HP × 값 — 장갑 색욕 ① (2026-10-21 · R299 · 투구 색욕 ① 은 2026-11-26 받는 체력 회복으로)
     start_gauge_pct: { ko: '전투 시작 시 행동 게이지', en: 'Action Gauge at Battle Start', zh: '开战时行动值', fmt: 'pct' },   // 가죽 신발 특성 — 빈 게이지를 그만큼 채운 채 출발 (R303)
     cull_normal_pct: { ko: '일반몹 처형', en: 'Culling Strike vs Normal', zh: '处决普通怪物', fmt: 'pct' },   // 장갑 폭식 ② — 직격 뒤 일반 몬스터 체력이 이 비율 이하면 쓰러뜨린다 (R303)
     res_all_per_level: { ko: '레벨당 모든 원소 저항', en: 'All Resist per Level', zh: '每级所有元素抗性', fmt: 'pct' },   // 신발 오만 (R303)

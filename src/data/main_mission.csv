@@ -13,7 +13,7 @@ c1_forge,1,build,forge,1,gold:1000|iron_ore:5|timber:5|dust:10,proposed,⚠제�
 c1_salvage,1,event,salvage,1,iron_ore:3,proposed,⚠제안 — 장비 분해(강화 가루) · 보상 철광석 = 바로 다음 강화 [사용자 11-25 「일단 이대로 바꿔봐」] [2026-11-25 · R583]
 c1_upgrade,1,count,upgrade,1,gold:1000|herb:5,proposed,⚠제안 — 장비 처음 강화
 c1_command,1,build,command,1,gold:1000|dust:10,proposed,⚠제안 — 지휘 천막 짓기 · 전술 리롤 가루
-c1_tactic,1,count,tactic,1,gold:600,proposed,⚠제안 — 전술 리롤 한 번(지휘 천막 r1 — 열린 칸이 비어 있다) · 보상 골드 = 리롤 한 번 더(리롤 비용을 돌려준다) [사용자 11-25 「일단 이대로 바꿔봐」] [2026-11-25 · R583]
+c1_tactic,1,count,tacticEquip,1,gold:500,proposed,⚠제안 — 작전 카드 장착 한 번(지휘 천막 r1 이 공격 칸을 열 때 첫 카드 일기토 한 장이 가방에 든다 — counters.tacticEquip) · 보상 골드 = 옵션 줄 인챈트 한 번(balance.csv:tactic_enchant_gold) [사용자 11-25 「일단 이대로 바꿔봐」 · R583 · 카드 장착으로 2026-11-25 · R586]
 c1_potion,1,event,potion,1,minor_healing:10,proposed,⚠제안 — 물약 구매(상단) · 보상 물약 = 1-1 보스 [사용자 11-25 「일단 이대로 바꿔봐」] [2026-11-25 · R583]
 c1_p1,1,clear,1013,1,box_weapon:1,proposed,⚠제안 — 1-1 장소 보스(옛 첫 클리어 상자 자리)
 c1_commission,1,fame,-,1,gold:500,proposed,⚠제안 — 의뢰 하나 채워 받기

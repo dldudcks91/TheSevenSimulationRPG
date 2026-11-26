@@ -50,6 +50,9 @@
  *     기본 공격은 안 싣고 평타 계수(`mainMult` — 힘 · ~~마법 무기 = 지능~~(2026-09-27) 은 R198 로 소멸 — 마법 무기는 평타가 없다)를 쓴다 (battle_design §9-2 · 2026-09-18 — ~~능력치 항 `flat`~~ 폐기).
  *   · **사건 훅** — `strikeOnce` 가 `hit`/`hitTaken`/`kill` 을, `downed` 가 `down` 을, 런타임이 `cast` 를 발화한다.
  *     유닛의 `reactions` 가 비면 아무 일도 없다 — 발화 **지점**이 곧 rng 순서 계약이다 (INTERFACE §5-2).
+ *   · **작전 카드 규칙** [2026-11-26 · R586 · battle_design §3-3 · PLAN_tactic_cards_impl §2 · §6] — `createRun` 맨 끝 `tactics = {party, enemy}` 가 쪽마다
+ *     규칙 11 종(`TACTIC_RULES`)을 건다. 출발 때 굳고(`refit` 무관) · 리더(파티 = 편성 첫 칸 · 적 = 라운드마다 하나)를 읽고 · 일하면 `tactic` 이벤트를 남긴다.
+ *     **없으면(`null` · 빈 배열) 한 글자도 안 다르다** — 굴림 · 이벤트 · 유닛 필드가 안 생긴다
  *   · **스킬 id 전용 코드가 없다** [2026-09-24 · R151 · PLAN_skill_structure 2단계] — 이 파일이 스킬에 대해 아는 것은 규칙뿐이다:
  *     오오라(`cast = aura`)를 창으로 건다 · 라운드가 바뀌면 `round_end = close` 창을 닫는다 · 쓰러지면 사건 `on_death` 를 쏜다(`rt.fire`) ·
  *     표식(`taunt` · `duel`)을 타겟팅이 읽는다. ~~결투 창 닫기 · 자폭 `blast`~~ 는 데이터(걸린 효과 · 하는 일 줄)로 갔다
@@ -57,7 +60,8 @@
  * ⚠ 아직 미확정이라 이 파일이 임시로 두는 것:
  *   ~~타겟팅: 진형·어그로 미확정 → 랜덤~~ **확정 2026-09-09** — 대상 선택은 **전열 우선(하드 게이트)**이다:
  *     전열 생존자가 있으면 후열은 대상이 안 되고, 전열이 전멸해야 뒤가 열린다 (battle_design §3-1).
- *     우선순위는 **좁은 계약부터** — 지목(결투) → 도발 → 전열 → 무작위. 앞의 둘은 진형을 무시한다.
+ *     우선순위는 **좁은 계약부터** — 작전 카드(일기토 · 쐐기진 표식) → 지목(결투) → 도발 → 문(트로이 목마의 후열 문 · 전열) → 무작위. 앞의 셋은 진형을 무시한다.
+ *     지목 · 도발은 **양쪽 같은 규칙**이다 [2026-11-26 · R586 D13 — ~~적 측 고르기만 읽었다~~].
  *   유닛의 `reactions`(사건 훅 등록)는 **자리만** 있고 싣는 소비자가 없다 — 마스터리 T3 몫 (skill_design §5).
  *   상태이상은 **결빙 · 화상 · 중독 · 스턴** [2026-09-28 · R177 · R178 · battle_design §2-4 ~ §2-7] — 스킬 타격이 맞은 대상에게 건다(`strikeOnce` 의 `sk.onHit` → `rt.applyStatus`).
  *     화상은 받는 피해 · 받는 회복을 창 파생(`skill_effects`)으로 밀고, 중독은 틱(`poisonTick` — 창 만료 뒤 · 재생 앞), 스턴은 `stun` 이 행동 예약 · 쿨을 민다.
@@ -96,6 +100,45 @@ export const ENCOUNTER_STREAMS = Object.freeze({
 });
 /** 부위 번호는 선택 부위의 유무 · 순서와 무관하다. 새 부위는 뒤에 붙인다. */
 export const MONSTER_GEAR_PARTS = Object.freeze(['weapon', 'helmet', 'armor', 'gloves', 'boots', 'amulet', 'ring']);
+
+/**
+ * 작전 카드 규칙 어휘 [2026-11-26 · R586 · PLAN_tactic_cards_impl §2 · §6 · battle_design §3-3] — rule → 받는 수치 칸(p1 · p2 · p3)의 종류.
+ *   `sec` = 초(0 초과) · `frac` = 몫(0 초과 1 이하) · 안 받는 칸은 읽지 않는다. 이 밖의 rule · 칸이 어긋난 수치는 `createRun` 이 **rng 를 쓰기 전에** 던진다.
+ *   **정의는 CSV(`tactic_card.csv`) · 종류는 코드** — 규칙의 뜻은 이 파일의 `createRun` 「작전 카드 규칙」 묶음이 든다 (INTERFACE §2-6 · §2-9 「규칙 어휘 11」)
+ */
+export const TACTIC_RULES = Object.freeze({
+    duel: Object.freeze([]), wedge: Object.freeze(['sec']), trojan: Object.freeze(['sec']), charge: Object.freeze(['sec']),
+    shieldwall: Object.freeze(['frac']), guard: Object.freeze(['frac']), turtle: Object.freeze(['sec', 'frac', 'frac']), retreat: Object.freeze(['frac']),
+    poison_arrow: Object.freeze(['frac']), fire_arrow: Object.freeze(['frac', 'frac']), baggage: Object.freeze(['frac']),
+});
+
+/**
+ * `createRun` 의 `tactics` → 쪽마다 `rule → Rule` 표 [2026-11-26 · R586 · INTERFACE §2-6 「작전 카드」]. `null` · 빈 배열이면 빈 표 둘(카드 없음).
+ *   던지는 것 — 모양(객체 · 쪽마다 배열) · 모르는 rule · `card` 가 빈 것 · **한쪽에 같은 rule 두 번** · 받는 칸의 수치가 종류(`TACTIC_RULES`) 밖.
+ *   Rule 은 **복사해 굳힌다** — 부르는 쪽이 뒤에 배열을 고쳐도 도는 런의 규칙은 안 바뀐다(출발 때 굳는다 · `refit` 도 안 바꾼다) · 순수 · rng 0
+ */
+function tacticTable(tactics) {
+    const T = { party: new Map(), enemy: new Map() };
+    if (tactics == null) return T;
+    if (typeof tactics !== 'object' || Array.isArray(tactics)) throw new Error(`battle: tactics ${JSON.stringify(tactics)} — { party: Rule[], enemy: Rule[] } 이거나 null 이어야 한다 (INTERFACE §2-6)`);
+    for (const side of ['party', 'enemy']) {
+        const list = tactics[side] ?? [];
+        if (!Array.isArray(list)) throw new Error(`battle: tactics.${side} — Rule 배열이어야 한다 (INTERFACE §2-6)`);
+        list.forEach((r, i) => {
+            const kinds = TACTIC_RULES[r?.rule];
+            if (!kinds || !Object.hasOwn(TACTIC_RULES, r.rule)) throw new Error(`battle: tactics.${side}[${i}] rule '${r?.rule}' — 모르는 규칙 (INTERFACE §2-6 · §2-9 「규칙 어휘 11」)`);
+            if (typeof r.card !== 'string' || !r.card) throw new Error(`battle: tactics.${side}[${i}] card '${r.card}' — 카드 id 가 있어야 한다 (INTERFACE §2-6)`);
+            if (T[side].has(r.rule)) throw new Error(`battle: tactics.${side} 에 rule '${r.rule}' 이 두 번 — 한쪽에 같은 규칙은 하나다 (PLAN_tactic_cards_impl §2)`);
+            kinds.forEach((k, j) => {
+                const v = r[`p${j + 1}`];
+                if (!(typeof v === 'number' && Number.isFinite(v) && v > 0 && (k === 'sec' || v <= 1)))
+                    throw new Error(`battle: tactics.${side}[${i}] ${r.rule} p${j + 1} '${v}' — ${k === 'sec' ? '0 초과 초' : '0 초과 1 이하 몫'}이어야 한다 (INTERFACE §2-6)`);
+            });
+            T[side].set(r.rule, Object.freeze({ card: r.card, rule: r.rule, p1: r.p1 ?? null, p2: r.p2 ?? null, p3: r.p3 ?? null }));
+        });
+    }
+    return T;
+}
 
 const TICK = 0.1;
 /** 걸음을 끊는 자리의 부동소수 여유 — 시각은 0.1 을 거듭 더해 꼬리가 붙는다(`advance`). **틱을 몇 번 도느냐만** 정하고 틱 안의 계산에는
@@ -686,7 +729,7 @@ export function createBattleSystem(data) {
             resMaxEl: c.res_max_el ?? null, drFlat: c.option_fx?.drFlat ?? 0,
             // 받는 회복 — `recvBase` = 장비의 체력 회복 +% · `recv` = 화상이 민 파생값(skill_effects `ATTRS` · 2026-09-28 R178). 창이 없으면 둘이 같다
             recv: c.option_fx?.recv ?? 0, recvBase: c.option_fx?.recv ?? 0,
-            // 처치 시 체력 회복(비율 · 투구 색욕 ① · 2026-10-21 R299) — `killHeal` 이 처치마다 최대 HP × 이 값을 회복한다. 없으면 0
+            // 처치 시 체력 회복(비율 · 장갑 색욕 ① · 2026-10-21 R299 · 투구 색욕 ① 은 2026-11-26 R588 받는 체력 회복으로) — `killHeal` 이 처치마다 최대 HP × 이 값을 회복한다. 없으면 0
             killHeal: c.option_fx?.killHeal ?? 0,
             // 물약 효과 상승(비율 · 반지 분노 ③ · 2026-10-29 R382) — `drinkPotions` 가 체력 회복 +% 와 한 괄호에 더한다. 없으면 0 — 종전과 같다
             potionPct: c.option_fx?.potion ?? 0,
@@ -1119,7 +1162,7 @@ export function createBattleSystem(data) {
      * @param enemyPotion 적 쪽 물약 `{potions, slotMax, potionHp}` — 결투장의 수비 쪽(2026-11-13 · R460 · arena_design §0). 파티와 같은 규칙으로 적 쪽이 마신다 ·
      *   칸 · 마시는 기준 · 쿨은 쪽마다 따로 · 안 주면 적은 안 마신다(종전과 같다 · rng 0)
      */
-    function createRun(partyUnits, stageId, rng, level, potions = null, slotMax = B.potion_slot_max, encounter = null, difficulty = null, codexOf = null, potionHp = null, rules = null, encounterSeeds = null, enemyPotion = null) {
+    function createRun(partyUnits, stageId, rng, level, potions = null, slotMax = B.potion_slot_max, encounter = null, difficulty = null, codexOf = null, potionHp = null, rules = null, encounterSeeds = null, enemyPotion = null, tactics = null) {
         const wearChance = wearChanceOf(difficulty);
         // 영웅 원소 저항 페널티 (R535) — 이 런 내내 같다 · 파티 영웅을 입힐 때(아래 · `refit`) 원소 저항 넷에서 뺀다 · 결투장 · 레이드(`encounter`)는 단과 무관하게 0
         const resPen = encounter ? 0 : resPenaltyOf(difficulty);
@@ -1141,6 +1184,11 @@ export function createBattleSystem(data) {
             if (eHp !== null && !(Number.isFinite(eHp) && eHp >= 0)) throw new Error(`battle: 적 potionHp ${eHp} — 0 이상 수여야 한다 (INTERFACE §2-6)`);
             enemyPot = { max: eMax, slots: eSlots.map(p => (p ? { id: p.id, heal: p.heal } : null)), left: eSlots.filter(Boolean).length, next: 0, readyAt: 0, line: eHp ?? B.potion_use_hp_pct, used: 0 };
         }
+        // 작전 카드 [2026-11-26 · R586 · PLAN_tactic_cards_impl §6 · INTERFACE §2-6 「작전 카드」] — 쪽마다 rule → Rule · 모양 검사는 rng 를 쓰기 전(아래 만남 씨앗 굴림 앞).
+        //   **출발 때 굳는다** — `refit` 은 이 표를 안 건드린다. 두 쪽 다 비면(`tacOn` 거짓) 아래 「작전 카드 규칙」 묶음이 하나도 안 돈다(rng · 타임라인 · 골든 불변)
+        const TAC = tacticTable(tactics);
+        const tacOn = TAC.party.size + TAC.enemy.size > 0;
+        const tacOf = (side, rule) => TAC[side].get(rule) ?? null;
         // 몬스터 레벨 = **이번 런의 스테이지 레벨** [2026-09-14 · R87 · base_expedition_design §1-4] — 적 생성 · 장비 아이템 레벨 ·
         //   처치 XP · 적중이 전부 이 값 하나를 읽는다. 스폰의 굴림 횟수는 안 바꾸고, 전투 중 수열은 적중을 따라 갈린다 (INTERFACE §2 simulate)
         const stageLevel = level ?? stage.dlvl;
@@ -1532,14 +1580,18 @@ export function createBattleSystem(data) {
                 //   물약 효과 상승(반지 분노 ③ · 2026-10-29 R382)은 **체력 회복 +% 와 한 괄호** — `(1 + recvBase + potionPct)` 에 치유 감소 몫 `(1 + recv) / (1 + recvBase)` 를 곱한다.
                 //   `potionPct` 가 0 이면 종전 식 그대로다(값 · 수열 불변)
                 const base = u.recvBase ?? 0;
-                const amt = u.potionPct ? Math.round(slot.heal * (1 + u.recv) * (1 + base + u.potionPct) / (1 + base))
+                const amt0 = u.potionPct ? Math.round(slot.heal * (1 + u.recv) * (1 + base + u.potionPct) / (1 + base))
                     : u.recv ? Math.round(slot.heal * (1 + u.recv)) : slot.heal;
+                // 치중대(작전 카드 · R586) — 그 양의 p1 을 같은 편 동료가 나눠 받고 마신 영웅은 그만큼 덜 · 카드가 없으면 null 이라 종전 그대로
+                const bg = tacOn ? tacBaggage(u, amt0) : null;
+                const amt = bg ? amt0 - bg.each * bg.to.length : amt0;
                 const hp0 = u.hp;
                 u.hp = Math.min(u.hpMax, u.hp + amt);
                 potionReadyAt = t + B.potion_cooldown_sec;
                 t4ShareHeal(u, u.hp - hp0);   // 색욕 T4 ② — 물약도 받은 회복이다
                 // `ready` = 파티 물약이 다시 준비되는 시각 — 재생기가 물약 띠의 쿨 판을 이것으로 걷는다(쿨을 계산하지 않는다 · R427)
                 timeline.push({ t: r1(t), e: 'potion', u: u.key, s: slot.id, i, amt, dhp: u.hp, left: potionLeft, ready: r1(potionReadyAt) });
+                if (bg) tacBaggageGive(u, bg);
             }
         };
         /** 적 쪽 물약 [2026-11-13 · R460 · arena_design §0] — 위 `drinkPotions` 와 같은 규칙(대상 · 순서 · 앞의 찬 칸 · 쪽 하나의 쿨 · 회복량 괄호)을
@@ -1559,11 +1611,14 @@ export function createBattleSystem(data) {
                 P.left -= 1;
                 out.enemyPotion.used += 1;
                 const base = u.recvBase ?? 0;
-                const amt = u.potionPct ? Math.round(slot.heal * (1 + u.recv) * (1 + base + u.potionPct) / (1 + base))
+                const amt0 = u.potionPct ? Math.round(slot.heal * (1 + u.recv) * (1 + base + u.potionPct) / (1 + base))
                     : u.recv ? Math.round(slot.heal * (1 + u.recv)) : slot.heal;
+                const bg = tacOn ? tacBaggage(u, amt0) : null;   // 치중대 — 파티 쪽과 같은 규칙 (R586)
+                const amt = bg ? amt0 - bg.each * bg.to.length : amt0;
                 u.hp = Math.min(u.hpMax, u.hp + amt);
                 P.readyAt = t + B.potion_cooldown_sec;
                 timeline.push({ t: r1(t), e: 'potion', u: u.key, s: slot.id, i, amt, dhp: u.hp, left: P.left, ready: r1(P.readyAt), side: 'enemy' });
+                if (bg) tacBaggageGive(u, bg);
             }
         };
 
@@ -1692,6 +1747,9 @@ export function createBattleSystem(data) {
             for (const e of units.enemies) primeGauge(e);
             const pg = {};
             if (round > 1) for (const p of party) { const s = primeGauge(p); if (s) pg[p.key] = r1(s); }
+            // 작전 카드의 라운드 시작 [R586 · 아래 `tacRoundOpen`] — 적이 서고 게이지 +% 를 받은 **뒤** · `round` 이벤트 **앞**(적의 당긴 게이지가 `fillAt` 에 실린다) ·
+            //   이벤트는 `round` · 오오라 창 뒤에 낸다 · 카드가 없으면 부르지 않는다 · rng 0
+            const tacEvs = tacOn ? tacRoundOpen() : null;
             // 파티 칸 쿨은 **라운드를 넘어 잇는다** — 스테이지(런)를 열 때만 준비된 채로 다시 선다(`out` 위 `readyCools` · R515) [2026-11-03 · R429 · battle_design §6 —
             //   ~~라운드를 열 때마다 한 바퀴~~ R427]. 재생기는 앞 라운드의 칸을 그대로 이어 그린다 — `round` 에 파티 칸을 싣지 않는다 · rng 0
             roundLog = { n: round, kind: sp.type, killed: [], eliteSin: units.enemies.find(e => e.grade === 'elite')?.sin ?? null };
@@ -1702,6 +1760,7 @@ export function createBattleSystem(data) {
             // 오오라 창 이벤트 [2026-09-15 · R98] — `round` 바로 뒤 · 파티 몫(전투 시작 · 갈아입기) 먼저, 이 라운드 적의 것 다음.
             //   창은 이미 걸려 있다 — 이벤트만 낸다(rng 0 · 전투 결과 불변)
             for (const ev of [...auraQueue.splice(0), ...enemyAuras]) timeline.push({ t: r1(t), ...ev });
+            if (tacEvs) for (const ev of tacEvs) timeline.push({ t: r1(t), ...ev });
         };
 
         const onKill = e => {
@@ -1966,25 +2025,263 @@ export function createBattleSystem(data) {
         /** 도발자 — `taunt` 창(표식 — `skill_effects.stateOf`)이 켜진 생존 유닛 중 배열 순 첫 번째 (skill_design §9-2 기사 항) */
         const hasTaunt = list => list.find(p => p.hp > 0 && stateOf(p, 'taunt')) ?? null;
 
+        /* ── 작전 카드 규칙 [2026-11-26 · R586 · PLAN_tactic_cards_impl §2 · §6 · battle_design §3-3 · INTERFACE §2-6 「작전 카드」] ──
+           규칙은 **쪽마다** 건다 — 파티 쪽 = `tactics.party` · 적 쪽 = `tactics.enemy`(결투장 수비 팀). 영웅 · 몬스터 · 결투장이 같은 규칙이고(PvP 기준)
+           수치는 Rule 의 p1 ~ p3 뿐이다. 카드가 없으면(`tacOn` 거짓) 아래는 하나도 안 불린다 — 굴림 · 이벤트 · 유닛 필드가 안 생긴다.
+           카드가 일하면 타임라인에 `{t, e: 'tactic', card, side, …}` 를 남긴다(모양은 INTERFACE §2-6 이벤트 표) */
+        const sideList = S => (S === 'party' ? party : units.enemies);
+        const otherSide = S => (S === 'party' ? 'enemy' : 'party');
+        // 리더 — 파티 = 편성 첫 칸(런 내내 같은 유닛) · 적 = 라운드를 열 때 `tacRoundOpen` 이 고른다 · **라운드 도중 쓰러져도 새로 안 뽑는다**
+        const partyLead = party[0] ?? null;
+        let enemyLead = null;
+        const leaderOf = S => (S === 'party' ? partyLead : enemyLead);
+        // 라운드마다 비우는 장부 — 쐐기진 표식(쪽마다 하나) · 그 라운드에 한 번만 알리는 카드(`side|rule` — 일기토 · 독화살 · 불화살) · 거짓 후퇴를 쓴 유닛
+        const tacMark = { party: null, enemy: null };
+        const tacSaid = new Set();
+        const tacRetreated = new Set();
+        const tacEvent = (card, side, extra) => timeline.push({ t: r1(t), e: 'tactic', card, side, ...extra });
+        const tacOnce = (S, r, extra) => {
+            const k = `${S}|${r.rule}`;
+            if (tacSaid.has(k)) return;
+            tacSaid.add(k);
+            tacEvent(r.card, S, extra);
+        };
+
         /**
-         * 단일 대상 선택 — 적 측은 **지목**(결투 선언) → **도발** 순으로 고정하고 그때는 **타겟 rng 를 쓰지 않는다**.
-         * 결투가 먼저인 이유: 지목은 그 적 하나에게만 걸리는 개별 계약이고 도발은 적 전체에 거는 광역 규칙이라,
+         * 적 리더 [PLAN §2 「리더」] — 결투장 = 적 영웅 첫 칸 · PvE = **보스가 서면 보스**(스테이지보스 · 챕터보스 — 챕터보스 판의 정예 호위보다 먼저) ·
+         *   아니면 정예 · 일반만이면 일반 전부 — 고른 무리 안에서 최대 체력이 가장 큰 적(같으면 전열 → 배열 앞) · 소환 제외 · rng 0
+         */
+        const pickEnemyLeader = () => {
+            const list = units.enemies.filter(e => !e.summon);
+            if (!list.length) return null;
+            if (encounter) return list[0];
+            const bosses = list.filter(e => e.grade === 'stage_boss' || e.grade === 'chapter_boss');
+            const elites = list.filter(e => e.grade === 'elite');
+            const pool = bosses.length ? bosses : elites.length ? elites : list;
+            return pool.reduce((a, b) => (b.hpMax > a.hpMax || (b.hpMax === a.hpMax && (b.rank ?? 0) < (a.rank ?? 0)) ? b : a));
+        };
+
+        /**
+         * 대상을 정하는 카드 — 사다리 맨 앞(지목 · 도발 · 문보다 먼저) · 고르면 타겟 rng 0 · 없으면 null.
+         *   **일기토** — 우리 리더의 고르기는 적 리더(살아 있고 후보 안이면) · 그 라운드 처음 한 번 `tactic` 이벤트.
+         *   **쐐기진** — 리더 아닌 동료의 고르기는 표식 적(표식이 살아 있고 후보 안이면) · 표식은 `tacWedge` 가 단다
+         */
+        function tacAim(u, foes) {
+            const S = u.side;
+            if (u === leaderOf(S)) {
+                const r = tacOf(S, 'duel');
+                const F = r ? leaderOf(otherSide(S)) : null;
+                if (!F || F.hp <= 0 || !foes.includes(F)) return null;
+                tacOnce(S, r, { a: u.key, d: F.key });
+                return F;
+            }
+            const m = tacMark[S];
+            return m && m.until > t + STEP_EPS && m.unit.hp > 0 && foes.includes(m.unit) ? m.unit : null;
+        }
+        /** 트로이 목마 — 우리 **후열**의 고르기는 전열 문 대신 **적 후열 문**(적 후열이 비면 null — 평소 문) · 굴림은 평소와 같은 1회 */
+        const tacBackGate = (u, foes) => {
+            if (!tacOf(u.side, 'trojan') || (u.rank ?? 0) === 0) return null;
+            const back = foes.filter(f => (f.rank ?? 0) !== 0);
+            return back.length ? back : null;
+        };
+        /** 쐐기진 표식 — 리더의 단일 직격(광역 타격이 아님)이 맞힌 산 적에 p1 초(다시 맞히면 그 적 · 그 시각부터 새로) · 같은 틱 같은 적이면 다시 안 알린다 · rng 0 */
+        const tacWedge = (u, d) => {
+            const S = u.side, r = tacOf(S, 'wedge');
+            if (!r || u !== leaderOf(S)) return;
+            const until = t + r.p1, m = tacMark[S];
+            if (m && m.unit === d && m.until === until) return;
+            tacMark[S] = { unit: d, until };
+            tacEvent(r.card, S, { a: u.key, d: d.key, until: r1(until) });
+        };
+        /**
+         * 방패벽 · 친위대 — **맞는 쪽 편의 카드**가 이 직격의 남은 몫 `rest`(배리어 앞 · 원소 보호막과 헌신이 가져간 뒤)를 나눈다 ·
+         *   방패벽 = 맞는 유닛이 후열이면 `floor(rest × p1)` 를 산 전열(소환 제외)이 똑같이(사람마다 내림) · 친위대 = 맞는 유닛이 리더이고 **단일 직격**이면
+         *   `floor(남은 것 × p1)` 를 체력(현재 HP)이 가장 높은 동료(리더 · 소환 제외 · 같으면 배열 앞)가. 한쪽에 둘 다 있으면 방패벽 → 친위대 순(게임은 방어 칸이 하나라 없다) ·
+         *   `{sum, list: [[유닛, 양, 카드]]}` 또는 null · rng 0
+         */
+        const tacShare = (d, rest, spread) => {
+            if (d.summon || !(rest > 0)) return null;
+            const S = d.side, list = [];
+            let left = rest, sum = 0;
+            const sw = tacOf(S, 'shieldwall');
+            if (sw && (d.rank ?? 0) !== 0) {
+                const front = sideList(S).filter(x => x.hp > 0 && !x.summon && (x.rank ?? 0) === 0);
+                const each = front.length ? Math.floor(Math.floor(left * sw.p1) / front.length) : 0;
+                if (each > 0) { for (const x of front) list.push([x, each, sw.card]); sum += each * front.length; left -= each * front.length; }
+            }
+            const gd = tacOf(S, 'guard');
+            if (gd && !spread && d === leaderOf(S)) {
+                const mates = sideList(S).filter(x => x !== d && x.hp > 0 && !x.summon);
+                const g = mates.length ? mates.reduce((a, b) => (b.hp > a.hp ? b : a)) : null;
+                const amt = g ? Math.floor(left * gd.p1) : 0;
+                if (amt > 0) { list.push([g, amt, gd.card]); sum += amt; }
+            }
+            return list.length ? { sum, list } : null;
+        };
+        /**
+         * 나눠 받은 몫 하나 — **이미 감소를 지난 값**이라 배리어만 먹고 HP 를 깎는다(헌신 `advLand` 와 같은 결 — 방어 · 저항 · 피해 감소 · 흡혈 · 반사 · 경직 · 훅 없음) ·
+         *   `tactic` 이벤트(`from` = 원래 맞은 유닛) · 기여(때린 쪽 몫) · 쓰러짐 · rng 0
+         */
+        function tacLand(a, d, dmg, card, from, ty) {
+            if (!(dmg > 0) || d.hp <= 0) return;
+            const hp0 = d.hp, had = !!d.barrier;
+            const { absorbed } = applyDamage(d, dmg);
+            const ov = d.hp > 0 ? 0 : Math.max(0, dmg - absorbed - hp0);
+            const ev = { t: r1(t), e: 'tactic', card, side: d.side, a: a.key, d: d.key, from: from.key, dmg, dhp: d.hp, ty };
+            if (had) ev.bar = barrierSum(d);
+            if (ov) ev.ov = ov;
+            timeline.push(ev);
+            const real = dmg - ov, ca = credit(a), cd = credit(d);
+            if (ca) ca.dealt += real;
+            if (cd) cd.taken += real;
+            noteTaken(d, a, real);
+            if (d.hp <= 0) { if (ca && d.side !== 'party' && !d.summon && !d.rewarded) ca.kills += 1; killHeal(a, d); downed(d); }
+        }
+        /**
+         * 거짓 후퇴 — 그 편 **전열**(소환 · 진형 붕괴 중 제외)의 체력 비율이 그 라운드 처음으로 p1 아래면 체력 비율이 가장 높은 후열(같으면 배열 앞)과 자리를 바꾼다 ·
+         *   그 후열의 비율이 더 높을 때만 · 바꿀 짝이 없어도 그 라운드의 한 번은 쓴다 · 영웅마다 라운드당 한 번 · 원래 자리는 `tacHome` 이 들고 다음 라운드를 열 때 되돌린다 ·
+         *   부르는 자리 — 직격이 끝날 때(맞은 편) · 틱마다 행동 앞(도트 · 반사 · 장치 피해 몫) · rng 0
+         */
+        const tacRetreat = S => {
+            const r = tacOf(S, 'retreat');
+            if (!r) return;
+            const list = sideList(S);
+            for (const x of list) {
+                if (x.hp <= 0 || x.summon || (x.rank ?? 0) !== 0 || x.rankBase !== undefined || tacRetreated.has(x) || !(hpRatio(x) < r.p1)) continue;
+                tacRetreated.add(x);
+                const back = list.filter(y => y.hp > 0 && !y.summon && (y.rank ?? 0) !== 0 && y.rankBase === undefined);
+                if (!back.length) continue;
+                const w = back.reduce((a, b) => (hpRatio(b) > hpRatio(a) ? b : a));
+                if (!(hpRatio(w) > hpRatio(x))) continue;
+                if (x.tacHome === undefined) x.tacHome = x.rank ?? 0;
+                if (w.tacHome === undefined) w.tacHome = w.rank ?? 0;
+                x.rank = w.rank;
+                w.rank = 0;
+                tacEvent(r.card, S, { u: x.key, w: w.key, rank: { [x.key]: x.rank, [w.key]: w.rank } });
+            }
+        };
+        /**
+         * 독화살 · 불화살 — 상대 편을 친 **물리 직격**마다 그 원소 몫 p1 을 물리 → 원소 전환 몫(`formula.strike` 의 `conv`)으로 싣는다 ·
+         *   스킬 창의 전환(원소 전환 오오라) 뒤에 붙어 몫의 합 1 자르기 안이다 · 없으면 null
+         */
+        const tacConv = u => {
+            let list = null;
+            for (const [rule, el] of [['poison_arrow', 'poison'], ['fire_arrow', 'fire']]) {
+                const r = tacOf(u.side, rule);
+                if (r) (list ??= []).push({ el, share: r.p1, tac: r });
+            }
+            return list;
+        };
+        /** 불화살 화상 — 전환이 실린 직격이 맞았고 대상이 살아 있으면(소환 제외) p2 확률(**rng 1회** · p2 ≥ 1 이면 0회) · 화상 = 이그나이트의 화상 행(원소 전환 오오라의 화상과 같은 줄) */
+        const tacBurn = (u, d) => {
+            const r = tacOf(u.side, 'fire_arrow');
+            if (!r || !(r.p2 >= 1 || rng() < r.p2)) return;
+            const x = statusX('mag_ignite_burn', `tactic:${r.card}`);
+            if (x) rt.applyStatus(u, d, x, t);
+        };
+        /** 치중대 — 마신 양 `amt` 의 `floor(amt × p1)` 를 같은 편 산 다른 동료(소환 제외)가 똑같이(사람마다 내림) · `{card, to, each}` 또는 null(동료가 없거나 몫이 0) · rng 0 */
+        const tacBaggage = (u, amt) => {
+            const r = tacOf(u.side, 'baggage');
+            if (!r) return null;
+            const to = sideList(u.side).filter(x => x !== u && x.hp > 0 && !x.summon);
+            const each = to.length ? Math.floor(Math.floor(amt * r.p1) / to.length) : 0;
+            return each > 0 ? { card: r.card, to, each } : null;
+        };
+        /** 치중대 나눠 주기 — `tactic` 이벤트 뒤 동료마다 회복(`heal` · `s` = `tactic:<카드>` · 받는 쪽 체력 회복 +% · 화상 감소를 탄다 — 색욕 T4 나누기와 같은 길) */
+        const tacBaggageGive = (u, bg) => {
+            tacEvent(bg.card, u.side, { u: u.key, to: bg.to.map(x => x.key), amt: bg.each });
+            for (const x of bg.to) advHeal(u, x, bg.each, `tactic:${bg.card}`);
+        };
+        /**
+         * 라운드를 열 때 [PLAN §2] — ① 거짓 후퇴가 바꾼 자리 되돌리기(파티 — 적은 라운드마다 새로 선다) ② 장부 비우기 · 적 리더 고르기 ③ 쪽마다
+         *   **기사 돌격**(산 전열의 다음 차례를 지금 — 게이지가 차기 시작하는 시각 · 경직 · 스턴 끝 · 한 틱 중 늦은 것까지 당긴다 · 후열은 p1 초 동안 게이지가 선다) ·
+         *   **트로이 목마**(산 후열은 p1 초 동안 게이지가 선다 — 행동하지 않는다) · **거북 진형**(산 유닛 전원에 p1 초 동안 받는 피해 감소 p2 창 + 공속 −p3 창 — 조용한 창 ·
+         *   공속은 다음 차례 예약부터 · INTERFACE §2-6 `period_pct`). 돌려주는 것 = `t` 없는 `tactic` 이벤트들(`round` · 오오라 창 뒤에 나간다) · rng 0
+         */
+        const tacRoundOpen = () => {
+            const evs = [];
+            const push = (card, side, extra) => evs.push({ e: 'tactic', card, side, ...extra });
+            const rt0 = tacOf('party', 'retreat');
+            if (rt0) {
+                const home = {};
+                for (const x of party) {
+                    if (x.tacHome === undefined) continue;
+                    const h = x.tacHome;
+                    delete x.tacHome;
+                    // 진형 붕괴가 걸린 채면 그 창이 끝날 때 돌아갈 자리를 집으로 고치고 지금 자리는 뒤집힌 집이다(창 규칙 그대로 — skill_effects `formation_break`)
+                    if (x.rankBase !== undefined) { x.rankBase = h; x.rank = h === 0 ? 1 : 0; } else x.rank = h;
+                    home[x.key] = x.rank;
+                }
+                if (Object.keys(home).length) push(rt0.card, 'party', { rank: home, back: true });
+            }
+            tacRetreated.clear();
+            tacSaid.clear();
+            tacMark.party = null;
+            tacMark.enemy = null;
+            enemyLead = pickEnemyLeader();
+            for (const S of ['party', 'enemy']) {
+                const list = sideList(S).filter(x => x.hp > 0 && !x.summon);
+                const front = list.filter(x => (x.rank ?? 0) === 0), back = list.filter(x => (x.rank ?? 0) !== 0);
+                const hold = until => { for (const x of back) x.tacHold = Math.max(x.tacHold ?? 0, until); };
+                const ch = tacOf(S, 'charge');
+                if (ch && list.length) {
+                    const pull = {};
+                    for (const x of front) {
+                        const floor = Math.max(TICK, x.fillAt - t, (x.stagUntil ?? 0) - t, (x.stunUntil ?? 0) - t);
+                        const shift = x.next - floor;
+                        if (!(shift > 0)) continue;
+                        x.next -= shift;
+                        x.fillAt -= shift;
+                        pull[x.key] = r1(shift);
+                    }
+                    const until = t + ch.p1;
+                    hold(until);
+                    push(ch.card, S, { pull, units: back.map(x => x.key), until: r1(until) });
+                }
+                const tj = tacOf(S, 'trojan');
+                if (tj && back.length) {
+                    const until = t + tj.p1;
+                    hold(until);
+                    push(tj.card, S, { units: back.map(x => x.key), until: r1(until) });
+                }
+                const tu = tacOf(S, 'turtle');
+                if (tu && list.length) {
+                    const until = t + tu.p1;
+                    for (const x of list) {
+                        x.buffs['tac:turtle_dr'] = { stat: 'dr_pct', v: tu.p2, until, element: null, by: 'tactic', quiet: true };
+                        x.buffs['tac:turtle_slow'] = { stat: 'period_pct', v: -tu.p3, until, element: null, by: 'tactic', quiet: true };
+                        refreshDerived(x);
+                    }
+                    push(tu.card, S, { units: list.map(x => x.key), until: r1(until) });
+                }
+            }
+            return evs;
+        };
+
+        /**
+         * 단일 대상 선택 — 사다리는 **좁은 것부터**: 작전 카드(일기토 · 쐐기진 표식) → **지목**(결투 선언) → **도발** → 문(트로이 목마의 후열 문 · 전열 문) → 무작위.
+         *   문 앞에서 고르면 **타겟 rng 를 쓰지 않는다**. 지목이 도발보다 먼저인 이유: 지목은 그 적 하나에게만 걸리는 개별 계약이고 도발은 적 전체에 거는 광역 규칙이라,
          *   좁은 쪽이 이기지 않으면 지목이 도발에 늘 먹혀 스킬이 죽는다 (skill_design §12-4).
+         *   **지목 · 도발은 양쪽 같은 규칙이다** [2026-11-26 · R586 D13 — ~~적 측만 읽었다~~] — 몬스터 · 결투장 적의 도발도 파티의 고르기를 묶는다(battle_design §3-3)
          */
         function pickTarget(u, foes) {
-            if (u.side === 'enemy') {
-                const duel = stateOf(u, 'duel')?.[1];      // 지목 창(표식) — 첫 창의 건 자 `by`
-                if (duel) {
-                    const marked = party.find(p => p.key === duel.by && p.hp > 0);
-                    if (marked) return marked;
-                }
-                const tn = hasTaunt(party);
-                if (tn) return tn;
+            if (tacOn) {
+                const x = tacAim(u, foes);
+                if (x) return x;
             }
+            const foeSide = u.side === 'party' ? units.enemies : party;
+            const duel = stateOf(u, 'duel')?.[1];      // 지목 창(표식) — 첫 창의 건 자 `by`
+            if (duel) {
+                const marked = foeSide.find(p => p.key === duel.by && p.hp > 0);
+                if (marked) return marked;
+            }
+            const tn = hasTaunt(foeSide);
+            if (tn) return tn;
             // **전열 우선 — 하드 게이트** [확정 2026-09-09 사용자 지시 · battle_design §3-1].
             //   전열(rank 0) 생존자가 하나라도 있으면 **후열은 대상이 되지 않는다**. 전열이 전멸해야 뒤가 열린다.
-            //   굴림은 여전히 **1회**다 — 바뀐 것은 모집단뿐이라 rng 소비 수열이 안 밀린다 (INTERFACE §5-2)
-            return pickFrom(frontOf(foes));
+            //   굴림은 여전히 **1회**다 — 바뀐 것은 모집단뿐이라 rng 소비 수열이 안 밀린다 (INTERFACE §5-2) · 트로이 목마의 후열 문도 같은 1회
+            const gate = tacOn ? tacBackGate(u, foes) : null;
+            return pickFrom(gate ?? frontOf(foes));
         }
 
         /** 피해 적용 — 배리어(HP 밖 흡수 풀)가 먼저 먹고 남은 몫만 HP 를 깎는다 · 조각은 먼저 끝나는 것부터(R517) */
@@ -3897,7 +4194,9 @@ export function createBattleSystem(data) {
             //   그 원소 저항이 깎는다 · formula.strike `conv`) · 전환 몫(`cv`)과 함께 실린다 · `advAfterHit` 에는 전환 몫만 넘긴다 · rng 0
             const ea = hitType === 'physical' && u.side !== target.side && u.enchant?.kind === 'phys' && (u.enchant.el === 'fire' || u.enchant.el === 'poison')
                 ? { el: u.enchant.el, share: B.elite_enchant_add_pct, add: true } : null;
-            if (cv || ea) u.conv = ea ? [...(cv ?? []), ea] : cv;
+            // 독화살 · 불화살(작전 카드 · R586) — 상대 편을 친 물리 직격마다 그 원소 몫(스킬 창의 전환 뒤 · 정예 강화의 더하는 몫 앞) · `advAfterHit` 에는 안 넘긴다 · 카드가 없으면 null
+            const tcv = tacOn && hitType === 'physical' && u.side !== target.side ? tacConv(u) : null;
+            if (cv || ea || tcv) u.conv = tcv ? [...(cv ?? []), ...tcv, ...(ea ? [ea] : [])] : ea ? [...(cv ?? []), ea] : cv;
             const attackMulBeforeMitigation = sumOf(u, 'maiden') > 0 ? dealt * (am?.attackMul ?? 1) : undefined;
             // 강타 — **맞기 직전 대상의 현재 체력** × % 를 그 타격의 **물리 피해**로 싣는다 [2026-11-24 사용자 「강타는 물리피해고 물리방어력에 의해 줄어들어야해」 · R570 · battle_design §9-6 —
             //   ~~치명 · 방어 · 저항을 받지 않는 고정 피해 · `strike` 뒤에 더한다~~(R78)] — 소재값(`crushBase`)을 그 타격 동안만 얹고 `formula.strike` 가 물리 방어(관통 포함) ·
@@ -3960,12 +4259,16 @@ export function createBattleSystem(data) {
             // 헌신 [2026-11-14 · R471 · advance_tree_draft §5] — 같은 편 가디언이 창 동안 이 직격의 몫을 대신 받는다(가져온 몫 × (1 − 가져온 피해 감소)) · 창이 없으면 0 이라 종전 그대로
             const dv = !took && u.side !== target.side ? devotionOf(target) : null;
             const moved = dv ? Math.floor((total - shTook) * dv.share) : 0;
+            // 방패벽 · 친위대(작전 카드 · R586 · 위 `tacShare`) — 헌신이 가져간 뒤의 남은 몫을 같은 편이 나눠 받는다 · 카드가 없으면 null 이라 0 을 빼 종전 그대로
+            const tsh = tacOn && !took && u.side !== target.side ? tacShare(target, total - shTook - moved, spread) : null;
+            const shared = tsh ? tsh.sum : 0;
             // 죄종 마스터리 T4 맞는 쪽 [2026-11-14] — 오만 ③ 큰 한 방의 넘친 몫 감소 · 폭식 ③ 원소 피해 일부를 회복으로 · 나태 ③(조건 동안) 일부를 나눠 받기 · 없으면 그대로
-            const tin = !took && u.side !== target.side && target.adv ? t4Incoming(u, target, total - shTook - moved, hitType) : null;
-            const intoHit = tin ? tin.into : total - shTook - moved;
+            const tin = !took && u.side !== target.side && target.adv ? t4Incoming(u, target, total - shTook - moved - shared, hitType) : null;
+            const intoHit = tin ? tin.into : total - shTook - moved - shared;
             const { absorbed: abs0 } = took ?? applyDamage(target, intoHit);
             const absorbed = abs0 + shTook;
             if (moved > 0) advLand(u, dv.g, Math.round(moved * (1 - dv.dr)), dv.s ?? 'kni_lastbastion', hitType);
+            if (tsh) for (const [x, amt, card] of tsh.list) tacLand(u, x, amt, card, target, hitType);
             if (tin) t4IncomingAfter(u, target, tin);
             // 넘친 몫 [2026-10-23 · R326] — 배리어 · HP 밖으로 넘친 양(쓰러뜨린 타격에만 0 초과). 처형 판정 앞에서 잰다(처형은 남은 체력을 지울 뿐 넘치지 않는다)
             //   파리 떼는 쓰러뜨린 타격(마지막 파리)에만 그 파리 밖으로 넘친 몫 · 기여는 실제로 깎은 파리 HP 합(`took`)
@@ -4018,6 +4321,9 @@ export function createBattleSystem(data) {
             if (proc) ev.proc = true;                        // 추가 피해가 **터진 타격만** 키가 선다 (INTERFACE §2-6)
             if (shield) ev.bar = barrierSum(target);        // 흡수 후 잔량(조각 합)
             timeline.push(ev);
+            // 작전 카드(R586) — 쐐기진 표식(리더의 단일 직격이 맞힌 산 적) · 독화살 · 불화살이 그 라운드 처음 일했다 · 카드가 없으면 아무 일도 없다 · rng 0
+            if (tacOn && !spread && u.side !== target.side && target.hp > 0) tacWedge(u, target);
+            if (tcv) for (const c of tcv) tacOnce(u.side, c.tac, { a: u.key, d: target.key, el: c.el });
             // 색욕 T4 ① 드러난 심장(2026-11-14) — 조건(상대 HP 가 높다)을 채운 적에게 치명이 터지면 잠깐 받는 피해 증가
             if (crit && u.adv?.lust_crit_vuln && target.hp > 0 && !target.summon && t4On(u, target))
                 advWin(target, `m4:lust@${u.key}`, 'dr_pct', -u.adv.lust_crit_vuln, t + B.mastery_t4_lust_sec, { by: u.key, foe: true });
@@ -4056,6 +4362,8 @@ export function createBattleSystem(data) {
             // 원소 보호막을 평타로 친 적은 결빙(프로스트 아머 · R471) — 그 보호막 시전자가 건다 · 기본 공격(`sk` 없음)만
             if (!sk && shieldWas && BASE_FREEZE && u.hp > 0 && !u.summon) rt.applyStatus(shieldWas.owner ?? target, u, { ...BASE_FREEZE, id: 'mag_frostarmor' }, t);
             advAfterHit(u, target, s, sk, hitType, total, proc, cv, convProc, real);
+            // 불화살 화상(작전 카드 · R586 · 위 `tacBurn`) — 전직 장치 뒤 · 원소 부여 앞 · 전환이 실린 직격만 · rng 1회(p2 < 1)
+            if (tcv && target.hp > 0 && !target.summon) tacBurn(u, target);
             // 원소 부여 [2026-10-16 · R250 · 이그나이트 · 딥 프리즈 · 서지] — **스킬 타격**의 원소가 창의 원소와 같으면 창이 든 상태이상(`hit`)을 건다.
             //   창마다 삽입 순서 · 확률이 1 이면 굴리지 않는다 · 1 미만이면 **rng 1회**(INTERFACE §5-2). 결빙은 같은 열쇠라 센 쪽(나중 것)이 덮는다
             //   **`shatter`**(딥 프리즈 · 2026-10-29 · R385 · battle_design §2-4) — 같은 자리 · 같은 순서에서 **이 타격 전에 결빙돼 있던** 대상에게만 창이 든 상태이상(스턴)을 건다 ·
@@ -4108,6 +4416,8 @@ export function createBattleSystem(data) {
             }
             // ~~장비 · 도감 반격(`counter_chance` — 맞으면 확률로 덤 기본 공격 1회)~~ — 2026-11-25 R585 걷음 · INTERFACE §2-6 「반격」.
             //   반격은 전직 스킬 창(몽크 「반격」 · 레인저 「응사」 — 위 `advStruck`)만 남는다 · 반격 중(`countering`)엔 다시 반격하지 않는다
+            // 거짓 후퇴(작전 카드 · R586) — 맞은 편 전열이 그 라운드 처음 문턱 아래로 갔으면 자리를 바꾼다 · 카드가 없으면 아무 일도 없다 · rng 0
+            if (tacOn) tacRetreat(target.side);
             // 호출자가 붙인 후처리(추가타 결빙 · 대상 방어 감소)까지 끝낸 뒤 장비 발동을 판정한다.
             lastStrike = { hit: true, dmg: total, proc, crit, killed: target.hp <= 0 };
             afterStrike?.(true);
@@ -4336,9 +4646,13 @@ export function createBattleSystem(data) {
                 // 물약 — 재생 **뒤** · 행동 **앞** (R103 · 위 `drinkPotions`). 물약이 없거나 칸이 빈 런은 안 돈다
                 if (potionLeft > 0) drinkPotions();
                 if (enemyPot && enemyPot.left > 0) drinkEnemyPotions();   // 결투장 수비 쪽 — 파티 다음 (R460)
+                // 거짓 후퇴(작전 카드 · R586) — 도트 · 반사 · 장치 피해로 문턱을 넘은 전열도 행동 **앞**에서 본다(직격은 `strikeOnce` 끝이 이미 봤다) · rng 0
+                if (tacOn) { tacRetreat('party'); tacRetreat('enemy'); }
                 for (const u of [...party, ...units.enemies]) {
                     if (u.hp <= 0) continue;
                     if (rules?.skipActor?.(u)) continue;
+                    // 기사 돌격의 후열 · 트로이 목마(작전 카드 · R586) — 그 시각까지(그 틱 포함) 게이지 · 칸 충전 · 시전이 선다 = 첫 행동이 그만큼 늦다 · 없으면 `undefined` 라 안 건너뛴다
+                    if (u.tacHold + STEP_EPS >= t) continue;
                     if (u.chan) { chanTick(u); continue; }   // 정신 집중 — 차례 · 칸 충전 대신 방 사이 초 시계 (2026-10-22 · 끊어 치기도 2026-10-30 R392 · 위 `chanTick`)
                     if (u.noBasic) { chargeTick(u); continue; }
                     u.next -= TICK;
@@ -4417,9 +4731,10 @@ export function createBattleSystem(data) {
 
     // makeEnemy 는 검증(dev/test.js)이 몬스터→유닛 변환 규칙을 직접 볼 수 있도록 함께 내보낸다 — stagePool 과 같은 이유
     // 결투장 단판 — 물약은 `createRun` 과 같은 칸(안 주면 물약 없음 · 2026-10-03) · `enemyPotion` = 수비 쪽 물약(2026-11-13 · R460 — 안 주면 적은 안 마신다)
-    function simulateTeams(party, enemies, rng, potions = null, slotMax = B.potion_slot_max, potionHp = null, enemyPotion = null) {
+    // 작전 카드 `tactics` = `{party, enemy}` — 공격 측 = `party` · 수비 팀 = `enemy` (2026-11-26 · R586 · 안 주면 카드 없음 — 종전과 같다)
+    function simulateTeams(party, enemies, rng, potions = null, slotMax = B.potion_slot_max, potionHp = null, enemyPotion = null, tactics = null) {
         if (!party.length || !enemies.length) throw new Error('battle: both teams must have units');
-        const run = createRun(party, null, rng, 1, potions, slotMax, enemies, null, null, potionHp, null, null, enemyPotion);
+        const run = createRun(party, null, rng, 1, potions, slotMax, enemies, null, null, potionHp, null, null, enemyPotion, tactics);
         while (run.next()?.ended === false);
         return { ...run.result, mode: 'arena' };
     }

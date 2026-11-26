@@ -15,7 +15,9 @@ const DAY = 24 * 3600 * 1000;
 const COUNTER_SKIP = new Set(['hero', 'item']);
 const COUNTER_LABEL = {
     battle: '원정 출발', tavern: '선술집 리롤', upgrade: '강화 시도', make: '제작', gamble: '도박',
-    commission: '의뢰', search: '수색', explore: '탐험', join: '가입 희망 도착', tactic: '전술 리롤', mg: '미니게임',
+    commission: '의뢰', search: '수색', explore: '탐험', join: '가입 희망 도착', mg: '미니게임',
+    // 작전 카드 (2026-11-26 · R586 — 옛 `tactic` 전술 리롤 회차는 세이브 v52 가 걷었다)
+    tacticEquip: '작전 카드 장착', tacticEnchant: '작전 카드 인챈트', tacticDrop: '작전 카드 드랍 굴림',
 };
 
 let fb = null;       // { A, F, auth, db }

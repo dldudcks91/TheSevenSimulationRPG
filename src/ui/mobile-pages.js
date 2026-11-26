@@ -139,14 +139,15 @@ export function mountMobilePages(main) {
             if (pop) wrap.appendChild(pop);
         }
     } else if (tab === 'party') {
-        const shareLabel = page.querySelector('.rs-colh .c-extra')?.textContent;
-        for (const share of all(page, '.rs-cell .rs-lead')) if (shareLabel) share.dataset.mobileLabel = shareLabel;
+        // 작전 카드 세 칸 (2026-11-26 · R586 · SCREEN_DESIGN §15) — 칸 하나(카드 + 옵션 줄 둘)씩 고르개로 · 고르개 글 = 칸 이름 · 아래 판은 둘째 페이지
+        const shareLabel = page.querySelector('.tc-colh .c-extra')?.textContent;
+        for (const share of all(page, '.tc-line .rs-lead')) if (shareLabel) share.dataset.mobileLabel = shareLabel;
         deck(page.querySelector('.pt-body'), tab, items(page, '.pt-left > .fm-box, .pt-left > .pt-potion, .pt-tactics', ['formation','potions','tactics']));
         const tactics = page.querySelector('.pt-tactics');
-        const grid = tactics?.querySelector('.rs-grid');
-        if (grid) {
-            chooseCards(grid, all(grid, ':scope > .rs-cell'), 'tactics', (card, i) => `${i + 1} ${card.querySelector('.rs-sin')?.textContent.trim() ?? '🔒'}`);
-            deck(tactics, 'tactic-content', items(tactics, ':scope > .rs-grid, :scope > .rs-board', ['cards','bonuses']));
+        const list = tactics?.querySelector('.tc-list');
+        if (list) {
+            chooseCards(list, all(list, ':scope > .tc-row'), 'tactics', card => card.querySelector('.tc-slot')?.textContent.trim() ?? '');
+            deck(tactics, 'tactic-content', items(tactics, ':scope > .tc-list, :scope > .rs-board', ['cards','bonuses']));
         }
     } else if (tab === 'research') {
         deck(page.querySelector('.cn-box'), tab, items(page, '.cn-lotbox, .cn-side', ['town','building']));

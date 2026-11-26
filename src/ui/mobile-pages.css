@@ -84,16 +84,10 @@
 :root[data-mobile] .pt-body > .pt-pick { flex: none; order: -2; margin: 0; }
 :root[data-mobile] .pt-pick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
 :root[data-mobile] .pt-pick > button { min-width: 0; white-space: normal; padding: 5px 3px; font-size: var(--mobile-fs-caption); }
-:root[data-mobile] .pt-tactics .rs-grid { justify-content: flex-start; gap: 8px; }
-:root[data-mobile] .pt-tactics .rs-colh { display: none; }
-:root[data-mobile] .pt-tactics .rs-cell { display: grid; flex: none; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; width: 100%; }
-:root[data-mobile] .pt-tactics .rs-cell .rs-top { grid-column: 1; grid-row: 1; justify-content: flex-start; }
-:root[data-mobile] .pt-tactics .rs-cell .rs-pin { grid-column: 2; grid-row: 1; min-height: 36px; }
-:root[data-mobile] .pt-tactics .rs-cell .rs-sin { grid-column: 1; grid-row: 2; }
-:root[data-mobile] .pt-tactics .rs-cell .rs-cnt-c { grid-column: 2; grid-row: 2; }
-:root[data-mobile] .pt-tactics .rs-cell .rs-cond,
-:root[data-mobile] .pt-tactics .rs-cell .rs-eff,
-:root[data-mobile] .pt-tactics .rs-cell .rs-lead { grid-column: 1 / -1; white-space: normal; min-width: 0; }
+/* 작전 카드 (§15 · R586) — 고르개로 한 칸씩 · 카드 위 · 줄 둘 · [인챈트] 는 손가락 크기 */
+:root[data-mobile] .pt-tactics .tc-list { justify-content: flex-start; }
+:root[data-mobile] .pt-tactics .tc-row { flex: none; width: 100%; }
+:root[data-mobile] .pt-tactics .tc-ench { min-height: 36px; }
 :root[data-mobile] .pt-tactics .rs-lead[data-mobile-label]::before { content: attr(data-mobile-label); color: var(--text-muted); font-size: var(--fs-2xs); margin-right: 8px; }
 :root[data-mobile] .fm-main { flex: none; gap: 8px; }
 :root[data-mobile] .fm-side { flex: none; }

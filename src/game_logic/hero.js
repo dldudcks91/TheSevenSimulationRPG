@@ -986,7 +986,7 @@ export function createHeroSystem(data) {
             vsEliteDr: f('vs_elite_dr'), vsFrontDr: f('vs_front_dr'), vsBackDr: f('vs_back_dr'),
             drFlat: f('dr_flat'),                // 절대값 피해 감소 — 모든 감소 뒤에 뺀다(formula.strike)
             recv: f('hp_recovery_pct'),          // 체력 회복 +% — 재생 · 회복 스킬 · 흡혈 · 물약 · 처치 시 회복에 곱한다(보호막 제외)
-            killHeal: f('kill_heal_pct'),        // 처치 시 체력 회복 — 처치마다 제 최대 HP × 값(battle.killHeal · 투구 · 장갑 색욕 ① · 2026-10-21 R299)
+            killHeal: f('kill_heal_pct'),        // 처치 시 체력 회복 — 처치마다 제 최대 HP × 값(battle.killHeal · 장갑 색욕 ① · 도감 · 전술 · 2026-10-21 R299 · 투구 색욕 ① 은 2026-11-26 받는 체력 회복으로)
             startGauge: f('start_gauge_pct'),    // 전투 시작 시 행동 게이지 +% — 빈 게이지를 그만큼 채운 채 세운다 · 원정은 라운드마다(battle.primeGauge · 가죽 신발 특성 · R303)
             cullNormal: f('cull_normal_pct'),    // 일반몹 처형 — 직격 뒤 등급 「일반」 몬스터의 체력이 최대 HP × 값 이하면 쓰러뜨린다(battle.strikeOnce · 장갑 폭식 ② · R303)
             xpGain: f('xp_gain_pct'),            // 경험치 획득 — **본인 몫**(state.advanceRun)

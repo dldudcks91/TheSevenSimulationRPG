@@ -30,7 +30,7 @@
 | 영웅 · 능력치 · 성장 | [hero_design.md](docs/game_design/hero_design.md) §1 2층 구조 · §2 직업 · §3 정체성 분담 · §4 능력치 · §4-1 기본 능력치 · §4-1-1 미결 · §4-2 불변식 · §5 성장 · §6 미탑재 | `hero_attribute.csv` · `combat_stat.csv` · `balance.csv` | DEV_PLAN §3-3 R7 · R12 |
 | 스킬 · 마스터리 · 전직 | [skill_design.md](docs/game_design/skill_design.md) §0 확정 · §1 구조 · §2 액티브 · §2-3 스킬 레벨 · §3 마스터리 · §4 전직 특화 · §5 롤백 · **§7 미확정** · §9 직업 액티브 초안 | `skill.csv` · `mastery_node.csv` · `balance.csv`(포인트 · 스킬 레벨 키 — 10-06) (전직 노드 테이블 · 고유 스킬 풀 · 스킬 레벨이 올리는 칸은 **미발행**) | DEV_PLAN §3-2 (스킬 효과) |
 | 아이템 · 접사 · 자원 | [item_design.md](docs/game_design/item_design.md) §1 구조 · §2 변경점 · §2-1 ilvl 스케일링 · §4 이관 · §5 자원 · **§5-3 미확정** | `equipment_option_override.csv` · `weapon_group.csv` · `inherited/` (읽기 전용) | DEV_PLAN §3-2 (크래프트·낙인·유니크) · §3-3 R11 |
-| 전술카드 | [tactic_card_design.md](docs/game_design/tactic_card_design.md) §1 정의 · §1-1 인접 개념 구분 · §2 확정 원칙 · §3 이관 · **§4 미확정** | **미발행** | DEV_PLAN §3-2 (전술카드) · §3-3 R14 |
+| 파티 전술 (작전 카드) | [tactic_card_design.md](docs/game_design/tactic_card_design.md) §1 정의 · §2 원칙 · §3 칸과 얻기 · §4 카드 11장 · §5 옵션 줄 · §6 리더 · 통솔 · 죄종 점수 · §7 결투장 · 시련 탑 · 「남은 것」 | `tactic_card.csv` · `tactic_option.csv` | DEV_PLAN §3-3 R586 |
 | 몬스터 · 스테이지 · 도감 | [monster_design.md](docs/game_design/monster_design.md) §0 데이터 재작성 · §1 타입 · §2 공격 타입 · §4 스테이지 구성 · §5 스폰 등급 · §6 정예 특성 · §7 데이터 구조 · §7-1 방어·저항 규칙 · §8 도감 · §9 이스터에그 몬스터 | `monster.csv` · `stage.csv` · `stage_round.csv` · `round_budget.csv` · `spawn_grade.csv` · `codex_level.csv` | DEV_PLAN §3-2 (정예 특성 · 도감 계열 스탯) |
 | 스토리 · 챕터 | [story_chapter_design.md](docs/game_design/story_chapter_design.md) §1 스토리 · §2 챕터 구조 (~~§3 상태이상~~ 10-21 삭제 — 상태이상 규칙은 battle_design.md §2 · §8) | `src/data/inherited/` | DEV_PLAN §3-2 (상태이상) |
 | 죄종 통일 매핑 | `sin_mapping.md` — **아직 없다.** GAME_DESIGN §1 세부 문서 표에 "(예정)" · §10 큰 틀의 첫 과제 | 미발행 | DEV_PLAN §3-2 (죄종 매핑) |
@@ -79,4 +79,4 @@ CSV 전체 목록과 각 파일이 무엇을 담는지는 [src/data/README.md](s
 - 어느 문서를 먼저 고치는지의 표는 [DEV_PLAN.md](docs/client/DEV_PLAN.md) §7
 
 ---
-*마지막 업데이트: 2026-11-20*
+*마지막 업데이트: 2026-11-26*

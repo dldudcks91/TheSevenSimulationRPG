@@ -151,13 +151,11 @@ function runFingerprint(SYS, B, NOW, seed, stage, order) {
     // 해금만 풀어준다 (성장 없음) — **표 순서의 앞 칸 전부**다: 칸은 직전 칸을 깨야 열린다(2026-09-29 · ~~골든 스테이지 중 앞의 것~~)
     G.progress.cleared = order.slice(0, order.indexOf(stage));
 
-    // 전술 칸 — `newGame` 직후 상태 그대로 (인위적으로 켜지 않는다, D-A4). 켜진 효과가 전투 수치에 들어가므로
-    // 지문에 남겨야 나중에 달라졌을 때 원인을 읽을 수 있다. 전술은 자기 rng 스트림이라 전투 수열과 안 섞인다.
-    // **열린 칸 전체**를 적는다 — 켜진 것만 적으면 칸에 무엇이 들었는지조차 안 남아서,
-    // 배정이 바뀌었는데 우연히 둘 다 조건 미달이면 지문이 침묵한다
-    // **등급도 적는다** (2026-09-02) — 같은 가족의 다른 등급은 값만 다르므로, 등급이 빠지면 지문이 안 움직인다
+    // 작전 카드 칸 — `newGame` 직후 상태 그대로 (인위적으로 장착하지 않는다, D-A4). 옵션 줄이 전투 수치에 · 카드 규칙이 전투 흐름에 들어가므로
+    // 지문에 남겨야 나중에 달라졌을 때 원인을 읽을 수 있다. 카드 굴림은 자기 rng 스트림이라 전투 수열과 안 섞인다.
+    // **열린 칸 전체**를 `갈래:카드:등급:줄(옵션/등급/m,…)` 로 적는다 — 빈 칸은 `-` · **열린 칸이 없으면 `-`**(새 게임은 지휘 천막이 없다 · R586)
     const tactics = SYS.game.tacticState(G).slots.filter(s => s.open)
-        .map(s => `${s.no}:${s.option?.id ?? '-'}:${s.option?.grade ?? '-'}:${s.active ? 'on' : 'off'}`).join('|') || '-';
+        .map(s => `${s.slot}:${s.card?.id ?? '-'}:${s.grade ?? '-'}:${s.lines.map(l => `${l.id}/${l.grade}/${l.m}`).join(',') || '-'}`).join('|') || '-';
 
     const r = SYS.game.resolveBattle(G, stage, NOW);
     if (!r.ok) throw new Error(`golden: seed ${seed} stage ${stage} — resolveBattle ${r.err}`);
@@ -204,7 +202,7 @@ export function buildMeta(B, D, NOW, created) {
         balance: { ...B },
         // 어느 CSV 가 달라졌는지 — 지문 diff 는 "달라졌다"만 말하고 파일은 못 짚는다
         csvHash: Object.fromEntries(Object.entries(D.csvText ?? {}).map(([f, t]) => [f, csvHash(t)])),
-        tacticsNote: 'newGame 직후 상태 그대로 — 전술 칸을 인위적으로 켜지 않는다 (런마다 tactics 에 열린 칸 전체 `번호:옵션:등급:on|off`)',
+        tacticsNote: 'newGame 직후 상태 그대로 — 작전 카드를 인위적으로 장착하지 않는다 (런마다 tactics 에 열린 칸 전체 `갈래:카드:등급:줄` · 열린 칸이 없으면 `-`)',
     };
 }
 

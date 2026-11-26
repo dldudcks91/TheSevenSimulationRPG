@@ -106,16 +106,16 @@
 :root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .ng-line { grid-column: 1; }
 :root[data-mobile-landscape] :is(.tv-hire,.mobile-visitor-detail) .tv-res-btns { grid-column: 1 / -1; grid-row: 4; margin: 0; }
 
-/* Tactics keeps five slots visible; a separate panel explains the shared bonuses. */
+/* Tactics shows one tactic card slot at a time (card + two option lines); a separate panel explains the shared bonuses. (R586) */
 :root[data-mobile] .page:has(.pt-tactics.mobile-pane-on) > .hs-panel,
 :root[data-mobile] .page:has(.pt-potion.mobile-pane-on) > .hs-panel { display: none; }
 :root[data-mobile] .pt-tactics.mobile-pane-on { overflow: hidden; }
 :root[data-mobile] .pt-tactics > .sub-h { order: -3; }
 :root[data-mobile] .pt-tactics > .rs-head { order: -2; display: flex; flex-wrap: wrap; gap: 6px 12px; padding: 7px; margin: 0; }
-:root[data-mobile] .pt-tactics .rs-roll { min-height: 40px; margin-left: auto; }
-:root[data-mobile] .pt-tactics .rs-grid.mobile-pane-on { overflow: hidden; }
-:root[data-mobile] .pt-tactics .rs-grid .mobile-choice-card { flex: 1; min-height: 0; align-content: center; padding: 12px; gap: 12px; }
-:root[data-mobile] .pt-tactics .rs-cell .rs-pin { min-height: 44px; min-width: 44px; }
+:root[data-mobile] .pt-tactics .tc-list.mobile-pane-on { overflow: auto; }
+:root[data-mobile] .pt-tactics .tc-list .mobile-choice-card { flex: 1; min-height: 0; justify-content: center; padding: 12px; gap: 12px; }
+:root[data-mobile] .pt-tactics .tc-card { min-height: 44px; }
+:root[data-mobile] .pt-tactics .tc-ench { min-height: 44px; }
 :root[data-mobile] .pt-tactics .rs-board.mobile-pane-on { overflow: auto; }
 :root[data-mobile] .pt-tactics .mobile-choice-button { flex-direction: column; font-size: var(--fs-2xs); }
 
@@ -169,7 +169,7 @@
 :root[data-mobile] .pt-tactics.mobile-pane { padding: 5px; }
 :root[data-mobile] .pt-tactics > .sub-h { padding: 5px; margin: 0; }
 :root:where([data-mobile-compact])[data-mobile] .pt-tactics > .rs-head { padding: 4px; gap: 3px 8px; font-size: var(--fs-xs); }
-:root:where([data-mobile-compact])[data-mobile] .pt-tactics .rs-grid .mobile-choice-card { padding: 6px; gap: 3px; align-content: center; }
+:root:where([data-mobile-compact])[data-mobile] .pt-tactics .tc-list .mobile-choice-card { padding: 6px; gap: 4px; }
 :root:where([data-mobile-compact])[data-mobile] .pt-tactics .mobile-choice-button { min-height: 36px; padding: 3px; }
 :root:where([data-mobile-compact])[data-mobile] .tr-adv-cur .sk-card { width: 36px; height: 36px; }
 :root:where([data-mobile-compact][data-mobile-portrait])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .mobile-choice-card { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); grid-template-rows: auto minmax(0,1fr) auto auto; gap: 2px 8px; }
@@ -186,7 +186,6 @@
 :root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .attr-list { margin: 2px 0; gap: 0 10px; }
 :root:where([data-mobile-compact])[data-mobile] :is(.tv-hire,.mobile-visitor-detail) .ng-line { font-size: var(--fs-2xs); line-height: 16px; border: 0; gap: 5px; }
 :root:where([data-mobile-compact])[data-mobile] .pt-tactics > .rs-head { display: grid; grid-template-columns: 1fr 1fr auto; align-items: center; font-size: var(--fs-2xs); }
-:root:where([data-mobile-compact])[data-mobile] .pt-tactics > .rs-head .rs-roll { grid-column: 3; grid-row: 1 / 3; min-height: 40px; padding: 3px 5px; font-size: var(--fs-2xs); }
 
 /* A short landscape is a two-column control surface, not a shorter portrait. */
 :root[data-mobile-landscape] .c-tavern.mobile-deck { display: grid; grid-template-columns: 94px minmax(0,1fr); grid-template-rows: minmax(0,1fr); }
@@ -225,12 +224,10 @@
 :root[data-mobile-landscape] .pt-body > .pt-pick .btn { min-height: 32px; }
 :root[data-mobile-landscape] .pt-tactics > .sub-h { padding: 0; line-height: 18px; font-size: var(--fs-xs); margin: 0; }
 :root[data-mobile-landscape] .pt-tactics > .rs-head { padding: 0; }
-:root[data-mobile-landscape] .pt-tactics > .rs-head .rs-roll { min-height: 32px; }
 :root[data-mobile-landscape] .pt-tactics .mobile-pages .btn { min-height: 28px; padding: 2px; }
 :root[data-mobile-landscape] .pt-tactics .mobile-choice-button { min-height: 30px; padding: 2px; }
-:root[data-mobile-landscape] .pt-tactics .rs-grid .mobile-choice-card { padding: 5px; gap: 2px; align-content: center; font-size: var(--mobile-fs-caption); line-height: 15px; }
-:root[data-mobile-landscape] .pt-tactics .rs-cell .rs-top { min-height: 28px; }
-:root[data-mobile-landscape] .pt-tactics .rs-cell .rs-pin { min-height: 30px; min-width: 36px; padding: 3px; }
+:root[data-mobile-landscape] .pt-tactics .tc-list .mobile-choice-card { padding: 5px; gap: 4px; font-size: var(--mobile-fs-caption); line-height: 15px; }
+:root[data-mobile-landscape] .pt-tactics .tc-ench { min-height: 30px; padding: 3px 6px; }
 /* Library (ADR-1179 · restored ADR-1262): the top row (skill info | advancement room cell) stays compact; the book sheet below takes the rest. */
 :root[data-mobile] .lib-top { gap: 6px; }
 :root[data-mobile] .lib-top > .lib-info { flex: 3 1 0; }
@@ -300,12 +297,8 @@
 :root[data-mobile-landscape] .mobile-research-line .dp-reg-face { width: 40px; height: 40px; }
 :root[data-mobile-landscape] .mobile-research-line .dp-card { padding: 4px; }
 :root[data-mobile-landscape] .mobile-research-line > .dp-tree-cell { height: 44px; --dp-orb: 36px; }
-:root[data-mobile-landscape] .pt-tactics .rs-grid { gap: 4px; }
-:root[data-mobile-landscape] .pt-tactics .rs-cell .rs-sin { grid-column: 1; grid-row: 2; }
-:root[data-mobile-landscape] .pt-tactics .rs-cell .rs-cond { grid-column: 2; grid-row: 2; text-align: right; }
-:root[data-mobile-landscape] .pt-tactics .rs-cell .rs-cnt-c { grid-column: 2; grid-row: 3; }
-:root[data-mobile-landscape] .pt-tactics .rs-cell .rs-eff { grid-column: 1; grid-row: 3; }
-:root[data-mobile-landscape] .pt-tactics .rs-cell .rs-lead { grid-column: 1 / -1; grid-row: 4; }
+:root[data-mobile-landscape] .pt-tactics .tc-list { gap: 4px; }
+:root[data-mobile-landscape] .pt-tactics .tc-row { gap: 4px; padding: 6px; }
 :root[data-mobile-landscape] .mobile-building-overview.mobile-pane-on { display: grid !important; grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); gap: 8px; }
 :root[data-mobile-landscape] .mobile-building-overview .cn-head { flex-direction: row; height: 100%; min-height: 0; }
 :root[data-mobile-landscape] .mobile-building-overview .cn-thumb-col { flex: 0 0 45%; }

@@ -236,7 +236,7 @@ const STRINGS = {
     'hint.departure': { ko: '한 번 출정할지 반복할지 고릅니다. 출발하면 선택한 Party의 준비 상태가 적용됩니다.', en: 'Choose a single or repeating expedition. Deployment uses the selected Party’s preparation.', zh: '选择出征一次还是循环出征。出发时将沿用所选Party的准备状态。' },
     'hint.foes': { ko: '이 지역에 등장하는 적입니다. 초상과 스킬에 마우스를 올리면 자세히 볼 수 있습니다.', en: 'The enemies found in this area. Hover their portraits and skills for details.', zh: '此区域出现的敌人。将鼠标移到头像和技能上可查看详情。' },
     'hint.story': { ko: '선택한 지역의 배경 이야기입니다.', en: 'The background story of the selected area.', zh: '所选区域的背景故事。' },
-    'hint.tactics': { ko: '조건을 만족한 전술 효과가 파티에 적용됩니다. 남길 칸은 잠그고 나머지는 리롤할 수 있습니다.', en: 'A tactic affects the party when its condition is met. Lock slots to keep them and reroll the rest.', zh: '满足条件的战术效果会作用于队伍。可以锁定要保留的格子，刷新其余格子。' },
+    'hint.tactics': { ko: '칸마다 작전 카드 한 장 — 전투 규칙 하나와 옵션 줄 둘을 듭니다. 카드를 누르면 가방의 카드를 장착하거나 분해합니다.', en: 'One tactic card per slot — each carries a battle rule and two option lines. Click a card to equip or dismantle cards from the bag.' },   // 2026-11-26 R586
     'hint.potions': { ko: '이 Party가 함께 쓸 물약과 순서입니다. 재고가 모자란 칸은 빈 채로 출발합니다.', en: 'The potions and drinking order shared by this Party. Slots without enough stock start empty.', zh: '此Party共用的药水及饮用顺序。库存不足的格子将空着出发。' },
     'hint.reports': { ko: '지난 원정 결과를 골라 보상과 전투 기록을 확인합니다.', en: 'Select a past expedition to review its rewards and battle record.', zh: '选择过去的远征结果，查看奖励与战斗记录。' },
     'hint.drops': { ko: '이 원정에서 얻은 아이템입니다. 아이템에 마우스를 올리면 옵션을 확인할 수 있습니다.', en: 'Items obtained in this expedition. Hover an item to inspect its options.', zh: '此次远征获得的物品。将鼠标移到物品上可查看词条。' },
@@ -512,8 +512,6 @@ const STRINGS = {
     'exp.sinBoss': { ko: '{sin}의 {name}', en: '{name} of {sin}', zh: '{sin}之{name}' },
     /* 출발 칸 줄의 라벨 — 출정 창 출정 방식 칸 맨 위 [2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0437 — 위험도 줄(ADR-0104)을 걷은 자리] */
     'exp.cell.h': { ko: '출발 칸', en: 'Starting stage', zh: '出发关卡' },
-    // 원정 중 교체 [2026-09-21 · R130 · SCREEN_DESIGN §4 · ADR-0272] — 교체로 도는 원정의 전술이 꺼졌다(효과 줄을 싣는다)
-    'exp.tactic.off': { ko: '전술 꺼짐 — {eff}', en: 'Tactic off — {eff}', zh: '战术关闭——{eff}' },
     // 반복 원정 [개정 2026-09-29 · SCREEN_DESIGN §4-1 · ADR-0432 — PLAN_stage_segments D8] — 켬 = 장소 안 순환 · 끔 = 이길 때마다 다음 칸. 어느 쪽이든 원정은 멈추지 않는다.
     //   버튼 글자는 기획 용어(반복 켬 · 끔)라 그대로다 — 뜻은 툴팁(`exp.repeat.tip`)과 도움말(`exp.repeat.sub`)이 든다
     'exp.repeat': { ko: '반복 원정', en: 'Auto-repeat', zh: '自动循环' },
@@ -599,7 +597,7 @@ const STRINGS = {
     'mm.c.count.upgrade': { ko: '장비 강화하기', en: 'Upgrade a piece of gear', zh: '强化装备' },
     'mm.c.count.gamble': { ko: '도박장 한 판', en: 'Play a round at the Gambling Den', zh: '在赌坊玩一局' },
     'mm.c.count.explore': { ko: '탐험 보내기', en: 'Send an exploration', zh: '派出探险' },
-    'mm.c.count.tactic': { ko: '전술 리롤', en: 'Reroll tactics' },   // 1장 「처음 한 번」 줄 (2026-11-25 · R583)
+    'mm.c.count.tacticEquip': { ko: '작전 카드 장착', en: 'Equip a tactic card' },   // 1장 「처음 한 번」 줄 (R583 · 2026-11-26 R586 — 옛 「전술 리롤」)
     'mm.c.event.mastery': { ko: '스킬 포인트 찍기', en: 'Spend a skill point' },
     'mm.c.event.take': { ko: '의뢰 받기', en: 'Take a commission' },
     'mm.c.event.sell': { ko: '장비 판매하기', en: 'Sell a piece of gear' },
@@ -607,6 +605,7 @@ const STRINGS = {
     'mm.c.event.salvage': { ko: '장비 분해하기', en: 'Salvage a piece of gear' },
     // 1장 튜토리얼 — 두루마리 아래 팻말 머리 · 길 안내 단계마다 설명 말풍선 `mm.tut.<미션>.<단계>` (2026-11-25 · SCREEN_DESIGN §2 「메인미션」 · ADR-1381 · `app.js:MM_TUTORIAL`)
     'mm.tut': { ko: '튜토리얼', en: 'Tutorial' },
+    'mm.tut.done': { ko: '튜토리얼 완료', en: 'Tutorial Complete' },   // 채운 튜토리얼 줄의 완료 판 머리 (2026-11-26 · ADR-1388)
     'mm.tut.c1_depart.tab': { ko: '원정은 파티를 장소에 보내 싸우게 하는 곳입니다. 전투는 알아서 진행되고, 주운 장비와 재료는 인벤토리에 쌓입니다.', en: 'Expeditions send your party out to fight. Battles play out on their own, and the gear and materials they find pile up in your inventory.' },
     'mm.tut.c1_depart.place': { ko: '싸울 장소를 고릅니다. 장소마다 칸이 이어져 있어 이기면 다음 칸으로 넘어가고, 마지막 칸에서는 그 장소의 보스가 기다립니다.', en: "Pick a place to fight. Each place is a run of cells: win and you move on to the next, with the place's boss waiting in the last one." },
     'mm.tut.c1_depart.send': { ko: '보내면 파티가 알아서 싸웁니다. 원정은 게임이 켜져 있는 동안에만 진행됩니다. 꺼 둔 동안에는 연구소가 일합니다.', en: 'Once sent, the party fights on its own. Expeditions only run while the game is open; while it is closed, the Laboratory does the work.' },
@@ -620,6 +619,10 @@ const STRINGS = {
     'mm.tut.c1_research.tab': { ko: '연구소의 지점을 연구하면 줄이 더 잘 돌아갑니다.', en: "Researching the Laboratory's nodes makes its lines work better." },
     'mm.tut.c1_research.node': { ko: '지점마다 하는 일이 다릅니다. 레벨을 올리면 재료가 더 많이 모이거나, 꺼 둔 시간을 더 길게 쳐 줍니다.', en: 'Each node does something different: higher levels gather more materials, or count more of the time you are away.' },
     'mm.tut.c1_research.go': { ko: '연구에는 골드와 재료, 그리고 시간이 듭니다. 연구가 끝나면 지점 레벨이 오릅니다.', en: 'Research costs gold, materials and time. When it finishes, the node gains a level.' },
+    // 연구 비용이 모자라면 받을 보상으로 먼저 — 두루마리 · 판의 받기 (2026-11-26 · ADR-1382 · 시안 B)
+    'mm.tut.c1_research.claim': { ko: '메인미션을 채우면 보상이 두루마리에 쌓입니다. 연구 비용은 그 보상으로 냅니다.', en: 'Completed main missions leave their rewards in the scroll. Pay for the research with them.' },
+    // 받기 단계 — 완료 판 [받기] · 판의 [모두 받기] 공통 (ADR-1382 · ADR-1388)
+    'mm.tut.claim': { ko: '받기를 누르면 채운 미션의 보상이 들어옵니다.', en: 'Claim to receive the rewards of completed missions.' },
     'mm.c.event.hire': { ko: '영웅 고용하기', en: 'Hire a hero', zh: '雇佣英雄' },
     'mm.c.event.book': { ko: '스킬북 배우기', en: 'Learn from a skill book', zh: '学习技能书' },
     'mm.c.event.equip': { ko: '장비 장착하기', en: 'Equip a piece of gear', zh: '穿戴装备' },
@@ -939,7 +942,7 @@ const STRINGS = {
     'ar.needTeam': { ko: '영웅 {n}명 편성', en: 'Assign {n} heroes', lock: true, zh: '编入{n}名英雄' },
     'ar.empty': { ko: '빈 자리', en: 'Empty slot', zh: '空位' },
     'ar.noOpponent': { ko: '상대를 고르면 팀이 나타납니다', en: 'Pick an opponent to reveal their team', zh: '选择对手后将显示其队伍' },
-    'ar.noTactic': { ko: '열린 전술 칸 없음', en: 'No tactic slots open', zh: '没有已开放的战术格' },   // Party 판의 전술 칸이 빌 때 (ADR-0495)
+    'ar.noTactic': { ko: '작전 카드 없음', en: 'No tactic cards' },   // 2026-11-26 R586 — 든 카드가 없을 때   // Party 판의 전술 칸이 빌 때 (ADR-0495)
     'ar.fight': { ko: '결투 시작', en: 'Start duel', zh: '开始决斗' },
     'ar.back': { ko: '결투장으로', en: 'Back to Arena', zh: '返回决斗场' },
     'ar.draw': { ko: '무승부', en: 'Draw', zh: '平局' },
@@ -997,7 +1000,7 @@ const STRINGS = {
     'mobile.party': { ko: '부대', en: 'Party', zh: '小队' },
     'mobile.selection': { ko: '선택', en: 'Selection', zh: '选择' },
     'mobile.freeSlots': { ko: '빈자리 {n}', en: '{n} free', zh: '空位{n}' },
-    'mobile.page.cards': { ko: '전술 카드', en: 'Cards', zh: '战术卡' },
+    'mobile.page.cards': { ko: '작전 카드', en: 'Cards', zh: '战术卡' },
     'mobile.page.bonuses': { ko: '추가 효과', en: 'Bonuses', zh: '额外效果' },
     'mobile.page.ranks': { ko: '랭크 목록', en: 'Ranks', zh: '各阶列表' },
     'mobile.page.levels': { ko: '레벨 목록', en: 'Levels', zh: '等级列表' },
@@ -1673,9 +1676,9 @@ const STRINGS = {
         zh: '队长与统率的作用',
     },
     'help.party.leader.body': {
-        ko: "리더는 그 편성 명단의 첫 영웅입니다. 리더의 통솔은 파티 전술 효과의 크기에 영향을 줍니다. 전열의 맨 앞에 서거나 캐릭터 탭에서 영웅을 선택했다고 리더가 바뀌지는 않습니다.<br><br>리더를 바꾸려면 편성 영웅을 모두 뺀 뒤, 원하는 영웅을 먼저 넣고 나머지 인원을 채웁니다. 통솔이 높아도 전술 조건을 만족하지 못하면 그 전술 효과는 적용되지 않으므로, 조건 충족과 리더 효과를 함께 봅니다.",
-        en: "The first hero in a preset's member list is its leader. The leader's Leadership affects the strength of Party tactics. Standing in the first front-row seat or selecting a hero in Character does not change the leader.<br><br>To change the leader, remove every hero from the preset, add the intended leader first, then fill the remaining places. High Leadership does not activate a tactic whose condition is unmet, so check both the condition and the leader's contribution.",
-        zh: '队长是该编队名单中的第一名英雄。队长的统率会影响队伍战术效果的大小。站在前排最前面，或在角色标签页中选中某名英雄，都不会改变队长。<br><br>要更换队长，先移出编队中的所有英雄，再先放入想要的英雄，然后补齐其余成员。即使统率很高，不满足战术条件时该战术效果也不会生效，所以要同时关注条件是否满足与队长的效果。',
+        // 2026-11-26 R586 — 작전 카드에는 조건이 없다 · 통솔은 옵션 줄 값만 키운다 (zh 는 빠진 목록으로 — LOCALIZATION_ZH)
+        ko: "리더는 그 편성 명단의 첫 영웅입니다. 리더의 통솔은 파티 전술 효과의 크기에 영향을 줍니다. 전열의 맨 앞에 서거나 캐릭터 탭에서 영웅을 선택했다고 리더가 바뀌지는 않습니다.<br><br>리더를 바꾸려면 편성 영웅을 모두 뺀 뒤, 원하는 영웅을 먼저 넣고 나머지 인원을 채웁니다. 리더의 통솔은 작전 카드 옵션 줄의 값을 키우거나 줄이며, 카드 규칙의 수치는 바꾸지 않습니다.",
+        en: "The first hero in a preset's member list is its leader. The leader's Leadership affects the strength of Party tactics. Standing in the first front-row seat or selecting a hero in Character does not change the leader.<br><br>To change the leader, remove every hero from the preset, add the intended leader first, then fill the remaining places. The leader's Leadership raises or lowers the values of tactic cards' option lines; it does not change the numbers in a card's rule.",
     },
     'help.party.formation.title': {
         ko: "전열은 누구를 지키나요",
@@ -1707,25 +1710,22 @@ const STRINGS = {
         en: "Use [−]/[+] below the belt to adjust this preset's HP threshold. A living hero drinks automatically when below it, without using an action. The party shares one potion cooldown: after anyone drinks, no one in the party can drink again for {cooldown} seconds.<br><br>A higher threshold drinks earlier but can waste healing beyond the missing HP. A lower threshold can make fuller use of each bottle, but risks falling to the next heavy hit. Consider incoming hit sizes and the potion's healing amount. Thresholds are saved per preset. Retreat and deploy again to ensure a change applies to an expedition.",
         zh: '用药水栏下方的[−]/[+]调整该编队使用药水的生命阈值。存活英雄的生命低于该比例时会自动饮用，且不占用行动。药水冷却由全队共用：有人饮用后，全队持续{cooldown}秒无法再次饮用。<br><br>提高阈值会更早饮用，但治疗量可能超过已损失的生命，造成部分浪费。降低阈值更容易用足每一瓶，但有在下一次重击前倒下的风险。请根据受到的伤害大小与药水治疗量来决定。阈值按每个编队分别保存；要确保远征中修改的阈值生效，请撤退后重新出发。',
     },
+    // 2026-11-26 R586 — 작전 카드 세 칸 · 드랍 → 가방 → 장착(소모) · 줄마다 인챈트 · 분해 → 조각 (SCREEN_DESIGN §15 · tactic_card_design · zh 는 빠진 목록으로)
     'help.party.tactics.title': {
-        ko: "파티 전술과 리롤",
-        en: "Party tactics and rerolls",
-        zh: '队伍战术与刷新',
+        ko: "파티 전술과 작전 카드",
+        en: "Party tactics and tactic cards",
     },
     'help.party.tactics.body': {
-        ko: "파티 전술은 조건을 만족한 칸의 효과가 파티에 적용되는 기능입니다. 조건 아래의 현재 수치를 보고 어떤 영웅을 맞춰야 할지 확인합니다. 지휘 천막의 랭크를 올리면 더 많은 전술 칸이 열립니다. [리롤]은 열린 칸의 죄종·효과·등급을 골드로 다시 뽑습니다. 칸마다 조건은 정해져 있습니다.<br><br>남기고 싶은 칸은 자물쇠로 잠그면 리롤되지 않으며, 잠금은 언제든 무료로 풀 수 있습니다. 전술 내용과 잠금은 편성마다 따로 저장됩니다. 잠근 칸이 많을수록 나머지 칸의 리롤 비용이 올라갑니다.",
-        en: "A party tactic applies its effect when that slot's condition is met. Use the current values shown with the condition to choose heroes. Higher Command Tent ranks unlock more tactic slots. [Reroll] spends gold to reroll the Sin, effect and grade in unlocked slots. Each slot keeps its own condition. Lock a slot to keep it during rerolls; locking and unlocking are free.<br><br>Tactics and locks are stored separately for each preset. Locking more slots raises the cost of rerolling the remaining ones.",
-        zh: '队伍战术是让满足条件的格子的效果作用于队伍的功能。查看条件下方的当前数值，确认需要凑齐哪些英雄。提升指挥营帐的阶，会开放更多战术格。[刷新]会花费金币，重新抽取已开放格子的罪宗、效果与稀有度。每格的条件是固定的。<br><br>想保留的格子用锁锁定后就不会被刷新，锁定随时可以免费解除。战术内容与锁定按每个编队分别保存。锁定的格子越多，其余格子的刷新费用越高。',
+        ko: "파티 전술은 편성마다 공격 · 방어 · 유틸 세 칸이고, 칸마다 작전 카드 한 장을 장착합니다. 카드는 전투 규칙 하나와 옵션 줄 둘을 듭니다. 규칙은 전투의 흐름(누구를 노리나 · 누가 대신 맞나 · 언제 움직이나)을 바꾸고, 옵션 줄은 파티의 능력치를 올립니다. 칸은 지휘 천막 1 · 2 · 3랭크가 차례로 열고, 칸이 처음 열리면 그 칸의 첫 카드 한 장을 받습니다.<br><br>카드는 정예와 스테이지보스가 떨어뜨려 가방에 쌓입니다. 카드를 누르면 그 칸의 가방이 열립니다. 장착하면 카드 한 장이 소모되고 그때 옵션 줄 둘이 정해집니다. 칸에 있던 카드를 바꾸면 옛 카드와 옵션 줄은 사라집니다. 카드 등급은 옵션 줄 등급의 상한입니다. 가방과 카드 조각은 모든 편성이 함께 쓰고, 칸의 카드는 편성마다 따로입니다.",
+        en: "Party tactics give each preset three slots — Attack, Defense and Utility — and each slot holds one tactic card. A card carries one battle rule and two option lines. The rule changes how a battle flows (who gets targeted, who takes hits instead, when units move); the option lines raise party stats. Command Tent ranks 1, 2 and 3 open the slots in turn, and each slot gives you its first card when it opens.<br><br>Elites and stage bosses drop cards into your bag. Click a card to open that slot's bag. Equipping uses up one card and rolls its two option lines at that moment. Replacing a slotted card discards the old card and its lines. A card's grade is the highest grade its option lines can reach. All presets share the bag and card shards; each preset keeps its own slotted cards.",
     },
     'help.party.tactic_choices.title': {
-        ko: "전술 조건을 맞추는 이유",
-        en: "Making tactic conditions work",
-        zh: '为何要满足战术条件',
+        ko: "인챈트와 카드 조각",
+        en: "Enchanting and card shards",
     },
     'help.party.tactic_choices.body': {
-        ko: "전술은 좋은 효과가 나왔다는 것만으로 적용되지 않습니다. 현재 편성으로 조건을 만족하는지 먼저 봅니다. 예를 들어 그 칸 죄종의 영웅 수를 세는 칸과 이 파티가 함께 잡은 몬스터 수를 세는 칸은 맞추는 대상이 다릅니다. 효과를 지키기 위해 편성을 바꿀지, 지금 파티에 맞는 전술을 다시 뽑을지 선택합니다.<br><br>리롤은 열린 칸 중 잠그지 않은 칸을 한꺼번에 바꾸며, 잠금을 많이 유지할수록 비싸집니다. 한 칸만 완벽하게 맞추려다 골드를 많이 쓰기 전에, 지금 켜져 있는 효과와 건설·강화 등에 필요한 비용도 함께 살펴봅니다. 전술은 전투 중 수동으로 발동하는 버튼이 아닙니다.",
-        en: "A promising tactic does nothing unless its condition is met by the current preset. A slot that counts heroes of its Sin and one that counts monsters this party has slain together ask for different things. Decide whether to change the party to keep an effect or reroll for a tactic that fits the party you have.<br><br>A reroll replaces every open, unlocked slot at once, and keeping more locks makes it more expensive. Before spending heavily to perfect one slot, consider the effects already active and the gold needed for buildings or upgrades. Tactics are not buttons you activate manually during combat.",
-        zh: '战术并不是抽到好效果就会生效，先要看当前编队是否满足条件。例如，统计该格罪宗英雄数量的格子，与统计本队伍共同击杀怪物数量的格子，需要凑齐的对象并不相同。请选择是为保住效果而调整编队，还是重新抽取适合当前队伍的战术。<br><br>刷新会一次性更换已开放格子中所有未锁定的格子，保留的锁定越多，费用越高。在为把一格刷到完美而花掉大量金币之前，也要考虑当前已生效的效果，以及建设、强化等所需的费用。战术不是战斗中手动发动的按钮。',
+        ko: "옵션 줄 오른쪽의 [인챈트]는 그 줄 하나를 골드와 카드 조각으로 다시 굴립니다. 옵션 종류, 등급(한 단계 오르거나 내리거나 그대로), 값이 함께 바뀌고 결과는 바로 적용됩니다. 줄 등급은 카드 등급을 넘지 않습니다.<br><br>카드 조각은 가방의 카드를 분해해 얻고, 등급이 높은 카드일수록 많이 나옵니다. 옵션 줄의 값에는 리더의 통솔과 그 줄 죄종의 점수(파티의 그 죄종 영웅과 장비)가 더해지며, 출처는 카드 아래 판에 표시됩니다. 원정 중에 장착하거나 인챈트한 것은 철수하고 다시 보낼 때부터 적용됩니다. 작전 카드는 전투 중에 직접 쓰는 버튼이 아닙니다.",
+        en: "[Enchant] beside an option line rerolls that one line for gold and card shards. Its option type, grade (one step up, one step down or unchanged) and value all change, and the result applies immediately. A line's grade never exceeds the card's grade.<br><br>Dismantle cards in the bag to get card shards; higher-grade cards give more. Option line values are boosted by the leader's Leadership and by the score of the line's Sin (heroes of that Sin and gear in the party), shown in the panel below the cards. Cards equipped or enchanted during an expedition take effect after you retreat and deploy again. Tactic cards are not buttons you use during combat.",
     },
     'help.party.changes.title': {
         ko: "원정 중 편성을 바꿨다면",
@@ -1733,8 +1733,8 @@ const STRINGS = {
         zh: '远征中更改了编队时',
     },
     'help.party.changes.body': {
-        ko: "원정 중인 편성은 명단이 잠겨 영웅을 넣고 빼거나 리더를 바꾸거나 다른 편성으로 옮길 수 없습니다. 철수하면 풀립니다. 진형·물약·전술은 원정 중에도 바꿀 수 있지만, 진행 중인 부대에는 출발 당시 구성이 유지됩니다. 승리 후 자동 출정도 그 구성을 이어 쓰므로, 새 구성을 쓰려면 철수한 뒤 다시 보냅니다.<br><br>패배 후 자동 재도전은 변경한 편성으로 출발할 수 있을 때 현재 편성을 반영합니다. 단, 원정 중 장비를 바꾸면 출발 때 켜진 전술의 장비 죄종 몫은 그 순간부터 달라집니다. 탐험 중인 편성의 명단도 귀환까지 바꿀 수 없습니다.",
-        en: "A preset on an expedition has a locked roster: you cannot add or remove heroes, change its leader or move its heroes to another preset until you retreat. Formation, potions and rolled tactics can still be changed, but they do not replace an active party's departure configuration. Automatic departures after wins keep that configuration; retreat and deploy again to use your changes.<br><br>Retries after defeats use the current preset when it can depart. However, changing equipment mid-run changes the gear Sin share of tactics active at departure from that moment. The roster of an exploring preset also stays locked until it returns.",
+        ko: "원정 중인 편성은 명단이 잠겨 영웅을 넣고 빼거나 리더를 바꾸거나 다른 편성으로 옮길 수 없습니다. 철수하면 풀립니다. 진형·물약·전술은 원정 중에도 바꿀 수 있지만, 진행 중인 부대에는 출발 당시 구성이 유지됩니다. 승리 후 자동 출정도 그 구성을 이어 쓰므로, 새 구성을 쓰려면 철수한 뒤 다시 보냅니다.<br><br>패배 후 자동 재도전은 변경한 편성으로 출발할 수 있을 때 현재 편성을 반영합니다. 단, 원정 중 장비를 바꾸면 출발 때 든 작전 카드 옵션 줄의 장비 죄종 몫은 그 순간부터 달라집니다. 탐험 중인 편성의 명단도 귀환까지 바꿀 수 없습니다.",
+        en: "A preset on an expedition has a locked roster: you cannot add or remove heroes, change its leader or move its heroes to another preset until you retreat. Formation, potions and tactic cards can still be changed, but they do not replace an active party's departure configuration. Automatic departures after wins keep that configuration; retreat and deploy again to use your changes.<br><br>Retries after defeats use the current preset when it can depart. However, changing equipment mid-run changes the gear Sin share of tactics active at departure from that moment. The roster of an exploring preset also stays locked until it returns.",
         zh: '远征中的编队名单会被锁定，无法加入或移出英雄、更换队长，也无法把英雄移到其他编队。撤退后即解除。阵型、药水与战术在远征中也可以更改，但进行中的小队仍保持出发时的配置。胜利后的自动出征也会沿用该配置，所以要使用新配置，请撤退后重新派遣。<br><br>战败后的自动重新挑战，在能以更改后的编队出发时，会采用当前编队。不过，远征中更换装备的话，出发时已生效战术中按装备罪宗计算的部分，会从那一刻起随之改变。探索中的编队名单在返回前同样无法更改。',
     },
     'help.character.identity.title': {
@@ -1813,9 +1813,9 @@ const STRINGS = {
         zh: '装备词条与罪宗',
     },
     'help.character.sins.body': {
-        ko: "장비의 부위·베이스·희귀도·아이템 레벨에 따라 장비 자체의 기본 수치와 붙는 옵션이 달라집니다. 아이템 이름의 접두·접미에는 죄종이 붙을 수 있으며, 편성의 파티 전술이 착용 장비의 죄종 수를 조건으로 셉니다. 영웅 자체의 죄종과 장비에 붙은 죄종은 서로 다른 조건이므로 전술에 표시된 대상을 확인합니다.",
-        en: "Slot, base type, rarity and item level determine equipment base stats and options. Prefixes and suffixes in item names can carry Sins, which Party tactics count on worn gear. A hero's own Sin and the Sins on equipment are separate conditions; check which one the tactic requires.",
-        zh: '装备本身的基础数值与附带的词条，取决于装备的部位、基底、稀有度与物品等级。物品名称的前缀、后缀可能带有罪宗，编队中的队伍战术会以穿戴装备的罪宗数量作为条件进行统计。英雄自身的罪宗与装备上的罪宗是不同的条件，请确认战术上标示的对象。',
+        // 2026-11-26 R586 — 장비 죄종은 조건이 아니라 죄종 점수(작전 카드 옵션 줄의 버프 몫)다 (zh 는 빠진 목록으로)
+        ko: "장비의 부위·베이스·희귀도·아이템 레벨에 따라 장비 자체의 기본 수치와 붙는 옵션이 달라집니다. 아이템 이름의 접두·접미에는 죄종이 붙을 수 있으며, 파티가 착용한 장비의 죄종 수는 영웅의 죄종과 함께 죄종 점수가 되어 같은 죄종 작전 카드의 옵션 줄 값을 키웁니다. 점수는 편성 탭의 카드 아래 판에서 확인합니다.",
+        en: "Slot, base type, rarity and item level determine equipment base stats and options. Prefixes and suffixes in item names can carry Sins. Together with heroes' own Sins, the Sins on the party's worn gear add up to Sin scores that boost the option lines of tactic cards of the same Sin. Check the scores in the panel below the cards in the Party tab.",
     },
     'help.character.inventory.title': {
         ko: "부대 인벤토리와 창고",
@@ -2770,6 +2770,7 @@ const STRINGS = {
     'rep.drops.sub': { ko: '{n}개', en: { one: '{n} item', other: '{n} items' }, zh: '{n}个' },
     'rep.drops.none': { ko: '떨어진 아이템 없음', en: 'No loot', zh: '没有掉落物品' },
     'rep.book': { ko: '스킬북', en: 'Book', zh: '技能书' },
+    'rep.tactic': { ko: '카드', en: 'Card' },   // 획득 격자의 작전 카드 칸 배지 (2026-11-26 · R586 · ADR-1386)
     'rep.matGot': { ko: '획득 {n}', en: 'Gained {n}', zh: '获得{n}' },   // 획득 격자의 처치 재료 칸 툴팁 아래 줄 (2026-10-06 · ADR-0530)
 
     /* ── 런 목록 · 기여 (리포트 개편 2026-09-09 · SCREEN_DESIGN §4-3 · ADR-0063) ── */
@@ -2987,7 +2988,6 @@ const STRINGS = {
     // 무기군 특성 — 성경의 버프 · 디버프 수치(태그 다섯에 같은 값)를 한 줄로 (§6 · ADR-1052 · R443) · 나머지 특성은 옵션 이름 그대로(`mock.itemAffixText`)
     'tip.weaponTrait.tagValue': { ko: '버프 · 디버프 효과 수치 +{p}', en: 'Buff & Debuff Effect Strength +{p}', zh: '增益、减益效果数值+{p}' },
     'tip.ringSlot': { ko: '반지 {n}번 칸에 착용', en: 'Goes on ring slot {n}', zh: '装备于{n}号戒指位' },
-    'tip.tacticOff': { ko: '끼우면 전술 꺼짐 — {eff}', en: 'Equipping turns a tactic off — {eff}', zh: '装备后战术关闭——{eff}' },
     // 아이템 툴팁 각주 — 기본은 착용품과 비교 두 장이고 Alt 동안 「이 아이템」 카드에 착용 델타가 선다 (SCREEN_DESIGN §6 · 2026-10-18 · ADR-0658)
     'tip.item.altHint': { ko: 'Alt 변화', en: 'Alt: changes', zh: 'Alt：变化' },
     // Shift 범위 각주 — 비교가 있는 카드는 둘을 한 줄에 · 범위를 다는 줄이 없는 카드엔 안 선다 (SCREEN_DESIGN §6 · ADR-0617)
@@ -3040,7 +3040,12 @@ const STRINGS = {
     'pt.err.missing': { ko: '없는 칸', en: 'No such slot', zh: '不存在的位置' },
     'pt.err.slotsFull': { ko: '물약 칸 가득 참', en: 'All potion slots are full', zh: '药水位已满' },
     'pt.err.gold': { ko: '골드 부족', en: 'Not enough gold', zh: '金币不足' },
-    'pt.err.allLocked': { ko: '굴릴 칸 없음 — 전부 잠김', en: 'Nothing to reroll — every slot is locked', zh: '没有可刷新的格——已全部锁定' },
+    // 작전 카드 거절 (2026-11-26 · R586 · INTERFACE §3) — equipTactic · enchantTactic · dismantleTactic
+    'pt.err.slotClosed': { ko: '안 열린 칸', en: 'Slot not open' },
+    'pt.err.noCard': { ko: '카드 없음', en: 'No such card' },
+    'pt.err.wrongSlot': { ko: '다른 칸의 카드', en: 'Card belongs to another slot' },
+    'pt.err.shard': { ko: '카드 조각 부족', en: 'Not enough Card Shards' },
+    'pt.err.invalid': { ko: '잘못된 장수', en: 'Invalid count' },
     'rs.h': { ko: '파티 전술', en: 'Party Tactics', zh: '队伍战术' },
     /* 건설 [2026-09-22 · R137 · SCREEN_DESIGN §13 · ADR-0302] — 표 넷을 그대로 그린다. 여는 것 문장은 **대상마다 한 키**(`cn.t.<대상>` —
        어휘는 `game_logic/construction.js:TARGETS`) · 더하기는 `+{n}`. 조건 · 비용 · 잠긴 자리의 「무엇을 지어야 하나」도 여기 */
@@ -3199,10 +3204,8 @@ const STRINGS = {
     'tr.err.line': { ko: '없는 줄', en: 'No such row', zh: '不存在的行' },
     'tr.err.slot': { ko: '없는 칸', en: 'No such cell', zh: '不存在的格' },
     'tr.adv.todo': { ko: "<b>{b} {n}랭크</b>부터 전직할 수 있습니다. 세 갈래 중 하나를 고르며 갈래는 되돌릴 수 없습니다. 전직 후 <b>마스터리 → 전직 트리</b>에서 공용 스킬 포인트로 메인을 배웁니다. 메인 강화는 영웅 레벨 조건을 만족해야 하며, 되돌리면 투자 포인트를 공용 지갑에 돌려받습니다.", en: "Advancement opens at <b>{b} rank {n}</b>. Choose one of three paths; the path cannot be undone. Then learn a main skill in <b>Mastery → Advancement Tree</b> using shared skill points. Further main ranks require the corresponding hero level. Refunding returns invested points to the shared pool.", zh: '<b>{b}{n}阶</b>起可以转职。从三条路线中选择一条，路线无法撤销。转职后在<b>专精 → 转职树</b>中用共用技能点学习主技能。提升主技能需满足英雄等级条件；撤回时，投入的点数会返还到共用点数池。' },
-    'rs.total': { ko: '합산 레벨', en: 'Total Level', zh: '总等级' },
     'rs.open': { ko: '열린 칸', en: 'Slots Open', zh: '已开启格' },
     'rs.allOpen': { ko: '전부 열림', en: 'All slots open', zh: '全部开启' },
-    // 한국어도 On / Off 그대로 [2026-09-27 사용자 지시 「한글이어도 무조건 On Off」 · SCREEN_DESIGN §15]
     // 연구소 단계 상자 — 산출물 옆 시간당 생산량 (SCREEN_DESIGN §8 · ADR-0665 — ~~기본 · 현재 · 효율 +n%~~ 는 영웅 배치와 함께 걷었다)
     'dp.perHour': { ko: '{n}/시간', en: '{n}/h', zh: '{n}/小时' },
     // 지점 레벨 — 트리 노드의 Lv / 최대 · 고른 지점의 Lv 눈금 · 상한 · 연구가 끝난 플래시 · 트리 머리의 오프라인 최대 (SCREEN_DESIGN §8 · ADR-0684 · ~~칸 레벨 · [레벨 올리기]~~ R288 → [연구] `dp.res.go`)
@@ -3290,39 +3293,57 @@ const STRINGS = {
     'mg.why.lives': { ko: '목숨 소진', en: 'Out of lives', zh: '机会用尽' },
     'mg.why.done': { ko: '나무를 모두 벰', en: 'Tree felled', zh: '树已全部砍完' },
     'mg.err.post': { ko: '미니게임이 없는 곳', en: 'No minigame here', zh: '此处没有小游戏' },
-    'rs.on': { ko: 'On', en: 'On', zh: '开' },
-    'rs.off': { ko: 'Off', en: 'Off', zh: '关' },
-    // 전체 리롤 + 잠금 [2026-09-22 · R28 · tactic_card_design §5-6] — 버튼 하나가 안 잠근 칸을 전부 굴리고, 비용은 잠근 칸 수가 정한다
-    'rs.reroll': { ko: '전체 리롤 {g}G', en: 'Reroll All {g}G', zh: '全部刷新{g}G' },
-    'rs.reroll.done': { ko: '{n}칸 다시 굴림', en: 'Rerolled {n} slot(s)', zh: '已刷新{n}格' },
-    'rs.lockedN': { ko: '잠근 칸', en: 'Locked', zh: '已锁定' },
-    'rs.lock': { ko: '잠그기', en: 'Lock', zh: '锁定' },
-    'rs.unlock': { ko: '풀기', en: 'Unlock', zh: '解锁' },
-    'rs.note': {
-        ko: '칸은 <b>줍는 것이 아닙니다</b> — <b>지휘 천막</b>의 랭크를 지을 때마다 하나씩 열리고(영웅 로스터 전원의 레벨 합이 그 랭크의 문턱입니다), '
-            + '칸에 든 옵션은 골드로 다시 굴립니다. 리롤은 <b>안 잠근 칸을 한 번에 전부</b> 굴립니다 — 지킬 칸은 <b>잠급니다</b>. '
-            + '잠그는 것은 무료지만 <b>잠근 칸이 많을수록 리롤이 비싸집니다</b>. 새로 나오는 것은 <b>지금 판에 든 것과 겹치지 않습니다</b>.',
-        en: 'Slots are <b>not looted</b> — one opens with each <b>Command Tent</b> rank you build (the summed level of your whole roster is that rank\'s requirement), '
-            + 'and the options inside are rerolled with gold. A reroll rolls <b>every unlocked slot at once</b> — <b>lock</b> the ones you want to keep. '
-            + 'Locking is free, but <b>each locked slot makes the reroll pricier</b>. A reroll never returns an option already on the board.',
-        zh: '格位<b>不是拾取来的</b>——每建造一阶<b>指挥营帐</b>就开启一格（英雄名册全员的等级总和就是该阶的门槛），格中的词条用金币重新随机。刷新会<b>一次性重随所有未锁定的格</b>——想保留的格就<b>锁定</b>。锁定免费，但<b>锁定的格越多，刷新越贵</b>。新出现的词条<b>不会与当前面板上已有的重复</b>。',
-    },
-    'rs.note.cond': {
-        ko: '조건은 <b>편성에서 확정되는 것</b>만 셉니다 — 죄종 · 직업 · 장비의 죄종 · 리더 · 진형 · 이 파티로 나간 횟수. <b>어려운 조건일수록</b>(난이도) 굴려서 나올 수 있는 값이 높습니다. '
-            + '전투 중에 변하는 값(현재 HP · 남은 적)은 쓰지 않습니다. 효과는 <b>파티에 든 영웅</b>에게만 붙습니다.',
-        en: 'Conditions read only what the formation fixes — sins, classes, gear sins, the leader, the formation and runs taken as this party. <b>The harder the condition</b> (Difficulty), the higher a roll can go. '
-            + 'Nothing that changes mid-battle (current HP, enemies left). Effects apply only to heroes in the party.',
-        zh: '条件只计算<b>在编队中确定的内容</b>——罪宗、职业、装备的罪宗、队长、阵型、以该队伍出征的次数。<b>条件越难</b>（难度），随机出的数值上限越高。不使用战斗中会变化的数值（当前生命、剩余敌人）。效果只作用于<b>队伍中的英雄</b>。',
-    },
-    // 열 이름 줄 — 칸 목록 위 · 행의 일곱 세로줄 (ADR-0763 · ADR-1048) · 진행 = 카운터 「지금 / 다음 문턱」 + 단계 「×n」
+    // 작전 카드 세 칸 [2026-11-26 · R586 · SCREEN_DESIGN §15 · ADR-1383 · ADR-1384] — 행 = 카드 + 옵션 줄 둘 · 줄마다 [인챈트] · 카드를 누르면 그 갈래의 가방 창
+    'rs.slot.attack': { ko: '공격', en: 'Attack' },
+    'rs.slot.defense': { ko: '방어', en: 'Defense' },
+    'rs.slot.utility': { ko: '유틸', en: 'Utility' },
+    'rs.shards': { ko: '카드 조각 {n}', en: 'Card Shards {n}' },   // 진척 줄 오른쪽 끝 · 가방 창 머리
+    'rs.card.none': { ko: '카드 없음', en: 'No card' },
+    'rs.bag.n': { ko: '가방 {n}', en: 'Bag {n}' },               // 카드 오른쪽 아래 — 그 갈래 가방 장수 합
+    'rs.enchant': { ko: '인챈트 {g}G · 조각 {s}', en: 'Enchant {g}G · Shard ×{s}' },   // 줄마다 — 비용을 버튼에 적는다
+    'rs.ench.done': { ko: '인챈트 — {grade} {eff}', en: 'Enchanted — {grade} {eff}' },
+    'rs.tip.sub': { ko: '{slot} · {sin} · {grade}', en: '{slot} · {sin} · {grade}' },   // 카드 툴팁 둘째 줄
+    'rs.bag.h': { ko: '{slot} 카드', en: '{slot} Cards' },
+    'rs.bag.cur': { ko: '장착 중', en: 'Equipped' },
+    'rs.bag.empty': { ko: '가방에 {slot} 카드 없음', en: 'No {slot} cards in the bag' },
+    'rs.bag.equip': { ko: '장착', en: 'Equip' },
+    'rs.bag.replace': { ko: '{card} 버리고 장착', en: 'Replace {card}' },   // 칸에 카드가 있을 때 첫 누름 — 두 번 누른다 (§3)
+    'rs.bag.dis': { ko: '분해 (조각 +{n})', en: { one: 'Dismantle (+{n} Shard)', other: 'Dismantle (+{n} Shards)' } },
+    'rs.bag.disConfirm': { ko: '정말 분해 (조각 +{n})', en: { one: 'Confirm (+{n} Shard)', other: 'Confirm (+{n} Shards)' } },
+    'rs.equip.done': { ko: '{card} 장착', en: '{card} equipped' },
+    'rs.dis.done': { ko: '카드 조각 +{n} — 가진 조각 {total}', en: { one: '+{n} Card Shard — {total} owned', other: '+{n} Card Shards — {total} owned' } },
+    // 열 이름 줄 — 카드 목록 위 · 행의 세로줄 (ADR-1383) · `rs.col.state` · `rs.col.sin` 은 연구 탭 · 실험실이 쓴다
     'rs.col.state': { ko: '상태', en: 'State', zh: '状态' },
     'rs.col.sin': { ko: '죄종', en: 'Sin', zh: '罪宗' },
-    'rs.col.cond': { ko: '조건', en: 'Condition', zh: '条件' },
-    'rs.col.prog': { ko: '진행', en: 'Progress', zh: '进度' },
-    // 버프 = 칸의 효과(적용 값) · 버프 몫 = 리더 통솔 + 그 죄종 장비 수가 더한 % — 출처는 카드 아래 판 (ADR-0764 · ADR-1048)
-    'rs.col.buff': { ko: '버프', en: 'Buff', zh: '增益' },
+    'rs.col.card': { ko: '카드', en: 'Card' },
+    'rs.col.opt': { ko: '옵션', en: 'Options' },
+    // 버프 몫 = 리더 통솔 + 그 줄 죄종 점수가 더한 % — 출처는 카드 아래 판 (ADR-1048 · ADR-1383)
     'rs.col.extra': { ko: '버프 몫', en: 'Buff Share', zh: '增益加成' },
-    'rs.col.lock': { ko: '잠금', en: 'Lock', zh: '锁定' },
+    'rs.col.ench': { ko: '인챈트', en: 'Enchant' },
+    // 카드 이름 — **영어가 원본 · 한글은 직역**(CLAUDE.md 규칙 6) · 한글 여덟은 사용자가 고른 역사 전술 이름 · 독화살 · 불화살 · 치중대와 영어 열하나는 ⚠임시(tactic_card_design §4)
+    'tc.name.duel': { ko: '일기토', en: 'Single Combat' },
+    'tc.name.wedge': { ko: '쐐기진', en: 'Wedge Formation' },
+    'tc.name.trojan': { ko: '트로이 목마', en: 'Trojan Horse' },
+    'tc.name.charge': { ko: '기사 돌격', en: "Knight's Charge" },
+    'tc.name.shieldwall': { ko: '방패벽', en: 'Shield Wall' },
+    'tc.name.guard': { ko: '친위대', en: 'Royal Guard' },
+    'tc.name.turtle': { ko: '거북 진형', en: 'Tortoise Formation' },
+    'tc.name.retreat': { ko: '거짓 후퇴', en: 'Feigned Retreat' },
+    'tc.name.poison_arrow': { ko: '독화살', en: 'Poison Arrow' },
+    'tc.name.fire_arrow': { ko: '불화살', en: 'Fire Arrow' },
+    'tc.name.baggage': { ko: '치중대', en: 'Baggage Train' },
+    // 카드 효과 한 문장 — 툴팁 전용 · 효과만(CLAUDE.md 규칙 7) · {p1} ~ {p3} = 카드 규칙의 수치(초는 수 · 몫은 「30%」 — `tactic.RULE_PARAMS`)
+    'tc.desc.duel': { ko: '우리 리더의 단일 공격은 적 리더만 노린다. 적 리더가 쓰러지면 평소대로 고른다.', en: "Your leader's single-target attacks aim only at the enemy leader. Once the enemy leader falls, targeting returns to normal." },
+    'tc.desc.wedge': { ko: '리더가 단일 공격으로 맞힌 적에 {p1}초 동안 표식. 동료의 단일 공격은 표식이 있는 적부터 노린다.', en: "Enemies hit by your leader's single-target attacks are marked for {p1}s. Allies' single-target attacks aim at the marked enemy first." },
+    'tc.desc.trojan': { ko: '라운드 시작 {p1}초 동안 우리 후열은 행동하지 않는다. 그 뒤 후열의 단일 공격은 적 후열을 노린다.', en: 'Your back row does not act for the first {p1}s of each round. After that, its single-target attacks aim at the enemy back row.' },
+    'tc.desc.charge': { ko: '라운드가 시작되면 우리 전열이 곧바로 행동한다. 후열의 첫 행동은 {p1}초 늦는다.', en: "When a round starts, your front row acts immediately. Your back row's first action comes {p1}s later." },
+    'tc.desc.shieldwall': { ko: '우리 후열이 맞는 직격 피해의 {p1}를 살아 있는 전열이 나눠 받는다.', en: 'Living front-row allies share {p1} of the direct-hit damage your back row takes.' },
+    'tc.desc.guard': { ko: '우리 리더가 맞는 단일 직격 피해의 {p1}를 체력이 가장 많은 동료가 대신 받는다.', en: 'The ally with the most HP takes {p1} of the single-target direct-hit damage aimed at your leader.' },
+    'tc.desc.turtle': { ko: '라운드 시작 {p1}초 동안 우리 편이 받는 피해 −{p2} · 공격 속도 −{p3}.', en: 'For the first {p1}s of each round, your side takes {p2} less damage and loses {p3} attack speed.' },
+    'tc.desc.retreat': { ko: '우리 전열 영웅의 체력이 라운드 중 처음 {p1} 아래로 내려가면 체력 비율이 가장 높은 후열과 자리를 바꾼다. 라운드가 끝나면 제자리로 돌아간다.', en: 'When a front-row hero first drops below {p1} HP in a round, they swap places with the healthiest back-row ally. Both return after the round.' },
+    'tc.desc.poison_arrow': { ko: '우리 편 물리 피해의 {p1}를 독 피해로 입힌다.', en: 'Your side deals {p1} of its physical damage as poison damage.' },
+    'tc.desc.fire_arrow': { ko: '우리 편 물리 피해의 {p1}를 화염 피해로 입히고 {p2} 확률로 화상을 건다.', en: 'Your side deals {p1} of its physical damage as fire damage, with a {p2} chance to burn.' },
+    'tc.desc.baggage': { ko: '우리 편이 물약을 마시면 회복량의 {p1}를 살아 있는 다른 동료가 나눠 받는다.', en: 'When an ally drinks a potion, the other living allies share {p1} of its healing.' },
     // 카드 아래 판 — 맨 위 리더 통솔 · 죄종 일곱의 장비 수 · 줄마다 이름 · 수 · 20칸 막대 · 버프 몫 % [2026-11-24 · ADR-1334 — ADR-1048 의 두 열 글 줄 대체]
     'rs.board.leadName': { ko: '통솔', en: 'Leadership', zh: '统率' },   // 2026-11-24 사용자 「리더통솔 그냥 통솔로」
     'rs.board.noLead': { ko: '리더 없음', en: 'No leader', zh: '无队长' },
@@ -3338,16 +3359,12 @@ const STRINGS = {
         en: 'The <b>leader</b>\'s (first slot) <b>Leadership</b> scales tactic effects — unchanged at {pivot}, ×{lo} at {min} and ×{hi} at {max}, evenly in between.',
         zh: '<b>队长</b>（编队第一格）的<b>统率</b>会改变战术效果的大小——统率为{pivot}时不变，为{min}时×{lo}，为{max}时×{hi}。其间均匀变化。',
     },
-    // 전술 옵션 등급 — ⚠ 아이템 희귀도(`mock.js:RARITY`)와 **별개 축**이고 이름만 같다 (tactic_card_design §5-5)
+    // 작전 카드 · 옵션 줄 등급 다섯 — ⚠ 아이템 희귀도(`mock.js:RARITY`)와 **별개 축**이고 이름만 같다 (tactic_card_design §3-3)
     'rs.grade.common': { ko: '일반', en: 'Common', zh: '普通' },
     'rs.grade.magic': { ko: '매직', en: 'Magic', zh: '魔法' },
     'rs.grade.rare': { ko: '레어', en: 'Rare', zh: '稀有' },
-    // 조건 문장 — 키 = 칸 조건의 어휘(`tactic_condition.csv:test`) [2026-11-11 · tactic_card_design §5-14 · ADR-1048] · {a} = 그 칸의 죄종 이름 ·
-    //   카운터 「지금 / 다음 문턱」과 단계 「×n」은 진행 칸이 단다 — ~~편성 구성 · 능력치 합 · 전직 · 관계 문장~~ 은 걷었다(R441)
-    'rs.cond.none': { ko: '조건 없음', en: 'No condition', zh: '无条件' },
-    'rs.cond.slot_sin_heroes': { ko: '{a} 영웅', en: '{a} heroes', zh: '{a}英雄' },
-    'rs.cond.slot_sin_attr_sum': { ko: '{s} 합', en: 'Total {s}', zh: '{s}总和' },   // 3랭크 — {s} = 그 칸 죄종의 짝 능력치 이름 (R466)
-    'rs.cond.kills_together': { ko: '함께 잡은 몬스터', en: 'Monsters slain together', zh: '共同击杀的怪物' },
+    'rs.grade.epic': { ko: '에픽', en: 'Epic' },
+    'rs.grade.legendary': { ko: '레전더리', en: 'Legendary' },
 
     'sk.points.h': { ko: '스킬 포인트', en: 'Skill Points', zh: '技能点' },
     'sk.points.note': { ko: "레벨마다 받는 <b>스킬 포인트</b>를 죄종·직업 마스터리와 전직 메인·꼬리에 나누어 씁니다. 전직해도 별도 포인트를 지급하지 않습니다. 메인 단계만 5레벨 간격으로 열립니다.", en: "<b>Skill points</b> earned on each level-up are shared by Sin mastery, Class mastery and advancement main skills and branches. Advancing grants no separate points. Only main-skill ranks unlock at five-level intervals.", zh: '每次升级获得的<b>技能点</b>分配给罪宗、职业专精以及转职主技能、分支。转职不会另外发放点数。只有主技能的阶段以5级为间隔开启。' },
@@ -3654,6 +3671,20 @@ const STRINGS = {
     'lab.duel.win.top': { ko: '위 승 · {sec}초', en: 'Top wins · {sec}s', zh: '上方胜 · {sec}秒' },
     'lab.duel.win.bottom': { ko: '아래 승 · {sec}초', en: 'Bottom wins · {sec}s', zh: '下方胜 · {sec}秒' },
     'lab.duel.timeout': { ko: '시간 초과 · {sec}초', en: 'Timeout · {sec}s', zh: '超时 · {sec}秒' },
+    // 결투 편성 창 — 팀 A 의 영웅(직업 · 죄종)과 작전 카드(칸마다 카드 · 등급 · 옵션 줄 둘) (2026-11-26 · R586 · SCREEN_DESIGN §18)
+    'lab.duel.party.title': { ko: '결투 편성', en: 'Duel Party' },
+    'lab.duel.party.edit': { ko: '편성 수정', en: 'Edit Party' },
+    'lab.duel.party.heroes': { ko: '영웅', en: 'Heroes' },
+    'lab.duel.party.leader': { ko: '리더', en: 'Leader' },
+    'lab.duel.party.hero': { ko: '영웅 {n}', en: 'Hero {n}' },
+    'lab.duel.party.class': { ko: '직업', en: 'Class' },
+    'lab.duel.party.random': { ko: '무작위', en: 'Random' },
+    'lab.duel.party.empty': { ko: '없음', en: 'None' },
+    'lab.duel.party.card': { ko: '카드', en: 'Card' },
+    'lab.duel.party.grade': { ko: '등급', en: 'Grade' },
+    'lab.duel.party.line': { ko: '옵션 {n}', en: 'Option {n}' },
+    'lab.duel.party.reset': { ko: '초기화', en: 'Reset' },
+    'lab.duel.party.fight': { ko: '이 편성으로 싸우기', en: 'Fight with this party' },
     'lab.h.chapter': { ko: '챕터', en: 'Chapter', zh: '章' },
     'lab.h.monster': { ko: '몬스터', en: 'Monster', zh: '怪物' },
     'lab.h.grade': { ko: '등급', en: 'Grade', zh: '级别' },
@@ -4082,6 +4113,16 @@ const STRINGS = {
     'log.say.maiden': { ko: '{d|이/가} {ico|으로/로} {v} 피해를 되받음', en: '{d} took {v} back from {ico}', zh: '{d}因{ico}反受{v}点伤害' },
     'log.say.regroup': { ko: '{a|이/가} {ico}에서 다시 뭉침 — HP {v}', en: '{a} regrouped from {ico} — HP {v}', zh: '{a}从{ico}中重新聚合——生命{v}' },
     'log.say.lvup': { ko: '{a} 레벨 {v} 달성', en: '{a} reached Lv.{v}', zh: '{a}达到Lv.{v}' },
+    // 작전 카드가 일했다 (2026-11-26 · R586 · SCREEN_DESIGN §4-2 · ADR-1385) — {ico} = 카드의 죄종 그림 · {k} = 카드 이름
+    'log.say.tacAim': { ko: '{a|이/가} {ico|으로/로} {d}{d|을/를} 노림', en: '{a} targets {d} with {ico}' },
+    'log.say.tacMark': { ko: '{a|이/가} {ico|으로/로} {d}에 표식', en: '{a} marked {d} with {ico}' },
+    'log.say.tacRound': { ko: '{ico} {k} 발동', en: '{ico} {k} triggered' },
+    'log.say.tacShare': { ko: '{a|이/가} {ico|으로/로} {d} 대신 {v} 피해', en: '{a} took {v} for {d} with {ico}' },
+    'log.say.tacSwap': { ko: '{a|이/가} {ico|으로/로} {d}{d|과/와} 자리를 바꿈', en: '{a} swapped places with {d} with {ico}' },
+    'log.say.tacConv': { ko: '{a|이/가} {ico|으로/로} {d}에게 {v} 피해', en: '{a} dealt {v} damage to {d} with {ico}' },
+    'log.v.tacAim': { ko: '노림', en: 'aim' },
+    'log.v.tacMark': { ko: '표식', en: 'mark' },
+    'log.v.tacSwap': { ko: '자리 바꿈', en: 'swap' },
     'pop.dodge': { ko: '빗나감', en: 'MISS', zh: '未命中' },
     'pop.counter': { ko: '반격', en: 'COUNTER', zh: '反击' },
     'pop.evade': { ko: '회피', en: 'EVADE', zh: '闪避' },   // 이베이드 (2026-10-16)

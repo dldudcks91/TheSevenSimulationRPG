@@ -21,7 +21,7 @@
 |---|---|
 | 전투 · 몬스터 | `battle_design.md` · `monster_design.md` |
 | 영웅 · 스킬 | `hero_design.md` · `skill_design.md` |
-| 아이템 · 전술카드 · 자원 | `item_design.md` · `tactic_card_design.md` |
+| 아이템 · 작전 카드 · 자원 | `item_design.md` · `tactic_card_design.md` |
 | 거점 · 파견 · 스토리 | `base_expedition_design.md` · `story_chapter_design.md` |
 | 화면 ↔ 기획 접점 | `docs/client/SCREEN_DESIGN.md` · `docs/client/DEV_PLAN.md` §3-2 · GAME_DESIGN §3 |
 
