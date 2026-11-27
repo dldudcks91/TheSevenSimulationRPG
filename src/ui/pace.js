@@ -10,7 +10,7 @@
  * 「실제 몇 초에 시뮬 몇 초」뿐이다. 걸음은 **쪼개도 같다** — 200ms 씩 열 번과 2초 한 번이 같은 자리에 선다(세움 · 사건 판정이 시각 기준이라서다).
  *
  * 박자 상태 `p` — 런 핸들(`app.js` 의 `B.pace`)이 들고 재생기가 빌려 쓴다(세이브에 안 든다 — 런 핸들과 같은 취급):
- *   `t` 재생 시각(초) · `i` 아직 안 지난 첫 사건의 자리(재생기는 `i` 앞까지 적용한다) · `phase` 지금 세움(`rise` | `focus` | `round` | null) ·
+ *   `t` 재생 시각(초) · `i` 아직 안 지난 첫 사건의 자리(재생기는 `i` 앞까지 적용한다) · `phase` 지금 세움(`rise` | `focus` | `round` | `opening` | null) ·
  *   `hold` 그 세움의 남은 실제 ms · `g0`/`g1` 세운 행동의 사건 자리 `[g0, g1)` · `rounds` 지난 `round` 수 · `done` `end` 를 지났다
  */
 
@@ -21,6 +21,7 @@ export const FOCUS_MS = 400;       // ② 그 행동을 적용하고 나간 채�
 // 라운드 사이 숨 — 마지막 몬스터가 쓰러진 뒤 다음 라운드가 서기까지 = 적 카드가 사라지는 0.45초(style.css `.side-enemy.round-clear` — 짝이다) + 빈 줄 0.5초
 //   (ADR-0500 · 1000 → 500 2026-10-21 사용자 · 500 → 950 2026-10-29 사용자 · ADR-0948)
 export const ROUND_GAP_MS = 950;
+export const OPENING_LESSON_MS = 1600; // 첫 게이지가 다 찬 모습과 기본 공격 대상을 잠시 보여준다.
 /* 한 번에 내다보는 재생 시각의 상한(초) — 앞을 보려면 엔진을 그 시각까지 먼저 민다(`reach`). 숨긴 탭은 1분에 한 번 깨므로
    한 번에 다 내다보면 보이는 재생보다 수십 초 앞서 라운드를 정산한다 — 이만큼씩 끊어 민다 */
 const LOOK_SEC = 1;
@@ -58,6 +59,8 @@ export function paceAt(tl, t = 0) {
     const p = { t, i: 0, phase: null, hold: 0, g0: -1, g1: -1, rounds: 0, done: false };
     while (p.i < tl.length && tl[p.i].t <= t + EPS && tl[p.i].e !== 'end') {
         if (tl[p.i].e === 'round') p.rounds++;
+        if (tl[p.i].openingActor) p.openingGauge = true;
+        if (tl[p.i].openingBasic) p.openingGauge = false;
         p.i++;
     }
     return p;
@@ -86,13 +89,16 @@ export function paceStep(p, tl, ms, cfg, reach = null) {
             p.phase = null; p.g0 = p.g1 = -1;
             continue;
         }
-        const s = p.t + Math.min(left / 1000 * cfg.speed, LOOK_SEC);
+        const speed = p.openingGauge ? Math.min(cfg.speed, 1) : cfg.speed;
+        const s = p.t + Math.min(left / 1000 * speed, LOOK_SEC);
         reach?.(s);
         let j = p.i, hit = null, quiet = null;
         for (; j < tl.length && tl[j].t <= s + EPS; j++) {
             const ev = tl[j];
             if (ev.e === 'end') { hit = 'end'; break; }
+            if (ev.openingActor) { hit = 'gauge'; break; }
             if (ev.e === 'round') { if (p.rounds > 0 && cfg.gap > 0) { hit = 'round'; break; } p.rounds++; continue; }
+            if (ev.openingBasic) { hit = 'opening'; break; }
             const who = actorOf(ev);
             if (cfg.focus <= 0 || who == null) continue;
             // 정신 집중의 뒤 방(끊어 치기 · 계속 닳기)은 안 선다 — 그 방의 타격 · 발동도 같이 지나간다. 카드는 여는 시전부터 닫힐 때까지 나간 채다 (battle.js:syncOffRise · ADR-1124)
@@ -101,16 +107,18 @@ export function paceStep(p, tl, ms, cfg, reach = null) {
             if (!cfg.skillOnly || isSkillAct(ev)) { hit = 'act'; break; }
         }
         if (!hit) {   // 세울 사건 없이 내다본 끝까지 간다
-            left = Math.max(0, left - (s - p.t) / cfg.speed * 1000);
+            left = Math.max(0, left - (s - p.t) / speed * 1000);
             p.t = s; p.i = j;
             if (left <= EPS) return 0;
             continue;
         }
         const at = Math.max(p.t, tl[j].t);
-        left = Math.max(0, left - (at - p.t) / cfg.speed * 1000);
+        left = Math.max(0, left - (at - p.t) / speed * 1000);
         p.t = at; p.i = j;
         if (hit === 'end') { p.i = j + 1; p.done = true; break; }
         if (hit === 'round') { p.phase = 'round'; p.hold = cfg.gap; continue; }
+        if (hit === 'gauge') { p.i = j + 1; p.rounds++; p.openingGauge = true; continue; }
+        if (hit === 'opening') { p.i = j + 1; p.openingGauge = false; p.phase = 'opening'; p.hold = OPENING_LESSON_MS; continue; }
         p.g0 = j; p.g1 = groupEnd(tl, j);
         // 모으기의 쏘는 방(`chan` 중 서는 것)은 ① 이 없다 — 여는 시전에서 나간 카드가 닫힐 때까지 나간 채 서 있다(battle.js:syncFocus · ADR-1087)
         if (cfg.rise > 0 && tl[j].e !== 'chan') { p.phase = 'rise'; p.hold = cfg.rise; continue; }

@@ -1,12 +1,27 @@
 card_id,tag,starter,sin,rule,p1,p2,p3,description_kr
-duel,aim,1,pride,duel,-,-,-,일기토 — 우리 리더의 단일 공격은 적 리더만 노린다(지목 · 도발 · 전열 문보다 먼저) · 적 리더가 쓰러지면 그 라운드는 평소 규칙. 행 한 줄 = 카드 한 종류 · tag = 태그(한 편성에 같은 태그 카드 한 장 · - = 없음 · 이름은 i18n tc.tag.<tag> · 2026-11-27 PLAN_tactic_tags D2 ~ D4 ⚠제안) · starter = 그 칸이 처음 열릴 때 일반 한 장으로 주는 칸 번호(칸마다 정확히 한 장 · - = 아님 · D5) · sin = 옵션 줄의 풀 죄종(tactic_option.csv) · rule = 규칙 어휘(코드 tactic.js RULES · 전투 해석 battle.js) · p1 ~ p3 = 규칙 수치(- = 없음 · 초 또는 몫) · 행 순서 = 드랍 · 층 AI 팀의 굴림 순서 · 이름 · 효과 문장은 i18n [2026-11-25 · R586 · tactic_card_design §4 · PLAN_tactic_cards_impl §2] ⚠제안 — 수치 전부 임시
-wedge,aim,-,envy,wedge,4,-,-,쐐기진 — 리더의 단일 공격이 맞힌 적에 표식(p1 초) · 표식 동안 동료의 단일 공격이 그 적부터. ⚠제안
-trojan,aim,-,sloth,trojan,3,-,-,트로이 목마 — 라운드 시작 p1 초 동안 우리 후열은 행동하지 않는다 · 그 뒤 후열의 단일 공격은 적 후열을 노린다(전열 문 무시 · 적 후열이 없으면 평소). ⚠제안
-charge,-,-,wrath,charge,1.5,-,-,기사 돌격 — 라운드가 시작되면 우리 전열은 바로 첫 행동 · 후열의 첫 행동은 p1 초 늦는다. ⚠제안
-shieldwall,cover,2,gluttony,shieldwall,0.3,-,-,방패벽 — 우리 후열이 맞는 직격의 p1 을 살아 있는 전열이 똑같이 나눠 받는다. ⚠제안
-guard,cover,-,pride,guard,0.4,-,-,친위대 — 우리 리더가 맞는 단일 직격의 p1 을 체력이 가장 높은 동료(리더 · 소환 제외)가 대신 받는다. ⚠제안
-turtle,-,-,gluttony,turtle,5,0.3,0.3,거북 진형 — 라운드 시작 p1 초 동안 우리 편 받는 피해 −p2 · 공속 −p3. ⚠제안
-retreat,-,-,lust,retreat,0.3,-,-,거짓 후퇴 — 우리 전열 영웅의 체력이 그 라운드 처음으로 p1 아래가 되면 체력 비율이 가장 높은 후열과 자리를 바꾼다(라운드가 끝나면 원래 자리 · 영웅마다 라운드당 한 번). ⚠제안
-poison_arrow,convert,3,envy,poison_arrow,0.3,-,-,독화살 — 우리 편 물리 피해의 p1 을 독 피해로 입힌다(물리 → 원소 전환 길). ⚠제안 · 이름 임시
-fire_arrow,convert,-,wrath,fire_arrow,0.3,0.2,-,불화살 — 우리 편 물리 피해의 p1 을 화염 피해로 입히고 p2 확률로 화상. ⚠제안 · 이름 임시
-baggage,-,-,greed,baggage,0.5,-,-,치중대 — 우리 편이 물약을 마시면 회복량의 p1 을 살아 있는 다른 동료가 똑같이 나눠 받는다(마신 영웅은 그만큼 덜). ⚠제안 · 이름 임시
+duel,attack,1,pride,duel,-,-,-,일기토 — 우리 리더의 단일 공격은 적 리더만 노린다(지목 · 도발 · 전열 문보다 먼저) · 적 리더가 쓰러지면 그 라운드는 평소 규칙. 행 한 줄 = 카드 한 종류 · tag = 진형 · 지원 · 공격 · 계략 · 사기 중 하나(한 편성에 같은 태그 카드 한 장 · 이름은 i18n tc.tag.<tag>) · starter = 그 칸이 처음 열릴 때 일반 한 장으로 주는 칸 번호(칸마다 정확히 한 장 · - = 아님 · D5) · sin = 옵션 줄의 풀 죄종(tactic_option.csv) · rule = 규칙 어휘(코드 tactic.js RULES · 전투 해석 battle.js) · p1 ~ p3 = 규칙 수치(- = 없음 · 초 또는 몫) · 행 순서 = 드랍 · 층 AI 팀의 굴림 순서 · 이름 · 효과 문장은 i18n [2026-11-25 · R586 · tactic_card_design §4 · PLAN_tactic_cards_impl §2] ⚠제안 — 수치 전부 임시
+wedge,formation,-,envy,wedge,4,-,-,쐐기진 — 리더의 단일 공격이 맞힌 적에 표식(p1 초) · 표식 동안 동료의 단일 공격이 그 적부터. ⚠제안
+trojan,stratagem,-,sloth,trojan,3,-,-,트로이 목마 — 라운드 시작 p1 초 동안 우리 후열은 행동하지 않는다 · 그 뒤 후열의 단일 공격은 적 후열을 노린다(전열 문 무시 · 적 후열이 없으면 평소). ⚠제안
+charge,attack,-,wrath,charge,1.5,-,-,기사 돌격 — 라운드가 시작되면 우리 전열은 바로 첫 행동 · 후열의 첫 행동은 p1 초 늦는다. ⚠제안
+shieldwall,formation,2,gluttony,shieldwall,0.3,-,-,방패벽 — 우리 후열이 맞는 직격의 p1 을 살아 있는 전열이 똑같이 나눠 받는다. ⚠제안
+guard,formation,-,pride,guard,0.4,-,-,친위대 — 우리 리더가 맞는 단일 직격의 p1 을 체력이 가장 높은 동료(리더 · 소환 제외)가 대신 받는다. ⚠제안
+turtle,formation,-,gluttony,turtle,5,0.3,0.3,거북 진형 — 라운드 시작 p1 초 동안 우리 편 받는 피해 −p2 · 공속 −p3. ⚠제안
+retreat,stratagem,-,lust,retreat,0.3,-,-,거짓 후퇴 — 우리 전열 영웅의 체력이 그 라운드 처음으로 p1 아래가 되면 체력 비율이 가장 높은 후열과 자리를 바꾼다(라운드가 끝나면 원래 자리 · 영웅마다 라운드당 한 번). ⚠제안
+poison_arrow,attack,-,envy,poison_arrow,0.3,-,-,독화살 — 우리 편 물리 피해의 p1 을 독 피해로 입힌다(물리 → 원소 전환 길). ⚠제안 · 이름 임시
+fire_arrow,attack,-,wrath,fire_arrow,0.3,0.2,-,불화살 — 우리 편 물리 피해의 p1 을 화염 피해로 입히고 p2 확률로 화상. ⚠제안 · 이름 임시
+baggage,support,3,greed,baggage,0.5,-,-,치중대 — 우리 편이 물약을 마시면 회복량의 p1 을 살아 있는 다른 동료가 똑같이 나눠 받는다(마신 영웅은 그만큼 덜). ⚠제안 · 이름 임시
+guardian,formation,-,sloth,guardian,0.2,-,-,수호자 — 전열에 살아 있는 아군 영웅이 리더 한 명뿐이면 아군 후열이 받는 피해 감소.
+unity,morale,-,pride,unity,0.2,3,-,일치단결 — 살아 있는 아군 영웅이 p2명 이상이면 영웅의 직격 피해 증가.
+dying_curse,stratagem,-,envy,dying_curse,0.05,5,-,최후의 저주 — 아군 영웅 사망마다 라운드 동안 적의 양수 방어력과 원소 저항을 곱으로 감소. 최대 p2회.
+giant,morale,-,wrath,giant,0.3,-,-,거인 — 마지막으로 살아 있는 아군 영웅의 일곱 기본 능력치 증가.
+desperate_charge,formation,-,wrath,desperate_charge,0.2,-,-,결사돌진 — 출전영웅이 모두 전열에 위치하면 적에게 입히는 피해가 p1증가한다.
+mutual_cover,formation,-,lust,mutual_cover,0.3,-,-,방패진 — 전열 2명·후열 1명으로 배치하면 전열 영웅 한 명이 받는 피해의 p1를 다른 전열 영웅이 대신 받는다.
+open_order,formation,-,greed,open_order,0.3,-,-,산개 대형 — 출전 영웅이 모두 후열에 위치하면 광역 공격으로 받는 피해가 p1 감소한다.
+iron_line,formation,-,gluttony,last_stand,-,-,-,배수진 — 출전 영웅이 모두 전열에 위치하면 처음으로 쓰러질 피해를 받는 아군 영웅이 체력 1로 버틴다. 전투당 한 번 발동한다.
+pursuit,formation,-,envy,pursuit,-,-,-,추격진 — 출전영웅이 모두 전열에 위치하면 단일 공격은 노릴 수 있는 적 중 남은 체력 비율이 가장 낮은 적을 우선한다.
+hammer_anvil,formation,-,wrath,crane_wing,0.3,-,-,학익진 — 전열 2명·후열 1명으로 배치하면 적 전열 유닛이 받는 피해의 p1를 적 후열 유닛들이 나눠 받는다.
+field_medics,formation,-,lust,field_medics,0.25,-,-,후방 의무대 — 전열 2명·후열 1명으로 배치하면 전열 두 영웅이 받는 회복량이 p1증가한다.
+vanguard_barrier,formation,-,pride,vanguard_barrier,0.3,-,-,선봉 방벽 — 전열 1명·후열 2명으로 배치하면 라운드 시작 시 전열 영웅이 자신의 최대 체력 p1만큼 보호막을 얻는다.
+aimed_fire,formation,-,envy,aimed_fire,0.15,-,-,정밀 사격 — 전열 1명·후열 2명으로 배치하면 후열 두 영웅의 단일 공격 치명타 확률이 p1p 증가한다.
+volley,formation,-,wrath,focused_fire,0.3,-,-,집중포화 — 출전 영웅이 모두 후열에 위치하면 적 전열 유닛에게 입히는 피해가 p1 증가한다.
+rapid_deployment,formation,-,sloth,rapid_deployment,0.35,-,-,신속 전개 — 출전영웅이 모두 후열에 위치하면 라운드 시작 시 각 영웅의 행동 게이지가 p1 찬다.

@@ -1,10 +1,4 @@
-/** 기본 직업 · 전직 스킬의 이미지 연출 — 사건 · 그림 · 움직임 (ADR-0515 · ADR-0520 · ADR-0528 · ADR-0550 · ADR-0551).
- * 표의 파일 이름은 스킬 모양의 키이며 `artFile` 이 그림체 접미를 붙인다(ADR-0651).
- * 게임 로직과 슬롯 아이콘은 이 표를 모른다. 그림이 준비되지 않으면
- * fx.js가 skill_looks.js의 기존 조각 조합을 표시한다.
- */
-/* 단일 다단의 조각 — k 번째 타격은 `beat` × k 늦게 서고 그림의 `parts[k % 길이]` 만 보인다(값은 인라인 변수 · ADR-0778).
-   X 는 두 칼날이 대각선으로 엇갈린 구도라 칼날을 따라가는 흐린 띠(가장자리가 부드러운 가림) 둘로 · 화살 셋은 위아래로 나란해 가로 띠 셋으로 가른다(두 그림체 같은 구도) */
+/** 단일 다단은 타격마다 해당 칼날 또는 투사체 한 줄을 드러낸다. */
 const X_BLADES = [
     { mask: 'linear-gradient(45deg, transparent 33%, #000 41%, #000 55%, transparent 63%)', mx: '-14px', my: '-14px' },    // 「\」 — 왼쪽 위에서 그어 내린다
     { mask: 'linear-gradient(135deg, transparent 37%, #000 45%, #000 59%, transparent 67%)', mx: '14px', my: '-14px' },    // 「/」 — 오른쪽 위에서 그어 내린다
@@ -12,53 +6,60 @@ const X_BLADES = [
 const THREE_ARROWS = [{ ct: '0%', cb: '66%' }, { ct: '33%', cb: '33%' }, { ct: '66%', cb: '0%' }];
 /* 러시 — 창끝 둘이 위아래로 나란한 그림을 창 하나씩 · `jitter` 가 타마다 각도(r 도) · 자리(x · y px)를 무작위로 흔들고 위 · 아래 창도 무작위로 고른다 (ADR-0780) */
 const TWO_SPEARS = [{ ct: '0%', cb: '57%' }, { ct: '43%', cb: '0%' }];
-/* 삭제된 스킬(state.js:RETIRED_ADVANCE)의 정의 — 거친 잉크 그림은 그리지 않았다(ADR-1379) */
-const RETIRED_STYLES = ['darktoon', 'foil'];
 
 export const SKILL_ART = {
+    // job warrior
     war_bash: { hit: { file: 'war_bash', motion: 'slash', size: 92, duration: 360 } },
     war_doubleswing: { hit: { file: 'war_doubleswing', motion: 'swing', size: 90, duration: 400, beat: 130, parts: X_BLADES } },
+    war_recovery: { heal: { file: 'war_recovery', motion: 'heal', size: 88, duration: 640 } },
     war_leap: { hit: { file: 'war_leap', motion: 'land', size: 94, duration: 460, quake: true } },
-    // 함성 — 초상 밖으로 세 겹의 충격파가 퍼진다. 두 그림체에 같은 크기 · 움직임을 쓴다.
-    war_shout: { buff: { file: 'war_shout_shockwave', motion: 'shout', size: 206, ay: .45, duration: 1100, pulses: 3, beat: 85 } },
-    war_battleorders: { buff: { file: 'war_battleorders_shockwave', motion: 'shout', size: 216, ay: .45, duration: 1100, pulses: 3, beat: 105 } },
-    war_warcry: { bad: { file: 'war_warcry_shockwave', motion: 'shout', size: 218, ay: .45, duration: 1100, pulses: 3, beat: 75 } },
-    war_battlecry: { bad: { file: 'war_battlecry_shockwave', motion: 'shout', size: 210, ay: .45, duration: 1100, pulses: 3, beat: 85 } },
+    war_shout: { buff: { file: 'war_shout', motion: 'shout', size: 116, ay: .45, duration: 760, pulses: 2, beat: 85 } },
+    war_battleorders: { buff: { file: 'war_battleorders', motion: 'shout', size: 116, ay: .45, duration: 760, pulses: 2, beat: 105 } },
     war_ironskin: { buff: { file: 'war_ironskin', motion: 'shell', size: 94, duration: 540 } },
+    war_frenzy: { buff: { file: 'war_frenzy', motion: 'orders', size: 90, duration: 560 } },
+    war_warcry: { bad: { file: 'war_warcry', motion: 'shout', size: 116, ay: .45, duration: 760, pulses: 2, beat: 75 } },
+    war_battlecry: { bad: { file: 'war_battlecry', motion: 'shout', size: 116, ay: .45, duration: 760, pulses: 2, beat: 85 } },
 
-    // 기사 — 인챈트는 실제 추가 피해인 화염이다. 레지스탕스 실드는 아래 추가 다크 카툰 표가 든다.
+    // job knight
+    kni_resistshield: { buff: { file: 'kni_resistshield', motion: 'shell', size: 92, duration: 540 } },
     kni_holyshield: { buff: { file: 'kni_holyshield', motion: 'shell', size: 92, duration: 540 } },
     kni_charge: { hit: { file: 'kni_charge', motion: 'thrust', size: 88, duration: 360 } },
     kni_rush: { hit: { file: 'kni_rush', motion: 'thrust', size: 84, duration: 340, beat: 110, parts: TWO_SPEARS, jitter: { r: 70, x: 26, y: 26 }, preview: 4 } },
     kni_enchant: { buff: { file: 'kni_enchant', motion: 'orders', size: 88, duration: 540 } },
-    // 상시 오오라의 그림은 도감에서만 재생한다(fxBuff의 until: null 제외).
-    // 오오라 셋 — 같은 푸른 마법진 원 · 안쪽 문양만 다르다 · 크기 · 움직임도 하나(ADR-0548).
     kni_might: { buff: { file: 'kni_might', motion: 'orbit', size: 90, duration: 620 } },
     kni_fanaticism: { buff: { file: 'kni_fanaticism', motion: 'orbit', size: 90, duration: 620 } },
     kni_defiance: { buff: { file: 'kni_defiance', motion: 'orbit', size: 90, duration: 620 } },
+    kni_sweep: { hit: { file: 'kni_sweep', motion: 'sweep', size: 94, duration: 420 } },
+    kni_holyfire: { buff: { file: 'kni_holyfire', motion: 'orbit', size: 90, duration: 620 } },
 
-    // 마법사 — 화염 · 냉기 · 번개 · 집중 · 얼음 벽 소환.
-    // 아이스 블라스트 · 라이트닝은 초상 바깥 위에서 떨어진다(ADR-0541). 두 장짜리는 그림마다 `anchor`를 잡아 같은 `targetY`에 맞춘다.
-    mag_fireball: { hit: { file: 'mag_fireball', motion: 'burst', size: 90, duration: 420 } },
-    // 인페르노 = 적진에 까는 불(R550 · ADR-1281) — 타격 사건이 없어 `hit` 이 아니라 상대 카드마다 서는 `bad` 다 · 불벽 한 장만 솟는다(이어 깔리던 불바닥은 걷었다 · ADR-1335)
-    mag_inferno: { bad: { file: 'mag_inferno', motion: 'pillar', size: 94, duration: 500 } },
-    mag_iceblast: { hit: {
-        file: 'mag_iceblast', motion: 'fall', size: 110, anchor: [.5, .95], targetY: .61, duration: 260,
-        then: { file: 'mag_iceblast_shatter', motion: 'shatter', size: 110, anchor: [.5, .91], targetY: .61, duration: 380 },
-    } },
-    mag_frostnova: { hit: { file: 'mag_frostnova', motion: 'wave', size: 94, duration: 480 } },
-    mag_lightning: { hit: { file: 'mag_lightning', motion: 'bolt', size: 124, ay: .9, duration: 380 } },
-    mag_chain: { hit: { file: 'mag_chain', motion: 'thrust', size: 90, duration: 360 } },
-
-    // 궁수 — 단발 · 연사 · 광역 · 유도 · 관통 · 독 강화.
+    // job archer
     arc_snipe: { hit: { file: 'arc_snipe', motion: 'thrust', size: 84, duration: 340 } },
     arc_rapid: { hit: { file: 'arc_rapid', motion: 'thrust', size: 84, duration: 340, beat: 90, parts: THREE_ARROWS } },
     arc_multishot: { hit: { file: 'arc_multishot', motion: 'rain', size: 90, duration: 440 } },
     arc_guided: { hit: { file: 'arc_guided', motion: 'thrust', size: 88, duration: 400 } },
     arc_pierce: { buff: { file: 'arc_pierce', motion: 'sweep', size: 90, duration: 520 } },
     arc_poison: { buff: { file: 'arc_poison', motion: 'orders', size: 88, duration: 580 } },
+    arc_coldarrow: { buff: { file: 'arc_coldarrow', motion: 'orders', size: 88, duration: 560 } },
+    arc_evade: { buff: { file: 'arc_evade', motion: 'sweep', size: 88, duration: 520 } },
+    arc_quickhands: { buff: { file: 'arc_quickhands', motion: 'sweep', size: 84, duration: 420 } },
+    arc_eagleeye: { buff: { file: 'arc_eagleeye', motion: 'inward', size: 88, duration: 580 } },
 
-    // 사제 — 성광 · 회복 · 강화 · 그림자 약화.
+    // job mage
+    mag_fireball: { hit: { file: 'mag_fireball', motion: 'burst', size: 90, duration: 420 } },
+    mag_inferno: { bad: { file: 'mag_inferno', motion: 'pillar', size: 94, duration: 500 } },
+    mag_iceblast: { hit: {
+        file: 'mag_iceblast', motion: 'fall', size: 110, anchor: [.5, .91], targetY: .61, duration: 260,
+        then: { file: 'mag_iceblast_shatter', motion: 'shatter', size: 110, anchor: [.5, .91], targetY: .61, duration: 380 },
+    } },
+    mag_frostnova: { hit: { file: 'mag_frostnova', motion: 'wave', size: 94, duration: 480 } },
+    mag_lightning: { hit: { file: 'mag_lightning', motion: 'bolt', size: 124, ay: .9, duration: 380 } },
+    mag_chain: { hit: { file: 'mag_chain', motion: 'thrust', size: 90, duration: 360 } },
+    mag_ignite: { buff: { file: 'mag_ignite', motion: 'orders', size: 90, duration: 560 } },
+    mag_deepfreeze: { buff: { file: 'mag_deepfreeze', motion: 'shell', size: 92, duration: 560 } },
+    mag_surge: { buff: { file: 'mag_surge', motion: 'wave', size: 90, duration: 520 } },
+    mag_echo: { buff: { file: 'mag_echo', motion: 'wave', size: 90, duration: 660 } },
+
+    // job priest
     pri_judgment: { hit: { file: 'pri_judgment', motion: 'strike', size: 94, duration: 480 } },
     pri_heal: { heal: { file: 'pri_heal', motion: 'heal', size: 88, duration: 640 } },
     pri_grace: { buff: { file: 'pri_grace', motion: 'sweep', size: 88, duration: 580 } },
@@ -67,9 +68,18 @@ export const SKILL_ART = {
     pri_regen: { buff: { file: 'pri_regen', motion: 'heal', size: 88, duration: 820 } },
     pri_penitence: { bad: { file: 'pri_penitence', motion: 'sink', size: 90, duration: 620 } },
     pri_bind: { bad: { file: 'pri_bind', motion: 'inward', size: 90, duration: 580 } },
+    pri_doom: { bad: { file: 'pri_doom', motion: 'sink', size: 92, duration: 620 } },
+    pri_summon: { call: { file: 'pri_summon', motion: 'orbit', size: 90, duration: 620 } },
 
-    // 전직 — 기본보다 크게(124~140) 카드 밖까지 뻗는다 · 큰 한 방은 두 장(떨어짐 · 날아듦 → 터짐 `_impact`)이고 흔들림은 터질 때 선다(ADR-0550).
-    // 전사 — 광전사 · 바바리안 · 선봉장. 휠윈드는 칼날 바퀴가 돈다(`spin`).
+    // monster 몬스터
+    mon_selfdestruct: { hit: { file: 'mon_selfdestruct', motion: 'burst', size: 124, duration: 460 } },
+    mon_hellfire: { hit: { file: 'mon_hellfire', motion: 'pillar', size: 118, duration: 420 } },
+    mon_ironmaiden: { bad: { file: 'mon_ironmaiden', motion: 'inward', size: 96, duration: 580 } },
+    mon_goldfever: { buff: { file: 'mon_goldfever', motion: 'burst', size: 92, duration: 520 } },
+    mon_mire: { bad: { file: 'mon_mire', motion: 'ground', size: 94, duration: 600 } },
+    mon_swarm: { buff: { file: 'mon_swarm', motion: 'cross', size: 94, duration: 620 } },
+
+    // advance war
     war_ragnarok: { buff: { file: 'war_ragnarok', motion: 'pillar', size: 136, duration: 720 } },
     war_berserk: { buff: { file: 'war_berserk', motion: 'burst', size: 128, duration: 600 } },
     war_mutualruin: { hit: {
@@ -78,71 +88,68 @@ export const SKILL_ART = {
     } },
     war_whirlwind: { hit: { file: 'war_whirlwind', motion: 'spin', size: 130, duration: 620 } },
     war_thorswrath: { hit: {
-        file: 'war_thorswrath', motion: 'fall', size: 128, anchor: [.5, .95], targetY: .66, duration: 260, quake: true,
-        then: { file: 'war_thorswrath_impact', motion: 'shatter', size: 132, anchor: [.5, .89], targetY: .66, duration: 440 },
+        file: 'war_thorswrath', motion: 'fall', size: 128, anchor: [.5, .91], targetY: .66, duration: 260, quake: true,
+        then: { file: 'war_thorswrath_impact', motion: 'shatter', size: 132, anchor: [.5, .91], targetY: .66, duration: 440 },
     } },
     war_shockwave: { hit: { file: 'war_shockwave', motion: 'ground', size: 140, duration: 520, quake: true } },
-    war_command: { buff: { file: 'war_command_shockwave', motion: 'shout', size: 258, ay: .45, duration: 1100, pulses: 3, beat: 75 } },
-    war_intimidate: { bad: { file: 'war_intimidate_shockwave', motion: 'shout', size: 274, ay: .45, duration: 1100, pulses: 3, beat: 65 } },
+    war_divinedescent: { buff: { file: 'war_divinedescent', motion: 'strike', size: 116, duration: 640 } },
+    war_command: { buff: { file: 'war_command', motion: 'shout', size: 136, ay: .45, duration: 760, pulses: 2, beat: 75 } },
+    war_intimidate: { bad: { file: 'war_intimidate', motion: 'shout', size: 136, ay: .45, duration: 760, pulses: 2, beat: 65 } },
 
-    // 기사 — 가디언 · 팔라딘 · 크루세이더. 방벽(신성한 심판 · 불굴의 맹세 · 성전)도 강화 그림이다.
+    // advance kni
     kni_lastbastion: { buff: { file: 'kni_lastbastion', motion: 'shell', size: 134, duration: 620 } },
     kni_unbreakablewill: { buff: { file: 'kni_unbreakablewill', motion: 'shell', size: 128, duration: 600 } },
     kni_divinejudgment: { buff: { file: 'kni_divinejudgment', motion: 'shell', size: 130, duration: 600 } },
-    kni_unyieldingoath: { buff: { file: 'kni_unyieldingoath', motion: 'orbit', size: 130, duration: 660, styles: RETIRED_STYLES } },
-    kni_holywar: { buff: { file: 'kni_holywar', motion: 'shell', size: 132, duration: 620, styles: RETIRED_STYLES } },
-    kni_vow: { buff: { file: 'kni_vow', motion: 'heal', size: 130, duration: 720, styles: RETIRED_STYLES } },
+    kni_cleansing: { buff: { file: 'kni_cleansing', motion: 'heal', size: 112, duration: 660 } },
+    kni_offenseaura: { buff: { file: 'kni_offenseaura', motion: 'orbit', size: 114, duration: 620 } },
+    kni_elemconvert: { buff: { file: 'kni_elemconvert', motion: 'sweep', size: 114, duration: 620 } },
     kni_retribution: { buff: { file: 'kni_retribution', motion: 'orders', size: 136, duration: 620 } },
     kni_condemnation: { hit: {
-        file: 'kni_condemnation', motion: 'fall', size: 130, anchor: [.49, .96], targetY: .64, duration: 260, quake: true,
-        then: { file: 'kni_condemnation_impact', motion: 'shatter', size: 130, anchor: [.49, .52], targetY: .64, duration: 420 },
+        file: 'kni_condemnation', motion: 'fall', size: 130, anchor: [.5, .91], targetY: .64, duration: 260, quake: true,
+        then: { file: 'kni_condemnation_impact', motion: 'shatter', size: 130, anchor: [.5, .5], targetY: .64, duration: 420 },
     } },
-    kni_showdown: { buff: { file: 'kni_showdown', motion: 'burst', size: 132, duration: 600, styles: RETIRED_STYLES } },
+    kni_fallingstrike: { hit: { file: 'kni_fallingstrike', motion: 'fall', size: 118, anchor: [.5, .9], targetY: .61, duration: 330 } },
 
-    // 메테오는 불꼬리 방향을 따라 오른쪽 위에서 진입한다. 운석 아랫면과 폭발 밑동을 같은 자리에 맞춘다.
+    // advance mag
     mag_meteor: { hit: {
-        file: 'mag_meteor', motion: 'flight', size: 140, anchor: [.34, .94], targetY: .66, entry: [.69, -.88], duration: 300, quake: true,
-        then: { file: 'mag_meteor_impact', motion: 'shatter', size: 140, anchor: [.49, .89], targetY: .66, duration: 460 },
+        file: 'mag_meteor', motion: 'flight', size: 140, anchor: [.21, .91], targetY: .66, entry: [.69, -.88], duration: 300, quake: true,
+        then: { file: 'mag_meteor_impact', motion: 'shatter', size: 140, anchor: [.5, .91], targetY: .66, duration: 460 },
     } },
-    mag_firewall: { hit: { file: 'mag_firewall', motion: 'pillar', size: 140, duration: 560, styles: RETIRED_STYLES } },
+    mag_ember: { hit: { file: 'mag_ember', motion: 'burst', size: 94, duration: 450 } },
     mag_hydra: { hit: { file: 'mag_hydra', motion: 'cross', size: 136, duration: 520 } },
     mag_frozenorb: { hit: {
-        file: 'mag_frozenorb', motion: 'flight', size: 130, anchor: [.72, .51], entry: [-.56, 0], duration: 280,
+        file: 'mag_frozenorb', motion: 'flight', size: 130, anchor: [.79, .5], entry: [-.56, 0], duration: 280,
         then: { file: 'mag_frozenorb_impact', motion: 'shatter', size: 136, anchor: [.5, .51], duration: 420 },
     } },
-    // 블리자드 = 적진에 까는 눈보라(R550 · ADR-1281) — 깔리는 순간(`bad`)도 틱(`hit`)과 같은 얼음 비
     mag_blizzard: { hit: { file: 'mag_blizzard', motion: 'rain', size: 140, ay: .62, duration: 620 }, bad: { file: 'mag_blizzard', motion: 'rain', size: 140, ay: .62, duration: 620 } },
-    mag_frostburst: { hit: {
-        file: 'mag_frostburst', motion: 'inward', size: 128, duration: 320, styles: RETIRED_STYLES,
-        then: { file: 'mag_frostburst_impact', motion: 'burst', size: 136, duration: 420, styles: RETIRED_STYLES },
-    } },
+    mag_frostarmor: { buff: { file: 'mag_frostarmor', motion: 'shell', size: 112, duration: 580 } },
     mag_thunderstrike: { hit: {
         file: 'mag_thunderstrike', motion: 'bolt', size: 140, anchor: [.51, .92], targetY: .64, duration: 300, quake: true,
         then: { file: 'mag_thunderstrike_impact', motion: 'burst', size: 132, anchor: [.5, .91], targetY: .64, duration: 380 },
     } },
     mag_nova: { hit: { file: 'mag_nova', motion: 'wave', size: 140, duration: 480 } },
-    mag_staticfield: { hit: { file: 'mag_staticfield', motion: 'bolt', size: 124, duration: 460, styles: RETIRED_STYLES } },
+    mag_thundergod: { hit: { file: 'mag_thundergod', motion: 'bolt', size: 122, anchor: [.5, .9], targetY: .61, duration: 410 } },
 
-    // 궁수 — 스나이퍼 · 보우마스터 · 레인저. 재장전은 화살 고리가 돈다(`spin`).
+    // advance arc
     arc_trueaim: { buff: { file: 'arc_trueaim', motion: 'inward', size: 130, duration: 600 } },
     arc_singlestrike: { hit: {
-        file: 'arc_singlestrike', motion: 'flight', size: 140, anchor: [.96, .55], entry: [-.42, 0], duration: 280, quake: true,
+        file: 'arc_singlestrike', motion: 'flight', size: 140, anchor: [.93, .5], entry: [-.42, 0], duration: 280, quake: true,
         then: { file: 'arc_singlestrike_impact', motion: 'burst', size: 132, anchor: [.53, .56], duration: 400 },
     } },
     arc_reload: { buff: { file: 'arc_reload', motion: 'spin', size: 128, duration: 620 } },
     arc_quickdraw: { buff: { file: 'arc_quickdraw', motion: 'sweep', size: 128, duration: 520 } },
-    arc_fulldraw: { buff: { file: 'arc_fulldraw', motion: 'orders', size: 134, duration: 620, styles: RETIRED_STYLES } },
+    arc_overdraw: { buff: { file: 'arc_overdraw', motion: 'orders', size: 92, duration: 620 } },
     arc_chaindraw: { buff: { file: 'arc_chaindraw', motion: 'sweep', size: 132, duration: 600 } },
     arc_huntersmark: { bad: { file: 'arc_huntersmark', motion: 'inward', size: 128, duration: 600 } },
-    arc_supportingfire: { buff: { file: 'arc_supportingfire', motion: 'orders', size: 134, duration: 620 } },
+    arc_supportingfire: { buff: { file: 'arc_supportingfire', motion: 'orders', size: 134, duration: 620 }, hit: { file: 'arc_supportingfire_hit', motion: 'thrust', size: 90, duration: 320 } },
     arc_trap: { hit: { file: 'arc_trap', motion: 'land', size: 128, duration: 480, quake: true } },
 
-    // 사제 — 비숍 · 검은사제 · 몽크. 천벌은 바깥 위에서 떨어진다.
-    pri_aegis: { buff: { file: 'pri_aegis', motion: 'shell', size: 134, duration: 620, styles: RETIRED_STYLES } },
-    pri_benediction: { heal: { file: 'pri_benediction', motion: 'heal', size: 136, duration: 760, styles: RETIRED_STYLES } },
+    // advance pri
+    pri_endure: { buff: { file: 'pri_endure', motion: 'shell', size: 112, duration: 640 } },
+    pri_purify: { heal: { file: 'pri_purify', motion: 'heal', size: 114, duration: 620 } },
     pri_resurrection: { heal: { file: 'pri_resurrection', motion: 'heal', size: 140, duration: 820 } },
     pri_punishment: { hit: {
-        file: 'pri_punishment', motion: 'fall', size: 132, anchor: [.5, .95], targetY: .66, duration: 260, quake: true,
+        file: 'pri_punishment', motion: 'fall', size: 132, anchor: [.5, .91], targetY: .66, duration: 260, quake: true,
         then: { file: 'pri_punishment_impact', motion: 'shatter', size: 134, anchor: [.5, .91], targetY: .66, duration: 440 },
     } },
     pri_atonement: { bad: { file: 'pri_atonement', motion: 'inward', size: 132, duration: 620 } },
@@ -150,47 +157,12 @@ export const SKILL_ART = {
     pri_diamondbody: { buff: { file: 'pri_diamondbody', motion: 'shell', size: 130, duration: 600 } },
     pri_sweep: { hit: { file: 'pri_sweep', motion: 'sweep', size: 140, duration: 480 } },
     pri_counter: { buff: { file: 'pri_counter', motion: 'burst', size: 132, duration: 560 } },
-
-    // 몬스터 — 소환은 불려 나온 · 되살아난 카드의 초상에 오오라(마이트)와 같은 마법진이 붉게 · 별은 뒤집혀 선다 · 크기 · 움직임도 오오라와 같다(ADR-0728).
-    pri_summon: { call: { file: 'pri_summon', motion: 'orbit', size: 90, duration: 620 } },
-
-    // 누락 스킬 보완 — 다크 카툰으로 새로 그린다 · 거친 잉크도 있다(ADR-1379). 함성은 위에서 세 그림체를 모두 제공한다. 애로우 레인은 삭제된 스킬이라 다크 카툰뿐.
-    war_recovery: { heal: { file: 'war_recovery', motion: 'heal', size: 88, duration: 640, styles: ['darktoon', 'roughink'] } },
-    war_frenzy: { buff: { file: 'war_frenzy', motion: 'orders', size: 90, duration: 560, styles: ['darktoon', 'roughink'] } },
-    kni_resistshield: { buff: { file: 'kni_resistshield', motion: 'shell', size: 92, duration: 540, styles: ['darktoon', 'roughink'] } },
-    kni_sweep: { hit: { file: 'kni_sweep', motion: 'sweep', size: 94, duration: 420, styles: ['darktoon', 'roughink'] } },
-    kni_holyfire: { buff: { file: 'kni_holyfire', motion: 'orbit', size: 90, duration: 620, styles: ['darktoon', 'roughink'] } },
-    arc_arrowrain: { hit: { file: 'arc_arrowrain', motion: 'rain', size: 94, duration: 500, styles: ['darktoon'] } },
-    arc_evade: { buff: { file: 'arc_evade', motion: 'sweep', size: 88, duration: 520, styles: ['darktoon', 'roughink'] } },
-    arc_overdraw: { buff: { file: 'arc_overdraw', motion: 'orders', size: 92, duration: 620, styles: ['darktoon', 'roughink'] } },
-    mag_ignite: { buff: { file: 'mag_ignite', motion: 'orders', size: 90, duration: 560, styles: ['darktoon', 'roughink'] } },
-    mag_deepfreeze: { buff: { file: 'mag_deepfreeze', motion: 'shell', size: 92, duration: 560, styles: ['darktoon', 'roughink'] } },
-    mag_surge: { buff: { file: 'mag_surge', motion: 'wave', size: 90, duration: 520, styles: ['darktoon', 'roughink'] } },
-    mag_echo: { buff: { file: 'mag_echo', motion: 'wave', size: 90, duration: 660, styles: ['darktoon', 'roughink'] } },
-    pri_doom: { bad: { file: 'pri_doom', motion: 'sink', size: 92, duration: 620, styles: ['darktoon', 'roughink'] } },
-    mon_selfdestruct: { hit: { file: 'mon_selfdestruct', motion: 'burst', size: 124, duration: 460, styles: ['darktoon', 'roughink'] } },
-    mon_hellfire: { hit: { file: 'mon_hellfire', motion: 'pillar', size: 118, duration: 420, styles: ['darktoon', 'roughink'] } },
 };
 
-/* 모으기의 기운 — 모으는 동안 쓰는 쪽 초상 둘레에서 안으로 빨려 든다(ADR-1252). 스킬마다가 아니라 시전 방식(`channel_charge`)이 부른다 ·
-   `style` = 그림체 설정과 상관없이 쓰는 그림체(금속박 · ADR-1270) · `own` = 제 판이 있는 그림체 — 그걸 고르면 그 판을 쓴다(거친 잉크 · ADR-1379) · `size` = 그림 한 장의 크기(px — 바깥에서 크게 시작해 줄어든다 · style.css `fx-charge-gather`) ·
-   `duration` = 한 번 빨려 드는 길이(ms · 배속을 탄다 · ADR-1270) ·
-   `size` 80 — 1.5배로 시작하면 120px 라 초상(90px) 바로 둘레에서 빨려 들기 시작한다(130 이면 195px 로 초상의 두 배가 넘어 너무 컸다 · 2026-11-18 사용자 「애초에 너무 커」) */
-export const CHARGE_ART = { file: 'charge_gather', style: 'foil', own: ['roughink'], size: 80, duration: 1400 };
-/** 모으기 기운을 그릴 그림체 — 고른 그림체에 제 판이 있으면 그것 · 없으면 `CHARGE_ART.style` */
-export const chargeStyle = style => CHARGE_ART.own.includes(style) ? style : CHARGE_ART.style;
+export const ART_STYLES = ['orrery', 'vitrail', 'wraith'];
+export const ART_DEFAULT = ART_STYLES[0];
+export const CHARGE_ART = { file: 'charge_gather', size: 80, duration: 1400 };
 
-/* 그림체 — 관전은 설정 탭이 고른 그림체로 서고(fx.js:fxArtStyle · ADR-0561), 도감의 이펙트 세그먼트는 같은 스킬을 그림체별로 견준다(§9-1 · ADR-0559).
-   버튼 · 탭 순서 = 이 배열 순서 · 기본값 = 한 번도 안 고른 사람의 관전(다크 카툰 · ADR-0621) */
-export const ART_STYLES = ['darktoon', 'foil', 'roughink'];
-export const ART_DEFAULT = 'darktoon';
-/* 다크 카툰·금속박을 보존하고 누락된 스킬은 다크 카툰으로 보완한다(ADR-0754). 거친 잉크 = Gemini 2차 판 · 지금 스킬 전부(ADR-1379).
-   `styles` 는 이어 서는 그림(`then`)에도 적는다 — 그 파일도 같은 목록을 따른다 */
-const SUFFIXED = new Set(ART_STYLES);
-const FILE_STYLES = new Map(Object.values(SKILL_ART).flatMap(events =>
-    Object.values(events).flatMap(def => [def, def.then]).filter(def => def?.styles).map(def => [def.file, def.styles])));
-/** 그 그림체의 파일 이름 — 없는 그림체는 null, 그림 없는 스킬은 기존 조각 조합을 쓴다. */
 export function artFile(file, style) {
-    const available = FILE_STYLES.get(file);
-    return SUFFIXED.has(style) && (!available || available.includes(style)) ? `${file}_${style}` : null;
+    return file && ART_STYLES.includes(style) ? `${style}/${file}` : null;
 }

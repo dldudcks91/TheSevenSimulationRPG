@@ -859,7 +859,9 @@ export function createHeroSystem(data) {
                 if (a.stat === 'debuff_dur_reduction') ddrList.push(a.v);   // 장비 줄 하나 = 원천 하나 (R465)
             }
         }
-        // 마스터리는 접사와 같은 채널로 합류한다 — 이 줄 아래로는 출처를 구분하지 않는다
+        // 경직 시간 증가는 출처 안에서 더하고 출처끼리 곱한다 [2026-11-27 사용자 「출처마다 내부적으로 합한다음에 곱으로」 · R601 · battle_design §2-3] — 장비 몫 = 여기까지의 합
+        const sdGear = flat.stagger_dur_pct ?? 0;
+        // 마스터리는 접사와 같은 채널로 합류한다 — 이 줄 아래로는 출처를 구분하지 않는다(위 경직 시간 증가 · 아래 피해 감소 · 디버프 시간 감소는 출처를 따로 모은다)
         const mb = masteryBonus(hero, items);
         for (const k of Object.keys(mb.flat)) flat[k] = (flat[k] ?? 0) + mb.flat[k];
         for (const x of mb.tags) { const bz = skillTags[x.tag] ??= {}; bz[x.effect] = (bz[x.effect] ?? 0) + x.v; }   // 전직 공통 줄의 태그 칸 (R471)
@@ -1004,7 +1006,10 @@ export function createHeroSystem(data) {
             resStack: Object.fromEntries(ELEMENTS.map(e => [e, f(`res_down_stack_${e}`)])),
             resStackAll: f('res_down_stack_pct'),   // 그 타격의 원소에 쌓는 겹(목걸이 시기 ③ · 2026-11-11 R453) — 원소별 값과 더한다
             defStack: f('def_down_stack_pct'),    // 방어력 감소 겹 하나의 값 — 대상 한 줄에 겹쳐 쌓인다(skill_effects.weaponOnHit · 상한 없음 — 2026-11-12 사용자)
-            staggerDur: f('stagger_dur_pct'),     // 내가 건 경직 +% (battle.stagger)
+            // 내가 건 경직 +% (battle.stagger) — **출처끼리 곱한다**(R601): (1 + 장비) × (1 + 마스터리) × (1 + 전술) − 1 · 출처 하나면 그 합 그대로.
+            //   도감 옵션 몫은 `staggerDurCodex` 로 따로 든다 — 전투가 도감 종족 몫과 더해 한 괄호로 곱한다(도감 = 출처 하나)
+            staggerDur: Number(((1 + sdGear) * (1 + (mb.flat.stagger_dur_pct ?? 0)) * (1 + (party?.flat?.stagger_dur_pct ?? 0)) - 1).toFixed(4)),
+            staggerDurCodex: cxFlat.stagger_dur_pct ?? 0,
             castRefund: f('cast_refund_chance'),  // 시전 시 칸 하나를 돌려받을 확률 (battle.chargeTick — rng 1회 · 옵션이 있을 때만)
             castStack: f('cast_stack_pct'),       // 시전 누적 겹 하나의 데미지 % — 라운드 동안 (battle.chargeTick · 최대 겹 [balance.csv:cast_stack_max])
             statusDur: f('status_dur_pct'),       // 내가 건 상태이상 +% (skill_runtime.applyStatus)
@@ -1019,7 +1024,7 @@ export function createHeroSystem(data) {
             fx.defDown, fx.resDown, fx.atkDownPhys, fx.atkDownMag, fx.crush, fx.magicFind,
             ...Object.values(fx.vsDr), fx.vsEliteDr, fx.vsFrontDr, fx.vsBackDr, fx.drFlat, fx.recv, fx.killHeal, fx.startGauge, fx.cullNormal, fx.xpGain,
             fx.freezeDur, fx.poisonDur, fx.burnDur, fx.stunDur, fx.buffDur, fx.hitBonus,
-            fx.defStack, ...Object.values(fx.resStack), fx.resStackAll, fx.staggerDur, fx.castRefund, fx.castStack, fx.statusDur, fx.debuffDur, fx.healOut, fx.potion, fx.coolMinus].some(v => v !== 0);
+            fx.defStack, ...Object.values(fx.resStack), fx.resStackAll, fx.staggerDur, fx.staggerDurCodex, fx.castRefund, fx.castStack, fx.statusDur, fx.debuffDur, fx.healOut, fx.potion, fx.coolMinus].some(v => v !== 0);
         return {
             [magic ? 'atk_magic' : 'atk_physical']: atk,
             // **평타는 언제나 물리다** [2026-10-02 · 사용자 확정 · R198 · battle_design §2-1 — ~~원소 옵션이 없는 마법 무기의 기본 공격은 물리~~(09-11 · R80) 대체].
@@ -1032,6 +1037,7 @@ export function createHeroSystem(data) {
             basic_attack: !magic,
             level: hero.level,                 // 적중률의 공격자 레벨 (§9-4)
             hp_max: hpMax,
+            hp_per_vit: units * attrCoef.vit.per * (1 + f('hp_pct')),
             // 갑옷 오만 「레벨당 방어력」은 **더하기**다 — 영웅 레벨 × 값 [2026-09-16 · item_design §1 「갑옷 옵션」]. 베이스 옵션 % 는 위 아이템 루프에서 고유값에만 곱했다
             defense: f('def_flat') + f('def_per_level') * hero.level,
             ...Object.fromEntries(ELEMENTS.map(e => [`res_${e}`, resAll + f(`res_${e}`)])),
@@ -1151,8 +1157,29 @@ export function createHeroSystem(data) {
         return hero;
     }
 
+    /** 전투 중 기본 능력치가 바뀔 때, 장비와 라운드 보정을 유지한 채 바뀌는 값만 돌려준다. */
+    function withBattleStats(u, stats) {
+        const old = u.stats;
+        const speed = speedCoef(old.agi) / speedCoef(stats.agi);
+        const periodRaw = u.periodRaw * speed;
+        const luck = F.statCoef(stats.luck) / F.statCoef(old.luck);
+        const find = attrMult('luck', stats.luck) / attrMult('luck', old.luck);
+        const duration = cha => Number.isFinite(cha) ? 1 - B.cha_debuff_dur_step_pct * (cha - B.attr_dmg_pivot) : 1;
+        const perVit = u.hpPerVit ?? (hpUnitSum[u.lvl] ?? 0) * attrCoef.vit.per;
+        return {
+            stats, mainMult: u.mainMult * F.statCoef(stats.str) / F.statCoef(old.str),
+            hpMaxBase: Math.round(u.hpMaxBase + ((stats.vit ?? 0) - (old.vit ?? 0)) * perVit),
+            periodRaw, basePeriod: Number(Math.max(B.period_floor_sec, periodRaw / (1 + u.speedBase)).toFixed(3)),
+            critDmg: 1 + (u.critDmg - 1) * luck,
+            mcond: u.mcond?.map(m => m.stat === 'crit_damage' ? { ...m, v: m.v * luck } : m) ?? null,
+            ddr: 1 - (1 - u.ddr) * duration(stats.cha) / duration(old.cha),
+            goldFind: F.roundPct((u.goldFind ?? 0) * find), itemFind: F.roundPct((u.itemFind ?? 0) * find),
+            magicFind: F.roundPct((u.magicFind ?? 0) * find),
+        };
+    }
+
     return {
-        fillZh,
+        withBattleStats, fillZh,
         rollAttributes, rollAttributesTrace, attrCenters, rollTier, rollInnate, rollFace, rollHero, rollStartParty, rollCandidates, avoidNames, rollHeroOf, rollGoblin, xpNeeded, starXpNeeded, grantXp, computeCombat, finalDamagePerSec,
         masteryNodes, masteryById, masteryNodesFor, migrateMasteryRanks, masteryBonus, masteryWiden, masteryRowKey, masteryRowUsed, masteryPickOneBlocked, masteryRowOpen, masteryRowHeld, gateOn, sinGearCount, levelScaled,
         weaponTrait: groupId => (weaponTraitLines[groupId] ?? []).map(l => ({ ...l })),   // 무기군 특성 줄 — 전투 합산과 같은 모양(사본 · R443)

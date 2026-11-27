@@ -761,13 +761,18 @@ const ATTRS = [
     u => {
         let up = 0, down = 1;
         for (const b of Object.values(u.buffs)) if (b.stat === 'def_pct') { if (b.v < 0) down *= Math.max(0, 1 + b.v); else up += b.v; }
-        u.def = u.defBase > 0 ? defScaled(u.defBase, up + sumOf(u, 'guard_pct')) * down : u.defBase;
+        u.def = u.defBase > 0 ? defScaled(u.defBase, up + sumOf(u, 'guard_pct')) * down * (u.tacCurseKeep ?? 1) : u.defBase;
     },
     // 저항 = 밑수 + 외침(guard · 전 원소) + 레지스탕스 실드(res_pct · 전 원소) 에 원소 하나의 창(무기 옵션 · `element` 칸만)을 **창 순서대로** 더한다
     u => {
         const guard = sumOf(u, 'guard_pct') + sumOf(u, 'res_pct');
         for (const k of Object.keys(u.res)) u.res[k] = u.resBase[k] + guard;
         for (const b of Object.values(u.buffs)) if (b.stat === 'res_elem' && b.element in u.res) u.res[b.element] += b.v;
+        if (u.tacCurseKeep !== undefined) {
+            // Keep the unscaled values for resistance bonuses that apply only to one hit.
+            u.tacResBeforeCurse = { ...u.res };
+            for (const k of Object.keys(u.res)) if (u.res[k] > 0) u.res[k] *= u.tacCurseKeep;
+        }
     },
     // 최대 HP — 닫힐 때 넘친 HP 를 깎는다(열 때 늘어난 만큼 현재 HP 를 올리는 것은 `EFFECTS.hp_max_pct.apply`)
     u => {

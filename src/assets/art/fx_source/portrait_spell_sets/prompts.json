@@ -1,0 +1,475 @@
+{
+  "direction": {
+    "orrery": "CELESTIAL ENGRAVING. Delicate antiqued brass astronomical instruments temporarily traced in empty air. Each action becomes open analytical fine gold/ivory drafting strokes, interrupted construction arcs, compass teeth, tiny gauge ticks, pointer vanes and bright punched stars. Mostly negative space, a few thick wax-white focal strokes to survive at 85px. Hand-cut copperplate instruments of a medieval astrologer. NOT a coin or static circle around everything, tailoring the diagram's envelope to its trajectory. Metal warm brass, cream, occasional muted element-colored tracer. No wide glows.",
+    "vitrail": "SHATTERED CATHEDRAL GLASS. Each action is a sculptural flying cluster of uneven, handcut translucent jewel panes with midnight lead cames. Concentrate ruby, amber, teal, cobalt, amethyst glass locally, a dominant color per skill. Directional facets and broken triangular splinters with sharp pearl rim lights and pale reflections. Asymmetrical, large bold pieces and holes open to the portrait behind. A tangible flat medieval stained-glass artwork breaking apart into space. NO intact windows, NO enclosing panel, no frame, no circles around each sprite, no glows.",
+    "wraith": "PHANTOM FLAME. Dark-fantasy ethereal volumetric VFX, high-end hand-painted realistic, loose and fiercely directional. Long sinuous wisps of luminous mist flow into and out of each gesture, with lost-and-found edges, thin trails fading to genuinely clear alpha and a small incandescent core. Subtle silvery-blue ghostlight with distinct warm fire, glacial cyan, venom green, crimson curses and soft sage healing accents as appropriate. Flowing organic vapor, flame lick filaments, ember motes. NO outlines, NO circles or glyphs, NO jewels, NO architecture. Shapes read in 85px."
+  },
+  "gridPrompt": "Use case: stylized-concept. Production game art asset, an exactly 4 columns x 4 rows transparent sprite atlas containing SIXTEEN deliberately different high quality isolated SKILL EFFECTS. SQUARE composition, regular aligned grid, equal square cells. Each entry is a frozen moment of an action over a gothic dark-fantasy portrait card (portrait NOT depicted). Each sprite fills only its own central 72% with generous fully transparent gutters so the atlas can be precisely sliced. No touching adjacent cells, no grid drawn, no borders, no labels, no characters, no background, no checkerboard. Strong readable central gesture, negative spaces. NOT inventory icons, not badges, no repeated surrounding medallions. All 16 in one art direction: {direction} Exact contents by ROW, left to right: Row 1 = {1} | {2} | {3} | {4}. Row 2 = {5} | {6} | {7} | {8}. Row 3 = {9} | {10} | {11} | {12}. Row 4 = {13} | {14} | {15} | {16}. Keep all four rows and columns equally spaced, transparent alpha through all open space.",
+  "sheetPromptAdditions": {
+    "orrery-6": "CRITICAL export asset requirement: background is empty alpha 0. Each sprite completely isolated. Never paint a gray, mottled, parchment or cloudy surface behind it. Sparse angular hard-edged brass linework with bold ivory needles and dash marks, like an inlaid precision instrument. No ambient haze at all."
+  },
+  "sheets": [
+    [
+      [
+        "war_bash",
+        "a heavy cleaving downward weapon strike; single diagonal cutting wedge"
+      ],
+      [
+        "war_doubleswing",
+        "two slashing crescents crossing as a large X, aligned exactly on the two diagonals"
+      ],
+      [
+        "war_recovery",
+        "two wrapping bands spiralling up to stitch a warrior's wound"
+      ],
+      [
+        "war_leap",
+        "an inverted V of impact pressure plunging to a cracked ground, paired dust shoulders"
+      ],
+      [
+        "war_shout",
+        "wide hollow protective voice wave, outward stepped semicircles with shield teeth"
+      ],
+      [
+        "war_battleorders",
+        "wide hollow life pulse wave with rising heartbeat crests"
+      ],
+      [
+        "war_ironskin",
+        "segmented iron plates locking together against two sides of an open center"
+      ],
+      [
+        "war_frenzy",
+        "three frenzied rising blood-red claw streaks in a narrow diagonal"
+      ],
+      [
+        "war_warcry",
+        "wide hostile barking voice wave with two threatening fangs projecting outward"
+      ],
+      [
+        "war_battlecry",
+        "wide serrated voice shock front tearing an enemy guard open"
+      ],
+      [
+        "kni_resistshield",
+        "faceted protective mantle of elemental resistance surrounding an open center"
+      ],
+      [
+        "kni_holyshield",
+        "tall hollow kite-shield silhouette of consecrated light, open face"
+      ],
+      [
+        "kni_charge",
+        "one strong horizontal lance rushing from left to right, tip on the right"
+      ],
+      [
+        "kni_rush",
+        "two parallel horizontal lance thrusts rightward, one in upper quarter one in lower quarter"
+      ],
+      [
+        "kni_enchant",
+        "a holy sword blade rising through a spiral of amber flame"
+      ],
+      [
+        "kni_might",
+        "power aura with a rising central spear point and two flanking arms"
+      ]
+    ],
+    [
+      [
+        "kni_fanaticism",
+        "accelerating aura with a twin flame split into three upward tongues"
+      ],
+      [
+        "kni_defiance",
+        "unyielding defensive aura, two squat opposing ramparts firmly planted around open center"
+      ],
+      [
+        "kni_sweep",
+        "one massive broad horizontal sweeping blade crescent ending at upper right"
+      ],
+      [
+        "kni_holyfire",
+        "a hanging halo of small rising flames radiates soft sacred fire"
+      ],
+      [
+        "arc_snipe",
+        "one extremely lean horizontal sniper arrow with long streak and a precise bright right-facing tip"
+      ],
+      [
+        "arc_rapid",
+        "THREE straight horizontal arrows pointed right, ONE each at y 17%, 50%, 83%, parallel, no crossing"
+      ],
+      [
+        "arc_multishot",
+        "five arrows fanning from one lower-left point to the right in a broad peacock fan"
+      ],
+      [
+        "arc_guided",
+        "one homing arrow swerving along a clearly visible S trajectory"
+      ],
+      [
+        "arc_pierce",
+        "one forward arrow punches through a series of three broken transverse barriers"
+      ],
+      [
+        "arc_poison",
+        "toxic green venom drips from a barbed arrowhead"
+      ],
+      [
+        "arc_coldarrow",
+        "icy cyan arrowhead growing long icicles and star frost"
+      ],
+      [
+        "arc_evade",
+        "a low lateral sidestep drawn as two offset disappearing traces"
+      ],
+      [
+        "arc_quickhands",
+        "three short arrow nocks being plucked along a rising diagonal, a staccato volley"
+      ],
+      [
+        "arc_eagleeye",
+        "a keen raptor eye with one gold pupil focused into a sharp rightward wedge"
+      ],
+      [
+        "mag_fireball",
+        "small spherical flame core flying right, long billowing leftward fire tail"
+      ],
+      [
+        "mag_inferno",
+        "wide low fire wall sprouting five distinct vertical flames at a common ground baseline"
+      ]
+    ],
+    [
+      [
+        "mag_iceblast",
+        "single heavy ice spike dropping straight down, point bottom center"
+      ],
+      [
+        "mag_frostnova",
+        "a horizontal frost wave exploding OUTWARD like a wide polar snowflake with hollow center"
+      ],
+      [
+        "mag_lightning",
+        "tall asymmetric fork of lightning striking straight down, main root at bottom center"
+      ],
+      [
+        "mag_chain",
+        "lightning forks LEFT TO RIGHT between three alternating charged nodes"
+      ],
+      [
+        "mag_ignite",
+        "coiled fire spell being primed, pair of glowing embers nested inside a hooked flame"
+      ],
+      [
+        "mag_deepfreeze",
+        "freezing spell gathering inward as six icy teeth around a clear core"
+      ],
+      [
+        "mag_surge",
+        "ascending electrical current, two opposed S-shaped arcs interlace vertically"
+      ],
+      [
+        "mag_echo",
+        "one tiny spell spark followed by two receding offset ghost impressions"
+      ],
+      [
+        "pri_judgment",
+        "single narrow downward shaft of holy light with a four-point star where it strikes"
+      ],
+      [
+        "pri_heal",
+        "soft warm healing light spreading as two gently uplifting wing shapes cupping an open center"
+      ],
+      [
+        "pri_grace",
+        "descending benediction, a crown of three falling lights converging on a radiant heart"
+      ],
+      [
+        "pri_haste",
+        "wind blessing, long feather blown upward with swept-back parallel streamlines"
+      ],
+      [
+        "pri_cure",
+        "hands of light cupping a single brilliant healing drop"
+      ],
+      [
+        "pri_regen",
+        "regenerating upward spiral of three luminous leaves springing from a seed"
+      ],
+      [
+        "pri_penitence",
+        "two drooping hooks of violet shadow bow under the weight of a falling tear"
+      ],
+      [
+        "pri_bind",
+        "two taut luminous chains pulled across one another in a binding X"
+      ]
+    ],
+    [
+      [
+        "pri_doom",
+        "ominous dark crimson eclipsed sun, its lower edge drips and splinters downward"
+      ],
+      [
+        "pri_summon",
+        "blood-red inverted five pointed star opening above a shallow summoning rift"
+      ],
+      [
+        "mon_selfdestruct",
+        "violent uneven blast of a rupturing core, jagged outward splinters"
+      ],
+      [
+        "mon_hellfire",
+        "a descending hooked torrent of sulphurous hellfire with clawed flame tips"
+      ],
+      [
+        "mon_ironmaiden",
+        "two spiked jaws leaning inward like a closing iron maiden curse"
+      ],
+      [
+        "mon_goldfever",
+        "a twisting upward fountain of feverish gold coins and flecks"
+      ],
+      [
+        "mon_mire",
+        "low sticky swamp mire, concentric lopsided ripples interrupted by sinking reeds"
+      ],
+      [
+        "mon_swarm",
+        "a loose diagonal stream of tiny winged flies dividing into two living tendrils"
+      ],
+      [
+        "war_ragnarok",
+        "horned silhouette made from upheaving red volcanic fire pillars"
+      ],
+      [
+        "war_berserk",
+        "two savage red slashes forming the silhouette of an open maul"
+      ],
+      [
+        "war_mutualruin",
+        "one huge dark red diagonal sacrificial sword slash with droplets running toward tip"
+      ],
+      [
+        "war_whirlwind",
+        "three sweeping blade crescents turn around an empty eye, clear whirling spiral"
+      ],
+      [
+        "war_thorswrath",
+        "downward falling broad-headed thunder hammer, impact head at bottom center"
+      ],
+      [
+        "war_shockwave",
+        "earthquake tearing outward from a low fissure throwing rocky scales sideways"
+      ],
+      [
+        "war_divinedescent",
+        "single vertical column of divine light falling through a parted mantle onto an open center"
+      ],
+      [
+        "war_command",
+        "outward blast of command in the shape of a broad soaring pair of wings"
+      ]
+    ],
+    [
+      [
+        "war_intimidate",
+        "a broad sonic shock front shaped like roaring lion fangs and a rippling mane, open center"
+      ],
+      [
+        "kni_lastbastion",
+        "two smaller light streams converge inward onto one larger guardian shield"
+      ],
+      [
+        "kni_unbreakablewill",
+        "three overlapping curved armor plates interlock around an open center"
+      ],
+      [
+        "kni_divinejudgment",
+        "reflective shield sends an incoming streak back on itself in a sharp V"
+      ],
+      [
+        "kni_cleansing",
+        "a cleansing aura of gently falling silver water drops and one open lotus"
+      ],
+      [
+        "kni_offenseaura",
+        "three rising spear tips in a triumphant offensive formation"
+      ],
+      [
+        "kni_elemconvert",
+        "a steel slashing crescent transmuting into flame from left to right"
+      ],
+      [
+        "kni_retribution",
+        "a raised sword wreathed in a branching lightning coil"
+      ],
+      [
+        "kni_condemnation",
+        "one heavy vertical executioner's blade pointing straight down, tip bottom center"
+      ],
+      [
+        "kni_fallingstrike",
+        "vertical knight sword strike plunging through an electric fork, tip bottom center"
+      ],
+      [
+        "mag_meteor",
+        "diagonal meteor, round incandescent crag at LOWER LEFT with a LONG straight burning tail extending to UPPER RIGHT. Head touching bottom near x=30%. No explosion yet"
+      ],
+      [
+        "mag_ember",
+        "three tiny embers kindling a central glowing coal until it cracks open"
+      ],
+      [
+        "mag_hydra",
+        "three fiery serpentine necks emerging from one base, viper heads lunging outward"
+      ],
+      [
+        "mag_frozenorb",
+        "an icy spherical projectile moving RIGHT, compact orb at right with a long horizontal glacial tail to its left"
+      ],
+      [
+        "mag_blizzard",
+        "parallel diagonally falling ice shards in a windblown curtain"
+      ],
+      [
+        "mag_frostarmor",
+        "two glacial shoulder plates and high ice collar framing a clear center"
+      ]
+    ],
+    [
+      [
+        "mag_thunderstrike",
+        "one strong purple-white lightning bolt falling from top to one distinct point at bottom center"
+      ],
+      [
+        "mag_nova",
+        "outward electric shock wave, sharp arcs leaping around a hollow expanding corona"
+      ],
+      [
+        "mag_thundergod",
+        "three almost parallel vertical lightning strokes converging at one small strike point"
+      ],
+      [
+        "arc_trueaim",
+        "four converging arrow sights align on a single tiny golden point in clear center"
+      ],
+      [
+        "arc_singlestrike",
+        "a long horizontal power shot flying right, heavy bright head on RIGHT edge with a long taut wake to left"
+      ],
+      [
+        "arc_reload",
+        "three arrow nocks wheeling clockwise around an open space, one folding back into place"
+      ],
+      [
+        "arc_quickdraw",
+        "short bow releasing early, one short string snap, brisk compact arc"
+      ],
+      [
+        "arc_overdraw",
+        "longbow strained to full draw, two deeply bowed limbs and one taut arrow"
+      ],
+      [
+        "arc_chaindraw",
+        "several rightward arrows emerge one after another through staggered openings"
+      ],
+      [
+        "arc_huntersmark",
+        "red hunter's quarry mark as a split antler shape around a single small central point"
+      ],
+      [
+        "arc_supportingfire",
+        "a fanned quiver raised upright with a detached forward arrow poised to assist"
+      ],
+      [
+        "arc_trap",
+        "two low spring-loaded toothed jaws snapping together from below"
+      ],
+      [
+        "pri_endure",
+        "one candle-like living spark protected inside a narrow upright arch"
+      ],
+      [
+        "pri_purify",
+        "a falling water droplet dissolving a broken dark chain into light"
+      ],
+      [
+        "pri_resurrection",
+        "a large rising pair of luminous wings lifting a spark up from ground"
+      ],
+      [
+        "pri_punishment",
+        "a single tall black-violet divine spear hanging straight down, tip bottom center"
+      ]
+    ],
+    [
+      [
+        "pri_atonement",
+        "a crimson sacrificial drop drawn between two cupped hooked streams"
+      ],
+      [
+        "pri_excommunication",
+        "a divided halo broken in two by a diagonal severing stroke"
+      ],
+      [
+        "pri_diamondbody",
+        "an adamantine diamond lattice hardening around an open central figure-shaped space, no person"
+      ],
+      [
+        "pri_sweep",
+        "a monk staff traces a wide low horizontal crescent with splintering dust"
+      ],
+      [
+        "pri_counter",
+        "an incoming downward blow turned into a sharp rising riposte, open elbow shape"
+      ],
+      [
+        "charge_gather",
+        "separate inward-tapering streams around the circumference rushing toward a clear center, four primary directions, gaps between"
+      ],
+      [
+        "mag_iceblast_shatter",
+        "ice impact burst on ground, a low fan of shattered cyan splinters flying upward from bottom center"
+      ],
+      [
+        "war_mutualruin_impact",
+        "blood-red sacrifice slash detonating into crossed jagged shards and dark droplets"
+      ],
+      [
+        "war_thorswrath_impact",
+        "indigo thunder hammer impact with two bright low sideways blasts from bottom center"
+      ],
+      [
+        "kni_condemnation_impact",
+        "holy execution impact, brilliant gold cross-shaped starburst radiating from CENTER"
+      ],
+      [
+        "mag_meteor_impact",
+        "mighty meteor strikes ground, billowing ochre fire and rock explosion rising and flaring outward from bottom center, separate debris"
+      ],
+      [
+        "mag_frozenorb_impact",
+        "blue frozen orb bursts into jagged radial ice splinters, center clearly visible"
+      ],
+      [
+        "mag_thunderstrike_impact",
+        "small low violet electric ground discharge scattering branching arcs from BOTTOM CENTER"
+      ],
+      [
+        "arc_singlestrike_impact",
+        "golden arrow impact creates a tiny central pierced opening, a rightward plume of splinters"
+      ],
+      [
+        "pri_punishment_impact",
+        "black-violet divine detonation like a split crown erupting from bottom center"
+      ],
+      [
+        "arc_supportingfire_hit",
+        "a single slim assisting arrow arcing diagonally down and right with short feather wake"
+      ]
+    ]
+  ]
+}

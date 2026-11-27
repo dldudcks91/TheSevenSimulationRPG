@@ -289,7 +289,7 @@
 :root[data-mobile-landscape] .main .ex-map-wrap.fill { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); grid-template-rows: 44px minmax(0,1fr); gap: 6px; padding: 5px; }
 :root[data-mobile-landscape] .ex-map-wrap > .ex-map { grid-column: 1; grid-row: 1 / -1; width: 100%; min-width: 0; align-self: center; }
 :root[data-mobile-landscape] .ex-map-wrap > .mobile-group-selector { grid-column: 2; grid-row: 1; }
-:root[data-mobile-landscape] .ex-map-wrap > .mobile-explore-spots { grid-column: 2; grid-row: 2; width: 100%; min-width: 0; }
+:root[data-mobile-landscape] .ex-map-wrap > .mobile-explore-spots { grid-column: 2; grid-row: 1 / -1; width: 100%; min-width: 0; }
 :root[data-mobile-landscape] .ex-map-wrap > .ex-pop { display: flex; }
 :root[data-mobile-landscape] .mobile-research-line:not(.mobile-group-hidden) { gap: 5px 0; padding: 5px; }
 :root[data-mobile-landscape] .dp-tree.mobile-pane { padding: 5px; gap: 5px; }

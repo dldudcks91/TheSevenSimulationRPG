@@ -355,9 +355,10 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
 
     /** 같은 층 = 같은 팀 — 시드를 층 번호로 판다(rng 를 안 받는다). 이름만 `taken` 을 피해 바뀔 수 있다(rng 0) ·
      *  작전 카드는 따로 판 줄(`colosseum_seed ^ FLOOR_TACTIC_SALT`)로 굴린다 — 같은 층 = 같은 카드 (R460 · R586) */
-    function rollFloorOpponent(no, taken = []) {
+    function rollFloorOpponent(no, taken = [], classes = null) {
         const F = floorAt(no);
-        return rollKit(F.kit, makeRng(deriveSeed(B.colosseum_seed, no)), taken, { tacticRng: floorTacticRng(no) });
+        return rollKit(F.kit, makeRng(deriveSeed(B.colosseum_seed, no)), taken, { tacticRng: floorTacticRng(no) },
+            classes ? { heroes: classes.map(cls => ({ cls })) } : null);
     }
     const floorAt = no => FLOORS.find(f => f.no === no) ?? (() => { throw new Error(`arena: 모르는 층 '${no}'`); })();
     const floorTacticRng = no => makeRng(deriveSeed(B.colosseum_seed ^ FLOOR_TACTIC_SALT, no));
@@ -604,7 +605,7 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
         return out;
     }
 
-    function importTeam(payload) {
+    function importTeam(payload, codex = {}) {
         const problems = validateTeam(payload);
         if (problems.length) return { ok: false, problems };
         const items = {}, ranks = {};
@@ -622,12 +623,27 @@ export function createArenaSystem({ hero, item, skill, battle, tactic = null, ba
             return h;
         });
         // 전투 능력치는 여기서 다시 계산한다 — payload 에는 능력치가 없다(올린 쪽 숫자를 안 믿는다) · 전술도 다시 잰다 · 물약은 표에서 (R460)
-        return { ok: true, team: snapshotTeam(heroes, items, ranks, { tactic: ghostTactic(payload, heroes, items) }), loadout: ghostLoadout(payload) };
+        return { ok: true, team: snapshotTeam(heroes, items, ranks, { codex, tactic: ghostTactic(payload, heroes, items) }), loadout: ghostLoadout(payload) };
+    }
+
+    function fightTagSeries(parties, opponents, rng) {
+        if (parties.length !== 3 || opponents.length !== 3) throw new Error('arena: expected three parties per side');
+        const rounds = [];
+        let win = 0, loss = 0;
+        for (let slot = 0; slot < 3 && win < 2 && loss < 2; slot++) {
+            const mine = parties[slot], other = opponents[slot];
+            const result = fight(mine.team, other.team, rng, mine.loadout, other.loadout);
+            const outcome = result.reason === 'timeout' ? 'draw' : result.won ? 'win' : 'loss';
+            if (outcome === 'win') win++;
+            if (outcome === 'loss') loss++;
+            rounds.push({ no: mine.no, opposingNo: other.no, team: mine.team, opponent: other.team, outcome, result });
+        }
+        return { rounds, win, loss, outcome: win === 2 ? 'win' : loss === 2 ? 'loss' : 'draw' };
     }
 
     return {
         teamSize, tiers: TIERS.map(t => clone(t)), floors: clone(FLOORS),
-        snapshotTeam, rollOpponent, fight,
+        snapshotTeam, rollOpponent, fight, fightTagSeries,
         rollTierOpponent, rollFloorOpponent, floorLoadout, rollRatedCandidates, tierOfRating, kitOfRating: r => clone(kitOfRating(r)),
         exportTeam, validateTeam, importTeam,
         // 차림 하나로 AI 팀 하나 — 탐험 상단 의뢰의 습격 팀(state 가 그 판 차림을 넘긴다 · 2026-11-26 · R590 · INTERFACE §2-17) · rng 순서는 `rollTierOpponent` 와 같은 길

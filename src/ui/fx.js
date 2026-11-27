@@ -2,7 +2,7 @@
  * fx.js — 관전 연출 = **스킬 이펙트** (2026-09-28 사용자 지시 · SCREEN_DESIGN §4-2 「연출」 · ADR-0409)
  *
  * **스킬에만** 선다 — 스킬로 난 피해 · 회복 · 창 · 방벽 · 불러내기. 반사 · 물약은 연출이 없다(숫자만 뜬다).
- *   전사 기본 스킬은 스킬별 투명 이미지(ADR-0515), 나머지는 코드로 그린 빛과 조각이다. 기본 켜짐 · `⚙` 설정 탭에서 끈다(ADR-0413 · ADR-0414).
+ *   현재 스킬은 고른 그림체의 투명 이미지를 사용한다. 기본 켜짐 · `⚙` 설정 탭에서 끈다.
  * **기본 공격 이펙트**(기본 공격 · 반격)는 스킬 이펙트와 따로 켠다(기본 켜짐) — **무기와 상관없이** 스킬 물리 베기와 같은 대각선 한 줄이고 색은 무채색이다.
  *   스킬 이펙트(피해 종류 색)와는 **색으로** 갈린다 (2026-10-03 · ADR-0501 · 굵기 ADR-0504 · 모양 ADR-0505).
  *   종류 공통 그림은 **꺼 둔다**(`ART_ON` · ADR-0412). 기본 직업 스킬 이미지는 `SKILL_ART`의 별도 장치로 표시한다.
@@ -20,7 +20,7 @@
  * **스킬마다 생김새가 다르다** — 이미지 표는 skill_art.js, 코드 조각(`PIECES`)의 표는 skill_looks.js다(ADR-0511 · ADR-0515).
  */
 import { SKILL_LOOKS } from './skill_looks.js';
-import { SKILL_ART, CHARGE_ART, ART_STYLES, ART_DEFAULT, artFile, chargeStyle } from './skill_art.js';
+import { SKILL_ART, CHARGE_ART, ART_STYLES, ART_DEFAULT, artFile } from './skill_art.js';
 
 /* ═══ 켜고 끄기 — `⚙` 판의 설정 탭이 건다 (SCREEN_DESIGN §2-2 · ADR-0413 · ADR-0414) ═══ */
 
@@ -474,6 +474,7 @@ const ART_ON = false;
 /* `src/assets/art/fx/<종류>.webp` — 켜면 관전이 설 때 한 번 읽어 둔다(`fxPreload`). 읽힌 종류만 그림이고 나머지는 위의 코드 모양이 선다
    (경로는 연출과 같이 들고 나가도록 여기 둔다 — 다른 그림 경로는 mock.js 가 든다) */
 const ART_DIR = './assets/art/fx/';
+export const skillArtUrl = file => `${ART_DIR}skills/${file}.webp`;
 const ART_KINDS = ['physical', 'fire', 'cold', 'lightning', 'poison', 'blast', 'heal', 'buff', 'debuff', 'barrier'];
 const art = new Map();   // 종류 → 읽힌 주소 (읽히기 전 · 파일이 없는 종류는 비어 있다)
 let preloaded = false;
@@ -493,7 +494,7 @@ const loadSkillArt = file => {
         const im = new Image();
         im.onload = () => { skillArt.set(file, im.src); resolve(); };
         im.onerror = () => resolve();   // 읽기 실패가 관전 부팅을 막지 않는다 — 그 칸은 코드 조합으로 선다
-        im.src = `${ART_DIR}skills/${file}.webp`;
+        im.src = skillArtUrl(file);
     }));
     return skillLoad.get(file);
 };
@@ -503,7 +504,7 @@ export function fxPreload(style = artPref, skills = Object.keys(SKILL_ART), char
         const d = styled(x, style);
         return [d.file, d.then?.file];
     })).filter(Boolean));
-    if (charge) files.add(artFile(CHARGE_ART.file, chargeStyle(style)));   // 모으기의 기운 — 시전 방식이 부른다 · 그림체는 CHARGE_ART 가 정한다 (ADR-1252 · ADR-1270 · ADR-1379)
+    if (charge) files.add(artFile(CHARGE_ART.file, style));
     files.delete(null);
     if (!preloaded && ART_ON) {
         preloaded = true;
@@ -547,11 +548,6 @@ function skillStamp(L, s, kind, x) {
             stampArt(L, s, d, x.crit, dl);
         }
     }
-    // 강화 · 회복엔 같은 색의 훑음도 선다. 함성은 세 겹의 충격파만 띄운다.
-    if ((kind === 'buff' || kind === 'heal') && def.motion !== 'shout') {
-        const look = SKILL_LOOKS[s]?.[kind] ?? SKILL_LOOKS[s]?.buff ?? [];
-        PIECES.sweep(L, { c: (look.find(([name]) => name === 'sweep') ?? look[0])?.[1]?.c ?? 'gold' }, x);
-    }
     // 두 장이면 흔들림은 둘째 그림(터짐)이 설 때 — 메테오 · 토르의 분노 (ADR-0550)
     if (def.quake) PIECES.quake(L, { dl: def.then && skillArt.has(def.then.file) ? def.duration : 0 }, x);
     return true;
@@ -565,7 +561,7 @@ function stampArt(L, s, def, crit, dl, part = null) {
     const [ax, ay] = def.anchor ?? [.5, def.ay ?? .5];
     const ox = (.5 - ax) * size;
     const oy = (.5 - ay) * size + ((def.targetY ?? .5) - .5) * height;
-    const im = spawn(L, `fx-skill-stamp fx-skill-${def.motion}${crit ? ' crit' : ''}`, {
+    const im = spawn(L, `fx-skill-stamp fx-look-${artStyle} fx-skill-${def.motion}${crit ? ' crit' : ''}`, {
         sz: px(size), t: ms(def.duration),
         ...(ox && { ox: px(ox) }),
         ...(oy && { oy: px(oy) }),
@@ -659,7 +655,8 @@ export function fxHeal(state, d, ev) {
 export function fxBuff(state, u, ev) {
     if (!ev.s || ev.until === null || !fxShown(state, 'skill') || !live(state, u)) return;
     prep(state, u);
-    const kind = ev.stat === 'barrier_pct' ? 'barrier' : (ev.stat === 'duel' || ev.k || (ev.v ?? 0) < 0) ? 'debuff' : 'buff';
+    const harmful = ev.stat === 'duel' || ev.stat === 'maiden' || ev.stat === 'atone' || ev.k || (ev.v ?? 0) < 0;
+    const kind = ev.stat === 'barrier_pct' ? 'barrier' : harmful ? 'debuff' : 'buff';
     const L = layerOf(u), look = SKILL_LOOKS[ev.s], list = kind === 'debuff' ? (look?.bad ?? look?.buff) : look?.buff;
     if (L.childElementCount > FX_CAP) return;
     asSkill(L, () => {
@@ -670,7 +667,7 @@ export function fxBuff(state, u, ev) {
     });
 }
 /* 모으기 (ADR-1252 · ADR-1255) — 모으는 동안 카드는 나간 채 서 있고 기운 그림만 초상 둘레에서 안으로 빨려 든다 · 쏘는 방에 초상이 번쩍하며 카드가 앞으로 튄다.
-   번쩍 · 튐은 「공격 시 흔들림」, 기운 그림은 「스킬 이펙트」(투명도)를 따르고 그림체는 `chargeStyle` — 고른 그림체에 제 판이 있으면 그것 · 없으면 `CHARGE_ART.style`(ADR-1270 · ADR-1379) · 카드는 떨지도(ADR-0723) 물러나지도 줄지도(ADR-1255) 않는다 ·
+   번쩍 · 튐은 「공격 시 흔들림」, 기운 그림은 「스킬 이펙트」의 투명도와 그림체를 따른다 ·
    튐의 길이 · 방향은 style.css 가 든다 */
 const chargeGather = card => card.querySelector(':scope > .fx-layer > .fx-charge-gather');
 /** 재생기가 카드를 갱신할 때마다 부른다 — `p` = 모은 몫(0 → 1 · 쏘기 전 · 거꾸로 닳는 게이지의 반대) · 모으지 않으면 null. 되감는 동안은 재생기가 안 부른다 */
@@ -679,14 +676,16 @@ export function fxCharge(state, u, p) {
     if (!card?.isConnected) return;
     const on = p != null && state.motion !== false;
     let g = chargeGather(card);
-    const file = artFile(CHARGE_ART.file, chargeStyle(artStyle));
+    const file = artFile(CHARGE_ART.file, artStyle);
     if (!on || !fxShown(state, 'skill') || !file || !skillArt.has(file)) { g?.remove(); return; }
+    if (g && g.dataset.file !== file) { g.remove(); g = null; }
     if (!g) {
         prep(state, u);
         const L = layerOf(u);
         asSkill(L, () => {
             g = document.createElement('span');
             g.className = 'fx-charge-gather';
+            g.dataset.file = file;
             g.style.setProperty('--sz', px(CHARGE_ART.size));
             g.style.setProperty('--t', ms(CHARGE_ART.duration));
             // 한 장이 바깥에 나타나 가운데 한 점으로 빨려 들어가 사라지고 다시 나타난다(style.css · 돌지 않는다 — ADR-1273 · ADR-1274).

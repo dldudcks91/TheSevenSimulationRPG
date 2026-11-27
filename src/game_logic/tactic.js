@@ -45,8 +45,8 @@ export function createTacticSystem(data) {
     /** 칸 번호 `'1'` ~ `'n'`(갈래 없음 · 세이브 키) — **이 순서로 지휘 천막 1 · 2 · 3랭크가 연다** · 층 AI 팀의 카드 굴림 순서 · `rulesOf` 를 부르는 쪽의 순서 (INTERFACE §5-3 · 2026-11-27) */
     if (!(Number.isInteger(data.slotCount) && data.slotCount >= 1)) throw new Error(`tactic: 칸 수 ${data.slotCount} — 1 이상 정수 (balance.csv:tactic_slot_count)`);
     const SLOTS = Array.from({ length: data.slotCount }, (_, i) => String(i + 1));
-    /** 태그 id — 영문 소문자로 시작하는 낱말(이름은 i18n `tc.tag.<id>`) · 어휘는 CSV 가 정한다 */
-    const TAG_ID = /^[a-z][a-z0-9_]*$/;
+    /** 작전 카드의 다섯 태그. 카드별 배정은 tactic_card.csv, 표시 이름은 tc.tag.<id>. */
+    const TAGS = ['formation', 'support', 'attack', 'stratagem', 'morale'];
     /**
      * 카드 규칙 어휘 — 규칙마다 받는 수치 칸(p1 ~ p3)의 종류: `sec` = 초(0 보다 크다) · `frac` = 몫(0 초과 1 이하) · 없는 칸은 `-`.
      *   이 밖의 규칙은 로드 시 throw · 전투 해석은 battle.js (INTERFACE §2-6) · 뜻은 tactic_card_design §4
@@ -63,6 +63,21 @@ export function createTacticSystem(data) {
         poison_arrow: ['frac'],
         fire_arrow: ['frac', 'frac'],
         baggage: ['frac'],
+        guardian: ['frac'],
+        unity: ['frac', 'count'],
+        dying_curse: ['frac', 'count'],
+        giant: ['frac'],
+        desperate_charge: ['frac'],
+        mutual_cover: ['frac'],
+        open_order: ['frac'],
+        last_stand: [],
+        pursuit: [],
+        crane_wing: ['frac'],
+        field_medics: ['frac'],
+        vanguard_barrier: ['frac'],
+        aimed_fire: ['frac'],
+        focused_fire: ['frac'],
+        rapid_deployment: ['frac'],
     };
     const RULES = Object.keys(RULE_PARAMS);
     /** 죄종 — 옵션 · 카드의 어휘 · 판 데이터(`gear` · `score`)의 순서 */
@@ -181,8 +196,8 @@ export function createTacticSystem(data) {
         const bad = why => { throw new Error(`tactic: 카드 ${id} — ${why}`); };
         if (!id) bad('card_id 가 없다');
         if (cardById[id]) bad('card_id 가 두 번 나온다');
-        const tag = dash(row.tag);
-        if (tag !== null && !(typeof tag === 'string' && TAG_ID.test(tag))) bad(`tag '${row.tag}' — 영문 소문자 낱말 또는 -`);
+        const tag = row.tag;
+        if (!TAGS.includes(tag)) bad(`tag '${tag}' — 어휘는 ${TAGS.join('/')}`);
         const starter = dash(row.starter);
         if (starter !== null && !SLOTS.includes(String(starter))) bad(`starter '${row.starter}' — 칸 번호 ${SLOTS.join('/')} 또는 -`);
         if (!SINS.includes(row.sin)) bad(`sin '${row.sin}' — 어휘는 ${SINS.join('/')}`);
@@ -195,6 +210,7 @@ export function createTacticSystem(data) {
         ps.forEach((v, k) => {
             const kind = kinds[k];
             if (!kind) { if (v !== null) bad(`p${k + 1} '${v}' — ${row.rule} 는 이 칸을 안 받는다(-)`); return; }
+            if (kind === 'count' && !(Number.isInteger(v) && v > 0)) bad(`p${k + 1} '${v}' — 양의 정수여야 한다`);
             if (kind === 'sec' && !(typeof v === 'number' && v > 0)) bad(`p${k + 1} '${v}' — 초는 0 보다 크다`);
             if (kind === 'frac' && !(typeof v === 'number' && v > 0 && v <= 1)) bad(`p${k + 1} '${v}' — 몫은 0 초과 1 이하`);
         });
@@ -209,6 +225,8 @@ export function createTacticSystem(data) {
         const n = cards.filter(c => c.starter === s).length;
         if (n !== 1) throw new Error(`tactic: 칸 ${s} 의 첫 카드가 ${n} 장 — 정확히 한 장 (tactic_card.csv:starter)`);
     }
+    if (new Set(cards.filter(c => c.starter !== null).map(c => c.tag)).size !== SLOTS.length)
+        throw new Error('tactic: 첫 카드들은 함께 장착할 수 있도록 태그가 달라야 한다');
     const copyCard = c => (c ? { ...c } : null);
 
     /* ── 줄 ── */
@@ -367,13 +385,13 @@ export function createTacticSystem(data) {
     };
     /**
      * 막는 카드 — `cardId` 를 `others`(같은 편성의 **다른** 칸에 든 카드 id — 칸 순)와 같이 낄 수 없게 하는 첫 카드 id · 없으면 null.
-     *   같은 카드 → 같은 태그(태그 `-` 끼리는 안 막는다) 순으로 본다 · 모르는 카드는 건너뛴다 · rng 0 (PLAN_tactic_tags D3)
+     *   같은 카드 → 같은 태그 순으로 본다 · 모르는 카드는 건너뛴다 · rng 0 (PLAN_tactic_tags D3)
      */
     function blockOf(cardId, others) {
         const c = cardById[cardId];
         if (!c) return null;
         const list = (others ?? []).filter(id => cardById[id]);
-        return list.find(id => id === c.id) ?? (c.tag === null ? null : list.find(id => cardById[id].tag === c.tag) ?? null);
+        return list.find(id => id === c.id) ?? list.find(id => cardById[id].tag === c.tag) ?? null;
     }
     /** 막는 까닭 — `'sameCard'` · `'sameTag'` · 막는 카드가 없으면 null (장착 거절 코드 · PLAN_tactic_tags D6) */
     const blockWhy = (cardId, others) => {
@@ -389,8 +407,7 @@ export function createTacticSystem(data) {
         // 규칙마다 받는 수치 칸의 종류(`sec` · `frac`) — battle.js `TACTIC_RULES` 와 같은 목록이어야 한다(단정이 대조한다 · 모듈끼리 import 하지 않는다)
         RULE_PARAMS: Object.fromEntries(RULES.map(r => [r, RULE_PARAMS[r].slice()])),
         cards: cards.map(copyCard), cardById: id => copyCard(cardById[id]),
-        // 태그 — 표에 나오는 순서 · 첫 카드 — 칸 번호가 주는 카드 (2026-11-27 · PLAN_tactic_tags D2 · D5)
-        tags: [...new Set(cards.map(c => c.tag).filter(t => t !== null))],
+        tags: TAGS.slice(),
         starterOf: slot => cards.find(c => c.starter === slot)?.id ?? null,
         blockOf, blockWhy,
         families: families.map(f => ({ ...f })), familyIds, sinList: SINS.slice(),

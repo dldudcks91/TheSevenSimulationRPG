@@ -1,5 +1,7 @@
 # 간체 중국어(zh-CN) 현지화 — 방향
 
+2026-11-27부터 상단 언어 목록에서 한국어, 영어, 중국어 간체·번체(대만), 일본어, 스페인어(스페인), 포르투갈어(브라질), 러시아어, 독일어, 프랑스어를 선택할 수 있다. 추가 언어의 화면 문구와 데이터 번역은 `src/ui/locales/`에 있다. 새 문구를 추가한 뒤 `python scripts/check_locales.py`로 누락, 자리표시자, 복수형을 확인한다. 아래 D7은 간체판 도입 당시의 조작 방식이다.
+
 > **상태: D1 ~ D10 확정(2026-11-16 사용자 「ㄱㄱ진행해줘」 — 모두 권장안) · 1차 완료(DEV_PLAN R520).** 배관 · 글꼴 · 번역이 다 붙었다 — 빠진 zh 0 · 역번역 검토 표본 166(검토 보고 [REVIEW.md](../../output/2026-11-16_zh_localization/REVIEW.md)). 남은 것은 출시 전 원어민 검수(§6)와, 새 문구가 생길 때 빠진 목록(`python scripts/zh_missing.py --list`)을 몰아서 옮기는 일(D5). 작업 도구 · 덩어리는 [output/2026-11-16_zh_localization/README.md](../../output/2026-11-16_zh_localization/README.md).
 > 근거 노트(조사 2026-11-16) — [비교작 · 중국 유저 반응 · Steam](../reference/zh_localization/comparable_games.md) · [ARPG 용어집](../reference/zh_localization/arpg_glossary.md) · [웹 기술(글꼴 · 줄바꿈 · 숫자)](../reference/zh_localization/web_tech.md) · [코드 속 문구 경로(조사 시점 줄 번호)](../reference/zh_localization/codebase_text_survey_2026-11-16.md)
 

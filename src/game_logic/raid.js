@@ -191,7 +191,7 @@ export function createRaidSystem({ battle, arena, game, monsters = {}, chapters 
             const byKey = new Map(ctx.party.map(u => [u.key, u]));
             for (; cursor < ctx.timeline.length; cursor++) {
                 const e = ctx.timeline[cursor], a = byKey.get(e.a), target = byKey.get(e.d);
-                if (e.e === 'hit' || e.e === 'dot' || e.e === 'blast' || e.e === 'reflect' || e.e === 'pulse') {
+                if (e.e === 'hit' || e.e === 'dot' || e.e === 'blast' || e.e === 'reflect' || e.e === 'pulse' || (e.e === 'tactic' && e.from && e.s === `tactic:${e.card}`)) {
                     const actual = Math.max(0, (e.dmg ?? 0) - (e.ov ?? 0) + (e.cull ?? 0));
                     if (a?.group && e.d === boss.key) contributions[a.group - 1].dealt += actual;
                     if (target?.group) contributions[target.group - 1].taken += actual;

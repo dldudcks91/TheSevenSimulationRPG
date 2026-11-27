@@ -315,7 +315,8 @@ def put(dst: Path, text: str | None = None, copy_from: Path | None = None) -> No
     if copy_from is not None:
         shutil.copyfile(copy_from, dst)
     else:
-        dst.write_text(text, encoding="utf-8", newline="\n")
+        with dst.open("w", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
 
 
 def build_file(src: Path, dst: Path, stats: dict) -> None:
@@ -340,11 +341,11 @@ def is_art_original(p: Path) -> bool:
 
 
 # The menu fetches these images up front (SCREEN_DESIGN §3 · ADR-1080): every built image except the looks the default
-# screen never shows. Keep in step with the defaults — ui/mock.js:BG_STYLES[0] (illustrate) · ui/skill_art.js:ART_DEFAULT (darktoon).
+# screen never shows. Skill effects load on demand for the current battle or codex selection.
 PRELOAD_SKIP = [
     "src/assets/art/backgrounds/gpt/*",
     "src/assets/art/backgrounds/pixel/background_stage_*",
-    "src/assets/art/fx/skills/*_foil.*",
+    "src/assets/art/fx/skills/*",
 ]
 
 # The first batch — what the first screen draws (SCREEN_DESIGN §3 · ADR-1097). The menu buttons wait for these only;
@@ -415,8 +416,11 @@ def plan(with_dev: bool) -> list[tuple[Path, str]]:
     files: list[tuple[Path, str]] = [(ROOT / "index.html", "index.html"), (SRC / "index.html", "src/index.html")]
     for d in ("ui", "game_logic"):
         files += [(p, f"src/{d}/{p.name}") for p in sorted((SRC / d).glob("*")) if p.suffix in (".js", ".css")]
+    files += [(p, f"src/ui/locales/{p.name}") for p in sorted((SRC / "ui/locales").glob("*.js"))]
     files += [(p, f"src/data/{p.name}") for p in sorted((SRC / "data").glob("*.csv"))]
     for p in sorted((SRC / "assets/art").rglob("*")):
+        if p.parent == SRC / "assets/art/fx/skills":
+            continue  # The retired flat sprite sets are kept in the source checkout.
         if p.is_file() and not is_art_original(p) and (p.suffix.lower() in ART_EXT or p.suffix == ".js"):
             files.append((p, p.relative_to(ROOT).as_posix()))
     # 간체 글꼴 서브셋 + 라이선스 (docs/client/LOCALIZATION_ZH.md D6 · scripts/build_zh_font.py) — 그대로 복사

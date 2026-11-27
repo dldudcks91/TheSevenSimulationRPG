@@ -5,7 +5,7 @@
  * 저장은 **엔진 중립 JSON** 이다: 상태 객체 자체가 평문 데이터라 serialize 는 버전 도장만 찍는다.
  * localStorage 접근은 ui/storage.js 어댑터 한 곳에서만 한다 (CLAUDE.md 이식성 규칙 3).
  *
- * 세이브 형식 v55 (2026-11-27 · 작전 카드 칸 키 = 칸 번호 — PLAN_tactic_tags D8)
+ * 세이브 형식 v56 (2026-11-27 · 지점별 탐험권 합산)
  * {
  *   version, seed, createdAt, savedAt,
  *   rosterSlots — 선술집에서 구매한 영웅 보유 칸 수. 기본 한도는 balance.csv 가 정한다.
@@ -17,7 +17,6 @@
  *   labResearch: {line, node, lv, at, until, paid} | null — 하고 있는 연구 하나(연구소 전체에 하나) · 버전 무변경 (2026-10-21 · R298)
  *   labReg: {uid: 줄} — 연구소 줄 등록(`LAB_LINES`). 한 영웅은 한 줄 · 효과 = 능력치 일곱 · 없으면 {} · 버전 무변경 (2026-10-21)
  *   mainMission: {met: [id], got: [id], ev: [event]} — 메인미션(`main_mission.csv`) · 채운 줄 · 받은 줄 · 한 번이라도 일어난 사건 · 버전 무변경 (2026-11-17 · R524)
- *   endless: {cleared} — 무한의 탑 오른 층(`colosseum` 과 같은 모양 · `endlessRecord` 만 바꾼다 · 없으면 0 · 버전 무변경 · 2026-11-19 · R554)
  *   labSince: {uid: ms} — 등록한 시각(숙련) · labClock: {gamble, train, lib} — 도박장 · 훈련 · 도서관 시계(lib = 줄 하나 `{at, carry, rolls}` · R546) · 버전 무변경 (2026-10-21 · R298)
  *   labForge: {slots: [itemUid], make: {heroUid: target}, clocks: {heroUid: {at, carry, rest?}}} — **연구소 대장간 줄 — v51** (2026-11-24 · R574) ·
  *     slots = 줄 공용 장비 칸(장비는 `items` 에 산다 — 아이템 주인 목록이 하나 는다: 가방 · 창고 · 착용 · 이 칸) · make = 영웅마다 「무엇을 만들지」(부위 id | 'potion:<id>') ·
@@ -102,7 +101,7 @@
  *   ~~research: {researchId: level}~~ — 건설 연구 레벨(v37 ~ v43 · 항목이 없어 언제나 {}) · 2026-10-29 걷었다(R195 — 사용자 09-30 「연구 완전히 삭제」 · 로드가 지운다 · 버전 무변경)
  * }
  *
- * **버전** — `deserialize` 는 **v38 ~ v55 를 연다** — 옛 버전은 한 단계씩 올린다. 그 전 세이브(v1 ~ v37)는 던지고 시작 화면이 새 게임으로 받는다
+ * **버전** — `deserialize` 는 **v38 ~ v56 를 연다** — 옛 버전은 한 단계씩 올린다. 그 전 세이브(v1 ~ v37)는 던지고 시작 화면이 새 게임으로 받는다
  *   [2026-09-23 · 사용자 지시 「끊어」 · 다부대]. 다음 버전이 생기면 같은 자리에서 한 단계씩 올린다 (INTERFACE §4)
  */
 
@@ -114,7 +113,7 @@ import { TARGETS as CN_TARGETS } from './construction.js';
 // 의뢰 어휘 — 로드가 모르는 어휘의 카드를 거르는 데만 쓴다(같은 취급 · R153)
 import { AXES as CM_AXES } from './commission.js';
 
-export const SAVE_VERSION = 55;
+export const SAVE_VERSION = 56;
 
 /**
  * @param {object} deps
@@ -383,14 +382,15 @@ export function createGameSystem(deps) {
             tavern: { rerolledAt: null, hired: [] },
             rosterSlots: 0,
             shop: null,      // 상단 목록 `{level, rerolledAt, sold, books}` — 교체도 구매도 한 적 없으면 null(레벨 1 · 교체 가능) (INTERFACE §4)
-            // 탐험 판 (v54 · R590 · INTERFACE §4) — 표 재고 {'지점|장|단|등급': n} · 편성마다 도는 판 · 편성마다 마지막 결과 · 지점마다 완수 수 · 첫 표를 준 지점 (~~explores~~ 옛 시간제)
+            // 탐험 판 (v54 · R590 · INTERFACE §4) — 표 재고 {'장|단|등급': n} · 편성마다 도는 판 · 편성마다 마지막 결과 · 지점마다 완수 수 · 첫 표를 준 지점 (~~explores~~ 옛 시간제)
             exploreTickets: {}, exploreRuns: newRuns(), exploreResults: newRuns(), exploreDone: { cave: 0, ruins: 0, caravan: 0 }, exploreOpened: [],
             joins: [],       // 수색 칸 [{no, hero, arrivedAt, src}] — 도착 순 · 돌려보낼 때까지 남는다 (2026-10-09 · 2026-10-19 · INTERFACE §4)
             visitHeroes: {}, // 수색 시계 {uid: {nextAt, held, rest?, hero?, from, trip}} — `rest` = 그 줄이 꽉 차 선술집에서 쉰다(2026-11-17 R532)
             visitFilter: 'normal',   // 거르기 — 수색이 데려올 최저 등급(normal = 거르지 않음 · 「대기소」 레벨 visit_filter_lv 가 연다 · 2026-11-17 R534) — 수색 줄에 등록한 영웅마다 하나 · `from` · `trip` = 이번 수색을 나선 시각 · 몇 번째 수색인가(이야기만 쓴다 · 2026-11-16 R508) · 아무도 없으면 안 돈다 (2026-11-14 · R492 · ~~기본 시계 `visit`~~ 2026-11-15 삭제)
             arena: freshArena(),       // 결투장 ELO {rating, peak, win, draw, loss} — `arenaRecord` 만 바꾼다 (2026-10-18 · arena_design §8 · INTERFACE §4)
-            colosseum: { cleared: 0 }, // 콜로세움 오른 층 — `colosseumRecord` 만 바꾼다 (2026-10-18 · arena_design §7)
-            endless: { cleared: 0 },   // 무한의 탑 오른 층 — `endlessRecord` 만 바꾼다 (2026-11-19 · R554 · endless_tower_design §0)
+            tagLeague: freshArena(),
+            tagDefense: null,          // 콜로세움에 등록한 세 편성의 방어 순서
+            colosseum: { cleared: 0 }, // 특수전장 시련의 탑 최고 클리어 층
             arenaDefense: null,       // 콜로세움 방어 편성 번호 · null = 등록 안 함 — `setArenaDefense` 만 바꾼다 (2026-11-11 · arena_design §9)
             // 의뢰 게시판 — 빈 채로 시작한다. 선술집을 짓고 화면이 그릴 때 `commissionFill` 이 채운다 (R153)
             commissions: { cards: [], fame: 0, sins: {} },
@@ -693,8 +693,10 @@ export function createGameSystem(deps) {
     function upgradeV53(s) {
         const back = {};
         for (const x of Array.isArray(s.explores) ? s.explores : []) {
-            const key = x && typeof x === 'object' ? ticketKey(x.spot, x.chapter, BASE_DIFF, EX_GRADES[0].id) : null;
-            if (key && ticketParse(key)) back[key] = (back[key] ?? 0) + 1;
+            if (!x || !EXPLORE_SPOTS.includes(x.spot)) continue;
+            const key = ticketKey(x.chapter, BASE_DIFF, EX_GRADES[0].id);
+            const oldKey = `${x.spot}|${key}`;
+            if (ticketParse(key)) back[oldKey] = (back[oldKey] ?? 0) + 1;
         }
         delete s.explores;
         s.exploreTickets = back;
@@ -724,6 +726,36 @@ export function createGameSystem(deps) {
         return s;
     }
 
+    /** v55 → v56. 지점별 잔액을 합치고, 이미 출발한 판은 원래 목적지를 보존한다. */
+    function upgradeV55(s) {
+        const oldTickets = s.exploreTickets;
+        s.exploreTickets = {};
+        function readOldKey(oldKey) {
+            if (typeof oldKey !== 'string') return null;
+            const [spot, ...parts] = oldKey.split('|');
+            const key = parts.join('|');
+            return EXPLORE_SPOTS.includes(spot) && ticketParse(key) ? { spot, key } : null;
+        }
+        for (const [oldKey, n] of Object.entries(oldTickets ?? {})) {
+            const t = readOldKey(oldKey);
+            if (t) exploreAddTickets(s, t.key, n);
+        }
+        for (const entries of [s.exploreRuns, s.exploreResults]) {
+            for (const entry of Array.isArray(entries) ? entries : []) {
+                const t = readOldKey(entry?.key);
+                if (t) Object.assign(entry, t);
+            }
+        }
+        for (const report of Array.isArray(s.reports) ? s.reports : []) {
+            for (const drop of Array.isArray(report?.tickets) ? report.tickets : []) {
+                const t = readOldKey(drop?.key);
+                if (t) { drop.key = t.key; delete drop.spot; }
+            }
+        }
+        s.version = 56;
+        return s;
+    }
+
     /** v38 이후를 연다. 옛 버전은 한 단계씩 올린다. */
     function deserialize(obj) {
         if (!obj || typeof obj !== 'object') throw new Error('save: not an object');
@@ -747,8 +779,19 @@ export function createGameSystem(deps) {
         if (src.version === 52) src = upgradeV52(src === obj ? clone(obj) : src);
         if (src.version === 53) src = upgradeV53(src === obj ? clone(obj) : src);
         if (src.version === 54) src = upgradeV54(src === obj ? clone(obj) : src);
+        if (src.version === 55) src = upgradeV55(src === obj ? clone(obj) : src);
         if (src.version !== SAVE_VERSION)
             throw new Error(`save: version ${obj.version} (expected ${SAVE_VERSION})`);
+        if (DIFFS.some(d => Number.isFinite(d.lastChapter))) {
+            // A wider edition's save must survive opening a narrower demo intact.
+            const records = { ...src.progress?.clearedIn, [BASE_DIFF]: src.progress?.cleared ?? [] };
+            for (const [diff, stages] of Object.entries(records))
+                if (Array.isArray(stages) && stages.some(id => !includesChapter(diff, deps.stages[id]?.chapter)))
+                    throw new Error('save: progress outside available chapters');
+            for (const run of src.runs ?? [])
+                if (run?.stageId != null && !includesChapter(run.difficulty ?? BASE_DIFF, deps.stages[run.stageId]?.chapter))
+                    throw new Error('save: expedition outside available chapters');
+        }
         const s = clone(src);
         s.rosterSlots = rosterSlotCount(s.rosterSlots);
         for (const h of s.heroes) h.equipped = { ...emptyEquip(), ...h.equipped };
@@ -875,12 +918,15 @@ export function createGameSystem(deps) {
         // 결투장 ELO · 콜로세움 층 — 없으면 「겨룬 적 · 오른 층이 없다」가 새 게임과 같은 초기 상태라 버전을 안 올린다 (INTERFACE §4 · 2026-10-18).
         //   셀 수 없는 값은 시작값 · 0 으로 · 최고치는 지금 레이팅 이상으로
         {
-            const a = s.arena && typeof s.arena === 'object' ? s.arena : {};
             const count = n => (Number.isInteger(n) && n >= 0 ? n : 0);
-            const rating = Number.isFinite(a.rating) ? a.rating : B.arena_elo_start;
-            s.arena = { rating, peak: Math.max(rating, Number.isFinite(a.peak) ? a.peak : rating), win: count(a.win), draw: count(a.draw), loss: count(a.loss) };
-            s.colosseum = { cleared: count(s.colosseum?.cleared) };
-            s.endless = { cleared: count(s.endless?.cleared) };   // 무한의 탑 오른 층 — 같은 규칙 · 버전 무변경 (2026-11-19 · R554)
+            for (const key of ['arena', 'tagLeague']) {
+                const a = s[key] ?? {};
+                const rating = Number.isFinite(a.rating) ? a.rating : B.arena_elo_start;
+                s[key] = { rating, peak: Math.max(rating, Number.isFinite(a.peak) ? a.peak : rating), win: count(a.win), draw: count(a.draw), loss: count(a.loss) };
+            }
+            s.tagDefense = validTagOrder(s.tagDefense) ? s.tagDefense.slice() : null;
+            s.colosseum = { cleared: Math.min(ENDLESS.length, Math.max(count(s.colosseum?.cleared), count(s.endless?.cleared))) };
+            delete s.endless;
         }
         // 제작 재료 · 회차 — 없으면 「가진 재료가 없다 · 만든 적이 없다」가 정확한 초기 상태라 버전을 안 올린다 (INTERFACE §4 · R96)
         s.materials = s.materials ?? {};
@@ -936,7 +982,7 @@ export function createGameSystem(deps) {
         // 한 영웅은 한 편성에만 든다 — 겹치면 **앞 편성이 갖는다** (v38 · 다부대 · `toggleParty` 와 같은 규칙)
         dedupeParties(s);
         // 소유권은 잘라내기 전에 검사하고, 사라지는 편성의 미완료 판은 먼저 돌려준다.
-        validateStageDecks(s, (stageId, difficulty) => deps.stages[stageId] && DIFF_IDS.includes(difficulty)
+        validateStageDecks(s, (stageId, difficulty) => includesChapter(difficulty, deps.stages[stageId]?.chapter)
             ? BT.stageRounds(deps.stages[stageId]).length : null);
         for (const slot of (s.runs ?? []).slice(limitsOf(s).presets)) releaseStageSeeds(s, slot);
         // 부대 — 편성 수에 맞춘다(넘치면 뒤를 자르고 모자라면 빈 자리를 붙인다). 도는 채로 저장된 부대는 **끊긴 것**이라 `closeRun` 이 걷는다 (v38)
@@ -1284,14 +1330,14 @@ export function createGameSystem(deps) {
             }
             // Lv1 · Lv2 칸 — 둘 다 있거나 둘 다 없다(보스 · VI 자리 · 2026-10-22 R314)
             const farm = r.farm ?? null, fight = r.fight ?? null;
-            if ((farm === null) !== (fight === null)) bad(`codex_option ${r.monsterId} — farm · fight 중 하나만 있다`);
+            if (seg.fight && (farm === null) !== (fight === null)) bad(`codex_option ${r.monsterId} — farm · fight 중 하나만 있다`);
             if (farm === null) {
                 if ((r.farmValue ?? null) !== null || (r.fightValue ?? null) !== null) bad(`codex_option ${r.monsterId} — 칸이 없는데 값이 있다`);
                 continue;
             }
             if (!CODEX_FARM.includes(farm)) bad(`codex_option ${r.monsterId} farm '${farm}' — ${CODEX_FARM.join(' · ')} 중 하나`);
-            if (!CODEX_FIGHT.includes(fight)) bad(`codex_option ${r.monsterId} fight '${fight}' — 전투 줄 열다섯 중 하나(INTERFACE §2-6)`);
-            if (!pos(r.farmValue) || !pos(r.fightValue)) bad(`codex_option ${r.monsterId} — farm_value · fight_value 는 양수`);
+            if (seg.fight && !CODEX_FIGHT.includes(fight)) bad(`codex_option ${r.monsterId} fight '${fight}' — 전투 줄 열다섯 중 하나(INTERFACE §2-6)`);
+            if (!pos(r.farmValue) || (seg.fight && !pos(r.fightValue))) bad(`codex_option ${r.monsterId} — farm_value · fight_value 는 양수`);
             const race = m.monster_type;   // 범위 = 종족(데몬 · 일반 · 언데드 — 2026-11-14 R494 · 부류 삭제)
             if (!races[race]) bad(`codex_option ${r.monsterId} — 종족 '${race}' 가 monster_type.csv 에 없다`);
             lines[r.monsterId] = { race, farm: { kind: farm, value: r.farmValue }, fight: { stat: fight, value: r.fightValue } };
@@ -1346,19 +1392,25 @@ export function createGameSystem(deps) {
         return out;
     }
     /** 도감 옵션 구간의 합 `{flat: {stat: v}}` — 몬스터마다 제 한 줄 × 옵션 구간 몫(`codexShare` · R539)을 더한다(레벨 = 먹는 레벨 — `codexLevelOf` · R339) · `computeCombat` 의 `codex` 입력 · rng 0 */
-    function codexOptions(state) {
-        const flat = {};
-        if (!CODEX.seg.option) return { flat };
+    function codexOptionLevels(state) {
+        const levels = {};
         const cap = limitsOf(state).codexLevel;
-        if (cap < CODEX.seg.option.from) return { flat };
+        if (!CODEX.seg.option || cap < CODEX.seg.option.from) return levels;
         for (const [id, exp] of Object.entries(state.codexExp ?? {})) {
+            const lv = Math.min(codexLevel(exp), cap);
+            if (Object.hasOwn(CODEX.options, id) && lv >= CODEX.seg.option.from) levels[id] = lv;
+        }
+        return levels;
+    }
+    function codexOptionsFromLevels(levels) {
+        const flat = {};
+        for (const [id, lv] of Object.entries(levels)) {
             const o = CODEX.options[id];
-            const share = o ? codexShare(Math.min(codexLevel(exp), cap), 'option') : 0;
-            if (share <= 0) continue;
-            flat[o.stat] = (flat[o.stat] ?? 0) + o.value * share;
+            flat[o.stat] = (flat[o.stat] ?? 0) + o.value * codexShare(lv, 'option');
         }
         return { flat };
     }
+    const codexOptions = state => codexOptionsFromLevels(codexOptionLevels(state));
 
     /* ── 책 업그레이드 상한 — 끝 하나 [2026-10-20 · R293 · skill_design §2-3 「레벨 제한을 두지말고 그냥 도안을 계속얻을 수 있게」] ──
        모든 스킬 · 모든 영웅이 같다. ~~스킬 도감 레벨이 나눠 열던 상한~~(`skill_codex_level.csv` · 2026-10-16 R266)은 표째 걷었다 —
@@ -2680,24 +2732,31 @@ export function createGameSystem(deps) {
        나머지 단의 기록은 `progress.clearedIn[단]` · 단이 바꾸는 것은 지금 **몬스터 레벨**(`level_col` 이 고른 칸 레벨 열 + `level_add` — 만렙에서 자른다 · R338)과 **처치 하나의 도감 경험치**(`codex_exp` · R239) ·
        **장 순서 해금**(`chapter_gate` — 0 이면 그 단이 열리는 순간 열린 장마다 첫 칸이 열린다 · 장 안은 그대로 순서 · 헬 · R242) 셋 */
     const DIFFS = (() => {
-        const rows = deps.difficulties?.length ? deps.difficulties : [{ id: 'normal', levelCol: 'dlvl', levelAdd: 0, codexExp: 1, chapterGate: 1 }];   // 표가 없는 조립 = 노말 한 단
+        const rows = deps.difficulties?.length ? deps.difficulties : [{ id: 'normal', levelCol: 'dlvl', codexExp: 1, /* @include hell */ levelAdd: 0, chapterGate: 1 /* @end */ }];   // 표가 없는 조립 = 노말 한 단
         const bad = why => { throw new Error(`difficulty_tier: ${why}`); };
         const seen = new Set();
         for (const d of rows) {
             if (!d.id || seen.has(d.id)) bad(`id '${d.id}' 가 비었거나 겹친다`);
+            /* @include hell */
             if (!(Number.isInteger(d.levelAdd) && d.levelAdd >= 0)) bad(`${d.id} — level_add '${d.levelAdd}'`);
+            /* @end */
             // 칸 레벨 열 — 모든 칸에 1 이상 정수가 있어야 한다(빈 칸이 조용히 NaN 레벨이 되지 않게 · 2026-10-24 · R338)
-            const col = d.levelCol ?? 'dlvl', hole = Object.values(deps.stages ?? {}).find(st => !(Number.isInteger(st[col]) && st[col] >= 1));
+            const last = d.lastChapter ?? Infinity;
+            if (last !== Infinity && !(Number.isInteger(last) && last > 0)) bad(`${d.id} — last_chapter ${last}`);
+            const col = d.levelCol ?? 'dlvl', hole = Object.values(deps.stages ?? {}).find(st => (last === Infinity || st.chapter <= last) && !(Number.isInteger(st[col]) && st[col] >= 1));
             if (hole) bad(`${d.id} — level_col '${col}' 이 칸 ${hole.stage_id} 에서 '${hole[col]}'`);
             if (!(Number.isInteger(d.codexExp) && d.codexExp >= 1)) bad(`${d.id} — codex_exp '${d.codexExp}'`);   // 처치 하나의 도감 경험치 (2026-10-10 · R239)
+            /* @include hell */
             if (d.chapterGate !== 0 && d.chapterGate !== 1) bad(`${d.id} — chapter_gate '${d.chapterGate}' (0 · 1)`);   // 장 순서 해금 (2026-10-12 · R242)
+            /* @end */
             seen.add(d.id);
         }
-        return rows.map(d => ({ id: d.id, levelCol: d.levelCol ?? 'dlvl', levelAdd: d.levelAdd, codexExp: d.codexExp, chapterGate: d.chapterGate === 1 }));
+        return rows.map(d => ({ id: d.id, lastChapter: d.lastChapter ?? Infinity, levelCol: d.levelCol ?? 'dlvl', codexExp: d.codexExp, /* @include hell */ levelAdd: d.levelAdd, chapterGate: d.chapterGate === 1 /* @end */ }));
     })();
     const DIFF_IDS = DIFFS.map(d => d.id);
     const BASE_DIFF = DIFF_IDS[0];
     const diffById = Object.fromEntries(DIFFS.map(d => [d.id, d]));
+    const includesChapter = (diff, chapter) => chapter > 0 && chapter <= (diffById[diff]?.lastChapter ?? 0);
     /** 다음 단을 여는 칸 — `[balance.csv:difficulty_unlock_chapter]` 장의 **보스 칸**(`boss_grade` = `chapter_boss`) · 단이 하나면 null · 없으면 만들 때 던진다 */
     const DIFF_GATE = (() => {
         if (DIFFS.length < 2) return null;
@@ -2739,7 +2798,7 @@ export function createGameSystem(deps) {
      *  만렙 `[balance.csv:hero_level_cap]` 에서 자른다 · 표에 없는 단은 `dlvl` 그대로 · rng 0 (2026-10-24 · R338 — 나이트메어 = 노말 끝에서 만렙까지 장마다 4레벨 계단) */
     const stageLevel = (stageId, diff = BASE_DIFF) => {
         const d = diffById[diff];
-        return Math.min(B.hero_level_cap ?? Infinity, deps.stages[stageId][d?.levelCol ?? 'dlvl'] + (d?.levelAdd ?? 0));
+        return Math.min(B.hero_level_cap ?? Infinity, deps.stages[stageId][d?.levelCol ?? 'dlvl'] /* @include hell */ + (d?.levelAdd ?? 0) /* @end */);
     };
     /** 그 단에서 그 칸을 깼나 — 안 주면 고른 단 · rng 0 */
     const stageCleared = (state, stageId, diff = curDiff(state)) => clearedList(state, diff).includes(stageId);
@@ -2756,7 +2815,7 @@ export function createGameSystem(deps) {
     function difficultyState(state) {
         return {
             cur: curDiff(state),
-            list: DIFFS.map((d, i) => ({ id: d.id, open: difficultyOpen(state, d.id), levelAdd: d.levelAdd, gate: i === 0 ? null : { from: DIFF_IDS[i - 1], stageId: DIFF_GATE } })),
+            list: DIFFS.map((d, i) => ({ id: d.id, open: difficultyOpen(state, d.id), /* @include hell */ levelAdd: d.levelAdd, /* @end */ gate: i === 0 ? null : { from: DIFF_IDS[i - 1], stageId: DIFF_GATE } })),
         };
     }
 
@@ -2775,10 +2834,12 @@ export function createGameSystem(deps) {
     function stageUnlocked(state, stageId, diff = curDiff(state)) {
         const i = deps.stageOrder.indexOf(stageId);
         if (i < 0 || !chapterOpen(state, deps.stages[stageId]?.chapter)) return false;
-        if (!difficultyOpen(state, diff)) return false;
+        if (!includesChapter(diff, deps.stages[stageId].chapter) || !difficultyOpen(state, diff)) return false;
         if (openAll() || i === 0) return true;
         const prev = deps.stageOrder[i - 1];
+        /* @include hell */
         if (!diffById[diff].chapterGate && deps.stages[prev].chapter !== deps.stages[stageId].chapter) return true;
+        /* @end */
         return clearedList(state, diff).includes(prev);
     }
 
@@ -4422,7 +4483,7 @@ export function createGameSystem(deps) {
      * 출발 가능 여부·실제 예약은 departRun이 판정한다. 첫 보스도 일반 판과 같다.
      */
     function stageSeedRequest(state, stageId, no = state.preset, diff = curDiff(state)) {
-        if (!deps.stages[stageId] || !DIFF_IDS.includes(diff) || !Number.isInteger(no) || no < 1 || no > state.presets.length)
+        if (!includesChapter(diff, deps.stages[stageId]?.chapter) || !Number.isInteger(no) || no < 1 || no > state.presets.length)
             throw new Error('stage seeds: invalid stage/difficulty/preset');
         return planStageSeeds(state, stageId, diff, no, BT.stageRounds(deps.stages[stageId]).length, seedOf);
     }
@@ -4476,9 +4537,10 @@ export function createGameSystem(deps) {
         const fixed = { byUid, shrine };
         // 단 = 몬스터가 선택 부위를 입을 확률을 고른다(레벨은 위 `level` 이 이미 든다 · 2026-10-12 · R245)
         // 도감 사다리 = 지금 상태를 읽는 함수 — 스폰마다 불러 라운드 사이에 오른 단계가 다음 라운드부터 먹는다 (2026-10-18 · R286 · INTERFACE §2-6 「도감 사다리」)
-        // 카드 규칙 = 맨 끝 인자 `{party, enemy: []}` — 카드가 없으면 null(지금과 한 글자도 안 다르다 · R586 · PLAN §6) · 적 물약 자리(13번째)는 원정에 없다
+        // 파티 카드 규칙만 넘긴다. 적 카드는 전투가 장소와 라운드 종류로 고른다.
+        const opening = stageSeeds.sequence === 1 && stageId === deps.stageOrder[0] && dif === BASE_DIFF;
         const battle = BT.createRun(partyUnits(view, going, no, tactics, fixed), stageId, rng, level, fillSlots(state, squad), limitsOf(state).potionSlots, null, dif,
-            id => codexLadder(state, id), squad.potionHp ?? null, null, stageSeeds.rounds.map(r => r.seed), null, rulesArg(rules));
+            id => codexLadder(state, id), squad.potionHp ?? null, opening ? { openingBasic: true } : null, stageSeeds.rounds.map(r => r.seed), null, rulesArg(rules));
         // 엔진 입력까지 검사한 뒤 한 번만 예약한다. 재출발은 자기 판을 먼저 반환한다.
         cutRun(state, 'retreat', no);
         // **그 편성이 탐험 판에 나가 있으면 걷는다** [2026-11-15 사용자 · R500 · 개정 2026-11-26 · R590 D16] — 일찍 부르기와 같다(모은 것 · 표 반환 없음 · 이어 돌기 멈춤 ·
@@ -4523,7 +4585,7 @@ export function createGameSystem(deps) {
         //   ~~첫 라운드까지 계산한다~~: 미래를 미리 계산해 두면 원정 중 교체가 그 순간 먹을 자리가 없다(base_expedition_design §1-5)
         battle.advance(0);
         // `seq` = 이 런의 전투 번호 — 신단 뽑기 스트림의 두 번째 인자(다른 부대가 그새 나가도 같은 신단 · INTERFACE §5-1)
-        return { ok: true, report, run: { stageId, preset: no, difficulty: dif, stageSeeds, report, result: battle.result, done: false, battle, rng, party: going, tactics, tacticRules: rules, fixed, squad, seq: stageSeeds.sequence } };
+        return { ok: true, report, run: { stageId, preset: no, difficulty: dif, stageSeeds, report, result: battle.result, done: false, battle, rng, party: going, tactics, tacticRules: rules, fixed, squad, seq: stageSeeds.sequence, openingLesson: opening } };
     }
 
     /** 편성 `no` 자리에 굳힌 편성을 끼운 **읽기 전용 얕은 사본** — 이어 가는 런의 전술 칸 · 진형을 처음 나간 편성으로 센다(`wearing` 의 사본과 같은 수법 · 원본 불변) */
@@ -4683,9 +4745,10 @@ export function createGameSystem(deps) {
             R.gold += s.gold;
             // ~~처치가 뱉는 가루~~ 는 2026-09-09 삭제 — 가루의 공급원은 **분해** 하나다(`salvage` · item_design §5-3)
             // 도감 레벨의 출처 — 이긴 라운드의 처치 × 그 런 단의 도감 경험치 × 처치 순간 등급의 배율 (monster_design §8 · 2026-10-10 처치 수 → 도감 경험치 · R239 · 등급 배율 2026-11-18 R539)
-            //   등급별 처치(`killGrades`)가 없는 결과는 처치 수 × 단 몫(배율 1)
+            //   등급별 처치(`killGrades`)가 없는 결과는 처치 수 × 단 몫(배율 1) · 도서관(도감 — r1)을 짓기 전엔 안 쌓인다(2026-11-27 · R603)
             const cxDiff = run.difficulty ?? BASE_DIFF;
-            if (s.killGrades) {
+            if (!hasFeature(state, 'codex')) { /* 도감 전 */ }
+            else if (s.killGrades) {
                 for (const [id, byGrade] of Object.entries(s.killGrades))
                     for (const [g, n] of Object.entries(byGrade)) state.codexExp[id] = (state.codexExp[id] ?? 0) + n * codexKillExp(cxDiff, g);
             } else for (const [id, n] of Object.entries(s.kills)) state.codexExp[id] = (state.codexExp[id] ?? 0) + n * codexExpOf(cxDiff);
@@ -6080,7 +6143,7 @@ export function createGameSystem(deps) {
        전투 단계는 원정과 같은 엔진 핸들(`exploreFight` → `stepRun`)을 화면이 재생 시각으로 민다 · 핸들은 세이브에 안 든다 —
        다시 켜면 그 판을 화면 없이 끝까지 계산해 결과만 준다(하던 전투는 처음부터 · `exploreFinish` · D17) ·
        탐험 전투는 스테이지 클리어 기록 · 원정 판 장부 · 반복 칸 · 원정 리포트 · 표 드롭을 안 건드린다 · 도감 · 의뢰 처치는 센다 */
-    /** 지점 어휘 — **이 순서가 표 드롭의 지점 굴림 인덱스 · 화면 목록 순서**다 (INTERFACE §5-3) */
+    /** 지점 어휘 — **이 순서가 지점 목록 순서**다 (INTERFACE §5-3) */
     const EXPLORE_SPOTS = ['cave', 'ruins', 'caravan'];
     /** 지점마다 여는 켜기 — 동굴은 탐험 r1 · 상단 의뢰 r2 · 폐허 r3 (2026-11-24 · R571 · INTERFACE §5-3) */
     const EXPLORE_SPOT_FEATURE = { cave: 'explore', ruins: 'explore_ruins', caravan: 'explore_caravan' };
@@ -6088,7 +6151,7 @@ export function createGameSystem(deps) {
     /** **실제로 지은** 랭크가 연 지점 — 첫 표만 본다(관리자 모드의 「다 연 판」이 첫 표를 미리 쓰지 않게) */
     const spotBuiltReal = (state, spot) => CN.opened(state.buildings ?? CN.startRanks()).features.includes(EXPLORE_SPOT_FEATURE[spot]);
     /** 탐험 굴림 솔트 — 판(계획) · 전투 · 습격 팀 · 전리품 · 지급 · 표 드롭 (INTERFACE §5-1 · R590 — ~~0xE7A1 결과 · 0xE7A2 이야기~~ 걷음) */
-    const EX_PLAN_SALT = 0xE7A3, EX_FIGHT_SALT = 0xE7A4, EX_KIT_SALT = 0xE7A5, EX_LOOT_SALT = 0xE7A6, EX_GRANT_SALT = 0xE7A7, EX_TICKET_SALT = 0xE7A8;
+    const EX_PLAN_SALT = 0xE7A3, EX_FIGHT_SALT = 0xE7A4, EX_KIT_SALT = 0xE7A5, EX_LOOT_SALT = 0xE7A6, EX_GRANT_SALT = 0xE7A7, EX_TICKET_SALT = 0xE7A8, EX_MAP_SALT = 0xE7A9;
     /** 폐허 이벤트 어휘 — 코드가 아는 것 · 표(`explore_ruins_event.csv`)는 가중만 든다 · 셋은 전투(몬스터 · 함정 · 드문 만남) (INTERFACE §5-3) */
     const EX_RUINS_KINDS = ['monster', 'trap', 'item', 'rare_encounter', 'empty'];
     const EX_RUINS_FIGHT = { monster: 'monster', trap: 'trap', rare_encounter: 'rare' };
@@ -6136,15 +6199,14 @@ export function createGameSystem(deps) {
     };
     /** 탐험이 서는 장 — 레벨대가 선 장(`stage.csv` 가 가진 장) 순 */
     const exploreChapters = chapterBands.map(b => b.band);
-    /** 표 키 — `'지점|장|단|등급'` (INTERFACE §4 `exploreTickets`) */
-    const ticketKey = (spot, chapter, diff, grade) => `${spot}|${chapter}|${diff}|${grade}`;
-    /** 표 키 → `{spot, chapter, diff, grade}` · 모르는 지점 · 장 · 단 · 등급이면 null · rng 0 */
+    /** 모든 지점이 같은 장·난이도·등급의 탐험권 잔액을 사용한다. */
+    const ticketKey = (chapter, diff, grade) => `${chapter}|${diff}|${grade}`;
     function ticketParse(key) {
         const parts = typeof key === 'string' ? key.split('|') : [];
-        if (parts.length !== 4) return null;
-        const [spot, ch, diff, grade] = parts, chapter = Number(ch);
-        if (!EXPLORE_SPOTS.includes(spot) || !exploreChapters.includes(chapter) || String(chapter) !== ch || !DIFF_IDS.includes(diff) || !EX_GRADES.some(g => g.id === grade)) return null;
-        return { spot, chapter, diff, grade };
+        if (parts.length !== 3) return null;
+        const [ch, diff, grade] = parts, chapter = Number(ch);
+        if (!exploreChapters.includes(chapter) || String(chapter) !== ch || !includesChapter(diff, chapter) || !EX_GRADES.some(g => g.id === grade)) return null;
+        return { chapter, diff, grade };
     }
     const gradeOf = id => EX_GRADES.find(g => g.id === id) ?? EX_GRADES[0];
     /** 표 재고에 `n` 장 — 모르는 키 · 1 미만이면 false · in-place · rng 0 (첫 표 · 드롭 · 이관 · 개발 손잡이가 같이 쓴다) */
@@ -6181,13 +6243,37 @@ export function createGameSystem(deps) {
     /** 그 장의 도감 VI 몬스터(???) — `stage_num` = `[balance.csv:stages_per_chapter]` + 1 · 여럿이면 번호가 가장 작은 것 · 없으면 null (지금 데이터 = 1장 둘라한) */
     const unknownOf = ch => Object.entries(deps.monsters ?? {}).filter(([, m]) => m.chapter === ch && m.stage_num === B.stages_per_chapter + 1)
         .map(([id]) => Number(id)).sort((a, b) => a - b)[0] ?? null;
+    const EX_HOUR_MS = 60 * 60 * 1000;
+    const exHour = at => Math.floor(at / EX_HOUR_MS);
+    function exploreRotation(state, at) {
+        const hour = exHour(at);
+        if (state.exploreRotation?.hour === hour) return state.exploreRotation;
+        const rng = makeRng(seedOf(state, EX_MAP_SALT, hour));
+        const rotation = { hour, offer: null };
+        if (rng() >= B.explore_hourly_chance) return rotation;
+        const chapters = exploreChapters.filter(ch => chapterOpen(state, ch));
+        const choices = EXPLORE_SPOTS.filter(spot => spotBuilt(state, spot)).map(spot => ({
+            spot, chapters: chapters.filter(ch => spot !== 'cave' || unknownOf(ch) != null),
+        })).filter(choice => choice.chapters.length);
+        if (choices.length) {
+            const choice = choices[Math.floor(rng() * choices.length)];
+            const chapter = choice.chapters[Math.floor(rng() * choice.chapters.length)];
+            rotation.offer = { hour, chapter, spot: choice.spot, mult: B.explore_hourly_special_mult };
+        }
+        return rotation;
+    }
+    // 한 번 지도에 공개한 제안은 같은 시각대에 건물이나 챕터를 열어도 유지한다.
+    function exploreRefresh(state, at) {
+        if (!hasFeature(state, 'explore') || state.exploreRotation?.hour === exHour(at)) return false;
+        state.exploreRotation = exploreRotation(state, at);
+        return true;
+    }
+    const exSpecial = x => gradeOf(x.grade).special * (x.offer?.mult ?? 1);
     /** 그 장 · 그 단의 칸 레벨 범위 `{lo, hi}` — 폐허 물건의 아이템 레벨 · 감사인사 재료 단계가 읽는다 */
     const chapterLevels = (ch, diff) => {
         const lv = (deps.stageOrder ?? []).filter(id => deps.stages[id].chapter === ch).map(id => stageLevel(id, diff));
         return lv.length ? { lo: Math.min(...lv), hi: Math.max(...lv) } : { lo: 1, hi: 1 };
     };
-    /** 헬 장 디버프의 단 — **바퀴의 마지막 단**(폐허 함정 · 난이도와 무관 · D12) */
-    const curseDiff = () => DIFF_IDS.at(-1);
 
     /**
      * 판의 단계 목록 — **저장하지 않는다.** `seedOf(state, 0xE7A3, x.no)` 와 표(지점 · 장 · 단 · 등급)가 매번 같은 판을 낸다 (INTERFACE §5-2 `state.explorePlan`).
@@ -6204,7 +6290,7 @@ export function createGameSystem(deps) {
             const cells = placeAt() ?? [];
             const roll = rng();
             const vi = unknownOf(x.chapter);
-            const unknown = vi != null && roll < Math.min(1, B.explore_cave_unknown_pct * g.special) ? vi : null;
+            const unknown = vi != null && roll < Math.min(1, B.explore_cave_unknown_pct * exSpecial(x)) ? vi : null;
             const last = cells.at(-1);
             for (const id of cells) steps.push({ kind: 'fight', fight: 'stage', stageId: id, level: stageLevel(id, x.diff), ...(unknown != null && id === last ? { bossId: unknown } : {}) });
             for (let i = 0; last != null && i < g.eliteRounds; i++) steps.push({ kind: 'fight', fight: 'elite', stageId: last, level: stageLevel(last, x.diff) });
@@ -6225,7 +6311,7 @@ export function createGameSystem(deps) {
         } else if (x.spot === 'ruins') {
             // 폐허 = [이동, 이벤트, …, 이동] — 이벤트마다 종류 1(드문 만남 × special_mult) → 장소 1 (D12)
             const L = Math.max(0, B.explore_ruins_leg_sec) * 1000;
-            const w = EX_RUINS.map(e => e.weight * (e.id === 'rare_encounter' ? g.special : 1));
+            const w = EX_RUINS.map(e => e.weight * (e.id === 'rare_encounter' ? exSpecial(x) : 1));
             for (let i = 1; i <= g.events; i++) {
                 steps.push({ kind: 'move', ms: L });
                 const ev = EX_RUINS[pickWeight(rng, w)].id;
@@ -6270,35 +6356,41 @@ export function createGameSystem(deps) {
     }
 
     /** 보내면 나올 거절 — `exploreSend` 와 화면(보내기 버튼)이 이 하나를 읽는다 · 탐험 r1 `unbuilt` → 모르는 표 `missing` → 그 지점 랭크 전 `unbuilt` → 표 없음 `noTicket` → 편성(`squadErr`) (INTERFACE §2-7) */
-    function exploreErr(state, key, no) {
+    function exploreErr(state, key, spot, no, now, offerHour) {
         if (!hasFeature(state, 'explore')) return 'unbuilt';
         const t = ticketParse(key);
-        if (!t) return 'missing';
-        if (!spotBuilt(state, t.spot)) return 'unbuilt';
+        if (!t || !EXPLORE_SPOTS.includes(spot)) return 'missing';
+        if (!spotBuilt(state, spot)) return 'unbuilt';
+        if (offerHour != null) {
+            const offer = exploreRotation(state, now).offer;
+            if (!offer || offer.hour !== offerHour || offer.spot !== spot || offer.chapter !== t.chapter) return 'expired';
+        }
         if (ticketsOf(state, key) < 1) return 'noTicket';
         return squadErr(state, no);
     }
 
     /** 판 하나를 연다 — 표 한 장을 쓰고 **보내는 순간의 편성을 떠 간다**(`squad` — 사람 · 진형 · 물약 칸 · 기준 · 카드 칸 · 원정 `departRun` 과 같은 문법) · 판정은 부른 쪽이 했다 */
-    function exStart(state, key, no, now, opts) {
+    function exStart(state, key, spot, no, now, opts) {
         const t = ticketParse(key), p = presetAt(state, no);
         takeTicket(state, key);
         state.counters.explore = (state.counters.explore ?? 0) + 1;
         const squad = { party: p.party.slice(), formation: clone(p.formation ?? null), potionSlots: padSlots(state, p.potionSlots ?? []), potionHp: potionHpOf(p), tactics: clone(fitTactics(p.tactics)) };
-        const x = { no: state.counters.explore, preset: no, key, ...t, repeat: opts?.repeat === true, stopOnLoss: opts?.stopOnLoss === true,
-            squad, startedAt: now, step: 0, stepAt: now, bank: emptyBank(), log: [] };
+        const x = { no: state.counters.explore, preset: no, key, spot, ...t, repeat: opts?.repeat === true, stopOnLoss: opts?.stopOnLoss === true,
+            squad, startedAt: now, step: 0, stepAt: now, bank: emptyBank(), log: [], ...(opts.offer ? { offer: { ...opts.offer } } : {}) };
         state.exploreRuns[no - 1] = x;
-        p.lastGo = { kind: 'explore', chapter: t.chapter, spot: t.spot };   // 대기 중인 부대 칸이 돌아올 곳 (R418)
+        p.lastGo = { kind: 'explore', chapter: t.chapter, spot };
         return x;
     }
     /**
      * 편성 `no` 를 표 `key` 로 보낸다 — 거절은 `exploreErr` 하나 · `opts = {repeat, stopOnLoss}` = 이어 돌기 · 지면 멈춤(보낼 때 고른다 · 10-22) ·
      *   보내는 순간 표 한 장을 쓴다 · in-place · rng 0(판은 `explorePlan` 이 그때그때 다시 낸다)
      */
-    function exploreSend(state, key, no, now, opts = {}) {
-        const err = exploreErr(state, key, no);
+    function exploreSend(state, key, spot, no, now, opts = {}) {
+        const err = exploreErr(state, key, spot, no, now, opts.offerHour);
         if (err) return { ok: false, err };
-        const x = exStart(state, key, no, now, opts);
+        const rotation = opts.offerHour != null ? exploreRotation(state, now) : null;
+        if (rotation) state.exploreRotation = rotation;
+        const x = exStart(state, key, spot, no, now, { ...opts, offer: rotation?.offer });
         return { ok: true, no, runNo: x.no };
     }
 
@@ -6332,7 +6424,7 @@ export function createGameSystem(deps) {
             // 전투 손잡이 — 단판 종류 · ??? 보스 · 함정의 헬 줄 · 표 등급 드롭 배수 · 하나도 없으면 null(원정 칸과 같은 엔진 길 · INTERFACE §2-6)
             const round = st.fight === 'elite' ? { type: 'elite' } : st.fight === 'monster' || st.fight === 'trap' ? { type: 'normal' } : st.fight === 'rare' ? { type: 'boss' } : null;
             const r = { ...(round ? { round } : {}), ...(st.bossId != null ? { bossId: st.bossId } : {}),
-                ...(st.fight === 'trap' ? { curseDiff: curseDiff() } : {}), ...(g.reward !== 1 ? { dropMult: g.reward } : {}) };
+                ...(st.fight === 'trap' ? { ruinsTrap: true } : {}), ...(g.reward !== 1 ? { dropMult: g.reward } : {}) };
             exRules = Object.keys(r).length ? r : null;
             battle = BT.createRun(units, st.stageId, rng, st.level, fillSlots(state, squad), slotMax, null, x.diff, id => codexLadder(state, id), potionHp,
                 exRules, null, null, rulesArg(rules));
@@ -6411,8 +6503,10 @@ export function createGameSystem(deps) {
         const P = h.pend, g = gradeOf(x.grade), bank = x.bank;
         for (const [id, k] of Object.entries(P.potions)) spendPotion(state, id, k);
         const rng = makeRng(deriveSeed(seedOf(state, EX_LOOT_SALT, x.no), h.explore.step));
+        const codexOn = hasFeature(state, 'codex');   // 도서관(도감 — r1)을 짓기 전엔 도감 경험치가 안 쌓인다(2026-11-27 · R603)
         for (const r of P.rounds) {
-            if (Object.keys(r.killGrades).length) {
+            if (!codexOn) { /* 도감 전 */ }
+            else if (Object.keys(r.killGrades).length) {
                 for (const [id, byGrade] of Object.entries(r.killGrades))
                     for (const [gr, n] of Object.entries(byGrade)) state.codexExp[id] = (state.codexExp[id] ?? 0) + n * codexKillExp(x.diff, gr);
             } else for (const [id, n] of Object.entries(r.kills)) state.codexExp[id] = (state.codexExp[id] ?? 0) + n * codexExpOf(x.diff);
@@ -6509,7 +6603,7 @@ export function createGameSystem(deps) {
      *   지점 전용(상단 의뢰 감사인사 · 가입 희망) · 지점 완수 +1. 지거나 부르면 모은 것 · 표를 잃는다. 결과는 그 편성의 결과 자리(`exploreResults`)에 · 판 자리는 빈다.
      *   `chain` 이면 이어 돌기 — 같은 표가 남았고 (이겼거나 · 졌고 지면 멈춤이 아니면) 그 순간 같은 편성으로 다음 판 (10-22) · rng = 그 판의 지급 줄 (INTERFACE §5-2)
      */
-    function exEnd(state, no, outcome, at, chain = true) {
+    function exEnd(state, no, outcome, at, chain = true, observedAt = at) {
         const x = exRunAt(state, no);
         if (!x) return null;
         const g = gradeOf(x.grade);
@@ -6546,7 +6640,7 @@ export function createGameSystem(deps) {
                 const roll = rng(), pick = rng();
                 const plan = explorePlan(state, x);
                 const li = plan.map((s, i) => (s.fight === 'raid' ? i : -1)).filter(i => i >= 0).at(-1);
-                if (li != null && roll < Math.min(1, B.explore_caravan_join_pct * g.special)) {
+                if (li != null && roll < Math.min(1, B.explore_caravan_join_pct * exSpecial(x))) {
                     const team = exRaidTeam(state, x, li, plan[li].level);
                     const foe = team[Math.floor(pick * team.length)]?.hero;
                     const hero = foe ? H.rollHeroOf(rng, foe.cls) : null;
@@ -6561,11 +6655,11 @@ export function createGameSystem(deps) {
             state.exploreDone[x.spot] = (state.exploreDone[x.spot] ?? 0) + 1;
         }
         state.exploreRuns[no - 1] = null;
-        const result = { no: x.no, preset: no, key: x.key, spot: x.spot, chapter: x.chapter, diff: x.diff, grade: x.grade, outcome, at, startedAt: x.startedAt, seen: outcome === 'recalled', log: x.log.slice(), got };   // 부른 판은 늘 본 것 — 지점 창 [부르기] · 원정 출발로 부르기 둘 다 알림을 안 남긴다 (11-26 사용자 「둘 다 본 것으로」)
+        const result = { no: x.no, preset: no, key: x.key, spot: x.spot, ...(x.offer ? { offer: { ...x.offer } } : {}), chapter: x.chapter, diff: x.diff, grade: x.grade, outcome, at, startedAt: x.startedAt, seen: outcome === 'recalled', log: x.log.slice(), got };   // 부른 판은 늘 본 것 — 지점 창 [부르기] · 원정 출발로 부르기 둘 다 알림을 안 남긴다 (11-26 사용자 「둘 다 본 것으로」)
         (state.exploreResults ??= [])[no - 1] = result;
         // 이어 돌기 — 같은 종류 표만 · 지면 멈춤 · 부르면 멈춘다 (10-22 · D16) · 다시 켜면 이어지지 않는다(`chain` 거짓 · D17)
-        if (chain && x.repeat && (outcome === 'won' || (outcome === 'lost' && !x.stopOnLoss)) && !exploreErr(state, x.key, no))
-            exStart(state, x.key, no, at, { repeat: true, stopOnLoss: x.stopOnLoss });
+        if (chain && x.repeat && (outcome === 'won' || (outcome === 'lost' && !x.stopOnLoss)) && !exploreErr(state, x.key, x.spot, no, observedAt, x.offer?.hour))
+            exStart(state, x.key, x.spot, no, at, { repeat: true, stopOnLoss: x.stopOnLoss, offer: x.offer });
         return result;
     }
 
@@ -6587,7 +6681,7 @@ export function createGameSystem(deps) {
                 continue;
             }
             const plan = explorePlan(state, x);
-            if (x.step >= plan.length) { ended.push(exEnd(state, no, 'won', x.stepAt)); continue; }
+            if (x.step >= plan.length) { ended.push(exEnd(state, no, 'won', x.stepAt, true, now)); continue; }
             const st = plan[x.step];
             if (st.kind === 'move') {
                 const end = x.stepAt + st.ms;
@@ -6600,13 +6694,13 @@ export function createGameSystem(deps) {
         }
     }
     /** 지금 단계의 전투를 연다 — 원정 핸들과 같은 모양(`stepRun` 으로 민다 · 관전이 그대로 그린다) · 같은 단계를 다시 열면 처음부터(먼저 끝낸 핸들 하나만 들어간다) · 거절 `none` · `notFight` */
-    function exploreFight(state, no, at) {
+    function exploreFight(state, no, at, observedAt = at) {
         const x = exRunAt(state, no);
         if (!x) return { ok: false, err: 'none' };
         const st = x.wait ? null : explorePlan(state, x)[x.step];   // 기다리는 판은 이미 다 계산했다 — 열 전투가 없다
         if (st?.kind !== 'fight') return { ok: false, err: 'notFight' };
         const h = exFightOpen(state, x, x.step, at);
-        if (!h) return { ok: false, err: 'noParty', ended: exEnd(state, no, 'lost', at) };
+        if (!h) return { ok: false, err: 'noParty', ended: exEnd(state, no, 'lost', at, true, observedAt) };
         return { ok: true, run: h };
     }
     /**
@@ -6614,7 +6708,7 @@ export function createGameSystem(deps) {
      *   `[balance.csv:repeat_restart_sec]` 뒤) · 마지막 단계였으면 이긴 판으로 끝 · 졌으면 진 판으로 끝 · 같은 핸들은 한 번만 · 거절 `missing` · `notDone` · `done`
      * @returns `{ok, won, ended: result | null}`
      */
-    function exploreFightEnd(state, h, endedAt) {
+    function exploreFightEnd(state, h, endedAt, observedAt = endedAt) {
         if (h?.kind !== 'explore') return { ok: false, err: 'missing' };
         if (!h.done) return { ok: false, err: 'notDone' };
         const x = exRunAt(state, h.preset);
@@ -6622,11 +6716,11 @@ export function createGameSystem(deps) {
         h.committed = true;
         const at = Number.isFinite(endedAt) ? endedAt : x.stepAt;
         exCommit(state, x, h);
-        if (!h.won) return { ok: true, won: false, ended: exEnd(state, h.preset, 'lost', at) };
+        if (!h.won) return { ok: true, won: false, ended: exEnd(state, h.preset, 'lost', at, true, observedAt) };
         x.step += 1;
         x.stepAt = at;
         const plan = explorePlan(state, x);
-        if (x.step >= plan.length) return { ok: true, won: true, ended: exEnd(state, h.preset, 'won', at) };
+        if (x.step >= plan.length) return { ok: true, won: true, ended: exEnd(state, h.preset, 'won', at, true, observedAt) };
         if (plan[x.step].kind === 'fight') x.stepAt = at + B.repeat_restart_sec * 1000;
         return { ok: true, won: true, ended: null };
     }
@@ -6686,7 +6780,7 @@ export function createGameSystem(deps) {
     }
 
     /**
-     * 첫 표 — **실제로 지은** 탐험 랭크가 연 지점마다 한 번(`exploreOpened`) 그 지점 일반 표(첫 행) `[balance.csv:explore_first_ticket_n]` 장 ·
+     * 첫 표 — **실제로 지은** 탐험 랭크가 연 지점마다 한 번(`exploreOpened`) 공통 일반 탐험권(첫 행) `[balance.csv:explore_first_ticket_n]` 장 ·
      *   장 = 노말에서 장 보스 칸을 깬 가장 높은 장(최소 1) · 단 = 첫 단 (D3) · 짓기 · 불러오기가 부른다 · rng 0
      */
     function grantFirstTickets(state) {
@@ -6697,7 +6791,7 @@ export function createGameSystem(deps) {
         for (const spot of EXPLORE_SPOTS) {
             if (state.exploreOpened.includes(spot) || !spotBuiltReal(state, spot)) continue;
             state.exploreOpened.push(spot);
-            if (B.explore_first_ticket_n >= 1) exploreAddTickets(state, ticketKey(spot, chapter, BASE_DIFF, EX_GRADES[0].id), Math.floor(B.explore_first_ticket_n));
+            if (B.explore_first_ticket_n >= 1) exploreAddTickets(state, ticketKey(chapter, BASE_DIFF, EX_GRADES[0].id), Math.floor(B.explore_first_ticket_n));
         }
         state.exploreOpened = EXPLORE_SPOTS.filter(s => state.exploreOpened.includes(s));
     }
@@ -6706,8 +6800,8 @@ export function createGameSystem(deps) {
     const TICKET_DROP_KEYS = [['elite', 'explore_ticket_drop_elite'], ['stage_boss', 'explore_ticket_drop_boss']];
     /**
      * 원정 이긴 라운드의 표 드롭 [D3 · D4] — `killGrades` 의 몬스터 순 → 정예 → 스테이지보스 → 처치 수만큼, 마리마다 `counters.exploreTicket` 선증가 · 제 스트림
-     *   (`seedOf(state, 0xE7A8, n)` — **전리품 · 작전 카드 줄과 따로다** · 골든 무변동): ① 떨어지나 → ② 열린 지점(`EXPLORE_SPOTS` 순 중 연 것) 균등 → ③ 등급(`weight`) ·
-     *   장 · 단 = 그 칸 · 열린 지점이 없으면 굴려도 안 준다(회차는 오른다) · `settleRound` 만 부른다(탐험 판은 안 부른다) · `[{key, spot, chapter, diff, grade}]`
+     *   (`seedOf(state, 0xE7A8, n)` — **전리품 · 작전 카드 줄과 따로다** · 골든 무변동): ① 떨어지나 → ② 등급(`weight`) ·
+     *   장 · 단 = 그 칸 · 열린 지점이 없으면 굴려도 안 준다(회차는 오른다) · `settleRound` 만 부른다(탐험 판은 안 부른다) · `[{key, chapter, diff, grade}]`
      */
     function rollTicketDrops(state, stageId, diff, killGrades) {
         const out = [];
@@ -6719,12 +6813,10 @@ export function createGameSystem(deps) {
                     state.counters.exploreTicket = n;
                     const rng = makeRng(seedOf(state, EX_TICKET_SALT, n));
                     if (!(rng() < B[key])) continue;
-                    const open = EXPLORE_SPOTS.filter(s => spotBuilt(state, s));
-                    if (!open.length || !exploreChapters.includes(chapter)) continue;
-                    const spot = open[Math.floor(rng() * open.length)];
+                    if (!EXPLORE_SPOTS.some(s => spotBuilt(state, s)) || !exploreChapters.includes(chapter)) continue;
                     const g = EX_GRADES[pickWeight(rng, EX_GRADES.map(x => x.weight))].id;
-                    const tk = ticketKey(spot, chapter, diff, g);
-                    if (exploreAddTickets(state, tk, 1)) out.push({ key: tk, spot, chapter, diff, grade: g });
+                    const tk = ticketKey(chapter, diff, g);
+                    if (exploreAddTickets(state, tk, 1)) out.push({ key: tk, chapter, diff, grade: g });
                 }
         return out;
     }
@@ -6767,7 +6859,7 @@ export function createGameSystem(deps) {
         const remainMs = W ? Math.max(0, W.at - now) : Math.round(plan.slice(x.step + 1).reduce((a, s) => a + est(s), 0)
             + (cur ? (cur.kind === 'move' ? Math.max(0, x.stepAt + cur.ms - now) : cur.kind === 'fight' ? est(cur) : 0) : 0));
         return {
-            no: x.preset, runNo: x.no, key: x.key, spot: x.spot, chapter: x.chapter, diff: x.diff, grade: x.grade, repeat: x.repeat, stopOnLoss: x.stopOnLoss,
+            no: x.preset, runNo: x.no, key: x.key, spot: x.spot, ...(x.offer ? { offer: { ...x.offer } } : {}), chapter: x.chapter, diff: x.diff, grade: x.grade, repeat: x.repeat, stopOnLoss: x.stopOnLoss,
             party: x.squad.party.slice(), startedAt: x.startedAt, step: x.step, steps: plan.length,
             phase: W ? 'wait' : cur ? cur.kind : 'move', stepAt: x.stepAt, stepEndsAt: W ? W.at : cur?.kind === 'move' ? x.stepAt + cur.ms : null,
             fight: cur?.kind === 'fight' ? { kind: cur.fight, stageId: cur.stageId, level: cur.level, unknown: cur.bossId != null } : null,
@@ -6780,18 +6872,21 @@ export function createGameSystem(deps) {
     }
     /**
      * 탐험 화면 상태 한 덩어리 — **판정을 여기서 다 낸다** · 상태 불변 · rng 는 판 계획(`explorePlan` — 저장 안 함)뿐 (INTERFACE §2-7 「탐험 판」).
-     *   `spots` = 장 × 지점(옛 모양 — 지도 아이콘 · `out` 은 늘 null) · `tickets` = 표 재고(지점 → 장 → 단 → 등급 순) · `runs` = 도는 판(편성 번호 순) ·
-     *   `results` = 편성마다 마지막 결과 또는 null · `squads` = 편성마다 표와 무관한 거절 · `used` / `max` = 나가 있는 편성(원정 + 탐험) / 상한
+     *   spots는 상시 입구와 현재 특별 지점이다. 상시 입구의 chapter는 지도 좌표이고 판의 chapter는 표가 정한다.
      */
     function exploreState(state, now) {
         const built = Object.fromEntries(EXPLORE_SPOTS.map(s => [s, spotBuilt(state, s)]));
-        const spots = [];
-        for (const chapter of exploreChapters) for (const spot of EXPLORE_SPOTS)
-            spots.push({ chapter, spot, open: chapterOpen(state, chapter), built: built[spot], live: true, out: null });
-        const order = (a, b) => EXPLORE_SPOTS.indexOf(a.spot) - EXPLORE_SPOTS.indexOf(b.spot) || a.chapter - b.chapter
+        const rotation = exploreRotation(state, now);
+        const openChapters = exploreChapters.filter(ch => chapterOpen(state, ch));
+        const anchors = { cave: 1, caravan: 2, ruins: 3 };
+        const spots = EXPLORE_SPOTS.filter(spot => built[spot] && openChapters.length).map(spot => ({
+            spot, chapter: openChapters[Math.min(anchors[spot], openChapters.length) - 1],
+        }));
+        if (rotation.offer) spots.push({ spot: rotation.offer.spot, chapter: rotation.offer.chapter, offer: { ...rotation.offer } });
+        const order = (a, b) => a.chapter - b.chapter
             || DIFF_IDS.indexOf(a.diff) - DIFF_IDS.indexOf(b.diff) || EX_GRADES.findIndex(g => g.id === a.grade) - EX_GRADES.findIndex(g => g.id === b.grade);
         const tickets = Object.entries(state.exploreTickets ?? {}).map(([key, n]) => ({ key, ...ticketParse(key), n }))
-            .filter(t => t.spot && Number.isInteger(t.n) && t.n >= 1).sort(order);
+            .filter(t => t.chapter && Number.isInteger(t.n) && t.n >= 1).sort(order);
         const L = limitsOf(state);
         return {
             open: hasFeature(state, 'explore'), built,
@@ -6802,7 +6897,7 @@ export function createGameSystem(deps) {
             squads: state.presets.map((p, i) => ({ no: i + 1, party: p.party.slice(), err: squadErr(state, i + 1) })),
             used: busyNos(state).length, max: L.expeditions, partyMax: L.party,
             done: { ...Object.fromEntries(EXPLORE_SPOTS.map(s => [s, state.exploreDone?.[s] ?? 0])) },
-            spots,
+            spots, nextRefreshAt: (rotation.hour + 1) * EX_HOUR_MS,
         };
     }
     /** 판의 단계 목록 사본 — **숨긴 습격 자리까지 낸다**(개발 · 단정 · 개발 URL 손잡이) · 화면은 `exploreState` 를 읽는다 · 없으면 null */
@@ -6822,11 +6917,11 @@ export function createGameSystem(deps) {
         if (!x || typeof x !== 'object') return null;
         const t = ticketParse(x.key);
         const party = Array.isArray(x.squad?.party) ? x.squad.party.filter(uid => s.heroes.some(h => h.uid === uid)) : [];
-        if (!t || !party.length || !Number.isInteger(x.no) || !Number.isInteger(x.step) || x.step < 0 || !Number.isFinite(x.stepAt) || !Number.isFinite(x.startedAt)) return null;
+        if (!t || !EXPLORE_SPOTS.includes(x.spot) || !party.length || !Number.isInteger(x.no) || !Number.isInteger(x.step) || x.step < 0 || !Number.isFinite(x.stepAt) || !Number.isFinite(x.startedAt)) return null;
         const b = x.bank && typeof x.bank === 'object' ? x.bank : {};
         const nat = v => (Number.isFinite(v) && v > 0 ? Math.round(v) : 0);
         return {
-            no: x.no, preset: no, key: x.key, ...t, repeat: x.repeat === true, stopOnLoss: x.stopOnLoss === true,
+            no: x.no, preset: no, key: x.key, spot: x.spot, ...t, repeat: x.repeat === true, stopOnLoss: x.stopOnLoss === true,
             squad: { party, formation: x.squad.formation ?? null, potionSlots: Array.isArray(x.squad.potionSlots) ? x.squad.potionSlots : [], potionHp: x.squad.potionHp ?? B.potion_use_hp_pct, tactics: fitTactics(x.squad.tactics) },
             startedAt: x.startedAt, step: x.step, stepAt: x.stepAt,
             bank: {
@@ -6836,6 +6931,7 @@ export function createGameSystem(deps) {
                 cards: (Array.isArray(b.cards) ? b.cards : []).filter(c => c && TC.keyOf(c.card, c.grade)),
             },
             log: (Array.isArray(x.log) ? x.log : []).filter(l => l && Number.isInteger(l.i) && typeof l.kind === 'string').map(l => ({ i: l.i, kind: l.kind, won: l.won !== false })),
+            ...(validExploreOffer(x.offer, exHour(x.startedAt)) && x.offer.spot === x.spot && x.offer.chapter === t.chapter ? { offer: { ...x.offer } } : {}),
             ...(fitExploreWait(x.wait) ? { wait: fitExploreWait(x.wait) } : {}),   // 기다림이 있을 때만 싣는다(없으면 필드 없음 — 보낸 판과 같은 모양)
         };
     }
@@ -6847,7 +6943,13 @@ export function createGameSystem(deps) {
         return { outcome: w.outcome, at: w.at, from: w.from, steps };
     }
     /** 불러온 탐험 칸 전부를 편성 수에 맞춘다 — 판 · 결과 자리 · 재고 · 완수 수 · 첫 표를 준 지점 · 회차 (v54 · INTERFACE §4) · 첫 표는 맨 끝 */
+    function validExploreOffer(offer, hour) {
+        return offer && offer.hour === hour && EXPLORE_SPOTS.includes(offer.spot) && exploreChapters.includes(offer.chapter)
+            && Number.isFinite(offer.mult) && offer.mult > 0;
+    }
     function fitExplore(s) {
+        const rotation = s.exploreRotation;
+        if (!Number.isSafeInteger(rotation?.hour) || !(rotation.offer === null || validExploreOffer(rotation.offer, rotation.hour))) delete s.exploreRotation;
         const n = limitsOf(s).presets;
         s.counters.explore = Number.isInteger(s.counters.explore) && s.counters.explore >= 0 ? s.counters.explore : 0;
         s.counters.exploreTicket = Number.isInteger(s.counters.exploreTicket) && s.counters.exploreTicket >= 0 ? s.counters.exploreTicket : 0;
@@ -7310,7 +7412,7 @@ export function createGameSystem(deps) {
 
     /**
      * 첫 카드 [D9 · D10 · INTERFACE §2-7 「첫 카드 · 카드 드랍」] — **실제로 지은** 지휘 천막 랭크가 연 칸(앞에서부터) 중 아직 안 준 칸마다
-     *   그 칸의 첫 카드(`tactic.starterOf` — `tactic_card.csv:starter` · 칸 1 = 일기토 · 칸 2 = 방패벽 · 칸 3 = 독화살)를 `common` 으로 한 장 · 준 칸은 `tacticStarter` 에 적는다(두 번 안 준다).
+     *   그 칸의 첫 카드(`tactic.starterOf` — `tactic_card.csv:starter` · 칸 1 = 일기토 · 칸 2 = 방패벽 · 칸 3 = 치중대)를 `common` 으로 한 장 · 준 칸은 `tacticStarter` 에 적는다(두 번 안 준다).
      *   짓기(`construct`) · 불러오기(`deserialize` — v51 → v52 포함) · 새 게임이 부른다 · in-place · rng 0
      */
     function grantStarters(state) {
@@ -7399,7 +7501,7 @@ export function createGameSystem(deps) {
     /** 그 편성의 **카드 규칙** — 열린 칸에 든 카드의 `tactic.rulesOf`(칸 순 — 1 → 2 → 3 · R586 · INTERFACE §2-7) · 상태 불변 · rng 0 */
     const tacticRules = (state, no = state.preset) => TC.rulesOf(slotLines(state, no).map(s => s.card.id));
     /** 전투 계약의 맨 끝 인자 — 우리 쪽 규칙이 있으면 `{party, enemy: []}` · 없으면 null(지금과 한 글자도 안 다르다 · PLAN §6) */
-    const rulesArg = rules => (rules.length ? { party: rules, enemy: [] } : null);
+    const rulesArg = rules => (rules.length ? { party: rules } : null);
 
     /**
      * **카드 장착** [D7 · INTERFACE §2-7 `equipTactic`] — 가방의 카드 한 장(`key` = `'card|grade'`)을 편성 `no`(기본 고른 편성)의 칸 `slot` 에 넣는다 —
@@ -7546,8 +7648,7 @@ export function createGameSystem(deps) {
     const arenaState = state => ({ ...freshArena(), ...(state.arena ?? {}) });
 
     /** 그 상대와 붙으면 오르내릴 양 — 표준 ELO · 반올림 · 0 아래로 가는 몫은 뺀다 */
-    function arenaStakes(state, opp) {
-        const { rating } = arenaState(state);
+    function ratingStakes(rating, opp) {
         const expect = 1 / (1 + 10 ** ((opp - rating) / B.arena_elo_scale));
         const out = {};
         for (const [k, s] of Object.entries(ARENA_SCORE)) out[k] = Math.max(-rating, Math.round(B.arena_elo_k * (s - expect)));
@@ -7555,15 +7656,66 @@ export function createGameSystem(deps) {
     }
 
     /** 한 판의 결과를 적는다 — 부르는 쪽이 **싸운 순간에** 부른다(관전 전 · 창을 닫아 지는 판을 피하지 못하게) · in-place */
-    function arenaRecord(state, opp, outcome) {
-        if (!(outcome in ARENA_SCORE)) return { ok: false, err: 'outcome' };
+    const arenaStakes = (state, opp) => ratingStakes(arenaState(state).rating, opp);
+    function recordRating(state, key, opp, outcome) {
+        if (!Object.hasOwn(ARENA_SCORE, outcome)) return { ok: false, err: 'outcome' };
         if (!Number.isFinite(opp)) return { ok: false, err: 'opp' };
-        const a = arenaState(state), before = a.rating, delta = arenaStakes(state, opp)[outcome];
+        const a = { ...freshArena(), ...state[key] }, before = a.rating, delta = ratingStakes(before, opp)[outcome];
         a.rating = before + delta;
         a.peak = Math.max(a.peak, a.rating);
         a[outcome] += 1;
-        state.arena = a;
+        state[key] = a;
         return { ok: true, before, after: a.rating, delta };
+    }
+    const arenaRecord = (state, opp, outcome) => recordRating(state, 'arena', opp, outcome);
+
+    function validTagOrder(order) {
+        return Array.isArray(order) && order.length === 3 && [1, 2, 3].every(no => order.includes(no));
+    }
+    function tagReady(state, order) {
+        if (!validTagOrder(order) || limitsOf(state).presets < 3) return false;
+        const ids = order.flatMap(no => partyOf(state, no));
+        return order.every(no => partyOf(state, no).length === 3) && new Set(ids).size === 9 && ids.every(uid => heroById(state, uid));
+    }
+    function setTagDefense(state, order) {
+        if (!tagReady(state, order)) return false;
+        state.tagDefense = order.slice();
+        return true;
+    }
+    function tagExport(state) {
+        const order = state.tagDefense;
+        if (!tagReady(state, order)) return null;
+        return { v: 1, codex: codexOptionLevels(state), parties: order.map(no => {
+            const ids = partyOf(state, no), heroes = ids.map(uid => heroById(state, uid));
+            return { no, ids, code: arenaSys().exportTeam(heroes, state.items, formationState(state, no).byUid, arenaExport(state, no)) };
+        }) };
+    }
+    function importTag(payload) {
+        const groups = payload?.parties, levels = payload?.codex;
+        if (payload?.v !== 1 || !Array.isArray(groups) || !validTagOrder(groups.map(g => g?.no))) return null;
+        if (!levels || typeof levels !== 'object' || Array.isArray(levels) ||
+            Object.entries(levels).some(([id, lv]) => !Object.hasOwn(CODEX.options, id) || !Number.isInteger(lv) || lv < 1 || lv > codexMaxLevel())) return null;
+        if (groups.some(g => !Array.isArray(g.ids) || g.ids.length !== 3 || g.ids.some(uid => typeof uid !== 'string' || !uid))) return null;
+        if (new Set(groups.flatMap(g => g.ids)).size !== 9) return null;
+        const codex = codexOptionsFromLevels(levels), parties = [];
+        for (const group of groups) {
+            const row = arenaSys().importTeam(group.code, codex);
+            if (!row.ok) return null;
+            parties.push({ no: group.no, team: row.team, loadout: row.loadout });
+        }
+        return parties;
+    }
+    function tagFight(state, order, opponent, rng) {
+        if (!tagReady(state, order) || !validTagOrder(state.tagDefense) || !Number.isSafeInteger(opponent?.rating) || opponent.rating < 0 ||
+            !Array.isArray(opponent.parties) || !validTagOrder(opponent.parties.map(p => p?.no))) return null;
+        const arena = arenaSys();
+        const parties = order.map(no => {
+            const loadout = arenaLoadout(state, no), heroes = partyOf(state, no).map(uid => heroById(state, uid));
+            return { no, team: arena.snapshotTeam(heroes, state.items, formationState(state, no).byUid, loadout), loadout };
+        });
+        const series = arena.fightTagSeries(parties, opponent.parties, rng);
+        series.rating = recordRating(state, 'tagLeague', opponent.rating, series.outcome);
+        return series;
     }
 
     const colosseumState = state => {
@@ -7574,19 +7726,18 @@ export function createGameSystem(deps) {
     /** 한 층의 도전 결과 — 열린 가장 높은 층을 이기면 한 층 오른다 · 깬 층 다시 이기기 · 지기는 아무것도 안 바꾼다 · in-place */
     function colosseumRecord(state, floor, won) {
         const { cleared } = colosseumState(state);
-        if (!Number.isInteger(floor) || floor < 1) return { ok: false, err: 'floor' };
+        if (!Number.isInteger(floor) || floor < 1 || floor > ENDLESS.length) return { ok: false, err: 'floor' };
         if (floor > cleared + 1) return { ok: false, err: 'locked' };
         const advanced = !!won && floor === cleared + 1;
         state.colosseum = { cleared: advanced ? floor : cleared };
         return { ok: true, cleared: state.colosseum.cleared, advanced };
     }
 
-    /* ── 무한의 탑 [2026-11-19 · R554 · endless_tower_design §0 · INTERFACE §2-7] ──
-       몬스터만 상대하는 층 사다리 — 한 층 = `endless_floor.csv` 한 줄 = 그 스테이지의 그 종류 라운드 하나를 **원정 규칙 그대로** 단판으로 돈다(`battle.createRun` 의 `rules.round`).
-       오르는 규칙은 시련의 탑과 같다 · **보상이 없다** — 결과로 바뀌는 세이브 값은 오른 층(`state.endless`) 하나다 · 영웅은 원정에서 빠지지 않는다 */
+    /* 시련의 탑 — 층 표가 몬스터 단판과 라이벌 결투를 고른다. 두 종류 모두 최고층만 기록한다. */
 
     // 층 표 — 한 줄 = 한 층 · 틀리면 생성 때 던진다 (INTERFACE §2-7 `endlessFloors`)
-    const ENDLESS = (deps.endlessFloors ?? []).map(r => ({ no: r.floor, stageId: r.stage_id, type: r.round_type, level: r.monster_level, difficulty: r.difficulty_id }));
+    const ENDLESS = (deps.endlessFloors ?? []).map(r => ({ no: r.floor, stageId: r.stage_id, type: r.round_type, level: r.monster_level, difficulty: r.difficulty_id,
+        ...(r.round_type === 'rival' ? { classes: String(r.rival_classes ?? '').split('|') } : {}) }));
     (() => {
         const bad = why => { throw new Error(`endless_floor: ${why}`); };
         if (!ENDLESS.length) bad('행이 없다');
@@ -7596,7 +7747,9 @@ export function createGameSystem(deps) {
             if (f.no !== i + 1) bad(`${i + 1}째 줄 — floor '${f.no}' (1 부터 빈틈없이 오름차순)`);
             const st = deps.stages[f.stageId];
             if (!st) bad(`${f.no}층 — stage_id '${f.stageId}' (stage.csv 에 없다)`);
-            if (f.type !== 'elite' && f.type !== 'boss') bad(`${f.no}층 — round_type '${f.type}' (elite · boss)`);
+            if (!['elite', 'boss', 'rival'].includes(f.type)) bad(`${f.no}층 — round_type '${f.type}' (elite · boss · rival)`);
+            if (f.type === 'rival' && (f.classes.length !== B.party_size_max || f.classes.some(cls => !deps.hero.mainClasses.includes(cls))))
+                bad(`${f.no}층 — rival_classes에 영웅 직업 세 개가 필요하다`);
             const has = BT.stageRounds(st).some(r => r.round_type === f.type);
             if (f.type === 'boss' && (!has || !st.boss_monster_idx)) bad(`${f.no}층 — 스테이지 ${f.stageId} 에 보스 라운드가 없다`);
             if (f.type === 'elite' && !has && (BT.stagePool(st).length || !chapterHasNormals(st.chapter)))
@@ -7606,25 +7759,10 @@ export function createGameSystem(deps) {
         });
     })();
 
-    const endlessState = state => {
-        const cleared = state.endless?.cleared ?? 0;
-        return { cleared, next: cleared + 1 };
-    };
-
-    /** 한 층의 도전 결과 — `colosseumRecord` 와 같은 규칙(열린 가장 높은 층을 이기면 한 층 · 깬 층 재승리 · 지기는 그대로) · `state.endless` 를 바꾼다 · in-place */
-    function endlessRecord(state, floor, won) {
-        const { cleared } = endlessState(state);
-        if (!Number.isInteger(floor) || floor < 1) return { ok: false, err: 'floor' };
-        if (floor > cleared + 1) return { ok: false, err: 'locked' };
-        const advanced = !!won && floor === cleared + 1;
-        state.endless = { cleared: advanced ? floor : cleared };
-        return { ok: true, cleared: state.endless.cleared, advanced };
-    }
-
     /**
      * 그 층의 런 — 파티는 **원정 출발과 같은 길**(`partyUnits` — 도감 옵션 · 전술 · 진형 · 시작 순서 · 물약 칸 = 재고에서 채운 칸 · 마시는 기준 · 칸 수)로 세운다.
      *   만남 = 층 시드 하나(`deriveSeed([balance.csv:endless_seed], 층)` — 같은 층 = 같은 무리) · 보스 층은 호위 수 고정(`[balance.csv:endless_boss_escorts]`) ·
-     *   단 · 장 디버프 · 부류 버프 · 도감 사다리는 원정 런 그대로(`createRun` 이 스테이지 · 단으로 고른다). 세이브를 안 바꾼다
+     *   단 · 장 디버프 · 적 작전 카드 · 도감 사다리는 원정 런 그대로(`createRun` 이 스테이지 · 단으로 고른다). 세이브를 안 바꾼다
      */
     function endlessRun(state, F, rng, no) {
         const p = presetAt(state, no) ?? curPreset(state);
@@ -7636,25 +7774,38 @@ export function createGameSystem(deps) {
         return { run, units };
     }
 
-    /** 그 층의 무리 — **전투 없이** 라운드를 열기만 한다(`advance(0)`) · `enemies` = 그 `round` 이벤트의 적(관전 카드 모양) · 등장 지연은 고정 씨앗 · 모르는 층이면 null · 상태 불변 */
+    /** 라이벌은 직업이 지정된 영웅 팀, 몬스터는 그 층의 무리. **전투 없이** 라운드를 열기만 한다(`advance(0)`) · `enemies` = 그 `round` 이벤트의 적(관전 카드 모양) · 등장 지연은 고정 씨앗 · 모르는 층이면 null · 상태 불변 */
     function endlessPreview(state, floor, no = state.preset) {
         const F = ENDLESS.find(f => f.no === floor);
         if (!F) return null;
+        if (F.type === 'rival') {
+            const names = partyOf(state, no).map(uid => heroById(state, uid).name);
+            return { type: F.type, opponent: arenaSys().rollFloorOpponent(floor, names, F.classes) };
+        }
         const { run } = endlessRun(state, F, makeRng(0), no);
         run.advance(0);
         return { type: F.type, enemies: run.result.timeline.find(e => e.e === 'round')?.enemies ?? [] };
     }
 
     /**
-     * 한 층 단판 — 끝까지 돈 결과 + `{mode: 'endless'}` · 세운 파티 유닛. **보상을 정산하지 않는다**(경험치 · 골드 · 드롭 · 책 · 도감 처치 · 함께 잡은 수 ·
+     * 한 층 단판 — 몬스터는 mode 'endless'와 파티 유닛, 라이벌은 mode 'arena'와 양쪽 영웅 스냅샷. **보상을 정산하지 않는다**(경험치 · 골드 · 드롭 · 책 · 도감 처치 · 함께 잡은 수 ·
      *   의뢰 · 메인미션 — 결과의 보상 칸은 읽지 않고 버린다) · 물약 재고도 안 준다 · 오른 층은 부르는 쪽이 `endlessRecord` 로 적는다 (endless_tower_design §0)
      */
     function endlessFight(state, floor, rng, no = state.preset) {
         const F = ENDLESS.find(f => f.no === floor);
         if (!F) return { ok: false, err: 'floor' };
-        if (floor > endlessState(state).cleared + 1) return { ok: false, err: 'locked' };
+        if (floor > colosseumState(state).cleared + 1) return { ok: false, err: 'locked' };
         const p = presetAt(state, no) ?? curPreset(state);
         if (p.party.length !== B.party_size_max) return { ok: false, err: 'noParty' };
+        if (F.type === 'rival') {
+            const arena = arenaSys();
+            const loadout = arenaLoadout(state, no);
+            const heroes = p.party.map(uid => heroById(state, uid));
+            const team = arena.snapshotTeam(heroes, state.items, formationOf(p).byUid, loadout);
+            const { opponent } = endlessPreview(state, floor, no);
+            const result = arena.fight(team, opponent, rng, loadout, arena.floorLoadout(floor));
+            return { ok: true, result, team, opponent };
+        }
         const { run, units } = endlessRun(state, F, rng, no);
         while (run.next()?.ended === false);
         return { ok: true, result: { ...run.result, mode: 'endless' }, units };
@@ -7795,7 +7946,7 @@ export function createGameSystem(deps) {
         visitSettle, visitState, visitStory,
         joinState, joinAdd, joinHire, joinDrop, visitHire, visitDrop, visitFilterSet,
         // 탐험 판 (2026-11-26 · R590 · INTERFACE §2-7 「탐험 판」 — ~~exploreTake · exploreDrop~~ 옛 시간제)
-        exploreState, exploreErr, exploreSend, exploreAdvance, exploreFight, exploreFightEnd, exploreRecall, exploreFinish, exploreSeen,
+        exploreState, exploreRefresh, exploreErr, exploreSend, exploreAdvance, exploreFight, exploreFightEnd, exploreRecall, exploreFinish, exploreSeen,
         exploreAddTickets, exploreTicketKey: ticketKey, exploreTicketParse: ticketParse, explorePlanOf, exploreJump,
         dispatchSettle, dispatchProgress, labState, labSettle, labResume, labResearchStart, labResearchCancel, labRegOf, labRegList, labRegister, labUnregister, labRegLoss, labEffectsFor, materialsState,
         materialLadder, synthState, synthesize,   // 재료 단계 · 대장간 합성 (2026-10-27 · R359)
@@ -7804,6 +7955,7 @@ export function createGameSystem(deps) {
         bookState, learnBook, salvageBook, salvageBooks, bookSalvagePreview, craftBook, sortBooks,
         masteryState, learnMastery, unlearnMastery, resetMastery,
         tacticState, tacticBonus, arenaLoadout, arenaExport, arenaState, arenaStakes, arenaRecord, colosseumState, colosseumRecord, arenaDefense, setArenaDefense, weaponGroupOf,
+        tagReady, setTagDefense, tagExport, importTag, tagFight,
         tacticRules, equipTactic, enchantTactic, dismantleTactic,   // 작전 카드 — 규칙 · 장착 · 줄 인챈트 · 분해 (2026-11-25 · R586 · ~~rerollTactic · toggleTacticLock~~)
         equipUsedTactic, dismantleUsedTactic,                        // 사용한 카드 — 장착 · 분해 (2026-11-26 · R589)
         constructionState, construct, hasFeature, needOf,
@@ -7811,6 +7963,6 @@ export function createGameSystem(deps) {
         notificationState,   // 상단 종 — 원정 준비 점검 · 처리 대기 (2026-10-30 · 초보 안내 걷음 2026-11-17)
         mainMissionState, mainMissionSync, mainMissionClaim,   // 메인미션 — 판정 · 기록 · 받기 (2026-11-17 · R524 · INTERFACE §2-7)
         // 무한의 탑 — 층 표(사본) · 오른 층 · 적기 · 무리 미리보기 · 단판 (2026-11-19 · R554 · INTERFACE §2-7)
-        endlessFloors: ENDLESS.map(f => ({ ...f })), endlessState, endlessRecord, endlessPreview, endlessFight,
+        endlessFloors: ENDLESS.map(f => ({ ...f, ...(f.classes ? { classes: f.classes.slice() } : {}) })), endlessState: colosseumState, endlessRecord: colosseumRecord, endlessPreview, endlessFight,
     };
 }

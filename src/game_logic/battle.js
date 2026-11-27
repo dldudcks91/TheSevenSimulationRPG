@@ -50,8 +50,8 @@
  *     기본 공격은 안 싣고 평타 계수(`mainMult` — 힘 · ~~마법 무기 = 지능~~(2026-09-27) 은 R198 로 소멸 — 마법 무기는 평타가 없다)를 쓴다 (battle_design §9-2 · 2026-09-18 — ~~능력치 항 `flat`~~ 폐기).
  *   · **사건 훅** — `strikeOnce` 가 `hit`/`hitTaken`/`kill` 을, `downed` 가 `down` 을, 런타임이 `cast` 를 발화한다.
  *     유닛의 `reactions` 가 비면 아무 일도 없다 — 발화 **지점**이 곧 rng 순서 계약이다 (INTERFACE §5-2).
- *   · **작전 카드 규칙** [2026-11-26 · R586 · battle_design §3-3 · PLAN_tactic_cards_impl §2 · §6] — `createRun` 맨 끝 `tactics = {party, enemy}` 가 쪽마다
- *     규칙 11 종(`TACTIC_RULES`)을 건다. 출발 때 굳고(`refit` 무관) · 리더(파티 = 편성 첫 칸 · 적 = 라운드마다 하나)를 읽고 · 일하면 `tactic` 이벤트를 남긴다.
+ *   · **작전 카드 규칙** — 명시한 편성 또는 스테이지의 적 카드가 쪽마다 규칙을 건다.
+ *     리더(파티 = 편성 첫 칸 · 적 = 라운드마다 하나)를 읽고 발동하면 `tactic` 이벤트를 남긴다.
  *     **없으면(`null` · 빈 배열) 한 글자도 안 다르다** — 굴림 · 이벤트 · 유닛 필드가 안 생긴다
  *   · **스킬 id 전용 코드가 없다** [2026-09-24 · R151 · PLAN_skill_structure 2단계] — 이 파일이 스킬에 대해 아는 것은 규칙뿐이다:
  *     오오라(`cast = aura`)를 창으로 건다 · 라운드가 바뀌면 `round_end = close` 창을 닫는다 · 쓰러지면 사건 `on_death` 를 쏜다(`rt.fire`) ·
@@ -90,6 +90,9 @@ import { barrierPut, barrierSum, barrierTake, refreshDerived, weaponOnHit, state
 // 스테이지 편성 예외 — 규칙이 코드라서 주입이 아니라 import 다 (skill_effects.js 와 같은 취급 · INTERFACE §2-13)
 import { STAGE_SPAWN_RULES, spawnRuleKey } from './spawn_rule.js';
 // 만남 줄 — 라운드 씨앗을 용도 · 몬스터 자리 · 장비 부위로 나눈다 (INTERFACE §5-1).
+/* @include hell */
+import { chapterDebuffLookup } from './chapter_debuff.js';
+/* @end */
 import { makeRng, deriveSeed } from './rng.js';
 
 /** 난수 용도 번호는 저장 · 서버 재현 계약이다. 표의 값이 바뀌면 같은 판의 내용도 바뀐다. */
@@ -104,13 +107,25 @@ export const MONSTER_GEAR_PARTS = Object.freeze(['weapon', 'helmet', 'armor', 'g
 /**
  * 작전 카드 규칙 어휘 [2026-11-26 · R586 · PLAN_tactic_cards_impl §2 · §6 · battle_design §3-3] — rule → 받는 수치 칸(p1 · p2 · p3)의 종류.
  *   `sec` = 초(0 초과) · `frac` = 몫(0 초과 1 이하) · 안 받는 칸은 읽지 않는다. 이 밖의 rule · 칸이 어긋난 수치는 `createRun` 이 **rng 를 쓰기 전에** 던진다.
- *   **정의는 CSV(`tactic_card.csv`) · 종류는 코드** — 규칙의 뜻은 이 파일의 `createRun` 「작전 카드 규칙」 묶음이 든다 (INTERFACE §2-6 · §2-9 「규칙 어휘 11」)
+ *   **정의는 CSV(`tactic_card.csv`) · 종류는 코드** — 규칙의 뜻은 이 파일의 `createRun` 「작전 카드 규칙」 묶음이 든다 (INTERFACE §2-6 · §2-9 「규칙 어휘」)
  */
 export const TACTIC_RULES = Object.freeze({
     duel: Object.freeze([]), wedge: Object.freeze(['sec']), trojan: Object.freeze(['sec']), charge: Object.freeze(['sec']),
     shieldwall: Object.freeze(['frac']), guard: Object.freeze(['frac']), turtle: Object.freeze(['sec', 'frac', 'frac']), retreat: Object.freeze(['frac']),
     poison_arrow: Object.freeze(['frac']), fire_arrow: Object.freeze(['frac', 'frac']), baggage: Object.freeze(['frac']),
+    guardian: Object.freeze(['frac']), unity: Object.freeze(['frac', 'count']), dying_curse: Object.freeze(['frac', 'count']), giant: Object.freeze(['frac']),
+    desperate_charge: Object.freeze(['frac']),
+    mutual_cover: Object.freeze(['frac']), open_order: Object.freeze(['frac']),
+    last_stand: Object.freeze([]),
+    pursuit: Object.freeze([]),
+    crane_wing: Object.freeze(['frac']),
+    field_medics: Object.freeze(['frac']),
+    vanguard_barrier: Object.freeze(['frac']),
+    aimed_fire: Object.freeze(['frac']),
+    focused_fire: Object.freeze(['frac']),
+    rapid_deployment: Object.freeze(['frac']),
 });
+const legacyTacticParams = new Map([['hammer_anvil', ['frac']], ['volley', ['frac']], ['iron_line', ['frac']]]);
 
 /**
  * `createRun` 의 `tactics` → 쪽마다 `rule → Rule` 표 [2026-11-26 · R586 · INTERFACE §2-6 「작전 카드」]. `null` · 빈 배열이면 빈 표 둘(카드 없음).
@@ -125,14 +140,15 @@ function tacticTable(tactics) {
         const list = tactics[side] ?? [];
         if (!Array.isArray(list)) throw new Error(`battle: tactics.${side} — Rule 배열이어야 한다 (INTERFACE §2-6)`);
         list.forEach((r, i) => {
-            const kinds = TACTIC_RULES[r?.rule];
-            if (!kinds || !Object.hasOwn(TACTIC_RULES, r.rule)) throw new Error(`battle: tactics.${side}[${i}] rule '${r?.rule}' — 모르는 규칙 (INTERFACE §2-6 · §2-9 「규칙 어휘 11」)`);
+            // Expeditions already in progress may carry the previous rule in their departure snapshot.
+            const kinds = Object.hasOwn(TACTIC_RULES, r?.rule) ? TACTIC_RULES[r.rule] : legacyTacticParams.get(r?.rule);
+            if (!kinds) throw new Error(`battle: tactics.${side}[${i}] rule '${r?.rule}' — 모르는 규칙 (INTERFACE §2-6 · §2-9 「규칙 어휘」)`);
             if (typeof r.card !== 'string' || !r.card) throw new Error(`battle: tactics.${side}[${i}] card '${r.card}' — 카드 id 가 있어야 한다 (INTERFACE §2-6)`);
             if (T[side].has(r.rule)) throw new Error(`battle: tactics.${side} 에 rule '${r.rule}' 이 두 번 — 한쪽에 같은 규칙은 하나다 (PLAN_tactic_cards_impl §2)`);
             kinds.forEach((k, j) => {
                 const v = r[`p${j + 1}`];
-                if (!(typeof v === 'number' && Number.isFinite(v) && v > 0 && (k === 'sec' || v <= 1)))
-                    throw new Error(`battle: tactics.${side}[${i}] ${r.rule} p${j + 1} '${v}' — ${k === 'sec' ? '0 초과 초' : '0 초과 1 이하 몫'}이어야 한다 (INTERFACE §2-6)`);
+                if (!(typeof v === 'number' && Number.isFinite(v) && v > 0 && (k === 'count' ? Number.isInteger(v) : k === 'sec' || v <= 1)))
+                    throw new Error(`battle: tactics.${side}[${i}] ${r.rule} p${j + 1} '${v}' — ${k === 'count' ? '양의 정수' : k === 'sec' ? '0 초과 초' : '0 초과 1 이하 몫'}이어야 한다 (INTERFACE §2-6)`);
             });
             T[side].set(r.rule, Object.freeze({ card: r.card, rule: r.rule, p1: r.p1 ?? null, p2: r.p2 ?? null, p3: r.p3 ?? null }));
         });
@@ -183,14 +199,17 @@ export function createBattleSystem(data) {
     const ET = data.eliteTraits ?? {};
     for (const s of data.sins ?? [])
         if (!ET.sin?.[s]?.length) throw new Error(`battle: eliteTraits.sin.${s} 가 비었다 — 그 죄종의 마스터리 T2 (mastery_node.csv · INTERFACE §2-6 · R459)`);
-    for (const k of ['enchant', 'def'])
+    const maxTraitSlots = Math.max(1, ...(data.difficulties ?? []).map(d => d.eliteTraitSlots ?? 1));
+    for (const k of ['enchant', /* @include defense */ 'def', /* @end */].slice(0, maxTraitSlots - 1))
         if (!ET[k]?.length) throw new Error(`battle: eliteTraits.${k} 가 비었다 (INTERFACE §2-6)`);
     // 정예 강화 [2026-11-17 · R528 · monster_design §6-1] — 풀은 원소 넷 · 값 키가 다 있어야 한다(없으면 NaN 피해가 조용히 샌다)
+    /* @include enchant */
     for (const el of ET.enchant)
         if (!['fire', 'cold', 'lightning', 'poison'].includes(el)) throw new Error(`battle: eliteTraits.enchant '${el}' — 원소 넷 중 하나 (INTERFACE §2-6 · R528)`);
     for (const k of ['elite_enchant_add_pct', 'elite_enchant_chain_pct', 'elite_enchant_back_mult', 'elite_enchant_blast_mult',
         'elite_enchant_cloud_mult', 'elite_enchant_cloud_sec', 'elite_enchant_frost_pct', 'elite_enchant_bolt_sec', 'elite_enchant_bolt_mult'])
-        if (!(B[k] > 0)) throw new Error(`battle: balance.csv 의 ${k} 가 없거나 0 이하다 (정예 강화 · R528)`);
+        if (maxTraitSlots >= 2 && !(B[k] > 0)) throw new Error(`battle: balance.csv 의 ${k} 가 없거나 0 이하다 (정예 강화 · R528)`);
+    /* @end */
     // 파티 골드 · 드랍 · 매직의 체감 K [2026-10-05] — 없으면 정산이 NaN 으로 조용히 샌다
     for (const k of ['party_gold_find_k', 'party_item_find_k', 'party_magic_find_k'])
         if (!(B[k] > 0)) throw new Error(`battle: balance.csv 의 ${k} 가 없거나 0 이하다`);
@@ -204,15 +223,6 @@ export function createBattleSystem(data) {
         // 면역(R522 · R526) — 강타 · 흡혈 · 결빙 · 불리언이거나 없다(없으면 면역 없음)
         for (const k of ['noCrush', 'noLeech', 'noFreeze']) if (r[k] !== undefined && typeof r[k] !== 'boolean') throw new Error(`battle: 종족 ${id} 의 ${k} '${r[k]}' — 불리언이어야 한다 (monster_type.csv:crush_immune · leech_immune · freeze_immune)`);
     }
-    // 부류 버프 [2026-11-16 · R518 · monster_design §3-2 · INTERFACE §2-6 — 2026-10-29 R388 기믹을 11-14 R494 에 걷었다가 나이트메어부터 버프로 되살렸다] —
-    //   군단 · 거인 · 수호자 · 이형은 비율(0 이상 1 미만) · 부족은 능력치에 더하는 수(0 이상 정수) · 표가 없는 조립은 비어 버프가 없다
-    const FAMILIES = data.families ?? {};
-    for (const [id, f] of Object.entries(FAMILIES)) {
-        const ok = id === 'Tribe' ? Number.isInteger(f.value) && f.value >= 0 : typeof f.value === 'number' && f.value >= 0 && f.value < 1;
-        if (!ok) throw new Error(`battle: 부류 ${id} 의 gimmick_value '${f.value}' — ${id === 'Tribe' ? '0 이상 정수' : '0 이상 1 미만'} (monster_base.csv)`);
-        if (!(Number.isInteger(f.n) && f.n >= 0)) throw new Error(`battle: 부류 ${id} 의 gimmick_n '${f.n}' — 0 이상 정수 (monster_base.csv)`);
-    }
-    if (Object.keys(FAMILIES).length && !Number.isInteger(B.monster_family_min_order)) throw new Error(`battle: balance.csv:monster_family_min_order '${B.monster_family_min_order}' — 정수여야 한다 (부류 버프의 첫 단)`);
     const rankOfRole = role => ROLES[role]?.rank ?? 0;
     const EPS = SK ? SK.EPS : 0;                // 준비·만료 판정 허용 오차 (skill.js — INTERFACE §5-3)
     const r1 = v => Math.round(v * 10) / 10;
@@ -311,7 +321,11 @@ export function createBattleSystem(data) {
     const wearOf = g => ({ fixed: partsOf(g.wear_fixed), optional: partsOf(g.wear_optional) });
     /** 난이도 단 — 선택 부위 착용 확률 `[difficulty_tier.csv:wear_chance]` · 안 준 단 · 표에 없는 단은 첫 단 · 표가 없는 조립은 1(다 입는다) */
     const DIFFS = data.difficulties ?? [];
+    const scoped = DIFFS.some(d => Number.isFinite(d.lastChapter));
     const diffOf = diff => DIFFS.find(d => d.id === diff) ?? DIFFS[0];
+    const STAGE_TACTICS = data.stageTactics ?? new Map();
+    if (STAGE_TACTICS.size && !(Number.isInteger(B.stage_tactic_min_order) && B.stage_tactic_min_order > 0))
+        throw new Error('battle: balance.csv:stage_tactic_min_order는 양의 정수여야 한다');
     const wearChanceOf = diff => diffOf(diff)?.wearChance ?? 1;
     /**
      * 몬스터 장비의 희귀도 가중치 — **그 등급 × 그 단의 한 행** `[gear_rarity.csv]` [2026-10-24 · 사용자 확정 · R350 · item_design §1 희귀도 —
@@ -321,25 +335,36 @@ export function createBattleSystem(data) {
     const RARITY = data.gearRarity ?? null;
     const gearWeightsOf = (g, diff) => (RARITY ? RARITY[g.grade]?.[diffOf(diff)?.id] ?? null : null);
     /** 몬스터 장비 아이템 레벨 고정 — 그 단이 **그 몬스터의 레벨로** 고정하나 `[difficulty_tier.csv:gear_ilvl_fixed]` (헬 · 사용자 「ㅇㅇ장비 50고정」 2026-10-28 · R366) · 표가 없는 조립은 굴림 */
+    /* @include hell */
     const gearFixedOf = diff => diffOf(diff)?.gearIlvlFixed === 1;
-    /**
-     * 장 디버프 — **단 · 장마다 한 줄** `[chapter_debuff.csv]` [2026-10-28 · 사용자 · R366 · base_expedition_design §1-4 — ~~라운드 단계~~(10-24)].
-     *   장 안의 칸은 같은 값이고 **챕터보스 칸만** 값에 `[balance.csv:chapter_debuff_boss_mult]` 를 곱한다(간격 · 시간 · 상한은 그대로).
-     *   출정 창과 `createRun` 이 이것 하나를 읽는다 · 줄이 없는 단 · 장 · 없는 칸은 null · rng 0
-     */
-    const DEBUFFS = data.chapterDebuffs ?? [];
+    /* @end */
+    // Effects used by combat encounters in the published areas.
     const DEBUFF_EFFECTS = ['taken_pct', 'poison', 'heal_cut', 'freeze', 'feast'];
     /** 마스터리 조건부 줄 중 **틱마다** 다시 쓰는 능력치 — 상대를 보는 조건이면 마지막으로 친 적과 견준다(hero.js `COND_STATS` · 2026-11-12 · R468) */
     const TICK_STATS = new Set(['cooldown_reduction', 'hp_regen']);
-    function debuffOf(stageId, difficulty = null) {
-        const stage = data.stages[stageId], d = diffOf(difficulty);
-        if (!stage || !d) return null;
-        const row = DEBUFFS.find(x => x.difficultyId === d.id && x.chapter === stage.chapter);
-        if (!row) return null;
-        const boss = stage.boss_grade === 'chapter_boss';
-        return { sin: row.sin, effect: row.effect, value: boss ? row.value * B.chapter_debuff_boss_mult : row.value,
-            intervalSec: row.intervalSec, durationSec: row.durationSec, cap: row.cap, boss };
+    function validateEffects(rows, keyOf, source) {
+        const debuffSeen = new Set();
+        const pos = v => typeof v === 'number' && v > 0;
+        for (const x of rows) {
+            const at = keyOf(x);
+            if (debuffSeen.has(at)) throw new Error(`battle: 효과 ${at} 이 두 줄 — 위치마다 한 줄이다 (${source})`);
+            debuffSeen.add(at);
+            if (!DEBUFF_EFFECTS.includes(x.effect)) throw new Error(`battle: 효과 ${at} 의 effect '${x.effect}' — ${DEBUFF_EFFECTS.join(' · ')} 중 하나 (${source})`);
+            // 결빙은 행동 속도(`period_pct`)라 음수 · 나머지는 양수
+            if (x.effect === 'freeze' ? !(typeof x.value === 'number' && x.value < 0) : !pos(x.value))
+                throw new Error(`battle: 효과 ${at} 의 value '${x.value}' — ${x.effect === 'freeze' ? '음수' : '양수'}여야 한다 (${source})`);
+            if ((x.effect === 'poison' || x.effect === 'freeze') && !(pos(x.intervalSec) && pos(x.durationSec)))
+                throw new Error(`battle: 효과 ${at} — ${x.effect} 는 interval_sec · duration_sec 가 양수여야 한다 (${source})`);
+            if (x.effect === 'feast' && !pos(x.cap)) throw new Error(`battle: 효과 ${at} — feast 는 cap 이 양수여야 한다 (${source})`);
+        }
     }
+    function ruinsTrapOf(stageId) {
+        const stage = data.stages[stageId];
+        return stage && DIFFS.length ? data.ruinsTraps?.find(x => x.chapter === stage.chapter) ?? null : null;
+    }
+    /* @include hell */
+    const debuffOf = chapterDebuffLookup(data, diffOf, ruinsTrapOf, validateEffects);
+    /* @end */
     /**
      * 몬스터 스킬 칸 — **난이도가 연다 · 보스는 한 칸 더** [2026-10-18 · R269 · monster_design §5-1 — ~~등급이 연다(일반 1 · 정예 2 · 보스 3)~~ 09-11].
      *   칸 수 = 그 단 `[difficulty_tier.csv:skill_slots]` + 등급 `[spawn_grade.csv:skill_slots_add]`. **칸은 출처 자리**다 —
@@ -370,13 +395,9 @@ export function createBattleSystem(data) {
      */
     const resPenaltyOf = diff => diffOf(diff)?.heroResPenalty ?? 0;
     const penalized = (combat, pen) => (pen ? { ...combat, ...Object.fromEntries(ELEMENTS.map(el => [`res_${el}`, (combat[`res_${el}`] ?? 0) - pen])) } : combat);
-    /** 부류 버프가 서는 단인가 — 그 단의 `order` ≥ `[balance.csv:monster_family_min_order]`(나이트메어부터 · R518) · 단을 모르는 조립은 안 선다 */
-    const familyOn = diff => (diffOf(diff)?.order ?? 0) >= B.monster_family_min_order;
-    /** 몬스터의 기본 능력치 일곱 — 부족 버프가 모두에 더한다(R518) */
-    const MONSTER_ATTRS = ['str', 'agi', 'int', 'vit', 'luck', 'ldr', 'cha'];
     const slotPlan = (m, g, diff) => ({
         innate: m.innate_skill,
-        second: slotsOf(diff) >= 2 && m.nightmare_skill && m.nightmare_skill !== '-' ? m.nightmare_skill : null,
+        second: /* @include enchant */ slotsOf(diff) >= 2 && m.nightmare_skill && m.nightmare_skill !== '-' ? m.nightmare_skill : /* @end */ null,
         rolled: g.skill_slots_add >= 1,
     });
     /** 몬스터 장비 아이템 레벨의 반폭 — 가운데 × `[balance.csv:drop_ilvl_spread_pct]` 반올림 · 하한 `[balance.csv:drop_ilvl_spread_min]`
@@ -395,11 +416,9 @@ export function createBattleSystem(data) {
      * 무기군 `-` 는 그 직업 본편 무기군(`item.groupsFor` 순서) 중 하나를 전용 수열의 한 굴림으로 고른다.
      * @param seed 이 몬스터 차림의 uint32 씨앗
      * @param level 스테이지 레벨 — `level_add` 는 안 탄다(INTERFACE §2-6 `lvl`)
-     * @param chance 선택 부위 착용 확률 — 그 런의 단(`wearChanceOf`)
-     * @param weights 희귀도 가중치 — 그 등급 × 그 런의 단(`gearWeightsOf` · 2026-10-24 · R350) · `null` 이면 드롭 가중치 · 굴림 수 불변
-     * @param ilvlFixed 그 런의 단이 아이템 레벨을 고정하나(`gearFixedOf` — 헬) — 참이면 아래 끝도 그 몬스터의 레벨이다(굴림은 소비만 · 2026-10-28 · R366)
+     * @param difficulty 착용 확률과 장비 희귀도를 정하는 원정 난이도.
      */
-    const wearGear = (seed, m, g, level, magicFind, chance, weights, ilvlFixed = false) => {
+    const wearGear = (seed, m, g, level, magicFind, difficulty) => {
         let weaponGroup = m.weapon_group;
         if (weaponGroup === '-') {
             const gs = data.itemSystem.groupsFor(m.cls);
@@ -411,6 +430,7 @@ export function createBattleSystem(data) {
             if (no < 0) throw new Error(`battle: 차림 난수 부위 '${part}' 의 번호가 없다`);
             return no;
         };
+        const chance = wearChanceOf(difficulty);
         const worn = optional.filter(part => makeRng(deriveSeed(seed ^ ENCOUNTER_STREAMS.wear, partNo(part)))() < chance);
         const center = level + g.gear_ilvl_add;
         return [...fixed, ...worn].flatMap(part => data.itemSystem.rollGear(makeRng(deriveSeed(seed ^ ENCOUNTER_STREAMS.part, partNo(part))), {
@@ -418,10 +438,12 @@ export function createBattleSystem(data) {
             ilvl: center,
             ilvlSpread: ilvlSpreadOf(center),
             ilvlMax: monsterLevelOf(m, level),
-            ...(ilvlFixed ? { ilvlMin: monsterLevelOf(m, level) } : {}),
+            /* @include hell */
+            ...(gearFixedOf(difficulty) ? { ilvlMin: monsterLevelOf(m, level) } : {}),
+            /* @end */
             magicFind,
             // 희귀도 가중치는 **등급 × 단이 쥔다** — 노말 일반몹 = 일반 + 가끔 매직(레어 0) · 나이트메어 · 헬 일반몹은 레어까지 (2026-10-24 사용자 확정 · R350)
-            rarityWeights: weights,
+            rarityWeights: gearWeightsOf(g, difficulty),
             useDropSinWeights: true,
             weaponGroup,
         }));
@@ -448,7 +470,7 @@ export function createBattleSystem(data) {
             weaponGroup: rolled ? null : m.weapon_group,
             weaponGroups: rolled ? data.itemSystem.groupsFor(m.cls).map(x => x.id) : [m.weapon_group],
             // 단이 고정하면(헬) 아래 끝도 그 몬스터의 레벨이다 (2026-10-28 · R366)
-            ilvlMin: gearFixedOf(difficulty) ? top : Math.min(top, Math.max(1, center - s)), ilvlMax: Math.min(top, center + s), rarityWeights: weights,
+            ilvlMin: /* @include hell */ gearFixedOf(difficulty) ? top : /* @end */ Math.min(top, Math.max(1, center - s)), ilvlMax: Math.min(top, center + s), rarityWeights: weights,
             rarityMax: weights ? [...RARS].reverse().find(r => weights[r] > 0) ?? RARS[0] : 'rare',
         };
     }
@@ -463,7 +485,7 @@ export function createBattleSystem(data) {
         const m = data.monsters[monsterId], g = data.grades[grade];
         if (!m || !g) return null;
         const seed = Math.floor(rng() * 4294967296);
-        const worn = wearGear(seed, m, g, level, magicFind, wearChanceOf(difficulty), gearWeightsOf(g, difficulty), gearFixedOf(difficulty));
+        const worn = wearGear(seed, m, g, level, magicFind, difficulty);
         const pick = makeRng(deriveSeed(seed ^ ENCOUNTER_STREAMS.drop, 0))();
         return { worn, drop: worn.length ? worn[Math.floor(pick * worn.length)] : null };
     }
@@ -482,9 +504,11 @@ export function createBattleSystem(data) {
                 throw new Error(`battle: 몬스터 ${at} 의 무기군 '${m.weapon_group}' 를 모른다${m.weapon_group === '-' ? ` — 직업 ${m.cls} 의 본편 무기군이 없다` : ''}`);
             if (m.innate_skill !== '-' && SK && !SK.defs[m.innate_skill]) throw new Error(`battle: 몬스터 ${at} 의 고유 스킬 '${m.innate_skill}' 를 모른다`);
             // 2칸 = 그 직업의 2티어 (monster_design §5-1 「나이트메어 2칸 = 2티어」 · §5-2-1 · R269) — 칸이 비면 `-`
-            const nm = m.nightmare_skill ?? '-', nd = SK?.defs[nm];
+            /* @include enchant */
+            const nm = m.nightmare_skill || '-', nd = SK?.defs[nm];
             if (nm !== '-' && SK && !(nd && nd.ownerKind === 'job' && nd.ownerId === m.cls && nd.tier === 2))
                 throw new Error(`battle: 몬스터 ${at} 의 nightmare_skill '${nm}' — ${m.cls} 의 2티어 직업 스킬이어야 한다 (monster.csv)`);
+            /* @end */
         }
         for (const g of Object.values(data.grades)) {
             // 보스의 한 칸 더 — 칸 수는 난이도가 연다(R269 · ~~등급마다 skill_slots ≥ 1~~)
@@ -506,29 +530,15 @@ export function createBattleSystem(data) {
             for (const [k, col] of [['monsterDmgMult', 'monster_dmg_mult'], ['monsterHpMult', 'monster_hp_mult']])
                 if (d[k] !== undefined && !(typeof d[k] === 'number' && d[k] > 0))
                     throw new Error(`battle: 난이도 ${d.id} 의 ${col} '${d[k]}' — 양수여야 한다 (difficulty_tier.csv · R301)`);
+            /* @include hell */
             if (d.gearIlvlFixed !== undefined && d.gearIlvlFixed !== 0 && d.gearIlvlFixed !== 1)
                 throw new Error(`battle: 난이도 ${d.id} 의 gear_ilvl_fixed '${d.gearIlvlFixed}' — 0 · 1 이어야 한다 (difficulty_tier.csv · R366)`);
+            /* @end */
             if (d.heroResPenalty !== undefined && !(typeof d.heroResPenalty === 'number' && d.heroResPenalty >= 0 && d.heroResPenalty <= 1))
                 throw new Error(`battle: 난이도 ${d.id} 의 hero_res_penalty '${d.heroResPenalty}' — 0 ~ 1 이어야 한다 (difficulty_tier.csv · R535)`);
         }
         // 장 디버프 — 아는 단 · 효과 다섯 · 단 · 장마다 한 줄 · 효과마다 쓰는 칸 (2026-10-28 · R366). 어긋난 줄이 조용히 새면 그 장에 디버프가 안 걸린다
-        if (DEBUFFS.length && !(typeof B.chapter_debuff_boss_mult === 'number' && B.chapter_debuff_boss_mult > 0))
-            throw new Error(`battle: chapter_debuff_boss_mult '${B.chapter_debuff_boss_mult}' — 양수여야 한다 (balance.csv · R366)`);
-        const debuffSeen = new Set();
-        const pos = v => typeof v === 'number' && v > 0;
-        for (const x of DEBUFFS) {
-            const at = `${x.difficultyId} ${x.chapter}장`;
-            if (!DIFFS.some(d => d.id === x.difficultyId)) throw new Error(`battle: 장 디버프 ${at} — 모르는 단 (chapter_debuff.csv)`);
-            if (debuffSeen.has(at)) throw new Error(`battle: 장 디버프 ${at} 이 두 줄 — 단 · 장마다 한 줄이다 (chapter_debuff.csv)`);
-            debuffSeen.add(at);
-            if (!DEBUFF_EFFECTS.includes(x.effect)) throw new Error(`battle: 장 디버프 ${at} 의 effect '${x.effect}' — ${DEBUFF_EFFECTS.join(' · ')} 중 하나 (chapter_debuff.csv)`);
-            // 결빙은 행동 속도(`period_pct`)라 음수 · 나머지는 양수
-            if (x.effect === 'freeze' ? !(typeof x.value === 'number' && x.value < 0) : !pos(x.value))
-                throw new Error(`battle: 장 디버프 ${at} 의 value '${x.value}' — ${x.effect === 'freeze' ? '음수' : '양수'}여야 한다 (chapter_debuff.csv)`);
-            if ((x.effect === 'poison' || x.effect === 'freeze') && !(pos(x.intervalSec) && pos(x.durationSec)))
-                throw new Error(`battle: 장 디버프 ${at} — ${x.effect} 는 interval_sec · duration_sec 가 양수여야 한다 (chapter_debuff.csv)`);
-            if (x.effect === 'feast' && !pos(x.cap)) throw new Error(`battle: 장 디버프 ${at} — feast 는 cap 이 양수여야 한다 (chapter_debuff.csv)`);
-        }
+        validateEffects(data.ruinsTraps ?? [], x => x.chapter, 'explore_ruins_trap.csv');
         // 희귀도 표 — 주면 등급 × 단 칸이 다 있어야 한다 · 칸은 희귀도 다섯 · 음수 없음 · 합 > 0 (2026-10-24 · R350).
         //   빈 칸이 조용히 새면 그 등급 · 단의 몬스터가 드롭 가중치로 굴러 표가 안 먹는다
         if (RARITY) {
@@ -593,7 +603,9 @@ export function createBattleSystem(data) {
                 if (!m) continue;
                 const at = difficulty => ({ monsterId: id, chapter: st.chapter, stageNum: st.stage_num, boss: grade !== 'normal', difficulty });
                 if (m.innate_skill === skillId) fixed.push(at(firstDiff));
+                /* @include enchant */
                 else if (secondDiff && m.nightmare_skill === skillId) fixed.push(at(secondDiff));
+                /* @end */
                 else if (data.grades[grade]?.skill_slots_add >= 1 && (CLASS_SKILLS[m.cls] ?? []).includes(skillId)) roll.push(at(firstDiff));
             }
         }
@@ -718,7 +730,7 @@ export function createBattleSystem(data) {
             def: c.defense, defBase: c.defense,
             // 깎인 방어의 **비율** — 가이디드 애로우가 양수 밑수를 깎을 때마다 곱해진다. 갈아입기가 `defBase = 새 밑수 × defKeep` 로 읽는다 (R130)
             defKeep: 1,
-            hpMaxBase: c.hp_max,
+            hpMaxBase: c.hp_max, hpPerVit: c.hp_per_vit,
             res: { fire: c.res_fire, cold: c.res_cold, lightning: c.res_lightning, poison: c.res_poison },
             resBase: { fire: c.res_fire, cold: c.res_cold, lightning: c.res_lightning, poison: c.res_poison },
             lvl: c.level,                            // 적중률의 레벨 — 몬스터는 스테이지 레벨 (§9-4 · R87)
@@ -772,7 +784,8 @@ export function createBattleSystem(data) {
             fhr: c.fhr ?? 0, stagUntil: 0,
             // 죄종 계열 옵션 [2026-10-05 · R206 · R208 · item_design §1] — 내가 건 경직 +% · 시전 칸 충전 확률 · 시전 누적 겹 값 · 내가 건 상태이상 / 디버프 +% · 회복량 +%.
             //   `combat.option_fx` 에서 온다(없으면 0 — 종전과 같다) · 몬스터도 든다 · `castStacks` 는 전투 안에서만 사는 겹 수(라운드가 바뀌면 0 · `beginRound`)
-            staggerDur: c.option_fx?.staggerDur ?? 0, castRefund: c.option_fx?.castRefund ?? 0, castStack: c.option_fx?.castStack ?? 0,
+            //   경직 시간 증가는 두 칸이다(R601) — `staggerDur` = 도감 밖 출처를 곱한 값 · `staggerDurCodex` = 도감 옵션 몫(종족 몫과 한 괄호 · `stagger`)
+            staggerDur: c.option_fx?.staggerDur ?? 0, staggerDurCodex: c.option_fx?.staggerDurCodex ?? 0, castRefund: c.option_fx?.castRefund ?? 0, castStack: c.option_fx?.castStack ?? 0,
             statusDur: c.option_fx?.statusDur ?? 0, debuffDur: c.option_fx?.debuffDur ?? 0, healOut: c.option_fx?.healOut ?? 0,
             castStacks: 0,
             // 스턴이 끝나는 시각(`stun` · battle_design §2-7) · 중독 틱 누산(`poisonTick` · §2-6) — 전투 안에서만 사는 값 (2026-09-28 · R178)
@@ -800,10 +813,10 @@ export function createBattleSystem(data) {
 
     /* 갈아입기가 새로 받는 필드 [2026-09-14 · R89] — **전투 능력치에서 오는 것만**(위 `makeUnit` 의 필드). 전투 안에서 사는 것 —
        HP · 창 · 배리어 · 행동 예약 · 경직 끝 시각 · 스킬 칸 · 재생 누산 · 자리 · 훅 · 스킬 타격 임시 필드 — 은 여기 없고 이어진다 */
-    const REFIT_FIELDS = ['hpMax', 'hpMaxBase', 'atkMin', 'atkMax', 'atkMinBase', 'atkMaxBase', 'atkPct', 'dmgPct', 'mainMult', 'matkMin', 'matkMax', 'matkMinBase', 'matkMaxBase', 'atkType', 'noBasic', 'sureHit',
+    const REFIT_FIELDS = ['hpMax', 'hpMaxBase', 'hpPerVit', 'atkMin', 'atkMax', 'atkMinBase', 'atkMaxBase', 'atkPct', 'dmgPct', 'mainMult', 'matkMin', 'matkMax', 'matkMinBase', 'matkMaxBase', 'atkType', 'noBasic', 'sureHit',
         'def', 'defBase', 'res', 'resBase', 'lvl', 'hitBonus', 'resMaxBonus', 'resMaxEl', 'dr', 'drBase', 'drFlat', 'counter', 'recv', 'killHeal', 'defIgnore', 'resReduction',
         'resReductionEl', 'buffDur', 'freezeDur', 'recvBase', 'burnDur', 'poisonDur', 'stunDur', 'ddr',
-        'staggerDur', 'castRefund', 'castStack', 'statusDur', 'debuffDur', 'healOut', 'potionPct',
+        'staggerDur', 'staggerDurCodex', 'castRefund', 'castStack', 'statusDur', 'debuffDur', 'healOut', 'potionPct',
         'bonusPct', 'crit', 'critDmg', 'ls', 'reflect', 'regen', 'regenBase', 'cdr', 'cdrBase', 'period', 'basePeriod', 'periodRaw', 'speedBase', 'periodWeapon', 'fhr',
         'goldFind', 'itemFind', 'findParty', 'fx', 'magicFind', 'stats', 'mcond', 'mtime', 'liveAtk', 'adv', 't4cond'];
 
@@ -852,21 +865,20 @@ export function createBattleSystem(data) {
     function makeEnemy(key, monsterId, grade, lvl, gear = [], extra = {}) {
         const m = data.monsters[monsterId];
         const g = data.grades[grade];
-        const { thirdSkill = null, difficulty = null, traits = null, tribeAdd = 0, ...rest } = extra;
-        // 다시 만들 재료 — 부족 버프가 불러내기로 다시 서는 무리를 같은 인자 + `tribeAdd` 로 다시 만든다(`retribe` · R518). `extra` 는 넘긴 그대로(부족 몫 없이)
-        const make = { lvl, extra: tribeAdd ? (({ tribeAdd: _, ...e }) => e)(extra) : extra };
+        const { thirdSkill = null, difficulty = null, traits = null, ...rest } = extra;
         // 정예 특성의 효과 [2026-11-15 · R501 · monster_design §6 · INTERFACE §2-6] — 칸마다 `{stat, v}` 를 얹은 사본이 유닛 · `round` 이벤트로 간다 · rng 0
         const fx = traitFx(traits);
         const fxOf = slot => fx?.find(f => f.slot === slot) ?? null;
-        const sinFx = fxOf('sin'), enchFx = fxOf('enchant'), defFx = fxOf('def');
+        const sinFx = fxOf('sin'), enchFx = fxOf('enchant');
+        /* @include defense */
+        const defFx = fxOf('def');
+        /* @end */
         // 몬스터 레벨 = 스테이지 레벨(인자 `lvl`) + 몬스터별 가산 [2026-09-28 · 사용자 「사탄만 13」 · monster_design §7 · INTERFACE §2-6] · 만렙에서 자른다(2026-10-24) —
         //   아래 전투 능력치 · 적중(`makeUnit` 의 `lvl`) · 처치 XP 가 더한 레벨을 읽는다. 입은 장비 ilvl 의 가운데는 `spawnRound` 가 스테이지 레벨로 굴려 안 타고 위 끝만 이 레벨이다
         const levelAdd = m.level_add;
         if (!Number.isInteger(levelAdd) || levelAdd < 0) throw new Error(`battle: 몬스터 ${monsterId} 의 level_add '${levelAdd}' — 0 이상 정수여야 한다 (monster.csv)`);
         lvl = monsterLevelOf(m, lvl);
         const stats = { str: m.str, agi: m.agi, int: m.int, vit: m.vit, luck: m.luck, ldr: m.ldr, cha: m.cha };
-        // 부족 버프 — 불러내기로 다시 선 무리는 능력치 일곱 모두에 더한다(`retribe` · R518)
-        if (tribeAdd) for (const k of MONSTER_ATTRS) stats[k] += tribeAdd;
         // 영웅과 같은 경로 — `mastery` 가 없으니 마스터리 몫은 0 이고 `codex`·`party` 도 안 넘긴다
         //   정예 죄종 칸만 예외 — 그 노드를 `elite_trait_sin_rank` 랭크로 쥔 영웅과 같은 길로 합류한다(노드 주인 죄종을 `sin` 으로 넘겨야 `masteryNodesFor` 가 통과시킨다 · R501)
         // 입력에서 다른 것은 **레벨 1 HP 바탕** 하나다 — 영웅 `hero_hp_base` 대신 `monster_hp_base` [2026-09-14 사용자 지시 · R91 · monster_design §5]
@@ -874,7 +886,9 @@ export function createBattleSystem(data) {
             ...(sinFx ? { sin: sinFx.sin, mastery: { [sinFx.id]: B.elite_trait_sin_rank } } : {}) }, gear);
         c.defense += m.defense;                                             // ①
         for (const el of ELEMENTS) c[`res_${el}`] += m[`res_${el}`];        // ①
-        c.hp_max = Math.round(c.hp_max * g.hp_mult * B.monster_hp_scale * hpMultOf(difficulty));   // ② · 그 런 단의 배수 (R301)
+        const hpScale = g.hp_mult * B.monster_hp_scale * hpMultOf(difficulty);
+        c.hp_per_vit *= hpScale;
+        c.hp_max = Math.round(c.hp_max * hpScale);   // ② · 그 런 단의 배수 (R301)
         // 공격력은 범위다 — 전역 배율 · 단의 배수는 양끝에 같이 곱한다 (R90 · R301)
         const dmgScale = B.monster_atk_scale * dmgMultOf(difficulty);
         for (const k of ['atk_physical', 'atk_magic']) {
@@ -886,6 +900,7 @@ export function createBattleSystem(data) {
         const body = grade === 'normal' || grade === 'elite' ? RACES[m.monster_type] ?? null : null;
         if (body) {
             c.hp_max = Math.round(c.hp_max * body.hp);
+            c.hp_per_vit *= body.hp;
             c.hp_regen *= body.regen;
             for (const k of ['atk_physical', 'atk_magic']) if (c[k] !== undefined) c[k] = { min: c[k].min * body.dmg, max: c[k].max * body.dmg };
             c.defense *= body.def;
@@ -893,12 +908,14 @@ export function createBattleSystem(data) {
         }
         // 정예 방어 칸 (R501) — 물리 = 방어(양수일 때)에 배수 · 원소 = 그 원소 저항을 절대 상한까지 · 그 원소의 상한 증가를 절대 상한에 닿게 더한다(적용 = 절대 상한).
         //   종족 · 전역 배율 뒤 · 아래 시트 복사본 앞이라 툴팁 Alt 값에 든다
+        /* @include defense */
         if (defFx?.stat === 'defense') { if (c.defense > 0) c.defense *= defFx.v; }
         else if (defFx) {
             c[defFx.stat] = Math.max(c[defFx.stat] ?? 0, defFx.v);
             const el = defFx.id;
             c.res_max_el = { ...(c.res_max_el ?? {}), [el]: Math.max(c.res_max_el?.[el] ?? 0, B.res_cap_absolute - B.res_cap_base - (c.res_max_bonus ?? 0)) };
         }
+        /* @end */
         // 능력치 계수는 **영웅과 같다** [2026-09-22 사용자 — 보류 해제 · battle_design §9-2] — 평타는 `computeCombat` 이 낸
         //   `main_attr_mult`(힘 · 마법 무기는 평타가 없다 — R198) 그대로 · 스킬의 데미지 슬롯은 시전 순간 `stats` 로 `scaleDef` 가 곱한다
         /*
@@ -928,6 +945,7 @@ export function createBattleSystem(data) {
         //   위 ①② 까지 먹은 값 그대로이고 전투 내부용(`option_fx` 묶음 · `atk_pct_sum` 괄호 합 · 평타 계수 · 평타 여부)만 뺀다.
         //   전투는 이것을 안 읽는다(유닛 필드가 따로 있다) · rng 0
         const sheet = { ...c };
+        delete sheet.hp_per_vit;
         delete sheet.option_fx;
         delete sheet.atk_pct_sum;
         delete sheet.main_attr_mult;   // 평타 능력치 계수 — 시트 행이 아니다(2026-09-18)
@@ -944,10 +962,6 @@ export function createBattleSystem(data) {
             ...(body?.noFreeze ? { noFreeze: true } : {}),   // 결빙 면역(데몬 · R526) — `skill_runtime.applyStatus` 가 읽는다
             // 정예 강화 [2026-11-17 · R528 · monster_design §6-1] — 원소 · 갈래(물리 무기 = `phys` · 마법 무기 = `mag` — 평타 여부 `basic_attack` 이 가른다) · 아래 장치들이 읽는다
             ...(enchFx ? { enchant: { el: enchFx.id, kind: c.basic_attack === false ? 'mag' : 'phys' } } : {}),
-            // 부류 — 버프가 읽는다(표에 있는 것만 · 보스 · 6 · 7장은 옛 id 라 null) · **나이트메어부터**(`familyOn`) · 노말은 null (R518 · monster_design §3-2)
-            family: FAMILIES[m.monster_base] && familyOn(difficulty) ? m.monster_base : null,
-            ...(tribeAdd ? { tribeAdd } : {}),   // 부족 버프로 더한 수 — 칩이 읽는다(`enemyView` 의 `family`)
-            make,
             cls: m.cls,                     // 직업 — 스킬 풀과 무기군을 정한다. 자리는 role 이 정한다 (monster_design §5-1)
             stats,                           // 기본 능력치 — 스킬 계수가 시전 순간 읽는다 (skill.js scaleDef · 영웅과 같다)
             actives: acts,
@@ -981,9 +995,13 @@ export function createBattleSystem(data) {
                 if (!n) throw new Error(`battle: 정예 죄종 칸 '${t.id}' — mastery_node.csv 에 없다 (INTERFACE §2-6 · R501)`);
                 return { ...t, sin: n.ownerId, stat: n.stat, v: n.value * Math.min(B.elite_trait_sin_rank, n.maxRank) };
             }
+            /* @include enchant */
             if (t.slot === 'enchant') return { ...t, stat: 'enchant', v: B.elite_enchant_add_pct };
+            /* @end */
+            /* @include defense */
             if (t.id === 'physical') return { ...t, stat: 'defense', v: B.elite_trait_def_mult };
             return { ...t, stat: `res_${t.id}`, v: B.res_cap_absolute };
+            /* @end */
         });
     }
 
@@ -993,11 +1011,14 @@ export function createBattleSystem(data) {
      *   같은 시드가 단마다 다른 편성을 낸다(선택 부위 「입나」와 같은 이유). 효과는 `traitFx` · 강화 장치(R528)
      * @returns [{slot: 'sin'|'enchant'|'def', id}]
      */
-    const ELITE_SLOTS = ['sin', 'enchant', 'def'];
+    const ELITE_SLOTS = ['sin', /* @include enchant */ 'enchant', /* @end */ /* @include defense */ 'def', /* @end */];
     const rollEliteTraits = (rng, sin, difficulty) => {
-        const at = list => list[Math.floor(rng() * list.length)];
-        const all = [{ slot: 'sin', id: at(ET.sin[sin]) }, { slot: 'enchant', id: at(ET.enchant) }, { slot: 'def', id: at(ET.def) }];
-        return all.slice(0, Math.min(ELITE_SLOTS.length, eliteSlotsOf(difficulty)));
+        // Reserve the same encounter RNG draws for every edition and difficulty.
+        const rolls = [rng(), rng(), rng()];
+        return ELITE_SLOTS.slice(0, eliteSlotsOf(difficulty)).map((slot, i) => {
+            const pool = slot === 'sin' ? ET.sin[sin] : ET[slot];
+            return { slot, id: pool[Math.floor(rolls[i] * pool.length)] };
+        });
     };
 
     /**
@@ -1017,14 +1038,13 @@ export function createBattleSystem(data) {
      * @param magicFind 파티 평균 매직아이템 획득확률(비율) — 장비 희귀도의 레어 가중치에 곱한다 (item_design §1 4단계)
      * @param level 몬스터 레벨 = **이번 런의 스테이지 레벨** — 안 주면 기본 레벨 `dlvl` (2026-09-14 · R87)
      * @param seed 이 라운드의 만남 씨앗 — 편성 · 차림 · 스킬 · 드롭 수열을 따로 파생한다
-     * @param wearChance 선택 부위 착용 확률 — 그 런의 단 (2026-10-12 · R245 · `wearGear`)
      * @param difficulty 그 런의 단 id — 스킬 칸 수를 고른다(`makeEnemy` · `slotPlan` · 2026-10-18 · R269 · rng 0)
      * @param cxMagic 몬스터 id → 그 몬스터 종족의 도감 Lv1 매직 몫(`codexOf().farm.magic`) 또는 null — 그 한 마리의 차림 굴림 `magicFind` 에 체감 밖에서 더한다
      *   [2026-10-22 · R314 · INTERFACE §2-6 「도감 사다리」] · 차림 줄은 유닛마다 제 줄이라 전투 줄을 안 민다 · 0 이면 더해도 종전 값이다
      * @param fix 한 라운드 단판(`createRun` 의 `rules.round` · 2026-11-19 · R554) `{type, escorts}` 또는 null — 종류를 바깥이 정하고(`n` 은 그 종류의 라운드 번호라 편성 예외가 그대로 먹는다) ·
      *   `escorts` 가 수면 보스 호위 수를 굴리지 않는다. **null 이면 종전과 한 글자도 같다**
      */
-    function spawnRound(seed, stage, pool, n, magicFind = 0, level = stage.dlvl, wearChance = 1, difficulty = null, cxMagic = null, fix = null) {
+    function spawnRound(seed, stage, pool, n, magicFind = 0, level = stage.dlvl, difficulty = null, cxMagic = null, fix = null) {
         const rng = makeRng(deriveSeed(seed ^ ENCOUNTER_STREAMS.formation, 0));
         const type = fix?.type ?? stageRounds(stage).find(r => r.round_num === n)?.round_type ?? 'normal';
         const budgetKey = type === 'boss' ? stage.boss_grade : type;
@@ -1096,7 +1116,7 @@ export function createBattleSystem(data) {
             //   정예 탐욕 칸의 매직(R501)도 그 한 마리 차림에 더한다 — 가중치만 바뀌고 굴림 수는 그대로
             const greed = traitFx(s.extra?.traits)?.find(f => f.stat === 'magic_find')?.v ?? 0;
             const mf = (cxMagic ? magicFind + cxMagic(s.id) : magicFind) + greed;   // 도감 Lv1 매직 — 그 종족 몫(R314)
-            const gear = wearGear(deriveSeed(seed ^ ENCOUNTER_STREAMS.gear, k), m, g, level, mf, wearChance, gearWeightsOf(g, difficulty), gearFixedOf(difficulty));
+            const gear = wearGear(deriveSeed(seed ^ ENCOUNTER_STREAMS.gear, k), m, g, level, mf, difficulty);
             // 보스의 한 칸 더 — 보스만(`skill_slots_add` ≥ 1 · R269 — ~~`skill_slots` ≥ 3~~ 같은 유닛이라 순서 · 횟수 불변). ⚠ **풀이 비어도 1회 소비한다**(무기 베이스·스킬 굴림과 같은 규칙).
             //   2칸(나이트메어)은 굴리지 않는다 — `nightmare_skill` 이 정한다
             let thirdSkill = null;
@@ -1162,13 +1182,15 @@ export function createBattleSystem(data) {
      *   없으면 `rng` 첫 굴림에서 만남 루트를 만들어 라운드 번호로 파생한다. 있으면 그대로 복사하고 전투 rng 를 소비하지 않는다.
      * @param enemyPotion 적 쪽 물약 `{potions, slotMax, potionHp}` — 결투장의 수비 쪽(2026-11-13 · R460 · arena_design §0). 파티와 같은 규칙으로 적 쪽이 마신다 ·
      *   칸 · 마시는 기준 · 쿨은 쪽마다 따로 · 안 주면 적은 안 마신다(종전과 같다 · rng 0)
+     * @param tactics 쪽별 카드 규칙 `{party?, enemy?}`. 스테이지 전투는 `enemy`를 생략하면 장소의 적 카드를 사용한다.
      */
     function createRun(partyUnits, stageId, rng, level, potions = null, slotMax = B.potion_slot_max, encounter = null, difficulty = null, codexOf = null, potionHp = null, rules = null, encounterSeeds = null, enemyPotion = null, tactics = null) {
-        const wearChance = wearChanceOf(difficulty);
         // 영웅 원소 저항 페널티 (R535) — 이 런 내내 같다 · 파티 영웅을 입힐 때(아래 · `refit`) 원소 저항 넷에서 뺀다 · 결투장 · 레이드(`encounter`)는 단과 무관하게 0
         const resPen = encounter ? 0 : resPenaltyOf(difficulty);
         // 결투장은 스테이지 스폰 대신 영웅 팀 스냅샷을 받아 같은 전투 루프를 단판으로 돈다.
         const stage = encounter ? { dlvl: level ?? 1 } : data.stages[stageId];
+        if (!encounter && scoped && (!stage || (difficulty != null && !DIFFS.some(d => d.id === difficulty)) || stage.chapter > diffOf(difficulty).lastChapter))
+            throw new Error('battle: stage outside available chapters');
         let potionSlots = potions ?? [];   // 둘째 라운드부터는 `restock` 이 받아 둔 목록으로 갈아 끼운다 (R315)
         // 칸은 **자리 순**이고 `null` = 빈 칸 — 재고가 모자랐거나 비워 둔 칸 (2026-09-21 · R124)
         if (!Array.isArray(potionSlots) || potionSlots.length > slotMax || potionSlots.some(p => p !== null && !(p?.id && p.heal >= 0)))
@@ -1185,11 +1207,42 @@ export function createBattleSystem(data) {
             if (eHp !== null && !(Number.isFinite(eHp) && eHp >= 0)) throw new Error(`battle: 적 potionHp ${eHp} — 0 이상 수여야 한다 (INTERFACE §2-6)`);
             enemyPot = { max: eMax, slots: eSlots.map(p => (p ? { id: p.id, heal: p.heal } : null)), left: eSlots.filter(Boolean).length, next: 0, readyAt: 0, line: eHp ?? B.potion_use_hp_pct, used: 0 };
         }
-        // 작전 카드 [2026-11-26 · R586 · PLAN_tactic_cards_impl §6 · INTERFACE §2-6 「작전 카드」] — 쪽마다 rule → Rule · 모양 검사는 rng 를 쓰기 전(아래 만남 씨앗 굴림 앞).
-        //   **출발 때 굳는다** — `refit` 은 이 표를 안 건드린다. 두 쪽 다 비면(`tacOn` 거짓) 아래 「작전 카드 규칙」 묶음이 하나도 안 돈다(rng · 타임라인 · 골든 불변)
+        // 명시한 편성은 출발 때 굳힌다. 스테이지의 적 카드는 나이트메어부터 일반·정예 라운드에 적용한다.
         const TAC = tacticTable(tactics);
-        const tacOn = TAC.party.size + TAC.enemy.size > 0;
+        const stageCard = !encounter && tactics?.enemy == null && (diffOf(difficulty)?.order ?? 0) >= B.stage_tactic_min_order
+            ? STAGE_TACTICS.get(`${stage?.chapter}-${stage?.stage_num}`) : null;
+        const stageEnemy = stageCard ? tacticTable({ enemy: [stageCard] }).enemy : null;
+        const fixedEnemy = TAC.enemy;
+        let tacOn = TAC.party.size + TAC.enemy.size > 0;
         const tacOf = (side, rule) => TAC[side].get(rule) ?? null;
+        // Capture the original rows before movement or summons. Each enemy wave has its own deployment.
+        function formationAtDeployment(side, roster) {
+            if (!roster.length || !TAC[side].size) return null;
+            const front = roster.filter(u => (u.rank ?? 0) === 0);
+            const back = roster.filter(u => (u.rank ?? 0) !== 0);
+            let rules;
+            if (!back.length) rules = ['desperate_charge', 'last_stand', 'pursuit', 'iron_line'];
+            else if (!front.length) rules = ['open_order', 'focused_fire', 'rapid_deployment', 'volley'];
+            else if (front.length === 2 && back.length === 1) rules = ['mutual_cover', 'crane_wing', 'field_medics', 'hammer_anvil'];
+            else if (front.length === 1 && back.length === 2) rules = ['vanguard_barrier', 'aimed_fire'];
+            else return null;
+            for (const rule of rules) {
+                const card = tacOf(side, rule);
+                if (card) return { ...card, front, back };
+            }
+            return null;
+        }
+        const formationDamageMultiplier = (a, d) => {
+            const card = a && a.side !== d.side && deployed[a.side];
+            if (card?.rule === 'desperate_charge') return 1 + card.p1;
+            if (card?.rule === 'focused_fire' && (d.rank ?? 0) === 0) return 1 + card.p1;
+            return 1;
+        };
+        // Damage copied from an earlier hit (sharing, overflow, meteor burn) already includes its attacker's bonus.
+        function formationDamage(a, d, dmg) {
+            const mult = formationDamageMultiplier(a, d);
+            return mult === 1 ? dmg : Math.round(dmg * mult);
+        }
         // 몬스터 레벨 = **이번 런의 스테이지 레벨** [2026-09-14 · R87 · base_expedition_design §1-4] — 적 생성 · 장비 아이템 레벨 ·
         //   처치 XP · 적중이 전부 이 값 하나를 읽는다. 스폰의 굴림 횟수는 안 바꾸고, 전투 중 수열은 적중을 따라 갈린다 (INTERFACE §2 simulate)
         const stageLevel = level ?? stage.dlvl;
@@ -1197,7 +1250,7 @@ export function createBattleSystem(data) {
         //   풀이 빈 칸(챕터보스 칸)은 그 장 일반몹 전체 · 안 주면 아래 세 줄이 종전 그대로다 (INTERFACE §2-6 `rules.round`)
         const solo = !encounter && rules?.round ? soloRound(stage, rules.round) : null;
         // 탐험 판의 손잡이 셋 [2026-11-26 · R590 · INTERFACE §2-6 `rules`] — `bossId` = 보스 라운드의 보스를 그 몬스터로(동굴 ???) ·
-        //   `curseDiff` = 장 디버프를 그 단의 줄로 읽는다(폐허 함정 = 헬 줄 · 몬스터 레벨 · 차림은 `difficulty` 그대로) · `dropMult` = 처치 드롭 판정 확률에 곱한다(표 등급 보상 배수) ·
+        //   `ruinsTrap` = 폐허 함정 효과 · `curseDiff` = 지정한 난이도의 장 디버프 · 몬스터 레벨·차림은 difficulty가 정한다.
         //   셋 다 안 주면 종전과 한 글자도 같다(곱 1 · 같은 칸 · 같은 단) · 틀리면 rng 를 쓰기 전에 던진다
         if (rules?.bossId != null && !data.monsters[rules.bossId]) throw new Error(`battle: rules.bossId '${rules.bossId}' — monster.csv 에 없다 (INTERFACE §2-6)`);
         if (rules?.dropMult != null && !(Number.isFinite(rules.dropMult) && rules.dropMult >= 0)) throw new Error(`battle: rules.dropMult '${rules.dropMult}' — 0 이상 수 (INTERFACE §2-6)`);
@@ -1239,6 +1292,8 @@ export function createBattleSystem(data) {
                 return slotOf(a, def, fits, 0);
             }))(fitterOf(p.weaponGroup)),
         }));
+        const deployed = { party: formationAtDeployment('party', party), enemy: null };
+        const lastStandUsed = { party: false, enemy: false };
         /*
          * 전투 시작 시 행동 게이지 +% [2026-10-21 · 사용자 · R303 · item_design §1 「10-21 방어구 개정」 — 가죽 신발 특성 · battle_design §6] —
          *   빈 채로 출발하는 게이지(R200)를 그 비율만큼 채운 채 세운다: 남은 시간(`next`)을 `값 × 주기` 만큼 당기고, 재생기가 보는 시작 시각(`fillAt`)도 같이 당긴다.
@@ -1246,8 +1301,7 @@ export function createBattleSystem(data) {
          *   부르는 자리 — 파티: 전투 시작(여기) + 원정은 라운드가 바뀔 때마다(`beginRound` · 차 있던 게이지에 더한다) / 적: 등장한 라운드에 한 번(`beginRound`).
          *   결투장은 한 판이 한 라운드라 시작 한 번이다. 당긴 초를 돌려준다 · rng 0
          */
-        const primeGauge = u => {
-            const g = u.fx?.startGauge ?? 0;
+        const primeGauge = (u, g = u.fx?.startGauge ?? 0) => {
             if (!(g > 0) || u.hp <= 0 || u.summon) return 0;
             const shift = Math.min(g * u.period, u.next - TICK);
             if (!(shift > 0)) return 0;
@@ -1381,8 +1435,6 @@ export function createBattleSystem(data) {
             ...(e.hero ? { hero: e.hero, rank: e.rank } : {}),
             key: e.key, monsterId: e.monsterId, grade: e.grade, sin: e.sin ?? null,
             traits: e.traits ?? null,
-            // 켜진 부류 버프 — 칩이 읽는다(R518 · INTERFACE §2-6 `round`) · 부족은 불러내기로 능력치를 받은 유닛만 · 그 밖은 키가 없다
-            ...(e.family && (e.family !== 'Tribe' || e.tribeAdd) ? { family: { id: e.family, value: FAMILIES[e.family].value, n: FAMILIES[e.family].n } } : {}),
             hpMax: e.hpMax, period: e.period,
             fillAt: r1(e.fillAt),   // 첫 게이지가 차기 시작하는 시각 — 빈 채로 출발한다 (R200 · INTERFACE §2-6)
             atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax, atkType: e.atkType, noBasic: e.noBasic,   // noBasic = 행동 게이지 색 (마법 무기 — R198 · SCREEN_DESIGN §4-2 · ADR-0476)
@@ -1488,7 +1540,10 @@ export function createBattleSystem(data) {
         let roundAt = 0;
         // 장 디버프 [2026-10-28 · R366 · base_expedition_design §1-4] — 이 칸 · 이 단의 한 줄(`debuffOf` · 결투장은 없다)이 런 내내 같다 —
         //   분노 · 폭식 = 직격(`strikeOnce`) · 탐욕 = 영웅의 받는 회복(`curseCut` → `ATTRS`) · 시기 · 나태 = 간격마다 거는 창(`curseCast`) · rng 0
-        const curse = encounter ? null : debuffOf(stageId, rules?.curseDiff ?? difficulty);
+        let curse = !encounter && rules?.ruinsTrap ? ruinsTrapOf(stageId) : null;
+        /* @include hell */
+        if (!encounter && !rules?.ruinsTrap) curse = debuffOf(stageId, rules?.curseDiff ?? difficulty);
+        /* @end */
         // 다음에 걸 시각 — 라운드를 열면 그 시각부터 간격마다(`beginRound`) · 거는 효과가 아니면 null
         let curseAt = null;
         // 거는 쪽 — 시전자가 없다(기여 · 처치 몫 없음) · 영웅의 「상대 편」이라 받는 쪽 시간 감소 · 매력이 줄인다
@@ -1516,6 +1571,20 @@ export function createBattleSystem(data) {
         const units = { party, enemies: [], codexRound: null };
         let roundLog = null;
         const alive = list => list.filter(u => u.hp > 0);
+        let openingTurn = rules?.openingBasic ? 'basic' : null;
+        // 첫 원정은 전열 기본 공격과 아군 스킬 순으로 행동한다. 게이지와 발동 조건은 그대로 쓴다.
+        function openingActor(combatants) {
+            let candidates;
+            if (openingTurn === 'basic') {
+                candidates = combatants.filter(u => u.hp > 0 && !u.noBasic);
+                const withFront = candidates.filter(u => rt.foesOf(u).some(d => d.hp > 0 && d.rank === 0));
+                if (withFront.length) candidates = withFront;
+            } else {
+                candidates = party.filter(u => u.hp > 0 && rt.pick(u, t));
+            }
+            const wait = u => u.noBasic && u.charges > 0 ? 0 : u.next;
+            return candidates.reduce((first, u) => !first || wait(u) < wait(first) ? u : first, null);
+        }
         const hooks = createHooks();
         // 액티브 실행은 런타임 몫 — 전투 하나마다 새로 만든다(모듈 전역 상태 없음)
         // 소환 유닛 키 — `p0`(파티) · `e0`(적) 과 겹치지 않는 `s0` 대역. 전투 하나 안에서만 센다
@@ -1523,7 +1592,7 @@ export function createBattleSystem(data) {
         const rt = createSkillRuntime({
             SK, B, rng, timeline, out, units, partyScope: rules?.partyScope,
             strikeOnce, pickTarget, r1, EPS, hooks,
-            makeSummon: (caster, def) => Object.assign(makeSummon(caster, def, `s${summonSeq++}`), { group: caster.group }),
+            makeSummon: (caster, def) => Object.assign(applyTacticCurse(makeSummon(caster, def, `s${summonSeq++}`)), { group: caster.group }),
             callBand: (caster, at) => callBand(caster, at),   // 불러내기 — 무리를 세우는 것은 적 배열 · 오오라 · 보상 표식을 아는 이쪽이다 (2026-09-18)
             // 비직격 고정 피해 한 대상 — 기여표와 전투불능을 아는 이쪽이다 (하는 일 `fixed` · 2026-09-24 R151 — ~~`blast` 전용 함수~~)
             dealIndirect: (a, d, dmg, s) => dealIndirect(a, d, dmg, s),
@@ -1666,6 +1735,13 @@ export function createBattleSystem(data) {
         };
 
         const beginRound = () => {
+            if (curseStacks.enemy) for (const u of party) {
+                delete u.tacCurseKeep;
+                delete u.tacResBeforeCurse;
+                refreshDerived(u);
+            }
+            curseStacks.party = curseStacks.enemy = 0;
+            curseDeaths.clear();
             advRoundStart(party);   // 노바 · 블리자드 겹 비우기(덤이 없으면) · 자동 칸 곧바로 (R471) — 적은 등장할 때 `readyCools` 가 모든 칸을 준비된 채 세운다(R515)
             // 물약 칸 다시 채우기 [2026-10-22 · R315 · battle_design §7-1] — 받아 둔 목록이 있으면 이 라운드의 칸이 그것이 되고 앞 칸부터 다시 마신다 ·
             //   그 목록을 아래 `round` 이벤트의 `pots` 로 싣는다(재생기가 칸을 다시 그린다) · 첫 라운드는 `createRun` 이 이미 채웠다 · rng 0
@@ -1711,12 +1787,6 @@ export function createBattleSystem(data) {
                 for (const k of stacks) delete p.buffs[k];
                 refreshDerived(p);
             }
-            // 이형 겹(부류 버프 · R518)도 라운드를 넘기지 않는다 — 칩이 보이는 창이라 `buffEnd` 를 낸다(이 라운드의 `round` 이벤트 앞) · rng 0
-            for (const p of party) if (p.buffs['fam:aberration']) {
-                delete p.buffs['fam:aberration'];
-                refreshDerived(p);
-                timeline.push({ t: r1(t), e: 'buffEnd', u: p.key, s: 'fam:aberration' });
-            }
             // 도감 사다리 — 그 몬스터 **종족 전체**의 닿은 몫 [2026-10-18 · R286 · 2026-10-22 · R314 · monster_design §8]. 라운드마다 한 번 읽어 둔다
             //   (스폰 전 매직 몫 · 스폰 뒤 유닛) — 라운드 사이에 오른 단계가 다음 라운드부터 먹는다 · 결투장 · 소환은 안 얹는다 · rng 0
             const cxMemo = new Map();
@@ -1735,9 +1805,12 @@ export function createBattleSystem(data) {
                 actives: (p.actives ?? []).map(a => slotOf(a, SK.resolve(a), fitterOf(p.weaponGroup), 0)),
                 // 시작 순서 — 결투장 팀 스냅샷이 정한다(다른 플레이어의 방어 편성 = 그 주인의 `fixed` · `random` · AI 팀 = `buffFirst` · R515) · 없으면 적의 기본(`startRanks`)
                 ...(p.startOrder ? { startOrder: p.startOrder } : {}),
-            })) } : spawnRound(roundSeedOf(round), stage, pool, solo ? solo.n : round, magicFind, stageLevel, wearChance, difficulty,
+            })) } : spawnRound(roundSeedOf(round), stage, pool, solo ? solo.n : round, magicFind, stageLevel, difficulty,
                 cxOf ? id => cxOf(id)?.farm.magic ?? 0 : null, spawnFix);   // 단판은 그 종류의 라운드 번호로 편성한다(R554) · `round` 이벤트의 `n` 은 런의 라운드 · 보스 바꿔 세우기(R590)
             units.enemies = sp.list;
+            const roundCard = stageEnemy && (sp.type === 'normal' || sp.type === 'elite') ? stageCard : null;
+            TAC.enemy = roundCard ? stageEnemy : fixedEnemy;
+            deployed.enemy = formationAtDeployment('enemy', sp.list);
             // 유닛에 얹는다 — 대기 무리(`band` · 불러내기가 세운다)도 같은 라운드의 몬스터다 · 칸이 없는 몬스터(보스 · 6 · 7장)는 null
             if (cxOf) for (const e of units.enemies) for (const u of [e, ...(e.band ?? [])]) u.codex = cxOf(u.monsterId);
             codexRoundOpen();
@@ -1764,6 +1837,7 @@ export function createBattleSystem(data) {
             if (round > 1) for (const p of party) { const s = primeGauge(p); if (s) pg[p.key] = r1(s); }
             // 작전 카드의 라운드 시작 [R586 · 아래 `tacRoundOpen`] — 적이 서고 게이지 +% 를 받은 **뒤** · `round` 이벤트 **앞**(적의 당긴 게이지가 `fillAt` 에 실린다) ·
             //   이벤트는 `round` · 오오라 창 뒤에 낸다 · 카드가 없으면 부르지 않는다 · rng 0
+            tacOn = TAC.party.size + TAC.enemy.size > 0;
             const tacEvs = tacOn ? tacRoundOpen() : null;
             // 파티 칸 쿨은 **라운드를 넘어 잇는다** — 스테이지(런)를 열 때만 준비된 채로 다시 선다(`out` 위 `readyCools` · R515) [2026-11-03 · R429 · battle_design §6 —
             //   ~~라운드를 열 때마다 한 바퀴~~ R427]. 재생기는 앞 라운드의 칸을 그대로 이어 그린다 — `round` 에 파티 칸을 싣지 않는다 · rng 0
@@ -1771,6 +1845,8 @@ export function createBattleSystem(data) {
             out.rounds.push(roundLog);
             rules?.onStart?.(ruleContext());
             timeline.push({ t: r1(t), e: 'round', n: round, kind: sp.type, enemies: units.enemies.map(enemyView), ...(Object.keys(pg).length ? { pg } : {}),
+                ...(openingTurn === 'basic' ? { openingActor: openingActor([...party, ...units.enemies])?.key } : {}),
+                ...(roundCard ? { enemyCard: roundCard.card } : {}),
                 ...(pots ? { pots: pots.map(p => (p ? { id: p.id, heal: p.heal } : null)) } : {}) });
             // 오오라 창 이벤트 [2026-09-15 · R98] — `round` 바로 뒤 · 파티 몫(전투 시작 · 갈아입기) 먼저, 이 라운드 적의 것 다음.
             //   창은 이미 걸려 있다 — 이벤트만 낸다(rng 0 · 전투 결과 불변)
@@ -1780,21 +1856,6 @@ export function createBattleSystem(data) {
 
         const onKill = e => {
             if (encounter) return;   // 연습 결투: XP·골드·드롭·도감 처치 없음
-            // 이형 [2026-11-16 · R518 · monster_design §3-2 — R388 기믹을 버프로] — 쓰러질 때마다 파티 전원(소환 제외)의 원소 저항 넷에 겹 +1(상한 `n`).
-            //   창 `fam:aberration`(`res_pct` = −값 × 겹 — 저항 합의 음수 항 · `until: null`) · 겹이 바뀌면 `buff` 이벤트(칩) · 라운드를 열면 지운다(`beginRound`) · rng 0
-            if (e.family === 'Aberration') {
-                const f = FAMILIES.Aberration;
-                for (const p of f.n > 0 && f.value > 0 ? party : []) {
-                    if (p.summon) continue;
-                    const was = p.buffs['fam:aberration']?.n ?? 0;
-                    const n = Math.min(f.n, was + 1);
-                    if (n === was) continue;
-                    const v = -f.value * n;
-                    p.buffs['fam:aberration'] = { stat: 'res_pct', v, n, until: Infinity, element: null, by: 'fam', s: 'fam:aberration', quiet: true };
-                    refreshDerived(p);
-                    timeline.push({ t: r1(t), e: 'buff', u: p.key, s: 'fam:aberration', stat: 'res_pct', v, until: null, n });
-                }
-            }
             roundLog.killed.push(e.monsterId);                   // 사실의 기록 — 진 라운드에서 잡은 것도 남는다
             // 아래 보상은 전부 **라운드 몫**이다 — 이기면 결과로 옮기고 지면 버린다 (R89)
             loot.kills[e.monsterId] = (loot.kills[e.monsterId] ?? 0) + 1;
@@ -1860,8 +1921,9 @@ export function createBattleSystem(data) {
          *   · 기여는 양쪽 다 센다 · 맞아서 쓰러지면 그 자리에서 `downed` 가 다시 돈다. **한 마리당 한 번**은 사건 규칙(`EVENT_TRIGGERS.on_death.once` · `u.fired`)이 든다 —
          *     지금 구조에서 연쇄는 안 생긴다(몬스터의 자폭은 파티만 때린다) — 그 규칙은 그 가정이 깨졌을 때의 잠금이다
          */
-        const dealIndirect = (a, d, dmg, s) => {
-            const ov = loseHp(d, dmg);
+        const dealIndirect = (a, d, amount, s) => {
+            const incoming = guardDamage(d, formationDamage(a, d, amount));
+            const { damage: dmg, ov } = landWithCover(a, d, incoming, FIXED_DMG);
             const ev = { t: r1(t), e: 'blast', a: a.key, d: d.key, s, dmg, dhp: d.hp };
             if (ov) ev.ov = ov;
             timeline.push(ev);
@@ -1915,11 +1977,14 @@ export function createBattleSystem(data) {
             if (u.side === 'enemy') { if (!u.summon && !u.rewarded) { u.rewarded = true; onKill(u); } }
             else if (!u.summon) { out.downed.push(u.uid); noteFall(u); }
             // 처치 정산(드롭 rng)이 **먼저** 돌아야 훅이 rng 를 써도 순서가 잠긴다 (INTERFACE §5-2)
+            if (tacOn && !u.summon) { curseOnDeath(u); updateGiant(u.side); }
             hooks.emit('down', u, { t });
             // 사건 `on_death` — 그 유닛의 사건 스킬(자폭)이 **죽음이 다 정산된 뒤에** 나간다. 자폭은 rng 0 이라 위 순서를 안 건드린다 (§9-6 · 2026-09-24 R151 — ~~`blast(u)`~~)
             rt.fire(u, 'on_death', t);
             // 정예 강화(마법 갈래 · R528) — 사건 스킬(자폭) **뒤** · 오오라 끄기 앞 · 폭발 · 독구름 · 서리 오라 걷기 · rng 0
+            /* @include enchant */
             if (u.enchant && u.side === 'enemy' && !u.summon) enchDeath(u);
+            /* @end */
             // 오오라는 그 뒤에 꺼진다 — 자폭이 제 오오라를 입은 채 나가던 것은 그대로다 (R287)
             dropAuras(u);
         };
@@ -1961,21 +2026,6 @@ export function createBattleSystem(data) {
         };
 
         /**
-         * 부족 버프로 다시 만들기 [2026-11-16 · R518 · monster_design §3-2 · INTERFACE §2-6 「종족의 몸 · 부류 버프」] — 처음 만든 인자(`make`) + `tribeAdd` 로
-         *   `makeEnemy` 를 다시 불러 전투 능력치(`REFIT_FIELDS` — 영웅 갈아입기와 같은 목록) · 시트를 갈아 끼운다. 칸 · 창 · 보상 · 자리 · 무리는 그대로 ·
-         *   깎인 방어 비율(`defKeep`)은 잇는다 · 다시 설 때마다 처음 능력치에서 새로(겹치지 않는다) · HP 는 새 최대치로 가득 · rng 0
-         */
-        const retribe = (m, add) => {
-            if (!m.make) return;
-            const f = makeEnemy(m.key, m.monsterId, m.grade, m.make.lvl, m.gear, { ...m.make.extra, tribeAdd: add });
-            for (const k of REFIT_FIELDS) m[k] = f[k];
-            m.defBase = f.defBase * m.defKeep;
-            m.sheet = f.sheet;
-            m.tribeAdd = add;
-            m.hp = m.hpMax;
-        };
-
-        /**
          * 불러내기 [2026-09-18 · INTERFACE §2-13 · skill_design §12-9] — 시전자의 무리(`band`) 중 **서 있지 않은 것을 전부** 세운다.
          *   처음 서는 것(대기)은 적 배열 끝에 붙고, 쓰러진 것은 **그 자리에서 되살아난다** — HP 가득 · 창은 오오라만 남는다 · 경직 풀림.
          *   둘 다 첫 차례는 **제 행동 주기 한 바퀴 뒤**(등장 지연을 굴리지 않는다) · 스킬은 부른 시각부터 쿨 한 바퀴(라운드 시작과 같은 규칙 · R427 — ~~준비 상태~~ R100).
@@ -1986,11 +2036,7 @@ export function createBattleSystem(data) {
             const up = (caster.band ?? []).filter(m => !m.called || m.hp <= 0);
             let fresh = false;
             const revived = [];
-            // 부족 버프 [2026-11-16 · R518 · monster_design §3-2] — 시전자가 부족이면 다시 서는 **부족** 무리를 능력치 + 값으로 다시 만든다(`retribe`) ·
-            //   보스(보스 라운드에서 무리에 든다)는 부류가 없어 안 받는다 · 값 0 이면 안 건드린다
-            const tribe = caster.family === 'Tribe' ? FAMILIES.Tribe?.value ?? 0 : 0;
             for (const m of up) {
-                if (tribe > 0 && m.family === 'Tribe') retribe(m, tribe);
                 if (!m.called) {
                     m.called = true;
                     units.enemies.push(m);
@@ -2023,6 +2069,10 @@ export function createBattleSystem(data) {
                 for (const x of units.enemies) refreshDerived(x);
                 for (const m of revived) m.hp = m.hpMax;
             }
+            if (tacOn && up.length) {
+                for (const m of up) { curseDeaths.delete(m); applyTacticCurse(m); }
+                updateGiant('enemy');
+            }
             return { units: up.map(enemyView), then };
         };
 
@@ -2042,7 +2092,7 @@ export function createBattleSystem(data) {
         const hasTaunt = list => list.find(p => p.hp > 0 && stateOf(p, 'taunt')) ?? null;
 
         /* ── 작전 카드 규칙 [2026-11-26 · R586 · PLAN_tactic_cards_impl §2 · §6 · battle_design §3-3 · INTERFACE §2-6 「작전 카드」] ──
-           규칙은 **쪽마다** 건다 — 파티 쪽 = `tactics.party` · 적 쪽 = `tactics.enemy`(결투장 수비 팀). 영웅 · 몬스터 · 결투장이 같은 규칙이고(PvP 기준)
+           파티는 `tactics.party`를 사용한다. 적은 `tactics.enemy` 또는 그 라운드의 장소 카드로 같은 규칙을 사용한다.
            수치는 Rule 의 p1 ~ p3 뿐이다. 카드가 없으면(`tacOn` 거짓) 아래는 하나도 안 불린다 — 굴림 · 이벤트 · 유닛 필드가 안 생긴다.
            카드가 일하면 타임라인에 `{t, e: 'tactic', card, side, …}` 를 남긴다(모양은 INTERFACE §2-6 이벤트 표) */
         const sideList = S => (S === 'party' ? party : units.enemies);
@@ -2055,7 +2105,71 @@ export function createBattleSystem(data) {
         const tacMark = { party: null, enemy: null };
         const tacSaid = new Set();
         const tacRetreated = new Set();
+        const curseStacks = { party: 0, enemy: 0 };
+        const curseDeaths = new Set();
         const tacEvent = (card, side, extra) => timeline.push({ t: r1(t), e: 'tactic', card, side, ...extra });
+        function aloneInFront(u, allies) {
+            return (u.rank ?? 0) === 0 && !allies.some(x => x !== u && x.hp > 0 && !x.summon && (x.rank ?? 0) === 0);
+        }
+
+        function guardianKeep(d) {
+            if (!d.rank) return 1;
+            const card = tacOf(d.side, 'guardian'), lead = leaderOf(d.side);
+            if (!card || !lead || lead.hp <= 0 || !aloneInFront(lead, sideList(d.side))) return 1;
+            tacOnce(d.side, card, { a: lead.key, d: d.key });
+            return 1 - card.p1;
+        }
+
+        function guardDamage(d, dmg) {
+            if (!tacOn || !(dmg > 0)) return dmg;
+            const keep = guardianKeep(d);
+            return keep === 1 ? dmg : Math.round(dmg * keep);
+        }
+
+        function applyTacticCurse(u) {
+            const side = otherSide(u.side), stacks = curseStacks[side];
+            const card = tacOf(side, 'dying_curse');
+            if (stacks && card) {
+                u.tacCurseKeep = (1 - card.p1) ** stacks;
+                refreshDerived(u);
+            }
+            return u;
+        }
+
+        function curseOnDeath(u) {
+            const card = tacOf(u.side, 'dying_curse');
+            if (!card || curseDeaths.has(u) || curseStacks[u.side] >= card.p2) return;
+            curseDeaths.add(u);
+            const stacks = ++curseStacks[u.side];
+            for (const foe of sideList(otherSide(u.side))) applyTacticCurse(foe);
+            tacEvent(card.card, u.side, { u: u.key, stacks });
+        }
+
+        function updateGiant(side, emit = tacEvent) {
+            const card = tacOf(side, 'giant');
+            if (!card) return;
+            const members = sideList(side).filter(u => !u.summon);
+            const alive = members.filter(u => u.hp > 0);
+            for (const u of members) {
+                const active = alive.length === 1 && alive[0] === u;
+                if (!u.stats || active === !!u.tacGiantBase) continue;
+                const ratio = u.hp / u.hpMax;
+                if (active) {
+                    const stats = Object.fromEntries(Object.entries(u.stats).map(([k, v]) => [k, Math.round(v * (1 + card.p1))]));
+                    const boosted = HS.withBattleStats(u, stats);
+                    u.tacGiantBase = Object.fromEntries(Object.keys(boosted).map(k => [k, u[k]]));
+                    Object.assign(u, boosted);
+                } else {
+                    Object.assign(u, u.tacGiantBase);
+                    delete u.tacGiantBase;
+                }
+                refreshDerived(u);
+                u.hp = ratio > 0 ? Math.max(1, Math.round(u.hpMax * ratio)) : 0;
+                if (side === 'party') measureParty();
+                emit(card.card, side, { u: u.key, active, stats: { ...u.stats }, hpMax: u.hpMax, dhp: u.hp, period: u.period });
+            }
+        }
+
         const tacOnce = (S, r, extra) => {
             const k = `${S}|${r.rule}`;
             if (tacSaid.has(k)) return;
@@ -2115,17 +2229,23 @@ export function createBattleSystem(data) {
          *   `floor(남은 것 × p1)` 를 체력(현재 HP)이 가장 높은 동료(리더 · 소환 제외 · 같으면 배열 앞)가. 한쪽에 둘 다 있으면 방패벽 → 친위대 순(게임은 방어 칸이 하나라 없다) ·
          *   `{sum, list: [[유닛, 양, 카드]]}` 또는 null · rng 0
          */
-        const tacShare = (d, rest, spread) => {
+        const tacShare = (d, rest, spread, hostile) => {
             if (d.summon || !(rest > 0)) return null;
             const S = d.side, list = [];
             let left = rest, sum = 0;
-            const sw = tacOf(S, 'shieldwall');
+            const sw = hostile && tacOf(S, 'shieldwall');
             if (sw && (d.rank ?? 0) !== 0) {
                 const front = sideList(S).filter(x => x.hp > 0 && !x.summon && (x.rank ?? 0) === 0);
                 const each = front.length ? Math.floor(Math.floor(left * sw.p1) / front.length) : 0;
                 if (each > 0) { for (const x of front) list.push([x, each, sw.card]); sum += each * front.length; left -= each * front.length; }
             }
-            const gd = tacOf(S, 'guard');
+            const share = mutualCover(d, left);
+            if (share) {
+                list.push([share.mate, share.amount, share.card]);
+                sum += share.amount;
+                left -= share.amount;
+            }
+            const gd = hostile && tacOf(S, 'guard');
             if (gd && !spread && d === leaderOf(S)) {
                 const mates = sideList(S).filter(x => x !== d && x.hp > 0 && !x.summon);
                 const g = mates.length ? mates.reduce((a, b) => (b.hp > a.hp ? b : a)) : null;
@@ -2134,24 +2254,73 @@ export function createBattleSystem(data) {
             }
             return list.length ? { sum, list } : null;
         };
+        function mutualCover(d, damage) {
+            const cover = deployed[d.side];
+            if (cover?.rule !== 'mutual_cover' || !cover.front.includes(d)) return null;
+            const mate = cover.front.find(unit => unit !== d);
+            const amount = Math.floor(damage * cover.p1);
+            return mate.hp > 0 && amount > 0 ? { mate, amount, card: cover.card } : null;
+        }
+
+        function craneWing(d, damage) {
+            const side = otherSide(d.side), card = deployed[side];
+            if (card?.rule !== 'crane_wing' || (d.rank ?? 0) !== 0) return null;
+            const amount = Math.floor(damage * card.p1);
+            if (amount <= 0) return null;
+            const back = sideList(d.side).filter(unit => unit.hp > 0 && (unit.rank ?? 0) !== 0);
+            return back.length ? { back, amount, card: card.card, side } : null;
+        }
+
+        function landCraneWing(wing, a, from, ty, bar, by, copies = 1) {
+            const total = wing.amount * copies;
+            const each = Math.floor(total / wing.back.length), extra = total % wing.back.length;
+            let landed = 0;
+            for (const [i, unit] of wing.back.entries()) {
+                const amount = each + (i < extra ? 1 : 0);
+                landed += tacLand(a, unit, amount, wing.card, from, ty, bar, by, wing.side);
+            }
+            return landed;
+        }
+
+        function damageOverflow(d, damage, bar) {
+            if (!bar) return loseHp(d, damage);
+            const before = d.hp;
+            const { absorbed } = applyDamage(d, damage);
+            return d.hp > 0 ? 0 : Math.max(0, damage - absorbed - before);
+        }
+
+        // Both portions follow the source's barrier rule. A transferred portion is settled only once.
+        function landWithCover(a, d, damage, ty, { bar = false, canShare = true, by = a?.key } = {}) {
+            const wing = canShare && craneWing(d, damage);
+            if (wing) damage -= wing.amount;
+            const share = canShare && mutualCover(d, damage);
+            if (share) damage -= share.amount;
+            const ov = damageOverflow(d, damage, bar);
+            let sharedDamage = wing ? landCraneWing(wing, a, d, ty, bar, by) : 0;
+            if (share) sharedDamage += tacLand(a, share.mate, share.amount, share.card, d, ty, bar, by);
+            return { damage, ov, sharedDamage };
+        }
+
         /**
-         * 나눠 받은 몫 하나 — **이미 감소를 지난 값**이라 배리어만 먹고 HP 를 깎는다(헌신 `advLand` 와 같은 결 — 방어 · 저항 · 피해 감소 · 흡혈 · 반사 · 경직 · 훅 없음) ·
+         * 나눠 받은 몫 하나 — 원래 피해의 배리어 규칙을 따르며 다시 나누지 않는다 ·
          *   `tactic` 이벤트(`from` = 원래 맞은 유닛) · 기여(때린 쪽 몫) · 쓰러짐 · rng 0
          */
-        function tacLand(a, d, dmg, card, from, ty) {
-            if (!(dmg > 0) || d.hp <= 0) return;
-            const hp0 = d.hp, had = !!d.barrier;
-            const { absorbed } = applyDamage(d, dmg);
-            const ov = d.hp > 0 ? 0 : Math.max(0, dmg - absorbed - hp0);
-            const ev = { t: r1(t), e: 'tactic', card, side: d.side, a: a.key, d: d.key, from: from.key, dmg, dhp: d.hp, ty };
+        function tacLand(a, d, dmg, card, from, ty, bar = true, by = a?.key, side = d.side) {
+            dmg = guardDamage(d, dmg);
+            if (!(dmg > 0) || d.hp <= 0) return 0;
+            const had = bar && !!d.barrier;
+            const ov = damageOverflow(d, dmg, bar && !(side !== d.side && d.swarm));
+            const ev = { t: r1(t), e: 'tactic', card, side, a: by, d: d.key, from: from.key, dmg, dhp: d.hp, ty };
+            if (side !== d.side) ev.s = `tactic:${card}`;
             if (had) ev.bar = barrierSum(d);
             if (ov) ev.ov = ov;
             timeline.push(ev);
-            const real = dmg - ov, ca = credit(a), cd = credit(d);
+            const real = dmg - ov, ca = a && a.side !== d.side ? credit(a) : null, cd = credit(d);
             if (ca) ca.dealt += real;
             if (cd) cd.taken += real;
             noteTaken(d, a, real);
             if (d.hp <= 0) { if (ca && d.side !== 'party' && !d.summon && !d.rewarded) ca.kills += 1; killHeal(a, d); downed(d); }
+            return real;
         }
         /**
          * 거짓 후퇴 — 그 편 **전열**(소환 · 진형 붕괴 중 제외)의 체력 비율이 그 라운드 처음으로 p1 아래면 체력 비율이 가장 높은 후열(같으면 배열 앞)과 자리를 바꾼다 ·
@@ -2236,7 +2405,33 @@ export function createBattleSystem(data) {
             tacMark.enemy = null;
             enemyLead = pickEnemyLeader();
             for (const S of ['party', 'enemy']) {
+                const card = deployed[S];
                 const list = sideList(S).filter(x => x.hp > 0 && !x.summon);
+                updateGiant(S, push);
+                if (card && card.rule !== 'mutual_cover') {
+                    const extra = {};
+                    if (card.rule === 'rapid_deployment') {
+                        extra.pull = {};
+                        for (const u of list) {
+                            const shift = primeGauge(u, card.p1);
+                            if (shift > 0) extra.pull[u.key] = r1(shift);
+                        }
+                    } else if (card.rule === 'field_medics') {
+                        for (const u of card.front) {
+                            u.buffs['tac:field_medics'] = { stat: 'recv_pct', v: card.p1, until: Infinity, by: 'tactic', quiet: true };
+                            refreshDerived(u);
+                        }
+                    } else if (card.rule === 'vanguard_barrier') {
+                        const u = card.front[0];
+                        if (u.hp > 0) {
+                            const amt = barrierPut(u, 'tac:vanguard_barrier', Math.round(u.hpMax * card.p1), Infinity);
+                            evs.push({ e: 'bar', u: u.key, amt });
+                        }
+                    } else if (card.rule === 'hammer_anvil') {
+                        card.lastHit = null;
+                    }
+                    push(card.card, S, extra);
+                }
                 const front = list.filter(x => (x.rank ?? 0) === 0), back = list.filter(x => (x.rank ?? 0) !== 0);
                 const hold = until => { for (const x of back) x.tacHold = Math.max(x.tacHold ?? 0, until); };
                 const ch = tacOf(S, 'charge');
@@ -2297,7 +2492,12 @@ export function createBattleSystem(data) {
             //   전열(rank 0) 생존자가 하나라도 있으면 **후열은 대상이 되지 않는다**. 전열이 전멸해야 뒤가 열린다.
             //   굴림은 여전히 **1회**다 — 바뀐 것은 모집단뿐이라 rng 소비 수열이 안 밀린다 (INTERFACE §5-2) · 트로이 목마의 후열 문도 같은 1회
             const gate = tacOn ? tacBackGate(u, foes) : null;
-            return pickFrom(gate ?? frontOf(foes));
+            const pool = gate ?? frontOf(foes);
+            if (deployed[u.side]?.rule === 'pursuit' && pool.length > 1) {
+                const lowest = Math.min(...pool.map(hpRatio));
+                return pickFrom(pool.filter(x => hpRatio(x) === lowest));
+            }
+            return pickFrom(pool);
         }
 
         /** 피해 적용 — 배리어(HP 밖 흡수 풀)가 먼저 먹고 남은 몫만 HP 를 깎는다 · 조각은 먼저 끝나는 것부터(R517) */
@@ -2366,16 +2566,19 @@ export function createBattleSystem(data) {
          *   예약을 밀면 배열 순서와 무관하게 차례가 정확히 그만큼 늦는다.
          * 경직 중에 다시 걸리면 **끝나는 시각만 새로 잡는다**(남은 시간에 더하지 않는다) — 그래서 옛 끝과 새 끝의 차이만 민다 · 새 끝이 더 이르면 아무것도 안 한다(2026-10-17). rng 0
          * `a` = 경직을 건 쪽 — **경직 시간 증가**(`a.staggerDur` · 무기 시기 ③ · 2026-10-05 R206)가 길이에 곱해진다. 0 · 모름이면 ×1 이라 종전 값이다
-         *   도감 Lv2 [2026-10-22 · R314] — 파티가 그 종족에 거는 경직 = 경직 시간 증가에 더하고 · 그 종족이 파티에 거는 경직 = 타격 회복에 더한다(종족 몫은 몬스터가 든다)
+         *   **출처 안에서 더하고 출처끼리 곱한다** [2026-11-27 사용자 「출처마다 내부적으로 합한다음에 곱으로」 · R601 · battle_design §2-3] —
+         *   `a.staggerDur` = 도감 밖 출처(장비 · 마스터리 · 전술)를 이미 곱한 값 · 도감 = 옵션 몫(`a.staggerDurCodex`) + 종족 몫이 한 괄호
+         *   도감 Lv2 [2026-10-22 · R314] — 파티가 그 종족에 거는 경직 = 도감 괄호에 더하고 · 그 종족이 파티에 거는 경직 = 타격 회복에 더한다(종족 몫은 몬스터가 든다)
          *   `fhrCond` = 그 타격의 마스터리 조건부 타격 회복(오만 T3 · R468) — 때리기 전 HP 로 판정한 값을 `strikeOnce` 가 넘긴다 · 0 이면 종전과 같다
          */
         function stagger(u, a = null, fhrCond = 0, sec = null) {
-            const sd = (a?.staggerDur ?? 0) + (a?.side === 'party' ? u.codex?.fight.stagger_dur_pct ?? 0 : 0);
+            const sd = a?.staggerDur ?? 0;
+            const sdCx = (a?.staggerDurCodex ?? 0) + (a?.side === 'party' ? u.codex?.fight.stagger_dur_pct ?? 0 : 0);
             const fh = u.fhr + fhrCond + (u.side === 'party' ? a?.codex?.fight.fhr ?? 0 : 0);
             // `sec` = 장치가 정한 경직 길이(사자후 · 덫 · 재장전 · 관통 · 소탕 · 반격 — 2026-11-14 R471) · 없으면 [balance.csv:stagger_sec] ·
             //   받는 쪽 장치(휠윈드 · 강신 · 금강 — `advStaggerMult` · 0 = 면역)를 곱한다 · 없으면 1 이라 종전 값
             const sm = advStaggerMult(u);
-            const dur = (sec ?? B.stagger_sec) * (sd ? 1 + sd : 1) * Math.max(0, 1 - fh) * sm;
+            const dur = (sec ?? B.stagger_sec) * (sd ? 1 + sd : 1) * (sdCx ? 1 + sdCx : 1) * Math.max(0, 1 - fh) * sm;
             if (!(dur > 0)) return;
             const end = t + dur;
             // 늦게 끝나는 쪽만 [2026-10-17] — 경직 시간 증가(R206)로 걸 때마다 길이가 달라져, 짧은 경직이 긴 경직을 덮으면 `end − from` 이 음수가 되어
@@ -2435,7 +2638,7 @@ export function createBattleSystem(data) {
          *      **시전 누적**(`castStack > 0` 이면 겹 +1 · 상한 [balance.csv:cast_stack_max] · 창 `cx:cast_stack` = 데미지 % 괄호의 덧셈 · rng 0).
          *      둘 다 옵션이 없으면 아무 일도 없다 — 그 밖에 rng 0
          */
-        function chargeTick(u) {
+        function chargeTick(u, waitForTurn) {
             // 정신 집중이 열린 동안은 여기 안 온다 — 행동 순회가 `chanTick` 으로 돌린다(칸이 안 찬다 · 2026-10-30 R392 — ~~끊어 치기는 `next` 가 방 사이 시계~~)
             // 칸 상한 — 공세 오오라 덤(마법 무기 아군 칸 +n · 창의 `chargeAdd` · 2026-11-14 R471)이 더한다 · 없으면 0
             const max = B.cast_charge_max + advChargeAdd(u);
@@ -2448,10 +2651,11 @@ export function createBattleSystem(data) {
                 }
             }
             // 멈춤 판정은 끝 시각과 같은 여유로 — `t += TICK` 의 누적 오차가 틱 하나를 더 막지 않게 (#69 와 같은 이유)
-            if (u.charges <= 0 || u.stagUntil > t + STEP_EPS || (u.stunUntil ?? 0) > t + STEP_EPS || !rt.pick(u, t)) return;
+            if (waitForTurn || u.charges <= 0 || u.stagUntil > t + STEP_EPS || (u.stunUntil ?? 0) > t + STEP_EPS || !rt.pick(u, t)) return;
             const full = u.charges >= max;
             u.charges -= 1;
             if (!rt.act(u, t)) { u.charges += 1; return; }
+            openingTurn = null;
             if (full) u.next = u.period;
             // 저절로 넘어가는 책장(마법사 마스터리 T4 ② · `adv.cast_refill_chance` · R437)은 무기의 시전 칸 충전과 같은 굴림에 더한다 — 둘 다 없으면 굴리지 않는다
             const refill = (u.castRefund ?? 0) + (u.adv?.cast_refill_chance ?? 0);
@@ -2479,12 +2683,12 @@ export function createBattleSystem(data) {
             if (u.dotAcc + EPS < B.dot_tick_sec) return;
             u.dotAcc -= B.dot_tick_sec;
             const resist = F.appliedResist(u.res?.poison ?? 0, u.resMaxBonus ?? 0, u.resMaxEl?.poison ?? 0);
-            const dmg = F.indirect(w.v * B.dot_tick_sec * (1 - resist));
-            const ov = loseHp(u, dmg);
+            const src = unitByKey(w.by);
+            const incoming = guardDamage(u, formationDamage(src, u, F.indirect(w.v * B.dot_tick_sec * (1 - resist))));
+            const { damage: dmg, ov } = landWithCover(src, u, incoming, 'poison', { by: w.by });
             const ev = { t: r1(t), e: 'dot', a: w.by, d: u.key, k: 'poison', s: w.s, dmg, dhp: u.hp, ty: 'poison' };
             if (ov) ev.ov = ov;
             timeline.push(ev);
-            const src = party.find(x => x.key === w.by) ?? units.enemies.find(x => x.key === w.by) ?? null;
             const ca = src ? credit(src) : null, cd = credit(u);
             if (ca) ca.dealt += dmg - ov;
             if (cd) cd.taken += dmg - ov;
@@ -2522,9 +2726,9 @@ export function createBattleSystem(data) {
             const ca = credit(u);
             for (const d of alive(rt.foesOf(u))) {
                 const resist = F.appliedResist(d.res?.[el] ?? 0, d.resMaxBonus ?? 0, d.resMaxEl?.[el] ?? 0);
-                const dmg = F.indirect(base * (1 - resist));
-                if (!(dmg > 0)) continue;
-                const ov = loseHp(d, dmg);
+                const incoming = guardDamage(d, formationDamage(u, d, F.indirect(base * (1 - resist))));
+                if (!(incoming > 0) || d.hp <= 0) continue;
+                const { damage: dmg, ov } = landWithCover(u, d, incoming, el);
                 const ev = { t: r1(t), e: 'dot', a: u.key, d: d.key, k: 'pulse', s: w.s, dmg, dhp: d.hp, ty: el };
                 if (ov) ev.ov = ov;
                 timeline.push(ev);
@@ -2547,6 +2751,7 @@ export function createBattleSystem(data) {
              마법: 화염 = 쓰러질 때 상대 편 전원 화염 피해 · 독 = 쓰러지면 상대 편 전원 중독(`enchDeath`) · 냉기 = 살아 있는 동안 상대 편 전원 행동 속도 −(`frostSync`) ·
                    전기 = 간격마다 무작위 상대 하나 번개(`enchTick` — **rng 1회** · INTERFACE §5-2)
            세기 바탕 = 그 정예의 공격력 중앙값 × 능력치 계수(`mainMult` — 물리 무기 = 힘 · 마법 무기 = 지능) — 오오라 피해의 바탕에 능력치 계수를 더했다 · 키는 `elite_enchant_*` */
+        /* @include enchant */
         const enchPower = u => ((u.atkMin ?? 0) + (u.atkMax ?? 0)) / 2 * (u.mainMult ?? 1);
         /** 강화가 낸 창 · 이벤트의 `s` — 재생기가 강화 칩의 그림 · 이름으로 읽는다 */
         const enchSrc = el => `elite:${el}`;
@@ -2555,7 +2760,7 @@ export function createBattleSystem(data) {
             if (!(base > 0) || d.hp <= 0) return;
             const resist = F.appliedResist(d.res?.[el] ?? 0, d.resMaxBonus ?? 0, d.resMaxEl?.[el] ?? 0);
             const dmg = F.indirect(base * (1 - resist));
-            if (dmg > 0) advLand(a, d, dmg, enchSrc(el), el, false);
+            if (dmg > 0) advLand(a, d, formationDamage(a, d, dmg), enchSrc(el), el, false);
         }
         /** 튀는 번개가 갈 자리 — 맞은 유닛 편의 산 유닛(소환 제외 · 맞은 유닛 빼고) 중 **뒤 열** 첫째 · 없으면 첫째 · 없으면 null · rng 0 */
         const chainNext = d => {
@@ -2612,6 +2817,7 @@ export function createBattleSystem(data) {
                 }
             }
         }
+        /* @end */
         /** 늪 [2026-11-17 · R533 · skill_design §12-9 · INTERFACE §2-6 「장 보스 고유 넷의 장치」 — 델리게이트 대체] — 편마다 `mire` 오오라(자기 창 · `foe` 아님 · 양수)를
          *  든 산 유닛이 있으면 **상대 편 전원**(소환 제외)에게 느려짐 창 하나(`MIRE` · 음수 · 시간 없음 · 여럿이 들면 가장 큰 값 · 같으면 배열 순 앞)를 맞추고 없으면 걷는다.
          *  창은 능력치 표가 둔화 합 · `coolSlow` 로 읽는다(skill_effects) · 값이 바뀔 때만 `buff` · `buffEnd` · 틱마다 부른다(서리 오라 뒤) · rng 0 */
@@ -2674,6 +2880,7 @@ export function createBattleSystem(data) {
             }
         }
         /** 주기적 번개(마법 전기) — 간격([balance.csv:elite_enchant_bolt_sec])이 찰 때마다 산 상대(소환 제외) 중 하나를 **rng 1회**로 골라 전기 피해 · 등장한 때부터 잰다 */
+        /* @include enchant */
         function enchTick(u) {
             const en = u.enchant;
             if (en.kind !== 'mag' || en.el !== 'lightning') return;
@@ -2685,6 +2892,7 @@ export function createBattleSystem(data) {
             const d = foes[Math.floor(rng() * foes.length)];
             enchLand(u, d, 'lightning', enchPower(u) * B.elite_enchant_bolt_mult);
         }
+        /* @end */
 
         /**
          * 무기 옵션의 조건부 추가 피해 % — **데미지 % 괄호에 덧셈**이다 (battle_design §9-1 · item_design §1 「무기 옵션」 · R78 · ~~조건부 괄호~~ 2026-09-18 한 괄호).
@@ -2756,25 +2964,6 @@ export function createBattleSystem(data) {
          * `s`(스킬 id)·`proc`(추가 피해가 터졌다)·`bar`(배리어 잔량)는 해당될 때만 붙는다 — 기본 공격의 이벤트 모양·rng 수열은 그대로다.
          * @param sk `{statMult, procChance, procMult}` — **스킬 타격만** 넘긴다(skill_effects 공격 대상 표). 기본 공격은 안 넘긴다 — 능력치 계수는 평타 계수(`mainMult`) · 추가 피해 0
          */
-        /**
-         * 부류 버프 [2026-11-16 · R518 · monster_design §3-2 — 2026-10-29 R388 기믹] — 그 직격 순간 **서 있는 적**(`hp > 0`)을 센다 · 창 · 이벤트 없음 · rng 0.
-         *   `familyUp` = 때리는 쪽 데미지 몫 — 군단(서 있는 군단이 `n` 이상) · 거인(서 있는 적이 자기 하나 · 데미지만) ·
-         *   `familyGuard` = 맞는 쪽 받는 피해 감소 몫 — 수호자(자기 아닌 수호자가 서 있으면 **후열** 몬스터) · 노말 · 결투장 유닛은 `family` 가 없어 0
-         */
-        const familyUp = u => {
-            const f = u.side === 'enemy' ? FAMILIES[u.family] : null;
-            if (!f) return 0;
-            const up = units.enemies.filter(e => e.hp > 0);
-            if (u.family === 'Army') return up.filter(e => e.family === 'Army').length >= f.n ? f.value : 0;
-            if (u.family === 'Giant') return up.length === 1 && up[0] === u ? f.value : 0;
-            return 0;
-        };
-        const familyGuard = target => {
-            const f = FAMILIES.Guardian;
-            if (!f || target.side !== 'enemy' || target.monsterId == null || target.rank !== 1) return 0;
-            return units.enemies.some(e => e !== target && e.hp > 0 && e.family === 'Guardian') ? f.value : 0;
-        };
-
         // 반격 중 — 반격의 기본 공격(그 안의 추가타 · 장비 발동 포함)이 도는 동안 참이다. 그 타격을 맞은 쪽은 반격을 굴리지 않는다 (아래 「반격」 · 2026-11-02 R426)
         let countering = false;
         /* ── 전직 트리 장치 [2026-11-13 · R471 · advance_tree_draft §3 ~ §8 · INTERFACE §2-6 「전직 트리 장치」] ──────────────────────────
@@ -2945,7 +3134,7 @@ export function createBattleSystem(data) {
             }
             if (s === 'kni_condemnation' && sk && !sk.advOwn && d.hp > 0) {
                 const amt = F.indirect((d.hpMax - d.hp) * B.condemn_missing_pct * (1 + (tf.cond_missing_more ?? 0)));
-                const ov = advLand(u, d, amt, s, FIXED_DMG, false);
+                const ov = advLand(u, d, formationDamage(u, d, amt), s, FIXED_DMG, false);
                 if (ov > 0 && tf.cond_overflow) passOver(u, d, ov * Math.min(1, tf.cond_overflow), s, tf.cond_overflow_two ? 2 : 1);
             }
             if (convProc && tf.ret_crit_jump && cv) {
@@ -3005,9 +3194,9 @@ export function createBattleSystem(data) {
                 if (x.acc + EPS < B.dot_tick_sec) continue;
                 x.acc -= B.dot_tick_sec;
                 const resist = F.appliedResist(d.res?.[x.el] ?? 0, d.resMaxBonus ?? 0, d.resMaxEl?.[x.el] ?? 0);
-                const dmg = F.indirect(x.dps * B.dot_tick_sec * (1 - resist));
-                if (!(dmg > 0) || d.hp <= 0) continue;
-                const ov = loseHp(d, dmg);
+                const incoming = guardDamage(d, F.indirect(x.dps * B.dot_tick_sec * (1 - resist)));
+                if (!(incoming > 0) || d.hp <= 0) continue;
+                const { damage: dmg, ov } = landWithCover(x.owner, d, incoming, x.el, { canShare: x.s !== 'sin_sloth_t4_defer' });
                 const ev = { t: r1(t), e: 'dot', a: x.by, d: d.key, k: 'adv', s: x.s, dmg, dhp: d.hp, ty: x.el };
                 if (ov) ev.ov = ov;
                 timeline.push(ev);
@@ -3418,13 +3607,11 @@ export function createBattleSystem(data) {
          * 장치 피해 하나 — 굴림 없는 정해진 양(넘김 · 대신 맞기 · 번짐 · 터짐 · 고정 몫). `bar` = 배리어를 거친다(대신 맞기 · 넘김) · 아니면 비직격(HP 에서 바로) ·
          *   `dot`(`k: adv`) 이벤트 · 기여 · 쓰러짐 · 돌려주는 값 = 넘친 몫
          */
-        function advLand(a, d, dmg, s, ty = null, bar = true) {
-            if (!(dmg > 0) || d.hp <= 0) return 0;
-            const hp0 = d.hp;
+        function advLand(a, d, incoming, s, ty = null, bar = true, canShare = true) {
+            incoming = guardDamage(d, incoming);
+            if (!(incoming > 0) || d.hp <= 0) return 0;
             const had = bar && !!d.barrier;   // 배리어를 거쳤으면 흡수 후 조각 합을 싣는다 — 재생기의 보호막 막대(R517)
-            let ov;
-            if (bar) { const { absorbed } = applyDamage(d, dmg); ov = d.hp > 0 ? 0 : Math.max(0, dmg - absorbed - hp0); }
-            else ov = loseHp(d, dmg);
+            const { damage: dmg, ov } = landWithCover(a, d, incoming, ty, { bar, canShare });
             const ev = { t: r1(t), e: 'dot', a: a.key, d: d.key, k: 'adv', s, dmg, dhp: d.hp };
             if (had) ev.bar = barrierSum(d);
             if (ty) ev.ty = ty;
@@ -3438,18 +3625,19 @@ export function createBattleSystem(data) {
             return ov;
         }
         /** 되돌린 피해 하나(신성한 심판) — 반사 규칙(비직격 · `reflect` 이벤트) · 돌려주는 값 = 실제로 깎은 양 */
-        function advReflect(src, x, dmg, s) {
-            if (!(dmg > 0) || x.hp <= 0) return 0;
-            const bov = loseHp(x, dmg);
-            const ev = { t: r1(t), e: 'reflect', a: src.key, d: x.key, dmg, ahp: x.hp, s };
+        function advReflect(src, x, incoming, s, by = src?.key) {
+            incoming = guardDamage(x, formationDamage(src, x, incoming));
+            if (!(incoming > 0) || x.hp <= 0) return 0;
+            const { damage: dmg, ov: bov, sharedDamage } = landWithCover(src, x, incoming, null, { by });
+            const ev = { t: r1(t), e: 'reflect', a: by, d: x.key, dmg, ahp: x.hp, s };
             if (bov) ev.ov = bov;
             timeline.push(ev);
-            const cS = credit(src), cX = credit(x);
+            const cS = src ? credit(src) : null, cX = credit(x);
             if (cS) cS.dealt += dmg - bov;
             if (cX) cX.taken += dmg - bov;
             noteTaken(x, src, dmg - bov);
             if (x.hp <= 0) { if (cS && x.side !== 'party' && !x.summon && !x.rewarded) cS.kills += 1; killHeal(src, x); downed(x); }
-            return dmg - bov;
+            return dmg - bov + sharedDamage;
         }
 
         /**
@@ -3472,6 +3660,13 @@ export function createBattleSystem(data) {
                 return true;
             }
             if (stateOf(d, 'devotion') && tfOf(d).devotion_undying) { d.hp = 1; return true; }
+            const card = deployed[d.side];
+            if (card?.rule === 'last_stand' && !lastStandUsed[d.side] && card.front.includes(d)) {
+                lastStandUsed[d.side] = true;
+                d.hp = 1;
+                tacEvent(card.card, d.side, { u: d.key, dhp: 1 });
+                return true;
+            }
             return false;
         }
         /** 헌신 — 이 아군(`d`)이 맞는 직격을 대신 받을 가디언 · 가져오는 몫(덤 = 더 · 가장 다친 아군은 전부) · 가져온 피해 감소 · 없으면 null */
@@ -3775,7 +3970,10 @@ export function createBattleSystem(data) {
                 const lk = stateOf(tgt, 'buff_lock')?.[1];
                 if (lk) {
                     const p = unitByKey(lk.by), v = p ? tfOf(p).exc_lock_punish : 0;
-                    if (v && p.hp > 0 && u.hp > 0) advLand(p, u, F.indirect(matkMid(p) * v * advCoef(p, 'int')), 'pri_excommunication', FIXED_DMG, false);
+                    if (v && p.hp > 0 && u.hp > 0) {
+                        const dmg = F.indirect(matkMid(p) * v * advCoef(p, 'int'));
+                        advLand(p, u, formationDamage(p, u, dmg), 'pri_excommunication', FIXED_DMG, false);
+                    }
                     return 0;
                 }
                 const bc = sumOf(u, 'buff_cut');
@@ -4011,6 +4209,7 @@ export function createBattleSystem(data) {
             if (tf.res_shield) barrierPut(d, 'pri_resurrection', Math.round(d.hpMax * tf.res_shield), t + B.advance_overheal_shield_sec);
             if (tf.res_power) advWin(d, 'adv:res_power', 'atk_pct', tf.res_power, t + B.advance_after_sec, { by: by.key });
             timeline.push({ t: r1(t), e: 'rise', u: d.key, a: by.key, s: 'pri_resurrection', dhp: d.hp, hpMax: d.hpMax });
+            if (tacOn) { curseDeaths.delete(d); updateGiant(d.side); }
             if (d.barrier) timeline.push({ t: r1(t), e: 'bar', u: d.key, amt: barrierSum(d) });   // 덤 보호막 — 일어선 카드에 막대가 선다(R517)
             for (const ev of then) timeline.push({ t: r1(t), ...ev });
         }
@@ -4140,6 +4339,10 @@ export function createBattleSystem(data) {
             const ma = u.mcond ? condSum(u, target, true) : null;
             const md = target.mcond ? condSum(target, u, false) : null;
             const crit0 = u.crit, critDmg0 = u.critDmg, defIgnore0 = u.defIgnore, res0 = target.res, atkMax0 = u.atkMax;
+            const attackFormation = u.side !== target.side ? deployed[u.side] : null;
+            if (attackFormation?.rule === 'aimed_fire' && !spread && attackFormation.back.includes(u)) {
+                u.crit = (u.crit ?? 0) + attackFormation.p1;
+            }
             if (ma) {
                 const s = ma.sum;
                 if (s.crit_rate) u.crit = (u.crit ?? 0) + s.crit_rate;
@@ -4153,13 +4356,18 @@ export function createBattleSystem(data) {
                 const di = sumOf(u, 'def_ignore');
                 if (di) u.defIgnore = (u.defIgnore ?? 0) + di;
             }
-            if (md?.sum.res_all) target.res = Object.fromEntries(Object.entries(res0 ?? {}).map(([e, v]) => [e, v + md.sum.res_all]));
+
             // 도감 Lv2 — 때리는 쪽(치명 · 명중 · 저항 감소) · 맞는 쪽(모든 원소 저항 · 절대값 피해 감소) (R314)
             const hitBonus0 = u.hitBonus, resRed0 = u.resReduction, drFlat0 = target.drFlat;
             if (cxA?.crit_rate) u.crit = (u.crit ?? 0) + cxA.crit_rate;
             if (cxA?.hit_bonus) u.hitBonus = (u.hitBonus ?? 0) + cxA.hit_bonus;
             if (cxA?.res_reduction) u.resReduction = (u.resReduction ?? 0) + cxA.res_reduction;
-            if (cxD?.res_all) target.res = Object.fromEntries(Object.entries(target.res ?? {}).map(([e, v]) => [e, v + cxD.res_all]));
+            if (md?.sum.res_all || cxD?.res_all) {
+                target.res = Object.fromEntries(Object.entries(target.tacResBeforeCurse ?? res0 ?? {}).map(([el, base]) => {
+                    const value = base + (md?.sum.res_all ?? 0) + (cxD?.res_all ?? 0);
+                    return [el, value > 0 ? value * (target.tacCurseKeep ?? 1) : value];
+                }));
+            }
             if (cxD?.dr_flat) target.drFlat = (target.drFlat ?? 0) + cxD.dr_flat;
             if (md?.sum.dr_flat) target.drFlat = (target.drFlat ?? 0) + md.sum.dr_flat;   // 마스터리 조건부 고정 피해 감소(폭식 T3 · R468) — 같은 자리 · 아래에서 되돌린다
             // 조건부 받는 피해 감소 — 맞는 쪽의 방어구 옵션. 셋을 더한 합이 **원천 하나**로 그 타격 동안만 `dr` 에 곱해진다 (2026-09-18). 합이 0 이면 안 건드린다
@@ -4168,8 +4376,7 @@ export function createBattleSystem(data) {
             if (guard) target.dr = 1 - (1 - dr0) * (1 - guard);
             for (const v of md?.dr ?? []) target.dr = 1 - (1 - target.dr) * (1 - v);
             // 혼자 앞에 서면(공통 줄 가디언 3 · `adv.alone_front_dr` · R471) — 전열에 다른 산 아군(소환 제외)이 없으면 받는 피해 감소 원천 하나 · 아래에서 되돌린다
-            const alone = target.adv?.alone_front_dr && (target.rank ?? 0) === 0
-                && !rt.alliesOf(target).some(x => x !== target && x.hp > 0 && !x.summon && (x.rank ?? 0) === 0) ? target.adv.alone_front_dr : 0;
+            const alone = target.adv?.alone_front_dr && aloneInFront(target, rt.alliesOf(target)) ? target.adv.alone_front_dr : 0;
             if (alone) target.dr = 1 - (1 - target.dr) * (1 - alone);
             // 도감 Lv2 받는 피해 감소 — 도감 전체가 **원천 하나**(장비 Lv4 의 피해 감소와 같은 규칙 · R314)
             if (cxD?.damage_reduction) target.dr = 1 - (1 - target.dr) * (1 - cxD.damage_reduction);
@@ -4184,12 +4391,7 @@ export function createBattleSystem(data) {
                 if (b.stat === 'final_dmg_pct' || (b.stat === 'final_phys_pct' && hitType === 'physical')) dealt *= Math.max(0, 1 + b.v);
             }
             if (u.adv?.final_dmg_bonus) dealt *= 1 + u.adv.final_dmg_bonus;   // 최종 데미지(공통 줄 크루세이더 1 · R471)
-            // 부류 버프(R518 · 위 `familyUp` · `familyGuard`) — 군단 · 거인은 이 자리의 원천 하나 · 수호자는 맞는 쪽 원천 하나 · 0 이면 안 건드린다
-            const famUp = u.family ? familyUp(u) : 0;
-            if (famUp) dealt *= 1 + famUp;
             if (dealt !== 1) target.dr = 1 - (1 - target.dr) * dealt;
-            const famGuard = familyGuard(target);
-            if (famGuard) target.dr = 1 - (1 - target.dr) * (1 - famGuard);
             // 고정 피해 몫(공통 줄 크루세이더 3 · `adv.fixed_dmg_share` · R471) — 그 몫은 방어 · 저항 · 피해 감소를 안 받는다(`formula.strike` 의 `fixedShare`)
             // 전직 장치의 타격 직전 몫 — 노바 · 천둥신의 분노 세지기 · 반드시 터짐 (R471) · 없으면 null
             //   (2026-11-14 — 평타 · 맞는 쪽 몫도 같은 자리: 퀵 드로우 · 오버드로우 · 호령 창 · 의지 겹 · 끌려나온 후열 — 값이 없으면 null 이라 종전 그대로)
@@ -4208,8 +4410,8 @@ export function createBattleSystem(data) {
             const cv = hitType === 'physical' ? convOf(u, target) : null;
             // 정예 강화(물리 갈래 · 화염 · 독 — 2026-11-17 R528 · monster_design §6-1) — 상대 편을 친 **물리 직격마다** 그 원소 몫을 **더한다**(`add` — 물리 몫은 그대로 ·
             //   그 원소 저항이 깎는다 · formula.strike `conv`) · 전환 몫(`cv`)과 함께 실린다 · `advAfterHit` 에는 전환 몫만 넘긴다 · rng 0
-            const ea = hitType === 'physical' && u.side !== target.side && u.enchant?.kind === 'phys' && (u.enchant.el === 'fire' || u.enchant.el === 'poison')
-                ? { el: u.enchant.el, share: B.elite_enchant_add_pct, add: true } : null;
+            const ea = /* @include enchant */ hitType === 'physical' && u.side !== target.side && u.enchant?.kind === 'phys' && (u.enchant.el === 'fire' || u.enchant.el === 'poison')
+                ? { el: u.enchant.el, share: B.elite_enchant_add_pct, add: true } : /* @end */ null;
             // 독화살 · 불화살(작전 카드 · R586) — 상대 편을 친 물리 직격마다 그 원소 몫(스킬 창의 전환 뒤 · 정예 강화의 더하는 몫 앞) · `advAfterHit` 에는 안 넘긴다 · 카드가 없으면 null
             const tcv = tacOn && hitType === 'physical' && u.side !== target.side ? tacConv(u) : null;
             if (cv || ea || tcv) u.conv = tcv ? [...(cv ?? []), ...tcv, ...(ea ? [ea] : [])] : ea ? [...(cv ?? []), ea] : cv;
@@ -4229,12 +4431,26 @@ export function createBattleSystem(data) {
             const { hit, dmg: dmgAll, crit, proc, convProc, damageBeforeMitigation, cb: cbHit } = F.strike(rng, u, target, attackMulBeforeMitigation);
             u.crushBase = crushBase0;
             // 강타 몫(`cb`)과 나머지(`dmg0`) — 흡혈 · 반사는 나머지만 본다(종전 그대로) · 둘의 합이 그 타격의 피해(`total`)
-            const cb = hit ? cbHit ?? 0 : 0;
-            const dmg0 = dmgAll - cb;
+            const cb0 = hit ? cbHit ?? 0 : 0;
+            const dmg0 = dmgAll - cb0;
             u.fixedShare = fs0;
             u.conv = conv0;
             // 받은 피해를 쌓아 다음 공격에(공통 줄 몽크 3 · `adv.struck_dmg_store` · R471) — 맞힌 직격에 쌓인 양을 더하고 비운다
-            const dmg = hit && u.advStore > 0 ? dmg0 + Math.round(u.advStore) : dmg0;
+            const raw = hit && u.advStore > 0 ? dmg0 + Math.round(u.advStore) : dmg0;
+            const unity = hit && tacOn && !u.summon && u.side !== target.side && tacOf(u.side, 'unity');
+            const united = unity && sideList(u.side).filter(x => x.hp > 0 && !x.summon).length >= unity.p2;
+            let outgoing = (united ? 1 + unity.p1 : 1) * formationDamageMultiplier(u, target);
+            if (hit && attackFormation?.rule === 'hammer_anvil') {
+                if (attackFormation.front.includes(u)) attackFormation.lastHit = target;
+                else if (attackFormation.back.includes(u) && attackFormation.lastHit === target) outgoing *= 1 + attackFormation.p1;
+            }
+            if (attackFormation?.rule === 'volley' && spread) outgoing *= 1 + attackFormation.p1;
+            const defense = hit && u.side !== target.side && deployed[target.side];
+            const protectedHit = spread ? defense?.rule === 'open_order' : defense?.rule === 'iron_line';
+            const formationKeep = protectedHit ? 1 - defense.p1 : 1;
+            const multiplier = outgoing * formationKeep * (hit && tacOn ? guardianKeep(target) : 1);
+            const cb = multiplier === 1 ? cb0 : Math.round(cb0 * multiplier);
+            const dmg = multiplier === 1 ? raw : Math.round((raw + cb0) * multiplier) - cb;
             if (hit && u.advStore > 0) u.advStore = 0;
             target.dr = dr0;
             target.res = res0;
@@ -4270,20 +4486,24 @@ export function createBattleSystem(data) {
             // 강타 몫(`cb`)은 위 `F.strike` 가 물리 피해로 깎아 돌려줬다(R570) — 합이 그 타격의 피해
             const total = dmg + cb;
             const hpBefore = target.hp;
-            const took = sw ? swarmTake(target, total, spread) : null;
-            const shTook = shieldWas && !took ? advShieldTake(u, target, total, hitType) : 0;
+            const shTook = shieldWas && !sw ? advShieldTake(u, target, total, hitType) : 0;
             // 헌신 [2026-11-14 · R471 · advance_tree_draft §5] — 같은 편 가디언이 창 동안 이 직격의 몫을 대신 받는다(가져온 몫 × (1 − 가져온 피해 감소)) · 창이 없으면 0 이라 종전 그대로
-            const dv = !took && u.side !== target.side ? devotionOf(target) : null;
+            const dv = !sw && u.side !== target.side ? devotionOf(target) : null;
             const moved = dv ? Math.floor((total - shTook) * dv.share) : 0;
+            const wing = tacOn && craneWing(target, total - shTook - moved);
+            const frontDamage = total - (wing?.amount ?? 0);
+            const copies = wing && sw && spread ? sw.hp.filter(hp => hp > 0).length : 1;
+            const took = sw ? swarmTake(target, frontDamage, spread) : null;
             // 방패벽 · 친위대(작전 카드 · R586 · 위 `tacShare`) — 헌신이 가져간 뒤의 남은 몫을 같은 편이 나눠 받는다 · 카드가 없으면 null 이라 0 을 빼 종전 그대로
-            const tsh = tacOn && !took && u.side !== target.side ? tacShare(target, total - shTook - moved, spread) : null;
+            const tsh = tacOn && !took ? tacShare(target, frontDamage - shTook - moved, spread, u.side !== target.side) : null;
             const shared = tsh ? tsh.sum : 0;
             // 죄종 마스터리 T4 맞는 쪽 [2026-11-14] — 오만 ③ 큰 한 방의 넘친 몫 감소 · 폭식 ③ 원소 피해 일부를 회복으로 · 나태 ③(조건 동안) 일부를 나눠 받기 · 없으면 그대로
-            const tin = !took && u.side !== target.side && target.adv ? t4Incoming(u, target, total - shTook - moved - shared, hitType) : null;
-            const intoHit = tin ? tin.into : total - shTook - moved - shared;
+            const tin = !took && u.side !== target.side && target.adv ? t4Incoming(u, target, frontDamage - shTook - moved - shared, hitType) : null;
+            const intoHit = tin ? tin.into : frontDamage - shTook - moved - shared;
             const { absorbed: abs0 } = took ?? applyDamage(target, intoHit);
             const absorbed = abs0 + shTook;
-            if (moved > 0) advLand(u, dv.g, Math.round(moved * (1 - dv.dr)), dv.s ?? 'kni_lastbastion', hitType);
+            if (wing) landCraneWing(wing, u, target, hitType, true, u.key, copies);
+            if (moved > 0) advLand(u, dv.g, Math.round(moved * (1 - dv.dr)), dv.s ?? 'kni_lastbastion', hitType, true, false);
             if (tsh) for (const [x, amt, card] of tsh.list) tacLand(u, x, amt, card, target, hitType);
             if (tin) t4IncomingAfter(u, target, tin);
             // 넘친 몫 [2026-10-23 · R326] — 배리어 · HP 밖으로 넘친 양(쓰러뜨린 타격에만 0 초과). 처형 판정 앞에서 잰다(처형은 남은 체력을 지울 뿐 넘치지 않는다)
@@ -4306,7 +4526,7 @@ export function createBattleSystem(data) {
             noteTaken(target, u, real);
             if (target.adv?.struck_dmg_store && target.hp > 0) target.advStore = (target.advStore ?? 0) + real * target.adv.struck_dmg_store;
             // `ty` — 그 타격의 피해 종류(`hitType`). 표시용이다 — 관전 로그가 피해 숫자를 종류 색으로 칠한다 (INTERFACE §2-6 · SCREEN_DESIGN §4-2)
-            const ev = { t: r1(t), e: 'hit', a: u.key, d: target.key, dmg: total, crit, dhp: target.hp, ty: hitType };
+            const ev = { t: r1(t), e: 'hit', a: u.key, d: target.key, dmg: frontDamage, crit, dhp: target.hp, ty: hitType };
             if (cb) ev.cb = cb;                              // 강타 몫 — 강타가 들어간 타격에만 키가 선다(`dmg` 는 합 · 흡혈 · 반사는 강타 몫을 안 먹는다)
             if (cull) ev.cull = cull;                        // 처형으로 지운 체력 — 처형이 터진 타격에만 키가 선다(`dmg` 에는 안 든다 · R303)
             if (ov) ev.ov = ov;                              // 넘친 몫 — 쓰러뜨린 타격에만 키가 선다(`dmg` 에는 들었다 · R326)
@@ -4339,6 +4559,7 @@ export function createBattleSystem(data) {
             timeline.push(ev);
             // 작전 카드(R586) — 쐐기진 표식(리더의 단일 직격이 맞힌 산 적) · 독화살 · 불화살이 그 라운드 처음 일했다 · 카드가 없으면 아무 일도 없다 · rng 0
             if (tacOn && !spread && u.side !== target.side && target.hp > 0) tacWedge(u, target);
+            if (united) tacOnce(u.side, unity, { a: u.key, d: target.key });
             if (tcv) for (const c of tcv) tacOnce(u.side, c.tac, { a: u.key, d: target.key, el: c.el });
             // 색욕 T4 ① 드러난 심장(2026-11-14) — 조건(상대 HP 가 높다)을 채운 적에게 치명이 터지면 잠깐 받는 피해 증가
             if (crit && u.adv?.lust_crit_vuln && target.hp > 0 && !target.summon && t4On(u, target))
@@ -4405,20 +4626,13 @@ export function createBattleSystem(data) {
                 const w = stateOf(u, 'maiden')[1];
                 const src = party.find(x => x.key === w.by) ?? units.enemies.find(x => x.key === w.by) ?? null;
                 const basis = damageBeforeMitigation === undefined ? dmg
-                    : Math.max(B.dmg_min, damageBeforeMitigation) + (dmg - dmg0);
-                const back = F.indirect(basis * mv);
-                const bov = loseHp(u, back);
-                const rev = { t: r1(t), e: 'reflect', a: w.by, d: u.key, dmg: back, ahp: u.hp, s: w.s };
-                if (bov) rev.ov = bov;
-                timeline.push(rev);
-                const cS = src ? credit(src) : null;
-                if (cS) cS.dealt += back - bov;
-                if (cA) cA.taken += back - bov;
-                noteTaken(u, src, back - bov);
-                if (u.hp <= 0) { if (cS && u.side !== 'party' && !u.rewarded) cS.kills += 1; killHeal(src, u); downed(u); }
+                    : (Math.max(B.dmg_min, damageBeforeMitigation) + raw - dmg0) * outgoing;
+                advReflect(src, u, F.indirect(basis * mv), w.s, w.by);
             }
             // 정예 강화(물리 갈래 · 냉기 · 전기 — 2026-11-17 R528 · monster_design §6-1) — 반사 · 메이든 **뒤** · 맞은 뒤 장치 앞 · rng 0
+            /* @include enchant */
             if (u.side !== target.side && (u.enchant || target.enchant)) enchStruck(u, target, hitType, mult);
+            /* @end */
             // 전직 장치의 맞은 뒤 [2026-11-14 · R471] — 의지 겹 · 신성한 심판 · 속죄 회복 · 사냥 표식 번짐 · 몽크 반격 · 지원 사격 반격 사격(반격 중엔 안 한다) · 장치가 없으면 아무 일도 없다
             if (u.side !== target.side) advStruck(u, target, s, sk, dmg, real);
             if (target.hp <= 0) {
@@ -4519,6 +4733,7 @@ export function createBattleSystem(data) {
                 // 현재 HP 는 **비율을 지킨다** [2026-09-21 · R130 · base_expedition_design §1-5] — 갈아입기 전 비율을 새 최대치에 곱한다(아래 파생 뒤).
                 //   뺐다 끼워도 손익이 0 이라 회복 수단이 아니고, 잠깐 뺀 HP 장비가 그 런 끝까지 HP 를 깎아 두는 함정도 없다
                 u.hpRatio = u.hpMax > 0 ? u.hp / u.hpMax : 1;
+                delete u.tacGiantBase;
                 for (const k of REFIT_FIELDS) u[k] = fresh[k];
                 // 적이 깎은 영구 방어(가이디드 애로우)는 **깎인 비율(`defKeep`)로** 잇는다 [2026-09-21 · R130] — ~~옛 방어값으로 나눈 비율~~ 은
                 //   방어가 0 이면 못 재서 장비를 다 벗었다 입으면 기록이 사라졌다. 깎인 **양**으로 들면 맞을 때 입은 방어가 손실을 정해
@@ -4571,6 +4786,7 @@ export function createBattleSystem(data) {
                 u.hp = fill?.includes(u.uid) ? u.hpMax : Math.max(1, Math.round(u.hpRatio * u.hpMax));
                 delete u.hpRatio;
             }
+            if (started && tacOn) updateGiant('party');
             for (const u of changed) {
                 timeline.push({
                     t: r1(t), e: 'refit', u: u.key, hpMax: u.hpMax, dhp: u.hp, period: u.period,
@@ -4637,10 +4853,14 @@ export function createBattleSystem(data) {
                 // 오오라 피해 틱 — 중독 틱 **뒤** · 재생 **앞** (홀리 파이어 · 2026-10-16 · R249 · INTERFACE §5-2). 창이 없으면 누산만 비운다
                 for (const u of [...party, ...units.enemies]) if (u.hp > 0) pulseTick(u);
                 // 정예 강화(마법 갈래 · R528) — 오오라 피해 **뒤** · 전직 트리 틱 앞: 서리 오라를 맞추고(rng 0) · 주기적 번개(간격마다 **rng 1회** — 적 배열 순 · INTERFACE §5-2)
+                /* @include enchant */
                 frostSync();
+                /* @end */
                 mireSync();   // 늪(R533) — 서리 오라 뒤 · rng 0 · 든 유닛이 없으면 아무것도 안 한다
                 fieldSync();  // 적진에 깐 창(R550) — 늪 뒤 · 깐 쪽이 닫히거나 쓰러졌으면 상대 편 칩을 걷는다 · rng 0
+                /* @include enchant */
                 for (const u of units.enemies) if (u.hp > 0 && u.enchant) enchTick(u);
+                /* @end */
                 // 전직 트리 틱 — 장치 지속 피해 · 자동 시전 · 창 동안의 주기 타격(히드라 · 블리자드 · 썬더 스트라이크) — 오오라 피해 **뒤** · 재생 **앞** (2026-11-13 R471)
                 for (const u of [...party, ...units.enemies]) if (u.hp > 0) advTick(u);
                 // HP 재생 — 행동 순회 **앞**. 초당 값이라 틱마다 누산하고 1 이상 쌓였을 때만 회복한다
@@ -4664,18 +4884,33 @@ export function createBattleSystem(data) {
                 if (enemyPot && enemyPot.left > 0) drinkEnemyPotions();   // 결투장 수비 쪽 — 파티 다음 (R460)
                 // 거짓 후퇴(작전 카드 · R586) — 도트 · 반사 · 장치 피해로 문턱을 넘은 전열도 행동 **앞**에서 본다(직격은 `strikeOnce` 끝이 이미 봤다) · rng 0
                 if (tacOn) { tacRetreat('party'); tacRetreat('enemy'); }
-                for (const u of [...party, ...units.enemies]) {
+                const combatants = [...party, ...units.enemies];
+                const opener = openingTurn && openingActor(combatants);
+                if (!opener) openingTurn = null; // 발동 가능한 아군 스킬이 없으면 다음 정상 행동에서 전투를 잇는다.
+                for (const u of combatants) {
                     if (u.hp <= 0) continue;
                     if (rules?.skipActor?.(u)) continue;
                     // 기사 돌격의 후열 · 트로이 목마(작전 카드 · R586) — 그 시각까지(그 틱 포함) 게이지 · 칸 충전 · 시전이 선다 = 첫 행동이 그만큼 늦다 · 없으면 `undefined` 라 안 건너뛴다
                     if (u.tacHold + STEP_EPS >= t) continue;
                     if (u.chan) { chanTick(u); continue; }   // 정신 집중 — 차례 · 칸 충전 대신 방 사이 초 시계 (2026-10-22 · 끊어 치기도 2026-10-30 R392 · 위 `chanTick`)
-                    if (u.noBasic) { chargeTick(u); continue; }
+                    const waitForTurn = openingTurn && u !== opener;
+                    if (u.noBasic) { chargeTick(u, waitForTurn); continue; }
                     u.next -= TICK;
                     // 같은 여유로 판정한다 — `next -= TICK` 의 꼬리(5.0 − 0.1 × 50 > 0)가 틱 하나를 더 먹지 않게 (DEV_PLAN §4 #69)
                     if (u.next <= STEP_EPS) {
+                        if (waitForTurn) continue;
                         u.next = u.period;
-                        rt.act(u, t);
+                        if (openingTurn === 'basic') {
+                            const start = timeline.length;
+                            rt.basicAttack(u, t, alive(rt.foesOf(u)));
+                            const swing = timeline.slice(start).find(ev => ev.a === u.key && !ev.s
+                                && ['hit', 'dodge', 'evade'].includes(ev.e));
+                            if (swing) swing.openingBasic = true;
+                            openingTurn = 'skill';
+                        } else {
+                            rt.act(u, t);
+                            openingTurn = null;
+                        }
                     }
                 }
                 rules?.afterTick?.(ruleContext());
@@ -4780,5 +5015,5 @@ export function createBattleSystem(data) {
         const lvl = Math.min(B.hero_level_cap, Math.max(1, Math.round(level)));
         return { xp: MONSTER_XP.get(lvl) * g.exp_mult, gold: Math.round(B.monster_gold_base * B.monster_gold_growth ** (lvl - 1) * g.gold_mult * B.gold_rate), dropChance: B.drop_chance_pct * g.drop_chance_mult };
     }
-    return { simulate, createRun, simulateTeams, stagePool, stageElement, stageRounds, skillCarriers, monsterSkillSlots, makeEnemy, monsterGearSpec, rollMonsterDrop, ilvlSpreadOf, debuffOf, rarityWeightsOf, rarityOpenOf, timeTargetOf, killRewardOf };
+    return { simulate, createRun, simulateTeams, stagePool, stageElement, stageRounds, skillCarriers, monsterSkillSlots, makeEnemy, monsterGearSpec, rollMonsterDrop, ilvlSpreadOf, ruinsTrapOf, /* @include hell */ debuffOf, /* @end */ rarityWeightsOf, rarityOpenOf, timeTargetOf, killRewardOf };
 }

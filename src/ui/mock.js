@@ -584,7 +584,11 @@ export const sinIcon = sin => SINS[sin] ? SIN_ICON_DIR + sin + ICON_EXT : null;
 /** 작전 카드 그림 — 파일 이름 = `tactic_card.csv:card_id` · Codex 「배지 장면」 초안(2026-11-25 초안에서 사용자가 고름 · ADR-1395) ·
  *  그림이 없는 카드는 null — 화면은 그 카드의 죄종 그림을 대신 세운다 (SCREEN_DESIGN §15 「카드 그림」 · ADR-1391) */
 export const TACTIC_ICON_DIR = './assets/art/icons/tactics/';
-export const TACTIC_ICON_FILES = ['duel', 'shieldwall', 'trojan'];
+export const TACTIC_ICON_FILES = [
+    'duel', 'shieldwall', 'trojan',
+    'desperate_charge', 'iron_line', 'mutual_cover', 'hammer_anvil',
+    'guardian', 'vanguard_barrier', 'open_order', 'volley',
+];
 export const tacticIcon = id => TACTIC_ICON_FILES.includes(id) ? TACTIC_ICON_DIR + id + ICON_EXT : null;
 /** 직업 아이콘 — 스킬 아이콘과 같은 Gemini 단색 실루엣 시트에서 잘랐다(`icons/classes/source/`). 마스터리 직업 판 머리가 판 색으로 칠한다 (SCREEN_DESIGN §7 · ADR-0375) */
 export const CLASS_ICON_DIR = './assets/art/icons/classes/';
@@ -855,7 +859,7 @@ export const EXPLORE_WORLD_MAP = BG_DIR + 'explore_world_muted.webp';
 export const EXPLORE_WORLD_SIZE = [1536, 714];
 export const exploreLocked = ch => BG_DIR + `explore_world_muted_locked/${ch}.webp`;
 export const EXPLORE_REGIONS = {
-    1: { at: [11, 62], ring: '#c4432e', tile: [0.00, 34.87, 24.48, 57.00], spots: { cave: [4.1, 45.2], ruins: [13.5, 50.3], caravan: [11.3, 57.8] } },
+    1: { at: [11, 62], specialAt: [9, 72], ring: '#c4432e', tile: [0.00, 34.87, 24.48, 57.00], spots: { cave: [4.1, 45.2], ruins: [13.5, 50.3], caravan: [11.3, 57.8] } },
     2: { at: [17, 18], ring: '#4f8a34', tile: [0.00, 1.82, 33.92, 49.30], spots: { cave: [2.9, 30.1], ruins: [21.5, 33.8], caravan: [14.6, 36.4] } },
     3: { at: [38, 66], ring: '#e3ad3c', tile: [20.64, 36.27, 34.38, 58.40], spots: { cave: [28.9, 71.1], ruins: [47.8, 75.2], caravan: [43.4, 80.8] } },
     4: { at: [47, 26], ring: '#9cc8e6', tile: [29.10, 1.96, 35.42, 55.32], spots: { cave: [36.3, 31.1], ruins: [57.4, 41.5], caravan: [42.3, 38.2] } },
@@ -866,8 +870,8 @@ export const EXPLORE_REGIONS = {
 /** 탐험 지점 아이콘 — `src/assets/art/icons/explore/<지점>.webp` · **테두리 없는 그림 원판**(테두리는 화면이 땅 색으로 두른다 · ADR-0553) */
 export const EXPLORE_ICON_DIR = './assets/art/icons/explore/';
 export const exploreIcon = spot => EXPLORE_ICON_DIR + spot + ICON_EXT;
-/** 탐험 표 그림 — `icons/explore/ticket_<지점>.webp` · 낡은 양피지 표에 그 지점 문양 · 등급은 그림이 아니라 칩 테두리 색이 든다 (2026-11-26 · Codex · ADR-1409) */
-export const exploreTicketIcon = spot => EXPLORE_ICON_DIR + 'ticket_' + spot + ICON_EXT;
+/** 세 탐험 지점에서 쓰는 나침반 문양. 등급은 표 테두리 색으로 표시한다. */
+export const EXPLORE_TICKET_ICON = EXPLORE_ICON_DIR + 'ticket' + ICON_EXT;
 /**
  * 탐험 판 관전 지도 (SCREEN_DESIGN §8-4 · 2026-11-26 R590 · ADR-1402 · ADR-1403) — **그림에 묶인 좌표**라 그림을 바꾸면 같이 다시 딴다.
  * `EXPLORE_CARAVAN_ROUTES[장]` = 세계지도(`EXPLORE_WORLD_SIZE` 픽셀) 위 상단 의뢰의 길 — 그 장 마차 자리(`EXPLORE_REGIONS[장].spots.caravan`)에서
@@ -963,10 +967,12 @@ export function facePath(file) {
  * **이름이 길수록 띠의 신원이 줄어든다** — 이름을 바꾸거나 더할 때 `&traits=max&lang=en` 으로 다시 본다(ADR-0775)
  */
 export const ELITE_TRAIT_ENCHANT = [
-    { el: 'fire', ko: '타오르는', en: 'Blazing', full: { ko: '화염 강화', en: 'Fire Enchanted' } },
-    { el: 'cold', ko: '얼어붙는', en: 'Freezing', full: { ko: '냉기 강화', en: 'Cold Enchanted' } },
-    { el: 'lightning', ko: '충전된', en: 'Charged', full: { ko: '전기 강화', en: 'Lightning Enchanted' } },
-    { el: 'poison', ko: '맹독의', en: 'Venomous', full: { ko: '독 강화', en: 'Poison Enchanted' } },
+    /* @include enchant */
+    { el: 'fire', ko: '타오르는', en: 'Blazing', zh: '炽燃的', full: { ko: '화염 강화', en: 'Fire Enchanted', zh: '火焰强化' } },
+    { el: 'cold', ko: '얼어붙는', en: 'Freezing', zh: '冰寒的', full: { ko: '냉기 강화', en: 'Cold Enchanted', zh: '冰霜强化' } },
+    { el: 'lightning', ko: '충전된', en: 'Charged', zh: '带电的', full: { ko: '전기 강화', en: 'Lightning Enchanted', zh: '闪电强化' } },
+    { el: 'poison', ko: '맹독의', en: 'Venomous', zh: '剧毒的', full: { ko: '독 강화', en: 'Poison Enchanted', zh: '毒素强化' } },
+    /* @end */
 ];
 /** 강화가 낸 창 · 피해의 출처 id(`elite:<원소>` · 서리 오라 `elite:frost`)에서 원소를 꺼낸다 — 강화가 아니면 null (R528 · battle.enchSrc) */
 export const enchantOfSrc = s => {
@@ -975,6 +981,7 @@ export const enchantOfSrc = s => {
     return ELITE_TRAIT_ENCHANT.find(x => x.el === el) ?? null;
 };
 // 한글은 짧은 직역(내화 · 방한 · 방독 — 칩에 맞는 길이 · 2026-10-24 사용자 「살의, 매력적인 이런게 좋은거같에」)
+/* @include defense */
 export const ELITE_TRAIT_DEF = [
     { dt: 'physical', ko: '단단한', en: 'Durable', zh: '坚固的' },
     { dt: 'fire', ko: '내화의', en: 'Fireproof', zh: '耐火的' },
@@ -982,6 +989,7 @@ export const ELITE_TRAIT_DEF = [
     { dt: 'lightning', ko: '절연된', en: 'Insulated', zh: '绝缘的' },
     { dt: 'poison', ko: '방독의', en: 'Venomproof', zh: '防毒的' },
 ];
+/* @end */
 /* 정예 특성 **죄종 칸 칩의 글자** — 그 정예 죄종의 형용사 [2026-11-15 사용자 「그냥 분노하는 << 이렇게 붙여」 · SCREEN_DESIGN §4-2 · ADR-1191].
    붙은 마스터리 칸(셋 중 하나)과 상관없이 같은 글자다 · 영어가 원본(`SINS.adj` 와 같은 낱말) · 한글은 직역 · 색욕은 「~의」 꼴(방어 칸 「내화의」와 같은 결).
    **표시 전용**이다 — 굴림 풀은 `mastery_node.csv` 의 죄종 T2 칸이고 이 표는 game_logic 에 안 간다 */

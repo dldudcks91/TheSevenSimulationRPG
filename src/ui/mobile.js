@@ -119,7 +119,7 @@ function install() {
     }, true);
     document.addEventListener('keydown', event => {
         if (!open) return;
-        if (event.key === 'Escape') {
+        if (event.key === 'Escape' && !event.target.closest('.language-picker:has(.lang-btn[aria-expanded="true"])')) {
             event.preventDefault(); event.stopImmediatePropagation(); closeMobileMenu();
         } else if (event.key === 'Tab') {
             const nodes = [...nav.querySelectorAll('button, a, input, select, textarea, [tabindex="0"]')]
@@ -164,7 +164,7 @@ export function mountMobileShell({ pre, tab }) {
     close.onclick = () => closeMobileMenu(); header.append(title, close); nav.prepend(header);
 
     const utilities = document.createElement('div'); utilities.className = 'mobile-menu-utilities';
-    for (const node of app.querySelectorAll('.resources > .lang-btn, .resources > .exp-time, .resources > .da-wrap')) utilities.appendChild(node);
+    for (const node of app.querySelectorAll('.resources > .language-picker, .resources > .exp-time, .resources > .da-wrap')) utilities.appendChild(node);
     nav.appendChild(utilities);
     for (const id of QUICK_TABS) {
         const source = nav.querySelector(`[data-tab="${id}"]`);

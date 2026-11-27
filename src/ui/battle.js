@@ -45,8 +45,8 @@ import * as M from './mock.js';
 import { D, SYS, monsterName, monsterFace, stageName, stageBgOf, chapterOf, skillInfo, potionInfo, shrineInfo, pickJosa, skillShowsLv } from './data.js';
 import { t, L, has } from './i18n.js';
 import { DEV_HOST } from './env.js';
-import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, potionTipCard, withLive, refreshTip, reanchorTip, headingHelp } from './tip.js';
-import { paceAt, paceStep, paceCfg, actorOf, isSkillAct, isSkillOnly, RISE_MS, PEAK_MS } from './pace.js';   // 박자 — 세움이 언제 · 얼마나 서나. 앱 시계와 같은 걸음이다 (ADR-0654)
+import { bindTipNode, hideTip, heroTipCard, monsterTipCard, skillTipCard, skillLineHtml, potionTipCard, withLive, refreshTip, reanchorTip, headingHelp } from './tip.js';
+import { paceAt, paceStep, paceCfg, actorOf, groupEnd, isSkillAct, isSkillOnly, RISE_MS, PEAK_MS } from './pace.js';   // 박자 — 세움이 언제 · 얼마나 서나. 앱 시계와 같은 걸음이다 (ADR-0654)
 import { fxPreloadSkills, fxHit, fxReflect, fxBlast, fxMiss, fxDown, fxHeal, fxBuff, fxCharge, fxChargeShot, fxAppear, fxArriveMark, fxArrive, fxRoundClear, SPEED_K, lungeFxOn } from './fx.js';   // 관전 연출 = 스킬 이펙트 + 기본 공격 이펙트 + 피격 반응 + 공격 시 흔들림(넷 다 기본 On) — 넷 다 `⚙` 판의 설정 탭이 따로 켜고 끈다 · 사건을 적용한 뒤에 부른다 (SCREEN_DESIGN §4-2 「연출」 · ADR-0409 · ADR-0410 · ADR-0413 · ADR-0414 · ADR-0468 · ADR-0501)
 
 /** 배속 버튼 — 배포 주소는 ×2 까지 · 개발 환경은 ×4 · ×16 도(×16 은 2026-10-05 사용자 지시) (SCREEN_DESIGN §4-2 · ADR-0755).
@@ -192,6 +192,7 @@ const runBuffName = (key, b) => {
  * 헬 디버프 칸 [2026-11-12 · SCREEN_DESIGN §4-2 「헬 디버프」 · ADR-1061] — 그 칸 × 그 런의 단의 장 디버프(`battle.debuffOf` — 헬)와
  *   설명창의 이름(「단 이름 · 죄종 이름」) · 효과 한 줄(출정 창 머리와 같은 문구 · 같은 값 — 챕터보스 칸은 배수가 곱해진 값). 장 디버프가 없으면 null
  */
+/* @include hell */
 function curseOf(stageId, diff) {
     const d = stageId != null && diff != null ? SYS.battle.debuffOf(stageId, diff) : null;
     if (!d) return null;
@@ -205,11 +206,17 @@ function curseOf(stageId, diff) {
 }
 /** 죄종 아이콘을 죄종 색으로 칠한 마스크 — 마스터리 판 머리와 같은 칠(ADR-0368) · 그림이 없으면 빈 칸 */
 const curseMask = c => c.art ? `<i class="sk-icon-mask" style="background:${c.color};-webkit-mask-image:url('${c.art}');mask-image:url('${c.art}')"></i>` : '';
+/* @end */
 /** 버프 줄 — 신단 → 전술 → 도감 · 장 디버프가 있으면 오른쪽 끝에 붉은 테두리 칸 하나 (ADR-0992 · ADR-1061) */
-const runBuffIconsHtml = curse => `<div class="run-buff-icons">${RUN_BUFF_KEYS.map(key =>
+const runBuffIconsHtml = (extra = '') => `<div class="run-buff-icons">${RUN_BUFF_KEYS.map(key =>
     `<span class="run-buff-icon" data-buff="${key}" role="img" tabindex="0" aria-label="${t(`bt.buff.${key}`)}"><img src="${M.RUN_BUFF_ART[key]}" alt="" draggable="false"></span>`
-).join('')}${curse ? `<span class="run-buff-icon curse" role="img" tabindex="0" aria-label="${curse.name}: ${curse.fx}">${curseMask(curse)}</span>` : ''}</div>`;
+).join('')}${extra}</div>`;
 /** 헬 디버프 칸의 설명창 — 버프 카드와 같은 틀 · 이름 「죄종의 저주」 → 흐린 장면 한 줄 글 → 선 아래 효과 한 줄 (ADR-1064) */
+/* @include hell */
+function runCurseIcon(stageId, diff) {
+    const curse = curseOf(stageId, diff);
+    return curse ? `<span class="run-buff-icon curse" role="img" tabindex="0" aria-label="${curse.name}: ${curse.fx}">${curseMask(curse)}</span>` : '';
+}
 function curseTipCard(curse) {
     const c = document.createElement('div');
     c.className = 'tip-card effect-tip run-buff-tip curse';
@@ -219,6 +226,7 @@ function curseTipCard(curse) {
     c.querySelector('.run-buff-line').textContent = curse.fx;
     return c;
 }
+/* @end */
 /** 기존 효과 카드의 틀 — 이름 아래 효과마다 한 줄, 조건·남은 시간은 적지 않는다. */
 function runBuffTipCard(key, b) {
     const c = document.createElement('div');
@@ -242,9 +250,11 @@ function runBuffTipCard(key, b) {
 /** 첫 그리기와 hover·키보드 포커스 때만 읽는다 — 재생 걸음마다 버프를 다시 계산하지 않는다. */
 function bindRunBuffTips(root, opts) {
     // 헬 디버프 칸 — 값이 그 런 내내 같아 묶을 때 한 번 읽는다 (ADR-1061)
+    /* @include hell */
     const curseNode = root.querySelector('.run-buff-icon.curse');
     const curse = curseNode ? curseOf(opts.stageId, opts.difficulty) : null;
     if (curse) bindTipNode(curseNode, () => curseTipCard(curse), { keyboard: true });
+    /* @end */
     const icons = [...root.querySelectorAll('.run-buff-icon[data-buff]')];
     if (!icons.length) return;
     const paint = b => {
@@ -375,6 +385,14 @@ export function mountBattle(container, opts) {
 
     const dom = buildDom(state, stage, stageId, opts.shrine ?? null, !!opts.buffsOf, opts);
     container.appendChild(dom);
+    if (opts.combatLessons) {
+        state.lesson = opts.combatLessons;
+        state.lessonBox = document.createElement('aside');
+        state.lessonBox.className = 'battle-lesson';
+        state.lessonBox.setAttribute('role', 'status');
+        state.lessonBox.hidden = true;
+        dom.querySelector('.arena').append(state.lessonBox);
+    }
     bindControls(state, container, opts);
     bindPotionTips(state, container);   // 첫 프레임의 칸도 카드를 든다 — 다시 칠할 때는 `paintPotion` 이 건다
     // 아레나의 빈 곳(카드 · 버튼 · 물약 칸 · 결과 띠 밖)을 누르면 장착 대상을 비운다 — 비우는 것은 앱이다 (ADR-0849)
@@ -390,7 +408,10 @@ export function mountBattle(container, opts) {
     state.t = state.pace.t;
     if (resume) state.catchUp = true;
     drain(state, container, opts);
-    if (state.catchUp) { state.catchUp = false; paintCaughtUp(state, container); }
+    if (state.catchUp) {
+        state.catchUp = false;
+        paintCaughtUp(state, container);
+    }
     paintClock(state, container);   // 남은 시간 — 첫 프레임 · 되감아 선 자리 (ADR-1047)
     scrollLog(state, container);
     if (!state.ended) { start(state, container, opts); wake(state, container, opts); }   // 세운 자리에 다시 섰으면 풀리는 순간에 깨운다
@@ -494,7 +515,7 @@ function buildDom(state, stage, stageId, shrine, buffs, opts = {}) {
                 <div class="side side-party"></div>
                 <div class="p-belt b-belt">${potionBeltHtml(state.potion, state.t)}</div>
                 ${state.enemyPotion ? `<div class="p-belt b-belt e-belt">${potionBeltHtml(state.enemyPotion, state.t)}</div>` : ''}
-                ${buffs ? runBuffIconsHtml(curseOf(stageId, opts.difficulty)) : ''}
+                ${buffs ? runBuffIconsHtml(/* @include hell */ runCurseIcon(stageId, opts.difficulty) /* @end */) : ''}
                 ${stageId != null ? '<div class="stage-clock"></div>' : ''}
                 <div class="battle-result"></div>
             </div>
@@ -693,6 +714,7 @@ const gradeChip = u => u.grade === 'elite' ? `<span class="sin-chip grade-chip e
    개발용 `&traits=<단>`(normal · nightmare · hell = 칸 하나 · 둘 · 셋)은 그 런의 단과 상관없이 **고정 예시**로 덮는다:
    그 정예의 죄종 · 키에서 고른다(난수 아님) · `&traits=max` = 칸마다 **지금 언어에서 가장 긴 이름**(죄종은 일곱 죄종 전체에서) —
    띠에서 신원이 얼마나 줄어드는지 보는 자리다(ADR-0775) */
+/* @include debug */
 const TRAIT_Q = new URLSearchParams(location.search).get('traits');
 const TRAIT_DEMO = { normal: 1, nightmare: 2, hell: 3, max: 3 }[TRAIT_Q] ?? 0;
 const keyHash = s => [...String(s)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
@@ -710,6 +732,7 @@ const demoEliteTraits = e => {
     if (TRAIT_DEMO >= 3) { const d = M.ELITE_TRAIT_DEF[(h >>> 8) % M.ELITE_TRAIT_DEF.length]; out.push({ name: d, color: `var(--dt-${d.dt})` }); }
     return out;
 };
+/* @end */
 /* 죄종 칸 칩 = **그 죄종의 형용사**(「분노하는」) · 죄종 색 — 붙은 마스터리 칸과 상관없이 같은 글자 [2026-11-15 사용자 지시 · ADR-1191] */
 const sinChip = sin => ({ name: M.ELITE_TRAIT_SIN[sin], color: M.SINS[sin]?.color ?? null });
 /* 강화 칸 칩 = 강화 이름(「화염 강화」) · 피해 종류 색 [2026-11-17 · R528 · ADR-1246 — 옛 능력치 칸 대체] */
@@ -720,7 +743,9 @@ const eliteTraitView = traits => (traits ?? []).map(({ slot, id } = {}) => {
         return n && M.ELITE_TRAIT_SIN[n.owner_id] ? sinChip(n.owner_id) : null;
     }
     if (slot === 'enchant') { const x = M.ELITE_TRAIT_ENCHANT.find(e => e.el === id); return x ? enchantChip(x) : null; }
+    /* @include defense */
     if (slot === 'def') { const d = M.ELITE_TRAIT_DEF.find(x => x.dt === id); return d ? { name: d, color: `var(--dt-${d.dt})` } : null; }
+    /* @end */
     return null;
 }).filter(Boolean);
 const traitsHtml = u => u.eliteTraits?.length
@@ -1042,6 +1067,7 @@ function renderUnits(state, root) {
             fxArrive(state, u);   // 서는 중인 적 — 불러내기로 다시 지어도 지난 만큼에서 이어 간다 (ADR-0948 · ADR-0951)
         }
     }
+    if (state.lesson) paintBattleLesson(state);
 }
 
 /**
@@ -1389,17 +1415,23 @@ function refreshAilmentLook(u, live) {
    그림 = 죄종 칸은 붙은 마스터리 칸 그림(죄종 색) · 강화 · 방어 칸은 `icons/battle_buffs/elite_<원소>`(피해 종류 색 — 강화 칩은 테두리도 그 색 · ADR-1246) — 회색 · 흰 실루엣을 마스크로 칠한다
    ⚠ 강화 칸은 제 그림이 아직 없어 방어 칸과 같은 원소 그림을 쓴다(그림이 서면 `elite_enchant_<원소>` 로 바꾼다) */
 const traitArt = f => f.slot === 'sin' ? M.packed(`./assets/art/icons/mastery/sin/${f.id}${M.ICON_EXT}`) : `./assets/art/icons/battle_buffs/elite_${f.id}${M.ICON_EXT}`;
-const traitColor = f => f.slot === 'sin' ? (M.SINS[f.sin]?.color ?? 'var(--text-secondary)') : f.slot === 'def' || f.slot === 'enchant' ? `var(--dt-${f.id})` : 'var(--text-secondary)';
+const traitColor = f => f.slot === 'sin' ? (M.SINS[f.sin]?.color ?? 'var(--text-secondary)') : /* @include defense */ f.slot === 'def' || /* @end */ f.slot === 'enchant' ? `var(--dt-${f.id})` : 'var(--text-secondary)';
 const traitIconHtml = f => `<i class="sk-icon-mask trait-ico" aria-hidden="true" style="background:${traitColor(f)};-webkit-mask-image:url('${traitArt(f)}');mask-image:url('${traitArt(f)}')"></i>`;
 /** 칩 이름 — 띠 칩과 같은 글자(죄종 = 형용사 · ADR-1191) */
-const traitName = f => f.slot === 'sin' ? M.ELITE_TRAIT_SIN[f.sin]
-    : f.slot === 'enchant' ? M.ELITE_TRAIT_ENCHANT.find(x => x.el === f.id) : M.ELITE_TRAIT_DEF.find(x => x.dt === f.id);
+function traitName(f) {
+    if (f.slot === 'sin') return M.ELITE_TRAIT_SIN[f.sin];
+    if (f.slot === 'enchant') return M.ELITE_TRAIT_ENCHANT.find(x => x.el === f.id);
+    /* @include defense */
+    return M.ELITE_TRAIT_DEF.find(x => x.dt === f.id);
+    /* @end */
+}
 /** 강화가 낸 창 · 피해(`elite:<원소>` · `elite:frost`)의 그림 — 그 강화 칩 그림 · 강화가 아니면 null (R528) */
 const enchantSrcIcon = s => { const x = M.enchantOfSrc(s); return x ? traitIconHtml({ slot: 'enchant', id: x.el }) : null; };
 /** 건 효과 한 줄 — 죄종 칸은 마스터리 툴팁과 같은 문장(`sk.masteryEffect.*`) · 몬스터에게 뜻이 바뀌는 칸(탐욕 셋 · 강화 · 방어)만 `bt.trait.*` ·
  *  강화는 **그 정예 갈래 한 줄만**(물리 무기 = `phys` · 마법 무기 = `mag` — 평타가 없으면 마법 · CLAUDE.md 규칙 7 · ADR-1246) · 값은 로드한 `balance.csv` 키 */
 function traitEffectText(f, u = null) {
     const hl = s => `<span class="tip-hl">${s}</span>`;
+    /* @include enchant */
     if (f.slot === 'enchant') {
         const kind = u?.noBasic ? 'mag' : 'phys';
         const Bv = D.balance ?? {};
@@ -1408,34 +1440,17 @@ function traitEffectText(f, u = null) {
         const shown = v == null ? '' : kind === 'mag' && (f.id === 'poison' || f.id === 'lightning') ? hl(v) : hl(M.pctText(v));
         return t(`bt.trait.enchant.${f.id}.${kind}`, { v: shown });
     }
+    /* @end */
+    /* @include defense */
     if (f.slot === 'def') return f.stat === 'defense' ? t('bt.trait.defMult', { v: hl(f.v) })
         : t('bt.trait.resCap', { e: t(`st.atkType.${f.id}`), v: hl(M.pctText(f.v)) });
+    /* @end */
     const fb = (D.combatStats ?? []).find(s => s.id === f.stat) ?? M.MASTERY_LABELS[f.stat];
     const v = hl(M.baseValue(f.stat, f.v, fb));
     const greed = { gold_find: 'bt.trait.gold', xp_gain_pct: 'bt.trait.xp', magic_find: 'bt.trait.magic' }[f.stat];
     if (greed) return t(greed, { v });
     const key = `sk.masteryEffect.${f.stat}`;
     return t(has(key) ? key : 'sk.masteryEffect', { stat: L(M.statLabel(f.stat, fb)), v });
-}
-
-/* ── 부류 버프 칩 — 정예 특성 칩 뒤 · 상시 [2026-11-16 사용자 지시 · SCREEN_DESIGN §4-2 · ADR-1218 · R518] ──
-   몬스터 = 로직이 실어 온 `family {id, value, n}`(나이트메어부터 · 부족은 소환으로 다시 선 몬스터만) · 영웅 = 이형이 깎은 저항 창(`fam:aberration`) ·
-   그림 = `icons/battle_buffs/fam_<id>` 를 본문 색으로 칠한다 · 부족은 그림이 없어 소환 스킬 그림 · 이름 = `monster_base.csv` */
-const FAM_SUMMON = 'pri_summon';
-const famIconHtml = id => {
-    if (id === 'Tribe') return skillImg(skillInfo(FAM_SUMMON));
-    const art = `./assets/art/icons/battle_buffs/fam_${String(id).toLowerCase()}${M.ICON_EXT}`;
-    return `<i class="sk-icon-mask trait-ico" aria-hidden="true" style="background:var(--text-secondary);-webkit-mask-image:url('${art}');mask-image:url('${art}')"></i>`;
-};
-const famName = id => {
-    const r = (D.monsterBaseRows ?? []).find(x => x.base_id === id);
-    return r ? L({ ko: r.name_kr, en: r.name_en, zh: r.name_zh }) : id;
-};
-/** 효과 한 줄 — 값은 로직이 실어 온 것(비율 · 부족은 더하는 수) */
-function famEffectText(f) {
-    const hl = s => `<span class="tip-hl">${s}</span>`;
-    const v = f.id === 'Tribe' ? hl(f.value) : hl(M.pctText(f.value));
-    return t(`bt.fam.${f.id}`, { v, n: hl(f.n), name: famName(f.id) });
 }
 
 /**
@@ -1455,12 +1470,10 @@ function refreshBuffs(u, now) {
     const live = u.hp > 0 ? [...(u.buffs ?? new Map())] : [];
     // 정예 특성 칩 — 줄 맨 앞 · 산 동안만(쓰러지면 다른 창처럼 걷힌다 · ADR-1194)
     const traits = u.hp > 0 ? (u.traits ?? []).filter(f => f?.stat) : [];
-    // 부류 버프 칩 — 특성 칩 바로 뒤 · 산 동안만 (ADR-1218)
-    const fam = u.hp > 0 && u.family?.id ? u.family : null;
     const stag = u.hp > 0 && staggered(u, now);
     const stagUntil = stag ? lastStagger(u)?.to ?? now : null;
     // 끝 시각도 지문이다 — 같은 창이 갱신되면 칩 노드와 툴팁의 `until`도 새 값으로 갈아야 한다.
-    const sig = `t${traits.length}|f${fam?.id ?? ''}|` + live.map(([id, b]) => `${id}:${b?.stat ?? ''}:${b?.v ?? 0}:${b?.until ?? 'always'}`).join('|')
+    const sig = `t${traits.length}|` + live.map(([id, b]) => `${id}:${b?.stat ?? ''}:${b?.v ?? 0}:${b?.until ?? 'always'}`).join('|')
         + (stag ? `|stagger:${stagUntil}` : '');
     if (row.dataset.sig === sig) return;      // 안 바뀌었으면 손대지 않는다 — 매 틱 다시 그리는 자리다
     row.dataset.sig = sig;
@@ -1470,10 +1483,7 @@ function refreshBuffs(u, now) {
     if (open?.dataset.effectOwner === String(u.key)) hideTip();
     // 상태이상 칩(`b.k` — 열쇠가 상태이상 이름)은 **늘 해롭다** · 그림은 적용 중인 것을 건 스킬(`b.s`) · 이름은 상태이상 (R178 · ADR-0405)
     row.innerHTML = traits.map((f, i) => `<span class="buff-chip good trait${f.slot === 'enchant' ? ' enchant' : ''}" data-trait="${i}"${f.slot === 'enchant' ? ` style="--chip-dt:var(--dt-${f.id})"` : ''}>${traitIconHtml(f)}</span>`).join('')
-        + (fam ? `<span class="buff-chip good${fam.id === 'Tribe' ? '' : ' trait'}" data-fam="1">${famIconHtml(fam.id)}</span>` : '')
         + live.map(([id, b]) => {
-            // 영웅의 이형 저항 감소 창 — 부류 그림 · 늘 해롭다 (ADR-1218)
-            if (id === 'fam:aberration') return `<span class="buff-chip bad trait" data-effect="${id}">${famIconHtml('Aberration')}</span>`;
             // 정예 강화가 건 창(서리 오라 · 피격 결빙 · 독구름 — `s: elite:*` · R528) — 그 강화 칩 그림 · 늘 해롭다 (ADR-1246)
             const ench = enchantSrcIcon(b?.s);
             if (ench) return `<span class="buff-chip bad trait" data-effect="${id}">${ench}</span>`;
@@ -1487,22 +1497,10 @@ function refreshBuffs(u, now) {
         chip.setAttribute('aria-label', name);
         bindTipNode(chip, () => effectTipCard({ owner: u.key, name, until: null, iconHtml: traitIconHtml(f), summaryHtml: traitEffectText(f, u) }));
     });
-    const famChip = row.querySelector('[data-fam]');
-    if (famChip) {
-        famChip.setAttribute('aria-label', famName(fam.id));
-        bindTipNode(famChip, () => effectTipCard({ owner: u.key, name: famName(fam.id), until: null, iconHtml: famIconHtml(fam.id), summaryHtml: famEffectText(fam) }));
-    }
-
     const byId = new Map(live);
     row.querySelectorAll('[data-effect]').forEach(chip => {
         const id = chip.dataset.effect;
         const b = byId.get(id);
-        if (id === 'fam:aberration') {
-            const name = famName('Aberration');
-            chip.setAttribute('aria-label', `${name} — ${effectSummaryText(b?.stat, b?.v)}`);
-            bindTipNode(chip, () => effectTipCard({ owner: u.key, name, stat: b?.stat, value: b?.v, until: null, now: u.buffTipNow, iconHtml: famIconHtml('Aberration') }));
-            return;
-        }
         const info = srcInfo(b?.s ?? id);
         const name = b?.k ? t(`bt.ail.${b.k}`) : L(info.name);
         // 창의 원소 — 그 창을 건 스킬의 **첫 줄**이 거는 걸린 효과가 든다(`skill_status.csv` · 이벤트가 창 열쇠를 안 실어 칩은 스킬 id 로 선다 · 부채 #68 —
@@ -1549,6 +1547,7 @@ function castSkill(state, u, ev) {
         }
     }
     // 스킬 이름 팝업은 없다 (2026-10-02 · ADR-0470) — 발동은 스킬 칸 반짝임 · 스킬 이펙트 · 로그가 말한다
+    return s;
 }
 /** 타격 라벨(`strikeLabel`) — 이벤트가 들고 온 스킬 id(`s`) 의 이름, 없으면 기본 공격. 로그가 쓴다 — 누적 데미지는 id 로 쌓고 그릴 때 같은 이름을 붙인다 */
 /** 칸의 첫 준비 시각 — 시뮬이 실은 값 그대로 · `null` 은 안 켜진 오오라라 **늘 덮는다**(Infinity) · 값이 없으면 `dflt` (INTERFACE §2-6 · R98) */
@@ -1941,6 +1940,7 @@ function step(state, root, opts) {
     // 박자 (`pace.js` · ADR-0654) — 흐른 시간만큼 민다. 세움(① 올라감 · ② 타격 · 라운드 숨) 동안은 시각이 안 간다 · 앱 시계와 같은 걸음이다.
     //   앞을 내다보기 전에 `onTime` 이 엔진을 그 시각까지 민다 — 끝난 라운드를 정산하고 사건을 붙인다 (R89 · R130)
     const t0 = state.t, i0 = state.idx;
+    if (state.lesson && state.lesson.step !== 'done') tickBattleLesson(state, gap);
     const left = paceStep(state.pace, opts.result.timeline, gap, paceOf(state.speed), s => opts.onTime?.(s, state.speed));
     // 박자가 `end` 에 닿은 순간 — 다음 런 · 챕터보스 재등장이 이 실제 시각에서 센다(결과 띠가 그 답을 읽으므로 적용보다 먼저)
     if (state.pace.done && !state.doneSent) { state.doneSent = true; opts.onDone?.(at - left); }
@@ -1970,6 +1970,130 @@ function drain(state, root, opts) {
     fxRoundClear(state, root);      // 라운드 숨 동안 적 줄을 비운다 — 다음 `round` 가 새 카드를 지은 뒤 같은 걸음에 걷힌다 (ADR-0948)
 }
 
+// 관전 중 실제로 읽은 시간만 센다. 편성을 열었다 돌아와도 같은 단계와 남은 시간이 이어진다.
+const lessonMs = { cooldown: 6500, magic: 4500, magicReady: 5500 };
+function setBattleLesson(state, step, cast = null) {
+    let duration = lessonMs[step] ?? 0;
+    if (step === 'magicReady' && magicLessonUnit(state)) duration = cast ? 3500 : 12000;
+    Object.assign(state.lesson, { step, cast, duration, remaining: duration });
+    paintBattleLesson(state);
+}
+
+function tickBattleLesson(state, gap) {
+    const note = state.lesson;
+    if (document.hidden || !state.lessonBox.parentElement.offsetWidth) return;
+    if (note.step === 'attack' && (state.pace.openingGauge || state.pace.phase === 'opening')) return;
+    note.remaining -= gap;
+    if (note.remaining <= 0) {
+        const next = { attack: 'cooldown', cooldown: 'magic', magic: 'magicReady', magicReady: 'done' };
+        setBattleLesson(state, next[note.step]);
+    } else if (state.lessonExample) paintChargeExample(state);
+}
+
+function magicLessonUnit(state) {
+    return [...state.party, ...state.enemies].find(u => u.hp > 0 && u.noBasic);
+}
+
+function lessonSkillSlot(unit, now) {
+    const slots = cdSlots(unit);
+    const usable = s => s?.cd > 0 && Number.isFinite(s.readyAt);
+    const cooling = slots.findIndex(s => usable(s) && s.readyAt > now);
+    return cooling >= 0 ? cooling : slots.findIndex(usable);
+}
+
+// 실제 시전 게이지가 없는 편성에서는 같은 칸 그림으로 두 칸이 차고 하나가 소모되는 예시를 보여준다.
+function paintChargeExample(state) {
+    const { step, remaining, duration } = state.lesson;
+    const full = Math.min(2, chargeMax());
+    const elapsed = duration - remaining;
+    const amount = step === 'magic' ? full * clamp01(elapsed / 3500) : full - (elapsed >= 1500 ? 1 : 0);
+    state.lessonExample.querySelectorAll('.act-fill').forEach((fill, i) => {
+        fill.style.transform = `scaleX(${clamp01(amount - i)})`;
+    });
+}
+
+function paintBattleLesson(state) {
+    if (state.catchUp) return;
+    for (const node of state.lessonMarks ?? []) node.classList.remove('lesson-mark');
+    state.lessonMarks = [];
+    const box = state.lessonBox;
+    const { step } = state.lesson;
+    let cast = state.lesson.cast;
+    const mage = (step === 'magic' || step === 'magicReady') && magicLessonUnit(state);
+    if (step === 'magicReady' && (mage?.key !== cast?.actor || (mage?.side === 'enemy' && state.round !== cast?.round))) cast = null;
+    state.lessonExample = null;
+    box.dataset.step = step;
+    box.hidden = step === 'done' || state.ended;
+    box.parentElement.classList.toggle('lesson-dim', !box.hidden && step === 'attack');
+    box.replaceChildren();
+    if (box.hidden) return;
+    const heading = document.createElement('strong');
+    heading.textContent = t(step === 'cooldown' && cast?.magic ? 'bt.lesson.cooldownMagic' : 'bt.lesson.' + step);
+    box.append(heading);
+    const marks = [];
+    if (step === 'attack') {
+        const opener = state.round === 1 && state.units.get(state.openingActor);
+        const actor = opener && !opener.noBasic ? opener : [...state.party, ...state.enemies].find(u => u.hp > 0 && !u.noBasic);
+        marks.push(actor?.node?.querySelector('.act-row'));
+        if (state.round === 1 && state.openingTarget) marks.push(state.units.get(state.openingTarget)?.node);
+        box.append(t('bt.lesson.front'));
+    } else if (step === 'magic' || step === 'magicReady') {
+        if (mage) {
+            marks.push(mage.node?.querySelector('.act-row'));
+            if (step === 'magicReady' && !cast) {
+                marks.push(mage.node?.querySelectorAll('.cd-slot')[lessonSkillSlot(mage, state.t)]);
+            }
+        } else {
+            const sample = document.createElement('div');
+            sample.className = 'lesson-example';
+            sample.textContent = t('bt.lesson.example');
+            state.lessonExample = document.createElement('div');
+            state.lessonExample.className = 'act-row segs';
+            state.lessonExample.innerHTML = actSegs();
+            sample.append(state.lessonExample);
+            box.append(sample);
+            paintChargeExample(state);
+        }
+    } else if (!cast) {
+        const unit = state.party.find(u => u.hp > 0 && lessonSkillSlot(u, state.t) >= 0);
+        if (unit) marks.push(unit.node?.querySelectorAll('.cd-slot')[lessonSkillSlot(unit, state.t)]);
+    }
+    if (cast) {
+        const actor = state.units.get(cast.actor);
+        if (actor && (actor.side === 'party' || state.round === cast.round) && cdSlots(actor)[cast.slot]?.id === cast.skill.id) {
+            marks.push(actor.node?.querySelectorAll('.cd-slot')[cast.slot]);
+        }
+        const detail = document.createElement('div');
+        detail.className = 'lesson-skill';
+        const targets = cast.targets.map(x => L(x.name));
+        detail.textContent = L(cast.skill.name) + (targets.length ? ' → ' + targets.join(', ') : '');
+        const effect = document.createElement('span');
+        effect.innerHTML = skillLineHtml(cast.skill, cast.context, ' ');
+        box.append(detail, effect);
+        for (const x of cast.targets) {
+            if (x.side === 'party' || state.round === cast.round) marks.push(state.units.get(x.key)?.node);
+        }
+    }
+    for (const node of marks.filter(Boolean)) {
+        node.classList.add('lesson-mark');
+        state.lessonMarks.push(node);
+    }
+}
+
+function skillLessonTargets(state, timeline, cast) {
+    const targets = new Set();
+    const end = groupEnd(timeline, state.idx);
+    for (let i = state.idx + 1; i < end; i++) {
+        const event = timeline[i];
+        if (event.e === 'skill') break;
+        if (event.s !== cast.s) continue;
+        if (event.a === cast.u && ['hit', 'heal', 'dodge', 'evade'].includes(event.e)) targets.add(event.d);
+        if (event.e === 'buff') targets.add(event.u);
+    }
+    return [...targets].map(key => state.units.get(key)).filter(Boolean)
+        .map(({ key, side, name }) => ({ key, side, name }));
+}
+
 /**
  * 스킬 문장의 재료 — 그 유닛의 **표시값** (INTERFACE §2-6 · SCREEN_DESIGN §4-2).
  * 문장이 「몇 초마다 얼마나」를 말하려면 주기 · 공격력 · 공격 타입이 필요하고, 회복량의 밑수 `matkMin`~`matkMax` ·
@@ -1993,9 +2117,7 @@ const unitSkillCtx = (u, combatOf = null) => ({
 const enemyEntry = (e, at) => ({
     // 죄종 — 몬스터는 제 칸 · 결투 상대 영웅은 영웅의 죄종(이름 줄 칩이 아군과 같다 · ADR-1078)
     key: e.key, side: 'enemy', monsterId: e.monsterId, grade: e.grade, sin: e.sin ?? e.hero?.sin, traits: e.traits,
-    eliteTraits: TRAIT_DEMO ? demoEliteTraits(e) : eliteTraitView(e.traits),   // 카드 위 특성 칩 (ADR-0768) — 로직이 굴린 칸 · 개발용 `&traits=` 면 예시로 덮는다
-    family: e.family ?? null,   // 부류 버프 칩 — 로직이 실어 온 켜진 부류 `{id, value, n}` (R518 · ADR-1218)
-
+    eliteTraits: /* @include debug */ TRAIT_DEMO ? demoEliteTraits(e) : /* @end */ eliteTraitView(e.traits),   // 카드 위 특성 칩 (ADR-0768) — 로직이 굴린 칸 · 개발용 `&traits=` 면 예시로 덮는다
     hero: e.hero ?? null, cls: e.hero?.cls,
     // 게이지는 등장 지연 뒤 빈 채로 찬다 — 시뮬이 실어 온 `fillAt` (R200 · ADR-0483) · 마법 무기의 칸은 0 에서
     name: enemyName(e), hp: e.hpMax, hpMax: e.hpMax, period: e.period, lastAct: e.fillAt ?? at, charges: 0, node: null,
@@ -2017,9 +2139,15 @@ const enemyEntry = (e, at) => ({
 
 function apply(state, root, opts, ev) {
     const U = k => state.units.get(k);
+    if (ev.openingBasic && state.lesson?.step === 'attack') {
+        state.openingActor = ev.a;
+        state.openingTarget = ev.d;
+        paintBattleLesson(state);
+    }
     switch (ev.e) {
         case 'round': {
             state.round = ev.n;
+            if (ev.openingActor) state.openingActor = ev.openingActor;
             for (const e of state.enemies) state.units.delete(e.key);
             state.enemies = ev.enemies.map(e => enemyEntry(e, ev.t));
             for (const e of state.enemies) state.units.set(e.key, e);
@@ -2037,6 +2165,7 @@ function apply(state, root, opts, ev) {
             //   종류는 글 왼쪽의 칩이다(라운드 트랙과 같은 색) · 첫 라운드는 목록에 안 쌓는다 — 빈 목록 맨 위에서 고정 줄과 같은 글이 두 번 섰다.
             //   목록 줄은 2라운드부터 경계로 선다 (ADR-0205)
             const roundLine = `<span class="lg-kind ${ev.kind}">${kindLabel(ev.kind)}</span>`
+                + (ev.enemyCard ? `<span class="lg-kind">${t('log.enemyCard', { card: t(`tc.name.${ev.enemyCard}`) })}</span>` : '')
                 + t('log.roundStart', { n: ev.n, list: enemyList(state) });
             if (state.logged) logWide(state, root, roundLine);   // 적은 줄이 있으면 = 목록이 비지 않았다(주체마다 `LOG_KEEP` 줄은 남는다)
             pinRound(root, roundLine);
@@ -2054,9 +2183,11 @@ function apply(state, root, opts, ev) {
                     continue;
                 }
                 // 되살아남 — 시뮬과 같다: HP 가득 · 창은 오오라(`until: null`)만 남는다 · 경직 창 비움 · 스킬은 부른 시각부터 쿨 한 바퀴(시뮬이 실은 `ready` · R427) (INTERFACE §2-6 `call`)
-                Object.assign(old, { hp: e.hpMax, hpMax: e.hpMax, lastAct: ev.t, stalls: [] });
-                // 부족 버프로 다시 선 몬스터는 능력치 · 표시값이 바뀌어 온다(R518 · ADR-1218) — 시뮬이 실은 값을 그대로 받는다
-                Object.assign(old, { family: e.family ?? null, period: e.period, atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax, stats: e.stats ?? old.stats, sheet: e.sheet ?? old.sheet });
+                Object.assign(old, {
+                    hp: e.hpMax, hpMax: e.hpMax, lastAct: ev.t, stalls: [],
+                    period: e.period, atkMin: e.atkMin, atkMax: e.atkMax, matkMin: e.matkMin, matkMax: e.matkMax,
+                    stats: e.stats ?? old.stats, sheet: e.sheet ?? old.sheet,
+                });
                 for (const [id, b] of [...old.buffs]) if (b.until !== null) old.buffs.delete(id);
                 old.skills = (e.actives ?? []).map((id, i) => ({ ...skillInfo(id), ...slotLv(e.up, i), readyAt: slotReady(e.ready?.[i], ev.t), firedAt: ev.t }));
                 refreshUnit(state, old);
@@ -2074,7 +2205,17 @@ function apply(state, root, opts, ev) {
             if (u) {
                 // 장비 발동은 제 차례 · 시전 칸을 쓰지 않는다. 같은 스킬을 배웠어도 그 칸의 쿨은 이어진다.
                 if (!ev.trigger) { markActed(u, ev.t); chargeTo(u, ev.ch, ev.t, false); }
-                castSkill(state, u, ev);
+                const skill = castSkill(state, u, ev);
+                const note = state.lesson;
+                if (note && note.step !== 'done' && skill && !ev.trigger && !state.catchUp && !document.hidden && state.lessonBox.parentElement.offsetWidth) {
+                    const first = (note.step === 'attack' || (note.step === 'cooldown' && !note.cast)) && u.side === 'party';
+                    const magic = note.step === 'magicReady' && !note.cast && u === magicLessonUnit(state);
+                    if (first || magic) {
+                        const cast = { actor: u.key, magic: u.noBasic, skill, slot: cdSlots(u).indexOf(skill), context: unitSkillCtx(u, state.combatOf),
+                            round: state.round, targets: skillLessonTargets(state, opts.result.timeline, ev) };
+                        setBattleLesson(state, first ? 'cooldown' : 'magicReady', cast);
+                    }
+                }
                 if (!ev.trigger) { u.skillT = ev.t; u.skillS = ev.s; u.skillN = 0; }
             }   // 이어지는 기본 공격은 베기를 안 띄운다 (ADR-0564) · 그 스킬의 타격 순번은 0 부터 (ADR-0778)
             // 정신 집중을 열었다 — 이 차례가 첫 방 (R318 · ADR-0720) · `iv` = 계속 닳기의 방 사이 간격(없으면 끊어 치기 — 주기)
@@ -2082,6 +2223,12 @@ function apply(state, root, opts, ev) {
             break;
         }
         case 'chan': {    // 정신 집중의 한 방 (R318 · ADR-0720) — 남은 방으로 게이지를 다시 맞추고 칸이 한 번 튄다(계속 닳기는 방이 잦아 칸은 안 튄다) · 타격은 뒤따르는 hit 가 그린다 · 로그 줄은 없다
+            // 모으기는 시전 뒤 실제로 쏘는 순간에야 대상이 정해진다.
+            const note = state.lesson?.cast;
+            if (note && !state.catchUp && !note.targets.length && note.skill.id === ev.s && note.actor === ev.u && note.round === state.round) {
+                note.targets = skillLessonTargets(state, opts.result.timeline, ev);
+                if (note.targets.length) paintBattleLesson(state);
+            }
             const u = U(ev.u);
             if (u?.chan) { markActed(u, ev.t); Object.assign(u.chan, { left: ev.left, at: ev.t }); if (!u.chan.iv) castSkill(state, u, ev); }
             // 모으기의 쏘는 방 — 기운이 걷히고 번쩍이며 카드가 앞으로 튄다 (ADR-1252 · ADR-1255) · 뒤따르는 hit 가 대상의 타격을 그린다
@@ -2224,6 +2371,7 @@ function apply(state, root, opts, ev) {
             const u = U(ev.u);
             if (!u) break;
             u.hp = 0;
+            if (u.noBasic && (state.lesson?.step === 'magic' || state.lesson?.step === 'magicReady')) paintBattleLesson(state);
             u.shield = null;
             refreshUnit(state, u);
             const enemy = u.side === 'enemy';
@@ -2240,6 +2388,7 @@ function apply(state, root, opts, ev) {
             if (ev.hpMax) u.hpMax = ev.hpMax;
             refreshUnit(state, u);
             popup(state, u, t('pop.rise'), 'heal');
+            fxHeal(state, u, ev);
             if (a) logLine(state, root, a.side, 'rise', L(a.name), dmgIcon(ev.s), strikeLabel(ev.s), L(u.name), '', 'heal-t');
             break;
         }
@@ -2374,14 +2523,34 @@ function apply(state, root, opts, ev) {
             const name = t(`tc.name.${ev.card}`), ico = tacticImg(ev.card), side = ev.side === 'enemy' ? 'enemy' : 'party';
             const hold = keys => { for (const k of keys ?? []) { const u = U(k); if (!u) continue; (u.stalls ??= []).push({ from: ev.t, to: ev.until, hold: true }); refreshUnit(state, u); } };
             const a = U(ev.a), d = U(ev.d);
-            if (rule === 'duel' || rule === 'wedge') {
+            for (const [key, shift] of Object.entries(ev.pull ?? {})) {
+                const u = U(key);
+                if (u?.side === 'party') { u.lastAct -= shift; refreshUnit(state, u); }
+            }
+            if (rule === 'giant') {
+                const u = U(ev.u);
+                if (u) {
+                    Object.assign(u, { hp: ev.dhp, hpMax: ev.hpMax, stats: ev.stats, period: ev.period });
+                    refreshUnit(state, u);
+                }
+                if (ev.active) logLine(state, root, side, 'tacRound', name, ico, name, '', t('log.v.up'));
+            } else if (rule === 'last_stand' && ev.u) {
+                const unit = U(ev.u);
+                if (unit) {
+                    unit.hp = ev.dhp;
+                    refreshUnit(state, unit);
+                    logLine(state, root, side, 'tacRound', L(unit.name), ico, name, '', '');
+                }
+            } else if ((rule === 'crane_wing' && !ev.from) || ['unity', 'guardian', 'dying_curse', 'desperate_charge', 'open_order', 'iron_line', 'last_stand', 'pursuit',
+                'hammer_anvil', 'field_medics', 'vanguard_barrier', 'aimed_fire', 'focused_fire', 'volley', 'rapid_deployment'].includes(rule)) {
+                logLine(state, root, side, 'tacRound', name, ico, name, '', t('log.v.up'));
+            } else if (rule === 'duel' || rule === 'wedge') {
                 if (a && d) logLine(state, root, side, rule === 'duel' ? 'tacAim' : 'tacMark', L(a.name), ico, name, L(d.name), t(rule === 'duel' ? 'log.v.tacAim' : 'log.v.tacMark'));
             } else if (rule === 'trojan' || rule === 'charge' || rule === 'turtle') {
                 // 기사 돌격 — 당긴 몫만큼 게이지 시작을 앞당긴다 · 파티만(적은 `round` 의 `fillAt` 에 이미 들었다)
-                for (const [k, s] of Object.entries(ev.pull ?? {})) { const u = U(k); if (u?.side === 'party') { u.lastAct -= s; refreshUnit(state, u); } }
                 if (rule !== 'turtle') hold(ev.units);
                 logLine(state, root, side, 'tacRound', name, ico, name, '', t('log.v.up'));
-            } else if (rule === 'shieldwall' || rule === 'guard') {
+            } else if (rule === 'shieldwall' || rule === 'guard' || rule === 'mutual_cover' || rule === 'crane_wing') {
                 // 나눠 받은 몫 — 받은 유닛 HP · 배리어 · 피해 팝업. 누적 판엔 안 더한다(맞은 유닛의 `hit` 이 나누기 전 합을 이미 실었다)
                 const from = U(ev.from);
                 if (d) {
@@ -2389,6 +2558,7 @@ function apply(state, root, opts, ev) {
                     if (ev.bar !== undefined) setShield(d, ev.bar);
                     popup(state, d, `-${ev.dmg}`, dmgPop(ev.ty));
                     refreshUnit(state, d);
+                    if (rule === 'crane_wing' && a) addDmg(state, a, d, ev.s, dealtOf(ev), ev.ty);
                     logLine(state, root, side, 'tacShare', L(d.name), ico, name, from ? L(from.name) : '', ev.dmg, ev.ty ? `dt-${ev.ty}` : '');
                 }
             } else if (rule === 'retreat') {
@@ -2423,6 +2593,7 @@ function apply(state, root, opts, ev) {
         }
         case 'end': {
             state.ended = true;
+            if (state.lesson) setBattleLesson(state, 'done');
             clearInterval(state.timer);
             levelCheck(state, root);   // 마지막 라운드의 레벨업 — 런이 닫혀 `refit` 이 없다 (ADR-0435)
             // 결투는 스테이지가 아니다 — 끝 줄은 결과 띠의 판정 그대로(승리 · 패배 · 무승부) [2026-10-15 · PLAN_user_review 2-5] · 무한의 탑 단판도 같다(ADR-1294)

@@ -335,7 +335,9 @@ fx_source/stun_star_20261028/   그 원본(Codex 다크 카툰 2×2 · 왼쪽 �
 
 **스테이지 띠**(SCREEN_DESIGN §4-2 · ADR-0663)는 그림을 **모양(mask)으로만** 쓴다 — 색은 CSS 가 챕터 죄종 색으로 칠한다. 원본을 갈면 `python scripts/build_stage_banner.py`(먹의 짙기 → 알파 · 먹 둘레로 자르기 · 폭 1600 WebP).
 
-그림체는 `src/ui/skill_art.js:ART_STYLES`, 스킬·움직임·크기는 `SKILL_ART`, 파일 이름은 `artFile`이 기준이다. 그림체는 다크 카툰·금속박·거친 잉크이며 누락된 스킬을 다크 카툰으로 모두 보완했다. 거친 잉크는 지금 스킬 전부와 모으기 기운을 갖추고, 삭제된 스킬 정의(`RETIRED_STYLES`)에는 없다([ADR-1379](../../../docs/client/adr/1379-이펙트-그림체에-거친-잉크를-더한다-모으기-기운은-거친-잉크를-고르면-그-판이다.md) · 설치는 `fx_source/roughink_20261124/install.py`). 정의의 `styles`가 가용 그림체를 제한하므로 금속박에 없는 추가 그림은 요청하지 않고 코드 조합으로 표시한다. 최종 설치는 `python scripts/build_darktoon_completion_fx.py`, 비교표는 `--compare`, 파일 검사는 `--verify`, 브라우저 검사는 `python scripts/verify_darktoon_completion_fx.py`다. 이미지 생성은 내장 imagegen을 사용한다.
+현재 스킬 이펙트는 천구도·성당 유리·망령불 세 벌이다. 기본은 천구도이며 도감 → 이펙트 → 나란히 보기에서 같은 초상에 세 벌을 동시에 재생한다. 원화 21장과 스킬별 프롬프트, 추출 및 검증 스크립트는 [스킬 이펙트 원본](fx_source/portrait_spell_sets/)에 있다. 실행용 그림은 `fx/skills/<style>/<file>.webp`, 연출의 접점과 박자는 `src/ui/skill_art.js`가 정한다.
+
+아래는 앞선 버전의 제작 기록이다.
 
 **함성 여섯 교체 · 2026-11-15** — 워 오더스·배틀 오더스·워 크라이·배틀 크라이·호령·사자후는 `<skill_id>_shockwave_<style>.webp` 12장을 사용한다. 초상 밖으로 퍼지는 세 겹의 충격파이며 두 그림체의 크기·움직임이 같다. 이전 개별 함성 파일 10장은 삭제했다. 원본·프롬프트·설치·검사는 [`fx_source/shout_shockwave_20261115/`](fx_source/shout_shockwave_20261115/README.md)에 있으며, `export.py` → `install.py` → `verify_installed.py` 순으로 재현한다. 기존 누락 보완 내보내기는 새 함성을 옛 시트에서 복구하지 않는다. 다른 스킬과 함께 들어 있는 과거 원본 시트는 보존한다.
 
@@ -510,7 +512,11 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 ## icons/tactics/ — 작전 카드 그림 [신설 2026-11-26]
 
-`<card_id>.png` 3장(`duel` 일기토 · `shieldwall` 방패벽 · `trojan` 트로이 목마 — `tactic_card.csv:card_id` = 파일명 · `mock.js:TACTIC_ICON_FILES` · `build_icons.py:GAME_DIRS` 의 `tactics`) — **배지 장면** — 둥근 배지 안에 그 전술의 장면(512 투명 · 긴 변 0.88 · 중앙 · 근검정 외곽선 · 아이템 합격선 안). 2026-11-25 초안 비교판(`output/2026-11-25_tactic_icons/` — 방향 다섯 × Codex · Gemini)의 `codex_d_scene` 타일을 cut.py 로 누끼했다(SCREEN_DESIGN §15 · ADR-1395 — 처음 넣은 `codex_b_item` 을 갈음). **초안이다** — 방향은 사용자가 다시 고를 수 있다 · 나머지 여덟 장(`wedge` · `charge` · `guard` · `turtle` · `retreat` · `poison_arrow` · `fire_arrow` · `baggage`)은 그림이 없어 화면이 그 카드의 죄종 그림을 세운다.
+작전 카드 원본은 512px PNG이고 게임은 같은 카드 ID의 256px WebP를 읽는다. 그림 목록은 `mock.js:TACTIC_ICON_FILES`에서 관리한다.
+
+일기토·방패벽·트로이 목마는 2026-11-25 비교판의 `codex_d_scene` 시안에서 가져왔다. 둥근 배지가 투명 캔버스 긴 변의 88%를 차지한다(SCREEN_DESIGN §15 · ADR-1395).
+
+진형 카드 여덟 장은 프롤로그의 불탄 마을과 1장 성채를 참고한 정사각형 전장 삽화다. 화면 위쪽이 적진이며, 바알이 지휘하는 용병 셋의 위치로 전열과 후열을 구분한다. 배수진·학익진·집중포화의 파일명은 각각 `iron_line`, `hammer_anvil`, `volley`다. [진형 카드 생성 프롬프트](icons_source/tactics/source/formations_prompts.txt)
 
 ## icons/classes/ — 직업 아이콘 [신설 2026-09-27]
 
@@ -619,7 +625,7 @@ TheSevenRPG 원작 크롭 아트는 폐기(배경 팔레트와 안 맞아 붕 �
 
 `<지점>.png` 3장(`cave` · `ruins` · `caravan` — 파일명 = `state.js:EXPLORE_SPOTS`) — 512 투명 · **원형 그림 원판**(양피지색 바탕 + 그림 · 가장자리는 검은 선) · **테두리가 없다** — 화면이 땅 색 테두리를 두른다(`mock.js:EXPLORE_REGIONS[장].ring` · `exploreIcon` · SCREEN_DESIGN §8-4 · ADR-0553). 원본 `source/codex_explore_icons_sheet.png`(Codex 이미지 생성 · 2132×738 · 지도 그림을 스타일 기준으로 붙인 청동 테두리 메달 셋) — 메달마다 원을 맞춰 자르고 청동 테두리를 걷어 낸 안쪽 검은 선까지가 원판이다(테두리를 박으면 땅 색마다 7 × 3 장이 된다)
 
-**탐험 표** `ticket_<지점>.png` 3장 [2026-11-26 · ADR-1409] — 512 투명 · 찢긴 끝 · 구멍 둘 · 붉은 밀랍 봉인의 낡은 양피지 표에 그 지점 문양(위 원판과 같은 그림)을 찍었다 · 등급은 그림이 아니라 화면의 칩 테두리 색 · 화면 = 지점 창 표 칩(`mock.js:exploreTicketIcon`). 원본 `source/codex_explore_ticket_sheet.png`(Codex · 1254 2×2 · 위 지점 시트를 스타일 기준으로 붙였다 · `cut.py --grid 2x2`) · 실측 합격(색 수 101 ~ 117 · 경계밀도 11 ~ 14% · 외곽선 15 ~ 16)
+**탐험권** `ticket.webp` — 동굴·폐허·상단 의뢰의 표 선택 칸에 같은 그림을 표시한다. 양피지 위에 나침반 문양과 붉은 밀랍 봉인을 넣었다. 등급은 칸 테두리 색으로 표시한다. 내장 이미지 생성 도구로 제작했고 512px 원본은 `icons_source/explore/ticket.png`, 게임용은 투명 256px WebP다.
 
 ## minigames/ — 자원 미니게임 [전면 교체 2026-10-16]
 

@@ -254,11 +254,38 @@ export function createItemSystem(data) {
         return n - item.affixes.length;
     }
     /**
-     * **가죽 장갑 시기는 특성이 정한다** [2026-11-17 · 사용자 「장갑에 공속 붙으면 방어력…, 캐스팅속도 붙으면 원소…」 · R531 · item_design §1 「10-21 방어구 개정」 · INTERFACE §5-3] —
-     *   갈래 특성 stat → 시기 칸에 남기는 변형. 표에 없는 특성(건틀릿 피해 감소 · 특성 없음)은 거르지 않는다(다섯 그대로) ·
-     *   변형만 거르므로 옵션 수 · 굴림 횟수는 그대로다(rng 소비 순서 불변 — INTERFACE §5-2). 구조 상수
+     * **장갑 시기는 갈래 특성이 정한다** [2026-11-17 · 사용자 「장갑에 공속 붙으면 방어력…, 캐스팅속도 붙으면 원소…」 · R531 · **건틀릿 2026-11-27** · 사용자 「최대원소 저항4개중에 1개 붙거나 경직시간 증가로하자」 · R604 ·
+     *   item_design §1 「10-21 방어구 개정」 · INTERFACE §5-3] — 갈래 특성 stat(없으면 `''`) → 시기 칸에 남기는 변형.
+     *   가죽 공격 속도 = 방어력 관통 · 가죽 캐스팅 속도 = 원소 관통 넷 · 건틀릿(피해 감소) = 최대 원소 저항 넷 + 경직 시간 증가 · 갈래 없는 장갑 = 방어력 관통 + 원소 관통 넷(옛 다섯) ·
+     *   표에 없는 특성은 거르지 않는다 · 변형만 거르므로 옵션 수 · 굴림 횟수는 그대로다(rng 소비 순서 불변 — INTERFACE §5-2). 구조 상수
      */
-    const GLOVES_ENVY_BY_TRAIT = { aspd_pct: st => st === 'def_ignore', cast_speed_pct: st => String(st).startsWith('res_reduction_') };
+    const GLOVES_ENVY_BY_TRAIT = {
+        aspd_pct: st => st === 'def_ignore',
+        cast_speed_pct: st => String(st).startsWith('res_reduction_'),
+        damage_reduction: st => String(st).startsWith('res_max_') || st === 'stagger_dur_pct',
+        '': st => st === 'def_ignore' || String(st).startsWith('res_reduction_'),
+    };
+    /**
+     * **장갑 오만도 갈래 특성이 정한다** [2026-11-27 · 사용자 「가죽장갑은 애초에 태생을 물리/마법으로 나누고 물리면 공격속도, 마법이면 캐스팅속도로」 · 「(건틀릿은) 레벨당 방어력/레벨당체력으로가자」 · R604 ·
+     *   item_design §1 · INTERFACE §5-3] — 가죽은 굴린 특성이 태생이다(공격 속도 = 물리 · 캐스팅 속도 = 마법). 갈래 특성 stat(없으면 `''`) → 오만 칸에 남기는 변형.
+     *   물리 가죽 = 레벨당 공격 속도 · 마법 가죽 = 레벨당 캐스팅 속도 · 건틀릿 = 레벨당 방어력 / 레벨당 체력 · 갈래 없는 장갑 = 레벨당 공격 속도(옛 한 줄) · 굴림 횟수 그대로. 구조 상수
+     */
+    const GLOVES_PRIDE_BY_TRAIT = {
+        aspd_pct: st => st === 'aspd_per_level_pct',
+        cast_speed_pct: st => st === 'cast_speed_per_level_pct',
+        damage_reduction: st => st === 'def_per_level' || st === 'hp_per_level',
+        '': st => st === 'aspd_per_level_pct',
+    };
+    /**
+     * **원소 변형을 한 덩어리로 세는 장갑 특성** [2026-11-27 · 사용자 「최대원소 저항4개중에 1개 붙거나 경직시간 증가로하자」 · 반반 · R604 · INTERFACE §5-3] —
+     *   건틀릿 시기 = 최대 원소 저항(넷 중 하나) 50% / 경직 시간 증가 50%. 변형 굴림이 덩어리(원소 접미를 뗀 stat)를 먼저 고르고 그 안에서 고른다 — 굴림은 같은 1회(`bundledPick`). 구조 상수
+     */
+    const GLOVES_ENVY_BUNDLE = new Set(['damage_reduction']);
+    /** 장갑 표를 굴린 특성(`ts` · 없으면 null)으로 거른다 — 시기 · 오만 칸의 변형만 · 다른 칸은 그대로 · 순수 */
+    const glovesRows = (rows, ts) => {
+        const envy = GLOVES_ENVY_BY_TRAIT[ts ?? ''] ?? null, pride = GLOVES_PRIDE_BY_TRAIT[ts ?? ''] ?? null;
+        return rows.filter(r => !(envy && r.sin === 'envy' && !envy(r.stat)) && !(pride && r.sin === 'pride' && !pride(r.stat)));
+    };
     const optionsOf = (slot, sin, kind = null) => (singleOption(slot, sin, kind) ? [1] : twoOptions(slot, sin) ? [1, 2] : FAMILY_OPTIONS)
         .filter(o => !EMPTY_CELLS.has(`${slot}:${sin}:${o}`) && !(kind && EMPTY_CELLS.has(`${slot}/${kind}:${sin}:${o}`)));
     /**
@@ -267,6 +294,21 @@ export function createItemSystem(data) {
      */
     const ELEMENT_IDS = ['fire', 'cold', 'lightning', 'poison'];
     const elementOf = stat => ELEMENT_IDS.find(e => stat === `${e}_dmg_pct` || String(stat).endsWith(`_${e}`)) ?? null;
+    /** 원소를 뗀 stat — 원소 변형 넷을 한 덩어리로 센다(`res_max_fire` → `res_max`) · 원소가 없으면 그대로 */
+    const elementStem = stat => {
+        const e = elementOf(stat);
+        return !e ? stat : stat === `${e}_dmg_pct` ? 'dmg_pct' : String(stat).slice(0, -(e.length + 1));
+    };
+    /**
+     * 덩어리 변형 굴림 [2026-11-27 · R604 · `GLOVES_ENVY_BUNDLE`] — 덩어리(`elementStem` · 표 행 순 첫 등장)를 균등하게 고르고 그 안에서 균등하게 고른다.
+     * 굴림은 같은 1회 — `r × 덩어리 수` 의 소수부를 덩어리 안 굴림으로 다시 쓴다(rng 소비 수 불변 · 덩어리마다 한 행이면 `vars[⌊r × n⌋]` 와 같다)
+     */
+    function bundledPick(vars, r) {
+        const stems = [...new Set(vars.map(v => elementStem(v.stat)))];
+        const x = r * stems.length, g = Math.min(stems.length - 1, Math.floor(x));
+        const inB = vars.filter(v => elementStem(v.stat) === stems[g]);
+        return inB[Math.min(inB.length - 1, Math.floor((x - g) * inB.length))];
+    }
     /**
      * 발동 옵션 → 스킬 풀 [2026-10-05 · R206 · R208 · R209 · INTERFACE §5-3 `PROC_POOL`] — 구조 어휘라 CSV 가 아니라 여기 둔다(`PROC_TRIGGERS` 와 같은 자리).
      * ⚠ `proc_struck_buff`(갑옷 오만 ③)는 「방어 쪽으로 한정」 목록이 미정이라 `buff` 그대로다(⚠임시)
@@ -612,8 +654,9 @@ export function createItemSystem(data) {
      * @param plusPool 특정 스킬 +n 의 스킬 후보 — 비면 그 옵션이 안 뜬다 · **장비는 안 준다**(2026-10-21 R303 — ~~무기 `plusPoolWeapon` · 갑옷 `plusPoolArmor` · 투구 버프 풀~~ · 유니크 논의 대기)
      * @param seed 이미 붙은 옵션 키 `used` · 잡은 원소 `element` 의 시작값 — 인챈트가 그 장비의 다른 줄을 넘긴다(R553 · `enchantSeed`) · 드롭은 안 준다(빈 시작) ·
      *   `floor` = 값 굴림의 바닥(비율 0 ~ 1 — 인챈트가 연구소 「인챈트」 지점 값을 넘긴다 · 2026-11-24 · R576 D13) — `vr` 을 `floor + vr × (1 − floor)` 로 옮긴다 · 0 이면 그대로 · 소비 수 불변
+     * @param bundle 변형을 원소 덩어리로 센다(`bundledPick` — 건틀릿 시기 반반 · 2026-11-27 R604 · `GLOVES_ENVY_BUNDLE`) · 소비 수 불변
      */
-    function familyOptions(rng, rows, sins, words, n, ilvl, classes, plusPool = [], oneElement = false, seed = null) {
+    function familyOptions(rng, rows, sins, words, n, ilvl, classes, plusPool = [], oneElement = false, seed = null, bundle = false) {
         const options = [], byKey = {};
         for (const r of rows) {                                       // 첫 등장 순 = CSV 행 순서
             const key = `${r.sin}:${r.option}`;
@@ -636,7 +679,7 @@ export function createItemSystem(data) {
             // 변형 — 원소를 잡은 무기면 그 원소 변형만(없으면 전부 · 굴림은 그대로 1회)
             const same = oneElement && element ? o.rows.filter(r => elementOf(r.stat) === element) : [];
             const vars = same.length ? same : o.rows;
-            const d = vars[Math.floor(sr * vars.length)];
+            const d = bundle ? bundledPick(vars, sr) : vars[Math.floor(sr * vars.length)];
             if (oneElement && !element && elementOf(d.stat)) element = elementOf(d.stat);
             // 발동 레벨 줄(스케일 `level` · R567) — 확률은 고정 · 값 굴림(`vr`)이 스킬 레벨이 된다 · 소비 수 그대로
             const lvRow = d.scale === 'level';
@@ -663,7 +706,7 @@ export function createItemSystem(data) {
     const enchantMultOf = rarity => B[`enchant_cost_mult_${rarity === 'unique' ? 'legendary' : rarity}`];
     /**
      * 그 장비가 굴린 계열표 — 드롭이 `familyOptions` 에 넘긴 것과 같은 행 · `{rows, classes, oneElement}` 또는 null:
-     *   무기 = 무기군 `appliesTo` · 발동 풀은 무기군 직업 · 원소 하나 / 방어구 넷 = 그 부위(장갑은 낀 특성이 시기 변형을 거른다 — `GLOVES_ENVY_BY_TRAIT`) /
+     *   무기 = 무기군 `appliesTo` · 발동 풀은 무기군 직업 · 원소 하나 / 방어구 넷 = 그 부위(장갑은 낀 특성이 시기 · 오만 변형을 거른다 — `glovesRows` · 건틀릿은 `bundle` · R604) /
      *   반지 · 목걸이 = 계열표 · 무기군 · 표가 없으면 null
      */
     function enchantTable(item) {
@@ -675,8 +718,8 @@ export function createItemSystem(data) {
         if (isArmor(slot)) {
             const tr = groupDef(slot, item.group)?.trait ?? null;
             const ts = tr ? (item.affixes ?? []).find(a => a.src === 'fixed' && tr.stats.includes(a.stat))?.stat ?? null : null;
-            const keep = slot === 'gloves' ? GLOVES_ENVY_BY_TRAIT[ts] ?? null : null;
-            return { rows: armorSinOpts.filter(r => r.slot === slot && !(keep && r.sin === 'envy' && !keep(r.stat))), classes: [], oneElement: false };
+            const rows = armorSinOpts.filter(r => r.slot === slot), gl = slot === 'gloves';
+            return { rows: gl ? glovesRows(rows, ts) : rows, classes: [], oneElement: false, bundle: gl && GLOVES_ENVY_BUNDLE.has(ts) };
         }
         if (slot === 'ring' || slot === 'amulet') return { rows: familyRows(slot), classes: [], oneElement: false };
         return null;
@@ -714,7 +757,7 @@ export function createItemSystem(data) {
     function enchantOption(rng, item, floor = 0) {
         const tbl = enchantable(item) ? enchantTable(item) : null;
         if (!tbl) { for (let i = 0; i < 4; i++) rng(); return null; }   // 소비 수는 언제나 넷 — 줄 하나의 굴림 수(`familyOptions` 의 `line`)
-        const a = familyOptions(rng, tbl.rows, [], [], 1, item.ilvl, tbl.classes, [], tbl.oneElement, { ...enchantSeed(item, tbl), floor })[0];
+        const a = familyOptions(rng, tbl.rows, [], [], 1, item.ilvl, tbl.classes, [], tbl.oneElement, { ...enchantSeed(item, tbl), floor }, !!tbl.bundle)[0];
         return a ? { ...a, ench: true } : null;
     }
     /**
@@ -756,11 +799,11 @@ export function createItemSystem(data) {
         const kr = rng(), vr = rng();
         const ts = tr ? tr.stats[Math.floor(kr * tr.stats.length)] : null;
         if (tr) out.push({ stat: ts, v: valueOf(tr, rollOf(tr, vr, ilvl), ilvl), src: 'fixed' });
-        // 가죽 장갑 시기 — 굴린 특성이 시기 칸의 변형을 거른다(R531 · `GLOVES_ENVY_BY_TRAIT` · 굴림 횟수 그대로)
-        const keep = slot === 'gloves' ? GLOVES_ENVY_BY_TRAIT[ts] ?? null : null;
-        const rows = armorSinOpts.filter(r => r.slot === slot && !(keep && r.sin === 'envy' && !keep(r.stat)));
+        // 장갑 — 굴린 특성이 시기 · 오만 칸의 변형을 거른다(R531 · R604 · `glovesRows` · 굴림 횟수 그대로) · 건틀릿 시기는 덩어리 굴림(반반 · `GLOVES_ENVY_BUNDLE`)
+        const slotRows = armorSinOpts.filter(r => r.slot === slot);
+        const gl = slot === 'gloves';
         // 특정 스킬 +n 풀은 안 준다 — 2026-10-21 장비에서 뺐다(R303)
-        return out.concat(familyOptions(rng, rows, sins, words, nRandom, ilvl, []));
+        return out.concat(familyOptions(rng, gl ? glovesRows(slotRows, ts) : slotRows, sins, words, nRandom, ilvl, [], [], false, null, gl && GLOVES_ENVY_BUNDLE.has(ts)));
     }
 
     /**

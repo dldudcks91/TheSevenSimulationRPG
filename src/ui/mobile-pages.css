@@ -231,7 +231,7 @@
 :root[data-mobile] .ng-wrap .ng-actions { flex: none; padding: 0; margin: 0; }
 :root[data-mobile] .ng-wrap .ng-actions .btn { flex: 1 1 auto; }
 :root[data-mobile] .main > .pro-wrap { display: flex; flex-direction: column; height: 100%; min-height: 0; padding: 8px; }
-:root[data-mobile] .pro-body { flex: 1 1 0; min-height: 0; overflow: auto; }
+:root[data-mobile] .pro-body { flex: 0 1 auto; min-height: 0; overflow: auto; }
 :root[data-mobile] .pro-actions { position: static; flex: none; }
 :root[data-mobile] .main > .mn-wrap { flex: 1 1 0; min-height: 0; overflow: auto; padding: 12px 6px; }
 

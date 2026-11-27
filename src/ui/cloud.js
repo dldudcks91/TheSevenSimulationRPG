@@ -242,13 +242,14 @@ export async function signOutAccount() {
  * 태그(`tag`)는 여기서 붙인다 — 계정 id 를 아는 곳이 여기뿐이다 (ADR-1042).
  * **플레이 기록과 묶지 않는다** — 보안 규칙이 이 문서를 거부해도 진행 요약 · 세이브 사본은 올라가야 한다(한 묶음은 통째로 거부된다)
  */
-export async function pushArenaTeam(arena) {
+export async function pushArenaTeam(arena, mode = 'arena') {
     const { s, user, fail: f } = await open();
     if (f) return f;
     const { F, db } = s;
     try {
-        if (arena === 'drop') await F.deleteDoc(F.doc(db, 'arenaTeams', user.uid));
-        else await F.setDoc(F.doc(db, 'arenaTeams', user.uid), { nick: arena.nick, rating: arena.rating, tag: tagOf(user.uid), team: arena.team, at: F.serverTimestamp() });
+        const ref = F.doc(db, mode === 'tag' ? 'tagTeams' : 'arenaTeams', user.uid);
+        if (arena === 'drop') await F.deleteDoc(ref);
+        else await F.setDoc(ref, { nick: arena.nick, rating: arena.rating, tag: tagOf(user.uid), team: arena.team, at: F.serverTimestamp() });
         return { ok: true };
     } catch (e) { return fail('network', e); }
 }
@@ -257,14 +258,14 @@ export async function pushArenaTeam(arena) {
  * 받기 — 최근 방어 편성 묶음과 내 방어 기록 (arena_design §9).
  * `teams` = `[{id, nick, rating, team, at}]`(team = 받은 문자열 그대로 — 검사는 부르는 쪽) · `log` = `[{by, nick, rating, result, friendly, at}]` · `me` = 내 uid
  */
-export async function pullArena() {
+export async function pullArena(mode = 'arena') {
     const { s, user, fail: f } = await open();
     if (f) return f;
     const { F, db } = s;
     try {
         const [teams, log] = await Promise.all([
-            F.getDocs(F.query(F.collection(db, 'arenaTeams'), F.orderBy('at', 'desc'), F.limit(PULL_TEAMS))),
-            F.getDocs(F.query(F.collection(db, 'arenaLog', user.uid, 'hits'), F.orderBy('at', 'desc'), F.limit(PULL_LOG))),
+            F.getDocs(F.query(F.collection(db, mode === 'tag' ? 'tagTeams' : 'arenaTeams'), F.orderBy('at', 'desc'), F.limit(PULL_TEAMS))),
+            F.getDocs(F.query(F.collection(db, mode === 'tag' ? 'tagLog' : 'arenaLog', user.uid, 'hits'), F.orderBy('at', 'desc'), F.limit(PULL_LOG))),
         ]);
         return {
             ok: true, me: user.uid,
@@ -304,12 +305,12 @@ export async function listArena({ name = '', tag = null, cursor = null } = {}) {
 
 /** 방어 기록 한 줄 — 방어자 `def` 의 기록함에 `{nick, rating, result}`(result = 방어자 쪽) + 내 uid · 서버 시각.
  *  `friendly` = 친구와 전투 목록에서 고른 친선전 — 그때만 `friendly: true` 칸이 붙는다(레이팅 결투 문서는 옛 모양 그대로 · ADR-1042) */
-export async function pushArenaHit(def, { nick, rating, result, friendly = false }) {
+export async function pushArenaHit(def, { nick, rating, result, friendly = false }, mode = 'arena') {
     const { s, user, fail: f } = await open();
     if (f) return f;
     const { F, db } = s;
     try {
-        await F.addDoc(F.collection(db, 'arenaLog', def, 'hits'), { by: user.uid, nick, rating, result, ...(friendly ? { friendly: true } : {}), at: F.serverTimestamp() });
+        await F.addDoc(F.collection(db, mode === 'tag' ? 'tagLog' : 'arenaLog', def, 'hits'), { by: user.uid, nick, rating, result, ...(friendly ? { friendly: true } : {}), at: F.serverTimestamp() });
         return { ok: true };
     } catch (e) { return fail('network', e); }
 }

@@ -41,10 +41,10 @@ mag_deepfreeze,2,apply,-,0,0,0,0,0,-,mag_deepfreeze_shatter,duration_sec,vit,0,-
 mag_surge,1,apply,-,0,0,0,0,0,-,mag_surge,effect_value,luck,0,duration_sec,vit,0,-,-,0,effect_value,0.02,-,-,-
 mag_echo,1,apply,-,0,0,0,0,0,-,mag_echo,duration_sec,vit,0,-,-,0,-,-,0,duration_sec,0.5,-,-,-
 pri_judgment,1,hit,-,1,0.7,0,0,0,fixed,-,mult_pct,int,0,-,-,0,-,-,0,mult_pct,0.07,고정 피해 — 방어 · 저항 · 피해 감소를 안 받는다 · 배율 · 레벨당 ×0.4 (2.2 · 0.22 → 10-06 사용자 「데미지를 낮춰서」 · R221) · 0.88 → 0.7 (2026-10-30 R396 결투 측정 — 상대 방어가 오를수록 혼자 세진다),-,-
-pri_heal,1,heal,-,0,1.6,0,0,0,-,-,mult_pct,cha,0,-,-,0,-,-,0,mult_pct,0.16,-,-,-
+pri_heal,1,heal,-,0,1.44,0,0,0,-,-,mult_pct,cha,0,-,-,0,-,-,0,mult_pct,0.16,배율 1.6 → 1.44(2026-11-27 R602 사용자 「힐량 약간줄여」 — 10% · 레벨당 증가분 그대로),-,-
 pri_grace,1,apply,-,0,0,0,0,0,-,pri_grace,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.025,-,-,-
 pri_haste,1,apply,-,0,0,0,0,0,-,pri_haste,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.05,-,-,-
-pri_cure,1,heal,-,0,3,0,0,0,-,-,mult_pct,cha,0,-,-,0,-,-,0,mult_pct,0.3,-,-,-
+pri_cure,1,heal,-,0,2.7,0,0,0,-,-,mult_pct,cha,0,-,-,0,-,-,0,mult_pct,0.3,배율 3 → 2.7(2026-11-27 R602 사용자 「힐량 약간줄여」 — 10% · 레벨당 증가분 그대로),-,-
 pri_regen,1,apply,-,0,0,0,0,0,-,pri_regen,effect_value,ldr,0,duration_sec,vit,0,-,-,0,effect_value,0.002,-,-,-
 pri_penitence,1,apply,-,0,0,0,0,0,-,pri_penitence,effect_value,cha,0,-,-,0,-,-,0,effect_value,0.025,-,-,-
 pri_bind,1,apply,-,0,0,0,0,0,-,pri_bind,effect_value,cha,0,-,-,0,-,-,0,effect_value,0.04,-,-,-

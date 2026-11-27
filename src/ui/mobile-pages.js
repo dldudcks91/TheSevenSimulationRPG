@@ -133,8 +133,6 @@ export function mountMobilePages(main) {
                 spot.appendChild(name); list.appendChild(spot);
             }
             wrap.appendChild(list);
-            groupChoices(list, all(list, '.ex-spot'), 'explore-chapter', card => card.dataset.exspot.split(':')[0],
-                (_, chapter) => `${t('mobile.chapter')} ${chapter}`);
             const pop = map.querySelector('.ex-pop');
             if (pop) wrap.appendChild(pop);
         }

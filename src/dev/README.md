@@ -260,10 +260,8 @@ service cloud.firestore {
       allow read: if isAdmin() || (request.auth != null && request.auth.uid == uid);   // 본인 — 아이디 계정의 사본 받기 · 주인 표식 확인 (2026-11-18)
     }
     // 결투장 데모 — 방어 편성(누구나 읽고 본인만 쓴다) · 방어 기록(공격자가 쓰고 방어자만 읽는다) (arena_design §9 · 2026-11-11)
-    match /arenaTeams/{uid} {
-      allow read: if request.auth != null;
-      allow delete: if request.auth != null && request.auth.uid == uid;
-      allow create, update: if request.auth != null && request.auth.uid == uid
+    function validDefense(uid) {
+      return request.auth != null && request.auth.uid == uid
         && request.resource.data.keys().hasOnly(['nick', 'rating', 'tag', 'team', 'at'])
         && request.resource.data.nick is string && request.resource.data.nick.size() <= 16
         && request.resource.data.rating is int
@@ -271,15 +269,32 @@ service cloud.firestore {
         && request.resource.data.team is string && request.resource.data.team.size() <= 200000
         && request.resource.data.at == request.time;
     }
-    match /arenaLog/{def}/hits/{hit} {
-      allow read, delete: if request.auth != null && request.auth.uid == def;
-      allow create: if request.auth != null && request.resource.data.by == request.auth.uid
+    match /arenaTeams/{uid} {
+      allow read: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if validDefense(uid);
+    }
+    match /tagTeams/{uid} {
+      allow read: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if validDefense(uid);
+    }
+    function validDefenseHit() {
+      return request.auth != null && request.resource.data.by == request.auth.uid
         && request.resource.data.keys().hasOnly(['by', 'nick', 'rating', 'result', 'friendly', 'at'])
         && request.resource.data.nick is string && request.resource.data.nick.size() <= 16
         && request.resource.data.rating is int
         && request.resource.data.result in ['win', 'draw', 'loss']
         && request.resource.data.get('friendly', true) == true
         && request.resource.data.at == request.time;
+    }
+    match /arenaLog/{def}/hits/{hit} {
+      allow read, delete: if request.auth != null && request.auth.uid == def;
+      allow create: if validDefenseHit();
+    }
+    match /tagLog/{def}/hits/{hit} {
+      allow read, delete: if request.auth != null && request.auth.uid == def;
+      allow create: if validDefenseHit();
     }
   }
 }

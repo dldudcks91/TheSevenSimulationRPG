@@ -1,53 +1,43 @@
-/**
- * i18n — 한/영 문자열 사전 + 언어 상태.
- *
- * 관리 규칙 (중요):
- *   1. **한 키에 ko/en 이 나란히 붙는다** — 두 언어가 따로 놀며 한쪽만 고치는 사고를 구조로 막는다.
- *      키를 추가할 때 반드시 두 언어를 같이 쓴다. en 누락 시 ko 로 폴백되므로 화면이 깨지진 않는다.
- *   2. **UI 문구는 여기, 데이터 문자열은 mock.js 의 {ko, en} 쌍** — 렌더러(app/battle)에는
- *      한국어 리터럴이 남지 않는다 (주석 제외). 이것이 검증 기준이다.
- *   3. 값 안의 `{x}` 는 t(key, {x: ...}) 로 치환된다. 어순이 언어마다 달라도 템플릿이 흡수한다.
- *
- * CSV 쪽 규약(예고): 데이터 CSV 는 `_kr` / `_en` 컬럼 쌍 (현재 `_kr` 만 존재 — monster.csv 등).
- * `_en` 컬럼이 붙고 로더가 생기면 mock.js 의 {ko, en} 쌍이 그대로 CSV 로 이사한다.
- *
- * 언어 전환: 우측 상단 버튼(한국어 → English → 简体中文 순환 · ADR-1220) / URL `?lang=en` / localStorage 유지.
- * (localStorage 는 UI 환경설정이라 세이브 어댑터 규칙과 무관 — 접근은 이 파일 안에서만 한다)
- *
- * 간체(zh) [2026-11-16 · docs/client/LOCALIZATION_ZH.md] — 키마다 셋째 칸 `zh`. **새 키는 ko/en 만 써도 된다**(D5) —
- * zh 가 없으면 영어를 보인다(D4 · 한국어가 중국어 화면에 새지 않게). 데이터 쪽은 CSV `_zh` 열 · mock 쌍의 `zh`.
- */
-
+/** UI text and language preferences. Additional languages are loaded on demand
+ * from ui/locales. CSV and saved names are resolved by their original text pair. */
+import { LANGUAGE_NAMES, catalogFor, needsCatalog, loadCatalog, dataText } from './locales.js';
+export { LANGUAGE_NAMES };
 const STORE_KEY = 'thesevensim.lang';
-export const LANGS = ['ko', 'en', 'zh'];
-/** `<html lang>` 에 다는 태그 — 간체는 `zh-CN`(글꼴 · 한자 모양을 고르는 신호 · `zh` 하나로는 약하다) */
-const LANG_TAG = { ko: 'ko', en: 'en', zh: 'zh-CN' };
-/** 바깥 링크의 언어 코드를 안의 코드로 — `zh-CN` · `zh-cn` · `zh-Hans` · `zh-SG` 는 모두 zh */
-const normLang = v => {
-    const s = String(v ?? '').toLowerCase();
-    return /^zh(-(cn|hans|sg))?$/.test(s) ? 'zh' : s;
-};
+export const LANGS = Object.keys(LANGUAGE_NAMES);
+const LANG_TAG = { zh: 'zh-CN', es: 'es-ES' };
+function normLang(value) {
+    const tag = String(value ?? '').replaceAll('_', '-').toLowerCase();
+    if (/^zh-(hant|tw|hk|mo)(-|$)/.test(tag)) return 'zh-TW';
+    if (/^zh($|-(hans|cn|sg)(-|$))/.test(tag)) return 'zh';
+    if (/^pt($|-br$)/.test(tag)) return 'pt-BR';
+    return tag.split('-')[0];
+}
 
 let current = (() => {
     const q = normLang(new URLSearchParams(location.search).get('lang'));
     if (LANGS.includes(q)) return q;
     try {
-        const saved = localStorage.getItem(STORE_KEY);
+        const saved = normLang(localStorage.getItem(STORE_KEY));
         if (LANGS.includes(saved)) return saved;
     } catch { /* 프라이빗 모드 등 — 기본값으로 */ }
     return 'ko';
 })();
 
+if (needsCatalog(current)) {
+    try { await loadCatalog(current); } catch { current = 'en'; }
+}
 export const lang = () => current;
-/** 지금 언어의 BCP 47 태그 — `<html lang>` 과 같은 값 */
 export const langTag = () => LANG_TAG[current] ?? current;
-/** 언어 버튼이 갈 다음 언어 — `LANGS` 순서로 돈다 (ADR-1220) */
-export const nextLang = () => LANGS[(LANGS.indexOf(current) + 1) % LANGS.length];
+let languageRequest = 0;
 
-export function setLang(l) {
-    if (!LANGS.includes(l)) return;
-    current = l;
-    try { localStorage.setItem(STORE_KEY, l); } catch { /* 저장 실패는 무해 */ }
+export async function setLang(value) {
+    const code = normLang(value);
+    if (!LANGS.includes(code)) return;
+    const request = ++languageRequest;
+    if (needsCatalog(code)) await loadCatalog(code);
+    if (request !== languageRequest) return;
+    current = code;
+    try { localStorage.setItem(STORE_KEY, code); } catch { /* private browsing */ }
     applyDocumentLang();
 }
 
@@ -57,18 +47,7 @@ export function applyDocumentLang() {
     document.title = t('app.title');
 }
 
-/** 칸이 찼나 — CSV 의 빈 셀은 `''` 로 온다(간체 열이 아직 비었을 때) */
-const filled = s => s != null && s !== '';
-
-/**
- * 데이터 문자열 선택 — CSV 또는 mock.js 의 {ko, en, zh} 를 현재 언어로 푼다.
- * 평문 문자열이 오면 그대로 돌려준다 (양 언어 공통 표기: 고유명사·숫자 등).
- * 간체는 칸이 비었으면 영어 → 한국어 순으로 대신한다(D4) — ko · en 의 동작은 그대로다.
- */
-export const L = v =>
-    v == null ? '' : (typeof v === 'string' ? v
-        : current === 'zh' ? (filled(v.zh) ? v.zh : filled(v.en) ? v.en : (v.ko ?? ''))
-            : (v[current] ?? v.ko ?? ''));
+export const L = value => dataText(value, current);
 
 /** 그 키가 사전에 있는가 — 어휘가 데이터에서 오는 자리(마스터리 효과 `app.js`)가 제 문구가 있는지 고를 때 쓴다 */
 export const has = key => Object.prototype.hasOwnProperty.call(STRINGS, key);
@@ -81,13 +60,17 @@ export const dictEntries = () => Object.entries(STRINGS);
 const escapeKey = key => String(key).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 /** UI 문구 조회 — 미등록 키는 키 그대로 노출된다(누락이 화면에서 바로 보이게 · HTML 글자는 이스케이프) */
+const pluralRules = Object.fromEntries(LANGS.map(code => [code, new Intl.PluralRules(LANG_TAG[code] ?? code)]));
+
 export function t(key, params) {
     const e = has(key) ? STRINGS[key] : null;
-    // 간체 칸이 없는 키는 영어로(D4) — 빈 문자열 `zh: ''` 은 일부러 비운 칸이라 그대로 쓴다
-    let s = e ? (current === 'zh' && !('zh' in e) ? (e.en ?? e.ko) : (e[current] ?? e.ko)) : escapeKey(key);
-    // 단수 · 복수 — 값이 `{one, other}` 면 수가 1 일 때 `one` [2026-10-17 · 「1 items」] · 수는 `{n}`, 없으면 `{v}` (천 단위 쉼표를 단 문자열도 받는다)
-    if (s && typeof s === 'object') s = Number(String(params?.n ?? params?.v ?? '').replaceAll(',', '')) === 1 ? s.one : s.other;
-    if (params) for (const [k, v] of Object.entries(params)) s = s.replaceAll(`{${k}}`, v);
+    let s = e ? (e[current] ?? catalogFor(current)?.ui[key] ?? e.en ?? e.ko) : escapeKey(key);
+    if (s && typeof s === 'object') {
+        const count = Number(String(params?.n ?? params?.v ?? '').replaceAll(',', ''));
+        const form = pluralRules[current].select(count);
+        s = s[form] ?? s.other;
+    }
+    if (params) s = s.replace(/\{(\w+)\}/g, (token, name) => Object.hasOwn(params, name) ? params[name] : token);
     return s;
 }
 
@@ -236,7 +219,7 @@ const STRINGS = {
     'hint.departure': { ko: '한 번 출정할지 반복할지 고릅니다. 출발하면 선택한 Party의 준비 상태가 적용됩니다.', en: 'Choose a single or repeating expedition. Deployment uses the selected Party’s preparation.', zh: '选择出征一次还是循环出征。出发时将沿用所选Party的准备状态。' },
     'hint.foes': { ko: '이 지역에 등장하는 적입니다. 초상과 스킬에 마우스를 올리면 자세히 볼 수 있습니다.', en: 'The enemies found in this area. Hover their portraits and skills for details.', zh: '此区域出现的敌人。将鼠标移到头像和技能上可查看详情。' },
     'hint.story': { ko: '선택한 지역의 배경 이야기입니다.', en: 'The background story of the selected area.', zh: '所选区域的背景故事。' },
-    'hint.tactics': { ko: '칸마다 작전 카드 한 장 — 전투 규칙 하나와 옵션 줄 둘을 듭니다. 카드를 누르면 가방의 카드를 장착하거나 분해합니다.', en: 'One tactic card per slot — each carries a battle rule and two option lines. Click a card to equip or dismantle cards from the bag.' },   // 2026-11-26 R586
+    'hint.tactics': { ko: '칸마다 작전 카드 한 장 — 전투 규칙 하나와 옵션 줄 둘을 듭니다. 카드를 누르면 가방의 카드를 장착하거나 분해합니다.', en: 'Each slot holds one tactic card with a battle rule and two option lines. Select a slot to open the card bag, where you can equip or dismantle cards.', zh: '每个栏位可装备一张战术卡。每张卡有一条战斗规则和两条词条。点击卡槽即可打开卡包，装备或分解卡牌。' },   // 2026-11-26 R586
     'hint.potions': { ko: '이 Party가 함께 쓸 물약과 순서입니다. 재고가 모자란 칸은 빈 채로 출발합니다.', en: 'The potions and drinking order shared by this Party. Slots without enough stock start empty.', zh: '此Party共用的药水及饮用顺序。库存不足的格子将空着出发。' },
     'hint.reports': { ko: '지난 원정 결과를 골라 보상과 전투 기록을 확인합니다.', en: 'Select a past expedition to review its rewards and battle record.', zh: '选择过去的远征结果，查看奖励与战斗记录。' },
     'hint.drops': { ko: '이 원정에서 얻은 아이템입니다. 아이템에 마우스를 올리면 옵션을 확인할 수 있습니다.', en: 'Items obtained in this expedition. Hover an item to inspect its options.', zh: '此次远征获得的物品。将鼠标移到物品上可查看词条。' },
@@ -263,7 +246,7 @@ const STRINGS = {
     'hint.resource_effects': { ko: '이 줄에 등록한 영웅들의 능력치로 더해지는 효과입니다. 배치를 바꾸면 적용 값도 달라집니다.', en: 'Effects added by the attributes of heroes registered to this line. Changing assignments changes the applied values.', zh: '按派驻到此线的英雄属性追加的效果。调整派驻后，生效数值也会改变。' },
     'hint.assignment': { ko: '이 줄에 효과를 더할 영웅을 등록합니다. 등록된 영웅을 다시 누르면 해제할 수 있습니다.', en: 'Register a hero to add effects to this line. Select a registered hero again to remove the assignment.', zh: '派驻英雄为此线追加效果。再次点击已派驻的英雄可取消派驻。' },
     'hint.minigame': { ko: '선택한 자원 줄의 미니게임입니다. 화면의 조작 안내를 확인하고 시작하세요.', en: 'A minigame for the selected resource line. Review its controls before starting.', zh: '所选资源线的小游戏。请确认画面上的操作说明后开始。' },
-    'hint.explore': { ko: '탐험 표 한 장과 편성을 골라 보냅니다. 판을 끝까지 깨면 모은 것을 받습니다.', en: 'Send a party with one exploration ticket. Clear the whole run to receive the haul.' },
+    'hint.explore': { ko: '탐험권 한 장과 편성을 골라 보냅니다. 판을 끝까지 깨면 모은 것을 받습니다.', en: 'Send a party with one exploration ticket. Clear the whole run to receive the haul.', zh: '选择一支编队，消耗一张探索票券即可出发。完成整趟探索才能领取途中收集的战利品。' },
     'hint.recruit': { ko: '후보 영웅을 확인하고 골드를 내어 고용합니다.', en: 'Inspect candidate heroes and spend gold to hire them.', zh: '查看候选英雄，支付金币雇佣。' },
     'hint.visitors': { ko: '수색 영웅이 찾아온 영웅입니다. 카드를 골라 고용하거나 떠나보낼 수 있습니다.', en: 'Heroes your searchers brought back. Select a card to hire or dismiss a candidate.', zh: '搜寻英雄带回的英雄。选择卡片即可雇佣或送走。' },
     'hint.commissions': { ko: '의뢰를 받아 목표를 채우고 보상을 받습니다. 의뢰 카드에서 조건과 진행도를 확인하세요.', en: 'Accept commissions, complete their objectives and claim rewards. Check each card’s conditions and progress.', zh: '接受委托，完成目标后领取奖励。请在委托卡片上确认条件与进度。' },
@@ -348,7 +331,9 @@ const STRINGS = {
         en: 'This save is an older format (v{v}) and cannot continue in this version. Start a new game',
         zh: '此存档为旧格式（v{v}），无法在此版本中继续。将开始新游戏',
     },
-    'ng.overwrite': { ko: '세이브를 지우고 이 셋으로 시작', en: 'Delete save & start with these', zh: '删除存档并以这三人开始' },
+    'ng.overwrite': { ko: '게임 시작', en: 'Start Game', zh: '开始游戏' },   // 열 수 있는 세이브가 있을 때의 시작 버튼 — 누르면 확인 창(`ng.overwriteAsk`) (SCREEN_DESIGN §3 · ADR-1437)
+    'ng.overwriteAsk': { ko: '저장된 게임이 삭제됩니다.', en: 'Your saved game will be deleted.', zh: '已保存的游戏将被删除。' },
+    // 계정으로 불러오기 창의 두 번 누름 첫 누름 (§2-1) — 새 게임 시작은 확인 창으로 옮겼다(ADR-1437)
     'ng.overwriteConfirm': { ko: '정말 지울까요? 한 번 더 누르면 지웁니다', en: 'Really? Click again to delete', zh: '确定要删除吗？再按一次即删除' },
     'ng.startWeapon': { ko: '직업 전속 무기군의 무기 1개를 쥐고 시작', en: 'Starts with one weapon from a class-exclusive weapon group', zh: '开局手持1把职业专属武器类别的武器' },
 
@@ -356,36 +341,36 @@ const STRINGS = {
     'cl.frozen.h': { ko: '다른 탭에서 게임 실행 중', en: 'The game is open in another tab', zh: '游戏正在其他标签页中运行' },
     'cl.frozen.reload': { ko: '이 탭에서 이어하기', en: 'Continue in this tab', zh: '在此标签页继续' },
     // 아이디 계정 (SCREEN_DESIGN §2-1 「계정」 · §2-2 · §3 · ADR-1263) — 계정 멈춤 창 · 메뉴 · 계정 창 둘 · 오류는 `acct.err.<결과 코드>`
-    'cl.frozen.acctH': { ko: '다른 곳에서 이 계정으로 게임을 열었습니다', en: 'This account was opened somewhere else' },
-    'mn.checking': { ko: '확인 중…', en: 'Checking…' },
-    'mn.acctLoad': { ko: '계정으로 불러오기', en: 'Load from Account' },
-    'mn.acctOn': { ko: '계정 {id}', en: 'Account {id}' },
-    'acct.newH': { ko: '계정 만들기', en: 'Create Account' },
-    'acct.loginH': { ko: '계정으로 불러오기', en: 'Load from Account' },
-    'acct.id': { ko: '아이디', en: 'ID' },
-    'acct.pw': { ko: '비밀번호', en: 'Password' },
-    'acct.pw2': { ko: '비밀번호 확인', en: 'Confirm password' },
-    'acct.idPh': { ko: '영문 소문자 · 숫자 · _ (3~16자)', en: 'a–z · 0–9 · _ (3–16)' },
-    'acct.note': { ko: '비밀번호를 잊으면 게임 안에서는 찾을 수 없습니다', en: 'A forgotten password can\'t be recovered in-game' },
-    'acct.create': { ko: '만들기', en: 'Create' },
-    'acct.load': { ko: '불러오기', en: 'Load' },
-    'acct.loadOver': { ko: '이 브라우저 세이브를 지우고 불러오기', en: 'Delete this browser\'s save & load' },
-    'acct.busy': { ko: '확인 중…', en: 'Checking…' },
-    'acct.made': { ko: '계정 {id} 을(를) 만들었습니다', en: 'Account {id} created' },
-    'acct.err.badId': { ko: '아이디는 영문 소문자 · 숫자 · _ 3~16자입니다', en: 'ID: 3–16 lowercase letters, digits or _' },
-    'acct.err.weak': { ko: '비밀번호는 6자 이상입니다', en: 'Password must be at least 6 characters' },
-    'acct.err.mismatch': { ko: '두 비밀번호가 다릅니다', en: 'The passwords don\'t match' },
-    'acct.err.taken': { ko: '이미 쓰는 아이디입니다', en: 'That ID is already taken' },
-    'acct.err.linked': { ko: '이미 계정에 묶여 있습니다', en: 'Already linked to an account' },
-    'acct.err.wrong': { ko: '아이디나 비밀번호가 틀렸습니다', en: 'Wrong ID or password' },
-    'acct.err.busy': { ko: '시도가 너무 많습니다 — 잠시 뒤에 다시 하세요', en: 'Too many attempts — try again later' },
-    'acct.err.off': { ko: '계정 기능이 아직 꺼져 있습니다', en: 'Accounts aren\'t enabled yet' },
-    'acct.err.network': { ko: '연결하지 못했습니다', en: 'Couldn\'t connect' },
-    'acct.err.read': { ko: '세이브를 받지 못했습니다', en: 'Couldn\'t load the save' },
-    'acct.err.dev': { ko: '개발 환경에서는 계정을 쓰지 않습니다', en: 'Accounts are off in development' },
+    'cl.frozen.acctH': { ko: '다른 곳에서 이 계정으로 게임을 열었습니다', en: 'This account is already in use elsewhere', zh: '此账号已在别处打开游戏' },
+    'mn.checking': { ko: '확인 중…', en: 'Checking…', zh: '正在检查…' },
+    'mn.acctLoad': { ko: '계정으로 불러오기', en: 'Load from Account', zh: '读取账号存档' },
+    'mn.acctOn': { ko: '계정 {id}', en: 'Account {id}', zh: '账号 {id}' },
+    'acct.newH': { ko: '계정 만들기', en: 'Create Account', zh: '创建账号' },
+    'acct.loginH': { ko: '계정으로 불러오기', en: 'Load from Account', zh: '读取账号存档' },
+    'acct.id': { ko: '아이디', en: 'ID', zh: '账号名' },
+    'acct.pw': { ko: '비밀번호', en: 'Password', zh: '密码' },
+    'acct.pw2': { ko: '비밀번호 확인', en: 'Confirm password', zh: '确认密码' },
+    'acct.idPh': { ko: '영문 소문자 · 숫자 · _ (3~16자)', en: '3–16 characters: a–z, 0–9 or _', zh: '3–16 个字符，可用小写英文字母、数字和下划线' },
+    'acct.note': { ko: '비밀번호를 잊으면 게임 안에서는 찾을 수 없습니다', en: 'A forgotten password can\'t be recovered in-game', zh: '忘记密码后，无法在游戏内找回' },
+    'acct.create': { ko: '만들기', en: 'Create', zh: '创建' },
+    'acct.load': { ko: '불러오기', en: 'Load', zh: '读取' },
+    'acct.loadOver': { ko: '이 브라우저 세이브를 지우고 불러오기', en: 'Replace this browser\'s save with the account save', zh: '删除此浏览器的存档并读取账号存档' },
+    'acct.busy': { ko: '확인 중…', en: 'Checking…', zh: '正在检查…' },
+    'acct.made': { ko: '계정 {id} 을(를) 만들었습니다', en: 'Account {id} created', zh: '账号 {id} 已创建' },
+    'acct.err.badId': { ko: '아이디는 영문 소문자 · 숫자 · _ 3~16자입니다', en: 'ID: 3–16 lowercase letters, digits or _', zh: '账号名须为 3–16 个字符，只能使用小写英文字母、数字和下划线' },
+    'acct.err.weak': { ko: '비밀번호는 6자 이상입니다', en: 'Password must be at least 6 characters', zh: '密码至少需要 6 个字符' },
+    'acct.err.mismatch': { ko: '두 비밀번호가 다릅니다', en: 'The passwords don\'t match', zh: '两次输入的密码不一致' },
+    'acct.err.taken': { ko: '이미 쓰는 아이디입니다', en: 'That ID is already taken', zh: '该账号名已被使用' },
+    'acct.err.linked': { ko: '이미 계정에 묶여 있습니다', en: 'Already linked to an account', zh: '已绑定账号' },
+    'acct.err.wrong': { ko: '아이디나 비밀번호가 틀렸습니다', en: 'Wrong ID or password', zh: '账号名或密码错误' },
+    'acct.err.busy': { ko: '시도가 너무 많습니다 — 잠시 뒤에 다시 하세요', en: 'Too many attempts — try again later', zh: '尝试次数过多，请稍后再试' },
+    'acct.err.off': { ko: '계정 기능이 아직 꺼져 있습니다', en: 'Accounts aren\'t enabled yet', zh: '账号功能尚未启用' },
+    'acct.err.network': { ko: '연결하지 못했습니다', en: 'Couldn\'t connect', zh: '连接失败' },
+    'acct.err.read': { ko: '세이브를 받지 못했습니다', en: 'Couldn\'t load the save', zh: '无法读取存档' },
+    'acct.err.dev': { ko: '개발 환경에서는 계정을 쓰지 않습니다', en: 'Accounts are off in development', zh: '开发环境中未启用账号功能' },
 
     /* ── 프롤로그 (2026-09-03 · SCREEN_DESIGN §3-1) ──
-       원문은 docs/game_design/story/prologue.md(정본 2026-09-14) — 화면이 문장을 새로 쓰지 않는다. `en` 은 그 직역이다 (2026-10-16 · ADR-0646).
+       원문은 docs/game_design/story/prologue.md의 다섯 씬이다. 영어 · 중국어는 같은 문단 구성을 따른다.
        줄바꿈은 이스케이프로 들어간다 — **빈 줄(`\n\n`)이 문단을 가르고**(app.js:renderPrologue 가 `<p>` 로 접는다) 한 줄 바꿈은 CSS(pre-line)가 편다 */
     'pro.h': { ko: '프롤로그', en: 'Prologue', zh: '序章' },
     /* 맨 윗줄 — 프롤로그 씬(1~3)이 든다. Chapter 1 씬(4~5)은 그 자리를 `pro.end` 가 가져간다 (SCREEN_DESIGN §3-1) */
@@ -399,83 +384,69 @@ const STRINGS = {
     'pro.s1.h': { ko: '왕좌', en: 'The Throne', zh: '王座' },
     'pro.s1.b': {
         ko: '지옥에는 왕이 있었다. 대악마 바알이었다.\n\n'
-            + '이 땅의 모든 것이 그의 것이었다. 바알은 자신의 일곱 감정을 나누어 부하들에게 깃들게 했다.\n'
-            + '분노, 시기, 탐욕, 나태, 폭식, 색욕, 오만.\n\n'
-            + '그 일곱 감정이 지옥의 균형을 붙들고 있었다.',
+            + '이 땅의 모든 것이 그의 것이었다.\n바알은 자신의 일곱 감정을 나누어 부하들에게 깃들게 했다.\n분노, 시기, 탐욕, 나태, 폭식, 색욕, 오만.\n\n'
+            + '왕좌 아래 일곱 부하는 그의 명을 기다렸다.',
         en: 'Hell had a king. His name was Baal, the archdemon.\n\n'
-            + 'Everything in this land was his. Baal divided his seven emotions among his servants.\n'
-            + 'Wrath, Envy, Greed, Sloth, Gluttony, Lust, Pride.\n\n'
-            + 'Those seven emotions held Hell in balance.',
-        zh: '地狱曾有一位王。他便是大恶魔巴尔。\n\n这片土地上的一切都属于他。巴尔将自己的七种情感分了出去，寄于部下之身。\n愤怒、嫉妒、贪婪、怠惰、暴食、色欲、傲慢。\n\n正是这七种情感，维系着地狱的平衡。',
+            + 'Everything in this land was his.\nBaal divided his seven emotions among his servants.\nWrath, Envy, Greed, Sloth, Gluttony, Lust, Pride.\n\n'
+            + 'At the foot of the throne, the seven servants waited for his command.',
+        zh: '地狱曾有一位王。他便是大恶魔巴尔。\n\n'
+            + '这片土地上的一切都属于他。\n巴尔将自己的七种情感分给了部下。\n愤怒、嫉妒、贪婪、怠惰、暴食、色欲、傲慢。\n\n'
+            + '王座之下，七名部下等候他的命令。',
     },
 
     'pro.s2.h': { ko: '배신의 밤', en: 'Night of Betrayal', zh: '背叛之夜' },
     'pro.s2.b': {
-        ko: '그날 밤, 일곱 개의 칼이 바알의 등에 꽂혔다.\n\n'
-            + '돌아본 자리에는 낯익은 얼굴들뿐이었다. 그는 맞서 싸웠으나, 힘의 절반은 이미 빠져나간 뒤였다.\n\n'
-            + '묶여 있던 것이 풀려 있었다. 누군가 열쇠를 넘긴 것이었다.\n'
-            + '바알은 뒤로 밀려났다. 발밑이 무너졌다.',
-        en: 'That night, seven blades sank into Baal’s back.\n\n'
-            + 'When he turned, every face was familiar. He fought back, but half his power had already drained away.\n\n'
-            + 'What had been bound was undone. Someone had handed over the key.\n'
-            + 'Baal was driven back. The ground gave way beneath him.',
-        zh: '那一夜，七把刀刺进了巴尔的后背。\n\n回头望去，尽是熟悉的面孔。他奋起反击，但半数力量早已流失。\n\n原本被束缚之物已然松脱。是有人交出了钥匙。\n巴尔被逼退。脚下的地面崩塌了。',
+        ko: '유난히 어두웠던 어느 날 밤, 일곱 개의 칼이 바알의 등에 꽂혔다.\n\n'
+            + '돌아본 자리에는 낯익은 얼굴들이 서있었다.\n맞서 싸우려 했으나, 이미 힘을 뺏긴 뒤였다.\n\n'
+            + '누군가 열쇠를 넘겼다. 바알은 뒤로 밀려났다. 발밑이 무너졌다.\n왕좌가, 그를 내려보는 얼굴들이, 지옥의 붉은 빛이 위로 멀어져 갔다.',
+        en: 'One unusually dark night, seven blades sank into Baal’s back.\n\n'
+            + 'He turned and saw familiar faces.\nHe tried to fight back, but his power had already been taken from him.\n\n'
+            + 'Someone had handed over the key. Baal was forced back. The ground gave way beneath him.\nThe throne, the faces looking down at him, the red light of Hell all receded above him.',
+        zh: '在一个格外漆黑的夜晚，七把刀刺进了巴尔的后背。\n\n'
+            + '他回过头，看见一张张熟悉的面孔。\n他想还击，力量却早已被夺走。\n\n'
+            + '有人交出了钥匙。巴尔被逼得连连后退。脚下的地面塌了。\n王座、俯视他的那些脸，还有地狱的红光，都在他上方渐渐远去。',
     },
 
     'pro.s3.h': { ko: '추락', en: 'The Fall', zh: '坠落' },
     'pro.s3.b': {
-        ko: '바알은 추락했다.\n\n'
-            + '지옥의 빛이 멀어질수록 힘도 빠져나갔다. 왕좌와 부하들의 얼굴, 그 밤에 일어난 일들이 차례로 흐려졌다.\n\n'
-            + '누가 먼저 칼을 들었는지, 누가 등을 돌렸는지 알 수 없었다. 칼이 일곱이었는지조차 확신할 수 없었다.\n'
-            + '배신당했다는 사실만은 남아 있었다.\n\n'
-            + '그때 살을 태우는 듯한 통증이 몸을 파고들었다. 무언가가 새겨지고 있었다.\n'
-            + '추락이 남긴 저주, 낙인이었다.',
-        en: 'Baal fell.\n\n'
-            + 'As the light of Hell receded, his strength drained away. The throne, his servants’ faces, the events of that night faded one by one.\n\n'
-            + 'He could not tell who had raised a blade first, or who had turned against him. He could no longer be certain there had been seven blades.\n'
-            + 'Only one certainty remained: he had been betrayed.\n\n'
-            + 'Then pain seared through his body, as though his flesh were burning. Something was being carved into him.\n'
-            + 'It was a brand, the curse his fall had left behind.',
-        zh: '巴尔坠落了。\n\n地狱之光越来越远，他的力量也随之流逝。王座、部下们的面孔、那一夜发生的种种，一件接一件变得模糊。\n\n是谁先举起了刀，又是谁背弃了他，他已无从知晓。就连刀是否真有七把，他也无法确定。\n唯有遭到背叛这一事实留了下来。\n\n就在这时，一阵仿佛灼烧血肉的剧痛钻进他的身体。有什么正被刻入其中。\n那是坠落留下的诅咒——烙印。',
+        ko: '돌아보았을 때 본 얼굴들이 하나씩 흐려졌다.\n칼이 정말 일곱이었는지조차 알 수 없었다.\n\n'
+            + '살을 태우는 통증이 밀려왔다. 바알의 몸에 낙인이 새겨지고 있었다.\n\n'
+            + '다시 싸우려면 그의 명을 따라 칼을 들 자들이 필요했다.\n\n'
+            + '<em>내 등에 칼을 꽂은 놈들을 하나씩 찾아내겠다.</em>',
+        en: 'The faces he had seen when he turned began to fade, one by one.\nHad there really been seven blades? He could no longer tell.\n\n'
+            + 'Pain seared his flesh. A brand was being burned into his body.\n\n'
+            + 'To fight again, he would need people who would take up arms at his command.\n\n'
+            + '<em>I’ll find the ones who put their blades in my back, one by one.</em>',
+        zh: '回头时看见的面孔一张张模糊了。\n就连那些刀是不是真有七把，他都说不准。\n\n'
+            + '灼烧般的剧痛袭来。巴尔身上正被刻下一道烙印。\n\n'
+            + '要再战一场，他就得找到肯听他号令、为他举刀的人。\n\n'
+            + '<em>那些在我背后捅刀的家伙，我要一个个找出来。</em>',
     },
 
     'pro.s4.h': { ko: '마을', en: 'The Village', zh: '村庄' },
     'pro.s4.b': {
-        ko: '눈을 떴을 때, 늙은 인간이 그의 입에 물을 흘려 넣고 있었다.\n\n'
-            + '몸은 무거웠고 배는 고팠다. 숨을 쉬는 것조차 버거웠다. 바알은 이 낯설고 나약한 몸이 불쾌했다.\n\n'
-            + '며칠 동안 인간들은 제 몫도 부족한 음식을 나누고 그의 상처를 감싸 주었다. 이름조차 모르는 자를 살리려 애썼다.\n'
-            + '지옥에서는 쓰러진 자를 밟고 지나갔다. 약한 자는 버려졌다. 그런데 이들은 그 당연한 이치를 거스르고 있었다.\n\n'
-            + '왜 이것들은 나를 살리려 하는가. 바알은 그들을 이해할 수 없었다.\n\n'
-            + '자신의 이름은 기억했다. 왕이었다는 것도, 모든 것을 빼앗겼다는 것도.\n'
-            + '그러나 일곱 개의 칼과 낯익은 얼굴들, 무너지는 발밑은 하나의 기억으로 이어지지 않았다.',
-        en: 'When he opened his eyes, an old human was giving him water.\n\n'
-            + 'His body was heavy, his stomach empty. Even breathing was hard. Baal resented this strange, frail body.\n\n'
-            + 'For days, the humans shared what little food they had and bound his wounds. They tried to save a man whose name they did not know. '
-            + 'In Hell, the fallen were trampled, the weak discarded. Yet these humans defied that natural order.\n\n'
-            + 'Why did these things try to keep him alive? Baal could not understand them.\n\n'
-            + 'He remembered his name, that he had been a king, that everything had been taken from him. '
-            + 'But the seven blades, the familiar faces and the crumbling ground would not form a coherent memory.',
-        zh: '睁开眼时，一个年迈的人类正往他嘴里滴水。\n\n身体沉重，腹中饥饿，连呼吸都很吃力。巴尔厌恶这具陌生而孱弱的躯体。\n\n一连数日，人类们分出连自己都不够吃的食物，为他包扎伤口。他们竭力救活一个连名字都不知道的人。\n在地狱，倒下的人会被踩踏而过，弱者会被抛弃。这些人却违背了这理所当然的法则。\n\n这些东西为何要救我？巴尔无法理解他们。\n\n他记得自己的名字，记得自己曾是王，也记得自己被夺走了一切。\n然而七把刀、熟悉的面孔、崩塌的地面，却始终连不成一段完整的记忆。',
+        ko: '눈을 떴을 때, 늙은 인간이 그의 입에 물을 흘려 넣고 있었다.\n인간이 된 바알은 제 힘으로 고개조차 들 수 없었다.\n\n'
+            + '며칠 동안 마을 사람들은 제 몫의 빵을 떼어 그에게 먹였다.\n\n'
+            + '<em>왜 이것들은 나를 살리려 하는가.</em>',
+        en: 'When he opened his eyes, an old human was trickling water into his mouth.\nNow human, Baal could not even lift his head on his own.\n\n'
+            + 'For days the villagers broke pieces off their own bread to feed him.\n\n'
+            + '<em>Why are these creatures trying to keep me alive?</em>',
+        zh: '他睁开眼时，一个年迈的人类正往他嘴里喂水。\n如今巴尔成了人，连自己抬起头都做不到。\n\n'
+            + '一连几天，村民们都从自己的面包上掰下一块喂给他。\n\n'
+            + '<em>这些东西为什么要救我？</em>',
     },
 
     'pro.s5.h': { ko: '불길', en: 'Flames', zh: '烈焰' },
     'pro.s5.b': {
-        ko: '그날 밤, 지평선이 붉게 물들었다.\n\n'
-            + '군세가 밀려오는 곳에서 분노의 기운이 번져 왔다. 바알은 그 기운을 잊지 않았다.\n'
-            + '사탄. 그가 지옥에서 추방했던 자였다. 추락한 왕의 기척을 쫓아온 것이었다.\n\n'
-            + '마을에 불길이 치솟고 인간들의 비명이 터져 나왔다. 바알은 몸을 일으켰다.\n'
-            + '직접 싸울 힘은 잃었으나, 지휘하는 법까지 잊지는 않았다.\n\n'
-            + '그는 선술집에서 만난 용병들을 향해 명령했다.',
-        en: 'That night, the horizon turned red.\n\n'
-            + 'The advancing army carried an aura of wrath. Baal had not forgotten it.\n'
-            + 'Satan. The one he had banished from Hell. He had followed the fallen king’s presence here.\n\n'
-            + 'Flames rose through the village, and the humans screamed. Baal rose to his feet.\n'
-            + 'He had lost the strength to fight, but he had not forgotten how to command.\n\n'
-            + 'He turned to the mercenaries he had met at the tavern and gave his order.',
-        zh: '那一夜，地平线被染红了。\n\n大军涌来之处，愤怒的气息蔓延而至。巴尔不曾忘记这股气息。\n撒旦。那个曾被他逐出地狱的人。他是循着坠落之王的气息追来的。\n\n村庄燃起烈焰，人类的惨叫声此起彼伏。巴尔撑起了身子。\n他已失去亲自战斗的力量，却没有忘记如何指挥。\n\n他转向在酒馆结识的佣兵们，下达了命令。',
+        ko: '마을에 불길이 치솟았다. 사탄의 군세였다.\n바알이 지옥에서 추방한 자가 여기까지 쫓아왔다.\n\n'
+            + '바알은 마을에서 모은 용병들을 향해 손을 들었다.',
+        en: 'Flames rose over the village. Satan’s army had come.\nThe one Baal had banished from Hell had pursued him all the way here.\n\n'
+            + 'Baal raised his hand to the mercenaries he had gathered in the village.',
+        zh: '村里燃起了大火。撒旦的大军来了。\n那个被巴尔逐出地狱的家伙一路追到了这里。\n\n'
+            + '巴尔朝他在村中召集的佣兵举起了手。',
     },
     /* 마지막 씬에만 선다 — 본문과 층이 다르다 (SCREEN_DESIGN §3-1) */
-    'pro.s5.q': { ko: '"저놈들을 쓸어라. 내가 뒤에서 이끈다."', en: '"Sweep them away. I will lead from behind."', zh: '“把那些家伙扫平。我在后方指挥。”' },
+    'pro.s5.q': { ko: '“길을 열어라. 사탄에게 간다.”', en: '“Clear a path. We’re going after Satan.”', zh: '“开路。我们去找撒旦。”' },
     'pro.end': { ko: 'Chapter 1. 분노 / 불타는 전장', en: 'Chapter 1. Wrath / Burning Battlefield', zh: '第1章 · 愤怒 / 燃烧战场' },
 
     /* ── 원정 (실동작) ── */
@@ -488,7 +459,7 @@ const STRINGS = {
     'exp.departLevelGap': { ko: '파티 평균 Lv.{avg} · 전장 Lv.{level} — 레벨 차이 {gap}. 그래도 출격할까요?', en: 'Party average Lv.{avg}, battlefield Lv.{level}: a gap of {gap}. Deploy anyway?', zh: '队伍平均Lv.{avg} · 战场Lv.{level}——等级差{gap}。仍要出击吗？' },   // 출정 확인 창 (R418 · ADR-1025)
     'exp.departCut': { ko: '이 파티는 지금 원정 중입니다. 진행 중인 원정을 접고 새로 출격할까요?', en: 'This party is on an expedition. End the current run and deploy anew?', zh: '此队伍正在远征。要中止当前远征并重新出击吗？' },
     // 탐험에 나가 있는 제 편성을 보낸다 — 진행 중 = 불러들인다 · 끝났다 = 결과를 받는다 · 다 안 들면 거절 (SCREEN_DESIGN §4-1 · ADR-1182)
-    'exp.departRecall': { ko: '이 파티는 지금 탐험 중입니다. 진행 중인 탐험을 불러들이고 출격할까요? 모은 것과 탐험 표를 잃습니다.', en: 'This party is out exploring. Call the run back and deploy? The haul and the ticket will be lost.' },
+    'exp.departRecall': { ko: '이 파티는 지금 탐험 중입니다. 진행 중인 탐험을 불러들이고 출격할까요? 모은 것과 탐험권를 잃습니다.', en: 'This party is out exploring. Call the run back and deploy? The haul and the ticket will be lost.', zh: '这支编队正在探索。要召回并派去远征吗？已收集的战利品和探索票券都会损失。' },
     'exp.departBagFull': { ko: '탐험 결과를 받을 인벤토리 칸 부족', en: 'Not enough inventory space for the exploration haul', zh: '背包空位不足，无法收取探索结果' },
     'exp.locked': { ko: '이전 스테이지 클리어', en: 'Clear the previous stage', lock: true, zh: '需通关上一关卡' },
     // 잠긴 장의 한 줄 — 그 장을 여는 앞 장 보스 (SCREEN_DESIGN §4-1 · §8-4 · ADR-0719 · R319). {ch} = 보스 칸의 장(`game.chapterGate`)
@@ -574,7 +545,8 @@ const STRINGS = {
     // 메인미션 — 상단바 골드 오른쪽 두루마리 판 (SCREEN_DESIGN §2 「메인미션」 · ADR-1232 · R524) · 받기 · 모두 받기 · 바로가기는 mail.claim · mail.claimAll · nt.shortcut
     'mm.h': { ko: '메인미션', en: 'Main Missions', zh: '主线任务' },
     'mm.count': { ko: '메인미션 · 받을 보상 {n}', en: { one: 'Main Missions · {n} reward to claim', other: 'Main Missions · {n} rewards to claim' }, zh: '主线任务 · 待领取奖励{n}个' },
-    'mm.new': { ko: '메인미션 · 새 미션', en: 'Main Missions · new mission', zh: '主线任务 · 新任务' },   // 안 본 다음 미션의 빨간 점이 섰을 때 아이콘 이름 (ADR-1245)    'mm.have': { ko: '{have} / {need}', en: '{have} / {need}', zh: '{have} / {need}' },
+    'mm.new': { ko: '메인미션 · 새 미션', en: 'Main Missions · new mission', zh: '主线任务 · 新任务' },   // 안 본 다음 미션의 빨간 점이 섰을 때 아이콘 이름 (ADR-1245)
+    'mm.have': { ko: '{have} / {need}', en: '{have} / {need}', zh: '{have} / {need}' },
     'mm.done': { ko: '메인미션을 모두 마쳤습니다', en: 'All main missions are complete', zh: '主线任务已全部完成' },
     'mm.none': { ko: '보상 없음', en: 'No reward', zh: '无奖励' },
     'mm.book': { ko: '스킬북', en: 'Skill Book', zh: '技能书' },
@@ -597,24 +569,24 @@ const STRINGS = {
     'mm.c.count.upgrade': { ko: '{where}에서 장비 강화하기', en: 'Upgrade a piece of gear at the {where}', zh: '在{where}强化装备' },
     'mm.c.count.gamble': { ko: '{where}에서 도박장 한 판 하기', en: 'Play a round of gambling at the {where}', zh: '在{where}的赌坊玩一局' },
     'mm.c.count.explore': { ko: '{where}에서 파티 보내기', en: 'Send a party out in {where}', zh: '在{where}派出队伍' },
-    'mm.c.count.tacticEquip': { ko: '{where}에서 작전 카드 장착하기', en: 'Equip a tactic card in {where}' },   // 1장 「처음 한 번」 줄 (R583 · 2026-11-26 R586 — 옛 「전술 리롤」)
-    'mm.c.event.mastery': { ko: '{where}에서 마스터리 포인트 찍기', en: 'Spend a mastery point in {where}' },
-    'mm.c.event.take': { ko: '{where}에서 의뢰 받기', en: 'Take a commission at the {where}' },
-    'mm.c.event.sell': { ko: '{where}에서 장비 판매하기', en: 'Sell a piece of gear at the {where}' },
-    'mm.c.event.potion': { ko: '{where}에서 물약 구매하기', en: 'Buy a potion at the {where}' },
-    'mm.c.event.salvage': { ko: '{where}에서 장비 분해하기', en: 'Salvage a piece of gear in {where}' },
+    'mm.c.count.tacticEquip': { ko: '{where}에서 작전 카드 장착하기', en: 'Equip a tactic card in {where}', zh: '在{where}装备一张战术卡' },   // 1장 「처음 한 번」 줄 (R583 · 2026-11-26 R586 — 옛 「전술 리롤」)
+    'mm.c.event.mastery': { ko: '{where}에서 마스터리 포인트 찍기', en: 'Spend a mastery point in {where}', zh: '在{where}分配一点专精点数' },
+    'mm.c.event.take': { ko: '{where}에서 의뢰 받기', en: 'Take a commission at the {where}', zh: '在{where}接取一项委托' },
+    'mm.c.event.sell': { ko: '{where}에서 장비 판매하기', en: 'Sell a piece of gear at the {where}', zh: '在{where}出售一件装备' },
+    'mm.c.event.potion': { ko: '{where}에서 물약 구매하기', en: 'Buy a potion at the {where}', zh: '在{where}购买一瓶药水' },
+    'mm.c.event.salvage': { ko: '{where}에서 장비 분해하기', en: 'Salvage a piece of gear in {where}', zh: '在{where}分解一件装备' },
     // 1장 튜토리얼 — 두루마리 아래 팻말 머리 · 길 안내 단계마다 설명 말풍선 `mm.tut.<미션>.<단계>` (2026-11-25 · SCREEN_DESIGN §2 「메인미션」 · ADR-1381 · `app.js:MM_TUTORIAL`)
-    'mm.tut': { ko: '튜토리얼', en: 'Tutorial' },
-    'mm.tut.c1_depart.tab': { ko: '원정은 파티를 장소에 보내 싸우게 하는 곳입니다. 전투는 알아서 진행되고, 주운 장비와 재료는 인벤토리에 쌓입니다.', en: 'Expeditions send your party out to fight. Battles play out on their own, and the gear and materials they find pile up in your inventory.' },
-    'mm.tut.c1_depart.place': { ko: '싸울 장소를 고릅니다. 장소마다 칸이 이어져 있어 이기면 다음 칸으로 넘어가고, 마지막 칸에서는 그 장소의 보스가 기다립니다.', en: "Pick a place to fight. Each place is a run of cells: win and you move on to the next, with the place's boss waiting in the last one." },
-    'mm.tut.c1_depart.send': { ko: '보내면 파티가 알아서 싸웁니다. 원정은 게임이 켜져 있는 동안에만 진행됩니다. 꺼 둔 동안에는 연구소가 일합니다.', en: 'Once sent, the party fights on its own. Expeditions only run while the game is open; while it is closed, the Laboratory does the work.' },
-    'mm.tut.c1_storage.tab': { ko: '건설은 골드로 건물을 짓는 곳입니다. 건물을 지으면 잠겨 있던 기능이 하나씩 열립니다.', en: 'Construction is where you spend gold on buildings. Each new building unlocks something that was locked.' },
-    'mm.tut.c1_storage.lot': { ko: '건물을 고르면 오른쪽에 그 건물이 여는 기능이 나옵니다. 창고를 지으면 연구소의 자원 줄이 열립니다.', en: "Select a building to see what it unlocks on the right. Building the Storage opens the Laboratory's Resources line." },
-    'mm.tut.c1_storage.build': { ko: '창고를 지으면 연구소의 자원 줄이 열리고, 자원 줄은 게임을 꺼 둔 동안에도 재료를 모읍니다. 비용을 내면 바로 지어집니다.', en: "Building the Storage opens the Laboratory's Resources line, which keeps gathering materials even while the game is closed. Pay the cost and it is built at once." },
-    'mm.tut.c1_reg.tab': { ko: '연구소는 게임을 꺼 둔 동안에도 일하는 곳입니다. 줄마다 영웅을 등록해야 그 줄이 돌아갑니다.', en: 'The Laboratory keeps working while the game is closed. A line only runs once a hero is registered to it.' },
-    'mm.tut.c1_reg.line': { ko: '빈 칸을 눌러 자원 줄에서 일할 영웅을 고릅니다.', en: 'Click the empty slot to choose a hero for the Resources line.' },
-    'mm.tut.c1_reg.hero': { ko: '등록한 영웅도 원정에는 그대로 나갈 수 있습니다. 자원 줄은 영웅이 많을수록 빨리 모입니다.', en: 'Registered heroes can still go on expeditions. The Resources line gathers faster with more heroes.' },
-    'mm.tut.c1_reg.apply': { ko: '적용하면 등록이 끝나고 줄이 돌기 시작합니다. 꺼 둔 동안 모인 재료는 다시 접속하면 들어와 있습니다.', en: 'Apply to register, and the line starts running. Materials gathered while you are away will be waiting when you return.' },
+    'mm.tut': { ko: '튜토리얼', en: 'Tutorial', zh: '新手教学' },
+    'mm.tut.c1_depart.tab': { ko: '원정은 파티를 장소에 보내 싸우게 하는 곳입니다. 전투는 알아서 진행되고, 주운 장비와 재료는 인벤토리에 쌓입니다.', en: 'Expeditions send your party out to fight. Battles play out on their own, and the gear and materials they find pile up in your inventory.', zh: '在远征中，你可以派出编队前往各地战斗。战斗自动进行，找到的装备和材料会放入背包。' },
+    'mm.tut.c1_depart.place': { ko: '싸울 장소를 고릅니다. 장소마다 칸이 이어져 있어 이기면 다음 칸으로 넘어가고, 마지막 칸에서는 그 장소의 보스가 기다립니다.', en: "Choose an area to fight in. Win a stage to advance to the next one. The area boss awaits in the final stage.", zh: '先选一个战斗地点。每个地点都有相连的关卡，获胜就能进入下一关，最后一关有该地点的首领。' },
+    'mm.tut.c1_depart.send': { ko: '보내면 파티가 알아서 싸웁니다. 원정은 게임이 켜져 있는 동안에만 진행됩니다. 꺼 둔 동안에는 연구소가 일합니다.', en: 'Once deployed, your party fights automatically. Expeditions progress while the game is open. The Laboratory keeps working while you are away.', zh: '派出编队后，英雄会自动战斗。远征只在游戏开启时推进。关闭游戏期间，研究所仍会工作。' },
+    'mm.tut.c1_storage.tab': { ko: '건설은 골드로 건물을 짓는 곳입니다. 건물을 지으면 잠겨 있던 기능이 하나씩 열립니다.', en: 'Spend gold in Construction to build facilities and unlock new features.', zh: '在建设页可以花费金币建造建筑。每建好一座建筑，都会解锁新的功能。' },
+    'mm.tut.c1_storage.lot': { ko: '건물을 고르면 오른쪽에 그 건물이 여는 기능이 나옵니다. 창고를 지으면 연구소의 자원 줄이 열립니다.', en: "Select a building to see its unlocks in the panel on the right. Building Storage opens the Laboratory's Resources line.", zh: '选中建筑即可在右侧查看它能解锁哪些功能。建造仓库会解锁研究所的资源线。' },
+    'mm.tut.c1_storage.build': { ko: '창고를 지으면 연구소의 자원 줄이 열리고, 자원 줄은 게임을 꺼 둔 동안에도 재료를 모읍니다. 비용을 내면 바로 지어집니다.', en: "Building Storage opens the Laboratory's Resources line, which keeps gathering materials even while the game is closed. Pay the cost and it is built at once.", zh: '建造仓库即可解锁研究所的资源线，关闭游戏后也能继续收集材料。支付费用后，仓库立即建成。' },
+    'mm.tut.c1_reg.tab': { ko: '연구소는 게임을 꺼 둔 동안에도 일하는 곳입니다. 줄마다 영웅을 등록해야 그 줄이 돌아갑니다.', en: 'The Laboratory keeps working while the game is closed. Assign at least one hero to each line you want to run.', zh: '关闭游戏后，研究所也会继续工作。每条线都要派驻至少一名英雄才会开始运作。' },
+    'mm.tut.c1_reg.line': { ko: '빈 칸을 눌러 자원 줄에서 일할 영웅을 고릅니다.', en: 'Click the empty slot to choose a hero for the Resources line.', zh: '点击空栏位，选择要派驻到资源线的英雄。' },
+    'mm.tut.c1_reg.hero': { ko: '등록한 영웅도 원정에는 그대로 나갈 수 있습니다. 자원 줄은 영웅이 많을수록 빨리 모입니다.', en: 'Assigned heroes can still go on expeditions. Each hero on the Resources line helps gather materials faster.', zh: '派驻的英雄仍可参加远征。派驻的英雄越多，资源线收集材料就越快。' },
+    'mm.tut.c1_reg.apply': { ko: '적용하면 등록이 끝나고 줄이 돌기 시작합니다. 꺼 둔 동안 모인 재료는 다시 접속하면 들어와 있습니다.', en: 'Select [Apply] to assign the hero and start production. Materials gathered while you are away will be in stock when you return.', zh: '点击应用，英雄就会进驻，产线随即开始运作。下次回来时，离线期间收集的材料已存入库存。' },
     'mm.c.event.hire': { ko: '{where}에서 영웅 고용하기', en: 'Hire a hero at the {where}', zh: '在{where}雇佣英雄' },
     'mm.c.event.book': { ko: '{where}에서 스킬북 배우기', en: 'Learn from a skill book in the {where}', zh: '在{where}学习技能书' },
     'mm.c.event.equip': { ko: '{where}에서 장비 장착하기', en: 'Equip a piece of gear in {where}', zh: '在{where}穿戴装备' },
@@ -634,7 +606,7 @@ const STRINGS = {
     'nt.check': { ko: '확인', en: 'OK', zh: '确定' },
     'nt.arrived': { ko: '새 알림 {n}건', en: { one: '{n} new notification', other: '{n} new notifications' }, zh: '{n}条新通知' },
     'nt.kind.commission': { ko: '의뢰 목표 달성 · 보상 수령 가능', en: 'Commission goal met · Reward ready', zh: '委托目标达成 · 可领取奖励' },
-    'nt.kind.explore': { ko: '탐험 판 끝 · 결과 보기', en: 'Exploration run over · View result' },
+    'nt.kind.explore': { ko: '탐험 판 끝 · 결과 보기', en: 'Exploration run over · View result', zh: '探索结束 · 查看结果' },
     'nt.kind.join': { ko: '가입 희망 영웅 도착', en: 'Hero awaiting recruitment', zh: '希望加入的英雄已到达' },
     'nt.kind.mastery': { ko: '스킬 포인트 사용 가능', en: 'Skill points available', zh: '有可用的技能点' },
     'nt.kind.offline': { ko: '오프라인 생산분 입고', en: 'Offline Production Received', zh: '离线产出已入库' },
@@ -860,27 +832,43 @@ const STRINGS = {
     'nav.expedition': { ko: '원정', en: 'Expedition', zh: '远征' },
     'nav.explore': { ko: '탐험', en: 'Exploration', zh: '探索' },
     'nav.battlefields': { ko: '특수전장', en: 'Special Battlefields', zh: '特殊战场' },
-    // 무한의 탑(탭 id `endless`) [2026-11-19 사용자 확정 · SCREEN_DESIGN §1 · ADR-1294] — 시련의 탑 바로 앞 · 몬스터만 상대하는 층 사다리 · 사다리 문구는 시련의 탑 것(`cs.*`)을 같이 쓴다
-    'nav.endless': { ko: '무한의 탑', en: 'Endless Tower', zh: '无尽之塔' },
     'et.from': { ko: '{n}층 · Lv.{lv} · {kind}', en: 'Floor {n} · Lv.{lv} · {kind}', zh: '第{n}层 · Lv.{lv} · {kind}' },   // 판 머리 — 층 · 상대 레벨 · 정예 / 보스
     'et.fromDiff': { ko: '{n}층 · Lv.{lv} · {kind} · {diff}', en: 'Floor {n} · Lv.{lv} · {kind} · {diff}', zh: '第{n}层 · Lv.{lv} · {kind} · {diff}' },   // 노말이 아닌 규칙의 층 — 뒤에 단 이름
-    'et.back': { ko: '무한의 탑으로', en: 'Back to the Endless Tower', zh: '返回无尽之塔' },
     // 시련의 탑(탭 id `colosseum`) [2026-10-18 사용자 지시 · SCREEN_DESIGN §1 · ADR-0670 · 이름 2026-11-13 ADR-1071] — 결투장(`arena`) 바로 앞 · 오프라인 층 사다리 · 레일(사다리) | 판
     'nav.colosseum': { ko: '시련의 탑', en: 'Tower of Trials', zh: '试炼之塔' },
     'cs.progress': { ko: '{n} / {total}층', en: 'Floor {n} / {total}', zh: '{n} / {total}层' },
     'cs.progressDone': { ko: '{total}층 완주', en: 'All {total} floors cleared', zh: '{total}层全部通关' },
     'cs.row': { ko: '{a}–{b}층', en: 'F{a}–{b}', zh: '{a}–{b}层' },   // 사다리 줄 머리 — 10층씩 한 줄 (ADR-1292)
-    'cs.from': { ko: '{n}층 · Lv.{lv} · AI 팀', en: 'Floor {n} · Lv.{lv} · AI team', zh: '第{n}层 · Lv.{lv} · AI队伍' },
     'cs.fight': { ko: '도전', en: 'Challenge', zh: '挑战' },
+    'cs.rival': { ko: '먼저 도착한 라이벌 파티', en: 'Rival adventuring party', zh: '先行抵达的对手队伍' },
+    'cs.monsterDifficulty': { ko: '{n}층부터 몬스터전에 {diff} 규칙이 적용됩니다.', en: 'Monster battles use {diff} rules from floor {n}.', zh: '从第{n}层起，怪物战采用{diff}规则。' },
     'cs.back': { ko: '시련의 탑으로', en: 'Back to the Tower', zh: '返回试炼之塔' },
     'cs.last': { ko: '지난 도전: {result} · {sec}초', en: 'Last challenge: {result} · {sec}s', zh: '上次挑战：{result} · {sec}秒' },
     'cs.last.open': { ko: '지난 도전: {result} · {sec}초 · {n}층 열림', en: 'Last challenge: {result} · {sec}s · Floor {n} unlocked', zh: '上次挑战：{result} · {sec}秒 · 已开启第{n}层' },
     'cs.help': {
-        ko: '시련의 탑은 한 층씩 올라가는 탑입니다. 처음엔 첫 층만 열려 있고, 열린 가장 높은 층을 이기면 다음 층이 열립니다. 깬 층은 다시 도전할 수 있고, 져도 잃는 것이 없습니다.<br>층마다 상대 AI 팀이 정해져 있습니다 — 같은 층은 언제 가도 같은 팀입니다. 층 번호가 곧 상대 레벨이고, 위층일수록 장비 · 강화 · 스킬도 오릅니다.',
-        en: 'The Tower of Trials is climbed one floor at a time. Only the first floor is open at the start; beat the highest open floor to unlock the next. You can challenge cleared floors again, and losing costs nothing.<br>Each floor has a fixed AI team — the same floor always fields the same team. The floor number is the enemy level, and higher floors also bring better gear, upgrades and skills.',
-        zh: '试炼之塔需逐层攀登。起初只开放第一层，击败已开放的最高层即可开启下一层。已通关的楼层可以再次挑战，失败也没有任何损失。<br>每层的对手AI队伍都是固定的——同一层无论何时去都是同一支队伍。层数即对手等级，越往上，对手的装备 · 强化 · 技能也越高。',
+        ko: '시련의 탑은 1층부터 시작합니다. 열린 가장 높은 층에서 이기면 다음 층이 열립니다. 패배해도 진행 기록은 유지되며, 깬 층에는 다시 도전할 수 있습니다.<br>층마다 상대가 정해져 있습니다. 정예 무리와 스테이지 보스를 거쳐 라이벌 영웅 파티와 장 보스를 만나며, 층 번호는 적의 기본 레벨입니다.',
+        en: 'Start on the first floor of the Tower of Trials. Win on the highest open floor to unlock the next. You keep your progress after a loss and can replay cleared floors.<br>Each floor has a fixed opponent. You face elite packs and stage bosses, then a rival party and a chapter boss. The floor number sets the enemy base level.',
+        zh: '试炼之塔从第一层开始。击败已开放的最高层即可解锁下一层。挑战失败也会保留进度，已通关的楼层可以再次挑战。<br>每层对手固定。你将先对战精英怪群和关卡首领，再与对手英雄队伍和章节首领交锋。层数决定敌人的基础等级。',
     },
     'nav.arena': { ko: '결투장', en: 'Arena', zh: '决斗场' },
+    'nav.tagMatch': { ko: '콜로세움', en: 'Colosseum', zh: '斗兽场', ja: 'コロッセオ', 'zh-TW': '競技場', es: 'Coliseo', 'pt-BR': 'Coliseu', ru: 'Колизей', de: 'Kolosseum', fr: 'Colisée' },
+    'hint.tagMatch': { ko: '세 파티를 방어 순서대로 등록하세요. 공격할 때는 상대의 진형·리더·스킬·작전 카드를 보고 대진을 정합니다. 두 판을 먼저 이기면 승리하며, 세 판 뒤 양쪽 모두 2승 미만이면 무승부입니다.', en: 'Register three parties in defense order. On attack, inspect enemy ranks, leaders, skills and tactic cards to choose your matchups. Two wins take the series. If neither side reaches two wins in three rounds, the series is drawn.', zh: '按防守顺序登记三支队伍。进攻时查看敌方阵型、队长、技能和战术卡并安排对阵。先胜两局者获胜，三局后双方均未满两胜则平局。', ja: "3つのパーティーを防衛順に登録します。攻撃時は相手の隊列、リーダー、スキル、戦術カードを確認して対戦順を決めます。2勝先取で、3戦で双方2勝未満なら引き分けです。", 'zh-TW': "按防守順序登錄三支隊伍。進攻時查看敵方陣型、隊長、技能與戰術卡，決定對戰順序。先勝兩局者獲勝，三局後雙方皆未滿兩勝則平手。", es: "Registra tres grupos en orden de defensa. Al atacar, consulta las filas, líderes, habilidades y cartas tácticas rivales antes de elegir los cruces. Gana quien consiga dos victorias. Si nadie lo logra en tres rondas, hay empate.", 'pt-BR': "Registre três grupos em ordem de defesa. Ao atacar, confira as fileiras, os líderes, as habilidades e as cartas táticas rivais antes de escolher os confrontos. Vence quem ganhar duas rodadas. Se ninguém conseguir em três, a partida empata.", ru: "Зарегистрируйте три отряда в порядке защиты. В атаке изучите ряды, лидеров, умения и тактические карты соперника, затем расставьте отряды. Побеждает сторона, первой выигравшая два раунда. Иначе после трёх раундов объявляется ничья.", de: "Melde drei Gruppen in Verteidigungsreihenfolge an. Prüfe beim Angriff die Reihen, Anführer, Fähigkeiten und Taktikkarten des Gegners und wähle die Paarungen. Zwei Siege entscheiden das Match. Erreicht niemand zwei Siege in drei Runden, endet es unentschieden.", fr: "Inscrivez trois groupes dans leur ordre de défense. En attaque, examinez les rangs, les chefs, les compétences et les cartes tactiques adverses avant de choisir les duels. Deux victoires assurent la série. Si personne ne les atteint en trois manches, il y a égalité." },
+    'tag.defOrder': { ko: '방어 순서', en: 'Defense order', zh: '防守顺序', ja: "防衛順", 'zh-TW': "防守順序", es: "Orden de defensa", 'pt-BR': "Ordem de defesa", ru: "Порядок защиты", de: "Verteidigungsreihenfolge", fr: "Ordre de défense" },
+    'tag.attackOrder': { ko: '공격 대진', en: 'Attack matchups', zh: '进攻对阵', ja: "攻撃の組み合わせ", 'zh-TW': "進攻對陣", es: "Cruces de ataque", 'pt-BR': "Confrontos de ataque", ru: "Пары атаки", de: "Angriffspaarungen", fr: "Duels en attaque" },
+    'tag.orderSlot': { ko: '{n}세트 출전 파티', en: 'Party for round {n}', zh: '第{n}局出战队伍', ja: "第{n}戦のパーティー", 'zh-TW': "第{n}局出戰隊伍", es: "Grupo para la ronda {n}", 'pt-BR': "Grupo da rodada {n}", ru: "Отряд на раунд {n}", de: "Gruppe für Runde {n}", fr: "Groupe pour la manche {n}" },
+    'tag.round': { ko: '{n}세트', en: 'Round {n}', zh: '第{n}局', ja: "第{n}戦", 'zh-TW': "第{n}局", es: "Ronda {n}", 'pt-BR': "Rodada {n}", ru: "Раунд {n}", de: "Runde {n}", fr: "Manche {n}" },
+    'tag.locked': { ko: '노말 5장을 클리어해 세 번째 편성을 열면 등록할 수 있습니다.', en: 'Clear Normal Chapter 5 to unlock your third party and register.', zh: '通关普通第5章，解锁第三支队伍后即可登记。', ja: "ノーマル第5章をクリアして第3パーティーを解放すると登録できます。", 'zh-TW': "通關普通第5章，解鎖第三支隊伍後即可登錄。", es: "Completa el capítulo 5 en Normal para desbloquear el tercer grupo e inscribirte.", 'pt-BR': "Conclua o capítulo 5 no Normal para liberar o terceiro grupo e se inscrever.", ru: "Пройдите главу 5 на обычной сложности, чтобы открыть третий отряд и зарегистрироваться.", de: "Schließe Kapitel 5 auf Normal ab, um die dritte Gruppe freizuschalten und dich anzumelden.", fr: "Terminez le chapitre 5 en difficulté normale pour débloquer le troisième groupe et vous inscrire." },
+    'tag.needNine': { ko: '편성 I·II·III에 영웅을 세 명씩 배치하세요.', en: 'Assign three heroes to each of parties I, II and III.', zh: '请在编队 I、II、III 中各安排三名英雄。', ja: "パーティーI・II・IIIに3人ずつ編成してください。", 'zh-TW': "請在編隊 I、II、III 中各安排三名英雄。", es: "Asigna tres héroes a cada grupo I, II y III.", 'pt-BR': "Atribua três heróis a cada grupo I, II e III.", ru: "Назначьте по три героя в отряды I, II и III.", de: "Weise den Gruppen I, II und III jeweils drei Helden zu.", fr: "Affectez trois héros à chacun des groupes I, II et III." },
+    'tag.mine': { ko: '내 파티', en: 'My party', zh: '我方队伍', ja: "自分のパーティー", 'zh-TW': "我方隊伍", es: "Mi grupo", 'pt-BR': "Meu grupo", ru: "Мой отряд", de: "Meine Gruppe", fr: "Mon groupe" },
+    'tag.fight': { ko: '태그매치 시작', en: 'Start tag match', zh: '开始团体赛', ja: "タッグマッチ開始", 'zh-TW': "開始團體賽", es: "Iniciar combate por equipos", 'pt-BR': "Iniciar partida em equipes", ru: "Начать командный бой", de: "Teamkampf starten", fr: "Lancer le match par équipes" },
+    'tag.next': { ko: '다음 세트', en: 'Next round', zh: '下一局', ja: "次の対戦", 'zh-TW': "下一局", es: "Siguiente ronda", 'pt-BR': "Próxima rodada", ru: "Следующий раунд", de: "Nächste Runde", fr: "Manche suivante" },
+    'tag.result': { ko: '대결 결과', en: 'Match result', zh: '比赛结果', ja: "対戦結果", 'zh-TW': "比賽結果", es: "Resultado", 'pt-BR': "Resultado", ru: "Итог матча", de: "Matchergebnis", fr: "Résultat du match" },
+    'tag.replay': { ko: '다시 보기', en: 'Replay', zh: '重播', ja: "リプレイ", 'zh-TW': "重播", es: "Ver repetición", 'pt-BR': "Ver replay", ru: "Посмотреть повтор", de: "Wiederholung", fr: "Revoir" },
+    'tag.back': { ko: '대진으로', en: 'Back to matchups', zh: '返回对阵', ja: "対戦表に戻る", 'zh-TW': "返回對陣", es: "Volver a los cruces", 'pt-BR': "Voltar aos confrontos", ru: "К парам", de: "Zurück zu den Paarungen", fr: "Retour aux duels" },
+    'tag.refresh': { ko: '새로고침', en: 'Refresh', zh: '刷新', ja: "更新", 'zh-TW': "重新整理", es: "Actualizar", 'pt-BR': "Atualizar", ru: "Обновить", de: "Aktualisieren", fr: "Actualiser" },
+    'tag.readFail': { ko: '상대 목록을 받지 못했습니다. 새로고침으로 다시 시도하세요.', en: 'Could not load opponents. Refresh to retry.', zh: '未能加载对手，请刷新重试。', ja: "対戦相手を読み込めませんでした。更新して再試行してください。", 'zh-TW': "無法載入對手，請重新整理。", es: "No se han podido cargar los rivales. Actualiza para reintentar.", 'pt-BR': "Falha ao carregar oponentes. Atualize para tentar de novo.", ru: "Не удалось загрузить соперников. Обновите список.", de: "Gegner konnten nicht geladen werden. Bitte aktualisieren.", fr: "Chargement des adversaires impossible. Actualisez pour réessayer." },
+    'tag.writeFail': { ko: '방어 편성을 올리지 못했습니다. 새로고침으로 다시 시도하세요.', en: 'Could not publish your defense. Refresh to retry.', zh: '未能上传防守阵容，请刷新重试。', ja: "防衛編成を公開できませんでした。更新して再試行してください。", 'zh-TW': "無法上傳防守陣容，請重新整理。", es: "No se ha podido publicar la defensa. Actualiza para reintentar.", 'pt-BR': "Falha ao publicar a defesa. Atualize para tentar de novo.", ru: "Не удалось опубликовать защиту. Обновите список.", de: "Verteidigung konnte nicht veröffentlicht werden. Bitte aktualisieren.", fr: "Publication de la défense impossible. Actualisez pour réessayer." },
+    'tag.pending': { ko: '방어 편성 동기화 중', en: 'Syncing defense', zh: '正在同步防守阵容', ja: "防衛編成を同期中", 'zh-TW': "正在同步防守陣容", es: "Sincronizando defensa", 'pt-BR': "Sincronizando defesa", ru: "Синхронизация защиты", de: "Verteidigung wird synchronisiert", fr: "Synchronisation de la défense" },
     // 결투장(탭 id `arena`) = 온라인 ELO [2026-10-18 · ADR-0670 · 이름 2026-11-13 ADR-1071 — ~~오프라인 | 온라인 갈래~~ ADR-0656] — 리그 카드 · 상대 후보 셋 · 친선전 창 · 검사 사유(INTERFACE §2-17 의 코드마다 하나)
     'ar.rating': { ko: '레이팅', en: 'Rating', zh: '积分' },
     'ar.peak': { ko: '최고 {n}', en: 'Best {n}', zh: '最高{n}' },
@@ -931,7 +919,7 @@ const STRINGS = {
     'ar.needTeam': { ko: '영웅 {n}명 편성', en: 'Assign {n} heroes', lock: true, zh: '编入{n}名英雄' },
     'ar.empty': { ko: '빈 자리', en: 'Empty slot', zh: '空位' },
     'ar.noOpponent': { ko: '상대를 고르면 팀이 나타납니다', en: 'Pick an opponent to reveal their team', zh: '选择对手后将显示其队伍' },
-    'ar.noTactic': { ko: '작전 카드 없음', en: 'No tactic cards' },   // 2026-11-26 R586 — 든 카드가 없을 때   // Party 판의 전술 칸이 빌 때 (ADR-0495)
+    'ar.noTactic': { ko: '작전 카드 없음', en: 'No tactic cards', zh: '无战术卡' },   // 2026-11-26 R586 — 든 카드가 없을 때   // Party 판의 전술 칸이 빌 때 (ADR-0495)
     'ar.fight': { ko: '결투 시작', en: 'Start duel', zh: '开始决斗' },
     'ar.back': { ko: '결투장으로', en: 'Back to Arena', zh: '返回决斗场' },
     'ar.draw': { ko: '무승부', en: 'Draw', zh: '平局' },
@@ -966,7 +954,8 @@ const STRINGS = {
     'res.gold': { ko: '골드', en: 'Gold', zh: '金币' },
     'res.dust': { ko: '분해 가루', en: 'Dust', zh: '分解粉尘' },
     'res.stigma': { ko: '낙인', en: 'Stigma', zh: '烙印' },
-    'ui.langBtn': { ko: 'EN', en: '简体中文', zh: '한국어' },   // 버튼에는 누르면 바뀔 다음 언어를 적는다 — 한국어 → English → 简体中文 순환 (ADR-1220)
+    'ui.langBtn': { ko: '언어', en: 'Language', zh: '语言' },
+    'ui.langError': { ko: '언어 파일을 불러올 수 없습니다. 다시 선택해 주세요.', en: 'Unable to load this language. Please select it again.', zh: '无法读取语言文件，请重新选择。' },
     'ui.close': { ko: '닫기', en: 'Close', zh: '关闭' },        // 창 레이어 — 닫는 길 셋 중 눈에 보이는 하나 (SCREEN_DESIGN §2)
     'ui.expTime': { ko: '원정 플레이 시간', en: 'Expedition Playtime', zh: '远征游戏时长' },   // 상단바 ⚙ 왼쪽 — 누적 원정 플레이 시간(배속을 탄다)의 라벨 (SCREEN_DESIGN §2 · ADR-0514)
     /* 창 안에서 답하는 버튼 둘 (2026-09-09) — 어느 창이든 같은 말을 쓴다. 「확인」은 **읽었다/한다**,
@@ -1011,12 +1000,12 @@ const STRINGS = {
     'set.logGrid': { ko: '칸', en: 'Grid', zh: '格' },
     'set.logText': { ko: '문장', en: 'Text', zh: '文字' },
     'set.nick': { ko: '닉네임', en: 'Nickname', zh: '昵称' },
-    'set.acct': { ko: '계정', en: 'Account' },   // 아이디 계정 줄 — 배포 주소에서만 (§2-2 · ADR-1263)
-    'set.acctNew': { ko: '계정 만들기', en: 'Create Account' },
-    'set.acctOut': { ko: '로그아웃', en: 'Log Out' },
-    'set.acctOutConfirm': { ko: '세이브를 지우고 로그아웃 — 한 번 더', en: 'Delete save & log out — click again' },   // 퍼널 페이지가 유저를 알아보는 이름 — 게임 안엔 안 찍힌다 (§2-1 · ADR-0633)
+    'set.acct': { ko: '계정', en: 'Account', zh: '账号' },   // 아이디 계정 줄 — 배포 주소에서만 (§2-2 · ADR-1263)
+    'set.acctNew': { ko: '계정 만들기', en: 'Create Account', zh: '创建账号' },
+    'set.acctOut': { ko: '로그아웃', en: 'Log Out', zh: '退出登录' },
+    'set.acctOutConfirm': { ko: '세이브를 지우고 로그아웃 — 한 번 더', en: 'Delete save & log out — click again', zh: '再次点击以删除存档并退出登录' },   // 퍼널 페이지가 유저를 알아보는 이름 — 게임 안엔 안 찍힌다 (§2-1 · ADR-0633)
     'set.rclickSalvage': { ko: '우클릭 분해', en: 'Right-click Salvage', zh: '右键分解' },
-    'set.mmDim': { ko: '바로가기 어둡게', en: 'Dim on Go To' },   // 첫 장 메인미션 [바로가기]의 탭 단계에서 화면을 어둡게 (2026-11-25 · §2-2 · ADR-1378)   // 켜면 보관 칸 장비 우클릭 = 바로 분해 · 메뉴는 Shift+우클릭 (2026-11-15 · §2-2 · ADR-1188)
+    'set.mmDim': { ko: '바로가기 어둡게', en: 'Dim Mission Background', zh: '使用快捷跳转时调暗背景' },   // 첫 장 메인미션 [바로가기]의 탭 단계에서 화면을 어둡게 (2026-11-25 · §2-2 · ADR-1378)   // 켜면 보관 칸 장비 우클릭 = 바로 분해 · 메뉴는 Shift+우클릭 (2026-11-15 · §2-2 · ADR-1188)
 
     /* ── 연구소 탭(옛 자원 탭 · 키 `dp.*` 는 옛 이름 그대로) — 줄은 넷: 자원 · 수색 · 훈련 · 도박장 (SCREEN_DESIGN §8) ──
        채광 · 채집 · 벌목은 「자원」 줄의 지점이다(`dp.node.mine` · `gather` · `log` — 2026-10-25 · ADR-0788 · R356) · `dp.post.mine` · `gather` · `log` 는 미니게임 창 제목이 쓴다.
@@ -1027,7 +1016,6 @@ const STRINGS = {
        ⚠ **`dp.post.mine` 은 값만 「채광」(활동)으로 바뀌고 키는 옛 장소 id 그대로다** [2026-09-04 사용자 지시] — 지점 id(`lab_material.csv:post`)와 같은 글자다 */
     'dp.post.res': { ko: '자원', en: 'Resources', zh: '资源' },
     'dp.post.trade': { ko: '상단', en: 'Trading House', zh: '商会' },
-    'dp.post.forge': { ko: '대장간', en: 'Blacksmith', zh: '铁匠铺' },
     'dp.post.mine': { ko: '채광', en: 'Mining', zh: '采矿' },
     'dp.post.gather': { ko: '채집', en: 'Gathering', zh: '采集' },
     'dp.post.log': { ko: '벌목', en: 'Logging', zh: '伐木' },
@@ -1080,40 +1068,40 @@ const STRINGS = {
     'dp.node.make': { ko: '제작', en: 'Crafting', zh: '制作' },   // 대장간 줄 — 레어 가중치 (R576 — ~~제작 레벨~~ R565)
     'dp.node.upgrade': { ko: '강화', en: 'Upgrade', zh: '强化' },   // 대장간 줄 — 강화 상한 (R566)
     'dp.node.potion': { ko: '물약', en: 'Potion', zh: '药水' },   // 대장간 줄 — 물약 단계 (R566)
-    'dp.node.enchant': { ko: '인챈트', en: 'Enchant' },   // 대장간 줄 — 인챈트 굴림 바닥 (R576 D13)
-    'dp.node.salvage': { ko: '분해', en: 'Salvage' },   // 대장간 줄 — 분해량 (R576 D13)
+    'dp.node.enchant': { ko: '인챈트', en: 'Enchant', zh: '附魔' },   // 대장간 줄 — 인챈트 굴림 바닥 (R576 D13)
+    'dp.node.salvage': { ko: '분해', en: 'Salvage', zh: '分解' },   // 대장간 줄 — 분해량 (R576 D13)
     'dp.val.upgrade': { ko: '+{n}강', en: '+{n}', zh: '+{n}' },   // 「강화」 지점 값 = 강화 상한 (R566)
     'dp.desc.forge.upgrade': { ko: '장비를 더 높은 단계까지 강화할 수 있습니다.', en: 'Lets gear be upgraded to higher steps.', zh: '装备可以强化到更高阶段。' },
     'dp.desc.forge.potion': { ko: '더 높은 단계의 물약을 만들 수 있습니다.', en: 'Lets the Blacksmith brew higher-tier potions.', zh: '可以制作更高阶的药水。' },
-    'dp.desc.forge.make': { ko: '대장간 줄이 만드는 장비가 레어로 나올 확률이 오릅니다.', en: 'Gear made here is more likely to be Rare.' },   // R576 D5 · D13
-    'dp.desc.forge.enchant': { ko: '인챈트로 붙는 옵션 값이 더 높게 나옵니다.', en: 'Enchanted option values roll higher.' },   // 굴림 바닥이 오른다 · 위 끝 그대로 (R576 D13)
-    'dp.desc.forge.salvage': { ko: '장비를 분해할 때 가루와 재료를 더 얻습니다.', en: 'Salvaging gear yields more dust and materials.' },   // R576 D13
+    'dp.desc.forge.make': { ko: '대장간 줄이 만드는 장비가 레어로 나올 확률이 오릅니다.', en: 'Gear made here is more likely to be Rare.', zh: '提高铁匠铺线制出稀有装备的几率。' },   // R576 D5 · D13
+    'dp.desc.forge.enchant': { ko: '인챈트로 붙는 옵션 값이 더 높게 나옵니다.', en: 'Raises the minimum value of an enchanted option.', zh: '提高附魔词条的数值下限。' },   // 굴림 바닥이 오른다 · 위 끝 그대로 (R576 D13)
+    'dp.desc.forge.salvage': { ko: '장비를 분해할 때 가루와 재료를 더 얻습니다.', en: 'Salvaging gear yields more dust and materials.', zh: '分解装备时可获得更多粉尘和材料。' },   // R576 D13
     'dp.val.slots': { ko: '+{n}칸', en: '+{n}', zh: '+{n}格' },
     'dp.val.range': { ko: '최고 −{n}', en: 'Top −{n}', zh: '最高−{n}' },
     // 레벨 값이 무엇을 미는가 — 레벨 목록 줄 · 「다음 레벨」 값 변화 줄 앞에 선다(「철광석 생산 +10%」 · ADR-1362)
-    'dp.lvVal': { ko: '{what} {v}', en: '{what} {v}' },
-    'dp.col.lv': { ko: '레벨', en: 'Level' },   // 레벨 목록 열 이름 — 레벨 | {무엇} | 상태(`rs.col.state`) (편성 전술 표와 같은 열 이름 줄 · ADR-1362)
-    'dp.col.val': { ko: '값', en: 'Value' },   // 무엇(`dp.what.*`)이 없는 지점의 값 열 이름
-    'dp.what.res.mine': { ko: '철광석 생산', en: 'Iron Ore output' },
-    'dp.what.res.gather': { ko: '약초 생산', en: 'Herb output' },
-    'dp.what.res.log': { ko: '목재 생산', en: 'Timber output' },
-    'dp.what.res.offline': { ko: '오프라인 생산', en: 'Offline production' },
-    'dp.what.res.relief': { ko: '부족 재료 가속', en: 'Low-stock boost' },
-    'dp.what.visit.interval': { ko: '영웅 도착 속도', en: 'Hero arrival speed' },
-    'dp.what.visit.quality': { ko: '레어 확률', en: 'Rare chance' },
-    'dp.what.visit.commission': { ko: '의뢰 카드', en: 'Commission cards' },   // R592
+    'dp.lvVal': { ko: '{what} {v}', en: '{what} {v}', zh: '{what} {v}' },
+    'dp.col.lv': { ko: '레벨', en: 'Level', zh: '等级' },   // 레벨 목록 열 이름 — 레벨 | {무엇} | 상태(`rs.col.state`) (편성 전술 표와 같은 열 이름 줄 · ADR-1362)
+    'dp.col.val': { ko: '값', en: 'Value', zh: '数值' },   // 무엇(`dp.what.*`)이 없는 지점의 값 열 이름
+    'dp.what.res.mine': { ko: '철광석 생산', en: 'Iron Ore output', zh: '铁矿石产量' },
+    'dp.what.res.gather': { ko: '약초 생산', en: 'Herb output', zh: '草药产量' },
+    'dp.what.res.log': { ko: '목재 생산', en: 'Timber output', zh: '木材产量' },
+    'dp.what.res.offline': { ko: '오프라인 생산', en: 'Offline production', zh: '离线产量' },
+    'dp.what.res.relief': { ko: '부족 재료 가속', en: 'Low-stock boost', zh: '短缺材料生产加速' },
+    'dp.what.visit.interval': { ko: '영웅 도착 속도', en: 'Hero arrival speed', zh: '英雄到达速度' },
+    'dp.what.visit.quality': { ko: '레어 확률', en: 'Rare chance', zh: '稀有英雄几率' },
+    'dp.what.visit.commission': { ko: '의뢰 카드', en: 'Commission cards', zh: '委托卡' },   // R592
     'dp.val.cmMult': { ko: '목표 ×{n} · 골드 ×{g}', en: 'Goal ×{n} · Gold ×{g}', zh: '目标×{n} · 金币×{g}' },   // 의뢰 지점 값 = 그 레벨의 배수 (R592 · ADR-1411)
     'dp.need.claims': { ko: '의뢰 완료 {have} / {need}', en: 'Commissions completed {have} / {need}', zh: '已完成委托 {have} / {need}' },   // 의뢰 지점 다음 레벨의 문턱 — 잠긴 자리의 한 토막(「~ 필요」 금지 · ADR-0699 · R592 · ADR-1411)
-    'dp.what.visit.waiting': { ko: '선술집 대기', en: 'Tavern waiting' },
-    'dp.what.train.speed': { ko: '훈련 경험치', en: 'Training XP' },
-    'dp.what.train.range': { ko: '훈련 상한', en: 'Training cap' },
-    'dp.what.gamble.income': { ko: '골드 수익', en: 'Gold income' },
-    'dp.what.gamble.burst': { ko: '대박 확률', en: 'Jackpot chance' },
-    'dp.what.lib.interval': { ko: '스킬 조각 생산', en: 'Skill Shard output' },
-    'dp.what.lib.burst': { ko: '스킬북 확률', en: 'Skill Book chance' },
-    'dp.what.forge.make': { ko: '레어 가중치', en: 'Rare weight' },   // R576 — ~~제작~~
-    'dp.what.forge.enchant': { ko: '인챈트 바닥', en: 'Enchant floor' },
-    'dp.what.forge.salvage': { ko: '분해량', en: 'Salvage yield' },
+    'dp.what.visit.waiting': { ko: '선술집 대기', en: 'Tavern waiting slots', zh: '酒馆等候位' },
+    'dp.what.train.speed': { ko: '훈련 경험치', en: 'Training XP', zh: '训练经验' },
+    'dp.what.train.range': { ko: '훈련 상한', en: 'Training cap', zh: '训练等级上限' },
+    'dp.what.gamble.income': { ko: '골드 수익', en: 'Gold income', zh: '金币收益' },
+    'dp.what.gamble.burst': { ko: '대박 확률', en: 'Jackpot chance', zh: '大丰收几率' },
+    'dp.what.lib.interval': { ko: '스킬 조각 생산', en: 'Skill Shard output', zh: '技能碎片产量' },
+    'dp.what.lib.burst': { ko: '스킬북 확률', en: 'Skill Book chance', zh: '技能书几率' },
+    'dp.what.forge.make': { ko: '레어 가중치', en: 'Rare weight', zh: '稀有装备权重' },   // R576 — ~~제작~~
+    'dp.what.forge.enchant': { ko: '인챈트 바닥', en: 'Minimum enchant value', zh: '附魔数值下限' },
+    'dp.what.forge.salvage': { ko: '분해량', en: 'Salvage yield', zh: '分解产量' },
     'dp.res.go': { ko: '연구', en: 'Research', zh: '研究' },
     'dp.res.cancel': { ko: '그만두기', en: 'Cancel', zh: '中止' },
     'dp.res.time': { ko: '{t} 걸림', en: 'Takes {t}', zh: '耗时{t}' },
@@ -1132,11 +1120,11 @@ const STRINGS = {
     'dp.out.h.train': { ko: '훈련 상한', en: 'Training Cap', zh: '训练上限' },
     'dp.out.h.gamble': { ko: '시간당 생산', en: 'Per Hour', zh: '每小时产量' },
     'dp.out.h.lib': { ko: '시간당 생산', en: 'Per Hour', zh: '每小时产量' },   // R546 — 자원 · 도박장과 같은 소제목
-    'dp.line.desc.forge': { ko: '등록한 영웅이 시간마다 장비 · 물약을 만듭니다', en: 'Assigned heroes make gear and potions every few hours' },   // R574
-    'dp.out.h.forge': { ko: '지금 만드는 것', en: 'In Production' },   // R574 — 장비 칸 · 영웅마다 만드는 것 · 강화 상한 (ADR-1375)
-    'dp.out.slots': { ko: '장비 칸', en: 'Gear slots' },   // 대장간 줄 공용 장비 칸 `n / 칸 수` (R574 D8)
-    'dp.out.upMax': { ko: '강화 상한', en: 'Upgrade cap' },   // 대장간 줄 「지금 만드는 것」 — 강화 상한 (R566)
-    'dp.out.needHero': { ko: '생산하려면 영웅을 등록해야 합니다', en: 'Assign a hero to start production' },   // 영웅이 있어야 도는 줄 — 등록한 영웅이 없을 때 (R574 D16 · ADR-1375)
+    'dp.line.desc.forge': { ko: '등록한 영웅이 시간마다 장비 · 물약을 만듭니다', en: 'Assigned heroes craft gear and brew potions at regular intervals', zh: '派驻的英雄会定时制作装备或药水' },   // R574
+    'dp.out.h.forge': { ko: '지금 만드는 것', en: 'In Production', zh: '正在制作' },   // R574 — 장비 칸 · 영웅마다 만드는 것 · 강화 상한 (ADR-1375)
+    'dp.out.slots': { ko: '장비 칸', en: 'Gear slots', zh: '装备栏位' },   // 대장간 줄 공용 장비 칸 `n / 칸 수` (R574 D8)
+    'dp.out.upMax': { ko: '강화 상한', en: 'Upgrade cap', zh: '强化上限' },   // 대장간 줄 「지금 만드는 것」 — 강화 상한 (R566)
+    'dp.out.needHero': { ko: '생산하려면 영웅을 등록해야 합니다', en: 'Assign a hero to start production', zh: '派驻英雄后即可开始生产' },   // 영웅이 있어야 도는 줄 — 등록한 영웅이 없을 때 (R574 D16 · ADR-1375)
     'fg.needLab': { ko: '{b} · {node} Lv{n}', en: '{b} · {node} Lv{n}', lock: true, zh: '{b} · {node} Lv{n}' },   // 대장간 탭 잠긴 제작 레벨 — 그 레벨을 여는 연구소 지점 레벨 (R565)
     'dp.out.shard': { ko: '스킬 조각', en: 'Skill Shards', zh: '技能碎片' },   // 도서관 줄 「지금 내는 것」 첫 줄 (R546 · ADR-1273)
     'dp.out.bookChance': { ko: '스킬북 확률', en: 'Skill book chance', zh: '技能书几率' },   // 조각 하나마다 등록 영웅 스킬 책 (R546)
@@ -1153,7 +1141,7 @@ const STRINGS = {
     'dp.fx.speed.train': { ko: '경험치', en: 'XP', zh: '经验' },
     'dp.fx.speed.gamble': { ko: '골드', en: 'Gold', zh: '金币' },
     'dp.fx.speed.lib': { ko: '조각 생산 속도', en: 'Shard production speed', zh: '碎片生产速度' },   // R546
-    'dp.fx.speed.forge': { ko: '제작 속도', en: 'Crafting speed' },   // 대장간 줄 — 힘 덤이 영웅마다 간격을 줄인다 (R574 D4)
+    'dp.fx.speed.forge': { ko: '제작 속도', en: 'Crafting speed', zh: '制作速度' },   // 대장간 줄 — 힘 덤이 영웅마다 간격을 줄인다 (R574 D4)
     'dp.fx.burst': { ko: '대박 확률', en: 'Jackpot chance', zh: '大丰收几率' },
     'dp.fx.quality': { ko: '레어 확률', en: 'Rare chance', zh: '稀有几率' },
     'dp.fx.research': { ko: '연구 속도', en: 'Research speed', zh: '研究速度' },
@@ -1178,62 +1166,72 @@ const STRINGS = {
        거절은 `game.exploreErr` 의 결과 코드와 짝 (`ex.err.<code>` — `unbuilt` 는 탐험 건설 한 줄 `flashNeed`) · 규칙 문장은 도움말(`help.explore.*`) · 창엔 설명 글줄이 없다(ADR-0560)
        ~~`ex.take` · `ex.cancel*` · `ex.taken*` · `ex.canceled` · `ex.err.pending` · `busy` · `slots` · `notDone` · `bagFull`~~ 옛 시간제와 함께 걷음 */
     // 지점 이름은 장마다 다르다 — 화면 문구가 아니라 데이터라 `explore_spot.csv` 가 든다 (ADR-0563)
-    'ex.tickets': { ko: '탐험 표', en: 'Tickets' },
-    'ex.noTicket': { ko: '표 없음', en: 'No tickets' },
-    'ex.tk': { ko: '{diff} · {grade}', en: '{diff} · {grade}' },   // 표 한 종류 — 난이도 · 등급(아이템 희귀도 이름)
-    'ex.tkN': { ko: '×{n}', en: '×{n}' },
-    'ex.repeat': { ko: '이어 돌기', en: 'Repeat' },
-    'ex.stopLoss': { ko: '지면 멈춤', en: 'Stop on loss' },
+    'ex.map.cave': { ko: "동굴", en: "Cave", zh: "洞穴" },
+    'ex.map.ruins': { ko: "폐허", en: "Ruins", zh: "废墟" },
+    'ex.map.caravan': { ko: "상단 의뢰", en: "Caravan escort", zh: "商队委托" },
+    'ex.map.chapter': { ko: "{n}장", en: "Ch. {n}", zh: "第{n}章" },
+    'ex.map.special': { ko: "특별 지점 · {name}", en: "Special site · {name}", zh: "特殊地点 · {name}" },
+    'ex.map.refresh': { ko: "다음 갱신까지 {n}분", en: "Next refresh in {n} min", zh: "距下次刷新还有{n}分钟" },
+    'ex.map.bonus.cave': { ko: "숨은 보스 출현 확률 ×{mult}", en: "Hidden boss chance ×{mult}", zh: "隐藏首领出现概率 ×{mult}" },
+    'ex.map.bonus.ruins': { ko: "드문 만남 가중치 ×{mult}", en: "Rare encounter weight ×{mult}", zh: "罕见遭遇权重 ×{mult}" },
+    'ex.map.bonus.caravan': { ko: "가입 희망 확률 ×{mult}", en: "Recruitment chance ×{mult}", zh: "申请加入概率 ×{mult}" },
+    'ex.err.expired': { ko: "특별 지점이 갱신됐습니다", en: "This special site has expired", zh: "特殊地点已刷新" },
+    'ex.tickets': { ko: '탐험권', en: 'Tickets', zh: '探索票券' },
+    'ex.noTicket': { ko: '표 없음', en: 'No tickets', zh: '无票券' },
+    'ex.tk': { ko: '{diff} · {grade}', en: '{diff} · {grade}', zh: '{diff} · {grade}' },   // 표 한 종류 — 난이도 · 등급(아이템 희귀도 이름)
+    'ex.tkN': { ko: '×{n}', en: '×{n}', zh: '×{n}' },
+    'ex.repeat': { ko: '이어 돌기', en: 'Repeat', zh: '连续探索' },
+    'ex.stopLoss': { ko: '지면 멈춤', en: 'Stop on loss', zh: '失败时停止' },
     'ex.go': { ko: '보내기', en: 'Send', zh: '出发' },
     'ex.left': { ko: '남은 시간 {t}', en: '{t} left', zh: '剩余时间{t}' },
-    'ex.step': { ko: '{n} / {total}', en: '{n} / {total}' },
-    'ex.watch': { ko: '보기', en: 'Watch' },
-    'ex.recall': { ko: '부르기', en: 'Call back' },
-    'ex.recallAsk': { ko: '이 파티를 불러들일까요? 모은 것과 탐험 표를 잃습니다.', en: 'Call this party back? The haul and the ticket will be lost.' },
-    'ex.recalled': { ko: '탐험을 불러들였습니다', en: 'Exploration called back' },
+    'ex.step': { ko: '{n} / {total}', en: '{n} / {total}', zh: '{n} / {total}' },
+    'ex.watch': { ko: '보기', en: 'Watch', zh: '观战' },
+    'ex.recall': { ko: '부르기', en: 'Call back', zh: '召回' },
+    'ex.recallAsk': { ko: '이 파티를 불러들일까요? 모은 것과 탐험권를 잃습니다.', en: 'Call this party back? The haul and the ticket will be lost.', zh: '要召回这支编队吗？已收集的战利品和探索票券都会损失。' },
+    'ex.recalled': { ko: '탐험을 불러들였습니다', en: 'Exploration called back', zh: '已召回探索编队' },
     'ex.sent': { ko: '{spot} 탐험 출발', en: 'Off to the {spot}', zh: '出发探索{spot}' },
     // 판이 끝났다 — 오른쪽 아래 알림(ADR-0692 · ADR-1404) · 부름은 유저가 누른 일이라 안 띄운다
-    'ex.end.won': { ko: '{spot} 완수', en: '{spot} completed' },
-    'ex.end.lost': { ko: '{spot} 실패', en: '{spot} failed' },
+    'ex.end.won': { ko: '{spot} 완수', en: '{spot} completed', zh: '已完成{spot}' },
+    'ex.end.lost': { ko: '{spot} 실패', en: '{spot} failed', zh: '{spot}探索失败' },
     // 결과 — 지점 창 결과 줄 · 결과 카드 (ADR-1404)
-    'ex.res.won': { ko: '완수', en: 'Completed' },
-    'ex.res.lost': { ko: '실패', en: 'Failed' },
-    'ex.res.recalled': { ko: '부름', en: 'Called back' },
-    'ex.res.open': { ko: '결과 보기', en: 'View result' },
-    'ex.res.got': { ko: '받은 것', en: 'Received' },
-    'ex.res.lostAll': { ko: '모은 것과 탐험 표를 잃었습니다', en: 'The haul and the ticket were lost' },
-    'ex.res.thanks': { ko: '감사인사', en: 'Thanks' },
-    'ex.res.join': { ko: '가입 희망', en: 'Wants to join' },
-    'ex.res.joinFull': { ko: '자리 없음', en: 'No room' },
+    'ex.res.won': { ko: '완수', en: 'Completed', zh: '已完成' },
+    'ex.res.lost': { ko: '실패', en: 'Failed', zh: '失败' },
+    'ex.res.recalled': { ko: '부름', en: 'Called back', zh: '已召回' },
+    'ex.res.open': { ko: '결과 보기', en: 'View result', zh: '查看结果' },
+    'ex.res.got': { ko: '받은 것', en: 'Received', zh: '获得物品' },
+    'ex.res.lostAll': { ko: '모은 것과 탐험권를 잃었습니다', en: 'The haul and the ticket were lost', zh: '已损失收集的战利品和探索票券' },
+    'ex.res.thanks': { ko: '감사인사', en: 'Thanks', zh: '致谢' },
+    'ex.res.join': { ko: '가입 희망', en: 'Wants to join', zh: '申请加入' },
+    'ex.res.joinFull': { ko: '자리 없음', en: 'No room', zh: '无空位' },
     // 관전 — 지도 · 정보 카드 · 전투 머리 (ADR-1401 ~ ADR-1403)
-    'ex.w.back': { ko: '탐험 지도', en: 'World map' },
-    'ex.w.toMap': { ko: '지도로', en: 'Back to map' },
-    'ex.w.raids': { ko: '습격', en: 'Raids' },
-    'ex.w.events': { ko: '이벤트', en: 'Events' },
-    'ex.w.fights': { ko: '전투', en: 'Fights' },
-    'ex.w.leftH': { ko: '남은 시간', en: 'Time left' },
-    'ex.w.bank': { ko: '모은 것', en: 'Haul' },
-    'ex.w.bankV': { ko: '골드 {g} · 장비 {i} · 책 {b} · 카드 {c}', en: 'Gold {g} · Gear {i} · Books {b} · Cards {c}' },
-    'ex.w.ambush': { ko: '습격!', en: 'Ambush!' },
-    'ex.w.raidN': { ko: '습격 {n} / {total}', en: 'Raid {n} / {total}' },
-    'ex.w.cell': { ko: '{spot} — {cell}', en: '{spot} — {cell}' },
-    'ex.w.elite': { ko: '정예', en: 'Elite' },
-    'ex.w.unknown': { ko: '???', en: '???' },
-    'ex.w.next': { ko: '다음 전투까지 {t}', en: 'Next fight in {t}' },
-    'ex.w.waitEnd': { ko: '판이 끝날 때까지 {t}', en: 'Run ends in {t}' },   // 기다림 — 다시 켰을 때 결과를 계산해 둔 판 (11-26 「끝 시각 유지」)
-    'ex.w.ev.monster': { ko: '몬스터', en: 'Monsters' },
-    'ex.w.ev.trap': { ko: '함정', en: 'Trap' },
-    'ex.w.ev.rare': { ko: '드문 만남', en: 'Rare encounter' },
-    'ex.w.ev.item': { ko: '물건', en: 'A find' },
-    'ex.w.ev.empty': { ko: '빈 방', en: 'Empty room' },
-    'ex.err.missing': { ko: '없는 표', en: 'No such ticket' },
-    'ex.err.noTicket': { ko: '표 없음', en: 'No tickets left' },
+    'ex.w.back': { ko: '탐험 지도', en: 'Exploration Map', zh: '探索地图' },
+    'ex.w.toMap': { ko: '지도로', en: 'Back to map', zh: '返回地图' },
+    'ex.w.raids': { ko: '습격', en: 'Ambushes', zh: '伏击' },
+    'ex.w.events': { ko: '이벤트', en: 'Events', zh: '事件' },
+    'ex.w.fights': { ko: '전투', en: 'Fights', zh: '战斗' },
+    'ex.w.leftH': { ko: '남은 시간', en: 'Time left', zh: '剩余时间' },
+    'ex.w.bank': { ko: '모은 것', en: 'Haul', zh: '已收集的战利品' },
+    'ex.w.bankV': { ko: '골드 {g} · 장비 {i} · 책 {b} · 카드 {c}', en: 'Gold {g} · Gear {i} · Books {b} · Cards {c}', zh: '金币 {g} · 装备 {i} · 技能书 {b} · 卡牌 {c}' },
+    'ex.w.ambush': { ko: '습격!', en: 'Ambush!', zh: '遭遇伏击！' },
+    'ex.w.raidN': { ko: '습격 {n} / {total}', en: 'Ambush {n} / {total}', zh: '伏击 {n} / {total}' },
+    'ex.w.cell': { ko: '{spot} — {cell}', en: '{spot} — {cell}', zh: '{spot} — {cell}' },
+    'ex.w.elite': { ko: '정예', en: 'Elite', zh: '精英' },
+    'ex.w.unknown': { ko: '???', en: '???', zh: '???' },
+    'ex.w.next': { ko: '다음 전투까지 {t}', en: 'Next fight in {t}', zh: '距下场战斗还有 {t}' },
+    'ex.w.waitEnd': { ko: '판이 끝날 때까지 {t}', en: 'Run ends in {t}', zh: '距探索结束还有 {t}' },   // 기다림 — 다시 켰을 때 결과를 계산해 둔 판 (11-26 「끝 시각 유지」)
+    'ex.w.ev.monster': { ko: '몬스터', en: 'Monsters', zh: '怪物' },
+    'ex.w.ev.trap': { ko: '함정', en: 'Trap', zh: '陷阱' },
+    'ex.w.ev.rare': { ko: '드문 만남', en: 'Rare encounter', zh: '罕见遭遇' },
+    'ex.w.ev.item': { ko: '물건', en: 'A find', zh: '发现物品' },
+    'ex.w.ev.empty': { ko: '빈 방', en: 'Empty room', zh: '空房间' },
+    'ex.err.missing': { ko: '없는 표', en: 'No such ticket', zh: '找不到这张票券' },
+    'ex.err.noTicket': { ko: '표 없음', en: 'No tickets left', zh: '探索票券已用完' },
     // 편성 쪽 거절 — 탐험은 편성으로 보낸다 (2026-10-10 · ADR-0582) · `full` = 원정 + 탐험이 편성 수만큼 나가 있다 (R590 D14)
     'ex.err.noParty': { ko: '빈 편성', en: 'That party is empty', zh: '空编队' },
     'ex.err.running': { ko: '원정 철수', en: 'Retreat from the expedition', lock: true, zh: '从远征撤退' },
     'ex.err.exploring': { ko: '이미 탐험 중', en: 'Already out exploring', zh: '已在探索中' },
     'ex.err.advancing': { ko: '전직 중인 영웅 있음', en: 'Someone in it is advancing', zh: '有英雄正在转职' },
-    'ex.err.full': { ko: '나갈 수 있는 부대가 모두 나가 있습니다', en: 'Every party slot is already out' },
+    'ex.err.full': { ko: '나갈 수 있는 부대가 모두 나가 있습니다', en: 'All available parties are already deployed', zh: '可派出的编队都已出发' },
     'ex.err.none': { ko: '나간 탐험 없음', en: 'Nobody is out there', zh: '没有外出的探索' },
     'dp.party': { ko: '파티', en: 'Party', zh: '队伍' },
     // 단계 트랙은 머리 줄이 없다 [2026-09-21 사용자 지시 · ADR-0228] — 개수는 상자의 순서 번호가 말한다.
@@ -1429,23 +1427,23 @@ const STRINGS = {
     'fg.synthed': { ko: '합성 — {name} ×{n}', en: 'Combined — {name} ×{n}', zh: '已合成——{name} ×{n}' },
     // 합성 · 인챈트 · 담금질 거절 — 결과 코드와 짝(`fg.err.<코드>` · `flashErr`)
     'fg.err.materials': { ko: '재료 부족', en: 'Not enough materials', zh: '材料不足' },
-    'fg.err.missing': { ko: '없는 장비 · 재료', en: 'Unknown item or material' },
+    'fg.err.missing': { ko: '없는 장비 · 재료', en: 'Unknown item or material', zh: '找不到这件装备或材料' },
     'fg.err.gold': { ko: '골드 부족', en: 'Not enough gold', zh: '金币不足' },
 
     /* ── 연구소 「대장간」 줄 등록 창 — 제작 줄 · 장비 칸 · 창고 판 (SCREEN_DESIGN §8 · ADR-1373 · R574) ── */
-    'lf.h.make': { ko: '제작', en: 'Crafting' },
-    'lf.h.slots': { ko: '장비 칸 {n} / {cap}', en: 'Gear Slots {n} / {cap}' },
-    'lf.h.stash': { ko: '창고 {n} / {cap}', en: 'Stash {n} / {cap}' },
-    'lf.take': { ko: '창고로', en: 'To Stash' },
-    'lf.takeAll': { ko: '모두 창고로', en: 'All to Stash' },
-    'lf.salvage': { ko: '분해', en: 'Salvage' },
-    'lf.rest.full': { ko: '칸 가득 참', en: 'Slots full' },
-    'lf.rest.gold': { ko: '골드 부족', en: 'Not enough gold' },
-    'lf.rest.materials': { ko: '재료 부족', en: 'Not enough materials' },
-    'lf.rest.none': { ko: '목표 없음', en: 'No target' },
-    'lf.every': { ko: '{h}시간마다', en: 'Every {h}h' },
-    'lf.gear': { ko: '장비', en: 'Gear' },   // 재접속 알림 「장비 +n」 — 대장간 줄이 칸에 넣은 수 (ADR-1296 · R574)
-    'lf.err.notRegistered': { ko: '대장간 줄에 등록 안 된 영웅', en: 'Hero is not assigned to the Blacksmith' },
+    'lf.h.make': { ko: '제작', en: 'Crafting', zh: '制作' },
+    'lf.h.slots': { ko: '장비 칸 {n} / {cap}', en: 'Gear Slots {n} / {cap}', zh: '装备栏位 {n} / {cap}' },
+    'lf.h.stash': { ko: '창고 {n} / {cap}', en: 'Stash {n} / {cap}', zh: '仓库 {n} / {cap}' },
+    'lf.take': { ko: '창고로', en: 'To Stash', zh: '移入仓库' },
+    'lf.takeAll': { ko: '모두 창고로', en: 'All to Stash', zh: '全部移入仓库' },
+    'lf.salvage': { ko: '분해', en: 'Salvage', zh: '分解' },
+    'lf.rest.full': { ko: '칸 가득 참', en: 'Slots full', zh: '栏位已满' },
+    'lf.rest.gold': { ko: '골드 부족', en: 'Not enough gold', zh: '金币不足' },
+    'lf.rest.materials': { ko: '재료 부족', en: 'Not enough materials', zh: '材料不足' },
+    'lf.rest.none': { ko: '목표 없음', en: 'No target', zh: '尚未选择制作目标' },
+    'lf.every': { ko: '{h}시간마다', en: 'Every {h}h', zh: '每 {h} 小时' },
+    'lf.gear': { ko: '장비', en: 'Gear', zh: '装备' },   // 재접속 알림 「장비 +n」 — 대장간 줄이 칸에 넣은 수 (ADR-1296 · R574)
+    'lf.err.notRegistered': { ko: '대장간 줄에 등록 안 된 영웅', en: 'Hero is not assigned to the Blacksmith', zh: '该英雄未派驻到铁匠铺线' },
 
     /* ── 도움말 탭 (2026-08-26 · 전면 정리 2026-10-29) ──
        현재 탭의 조작법과 규칙은 help.<tab>.<topic>에 한/영으로 둔다 (ADR-0946).
@@ -1472,9 +1470,9 @@ const STRINGS = {
         zh: '新手入门顺序',
     },
     'help.expedition.first_steps.body': {
-        ko: "목표는 좋은 영웅과 장비를 모아 파티를 키우고 챕터를 진행하는 것입니다. 전투는 자동으로 진행되며, 누구를 데려가고 어떤 장비·스킬·전술을 줄지 준비하는 것이 플레이의 중심입니다.<br><br>새 게임에서 시작 영웅을 확정했다면 왼쪽 <b>[원정]</b> 탭에서 스테이지 목록을 열고 첫 스테이지를 골라 <b>[보내기]</b>로 시작합니다. 인원과 진형은 편성에서, 장비와 마스터리는 캐릭터에서 조정합니다. 전투를 계속 보고 있지 않아도 게임이 켜져 있는 동안 원정은 진행됩니다.<br><br>장비를 얻으면 캐릭터에서 착용품과 비교하고, 다음 스테이지에 도전합니다. 막히면 이미 깬 곳을 돌아 장비·경험치·재료를 모으고, 선술집의 영웅 고용이나 대장간의 제작·강화를 함께 살펴봅니다. 기능이 잠겨 있으면 건설에서 다음 해금 조건을 확인합니다. 여러 곳에서 얻은 성장을 모아 막혔던 스테이지를 넘는 흐름입니다.",
-        en: "Your goal is to collect good heroes and equipment, improve the party and progress through chapters. Combat runs automatically. Your main decisions are who to bring and which gear, skills and tactics to give them.<br><br>After confirming your starting heroes, open <b>Expedition</b> in the left navigation, choose the first stage from its list and press <b>Deploy</b>. Adjust members and formation in Party, and equipment and mastery in Character. Expeditions continue while the game is open even when you are not watching.<br><br>Compare newly found gear with equipped items in Character, then try the next stage. When progress slows, revisit cleared areas for equipment, XP and materials, and consider Tavern recruits or Blacksmith crafting and upgrades. Check Construction for the next unlock when a feature is locked. Use progress gained in one activity to try the next stage again.",
-        zh: '目标是收集优秀的英雄与装备、培养队伍并推进章节。战斗自动进行，玩法的核心在于准备：带谁出战，给他们什么装备、技能与战术。<br><br>在新游戏中确定初始英雄后，从左侧<b>[远征]</b>标签页打开关卡列表，选择第一个关卡，按<b>[派遣]</b>开始。成员与阵型在编队页调整，装备与专精在角色页调整。即使不一直观看战斗，只要游戏开着，远征就会继续进行。<br><br>获得装备后，在角色页中与已穿戴的装备比较，然后挑战下一个关卡。卡关时，可以回到已通关的地方收集装备、经验与材料，同时看看酒馆的英雄雇佣和铁匠铺的制作、强化。功能未解锁时，在建设页查看下一个解锁条件。整体流程就是把从各处获得的成长汇集起来，突破卡住的关卡。',
+        ko: "시작 영웅을 확정하면 상단 두루마리 아래에 메인미션 팻말이 뜹니다. 팻말을 눌러 안내 테두리를 따라가세요. 원정에서 첫 스테이지를 골라 [보내기], 건설에서 창고 짓기, 연구소 자원 줄에 영웅을 등록하기까지 차례로 안내합니다. 완료 판의 [받기]를 누르면 그 자리에서 보상을 받고 다음 안내를 볼 수 있습니다.<br><br>원정 전투는 자동으로 진행됩니다. 편성에서 인원·진형·물약·작전 카드를 준비하고, 캐릭터에서 장비와 마스터리를 바꿉니다. 다음 스테이지가 어렵다면 이미 깬 장소를 반복 원정해 장비·경험치를 모으고, 연구소 생산과 선술집 의뢰로 건설·강화에 쓸 재료와 골드를 마련합니다.",
+        en: "Once you confirm your starting heroes, a Main Mission sign appears under the scroll at the top. Select the sign and follow the highlight. It guides you through sending a party to the first Expedition stage, building Storage, and assigning a hero to the Resources line in the Laboratory. Select [Claim] on the completion card to collect the reward and see the next step.<br><br>Expedition combat is automatic. Set up heroes, formation, potions and Tactic Cards in Party, then manage gear and masteries in Character. If the next stage is tough, repeat an area you have cleared for gear and XP. Laboratory production and Tavern commissions provide materials and gold for construction and upgrades.",
+        zh: "确认初始英雄后，顶部卷轴下会出现主线任务提示牌。点击提示牌并跟随高亮指引，依次派队前往远征的第一个关卡、建造仓库，再向研究所的资源线派驻英雄。点击完成卡上的【领取】，即可当场领取奖励并查看下一步。<br><br>远征战斗自动进行。在编队中设置英雄、阵型、药水和战术卡，在角色页调整装备和专精。如果下一关过不去，可以重复远征已通关的地点来积累装备和经验，再通过研究所生产与酒馆委托筹集建造和强化所需的材料及金币。",
     },
     'help.expedition.start.title': {
         ko: "출발과 부대",
@@ -1483,7 +1481,7 @@ const STRINGS = {
     },
     'help.expedition.start.body': {
         ko: "왼쪽 <b>[원정]</b> 탭에서 스테이지 목록을 열고 난이도·챕터·열린 스테이지를 고릅니다. 출정 창에서 적 구성과 보상을 확인하고, 편성을 고른 뒤 <b>[보내기]</b>로 출발합니다. 인원·진형·물약·전술은 편성 탭에서 준비합니다.<br><br>한 파티에는 최대 {party}명이 들어가며, 현재 동시에 원정을 보낼 수 있는 부대는 {expeditions}개입니다. 같은 영웅을 여러 부대에 동시에 보낼 수 없습니다.",
-        en: "Open the stage list with <b>Expedition</b> in the left navigation, then choose a difficulty, chapter and unlocked stage. Inspect enemies and rewards in the departure window, choose a Party preset and press <b>Deploy</b>. Prepare members, formation, potions and tactics in Party.<br><br>Each party holds up to <b>{party}</b> heroes, and the current simultaneous expedition limit is <b>{expeditions}</b>. A hero cannot join multiple active expeditions.",
+        en: "Open the stage list with <b>Expedition</b> in the left navigation, then choose a difficulty, chapter and unlocked stage. Inspect enemies and rewards in the departure window, choose a Party preset and press <b>Deploy</b>. Prepare members, formation, potions and tactics in Party.<br><br>Each party holds up to {party} heroes. You can send {expeditions} parties on expeditions at once. A hero cannot join multiple active expeditions.",
         zh: '在左侧<b>[远征]</b>标签页打开关卡列表，选择难度、章与已开放的关卡。在出征窗口中确认敌人构成与奖励，选择编队后按<b>[派遣]</b>出发。成员、阵型、药水与战术在编队标签页中准备。<br><br>一支队伍最多容纳{party}名英雄，目前可同时派出远征的小队为{expeditions}个。同一名英雄不能同时派往多个小队。',
     },
     'help.expedition.rounds.title': {
@@ -1492,9 +1490,9 @@ const STRINGS = {
         zh: '回合与一次远征',
     },
     'help.expedition.rounds.body': {
-        ko: "한 스테이지를 시작해서 끝낼 때까지가 한 번의 원정이며, 그 안에서 적 무리와 싸우는 단위가 라운드입니다. 라운드를 이기면 그 라운드의 보상을 받고 다음 무리와 싸웁니다. 모든 라운드를 이겨야 스테이지가 클리어됩니다.<br><br>철수·패배·게임 종료 뒤에도 아직 이기지 못한 라운드의 적과 장비는 다시 만납니다. 이미 이긴 라운드는 다음 출발에 새 무리로 바뀝니다. 여러 부대가 같은 스테이지에 가면 서로 다른 무리를 맡고, 미완료 무리는 다음 부대에게 돌아갑니다. 파티 매직아이템 획득확률를 높이면 같은 적의 장비 희귀도가 좋아질 수 있습니다.<br><br>다음 라운드로 넘어가도 깎인 HP가 저절로 가득 차지는 않습니다. 쓰러진 영웅도 그 원정에서는 계속 빠져 있으므로, 앞 라운드를 이겼어도 뒤 라운드에서 파티가 무너질 수 있습니다. 회복·보호·적을 빨리 처치하는 힘을 함께 살펴보는 이유입니다.<br><br>라운드 보상으로 레벨이 오른 영웅은 다음 라운드를 최대 HP로 시작합니다. 원정 자체가 끝나면 승패와 관계없이 모두 회복하며, 다음 원정에는 다시 전원이 출발합니다.",
+        ko: "한 스테이지를 시작해서 끝낼 때까지가 한 번의 원정이며, 그 안에서 적 무리와 싸우는 단위가 라운드입니다. 라운드를 이기면 그 라운드의 보상을 받고 다음 무리와 싸웁니다. 모든 라운드를 이겨야 스테이지가 클리어됩니다.<br><br>철수·패배·게임 종료 뒤에도 아직 이기지 못한 라운드의 적과 장비는 다시 만납니다. 이미 이긴 라운드는 다음 출발에 새 무리로 바뀝니다. 여러 부대가 같은 스테이지에 가면 서로 다른 무리를 맡고, 미완료 무리는 다음 부대에게 돌아갑니다. 파티 매직아이템 획득확률을 높이면 같은 적의 장비 희귀도가 좋아질 수 있습니다.<br><br>다음 라운드로 넘어가도 깎인 HP가 저절로 가득 차지는 않습니다. 쓰러진 영웅도 그 원정에서는 계속 빠져 있으므로, 앞 라운드를 이겼어도 뒤 라운드에서 파티가 무너질 수 있습니다. 회복·보호·적을 빨리 처치하는 힘을 함께 살펴보는 이유입니다.<br><br>라운드 보상으로 레벨이 오른 영웅은 다음 라운드를 최대 HP로 시작합니다. 원정 자체가 끝나면 승패와 관계없이 모두 회복하며, 다음 원정에는 다시 전원이 출발합니다.",
         en: "A run lasts from entering a stage until that attempt ends. Each fight against a group of enemies is a round. Winning a round grants its rewards and moves on to the next group. Win every round to clear the stage.<br><br>After retreat, defeat or closing the game, unfinished rounds keep their enemies and equipment. Rounds already won bring new groups on the next departure. Multiple parties take different groups at the same stage, and unfinished groups return for the next party. Raising Party Magic Find can improve the same enemies' equipment rarity.<br><br>Lost HP does not automatically refill between rounds. Fallen heroes stay out for the rest of that run, so a party that wins early rounds can still fall apart later. This is why healing, protection and killing enemies quickly all matter.<br><br>A hero who levels up from a round's rewards starts the next round at full HP. When the run itself ends, everyone recovers regardless of the result and can join the next departure.",
-        zh: '从开始一个关卡到结束为止是一次远征，其中与一群敌人战斗的单位是回合。赢下一个回合即可获得该回合的奖励，并继续与下一群敌人战斗。必须赢下所有回合才算通关该关卡。<br><br>撤退、战败或关闭游戏后，尚未赢下的回合中的敌人与装备不会改变，下次还会遇到。已赢下的回合在下次出发时会换成新的敌群。多个小队前往同一关卡时会各自负责不同的敌群，未完成的敌群会留给下一个小队。提高队伍魔法物品获取率，同一批敌人的装备稀有度可能会变好。<br><br>进入下一回合时，损失的生命不会自动回满。倒下的英雄在该次远征中也会一直缺席，因此即使赢下了前面的回合，队伍也可能在后面的回合崩溃。这就是要同时关注治疗、保护与快速击杀敌人能力的原因。<br><br>因回合奖励而升级的英雄会以最大生命开始下一回合。远征本身结束后，无论胜负全员都会恢复，下次远征时全员再次出发。',
+        zh: "从开始一个关卡到结束为止是一次远征，其中与一群敌人战斗的单位是回合。赢下一个回合即可获得该回合的奖励，并继续与下一群敌人战斗。必须赢下所有回合才算通关该关卡。<br><br>撤退、战败或关闭游戏后，尚未赢下的回合中的敌人与装备不会改变，下次还会遇到。已赢下的回合在下次出发时会换成新的敌群。多个小队前往同一关卡时会各自负责不同的敌群，未完成的敌群会留给下一个小队。提高队伍魔法物品获取率，同一批敌人的装备稀有度可能会变好。<br><br>进入下一回合时，损失的生命不会自动回满。倒下的英雄在该次远征中也会一直缺席，因此即使赢下了前面的回合，队伍也可能在后面的回合崩溃。这就是要同时关注治疗、保护与快速击杀敌人能力的原因。<br><br>因回合奖励而升级的英雄会以最大生命开始下一回合。远征本身结束后，无论胜负全员都会恢复，下次远征时全员再次出发。",
     },
     'help.expedition.stages.title': {
         ko: "스테이지와 난이도",
@@ -1552,19 +1550,19 @@ const STRINGS = {
         zh: '奖励、报告与恢复',
     },
     'help.expedition.rewards.body': {
-        ko: "이긴 라운드의 장비와 보상은 해당 부대의 인벤토리·재고에 들어옵니다. 인벤토리가 가득 차면 넘친 장비는 가루와 부위 재료로 분해됩니다. 자동 분해에서 보존하도록 정한 장비도 공간 부족으로 넘치면 분해될 수 있으므로 빈 칸을 확보합니다.<br><br><b>[Report]</b>는 왼쪽 원정 탭의 스테이지 목록 오른쪽 위에서 엽니다. 원정 기록, 획득 아이템, 영웅별 가한 피해·받은 피해·처치와 쓰러짐을 확인할 수 있습니다. 철수하거나 패배해도 이미 이긴 라운드의 보상은 남고, 끝내지 못한 라운드에서는 보상을 받지 못합니다.<br><br>원정이 끝나면 HP와 전투불능이 무료로 즉시 회복됩니다. 챕터보스를 쓰러뜨린 뒤에는 재등장 대기시간이 있으며, 그동안 같은 난이도의 해당 보스에게는 어느 부대도 다시 출발할 수 없습니다. 첫 클리어 상자는 일반 처치 보상과 다른 별도 보상입니다.",
-        en: "Rewards from won rounds enter that party's inventory and your stock. When its inventory is full, overflow gear is salvaged into dust and slot materials. Overflow can consume gear marked to keep by auto-salvage rules, so leave free slots.<br><br>Open <b>Report</b> at the top right of the stage list in Expedition. It shows run history, loot, and each hero's damage dealt, damage taken, kills and falls. Retreating or losing keeps rewards from rounds already won; unfinished rounds grant no rewards.<br><br>At the end of a run, lost HP and fallen heroes recover immediately for free. A defeated chapter boss has a respawn wait. No party can enter that boss stage on the same difficulty until it returns. First-clear chests are separate from ordinary kill rewards.",
-        zh: '已赢回合的装备与奖励会进入该小队的背包与库存。背包满后，溢出的装备会被分解为粉尘与部位材料。即使是在自动分解中设为保留的装备，也可能因空间不足溢出而被分解，所以要留出空格。<br><br><b>[报告]</b>在左侧远征标签页关卡列表的右上角打开。可以查看远征记录、获得的物品，以及每名英雄造成的伤害、受到的伤害、击杀与倒下。即使撤退或战败，已赢回合的奖励也会保留；未完成的回合则得不到奖励。<br><br>远征结束后，生命与倒下状态会立即免费恢复。击败章节首领后会有重生等待时间，在此期间，任何小队都无法再次出发挑战同一难度的该首领。首通宝箱是独立于普通击杀奖励的额外奖励。',
+        ko: "이긴 라운드의 장비와 보상은 해당 부대의 인벤토리·재고에 들어옵니다. 인벤토리가 가득 차면 넘친 장비는 가루와 부위 재료로 분해됩니다. 자동 분해에서 보존하도록 정한 장비도 공간 부족으로 넘치면 분해될 수 있으므로 빈 칸을 확보합니다. 처치 골드는 원정 전체의 합을 기준으로 반올림하며, 이긴 라운드마다 이번 라운드에서 늘어난 몫을 받습니다.<br><br><b>[Report]</b>는 왼쪽 원정 탭의 스테이지 목록 오른쪽 위에서 엽니다. 원정 기록, 획득 아이템, 영웅별 가한 피해·받은 피해·처치와 쓰러짐을 확인할 수 있습니다. 철수하거나 패배해도 이미 이긴 라운드의 보상은 남고, 끝내지 못한 라운드에서는 보상을 받지 못합니다.<br><br>원정이 끝나면 HP와 전투불능이 무료로 즉시 회복됩니다. 챕터보스를 쓰러뜨린 뒤에는 재등장 대기시간이 있으며, 그동안 같은 난이도의 해당 보스에게는 어느 부대도 다시 출발할 수 없습니다. 첫 클리어 상자는 일반 처치 보상과 다른 별도 보상입니다.",
+        en: "Rewards from won rounds enter that party's inventory and your stock. When its inventory is full, overflow gear is salvaged into dust and slot materials. Overflow can consume gear marked to keep by auto-salvage rules, so leave free slots. Kill gold is rounded across the whole Expedition, and each won round pays its share.<br><br>Open <b>Report</b> at the top right of the stage list in Expedition. It shows run history, loot, and each hero's damage dealt, damage taken, kills and falls. Retreating or losing keeps rewards from rounds already won; unfinished rounds grant no rewards.<br><br>At the end of a run, lost HP and fallen heroes recover immediately for free. A defeated chapter boss has a respawn wait. No party can enter that boss stage on the same difficulty until it returns. First-clear chests are separate from ordinary kill rewards.",
+        zh: "已赢回合的装备与奖励会进入该小队的背包与库存。背包满后，溢出的装备会被分解为粉尘与部位材料。即使是在自动分解中设为保留的装备，也可能因空间不足溢出而被分解，所以要留出空格。 击杀金币按整趟远征的累计总额四舍五入，每个获胜回合发放该回合新增的金币。<br><br><b>[报告]</b>在左侧远征标签页关卡列表的右上角打开。可以查看远征记录、获得的物品，以及每名英雄造成的伤害、受到的伤害、击杀与倒下。即使撤退或战败，已赢回合的奖励也会保留；未完成的回合则得不到奖励。<br><br>远征结束后，生命与倒下状态会立即免费恢复。击败章节首领后会有重生等待时间，在此期间，任何小队都无法再次出发挑战同一难度的该首领。首通宝箱是独立于普通击杀奖励的额外奖励。",
     },
     'help.expedition.firstclear.title': {
-        ko: "메인미션과 상자",
-        en: "Main missions and chests",
-        zh: '主线任务与宝箱',
+        ko: "메인미션과 첫 클리어 상자",
+        en: "Main Missions and first-clear chests",
+        zh: "主线任务与首通宝箱",
     },
     'help.expedition.firstclear.body': {
-        ko: "상단바 골드 오른쪽의 두루마리가 메인미션입니다. 노말 5챕터 보스를 깰 때까지 다음에 노릴 목표를 하나씩 보여 주고, 채운 미션은 순서와 상관없이 판에서 보상을 받습니다. 미션이 기능이나 챕터를 열지는 않습니다 — 여는 것은 지금처럼 건설과 보스입니다.<br><br>장소마다 보스를 처음 깨는 미션은 상자를 줍니다. 상자는 창고에 들어가고, 창고가 차 있으면 우편함으로 갑니다. 상자는 보관 칸을 우클릭해 [사용]하면 보고 있는 영웅에게 맞는 장비 하나가 그 영웅의 레벨로 나옵니다. 보스 스테이지를 처음 클리어해도 상자를 따로 주지는 않습니다.",
-        en: "The scroll to the right of your gold is the main mission list. Until you beat the Normal Chapter 5 boss it shows the next goal one at a time, and you can claim any completed mission's reward from the panel in any order. Missions do not unlock features or chapters — construction and bosses still do that.<br><br>Missions for defeating each area's boss for the first time give a chest. Chests go to the stash, or to the mailbox if the stash is full. Right-click a chest and choose [Use] to get one piece of gear that fits the hero you are viewing, at that hero's level. Clearing a boss stage for the first time no longer grants a separate chest.",
-        zh: '顶栏金币右侧的卷轴就是主线任务。在击败普通难度第5章首领之前，它会逐个显示下一个目标，已完成的任务可以不按顺序在面板中领取奖励。任务不会开放功能或章节——开放仍由建设与首领负责。<br><br>首次击败各区域首领的任务会奖励宝箱。宝箱会进入仓库，仓库已满时送往邮箱。右键宝箱选择[使用]，会按当前查看英雄的等级获得一件适合该英雄的装备。首次通关首领关卡不再另外给予宝箱。',
+        ko: "상단의 두루마리를 누르면 메인미션에서 다음 목표와 받을 보상을 볼 수 있습니다. [바로가기]를 누르면 필요한 탭이나 행동에 안내 테두리가 표시됩니다. 1장의 네 번째 목표인 첫 연구까지는 두루마리 아래 팻말에서도 안내를 열 수 있습니다. 1장에서 완료한 미션은 두루마리 아래 완료 판에서 [받기]를 누르거나 미션 창에서 수령합니다.<br><br>장소 보스를 처음 쓰러뜨리는 메인미션의 보상에는 장비 상자가 있습니다. 상자는 창고로 들어가고, 창고가 차 있으면 우편함으로 갑니다. 장비를 받을 영웅을 고르고 창고에서 상자를 우클릭한 뒤 [사용]을 누르면 그 영웅의 직업과 레벨에 맞는 장비가 나옵니다.",
+        en: "Select the scroll at the top to see the next Main Mission and any rewards ready to claim. [Go to] highlights the relevant tab or action. The sign below the scroll also opens guidance through Chapter 1's fourth objective, starting your first research. Claim completed Chapter 1 missions from the card below the scroll or from the mission window.<br><br>Main Mission rewards for defeating certain bosses for the first time include gear chests. A chest goes to the stash, or to the mailbox if the stash is full. Select the hero you want to give gear to, then right-click the chest and select [Use] to get gear for that hero's class and level.",
+        zh: "点击顶部卷轴，可查看主线任务的下一目标和待领取奖励。点击【前往】会高亮相关页签或操作。第 1 章的第四个目标是首次研究，到这一步为止，也可以从卷轴下方的提示牌打开指引。第 1 章已完成的任务可在卷轴下方的完成卡上点击【领取】，也可在任务窗口领取。<br><br>首次击败指定地点首领的主线任务会奖励装备宝箱。宝箱会进入仓库，仓库已满时会寄到邮箱。选中要领取装备的英雄，在仓库中右键点击宝箱并选择【使用】，即可获得符合该英雄职业和等级的装备。",
     },
     'help.expedition.review.title': {
         ko: "막힌 원정을 살펴보는 순서",
@@ -1592,9 +1590,9 @@ const STRINGS = {
         zh: '以更高难度重温同一章',
     },
     'help.expedition.difficulty.body': {
-        ko: "노말을 진행한 뒤 나이트메어, 그 뒤 헬로 같은 챕터를 다시 돌아갑니다. 난이도는 이름만 바꾸는 것이 아니라 적의 레벨·체력·피해·착용 장비와 스킬 구성을 바꿉니다. 같은 초상이라도 이전 난이도에서 이겼던 방식이 그대로 통한다고 생각하지 않고 적의 현재 스킬과 장비를 확인합니다.<br><br>일반 원정 드롭에서는 에픽 장비가 나이트메어의 정예·보스부터, 레전더리 장비가 헬의 정예·보스에서 나올 수 있습니다. 일반 몬스터의 장비는 헬에서도 레어까지입니다. 파티 매직아이템 획득확률을 높여도 그 난이도·몬스터 등급에서 나오지 않는 희귀도가 새로 열리지는 않습니다.<br><br>헬의 몬스터 레벨과 드롭 장비 레벨은 만렙에서 고정되고, 영웅도 레벨 상한을 넘어 자라지는 않습니다. 다른 장의 첫 스테이지를 골라 파티와 보상이 맞는 곳부터 공략할 수 있습니다. 각 장의 디버프가 다르므로 레벨 외의 대응이 중요해집니다.<br><br>정예 카드에 표시되는 죄종·능력치·방어 특성 칩은 현재 표시만 구현되어 있습니다. 면역 이름의 칩이 보이더라도 그 특성으로 실제 원소 면역이 적용되는 기능은 아직 준비 중입니다. 현재 적의 장비·스킬·적용 능력치를 기준으로 판단합니다.",
-        en: "After Normal, revisit the chapters on Nightmare and then Hell. Difficulty changes enemy levels, HP, damage, equipment and skill loadouts, not just the name. An enemy with the same portrait may need a different response, so inspect its current skills and gear.<br><br>For ordinary expedition loot, Epic gear can appear from Nightmare elites and bosses, and Legendary gear from Hell elites and bosses. Normal monsters remain limited to Rare gear even in Hell. More Party Magic Find does not unlock a rarity unavailable to that difficulty and monster grade.<br><br>Hell fixes monster and dropped-equipment levels at the level cap; heroes do not level beyond their cap either. You can choose another chapter's first stage and tackle an area that suits your party and reward needs. Different chapter debuffs make responses beyond leveling important.<br><br>The Sin, attribute and defense trait chips shown on elite cards currently have display implementation only. A chip with an immunity name does not yet grant that trait's actual elemental immunity. Judge enemies by their current gear, skills and applied stats.",
-        zh: '通关普通难度后，依次在噩梦、地狱难度下重新挑战同样的章。难度改变的不只是名称，还有敌人的等级、生命、伤害、穿戴的装备与技能构成。即使头像相同，也不要以为之前难度中获胜的方法依然有效，要查看敌人当前的技能与装备。<br><br>在普通远征掉落中，史诗装备从噩梦难度起可能由精英、首领掉落，传奇装备可能由地狱难度的精英、首领掉落。普通怪物的装备即使在地狱难度也最多为稀有。即使提高队伍魔法物品获取率，也不会开放该难度与怪物级别本不掉落的稀有度。<br><br>地狱难度的怪物等级与掉落装备等级固定为满级，英雄也不会超过等级上限继续成长。可以选择其他章的第一个关卡，从适合队伍与所需奖励的地方开始攻略。各章的减益不同，因此等级以外的应对变得重要。<br><br>精英卡片上显示的罪宗、属性、防御特性标签目前仅实现了显示。即使看到带有免疫名称的标签，凭该特性实际获得元素免疫的功能仍在开发中。请以敌人当前的装备、技能与实际生效的属性为准进行判断。',
+        ko: "노말을 진행한 뒤 나이트메어, 그 뒤 헬로 같은 챕터를 다시 돌아갑니다. 난이도는 이름만 바꾸는 것이 아니라 적의 레벨·체력·피해·착용 장비와 스킬 구성을 바꿉니다. 같은 초상이라도 이전 난이도에서 이겼던 방식이 그대로 통한다고 생각하지 않고 적의 현재 스킬과 장비를 확인합니다.<br><br>일반 원정 드롭에서는 에픽 장비가 나이트메어의 정예·보스부터, 레전더리 장비가 헬의 정예·보스에서 나올 수 있습니다. 일반 몬스터의 장비는 헬에서도 레어까지입니다. 파티 매직아이템 획득확률을 높여도 그 난이도·몬스터 등급에서 나오지 않는 희귀도가 새로 열리지는 않습니다.<br><br>헬의 몬스터 레벨과 드롭 장비 레벨은 만렙에서 고정되고, 영웅도 레벨 상한을 넘어 자라지는 않습니다. 다른 장의 첫 스테이지를 골라 파티와 보상이 맞는 곳부터 공략할 수 있습니다. 각 장의 디버프가 다르므로 레벨 외의 대응이 중요해집니다.<br><br>나이트메어와 헬의 일반·정예 라운드에서는 장소별 적 작전 카드가 적용됩니다. 라운드 시작 전투 로그에서 카드 이름을 확인할 수 있습니다. 정예 카드의 특성 칩은 그 정예에게 붙은 죄종·강화·방어 효과를 보여 줍니다.",
+        en: "After Normal, revisit the chapters on Nightmare and then Hell. Difficulty changes enemy levels, HP, damage, equipment and skill loadouts, not just the name. An enemy with the same portrait may need a different response, so inspect its current skills and gear.<br><br>For ordinary expedition loot, Epic gear can appear from Nightmare elites and bosses, and Legendary gear from Hell elites and bosses. Normal monsters remain limited to Rare gear even in Hell. More Party Magic Find does not unlock a rarity unavailable to that difficulty and monster grade.<br><br>Hell fixes monster and dropped-equipment levels at the level cap; heroes do not level beyond their cap either. You can choose another chapter's first stage and tackle an area that suits your party and reward needs. Different chapter debuffs make responses beyond leveling important.<br><br>In Nightmare and Hell, enemies in Normal and Elite rounds use the area's Tactic Card. Its name appears in the battle log when the round begins. Trait chips show the Sin, enchantment and defensive effects on an Elite.",
+        zh: "通关普通难度后，依次在噩梦、地狱难度下重新挑战同样的章。难度改变的不只是名称，还有敌人的等级、生命、伤害、穿戴的装备与技能构成。即使头像相同，也不要以为之前难度中获胜的方法依然有效，要查看敌人当前的技能与装备。<br><br>在普通远征掉落中，史诗装备从噩梦难度起可能由精英、首领掉落，传奇装备可能由地狱难度的精英、首领掉落。普通怪物的装备即使在地狱难度也最多为稀有。即使提高队伍魔法物品获取率，也不会开放该难度与怪物级别本不掉落的稀有度。<br><br>地狱难度的怪物等级与掉落装备等级固定为满级，英雄也不会超过等级上限继续成长。可以选择其他章的第一个关卡，从适合队伍与所需奖励的地方开始攻略。各章的减益不同，因此等级以外的应对变得重要。<br><br>在噩梦和地狱难度中，普通与精英回合的敌人会使用该地点的战术卡。回合开始时可在战斗日志中看到卡名。精英的特性标记显示其罪宗、强化与防御效果。",
     },
     'help.expedition.hell_debuffs.title': {
         ko: "헬에서 장마다 달라지는 위험",
@@ -1619,33 +1617,39 @@ const STRINGS = {
     // 탐험 — 표 · 끝이 있는 판 · 다 깨야 받음 · 지거나 부르면 잃음 · 꺼진 동안은 시작한 판만 (SCREEN_DESIGN §12 · 2026-11-26 R590 — ~~purpose · time · claim~~ 옛 시간제 주제 걷음)
     'help.explore.map.title': { ko: '지도와 지점', en: 'Map and spots', zh: '地图与地点' },
     'help.explore.map.body': {
-        ko: '지도의 지점 아이콘을 누르면 그 지점 창이 열립니다. 닫기 버튼이나 지도 빈 곳을 누르면 닫힙니다. 동굴 · 상단 의뢰 · 폐허는 탐험 건물 랭크가 하나씩 열고, 지점은 땅(챕터)마다 따로 있습니다. 다음 챕터의 땅은 노말 난이도에서 이전 챕터보스를 클리어하면 열립니다.<br><br>아이콘 오른쪽 위 숫자는 그 땅 · 그 지점의 탐험 표 수입니다. 판이 나가 있으면 테두리가 진행 막대가 되고, 아직 안 본 결과가 있으면 「!」가 섭니다.',
-        en: 'Click a spot icon on the map to open its window; close it with its close button or an empty area of the map. Exploration building ranks open the cave, caravan escort and ruins one by one, and every land (chapter) has its own spots. Beating a chapter boss on Normal opens the next chapter\'s land.<br><br>The number at an icon\'s top right is how many tickets you hold for that land\'s spot. While a run is out, the icon ring fills as a progress bar; a 「!」 marks a result you have not viewed yet.',
+        ko: "탐험 건물을 올리면 동굴, 상단 의뢰, 폐허가 차례로 열립니다. 각 종류의 입구는 지도 전체에 하나씩 있고, 어느 챕터로 갈지는 탐험권으로 고릅니다.<br><br>매시 정각에 열린 지역 중 한 곳에 ★ 특별 지점이 나타날 수 있습니다. 그 챕터의 표로 출발하면 보너스가 판이 끝날 때까지 적용됩니다. 지점이 닫히면 이어 돌기도 멈춥니다.",
+        en: "Exploration ranks unlock the cave, caravan escort and ruins. Each has one permanent entrance. Choose a ticket to set the chapter and difficulty.<br><br>On the hour, a ★ special site may appear in an unlocked chapter. Use a ticket for that chapter to keep the bonus for the whole run. Repeat stops when the site expires.",
+        zh: "探索建筑升阶后依次开放洞穴、商队委托和废墟。每种地点在地图上都有一个常驻入口。票券决定章节和难度。<br><br>每逢整点，已开放章节中可能出现一个 ★ 特殊地点。使用对应章节的票券出发后，加成会持续到本次探索结束。地点到期后，连续探索也会停止。",
     },
-    'help.explore.tickets.title': { ko: '탐험 표', en: 'Exploration tickets' },
+    'help.explore.tickets.title': { ko: '탐험권', en: 'Exploration tickets', zh: '探索票券' },
     'help.explore.tickets.body': {
-        ko: '탐험은 표 한 장을 내고 갑니다. 표는 원정에서 정예를 쓰러뜨리면 {elite}%, 스테이지보스를 쓰러뜨리면 {boss}% 확률로 나오고, 지점이 새로 열릴 때 그 지점 표 {first}장을 받습니다. 표의 지점은 열린 지점 중 하나이고, 챕터와 난이도는 표를 주운 원정 칸을 따릅니다. 탐험 판에서는 표가 나오지 않습니다.<br><br>표에는 등급(일반 · 매직 · 레어)이 있습니다. 등급이 높을수록 판이 길어지고(동굴 끝 정예 라운드 · 상단 의뢰 습격 · 폐허 이벤트가 늘어납니다) 보상 배수와 특별한 일이 일어날 확률이 올라갑니다. 표는 인벤토리 칸을 쓰지 않습니다.',
-        en: 'Each run spends one ticket. Tickets drop on expeditions — {elite}% per elite and {boss}% per stage boss you defeat — and a newly opened spot gives {first} ticket(s) for it. A dropped ticket is for one of your open spots, at the chapter and difficulty of the expedition stage where it dropped. Exploration runs never drop tickets.<br><br>Tickets have a grade (Normal · Magic · Rare). Higher grades make the run longer (more elite rounds at the end of the cave, more raids on the caravan escort, more events in the ruins) and raise the reward multiplier and the chance of something special. Tickets don\'t take inventory slots.',
+        ko: '탐험은 표 한 장을 내고 갑니다. 표는 원정에서 정예를 쓰러뜨리면 {elite}%, 스테이지보스를 쓰러뜨리면 {boss}% 확률로 나오고, 지점이 새로 열릴 때 공통 탐험권 {first}장을 받습니다. 열린 상시 지점 어디서든 쓸 수 있고, 챕터와 난이도는 표를 주운 원정 칸을 따릅니다. 탐험 판에서는 표가 나오지 않습니다.<br><br>표에는 등급(일반 · 매직 · 레어)이 있습니다. 등급이 높을수록 판이 길어지고(동굴 끝 정예 라운드 · 상단 의뢰 습격 · 폐허 이벤트가 늘어납니다) 보상 배수와 특별한 일이 일어날 확률이 올라갑니다. 표는 인벤토리 칸을 쓰지 않습니다.',
+        en: 'Each run spends one ticket. Tickets drop on expeditions — {elite}% per elite and {boss}% per stage boss you defeat — and a newly opened spot gives {first} shared ticket(s). Tickets inherit their expedition stage’s chapter and difficulty and can be spent at any unlocked permanent entrance. Exploration runs never drop tickets.<br><br>Tickets have a grade (Normal · Magic · Rare). Higher grades make the run longer (more elite rounds at the end of the cave, more raids on the caravan escort, more events in the ruins) and raise the reward multiplier and the chance of something special. Tickets don\'t take inventory slots.',
+        zh: '每次探索消耗一张票券。远征中每击败一名精英或关卡首领，分别有 {elite}% 和 {boss}% 的概率掉落票券。新地点开放时会赠送 {first} 张通用探索票券。票券继承掉落关卡的章节和难度，可用于任一已开放的常驻入口。<br><br>票券分普通、魔法和稀有三档。高品质票券会增加洞穴的精英回合、商队的伏击次数或废墟事件，同时提高奖励和特殊事件概率。票券不占背包格。',
     },
-    'help.explore.depart.title': { ko: '표와 편성으로 보내기', en: 'Sending a party with a ticket' },
+    'help.explore.depart.title': { ko: '표와 편성으로 보내기', en: 'Sending a party with a ticket', zh: '使用票券派队出发' },
     'help.explore.depart.body': {
-        ko: '지점 창에서 표 하나와 편성 하나를 고르고 [보내기]를 누릅니다. 한 명만 든 편성도 갈 수 있고 최대 {party}명까지 함께 갑니다. 편성 하나는 원정이든 탐험이든 한 판만 돌고, 원정과 탐험을 합쳐 {expeditions}개 부대까지 동시에 나갑니다.<br><br>[이어 돌기]를 켜면 판이 끝날 때 같은 종류의 표(지점 · 챕터 · 난이도 · 등급)가 남아 있는 한 바로 다음 판을 엽니다. [지면 멈춤]까지 켜면 진 판 뒤에는 멈춥니다. 둘 다 보낼 때 정하고 판 중에는 바꾸지 않습니다.',
-        en: 'In a spot window, pick a ticket and a party, then press [Send]. A one-hero party can go; up to {party} heroes go together. A party runs one thing at a time — an expedition or an exploration — and expeditions and explorations together can have {expeditions} parties out at once.<br><br>With [Repeat] on, a finished run opens the next one right away while you still hold the same kind of ticket (spot · chapter · difficulty · grade). Add [Stop on loss] to halt after a lost run. Both are set when sending and can\'t be changed mid-run.',
+        ko: '지점 창에서 표 하나와 편성 하나를 고르고 [보내기]를 누릅니다. 한 명만 든 편성도 갈 수 있고 최대 {party}명까지 함께 갑니다. 편성 하나는 원정이든 탐험이든 한 판만 돌고, 원정과 탐험을 합쳐 {expeditions}개 부대까지 동시에 나갑니다.<br><br>[이어 돌기]를 켜면 판이 끝날 때 같은 챕터·난이도·등급의 탐험권이 남아 있으면 같은 지점으로 다시 출발합니다. [지면 멈춤]까지 켜면 진 판 뒤에는 멈춥니다. 둘 다 보낼 때 정하고 판 중에는 바꾸지 않습니다.',
+        en: 'In a spot window, pick a ticket and a party, then press [Send]. A one-hero party can go; up to {party} heroes go together. A party runs one thing at a time — an expedition or an exploration — and expeditions and explorations together can have {expeditions} parties out at once.<br><br>With [Repeat] on, your party returns to the same spot while a ticket of the same chapter, difficulty and grade remains. Add [Stop on loss] to halt after a lost run. Both are set when sending and can\'t be changed mid-run.',
+        zh: '在地点窗口选择一张票券和一支编队，再点击【出发】。一名英雄即可出发，最多可带 {party} 名。每支编队同一时间只能进行一趟远征或探索。远征和探索合计最多可同时派出 {expeditions} 支队伍。<br><br>开启【连续探索】后，只要仍有相同章节、难度和品质的票券，编队就会返回同一地点继续探索。勾选【失败时停止】可在战败后停下。请在出发前确定这些选项。',
     },
-    'help.explore.run.title': { ko: '판의 진행과 관전', en: 'How a run plays' },
+    'help.explore.run.title': { ko: '판의 진행과 관전', en: 'How a run plays', zh: '探索进程与观战' },
     'help.explore.run.body': {
         ko: '탐험 판은 정해진 단계를 차례로 지나는 끝이 있는 전투입니다. 동굴은 원정 장소 하나의 칸 I · II · III을 원정과 같은 규칙으로 싸우고, 등급에 따라 끝에 정예 라운드가 붙습니다. 상단 의뢰는 마차가 길을 가다 적 영웅 셋에게 습격당하며, 습격 자리는 미리 보이지 않습니다. 폐허는 안개 낀 유적을 지나며 몬스터 · 함정 · 드문 만남 · 물건 · 빈 방을 만납니다. 함정은 우리 편에 헬 난이도의 챕터 디버프를 겁니다.<br><br>나간 부대는 위쪽 부대 칸에 지점 이름으로 서고, 누르면 판을 관전합니다. 장비와 스킬 트리는 판 중에도 바꿀 수 있고 다음 라운드부터 적용됩니다.',
         en: 'An exploration run is a finite battle that goes through set steps in order. The cave fights stages I · II · III of one expedition location under expedition rules, with extra elite rounds at the end depending on the grade. On a caravan escort the wagon travels the road until three enemy heroes ambush it — where they strike stays hidden until it happens. The ruins lead through a fog-covered ruin with monsters, traps, rare encounters, finds and empty rooms; a trap puts that chapter\'s Hell debuff on your party.<br><br>A party that is out shows in the top party bar under the spot\'s name — click it to watch. You can change gear and skill trees mid-run; changes apply from the next round.',
+        zh: '探索按阶段推进。洞穴按远征规则挑战同一地点的 I、II、III 关，票券品质可增加末尾的精英回合。护送商队时，马车会遇到三名敌方英雄的突袭，伏击位置到事发时才会显示。迷雾废墟中会遇到怪物、陷阱、稀有遭遇、物品或空房间。陷阱会对队伍施加该章地狱难度的减益。<br><br>点击顶部队伍栏里的地点名称即可观战。探索中更换装备或调整技能树，会从下一回合开始生效。',
     },
-    'help.explore.rewards.title': { ko: '보상', en: 'Rewards' },
+    'help.explore.rewards.title': { ko: '보상', en: 'Rewards', zh: '奖励' },
     'help.explore.rewards.body': {
-        ko: '판에서 쓰러뜨린 적의 경험치 · 골드 · 장비 · 스킬북 · 작전 카드는 원정과 같은 규칙으로 판에 모였다가, <b>판을 끝까지 깨면</b> 표 등급의 보상 배수를 곱해 한꺼번에 받습니다. 판 중에는 레벨이 오르지 않습니다. 상단 의뢰의 적 영웅은 그 레벨 정예 한 마리 몫입니다.<br><br>지점마다 덤이 있습니다. 동굴 마지막 보스 자리에 가끔 「???」가 서고, 이기면 도감에 오릅니다. 상단 의뢰를 마치면 감사인사로 그 챕터 단계의 철광석과 목재를 받고, 마지막 습격의 적 한 명이 선술집에 가입 희망으로 올 수 있습니다(자리가 차 있으면 오지 않습니다). 폐허의 물건은 장비나 스킬북입니다. 판이 끝나면 오른쪽 아래 알림과 결과 카드로 확인합니다.',
-        en: 'XP, gold, gear, skill books and tactic cards from enemies you defeat pile up in the run under expedition rules, and you receive them all at once — multiplied by the ticket grade\'s reward multiplier — <b>only when you clear the whole run</b>. Heroes don\'t level up mid-run. Each enemy hero on a caravan escort counts as one elite of that level.<br><br>Each spot adds something extra. The cave\'s final boss slot is sometimes taken by 「???」, which enters the codex when beaten. Finishing a caravan escort gives ore and timber of that chapter\'s tier as thanks, and one enemy from the last raid may come to the Tavern wanting to join (not if the slots are full). Finds in the ruins are gear or skill books. When a run ends, a notice appears at the bottom right and a result card shows what happened.',
+        ko: "탐험에서 모은 경험치·골드·장비·스킬북·작전 카드는 <b>탐험을 끝까지 클리어하면</b> 자동으로 받습니다. 높은 등급의 표는 골드와 경험치를 늘리고, 처치 시 장비나 스킬북을 얻을 확률을 높입니다. 경험치로 인한 레벨업은 결과를 받을 때 적용됩니다.<br><br>동굴에서는 마지막 보스 자리에 드물게 「???」가 나오며, 쓰러뜨리면 도감에 기록됩니다. 상단 의뢰를 마치면 최하급 철광석과 목재를 받고, 자리가 있으면 마지막 습격의 적 한 명이 선술집에 가입을 희망할 수 있습니다. 폐허에서는 장비나 스킬북이 든 물건을 발견할 수 있습니다. 결과는 알림이나 탐험 지점 창에서 확인합니다.",
+        en: "The XP, gold, gear, skill books and Tactic Cards collected during a run are awarded automatically <b>when you clear the whole run</b>. Higher ticket grades increase XP and gold and improve the chance of gear or a skill book from a kill. Heroes level up when the rewards are awarded.<br><br>A rare “???” can take the final boss's place in the cave. Defeating it records it in the Codex. Completing a caravan escort awards lowest-grade iron ore and timber. One raider from the final ambush may ask to join at the Tavern if there is room. In the Ruins, you can find gear or a skill book. Check the notification or the spot window for the result.",
+        zh: "探索中积攒的经验、金币、装备、技能书和战术卡，会在<b>完成整趟探索后</b>自动发放。高品质票券提高经验与金币收益，也提高击杀后获得装备或技能书的概率。英雄在结算奖励时升级。<br><br>洞穴的最终首领偶尔会被「???」替代，击败后会录入图鉴。完成商队委托会获得最低级铁矿石和木材。酒馆有空位时，最后一波伏击中的一名敌人可能会申请加入。废墟中可能发现装备或技能书。可在通知或探索地点窗口查看结果。",
     },
-    'help.explore.recall.title': { ko: '지거나 부르면', en: 'Losing and calling back' },
+    'help.explore.recall.title': { ko: '패배와 귀환', en: 'Defeat and recall', zh: '战败与召回' },
     'help.explore.recall.body': {
-        ko: '판에서 우리 편이 전멸하면 그 판은 실패하고, 모은 것과 표를 모두 잃습니다. 지점 창이나 관전의 [부르기]로 판을 일찍 끝내도 같습니다 — 표는 돌려받지 못합니다. 탐험 중인 편성은 명단을 바꿀 수 없고, 원정에 보내면 확인 창을 거쳐 그 판을 불러들이고 출격합니다.<br><br>판은 게임이 켜져 있는 동안만 진행됩니다. 게임을 닫았다가 다시 켜면 하던 판만 화면 없이 끝까지 계산해 결과를 받고, [이어 돌기]는 이어지지 않습니다. 꺼져 있는 동안 새 판을 열지는 않습니다.',
-        en: 'If your whole party falls in a fight, the run fails and you lose the haul and the ticket. Calling it back early with [Call back] in the spot window or while watching is the same — the ticket is not returned. A party that is out exploring can\'t change members; sending it on an expedition asks for confirmation, then calls the run back and deploys.<br><br>Runs only progress while the game is on. When you close and reopen the game, the run in progress is calculated to the end without the screen and you get its result; [Repeat] does not continue. No new runs start while the game is off.',
+        ko: "패배하거나 [부르기]를 누르면 탐험이 끝나고, 사용한 표와 그 판에 모아 둔 전리품을 잃습니다. 탐험 중에는 편성 명단이 잠깁니다. 같은 편성을 원정에 보내려면 확인 창에서 탐험을 끝낸 뒤 출발합니다.<br><br>게임을 닫았다가 돌아오면 이미 시작한 탐험의 남은 전투가 자동으로 계산됩니다. 종료 시각이 지났다면 바로 결과가 나오고, 아직 남았다면 그 시각까지 기다립니다. [이어 돌기]는 접속 중에만 다음 판을 엽니다.",
+        en: "A loss or [Call back] ends the run and forfeits the spent ticket and the loot collected for that run. The party roster is locked while exploring. To send that party on an Expedition, confirm the recall and then depart.<br><br>On reopening the game, the remaining fights of an active exploration run are resolved automatically. The result appears immediately if its finish time has passed, or when that time arrives. [Repeat] starts another run only while the game stays open.",
+        zh: "战败或点击【召回】会结束探索，已消耗的票券和本次积攒的战利品都会失去。探索期间队员名单锁定。若要派同一编队去远征，需在确认窗口结束探索后再出发。<br><br>重新打开游戏时，已开始的探索会自动计算剩余战斗。若结束时间已到，会立即显示结果；否则需等到结束时间。【连续探索】只会在游戏保持开启时启动下一次探索。",
     },
     'help.party.members.title': {
         ko: "파티 구성과 리더",
@@ -1654,7 +1658,7 @@ const STRINGS = {
     },
     'help.party.members.body': {
         ko: "먼저 Party 번호를 고른 뒤 위의 영웅 카드를 눌러 그 편성에 넣거나 뺍니다. 진형 보드의 영웅을 눌러도 빠집니다. 한 영웅을 다른 편성에 넣으면 이전 편성에서 이동하며, 한 편성에는 최대 {party}명이 들어갑니다. 파티 명단의 첫 영웅이 리더입니다. 진형의 전열·후열 위치와 리더는 별개입니다.",
-        en: "Select a Party number, then click heroes in the roster to add or remove them. Clicking a hero on the formation board also removes them. Adding a hero to another preset moves them out of their previous preset. Each party holds up to {party} heroes.<br><br>The first hero in the party list is the leader; leadership is separate from the hero's front or back row position.",
+        en: "Select a Party number, then click heroes in the roster to add or remove them. Clicking a hero on the formation board also removes them. Adding a hero to another preset moves them out of their previous preset. Each party holds up to {party} heroes. The first hero in the list leads the party from either row.",
         zh: '先选择Party编号，再点击上方的英雄卡，将其加入或移出该编队。点击阵型面板上的英雄也会将其移出。把一名英雄加入其他编队时，他会从原来的编队移过去；每个编队最多容纳{party}名。队伍名单中的第一名英雄是队长。阵型中的前排、后排位置与队长无关。',
     },
     'help.party.leader.title': {
@@ -1663,9 +1667,10 @@ const STRINGS = {
         zh: '队长与统率的作用',
     },
     'help.party.leader.body': {
-        // 2026-11-26 R586 — 작전 카드에는 조건이 없다 · 통솔은 옵션 줄 값만 키운다 (zh 는 빠진 목록으로 — LOCALIZATION_ZH)
+        // 2026-11-26 R586 — 작전 카드에는 조건이 없다 · 통솔은 옵션 줄 값만 키운다
         ko: "리더는 그 편성 명단의 첫 영웅입니다. 리더의 통솔은 파티 전술 효과의 크기에 영향을 줍니다. 전열의 맨 앞에 서거나 캐릭터 탭에서 영웅을 선택했다고 리더가 바뀌지는 않습니다.<br><br>리더를 바꾸려면 편성 영웅을 모두 뺀 뒤, 원하는 영웅을 먼저 넣고 나머지 인원을 채웁니다. 리더의 통솔은 작전 카드 옵션 줄의 값을 키우거나 줄이며, 카드 규칙의 수치는 바꾸지 않습니다.",
         en: "The first hero in a preset's member list is its leader. The leader's Leadership affects the strength of Party tactics. Standing in the first front-row seat or selecting a hero in Character does not change the leader.<br><br>To change the leader, remove every hero from the preset, add the intended leader first, then fill the remaining places. The leader's Leadership raises or lowers the values of tactic cards' option lines; it does not change the numbers in a card's rule.",
+        zh: '编队名单中的第一名英雄就是队长。队长的统率会影响队伍战术的效果。将英雄放在前排首位，或在角色页选中英雄，都不会更换队长。<br><br>要更换队长，请先移除编队中的所有英雄，再把新队长第一个加入，最后补齐队员。队长的统率会提高或降低战术卡的词条数值，卡牌战斗规则中的数值保持固定。',
     },
     'help.party.formation.title': {
         ko: "전열은 누구를 지키나요",
@@ -1688,31 +1693,35 @@ const STRINGS = {
         zh: '药水栏不是英雄个人的栏位，而是整个队伍共用的一排。触及生命阈值的英雄会从靠前的已装填格开始饮用。多名英雄同时需要时，生命比例最低的英雄优先；比例相同时，队伍名单中靠前的英雄优先。药水无法让倒下的英雄复活。<br><br>点击持有的药水会放入靠前的空格，点击已装填的格子则会清空。可以把药水拖到想要的格子里，也可以在格子之间拖动来调整顺序。同一种药水可以放入多个格子，放入本身不会减少库存。<br><br>每回合都会按照出发时的配置与当前库存重新装填药水栏。在一个回合内用完所有格子后就不能再喝，但下一回合会重新装填，所以一次远征中消耗的药水可以多于格子数。库存由所有小队共用，库存不足的格子会以空格开始。远征途中制作或购买的药水，可以从下一回合起补充进来。',
     },
     'help.party.threshold.title': {
-        ko: "물약을 일찍 쓸지 아껴 쓸지",
-        en: "Choosing when to drink",
-        zh: '药水早用还是省着用',
+        ko: "물약 자동 사용 기준",
+        en: "When potions are used",
+        zh: '药水的自动饮用条件',
     },
     'help.party.threshold.body': {
-        ko: "물약 칸 아래 [−]/[+]로 이 편성의 사용 HP 기준을 조절합니다. 살아 있는 영웅의 HP가 그 비율 미만으로 내려가면 자동으로 마시며, 행동 차례는 사용하지 않습니다. 물약 쿨타임은 파티가 함께 써서, 누군가 마시면 {cooldown}초 동안 파티 누구도 다시 마시지 못합니다.<br><br>기준을 높이면 더 일찍 마시지만, 빈 HP보다 회복량이 커서 일부를 낭비할 수 있습니다. 낮추면 한 병을 충분히 쓰기 쉬운 대신 다음 큰 공격 전에 쓰러질 위험이 있습니다. 받은 피해의 크기와 물약 회복량을 보고 정합니다. 기준은 편성마다 따로 저장되며, 원정 중 바꾼 기준을 확실히 적용하려면 철수한 뒤 다시 출발합니다.",
-        en: "Use [−]/[+] below the belt to adjust this preset's HP threshold. A living hero drinks automatically when below it, without using an action. The party shares one potion cooldown: after anyone drinks, no one in the party can drink again for {cooldown} seconds.<br><br>A higher threshold drinks earlier but can waste healing beyond the missing HP. A lower threshold can make fuller use of each bottle, but risks falling to the next heavy hit. Consider incoming hit sizes and the potion's healing amount. Thresholds are saved per preset. Retreat and deploy again to ensure a change applies to an expedition.",
-        zh: '用药水栏下方的[−]/[+]调整该编队使用药水的生命阈值。存活英雄的生命低于该比例时会自动饮用，且不占用行动。药水冷却由全队共用：有人饮用后，全队持续{cooldown}秒无法再次饮用。<br><br>提高阈值会更早饮用，但治疗量可能超过已损失的生命，造成部分浪费。降低阈值更容易用足每一瓶，但有在下一次重击前倒下的风险。请根据受到的伤害大小与药水治疗量来决定。阈值按每个编队分别保存；要确保远征中修改的阈值生效，请撤退后重新出发。',
+        ko: "편성의 물약 제목 옆 [?]에서 현재 사용 HP 기준을 확인합니다. 살아 있는 영웅의 HP가 그 비율 아래로 떨어지면 행동 차례를 쓰지 않고 자동으로 마십니다. 한 명이 마시면 {cooldown}초 동안 파티 전체가 물약을 다시 마실 수 없습니다.",
+        en: "Check the [?] next to Potions in Party for the current HP threshold. A living hero who falls below it drinks automatically without spending an action. Once one hero drinks, the whole party waits {cooldown} seconds before anyone can drink again.",
+        zh: "点击编队中药水标题旁的【?】，可查看当前饮用的生命值门槛。存活英雄的生命值低于门槛时会自动喝药，无需消耗行动。一名英雄喝药后，全队需等待 {cooldown} 秒才能再次喝药。",
     },
-    // 2026-11-26 R586 — 작전 카드 세 칸 · 드랍 → 가방 → 장착(소모) · 줄마다 인챈트 · 분해 → 조각 (SCREEN_DESIGN §15 · tactic_card_design · zh 는 빠진 목록으로)
+    // 작전 카드 장착 · 태그 · 보관 · 줄 인챈트 (SCREEN_DESIGN §15)
     'help.party.tactics.title': {
         ko: "파티 전술과 작전 카드",
         en: "Party tactics and tactic cards",
+        zh: "队伍战术与战术卡",
     },
     'help.party.tactics.body': {
-        ko: "파티 전술은 편성마다 세 칸이고, 칸마다 작전 카드 한 장을 장착합니다. 어느 카드든 어느 칸에 들어가지만, 한 편성에 같은 카드와 같은 태그의 카드는 한 장씩만 낄 수 있습니다. 카드는 전투 규칙 하나와 옵션 줄 둘을 듭니다. 규칙은 전투의 흐름(누구를 노리나 · 누가 대신 맞나 · 언제 움직이나)을 바꾸고, 옵션 줄은 파티의 능력치를 올립니다. 칸은 지휘 천막 1 · 2 · 3랭크가 차례로 열고, 칸이 처음 열리면 그 칸의 첫 카드 한 장을 받습니다.<br><br>카드는 정예와 스테이지보스가 떨어뜨려 가방에 쌓입니다. 칸을 누르면 가방이 열리고, 고른 카드가 그 칸에 들어갑니다. 다른 칸의 카드에 막힌 카드는 장착할 수 없고, 막는 카드에 빨간 테두리가 그려집니다. 장착하면 카드 한 장이 소모되고 그때 옵션 줄 둘이 정해집니다. 칸에서 빠진 카드는 옵션 줄째 사용한 카드로 보관되고, 다시 장착하면 그 줄 그대로 듭니다. 보관 칸이 가득 차면 새 카드로 바꿀 수 없고, 원정 · 탐험 중인 편성의 칸에서는 카드를 뺄 수 없습니다. 카드 등급은 옵션 줄 등급의 상한입니다. 가방과 카드 조각은 모든 편성이 함께 쓰고, 칸의 카드는 편성마다 따로입니다.",
-        en: "Party tactics give each preset three slots, and each slot holds one tactic card. Any card fits any slot, but a preset can hold only one copy of a card and only one card of each tag. A card carries one battle rule and two option lines. The rule changes how a battle flows (who gets targeted, who takes hits instead, when units move); the option lines raise party stats. Command Tent ranks 1, 2 and 3 open the slots in turn, and each slot gives you its first card when it opens.<br><br>Elites and stage bosses drop cards into your bag. Click a slot to open the bag; the card you pick goes into that slot. A card blocked by another slot's card can't be equipped, and the blocking card gets a red border. Equipping uses up one card and rolls its two option lines at that moment. A card taken out of a slot is stored as a used card with its lines, and goes back in with the same lines. When storage is full you can't swap in a new card, and a preset that is out on an expedition or exploring can't have its cards taken out. A card's grade is the highest grade its option lines can reach. All presets share the bag and card shards; each preset keeps its own slotted cards.",
+        ko: "지휘 천막을 1·2·3랭크로 올릴 때마다 작전 카드 칸 하나가 열리고 첫 카드 한 장을 받습니다. 카드는 어느 열린 칸에나 장착할 수 있고, 한 편성에서는 같은 카드나 같은 태그를 중복으로 쓸 수 없습니다. 가방에서 장착할 수 없는 카드를 선택하면, 충돌하는 장착 카드의 칸이 빨간색으로 표시됩니다.<br><br>정예와 스테이지보스가 떨어뜨린 카드는 편성 공용 가방에 들어갑니다. 편성에서 카드 칸을 눌러 가방을 열고 [장착]합니다. 새 카드를 장착하면 가방에서 한 장을 쓰고 옵션 두 줄이 정해집니다. 각 카드는 그 옵션과 함께 전투 규칙 하나를 적용합니다. 카드 등급이 옵션 줄 등급의 상한입니다.<br><br>교체한 카드는 옵션을 유지한 채 가방 위쪽의 사용한 카드에 보관됩니다. 보관 공간은 모든 편성이 공유하며 최대 {usedCap}장입니다. 가득 차면 사용한 카드끼리 교체하거나, 사용한 카드를 분해해 자리를 비운 뒤 새 카드로 교체합니다. 원정·탐험 중인 편성은 빈 칸에 장착할 수 있으며, 차 있는 칸의 교체는 귀환 후 가능합니다.",
+        en: "Command Tent ranks 1, 2 and 3 each unlock a Tactic Card slot and grant a starter card. Any card fits any open slot. A party can use each card and each tag once. Select a blocked card in the bag to highlight the conflicting equipped card's slot in red.<br><br>Elites and stage bosses drop cards into the shared bag. Select a card slot in Party to open the bag, then select [Equip]. Equipping a new card spends one copy and rolls two option lines. Each card applies one combat rule along with its options. The card's grade caps the grade of its option lines.<br><br>A replaced card keeps its options and goes into the used-card area at the top of the bag. All parties share space for {usedCap} used cards. When full, swap in another used card or dismantle one to make room for a new card. An active Expedition or Exploration party can fill an empty slot. To replace an equipped card, wait until the party returns.",
+        zh: "指挥营帐升到 1、2、3 阶时，每阶开放一个战术卡槽并赠送一张初始卡。任意卡都可放进任意已开卡槽。同一编队内，同名卡或同标签的卡只能装一张。在卡包中选中无法装备的卡时，冲突的已装卡槽会以红色标出。<br><br>精英和关卡首领掉落的卡会进入共用卡包。点击编队中的卡槽打开卡包，再点击【装备】。装备新卡会消耗一张库存并随机生成两条词条。每张卡还会应用一条战斗规则。词条品质最高可达到该卡的品质。<br><br>换下的卡会保留词条，存放在卡包上方的已使用区域。所有编队共用 {usedCap} 个存放位。存满后，可以用另一张已使用的卡换装，或分解一张腾出位置再换新卡。正在远征或探索的编队仍可装入空槽，已装卡需等归队后才能更换。",
     },
     'help.party.tactic_choices.title': {
         ko: "인챈트와 카드 조각",
         en: "Enchanting and card shards",
+        zh: "附魔与卡牌碎片",
     },
     'help.party.tactic_choices.body': {
-        ko: "옵션 줄 오른쪽의 [인챈트]는 그 줄 하나를 골드와 카드 조각으로 다시 굴립니다. 옵션 종류, 등급(한 단계 오르거나 내리거나 그대로), 값이 함께 바뀌고 결과는 바로 적용됩니다. 줄 등급은 카드 등급을 넘지 않습니다.<br><br>카드 조각은 가방의 카드를 분해해 얻고, 등급이 높은 카드일수록 많이 나옵니다. 옵션 줄의 값에는 리더의 통솔과 그 줄 죄종의 점수(파티의 그 죄종 영웅과 장비)가 더해지며, 출처는 카드 아래 판에 표시됩니다. 원정 중에 장착하거나 인챈트한 것은 철수하고 다시 보낼 때부터 적용됩니다. 작전 카드는 전투 중에 직접 쓰는 버튼이 아닙니다.",
-        en: "[Enchant] beside an option line rerolls that one line for gold and card shards. Its option type, grade (one step up, one step down or unchanged) and value all change, and the result applies immediately. A line's grade never exceeds the card's grade.<br><br>Dismantle cards in the bag to get card shards; higher-grade cards give more. Option line values are boosted by the leader's Leadership and by the score of the line's Sin (heroes of that Sin and gear in the party), shown in the panel below the cards. Cards equipped or enchanted during an expedition take effect after you retreat and deploy again. Tactic cards are not buttons you use during combat.",
+        ko: "옵션 줄 옆의 [인챈트]를 누르면 골드와 카드 조각을 써서 그 줄의 종류·등급·수치를 다시 굴립니다. 등급은 한 단계 오르거나 내리거나 유지되며, 카드 등급까지 오를 수 있습니다. 새 결과는 즉시 저장됩니다.<br><br>가방의 새 카드와 사용한 카드를 분해하면 카드 조각을 얻습니다. 등급이 높을수록 조각을 더 많이 줍니다. 옵션 줄의 적용 수치는 리더의 통솔과 같은 죄종의 영웅·장비에서 얻는 죄종 점수에 따라 달라집니다. 카드 아래에서 두 보정의 출처를 확인합니다.",
+        en: "Select [Enchant] next to an option line to spend gold and card shards on a fresh option, grade and value for that line. Its grade may move one step up or down, or stay the same, up to the card's grade. The new roll is saved immediately.<br><br>Dismantle new or used cards in the bag for card shards. Higher-grade cards give more shards. The applied value of each line depends on the leader's Leadership and the Sin score from heroes and gear matching the line's Sin. The area below the cards shows where those bonuses come from.",
+        zh: "点击词条旁的【附魔】，可花费金币与卡牌碎片重新随机生成该条的类型、品质和数值。词条品质可以升降一阶或保持不变，上限为卡牌品质。新结果会立即保存。<br><br>分解卡包中的新卡或已使用卡可获得碎片，卡牌品质越高，碎片越多。词条的实际数值受队长的统率和同罪宗英雄、装备提供的罪宗分数影响。可在卡牌下方查看加成来源。",
     },
     'help.party.changes.title': {
         ko: "원정 중 편성을 바꿨다면",
@@ -1720,9 +1729,9 @@ const STRINGS = {
         zh: '远征中更改了编队时',
     },
     'help.party.changes.body': {
-        ko: "원정 중인 편성은 명단이 잠겨 영웅을 넣고 빼거나 리더를 바꾸거나 다른 편성으로 옮길 수 없습니다. 철수하면 풀립니다. 진형·물약·전술은 원정 중에도 바꿀 수 있지만, 진행 중인 부대에는 출발 당시 구성이 유지됩니다. 승리 후 자동 출정도 그 구성을 이어 쓰므로, 새 구성을 쓰려면 철수한 뒤 다시 보냅니다.<br><br>패배 후 자동 재도전은 변경한 편성으로 출발할 수 있을 때 현재 편성을 반영합니다. 단, 원정 중 장비를 바꾸면 출발 때 든 작전 카드 옵션 줄의 장비 죄종 몫은 그 순간부터 달라집니다. 탐험 중인 편성의 명단도 귀환까지 바꿀 수 없습니다.",
-        en: "A preset on an expedition has a locked roster: you cannot add or remove heroes, change its leader or move its heroes to another preset until you retreat. Formation, potions and tactic cards can still be changed, but they do not replace an active party's departure configuration. Automatic departures after wins keep that configuration; retreat and deploy again to use your changes.<br><br>Retries after defeats use the current preset when it can depart. However, changing equipment mid-run changes the gear Sin share of tactics active at departure from that moment. The roster of an exploring preset also stays locked until it returns.",
-        zh: '远征中的编队名单会被锁定，无法加入或移出英雄、更换队长，也无法把英雄移到其他编队。撤退后即解除。阵型、药水与战术在远征中也可以更改，但进行中的小队仍保持出发时的配置。胜利后的自动出征也会沿用该配置，所以要使用新配置，请撤退后重新派遣。<br><br>战败后的自动重新挑战，在能以更改后的编队出发时，会采用当前编队。不过，远征中更换装备的话，出发时已生效战术中按装备罪宗计算的部分，会从那一刻起随之改变。探索中的编队名单在返回前同样无法更改。',
+        ko: "원정·탐험 중인 편성의 명단은 귀환까지 잠깁니다. 원정은 출발할 때 정한 진형·물약·작전 카드를 사용하며, 승리 후 자동 출정에서도 그 구성을 이어 씁니다. 편성에서 바꾼 구성이나 카드 옵션을 적용하려면 [철수]한 다음 다시 [보내기]합니다.<br><br>원정에서 패배해 자동 재도전할 때는 출발할 수 있으면 현재 편성을 반영합니다. 원정 중 장비 교체는 바로 적용되며, 출발할 때 장착한 작전 카드 옵션의 장비 죄종 몫도 함께 바뀝니다.",
+        en: "The roster of a party on an Expedition or Exploration is locked until it returns. An Expedition uses the formation, potions and Tactic Cards set at departure and retains that setup when it advances after a win. To apply changes to your setup or card options, [Retreat] and send the party out again.<br><br>An automatic retry after an Expedition loss uses the current party setup if it can depart. Gear changes during an Expedition apply immediately and also update the equipment contribution to the Sin score of the cards taken at departure.",
+        zh: "编队在远征或探索中时，名单会锁定至归队。远征采用出发时的阵型、药水与战术卡，胜利后自动前往下一关时也会沿用这些设置。要应用更改后的配置或卡牌词条，请先【撤退】再派出。<br><br>远征战败后自动重试时，如果当前编队可以出发，就会采用当前设置。远征中的装备更换会立即生效，并同步更新出发时所带战术卡的装备罪宗分数。",
     },
     'help.character.identity.title': {
         ko: "직업·죄종·등급·고유 스킬",
@@ -1770,9 +1779,9 @@ const STRINGS = {
         zh: '穿戴条件与装备比较',
     },
     'help.character.equipment.body': {
-        ko: "인벤토리나 창고의 장비를 누르면 선택한 영웅이 착용하고, 착용 칸을 누르면 해제됩니다. 장착을 막는 것은 장비의 요구 레벨입니다. 직업이 달라도 다른 직업의 무기나 갑옷을 직접 착용할 수 있습니다. 다만 착용할 수 있다는 것과 그 무기로 가진 스킬을 쓸 수 있다는 것은 다릅니다.<br><br>장비에 마우스를 올리면 착용품과 나란히 비교됩니다. [Alt]는 착용 후 바뀌는 세부 스탯, [Shift]는 옵션의 수치 범위를 보여 줍니다. 공격을 맡긴 영웅은 무기 공격력·속도·실제로 쓰는 스킬을, 앞에서 버티는 영웅은 HP·물리 방어·상대 스킬의 원소 저항을 함께 살펴봅니다.<br><br>[자동 장착]은 현재 보고 있는 부대 인벤토리에서 그 영웅 직업에 맞는 장비를 고릅니다. 내가 의도한 다른 직업 무기 조합까지 찾아 주는 기능은 아닙니다. (미적용) 표시가 있는 옵션은 아직 전투에 적용되지 않습니다.",
-        en: "Click gear in an inventory or the stash to equip it on the selected hero; click an equipped slot to remove it. The equip restriction is its required level. Any class can manually wear another class's weapon or armor. Being able to equip a weapon does not mean every owned skill works with it.<br><br>Hover gear for a side-by-side comparison. [Alt] shows detailed stat changes after equipping; [Shift] shows option roll ranges. For an attacker, compare weapon attack, speed and the skills they actually use. For a front-line hero, also consider HP, physical defense and resistance to the enemy's skill elements.<br><br>[Auto-equip] chooses class-suitable gear from the party inventory you are viewing. It does not search for every off-class weapon build you might intend. Options marked (inactive) do not yet affect combat.",
-        zh: '点击背包或仓库中的装备，所选英雄就会穿戴；点击已穿戴的栏位则会卸下。限制穿戴的是装备的需求等级。即使职业不同，也可以直接穿戴其他职业的武器或铠甲。不过，能穿戴与能用该武器施放自己的技能是两回事。<br><br>将鼠标悬停在装备上，会与已穿戴的装备并排比较。[Alt]显示穿戴后详细属性的变化，[Shift]显示词条的数值范围。负责输出的英雄，要一并查看武器攻击力、速度与实际使用的技能；在前排抗伤的英雄，要一并查看生命、物理防御以及对应对手技能元素的抗性。<br><br>[自动装备]会从当前查看的小队背包中，挑选适合该英雄职业的装备，但不会替你找出你刻意搭配的其他职业武器组合。带有（未生效）标记的词条，目前还不会在战斗中生效。',
+        ko: "인벤토리나 창고에서 장비를 클릭해 고릅니다. 장착하려면 장비를 우클릭한 뒤 [착용]을 누르고, 벗으려면 착용 칸을 우클릭합니다. 장비의 요구 레벨을 충족하면 다른 직업의 무기나 갑옷도 착용할 수 있습니다. 스킬에 필요한 무기는 스킬 설명에서 확인합니다.<br><br>마우스를 올리면 현재 착용품과 비교합니다. [Alt]는 장착하면 바뀌는 세부 스탯을, [Shift]는 옵션의 수치 범위를 보여 줍니다. [자동 장착]은 현재 부대 인벤토리에서 선택한 영웅의 직업에 맞는 장비를 고르며, 무기는 최종 데미지, 방어구는 방어력을 우선합니다.",
+        en: "Click gear in a party inventory or the stash to select it. To equip it, right-click it and select [Equip]. Right-click a worn slot to unequip it. A hero can wear another class's weapon or armor if they meet its level requirement. Each skill lists the weapon it requires.<br><br>Hover gear to compare it with the worn item. Hold [Alt] to see the detailed stat changes from equipping it and [Shift] to see option ranges. [Auto-equip] looks in the current party's inventory for gear that fits the selected hero's class. It prioritizes final damage for weapons and defense for armor.",
+        zh: "点击背包或仓库中的装备可选中。要穿戴，请右键点击装备并选择【装备】。右键点击已穿戴的格子可卸下。达到等级要求后，英雄也能穿戴其他职业的武器或护甲。技能所需武器可在技能说明中查看。<br><br>悬停于装备上可与当前穿戴的装备比较。按住【Alt】查看穿戴后的详细属性变化，按住【Shift】查看词条数值范围。【自动装备】会在当前队伍背包里挑选适合所选英雄职业的装备，武器优先考虑最终伤害，护甲优先考虑防御力。",
     },
     'help.character.equipment_slots.title': {
         ko: "장비 부위와 갑옷 갈래",
@@ -1800,9 +1809,10 @@ const STRINGS = {
         zh: '装备词条与罪宗',
     },
     'help.character.sins.body': {
-        // 2026-11-26 R586 — 장비 죄종은 조건이 아니라 죄종 점수(작전 카드 옵션 줄의 버프 몫)다 (zh 는 빠진 목록으로)
+        // 2026-11-26 R586 — 장비 죄종은 조건이 아니라 죄종 점수(작전 카드 옵션 줄의 버프 몫)다
         ko: "장비의 부위·베이스·희귀도·아이템 레벨에 따라 장비 자체의 기본 수치와 붙는 옵션이 달라집니다. 아이템 이름의 접두·접미에는 죄종이 붙을 수 있으며, 파티가 착용한 장비의 죄종 수는 영웅의 죄종과 함께 죄종 점수가 되어 같은 죄종 작전 카드의 옵션 줄 값을 키웁니다. 점수는 편성 탭의 카드 아래 판에서 확인합니다.",
         en: "Slot, base type, rarity and item level determine equipment base stats and options. Prefixes and suffixes in item names can carry Sins. Together with heroes' own Sins, the Sins on the party's worn gear add up to Sin scores that boost the option lines of tactic cards of the same Sin. Check the scores in the panel below the cards in the Party tab.",
+        zh: '装备的部位、基底、稀有度和物品等级决定基础属性与可出现的词条。装备名称的前缀和后缀可以带有罪宗。队伍所穿装备的罪宗与英雄自身的罪宗共同计入罪宗分数，分数越高，同罪宗战术卡的词条效果就越强。可在编队页的卡牌下方查看分数。',
     },
     'help.character.inventory.title': {
         ko: "부대 인벤토리와 창고",
@@ -1810,9 +1820,9 @@ const STRINGS = {
         zh: '小队背包与仓库',
     },
     'help.character.inventory.body': {
-        ko: "인벤토리는 부대마다 따로 있으며, 부대 번호를 눌러 보고 정리할 대상을 고릅니다. 창고는 공용입니다. [Ctrl]+클릭하거나 끌어 놓아 인벤토리와 창고 사이에서 장비를 옮길 수 있습니다. [정렬]은 등급·레벨·부위 기준으로 현재 칸을 한 번 정리하고, 그 뒤 들어오는 장비는 끝에 붙습니다.<br><br>장비 교체 시 벗은 장비는 새 장비를 꺼낸 보관함으로 돌아가며, 직접 해제한 장비는 보고 있는 인벤토리로 들어갑니다. 장비 강화와 제작은 대장간에서 진행합니다.",
-        en: "Each party has its own inventory; choose a party number to select which one to view and organize. The stash is shared. Use [Ctrl]+click or drag and drop to move gear between an inventory and the stash. [Sort] organizes the current container once by rarity, level or slot; later arrivals append to the end.<br><br>When swapping equipment, the old item returns to the container the new one came from. Manually removed equipment enters the currently viewed inventory. Upgrade and craft gear at the Blacksmith.",
-        zh: '每个小队都有各自的背包，点击小队编号即可选择要查看和整理的背包。仓库为共用。[Ctrl]+点击或拖放，可以在背包与仓库之间移动装备。[排序]会按稀有度、等级、部位将当前格子整理一次，之后进入的装备会排在末尾。<br><br>更换装备时，卸下的装备会回到取出新装备的背包或仓库；手动卸下的装备会进入当前查看的背包。装备的强化与制作在铁匠铺进行。',
+        ko: "인벤토리는 부대마다 따로 있고 창고는 공용입니다. 부대 번호를 눌러 인벤토리를 고릅니다. [Ctrl]+클릭하거나 반대편 칸으로 끌어 놓으면 인벤토리와 창고 사이에서 장비를 옮길 수 있습니다. [정렬]은 현재 칸을 등급·레벨·부위 기준으로 정리합니다.<br><br>장비를 교체하면 벗은 장비는 새 장비를 꺼낸 곳으로 돌아갑니다. 착용 칸에서 장비만 해제하면 현재 보고 있는 인벤토리로 들어갑니다.",
+        en: "Each party has its own inventory and all parties share the stash. Select a party number to view its inventory. [Ctrl]+click or drag gear to the other grid to move it between the inventory and stash. [Sort] orders the current storage by rarity, level and slot.<br><br>When you replace an item, the old item goes to the storage you took the new one from. When you unequip an item from a worn slot, it goes to the inventory you are viewing.",
+        zh: "每支队伍有独立背包，仓库由所有队伍共用。点击队伍编号可查看其背包。按住【Ctrl】点击，或将装备拖到另一侧，可在背包与仓库之间移动装备。【排序】按品质、等级和部位整理当前容器。<br><br>更换装备时，旧装备会回到新装备取出的地方。直接卸下装备时，装备会进入当前查看的背包。",
     },
     'help.character.salvage.title': {
         ko: "분해와 잠금",
@@ -1820,9 +1830,9 @@ const STRINGS = {
         zh: '分解与锁定',
     },
     'help.character.salvage.body': {
-        ko: "장비를 우클릭한 뒤 [잠금]으로 분해를 막고, [잠금 해제]로 보호를 풉니다. [분해] 창에서는 장비를 직접 고르거나 등급·레벨·베이스 필터로 선택한 뒤 [분해하기]로 가루와 부위 재료를 얻습니다. 등급·레벨·베이스의 서로 다른 열은 모두 만족해야 하며, 같은 열에서 여러 항목을 고르면 그중 하나에 맞아도 선택됩니다.<br><br>분해한 장비는 돌아오지 않으므로 중요한 장비는 먼저 잠급니다. [자동 분해]에서는 부대별로 등급마다 보존·분해를 정합니다. 일반은 [베이스]로 베이스 옵션이 문턱 이상인 것만 남기고, 매직부터는 [단어]로 이름의 죄종 단어가 그 아이템 레벨에서 나올 수 있는 단어 중 위쪽인 것만 남깁니다(맨 위 단어는 원래 죄종 이름). 레벨 조건도 함께 정할 수 있습니다. 원정에서 조건에 맞는 장비를 새로 얻을 때 적용되며, 기존 장비를 정리하려면 [지금 인벤토리에 적용]을 누릅니다. 유니크·크래프트는 자동 분해에서 보존됩니다.<br><br>설정을 프리셋에 저장해 다른 부대에서 불러올 수 있습니다.",
-        en: "Right-click equipment and choose [Lock] to protect it from salvage or choose [Unlock] to remove that protection. In [Salvage], select gear manually or with rarity, level and base-option filters, then [Salvage now] to receive dust and slot materials. Gear must match every selected filter column; multiple options within the same column match any one of those options.<br><br>Salvage permanently consumes items, so lock important gear first. [Auto salvage] sets keep or salvage per rarity for each party. Normal items use [Base] to keep only base options at or above the threshold; Magic and higher use [Word] to keep only items whose sin word in the name is among the higher words possible at that item level (the top word is the original sin name). A level rule can be added too. It checks newly received Expedition drops; use [Apply to inventory now] to process gear already owned. Unique and crafted items are kept by auto-salvage. Save rules to a preset to load them on another party.",
-        zh: '右键点击装备后选择[锁定]可防止分解，选择[解锁]则取消保护。在[分解]窗口中，可以手动选择装备，或用稀有度、等级、基底筛选后，按[执行分解]获得粉尘与部位材料。稀有度、等级、基底这些不同的列必须全部满足；同一列中选择多项时，只要符合其中一项即会被选中。<br><br>分解的装备无法找回，所以请先锁定重要装备。在[自动分解]中，按小队为每种稀有度设定保留或分解。普通装备用[基底]只保留基底词条在门槛以上的装备；魔法及以上用[词]只保留名称中的罪宗词在该物品等级可能出现的词中排在上位的装备（最上位的词就是罪宗本名）。也可以同时设定等级条件。该设定在远征中新获得符合条件的装备时生效；要整理已有装备，请按[立即应用于背包]。暗金与手工装备在自动分解中会被保留。<br><br>可以将设定保存为预设，在其他小队中读取。',
+        ko: "보관 중인 장비의 우클릭 메뉴에서 [잠금]을 누르면 분해를 막을 수 있습니다. 설정에서 [우클릭 분해]를 켰다면 [Shift]+우클릭으로 메뉴를 엽니다. [분해] 창에서는 직접 고르거나 등급·레벨·베이스 필터로 장비를 고른 뒤 [분해하기]를 누릅니다. 서로 다른 필터 열은 모두 일치해야 하고 같은 열에서는 하나만 일치해도 됩니다.<br><br>장비를 분해하면 가루와 부위 재료를 받습니다. 장비의 등급과 아이템 레벨 구간에 따라 양이 달라지며, 연구소 대장간 줄의 [분해] 지점으로 더 늘릴 수 있습니다.<br><br>창고 3랭크에서 [자동 분해]가 열립니다. 부대별로 등급마다 보존·분해를 정하고, 일반 장비는 [베이스], 매직 이상은 [단어] 조건을 고를 수 있습니다. 레벨 조건도 함께 적용할 수 있습니다. 이미 보유한 장비에는 [지금 인벤토리에 적용]을 사용합니다. 유니크와 크래프트는 자동 분해에서 보존됩니다. 부대 간에는 설정을 프리셋으로 옮길 수 있습니다.",
+        en: "Use [Lock] in the right-click menu to protect stored gear from salvage. If [Right-click Salvage] is enabled in Settings, use [Shift]+right-click to open the menu. In [Salvage], select gear by hand or with rarity, level and base filters, then select [Salvage now]. Items must match each selected column and can match any of the selected choices within a column.<br><br>Salvaging gear gives dust and slot materials. The amount depends on rarity and the item's level band. Research the Salvage node on the Laboratory's Blacksmith line for more.<br><br>Storage rank 3 unlocks [Auto salvage]. Set keep or salvage by rarity for each party. Use [Base] to keep Normal gear by base roll and [Word] to keep Magic and higher gear by the rank of the Sin word in its name. You can also set a level rule. Use [Apply to inventory now] for gear you already have. Auto salvage keeps Unique and Crafted gear. Save rules to a preset to reuse them across parties.",
+        zh: "在保管中的装备上右键选择【锁定】可防止分解。如果开启了【右键分解】，请按住【Shift】再右键打开菜单。在【分解】窗口可手动选择装备，也可按品质、等级和基础词条筛选，再点击【执行分解】。不同筛选栏的条件都须满足，同一栏满足任一已选条件即可。<br><br>分解装备可获得粉尘和部位材料。数量取决于装备品质和物品等级区间。研究所铁匠铺线的【分解】节点可进一步提高产量。<br><br>仓库升到 3 阶可开启【自动分解】。可为每支队伍按品质设置保留或分解。普通装备可按【基础】词条数值保留，魔法及以上装备可按名称中罪宗【词缀】的档位保留，也可加上等级条件。已持有的装备可用【立即应用于背包】处理。自动分解会保留暗金和手工装备。可保存预设供其他队伍使用。",
     },
     'help.character.skills.title': {
         ko: "액티브 스킬과 자동 사용 순서",
@@ -1890,9 +1900,9 @@ const STRINGS = {
         zh: '暴击、压碎性打击、吸血与反击',
     },
     'help.character.critical_effects.body': {
-        ko: "치명타 확률은 치명타가 나올 빈도, 치명타 피해는 치명타가 났을 때의 배율입니다. 마법 무기의 직접 타격도 치명타가 나올 수 있습니다. 두 수치 중 하나만 보고 공격 성능 전체를 판단하지 않습니다.<br><br>강타는 타격 직전 적의 현재 HP에 비례한 피해를 더합니다. 최대 HP 기준이 아니므로 같은 적도 HP가 많이 남았을 때 추가량이 큽니다. 강타는 물리 무기·맨손의 직격에 적용되며, 마법 무기를 들면 적용되지 않습니다.<br><br>흡혈은 준 직격 피해에 비례합니다. 물리 피해는 HP를 회복하고, 원소 피해는 잠깐 유지되는 보호막이 되며(최대 HP의 일정 비율까지), 고정 피해에는 흡혈이 붙지 않습니다. 피해가 잘 나오지 않으면 회복도 작아지며, 강타로 더한 피해나 중독·반사에는 흡혈이 붙지 않습니다. 회복을 늘리려면 흡혈 수치와 실제 타격 피해를 함께 확인합니다.<br><br>반격은 맞았을 때 확률로 공격자에게 기본 공격을 한 번 돌려줍니다. 자기 행동 차례는 쓰지 않으며, 반격을 맞은 쪽은 다시 반격하지 않습니다. 받은 피해를 그대로 되돌리는 반사와 다릅니다. 마법 무기에는 기본 공격이 없어 반격하지 못하며, 경직·스턴 중에도 반격하지 못합니다.",
-        en: "Critical Chance controls how often critical hits occur; Critical Damage controls their multiplier. Direct hits with magic weapons can also critically hit. Neither stat alone describes the hero's overall damage output.<br><br>Crushing Blow adds damage based on the enemy's current HP just before the hit. It uses current rather than maximum HP, so the added amount is larger while that enemy has more HP left. Crushing Blow works with direct hits using Physical weapons or bare hands, but does not apply while wielding a magic weapon.<br><br>Life Steal scales with direct-hit damage dealt. Physical damage restores HP, elemental damage becomes a short-lived shield (up to a share of max HP), and Fixed damage provides no Life Steal. Weak hits also mean little healing. Added Crushing Blow damage, Poison damage over time and reflection provide no Life Steal. Compare the Life Steal value with the damage the hero actually deals.<br><br>A counter has a chance to answer an incoming hit with a bonus basic attack against the attacker. It does not use the defender's own action turn, and a counter cannot itself be countered. This differs from reflection. Magic weapons have no basic attack and cannot counter; staggered or Stunned heroes cannot counter either.",
-        zh: '暴击率是暴击出现的频率，暴击伤害是暴击时的倍率。魔法武器的直接打击也可能暴击。不要只看其中一项就判断整体的攻击能力。<br><br>压碎性打击会在命中前，按敌人当前生命的比例追加伤害。它并不以最大生命为基准，所以同一个敌人剩余生命较多时，追加量较大。压碎性打击适用于物理武器与空手的直击，手持魔法武器时不生效。<br><br>吸血与造成的直击伤害成正比。物理伤害会恢复生命，元素伤害会转化为短暂存在的护盾（最多为最大生命的一定比例），真实伤害则没有吸血。伤害打不出来，治疗也会变少；压碎性打击追加的伤害以及中毒、反射都不会触发吸血。想增加治疗量，请一并确认吸血数值与实际打击伤害。<br><br>反击是在受到攻击时，有一定几率对攻击者回敬一次普通攻击。反击不占用自己的行动，被反击的一方也不会再反击。它与将受到的伤害原样返还的反射不同。魔法武器没有普通攻击，因此无法反击；处于僵直或眩晕状态时也无法反击。',
+        ko: "치명타 확률은 치명타가 나올 빈도이고, 치명타 피해는 치명타가 났을 때의 피해 배율입니다. 마법 무기의 직격에도 치명타가 나올 수 있습니다.<br><br>강타는 타격 직전 적의 현재 HP에 비례한 물리 피해를 더합니다. 적의 물리 방어와 공격자의 방어력 관통이 이 피해에 적용됩니다. 물리 무기 또는 맨손으로 가한 직격에서 발동하며, 일반·정예 언데드에게는 통하지 않습니다.<br><br>흡혈은 준 직격 피해에 비례합니다. 물리 피해로는 HP를 회복하고, 원소 피해로는 최대 HP의 일정 비율까지 잠깐 유지되는 보호막을 얻습니다. 고정 피해, 강타로 더한 피해, 중독, 반사는 흡혈을 일으키지 않습니다.",
+        en: "Critical Chance determines how often a hit is critical. Critical Damage determines how much damage a critical hit deals. Direct hits with magic weapons can also crit.<br><br>Crushing Blow adds Physical damage based on the target's current HP just before the hit. The target's Physical Defense and the attacker's Defense Penetration apply to that damage. It works on direct hits with a physical weapon or bare hands. Normal and Elite Undead are immune.<br><br>Life Steal scales with direct-hit damage dealt. Physical damage restores HP. Elemental damage grants a short-lived shield capped at a share of max HP. Fixed damage, the extra damage from Crushing Blow, poison and reflected damage do not provide Life Steal.",
+        zh: "暴击率决定暴击出现的频率，暴击伤害决定暴击时的伤害倍率。魔法武器的直击也能暴击。<br><br>重击按命中前目标的当前生命值附加物理伤害。这部分伤害会计算目标的物理防御和攻击者的防御穿透。物理武器或空手造成的直击可触发重击，普通和精英亡灵对其免疫。<br><br>吸血随造成的直击伤害增加。物理伤害恢复生命，元素伤害提供短暂护盾，护盾上限取决于最大生命值的一定比例。固定伤害、重击附加伤害、中毒和反射都不会触发吸血。",
     },
     'help.character.farming_stats.title': {
         ko: "드랍률과 파티 획득 보너스",
@@ -1930,9 +1940,9 @@ const STRINGS = {
         zh: '用专精塑造英雄的强项',
     },
     'help.character.mastery.body': {
-        ko: "[마스터리 열기]에서 죄종·직업 마스터리에 포인트를 투자합니다. 두 마스터리는 모두 패시브 효과이며 같은 포인트를 나누어 씁니다. 공격 스킬 하나를 더 장착하는 기능이 아니라, 가진 영웅의 공격·생존·파밍 등 강점을 고르는 기능입니다.<br><br>칸을 누르면 한 랭크를 올리고 우클릭하면 한 랭크와 포인트를 돌려받습니다. [마스터리 초기화]도 마스터리에 투자한 포인트를 무료로 환급하므로, 지금 막힌 원인에 맞춰 배분을 바꿔 볼 수 있습니다. 높은 층은 레벨 조건을 확인하고, 특정 무기·갑옷·장비 죄종 수를 요구하는 칸은 현재 조건까지 맞아야 효과가 적용됩니다.<br><br>도서관에서 전직하면 마스터리와 같은 스킬 포인트로 메인 하나를 배우고 강화합니다. 메인 단계는 전직 가능 레벨부터 5레벨 간격으로 열립니다. 배운 전직 스킬을 되돌려 같은 갈래의 다른 스킬로 바꿀 수 있지만, 선택한 전직 갈래 자체를 바꾸는 기능은 없습니다. 특수·변형·필살기 가지는 현재 준비 중입니다.",
-        en: "[Open Mastery] lets you invest in Sin and Class mastery. Both provide passive effects and share one point pool. They shape the hero's damage, survival or farming strengths rather than adding another equipped active skill.<br><br>Click a node for one rank or right-click to refund one rank and point. [Reset Mastery] also refunds mastery investments for free, so you can change allocation to address the problem you face. Check higher-tier level requirements and any matching weapon, armor or equipment-Sin conditions; investing alone does not activate a condition you do not meet.<br><br>After advancing at the Library, use the same skill points as mastery to learn and upgrade one main skill. Main ranks unlock at five-level intervals from the advancement unlock level. Refunding it lets you choose another skill within the same path, but the chosen advancement path itself cannot be changed. Special, Variant and Ultimate branches are currently coming later.",
-        zh: '在[打开专精]中向罪宗专精与职业专精投入点数。两种专精都是被动效果，共用同一份点数。它不是让你多装备一个攻击技能，而是为已有的英雄选择攻击、生存、刷宝等方面强项的功能。<br><br>点击格子提升一阶，右键点击则返还一阶与对应点数。[重置专精]同样会免费返还投入专精的点数，所以可以针对当前卡关的原因尝试调整分配。高层级要确认等级条件；要求特定武器、铠甲或装备罪宗数量的格子，还必须满足当前条件，效果才会生效。<br><br>在图书馆转职后，使用与专精相同的技能点学习并升级一个主技能。主技能的阶段从可转职等级起，每5级开放一个。已学的转职技能可以撤回，换成同一分支中的其他技能，但无法更改已选择的转职分支本身。特殊、变形、必杀分支目前仍在开发中。',
+        ko: "캐릭터의 [마스터리 열기]에서 죄종·직업 마스터리에 공용 스킬 포인트를 투자합니다. 칸을 클릭해 한 랭크를 올리고, 우클릭해 한 랭크와 포인트를 돌려받습니다. [마스터리 초기화]를 누르면 투자한 포인트를 무료로 환급합니다.<br><br>높은 티어를 열려면 표시된 레벨과 포인트 조건을 확인합니다. 특정 무기·갑옷·장비 죄종 수를 요구하는 효과는 해당 조건을 만족할 때 적용됩니다. 죄종 마스터리 T3는 영웅과 같은 죄종 장비를 {sinGear}부위 착용해야 적용됩니다.<br><br>전직 후에는 같은 공용 스킬 포인트를 전직 마스터리에도 쓸 수 있습니다. 스킬을 고르고 포인트를 배분하는 방법은 도서관 도움말에서 확인합니다.",
+        en: "Select [Open Mastery] in Character to spend shared skill points on Sin and class masteries. Click a node to raise it one rank or right-click it to refund one rank and its point. [Reset Mastery] refunds invested points for free.<br><br>Check the displayed level and point requirements to unlock higher tiers. Effects that require a weapon, armor, or a number of matching Sin pieces apply when those conditions are met. Sin mastery T3 requires {sinGear} pieces of gear matching the hero's Sin.<br><br>After advancement, the same pool of skill points can be spent on Advancement Mastery. See the Library help for selecting a skill and allocating points.",
+        zh: "在角色页点击【打开专精】，可将共用技能点投入罪宗和职业专精。点击节点可提升一阶，右键点击可退回一阶及对应点数。点击【重置专精】可免费返还已投入的点数。<br><br>解锁更高层级时，请查看显示的等级和技能点要求。要求特定武器、护甲或罪宗装备件数的效果，在满足条件时生效。罪宗专精 T3 需要穿戴 {sinGear} 件与英雄同罪宗的装备。<br><br>转职后，共用技能点也可用于转职专精。技能选择和加点方法可查看图书馆帮助。",
     },
     'help.character.dismiss.title': {
         ko: "영웅 해고와 남는 것",
@@ -1960,9 +1970,9 @@ const STRINGS = {
         zh: '初期扩建城镇的顺序',
     },
     'help.research.first_steps.body': {
-        ko: "초반 첫 건설은 두 줄로 열립니다. <b>창고 → 지휘 천막</b>과 <b>선술집 → 상단 → 대장간</b>이며, 창고와 선술집은 처음부터 지을 수 있습니다. 앞 건물을 지으면 같은 줄 다음 건물의 건설 조건이 갖춰집니다. 필요한 골드는 원정을 진행하고 의뢰를 수령해 마련할 수 있습니다.<br><br>선술집은 <b>의뢰 게시판을 먼저</b> 열며, 고용은 이후 랭크에서 열립니다. 창고를 지으면 연구소의 <b>자원 자동 생산</b>이 시작되고, 지휘 천막을 지으면 편성의 <b>첫 파티 전술 칸</b>이 열립니다. 인벤토리와 공용 창고 칸은 건설 전에도 사용할 수 있습니다.",
-        en: "The first buildings unlock along two paths: <b>Storage → Command Tent</b> and <b>Tavern → Trading House → Blacksmith</b>. Storage and Tavern can be built from the start, and each building satisfies the requirement for the next one on its path. Expeditions and claimed commissions provide gold for construction.<br><br>The Tavern opens its <b>commission board first</b>; hiring unlocks at a later rank. Building Storage starts the Laboratory's <b>automatic material production</b>. Building the Command Tent opens the <b>first Party tactic slot</b>. Inventory and shared stash spaces can be used before Storage is built.",
-        zh: '初期的首次建设分两条线开放：<b>仓库 → 指挥营帐</b>与<b>酒馆 → 商会 → 铁匠铺</b>。仓库和酒馆从一开始就能建造，建好前一座建筑，就满足同一条线上下一座建筑的建设条件。所需金币可以通过推进远征和领取委托奖励来筹集。<br><br>酒馆会<b>先开放委托告示板</b>，雇佣在之后的阶开放。建好仓库后，研究所的<b>资源自动生产</b>就会开始；建好指挥营帐后，编队的<b>第一个队伍战术格</b>就会开放。背包与共用仓库的格子在建设前也可以使用。',
+        ko: "창고와 선술집은 처음부터 지을 수 있습니다. 창고를 지으면 지휘 천막을 지을 수 있고, 연구소의 자원 줄이 열립니다. 자원 줄에 영웅을 등록하면 철광석·약초·목재 생산이 시작됩니다. 인벤토리와 공용 창고 칸은 건설 전에도 이용할 수 있습니다.<br><br>선술집을 지으면 의뢰 게시판이 열리고 상단을 지을 수 있습니다. 상단을 지으면 대장간을 지을 수 있습니다. 선술집의 영웅 고용은 2랭크에서 열립니다.",
+        en: "Storage and the Tavern can be built from the start. Building Storage lets you build the Command Tent and opens the Laboratory's Resources line. Assign a hero to that line to start producing iron ore, herbs and timber. The party inventories and shared stash are available before construction.<br><br>Building the Tavern opens the commission board and lets you build the Trading House. Once the Trading House is built, you can build the Blacksmith. Hero hiring opens at Tavern rank 2.",
+        zh: "仓库和酒馆从一开始就可以建造。建造仓库后，可建造指挥营帐，并开启研究所的资源线。派驻英雄后，就会开始生产铁矿石、草药和木材。队伍背包和共用仓库格在建造前即可使用。<br><br>建造酒馆后会开启委托板，并可建造商会。建成商会后可建造铁匠铺。酒馆升到 2 阶后可雇用英雄。",
     },
     'help.research.requirements.title': {
         ko: "건설 조건과 지불",
@@ -1980,9 +1990,9 @@ const STRINGS = {
         zh: '哪座建筑开放什么？',
     },
     'help.research.unlocks.body': {
-        ko: "<b>상단</b>은 물건 구매, <b>선술집</b>은 의뢰·영웅 고용·도박장, <b>대장간</b>은 장비 제작·강화·재료 합성을 엽니다. <b>도서관</b>은 스킬북·전직·도감 단계를 엽니다.<br><br><b>지휘 천막</b>은 파티 전술 칸을 늘립니다. <b>창고</b>의 뒤 랭크는 물약 칸 등 표시된 기능을 확장합니다. 정확한 내용은 각 건물의 랭크 목록을 확인합니다.<br><br><b>연구소 랭크를 짓는 것</b>과 <b>연구소에서 지점을 연구하는 것</b>은 다릅니다. 건설은 새 지점을 열고, 열린 지점의 생산량·속도 등을 올리는 것은 연구소의 연구입니다.",
-        en: "The <b>Trading House</b> opens purchases; the <b>Tavern</b> opens commissions, hiring and gambling; the <b>Blacksmith</b> opens smithing, upgrades and material combining. The <b>Library</b> opens skill books, advancement and Codex levels.<br><br>The <b>Command Tent</b> adds tactic slots. Later <b>Storage</b> ranks expand the listed features, including potion slots. Check each building's rank list for exact unlocks.<br><br><b>Building a Laboratory rank</b> differs from <b>researching a Laboratory node</b>. Construction opens new nodes. Research in the Laboratory improves the output, speed and other effects of nodes already open.",
-        zh: '<b>商会</b>开放物品购买，<b>酒馆</b>开放委托、英雄雇佣与赌坊，<b>铁匠铺</b>开放装备制作、强化与材料合成。<b>图书馆</b>开放技能书、转职与图鉴阶段。<br><br><b>指挥营帐</b>增加队伍战术格。<b>仓库</b>的后续阶会扩展药水格等所示功能。具体内容请查看各建筑的阶列表。<br><br><b>建造研究所的阶</b>与<b>在研究所中研究节点</b>是两回事。建设会开放新节点，而提升已开放节点的产量、速度等，则是研究所的研究。',
+        ko: "대장간은 랭크 순서대로 강화, 연구소 대장간 줄의 제작, 합성, 담금질, 장비 인챈트를 엽니다. 창고는 자원 줄과 추가 물약 칸, 자동 분해를 열고 지휘 천막은 작전 카드 칸을 엽니다.<br><br>도서관은 스킬북 학습과 도감부터 시작해 연구소 도서관 줄, 스킬북 제작·분해, 전직, 추가 도감 구간을 차례로 엽니다. 탐험 건물은 동굴·상단 의뢰·폐허를 순서대로 엽니다.<br><br>연구소의 건물 랭크를 올리면 새 지점과 지점의 다음 레벨이 열립니다. 열린 지점은 연구소 탭에서 연구해 실제 효과를 올립니다. 각 건물이 여는 기능은 건설의 랭크 목록에서 확인합니다.",
+        en: "The Blacksmith unlocks upgrades, crafting on the Laboratory's Blacksmith line, combining, quenching and gear enchanting in rank order. Storage unlocks the Resources line, extra potion slots and Auto Salvage. The Command Tent opens Tactic Card slots.<br><br>The Library starts with skill-book learning and the Codex, then unlocks the Laboratory's Library line, book crafting and salvage, advancement and further Codex sections. The Exploration building opens the cave, Caravan jobs and Ruins in order.<br><br>Higher Laboratory ranks open new nodes and higher node levels. Research those levels in the Laboratory tab to improve their effects. Each building's rank list in Construction shows its unlocks.",
+        zh: "铁匠铺按阶依次开启强化、研究所铁匠铺线的制作、合成、淬火和装备附魔。仓库开启资源线、额外药水格及自动分解。指挥营帐开启战术卡槽。<br><br>图书馆先开启技能书学习和图鉴，再依次开启研究所图书馆线、技能书制作与分解、转职和更多图鉴区间。探索建筑依次开启洞穴、商队委托与废墟。<br><br>提高研究所建筑阶数可开放新节点和更高的节点等级。在研究所页进行研究即可提升相应效果。各建筑开放的功能可在建造页的阶数列表查看。",
     },
     'help.research.locked.title': {
         ko: "잠긴 기능과 준비 중 기능",
@@ -2040,9 +2050,9 @@ const STRINGS = {
         zh: '在现有远征上附加委托',
     },
     'help.tavern.commissions.body': {
-        ko: "게시판에서 목표와 골드 보상을 보고 <b>[수락]</b>합니다. 동시에 진행할 수 있는 의뢰는 <b>{slots}개</b>입니다. 별도 파티나 전투를 시작하지 않으며, 수락한 뒤 모든 부대의 <b>승리 라운드</b>가 목표를 함께 채웁니다.<br><br>토벌·현상금 의뢰는 적힌 장·종족·장소를 맞춰 잡아야 하고 패배한 라운드는 세지 않습니다. 분해 의뢰는 직접 분해하거나 자동 분해 규칙으로 분해한 장비를 세며, 가방이 가득 차 넘친 장비는 세지 않습니다. 재료 의뢰는 분해와 연구소에서 얻은 철광석·약초·목재를 세며, 상점 구매·교환·합성은 세지 않습니다. 강화 의뢰는 실패한 시도도 셉니다. 스킬북 의뢰는 새로 배우거나 단계를 올릴 때마다, 고용 의뢰는 영웅을 고용할 때마다 셉니다. 장비 획득 의뢰는 이긴 라운드에 들어온 장비를 세며, 상점·상자·탐험에서 얻은 것은 세지 않습니다. 수락 전에 일어난 것은 세지 않습니다.<br><br>다 채우면 <b>[수령]</b>해야 골드를 받습니다. 기한은 없습니다. <b>[포기]</b>하면 진행도는 사라지지만 벌금은 없고, 수령·포기한 자리는 새 의뢰로 바뀝니다. 현재 돌고 있는 지역이나 앞으로 잡을 적과 맞는 목표를 고르면 원정과 함께 진행할 수 있습니다.",
-        en: "Check a card's goal and gold reward, then <b>Accept</b>. Your active limit is <b>{slots}</b>. No extra Party or battle starts: <b>won rounds</b> from all your expeditions contribute after acceptance.<br><br>Hunt and Bounty goals require the stated chapter, race or place, and defeated rounds do not count. Salvage goals count gear you salvage by hand or by auto-salvage rules, but not full-bag overflow. Gathering goals count ore, herbs and timber from salvage and the Laboratory, not Shop purchases, trades or synthesis. Enhance goals count failed attempts too. Skill book goals count each book you learn or level up, and hiring goals count each hero you hire. Gear collection goals count gear from won rounds, not from the Shop, chests or Explorations. Nothing from before acceptance counts.<br><br>Use <b>Claim</b> after completion to receive the gold. There is no deadline. <b>Abandon</b> loses progress without a fee. Claiming or abandoning replaces that card. A goal matching your current farming area or next enemies can progress alongside your expeditions.",
-        zh: '在告示板上查看目标和金币奖励后点击<b>[接受]</b>。可同时进行的委托为<b>{slots}个</b>。委托不会另外组建队伍或开启战斗，接受后所有小队的<b>胜利回合</b>都会共同推进目标。<br><br>讨伐、悬赏委托必须在写明的章、种族、场所击杀目标，失败的回合不计入。分解委托计入亲手分解或按自动分解规则分解的装备，因背包已满而溢出的装备不计入。材料委托计入从分解和研究所获得的铁矿石、草药、木材，商店购买、交换、合成不计入。强化委托连失败的尝试也计入。技能书委托在每次学会或升级技能书时计入，雇佣委托在每次雇佣英雄时计入。装备获取委托计入胜利回合中获得的装备，从商店、宝箱、探索获得的不计入。接受之前发生的事不计入。<br><br>全部完成后需点击<b>[领取]</b>才能获得金币。没有期限。<b>[放弃]</b>会清空进度，但没有罚金，领取或放弃后空出的位置会换成新委托。选择与当前所在区域或接下来要打的敌人相符的目标，就能与远征一同推进。',
+        ko: "선술집 게시판에서 목표와 골드 보상을 보고 [수락]합니다. 동시에 {slots}개까지 진행할 수 있습니다. 수락한 뒤 모든 부대의 활동 중 목표에 맞는 기록을 합산합니다.<br><br>토벌·현상금은 카드에 적힌 장·종족·장소에 맞는 처치를 셉니다. 분해 의뢰는 직접 분해하거나 자동 분해 규칙으로 분해한 장비를 셉니다. 재료 의뢰에는 분해와 연구소에서 얻은 철광석·약초·목재가 들어갑니다. 강화는 시도 횟수, 제작은 연구소 대장간 줄에서 만든 장비 수를 셉니다. 스킬북과 고용은 학습·업그레이드와 고용이 완료될 때, 장비 획득은 원정에서 승리한 라운드의 장비가 인벤토리에 들어올 때 셉니다.<br><br>목표를 채우면 [수령]을 눌러 골드를 받습니다. [포기]하면 그 의뢰의 진행도가 사라집니다. 수령하거나 포기한 자리에는 새 의뢰가 들어오며, 수락한 의뢰에는 기한이 없습니다.",
+        en: "Check the objective and gold reward on the Tavern board, then select [Accept]. You can have up to {slots} active commissions. Matching progress from all parties counts after you accept.<br><br>Hunts and bounties count kills matching the chapter, species or area shown. Salvage commissions count gear salvaged by hand or by Auto Salvage rules. Gathering counts iron ore, herbs and timber from salvage or the Laboratory. Upgrading counts attempts, while crafting counts gear made on the Laboratory's Blacksmith line. Skill-book and hiring commissions advance when a skill is learned or upgraded or a hero is hired. Gear collection counts gear added to inventory from won Expedition rounds.<br><br>Once the objective is complete, select [Claim] to collect the gold. [Abandon] clears that commission's progress. Claiming or abandoning replaces the card. Accepted commissions have no deadline.",
+        zh: "在酒馆委托板查看目标及金币奖励后点击【接受】。最多可同时进行 {slots} 项委托。接受后，所有队伍符合条件的进度会合并计算。<br><br>讨伐和悬赏统计符合卡片所列章节、种族或地点的击杀。分解委托统计手动分解或按自动分解规则处理的装备。采集委托统计通过分解或研究所获得的铁矿石、草药和木材。强化统计尝试次数，制作统计研究所铁匠铺线制作的装备。学习或升级技能、雇用英雄完成后会计入相应委托。装备收集统计远征获胜回合中入包的装备。<br><br>达成目标后，点击【领取】获得金币。点击【放弃】会清除该委托进度。领取或放弃后会换上新委托。已接受的委托没有期限。",
     },
     'help.tavern.fame.title': {
         ko: "카드 등급과 의뢰 레벨",
@@ -2050,9 +2060,9 @@ const STRINGS = {
         zh: '卡牌稀有度与委托等级',
     },
     'help.tavern.fame.body': {
-        ko: "의뢰의 <b>일반·매직·레어 등급</b>은 카드마다 따로 정해집니다. 높은 등급은 목표 수와 보상이 함께 커지며, 목표 수 대비 골드도 더 좋습니다.<br><br><b>의뢰 레벨</b>은 연구소 수색 줄의 <b>의뢰</b> 지점을 연구해 올립니다. 다음 레벨을 연구하려면 의뢰를 정해진 횟수만큼 완료해야 합니다. 레벨이 오르면 새 카드의 목표 수와 골드가 함께 커지고, 게시판에서 받지 않은 카드도 모두 새 레벨로 다시 섭니다. 받아 둔 의뢰는 진행도 그대로입니다.",
-        en: "Each commission rolls its own <b>Normal, Magic or Rare grade</b>. Higher grades increase both the goal and reward, with more gold per unit of the goal.<br><br>The <b>Commission level</b> rises by researching the <b>Commissions</b> node on the Laboratory Search line. Researching the next level requires a set number of completed commissions. A higher level increases the goals and gold on new cards, and every card on the board you have not accepted is rerolled at the new level. Accepted commissions keep their progress.",
-        zh: '委托的<b>稀有度（普通、魔法、稀有）</b>每张卡单独决定。稀有度越高，目标数量和奖励一起增大，按目标数量计算的金币也更划算。<br><br><b>委托等级</b>通过研究研究所搜寻线的<b>委托</b>节点来提升。研究下一级需要完成规定次数的委托。等级提升后，新卡的目标数量和金币一起增大，告示板上尚未接受的卡也会全部按新等级重新生成。已接受的委托保留原有进度。',
+        ko: "카드 등급은 일반·매직·레어로 나뉩니다. 등급이 높을수록 목표 수와 골드가 커지고, 목표 수 대비 골드도 더 많습니다.<br><br>의뢰 레벨은 연구소 수색 줄의 [의뢰] 지점에서 확인하고 올립니다. 보상을 정해진 횟수만큼 수령하면 다음 레벨을 연구할 수 있습니다. 연구를 마치면 아직 수락하지 않은 카드가 새 레벨로 갱신되며 목표 수와 골드가 올라갑니다. 받아 둔 의뢰의 목표와 진행도는 유지됩니다.",
+        en: "Each card is Normal, Magic or Rare. Higher grades increase the target count, total gold and gold per target.<br><br>Check and raise Commission Level at the [Commissions] node on the Laboratory's Search line. Claim the required number of rewards to research the next level. Finishing the research refreshes unaccepted cards at the new level with higher targets and gold rewards. Active commissions keep their objectives and progress.",
+        zh: "委托卡分为普通、魔法和稀有。品质越高，目标数量、金币总额及每个目标对应的金币越多。<br><br>可在研究所搜寻线的【委托】节点查看并提升委托等级。领取指定次数的奖励后即可研究下一等级。研究完成后，未接受的卡会按新等级刷新，目标数量和金币奖励都会提高。已接受委托的目标和进度会保留。",
     },
     'help.tavern.gambling.title': {
         ko: "도박장 슬롯",
@@ -2090,9 +2100,9 @@ const STRINGS = {
         zh: '批量购买药水',
     },
     'help.shop.consumables.body': {
-        ko: "물약을 고르고 수량 버튼으로 총개수와 가격을 확인한 뒤 <b>[구매]</b>합니다. 수량 버튼은 고르기만 하며 즉시 구매하지 않습니다. 고른 수량 버튼을 다시 누르면 한 개로 돌아갑니다.<br><br>물약은 매진되지 않고 공동 재고에 쌓입니다. 총가격이 모자라면 일부만 사지 않고 구매가 취소됩니다. 구입한 물약을 전투에 쓰려면 편성 탭에서 물약 칸의 종류와 순서를 정합니다. 상점 구매는 골드만 쓰고, 대장간 물약 제작은 골드와 약초를 씁니다. 가격은 각 화면에서 비교할 수 있습니다.",
-        en: "Select a potion, choose a quantity to check its total price, then press <b>Buy</b>. Quantity buttons only select an amount; they do not purchase it immediately. Click the selected quantity again to return to one.<br><br>Potions never sell out and accumulate in shared stock. If you cannot afford the total, none are purchased. Configure potion types and order in Party to use them in combat. Shop purchases cost gold; brewing at the Blacksmith costs gold and herbs. Compare the prices shown in each place.",
-        zh: '选择药水，用数量按钮确认总数和价格后点击<b>[购买]</b>。数量按钮只用于选择，不会立即购买。再次点击已选的数量按钮会恢复为1个。<br><br>药水不会售罄，会累积到共用库存中。总价不足时不会只买一部分，而是取消购买。要在战斗中使用买来的药水，需在编队页设定药水栏的种类和顺序。商店购买只花金币，铁匠铺制作药水则花金币和草药。价格可在各自的画面中比较。',
+        ko: "물약과 수량을 고른 뒤 총가격을 확인하고 [구매]합니다. 구매한 물약은 공용 재고에 들어갑니다. 편성의 [보유 물약]에서 전투에 가져갈 물약과 순서를 정합니다.<br><br>상점에서는 골드로 물약을 삽니다. 연구소 대장간 줄에서 만들 때는 골드와 약초를 씁니다.",
+        en: "Select a potion and quantity, check the total, then select [Buy]. Purchased potions enter shared stock. Use [In Stock] in Party to choose which potions to take and in what order.<br><br>Buy potions in the Shop with gold, or make them with gold and herbs on the Laboratory's Blacksmith line.",
+        zh: "选择药水和数量，确认总价后点击【购买】。买来的药水进入共用库存。在编队的【持有药水】中选择带入战斗的药水及顺序。<br><br>可在商店花金币购买药水，也可在研究所的铁匠铺线用金币和草药制作。",
     },
     'help.shop.books.title': {
         ko: "스킬북을 샀다면",
@@ -2100,9 +2110,9 @@ const STRINGS = {
         zh: '买了技能书之后',
     },
     'help.shop.books.body': {
-        ko: "상단 물약 아래 줄의 스킬 그림은 <b>스킬북</b>입니다. 산 책은 책 재고에 쌓이고, 도서관 <b>[스킬 업그레이드]</b>에서 영웅을 골라 배우거나 업그레이드합니다. 같은 책을 여러 권 모으면 업그레이드에 씁니다.<br><br>일반 상단은 현재 <b>1티어 직업 스킬 책</b>을 팝니다. 모든 스킬을 파는 것은 아니므로, 다른 스킬은 스킬 도감의 획득처를 확인합니다.",
-        en: "The skill icons below the potions in the Shop are <b>skill books</b>. Bought books enter book stock; select a hero under <b>Skill Upgrade</b> in the Library to learn or upgrade it. Extra copies of the same book are used for upgrades.<br><br>The ordinary Trading House currently sells <b>Tier 1 class-skill books</b>. It does not stock every skill. Check a skill's Codex entry for other sources.",
-        zh: '商会药水下方一行的技能图标就是<b>技能书</b>。买来的书进入书籍库存，在图书馆<b>[技能升级]</b>中选择英雄来学习或升级。同一本书收集多本时用于升级。<br><br>普通商会目前出售<b>T1职业技能书</b>。并非出售所有技能，其他技能请在技能图鉴中查看获取途径。',
+        ko: "상단 3랭크에서 스킬북 판매가 열립니다. 일반 상단에서는 1티어 직업 스킬북을 살 수 있고, 사들인 책은 도서관의 [보유 스킬북]에서 확인합니다. 영웅을 고른 뒤 도서관 위쪽 [스킬정보]에서 배우거나 업그레이드합니다. 다른 스킬북의 획득처는 스킬 도감에서 확인합니다.",
+        en: "Trading House rank 3 unlocks skill-book sales. The regular Shop sells Tier 1 class skill books. Purchased books appear in [Owned Skill Books] in the Library. Select a hero and use [Skill Info] at the top to learn or upgrade a skill. Check the Skill Codex for sources of other books.",
+        zh: "商会升到 3 阶后可购买技能书。普通商店出售一阶职业技能书，买到的书可在图书馆的【持有的技能书】中查看。选择英雄后，在顶部【技能信息】中学习或升级技能。其他技能书的来源可查阅技能图鉴。",
     },
     'help.shop.trade.title': {
         ko: '재료 또는 골드로 구매하기',
@@ -2124,30 +2134,36 @@ const STRINGS = {
         en: "Upgrading the Trading House to the required rank opens <b>special-trader visits</b>. Its panel shows the time until arrival or departure. This timer is separate from the ordinary Trading House's free <b>Refresh</b> wait.<br><br>Special-trader goods are currently <b>coming later</b>. Question-mark slots cannot be purchased. Buy ordinary gear, potions and skill books from the regular Trading House on the left.",
         zh: '在建设中将商会提升到相应的阶后，会开放<b>行商来访</b>功能。面板上可查看距离到达或离开的剩余时间。这个计时与普通商会<b>[刷新]</b>的免费等待时间无关。<br><br>行商商品目前<b>准备中</b>。问号格无法购买。普通装备、药水、技能书请在左侧的普通商会购买。',
     },
-    // 2026-11-24 — 장비 · 물약 제작이 연구소 대장간 줄로 옮겨 세 주제의 문장을 고쳤다(R574 · ADR-1374 · zh 는 빠진 목록으로)
+    // 2026-11-24 — 장비 · 물약 제작이 연구소 대장간 줄로 옮겨 세 주제의 문장을 고쳤다(R574 · ADR-1374)
     'help.forge.overview.title': {
         ko: "강화 · 인챈트 · 합성의 차이",
         en: "Upgrades, enchants and combining",
+        zh: '强化、附魔与合成的区别',
     },
     'help.forge.overview.body': {
-        ko: "<b>강화</b>는 이미 가진 무기·방어구의 <b>기본 성능</b>을 올립니다. <b>인챈트</b>는 레어 이상 장비에 옵션 한 줄을 붙입니다. <b>합성</b>은 여러 개의 재료를 모아 <b>한 단계 높은 재료</b>로 바꿉니다.<br><br>새 장비와 물약은 대장간이 아니라 <b>연구소의 대장간 줄</b>이 만듭니다. 합성은 장비를 바꾸거나 장비 옵션을 다시 뽑는 기능이 아닙니다.",
-        en: "<b>Upgrade</b> improves the <b>base performance</b> of a weapon or armor you already own. <b>Enchant</b> adds one option line to Rare or better gear. <b>Combine</b> turns several materials into <b>the next material grade</b>.<br><br>New gear and potions are made by the <b>Blacksmith line in the Laboratory</b>, not here. Combining does not alter equipment or reroll its options.",
+        ko: "대장간에서는 장비를 골라 [강화]하거나 [인챈트]하고, [합성]에서 재료의 단계를 올립니다. 강화는 무기 피해나 방어력을 올리고, 인챈트는 전용 옵션을 추가하거나 바꿉니다.<br><br>새 장비와 물약을 만들려면 대장간 2랭크에서 열리는 연구소 대장간 줄에 영웅을 등록합니다.",
+        en: "Select gear at the Blacksmith to [Upgrade] or [Enchant] it. Use [Combine] to make higher-grade materials. Upgrading improves weapon damage or armor defense. Enchanting adds or replaces an enchantment option.<br><br>To make new gear and potions, assign a hero to the Laboratory's Blacksmith line, which opens at Blacksmith rank 2.",
+        zh: "在铁匠铺选中装备后可【强化】或【附魔】，在【合成】中可提升材料品阶。强化提高武器伤害或护甲防御，附魔则添加或更换附魔词条。<br><br>要制作新装备和药水，请向铁匠铺 2 阶开启的研究所铁匠铺线派驻英雄。",
     },
     'help.forge.smith.title': {
         ko: "새 장비는 연구소 대장간 줄에서",
-        en: "New gear comes from the Laboratory",
+        en: "Crafting gear on the Laboratory’s Blacksmith line",
+        zh: '在研究所铁匠铺线制作新装备',
     },
     'help.forge.smith.body': {
         ko: "연구소의 <b>대장간 줄</b>에 영웅을 등록하고, 등록 창에서 영웅마다 <b>무엇을 만들지</b>(장비 부위 일곱 또는 열린 물약 단계)를 고릅니다. 고르는 즉시 그 영웅의 시계가 돌고 정해진 시간마다 하나씩 만듭니다.<br><br>장비는 <b>그 영웅의 레벨</b>로 나오며 드롭과 같이 베이스·희귀도·옵션을 전부 새로 정합니다. 비용(골드·부위 재료·가루)은 하나가 완성되는 순간 냅니다. 모자라면 그 영웅은 쉬다가 비용이 생기면 다시 만듭니다.<br><br>만든 장비는 <b>줄 공용 장비 칸</b>에 쌓입니다. 칸이 가득 차면 장비를 만드는 시계가 모두 쉬므로, 등록 창의 장비 칸에서 <b>[창고로]</b> 옮기거나 <b>[분해]</b>합니다. 게임을 끈 동안에도 칸이 찰 때까지 만듭니다.",
         en: "Assign heroes to the <b>Blacksmith line</b> in the Laboratory, then pick <b>what each hero makes</b> (one of seven gear slots or an unlocked potion tier) in the assignment window. The hero's clock starts at once and makes one item per interval.<br><br>Gear comes out at <b>that hero's level</b> and rolls base, rarity and options like a drop. The cost (gold, slot material and dust) is paid when an item is finished. If you cannot pay, the hero waits and resumes once you can.<br><br>Finished gear goes into the line's <b>shared gear slots</b>. When they are full, every gear clock pauses, so use <b>To Stash</b> or <b>Salvage</b> in the assignment window. Gear keeps being made while the game is closed until the slots fill.",
+        zh: '向研究所的<b>铁匠铺线</b>派驻英雄，然后在派驻窗口为每名英雄选择<b>要制作的物品</b>，可选七个装备部位之一或已解锁级别的药水。选好后立即开始计时，此后每隔一段时间制成一件。<br><br>装备的物品等级等于<b>制作英雄的等级</b>，基底、稀有度和词条与掉落装备一样随机生成。每件装备完成时才扣除金币、对应部位的材料和粉尘。费用不足时，英雄会暂停制作，等资源充足后继续。<br><br>制成的装备会放入<b>该产线共用的装备栏位</b>。栏位满后，所有装备制作都会暂停。请在派驻窗口选择<b>【移入仓库】</b>或<b>【分解】</b>腾出空间。关闭游戏后也会继续制作，直到栏位填满。',
     },
     'help.forge.potions.title': {
         ko: "물약 만들기와 재고",
         en: "Brewing and stocking potions",
+        zh: '制作药水与管理库存',
     },
     'help.forge.potions.body': {
         ko: "물약도 연구소 <b>대장간 줄</b>이 만듭니다. 등록 창에서 영웅의 목표로 물약을 고르면 정해진 시간마다 하나씩 재고에 들어오고, 비용은 골드와 약초입니다. 상점에서도 살 수 있습니다.<br><br>만들 수 있는 물약 단계는 대장간 랭크와 연구소 「물약」 지점이 엽니다. 재고는 여러 Party가 함께 쓰며, 편성에서 물약 칸을 채워도 그때 바로 소모되지는 않습니다. 전투에서 마신 만큼 줄어드므로 자동 원정을 계속할 때는 재고를 확인합니다. 물약 종류·순서·사용 HP 기준은 편성 탭에서 정합니다.",
         en: "Potions are also made by the <b>Blacksmith line</b> in the Laboratory. Pick a potion as a hero's target in the assignment window and one enters your stock per interval, costing gold and herbs. Shops also sell potions.<br><br>The Blacksmith rank and the Laboratory's Potion node unlock brewable tiers. All Parties share stock. Filling preset slots does not spend it immediately; drinking in combat does. Check supplies when running repeated expeditions. Set potion types, order and drinking HP threshold in Party.",
+        zh: '药水也由研究所的<b>铁匠铺线</b>制作。在派驻窗口为英雄选择一种药水，之后每隔一段时间就会消耗金币和草药，制成一瓶并放入库存。也可直接在商店购买药水。<br><br>铁匠铺的阶数和研究所的「药水」节点决定可制作的药水级别。所有编队共用库存，在编队页配置药水时不会扣除，战斗中喝下才会消耗。连续远征时请留意库存。在编队页可以设置药水种类、使用顺序和触发喝药的生命值阈值。',
     },
     'help.forge.upgrade.title': {
         ko: "가진 장비 강화",
@@ -2155,9 +2171,29 @@ const STRINGS = {
         zh: '强化已有装备',
     },
     'help.forge.upgrade.body': {
-        ko: "왼쪽 착용 장비나 아래 인벤토리·창고의 장비를 눌러 강화 대상을 고릅니다. 대장간에서 장비를 누르는 것은 <b>장착이 아니라 대상 선택</b>입니다. <b>[강화]</b>에서 다음 효과·성공 확률·골드와 재료 비용을 확인합니다.<br><br>강화는 무기의 피해 범위와 방어구의 방어력 같은 <b>기본 성능</b>을 올립니다. 붙어 있던 죄종·옵션 조합을 바꾸거나 옵션 값을 다시 뽑지 않습니다. 목걸이와 반지는 강화할 수 없으며, 상한은 대장간 랭크에 따라 늘어납니다.<br><br>성공하면 강화 단계가 하나 오릅니다. <b>실패해도 골드와 재료는 소모</b>됩니다. 높은 단계에서는 실패할 때 단계가 하나 내려가거나 <b>장비가 부서질 수 있고</b>, 부서진 장비는 분해한 것과 같은 재료를 남깁니다. 착용 중인 장비와 창고 장비도 강화할 수 있습니다.",
-        en: "Click worn gear on the left, or gear in inventory or stash below, to select a target. Clicking gear here <b>selects it rather than equipping it</b>. In <b>Upgrade</b>, check the next effect, success chance, and gold and material costs.<br><br>Upgrades raise <b>base performance</b>, such as weapon damage or armor defense. They do not change the existing Sins, option combination or rolled option values. Amulets and rings cannot be upgraded. Blacksmith ranks can raise the cap.<br><br>Success adds one upgrade level. <b>Failure still spends gold and materials</b>. At higher levels a failure can drop the item one level or <b>break the item</b>; a broken item leaves the same materials as salvaging it. Both worn and stashed gear can be upgraded.",
-        zh: '点击左侧已穿戴的装备，或下方背包、仓库中的装备，选择强化目标。在铁匠铺点击装备是<b>选择目标，而不是装备</b>。在<b>[强化]</b>中确认下一级效果、成功几率以及金币和材料费用。<br><br>强化提升武器伤害范围、防具防御力等<b>基础性能</b>。不会改变原有的罪宗与词条组合，也不会重新随机词条数值。项链和戒指无法强化，上限随铁匠铺的阶提升。<br><br>成功时强化等级提升1级。<b>失败时也会消耗金币和材料</b>。在较高阶段失败时，等级可能下降1级，或<b>装备可能损毁</b>；损毁的装备会留下与分解相同的材料。已穿戴的装备和仓库中的装备也可以强化。',
+        ko: "착용 장비나 인벤토리·창고의 장비를 눌러 강화 대상을 고릅니다. [강화]에서 다음 단계의 효과·성공 확률·비용을 확인합니다. 무기와 방어구를 강화할 수 있습니다. 더 높은 강화 단계는 연구소 대장간 줄의 [강화] 지점에서 엽니다.<br><br>성공하면 한 단계 오르고, 대성공이면 더 오릅니다. 실패해도 골드와 재료가 소모됩니다. 높은 단계에서는 강등되거나 파괴될 수 있으며, 파괴된 장비는 분해 재료를 남깁니다. 다음 시도의 결과별 확률은 강화 화면에서 확인합니다.",
+        en: "Select worn gear or gear in the inventory or stash to upgrade. [Upgrade] shows the effect, odds and cost of the next attempt. Weapons and armor can be upgraded. Research the [Upgrade] node on the Laboratory's Blacksmith line to raise the cap.<br><br>A success adds one upgrade level and a great success adds more. A failed attempt still spends gold and materials. At higher levels the gear can downgrade or break. Broken gear leaves salvage materials. The Upgrade screen shows the odds for the next attempt.",
+        zh: "点击已穿戴的装备，或背包、仓库里的装备来选定强化目标。可在【强化】中查看下一次尝试的效果、概率与费用。武器和护甲可强化。研究所铁匠铺线的【强化】节点可提高上限。<br><br>成功时提升一阶，大成功时额外提升。失败也会消耗金币和材料。高阶时装备可能降级或损毁，损毁会留下分解材料。下次尝试的各项概率可在强化界面查看。",
+    },
+    'help.forge.temper.title': {
+        ko: "담금질",
+        en: "Quench",
+        zh: "淬火",
+    },
+    'help.forge.temper.body': {
+        ko: "대장간 4랭크에서 [강화] 화면의 담금질을 사용할 수 있습니다. [달구기]는 강화 성공 확률, [덧대기]는 대성공 확률을 높입니다. [막기]는 강등이나 파괴 결과를 막을 확률을 높입니다. 담금질 효과는 바로 다음 강화 시도에서 소모됩니다.",
+        en: "Blacksmith rank 4 opens Quench on the [Upgrade] screen. [Heat] raises the success chance, [Reinforce] raises the great success chance, and [Guard] gives a chance to prevent a downgrade or break. The next upgrade attempt consumes the quench effect.",
+        zh: "铁匠铺升到 4 阶后可在【强化】界面淬火。【加热】提高强化成功率，【加固】提高大成功率，【防护】有机会阻止降级或损毁。淬火效果会在下一次强化尝试中消耗。",
+    },
+    'help.forge.enchant.title': {
+        ko: "장비 인챈트",
+        en: "Gear enchanting",
+        zh: "装备附魔",
+    },
+    'help.forge.enchant.body': {
+        ko: "대장간 5랭크에서 [인챈트]가 열립니다. 레어 이상 장비를 고르고 골드와 가루를 내면 인챈트 옵션 한 줄이 붙습니다. 이미 인챈트한 장비에 다시 시도하면 [선택]으로 새 옵션을 적용하거나 [유지]로 기존 줄을 남깁니다. 연구소 대장간 줄의 [인챈트] 지점은 굴림의 최저 수치를 높입니다.",
+        en: "Blacksmith rank 5 opens [Enchant]. Select Rare or higher gear and pay gold and dust to add an enchantment option. When enchanting the item again, select [Choose] to apply the new roll or [Keep] to retain the current line. The [Enchant] node on the Laboratory's Blacksmith line raises the minimum value an enchantment can roll.",
+        zh: "铁匠铺升到 5 阶后开启【附魔】。选中稀有及以上装备并支付金币和粉尘，可添加一条附魔词条。再次附魔时，点击【选择】应用新词条，或点击【保留】留下原词条。研究所铁匠铺线的【附魔】节点可提高附魔数值的下限。",
     },
     'help.forge.combine.title': {
         ko: "재료를 한 단계 올리는 합성",
@@ -2165,9 +2201,9 @@ const STRINGS = {
         zh: '将材料提升一级的合成',
     },
     'help.forge.combine.body': {
-        ko: "<b>[합성]</b>에서는 같은 재료의 바로 아래 단계와 골드를 써서 한 단계 높은 재료를 만듭니다. 예를 들어 최하급 철광석을 모아 하급 철광석으로 바꿉니다. 철광석을 약초로 바꾸는 식의 종류 교환은 아닙니다.<br><br><b>[합성]</b>은 한 개, <b>[최대]</b>는 현재 재료와 골드로 만들 수 있는 최대 수량을 만듭니다. 즉시 완료되고 실패하지 않습니다. 사용한 재료는 소모되며 아래 단계로 되돌리는 기능은 없습니다.<br><br>현재 제작·강화·물약·스킬북·연구가 소비하는 재료는 최하급입니다. 상위 단계 재료의 사용처는 아직 준비 중이므로, 재고를 전부 합성하기 전에 지금 필요한 최하급 재료를 남겨 둡니다.",
-        en: "<b>Combine</b> uses the immediately lower grade of the same material and gold to make the next grade. For example, combine lowest-grade iron ore into low-grade iron ore. It does not exchange one material type for another, such as ore for herbs.<br><br><b>Combine</b> makes one; <b>Max</b> makes as many as your current materials and gold allow. Combining is immediate and cannot fail. Inputs are consumed and cannot be converted back to lower grades.<br><br>Smithing, upgrades, potions, skill books and research currently consume lowest-grade materials. Uses for higher grades are still coming later. Keep the lowest-grade materials you currently need before combining your stock.",
-        zh: '<b>[合成]</b>使用同种材料低一级的材料和金币，制作高一级的材料。例如，把最低级铁矿石合成为低级铁矿石。这不是把铁矿石换成草药之类的种类交换。<br><br><b>[合成]</b>制作1个，<b>[最多]</b>按当前材料和金币能制作的最大数量制作。立即完成，不会失败。使用的材料会被消耗，没有退回较低级别的功能。<br><br>目前制作、强化、药水、技能书、研究消耗的都是最低级材料。较高级别材料的用途仍在准备中，所以在把库存全部合成之前，先留下当前需要的最低级材料。',
+        ko: "대장간 3랭크에서 [합성]이 열립니다. 같은 재료의 바로 아래 단계와 골드를 써서 한 단계 높은 재료를 만듭니다. 철광석·약초·목재·가루를 합성할 수 있습니다. 예를 들어 최하급 철광석을 모아 하급 철광석을 만듭니다.<br><br>[합성]으로 한 개를, [최대]로 현재 재고와 골드로 만들 수 있는 최대 수량을 만듭니다. 결과는 즉시 들어옵니다. 담금질에 필요한 재료 단계는 장비를 고른 뒤 비용에서 확인합니다.",
+        en: "Blacksmith rank 3 opens [Combine]. Use gold and the immediately lower grade of iron ore, herbs, timber or dust to make the next grade of that material. For example, combine lowest-grade iron ore into low-grade iron ore.<br><br>[Combine] makes one, and [Max] makes as many as your current stock and gold allow. The result arrives immediately. To see the material grade needed for a quench, select the gear and check its cost.",
+        zh: "铁匠铺升到 3 阶后开启【合成】。消耗金币和低一阶的铁矿石、草药、木材或粉尘，可制作同种材料的下一品阶。例如，可用最低级铁矿石合成低级铁矿石。<br><br>点击【合成】制作一个，点击【最大】按现有库存和金币制作尽可能多的数量。产物会立即到账。要查看淬火所需的材料品阶，请先选择装备，再查看费用。",
     },
     'help.forge.craft.title': {
         ko: "크래프트의 현재 상태",
@@ -2176,7 +2212,8 @@ const STRINGS = {
     },
     'help.forge.craft.body': {
         ko: "<b>[크래프트]</b>는 현재 준비 중입니다. 사용할 수 있는 작업은 <b>[강화] · [인챈트] · [합성]</b>입니다.",
-        en: "<b>Craft</b> is currently coming later. Available operations are <b>Upgrade, Enchant and Combine</b>.",
+        en: "<b>Craft</b> is not available yet. You can currently <b>Upgrade, Enchant or Combine</b>.",
+        zh: '<b>【打造】</b>尚未开放。目前可以进行<b>【强化】、【附魔】和【合成】</b>。',
     },
     'help.library.basics.title': {
         ko: "스킬북 · 전직의 차이",
@@ -2194,9 +2231,9 @@ const STRINGS = {
         zh: '获得与分解技能书',
     },
     'help.library.sources.body': {
-        ko: "스킬북은 원정에서 몬스터를 처치하거나 탐험 동굴의 보상, 연구소 도서관 줄, 상단 구매, 영웅의 첫 책 사용 레벨 보상으로 들어옵니다. 어떤 몬스터가 어떤 책을 주는지는 스킬 도감의 획득처에서 확인합니다.<br><br>얻은 책은 바로 책 재고에 쌓이며 장비 인벤토리 칸을 차지하지 않습니다. 더 쓸 데가 없는 책은 창고의 <b>[스킬북]</b> 탭에서 골라 <b>[분해]</b>합니다. 한 번에 1권이 <b>스킬 조각 {shard}개</b>가 되며, 되돌릴 수 없습니다.<br><br>연구소 <b>도서관</b> 줄은 영웅을 등록해야 시간마다 스킬 조각을 생산합니다. 조각이 나올 때마다 <b>[대박]</b> 확률로 그 영웅이 가진 스킬의 책도 한 권 들어옵니다.",
-        en: "Skill books come from defeating monsters on Expeditions, Exploration cave rewards, the Laboratory Library line, Trading House purchases and each hero's first-book level reward. Check a skill's Codex sources to see which monsters drop its book.<br><br>Books enter book stock immediately and do not take equipment inventory slots. Select a book you no longer need in the stash's <b>Skill Books</b> tab and press <b>Salvage</b>. Each press turns one book into <b>{shard} skill shard(s)</b> and cannot be undone.<br><br>The Laboratory <b>Library</b> line produces skill shards every hour once a hero is assigned. Each shard has a <b>Jackpot</b> chance to also bring one book of a skill that hero has.",
-        zh: '技能书的来源有：远征中击杀怪物、探索洞穴的奖励、研究所的图书馆线、商会购买，以及英雄达到可用书等级时的首本书奖励。哪种怪物掉落哪本书，请在技能图鉴的获取途径中查看。<br><br>获得的书会立即进入书籍库存，不占背包的装备格。用不上的书可在仓库的<b>[技能书]</b>页中选中后<b>[分解]</b>。每次将1本书变为<b>{shard}个技能碎片</b>，且无法撤销。<br><br>研究所的<b>图书馆</b>线需要派驻英雄才会每小时生产技能碎片。每产出一个碎片，都有<b>[大丰收]</b>几率额外获得一本该英雄所持技能的技能书。',
+        ko: "스킬북은 원정과 탐험, 연구소 도서관 줄, 상단 구매, 영웅의 첫 책 사용 레벨 보상에서 얻습니다. 몬스터별 획득처는 스킬 도감에서 확인합니다. 얻은 책은 공용 책 재고에 쌓입니다.<br><br>도서관 2랭크에서 열리는 연구소 도서관 줄에 영웅을 등록하면 스킬 조각을 생산합니다. 조각이 나올 때 [대박]이 터지면 그 영웅의 고유 또는 습득 스킬의 책도 나옵니다. 도서관 4랭크에서 [분해]를 사용할 수 있고, 책 한 권을 분해하면 스킬 조각 {shard}개를 얻습니다.",
+        en: "Find skill books in Expeditions and Exploration, from the Laboratory's Library line, in the Shop, or as a reward when a hero first reaches the level for reading books. Check the Skill Codex for monster drop sources. Books go to shared book stock.<br><br>Assign heroes to the Laboratory's Library line, which opens at Library rank 2, to produce skill shards. A [Jackpot] on a shard payout also gives a book for that hero's innate or learned skill. Library rank 4 opens [Salvage], which gives {shard} skill shards per book.",
+        zh: "可通过远征、探索、研究所图书馆线、商店购买，或英雄首次达到读书等级时的奖励获得技能书。各怪物的掉落来源可在技能图鉴查看。技能书进入共用库存。<br><br>图书馆升到 2 阶后，可向研究所的图书馆线派驻英雄来生产技能碎片。发放碎片时若触发【大奖】，还会获得该英雄的固有或已学技能书。图书馆 4 阶开启【分解】，每本书可分解为 {shard} 个技能碎片。",
     },
     'help.library.craft.title': {
         ko: "스킬 조각으로 스킬북 만들기",
@@ -2214,9 +2251,9 @@ const STRINGS = {
         zh: '选择读书的英雄并学习',
     },
     'help.library.learn.body': {
-        ko: "위쪽 영웅 띠에서 책을 읽힐 영웅을 고르고, <b>[스킬 업그레이드]</b>에서 보유 책을 누릅니다. 영웅 레벨 <b>{level}</b>부터 사용할 수 있습니다. 새 스킬의 <b>[배우기]</b>는 책 한 권을 쓰고 그 영웅의 '배운 스킬' 칸을 채웁니다. 다른 영웅에게도 주려면 별도 책이 필요합니다.<br><br>이미 다른 스킬을 배웠으면 버튼이 <b>[덮어쓰기]</b>로 바뀝니다. 누르면 확인 창이 뜨고, 확인하면 이전 스킬과 그 업그레이드는 사라지고 사용했던 책도 돌아오지 않습니다. 새 책의 효과와 필요한 무기를 먼저 확인합니다.<br><br>다른 직업의 책도 읽을 수 있지만, 무기의 힘을 쓰는 타격·회복·소환 스킬은 <b>그 스킬 직업의 무기</b>를 들어야 발동합니다. 배우는 것과 현재 장비로 사용할 수 있는 것은 별개입니다.",
-        en: "Choose the hero who will read the book in the top strip, then select an owned book in <b>Skill Upgrade</b>. Heroes can use books from level <b>{level}</b>. <b>Learn</b> spends one book to fill that hero's learned-skill slot. Teaching another hero requires another copy.<br><br>If the hero already learned a different skill, the button becomes <b>Overwrite</b> and asks for confirmation. Confirming removes the old skill and its upgrades without returning used books. Check the new skill's effect and weapon requirement first.<br><br>A hero can read another class's book, but weapon-powered attack, healing and summoning skills require <b>a weapon belonging to that skill's class</b>. Learning a skill does not guarantee that current equipment can cast it.",
-        zh: '在上方英雄栏中选择要读书的英雄，再在<b>[技能升级]</b>中点击持有的书。从英雄等级<b>{level}</b>起可以使用。新技能的<b>[学习]</b>会消耗一本书，填入该英雄的“习得技能”栏。要教给其他英雄，需要另一本书。<br><br>如果已经学了其他技能，按钮会变为<b>[覆盖]</b>。点击后会弹出确认窗口，确认后之前的技能及其升级都会消失，已用掉的书也不会返还。请先确认新书的效果和所需武器。<br><br>也可以阅读其他职业的书，但借助武器之力的打击、治疗、召唤技能，必须手持<b>该技能所属职业的武器</b>才会发动。学会技能与能否用当前装备使用它是两回事。',
+        ko: "도서관에서 영웅을 고르고 [보유 스킬북]에서 읽힐 책을 선택합니다. 영웅 레벨 {level}부터 위쪽 [스킬정보]의 습득 줄에서 [배우기]를 누를 수 있습니다. 책 한 권을 써서 그 영웅의 습득 칸을 채웁니다.<br><br>이미 다른 스킬을 배웠다면 [덮어쓰기]로 교체합니다. 확인하면 이전 스킬과 그 업그레이드 단계가 사라집니다. 다른 직업의 책도 배울 수 있습니다. 전투에서 사용할 수 있는 무기는 각 스킬 설명에서 확인합니다.",
+        en: "Choose a hero in the Library and select a book in [Owned Skill Books]. At hero level {level}, [Learn] becomes available in the learned skill row of [Skill Info]. Learning spends one book and fills that hero's learned slot.<br><br>If the hero already learned another skill, use [Overwrite] to replace it. Confirming removes the old learned skill and its upgrades. Heroes can learn books from other classes. Each skill description shows which weapon lets the hero use it in combat.",
+        zh: "在图书馆选定英雄，再从【持有的技能书】中选择一本书。英雄达到 {level} 级后，可以在【技能信息】的已学技能栏点击【学习】。学习会消耗一本书，并填入该英雄的已学技能槽。<br><br>若英雄已学了另一技能，可用【覆盖】更换。确认后，旧的已学技能及其升级等级会消失。也可学习其他职业的技能书。技能说明会列出在战斗中使用该技能所需的武器。",
     },
     'help.library.upgrade.title': {
         ko: "같은 스킬북으로 레벨 올리기",
@@ -2224,9 +2261,9 @@ const STRINGS = {
         zh: '用同名技能书提升等级',
     },
     'help.library.upgrade.body': {
-        ko: "선택한 영웅의 <b>고유 스킬이나 이미 배운 스킬</b>과 같은 책을 고르면 새 스킬을 배우는 대신 그 스킬을 업그레이드합니다. 다른 액티브 칸이 추가되지는 않습니다.<br><br>버튼에 표시된 같은 책 수를 내면 레벨이 한 단계 오릅니다. 높은 단계일수록 더 많은 책이 필요하며, 책 말고 다른 재화는 들지 않습니다. 업그레이드는 <b>선택한 영웅의 해당 스킬</b>에만 적용됩니다. 전직 메인은 공용 스킬 포인트로 올리며 각 단계의 영웅 레벨 조건도 만족해야 합니다.",
-        en: "Choose a book matching the selected hero's <b>innate or already-learned skill</b> to upgrade that skill instead of learning a new one. This does not add another active slot.<br><br>Spend the matching copies shown on the button to add one skill level. Higher steps require more books; reading costs nothing else. The upgrade affects <b>that skill on the selected hero</b>. Advance main skills use shared skill points and require the corresponding hero level.",
-        zh: '选择与所选英雄的<b>固有技能或已习得技能</b>相同的书时，不会学习新技能，而是升级该技能。不会多出一个主动栏。<br><br>交出按钮上显示数量的同名书，技能等级提升1级。等级越高需要的书越多，除了书不需要其他资源。升级只作用于<b>所选英雄的该技能</b>。转职主技能用共用技能点提升，并且还需满足每一级的英雄等级条件。',
+        ko: "도서관 [스킬정보]의 고유·습득 줄에서 같은 스킬북을 써 [업그레이드]합니다. 필요한 책 수와 업그레이드 단계를 줄마다 확인할 수 있습니다. 고유 스킬의 업그레이드는 책을 갖추면 영웅 레벨과 관계없이 할 수 있습니다.<br><br>스킬 설명 아래 계산 줄에서 기본 수치, 능력치 보정, 쿨타임 등이 선택한 영웅에게 어떻게 적용되는지 확인합니다. 전직 스킬은 전직 마스터리에서 공용 스킬 포인트로 강화합니다.",
+        en: "Use matching books to [Upgrade] an innate or learned skill in its [Skill Info] row in the Library. Each row shows its upgrade level and book cost. Innate skills can be upgraded at any hero level if you have the required books.<br><br>The calculations below the skill description show how base values, attributes and cooldowns apply to the selected hero. Improve advancement skills with shared skill points in Advancement Mastery.",
+        zh: "在图书馆【技能信息】的固有或已学技能栏中，使用相同的技能书点击【升级】。每一栏会显示升级等级及所需书本。备齐所需技能书后，固有技能可在任意英雄等级升级。<br><br>技能说明下方的计算栏会显示基础数值、属性修正和冷却时间如何作用于当前英雄。转职技能在转职专精中用共用技能点强化。",
     },
     'help.library.advance.title': {
         ko: "전직 갈래는 신중히 선택",
@@ -2234,9 +2271,9 @@ const STRINGS = {
         zh: '谨慎选择转职分支',
     },
     'help.library.advance.body': {
-        ko: "도서관에서 영웅을 고르고 <b>전직의 방</b> 칸의 <b>[입장]</b>을 누릅니다. 방에는 세 갈래가 한 줄씩 서고, 줄마다 갈래의 역할과 전직 스킬 셋의 효과가 적혀 있습니다. 방을 열면 맨 위 갈래가 골라져 있고 방 오른쪽에 그 갈래의 마스터리 판이 붙어 있습니다. 다른 갈래를 누르면 고른 갈래와 판이 바뀝니다. 판 안의 전직 스킬을 누르면 그 스킬의 강화 칸이 아래 줄에 섭니다. 칸에 올리면 효과가 보입니다. 미리보기는 재화나 포인트를 쓰지 않습니다.<br><br>전직 기능을 열고 레벨 <b>{level}</b> 이상이 되면 갈래를 선택하고 <b>[전직]</b>합니다. 비용은 <b>{gold}G</b>이며 현재는 즉시 완료됩니다. <b>전직 갈래는 변경할 수 없습니다.</b> 원정 중에도 전직할 수 있지만 탐험 중에는 먼저 돌아와야 합니다.<br><br>완료 후 전직의 방 바닥의 <b>[마스터리 열기]</b>에서 전직 스킬을 배우고 강화합니다. 전직만으로 스킬을 자동 학습하지는 않습니다. 같은 갈래 안에서는 스킬을 바꿀 수 있습니다.",
-        en: "Select a hero in the Library and press <b>Enter</b> on the <b>Chamber of Advancement</b> panel. Each of the three paths has its own row with its role and the effects of its three advancement skills. The top path is selected when the chamber opens, with its mastery board attached on the right. Click another path to switch the selection and the board. Click an advancement skill on the board to show its strengthening cells in the row below. Hover a cell to see its effect. Previewing spends no resources or points.<br><br>Unlock advancement and reach level <b>{level}</b>, then select a path and press <b>Advance</b>. The cost is <b>{gold}G</b> and advancement currently completes instantly. <b>The path cannot be changed.</b> Heroes can advance during Expeditions; those exploring must return first.<br><br>After completion, use <b>Open Mastery</b> at the bottom of the chamber to learn and improve an advancement skill. Advancement does not automatically teach a skill. Skills can be swapped within the chosen path.",
-        zh: '在图书馆选择英雄后，点击<b>转职之间</b>栏的<b>[进入]</b>。房间里三条分支各占一行，每行写有该分支的定位和三个转职技能的效果。打开房间时最上方的分支已被选中，房间右侧附有该分支的专精盘。点击其他分支会切换所选分支和专精盘。点击专精盘中的转职技能，下方一行会显示该技能的强化格。把鼠标移到格子上可查看效果。预览不会消耗资源或点数。<br><br>开放转职功能并达到等级<b>{level}</b>以上后，选择分支并<b>[转职]</b>。费用为<b>{gold}G</b>，目前会立即完成。<b>转职分支无法更改。</b>远征中也可以转职，但探索中的英雄需要先返回。<br><br>完成后，在转职之间底部的<b>[打开专精]</b>中学习并强化转职技能。仅转职不会自动学会技能。同一分支内可以更换技能。',
+        ko: "도서관에서 영웅을 고르고 [전직의 방]의 [입장]을 누릅니다. 갈래를 고르면 마스터리와 전직 스킬을 미리 볼 수 있습니다. 도서관 5랭크에서 기능을 열고 영웅이 레벨 {level}에 도달하면, 원하는 갈래를 골라 {gold}G를 내고 [전직]합니다. 정한 갈래는 이후 바꿀 수 없습니다.<br><br>전직을 마치면 [마스터리 열기]에서 그 갈래의 스킬을 골라 배웁니다. 같은 갈래 안에서는 전직 스킬을 교체할 수 있습니다. 원정 중에는 전직할 수 있고, 탐험 중인 영웅은 귀환 후 전직할 수 있습니다.",
+        en: "Select a hero in the Library and use [Enter] on the Chamber of Advancement. Select a path to preview its mastery and skills. Once the Library reaches rank 5 and the hero reaches level {level}, choose a path and pay {gold}G to [Advance]. The chosen path is permanent.<br><br>After advancing, use [Open Mastery] to select a skill in that path. You can swap skills within the chosen path. Heroes can advance during an Expedition. Heroes who are exploring can advance after returning.",
+        zh: "在图书馆选择英雄，并在转职房间点击【进入】。选择分支可预览其专精与转职技能。图书馆升到 5 阶且英雄达到 {level} 级后，选定分支并支付 {gold} 金币即可【转职】。已选分支以后无法更换。<br><br>转职后，从【打开专精】中选择该分支的技能来学习。同一分支内可以更换转职技能。远征中的英雄可以转职，探索中的英雄需归队后再转职。",
     },
     'help.library.points.title': { ko: "공용 스킬 포인트와 전직 트리", en: "Shared skill points and the Advancement Tree", zh: '共用技能点与转职树' },
     'help.library.points.body': { ko: "영웅은 <b>레벨 1 부터 레벨마다 스킬 포인트</b>를 받습니다. 죄종·직업 마스터리와 전직 트리는 같은 포인트를 나누어 씁니다.<br><br>전직하면 갈래의 전직 스킬 셋 중 <b>하나</b>를 배웁니다 — 스킬 포인트를 쓰지 않습니다. 전직 트리에는 줄이 둘 있습니다. <b>공통 줄</b>은 갈래 전체에 닿고, <b>스킬 줄</b>(크기 · 변형 1 · 변형 2)은 배운 스킬에 닿습니다. 줄마다 칸 셋에 합 <b>{row}</b>까지 자유롭게 나눠 찍고, 한 칸에 {row}을 모두 넣으면 그 칸의 덤이 켜집니다.<br><br>칸을 우클릭하면 1랭크가, 배운 전직 스킬을 우클릭하면 스킬 줄 전체가 <b>공용 스킬 포인트로 환급</b>됩니다. 다른 전직 스킬을 누르면 바로 갈아끼웁니다 — 스킬 줄은 환급되고 공통 줄은 그대로입니다. 갈래와 전직 비용은 그대로입니다.", en: "Heroes earn <b>skill points at every level, starting at Lv1</b>. Sin mastery, Class mastery and the Advancement Tree share this pool.<br><br>After advancing, learn <b>one</b> of the path's three skills — it costs no skill points. The tree has two rows. The <b>common row</b> affects the whole path; the <b>skill row</b> (Power · Variant 1 · Variant 2) affects the learned skill. Split up to <b>{row}</b> ranks per row freely across its three cells; putting all {row} into one cell turns on its bonus.<br><br>Right-click a cell to refund one rank, or the learned skill to refund its whole skill row to the <b>shared skill-point pool</b>. Click another advancement skill to swap to it — the skill row is refunded and the common row stays. The chosen path and gold cost remain.", zh: '英雄<b>从1级起每升一级都会获得技能点</b>。罪宗专精、职业专精与转职树共用同一批技能点。<br><br>转职后学会该分支三个转职技能中的<b>一个</b>——不消耗技能点。转职树有两行。<b>通用行</b>作用于整个分支，<b>技能行</b>（威力、变体1、变体2）作用于学会的技能。每行三格合计最多<b>{row}</b>，可自由分配；一格投满{row}时，该格的额外效果就会启用。<br><br>右键点击格子会把1阶返还为<b>共用技能点</b>；右键点击已学会的转职技能，则返还整条技能行。点击其他转职技能会立即替换——技能行返还，通用行保持不变。分支和转职费用保持不变。' },
@@ -2246,9 +2283,9 @@ const STRINGS = {
         zh: '线、节点、阶的区别',
     },
     'help.resource.lines.body': {
-        ko: "연구소의 <b>줄</b>은 자원·수색·훈련·도박장·도서관처럼 자동으로 얻는 것의 분야입니다. <b>지점</b>은 그 줄의 생산량·간격·품질 등을 올리는 연구 항목입니다.<br><br>왼쪽 <b>줄 카드</b>를 누르면 오른쪽에 생산량과 등록 효과가 나옵니다. 동그란 <b>지점</b>을 누르면 현재 값·다음 효과·비용·연구 시간을 볼 수 있습니다. 연구소의 위쪽 영웅 띠는 현황을 보는 자리이며, 실제 등록은 줄 카드의 얼굴이나 <b>+</b>에서 합니다.<br><br>잠긴 지점은 필요한 건물·랭크부터 갖춰야 합니다. <b>건설</b>에서 연구소 랭크를 올리면 새 지점이 열리고 지점마다 올릴 수 있는 레벨도 높아집니다. 이 화면의 <b>연구</b>로 열린 지점의 레벨을 올립니다.<br><br>건설에서 도서관 랭크를 올려 연구소 도서관 줄을 열면 영웅을 등록할 수 있습니다. 등록한 영웅의 고유·배운 기본 스킬 중 하나의 스킬북을 생산합니다. 전직 스킬은 제외하며, 스킬이 업그레이드 상한에 닿아도 책은 생산합니다 — 남는 책은 창고에서 분해합니다.",
-        en: "A Laboratory <b>line</b> is a field of automatic output: Resources, Search, Training, Gambling Den or Library. A <b>node</b> is research that improves a line's output, interval, quality or another property.<br><br>Select a <b>line card</b> on the left to see output and hero bonuses on the right. Select a round <b>node</b> for its current value, next effect, cost and research time. The hero strip at the top shows assignments; open an actual assignment from a line's portrait or <b>+</b>.<br><br>Locked nodes need the shown building or rank first. Raising the Laboratory rank in <b>Construction</b> opens new nodes and raises how far each node can be researched. Use <b>Research</b> here to raise their levels.<br><br>Upgrade the Library in Construction to open the Laboratory Library line, then assign heroes to it. Each assigned hero produces books of a randomly chosen innate or learned basic skill. Advance skills are excluded; reaching a skill upgrade cap does not stop production — salvage spare books in the stash.",
-        zh: '研究所的<b>线</b>是自动获取项目的类别，例如资源、搜寻、训练、赌坊、图书馆。<b>节点</b>是提升该线产量、间隔、品质等的研究项目。<br><br>点击左侧的<b>线卡片</b>，右侧会显示产量和派驻效果。点击圆形的<b>节点</b>可查看当前值、下一级效果、费用和研究时间。研究所上方的英雄栏用于查看现状，实际派驻要在线卡片的头像或<b>+</b>处进行。<br><br>锁定的节点需要先具备所需的建筑或阶。在<b>建设</b>中提升研究所的阶，会开放新节点，每个节点可提升的等级上限也会提高。在此画面通过<b>研究</b>提升已开放节点的等级。<br><br>在建设中提升图书馆的阶、开放研究所的图书馆线后，就可以派驻英雄。该线会生产派驻英雄固有或习得的基础技能之一的技能书。转职技能除外；即使技能已达升级上限，也照样生产书——多余的书在仓库中分解。',
+        ko: "연구소에는 자원·수색·훈련·도박장·도서관·대장간 줄이 있습니다. 줄 카드를 누르면 생산과 등록 효과를, 동그란 지점을 누르면 현재 효과와 다음 레벨의 비용·시간을 볼 수 있습니다.<br><br>각 줄은 필요한 건물을 지은 뒤 영웅을 등록하면 가동됩니다. 줄 카드의 빈 등록 칸에서 영웅을 고르고 [적용]합니다. 연구소 랭크를 올리면 새 지점과 더 높은 지점 레벨이 열리며, 지점마다 자체 상한까지 올릴 수 있습니다.",
+        en: "The Laboratory has Resources, Search, Training, Gambling Den, Library and Blacksmith lines. Select a line card to see its output and assignment bonuses. Select a round node to see its current effect and the cost and time of its next level.<br><br>Build the required facility and assign a hero to start a line. Use an empty assignment slot on the line card, choose a hero, and select [Apply]. Laboratory ranks unlock nodes and higher research levels, up to each node's own cap.",
+        zh: "研究所包含资源、搜寻、训练、赌坊、图书馆和铁匠铺生产线。点击生产线卡片可查看产出与派驻加成。点击圆形节点可查看当前效果以及升到下一级的费用和时间。<br><br>建好所需设施并派驻英雄后，产线才会运行。点击产线卡片中的空派驻位，选择英雄并点击【应用】。提高研究所阶数可开放新节点和更高的研究等级，每个节点都有各自的上限。",
     },
     'help.resource.production.title': {
         ko: "자동 생산과 게임을 닫은 동안",
@@ -2258,6 +2295,7 @@ const STRINGS = {
     'help.resource.production.body': {
         ko: "창고를 지으면 연구소의 <b>자원 줄</b>이 열립니다. 영웅을 등록하면 <b>최하급 철광석·약초·목재를 모두</b> 생산합니다. 연구소의 모든 줄은 <b>등록한 영웅이 있어야</b> 돌고, 등록한 영웅이 많을수록 더 빨리 얻습니다.<br><br>자원 줄의 <b>채광·채집·벌목</b> 연구는 각각 철광석·약초·목재 생산량을 높입니다. 무기나 건물이 필요하면 철광석, 방어구나 건물이 필요하면 목재, 물약·책·약초 비용 연구가 필요하면 약초를 확인합니다. 생산물은 재고에 자동으로 더해집니다.<br><br>게임을 켜 둔 동안에는 계속 생산합니다. 오프라인 생산은 <b>기본 {hours}시간</b>까지 쌓입니다. 자원 줄의 <b>오프라인 생산 시간 연장</b>을 연구하면 철광석·약초·목재가 더 오래 쌓입니다. 수색의 도착 시계는 이 시간 상한을 받지 않고 대기소가 찰 때까지 흐르고, 대장간 줄의 장비는 장비 칸이 찰 때까지 만듭니다.",
         en: "Building Storage opens the Laboratory's <b>Resources line</b>. With heroes assigned it produces <b>lowest-grade iron ore, herbs and timber together</b>. Every Laboratory line <b>needs at least one assigned hero</b> to run, and more heroes produce faster.<br><br><b>Mining, Gathering and Logging</b> research raise ore, herb and timber output respectively. Check ore for weapons or buildings, timber for armor or buildings, and herbs for potions, books or research with an herb cost. Output enters stock automatically.<br><br>Production continues while the game is open. Offline output accumulates for <b>up to {hours}h by default</b>. Research <b>Offline Production Time</b> in Resources to extend the cap for ore, herbs and timber. The Search arrival timer has no such time cap and continues until its Waiting Room fills, and the Blacksmith line keeps making gear until its gear slots fill.",
+        zh: '建造仓库后即可解锁研究所的<b>资源线</b>。派驻英雄后，可<b>同时生产最低级的铁矿石、草药和木材</b>。研究所的每条线都<b>至少要派驻一名英雄</b>才能运作，派驻的英雄越多，生产越快。<br><br>资源线的<b>采矿、采集和伐木</b>研究分别提高铁矿石、草药和木材的产量。制作武器或建造建筑时请留意铁矿石，制作护甲或建造建筑时留意木材，制作药水、技能书或进行消耗草药的研究时留意草药。产出会自动存入库存。<br><br>游戏开启时会持续生产。离线产出<b>默认最多累积 {hours} 小时</b>。在资源线研究<b>离线生产时长</b>，铁矿石、草药和木材就能累积更久。搜寻的到达计时不受这个上限影响，会持续到等候位满。铁匠铺线也会继续制作装备，直到装备栏位填满。',
     },
     'help.resource.materials.title': {
         ko: "재료는 어디서 얻고 어디에 쓰나요?",
@@ -2265,9 +2303,9 @@ const STRINGS = {
         zh: '材料从哪里获得，用在哪里？',
     },
     'help.resource.materials.body': {
-        ko: "<b>철광석</b>은 연구소 채광과 무기 분해로 얻습니다. 무기·장신구 제작, 무기 강화, 건설에 씁니다. <b>목재</b>는 연구소 벌목과 방어구 분해로 얻으며, 방어구 제작·강화와 건설에 씁니다.<br><br><b>약초</b>는 연구소 채집과 반지·목걸이 분해로 얻습니다. 물약·스킬북 제작과 약초가 표시된 연구에 씁니다. <b>가루</b>는 장비를 분해해 얻고, 장비 제작·강화와 스킬북 제작에 씁니다. 도박장도 표시된 재료를 지급할 수 있습니다.<br><br>원정에서는 적 처치가 재료를 직접 떨어뜨리는 대신, <b>떨어진 장비를 분해</b>해 재료를 얻습니다. 재료는 공용이며 창고의 <b>재료</b> 탭에서 수량을 확인할 수 있습니다.<br><br><b>종류</b>와 <b>단계</b>를 구분합니다. 철광석·목재·약초·가루가 종류이고, 최하급·하급·중급·상급·최상급이 단계입니다. 현재 소비처는 최하급을 쓰며, 높은 단계는 대장간 <b>[합성]</b>으로 만듭니다. 재료가 있어도 요구 단계와 다르면 비용을 채우지 못합니다.",
-        en: "<b>Iron ore</b> comes from Laboratory Mining and weapon salvage. It funds weapon and jewelry smithing, weapon upgrades and construction. <b>Timber</b> comes from Logging and armor salvage, and funds armor smithing, upgrades and construction.<br><br><b>Herbs</b> come from Gathering and salvaging rings or amulets. They fund potions, skill books and research that lists an herb cost. <b>Dust</b> comes from salvaged gear and funds smithing, equipment upgrades and skill books. Gambling can also award the materials shown on its paytable.<br><br>Expedition enemies do not directly drop these materials. Obtain them by <b>salvaging the gear they drop</b>. Material stock is shared; view quantities in the stash's <b>Materials</b> tab.<br><br>Distinguish <b>type</b> from <b>grade</b>. Ore, timber, herbs and dust are types. Lowest, low, mid, high and top are grades. Current costs use lowest-grade stock; make higher grades with <b>Combine</b> at the Blacksmith. Owning a different grade does not satisfy a cost.",
-        zh: '<b>铁矿石</b>通过研究所采矿和分解武器获得，用于武器、饰品制作，武器强化和建设。<b>木材</b>通过研究所伐木和分解防具获得，用于防具制作、强化和建设。<br><br><b>草药</b>通过研究所采集和分解戒指、项链获得，用于药水、技能书制作以及标有草药的研究。<b>粉尘</b>通过分解装备获得，用于装备制作、强化和技能书制作。赌坊也可能给予所示的材料。<br><br>远征中击杀敌人不会直接掉落材料，而是通过<b>分解掉落的装备</b>获得材料。材料是共用的，可在仓库的<b>材料</b>页查看数量。<br><br>要区分<b>种类</b>和<b>级别</b>。铁矿石、木材、草药、粉尘是种类，最低级、低级、中级、高级、最高级是级别。目前的消耗项都使用最低级，更高级别在铁匠铺用<b>[合成]</b>制作。即使持有材料，级别与要求不同也无法支付费用。',
+        ko: "연구소 자원 줄에서 최하급 철광석·목재·약초를 생산합니다. 장비를 분해하면 가루와 부위 재료가 나옵니다. 무기는 철광석, 방어구는 목재, 장신구는 약초를 줍니다. 창고의 [재료]에서 공용 재고를 확인합니다.<br><br>장비 제작에는 골드·가루·해당 부위 재료를 씁니다. 물약 제작과 재료를 요구하는 연구에는 약초가 쓰이고, 스킬북 제작에는 스킬 조각과 골드가 필요합니다. 교역소에서 최하급 재료를 사거나 교환하고, 대장간 [합성]에서 위 단계 재료를 만듭니다.",
+        en: "The Laboratory's Resources line produces lowest-grade iron ore, timber and herbs. Salvaging gear gives dust and a slot material: iron ore for weapons, timber for armor, and herbs for jewelry. Check shared stock in the stash's [Materials] tab.<br><br>Gear crafting uses gold, dust and the slot material. Potion crafting and research that requires materials use herbs. Skill-book crafting uses skill shards and gold. Buy or trade lowest-grade materials at the Trade Post, and make higher grades with [Combine] at the Blacksmith.",
+        zh: "研究所的资源线生产最低级铁矿石、木材和草药。分解装备会获得粉尘和部位材料：武器出铁矿石，护甲出木材，饰品出草药。共用库存可在仓库的【材料】页查看。<br><br>制作装备消耗金币、粉尘和对应的部位材料。制作药水和需要材料的研究会消耗草药。制作技能书使用技能碎片与金币。可在贸易站购买或交换最低级材料，并在铁匠铺通过【合成】制作更高品阶的材料。",
     },
     'help.resource.research.title': {
         ko: "연구 시작 · 완료 · 그만두기",
@@ -2295,8 +2333,9 @@ const STRINGS = {
         zh: '挑选派驻英雄的标准',
     },
     'help.resource.hero_effects.body': {
-        ko: "자원 · 도박장 줄은 등록한 <b>영웅 한 명마다</b> 산출이 한 몫씩 납니다 — 영웅이 없으면 멈추므로 능력치보다 먼저 칸을 채웁니다. 수색 · 대장간은 등록한 영웅마다 시계가 하나씩 따로 돌아, 각자 한 명씩 데려오거나 하나씩 만듭니다. 훈련 · 도서관은 등록한 영웅 한 명 한 명이 경험치 · 스킬북을 받는 줄이라 인원 몫이 없습니다.<br><br><b>운</b>은 대박 지점이 있는 줄의 추가 지급 확률을 높입니다. <b>지능</b>은 그 줄의 연구 시간을 줄이며, <b>민첩</b>은 연구 비용을 줄입니다. <b>매력</b>은 수색의 레어 후보 확률을 높입니다.<br><br><b>건강</b>은 같은 줄에 오래 등록할수록 쌓이는 숙련 보너스를 키웁니다. <b>통솔</b>은 같은 줄의 다른 등록 영웅 효과를 높이므로 여럿을 등록할 때 의미가 있습니다. 장비·레벨 대신 영웅의 기본 능력치가 이 효과의 재료입니다.<br><br>등록 효과의 현재 수치는 줄 카드를 눌러 확인합니다. 해당 효과를 사용하지 않는 줄에는 적용되지 않습니다. 영웅을 다른 줄로 옮기거나 등록을 풀면 그 영웅의 숙련 시간은 다시 시작하므로, 비교한 뒤 자리를 정합니다.",
-        en: "On the Resources and Gambling Den lines each assigned <b>hero</b> produces one share of the output — the line stops without heroes, so fill the seats before comparing stats. On Search and the Blacksmith each assigned hero runs a clock of their own, bringing someone in or making one item on it. Training and the Library give XP or books to each assigned hero, so they have no head share.<br><br><b>Luck</b> raises extra-output chance on lines with a Jackpot node. <b>Intelligence</b> shortens that line's research time; <b>Agility</b> lowers research costs. <b>Charisma</b> raises Search's Rare-candidate chance.<br><br><b>Vitality</b> strengthens the proficiency bonus that builds while a hero remains assigned to the same line. <b>Leadership</b> boosts other assigned heroes on that line, so it matters with multiple heroes. These effects use the hero's base attributes rather than equipment or level.<br><br>Select the line card to check current hero bonuses. Effects do not apply to lines that have no use for them. Moving or removing a hero resets the time accumulated on that assignment, so compare heroes before settling their positions.",
+        ko: "자원·도박장 줄은 등록한 영웅 한 명마다 기본 산출 한 몫이 더해집니다. 수색·대장간은 영웅마다 따로 다음 도착이나 제작까지의 시간을 셉니다. 훈련 경험치는 등록한 영웅에게만 들어가며, 도서관은 스킬 조각과 스킬북을 공용 재고에 보탭니다.<br><br><b>운</b>은 대박 지점이 있는 줄의 추가 지급 확률을 높입니다. <b>지능</b>은 그 줄의 연구 시간을 줄이며, <b>민첩</b>은 연구 비용을 줄입니다. <b>매력</b>은 수색의 레어 후보 확률을 높입니다.<br><br><b>건강</b>은 같은 줄에 오래 등록할수록 쌓이는 숙련 보너스를 키웁니다. <b>통솔</b>은 같은 줄의 다른 등록 영웅 효과를 높이므로 여럿을 등록할 때 의미가 있습니다. 장비·레벨 대신 영웅의 기본 능력치가 이 효과의 재료입니다.<br><br>등록 효과의 현재 수치는 줄 카드를 눌러 확인합니다. 해당 효과를 사용하지 않는 줄에는 적용되지 않습니다. 영웅을 다른 줄로 옮기거나 등록을 풀면 그 영웅의 숙련 시간은 다시 시작하므로, 비교한 뒤 자리를 정합니다.",
+        en: "Each assigned hero adds one share of base output on the Resources and Gambling Den lines. Search and Blacksmith track each hero’s next arrival or craft separately. Training XP goes to assigned heroes. The Library adds skill shards and books to shared stock.<br><br><b>Luck</b> raises extra-output chance on lines with a Jackpot node. <b>Intelligence</b> shortens that line's research time; <b>Agility</b> lowers research costs. <b>Charisma</b> raises Search's Rare-candidate chance.<br><br><b>Vitality</b> strengthens the proficiency bonus that builds while a hero remains assigned to the same line. <b>Leadership</b> boosts other assigned heroes on that line, so it matters with multiple heroes. These effects use the hero's base attributes rather than equipment or level.<br><br>Select the line card to check current hero bonuses. Effects do not apply to lines that have no use for them. Moving or removing a hero resets the time accumulated on that assignment, so compare heroes before settling their positions.",
+        zh: "资源线和赌坊线每派驻一名英雄，就增加一份基础产出。搜寻线和铁匠铺线分别计算每名英雄下一次带回候选人或完成制作的时间。训练经验发给对应英雄，图书馆则将技能碎片和技能书加入共用库存。<br><br><b>幸运</b>提高有大奖节点的产线额外发放的概率。<b>智力</b>缩短该产线的研究时间，<b>敏捷</b>降低研究费用，<b>魅力</b>提高搜索带回稀有候选人的概率。<br><br><b>体质</b>提高长期派驻累积的熟练加成，<b>统率</b>提高同一产线其他派驻英雄的效果。这些效果取决于英雄的基础属性。<br><br>点击产线卡片可查看当前派驻效果。更换产线或解除派驻会重置该英雄的熟练时间。",
     },
     'help.resource.jobs.title': {
         ko: "수색 · 훈련 · 자동 골드",
@@ -2308,46 +2347,15 @@ const STRINGS = {
         en: "<b>Search</b> brings one candidate to the Tavern per interval for each hero assigned to this line, and does nothing with no one assigned. Interval makes arrivals faster. While that searcher's Tavern slots are full, the searcher rests and sets out again as soon as you free one of them. Quality raises Rare chance, Waiting Room opens a second slot per searcher and then Filter, and Roster raises how many heroes you can keep.<br><br><b>Training</b> helps assigned heroes catch up toward the roster's leading level. Its cap is <b>the highest roster level minus the gap shown by Range</b>. Research Range to reduce that gap. Heroes at or above the cap gain no Training XP, so Expeditions must push the leading level forward.<br><br>The <b>Gambling Den line</b> automatically produces gold once the Tavern's Gambling Den is unlocked. It needs no stake or spin button. Income raises output, while Jackpot raises the chance of an extra payout. This is separate from manually playing Tavern slots.",
         zh: '<b>搜寻</b>线上每位派驻英雄每隔一段时间就带一名候选到酒馆。没有派驻任何人时不会运作。[间隔]让到达更快。该英雄那一行的酒馆格子已满时，该英雄会休息，你一腾出该行格子就立刻再次出发。[品质]提高稀有候选几率，[等候所]为每一行开启第二格并开启筛选，[名册]增加可拥有的英雄数量。<br><br>派驻在<b>训练</b>线上的英雄会随时间获得经验，追赶名册中领先的等级。上限为<b>名册最高等级 − [范围]所示的差距</b>。研究范围可缩小这个差距。等级在上限以上的英雄不会获得训练经验，因此要靠远征来推高最高等级。<br><br><b>赌坊线</b>在开放酒馆的赌坊后会自动生产金币，无需下注或点击旋转。[收益]提高产量，[大丰收]提高额外再发放一次的几率。这与亲手玩酒馆老虎机是两回事。',
     },
-    // 무한의 탑 도움말 (ADR-1294 · endless_tower_design §0) — 시련의 탑 묶음과 같은 모양 · 층 수 · 규칙 단 · 호위 수는 표 · 키에서 읽는다(`helpSections` 의 args)
-    'help.endless.prepare.title': {
-        ko: "무한의 탑에서 몬스터 상대하기",
-        en: "Facing monsters in the Endless Tower",
-        zh: '在无尽之塔中迎战怪物',
-    },
-    'help.endless.prepare.body': {
-        ko: "무한의 탑은 몬스터 무리를 상대로 한 층씩 오르는 곳입니다. 원정에서 만나는 정예 · 보스 라운드를 한 판씩 다시 겨뤄, 지금 편성이 어디까지 버티는지 볼 수 있습니다. 챕터 진행과 별개이고, 원정에 나가 있는 영웅도 원정에서 빠지지 않은 채 도전할 수 있습니다.<br><br>사용할 Party를 고르고 영웅 {duelSize}명을 채운 뒤 열린 층을 선택합니다. 판 위에 그 층의 몬스터 세 마리가 서고, 카드에 올리면 장비와 스킬을 볼 수 있습니다. [도전]을 누르면 한 판의 자동전투가 시작됩니다.",
-        en: "The Endless Tower lets you climb floor by floor against monster packs. Each floor replays an elite or boss round from the Expeditions, so you can see how far your current party holds. It is separate from chapter progress, and heroes out on an Expedition can challenge it without leaving that Expedition.<br><br>Choose a Party, fill all {duelSize} hero slots and select an open floor. The floor's three monsters stand on the board; hover a card to see its gear and skills. Press Challenge to start one automatic battle.",
-        zh: '无尽之塔是迎战怪物群、逐层攀登的地方。每一层都会把远征中遇到的精英 · 首领回合单独再打一场，可以看看当前编队能撑到哪一层。它与章节进度无关，正在远征的英雄也能在不离开远征的情况下挑战。<br><br>选择要使用的Party，填满{duelSize}名英雄后，选择已开放的层。棋盘上会站着该层的三只怪物，把鼠标移到卡片上可以查看装备与技能。点击[挑战]即开始一场自动战斗。',
-    },
-    'help.endless.floors.title': {
-        ko: "층 짜기",
-        en: "How the floors are built",
-        zh: '楼层构成',
-    },
-    'help.endless.floors.body': {
-        ko: "층은 모두 {total}층이고, 1장부터 장마다 10층씩 쌓여 있습니다. 스테이지마다 두 층입니다 — 앞 층은 정예 하나와 일반 몬스터 둘이 나오는 <b>정예 층</b>, 뒤 층은 그 스테이지의 보스와 호위 {escorts}마리가 나오는 <b>보스 층</b>입니다. 5스테이지 보스 층에는 챕터보스와 정해진 정예 호위가 나옵니다.<br><br><b>층 번호가 곧 상대 레벨</b>이고, {from}층부터는 {diff} 규칙이 적용되어 몬스터가 더 강해집니다. 같은 층에는 언제나 같은 몬스터 무리가 나옵니다. 처음에는 첫 층만 열리고, 열린 가장 높은 층을 이기면 다음 층이 열립니다. 이미 깬 층은 다시 도전할 수 있고, 져도 열린 층을 잃지 않습니다.",
-        en: "There are {total} floors, ten per chapter starting from Chapter 1. Each stage has two floors — first an <b>elite floor</b> with one elite and two normal monsters, then a <b>boss floor</b> with that stage's boss and {escorts} escorts. Stage 5 boss floors bring the chapter boss with its fixed elite guards.<br><br><b>The floor number is the enemy level</b>, and from floor {from} the {diff} rules apply, making monsters stronger. The same floor always fields the same monster pack. Only the first floor is open at the start; beat the highest open floor to unlock the next. Cleared floors can be retried, and losing never removes unlocked floors.",
-        zh: '楼层共{total}层，从第1章起每章10层。每个关卡两层——前一层是出现一只精英和两只普通怪物的<b>精英层</b>，后一层是出现该关卡首领与{escorts}只护卫的<b>首领层</b>。第5关卡的首领层会出现章节首领与固定的精英护卫。<br><br><b>层数即对手等级</b>，从第{from}层起适用{diff}规则，怪物会变得更强。同一层出现的怪物群始终相同。起初只开放第一层，打赢已开放的最高层即可开放下一层。已通关的层可以再次挑战，失败也不会失去已开放的层。',
-    },
-    'help.endless.rules.title': {
-        ko: "무한의 탑의 규칙",
-        en: "Endless Tower rules",
-        zh: '无尽之塔的规则',
-    },
-    'help.endless.rules.body': {
-        ko: "전투는 원정과 같은 규칙으로 한 라운드를 겨룹니다. 영웅의 능력치 · 장비 · 스킬에 선택한 Party의 파티 전술 · 물약 · 진형과 도감 보너스가 모두 적용되고, 몬스터 쪽도 원정에서처럼 부류 버프 등이 그대로 걸립니다. 제한시간 안에 몬스터를 모두 쓰러뜨리지 못하면 무승부이고 층이 열리지 않습니다.<br><br><b>보상은 없습니다</b> — 경험치 · 골드 · 장비 · 스킬북 · 도감 경험치가 오르지 않고 의뢰 · 메인미션도 진행되지 않습니다. 물약은 보유 재고에서 채워 가지만 마셔도 재고는 줄지 않습니다. 저장되는 것은 오른 층뿐입니다.<br><br>결과는 [도전]을 누를 때의 영웅 · 장비 · 편성으로 정해지고, 관전은 그 전투를 재생하는 화면입니다.",
-        en: "Battles follow Expedition rules for a single round. Your heroes' attributes, gear and skills plus the selected Party's tactics, potions, formation and Codex bonuses all apply, and the monsters keep their Expedition traits such as family buffs. If you cannot defeat every monster before the time limit, the result is a draw and the next floor stays locked.<br><br><b>There are no rewards</b> — no XP, gold, equipment, skill books or Codex EXP, and commissions and main missions do not progress. Potions are filled from your stock, but drinking them does not reduce it. Only the floors you have climbed are saved.<br><br>The result is decided by the heroes, gear and Party setup at the moment you press Challenge; spectating replays that battle.",
-        zh: '战斗按与远征相同的规则进行一个回合。英雄的属性 · 装备 · 技能，加上所选Party的队伍战术 · 药水 · 阵型与图鉴加成全部生效，怪物一方也会像远征一样带上各自的增益效果。若在时间限制内没能击倒所有怪物，即为平局，下一层不会开放。<br><br><b>没有奖励</b>——不会获得经验 · 金币 · 装备 · 技能书 · 图鉴经验，委托 · 主线任务也不会推进。药水从持有库存中带满，但喝掉也不会减少库存。保存的只有已登上的楼层。<br><br>结果以点击[挑战]时的英雄 · 装备 · 编队为准，观战是回放那场战斗的画面。',
-    },
     'help.colosseum.prepare.title': {
         ko: "시련의 탑에서 파티 시험하기",
         en: "Testing your party in the Tower of Trials",
         zh: '在试炼之塔中检验队伍',
     },
     'help.colosseum.prepare.body': {
-        ko: "시련의 탑은 정해진 영웅 팀을 상대로 한 층씩 도전하는 곳입니다. 원정에서 맞춘 장비와 편성이 영웅 팀끼리의 전투에서는 어떤지 시험할 수 있습니다. 챕터 진행과 별개이므로 원정을 진행하다가 원하는 때 도전해도 됩니다.<br><br>사용할 Party를 고르고 영웅 {duelSize}명을 채운 뒤 열린 층을 선택합니다. [편성 수정]은 편성 탭으로 이동하는 버튼입니다. 거기서 인원·전열/후열·물약·파티 전술을 준비한 뒤 시련의 탑으로 돌아옵니다. 상대 카드에서 장비와 스킬을 살펴보고 [도전]을 누르면 한 판의 자동전투가 시작됩니다.",
-        en: "The Tower of Trials lets you challenge fixed hero teams one floor at a time. It is a place to test how the equipment and formations you built during Expeditions perform against another hero team. It is separate from chapter progress, so you can challenge it whenever you choose.<br><br>Choose a Party, fill all {duelSize} hero slots and select an open floor. Edit party takes you to the Party tab. Prepare members, front/back rows, potions and tactics there, then return to the Tower. Inspect the enemy cards for gear and skills, and press Challenge to start one automatic battle.",
-        zh: '试炼之塔是逐层挑战固定英雄队伍的地方。可以检验你在远征中配好的装备和编队，在英雄队伍之间的战斗中表现如何。它与章节进度无关，可以在远征途中随时挑战。<br><br>选择要使用的Party，填满{duelSize}名英雄后，选择已开放的层。[修改编队]是前往编队页的按钮。在那里准备好人员、前排/后排、药水、队伍战术后，再回到试炼之塔。在对手卡片上查看装备和技能，点击[挑战]即开始一场自动战斗。',
+        ko: "원정에서 준비한 파티로 시련의 탑을 오릅니다. 영웅 {duelSize}명을 편성하고 열린 층을 선택하세요. 상대 카드에서 장비와 스킬을 확인하고 [도전]을 누르면 자동전투가 시작됩니다.",
+        en: "Bring {duelSize} heroes from your expedition party and choose an open floor. Inspect the enemy cards for gear and skills, then press Challenge to start the battle.",
+        zh: "编入{duelSize}名英雄后选择已开放的楼层。查看敌方卡牌上的装备与技能，再点击挑战开始自动战斗。",
     },
     'help.colosseum.floors.title': {
         ko: "층 오르기",
@@ -2355,9 +2363,9 @@ const STRINGS = {
         zh: '逐层攀登',
     },
     'help.colosseum.floors.body': {
-        ko: "처음에는 첫 층만 열립니다. 열린 가장 높은 층을 이기면 다음 층이 열리고, 이미 깬 층은 언제든 다시 도전할 수 있습니다. 각 층은 같은 AI 팀을 사용합니다. <b>층 번호가 곧 상대 레벨</b>이고, 높은 층일수록 장비 · 스킬도 강해집니다.<br><br>져도 열린 층을 잃지 않습니다.",
-        en: "Only the first floor is initially open. Beat the highest open floor to unlock the next; cleared floors remain available to retry. Each floor uses a fixed AI team. <b>The floor number is the enemy level</b>, and higher floors also bring stronger gear and skills.<br><br>Losing does not remove unlocked floors.",
-        zh: '起初只开放第一层。打赢已开放的最高层后会开放下一层，已通关的层随时可以再次挑战。每一层都使用固定的AI队伍。<b>层数即对手等级</b>，层数越高，对手的装备、技能也越强。<br><br>失败也不会失去已开放的层。',
+        ko: "현재 {total}층까지 도전할 수 있습니다. 장마다 첫 여덟 층에서는 정예 무리와 스테이지보스를 차례로 상대합니다. 아홉째 층에는 먼저 도착한 라이벌 영웅 셋, 열째 층에는 챕터보스와 호위가 기다립니다. 층 번호가 기준 레벨입니다. {difficulty}",
+        en: "There are {total} floors. The first eight floors of each chapter alternate between elite packs and stage bosses. Three rival heroes wait on the ninth, and the chapter boss and its escorts on the tenth. The floor number sets the base level. {difficulty}",
+        zh: "当前可挑战{total}层。每章前八层交替出现精英队伍与关卡首领。第九层是先到的三名对手英雄，第十层是章节首领与护卫。楼层数即基础等级。{difficulty}",
     },
     'help.colosseum.retry.title': {
         ko: "같은 층에서 막혔다면",
@@ -2370,14 +2378,14 @@ const STRINGS = {
         zh: '同一层出现的对手编队相同。在观战中观察谁先倒下、被哪个敌方技能打出大量伤害，然后更换装备或阵型再次挑战。一次只改一处，更容易比较是哪项准备起了作用。<br><br>如果因为英雄位空缺而[挑战]不可用，请为所选Party填满{duelSize}名英雄。战术效果和药水请查看我方队伍下方显示的内容。如果等级或装备不足，可以通过远征、雇佣、制作培养队伍后再回来，已通关的层都会保留。',
     },
     'help.colosseum.rules.title': {
-        ko: "두 결투 콘텐츠의 공통 규칙",
-        en: "Rules shared by both duel modes",
-        zh: '两种决斗内容的通用规则',
+        ko: "전투와 최고층 기록",
+        en: "Battles and floor progress",
+        zh: "战斗与楼层进度",
     },
     'help.colosseum.rules.body': {
-        ko: "시련의 탑과 결투장은 내 영웅의 능력치·장비·스킬에 선택한 Party의 파티 전술과 물약, 도감 보너스를 더해 한 판을 겨룹니다. 도감 보너스는 원정과 같이 붙습니다. 상대 팀도 자기 파티 전술과 물약을 같은 규칙으로 사용합니다. 제한시간 안에 승부가 나지 않으면 무승부입니다.<br><br>물약은 보유 재고에서 채울 수 있는 만큼 가져가며, 결투 중 마셔도 실제 재고는 줄지 않습니다. 결투에는 골드·재료 비용이 없고 장비나 도감 경험치 보상도 없습니다. 시련의 탑의 층과 결투장의 레이팅·전적이 각각 진행 기록입니다.<br><br>결과는 [도전] 또는 [결투 시작]을 누를 때의 영웅과 장비·편성을 기준으로 정해집니다. 관전은 그 전투를 재생하는 화면입니다. 그 뒤 장비나 편성을 바꾸면 다음 결투부터 반영되며, 관전을 닫아도 이미 기록된 결과는 유지됩니다.",
-        en: "Tower of Trials and Arena duels use your heroes' attributes, gear and skills plus the selected Party's tactics, potions and Codex bonuses for one battle. Codex bonuses apply just as in Expeditions. Opponents use their own party tactics and potions under the same rules. Reaching the time limit ends in a draw.<br><br>Potions are filled from the stock you own, but drinking them in a duel does not reduce that stock. Duels cost no gold or materials and grant no equipment or Codex EXP. Tower floors, and Arena rating and records, track your progress in each mode.<br><br>The result is determined using the heroes, gear and Party configuration present when you press Challenge or Start duel. Spectating replays that battle. Later equipment or formation changes apply to the next duel, and leaving the replay keeps the result already recorded.",
-        zh: '试炼之塔和决斗场以你英雄的属性、装备、技能，加上所选Party的队伍战术、药水和图鉴加成，进行一场对决。图鉴加成与远征一样生效。对手队伍也按同样的规则使用自己的队伍战术和药水。在时间限制内未分胜负则为平局。<br><br>药水从持有库存中尽量带满，决斗中喝掉也不会减少实际库存。决斗没有金币、材料费用，也没有装备或图鉴经验奖励。试炼之塔的层与决斗场的积分、战绩分别是各自的进度记录。<br><br>结果以点击[挑战]或[开始决斗]时的英雄、装备、编队为准。观战是回放那场战斗的画面。之后更换装备或编队会从下一场决斗开始生效，关闭观战也会保留已记录的结果。',
+        ko: "몬스터는 원정 규칙으로 한 라운드를 싸웁니다. 라이벌은 장비·스킬·물약·작전 카드를 갖추고 결투 규칙으로 싸웁니다. 내 도감과 파티 전술은 두 전투에 모두 적용됩니다.<br><br>열린 최고층에서 시간 안에 승리하면 다음 층이 열립니다. 패배하거나 무승부여도 다시 도전할 수 있습니다. 최고층 기록만 저장하며 물약 재고는 소모하지 않습니다.",
+        en: "Monster encounters use one expedition round. Rival heroes fight a duel with gear, skills, potions and tactic cards. Your Codex and party tactics apply to both.<br><br>Win on the highest open floor within the time limit to unlock the next. You can retry after a loss or draw. Only floor progress is saved and potion stock is preserved.",
+        zh: "怪物战按远征规则进行一个回合。对手英雄携带装备、技能、药水与战术卡，按决斗规则作战。你的图鉴与队伍战术在两种战斗中均生效。<br><br>在最高开放层限时内获胜即可开启下一层。落败或平局后可重试。仅记录通关进度，药水库存不会减少。",
     },
     'help.arena.rating.title': {
         ko: "레이팅과 리그 이해하기",
@@ -2435,9 +2443,9 @@ const STRINGS = {
         zh: '查看怪物与图鉴经验',
     },
     'help.codex.monsters.body': {
-        ko: "몬스터에서 챕터를 고르면 지역별 몬스터의 모습·분류·스킬과 도감 진행을 살펴볼 수 있습니다. 아직 원정에서 열지 못한 지역도 여기서 미리 볼 수 있습니다. 몬스터 카드를 가리키면 이야기와 구간 보상, 스킬 그림을 가리키면 스킬 효과가 나옵니다. 일반/정예 고르개는 여기서 보는 초상만 바꾸며 같은 몬스터의 도감 경험치를 따로 나누지는 않습니다.<br><br>도감 경험치는 영웅을 레벨업시키는 경험치와 별도로, 몬스터마다 쌓이는 처치 기록입니다. 원정에서 이긴 라운드의 처치가 정산될 때 들어오며 진 라운드나 도중에 철수한 라운드의 처치는 포함되지 않습니다. 처치당 도감 경험치는 {per}이고, 정예·보스는 여기에 배율을 곱합니다({grade}).",
-        en: "Choose a chapter under Monsters to inspect each area's monsters, classifications, skills and Codex progress. You can preview areas you have not yet unlocked in Expeditions. Hover a monster card for its story and tier rewards, or a skill icon for its effect. The Normal/Elite selector changes the displayed portrait; it does not split that monster's Codex EXP into separate tracks.<br><br>Codex EXP is a separate record for each monster, apart from the XP that levels up heroes. It is awarded when kills from a won Expedition round are settled. Kills from lost rounds or rounds abandoned partway through do not count. Codex EXP per kill is {per}, multiplied for Elites and bosses ({grade}).",
-        zh: '在怪物页中选择章后，可以查看各区域怪物的外形、分类、技能以及图鉴进度。还未在远征中开放的区域也可以在这里预览。指向怪物卡片会显示故事和区间奖励，指向技能图标会显示技能效果。普通/精英切换只改变这里显示的肖像，不会把同一怪物的图鉴经验分开计算。<br><br>图鉴经验与让英雄升级的经验不同，是每种怪物各自累积的击杀记录。在远征中获胜回合的击杀结算时获得，失败的回合或中途撤退的回合中的击杀不计入。每次击杀的图鉴经验为{per}，击杀精英、首领时再乘以倍率（{grade}）。',
+        ko: "몬스터 도감에서 챕터를 고르면 지역별 몬스터의 분류·스킬·도감 진행도를 볼 수 있습니다. 카드를 가리키면 이야기와 구간 보상을, 스킬 그림을 가리키면 그 효과를 확인합니다. 일반·정예 초상은 같은 몬스터의 도감 기록을 공유합니다.<br><br>도감 경험치는 몬스터마다 쌓입니다. 원정에서 이긴 라운드의 처치와 탐험 전투에서 정산된 처치가 기록됩니다. 난이도별 처치당 경험치는 {per}이며, 정예·보스에는 등급 배율이 적용됩니다({grade}).",
+        en: "Choose a chapter in the Monster Codex to view each area's monsters, skills, classification and Codex progress. Hover a monster card for its story and section rewards, or a skill icon for its effect. Normal and Elite portraits share one Codex entry.<br><br>Codex EXP accumulates for each monster. Kills from won Expedition rounds and settled Exploration fights count. EXP per kill by difficulty is {per}. Elites and bosses apply their grade multipliers ({grade}).",
+        zh: "在怪物图鉴中选择章节，可查看各区域怪物的分类、技能和图鉴进度。悬停于怪物卡片可查看故事与区间奖励，悬停于技能图标可查看效果。普通和精英头像共用一个图鉴记录。<br><br>图鉴经验按怪物累积。远征获胜回合的击杀和探索战斗中已结算的击杀都会记录。各难度每次击杀的经验是 {per}，精英与首领另乘品质倍率（{grade}）。",
     },
     'help.codex.classification.title': {
         ko: "종족 · 직업 읽기",
@@ -2486,7 +2494,7 @@ const STRINGS = {
     },
     'help.codex.art.body': {
         ko: "<b>캐릭터</b>는 직업별 영웅 초상, <b>아이템</b>은 무기 · 방어구 · 물약의 그림과 목록을 모아 보여줍니다. 물약을 가리키면 효과를 확인할 수 있습니다. 초상 그림체 고르개는 실제 게임의 초상과 배경에도 적용되며 설정의 그림체 선택과 함께 저장됩니다.<br><br>도감에서 그림을 보는 것만으로 영웅이나 장비를 획득하지는 않습니다.",
-        en: "<b>Characters</b> collects hero portraits by class, and <b>Items</b> lists weapon, armor and potion artwork. Hover potions to see their effects. The portrait style selector also changes portraits and backgrounds used in the game and shares its saved choice with Settings. Viewing artwork in the Codex does not grant heroes or equipment.",
+        en: "<b>Characters</b> collects hero portraits by class, and <b>Items</b> lists weapon, armor and potion artwork. Hover potions to see their effects. The portrait style selector also changes portraits and backgrounds used in the game and shares its saved choice with Settings.<br><br>Viewing artwork in the Codex does not grant heroes or equipment.",
         zh: '<b>角色</b>汇集展示各职业的英雄肖像，<b>物品</b>汇集展示武器、防具、药水的图片和列表。指向药水可查看效果。肖像画风切换也会应用到实际游戏中的肖像和背景，并与设置中的画风选择一同保存。<br><br>仅在图鉴中查看图片并不会获得英雄或装备。',
     },
     'help.codex.skills.title': {
@@ -2495,9 +2503,9 @@ const STRINGS = {
         zh: '查找可学的技能与专精',
     },
     'help.codex.skills.body': {
-        ko: "스킬 목록은 일반 스킬과 전직 스킬을 직업·전직별로 보여줍니다. 스킬 그림에 마우스를 올려 효과와 필요한 무기를 확인합니다. 스킬북이 있는 일반 스킬에는 획득처와 레벨이 오를 때 좋아지는 항목도 표시됩니다. 원하는 스킬이 있다면 이 목록에서 그 스킬북의 획득처를 찾습니다.<br><br>도감에서는 스킬과 마스터리를 미리 살펴봅니다. 실제 책 습득은 도서관에서, 스킬 포인트 투자는 캐릭터의 [마스터리 열기]에서 합니다. 도감의 스킬 수치는 특정 영웅을 선택한 상태가 아니므로, 실제 영웅에게 적용되는 피해·회복량은 그 영웅의 스킬 설명에서도 확인합니다. 전직의 특수·변형·필살기 가지는 현재 준비 중입니다.",
-        en: "The Skills list groups regular and advancement skills by class and advancement. Hover an icon to read its effect and weapon requirement. Regular skills that can become books also show sources and what improves per level. To pursue a skill, find where its book comes from here.<br><br>The Codex lets you preview skills and mastery. Learn books at the Library, and spend skill points through Open Mastery in Character. Codex skill details have no selected hero context, so check the skill on your actual hero for their damage or healing values. The Special, Variant and Ultimate advancement branches are currently coming later.",
-        zh: '技能列表按职业、转职分类显示普通技能和转职技能。把鼠标移到技能图标上可查看效果和所需武器。有技能书的普通技能还会显示获取途径，以及等级提升时变强的项目。如果有想要的技能，就在这个列表中查找其技能书的获取途径。<br><br>图鉴用于预先查看技能和专精。实际学习书籍在图书馆进行，投入技能点则在角色的[打开专精]中进行。图鉴中的技能数值并未选定特定英雄，因此实际作用于英雄的伤害、治疗量也要在该英雄的技能说明中确认。转职的特殊、变体、必杀技分支目前仍在准备中。',
+        ko: "스킬 목록은 일반 스킬과 전직 스킬을 직업·전직별로 보여줍니다. 스킬 그림에 마우스를 올려 효과와 필요한 무기를 확인합니다. 스킬북이 있는 일반 스킬에는 획득처와 레벨이 오를 때 좋아지는 항목도 표시됩니다. 원하는 스킬이 있다면 이 목록에서 그 스킬북의 획득처를 찾습니다.<br><br>도감에서는 스킬과 마스터리를 미리 살펴봅니다. 실제 책 습득은 도서관에서, 스킬 포인트 투자는 캐릭터의 [마스터리 열기]에서 합니다. 도감의 스킬 수치는 특정 영웅을 선택한 상태가 아니므로, 실제 영웅에게 적용되는 피해·회복량은 그 영웅의 스킬 설명에서도 확인합니다.",
+        en: "The Skills list groups regular and advancement skills by class and advancement. Hover an icon to read its effect and weapon requirement. Regular skills that can become books also show sources and what improves per level. To pursue a skill, find where its book comes from here.<br><br>The Codex lets you preview skills and mastery. Learn books at the Library, and spend skill points through Open Mastery in Character. Codex skill details have no selected hero context, so check the skill on your actual hero for their damage or healing values.",
+        zh: "技能列表按职业、转职分类显示普通技能和转职技能。把鼠标移到技能图标上可查看效果和所需武器。有技能书的普通技能还会显示获取途径，以及等级提升时变强的项目。如果有想要的技能，就在这个列表中查找其技能书的获取途径。<br><br>图鉴用于预先查看技能和专精。实际学习书籍在图书馆进行，投入技能点则在角色的[打开专精]中进行。图鉴中的技能数值并未选定特定英雄，因此实际作用于英雄的伤害、治疗量也要在该英雄的技能说明中确认。",
     },
     'help.codex.effects.title': {
         ko: "이펙트 미리 보기",
@@ -2505,9 +2513,9 @@ const STRINGS = {
         zh: '预览特效',
     },
     'help.codex.effects.body': {
-        ko: "<b>이펙트</b>에서 카드를 누르면 해당 스킬의 전투 연출을 재생합니다. 묶음의 ▶는 그 묶음을, <b>[전부 재생]</b>은 모든 효과를 재생합니다. 위쪽에서 그림체를 비교할 수 있으며, 도감의 미리 보기는 설정에서 스킬 이펙트를 꺼 둔 경우에도 재생됩니다.<br><br>도감에서 비교할 그림체를 고르는 것과 실제 전투 그림체를 고르는 설정은 별개입니다.",
-        en: "Under <b>Effects</b>, select a card to play that skill's battle effect. A group's ▶ plays that group; <b>Play all</b> plays every effect. Compare art styles at the top. Codex previews play even when skill effects are disabled in Settings. Choosing a preview style here does not change the live battle style in Settings.",
-        zh: '在<b>特效</b>中点击卡片，会播放该技能的战斗特效。组上的▶播放该组，<b>[全部播放]</b>播放所有特效。可在上方比较画风，即使在设置中关闭了技能特效，图鉴中的预览也会播放。<br><br>在图鉴中选择用于比较的画风，与选择实际战斗画风的设置是两回事。',
+        ko: "<b>이펙트</b>에서 그림체를 고르고 카드를 누르면 해당 스킬의 연출을 볼 수 있습니다. 묶음 옆의 ▶는 그 묶음, [전부 재생]은 전체를 재생합니다. [나란히 보기]에서 스킬을 고르면 여러 그림체를 동시에 볼 수 있습니다.<br><br>실제 전투에 적용할 그림체는 설정에서 고릅니다. 도감 미리 보기는 설정에서 스킬 이펙트를 꺼 둔 상태에서도 재생됩니다.",
+        en: "In <b>Effects</b>, choose a style and select a card to play its skill animation. The ▶ next to a group plays that group, and [Play All] plays every effect. Choose a skill in [Side by Side] to see its styles play together.<br><br>Choose the style for live combat in Settings. Codex previews play even if skill effects are disabled.",
+        zh: '在<b>特效</b>中选择画风，再点击卡片即可播放该技能的动画。分组旁的 ▶ 会播放该组，【全部播放】则播放所有特效。在【并排对比】中选择技能，可同时查看多种画风。<br><br>实战画风在设置中选择。即使关闭了技能特效，图鉴预览仍可播放。',
     },
     'help.help.browse.title': {
         ko: "도움말에서 필요한 설명 찾기",
@@ -2535,9 +2543,9 @@ const STRINGS = {
         zh: '鼠标、键盘、触屏操作',
     },
     'help.help.controls.body': {
-        ko: "영웅·몬스터·장비·스킬 그림에 마우스를 올리면 그 대상의 설명 카드인 툴팁이 뜹니다. 장비를 우클릭하면 잠금·이동·분해처럼 그 칸에서 가능한 행동을 고를 수 있습니다. Alt를 누르면 카드의 세부 능력치·스킬 계산이나 장비 착용 후 변화량을, Shift를 누르면 장비 옵션이 나올 수 있는 수치 범위를 확인합니다.<br><br>터치에서는 그림을 길게 눌러 설명을 엽니다. 카드 아래 [세부]와 [범위]가 나오면 각각 Alt와 Shift 대신 사용할 수 있으며, 장착·이동 같은 행동 버튼도 그 줄에 표시됩니다. 화면을 스크롤하려면 누른 채 움직이고, 설명을 열려면 그 자리에서 길게 누릅니다.<br><br>일반 창은 ×, 창 바깥 영역 클릭, Esc로 닫습니다. 확인이 필요한 창은 그 안의 선택 버튼으로 진행합니다. 모바일에서는 아래쪽 아이콘으로 메뉴를 바꾸고 [메뉴]에서 모든 탭을 엽니다. 가로 화면에서는 아이콘이 왼쪽으로 이동합니다. 위쪽 부대 상태를 누르면 전투로 돌아가며, 전장 오른쪽 아래 버튼으로 가방을 펼치거나 접습니다.",
-        en: "Hover hero, monster, equipment or skill artwork to open its information card, called a tooltip. Right-click equipment to choose the available actions, such as locking, moving or salvaging it. Hold Alt for detailed stats, skill calculations or equipment stat changes, and Shift for the possible value ranges of equipment options.<br><br>On touchscreens, hold an image to open its information. Details and Range buttons, when shown below the card, provide the Alt and Shift views. Available actions such as equipping or moving appear there too. Move your finger to scroll, or keep it still while holding to open information.<br><br>Close most windows with ×, an outside click or Esc. Windows requiring a choice use their own buttons. On mobile, use the bottom icons to switch screens and Menu to reach every tab. In landscape, the icons move to the left. Tap a party status at the top to return to combat. The button at the bottom right of the battlefield shows or hides the bags.",
-        zh: '把鼠标移到英雄、怪物、装备、技能图标上，会弹出该对象的说明卡片，即工具提示。右键点击装备，可以选择该格中可进行的操作，例如锁定、移动、分解。按住Alt可查看卡片的详细属性、技能计算或装备穿戴后的变化量，按住Shift可查看装备词条可能出现的数值范围。<br><br>在触屏上，长按图片即可打开说明。卡片下方出现[详情]和[范围]时，可分别代替Alt和Shift使用，装备、移动等操作按钮也会显示在那一行。要滚动画面，就按住后移动；要打开说明，就在原地长按。<br><br>普通窗口可用×、点击窗口外区域或Esc关闭。需要确认的窗口，用其中的选项按钮继续。在移动端，用下方图标切换菜单，在[菜单]中打开所有页面。横屏时图标会移到左侧。点击上方的小队状态即可回到战斗，用战场右下角的按钮展开或收起背包。',
+        ko: "영웅·몬스터·장비·스킬에 마우스를 올리면 툴팁이 뜹니다. [Alt]를 누르면 세부 스탯·계산 또는 착용 전후 차이를, [Shift]를 누르면 장비 옵션의 수치 범위를 확인합니다.<br><br>보관 중인 장비는 클릭으로 선택하고 우클릭으로 [착용]·[잠금] 메뉴를 엽니다. [우클릭 분해]를 켰다면 [Shift]+우클릭으로 메뉴를 열 수 있습니다. 터치에서는 그림을 길게 눌러 툴팁을 열고, 카드 아래 [세부]·[범위]와 해당 행동 버튼을 사용합니다.<br><br>일반 창은 ×, 창 바깥 클릭, [Esc]로 닫습니다. 모바일에서는 [메뉴]로 전체 탭을 열고, 위쪽 부대 상태를 눌러 관전으로 돌아갑니다. 전장 오른쪽 아래 버튼으로 가방을 펼치거나 접습니다.",
+        en: "Hover heroes, monsters, gear or skills to see their tooltips. Hold [Alt] for detailed stats, calculations or changes from equipping gear. Hold [Shift] for equipment option ranges.<br><br>Click stored gear to select it and right-click to open the [Equip] and [Lock] menu. If [Right-click Salvage] is on, use [Shift]+right-click for the menu. On touch screens, press and hold an icon and use the [Details], [Ranges] and action buttons below the tooltip.<br><br>Close ordinary windows with ×, a click outside the window, or [Esc]. On mobile, use [Menu] to open the full list of tabs and tap a party status at the top to return to its battle. Use the lower-right battlefield button to open or close the inventory.",
+        zh: "将鼠标移到英雄、怪物、装备或技能上可查看提示。按住【Alt】可查看详细属性、计算或穿戴前后的变化；按住【Shift】可查看装备词条的数值范围。<br><br>点击保管中的装备可选中，右键可打开【装备】与【锁定】菜单。开启【右键分解】后，可按住【Shift】再右键打开菜单。触屏上长按图标可打开提示，再使用下方的【详情】、【范围】与操作按钮。<br><br>普通窗口可用 ×、点击窗口外部或按【Esc】关闭。手机上可用【菜单】打开完整页签列表，点击顶部队伍状态可返回观战。战场右下按钮可展开或收起背包。",
     },
     'help.help.when_stuck.title': {
         ko: "막혔을 때 확인할 곳",
@@ -2545,9 +2553,9 @@ const STRINGS = {
         zh: '卡住时该看哪里',
     },
     'help.help.when_stuck.body': {
-        ko: "출발할 수 없다면 편성에 영웅이 있는지, 그 영웅이 다른 원정이나 탐험에 나가 있는지, 고른 스테이지가 열려 있는지 확인합니다. 거절될 때 표시되는 사유가 먼저 해결할 조건입니다.<br><br>출발은 되지만 계속 진다면 원정의 Report와 관전에서 쓰러진 순서와 피해를 확인합니다. 캐릭터의 착용 장비와 남은 스킬 포인트, 편성의 진형·물약·전술 조건을 살펴봅니다. 어떤 부분이 부족한지에 따른 자세한 예시는 원정과 캐릭터 도움말에 있습니다.<br><br>버튼이나 탭이 잠겨 있으면 건설에서 해당 건물·다음 랭크 조건을 봅니다. 재료가 부족하면 연구소 생산과 장비 분해를 확인하고, 골드가 부족하면 원정을 진행하거나 완료한 의뢰를 수령합니다. 재료의 종류와 단계가 비용에 적힌 것과 같은지도 봅니다. 도감 눈금은 찼는데 잠겨 있다면 도서관 랭크를 확인합니다. 지금 필요한 기능의 조건부터 맞추면 다음 목표를 정하기 쉽습니다.",
-        en: "If you cannot deploy, check that the Party contains heroes, that they are not away on another Expedition or Exploration, and that the selected stage is open. The displayed rejection reason tells you which requirement to solve first.<br><br>If you can deploy but keep losing, inspect Report and spectate to see who fell first and what dealt damage. Check equipped gear and unspent skill points in Character, then formation, potions and tactic conditions in Party. Expedition and Character help give more detailed examples for each problem.<br><br>For locked buttons or tabs, check the building and next-rank requirements in Construction. For materials, check Laboratory production and gear salvage. For gold, run Expeditions or claim completed commissions. Match the material type and grade to the cost shown. A filled but locked Codex milestone needs Library ranks. Start with the requirements for the feature you need now.",
-        zh: '如果无法出发，请确认编队中是否有英雄，该英雄是否正在进行其他远征或探索，所选关卡是否已开放。被拒绝时显示的原因，就是要先解决的条件。<br><br>如果能出发却一直失败，请在远征的报告和观战中查看倒下的顺序和所受伤害。检查角色的已穿戴装备和剩余技能点，以及编队的阵型、药水、战术条件。针对各种不足之处的详细示例，见远征和角色的帮助。<br><br>按钮或页面被锁定时，请在建设中查看相应建筑及下一阶的条件。材料不足时，查看研究所的生产和装备分解；金币不足时，推进远征或领取已完成的委托。还要确认材料的种类和级别是否与费用上写的一致。图鉴刻度已满却仍锁定时，请确认图书馆的阶。先满足眼下所需功能的条件，就更容易确定下一个目标。',
+        ko: "출발할 수 없다면 편성에 영웅이 있는지, 그 영웅이 다른 원정이나 탐험에 나가 있는지, 고른 스테이지가 열려 있는지 확인합니다. 거절될 때 표시되는 사유가 먼저 해결할 조건입니다.<br><br>출발은 되지만 계속 진다면 원정의 Report와 관전에서 쓰러진 순서와 피해를 확인합니다. 캐릭터의 착용 장비와 남은 스킬 포인트, 편성의 진형·물약·작전 카드를 살펴봅니다. 어떤 부분이 부족한지에 따른 자세한 예시는 원정과 캐릭터 도움말에 있습니다.<br><br>버튼이나 탭이 잠겨 있으면 건설에서 해당 건물·다음 랭크 조건을 봅니다. 재료가 부족하면 연구소 생산과 장비 분해를 확인하고, 골드가 부족하면 원정을 진행하거나 완료한 의뢰를 수령합니다. 재료의 종류와 단계가 비용에 적힌 것과 같은지도 봅니다. 도감 눈금은 찼는데 잠겨 있다면 도서관 랭크를 확인합니다. 지금 필요한 기능의 조건부터 맞추면 다음 목표를 정하기 쉽습니다.",
+        en: "If you cannot deploy, check that the Party contains heroes, that they are not away on another Expedition or Exploration, and that the selected stage is open. The displayed rejection reason tells you which requirement to solve first.<br><br>If you can deploy but keep losing, inspect Report and spectate to see who fell first and what dealt damage. Check equipped gear and unspent skill points in Character, then formation, potions and equipped Tactic Cards in Party. Expedition and Character help give more detailed examples for each problem.<br><br>For locked buttons or tabs, check the building and next-rank requirements in Construction. For materials, check Laboratory production and gear salvage. For gold, run Expeditions or claim completed commissions. Match the material type and grade to the cost shown. A filled but locked Codex milestone needs Library ranks. Start with the requirements for the feature you need now.",
+        zh: "如果无法出发，请确认编队中是否有英雄，该英雄是否正在进行其他远征或探索，所选关卡是否已开放。被拒绝时显示的原因，就是要先解决的条件。<br><br>如果能出发却一直失败，请在远征的报告和观战中查看倒下的顺序和所受伤害。检查角色的已穿戴装备和剩余技能点，以及编队的阵型、药水、战术卡。针对各种不足之处的详细示例，见远征和角色的帮助。<br><br>按钮或页面被锁定时，请在建设中查看相应建筑及下一阶的条件。材料不足时，查看研究所的生产和装备分解；金币不足时，推进远征或领取已完成的委托。还要确认材料的种类和级别是否与费用上写的一致。图鉴刻度已满却仍锁定时，请确认图书馆的阶。先满足眼下所需功能的条件，就更容易确定下一个目标。",
     },
     'help.help.settings.title': {
         ko: "화면 설정과 언어",
@@ -2555,9 +2563,9 @@ const STRINGS = {
         zh: '画面设置与语言',
     },
     'help.help.settings.body': {
-        ko: "상단의 EN 또는 한국어 버튼을 누르면 표시 언어가 바뀝니다. 모바일에서는 [메뉴] 안에 있습니다.<br><br>전투 연출이 복잡하게 느껴지면 스킬 이펙트·기본 공격 이펙트·피격 반응·공격 시 흔들림을 각각 조정할 수 있습니다. 이펙트 투명도는 값이 클수록 스킬 그림을 옅게 만듭니다. 스킬 이펙트가 Off이면 그림체와 투명도 선택이 흐려지고, 피격 반응이 Off이면 피격 시 흔들림 선택이 흐려집니다. 다시 켜면 이전 선택을 사용합니다.<br><br>로그의 칸/문장은 전투 기록을 나누어 볼지 문장으로 읽을지 고르는 표시 방식입니다. 언어와 연출·로그 설정은 전투 승패나 장비 효과를 바꾸지 않으며 이 브라우저에 저장됩니다.",
-        en: "Use the language button at the top to switch between Korean and English. On mobile, it is inside Menu.<br><br>If combat visuals feel busy, adjust skill effects, basic attack effects, hit reactions and attack movement separately. A higher transparency value makes skill artwork fainter. Turning Skill Effects Off dims its style and transparency controls; turning Hit Reactions Off dims Shake on Hit. Turning them back on restores the previous choices.<br><br>Grid/Text chooses whether battle log entries are divided into columns or read as sentences. Language, visual effects and log settings do not change battle outcomes or equipment effects, and are saved in this browser.",
-        zh: '点击上方的语言按钮即可切换显示语言。在移动端，该按钮位于[菜单]中。<br><br>如果觉得战斗演出太杂乱，可以分别调整技能特效、普通攻击特效、受击反应、攻击时晃动。特效透明度数值越大，技能图像越淡。技能特效设为关闭时，画风和透明度选项会变暗；受击反应设为关闭时，受击晃动选项会变暗。重新开启后会沿用之前的选择。<br><br>日志的格子/句子是选择把战斗记录分栏查看还是按句子阅读的显示方式。语言及演出、日志设置不会改变战斗胜负或装备效果，并保存在此浏览器中。',
+        ko: "상단 언어 목록에서 원하는 언어를 고르세요.<br><br>설정에서 스킬 이펙트 그림체와 투명도, 기본 공격 이펙트, 피격 반응과 흔들림, 전투 로그 표시 방식을 바꿀 수 있습니다. [바로가기 어둡게]는 첫 메인미션의 안내 위치 주변을 어둡게 표시합니다.",
+        en: "Choose your language from the list at the top.<br><br>In Settings you can change the style and transparency of skill effects, basic attack effects, hit reactions and shake, and the battle log format. [Dim Mission Background] darkens the area around the highlights for the first Main Missions.",
+        zh: "在顶部的语言列表中选择语言。<br><br>在设置中可调整技能特效的风格和透明度、普攻特效、受击反应与震动，以及战斗日志的显示方式。【使用快捷跳转时调暗背景】会调暗早期主线任务指引高亮位置的周围区域。",
     },
     'help.help.newgame.title': {
         ko: "새 게임과 첫 영웅",
@@ -2565,9 +2573,9 @@ const STRINGS = {
         zh: '新游戏与初始英雄',
     },
     'help.help.newgame.body': {
-        ko: "메뉴의 [새 게임]을 누르면 프롤로그가 먼저 나오고, 이어서 첫 영웅 {starterCount}명의 직업 · 죄종 · 능력치를 확인할 수 있습니다. [다시 굴리기]는 후보 전원을 다시 뽑으며, 원하는 조합이 나올 때까지 제한 없이 사용할 수 있습니다. 시작을 확정하면 그 영웅들이 첫 파티가 되고 각자 직업에 맞는 무기를 들고 Chapter 1 을 시작합니다.<br><br>기존 세이브가 있으면 덮어쓰기 버튼을 한 번 더 눌러야 새 게임을 시작합니다. [뒤로가기]로 메뉴에 돌아가면 기존 저장을 불러올 수 있습니다.",
-        en: "Choose New Game from the menu to see the prologue, then inspect the classes, Sins and attributes of your {starterCount} starting heroes. Reroll replaces every candidate and can be used without limit until you find a team you like. Confirming makes those heroes your first party, each carrying a weapon suited to their class, and Chapter 1 begins.<br><br>If a save already exists, press the overwrite button again to confirm a new game. Back returns to the menu, where you can load the existing save.",
-        zh: '点击菜单中的[新游戏]，会先播放序章，随后可查看{starterCount}名初始英雄的职业、罪宗、属性。[重掷]会重新抽取全部候选，在出现想要的组合之前可以无限次使用。确定开始后，这些英雄会成为第一支队伍，各自手持适合自己职业的武器开始第1章。<br><br>如果已有存档，需要再按一次覆盖按钮才会开始新游戏。用[返回]回到菜单，可以读取原有存档。',
+        ko: "메뉴에서 [새 게임]을 누르면 프롤로그가 시작됩니다. 앞부분을 본 뒤 시작 영웅 {starterCount}명의 직업·죄종·능력치를 확인합니다. [다시 굴리기]는 후보 전원을 다시 뽑으며 횟수 제한 없이 사용할 수 있습니다. 시작 파티를 확정하면 프롤로그의 나머지 장면을 거쳐 1장 원정과 메인미션 안내로 이어집니다.<br><br>기존 세이브는 시작 파티를 최종 확정할 때 덮어씁니다. 그 전에는 [뒤로가기]로 메뉴에 돌아가 기존 게임을 불러올 수 있습니다.",
+        en: "Select [New Game] in the menu to start the prologue. After its opening scenes, review the classes, Sins and attributes of your {starterCount} starting heroes. [Reroll] replaces all candidates and can be used as often as you want. Confirm your starting party to see the rest of the prologue and enter the Chapter 1 Expedition and Main Mission guidance.<br><br>Final confirmation of the starting party overwrites the existing save. Until then, use [Back] to return to the menu and load the existing game.",
+        zh: "在菜单中点击【新游戏】会开始序章。看过开场后，可查看 {starterCount} 名初始英雄的职业、罪宗及属性。【重新随机】会重选所有候选人，次数不限。确认初始编队后会播放剩余序章场景，然后进入第 1 章远征与主线任务指引。<br><br>最终确认初始编队时会覆盖已有存档。在此之前，可以点击【返回】回到菜单并加载原来的游戏。",
     },
     'help.help.saving.title': {
         ko: "자동 저장과 이어하기",
@@ -2575,9 +2583,9 @@ const STRINGS = {
         zh: '自动保存与继续游戏',
     },
     'help.help.saving.body': {
-        ko: "진행 상황은 현재 브라우저에 자동 저장됩니다. 다시 게임을 열면 메뉴의 [불러오기]로 이어합니다. 저장은 브라우저와 접속 주소를 기준으로 남으므로 다른 브라우저·기기·주소에서는 같은 저장이 자동으로 이어지지 않습니다. 브라우저의 이 사이트 저장 데이터를 지우면 자동 저장도 지워집니다.<br><br>같은 브라우저에서 게임 탭을 여러 개 열면 한 탭이 저장할 때 기존 탭은 멈춤 화면을 표시합니다. 플레이할 탭을 하나 정해 사용합니다. [이 탭에서 이어하기]는 최신 저장을 읽도록 새로고침하는 버튼이며, 메뉴가 나오면 [불러오기]로 계속합니다.<br><br>새 게임 화면에서 후보를 다시 굴리거나 [뒤로가기]로 돌아오는 동안에는 기존 세이브가 유지됩니다. 새 영웅으로 시작하기를 최종 확정하면 기존 자동 저장을 새 게임으로 덮습니다. 설정과 언어 선택은 게임 진행과 별도로 이 브라우저에 남습니다.",
-        en: "Progress is saved automatically in this browser. When you reopen the game, continue with Load Game from the menu. Saves belong to the browser and site address, so another browser, device or address does not automatically continue the same save. Clearing this site's browser storage also clears the autosave.<br><br>If multiple game tabs are open in one browser, a tab that saves causes the older tab to show a paused screen. Choose one tab to play in. Continue in this tab reloads the page to read the latest save; if the menu appears, use Load Game to continue.<br><br>Rerolling candidates in New Game or returning with Back keeps the existing save. Final confirmation to start with new heroes replaces the autosave with the new game. Display settings and language are stored in this browser separately from game progress.",
-        zh: '游戏进度会自动保存在当前浏览器中。重新打开游戏时，用菜单的[读取]继续。存档以浏览器和访问地址为准保存，因此在其他浏览器、设备、地址上不会自动接续同一存档。清除浏览器中本网站的存储数据，自动存档也会被清除。<br><br>在同一浏览器中打开多个游戏标签页时，一个标签页存档后，原有的标签页会显示暂停画面。请选定一个标签页来游玩。[在此标签页继续]是刷新页面以读取最新存档的按钮，出现菜单后用[读取]继续。<br><br>在新游戏画面重新随机候选，或用[返回]回去期间，原有存档会保留。最终确定以新英雄开始后，原有的自动存档会被新游戏覆盖。设置和语言选择与游戏进度分开，保存在此浏览器中。',
+        ko: "진행 상황은 현재 브라우저에 자동 저장됩니다. 메뉴의 [불러오기]로 이어합니다. 계정을 연결하지 않은 저장은 현재 브라우저와 접속 주소에 남습니다. 이 사이트의 저장 데이터를 지우면 로컬 저장도 삭제됩니다.<br><br>배포판에서는 설정의 [계정 만들기]로 진행을 계정에 연결할 수 있습니다. 다른 브라우저나 기기에서는 메뉴의 [계정으로 불러오기]로 로그인해 이어합니다. 그 브라우저에 이미 세이브가 있으면 덮어쓰기를 확인합니다.<br><br>같은 저장을 여러 탭에서 열면 이전 탭에 멈춤 화면이 뜨고 새로 연 탭에서 이어서 플레이합니다. 이전 탭으로 돌아가려면 [이 탭에서 이어하기]로 최신 저장을 불러옵니다.",
+        en: "Progress is saved automatically in this browser. Select [Load Game] in the menu to continue. Saves without a linked account stay with the current browser and site address. Clearing this site's data removes the local save.<br><br>In the live build, use [Create Account] in Settings to link your progress to an account. On another browser or device, sign in from [Load from Account] in the menu. If that browser already has a save, you will be asked to confirm the overwrite.<br><br>If you open the same save in more than one tab, the earlier tab pauses and play continues in the newly opened one. To return to the earlier tab, select [Continue in this tab] to load the latest save.",
+        zh: "游戏进度会自动保存在当前浏览器。可从菜单点击【读取】继续。未绑定账号的存档保存在当前浏览器与访问地址下。清除该网站的数据也会删除本地存档。<br><br>在正式版本中，可在设置里点击【创建账号】将进度关联到账号。换用浏览器或设备时，可在菜单中选择【读取账号存档】并登录。如该浏览器已有存档，会要求确认覆盖。<br><br>若在多个标签页打开同一存档，较早的标签页会暂停，可在新打开的标签页继续游戏。要回到较早的标签页，可点击【在此标签页继续】加载最新存档。",
     },
     'help.help.away.title': {
         ko: "다른 화면을 보거나 자리를 비울 때",
@@ -2585,9 +2593,9 @@ const STRINGS = {
         zh: '查看其他画面或离开时',
     },
     'help.help.away.body': {
-        ko: "게임 안에서 도움말·캐릭터·건설 같은 다른 탭을 보는 동안에도 원정과 탐험은 진행됩니다. 관전 중인 팀만 움직이는 방식이 아니므로 장비를 정리하면서 전투를 돌릴 수 있습니다.<br><br>게임을 완전히 닫으면 원정은 멈추며, 다시 접속한 뒤 출발합니다. 보낸 탐험은 꺼 둔 동안에도 남은 시간이 흘러 완료되므로 돌아왔을 때 탐험 탭에서 수령합니다. 연구소의 기본 오프라인 생산 상한은 {offlineHours}시간입니다. 자원 연구로 재료 상한을 늘릴 수 있으며, 수색은 대기소가 찰 때까지 진행됩니다.<br><br>PC가 절전 상태에 들어가거나 브라우저가 게임 탭을 오래 정지시키면 원정이 끊길 수 있습니다. 돌아왔을 때 마지막 리포트를 확인하고 [보내기]로 다시 시작합니다. 연구소 생산과 탐험의 완료·수령은 각 탭에서 확인합니다.",
-        en: "Expeditions and Exploration continue while you view other in-game tabs such as Help, Character or Construction. Activity is not limited to the team you are spectating, so you can organize equipment while combat runs.<br><br>Closing the game stops Expeditions; deploy again after returning. An exploration already sent can finish while the game is closed; claim it in Exploration when you return. The Laboratory's default offline cap is {offlineHours}h. Resources research extends the cap for materials. Search continues until its Waiting Room fills.<br><br>If the PC sleeps or the browser suspends the game tab for a long time, Expeditions can stop. On return, check the last report, then Deploy again. Check Laboratory output and Exploration completion or collection in their respective tabs.",
-        zh: '在游戏内查看帮助、角色、建设等其他页面时，远征和探索也会继续进行。并不是只有正在观战的队伍在行动，所以可以一边整理装备一边让战斗进行。<br><br>完全关闭游戏后，远征会停止，重新进入后需要再次出发。已派出的探索在关闭期间剩余时间也会流逝并完成，回来后在探索页领取。研究所的离线产出默认最多累计{offlineHours}小时。资源研究可延长材料的累计时间，搜寻会持续到等候所填满为止。<br><br>电脑进入睡眠状态，或浏览器长时间暂停游戏页面时，远征可能会中断。回来后查看最后一份报告，用[派遣]重新开始。研究所的生产以及探索的完成、领取请在各自的页面查看。',
+        ko: "게임 안에서 도움말이나 장비를 보는 동안에도 원정·탐험은 진행됩니다. 게임을 닫으면 원정은 멈춥니다. 돌아와서 마지막 Report를 확인하고 원하는 스테이지에 다시 [보내기]합니다.<br><br>이미 시작한 탐험은 다시 접속할 때 남은 전투를 계산합니다. 종료 시각이 지나면 결과가 나오고, 성공 보상은 자동으로 들어옵니다. 이어 돌기는 게임을 다시 켜도 이어지지 않습니다.<br><br>연구소에 등록한 영웅은 오프라인에도 생산합니다. 기본 생산 상한은 {offlineHours}시간이며, 자원 줄의 연구로 재료 생산 시간을 늘릴 수 있습니다. 수색은 대기소가 찰 때까지, 장비 제작은 보관 칸이 차거나 재료가 모자랄 때까지 진행됩니다.",
+        en: "Expeditions and Exploration continue while you read Help or manage gear. Closing the game stops Expeditions. When you return, check the last Report and [Deploy] again on the stage you want.<br><br>Reopening the game resolves the remaining fights of a run already started. Its result appears when the finish time has passed, and a successful run pays out automatically. The repeat queue stops when you close the game.<br><br>Assigned Laboratory heroes produce while you are offline. The default production cap is {offlineHours} hours, and Resources research can extend material production. Search runs until waiting slots fill, and gear crafting continues until its gear slots fill or supplies run short.",
+        zh: "在游戏中查看帮助或整理装备时，远征与探索会继续进行。关闭游戏会中止远征。回来后可查看上次报告，再将队伍派往想去的关卡。<br><br>重新打开游戏时，已开始的探索会结算剩余战斗。到达结束时间后会显示结果，成功奖励会自动发放。关闭游戏会停止连续探索。<br><br>派驻到研究所的英雄在离线期间仍会生产。默认生产上限为 {offlineHours} 小时，资源线研究可延长材料生产时间。搜索会持续至候选等候位满，装备制作则会持续至装备存放位满或材料不足。",
     },
     // 왼쪽 탭 아이콘의 출처 — CC BY 3.0 의 표기 조건 (SCREEN_DESIGN §1 · §12 · ADR-1028)
     'help.help.credits.title': {
@@ -2606,9 +2614,9 @@ const STRINGS = {
         zh: '物品生成器',
     },
     'help.lab.generator.body': {
-        ko: "실험실은 개발 환경에서만 보이는 아이템 확인 도구입니다. 챕터와 몬스터를 고른 뒤 일반/정예 등급, 난이도, 스테이지 레벨을 조정합니다. 몬스터를 바꾸면 레벨은 그 장소의 기본값으로 돌아갑니다. 보스는 자기 등급으로 고정됩니다.",
-        en: "The Lab is an item inspection tool available only in development environments. Choose a chapter and monster, then adjust Normal/Elite grade, difficulty and stage level. Changing monsters resets the level to that area's default. Bosses keep their own fixed grade.",
-        zh: '实验室是仅在开发环境中可见的物品检查工具。选择章和怪物后，调整普通/精英级别、难度、关卡等级。更换怪物时，等级会恢复为该场所的默认值。首领固定为自身的级别。',
+        ko: "실험실의 [아이템 생성기]에서는 챕터와 몬스터, 일반·정예 등급, 난이도, 스테이지 레벨을 골라 드롭을 미리 확인합니다. 몬스터를 바꾸면 레벨은 그 장소의 기본값으로 돌아갑니다. 보스는 자신의 등급을 사용합니다.",
+        en: "In the developer lab's [Item Generator], select a chapter, monster, Normal or Elite grade, difficulty and stage level to preview drops. Changing the monster resets the level to the area's default. Bosses use their own grade.",
+        zh: "在开发专用实验室的【物品生成器】中，可选择章节、怪物、普通或精英品阶、难度与关卡等级来预览掉落。更换怪物会将等级恢复为该地点的默认值。首领使用自身的品阶。",
     },
     'help.lab.rolling.title': {
         ko: "드롭 조건과 굴리기",
@@ -2616,9 +2624,19 @@ const STRINGS = {
         zh: '掉落条件与随机',
     },
     'help.lab.rolling.body': {
-        ko: "부위 줄에서 항상 착용하는 장비와 확률로 착용하는 장비를 구분할 수 있습니다. 아이템 레벨 범위와 희귀도 가중치는 현재 조건의 실제 드롭 규칙입니다. <b>[굴리기]</b>는 한 번, <b>[×10]</b>은 열 번 생성하며 파티 매직아이템 획득확률는 적용하지 않습니다.<br><br>가중치는 상대 비중이므로 표시값 자체가 퍼센트 확률은 아닙니다.",
-        en: "The slot row distinguishes always-equipped items from optional slots with a wear chance. Item-level ranges and rarity weights show the actual drop rules for your chosen conditions. <b>Roll</b> generates once; <b>×10</b> generates ten times. Party Magic Find is excluded. Weights are relative shares, not direct percentage chances.",
+        ko: "부위 줄에서 항상 착용하는 장비와 확률로 착용하는 장비를 구분할 수 있습니다. 아이템 레벨 범위와 희귀도 가중치는 현재 조건의 실제 드롭 규칙입니다. <b>[굴리기]</b>는 한 번, <b>[×10]</b>은 열 번 생성하며 파티 매직아이템 획득 확률은 적용하지 않습니다.<br><br>가중치는 상대 비중이므로 표시값 자체가 퍼센트 확률은 아닙니다.",
+        en: "The slot row distinguishes always-equipped items from optional slots with a wear chance. Item-level ranges and rarity weights show the actual drop rules for your chosen conditions. <b>Roll</b> generates once; <b>×10</b> generates ten times. Party Magic Find does not affect these rolls.<br><br>Each weight is relative to the sum of the weights.",
         zh: '在部位行中，可以区分必定穿戴的装备与按几率穿戴的装备。物品等级范围和稀有度权重是当前条件下的实际掉落规则。<b>[随机生成]</b>生成一次，<b>[×10]</b>生成十次，不计入队伍魔法物品获取率。<br><br>权重是相对比重，所示数值本身并不是百分比几率。',
+    },
+    'help.lab.duel.title': {
+        ko: "결투 연습",
+        en: "Duel practice",
+        zh: "决斗练习",
+    },
+    'help.lab.duel.body': {
+        ko: "실험실의 [결투]는 샘플 영웅 파티끼리 싸우는 개발용 연습입니다. [편성 수정]에서 아래 팀의 직업·죄종·작전 카드와 옵션을 정합니다. [조합 돌리기]는 새 팀 조합을 만들고, [다시 싸우기]는 현재 조합으로 새 전투를 엽니다. 실제 편성과 결투장 전적에는 반영되지 않습니다.",
+        en: "[Duel] in the developer lab pits sample hero teams against each other. Use [Edit Party] to set the lower team's classes, Sins, Tactic Cards and options. [Reroll Teams] makes a new matchup. [Fight Again] starts another battle with the current teams. Practice leaves your real parties and Arena record intact.",
+        zh: "开发实验室中的【决斗】让两支示例英雄队伍交战。可用【编辑编队】设置下方队伍的职业、罪宗、战术卡和词条。【随机组合】会生成新的对阵，【再战一次】则用当前阵容再打一场。练习不会改变实际编队或决斗场战绩。",
     },
     'help.lab.results.title': {
         ko: "결과와 저장",
@@ -2757,7 +2775,7 @@ const STRINGS = {
     'rep.drops.sub': { ko: '{n}개', en: { one: '{n} item', other: '{n} items' }, zh: '{n}个' },
     'rep.drops.none': { ko: '떨어진 아이템 없음', en: 'No loot', zh: '没有掉落物品' },
     'rep.book': { ko: '스킬북', en: 'Book', zh: '技能书' },
-    'rep.tactic': { ko: '카드', en: 'Card' },   // 획득 격자의 작전 카드 칸 배지 (2026-11-26 · R586 · ADR-1386)
+    'rep.tactic': { ko: '카드', en: 'Card', zh: '卡牌' },   // 획득 격자의 작전 카드 칸 배지 (2026-11-26 · R586 · ADR-1386)
     'rep.matGot': { ko: '획득 {n}', en: 'Gained {n}', zh: '获得{n}' },   // 획득 격자의 처치 재료 칸 툴팁 아래 줄 (2026-10-06 · ADR-0530)
 
     /* ── 런 목록 · 기여 (리포트 개편 2026-09-09 · SCREEN_DESIGN §4-3 · ADR-0063) ── */
@@ -3028,13 +3046,13 @@ const STRINGS = {
     'pt.err.slotsFull': { ko: '물약 칸 가득 참', en: 'All potion slots are full', zh: '药水位已满' },
     'pt.err.gold': { ko: '골드 부족', en: 'Not enough gold', zh: '金币不足' },
     // 작전 카드 거절 (2026-11-26 · R586 · INTERFACE §3) — equipTactic · enchantTactic · dismantleTactic
-    'pt.err.slotClosed': { ko: '안 열린 칸', en: 'Slot not open' },
-    'pt.err.noCard': { ko: '카드 없음', en: 'No such card' },
-    'pt.err.sameCard': { ko: '같은 카드가 다른 칸에 있음', en: 'Same card in another slot' },   // 한 편성에 같은 카드 한 장 (2026-11-27 · PLAN_tactic_tags D3)
-    'pt.err.sameTag': { ko: '같은 태그 카드가 다른 칸에 있음', en: 'Same tag in another slot' },   // 한 편성에 같은 태그 카드 한 장
-    'pt.err.storeFull': { ko: '보관 칸 가득 참', en: 'Storage full' },   // 사용한 카드 보관이 가득 차 새 카드로 못 바꾼다 (R589)
-    'pt.err.shard': { ko: '카드 조각 부족', en: 'Not enough Card Shards' },
-    'pt.err.invalid': { ko: '잘못된 장수', en: 'Invalid count' },
+    'pt.err.slotClosed': { ko: '안 열린 칸', en: 'Slot not open', zh: '栏位尚未解锁' },
+    'pt.err.noCard': { ko: '카드 없음', en: 'No such card', zh: '找不到这张卡' },
+    'pt.err.sameCard': { ko: '같은 카드가 다른 칸에 있음', en: 'Same card in another slot', zh: '其他栏位已装备同名卡' },   // 한 편성에 같은 카드 한 장 (2026-11-27 · PLAN_tactic_tags D3)
+    'pt.err.sameTag': { ko: '같은 태그 카드가 다른 칸에 있음', en: 'Same tag in another slot', zh: '其他栏位已装备相同标签的卡' },   // 한 편성에 같은 태그 카드 한 장
+    'pt.err.storeFull': { ko: '보관 칸 가득 참', en: 'Storage full', zh: '存放位已满' },   // 사용한 카드 보관이 가득 차 새 카드로 못 바꾼다 (R589)
+    'pt.err.shard': { ko: '카드 조각 부족', en: 'Not enough Card Shards', zh: '卡牌碎片不足' },
+    'pt.err.invalid': { ko: '잘못된 장수', en: 'Invalid count', zh: '卡牌数量无效' },
     'rs.h': { ko: '파티 전술', en: 'Party Tactics', zh: '队伍战术' },
     /* 건설 [2026-09-22 · R137 · SCREEN_DESIGN §13 · ADR-0302] — 표 넷을 그대로 그린다. 여는 것 문장은 **대상마다 한 키**(`cn.t.<대상>` —
        어휘는 `game_logic/construction.js:TARGETS`) · 더하기는 `+{n}`. 조건 · 비용 · 잠긴 자리의 「무엇을 지어야 하나」도 여기 */
@@ -3283,62 +3301,93 @@ const STRINGS = {
     'mg.why.done': { ko: '나무를 모두 벰', en: 'Tree felled', zh: '树已全部砍完' },
     'mg.err.post': { ko: '미니게임이 없는 곳', en: 'No minigame here', zh: '此处没有小游戏' },
     // 작전 카드 세 칸 [2026-11-26 · R586 · SCREEN_DESIGN §15 · ADR-1383 · ADR-1384] — 행 = 카드 + 옵션 줄 둘 · 줄마다 [인챈트] · 카드를 누르면 가방 창(어느 칸이든 같은 가방 · 2026-11-27)
-    'rs.slotNo': { ko: '칸 {n}', en: 'Slot {n}' },   // 실험실 결투 편성의 칸 이름 — 갈래가 없어 번호만 (2026-11-27 · PLAN_tactic_tags D1)
-    // 카드 태그 — 한 편성에 같은 태그 카드 한 장 ⚠임시 이름 (2026-11-27 · PLAN_tactic_tags D4 · tactic_card.csv:tag)
-    'tc.tag.aim': { ko: '노리기', en: 'Targeting' },
-    'tc.tag.cover': { ko: '대신 맞기', en: 'Cover' },
-    'tc.tag.convert': { ko: '피해 전환', en: 'Conversion' },
-    'rs.shards': { ko: '카드 조각 {n}', en: 'Card Shards {n}' },   // 진척 줄 오른쪽 끝 · 가방 창 머리
-    'rs.enchant': { ko: '인챈트 {g}G · 조각 {s}', en: 'Enchant {g}G · Shard ×{s}' },   // 줄마다 — 비용을 버튼에 적는다
-    'rs.ench.done': { ko: '인챈트 — {grade} {eff}', en: 'Enchanted — {grade} {eff}' },
-    'rs.tip.sub': { ko: '{tag} · {sin} · {grade}', en: '{tag} · {sin} · {grade}' },   // 카드 툴팁 둘째 줄 — 태그 · 죄종 · 등급
-    'rs.tip.subNoTag': { ko: '{sin} · {grade}', en: '{sin} · {grade}' },   // 태그 없는 카드
-    'rs.bag.h': { ko: '작전 카드', en: 'Tactic Cards' },   // 가방 창 머리 — 어느 칸을 눌러도 같은 가방 (2026-11-27)
-    'rs.bag.equip': { ko: '장착', en: 'Equip' },
+    'rs.slotNo': { ko: '칸 {n}', en: 'Slot {n}', zh: '栏位 {n}' },   // 실험실 결투 편성의 칸 이름 — 갈래가 없어 번호만 (2026-11-27 · PLAN_tactic_tags D1)
+    // 작전 카드 태그 — 한 편성에 태그당 한 장
+    'tc.tag.formation': { ko: '진형', en: 'Formation', zh: '阵型' },
+    'tc.tag.support': { ko: '지원', en: 'Support', zh: '支援' },
+    'tc.tag.attack': { ko: '공격', en: 'Attack', zh: '攻击' },
+    'tc.tag.stratagem': { ko: '계략', en: 'Stratagem', zh: '计谋' },
+    'tc.tag.morale': { ko: '사기', en: 'Morale', zh: '士气' },
+    'rs.shards': { ko: '카드 조각 {n}', en: 'Card Shards {n}', zh: '卡牌碎片 {n}' },   // 진척 줄 오른쪽 끝 · 가방 창 머리
+    'rs.enchant': { ko: '인챈트 {g}G · 조각 {s}', en: 'Enchant {g}G · Shard ×{s}', zh: '附魔 {g}G · 碎片 ×{s}' },   // 줄마다 — 비용을 버튼에 적는다
+    'rs.ench.done': { ko: '인챈트 — {grade} {eff}', en: 'Enchanted — {grade} {eff}', zh: '附魔完成 · {grade} {eff}' },
+    'rs.tip.sub': { ko: '{tag} · {sin} · {grade}', en: '{tag} · {sin} · {grade}', zh: '{tag} · {sin} · {grade}' },   // 카드 툴팁 둘째 줄 — 태그 · 죄종 · 등급
+    'rs.bag.h': { ko: '작전 카드', en: 'Tactic Cards', zh: '战术卡' },   // 가방 창 머리 — 어느 칸을 눌러도 같은 가방 (2026-11-27)
+    'rs.bag.equip': { ko: '장착', en: 'Equip', zh: '装备' },
     // 가방 창 두 덩어리 — 위 사용한 카드 · 아래 새 카드 (§15 · ADR-1390 · R589)
-    'rs.bag.inUse': { ko: '사용 중인 카드', en: 'Equipped Cards' },   // 가방 창 맨 위 덩어리 — 편성마다 칸 셋에 든 카드 (ADR-1428 · ADR-1430 · 2026-11-27)
-    'rs.bag.used': { ko: '사용한 카드', en: 'Used Cards' },
-    'rs.bag.new': { ko: '새 카드', en: 'New Cards' },
+    'rs.bag.inUse': { ko: '사용 중인 카드', en: 'Equipped Cards', zh: '已装备的卡' },   // 가방 창 맨 위 덩어리 — 편성마다 칸 셋에 든 카드 (ADR-1428 · ADR-1430 · 2026-11-27)
+    'rs.bag.used': { ko: '사용한 카드', en: 'Used Cards', zh: '使用过的卡' },
+    'rs.bag.new': { ko: '새 카드', en: 'New Cards', zh: '新卡' },
     // 등급 탭 · 고른 카드 줄 (§15 · ADR-1399)
-    'rs.bag.all': { ko: '전체', en: 'All' },
-    'rs.bag.lock.running': { ko: '원정 중에는 카드를 뺄 수 없습니다', en: "Cards can't be removed during an expedition" },
-    'rs.bag.lock.exploring': { ko: '탐험 중에는 카드를 뺄 수 없습니다', en: "Cards can't be removed while exploring" },
-    'rs.bag.dis': { ko: '분해 (조각 +{n})', en: { one: 'Dismantle (+{n} Shard)', other: 'Dismantle (+{n} Shards)' } },
-    'rs.bag.disConfirm': { ko: '정말 분해 (조각 +{n})', en: { one: 'Confirm (+{n} Shard)', other: 'Confirm (+{n} Shards)' } },
-    'rs.equip.done': { ko: '{card} 장착', en: '{card} equipped' },
-    'rs.dis.done': { ko: '카드 조각 +{n} — 가진 조각 {total}', en: { one: '+{n} Card Shard — {total} owned', other: '+{n} Card Shards — {total} owned' } },
+    'rs.bag.all': { ko: '전체', en: 'All', zh: '全部' },
+    'rs.bag.lock.running': { ko: '원정 중에는 카드를 뺄 수 없습니다', en: "Cards can't be removed during an expedition", zh: '远征期间无法卸下卡牌' },
+    'rs.bag.lock.exploring': { ko: '탐험 중에는 카드를 뺄 수 없습니다', en: "Cards can't be removed while exploring", zh: '探索期间无法卸下卡牌' },
+    'rs.bag.dis': { ko: '분해 (조각 +{n})', en: { one: 'Dismantle (+{n} Shard)', other: 'Dismantle (+{n} Shards)' }, zh: '分解（碎片 +{n}）' },
+    'rs.bag.disConfirm': { ko: '정말 분해 (조각 +{n})', en: { one: 'Confirm (+{n} Shard)', other: 'Confirm (+{n} Shards)' }, zh: '确认分解（碎片 +{n}）' },
+    'rs.equip.done': { ko: '{card} 장착', en: '{card} equipped', zh: '已装备{card}' },
+    'rs.dis.done': { ko: '카드 조각 +{n} — 가진 조각 {total}', en: { one: '+{n} Card Shard — {total} owned', other: '+{n} Card Shards — {total} owned' }, zh: '卡牌碎片 +{n} · 现有 {total}' },
     // 열 이름 줄 — 카드 목록 위 · 행의 세로줄 (ADR-1383) · `rs.col.state` · `rs.col.sin` 은 연구 탭 · 실험실이 쓴다
     'rs.col.state': { ko: '상태', en: 'State', zh: '状态' },
     'rs.col.sin': { ko: '죄종', en: 'Sin', zh: '罪宗' },
-    'rs.col.card': { ko: '카드', en: 'Card' },
-    'rs.col.opt': { ko: '옵션', en: 'Options' },
+    'rs.col.card': { ko: '카드', en: 'Card', zh: '卡牌' },
+    'rs.col.opt': { ko: '옵션', en: 'Options', zh: '词条' },
     // 버프 몫 = 리더 통솔 + 그 줄 죄종 점수가 더한 % — 출처는 카드 아래 판 (ADR-1048 · ADR-1383)
     'rs.col.extra': { ko: '버프 몫', en: 'Buff Share', zh: '增益加成' },
-    'rs.col.ench': { ko: '인챈트', en: 'Enchant' },
+    'rs.col.ench': { ko: '인챈트', en: 'Enchant', zh: '附魔' },
     // 카드 이름 — **영어가 원본 · 한글은 직역**(CLAUDE.md 규칙 6) · 한글 여덟은 사용자가 고른 역사 전술 이름 · 독화살 · 불화살 · 치중대와 영어 열하나는 ⚠임시(tactic_card_design §4)
-    'tc.name.duel': { ko: '일기토', en: 'Single Combat' },
-    'tc.name.wedge': { ko: '쐐기진', en: 'Wedge Formation' },
-    'tc.name.trojan': { ko: '트로이 목마', en: 'Trojan Horse' },
-    'tc.name.charge': { ko: '기사 돌격', en: "Knight's Charge" },
-    'tc.name.shieldwall': { ko: '방패벽', en: 'Shield Wall' },
-    'tc.name.guard': { ko: '친위대', en: 'Royal Guard' },
-    'tc.name.turtle': { ko: '거북 진형', en: 'Tortoise Formation' },
-    'tc.name.retreat': { ko: '거짓 후퇴', en: 'Feigned Retreat' },
-    'tc.name.poison_arrow': { ko: '독화살', en: 'Poison Arrow' },
-    'tc.name.fire_arrow': { ko: '불화살', en: 'Fire Arrow' },
-    'tc.name.baggage': { ko: '치중대', en: 'Baggage Train' },
+    'tc.name.duel': { ko: '일기토', en: 'Single Combat', zh: '单挑' },
+    'tc.name.wedge': { ko: '쐐기진', en: 'Wedge Formation', zh: '楔形阵' },
+    'tc.name.trojan': { ko: '트로이 목마', en: 'Trojan Horse', zh: '特洛伊木马' },
+    'tc.name.charge': { ko: '기사 돌격', en: "Knight's Charge", zh: '骑士冲锋' },
+    'tc.name.shieldwall': { ko: '방패벽', en: 'Shield Wall', zh: '盾墙' },
+    'tc.name.guard': { ko: '친위대', en: 'Royal Guard', zh: '近卫队' },
+    'tc.name.turtle': { ko: '거북 진형', en: 'Tortoise Formation', zh: '龟甲阵' },
+    'tc.name.retreat': { ko: '거짓 후퇴', en: 'Feigned Retreat', zh: '佯退' },
+    'tc.name.poison_arrow': { ko: '독화살', en: 'Poison Arrow', zh: '毒箭' },
+    'tc.name.fire_arrow': { ko: '불화살', en: 'Fire Arrow', zh: '火箭' },
+    'tc.name.guardian': { ko: '수호자', en: 'Guardian', zh: '守护者' },
+    'tc.desc.guardian': { ko: '전열에 살아 있는 아군 영웅이 리더 한 명뿐이면 아군 후열이 받는 피해가 {p1} 감소한다.', en: 'While your leader is the only living allied hero in the front row, allies in the back row take {p1} less damage.', zh: '我方领袖是前排唯一存活的我方英雄时，我方后排受到的伤害降低 {p1}。' },
+    'tc.name.unity': { ko: '일치단결', en: 'United Front', zh: '众志成城' },
+    'tc.desc.unity': { ko: '아군 영웅이 {p2}명 이상 살아 있는 동안 아군 영웅의 직격 피해가 {p1} 증가한다.', en: 'While at least {p2} allied heroes are alive, allied heroes deal {p1} more direct damage.', zh: '至少有 {p2} 名我方英雄存活时，我方英雄的直接伤害提高 {p1}。' },
+    'tc.name.dying_curse': { ko: '최후의 저주', en: 'Dying Curse', zh: '临终诅咒' },
+    'tc.desc.dying_curse': { ko: '아군 영웅이 쓰러질 때마다 적의 양수 방어력과 모든 양수 원소 저항이 현재 값에서 {p1}씩 감소한다. 라운드당 최대 {p2}회.', en: 'Whenever an allied hero falls, enemies lose {p1} of their current positive defense and each positive elemental resistance. Stacks up to {p2} times per round.', zh: '每当一名我方英雄倒下，敌方当前为正的防御力和各项元素抗性降低 {p1}，每回合最多叠加 {p2} 次。' },
+    'tc.name.giant': { ko: '거인', en: 'Giant', zh: '巨人' },
+    'tc.name.desperate_charge': { ko: '결사돌진', en: 'Desperate Charge', zh: '决死冲锋' },
+    'tc.name.mutual_cover': { ko: '방패진', en: 'Shield Formation', zh: '盾阵' },
+    'tc.desc.mutual_cover': { ko: '전열 2명·후열 1명으로 배치하면, 전열 영웅 한 명이 받는 피해의 {p1}를 다른 전열 영웅이 대신 받는다.', en: 'Deploy two heroes in front and one in back. When either front hero takes damage, the other takes {p1} of it instead.', zh: '部署为前排两人、后排一人时，一名前排英雄受到伤害，另一名前排英雄会代其承受其中的 {p1}。' },
+    'tc.name.open_order': { ko: '산개 대형', en: 'Open Order', zh: '散开阵形' },
+    'tc.name.iron_line': { ko: '배수진', en: 'Last Stand', zh: '背水阵' },
+    'tc.desc.iron_line': { ko: '출전 영웅이 모두 전열에 위치하면, 처음으로 쓰러질 피해를 받는 아군 영웅이 체력 1로 버틴다. 전투당 한 번 발동한다.', en: 'Deploy all heroes in front. Once per battle, the first ally who would fall survives with 1 HP.', zh: '出战英雄全部部署在前排时，首名受到致命伤害的友方英雄会保留 1 点生命。每场战斗触发一次。' },
+    'tc.name.pursuit': { ko: '추격진', en: 'Pursuit Formation', zh: '追击阵' },
+    'tc.desc.pursuit': { ko: '출전영웅이 모두 전열에 위치하면 단일 공격은 노릴 수 있는 적 중 남은 체력 비율이 가장 낮은 적을 우선한다.', en: 'If all heroes deploy in front, single-target attacks prioritize the eligible enemy with the lowest percentage of HP remaining.', zh: '出战英雄全部部署在前排时，单体攻击优先选择可攻击目标中剩余生命比例最低的敌人。' },
+    'tc.name.hammer_anvil': { ko: '학익진', en: 'Crane Wing Formation', zh: '鹤翼阵' },
+    'tc.desc.hammer_anvil': { ko: '전열 2명·후열 1명으로 배치하면, 적 전열 유닛이 받는 피해의 {p1}를 적 후열 유닛들이 나눠 받는다.', en: 'Deploy two heroes in front and one in back. Enemy back-row units share {p1} of the damage an enemy front-row unit would take.', zh: '部署为前排两人、后排一人时，敌方前排单位所受伤害的 {p1} 由敌方后排单位平摊。' },
+    'tc.name.field_medics': { ko: '후방 의무대', en: 'Field Medics', zh: '后方医疗队' },
+    'tc.desc.field_medics': { ko: '전열 2명·후열 1명으로 배치하면 전열 두 영웅이 받는 회복량이 {p1}증가한다.', en: 'Deploy two heroes in front and one in back. Both front heroes receive {p1} more healing.', zh: '部署为前排两人、后排一人时，两名前排英雄受到的治疗量提高 {p1}。' },
+    'tc.name.vanguard_barrier': { ko: '선봉 방벽', en: 'Vanguard Bulwark', zh: '先锋壁垒' },
+    'tc.desc.vanguard_barrier': { ko: '전열 1명·후열 2명으로 배치하면 라운드 시작 시 전열 영웅이 자신의 최대 체력 {p1}만큼 보호막을 얻는다.', en: 'Deploy one hero in front and two in back. At the start of each round, the front hero gains a barrier equal to {p1} of their maximum HP.', zh: '部署为前排一人、后排两人时，每回合开始，前排英雄获得相当于自身最大生命值 {p1} 的护盾。' },
+    'tc.name.aimed_fire': { ko: '정밀 사격', en: 'Aimed Fire', zh: '精准射击' },
+    'tc.desc.aimed_fire': { ko: '전열 1명·후열 2명으로 배치하면 후열 두 영웅의 단일 공격 치명타 확률이 {p1}p 증가한다.', en: 'Deploy one hero in front and two in back. Both rear heroes gain +{p1} critical strike chance on single-target attacks.', zh: '部署为前排一人、后排两人时，两名后排英雄的单体攻击暴击率额外增加 {p1}。' },
+    'tc.name.volley': { ko: '집중포화', en: 'Focused Fire', zh: '集中火力' },
+    'tc.desc.volley': { ko: '출전 영웅이 모두 후열에 위치하면 적 전열 유닛에게 입히는 피해가 {p1} 증가한다.', en: 'If all heroes deploy in the back row, your side deals {p1} more damage to enemy front-row units.', zh: '出战英雄全部部署在后排时，对敌方前排单位造成的伤害提高 {p1}。' },
+    'tc.name.rapid_deployment': { ko: '신속 전개', en: 'Rapid Deployment', zh: '快速展开' },
+    'tc.desc.rapid_deployment': { ko: '출전영웅이 모두 후열에 위치하면 라운드 시작 시 각 영웅의 행동 게이지가 {p1} 찬다.', en: 'If all heroes deploy in back, each hero fills {p1} of their action gauge at the start of each round.', zh: '出战英雄全部部署在后排时，每回合开始，各英雄的行动条增加 {p1}。' },
+    'tc.desc.open_order': { ko: '출전 영웅이 모두 후열에 위치하면 광역 공격으로 받는 피해가 {p1} 감소한다.', en: 'If you deploy all your heroes in the back row, your side takes {p1} less damage from area attacks.', zh: '出战英雄全部部署在后排时，受到的范围攻击伤害降低 {p1}。' },
+    'tc.desc.desperate_charge': { ko: '출전영웅이 모두 전열에 위치하면 적에게 입히는 피해가 {p1}증가한다.', en: 'If you deploy all your heroes in the front row, your side deals {p1} more damage to enemies throughout the battle.', zh: '出战英雄全部部署在前排时，整场战斗对敌人造成的伤害提高 {p1}。' },
+    'tc.desc.giant': { ko: '살아 있는 아군 영웅이 한 명이면 그 영웅의 일곱 기본 능력치가 {p1} 증가한다.', en: 'While exactly one allied hero is alive, all seven of that hero’s attributes increase by {p1}.', zh: '我方仅剩一名英雄存活时，其七项基础属性提高 {p1}。' },
+    'tc.name.baggage': { ko: '치중대', en: 'Baggage Train', zh: '辎重队' },
     // 카드 효과 한 문장 — 툴팁 전용 · 효과만(CLAUDE.md 규칙 7) · {p1} ~ {p3} = 카드 규칙의 수치(초는 수 · 몫은 「30%」 — `tactic.RULE_PARAMS`)
-    'tc.desc.duel': { ko: '우리 리더의 단일 공격은 적 리더만 노린다. 적 리더가 쓰러지면 평소대로 고른다.', en: "Your leader's single-target attacks aim only at the enemy leader. Once the enemy leader falls, targeting returns to normal." },
-    'tc.desc.wedge': { ko: '리더가 단일 공격으로 맞힌 적에 {p1}초 동안 표식. 동료의 단일 공격은 표식이 있는 적부터 노린다.', en: "Enemies hit by your leader's single-target attacks are marked for {p1}s. Allies' single-target attacks aim at the marked enemy first." },
-    'tc.desc.trojan': { ko: '라운드 시작 {p1}초 동안 우리 후열은 행동하지 않는다. 그 뒤 후열의 단일 공격은 적 후열을 노린다.', en: 'Your back row does not act for the first {p1}s of each round. After that, its single-target attacks aim at the enemy back row.' },
-    'tc.desc.charge': { ko: '라운드가 시작되면 우리 전열이 곧바로 행동한다. 후열의 첫 행동은 {p1}초 늦는다.', en: "When a round starts, your front row acts immediately. Your back row's first action comes {p1}s later." },
-    'tc.desc.shieldwall': { ko: '우리 후열이 맞는 직격 피해의 {p1}를 살아 있는 전열이 나눠 받는다.', en: 'Living front-row allies share {p1} of the direct-hit damage your back row takes.' },
-    'tc.desc.guard': { ko: '우리 리더가 맞는 단일 직격 피해의 {p1}를 체력이 가장 많은 동료가 대신 받는다.', en: 'The ally with the most HP takes {p1} of the single-target direct-hit damage aimed at your leader.' },
-    'tc.desc.turtle': { ko: '라운드 시작 {p1}초 동안 우리 편이 받는 피해 −{p2} · 공격 속도 −{p3}.', en: 'For the first {p1}s of each round, your side takes {p2} less damage and loses {p3} attack speed.' },
-    'tc.desc.retreat': { ko: '우리 전열 영웅의 체력이 라운드 중 처음 {p1} 아래로 내려가면 체력 비율이 가장 높은 후열과 자리를 바꾼다. 라운드가 끝나면 제자리로 돌아간다.', en: 'When a front-row hero first drops below {p1} HP in a round, they swap places with the healthiest back-row ally. Both return after the round.' },
-    'tc.desc.poison_arrow': { ko: '우리 편 물리 피해의 {p1}를 독 피해로 입힌다.', en: 'Your side deals {p1} of its physical damage as poison damage.' },
-    'tc.desc.fire_arrow': { ko: '우리 편 물리 피해의 {p1}를 화염 피해로 입히고 {p2} 확률로 화상을 건다.', en: 'Your side deals {p1} of its physical damage as fire damage, with a {p2} chance to burn.' },
-    'tc.desc.baggage': { ko: '우리 편이 물약을 마시면 회복량의 {p1}를 살아 있는 다른 동료가 나눠 받는다.', en: 'When an ally drinks a potion, the other living allies share {p1} of its healing.' },
+    'tc.desc.duel': { ko: '우리 리더의 단일 공격은 적 리더만 노린다. 적 리더가 쓰러지면 평소대로 고른다.', en: "Your leader's single-target attacks aim only at the enemy leader. Once the enemy leader falls, targeting returns to normal.", zh: '我方队长的单体攻击只以敌方队长为目标。敌方队长倒下后，按常规规则选择目标。' },
+    'tc.desc.wedge': { ko: '리더가 단일 공격으로 맞힌 적에 {p1}초 동안 표식. 동료의 단일 공격은 표식이 있는 적부터 노린다.', en: "Enemies hit by your leader's single-target attacks are marked for {p1}s. Allies' single-target attacks aim at the marked enemy first.", zh: '我方队长的单体攻击命中后，会标记目标 {p1} 秒。队友的单体攻击优先攻击被标记的敌人。' },
+    'tc.desc.trojan': { ko: '라운드 시작 {p1}초 동안 우리 후열은 행동하지 않는다. 그 뒤 후열의 단일 공격은 적 후열을 노린다.', en: 'Your back row does not act for the first {p1}s of each round. After that, its single-target attacks aim at the enemy back row.', zh: '每回合开始后的 {p1} 秒内，我方后排无法行动。此后，我方后排的单体攻击优先瞄准敌方后排。' },
+    'tc.desc.charge': { ko: '라운드가 시작되면 우리 전열이 곧바로 행동한다. 후열의 첫 행동은 {p1}초 늦는다.', en: "When a round starts, your front row acts immediately. Your back row's first action comes {p1}s later.", zh: '每回合开始时，我方前排立即行动，后排的首次行动延后 {p1} 秒。' },
+    'tc.desc.shieldwall': { ko: '우리 후열이 맞는 직격 피해의 {p1}를 살아 있는 전열이 나눠 받는다.', en: 'Living front-row allies share {p1} of the direct-hit damage your back row takes.', zh: '我方后排受到直击伤害时，由存活的前排队友分摊其中的 {p1}。' },
+    'tc.desc.guard': { ko: '우리 리더가 맞는 단일 직격 피해의 {p1}를 체력이 가장 많은 동료가 대신 받는다.', en: 'The ally with the most HP takes {p1} of the single-target direct-hit damage aimed at your leader.', zh: '我方队长受到单体直击伤害时，由当前生命值最高的队友代为承受其中的 {p1}。' },
+    'tc.desc.turtle': { ko: '라운드 시작 {p1}초 동안 우리 편이 받는 피해 −{p2} · 공격 속도 −{p3}.', en: 'For the first {p1}s of each round, your side takes {p2} less damage and loses {p3} attack speed.', zh: '每回合开始后的 {p1} 秒内，我方所受伤害降低 {p2}，攻击速度降低 {p3}。' },
+    'tc.desc.retreat': { ko: '우리 전열 영웅의 체력이 라운드 중 처음 {p1} 아래로 내려가면 후열에서 남은 체력 비율이 가장 높은 동료를 찾는다. 그 동료의 체력 비율이 더 높으면 둘이 자리를 바꾸고, 라운드가 끝나면 돌아온다.', en: 'The first time a front-row hero drops below {p1} HP in a round, they look for the back-row ally with the highest percentage of HP remaining. If that ally has a higher HP percentage, the two swap places until the round ends.', zh: '每回合中，我方前排英雄的生命值比例首次低于 {p1} 时，会寻找剩余生命值比例最高的后排队友。若该队友的生命值比例更高，双方便交换位置，回合结束后归位。' },
+    'tc.desc.poison_arrow': { ko: '우리 편 물리 피해의 {p1}를 독 피해로 입힌다.', en: 'Converts {p1} of your party\'s physical damage to Poison damage.', zh: '将我方物理伤害的 {p1} 转化为毒素伤害。' },
+    'tc.desc.fire_arrow': { ko: '우리 편 물리 피해의 {p1}를 화염 피해로 입히고 {p2} 확률로 화상을 건다.', en: 'Converts {p1} of your party\'s physical damage to Fire damage, with a {p2} chance to inflict Burn.', zh: '将我方物理伤害的 {p1} 转化为火焰伤害，并有 {p2} 几率使目标燃烧。' },
+    'tc.desc.baggage': { ko: '우리 편이 물약을 마시면 회복량의 {p1}를 살아 있는 다른 동료가 나눠 받는다.', en: 'When an ally drinks a potion, the other living allies share {p1} of its healing.', zh: '我方英雄喝下药水时，其他存活的队友平分相当于其治疗量 {p1} 的治疗。' },
     // 카드 아래 판 — 맨 위 리더 통솔 · 죄종 일곱의 장비 수 · 줄마다 이름 · 수 · 20칸 막대 · 버프 몫 % [2026-11-24 · ADR-1334 — ADR-1048 의 두 열 글 줄 대체]
     'rs.board.leadName': { ko: '통솔', en: 'Leadership', zh: '统率' },   // 2026-11-24 사용자 「리더통솔 그냥 통솔로」
     'rs.board.noLead': { ko: '리더 없음', en: 'No leader', zh: '无队长' },
@@ -3358,8 +3407,8 @@ const STRINGS = {
     'rs.grade.common': { ko: '일반', en: 'Common', zh: '普通' },
     'rs.grade.magic': { ko: '매직', en: 'Magic', zh: '魔法' },
     'rs.grade.rare': { ko: '레어', en: 'Rare', zh: '稀有' },
-    'rs.grade.epic': { ko: '에픽', en: 'Epic' },
-    'rs.grade.legendary': { ko: '레전더리', en: 'Legendary' },
+    'rs.grade.epic': { ko: '에픽', en: 'Epic', zh: '史诗' },
+    'rs.grade.legendary': { ko: '레전더리', en: 'Legendary', zh: '传奇' },
 
     'sk.points.h': { ko: '스킬 포인트', en: 'Skill Points', zh: '技能点' },
     'sk.points.note': { ko: "레벨마다 받는 <b>스킬 포인트</b>를 죄종·직업 마스터리와 전직 메인·꼬리에 나누어 씁니다. 전직해도 별도 포인트를 지급하지 않습니다. 메인 단계만 5레벨 간격으로 열립니다.", en: "<b>Skill points</b> earned on each level-up are shared by Sin mastery, Class mastery and advancement main skills and branches. Advancing grants no separate points. Only main-skill ranks unlock at five-level intervals.", zh: '每次升级获得的<b>技能点</b>分配给罪宗、职业专精以及转职主技能、分支。转职不会另外发放点数。只有主技能的阶段以5级为间隔开启。' },
@@ -3519,19 +3568,19 @@ const STRINGS = {
     'bk.overwrite.warn': { ko: '기존 스킬과 레벨은 사라지고 책으로 돌아오지 않습니다.', en: 'The current skill and its level are lost. Books are not returned.', zh: '原有的技能与等级将会消失，书也不会返还。' },   // 덮어쓰기 확인 창 둘째 줄 (ADR-1020)
     'bk.upgrade': { ko: '업그레이드', en: 'Upgrade', zh: '升级' },   // 같은 책 — 버튼은 행동 이름만 · 드는 책 수는 읽기 줄 아랫줄 `bk.need` (ADR-1208 · R216)
     'bk.lvUp': { ko: 'Lv.{a} → Lv.{b}', en: 'Lv.{a} → Lv.{b}', zh: 'Lv.{a} → Lv.{b}' },   // 읽기 줄 아랫줄 — 지금 → 읽은 뒤 (§17 · ADR-1208)
-    'bk.books': { ko: '책 {have}/{need}', en: 'Books {have}/{need}' },   // 도서관 스킬정보 칸 줄 아랫줄 — 가진 / 드는 같은 책 · 모자라면 붉다 (§17 · ADR-1308)
-    'bk.swap': { ko: '{a} → {b}', en: '{a} → {b}' },   // 습득 줄 윗줄 — 앞 스킬 Lv.n → 새 책(덮어쓰기) (ADR-1308) · 레벨 줄의 지금 → 다음 값 (ADR-1312 · 1317)
-    'bk.weaponAny': { ko: '자유', en: 'Any weapon' },
+    'bk.books': { ko: '책 {have}/{need}', en: 'Books {have}/{need}', zh: '技能书 {have}/{need}' },   // 도서관 스킬정보 칸 줄 아랫줄 — 가진 / 드는 같은 책 · 모자라면 붉다 (§17 · ADR-1308)
+    'bk.swap': { ko: '{a} → {b}', en: '{a} → {b}', zh: '{a} → {b}' },   // 습득 줄 윗줄 — 앞 스킬 Lv.n → 새 책(덮어쓰기) (ADR-1308) · 레벨 줄의 지금 → 다음 값 (ADR-1312 · 1317)
+    'bk.weaponAny': { ko: '자유', en: 'Any weapon', zh: '不限武器' },
     // 스킬정보 계산 줄 — 설명의 숫자마다 `이름 값 = 식` (§17 · 2026-11-24) · 밑수 이름은 `st.atk` · 능력치 표 · 쿨감은 `sk.cdrShort` 를 쓴다
-    'bk.calc.dmg': { ko: '피해', en: 'Hit' },   // en 은 밑수 이름(`st.atk` = Damage)과 겹치지 않게 한 타
-    'bk.calc.heal': { ko: '회복', en: 'Heal' },
-    'bk.calc.hp': { ko: 'HP', en: 'HP' },
-    'bk.calc.cool': { ko: '쿨타임', en: 'CD' },   // en 은 짧게 — 계산 줄 이름 칸이 가장 긴 이름에 맞춰 선다 (ADR-1364)
-    'bk.calc.tag': { ko: '태그', en: 'Tag' },
-    'bk.calc.weaponDmg': { ko: '무기 데미지', en: 'Weapon Damage' },   // 계산 줄의 무기 밑수(atk) 이름 — 이 줄만 · 다른 자리의 「데미지」는 `st.atk` (ADR-1432)
-    'bk.calc.tagDur': { ko: '지속 +{p}%', en: 'Duration +{p}%' },
-    'bk.calc.tagVal': { ko: '효과 +{p}%', en: 'Effect +{p}%' },   // 스킬정보 줄 오른쪽 위 칩 — 무기가 필요 없는 스킬 (§17 · ADR-1321)
-    'bk.weaponClash': { ko: '{name} 스킬과 필요 무기가 달라 함께 쓸 수 없습니다', en: 'Different weapon than {name} — can’t use both' },   // 스킬정보 습득 줄 붉은 한 줄 — 고유 칸 스킬과 맞는 무기군이 없다 (§17 · ADR-1319)
+    'bk.calc.dmg': { ko: '피해', en: 'Hit', zh: '伤害' },   // en 은 밑수 이름(`st.atk` = Damage)과 겹치지 않게 한 타
+    'bk.calc.heal': { ko: '회복', en: 'Heal', zh: '治疗' },
+    'bk.calc.hp': { ko: 'HP', en: 'HP', zh: 'HP' },
+    'bk.calc.cool': { ko: '쿨타임', en: 'CD', zh: '冷却' },   // en 은 짧게 — 계산 줄 이름 칸이 가장 긴 이름에 맞춰 선다 (ADR-1364)
+    'bk.calc.tag': { ko: '태그', en: 'Tag', zh: '标签' },
+    'bk.calc.weaponDmg': { ko: '무기 데미지', en: 'Weapon Damage', zh: '武器伤害' },   // 계산 줄의 무기 밑수(atk) 이름 — 이 줄만 · 다른 자리의 「데미지」는 `st.atk` (ADR-1432)
+    'bk.calc.tagDur': { ko: '지속 +{p}%', en: 'Duration +{p}%', zh: '持续时间 +{p}%' },
+    'bk.calc.tagVal': { ko: '효과 +{p}%', en: 'Effect +{p}%', zh: '效果 +{p}%' },   // 스킬정보 줄 오른쪽 위 칩 — 무기가 필요 없는 스킬 (§17 · ADR-1321)
+    'bk.weaponClash': { ko: '{name} 스킬과 필요 무기가 달라 함께 쓸 수 없습니다', en: 'Different weapon than {name} — can’t use both', zh: '与{name}所需的武器不同，无法同时使用' },   // 스킬정보 습득 줄 붉은 한 줄 — 고유 칸 스킬과 맞는 무기군이 없다 (§17 · ADR-1319)
     'bk.lvMax': { ko: 'Lv.{n} · 최대 레벨', en: 'Lv.{n} · Max level', zh: 'Lv.{n} · 最高等级' },   // 읽기 줄 아랫줄 — 상한 (ADR-1208)
     'bk.max': { ko: '최대', en: 'Max', zh: '最高' },
     // 스킬 북 제작 — 도서관 아랫줄 오른쪽 구역 (2026-11-18 · R540 · SCREEN_DESIGN §17 · ADR-1262) · 스킬 조각 이름 ⚠임시
@@ -3547,7 +3596,7 @@ const STRINGS = {
     'bk.crafted': { ko: '{skill} 스킬북 제작 완료', en: 'Crafted a {skill} book', zh: '{skill}技能书制作完成' },
     'bk.salvage': { ko: '분해', en: 'Salvage', zh: '分解' },   // 창고 스킬북 탭 도구 줄(고른 책 1권) · 도서관 보유 스킬북 제목 줄(분해함을 띄운다) (§6 · §17 · ADR-1199 · ADR-1262 · ADR-1304)
     'bk.salv.gain': { ko: '스킬 조각 +{n}', en: 'Skill Shards +{n}', zh: '技能碎片+{n}' },   // 도서관 분해함 바닥 — 함 안의 책이 주는 조각 합(`game.bookSalvagePreview` · ADR-1304)
-    'bk.cube.done': { ko: '스킬북 {n}권 분해 — 스킬 조각 +{s}', en: 'Salvaged {n} skill books — Skill Shards +{s}' },   // 도서관 분해함 [분해하기] (ADR-1304)
+    'bk.cube.done': { ko: '스킬북 {n}권 분해 — 스킬 조각 +{s}', en: { one: 'Salvaged {n} skill book · Skill Shards +{s}', other: 'Salvaged {n} skill books · Skill Shards +{s}' }, zh: '已分解 {n} 本技能书 · 技能碎片 +{s}' },   // 도서관 분해함 [분해하기] (ADR-1304)
     'bk.salvaged': { ko: '{skill} 스킬북 분해 — 스킬 조각 +{n}', en: 'Salvaged a {skill} book — Skill Shard +{n}', zh: '分解{skill}技能书——技能碎片+{n}' },
     // 결과 코드 — `game.learnBook` · `game.craftBook` · `game.salvageBook` · `game.bookState` (INTERFACE §3)
     'bk.err.shards': { ko: '스킬 조각 부족', en: 'Not enough skill shards', zh: '技能碎片不足' },   // craftBook (R540)
@@ -3668,19 +3717,19 @@ const STRINGS = {
     'lab.duel.win.bottom': { ko: '아래 승 · {sec}초', en: 'Bottom wins · {sec}s', zh: '下方胜 · {sec}秒' },
     'lab.duel.timeout': { ko: '시간 초과 · {sec}초', en: 'Timeout · {sec}s', zh: '超时 · {sec}秒' },
     // 결투 편성 창 — 팀 A 의 영웅(직업 · 죄종)과 작전 카드(칸마다 카드 · 등급 · 옵션 줄 둘) (2026-11-26 · R586 · SCREEN_DESIGN §18)
-    'lab.duel.party.title': { ko: '결투 편성', en: 'Duel Party' },
-    'lab.duel.party.edit': { ko: '편성 수정', en: 'Edit Party' },
-    'lab.duel.party.heroes': { ko: '영웅', en: 'Heroes' },
-    'lab.duel.party.leader': { ko: '리더', en: 'Leader' },
-    'lab.duel.party.hero': { ko: '영웅 {n}', en: 'Hero {n}' },
-    'lab.duel.party.class': { ko: '직업', en: 'Class' },
-    'lab.duel.party.random': { ko: '무작위', en: 'Random' },
-    'lab.duel.party.empty': { ko: '없음', en: 'None' },
-    'lab.duel.party.card': { ko: '카드', en: 'Card' },
-    'lab.duel.party.grade': { ko: '등급', en: 'Grade' },
-    'lab.duel.party.line': { ko: '옵션 {n}', en: 'Option {n}' },
-    'lab.duel.party.reset': { ko: '초기화', en: 'Reset' },
-    'lab.duel.party.fight': { ko: '이 편성으로 싸우기', en: 'Fight with this party' },
+    'lab.duel.party.title': { ko: '결투 편성', en: 'Duel Party', zh: '决斗编队' },
+    'lab.duel.party.edit': { ko: '편성 수정', en: 'Edit Party', zh: '编辑编队' },
+    'lab.duel.party.heroes': { ko: '영웅', en: 'Heroes', zh: '英雄' },
+    'lab.duel.party.leader': { ko: '리더', en: 'Leader', zh: '队长' },
+    'lab.duel.party.hero': { ko: '영웅 {n}', en: 'Hero {n}', zh: '英雄 {n}' },
+    'lab.duel.party.class': { ko: '직업', en: 'Class', zh: '职业' },
+    'lab.duel.party.random': { ko: '무작위', en: 'Random', zh: '随机' },
+    'lab.duel.party.empty': { ko: '없음', en: 'None', zh: '无' },
+    'lab.duel.party.card': { ko: '카드', en: 'Card', zh: '卡牌' },
+    'lab.duel.party.grade': { ko: '등급', en: 'Grade', zh: '稀有度' },
+    'lab.duel.party.line': { ko: '옵션 {n}', en: 'Option {n}', zh: '词条 {n}' },
+    'lab.duel.party.reset': { ko: '초기화', en: 'Reset', zh: '重置' },
+    'lab.duel.party.fight': { ko: '이 편성으로 싸우기', en: 'Fight with this party', zh: '使用此编队战斗' },
     'lab.h.chapter': { ko: '챕터', en: 'Chapter', zh: '章' },
     'lab.h.monster': { ko: '몬스터', en: 'Monster', zh: '怪物' },
     'lab.h.grade': { ko: '등급', en: 'Grade', zh: '级别' },
@@ -3730,10 +3779,10 @@ const STRINGS = {
     'cx.rw.gold': { ko: '파티 골드 획득', en: 'Party Gold Find', zh: '队伍金币获取' },
     'cx.rw.material': { ko: '재료 획득', en: 'Material Find', zh: '材料获取' },
     // 전체 버프 — 도감 몬스터 챕터 줄 오른쪽 버튼 · 그 창의 제목 · 묶음 머리 셋 (SCREEN_DESIGN §9 · ADR-1279)
-    'cx.buff.btn': { ko: '전체 버프', en: 'All Buffs' },
-    'cx.buff.farm': { ko: '파밍', en: 'Farming' },
-    'cx.buff.fight': { ko: '전투', en: 'Combat' },
-    'cx.buff.option': { ko: '옵션 · 파티 전원', en: 'Options · Whole Party' },
+    'cx.buff.btn': { ko: '전체 버프', en: 'All Buffs', zh: '全部增益' },
+    'cx.buff.farm': { ko: '파밍', en: 'Farming', zh: '刷取收益' },
+    'cx.buff.fight': { ko: '전투', en: 'Combat', zh: '战斗' },
+    'cx.buff.option': { ko: '옵션 · 파티 전원', en: 'Options · Whole Party', zh: '词条 · 全队生效' },
     // 스킬 도감 툴팁의 둘째 장 — 획득처 작은 초상 · 레벨이 오르면 (SCREEN_DESIGN §9-1 · ADR-0680 — ~~단계~~ ADR-0650) · 「상단」 머리는 건물 이름 데이터(building.csv)
     'cx.tip.source': { ko: '획득처', en: 'Found On', zh: '获取地点' },
     'cx.tip.levelOptions': { ko: '레벨별 옵션', en: 'Options by Level', zh: '各等级词条' },
@@ -3890,9 +3939,11 @@ const STRINGS = {
     // 이펙트 세그먼트 [2026-10-05 · §9-1 · ADR-0513 · 세그먼트로 2026-10-09 ADR-0559] — 스킬마다 관전 이펙트를 띄운다 · 맨 위 버튼이 전부를 띄운다
     'ix.fx.playAll': { ko: '▶ 전부 재생', en: '▶ Play All', zh: '▶ 全部播放' },
     // 이펙트 세그먼트의 그림체 탭 [2026-10-09 · §9-1 · ADR-0559] — 키 = skill_art.js:ART_STYLES · 실전 그림체에는 live 가 이름을 감싼다
-    'ix.fxs.darktoon': { ko: '다크 카툰', en: 'Dark Cartoon', zh: '暗黑卡通' },
-    'ix.fxs.foil': { ko: '금속박', en: 'Metal Foil', zh: '金属箔' },
-    'ix.fxs.roughink': { ko: '거친 잉크', en: 'Rough Ink', zh: '粗墨' },   // Gemini 2차 판 (ADR-1379)
+    'ix.fxs.orrery': { ko: '천구도', en: 'Celestial Chart', zh: '星图' },
+    'ix.fxs.vitrail': { ko: '성당 유리', en: 'Stained Glass', zh: '彩绘玻璃' },
+    'ix.fxs.wraith': { ko: '망령불', en: 'Wraithfire', zh: '幽焰' },
+    'ix.fx.compare': { ko: '나란히 보기', en: 'Side by Side', zh: '并排对比' },
+    'ix.fx.replay': { ko: '▶ 다시 재생', en: '▶ Replay', zh: '▶ 重播' },
     'ix.fxs.live': { ko: '{name} · 실전', en: '{name} · In Battle', zh: '{name} · 实战' },
     // 일반 스킬 묶음 안의 티어 칸 머리 [2026-10-02 · §9-1 · ADR-0475 · `skill.csv:tier`]
     'ix.tier': { ko: '{n}티어', en: 'Tier {n}', zh: '第{n}层' },
@@ -3941,6 +3992,13 @@ const STRINGS = {
     'bt.castTitle': { ko: '캐스팅 속도 {s}초 — 다 차면 칸 하나 충전', en: 'Casting Speed {s}s — stores a charge when the gauge fills', zh: '施法速度{s}秒——蓄满后充能一个施法格' },
     'bt.tab.dmg': { ko: '누적 데미지', en: 'Damage', zh: '累计伤害' },
     'bt.basicAttack': { ko: '기본 공격', en: 'Basic attack', zh: '普通攻击' },
+    'bt.lesson.front': { ko: '기본 공격은 전열부터 노립니다.', en: 'Basic attacks target the front row first.', zh: '普通攻击会优先瞄准前排。' },
+    'bt.lesson.cooldownMagic': { ko: "스킬을 쓰면 아이콘이 어두워집니다. 어둠이 모두 걷히면 쿨타임이 끝나 다시 쓸 수 있습니다.", en: "Using a skill shades its icon. Once the shading clears, the cooldown is over and the skill can be used again.", zh: "施放技能后，图标会变暗。阴影完全消失时，冷却结束，技能可以再次施放。" },
+    'bt.lesson.attack': { ko: "주황색 행동 게이지가 가득 차면 기본 공격을 합니다.", en: "When the orange action gauge fills, the unit makes a basic attack.", zh: "橙色行动条充满时，单位会发动普通攻击。" },
+    'bt.lesson.cooldown': { ko: "스킬 아이콘의 어둠이 걷히면 쿨타임이 끝난 것입니다. 물리 유닛은 공격 차례에 준비된 스킬도 자동으로 씁니다.", en: "When the shading clears from a skill icon, its cooldown is over. On their attack turn, physical units also use a ready skill automatically.", zh: "技能图标上的阴影消失，表示冷却完毕。物理单位在攻击时也会自动使用已就绪的技能。" },
+    'bt.lesson.magic': { ko: "마법 무기는 기본 공격 대신 파란 게이지에 시전 칸을 하나씩 모읍니다.", en: "Magic weapons build up blue casting charges, one at a time, in place of basic attacks.", zh: "魔法武器会逐格积攒蓝色施法充能，取代普通攻击。" },
+    'bt.lesson.magicReady': { ko: "쿨타임이 끝난 스킬이 있으면 모아 둔 시전 칸 하나를 써서 자동으로 시전합니다.", en: "When a skill is off cooldown, the unit automatically spends one stored charge to cast it.", zh: "技能冷却完毕后，单位会自动消耗一格已有的充能来施放。" },
+    'bt.lesson.example': { ko: "시전 게이지 예시", en: "Casting gauge example", zh: "施法条示例" },
     'bt.reflectLabel': { ko: '반사', en: 'Reflect', zh: '反射' },
     // 물리 경직 칩의 이름 — 칩에 올리면 뜬다 (R110 · SCREEN_DESIGN §4-2 · ADR-0154)
     'bt.stagger': { ko: '경직', en: 'Stagger', zh: '僵直' },
@@ -4032,22 +4090,16 @@ const STRINGS = {
     'bt.trait.xp': { ko: '이 적을 처치하면 파티 경험치 획득 {v} 증가', en: 'Party Experience Gain increases by {v} when defeating this enemy', zh: '击杀该敌人时队伍经验获取提高{v}' },
     'bt.trait.magic': { ko: '이 적의 장비 굴림에 파티 매직아이템 획득확률 {v} 추가', en: 'Adds {v} Party Magic Find to this enemy’s gear rolls', zh: '该敌人的装备随机生成时额外获得{v}队伍魔法物品获取率' },
     // 강화 칸 — 그 정예 갈래 한 줄(물리 무기 `phys` · 마법 무기 `mag` · R528 · ADR-1246) · 값은 balance.csv `elite_enchant_*`
-    'bt.trait.enchant.fire.phys': { ko: '물리 피해의 {v}만큼 화염 피해 추가', en: 'Adds Fire damage equal to {v} of physical damage' },
-    'bt.trait.enchant.fire.mag': { ko: '쓰러질 때 폭발해 영웅 전원에게 화염 피해', en: 'Explodes on death, dealing Fire damage to all heroes' },
-    'bt.trait.enchant.cold.phys': { ko: '이 정예를 때린 영웅은 결빙되고 냉기 피해를 받는다', en: 'Heroes that strike it are frozen and take Cold damage' },
-    'bt.trait.enchant.cold.mag': { ko: '살아 있는 동안 영웅 전원 행동 속도 {v} 감소', en: 'While alive, all heroes act {v} slower' },
-    'bt.trait.enchant.lightning.phys': { ko: '공격이 맞으면 뒤의 영웅에게 공격의 {v}만큼 전기 피해', en: 'Hits arc to a hero behind for {v} of the hit as Lightning damage' },
-    'bt.trait.enchant.lightning.mag': { ko: '{v}초마다 무작위 영웅에게 번개', en: 'Strikes a random hero with lightning every {v}s' },
-    'bt.trait.enchant.poison.phys': { ko: '물리 피해의 {v}만큼 독 피해 추가', en: 'Adds Poison damage equal to {v} of physical damage' },
-    'bt.trait.enchant.poison.mag': { ko: '쓰러지면 영웅 전원 {v}초 중독', en: 'On death, poisons all heroes for {v}s' },
+    'bt.trait.enchant.fire.phys': { ko: '물리 피해의 {v}만큼 화염 피해 추가', en: 'Adds Fire damage equal to {v} of physical damage', zh: '附加相当于物理伤害 {v} 的火焰伤害' },
+    'bt.trait.enchant.fire.mag': { ko: '쓰러질 때 폭발해 영웅 전원에게 화염 피해', en: 'Explodes on death, dealing Fire damage to all heroes', zh: '倒下时爆炸，对所有英雄造成火焰伤害' },
+    'bt.trait.enchant.cold.phys': { ko: '이 정예를 때린 영웅은 결빙되고 냉기 피해를 받는다', en: 'Heroes that strike it are frozen and take Cold damage', zh: '攻击该精英的英雄会被冻结并受到冰霜伤害' },
+    'bt.trait.enchant.cold.mag': { ko: '살아 있는 동안 영웅 전원 행동 속도 {v} 감소', en: 'While alive, all heroes act {v} slower', zh: '该精英存活时，所有英雄的行动速度降低 {v}' },
+    'bt.trait.enchant.lightning.phys': { ko: '공격이 맞으면 뒤의 영웅에게 공격의 {v}만큼 전기 피해', en: 'Hits arc to a hero behind for {v} of the hit as Lightning damage', zh: '攻击命中时，闪电会跳向目标身后的英雄，造成相当于本次命中伤害 {v} 的闪电伤害' },
+    'bt.trait.enchant.lightning.mag': { ko: '{v}초마다 무작위 영웅에게 번개', en: 'Strikes a random hero with lightning every {v}s', zh: '每 {v} 秒以闪电击中一名随机英雄' },
+    'bt.trait.enchant.poison.phys': { ko: '물리 피해의 {v}만큼 독 피해 추가', en: 'Adds Poison damage equal to {v} of physical damage', zh: '附加相当于物理伤害 {v} 的毒素伤害' },
+    'bt.trait.enchant.poison.mag': { ko: '쓰러지면 영웅 전원 {v}초 중독', en: 'On death, poisons all heroes for {v}s', zh: '倒下时使所有英雄中毒，持续 {v} 秒' },
     'bt.trait.defMult': { ko: '물리 방어 {v}배', en: 'Physical Defense ×{v}', zh: '物理防御{v}倍' },
     'bt.trait.resCap': { ko: '{e} 피해 {v} 감소', en: '{e} damage taken reduced by {v}', zh: '受到的{e}伤害降低{v}' },
-    // 부류 버프 칩의 효과 한 줄 (R518 · ADR-1218) — 이름은 monster_base.csv · 값은 로직이 실어 온 것
-    'bt.fam.Army': { ko: '같은 부류가 {n} 이상 서 있으면 데미지 {v} 증가', en: 'Damage +{v} while {n} or more of its kind stand', zh: '同类存活{n}个以上时，伤害提高{v}' },
-    'bt.fam.Tribe': { ko: '모든 능력치 {v} 증가', en: 'All attributes increase by {v}', zh: '全属性提高{v}' },
-    'bt.fam.Giant': { ko: '혼자 남으면 데미지 {v} 증가', en: 'Damage +{v} when it stands alone', zh: '只剩自己时，伤害提高{v}' },
-    'bt.fam.Guardian': { ko: '서 있는 동안 후열 동료가 받는 피해 {v} 감소', en: 'Back-row allies take {v} less damage while it stands', zh: '存活期间，后排同伴受到的伤害降低{v}' },
-    'bt.fam.Aberration': { ko: '쓰러질 때마다 영웅의 모든 원소 저항 {v} 감소 · 최대 {n}번', en: 'Each time it falls, heroes lose {v} of all elemental resistances, up to {n} times', zh: '每次倒下时，英雄的所有元素抗性降低{v} · 最多{n}次' },
     // 로그 탭 — 줄의 **주체**(그 일을 한 쪽)로 거른다 (2026-09-15 · SCREEN_DESIGN §4-2)
     'bt.logf.all': { ko: '전체', en: 'All', zh: '全部' },
     'bt.logf.party': { ko: '우리', en: 'Party', zh: '我方' },
@@ -4070,6 +4122,7 @@ const STRINGS = {
     'bt.logh.target': { ko: '대상', en: 'Target', zh: '目标' },
     'bt.logh.val': { ko: '데미지', en: 'Damage', zh: '伤害' },
     // 라운드 줄 — 종류(일반 · 정예 · 보스)는 괄호가 아니라 글 왼쪽의 칩이다(렌더러가 `kind.*` 로 붙인다 · 2026-09-21 · ADR-0205)
+    'log.enemyCard': { ko: '적 작전 · {card}', en: 'Enemy tactic · {card}', zh: '敌方战术 · {card}' },
     'log.roundStart': { ko: '<b>라운드 {n}</b> — {list}', en: '<b>Round {n}</b> — {list}', zh: '<b>第{n}回合</b>——{list}' },
     // 로그 값 칸 (2026-09-21 · ADR-0189) — 격자 방식의 한 줄은 네 칸(주체 이름 · 스킬 그림 · 대상 이름 · 값)이다. 문장 방식의 틀은 아래 `log.say.*`.
     //   글자로 서는 값만 여기 든다 — 피해 · 회복량은 숫자 그대로다. 팝업(`pop.*`)은 영어가 대문자라 따로 든다
@@ -4103,22 +4156,22 @@ const STRINGS = {
     'log.say.ailEnd': { ko: '{a}의 {ico} {k} 해제', en: '{ico} {k} on {a} ended', zh: '{a}的{ico}{k}解除' },
     'log.say.slain': { ko: '{a} 처치', en: '{a} slain', zh: '{a}被击杀' },
     'log.say.downed': { ko: '{a} 전투 불능', en: '{a} downed', zh: '{a}倒下' },
-    'log.say.rise': { ko: '{a|이/가} {ico|으로/로} {d}{d|을/를} 일으킴', en: '{a} raised {d} with {ico}', zh: '{a}用{ico}扶起{d}——{d}重新站起' },   // 리저렉션 (2026-11-14 R471)
+    'log.say.rise': { ko: '{a|이/가} {ico|으로/로} {d|을/를} 일으킴', en: '{a} raised {d} with {ico}', zh: '{a}用{ico}扶起了{d}' },   // 리저렉션 (2026-11-14 R471)
     'log.say.call': { ko: '{a|이/가} {ico|으로/로} {d} 소환', en: '{a} summoned {d} with {ico}', zh: '{a}用{ico}召唤{d}' },
     // 장 보스 고유 넷 (2026-10-29 · R380) — 아이언 메이든이 되돌린 피해 · 스웜이 다시 뭉쳤다 (늪은 로그가 없다 — ADR-1258)
     'log.say.maiden': { ko: '{d|이/가} {ico|으로/로} {v} 피해를 되받음', en: '{d} took {v} back from {ico}', zh: '{d}因{ico}反受{v}点伤害' },
     'log.say.regroup': { ko: '{a|이/가} {ico}에서 다시 뭉침 — HP {v}', en: '{a} regrouped from {ico} — HP {v}', zh: '{a}从{ico}中重新聚合——生命{v}' },
     'log.say.lvup': { ko: '{a} 레벨 {v} 달성', en: '{a} reached Lv.{v}', zh: '{a}达到Lv.{v}' },
     // 작전 카드가 일했다 (2026-11-26 · R586 · SCREEN_DESIGN §4-2 · ADR-1385) — {ico} = 카드의 죄종 그림 · {k} = 카드 이름
-    'log.say.tacAim': { ko: '{a|이/가} {ico|으로/로} {d}{d|을/를} 노림', en: '{a} targets {d} with {ico}' },
-    'log.say.tacMark': { ko: '{a|이/가} {ico|으로/로} {d}에 표식', en: '{a} marked {d} with {ico}' },
-    'log.say.tacRound': { ko: '{ico} {k} 발동', en: '{ico} {k} triggered' },
-    'log.say.tacShare': { ko: '{a|이/가} {ico|으로/로} {d} 대신 {v} 피해', en: '{a} took {v} for {d} with {ico}' },
-    'log.say.tacSwap': { ko: '{a|이/가} {ico|으로/로} {d}{d|과/와} 자리를 바꿈', en: '{a} swapped places with {d} with {ico}' },
-    'log.say.tacConv': { ko: '{a|이/가} {ico|으로/로} {d}에게 {v} 피해', en: '{a} dealt {v} damage to {d} with {ico}' },
-    'log.v.tacAim': { ko: '노림', en: 'aim' },
-    'log.v.tacMark': { ko: '표식', en: 'mark' },
-    'log.v.tacSwap': { ko: '자리 바꿈', en: 'swap' },
+    'log.say.tacAim': { ko: '{a|이/가} {ico|으로/로} {d|을/를} 노림', en: '{a} targets {d} with {ico}', zh: '{a}借助{ico}瞄准了{d}' },
+    'log.say.tacMark': { ko: '{a|이/가} {ico|으로/로} {d}에 표식', en: '{a} marked {d} with {ico}', zh: '{a}借助{ico}标记了{d}' },
+    'log.say.tacRound': { ko: '{ico} {k} 발동', en: '{ico} {k} triggered', zh: '{ico} {k} 已触发' },
+    'log.say.tacShare': { ko: '{a|이/가} {ico|으로/로} {d} 대신 {v} 피해', en: '{a} took {v} for {d} with {ico}', zh: '{a}借助{ico}替{d}承受了 {v} 点伤害' },
+    'log.say.tacSwap': { ko: '{a|이/가} {ico|으로/로} {d|과/와} 자리를 바꿈', en: '{a} swapped places with {d} with {ico}', zh: '{a}借助{ico}与{d}交换了位置' },
+    'log.say.tacConv': { ko: '{a|이/가} {ico|으로/로} {d}에게 {v} 피해', en: '{a} dealt {v} damage to {d} with {ico}', zh: '{a}借助{ico}对{d}造成了 {v} 点伤害' },
+    'log.v.tacAim': { ko: '노림', en: 'aim', zh: '瞄准' },
+    'log.v.tacMark': { ko: '표식', en: 'mark', zh: '标记' },
+    'log.v.tacSwap': { ko: '자리 바꿈', en: 'swap', zh: '换位' },
     'pop.dodge': { ko: '빗나감', en: 'MISS', zh: '未命中' },
     'pop.counter': { ko: '반격', en: 'COUNTER', zh: '反击' },
     'pop.evade': { ko: '회피', en: 'EVADE', zh: '闪避' },   // 이베이드 (2026-10-16)
